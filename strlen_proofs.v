@@ -408,10 +408,10 @@ Qed.
 Lemma ones_bound:
   forall p x, ones (N.pos p) x < 2^(N.pos p * x).
 Proof.
-  intros. rewrite <- (N2Nat.id x). generalize (N.to_nat x) as n. clear x. induction n.
+  intros. induction x using N.peano_ind.
     apply N_lt_0_pow2.
-    rewrite Nat2N.inj_succ, ones_succ_top, N.mul_succ_r, N.pow_add_r. eapply N.lt_le_trans.
-      eapply N.add_lt_le_mono. exact IHn. reflexivity.
+    rewrite ones_succ_top, N.mul_succ_r, N.pow_add_r. eapply N.lt_le_trans.
+      eapply N.add_lt_le_mono. exact IHx. reflexivity.
       rewrite <- (N.mul_1_l (2^_)) at -3. rewrite <- N.mul_add_distr_r, N.mul_comm. apply N.mul_le_mono_nonneg_l.
         apply N.le_0_l.
         change (1+1) with (2^1). apply N.pow_le_mono_r. discriminate 1. destruct p; discriminate 1.
@@ -1040,7 +1040,7 @@ Proof.
   (* addl $0xfefefeff, %ecx *)
   Unshelve. all: match type of ADDR with _=56 => idtac | _=82 => idtac | _=108 => idtac | _=134 => idtac | _ => shelve end.
   all: unfold towidth;
-  rewrite (N.mod_small (getmem _ _ _ _)) by (change 32 with (Mb * N.of_nat 4); apply getmem_bound, (x86_wtm MDL MEM));
+  rewrite (N.mod_small (getmem _ _ _ _)) by (change 32 with (Mb * 4); apply getmem_bound, (x86_wtm MDL MEM));
   repeat first [ assumption | split ];
   [ rewrite (N.add_comm (2^32)); rewrite <- (N.add_sub_assoc _ (2^32)) by discriminate 1; reflexivity
   | rewrite N.mod_mod by discriminate 1; change 4278124287 with (2^32 - ones 8 4); destruct (ones 8 4 <=? _) eqn:CMP;
@@ -1050,7 +1050,7 @@ Proof.
       [ apply N.sub_lt, N.ltb_lt in CMP; [ rewrite CMP; reflexivity | reflexivity ]
       | eapply N.le_lt_trans;
         [ apply N.le_sub_l
-        | change 32 with (Mb * N.of_nat 4); apply getmem_bound, (x86_wtm MDL MEM) ] ]
+        | change 32 with (Mb * 4); apply getmem_bound, (x86_wtm MDL MEM) ] ]
     | apply N.leb_gt in CMP; rewrite N.mod_small;
       [ replace (_ <? _) with false;
         [ reflexivity
@@ -1066,7 +1066,7 @@ Proof.
   all: repeat first [ assumption | split ];
   rewrite N.mod_mod by discriminate 1; destruct (getmem _ _ _ (eax-4)) eqn:GM;
   [ reflexivity
-  | assert (BND: N.pos p < 2^(Mb * N.of_nat 4)) by (rewrite <- GM; apply getmem_bound, (x86_wtm MDL MEM));
+  | assert (BND: N.pos p < 2^(Mb * 4)) by (rewrite <- GM; apply getmem_bound, (x86_wtm MDL MEM));
     rewrite (N.mod_small (2^32-_)) by (apply N.sub_lt; [ apply N.lt_le_incl; exact BND | reflexivity ]);
     rewrite <- N.add_sub_assoc by (apply N.le_add_le_sub_l, N.lt_pred_le; rewrite N.add_1_r, N.pred_succ; exact BND);
     rewrite N.add_comm; rewrite <- (N.mul_1_l (2^32)) at 2; rewrite N.mod_add by discriminate 1;
