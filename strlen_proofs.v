@@ -305,24 +305,6 @@ Proof.
   apply N.add_le_mono_r, N.mul_le_mono_l, N.le_succ_l, N.gt_lt, H2.
 Qed.
 
-(*
-Remark inj_le:
-  forall a b, (N.of_nat a <= N.of_nat b) <-> (a <= b)%nat.
-Proof.
-  split; intros.
-    apply nat_compare_le. rewrite Nat2N.inj_compare. apply N.compare_le_iff. assumption.
-    apply N.compare_le_iff. unfold N.le. rewrite <- Nat2N.inj_compare. apply nat_compare_le. assumption.
-Qed.
-
-Remark inj_lt:
-  forall a b, (N.of_nat a < N.of_nat b) <-> (a < b)%nat.
-Proof.
-  split; intros.
-    apply nat_compare_lt. rewrite Nat2N.inj_compare. apply N.compare_lt_iff. assumption.
-    apply N.compare_lt_iff. unfold N.lt. rewrite <- Nat2N.inj_compare. apply nat_compare_lt. assumption.
-Qed.
-*)
-
 (* User-level memory-reads that are successful must not have targeted the very top of
    the process address space, since those pages are reserved by the kernel. *)
 Lemma read_bound_op:
@@ -394,14 +376,6 @@ Lemma ones_succ:
 Proof.
   intros. unfold ones at 1. rewrite unroll_Niter. reflexivity.
 Qed.
-
-(*
-Lemma ones_S:
-  forall n w, ones n (N.of_nat (S w)) = (ones n (N.of_nat w)) * 2^n + 1.
-Proof.
-  intros. rewrite Nat2N.inj_succ. apply ones_succ.
-Qed.
-*)
 
 Lemma ones_succ_top:
   forall w n, ones w (N.succ n) = ones w n + 2^(w*n).
