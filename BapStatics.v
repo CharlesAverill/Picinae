@@ -675,6 +675,109 @@ Proof.
   exists u. split; assumption.
 Qed.
 
+(* Well-typedness of while-loop is preserved by unrolling. *)
+Remark welltyped_while:
+  forall e q c0 c,
+  typof_stmt c0 c (While e q) c ->
+  typof_stmt c0 c (If e (Seq q (While e q)) Nop) c.
+Proof.
+  intros. inversion H; subst.
+  apply TIf with (c1:=c) (c2:=c).
+    reflexivity.
+    reflexivity.
+    assumption.
+    apply TSeq with (c1:=c') (c2:=c); assumption.
+    apply TNop.
+Qed.
+
+(*
+(* Only typed variables are accessible. *)
+Theorem eval_exp_untyped_var:
+  forall v u0 RW e s u c t
+         (E: eval_exp RW s e u)
+         (T: typof_exp c e t)
+         (CV: c v = None),
+  eval_exp RW (update vareq s v u0) e u.
+Proof.
+  induction e; intros.
+    destruct v0. destruct (vareq id v).
+      inversion T; subst. rewrite CV0 in CV. discriminate CV.
+      apply EVar. rewrite update_frame by assumption. inversion E. assumption.
+    all: inversion E; inversion T; subst; econstructor.
+    all: try first [ assumption | eapply IHe; eassumption | eapply IHe1; eassumption | eapply IHe2; eassumption | eapply IHe3; eassumption ].
+    injection H4 as; subst. destruct (vareq v id).
+      subst id. rewrite update_cancel. exact E2.
+      rewrite update_swap by assumption. eapply IHe2. exact E2. exact T2. rewrite update_frame by assumption. exact CV.
+    destruct n1.
+      eapply IHe3. exact E'. exact T3. exact CV.
+      eapply IHe2. exact E'. exact T2. exact CV.
+Qed.
+
+Theorem exec_stmt_newvar:
+  forall v RW m q c0 s s' c c' t
+         (XS: exec_stmt RW s q m s' None)
+         (T: typof_stmt c0 c q c')
+         (CV: c v = None) (CV': c' v = Some t),
+  s' v <> None.
+Proof.
+  induction m; intros; inversion XS; subst.
+    inversion T; subst. rewrite CV' in CV. discriminate CV.
+    destruct (vareq v id).
+      subst id. rewrite update_updated. discriminate 1.
+      inversion T; subst. rewrite update_frame in CV' by assumption. rewrite CV' in CV. discriminate CV.
+    inversion T; subst. destruct (c2 v) eqn:CV2.
+      intro SV'. eapply exec_stmt_nodelete in SV'; [|exact XS0]. revert SV'. eapply IHm. exact XS1. exact TS1. exact CV. apply SS. exact CV2.
+      eapply IHm. exact XS0. exact TS2. exact CV2. exact CV'.
+    inversion T; subst. eapply IHm. exact XS0. apply welltyped_while. exact T. exact CV. exact CV'.
+    inversion T; subst. destruct c1.
+      eapply IHm. exact XS0. exact TS2. exact CV. apply SS2. exact CV'.
+      eapply IHm. exact XS0. exact TS1. exact CV. apply SS1. exact CV'.
+Qed.
+
+Lemma exec_stmt_ignore_var:
+  forall v RW m q c0 s s' c c' t u
+         (XS: exec_stmt RW s q m s' None)
+         (T: typof_stmt c0 c q c')
+         (CV: c v = None) (CV': c' v = Some t),
+  exec_stmt RW (update vareq s v u) q m s' None.
+Proof.
+  induction m; intros; inversion XS; subst.
+    inversion T; subst. rewrite CV' in CV. discriminate CV.
+    inversion T; subst. destruct (vareq v id).
+      subst id. rewrite <- (update_cancel vareq s v u (Some u0)). apply XMove. eapply eval_exp_untyped_var. assumption. exact TE. exact CV.
+      rewrite update_frame in CV' by assumption. rewrite CV' in CV. discriminate CV.
+    
+
+Theorem exec_stmt_untyped_var:
+  forall v u RW c0 m q s s' x c c'
+         (XS: exec_stmt RW s q m s' x)
+         (T: typof_stmt c0 c q c')
+         (CV: c v = None),
+  exec_stmt RW (update vareq s v u) q m s' x \/
+  exec_stmt RW (update vareq s v u) q m (update vareq s' v u) x.
+Proof.
+  induction m; intros.
+    right. inversion XS; subst. apply XZero.
+    inversion XS; subst.
+      right. apply XNop.
+      inversion T; subst. destruct (vareq id v).
+        left. subst id. rewrite <- (update_cancel _ _ v u (Some u0)). apply XMove. eapply eval_exp_untyped_var. exact E. exact TE. exact CV.
+        right. rewrite update_swap by assumption. apply XMove. eapply eval_exp_untyped_var. exact E. exact TE. exact CV.
+      right. inversion T; subst. eapply XJmp. eapply eval_exp_untyped_var. exact E. exact TE. exact CV.
+      right. inversion T; subst. apply XExn.
+      inversion T; subst. destruct (IHm _ _ _ _ _ _ XS0 TS1 CV).
+        left. apply XSeq1. assumption.
+        right. apply XSeq1. assumption.
+      inversion T; subst. destruct (IHm _ _ _ _ _ _ XS1 TS1 CV).
+        left. eapply XSeq2. exact H. exact XS0.
+        destruct (c2 v) eqn:CV2.
+          left. eapply XSeq2; [|exact XS0]. rewrite (@store_upd_eq s2 v u). exact XS0.
+            eapply exec_stmt_mono in H.
+          destruct (IHm _ _ _ _ _ _ XS0 TS2 CV2).
+            left. eapply XSeq2. exact H. exact H0.
+            right. eapply XSeq2. exact H. exact H0.
+*)
+
 (* Every result of evaluating a well-typed expression is a well-typed value. *)
 Lemma preservation_eval_exp:
   forall {RW s e c t u}
@@ -815,20 +918,6 @@ Proof.
   apply EConcat; assumption.
 Qed.
 
-Remark welltyped_while:
-  forall e q c0 c,
-  typof_stmt c0 c (While e q) c ->
-  typof_stmt c0 c (If e (Seq q (While e q)) Nop) c.
-Proof.
-  intros. inversion H; subst.
-  apply TIf with (c1:=c) (c2:=c).
-    reflexivity.
-    reflexivity.
-    assumption.
-    apply TSeq with (c1:=c') (c2:=c); assumption.
-    apply TNop.
-Qed.
-
 (* Statement execution preserves the modeling relation. *)
 Lemma preservation_exec_stmt:
   forall {RW m s q c0 c c' s'}
@@ -952,27 +1041,6 @@ Proof.
         destruct (IHn s q1 c c1 MCS TS1) as [s'1 [x1 XS1]]. exists s'1,x1. apply XIf with (c:=N.pos p); assumption.
 Qed.
 
-(* Well-typed programs never get "stuck" except for memory access violations.
-   They hit the recursion limit, exit, or run to completion.  They never get
-   "stuck" due to a runtime type-mismatch. *)
-Theorem type_safety:
-  forall RW p c0 s0 m n a
-         (MEM: forall b m mw a, RW b m mw a : Prop)
-         (MCS: models c0 s0) (WP: welltyped_prog c0 p),
-  exists s' x, exec_prog RW p a s0 m n s' x.
-Proof.
-  intros. revert a s0 MCS. induction n; intros.
-    exists s0,(Exit a). apply XPZero.
-    assert (XS:=WP a). destruct (p a) as [(sz,q)|] eqn:LU.
-      destruct XS as [c' T]. destruct (progress_exec_stmt m MEM MCS T) as [s2 [x2 XS]].
-        destruct (exitaddr (a+sz) x2) as [a'|] eqn:EX.
-          destruct (IHn a' s2 (pres_frame_exec_stmt MCS MCS T XS)) as [s' [x XP]].
-            exists s',x. revert LU XS EX XP. apply XPStep.
-          destruct x2 as [x2|]; [|discriminate].
-            exists s2,x2. revert LU XS EX. apply XPDone.
-      exists s0,(Exit a). apply XPNone. assumption.
-Qed.
-
 (* Well-typed programs preserve the modeling relation at every execution step. *)
 Theorem preservation_exec_prog:
   forall RW p c s m n a s' x (MCS: models c s)
@@ -981,7 +1049,6 @@ Theorem preservation_exec_prog:
 Proof.
   intros. revert a s x MCS XS. induction n; intros; inversion XS; clear XS; subst.
     assumption.
-    assumption.
     eapply IHn.
       specialize (WP a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
         exact MCS. exact MCS. exact TS. exact XS0.
@@ -989,6 +1056,26 @@ Proof.
     specialize (WP a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
       exact MCS. exact MCS. exact TS. exact XS0.
 Qed.
+
+(* Well-typed programs never get "stuck" except for memory access violations.
+   They hit the recursion limit, exit, or run to completion.  They never get
+   "stuck" due to a runtime type-mismatch. *)
+Theorem progress_exec_prog:
+  forall RW p c0 s0 m n a s1 a'
+         (MEM: forall b m mw a, RW b m mw a : Prop)
+         (MCS: models c0 s0) (WP: welltyped_prog c0 p)
+         (XP: exec_prog RW p a s0 m n s1 (Exit a')) (IL: p a' <> None),
+  exists s' x, exec_prog RW p a s0 m (S n) s' x.
+Proof.
+  intros.
+  assert (WPA':=WP a'). destruct (p a') as [(sz,q)|] eqn:IL'; [|contradict IL; reflexivity]. clear IL.
+  destruct WPA' as [c' T]. eapply progress_exec_stmt in T.
+    destruct T as [s' [x XS]]. exists s'. eapply exec_prog_append in XS; [|exact XP | exact IL'].
+      destruct x as [e|]; [destruct e|]; eexists; exact XS.
+    exact MEM.
+    eapply preservation_exec_prog. exact MCS. exact WP. exact XP.
+Qed.
+
 
 End BAPStaticsTheorems.
 

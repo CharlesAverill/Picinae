@@ -17,6 +17,7 @@ Require Import NArith.
 Require Import Structures.Equalities.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
+Require Setoid.
 
 
 (* The interpreter module takes a machine architecture as input, expressed as
@@ -25,7 +26,7 @@ Require Import FunctionalExtensionality.
 Module Type Architecture.
   Declare Module Var : UsualDecidableType.
   Parameter Mb : N.
-  Axiom Mb_nonzero : Mb <> 0%N.
+  Axiom Mb_nonzero : Mb <> N0.
 End Architecture.
 
 
@@ -284,20 +285,19 @@ Definition exitaddr (a:addr) (x:option exit) : option addr :=
              | _ => None
   end.
 
-(* Execute at most n machine instructions of a program p starting at address a,
+(* Execute exactly n machine instructions of a program p starting at address a,
    imposing a recursion depth limit of m for each instruction's encoding, and
    returning a store and exit condition.  Exit condition "Unfinished" means
    depth limit m was exceeded during execution of one of the instructions. *)
 Inductive exec_prog (p:program) (a:addr) (s:store) (m:nat) : nat -> store -> exit -> Prop :=
 | XPZero: exec_prog p a s m O s (Exit a)
-| XPNone n (LU: p a = None): exec_prog p a s m (S n) s (Exit a)
 | XPStep n sz q s2 x1 a' s' x' (LU: p a = Some (sz,q))
          (XS: exec_stmt s q m s2 x1) (EX: exitaddr (a+sz) x1 = Some a')
          (XP: exec_prog p a' s2 m n s' x'):
     exec_prog p a s m (S n) s' x'
-| XPDone n sz q s' x (LU: p a = Some (sz,q))
+| XPDone sz q s' x (LU: p a = Some (sz,q))
          (XS: exec_stmt s q m s' (Some x)) (EX: exitaddr (a+sz) (Some x) = None):
-    exec_prog p a s m (S n) s' x.
+    exec_prog p a s m (S O) s' x.
 
 End InterpreterEngine.
 
@@ -337,6 +337,14 @@ Proof.
   unfold po_subset. intros f g h FG GH x y FX. apply GH,FG. assumption.
 Qed.
 
+Theorem po_subset_contrapos {A B}:
+  forall (f g: A -> option B) x, po_subset f g -> g x = None -> f x = None.
+Proof.
+  unfold po_subset. intros f g x SS H. specialize (SS x). destruct (f x).
+    symmetry. rewrite <- H. apply SS. reflexivity.
+    reflexivity.
+Qed.
+
 Theorem po_subset_update {A B} {eq: forall (a b:A), {a=b}+{a<>b}}:
   forall (f g: A -> option B) (SS: po_subset f g) (x:A) (y:option B),
   po_subset (update eq f x y) (update eq g x y).
@@ -366,7 +374,6 @@ Qed.
 
 End PartialOrders.
 
-Require Setoid.
 Add Parametric Relation {A B:Type}: (A -> option B) po_subset
 reflexivity proved by po_subset_reflexive
 transitivity proved by po_subset_transitive
@@ -691,12 +698,24 @@ Proof.
   destruct (eq z x); reflexivity.
 Qed.
 
+(* Equivalent updates within a sequence of updates can be disregarded when searching
+   for updates that cancel each other via update_cancel. *)
+Theorem update_inner_same:
+  forall {A B} (eq:forall (x y:A), {x=y}+{x<>y}) (s1 s2:A->B) x1 y1 x2 y2,
+    update eq s1 x2 y2 = update eq s2 x2 y2 ->
+  update eq (update eq s1 x1 y1) x2 y2 = update eq (update eq s2 x1 y1) x2 y2.
+Proof.
+  intros. destruct (eq x1 x2).
+    subst x2. do 2 rewrite update_cancel. assumption.
+    rewrite (update_swap eq s1), (update_swap eq s2) by assumption. rewrite H. reflexivity.
+Qed.
+
 (* If variable id's value u is known for store s, then s[id:=u] is the same as s.
    This fact is useful for "stocking" store expressions with explicit updates that
    reveal the values of known variables, allowing tactics to use that information to
    make progress without searching the rest of the proof context. *)
 Theorem store_upd_eq {s:store} {id u}:
-  forall (SV: s id = u), s = s[id:=u].
+  forall (SV: s id = u), s = update vareq s id u.
 Proof.
   intro.
   extensionality v.
@@ -966,10 +985,6 @@ Proof.
     constructor.
     symmetry. apply updateall_subset. assumption.
 
-  replace (updateall s2 s) with s2.
-    constructor. assumption.
-    symmetry. apply updateall_subset. assumption.
-
   apply XPStep with (sz:=sz) (q:=q) (s2:=updateall s0 s2) (x1:=x1) (a':=a'); try assumption.
     apply (exec_stmt_mono _ XS PO).
     replace (updateall s0 s') with (updateall (updateall s0 s2) s').
@@ -1030,7 +1045,7 @@ Proof.
 Qed.
 
 (* A stmt that finishes within n steps will also finish within (S n) steps. *)
-Lemma exec_stmt_raisebound:
+Theorem exec_stmt_incbound:
   forall RW m s q s' x (FIN: x <> Some Unfinished) (XS: exec_stmt RW s q m s' x),
   exec_stmt RW s q (S m) s' x.
 Proof.
@@ -1046,6 +1061,15 @@ Proof.
       apply IHm. exact FIN. exact XS0.
     apply XWhile. apply IHm. exact FIN. exact XS0.
     eapply XIf. exact E. apply IHm. exact FIN. exact XS0.
+Qed.
+
+Corollary exec_stmt_raisebound:
+  forall RW m' m s q s' x (LE: (m <= m')%nat) (FIN: x <> Some Unfinished) (XS: exec_stmt RW s q m s' x),
+  exec_stmt RW s q m' s' x.
+Proof.
+  intros. pattern m'. revert m' LE. apply le_ind.
+    exact XS.
+    intros. apply exec_stmt_incbound. exact FIN. assumption.
 Qed.
 
 (* To prove properties of while-loops, it suffices to prove that each loop iteration
@@ -1078,8 +1102,8 @@ Proof.
       eapply INV. exact PRE. exact E. exact XS2.
 Qed.
 
-(* Extract the last (instead of the first) small-step in an exec_prog computation. *)
-Theorem XPLastStep:
+(* Append a step to an exec_prog computation. *)
+Theorem exec_prog_append:
   forall RW p n a s m sz q s2 a1 s' x'
          (XP: exec_prog RW p a s m n s2 (Exit a1))
          (LU: p a1 = Some (sz,q))
@@ -1094,9 +1118,40 @@ Proof.
       eapply XPDone. exact LU. exact XS. reflexivity.
       eapply XPStep. exact LU. exact XS. reflexivity. apply XPZero.
     inversion XP; subst.
-      rewrite LU0 in LU. discriminate.
       eapply XPStep. exact LU0. exact XS0. exact EX. eapply IHn. exact XP0. exact LU. exact XS.
       discriminate.
+Qed.
+
+(* Split an exec_prog computation into two parts. *)
+Theorem exec_prog_split:
+  forall RW p a s m n1 n2 s' x'
+         (XP: exec_prog RW p a s m (n1 + S n2)%nat s' x'),
+  exists s1 a1, exec_prog RW p a s m n1 s1 (Exit a1) /\ exec_prog RW p a1 s1 m (S n2) s' x'.
+Proof.
+  intros. revert n2 XP. induction n1; intros.
+    exists s,a. split. apply XPZero. exact XP.
+    rewrite Nat.add_succ_comm in XP. destruct (IHn1 _ XP) as [s1 [a1 [XP1 XP2]]]. inversion XP2; subst. exists s2,a'. split.
+      eapply exec_prog_append in XP1; [|exact LU | exact XS]. destruct x1 as [e|]; [destruct e|].
+        discriminate EX.
+        injection EX as; subst. exact XP1.
+        discriminate EX.
+        injection EX as; subst. exact XP1.
+      assumption.
+Qed.
+
+(* Concatenate two exec_prog comptations into one whole. *)
+Theorem exec_prog_concat:
+  forall RW p a s m n1 n2 s1 a1 s' x'
+         (XP1: exec_prog RW p a s m n1 s1 (Exit a1)) (XP2: exec_prog RW p a1 s1 m (S n2) s' x'),
+  exec_prog RW p a s m (n1 + S n2)%nat s' x'.
+Proof.
+  intros. revert n2 s1 a1 XP1 XP2. induction n1; intros.
+    inversion XP1; subst. exact XP2.
+    rewrite <- Nat.add_1_r in XP1. apply exec_prog_split in XP1. destruct XP1 as [s2 [a2 [XP0 XP1]]]. rewrite Nat.add_succ_comm. eapply IHn1.
+     exact XP0.
+     inversion XP1; subst.
+       eapply XPStep. exact LU. exact XS. exact EX. inversion XP; subst. exact XP2.
+       discriminate EX.
 Qed.
 
 (* To prove that a property holds at the conclusion of a program's execution, it suffices
@@ -1104,14 +1159,13 @@ Qed.
 Theorem prog_inv_universal:
   forall (P: exit -> store -> Prop)
          RW (p:program) a0 s0 m n s' x' (XP: exec_prog RW p a0 s0 m n s' x') (PRE: P (Exit a0) s0)
-         (INV: forall a1 s1 sz q s1' x1 (PA: p a1 = Some (sz,q)) (PRE: P (Exit a1) s1)
+         (INV: forall a1 s1 sz q s1' x1 (IL: p a1 = Some (sz,q)) (PRE: P (Exit a1) s1)
                       (XS: exec_stmt RW s1 q m s1' x1),
                P (match x1 with None => Exit (a1 + sz)
                               | Some x => x end) s1'),
   P x' s'.
 Proof.
   intros. revert a0 s0 XP PRE. induction n; intros; inversion XP; subst.
-    exact PRE.
     exact PRE.
     apply (IHn a' s2).
       exact XP0.
@@ -1124,45 +1178,109 @@ Qed.
 (* Alternatively, one may prove that the property is preserved by all the reachable statements.
    (The user's invariant may adopt a precondition of False for unreachable statements.) *)
 Theorem prog_inv_reachable:
-  forall (P: exit -> store -> Prop)
-         RW (p:program) a0 s0 m n s' x' (XP: exec_prog RW p a0 s0 m n s' x') (PRE: P (Exit a0) s0)
-         (INV: forall a1 s1 n1 sz q s1' x1 (PA: p a1 = Some (sz,q)) (PRE: P (Exit a1) s1) (LE: (n1 <= n)%nat)
+  forall (P: exit -> store -> nat -> Prop)
+         RW (p:program) a0 s0 m n s' x' (XP: exec_prog RW p a0 s0 m n s' x') (PRE: P (Exit a0) s0 O)
+         (INV: forall a1 s1 n1 sz q s1' x1 (IL: p a1 = Some (sz,q)) (PRE: P (Exit a1) s1 n1) (LT: (n1 < n)%nat)
                       (XP: exec_prog RW p a0 s0 m n1 s1 (Exit a1))
-                      (XS: exec_stmt RW s1 q m s1' x1),
+                      (XS: exec_stmt RW s1 q m s1' x1)
+                      (XP': match x1 with None => exec_prog RW p (a1+sz) s1' m (n - S n1) s' x'
+                                        | Some (Exit a2) => exec_prog RW p a2 s1' m (n - S n1) s' x'
+                                        | Some x2 => x'=x2 end),
                P (match x1 with None => Exit (a1 + sz)
-                              | Some x => x end) s1'),
-  P x' s'.
+                              | Some x => x end) s1' (S n1)),
+  P x' s' n.
 Proof.
   intros.
-  assert (H: exists a1 s1 n2, (n2 <= n)%nat /\ exec_prog RW p a0 s0 m (n - n2) s1 (Exit a1) /\ P (Exit a1) s1 /\ exec_prog RW p a1 s1 m n2 s' x').
-    exists a0,s0,n. repeat split.
+  assert (H: exists a1 s1 n2, (n2 <= n)%nat /\ exec_prog RW p a0 s0 m (n - n2) s1 (Exit a1) /\ P (Exit a1) s1 (n - n2)%nat /\ exec_prog RW p a1 s1 m n2 s' x').
+    exists a0,s0,n. rewrite Nat.sub_diag. repeat split.
       apply le_n.
-      rewrite Nat.sub_diag. apply XPZero.
+      apply XPZero.
       exact PRE.
       exact XP.
   destruct H as [a1 [s1 [n2 [LE [XP1 [PRE1 XP2]]]]]].
   clear XP. revert a1 s1 LE PRE1 XP1 XP2. induction n2; intros.
-    inversion XP2; clear XP2; subst. exact PRE1.
+    inversion XP2; clear XP2; subst. rewrite Nat.sub_0_r in PRE1. exact PRE1.
     inversion XP2; clear XP2; subst.
-      exact PRE1.
       apply (IHn2 a' s2).
         transitivity (S n2). apply le_S, le_n. assumption.
-        specialize (INV a1 s1 (n - S n2)%nat sz q s2 x1 LU PRE1 (Nat.le_sub_l _ _) XP1 XS). destruct x1; [destruct e|].
+
+        specialize (INV a1 s1 (n - S n2)%nat sz q s2 x1 LU PRE1 (Nat.sub_lt n (S n2) LE (Nat.lt_0_succ n2)) XP1 XS).
+        rewrite minus_Sn_m, Nat.sub_succ in INV by exact LE.
+        replace (n - (n - n2))%nat with n2 in INV by (apply plus_minus; symmetry; apply Nat.sub_add, le_Sn_le, LE).
+        destruct x1; [destruct e|].
           discriminate EX.
-          injection EX. intro. subst a'. exact INV.
+          injection EX. intro. subst a'. apply INV. exact XP.
           discriminate EX.
-          injection EX. intro. subst a'. exact INV.
+          injection EX. intro. subst a'. apply INV. exact XP.
 
         destruct n. inversion LE. apply le_S_n in LE. rewrite Nat.sub_succ_l; [|exact LE].
         replace (Exit a') with (match x1 with None => Exit (a1 + sz)
                                             | Some x => x end).
-          eapply XPLastStep. exact XP1. exact LU. exact XS.
+          eapply exec_prog_append. exact XP1. exact LU. exact XS.
           destruct x1; [destruct e|]; first [ discriminate EX | injection EX; intro; subst; reflexivity ].
 
         exact XP.
-      specialize (INV a1 s1 (n - S n2)%nat sz q s' (Some x') LU PRE1 (Nat.le_sub_l _ _) XP1 XS). exact INV.
+      specialize (INV a1 s1 (n-1)%nat sz q s' (Some x') LU PRE1 (Nat.sub_lt n 1 LE Nat.lt_0_1) XP1 XS).
+      rewrite minus_Sn_m, Nat.sub_succ, Nat.sub_0_r in INV by exact LE.
+      apply INV. destruct x'.
+        reflexivity.
+        discriminate EX.
+        reflexivity.
 Qed.
 
+(* Rather than assigning and proving an invariant at every machine instruction, we can generalize
+   the above to allow users to assign invariants to only a few machine instructions.  To prove that
+   all the invariants are satisfied, the user can prove that any execution that starts in an
+   invariant-satisfying state and that reaches another invariant always satisfies the latter. *)
+
+(* The "next invariant satisfied" property is true if we're at an invariant point and the state
+   satisfies that invariant, or we're not at an invariant point and (inductively) taking one
+   exec_prog step leads to a "next invariant satisfied" state. *)
+Inductive next_inv_sat (PS: exit -> store -> nat -> option Prop):
+            bool -> exit -> acctyp -> program -> store -> nat -> nat -> nat -> store -> exit -> Prop :=
+| NISHere x RW p s m n n' s' x' (TRU: match PS x s n with None => False | Some P => P end):
+    next_inv_sat PS true x RW p s m n n' s' x'
+| NISStep RW p s m n n' s' x' a
+          (STEP: forall sz q s1 x1 (LT: (n < n')%nat)
+                        (IL: p a = Some (sz,q)) (XS: exec_stmt RW s q m s1 x1)
+                        (XP': match x1 with None => exec_prog RW p (a+sz) s1 m (n' - S n) s' x'
+                              | Some (Exit a2) => exec_prog RW p a2 s1 m (n' - S n) s' x'
+                              | Some x2 => x'=x2 end),
+                 next_inv_sat PS (match PS match x1 with None => Exit (a+sz) | Some x1 => x1 end s1 (S n) with
+                                  | Some _ => true | None => false end)
+                              match x1 with None => Exit (a+sz) | Some x1 => x1 end
+                              RW p s1 m (S n) n' s' x'):
+    next_inv_sat PS false (Exit a) RW p s m n n' s' x'.
+
+(* Proving the "next invariant satisfied" property for all invariant points proves partial
+   correctness of the program. *)
+Theorem prog_inv:
+  forall (PS: exit -> store -> nat -> option Prop) RW (p:program) a0 s0 m n s' x'
+         (XP: exec_prog RW p a0 s0 m n s' x')
+         (PRE: match PS (Exit a0) s0 O with Some P => P | None => False end)
+         (INV: forall a1 s1 n1
+                      (XP: exec_prog RW p a0 s0 m n1 s1 (Exit a1))
+                      (PRE: match PS (Exit a1) s1 n1 with Some P => P | None => False end),
+               next_inv_sat PS false (Exit a1) RW p s1 m n1 n s' x'),
+  match PS x' s' n with Some P => P | None => True end.
+Proof.
+  intros.
+  assert (NIS: next_inv_sat PS (match PS x' s' n with Some _ => true | None => false end) x' RW p s' m n n s' x').
+    pattern x' at -3, s' at -3, n at -3. eapply prog_inv_reachable.
+      exact XP.
+      destruct (PS (Exit a0) s0 O) eqn:PS0.
+        apply NISHere. rewrite PS0. exact PRE.
+        exfalso. exact PRE.
+      intros. specialize (INV a1 s1 n1 XP0). destruct (PS (Exit a1) s1 n1) eqn:PS1.
+
+        inversion PRE0; subst. rewrite PS1 in TRU. specialize (INV TRU).
+        inversion INV; subst. eapply STEP. exact LT. exact IL. exact XS. exact XP'.
+
+        inversion PRE0; subst. eapply STEP. exact LT. exact IL. exact XS. exact XP'.
+  destruct (PS x' s' n) eqn:PS'.
+    inversion NIS. rewrite PS' in TRU. exact TRU.
+    exact I.
+Qed.
 
 
 (* Statements and programs that contain no assignments to some IL variable v
@@ -1211,7 +1329,7 @@ Proof.
     reflexivity.
     intros. rewrite <- PRE. apply (noassign_inv v) in XS.
       exact XS.
-      specialize (NP a1). rewrite PA in NP. exact NP.
+      specialize (NP a1). rewrite IL in NP. exact NP.
 Qed.
 
 End InterpTheory.
@@ -1281,14 +1399,20 @@ Definition feval_unop (uop:unop_typ) (n:N) (w:bitwidth) : uvalue :=
   | OP_NOT => VaU true zstore (N.lnot n w) w
   end.
 
-Definition uopt (v:option value) : uvalue :=
+Definition uget (v:option value) : uvalue :=
   match v with None => VaU true zstore 0 0
              | Some u => uvalue_of u
   end.
 
+Lemma fold_uget:
+  forall v, match v with None => VaU true zstore 0 0
+                       | Some u => uvalue_of u
+            end = uget v.
+Proof. intros. reflexivity. Qed.
+
 Fixpoint feval_exp (e:exp) (s:store) : uvalue :=
   match e with
-  | Var (Va id _) => uopt (s id)
+  | Var (Va id _) => uget (s id)
   | Word (n,w) => VaU true zstore n w
   | Load e1 e2 en w =>
       match feval_exp e1 s, feval_exp e2 s with
@@ -1313,8 +1437,9 @@ Fixpoint feval_exp (e:exp) (s:store) : uvalue :=
   | Let (Va id t) e1 e2 => feval_exp e2 (update vareq s id (Some (of_uvalue (feval_exp e1 s))))
   | Unknown _ => VaU true zstore 0 0
   | Ite e1 e2 e3 =>
-      match feval_exp e1 s with
-      | VaU _ _ n w => feval_exp (match n with N0 => e3 | _ => e2 end) s
+      match feval_exp e1 s, feval_exp e2 s, feval_exp e3 s with
+      | VaU _ _ n1 _, VaU b2 m2 n2 w2, VaU b3 m3 n3 w3 =>
+          VaU (if n1 then b3 else b2) (if n1 then m3 else m2) (if n1 then n3 else n2) (if n1 then w3 else w2)
       end
   | Extract n1 n2 e1 =>
       match feval_exp e1 s with
@@ -1324,6 +1449,29 @@ Fixpoint feval_exp (e:exp) (s:store) : uvalue :=
   | Concat e1 e2 =>
       match feval_exp e1 s, feval_exp e2 s with
       | VaU _ _ n1 w1, VaU _ _ n2 w2 => VaU true zstore (N.land (N.shiftl n1 w2) n2) (w1+w2)
+      end
+  end.
+
+Definition NoMemAcc := True.
+Definition MemAcc (RW:acctyp) rw m mw a w := forall n, n < w/Mb -> RW rw m mw (a+n).
+
+Fixpoint memacc_exp (e:exp) (RW:acctyp) (s:store) : Prop :=
+  match e with
+  | Load e1 e2 _ w =>
+      match feval_exp e1 s, feval_exp e2 s with
+      | VaU _ m _ mw, VaU _ _ a _ => MemAcc RW false m mw a w
+      end
+  | Store e1 e2 _ _ w =>
+      match feval_exp e1 s, feval_exp e2 s with
+      | VaU _ m _ mw, VaU _ _ a _ => MemAcc RW true m mw a w
+      end
+  | Var _ | Word _ | Unknown _ => NoMemAcc
+  | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => memacc_exp e1 RW s
+  | BinOp _ e1 e2 | Concat e1 e2 => memacc_exp e1 RW s /\ memacc_exp e2 RW s
+  | Let (Va id _) e1 e2 => memacc_exp e1 RW s /\ memacc_exp e2 RW (update vareq s id (Some (of_uvalue (feval_exp e1 s))))
+  | Ite e1 e2 e3 =>
+      match feval_exp e1 s with
+      | VaU _ _ n w => if n then memacc_exp e3 RW s else memacc_exp e2 RW s
       end
   end.
 
@@ -1359,8 +1507,8 @@ Proof.
   intro. destruct v. destruct n. reflexivity. reflexivity.
 Qed.
 
-Lemma canonical_uopt:
-  forall v, canonical_uvalue (uopt v).
+Lemma canonical_uget:
+  forall v, canonical_uvalue (uget v).
 Proof.
   intros. destruct v.
     apply canonical_conv.
@@ -1371,7 +1519,7 @@ Lemma canonical_feval:
    forall e s, canonical_uvalue (feval_exp e s).
 Proof.
   induction e; intros.
-    simpl. destruct v. apply canonical_uopt.
+    simpl. destruct v. apply canonical_uget.
     destruct n. reflexivity.
     simpl. do 2 destruct (feval_exp _ _). reflexivity.
     simpl. do 3 destruct (feval_exp _ _). reflexivity.
@@ -1380,9 +1528,9 @@ Proof.
     simpl. destruct (feval_exp _ _). reflexivity.
     simpl. destruct v. apply IHe2.
     reflexivity.
-    simpl. destruct (feval_exp _ _). destruct n.
-      apply IHe3.
-      apply IHe2.
+    simpl. destruct (feval_exp e1 s). destruct (feval_exp e2 s) eqn:FE2. destruct (feval_exp e3 s) eqn:FE3. destruct n.
+      rewrite <- FE3. apply IHe3.
+      rewrite <- FE2. apply IHe2.
     simpl. destruct (feval_exp _ _). reflexivity.
     simpl. do 2 destruct (feval_exp _ _). reflexivity.
 Qed.
@@ -1440,8 +1588,8 @@ Proof.
     simpl. simpl in K. apply andb_prop in K. destruct K as [K1 K]. simpl in K. apply andb_prop in K. destruct K as [K2 K3].
     apply (IHe1 _ _ K1) in E1. destruct (feval_exp e1 _). simpl in E1. destruct z; [|discriminate E1]. injection E1 as; subst.
     destruct n.
-      apply (IHe3 _ _ K3) in E'. destruct (feval_exp e3 _). subst u. reflexivity.
-      apply (IHe2 _ _ K2) in E'. destruct (feval_exp e2 _). subst u. reflexivity.
+      apply (IHe3 _ _ K3) in E'. destruct (feval_exp e2 s). destruct (feval_exp e3 _). subst u. reflexivity.
+      apply (IHe2 _ _ K2) in E'. destruct (feval_exp e2 _). destruct (feval_exp e3 _). subst u. reflexivity.
 
     simpl.
     apply (IHe _ _ K) in E1. destruct (feval_exp e _). simpl in E1. destruct z; [|discriminate E1]. injection E1 as; subst.
@@ -1453,6 +1601,41 @@ Proof.
     reflexivity.
 Qed.
 
+Theorem memacc_exp_true:
+  forall RW e s u (K: exp_known e = true) (E: eval_exp RW s e u),
+  memacc_exp e RW s.
+Proof.
+  induction e; intros; try exact I;
+    try (unfold exp_known in K; fold exp_known in K; apply andb_prop in K; destruct K as [K1 K2]);
+    inversion E; subst;
+    unfold memacc_exp; fold memacc_exp;
+    try first [ eapply IHe; [ exact K | exact E1 ]
+              | split; [ eapply IHe1; [ exact K1 | exact E1 ]
+                       | eapply IHe2; [ exact K2 | exact E2 ] ] ].
+
+  (* Load *)
+  apply reduce_exp in E1; [|exact K1]. apply reduce_exp in E2; [|exact K2].
+  apply (f_equal uvalue_of) in E1. apply (f_equal uvalue_of) in E2. rewrite can_uvalue_inv in E1,E2 by apply canonical_feval.
+  unfold uvalue_of in E1,E2. rewrite <- E1, <- E2. exact R.
+
+  (* Store *)
+  apply andb_prop, proj1 in K2.
+  apply reduce_exp in E1; [|exact K1]. apply reduce_exp in E2; [|exact K2].
+  apply (f_equal uvalue_of) in E1. apply (f_equal uvalue_of) in E2. rewrite can_uvalue_inv in E1,E2 by apply canonical_feval.
+  unfold uvalue_of in E1,E2. unfold memacc_exp. rewrite <- E1, <- E2. exact W.
+
+  (* Let *)
+  split.
+    eapply IHe1. exact K1. exact E1.
+    eapply IHe2. exact K2. apply reduce_exp in E1; [|exact K1]. rewrite <- E1. exact E2.
+
+  (* Ite *)
+  apply reduce_exp in E1; [|exact K1]. apply (f_equal uvalue_of) in E1. rewrite can_uvalue_inv in E1 by apply canonical_feval.
+  rewrite <- E1. simpl. apply andb_prop in K2. destruct n1.
+    eapply IHe3. exact (proj2 K2). exact E'.
+    eapply IHe2. exact (proj1 K2). exact E'.
+Qed.
+
 
 (* With the above, we can now reduce common-case exec_stmt hypotheses into hypotheses of the
    form s' = ... /\ x' = ..., which allows us to infer the final store s' and exit state x'
@@ -1462,7 +1645,8 @@ Lemma reduce_seq_move:
   forall x1 (FIN: x1 <> Some Unfinished)
          RW s1 id t e q m s1' (XS: exec_stmt RW s1 (Seq (Move (Va id t) e) q) m s1' x1),
   if exp_known e then
-    let u := of_uvalue (feval_exp e s1) in exec_stmt RW (s1[id:=Some u]) q (pred m) s1' x1
+    (let u := of_uvalue (feval_exp e s1) in exec_stmt RW (s1[id:=Some u]) q (pred m) s1' x1) /\
+    memacc_exp e RW s1
   else
     exists u, exec_stmt RW (s1[id:=Some u]) q (pred m) s1' x1.
 Proof.
@@ -1470,7 +1654,9 @@ Proof.
   inversion XS0; subst. contradict FIN. reflexivity.
   inversion XS1; subst.
   destruct (exp_known e) eqn:K.
-    eapply reduce_exp in E. subst u. exact XS0. exact K.
+    split.
+      eapply reduce_exp in E. subst u. exact XS0. exact K.
+      eapply memacc_exp_true. exact K. exact E.
     eexists. exact XS0.
 Qed.
 
@@ -1488,13 +1674,16 @@ Lemma reduce_move:
   forall x1 (FIN: x1 <> Some Unfinished)
          RW s1 id t e m s1' (XS: exec_stmt RW s1 (Move (Va id t) e) m s1' x1),
   if exp_known e then
-    (let u := of_uvalue (feval_exp e s1) in s1' = s1[id:=Some u]) /\ x1 = None
+    ((let u := of_uvalue (feval_exp e s1) in s1' = s1[id:=Some u]) /\ x1 = None) /\
+    memacc_exp e RW s1
   else exists u, (s1' = s1[id:=Some u] /\ x1 = None).
 Proof.
   intros.
   inversion XS; subst. contradict FIN. reflexivity.
   destruct (exp_known e) eqn:K.
-    eapply reduce_exp in E. rewrite E. split; reflexivity. exact K.
+    split.
+      eapply reduce_exp in E. rewrite E. split; reflexivity. exact K.
+      eapply memacc_exp_true. exact K. exact E.
     exists u. split; reflexivity.
 Qed.
 
@@ -1502,16 +1691,20 @@ Lemma reduce_jmp:
   forall x1 (FIN: x1 <> Some Unfinished)
          RW s1 e m s1' (XS: exec_stmt RW s1 (Jmp e) m s1' x1),
   if exp_known e then
-    s1' = s1 /\ x1 = Some (Exit (match feval_exp e s1 with VaU _ _ a _ => a end))
+    (s1' = s1 /\ x1 = Some (Exit (match feval_exp e s1 with VaU _ _ a _ => a end))) /\
+    memacc_exp e RW s1
   else exists a, (s1' = s1 /\ x1 = Some (Exit a)).
 Proof.
   intros. inversion XS; subst. contradict FIN. reflexivity.
   destruct (exp_known e) eqn:K.
-    split. reflexivity.
-    eapply reduce_exp in E; [|exact K].
-    apply (f_equal uvalue_of) in E.
-    rewrite can_uvalue_inv in E; [|apply canonical_feval].
-    simpl in E. rewrite <- E. reflexivity.
+    split.
+      split. reflexivity.
+      eapply reduce_exp in E; [|exact K].
+      apply (f_equal uvalue_of) in E.
+      rewrite can_uvalue_inv in E; [|apply canonical_feval].
+      simpl in E. rewrite <- E. reflexivity.
+
+      eapply memacc_exp_true. exact K. exact E.
 
     exists a. split; reflexivity.
 Qed.
@@ -1520,17 +1713,20 @@ Lemma reduce_if:
   forall x1 (FIN: x1 <> Some Unfinished)
          RW s1 e q1 q2 m s1' (XS: exec_stmt RW s1 (If e q1 q2) m s1' x1),
   if exp_known e then
-    exec_stmt RW s1 (match feval_exp e s1 with VaU _ _ c _ => if c then q2 else q1 end) (pred m) s1' x1
+    (exec_stmt RW s1 (match feval_exp e s1 with VaU _ _ c _ => if c then q2 else q1 end) (pred m) s1' x1) /\
+    memacc_exp e RW s1
   else
     exists (c:N), exec_stmt RW s1 (if c then q2 else q1) (pred m) s1' x1.
 Proof.
   intros. inversion XS; subst. contradict FIN. reflexivity.
   destruct (exp_known e) eqn:K.
+    split.
+      eapply reduce_exp in E; [|exact K].
+      apply (f_equal uvalue_of) in E.
+      rewrite can_uvalue_inv in E; [|apply canonical_feval].
+      rewrite <- E. simpl. destruct c; assumption.
 
-    eapply reduce_exp in E; [|exact K].
-    apply (f_equal uvalue_of) in E.
-    rewrite can_uvalue_inv in E; [|apply canonical_feval].
-    rewrite <- E. simpl. destruct c; assumption.
+      eapply memacc_exp_true. exact K. exact E.
 
     eexists. exact XS0.
 Qed.
@@ -1548,10 +1744,41 @@ End FInterp.
    expression, which might include arguments of an enclosing unexpandable function. *)
 
 Ltac simpl_exp :=
-  cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop utowidth utobit uopt of_uvalue uvalue_of ].
+  cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
+                             utowidth utobit uget of_uvalue uvalue_of ].
 
 Tactic Notation "simpl_exp" "in" hyp(H) :=
-  cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop utowidth utobit uopt of_uvalue uvalue_of ] in H.
+  cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
+                             utowidth utobit uget of_uvalue uvalue_of ] in H.
+
+
+(* Statement simplification most often gets stuck at variable-reads, since the full content of the
+   store is generally not known (s is a symbolic expression).  We can often push past this obstacle
+   by applying the update_updated and update_frame theorems to automatically infer that the values
+   of variables not being read are irrelevant.  The "simpl_stores" tactic does so. *)
+
+Remark if_N_same: forall A (n:N) (a:A), (if n then a else a) = a.
+Proof. intros. destruct n; reflexivity. Qed.
+
+Ltac simpl_stores :=
+  repeat first [ rewrite update_updated | rewrite update_frame; [|discriminate 1] ];
+  repeat rewrite if_N_same;
+  repeat match goal with |- context [ update vareq ?S ?V ?U ] =>
+    match S with context c [ update vareq ?T V _ ] => let r := context c[T] in
+      replace (update vareq S V U) with (update vareq r V U) by
+        (symmetry; repeat apply update_inner_same; apply update_cancel)
+    end
+  end.
+
+Tactic Notation "simpl_stores" "in" hyp(H) :=
+  repeat first [ rewrite update_updated in H | rewrite update_frame in H; [|discriminate 1] ];
+  repeat rewrite if_N_same in H;
+  repeat match type of H with context [ update vareq ?S ?V ?U ] =>
+    match S with context c [ update vareq ?T V _ ] => let r := context c[T] in
+      replace (update vareq S V U) with (update vareq r V U) in H by
+        (symmetry; repeat apply update_inner_same; apply update_cancel)
+    end
+  end.
 
 
 (* To facilitate expression simplification, it is often convenient to first consolidate all information
@@ -1560,37 +1787,40 @@ Tactic Notation "simpl_exp" "in" hyp(H) :=
    expression to be reduced and "s" is the store, and adds "s[var:=value]" to the expression. *)
 
 Ltac stock_store :=
-  lazymatch goal with |- exec_stmt _ ?S ?Q _ _ _ => repeat
-    lazymatch goal with [ H: S ?V |- exec_stmt _ ?U _ _ _ _ ] =>
-      lazymatch U with context [ V ] => fail | _ =>
-        lazymatch Q with context [ Va V ] => rewrite (store_upd_eq H) end
-      end
-    end
-  | _ => fail 1 "Goal is not of the form (exec_stmt ...)"
-  end.
-
-Tactic Notation "stock_store" "in" hyp(XS) :=
-  lazymatch type of XS with exec_stmt _ ?S ?Q _ _ _ => repeat
-    lazymatch type of XS with exec_stmt _ ?U _ _ _ _ =>
-      match goal with H: S ?V = _ |- _ =>
-        lazymatch U with context [ V ] => fail | _ =>
-          lazymatch Q with context [ Va V ] => rewrite (store_upd_eq H) in XS end
+  lazymatch goal with |- exec_stmt _ _ ?Q _ _ _ => repeat
+    match Q with context [ Va ?V ] =>
+      lazymatch goal with |- exec_stmt _ ?S _ _ _ _ =>
+        lazymatch S with context [ update vareq _ V _ ] => fail | _ =>
+          erewrite (@store_upd_eq _ V) by (simpl_stores; eassumption)
         end
       end
     end
-  | _ => fail 1 "Hypothesis is not of the form (exec_stmt ...)"
+  | _ => fail "Goal is not of the form (exec_stmt ...)"
   end.
 
-(* Statement simplification most often gets stuck at variable-reads, since the full content of the
-   store is generally not known (s is a symbolic expression).  We can often push past this obstacle
-   by applying the update_updated and update_frame theorems to automatically infer that the values
-   of variables not being read are irrelevant.  The "simpl_stores" tactic does so. *)
+Tactic Notation "stock_store" "in" hyp(XS) :=
+  lazymatch type of XS with exec_stmt _ _ ?Q _ _ _ => repeat
+    match Q with context [ Va ?V ] =>
+      lazymatch type of XS with exec_stmt _ ?S _ _ _ _ =>
+        lazymatch S with context [ update vareq _ V _ ] => fail | _ =>
+          erewrite (@store_upd_eq _ V) in XS by (simpl_stores; eassumption)
+        end
+      end
+    end
+  | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
+  end.
 
-Ltac simpl_stores :=
-  repeat first [ rewrite update_updated | rewrite update_frame; [|discriminate 1] ].
 
-Tactic Notation "simpl_stores" "in" hyp(H) :=
-  repeat first [ rewrite update_updated in H | rewrite update_frame in H; [|discriminate 1] ].
+(* Replace any unresolved variable lookups as fresh Coq variables after functional evaluation. *)
+
+Ltac destr_ugets H :=
+  try (rewrite fold_uget in H; repeat rewrite fold_uget in H;
+       repeat match type of H with context [ uget ?X ] =>
+         let UGET := fresh "UGET" in
+         let utyp := fresh "utyp" in let mem := fresh "mem" in let n := fresh "n" in let w := fresh "w" in
+         destruct (uget X) as [utyp mem n w] eqn:UGET
+       end).
+
 
 (* Finally, simplifying a hypothesis of the form (exec_stmt ...) entails applying the functional
    interpreter to each statement in the sequence (usually a Move), using simpl_stores to try to
@@ -1598,30 +1828,57 @@ Tactic Notation "simpl_stores" "in" hyp(H) :=
    end of the sequence.  (We don't attempt to break conditionals into cases, since often the user
    wants to decide which case distinction is best.) *)
 
+Ltac nomemaccs T :=
+  lazymatch T with NoMemAcc => idtac
+  | if _ then ?E1 else ?E2 => nomemaccs E1; nomemaccs E2
+  | ?E1 /\ ?E2 => nomemaccs E1; nomemaccs E2
+  | _ => fail
+  end.
+
+Ltac destruct_memacc H :=
+  lazymatch type of H with
+  | _=_ /\ _=_ => idtac
+  | exists _, _ => let u := fresh "u" in destruct H as [u H]; simpl_exp in H; simpl_stores in H
+  | ?H1 /\ ?H1 =>
+    lazymatch goal with
+    | [ _:H1 |- _ ] => clear H
+    | _ => apply proj1 in H; destruct_memacc H
+    end
+  | ?H1 /\ ?H2 =>
+    lazymatch goal with
+    | [ _:H1, _:H2 |- _ ] => clear H
+    | [ _:H1 |- _ ] => apply proj2 in H; destruct_memacc H
+    | [ _:H2 |- _ ] => apply proj1 in H; destruct_memacc H
+    | _ => let H' := fresh "ACC" in destruct H as [H H']; destruct_memacc H; destruct_memacc H'
+    end
+  | ?T => try (nomemaccs T; clear H)
+  end.
+
+Ltac finish_simpl_stmt H :=
+  simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H; destruct_memacc H.
+
 Tactic Notation "simpl_stmt" "in" hyp(H) :=
-  repeat (
-    apply reduce_seq_move in H; [|assumption];
-    simpl_exp in H;
-    try match type of H with exists _, _ => let u := fresh "u" in destruct H as [u H] end;
-    simpl_stores in H;
-    simpl_exp in H
-  );
-  first [ apply reduce_nop in H; [|assumption]
-        | apply reduce_move in H; [|assumption]; simpl_exp in H;
-          try match type of H with exists _, _ => let u := fresh "u" in destruct H as [u H] end
-        | apply reduce_jmp in H; [|assumption]; simpl_exp in H;
-          try match type of H with exists _, _ => let a := fresh "a" in destruct H as [a H] end
-        | apply reduce_if in H; [|assumption]; simpl_exp in H;
-          try match type of H with exists _, _ => let c := fresh "c" in destruct H as [c H] end ];
-  simpl_stores in H;
-  simpl_exp in H.
+  lazymatch type of H with exec_stmt _ _ _ _ _ ?X =>
+    let K := fresh "FIN" in enough (K: X <> Some Unfinished); [
+    repeat (apply reduce_seq_move in H; [|exact K]; finish_simpl_stmt H);
+    first [ apply reduce_nop in H; [|exact K]; unfold cast in H
+          | apply reduce_move in H; [|exact K]; finish_simpl_stmt H
+          | apply reduce_jmp in H; [|exact K]; finish_simpl_stmt H
+          | apply reduce_if in H; [|exact K];
+            simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
+            match type of H with
+            | exists _, _ => let c := fresh "c" in
+                             destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
+            | _ => destruct_memacc H
+            end ];
+    clear K |]
+  | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
+  end.
 
 (* Combining all of the above, our most typical simplification regimen first stocks the store
    of the exec_stmt with any known variable values from the context, then applies the functional
    interpreter, and then unfolds a few basic constants. *)
 
-Tactic Notation "bsimpl" "in" hyp(H) :=
-  stock_store in H; simpl_stmt in H;
-  unfold cast,tobit in H.
+Tactic Notation "bsimpl" "in" hyp(H) := stock_store in H; simpl_stmt in H; unfold tobit in H.
 
 End BAPInterp.

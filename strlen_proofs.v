@@ -54,12 +54,6 @@ Lemma inj_prog_stmt: forall (sz1 sz2: N) (q1 q2: stmt),
                      Some (sz1,q1) = Some (sz2,q2) -> sz1=sz2 /\ q1=q2.
 Proof. injection 1 as. split; assumption. Qed.
 
-Lemma inj_exit: forall a1 a2, Exit a1 = Exit a2 -> a1 = a2.
-Proof. intros. injection H. trivial. Qed.
-
-Lemma inj_optval: forall (u1 u2:value), Some u1 = Some u2 -> u1=u2.
-Proof. intros. injection H. trivial. Qed.
-
 (* Create a case distinction between unfinished and not-unfinished program states.
    "Unfinished" programs are those whose starting states were not provided a sufficiently
    high recursion limit to fully evaluate one or more IL blocks.  A real CPU has no such
@@ -107,17 +101,17 @@ Theorem strlen_preserves_esp:
          (XP: exec_prog RW strlen_i386 0 s m n s' x),
   strlen_esp_inv esp mem x s'.
 Proof.
-  intros.
+  intros. pattern x,s',n.
   eapply prog_inv_reachable. exact XP.
   unfold strlen_esp_inv. destruct (N.eq_dec _ _). exact I. assumption.
 
   intros.
   unfold strlen_esp_inv in PRE. destruct (N.eq_dec a1 _) as [EQ|NE] in PRE.
-    rewrite <- EQ, PA in RET. discriminate RET.
+    rewrite <- EQ, IL in RET. discriminate RET.
   apply strlen_preserves_memory in XP0. rewrite <- XP0 in MEM0.
-  clear s n s' x ESP0 RET XP NE LE XP0.
-  destruct a1 as [|a]; repeat first [ discriminate PA | destruct a as [a|a|] ].
-  all: apply inj_prog_stmt in PA; destruct PA; subst sz q; simpl.
+  clear s n s' x ESP0 RET XP NE LT XP0 XP'.
+  destruct a1 as [|a]; repeat first [ discriminate IL | destruct a as [a|a|] ].
+  all: apply inj_prog_stmt in IL; destruct IL; subst sz q; simpl.
 
   all: try (
     apply (noassign_inv R_ESP) in XS;
@@ -126,7 +120,7 @@ Proof.
   ).
 
   destruct (fin_dec x1) as [FIN|FIN]. subst x1. exact I.
-  stock_store in XS. simpl_stmt in XS. destruct XS. subst x1.
+  stock_store in XS. simpl_stmt in XS; [|assumption]. destruct XS. subst x1.
   unfold strlen_esp_inv. destruct (N.eq_dec _ _).
     exact I.
     contradict n. reflexivity.
@@ -142,141 +136,6 @@ Qed.
    where p is the address stored at [ESP+4] on entry. *)
 
 Definition ones (b n:N) := N.iter n (fun x => x * 2^b + 1) 0.
-
-Definition nilfree (m:addr->N) (p:addr) (k:N) :=
-  p <= k /\ forall i, p <= i -> i < k -> m i > 0.
-
-Definition strlen_regs_inv (m:addr->N) (a:addr) (s:store) (p eax:addr) :=
-  match a with
-  | 4 => nilfree m p eax
-  | 9 => nilfree m p eax /\ s R_EDX = Some (VaN (3, 32))
-  | 11 => nilfree m p eax /\ exists edx, s R_EDX = Some (VaN (edx, 32)) /\ edx < 4 /\
-                                         s R_ZF = Some (tobit (N.eqb edx 0))
-  | 13 => nilfree m p eax /\ exists edx, s R_EDX = Some (VaN (edx, 32)) /\ edx < 4
-  | 15 | 24 | 33 => nilfree m p eax /\ exists edx, s R_EDX = Some (VaN (edx, 32)) /\ edx < 4
-  | 17 | 26 => nilfree m p eax /\ eax+1 < 2^32 /\
-     (exists edx, s R_EDX = Some (VaN (edx, 32)) /\ edx < 4) /\
-     s R_ZF = Some (VaN (match m eax with N0 => 1 | _ => 0 end, 1))
-  | 23 | 32 => nilfree m p (eax+1) /\ eax+1 < 2^32 /\
-     exists edx, s R_EDX = Some (VaN (edx, 32)) /\ edx < 4
-  | 36 => nilfree m p eax /\ exists edx, s R_EDX = Some (VaN (edx, 32)) /\ edx < 4 /\
-                                       s R_ZF = Some (tobit (N.eqb edx 0))
-  | 38 => nilfree m p eax /\ exists edx, s R_EDX = Some (VaN (edx, 32)) /\ edx < 4
-  | 40 => nilfree m p eax /\ eax+1 < 2^32 /\
-     s R_ZF = Some (VaN (match m eax with N0 => 1 | _ => 0 end, 1))
-  | 46 => nilfree m p (eax+1) /\ eax+1 < 2^32
-  | 47 => nilfree m p eax
-  | 49 | 75 | 101 | 127 => nilfree m p eax /\ s R_EDX = Some (VaN (0, 32))
-  | 51 | 77 | 103 | 129 => nilfree m p eax /\ eax+4 < 2^32 /\ s R_EDX = Some (VaN (0, 32)) /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m eax, 32))
-  | 54 | 80 | 106 | 132 => nilfree m p (eax-4) /\ 4 <= eax /\ eax < 2^32 /\
-     s R_EDX = Some (VaN (0, 32)) /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m (eax-4), 32))
-  | 56 | 82 | 108 | 134 => nilfree m p (eax-4) /\ 4 <= eax /\ eax < 2^32 /\
-     s R_EDX = Some (VaN ((2^32 - getmem LittleE 32 m (eax-4)) mod 2^32, 32)) /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m (eax-4), 32))
-  | 62 | 88 | 114 | 140 => nilfree m p (eax-4) /\ 4 <= eax /\ eax < 2^32 /\
-     s R_EDX = Some (VaN ((2^32 - getmem LittleE 32 m (eax-4)) mod 2^32, 32)) /\
-     s R_ECX = Some (towidth 32 (2^32 + getmem LittleE 32 m (eax-4) - ones 8 4)) /\
-     s R_CF = Some (tobit (N.leb (ones 8 4) (getmem LittleE 32 m (eax-4))))
-  | 63 | 89 | 115 | 141 => nilfree m p (eax-4) /\ 4 <= eax /\ eax < 2^32 /\
-     s R_EDX = Some (VaN (N.lnot (getmem LittleE 32 m (eax-4)) 32, 32)) /\
-     s R_ECX = Some (towidth 32 (2^32 + getmem LittleE 32 m (eax-4) - ones 8 4)) /\
-     s R_CF = Some (tobit (N.leb (ones 8 4) (getmem LittleE 32 m (eax-4))))
-  | 65 | 91 | 117 | 143 => nilfree m p (eax-4) /\ 4 <= eax /\ eax < 2^32 /\
-     s R_EDX = Some (VaN (N.lnot (getmem LittleE 32 m (eax-4)) 32, 32)) /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m (eax-4) - ones 8 4, 32)) /\
-     ones 8 4 <= getmem LittleE 32 m (eax-4)
-  | 67 | 93 | 119 | 145 => nilfree m p (eax-4) /\ 4 <= eax /\ eax < 2^32 /\
-     s R_EDX = Some (VaN (N.lxor (N.lnot (getmem LittleE 32 m (eax-4)) 32)
-                                 (getmem LittleE 32 m (eax-4) - ones 8 4), 32)) /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m (eax-4) - ones 8 4, 32)) /\
-     ones 8 4 <= getmem LittleE 32 m (eax-4)
-  | 73 | 99 | 125 | 151 => nilfree m p (eax-4) /\ 4 <= eax /\ eax < 2^32 /\
-     let edx := N.land (N.lxor (N.lnot (getmem LittleE 32 m (eax-4)) 32)
-                               (getmem LittleE 32 m (eax-4) - ones 8 4))
-                         (ones 8 4 - 1) in
-     s R_EDX = Some (VaN (edx, 32)) /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m (eax-4) - ones 8 4, 32)) /\
-     s R_ZF = Some (tobit (N.eqb 0 edx)) /\
-     ones 8 4 <= getmem LittleE 32 m (eax-4)
-  | 153 => nilfree m p (eax-4) /\ 4 <= eax /\ eax < 2^32 /\
-     s R_ECX = Some (towidth 32 (2^32 + getmem LittleE 32 m (eax-4) - ones 8 4)) /\
-     exists i, p <= i < eax /\ m i = 0
-  | 156 => nilfree m p eax /\ eax+3 < 2^32 /\
-     s R_ECX = Some (towidth 32 (2^32 + getmem LittleE 32 m eax - ones 8 4)) /\
-     exists i, p <= i <= eax+3 /\ m i = 0
-  | 162 => nilfree m p eax /\ eax+3 < 2^32 /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m eax, 32)) /\
-     exists i, p <= i <= eax+3 /\ m i = 0
-  | 165 => nilfree m p eax /\ eax+3 < 2^32 /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m eax, 32)) /\
-     s R_ZF = Some (VaN (match m eax with N0 => 1 | _ => 0 end, 1)) /\
-     exists i, p <= i <= eax+3 /\ m i = 0
-  | 167 => nilfree m p (eax+1) /\ eax+3 < 2^32 /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m eax, 32)) /\
-     exists i, p <= i <= eax+3 /\ m i = 0
-  | 168 => nilfree m p eax /\ 1 <= eax /\ eax+2 < 2^32 /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m (eax-1), 32)) /\
-     exists i, p <= i <= eax+2 /\ m i = 0
-  | 170 => nilfree m p eax /\ 1 <= eax /\ eax+2 < 2^32 /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m (eax-1), 32)) /\
-     s R_ZF = Some (VaN (match m eax with N0 => 1 | _ => 0 end, 1)) /\
-     exists i, p <= i <= eax+2 /\ m i = 0
-  | 172 => nilfree m p (eax+1) /\ 1 <= eax /\ eax+2 < 2^32 /\
-     s R_ECX = Some (VaN (getmem LittleE 32 m (eax-1), 32)) /\
-     exists i, p <= i <= eax+2 /\ m i = 0
-  | 175 => nilfree m p (eax+1) /\ eax+2 < 2^32 /\
-     s R_ECX = Some (VaN (getmem LittleE 16 m (eax+1), 32)) /\
-     exists i, p <= i <= eax+2 /\ m i = 0
-  | 176 => nilfree m p eax /\ eax+1 < 2^32 /\
-     s R_ECX = Some (VaN (getmem LittleE 16 m eax, 32)) /\
-     exists i, p <= i <= eax+1 /\ m i = 0
-  | 179 => nilfree m p eax /\ eax+1 < 2^32 /\
-     s R_ECX = Some (VaN (getmem LittleE 16 m eax, 32)) /\
-     s R_ZF = Some (VaN (match m eax with N0 => 1 | _ => 0 end, 1)) /\
-     exists i, p <= i <= eax+1 /\ m i = 0
-  | 181 => nilfree m p (eax+1) /\ eax+1 < 2^32 /\ m (eax+1) = 0
-  | 182 => nilfree m p eax /\ m eax = 0
-  | 186 => nilfree m p (p+eax) /\ m (p+eax) = 0
-  | _ => False
-  end.
-
-Definition strlen_postcond (mem:addr->N) (s:store) (esp:N) :=
-  s R_ESP = Some (VaN (esp+4, 32)) /\
-  let p := getmem LittleE 32 mem (esp+4) in
-  exists eax, s R_EAX = Some (VaN (eax, 32)) /\
-              mem (p + eax) = 0 /\
-              forall i, i < eax -> mem (p+i) > 0.
-
-Definition strlen_main_inv (esp:N) (mem:addr->N) (x:exit) (s:store) :=
-  match x with
-  | Exit a => if N.eq_dec a (getmem LittleE 32 mem esp) then strlen_postcond mem s esp else
-     match a with 0 => True | N.pos _ =>
-       exists eax, s R_EAX = Some (VaN (eax, 32)) /\
-       strlen_regs_inv mem a s (getmem LittleE 32 mem (esp+4)) eax
-     end
-  | _ => True
-  end.
-
-
-
-
-Lemma shiftr_low_pow2: forall a n, a < 2^n -> N.shiftr a n = 0.
-Proof.
-  intros. destruct a. apply N.shiftr_0_l.
-  apply N.shiftr_eq_0. apply N.log2_lt_pow2. reflexivity. assumption.
-Qed.
-
-Lemma lor_plus:
-  forall a b (A0: N.land a b = 0), N.lor a b = a + b.
-Proof.
-  destruct a as [|a]; destruct b as [|b]; intros; try reflexivity.
-  simpl in *. apply f_equal. revert b A0.
-  induction a; destruct b; simpl; intros; try solve [ reflexivity | discriminate A0 ].
-    destruct (Pos.land a b); discriminate A0.
-    all: rewrite IHa; [ reflexivity | destruct (Pos.land a b); [ reflexivity | discriminate A0 ]].
-Qed.
 
 Lemma land_lohi_0:
   forall x y n, x < 2^n -> N.land x (N.shiftl y n) = 0.
@@ -304,66 +163,6 @@ Proof.
   rewrite N.add_assoc, <- N.mul_succ_r. rewrite (N.div_mod' a (N.pos p)) at 2.
   apply N.add_le_mono_r, N.mul_le_mono_l, N.le_succ_l, N.gt_lt, H2.
 Qed.
-
-(* User-level memory-reads that are successful must not have targeted the very top of
-   the process address space, since those pages are reserved by the kernel. *)
-Lemma read_bound_op:
-  forall {RW mem mw a x s dstv op memv srcv en w e q m s'}
-         (MEM: s memv = Some (VaM mem mw))
-         (SRC: s srcv = Some (VaN (a,mw)))
-         (HI: ~RW false mem mw (2^mw - 1))
-         (ABND: a < 2^mw)
-         (FIN: x <> Some Unfinished)
-         (XS: exec_stmt RW s (Seq (Move dstv (BinOp op
-                (Load (Var (Va memv (MemT mw))) (Cast CAST_UNSIGNED mw (Cast CAST_LOW mw (Var (Va srcv (NumT mw))))) en w)
-                e)) q) m s' x),
-  a + w/Mb < 2^mw.
-Proof.
-  intros.
-  inversion XS; clear XS; subst. contradict FIN. reflexivity.
-  inversion XS0; subst. contradict FIN. reflexivity.
-  inversion XS1; clear XS0 XS1; subst. inversion E; clear E E2; subst.
-  inversion E1; clear E1; subst.
-  inversion E0; clear E0; subst. rewrite MEM in SV. injection SV as; subst.
-  inversion E2; clear E2; subst. inversion E1; clear E1; subst.
-  inversion E0; clear E0; subst. rewrite SRC in SV. injection SV as; subst.
-  destruct (N.lt_ge_cases (n + w0/Mb) (2^w1)) as [?|H1]. assumption.
-  exfalso. apply HI.
-  rewrite N.mod_small in R by assumption.
-  apply N.lt_le_pred in ABND. rewrite <- N.sub_1_r in ABND.
-  rewrite <- (N.add_sub (2^w1 - 1) n). rewrite N.add_sub_swap by assumption. rewrite N.add_comm. apply R.
-  apply (N.le_lt_add_lt n n). reflexivity.
-  rewrite N.sub_add by assumption. rewrite N.add_comm. rewrite N.sub_1_r.
-  eapply N.lt_le_trans. apply N.lt_pred_l. apply N.pow_nonzero. discriminate 1. assumption.
-Qed.
-
-Lemma read_bound_mov:
-  forall {RW mem mw a x s dstv memv srcv en w m s'}
-         (MEM: s memv = Some (VaM mem mw))
-         (SRC: s srcv = Some (VaN (a,mw)))
-         (HI: ~RW false mem mw (2^mw - 1))
-         (ABND: a < 2^mw)
-         (FIN: x <> Some Unfinished)
-         (XS: exec_stmt RW s (Move dstv (Load (Var (Va memv (MemT mw))) (Var (Va srcv (NumT mw))) en w))
-                        m s' x),
-  a + w/Mb < 2^mw.
-Proof.
-  intros.
-  inversion XS; clear XS; subst. contradict FIN. reflexivity.
-  inversion E; clear E; subst.
-  inversion E1; clear E1; subst. rewrite MEM in SV. injection SV as; subst.
-  inversion E2; clear E2; subst. rewrite SRC in SV. injection SV as; subst.
-  destruct (N.lt_ge_cases (a0 + w/Mb) (2^mw0)) as [?|H1]. assumption.
-  exfalso. apply HI.
-  apply N.lt_le_pred in ABND. rewrite <- N.sub_1_r in ABND.
-  rewrite <- (N.add_sub (2^mw0 - 1) a0). rewrite N.add_sub_swap by assumption. rewrite N.add_comm. apply R.
-  apply (N.le_lt_add_lt a0 a0). reflexivity.
-  rewrite N.sub_add by assumption. rewrite N.add_comm. rewrite N.sub_1_r.
-  eapply N.lt_le_trans. apply N.lt_pred_l. apply N.pow_nonzero. discriminate 1. assumption.
-Qed.
-
-
-
 
 Lemma unroll_Niter:
   forall {A:Type} f n (x:A), N.iter (N.succ n) f x = f (N.iter n f x).
@@ -415,6 +214,50 @@ Proof.
       rewrite <- (N.mul_1_l (2^_)) at -3. rewrite <- N.mul_add_distr_r, N.mul_comm. apply N.mul_le_mono_nonneg_l.
         apply N.le_0_l.
         change (1+1) with (2^1). apply N.pow_le_mono_r. discriminate 1. destruct p; discriminate 1.
+Qed.
+
+Lemma add_sub_mod_le: forall x y z, z <= y -> (x + (y-z)) mod y < x -> z <= x.
+Proof.
+  intros. destruct (N.le_gt_cases y (x+(y-z))).
+    apply (N.add_le_mono_r _ _ (y-z)). rewrite N.add_sub_assoc, N.add_comm, N.add_sub. assumption. assumption.
+    rewrite N.mod_small in H0 by assumption. apply (N.lt_le_trans _ _ (x+(y-z))) in H0.
+      contradict H0. apply N.lt_irrefl.
+      apply N.le_add_r.
+Qed.
+
+Lemma le_add_sub_mod:
+  forall x y z, 0 < z -> x <= (x + (2^y-z)) mod 2^y -> x < z.
+Proof.
+  intros. apply N.nle_gt. intro H1. apply H0. apply N.lt_gt.
+  rewrite N.add_sub_assoc by (
+    etransitivity; [exact H1|]; etransitivity; [exact H0|]; eapply N.lt_le_incl, N.mod_upper_bound, N.pow_nonzero; discriminate 1).
+  rewrite N.add_comm.
+  rewrite <- N.add_sub_assoc by exact H1.
+  rewrite <- N.add_mod_idemp_l, N.mod_same, N.add_0_l by (apply N.pow_nonzero; discriminate 1).
+  rewrite N.mod_small by (
+    eapply N.le_lt_trans; [apply N.le_sub_l|]; eapply N.le_lt_trans; [exact H0|]; apply N.mod_upper_bound, N.pow_nonzero; discriminate 1).
+  apply N.sub_lt; assumption.
+Qed.
+
+Lemma sub_lnot: forall x w, x < 2^w ->
+  (2^w + (2^w - x) mod 2^w - 1) mod 2^w = N.lnot x w.
+Proof.
+  intros.
+  rewrite N.add_comm.
+  rewrite <- N.add_sub_assoc by apply (N.le_succ_l 0), N_lt_0_pow2.
+  rewrite <- (N.mod_small (_-1) (2^w)) by (apply N.sub_lt; [ apply (N.le_succ_l 0), N_lt_0_pow2 | apply N.lt_0_1 ]).
+  rewrite <- N.add_mod by (apply N.pow_nonzero; discriminate 1).
+  rewrite <- (N.succ_pred (2^w)) at 1 by (apply N.pow_nonzero; discriminate 1).
+  rewrite <- N.add_1_l.
+  rewrite <- (N.add_sub_assoc 1) by apply N.lt_le_pred, H.
+  rewrite (N.add_comm 1), <- (N.add_assoc _ 1).
+  rewrite N.add_sub_assoc, (N.add_comm 1) by apply (N.le_succ_l 0), N_lt_0_pow2.
+  rewrite N.add_sub.
+  rewrite N.add_mod, N.mod_same, N.add_0_r, N.mod_mod by (apply N.pow_nonzero; discriminate 1).
+  rewrite N.mod_small by (eapply N.le_lt_trans; [ apply N.le_sub_l | apply N.lt_pred_l, N.pow_nonzero; discriminate 1 ]).
+  rewrite <- N.ones_equiv.
+  symmetry. destruct x. rewrite N.sub_0_r. apply N.lnot_0_l.
+  apply N.lnot_sub_low. apply N.log2_lt_pow2. reflexivity. assumption.
 Qed.
 
 Lemma bytes_pos_lobound:
@@ -796,9 +639,9 @@ Qed.
    Keep destructing n:N until either n is a completed numeric constant (provided as an
    equality in hypothesis H) or tactic T solves the goal.  This yields a set of subgoals
    in which n equals the various constants admitted by T.  Typical usage:
-     destN a until (discriminate PA) hyp:ADDR.
-   where PA is an instruction fetch of the form (PA: program a = Some _). *)
-Tactic Notation "destN" constr(n) "until" tactic(T) "hyp:" ident(H) :=
+     destN a until (discriminate IL) hyp:ADDR.
+   where IL is an instruction lookup of the form (IL: program a = Some _). *)
+Tactic Notation "destN" constr(n) "until" tactic(T) "eqn" ":" ident(H) :=
   let p := fresh n in
   destruct n as [|p] eqn:H;
   [ try solve [T]
@@ -811,6 +654,32 @@ Tactic Notation "destN" constr(n) "until" tactic(T) "hyp:" ident(H) :=
 Tactic Notation "focus_addr" hyp(H) constr(n) :=
   match type of H with _ = n => idtac | _ => shelve end.
 
+Definition nilfree (m:addr->N) (p:addr) (k:N) :=
+  p <= k /\ forall i, p <= i -> i < k -> m i > 0.
+
+Definition strlen_inv_set (m:addr->N) (esp:N) (a:addr) (_:exit) (s:store) (_:nat) :=
+  match a with
+  | 0 => Some True
+  | 38 => Some (∃ eax edx, s R_EAX = Ⓓeax /\ s R_EDX = Ⓓedx /\ nilfree m (m Ⓓ[esp+4]) eax /\ edx < 4)
+  | 49 | 75 | 101 | 127 => Some (∃ eax, s R_EAX = Ⓓeax /\ nilfree m (m Ⓓ[esp+4]) eax /\ s R_EDX = Ⓓ0)
+  | 153 => Some (∃ eax, s R_EAX = Ⓓeax /\ nilfree m (m Ⓓ[esp+4]) (eax-4) /\ 4 <= eax /\
+                         s R_ECX = Ⓓ(2^32 + m Ⓓ[eax-4] ⊖ ones 8 4) /\
+                         exists i, m Ⓓ[esp+4] <= i < eax /\ m i = 0)
+  | 182 => Some (∃ eax, s R_EAX = Ⓓeax /\ nilfree m (m Ⓓ[esp+4]) eax /\ m eax = 0)
+  | 186 => Some (∃ eax, s R_EAX = Ⓓeax /\ nilfree m (m Ⓓ[esp+4]) ((m Ⓓ[esp+4])+eax) /\ m ((m Ⓓ[esp+4])+eax) = 0)
+  | _ => None
+  end.
+
+Definition strlen_postcond (mem:addr->N) (esp:N) (_:addr) (_:exit) (s:store) (_:nat) :=
+  s R_ESP = Some (VaN (esp+4, 32)) /\
+  let p := getmem LittleE 32 mem (esp+4) in
+  exists eax, s R_EAX = Some (VaN (eax, 32)) /\
+              mem (p + eax) = 0 /\
+              forall i, i < eax -> mem (p+i) > 0.
+
+Definition strlen_inv (mem:addr->N) (esp:N) :=
+  x86_subroutine_inv strlen_i386 (strlen_inv_set mem esp) (strlen_postcond mem esp) (getmem LittleE 32 mem esp).
+
 Theorem strlen_partial_correctness:
   forall RW s esp mem m n s' x
          (HI: ~ RW false mem 32 (2^32 - 1)%N)
@@ -819,481 +688,233 @@ Theorem strlen_partial_correctness:
          (ESP0: s R_ESP = Some (VaN (esp,32))) (MEM0: s V_MEM32 = Some (VaM mem 32))
          (RET: strlen_i386 (getmem LittleE 32 mem esp) = None)
          (XP0: exec_prog RW strlen_i386 0 s m n s' x),
-  strlen_main_inv esp mem x s'.
+  match strlen_inv mem esp x s' n with Some P => P | None => True end.
 Proof.
-  intros. eapply prog_inv_reachable. exact XP0.
-  unfold strlen_main_inv. destruct (getmem _ _ _ _). discriminate RET. exact I.
-  intros. destruct (match x1 with Some x0 => x0 | None => _ end) eqn:EX; try exact I.
+  intros.
+  destruct x as [|a'|i]; try exact I.
+  eapply prog_inv. exact XP0.
+  unfold strlen_inv. destruct (getmem _ _ _ _). discriminate RET. exact I.
+  intros.
   assert (MEM: s1 V_MEM32 = Some (VaM mem 32)).
     rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
   assert (ESP: strlen_esp_inv esp mem (Exit a1) s1).
     eapply strlen_preserves_esp. exact ESP0. exact MEM0. exact RET. exact XP.
   assert (MDL: models x86typctx s1).
     eapply preservation_exec_prog. exact MDL0. apply strlen_welltyped. exact XP.
-  destruct (fin_dec x1) as [FIN|FIN]. subst x1. discriminate EX.
-  unfold strlen_esp_inv in ESP. unfold strlen_main_inv in PRE. destruct (N.eq_dec a1 _) as [EQ|NE].
-    rewrite <- EQ, PA in RET. discriminate RET.
-  clear s n s' x MDL0 MEM0 ESP0 XP NE LE XP0.
+  unfold strlen_esp_inv in ESP. unfold strlen_inv, x86_subroutine_inv in PRE.
+  clear s MDL0 MEM0 ESP0 XP XP0.
+  assert (WTM:=x86_wtm MDL MEM). simpl in WTM.
 
-  destN a1 until (discriminate PA) hyp:ADDR.
+  destruct (N.eq_dec a1 _). subst a1. eapply NISStep. intros. rewrite IL in RET. discriminate RET. clear n0.
+  destN a1 until (exfalso; exact PRE) eqn:ADDR.
+  all:unfold strlen_inv_set in PRE.
 
-  all: apply inj_prog_stmt in PA; destruct PA; subst sz q; simpl in EX.
+  Local Ltac step := time x86_step.
 
-  all: focus_addr ADDR 0 (* movl 0x4(%esp), %eax *).
-  bsimpl in XS. destruct XS; subst s1' x1. apply inj_exit in EX. subst a.
-  unfold strlen_main_inv. destruct (N.eq_dec _ _). rewrite <- e in RET. discriminate RET.
-  simpl_stores. eexists. split. reflexivity. split.
-    rewrite N.mod_small. reflexivity. eapply N.lt_le_trans; [|exact ESPLO]. apply N.add_le_lt_mono; reflexivity.
-    intro. rewrite N.mod_small.
-      intros IBOT ITOP. exfalso. eapply N.lt_irrefl. eapply N.le_lt_trans. exact IBOT. exact ITOP.
-      eapply N.lt_le_trans; [|exact ESPLO]. apply N.add_le_lt_mono; reflexivity.
-
-  Unshelve.
-  all: destruct PRE as [eax [EAX PRE]]; unfold strlen_regs_inv in PRE.
-
-  Local Ltac namepre H :=
-    match type of H with
-    | nilfree _ _ _ => let NF:=fresh "NF" in rename H into NF
-    | _ R_EDX = _ => let EDX:=fresh "EDX" in rename H into EDX
-    | _ R_ECX = _ => let ECX:=fresh "ECX" in rename H into ECX
-    | _ R_CF = _ => let ECX:=fresh "CF" in rename H into ECX
-    | _ R_ZF = _ => let ECX:=fresh "ZF" in rename H into ECX
-    | _ => idtac
-    end.
-  Local Ltac destpre H :=
-    match type of H with
-    | _ /\ _ => let H1:=fresh "PRE" in let H2:=fresh "PRE" in destruct H as [H1 H2]; destpre H1; destpre H2
-    | exists V, _ => let X:=fresh V in let H2:=fresh "PRE" in destruct H as [X H2]; destpre H2
-    | _ => namepre H
-    end.
-  all: destpre PRE.
-
-  all: match type of ADDR with _=15 => idtac | _=24 => idtac | _=38 => idtac | _ => shelve end.
-  (* 15,24,38: cmpb %dh, (%eax) *)
-  all: assert (LM: eax + 1 < 2^32) by (
-    change 1 with (8/Mb); refine (read_bound_op MEM EAX HI _ FIN XS);
-    destruct (MDL R_EAX (NumT 32) (eq_refl _)) as [u [EAX2 BND]];
-    rewrite EAX2 in EAX; apply inj_optval in EAX; subst u;
-    inversion BND; assumption).
-  Unshelve.
-
-  all: match type of ADDR with _=49 => idtac | _=75 => idtac | _=101 => idtac | _=127 => idtac | _ => shelve end.
-  all: assert (LM: eax + 4 < 2 ^ 32) by (
-    change 4 with (32/Mb); refine (read_bound_mov MEM EAX HI _ FIN XS);
-    destruct (MDL R_EAX (NumT 32) (eq_refl _)) as [u [EAX2 BND]];
-    rewrite EAX2 in EAX; apply inj_optval in EAX; subst u;
-    inversion BND; assumption).
-  Unshelve.
-
-  Ltac reduce_main_inv XS EX RET :=
-    match type of XS with ?S1' = _ /\ ?X1 = _ =>
-      destruct XS; subst S1' X1; apply inj_exit in EX; rewrite <- EX in *; unfold strlen_main_inv;
-      let e:=fresh "e" in let n:=fresh "n" in destruct (N.eq_dec _ _) as [e|n];
-      [ rewrite <- e in RET; discriminate RET
-      | clear n; unfold strlen_regs_inv; simpl_stores;
-        eexists; try (split; [ solve [ reflexivity | eassumption ] | ]) ]
-    end.
-
-  all: bsimpl in XS; try reduce_main_inv XS EX RET.
-  (* all: stock_store in XS; try (simpl_stmt in XS; reduce_main_inv XS EX RET). *)
-
-  all: focus_addr ADDR 4 (* movl $0x3, %edx *).
-  split. assumption. reflexivity.
-
-  Unshelve. all: focus_addr ADDR 9 (* andl %eax, %edx *).
-  split. assumption. eexists. split. reflexivity. change (3 mod 2^32) with (N.ones 2). split.
-    rewrite N.land_comm, N.land_ones. apply N.mod_lt. discriminate 1.
-    rewrite N.eqb_sym, <- N.land_ones, N.land_comm, N.land_assoc. reflexivity.
-
-  Unshelve. all: focus_addr ADDR 11 (* je 49 *).
-  destruct (edx =? 0) eqn:EDX0; bsimpl in XS; reduce_main_inv XS EX RET;
-  (split; try assumption).
-    apply Neqb_ok in EDX0. rewrite EDX,EDX0. reflexivity.
-    eexists. split. exact EDX. assumption.
-
-  Unshelve. all: focus_addr ADDR 13 (* jp 38 *).
-  match type of XS with (exec_stmt _ _ match ?E with _ => _ end _ _ _) => destruct E end.
-  destruct n; bsimpl in XS; reduce_main_inv XS EX RET;
-  (split; [ assumption | eexists; split; [exact EDX | assumption] ]).
-
-  Unshelve. all: focus_addr ADDR 15 (* cmpb %dh, (%eax) *).
-  repeat (split; try assumption).
-    eexists. split. reflexivity. assumption.
-
-    rewrite (N.mod_small edx), (N.mod_small edx) by (transitivity 4; [assumption|reflexivity]).
-    rewrite N.shiftr_eq_0, N.sub_0_r, N.add_comm.
-    change (2^8) with (1*2^8) at 1. rewrite N.mod_add by discriminate 1.
-    rewrite N.mod_small by apply getmem_bound, (x86_wtm MDL MEM).
-    rewrite getmem_Mb, N.mod_small. destruct (mem _); reflexivity.
-    eapply N.le_lt_trans. eapply N.le_add_r. exact LM.
-    destruct edx. reflexivity. apply N.log2_lt_pow2. reflexivity. transitivity 4. assumption. reflexivity.
-
-  Unshelve. all: focus_addr ADDR 17 (* je 182 *).
-  destruct (mem eax) eqn:BYT; bsimpl in XS; reduce_main_inv XS EX RET;
-      (repeat first [ assumption | split ]).
-    etransitivity. apply (proj1 NF). apply N.le_add_r.
-    intros i H1 H2. rewrite N.add_1_r in H2. apply N.lt_succ_r, N.lt_eq_cases in H2. destruct H2.
-      apply NF; assumption.
-      subst i. rewrite BYT. reflexivity.
-    eexists. split. exact EDX. assumption.
-
-  Unshelve. all: focus_addr ADDR 23 (* incl %eax *).
-  split.
-    rewrite (N.mod_small eax).
-      rewrite N.mod_small by assumption. exact NF.
-      eapply N.le_lt_trans. eapply N.le_add_r. eassumption.
-    eexists. split. exact EDX. assumption.
-
-  Unshelve. all: focus_addr ADDR 24 (* cmpb %dh, (%eax) *).
-  repeat first [ assumption | split ].
-    eexists. split. reflexivity. assumption.
-
-    rewrite (N.mod_small edx), (N.mod_small edx) by (transitivity 4; [assumption|reflexivity]).
-    rewrite N.shiftr_eq_0, N.sub_0_r, N.add_comm.
-    change (2^8) with (1*2^8) at 1. rewrite N.mod_add by discriminate 1.
-    rewrite N.mod_small by apply getmem_bound, (x86_wtm MDL MEM).
-    rewrite getmem_Mb, N.mod_small. destruct (mem _); reflexivity.
-    eapply N.le_lt_trans. eapply N.le_add_r. exact LM.
-    destruct edx. reflexivity. apply N.log2_lt_pow2. reflexivity. transitivity 4. assumption. reflexivity.
-
-  Unshelve. all: focus_addr ADDR 26 (* je 182 *).
-  destruct (mem eax) eqn:BYT; bsimpl in XS; reduce_main_inv XS EX RET;
-      (repeat first [ assumption | split ]).
-    etransitivity. apply (proj1 NF). apply N.le_add_r.
-    intros i H1 H2. rewrite N.add_1_r in H2. apply N.lt_succ_r, N.lt_eq_cases in H2. destruct H2.
-      apply NF; assumption.
-      subst i. rewrite BYT. reflexivity.
-    eexists. split. exact EDX. assumption.
-
-  Unshelve. all: focus_addr ADDR 32 (* incl %eax *).
-  split.
-    rewrite (N.mod_small eax).
-      rewrite N.mod_small by assumption. exact NF.
-      eapply N.le_lt_trans. eapply N.le_add_r. eassumption.
-    eexists. split. exact EDX. assumption.
-
-  Unshelve. all: focus_addr ADDR 33 (* xorl $0x2, %edx *).
-  split. assumption. eexists.
-  assert (XORLO: N.lxor (edx mod 2^32) 2 < 4).
-    change 4 with (2^2). apply logic_op_bound.
-      intros. rewrite N.lxor_spec,Z1,Z2. reflexivity.
-      rewrite <- (N.mod_small edx 4) by assumption. rewrite N.mod_small.
-        apply N.mod_lt. discriminate 1.
-        transitivity 4. apply N.mod_lt. discriminate 1. reflexivity.
-      reflexivity.
-  repeat split.
-    apply XORLO.
-    rewrite N.mod_small.
-      rewrite N.eqb_sym. reflexivity.
-      transitivity 4. apply XORLO. reflexivity.
-
-  Unshelve. all: focus_addr ADDR 36 (* je 49 *).
-  destruct (edx =? 0) eqn:EDX0; bsimpl in XS; reduce_main_inv XS EX RET;
-  (split; try assumption).
-    apply Neqb_ok in EDX0. rewrite EDX,EDX0. reflexivity.
-    eexists. split. exact EDX. assumption.
-
-  Unshelve. all: focus_addr ADDR 38 (* cmpb %dh, (%eax) *).
-  repeat first [ assumption | split ].
-    rewrite (N.mod_small edx), (N.mod_small edx) by (transitivity 4; [assumption|reflexivity]).
-    rewrite N.shiftr_eq_0, N.sub_0_r, N.add_comm.
-    change (2^8) with (1*2^8) at 1. rewrite N.mod_add by discriminate 1.
-    rewrite N.mod_small by apply getmem_bound, (x86_wtm MDL MEM).
-    rewrite getmem_Mb, N.mod_small. destruct (mem _); reflexivity.
-    eapply N.le_lt_trans. eapply N.le_add_r. exact LM.
-    destruct edx. reflexivity. apply N.log2_lt_pow2. reflexivity. transitivity 4. assumption. reflexivity.
-
-  Unshelve. all: focus_addr ADDR 40 (* je 182 *).
-  destruct (mem eax) eqn:BYT; bsimpl in XS; reduce_main_inv XS EX RET;
-      (repeat first [ assumption | split ]).
-    etransitivity. apply (proj1 NF). apply N.le_add_r.
-    intros i H1 H2. rewrite N.add_1_r in H2. apply N.lt_succ_r, N.lt_eq_cases in H2. destruct H2.
-      apply NF; assumption.
-      subst i. rewrite BYT. reflexivity.
-
-  Unshelve. all: focus_addr ADDR 46 (* 46: incl %eax *).
-  rewrite (N.mod_small eax).
-    rewrite N.mod_small by assumption. exact NF.
-    eapply N.le_lt_trans. eapply N.le_add_r. eassumption.
-
-  Unshelve. all: focus_addr ADDR 47 (* xorl %edx, %edx *).
-  split. assumption. reflexivity.
-
-  (* movl (%eax), %ecx *)
-  Unshelve. all: match type of ADDR with _=49 => idtac | _=75 => idtac | _=101 => idtac | _=127 => idtac | _ => shelve end.
-  all: repeat first [ assumption | split ].
-
-  (* 51: addl $0x4, %eax *)
-  Unshelve. all: match type of ADDR with _=51 => idtac | _=77 => idtac | _=103 => idtac | _=129 => idtac | _ => shelve end.
-  all: rewrite (N.mod_small eax) by (eapply N.le_lt_trans; [ apply N.le_add_r | exact PRE ]);
-  rewrite N.mod_small by assumption;
-  rewrite N.add_sub;
-  repeat first [ assumption | split ]; rewrite N.add_comm; apply N.le_add_r.
-
-  (* subl %ecx, %edx *)
-  Unshelve. all: match type of ADDR with _=54 => idtac | _=80 => idtac | _=106 => idtac | _=132 => idtac | _ => shelve end.
-  all: repeat first [ assumption | split ];
-  change (0 mod _) with 0; rewrite N.add_0_r;
-  rewrite (N.mod_small (getmem _ _ _ _)) by apply getmem_bound, (x86_wtm MDL MEM);
-  reflexivity.
-
-  (* addl $0xfefefeff, %ecx *)
-  Unshelve. all: match type of ADDR with _=56 => idtac | _=82 => idtac | _=108 => idtac | _=134 => idtac | _ => shelve end.
-  all: unfold towidth;
-  rewrite (N.mod_small (getmem _ _ _ _)) by (change 32 with (Mb * 4); apply getmem_bound, (x86_wtm MDL MEM));
-  repeat first [ assumption | split ];
-  [ rewrite (N.add_comm (2^32)); rewrite <- (N.add_sub_assoc _ (2^32)) by discriminate 1; reflexivity
-  | rewrite N.mod_mod by discriminate 1; change 4278124287 with (2^32 - ones 8 4); destruct (ones 8 4 <=? _) eqn:CMP;
-    [ apply N.leb_le in CMP; rewrite N.add_sub_assoc by discriminate 1; rewrite N.add_comm; rewrite <- N.add_sub_assoc by exact CMP;
-      rewrite N.add_mod by discriminate 1; rewrite N.add_0_l; rewrite N.mod_mod by discriminate 1;
-      rewrite N.mod_small;
-      [ apply N.sub_lt, N.ltb_lt in CMP; [ rewrite CMP; reflexivity | reflexivity ]
-      | eapply N.le_lt_trans;
-        [ apply N.le_sub_l
-        | change 32 with (Mb * 4); apply getmem_bound, (x86_wtm MDL MEM) ] ]
-    | apply N.leb_gt in CMP; rewrite N.mod_small;
-      [ replace (_ <? _) with false;
-        [ reflexivity
-        | symmetry; apply N.ltb_ge; apply N.le_add_r ]
-      | apply (N.le_lt_add_lt (ones 8 4) (ones 8 4));
-        [ reflexivity
-        | rewrite (N.add_comm (2^32)); rewrite <- N.add_assoc; apply N.add_lt_le_mono;
-          [ exact CMP
-          | rewrite N.sub_add by discriminate 1; reflexivity ] ] ] ] ].
-
-  (* decl %edx *)
-  Unshelve. all: match type of ADDR with _=62 => idtac | _=88 => idtac | _=114 => idtac | _=140 => idtac | _ => shelve end.
-  all: repeat first [ assumption | split ];
-  rewrite N.mod_mod by discriminate 1; destruct (getmem _ _ _ (eax-4)) eqn:GM;
-  [ reflexivity
-  | assert (BND: N.pos p < 2^(Mb * 4)) by (rewrite <- GM; apply getmem_bound, (x86_wtm MDL MEM));
-    rewrite (N.mod_small (2^32-_)) by (apply N.sub_lt; [ apply N.lt_le_incl; exact BND | reflexivity ]);
-    rewrite <- N.add_sub_assoc by (apply N.le_add_le_sub_l, N.lt_pred_le; rewrite N.add_1_r, N.pred_succ; exact BND);
-    rewrite N.add_comm; rewrite <- (N.mul_1_l (2^32)) at 2; rewrite N.mod_add by discriminate 1;
-    rewrite N.mod_small by (eapply N.le_lt_trans; [ apply N.le_sub_l | apply N.sub_lt; [ apply N.lt_le_incl; exact BND | reflexivity ] ]);
-    rewrite <- N.sub_add_distr, N.add_comm, N.sub_add_distr, <- N.pred_sub;
-    rewrite N.lnot_sub_low by (apply N.log2_lt_pow2; [ reflexivity | exact BND ]);
-    reflexivity ].
-
-  (* jae 153 *)
-  Unshelve. all: match type of ADDR with _=63 => idtac | _=89 => idtac | _=115 => idtac | _=141 => idtac | _ => shelve end.
-  all: destruct (ones 8 4 <=? getmem _ _ _ _) eqn:UF; [ apply N.leb_le in UF | apply N.leb_gt in UF ];
-  bsimpl in XS; reduce_main_inv XS EX RET;
-  repeat first [ assumption | split ];
-  [ rewrite ECX; unfold towidth; rewrite <- N.add_sub_assoc by exact UF;
-    rewrite N.add_mod, N.mod_same by discriminate 1; rewrite N.add_0_l;
-    rewrite N.mod_mod by discriminate 1;
-    rewrite N.mod_small by (eapply N.le_lt_trans; [ apply N.le_sub_l | apply getmem_bound, (x86_wtm MDL MEM) ]);
-    reflexivity
-  | change 32 with (Mb*4) in UF; destruct (below_ones _ _ _ (x86_wtm MDL MEM) UF) as [i [I4 ZB]]; exists (eax-4+i); repeat split;
-    [ rewrite <- (N.add_0_r (getmem _ _ _ _)); apply N.add_le_mono; [ apply (proj1 NF) | apply N.le_0_l ]
-    | rewrite <- (N.sub_add 4 eax) at 2 by assumption; apply N.add_lt_mono_l; assumption
-    | assumption ] ].
-
-  (* 65: xorl %ecx, %edx *)
-  Unshelve. all: match type of ADDR with _=65 => idtac | _=91 => idtac | _=117 => idtac | _=143 => idtac | _ => shelve end.
-  all: repeat first [ assumption | split ];
-  rewrite N.mod_small;
-  [ rewrite N.mod_small;
-    [ reflexivity
-    | eapply N.le_lt_trans;
-      [ apply N.le_sub_l
-      | apply getmem_bound; apply (x86_wtm MDL MEM) ] ]
-  | unfold N.lnot; apply logic_op_bound;
-    [ intros; rewrite N.lxor_spec,Z1,Z2; reflexivity
-    | apply getmem_bound; apply (x86_wtm MDL MEM)
-    | apply N.lt_pred_l; discriminate 1 ] ].
-
-  (* andl $0x1010100, %edx *)
-  Unshelve. all: match type of ADDR with _=67 => idtac | _=93 => idtac | _=119 => idtac | _=145 => idtac | _ => shelve end.
-  all: rewrite N.mod_small;
-  [ rewrite N.mod_small;
-    [ repeat first [ assumption | split ]
-    | apply logic_op_bound;
-      [ intros; rewrite N.land_spec,Z1,Z2; reflexivity
-      | apply logic_op_bound;
-        [ intros; rewrite N.lxor_spec,Z1,Z2; reflexivity
-        | unfold N.lnot; apply logic_op_bound;
-          [ intros; rewrite N.lxor_spec,Z1,Z2; reflexivity
-          | apply getmem_bound, (x86_wtm MDL MEM)
-          | reflexivity ]
-        | eapply N.le_lt_trans; [ apply N.le_sub_l | apply getmem_bound, (x86_wtm MDL MEM) ] ]
-      | reflexivity ] ]
-  | apply logic_op_bound;
-    [ intros; rewrite N.lxor_spec,Z1,Z2; reflexivity
-    | unfold N.lnot; apply logic_op_bound;
-      [ intros; rewrite N.lxor_spec,Z1,Z2; reflexivity
-      | apply getmem_bound, (x86_wtm MDL MEM)
-      | reflexivity ]
-    | eapply N.le_lt_trans; [ apply N.le_sub_l | apply getmem_bound; apply (x86_wtm MDL MEM) ] ] ].
-
-  (* jne 153 *)
-  Unshelve. all: match type of ADDR with _=73 => idtac | _=99 => idtac | _=125 => idtac | _=151 => idtac | _ => shelve end.
-  all: destruct (N.land _ _) eqn:TST; bsimpl in XS; reduce_main_inv XS EX RET;
-  repeat first [ assumption | split ];
-  [ etransitivity; [ apply (proj1 NF) | apply N.le_sub_l ]
-  | intros i IBOT ITOP; destruct (N.lt_ge_cases i (eax-4));
-    [ apply (proj2 NF); assumption
-    | rewrite <- (N.sub_add _ _ H), N.add_comm; apply noborrow_nonil with (w:=4);
-      [ apply (x86_wtm MDL MEM)
-      | exact PRE3
-      | exact TST
-      | apply (N.add_lt_mono_r _ _ (eax-4)); rewrite (N.sub_add _ _ H), (N.add_sub_assoc _ _ _ PRE), N.add_comm, N.add_sub; exact ITOP ] ]
-  | unfold towidth; rewrite <- N.add_sub_assoc by assumption;
-        rewrite N.add_mod,N.mod_same by discriminate 1; rewrite N.add_0_l;
-        rewrite N.mod_mod by discriminate 1; rewrite N.mod_small;
-        [ exact ECX
-        | eapply N.le_lt_trans; [ apply N.le_sub_l | apply getmem_bound, (x86_wtm MDL MEM) ] ]
-  | assert (TST': N.pos p > 0) by reflexivity; rewrite <- TST in TST'; change 32 with (Mb*4) in TST'; apply borrow_nil in TST';
-    [ destruct TST' as [n [N4 MN]]; exists (eax - 4 + n); split;
-      [ split;
-        [ etransitivity; [ apply (proj1 NF) | apply N.le_add_r ]
-        | rewrite <- (N.sub_add 4 eax) at 2 by exact PRE; apply N.add_lt_mono_l; exact N4 ]
-      | exact MN ]
-    | apply (x86_wtm MDL MEM)
-    | exact PRE3 ] ].
-
-  Unshelve. all: focus_addr ADDR 153 (* subl $0x4, %eax *).
-  rewrite (N.mod_small eax) by assumption.
-  rewrite <- N.add_sub_assoc by assumption.
-  rewrite N.add_mod, N.mod_same, N.add_0_l, N.mod_mod by discriminate 1.
-  rewrite N.mod_small by (eapply N.le_lt_trans; [ apply N.le_sub_l | assumption ]).
-  change 3 with (4-1). rewrite N.add_sub_assoc by discriminate 1. rewrite N.sub_add by assumption.
-  repeat first [ assumption | split ].
-    eapply N.le_lt_trans. apply N.le_sub_l. assumption.
-    exists i. repeat first [ assumption | split ]. rewrite N.sub_1_r. apply N.lt_le_pred. assumption.
-
-  Unshelve. all: focus_addr ADDR 156 (* subl $0xfefefeff, %ecx *).
-  unfold towidth. repeat first [ assumption | split ].
-
-    rewrite N.mod_mod by discriminate 1.
-    rewrite N.add_comm. rewrite <- N.add_sub_assoc by discriminate 1. rewrite <- (N.mod_small (2^32-_) (2^32)) by reflexivity. rewrite <- N.add_mod by discriminate 1.
-    rewrite (N.add_comm (2^32) _). rewrite <- N.add_sub_assoc by discriminate 1. rewrite <- N.add_assoc. rewrite N.add_mod by discriminate 1.
-    rewrite N.add_0_r. rewrite N.mod_mod by discriminate 1. rewrite N.mod_small. reflexivity.
-    apply getmem_bound. apply (x86_wtm MDL MEM).
-
-    exists i. repeat first [ assumption | split ].
-
-  Unshelve. all: focus_addr ADDR 162 (* cmpb $0x0, $cl *).
-  repeat first [ assumption | split ].
-
-    rewrite N.sub_0_r, N.add_mod, N.add_0_l, N.mod_mod, N.mod_mod by discriminate 1.
-    do 2 rewrite <- N.land_ones. rewrite <- N.land_assoc. change (N.land (N.ones _) _) with (N.ones 8).
-    change 32 with (Mb*4). rewrite getmem_mul, N.land_lor_distr_l. do 2 rewrite N.land_ones.
-    rewrite N.shiftl_mul_pow2, N.mod_mul, N.lor_0_r by discriminate 1. rewrite N.mod_small by apply (x86_wtm MDL MEM).
-    destruct (mem eax); reflexivity.
-
-    exists i. repeat first [ assumption | split ].
-
-  Unshelve. all: focus_addr ADDR 165 (* je 182 *).
-  destruct (mem eax) eqn:MA; bsimpl in XS; reduce_main_inv XS EX RET;
-      repeat first [ assumption | split ].
-    transitivity eax. apply (proj1 NF). apply N.le_add_r.
-    rewrite N.add_1_r. intros j JBOT JTOP. apply N.lt_succ_r,N.lt_eq_cases in JTOP. destruct JTOP.
-      apply (proj2 NF); assumption.
-      subst j. rewrite MA. reflexivity.
-    exists i. repeat first [ assumption | split ].
-
-  Unshelve. all: focus_addr ADDR 167 (* incl %eax *).
-  rewrite (N.mod_small eax) by (eapply N.le_lt_trans; [ apply N.le_add_r | eassumption ]).
-  rewrite N.mod_small by (eapply N.le_lt_trans; [|eassumption]; apply N.add_le_mono_l; discriminate 1).
-  rewrite N.add_sub. rewrite <- N.add_assoc.
-  repeat first [ assumption | split ].
-    rewrite N.add_comm. apply N.le_add_r.
-    exists i. repeat first [ assumption | split ].
-
-  Unshelve. all: focus_addr ADDR 168 (* testb %ch, %ch *).
-  repeat first [ assumption | split ].
-
-    rewrite N.land_diag. unfold cast. rewrite (N.mod_small (getmem _ _ _ _)) by apply getmem_bound, (x86_wtm MDL MEM).
-    change 32 with (Mb*4). rewrite getmem_mul. change (N.pred 4) with 3. rewrite getmem_mul.
-    rewrite N.shiftl_lor, N.shiftl_shiftl, N.lor_assoc, <- N.land_ones, N.land_lor_distr_l.
-    do 2 rewrite N.land_ones.
-    rewrite (N.shiftl_mul_pow2 _ (_+_)). rewrite N.mod_mul by discriminate 1.
-    rewrite N.lor_0_r, <- N.land_ones, N.shiftr_land, N.shiftr_lor.
-    rewrite N.shiftr_shiftl_r by discriminate 1. rewrite N.shiftr_0_r.
-    rewrite shiftr_low_pow2 by apply (x86_wtm MDL MEM). rewrite N.lor_0_l.
-    change (N.shiftr _ _) with (N.ones 8). rewrite N.land_ones. rewrite N.mod_small by apply (x86_wtm MDL MEM).
-    rewrite <- N.pred_sub. erewrite N.lt_succ_pred by (eapply N.lt_le_trans; [ apply N.lt_0_1 | assumption ]).
-    destruct (mem eax); reflexivity.
-
-    exists i. repeat first [ assumption | split ].
-
-  Unshelve. all: focus_addr ADDR 170 (* 170: je 182 *).
-  destruct (mem eax) eqn:MA; bsimpl in XS; reduce_main_inv XS EX RET;
-      repeat first [ assumption | split ].
-    transitivity eax. apply (proj1 NF). apply N.le_add_r.
-    rewrite N.add_1_r. intros j JBOT JTOP. apply N.lt_succ_r,N.lt_eq_cases in JTOP. destruct JTOP.
-      apply (proj2 NF); assumption.
-      subst j. rewrite MA. reflexivity.
-    exists i. repeat first [ assumption | split ].
-
-  Unshelve. all: focus_addr ADDR 172 (* shrl $0x10, %ecx *).
-  repeat first [ assumption | split ].
-    simpl (N.land _ _). rewrite N.mod_small by apply getmem_bound, (x86_wtm MDL MEM).
-    change 32 with (Mb*4). rewrite getmem_mul. change (N.pred 4) with 3. rewrite getmem_mul.
-    do 2 (rewrite N.shiftr_lor; rewrite N.shiftr_shiftl_r by discriminate 1).
-    rewrite shiftr_low_pow2 by (etransitivity; [ apply (x86_wtm MDL MEM) | reflexivity ]).
-    rewrite shiftr_low_pow2 by apply (x86_wtm MDL MEM).
-    do 2 rewrite N.lor_0_l. rewrite N.shiftr_0_r by reflexivity.
-    do 2 rewrite <- N.add_1_r. rewrite N.sub_add by assumption. reflexivity.
-
-    exists i. repeat first [ assumption | split ].
-
-  Unshelve. all: focus_addr ADDR 175 (* incl %eax *).
-  rewrite (N.mod_small eax) by (eapply N.le_lt_trans; [ apply N.le_add_r | eassumption ]).
-  rewrite N.mod_small by (eapply N.le_lt_trans; [ apply (N.le_add_r _ 1) | rewrite <- N.add_assoc; assumption ]).
-  rewrite <- N.add_assoc.
-  repeat first [ assumption | split ].
-    exists i. repeat first [assumption | split ].
-
-  Unshelve. all: focus_addr ADDR 176 (* cmpb $0x0, %cl *).
-  repeat first [ assumption | split ].
-
-    rewrite N.sub_0_r, N.add_mod, N.add_0_l, N.mod_mod, N.mod_mod by discriminate 1.
-    do 2 rewrite <- N.land_ones. rewrite <- N.land_assoc. change (N.land (N.ones _) _) with (N.ones 8).
-    change 16 with (Mb*2). rewrite getmem_mul, N.land_lor_distr_l. do 2 rewrite N.land_ones.
-    rewrite N.shiftl_mul_pow2, N.mod_mul, N.lor_0_r by discriminate 1. rewrite N.mod_small by apply (x86_wtm MDL MEM).
-    destruct (mem eax); reflexivity.
-
-    exists i. repeat first [ assumption | split ].
-
-  Unshelve. all: focus_addr ADDR 179 (* je 182 *).
-  destruct (mem eax) eqn:MA; bsimpl in XS; reduce_main_inv XS EX RET;
-      repeat first [ assumption | split ].
-    transitivity eax. apply (proj1 NF). apply N.le_add_r.
-    rewrite N.add_1_r. intros j JBOT JTOP. apply N.lt_succ_r,N.lt_eq_cases in JTOP. destruct JTOP.
-      apply (proj2 NF); assumption.
-      subst j. rewrite MA. reflexivity.
-    apply N.le_lteq in PRE3. destruct PRE3 as [H|H].
-      rewrite N.add_1_r in H. apply N.lt_succ_r, N.le_lteq in H. destruct H as [H|H].
-        apply (proj2 NF) in H; [|assumption]. rewrite PRE2 in H. discriminate H.
-        subst i. rewrite PRE2 in MA. discriminate MA.
-      subst i. assumption.
-
-  Unshelve. all: focus_addr ADDR 181 (* incl %eax *).
-  rewrite (N.mod_small eax) by (eapply N.le_lt_trans; [ apply N.le_add_r | eassumption ]).
-  rewrite N.mod_small by assumption.
-  split; assumption.
-
-  Unshelve. all: focus_addr ADDR 182 (* subl 0x4(%esp), %eax *).
-  rewrite (N.mod_small esp) by (eapply N.lt_le_trans; [|exact ESPLO]; apply N.lt_add_pos_r; reflexivity).
-  rewrite (N.mod_small (esp+4)) by (eapply N.lt_le_trans; [|exact ESPLO]; apply N.add_lt_mono_l; reflexivity).
-  rewrite (N.mod_small eax) by apply (x86_regsize MDL EAX).
-  rewrite <- N.add_sub_assoc by apply (proj1 NF).
-  rewrite N.add_mod, N.mod_same, N.add_0_l, N.mod_mod by discriminate 1.
-  rewrite N.mod_small by (eapply N.le_lt_trans; [ apply N.le_sub_l | apply (x86_regsize MDL EAX) ]).
-  rewrite (N.add_comm _ (_-_)). rewrite N.sub_add by apply (proj1 NF).
-  split; assumption.
-
-  Unshelve. all: focus_addr ADDR 186 (* retl *).
-  destruct XS. subst s1' x1. apply inj_exit in EX. subst a.
-  unfold strlen_main_inv, strlen_postcond. simpl_stores.
-  destruct (N.eq_dec _ _); [| contradict n; reflexivity ].
-  rewrite N.mod_small by (eapply N.lt_le_trans; [|exact ESPLO]; apply N.add_lt_mono_l; reflexivity).
-  split.
+  all: focus_addr ADDR 0. clear PRE.
+  step. rewrite N.mod_small by (eapply N.lt_le_trans; [|exact ESPLO]; apply N.add_lt_mono_l; reflexivity).
+  step.
+  step.
+  assert (NF0: nilfree mem (mem Ⓓ[esp+4]) (mem Ⓓ[esp+4])). split.
     reflexivity.
-    exists eax. repeat first [ assumption | split ]. intros i ITOP. apply (proj2 NF).
-      apply N.le_add_r.
-      apply N.add_lt_mono_l. assumption.
+    intros i H1 H2. exfalso. apply H1, N.lt_gt, H2.
+  step. eexists. split. reflexivity. split. exact NF0. apply Neqb_ok in BC. rewrite <- BC. reflexivity.
+  step. clear BC BC0.
+  step. assert (LM1: mem Ⓓ[esp+4] + 1 < 2^32).
+    apply N.lt_nge. intro H. apply HI.
+    replace (mem Ⓓ[esp+4]) with (2^32-1) in ACC. apply (ACC 0). reflexivity.
+    apply N.le_antisymm.
+      apply N.le_sub_le_add_r. exact H.
+      rewrite <- N.pred_sub. apply N.lt_le_pred, getmem_bound, WTM.
+  step. eexists. split. reflexivity. split. exact NF0. symmetry. apply Neqb_ok, BC.
+  assert (NF1: nilfree mem (mem Ⓓ[esp+4]) (mem Ⓓ[esp+4]+1)). split.
+    apply N.le_add_r.
+    intros i H1 H2. replace i with (mem Ⓓ[esp+4]).
+      apply N_neq0_gt0, N.neq_sym, N.eqb_neq, BC.
+      apply N.le_antisymm. exact H1. apply N.lt_succ_r. rewrite <- N.add_1_r. exact H2.
+  clear NF0 BC.
+  step.
+  step. assert (LM2: mem Ⓓ[ esp + 4] + 1 + 1 < 2^32).
+    apply N.lt_nge. intro H. apply HI.
+    replace (mem Ⓓ[esp+4]) with (2^32-1-1) in ACC. rewrite N.sub_add in ACC by discriminate 1. apply (ACC 0). reflexivity.
+    apply N.add_sub_eq_r. apply N.le_antisymm.
+      rewrite <- N.pred_sub. apply N.lt_le_pred. exact LM1.
+      apply N.le_sub_le_add_r. exact H.
+  step. eexists. split. reflexivity. split. exact NF1. symmetry. apply Neqb_ok. exact BC.
+  assert (NF2: nilfree mem (mem Ⓓ[esp+4]) (mem Ⓓ[esp+4]+1+1)). split.
+    rewrite <- N.add_assoc. apply N.le_add_r.
+    intros i H1 H2. rewrite N.add_1_r in H2. apply N.lt_succ_r, N.lt_eq_cases in H2. destruct H2 as [H2|H2].
+      revert i H1 H2. exact (proj2 NF1).
+      rewrite H2. apply N_neq0_gt0, N.neq_sym, N.eqb_neq, BC.
+  clear NF1 BC.
+  step. clear LM1.
+  step. rewrite <- (N.land_ones _ 2), lxor_land, N.land_ones by reflexivity.
+  step. eexists. split. reflexivity. split. exact NF2. apply Neqb_ok in BC. rewrite BC. reflexivity.
+  eexists. eexists. do 2 (split; [reflexivity|]). split. exact NF2. apply N.mod_upper_bound. discriminate 1.
+  eexists. eexists. do 2 (split; [reflexivity|]). split. exact NF0. apply N.mod_upper_bound. discriminate 1.
+
+  Unshelve. all: focus_addr ADDR 38. destruct PRE as [eax [edx [EAX [EDX [NF EDX4]]]]].
+  step. assert (LM3: eax + 1 < 2^32).
+    apply N.lt_nge. intro H. apply HI.
+    replace eax with (2^32-1) in ACC. apply (ACC 0). reflexivity.
+    apply N.le_antisymm.
+      apply N.le_sub_le_add_r. exact H.
+      rewrite <- N.pred_sub. apply N.lt_le_pred. exact (x86_regsize MDL EAX).
+  step. eexists. split. reflexivity. split. exact NF. symmetry. apply Neqb_ok. exact BC.
+  step.
+  step. eexists. split. reflexivity. split; [|reflexivity]. split.
+    etransitivity. apply (proj1 NF). apply N.le_add_r.
+    intros i H1 H2. rewrite N.add_1_r in H2. apply N.lt_succ_r, N.lt_eq_cases in H2. destruct H2 as [H2|H2].
+      revert i H1 H2. exact (proj2 NF).
+      rewrite H2. apply N_neq0_gt0, N.neq_sym, N.eqb_neq, BC.
+
+  Unshelve. all: match type of ADDR with _=49 => idtac | _=75 => idtac | _=101 => idtac | _=127 => idtac | _ => shelve end.
+  all: unfold strlen_inv_set in PRE; destruct PRE as [eax [EAX [NF EDX0]]].
+  all:step. all:assert (LM: eax + 4 < 2^32) by (apply N.lt_nge; intro H; apply HI;
+    replace (2^32-1) with (eax+(N.pred(2^32) - eax));
+    [ apply ACC, (N.add_lt_mono_r _ _ eax); rewrite N.sub_add by apply N.lt_le_pred, (x86_regsize MDL EAX); rewrite N.add_comm; eapply N.lt_le_trans; [|exact H]; reflexivity
+    | rewrite N.add_sub_assoc by apply N.lt_le_pred, (x86_regsize MDL EAX); rewrite N.add_comm, N.add_sub; reflexivity ]).
+  all:step.
+  all:step.
+  all:step. all:change 4278124287 with (2^32 - ones 8 4).
+  all:step.
+  all:step.
+  2,4,6,8:apply N.ltb_ge, le_add_sub_mod in BC; [|reflexivity];
+  eexists; split; [reflexivity|]; rewrite N.add_sub; split; [exact NF|]; repeat split;
+  [ rewrite N.add_comm; apply N.le_add_r
+  | rewrite N.add_sub_assoc, N.add_comm by discriminate 1; reflexivity
+  | change 32 with (Mb*4) in BC; apply below_ones in BC; [|exact WTM]; destruct BC as [i [I4 NIL]]; exists (eax+i); repeat split;
+    [ etransitivity; [ apply (proj1 NF) | apply N.le_add_r ]
+    | apply N.add_lt_mono_l; exact I4
+    | exact NIL ] ].
+  all: apply N.ltb_lt, add_sub_mod_le in BC; [|discriminate 1].
+  all: rewrite sub_lnot by apply getmem_bound, WTM.
+  all:step.
+    all:rewrite N.add_sub_assoc by discriminate 1.
+    all:rewrite (N.add_comm _ (2^32)).
+    all:rewrite <- N.add_sub_assoc by exact BC.
+    all:rewrite N.add_mod, N.mod_same, N.add_0_l, N.mod_mod by (apply N.pow_nonzero; discriminate 1).
+    all:rewrite (N.mod_small (_-_)) by (eapply N.le_lt_trans; [ apply N.le_sub_l | apply getmem_bound, WTM ]).
+  all:change 16843008 with (ones 8 4 - 1).
+  all:step.
+  all:step.
+  1,3,5,7:apply Neqb_ok in BC0; symmetry in BC0; eexists; split; [reflexivity|]; repeat split;
+  [ etransitivity; [ apply (proj1 NF) | apply N.le_add_r ]
+  | intros; destruct (N.lt_ge_cases i eax);
+    [ apply (proj2 NF); assumption
+    | rewrite <- (N.add_sub i eax), N.add_comm, <- N.add_sub_assoc by assumption;
+      (apply noborrow_nonil with (w:=4); try assumption);
+      apply (N.add_lt_mono_l _ _ eax); rewrite N.add_sub_assoc, N.add_comm, N.add_sub; assumption ]
+  | rewrite BC0; reflexivity ].
+  all: eexists; split; [reflexivity|]; rewrite N.add_sub; split; [exact NF|]; repeat split;
+  [ rewrite N.add_comm; apply N.le_add_r
+  | rewrite <- N.add_sub_assoc by exact BC; rewrite <- N.add_mod_idemp_l, N.mod_same, N.add_0_l by discriminate 1;
+    rewrite N.mod_small; [reflexivity|]; eapply N.le_lt_trans; [apply N.le_sub_l | apply getmem_bound,WTM ]
+  | change 32 with (Mb*4) in BC0; apply N.eqb_neq, N.neq_sym, N_neq0_gt0, borrow_nil in BC0; try assumption;
+    destruct BC0 as [i [I4 NIL]]; exists (eax + i); repeat split;
+    [ etransitivity; [ apply (proj1 NF) | apply N.le_add_r ]
+    | apply N.add_lt_mono_l, I4
+    | exact NIL ] ].
+
+  Unshelve. all:focus_addr ADDR 153. destruct PRE as [eax [EAX [NF [EAX4 [ECX NIL]]]]].
+  step.
+    rewrite <- N.add_sub_assoc by exact EAX4.
+    rewrite <- N.add_mod_idemp_l, N.mod_same, N.add_0_l by discriminate 1.
+    rewrite N.mod_small by (etransitivity; [ apply N.sub_lt; [exact EAX4|reflexivity] | apply (x86_regsize MDL EAX) ]).
+  step.
+    change 4278124287 with (2^32 - ones 8 4).
+    rewrite N.add_comm. rewrite <- N.add_sub_assoc by discriminate 1.
+    change (2^32-(2^32-ones 8 4)) with (ones 8 4).
+    rewrite N.add_mod_idemp_l by discriminate 1.
+    rewrite N.sub_add by (etransitivity; [|apply N.le_add_r]; discriminate 1).
+    rewrite <- N.add_mod_idemp_l, N.mod_same, N.add_0_l by discriminate 1.
+    rewrite N.mod_small by apply getmem_bound, WTM.
+  step. replace (mem Ⓓ[ eax - 4] mod 2 ^ 8) with (mem (eax-4)) by (
+    rewrite getmem_byte, <- N.land_ones; simpl;
+    rewrite N.land_lor_distr_l, N.land_ones, N.land_ones, N.mod_small by apply WTM;
+    rewrite N.shiftl_mul_pow2, N.mod_mul, N.lor_0_r by discriminate 1;
+    reflexivity ).
+  step. eexists. split. reflexivity. split. exact NF. symmetry. apply Neqb_ok. exact BC.
+  apply N.eqb_neq, N.neq_sym, N_neq0_gt0 in BC.
+  step.
+    replace (eax - 4 ⊕ 1) with (eax-3) by (
+      change 4 with (3+1);
+      rewrite N.sub_add_distr, N.sub_add by (change 1 with (4-3); apply N.sub_le_mono_r, EAX4);
+      symmetry; apply N.mod_small;
+      eapply N.le_lt_trans; [ apply N.le_sub_l | apply (x86_regsize MDL EAX) ]).
+  step. rewrite N.land_diag. replace (mem Ⓓ[eax-4] mod _ >> _) with (mem (eax-3)) by (
+    change 32 with (Mb * N.succ (N.succ 2));
+    rewrite getmem_succ_r, getmem_succ_r, <- N.land_ones, N.shiftr_land,
+            N.shiftr_lor, N.shiftr_shiftl_l, N.shiftl_0_r by discriminate 1;
+    change (N.ones _ >> _) with (N.ones 8);
+    rewrite shiftr_low_pow2, N.lor_0_l, N.land_lor_distr_l, N.land_ones, N.mod_small by apply WTM;
+    rewrite N.shiftl_mul_pow2, N.land_ones, N.mod_mul, N.lor_0_r by discriminate 1;
+    change 4 with (1+3);
+    rewrite N.sub_add_distr, N.sub_1_r, <- N.sub_succ_l by (change 3 with (N.pred 4); apply N.pred_le_mono, EAX4);
+    rewrite N.succ_pred by (intro H; apply EAX4; rewrite H; reflexivity);
+    reflexivity).
+  assert (NF3: nilfree mem (mem Ⓓ[esp+4]) (eax-3)). split.
+    etransitivity. apply (proj1 NF). apply N.sub_le_mono_l. discriminate 1.
+    intros i H1 H2. apply N.lt_le_pred in H2. rewrite <- N.sub_succ_r in H2. apply N.lt_eq_cases in H2. destruct H2 as [H2|H2].
+      apply (proj2 NF). exact H1. exact H2.
+      rewrite H2. exact BC.
+  clear NF BC.
+  step. eexists. split. reflexivity. split. exact NF3. symmetry. apply Neqb_ok. exact BC.
+  apply N.eqb_neq, N.neq_sym, N_neq0_gt0 in BC.
+  assert (NF2: nilfree mem (mem Ⓓ[esp+4]) (eax-2)). split.
+    etransitivity. apply (proj1 NF3). apply N.sub_le_mono_l. discriminate 1.
+    intros i H1 H2. apply N.lt_le_pred in H2. rewrite <- N.sub_succ_r in H2. apply N.lt_eq_cases in H2. destruct H2 as [H2|H2].
+      apply (proj2 NF3). exact H1. exact H2.
+      rewrite H2. exact BC.
+  clear NF3 BC.
+  step.
+  step.
+  step.
+    replace (eax - 3 ⊕ 1) with (eax-2) by (
+      change 3 with (2+1); rewrite N.sub_add_distr;
+      rewrite N.sub_add by (apply N.le_add_le_sub_r; transitivity 4; [ discriminate 1 | exact EAX4 ]);
+      symmetry; apply N.mod_small; eapply N.le_lt_trans; [ apply N.le_sub_l | apply (x86_regsize MDL EAX) ]).
+    replace (mem Ⓓ[eax-4] >> 16 mod 2^8) with (mem (eax-2)) by (
+      change 32 with (Mb*(2+N.succ 1));
+      rewrite getmem_split, N.shiftr_lor, shiftr_low_pow2, N.lor_0_l by apply getmem_bound, WTM;
+      rewrite N.shiftr_shiftl_l, N.shiftl_0_r by discriminate 1;
+      rewrite getmem_succ_r, <- N.land_ones, N.land_lor_distr_l, N.land_ones, N.mod_small by apply WTM;
+      rewrite N.shiftl_mul_pow2, N.land_ones, N.mod_mul, N.lor_0_r by discriminate 1;
+      change 4 with (2+2); rewrite N.sub_add_distr, N.sub_add by apply N.le_add_le_sub_r, EAX4;
+      reflexivity).
+  step. eexists. split. reflexivity. split. exact NF2. symmetry. apply Neqb_ok. exact BC.
+  apply N.eqb_neq, N.neq_sym, N_neq0_gt0 in BC.
+  assert (NF1: nilfree mem (mem Ⓓ[esp+4]) (eax-1)). split.
+    etransitivity. apply (proj1 NF2). apply N.sub_le_mono_l. discriminate 1.
+    intros i H1 H2. apply N.lt_le_pred in H2. rewrite <- N.sub_succ_r in H2. apply N.lt_eq_cases in H2. destruct H2 as [H2|H2].
+      apply (proj2 NF2). exact H1. exact H2.
+      rewrite H2. exact BC.
+  clear NF2 BC.
+  step.
+    replace (eax - 2 ⊕ 1) with (eax-1) by (
+      change 2 with (1+1) at 1;
+      rewrite N.sub_add_distr, N.sub_add by (apply N.le_add_le_sub_r; transitivity 4; [ discriminate 1 | exact EAX4 ]);
+      symmetry; apply N.mod_small; eapply N.le_lt_trans; [ apply N.le_sub_l | apply (x86_regsize MDL EAX) ] ).
+  eexists. split. reflexivity. split. exact NF1. destruct NIL as [i [[H1 H2] NIL]]. replace eax with (N.succ (eax-1)) in H2.
+    apply N.lt_succ_r, N.lt_eq_cases in H2. destruct H2 as [H2|H2].
+      contradict NIL. apply N_neq0_gt0. apply NF1. exact H1. exact H2.
+      rewrite <- H2. exact NIL.
+    rewrite N.sub_1_r. apply N.succ_pred. intro H. apply EAX4. rewrite H. reflexivity.
+
+  Unshelve. all:focus_addr ADDR 182. destruct PRE as [eax [EAX [NF NIL]]].
+  step.
+    rewrite (N.mod_small (esp+4)) by (eapply N.lt_le_trans; [|exact ESPLO]; apply N.add_lt_mono_l; reflexivity).
+    rewrite <- N.add_sub_assoc by exact (proj1 NF).
+    rewrite <- N.add_mod_idemp_l, N.mod_same, N.add_0_l by discriminate 1.
+    rewrite (N.mod_small (eax-_)) by (eapply N.le_lt_trans; [ apply N.le_sub_l | apply (x86_regsize MDL EAX) ]).
+  eexists. split. reflexivity. rewrite N.add_sub_assoc, (N.add_comm _ eax), N.add_sub by exact (proj1 NF). split.
+    exact NF.
+    exact NIL.
+
+  Unshelve. destruct PRE as [eax [EAX [NF NIL]]].
+  step. split. simpl_stores. rewrite N.mod_small. reflexivity. eapply N.lt_le_trans; [|exact ESPLO]. apply N.add_lt_mono_l. reflexivity.
+  eexists. simpl_stores. repeat split.
+    exact EAX.
+    exact NIL.
+    intros i H. apply NF. apply N.le_add_r. apply N.add_lt_mono_l. exact H.
 Qed.
