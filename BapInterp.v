@@ -25,8 +25,7 @@ Require Setoid.
    memory contents (usually 8 for bytes).  The bitwidth can be any nonzero N. *)
 Module Type Architecture.
   Declare Module Var : UsualDecidableType.
-  Parameter Mb : N.
-  Axiom Mb_nonzero : Mb <> N0.
+  Parameter mem_bits : positive.
 End Architecture.
 
 
@@ -34,6 +33,7 @@ End Architecture.
 Module BAPInterp (Arch : Architecture).
 
 Export Arch.
+Definition Mb := Npos mem_bits.
 Module Syntax := BAPSyntax Var.
 Export Syntax.
 Open Scope N.
@@ -47,7 +47,7 @@ Definition vareq := Var.eq_dec.
 
 (* Runtime values are integers or memory states. *)
 Inductive value : Type :=
-| VaN (n:word)
+| VaN (n:N) (w:bitwidth)
 | VaM (m:addr->N) (w:bitwidth).
 
 (* Memory is well-typed if every address holds a byte. *)
@@ -57,56 +57,46 @@ Definition welltyped_memory (m:addr->N) : Prop :=
 (* A constant's type is its bitwidth, and a memory's type is the
    bitwidth of its addresses. *)
 Inductive typof_val: value -> typ -> Prop :=
-| TVN (n:N) (w:bitwidth) (LT: n < 2^w): typof_val (VaN (n,w)) (NumT w)
+| TVN (n:N) (w:bitwidth) (LT: n < 2^w): typof_val (VaN n w) (NumT w)
 | TVM (m:addr->N) (w:bitwidth) (WTM: welltyped_memory m): typof_val (VaM m w) (MemT w).
 
 (* A store is a partial function from variables to values. *)
 Definition store := varid -> option value.
 
 (* Reinterpret an unsigned integer as a 2's complement signed integer. *)
-Definition of_twoscomp (i:word) : Z :=
-  match i with (_,N0) => Z0 | (n,Npos w) =>
-    if (2^(Pos.pred_N w)) <=? n then Z.sub (Z.of_N n) (Z.of_N (2^Npos w)) else Z.of_N n
-  end.
+Definition of_twoscomp (n:N) (w:bitwidth) : Z :=
+  if N.testbit n (N.pred w) then Z.of_N n - Z.of_N (2^w) else Z.of_N n.
 
 (* Convert an integer back to 2's complement form. *)
 Definition to_twoscomp (z:Z) (w:N) : N :=
-  match z with Z0 => N0
-             | Z.pos p => Npos p
-             | Z.neg p => 2^w - Npos p
-  end.
+  Z.to_N (z mod 2^(Z.of_N w)).
 
 (* Perform a signed operation by converting the unsigned operands to signed
    operands, applying the signed operation, and then converting the signed
    result back to unsigned. *)
 Definition signed_op (op:Z->Z->Z) (w n1 n2:N) : N :=
-  to_twoscomp (op (of_twoscomp (n1,w)) (of_twoscomp (n2,w))) w.
+  to_twoscomp (op (of_twoscomp n1 w) (of_twoscomp n2 w)) w.
 
 (* Compute an arithmetic shift-right (sign-extending shift-right). *)
-Definition ashiftr (w n1 n2:N) : N :=
-  match w with N0 => n1 | Npos sb =>
-    if N.testbit n1 (Pos.pred_N sb) then
-      N.shiftr (N.lor (N.shiftl (N.ones n2) w) n1) n2
-    else N.shiftr n1 n2
-  end.
+Definition ashiftr (w:N) := signed_op Z.shiftr w.
 
 (* Force a result to a given width by dropping the high bits. *)
-Definition towidth (w n:N) : value :=
-  VaN (N.modulo n (2^w), w).
+Definition towidth (w:bitwidth) (n:N) : value :=
+  VaN (N.modulo n (2^w)) w.
 Global Arguments towidth / w n.
 
 (* Force a result to a boolean value (1-bit integer). *)
 Definition tobit (b:bool) : value :=
-  VaN (N.b2n b, 1).
+  VaN (N.b2n b) 1.
 Global Arguments tobit / b.
 
 (* Perform signed less-than comparison. *)
 Definition signed_lt (w n1 n2:N) : bool :=
-  Z.ltb (of_twoscomp (n1,w)) (of_twoscomp (n2,w)).
+  Z.ltb (of_twoscomp n1 w) (of_twoscomp n2 w).
 
 (* Perform signed less-or-equal comparison. *)
 Definition signed_le (w n1 n2:N) : bool :=
-  Z.leb (of_twoscomp (n1,w)) (of_twoscomp (n2,w)).
+  Z.leb (of_twoscomp n1 w) (of_twoscomp n2 w).
 
 (* Perform a binary operation (using the above as helper functions). *)
 Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
@@ -114,16 +104,16 @@ Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
   | OP_PLUS => towidth w (n1+n2)
   | OP_MINUS => towidth w (2^w + n1 - n2)
   | OP_TIMES => towidth w (n1*n2)
-  | OP_DIVIDE => VaN (n1/n2, w)
+  | OP_DIVIDE => VaN (n1/n2) w
   | OP_SDIVIDE => towidth w (signed_op Z.quot w n1 n2) (* need towidth since -2^w/-1 >= 2^w *)
-  | OP_MOD => VaN (N.modulo n1 n2, w)
-  | OP_SMOD => VaN (signed_op Z.rem w n1 n2, w)
+  | OP_MOD => VaN (N.modulo n1 n2) w
+  | OP_SMOD => VaN (signed_op Z.rem w n1 n2) w
   | OP_LSHIFT => towidth w (N.shiftl n1 n2)
-  | OP_RSHIFT => VaN (N.shiftr n1 n2, w)
-  | OP_ARSHIFT => VaN (ashiftr w n1 n2, w)
-  | OP_AND => VaN (N.land n1 n2, w)
-  | OP_OR => VaN (N.lor n1 n2, w)
-  | OP_XOR => VaN (N.lxor n1 n2, w)
+  | OP_RSHIFT => VaN (N.shiftr n1 n2) w
+  | OP_ARSHIFT => VaN (ashiftr w n1 n2) w
+  | OP_AND => VaN (N.land n1 n2) w
+  | OP_OR => VaN (N.lor n1 n2) w
+  | OP_XOR => VaN (N.lxor n1 n2) w
   | OP_EQ => tobit (n1 =? n2)
   | OP_NEQ => tobit (negb (n1 =? n2))
   | OP_LT => tobit (n1 <? n2)
@@ -135,8 +125,8 @@ Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
 (* Perform a unary operation. *)
 Definition eval_unop (uop:unop_typ) (n:N) (w:bitwidth) : value :=
   match uop with
-  | OP_NEG => VaN (match n with N0 => N0 | _ => 2^w - n end, w)
-  | OP_NOT => VaN (N.lnot n w, w)
+  | OP_NEG => towidth w (2^w - n)
+  | OP_NOT => VaN (N.lnot n w) w
   end.
 
 (* Return a new store that is like store f except with variable x
@@ -148,15 +138,15 @@ Notation "f [ x := y ]" := (update vareq f x y) (at level 50, left associativity
 
 
 (* Perform a cast operation. *)
-Definition signed_cast (p:positive) (w':bitwidth) (n:N) : N :=
-  if N.testbit n (Pos.pred_N p) then N.lor (N.shiftl (N.ones (w'-Npos p)) (Npos p)) n else n.
+Definition signed_cast (w w':bitwidth) (n:N) : N :=
+  to_twoscomp (of_twoscomp n w) w'.
 
 Definition cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
   match c with
   | CAST_UNSIGNED => n
-  | CAST_SIGNED => match w with N0 => N0 | Npos p => signed_cast p w' n end
-  | CAST_HIGH => N.shiftr n (w-w')
-  | CAST_LOW => N.modulo n (2^w')
+  | CAST_SIGNED => signed_cast w w' n
+  | CAST_HIGH => N.shiftr n (w - w')
+  | CAST_LOW => n mod (2^w')
   end.
 
 (* We next define memory accessor functions getmem and setmem, which read/store w-bit numbers
@@ -172,16 +162,16 @@ Definition cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
 (* Interpret len bytes at address a of memory m as an e-endian number. *)
 Definition getmem_big mem len rec a := N.lor (rec (N.succ a)) (N.shiftl (mem a) (Mb*len)).
 Definition getmem_little mem (len:bitwidth) rec a := N.lor (mem a) (N.shiftl (rec (N.succ a)) Mb).
-Definition getmem (e:endianness) (w:bitwidth) (mem:addr->N) : addr -> N :=
-  N.recursion (fun _ => N0) (match e with BigE => getmem_big | LittleE => getmem_little end mem) (w/Mb).
+Definition getmem (e:endianness) (len:bitwidth) (mem:addr->N) : addr -> N :=
+  N.recursion (fun _ => N0) (match e with BigE => getmem_big | LittleE => getmem_little end mem) len.
 
 (* Store v as a len-byte, e-endian number at address a of memory m. *)
 Definition setmem_big len rec mem a v : addr -> N :=
   rec (update N.eq_dec mem a (N.shiftr v (Mb*len))) (N.succ a) (v mod 2^(Mb*len)).
 Definition setmem_little len rec mem a v : addr -> N :=
   rec (update N.eq_dec mem a (match len with N0 => v | Npos _ => v mod 2^Mb end)) (N.succ a) (N.shiftr v Mb).
-Definition setmem (e:endianness) (w:bitwidth) : (addr->N) -> addr -> N -> (addr -> N) :=
-  N.recursion (fun m _ _ => m) (match e with BigE => setmem_big | LittleE => setmem_little end) (w/Mb).
+Definition setmem (e:endianness) (len:bitwidth) : (addr->N) -> addr -> N -> (addr -> N) :=
+  N.recursion (fun m _ _ => m) (match e with BigE => setmem_big | LittleE => setmem_little end) len.
 
 
 
@@ -216,25 +206,25 @@ Variable accessible : acctyp.
 Inductive eval_exp (s:store): exp -> value -> Prop :=
 | EVar (id:varid) (t:typ) (u:value) (SV: s id = Some u):
        eval_exp s (Var (Va id t)) u
-| EImm (n:N) (w:bitwidth): eval_exp s (Word (n,w)) (VaN (n,w))
-| ELoad (e1 e2:exp) (en:endianness) (w' mw:bitwidth) (m:addr->N) (a:addr)
-        (E1: eval_exp s e1 (VaM m mw)) (E2: eval_exp s e2 (VaN (a,mw)))
-        (R: forall n, n < w'/Mb -> accessible false m mw (a+n)):
-        eval_exp s (Load e1 e2 en w') (VaN (getmem en w' m a, w'))
-| EStore (e1 e2 e3:exp) (en:endianness) (w mw:bitwidth) (m:addr->N) (a:addr)
+| EImm (n:N) (w:bitwidth): eval_exp s (Word n w) (VaN n w)
+| ELoad (e1 e2:exp) (en:endianness) (len mw:bitwidth) (m:addr->N) (a:addr)
+        (E1: eval_exp s e1 (VaM m mw)) (E2: eval_exp s e2 (VaN a mw))
+        (R: forall n, n < len -> accessible false m mw (a+n)):
+        eval_exp s (Load e1 e2 en len) (VaN (getmem en len m a) (Mb*len))
+| EStore (e1 e2 e3:exp) (en:endianness) (len mw:bitwidth) (m:addr->N) (a:addr)
          (v:N) (E1: eval_exp s e1 (VaM m mw))
-         (E2: eval_exp s e2 (VaN (a,mw))) (E3: eval_exp s e3 (VaN (v, w)))
-         (W: forall n, n < w/Mb -> accessible true m mw (a+n)):
-         eval_exp s (Store e1 e2 e3 en w) (VaM (setmem en w m a v) mw)
+         (E2: eval_exp s e2 (VaN a mw)) (E3: eval_exp s e3 (VaN v (Mb*len)))
+         (W: forall n, n < len -> accessible true m mw (a+n)):
+         eval_exp s (Store e1 e2 e3 en len) (VaM (setmem en len m a v) mw)
 | EBinOp (bop:binop_typ) (e1 e2:exp) (n1 n2:N) (w:bitwidth)
-         (E1: eval_exp s e1 (VaN (n1,w))) (E2: eval_exp s e2 (VaN (n2,w))):
+         (E1: eval_exp s e1 (VaN n1 w)) (E2: eval_exp s e2 (VaN n2 w)):
          eval_exp s (BinOp bop e1 e2) (eval_binop bop w n1 n2)
 | EUnOp (uop:unop_typ) (e1:exp) (n1:N) (w1:bitwidth)
-        (E1: eval_exp s e1 (VaN (n1,w1))):
+        (E1: eval_exp s e1 (VaN n1 w1)):
         eval_exp s (UnOp uop e1) (eval_unop uop n1 w1)
 | ECast (c:cast_typ) (w w':bitwidth) (e1:exp) (n:N)
-        (E1: eval_exp s e1 (VaN (n,w))):
-        eval_exp s (Cast c w' e1) (VaN (cast c w w' n, w'))
+        (E1: eval_exp s e1 (VaN n w)):
+        eval_exp s (Cast c w' e1) (VaN (cast c w w' n) w')
 | ELet (id:varid) (t:typ) (e1 e2:exp) (u1 u2:value)
        (E1: eval_exp s e1 u1) (E2: eval_exp (update vareq s id (Some u1)) e2 u2):
        eval_exp s (Let (Va id t) e1 e2) u2
@@ -242,16 +232,16 @@ Inductive eval_exp (s:store): exp -> value -> Prop :=
            (TV: typof_val u t):
            eval_exp s (Unknown t) u
 | EIte (e1 e2 e3:exp) (n1:N) (w1:bitwidth) (u':value)
-       (E1: eval_exp s e1 (VaN (n1,w1)))
+       (E1: eval_exp s e1 (VaN n1 w1))
        (E': eval_exp s (match n1 with N0 => e3 | _ => e2 end) u'):
        eval_exp s (Ite e1 e2 e3) u'
 | EExtract (w n1 n2:bitwidth) (e1:exp) (n:N)
-           (E1: eval_exp s e1 (VaN (n,w))):
+           (E1: eval_exp s e1 (VaN n w)):
            eval_exp s (Extract n1 n2 e1) (VaN (cast CAST_HIGH (N.succ n1) (N.succ (n1-n2))
-                                                 (cast CAST_LOW w (N.succ n1) n), N.succ (n1-n2)))
+                                                 (cast CAST_LOW w (N.succ n1) n)) (N.succ (n1-n2)))
 | EConcat (e1 e2:exp) (n1 w1 n2 w2:N)
-          (E1: eval_exp s e1 (VaN (n1,w1))) (E2: eval_exp s e2 (VaN (n2,w2))):
-          eval_exp s (Concat e1 e2) (VaN (N.land (N.shiftl n1 w2) n2, w1+w2)).
+          (E1: eval_exp s e1 (VaN n1 w1)) (E2: eval_exp s e2 (VaN n2 w2)):
+          eval_exp s (Concat e1 e2) (VaN (N.lor (N.shiftl n1 w2) n2) (w1+w2)).
 
 (* Execute an IL statement with recursion depth limit n, returning a new store
    and possibly an exit (if the statement exited prematurely).  "None" is
@@ -263,7 +253,7 @@ Inductive exec_stmt (s:store): stmt -> nat -> store -> option exit -> Prop :=
 | XNop n: exec_stmt s Nop (S n) s None
 | XMove n id t e u (E: eval_exp s e u):
     exec_stmt s (Move (Va id t) e) (S n) (update vareq s id (Some u)) None
-| XJmp n e a w (E: eval_exp s e (VaN (a,w))):
+| XJmp n e a w (E: eval_exp s e (VaN a w)):
     exec_stmt s (Jmp e) (S n) s (Some (Exit a))
 | XExn n i: exec_stmt s (CpuExn i) (S n) s (Some (Exn i))
 | XSeq1 n q1 q2 s' x (XS: exec_stmt s q1 n s' (Some x)):
@@ -273,7 +263,7 @@ Inductive exec_stmt (s:store): stmt -> nat -> store -> option exit -> Prop :=
 | XWhile n e q s' x (XS: exec_stmt s (If e (Seq q (While e q)) Nop) n s' x):
     exec_stmt s (While e q) (S n) s' x
 | XIf n e q1 q2 c s' x
-      (E: eval_exp s e (VaN (c,1)))
+      (E: eval_exp s e (VaN c 1))
       (XS: exec_stmt s (match c with N0 => q2 | _ => q1 end) n s' x):
     exec_stmt s (If e q1 q2) (S n) s' x.
 
@@ -380,11 +370,22 @@ transitivity proved by po_subset_transitive
 as poss.
 
 
+(* Convenience lemmas for inverted reasoning about typof_val. *)
+
+Lemma value_bound:
+  forall n w (TV: typof_val (VaN n w) (NumT w)), n < 2^w.
+Proof. intros. inversion TV. assumption. Qed.
+
+Lemma mem_welltyped:
+  forall m w (TV: typof_val (VaM m w) (MemT w)), welltyped_memory m.
+Proof. intros. inversion TV. assumption. Qed.
+
+
 (* Recursive quantification of sub-expressions and sub-statements: *)
 
 Fixpoint exps_in_exp {T:Type} (C:T->T->T) (P:exp->T) (e:exp) : T :=
   match e with
-  | Var _ | Word _ | Unknown _ => P e
+  | Var _ | Word _ _ | Unknown _ => P e
   | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => C (P e) (exps_in_exp C P e1)
   | BinOp _ e1 e2 | Let _ e1 e2 | Concat e1 e2 | Load e1 e2 _ _ =>
       C (P e) (C (exps_in_exp C P e1) (exps_in_exp C P e2))
@@ -428,19 +429,14 @@ Section InterpTheory.
    Proofs that inductively expand getmem/setmem should typically perform the
    following steps:
 
-   (1) Express bitwidth argument w as a product of the form (Mb*n).  If w does
-       not already have this form, try doing this:
-         rewrite (getmem_div_mul w). rewrite (setmem_div_mul w).
-         generalize (w/Mb) as n.
+   (1) Use Peano induction to induct over length argument:
+         induction len using N.peano_ind.
 
-   (2) Use Peano induction to induct over n:
-         induction n using N.peano_ind.
-
-   (3) Within the proof, unfold the base case (where w=0) using the getmem_0
+   (2) Within the proof, unfold the base case (where len=0) using the getmem_0
        or setmem_0 theorems.
 
-   (4) Unfold inductive cases (where w = N.succ w') using the getmem_succ_r
-       or setmem_succ_r theorems. *)
+   (3) Unfold inductive cases (where len = N.succ _) using the getmem_succ
+       or setmem_succ theorems. *)
 
 (* Base cases for getmem/setmem *)
 Theorem getmem_0: forall e m a, getmem e N0 m a = N0.
@@ -449,196 +445,83 @@ Proof. reflexivity. Qed.
 Theorem setmem_0: forall e m a v, setmem e N0 m a v = m.
 Proof. reflexivity. Qed.
 
-(* Convert getmem/setmem bitwidth arguments into a multiple of bytes. *)
-Theorem getmem_div_mul:
-  forall w e, getmem e w = getmem e (Mb*(w/Mb)).
-Proof.
-  intros. unfold getmem.
-  rewrite N.mul_comm. rewrite N.div_mul by apply Mb_nonzero.
-  reflexivity.
-Qed.
-
-Theorem setmem_div_mul:
-  forall w e, setmem e w = setmem e (Mb*(w/Mb)).
-Proof.
-  intros. unfold setmem.
-  rewrite N.mul_comm. rewrite N.div_mul by apply Mb_nonzero.
-  reflexivity.
-Qed.
-
 (* Unfold getmem/setmem by one byte (for inductive cases of proofs). *)
-Theorem getmem_succ_r:
-  forall e w m a, getmem e (Mb * N.succ w) m a =
-    match e with BigE => N.lor (getmem e (Mb*w) m (N.succ a)) (N.shiftl (m a) (Mb*w))
-               | LittleE => N.lor (m a) (N.shiftl (getmem e (Mb*w) m (N.succ a)) Mb)
+Theorem getmem_succ:
+  forall e len m a, getmem e (N.succ len) m a =
+    match e with BigE => N.lor (getmem e len m (N.succ a)) (N.shiftl (m a) (Mb*len))
+               | LittleE => N.lor (m a) (N.shiftl (getmem e len m (N.succ a)) Mb)
     end.
 Proof.
   intros. unfold getmem.
-  do 2 (rewrite N.mul_comm; rewrite N.div_mul by apply Mb_nonzero). rewrite N.mul_comm.
   rewrite (N.recursion_succ (@eq (addr->N))).
   destruct e; reflexivity.
   reflexivity.
   intros x y H1 f g H2. rewrite H1,H2. reflexivity.
 Qed.
 
-Theorem setmem_succ_r:
-  forall e w m a v, setmem e (Mb * N.succ w) m a v =
-    match e with BigE => setmem e (Mb*w) (update N.eq_dec m a (N.shiftr v (Mb*w))) (N.succ a) (v mod 2^(Mb*w))
-               | LittleE => setmem e (Mb*w) (update N.eq_dec m a match w with N0 => v | Npos _ => v mod 2^Mb end) (N.succ a) (N.shiftr v Mb)
+Theorem setmem_succ:
+  forall e len m a v, setmem e (N.succ len) m a v =
+    match e with BigE => setmem e len (update N.eq_dec m a (N.shiftr v (Mb*len))) (N.succ a) (v mod 2^(Mb*len))
+               | LittleE => setmem e len (update N.eq_dec m a match len with N0 => v | Npos _ => v mod 2^Mb end) (N.succ a) (N.shiftr v Mb)
     end.
 Proof.
   intros. unfold setmem.
-  do 2 (rewrite N.mul_comm; rewrite N.div_mul by apply Mb_nonzero). rewrite N.mul_comm.
   rewrite (N.recursion_succ (@eq ((addr->N)->addr->N->(addr->N)))).
   destruct e; reflexivity.
   reflexivity.
   intros x y H1 f g H2. rewrite H1,H2. reflexivity.
 Qed.
 
-Corollary getmem_succ_l:
-  forall e w m a, getmem e (N.succ w * Mb) m a =
-    match e with BigE => N.lor (getmem e (w*Mb) m (N.succ a)) (N.shiftl (m a) (w*Mb))
-               | LittleE => N.lor (m a) (N.shiftl (getmem e (w*Mb) m (N.succ a)) Mb)
-    end.
-Proof. intros. rewrite N.mul_comm, (N.mul_comm w). apply getmem_succ_r. Qed.
-
-Theorem setmem_succ_l:
-  forall e w m a v, setmem e (N.succ w * Mb) m a v =
-    match e with BigE => setmem e (w*Mb) (update N.eq_dec m a (N.shiftr v (w*Mb))) (N.succ a) (v mod 2^(w*Mb))
-               | LittleE => setmem e (w*Mb) (update N.eq_dec m a match w with N0 => v | Npos _ => v mod 2^Mb end) (N.succ a) (N.shiftr v Mb)
-    end.
-Proof. intros. rewrite N.mul_comm, (N.mul_comm w). apply setmem_succ_r. Qed.
-
-Corollary getmem_mul:
-  forall e w m a, getmem e (Mb * w) m a =
-    match w with N0 => N0 | Npos _ =>
-      match e with BigE => N.lor (getmem e (Mb * N.pred w) m (N.succ a)) (N.shiftl (m a) (Mb * N.pred w))
-                 | LittleE => N.lor (m a) (N.shiftl (getmem e (Mb * N.pred w) m (N.succ a)) Mb)
-    end
-  end.
-Proof.
-  intros. destruct w as [|w]. rewrite N.mul_0_r. apply getmem_0.
-  rewrite <- (N.succ_pred (Npos w)) by discriminate 1.
-  rewrite N.pred_succ.
-  apply getmem_succ_r.
-Qed.
-
-Theorem setmem_mul:
-  forall e w m a v, setmem e (Mb * w) m a v =
-    match w with N0 => m | Npos _ =>
-      match e with BigE => setmem e (Mb * N.pred w) (update N.eq_dec m a (N.shiftr v (Mb * N.pred w))) (N.succ a) (v mod 2^(Mb * N.pred w))
-                 | LittleE => setmem e (Mb * N.pred w) (update N.eq_dec m a match N.pred w with N0 => v | Npos _ => v mod 2^Mb end) (N.succ a) (N.shiftr v Mb)
-      end
-    end.
-Proof.
-  intros. destruct w as [|w]. rewrite N.mul_0_r. apply setmem_0.
-  rewrite <- (N.succ_pred (Npos w)) by discriminate 1.
-  rewrite N.pred_succ.
-  apply setmem_succ_r.
-Qed.
-
-Remark sub_div_mul: forall w, (w-Mb)/Mb*Mb = Mb * N.pred (w/Mb).
-Proof.
-  intros. destruct (N.le_gt_cases Mb w) as [H|H].
-
-  rewrite (N.div_mod' w Mb) at 1.
-  rewrite N.add_comm, (N.mul_comm _ (_/_)).
-  rewrite <- N.add_sub_assoc.
-  rewrite <- (N.mul_1_l Mb) at 4.
-  rewrite <- N.mul_sub_distr_r.
-  rewrite N.div_add by apply Mb_nonzero.
-  rewrite (N.div_small (_ mod _)) by apply N.mod_lt, Mb_nonzero.
-  rewrite N.add_0_l, N.sub_1_r. apply N.mul_comm.
-
-  rewrite <- N.mul_1_l at 1.
-  apply N.mul_le_mono_r.
-  apply N.div_le_lower_bound. apply Mb_nonzero. rewrite N.mul_1_r. assumption.
-
-  rewrite (N.div_small w) by assumption.
-  rewrite N.mul_0_r.
-  replace (w - Mb) with 0. reflexivity.
-  symmetry. apply N.sub_0_le, N.lt_le_incl. assumption.
-Qed.
-
-Corollary getmem_byte:
-  forall e w m a, getmem e w m a =
-    match w/Mb with N0 => N0 | Npos _ =>
-      match e with BigE => N.lor (getmem e (w-Mb) m (N.succ a)) (N.shiftl (m a) (Mb * N.pred (w/Mb)))
-                 | LittleE => N.lor (m a) (N.shiftl (getmem e (w-Mb) m (N.succ a)) Mb)
-      end
-    end.
-Proof.
-  intros.
-  rewrite (getmem_div_mul (_-_)), N.mul_comm, sub_div_mul, getmem_div_mul.
-  apply getmem_mul.
-Qed.
-
-Corollary setmem_byte:
-  forall e w m a v, setmem e w m a v =
-    match w/Mb with N0 => m | Npos _ =>
-      match e with BigE => setmem e (w-Mb) (update N.eq_dec m a (N.shiftr v (Mb*N.pred(w/Mb)))) (N.succ a) (v mod 2^(Mb*N.pred(w/Mb)))
-                 | LittleE => setmem e (w-Mb) (update N.eq_dec m a match N.pred(w/Mb) with N0 => v | Npos _ => v mod 2^Mb end) (N.succ a) (N.shiftr v Mb)
-      end
-    end.
-Proof.
-  intros.
-  rewrite (setmem_div_mul (_-_)), N.mul_comm, sub_div_mul, setmem_div_mul.
-  apply setmem_mul.
-Qed.
-
 (* special cases for when getmem/setmem are applied to access a single memory byte *)
-Corollary getmem_Mb: forall e m a, getmem e Mb m a = m a.
+Corollary getmem_1: forall e m a, getmem e 1 m a = m a.
 Proof.
-  intros.
-  rewrite getmem_byte, N.div_same, N.sub_diag, getmem_0 by apply Mb_nonzero.
-  destruct e.
-    rewrite N.mul_0_r, N.shiftl_0_r. apply N.lor_0_l.
-    rewrite N.shiftl_0_l. apply N.lor_0_r.
+  intros. change 1 with (N.succ 0).
+  rewrite getmem_succ, getmem_0, N.mul_0_r, N.shiftl_0_r, N.lor_0_l, N.lor_0_r.
+  destruct e; reflexivity.
 Qed.
 
-Corollary setmem_Mb: forall e, setmem e Mb = update N.eq_dec.
+Corollary setmem_1: forall e, setmem e 1 = update N.eq_dec.
 Proof.
   intros. extensionality m. extensionality a. extensionality v.
-  rewrite setmem_byte, N.div_same, N.sub_diag, setmem_0, setmem_0 by apply Mb_nonzero.
-  destruct e.
-    rewrite N.mul_0_r, N.shiftr_0_r. reflexivity.
-    reflexivity.
+  change 1 with (N.succ 0).
+  rewrite setmem_succ, !setmem_0, N.mul_0_r, N.shiftr_0_r.
+  destruct e; reflexivity.
 Qed.
 
 
 (* Break an (i+j)-byte number read/stored to/from memory into two numbers of size i and j. *)
 Theorem getmem_split:
-  forall e i j m a, getmem e (Mb*(i+j)) m a =
-    match e with BigE => N.lor (getmem e (Mb*j) m (a+i)) (N.shiftl (getmem e (Mb*i) m a) (Mb*j))
-               | LittleE => N.lor (getmem e (Mb*i) m a) (N.shiftl (getmem e (Mb*j) m (a+i)) (Mb*i))
+  forall e i j m a, getmem e (i+j) m a =
+    match e with BigE => N.lor (getmem e j m (a+i)) (N.shiftl (getmem e i m a) (Mb*j))
+               | LittleE => N.lor (getmem e i m a) (N.shiftl (getmem e j m (a+i)) (Mb*i))
     end.
 Proof.
   induction i using N.peano_ind; intros.
     rewrite N.add_0_l, N.add_0_r, N.mul_0_r, getmem_0, N.shiftl_0_l, N.shiftl_0_r, N.lor_0_r, N.lor_0_l. destruct e; reflexivity.
-    rewrite <- N.add_succ_comm, getmem_succ_r, N.add_succ_l. destruct e.
-      rewrite N.shiftl_lor, N.shiftl_shiftl, N.lor_assoc, <- IHi, <- N.mul_add_distr_l. apply getmem_succ_r.
-      rewrite (N.mul_succ_r _ i), <- N.shiftl_shiftl, <- N.lor_assoc, <- N.shiftl_lor, <- IHi. apply getmem_succ_r.
+    rewrite <- N.add_succ_comm, getmem_succ, N.add_succ_l. destruct e.
+      rewrite N.shiftl_lor, N.shiftl_shiftl, N.lor_assoc, <- IHi, <- N.mul_add_distr_l. apply getmem_succ.
+      rewrite (N.mul_succ_r _ i), <- N.shiftl_shiftl, <- N.lor_assoc, <- N.shiftl_lor, <- IHi. apply getmem_succ.
 Qed.
 
 Theorem setmem_split:
-  forall e i j m a v, setmem e (Mb*(i+j)) m a v =
-    match e with BigE => setmem e (Mb*j) (setmem e (Mb*i) m a (N.shiftr v (Mb*j))) (a+i) match i with N0 => v | Npos _ => v mod 2^(Mb*j) end
-               | LittleE => setmem e (Mb*j) (setmem e (Mb*i) m a match j with N0 => v | Npos _ => v mod 2^(Mb*i) end) (a+i) (N.shiftr v (Mb*i))
+  forall e i j m a v, setmem e (i+j) m a v =
+    match e with BigE => setmem e j (setmem e i m a (N.shiftr v (Mb*j))) (a+i) match i with N0 => v | Npos _ => v mod 2^(Mb*j) end
+               | LittleE => setmem e j (setmem e i m a match j with N0 => v | Npos _ => v mod 2^(Mb*i) end) (a+i) (N.shiftr v (Mb*i))
     end.
 Proof.
   induction i using N.peano_ind; intros.
     rewrite N.add_0_l, N.add_0_r, N.mul_0_r, N.shiftr_0_r, setmem_0, setmem_0. destruct e; reflexivity.
-    rewrite <- N.add_succ_comm, setmem_succ_r, setmem_succ_r, N.add_succ_l. destruct e.
+    rewrite <- N.add_succ_comm, !setmem_succ, N.add_succ_l. destruct e.
 
-      rewrite <- (N.succ_pos_spec i), N.shiftr_shiftr, <- N.mul_add_distr_l, (N.add_comm j), setmem_succ_r, IHi.
+      rewrite <- (N.succ_pos_spec i), N.shiftr_shiftr, <- N.mul_add_distr_l, (N.add_comm j), setmem_succ, IHi.
       rewrite <- N.land_ones, <- N.land_ones, N.shiftr_land, (N.shiftr_div_pow2 (N.ones _)).
       rewrite N.ones_div_pow2 by (rewrite N.mul_add_distr_l, N.add_comm; apply N.le_add_r).
       rewrite N.mul_add_distr_l at 2. rewrite N.add_sub, N.land_ones, <- N.land_assoc, N.land_ones, N.land_ones.
       rewrite N.ones_mod_pow2 by (rewrite N.mul_add_distr_l, N.add_comm; apply N.le_add_r).
       rewrite N.land_ones. destruct i; reflexivity.
 
-      rewrite setmem_succ_r, IHi. destruct j.
-        rewrite N.mul_0_r, N.add_0_r, setmem_0, setmem_0. reflexivity.
+      rewrite setmem_succ, IHi. destruct j.
+        rewrite N.add_0_r, setmem_0, setmem_0. reflexivity.
         destruct i.
           rewrite N.mul_0_r, N.add_0_l, setmem_0, setmem_0, N.mul_1_r, N.shiftr_0_r. reflexivity.
           destruct (N.pos _ + N.pos _) eqn:H.
@@ -726,57 +609,45 @@ Qed.
 
 (* setmem doesn't modify addresses below a, or address at or above a+w. *)
 Theorem setmem_frame_low:
-  forall e w m a v a' (LT: a' < a),
-  setmem e w m a v a' = m a'.
+  forall e len m a v a' (LT: a' < a),
+  setmem e len m a v a' = m a'.
 Proof.
-  intros. rewrite setmem_div_mul. generalize (w/Mb) as n. intro.
-  revert m a v LT. induction n using N.peano_ind; intros.
-    rewrite N.mul_0_r. reflexivity.
-    rewrite setmem_succ_r. destruct e;
-      rewrite IHn by apply N.lt_lt_succ_r, LT; apply update_frame, N.lt_neq, LT.
+  induction len using N.peano_ind; intros.
+    rewrite setmem_0. reflexivity.
+    rewrite setmem_succ. destruct e;
+      rewrite IHlen by apply N.lt_lt_succ_r, LT; apply update_frame, N.lt_neq, LT.
 Qed.
 
 Theorem setmem_frame_high:
-  forall e w m a v a' (LE: a + w/Mb*Mb <= a'),
-  setmem e w m a v a' = m a'.
+  forall e len m a v a' (LE: a + len <= a'),
+  setmem e len m a v a' = m a'.
 Proof.
-  intros until a'. rewrite setmem_div_mul. generalize (w/Mb) as n. intro.
-  revert m a v. induction n using N.peano_ind; intros.
-    rewrite N.mul_0_r. reflexivity.
+  induction len using N.peano_ind; intros.
+    rewrite setmem_0. reflexivity.
 
-    assert (LT: a < a'). eapply N.lt_le_trans; [|exact LE].
-      apply N.lt_add_pos_r, N.mul_pos_pos. apply N.lt_0_succ. apply N.neq_0_lt_0, Mb_nonzero.
-    rewrite setmem_succ_r. destruct e; (rewrite IHn;
+    assert (LT: a < a'). eapply N.lt_le_trans; [|exact LE]. apply N.lt_add_pos_r, N.lt_0_succ.
+    rewrite setmem_succ. destruct e; (rewrite IHlen;
     [ apply update_frame, not_eq_sym, N.lt_neq, LT
-    | rewrite N.add_succ_l; apply N.le_succ_l; (eapply N.lt_le_trans; [|exact LE]); apply N.add_lt_mono_l, N.mul_lt_mono_pos_r;
-      [ apply N.neq_0_lt_0, Mb_nonzero
-      | apply N.lt_succ_diag_r ] ] ).
+    | rewrite N.add_succ_l; apply N.le_succ_l; (eapply N.lt_le_trans; [|exact LE]); apply N.add_lt_mono_l, N.lt_succ_diag_r ]).
 Qed.
 
 (* to_twoscomp inverts of_twoscomp *)
 Theorem twoscomp_inv:
   forall n w (LT: n < 2^w),
-  to_twoscomp (of_twoscomp (n,w)) w = n.
+  to_twoscomp (of_twoscomp n w) w = n.
 Proof.
-  assert (EXNEG: forall z, (z<0)%Z -> exists p, z = Z.neg p).
-    intros. apply Z.lt_gt in H. destruct z; try discriminate. exists p. reflexivity.
+  intros. unfold of_twoscomp, to_twoscomp.
+  replace (2 ^ Z.of_N w)%Z with (Z.of_N (2^w)) by apply N2Z.inj_pow.
+  destruct (N.testbit _ _).
 
-  intros.
-  destruct w. destruct n. reflexivity. apply N.lt_gt in LT. destruct p; discriminate LT.
-  simpl. unfold to_twoscomp. destruct (2^Pos.pred_N p <=? n) eqn:P.
+    rewrite <- Zminus_mod_idemp_r.
+    rewrite Z.mod_same by (rewrite N2Z.inj_pow; apply Z.pow_nonzero; [ discriminate 1 | apply N2Z.is_nonneg ]).
+    rewrite Z.sub_0_r, <- N2Z.inj_mod, N2Z.id by (apply N.pow_nonzero; discriminate 1).
+    apply N.mod_small. assumption.
 
-  apply N2Z.inj_lt in LT. simpl in LT.
-  apply (Z.sub_lt_le_mono _ _ (Z.pos(2^p)) (Z.pos(2^p))) in LT; [|reflexivity].
-  rewrite Z.sub_diag in LT. apply EXNEG in LT. destruct LT as [p' LT]. rewrite LT.
-  apply N.add_sub_eq_r, N2Z.inj. rewrite N2Z.inj_add. simpl.
-  apply Z.sub_cancel_r with (p:=Z.pos p').
-  rewrite <- Z.add_sub_assoc, Z.sub_diag, Z.add_0_r, <- (Pos2Z.opp_neg p'), Z.sub_opp_r, <- LT.
-  symmetry. apply Zplus_minus.
-
-  destruct (Z.of_N n) eqn:H.
-    apply N2Z.inj_iff. symmetry. assumption.
-    apply N2Z.inj. rewrite positive_N_Z. symmetry. assumption.
-    destruct n; discriminate H.
+    rewrite Z.mod_small. apply N2Z.id. split.
+      apply N2Z.is_nonneg.
+      apply N2Z.inj_lt. assumption.
 Qed.
 
 (* getmem inverts setmem *)
@@ -789,19 +660,16 @@ Proof.
 Qed.
 
 Theorem getmem_setmem:
-  forall e w m a v,
-  getmem e w (setmem e w m a v) a = match w/Mb with N0 => N0 | Npos _ => v end.
+  forall e len m a v,
+  getmem e len (setmem e len m a v) a = match len with N0 => N0 | Npos _ => v end.
 Proof.
-  intros. rewrite setmem_div_mul, getmem_div_mul. generalize (w/Mb) as n. intro.
-  revert m a v. clear w. induction n using N.peano_ind; intros.
-    rewrite N.mul_0_r. apply getmem_0.
-    rewrite <- N.succ_pos_spec at 3. rewrite getmem_succ_r, setmem_succ_r. destruct e.
-      rewrite IHn. destruct n.
-        rewrite N.lor_0_l, N.mul_0_r, setmem_0, N.shiftl_0_r, N.shiftr_0_r. apply update_updated.
-        rewrite setmem_frame_low by apply N.lt_succ_diag_r. rewrite update_updated. apply recompose_bytes.
-      rewrite IHn. destruct n.
-        rewrite N.mul_0_r, setmem_0, N.shiftl_0_l, N.lor_0_r. apply update_updated.
-        rewrite setmem_frame_low by apply N.lt_succ_diag_r. rewrite update_updated. apply recompose_bytes.
+  induction len using N.peano_ind; intros.
+    apply getmem_0.
+    rewrite <- N.succ_pos_spec at 3. rewrite getmem_succ, setmem_succ. destruct e; rewrite IHlen; destruct len.
+      rewrite N.lor_0_l, N.mul_0_r, setmem_0, N.shiftl_0_r, N.shiftr_0_r. apply update_updated.
+      rewrite setmem_frame_low by apply N.lt_succ_diag_r. rewrite update_updated. apply recompose_bytes.
+      rewrite setmem_0, N.shiftl_0_l, N.lor_0_r. apply update_updated.
+      rewrite setmem_frame_low by apply N.lt_succ_diag_r. rewrite update_updated. apply recompose_bytes.
 Qed.
 
 
@@ -833,7 +701,6 @@ Proof.
   try reflexivity.
 
   rewrite SV in SV0. injection SV0. intro. assumption.
-  rewrite H2. reflexivity.
   exfalso. assumption.
 Qed.
 
@@ -1079,7 +946,7 @@ Theorem while_inv:
   forall (P: store -> Prop)
          RW s e q m s' x (XS: exec_stmt RW s (While e q) m s' x) (PRE: P s)
          (INV: forall s c m s' x (PRE: P s)
-                      (EX: eval_exp RW s e (VaN (Npos c, 1)))
+                      (EX: eval_exp RW s e (VaN (Npos c) 1))
                       (XS: exec_stmt RW s q m s' x), P s'),
   P s'.
 Proof.
@@ -1169,9 +1036,9 @@ Proof.
     exact PRE.
     apply (IHn a' s2).
       exact XP0.
-      specialize (INV a0 s0 sz q s2 x1 LU PRE XS). destruct x1; [destruct e|].
-        1,3: discriminate.
-        1,2: injection EX; intro; subst a'; exact INV.
+      specialize (INV a0 s0 sz q s2 x1 LU PRE XS). destruct x1; [destruct e|]; first
+      [ discriminate EX
+      | injection EX; intro; subst a'; exact INV ].
     specialize (INV a0 s0 sz q s' (Some x') LU PRE XS). exact INV.
 Qed.
 
@@ -1357,12 +1224,12 @@ Definition zstore (_:addr) := 0.
 
 Definition uvalue_of (v:value) :=
   match v with
-  | VaN (n,w) => VaU true zstore n w
+  | VaN n w => VaU true zstore n w
   | VaM m w => VaU false m 0 w
   end.
 
 Definition of_uvalue (v:uvalue) :=
-  match v with VaU z m n w => if z then VaN (n,w) else VaM m w end.
+  match v with VaU z m n w => if z then VaN n w else VaM m w end.
 
 Definition utowidth (w n:N) : uvalue :=
   VaU true zstore (N.modulo n (2^w)) w.
@@ -1395,7 +1262,7 @@ Definition feval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : uvalue :=
 
 Definition feval_unop (uop:unop_typ) (n:N) (w:bitwidth) : uvalue :=
   match uop with
-  | OP_NEG => VaU true zstore (match n with N0 => N0 | _ => (2^w) - n end) w
+  | OP_NEG => utowidth w ((2^w) - n)
   | OP_NOT => VaU true zstore (N.lnot n w) w
   end.
 
@@ -1410,17 +1277,19 @@ Lemma fold_uget:
             end = uget v.
 Proof. intros. reflexivity. Qed.
 
+Definition bits_of_mem len := N.mul Mb len.
+
 Fixpoint feval_exp (e:exp) (s:store) : uvalue :=
   match e with
   | Var (Va id _) => uget (s id)
-  | Word (n,w) => VaU true zstore n w
-  | Load e1 e2 en w =>
+  | Word n w => VaU true zstore n w
+  | Load e1 e2 en len =>
       match feval_exp e1 s, feval_exp e2 s with
-      | VaU _ m _ _, VaU _ _ n _ => VaU true zstore (getmem en w m n) w
+      | VaU _ m _ _, VaU _ _ n _ => VaU true zstore (getmem en len m n) (bits_of_mem len)
       end
-  | Store e1 e2 e3 en w =>
+  | Store e1 e2 e3 en len =>
       match feval_exp e1 s, feval_exp e2 s, feval_exp e3 s with
-      | VaU _ m _ mw, VaU _ _ a _, VaU _ _ v _ => VaU false (setmem en w m a v) 0 mw
+      | VaU _ m _ mw, VaU _ _ a _, VaU _ _ v _ => VaU false (setmem en len m a v) 0 mw
       end
   | BinOp bop e1 e2 =>
       match feval_exp e1 s, feval_exp e2 s with
@@ -1448,24 +1317,24 @@ Fixpoint feval_exp (e:exp) (s:store) : uvalue :=
       end
   | Concat e1 e2 =>
       match feval_exp e1 s, feval_exp e2 s with
-      | VaU _ _ n1 w1, VaU _ _ n2 w2 => VaU true zstore (N.land (N.shiftl n1 w2) n2) (w1+w2)
+      | VaU _ _ n1 w1, VaU _ _ n2 w2 => VaU true zstore (N.lor (N.shiftl n1 w2) n2) (w1+w2)
       end
   end.
 
 Definition NoMemAcc := True.
-Definition MemAcc (RW:acctyp) rw m mw a w := forall n, n < w/Mb -> RW rw m mw (a+n).
+Definition MemAcc (RW:acctyp) rw m mw a len := forall n, n < len -> RW rw m mw (a+n).
 
 Fixpoint memacc_exp (e:exp) (RW:acctyp) (s:store) : Prop :=
   match e with
-  | Load e1 e2 _ w =>
+  | Load e1 e2 _ len =>
       match feval_exp e1 s, feval_exp e2 s with
-      | VaU _ m _ mw, VaU _ _ a _ => MemAcc RW false m mw a w
+      | VaU _ m _ mw, VaU _ _ a _ => MemAcc RW false m mw a len
       end
-  | Store e1 e2 _ _ w =>
+  | Store e1 e2 _ _ len =>
       match feval_exp e1 s, feval_exp e2 s with
-      | VaU _ m _ mw, VaU _ _ a _ => MemAcc RW true m mw a w
+      | VaU _ m _ mw, VaU _ _ a _ => MemAcc RW true m mw a len
       end
-  | Var _ | Word _ | Unknown _ => NoMemAcc
+  | Var _ | Word _ _ | Unknown _ => NoMemAcc
   | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => memacc_exp e1 RW s
   | BinOp _ e1 e2 | Concat e1 e2 => memacc_exp e1 RW s /\ memacc_exp e2 RW s
   | Let (Va id _) e1 e2 => memacc_exp e1 RW s /\ memacc_exp e2 RW (update vareq s id (Some (of_uvalue (feval_exp e1 s))))
@@ -1477,7 +1346,7 @@ Fixpoint memacc_exp (e:exp) (RW:acctyp) (s:store) : Prop :=
 
 Fixpoint exp_known (e:exp) :=
   match e with
-  | Var _ | Word _ => true
+  | Var _ | Word _ _ => true
   | Unknown _ => false
   | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => exp_known e1
   | BinOp _ e1 e2 | Let _ e1 e2 | Concat e1 e2 | Load e1 e2 _ _ => if exp_known e1 then exp_known e2 else false
@@ -1486,9 +1355,7 @@ Fixpoint exp_known (e:exp) :=
 
 Lemma uvalue_inv: forall u, of_uvalue (uvalue_of u) = u.
 Proof.
-  intros. destruct u.
-    destruct n. reflexivity.
-    reflexivity.
+  intros. destruct u; reflexivity.
 Qed.
 
 Definition canonical_uvalue (u:uvalue) :=
@@ -1504,7 +1371,7 @@ Qed.
 Lemma canonical_conv:
   forall v, canonical_uvalue (uvalue_of v).
 Proof.
-  intro. destruct v. destruct n. reflexivity. reflexivity.
+  intro. destruct v; reflexivity.
 Qed.
 
 Lemma canonical_uget:
@@ -1518,21 +1385,15 @@ Qed.
 Lemma canonical_feval:
    forall e s, canonical_uvalue (feval_exp e s).
 Proof.
-  induction e; intros.
-    simpl. destruct v. apply canonical_uget.
-    destruct n. reflexivity.
-    simpl. do 2 destruct (feval_exp _ _). reflexivity.
-    simpl. do 3 destruct (feval_exp _ _). reflexivity.
-    simpl. do 2 destruct (feval_exp _ _). destruct b; reflexivity.
-    simpl. destruct (feval_exp _ _). destruct u; reflexivity.
-    simpl. destruct (feval_exp _ _). reflexivity.
-    simpl. destruct v. apply IHe2.
-    reflexivity.
-    simpl. destruct (feval_exp e1 s). destruct (feval_exp e2 s) eqn:FE2. destruct (feval_exp e3 s) eqn:FE3. destruct n.
-      rewrite <- FE3. apply IHe3.
-      rewrite <- FE2. apply IHe2.
-    simpl. destruct (feval_exp _ _). reflexivity.
-    simpl. do 2 destruct (feval_exp _ _). reflexivity.
+  induction e; intros; simpl;
+  repeat match goal with |- context [ feval_exp ?e ?s ] => destruct (feval_exp e s) eqn:? end;
+  try reflexivity.
+  destruct v. apply canonical_uget.
+  destruct b; reflexivity.
+  destruct u; reflexivity.
+  destruct v. apply IHe2.
+  destruct n;
+    match goal with [ H: _ = ?u |- _ ?u ] => rewrite <- H; generalize s; assumption end.
 Qed.
 
 Theorem reduce_binop:
@@ -1550,55 +1411,24 @@ Qed.
 Theorem reduce_exp:
   forall RW e s u (K: exp_known e = true) (E: eval_exp RW s e u), u = of_uvalue (feval_exp e s).
 Proof.
-  induction e; intros; inversion E; clear E; subst.
-    simpl. rewrite SV. symmetry. apply uvalue_inv.
-    reflexivity.
+  induction e; intros; inversion E; clear E; subst; simpl;
+  simpl in K; repeat (apply andb_prop in K; let K':=fresh "K" in destruct K as [K' K]);
+  repeat match goal with [ IH: forall _ _, exp_known ?e = _ -> _, K: exp_known ?e = _, E: eval_exp _ _ ?e _ |- _ ] =>
+    apply (IH _ _ K) in E;
+    try (let b := fresh "b" in destruct (feval_exp e _) as [b ? ? ?]; destruct b; try discriminate E; injection E as)
+  end; subst; try reflexivity.
 
-    simpl. simpl in K. apply andb_prop in K. destruct K as [K1 K2].
-    apply (IHe1 _ _ K1) in E1. destruct (feval_exp e1 _). simpl in E1. destruct z. discriminate E1. injection E1 as; subst.
-    apply (IHe2 _ _ K2) in E2. destruct (feval_exp e2 _). simpl in E2. destruct z; [|discriminate E2]. injection E2 as; subst.
-    reflexivity.
+    rewrite SV. symmetry. apply uvalue_inv.
 
-    simpl. simpl in K. apply andb_prop in K. destruct K as [K1 K]. apply andb_prop in K. destruct K as [K2 K3].
-    apply (IHe1 _ _ K1) in E1. destruct (feval_exp e1 _). simpl in E1. destruct z. discriminate E1. injection E1 as; subst.
-    apply (IHe2 _ _ K2) in E2. destruct (feval_exp e2 _). simpl in E2. destruct z; [|discriminate E2]. injection E2 as; subst.
-    apply (IHe3 _ _ K3) in E3. destruct (feval_exp e3 _). simpl in E3. destruct z; [|discriminate E3]. injection E3 as; subst.
-    reflexivity.
-
-    simpl. simpl in K. apply andb_prop in K. destruct K as [K1 K2].
-    apply (IHe1 _ _ K1) in E1. destruct (feval_exp e1 _). simpl in E1. destruct z; [|discriminate E1]. injection E1 as; subst.
-    apply (IHe2 _ _ K2) in E2. destruct (feval_exp e2 _). simpl in E2. destruct z; [|discriminate E2]. injection E2 as; subst.
     apply reduce_binop.
 
-    simpl.
-    apply (IHe _ _ K) in E1. destruct (feval_exp e _). simpl in E1. destruct z; [|discriminate E1]. injection E1 as; subst.
     apply reduce_unop.
-
-    simpl.
-    apply (IHe _ _ K) in E1. destruct (feval_exp e _). simpl in E1. destruct z; [|discriminate E1]. injection E1 as; subst.
-    reflexivity.
-
-    simpl. simpl in K. apply andb_prop in K. destruct K as [K1 K2].
-    apply (IHe1 _ _ K1) in E1. subst u1.
-    apply (IHe2 _ _ K2) in E2. subst u.
-    reflexivity.
 
     discriminate K.
 
-    simpl. simpl in K. apply andb_prop in K. destruct K as [K1 K]. simpl in K. apply andb_prop in K. destruct K as [K2 K3].
-    apply (IHe1 _ _ K1) in E1. destruct (feval_exp e1 _). simpl in E1. destruct z; [|discriminate E1]. injection E1 as; subst.
     destruct n.
-      apply (IHe3 _ _ K3) in E'. destruct (feval_exp e2 s). destruct (feval_exp e3 _). subst u. reflexivity.
-      apply (IHe2 _ _ K2) in E'. destruct (feval_exp e2 _). destruct (feval_exp e3 _). subst u. reflexivity.
-
-    simpl.
-    apply (IHe _ _ K) in E1. destruct (feval_exp e _). simpl in E1. destruct z; [|discriminate E1]. injection E1 as; subst.
-    reflexivity.
-
-    simpl. simpl in K. apply andb_prop in K. destruct K as [K1 K2].
-    apply (IHe1 _ _ K1) in E1. destruct (feval_exp e1 _). simpl in E1. destruct z; [|discriminate E1]. injection E1 as; subst.
-    apply (IHe2 _ _ K2) in E2. destruct (feval_exp e2 _). simpl in E2. destruct z; [|discriminate E2]. injection E2 as; subst.
-    reflexivity.
+      apply (IHe3 _ _ K) in E'. destruct (feval_exp e2 s). destruct (feval_exp e3 _). subst u. reflexivity.
+      apply (IHe2 _ _ K1) in E'. destruct (feval_exp e2 _). destruct (feval_exp e3 _). subst u. reflexivity.
 Qed.
 
 Theorem memacc_exp_true:
@@ -1745,11 +1575,13 @@ End FInterp.
 
 Ltac simpl_exp :=
   cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
-                             utowidth utobit uget of_uvalue uvalue_of ].
+                             utowidth utobit uget of_uvalue uvalue_of ];
+  repeat simpl (bits_of_mem _).
 
 Tactic Notation "simpl_exp" "in" hyp(H) :=
   cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
-                             utowidth utobit uget of_uvalue uvalue_of ] in H.
+                             utowidth utobit uget of_uvalue uvalue_of ] in H;
+  repeat simpl (bits_of_mem _) in H.
 
 
 (* Statement simplification most often gets stuck at variable-reads, since the full content of the

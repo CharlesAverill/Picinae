@@ -19,6 +19,7 @@ Definition varid := VarID.t.
 
 (* Bitwidths are expressed as natural numbers. *)
 Definition bitwidth := N.
+Bind Scope N_scope with bitwidth.
 
 (* An IL expression type is a number of bitwidth w, or a memory state with
    addresses of bitwidth w.  (The bitwidth of memory contents is architecture-
@@ -31,10 +32,6 @@ Inductive typ : Type :=
 Inductive endianness : Type :=
 | BigE
 | LittleE.
-
-(* An integer is an unsigned value and its bitwidth.  During signed operations,
-   the bits of the value are reinterpreted as a signed integer. *)
-Definition word := (N*bitwidth)%type.
 
 (* A variable appearing within an IL expression or statement is written as
    (Va id t) where id is an identifier (from the Typ module---see above)
@@ -78,9 +75,9 @@ Inductive cast_typ : Type :=
 (* IL expression syntax *)
 Inductive exp : Type :=
 | Var (v:var)
-| Word (n:word)
-| Load (e1 e2:exp) (en:endianness) (w:bitwidth)  (* Load(mem,addr,endian,bitwidth) *)
-| Store (e1 e2 e3:exp) (en:endianness) (w:bitwidth)  (* Store(mem,addr,val,endian,bitwidth) *)
+| Word (n:N) (w:bitwidth)
+| Load (e1 e2:exp) (en:endianness) (w:bitwidth)  (* Load(mem,addr,endian,BYTEwidth) *)
+| Store (e1 e2 e3:exp) (en:endianness) (w:bitwidth)  (* Store(mem,addr,val,endian,BYTEwidth) *)
 | BinOp (b:binop_typ) (e1 e2:exp)
 | UnOp (u:unop_typ) (e:exp)
 | Cast (c:cast_typ) (w:bitwidth) (e:exp) (* Cast to a new width. *)
@@ -88,7 +85,7 @@ Inductive exp : Type :=
 | Unknown (t:typ)
 (* Expression types below here are just syntactic sugar for the above. *)
 | Ite (e1 e2 e3:exp)
-| Extract (n1 n2:N) (e:exp) (* Extract hbits to lbits of e (NumT type). *)
+| Extract (n1 n2:bitwidth) (e:exp) (* Extract hbits to lbits of e (NumT type). *)
 | Concat (e1 e2:exp) (* Concat two NumT expressions together. *).
 
 (* The BIL specification formalizes statement sequences as statement lists;
@@ -117,6 +114,7 @@ Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : stmt_s
 
 (* Memory addresses are expressed as natural numbers. *)
 Definition addr := N.
+Bind Scope N_scope with addr.
 
 (* Programs map addresses to an instruction size sz and an IL statement q
    that encodes the instruction.  If q falls through, control flows to
