@@ -80,13 +80,13 @@ Qed.
 
 Definition strlen_esp_inv (esp:N) (mem:addr->N) (x:exit) (s':store) :=
   match x with Exit a =>
-    if N.eq_dec a (getmem LittleE 32 mem esp) then True
-    else s' R_ESP = Some (VaN (esp,32))
+    if N.eq_dec a (getmem LittleE 4 mem esp) then True
+    else s' R_ESP = Some (VaN esp 32)
   | _ => True
   end.
 
 Lemma strlen_stmt_esp:
-  forall y u s' mem x a' (PRE: y = Some (VaN (u,32))) (XS: s' R_ESP = y),
+  forall y u s' mem x a' (PRE: y = Some (VaN u 32)) (XS: s' R_ESP = y),
   strlen_esp_inv u mem (match x with Some e => e | None => Exit a' end) s'.
 Proof.
   intros. rewrite <- XS in PRE. unfold strlen_esp_inv.
@@ -96,8 +96,8 @@ Qed.
 
 Theorem strlen_preserves_esp:
   forall RW s esp mem m n s' x
-         (ESP0: s R_ESP = Some (VaN (esp,32))) (MEM0: s V_MEM32 = Some (VaM mem 32))
-         (RET: strlen_i386 (getmem LittleE 32 mem esp) = None)
+         (ESP0: s R_ESP = Some (VaN esp 32)) (MEM0: s V_MEM32 = Some (VaM mem 32))
+         (RET: strlen_i386 (getmem LittleE 4 mem esp) = None)
          (XP: exec_prog RW strlen_i386 0 s m n s' x),
   strlen_esp_inv esp mem x s'.
 Proof.
@@ -263,11 +263,11 @@ Qed.
 Lemma bytes_pos_lobound:
   forall mem i a (WTM: welltyped_memory mem)
          (H: forall j, j < i -> mem (a + j) > 0),
-  ones Mb i <= getmem LittleE (Mb*i) mem a.
+  ones Mb i <= getmem LittleE i mem a.
 Proof.
   intros mem i a WTM. revert a. induction i using N.peano_ind; intros.
     reflexivity.
-    rewrite ones_succ, getmem_succ_r, lor_plus.
+    rewrite ones_succ, getmem_succ, lor_plus.
       rewrite N.add_comm. apply N.add_le_mono.
         apply N.lt_pred_le, N.gt_lt. rewrite <- (N.add_0_r a). apply H. apply N.lt_0_succ.
         rewrite N.shiftl_mul_pow2. apply N.mul_le_mono_nonneg_r.
@@ -278,12 +278,12 @@ Qed.
 
 Lemma below_ones:
   forall mem w a (WTM: welltyped_memory mem)
-         (GM: getmem LittleE (Mb*w) mem a < ones Mb w),
+         (GM: getmem LittleE w mem a < ones Mb w),
   exists i, i < w /\ mem (a+i) = 0.
 Proof.
   intros mem w a WTM. revert a. induction w using N.peano_ind; intros.
     contradict GM. apply N.nlt_0_r.
-    rewrite ones_succ, getmem_succ_r in GM. destruct (mem a) eqn:M0.
+    rewrite ones_succ, getmem_succ in GM. destruct (mem a) eqn:M0.
       exists 0. split. apply N.lt_0_succ. rewrite N.add_0_r. exact M0.
       destruct (IHw (N.succ a)) as [i [LOI MI]].
 
@@ -421,9 +421,9 @@ Qed.
 
 Theorem noborrow_nonil:
   forall mem w a (WTM: welltyped_memory mem)
-         (GM: ones Mb w <= getmem LittleE (Mb*w) mem a)
-         (TST: N.land (N.lxor (N.lnot (getmem LittleE (Mb*w) mem a) (Mb*w))
-                              (getmem LittleE (Mb*w) mem a - ones Mb w))
+         (GM: ones Mb w <= getmem LittleE w mem a)
+         (TST: N.land (N.lxor (N.lnot (getmem LittleE w mem a) (Mb*w))
+                              (getmem LittleE w mem a - ones Mb w))
                       (ones Mb w - 1) = 0)
          i (IW: i < w),
   mem (a + i) > 0.
@@ -454,7 +454,7 @@ Proof.
   rewrite N.shiftr_shiftl_l by reflexivity.
   rewrite N.sub_diag, N.shiftl_0_r, N.shiftr_div_pow2.
   rewrite N.div_small by apply getmem_bound, WTM.
-  rewrite N.lor_0_l, getmem_succ_r, <- N.land_ones, N.land_lor_distr_l, N.land_ones, N.land_ones, N.shiftl_mul_pow2.
+  rewrite N.lor_0_l, getmem_succ, <- N.land_ones, N.land_lor_distr_l, N.land_ones, N.land_ones, N.shiftl_mul_pow2.
   rewrite N.mod_mul by (apply N.pow_nonzero; discriminate 1).
   rewrite N.lor_0_r.
   rewrite N.mod_small by apply WTM.
@@ -494,10 +494,10 @@ Proof.
   subst w. clear TST IHi. revert a GM. induction i using N.peano_ind; intros.
     apply N.lt_gt. eapply N.lt_le_trans. apply N.lt_0_1. rewrite N.add_0_r. etransitivity.
       exact GM.
-      rewrite getmem_succ_r, N.lor_0_r. reflexivity.
+      rewrite getmem_succ, N.lor_0_r. reflexivity.
 
     rewrite <- N.add_succ_comm. apply IHi.
-    rewrite getmem_succ_r, ones_succ in GM.
+    rewrite getmem_succ, ones_succ in GM.
     apply (N.div_le_mono _ _ (2^Mb)) in GM; [|apply N.pow_nonzero; discriminate 1].
     rewrite N.div_add_l in GM; [|apply N.pow_nonzero; discriminate 1].
     rewrite N.div_small, N.add_0_r in GM; [|reflexivity].
@@ -528,9 +528,9 @@ Qed.
 
 Theorem borrow_nil:
   forall mem w a (WTM: welltyped_memory mem)
-         (GM: ones Mb w <= getmem LittleE (Mb*w) mem a)
-         (TST: N.land (N.lxor (N.lnot (getmem LittleE (Mb*w) mem a) (Mb*w))
-                              (getmem LittleE (Mb*w) mem a - ones Mb w))
+         (GM: ones Mb w <= getmem LittleE w mem a)
+         (TST: N.land (N.lxor (N.lnot (getmem LittleE w mem a) (Mb*w))
+                              (getmem LittleE w mem a - ones Mb w))
                       (ones Mb w - 1) > 0),
   exists i, i < w /\ mem (a + i) = 0.
 Proof.
@@ -576,7 +576,7 @@ Proof.
   rewrite <- (N.succ_pred (N.pos j)) in TST at 4 by discriminate 1.
   rewrite (N.mul_succ_r _ (N.pred _)), (N.add_comm _ Mb) in TST.
 
-  destruct (N.le_gt_cases (ones Mb (N.pred (N.pos j))) (getmem LittleE (Mb * N.pred (N.pos j)) mem a)) as [LOJ|LOJ].
+  destruct (N.le_gt_cases (ones Mb (N.pred (N.pos j))) (getmem LittleE (N.pred (N.pos j)) mem a)) as [LOJ|LOJ].
 
   rewrite <- extract_bit in TST.
 
@@ -593,7 +593,7 @@ Proof.
     rewrite N.shiftr_shiftl_l in TST by reflexivity.
     rewrite N.lor_0_l, N.sub_diag, N.shiftl_0_r in TST.
     rewrite N.sub_succ_l in TST by (etransitivity; [ apply N.le_pred_l | exact JW ]).
-    rewrite getmem_succ_r in TST.
+    rewrite getmem_succ in TST.
     rewrite lor_plus in TST by apply land_lohi_0, WTM.
     rewrite N.shiftl_mul_pow2 in TST.
     rewrite N.mod_add in TST by (apply N.pow_nonzero; discriminate 1).
@@ -671,22 +671,22 @@ Definition strlen_inv_set (m:addr->N) (esp:N) (a:addr) (_:exit) (s:store) (_:nat
   end.
 
 Definition strlen_postcond (mem:addr->N) (esp:N) (_:addr) (_:exit) (s:store) (_:nat) :=
-  s R_ESP = Some (VaN (esp+4, 32)) /\
-  let p := getmem LittleE 32 mem (esp+4) in
-  exists eax, s R_EAX = Some (VaN (eax, 32)) /\
+  s R_ESP = Some (VaN (esp+4) 32) /\
+  let p := getmem LittleE 4 mem (esp+4) in
+  exists eax, s R_EAX = Some (VaN eax 32) /\
               mem (p + eax) = 0 /\
               forall i, i < eax -> mem (p+i) > 0.
 
 Definition strlen_inv (mem:addr->N) (esp:N) :=
-  x86_subroutine_inv strlen_i386 (strlen_inv_set mem esp) (strlen_postcond mem esp) (getmem LittleE 32 mem esp).
+  x86_subroutine_inv strlen_i386 (strlen_inv_set mem esp) (strlen_postcond mem esp) (getmem LittleE 4 mem esp).
 
 Theorem strlen_partial_correctness:
   forall RW s esp mem m n s' x
          (HI: ~ RW false mem 32 (2^32 - 1)%N)
          (MDL0: models x86typctx s)
          (ESPLO: esp + 8 <= 2^32)
-         (ESP0: s R_ESP = Some (VaN (esp,32))) (MEM0: s V_MEM32 = Some (VaM mem 32))
-         (RET: strlen_i386 (getmem LittleE 32 mem esp) = None)
+         (ESP0: s R_ESP = Some (VaN esp 32)) (MEM0: s V_MEM32 = Some (VaM mem 32))
+         (RET: strlen_i386 (getmem LittleE 4 mem esp) = None)
          (XP0: exec_prog RW strlen_i386 0 s m n s' x),
   match strlen_inv mem esp x s' n with Some P => P | None => True end.
 Proof.
@@ -830,7 +830,7 @@ Proof.
     rewrite <- N.add_mod_idemp_l, N.mod_same, N.add_0_l by discriminate 1.
     rewrite N.mod_small by apply getmem_bound, WTM.
   step. replace (mem Ⓓ[ eax - 4] mod 2 ^ 8) with (mem (eax-4)) by (
-    rewrite getmem_byte, <- N.land_ones; simpl;
+    change 4 with (N.succ 3); rewrite getmem_succ, <- N.land_ones; simpl;
     rewrite N.land_lor_distr_l, N.land_ones, N.land_ones, N.mod_small by apply WTM;
     rewrite N.shiftl_mul_pow2, N.mod_mul, N.lor_0_r by discriminate 1;
     reflexivity ).
@@ -843,16 +843,14 @@ Proof.
       symmetry; apply N.mod_small;
       eapply N.le_lt_trans; [ apply N.le_sub_l | apply (x86_regsize MDL EAX) ]).
   step. rewrite N.land_diag. replace (mem Ⓓ[eax-4] mod _ >> _) with (mem (eax-3)) by (
-    change 32 with (Mb * N.succ (N.succ 2));
-    rewrite getmem_succ_r, getmem_succ_r, <- N.land_ones, N.shiftr_land,
+    change 4 with (N.succ (N.succ 2));
+    rewrite getmem_succ, getmem_succ, <- N.land_ones, N.shiftr_land,
             N.shiftr_lor, N.shiftr_shiftl_l, N.shiftl_0_r by discriminate 1;
     change (N.ones _ >> _) with (N.ones 8);
     rewrite shiftr_low_pow2, N.lor_0_l, N.land_lor_distr_l, N.land_ones, N.mod_small by apply WTM;
     rewrite N.shiftl_mul_pow2, N.land_ones, N.mod_mul, N.lor_0_r by discriminate 1;
-    change 4 with (1+3);
-    rewrite N.sub_add_distr, N.sub_1_r, <- N.sub_succ_l by (change 3 with (N.pred 4); apply N.pred_le_mono, EAX4);
-    rewrite N.succ_pred by (intro H; apply EAX4; rewrite H; reflexivity);
-    reflexivity).
+    rewrite N.sub_succ_r, N.succ_pred by (eapply N.sub_gt, N.lt_le_trans; [|exact EAX4]; reflexivity);
+    reflexivity ).
   assert (NF3: nilfree mem (mem Ⓓ[esp+4]) (eax-3)). split.
     etransitivity. apply (proj1 NF). apply N.sub_le_mono_l. discriminate 1.
     intros i H1 H2. apply N.lt_le_pred in H2. rewrite <- N.sub_succ_r in H2. apply N.lt_eq_cases in H2. destruct H2 as [H2|H2].
@@ -875,10 +873,10 @@ Proof.
       rewrite N.sub_add by (apply N.le_add_le_sub_r; transitivity 4; [ discriminate 1 | exact EAX4 ]);
       symmetry; apply N.mod_small; eapply N.le_lt_trans; [ apply N.le_sub_l | apply (x86_regsize MDL EAX) ]).
     replace (mem Ⓓ[eax-4] >> 16 mod 2^8) with (mem (eax-2)) by (
-      change 32 with (Mb*(2+N.succ 1));
+      change 4 with (2+N.succ 1);
       rewrite getmem_split, N.shiftr_lor, shiftr_low_pow2, N.lor_0_l by apply getmem_bound, WTM;
       rewrite N.shiftr_shiftl_l, N.shiftl_0_r by discriminate 1;
-      rewrite getmem_succ_r, <- N.land_ones, N.land_lor_distr_l, N.land_ones, N.mod_small by apply WTM;
+      rewrite getmem_succ, <- N.land_ones, N.land_lor_distr_l, N.land_ones, N.mod_small by apply WTM;
       rewrite N.shiftl_mul_pow2, N.land_ones, N.mod_mul, N.lor_0_r by discriminate 1;
       change 4 with (2+2); rewrite N.sub_add_distr, N.sub_add by apply N.le_add_le_sub_r, EAX4;
       reflexivity).

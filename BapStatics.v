@@ -51,15 +51,14 @@ Inductive typof_exp (c:typctx): exp -> typ -> Prop :=
        typof_exp c (Var (Va id t)) t
 | TWord (n:N) (w:bitwidth)
         (LT: n < 2^w):
-        typof_exp c (Word (n,w)) (NumT w)
-| TLoad (e1 e2:exp) (en:endianness) (w mw:bitwidth)
-        (T1: typof_exp c e1 (MemT mw)) (T2: typof_exp c e2 (NumT mw))
-        (M: w mod Mb = 0):
-        typof_exp c (Load e1 e2 en w) (NumT w)
-| TStore (e1 e2 e3:exp) (en:endianness) (w mw:bitwidth)
-         (T1: typof_exp c e1 (MemT mw)) (T2: typof_exp c e2 (NumT mw)) (T3: typof_exp c e3 (NumT w))
-         (M: w mod Mb = 0):
-         typof_exp c (Store e1 e2 e3 en w) (MemT mw)
+        typof_exp c (Word n w) (NumT w)
+| TLoad (e1 e2:exp) (en:endianness) (len mw:bitwidth)
+        (T1: typof_exp c e1 (MemT mw)) (T2: typof_exp c e2 (NumT mw)):
+        typof_exp c (Load e1 e2 en len) (NumT (Mb*len))
+| TStore (e1 e2 e3:exp) (en:endianness) (len mw:bitwidth)
+         (T1: typof_exp c e1 (MemT mw)) (T2: typof_exp c e2 (NumT mw))
+         (T3: typof_exp c e3 (NumT (Mb*len))):
+         typof_exp c (Store e1 e2 e3 en len) (MemT mw)
 | TBinOp (bop:binop_typ) (e1 e2:exp) (w:bitwidth)
          (T1: typof_exp c e1 (NumT w)) (T2: typof_exp c e2 (NumT w)):
          typof_exp c (BinOp bop e1 e2) (NumT (widthof_binop bop w))
@@ -209,7 +208,7 @@ Qed.
    In general, interpretation of an arbitrary, unchecked IL program can fail
    (i.e., exec_prog is underivable) for only the following reasons:
 
-   (1) memory access violation ("accessible" returns False), or
+   (1) memory access violation ("accessible" is False), or
 
    (2) a type-mismatch occurs (e.g., addition applied to memory stores).
 
@@ -226,7 +225,7 @@ Qed.
    analysis, we provably preclude all but the stuck states of interest. *)
 
 
-(* Helper lemmas *)
+(* Helper lemmas for proving upper bounds on various operations *)
 
 Remark N_lt_0_pow2: forall p, 0 < 2^p.
 Proof.
@@ -240,6 +239,26 @@ Proof.
   intro. rewrite <- N2Z.inj_0. apply N2Z.inj_lt. apply N_lt_0_pow2.
 Qed.
 
+Remark hibits_zero_bound:
+  forall n w,
+    (forall b, w<=b -> N.testbit n b = false) ->
+  n < 2^w.
+Proof.
+  intros.
+  destruct n. destruct (2^w) eqn:H1. apply N.pow_nonzero in H1. contradict H1. discriminate 1. reflexivity.
+  apply N.compare_nge_iff. intro P.
+    apply N.log2_le_pow2 in P; [|reflexivity].
+    apply H in P. rewrite N.bit_log2 in P. discriminate P. discriminate 1.
+Qed.
+
+Remark bound_hibits_zero:
+  forall w n b, n < 2^w -> w<=b -> N.testbit n b = false.
+Proof.
+  intros. destruct n. reflexivity. apply N.bits_above_log2, N.log2_lt_pow2. reflexivity.
+  eapply N.lt_le_trans. eassumption.
+  apply N.pow_le_mono_r. discriminate 1. assumption.
+Qed.
+
 Lemma typof_towidth:
   forall w n, typof_val (towidth w n) (NumT w).
 Proof.
@@ -249,7 +268,7 @@ Proof.
   intro. discriminate.
 Qed.
 
-Remark div_bound: forall n1 n2, N.div n1 n2 <= n1.
+Lemma div_bound: forall n1 n2, N.div n1 n2 <= n1.
 Proof.
   intros.
   destruct n2. destruct n1. reflexivity. apply N.le_0_l.
@@ -266,69 +285,42 @@ Qed.
 Definition signed_range (w:N) (z:Z) := (- Z.of_N (2^w)%N <= z < Z.of_N (2^w)%N)%Z.
 
 Lemma twoscomp_range:
-  forall n w, n < 2^(N.succ w) -> signed_range w (of_twoscomp (n,N.succ w)).
+  forall n w, n < 2^(N.succ w) -> signed_range w (of_twoscomp n (N.succ w)).
 Proof.
-  unfold of_twoscomp,signed_range. intros.
-  rewrite <- (N.pred_succ w) at 1 4. destruct (N.succ w) eqn:H1. contradict H1. apply N.neq_succ_0.
-  apply N2Z.inj_lt in H. revert H.
-  repeat rewrite N2Z.inj_pow. rewrite N2Z.inj_pred by (destruct p; reflexivity). repeat rewrite N2Z.inj_pos.
-  rewrite <- (Z.succ_pred (Z.pos p)) at 1 3 4.
-  rewrite Z.pow_succ_r by (apply Zsucc_le_reg; rewrite Z.succ_pred; destruct p; discriminate 1).
-  rewrite <- Z.add_diag.
-  intro. destruct (2^Pos.pred_N p <=? n) eqn:LE.
+  intros. unfold of_twoscomp, signed_range. destruct (N.testbit _ _) eqn:SB; split.
 
-  apply N.leb_le in LE.
-  rewrite N2Z.inj_le, N2Z.inj_pow, N.pos_pred_spec in LE.
-  rewrite N2Z.inj_pred in LE by reflexivity.
-  repeat rewrite N2Z.inj_pos in LE.
-  split.
-    apply Z.le_add_le_sub_r. rewrite Zplus_assoc, Z.add_opp_diag_l, Z.add_0_l. assumption.
-    apply Z.lt_sub_lt_add_l. rewrite <- Z.add_0_r at 1. apply Z.add_lt_le_mono.
-      assumption.
-      apply Z.pow_nonneg. discriminate 1.
+  apply Z.le_add_le_sub_l. rewrite Z.add_opp_r.
+  rewrite <- N2Z.inj_sub by (apply N.pow_le_mono_r; [ discriminate 1 | apply N.lt_le_incl, N.lt_succ_diag_r ]).
+  apply N2Z.inj_le. rewrite <- (N.mul_1_l (2^w)), N.pow_succ_r', <- N.mul_sub_distr_r, N.mul_1_l.
+  intro H'. rewrite (bound_hibits_zero w) in SB.
+    discriminate SB.
+    apply N.gt_lt. assumption.
+    rewrite N.pred_succ. reflexivity.
 
-  apply N.leb_gt, N2Z.inj_lt in LE.
-  rewrite N2Z.inj_pow, N.pos_pred_spec in LE. rewrite N2Z.inj_pred in LE by reflexivity.
-  repeat rewrite N2Z.inj_pos in LE.
-  split.
-    transitivity Z0.
-      apply Z.opp_nonpos_nonneg, Z.pow_nonneg. discriminate 1.
-      rewrite <- N2Z.inj_0. apply N2Z.inj_le, N.le_0_l.
-    assumption.
+  eapply Z.lt_le_trans.
+    apply Z.lt_sub_0. apply N2Z.inj_lt. assumption.
+    apply N2Z.is_nonneg.
+
+  transitivity Z0; [apply Z.opp_nonpos_nonneg|]; apply N2Z.is_nonneg.
+
+  apply N2Z.inj_lt. apply hibits_zero_bound. intros b WB. apply N.le_lteq in WB. destruct WB.
+    eapply bound_hibits_zero. apply H. apply N.le_succ_l. assumption.
+    subst b. rewrite <- (N.pred_succ w). assumption.
 Qed.
 
 (* Expressing a signed integer in two's complement form yields an unsigned N
-   whose bitwidth is one greater than the log2 of the upper bound of the
-   signed integer. *)
+   whose bitwidth is one greater than the bitwidth of the signed integer. *)
 
 Lemma twoscomp_bound:
-  forall z w, signed_range w z -> to_twoscomp z (N.succ w) < 2^(N.succ w).
+  forall z w, to_twoscomp z w < 2^w.
 Proof.
-  unfold signed_range,to_twoscomp. intros. destruct z.
-  transitivity 1. reflexivity. apply N.pow_gt_1. reflexivity. apply N.neq_succ_0.
-  apply N.lt_le_trans with (m:=2^w).
-    apply N2Z.inj_lt. rewrite N2Z.inj_pos. apply (proj2 H).
-    apply N.pow_le_mono_r. discriminate 1. apply N.le_succ_diag_r.
-  apply N.sub_lt.
-    transitivity (2^w).
-      apply N2Z.inj_le. rewrite N2Z.inj_pos. apply Z.opp_le_mono. rewrite Pos2Z.opp_pos. apply (proj1 H).
-      apply N.pow_le_mono_r. discriminate 1. apply N.le_succ_diag_r.
-    reflexivity.
+  intros. unfold to_twoscomp. rewrite <- (N2Z.id (2^w)). apply Z2N.inj_lt.
+    apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
+    apply N2Z.is_nonneg.
+    rewrite N2Z.inj_pow. apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
 Qed.
 
-(* From the above, we can prove sound and complete upper bounds on signed
-   remainder operations. *)
-
-Remark testbit_true_nonzero:
-  forall x y, N.testbit x y = true -> x>0.
-Proof.
-  intros.
-  destruct x.
-  rewrite N.bits_0 in H. discriminate.
-  reflexivity.
-Qed.
-
-Remark rem_bound:
+Lemma rem_bound:
   forall w x y (RX: signed_range w x) (RY: signed_range w y),
   signed_range w (Z.rem x y).
 Proof.
@@ -362,176 +354,160 @@ Proof.
     apply Z.le_lt_trans with (m:=Z0). apply Z.opp_nonpos_nonneg. assumption. apply Z_lt_0_pow2.
 Qed.
 
-(* The following helper lemmas prove upper bounds for bit logic operations
-   based on Nat.testbit. *)
-
-Remark shiftr_bound:
-  forall x y, N.shiftr x y <= x.
+Lemma mod_bound:
+  forall w x y, x < 2^w -> y < 2^w -> x mod y < 2^w.
 Proof.
-  intros.
-  rewrite N.shiftr_div_pow2.
-  apply div_bound.
+  intros. destruct y as [|y].
+    destruct x; assumption.
+    etransitivity. apply N.mod_lt. discriminate 1. assumption.
 Qed.
 
-Remark hibits_zero_bound:
-  forall n w,
-    (forall b, w<=b -> N.testbit n b = false) ->
-  n < 2^w.
+Lemma shiftl_bound:
+  forall w x y, x < 2^w -> N.shiftl x y < 2^(w+y).
 Proof.
-  intros.
-  destruct n. destruct (2^w) eqn:H1. apply N.pow_nonzero in H1. contradict H1. discriminate 1. reflexivity.
-  apply N.compare_nge_iff. intro P.
-    apply N.log2_le_pow2 in P; [|reflexivity].
-    apply H in P. rewrite N.bit_log2 in P. discriminate P. discriminate 1.
-Qed.
-
-Remark bound_hibits_zero:
-  forall w n b,
-    n < 2^w -> w<=b ->
-  N.testbit n b = false.
-Proof.
-  intros.
-  destruct n. reflexivity.
-  apply N.bits_above_log2.
-  apply N.log2_lt_pow2.
-  reflexivity.
-  apply N.lt_le_trans with (m:=2^w). assumption.
-  apply N.pow_le_mono_r.
-    discriminate 1.
+  intros. rewrite N.shiftl_mul_pow2, N.pow_add_r. apply N.mul_lt_mono_pos_r.
+    apply N_lt_0_pow2.
     assumption.
 Qed.
 
-Remark logic_op_bound:
+Lemma shiftr_bound:
+  forall w x y, x < 2^w -> N.shiftr x y < 2^(w-y).
+Proof.
+  intros. destruct (N.le_gt_cases y w).
+    rewrite N.shiftr_div_pow2. apply N.div_lt_upper_bound.
+      apply N.pow_nonzero. discriminate 1.
+      rewrite <- N.pow_add_r, N.add_sub_assoc, N.add_comm, N.add_sub; assumption.
+    destruct x as [|x]. 
+      rewrite N.shiftr_0_l. apply N_lt_0_pow2.
+      rewrite N.shiftr_eq_0. apply N_lt_0_pow2. apply N.log2_lt_pow2.
+        reflexivity.
+        etransitivity. eassumption. apply N.pow_lt_mono_r. reflexivity. assumption.
+Qed.
+
+Lemma ones_bound:
+  forall w, N.ones w < 2^w.
+Proof.
+  intro. rewrite N.ones_equiv. apply N.lt_pred_l. apply N.pow_nonzero. discriminate 1.
+Qed.
+
+Lemma logic_op_bound:
   forall w n1 n2 f
-         (Z: forall x y b
-             (Z1: N.testbit x b = false) (Z2: N.testbit y b = false),
+         (Z: forall x y b (Z1: N.testbit x b = false) (Z2: N.testbit y b = false),
              N.testbit (f x y) b = false)
          (W1: n1 < 2^w) (W2: n2 < 2^w),
   f n1 n2 < 2^w.
 Proof.
-  intros.
-  apply hibits_zero_bound. intros.
-  apply Z.
-    revert H. apply bound_hibits_zero. apply W1.
-    revert H. apply bound_hibits_zero. apply W2.
+  intros. apply hibits_zero_bound. intros. apply Z;
+    revert H; apply bound_hibits_zero; assumption.
 Qed.
 
-Remark ashiftr_bound:
-  forall w n1 n2 (N1: n1 < 2^w),
-  ashiftr w n1 n2 < 2^w.
+Lemma land_bound:
+  forall w x y, x < 2^w -> y < 2^w -> N.land x y < 2^w.
 Proof.
-  intros. unfold ashiftr.
-  destruct w. assumption.
-  destruct (N.testbit n1 (Pos.pred_N p)).
-
-  apply hibits_zero_bound. intros.
-  rewrite N.shiftr_spec, N.lor_spec, N.shiftl_spec_high, N.ones_spec_high.
-  simpl.
-  apply (bound_hibits_zero (N.pos p)). assumption. rewrite <- N.add_0_r at 1. apply N.add_le_mono. assumption. apply N.le_0_l.
-  rewrite N.add_comm. rewrite <- N.add_sub_assoc. apply N.le_add_r. assumption.
-  apply N.le_0_l.
-  rewrite <- N.add_0_r at 1. apply N.add_le_mono. assumption. apply N.le_0_l.
-  apply N.le_0_l.
-
-  apply N.le_lt_trans with (m:=n1).
-  apply shiftr_bound.
-  assumption.
+  intros. apply logic_op_bound; try assumption.
+  intros. rewrite N.land_spec, Z1, Z2. reflexivity.
 Qed.
 
-Remark lor_bound:
-  forall w x y (Xlt: x < 2^w) (Ylt: y < 2^w),
-  N.lor x y < 2^w.
+Lemma lor_bound:
+  forall w x y, x < 2^w -> y < 2^w -> N.lor x y < 2^w.
 Proof.
-  intros. apply logic_op_bound; try assumption. intros.
-  rewrite N.lor_spec, Z1, Z2. reflexivity.
+  intros. apply logic_op_bound; try assumption.
+  intros. rewrite N.lor_spec, Z1, Z2. reflexivity.
 Qed.
 
+Lemma lxor_bound:
+  forall w x y, x < 2^w -> y < 2^w -> N.lxor x y < 2^w.
+Proof.
+  intros. apply logic_op_bound; try assumption.
+  intros. rewrite N.lxor_spec, Z1, Z2. reflexivity.
+Qed.
+
+Lemma lnot_bound:
+  forall w x, x < 2^w -> N.lnot x w < 2^w.
+Proof.
+  intros. unfold N.lnot. apply lxor_bound. assumption.
+  unfold N.ones. rewrite N.shiftl_1_l. apply N.lt_pred_l, N.pow_nonzero. discriminate 1.
+Qed.
+
+Lemma bit_bound:
+  forall (b:bool), (if b then 1 else 0) < 2.
+Proof. destruct b; reflexivity. Qed.
+
+Lemma cast_high_bound:
+  forall n w w', n < 2^w -> w' <= w -> N.shiftr n (w - w') < 2^w'.
+Proof.
+  intros. apply hibits_zero_bound. intros.
+  rewrite N.shiftr_spec by apply N.le_0_l. apply (bound_hibits_zero w). assumption.
+  rewrite N.add_sub_assoc, N.add_comm, <- N.add_sub_assoc by assumption.
+  apply N.le_add_r.
+Qed.
+
+Lemma concat_bound:
+  forall n1 n2 w1 w2, n1 < 2^w1 -> n2 < 2^w2 -> N.lor (N.shiftl n1 w2) n2 < 2^(w1+w2).
+Proof.
+  intros. apply lor_bound. apply shiftl_bound. assumption. eapply N.lt_le_trans.
+    eassumption.
+    apply N.pow_le_mono_r. discriminate 1. rewrite N.add_comm. apply N.le_add_r.
+Qed.
 
 
 (* Binary operations on well-typed values yield well-typed values. *)
 Theorem typesafe_binop:
   forall bop n1 n2 w
-         (TV1: typof_val (VaN (n1,w)) (NumT w)) (TV2: typof_val (VaN (n2,w)) (NumT w)),
+         (TV1: typof_val (VaN n1 w) (NumT w)) (TV2: typof_val (VaN n2 w) (NumT w)),
   typof_val (eval_binop bop w n1 n2) (NumT (widthof_binop bop w)).
 Proof.
-  assert (BIT: forall (b:bool), (if b then 1 else 0) < N.shiftl 1 1).
-    change (N.shiftl 1 1) with 2.
-    destruct b; reflexivity.
-  intros. destruct bop; try first [ apply typof_towidth |
-                                    apply TVN,BIT ].
+  intros. destruct bop; try first [ apply typof_towidth | apply TVN, bit_bound ];
+  apply TVN.
 
   (* DIV *)
-  apply TVN. apply N.le_lt_trans with (m:=n1).
-    apply div_bound.
-    inversion TV1. assumption.
+  eapply N.le_lt_trans. apply div_bound. apply value_bound. assumption.
 
   (* MOD *)
-  destruct n2. destruct n1; assumption.
-  apply TVN. apply N.le_lt_trans with (m:=N.pos p).
-    apply N.lt_le_incl. apply N.mod_lt. discriminate 1.
-    inversion TV2. assumption.
+  apply mod_bound; apply value_bound; assumption.
 
   (* SMOD *)
-  apply TVN. destruct w.
-    unfold signed_op,of_twoscomp,to_twoscomp. apply N.lt_0_1.
-    rewrite <- N.succ_pos_pred. apply twoscomp_bound. apply rem_bound.
-      apply twoscomp_range. rewrite N.succ_pos_pred. inversion TV1. assumption.
-      apply twoscomp_range. rewrite N.succ_pos_pred. inversion TV2. assumption.
+  apply twoscomp_bound.
 
   (* SHIFTR *)
-  apply TVN. apply N.le_lt_trans with (m:=n1).
-    apply shiftr_bound.
-    inversion TV1. assumption.
+  eapply N.lt_le_trans.
+    apply shiftr_bound. apply value_bound. eassumption.
+    apply N.pow_le_mono_r. discriminate 1. apply N.le_sub_l.
 
   (* ASHIFTR *)
-  apply TVN. apply ashiftr_bound. inversion TV1. assumption.
+  apply twoscomp_bound.
 
   (* LAND *)
-  apply TVN. apply logic_op_bound.
-    intros. rewrite N.land_spec. rewrite Z1,Z2. reflexivity.
-    inversion TV1. assumption.
-    inversion TV2. assumption.
+  apply land_bound; apply value_bound; assumption.
 
   (* LOR *)
-  apply TVN. apply logic_op_bound.
-    intros. rewrite N.lor_spec. rewrite Z1,Z2. reflexivity.
-    inversion TV1. assumption.
-    inversion TV2. assumption.
+  apply lor_bound; apply value_bound; assumption.
 
   (* LXOR *)
-  apply TVN. apply logic_op_bound.
-    intros. rewrite N.lxor_spec. rewrite Z1,Z2. reflexivity.
-    inversion TV1. assumption.
-    inversion TV2. assumption.
+  apply lxor_bound; apply value_bound; assumption.
 Qed.
 
 (* Unary operations on well-typed values yield well-typed values. *)
 Theorem typesafe_unop:
   forall uop n w
-         (TV: typof_val (VaN (n,w)) (NumT w)),
+         (TV: typof_val (VaN n w) (NumT w)),
   typof_val (eval_unop uop n w) (NumT w).
 Proof.
-  intros.
-  destruct uop.
+  intros. destruct uop; apply TVN.
 
   (* NEG *)
-  apply TVN. destruct n.
-    destruct w; reflexivity.
-    apply N.sub_lt. apply N.lt_le_incl. inversion TV. assumption. reflexivity.
+  apply N.mod_upper_bound, N.pow_nonzero. discriminate 1.
 
   (* NOT *)
-  apply TVN. unfold N.lnot. apply logic_op_bound.
-    intros. rewrite N.lxor_spec, Z1, Z2. reflexivity.
-    inversion TV. assumption.
-    unfold N.ones. rewrite N.shiftl_1_l. apply N.lt_pred_l, N.pow_nonzero. discriminate 1.
+  apply lnot_bound, value_bound. assumption.
 Qed.
 
 (* Casts of well-typed values yield well-typed values. *)
 Theorem typesafe_cast:
-  forall c n w w' (TV: typof_val (VaN (n,w)) (NumT w))
+  forall c n w w' (TV: typof_val (VaN n w) (NumT w))
     (T: match c with CAST_UNSIGNED | CAST_SIGNED => w<=w'
                    | CAST_HIGH | CAST_LOW => w'<=w end),
-  typof_val (VaN (cast c w w' n, w')) (NumT w').
+  typof_val (VaN (cast c w w' n) w') (NumT w').
 Proof.
   intros. inversion TV. subst. destruct c; simpl.
 
@@ -539,43 +515,26 @@ Proof.
   apply typof_towidth.
 
   (* HIGH *)
-  apply TVN. apply hibits_zero_bound. intros.
-  rewrite N.shiftr_spec. apply (bound_hibits_zero w). assumption.
-  rewrite N.add_sub_assoc, N.add_comm, <- N.add_sub_assoc.
-  apply N.le_add_r. assumption. assumption. apply N.le_0_l.
+  apply TVN, cast_high_bound; assumption.
 
   (* SIGNED *)
-  apply TVN. destruct w as [|sb]. apply N_lt_0_pow2.
-  unfold signed_cast. destruct (N.testbit n (Pos.pred_N sb)).
-
-    apply hibits_zero_bound. intros.
-    rewrite N.lor_spec, N.shiftl_spec_high, N.ones_spec_high.
-    simpl. apply (bound_hibits_zero (N.pos sb)). assumption.
-    transitivity w'; assumption.
-    apply N.sub_le_mono_r. assumption.
-    apply N.le_0_l.
-    transitivity w'; assumption.
-    apply N.lt_le_trans with (m:=2^(N.pos sb)). assumption.
-      apply N.pow_le_mono_r. discriminate 1. assumption.
+  apply TVN, twoscomp_bound.
 
   (* UNSIGNED *)
-  apply TVN. apply N.lt_le_trans with (m:=2^w). assumption.
+  apply TVN. eapply N.lt_le_trans. eassumption.
   apply N.pow_le_mono_r. discriminate 1. assumption.
 Qed.
 
 (* Memory-loads of well-typed arguments yield well-typed results. *)
 Theorem getmem_bound:
-  forall e w m a (WTM: welltyped_memory m),
-  getmem e w m a < 2^w.
+  forall e len m a (WTM: welltyped_memory m),
+  getmem e len m a < 2^(Mb*len).
 Proof.
-  intros.
-  rewrite getmem_div_mul.
-  eapply N.lt_le_trans; [|apply N.pow_le_mono_r; [ discriminate 1 | apply N.mul_div_le, Mb_nonzero ] ].
-  revert a. generalize (w/Mb) as n. induction n using N.peano_ind; intro.
+  intros. revert a. induction len using N.peano_ind; intro.
     rewrite N.mul_0_r. apply N_lt_0_pow2.
-    rewrite getmem_succ_r. destruct e; apply lor_bound.
+    rewrite getmem_succ. destruct e; apply lor_bound.
       eapply N.lt_le_trans.
-        apply IHn.
+        apply IHlen.
         apply N.pow_le_mono_r. discriminate 1. apply N.mul_le_mono_nonneg_l. apply N.le_0_l. apply N.le_succ_diag_r.
       rewrite N.shiftl_mul_pow2, N.mul_succ_r, N.add_comm, N.pow_add_r. apply N.mul_lt_mono_pos_r.
         apply N_lt_0_pow2.
@@ -585,56 +544,47 @@ Proof.
         apply N.pow_le_mono_r. discriminate 1. rewrite N.mul_succ_r, N.add_comm. apply N.le_add_r.
       rewrite N.shiftl_mul_pow2, N.mul_succ_r, N.pow_add_r. apply N.mul_lt_mono_pos_r.
         apply N_lt_0_pow2.
-        apply IHn.
+        apply IHlen.
 Qed.
 
 Theorem typesafe_getmem:
-  forall w w' m a e (TV1: typof_val (VaM m w) (MemT w)),
-  typof_val (VaN (getmem e w' m a, w')) (NumT w').
+  forall mw len m a e (TV1: typof_val (VaM m mw) (MemT mw)),
+  typof_val (VaN (getmem e len m a) (Mb*len)) (NumT (Mb*len)).
 Proof.
-  intros. apply TVN. apply getmem_bound. inversion TV1. assumption.
+  intros. apply TVN. apply getmem_bound. eapply mem_welltyped. eassumption.
 Qed.
 
 (* Stores into well-typed memory yield well-typed memory. *)
 Theorem setmem_welltyped:
-  forall e w m a v (WTM: welltyped_memory m) (VM: v < 2^w) (M: w mod Mb = 0),
-  welltyped_memory (setmem e w m a v).
+  forall e len m a v (WTM: welltyped_memory m) (VM: v < 2^(Mb*len)),
+  welltyped_memory (setmem e len m a v).
 Proof.
-  intros.
-  rewrite (N.div_mod' w Mb), M, N.add_0_r in VM. clear M.
-  rewrite setmem_div_mul.
-  revert m a v WTM VM. generalize (w/Mb) as n. clear w. induction n using N.peano_ind; intros.
-    rewrite N.mul_0_r, setmem_0. apply WTM.
-    rewrite setmem_succ_r. destruct e.
-      apply IHn.
-        intro a'. destruct (N.eq_dec a' a).
-          subst a'. rewrite update_updated, N.shiftr_div_pow2. apply N.div_lt_upper_bound.
-            apply N.pow_nonzero. discriminate 1.
-            rewrite <- N.pow_add_r, <- N.mul_succ_r. exact VM.
-          rewrite update_frame by assumption. apply WTM.
+  induction len using N.peano_ind; intros.
+    rewrite setmem_0. apply WTM.
+    rewrite setmem_succ. destruct e; (apply IHlen; [intro a'; destruct (N.eq_dec a' a); [subst a'|]|]).
+      rewrite update_updated, N.shiftr_div_pow2. apply N.div_lt_upper_bound.
+        apply N.pow_nonzero. discriminate 1.
+        rewrite <- N.pow_add_r, <- N.mul_succ_r. exact VM.
+      rewrite update_frame by assumption. apply WTM.
+      apply N.mod_lt, N.pow_nonzero. discriminate 1.
+      rewrite update_updated. destruct len.
+        eapply N.lt_le_trans. exact VM. rewrite N.mul_1_r. reflexivity.
         apply N.mod_lt, N.pow_nonzero. discriminate 1.
-      apply IHn.
-        intro a'. destruct (N.eq_dec a' a).
-          subst a'. rewrite update_updated. destruct n.
-            eapply N.lt_le_trans. exact VM. rewrite N.mul_1_r. reflexivity.
-            apply N.mod_lt, N.pow_nonzero. discriminate 1.
-          rewrite update_frame by assumption. apply WTM.
-        rewrite N.shiftr_div_pow2. apply N.div_lt_upper_bound.
-          apply N.pow_nonzero. discriminate 1.
-          rewrite <- N.pow_add_r, N.add_comm, <- N.mul_succ_r. exact VM.
+      rewrite update_frame by assumption. apply WTM.
+      rewrite N.shiftr_div_pow2. apply N.div_lt_upper_bound.
+        apply N.pow_nonzero. discriminate 1.
+        rewrite <- N.pow_add_r, N.add_comm, <- N.mul_succ_r. exact VM.
 Qed.
 
 Corollary typesafe_setmem:
-  forall w mw m a v e
+  forall len mw m a v e
          (TV1: typof_val (VaM m mw) (MemT mw))
-         (TV3: typof_val (VaN (v,w)) (NumT w))
-         (M: w mod Mb = 0),
-  typof_val (VaM (setmem e w m a v) mw) (MemT mw).
+         (TV3: typof_val (VaN v (Mb*len)) (NumT (Mb*len))),
+  typof_val (VaM (setmem e len m a v) mw) (MemT mw).
 Proof.
   intros. apply TVM, setmem_welltyped.
-    inversion TV1. assumption.
-    inversion TV3. assumption.
-    assumption.
+    eapply mem_welltyped. eassumption.
+    apply value_bound. assumption.
 Qed.
 
 
@@ -656,7 +606,7 @@ Proof.
 Qed.
 
 Theorem models_regsize:
-  forall {c s v u w} (MDL: models c s) (VAL: s v = Some (VaN (u,w))),
+  forall {c s v u w} (MDL: models c s) (VAL: s v = Some (VaN u w)),
   match c v with Some _ => u < 2^w | None => True end.
 Proof.
   intros. specialize (MDL v). destruct (c v); [|exact I].
@@ -682,101 +632,10 @@ Remark welltyped_while:
   typof_stmt c0 c (If e (Seq q (While e q)) Nop) c.
 Proof.
   intros. inversion H; subst.
-  apply TIf with (c1:=c) (c2:=c).
-    reflexivity.
-    reflexivity.
-    assumption.
+  apply TIf with (c1:=c) (c2:=c); try reflexivity; try assumption.
     apply TSeq with (c1:=c') (c2:=c); assumption.
     apply TNop.
 Qed.
-
-(*
-(* Only typed variables are accessible. *)
-Theorem eval_exp_untyped_var:
-  forall v u0 RW e s u c t
-         (E: eval_exp RW s e u)
-         (T: typof_exp c e t)
-         (CV: c v = None),
-  eval_exp RW (update vareq s v u0) e u.
-Proof.
-  induction e; intros.
-    destruct v0. destruct (vareq id v).
-      inversion T; subst. rewrite CV0 in CV. discriminate CV.
-      apply EVar. rewrite update_frame by assumption. inversion E. assumption.
-    all: inversion E; inversion T; subst; econstructor.
-    all: try first [ assumption | eapply IHe; eassumption | eapply IHe1; eassumption | eapply IHe2; eassumption | eapply IHe3; eassumption ].
-    injection H4 as; subst. destruct (vareq v id).
-      subst id. rewrite update_cancel. exact E2.
-      rewrite update_swap by assumption. eapply IHe2. exact E2. exact T2. rewrite update_frame by assumption. exact CV.
-    destruct n1.
-      eapply IHe3. exact E'. exact T3. exact CV.
-      eapply IHe2. exact E'. exact T2. exact CV.
-Qed.
-
-Theorem exec_stmt_newvar:
-  forall v RW m q c0 s s' c c' t
-         (XS: exec_stmt RW s q m s' None)
-         (T: typof_stmt c0 c q c')
-         (CV: c v = None) (CV': c' v = Some t),
-  s' v <> None.
-Proof.
-  induction m; intros; inversion XS; subst.
-    inversion T; subst. rewrite CV' in CV. discriminate CV.
-    destruct (vareq v id).
-      subst id. rewrite update_updated. discriminate 1.
-      inversion T; subst. rewrite update_frame in CV' by assumption. rewrite CV' in CV. discriminate CV.
-    inversion T; subst. destruct (c2 v) eqn:CV2.
-      intro SV'. eapply exec_stmt_nodelete in SV'; [|exact XS0]. revert SV'. eapply IHm. exact XS1. exact TS1. exact CV. apply SS. exact CV2.
-      eapply IHm. exact XS0. exact TS2. exact CV2. exact CV'.
-    inversion T; subst. eapply IHm. exact XS0. apply welltyped_while. exact T. exact CV. exact CV'.
-    inversion T; subst. destruct c1.
-      eapply IHm. exact XS0. exact TS2. exact CV. apply SS2. exact CV'.
-      eapply IHm. exact XS0. exact TS1. exact CV. apply SS1. exact CV'.
-Qed.
-
-Lemma exec_stmt_ignore_var:
-  forall v RW m q c0 s s' c c' t u
-         (XS: exec_stmt RW s q m s' None)
-         (T: typof_stmt c0 c q c')
-         (CV: c v = None) (CV': c' v = Some t),
-  exec_stmt RW (update vareq s v u) q m s' None.
-Proof.
-  induction m; intros; inversion XS; subst.
-    inversion T; subst. rewrite CV' in CV. discriminate CV.
-    inversion T; subst. destruct (vareq v id).
-      subst id. rewrite <- (update_cancel vareq s v u (Some u0)). apply XMove. eapply eval_exp_untyped_var. assumption. exact TE. exact CV.
-      rewrite update_frame in CV' by assumption. rewrite CV' in CV. discriminate CV.
-    
-
-Theorem exec_stmt_untyped_var:
-  forall v u RW c0 m q s s' x c c'
-         (XS: exec_stmt RW s q m s' x)
-         (T: typof_stmt c0 c q c')
-         (CV: c v = None),
-  exec_stmt RW (update vareq s v u) q m s' x \/
-  exec_stmt RW (update vareq s v u) q m (update vareq s' v u) x.
-Proof.
-  induction m; intros.
-    right. inversion XS; subst. apply XZero.
-    inversion XS; subst.
-      right. apply XNop.
-      inversion T; subst. destruct (vareq id v).
-        left. subst id. rewrite <- (update_cancel _ _ v u (Some u0)). apply XMove. eapply eval_exp_untyped_var. exact E. exact TE. exact CV.
-        right. rewrite update_swap by assumption. apply XMove. eapply eval_exp_untyped_var. exact E. exact TE. exact CV.
-      right. inversion T; subst. eapply XJmp. eapply eval_exp_untyped_var. exact E. exact TE. exact CV.
-      right. inversion T; subst. apply XExn.
-      inversion T; subst. destruct (IHm _ _ _ _ _ _ XS0 TS1 CV).
-        left. apply XSeq1. assumption.
-        right. apply XSeq1. assumption.
-      inversion T; subst. destruct (IHm _ _ _ _ _ _ XS1 TS1 CV).
-        left. eapply XSeq2. exact H. exact XS0.
-        destruct (c2 v) eqn:CV2.
-          left. eapply XSeq2; [|exact XS0]. rewrite (@store_upd_eq s2 v u). exact XS0.
-            eapply exec_stmt_mono in H.
-          destruct (IHm _ _ _ _ _ _ XS0 TS2 CV2).
-            left. eapply XSeq2. exact H. exact H0.
-            right. eapply XSeq2. exact H. exact H0.
-*)
 
 (* Every result of evaluating a well-typed expression is a well-typed value. *)
 Lemma preservation_eval_exp:
@@ -800,7 +659,7 @@ Proof.
   apply TVN. assumption.
 
   (* Load *)
-  apply typesafe_getmem with (w:=mw); assumption.
+  eapply typesafe_getmem; eassumption.
 
   (* Store *)
   apply typesafe_setmem; assumption.
@@ -835,15 +694,7 @@ Proof.
     apply -> N.succ_le_mono. apply N.le_sub_l.
 
   (* Concat *)
-  apply TVN. apply logic_op_bound.
-    intros. rewrite N.land_spec, Z1, Z2. reflexivity.
-    rewrite N.shiftl_mul_pow2, N.pow_add_r. apply N.mul_lt_mono_pos_r.
-      apply N_lt_0_pow2.
-      assumption.
-    apply N.lt_le_trans with (m:=2^w2).
-      assumption.
-      rewrite N.pow_add_r, <- (N.mul_1_l (2^w2)) at 1. apply N.mul_le_mono_r.
-        change 1 with (2^0). apply N.pow_le_mono_r. discriminate 1. apply N.le_0_l.
+  apply TVN. apply concat_bound; assumption.
 Qed.
 
 (* If an expression is well-typed and there are no memory access violations,
@@ -869,16 +720,14 @@ Proof.
   exists u. apply EVar; assumption.
 
   (* Word *)
-  exists (VaN (n,w)). apply EImm; assumption.
+  exists (VaN n w). apply EImm; assumption.
 
   (* Load *)
-  exists (VaN (getmem en w m n, w)).
-  apply ELoad with (mw:=mw); try assumption.
-  intros. apply MEM.
+  eexists. eapply ELoad; try eassumption. intros. apply MEM.
 
   (* Store *)
-  exists (VaM (setmem en w m n n0) mw).
-  apply EStore; try assumption.
+  eexists.
+  eapply EStore; try eassumption.
   intros. apply MEM.
 
   (* BinOp *)
@@ -890,7 +739,7 @@ Proof.
   apply EUnOp; assumption.
 
   (* Cast *)
-  exists (VaN (cast ct w w' n, w')). apply ECast; assumption.
+  eexists. apply ECast; eassumption.
 
   (* Let *)
   assert (CS': models (c[id:=Some t1]) (s[id:=Some u])).
@@ -902,20 +751,18 @@ Proof.
 
   (* Unknown *)
   destruct t.
-    exists (VaN (0,w)). apply EUnknown, TVN, N_lt_0_pow2.
+    exists (VaN 0 w). apply EUnknown, TVN, N_lt_0_pow2.
     exists (VaM (fun _ => 0) w). apply EUnknown, TVM. intro. apply N_lt_0_pow2.
 
   (* Ite *)
-  exists (match n with N0 => u0 | _ => u end).
+  eexists (match n with N0 => u0 | _ => u end).
   apply EIte with (n1:=n) (w1:=w). assumption. destruct n; assumption.
 
   (* Extract *)
-  exists (VaN (cast CAST_HIGH (N.succ n1) (N.succ (n1-n2)) (cast CAST_LOW w (N.succ n1) n), N.succ (n1-n2))).
-  apply EExtract; assumption.
+  eexists. apply EExtract; eassumption.
 
   (* Concat *)
-  exists (VaN (N.land (N.shiftl n w2) n0,w1+w2)).
-  apply EConcat; assumption.
+  eexists. apply EConcat; eassumption.
 Qed.
 
 (* Statement execution preserves the modeling relation. *)
