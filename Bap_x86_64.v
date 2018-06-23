@@ -1,4 +1,4 @@
-(* Instantiation of CoqBAP for Intel x86 Architecture
+(* Instantiation of CoqBAP for Intel x86_64 Architecture
  *
  * Copyright (c) 2018 Kevin W. Hamlen
  * Computer Science Department
@@ -17,7 +17,7 @@ Require Import NArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.
 
-(* Variables found in IL code lifted from x86 native code: *)
+(* Variables found in IL code lifted from x86_64 native code: *)
 Inductive x86var :=
   (* Main memory: MemT 32 / MemT 64*)
   | V_MEM32 | V_MEM64
@@ -65,9 +65,7 @@ End MiniX86VarEq.
 
 Module X86Arch <: Architecture.
   Module Var := Make_UDT MiniX86VarEq.
-  Definition Mb := 8%N.
-  Theorem Mb_nonzero: Mb <> 0%N.
-  Proof. discriminate 1. Qed.
+  Definition mem_bits := 8%positive.
 End X86Arch.
 
 (* Instantiate the static semantics module with the x86 identifiers above. *)
@@ -130,16 +128,12 @@ Proof. intro. reflexivity. Qed.
 Theorem lor_plus:
   forall a b (A0: N.land a b = 0), N.lor a b = a + b.
 Proof.
-  destruct a as [|a]; destruct b as [|b]; intros; try reflexivity.
-  simpl in *. apply f_equal. revert b A0.
-  induction a; destruct b; simpl; intros; try solve [ reflexivity | discriminate A0 ].
-    destruct (Pos.land a b); discriminate A0.
-    all: rewrite IHa; [ reflexivity | destruct (Pos.land a b); [ reflexivity | discriminate A0 ]].
+  intros. rewrite <- N.lxor_lor, N.add_nocarry_lxor by assumption. reflexivity.
 Qed.
 
 (* ((width) memory[...]) mod 2^width = (width) memory[...] *)
-Lemma memlo: forall w1 w2 m a, welltyped_memory m -> w1 <= w2 ->
-  (getmem LittleE w1 m a) mod 2^w2 = getmem LittleE w1 m a.
+Lemma memlo: forall len w m a, welltyped_memory m -> Mb*len <= w ->
+  (getmem LittleE len m a) mod 2^w = getmem LittleE len m a.
 Proof.
   intros. apply N.mod_small. eapply N.lt_le_trans.
     apply getmem_bound. assumption.
@@ -239,7 +233,7 @@ Global Hint Rewrite N.lor_0_l : mod_pow2.
 Global Hint Rewrite N.lor_0_r : mod_pow2.
 Global Hint Rewrite N.lxor_0_l : mod_pow2.
 Global Hint Rewrite N.lxor_0_r : mod_pow2.
-Global Hint Rewrite getmem_Mb : mod_pow2.
+Global Hint Rewrite getmem_1 : mod_pow2.
 Global Hint Rewrite N.mul_1_l : mod_pow2.
 Global Hint Rewrite N.mul_1_r : mod_pow2.
 Global Hint Rewrite fold_parity : mod_pow2.
@@ -266,36 +260,11 @@ Global Hint Rewrite N.mod_small using solve_lt : mod_pow2.
 
 (* When reducing modulo operations, try auto-solving inequalities of the form x < 2^w. *)
 
-Lemma lnot_bound: forall x y, x < 2^y -> N.lnot x y < 2^y.
-Proof.
-  intros. apply hibits_zero_bound. intros.
-  rewrite N.lnot_spec_high by assumption.
-  eapply bound_hibits_zero; eassumption.
-Qed.
-
-Lemma lxor_bound: forall x y z, x < 2^z -> y < 2^z -> N.lxor x y < 2^z.
-Proof.
-  intros. apply logic_op_bound; [| assumption .. ].
-  intros. rewrite N.lxor_spec, Z1, Z2. reflexivity.
-Qed.
-
-Lemma land_bound: forall x y z, x < 2^z -> y < 2^z -> N.land x y < 2^z.
-Proof.
-  intros. apply logic_op_bound; [| assumption .. ].
-  intros. rewrite N.land_spec, Z1, Z2. reflexivity.
-Qed.
-
-Lemma lor_bound: forall x y z, x < 2^z -> y < 2^z -> N.lor x y < 2^z.
-Proof.
-  intros. apply logic_op_bound; [|assumption .. ].
-  intros. rewrite N.lor_spec, Z1, Z2. reflexivity.
-Qed.
-
 Ltac solve_lt_prim :=
   reflexivity +
   eassumption +
   (apply N.mod_upper_bound; discriminate 1) +
-  lazymatch goal with [ M: models x86typctx ?s, R: ?s ?r = Some (VaN (?x,?w)) |- ?x < _ ] => apply (x86_regsize M R)
+  lazymatch goal with [ M: models x86typctx ?s, R: ?s ?r = Some (VaN ?x ?w) |- ?x < _ ] => apply (x86_regsize M R)
                     | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM end +
   (apply getmem_bound; assumption) +
   (apply lxor_bound; solve_lt) +
@@ -317,7 +286,7 @@ with solve_lt :=
 Tactic Notation "simpl_x86" "in" hyp(H) :=
   autorewrite with mod_pow2 in H;
   repeat (match type of H with
-  | context [ (getmem LittleE ?w1 ?m ?a) mod 2^?w2 ] => rewrite (memlo w1 w2 m a) in H; [| assumption | discriminate 1 ]
+  | context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a) in H; [| assumption | discriminate 1 ]
   | context [ N.shiftr ?X ?Y ] => rewrite (shiftr_low_pow2 X Y) in H by solve_lt
   | context [ ?X mod ?M ] => rewrite (N.mod_small X M) in H by solve_lt
   | context [ N.land ?X ?Y ] => (erewrite (land_mod_r X Y) in H +
@@ -327,7 +296,7 @@ Tactic Notation "simpl_x86" "in" hyp(H) :=
 Ltac simpl_x86 :=
   autorewrite with mod_pow2;
   repeat (match goal with
-  | |- context [ (getmem LittleE ?w1 ?m ?a) mod 2^?w2 ] => rewrite (memlo w1 w2 m a); [| assumption | discriminate 1 ]
+  | |- context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a); [| assumption | discriminate 1 ]
   | |- context [ N.shiftr ?X ?Y ] => rewrite (shiftr_low_pow2 X Y) by solve_lt
   | |- context [ ?X mod ?M ] => rewrite (N.mod_small X M) by solve_lt
   | |- context [ N.land ?X ?Y ] => (erewrite (land_mod_r X Y) +
@@ -345,14 +314,14 @@ Ltac simpl_x86 :=
 
    In order for this methodology to prove that a post-condition holds at subroutine exit,
    we must attach one of these invariants (the post-condition) to the return address of the
-   subroutine.  This is a somewhat delicate process, since unlike all the other code addresses,
-   the exact value of the return address is not known until runtime.  We therefore adopt the
+   subroutine.  This is a somewhat delicate process, since unlike most other code addresses,
+   the exact value of the return address is defined by the caller.  We therefore adopt the
    following conventions:  Assume that an x86 subroutine begins with a return address located
    at a particular memory address (determined by the subroutine's calling convention).  The
    subroutine "exits" when control flows to that address.  As a precondition of the subroutine,
    we assume that the subroutine program p does not assign an IL block to the return address
    (i.e., p retaddr = None).  If this assumption is violated, it means that the caller is
-   part of the subroutine (i.e., the subroutine recursively called itself), which is not
+   part of the callee (i.e., the subroutine recursively called itself), which is not
    really the end of the subroutine's execution. *)
 
 
@@ -396,7 +365,7 @@ Proof.
     exfalso. apply n0. reflexivity.
 Qed.
 
-(* If we reach some other address to which an invariant has been assigned, top and request
+(* If we reach some other address to which an invariant has been assigned, stop and request
    that the user prove the invariant using the current state. *)
 Remark x86_not_returning_invhere (P: Prop):
   forall p inv_set postcond ra a s n
@@ -499,25 +468,25 @@ Ltac x86_step :=
 Module X86Notations.
 
 Notation "Ⓜ m" := (Some (VaM m 32)) (at level 20). (* memory value *)
-Notation "ⓑ u" := (Some (VaN (u,1))) (at level 20). (* bit value *)
-Notation "Ⓑ u" := (Some (VaN (u,8))) (at level 20). (* byte value *)
-Notation "Ⓦ u" := (Some (VaN (u,16))) (at level 20). (* word value *)
-Notation "Ⓓ u" := (Some (VaN (u,32))) (at level 20). (* dword value *)
-Notation "Ⓠ u" := (Some (VaN (u,64))) (at level 20). (* quad word value *)
-Notation "Ⓧ u" := (Some (VaN (u,128))) (at level 20). (* xmm value *)
-Notation "Ⓨ u" := (Some (VaN (u,256))) (at level 20). (* ymm value *)
-Notation "m Ⓑ[ a ]" := (getmem LittleE 8 m a) (at level 10). (* read byte from memory *)
-Notation "m Ⓦ[ a ]" := (getmem LittleE 16 m a) (at level 10). (* read word from memory *)
-Notation "m Ⓓ[ a ]" := (getmem LittleE 32 m a) (at level 10). (* read dword from memory *)
-Notation "m Ⓠ[ a ]" := (getmem LittleE 64 m a) (at level 10). (* read quad word from memory *)
-Notation "m Ⓧ[ a ]" := (getmem LittleE 128 m a) (at level 10). (* read xmm from memory *)
-Notation "m Ⓨ[ a ]" := (getmem LittleE 256 m a) (at level 10). (* read ymm from memory *)
-Notation "m [Ⓑ a := v ]" := (setmem LittleE 8 m a v) (at level 50, left associativity). (* write byte to memory *)
-Notation "m [Ⓦ a := v ]" := (setmem LittleE 16 m a v) (at level 50, left associativity). (* write word to memory *)
-Notation "m [Ⓓ a := v ]" := (setmem LittleE 32 m a v) (at level 50, left associativity). (* write dword to memory *)
-Notation "m [Ⓠ a := v ]" := (setmem LittleE 64 m a v) (at level 50, left associativity). (* write quad word to memory *)
-Notation "m [Ⓧ a := v ]" := (setmem LittleE 128 m a v) (at level 50, left associativity). (* write xmm to memory *)
-Notation "m [Ⓨ a := v ]" := (setmem LittleE 256 m a v) (at level 50, left associativity). (* write ymm to memory *)
+Notation "ⓑ u" := (Some (VaN u 1)) (at level 20). (* bit value *)
+Notation "Ⓑ u" := (Some (VaN u 8)) (at level 20). (* byte value *)
+Notation "Ⓦ u" := (Some (VaN u 16)) (at level 20). (* word value *)
+Notation "Ⓓ u" := (Some (VaN u 32)) (at level 20). (* dword value *)
+Notation "Ⓠ u" := (Some (VaN u 64)) (at level 20). (* quad word value *)
+Notation "Ⓧ u" := (Some (VaN u 128)) (at level 20). (* xmm value *)
+Notation "Ⓨ u" := (Some (VaN u 256)) (at level 20). (* ymm value *)
+Notation "m Ⓑ[ a ]" := (getmem LittleE 1 m a) (at level 10). (* read byte from memory *)
+Notation "m Ⓦ[ a ]" := (getmem LittleE 2 m a) (at level 10). (* read word from memory *)
+Notation "m Ⓓ[ a ]" := (getmem LittleE 4 m a) (at level 10). (* read dword from memory *)
+Notation "m Ⓠ[ a ]" := (getmem LittleE 8 m a) (at level 10). (* read quad word from memory *)
+Notation "m Ⓧ[ a ]" := (getmem LittleE 16 m a) (at level 10). (* read xmm from memory *)
+Notation "m Ⓨ[ a ]" := (getmem LittleE 32 m a) (at level 10). (* read ymm from memory *)
+Notation "m [Ⓑ a := v ]" := (setmem LittleE 1 m a v) (at level 50, left associativity). (* write byte to memory *)
+Notation "m [Ⓦ a := v ]" := (setmem LittleE 2 m a v) (at level 50, left associativity). (* write word to memory *)
+Notation "m [Ⓓ a := v ]" := (setmem LittleE 4 m a v) (at level 50, left associativity). (* write dword to memory *)
+Notation "m [Ⓠ a := v ]" := (setmem LittleE 8 m a v) (at level 50, left associativity). (* write quad word to memory *)
+Notation "m [Ⓧ a := v ]" := (setmem LittleE 16 m a v) (at level 50, left associativity). (* write xmm to memory *)
+Notation "m [Ⓨ a := v ]" := (setmem LittleE 32 m a v) (at level 50, left associativity). (* write ymm to memory *)
 Notation "x ⊕ y" := ((x+y) mod 2^32) (at level 50, left associativity). (* modular addition *)
 Notation "x ⊖ y" := ((x-y) mod 2^32) (at level 50, left associativity). (* modular subtraction *)
 Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* modular multiplication *)
@@ -529,3 +498,4 @@ Notation "x .^ y" := (N.lxor x y) (at level 55, left associativity). (* logical 
 Notation "x .| y" := (N.lor x y) (at level 55, left associativity). (* logical or *)
 
 End X86Notations.
+
