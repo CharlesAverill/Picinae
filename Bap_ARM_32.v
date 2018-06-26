@@ -11,7 +11,6 @@
  * modules, and compile them (in that order) using menu option Compile->
  * Compile buffer.
  *)
-Add LoadPath "H:\coq\CoqBAP-test\CoqBAP-test".
 
 Require Import BapStatics.
 Require Import NArith.
