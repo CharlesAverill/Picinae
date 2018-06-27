@@ -25,7 +25,7 @@ Require Import ZArith.
 Require Import Picinae_i386.
 Require Import strlen_i386.
 
-Import Picinae_x86.
+Import PArch_i386.
 Import X86Notations.
 Open Scope N.
 
