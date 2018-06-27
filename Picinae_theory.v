@@ -1,374 +1,51 @@
-(* BIL Interpreter for Binary Analysis Platform (BAP)
- *
- * Copyright (c) 2018 Kevin W. Hamlen
- * Computer Science Department
- * The University of Texas at Dallas
- *
- * Any use, commercial or otherwise, requires the express permission of
- * the author.
- *
- * To compile this module, first load the BapSyntax module and compile
- * it with menu option Compile->Compile buffer.
+(* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
+                                                                          $MNDM7
+   Copyright (c) 2018 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
+   Computer Science Department             Z$$ZM++O++                    7MMZZN+
+                                          ZZ$7Z.ZM~?                     7MZDNO$
+                                        ?Z8ZO7.OM=+?                     $OMO+Z+
+   Any use, commercial or otherwise       ?D=++M++ZMMNDNDZZ$$Z?           MM,IZ=
+   requires the express permission of        MZZZZZZ+...=.8NOZ8NZ$7       MM+$7M
+   the author.                                 ?NNMMM+.IZDMMMMZMD8O77     O7+MZ+
+                                                     MMM8MMMMMMMMMMM77   +MMMMZZ
+                                                     MMMMMMMMMMMZMDMD77$.ZMZMM78
+                                                      MMMMMMMMMMMMMMMMMMMZOMMM+Z
+   Interpreter Theory module:                          MMMMMMMMMMMMMMMMM^NZMMN+Z
+   * quantification over IL syntax,                     MMMMMMMMMMMMMMM/.$MZM8O+
+   * theory of store-updates and memory-accesses,        MMMMMMMMMMMMMM7..$MNDM+
+   * theory of two's-complement binary numbers,           MMDMMMMMMMMMZ7..$DM$77
+   * determinism of Unknown-free programs,                 MMMMMMM+MMMZ7..7ZM~++
+   * monotonicity of stores,                                MMMMMMMMMMM7..ZNOOMZ
+   * boundedness of While-free programs,                     MMMMMMMMMM$.$MOMO=7
+   * inductive schemas for program analysis,                  MDMMMMMMMO.7MDM7M+
+   * frame theorems for assignment-free programs, and          ZMMMMMMMM.$MM8$MN
+   * functional interpretation of statements.                  $ZMMMMMMZ..MMMOMZ
+                                                                ?MMMMMM7..MNN7$M
+   To compile this module, first load the Picinae_core           ?MMMMMZ..MZM$ZZ
+   module and compile it with menu option                         ?$MMMZ7.ZZM7DZ
+   Compile->Compile_buffer.                                         7MMM$.7MDOD7
+                                                                     7MMM.7M77ZZ
+                                                                      $MM78ZDZ7Z
+                                                                        MM8D$7Z7
+                                                                        MM7O$$+Z
+                                                                         M 7N8ZD
  *)
 
-Require Export BapSyntax.
-Require Import ZArith.
+Require Export Picinae_core.
 Require Import NArith.
-Require Import Structures.Equalities.
+Require Import ZArith.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
 Require Setoid.
 
 
-(* The interpreter module takes a machine architecture as input, expressed as
-   a module that defines a type for IL variables along with the bitwidth of
-   memory contents (usually 8 for bytes).  The bitwidth can be any nonzero N. *)
-Module Type Architecture.
-  Declare Module Var : UsualDecidableType.
-  Parameter mem_bits : positive.
-End Architecture.
 
+Module PicinaeTheory (Arch: Architecture).
 
-
-Module BAPInterp (Arch : Architecture).
-
-Export Arch.
-Definition Mb := Npos mem_bits.
-Module Syntax := BAPSyntax Var.
-Export Syntax.
+Module PCore := PicinaeCore Arch.
+Export PCore.
 Open Scope N.
-
-(* Different machine architectures use different datatypes to represent
-   variable identifiers at the IL level.  The representation can be almost
-   anything, but the interpreter at least needs a way to decide whether
-   arbitrary variable instances denote the same variable.  To facilitate this,
-   we use Coq's UsualDecidableType module from Structures.Equalities. *)
-Definition vareq := Var.eq_dec.
-
-(* Runtime values are integers or memory states. *)
-Inductive value : Type :=
-| VaN (n:N) (w:bitwidth)
-| VaM (m:addr->N) (w:bitwidth).
-
-(* Memory is well-typed if every address holds a byte. *)
-Definition welltyped_memory (m:addr->N) : Prop :=
-  forall a, m a < 2^Mb.
-
-(* A constant's type is its bitwidth, and a memory's type is the
-   bitwidth of its addresses. *)
-Inductive typof_val: value -> typ -> Prop :=
-| TVN (n:N) (w:bitwidth) (LT: n < 2^w): typof_val (VaN n w) (NumT w)
-| TVM (m:addr->N) (w:bitwidth) (WTM: welltyped_memory m): typof_val (VaM m w) (MemT w).
-
-(* A store is a partial function from variables to values. *)
-Definition store := varid -> option value.
-
-(* Reinterpret an unsigned integer as a 2's complement signed integer. *)
-Definition of_twoscomp (n:N) (w:bitwidth) : Z :=
-  if N.testbit n (N.pred w) then Z.of_N n - Z.of_N (2^w) else Z.of_N n.
-
-(* Convert an integer back to 2's complement form. *)
-Definition to_twoscomp (z:Z) (w:N) : N :=
-  Z.to_N (z mod 2^(Z.of_N w)).
-
-(* Perform a signed operation by converting the unsigned operands to signed
-   operands, applying the signed operation, and then converting the signed
-   result back to unsigned. *)
-Definition signed_op (op:Z->Z->Z) (w n1 n2:N) : N :=
-  to_twoscomp (op (of_twoscomp n1 w) (of_twoscomp n2 w)) w.
-
-(* Compute an arithmetic shift-right (sign-extending shift-right). *)
-Definition ashiftr (w:N) := signed_op Z.shiftr w.
-
-(* Force a result to a given width by dropping the high bits. *)
-Definition towidth (w:bitwidth) (n:N) : value :=
-  VaN (N.modulo n (2^w)) w.
-Global Arguments towidth / w n.
-
-(* Force a result to a boolean value (1-bit integer). *)
-Definition tobit (b:bool) : value :=
-  VaN (N.b2n b) 1.
-Global Arguments tobit / b.
-
-(* Perform signed less-than comparison. *)
-Definition signed_lt (w n1 n2:N) : bool :=
-  Z.ltb (of_twoscomp n1 w) (of_twoscomp n2 w).
-
-(* Perform signed less-or-equal comparison. *)
-Definition signed_le (w n1 n2:N) : bool :=
-  Z.leb (of_twoscomp n1 w) (of_twoscomp n2 w).
-
-(* Perform a binary operation (using the above as helper functions). *)
-Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
-  match bop with
-  | OP_PLUS => towidth w (n1+n2)
-  | OP_MINUS => towidth w (2^w + n1 - n2)
-  | OP_TIMES => towidth w (n1*n2)
-  | OP_DIVIDE => VaN (n1/n2) w
-  | OP_SDIVIDE => towidth w (signed_op Z.quot w n1 n2) (* need towidth since -2^w/-1 >= 2^w *)
-  | OP_MOD => VaN (N.modulo n1 n2) w
-  | OP_SMOD => VaN (signed_op Z.rem w n1 n2) w
-  | OP_LSHIFT => towidth w (N.shiftl n1 n2)
-  | OP_RSHIFT => VaN (N.shiftr n1 n2) w
-  | OP_ARSHIFT => VaN (ashiftr w n1 n2) w
-  | OP_AND => VaN (N.land n1 n2) w
-  | OP_OR => VaN (N.lor n1 n2) w
-  | OP_XOR => VaN (N.lxor n1 n2) w
-  | OP_EQ => tobit (n1 =? n2)
-  | OP_NEQ => tobit (negb (n1 =? n2))
-  | OP_LT => tobit (n1 <? n2)
-  | OP_LE => tobit (n1 <=? n2)
-  | OP_SLT => tobit (signed_lt w n1 n2)
-  | OP_SLE => tobit (signed_le w n1 n2)
-  end.
-
-(* Perform a unary operation. *)
-Definition eval_unop (uop:unop_typ) (n:N) (w:bitwidth) : value :=
-  match uop with
-  | OP_NEG => towidth w (2^w - n)
-  | OP_NOT => VaN (N.lnot n w) w
-  end.
-
-(* Return a new store that is like store f except with variable x
-   remapped to value y. *)
-Definition update {A B:Type} (eq:forall (a b:A), {a=b}+{a<>b}) (f:A->B) (x:A) (y:B) (z:A) : B :=
-  if eq z x then y else f z.
-
-Notation "f [ x := y ]" := (update vareq f x y) (at level 50, left associativity).
-
-
-(* Perform a cast operation. *)
-Definition signed_cast (w w':bitwidth) (n:N) : N :=
-  to_twoscomp (of_twoscomp n w) w'.
-
-Definition cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
-  match c with
-  | CAST_UNSIGNED => n
-  | CAST_SIGNED => signed_cast w w' n
-  | CAST_HIGH => N.shiftr n (w - w')
-  | CAST_LOW => n mod (2^w')
-  end.
-
-(* We next define memory accessor functions getmem and setmem, which read/store w-bit numbers
-   to/from memory.  Since w could be large on some architectures, we express both as recursions
-   over N, using Peano recursion (P w -> P (N.succ w)).  Proofs must therefore typically use
-   the N.peano_ind inductive principle to reason about them.  (We later provide some machinery
-   for doing so.)  These functions are also carefully defined to behave reasonably when the
-   value being read/stored is not well-typed (i.e., larger than 2^w).  In particular, the extra
-   bits are stored into the most significant byte (violating memory well-typedness), except
-   that when w=0, the value argument is ignored and 0 is returned/stored.  This behavior is
-   useful because it facilitates theorems whose correctness are independent of type-safety. *)
-
-(* Interpret len bytes at address a of memory m as an e-endian number. *)
-Definition getmem_big mem len rec a := N.lor (rec (N.succ a)) (N.shiftl (mem a) (Mb*len)).
-Definition getmem_little mem (len:bitwidth) rec a := N.lor (mem a) (N.shiftl (rec (N.succ a)) Mb).
-Definition getmem (e:endianness) (len:bitwidth) (mem:addr->N) : addr -> N :=
-  N.recursion (fun _ => N0) (match e with BigE => getmem_big | LittleE => getmem_little end mem) len.
-
-(* Store v as a len-byte, e-endian number at address a of memory m. *)
-Definition setmem_big len rec mem a v : addr -> N :=
-  rec (update N.eq_dec mem a (N.shiftr v (Mb*len))) (N.succ a) (v mod 2^(Mb*len)).
-Definition setmem_little len rec mem a v : addr -> N :=
-  rec (update N.eq_dec mem a (match len with N0 => v | Npos _ => v mod 2^Mb end)) (N.succ a) (N.shiftr v Mb).
-Definition setmem (e:endianness) (len:bitwidth) : (addr->N) -> addr -> N -> (addr -> N) :=
-  N.recursion (fun m _ _ => m) (match e with BigE => setmem_big | LittleE => setmem_little end) len.
-
-
-
-(* A program exits by hitting a computation limit (Unfinished), jumping to an address
-   outside the program (Exit), or throwing an exception (Exn). *)
-Inductive exit : Type := Unfinished | Exit (a:addr) | Exn (i:N).
-
-Section InterpreterEngine.
-
-(* User-defined proposition "accessible b m w a" specifies whether address a
-   of memory m (where addresses of m have width w) is readable (if b=false)
-   or writable (if b=true) on whatever architecture is being modeled.  If
-   input a is greater than or equal to memory limit 2^w, then this function
-   should return False (neither readable nor writable).  This can happen if a
-   memory access request spans the limit imposed by the address bitwidth.
-   For example, the following expression is considered well-typed by our
-   static semantics, but accesses memory out of bounds at runtime:
-       Load mem (Int (2^32-1, 32)) endianness (Int (16, w))
-   where mem is a memory operand with 32-bit addresses.  Here, address 2^32-1
-   is a legitimate 32-bit integer operand, but the request for 16 bits of
-   memory effectively also accesses address 2^32, which is not representable
-   as a 32-bit number.  Since the width argument to Load and Store cannot be
-   statically predicted, type-checking cannot statically preclude this. *)
-Definition acctyp := bool -> (addr->N) -> bitwidth -> addr -> Prop.
-Variable accessible : acctyp.
-
-(* Evaluate an expression in the context of a store, returning a value.  Note
-   that the semantics of EUnknown are non-deterministic: an EUnknown expression
-   evaluates to any well-typed value.  Thus, eval_exp and the other interpreter
-   semantic definitions that follow should be considered statements of
-   possibility in an alethic modal logic. *)
-Inductive eval_exp (s:store): exp -> value -> Prop :=
-| EVar (id:varid) (t:typ) (u:value) (SV: s id = Some u):
-       eval_exp s (Var (Va id t)) u
-| EImm (n:N) (w:bitwidth): eval_exp s (Word n w) (VaN n w)
-| ELoad (e1 e2:exp) (en:endianness) (len mw:bitwidth) (m:addr->N) (a:addr)
-        (E1: eval_exp s e1 (VaM m mw)) (E2: eval_exp s e2 (VaN a mw))
-        (R: forall n, n < len -> accessible false m mw (a+n)):
-        eval_exp s (Load e1 e2 en len) (VaN (getmem en len m a) (Mb*len))
-| EStore (e1 e2 e3:exp) (en:endianness) (len mw:bitwidth) (m:addr->N) (a:addr)
-         (v:N) (E1: eval_exp s e1 (VaM m mw))
-         (E2: eval_exp s e2 (VaN a mw)) (E3: eval_exp s e3 (VaN v (Mb*len)))
-         (W: forall n, n < len -> accessible true m mw (a+n)):
-         eval_exp s (Store e1 e2 e3 en len) (VaM (setmem en len m a v) mw)
-| EBinOp (bop:binop_typ) (e1 e2:exp) (n1 n2:N) (w:bitwidth)
-         (E1: eval_exp s e1 (VaN n1 w)) (E2: eval_exp s e2 (VaN n2 w)):
-         eval_exp s (BinOp bop e1 e2) (eval_binop bop w n1 n2)
-| EUnOp (uop:unop_typ) (e1:exp) (n1:N) (w1:bitwidth)
-        (E1: eval_exp s e1 (VaN n1 w1)):
-        eval_exp s (UnOp uop e1) (eval_unop uop n1 w1)
-| ECast (c:cast_typ) (w w':bitwidth) (e1:exp) (n:N)
-        (E1: eval_exp s e1 (VaN n w)):
-        eval_exp s (Cast c w' e1) (VaN (cast c w w' n) w')
-| ELet (id:varid) (t:typ) (e1 e2:exp) (u1 u2:value)
-       (E1: eval_exp s e1 u1) (E2: eval_exp (update vareq s id (Some u1)) e2 u2):
-       eval_exp s (Let (Va id t) e1 e2) u2
-| EUnknown (t:typ) (u:value)
-           (TV: typof_val u t):
-           eval_exp s (Unknown t) u
-| EIte (e1 e2 e3:exp) (n1:N) (w1:bitwidth) (u':value)
-       (E1: eval_exp s e1 (VaN n1 w1))
-       (E': eval_exp s (match n1 with N0 => e3 | _ => e2 end) u'):
-       eval_exp s (Ite e1 e2 e3) u'
-| EExtract (w n1 n2:bitwidth) (e1:exp) (n:N)
-           (E1: eval_exp s e1 (VaN n w)):
-           eval_exp s (Extract n1 n2 e1) (VaN (cast CAST_HIGH (N.succ n1) (N.succ (n1-n2))
-                                                 (cast CAST_LOW w (N.succ n1) n)) (N.succ (n1-n2)))
-| EConcat (e1 e2:exp) (n1 w1 n2 w2:N)
-          (E1: eval_exp s e1 (VaN n1 w1)) (E2: eval_exp s e2 (VaN n2 w2)):
-          eval_exp s (Concat e1 e2) (VaN (N.lor (N.shiftl n1 w2) n2) (w1+w2)).
-
-(* Execute an IL statement with recursion depth limit n, returning a new store
-   and possibly an exit (if the statement exited prematurely).  "None" is
-   returned if the statement finishes and falls through.  "Some Unfinished"
-   is returned if the statement requires more than n steps of computation
-   to complete. *)
-Inductive exec_stmt (s:store): stmt -> nat -> store -> option exit -> Prop :=
-| XZero q: exec_stmt s q O s (Some Unfinished)
-| XNop n: exec_stmt s Nop (S n) s None
-| XMove n id t e u (E: eval_exp s e u):
-    exec_stmt s (Move (Va id t) e) (S n) (update vareq s id (Some u)) None
-| XJmp n e a w (E: eval_exp s e (VaN a w)):
-    exec_stmt s (Jmp e) (S n) s (Some (Exit a))
-| XExn n i: exec_stmt s (CpuExn i) (S n) s (Some (Exn i))
-| XSeq1 n q1 q2 s' x (XS: exec_stmt s q1 n s' (Some x)):
-    exec_stmt s (Seq q1 q2) (S n) s' (Some x)
-| XSeq2 n q1 q2 s2 s' x' (XS1: exec_stmt s q1 n s2 None) (XS1: exec_stmt s2 q2 n s' x'):
-    exec_stmt s (Seq q1 q2) (S n) s' x'
-| XWhile n e q s' x (XS: exec_stmt s (If e (Seq q (While e q)) Nop) n s' x):
-    exec_stmt s (While e q) (S n) s' x
-| XIf n e q1 q2 c s' x
-      (E: eval_exp s e (VaN c 1))
-      (XS: exec_stmt s (match c with N0 => q2 | _ => q1 end) n s' x):
-    exec_stmt s (If e q1 q2) (S n) s' x.
-
-(* Helper function to compute the address of the next assembly code
-   instruction to execute: *)
-Definition exitaddr (a:addr) (x:option exit) : option addr :=
-  match x with None => Some a
-             | Some (Exit a') => Some a'
-             | _ => None
-  end.
-
-(* Execute exactly n machine instructions of a program p starting at address a,
-   imposing a recursion depth limit of m for each instruction's encoding, and
-   returning a store and exit condition.  Exit condition "Unfinished" means
-   depth limit m was exceeded during execution of one of the instructions. *)
-Inductive exec_prog (p:program) (a:addr) (s:store) (m:nat) : nat -> store -> exit -> Prop :=
-| XPZero: exec_prog p a s m O s (Exit a)
-| XPStep n sz q s2 x1 a' s' x' (LU: p a = Some (sz,q))
-         (XS: exec_stmt s q m s2 x1) (EX: exitaddr (a+sz) x1 = Some a')
-         (XP: exec_prog p a' s2 m n s' x'):
-    exec_prog p a s m (S n) s' x'
-| XPDone sz q s' x (LU: p a = Some (sz,q))
-         (XS: exec_stmt s q m s' (Some x)) (EX: exitaddr (a+sz) (Some x) = None):
-    exec_prog p a s m (S O) s' x.
-
-End InterpreterEngine.
-
-
-
-(* Everything after this point comprises a (machine-checked) theory of the
-   interpreter semantics defined above. *)
-
-
-Section PartialOrders.
-
-(* This section proves some generally useful facts about the partial order
-   consisting of A-to-B partial functions ordered by subset. *)
-
-Definition po_subset {A B:Type} (f g: A -> option B) : Prop :=
-  forall x y, f x = Some y -> g x = Some y.
-
-Theorem po_subset_reflexive {A B}:
-  forall (f:A->option B), po_subset f f.
-Proof.
-  unfold po_subset. intros. assumption.
-Qed.
-
-Theorem po_subset_antisymmetric {A B}:
-  forall (f g:A->option B), po_subset f g -> po_subset g f ->
-  f = g.
-Proof.
-  unfold po_subset. intros f g FG GF. extensionality v.
-  specialize (FG v). specialize (GF v). destruct (f v) as [b|].
-    symmetry. apply FG. reflexivity.
-    destruct (g v). apply GF. reflexivity. reflexivity.
-Qed.
-
-Theorem po_subset_transitive {A B}:
-  forall (f g h:A->option B), po_subset f g -> po_subset g h -> po_subset f h.
-Proof.
-  unfold po_subset. intros f g h FG GH x y FX. apply GH,FG. assumption.
-Qed.
-
-Theorem po_subset_contrapos {A B}:
-  forall (f g: A -> option B) x, po_subset f g -> g x = None -> f x = None.
-Proof.
-  unfold po_subset. intros f g x SS H. specialize (SS x). destruct (f x).
-    symmetry. rewrite <- H. apply SS. reflexivity.
-    reflexivity.
-Qed.
-
-Theorem po_subset_update {A B} {eq: forall (a b:A), {a=b}+{a<>b}}:
-  forall (f g: A -> option B) (SS: po_subset f g) (x:A) (y:option B),
-  po_subset (update eq f x y) (update eq g x y).
-Proof.
-  intros. unfold update. intros z y' H. destruct (eq z x).
-    assumption.
-    apply SS. assumption. 
-Qed.
-
-Definition updateall {A B:Type} (f g: A -> option B) (x:A) : option B :=
-  match g x with None => f x | Some y => Some y end.
-
-Theorem updateall_subset {A B}:
-  forall (f g: A->option B), po_subset f g -> updateall g f = g.
-Proof.
-  unfold po_subset,updateall. intros.
-  apply functional_extensionality. intro x. specialize H with (x:=x). destruct (f x).
-    symmetry. apply H. reflexivity.
-    reflexivity.
-Qed.
-
-Theorem subset_updateall {A B}:
-  forall (f g: A->option B), po_subset f (updateall g f).
-Proof.
-  unfold po_subset,updateall. intros. rewrite H. reflexivity.
-Qed.
-
-End PartialOrders.
-
-Add Parametric Relation {A B:Type}: (A -> option B) po_subset
-reflexivity proved by po_subset_reflexive
-transitivity proved by po_subset_transitive
-as poss.
-
 
 (* Convenience lemmas for inverted reasoning about typof_val. *)
 
@@ -380,6 +57,8 @@ Lemma mem_welltyped:
   forall m w (TV: typof_val (VaM m w) (MemT w)), welltyped_memory m.
 Proof. intros. inversion TV. assumption. Qed.
 
+
+Section Quantification.
 
 (* Recursive quantification of sub-expressions and sub-statements: *)
 
@@ -393,13 +72,13 @@ Fixpoint exps_in_exp {T:Type} (C:T->T->T) (P:exp->T) (e:exp) : T :=
       C (P e) (C (exps_in_exp C P e1) (C (exps_in_exp C P e2) (exps_in_exp C P e3)))
   end.
 
-Fixpoint exps_in_stmt {T:Type} (C:T->T->T) (d:T) (P:exp->T) (q:stmt) : T :=
+Fixpoint exps_in_stmt {T:Type} (C:T->T->T) (b:T) (P:exp->T) (q:stmt) : T :=
   match q with
-  | Nop | CpuExn _ => d
+  | Nop | CpuExn _ => b
   | Move _ e | Jmp e => exps_in_exp C P e
-  | Seq q1 q2 => C (exps_in_stmt C d P q1) (exps_in_stmt C d P q2)
-  | While e q0 => C (exps_in_exp C P e) (exps_in_stmt C d P q0)
-  | If e q1 q2 => C (exps_in_exp C P e) (C (exps_in_stmt C d P q1) (exps_in_stmt C d P q2))
+  | Seq q1 q2 => C (exps_in_stmt C b P q1) (exps_in_stmt C b P q2)
+  | While e q0 => C (exps_in_exp C P e) (exps_in_stmt C b P q0)
+  | If e q1 q2 => C (exps_in_exp C P e) (C (exps_in_stmt C b P q1) (exps_in_stmt C b P q2))
   end.
 
 Fixpoint stmts_in_stmt {T:Type} (C:T->T->T) (P:stmt->T) (q:stmt) : T :=
@@ -415,10 +94,19 @@ Definition exists_exp_in_exp := exps_in_exp or.
 Definition exists_exp_in_stmt := exps_in_stmt or False.
 Definition forall_stmts_in_stmt := stmts_in_stmt and.
 Definition exists_stmt_in_stmt := stmts_in_stmt or.
+Definition forall_exps_in_prog P (p:program) :=
+  forall a q sz, p a = Some (sz,q) -> forall_exps_in_stmt P q.
+Definition exists_exp_in_prog P (p:program) :=
+  exists a q sz, p a = Some (sz,q) /\ exists_exp_in_stmt P q.
+Definition forall_stmts_in_prog P (p:program) :=
+  forall a q sz, p a = Some (sz,q) -> forall_stmts_in_stmt P q.
+Definition exists_stmt_in_prog P (p:program) :=
+  exists a q sz, p a = Some (sz,q) /\ exists_stmt_in_stmt P q.
+
+End Quantification.
 
 
-
-Section InterpTheory.
+Section StoreTheory.
 
 (* The getmem/setmem memory accessors are defined as Peano recursions over N,
    rather than natural number recursions.  This is important for keeping proof
@@ -537,6 +225,32 @@ Proof.
 Qed.
 
 
+(* Symmetric updates preserve the partial order relation. *)
+
+Theorem pfsub_update {A B} {eq: forall (a b:A), {a=b}+{a<>b}}:
+  forall (f g: A -> option B) (SS: f ⊆ g) (x:A) (y:option B),
+  update eq f x y ⊆ update eq g x y.
+Proof.
+  intros. unfold update. intros z y' H. destruct (eq z x).
+    assumption.
+    apply SS. assumption. 
+Qed.
+
+Definition updateall {A B:Type} (f g: A -> option B) (x:A) : option B :=
+  match g x with None => f x | Some y => Some y end.
+
+Theorem updateall_subset {A B}:
+  forall (f g: A->option B), f ⊆ g -> updateall g f = g.
+Proof.
+  unfold pfsub, updateall. intros.
+  apply functional_extensionality. intro x. specialize H with (x:=x). destruct (f x).
+    symmetry. apply H. reflexivity.
+    reflexivity.
+Qed.
+
+Theorem subset_updateall {A B}:
+  forall (f g: A->option B), f ⊆ updateall g f.
+Proof. unfold pfsub, updateall. intros. rewrite H. reflexivity. Qed.
 
 (* Frame property: Updating variable x does not affect the value of any other variable z. *)
 Theorem update_frame:
@@ -593,17 +307,17 @@ Proof.
     rewrite (update_swap eq s1), (update_swap eq s2) by assumption. rewrite H. reflexivity.
 Qed.
 
-(* If variable id's value u is known for store s, then s[id:=u] is the same as s.
+(* If variable v's value u is known for store s, then s[v:=u] is the same as s.
    This fact is useful for "stocking" store expressions with explicit updates that
    reveal the values of known variables, allowing tactics to use that information to
    make progress without searching the rest of the proof context. *)
-Theorem store_upd_eq {s:store} {id u}:
-  forall (SV: s id = u), s = update vareq s id u.
+Theorem store_upd_eq {s:store} {v u}:
+  forall (SV: s v = u), s = update vareq s v u.
 Proof.
   intro.
-  extensionality v.
-  destruct (vareq v id).
-    subst v. rewrite update_updated. exact SV.
+  extensionality v0.
+  destruct (vareq v0 v).
+    subst v0. rewrite update_updated. exact SV.
     rewrite update_frame. reflexivity. assumption.
 Qed.
 
@@ -631,25 +345,6 @@ Proof.
     | rewrite N.add_succ_l; apply N.le_succ_l; (eapply N.lt_le_trans; [|exact LE]); apply N.add_lt_mono_l, N.lt_succ_diag_r ]).
 Qed.
 
-(* to_twoscomp inverts of_twoscomp *)
-Theorem twoscomp_inv:
-  forall n w (LT: n < 2^w),
-  to_twoscomp (of_twoscomp n w) w = n.
-Proof.
-  intros. unfold of_twoscomp, to_twoscomp.
-  replace (2 ^ Z.of_N w)%Z with (Z.of_N (2^w)) by apply N2Z.inj_pow.
-  destruct (N.testbit _ _).
-
-    rewrite <- Zminus_mod_idemp_r.
-    rewrite Z.mod_same by (rewrite N2Z.inj_pow; apply Z.pow_nonzero; [ discriminate 1 | apply N2Z.is_nonneg ]).
-    rewrite Z.sub_0_r, <- N2Z.inj_mod, N2Z.id by (apply N.pow_nonzero; discriminate 1).
-    apply N.mod_small. assumption.
-
-    rewrite Z.mod_small. apply N2Z.id. split.
-      apply N2Z.is_nonneg.
-      apply N2Z.inj_lt. assumption.
-Qed.
-
 (* getmem inverts setmem *)
 Lemma recompose_bytes:
   forall w v, N.lor (v mod 2^w) (N.shiftl (N.shiftr v w) w) = v.
@@ -672,7 +367,34 @@ Proof.
       rewrite setmem_frame_low by apply N.lt_succ_diag_r. rewrite update_updated. apply recompose_bytes.
 Qed.
 
+End StoreTheory.
 
+
+Section TwosComplement.
+
+(* to_twoscomp inverts of_twoscomp *)
+Theorem twoscomp_inv:
+  forall n w (LT: n < 2^w),
+  to_twoscomp (of_twoscomp n w) w = n.
+Proof.
+  intros. unfold of_twoscomp, to_twoscomp.
+  replace (2 ^ Z.of_N w)%Z with (Z.of_N (2^w)) by apply N2Z.inj_pow.
+  destruct (N.testbit _ _).
+
+    rewrite <- Zminus_mod_idemp_r.
+    rewrite Z.mod_same by (rewrite N2Z.inj_pow; apply Z.pow_nonzero; [ discriminate 1 | apply N2Z.is_nonneg ]).
+    rewrite Z.sub_0_r, <- N2Z.inj_mod, N2Z.id by (apply N.pow_nonzero; discriminate 1).
+    apply N.mod_small. assumption.
+
+    rewrite Z.mod_small. apply N2Z.id. split.
+      apply N2Z.is_nonneg.
+      apply N2Z.inj_lt. assumption.
+Qed.
+
+End TwosComplement.
+
+
+Section Determinism.
 
 (* The semantics of eval_exp, exec_stmt, and exec_prog are deterministic
    as long as there are no Unknown expressions. *)
@@ -680,22 +402,21 @@ Qed.
 Definition not_unknown e := match e with Unknown _ => False | _ => True end.
 
 Theorem eval_exp_deterministic:
-  forall {RW e s v1 v2} (NU: forall_exps_in_exp not_unknown e)
-         (E1: eval_exp RW s e v1) (E2: eval_exp RW s e v2), v1=v2.
+  forall {e s v1 v2} (NU: forall_exps_in_exp not_unknown e)
+         (E1: eval_exp s e v1) (E2: eval_exp s e v2), v1=v2.
 Proof.
   induction e; intros; inversion E1; inversion E2; clear E1 E2; subst;
   unfold forall_exps_in_exp in NU; simpl in NU;
     repeat match type of NU with _ /\ _ => let H := fresh NU in destruct NU as [H NU] end;
-  try match goal with [ H: Va _ _ = Va _ _ |- _] => injection H; clear H; intros; subst end;
   try (remember (match n0 with N0 => e3 | _ => e2 end) as e);
-  repeat match goal with [ IH: forall _ _ _, _ -> eval_exp _ _ ?E _ -> eval_exp _ _ ?E _ -> _=_,
+  repeat match goal with [ IH: forall _ _ _, _ -> eval_exp _ ?E _ -> eval_exp _ ?E _ -> _=_,
                            H0: exps_in_exp and not_unknown ?E,
-                           H1: eval_exp _ ?S ?E ?V1,
-                           H2: eval_exp _ ?S ?E ?V2 |- _ ] =>
+                           H1: eval_exp ?S ?E ?V1,
+                           H2: eval_exp ?S ?E ?V2 |- _ ] =>
            specialize (IH S V1 V2 H0 H1 H2); clear H0 H1 H2;
            try (injection IH; clear IH; intros); subst;
            try match type of E' with
-             eval_exp _ _ (match ?N with N0 => _ | _ => _ end) _ => destruct N
+             eval_exp _ (match ?N with N0 => _ | _ => _ end) _ => destruct N
            end
          end;
   try reflexivity.
@@ -705,8 +426,8 @@ Proof.
 Qed.
 
 Theorem exec_stmt_deterministic:
-  forall {RW s q n s1 x1 s2 x2} (NU: forall_exps_in_stmt not_unknown q)
-         (X1: exec_stmt RW s q n s1 x1) (X2: exec_stmt RW s q n s2 x2),
+  forall {s q n s1 x1 s2 x2} (NU: forall_exps_in_stmt not_unknown q)
+         (X1: exec_stmt s q n s1 x1) (X2: exec_stmt s q n s2 x2),
   s1 = s2 /\ x1 = x2.
 Proof.
   intros. revert s2 x2 X2.
@@ -737,9 +458,9 @@ Proof.
 Qed.
 
 Theorem exec_prog_deterministic:
-  forall {RW p a s m n s1 x1 s2 x2}
+  forall {p a s m n s1 x1 s2 x2}
   (NU: forall a', match p a' with None => True | Some (_,q) => forall_exps_in_stmt not_unknown q end)
-  (XP1: exec_prog RW p a s m n s1 x1) (XP2: exec_prog RW p a s m n s2 x2),
+  (XP1: exec_prog p a s m n s1 x1) (XP2: exec_prog p a s m n s2 x2),
   s1 = s2 /\ x1 = x2.
 Proof.
   intros. revert s2 x2 XP2. dependent induction XP1; intros; inversion XP2; subst;
@@ -763,6 +484,10 @@ Proof.
   split; reflexivity.
 Qed.
 
+End Determinism.
+
+
+Section Monotonicity.
 
 (* Some monotonicity properties: *)
 
@@ -770,16 +495,16 @@ Qed.
    stores (i.e., there is no "delete variable" operation). *)
 
 Theorem exec_stmt_nodelete:
-  forall {RW s q n s' x} (XS: exec_stmt RW s q n s' x) v (V': s' v = None),
+  forall {s q n s' x} (XS: exec_stmt s q n s' x) v (V': s' v = None),
   s v = None.
 Proof.
   intros. dependent induction XS; try apply IHXS; try assumption.
-  unfold update in V'. destruct (vareq v id). discriminate. assumption.
-  apply IHXS1,IHXS2. assumption.
+  unfold update in V'. destruct (vareq v0 v). discriminate. assumption.
+  apply IHXS1, IHXS2. assumption.
 Qed.
 
 Theorem exec_prog_nodelete:
-  forall {RW p a s m n s' x} (XP: exec_prog RW p a s m n s' x)
+  forall {p a s m n s' x} (XP: exec_prog p a s m n s' x)
          v (V': s' v = None),
   s v = None.
 Proof.
@@ -788,40 +513,43 @@ Proof.
 Qed.
 
 Theorem eval_exp_mono:
-  forall {RW e v s1} s2 (E: eval_exp RW s1 e v) (SS: po_subset s1 s2),
-  eval_exp RW s2 e v.
+  forall {e v s1} s2 (E: eval_exp s1 e v) (SS: s1 ⊆ s2),
+  eval_exp s2 e v.
 Proof.
   induction e; intros; inversion E; clear E; subst;
-  repeat match goal with [ IH: forall _ _ _, eval_exp _ _ ?E _ -> _ -> eval_exp _ _ ?E _,
-                           H: eval_exp _ _ ?E _ |- _ ] =>
-    let H':=fresh "IH" H in assert (H':=IH _ _ _ H SS); clear IH
+  repeat match goal with [ IH: forall _ _ _, eval_exp _ ?E _ -> _ -> eval_exp _ ?E _,
+                           H: eval_exp _ ?E _ |- _ ] =>
+    eapply IH in H; [|exact SS]
   end;
-  try (econstructor; eassumption).
+  econstructor; try eassumption.
 
-  apply EVar. apply SS. assumption.
+  apply SS. assumption.
 
-  apply ELet with (u1:=u1). assumption.
-    apply IHe2 with (s1:=update vareq s1 id (Some u1)); [assumption|].
-    intros x y. unfold update. intro. destruct (vareq x id). assumption.
-    apply SS. assumption.
+  intros. eapply mem_readable_mono. exact SS. apply R. assumption.
 
-  apply EIte with (n1:=n1) (w1:=w1). assumption. destruct n1.
-    apply (IHe3 _ s1); assumption.
-    apply (IHe2 _ s1); assumption.
+  intros. eapply mem_writable_mono. exact SS. apply W. assumption.
+
+  eapply IHe2; [eassumption|].
+  intros x y. unfold update. intro. destruct (vareq x v). assumption.
+  apply SS. assumption.
+
+  destruct n1.
+    eapply IHe3; eassumption.
+    eapply IHe2; eassumption.
 Qed.
 
 Theorem exec_stmt_mono:
-  forall {RW s1 q m s1' x} s2 (XS: exec_stmt RW s1 q m s1' x) (PO: po_subset s1 s2),
-  exec_stmt RW s2 q m (updateall s2 s1') x.
+  forall {s1 q m s1' x} s2 (XS: exec_stmt s1 q m s1' x) (PO: s1 ⊆ s2),
+  exec_stmt s2 q m (updateall s2 s1') x.
 Proof.
   intros. revert s2 PO. dependent induction XS; intros;
   try (rewrite updateall_subset; [ try constructor | assumption ]).
 
-  replace (updateall s2 (s[id:=Some u])) with (s2[id:=Some u]).
+  replace (updateall s2 (s[v:=Some u])) with (s2[v:=Some u]).
     apply XMove. apply (eval_exp_mono _ E PO).
-    extensionality x. unfold update,updateall. destruct (vareq x id).
+    extensionality x. unfold update, updateall. destruct (vareq x v).
       reflexivity.
-      unfold po_subset in PO. specialize PO with (x:=x). destruct (s x).
+      unfold pfsub in PO. specialize PO with (x:=x). destruct (s x).
         apply PO. reflexivity.
         reflexivity.
 
@@ -843,8 +571,8 @@ Proof.
 Qed.
 
 Theorem exec_prog_mono:
-  forall {RW p a s1 m n s1' x} s2 (XP: exec_prog RW p a s1 m n s1' x) (PO: po_subset s1 s2),
-  exec_prog RW p a s2 m n (updateall s2 s1') x.
+  forall {p a s1 m n s1' x} s2 (XP: exec_prog p a s1 m n s1' x) (PO: s1 ⊆ s2),
+  exec_prog p a s2 m n (updateall s2 s1') x.
 Proof.
   intros. revert s2 PO. dependent induction XP; intros.
 
@@ -864,7 +592,10 @@ Proof.
     apply (exec_stmt_mono _ XS PO).
 Qed.
 
+End Monotonicity.
 
+
+Section Boundedness.
 
 (* If there are no while-loops, we can compute a necessary and sufficient recursion bound to
    avoid an Unfinished condition for execution of any statement. *)
@@ -892,9 +623,9 @@ Proof.
 Qed.
 
 Theorem stmt_finish:
-  forall RW s q n n' s' x
+  forall s q n n' s' x
          (SB: step_bound q = Some n) (LT: (n <= n')%nat)
-         (XS: exec_stmt RW s q n' s' x),
+         (XS: exec_stmt s q n' s' x),
   x <> Some Unfinished.
 Proof.
   intros.
@@ -913,8 +644,8 @@ Qed.
 
 (* A stmt that finishes within n steps will also finish within (S n) steps. *)
 Theorem exec_stmt_incbound:
-  forall RW m s q s' x (FIN: x <> Some Unfinished) (XS: exec_stmt RW s q m s' x),
-  exec_stmt RW s q (S m) s' x.
+  forall m s q s' x (FIN: x <> Some Unfinished) (XS: exec_stmt s q m s' x),
+  exec_stmt s q (S m) s' x.
 Proof.
   induction m; intros; inversion XS; clear XS; subst.
     contradict FIN. reflexivity.
@@ -931,23 +662,28 @@ Proof.
 Qed.
 
 Corollary exec_stmt_raisebound:
-  forall RW m' m s q s' x (LE: (m <= m')%nat) (FIN: x <> Some Unfinished) (XS: exec_stmt RW s q m s' x),
-  exec_stmt RW s q m' s' x.
+  forall m' m s q s' x (LE: (m <= m')%nat) (FIN: x <> Some Unfinished) (XS: exec_stmt s q m s' x),
+  exec_stmt s q m' s' x.
 Proof.
   intros. pattern m'. revert m' LE. apply le_ind.
     exact XS.
     intros. apply exec_stmt_incbound. exact FIN. assumption.
 Qed.
 
+End Boundedness.
+
+
+Section InvariantProofs.
+
 (* To prove properties of while-loops, it suffices to prove that each loop iteration
    preserves the property.  This is equivalent to stepping the loop three small-steps
    at a time (to unfold the While->If->Seq expansion of the loop). *)
 Theorem while_inv:
   forall (P: store -> Prop)
-         RW s e q m s' x (XS: exec_stmt RW s (While e q) m s' x) (PRE: P s)
+         s e q m s' x (XS: exec_stmt s (While e q) m s' x) (PRE: P s)
          (INV: forall s c m s' x (PRE: P s)
-                      (EX: eval_exp RW s e (VaN (Npos c) 1))
-                      (XS: exec_stmt RW s q m s' x), P s'),
+                      (EX: eval_exp s e (VaN (Npos c) 1))
+                      (XS: exec_stmt s q m s' x), P s'),
   P s'.
 Proof.
   intros. revert s s' x XS PRE.
@@ -971,29 +707,24 @@ Qed.
 
 (* Append a step to an exec_prog computation. *)
 Theorem exec_prog_append:
-  forall RW p n a s m sz q s2 a1 s' x'
-         (XP: exec_prog RW p a s m n s2 (Exit a1))
+  forall p n a s m sz q s2 a1 s' x'
+         (XP: exec_prog p a s m n s2 (Exit a1))
          (LU: p a1 = Some (sz,q))
-         (XS: exec_stmt RW s2 q m s' x'),
-    exec_prog RW p a s m (S n) s' (match x' with None => Exit (a1+sz)
-                                               | Some x' => x' end).
+         (XS: exec_stmt s2 q m s' x'),
+    exec_prog p a s m (S n) s' (match x' with None => Exit (a1+sz)
+                                            | Some x' => x' end).
 Proof.
-  induction n; intros.
-    inversion XP; subst. destruct x'; [destruct e|].
-      eapply XPDone. exact LU. exact XS. reflexivity.
-      eapply XPStep. exact LU. exact XS. reflexivity. apply XPZero.
-      eapply XPDone. exact LU. exact XS. reflexivity.
-      eapply XPStep. exact LU. exact XS. reflexivity. apply XPZero.
-    inversion XP; subst.
-      eapply XPStep. exact LU0. exact XS0. exact EX. eapply IHn. exact XP0. exact LU. exact XS.
-      discriminate.
+  induction n; intros; inversion XP; subst.
+    destruct x'; [destruct e|]; econstructor; solve [ eassumption | reflexivity | apply XPZero ].
+    eapply XPStep; try eassumption. eapply IHn; eassumption.
+    discriminate.
 Qed.
 
 (* Split an exec_prog computation into two parts. *)
 Theorem exec_prog_split:
-  forall RW p a s m n1 n2 s' x'
-         (XP: exec_prog RW p a s m (n1 + S n2)%nat s' x'),
-  exists s1 a1, exec_prog RW p a s m n1 s1 (Exit a1) /\ exec_prog RW p a1 s1 m (S n2) s' x'.
+  forall p a s m n1 n2 s' x'
+         (XP: exec_prog p a s m (n1 + S n2)%nat s' x'),
+  exists s1 a1, exec_prog p a s m n1 s1 (Exit a1) /\ exec_prog p a1 s1 m (S n2) s' x'.
 Proof.
   intros. revert n2 XP. induction n1; intros.
     exists s,a. split. apply XPZero. exact XP.
@@ -1008,9 +739,9 @@ Qed.
 
 (* Concatenate two exec_prog comptations into one whole. *)
 Theorem exec_prog_concat:
-  forall RW p a s m n1 n2 s1 a1 s' x'
-         (XP1: exec_prog RW p a s m n1 s1 (Exit a1)) (XP2: exec_prog RW p a1 s1 m (S n2) s' x'),
-  exec_prog RW p a s m (n1 + S n2)%nat s' x'.
+  forall p a s m n1 n2 s1 a1 s' x'
+         (XP1: exec_prog p a s m n1 s1 (Exit a1)) (XP2: exec_prog p a1 s1 m (S n2) s' x'),
+  exec_prog p a s m (n1 + S n2)%nat s' x'.
 Proof.
   intros. revert n2 s1 a1 XP1 XP2. induction n1; intros.
     inversion XP1; subst. exact XP2.
@@ -1025,9 +756,9 @@ Qed.
    to prove that the property is preserved by every statement in the program. *)
 Theorem prog_inv_universal:
   forall (P: exit -> store -> Prop)
-         RW (p:program) a0 s0 m n s' x' (XP: exec_prog RW p a0 s0 m n s' x') (PRE: P (Exit a0) s0)
+         (p:program) a0 s0 m n s' x' (XP: exec_prog p a0 s0 m n s' x') (PRE: P (Exit a0) s0)
          (INV: forall a1 s1 sz q s1' x1 (IL: p a1 = Some (sz,q)) (PRE: P (Exit a1) s1)
-                      (XS: exec_stmt RW s1 q m s1' x1),
+                      (XS: exec_stmt s1 q m s1' x1),
                P (match x1 with None => Exit (a1 + sz)
                               | Some x => x end) s1'),
   P x' s'.
@@ -1046,19 +777,19 @@ Qed.
    (The user's invariant may adopt a precondition of False for unreachable statements.) *)
 Theorem prog_inv_reachable:
   forall (P: exit -> store -> nat -> Prop)
-         RW (p:program) a0 s0 m n s' x' (XP: exec_prog RW p a0 s0 m n s' x') (PRE: P (Exit a0) s0 O)
+         (p:program) a0 s0 m n s' x' (XP: exec_prog p a0 s0 m n s' x') (PRE: P (Exit a0) s0 O)
          (INV: forall a1 s1 n1 sz q s1' x1 (IL: p a1 = Some (sz,q)) (PRE: P (Exit a1) s1 n1) (LT: (n1 < n)%nat)
-                      (XP: exec_prog RW p a0 s0 m n1 s1 (Exit a1))
-                      (XS: exec_stmt RW s1 q m s1' x1)
-                      (XP': match x1 with None => exec_prog RW p (a1+sz) s1' m (n - S n1) s' x'
-                                        | Some (Exit a2) => exec_prog RW p a2 s1' m (n - S n1) s' x'
+                      (XP: exec_prog p a0 s0 m n1 s1 (Exit a1))
+                      (XS: exec_stmt s1 q m s1' x1)
+                      (XP': match x1 with None => exec_prog p (a1+sz) s1' m (n - S n1) s' x'
+                                        | Some (Exit a2) => exec_prog p a2 s1' m (n - S n1) s' x'
                                         | Some x2 => x'=x2 end),
                P (match x1 with None => Exit (a1 + sz)
                               | Some x => x end) s1' (S n1)),
   P x' s' n.
 Proof.
   intros.
-  assert (H: exists a1 s1 n2, (n2 <= n)%nat /\ exec_prog RW p a0 s0 m (n - n2) s1 (Exit a1) /\ P (Exit a1) s1 (n - n2)%nat /\ exec_prog RW p a1 s1 m n2 s' x').
+  assert (H: exists a1 s1 n2, (n2 <= n)%nat /\ exec_prog p a0 s0 m (n - n2) s1 (Exit a1) /\ P (Exit a1) s1 (n - n2)%nat /\ exec_prog p a1 s1 m n2 s' x').
     exists a0,s0,n. rewrite Nat.sub_diag. repeat split.
       apply le_n.
       apply XPZero.
@@ -1104,35 +835,35 @@ Qed.
    satisfies that invariant, or we're not at an invariant point and (inductively) taking one
    exec_prog step leads to a "next invariant satisfied" state. *)
 Inductive next_inv_sat (PS: exit -> store -> nat -> option Prop):
-            bool -> exit -> acctyp -> program -> store -> nat -> nat -> nat -> store -> exit -> Prop :=
-| NISHere x RW p s m n n' s' x' (TRU: match PS x s n with None => False | Some P => P end):
-    next_inv_sat PS true x RW p s m n n' s' x'
-| NISStep RW p s m n n' s' x' a
+            bool -> exit -> program -> store -> nat -> nat -> nat -> store -> exit -> Prop :=
+| NISHere x p s m n n' s' x' (TRU: match PS x s n with None => False | Some P => P end):
+    next_inv_sat PS true x p s m n n' s' x'
+| NISStep p s m n n' s' x' a
           (STEP: forall sz q s1 x1 (LT: (n < n')%nat)
-                        (IL: p a = Some (sz,q)) (XS: exec_stmt RW s q m s1 x1)
-                        (XP': match x1 with None => exec_prog RW p (a+sz) s1 m (n' - S n) s' x'
-                              | Some (Exit a2) => exec_prog RW p a2 s1 m (n' - S n) s' x'
+                        (IL: p a = Some (sz,q)) (XS: exec_stmt s q m s1 x1)
+                        (XP': match x1 with None => exec_prog p (a+sz) s1 m (n' - S n) s' x'
+                              | Some (Exit a2) => exec_prog p a2 s1 m (n' - S n) s' x'
                               | Some x2 => x'=x2 end),
                  next_inv_sat PS (match PS match x1 with None => Exit (a+sz) | Some x1 => x1 end s1 (S n) with
                                   | Some _ => true | None => false end)
                               match x1 with None => Exit (a+sz) | Some x1 => x1 end
-                              RW p s1 m (S n) n' s' x'):
-    next_inv_sat PS false (Exit a) RW p s m n n' s' x'.
+                              p s1 m (S n) n' s' x'):
+    next_inv_sat PS false (Exit a) p s m n n' s' x'.
 
 (* Proving the "next invariant satisfied" property for all invariant points proves partial
    correctness of the program. *)
 Theorem prog_inv:
-  forall (PS: exit -> store -> nat -> option Prop) RW (p:program) a0 s0 m n s' x'
-         (XP: exec_prog RW p a0 s0 m n s' x')
+  forall (PS: exit -> store -> nat -> option Prop) (p:program) a0 s0 m n s' x'
+         (XP: exec_prog p a0 s0 m n s' x')
          (PRE: match PS (Exit a0) s0 O with Some P => P | None => False end)
          (INV: forall a1 s1 n1
-                      (XP: exec_prog RW p a0 s0 m n1 s1 (Exit a1))
+                      (XP: exec_prog p a0 s0 m n1 s1 (Exit a1))
                       (PRE: match PS (Exit a1) s1 n1 with Some P => P | None => False end),
-               next_inv_sat PS false (Exit a1) RW p s1 m n1 n s' x'),
+               next_inv_sat PS false (Exit a1) p s1 m n1 n s' x'),
   match PS x' s' n with Some P => P | None => True end.
 Proof.
   intros.
-  assert (NIS: next_inv_sat PS (match PS x' s' n with Some _ => true | None => false end) x' RW p s' m n n s' x').
+  assert (NIS: next_inv_sat PS (match PS x' s' n with Some _ => true | None => false end) x' p s' m n n s' x').
     pattern x' at -3, s' at -3, n at -3. eapply prog_inv_reachable.
       exact XP.
       destruct (PS (Exit a0) s0 O) eqn:PS0.
@@ -1149,23 +880,28 @@ Proof.
     exact I.
 Qed.
 
+End InvariantProofs.
+
+
+Section FrameTheorems.
 
 (* Statements and programs that contain no assignments to some IL variable v
    leave that variable unchanged in the output store. *)
+
 Fixpoint noassign v q :=
   match q with
   | Nop | Jmp _ | CpuExn _ => True
   | Seq q1 q2 | If _ q1 q2 => noassign v q1 /\ noassign v q2
   | While _ q' => noassign v q'
-  | Move (Va v1 _) q => v<>v1
+  | Move v1 q => v<>v1
   end.
 
 Theorem noassign_inv:
-  forall v q (H:noassign v q) RW m (s s':store) x,
-  exec_stmt RW s q m s' x -> s' v = s v.
+  forall v q (H:noassign v q) m (s s':store) x,
+  exec_stmt s q m s' x -> s' v = s v.
 Proof.
   induction q; intros; inversion H0; subst; try reflexivity.
-    destruct (vareq id v).
+    destruct (vareq v0 v).
       exfalso. subst. apply H. reflexivity.
       apply update_frame. apply H.
     eapply IHq1. exact (proj1 H). exact XS.
@@ -1187,8 +923,8 @@ Definition prog_noassign v (p:program) :=
   forall a, match p a with None => True | Some (_,q) => noassign v q end.
 
 Theorem prog_noassign_inv:
-  forall v RW p (NP: prog_noassign v p) m s' x
-         n a s (EP: exec_prog RW p a s m n s' x),
+  forall v p (NP: prog_noassign v p) m s' x
+         n a s (EP: exec_prog p a s m n s' x),
   s' v = s v.
 Proof.
   intros. pattern x, s'. eapply prog_inv_universal.
@@ -1199,8 +935,7 @@ Proof.
       specialize (NP a1). rewrite IL in NP. exact NP.
 Qed.
 
-End InterpTheory.
-
+End FrameTheorems.
 
 
 Section FInterp.
@@ -1281,7 +1016,7 @@ Definition bits_of_mem len := N.mul Mb len.
 
 Fixpoint feval_exp (e:exp) (s:store) : uvalue :=
   match e with
-  | Var (Va id _) => uget (s id)
+  | Var v => uget (s v)
   | Word n w => VaU true zstore n w
   | Load e1 e2 en len =>
       match feval_exp e1 s, feval_exp e2 s with
@@ -1303,7 +1038,7 @@ Fixpoint feval_exp (e:exp) (s:store) : uvalue :=
       match feval_exp e1 s with
       | VaU _ _ n w => VaU true zstore (cast c w w' n) w'
       end
-  | Let (Va id t) e1 e2 => feval_exp e2 (update vareq s id (Some (of_uvalue (feval_exp e1 s))))
+  | Let v e1 e2 => feval_exp e2 (update vareq s v (Some (of_uvalue (feval_exp e1 s))))
   | Unknown _ => VaU true zstore 0 0
   | Ite e1 e2 e3 =>
       match feval_exp e1 s, feval_exp e2 s, feval_exp e3 s with
@@ -1322,25 +1057,26 @@ Fixpoint feval_exp (e:exp) (s:store) : uvalue :=
   end.
 
 Definition NoMemAcc := True.
-Definition MemAcc (RW:acctyp) rw m mw a len := forall n, n < len -> RW rw m mw (a+n).
+Definition MemAcc (RW: store -> addr -> Prop) (s:store) a len :=
+  forall n, n < len -> RW s (a+n).
 
-Fixpoint memacc_exp (e:exp) (RW:acctyp) (s:store) : Prop :=
+Fixpoint memacc_exp (e:exp) (s:store) : Prop :=
   match e with
   | Load e1 e2 _ len =>
       match feval_exp e1 s, feval_exp e2 s with
-      | VaU _ m _ mw, VaU _ _ a _ => MemAcc RW false m mw a len
+      | VaU _ m _ mw, VaU _ _ a _ => MemAcc mem_readable s a len
       end
   | Store e1 e2 _ _ len =>
       match feval_exp e1 s, feval_exp e2 s with
-      | VaU _ m _ mw, VaU _ _ a _ => MemAcc RW true m mw a len
+      | VaU _ m _ mw, VaU _ _ a _ => MemAcc mem_writable s a len
       end
   | Var _ | Word _ _ | Unknown _ => NoMemAcc
-  | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => memacc_exp e1 RW s
-  | BinOp _ e1 e2 | Concat e1 e2 => memacc_exp e1 RW s /\ memacc_exp e2 RW s
-  | Let (Va id _) e1 e2 => memacc_exp e1 RW s /\ memacc_exp e2 RW (update vareq s id (Some (of_uvalue (feval_exp e1 s))))
+  | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => memacc_exp e1 s
+  | BinOp _ e1 e2 | Concat e1 e2 => memacc_exp e1 s /\ memacc_exp e2 s
+  | Let v e1 e2 => memacc_exp e1 s /\ memacc_exp e2 (update vareq s v (Some (of_uvalue (feval_exp e1 s))))
   | Ite e1 e2 e3 =>
       match feval_exp e1 s with
-      | VaU _ _ n w => if n then memacc_exp e3 RW s else memacc_exp e2 RW s
+      | VaU _ _ n w => if n then memacc_exp e3 s else memacc_exp e2 s
       end
   end.
 
@@ -1363,9 +1099,7 @@ Definition canonical_uvalue (u:uvalue) :=
 
 Lemma can_uvalue_inv: forall u (C: canonical_uvalue u), uvalue_of (of_uvalue u) = u.
 Proof.
-  intros. destruct u. destruct z.
-    simpl in C. subst m. reflexivity.
-    simpl in C. subst n. reflexivity.
+  intros. destruct u. destruct z; simpl in C; subst; reflexivity.
 Qed.
 
 Lemma canonical_conv:
@@ -1388,10 +1122,10 @@ Proof.
   induction e; intros; simpl;
   repeat match goal with |- context [ feval_exp ?e ?s ] => destruct (feval_exp e s) eqn:? end;
   try reflexivity.
-  destruct v. apply canonical_uget.
+  apply canonical_uget.
   destruct b; reflexivity.
   destruct u; reflexivity.
-  destruct v. apply IHe2.
+  rewrite <- Hequ. apply IHe2.
   destruct n;
     match goal with [ H: _ = ?u |- _ ?u ] => rewrite <- H; generalize s; assumption end.
 Qed.
@@ -1409,11 +1143,11 @@ Proof.
 Qed.
 
 Theorem reduce_exp:
-  forall RW e s u (K: exp_known e = true) (E: eval_exp RW s e u), u = of_uvalue (feval_exp e s).
+  forall e s u (K: exp_known e = true) (E: eval_exp s e u), u = of_uvalue (feval_exp e s).
 Proof.
   induction e; intros; inversion E; clear E; subst; simpl;
   simpl in K; repeat (apply andb_prop in K; let K':=fresh "K" in destruct K as [K' K]);
-  repeat match goal with [ IH: forall _ _, exp_known ?e = _ -> _, K: exp_known ?e = _, E: eval_exp _ _ ?e _ |- _ ] =>
+  repeat match goal with [ IH: forall _ _, exp_known ?e = _ -> _, K: exp_known ?e = _, E: eval_exp _ ?e _ |- _ ] =>
     apply (IH _ _ K) in E;
     try (let b := fresh "b" in destruct (feval_exp e _) as [b ? ? ?]; destruct b; try discriminate E; injection E as)
   end; subst; try reflexivity.
@@ -1432,8 +1166,8 @@ Proof.
 Qed.
 
 Theorem memacc_exp_true:
-  forall RW e s u (K: exp_known e = true) (E: eval_exp RW s e u),
-  memacc_exp e RW s.
+  forall e s u (K: exp_known e = true) (E: eval_exp s e u),
+  memacc_exp e s.
 Proof.
   induction e; intros; try exact I;
     try (unfold exp_known in K; fold exp_known in K; apply andb_prop in K; destruct K as [K1 K2]);
@@ -1452,7 +1186,7 @@ Proof.
   apply andb_prop, proj1 in K2.
   apply reduce_exp in E1; [|exact K1]. apply reduce_exp in E2; [|exact K2].
   apply (f_equal uvalue_of) in E1. apply (f_equal uvalue_of) in E2. rewrite can_uvalue_inv in E1,E2 by apply canonical_feval.
-  unfold uvalue_of in E1,E2. unfold memacc_exp. rewrite <- E1, <- E2. exact W.
+  unfold uvalue_of in E1,E2. rewrite <- E1, <- E2. exact W.
 
   (* Let *)
   split.
@@ -1473,12 +1207,12 @@ Qed.
 
 Lemma reduce_seq_move:
   forall x1 (FIN: x1 <> Some Unfinished)
-         RW s1 id t e q m s1' (XS: exec_stmt RW s1 (Seq (Move (Va id t) e) q) m s1' x1),
+         s1 v e q m s1' (XS: exec_stmt s1 (Seq (Move v e) q) m s1' x1),
   if exp_known e then
-    (let u := of_uvalue (feval_exp e s1) in exec_stmt RW (s1[id:=Some u]) q (pred m) s1' x1) /\
-    memacc_exp e RW s1
+    (let u := of_uvalue (feval_exp e s1) in exec_stmt (s1[v:=Some u]) q (pred m) s1' x1) /\
+    memacc_exp e s1
   else
-    exists u, exec_stmt RW (s1[id:=Some u]) q (pred m) s1' x1.
+    exists u, exec_stmt (s1[v:=Some u]) q (pred m) s1' x1.
 Proof.
   intros. inversion XS; subst. contradict FIN. reflexivity.
   inversion XS0; subst. contradict FIN. reflexivity.
@@ -1492,7 +1226,7 @@ Qed.
 
 Lemma reduce_nop:
   forall x1 (FIN: x1 <> Some Unfinished)
-         RW s1 m s1' (XS: exec_stmt RW s1 Nop m s1' x1),
+         s1 m s1' (XS: exec_stmt s1 Nop m s1' x1),
   s1' = s1 /\ x1 = None.
 Proof.
   intros. inversion XS; subst.
@@ -1502,11 +1236,11 @@ Qed.
 
 Lemma reduce_move:
   forall x1 (FIN: x1 <> Some Unfinished)
-         RW s1 id t e m s1' (XS: exec_stmt RW s1 (Move (Va id t) e) m s1' x1),
+         s1 v e m s1' (XS: exec_stmt s1 (Move v e) m s1' x1),
   if exp_known e then
-    ((let u := of_uvalue (feval_exp e s1) in s1' = s1[id:=Some u]) /\ x1 = None) /\
-    memacc_exp e RW s1
-  else exists u, (s1' = s1[id:=Some u] /\ x1 = None).
+    ((let u := of_uvalue (feval_exp e s1) in s1' = s1[v:=Some u]) /\ x1 = None) /\
+    memacc_exp e s1
+  else exists u, (s1' = s1[v:=Some u] /\ x1 = None).
 Proof.
   intros.
   inversion XS; subst. contradict FIN. reflexivity.
@@ -1519,10 +1253,10 @@ Qed.
 
 Lemma reduce_jmp:
   forall x1 (FIN: x1 <> Some Unfinished)
-         RW s1 e m s1' (XS: exec_stmt RW s1 (Jmp e) m s1' x1),
+         s1 e m s1' (XS: exec_stmt s1 (Jmp e) m s1' x1),
   if exp_known e then
     (s1' = s1 /\ x1 = Some (Exit (match feval_exp e s1 with VaU _ _ a _ => a end))) /\
-    memacc_exp e RW s1
+    memacc_exp e s1
   else exists a, (s1' = s1 /\ x1 = Some (Exit a)).
 Proof.
   intros. inversion XS; subst. contradict FIN. reflexivity.
@@ -1541,12 +1275,12 @@ Qed.
 
 Lemma reduce_if:
   forall x1 (FIN: x1 <> Some Unfinished)
-         RW s1 e q1 q2 m s1' (XS: exec_stmt RW s1 (If e q1 q2) m s1' x1),
+         s1 e q1 q2 m s1' (XS: exec_stmt s1 (If e q1 q2) m s1' x1),
   if exp_known e then
-    (exec_stmt RW s1 (match feval_exp e s1 with VaU _ _ c _ => if c then q2 else q1 end) (pred m) s1' x1) /\
-    memacc_exp e RW s1
+    (exec_stmt s1 (match feval_exp e s1 with VaU _ _ c _ => if c then q2 else q1 end) (pred m) s1' x1) /\
+    memacc_exp e s1
   else
-    exists (c:N), exec_stmt RW s1 (if c then q2 else q1) (pred m) s1' x1.
+    exists (c:N), exec_stmt s1 (if c then q2 else q1) (pred m) s1' x1.
 Proof.
   intros. inversion XS; subst. contradict FIN. reflexivity.
   destruct (exp_known e) eqn:K.
@@ -1572,6 +1306,10 @@ End FInterp.
    This result can be further reduced by the user (e.g., using "simpl") if desired.  Call-by-value
    strategy is used here, since our goal is usually to reduce as much as possible of the target
    expression, which might include arguments of an enclosing unexpandable function. *)
+
+Declare Reduction simpl_exp :=
+  cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
+                             utowidth utobit uget of_uvalue uvalue_of ].
 
 Ltac simpl_exp :=
   cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
@@ -1619,9 +1357,9 @@ Tactic Notation "simpl_stores" "in" hyp(H) :=
    expression to be reduced and "s" is the store, and adds "s[var:=value]" to the expression. *)
 
 Ltac stock_store :=
-  lazymatch goal with |- exec_stmt _ _ ?Q _ _ _ => repeat
-    match Q with context [ Va ?V ] =>
-      lazymatch goal with |- exec_stmt _ ?S _ _ _ _ =>
+  lazymatch goal with |- exec_stmt _ ?Q _ _ _ => repeat
+    match Q with context [ Var ?V ] =>
+      lazymatch goal with |- exec_stmt ?S _ _ _ _ =>
         lazymatch S with context [ update vareq _ V _ ] => fail | _ =>
           erewrite (@store_upd_eq _ V) by (simpl_stores; eassumption)
         end
@@ -1631,9 +1369,9 @@ Ltac stock_store :=
   end.
 
 Tactic Notation "stock_store" "in" hyp(XS) :=
-  lazymatch type of XS with exec_stmt _ _ ?Q _ _ _ => repeat
-    match Q with context [ Va ?V ] =>
-      lazymatch type of XS with exec_stmt _ ?S _ _ _ _ =>
+  lazymatch type of XS with exec_stmt _ ?Q _ _ _ => repeat
+    match Q with context [ Var ?V ] =>
+      lazymatch type of XS with exec_stmt ?S _ _ _ _ =>
         lazymatch S with context [ update vareq _ V _ ] => fail | _ =>
           erewrite (@store_upd_eq _ V) in XS by (simpl_stores; eassumption)
         end
@@ -1653,12 +1391,11 @@ Ltac destr_ugets H :=
          destruct (uget X) as [utyp mem n w] eqn:UGET
        end).
 
-
-(* Finally, simplifying a hypothesis of the form (exec_stmt ...) entails applying the functional
-   interpreter to each statement in the sequence (usually a Move), using simpl_stores to try to
-   infer any unresolved variable-reads, and repeating this until we reach a conditional or the
-   end of the sequence.  (We don't attempt to break conditionals into cases, since often the user
-   wants to decide which case distinction is best.) *)
+(* As the functional interpreter interprets stmts within a sequence, it infers memory access
+   hypotheses as a side-effect of interpreting Load and Store expressions.  It splits these
+   off into separate hypotheses in order to continue stepping the main exec_stmt hypothesis.
+   Many are redundant (e.g., because Load or Store is applied to the same expression multiple
+   times within the stmt), so we automatically clear any redundant ones. *)
 
 Ltac nomemaccs T :=
   lazymatch T with NoMemAcc => idtac
@@ -1686,22 +1423,33 @@ Ltac destruct_memacc H :=
   | ?T => try (nomemaccs T; clear H)
   end.
 
-Ltac finish_simpl_stmt H :=
-  simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H; destruct_memacc H.
+(* Finally, simplifying a hypothesis of the form (exec_stmt ...) entails applying the functional
+   interpreter to each statement in the sequence (usually a Move), using simpl_stores to try to
+   infer any unresolved variable-reads, using destr_ugets to abstract any unresolved store-reads,
+   and repeating this until we reach a conditional or the end of the sequence.  (We don't attempt
+   to break conditionals into cases automatically here, since often the caller wants to decide
+   which case distinction is best.)
 
-Tactic Notation "simpl_stmt" "in" hyp(H) :=
-  lazymatch type of H with exec_stmt _ _ _ _ _ ?X =>
+   Here, parameter "tac" is a caller-supplied tactic (taking a hypothesis as its argument) which
+   is applied to simplify the expression after each step within a stmt.  This is most often useful
+   for simplifying memory access hypotheses before they get split off from the main hypothesis. *)
+
+Ltac finish_simpl_stmt tac H :=
+  simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H; tac H; destruct_memacc H.
+
+Tactic Notation "simpl_stmt" "using" tactic(tac) "in" hyp(H) :=
+  lazymatch type of H with exec_stmt _ _ _ _ ?X =>
     let K := fresh "FIN" in enough (K: X <> Some Unfinished); [
-    repeat (apply reduce_seq_move in H; [|exact K]; finish_simpl_stmt H);
+    repeat (apply reduce_seq_move in H; [|exact K]; finish_simpl_stmt tac H);
     first [ apply reduce_nop in H; [|exact K]; unfold cast in H
-          | apply reduce_move in H; [|exact K]; finish_simpl_stmt H
-          | apply reduce_jmp in H; [|exact K]; finish_simpl_stmt H
+          | apply reduce_move in H; [|exact K]; finish_simpl_stmt tac H
+          | apply reduce_jmp in H; [|exact K]; finish_simpl_stmt tac H
           | apply reduce_if in H; [|exact K];
             simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
             match type of H with
             | exists _, _ => let c := fresh "c" in
                              destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
-            | _ => destruct_memacc H
+            | _ => tac H; destruct_memacc H
             end ];
     clear K |]
   | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
@@ -1711,6 +1459,7 @@ Tactic Notation "simpl_stmt" "in" hyp(H) :=
    of the exec_stmt with any known variable values from the context, then applies the functional
    interpreter, and then unfolds a few basic constants. *)
 
-Tactic Notation "bsimpl" "in" hyp(H) := stock_store in H; simpl_stmt in H; unfold tobit in H.
+Tactic Notation "bsimpl" "using" tactic(tac) "in" hyp(H) :=
+  stock_store in H; simpl_stmt using tac in H; unfold tobit in H.
 
-End BAPInterp.
+End PicinaeTheory.
