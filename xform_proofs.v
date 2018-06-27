@@ -1,15 +1,19 @@
-(* Example proofs using CoqBAP for reasoning about x86 code transformations
- *
- * Copyright (c) 2018 Kevin W. Hamlen
- * Computer Science Department
- * The University of Texas at Dallas
- *
- * Any use, commercial or otherwise, requires the express permission of
- * the author.
- *
- * To run this module, first load the BapSyntax, BapInterp, BapStatics,
- * Bap_i386, and strlen_i386 modules, and compile each (in that order)
- * using menu option Compile->Compile buffer.
+(* Example proofs using Picinae for reasoning about x86 code transformations
+
+   Copyright (c) 2018 Kevin W. Hamlen
+   Computer Science Department
+   The University of Texas at Dallas
+
+   Any use, commercial or otherwise, requires the express permission of
+   the author.
+
+   To run this module, first load and compile:
+   * Picinae_syntax
+   * Picinae_theory
+   * Picinae_statics
+   * Picinae_i386
+   (in that order) and then compile this module using menu option
+   Compile->Compile buffer.
  *)
 
 Require Import Utf8.
