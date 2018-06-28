@@ -1,21 +1,42 @@
-(* Instantiation of CoqBAP for Intel x86_64 Architecture
- *
- * Copyright (c) 2018 Kevin W. Hamlen
- * Computer Science Department
- * The University of Texas at Dallas
- *
- * Any use, commercial or otherwise, requires the express permission of
- * the author.
- *
- * To run this module, first load the BapSyntax, BapInterp, and BapStatics
- * modules, and compile them (in that order) using menu option Compile->
- * Compile buffer.
+(* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
+                                                                          $MNDM7
+   Copyright (c) 2018 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
+   Computer Science Department             Z$$ZM++O++                    7MMZZN+
+                                          ZZ$7Z.ZM~?                     7MZDNO$
+                                        ?Z8ZO7.OM=+?                     $OMO+Z+
+   Any use, commercial or otherwise       ?D=++M++ZMMNDNDZZ$$Z?           MM,IZ=
+   requires the express permission of        MZZZZZZ+...=.8NOZ8NZ$7       MM+$7M
+   the author.                                 ?NNMMM+.IZDMMMMZMD8O77     O7+MZ+
+                                                     MMM8MMMMMMMMMMM77   +MMMMZZ
+                                                     MMMMMMMMMMMZMDMD77$.ZMZMM78
+                                                      MMMMMMMMMMMMMMMMMMMZOMMM+Z
+   Instantiation of Picinae for Intel x86 ISA.         MMMMMMMMMMMMMMMMM^NZMMN+Z
+                                                        MMMMMMMMMMMMMMM/.$MZM8O+
+   To compile this module, first load and compile:       MMMMMMMMMMMMMM7..$MNDM+
+   * Picinae_core                                         MMDMMMMMMMMMZ7..$DM$77
+   * Picinae_theory                                        MMMMMMM+MMMZ7..7ZM~++
+   * Picinae_statics                                        MMMMMMMMMMM7..ZNOOMZ
+   Then compile this module with menu option                 MMMMMMMMMM$.$MOMO=7
+   Compile->Compile_buffer.                                   MDMMMMMMMO.7MDM7M+
+                                                               ZMMMMMMMM.$MM8$MN
+                                                               $ZMMMMMMZ..MMMOMZ
+                                                                ?MMMMMM7..MNN7$M
+                                                                 ?MMMMMZ..MZM$ZZ
+                                                                  ?$MMMZ7.ZZM7DZ
+                                                                    7MMM$.7MDOD7
+                                                                     7MMM.7M77ZZ
+                                                                      $MM78ZDZ7Z
+                                                                        MM8D$7Z7
+                                                                        MM7O$$+Z
+                                                                         M 7N8ZD
  *)
 
-Require Import BapStatics.
+Require Export Picinae_statics.
 Require Import NArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.
+Open Scope N.
 
 (* Variables found in IL code lifted from x86_64 native code: *)
 Inductive x86var :=
@@ -48,6 +69,8 @@ Inductive x86var :=
   | R_RSP | R_RBP (* NumT 64 *)
   (* New/Additional 64-bit registers *)
   | R_R8 | R_R9 | R_R10 | R_R11 | R_R12 | R_R13 | R_R14 | R_R15 (* NumT 64 *)
+  (* These meta-variables model page access permissions: *)
+  | A_READ | A_WRITE
   (* Temporaries introduced by the BIL lifter: *)
   | V_TEMP (n:N).
 
@@ -65,16 +88,27 @@ End MiniX86VarEq.
 
 Module X86Arch <: Architecture.
   Module Var := Make_UDT MiniX86VarEq.
+  Definition var := Var.t.
+  Definition store := var -> option value.
+
   Definition mem_bits := 8%positive.
+  Definition mem_readable s a := exists r, s A_READ = Some (VaM r 32) /\ r a <> 0.
+  Definition mem_writable s a := exists w, s A_WRITE = Some (VaM w 32) /\ w a <> 0.
+  Theorem mem_readable_mono:
+    forall s1 s2 a, s1 ⊆ s2 -> mem_readable s1 a -> mem_readable s2 a.
+  Proof. intros. destruct H0 as [r [R1 R2]]. exists r. split; [apply H|]; assumption. Qed.
+  Theorem mem_writable_mono:
+    forall s1 s2 a, s1 ⊆ s2 -> mem_writable s1 a -> mem_writable s2 a.
+  Proof. intros. destruct H0 as [w [W1 W2]]. exists w. split; [apply H|]; assumption. Qed.
 End X86Arch.
 
 (* Instantiate the static semantics module with the x86 identifiers above. *)
 
-Module BAP_x86_64 := BAPStatics X86Arch.
-Import BAP_x86_64.
+Module PArch_amd64 := PicinaeStatics X86Arch.
+Import PArch_amd64.
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
-Definition x86typctx (id:varid) : option typ :=
+Definition x86typctx (id:var) : option typ :=
   match id with
   | V_MEM32 => Some (MemT 32)
   | V_MEM64 => Some (MemT 64)
@@ -92,6 +126,7 @@ Definition x86typctx (id:varid) : option typ :=
   | R_RAX | R_RBX | R_RCX | R_RDX | R_RDI | R_RSI => Some (NumT 64)
   | R_RSP | R_RBP => Some (NumT 64)
   | R_R8 | R_R9 | R_R10 | R_R11 | R_R12 | R_R13 | R_R14 | R_R15 => Some (NumT 64)
+  | A_READ | A_WRITE => Some (MemT 32)
   | V_TEMP _ => None
   end.
 
@@ -121,6 +156,39 @@ Lemma fold_parity: forall n,
             (N.lxor (N.shiftr n 4) n))) mod 2^1) 1
   = parity n.
 Proof. intro. reflexivity. Qed.
+
+Lemma memacc_read_frame:
+  forall s v u (NE: v <> A_READ),
+  MemAcc mem_readable (update vareq s v u) = MemAcc mem_readable s.
+Proof.
+  intros. unfold MemAcc, mem_readable. rewrite update_frame. reflexivity.
+  apply not_eq_sym. exact NE.
+Qed.
+
+Lemma memacc_write_frame:
+  forall s v u (NE: v <> A_WRITE),
+  MemAcc mem_writable (update vareq s v u) = MemAcc mem_writable s.
+Proof.
+  intros. unfold MemAcc, mem_writable. rewrite update_frame. reflexivity.
+  apply not_eq_sym. exact NE.
+Qed.
+
+Lemma memacc_read_updated:
+  forall s v u1 u2,
+  MemAcc mem_readable (update vareq (update vareq s v u2) A_READ u1) =
+  MemAcc mem_readable (update vareq s A_READ u1).
+Proof.
+  intros. unfold MemAcc, mem_readable. rewrite !update_updated. reflexivity.
+Qed.
+
+Lemma memacc_write_updated:
+  forall s v u1 u2,
+  MemAcc mem_writable (update vareq (update vareq s v u2) A_WRITE u1) =
+  MemAcc mem_writable (update vareq s A_WRITE u1).
+Proof.
+  intros. unfold MemAcc, mem_writable. rewrite !update_updated. reflexivity.
+Qed.
+
 
 (* getmem assembles bytes into words by logical-or'ing them together, but sometimes it
    is easier to reason about them as if they were added.  The following theorem proves
@@ -342,10 +410,10 @@ Definition x86_subroutine_inv (p:program) inv_set postcond retaddr x (s:store) (
 (* Since we are proving partial correctness, we know that the computation doesn't get aborted
    by a computation limit in the middle (since that violates the termination assumption). *)
 Remark not_unfinished:
-  forall x (a':addr) RW p a s m n s' x',
+  forall x (a':addr) p a s m n s' x',
   match x with
-  | Some (Exit a2) => exec_prog RW p a2 s m n s' x'
-  | None => exec_prog RW p a s m n s' x'
+  | Some (Exit a2) => exec_prog p a2 s m n s' x'
+  | None => exec_prog p a s m n s' x'
   | Some x2 => Exit a' = x2
   end -> x <> Some Unfinished.
 Proof. intros. destruct x as [e|]; [destruct e|]; discriminate. Qed.
@@ -353,12 +421,12 @@ Proof. intros. destruct x as [e|]; [destruct e|]; discriminate. Qed.
 (* If we reach the return address during symbolic interpretation, stop and request that the
    user prove the post-condition using the current state. *)
 Remark x86_returning:
-  forall ra s n inv_set (postcond: addr -> exit -> store -> nat -> Prop) p RW m n' s' x',
+  forall ra s n inv_set (postcond: addr -> exit -> store -> nat -> Prop) p m n' s' x',
   postcond ra (Exit ra) s n ->
   next_inv_sat (x86_subroutine_inv p inv_set postcond ra)
                match x86_subroutine_inv p inv_set postcond ra (Exit ra) s n with
                | Some _ => true | None => false end
-               (Exit ra) RW p s m n n' s' x'.
+               (Exit ra) p s m n n' s' x'.
 Proof.
   intros. unfold x86_subroutine_inv. destruct (N.eq_dec ra ra) eqn:H'.
     apply NISHere. rewrite H'. assumption.
@@ -382,13 +450,13 @@ Qed.
 (* If we're at a code address to which no invariant has been assigned, step the
    computation to the next instruction. *)
 Remark x86_not_returning_invstep (b:bool):
-  forall OP inv_set postcond a ra s n RW p m n' s' x'
+  forall OP inv_set postcond a ra s n p m n' s' x'
          (RET: p ra = match p a with Some _ => None | None => Some (0,Nop) end)
          (IS: match inv_set a (Exit a) s n with Some _ => true | None => false end = b),
-  next_inv_sat OP b (Exit a) RW p s m n n' s' x' ->
+  next_inv_sat OP b (Exit a) p s m n n' s' x' ->
   next_inv_sat OP match x86_subroutine_inv p inv_set postcond ra (Exit a) s n with
                   | Some _ => true | None => false end
-                  (Exit a) RW p s m n n' s' x'.
+                  (Exit a) p s m n n' s' x'.
 Proof.
   intros.
   unfold x86_subroutine_inv. destruct (N.eq_dec a _) as [EQ|NE].
@@ -401,6 +469,16 @@ Qed.
 Remark inj_prog_stmt: forall (sz1 sz2: N) (q1 q2: stmt),
                       Some (sz1,q1) = Some (sz2,q2) -> sz1=sz2 /\ q1=q2.
 Proof. injection 1 as. split; assumption. Qed.
+
+(* Simplify x86 memory access permissions between simpl_stmt simplification steps. *)
+Ltac simpl_memaccs H :=
+  repeat first [ rewrite memacc_read_updated in H
+               | rewrite memacc_write_updated in H
+               | rewrite memacc_read_frame in H by discriminate 1
+               | rewrite memacc_write_frame in H by discriminate 1 ].
+
+Tactic Notation "x86_simpl_stmt" "in" hyp(H) := simpl_stmt using simpl_memaccs in H.
+Tactic Notation "x86_bsimpl" "in" hyp(H) := bsimpl using simpl_memaccs in H.
 
 (* Values of IL temp variables are ignored by the x86 interpreter once the IL block that
    generated them completes.  We can therefore generalize them away at IL block boundaries
@@ -422,7 +500,7 @@ Ltac x86_invhere := first
 (* Symbolically evaluate an x86 machine instruction for one step, and simplify the resulting
    Coq expressions. *)
 Ltac x86_step_and_simplify XS XP' :=
-  (bsimpl in XS; [|exact XP']);
+  (x86_bsimpl in XS; [|exact XP']);
   revert XS; generalize_temps; intro XS;
   simpl_x86 in XS.
 
@@ -439,8 +517,8 @@ Ltac x86_invseek :=
   apply inj_prog_stmt in IL; destruct IL; subst sz q;
   lazymatch goal with |- context [ Exit (?x + ?y) ] => simpl (x+y) end;
   x86_step_and_simplify XS XP';
-  repeat lazymatch goal with [ ACC: MemAcc _ _ _ _ _ _ |- _ ] => simpl_x86 ACC; revert ACC end; intros;
-  repeat lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ _ =>
+  repeat lazymatch goal with [ ACC: MemAcc _ _ _ _ |- _ ] => simpl_x86 ACC; revert ACC end; intros;
+  repeat lazymatch type of XS with exec_stmt _ (if ?c then _ else _) _ _ _ =>
     let BC := fresh "BC" in
     lazymatch c with (if ?c2 then _ else _) => destruct c2 eqn:BC
                    | N.lnot (if ?c2 then _ else _) 1 => destruct c2 eqn:BC
@@ -461,7 +539,7 @@ Ltac x86_invseek :=
    and either step to the next machine instruction (if we're not at an invariant) or
    produce an invariant as a proof goal. *)
 Ltac x86_step :=
-  repeat match goal with [ H: MemAcc ?RW _ _ _ _ _ |- next_inv_sat _ _ _ ?RW _ _ _ _ _ _ _ ] => clear H end;
+  repeat match goal with [ H: MemAcc _ _ _ _ |- _ ] => clear H end;
   first [ x86_invseek; try x86_invhere | x86_invhere ].
 
 
@@ -498,4 +576,3 @@ Notation "x .^ y" := (N.lxor x y) (at level 55, left associativity). (* logical 
 Notation "x .| y" := (N.lor x y) (at level 55, left associativity). (* logical or *)
 
 End X86Notations.
-
