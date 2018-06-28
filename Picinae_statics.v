@@ -1,25 +1,44 @@
-(* Type-checker and proof of type-safety for BIL
- *
- * Copyright (c) 2018 Kevin W. Hamlen
- * Computer Science Department
- * The University of Texas at Dallas
- *
- * Any use, commercial or otherwise, requires the express permission of
- * the author.
- *
- * To compile this module, first load the BapSyntax and BapInterp modules
- * and compile them (in that order) with menu option Compile->Compile buffer.
+(* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
+                                                                          $MNDM7
+   Copyright (c) 2018 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
+   Computer Science Department             Z$$ZM++O++                    7MMZZN+
+                                          ZZ$7Z.ZM~?                     7MZDNO$
+                                        ?Z8ZO7.OM=+?                     $OMO+Z+
+   Any use, commercial or otherwise       ?D=++M++ZMMNDNDZZ$$Z?           MM,IZ=
+   requires the express permission of        MZZZZZZ+...=.8NOZ8NZ$7       MM+$7M
+   the author.                                 ?NNMMM+.IZDMMMMZMD8O77     O7+MZ+
+                                                     MMM8MMMMMMMMMMM77   +MMMMZZ
+                                                     MMMMMMMMMMMZMDMD77$.ZMZMM78
+                                                      MMMMMMMMMMMMMMMMMMMZOMMM+Z
+   Static Semantics Theory module:                     MMMMMMMMMMMMMMMMM^NZMMN+Z
+   * boundedness of modular arithmetic outputs,         MMMMMMMMMMMMMMM/.$MZM8O+
+   * type-preservation of operational semantics,         MMMMMMMMMMMMMM7..$MNDM+
+   * progress of memory-safe programs, and                MMDMMMMMMMMMZ7..$DM$77
+   * proof of type-safety.                                 MMMMMMM+MMMZ7..7ZM~++
+                                                            MMMMMMMMMMM7..ZNOOMZ
+   To compile this module, first load and compile:           MMMMMMMMMM$.$MOMO=7
+   * Picinae_core                                             MDMMMMMMMO.7MDM7M+
+   * Picinae_theory                                            ZMMMMMMMM.$MM8$MN
+   Then compile this module with menu option                   $ZMMMMMMZ..MMMOMZ
+   Compile->Compile_buffer.                                     ?MMMMMM7..MNN7$M
+                                                                 ?MMMMMZ..MZM$ZZ
+                                                                  ?$MMMZ7.ZZM7DZ
+                                                                    7MMM$.7MDOD7
+                                                                     7MMM.7M77ZZ
+                                                                      $MM78ZDZ7Z
+                                                                        MM8D$7Z7
+                                                                        MM7O$$+Z
+                                                                         M 7N8ZD
  *)
 
-
-Require Export BapInterp.
+Require Export Picinae_theory.
 Require Import NArith.
 Require Import ZArith.
 Require Import Program.Equality.
-Require Import Structures.Equalities.
 Require Import FunctionalExtensionality.
 
-Module BAPStatics (Arch:Architecture).
+Module PicinaeStatics (Arch: Architecture).
 
 (* This module proves that the semantics of the IL are type-safe in the sense that
    programs whose constants have proper bitwidths never produce variable values or
@@ -28,13 +47,12 @@ Module BAPStatics (Arch:Architecture).
    and (2) proving practical results that rely upon the assumption that machine
    registers and memory contents always have values of appropriate bitwidths. *)
 
-Module Interp := BAPInterp Arch.
-Export Interp.
-
+Module PTheory := PicinaeTheory Arch.
+Export PTheory.
 Open Scope N.
 
 (* A typing context is a partial map from variables to types. *)
-Definition typctx := varid -> option typ.
+Definition typctx := var -> option typ.
 
 (* The bitwidth of the result of a binary operation *)
 Definition widthof_binop (bop:binop_typ) (w:bitwidth) : bitwidth :=
@@ -46,9 +64,9 @@ Definition widthof_binop (bop:binop_typ) (w:bitwidth) : bitwidth :=
 
 (* Type-check an expression in a typing context, returning its type. *)
 Inductive typof_exp (c:typctx): exp -> typ -> Prop :=
-| TVar (id:varid) (t:typ)
-       (CV: c id = Some t):
-       typof_exp c (Var (Va id t)) t
+| TVar (v:var) (t:typ)
+       (CV: c v = Some t):
+       typof_exp c (Var v) t
 | TWord (n:N) (w:bitwidth)
         (LT: n < 2^w):
         typof_exp c (Word n w) (NumT w)
@@ -70,9 +88,9 @@ Inductive typof_exp (c:typctx): exp -> typ -> Prop :=
         (LE: match ct with CAST_UNSIGNED | CAST_SIGNED => w <= w'
                          | CAST_HIGH | CAST_LOW => w' <= w end):
         typof_exp c (Cast ct w' e) (NumT w')
-| TLet (id:varid) (t0:typ) (e1 e2:exp) (t1 t2:typ)
-       (T1: typof_exp c e1 t1) (T2: typof_exp (c[id:=Some t1]) e2 t2):
-       typof_exp c (Let (Va id t0) e1 e2) t2
+| TLet (v:var) (e1 e2:exp) (t1 t2:typ)
+       (T1: typof_exp c e1 t1) (T2: typof_exp (c[v:=Some t1]) e2 t2):
+       typof_exp c (Let v e1 e2) t2
 | TUnknown (t:typ):
            typof_exp c (Unknown t) t
 | TIte (e1 e2 e3:exp) (w:bitwidth) (t:typ)
@@ -116,17 +134,17 @@ Inductive typof_exp (c:typctx): exp -> typ -> Prop :=
 
 Inductive typof_stmt (c0 c:typctx): stmt -> typctx -> Prop :=
 | TNop: typof_stmt c0 c Nop c
-| TMove id t e (CV: c0 id = None \/ c0 id = Some t) (TE: typof_exp c e t):
-    typof_stmt c0 c (Move (Va id t) e) (c[id:=Some t])
+| TMove v t e (CV: c0 v = None \/ c0 v = Some t) (TE: typof_exp c e t):
+    typof_stmt c0 c (Move v e) (c[v:=Some t])
 | TJmp e w (TE: typof_exp c e (NumT w)): typof_stmt c0 c (Jmp e) c
 | TCpuExn ex: typof_stmt c0 c (CpuExn ex) c
-| TSeq q1 q2 c1 c2 c' (SS: po_subset c2 c1)
+| TSeq q1 q2 c1 c2 c' (SS: c2 ⊆ c1)
        (TS1: typof_stmt c0 c q1 c1) (TS2: typof_stmt c0 c2 q2 c'):
     typof_stmt c0 c (Seq q1 q2) c'
-| TWhile e q c' (SS: po_subset c c')
+| TWhile e q c' (SS: c ⊆ c')
     (TE: typof_exp c e (NumT 1)) (TS: typof_stmt c0 c q c'):
     typof_stmt c0 c (While e q) c
-| TIf e q1 q2 c1 c2 c' (SS1: po_subset c' c1) (SS2: po_subset c' c2)
+| TIf e q1 q2 c1 c2 c' (SS1: c' ⊆ c1) (SS2: c' ⊆ c2)
       (TE: typof_exp c e (NumT 1))
       (TS1: typof_stmt c0 c q1 c1) (TS2: typof_stmt c0 c q2 c2):
     typof_stmt c0 c (If e q1 q2) c'.
@@ -136,8 +154,6 @@ Definition welltyped_prog (c0:typctx) (p:program) : Prop :=
   forall a, match p a with None => True | Some (_,q) =>
               exists c', typof_stmt c0 c0 q c' end.
 
-
-Section BAPStaticsTheorems.
 
 (* These short lemmas are helpful when automating type-checking in tactics. *)
 Lemma typchk_binop:
@@ -174,6 +190,8 @@ Proof.
   intros. revert t2 TE2. dependent induction TE1; intros; inversion TE2; subst;
   try reflexivity.
 
+  rewrite CV in CV0. injection CV0. trivial.
+
   apply IHTE1_1. assumption.
 
   apply IHTE1_1 in T1. injection T1. intro. subst. reflexivity.
@@ -190,17 +208,15 @@ Qed.
 
 (* Expression typing contexts can be safely weakened. *)
 Theorem typof_exp_weaken:
-  forall c1 c2 e t (TE: typof_exp c1 e t) (PO: po_subset c1 c2),
+  forall c1 c2 e t (TE: typof_exp c1 e t) (SS: c1 ⊆ c2),
   typof_exp c2 e t.
 Proof.
-  intros. revert c2 PO. dependent induction TE; intros; econstructor;
-  try (try first [ apply IHTE | apply IHTE1 | apply IHTE2 | apply IHTE3 ]; assumption).
+  intros. revert c2 SS. dependent induction TE; intros; econstructor;
+  try (try first [ apply IHTE | apply IHTE1 | apply IHTE2 | apply IHTE3 | apply SS ]; assumption).
 
-  apply PO. assumption.
-
-  apply IHTE2. unfold update. intros v t CV. destruct (vareq v id).
+  apply IHTE2. unfold update. intros v0 t CV. destruct (vareq v0 v).
     assumption.
-    apply PO. assumption.
+    apply SS. assumption.
 Qed.
 
 
@@ -208,7 +224,7 @@ Qed.
    In general, interpretation of an arbitrary, unchecked IL program can fail
    (i.e., exec_prog is underivable) for only the following reasons:
 
-   (1) memory access violation ("accessible" is False), or
+   (1) memory access violation ("mem_readable" or "mem_writable" is falsified), or
 
    (2) a type-mismatch occurs (e.g., addition applied to memory stores).
 
@@ -548,7 +564,7 @@ Proof.
 Qed.
 
 Theorem typesafe_getmem:
-  forall mw len m a e (TV1: typof_val (VaM m mw) (MemT mw)),
+  forall mw len m a e (TV: typof_val (VaM m mw) (MemT mw)),
   typof_val (VaN (getmem e len m a) (Mb*len)) (NumT (Mb*len)).
 Proof.
   intros. apply TVN. apply getmem_bound. eapply mem_welltyped. eassumption.
@@ -617,11 +633,11 @@ Qed.
 
 (* Shrinking the typing context preserves the modeling relation. *)
 Lemma models_subset:
-  forall c s c' (M: models c s) (CSS: po_subset c' c),
+  forall c s c' (M: models c s) (SS: c' ⊆ c),
   models c' s.
 Proof.
   unfold models. intros.
-  apply CSS in CV. apply M in CV. destruct CV as [u [SV T]].
+  apply SS in CV. apply M in CV. destruct CV as [u [SV T]].
   exists u. split; assumption.
 Qed.
 
@@ -639,15 +655,15 @@ Qed.
 
 (* Every result of evaluating a well-typed expression is a well-typed value. *)
 Lemma preservation_eval_exp:
-  forall {RW s e c t u}
-         (MCS: models c s) (TE: typof_exp c e t) (E: eval_exp RW s e u),
+  forall {s e c t u}
+         (MCS: models c s) (TE: typof_exp c e t) (E: eval_exp s e u),
   typof_val u t.
 Proof.
   intros. revert s u MCS E. dependent induction TE; intros;
   inversion E; subst;
-  repeat (match goal with [ IH: forall _ _, models _ _ -> eval_exp ?A _ ?E _ -> typof_val _ _,
+  repeat (match goal with [ IH: forall _ _, models _ _ -> eval_exp _ ?E _ -> typof_val _ _,
                             M: models _ ?S,
-                            EE: eval_exp ?A ?S ?E _ |- _ ] =>
+                            EE: eval_exp ?S ?E _ |- _ ] =>
             specialize (IH S _ MCS EE); try (inversion IH; [idtac]; subst) end).
 
   (* Var *)
@@ -674,9 +690,9 @@ Proof.
   apply typesafe_cast; assumption.
 
   (* Let *)
-  assert (CS': models (c[id:=Some t1]) (s[id:=Some u1])).
-    unfold update. intros v00 t00 VEQT. destruct (vareq v00 id).
-      exists u1. split. reflexivity. injection VEQT. intro. subst t00. assumption.
+  assert (CS': models (c[v:=Some t1]) (s[v:=Some u1])).
+    unfold update. intros v0 t0 VEQT. destruct (vareq v0 v).
+      exists u1. split. reflexivity. injection VEQT. intro. subst t0. assumption.
       apply MCS in VEQT. assumption.
   revert CS' E2. apply IHTE2.
 
@@ -699,13 +715,15 @@ Qed.
 
 (* If an expression is well-typed and there are no memory access violations,
    then evaluating it always succeeds (never gets "stuck"). *)
+
 Lemma progress_eval_exp:
-  forall {RW s e c t} (MEM: forall b m mw a, RW b m mw a : Prop)
+  forall {s e c t}
+         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c s) (T: typof_exp c e t),
-  exists u, eval_exp RW s e u.
+  exists u, eval_exp s e u.
 Proof.
   intros. revert s MCS. dependent induction T; intros;
-  repeat match reverse goal with [ IH: forall _, models ?C _ -> exists _, eval_exp ?A _ ?E _,
+  repeat match reverse goal with [ IH: forall _, models ?C _ -> exists _, eval_exp _ ?E _,
                                     M: models ?C ?S,
                                     T: typof_exp ?C ?E _ |- _ ] =>
     specialize (IH S M);
@@ -720,34 +738,31 @@ Proof.
   exists u. apply EVar; assumption.
 
   (* Word *)
-  exists (VaN n w). apply EImm; assumption.
+  exists (VaN n w). apply EWord; assumption.
 
   (* Load *)
-  eexists. eapply ELoad; try eassumption. intros. apply MEM.
+  eexists. eapply ELoad; try eassumption. intros. apply RW.
 
   (* Store *)
-  eexists.
-  eapply EStore; try eassumption.
-  intros. apply MEM.
+  eexists. eapply EStore; try eassumption. intros. apply RW.
 
   (* BinOp *)
-  exists (eval_binop bop w n n0).
-  apply EBinOp; assumption.
+  eexists. apply EBinOp; eassumption.
 
   (* UnOp *)
-  exists (eval_unop uop n w).
-  apply EUnOp; assumption.
+  eexists. apply EUnOp; eassumption.
 
   (* Cast *)
   eexists. apply ECast; eassumption.
 
   (* Let *)
-  assert (CS': models (c[id:=Some t1]) (s[id:=Some u])).
-    unfold update. intros v00 t00 VEQT. destruct (vareq v00 id).
-      exists u. split. reflexivity. injection VEQT. intro. subst t00. assumption.
+  assert (CS': models (c[v:=Some t1]) (s[v:=Some u])).
+    unfold update. intros v0 t0 VEQT. destruct (vareq v0 v).
+      exists u. split. reflexivity. injection VEQT. intro. subst t0. assumption.
       apply MCS in VEQT. assumption.
-  specialize (IHT2 _ CS'). destruct IHT2 as [u2 EE2].
-  exists u2. apply ELet with (u1:=u); assumption.
+  edestruct IHT2 as [u2 EE2].
+    apply CS'.
+    exists u2. eapply ELet; eassumption.
 
   (* Unknown *)
   destruct t.
@@ -767,14 +782,14 @@ Qed.
 
 (* Statement execution preserves the modeling relation. *)
 Lemma preservation_exec_stmt:
-  forall {RW m s q c0 c c' s'}
-         (MCS: models c s) (T: typof_stmt c0 c q c') (XS: exec_stmt RW s q m s' None),
+  forall {m s q c0 c c' s'}
+         (MCS: models c s) (T: typof_stmt c0 c q c') (XS: exec_stmt s q m s' None),
   models c' s'.
 Proof.
   intros. revert c c' MCS T. dependent induction XS; intros; inversion T; subst;
   try assumption.
 
-  unfold update. intros v t0 T0. destruct (vareq v id).
+  unfold update. intros v0 t0 T0. destruct (vareq v0 v).
     subst. injection T0; intro; subst. exists u. split. reflexivity. apply (preservation_eval_exp MCS TE E).
     apply MCS; assumption.
 
@@ -801,15 +816,15 @@ Qed.
 
 (* Execution also preserves modeling the frame context c0. *)
 Lemma pres_frame_exec_stmt:
-  forall {RW m s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
-         (T: typof_stmt c0 c q c') (XS: exec_stmt RW s q m s' x),
+  forall {m s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
+         (T: typof_stmt c0 c q c') (XS: exec_stmt s q m s' x),
   models c0 s'.
 Proof.
   intros. revert c c' MCS T. dependent induction XS; intros;
   try assumption;
   inversion T; subst.
 
-  intros v t0 CV0. unfold update. destruct (vareq v id).
+  intros v0 t0 CV0. unfold update. destruct (vareq v0 v).
     subst. exists u. split. reflexivity. destruct CV as [CV|CV]; rewrite CV0 in CV.
       discriminate.
       injection CV. intro. subst t0. apply (preservation_eval_exp MCS TE E).
@@ -835,10 +850,10 @@ Qed.
 (* Well-typed statements never get "stuck" except for memory access violations.
    They either hit the recursion limit, exit, or run to completion. *)
 Lemma progress_exec_stmt:
-  forall {RW s q c0 c c'} n
-         (MEM: forall b m mw a, RW b m mw a : Prop)
+  forall {s q c0 c c'} n
+         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c s) (T: typof_stmt c0 c q c'),
-  exists s' x, exec_stmt RW s q n s' x.
+  exists s' x, exec_stmt s q n s' x.
 Proof.
   intros. revert s q c c' MCS T. induction n; intros.
     exists s,(Some Unfinished). apply XZero.
@@ -849,11 +864,11 @@ Proof.
       exists s,None. apply XNop.
 
       (* Move *)
-      assert (E:=progress_eval_exp MEM MCS TE). destruct E as [u E].
-      exists (s[id:=Some u]),None. apply XMove. assumption.
+      assert (E:=progress_eval_exp RW MCS TE). destruct E as [u E].
+      exists (s[v:=Some u]),None. apply XMove. assumption.
 
       (* Jmp *)
-      assert (E:=progress_eval_exp MEM MCS TE). destruct E as [u E].
+      assert (E:=progress_eval_exp RW MCS TE). destruct E as [u E].
       assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [a' w'|]; subst.
       exists s,(Some (Exit a')). apply XJmp with (w:=w). assumption.
 
@@ -881,7 +896,7 @@ Proof.
       exists s',x. apply XWhile. assumption.
 
       (* If *)
-      assert (E:=progress_eval_exp MEM MCS TE). destruct E as [u E].
+      assert (E:=progress_eval_exp RW MCS TE). destruct E as [u E].
       assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [cnd w|]; subst.
       destruct cnd.
         destruct (IHn s q2 c c2 MCS TS2) as [s'2 [x2 XS2]]. exists s'2,x2. apply XIf with (c:=0); assumption.
@@ -890,8 +905,8 @@ Qed.
 
 (* Well-typed programs preserve the modeling relation at every execution step. *)
 Theorem preservation_exec_prog:
-  forall RW p c s m n a s' x (MCS: models c s)
-         (WP: welltyped_prog c p) (XS: exec_prog RW p a s m n s' x),
+  forall p c s m n a s' x (MCS: models c s)
+         (WP: welltyped_prog c p) (XS: exec_prog p a s m n s' x),
   models c s'.
 Proof.
   intros. revert a s x MCS XS. induction n; intros; inversion XS; clear XS; subst.
@@ -908,24 +923,20 @@ Qed.
    They hit the recursion limit, exit, or run to completion.  They never get
    "stuck" due to a runtime type-mismatch. *)
 Theorem progress_exec_prog:
-  forall RW p c0 s0 m n a s1 a'
-         (MEM: forall b m mw a, RW b m mw a : Prop)
+  forall p c0 s0 m n a s1 a'
+         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c0 s0) (WP: welltyped_prog c0 p)
-         (XP: exec_prog RW p a s0 m n s1 (Exit a')) (IL: p a' <> None),
-  exists s' x, exec_prog RW p a s0 m (S n) s' x.
+         (XP: exec_prog p a s0 m n s1 (Exit a')) (IL: p a' <> None),
+  exists s' x, exec_prog p a s0 m (S n) s' x.
 Proof.
   intros.
   assert (WPA':=WP a'). destruct (p a') as [(sz,q)|] eqn:IL'; [|contradict IL; reflexivity]. clear IL.
   destruct WPA' as [c' T]. eapply progress_exec_stmt in T.
     destruct T as [s' [x XS]]. exists s'. eapply exec_prog_append in XS; [|exact XP | exact IL'].
       destruct x as [e|]; [destruct e|]; eexists; exact XS.
-    exact MEM.
+    exact RW.
     eapply preservation_exec_prog. exact MCS. exact WP. exact XP.
 Qed.
-
-
-End BAPStaticsTheorems.
-
 
 (* Attempt to automatically solve a goal of one of the following forms:
    (1) welltyped_prog c p
@@ -933,9 +944,9 @@ End BAPStaticsTheorems.
    (3) typof_exp c e ?t
    This tactic only succeeds on common-case programs, statements, and expressions.
    More exotic goals will need manual proof effort. *)
-Ltac BAP_typecheck :=
+Ltac Picinae_typecheck :=
   repeat lazymatch goal with
-  | [ |- welltyped_prog _  _ ] => let a := fresh "a" in
+  | [ |- welltyped_prog _ _ ] => let a := fresh "a" in
       intro a;
       destruct a as [|a]; repeat first [ exact I | destruct a as [a|a|] ];
       eexists
@@ -946,11 +957,11 @@ Ltac BAP_typecheck :=
   | [ |- typof_exp _ _ _ ] => econstructor
   | [ |- update _ _ _ _ _ = _ ] => repeat (rewrite update_frame; [|discriminate 1]);
                                    solve [ apply update_updated | reflexivity ]
-  | [ |- _=_ \/ _=_ ] => solve [ left;reflexivity | right;reflexivity ]
-  | [ |- po_subset _ _ ] => reflexivity
-  | [ |- _=_ ] => reflexivity
-  | [ |- _<_ ] => reflexivity
+  | [ |- _ = _ \/ _ = _ ] => solve [ left;reflexivity | right;reflexivity ]
+  | [ |- _ ⊆ _ ] => reflexivity
+  | [ |- _ = _ ] => reflexivity
+  | [ |- _ < _ ] => reflexivity
   | [ |- _ <= _ ] => discriminate 1
   end.
 
-End BAPStatics.
+End PicinaeStatics.
