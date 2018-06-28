@@ -86,8 +86,8 @@ Module X86Arch <: Architecture.
   Definition store := var -> option value.
 
   Definition mem_bits := 8%positive.
-  Definition mem_readable s a := exists r, s A_READ = Some (VaM r 1) /\ r a = 1.
-  Definition mem_writable s a := exists w, s A_WRITE = Some (VaM w 1) /\ w a = 1.
+  Definition mem_readable s a := exists r, s A_READ = Some (VaM r 32) /\ r a <> 0.
+  Definition mem_writable s a := exists w, s A_WRITE = Some (VaM w 32) /\ w a <> 0.
   Theorem mem_readable_mono:
     forall s1 s2 a, s1 ⊆ s2 -> mem_readable s1 a -> mem_readable s2 a.
   Proof. intros. destruct H0 as [r [R1 R2]]. exists r. split; [apply H|]; assumption. Qed.
@@ -116,7 +116,7 @@ Definition x86typctx (v:var) : option typ :=
   | R_MXCSR => Some (NumT 32)
   | R_YMM0 | R_YMM1 | R_YMM2  | R_YMM3  | R_YMM4  | R_YMM5  | R_YMM6  | R_YMM7
   | R_YMM8 | R_YMM9 | R_YMM10 | R_YMM11 | R_YMM12 | R_YMM13 | R_YMM14 | R_YMM15 => Some (NumT 256)
-  | A_READ | A_WRITE => Some (MemT 1)
+  | A_READ | A_WRITE => Some (MemT 32)
   | V_TEMP _ => None
   end.
 
