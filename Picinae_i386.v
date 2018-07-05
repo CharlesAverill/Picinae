@@ -90,10 +90,10 @@ Module X86Arch <: Architecture.
   Definition mem_writable s a := exists w, s A_WRITE = Some (VaM w 32) /\ w a <> 0.
   Theorem mem_readable_mono:
     forall s1 s2 a, s1 ⊆ s2 -> mem_readable s1 a -> mem_readable s2 a.
-  Proof. intros. destruct H0 as [r [R1 R2]]. exists r. split; [apply H|]; assumption. Qed.
+  Proof. intros. destruct H0. eexists. split; [apply H|]; apply H0. Qed.
   Theorem mem_writable_mono:
     forall s1 s2 a, s1 ⊆ s2 -> mem_writable s1 a -> mem_writable s2 a.
-  Proof. intros. destruct H0 as [w [W1 W2]]. exists w. split; [apply H|]; assumption. Qed.
+  Proof. intros. destruct H0. eexists. split; [apply H|]; apply H0. Qed.
 End X86Arch.
 
 (* Instantiate the static semantics module with the x86 identifiers above. *)

@@ -372,23 +372,293 @@ End StoreTheory.
 
 Section TwosComplement.
 
-(* to_twoscomp inverts of_twoscomp *)
-Theorem twoscomp_inv:
-  forall n w (LT: n < 2^w),
-  to_twoscomp (of_twoscomp n w) w = n.
+(* Reinterpreting an unsigned nat as a signed integer in two's complement form
+   always yields an integer in range [-2^w, 2^w), where w is one less than the
+   bitwidth of the original unsigned number. *)
+
+Definition signed_range (w:N) (z:Z) :=
+  (match w with N0 => z = Z0 | _ =>
+    - Z.of_N (2^N.pred w)%N <= z < Z.of_N (2^N.pred w)%N
+   end)%Z.
+
+Remark N2Z_pow2_pos:
+  forall w, (0 < Z.of_N (2^w))%Z.
+Proof. intros. rewrite N2Z.inj_pow. apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg. Qed.
+
+Remark N2Z_pow2_nonzero:
+  forall w, Z.of_N (2^w) <> Z0.
+Proof. intros. apply Z.neq_sym, Z.lt_neq, N2Z_pow2_pos. Qed.
+
+Lemma hibits_zero_bound:
+  forall n w,
+    (forall b, w<=b -> N.testbit n b = false) ->
+  n < 2^w.
 Proof.
-  intros. unfold of_twoscomp, to_twoscomp.
-  replace (2 ^ Z.of_N w)%Z with (Z.of_N (2^w)) by apply N2Z.inj_pow.
-  destruct (N.testbit _ _).
+  intros.
+  destruct n. destruct (2^w) eqn:H1. apply N.pow_nonzero in H1. contradict H1. discriminate 1. reflexivity.
+  apply N.compare_nge_iff. intro P.
+    apply N.log2_le_pow2 in P; [|reflexivity].
+    apply H in P. rewrite N.bit_log2 in P. discriminate P. discriminate 1.
+Qed.
+
+Lemma bound_hibits_zero:
+  forall w n b, n < 2^w -> w<=b -> N.testbit n b = false.
+Proof.
+  intros. destruct n. reflexivity. apply N.bits_above_log2, N.log2_lt_pow2. reflexivity.
+  eapply N.lt_le_trans. eassumption.
+  apply N.pow_le_mono_r. discriminate 1. assumption.
+Qed.
+
+Theorem signbit:
+  forall n w (LT: n < 2^w), N.testbit n (N.pred w) = (2^(N.pred w) <=? n).
+Proof.
+  intros. destruct (_ <=? _) eqn:H.
+
+    destruct (N.testbit _ _) eqn:SB. reflexivity.
+    exfalso. apply N.leb_le in H. apply H, N.lt_gt, hibits_zero_bound.
+    intros b LE. apply N.lt_eq_cases in LE. destruct LE.
+      eapply bound_hibits_zero. exact LT. apply N.lt_pred_le. assumption.
+      subst b. assumption.
+
+    eapply bound_hibits_zero. apply N.leb_gt, H. reflexivity.
+Qed.
+
+Theorem toZ_bounds:
+  forall n w, n < 2^w -> signed_range w (toZ w n).
+Proof.
+  intros. unfold toZ, signed_range.
+  destruct w as [|w]. apply N.lt_1_r in H. subst n. rewrite N.bits_0. reflexivity.
+  rewrite signbit by assumption. destruct (_ <=? _) eqn:SB; split.
+
+    apply Z.le_add_le_sub_l. rewrite Z.add_opp_r.
+    rewrite <- N2Z.inj_sub by (apply N.pow_le_mono_r; [ discriminate 1 | apply N.le_pred_l]).
+    apply N2Z.inj_le.
+    rewrite <- (N.mul_1_l (2^(N.pred _))).
+    rewrite <- (N.succ_pred (N.pos w)) at 1 by discriminate 1.
+    rewrite N.pow_succ_r', <- N.mul_sub_distr_r, N.mul_1_l.
+    apply N.leb_le, SB.
+
+    eapply Z.lt_le_trans.
+      apply Z.lt_sub_0. apply N2Z.inj_lt. assumption.
+      apply N2Z.is_nonneg.
+
+    transitivity Z0; [apply Z.opp_nonpos_nonneg|]; apply N2Z.is_nonneg.
+
+    apply N2Z.inj_lt, N.leb_gt, SB.
+Qed.
+
+Theorem ofZ_bound:
+  forall z w, ofZ w z < 2^w.
+Proof.
+  intros. rewrite <- (N2Z.id (2^w)). unfold ofZ. apply Z2N.inj_lt;
+  solve [ apply Z.mod_pos_bound, N2Z_pow2_pos | apply N2Z.is_nonneg ].
+Qed.
+
+(* ofZ inverts toZ *)
+Theorem ofZ_toZ:
+  forall n w (LT: n < 2^w), ofZ w (toZ w n) = n.
+Proof.
+  intros. unfold toZ, ofZ. destruct (N.testbit _ _).
 
     rewrite <- Zminus_mod_idemp_r.
-    rewrite Z.mod_same by (rewrite N2Z.inj_pow; apply Z.pow_nonzero; [ discriminate 1 | apply N2Z.is_nonneg ]).
+    rewrite Z.mod_same by apply N2Z_pow2_nonzero.
     rewrite Z.sub_0_r, <- N2Z.inj_mod, N2Z.id by (apply N.pow_nonzero; discriminate 1).
     apply N.mod_small. assumption.
 
     rewrite Z.mod_small. apply N2Z.id. split.
       apply N2Z.is_nonneg.
       apply N2Z.inj_lt. assumption.
+Qed.
+
+Corollary toZ_inj:
+  forall w n1 n2 (LT1: n1 < 2^w) (LT2: n2 < 2^w),
+    toZ w n1 = toZ w n2 -> n1 = n2.
+Proof.
+  intros.
+  rewrite <- (ofZ_toZ n1 w), <- (ofZ_toZ n2 w), H by assumption.
+  reflexivity.
+Qed.
+
+Theorem ofZ_inj:
+  forall z1 z2 w (SR1: signed_range w z1) (SR2: signed_range w z2),
+    ofZ w z1 = ofZ w z2 -> z1 = z2.
+Proof.
+  match goal with |- forall z1 z2, ?P => cut (forall z1 z2 (LE: z2 <= z1), P)%Z end.
+    intros. destruct (Z.le_gt_cases z2 z1); [|symmetry]; eapply H; try eassumption.
+    apply Z.lt_le_incl. assumption. symmetry. assumption.
+
+  unfold ofZ. intros.
+  apply Zminus_eq. rewrite <- (Z.mod_small (_-_) (Z.of_N (2^w))). rewrite Zminus_mod.
+  apply Z2N.inj in H; try (apply Z.mod_pos_bound; change Z0 with (Z.of_N 0);
+    apply N2Z.inj_lt, N.neq_0_lt_0, N.pow_nonzero; discriminate 1).
+  apply Zeq_minus in H. rewrite H. reflexivity.
+
+  split. apply Zle_minus_le_0, LE.
+  destruct w as [|w]. rewrite SR1,SR2. reflexivity.
+  rewrite <- (N.succ_pred (Npos w)) by discriminate 1. rewrite N.pow_succ_r', N2Z.inj_mul.
+  change (Z.of_N 2) with (1+1)%Z. rewrite Z.mul_add_distr_r, Z.mul_1_l, <- Z.sub_opp_r.
+  apply Z.sub_lt_le_mono. apply SR1. apply SR2.
+Qed.
+
+Theorem toZ_ofZ:
+  forall z w (SR: signed_range w z), toZ w (ofZ w z) = z.
+Proof.
+  intros. eapply ofZ_inj; try eassumption.
+    apply toZ_bounds, ofZ_bound.
+    apply ofZ_toZ, ofZ_bound.
+Qed.
+
+Lemma ofZ_eqm:
+  forall z1 z2 w, eqm (Z.of_N (2^w)) z1 z2 <-> ofZ w z1 = ofZ w z2.
+Proof.
+  unfold ofZ. split; intro.
+    rewrite H. reflexivity.
+    apply Z2N.inj; solve [ apply H | apply Z.mod_pos_bound, N2Z_pow2_pos ].
+Qed.
+
+Lemma toZ_Neqm:
+  forall n1 n2 w, toZ w n1 = toZ w n2 -> n1 mod 2^w = n2 mod 2^w.
+Proof.
+  unfold toZ. intros.
+  apply N2Z.inj. rewrite !N2Z.inj_mod by (apply N.pow_nonzero; discriminate 1).
+  apply (f_equal (fun z => Z.modulo z (Z.of_N (2^w)))) in H. repeat destruct (N.testbit _ _);
+    repeat rewrite Zminus_mod, Z.mod_same, Z.sub_0_r, Z.mod_mod in H by apply N2Z_pow2_nonzero;
+    rewrite H; reflexivity.
+Qed.
+
+Lemma eqm_toZ:
+  forall w n z, eqm (Z.of_N (2^w)) (Z.of_N n) z -> eqm (Z.of_N (2^w)) (toZ w n) z.
+Proof.
+  intros. unfold eqm,toZ. destruct (N.testbit _ _);
+  [ rewrite <- Zminus_mod_idemp_r, Z.mod_same, Z.sub_0_r by (
+      rewrite N2Z.inj_pow; apply Z.pow_nonzero; [ discriminate 1 | apply N2Z.is_nonneg]) |];
+  apply H.
+Qed.
+
+Lemma toZ_eqm:
+  forall w n, eqm (Z.of_N (2^w)) (toZ w n) (Z.of_N n).
+Proof.
+  intros. unfold toZ. destruct (N.testbit _ _).
+    unfold eqm. rewrite <- Zminus_mod_idemp_r, Z.mod_same, Z.sub_0_r by apply N2Z_pow2_nonzero. reflexivity.
+    reflexivity.
+Qed.
+
+Theorem ofZ_add:
+  forall w z1 z2, (ofZ w z1 + ofZ w z2) mod 2^w = ofZ w (z1 + z2).
+Proof.
+  intros. unfold ofZ.
+  rewrite <- Z2N.inj_add by apply Z.mod_pos_bound, N2Z_pow2_pos.
+  rewrite <- (N2Z.id (2^w)) at 3.
+  rewrite <- Z2N.inj_mod by solve [ apply N2Z_pow2_pos | apply Z.add_nonneg_nonneg; apply Z.mod_pos_bound, N2Z_pow2_pos ].
+  rewrite <- Z.add_mod by apply N2Z_pow2_nonzero.
+  reflexivity.
+Qed.
+
+Theorem signed_sub:
+  forall w n1 n2, n2 < 2^w -> (2^w + n1 - n2) mod 2^w = sbop Z.sub w n1 n2.
+Proof.
+  intros. unfold sbop.
+  rewrite <- (ofZ_toZ (_ mod _) w) by (apply N.mod_upper_bound, N.pow_nonzero; discriminate 1).
+  apply ofZ_eqm, eqm_toZ.
+  rewrite N2Z.inj_mod by (apply N.pow_nonzero; discriminate 1).
+  unfold eqm. rewrite Z.mod_mod by apply N2Z_pow2_nonzero.
+  rewrite N2Z.inj_sub, N2Z.inj_add by (eapply N.lt_le_incl, N.lt_le_trans; [ exact H | apply N.le_add_r ]).
+  rewrite <- Z.add_sub_assoc, <- Zplus_mod_idemp_l, Z.mod_same, Z.add_0_l by apply N2Z_pow2_nonzero.
+  apply Zminus_eqm; apply eqm_sym, toZ_eqm.
+Qed.
+
+Theorem signed_neg:
+  forall w n, n < 2^w -> (2^w - n) mod 2^w = ofZ w (- toZ w n).
+Proof.
+  intros. rewrite <- (N.add_0_r (2^w)) at 1. rewrite <- Z.sub_0_l. apply signed_sub. assumption.
+Qed.
+
+Theorem ofZ_mul:
+  forall w z1 z2, (ofZ w z1 * ofZ w z2) mod 2^w = ofZ w (z1 * z2).
+Proof.
+  intros. unfold ofZ.
+  rewrite <- Z2N.inj_mul by apply Z.mod_pos_bound, N2Z_pow2_pos.
+  rewrite <- (N2Z.id (2^w)) at 3.
+  rewrite <- Z2N.inj_mod by solve [ apply N2Z_pow2_pos | apply Z.mul_nonneg_nonneg; apply Z.mod_pos_bound, N2Z_pow2_pos ].
+  rewrite <- Z.mul_mod by apply N2Z_pow2_nonzero.
+  reflexivity.
+Qed.
+
+Theorem ofZ_mod_pow2:
+  forall w z n, (ofZ w z) mod 2^n = ofZ w (z mod Z.of_N (2^n)).
+Proof.
+  intros. rewrite <- (N2Z.id (2^n)) at 1. unfold ofZ. rewrite <- Z2N.inj_mod.
+    rewrite !N2Z.inj_pow, <- !Z.land_ones, <- !Z.land_assoc, (Z.land_comm (Z.ones _)) by apply N2Z.is_nonneg. reflexivity.
+    apply Z.mod_pos_bound, N2Z_pow2_pos.
+    apply N2Z_pow2_pos.
+Qed.
+
+Theorem ofZ_shiftl:
+  forall w z n,
+  (N.shiftl (ofZ w z) n) mod 2^w = ofZ w (Z.shiftl z (Z.of_N n)).
+Proof.
+  intros. unfold ofZ.
+  rewrite N.shiftl_mul_pow2, Z.shiftl_mul_pow2 by apply N2Z.is_nonneg.
+  rewrite <- (N2Z.id (2^n)), <- Z2N.inj_mul.
+    rewrite <- (N2Z.id (2^w)) at 2. rewrite <- Z2N.inj_mod.
+      rewrite Z.mul_mod_idemp_l, N2Z.inj_pow by apply N2Z_pow2_nonzero. reflexivity.
+      apply Z.mul_nonneg_nonneg.
+        apply Z.mod_pos_bound, N2Z_pow2_pos.
+        apply Z.lt_le_incl, N2Z_pow2_pos.
+      apply N2Z_pow2_pos.
+    apply Z.mod_pos_bound, N2Z_pow2_pos.
+    apply Z.lt_le_incl, N2Z_pow2_pos.
+Qed.
+
+Lemma testbit_ofZ:
+  forall w z n, N.testbit (ofZ w z) n = andb (n <? w) (Z.testbit z (Z.of_N n)).
+Proof.
+  intros. destruct (N.lt_ge_cases n w).
+    replace (n <? w) with true.
+      unfold ofZ. rewrite <- Z.testbit_of_N. rewrite Z2N.id.
+        rewrite N2Z.inj_pow. apply Z.mod_pow2_bits_low, N2Z.inj_lt, H.
+        apply Z.mod_pos_bound, N2Z_pow2_pos.
+      symmetry. apply N.ltb_lt. assumption.
+    replace (n <? w) with false.
+      eapply bound_hibits_zero. apply ofZ_bound. assumption.
+      symmetry. apply N.ltb_ge. assumption.
+Qed.
+
+Theorem ofZ_land:
+  forall w z1 z2, N.land (ofZ w z1) (ofZ w z2) = ofZ w (Z.land z1 z2).
+Proof.
+  intros. apply N.bits_inj. intro b.
+  rewrite N.land_spec, !testbit_ofZ, Z.land_spec.
+  destruct (_ <? _); destruct (Z.testbit _ _); destruct (Z.testbit _ _); reflexivity.
+Qed.
+
+Theorem ofZ_lor:
+  forall w z1 z2, N.lor (ofZ w z1) (ofZ w z2) = ofZ w (Z.lor z1 z2).
+Proof.
+  intros. apply N.bits_inj. intro b.
+  rewrite N.lor_spec, !testbit_ofZ, Z.lor_spec.
+  destruct (_ <? _); destruct (Z.testbit _ _); destruct (Z.testbit _ _); reflexivity.
+Qed.
+
+Theorem ofZ_lxor:
+  forall w z1 z2, N.lxor (ofZ w z1) (ofZ w z2) = ofZ w (Z.lxor z1 z2).
+Proof.
+  intros. apply N.bits_inj. intro b.
+  rewrite N.lxor_spec, !testbit_ofZ, Z.lxor_spec.
+  destruct (_ <? _); destruct (Z.testbit _ _); destruct (Z.testbit _ _); reflexivity.
+Qed.
+
+Theorem ofZ_lnot:
+  forall w z, N.lnot (ofZ w z) w = ofZ w (Z.lnot z).
+Proof.
+  intros. apply N.bits_inj. intro b. destruct (N.lt_ge_cases b w).
+
+    rewrite N.lnot_spec_low by assumption.
+    rewrite !testbit_ofZ, Z.lnot_spec by apply N2Z.is_nonneg.
+    apply N.ltb_lt in H. rewrite H. reflexivity.
+
+    rewrite N.lnot_spec_high by assumption.
+    rewrite !testbit_ofZ. apply N.ltb_ge in H. rewrite H. reflexivity.
 Qed.
 
 End TwosComplement.
@@ -978,9 +1248,9 @@ Definition feval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : uvalue :=
   | OP_MINUS => utowidth w (2^w + n1 - n2)
   | OP_TIMES => utowidth w (n1*n2)
   | OP_DIVIDE => VaU true zstore (n1/n2) w
-  | OP_SDIVIDE => utowidth w (signed_op Z.quot w n1 n2)
+  | OP_SDIVIDE => VaU true zstore (sbop Z.quot w n1 n2) w
   | OP_MOD => VaU true zstore (N.modulo n1 n2) w
-  | OP_SMOD => VaU true zstore (signed_op Z.rem w n1 n2) w
+  | OP_SMOD => VaU true zstore (sbop Z.rem w n1 n2) w
   | OP_LSHIFT => utowidth w (N.shiftl n1 n2)
   | OP_RSHIFT => VaU true zstore (N.shiftr n1 n2) w
   | OP_ARSHIFT => VaU true zstore (ashiftr w n1 n2) w
@@ -991,8 +1261,8 @@ Definition feval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : uvalue :=
   | OP_NEQ => utobit (negb (n1 =? n2))
   | OP_LT => utobit (n1 <? n2)
   | OP_LE => utobit (n1 <=? n2)
-  | OP_SLT => utobit (signed_lt w n1 n2)
-  | OP_SLE => utobit (signed_le w n1 n2)
+  | OP_SLT => utobit (slt w n1 n2)
+  | OP_SLE => utobit (sle w n1 n2)
   end.
 
 Definition feval_unop (uop:unop_typ) (n:N) (w:bitwidth) : uvalue :=
