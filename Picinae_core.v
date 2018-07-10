@@ -39,21 +39,18 @@ Require Import Structures.Equalities.
 Require Setoid.
 
 
-(* First define and prove some generally useful facts about the partial order
-   consisting of A-to-B partial functions ordered by subset. *)
+(* First define the partial order of A-to-B partial functions ordered by subset. *)
 
 Definition pfsub {A B:Type} (f g: A -> option B) : Prop :=
   forall x y, f x = Some y -> g x = Some y.
 
 Notation "f ⊆ g" := (pfsub f g) (at level 70, right associativity).
 
-Theorem pfsub_refl {A B}:
-  forall (f:A->option B), f ⊆ f.
+Theorem pfsub_refl {A B}: forall (f:A->option B), f ⊆ f.
 Proof. unfold pfsub. intros. assumption. Qed.
 
 Theorem pfsub_antisym {A B}:
-  forall (f g:A->option B), f ⊆ g -> g ⊆ f ->
-  f = g.
+  forall (f g:A->option B), f ⊆ g -> g ⊆ f -> f = g.
 Proof.
   unfold pfsub. intros f g FG GF. extensionality v.
   specialize (FG v). specialize (GF v). destruct (f v) as [b|].
@@ -232,39 +229,37 @@ Inductive typof_val: value -> typ -> Prop :=
 | TVM (m:addr->N) (w:bitwidth) (WTM: welltyped_memory m): typof_val (VaM m w) (MemT w).
 
 (* Reinterpret an unsigned integer as a 2's complement signed integer. *)
-Definition of_twoscomp (n:N) (w:bitwidth) : Z :=
+Definition toZ (w:bitwidth) (n:N) : Z :=
   if N.testbit n (N.pred w) then Z.of_N n - Z.of_N (2^w) else Z.of_N n.
 
 (* Convert an integer back to 2's complement form. *)
-Definition to_twoscomp (z:Z) (w:N) : N :=
-  Z.to_N (z mod 2^(Z.of_N w)).
+Definition ofZ (w:bitwidth) (z:Z) : N :=
+  Z.to_N (z mod (Z.of_N (2^w))).
 
 (* Perform a signed operation by converting the unsigned operands to signed
    operands, applying the signed operation, and then converting the signed
    result back to unsigned. *)
-Definition signed_op (op:Z->Z->Z) (w n1 n2:N) : N :=
-  to_twoscomp (op (of_twoscomp n1 w) (of_twoscomp n2 w)) w.
+Definition sbop (bop:Z->Z->Z) (w:bitwidth) (n1 n2:N) : N :=
+  ofZ w (bop (toZ w n1) (toZ w n2)).
 
 (* Compute an arithmetic shift-right (sign-extending shift-right). *)
-Definition ashiftr (w:N) := signed_op Z.shiftr w.
+Definition ashiftr (w:bitwidth) := sbop Z.shiftr w.
 
 (* Force a result to a given width by dropping the high bits. *)
-Definition towidth (w:bitwidth) (n:N) : value :=
-  VaN (N.modulo n (2^w)) w.
+Definition towidth (w:bitwidth) (n:N) : value := VaN (n mod (2^w)) w.
 Global Arguments towidth / w n.
 
 (* Force a result to a boolean value (1-bit integer). *)
-Definition tobit (b:bool) : value :=
-  VaN (N.b2n b) 1.
+Definition tobit (b:bool) : value := VaN (N.b2n b) 1.
 Global Arguments tobit / b.
 
 (* Perform signed less-than comparison. *)
-Definition signed_lt (w n1 n2:N) : bool :=
-  Z.ltb (of_twoscomp n1 w) (of_twoscomp n2 w).
+Definition slt (w n1 n2:N) : bool :=
+  Z.ltb (toZ w n1) (toZ w n2).
 
 (* Perform signed less-or-equal comparison. *)
-Definition signed_le (w n1 n2:N) : bool :=
-  Z.leb (of_twoscomp n1 w) (of_twoscomp n2 w).
+Definition sle (w n1 n2:N) : bool :=
+  Z.leb (toZ w n1) (toZ w n2).
 
 (* Perform a binary operation (using the above as helper functions). *)
 Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
@@ -273,9 +268,9 @@ Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
   | OP_MINUS => towidth w (2^w + n1 - n2)
   | OP_TIMES => towidth w (n1*n2)
   | OP_DIVIDE => VaN (n1/n2) w
-  | OP_SDIVIDE => towidth w (signed_op Z.quot w n1 n2) (* need towidth since -2^w/-1 >= 2^w *)
+  | OP_SDIVIDE => VaN (sbop Z.quot w n1 n2) w
   | OP_MOD => VaN (N.modulo n1 n2) w
-  | OP_SMOD => VaN (signed_op Z.rem w n1 n2) w
+  | OP_SMOD => VaN (sbop Z.rem w n1 n2) w
   | OP_LSHIFT => towidth w (N.shiftl n1 n2)
   | OP_RSHIFT => VaN (N.shiftr n1 n2) w
   | OP_ARSHIFT => VaN (ashiftr w n1 n2) w
@@ -286,8 +281,8 @@ Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
   | OP_NEQ => tobit (negb (n1 =? n2))
   | OP_LT => tobit (n1 <? n2)
   | OP_LE => tobit (n1 <=? n2)
-  | OP_SLT => tobit (signed_lt w n1 n2)
-  | OP_SLE => tobit (signed_le w n1 n2)
+  | OP_SLT => tobit (slt w n1 n2)
+  | OP_SLE => tobit (sle w n1 n2)
   end.
 
 (* Perform a unary operation. *)
@@ -306,15 +301,15 @@ Notation "f [ x := y ]" := (update vareq f x y) (at level 50, left associativity
 
 
 (* Perform a cast operation. *)
-Definition signed_cast (w w':bitwidth) (n:N) : N :=
-  to_twoscomp (of_twoscomp n w) w'.
+Definition scast (w w':bitwidth) (n:N) : N :=
+  ofZ w' (toZ w n).
 
 Definition cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
   match c with
   | CAST_UNSIGNED => n
-  | CAST_SIGNED => signed_cast w w' n
+  | CAST_SIGNED => scast w w' n
   | CAST_HIGH => N.shiftr n (w - w')
-  | CAST_LOW => n mod (2^w')
+  | CAST_LOW => n mod 2^w'
   end.
 
 (* We next define memory accessor functions getmem and setmem, which read/store w-bit numbers

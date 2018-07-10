@@ -243,38 +243,6 @@ Qed.
 
 (* Helper lemmas for proving upper bounds on various operations *)
 
-Remark N_lt_0_pow2: forall p, 0 < 2^p.
-Proof.
-  intros. destruct (2^p) eqn:H.
-    exfalso. revert H. apply (N.pow_nonzero 2). discriminate 1.
-    reflexivity.
-Qed.
-
-Remark Z_lt_0_pow2: forall p, (0 < Z.of_N (2^p))%Z.
-Proof.
-  intro. rewrite <- N2Z.inj_0. apply N2Z.inj_lt. apply N_lt_0_pow2.
-Qed.
-
-Remark hibits_zero_bound:
-  forall n w,
-    (forall b, w<=b -> N.testbit n b = false) ->
-  n < 2^w.
-Proof.
-  intros.
-  destruct n. destruct (2^w) eqn:H1. apply N.pow_nonzero in H1. contradict H1. discriminate 1. reflexivity.
-  apply N.compare_nge_iff. intro P.
-    apply N.log2_le_pow2 in P; [|reflexivity].
-    apply H in P. rewrite N.bit_log2 in P. discriminate P. discriminate 1.
-Qed.
-
-Remark bound_hibits_zero:
-  forall w n b, n < 2^w -> w<=b -> N.testbit n b = false.
-Proof.
-  intros. destruct n. reflexivity. apply N.bits_above_log2, N.log2_lt_pow2. reflexivity.
-  eapply N.lt_le_trans. eassumption.
-  apply N.pow_le_mono_r. discriminate 1. assumption.
-Qed.
-
 Lemma typof_towidth:
   forall w n, typof_val (towidth w n) (NumT w).
 Proof.
@@ -294,47 +262,11 @@ Proof.
   destruct p; discriminate 1.
 Qed.
 
-(* Reinterpreting an unsigned nat as a signed integer in two's complement form
-   always yields an integer in range [-2^w, 2^w), where w is one less than the
-   bitwidth of the unsigned nat. *)
+Remark Nlt_0_pow2: forall p, 0 < 2^p.
+Proof. intros. apply N.neq_0_lt_0, N.pow_nonzero. discriminate 1. Qed.
 
-Definition signed_range (w:N) (z:Z) := (- Z.of_N (2^w)%N <= z < Z.of_N (2^w)%N)%Z.
-
-Lemma twoscomp_range:
-  forall n w, n < 2^(N.succ w) -> signed_range w (of_twoscomp n (N.succ w)).
-Proof.
-  intros. unfold of_twoscomp, signed_range. destruct (N.testbit _ _) eqn:SB; split.
-
-  apply Z.le_add_le_sub_l. rewrite Z.add_opp_r.
-  rewrite <- N2Z.inj_sub by (apply N.pow_le_mono_r; [ discriminate 1 | apply N.lt_le_incl, N.lt_succ_diag_r ]).
-  apply N2Z.inj_le. rewrite <- (N.mul_1_l (2^w)), N.pow_succ_r', <- N.mul_sub_distr_r, N.mul_1_l.
-  intro H'. rewrite (bound_hibits_zero w) in SB.
-    discriminate SB.
-    apply N.gt_lt. assumption.
-    rewrite N.pred_succ. reflexivity.
-
-  eapply Z.lt_le_trans.
-    apply Z.lt_sub_0. apply N2Z.inj_lt. assumption.
-    apply N2Z.is_nonneg.
-
-  transitivity Z0; [apply Z.opp_nonpos_nonneg|]; apply N2Z.is_nonneg.
-
-  apply N2Z.inj_lt. apply hibits_zero_bound. intros b WB. apply N.le_lteq in WB. destruct WB.
-    eapply bound_hibits_zero. apply H. apply N.le_succ_l. assumption.
-    subst b. rewrite <- (N.pred_succ w). assumption.
-Qed.
-
-(* Expressing a signed integer in two's complement form yields an unsigned N
-   whose bitwidth is one greater than the bitwidth of the signed integer. *)
-
-Lemma twoscomp_bound:
-  forall z w, to_twoscomp z w < 2^w.
-Proof.
-  intros. unfold to_twoscomp. rewrite <- (N2Z.id (2^w)). apply Z2N.inj_lt.
-    apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
-    apply N2Z.is_nonneg.
-    rewrite N2Z.inj_pow. apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
-Qed.
+Remark Zlt_0_pow2: forall p, (0 < Z.of_N (2^p))%Z.
+Proof. intro. rewrite <- N2Z.inj_0. apply N2Z.inj_lt. apply Nlt_0_pow2. Qed.
 
 Lemma rem_bound:
   forall w x y (RX: signed_range w x) (RY: signed_range w y),
@@ -342,18 +274,19 @@ Lemma rem_bound:
 Proof.
   assert (BP: forall p1 p2, (0 <= Z.rem (Z.pos p1) (Z.pos p2) < Z.pos p2)%Z).
     intros. apply Z.rem_bound_pos. apply Pos2Z.is_nonneg. apply Pos2Z.is_pos.
-  intros. destruct y as [|p2|p2]; destruct x as [|p1|p1]; try assumption;
+  intros. destruct w as [|w]. unfold signed_range in RX,RY. subst. reflexivity.
+  destruct y as [|p2|p2]; destruct x as [|p1|p1]; try assumption;
   specialize (BP p1 p2); destruct BP as [BP1 BP2].
 
   (* x>0, y>0 *)
-  split.
+  unfold signed_range. split.
     transitivity Z0. apply Z.opp_nonpos_nonneg. rewrite <- N2Z.inj_0. apply N2Z.inj_le. apply N.le_0_l. assumption.
     transitivity (Z.pos p2). assumption. apply (proj2 RY).
 
   (* x<0, y>0 *)
   rewrite <- Pos2Z.opp_pos, Z.rem_opp_l; [|discriminate]. split.
     apply -> Z.opp_le_mono. apply Z.lt_le_incl. transitivity (Z.pos p2). assumption. apply (proj2 RY).
-    apply Z.le_lt_trans with (m:=Z0). apply Z.opp_nonpos_nonneg. assumption. apply Z_lt_0_pow2.
+    apply Z.le_lt_trans with (m:=Z0). apply Z.opp_nonpos_nonneg. assumption. apply Zlt_0_pow2.
 
   (* x>0, y<0 *)
   rewrite <- Pos2Z.opp_pos, Z.rem_opp_r; [|discriminate]. split.
@@ -367,7 +300,7 @@ Proof.
     apply -> Z.opp_le_mono. transitivity (Z.pos p1).
       apply Z.rem_le. apply Pos2Z.is_nonneg. apply Pos2Z.is_pos.
       apply proj1 in RX. rewrite <- Pos2Z.opp_pos in RX. apply Z.opp_le_mono. assumption.
-    apply Z.le_lt_trans with (m:=Z0). apply Z.opp_nonpos_nonneg. assumption. apply Z_lt_0_pow2.
+    apply Z.le_lt_trans with (m:=Z0). apply Z.opp_nonpos_nonneg. assumption. apply Zlt_0_pow2.
 Qed.
 
 Lemma mod_bound:
@@ -382,7 +315,7 @@ Lemma shiftl_bound:
   forall w x y, x < 2^w -> N.shiftl x y < 2^(w+y).
 Proof.
   intros. rewrite N.shiftl_mul_pow2, N.pow_add_r. apply N.mul_lt_mono_pos_r.
-    apply N_lt_0_pow2.
+    apply Nlt_0_pow2.
     assumption.
 Qed.
 
@@ -394,8 +327,8 @@ Proof.
       apply N.pow_nonzero. discriminate 1.
       rewrite <- N.pow_add_r, N.add_sub_assoc, N.add_comm, N.add_sub; assumption.
     destruct x as [|x]. 
-      rewrite N.shiftr_0_l. apply N_lt_0_pow2.
-      rewrite N.shiftr_eq_0. apply N_lt_0_pow2. apply N.log2_lt_pow2.
+      rewrite N.shiftr_0_l. apply Nlt_0_pow2.
+      rewrite N.shiftr_eq_0. apply Nlt_0_pow2. apply N.log2_lt_pow2.
         reflexivity.
         etransitivity. eassumption. apply N.pow_lt_mono_r. reflexivity. assumption.
 Qed.
@@ -474,24 +407,18 @@ Theorem typesafe_binop:
   typof_val (eval_binop bop w n1 n2) (NumT (widthof_binop bop w)).
 Proof.
   intros. destruct bop; try first [ apply typof_towidth | apply TVN, bit_bound ];
-  apply TVN.
+  apply TVN; try apply ofZ_bound.
 
   (* DIV *)
   eapply N.le_lt_trans. apply div_bound. apply value_bound. assumption.
 
-  (* MOD *)
-  apply mod_bound; apply value_bound; assumption.
-
   (* SMOD *)
-  apply twoscomp_bound.
+  apply mod_bound; apply value_bound; assumption.
 
   (* SHIFTR *)
   eapply N.lt_le_trans.
     apply shiftr_bound. apply value_bound. eassumption.
     apply N.pow_le_mono_r. discriminate 1. apply N.le_sub_l.
-
-  (* ASHIFTR *)
-  apply twoscomp_bound.
 
   (* LAND *)
   apply land_bound; apply value_bound; assumption.
@@ -534,7 +461,7 @@ Proof.
   apply TVN, cast_high_bound; assumption.
 
   (* SIGNED *)
-  apply TVN, twoscomp_bound.
+  apply TVN, ofZ_bound.
 
   (* UNSIGNED *)
   apply TVN. eapply N.lt_le_trans. eassumption.
@@ -547,19 +474,19 @@ Theorem getmem_bound:
   getmem e len m a < 2^(Mb*len).
 Proof.
   intros. revert a. induction len using N.peano_ind; intro.
-    rewrite N.mul_0_r. apply N_lt_0_pow2.
+    rewrite N.mul_0_r. apply Nlt_0_pow2.
     rewrite getmem_succ. destruct e; apply lor_bound.
       eapply N.lt_le_trans.
         apply IHlen.
         apply N.pow_le_mono_r. discriminate 1. apply N.mul_le_mono_nonneg_l. apply N.le_0_l. apply N.le_succ_diag_r.
       rewrite N.shiftl_mul_pow2, N.mul_succ_r, N.add_comm, N.pow_add_r. apply N.mul_lt_mono_pos_r.
-        apply N_lt_0_pow2.
+        apply Nlt_0_pow2.
         apply WTM.
       eapply N.lt_le_trans.
         apply WTM.
         apply N.pow_le_mono_r. discriminate 1. rewrite N.mul_succ_r, N.add_comm. apply N.le_add_r.
       rewrite N.shiftl_mul_pow2, N.mul_succ_r, N.pow_add_r. apply N.mul_lt_mono_pos_r.
-        apply N_lt_0_pow2.
+        apply Nlt_0_pow2.
         apply IHlen.
 Qed.
 
@@ -766,8 +693,8 @@ Proof.
 
   (* Unknown *)
   destruct t.
-    exists (VaN 0 w). apply EUnknown, TVN, N_lt_0_pow2.
-    exists (VaM (fun _ => 0) w). apply EUnknown, TVM. intro. apply N_lt_0_pow2.
+    exists (VaN 0 w). apply EUnknown, TVN, Nlt_0_pow2.
+    exists (VaM (fun _ => 0) w). apply EUnknown, TVM. intro. apply Nlt_0_pow2.
 
   (* Ite *)
   eexists (match n with N0 => u0 | _ => u end).

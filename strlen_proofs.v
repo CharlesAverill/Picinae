@@ -218,11 +218,14 @@ Proof.
     apply N.mul_le_mono_nonneg_r. apply N.le_0_l. apply N.lt_pred_le. assumption.
 Qed.
 
+Remark Nlt_0_pow2: forall p, 0 < 2^p.
+Proof. intros. apply N.neq_0_lt_0, N.pow_nonzero. discriminate 1. Qed.
+
 Lemma ones_bound:
   forall p x, ones (N.pos p) x < 2^(N.pos p * x).
 Proof.
   intros. induction x using N.peano_ind.
-    apply N_lt_0_pow2.
+    apply Nlt_0_pow2.
     rewrite ones_succ_top, N.mul_succ_r, N.pow_add_r. eapply N.lt_le_trans.
       eapply N.add_lt_le_mono. exact IHx. reflexivity.
       rewrite <- (N.mul_1_l (2^_)) at -3. rewrite <- N.mul_add_distr_r, N.mul_comm. apply N.mul_le_mono_nonneg_l.
@@ -258,14 +261,14 @@ Lemma sub_lnot: forall x w, x < 2^w ->
 Proof.
   intros.
   rewrite N.add_comm.
-  rewrite <- N.add_sub_assoc by apply (N.le_succ_l 0), N_lt_0_pow2.
-  rewrite <- (N.mod_small (_-1) (2^w)) by (apply N.sub_lt; [ apply (N.le_succ_l 0), N_lt_0_pow2 | apply N.lt_0_1 ]).
+  rewrite <- N.add_sub_assoc by apply (N.le_succ_l 0), Nlt_0_pow2.
+  rewrite <- (N.mod_small (_-1) (2^w)) by (apply N.sub_lt; [ apply (N.le_succ_l 0), Nlt_0_pow2 | apply N.lt_0_1 ]).
   rewrite <- N.add_mod by (apply N.pow_nonzero; discriminate 1).
   rewrite <- (N.succ_pred (2^w)) at 1 by (apply N.pow_nonzero; discriminate 1).
   rewrite <- N.add_1_l.
   rewrite <- (N.add_sub_assoc 1) by apply N.lt_le_pred, H.
   rewrite (N.add_comm 1), <- (N.add_assoc _ 1).
-  rewrite N.add_sub_assoc, (N.add_comm 1) by apply (N.le_succ_l 0), N_lt_0_pow2.
+  rewrite N.add_sub_assoc, (N.add_comm 1) by apply (N.le_succ_l 0), Nlt_0_pow2.
   rewrite N.add_sub.
   rewrite N.add_mod, N.mod_same, N.add_0_r, N.mod_mod by (apply N.pow_nonzero; discriminate 1).
   rewrite N.mod_small by (eapply N.le_lt_trans; [ apply N.le_sub_l | apply N.lt_pred_l, N.pow_nonzero; discriminate 1 ]).
@@ -328,16 +331,16 @@ Proof.
   intro H. apply N.gt_lt in H.
   rewrite N.div_mul by (apply N.pow_nonzero; discriminate 1).
   rewrite <- (N.sub_add (2^b) (_*_)).
-  rewrite <- N.add_sub_assoc by apply N.lt_pred_le, N_lt_0_pow2.
+  rewrite <- N.add_sub_assoc by apply N.lt_pred_le, Nlt_0_pow2.
   rewrite <- (N.mul_1_l (2^b)) at 4. rewrite <- N.mul_sub_distr_r.
   rewrite N.div_add_l by (apply N.pow_nonzero; discriminate 1).
-  rewrite (N.div_small (_-_)) by (apply N.sub_lt; [ apply N.lt_pred_le, N_lt_0_pow2 | reflexivity ]).
+  rewrite (N.div_small (_-_)) by (apply N.sub_lt; [ apply N.lt_pred_le, Nlt_0_pow2 | reflexivity ]).
   rewrite N.add_0_r.
-  rewrite N.odd_sub by (eapply N.lt_pred_le, N.mul_lt_mono_pos_r; [ apply N_lt_0_pow2 | exact H ]).
+  rewrite N.odd_sub by (eapply N.lt_pred_le, N.mul_lt_mono_pos_r; [ apply Nlt_0_pow2 | exact H ]).
   rewrite N.odd_1. destruct (N.odd (_/_)); reflexivity.
 
-    rewrite <- (N.mul_1_l (2^b)) at 1. apply N.mul_le_mono_pos_r. apply N_lt_0_pow2.
-    apply N.lt_pred_le, (N.mul_lt_mono_pos_r (2^b)). apply N_lt_0_pow2. exact H.
+    rewrite <- (N.mul_1_l (2^b)) at 1. apply N.mul_le_mono_pos_r. apply Nlt_0_pow2.
+    apply N.lt_pred_le, (N.mul_lt_mono_pos_r (2^b)). apply Nlt_0_pow2. exact H.
 
   intro.
   rewrite <- N.add_sub_assoc by (destruct p; discriminate 1).
@@ -379,7 +382,7 @@ Proof.
   rewrite N.add_0_l.
   apply sub11parity. assumption.
 
-  apply N.mul_le_mono_pos_r. apply N_lt_0_pow2.
+  apply N.mul_le_mono_pos_r. apply Nlt_0_pow2.
   rewrite N.add_1_r. apply N.le_succ_l. assumption.
 Qed.
 
@@ -533,7 +536,7 @@ Proof.
           apply N.pow_le_mono_r. discriminate 1. apply N.mul_div_le; assumption.
           assumption.
         apply N.pow_nonzero. discriminate 1.
-    eapply N.mul_lt_mono_pos_l. apply N_lt_0_pow2. eapply N.le_lt_trans.
+    eapply N.mul_lt_mono_pos_l. apply Nlt_0_pow2. eapply N.le_lt_trans.
       apply N.mul_div_le, N.pow_nonzero. discriminate 1.
       rewrite <- N.pow_add_r, <- N.mul_succ_r. eapply N.lt_le_trans.
         exact HI.
