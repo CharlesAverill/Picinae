@@ -1,6 +1,6 @@
-.PHONY: arch strlen all clean
+.PHONY: arch strlen tests all clean
 
-all: arch strlen
+all: arch tests strlen
 	coqc xform_proofs.v
 
 arch:
@@ -15,5 +15,9 @@ strlen:
 	coqc strlen_i386.v
 	coqc strlen_proofs.v
 
+tests:
+	$(MAKE) -C tests all
+	
 clean:
 	rm -rf *.vo *.glob .*.aux
+	$(MAKE) -C tests clean
