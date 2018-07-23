@@ -1565,6 +1565,17 @@ Proof.
     eexists. exact XS0.
 Qed.
 
+Lemma reduce_seq_if:
+  forall x1 (FIN: x1 <> Some Unfinished)
+         s1 e q q1 q2 m s1' (XS: exec_stmt s1 (Seq (If e q1 q2) q) m s1' x1),
+  if exp_known e then
+    (exec_stmt s1 (Seq (match feval_exp e s1 with VaU _ _ c _ => if c then q2 else q1 end) q) (pred m) s1' x1) /\
+    memacc_exp e s1
+  else
+    exists (c:N), exec_stmt s1 (if c then q2 else q1) (pred m) s1' x1.
+Proof.
+Admitted.
+
 End FInterp.
 
 
@@ -1715,6 +1726,13 @@ Tactic Notation "simpl_stmt" "using" tactic(tac) "in" hyp(H) :=
           | apply reduce_move in H; [|exact K]; finish_simpl_stmt tac H
           | apply reduce_jmp in H; [|exact K]; finish_simpl_stmt tac H
           | apply reduce_if in H; [|exact K];
+            simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
+            match type of H with
+            | exists _, _ => let c := fresh "c" in
+                             destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
+            | _ => tac H; destruct_memacc H
+            end 
+          | apply reduce_seq_if in H; [|exact K];
             simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
             match type of H with
             | exists _, _ => let c := fresh "c" in
