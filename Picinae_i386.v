@@ -16,11 +16,11 @@
    To compile this module, first load and compile:       MMMMMMMMMMMMMM7..$MNDM+
    * Picinae_core                                         MMDMMMMMMMMMZ7..$DM$77
    * Picinae_theory                                        MMMMMMM+MMMZ7..7ZM~++
-   * Picinae_statics                                        MMMMMMMMMMM7..ZNOOMZ
-   Then compile this module with menu option                 MMMMMMMMMM$.$MOMO=7
-   Compile->Compile_buffer.                                   MDMMMMMMMO.7MDM7M+
-                                                               ZMMMMMMMM.$MM8$MN
-                                                               $ZMMMMMMZ..MMMOMZ
+   * Picinae_finterp                                        MMMMMMMMMMM7..ZNOOMZ
+   * Picinae_statics                                         MMMMMMMMMM$.$MOMO=7
+   * Picinae_slogic                                           MDMMMMMMMO.7MDM7M+
+   Then compile this module with menu option                   ZMMMMMMMM.$MM8$MN
+   Compile->Compile_buffer.                                    $ZMMMMMMZ..MMMOMZ
                                                                 ?MMMMMM7..MNN7$M
                                                                  ?MMMMMZ..MZM$ZZ
                                                                   ?$MMMZ7.ZZM7DZ
@@ -32,7 +32,11 @@
                                                                          M 7N8ZD
  *)
 
+Require Export Picinae_core.
+Require Export Picinae_theory.
+Require Export Picinae_finterp.
 Require Export Picinae_statics.
+Require Export Picinae_slogic.
 Require Import NArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.
@@ -69,7 +73,7 @@ Inductive x86var :=
   | V_TEMP (n:N).
 
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
-   input to the BapInterp module, so that it understands how the variable
+   input to the Architecture module, so that it understands how the variable
    identifiers chosen above are syntactically written and how to decide whether
    any two variable instances refer to the same variable. *)
 
@@ -77,7 +81,7 @@ Module MiniX86VarEq <: MiniDecidableType.
   Definition t := x86var.
   Definition eq_dec (v1 v2:x86var) : {v1=v2}+{v1<>v2}.
     decide equality; apply N.eq_dec.
-  Qed.
+  Qed. (* Some users may want to change this Qed to Defined. *)
 End MiniX86VarEq.
 
 Module X86Arch <: Architecture.
@@ -96,13 +100,20 @@ Module X86Arch <: Architecture.
   Proof. intros. destruct H0. eexists. split; [apply H|]; apply H0. Qed.
 End X86Arch.
 
-(* Instantiate the static semantics module with the x86 identifiers above. *)
-
-Module PArch_i386 := PicinaeStatics X86Arch.
-Import PArch_i386.
+(* Instantiate the Picinae modules with the x86 identifiers above. *)
+Module IL_i386 := PicinaeIL X86Arch.
+Export IL_i386.
+Module Theory_i386 := PicinaeTheory IL_i386.
+Export Theory_i386.
+Module FInterp_i386 := PicinaeFInterp IL_i386.
+Export FInterp_i386.
+Module Statics_i386 := PicinaeStatics IL_i386.
+Export Statics_i386.
+Module SLogic_i386 := PicinaeSLogic IL_i386.
+Export SLogic_i386.
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
-Definition x86typctx (v:var) : option typ :=
+Definition x86typctx v :=
   match v with
   | V_MEM32 => Some (MemT 32)
   | R_AF | R_CF | R_DF | R_OF | R_PF | R_SF | R_ZF => Some (NumT 1)
@@ -148,33 +159,33 @@ Lemma fold_parity: forall n,
 Proof. intro. reflexivity. Qed.
 
 Lemma memacc_read_frame:
-  forall s v u (NE: v <> A_READ),
-  MemAcc mem_readable (update vareq s v u) = MemAcc mem_readable s.
+  forall h s v u (NE: v <> A_READ),
+  MemAcc mem_readable h (update s v u) = MemAcc mem_readable h s.
 Proof.
   intros. unfold MemAcc, mem_readable. rewrite update_frame. reflexivity.
   apply not_eq_sym. exact NE.
 Qed.
 
 Lemma memacc_write_frame:
-  forall s v u (NE: v <> A_WRITE),
-  MemAcc mem_writable (update vareq s v u) = MemAcc mem_writable s.
+  forall h s v u (NE: v <> A_WRITE),
+  MemAcc mem_writable h (update s v u) = MemAcc mem_writable h s.
 Proof.
   intros. unfold MemAcc, mem_writable. rewrite update_frame. reflexivity.
   apply not_eq_sym. exact NE.
 Qed.
 
 Lemma memacc_read_updated:
-  forall s v u1 u2,
-  MemAcc mem_readable (update vareq (update vareq s v u2) A_READ u1) =
-  MemAcc mem_readable (update vareq s A_READ u1).
+  forall h s v u1 u2,
+  MemAcc mem_readable h (update (update s v u2) A_READ u1) =
+  MemAcc mem_readable h (update s A_READ u1).
 Proof.
   intros. unfold MemAcc, mem_readable. rewrite !update_updated. reflexivity.
 Qed.
 
 Lemma memacc_write_updated:
-  forall s v u1 u2,
-  MemAcc mem_writable (update vareq (update vareq s v u2) A_WRITE u1) =
-  MemAcc mem_writable (update vareq s A_WRITE u1).
+  forall h s v u1 u2,
+  MemAcc mem_writable h (update (update s v u2) A_WRITE u1) =
+  MemAcc mem_writable h (update s A_WRITE u1).
 Proof.
   intros. unfold MemAcc, mem_writable. rewrite !update_updated. reflexivity.
 Qed.
@@ -391,7 +402,7 @@ Ltac simpl_x86 :=
    the parameters helps Coq more easily unify some of the goals in the automated machinery
    that follows. *)
 
-Definition x86_subroutine_inv (p:program) inv_set postcond retaddr x (s:store) (n:nat) : option Prop :=
+Definition x86_subroutine_inv (_:program) inv_set postcond retaddr x (s:store) (n:nat) : option Prop :=
   match x with
   | Exit a => if N.eq_dec a retaddr then Some (postcond a x s n) else inv_set a x s n
   | _ => Some True
@@ -400,10 +411,10 @@ Definition x86_subroutine_inv (p:program) inv_set postcond retaddr x (s:store) (
 (* Since we are proving partial correctness, we know that the computation doesn't get aborted
    by a computation limit in the middle (since that violates the termination assumption). *)
 Remark not_unfinished:
-  forall x (a':addr) p a s m n s' x',
+  forall x (a':addr) h p a s m n s' x',
   match x with
-  | Some (Exit a2) => exec_prog p a2 s m n s' x'
-  | None => exec_prog p a s m n s' x'
+  | Some (Exit a2) => exec_prog h p a2 s m n s' x'
+  | None => exec_prog h p a s m n s' x'
   | Some x2 => Exit a' = x2
   end -> x <> Some Unfinished.
 Proof. intros. destruct x as [e|]; [destruct e|]; discriminate. Qed.
@@ -411,12 +422,12 @@ Proof. intros. destruct x as [e|]; [destruct e|]; discriminate. Qed.
 (* If we reach the return address during symbolic interpretation, stop and request that the
    user prove the post-condition using the current state. *)
 Remark x86_returning:
-  forall ra s n inv_set (postcond: addr -> exit -> store -> nat -> Prop) p m n' s' x',
+  forall ra s n inv_set (postcond: addr -> exit -> store -> nat -> Prop) h p m n' s' x',
   postcond ra (Exit ra) s n ->
   next_inv_sat (x86_subroutine_inv p inv_set postcond ra)
                match x86_subroutine_inv p inv_set postcond ra (Exit ra) s n with
                | Some _ => true | None => false end
-               (Exit ra) p s m n n' s' x'.
+               (Exit ra) h p s m n n' s' x'.
 Proof.
   intros. unfold x86_subroutine_inv. destruct (N.eq_dec ra ra) eqn:H'.
     apply NISHere. rewrite H'. assumption.
@@ -440,13 +451,13 @@ Qed.
 (* If we're at a code address to which no invariant has been assigned, step the
    computation to the next instruction. *)
 Remark x86_not_returning_invstep (b:bool):
-  forall OP inv_set postcond a ra s n p m n' s' x'
+  forall OP inv_set postcond a ra s n h p m n' s' x'
          (RET: p ra = match p a with Some _ => None | None => Some (0,Nop) end)
          (IS: match inv_set a (Exit a) s n with Some _ => true | None => false end = b),
-  next_inv_sat OP b (Exit a) p s m n n' s' x' ->
+  next_inv_sat OP b (Exit a) h p s m n n' s' x' ->
   next_inv_sat OP match x86_subroutine_inv p inv_set postcond ra (Exit a) s n with
                   | Some _ => true | None => false end
-                  (Exit a) p s m n n' s' x'.
+                  (Exit a) h p s m n n' s' x'.
 Proof.
   intros.
   unfold x86_subroutine_inv. destruct (N.eq_dec a _) as [EQ|NE].
@@ -474,10 +485,10 @@ Tactic Notation "x86_bsimpl" "in" hyp(H) := bsimpl using simpl_memaccs in H.
    generated them completes.  We can therefore generalize them away at IL block boundaries
    to simplify the expression. *)
 Ltac generalize_temps :=
-  repeat match goal with |- context c [ update vareq ?S (V_TEMP ?N) (Some ?U) ] => lazymatch goal with |- ?G =>
+  repeat match goal with |- context c [ update ?S (V_TEMP ?N) (Some ?U) ] => lazymatch goal with |- ?G =>
     let u := fresh "tmp" in
       set (u:=Some U) in |- * at 0;
-      let c' := context c[update vareq S (V_TEMP N) u] in
+      let c' := context c[update S (V_TEMP N) u] in
         change G with c'; generalize u; clear u; intro
   end end.
 
@@ -507,8 +518,8 @@ Ltac x86_invseek :=
   apply inj_prog_stmt in IL; destruct IL; subst sz q;
   lazymatch goal with |- context [ Exit (?x + ?y) ] => simpl (x+y) end;
   x86_step_and_simplify XS XP';
-  repeat lazymatch goal with [ ACC: MemAcc _ _ _ _ |- _ ] => simpl_x86 ACC; revert ACC end; intros;
-  repeat lazymatch type of XS with exec_stmt _ (if ?c then _ else _) _ _ _ =>
+  repeat lazymatch goal with [ ACC: MemAcc _ _ _ _ _ |- _ ] => simpl_x86 ACC; revert ACC end; intros;
+  repeat lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ _ =>
     let BC := fresh "BC" in
     lazymatch c with (if ?c2 then _ else _) => destruct c2 eqn:BC
                    | N.lnot (if ?c2 then _ else _) 1 => destruct c2 eqn:BC
@@ -529,7 +540,7 @@ Ltac x86_invseek :=
    and either step to the next machine instruction (if we're not at an invariant) or
    produce an invariant as a proof goal. *)
 Ltac x86_step :=
-  repeat match goal with [ H: MemAcc _ _ _ _ |- _ ] => clear H end;
+  repeat match goal with [ H: MemAcc _ _ _ _ _ |- _ ] => clear H end;
   first [ x86_invseek; try x86_invhere | x86_invhere ].
 
 

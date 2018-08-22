@@ -38,21 +38,14 @@ Require Import ZArith.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
 
-Module PicinaeStatics (Arch: Architecture).
 
-(* This module proves that the semantics of the IL are type-safe in the sense that
-   programs whose constants have proper bitwidths never produce variable values or
-   expressions that exceed their declared bitwidths as they execute.  This is
-   important for (1) providing assurance that the semantics are correctly defined,
-   and (2) proving practical results that rely upon the assumption that machine
-   registers and memory contents always have values of appropriate bitwidths. *)
 
-Module PTheory := PicinaeTheory Arch.
-Export PTheory.
-Open Scope N.
-
-(* A typing context is a partial map from variables to types. *)
-Definition typctx := var -> option typ.
+(* An IL expression type is a number of bitwidth w, or a memory state with
+   addresses of bitwidth w.  (The bitwidth of memory contents is architecture-
+   specific, but is usually bitwidth 8.) *)
+Inductive typ : Type :=
+| NumT (w:bitwidth)
+| MemT (w:bitwidth).
 
 (* The bitwidth of the result of a binary operation *)
 Definition widthof_binop (bop:binop_typ) (w:bitwidth) : bitwidth :=
@@ -62,195 +55,16 @@ Definition widthof_binop (bop:binop_typ) (w:bitwidth) : bitwidth :=
   | OP_EQ | OP_NEQ | OP_LT | OP_LE | OP_SLT | OP_SLE => 1
   end.
 
-(* Type-check an expression in a typing context, returning its type. *)
-Inductive typof_exp (c:typctx): exp -> typ -> Prop :=
-| TVar (v:var) (t:typ)
-       (CV: c v = Some t):
-       typof_exp c (Var v) t
-| TWord (n:N) (w:bitwidth)
-        (LT: n < 2^w):
-        typof_exp c (Word n w) (NumT w)
-| TLoad (e1 e2:exp) (en:endianness) (len mw:bitwidth)
-        (T1: typof_exp c e1 (MemT mw)) (T2: typof_exp c e2 (NumT mw)):
-        typof_exp c (Load e1 e2 en len) (NumT (Mb*len))
-| TStore (e1 e2 e3:exp) (en:endianness) (len mw:bitwidth)
-         (T1: typof_exp c e1 (MemT mw)) (T2: typof_exp c e2 (NumT mw))
-         (T3: typof_exp c e3 (NumT (Mb*len))):
-         typof_exp c (Store e1 e2 e3 en len) (MemT mw)
-| TBinOp (bop:binop_typ) (e1 e2:exp) (w:bitwidth)
-         (T1: typof_exp c e1 (NumT w)) (T2: typof_exp c e2 (NumT w)):
-         typof_exp c (BinOp bop e1 e2) (NumT (widthof_binop bop w))
-| TUnOp (uop:unop_typ) (e:exp) (w:bitwidth)
-        (T1: typof_exp c e (NumT w)):
-        typof_exp c (UnOp uop e) (NumT w)
-| TCast (ct:cast_typ) (w w':bitwidth) (e:exp)
-        (T1: typof_exp c e (NumT w))
-        (LE: match ct with CAST_UNSIGNED | CAST_SIGNED => w <= w'
-                         | CAST_HIGH | CAST_LOW => w' <= w end):
-        typof_exp c (Cast ct w' e) (NumT w')
-| TLet (v:var) (e1 e2:exp) (t1 t2:typ)
-       (T1: typof_exp c e1 t1) (T2: typof_exp (c[v:=Some t1]) e2 t2):
-       typof_exp c (Let v e1 e2) t2
-| TUnknown (t:typ):
-           typof_exp c (Unknown t) t
-| TIte (e1 e2 e3:exp) (w:bitwidth) (t:typ)
-       (T1: typof_exp c e1 (NumT w)) (T2: typof_exp c e2 t) (T3: typof_exp c e3 t):
-       typof_exp c (Ite e1 e2 e3) t
-| TExtract (w n1 n2:bitwidth) (e1:exp)
-           (T1: typof_exp c e1 (NumT w)) (LO: n2 <= n1) (HI: n1 < w):
-           typof_exp c (Extract n1 n2 e1) (NumT (N.succ (n1-n2)))
-| TConcat (e1 e2:exp) (w1 w2:N)
-          (T1: typof_exp c e1 (NumT w1)) (T2: typof_exp c e2 (NumT w2)):
-          typof_exp c (Concat e1 e2) (NumT (w1+w2)).
 
-(* Static semantics for statements:
-   Defining a sound statement typing semantics is tricky for two reasons:
+Section OpBounds.
 
-   (1) There are really two kinds of IL variables: (a) those that encode cpu state
-   (which are always initialized, and whose types are fixed), and (b) temporary
-   variables introduced during lifting to IL (which are not guaranteed to be
-   initialized, and whose types may vary across different instruction encodings.
+(* Establish upper bounds on various arithmetic and logical operations. *)
 
-   We therefore use separate contexts c0 and c to model the two kinds.  Context
-   c0 models the cpu state variables, while c models all variables.  Context c
-   therefore usually subsumes c0, and is always consistent with c0 (i.e., the
-   join of c and c0 is always a valid context).  This consistency is enforced
-   by checking assigned value types against c0 at every Move, irrespective of c.
+Remark Nlt_0_pow2: forall p, 0 < 2^p.
+Proof. intros. apply N.neq_0_lt_0, N.pow_nonzero. discriminate 1. Qed.
 
-   (2) Since variable initialization states are mutable, we need static rules
-   that support meets and joins of contexts.  But a general weakening rule is
-   inconveniently broad; it hampers syntax-directed inductive proofs, since it
-   is potentially applicable to all statement forms during inversions.
-
-   To avoid this, we instead define a strategically chosen weakening clause
-   within the sequence typing rule (TSeq), along with a fixed point requirement
-   for loops (TWhile).  An IL program that only assigns values of one type to
-   each variable per instruction encoding can be safely type-checked by ignoring
-   both clauses; the fixed point condition is automatically satisfied if the
-   weakening clause is never utilized.  But including these two clauses yields
-   a provably type-safe semantics because the weakening clause adds just enough
-   flexibility to prove satisfaction of the fixed point requirement without
-   having to cope with a fully generalized weakening rule. *)
-
-Inductive typof_stmt (c0 c:typctx): stmt -> typctx -> Prop :=
-| TNop: typof_stmt c0 c Nop c
-| TMove v t e (CV: c0 v = None \/ c0 v = Some t) (TE: typof_exp c e t):
-    typof_stmt c0 c (Move v e) (c[v:=Some t])
-| TJmp e w (TE: typof_exp c e (NumT w)): typof_stmt c0 c (Jmp e) c
-| TCpuExn ex: typof_stmt c0 c (CpuExn ex) c
-| TSeq q1 q2 c1 c2 c' (SS: c2 ⊆ c1)
-       (TS1: typof_stmt c0 c q1 c1) (TS2: typof_stmt c0 c2 q2 c'):
-    typof_stmt c0 c (Seq q1 q2) c'
-| TWhile e q c' (SS: c ⊆ c')
-    (TE: typof_exp c e (NumT 1)) (TS: typof_stmt c0 c q c'):
-    typof_stmt c0 c (While e q) c
-| TIf e q1 q2 c1 c2 c' (SS1: c' ⊆ c1) (SS2: c' ⊆ c2)
-      (TE: typof_exp c e (NumT 1))
-      (TS1: typof_stmt c0 c q1 c1) (TS2: typof_stmt c0 c q2 c2):
-    typof_stmt c0 c (If e q1 q2) c'.
-
-(* A program is well-typed if all its statements are well-typed. *)
-Definition welltyped_prog (c0:typctx) (p:program) : Prop :=
-  forall a, match p a with None => True | Some (_,q) =>
-              exists c', typof_stmt c0 c0 q c' end.
-
-
-(* These short lemmas are helpful when automating type-checking in tactics. *)
-Lemma typchk_binop:
-  forall bop c e1 e2 w w' (W: widthof_binop bop w = w')
-         (T1: typof_exp c e1 (NumT w)) (T2: typof_exp c e2 (NumT w)),
-  typof_exp c (BinOp bop e1 e2) (NumT w').
-Proof.
-  intros. rewrite <- W. apply TBinOp; assumption.
-Qed.
-
-Lemma typchk_extract:
-  forall w c n1 n2 e1 w' (W: N.succ (n1-n2) = w')
-         (T1: typof_exp c e1 (NumT w)) (LO: n2 <= n1) (HI: n1 < w),
-  typof_exp c (Extract n1 n2 e1) (NumT w').
-Proof.
-  intros. rewrite <- W. apply TExtract with (w:=w); assumption.
-Qed.
-
-Lemma typchk_concat:
-  forall c e1 e2 w1 w2 w' (W: w1+w2 = w')
-         (T1: typof_exp c e1 (NumT w1)) (T2: typof_exp c e2 (NumT w2)),
-  typof_exp c (Concat e1 e2) (NumT w').
-Proof.
-  intros. rewrite <- W. apply TConcat; assumption.
-Qed.
-
-
-(* Type-checking of expressions and statements is deterministic. *)
-
-Theorem typof_exp_deterministic:
-  forall e c t1 t2 (TE1: typof_exp c e t1) (TE2: typof_exp c e t2),
-  t1 = t2.
-Proof.
-  intros. revert t2 TE2. dependent induction TE1; intros; inversion TE2; subst;
-  try reflexivity.
-
-  rewrite CV in CV0. injection CV0. trivial.
-
-  apply IHTE1_1. assumption.
-
-  apply IHTE1_1 in T1. injection T1. intro. subst. reflexivity.
-
-  apply IHTE1. assumption.
-
-  apply IHTE1_2. apply IHTE1_1 in T1. subst. assumption.
-
-  apply IHTE1_2. assumption.
-
-  apply IHTE1_1 in T1. apply IHTE1_2 in T2.
-  injection T1. injection T2. intros. subst. reflexivity.
-Qed.
-
-(* Expression typing contexts can be safely weakened. *)
-Theorem typof_exp_weaken:
-  forall c1 c2 e t (TE: typof_exp c1 e t) (SS: c1 ⊆ c2),
-  typof_exp c2 e t.
-Proof.
-  intros. revert c2 SS. dependent induction TE; intros; econstructor;
-  try (try first [ apply IHTE | apply IHTE1 | apply IHTE2 | apply IHTE3 | apply SS ]; assumption).
-
-  apply IHTE2. unfold update. intros v0 t CV. destruct (vareq v0 v).
-    assumption.
-    apply SS. assumption.
-Qed.
-
-
-(* We next prove type-safety of the IL with respect to the above static semantics.
-   In general, interpretation of an arbitrary, unchecked IL program can fail
-   (i.e., exec_prog is underivable) for only the following reasons:
-
-   (1) memory access violation ("mem_readable" or "mem_writable" is falsified), or
-
-   (2) a type-mismatch occurs (e.g., addition applied to memory stores).
-
-   Type-safety proves that if type-checking succeeds, then the only reachable
-   stuck-states are case (1).  That is, runtime type-mismatches are precluded,
-   and all computed values have proper types.
-
-   This property is important in the context of formal validation of native
-   code programs because typically we want to prove that no stuck states are
-   reachable, and conclude from this that there are no access violations and
-   that the assumptions imply the assertions.  This is only possible if we can
-   rule out stuck states introduced by a failure of BAP to lift the native
-   code to valid IL code.  By type-checking the IL code prior to subsequent
-   analysis, we provably preclude all but the stuck states of interest. *)
-
-
-(* Helper lemmas for proving upper bounds on various operations *)
-
-Lemma typof_towidth:
-  forall w n, typof_val (towidth w n) (NumT w).
-Proof.
-  intros. apply TVN.
-  apply N.mod_upper_bound.
-  apply N.pow_nonzero.
-  intro. discriminate.
-Qed.
+Remark Zlt_0_pow2: forall p, (0 < Z.of_N (2^p))%Z.
+Proof. intro. rewrite <- N2Z.inj_0. apply N2Z.inj_lt. apply Nlt_0_pow2. Qed.
 
 Lemma div_bound: forall n1 n2, N.div n1 n2 <= n1.
 Proof.
@@ -261,12 +75,6 @@ Proof.
   unfold N.le. simpl. change p0 with (1*p0)%positive at 1. rewrite Pos.mul_compare_mono_r.
   destruct p; discriminate 1.
 Qed.
-
-Remark Nlt_0_pow2: forall p, 0 < 2^p.
-Proof. intros. apply N.neq_0_lt_0, N.pow_nonzero. discriminate 1. Qed.
-
-Remark Zlt_0_pow2: forall p, (0 < Z.of_N (2^p))%Z.
-Proof. intro. rewrite <- N2Z.inj_0. apply N2Z.inj_lt. apply Nlt_0_pow2. Qed.
 
 Lemma rem_bound:
   forall w x y (RX: signed_range w x) (RY: signed_range w y),
@@ -398,6 +206,228 @@ Proof.
     eassumption.
     apply N.pow_le_mono_r. discriminate 1. rewrite N.add_comm. apply N.le_add_r.
 Qed.
+
+End OpBounds.
+
+
+
+Module Type PICINAE_STATICS (IL: PICINAE_IL).
+
+(* This module proves that the semantics of the IL are type-safe in the sense that
+   programs whose constants have proper bitwidths never produce variable values or
+   expressions that exceed their declared bitwidths as they execute.  This is
+   important for (1) providing assurance that the semantics are correctly defined,
+   and (2) proving practical results that rely upon the assumption that machine
+   registers and memory contents always have values of appropriate bitwidths. *)
+
+Import IL.
+Module PTheory := PicinaeTheory IL.
+Import PTheory.
+Open Scope N.
+
+(* Memory is well-typed if every address holds a byte. *)
+Definition welltyped_memory (m:addr->N) : Prop :=
+  forall a, m a < 2^Mb.
+
+(* A constant's type is its bitwidth, and a memory's type is the
+   bitwidth of its addresses. *)
+Inductive typof_val: value -> typ -> Prop :=
+| TVN (n:N) (w:bitwidth) (LT: n < 2^w): typof_val (VaN n w) (NumT w)
+| TVM (m:addr->N) (w:bitwidth) (WTM: welltyped_memory m): typof_val (VaM m w) (MemT w).
+
+(* A typing context is a partial map from variables to types. *)
+Definition typctx := var -> option typ.
+
+(* Type-check an expression in a typing context, returning its type. *)
+Inductive typof_exp (c:typctx): exp -> typ -> Prop :=
+| TVar v t (CV: c v = Some t): typof_exp c (Var v) t
+| TWord n w (LT: n < 2^w): typof_exp c (Word n w) (NumT w)
+| TLoad e1 e2 en len mw
+        (T1: typof_exp c e1 (MemT mw)) (T2: typof_exp c e2 (NumT mw)):
+        typof_exp c (Load e1 e2 en len) (NumT (Mb*len))
+| TStore e1 e2 e3 en len mw
+         (T1: typof_exp c e1 (MemT mw)) (T2: typof_exp c e2 (NumT mw))
+         (T3: typof_exp c e3 (NumT (Mb*len))):
+         typof_exp c (Store e1 e2 e3 en len) (MemT mw)
+| TBinOp bop e1 e2 w
+         (T1: typof_exp c e1 (NumT w)) (T2: typof_exp c e2 (NumT w)):
+         typof_exp c (BinOp bop e1 e2) (NumT (widthof_binop bop w))
+| TUnOp uop e w (T1: typof_exp c e (NumT w)):
+        typof_exp c (UnOp uop e) (NumT w)
+| TCast ct w w' e (T1: typof_exp c e (NumT w))
+        (LE: match ct with CAST_UNSIGNED | CAST_SIGNED => w <= w'
+                         | CAST_HIGH | CAST_LOW => w' <= w end):
+        typof_exp c (Cast ct w' e) (NumT w')
+| TLet v e1 e2 t1 t2
+       (T1: typof_exp c e1 t1) (T2: typof_exp (c[v:=Some t1]) e2 t2):
+       typof_exp c (Let v e1 e2) t2
+| TUnknown w: typof_exp c (Unknown w) (NumT w)
+| TIte e1 e2 e3 w t
+       (T1: typof_exp c e1 (NumT w)) (T2: typof_exp c e2 t) (T3: typof_exp c e3 t):
+       typof_exp c (Ite e1 e2 e3) t
+| TExtract w n1 n2 e1
+           (T1: typof_exp c e1 (NumT w)) (LO: n2 <= n1) (HI: n1 < w):
+           typof_exp c (Extract n1 n2 e1) (NumT (N.succ (n1-n2)))
+| TConcat e1 e2 w1 w2
+          (T1: typof_exp c e1 (NumT w1)) (T2: typof_exp c e2 (NumT w2)):
+          typof_exp c (Concat e1 e2) (NumT (w1+w2)).
+
+(* Static semantics for statements:
+   Defining a sound statement typing semantics is tricky for two reasons:
+
+   (1) There are really two kinds of IL variables: (a) those that encode cpu state
+   (which are always initialized, and whose types are fixed), and (b) temporary
+   variables introduced during lifting to IL (which are not guaranteed to be
+   initialized, and whose types may vary across different instruction encodings.
+
+   We therefore use separate contexts c0 and c to model the two kinds.  Context
+   c0 models the cpu state variables, while c models all variables.  Context c
+   therefore usually subsumes c0, and is always consistent with c0 (i.e., the
+   join of c and c0 is always a valid context).  This consistency is enforced
+   by checking assigned value types against c0 at every Move, irrespective of c.
+
+   (2) Since variable initialization states are mutable, we need static rules
+   that support meets and joins of contexts.  But a general weakening rule is
+   inconveniently broad; it hampers syntax-directed inductive proofs, since it
+   is potentially applicable to all statement forms during inversions.
+
+   To avoid this, we instead define a strategically chosen weakening clause
+   within the sequence typing rule (TSeq), along with a fixed point requirement
+   for loops (TWhile).  An IL program that only assigns values of one type to
+   each variable per instruction encoding can be safely type-checked by ignoring
+   both clauses; the fixed point condition is automatically satisfied if the
+   weakening clause is never utilized.  But including these two clauses yields
+   a provably type-safe semantics because the weakening clause adds just enough
+   flexibility to prove satisfaction of the fixed point requirement without
+   having to cope with a fully generalized weakening rule. *)
+
+Inductive typof_stmt (c0 c:typctx): stmt -> typctx -> Prop :=
+| TNop: typof_stmt c0 c Nop c
+| TMove v t e (CV: c0 v = None \/ c0 v = Some t) (TE: typof_exp c e t):
+    typof_stmt c0 c (Move v e) (c[v:=Some t])
+| TJmp e w (TE: typof_exp c e (NumT w)): typof_stmt c0 c (Jmp e) c
+| TExn ex: typof_stmt c0 c (Exn ex) c
+| TSeq q1 q2 c1 c2 c' (SS: c2 ⊆ c1)
+       (TS1: typof_stmt c0 c q1 c1) (TS2: typof_stmt c0 c2 q2 c'):
+    typof_stmt c0 c (Seq q1 q2) c'
+| TWhile e q c' (SS: c ⊆ c')
+    (TE: typof_exp c e (NumT 1)) (TS: typof_stmt c0 c q c'):
+    typof_stmt c0 c (While e q) c
+| TIf e q1 q2 c1 c2 c' (SS1: c' ⊆ c1) (SS2: c' ⊆ c2)
+      (TE: typof_exp c e (NumT 1))
+      (TS1: typof_stmt c0 c q1 c1) (TS2: typof_stmt c0 c q2 c2):
+    typof_stmt c0 c (If e q1 q2) c'.
+
+(* A program is well-typed if all its statements are well-typed. *)
+Definition welltyped_prog (c0:typctx) (p:program) : Prop :=
+  forall a, match p a with None => True | Some (_,q) =>
+              exists c', typof_stmt c0 c0 q c' end.
+
+
+(* Convenience lemmas for inverted reasoning about typof_val. *)
+
+Lemma value_bound:
+  forall n w (TV: typof_val (VaN n w) (NumT w)), n < 2^w.
+Proof. intros. inversion TV. assumption. Qed.
+
+Lemma mem_welltyped:
+  forall m w (TV: typof_val (VaM m w) (MemT w)), welltyped_memory m.
+Proof. intros. inversion TV. assumption. Qed.
+
+Lemma typof_towidth:
+  forall w n, typof_val (towidth w n) (NumT w).
+Proof.
+  intros. apply TVN.
+  apply N.mod_upper_bound.
+  apply N.pow_nonzero.
+  intro. discriminate.
+Qed.
+
+
+(* These short lemmas are helpful when automating type-checking in tactics. *)
+Lemma typchk_binop:
+  forall bop c e1 e2 w w' (W: widthof_binop bop w = w')
+         (T1: typof_exp c e1 (NumT w)) (T2: typof_exp c e2 (NumT w)),
+  typof_exp c (BinOp bop e1 e2) (NumT w').
+Proof.
+  intros. rewrite <- W. apply TBinOp; assumption.
+Qed.
+
+Lemma typchk_extract:
+  forall w c n1 n2 e1 w' (W: N.succ (n1-n2) = w')
+         (T1: typof_exp c e1 (NumT w)) (LO: n2 <= n1) (HI: n1 < w),
+  typof_exp c (Extract n1 n2 e1) (NumT w').
+Proof.
+  intros. rewrite <- W. apply TExtract with (w:=w); assumption.
+Qed.
+
+Lemma typchk_concat:
+  forall c e1 e2 w1 w2 w' (W: w1+w2 = w')
+         (T1: typof_exp c e1 (NumT w1)) (T2: typof_exp c e2 (NumT w2)),
+  typof_exp c (Concat e1 e2) (NumT w').
+Proof.
+  intros. rewrite <- W. apply TConcat; assumption.
+Qed.
+
+
+(* Type-checking of expressions and statements is deterministic. *)
+
+Theorem typof_exp_deterministic:
+  forall e c t1 t2 (TE1: typof_exp c e t1) (TE2: typof_exp c e t2),
+  t1 = t2.
+Proof.
+  intros. revert t2 TE2. dependent induction TE1; intros; inversion TE2; subst;
+  try reflexivity.
+
+  rewrite CV in CV0. injection CV0. trivial.
+
+  apply IHTE1_1. assumption.
+
+  apply IHTE1_1 in T1. injection T1. intro. subst. reflexivity.
+
+  apply IHTE1. assumption.
+
+  apply IHTE1_2. apply IHTE1_1 in T1. subst. assumption.
+
+  apply IHTE1_2. assumption.
+
+  apply IHTE1_1 in T1. apply IHTE1_2 in T2.
+  injection T1. injection T2. intros. subst. reflexivity.
+Qed.
+
+(* Expression typing contexts can be safely weakened. *)
+Theorem typof_exp_weaken:
+  forall c1 c2 e t (TE: typof_exp c1 e t) (SS: c1 ⊆ c2),
+  typof_exp c2 e t.
+Proof.
+  intros. revert c2 SS. dependent induction TE; intros; econstructor;
+  try (try first [ apply IHTE | apply IHTE1 | apply IHTE2 | apply IHTE3 | apply SS ]; assumption).
+
+  apply IHTE2. unfold update. intros v0 t CV. destruct (v0 == v).
+    assumption.
+    apply SS. assumption.
+Qed.
+
+
+(* We next prove type-safety of the IL with respect to the above static semantics.
+   In general, interpretation of an arbitrary, unchecked IL program can fail
+   (i.e., exec_prog is underivable) for only the following reasons:
+
+   (1) memory access violation ("mem_readable" or "mem_writable" is falsified), or
+
+   (2) a type-mismatch occurs (e.g., addition applied to memory stores).
+
+   Type-safety proves that if type-checking succeeds, then the only reachable
+   stuck-states are case (1).  That is, runtime type-mismatches are precluded,
+   and all computed values have proper types.
+
+   This property is important in the context of formal validation of native
+   code programs because typically we want to prove that no stuck states are
+   reachable, and conclude from this that there are no access violations and
+   that the assumptions imply the assertions.  This is only possible if we can
+   rule out stuck states introduced by a failure of BAP to lift the native
+   code to valid IL code.  By type-checking the IL code prior to subsequent
+   analysis, we provably preclude all but the stuck states of interest. *)
 
 
 (* Binary operations on well-typed values yield well-typed values. *)
@@ -582,16 +612,16 @@ Qed.
 
 (* Every result of evaluating a well-typed expression is a well-typed value. *)
 Lemma preservation_eval_exp:
-  forall {s e c t u}
-         (MCS: models c s) (TE: typof_exp c e t) (E: eval_exp s e u),
+  forall {h s e c t u}
+         (MCS: models c s) (TE: typof_exp c e t) (E: eval_exp h s e u),
   typof_val u t.
 Proof.
   intros. revert s u MCS E. dependent induction TE; intros;
   inversion E; subst;
-  repeat (match goal with [ IH: forall _ _, models _ _ -> eval_exp _ ?E _ -> typof_val _ _,
-                            M: models _ ?S,
-                            EE: eval_exp ?S ?E _ |- _ ] =>
-            specialize (IH S _ MCS EE); try (inversion IH; [idtac]; subst) end).
+  repeat (match goal with [ IH: forall _ _, models _ _ -> eval_exp ?h _ ?e _ -> typof_val _ _,
+                            M: models _ ?s,
+                            EE: eval_exp ?h ?s ?e _ |- _ ] =>
+            specialize (IH s _ MCS EE); try (inversion IH; [idtac]; subst) end).
 
   (* Var *)
   apply MCS in CV. destruct CV as [u' [SID TVU]].
@@ -618,13 +648,13 @@ Proof.
 
   (* Let *)
   assert (CS': models (c[v:=Some t1]) (s[v:=Some u1])).
-    unfold update. intros v0 t0 VEQT. destruct (vareq v0 v).
+    unfold update. intros v0 t0 VEQT. destruct (v0 == v).
       exists u1. split. reflexivity. injection VEQT. intro. subst t0. assumption.
       apply MCS in VEQT. assumption.
   revert CS' E2. apply IHTE2.
 
   (* Unknown *)
-  assumption.
+  apply TVN. assumption.
 
   (* Ite *)
   destruct n1.
@@ -647,13 +677,13 @@ Lemma progress_eval_exp:
   forall {s e c t}
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c s) (T: typof_exp c e t),
-  exists u, eval_exp s e u.
+  exists u, eval_exp htotal s e u.
 Proof.
   intros. revert s MCS. dependent induction T; intros;
-  repeat match reverse goal with [ IH: forall _, models ?C _ -> exists _, eval_exp _ ?E _,
-                                    M: models ?C ?S,
-                                    T: typof_exp ?C ?E _ |- _ ] =>
-    specialize (IH S M);
+  repeat match reverse goal with [ IH: forall _, models ?C _ -> exists _, eval_exp _ _ ?e _,
+                                    M: models ?c ?s,
+                                    T: typof_exp ?c ?e _ |- _ ] =>
+    specialize (IH s M);
     let u':=fresh "u" in let EE:=fresh "E" in let TV:=fresh "TV" in
       destruct IH as [u' EE];
       assert (TV:=preservation_eval_exp M T EE);
@@ -668,10 +698,10 @@ Proof.
   exists (VaN n w). apply EWord; assumption.
 
   (* Load *)
-  eexists. eapply ELoad; try eassumption. intros. apply RW.
+  eexists. eapply ELoad; try eassumption. intros. split. reflexivity. apply RW.
 
   (* Store *)
-  eexists. eapply EStore; try eassumption. intros. apply RW.
+  eexists. eapply EStore; try eassumption. intros. split. reflexivity. apply RW.
 
   (* BinOp *)
   eexists. apply EBinOp; eassumption.
@@ -684,7 +714,7 @@ Proof.
 
   (* Let *)
   assert (CS': models (c[v:=Some t1]) (s[v:=Some u])).
-    unfold update. intros v0 t0 VEQT. destruct (vareq v0 v).
+    unfold update. intros v0 t0 VEQT. destruct (v0 == v).
       exists u. split. reflexivity. injection VEQT. intro. subst t0. assumption.
       apply MCS in VEQT. assumption.
   edestruct IHT2 as [u2 EE2].
@@ -692,9 +722,7 @@ Proof.
     exists u2. eapply ELet; eassumption.
 
   (* Unknown *)
-  destruct t.
-    exists (VaN 0 w). apply EUnknown, TVN, Nlt_0_pow2.
-    exists (VaM (fun _ => 0) w). apply EUnknown, TVM. intro. apply Nlt_0_pow2.
+  exists (VaN 0 w). apply EUnknown. apply Nlt_0_pow2.
 
   (* Ite *)
   eexists (match n with N0 => u0 | _ => u end).
@@ -709,14 +737,14 @@ Qed.
 
 (* Statement execution preserves the modeling relation. *)
 Lemma preservation_exec_stmt:
-  forall {m s q c0 c c' s'}
-         (MCS: models c s) (T: typof_stmt c0 c q c') (XS: exec_stmt s q m s' None),
+  forall {h d s q c0 c c' s'}
+         (MCS: models c s) (T: typof_stmt c0 c q c') (XS: exec_stmt h s q d s' None),
   models c' s'.
 Proof.
   intros. revert c c' MCS T. dependent induction XS; intros; inversion T; subst;
   try assumption.
 
-  unfold update. intros v0 t0 T0. destruct (vareq v0 v).
+  unfold update. intros v0 t0 T0. destruct (v0 == v).
     subst. injection T0; intro; subst. exists u. split. reflexivity. apply (preservation_eval_exp MCS TE E).
     apply MCS; assumption.
 
@@ -743,15 +771,15 @@ Qed.
 
 (* Execution also preserves modeling the frame context c0. *)
 Lemma pres_frame_exec_stmt:
-  forall {m s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
-         (T: typof_stmt c0 c q c') (XS: exec_stmt s q m s' x),
+  forall {h d s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
+         (T: typof_stmt c0 c q c') (XS: exec_stmt h s q d s' x),
   models c0 s'.
 Proof.
   intros. revert c c' MCS T. dependent induction XS; intros;
   try assumption;
   inversion T; subst.
 
-  intros v0 t0 CV0. unfold update. destruct (vareq v0 v).
+  intros v0 t0 CV0. unfold update. destruct (v0 == v).
     subst. exists u. split. reflexivity. destruct CV as [CV|CV]; rewrite CV0 in CV.
       discriminate.
       injection CV. intro. subst t0. apply (preservation_eval_exp MCS TE E).
@@ -777,13 +805,13 @@ Qed.
 (* Well-typed statements never get "stuck" except for memory access violations.
    They either hit the recursion limit, exit, or run to completion. *)
 Lemma progress_exec_stmt:
-  forall {s q c0 c c'} n
+  forall {s q c0 c c'} d
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c s) (T: typof_stmt c0 c q c'),
-  exists s' x, exec_stmt s q n s' x.
+  exists s' x, exec_stmt htotal s q d s' x.
 Proof.
-  intros. revert s q c c' MCS T. induction n; intros.
-    exists s,(Some Unfinished). apply XZero.
+  intros. revert s q c c' MCS T. induction d; intros.
+    exists s,(Some Unfinished). apply XUnfinished.
 
     destruct q; try (inversion T; subst).
 
@@ -799,41 +827,41 @@ Proof.
       assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [a' w'|]; subst.
       exists s,(Some (Exit a')). apply XJmp with (w:=w). assumption.
 
-      (* CpuExn *)
-      exists s,(Some (Exn i)). apply XExn.
+      (* Exn *)
+      exists s,(Some (Throw i)). apply XExn.
 
       (* Seq *)
-      assert (XS1:=IHn s q1 c c1 MCS TS1). destruct XS1 as [s2 [x1 XS1]].
+      assert (XS1:=IHd s q1 c c1 MCS TS1). destruct XS1 as [s2 [x1 XS1]].
       destruct x1 as [x1|].
 
         destruct x1.
           exists s2,(Some Unfinished). apply XSeq1. assumption.
           exists s2,(Some (Exit a)). apply XSeq1. assumption.
-          exists s2,(Some (Exn i)). apply XSeq1. assumption.
+          exists s2,(Some (Throw i)). apply XSeq1. assumption.
 
         assert (MCS2:=preservation_exec_stmt MCS TS1 XS1).
         apply models_subset with (c':=c2) in MCS2; try assumption.
-        assert (XS2:=IHn s2 q2 c2 c' MCS2 TS2). destruct XS2 as [s' [x XS2]]. 
+        assert (XS2:=IHd s2 q2 c2 c' MCS2 TS2). destruct XS2 as [s' [x XS2]]. 
         exists s',x. apply XSeq2 with (s2:=s2); assumption.
 
       (* While *)
-      specialize IHn with (s:=s) (q:=If e (Seq q (While e q)) Nop) (c:=c') (c':=c').
+      specialize IHd with (s:=s) (q:=If e (Seq q (While e q)) Nop) (c:=c') (c':=c').
       apply welltyped_while in T.
-      destruct (IHn MCS T) as [s' [x XS]].
+      destruct (IHd MCS T) as [s' [x XS]].
       exists s',x. apply XWhile. assumption.
 
       (* If *)
       assert (E:=progress_eval_exp RW MCS TE). destruct E as [u E].
       assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [cnd w|]; subst.
       destruct cnd.
-        destruct (IHn s q2 c c2 MCS TS2) as [s'2 [x2 XS2]]. exists s'2,x2. apply XIf with (c:=0); assumption.
-        destruct (IHn s q1 c c1 MCS TS1) as [s'1 [x1 XS1]]. exists s'1,x1. apply XIf with (c:=N.pos p); assumption.
+        destruct (IHd s q2 c c2 MCS TS2) as [s'2 [x2 XS2]]. exists s'2,x2. apply XIf with (c:=0); assumption.
+        destruct (IHd s q1 c c1 MCS TS1) as [s'1 [x1 XS1]]. exists s'1,x1. apply XIf with (c:=N.pos p); assumption.
 Qed.
 
 (* Well-typed programs preserve the modeling relation at every execution step. *)
 Theorem preservation_exec_prog:
-  forall p c s m n a s' x (MCS: models c s)
-         (WP: welltyped_prog c p) (XS: exec_prog p a s m n s' x),
+  forall h p c s d n a s' x (MCS: models c s)
+         (WP: welltyped_prog c p) (XS: exec_prog h p a s d n s' x),
   models c s'.
 Proof.
   intros. revert a s x MCS XS. induction n; intros; inversion XS; clear XS; subst.
@@ -850,11 +878,11 @@ Qed.
    They hit the recursion limit, exit, or run to completion.  They never get
    "stuck" due to a runtime type-mismatch. *)
 Theorem progress_exec_prog:
-  forall p c0 s0 m n a s1 a'
+  forall p c0 s0 d n a s1 a'
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c0 s0) (WP: welltyped_prog c0 p)
-         (XP: exec_prog p a s0 m n s1 (Exit a')) (IL: p a' <> None),
-  exists s' x, exec_prog p a s0 m (S n) s' x.
+         (XP: exec_prog htotal p a s0 d n s1 (Exit a')) (IL: p a' <> None),
+  exists s' x, exec_prog htotal p a s0 d (S n) s' x.
 Proof.
   intros.
   assert (WPA':=WP a'). destruct (p a') as [(sz,q)|] eqn:IL'; [|contradict IL; reflexivity]. clear IL.
@@ -869,8 +897,8 @@ Qed.
    (1) welltyped_prog c p
    (2) typof_stmt c0 c q ?c'
    (3) typof_exp c e ?t
-   This tactic only succeeds on common-case programs, statements, and expressions.
-   More exotic goals will need manual proof effort. *)
+   This tactic only succeeds on common-case programs, statements, and expressions generated
+   by the lifter.  More exotic goals may need manual proof effort. *)
 Ltac Picinae_typecheck :=
   repeat lazymatch goal with
   | [ |- welltyped_prog _ _ ] => let a := fresh "a" in
@@ -882,7 +910,7 @@ Ltac Picinae_typecheck :=
   | [ |- typof_exp _ (Concat _ _) _ ] => eapply typchk_concat
   | [ |- typof_stmt _ _ _ _ ] => econstructor
   | [ |- typof_exp _ _ _ ] => econstructor
-  | [ |- update _ _ _ _ _ = _ ] => repeat (rewrite update_frame; [|discriminate 1]);
+  | [ |- update _ _ _ _ = _ ] => repeat (rewrite update_frame; [|discriminate 1]);
                                    solve [ apply update_updated | reflexivity ]
   | [ |- _ = _ \/ _ = _ ] => solve [ left;reflexivity | right;reflexivity ]
   | [ |- _ ⊆ _ ] => reflexivity
@@ -891,4 +919,9 @@ Ltac Picinae_typecheck :=
   | [ |- _ <= _ ] => discriminate 1
   end.
 
+End PICINAE_STATICS.
+
+
+Module PicinaeStatics (IL: PICINAE_IL) <: PICINAE_STATICS IL.
+  Include PICINAE_STATICS IL.
 End PicinaeStatics.

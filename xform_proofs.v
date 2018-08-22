@@ -10,7 +10,9 @@
    To run this module, first load and compile:
    * Picinae_syntax
    * Picinae_theory
+   * Picinae_finterp
    * Picinae_statics
+   * Picinae_slogic
    * Picinae_i386
    (in that order) and then compile this module using menu option
    Compile->Compile buffer.
@@ -23,7 +25,6 @@ Require Import NArith.
 Require Import ZArith.
 Require Import Picinae_i386.
 
-Import PArch_i386.
 Import X86Notations.
 Open Scope N.
 
@@ -48,7 +49,7 @@ Fixpoint varmap_exp f e :=
 
 Fixpoint varmap_stmt f q :=
   match q with
-  | Nop | CpuExn _ => q
+  | Nop | Exn _ => q
   | Move v e => Move (f v) (varmap_exp f e)
   | Jmp e => Jmp (varmap_exp f e)
   | Seq q1 q2 => Seq (varmap_stmt f q1) (varmap_stmt f q2)
@@ -118,12 +119,12 @@ Proof.
 Qed.
 
 Lemma reg_realloc_exp:
-  forall f e s u (INV: invertible f) (PA: preserves_access f) (E: eval_exp (varmap_store f s) e u),
-  eval_exp s (varmap_exp f e) u.
+  forall f e h s u (INV: invertible f) (PA: preserves_access f) (E: eval_exp h (varmap_store f s) e u),
+  eval_exp h s (varmap_exp f e) u.
 Proof.
   intros. revert s u E. induction e; intros; inversion E; subst; simpl;
   try (econstructor; try match goal with
-    [ IH: forall _ _, _ -> eval_exp _ ?E _ |- eval_exp _ ?E _ ] => eapply IH; eassumption
+    [ IH: forall _ _, _ -> eval_exp ?h _ ?e _ |- eval_exp ?h _ ?e _ ] => eapply IH; eassumption
   end).
 
   assumption.
@@ -137,12 +138,12 @@ Proof.
 Qed.
 
 Lemma reg_realloc_stmt:
-  forall f m q s s' x (BI: bijective f) (PA: preserves_access f)
-         (XS: exec_stmt (varmap_store f s) q m (varmap_store f s') x),
-  exec_stmt s (varmap_stmt f q) m s' x.
+  forall f d h q s s' x (BI: bijective f) (PA: preserves_access f)
+         (XS: exec_stmt h (varmap_store f s) q d (varmap_store f s') x),
+  exec_stmt h s (varmap_stmt f q) d s' x.
 Proof.
-  intros. revert q s s' x XS. induction m; intros.
-    inversion XS; subst. apply varmap_store_eq in H0. subst s'. apply XZero. apply BI.
+  intros. revert q s s' x XS. induction d; intros.
+    inversion XS; subst. apply varmap_store_eq in H0. subst s'. apply XUnfinished. apply BI.
     destruct q; inversion XS; subst.
       apply varmap_store_eq in H0. subst s'. apply XNop. apply BI.
       rewrite <- varmap_update in H3 by apply BI. apply varmap_store_eq in H3.
@@ -152,30 +153,30 @@ Proof.
         subst s'. eapply XJmp. apply reg_realloc_exp. apply BI. apply PA. eassumption.
         apply BI.
       apply varmap_store_eq in H2. subst s'. apply XExn. apply BI.
-      apply XSeq1. fold varmap_stmt. eapply IHm. assumption.
+      apply XSeq1. fold varmap_stmt. eapply IHd. assumption.
       destruct (varmap_store_inv f s2 BI) as [s2' H]. subst s2. eapply XSeq2; fold varmap_stmt.
-        apply IHm. exact XS1.
-        apply IHm. exact XS0.
-      apply XWhile. change (If _ _ _) with (varmap_stmt f (If e (Seq q (While e q)) Nop)). apply IHm, XS0.
+        apply IHd. exact XS1.
+        apply IHd. exact XS0.
+      apply XWhile. change (If _ _ _) with (varmap_stmt f (If e (Seq q (While e q)) Nop)). apply IHd, XS0.
       eapply XIf.
         apply reg_realloc_exp. apply BI. exact PA. exact E.
-        fold varmap_stmt. destruct c; apply IHm; assumption.
+        fold varmap_stmt. destruct c; apply IHd; assumption.
 Qed.
 
 Theorem register_reallocation_correct:
-  forall f p m n a s s' x
+  forall f h p d n a s s' x
          (BI: bijective f) (PA: preserves_access f)
-         (XP: exec_prog p a (varmap_store f s) m n (varmap_store f s') x),
-    exec_prog (reg_realloc f p) a s m n s' x.
+         (XP: exec_prog h p a (varmap_store f s) d n (varmap_store f s') x),
+    exec_prog h (reg_realloc f p) a s d n s' x.
 Proof.
   intros. revert a s s' x XP. induction n; intros; inversion XP; subst.
-    apply varmap_store_eq in H. subst s'. apply XPZero. apply BI.
-    destruct (varmap_store_inv f s2 BI) as [s2' H]. subst s2. eapply XPStep.
+    apply varmap_store_eq in H. subst s'. apply XDone. apply BI.
+    destruct (varmap_store_inv f s2 BI) as [s2' H]. subst s2. eapply XStep.
       unfold reg_realloc. rewrite LU. reflexivity.
       apply reg_realloc_stmt. apply BI. apply PA. exact XS.
       exact EX.
       apply IHn. assumption.
-    eapply XPDone.
+    eapply XAbort.
       unfold reg_realloc. rewrite LU. reflexivity.
       apply reg_realloc_stmt. apply BI. apply PA. exact XS.
       exact EX.

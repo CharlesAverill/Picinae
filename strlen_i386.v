@@ -1,5 +1,4 @@
 Require Import Picinae_i386.
-Import PArch_i386.
 Require Import NArith.
 Open Scope N.
 Open Scope stmt_scope.
@@ -21,7 +20,7 @@ Definition strlen_i386 : program := fun a => match a with
     Move R_EDX (BinOp OP_AND (Cast CAST_LOW 32 (Var R_EDX)) (Cast CAST_LOW 32 (Var R_EAX))) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_PF (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59293) (BinOp OP_XOR (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_EDX)) (Word 4 32)) (Cast CAST_LOW 32 (Var R_EDX))) (Let (V_TEMP 59293) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59293)) (Word 2 32)) (Var (V_TEMP 59293))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59293)) (Word 1 32)) (Var (V_TEMP 59293))))))) $;
     Move R_SF (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_EDX))) $;
     Move R_ZF (BinOp OP_EQ (Word 0 32) (Cast CAST_LOW 32 (Var R_EDX)))
@@ -112,7 +111,7 @@ Definition strlen_i386 : program := fun a => match a with
     Move R_EDX (BinOp OP_XOR (Cast CAST_LOW 32 (Var R_EDX)) (Word 2 32)) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_PF (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59302) (BinOp OP_XOR (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_EDX)) (Word 4 32)) (Cast CAST_LOW 32 (Var R_EDX))) (Let (V_TEMP 59302) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59302)) (Word 2 32)) (Var (V_TEMP 59302))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59302)) (Word 1 32)) (Var (V_TEMP 59302))))))) $;
     Move R_SF (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_EDX))) $;
     Move R_ZF (BinOp OP_EQ (Word 0 32) (Cast CAST_LOW 32 (Var R_EDX)))
@@ -161,7 +160,7 @@ Definition strlen_i386 : program := fun a => match a with
 (* 0x7484f: xorl %edx, %edx *)
 | 47 => Some (2,
     Move R_EDX (Word 0 32) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_ZF (Word 1 1) $;
     Move R_PF (Word 1 1) $;
     Move R_OF (Word 0 1) $;
@@ -237,7 +236,7 @@ Definition strlen_i386 : program := fun a => match a with
     Move R_EDX (BinOp OP_XOR (Cast CAST_LOW 32 (Var R_EDX)) (Cast CAST_LOW 32 (Var R_ECX))) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_PF (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59317) (BinOp OP_XOR (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_EDX)) (Word 4 32)) (Cast CAST_LOW 32 (Var R_EDX))) (Let (V_TEMP 59317) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59317)) (Word 2 32)) (Var (V_TEMP 59317))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59317)) (Word 1 32)) (Var (V_TEMP 59317))))))) $;
     Move R_SF (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_EDX))) $;
     Move R_ZF (BinOp OP_EQ (Word 0 32) (Cast CAST_LOW 32 (Var R_EDX)))
@@ -248,7 +247,7 @@ Definition strlen_i386 : program := fun a => match a with
     Move R_EDX (BinOp OP_AND (Cast CAST_LOW 32 (Var R_EDX)) (Word 16843008 32)) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_PF (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59318) (BinOp OP_XOR (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_EDX)) (Word 4 32)) (Cast CAST_LOW 32 (Var R_EDX))) (Let (V_TEMP 59318) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59318)) (Word 2 32)) (Var (V_TEMP 59318))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59318)) (Word 1 32)) (Var (V_TEMP 59318))))))) $;
     Move R_SF (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_EDX))) $;
     Move R_ZF (BinOp OP_EQ (Word 0 32) (Cast CAST_LOW 32 (Var R_EDX)))
@@ -331,7 +330,7 @@ Definition strlen_i386 : program := fun a => match a with
     Move R_EDX (BinOp OP_XOR (Cast CAST_LOW 32 (Var R_EDX)) (Cast CAST_LOW 32 (Var R_ECX))) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_PF (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59329) (BinOp OP_XOR (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_EDX)) (Word 4 32)) (Cast CAST_LOW 32 (Var R_EDX))) (Let (V_TEMP 59329) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59329)) (Word 2 32)) (Var (V_TEMP 59329))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59329)) (Word 1 32)) (Var (V_TEMP 59329))))))) $;
     Move R_SF (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_EDX))) $;
     Move R_ZF (BinOp OP_EQ (Word 0 32) (Cast CAST_LOW 32 (Var R_EDX)))
@@ -342,7 +341,7 @@ Definition strlen_i386 : program := fun a => match a with
     Move R_EDX (BinOp OP_AND (Cast CAST_LOW 32 (Var R_EDX)) (Word 16843008 32)) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_PF (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59330) (BinOp OP_XOR (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_EDX)) (Word 4 32)) (Cast CAST_LOW 32 (Var R_EDX))) (Let (V_TEMP 59330) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59330)) (Word 2 32)) (Var (V_TEMP 59330))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59330)) (Word 1 32)) (Var (V_TEMP 59330))))))) $;
     Move R_SF (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_EDX))) $;
     Move R_ZF (BinOp OP_EQ (Word 0 32) (Cast CAST_LOW 32 (Var R_EDX)))
@@ -425,7 +424,7 @@ Definition strlen_i386 : program := fun a => match a with
     Move R_EDX (BinOp OP_XOR (Cast CAST_LOW 32 (Var R_EDX)) (Cast CAST_LOW 32 (Var R_ECX))) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_PF (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59341) (BinOp OP_XOR (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_EDX)) (Word 4 32)) (Cast CAST_LOW 32 (Var R_EDX))) (Let (V_TEMP 59341) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59341)) (Word 2 32)) (Var (V_TEMP 59341))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59341)) (Word 1 32)) (Var (V_TEMP 59341))))))) $;
     Move R_SF (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_EDX))) $;
     Move R_ZF (BinOp OP_EQ (Word 0 32) (Cast CAST_LOW 32 (Var R_EDX)))
@@ -436,7 +435,7 @@ Definition strlen_i386 : program := fun a => match a with
     Move R_EDX (BinOp OP_AND (Cast CAST_LOW 32 (Var R_EDX)) (Word 16843008 32)) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_PF (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59342) (BinOp OP_XOR (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_EDX)) (Word 4 32)) (Cast CAST_LOW 32 (Var R_EDX))) (Let (V_TEMP 59342) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59342)) (Word 2 32)) (Var (V_TEMP 59342))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59342)) (Word 1 32)) (Var (V_TEMP 59342))))))) $;
     Move R_SF (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_EDX))) $;
     Move R_ZF (BinOp OP_EQ (Word 0 32) (Cast CAST_LOW 32 (Var R_EDX)))
@@ -519,7 +518,7 @@ Definition strlen_i386 : program := fun a => match a with
     Move R_EDX (BinOp OP_XOR (Cast CAST_LOW 32 (Var R_EDX)) (Cast CAST_LOW 32 (Var R_ECX))) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_PF (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59353) (BinOp OP_XOR (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_EDX)) (Word 4 32)) (Cast CAST_LOW 32 (Var R_EDX))) (Let (V_TEMP 59353) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59353)) (Word 2 32)) (Var (V_TEMP 59353))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59353)) (Word 1 32)) (Var (V_TEMP 59353))))))) $;
     Move R_SF (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_EDX))) $;
     Move R_ZF (BinOp OP_EQ (Word 0 32) (Cast CAST_LOW 32 (Var R_EDX)))
@@ -530,7 +529,7 @@ Definition strlen_i386 : program := fun a => match a with
     Move R_EDX (BinOp OP_AND (Cast CAST_LOW 32 (Var R_EDX)) (Word 16843008 32)) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_PF (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59354) (BinOp OP_XOR (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_EDX)) (Word 4 32)) (Cast CAST_LOW 32 (Var R_EDX))) (Let (V_TEMP 59354) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59354)) (Word 2 32)) (Var (V_TEMP 59354))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59354)) (Word 1 32)) (Var (V_TEMP 59354))))))) $;
     Move R_SF (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_EDX))) $;
     Move R_ZF (BinOp OP_EQ (Word 0 32) (Cast CAST_LOW 32 (Var R_EDX)))
@@ -605,7 +604,7 @@ Definition strlen_i386 : program := fun a => match a with
     Move (V_TEMP 59363) (BinOp OP_AND (Cast CAST_HIGH 8 (Cast CAST_LOW 16 (Cast CAST_LOW 32 (Var R_ECX)))) (Cast CAST_HIGH 8 (Cast CAST_LOW 16 (Cast CAST_LOW 32 (Var R_ECX))))) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
-    Move R_AF (Unknown (NumT 1)) $;
+    Move R_AF (Unknown 1) $;
     Move R_PF (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59364) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59363)) (Word 4 8)) (Var (V_TEMP 59363))) (Let (V_TEMP 59364) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59364)) (Word 2 8)) (Var (V_TEMP 59364))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59364)) (Word 1 8)) (Var (V_TEMP 59364))))))) $;
     Move R_SF (Cast CAST_HIGH 1 (Var (V_TEMP 59363))) $;
     Move R_ZF (BinOp OP_EQ (Word 0 8) (Var (V_TEMP 59363)))
@@ -626,11 +625,11 @@ Definition strlen_i386 : program := fun a => match a with
     Move (V_TEMP 59366) (BinOp OP_AND (Word 16 32) (BinOp OP_MINUS (Word 32 32) (Word 1 32))) $;
     Move R_ECX (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_ECX)) (BinOp OP_AND (Word 16 32) (BinOp OP_MINUS (Word 32 32) (Word 1 32)))) $;
     Move R_CF (Ite (BinOp OP_EQ (Var (V_TEMP 59366)) (Word 0 32)) (Var R_CF) (Cast CAST_HIGH 1 (BinOp OP_LSHIFT (Var (V_TEMP 59365)) (BinOp OP_MINUS (Word 32 32) (Var (V_TEMP 59366)))))) $;
-    Move R_OF (Ite (BinOp OP_EQ (Var (V_TEMP 59366)) (Word 0 32)) (Var R_OF) (Ite (BinOp OP_EQ (Var (V_TEMP 59366)) (Word 1 32)) (Cast CAST_HIGH 1 (Var (V_TEMP 59365))) (Unknown (NumT 1)))) $;
+    Move R_OF (Ite (BinOp OP_EQ (Var (V_TEMP 59366)) (Word 0 32)) (Var R_OF) (Ite (BinOp OP_EQ (Var (V_TEMP 59366)) (Word 1 32)) (Cast CAST_HIGH 1 (Var (V_TEMP 59365))) (Unknown 1))) $;
     Move R_SF (Ite (BinOp OP_EQ (Var (V_TEMP 59366)) (Word 0 32)) (Var R_SF) (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_ECX)))) $;
     Move R_ZF (Ite (BinOp OP_EQ (Var (V_TEMP 59366)) (Word 0 32)) (Var R_ZF) (BinOp OP_EQ (Word 0 32) (Cast CAST_LOW 32 (Var R_ECX)))) $;
     Move R_PF (Ite (BinOp OP_EQ (Var (V_TEMP 59366)) (Word 0 32)) (Var R_PF) (UnOp OP_NOT (Cast CAST_LOW 1 (Let (V_TEMP 59367) (BinOp OP_XOR (BinOp OP_RSHIFT (Cast CAST_LOW 32 (Var R_ECX)) (Word 4 32)) (Cast CAST_LOW 32 (Var R_ECX))) (Let (V_TEMP 59367) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59367)) (Word 2 32)) (Var (V_TEMP 59367))) (BinOp OP_XOR (BinOp OP_RSHIFT (Var (V_TEMP 59367)) (Word 1 32)) (Var (V_TEMP 59367)))))))) $;
-    Move R_AF (Ite (BinOp OP_EQ (Var (V_TEMP 59366)) (Word 0 32)) (Var R_AF) (Unknown (NumT 1)))
+    Move R_AF (Ite (BinOp OP_EQ (Var (V_TEMP 59366)) (Word 0 32)) (Var R_AF) (Unknown 1))
   )
 
 (* 0x748cf: incl %eax *)

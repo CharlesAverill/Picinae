@@ -37,6 +37,7 @@ Require Import ZArith.
 Require Import FunctionalExtensionality.
 Require Import Structures.Equalities.
 Require Setoid.
+Open Scope N.
 
 
 (* First define the partial order of A-to-B partial functions ordered by subset. *)
@@ -76,6 +77,20 @@ Add Parametric Relation {A B:Type}: (A -> option B) pfsub
 as pfsubset.
 
 
+(* Introduce a typeclass for equality decision procedures, so that we can
+   henceforth refer to instances of types that instantiate the typeclass
+   as "equal" without explicitly supplying the equality decision procedure. *)
+Class EqDec A : Type := { iseq: forall (a b:A), {a=b}+{a<>b} }.
+Instance NEqDec : EqDec N := { iseq := N.eq_dec }.
+Notation "x == y" := (iseq x y) (at level 70, no associativity).
+
+(* When there is an equality decision procedure for a function f's domain,
+   we can "update" f by remapping a domain element x to a new co-domain
+   element y. *)
+Definition update {A B:Type} {_: EqDec A} (f:A->B) (x:A) (y:B) (x0:A) : B :=
+  if x0 == x then y else f x0.
+Notation "f [ x := y ]" := (update f x y) (at level 50, left associativity).
+
 
 (* Bitwidths are expressed as natural numbers. *)
 Definition bitwidth := N.
@@ -85,52 +100,66 @@ Bind Scope N_scope with bitwidth.
 Definition addr := N.
 Bind Scope N_scope with addr.
 
-(* Runtime values are integers or memory states. *)
-Inductive value : Type :=
+(* Abstract values are binary numbers (N) or memory states. *)
+Inductive avalue (T:Type) : Type :=
 | VaN (n:N) (w:bitwidth)
-| VaM (m:addr->N) (w:bitwidth).
+| VaM (m:addr->T) (w:bitwidth).
+Arguments VaN {T} n w.
+Arguments VaM {T} m w.
 
+Definition value := avalue N.
 
+(* Heaps (for separation logic) *)
+Definition heap (A:Type) := addr -> option A.
+Definition hdomain := heap unit.
+Definition htotal : hdomain := fun _ => Some tt.
 
-(* Each Picinae instantiation takes a machine architecture as input, expressed as
-   a module that defines a type for IL variables, the bitwidth of memory contents
-   (usually 8 for bytes), and two propositions that express the CPU's memory
-   access model. Specifically, mem_readable and mem_writable must be propositions
-   that are satisfied when an address is readable/writable in the context of a
-   given store.  The definitions of these propositions can be mostly arbitrary,
-   but they must reason monotonically about store content (e.g., access must be
-   denied if the store variables that are the basis for the decision are
-   undefined).  This ensures that learning more information about a computation
-   state never invalidates conclusions proved using less knowledge. *)
-Module Type Architecture.
-  Declare Module Var : UsualDecidableType.
-  Definition var := Var.t.
-  Definition store := var -> option value.
+(* Reinterpret an unsigned integer as a two's complement signed integer. *)
+Definition toZ (w:bitwidth) (n:N) : Z :=
+  if N.testbit n (N.pred w) then Z.of_N n - Z.of_N (2^w) else Z.of_N n.
 
-  Parameter mem_bits: positive.
-  Parameter mem_readable: store -> addr -> Prop.
-  Parameter mem_writable: store -> addr -> Prop.
+(* Convert an integer back to 2's complement form. *)
+Definition ofZ (w:bitwidth) (z:Z) : N :=
+  Z.to_N (z mod (Z.of_N (2^w))).
 
-  Axiom mem_readable_mono:
-    forall s1 s2 a, s1 ⊆ s2 -> mem_readable s1 a -> mem_readable s2 a.
-  Axiom mem_writable_mono:
-    forall s1 s2 a, s1 ⊆ s2 -> mem_writable s1 a -> mem_writable s2 a.
-End Architecture.
+(* Two's complement numbers of width w have values within the interval
+   [ -2^(w-1), 2^(w-1) ), except that we adopt the convention that
+   zero-bitwidth numbers always have value zero.  (Zero-bitwidth numbers
+   occasionally appear in the context of bitwidth-subtraction, which can
+   yield a difference of zero bits holding a value of zero.) *)
+Definition signed_range (w:N) (z:Z) :=
+  (match w with N0 => z = Z0 | _ =>
+    - Z.of_N (2^N.pred w)%N <= z < Z.of_N (2^N.pred w)%N
+   end)%Z.
 
+(* Perform a signed operation by converting the unsigned operands to signed
+   operands, applying the signed operation, and then converting the signed
+   result back to unsigned. *)
+Definition sbop (bop:Z->Z->Z) (w:bitwidth) (n1 n2:N) : N :=
+  ofZ w (bop (toZ w n1) (toZ w n2)).
 
-Module PicinaeCore (Arch: Architecture).
+(* Compute an arithmetic shift-right (sign-extending shift-right). *)
+Definition ashiftr (w:bitwidth) := sbop Z.shiftr w.
 
-Export Arch.
-Open Scope N.
-Definition vareq := Var.eq_dec.
-Definition Mb := Npos mem_bits.
+(* Force a result to a given width by dropping the high bits. *)
+Definition towidth (w:bitwidth) (n:N) : value := VaN (n mod (2^w)) w.
+Global Arguments towidth / w n.
 
-(* An IL expression type is a number of bitwidth w, or a memory state with
-   addresses of bitwidth w.  (The bitwidth of memory contents is architecture-
-   specific, but is usually bitwidth 8.) *)
-Inductive typ : Type :=
-| NumT (w:bitwidth)
-| MemT (w:bitwidth).
+(* Force a result to a boolean value (1-bit integer). *)
+Definition tobit (b:bool) : value := VaN (N.b2n b) 1.
+Global Arguments tobit / b.
+
+(* Perform signed less-than comparison. *)
+Definition slt (w n1 n2:N) : bool :=
+  Z.ltb (toZ w n1) (toZ w n2).
+
+(* Perform signed less-or-equal comparison. *)
+Definition sle (w n1 n2:N) : bool :=
+  Z.leb (toZ w n1) (toZ w n2).
+
+(* Perform a cast operation. *)
+Definition scast (w w':bitwidth) (n:N) : N :=
+  ofZ w' (toZ w n).
 
 (* Endianness: *)
 Inductive endianness : Type :=
@@ -171,96 +200,6 @@ Inductive cast_typ : Type :=
 | CAST_SIGNED (* Sign-extending widening cast. *)
 | CAST_UNSIGNED (* 0-padding widening cast. *).
 
-(* IL expression syntax *)
-Inductive exp : Type :=
-| Var (v:var)
-| Word (n:N) (w:bitwidth)
-| Load (e1 e2:exp) (en:endianness) (w:bitwidth)  (* Load(mem,addr,endian,BYTEwidth) *)
-| Store (e1 e2 e3:exp) (en:endianness) (w:bitwidth)  (* Store(mem,addr,val,endian,BYTEwidth) *)
-| BinOp (b:binop_typ) (e1 e2:exp)
-| UnOp (u:unop_typ) (e:exp)
-| Cast (c:cast_typ) (w:bitwidth) (e:exp) (* Cast to a new width. *)
-| Let (v:var) (e1 e2:exp)
-| Unknown (t:typ)
-(* Expression types below here are just syntactic sugar for the above. *)
-| Ite (e1 e2 e3:exp)
-| Extract (n1 n2:N) (e:exp) (* Extract hbits to lbits of e (NumT type). *)
-| Concat (e1 e2:exp) (* Concat two NumT expressions together. *).
-
-(* The BIL specification formalizes statement sequences as statement lists;
-   however, that approach makes Coq proofs very cumbersome because it forces
-   reasoning about mutually recursive datatypes (statements that contain lists
-   that contain statements).  To avoid this, we here instead define statements
-   to include binary sequences (Seq) and nullary sequences (Nop).  Together
-   these are equivalent to lists, but keep everything within one datatype. *)
-
-Inductive stmt : Type :=
-| Nop (* Do nothing. *)
-| Move (v:var) (e:exp)  (* Assign a value to a var. *)
-| Jmp (e:exp) (* Jump to a label/address. *)
-| CpuExn (i:N) (* CPU Exception (numbered) *)
-| Seq (q1 q2:stmt) (* sequence: q1 then q2 *)
-| While (e:exp) (q:stmt) (* While e<>0 do q *)
-| If (e:exp) (q1 q2:stmt) (* If e<>0 then q1 else q2 *).
-
-(* Convenient notation for sequence:
-   Note that the sequence infix operator $; is RIGHT-associative.  This is critical
-   because it allows sequences to be easily analyzed in forward order, which is the
-   natural order in which most proofs progress. *)
-Delimit Scope stmt_scope with stmt.
-Bind Scope stmt_scope with stmt.
-Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : stmt_scope.
-
-(* Programs map addresses to an instruction size sz and an IL statement q
-   that encodes the instruction.  If q falls through, control flows to
-   address a+sz.  We express programs as functions instead of lists in order
-   to correctly model architectures and programs with unaligned instructions
-   (or those whose alignments are unknown prior to the analysis). *)
-Definition program := addr -> option (N * stmt).
-
-(* Memory is well-typed if every address holds a byte. *)
-Definition welltyped_memory (m:addr->N) : Prop :=
-  forall a, m a < 2^Mb.
-
-(* A constant's type is its bitwidth, and a memory's type is the
-   bitwidth of its addresses. *)
-Inductive typof_val: value -> typ -> Prop :=
-| TVN (n:N) (w:bitwidth) (LT: n < 2^w): typof_val (VaN n w) (NumT w)
-| TVM (m:addr->N) (w:bitwidth) (WTM: welltyped_memory m): typof_val (VaM m w) (MemT w).
-
-(* Reinterpret an unsigned integer as a 2's complement signed integer. *)
-Definition toZ (w:bitwidth) (n:N) : Z :=
-  if N.testbit n (N.pred w) then Z.of_N n - Z.of_N (2^w) else Z.of_N n.
-
-(* Convert an integer back to 2's complement form. *)
-Definition ofZ (w:bitwidth) (z:Z) : N :=
-  Z.to_N (z mod (Z.of_N (2^w))).
-
-(* Perform a signed operation by converting the unsigned operands to signed
-   operands, applying the signed operation, and then converting the signed
-   result back to unsigned. *)
-Definition sbop (bop:Z->Z->Z) (w:bitwidth) (n1 n2:N) : N :=
-  ofZ w (bop (toZ w n1) (toZ w n2)).
-
-(* Compute an arithmetic shift-right (sign-extending shift-right). *)
-Definition ashiftr (w:bitwidth) := sbop Z.shiftr w.
-
-(* Force a result to a given width by dropping the high bits. *)
-Definition towidth (w:bitwidth) (n:N) : value := VaN (n mod (2^w)) w.
-Global Arguments towidth / w n.
-
-(* Force a result to a boolean value (1-bit integer). *)
-Definition tobit (b:bool) : value := VaN (N.b2n b) 1.
-Global Arguments tobit / b.
-
-(* Perform signed less-than comparison. *)
-Definition slt (w n1 n2:N) : bool :=
-  Z.ltb (toZ w n1) (toZ w n2).
-
-(* Perform signed less-or-equal comparison. *)
-Definition sle (w n1 n2:N) : bool :=
-  Z.leb (toZ w n1) (toZ w n2).
-
 (* Perform a binary operation (using the above as helper functions). *)
 Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
   match bop with
@@ -292,18 +231,6 @@ Definition eval_unop (uop:unop_typ) (n:N) (w:bitwidth) : value :=
   | OP_NOT => VaN (N.lnot n w) w
   end.
 
-(* Return a new store that is like store f except with variable x
-   remapped to value y. *)
-Definition update {A B:Type} (eq:forall (a b:A), {a=b}+{a<>b}) (f:A->B) (x:A) (y:B) (z:A) : B :=
-  if eq z x then y else f z.
-
-Notation "f [ x := y ]" := (update vareq f x y) (at level 50, left associativity).
-
-
-(* Perform a cast operation. *)
-Definition scast (w w':bitwidth) (n:N) : N :=
-  ofZ w' (toZ w n).
-
 Definition cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
   match c with
   | CAST_UNSIGNED => n
@@ -312,10 +239,107 @@ Definition cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
   | CAST_LOW => n mod 2^w'
   end.
 
-(* We next define memory accessor functions getmem and setmem, which read/store w-bit numbers
-   to/from memory.  Since w could be large on some architectures, we express both as recursions
-   over N, using Peano recursion (P w -> P (N.succ w)).  Proofs must therefore typically use
-   the N.peano_ind inductive principle to reason about them.  (We later provide some machinery
+(* A program exits by hitting a computation limit (Unfinished), jumping to an address
+   outside the program (Exit), or throwing an exception (Throw). *)
+Inductive exit : Type := Unfinished | Exit (a:addr) | Throw (i:N).
+
+(* Helper function to compute the address of the next assembly code
+   instruction to execute: *)
+Definition exitaddr (a:addr) (x:option exit) : option addr :=
+  match x with None => Some a
+             | Some (Exit a') => Some a'
+             | _ => None
+  end.
+
+
+
+
+(* Each Picinae instantiation takes a machine architecture as input, expressed as
+   a module that defines a type for IL variables, the bitwidth of memory contents
+   (usually 8 for byte-granularity), and propositions that express the CPU's memory
+   access model. Specifically, mem_readable and mem_writable must be propositions
+   that are satisfied when an address is readable/writable in the context of a
+   given store.  The definitions of these propositions can be mostly arbitrary,
+   but they must reason monotonically about store content (e.g., access must be
+   denied if the store variables that are the basis for the decision are
+   undefined).  This ensures that learning more information about a computation
+   state never invalidates conclusions proved using less knowledge. *)
+Module Type Architecture.
+  Declare Module Var : UsualDecidableType.
+  Definition var := Var.t.
+  Definition store := var -> option value.
+
+  Parameter mem_bits: positive.
+  Parameter mem_readable: store -> addr -> Prop.
+  Parameter mem_writable: store -> addr -> Prop.
+
+  Axiom mem_readable_mono:
+    forall s1 s2 a, s1 ⊆ s2 -> mem_readable s1 a -> mem_readable s2 a.
+  Axiom mem_writable_mono:
+    forall s1 s2 a, s1 ⊆ s2 -> mem_writable s1 a -> mem_writable s2 a.
+End Architecture.
+
+
+(* A PicinaeCore module builds the syntax and operational semantics of an IL
+   described by an Architecture. *)
+Module Type PICINAE_CORE (Arch: Architecture).
+
+Import Arch.
+Definition Mb := Npos mem_bits.
+Definition vareq := Var.eq_dec.
+Instance VarEqDec : EqDec var := { iseq := vareq }.
+
+(* IL expression syntax *)
+Inductive exp : Type :=
+| Var (v:var)
+| Word (n:N) (w:bitwidth)
+| Load (e1 e2:exp) (en:endianness) (w:bitwidth)  (* Load(mem,addr,endian,BYTEwidth) *)
+| Store (e1 e2 e3:exp) (en:endianness) (w:bitwidth)  (* Store(mem,addr,val,endian,BYTEwidth) *)
+| BinOp (b:binop_typ) (e1 e2:exp)
+| UnOp (u:unop_typ) (e:exp)
+| Cast (c:cast_typ) (w:bitwidth) (e:exp) (* Cast to a new width. *)
+| Let (v:var) (e1 e2:exp)
+| Unknown (w:bitwidth)
+(* Expression types below here are just syntactic sugar for the above. *)
+| Ite (e1 e2 e3:exp)
+| Extract (n1 n2:N) (e:exp) (* Extract hbits to lbits of e (NumT type). *)
+| Concat (e1 e2:exp) (* Concat two NumT expressions together. *).
+
+(* The BIL specification formalizes statement sequences as statement lists;
+   however, that approach makes Coq proofs very cumbersome because it forces
+   reasoning about mutually recursive datatypes (statements that contain lists
+   that contain statements).  To avoid this, we here instead define statements
+   to include binary sequences (Seq) and nullary sequences (Nop).  Together
+   these are equivalent to lists, but keep everything within one datatype. *)
+
+Inductive stmt : Type :=
+| Nop (* Do nothing. *)
+| Move (v:var) (e:exp)  (* Assign a value to a var. *)
+| Jmp (e:exp) (* Jump to a label/address. *)
+| Exn (i:N) (* CPU Exception (numbered) *)
+| Seq (q1 q2:stmt) (* sequence: q1 then q2 *)
+| While (e:exp) (q:stmt) (* While e<>0 do q *)
+| If (e:exp) (q1 q2:stmt) (* If e<>0 then q1 else q2 *).
+
+(* Convenient notation for sequence:
+   Note that the sequence infix operator $; is RIGHT-associative.  This is critical
+   because it allows sequences to be easily analyzed in forward order, which is the
+   natural order in which most proofs progress. *)
+Delimit Scope stmt_scope with stmt.
+Bind Scope stmt_scope with stmt.
+Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : stmt_scope.
+
+(* Programs map addresses to an instruction size sz and an IL statement q
+   that encodes the instruction.  If q falls through, control flows to
+   address a+sz.  We express programs as functions instead of lists in order
+   to correctly model architectures and programs with unaligned instructions
+   (or those whose alignments are unknown prior to the analysis). *)
+Definition program := addr -> option (N * stmt).
+
+(* Memory accessor functions getmem and setmem read/store w-bit numbers to/from memory.
+   Since w could be large on some architectures, we express both as recursions over N,
+   using Peano recursion (P w -> P (N.succ w)).  Proofs must therefore typically use the
+   N.peano_ind inductive principle to reason about them.  (Picinae_theory provides machinery
    for doing so.)  These functions are also carefully defined to behave reasonably when the
    value being read/stored is not well-typed (i.e., larger than 2^w).  In particular, the extra
    bits are stored into the most significant byte (violating memory well-typedness), except
@@ -330,9 +354,9 @@ Definition getmem (e:endianness) (len:bitwidth) (mem:addr->N) : addr -> N :=
 
 (* Store v as a len-byte, e-endian number at address a of memory m. *)
 Definition setmem_big len rec mem a v : addr -> N :=
-  rec (update N.eq_dec mem a (N.shiftr v (Mb*len))) (N.succ a) (v mod 2^(Mb*len)).
+  rec (update mem a (N.shiftr v (Mb*len))) (N.succ a) (v mod 2^(Mb*len)).
 Definition setmem_little len rec mem a v : addr -> N :=
-  rec (update N.eq_dec mem a (match len with N0 => v | Npos _ => v mod 2^Mb end)) (N.succ a) (N.shiftr v Mb).
+  rec (update mem a (match len with N0 => v | Npos _ => v mod 2^Mb end)) (N.succ a) (N.shiftr v Mb).
 Definition setmem (e:endianness) (len:bitwidth) : (addr->N) -> addr -> N -> (addr -> N) :=
   N.recursion (fun m _ _ => m) (match e with BigE => setmem_big | LittleE => setmem_little end) len.
 
@@ -340,9 +364,7 @@ Definition setmem (e:endianness) (len:bitwidth) : (addr->N) -> addr -> N -> (add
 
 Section InterpreterEngine.
 
-(* A program exits by hitting a computation limit (Unfinished), jumping to an address
-   outside the program (Exit), or throwing an exception (Exn). *)
-Inductive exit : Type := Unfinished | Exit (a:addr) | Exn (i:N).
+Variable h : hdomain.
 
 (* Evaluate an expression in the context of a store, returning a value.  Note
    that the semantics of EUnknown are non-deterministic: an EUnknown expression
@@ -350,91 +372,185 @@ Inductive exit : Type := Unfinished | Exit (a:addr) | Exn (i:N).
    semantic definitions that follow should be considered statements of
    possibility in an alethic modal logic. *)
 Inductive eval_exp (s:store): exp -> value -> Prop :=
-| EVar (v:var) (u:value) (SV: s v = Some u):
-       eval_exp s (Var v) u
-| EWord (n:N) (w:bitwidth): eval_exp s (Word n w) (VaN n w)
-| ELoad (e1 e2:exp) (en:endianness) (len mw:bitwidth) (m:addr->N) (a:addr)
-        (E1: eval_exp s e1 (VaM m mw)) (E2: eval_exp s e2 (VaN a mw))
-        (R: forall n, n < len -> mem_readable s (a+n)):
+| EVar v u (SV: s v = Some u): eval_exp s (Var v) u
+| EWord n w: eval_exp s (Word n w) (VaN n w)
+| ELoad e1 e2 en len mw m a (E1: eval_exp s e1 (VaM m mw)) (E2: eval_exp s e2 (VaN a mw))
+        (R: forall n, n < len -> h (a+n) = Some tt /\ mem_readable s (a+n)):
         eval_exp s (Load e1 e2 en len) (VaN (getmem en len m a) (Mb*len))
-| EStore (e1 e2 e3:exp) (en:endianness) (len mw:bitwidth) (m:addr->N) (a:addr)
-         (v:N) (E1: eval_exp s e1 (VaM m mw))
+| EStore e1 e2 e3 en len mw m a v (E1: eval_exp s e1 (VaM m mw))
          (E2: eval_exp s e2 (VaN a mw)) (E3: eval_exp s e3 (VaN v (Mb*len)))
-         (W: forall n, n < len -> mem_writable s (a+n)):
+         (W: forall n, n < len -> h (a+n) = Some tt /\ mem_writable s (a+n)):
          eval_exp s (Store e1 e2 e3 en len) (VaM (setmem en len m a v) mw)
-| EBinOp (bop:binop_typ) (e1 e2:exp) (n1 n2:N) (w:bitwidth)
-         (E1: eval_exp s e1 (VaN n1 w)) (E2: eval_exp s e2 (VaN n2 w)):
+| EBinOp bop e1 e2 n1 n2 w (E1: eval_exp s e1 (VaN n1 w)) (E2: eval_exp s e2 (VaN n2 w)):
          eval_exp s (BinOp bop e1 e2) (eval_binop bop w n1 n2)
-| EUnOp (uop:unop_typ) (e1:exp) (n1:N) (w1:bitwidth)
-        (E1: eval_exp s e1 (VaN n1 w1)):
+| EUnOp uop e1 n1 w1 (E1: eval_exp s e1 (VaN n1 w1)):
         eval_exp s (UnOp uop e1) (eval_unop uop n1 w1)
-| ECast (c:cast_typ) (w w':bitwidth) (e1:exp) (n:N)
-        (E1: eval_exp s e1 (VaN n w)):
-        eval_exp s (Cast c w' e1) (VaN (cast c w w' n) w')
-| ELet (v:var) (e1 e2:exp) (u1 u2:value)
-       (E1: eval_exp s e1 u1) (E2: eval_exp (update vareq s v (Some u1)) e2 u2):
+| ECast ct w w' e1 n (E1: eval_exp s e1 (VaN n w)):
+        eval_exp s (Cast ct w' e1) (VaN (cast ct w w' n) w')
+| ELet v e1 e2 u1 u2 (E1: eval_exp s e1 u1) (E2: eval_exp (update s v (Some u1)) e2 u2):
        eval_exp s (Let v e1 e2) u2
-| EUnknown (t:typ) (u:value)
-           (TV: typof_val u t):
-           eval_exp s (Unknown t) u
-| EIte (e1 e2 e3:exp) (n1:N) (w1:bitwidth) (u':value)
-       (E1: eval_exp s e1 (VaN n1 w1))
+| EUnknown n w (LT: n < 2^w): eval_exp s (Unknown w) (VaN n w)
+| EIte e1 e2 e3 n1 w1 u' (E1: eval_exp s e1 (VaN n1 w1))
        (E': eval_exp s (match n1 with N0 => e3 | _ => e2 end) u'):
        eval_exp s (Ite e1 e2 e3) u'
-| EExtract (w n1 n2:bitwidth) (e1:exp) (n:N)
-           (E1: eval_exp s e1 (VaN n w)):
+| EExtract w n1 n2 e1 n (E1: eval_exp s e1 (VaN n w)):
            eval_exp s (Extract n1 n2 e1) (VaN (cast CAST_HIGH (N.succ n1) (N.succ (n1-n2))
                                                  (cast CAST_LOW w (N.succ n1) n)) (N.succ (n1-n2)))
-| EConcat (e1 e2:exp) (n1 w1 n2 w2:N)
-          (E1: eval_exp s e1 (VaN n1 w1)) (E2: eval_exp s e2 (VaN n2 w2)):
+| EConcat e1 e2 n1 w1 n2 w2 (E1: eval_exp s e1 (VaN n1 w1)) (E2: eval_exp s e2 (VaN n2 w2)):
           eval_exp s (Concat e1 e2) (VaN (N.lor (N.shiftl n1 w2) n2) (w1+w2)).
 
-(* Execute an IL statement with recursion depth limit n, returning a new store
+(* Execute an IL statement with recursion depth limit d, returning a new store
    and possibly an exit (if the statement exited prematurely).  "None" is
    returned if the statement finishes and falls through.  "Some Unfinished"
    is returned if the statement requires more than n steps of computation
    to complete. *)
 Inductive exec_stmt (s:store): stmt -> nat -> store -> option exit -> Prop :=
-| XZero q: exec_stmt s q O s (Some Unfinished)
-| XNop n: exec_stmt s Nop (S n) s None
-| XMove n v e u (E: eval_exp s e u):
-    exec_stmt s (Move v e) (S n) (update vareq s v (Some u)) None
-| XJmp n e a w (E: eval_exp s e (VaN a w)):
-    exec_stmt s (Jmp e) (S n) s (Some (Exit a))
-| XExn n i: exec_stmt s (CpuExn i) (S n) s (Some (Exn i))
-| XSeq1 n q1 q2 s' x (XS: exec_stmt s q1 n s' (Some x)):
-    exec_stmt s (Seq q1 q2) (S n) s' (Some x)
-| XSeq2 n q1 q2 s2 s' x' (XS1: exec_stmt s q1 n s2 None) (XS1: exec_stmt s2 q2 n s' x'):
-    exec_stmt s (Seq q1 q2) (S n) s' x'
-| XWhile n e q s' x (XS: exec_stmt s (If e (Seq q (While e q)) Nop) n s' x):
-    exec_stmt s (While e q) (S n) s' x
-| XIf n e q1 q2 c s' x
+| XUnfinished q: exec_stmt s q O s (Some Unfinished)
+| XNop d: exec_stmt s Nop (S d) s None
+| XMove d v e u (E: eval_exp s e u):
+    exec_stmt s (Move v e) (S d) (update s v (Some u)) None
+| XJmp d e a w (E: eval_exp s e (VaN a w)):
+    exec_stmt s (Jmp e) (S d) s (Some (Exit a))
+| XExn d i: exec_stmt s (Exn i) (S d) s (Some (Throw i))
+| XSeq1 d q1 q2 s' x (XS: exec_stmt s q1 d s' (Some x)):
+    exec_stmt s (Seq q1 q2) (S d) s' (Some x)
+| XSeq2 d q1 q2 s2 s' x' (XS1: exec_stmt s q1 d s2 None) (XS1: exec_stmt s2 q2 d s' x'):
+    exec_stmt s (Seq q1 q2) (S d) s' x'
+| XWhile d e q s' x (XS: exec_stmt s (If e (Seq q (While e q)) Nop) d s' x):
+    exec_stmt s (While e q) (S d) s' x
+| XIf d e q1 q2 c s' x
       (E: eval_exp s e (VaN c 1))
-      (XS: exec_stmt s (match c with N0 => q2 | _ => q1 end) n s' x):
-    exec_stmt s (If e q1 q2) (S n) s' x.
-
-(* Helper function to compute the address of the next assembly code
-   instruction to execute: *)
-Definition exitaddr (a:addr) (x:option exit) : option addr :=
-  match x with None => Some a
-             | Some (Exit a') => Some a'
-             | _ => None
-  end.
+      (XS: exec_stmt s (match c with N0 => q2 | _ => q1 end) d s' x):
+    exec_stmt s (If e q1 q2) (S d) s' x.
 
 (* Execute exactly n machine instructions of a program p starting at address a,
-   imposing a recursion depth limit of m for each instruction's encoding, and
+   imposing a recursion depth limit of d for each instruction's encoding, and
    returning a store and exit condition.  Exit condition "Unfinished" means
-   depth limit m was exceeded during execution of one of the instructions. *)
-Inductive exec_prog (p:program) (a:addr) (s:store) (m:nat) : nat -> store -> exit -> Prop :=
-| XPZero: exec_prog p a s m O s (Exit a)
-| XPStep n sz q s2 x1 a' s' x' (LU: p a = Some (sz,q))
-         (XS: exec_stmt s q m s2 x1) (EX: exitaddr (a+sz) x1 = Some a')
-         (XP: exec_prog p a' s2 m n s' x'):
-    exec_prog p a s m (S n) s' x'
-| XPDone sz q s' x (LU: p a = Some (sz,q))
-         (XS: exec_stmt s q m s' (Some x)) (EX: exitaddr (a+sz) (Some x) = None):
-    exec_prog p a s m (S O) s' x.
+   depth limit d was exceeded during execution of one of the instructions. *)
+Inductive exec_prog (p:program) (a:addr) (s:store) (d:nat) : nat -> store -> exit -> Prop :=
+| XDone: exec_prog p a s d O s (Exit a)
+| XStep n sz q s2 x1 a' s' x' (LU: p a = Some (sz,q))
+        (XS: exec_stmt s q d s2 x1) (EX: exitaddr (a+sz) x1 = Some a')
+        (XP: exec_prog p a' s2 d n s' x'):
+    exec_prog p a s d (S n) s' x'
+| XAbort sz q s' x (LU: p a = Some (sz,q))
+         (XS: exec_stmt s q d s' (Some x)) (EX: exitaddr (a+sz) (Some x) = None):
+    exec_prog p a s d (S O) s' x.
 
 End InterpreterEngine.
 
-End PicinaeCore.
+
+(* Define a helpful function for computing sufficient recusion depth bounds
+   for statements lacking While-loops. *)
+Fixpoint depth_bound (q:stmt) : option nat :=
+  match q with
+  | Nop | Move _ _ | Jmp _ | Exn _ => Some 1%nat
+  | Seq q1 q2 | If _ q1 q2 => match depth_bound q1, depth_bound q2 with
+                              | Some d1, Some d2 => Some (S (max d1 d2))
+                              | _, _ => None
+                              end
+  | While _ _ => None
+  end.
+
+
+Section Quantification.
+
+(* Recursive quantification of sub-expressions and sub-statements: *)
+
+Fixpoint exps_in_exp {T:Type} (C:T->T->T) (P:exp->T) (e:exp) : T :=
+  match e with
+  | Var _ | Word _ _ | Unknown _ => P e
+  | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => C (P e) (exps_in_exp C P e1)
+  | BinOp _ e1 e2 | Let _ e1 e2 | Concat e1 e2 | Load e1 e2 _ _ =>
+      C (P e) (C (exps_in_exp C P e1) (exps_in_exp C P e2))
+  | Ite e1 e2 e3 | Store e1 e2 e3 _ _ =>
+      C (P e) (C (exps_in_exp C P e1) (C (exps_in_exp C P e2) (exps_in_exp C P e3)))
+  end.
+
+Fixpoint exps_in_stmt {T:Type} (C:T->T->T) (b:T) (P:exp->T) (q:stmt) : T :=
+  match q with
+  | Nop | Exn _ => b
+  | Move _ e | Jmp e => exps_in_exp C P e
+  | Seq q1 q2 => C (exps_in_stmt C b P q1) (exps_in_stmt C b P q2)
+  | While e q0 => C (exps_in_exp C P e) (exps_in_stmt C b P q0)
+  | If e q1 q2 => C (exps_in_exp C P e) (C (exps_in_stmt C b P q1) (exps_in_stmt C b P q2))
+  end.
+
+Fixpoint stmts_in_stmt {T:Type} (C:T->T->T) (P:stmt->T) (q:stmt) : T :=
+  match q with
+  | Nop | Exn _ | Move _ _ | Jmp _ => P q
+  | While _ q0 => C (P q) (stmts_in_stmt C P q0)
+  | Seq q1 q2 | If _ q1 q2 => C (P q) (C (stmts_in_stmt C P q1) (stmts_in_stmt C P q2))
+  end.
+
+Definition forall_exps_in_exp := exps_in_exp and.
+Definition forall_exps_in_stmt := exps_in_stmt and True.
+Definition exists_exp_in_exp := exps_in_exp or.
+Definition exists_exp_in_stmt := exps_in_stmt or False.
+Definition forall_stmts_in_stmt := stmts_in_stmt and.
+Definition exists_stmt_in_stmt := stmts_in_stmt or.
+Definition forall_exps_in_prog P (p:program) :=
+  forall a q sz, p a = Some (sz,q) -> forall_exps_in_stmt P q.
+Definition exists_exp_in_prog P (p:program) :=
+  exists a q sz, p a = Some (sz,q) /\ exists_exp_in_stmt P q.
+Definition forall_stmts_in_prog P (p:program) :=
+  forall a q sz, p a = Some (sz,q) -> forall_stmts_in_stmt P q.
+Definition exists_stmt_in_prog P (p:program) :=
+  exists a q sz, p a = Some (sz,q) /\ exists_stmt_in_stmt P q.
+
+Definition forall_vars_in_exp (P: var -> Prop) :=
+  forall_exps_in_exp (fun e => match e with Var v | Let v _ _ => P v | _ => True end).
+Definition forall_vars_in_stmt (P: var -> Prop) (q:stmt) :=
+  forall_stmts_in_stmt (fun q => match q with Move v _ => P v | _ => True end) q /\
+  forall_exps_in_stmt (forall_vars_in_exp P) q.
+Definition forall_vars_in_prog (P: var -> Prop) :=
+  forall_stmts_in_prog (forall_vars_in_stmt P).
+Definition exists_var_in_exp (P: var -> Prop) :=
+  exists_exp_in_exp (fun e => match e with Var v | Let v _ _ => P v | _ => False end).
+Definition exists_var_in_stmt (P: var -> Prop) (q: stmt) :=
+  exists_stmt_in_stmt (fun q => match q with Move v _ => P v | _ => False end) q \/
+  exists_exp_in_stmt (exists_var_in_exp P) q.
+Definition exists_var_in_prog (P: var -> Prop) :=
+  exists_stmt_in_prog (exists_var_in_stmt P).
+
+Global Arguments exps_in_exp {T} C P !e.
+Global Arguments exps_in_stmt {T} C b P !q.
+Global Arguments stmts_in_stmt {T} C P !q.
+Global Arguments forall_exps_in_exp P e /.
+Global Arguments forall_exps_in_stmt P q /.
+Global Arguments exists_exp_in_exp P e /.
+Global Arguments exists_exp_in_stmt P q /.
+Global Arguments forall_stmts_in_stmt P q /.
+Global Arguments exists_stmt_in_stmt P q /.
+Global Arguments forall_vars_in_exp P e /.
+Global Arguments forall_vars_in_stmt P q /.
+Global Arguments exists_var_in_exp P e /.
+Global Arguments exists_var_in_stmt P q /.
+
+Definition not_unknown e := match e with Unknown _ => False | _ => True end.
+
+Inductive allassigns (P: var -> Prop) : stmt -> Prop :=
+| AANop: allassigns P Nop
+| AAMove v e (PV: P v): allassigns P (Move v e)
+| AAJmp e: allassigns P (Jmp e)
+| AAExn i: allassigns P (Exn i)
+| AASeq q1 q2 (AA1: allassigns P q1) (AA2: allassigns P q2): allassigns P (Seq q1 q2)
+| AAWhile e q (AA: allassigns P q): allassigns P (While e q)
+| AAIf e q1 q2 (AA1: allassigns P q1) (AA2: allassigns P q2): allassigns P (If e q1 q2).
+
+Definition noassign v := allassigns (fun v0 => v0 <> v).
+
+Definition prog_noassign v (p:program) :=
+  forall a, match p a with None => True | Some (_,q) => noassign v q end.
+
+End Quantification.
+
+End PICINAE_CORE.
+
+
+Module Type PICINAE_IL := Architecture <+ PICINAE_CORE.
+
+Module PicinaeIL (Arch: Architecture) <: PICINAE_IL.
+  Include Arch.
+  Include PICINAE_CORE Arch.
+End PicinaeIL.

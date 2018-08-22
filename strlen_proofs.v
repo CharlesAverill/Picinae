@@ -10,7 +10,9 @@
    To run this module, first load and compile:
    * Picinae_syntax
    * Picinae_theory
+   * Picinae_finterp
    * Picinae_statics
+   * Picinae_slogic
    * Picinae_i386
    * strlen_i386
    (in that order) and then compile this module using menu option
@@ -25,10 +27,11 @@ Require Import ZArith.
 Require Import Picinae_i386.
 Require Import strlen_i386.
 
-Import PArch_i386.
 Import X86Notations.
 Open Scope N.
 
+(* Use a flat memory model for these proofs. *)
+Definition fh := htotal.
 
 (* Example #1: Type safety
    We first prove that the program is well-typed (automated by the Picinae_typecheck tactic).
@@ -42,12 +45,11 @@ Qed.
 (* Example #2: Memory safety
    Strlen contains no memory-writes, and is therefore trivially memory-safe. *)
 Theorem strlen_preserves_memory:
-  forall s m n s' x,
-  exec_prog strlen_i386 0 s m n s' x -> s' V_MEM32 = s V_MEM32.
+  forall s d n s' x,
+  exec_prog fh strlen_i386 0 s d n s' x -> s' V_MEM32 = s V_MEM32.
 Proof.
-  intros. eapply prog_noassign_inv; [|exact H].
-  intro a. destruct a as [|a]. discriminate 1.
-  repeat first [ exact I | destruct a as [a|a|] | simpl; (repeat split); discriminate 1 ].
+  intros. eapply noassign_prog_same; [|eassumption].
+  prove_noassign.
 Qed.
 
 
@@ -75,21 +77,19 @@ Qed.
    and it restores ESP on exit. *)
 
 Theorem strlen_preserves_ebx:
-  forall s m n s' x,
-  exec_prog strlen_i386 0 s m n s' x -> s' R_EBX = s R_EBX.
+  forall s d n s' x,
+  exec_prog fh strlen_i386 0 s d n s' x -> s' R_EBX = s R_EBX.
 Proof.
-  intros. eapply prog_noassign_inv; [|exact H].
-  intro a. destruct a as [|a]. discriminate 1.
-  repeat first [ exact I | destruct a as [a|a|] | simpl; (repeat split); discriminate 1 ].
+  intros. eapply noassign_prog_same; [|eassumption].
+  prove_noassign.
 Qed.
 
 Theorem strlen_preserves_readable:
-  forall s m n s' x,
-  exec_prog strlen_i386 0 s m n s' x -> s' A_READ = s A_READ.
+  forall s d n s' x,
+  exec_prog fh strlen_i386 0 s d n s' x -> s' A_READ = s A_READ.
 Proof.
-  intros. eapply prog_noassign_inv; [|exact H].
-  intro a. destruct a as [|a]. discriminate 1.
-  repeat first [ exact I | destruct a as [a|a|] | simpl; (repeat split); discriminate 1 ].
+  intros. eapply noassign_prog_same; [|eassumption].
+  prove_noassign.
 Qed.
 
 Definition strlen_esp_inv (esp:N) (mem:addr->N) (x:exit) (s':store) :=
@@ -109,10 +109,10 @@ Proof.
 Qed.
 
 Theorem strlen_preserves_esp:
-  forall s esp mem m n s' x
+  forall s esp mem d n s' x
          (ESP0: s R_ESP = Some (VaN esp 32)) (MEM0: s V_MEM32 = Some (VaM mem 32))
          (RET: strlen_i386 (getmem LittleE 4 mem esp) = None)
-         (XP: exec_prog strlen_i386 0 s m n s' x),
+         (XP: exec_prog fh strlen_i386 0 s d n s' x),
   strlen_esp_inv esp mem x s'.
 Proof.
   intros. pattern x,s',n.
@@ -127,11 +127,11 @@ Proof.
   destruct a1 as [|a]; repeat first [ discriminate IL | destruct a as [a|a|] ].
   all: apply inj_prog_stmt in IL; destruct IL; subst sz q; simpl.
 
-  all: try (
-    apply (noassign_inv R_ESP) in XS;
+  all: try solve [
+    apply (noassign_stmt_same R_ESP) in XS;
     [ apply (strlen_stmt_esp (s1 R_ESP)); assumption
-    | simpl; repeat split; discriminate 1 ]
-  ).
+    | prove_noassign ]
+  ].
 
   destruct (fin_dec x1) as [FIN|FIN]. subst x1. exact I.
   stock_store in XS. x86_simpl_stmt in XS; [|assumption]. destruct XS. subst x1.
@@ -698,13 +698,13 @@ Definition strlen_inv (mem:addr->N) (esp:N) :=
   x86_subroutine_inv strlen_i386 (strlen_inv_set mem esp) (strlen_postcond mem esp) (getmem LittleE 4 mem esp).
 
 Theorem strlen_partial_correctness:
-  forall s esp mem m n s' x
+  forall s esp mem d n s' x
          (HI0: ~ mem_readable s (2^32 - 1)%N)
          (MDL0: models x86typctx s)
          (ESPLO: esp + 8 <= 2^32)
          (ESP0: s R_ESP = Some (VaN esp 32)) (MEM0: s V_MEM32 = Some (VaM mem 32))
          (RET: strlen_i386 (getmem LittleE 4 mem esp) = None)
-         (XP0: exec_prog strlen_i386 0 s m n s' x),
+         (XP0: exec_prog fh strlen_i386 0 s d n s' x),
   match strlen_inv mem esp x s' n with Some P => P | None => True end.
 Proof.
   intros.
@@ -715,7 +715,8 @@ Proof.
   assert (MEM: s1 V_MEM32 = Some (VaM mem 32)).
     rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
   assert (HI: ~ mem_readable s1 (2^32 - 1)%N).
-    unfold mem_readable. intro H. destruct H as [r [H1 H2]]. apply HI0. exists r. split; [|exact H2].
+    unfold mem_readable. intro H. destruct H as [r [H1 H2]]. apply HI0.
+    exists r. split; [|exact H2].
     erewrite <- strlen_preserves_readable; eassumption.
   assert (ESP: strlen_esp_inv esp mem (Exit a1) s1).
     eapply strlen_preserves_esp. exact ESP0. exact MEM0. exact RET. exact XP.
