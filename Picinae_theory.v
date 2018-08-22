@@ -41,8 +41,6 @@ Require Setoid.
 
 
 
-Section PartialFunctionTheory.
-
 (* Tactic "vreflexivity v" reduces "v==v" to true (actually "left _"). *)
 Theorem iseq_refl {A} {_:EqDec A}:
   forall (x:A), exists (H: x = x), (x == x) = left H.
@@ -74,6 +72,9 @@ Ltac vantisym v1 v2 :=
   [ destruct (iseq_antisym v1 v2 H1) as [Hv1v2 H2];
     rewrite H2 in *;
     clear H1 H2; try clear Hv1v2 |].
+
+
+Section PartialFunctionTheory.
 
 (* Symmetric updates preserve the partial order relation. *)
 Theorem pfsub_update {A B} {_: EqDec A}:
