@@ -35,11 +35,9 @@
 
 Require Import Picinae_core.
 Require Import Picinae_theory.
-Require Import NArith.
-Require Import ZArith.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
-Require Setoid.
+Require Import NArith.
 
 (* This module implements separation logic for local reasoning about memory in Picinae.
    Rather than define a separation operators as an Inductive datatype with associated
@@ -125,16 +123,6 @@ Definition monotonic {A B} (P: (A -> option B) -> Prop) :=
 (* monotonic' properties are preserved by domain contraction. *)
 Definition monotonic' {A B} (P: (A -> option B) -> Prop) :=
   forall h1 h2 (SS: h2 ⊆ h1), P h1 -> P h2.
-
-(* hmonotonic heapy-store-properties are preserved by expanding the domains of
-   all heaps within the store. *)
-Definition hmonotonic {V} (P: hsprop V) :=
-  forall (h:hdomain) hs, P (resths h hs) -> P hs.
-
-(* hmonotonic' heapy-store-properties are preserved by contracting the domains
-   of all heaps within the store. *)
-Definition hmonotonic' {V} (P: hsprop V) :=
-  forall (h:hdomain) hs, P hs -> P (resths h hs).
 
 (* update-preserving heapy-store-properties are preserved by updating var v to
    heapy value hu. *)
@@ -326,9 +314,9 @@ Definition hmodels_store (h:hdomain) (s s':store) :=
 
 
 (* Our goal is to prove the soundness of the frame rule: {P}q{Q} -> {P*R}q{Q*R}.
-   But only certain properties P, Q, R satisfy this rule.  In particular, P must be
-   monotonic in its heap ("hmonotonic") and R must not depend upon variables and memory
-   addresses assigned by q.  We define this "framing" meta-property below. *)
+   But only certain properties R satisfy this rule.  In particular, R must not depend
+   upon variables and memory addresses assigned by q.  We define this "framing"
+   meta-property below. *)
 
 (* R "frames" q if for all variables v assigned by q, updating v to any value u that
    satisfies the modeling relation preserves R. *)
@@ -340,7 +328,9 @@ Definition frames_prog (R: hsprop var) (p:program) :=
   forall a, match p a with None => True | Some (_,q) => frames_stmt R q end.
 
 
-(* Duals to the above: *)
+(* Duals to the above:  We need duals to each of the above because if R contains
+   a negation or implication, the framing requirement gets reversed for the
+   negated sub-proposition or antecedent. *)
 
 (* R "universally-frames" q if forall all variables v assigned by q, updating v to
    any value at all preserves R. *)
@@ -482,7 +472,7 @@ Proof.
     apply AANop.
 Qed.
 
-Theorem framed_stmt:
+Lemma framed_stmt:
   forall {A} (R: hsprop var) (h:heap A) d s q s' x (FR: frames_stmt R q)
          (XS: exec_stmt (hopp h) s q d s' x)
          (HS: hmodels_store (hopp h) s s') (PRE: R (resths h (to_hstore s))),
@@ -506,7 +496,7 @@ Proof.
     eapply IHd; try eassumption. destruct c; apply FR.
 Qed.
 
-Theorem framed_prog:
+Lemma framed_prog:
   forall {A} (R: hsprop var) (h:heap A) p a s d n s' x (FR: frames_prog R p)
          (XP: exec_prog (hopp h) p a s d n s' x)
          (HS: hmodels_store (hopp h) s s') (PRE: R (resths h (to_hstore s))),
@@ -524,49 +514,53 @@ Qed.
 
 
 (* Main result: The frame rule of separation logic is sound.  In particular, if {P}q{Q}
-   holds, and if P is hmonotonic and R frames q, then {P*R}q{Q*R} holds. *)
+   holds, and if R frames q, then {P*R}q{Q*R} holds. *)
 
 Theorem stmt_frame:
-  forall q P Q R (MP: hmonotonic P) (FR: frames_stmt R q)
+  forall q (P Q R: hsprop var) (FR: frames_stmt R q)
          (HT: htrip_stmt P q Q),
   htrip_stmt (sep P R) q (sep Q R).
 Proof.
   unfold htrip_stmt. intros. destruct PRE as [dom' [PS RS]]. split.
-    apply HT. eapply MP. eassumption. assumption.
+    eapply exec_stmt_hmono.
+      eapply resth_subset.
+      apply HT. rewrite <- resths_assoc. exact PS. exact XS.
     exists dom'. rewrite !resths_assoc in *. split.
       eapply HT; eassumption.
       eapply framed_stmt; try eassumption; rewrite hopp_resth, hopp_inv, updateall_comm.
-        apply HT; [|eassumption]. eapply MP. rewrite resths_assoc, resth_ident.
-          eassumption.
-          etransitivity. rewrite resth_comm. apply resth_subset. apply subset_updateall.
-        eapply hmodels_stmt. apply HT; [|eassumption]. eapply MP. rewrite resths_assoc, resth_ident.
-          eassumption.
-          etransitivity. rewrite resth_comm. apply resth_subset. apply subset_updateall.
+        eapply exec_stmt_hmono.
+          etransitivity; [|apply subset_updateall]. eapply resth_subset.
+          rewrite resth_comm. apply HT. exact PS. exact XS.
+        eapply hmodels_stmt. eapply exec_stmt_hmono.
+          etransitivity; [|apply subset_updateall]. eapply resth_subset.
+          rewrite resth_comm. apply HT. exact PS. exact XS.
 Qed.
 
 Theorem prog_frame:
-  forall P p a n Q R (MP: hmonotonic P) (FR: frames_prog R p)
+  forall p a n (P Q R: hsprop var) (FR: frames_prog R p)
          (HT: htrip_prog P p a n Q),
   htrip_prog (sep P R) p a n (sep Q R).
 Proof.
   unfold htrip_prog. intros. destruct PRE as [h' [PS RS]]. split.
-    apply HT. eapply MP. eassumption. assumption.
+    eapply exec_prog_hmono.
+      eapply resth_subset.
+      apply HT. rewrite <- resths_assoc. exact PS. exact XP.
     exists h'. rewrite !resths_assoc in *. split.
       eapply HT; eassumption.
       eapply framed_prog; try eassumption; rewrite hopp_resth, hopp_inv, updateall_comm.
-        apply HT; [|eassumption]. eapply MP. rewrite resths_assoc, resth_ident.
-          eassumption.
-          etransitivity. rewrite resth_comm. apply resth_subset. apply subset_updateall.
-        eapply hmodels_prog. apply HT; [|eassumption]. eapply MP. rewrite resths_assoc, resth_ident.
-          eassumption.
-          etransitivity. rewrite resth_comm. apply resth_subset. apply subset_updateall.
+        eapply exec_prog_hmono.
+          etransitivity; [|apply subset_updateall]. eapply resth_subset.
+          rewrite resth_comm. apply HT. exact PS. exact XP.
+        eapply hmodels_prog. eapply exec_prog_hmono.
+          etransitivity; [|apply subset_updateall]. eapply resth_subset.
+          rewrite resth_comm. apply HT. exact PS. exact XP.
 Qed.
 
 
 
 (* At this point we have our main result, but it requires users to prove that
-   P is hmonotonic and that R frames q in order to use it.  We here prove some general
-   sufficiency conditions to help users prove those meta-properties. *)
+   R frames q in order to use it.  We here prove some general sufficiency conditions
+   to help users prove this meta-property. *)
 
 (* Sufficiency conditions for proving "R (universally-)frames q": *)
 Lemma upd_pres_sep:
@@ -727,9 +721,9 @@ Qed.
 
 (* (frames'_stmt (hprop R) q) is false for useful R's, so not worth proving anything about it.
    This is because hprops are properties that are universally satisfied by all heaps in the
-   store, and frames_stmt' requires that its proposition parameter R be satisfied by all values
+   store, and frames'_stmt requires that its proposition parameter R be satisfied by all values
    assigned to variables in q.  Thus, if q contains any assignments at all, R would have to be
-   universally true of all heaps in order for (frames_stmt' (hprop R) q) to be true.
+   universally true of all heaps in order for (frames'_stmt (hprop R) q) to be true.
    This has taken me a long time to understand, so I prove it here to convince/remind myself. *)
 Remark frames'_stmt_hprop_useless:
   forall R v e, (frames'_stmt (hprop var R) (Move v e)) -> (forall h, R h).
@@ -866,102 +860,9 @@ Module PicinaeSLogic (IL: PICINAE_IL) <: PICINAE_SLOGIC IL.
 End PicinaeSLogic.
 
 
-(* P*Q is hmonotonic as long as P or Q are hmonotonic. *)
-Theorem hmono_sep:
-  forall V P Q (M: hmonotonic P \/ hmonotonic Q), hmonotonic (sepconj V P Q).
-Proof.
-  unfold hmonotonic,sepconj. intros. destruct H as [dom' [P1 Q2]]. destruct M as [M|M]; eexists.
-
-  rewrite resths_assoc in Q2. rewrite <- (hopp_inv (resth _ _)) in Q2. split; [|eassumption].
-  eapply M. rewrite resths_assoc, resth_ident. rewrite resths_assoc in P1. eassumption.
-  etransitivity.
-    rewrite resth_comm. apply resth_subset.
-    rewrite hopp_resth, hopp_inv, updateall_comm. apply subset_updateall.
-
-  rewrite resths_assoc in P1. split; [eassumption|].
-  eapply M. rewrite resths_assoc, resth_ident.
-    rewrite resths_assoc in Q2. eassumption.
-    etransitivity.
-      rewrite resth_comm. apply resth_subset.
-      rewrite hopp_resth. rewrite updateall_comm. apply subset_updateall.
-Qed.
-
-(* (hprop P) is hmonotonic as long as P is monotonic. *)
-Theorem hmono_hprop:
-  forall V P (M: monotonic P), hmonotonic (hprop V P).
-Proof.
-  unfold hmonotonic,hprop. intros. eapply M.
-    eapply resth_subset.
-    eapply H. unfold resths. rewrite SV. reflexivity.
-Qed.
-
-(* True is hmonotonic. *)
-Theorem hmono_htrue: forall V, @hmonotonic V htrue.
-Proof. unfold htrue,hmonotonic. intros. assumption. Qed.
-
-(* False is hmonotonic. *)
-Theorem hmono_hfalse: forall V, @hmonotonic V hfalse.
-Proof. unfold hfalse,hmonotonic. intros. assumption. Qed.
-
-(* Implication is co-variant in hmonotonicity. *)
-Theorem hmono_impl:
-  forall V (P Q: hsprop V) (M1: hmonotonic' P) (M2: hmonotonic Q),
-  hmonotonic (fun hs => P hs -> Q hs).
-Proof.
-  unfold hmonotonic. intros. eapply M2,H,M1. assumption.
-Qed.
-
-(* Negation therefore flips the hmonotonicity direction. *)
-Corollary hmono_not:
-  forall V (P: hsprop V) (M: hmonotonic' P), hmonotonic (fun hs => ~ P hs).
-Proof.
-  intros. apply hmono_impl. assumption. apply hmono_hfalse.
-Qed.
 
 
-(* Dual results for hmonotonic': *)
-
-Theorem hmono'_sep:
-  forall V P Q (M1: hmonotonic' P) (M2: hmonotonic' Q), hmonotonic' (sepconj V P Q).
-Proof.
-  unfold hmonotonic'. intros. destruct H as [h' [P1 Q2]].
-  exists h'. split; rewrite resths_assoc, resth_comm, <- resths_assoc.
-    apply M1. assumption.
-    apply M2. assumption.
-Qed.
-
-Theorem hmono'_htrue: forall V, @hmonotonic' V htrue.
-Proof. unfold htrue,hmonotonic'. intros. assumption. Qed.
-
-Theorem hmono'_hfalse: forall V, @hmonotonic' V hfalse.
-Proof. unfold hfalse,hmonotonic'. intros. assumption. Qed.
-
-Theorem hmono'_hprop:
-  forall V P (M: monotonic' P), hmonotonic' (hprop V P).
-Proof.
-  unfold hmonotonic',hprop,resths,resthv. intros.
-  destruct (hs v) as [hu|] eqn:HSV; [|discriminate]. destruct hu. discriminate. injection SV as. subst.
-  eapply M.
-    apply resth_subset.
-    eapply H. eassumption.
-Qed.
-
-Theorem hmono'_impl:
-  forall V (P Q: hsprop V) (M1: hmonotonic P) (M2: hmonotonic' Q),
-  hmonotonic' (fun hs => P hs -> Q hs).
-Proof.
-  unfold hmonotonic'. intros. eapply M2,H,M1. eassumption.
-Qed.
-
-Corollary hmono'_not:
-  forall V (P: hsprop V) (M: hmonotonic P),
-  hmonotonic' (fun hs => ~ P hs).
-Proof.
-  intros. apply hmono'_impl. assumption. apply hmono'_hfalse.
-Qed.
-
-
-(* Analogous results for monotonicity: *)
+(* Theorems about monotonicity of properties: *)
 
 Theorem mono_sep:
   forall V P Q (M1: monotonic P) (M2: monotonic Q), monotonic (sepconj V P Q).
