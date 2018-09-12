@@ -3,7 +3,7 @@ Require Import NArith.
 Open Scope N.
 Open Scope stmt_scope.
 
-Definition my_prog : program := fun a => match a with
+Definition memcpy_i386 : program := fun a => match a with
 
 (* 0xc0000040: movl %edi, %eax *)
 | 0 => Some (2,
