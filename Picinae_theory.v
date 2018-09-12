@@ -1232,6 +1232,251 @@ Ltac prove_noassign :=
 
 End PICINAE_THEORY.
 
+Lemma reduce_move:
+  forall x1 (FIN: x1 <> Some Unfinished)
+         s1 v e m s1' (XS: exec_stmt s1 (Move v e) m s1' x1),
+  if exp_known e then
+    ((let u := of_uvalue (feval_exp e s1) in s1' = s1[v:=Some u]) /\ x1 = None) /\
+    memacc_exp e s1
+  else exists u, (s1' = s1[v:=Some u] /\ x1 = None).
+Proof.
+  intros.
+  inversion XS; subst. contradict FIN. reflexivity.
+  destruct (exp_known e) eqn:K.
+    split.
+      eapply reduce_exp in E. rewrite E. split; reflexivity. exact K.
+      eapply memacc_exp_true. exact K. exact E.
+    exists u. split; reflexivity.
+Qed.
+
+Lemma reduce_jmp:
+  forall x1 (FIN: x1 <> Some Unfinished)
+         s1 e m s1' (XS: exec_stmt s1 (Jmp e) m s1' x1),
+  if exp_known e then
+    (s1' = s1 /\ x1 = Some (Exit (match feval_exp e s1 with VaU _ _ a _ => a end))) /\
+    memacc_exp e s1
+  else exists a, (s1' = s1 /\ x1 = Some (Exit a)).
+Proof.
+  intros. inversion XS; subst. contradict FIN. reflexivity.
+  destruct (exp_known e) eqn:K.
+    split.
+      split. reflexivity.
+      eapply reduce_exp in E; [|exact K].
+      apply (f_equal uvalue_of) in E.
+      rewrite can_uvalue_inv in E; [|apply canonical_feval].
+      simpl in E. rewrite <- E. reflexivity.
+
+      eapply memacc_exp_true. exact K. exact E.
+
+    exists a. split; reflexivity.
+Qed.
+
+Lemma reduce_if:
+  forall x1 (FIN: x1 <> Some Unfinished)
+         s1 e q1 q2 m s1' (XS: exec_stmt s1 (If e q1 q2) m s1' x1),
+  if exp_known e then
+    (exec_stmt s1 (match feval_exp e s1 with VaU _ _ c _ => if c then q2 else q1 end) (pred m) s1' x1) /\
+    memacc_exp e s1
+  else
+    exists (c:N), exec_stmt s1 (if c then q2 else q1) (pred m) s1' x1.
+Proof.
+  intros. inversion XS; subst. contradict FIN. reflexivity.
+  destruct (exp_known e) eqn:K.
+    split.
+      eapply reduce_exp in E; [|exact K].
+      apply (f_equal uvalue_of) in E.
+      rewrite can_uvalue_inv in E; [|apply canonical_feval].
+      rewrite <- E. simpl. destruct c; assumption.
+
+      eapply memacc_exp_true. exact K. exact E.
+
+    eexists. exact XS0.
+Qed.
+
+Lemma reduce_seq_if:
+  forall x1 (FIN: x1 <> Some Unfinished)
+         s1 e q q1 q2 m s1' (XS: exec_stmt s1 (Seq (If e q1 q2) q) m s1' x1),
+  if exp_known e then
+    (exec_stmt s1 (Seq (match feval_exp e s1 with VaU _ _ c _ => if c then q2 else q1 end) q) (pred m) s1' x1) /\
+    memacc_exp e s1
+  else
+    exists (c:N), exec_stmt s1 (if c then q2 else q1) (pred m) s1' x1.
+Proof.
+Admitted.
+
+End FInterp.
+
+
+(* Using the functional interpreter, we now define a set of tactics that reduce expressions to values,
+   and statements to stores & exits.  These tactics are carefully implemented to avoid simplifying
+   anything other than the machinery of the functional interpreter, so that Coq does not spin out of
+   control attempting to execute the entire program.  Our objective is to infer a reasonably small,
+   well-formed symbolic expression that captures the result of executing each assembly instruction.
+   This result can be further reduced by the user (e.g., using "simpl") if desired.  Call-by-value
+   strategy is used here, since our goal is usually to reduce as much as possible of the target
+   expression, which might include arguments of an enclosing unexpandable function. *)
+
+Declare Reduction simpl_exp :=
+  cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
+                             utowidth utobit uget of_uvalue uvalue_of ].
+
+Ltac simpl_exp :=
+  cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
+                             utowidth utobit uget of_uvalue uvalue_of ];
+  repeat simpl (bits_of_mem _).
+
+Tactic Notation "simpl_exp" "in" hyp(H) :=
+  cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
+                             utowidth utobit uget of_uvalue uvalue_of ] in H;
+  repeat simpl (bits_of_mem _) in H.
+
+
+(* Statement simplification most often gets stuck at variable-reads, since the full content of the
+   store is generally not known (s is a symbolic expression).  We can often push past this obstacle
+   by applying the update_updated and update_frame theorems to automatically infer that the values
+   of variables not being read are irrelevant.  The "simpl_stores" tactic does so. *)
+
+Remark if_N_same: forall A (n:N) (a:A), (if n then a else a) = a.
+Proof. intros. destruct n; reflexivity. Qed.
+
+Ltac simpl_stores :=
+  repeat first [ rewrite update_updated | rewrite update_frame; [|discriminate 1] ];
+  repeat rewrite if_N_same;
+  repeat match goal with |- context [ update vareq ?S ?V ?U ] =>
+    match S with context c [ update vareq ?T V _ ] => let r := context c[T] in
+      replace (update vareq S V U) with (update vareq r V U) by
+        (symmetry; repeat apply update_inner_same; apply update_cancel)
+    end
+  end.
+
+Tactic Notation "simpl_stores" "in" hyp(H) :=
+  repeat first [ rewrite update_updated in H | rewrite update_frame in H; [|discriminate 1] ];
+  repeat rewrite if_N_same in H;
+  repeat match type of H with context [ update vareq ?S ?V ?U ] =>
+    match S with context c [ update vareq ?T V _ ] => let r := context c[T] in
+      replace (update vareq S V U) with (update vareq r V U) in H by
+        (symmetry; repeat apply update_inner_same; apply update_cancel)
+    end
+  end.
+
+
+(* To facilitate expression simplification, it is often convenient to first consolidate all information
+   about known variable values into the expression to be simplified.  The "stock_store" tactic searches the
+   proof context for hypotheses of the form "s var = value", where "var" is some variable appearing in the
+   expression to be reduced and "s" is the store, and adds "s[var:=value]" to the expression. *)
+
+Ltac stock_store :=
+  lazymatch goal with |- exec_stmt _ ?Q _ _ _ => repeat
+    match Q with context [ Var ?V ] =>
+      lazymatch goal with |- exec_stmt ?S _ _ _ _ =>
+        lazymatch S with context [ update vareq _ V _ ] => fail | _ =>
+          erewrite (@store_upd_eq _ V) by (simpl_stores; eassumption)
+        end
+      end
+    end
+  | _ => fail "Goal is not of the form (exec_stmt ...)"
+  end.
+
+Tactic Notation "stock_store" "in" hyp(XS) :=
+  lazymatch type of XS with exec_stmt _ ?Q _ _ _ => repeat
+    match Q with context [ Var ?V ] =>
+      lazymatch type of XS with exec_stmt ?S _ _ _ _ =>
+        lazymatch S with context [ update vareq _ V _ ] => fail | _ =>
+          erewrite (@store_upd_eq _ V) in XS by (simpl_stores; eassumption)
+        end
+      end
+    end
+  | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
+  end.
+
+
+(* Replace any unresolved variable lookups as fresh Coq variables after functional evaluation. *)
+
+Ltac destr_ugets H :=
+  try (rewrite fold_uget in H; repeat rewrite fold_uget in H;
+       repeat match type of H with context [ uget ?X ] =>
+         let UGET := fresh "UGET" in
+         let utyp := fresh "utyp" in let mem := fresh "mem" in let n := fresh "n" in let w := fresh "w" in
+         destruct (uget X) as [utyp mem n w] eqn:UGET
+       end).
+
+(* As the functional interpreter interprets stmts within a sequence, it infers memory access
+   hypotheses as a side-effect of interpreting Load and Store expressions.  It splits these
+   off into separate hypotheses in order to continue stepping the main exec_stmt hypothesis.
+   Many are redundant (e.g., because Load or Store is applied to the same expression multiple
+   times within the stmt), so we automatically clear any redundant ones. *)
+
+Ltac nomemaccs T :=
+  lazymatch T with NoMemAcc => idtac
+  | if _ then ?E1 else ?E2 => nomemaccs E1; nomemaccs E2
+  | ?E1 /\ ?E2 => nomemaccs E1; nomemaccs E2
+  | _ => fail
+  end.
+
+Ltac destruct_memacc H :=
+  lazymatch type of H with
+  | _=_ /\ _=_ => idtac
+  | exists _, _ => let u := fresh "u" in destruct H as [u H]; simpl_exp in H; simpl_stores in H
+  | ?H1 /\ ?H1 =>
+    lazymatch goal with
+    | [ _:H1 |- _ ] => clear H
+    | _ => apply proj1 in H; destruct_memacc H
+    end
+  | ?H1 /\ ?H2 =>
+    lazymatch goal with
+    | [ _:H1, _:H2 |- _ ] => clear H
+    | [ _:H1 |- _ ] => apply proj2 in H; destruct_memacc H
+    | [ _:H2 |- _ ] => apply proj1 in H; destruct_memacc H
+    | _ => let H' := fresh "ACC" in destruct H as [H H']; destruct_memacc H; destruct_memacc H'
+    end
+  | ?T => try (nomemaccs T; clear H)
+  end.
+
+(* Finally, simplifying a hypothesis of the form (exec_stmt ...) entails applying the functional
+   interpreter to each statement in the sequence (usually a Move), using simpl_stores to try to
+   infer any unresolved variable-reads, using destr_ugets to abstract any unresolved store-reads,
+   and repeating this until we reach a conditional or the end of the sequence.  (We don't attempt
+   to break conditionals into cases automatically here, since often the caller wants to decide
+   which case distinction is best.)
+
+   Here, parameter "tac" is a caller-supplied tactic (taking a hypothesis as its argument) which
+   is applied to simplify the expression after each step within a stmt.  This is most often useful
+   for simplifying memory access hypotheses before they get split off from the main hypothesis. *)
+
+Ltac finish_simpl_stmt tac H :=
+  simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H; tac H; destruct_memacc H.
+
+Tactic Notation "simpl_stmt" "using" tactic(tac) "in" hyp(H) :=
+  lazymatch type of H with exec_stmt _ _ _ _ ?X =>
+    let K := fresh "FIN" in enough (K: X <> Some Unfinished); [
+    repeat (apply reduce_seq_move in H; [|exact K]; finish_simpl_stmt tac H);
+    first [ apply reduce_nop in H; [|exact K]; unfold cast in H
+          | apply reduce_move in H; [|exact K]; finish_simpl_stmt tac H
+          | apply reduce_jmp in H; [|exact K]; finish_simpl_stmt tac H
+          | apply reduce_if in H; [|exact K];
+            simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
+            match type of H with
+            | exists _, _ => let c := fresh "c" in
+                             destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
+            | _ => tac H; destruct_memacc H
+            end 
+          | apply reduce_seq_if in H; [|exact K];
+            simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
+            match type of H with
+            | exists _, _ => let c := fresh "c" in
+                             destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
+            | _ => tac H; destruct_memacc H
+            end ];
+    clear K |]
+  | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
+  end.
+
+(* Combining all of the above, our most typical simplification regimen first stocks the store
+   of the exec_stmt with any known variable values from the context, then applies the functional
+   interpreter, and then unfolds a few basic constants. *)
+
+Tactic Notation "bsimpl" "using" tactic(tac) "in" hyp(H) :=
+  stock_store in H; simpl_stmt using tac in H; unfold tobit in H.
 
 Module PicinaeTheory (IL: PICINAE_IL) <: PICINAE_THEORY IL.
   Include PICINAE_THEORY IL.
