@@ -538,23 +538,41 @@ Ltac destruct_memacc H :=
 Ltac finish_simpl_stmt tac H :=
   simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H; tac H; destruct_memacc H.
 
+Ltac simpl_stmt_loop tac H F :=
+  lazymatch type of H with exec_stmt _ _ ?q _ _ _ => lazymatch q with
+  | Seq (Move _ _) _ =>
+    apply reduce_seq_move in H; [|exact F]; finish_simpl_stmt tac H; simpl_stmt_loop tac H F
+  | Nop => apply reduce_nop in H; [|exact F]; unfold cast in H
+  | Move _ _ => apply reduce_move in H; [|exact F]; finish_simpl_stmt tac H
+  | Jmp _ => apply reduce_jmp in H; [|exact F]; finish_simpl_stmt tac H
+  | If _ _ _ => apply reduce_if in H; [|exact F];
+      simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
+      lazymatch type of H with
+      | exists _, _ => let c := fresh "c" in
+          destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
+      | _ => tac H; destruct_memacc H
+      end
+  | _ => first
+  [ apply reduce_seq_move in H; [|exact F]; finish_simpl_stmt tac H; simpl_stmt_loop tac H F
+  | apply reduce_nop in H; [|exact F]; unfold cast in H
+  | apply reduce_move in H; [|exact F]; finish_simpl_stmt tac H
+  | apply reduce_jmp in H; [|exact F]; finish_simpl_stmt tac H
+  | apply reduce_if in H; [|exact F];
+      simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
+      lazymatch type of H with
+      | exists _, _ => let c := fresh "c" in
+          destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
+      | _ => tac H; destruct_memacc H
+      end ]
+  end end.
+
 Tactic Notation "simpl_stmt" "using" tactic(tac) "in" hyp(H) :=
-  lazymatch type of H with exec_stmt _ _ _ _ _ ?X =>
-    let K := fresh "FIN" in enough (K: X <> Some Unfinished); [
-    repeat (apply reduce_seq_move in H; [|exact K]; finish_simpl_stmt tac H);
-    first [ apply reduce_nop in H; [|exact K]; unfold cast in H
-          | apply reduce_move in H; [|exact K]; finish_simpl_stmt tac H
-          | apply reduce_jmp in H; [|exact K]; finish_simpl_stmt tac H
-          | apply reduce_if in H; [|exact K];
-            simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
-            match type of H with
-            | exists _, _ => let c := fresh "c" in
-                             destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
-            | _ => tac H; destruct_memacc H
-            end ];
-    clear K |]
+  lazymatch type of H with exec_stmt _ _ _ _ _ ?x =>
+    let F := fresh "FIN" in enough (F: x <> Some Unfinished);
+    [ simpl_stmt_loop tac H F; clear F |]
   | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
   end.
+
 
 (* Combining all of the above, our most typical simplification regimen first stocks the store
    of the exec_stmt with any known variable values from the context, then applies the functional

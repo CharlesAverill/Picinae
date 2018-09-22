@@ -71,6 +71,26 @@ Proof.
   intro. destruct x; [destruct e|]; first [ left;reflexivity | right;discriminate 1].
 Qed.
 
+(* Tactic: destN n until T hyp:H
+   Keep destructing n:N until either n is a completed numeric constant (provided as an
+   equality in hypothesis H) or tactic T solves the goal.  This yields a set of subgoals
+   in which n equals the various constants admitted by T.  Typical usage:
+     destN a until (discriminate IL) hyp:ADDR.
+   where IL is an instruction lookup of the form (IL: program a = Some _). *)
+Tactic Notation "destN" constr(n) "until" tactic(T) "eqn" ":" ident(H) :=
+  let p := fresh n in
+  destruct n as [|p] eqn:H;
+  [ try solve [T]
+  | repeat first [ solve[T] | destruct p as [p|p|] ] ].
+
+(* Tactic: focus_addr H n
+   Shelve all goals except the goal in which hypothesis H has the form (H: _ = n).
+   This retrieves the subgoal for address n from a sea of arbitrarily ordered goals.
+   Use vernacular command "Unshelve" to pull back all the shelved goals afterward. *)
+Tactic Notation "focus_addr" hyp(H) constr(n) :=
+  match type of H with _ = n => idtac | _ => shelve end.
+
+
 
 (* Example #3: Architectural calling convention compliance
    Strlen does not write to callee-save registers (e.g., EBX)
@@ -92,52 +112,99 @@ Proof.
   prove_noassign.
 Qed.
 
-Definition strlen_esp_inv (esp:N) (mem:addr->N) (x:exit) (s':store) :=
-  match x with Exit a =>
-    if N.eq_dec a (getmem LittleE 4 mem esp) then True
-    else s' R_ESP = Some (VaN esp 32)
-  | _ => True
-  end.
+(* Proving that strlen restores ESP on exit is our first example of a property that
+   requires stepwise symbolic interpretation of the program to verify.  We first
+   define a set of invariants, one for each program point.  In this simple case,
+   all program points have the same invariant, so we return the same one for all. *)
+Definition strlen_esp_invset (esp:N) (_:addr) (_:exit) (s:store) (_:nat) :=
+  Some (s R_ESP = Ⓓ esp).
 
-Lemma strlen_stmt_esp:
-  forall y u s' mem x a' (PRE: y = Some (VaN u 32)) (XS: s' R_ESP = y),
-  strlen_esp_inv u mem (match x with Some e => e | None => Exit a' end) s'.
-Proof.
-  intros. rewrite <- XS in PRE. unfold strlen_esp_inv.
-  destruct x; [ destruct e; try exact I | ].
-  all: destruct (N.eq_dec _ _); first [ exact I | exact PRE ].
-Qed.
+(* Next, we define the post-condition we wish to prove: *)
+Definition strlen_esp_postcond (esp:N) (_:addr) (_:exit) (s:store) (_:nat) :=
+  s R_ESP = Ⓓ (esp ⊕ 4).
 
+(* The invariant set and post-condition are combined into a single invariant-set
+   using the x86_subroutine_inv function, which expects the subroutine's return
+   address as its third argument. *)
+Definition strlen_esp_inv (mem:addr->N) (esp:N) :=
+  x86_subroutine_inv strlen_i386 (strlen_esp_invset esp) (strlen_esp_postcond esp) (mem Ⓓ[esp]).
+
+(* Now we pose a theorem that asserts that this invariant-set is satisfied at
+   all points where it is defined: *)
 Theorem strlen_preserves_esp:
   forall s esp mem d n s' x
-         (ESP0: s R_ESP = Some (VaN esp 32)) (MEM0: s V_MEM32 = Some (VaM mem 32))
-         (RET: strlen_i386 (getmem LittleE 4 mem esp) = None)
-         (XP: exec_prog fh strlen_i386 0 s d n s' x),
-  strlen_esp_inv esp mem x s'.
+         (ESP0: s R_ESP = Ⓓ esp) (MEM0: s V_MEM32 = Ⓜ mem)
+         (RET: strlen_i386 (mem Ⓓ[esp]) = None)
+         (XP0: exec_prog fh strlen_i386 0 s d n s' x),
+  match strlen_esp_inv mem esp x s' n with Some P => P | None => True end.
 Proof.
-  intros. pattern x,s',n.
-  eapply prog_inv_reachable. exact XP.
-  unfold strlen_esp_inv. destruct (N.eq_dec _ _). exact I. assumption.
-
   intros.
-  unfold strlen_esp_inv in PRE. destruct (N.eq_dec a1 _) as [EQ|NE] in PRE.
-    rewrite <- EQ, IL in RET. discriminate RET.
-  apply strlen_preserves_memory in XP0. rewrite <- XP0 in MEM0.
-  clear s n s' x ESP0 RET XP NE LT XP0 XP'.
-  destruct a1 as [|a]; repeat first [ discriminate IL | destruct a as [a|a|] ].
-  all: apply inj_prog_stmt in IL; destruct IL; subst sz q; simpl.
 
-  all: try solve [
-    apply (noassign_stmt_same R_ESP) in XS;
-    [ apply (strlen_stmt_esp (s1 R_ESP)); assumption
-    | prove_noassign ]
-  ].
+  (* First, simplify x to (Exit _) by observing that our invariant-set does not impose
+     any proof obligation when x is a non-standard exit condition (e.g., exception). *)
+  destruct x as [|a'|i]; try exact I.
 
-  destruct (fin_dec x1) as [FIN|FIN]. subst x1. exact I.
-  stock_store in XS. x86_simpl_stmt in XS; [|assumption]. destruct XS. subst x1.
-  unfold strlen_esp_inv. destruct (N.eq_dec _ _).
-    exact I.
-    contradict n. reflexivity.
+  (* Now use the prog_inv inductive principle from Picinae_theory.v. *)
+  eapply prog_inv. exact XP0.
+
+  (* We must first prove the pre-condition, which says that the invariant-set is
+     satisfied on entry to the subroutine.  This is proved by assumption ESP0. *)
+  unfold strlen_esp_inv, x86_subroutine_inv. destruct (N.eq_dec _ _).
+    rewrite <- e in RET. discriminate RET.
+    exact ESP0.
+
+  (* Now we enter the inductive case, wherein Coq asks us to prove that the invariant-set
+     is preserved by every (reachable) instruction in the program.  Before breaking the
+     goal down into many cases (one for each instruction in this case), it is wise to
+     simplify and/or remove anything in the context that is unnecessary.  We first
+     simplify the pre-condition assumption. *)
+  intros.
+  unfold strlen_esp_inv, x86_subroutine_inv in PRE. destruct (N.eq_dec a1 _).
+    subst a1. eapply NISStep. intros. rewrite IL in RET. discriminate RET.
+  unfold strlen_esp_invset in PRE.
+
+  (* In order for symbolic interpretation to succeed, the context must reveal the values
+     of all relevant variables in store s1 (which denotes the store on entry to each
+     instruction for which the goal must be proved).  The only two variables in our
+     invariant-set are ESP and MEM.  The value of ESP is already revealed by our
+     pre-condition (PRE).  We can get the value of MEM from MEM0 using our previously
+     proved strlen_preserves_memory theorem. *)
+  assert (MEM: s1 V_MEM32 = Some (VaM mem 32)).
+    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
+  clear n0 MEM0 XP0 XP.
+
+  (* We are now ready to break the goal down into one case for each invariant-point.
+     The destN tactic (defined above) recursively destructs address a1 into all
+     possible addresses.  To use it, you need to give it a tactic-sequence that
+     eliminates the goal whenever a1 is not the address of any instruction.  Usually
+     the best way to do that is to temporarily set a1 to a non-instruction address
+     (e.g., replace a1 with 1) and then figure out how to disprove the resulting goal
+     by contradiction.  In this case, discrimination on IL works.  Once you have a
+     tactic sequence that disproves non-instruction goals, use it as the "until"
+     argument to destN: *)
+  destN a1 until (apply NISStep; intros; discriminate IL) eqn:ADDR.
+
+  (* We now have one goal for each invariant-point.  We must prove that each of these
+     instructions preserves the invariant-set.  To do so, we apply the symbolic
+     interpreter to all the goals in parallel.  (Note that this can take a while.)
+     If this fails, you should do "try x86_step" instead, and then try to figure out
+     why some steps didn't work.  It's usually because you forgot to derive the
+     value of some IL variable needed by the symbolic interpreter to make progress
+     on that subgoal. *)
+  all: x86_step.
+
+  (* Note that we wind up with more goals that we started with, since some of the
+     instructions branch, requiring us to prove the goal for each possible destination.
+     Fortunately, since this is a pretty simple invariant-set, the symbolic state
+     inferred for most of the goals trivially satisfies the theorem.  We can solve
+     all but one by assumption or reflexivity: *)
+  all: try solve [ exact PRE | reflexivity ].
+
+  (* The only unsolved goal is the one for the final instruction in the program,
+     which is the only one that modifies ESP.  We can solve that one using the
+     update_updated theorem, which reasons about state updates. *)
+  unfold strlen_esp_postcond.
+  apply update_updated.
 Qed.
 
 
@@ -652,29 +719,22 @@ Proof.
 Qed.
 
 
-(* Tactic: destN n until T hyp:H
-   Keep destructing n:N until either n is a completed numeric constant (provided as an
-   equality in hypothesis H) or tactic T solves the goal.  This yields a set of subgoals
-   in which n equals the various constants admitted by T.  Typical usage:
-     destN a until (discriminate IL) hyp:ADDR.
-   where IL is an instruction lookup of the form (IL: program a = Some _). *)
-Tactic Notation "destN" constr(n) "until" tactic(T) "eqn" ":" ident(H) :=
-  let p := fresh n in
-  destruct n as [|p] eqn:H;
-  [ try solve [T]
-  | repeat first [ solve[T] | destruct p as [p|p|] ] ].
-
-(* Tactic: focus_addr H n
-   Shelve all goals except the goal in which hypothesis H has the form (H: _ = n).
-   This retrieves the subgoal for address n from a sea of arbitrarily ordered goals.
-   Use vernacular command "Unshelve" to pull back all the shelved goals afterward. *)
-Tactic Notation "focus_addr" hyp(H) constr(n) :=
-  match type of H with _ = n => idtac | _ => shelve end.
-
+(* We define partial-correctness of strlen as returning an index in EAX
+   such that all addresses in [p, p+EAX) are "nil-free" (non-zero), where
+   p is the (original) value of the first stack argument. *)
 Definition nilfree (m:addr->N) (p:addr) (k:N) :=
   p <= k /\ forall i, p <= i -> i < k -> m i > 0.
 
-Definition strlen_inv_set (m:addr->N) (esp:N) (a:addr) (_:exit) (s:store) (_:nat) :=
+(* The invariant-set for this property is much more complex than our previous
+   examples.  At the entrypoint (address 0) we have no assumptions (True).
+   Addresses 38, 153, and 182 are meets in the control-flow graph, so we place
+   invariants at those points to simplify the analysis.  Address 49 is the
+   start of an unrolled loop, where the loop body has been replicated at
+   addresses 75, 101, and 127 for better performance.  We therefore put our
+   loop invariant at all four addresses so that we can treat it like a rolled
+   loop, and avoid duplications in the proof logic.  Address 186 is the
+   return instruction at the end, so gets a special invariant. *)
+Definition strlen_invset (m:addr->N) (esp:N) (a:addr) (_:exit) (s:store) (_:nat) :=
   match a with
   | 0 => Some True
   | 38 => Some (∃ eax edx, s R_EAX = Ⓓeax /\ s R_EDX = Ⓓedx /\ nilfree m (m Ⓓ[esp+4]) eax /\ edx < 4)
@@ -687,49 +747,78 @@ Definition strlen_inv_set (m:addr->N) (esp:N) (a:addr) (_:exit) (s:store) (_:nat
   | _ => None
   end.
 
+(* The post-condition says that ESP gets restored and EAX is the index of the
+   first nil character after input pointer p. *)
 Definition strlen_postcond (mem:addr->N) (esp:N) (_:addr) (_:exit) (s:store) (_:nat) :=
-  s R_ESP = Some (VaN (esp+4) 32) /\
-  let p := getmem LittleE 4 mem (esp+4) in
-  exists eax, s R_EAX = Some (VaN eax 32) /\
+  s R_ESP = Ⓓ (esp+4) /\
+  let p := mem Ⓓ[esp+4] in
+  exists eax, s R_EAX = Ⓓ eax /\
               mem (p + eax) = 0 /\
               forall i, i < eax -> mem (p+i) > 0.
 
+(* The invariant-set and post-conditions are combined as usual: *)
 Definition strlen_inv (mem:addr->N) (esp:N) :=
-  x86_subroutine_inv strlen_i386 (strlen_inv_set mem esp) (strlen_postcond mem esp) (getmem LittleE 4 mem esp).
+  x86_subroutine_inv strlen_i386 (strlen_invset mem esp) (strlen_postcond mem esp) (mem Ⓓ[esp]).
 
+(* Our premises for this theorem are a bit more elaborate.  Here is some rationale:
+   (HI0) The theorem is only true if the search for a nil does not wrap
+     around the address space and become lower than p.  In user code
+     this can never happen because the high bytes of the address space
+     are reserved and unreadable.  We therefore assume that the highest
+     byte is unreadable.
+   (MDL0) Since we will be doing full symbolic interpretation, we must
+     assume that on entry the processor is in a valid state.
+   (ESPLO) Also, the input stack pointer must not be beyond user memory,
+     since otherwise "restoring" it would incur an integer overflow. *)
 Theorem strlen_partial_correctness:
   forall s esp mem d n s' x
          (HI0: ~ mem_readable s (2^32 - 1)%N)
          (MDL0: models x86typctx s)
          (ESPLO: esp + 8 <= 2^32)
-         (ESP0: s R_ESP = Some (VaN esp 32)) (MEM0: s V_MEM32 = Some (VaM mem 32))
-         (RET: strlen_i386 (getmem LittleE 4 mem esp) = None)
+         (ESP0: s R_ESP = Ⓓ esp) (MEM0: s V_MEM32 = Ⓜ mem)
+         (RET: strlen_i386 (mem Ⓓ[esp]) = None)
          (XP0: exec_prog fh strlen_i386 0 s d n s' x),
   match strlen_inv mem esp x s' n with Some P => P | None => True end.
 Proof.
   intros.
+
+  (* Our invariant is trivially satisfied by non-standard exit conditions. *)
   destruct x as [|a'|i]; try exact I.
+
+  (* Use the prog_inv inductive principle. *)
   eapply prog_inv. exact XP0.
-  unfold strlen_inv. destruct (getmem _ _ _ _). discriminate RET. exact I.
+
+  (* The pre-condition (True) is trivially satisfied. *)
+  unfold strlen_inv, x86_subroutine_inv. destruct (N.eq_dec _ _).
+    rewrite <- e in RET. discriminate RET.
+    exact I.
+
+  (* Before splitting into cases, translate each hypothesis about the
+     entry point store s to each instruction's starting store s1: *)
   intros.
-  assert (MEM: s1 V_MEM32 = Some (VaM mem 32)).
+  assert (MDL: models x86typctx s1).
+    eapply preservation_exec_prog. exact MDL0. apply strlen_welltyped. exact XP.
+  assert (MEM: s1 V_MEM32 = Ⓜ mem).
     rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
+  assert (WTM := x86_wtm MDL MEM). simpl in WTM.
   assert (HI: ~ mem_readable s1 (2^32 - 1)%N).
     unfold mem_readable. intro H. destruct H as [r [H1 H2]]. apply HI0.
     exists r. split; [|exact H2].
     erewrite <- strlen_preserves_readable; eassumption.
-  assert (ESP: strlen_esp_inv esp mem (Exit a1) s1).
-    eapply strlen_preserves_esp. exact ESP0. exact MEM0. exact RET. exact XP.
-  assert (MDL: models x86typctx s1).
-    eapply preservation_exec_prog. exact MDL0. apply strlen_welltyped. exact XP.
-  unfold strlen_esp_inv in ESP. unfold strlen_inv, x86_subroutine_inv in PRE.
+  assert (ESP := strlen_preserves_esp _ _ _ _ _ _ (Exit a1) ESP0 MEM0 RET XP).
   clear s HI0 MDL0 MEM0 ESP0 XP XP0.
-  assert (WTM:=x86_wtm MDL MEM). simpl in WTM.
 
-  destruct (N.eq_dec a1 _). subst a1. eapply NISStep. intros. rewrite IL in RET. discriminate RET. clear n0.
+  (* Eliminate the case where address a1 does not contain an instruction. *)
+  unfold strlen_inv, strlen_esp_inv, x86_subroutine_inv in PRE, ESP.
+  destruct (N.eq_dec a1 _). subst a1. eapply NISStep. intros. rewrite IL in RET. discriminate RET.
+  clear n0.
+
+  (* Break the proof into cases, one for each invariant-point. *)
   destN a1 until (exfalso; exact PRE) eqn:ADDR.
-  all:unfold strlen_inv_set in PRE.
+  all: unfold strlen_invset in PRE; unfold strlen_esp_invset in ESP.
 
+  (* Time how long it takes for each symbolic interpretation step to complete
+     (for profiling and to give visual cues that something is happening...). *)
   Local Ltac step := time x86_step.
 
   all: focus_addr ADDR 0. clear PRE.
@@ -790,7 +879,7 @@ Proof.
       rewrite H2. apply N_neq0_gt0, N.neq_sym, N.eqb_neq, BC.
 
   Unshelve. all: match type of ADDR with _=49 => idtac | _=75 => idtac | _=101 => idtac | _=127 => idtac | _ => shelve end.
-  all: unfold strlen_inv_set in PRE; destruct PRE as [eax [EAX [NF EDX0]]].
+  all: unfold strlen_invset in PRE; destruct PRE as [eax [EAX [NF EDX0]]].
   all:step. all:assert (LM: eax + 4 < 2^32) by (apply N.lt_nge; intro H; apply HI;
     replace (2^32-1) with (eax+(N.pred(2^32) - eax));
     [ apply ACC, (N.add_lt_mono_r _ _ eax); rewrite N.sub_add by apply N.lt_le_pred, (x86_regsize MDL EAX); rewrite N.add_comm; eapply N.lt_le_trans; [|exact H]; reflexivity

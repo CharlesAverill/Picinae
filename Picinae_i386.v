@@ -289,6 +289,17 @@ Proof.
   apply N.shiftr_eq_0. apply N.log2_lt_pow2. reflexivity. assumption.
 Qed.
 
+(* These nested-ifs arise from conditional branches on status flag expressions. *)
+Remark if_if:
+  forall (b:bool) (q1 q2:stmt),
+  (if (if b then 1 else N0) then q1 else q2) = (if b then q2 else q1).
+Proof. intros. destruct b; reflexivity. Qed.
+
+Remark if_not_if:
+  forall (b:bool) (q1 q2:stmt),
+  (if (N.lnot (if b then 1 else 0) 1) then q1 else q2) = (if b then q1 else q2).
+Proof. intros. destruct b; reflexivity. Qed.
+
 
 Create HintDb mod_pow2 discriminated.
 Global Hint Rewrite N.sub_0_r : mod_pow2.
@@ -320,6 +331,8 @@ Global Hint Rewrite mod_add_mul_ll using discriminate 1 : mod_pow2.
 Global Hint Rewrite mod_add_mul_rr using discriminate 1 : mod_pow2.
 Global Hint Rewrite mod_add_mul_rl using discriminate 1 : mod_pow2.
 Global Hint Rewrite mem_small using assumption : mod_pow2.
+Global Hint Rewrite if_if : mod_pow2.
+Global Hint Rewrite if_not_if : mod_pow2.
 (*
 Global Hint Rewrite memlo using solve [ discriminate 1 | assumption ] : mod_pow2.
 Global Hint Rewrite shiftr_low_pow2 using solve_lt : mod_pow2.
@@ -330,16 +343,18 @@ Global Hint Rewrite N.mod_small using solve_lt : mod_pow2.
 (* When reducing modulo operations, try auto-solving inequalities of the form x < 2^w. *)
 
 Ltac solve_lt_prim :=
-  reflexivity +
+  reflexivity (* solves "<" relations on closed terms *) +
   eassumption +
-  (apply N.mod_upper_bound; discriminate 1) +
-  lazymatch goal with [ M: models x86typctx ?s, R: ?s ?r = Some (VaN ?x ?w) |- ?x < _ ] => apply (x86_regsize M R)
-                    | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM end +
-  (apply getmem_bound; assumption) +
-  (apply lxor_bound; solve_lt) +
-  (apply land_bound; solve_lt) +
-  (apply lor_bound; solve_lt) +
-  (apply lnot_bound; solve_lt) +
+  match goal with
+  | [ |- _ mod _ < _ ] => apply N.mod_upper_bound; discriminate 1
+  | [ M: models x86typctx ?s, R: ?s _ = Some (VaN ?x _) |- ?x < _ ] => apply (x86_regsize M R)
+  | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM
+  | [ |- getmem _ _ _ _ < 2^_ ] => apply getmem_bound; assumption
+  | [ |- N.lxor _ _ < 2^_ ] => apply lxor_bound; solve_lt
+  | [ |- N.land _ _ < 2^_ ] => apply land_bound; solve_lt
+  | [ |- N.lor _ _ < 2^_ ] => apply lor_bound; solve_lt
+  | [ |- N.lnot _ _ < 2^_ ] => apply lnot_bound; solve_lt
+  end +
   (eapply N.le_lt_trans; [ apply N.le_sub_l | solve_lt ])
 with solve_lt :=
   solve_lt_prim +
@@ -356,20 +371,20 @@ Tactic Notation "simpl_x86" "in" hyp(H) :=
   autorewrite with mod_pow2 in H;
   repeat (match type of H with
   | context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a) in H; [| assumption | discriminate 1 ]
-  | context [ N.shiftr ?X ?Y ] => rewrite (shiftr_low_pow2 X Y) in H by solve_lt
-  | context [ ?X mod ?M ] => rewrite (N.mod_small X M) in H by solve_lt
-  | context [ N.land ?X ?Y ] => (erewrite (land_mod_r X Y) in H +
-                                 erewrite (land_mod_l X Y) in H); [| reflexivity | simpl;reflexivity ]
+  | context [ N.shiftr ?x ?y ] => rewrite (shiftr_low_pow2 x y) in H by solve_lt
+  | context [ ?x mod ?m ] => rewrite (N.mod_small x m) in H by solve_lt
+  | context [ N.land ?x ?y ] => (erewrite (land_mod_r x y) in H +
+                                 erewrite (land_mod_l x y) in H); [| reflexivity | simpl;reflexivity ]
   end; autorewrite with mod_pow2 in H).
 
 Ltac simpl_x86 :=
   autorewrite with mod_pow2;
   repeat (match goal with
   | |- context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a); [| assumption | discriminate 1 ]
-  | |- context [ N.shiftr ?X ?Y ] => rewrite (shiftr_low_pow2 X Y) by solve_lt
-  | |- context [ ?X mod ?M ] => rewrite (N.mod_small X M) by solve_lt
-  | |- context [ N.land ?X ?Y ] => (erewrite (land_mod_r X Y) +
-                                    erewrite (land_mod_l X Y)); [| reflexivity | simpl;reflexivity ]
+  | |- context [ N.shiftr ?x ?y ] => rewrite (shiftr_low_pow2 x y) by solve_lt
+  | |- context [ ?x mod ?m ] => rewrite (N.mod_small x m) by solve_lt
+  | |- context [ N.land ?x ?y ] => (erewrite (land_mod_r x y) +
+                                    erewrite (land_mod_l x y)); [| reflexivity | simpl;reflexivity ]
   end; autorewrite with mod_pow2).
 
 
@@ -511,7 +526,7 @@ Ltac x86_step_and_simplify XS XP' :=
    various points.) *)
 Ltac x86_invseek :=
   apply NISStep;
-  let sz := fresh "sz" in let q := fresh "Q" in let s := fresh "s" in let x := fresh "x" in
+  let sz := fresh "sz" in let q := fresh "q" in let s := fresh "s" in let x := fresh "x" in
   let LT := fresh "LT" in let IL := fresh "IL" in let XS := fresh "XS" in let XP' := fresh "XP'" in
   intros sz q s x LT IL XS XP'; clear LT;
   apply not_unfinished in XP';
@@ -520,11 +535,7 @@ Ltac x86_invseek :=
   x86_step_and_simplify XS XP';
   repeat lazymatch goal with [ ACC: MemAcc _ _ _ _ _ |- _ ] => simpl_x86 ACC; revert ACC end; intros;
   repeat lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ _ =>
-    let BC := fresh "BC" in
-    lazymatch c with (if ?c2 then _ else _) => destruct c2 eqn:BC
-                   | N.lnot (if ?c2 then _ else _) 1 => destruct c2 eqn:BC
-                   | _ => destruct c eqn:BC end;
-    simpl_x86 in BC;
+    let BC := fresh "BC" in (destruct c eqn:BC; simpl_x86 in BC);
     x86_step_and_simplify XS XP'
   end;
   clear XP'; repeat match goal with [ u:value |- _ ] => clear u

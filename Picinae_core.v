@@ -300,7 +300,6 @@ Inductive exp : Type :=
 | Cast (c:cast_typ) (w:bitwidth) (e:exp) (* Cast to a new width. *)
 | Let (v:var) (e1 e2:exp)
 | Unknown (w:bitwidth)
-(* Expression types below here are just syntactic sugar for the above. *)
 | Ite (e1 e2 e3:exp)
 | Extract (n1 n2:N) (e:exp) (* Extract hbits to lbits of e (NumT type). *)
 | Concat (e1 e2:exp) (* Concat two NumT expressions together. *).
