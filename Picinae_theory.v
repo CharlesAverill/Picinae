@@ -969,6 +969,16 @@ End Boundedness.
 
 Section InvariantProofs.
 
+(* It is often useful to have a case distinction between unfinished and not-unfinished
+   statement exits.  "Unfinished" statements are those whose starting states were not
+   provided a sufficiently high recursion limit to fully evaluate.  A real CPU has no
+   such recursion limit, so we don't usually care about such states.  Proof goals
+   therefore tend to have the form "if not unfinished, then <some property>". *)
+Lemma fin_dec: forall x, {x = Some Unfinished} + {x <> Some Unfinished}.
+Proof.
+  intro. destruct x; [destruct e|]; first [ left;reflexivity | right;discriminate 1 ].
+Qed.
+
 (* To prove properties of while-loops, it suffices to prove that each loop iteration
    preserves the property.  This is equivalent to stepping the loop three small-steps
    at a time (to unfold the While->If->Seq expansion of the loop). *)
@@ -1127,56 +1137,175 @@ Qed.
    all the invariants are satisfied, the user can prove that any execution that starts in an
    invariant-satisfying state and that reaches another invariant always satisfies the latter. *)
 
-(* The "next invariant satisfied" property is true if we're at an invariant point and the state
-   satisfies that invariant, or we're not at an invariant point and (inductively) taking one
-   exec_prog step leads to a "next invariant satisfied" state. *)
-Inductive next_inv_sat (PS: exit -> store -> nat -> option Prop):
-            bool -> exit -> hdomain -> program -> store -> nat -> nat -> nat -> store -> exit -> Prop :=
-| NISHere x h p s d n n' s' x' (TRU: match PS x s n with None => False | Some P => P end):
-    next_inv_sat PS true x h p s d n n' s' x'
-| NISStep h p s d n n' s' x' a
-          (STEP: forall sz q s1 x1 (LT: (n < n')%nat)
-                        (IL: p a = Some (sz,q)) (XS: exec_stmt h s q d s1 x1)
-                        (XP': match x1 with None => exec_prog h p (a+sz) s1 d (n' - S n) s' x'
-                              | Some (Exit a2) => exec_prog h p a2 s1 d (n' - S n) s' x'
-                              | Some x2 => x'=x2 end),
-                 next_inv_sat PS (match PS match x1 with None => Exit (a+sz) | Some x1 => x1 end s1 (S n) with
-                                  | Some _ => true | None => false end)
-                              match x1 with None => Exit (a+sz) | Some x1 => x1 end
-                              h p s1 d (S n) n' s' x'):
-    next_inv_sat PS false (Exit a) h p s d n n' s' x'.
+(* Sometimes we want to assert that an invariant is present and satisfied, while other times we
+   want to more leniently stipulate that an invariant is satisfied if present: *)
+Definition true_inv (OP: option Prop) := match OP with Some P => P | None => False end.
+Definition trueif_inv (OP: option Prop) := match OP with Some P => P | None => True end.
+
+Lemma trueif_true_inv: forall OP, true_inv OP -> trueif_inv OP.
+Proof. unfold true_inv, trueif_inv. intros. destruct OP. assumption. exact I. Qed.
+
+Lemma trueif_some: forall P, trueif_inv (Some P) -> P.
+Proof. intros. assumption. Qed.
+
+Lemma trueif_none: trueif_inv None -> True.
+Proof. intro. assumption. Qed.
+
+Lemma trueinv_some: forall P, true_inv (Some P) -> P.
+Proof. intros. assumption. Qed.
+
+Lemma trueinv_none: ~ true_inv None.
+Proof. intro. assumption. Qed.
+
+(* The "next invariant" property is true if the computation always eventually
+   reaches a "next" invariant, and in a state that satisfies that invariant.
+   (If the computation is already at an invariant, it is considered the "next"
+   invariant if parameter b=true; otherwise the computation must take at least
+   one step before it can satisfy the "next invariant" property.) *)
+Inductive nextinv PS p h d: bool -> exit -> store -> Prop :=
+| NIHere x s (TRU: true_inv (PS p x s)):
+    nextinv PS p h d true x s
+| NIStep (b:bool) s a
+         (NOI: (if b then PS p (Exit a) s else None) = None)
+         (STEP: forall sz q s1 x1
+                       (IL: p a = Some (sz,q)) (XS: exec_stmt h s q d s1 x1),
+                nextinv PS p h d true
+                        match x1 with None => Exit (a+sz) | Some x1 => x1 end s1):
+    nextinv PS p h d b (Exit a) s.
 
 (* Proving the "next invariant satisfied" property for all invariant points proves partial
    correctness of the program. *)
 Theorem prog_inv:
-  forall (PS: exit -> store -> nat -> option Prop) h p a0 s0 d n s' x'
+  forall h p a0 s0 d n PS s' x'
          (XP: exec_prog h p a0 s0 d n s' x')
-         (PRE: match PS (Exit a0) s0 O with Some P => P | None => False end)
+         (PRE: true_inv (PS p (Exit a0) s0))
          (INV: forall a1 s1 n1
                       (XP: exec_prog h p a0 s0 d n1 s1 (Exit a1))
-                      (PRE: match PS (Exit a1) s1 n1 with Some P => P | None => False end),
-               next_inv_sat PS false (Exit a1) h p s1 d n1 n s' x'),
-  match PS x' s' n with Some P => P | None => True end.
+                      (PRE: true_inv (PS p (Exit a1) s1)),
+               nextinv PS p h d false (Exit a1) s1),
+  trueif_inv (PS p x' s').
 Proof.
   intros.
-  assert (NIS: next_inv_sat PS (match PS x' s' n with Some _ => true | None => false end) x' h p s' d n n s' x').
-    pattern x' at -3, s' at -3, n at -3. eapply prog_inv_reachable.
+  assert (NI: nextinv PS p h d true x' s').
+    pattern x', s', n. eapply prog_inv_reachable.
       exact XP.
-      destruct (PS (Exit a0) s0 O) eqn:PS0.
-        apply NISHere. rewrite PS0. exact PRE.
-        exfalso. exact PRE.
-      intros. specialize (INV a1 s1 n1 XP0). destruct (PS (Exit a1) s1 n1) eqn:PS1.
+      apply NIHere. exact PRE.
+      intros. inversion PRE0; subst.
+        eapply INV in TRU.
+          inversion TRU; subst. eapply STEP. exact IL. exact XS.
+          exact XP0.
+        eapply STEP. exact IL. exact XS.
+  inversion NI; subst.
+    apply trueif_true_inv. exact TRU.
+    rewrite NOI. exact I.
+Qed.
 
-        inversion PRE0; subst. rewrite PS1 in TRU. specialize (INV TRU).
-        inversion INV; subst. eapply STEP. exact LT. exact IL. exact XS. exact XP'.
+(* Subroutine invariants can usually be defined in terms of an invariant-set
+   (which is a partial map from addresses and stores to invariants) and a
+   post-condition (a property of exits and stores).  The post-condition is
+   asserted to be satisfied when execution exits the subroutine either by
+   throwing an exception or reaching an address outside the subroutine. *)
+Definition invs PS Q (p:program) x (s:store) : option Prop :=
+  match x with
+  | Unfinished => Some True
+  | Exit a => match p a with None => Some (Q x s) | Some _ => PS a s end
+  | Throw _ => Some (Q x s)
+  end.
 
-        inversion PRE0; subst. eapply STEP. exact LT. exact IL. exact XS. exact XP'.
-  destruct (PS x' s' n) eqn:PS'.
-    inversion NIS. rewrite PS' in TRU. exact TRU.
-    exact I.
+(* The following lemmas apply-and-simplify the NIHere rule in tactics. *)
+Lemma nextinv_here:
+  forall P (PS: program -> exit -> store -> option Prop) p h d x s
+         (INV: PS p x s = Some P) (TRU: P),
+  nextinv PS p h d true x s.
+Proof. intros. apply NIHere. rewrite INV. exact TRU. Qed.
+
+Lemma nextinv_ret:
+  forall PS (Q: exit -> store -> Prop) p h d r s
+         (IL: p r = None) (POST: Q (Exit r) s),
+  nextinv (invs PS Q) p h d true (Exit r) s.
+Proof. intros. apply NIHere. unfold invs. rewrite IL. exact POST. Qed.
+
+Lemma nextinv_exn:
+  forall PS (Q: exit -> store -> Prop) p h d i s
+         (POST: Q (Throw i) s),
+  nextinv (invs PS Q) p h d true (Throw i) s.
+Proof. intros. apply NIHere. exact POST. Qed.
+
+(* To prove a subroutine invariant, it suffices to prove that
+   (1) the invariant-set is satisfied on entry (precondition), and
+   (2) starting at any invariant point in the subroutine always yields a trace
+       that reaches another invariant point and satisfies its invariant. *)
+Theorem prove_invs:
+  forall h a0 s0 d PS Q p x s' n
+    (XP0: exec_prog h p a0 s0 d n s' x)
+    (PRE: true_inv (invs PS Q p (Exit a0) s0))
+    (CASES: forall a1 s1 n1
+      (XP: exec_prog h p a0 s0 d n1 s1 (Exit a1))
+      (PRE: true_inv (if p a1 then PS a1 s1 else None)),
+      nextinv (invs PS Q) p h d false (Exit a1) s1),
+  trueif_inv (invs PS Q p x s').
+Proof.
+  intros. eapply prog_inv. exact XP0. exact PRE.
+  intros. unfold invs in PRE0. destruct (p a1) eqn:PA1.
+    eapply CASES. exact XP. rewrite PA1. exact PRE0.
+    apply NIStep. reflexivity. intros. rewrite PA1 in IL. discriminate IL.
 Qed.
 
 End InvariantProofs.
+
+(* Tactic "shelve_cases w PRE" divides the inductive case of prove_invs into subgoals,
+   one for each invariant point defined by precondition PRE, and shelves them in
+   ascending order by address.  Shelved goals can then be unshelved by the user using
+   the "Unshelve" Coq vernacular command.  Argument w should be the max bitwidth of
+   addresses to consider (e.g., 32 on 32-bit ISAs). *)
+
+Tactic Notation "simpl_trueif" "in" hyp(H) :=
+  first [ simple apply trueif_none in H; clear H
+        | apply trueif_some in H ].
+
+Tactic Notation "simpl_trueinv" "in" hyp(H) :=
+  first [ simple apply trueinv_none in H; exfalso; exact H
+        | apply trueinv_some in H ].
+
+Ltac shelve_case H :=
+  tryif (simple apply trueinv_none in H) then (exfalso; exact H)
+  else tryif (apply trueinv_some in H) then
+    (repeat match goal with [ H: true_inv _ |- _ ] => simpl_trueinv in H
+                          | [ H: trueif_inv _ |- _ ] => simpl_trueif in H
+            end;
+     shelve)
+  else lazymatch type of H with
+  | true_inv (if _ ?a then _ else _) =>
+      fail "unable to simplify" H "to an invariant for address" a
+  | _ => fail "unable to simplify" H "to an invariant"
+  end.
+
+Ltac shelve_cases_loop H a :=
+  let g := numgoals in (
+    do g (
+      (only 1: (case a as [a|a|]; [| |shelve_case H]));
+      (only 2-2097152: cycle g);
+      revgoals; cycle g; revgoals;
+      cycle 1
+    );
+    cycle g
+  );
+  try (simple apply trueinv_none in H; exfalso; exact H).
+
+Tactic Notation "shelve_cases" int_or_var(i) hyp(H) :=
+  lazymatch type of H with true_inv (if ?p ?a then _ else None) =>
+    is_var a; case a as [|a]; [ shelve_case H | do i shelve_cases_loop H a ];
+    fail "bit width" i "is insufficient to explore the invariant space"
+  | _ => fail "hypothesis" H "is not a precondition of the form"
+              "(true_inv (if [program] [addr] then [invariant-set] else None))"
+  end.
+
+(* Tactic "focus_addr n" isolates the goal for the invariant at address n
+   from a sea of goals unshelved from shelve_cases, re-shelving the rest. *)
+Tactic Notation "focus_addr" constr(n) :=
+  lazymatch goal with |- nextinv _ _ _ _ _ (Exit n) _ => idtac
+                    | _ => shelve end.
+
 
 
 Section FrameTheorems.

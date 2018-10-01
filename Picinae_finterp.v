@@ -415,12 +415,16 @@ Declare Reduction simpl_exp :=
 Ltac simpl_exp :=
   cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
                              utowidth utobit uget of_uvalue uvalue_of ];
-  repeat simpl (bits_of_mem _).
+  repeat match goal with |- context [ bits_of_mem ?w ] =>
+    let b := eval compute in (bits_of_mem w) in change (bits_of_mem w) with b
+  end.
 
 Tactic Notation "simpl_exp" "in" hyp(H) :=
   cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
                              utowidth utobit uget of_uvalue uvalue_of ] in H;
-  repeat simpl (bits_of_mem _) in H.
+  repeat match type of H with context [ bits_of_mem ?w ] =>
+    let b := eval compute in (bits_of_mem w) in change (bits_of_mem w) with b in H
+  end.
 
 
 (* Statement simplification most often gets stuck at variable-reads, since the full content of the
@@ -578,7 +582,7 @@ Tactic Notation "simpl_stmt" "using" tactic(tac) "in" hyp(H) :=
    of the exec_stmt with any known variable values from the context, then applies the functional
    interpreter, and then unfolds a few basic constants. *)
 
-Tactic Notation "bsimpl" "using" tactic(tac) "in" hyp(H) :=
+Tactic Notation "psimpl" "using" tactic(tac) "in" hyp(H) :=
   stock_store in H; simpl_stmt using tac in H; unfold tobit in H.
 
 End PICINAE_FINTERP.
