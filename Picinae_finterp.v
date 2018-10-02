@@ -415,12 +415,16 @@ Declare Reduction simpl_exp :=
 Ltac simpl_exp :=
   cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
                              utowidth utobit uget of_uvalue uvalue_of ];
-  repeat simpl (bits_of_mem _).
+  repeat match goal with |- context [ bits_of_mem ?w ] =>
+    let b := eval compute in (bits_of_mem w) in change (bits_of_mem w) with b
+  end.
 
 Tactic Notation "simpl_exp" "in" hyp(H) :=
   cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
                              utowidth utobit uget of_uvalue uvalue_of ] in H;
-  repeat simpl (bits_of_mem _) in H.
+  repeat match type of H with context [ bits_of_mem ?w ] =>
+    let b := eval compute in (bits_of_mem w) in change (bits_of_mem w) with b in H
+  end.
 
 
 (* Statement simplification most often gets stuck at variable-reads, since the full content of the
@@ -538,29 +542,47 @@ Ltac destruct_memacc H :=
 Ltac finish_simpl_stmt tac H :=
   simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H; tac H; destruct_memacc H.
 
+Ltac simpl_stmt_loop tac H F :=
+  lazymatch type of H with exec_stmt _ _ ?q _ _ _ => lazymatch q with
+  | Seq (Move _ _) _ =>
+    apply reduce_seq_move in H; [|exact F]; finish_simpl_stmt tac H; simpl_stmt_loop tac H F
+  | Nop => apply reduce_nop in H; [|exact F]; unfold cast in H
+  | Move _ _ => apply reduce_move in H; [|exact F]; finish_simpl_stmt tac H
+  | Jmp _ => apply reduce_jmp in H; [|exact F]; finish_simpl_stmt tac H
+  | If _ _ _ => apply reduce_if in H; [|exact F];
+      simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
+      lazymatch type of H with
+      | exists _, _ => let c := fresh "c" in
+          destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
+      | _ => tac H; destruct_memacc H
+      end
+  | _ => first
+  [ apply reduce_seq_move in H; [|exact F]; finish_simpl_stmt tac H; simpl_stmt_loop tac H F
+  | apply reduce_nop in H; [|exact F]; unfold cast in H
+  | apply reduce_move in H; [|exact F]; finish_simpl_stmt tac H
+  | apply reduce_jmp in H; [|exact F]; finish_simpl_stmt tac H
+  | apply reduce_if in H; [|exact F];
+      simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
+      lazymatch type of H with
+      | exists _, _ => let c := fresh "c" in
+          destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
+      | _ => tac H; destruct_memacc H
+      end ]
+  end end.
+
 Tactic Notation "simpl_stmt" "using" tactic(tac) "in" hyp(H) :=
-  lazymatch type of H with exec_stmt _ _ _ _ _ ?X =>
-    let K := fresh "FIN" in enough (K: X <> Some Unfinished); [
-    repeat (apply reduce_seq_move in H; [|exact K]; finish_simpl_stmt tac H);
-    first [ apply reduce_nop in H; [|exact K]; unfold cast in H
-          | apply reduce_move in H; [|exact K]; finish_simpl_stmt tac H
-          | apply reduce_jmp in H; [|exact K]; finish_simpl_stmt tac H
-          | apply reduce_if in H; [|exact K];
-            simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
-            match type of H with
-            | exists _, _ => let c := fresh "c" in
-                             destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
-            | _ => tac H; destruct_memacc H
-            end ];
-    clear K |]
+  lazymatch type of H with exec_stmt _ _ _ _ _ ?x =>
+    let F := fresh "FIN" in enough (F: x <> Some Unfinished);
+    [ simpl_stmt_loop tac H F; clear F |]
   | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
   end.
+
 
 (* Combining all of the above, our most typical simplification regimen first stocks the store
    of the exec_stmt with any known variable values from the context, then applies the functional
    interpreter, and then unfolds a few basic constants. *)
 
-Tactic Notation "bsimpl" "using" tactic(tac) "in" hyp(H) :=
+Tactic Notation "psimpl" "using" tactic(tac) "in" hyp(H) :=
   stock_store in H; simpl_stmt using tac in H; unfold tobit in H.
 
 End PICINAE_FINTERP.

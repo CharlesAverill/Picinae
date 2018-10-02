@@ -289,6 +289,17 @@ Proof.
   apply N.shiftr_eq_0. apply N.log2_lt_pow2. reflexivity. assumption.
 Qed.
 
+(* These nested-ifs arise from conditional branches on status flag expressions. *)
+Remark if_if:
+  forall (b:bool) (q1 q2:stmt),
+  (if (if b then 1 else N0) then q1 else q2) = (if b then q2 else q1).
+Proof. intros. destruct b; reflexivity. Qed.
+
+Remark if_not_if:
+  forall (b:bool) (q1 q2:stmt),
+  (if (N.lnot (if b then 1 else 0) 1) then q1 else q2) = (if b then q1 else q2).
+Proof. intros. destruct b; reflexivity. Qed.
+
 
 Create HintDb mod_pow2 discriminated.
 Global Hint Rewrite N.sub_0_r : mod_pow2.
@@ -320,6 +331,8 @@ Global Hint Rewrite mod_add_mul_ll using discriminate 1 : mod_pow2.
 Global Hint Rewrite mod_add_mul_rr using discriminate 1 : mod_pow2.
 Global Hint Rewrite mod_add_mul_rl using discriminate 1 : mod_pow2.
 Global Hint Rewrite mem_small using assumption : mod_pow2.
+Global Hint Rewrite if_if : mod_pow2.
+Global Hint Rewrite if_not_if : mod_pow2.
 (*
 Global Hint Rewrite memlo using solve [ discriminate 1 | assumption ] : mod_pow2.
 Global Hint Rewrite shiftr_low_pow2 using solve_lt : mod_pow2.
@@ -330,16 +343,18 @@ Global Hint Rewrite N.mod_small using solve_lt : mod_pow2.
 (* When reducing modulo operations, try auto-solving inequalities of the form x < 2^w. *)
 
 Ltac solve_lt_prim :=
-  reflexivity +
+  reflexivity (* solves "<" relations on closed terms *) +
   eassumption +
-  (apply N.mod_upper_bound; discriminate 1) +
-  lazymatch goal with [ M: models x86typctx ?s, R: ?s ?r = Some (VaN ?x ?w) |- ?x < _ ] => apply (x86_regsize M R)
-                    | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM end +
-  (apply getmem_bound; assumption) +
-  (apply lxor_bound; solve_lt) +
-  (apply land_bound; solve_lt) +
-  (apply lor_bound; solve_lt) +
-  (apply lnot_bound; solve_lt) +
+  match goal with
+  | [ |- _ mod _ < _ ] => apply N.mod_upper_bound; discriminate 1
+  | [ M: models x86typctx ?s, R: ?s _ = Some (VaN ?x _) |- ?x < _ ] => apply (x86_regsize M R)
+  | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM
+  | [ |- getmem _ _ _ _ < 2^_ ] => apply getmem_bound; assumption
+  | [ |- N.lxor _ _ < 2^_ ] => apply lxor_bound; solve_lt
+  | [ |- N.land _ _ < 2^_ ] => apply land_bound; solve_lt
+  | [ |- N.lor _ _ < 2^_ ] => apply lor_bound; solve_lt
+  | [ |- N.lnot _ _ < 2^_ ] => apply lnot_bound; solve_lt
+  end +
   (eapply N.le_lt_trans; [ apply N.le_sub_l | solve_lt ])
 with solve_lt :=
   solve_lt_prim +
@@ -356,20 +371,20 @@ Tactic Notation "simpl_x86" "in" hyp(H) :=
   autorewrite with mod_pow2 in H;
   repeat (match type of H with
   | context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a) in H; [| assumption | discriminate 1 ]
-  | context [ N.shiftr ?X ?Y ] => rewrite (shiftr_low_pow2 X Y) in H by solve_lt
-  | context [ ?X mod ?M ] => rewrite (N.mod_small X M) in H by solve_lt
-  | context [ N.land ?X ?Y ] => (erewrite (land_mod_r X Y) in H +
-                                 erewrite (land_mod_l X Y) in H); [| reflexivity | simpl;reflexivity ]
+  | context [ N.shiftr ?x ?y ] => rewrite (shiftr_low_pow2 x y) in H by solve_lt
+  | context [ ?x mod ?m ] => rewrite (N.mod_small x m) in H by solve_lt
+  | context [ N.land ?x ?y ] => (erewrite (land_mod_r x y) in H +
+                                 erewrite (land_mod_l x y) in H); [| reflexivity | simpl;reflexivity ]
   end; autorewrite with mod_pow2 in H).
 
 Ltac simpl_x86 :=
   autorewrite with mod_pow2;
   repeat (match goal with
   | |- context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a); [| assumption | discriminate 1 ]
-  | |- context [ N.shiftr ?X ?Y ] => rewrite (shiftr_low_pow2 X Y) by solve_lt
-  | |- context [ ?X mod ?M ] => rewrite (N.mod_small X M) by solve_lt
-  | |- context [ N.land ?X ?Y ] => (erewrite (land_mod_r X Y) +
-                                    erewrite (land_mod_l X Y)); [| reflexivity | simpl;reflexivity ]
+  | |- context [ N.shiftr ?x ?y ] => rewrite (shiftr_low_pow2 x y) by solve_lt
+  | |- context [ ?x mod ?m ] => rewrite (N.mod_small x m) by solve_lt
+  | |- context [ N.land ?x ?y ] => (erewrite (land_mod_r x y) +
+                                    erewrite (land_mod_l x y)); [| reflexivity | simpl;reflexivity ]
   end; autorewrite with mod_pow2).
 
 
@@ -385,85 +400,12 @@ Ltac simpl_x86 :=
    we must attach one of these invariants (the post-condition) to the return address of the
    subroutine.  This is a somewhat delicate process, since unlike most other code addresses,
    the exact value of the return address is defined by the caller.  We therefore adopt the
-   following conventions:  Assume that an x86 subroutine begins with a return address located
-   at a particular memory address (determined by the subroutine's calling convention).  The
-   subroutine "exits" when control flows to that address.  As a precondition of the subroutine,
-   we assume that the subroutine program p does not assign an IL block to the return address
-   (i.e., p retaddr = None).  If this assumption is violated, it means that the caller is
-   part of the callee (i.e., the subroutine recursively called itself), which is not
-   really the end of the subroutine's execution. *)
+   convention that subroutines "exit" whenever control flows to an address for which no IL
+   code is defined at that address.  This allows proving correctness of a subroutine by
+   lifting only the subroutine to IL code (or using the pmono theorems from Picinae_theory
+   to isolate only the subroutine from a larger program), leaving the non-subroutine code
+   undefined (None). *)
 
-
-(* A subroutine invariant takes a program p, a set of invariants inv_set assigned to various
-   fixed code addresses, a post-condition (postcond), and a return address retaddr (which is
-   usually a symbolic Coq expression that extracts the appropriate value from memory), and
-   uses those to map each exit condition, store, and step count to a proposition.
-   Implementation note: Program p is not actually used in the definition, but including it in
-   the parameters helps Coq more easily unify some of the goals in the automated machinery
-   that follows. *)
-
-Definition x86_subroutine_inv (_:program) inv_set postcond retaddr x (s:store) (n:nat) : option Prop :=
-  match x with
-  | Exit a => if N.eq_dec a retaddr then Some (postcond a x s n) else inv_set a x s n
-  | _ => Some True
-  end.
-
-(* Since we are proving partial correctness, we know that the computation doesn't get aborted
-   by a computation limit in the middle (since that violates the termination assumption). *)
-Remark not_unfinished:
-  forall x (a':addr) h p a s m n s' x',
-  match x with
-  | Some (Exit a2) => exec_prog h p a2 s m n s' x'
-  | None => exec_prog h p a s m n s' x'
-  | Some x2 => Exit a' = x2
-  end -> x <> Some Unfinished.
-Proof. intros. destruct x as [e|]; [destruct e|]; discriminate. Qed.
-
-(* If we reach the return address during symbolic interpretation, stop and request that the
-   user prove the post-condition using the current state. *)
-Remark x86_returning:
-  forall ra s n inv_set (postcond: addr -> exit -> store -> nat -> Prop) h p m n' s' x',
-  postcond ra (Exit ra) s n ->
-  next_inv_sat (x86_subroutine_inv p inv_set postcond ra)
-               match x86_subroutine_inv p inv_set postcond ra (Exit ra) s n with
-               | Some _ => true | None => false end
-               (Exit ra) h p s m n n' s' x'.
-Proof.
-  intros. unfold x86_subroutine_inv. destruct (N.eq_dec ra ra) eqn:H'.
-    apply NISHere. rewrite H'. assumption.
-    exfalso. apply n0. reflexivity.
-Qed.
-
-(* If we reach some other address to which an invariant has been assigned, stop and request
-   that the user prove the invariant using the current state. *)
-Remark x86_not_returning_invhere (P: Prop):
-  forall p inv_set postcond ra a s n
-         (RET: p ra = match p a with Some _ => None | None => Some (0,Nop) end)
-         (IS: inv_set a (Exit a) s n = Some P),
-  P ->
-  match x86_subroutine_inv p inv_set postcond ra (Exit a) s n with Some P => P | None => False end.
-Proof.
-  intros. unfold x86_subroutine_inv. destruct (N.eq_dec a ra) as [EQ|NE].
-    subst a. destruct (p ra); discriminate RET.
-    rewrite IS. assumption.
-Qed.
-
-(* If we're at a code address to which no invariant has been assigned, step the
-   computation to the next instruction. *)
-Remark x86_not_returning_invstep (b:bool):
-  forall OP inv_set postcond a ra s n h p m n' s' x'
-         (RET: p ra = match p a with Some _ => None | None => Some (0,Nop) end)
-         (IS: match inv_set a (Exit a) s n with Some _ => true | None => false end = b),
-  next_inv_sat OP b (Exit a) h p s m n n' s' x' ->
-  next_inv_sat OP match x86_subroutine_inv p inv_set postcond ra (Exit a) s n with
-                  | Some _ => true | None => false end
-                  (Exit a) h p s m n n' s' x'.
-Proof.
-  intros.
-  unfold x86_subroutine_inv. destruct (N.eq_dec a _) as [EQ|NE].
-    rewrite <- EQ in RET. destruct (p a); discriminate RET.
-    rewrite IS. exact H.
-Qed.
 
 (* Some versions of Coq check injection-heavy proofs very slowly (at Qed).  This slow-down can
    be avoided by sequestering prevalent injections into lemmas, as we do here. *)
@@ -479,29 +421,31 @@ Ltac simpl_memaccs H :=
                | rewrite memacc_write_frame in H by discriminate 1 ].
 
 Tactic Notation "x86_simpl_stmt" "in" hyp(H) := simpl_stmt using simpl_memaccs in H.
-Tactic Notation "x86_bsimpl" "in" hyp(H) := bsimpl using simpl_memaccs in H.
+Tactic Notation "x86_psimpl" "in" hyp(H) := psimpl using simpl_memaccs in H.
 
 (* Values of IL temp variables are ignored by the x86 interpreter once the IL block that
    generated them completes.  We can therefore generalize them away at IL block boundaries
    to simplify the expression. *)
 Ltac generalize_temps :=
-  repeat match goal with |- context c [ update ?S (V_TEMP ?N) (Some ?U) ] => lazymatch goal with |- ?G =>
-    let u := fresh "tmp" in
-      set (u:=Some U) in |- * at 0;
-      let c' := context c[update S (V_TEMP N) u] in
-        change G with c'; generalize u; clear u; intro
+  repeat match goal with |- context C [ update ?s (V_TEMP ?n) (Some ?u) ] => lazymatch goal with |- ?G =>
+    let t := fresh "tmp" in
+      set (t := Some u) in |- * at 0;
+      let C' := context C[update s (V_TEMP n) t] in
+        change G with C'; generalize t; clear t; intro
   end end.
 
 (* If asked to step the computation when we're already at an invariant point, just
    make the proof goal be the invariant. *)
-Ltac x86_invhere := first
-  [ eapply NISHere, x86_not_returning_invhere; [assumption|reflexivity|simpl_stores]
-  | apply x86_returning ]; simpl_x86.
+Ltac x86_invhere :=
+  first [ eapply nextinv_here; [reflexivity|]
+        | apply nextinv_ret; [ first [assumption|reflexivity] |]
+        | apply nextinv_exn ];
+  simpl_stores; simpl_x86.
 
 (* Symbolically evaluate an x86 machine instruction for one step, and simplify the resulting
    Coq expressions. *)
 Ltac x86_step_and_simplify XS XP' :=
-  (x86_bsimpl in XS; [|exact XP']);
+  (x86_psimpl in XS; [|exact XP']);
   revert XS; generalize_temps; intro XS;
   simpl_x86 in XS.
 
@@ -510,31 +454,23 @@ Ltac x86_step_and_simplify XS XP' :=
    but often it is wiser to pause and do some manual simplification of the state at
    various points.) *)
 Ltac x86_invseek :=
-  apply NISStep;
-  let sz := fresh "sz" in let q := fresh "Q" in let s := fresh "s" in let x := fresh "x" in
-  let LT := fresh "LT" in let IL := fresh "IL" in let XS := fresh "XS" in let XP' := fresh "XP'" in
-  intros sz q s x LT IL XS XP'; clear LT;
-  apply not_unfinished in XP';
+  apply NIStep; [reflexivity|];
+  let sz := fresh "sz" in let q := fresh "q" in let s := fresh "s" in let x := fresh "x" in
+  let IL := fresh "IL" in let XS := fresh "XS" in
+  intros sz q s x IL XS;
   apply inj_prog_stmt in IL; destruct IL; subst sz q;
   lazymatch goal with |- context [ Exit (?x + ?y) ] => simpl (x+y) end;
-  x86_step_and_simplify XS XP';
+  let FIN := fresh "FIN" in destruct (fin_dec x) as [FIN|FIN];
+  [ rewrite FIN; apply NIHere; exact I |];
+  x86_step_and_simplify XS FIN;
   repeat lazymatch goal with [ ACC: MemAcc _ _ _ _ _ |- _ ] => simpl_x86 ACC; revert ACC end; intros;
   repeat lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ _ =>
-    let BC := fresh "BC" in
-    lazymatch c with (if ?c2 then _ else _) => destruct c2 eqn:BC
-                   | N.lnot (if ?c2 then _ else _) 1 => destruct c2 eqn:BC
-                   | _ => destruct c eqn:BC end;
-    simpl_x86 in BC;
-    x86_step_and_simplify XS XP'
+    let BC := fresh "BC" in (destruct c eqn:BC; simpl_x86 in BC);
+    x86_step_and_simplify XS FIN
   end;
-  clear XP'; repeat match goal with [ u:value |- _ ] => clear u
+  clear FIN; repeat match goal with [ u:value |- _ ] => clear u
                                   | [ u:option value |- _ ] => clear u end;
-  lazymatch type of XS with s=_ /\ x=_ =>
-    destruct XS; subst x;
-    first [ apply (x86_not_returning_invstep false); [assumption|reflexivity|subst s]
-          | apply (x86_not_returning_invstep true); [assumption|reflexivity|subst s]
-          | apply x86_returning; subst s ]
-  end.
+  lazymatch type of XS with s=_ /\ x=_ => destruct XS; subst s x end.
 
 (* Clear any stale memory-access hypotheses (arising from previous computation steps)
    and either step to the next machine instruction (if we're not at an invariant) or
@@ -554,18 +490,18 @@ Notation "Ⓓ u" := (Some (VaN u 32)) (at level 20). (* dword value *)
 Notation "Ⓠ u" := (Some (VaN u 64)) (at level 20). (* quad word value *)
 Notation "Ⓧ u" := (Some (VaN u 128)) (at level 20). (* xmm value *)
 Notation "Ⓨ u" := (Some (VaN u 256)) (at level 20). (* ymm value *)
-Notation "m Ⓑ[ a ]" := (getmem LittleE 1 m a) (at level 10). (* read byte from memory *)
-Notation "m Ⓦ[ a ]" := (getmem LittleE 2 m a) (at level 10). (* read word from memory *)
-Notation "m Ⓓ[ a ]" := (getmem LittleE 4 m a) (at level 10). (* read dword from memory *)
-Notation "m Ⓠ[ a ]" := (getmem LittleE 8 m a) (at level 10). (* read quad word from memory *)
-Notation "m Ⓧ[ a ]" := (getmem LittleE 16 m a) (at level 10). (* read xmm from memory *)
-Notation "m Ⓨ[ a ]" := (getmem LittleE 32 m a) (at level 10). (* read ymm from memory *)
-Notation "m [Ⓑ a := v ]" := (setmem LittleE 1 m a v) (at level 50, left associativity). (* write byte to memory *)
-Notation "m [Ⓦ a := v ]" := (setmem LittleE 2 m a v) (at level 50, left associativity). (* write word to memory *)
-Notation "m [Ⓓ a := v ]" := (setmem LittleE 4 m a v) (at level 50, left associativity). (* write dword to memory *)
-Notation "m [Ⓠ a := v ]" := (setmem LittleE 8 m a v) (at level 50, left associativity). (* write quad word to memory *)
-Notation "m [Ⓧ a := v ]" := (setmem LittleE 16 m a v) (at level 50, left associativity). (* write xmm to memory *)
-Notation "m [Ⓨ a := v ]" := (setmem LittleE 32 m a v) (at level 50, left associativity). (* write ymm to memory *)
+Notation "m Ⓑ[ a  ]" := (getmem LittleE 1 m a) (at level 10). (* read byte from memory *)
+Notation "m Ⓦ[ a  ]" := (getmem LittleE 2 m a) (at level 10). (* read word from memory *)
+Notation "m Ⓓ[ a  ]" := (getmem LittleE 4 m a) (at level 10). (* read dword from memory *)
+Notation "m Ⓠ[ a  ]" := (getmem LittleE 8 m a) (at level 10). (* read quad word from memory *)
+Notation "m Ⓧ[ a  ]" := (getmem LittleE 16 m a) (at level 10). (* read xmm from memory *)
+Notation "m Ⓨ[ a  ]" := (getmem LittleE 32 m a) (at level 10). (* read ymm from memory *)
+Notation "m [Ⓑ a := v  ]" := (setmem LittleE 1 m a v) (at level 50, left associativity). (* write byte to memory *)
+Notation "m [Ⓦ a := v  ]" := (setmem LittleE 2 m a v) (at level 50, left associativity). (* write word to memory *)
+Notation "m [Ⓓ a := v  ]" := (setmem LittleE 4 m a v) (at level 50, left associativity). (* write dword to memory *)
+Notation "m [Ⓠ a := v  ]" := (setmem LittleE 8 m a v) (at level 50, left associativity). (* write quad word to memory *)
+Notation "m [Ⓧ a := v  ]" := (setmem LittleE 16 m a v) (at level 50, left associativity). (* write xmm to memory *)
+Notation "m [Ⓨ a := v  ]" := (setmem LittleE 32 m a v) (at level 50, left associativity). (* write ymm to memory *)
 Notation "x ⊕ y" := ((x+y) mod 2^32) (at level 50, left associativity). (* modular addition *)
 Notation "x ⊖ y" := ((x-y) mod 2^32) (at level 50, left associativity). (* modular subtraction *)
 Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* modular multiplication *)
