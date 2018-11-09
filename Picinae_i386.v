@@ -444,8 +444,8 @@ Ltac x86_invhere :=
 
 (* Symbolically evaluate an x86 machine instruction for one step, and simplify the resulting
    Coq expressions. *)
-Ltac x86_step_and_simplify XS XP' :=
-  (x86_psimpl in XS; [|exact XP']);
+Ltac x86_step_and_simplify XS :=
+  x86_psimpl in XS;
   revert XS; generalize_temps; intro XS;
   simpl_x86 in XS.
 
@@ -460,16 +460,14 @@ Ltac x86_invseek :=
   intros sz q s x IL XS;
   apply inj_prog_stmt in IL; destruct IL; subst sz q;
   lazymatch goal with |- context [ Exit (?x + ?y) ] => simpl (x+y) end;
-  let FIN := fresh "FIN" in destruct (fin_dec x) as [FIN|FIN];
-  [ rewrite FIN; apply NIHere; exact I |];
-  x86_step_and_simplify XS FIN;
+  x86_step_and_simplify XS;
   repeat lazymatch goal with [ ACC: MemAcc _ _ _ _ _ |- _ ] => simpl_x86 ACC; revert ACC end; intros;
-  repeat lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ _ =>
+  repeat lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ =>
     let BC := fresh "BC" in (destruct c eqn:BC; simpl_x86 in BC);
-    x86_step_and_simplify XS FIN
+    x86_step_and_simplify XS
   end;
-  clear FIN; repeat match goal with [ u:value |- _ ] => clear u
-                                  | [ u:option value |- _ ] => clear u end;
+  repeat match goal with [ u:value |- _ ] => clear u
+                       | [ u:option value |- _ ] => clear u end;
   lazymatch type of XS with s=_ /\ x=_ => destruct XS; subst s x end.
 
 (* Clear any stale memory-access hypotheses (arising from previous computation steps)

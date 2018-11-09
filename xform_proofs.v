@@ -53,8 +53,8 @@ Fixpoint varmap_stmt f q :=
   | Move v e => Move (f v) (varmap_exp f e)
   | Jmp e => Jmp (varmap_exp f e)
   | Seq q1 q2 => Seq (varmap_stmt f q1) (varmap_stmt f q2)
-  | While e q1 => While (varmap_exp f e) (varmap_stmt f q1)
   | If e q1 q2 => If (varmap_exp f e) (varmap_stmt f q1) (varmap_stmt f q2)
+  | Rep e q1 => Rep (varmap_exp f e) (varmap_stmt f q1)
   end.
 
 Definition reg_realloc f (p: program) :=
@@ -138,36 +138,40 @@ Proof.
 Qed.
 
 Lemma reg_realloc_stmt:
-  forall f d h q s s' x (BI: bijective f) (PA: preserves_access f)
-         (XS: exec_stmt h (varmap_store f s) q d (varmap_store f s') x),
-  exec_stmt h s (varmap_stmt f q) d s' x.
+  forall f h q s s' x (BI: bijective f) (PA: preserves_access f)
+         (XS: exec_stmt h (varmap_store f s) q (varmap_store f s') x),
+  exec_stmt h s (varmap_stmt f q) s' x.
 Proof.
-  intros. revert q s s' x XS. induction d; intros.
-    inversion XS; subst. apply varmap_store_eq in H0. subst s'. apply XUnfinished. apply BI.
-    destruct q; inversion XS; subst.
-      apply varmap_store_eq in H0. subst s'. apply XNop. apply BI.
-      rewrite <- varmap_update in H3 by apply BI. apply varmap_store_eq in H3.
-        subst s'. apply XMove. apply reg_realloc_exp. apply BI. apply PA. assumption.
-        apply BI.
-      apply varmap_store_eq in H2.
-        subst s'. eapply XJmp. apply reg_realloc_exp. apply BI. apply PA. eassumption.
-        apply BI.
-      apply varmap_store_eq in H2. subst s'. apply XExn. apply BI.
-      apply XSeq1. fold varmap_stmt. eapply IHd. assumption.
-      destruct (varmap_store_inv f s2 BI) as [s2' H]. subst s2. eapply XSeq2; fold varmap_stmt.
-        apply IHd. exact XS1.
-        apply IHd. exact XS0.
-      apply XWhile. change (If _ _ _) with (varmap_stmt f (If e (Seq q (While e q)) Nop)). apply IHd, XS0.
-      eapply XIf.
-        apply reg_realloc_exp. apply BI. exact PA. exact E.
-        fold varmap_stmt. destruct c; apply IHd; assumption.
+  intros. revert s s' x XS. induction q using stmt_ind2; intros; inversion XS; subst.
+    apply varmap_store_eq in H. subst s'. apply XNop. apply BI.
+    rewrite <- varmap_update in H by apply BI. apply varmap_store_eq in H.
+      subst s'. apply XMove. apply reg_realloc_exp. apply BI. apply PA. assumption.
+      apply BI.
+    apply varmap_store_eq in H.
+      subst s'. eapply XJmp. apply reg_realloc_exp. apply BI. apply PA. eassumption.
+      apply BI.
+    apply varmap_store_eq in H. subst s'. apply XExn. apply BI.
+    apply XSeq1. fold varmap_stmt. eapply IHq1. assumption.
+    destruct (varmap_store_inv f s2 BI) as [s2' H]. subst s2. eapply XSeq2; fold varmap_stmt.
+      apply IHq1. exact XS1.
+      apply IHq2. exact XS0.
+    eapply XIf.
+      apply reg_realloc_exp. apply BI. exact PA. exact E.
+      fold varmap_stmt. destruct c; [ apply IHq2 | apply IHq1 ]; assumption.
+    simpl. eapply XRep.
+      apply reg_realloc_exp. apply BI. exact PA. exact E.
+      replace (N.iter n _ Nop) with (varmap_stmt f (N.iter n (Seq q) Nop)).
+        apply IHq2. exact XS0.
+        clear w E XS0. induction n using N.peano_ind.
+          reflexivity.
+          rewrite !Niter_succ. simpl. rewrite IHn. reflexivity.
 Qed.
 
 Theorem register_reallocation_correct:
-  forall f h p d n a s s' x
+  forall f h p n a s s' x
          (BI: bijective f) (PA: preserves_access f)
-         (XP: exec_prog h p a (varmap_store f s) d n (varmap_store f s') x),
-    exec_prog h (reg_realloc f p) a s d n s' x.
+         (XP: exec_prog h p a (varmap_store f s) n (varmap_store f s') x),
+    exec_prog h (reg_realloc f p) a s n s' x.
 Proof.
   intros. revert a s s' x XP. induction n; intros; inversion XP; subst.
     apply varmap_store_eq in H. subst s'. apply XDone. apply BI.

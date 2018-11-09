@@ -45,8 +45,8 @@ Qed.
 (* Example #2: Memory safety
    Strlen contains no memory-writes, and is therefore trivially memory-safe. *)
 Theorem strlen_preserves_memory:
-  forall s d n s' x,
-  exec_prog fh strlen_i386 0 s d n s' x -> s' V_MEM32 = s V_MEM32.
+  forall s n s' x,
+  exec_prog fh strlen_i386 0 s n s' x -> s' V_MEM32 = s V_MEM32.
 Proof.
   intros. eapply noassign_prog_same; [|eassumption].
   prove_noassign.
@@ -59,16 +59,16 @@ Qed.
    and it restores ESP on exit. *)
 
 Theorem strlen_preserves_ebx:
-  forall s d n s' x,
-  exec_prog fh strlen_i386 0 s d n s' x -> s' R_EBX = s R_EBX.
+  forall s n s' x,
+  exec_prog fh strlen_i386 0 s n s' x -> s' R_EBX = s R_EBX.
 Proof.
   intros. eapply noassign_prog_same; [|eassumption].
   prove_noassign.
 Qed.
 
 Theorem strlen_preserves_readable:
-  forall s d n s' x,
-  exec_prog fh strlen_i386 0 s d n s' x -> s' A_READ = s A_READ.
+  forall s n s' x,
+  exec_prog fh strlen_i386 0 s n s' x -> s' A_READ = s A_READ.
 Proof.
   intros. eapply noassign_prog_same; [|eassumption].
   prove_noassign.
@@ -93,10 +93,10 @@ Definition strlen_esp_invset esp :=
    the conclusion of the subroutine.  The "trueif_inv" function asserts that
    anywhere an invariant exists (e.g., at the post-condition), it is true. *)
 Theorem strlen_preserves_esp:
-  forall s esp mem d n s' x'
+  forall s esp mem n s' x'
          (ESP0: s R_ESP = Ⓓ esp) (MEM0: s V_MEM32 = Ⓜ mem)
          (RET: strlen_i386 (mem Ⓓ[esp]) = None)
-         (XP0: exec_prog fh strlen_i386 0 s d n s' x'),
+         (XP0: exec_prog fh strlen_i386 0 s n s' x'),
   trueif_inv (strlen_esp_invset esp strlen_i386 x' s').
 Proof.
   intros.
@@ -721,13 +721,13 @@ Qed.
    (ESPLO) Also, the input stack pointer must not be beyond user memory,
      since otherwise "restoring" it would incur an integer overflow. *)
 Theorem strlen_partial_correctness:
-  forall s esp mem d n s' x
+  forall s esp mem n s' x
          (HI0: ~ mem_readable s (2^32 - 1)%N)
          (MDL0: models x86typctx s)
          (ESPLO: esp + 8 <= 2^32)
          (ESP0: s R_ESP = Ⓓ esp) (MEM0: s V_MEM32 = Ⓜ mem)
          (RET: strlen_i386 (mem Ⓓ[esp]) = None)
-         (XP0: exec_prog fh strlen_i386 0 s d n s' x),
+         (XP0: exec_prog fh strlen_i386 0 s n s' x),
   trueif_inv (strlen_invset mem esp strlen_i386 x s').
 Proof.
   intros.
@@ -748,7 +748,7 @@ Proof.
     unfold mem_readable. intro H. destruct H as [r [H1 H2]]. apply HI0.
     exists r. split; [|exact H2].
     erewrite <- strlen_preserves_readable; eassumption.
-  assert (ESP := strlen_preserves_esp _ _ _ _ _ _ (Exit a1) ESP0 MEM0 RET XP).
+  assert (ESP := strlen_preserves_esp _ _ _ _ _ (Exit a1) ESP0 MEM0 RET XP).
   clear s HI0 MDL0 MEM0 ESP0 XP XP0.
 
   (* Break the proof into cases, one for each invariant-point. *)

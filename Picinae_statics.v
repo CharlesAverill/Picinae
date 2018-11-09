@@ -310,13 +310,13 @@ Inductive typof_stmt (c0 c:typctx): stmt -> typctx -> Prop :=
 | TSeq q1 q2 c1 c2 c' (SS: c2 ⊆ c1)
        (TS1: typof_stmt c0 c q1 c1) (TS2: typof_stmt c0 c2 q2 c'):
     typof_stmt c0 c (Seq q1 q2) c'
-| TWhile e q c' (SS: c ⊆ c')
-    (TE: typof_exp c e (NumT 1)) (TS: typof_stmt c0 c q c'):
-    typof_stmt c0 c (While e q) c
 | TIf e q1 q2 c1 c2 c' (SS1: c' ⊆ c1) (SS2: c' ⊆ c2)
       (TE: typof_exp c e (NumT 1))
       (TS1: typof_stmt c0 c q1 c1) (TS2: typof_stmt c0 c q2 c2):
-    typof_stmt c0 c (If e q1 q2) c'.
+    typof_stmt c0 c (If e q1 q2) c'
+| TRep e w q c' (SS: c ⊆ c')
+    (TE: typof_exp c e (NumT w)) (TS: typof_stmt c0 c q c'):
+    typof_stmt c0 c (Rep e q) c.
 
 (* A program is well-typed if all its statements are well-typed. *)
 Definition welltyped_prog (c0:typctx) (p:program) : Prop :=
@@ -422,12 +422,11 @@ Qed.
    and all computed values have proper types.
 
    This property is important in the context of formal validation of native
-   code programs because typically we want to prove that no stuck states are
-   reachable, and conclude from this that there are no access violations and
-   that the assumptions imply the assertions.  This is only possible if we can
-   rule out stuck states introduced by a failure of BAP to lift the native
-   code to valid IL code.  By type-checking the IL code prior to subsequent
-   analysis, we provably preclude all but the stuck states of interest. *)
+   code programs because proofs about such code typically rely upon the types
+   of values that each cpu state element can hold (e.g., 32-bit registers always
+   contain 32-bit numbers).  Proving type-safety allows us to verify these
+   basic properties within other proofs by first running the type-checker (as a
+   tactic), and then applying the type-soundness theorem(s). *)
 
 
 (* Binary operations on well-typed values yield well-typed values. *)
@@ -598,18 +597,6 @@ Proof.
   exists u. split; assumption.
 Qed.
 
-(* Well-typedness of while-loop is preserved by unrolling. *)
-Remark welltyped_while:
-  forall e q c0 c,
-  typof_stmt c0 c (While e q) c ->
-  typof_stmt c0 c (If e (Seq q (While e q)) Nop) c.
-Proof.
-  intros. inversion H; subst.
-  apply TIf with (c1:=c) (c2:=c); try reflexivity; try assumption.
-    apply TSeq with (c1:=c') (c2:=c); assumption.
-    apply TNop.
-Qed.
-
 (* Every result of evaluating a well-typed expression is a well-typed value. *)
 Lemma preservation_eval_exp:
   forall {h s e c t u}
@@ -735,10 +722,19 @@ Proof.
   eexists. apply EConcat; eassumption.
 Qed.
 
+Remark welltyped_rep:
+  forall e c0 c q n (TS: typof_stmt c0 c (Rep e q) c),
+  typof_stmt c0 c (N.iter n (Seq q) Nop) c.
+Proof.
+  intros. inversion TS; subst. apply Niter_invariant.
+    apply TNop.
+    intros. eapply TSeq; eassumption.
+Qed.
+
 (* Statement execution preserves the modeling relation. *)
 Lemma preservation_exec_stmt:
-  forall {h d s q c0 c c' s'}
-         (MCS: models c s) (T: typof_stmt c0 c q c') (XS: exec_stmt h s q d s' None),
+  forall {h s q c0 c c' s'}
+         (MCS: models c s) (T: typof_stmt c0 c q c') (XS: exec_stmt h s q s' None),
   models c' s'.
 Proof.
   intros. revert c c' MCS T. dependent induction XS; intros; inversion T; subst;
@@ -755,11 +751,6 @@ Proof.
       assumption.
     assumption.
 
-  apply IHXS with (c:=c') (c':=c').
-    reflexivity.
-    assumption.
-    apply welltyped_while. assumption.
-
   destruct c.
     apply models_subset with (c:=c3).
       apply IHXS with (c:=c1). reflexivity. assumption. assumption.
@@ -767,12 +758,18 @@ Proof.
     apply models_subset with (c:=c2).
       apply IHXS with (c:=c1). reflexivity. assumption. assumption.
       assumption.
+
+  apply IHXS with (c:=c') (c':=c').
+    reflexivity.
+    assumption.
+
+  eapply welltyped_rep; eassumption.
 Qed.
 
 (* Execution also preserves modeling the frame context c0. *)
 Lemma pres_frame_exec_stmt:
-  forall {h d s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
-         (T: typof_stmt c0 c q c') (XS: exec_stmt h s q d s' x),
+  forall {h s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
+         (T: typof_stmt c0 c q c') (XS: exec_stmt h s q s' x),
   models c0 s'.
 Proof.
   intros. revert c c' MCS T. dependent induction XS; intros;
@@ -794,74 +791,71 @@ Proof.
       assumption.
     assumption.
 
-  apply IHXS with (c:=c') (c':=c'); try assumption.
-  apply welltyped_while. assumption.
-
   destruct c.
     apply IHXS with (c:=c1) (c':=c3); assumption.
     apply IHXS with (c:=c1) (c':=c2); assumption.
+
+  apply IHXS with (c:=c') (c':=c'); try assumption.
+  eapply welltyped_rep; eassumption.
 Qed.
 
 (* Well-typed statements never get "stuck" except for memory access violations.
-   They either hit the recursion limit, exit, or run to completion. *)
+   They either exit or run to completion. *)
 Lemma progress_exec_stmt:
-  forall {s q c0 c c'} d
+  forall {s q c0 c c'}
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c s) (T: typof_stmt c0 c q c'),
-  exists s' x, exec_stmt htotal s q d s' x.
+  exists s' x, exec_stmt htotal s q s' x.
 Proof.
-  intros. revert s q c c' MCS T. induction d; intros.
-    exists s,(Some Unfinished). apply XUnfinished.
+  intros. revert c c' s T MCS. induction q using stmt_ind2; intros;
+  try (inversion T; subst).
 
-    destruct q; try (inversion T; subst).
+  (* Nop *)
+  exists s,None. apply XNop.
 
-      (* Nop *)
-      exists s,None. apply XNop.
+  (* Move *)
+  destruct (progress_eval_exp RW MCS TE) as [u E].
+  exists (s[v:=Some u]),None. apply XMove. assumption.
 
-      (* Move *)
-      assert (E:=progress_eval_exp RW MCS TE). destruct E as [u E].
-      exists (s[v:=Some u]),None. apply XMove. assumption.
+  (* Jmp *)
+  destruct (progress_eval_exp RW MCS TE) as [u E].
+  assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [a' w'|]; subst.
+  exists s,(Some (Exit a')). apply XJmp with (w:=w). assumption.
 
-      (* Jmp *)
-      assert (E:=progress_eval_exp RW MCS TE). destruct E as [u E].
-      assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [a' w'|]; subst.
-      exists s,(Some (Exit a')). apply XJmp with (w:=w). assumption.
+  (* Exn *)
+  exists s,(Some (Raise i)). apply XExn.
 
-      (* Exn *)
-      exists s,(Some (Throw i)). apply XExn.
+  (* Seq *)
+  destruct (IHq1 _ _ _ TS1 MCS) as [s2 [x2 XS1]]. destruct x2.
+    exists s2,(Some e). apply XSeq1. exact XS1.
+    destruct (IHq2 _ _ s2 TS2) as [s' [x' XS2]].
+      eapply models_subset.
+        eapply preservation_exec_stmt; eassumption.
+        exact SS.
+      exists s',x'. eapply XSeq2; eassumption.
 
-      (* Seq *)
-      assert (XS1:=IHd s q1 c c1 MCS TS1). destruct XS1 as [s2 [x1 XS1]].
-      destruct x1 as [x1|].
+  (* If *)
+  destruct (progress_eval_exp RW MCS TE) as [u E].
+  assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [cnd w|]; subst.
+  destruct cnd as [|cnd].
+    destruct (IHq2 _ _ _ TS2 MCS) as [s'2 [x2 XS2]]. exists s'2,x2. apply XIf with (c:=0); assumption.
+    destruct (IHq1 _ _ _ TS1 MCS) as [s'1 [x1 XS1]]. exists s'1,x1. apply XIf with (c:=N.pos cnd); assumption.
 
-        destruct x1.
-          exists s2,(Some Unfinished). apply XSeq1. assumption.
-          exists s2,(Some (Exit a)). apply XSeq1. assumption.
-          exists s2,(Some (Throw i)). apply XSeq1. assumption.
-
-        assert (MCS2:=preservation_exec_stmt MCS TS1 XS1).
-        apply models_subset with (c':=c2) in MCS2; try assumption.
-        assert (XS2:=IHd s2 q2 c2 c' MCS2 TS2). destruct XS2 as [s' [x XS2]]. 
-        exists s',x. apply XSeq2 with (s2:=s2); assumption.
-
-      (* While *)
-      specialize IHd with (s:=s) (q:=If e (Seq q (While e q)) Nop) (c:=c') (c':=c').
-      apply welltyped_while in T.
-      destruct (IHd MCS T) as [s' [x XS]].
-      exists s',x. apply XWhile. assumption.
-
-      (* If *)
-      assert (E:=progress_eval_exp RW MCS TE). destruct E as [u E].
-      assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [cnd w|]; subst.
-      destruct cnd.
-        destruct (IHd s q2 c c2 MCS TS2) as [s'2 [x2 XS2]]. exists s'2,x2. apply XIf with (c:=0); assumption.
-        destruct (IHd s q1 c c1 MCS TS1) as [s'1 [x1 XS1]]. exists s'1,x1. apply XIf with (c:=N.pos p); assumption.
+  (* Rep *)
+  destruct (progress_eval_exp RW MCS TE) as [u E].
+  assert (TV:=preservation_eval_exp MCS TE E). inversion TV; subst.
+  destruct (IHq2 n c' c' s) as [s' [x XS]].
+    apply Niter_invariant.
+      apply TNop.
+      intros. eapply TSeq; eassumption.
+    exact MCS.
+    exists s',x. eapply XRep. exact E. assumption.
 Qed.
 
 (* Well-typed programs preserve the modeling relation at every execution step. *)
 Theorem preservation_exec_prog:
-  forall h p c s d n a s' x (MCS: models c s)
-         (WP: welltyped_prog c p) (XS: exec_prog h p a s d n s' x),
+  forall h p c s n a s' x (MCS: models c s)
+         (WP: welltyped_prog c p) (XS: exec_prog h p a s n s' x),
   models c s'.
 Proof.
   intros. revert a s x MCS XS. induction n; intros; inversion XS; clear XS; subst.
@@ -875,14 +869,14 @@ Proof.
 Qed.
 
 (* Well-typed programs never get "stuck" except for memory access violations.
-   They hit the recursion limit, exit, or run to completion.  They never get
-   "stuck" due to a runtime type-mismatch. *)
+   They exit, or run to completion.  They never get "stuck" due to a runtime
+   type-mismatch. *)
 Theorem progress_exec_prog:
-  forall p c0 s0 d n a s1 a'
+  forall p c0 s0 n a s1 a'
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c0 s0) (WP: welltyped_prog c0 p)
-         (XP: exec_prog htotal p a s0 d n s1 (Exit a')) (IL: p a' <> None),
-  exists s' x, exec_prog htotal p a s0 d (S n) s' x.
+         (XP: exec_prog htotal p a s0 n s1 (Exit a')) (IL: p a' <> None),
+  exists s' x, exec_prog htotal p a s0 (S n) s' x.
 Proof.
   intros.
   assert (WPA':=WP a'). destruct (p a') as [(sz,q)|] eqn:IL'; [|contradict IL; reflexivity]. clear IL.

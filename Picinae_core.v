@@ -231,6 +231,7 @@ Definition eval_unop (uop:unop_typ) (n:N) (w:bitwidth) : value :=
   | OP_NOT => VaN (N.lnot n w) w
   end.
 
+(* Cast a numeric value to a new bitwidth. *)
 Definition cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
   match c with
   | CAST_UNSIGNED => n
@@ -239,9 +240,9 @@ Definition cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
   | CAST_LOW => n mod 2^w'
   end.
 
-(* A program exits by hitting a computation limit (Unfinished), jumping to an address
-   outside the program (Exit), or throwing an exception (Throw). *)
-Inductive exit : Type := Unfinished | Exit (a:addr) | Throw (i:N).
+(* A program exits by jumping to an address outside the program (Exit),
+   or raising an exception (Raise). *)
+Inductive exit : Type := Exit (a:addr) | Raise (i:N).
 
 (* Helper function to compute the address of the next assembly code
    instruction to execute: *)
@@ -309,7 +310,11 @@ Inductive exp : Type :=
    reasoning about mutually recursive datatypes (statements that contain lists
    that contain statements).  To avoid this, we here instead define statements
    to include binary sequences (Seq) and nullary sequences (Nop).  Together
-   these are equivalent to lists, but keep everything within one datatype. *)
+   these are equivalent to lists, but keep everything within one datatype.
+
+   We also here encode while-loops as repeat (Rep) loops, which enforce loop
+   boundedness.  A BIL "while e do q" loop that has a bound n on the number
+   of iterations can therefore be encoded as (Rep n (If e q Nop)). *)
 
 Inductive stmt : Type :=
 | Nop (* Do nothing. *)
@@ -317,8 +322,8 @@ Inductive stmt : Type :=
 | Jmp (e:exp) (* Jump to a label/address. *)
 | Exn (i:N) (* CPU Exception (numbered) *)
 | Seq (q1 q2:stmt) (* sequence: q1 then q2 *)
-| While (e:exp) (q:stmt) (* While e<>0 do q *)
-| If (e:exp) (q1 q2:stmt) (* If e<>0 then q1 else q2 *).
+| If (e:exp) (q1 q2:stmt) (* If e<>0 then q1 else q2 *)
+| Rep (e:exp) (q:stmt) (* Repeat q for e iterations *).
 
 (* Convenient notation for sequence:
    Note that the sequence infix operator $; is RIGHT-associative.  This is critical
@@ -398,58 +403,41 @@ Inductive eval_exp (s:store): exp -> value -> Prop :=
 | EConcat e1 e2 n1 w1 n2 w2 (E1: eval_exp s e1 (VaN n1 w1)) (E2: eval_exp s e2 (VaN n2 w2)):
           eval_exp s (Concat e1 e2) (VaN (N.lor (N.shiftl n1 w2) n2) (w1+w2)).
 
-(* Execute an IL statement with recursion depth limit d, returning a new store
-   and possibly an exit (if the statement exited prematurely).  "None" is
-   returned if the statement finishes and falls through.  "Some Unfinished"
-   is returned if the statement requires more than n steps of computation
-   to complete. *)
-Inductive exec_stmt (s:store): stmt -> nat -> store -> option exit -> Prop :=
-| XUnfinished q: exec_stmt s q O s (Some Unfinished)
-| XNop d: exec_stmt s Nop (S d) s None
-| XMove d v e u (E: eval_exp s e u):
-    exec_stmt s (Move v e) (S d) (update s v (Some u)) None
-| XJmp d e a w (E: eval_exp s e (VaN a w)):
-    exec_stmt s (Jmp e) (S d) s (Some (Exit a))
-| XExn d i: exec_stmt s (Exn i) (S d) s (Some (Throw i))
-| XSeq1 d q1 q2 s' x (XS: exec_stmt s q1 d s' (Some x)):
-    exec_stmt s (Seq q1 q2) (S d) s' (Some x)
-| XSeq2 d q1 q2 s2 s' x' (XS1: exec_stmt s q1 d s2 None) (XS1: exec_stmt s2 q2 d s' x'):
-    exec_stmt s (Seq q1 q2) (S d) s' x'
-| XWhile d e q s' x (XS: exec_stmt s (If e (Seq q (While e q)) Nop) d s' x):
-    exec_stmt s (While e q) (S d) s' x
-| XIf d e q1 q2 c s' x
+(* Execute an IL statement, returning a new store and possibly an exit (if the
+   statement exited prematurely).  "None" is returned if the statement finishes
+   and falls through. *)
+Inductive exec_stmt (s:store): stmt -> store -> option exit -> Prop :=
+| XNop: exec_stmt s Nop s None
+| XMove v e u (E: eval_exp s e u):
+    exec_stmt s (Move v e) (update s v (Some u)) None
+| XJmp e a w (E: eval_exp s e (VaN a w)):
+    exec_stmt s (Jmp e) s (Some (Exit a))
+| XExn i: exec_stmt s (Exn i) s (Some (Raise i))
+| XSeq1 q1 q2 s' x (XS: exec_stmt s q1 s' (Some x)):
+    exec_stmt s (Seq q1 q2) s' (Some x)
+| XSeq2 q1 q2 s2 s' x' (XS1: exec_stmt s q1 s2 None) (XS1: exec_stmt s2 q2 s' x'):
+    exec_stmt s (Seq q1 q2) s' x'
+| XIf e q1 q2 c s' x
       (E: eval_exp s e (VaN c 1))
-      (XS: exec_stmt s (match c with N0 => q2 | _ => q1 end) d s' x):
-    exec_stmt s (If e q1 q2) (S d) s' x.
+      (XS: exec_stmt s (match c with N0 => q2 | _ => q1 end) s' x):
+    exec_stmt s (If e q1 q2) s' x
+| XRep n w e q s' x
+       (E: eval_exp s e (VaN n w)) (XS: exec_stmt s (N.iter n (Seq q) Nop) s' x):
+    exec_stmt s (Rep e q) s' x.
 
 (* Execute exactly n machine instructions of a program p starting at address a,
-   imposing a recursion depth limit of d for each instruction's encoding, and
-   returning a store and exit condition.  Exit condition "Unfinished" means
-   depth limit d was exceeded during execution of one of the instructions. *)
-Inductive exec_prog (p:program) (a:addr) (s:store) (d:nat) : nat -> store -> exit -> Prop :=
-| XDone: exec_prog p a s d O s (Exit a)
+   returning a store and exit condition. *)
+Inductive exec_prog (p:program) (a:addr) (s:store): nat -> store -> exit -> Prop :=
+| XDone: exec_prog p a s O s (Exit a)
 | XStep n sz q s2 x1 a' s' x' (LU: p a = Some (sz,q))
-        (XS: exec_stmt s q d s2 x1) (EX: exitaddr (a+sz) x1 = Some a')
-        (XP: exec_prog p a' s2 d n s' x'):
-    exec_prog p a s d (S n) s' x'
+        (XS: exec_stmt s q s2 x1) (EX: exitaddr (a+sz) x1 = Some a')
+        (XP: exec_prog p a' s2 n s' x'):
+    exec_prog p a s (S n) s' x'
 | XAbort sz q s' x (LU: p a = Some (sz,q))
-         (XS: exec_stmt s q d s' (Some x)) (EX: exitaddr (a+sz) (Some x) = None):
-    exec_prog p a s d (S O) s' x.
+         (XS: exec_stmt s q s' (Some x)) (EX: exitaddr (a+sz) (Some x) = None):
+    exec_prog p a s (S O) s' x.
 
 End InterpreterEngine.
-
-
-(* Define a helpful function for computing sufficient recusion depth bounds
-   for statements lacking While-loops. *)
-Fixpoint depth_bound (q:stmt) : option nat :=
-  match q with
-  | Nop | Move _ _ | Jmp _ | Exn _ => Some 1%nat
-  | Seq q1 q2 | If _ q1 q2 => match depth_bound q1, depth_bound q2 with
-                              | Some d1, Some d2 => Some (S (max d1 d2))
-                              | _, _ => None
-                              end
-  | While _ _ => None
-  end.
 
 
 Section Quantification.
@@ -471,14 +459,14 @@ Fixpoint exps_in_stmt {T:Type} (C:T->T->T) (b:T) (P:exp->T) (q:stmt) : T :=
   | Nop | Exn _ => b
   | Move _ e | Jmp e => exps_in_exp C P e
   | Seq q1 q2 => C (exps_in_stmt C b P q1) (exps_in_stmt C b P q2)
-  | While e q0 => C (exps_in_exp C P e) (exps_in_stmt C b P q0)
+  | Rep e q0 => C (exps_in_exp C P e) (exps_in_stmt C b P q0)
   | If e q1 q2 => C (exps_in_exp C P e) (C (exps_in_stmt C b P q1) (exps_in_stmt C b P q2))
   end.
 
 Fixpoint stmts_in_stmt {T:Type} (C:T->T->T) (P:stmt->T) (q:stmt) : T :=
   match q with
   | Nop | Exn _ | Move _ _ | Jmp _ => P q
-  | While _ q0 => C (P q) (stmts_in_stmt C P q0)
+  | Rep _ q0 => C (P q) (stmts_in_stmt C P q0)
   | Seq q1 q2 | If _ q1 q2 => C (P q) (C (stmts_in_stmt C P q1) (stmts_in_stmt C P q2))
   end.
 
@@ -534,7 +522,7 @@ Inductive allassigns (P: var -> Prop) : stmt -> Prop :=
 | AAJmp e: allassigns P (Jmp e)
 | AAExn i: allassigns P (Exn i)
 | AASeq q1 q2 (AA1: allassigns P q1) (AA2: allassigns P q2): allassigns P (Seq q1 q2)
-| AAWhile e q (AA: allassigns P q): allassigns P (While e q)
+| AARep e q (AA: allassigns P q): allassigns P (Rep e q)
 | AAIf e q1 q2 (AA1: allassigns P q1) (AA2: allassigns P q2): allassigns P (If e q1 q2).
 
 Definition noassign v := allassigns (fun v0 => v0 <> v).

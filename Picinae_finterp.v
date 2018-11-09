@@ -310,44 +310,38 @@ Qed.
    and substitute them away throughout the proof context. *)
 
 Lemma reduce_seq_move:
-  forall x1 (FIN: x1 <> Some Unfinished)
-         h s1 v e q d s1' (XS: exec_stmt h s1 (Seq (Move v e) q) d s1' x1),
+  forall x1 h s1 v e q s1' (XS: exec_stmt h s1 (Seq (Move v e) q) s1' x1),
   if exp_known e then
-    (let u := of_uvalue (feval_exp e s1) in exec_stmt h (s1[v:=Some u]) q (pred d) s1' x1) /\
+    (let u := of_uvalue (feval_exp e s1) in exec_stmt h (s1[v:=Some u]) q s1' x1) /\
     memacc_exp h e s1
   else
-    exists u, exec_stmt h (s1[v:=Some u]) q (pred d) s1' x1.
+    exists u, exec_stmt h (s1[v:=Some u]) q s1' x1.
 Proof.
-  intros. inversion XS; subst. contradict FIN. reflexivity.
-  inversion XS0; subst. contradict FIN. reflexivity.
-  inversion XS1; subst.
-  destruct (exp_known e) eqn:K.
-    split.
-      eapply reduce_exp in E. subst u. exact XS0. exact K.
-      eapply memacc_exp_true. exact K. exact E.
-    eexists. exact XS0.
+  intros. inversion XS; subst.
+    inversion XS0; subst.
+
+    inversion XS1; subst. destruct (exp_known e) eqn:K.
+      split.
+        eapply reduce_exp in E. subst u. exact XS0. exact K.
+        eapply memacc_exp_true. exact K. exact E.
+      eexists. exact XS0.
 Qed.
 
 Lemma reduce_nop:
-  forall x1 (FIN: x1 <> Some Unfinished)
-         h s1 d s1' (XS: exec_stmt h s1 Nop d s1' x1),
+  forall x1 h s1 s1' (XS: exec_stmt h s1 Nop s1' x1),
   s1' = s1 /\ x1 = None.
 Proof.
-  intros. inversion XS; subst.
-  contradict FIN. reflexivity.
-  split; reflexivity.
+  intros. inversion XS; subst. split; reflexivity.
 Qed.
 
 Lemma reduce_move:
-  forall x1 (FIN: x1 <> Some Unfinished)
-         h s1 v e d s1' (XS: exec_stmt h s1 (Move v e) d s1' x1),
+  forall x1 h s1 v e s1' (XS: exec_stmt h s1 (Move v e) s1' x1),
   if exp_known e then
     ((let u := of_uvalue (feval_exp e s1) in s1' = s1[v:=Some u]) /\ x1 = None) /\
     memacc_exp h e s1
   else exists u, (s1' = s1[v:=Some u] /\ x1 = None).
 Proof.
-  intros. inversion XS; subst. contradict FIN. reflexivity.
-  destruct (exp_known e) eqn:K.
+  intros. inversion XS; subst. destruct (exp_known e) eqn:K.
     split.
       eapply reduce_exp in E. rewrite E. split; reflexivity. exact K.
       eapply memacc_exp_true. exact K. exact E.
@@ -355,15 +349,13 @@ Proof.
 Qed.
 
 Lemma reduce_jmp:
-  forall x1 (FIN: x1 <> Some Unfinished)
-         h s1 e d s1' (XS: exec_stmt h s1 (Jmp e) d s1' x1),
+  forall x1 h s1 e s1' (XS: exec_stmt h s1 (Jmp e) s1' x1),
   if exp_known e then
     (s1' = s1 /\ x1 = Some (Exit (match feval_exp e s1 with VaU _ _ a _ => a end))) /\
     memacc_exp h e s1
   else exists a, (s1' = s1 /\ x1 = Some (Exit a)).
 Proof.
-  intros. inversion XS; subst. contradict FIN. reflexivity.
-  destruct (exp_known e) eqn:K.
+  intros. inversion XS; subst. destruct (exp_known e) eqn:K.
     split.
       split. reflexivity.
       eapply reduce_exp in E; [|exact K].
@@ -377,16 +369,14 @@ Proof.
 Qed.
 
 Lemma reduce_if:
-  forall x1 (FIN: x1 <> Some Unfinished)
-         h s1 e q1 q2 d s1' (XS: exec_stmt h s1 (If e q1 q2) d s1' x1),
+  forall x1 h s1 e q1 q2 s1' (XS: exec_stmt h s1 (If e q1 q2) s1' x1),
   if exp_known e then
-    (exec_stmt h s1 (match feval_exp e s1 with VaU _ _ c _ => if c then q2 else q1 end) (pred d) s1' x1) /\
+    (exec_stmt h s1 (match feval_exp e s1 with VaU _ _ c _ => if c then q2 else q1 end) s1' x1) /\
     memacc_exp h e s1
   else
-    exists (c:N), exec_stmt h s1 (if c then q2 else q1) (pred d) s1' x1.
+    exists (c:N), exec_stmt h s1 (if c then q2 else q1) s1' x1.
 Proof.
-  intros. inversion XS; subst. contradict FIN. reflexivity.
-  destruct (exp_known e) eqn:K.
+  intros. inversion XS; subst. destruct (exp_known e) eqn:K.
     split.
       eapply reduce_exp in E; [|exact K].
       apply (f_equal uvalue_of) in E.
@@ -462,9 +452,9 @@ Tactic Notation "simpl_stores" "in" hyp(H) :=
    expression to be reduced and "s" is the store, and adds "s[var:=value]" to the expression. *)
 
 Ltac stock_store :=
-  lazymatch goal with |- exec_stmt _ _ ?Q _ _ _ => repeat
+  lazymatch goal with |- exec_stmt _ _ ?Q _ _ => repeat
     match Q with context [ Var ?V ] =>
-      lazymatch goal with |- exec_stmt _ ?S _ _ _ _ =>
+      lazymatch goal with |- exec_stmt _ ?S _ _ _ =>
         lazymatch S with context [ update _ V _ ] => fail | _ =>
           erewrite (store_upd_eq S V) by (simpl_stores; eassumption)
         end
@@ -474,9 +464,9 @@ Ltac stock_store :=
   end.
 
 Tactic Notation "stock_store" "in" hyp(XS) :=
-  lazymatch type of XS with exec_stmt _ _ ?Q _ _ _ => repeat
+  lazymatch type of XS with exec_stmt _ _ ?Q _ _ => repeat
     match Q with context [ Var ?V ] =>
-      lazymatch type of XS with exec_stmt _ ?S _ _ _ _ =>
+      lazymatch type of XS with exec_stmt _ ?S _ _ _ =>
         lazymatch S with context [ update _ V _ ] => fail | _ =>
           erewrite (store_upd_eq S V) in XS by (simpl_stores; eassumption)
         end
@@ -542,14 +532,14 @@ Ltac destruct_memacc H :=
 Ltac finish_simpl_stmt tac H :=
   simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H; tac H; destruct_memacc H.
 
-Ltac simpl_stmt_loop tac H F :=
-  lazymatch type of H with exec_stmt _ _ ?q _ _ _ => lazymatch q with
+Ltac simpl_stmt_loop tac H :=
+  lazymatch type of H with exec_stmt _ _ ?q _ _ => lazymatch q with
   | Seq (Move _ _) _ =>
-    apply reduce_seq_move in H; [|exact F]; finish_simpl_stmt tac H; simpl_stmt_loop tac H F
-  | Nop => apply reduce_nop in H; [|exact F]; unfold cast in H
-  | Move _ _ => apply reduce_move in H; [|exact F]; finish_simpl_stmt tac H
-  | Jmp _ => apply reduce_jmp in H; [|exact F]; finish_simpl_stmt tac H
-  | If _ _ _ => apply reduce_if in H; [|exact F];
+    apply reduce_seq_move in H; finish_simpl_stmt tac H; simpl_stmt_loop tac H
+  | Nop => apply reduce_nop in H; unfold cast in H
+  | Move _ _ => apply reduce_move in H; finish_simpl_stmt tac H
+  | Jmp _ => apply reduce_jmp in H; finish_simpl_stmt tac H
+  | If _ _ _ => apply reduce_if in H;
       simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
       lazymatch type of H with
       | exists _, _ => let c := fresh "c" in
@@ -557,11 +547,11 @@ Ltac simpl_stmt_loop tac H F :=
       | _ => tac H; destruct_memacc H
       end
   | _ => first
-  [ apply reduce_seq_move in H; [|exact F]; finish_simpl_stmt tac H; simpl_stmt_loop tac H F
-  | apply reduce_nop in H; [|exact F]; unfold cast in H
-  | apply reduce_move in H; [|exact F]; finish_simpl_stmt tac H
-  | apply reduce_jmp in H; [|exact F]; finish_simpl_stmt tac H
-  | apply reduce_if in H; [|exact F];
+  [ apply reduce_seq_move in H; finish_simpl_stmt tac H; simpl_stmt_loop tac H
+  | apply reduce_nop in H; unfold cast in H
+  | apply reduce_move in H; finish_simpl_stmt tac H
+  | apply reduce_jmp in H; finish_simpl_stmt tac H
+  | apply reduce_if in H;
       simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
       lazymatch type of H with
       | exists _, _ => let c := fresh "c" in
@@ -571,9 +561,7 @@ Ltac simpl_stmt_loop tac H F :=
   end end.
 
 Tactic Notation "simpl_stmt" "using" tactic(tac) "in" hyp(H) :=
-  lazymatch type of H with exec_stmt _ _ _ _ _ ?x =>
-    let F := fresh "FIN" in enough (F: x <> Some Unfinished);
-    [ simpl_stmt_loop tac H F; clear F |]
+  lazymatch type of H with exec_stmt _ _ _ _ ?x => simpl_stmt_loop tac H
   | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
   end.
 

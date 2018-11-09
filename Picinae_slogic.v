@@ -290,12 +290,12 @@ Definition sep := sepconj var.
    "go wrong" as "contracting the heap-domain of q that otherwise stays right
    does not cause q to go wrong". *)
 Definition htrip_stmt P q Q :=
-  forall d s h s' x (PRE: P (resths h (to_hstore s))) (XS: exec_stmt htotal s q d s' x),
-    exec_stmt h s q d s' x /\ Q (resths h (to_hstore s')).
+  forall s h s' x (PRE: P (resths h (to_hstore s))) (XS: exec_stmt htotal s q s' x),
+    exec_stmt h s q s' x /\ Q (resths h (to_hstore s')).
 
 Definition htrip_prog P p a n Q :=
-  forall d s h s' x (PRE: P (resths h (to_hstore s))) (XP: exec_prog htotal p a s d n s' x),
-    exec_prog h p a s d n s' x /\ Q (resths h (to_hstore s')).
+  forall s h s' x (PRE: P (resths h (to_hstore s))) (XP: exec_prog htotal p a s n s' x),
+    exec_prog h p a s n s' x /\ Q (resths h (to_hstore s')).
 
 
 
@@ -351,7 +351,7 @@ Lemma destruct_frames_stmt:
   | Nop | Jmp _ | Exn _ => True
   | Move v _ => forall s (h:hdomain) hu (HM: hmodels s (hopp h) hu), upd_pres R (resths h (to_hstore s)) (resthv h (to_hval hu)) v
   | Seq q1 q2 => frames_stmt R q1 /\ frames_stmt R q2
-  | While _ q1 => frames_stmt R q1
+  | Rep _ q1 => frames_stmt R q1
   | If _ q1 q2 => frames_stmt R q1 /\ frames_stmt R q2
   end.
 Proof.
@@ -366,7 +366,7 @@ Lemma destruct_frames'_stmt:
   | Nop | Jmp _ | Exn _ => True
   | Move v _ => forall s (h:hdomain) hu, upd_pres R (resths h (to_hstore s)) (resthv h (to_hval hu)) v
   | Seq q1 q2 => frames'_stmt R q1 /\ frames'_stmt R q2
-  | While _ q1 => frames'_stmt R q1
+  | Rep _ q1 => frames'_stmt R q1
   | If _ q1 q2 => frames'_stmt R q1 /\ frames'_stmt R q2
   end.
 Proof.
@@ -438,7 +438,7 @@ Proof.
 Qed.
 
 Theorem hmodels_stmt:
-  forall h s q d s' x (XS: exec_stmt h s q d s' x),
+  forall h s q s' x (XS: exec_stmt h s q s' x),
   hmodels_store h s s'.
 Proof.
   intros. dependent induction XS; intros; try solve [ apply hmodels_refl | assumption ].
@@ -449,7 +449,7 @@ Proof.
 Qed.
 
 Theorem hmodels_prog:
-  forall h p a s d n s' x (XP: exec_prog h p a s d n s' x),
+  forall h p a s n s' x (XP: exec_prog h p a s n s' x),
   hmodels_store h s s'.
 Proof.
   intros. dependent induction XP; intros.
@@ -462,43 +462,50 @@ Qed.
 
 (* Proof that if R frames q, then executing q preserves R. *)
 
-Lemma frames_while:
-  forall R e q (FR: frames_stmt R q), frames_stmt R (If e (q $; While e q) Nop).
+Lemma frames_rep:
+  forall R e q (FR: frames_stmt R q), frames_stmt R (Seq q (Rep e q)).
 Proof.
-  intros. intros s dom u HM. apply AAIf.
-    apply AASeq.
-      apply FR. assumption.
-      apply AAWhile, FR. assumption.
-    apply AANop.
+  intros. intros s h u HM. apply AASeq.
+    apply FR. assumption.
+    apply AARep, FR. assumption.
 Qed.
 
 Lemma framed_stmt:
-  forall {A} (R: hsprop var) (h:heap A) d s q s' x (FR: frames_stmt R q)
-         (XS: exec_stmt (hopp h) s q d s' x)
+  forall {A} (R: hsprop var) (h:heap A) s q s' x (FR: frames_stmt R q)
+         (XS: exec_stmt (hopp h) s q s' x)
          (HS: hmodels_store (hopp h) s s') (PRE: R (resths h (to_hstore s))),
   R (resths h (to_hstore s')).
 Proof.
-  intros. revert s q s' x XS FR HS PRE.
-  induction d; intros; inversion XS; clear XS; subst; try assumption; apply destruct_frames_stmt in FR.
+  intros. revert s s' x XS FR HS PRE.
+  induction q using stmt_ind2; intros;
+    inversion XS; clear XS; subst; try assumption;
+    apply destruct_frames_stmt in FR.
 
     rewrite to_hstore_update, resths_update, <- resths_hdom, <- resthv_hdom. apply FR.
       rewrite hopp_hdom. eapply hmodels_exp. eassumption.
       rewrite resths_hdom. assumption.
 
-    eapply IHd; try eassumption. apply FR.
-    eapply IHd. eassumption.
+    eapply IHq1; try eassumption. apply FR.
+    eapply IHq2. eassumption.
       apply FR.
       eapply hmodels_stmt. eassumption.
-      eapply IHd; try eassumption.
+      eapply IHq1; try eassumption.
         apply FR.
         eapply hmodels_stmt. eassumption.
-    eapply IHd; try eassumption. apply frames_while. assumption.
-    eapply IHd; try eassumption. destruct c; apply FR.
+
+    destruct c.
+      eapply IHq2; try eassumption. apply FR.
+      eapply IHq1; try eassumption. apply FR.
+
+    eapply IHq2; try eassumption.
+    apply Niter_invariant.
+      intros s1 h1 u HM. apply AANop.
+      intros q' FR' s1 h1 u HM. apply AASeq; [ apply FR | apply FR']; assumption.
 Qed.
 
 Lemma framed_prog:
-  forall {A} (R: hsprop var) (h:heap A) p a s d n s' x (FR: frames_prog R p)
-         (XP: exec_prog (hopp h) p a s d n s' x)
+  forall {A} (R: hsprop var) (h:heap A) p a s n s' x (FR: frames_prog R p)
+         (XP: exec_prog (hopp h) p a s n s' x)
          (HS: hmodels_store (hopp h) s s') (PRE: R (resths h (to_hstore s))),
   R (resths h (to_hstore s')).
 Proof.
@@ -590,8 +597,8 @@ Proof.
         eapply hmodels_mono; [|eassumption]. apply hopp_mono. apply resth_subset.
         rewrite <- resths_assoc. assumption.
     apply AASeq; [ apply IHq1 | apply IHq2 ]; intros; solve [ apply FR1 | apply FR2 | assumption ].
-    apply AAWhile, IHq; intros; assumption.
     apply AAIf; [ apply IHq1 | apply IHq2 ]; intros; solve [ apply FR1 | apply FR2 | assumption ].
+    apply AARep, IHq; intros; assumption.
 Qed.
 
 (* P*Q universally-frames q if both P and Q universally-frame q. *)
@@ -608,12 +615,12 @@ Proof.
     apply AASeq; [ apply IHq1 | apply IHq2 ]; intros; solve
     [ specialize (FR1 s0 h0 u0); inversion FR1; assumption
     | specialize (FR2 s0 h0 u0); inversion FR2; assumption ].
-    apply AAWhile, IHq; intros.
-      specialize (FR1 s0 h0 u0). inversion FR1. assumption.
-      specialize (FR2 s0 h0 u0). inversion FR2. assumption.
     apply AAIf; [ apply IHq1 | apply IHq2 ]; intros; solve
     [ specialize (FR1 s0 h0 u0); inversion FR1; assumption
     | specialize (FR2 s0 h0 u0); inversion FR2; assumption ].
+    apply AARep, IHq; intros.
+      specialize (FR1 s0 h0 u0). inversion FR1. assumption.
+      specialize (FR2 s0 h0 u0). inversion FR2. assumption.
 Qed.
 
 Theorem frames_prog_sep:
@@ -766,13 +773,13 @@ Proof.
     [ apply destruct_frames'_stmt in FR1; apply FR1
     | apply destruct_frames_stmt in FR2; apply FR2 ].
 
-    apply AAWhile. apply IHq; try assumption.
-      apply destruct_frames'_stmt in FR1; apply FR1.
-      apply destruct_frames_stmt in FR2; apply FR2.
-
     apply AAIf; [ apply IHq1 | apply IHq2 ]; try assumption; solve
     [ apply destruct_frames'_stmt in FR1; apply FR1
     | apply destruct_frames_stmt in FR2; apply FR2 ].
+
+    apply AARep. apply IHq; try assumption.
+      apply destruct_frames'_stmt in FR1; apply FR1.
+      apply destruct_frames_stmt in FR2; apply FR2.
 Qed.
 
 Theorem frames'_stmt_impl:
@@ -797,13 +804,13 @@ Proof.
     [ apply destruct_frames'_stmt in FR1; apply FR1
     | apply destruct_frames'_stmt in FR2; apply FR2 ].
 
-    apply AAWhile. apply IHq; try assumption.
-      apply destruct_frames'_stmt in FR1; apply FR1.
-      apply destruct_frames'_stmt in FR2; apply FR2.
-
     apply AAIf; [ apply IHq1 | apply IHq2 ]; try assumption; solve
     [ apply destruct_frames'_stmt in FR1; apply FR1
     | apply destruct_frames'_stmt in FR2; apply FR2 ].
+
+    apply AARep. apply IHq; try assumption.
+      apply destruct_frames'_stmt in FR1; apply FR1.
+      apply destruct_frames'_stmt in FR2; apply FR2.
 Qed.
 
 Theorem frames_prog_impl:

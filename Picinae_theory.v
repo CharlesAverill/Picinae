@@ -467,11 +467,77 @@ Qed.
 End TwosComplement.
 
 
+Section NInduction.
+
+(* Analogues of theorems about Pos.iter, but for N.iter. *)
+
+Corollary Niter_swap:
+  forall n {A} (f: A -> A) x, N.iter n f (f x) = f (N.iter n f x).
+Proof. intros. destruct n. reflexivity. apply Pos.iter_swap. Qed.
+
+Corollary Niter_succ:
+  forall n {A} (f: A -> A) x, N.iter (N.succ n) f x = f (N.iter n f x).
+Proof. intros. destruct n. reflexivity. apply Pos.iter_succ. Qed.
+
+Corollary Niter_invariant:
+  forall {A} (Inv: A -> Prop) f x
+         (BC: Inv x) (IC: forall x (IH: Inv x), Inv (f x)),
+  forall n, Inv (N.iter n f x).
+Proof.
+  intros. destruct n.
+    exact BC.
+    simpl. apply Pos.iter_invariant.
+      intros. apply IC. assumption.
+      exact BC.
+Qed.
+
+Corollary Niter_add:
+  forall m n {A} (f: A -> A) x,
+  N.iter (m+n) f x = N.iter m f (N.iter n f x).
+Proof.
+  intros. destruct m.
+    reflexivity.
+    destruct n.
+      rewrite N.add_0_r. reflexivity.
+      apply Pos.iter_add.
+Qed.
+
+End NInduction.
+
+
 
 Module Type PICINAE_THEORY (IL: PICINAE_IL).
 
 Import IL.
 Open Scope N.
+
+(* Define an alternative inductive principle for structural inductions on stmts
+   that works better for proving properties of *executed* stmts that might contain
+   repeat-loops.  The cases for all non-repeat forms are the same as Coq's default
+   stmt_ind principle, but properties P of repeat-loops are provable from assuming
+   that the expansion of the loop into a sequence satisfies P.
+ *)
+Theorem stmt_ind2 (P: stmt -> Prop):
+  P Nop ->
+  (forall v e, P (Move v e)) ->
+  (forall e, P (Jmp e)) ->
+  (forall i, P (Exn i)) ->
+  (forall q1 q2 (IHq1: P q1) (IHq2: P q2), P (Seq q1 q2)) ->
+  (forall e q1 q2 (IHq1: P q1) (IHq2: P q2), P (If e q1 q2)) ->
+  (forall e q (IHq1: P q) (IHq2: forall n, P (N.iter n (Seq q) Nop)), P (Rep e q)) ->
+  forall (q:stmt), P q.
+Proof.
+  intros. induction q.
+    assumption.
+    apply H0.
+    apply H1.
+    apply H2.
+    apply H3; assumption.
+    apply H4; assumption.
+    apply H5. assumption. apply Niter_invariant.
+      apply H.
+      intros. apply H3; assumption.
+Qed.
 
 
 Section StoreTheory.
@@ -670,8 +736,8 @@ Proof.
 Qed.
 
 Theorem exec_stmt_deterministic:
-  forall {h s q d s1 x1 s2 x2} (NU: forall_exps_in_stmt not_unknown q)
-         (X1: exec_stmt h s q d s1 x1) (X2: exec_stmt h s q d s2 x2),
+  forall {h s q s1 x1 s2 x2} (NU: forall_exps_in_stmt not_unknown q)
+         (X1: exec_stmt h s q s1 x1) (X2: exec_stmt h s q s2 x2),
   s1 = s2 /\ x1 = x2.
 Proof.
   intros. revert s2 x2 X2.
@@ -694,16 +760,19 @@ Proof.
 
   apply (IHX1_1 NU1),proj1 in XS1. subst. apply (IHX1_2 NU2) in XS0. assumption.
 
-  apply IHX1; repeat first [ assumption | split ].
-
   apply IHX1.
     destruct NU2. destruct c; assumption.
     assert (H:=eval_exp_deterministic NU1 E E0). injection H; intros; subst. assumption.
+
+  assert (H:=eval_exp_deterministic NU1 E E0). injection H; intros; subst.
+  apply IHX1.
+    apply Niter_invariant. exact I. split; assumption.
+    assumption.
 Qed.
 
 Theorem exec_prog_deterministic:
-  forall {p a h s d n s1 x1 s2 x2} (NU: forall_exps_in_prog not_unknown p)
-  (XP1: exec_prog h p a s d n s1 x1) (XP2: exec_prog h p a s d n s2 x2),
+  forall {p a h s n s1 x1 s2 x2} (NU: forall_exps_in_prog not_unknown p)
+  (XP1: exec_prog h p a s n s1 x1) (XP2: exec_prog h p a s n s2 x2),
   s1 = s2 /\ x1 = x2.
 Proof.
   intros. revert s2 x2 XP2. dependent induction XP1; intros; inversion XP2; subst;
@@ -738,7 +807,7 @@ Section Monotonicity.
    stores (i.e., there is no "delete variable" operation). *)
 
 Theorem exec_stmt_nodelete:
-  forall {h s q d s' x} (XS: exec_stmt h s q d s' x) v (V': s' v = None),
+  forall {h s q s' x} (XS: exec_stmt h s q s' x) v (V': s' v = None),
   s v = None.
 Proof.
   intros. dependent induction XS; try apply IHXS; try assumption.
@@ -747,7 +816,7 @@ Proof.
 Qed.
 
 Theorem exec_prog_nodelete:
-  forall {h p a s d n s' x} (XP: exec_prog h p a s d n s' x)
+  forall {h p a s n s' x} (XP: exec_prog h p a s n s' x)
          v (V': s' v = None),
   s v = None.
 Proof.
@@ -808,17 +877,17 @@ Proof.
 Qed.
 
 Theorem exec_stmt_hmono:
-  forall h1 h2 s q d s' x (HS: h1 ⊆ h2)
-         (XS: exec_stmt h1 s q d s' x),
-  exec_stmt h2 s q d s' x.
+  forall h1 h2 s q s' x (HS: h1 ⊆ h2)
+         (XS: exec_stmt h1 s q s' x),
+  exec_stmt h2 s q s' x.
 Proof.
   intros. dependent induction XS; econstructor;
     try eapply eval_exp_hmono; eassumption.
 Qed.
 
 Theorem exec_stmt_smono:
-  forall s1 s2 h q d s1' x (SS: s1 ⊆ s2) (XS: exec_stmt h s1 q d s1' x),
-  exec_stmt h s2 q d (updateall s2 s1') x.
+  forall s1 s2 h q s1' x (SS: s1 ⊆ s2) (XS: exec_stmt h s1 q s1' x),
+  exec_stmt h s2 q (updateall s2 s1') x.
 Proof.
   intros. revert s2 SS. dependent induction XS; intros;
   try (rewrite updateall_subset; [ try constructor | assumption ]).
@@ -843,15 +912,17 @@ Proof.
         reflexivity.
         rewrite H. reflexivity. reflexivity.
 
-  apply XWhile. apply IHXS. assumption.
-
   apply XIf with (c:=c). eapply eval_exp_smono; eassumption. apply IHXS. assumption.
+
+  apply XRep with (n:=n) (w:=w).
+    eapply eval_exp_smono; eassumption.
+    apply IHXS. assumption.
 Qed.
 
 Theorem exec_prog_hmono:
-  forall h1 h2 p s a d n s' x (HS: h1 ⊆ h2)
-         (XP: exec_prog h1 p a s d n s' x),
-  exec_prog h2 p a s d n s' x.
+  forall h1 h2 p s a n s' x (HS: h1 ⊆ h2)
+         (XP: exec_prog h1 p a s n s' x),
+  exec_prog h2 p a s n s' x.
 Proof.
   intros. revert s a XP. induction n; intros; inversion XP; clear XP; subst.
     apply XDone.
@@ -863,9 +934,9 @@ Proof.
 Qed.
 
 Theorem exec_prog_smono:
-  forall p s1 s2 h a d n s1' x (SS: s1 ⊆ s2)
-         (XP: exec_prog h p a s1 d n s1' x),
-  exec_prog h p a s2 d n (updateall s2 s1') x.
+  forall p s1 s2 h a n s1' x (SS: s1 ⊆ s2)
+         (XP: exec_prog h p a s1 n s1' x),
+  exec_prog h p a s2 n (updateall s2 s1') x.
 Proof.
   intros. revert s2 SS. dependent induction XP; intros.
 
@@ -890,9 +961,9 @@ Proof.
 Qed.
 
 Theorem exec_prog_pmono:
-  forall p1 p2 s h a d n s' x (PS: p1 ⊆ p2)
-         (XP: exec_prog h p1 a s d n s' x),
-  exec_prog h p2 a s d n s' x.
+  forall p1 p2 s h a n s' x (PS: p1 ⊆ p2)
+         (XP: exec_prog h p1 a s n s' x),
+  exec_prog h p2 a s n s' x.
 Proof.
   intros. dependent induction XP; econstructor; try apply PS; eassumption.
 Qed.
@@ -900,123 +971,35 @@ Qed.
 End Monotonicity.
 
 
-Section Boundedness.
-
-(* If there are no while-loops, we can compute a necessary and sufficient recursion depth
-   bound to avoid an Unfinished condition for execution of any statement. *)
-
-Theorem depth_bound_pos:
-  forall q d (SB: depth_bound q = Some d), (0<d)%nat.
-Proof.
-  induction q; intros;
-  simpl in SB; try (injection SB; clear SB; intro; subst d);
-  try solve [ exact Nat.lt_0_1 | discriminate ];
-  destruct (depth_bound q1); destruct (depth_bound q2); try discriminate;
-  injection SB; clear SB; intro; subst;
-  apply Nat.lt_0_succ.
-Qed.
-
-Theorem stmt_finish:
-  forall h s q d d' s' x
-         (SB: depth_bound q = Some d) (LT: (d <= d')%nat)
-         (XS: exec_stmt h s q d' s' x),
-  x <> Some Unfinished.
-Proof.
-  intros.
-  revert d SB LT. dependent induction XS; intros; try discriminate.
-
-  exfalso. apply le_not_lt in LT. apply LT. revert SB. apply depth_bound_pos.
-
-  3: destruct c.
-  all: simpl in SB; destruct (depth_bound q1) as [d1|]; destruct (depth_bound q2) as [d2|]; try discriminate.
-  all: injection SB; clear SB; intro; subst.
-  2: rename IHXS2 into IHXS.
-  all: eapply IHXS; [reflexivity|].
-  all: transitivity (max d1 d2); [ first [ apply Max.le_max_l | apply Max.le_max_r ]
-                                 | apply le_S_n; assumption ].
-Qed.
-
-(* A stmt that finishes within n steps will also finish within (S n) steps. *)
-Theorem exec_stmt_incbound:
-  forall h d s q s' x (FIN: x <> Some Unfinished) (XS: exec_stmt h s q d s' x),
-  exec_stmt h s q (S d) s' x.
-Proof.
-  induction d; intros; inversion XS; clear XS; subst.
-    contradict FIN. reflexivity.
-    apply XNop.
-    apply XMove. exact E.
-    eapply XJmp. exact E.
-    apply XExn.
-    apply XSeq1. apply IHd. exact FIN. exact XS0.
-    eapply XSeq2.
-      apply IHd. discriminate 1. exact XS1.
-      apply IHd. exact FIN. exact XS0.
-    apply XWhile. apply IHd. exact FIN. exact XS0.
-    eapply XIf. exact E. apply IHd. exact FIN. exact XS0.
-Qed.
-
-Corollary exec_stmt_raisebound:
-  forall h d' d s q s' x (LE: (d <= d')%nat) (FIN: x <> Some Unfinished) (XS: exec_stmt h s q d s' x),
-  exec_stmt h s q d' s' x.
-Proof.
-  intros. pattern d'. revert d' LE. apply le_ind.
-    exact XS.
-    intros. apply exec_stmt_incbound. exact FIN. assumption.
-Qed.
-
-End Boundedness.
-
 
 Section InvariantProofs.
 
-(* It is often useful to have a case distinction between unfinished and not-unfinished
-   statement exits.  "Unfinished" statements are those whose starting states were not
-   provided a sufficiently high recursion limit to fully evaluate.  A real CPU has no
-   such recursion limit, so we don't usually care about such states.  Proof goals
-   therefore tend to have the form "if not unfinished, then <some property>". *)
-Lemma fin_dec: forall x, {x = Some Unfinished} + {x <> Some Unfinished}.
-Proof.
-  intro. destruct x; [destruct e|]; first [ left;reflexivity | right;discriminate 1 ].
-Qed.
-
-(* To prove properties of while-loops, it suffices to prove that each loop iteration
-   preserves the property.  This is equivalent to stepping the loop three small-steps
-   at a time (to unfold the While->If->Seq expansion of the loop). *)
-Theorem while_inv:
+(* To prove properties of states computed by repeat-loops, it suffices to prove
+   that each loop iteration preserves the property. *)
+Theorem rep_inv:
   forall (P: store -> Prop)
-         h s e q d s' x (XS: exec_stmt h s (While e q) d s' x) (PRE: P s)
-         (INV: forall s c d s' x (PRE: P s)
-                      (EX: eval_exp h s e (VaN (Npos c) 1))
-                      (XS: exec_stmt h s q d s' x), P s'),
+         h s e q s' x (XS: exec_stmt h s (Rep e q) s' x) (PRE: P s)
+         (INV: forall s s' x (PRE: P s) (XS: exec_stmt h s q s' x), P s'),
   P s'.
 Proof.
-  intros. revert s s' x XS PRE.
-  rewrite (Nat.div_mod d 3); [|discriminate].
-  induction (Nat.div d 3) as [|m'].
-
-  simpl. destruct (snd _); intros.
-    inversion XS; inversion XS0; inversion XS1; subst. exact PRE.
-    destruct y.
-      inversion XS; inversion XS0; subst. exact PRE.
-      inversion XS; subst. exact PRE.
-
-  rewrite Nat.mul_succ_r. rewrite (plus_comm _ 3). rewrite <- plus_assoc. intros.
-  inversion XS; inversion XS0; subst. destruct c; inversion XS1; subst.
-    exact PRE.
-    eapply INV. exact PRE. exact E. exact XS2.
-    eapply IHm'.
-      exact XS3.
-      eapply INV. exact PRE. exact E. exact XS2.
+  intros. inversion XS; clear XS; subst.
+  clear e w E. revert s PRE XS0. apply Niter_invariant; intros.
+    inversion XS0; subst. exact PRE.
+    inversion XS0; subst.
+      eapply INV; eassumption.
+      eapply IH.
+        eapply INV. exact PRE. exact XS1.
+        exact XS2.
 Qed.
 
 (* Append a step to an exec_prog computation. *)
 Theorem exec_prog_append:
-  forall h p n a s d sz q s2 a1 s' x'
-         (XP: exec_prog h p a s d n s2 (Exit a1))
+  forall h p n a s sz q s2 a1 s' x'
+         (XP: exec_prog h p a s n s2 (Exit a1))
          (LU: p a1 = Some (sz,q))
-         (XS: exec_stmt h s2 q d s' x'),
-    exec_prog h p a s d (S n) s' (match x' with None => Exit (a1+sz)
-                                              | Some x' => x' end).
+         (XS: exec_stmt h s2 q s' x'),
+    exec_prog h p a s (S n) s' (match x' with None => Exit (a1+sz)
+                                            | Some x' => x' end).
 Proof.
   induction n; intros; inversion XP; subst.
     destruct x'; [destruct e|]; econstructor; solve [ eassumption | reflexivity | apply XDone ].
@@ -1026,15 +1009,14 @@ Qed.
 
 (* Split an exec_prog computation into two parts. *)
 Theorem exec_prog_split:
-  forall h p a s d n1 n2 s' x'
-         (XP: exec_prog h p a s d (n1 + S n2)%nat s' x'),
-  exists s1 a1, exec_prog h p a s d n1 s1 (Exit a1) /\ exec_prog h p a1 s1 d (S n2) s' x'.
+  forall h p a s n1 n2 s' x'
+         (XP: exec_prog h p a s (n1 + S n2)%nat s' x'),
+  exists s1 a1, exec_prog h p a s n1 s1 (Exit a1) /\ exec_prog h p a1 s1 (S n2) s' x'.
 Proof.
   intros. revert n2 XP. induction n1; intros.
     exists s,a. split. apply XDone. exact XP.
     rewrite Nat.add_succ_comm in XP. destruct (IHn1 _ XP) as [s1 [a1 [XP1 XP2]]]. inversion XP2; subst. exists s2,a'. split.
       eapply exec_prog_append in XP1; [|exact LU | exact XS]. destruct x1 as [e|]; [destruct e|].
-        discriminate EX.
         injection EX as; subst. exact XP1.
         discriminate EX.
         injection EX as; subst. exact XP1.
@@ -1043,9 +1025,9 @@ Qed.
 
 (* Concatenate two exec_prog comptations into one whole. *)
 Theorem exec_prog_concat:
-  forall h p a s d n1 n2 s1 a1 s' x'
-         (XP1: exec_prog h p a s d n1 s1 (Exit a1)) (XP2: exec_prog h p a1 s1 d (S n2) s' x'),
-  exec_prog h p a s d (n1 + S n2)%nat s' x'.
+  forall h p a s n1 n2 s1 a1 s' x'
+         (XP1: exec_prog h p a s n1 s1 (Exit a1)) (XP2: exec_prog h p a1 s1 n2 s' x'),
+  exec_prog h p a s (n1 + n2)%nat s' x'.
 Proof.
   intros. revert n2 s1 a1 XP1 XP2. induction n1; intros.
     inversion XP1; subst. exact XP2.
@@ -1060,9 +1042,9 @@ Qed.
    to prove that the property is preserved by every statement in the program. *)
 Theorem prog_inv_universal:
   forall (P: exit -> store -> Prop)
-         h p a0 s0 d n s' x' (XP: exec_prog h p a0 s0 d n s' x') (PRE: P (Exit a0) s0)
+         h p a0 s0 n s' x' (XP: exec_prog h p a0 s0 n s' x') (PRE: P (Exit a0) s0)
          (INV: forall a1 s1 sz q s1' x1 (IL: p a1 = Some (sz,q)) (PRE: P (Exit a1) s1)
-                      (XS: exec_stmt h s1 q d s1' x1),
+                      (XS: exec_stmt h s1 q s1' x1),
                P (match x1 with None => Exit (a1 + sz)
                               | Some x => x end) s1'),
   P x' s'.
@@ -1081,12 +1063,12 @@ Qed.
    (The user's invariant may adopt a precondition of False for unreachable statements.) *)
 Theorem prog_inv_reachable:
   forall (P: exit -> store -> nat -> Prop)
-         h p a0 s0 d n s' x' (XP: exec_prog h p a0 s0 d n s' x') (PRE: P (Exit a0) s0 O)
+         h p a0 s0 n s' x' (XP: exec_prog h p a0 s0 n s' x') (PRE: P (Exit a0) s0 O)
          (INV: forall a1 s1 n1 sz q s1' x1 (IL: p a1 = Some (sz,q)) (PRE: P (Exit a1) s1 n1) (LT: (n1 < n)%nat)
-                      (XP: exec_prog h p a0 s0 d n1 s1 (Exit a1))
-                      (XS: exec_stmt h s1 q d s1' x1)
-                      (XP': match x1 with None => exec_prog h p (a1+sz) s1' d (n - S n1) s' x'
-                                        | Some (Exit a2) => exec_prog h p a2 s1' d (n - S n1) s' x'
+                      (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
+                      (XS: exec_stmt h s1 q s1' x1)
+                      (XP': match x1 with None => exec_prog h p (a1+sz) s1' (n - S n1) s' x'
+                                        | Some (Exit a2) => exec_prog h p a2 s1' (n - S n1) s' x'
                                         | Some x2 => x'=x2 end),
                P (match x1 with None => Exit (a1 + sz)
                               | Some x => x end) s1' (S n1)),
@@ -1094,8 +1076,8 @@ Theorem prog_inv_reachable:
 Proof.
   intros.
   assert (H: exists a1 s1 n2, (n2 <= n)%nat /\
-               exec_prog h p a0 s0 d (n - n2) s1 (Exit a1) /\ P (Exit a1) s1 (n - n2)%nat /\
-               exec_prog h p a1 s1 d n2 s' x').
+               exec_prog h p a0 s0 (n - n2) s1 (Exit a1) /\ P (Exit a1) s1 (n - n2)%nat /\
+               exec_prog h p a1 s1 n2 s' x').
     exists a0,s0,n. rewrite Nat.sub_diag. repeat split.
       apply le_n.
       apply XDone.
@@ -1112,7 +1094,6 @@ Proof.
         rewrite minus_Sn_m, Nat.sub_succ in INV by exact LE.
         replace (n - (n - n2))%nat with n2 in INV by (apply plus_minus; symmetry; apply Nat.sub_add, le_Sn_le, LE).
         destruct x1; [destruct e|].
-          discriminate EX.
           injection EX. intro. subst a'. apply INV. exact XP.
           discriminate EX.
           injection EX. intro. subst a'. apply INV. exact XP.
@@ -1127,7 +1108,6 @@ Proof.
       specialize (INV a1 s1 (n-1)%nat sz q s' (Some x') LU PRE1 (Nat.sub_lt n 1 LE Nat.lt_0_1) XP1 XS).
       rewrite minus_Sn_m, Nat.sub_succ, Nat.sub_0_r in INV by exact LE.
       apply INV. destruct x'.
-        reflexivity.
         discriminate EX.
         reflexivity.
 Qed.
@@ -1162,31 +1142,31 @@ Proof. intro. assumption. Qed.
    (If the computation is already at an invariant, it is considered the "next"
    invariant if parameter b=true; otherwise the computation must take at least
    one step before it can satisfy the "next invariant" property.) *)
-Inductive nextinv PS p h d: bool -> exit -> store -> Prop :=
+Inductive nextinv PS p h: bool -> exit -> store -> Prop :=
 | NIHere x s (TRU: true_inv (PS p x s)):
-    nextinv PS p h d true x s
+    nextinv PS p h true x s
 | NIStep (b:bool) s a
          (NOI: (if b then PS p (Exit a) s else None) = None)
          (STEP: forall sz q s1 x1
-                       (IL: p a = Some (sz,q)) (XS: exec_stmt h s q d s1 x1),
-                nextinv PS p h d true
+                       (IL: p a = Some (sz,q)) (XS: exec_stmt h s q s1 x1),
+                nextinv PS p h true
                         match x1 with None => Exit (a+sz) | Some x1 => x1 end s1):
-    nextinv PS p h d b (Exit a) s.
+    nextinv PS p h b (Exit a) s.
 
 (* Proving the "next invariant satisfied" property for all invariant points proves partial
    correctness of the program. *)
 Theorem prog_inv:
-  forall h p a0 s0 d n PS s' x'
-         (XP: exec_prog h p a0 s0 d n s' x')
+  forall h p a0 s0 n PS s' x'
+         (XP: exec_prog h p a0 s0 n s' x')
          (PRE: true_inv (PS p (Exit a0) s0))
          (INV: forall a1 s1 n1
-                      (XP: exec_prog h p a0 s0 d n1 s1 (Exit a1))
+                      (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
                       (PRE: true_inv (PS p (Exit a1) s1)),
-               nextinv PS p h d false (Exit a1) s1),
+               nextinv PS p h false (Exit a1) s1),
   trueif_inv (PS p x' s').
 Proof.
   intros.
-  assert (NI: nextinv PS p h d true x' s').
+  assert (NI: nextinv PS p h true x' s').
     pattern x', s', n. eapply prog_inv_reachable.
       exact XP.
       apply NIHere. exact PRE.
@@ -1204,31 +1184,30 @@ Qed.
    (which is a partial map from addresses and stores to invariants) and a
    post-condition (a property of exits and stores).  The post-condition is
    asserted to be satisfied when execution exits the subroutine either by
-   throwing an exception or reaching an address outside the subroutine. *)
+   raising an exception or reaching an address outside the subroutine. *)
 Definition invs PS Q (p:program) x (s:store) : option Prop :=
   match x with
-  | Unfinished => Some True
   | Exit a => match p a with None => Some (Q x s) | Some _ => PS a s end
-  | Throw _ => Some (Q x s)
+  | Raise _ => Some (Q x s)
   end.
 
 (* The following lemmas apply-and-simplify the NIHere rule in tactics. *)
 Lemma nextinv_here:
-  forall P (PS: program -> exit -> store -> option Prop) p h d x s
+  forall P (PS: program -> exit -> store -> option Prop) p h x s
          (INV: PS p x s = Some P) (TRU: P),
-  nextinv PS p h d true x s.
+  nextinv PS p h true x s.
 Proof. intros. apply NIHere. rewrite INV. exact TRU. Qed.
 
 Lemma nextinv_ret:
-  forall PS (Q: exit -> store -> Prop) p h d r s
+  forall PS (Q: exit -> store -> Prop) p h r s
          (IL: p r = None) (POST: Q (Exit r) s),
-  nextinv (invs PS Q) p h d true (Exit r) s.
+  nextinv (invs PS Q) p h true (Exit r) s.
 Proof. intros. apply NIHere. unfold invs. rewrite IL. exact POST. Qed.
 
 Lemma nextinv_exn:
-  forall PS (Q: exit -> store -> Prop) p h d i s
-         (POST: Q (Throw i) s),
-  nextinv (invs PS Q) p h d true (Throw i) s.
+  forall PS (Q: exit -> store -> Prop) p h i s
+         (POST: Q (Raise i) s),
+  nextinv (invs PS Q) p h true (Raise i) s.
 Proof. intros. apply NIHere. exact POST. Qed.
 
 (* To prove a subroutine invariant, it suffices to prove that
@@ -1236,13 +1215,13 @@ Proof. intros. apply NIHere. exact POST. Qed.
    (2) starting at any invariant point in the subroutine always yields a trace
        that reaches another invariant point and satisfies its invariant. *)
 Theorem prove_invs:
-  forall h a0 s0 d PS Q p x s' n
-    (XP0: exec_prog h p a0 s0 d n s' x)
+  forall h a0 s0 PS Q p x s' n
+    (XP0: exec_prog h p a0 s0 n s' x)
     (PRE: true_inv (invs PS Q p (Exit a0) s0))
     (CASES: forall a1 s1 n1
-      (XP: exec_prog h p a0 s0 d n1 s1 (Exit a1))
+      (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
       (PRE: true_inv (if p a1 then PS a1 s1 else None)),
-      nextinv (invs PS Q) p h d false (Exit a1) s1),
+      nextinv (invs PS Q) p h false (Exit a1) s1),
   trueif_inv (invs PS Q p x s').
 Proof.
   intros. eapply prog_inv. exact XP0. exact PRE.
@@ -1303,7 +1282,7 @@ Tactic Notation "shelve_cases" int_or_var(i) hyp(H) :=
 (* Tactic "focus_addr n" isolates the goal for the invariant at address n
    from a sea of goals unshelved from shelve_cases, re-shelving the rest. *)
 Tactic Notation "focus_addr" constr(n) :=
-  lazymatch goal with |- nextinv _ _ _ _ _ (Exit n) _ => idtac
+  lazymatch goal with |- nextinv _ _ _ _ (Exit n) _ => idtac
                     | _ => shelve end.
 
 
@@ -1320,25 +1299,24 @@ Proof.
 Qed.
 
 Theorem noassign_stmt_same:
-  forall v h q (NA: noassign v q) d (s s':store) x,
-  exec_stmt h s q d s' x -> s' v = s v.
+  forall v h q (NA: noassign v q) (s s':store) x,
+  exec_stmt h s q s' x -> s' v = s v.
 Proof.
   induction q; intros; inversion H; subst; try reflexivity.
     inversion NA; subst. apply update_frame, not_eq_sym. assumption.
     eapply IHq1; try eassumption. inversion NA. assumption.
     inversion NA. transitivity (s2 v); [ eapply IHq2 | eapply IHq1 ]; eassumption.
+    inversion NA. destruct c; [ eapply IHq2 | eapply IHq1 ]; eassumption.
 
-    pattern s'. eapply while_inv.
+    pattern s'. eapply rep_inv.
       eassumption.
       reflexivity.
       intros. rewrite <- PRE. eapply IHq. inversion NA. assumption. eassumption.
-
-    inversion NA. destruct c; [ eapply IHq2 | eapply IHq1 ]; eassumption.
 Qed.
 
 Theorem noassign_prog_same:
-  forall v h p (NA: prog_noassign v p) d s' x
-         n a s (EP: exec_prog h p a s d n s' x),
+  forall v h p (NA: prog_noassign v p) s' x
+         n a s (EP: exec_prog h p a s n s' x),
   s' v = s v.
 Proof.
   intros. pattern x, s'. eapply prog_inv_universal.
