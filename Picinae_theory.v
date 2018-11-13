@@ -824,6 +824,10 @@ Proof.
   apply (exec_stmt_nodelete XS); try apply IHXP; assumption.
 Qed.
 
+
+(* eval_exp, exec_stmt, and exec_prog are monotonic with respect to heaps and
+   stores: Enlarging the heap and/or store preserves the relations. *)
+
 Theorem eval_exp_hmono:
   forall h1 h2 s e u (HS: h1 ⊆ h2) (E: eval_exp h1 s e u),
   eval_exp h2 s e u.
@@ -960,6 +964,8 @@ Proof.
     assumption.
 Qed.
 
+(* exec_prog is monotonic with respect to programs.  Enlarging the space of known
+   instructions in memory preserves executions. *)
 Theorem exec_prog_pmono:
   forall p1 p2 s h a n s' x (PS: p1 ⊆ p2)
          (XP: exec_prog h p1 a s n s' x),
@@ -1139,7 +1145,7 @@ Proof. intro. assumption. Qed.
 
 (* The "next invariant" property is true if the computation always eventually
    reaches a "next" invariant, and in a state that satisfies that invariant.
-   (If the computation is already at an invariant, it is considered the "next"
+   (If the computation is already at an invariant, it is considered its own "next"
    invariant if parameter b=true; otherwise the computation must take at least
    one step before it can satisfy the "next invariant" property.) *)
 Inductive nextinv PS p h: bool -> exit -> store -> Prop :=
@@ -1329,6 +1335,8 @@ Qed.
 
 End FrameTheorems.
 
+(* Prove a goal of the form (prog_noassign v p) for a program p that contains no
+   statements having assignments to v. *)
 Ltac prove_noassign :=
   try lazymatch goal with [ |- prog_noassign _ _ ] => let a := fresh "a" in
     let a := fresh "a" in intro a; destruct a as [|a];

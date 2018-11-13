@@ -39,21 +39,23 @@ Require Import Program.Equality.
 Require Import FunctionalExtensionality.
 Require Import NArith.
 
-(* This module implements separation logic for local reasoning about memory in Picinae.
-   Rather than define a separation operators as an Inductive datatype with associated
-   inference rules (which would confine proof authors to using only those rules for
-   local reasoning), we instead derive the soundness of separation logic's Frame Rule
-   directly in Coq.  This allows proof authors to use Coq's entire proof logic for
-   local reasoning by simply applying the Frame Rule as a theorem when desired. *)
+(* This module implements separation logic for local reasoning about memory in
+   Picinae.  Rather than define a separation operators as an Inductive datatype
+   with associated inference rules (which would confine proof authors to using
+   only those rules for local reasoning), we instead derive the soundness of
+   separation logic's Frame Rule directly in Coq.  This allows proof authors to
+   use Coq's entire proof logic for local reasoning by simply applying the
+   Frame Rule as a theorem when desired. *)
 
 
-(* Heaps are partial functions from addr to N.  The IL interpreter expresses memories m
-   as total functions, so to make them act like heaps, we separately encode the heap's
-   domain (h:hdomain), which we here express as a partial function from addr to unit.
-   For any addr 'a', if (h a = None) then address 'a' is outside the heap; otherwise
-   (h a = Some tt) and (m a) is its value.  (This is more convenient than representing
-   h as a total function from addr to bool, since it allows functions and theorems
-   concerning partial functions to be applied to heaps and their domains.) *)
+(* Heaps are partial functions from addr to N.  The IL interpreter expresses
+   memories m as total functions, so to make them act like heaps, we separately
+   encode the heap's domain (h:hdomain), which we here express as a partial
+   function from addr to unit.  For any addr 'a', if (h a = None) then address
+   'a' is outside the heap; otherwise (h a = Some tt) and (m a) is its value.
+   (This is more convenient than representing h as a total function from addr
+   to bool, since it allows functions and theorems concerning partial functions
+   to be applied to heaps and their domains.) *)
 Definition hdom {A} (h: heap A) a := match h a with None => None | Some _ => Some tt end.
 Definition hopp {A} (h: heap A) a := match h a with None => Some tt | Some _ => None end.
 
@@ -90,9 +92,9 @@ Definition hsprop (V:Type) := hstore V -> Prop.
 Definition sepconj V P Q : hsprop V :=
   fun hs => exists (h:hdomain), P (resths h hs) /\ Q (resths (hopp h) hs).
 
-(* Separation logic for Picinae is complicated by the fact that Picinae stores can
-   have many heaps (or none), not just one.  We therefore define heap propositions
-   as properties satisfied by ALL heaps in the store. *)
+(* Separation logic for Picinae is complicated by the fact that Picinae stores
+   can have many heaps (or none), not just one.  We therefore define heap
+   propositions as properties satisfied by ALL heaps in the store. *)
 Definition hprop V (P: heap N -> Prop): hsprop V :=
   fun hs => forall v m w (SV: hs v = Some (VaM m w)), P m.
 
@@ -283,12 +285,14 @@ Open Scope N.
 
 Definition sep := sepconj var.
 
-(* In separation logic, Hoare triple {P}q{Q} asserts that executing q on any heap h
-   that satisfyies P does not "go wrong" and yields a heap satisfying Q.  "Going wrong"
-   in this context means accessing memory outside of h's domain.  (It does not mean
-   type-mismatch, which is handled by the static semantics.)  We therefore here define
-   "go wrong" as "contracting the heap-domain of q that otherwise stays right
-   does not cause q to go wrong". *)
+
+(* In separation logic, Hoare triple {P}q{Q} asserts that executing q on any
+   heap h that satisfyies P does not "go wrong" and yields a heap satisfying Q.
+   "Going wrong" in this context means accessing memory outside of h's domain.
+   (It does not mean type-mismatch, which is handled by the static semantics.)
+   We therefore here define "go wrong" as "contracting the heap-domain of q
+   that otherwise stays right does not cause q to go wrong". *)
+
 Definition htrip_stmt P q Q :=
   forall s h s' x (PRE: P (resths h (to_hstore s))) (XS: exec_stmt htotal s q s' x),
     exec_stmt h s q s' x /\ Q (resths h (to_hstore s')).
@@ -314,12 +318,13 @@ Definition hmodels_store (h:hdomain) (s s':store) :=
 
 
 (* Our goal is to prove the soundness of the frame rule: {P}q{Q} -> {P*R}q{Q*R}.
-   But only certain properties R satisfy this rule.  In particular, R must not depend
-   upon variables and memory addresses assigned by q.  We define this "framing"
-   meta-property below. *)
+   But only certain properties R satisfy this rule.  In particular, R must not
+   depend upon variables and memory addresses assigned by q.  We define this
+   "framing" meta-property below. *)
 
-(* R "frames" q if for all variables v assigned by q, updating v to any value u that
-   satisfies the modeling relation preserves R. *)
+(* R "frames" q if for all variables v assigned by q, updating v to any value u
+   that satisfies the modeling relation preserves R. *)
+
 Definition frames_stmt (R: hsprop var) q :=
   forall s (h:hdomain) u (HM: hmodels s (hopp h) u),
   allassigns (upd_pres R (resths h (to_hstore s)) (resthv h (to_hval u))) q.
@@ -332,8 +337,9 @@ Definition frames_prog (R: hsprop var) (p:program) :=
    a negation or implication, the framing requirement gets reversed for the
    negated sub-proposition or antecedent. *)
 
-(* R "universally-frames" q if forall all variables v assigned by q, updating v to
-   any value at all preserves R. *)
+(* R "universally-frames" q if forall all variables v assigned by q, updating v
+   to any value at all preserves R. *)
+
 Definition frames'_stmt (R: hsprop var) q :=
   forall s (h:hdomain) u,
   allassigns (upd_pres R (resths h (to_hstore s)) (resthv h (to_hval u))) q.
@@ -377,7 +383,7 @@ Qed.
 
 
 
-(* Proof that the IL interpreter obeys the modeling relation: *)
+(* Proof that the IL semantics obey the modeling relation: *)
 
 Lemma hmodels_refl:
   forall h s, hmodels_store h s s.
@@ -520,8 +526,8 @@ Proof.
 Qed.
 
 
-(* Main result: The frame rule of separation logic is sound.  In particular, if {P}q{Q}
-   holds, and if R frames q, then {P*R}q{Q*R} holds. *)
+(* Main result: The frame rule of separation logic is sound.  In particular,
+   if {P}q{Q} holds, and if R frames q, then {P*R}q{Q*R} holds. *)
 
 Theorem stmt_frame:
   forall q (P Q R: hsprop var) (FR: frames_stmt R q)
@@ -566,8 +572,8 @@ Qed.
 
 
 (* At this point we have our main result, but it requires users to prove that
-   R frames q in order to use it.  We here prove some general sufficiency conditions
-   to help users prove this meta-property. *)
+   R frames q in order to use it.  We here prove some general sufficiency
+   conditions to help users prove this meta-property. *)
 
 (* Sufficiency conditions for proving "R (universally-)frames q": *)
 Lemma upd_pres_sep:
@@ -693,8 +699,8 @@ Proof.
     exact I.
 Qed.
 
-(* To prove that R (universally-)frames q, it sufficies to prove that R is update-preserving
-   for all possible stores. *)
+(* To prove that R (universally-)frames q, it sufficies to prove that R is
+   update-preserving for all possible stores. *)
 Lemma frames_stmt_anystore:
   forall R q, (forall s (h:hdomain) u v (HM: hmodels s (hopp h) u), upd_pres R (resths h (to_hstore s)) (resthv h (to_hval u)) v) ->
   frames_stmt R q.
@@ -726,12 +732,14 @@ Proof.
     rewrite update_frame in SV by assumption. eapply H. eassumption.
 Qed.
 
-(* (frames'_stmt (hprop R) q) is false for useful R's, so not worth proving anything about it.
-   This is because hprops are properties that are universally satisfied by all heaps in the
-   store, and frames'_stmt requires that its proposition parameter R be satisfied by all values
-   assigned to variables in q.  Thus, if q contains any assignments at all, R would have to be
-   universally true of all heaps in order for (frames'_stmt (hprop R) q) to be true.
-   This has taken me a long time to understand, so I prove it here to convince/remind myself. *)
+(* (frames'_stmt (hprop R) q) is false for useful R's, so not worth proving
+   anything about it.  This is because hprops are properties that are universally
+   satisfied by all heaps in the store, and frames'_stmt requires that its
+   proposition parameter R be satisfied by all values assigned to variables in q.
+   Thus, if q contains any assignments at all, R would have to be universally
+   true of all heaps in order for (frames'_stmt (hprop R) q) to be true.  This
+   has taken me a long time to understand, so I prove it here to convince/remind
+   myself. *)
 Remark frames'_stmt_hprop_useless:
   forall R v e, (frames'_stmt (hprop var R) (Move v e)) -> (forall h, R h).
 Proof.
@@ -750,7 +758,8 @@ Proof.
     exact I.
 Qed.
 
-(* (P -> Q) frames q if: P is inverse-monotonic and universally-frames q, and Q frames q. *)
+(* (P -> Q) frames q if: P is inverse-monotonic and universally-frames q,
+   and Q frames q. *)
 Theorem frames_stmt_impl:
   forall P Q q (M1: monotonic' P) (FR1: frames'_stmt P q) (FR2: frames_stmt Q q),
   frames_stmt (fun hs => P hs -> Q hs) q.
@@ -896,9 +905,9 @@ Proof.
     intros v m w H. discriminate.
 Qed.
 
-(* Only contradictory pointsto properties are monotonic, since pointsto only accepts
-   heaps with singleton domains.  It is therefore not useful to prove sufficiency
-   conditions for store-monotonicity for pointsto properties. *)
+(* Only contradictory pointsto properties are monotonic, since pointsto only
+   accepts heaps with singleton domains.  It is therefore not useful to prove
+   sufficiency conditions for store-monotonicity for pointsto properties. *)
 Remark mono_pointsto_useless:
   forall a Q, monotonic (pointsto a Q) -> (forall h, ~ pointsto a Q h).
 Proof.
@@ -968,9 +977,9 @@ Proof. unfold hfalse,monotonic'. intros. assumption. Qed.
 Theorem mono'_hprop: forall V P, monotonic' (hprop V P).
 Proof. unfold hprop,monotonic'. intros. eapply H. apply SS. eassumption. Qed.
 
-(* Only contradictory pointsto properties are monotonic', since pointsto only accepts
-   heaps with singleton domains.  It is therefore not useful to prove any sufficiency
-   properties for monotonic' of pointsto. *)
+(* Only contradictory pointsto properties are monotonic', since pointsto only
+   accepts heaps with singleton domains.  It is therefore not useful to prove
+   any sufficiency properties for monotonic' of pointsto. *)
 Remark mono'_pointsto_useless:
   forall a Q, monotonic' (pointsto a Q) -> (forall h, ~ pointsto a Q h).
 Proof.
@@ -1016,7 +1025,8 @@ Proof.
       extensionality a. unfold updateall. destruct (h a); reflexivity.
     discriminate.
 Qed.
-(* Monotonicity of P or Q is too much, since that makes non-contradictory sepimp tautological: *)
+(* Monotonicity of P or Q is too much, since that makes non-contradictory
+   sepimp tautological: *)
 Remark mono'_sepimp_tautological:
   forall P Q h0 (NC: sepimp P Q h0) (M: monotonic P \/ monotonic Q),
   monotonic' (sepimp P Q) -> (forall h, sepimp P Q h).

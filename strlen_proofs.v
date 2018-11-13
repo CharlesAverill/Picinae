@@ -138,14 +138,9 @@ Proof.
   (* Note that we wind up with more goals that we started with, since some of the
      instructions branch, requiring us to prove the goal for each possible destination.
      Fortunately, since this is a pretty simple invariant-set, the symbolic state
-     inferred for most of the goals trivially satisfies the theorem.  We can solve
-     all but one by assumption or reflexivity: *)
-  all: try solve [ reflexivity | assumption ].
-
-  (* The only unsolved goal is the one for the final instruction in the program,
-     which is the only one that modifies ESP.  We can solve that one using the
-     update_updated theorem, which reasons about state updates. *)
-  apply update_updated.
+     inferred for all the goals trivially satisfies the theorem.  We can solve
+     all by assumption or reflexivity: *)
+  all: solve [ reflexivity | assumption ].
 
   (* At Qed, Coq re-checks the proof, including all those symbolic interpretation
      steps, so please be patient again... *)

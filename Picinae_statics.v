@@ -41,8 +41,8 @@ Require Import FunctionalExtensionality.
 
 
 (* An IL expression type is a number of bitwidth w, or a memory state with
-   addresses of bitwidth w.  (The bitwidth of memory contents is architecture-
-   specific, but is usually bitwidth 8.) *)
+   addresses of bitwidth w.  (The bitwidth of memory contents is specified
+   by the architecture, not the type.) *)
 Inductive typ : Type :=
 | NumT (w:bitwidth)
 | MemT (w:bitwidth).
@@ -293,7 +293,7 @@ Inductive typof_exp (c:typctx): exp -> typ -> Prop :=
 
    To avoid this, we instead define a strategically chosen weakening clause
    within the sequence typing rule (TSeq), along with a fixed point requirement
-   for loops (TWhile).  An IL program that only assigns values of one type to
+   for loops (TRep).  An IL program that only assigns values of one type to
    each variable per instruction encoding can be safely type-checked by ignoring
    both clauses; the fixed point condition is automatically satisfied if the
    weakening clause is never utilized.  But including these two clauses yields
@@ -656,6 +656,7 @@ Proof.
   (* Concat *)
   apply TVN. apply concat_bound; assumption.
 Qed.
+
 
 (* If an expression is well-typed and there are no memory access violations,
    then evaluating it always succeeds (never gets "stuck"). *)

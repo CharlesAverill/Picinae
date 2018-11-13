@@ -35,106 +35,342 @@
 Require Import Picinae_theory.
 Require Import NArith.
 Require Import ZArith.
+Require Import List.
 
 (* Functional Interpretation of Programs:
-   This module defines an IL interpreter that is purely functional instead of inductive.  Since programs
-   can be non-deterministic (if there are Unknown expressions), this interpreter only computes one possible
-   value of each variable.  We then prove that this result is correct according to the operational semantics.
-   When there are no unknowns, determinism of the semantics (proved above) proves that the result is precise.
-   This facilitates a series of tactics that can interpret common-case expressions and statements in proofs
-   to automatically infer the resulting store after execution of each assembly language instruction.
+   This module defines an IL interpreter that is purely functional instead of
+   inductive.  Since programs can be non-deterministic (if there are Unknown
+   expressions), the interpreter introduces a fresh context variable for each
+   unknown.  The interpreter is proved correct according to the operational
+   semantics, so it does not contribute to Picinae's trusted core definitions.
+   This facilitates a series of tactics that can symbolically evaluate
+   expressions and statements in proofs to automatically infer the resulting
+   store after execution of each assembly language instruction. *)
 
-   In order to help Coq expression simplification to infer a value for each symbolic expression, we define
-   our interpreter in terms of "untyped values" (uvalues), which always contain both a memory value and a
-   numeric value.  This allows the interpreter to progress even when Coq can't automatically infer an
-   expression's type. *)
+
+(* In order to help Coq expression simplification to infer a value for each
+   symbolic expression, we define our interpreter in terms of "untyped values"
+   (uvalues), which always contain both a memory value and a numeric value.
+   This allows the interpreter to progress even when it can't automatically
+   infer a IL expression's IL-type. *)
 
 Inductive uvalue := VaU (z:bool) (m:addr->N) (n:N) (w:N).
 
-Definition zstore (_:addr) := 0.
-
 Definition uvalue_of (v:value) :=
   match v with
-  | VaN n w => VaU true zstore n w
+  | VaN n w => VaU true (fun _ => 0) n w
   | VaM m w => VaU false m 0 w
   end.
 
-Definition of_uvalue (v:uvalue) :=
-  match v with VaU z m n w => if z then VaN n w else VaM m w end.
+
+(* When the interpreter cannot determine an IL variable's type and/or value
+   (e.g., because store s is a Coq variable), the interpreter returns an
+   expression that contains the following accessor functions to refer to the
+   unknown type/value. *)
+
+Definition vtyp (u: option value) :=
+  match u with Some (VaM _ _) => false | _ => true end.
+
+Definition vnum (u: option value) :=
+  match u with Some (VaN n _) => n | _ => N0 end.
+
+Definition vmem (u: option value) :=
+  match u with Some (VaM m _) => m | _ => (fun _ => N0) end.
+
+Definition vwidth (u: option value) :=
+  match u with Some (VaN _ w) | Some (VaM _ w) => w | None => N0 end.
+
+Definition vget (u:option value) : uvalue :=
+  match u with None => VaU true (fun _ => 0) 0 0
+             | Some u => uvalue_of u
+  end.
+
+Lemma vtyp_num n w: vtyp (Some (VaN n w)) = true. Proof eq_refl.
+Lemma vtyp_mem m w: vtyp (Some (VaM m w)) = false. Proof eq_refl.
+Lemma vnum_num n w: vnum (Some (VaN n w)) = n. Proof eq_refl.
+Lemma vmem_mem m w: vmem (Some (VaM m w)) = m. Proof eq_refl.
+Lemma vwidth_num n w: vwidth (Some (VaN n w)) = w. Proof eq_refl.
+Lemma vwidth_mem m w: vwidth (Some (VaM m w)) = w. Proof eq_refl.
+
+Lemma fold_vget:
+  forall u, VaU (vtyp u) (vmem u) (vnum u) (vwidth u) = vget u.
+Proof. intro. destruct u as [u|]; [destruct u|]; reflexivity. Qed.
+
+
+(* Unknowns are modeled as return values of an oracle function f that maps
+   unknown-identifiers (binary positive numbers) to the values of each
+   unknown.  In order to assign a unique unknown-identifier to each unknown
+   appearing in the statement without preprocessing the statement to count
+   them all, we use a trick from proofs about partitioning countably infinite
+   domains into multiple countably infinite domains:  To assign mutually
+   exclusive identifiers to two expressions e1 and e2, we assign only even
+   identifiers to unknowns in e1 and only odd identifiers to unknowns in e2.
+   When this strategy is followed recursively, all unknowns get unique ids. *)
+
+Definition unknowns0 f i : N := f (xO i).
+Definition unknowns1 f i : N := f (xI i).
+Definition unknowns00 f i : N := f (xO (xO i)).
+Definition unknowns01 f i : N := f (xI (xO i)).
+Definition unknowns10 f i : N := f (xO (xI i)).
+
+
+(* The interpreter accmulates memory access predicates as a separate list
+   of propositions during interpretation.  This allows the proof to infer
+   memory accessibility facts from successful executions.  The list of
+   propositions is later assembled into a conjunction, which is then split
+   off into separate hypotheses in the proof context.  Sometimes it is
+   useful to end the conjunction with a prop of "True" (to signal the end)
+   while other times it is more succinct to not include this end-prop.
+   We therefore define functions for both treatments. *)
+
+Definition conjallT := List.fold_right and True.
+
+Fixpoint conjall l :=
+  match l with nil => True | P::nil => P | P::t => P /\ conjall t end.
+
+Lemma conjallT_app:
+  forall l1 l2, conjallT l1 -> conjallT l2 -> conjallT (l1++l2).
+Proof.
+  intros. revert H. induction l1; intros.
+    assumption.
+    split.
+      apply H.
+      apply IHl1. apply H.
+Qed.
+
+Lemma conjall_iffT:
+  forall l, conjallT l <-> conjall l.
+Proof.
+  induction l.
+    reflexivity.
+    destruct l; split; intro H.
+      apply H.
+      split. apply H. exact I.
+      split. apply H. apply IHl, H.
+      split. apply H. apply IHl, H.
+Qed.
+
+
+(* For speed, the interpreter function is designed to be evaluated using
+   vm_compute or native_compute.  However, those tactics perform uncontrolled
+   expansion of every term, resulting in huge terms that are completely
+   intractable for users (and very slow for Coq to manipulate).  To control
+   and limit this expansion, we create a Module that hides the expansions of
+   functions we don't want vm_compute to evaluate.  After vm_compute completes,
+   we replace the opaque functions with the real ones (using autorewrite). *)
+
+Module Type NOEXPAND.
+  Parameter negb: bool -> bool.
+  Parameter add: N -> N -> N.
+  Parameter sub: N -> N -> N.
+  Parameter mul: N -> N -> N.
+  Parameter div: N -> N -> N.
+  Parameter quot: Z -> Z -> Z.
+  Parameter rem: Z -> Z -> Z.
+  Parameter modulo: N -> N -> N.
+  Parameter pow: N -> N -> N.
+  Parameter shiftl: N -> N -> N.
+  Parameter shiftr: N -> N -> N.
+  Parameter ashiftr: bitwidth -> N -> N -> N.
+  Parameter land: N -> N -> N.
+  Parameter lor: N -> N -> N.
+  Parameter lxor: N -> N -> N.
+  Parameter lnot: N -> N -> N.
+  Parameter eqb: N -> N -> bool.
+  Parameter ltb: N -> N -> bool.
+  Parameter leb: N -> N -> bool.
+  Parameter slt: N -> N -> N -> bool.
+  Parameter sle: N -> N -> N -> bool.
+  Parameter sbop: (Z -> Z -> Z) -> bitwidth -> N -> N -> N.
+  Parameter scast: bitwidth -> bitwidth -> N -> N.
+  Parameter Niter: N -> forall {A}, (A -> A) -> A -> A.
+  Parameter zstore: addr -> N.
+  Parameter _vtyp: option value -> bool.
+  Parameter _vnum: option value -> N.
+  Parameter _vmem: option value -> addr -> N.
+  Parameter _vwidth: option value -> N.
+
+  Axiom negb_eq: negb = Coq.Init.Datatypes.negb.
+  Axiom add_eq: add = N.add.
+  Axiom sub_eq: sub = N.sub.
+  Axiom mul_eq: mul = N.mul.
+  Axiom div_eq: div = N.div.
+  Axiom quot_eq: quot = Z.quot.
+  Axiom rem_eq: rem = Z.rem.
+  Axiom modulo_eq: modulo = N.modulo.
+  Axiom pow_eq: pow = N.pow.
+  Axiom shiftl_eq: shiftl = N.shiftl.
+  Axiom shiftr_eq: shiftr = N.shiftr.
+  Axiom ashiftr_eq: ashiftr = Picinae_core.ashiftr.
+  Axiom land_eq: land = N.land.
+  Axiom lor_eq: lor = N.lor.
+  Axiom lxor_eq: lxor = N.lxor.
+  Axiom lnot_eq: lnot = N.lnot.
+  Axiom eqb_eq: eqb = N.eqb.
+  Axiom ltb_eq: ltb = N.ltb.
+  Axiom leb_eq: leb = N.leb.
+  Axiom slt_eq: slt = Picinae_core.slt.
+  Axiom sle_eq: sle = Picinae_core.sle.
+  Axiom sbop_eq: sbop = Picinae_core.sbop.
+  Axiom scast_eq: scast = Picinae_core.scast.
+  Axiom Niter_eq: Niter = N.iter.
+  Axiom vtyp_eq: _vtyp = vtyp.
+  Axiom vnum_eq: _vnum = vnum.
+  Axiom vmem_eq: _vmem = vmem.
+  Axiom vwidth_eq: _vwidth = vwidth.
+End NOEXPAND.
+
+Module NoE : NOEXPAND.
+  Definition negb := negb.
+  Definition add := N.add.
+  Definition sub := N.sub.
+  Definition mul := N.mul.
+  Definition div := N.div.
+  Definition quot := Z.quot.
+  Definition rem := Z.rem.
+  Definition modulo := N.modulo.
+  Definition pow := N.pow.
+  Definition shiftl := N.shiftl.
+  Definition shiftr := N.shiftr.
+  Definition ashiftr := ashiftr.
+  Definition land := N.land.
+  Definition lor := N.lor.
+  Definition lxor := N.lxor.
+  Definition lnot := N.lnot.
+  Definition eqb := N.eqb.
+  Definition ltb := N.ltb.
+  Definition leb := N.leb.
+  Definition slt := slt.
+  Definition sle := sle.
+  Definition sbop := sbop.
+  Definition scast := scast.
+  Definition Niter := N.iter.
+  Definition zstore (_:addr) := 0.
+  Definition _vtyp := vtyp.
+  Definition _vnum := vnum.
+  Definition _vmem := vmem.
+  Definition _vwidth := vwidth.
+
+  Theorem negb_eq: negb = Coq.Init.Datatypes.negb. Proof eq_refl.
+  Theorem add_eq: add = N.add. Proof eq_refl.
+  Theorem sub_eq: sub = N.sub. Proof eq_refl.
+  Theorem mul_eq: mul = N.mul. Proof eq_refl.
+  Theorem div_eq: div = N.div. Proof eq_refl.
+  Theorem quot_eq: quot = Z.quot. Proof eq_refl.
+  Theorem rem_eq: rem = Z.rem. Proof eq_refl.
+  Theorem modulo_eq: modulo = N.modulo. Proof eq_refl.
+  Theorem pow_eq: pow = N.pow. Proof eq_refl.
+  Theorem shiftl_eq: shiftl = N.shiftl. Proof eq_refl.
+  Theorem shiftr_eq: shiftr = N.shiftr. Proof eq_refl.
+  Theorem ashiftr_eq: ashiftr = Picinae_core.ashiftr. Proof eq_refl.
+  Theorem land_eq: land = N.land. Proof eq_refl.
+  Theorem lor_eq: lor = N.lor. Proof eq_refl.
+  Theorem lxor_eq: lxor = N.lxor. Proof eq_refl.
+  Theorem lnot_eq: lnot = N.lnot. Proof eq_refl.
+  Theorem eqb_eq: eqb = N.eqb. Proof eq_refl.
+  Theorem ltb_eq: ltb = N.ltb. Proof eq_refl.
+  Theorem leb_eq: leb = N.leb. Proof eq_refl.
+  Theorem slt_eq: slt = Picinae_core.slt. Proof eq_refl.
+  Theorem sle_eq: sle = Picinae_core.sle. Proof eq_refl.
+  Theorem sbop_eq: sbop = Picinae_core.sbop. Proof eq_refl.
+  Theorem scast_eq: scast = Picinae_core.scast. Proof eq_refl.
+  Theorem Niter_eq: Niter = N.iter. Proof eq_refl.
+  Theorem vtyp_eq: _vtyp = vtyp. Proof eq_refl.
+  Theorem vnum_eq: _vnum = vnum. Proof eq_refl.
+  Theorem vmem_eq: _vmem = vmem. Proof eq_refl.
+  Theorem vwidth_eq: _vwidth = vwidth. Proof eq_refl.
+End NoE.
+
+Create HintDb feval discriminated.
+Global Hint Rewrite NoE.negb_eq : feval.
+Global Hint Rewrite NoE.add_eq : feval.
+Global Hint Rewrite NoE.sub_eq : feval.
+Global Hint Rewrite NoE.mul_eq : feval.
+Global Hint Rewrite NoE.div_eq : feval.
+Global Hint Rewrite NoE.quot_eq : feval.
+Global Hint Rewrite NoE.rem_eq : feval.
+Global Hint Rewrite NoE.modulo_eq : feval.
+Global Hint Rewrite NoE.pow_eq : feval.
+Global Hint Rewrite NoE.shiftl_eq : feval.
+Global Hint Rewrite NoE.shiftr_eq : feval.
+Global Hint Rewrite NoE.ashiftr_eq : feval.
+Global Hint Rewrite NoE.land_eq : feval.
+Global Hint Rewrite NoE.lor_eq : feval.
+Global Hint Rewrite NoE.lxor_eq : feval.
+Global Hint Rewrite NoE.lnot_eq : feval.
+Global Hint Rewrite NoE.eqb_eq : feval.
+Global Hint Rewrite NoE.ltb_eq : feval.
+Global Hint Rewrite NoE.leb_eq : feval.
+Global Hint Rewrite NoE.slt_eq : feval.
+Global Hint Rewrite NoE.sle_eq : feval.
+Global Hint Rewrite NoE.sbop_eq : feval.
+Global Hint Rewrite NoE.scast_eq : feval.
+Global Hint Rewrite NoE.Niter_eq : feval.
+Global Hint Rewrite NoE.vtyp_eq : feval.
+Global Hint Rewrite NoE.vnum_eq : feval.
+Global Hint Rewrite NoE.vmem_eq : feval.
+Global Hint Rewrite NoE.vwidth_eq : feval.
+Global Hint Rewrite vtyp_num : feval.
+Global Hint Rewrite vtyp_mem : feval.
+Global Hint Rewrite vnum_num : feval.
+Global Hint Rewrite vmem_mem : feval.
+Global Hint Rewrite vwidth_num : feval.
+Global Hint Rewrite vwidth_mem : feval.
+Global Hint Rewrite fold_vget : feval.
+
+
+(* Functionally evaluate binary and unary operations using the opaque
+   functions above. *)
+
+Definition of_uvalue (u:uvalue) :=
+  match u with VaU z m n w => if z then VaN n w else VaM m w end.
 
 Definition utowidth (w n:N) : uvalue :=
-  VaU true zstore (N.modulo n (2^w)) w.
+  VaU true NoE.zstore (NoE.modulo n (NoE.pow 2 w)) w.
 
 Definition utobit (b:bool) : uvalue :=
-  VaU true zstore (if b then 1 else 0) 1.
+  VaU true NoE.zstore (if b then 1 else 0) 1.
 
 Definition feval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : uvalue :=
   match bop with
-  | OP_PLUS => utowidth w (n1+n2)
-  | OP_MINUS => utowidth w (2^w + n1 - n2)
-  | OP_TIMES => utowidth w (n1*n2)
-  | OP_DIVIDE => VaU true zstore (n1/n2) w
-  | OP_SDIVIDE => VaU true zstore (sbop Z.quot w n1 n2) w
-  | OP_MOD => VaU true zstore (N.modulo n1 n2) w
-  | OP_SMOD => VaU true zstore (sbop Z.rem w n1 n2) w
-  | OP_LSHIFT => utowidth w (N.shiftl n1 n2)
-  | OP_RSHIFT => VaU true zstore (N.shiftr n1 n2) w
-  | OP_ARSHIFT => VaU true zstore (ashiftr w n1 n2) w
-  | OP_AND => VaU true zstore (N.land n1 n2) w
-  | OP_OR => VaU true zstore (N.lor n1 n2) w
-  | OP_XOR => VaU true zstore (N.lxor n1 n2) w
-  | OP_EQ => utobit (n1 =? n2)
-  | OP_NEQ => utobit (negb (n1 =? n2))
-  | OP_LT => utobit (n1 <? n2)
-  | OP_LE => utobit (n1 <=? n2)
-  | OP_SLT => utobit (slt w n1 n2)
-  | OP_SLE => utobit (sle w n1 n2)
+  | OP_PLUS => utowidth w (NoE.add n1 n2)
+  | OP_MINUS => utowidth w (NoE.sub (NoE.add (NoE.pow 2 w) n1) n2)
+  | OP_TIMES => utowidth w (NoE.mul n1 n2)
+  | OP_DIVIDE => VaU true NoE.zstore (NoE.div n1 n2) w
+  | OP_SDIVIDE => VaU true NoE.zstore (NoE.sbop NoE.quot w n1 n2) w
+  | OP_MOD => VaU true NoE.zstore (NoE.modulo n1 n2) w
+  | OP_SMOD => VaU true NoE.zstore (NoE.sbop NoE.rem w n1 n2) w
+  | OP_LSHIFT => utowidth w (NoE.shiftl n1 n2)
+  | OP_RSHIFT => VaU true NoE.zstore (NoE.shiftr n1 n2) w
+  | OP_ARSHIFT => VaU true NoE.zstore (NoE.ashiftr w n1 n2) w
+  | OP_AND => VaU true NoE.zstore (NoE.land n1 n2) w
+  | OP_OR => VaU true NoE.zstore (NoE.lor n1 n2) w
+  | OP_XOR => VaU true NoE.zstore (NoE.lxor n1 n2) w
+  | OP_EQ => utobit (NoE.eqb n1 n2)
+  | OP_NEQ => utobit (NoE.negb (NoE.eqb n1 n2))
+  | OP_LT => utobit (NoE.ltb n1 n2)
+  | OP_LE => utobit (NoE.leb n1 n2)
+  | OP_SLT => utobit (NoE.slt w n1 n2)
+  | OP_SLE => utobit (NoE.sle w n1 n2)
   end.
 
 Definition feval_unop (uop:unop_typ) (n:N) (w:bitwidth) : uvalue :=
   match uop with
-  | OP_NEG => utowidth w ((2^w) - n)
-  | OP_NOT => VaU true zstore (N.lnot n w) w
+  | OP_NEG => utowidth w (NoE.sub (NoE.pow 2 w) n)
+  | OP_NOT => VaU true NoE.zstore (NoE.lnot n w) w
   end.
 
-Definition uget (v:option value) : uvalue :=
-  match v with None => VaU true zstore 0 0
-             | Some u => uvalue_of u
+Definition feval_cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
+  match c with
+  | CAST_UNSIGNED => n
+  | CAST_SIGNED => NoE.scast w w' n
+  | CAST_HIGH => NoE.shiftr n (w - w')
+  | CAST_LOW => NoE.modulo n (NoE.pow 2 w')
   end.
 
-Lemma fold_uget:
-  forall v, match v with None => VaU true zstore 0 0
-                       | Some u => uvalue_of u
-            end = uget v.
-Proof. intros. reflexivity. Qed.
 
-Lemma uvalue_inv: forall u, of_uvalue (uvalue_of u) = u.
-Proof.
-  intros. destruct u; reflexivity.
-Qed.
-
-Definition canonical_uvalue (u:uvalue) :=
-  match u with VaU z m n w => if z then m = zstore else n = 0 end.
-
-Lemma can_uvalue_inv: forall u (C: canonical_uvalue u), uvalue_of (of_uvalue u) = u.
-Proof.
-  intros. destruct u. destruct z; simpl in C; subst; reflexivity.
-Qed.
-
-Lemma canonical_conv:
-  forall v, canonical_uvalue (uvalue_of v).
-Proof.
-  intro. destruct v; reflexivity.
-Qed.
-
-Lemma canonical_uget:
-  forall v, canonical_uvalue (uget v).
-Proof.
-  intros. destruct v.
-    apply canonical_conv.
-    reflexivity.
-Qed.
-
+(* Functional interpretation of expressions and statements requires instantiating
+   a functor that accepts the architecture-specific IL syntax and semantics. *)
 
 Module Type PICINAE_FINTERP (IL: PICINAE_IL).
 
@@ -142,285 +378,432 @@ Import IL.
 Module PTheory := PicinaeTheory IL.
 Import PTheory.
 
-Definition bits_of_mem len := N.mul Mb len.
+Definition vupdate := @Picinae_core.update var (option value) VarEqDec.
 
-Fixpoint feval_exp (e:exp) (s:store) : uvalue :=
-  match e with
-  | Var v => uget (s v)
-  | Word n w => VaU true zstore n w
-  | Load e1 e2 en len =>
-      match feval_exp e1 s, feval_exp e2 s with
-      | VaU _ m _ _, VaU _ _ n _ => VaU true zstore (getmem en len m n) (bits_of_mem len)
-      end
-  | Store e1 e2 e3 en len =>
-      match feval_exp e1 s, feval_exp e2 s, feval_exp e3 s with
-      | VaU _ m _ mw, VaU _ _ a _, VaU _ _ v _ => VaU false (setmem en len m a v) 0 mw
-      end
-  | BinOp bop e1 e2 =>
-      match feval_exp e1 s, feval_exp e2 s with
-      | VaU _ _ n1 w, VaU _ _ n2 _ => feval_binop bop w n1 n2
-      end
-  | UnOp uop e1 =>
-      match feval_exp e1 s with
-      | VaU _ _ n w => feval_unop uop n w
-      end
-  | Cast c w' e1 =>
-      match feval_exp e1 s with
-      | VaU _ _ n w => VaU true zstore (cast c w w' n) w'
-      end
-  | Let v e1 e2 => feval_exp e2 (update s v (Some (of_uvalue (feval_exp e1 s))))
-  | Unknown _ => VaU true zstore 0 0
-  | Ite e1 e2 e3 =>
-      match feval_exp e1 s, feval_exp e2 s, feval_exp e3 s with
-      | VaU _ _ n1 _, VaU b2 m2 n2 w2, VaU b3 m3 n3 w3 =>
-          VaU (if n1 then b3 else b2) (if n1 then m3 else m2) (if n1 then n3 else n2) (if n1 then w3 else w2)
-      end
-  | Extract n1 n2 e1 =>
-      match feval_exp e1 s with
-      | VaU _ _ n w => VaU true zstore (cast CAST_HIGH (N.succ n1) (N.succ (n1-n2))
-                                             (cast CAST_LOW w (N.succ n1) n)) (N.succ (n1-n2))
-      end
-  | Concat e1 e2 =>
-      match feval_exp e1 s, feval_exp e2 s with
-      | VaU _ _ n1 w1, VaU _ _ n2 w2 => VaU true zstore (N.lor (N.shiftl n1 w2) n2) (w1+w2)
-      end
-  end.
-
-Definition NoMemAcc := True.
+(* Memory access propositions resulting from functional interpretation are
+   encoded as (MemAcc (mem_readable|mem_writable) heap store addr length). *)
 Definition MemAcc (P: store -> addr -> Prop) h s a len :=
   forall n, n < len -> h (a+n) = Some tt /\ P s (a+n).
 
-Fixpoint memacc_exp h e s : Prop :=
+Module Type NOEMEM.
+  Parameter getmem: endianness -> bitwidth -> (addr -> N) -> addr -> N.
+  Parameter setmem: endianness -> bitwidth -> (addr -> N) -> addr -> N -> addr -> N.
+  Parameter vupdate: store -> var -> option value -> store.
+  Parameter memaccr: hdomain -> store -> N -> N -> Prop.
+  Parameter memaccw: hdomain -> store -> N -> N -> Prop.
+  Axiom getmem_eq: getmem = IL.getmem.
+  Axiom setmem_eq: setmem = IL.setmem.
+  Axiom vupdate_eq: vupdate = @Picinae_core.update var (option value) VarEqDec.
+  Axiom memaccr_eq: memaccr = MemAcc mem_readable.
+  Axiom memaccw_eq: memaccw = MemAcc mem_writable.
+End NOEMEM.
+
+Module NoEMem : NOEMEM.
+  Definition getmem := IL.getmem.
+  Definition setmem := IL.setmem.
+  Definition vupdate := @update var (option value) VarEqDec.
+  Definition memaccr := MemAcc mem_readable.
+  Definition memaccw := MemAcc mem_writable.
+  Theorem getmem_eq: getmem = IL.getmem. Proof eq_refl.
+  Theorem setmem_eq: setmem = IL.setmem. Proof eq_refl.
+  Theorem vupdate_eq: vupdate = PICINAE_FINTERP.vupdate. Proof eq_refl.
+  Theorem memaccr_eq: memaccr = MemAcc mem_readable. Proof eq_refl.
+  Theorem memaccw_eq: memaccw = MemAcc mem_writable. Proof eq_refl.
+End NoEMem.
+
+Global Hint Rewrite NoEMem.getmem_eq : feval.
+Global Hint Rewrite NoEMem.setmem_eq : feval.
+Global Hint Rewrite NoEMem.vupdate_eq : feval.
+Global Hint Rewrite NoEMem.memaccr_eq : feval.
+Global Hint Rewrite NoEMem.memaccw_eq : feval.
+
+Definition bits_of_mem len := N.mul Mb len.
+
+(* Functionally evaluate an expression.  Parameter unk is an oracle function
+   that returns values of unknown expressions. *)
+Fixpoint feval_exp e h s unk :=
   match e with
-  | Load e1 e2 _ len =>
-      match feval_exp e1 s, feval_exp e2 s with
-      | VaU _ m _ mw, VaU _ _ a _ => MemAcc mem_readable h s a len
+  | Var v => (VaU (NoE._vtyp (s vupdate v))
+                  (NoE._vmem (s vupdate v))
+                  (NoE._vnum (s vupdate v))
+                  (NoE._vwidth (s vupdate v)), nil)
+  | Word n w => (VaU true NoE.zstore n w, nil)
+  | Load e1 e2 en len =>
+      match feval_exp e1 h s (unknowns0 unk), feval_exp e2 h s (unknowns1 unk) with
+      | (VaU _ m _ _, ma1), (VaU _ _ n _, ma2) =>
+        (VaU true NoE.zstore (NoEMem.getmem en len m n) (bits_of_mem len),
+         NoEMem.memaccr h (s NoEMem.vupdate) n len :: ma1++ma2)
       end
-  | Store e1 e2 _ _ len =>
-      match feval_exp e1 s, feval_exp e2 s with
-      | VaU _ m _ mw, VaU _ _ a _ => MemAcc mem_writable h s a len
+  | Store e1 e2 e3 en len =>
+      match feval_exp e1 h s (unknowns00 unk), feval_exp e2 h s (unknowns01 unk), feval_exp e3 h s (unknowns10 unk) with
+      | (VaU _ m _ mw, ma1), (VaU _ _ a _, ma2), (VaU _ _ v _, ma3) =>
+        (VaU false (NoEMem.setmem en len m a v) 0 mw,
+         NoEMem.memaccw h (s NoEMem.vupdate) a len :: ma1++ma2++ma3)
       end
-  | Var _ | Word _ _ | Unknown _ => NoMemAcc
-  | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => memacc_exp h e1 s
-  | BinOp _ e1 e2 | Concat e1 e2 => memacc_exp h e1 s /\ memacc_exp h e2 s
-  | Let v e1 e2 => memacc_exp h e1 s /\ memacc_exp h e2 (update s v (Some (of_uvalue (feval_exp e1 s))))
+  | BinOp bop e1 e2 =>
+      match feval_exp e1 h s (unknowns0 unk), feval_exp e2 h s (unknowns1 unk) with
+      | (VaU _ _ n1 w, ma1), (VaU _ _ n2 _, ma2) => (feval_binop bop w n1 n2, ma1++ma2)
+      end
+  | UnOp uop e1 =>
+      match feval_exp e1 h s unk with (VaU _ _ n w, ma) =>
+        (feval_unop uop n w, ma)
+      end
+  | Cast c w' e1 =>
+      match feval_exp e1 h s unk with (VaU _ _ n w, ma) =>
+        (VaU true NoE.zstore (feval_cast c w w' n) w', ma)
+      end
+  | Let v e1 e2 =>
+      match feval_exp e1 h s (unknowns0 unk) with (u,ma1) =>
+        match feval_exp e2 h (fun upd => upd (s upd) v (Some (of_uvalue u))) (unknowns1 unk) with
+        | (u',ma2) => (u', ma1++ma2)
+        end
+      end
+  | Unknown w => (VaU true NoE.zstore (NoE.modulo (unk xH) (NoE.pow 2 w)) w, nil)
   | Ite e1 e2 e3 =>
-      match feval_exp e1 s with
-      | VaU _ _ n w => if n then memacc_exp h e3 s else memacc_exp h e2 s
+      match feval_exp e1 h s (unknowns0 unk), feval_exp e2 h s (unknowns1 unk), feval_exp e3 h s (unknowns1 unk) with
+      | (VaU _ _ n1 _, ma1), (VaU b2 m2 n2 w2, ma2), (VaU b3 m3 n3 w3, ma3) =>
+        (VaU (if n1 then b3 else b2) (if n1 then m3 else m2) (if n1 then n3 else n2) (if n1 then w3 else w2),
+         match ma2,ma3 with nil,nil => ma1 | _,_ => ma1++(if n1 then conjall ma3 else conjall ma2)::nil end)
+      end
+  | Extract n1 n2 e1 =>
+      match feval_exp e1 h s unk with
+      | (VaU _ _ n w, ma) => (VaU true NoE.zstore (feval_cast CAST_HIGH (N.succ n1) (N.succ (n1-n2))
+                                                  (feval_cast CAST_LOW w (N.succ n1) n)) (N.succ (n1-n2)), ma)
+      end
+  | Concat e1 e2 =>
+      match feval_exp e1 h s (unknowns0 unk), feval_exp e2 h s (unknowns1 unk) with
+      | (VaU _ _ n1 w1, ma1), (VaU _ _ n2 w2, ma2) =>
+        (VaU true NoE.zstore (NoE.lor (NoE.shiftl n1 w2) n2) (w1+w2), ma1++ma2)
       end
   end.
 
-Fixpoint exp_known e :=
-  match e with
-  | Var _ | Word _ _ => true
-  | Unknown _ => false
-  | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => exp_known e1
-  | BinOp _ e1 e2 | Let _ e1 e2 | Concat e1 e2 | Load e1 e2 _ _ => if exp_known e1 then exp_known e2 else false
-  | Ite e1 e2 e3 | Store e1 e2 e3 _ _ => if exp_known e1 then (if exp_known e2 then exp_known e3 else false) else false
+
+(* Convert a list of variables and their values to a store function. *)
+Fixpoint updlst s (l: list (var * option value)) upd : store :=
+  match l with nil => s | (v,u)::t => upd (updlst s t upd) v u end.
+
+(* Remove a variable from a list of variables and their values. *)
+Fixpoint remlst v l : list (var * option value) :=
+  match l with nil => nil | (v',u)::t => if v == v' then t else (v',u)::(remlst v t) end.
+
+
+(* The statement interpreter returns a list of known variables and their values,
+   a "continuation" state (which is either an exit or a new statement that, if
+   interpreted, would yield the final state), and a list of memory access props.
+   Returning a statement-continuation allows the interpreter to stop interpretation
+   early if it encounters a conditional or loop that requires a tactic-level
+   case-distinction or induction before interpretation can proceed.  This prevents
+   the interpreted term from blowing up into a huge conditional expression in which
+   every possible branch is fully expanded. *)
+
+Inductive finterp_cont := FIExit (x: option exit) | FIStmt (q: stmt).
+
+Inductive finterp_state :=
+| FIS (l: list (var * option value)) (xq: finterp_cont) (ma: list Prop).
+
+Fixpoint fexec_stmt q h s unk l :=
+  match q with
+  | Nop => FIS l (FIExit None) nil
+  | Move v e => match feval_exp e h (updlst s l) unk with
+                | (u,ma) => FIS ((v, Some (of_uvalue u))::remlst v l) (FIExit None) ma
+                end
+  | Jmp e => match feval_exp e h (updlst s l) unk with
+             | (VaU _ _ n _, ma) => FIS l (FIExit (Some (Exit n))) ma
+             end
+  | Exn i => FIS l (FIExit (Some (Raise i))) nil
+  | Seq q1 q2 =>
+      match fexec_stmt q1 h s (unknowns0 unk) l with
+      | FIS l1 (FIStmt q1') ma1 => FIS l1 (FIStmt (Seq q1' q2)) ma1
+      | FIS l1 (FIExit (Some x1)) ma1 => FIS l1 (FIExit (Some x1)) ma1
+      | FIS l1 (FIExit None) ma1 => match fexec_stmt q2 h s (unknowns1 unk) l1 with
+                                    | FIS l2 qx2 ma2 => FIS l2 qx2 (ma1++ma2)
+                                    end
+      end
+  | If e q1 q2 =>
+      match feval_exp e h (updlst s l) unk with (VaU _ _ n _, ma0) =>
+        FIS l (FIStmt (if n then q2 else q1)) ma0
+      end
+  | Rep e q1 =>
+      match feval_exp e h (updlst s l) unk with (VaU _ _ n _, ma0) =>
+        FIS l (FIStmt (NoE.Niter n (Seq q1) Nop)) ma0
+      end
   end.
 
 
-Lemma canonical_feval:
-   forall e s, canonical_uvalue (feval_exp e s).
-Proof.
-  induction e; intros; simpl;
-  repeat match goal with |- context [ feval_exp ?e ?s ] => destruct (feval_exp e s) eqn:? end;
-  try reflexivity.
-  apply canonical_uget.
-  destruct b; reflexivity.
-  destruct u; reflexivity.
-  rewrite <- Hequ. apply IHe2.
-  destruct n;
-    match goal with [ H: _ = ?u |- _ ?u ] => rewrite <- H; generalize s; assumption end.
-Qed.
-
-Theorem reduce_binop:
-  forall bop w n1 n2, eval_binop bop w n1 n2 = of_uvalue (feval_binop bop w n1 n2).
-Proof.
-  intros. destruct bop; reflexivity.
-Qed.
-
-Theorem reduce_unop:
-  forall uop w n, eval_unop uop w n = of_uvalue (feval_unop uop w n).
-Proof.
-  intros. destruct uop; reflexivity.
-Qed.
+(* Now we prove that the functional interpreter obeys the operational semantics.
+   The proved theorems can be used as tactics that convert eval_exp and exec_stmt
+   propositions to feval_exp and fexec_stmt functions that can be evaluated using
+   vm_compute or other reduction tactics. *)
 
 Theorem reduce_exp:
-  forall h e s u (K: exp_known e = true) (E: eval_exp h s e u), u = of_uvalue (feval_exp e s).
+  forall h e s u (E: eval_exp h (s vupdate) e u),
+  exists unk, match feval_exp e h s unk with (u',ma) =>
+    u = of_uvalue u' /\ conjallT ma end.
 Proof.
-  induction e; intros; inversion E; clear E; subst; simpl;
-  simpl in K; repeat (apply andb_prop in K; let K':=fresh "K" in destruct K as [K' K]);
-  repeat match goal with [ IH: forall _ _, exp_known ?e = _ -> _, K: exp_known ?e = _, E: eval_exp _ _ ?e _ |- _ ] =>
-    apply (IH _ _ K) in E;
-    try (let b := fresh "b" in destruct (feval_exp e _) as [b ? ? ?]; destruct b; try discriminate E; injection E as)
-  end; subst; try reflexivity.
+  induction e; intros; inversion E; clear E; subst.
 
-    rewrite SV. symmetry. apply uvalue_inv.
+  (* Var *)
+  exists (fun _ => N0). split.
+    simpl. rewrite SV. autorewrite with feval. destruct u; reflexivity.
+    exact I.
 
-    apply reduce_binop.
-
-    apply reduce_unop.
-
-    discriminate K.
-
-    destruct n.
-      apply (IHe3 _ _ K) in E'. destruct (feval_exp e2 s). destruct (feval_exp e3 _). subst u. reflexivity.
-      apply (IHe2 _ _ K1) in E'. destruct (feval_exp e2 _). destruct (feval_exp e3 _). subst u. reflexivity.
-Qed.
-
-Theorem memacc_exp_true:
-  forall h e s u (K: exp_known e = true) (E: eval_exp h s e u),
-  memacc_exp h e s.
-Proof.
-  induction e; intros; try exact I;
-    try (unfold exp_known in K; fold exp_known in K; apply andb_prop in K; destruct K as [K1 K2]);
-    inversion E; subst;
-    unfold memacc_exp; fold memacc_exp;
-    try first [ eapply IHe; [ exact K | exact E1 ]
-              | split; [ eapply IHe1; [ exact K1 | exact E1 ]
-                       | eapply IHe2; [ exact K2 | exact E2 ] ] ].
+  (* Word *)
+  exists (fun _ => N0). split.
+    reflexivity.
+    exact I.
 
   (* Load *)
-  apply reduce_exp in E1; [|exact K1]. apply reduce_exp in E2; [|exact K2].
-  apply (f_equal uvalue_of) in E1. apply (f_equal uvalue_of) in E2. rewrite can_uvalue_inv in E1,E2 by apply canonical_feval.
-  unfold uvalue_of in E1,E2. rewrite <- E1, <- E2. exact R.
+  apply IHe1 in E1. apply IHe2 in E2. clear IHe1 IHe2.
+  destruct E1 as [unk1 E1]. destruct E2 as [unk2 E2].
+  exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
+  unfold feval_exp; fold feval_exp. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
+  destruct (feval_exp e1 _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  destruct (feval_exp e2 _ _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
+  simpl in U1,U2. destruct z; destruct z0; try discriminate. injection U1; injection U2; intros; subst.
+  autorewrite with feval. split.
+    reflexivity.
+    split.
+      exact R.
+      apply conjallT_app; assumption.
 
   (* Store *)
-  apply andb_prop, proj1 in K2.
-  apply reduce_exp in E1; [|exact K1]. apply reduce_exp in E2; [|exact K2].
-  apply (f_equal uvalue_of) in E1. apply (f_equal uvalue_of) in E2. rewrite can_uvalue_inv in E1,E2 by apply canonical_feval.
-  unfold uvalue_of in E1,E2. rewrite <- E1, <- E2. exact W.
+  apply IHe1 in E1. apply IHe2 in E2. apply IHe3 in E3. clear IHe1 IHe2 IHe3.
+  destruct E1 as [unk1 E1]. destruct E2 as [unk2 E2]. destruct E3 as [unk3 E3].
+  exists (fun i => match i with xO (xO j) => unk1 j | xI (xO j) => unk2 j | xO (xI j) => unk3 j | _ => N0 end).
+  unfold feval_exp; fold feval_exp. change (unknowns00 _) with unk1. change (unknowns01 _) with unk2. change (unknowns10 _) with unk3.
+  destruct (feval_exp e1 _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  destruct (feval_exp e2 _ _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
+  destruct (feval_exp e3 _ _ _) as (u3,ma3). destruct u3. destruct E3 as [U3 M3].
+  simpl in U1,U2,U3. destruct z; destruct z0; destruct z1; try discriminate. injection U1; injection U2; injection U3; intros; subst.
+  autorewrite with feval. split.
+    reflexivity.
+    split.
+      exact W.
+      repeat try apply conjallT_app; assumption.
+
+  (* BinOp *)
+  apply IHe1 in E1. apply IHe2 in E2. clear IHe1 IHe2.
+  destruct E1 as [unk1 E1]. destruct E2 as [unk2 E2].
+  exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
+  unfold feval_exp; fold feval_exp. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
+  destruct (feval_exp e1 _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  destruct (feval_exp e2 _ _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
+  simpl in U1,U2. destruct z; destruct z0; try discriminate. injection U1; injection U2; intros; subst.
+  split.
+    destruct b; simpl; autorewrite with feval; reflexivity.
+    apply conjallT_app; assumption.
+
+  (* UnOp *)
+  apply IHe in E1. clear IHe.
+  destruct E1 as [unk1 E1].
+  exists unk1.
+  unfold feval_exp; fold feval_exp.
+  destruct (feval_exp e _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
+  split.
+    destruct u; simpl; autorewrite with feval; reflexivity.
+    assumption.
+
+  (* Cast *)
+  apply IHe in E1. clear IHe.
+  destruct E1 as [unk1 E1].
+  exists unk1.
+  unfold feval_exp; fold feval_exp.
+  destruct (feval_exp e _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
+  split.
+    destruct c; simpl; autorewrite with feval; reflexivity.
+    assumption.
 
   (* Let *)
+  change (s vupdate [v:=Some u1]) with ((fun upd => upd (s upd) v (Some u1)) vupdate) in E2.
+  apply IHe1 in E1. apply IHe2 in E2. clear IHe1 IHe2.
+  destruct E1 as [unk1 E1]. destruct E2 as [unk2 E2].
+  exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
+  unfold feval_exp; fold feval_exp. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
+  destruct (feval_exp e1 _ _ _) as (u0,ma1). destruct E1 as [U1 M1]. subst.
+  destruct (feval_exp e2 _ _ _) as (u2,ma2). destruct E2 as [U2 M2]. subst.
   split.
-    eapply IHe1. exact K1. exact E1.
-    eapply IHe2. exact K2. apply reduce_exp in E1; [|exact K1]. rewrite <- E1. exact E2.
+    reflexivity.
+    apply conjallT_app; assumption.
 
-  (* Ite *)
-  apply reduce_exp in E1; [|exact K1]. apply (f_equal uvalue_of) in E1. rewrite can_uvalue_inv in E1 by apply canonical_feval.
-  rewrite <- E1. simpl. apply andb_prop in K2. destruct n1.
-    eapply IHe3. exact (proj2 K2). exact E'.
-    eapply IHe2. exact (proj1 K2). exact E'.
-Qed.
+  (* Unknown *)
+  exists (fun _ => n).
+  unfold feval_exp; fold feval_exp.
+  simpl. autorewrite with feval. split.
+    rewrite N.mod_small by assumption. reflexivity.
+    exact I.
 
+  (* Ife *)
+  apply IHe1 in E1. clear IHe1. destruct E1 as [unk1 E1].
+  destruct n1.
 
-(* With the above, we can now reduce common-case exec_stmt hypotheses into hypotheses of the
-   form s' = ... /\ x' = ..., which allows us to infer the final store s' and exit state x'
-   and substitute them away throughout the proof context. *)
-
-Lemma reduce_seq_move:
-  forall x1 h s1 v e q s1' (XS: exec_stmt h s1 (Seq (Move v e) q) s1' x1),
-  if exp_known e then
-    (let u := of_uvalue (feval_exp e s1) in exec_stmt h (s1[v:=Some u]) q s1' x1) /\
-    memacc_exp h e s1
-  else
-    exists u, exec_stmt h (s1[v:=Some u]) q s1' x1.
-Proof.
-  intros. inversion XS; subst.
-    inversion XS0; subst.
-
-    inversion XS1; subst. destruct (exp_known e) eqn:K.
-      split.
-        eapply reduce_exp in E. subst u. exact XS0. exact K.
-        eapply memacc_exp_true. exact K. exact E.
-      eexists. exact XS0.
-Qed.
-
-Lemma reduce_nop:
-  forall x1 h s1 s1' (XS: exec_stmt h s1 Nop s1' x1),
-  s1' = s1 /\ x1 = None.
-Proof.
-  intros. inversion XS; subst. split; reflexivity.
-Qed.
-
-Lemma reduce_move:
-  forall x1 h s1 v e s1' (XS: exec_stmt h s1 (Move v e) s1' x1),
-  if exp_known e then
-    ((let u := of_uvalue (feval_exp e s1) in s1' = s1[v:=Some u]) /\ x1 = None) /\
-    memacc_exp h e s1
-  else exists u, (s1' = s1[v:=Some u] /\ x1 = None).
-Proof.
-  intros. inversion XS; subst. destruct (exp_known e) eqn:K.
+    apply IHe3 in E'. clear IHe2 IHe3. destruct E' as [unk3 E3].
+    exists (fun i => match i with xO j => unk1 j | xI j => unk3 j | _ => N0 end).
+    unfold feval_exp; fold feval_exp. change (unknowns0 _) with unk1. change (unknowns1 _) with unk3.
+    destruct (feval_exp e1 _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+    destruct (feval_exp e3 _ _ _) as (u3,ma3). destruct u3. destruct E3 as [U3 M3]. subst.
+    simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
+    destruct (feval_exp e2 _ _ _) as (u2,ma2). destruct u2.
     split.
-      eapply reduce_exp in E. rewrite E. split; reflexivity. exact K.
-      eapply memacc_exp_true. exact K. exact E.
-    exists u. split; reflexivity.
-Qed.
+      reflexivity.
+      destruct ma2; destruct ma3.
+        assumption.
+        apply conjallT_app. assumption. split. apply conjall_iffT. assumption. exact I.
+        apply conjallT_app. assumption. split; exact I.
+        apply conjallT_app. assumption. split. apply conjall_iffT. assumption. exact I.
 
-Lemma reduce_jmp:
-  forall x1 h s1 e s1' (XS: exec_stmt h s1 (Jmp e) s1' x1),
-  if exp_known e then
-    (s1' = s1 /\ x1 = Some (Exit (match feval_exp e s1 with VaU _ _ a _ => a end))) /\
-    memacc_exp h e s1
-  else exists a, (s1' = s1 /\ x1 = Some (Exit a)).
-Proof.
-  intros. inversion XS; subst. destruct (exp_known e) eqn:K.
+    apply IHe2 in E'. clear IHe2 IHe3. destruct E' as [unk2 E2].
+    exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
+    unfold feval_exp; fold feval_exp. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
+    destruct (feval_exp e1 _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+    destruct (feval_exp e2 _ _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2]. subst.
+    simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
+    destruct (feval_exp e3 _ _ _) as (u3,ma3). destruct u3.
     split.
-      split. reflexivity.
-      eapply reduce_exp in E; [|exact K].
-      apply (f_equal uvalue_of) in E.
-      rewrite can_uvalue_inv in E; [|apply canonical_feval].
-      simpl in E. rewrite <- E. reflexivity.
+      reflexivity.
+      destruct ma3; destruct ma2.
+        assumption.
+        apply conjallT_app. assumption. split. apply conjall_iffT. assumption. exact I.
+        apply conjallT_app. assumption. split; exact I.
+        apply conjallT_app. assumption. split. apply conjall_iffT. assumption. exact I.
 
-      eapply memacc_exp_true. exact K. exact E.
+  (* Extract *)
+  apply IHe in E1. clear IHe.
+  destruct E1 as [unk1 E1].
+  exists unk1.
+  unfold feval_exp; fold feval_exp.
+  destruct (feval_exp e _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
+  split.
+    simpl. autorewrite with feval. reflexivity.
+    assumption.
 
-    exists a. split; reflexivity.
+  (* Concat *)
+  apply IHe1 in E1. apply IHe2 in E2. clear IHe1 IHe2.
+  destruct E1 as [unk1 E1]. destruct E2 as [unk2 E2].
+  exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
+  unfold feval_exp; fold feval_exp. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
+  destruct (feval_exp e1 _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  destruct (feval_exp e2 _ _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
+  simpl in U1,U2. destruct z; destruct z0; try discriminate. injection U1; injection U2; intros; subst.
+  split.
+    simpl. autorewrite with feval. reflexivity.
+    apply conjallT_app; assumption.
 Qed.
 
-Lemma reduce_if:
-  forall x1 h s1 e q1 q2 s1' (XS: exec_stmt h s1 (If e q1 q2) s1' x1),
-  if exp_known e then
-    (exec_stmt h s1 (match feval_exp e s1 with VaU _ _ c _ => if c then q2 else q1 end) s1' x1) /\
-    memacc_exp h e s1
-  else
-    exists (c:N), exec_stmt h s1 (if c then q2 else q1) s1' x1.
+Lemma updlst_remlst:
+  forall v u l s, updlst s (remlst v l) vupdate [v:=u] = updlst s l vupdate [v:=u].
 Proof.
-  intros. inversion XS; subst. destruct (exp_known e) eqn:K.
-    split.
-      eapply reduce_exp in E; [|exact K].
-      apply (f_equal uvalue_of) in E.
-      rewrite can_uvalue_inv in E; [|apply canonical_feval].
-      rewrite <- E. simpl. destruct c; assumption.
+  induction l; intros.
+    reflexivity.
+    destruct a as (v1,u1). simpl. destruct (vareq v v1).
+      subst. unfold vupdate at 2. rewrite update_cancel. reflexivity.
+      simpl. unfold vupdate at 1 3. rewrite update_swap.
+        rewrite IHl. rewrite update_swap by assumption. reflexivity.
+        intro H. apply n. symmetry. exact H.
+Qed.
 
-      eapply memacc_exp_true. exact K. exact E.
+Theorem reduce_stmt:
+  forall s l q h s' x (XS: exec_stmt h (updlst s l vupdate) q s' x),
+  exists unk, match fexec_stmt q h s unk l with
+              | FIS l' (FIExit x') ma => (s' = updlst s l' NoEMem.vupdate /\ x = x') /\ conjallT ma
+              | FIS l' (FIStmt q') ma => exec_stmt h (updlst s l' NoEMem.vupdate) q' s' x /\ conjallT ma
+              end.
+Proof.
+  rewrite NoEMem.vupdate_eq.
+  intros s l q h. revert s l. induction q using stmt_ind2; intros;
+  inversion XS; clear XS; subst.
 
-    eexists. exact XS0.
+  (* Nop *)
+  exists (fun _ => N0).
+  simpl. repeat split.
+
+  (* Move *)
+  apply reduce_exp in E. destruct E as [unk E]. exists unk.
+  simpl. destruct (feval_exp _ _ _ _) as (u1,ma1).
+  destruct E as [U1 M1]. subst.
+  repeat split.
+    simpl. rewrite updlst_remlst. reflexivity.
+    exact M1.
+
+  (* Jmp *)
+  apply reduce_exp in E. destruct E as [unk E]. exists unk.
+  simpl. destruct (feval_exp _ _ _ _) as (u1,ma1). destruct u1.
+  destruct E as [U1 M1]. simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
+  repeat split. exact M1.
+
+  (* Exn *)
+  exists (fun _ => N0).
+  simpl. repeat split.
+
+  (* Seq1 *)
+  apply IHq1 in XS0. clear IHq1. destruct XS0 as [unk XS1].
+  exists (fun i => match i with xO j => unk j | _ => N0 end).
+  simpl. change (unknowns0 _) with unk.
+  destruct (fexec_stmt _ _ _ _ _) as [l1 [x1|q1'] ma1].
+    destruct XS1 as [[S1 X1] M1]. subst. repeat split. exact M1.
+    split; try apply XSeq1; apply XS1.
+
+  (* Seq2 *)
+  apply IHq1 in XS1. clear IHq1. destruct XS1 as [unk1 XS1].
+  destruct (fexec_stmt q1 _ _ _ _) as [l1 [x1|q1'] ma1] eqn:FS1.
+
+    destruct XS1 as [[S1 X1] M1]. subst.
+    apply IHq2 in XS0. clear IHq2. destruct XS0 as [unk2 XS2].
+    exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
+    simpl. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
+    rewrite FS1.
+    destruct (fexec_stmt q2 _ _ _ _) as [l2 [x2|q2'] ma2].
+      destruct XS2 as [[S2 X2] M2]. subst. repeat split. apply conjallT_app; assumption.
+      split. apply XS2. apply conjallT_app. exact M1. apply XS2.
+
+    exists (fun i => match i with xO j => unk1 j | _ => N0 end).
+    simpl. change (unknowns0 _) with unk1. rewrite FS1.
+    split. eapply XSeq2. apply XS1. assumption. apply XS1.
+
+  (* If *)
+  apply reduce_exp in E. destruct E as [unk E].
+  exists unk. simpl.
+  destruct (feval_exp _ _ _ _) as [u ma0].
+  destruct E as [E M]. destruct u as [z m n w]. destruct z; [|discriminate]. injection E; intros; subst.
+  split; assumption.
+
+  (* Rep *)
+  apply reduce_exp in E. destruct E as [unk E].
+  exists unk. simpl.
+  destruct (feval_exp _ _ _ _) as [u ma0].
+  destruct E as [E M]. destruct u as [z m c ?]. destruct z; [|discriminate]. injection E; intros; subst.
+  rewrite NoE.Niter_eq. split; assumption.
+Qed.
+
+Theorem update_updlst:
+  forall upd s v u l,
+  updlst (upd s v u) (rev l) upd = updlst s (rev ((v,u)::l)) upd.
+Proof.
+  intros. simpl. generalize (rev l) as l'. induction l'.
+    reflexivity.
+    simpl. rewrite IHl'. reflexivity.
 Qed.
 
 
-(* Using the functional interpreter, we now define a set of tactics that reduce expressions to values,
-   and statements to stores & exits.  These tactics are carefully implemented to avoid simplifying
-   anything other than the machinery of the functional interpreter, so that Coq does not spin out of
-   control attempting to execute the entire program.  Our objective is to infer a reasonably small,
-   well-formed symbolic expression that captures the result of executing each assembly instruction.
-   This result can be further reduced by the user (e.g., using "simpl") if desired.  Call-by-value
-   strategy is used here, since our goal is usually to reduce as much as possible of the target
-   expression, which might include arguments of an enclosing unexpandable function. *)
+(* Using the functional interpreter, we now define a set of tactics that reduce
+   expressions to values, and statements to stores & exits.  These tactics are
+   carefully implemented to avoid simplifying anything other than the machinery
+   of the functional interpreter, so that Coq does not spin out of control
+   attempting to execute the entire program.  Our objective is to infer a
+   reasonably small, well-formed symbolic expression that captures the result
+   of executing each assembly instruction.  This result can be further reduced
+   by the user (e.g., using "simpl") if desired.  Call-by-value strategy is
+   used here, since our goal is usually to reduce as much as possible of the
+   target expression, which might include arguments of an enclosing unexpandable
+   function. *)
 
-Declare Reduction simpl_exp :=
-  cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
-                             utowidth utobit uget of_uvalue uvalue_of ].
-
-Ltac simpl_exp :=
-  cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
-                             utowidth utobit uget of_uvalue uvalue_of ];
-  repeat match goal with |- context [ bits_of_mem ?w ] =>
-    let b := eval compute in (bits_of_mem w) in change (bits_of_mem w) with b
-  end.
-
-Tactic Notation "simpl_exp" "in" hyp(H) :=
-  cbv beta iota zeta delta [ exp_known feval_exp feval_binop feval_unop memacc_exp
-                             utowidth utobit uget of_uvalue uvalue_of ] in H;
-  repeat match type of H with context [ bits_of_mem ?w ] =>
-    let b := eval compute in (bits_of_mem w) in change (bits_of_mem w) with b in H
-  end.
-
-
-(* Statement simplification most often gets stuck at variable-reads, since the full content of the
-   store is generally not known (s is a symbolic expression).  We can often push past this obstacle
-   by applying the update_updated and update_frame theorems to automatically infer that the values
-   of variables not being read are irrelevant.  The "simpl_stores" tactic does so. *)
+(* Statement simplification most often gets stuck at variable-reads, since the
+   full content of the store is generally not known (s is a symbolic expression).
+   We can often push past this obstacle by applying the update_updated and
+   update_frame theorems to automatically infer that the values of variables not
+   being read are irrelevant.  The "simpl_stores" tactic does so. *)
 
 Remark if_N_same: forall A (n:N) (a:A), (if n then a else a) = a.
 Proof. intros. destruct n; reflexivity. Qed.
@@ -446,10 +829,12 @@ Tactic Notation "simpl_stores" "in" hyp(H) :=
   end.
 
 
-(* To facilitate expression simplification, it is often convenient to first consolidate all information
-   about known variable values into the expression to be simplified.  The "stock_store" tactic searches the
-   proof context for hypotheses of the form "s var = value", where "var" is some variable appearing in the
-   expression to be reduced and "s" is the store, and adds "s[var:=value]" to the expression. *)
+(* To facilitate expression simplification, it is often convenient to first
+   consolidate all information about known variable values into the expression
+   to be simplified.  The "stock_store" tactic searches the proof context for
+   hypotheses of the form "s var = value", where "var" is some variable
+   appearing in the expression to be reduced and "s" is the store, and adds
+   "s[var:=value]" to the expression. *)
 
 Ltac stock_store :=
   lazymatch goal with |- exec_stmt _ _ ?Q _ _ => repeat
@@ -476,102 +861,101 @@ Tactic Notation "stock_store" "in" hyp(XS) :=
   end.
 
 
-(* Replace any unresolved variable lookups as fresh Coq variables after functional evaluation. *)
+(* To prevent vm_compute from expanding symbolic expressions that the user
+   already has in a desired form, the following lemmas introduce symbolic
+   constants for those expressions that are set equal to the original terms.
+   The "destruct" tactic can then be used to separate those terms out into
+   a different hypothesis to which vm_compute is not applied, and then
+   use "subst" to substitute them back into the evaluated term after vm_compute
+   is done. *)
 
-Ltac destr_ugets H :=
-  try (rewrite fold_uget in H; repeat rewrite fold_uget in H;
-       repeat match type of H with context [ uget ?X ] =>
-         let UGET := fresh "UGET" in
-         let utyp := fresh "utyp" in let mem := fresh "mem" in let n := fresh "n" in let w := fresh "w" in
-         destruct (uget X) as [utyp mem n w] eqn:UGET
-       end).
+Lemma fexec_stmt_init:
+  forall h s q s' x (XS: exec_stmt h s q s' x),
+  exec_stmt h (updlst s (rev nil) vupdate) q s' x /\ True.
+Proof. split. assumption. exact I. Qed.
 
-(* As the functional interpreter interprets stmts within a sequence, it infers memory access
-   hypotheses as a side-effect of interpreting Load and Store expressions.  It splits these
-   off into separate hypotheses in order to continue stepping the main exec_stmt hypothesis.
-   Many are redundant (e.g., because Load or Store is applied to the same expression multiple
-   times within the stmt), so we automatically clear any redundant ones. *)
+Lemma fexec_stmt_updn:
+  forall h s v n w l q s' x EQs,
+  exec_stmt h (updlst (vupdate s v (Some (VaN n w))) (rev l) vupdate) q s' x /\ EQs ->
+  exists a, exec_stmt h (updlst s (rev ((v, Some (VaN a w))::l)) vupdate) q s' x /\ (a=n /\ EQs).
+Proof.
+  intros. exists n. split.
+    rewrite <- update_updlst. apply H.
+    split. reflexivity. apply H.
+Qed.
 
-Ltac nomemaccs T :=
-  lazymatch T with NoMemAcc => idtac
-  | if _ then ?E1 else ?E2 => nomemaccs E1; nomemaccs E2
-  | ?E1 /\ ?E2 => nomemaccs E1; nomemaccs E2
-  | _ => fail
-  end.
+Lemma fexec_stmt_updm:
+  forall h s v m w l q s' x EQs,
+  exec_stmt h (updlst (vupdate s v (Some (VaM m w))) (rev l) vupdate) q s' x /\ EQs ->
+  exists a, exec_stmt h (updlst s (rev ((v, Some (VaM a w))::l)) vupdate) q s' x /\ (a=m /\ EQs).
+Proof.
+  intros. exists m. split.
+    rewrite <- update_updlst. apply H.
+    split. reflexivity. apply H.
+Qed.
 
-Ltac destruct_memacc H :=
-  lazymatch type of H with
-  | _=_ /\ _=_ => idtac
-  | exists _, _ => let u := fresh "u" in destruct H as [u H]; simpl_exp in H; simpl_stores in H
-  | ?H1 /\ ?H1 =>
-    lazymatch goal with
-    | [ _:H1 |- _ ] => clear H
-    | _ => apply proj1 in H; destruct_memacc H
-    end
-  | ?H1 /\ ?H2 =>
-    lazymatch goal with
-    | [ _:H1, _:H2 |- _ ] => clear H
-    | [ _:H1 |- _ ] => apply proj2 in H; destruct_memacc H
-    | [ _:H2 |- _ ] => apply proj1 in H; destruct_memacc H
-    | _ => let H' := fresh "ACC" in destruct H as [H H']; destruct_memacc H; destruct_memacc H'
-    end
-  | ?T => try (nomemaccs T; clear H)
-  end.
+Lemma fexec_stmt_updu:
+  forall h s v u l q s' x EQs,
+  exec_stmt h (updlst (vupdate s v u) (rev l) vupdate) q s' x /\ EQs ->
+  exists a, exec_stmt h (updlst s (rev ((v,u)::l)) vupdate) q s' x /\ (a=u /\ EQs).
+Proof.
+  intros. exists u. split.
+    rewrite <- update_updlst. apply H.
+    split. reflexivity. apply H.
+Qed.
 
-(* Finally, simplifying a hypothesis of the form (exec_stmt ...) entails applying the functional
-   interpreter to each statement in the sequence (usually a Move), using simpl_stores to try to
-   infer any unresolved variable-reads, using destr_ugets to abstract any unresolved store-reads,
-   and repeating this until we reach a conditional or the end of the sequence.  (We don't attempt
-   to break conditionals into cases automatically here, since often the caller wants to decide
-   which case distinction is best.)
 
-   Here, parameter "tac" is a caller-supplied tactic (taking a hypothesis as its argument) which
-   is applied to simplify the expression after each step within a stmt.  This is most often useful
-   for simplifying memory access hypotheses before they get split off from the main hypothesis. *)
+(* Finally, simplifying a hypothesis H of the form (exec_stmt ...) entails first
+   removing any user-supplied expressions in H that we don't want expanded, then
+   applying the reduce_stmt theorem to convert it into an fexec_stmt expression,
+   launching vm_compute on it, then abstracting any unknowns as unique proof
+   context variables, and finally substituting any removed or opaque expressions
+   back in to the evaluated expression. *)
 
-Ltac finish_simpl_stmt tac H :=
-  simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H; tac H; destruct_memacc H.
-
-Ltac simpl_stmt_loop tac H :=
-  lazymatch type of H with exec_stmt _ _ ?q _ _ => lazymatch q with
-  | Seq (Move _ _) _ =>
-    apply reduce_seq_move in H; finish_simpl_stmt tac H; simpl_stmt_loop tac H
-  | Nop => apply reduce_nop in H; unfold cast in H
-  | Move _ _ => apply reduce_move in H; finish_simpl_stmt tac H
-  | Jmp _ => apply reduce_jmp in H; finish_simpl_stmt tac H
-  | If _ _ _ => apply reduce_if in H;
-      simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
-      lazymatch type of H with
-      | exists _, _ => let c := fresh "c" in
-          destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
-      | _ => tac H; destruct_memacc H
-      end
-  | _ => first
-  [ apply reduce_seq_move in H; finish_simpl_stmt tac H; simpl_stmt_loop tac H
-  | apply reduce_nop in H; unfold cast in H
-  | apply reduce_move in H; finish_simpl_stmt tac H
-  | apply reduce_jmp in H; finish_simpl_stmt tac H
-  | apply reduce_if in H;
-      simpl_exp in H; simpl_stores in H; destr_ugets H; unfold cast in H;
-      lazymatch type of H with
-      | exists _, _ => let c := fresh "c" in
-          destruct H as [c H]; simpl_exp in H; simpl_stores in H; destr_ugets H
-      | _ => tac H; destruct_memacc H
-      end ]
-  end end.
-
-Tactic Notation "simpl_stmt" "using" tactic(tac) "in" hyp(H) :=
-  lazymatch type of H with exec_stmt _ _ _ _ ?x => simpl_stmt_loop tac H
+Ltac step_stmt XS :=
+  lazymatch type of XS with exec_stmt ?h _ _ ?s' ?x =>
+    apply fexec_stmt_init in XS;
+    repeat first [ apply fexec_stmt_updn in XS; let _n := fresh "_n" in destruct XS as [_n XS]
+                 | apply fexec_stmt_updm in XS; let _m := fresh "_m" in destruct XS as [_m XS]
+                 | apply fexec_stmt_updu in XS; let _u := fresh "_u" in destruct XS as [_u XS] ];
+    let EQs := fresh in (
+      destruct XS as [XS EQs];
+      let _h := fresh "_h" in let _s := fresh "_s" in let _s' := fresh "_s'" in let _x := fresh "_x" in (
+        lazymatch type of XS with exec_stmt _ (updlst ?s _ _) _ _ _ =>
+          remember h as _h; remember s as _s; remember s' as _s'; remember x as _x
+        end;
+        apply reduce_stmt in XS; let unk := fresh "unknown" in (
+          destruct XS as [unk XS];
+          vm_compute in XS;
+          revert XS; repeat lazymatch goal with |- context [ unk ?i ] =>
+            generalize (unk i); let u := fresh "u" in intro u
+          end; intro XS; try clear unk
+        );
+        autorewrite with feval in XS;
+        subst _h _s _s' _x
+      );
+      repeat lazymatch type of EQs with (?_nmu = _) /\ _ =>
+        let H1 := fresh in destruct EQs as [H1 EQs]; subst _nmu
+      end;
+      clear EQs
+    )
   | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
   end.
 
 
-(* Combining all of the above, our most typical simplification regimen first stocks the store
-   of the exec_stmt with any known variable values from the context, then applies the functional
-   interpreter, and then unfolds a few basic constants. *)
+(* We can then break the memory access part of XS resulting from step_stmt into
+   separate hypotheses.  This is provided as a separate tactic because often
+   the user may want to perform some sort of simplification before splitting. *)
 
-Tactic Notation "psimpl" "using" tactic(tac) "in" hyp(H) :=
-  stock_store in H; simpl_stmt using tac in H; unfold tobit in H.
+Ltac destruct_memaccs XS :=
+  let ACCs := fresh "ACCs" in
+    destruct XS as [XS ACCs];
+    repeat lazymatch type of ACCs with ?H1 /\ _ =>
+      lazymatch goal with [ H0:H1 |- _ ] => apply proj2 in ACCs
+      | _ => let ACC := fresh "ACC" in destruct ACCs as [ACC ACCs]
+      end
+    | True => clear ACCs
+    end.
 
 End PICINAE_FINTERP.
 

@@ -81,7 +81,8 @@ Module MiniX86VarEq <: MiniDecidableType.
   Definition t := x86var.
   Definition eq_dec (v1 v2:x86var) : {v1=v2}+{v1<>v2}.
     decide equality; apply N.eq_dec.
-  Qed. (* Some users may want to change this Qed to Defined. *)
+  Defined.  (* <-- This must be Defined (not Qed!) for finterp to work! *)
+  Arguments eq_dec v1 v2 : simpl never.
 End MiniX86VarEq.
 
 Module X86Arch <: Architecture.
@@ -136,12 +137,12 @@ Definition x86_regsize {s v u w} := @models_regsize x86typctx s v u w.
 
 
 
-(* Create some automated machinery for simplifying symbolic expressions commonly arising
-   from x86 instruction operations.  Mostly this involves simplifying e mod 2^w whenever
-   e < 2^w. *)
+(* Create some automated machinery for simplifying symbolic expressions commonly
+   arising from x86 instruction operations.  Mostly this involves simplifying
+   (e mod 2^w) whenever e < 2^w. *)
 
-(* Define an abbreviation for x86's parity flag computation, which produces uncomfortably
-   large symbolic expressions. *)
+(* Define an abbreviation for x86's parity flag computation, which produces
+   uncomfortably large symbolic expressions. *)
 Definition parity n :=
   N.lnot ((N.lxor
     (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
@@ -157,6 +158,11 @@ Lemma fold_parity: forall n,
             (N.lxor (N.shiftr n 4) n))) mod 2^1) 1
   = parity n.
 Proof. intro. reflexivity. Qed.
+
+
+(* Simplify memory access propositions by observing that on x86, the only part
+   of the store that affects memory accessibility are the page-access bits
+   (A_READ and A_WRITE). *)
 
 Lemma memacc_read_frame:
   forall h s v u (NE: v <> A_READ),
@@ -191,9 +197,10 @@ Proof.
 Qed.
 
 
-(* getmem assembles bytes into words by logical-or'ing them together, but sometimes it
-   is easier to reason about them as if they were added.  The following theorem proves
-   that logical-or and addition are the same when the operands share no common bits. *)
+(* getmem assembles bytes into words by logical-or'ing them together, but
+   sometimes it is easier to reason about them as if they were summed.  The
+   following theorem proves that logical-or and addition are the same when
+   the operands share no common bits. *)
 Theorem lor_plus:
   forall a b (A0: N.land a b = 0), N.lor a b = a + b.
 Proof.
@@ -333,14 +340,10 @@ Global Hint Rewrite mod_add_mul_rl using discriminate 1 : mod_pow2.
 Global Hint Rewrite mem_small using assumption : mod_pow2.
 Global Hint Rewrite if_if : mod_pow2.
 Global Hint Rewrite if_not_if : mod_pow2.
-(*
-Global Hint Rewrite memlo using solve [ discriminate 1 | assumption ] : mod_pow2.
-Global Hint Rewrite shiftr_low_pow2 using solve_lt : mod_pow2.
-Global Hint Rewrite N.mod_small using solve_lt : mod_pow2.
-*)
 
 
-(* When reducing modulo operations, try auto-solving inequalities of the form x < 2^w. *)
+(* When reducing modulo operations, try auto-solving inequalities of the form
+   x < 2^w. *)
 
 Ltac solve_lt_prim :=
   reflexivity (* solves "<" relations on closed terms *) +
@@ -360,12 +363,14 @@ with solve_lt :=
   solve_lt_prim +
   (eapply N.lt_le_trans; [ solve_lt_prim | discriminate 1 ]).
 
-(* Try to auto-simplify modular arithmetic expressions within a Coq expression resulting from
-   functional interpretation of an x86 IL statement.
 
-   Implementation notes:  Currently I am using a combination of autorewrite and repeated
-   context-matching for this, since it's the fastest solution I can find (as of Coq 8.0).
-   Using rewrite_strat with topdown strategy is much slower; I'm not sure why. *)
+(* Try to auto-simplify modular arithmetic expressions within a Coq expression
+   resulting from functional interpretation of an x86 IL statement.
+
+   Implementation notes:  Currently I am using a combination of autorewrite and
+   repeated context-matching for this, since it's the fastest solution I can
+   find (as of Coq 8.0).  Using rewrite_strat with topdown strategy is much
+   slower; I'm not sure why. *)
 
 Tactic Notation "simpl_x86" "in" hyp(H) :=
   autorewrite with mod_pow2 in H;
@@ -389,43 +394,50 @@ Ltac simpl_x86 :=
 
 
 
-(* Introduce automated machinery for verifying an x86 machine code subroutine (or collection
-   of subroutines) by (1) defining a set of Floyd-Hoare invariants (including pre- and post-
-   conditions) and (2) proving that symbolically executing the program starting at any
-   invariant point in a state that satisfies the program until the next invariant point always
-   yields a state that satisfies the reached invariant.  This proves partial correctness of
-   the subroutine.
+(* Introduce automated machinery for verifying an x86 machine code subroutine
+   (or collection of subroutines) by (1) defining a set of Floyd-Hoare
+   invariants (including pre- and post-conditions) and (2) proving that
+   symbolically executing the program starting at any invariant point in a
+   state that satisfies the program until the next invariant point always
+   yields a state that satisfies the reached invariant.  This proves partial
+   correctness of the subroutine.
 
-   In order for this methodology to prove that a post-condition holds at subroutine exit,
-   we must attach one of these invariants (the post-condition) to the return address of the
-   subroutine.  This is a somewhat delicate process, since unlike most other code addresses,
-   the exact value of the return address is defined by the caller.  We therefore adopt the
-   convention that subroutines "exit" whenever control flows to an address for which no IL
-   code is defined at that address.  This allows proving correctness of a subroutine by
-   lifting only the subroutine to IL code (or using the pmono theorems from Picinae_theory
-   to isolate only the subroutine from a larger program), leaving the non-subroutine code
-   undefined (None). *)
+   In order for this methodology to prove that a post-condition holds at
+   subroutine exit, we must attach one of these invariants (the post-condition)
+   to the return address of the subroutine.  This is a somewhat delicate
+   process, since unlike most other code addresses, the exact value of the
+   return address is an unknown (defined by the caller).  We therefore adopt
+   the convention that subroutines "exit" whenever control flows to an address
+   for which no IL code is defined at that address.  This allows proving
+   correctness of a subroutine by lifting only the subroutine to IL code (or
+   using the pmono theorems from Picinae_theory to isolate only the subroutine
+   from a larger program), leaving the non-subroutine code undefined (None). *)
 
 
-(* Some versions of Coq check injection-heavy proofs very slowly (at Qed).  This slow-down can
-   be avoided by sequestering prevalent injections into lemmas, as we do here. *)
+(* Some versions of Coq check injection-heavy proofs very slowly (at Qed).
+   This slow-down can be avoided by sequestering prevalent injections into
+   lemmas, as we do here. *)
 Remark inj_prog_stmt: forall (sz1 sz2: N) (q1 q2: stmt),
                       Some (sz1,q1) = Some (sz2,q2) -> sz1=sz2 /\ q1=q2.
 Proof. injection 1 as. split; assumption. Qed.
 
-(* Simplify x86 memory access permissions between simpl_stmt simplification steps. *)
+(* Simplify x86 memory access assertions produced by step_stmt. *)
 Ltac simpl_memaccs H :=
   repeat first [ rewrite memacc_read_updated in H
                | rewrite memacc_write_updated in H
                | rewrite memacc_read_frame in H by discriminate 1
                | rewrite memacc_write_frame in H by discriminate 1 ].
 
-Tactic Notation "x86_simpl_stmt" "in" hyp(H) := simpl_stmt using simpl_memaccs in H.
-Tactic Notation "x86_psimpl" "in" hyp(H) := psimpl using simpl_memaccs in H.
+(* Apply the functional interpreter, and then simplify and separate any
+   memory access assertions into separate hypotheses. *)
+Ltac x86_step_stmt XS :=
+  step_stmt XS;
+  simpl_memaccs XS;
+  destruct_memaccs XS.
 
-(* Values of IL temp variables are ignored by the x86 interpreter once the IL block that
-   generated them completes.  We can therefore generalize them away at IL block boundaries
-   to simplify the expression. *)
+(* Values of IL temp variables are ignored by the x86 interpreter once the IL
+   block that generated them completes.  We can therefore generalize them
+   away at IL block boundaries to simplify the expression. *)
 Ltac generalize_temps :=
   repeat match goal with |- context C [ update ?s (V_TEMP ?n) (Some ?u) ] => lazymatch goal with |- ?G =>
     let t := fresh "tmp" in
@@ -434,25 +446,26 @@ Ltac generalize_temps :=
         change G with C'; generalize t; clear t; intro
   end end.
 
-(* If asked to step the computation when we're already at an invariant point, just
-   make the proof goal be the invariant. *)
+(* If asked to step the computation when we're already at an invariant point,
+   just make the proof goal be the invariant. *)
 Ltac x86_invhere :=
   first [ eapply nextinv_here; [reflexivity|]
         | apply nextinv_ret; [ first [assumption|reflexivity] |]
         | apply nextinv_exn ];
   simpl_stores; simpl_x86.
 
-(* Symbolically evaluate an x86 machine instruction for one step, and simplify the resulting
-   Coq expressions. *)
+(* Symbolically evaluate an x86 machine instruction for one step, and simplify
+   the resulting Coq expressions. *)
 Ltac x86_step_and_simplify XS :=
-  x86_psimpl in XS;
+  stock_store in XS;
+  x86_step_stmt XS;
   revert XS; generalize_temps; intro XS;
   simpl_x86 in XS.
 
-(* If we're not at an invariant, symbolically interpret the program for one machine
-   language instruction.  (The user can use "do" to step through many instructions,
-   but often it is wiser to pause and do some manual simplification of the state at
-   various points.) *)
+(* If we're not at an invariant, symbolically interpret the program for one
+   machine language instruction.  (The user can use "do" to step through many
+   instructions, but often it is wiser to pause and do some manual
+   simplification of the state at various points.) *)
 Ltac x86_invseek :=
   apply NIStep; [reflexivity|];
   let sz := fresh "sz" in let q := fresh "q" in let s := fresh "s" in let x := fresh "x" in
@@ -461,18 +474,17 @@ Ltac x86_invseek :=
   apply inj_prog_stmt in IL; destruct IL; subst sz q;
   lazymatch goal with |- context [ Exit (?x + ?y) ] => simpl (x+y) end;
   x86_step_and_simplify XS;
-  repeat lazymatch goal with [ ACC: MemAcc _ _ _ _ _ |- _ ] => simpl_x86 ACC; revert ACC end; intros;
-  repeat lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ =>
-    let BC := fresh "BC" in (destruct c eqn:BC; simpl_x86 in BC);
+  try lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ =>
+    (let BC := fresh "BC" in destruct c eqn:BC);
     x86_step_and_simplify XS
   end;
   repeat match goal with [ u:value |- _ ] => clear u
                        | [ u:option value |- _ ] => clear u end;
   lazymatch type of XS with s=_ /\ x=_ => destruct XS; subst s x end.
 
-(* Clear any stale memory-access hypotheses (arising from previous computation steps)
-   and either step to the next machine instruction (if we're not at an invariant) or
-   produce an invariant as a proof goal. *)
+(* Clear any stale memory-access hypotheses (arising from previous computation
+   steps) and either step to the next machine instruction (if we're not at an
+   invariant) or produce an invariant as a proof goal. *)
 Ltac x86_step :=
   repeat match goal with [ H: MemAcc _ _ _ _ _ |- _ ] => clear H end;
   first [ x86_invseek; try x86_invhere | x86_invhere ].

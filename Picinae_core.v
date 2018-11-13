@@ -92,11 +92,10 @@ Definition update {A B:Type} {_: EqDec A} (f:A->B) (x:A) (y:B) (x0:A) : B :=
 Notation "f [ x := y ]" := (update f x y) (at level 50, left associativity).
 
 
-(* Bitwidths are expressed as natural numbers. *)
+(* Bitwidths and addresses are expressed as binary natural numbers. *)
 Definition bitwidth := N.
 Bind Scope N_scope with bitwidth.
 
-(* Memory addresses are expressed as natural numbers. *)
 Definition addr := N.
 Bind Scope N_scope with addr.
 
@@ -109,7 +108,7 @@ Arguments VaM {T} m w.
 
 Definition value := avalue N.
 
-(* Heaps (for separation logic) *)
+(* Heaps (for separation logic) define sets of accessible addresses. *)
 Definition heap (A:Type) := addr -> option A.
 Definition hdomain := heap unit.
 Definition htotal : hdomain := fun _ => Some tt.
@@ -157,20 +156,18 @@ Definition slt (w n1 n2:N) : bool :=
 Definition sle (w n1 n2:N) : bool :=
   Z.leb (toZ w n1) (toZ w n2).
 
-(* Perform a cast operation. *)
+(* Perform a bitwidth cast operation. *)
 Definition scast (w w':bitwidth) (n:N) : N :=
   ofZ w' (toZ w n).
 
 (* Endianness: *)
-Inductive endianness : Type :=
-| BigE
-| LittleE.
+Inductive endianness : Type := BigE | LittleE.
 
 (* IL binary operators *)
 Inductive binop_typ : Type :=
-| OP_PLUS (* Integer addition (commutative, associative) *)
+| OP_PLUS (* Integer addition *)
 | OP_MINUS (* Subtract second integer from first. *)
-| OP_TIMES (* Integer multiplication (commutative, associative)*)
+| OP_TIMES (* Integer multiplication *)
 | OP_DIVIDE (* Unsigned integer division *)
 | OP_SDIVIDE (* Signed integer division *)
 | OP_MOD (* Unsigned modulus *)
@@ -178,11 +175,11 @@ Inductive binop_typ : Type :=
 | OP_LSHIFT (* Left shift *)
 | OP_RSHIFT (* Right shift, fill with 0 *)
 | OP_ARSHIFT (* Right shift, sign extend *)
-| OP_AND (* Bitwise and (commutative, associative) *)
-| OP_OR (* Bitwise or (commutative, associative) *)
-| OP_XOR (* Bitwise xor (commutative, associative) *)
-| OP_EQ (* Equals (commutative) (associative on booleans) *)
-| OP_NEQ (* Not equals (commutative) (associative on booleans) *)
+| OP_AND (* Bitwise and *)
+| OP_OR (* Bitwise or *)
+| OP_XOR (* Bitwise xor *)
+| OP_EQ (* Equals *)
+| OP_NEQ (* Not equals *)
 | OP_LT (* Unsigned less than *)
 | OP_LE (* Unsigned less than or equal to *)
 | OP_SLT (* Signed less than *)
@@ -193,14 +190,14 @@ Inductive unop_typ : Type :=
 | OP_NEG (* Negate (2's complement) *)
 | OP_NOT (* Bitwise not *).
 
-(* IL cast operators *)
+(* IL bitwidth cast operators *)
 Inductive cast_typ : Type :=
 | CAST_LOW (* Narrowing cast. Keeps the low bits. *)
 | CAST_HIGH (* Narrowing cast. Keeps the high bits. *)
 | CAST_SIGNED (* Sign-extending widening cast. *)
 | CAST_UNSIGNED (* 0-padding widening cast. *).
 
-(* Perform a binary operation (using the above as helper functions). *)
+(* Perform a binary operation. *)
 Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
   match bop with
   | OP_PLUS => towidth w (n1+n2)
@@ -303,7 +300,7 @@ Inductive exp : Type :=
 | Unknown (w:bitwidth)
 | Ite (e1 e2 e3:exp)
 | Extract (n1 n2:N) (e:exp) (* Extract hbits to lbits of e (NumT type). *)
-| Concat (e1 e2:exp) (* Concat two NumT expressions together. *).
+| Concat (e1 e2:exp) (* Bit-concat two NumT expressions together. *).
 
 (* The BIL specification formalizes statement sequences as statement lists;
    however, that approach makes Coq proofs very cumbersome because it forces
@@ -312,7 +309,7 @@ Inductive exp : Type :=
    to include binary sequences (Seq) and nullary sequences (Nop).  Together
    these are equivalent to lists, but keep everything within one datatype.
 
-   We also here encode while-loops as repeat (Rep) loops, which enforce loop
+   BIL's while-loops are encoded as repeat (Rep) loops, which enforce loop
    boundedness.  A BIL "while e do q" loop that has a bound n on the number
    of iterations can therefore be encoded as (Rep n (If e q Nop)). *)
 
