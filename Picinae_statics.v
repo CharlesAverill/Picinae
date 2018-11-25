@@ -47,6 +47,12 @@ Inductive typ : Type :=
 | NumT (w:bitwidth)
 | MemT (w:bitwidth).
 
+(* Create an effective decision procedure for type-equality. *)
+Theorem typ_eqdec: forall (t1 t2:typ), {t1=t2}+{t1<>t2}.
+Proof. decide equality; apply N.eq_dec. Defined.
+Arguments typ_eqdec t1 t2 : simpl never.
+Instance TypEqDec : EqDec typ := { iseq := typ_eqdec }.
+
 (* The bitwidth of the result of a binary operation *)
 Definition widthof_binop (bop:binop_typ) (w:bitwidth) : bitwidth :=
   match bop with
@@ -210,6 +216,44 @@ Qed.
 End OpBounds.
 
 
+Section HasUpperBound.
+
+(* Define the has-upper-bound property of pairs of partial functions, and
+   prove some general sufficiency conditions for having the property. *)
+
+Definition has_upper_bound {A B} (f g: A -> option B) :=
+  forall x y z, f x = Some y -> g x = Some z -> y = z.
+
+Lemma hub_refl:
+  forall A B (f: A -> option B), has_upper_bound f f.
+Proof.
+  unfold has_upper_bound. intros.
+  rewrite H0 in H. inversion H.
+  reflexivity.
+Qed.
+
+Lemma hub_subset:
+  forall A B (f g f' g': A -> option B) (HUB: has_upper_bound f g)
+         (SS1: f' ⊆ f) (SS2: g' ⊆ g),
+  has_upper_bound f' g'.
+Proof.
+  unfold has_upper_bound. intros. eapply HUB.
+    apply SS1. eassumption.
+    apply SS2. assumption.
+Qed.
+
+Lemma hub_update {A B} {eq:EqDec A}:
+  forall (f g: A -> option B) x y (HUB: has_upper_bound f g),
+  has_upper_bound (f[x:=y]) (g[x:=y]).
+Proof.
+  unfold has_upper_bound. intros. destruct (x0 == x).
+    subst. rewrite update_updated in H,H0. rewrite H0 in H. inversion H. reflexivity.
+    rewrite update_frame in H,H0 by assumption. eapply HUB; eassumption.
+Qed.
+
+End HasUpperBound.
+
+
 
 Module Type PICINAE_STATICS (IL: PICINAE_IL).
 
@@ -231,46 +275,46 @@ Definition welltyped_memory (m:addr->N) : Prop :=
 
 (* A constant's type is its bitwidth, and a memory's type is the
    bitwidth of its addresses. *)
-Inductive typof_val: value -> typ -> Prop :=
-| TVN (n:N) (w:bitwidth) (LT: n < 2^w): typof_val (VaN n w) (NumT w)
-| TVM (m:addr->N) (w:bitwidth) (WTM: welltyped_memory m): typof_val (VaM m w) (MemT w).
+Inductive hastyp_val: value -> typ -> Prop :=
+| TVN (n:N) (w:bitwidth) (LT: n < 2^w): hastyp_val (VaN n w) (NumT w)
+| TVM (m:addr->N) (w:bitwidth) (WTM: welltyped_memory m): hastyp_val (VaM m w) (MemT w).
 
 (* A typing context is a partial map from variables to types. *)
 Definition typctx := var -> option typ.
 
 (* Type-check an expression in a typing context, returning its type. *)
-Inductive typof_exp (c:typctx): exp -> typ -> Prop :=
-| TVar v t (CV: c v = Some t): typof_exp c (Var v) t
-| TWord n w (LT: n < 2^w): typof_exp c (Word n w) (NumT w)
+Inductive hastyp_exp (c:typctx): exp -> typ -> Prop :=
+| TVar v t (CV: c v = Some t): hastyp_exp c (Var v) t
+| TWord n w (LT: n < 2^w): hastyp_exp c (Word n w) (NumT w)
 | TLoad e1 e2 en len mw
-        (T1: typof_exp c e1 (MemT mw)) (T2: typof_exp c e2 (NumT mw)):
-        typof_exp c (Load e1 e2 en len) (NumT (Mb*len))
+        (T1: hastyp_exp c e1 (MemT mw)) (T2: hastyp_exp c e2 (NumT mw)):
+        hastyp_exp c (Load e1 e2 en len) (NumT (Mb*len))
 | TStore e1 e2 e3 en len mw
-         (T1: typof_exp c e1 (MemT mw)) (T2: typof_exp c e2 (NumT mw))
-         (T3: typof_exp c e3 (NumT (Mb*len))):
-         typof_exp c (Store e1 e2 e3 en len) (MemT mw)
+         (T1: hastyp_exp c e1 (MemT mw)) (T2: hastyp_exp c e2 (NumT mw))
+         (T3: hastyp_exp c e3 (NumT (Mb*len))):
+         hastyp_exp c (Store e1 e2 e3 en len) (MemT mw)
 | TBinOp bop e1 e2 w
-         (T1: typof_exp c e1 (NumT w)) (T2: typof_exp c e2 (NumT w)):
-         typof_exp c (BinOp bop e1 e2) (NumT (widthof_binop bop w))
-| TUnOp uop e w (T1: typof_exp c e (NumT w)):
-        typof_exp c (UnOp uop e) (NumT w)
-| TCast ct w w' e (T1: typof_exp c e (NumT w))
+         (T1: hastyp_exp c e1 (NumT w)) (T2: hastyp_exp c e2 (NumT w)):
+         hastyp_exp c (BinOp bop e1 e2) (NumT (widthof_binop bop w))
+| TUnOp uop e w (T1: hastyp_exp c e (NumT w)):
+        hastyp_exp c (UnOp uop e) (NumT w)
+| TCast ct w w' e (T1: hastyp_exp c e (NumT w))
         (LE: match ct with CAST_UNSIGNED | CAST_SIGNED => w <= w'
                          | CAST_HIGH | CAST_LOW => w' <= w end):
-        typof_exp c (Cast ct w' e) (NumT w')
+        hastyp_exp c (Cast ct w' e) (NumT w')
 | TLet v e1 e2 t1 t2
-       (T1: typof_exp c e1 t1) (T2: typof_exp (c[v:=Some t1]) e2 t2):
-       typof_exp c (Let v e1 e2) t2
-| TUnknown w: typof_exp c (Unknown w) (NumT w)
+       (T1: hastyp_exp c e1 t1) (T2: hastyp_exp (c[v:=Some t1]) e2 t2):
+       hastyp_exp c (Let v e1 e2) t2
+| TUnknown w: hastyp_exp c (Unknown w) (NumT w)
 | TIte e1 e2 e3 w t
-       (T1: typof_exp c e1 (NumT w)) (T2: typof_exp c e2 t) (T3: typof_exp c e3 t):
-       typof_exp c (Ite e1 e2 e3) t
+       (T1: hastyp_exp c e1 (NumT w)) (T2: hastyp_exp c e2 t) (T3: hastyp_exp c e3 t):
+       hastyp_exp c (Ite e1 e2 e3) t
 | TExtract w n1 n2 e1
-           (T1: typof_exp c e1 (NumT w)) (LO: n2 <= n1) (HI: n1 < w):
-           typof_exp c (Extract n1 n2 e1) (NumT (N.succ (n1-n2)))
+           (T1: hastyp_exp c e1 (NumT w)) (LO: n2 <= n1) (HI: n1 < w):
+           hastyp_exp c (Extract n1 n2 e1) (NumT (N.succ (n1-n2)))
 | TConcat e1 e2 w1 w2
-          (T1: typof_exp c e1 (NumT w1)) (T2: typof_exp c e2 (NumT w2)):
-          typof_exp c (Concat e1 e2) (NumT (w1+w2)).
+          (T1: hastyp_exp c e1 (NumT w1)) (T2: hastyp_exp c e2 (NumT w2)):
+          hastyp_exp c (Concat e1 e2) (NumT (w1+w2)).
 
 (* Static semantics for statements:
    Defining a sound statement typing semantics is tricky for two reasons:
@@ -278,13 +322,13 @@ Inductive typof_exp (c:typctx): exp -> typ -> Prop :=
    (1) There are really two kinds of IL variables: (a) those that encode cpu state
    (which are always initialized, and whose types are fixed), and (b) temporary
    variables introduced during lifting to IL (which are not guaranteed to be
-   initialized, and whose types may vary across different instruction encodings.
+   initialized, and whose types may vary across different instruction IL blocks.
 
    We therefore use separate contexts c0 and c to model the two kinds.  Context
    c0 models the cpu state variables, while c models all variables.  Context c
    therefore usually subsumes c0, and is always consistent with c0 (i.e., the
    join of c and c0 is always a valid context).  This consistency is enforced
-   by checking assigned value types against c0 at every Move, irrespective of c.
+   by checking assigned value types against c0 at every Move, but only updating c.
 
    (2) Since variable initialization states are mutable, we need static rules
    that support meets and joins of contexts.  But a general weakening rule is
@@ -301,41 +345,41 @@ Inductive typof_exp (c:typctx): exp -> typ -> Prop :=
    flexibility to prove satisfaction of the fixed point requirement without
    having to cope with a fully generalized weakening rule. *)
 
-Inductive typof_stmt (c0 c:typctx): stmt -> typctx -> Prop :=
-| TNop: typof_stmt c0 c Nop c
-| TMove v t e (CV: c0 v = None \/ c0 v = Some t) (TE: typof_exp c e t):
-    typof_stmt c0 c (Move v e) (c[v:=Some t])
-| TJmp e w (TE: typof_exp c e (NumT w)): typof_stmt c0 c (Jmp e) c
-| TExn ex: typof_stmt c0 c (Exn ex) c
+Inductive hastyp_stmt (c0 c:typctx): stmt -> typctx -> Prop :=
+| TNop: hastyp_stmt c0 c Nop c
+| TMove v t e (CV: c0 v = None \/ c0 v = Some t) (TE: hastyp_exp c e t):
+    hastyp_stmt c0 c (Move v e) (c[v:=Some t])
+| TJmp e w (TE: hastyp_exp c e (NumT w)): hastyp_stmt c0 c (Jmp e) c
+| TExn ex: hastyp_stmt c0 c (Exn ex) c
 | TSeq q1 q2 c1 c2 c' (SS: c2 ⊆ c1)
-       (TS1: typof_stmt c0 c q1 c1) (TS2: typof_stmt c0 c2 q2 c'):
-    typof_stmt c0 c (Seq q1 q2) c'
+       (TS1: hastyp_stmt c0 c q1 c1) (TS2: hastyp_stmt c0 c2 q2 c'):
+    hastyp_stmt c0 c (Seq q1 q2) c'
 | TIf e q1 q2 c1 c2 c' (SS1: c' ⊆ c1) (SS2: c' ⊆ c2)
-      (TE: typof_exp c e (NumT 1))
-      (TS1: typof_stmt c0 c q1 c1) (TS2: typof_stmt c0 c q2 c2):
-    typof_stmt c0 c (If e q1 q2) c'
+      (TE: hastyp_exp c e (NumT 1))
+      (TS1: hastyp_stmt c0 c q1 c1) (TS2: hastyp_stmt c0 c q2 c2):
+    hastyp_stmt c0 c (If e q1 q2) c'
 | TRep e w q c' (SS: c ⊆ c')
-    (TE: typof_exp c e (NumT w)) (TS: typof_stmt c0 c q c'):
-    typof_stmt c0 c (Rep e q) c.
+    (TE: hastyp_exp c e (NumT w)) (TS: hastyp_stmt c0 c q c'):
+    hastyp_stmt c0 c (Rep e q) c.
 
 (* A program is well-typed if all its statements are well-typed. *)
 Definition welltyped_prog (c0:typctx) (p:program) : Prop :=
-  forall a, match p a with None => True | Some (_,q) =>
-              exists c', typof_stmt c0 c0 q c' end.
+  forall s a, match p s a with None => True | Some (_,q) =>
+                exists c', hastyp_stmt c0 c0 q c' end.
 
 
-(* Convenience lemmas for inverted reasoning about typof_val. *)
+(* Convenience lemmas for inverted reasoning about hastyp_val. *)
 
 Lemma value_bound:
-  forall n w (TV: typof_val (VaN n w) (NumT w)), n < 2^w.
+  forall n w (TV: hastyp_val (VaN n w) (NumT w)), n < 2^w.
 Proof. intros. inversion TV. assumption. Qed.
 
 Lemma mem_welltyped:
-  forall m w (TV: typof_val (VaM m w) (MemT w)), welltyped_memory m.
+  forall m w (TV: hastyp_val (VaM m w) (MemT w)), welltyped_memory m.
 Proof. intros. inversion TV. assumption. Qed.
 
-Lemma typof_towidth:
-  forall w n, typof_val (towidth w n) (NumT w).
+Lemma hastyp_towidth:
+  forall w n, hastyp_val (towidth w n) (NumT w).
 Proof.
   intros. apply TVN.
   apply N.mod_upper_bound.
@@ -345,60 +389,94 @@ Qed.
 
 
 (* These short lemmas are helpful when automating type-checking in tactics. *)
-Lemma typchk_binop:
+Lemma hastyp_binop:
   forall bop c e1 e2 w w' (W: widthof_binop bop w = w')
-         (T1: typof_exp c e1 (NumT w)) (T2: typof_exp c e2 (NumT w)),
-  typof_exp c (BinOp bop e1 e2) (NumT w').
+         (T1: hastyp_exp c e1 (NumT w)) (T2: hastyp_exp c e2 (NumT w)),
+  hastyp_exp c (BinOp bop e1 e2) (NumT w').
 Proof.
   intros. rewrite <- W. apply TBinOp; assumption.
 Qed.
 
-Lemma typchk_extract:
+Lemma hastyp_extract:
   forall w c n1 n2 e1 w' (W: N.succ (n1-n2) = w')
-         (T1: typof_exp c e1 (NumT w)) (LO: n2 <= n1) (HI: n1 < w),
-  typof_exp c (Extract n1 n2 e1) (NumT w').
+         (T1: hastyp_exp c e1 (NumT w)) (LO: n2 <= n1) (HI: n1 < w),
+  hastyp_exp c (Extract n1 n2 e1) (NumT w').
 Proof.
   intros. rewrite <- W. apply TExtract with (w:=w); assumption.
 Qed.
 
-Lemma typchk_concat:
+Lemma hastyp_concat:
   forall c e1 e2 w1 w2 w' (W: w1+w2 = w')
-         (T1: typof_exp c e1 (NumT w1)) (T2: typof_exp c e2 (NumT w2)),
-  typof_exp c (Concat e1 e2) (NumT w').
+         (T1: hastyp_exp c e1 (NumT w1)) (T2: hastyp_exp c e2 (NumT w2)),
+  hastyp_exp c (Concat e1 e2) (NumT w').
 Proof.
   intros. rewrite <- W. apply TConcat; assumption.
 Qed.
 
 
-(* Type-checking of expressions and statements is deterministic. *)
-
-Theorem typof_exp_deterministic:
-  forall e c t1 t2 (TE1: typof_exp c e t1) (TE2: typof_exp c e t2),
+(* Expression types are unique. *)
+Theorem hastyp_exp_unique:
+  forall e c1 c2 t1 t2 (HUB: has_upper_bound c1 c2)
+         (TE1: hastyp_exp c1 e t1) (TE2: hastyp_exp c2 e t2),
   t1 = t2.
 Proof.
-  intros. revert t2 TE2. dependent induction TE1; intros; inversion TE2; subst;
+  intros. revert c1 c2 t1 t2 HUB TE1 TE2. induction e; intros;
+  inversion TE1; inversion TE2; clear TE1 TE2; subst;
   try reflexivity.
 
-  rewrite CV in CV0. injection CV0. trivial.
+  (* Var *)
+  eapply HUB; eassumption.
 
-  apply IHTE1_1. assumption.
+  (* Store *)
+  eapply IHe1; eassumption.
 
-  apply IHTE1_1 in T1. injection T1. intro. subst. reflexivity.
+  (* BinOp *)
+  specialize (IHe1 _ _ _ _ HUB T1 T0). inversion IHe1. reflexivity.
 
-  apply IHTE1. assumption.
+  (* UnOp *)
+  specialize (IHe _ _ _ _ HUB T1 T0). inversion IHe. reflexivity.
 
-  apply IHTE1_2. apply IHTE1_1 in T1. subst. assumption.
+  (* Let *)
+  specialize (IHe1 _ _ _ _ HUB T1 T0). subst.
+  refine (IHe2 _ _ _ _ _ T2 T3). apply hub_update. exact HUB.
 
-  apply IHTE1_2. assumption.
+  (* Extract *)
+  exact (IHe2 _ _ _ _ HUB T2 T4).
 
-  apply IHTE1_1 in T1. apply IHTE1_2 in T2.
-  injection T1. injection T2. intros. subst. reflexivity.
+  (* Concat *)
+  specialize (IHe1 _ _ _ _ HUB T1 T0). inversion IHe1. subst.
+  specialize (IHe2 _ _ _ _ HUB T2 T3). inversion IHe2. subst.
+  reflexivity.
+Qed.
+
+(* Statement types are compatible (though not necessarily unique). *)
+Theorem hastyp_stmt_compat:
+  forall c0 q c1 c2 c1' c2'
+         (HUB: has_upper_bound c1 c2)
+         (TS1: hastyp_stmt c0 c1 q c1') (TS2: hastyp_stmt c0 c2 q c2'),
+  has_upper_bound c1' c2'.
+Proof.
+  induction q; intros; inversion TS1; inversion TS2; clear TS1 TS2; subst;
+  try exact HUB.
+
+  (* Move *)
+  replace t0 with t in * by (eapply hastyp_exp_unique; eassumption).
+  apply hub_update. exact HUB.
+
+  (* Seq *)
+  eapply IHq2; [|eassumption..].
+  eapply hub_subset; [|eassumption..].
+  eapply IHq1; eassumption.
+
+  (* If *)
+  clear SS2 SS3. eapply hub_subset; [|eassumption..].
+  eapply IHq1; eassumption.
 Qed.
 
 (* Expression typing contexts can be safely weakened. *)
-Theorem typof_exp_weaken:
-  forall c1 c2 e t (TE: typof_exp c1 e t) (SS: c1 ⊆ c2),
-  typof_exp c2 e t.
+Theorem hastyp_exp_weaken:
+  forall c1 c2 e t (TE: hastyp_exp c1 e t) (SS: c1 ⊆ c2),
+  hastyp_exp c2 e t.
 Proof.
   intros. revert c2 SS. dependent induction TE; intros; econstructor;
   try (try first [ apply IHTE | apply IHTE1 | apply IHTE2 | apply IHTE3 | apply SS ]; assumption).
@@ -406,6 +484,32 @@ Proof.
   apply IHTE2. unfold update. intros v0 t CV. destruct (v0 == v).
     assumption.
     apply SS. assumption.
+Qed.
+
+(* Statement frame contexts can be safely weakened. *)
+Theorem hastyp_stmt_weaken:
+  forall c0 c0' q c c' (TS: hastyp_stmt c0 c q c') (SS: c0' ⊆ c0),
+  hastyp_stmt c0' c q c'.
+Proof.
+  induction q; intros; inversion TS; subst.
+    apply TNop.
+    apply TMove.
+      specialize (SS v). destruct (c0' v).
+        right. rewrite (SS t0 (eq_refl _)) in CV. destruct CV. discriminate. assumption.
+        left. reflexivity.
+      exact TE.
+    eapply TJmp. exact TE.
+    apply TExn.
+    eapply TSeq. exact SS0.
+      apply IHq1. exact TS1. exact SS.
+      apply IHq2. exact TS2. exact SS.
+    eapply TIf. exact SS1. exact SS2.
+      exact TE.
+      apply IHq1. exact TS1. exact SS.
+      apply IHq2. exact TS2. exact SS.
+    eapply TRep. exact SS0.
+      exact TE.
+      apply IHq. exact TS0. exact SS.
 Qed.
 
 
@@ -432,10 +536,10 @@ Qed.
 (* Binary operations on well-typed values yield well-typed values. *)
 Theorem typesafe_binop:
   forall bop n1 n2 w
-         (TV1: typof_val (VaN n1 w) (NumT w)) (TV2: typof_val (VaN n2 w) (NumT w)),
-  typof_val (eval_binop bop w n1 n2) (NumT (widthof_binop bop w)).
+         (TV1: hastyp_val (VaN n1 w) (NumT w)) (TV2: hastyp_val (VaN n2 w) (NumT w)),
+  hastyp_val (eval_binop bop w n1 n2) (NumT (widthof_binop bop w)).
 Proof.
-  intros. destruct bop; try first [ apply typof_towidth | apply TVN, bit_bound ];
+  intros. destruct bop; try first [ apply hastyp_towidth | apply TVN, bit_bound ];
   apply TVN; try apply ofZ_bound.
 
   (* DIV *)
@@ -462,8 +566,8 @@ Qed.
 (* Unary operations on well-typed values yield well-typed values. *)
 Theorem typesafe_unop:
   forall uop n w
-         (TV: typof_val (VaN n w) (NumT w)),
-  typof_val (eval_unop uop n w) (NumT w).
+         (TV: hastyp_val (VaN n w) (NumT w)),
+  hastyp_val (eval_unop uop n w) (NumT w).
 Proof.
   intros. destruct uop; apply TVN.
 
@@ -476,15 +580,15 @@ Qed.
 
 (* Casts of well-typed values yield well-typed values. *)
 Theorem typesafe_cast:
-  forall c n w w' (TV: typof_val (VaN n w) (NumT w))
+  forall c n w w' (TV: hastyp_val (VaN n w) (NumT w))
     (T: match c with CAST_UNSIGNED | CAST_SIGNED => w<=w'
                    | CAST_HIGH | CAST_LOW => w'<=w end),
-  typof_val (VaN (cast c w w' n) w') (NumT w').
+  hastyp_val (VaN (cast c w w' n) w') (NumT w').
 Proof.
   intros. inversion TV. subst. destruct c; simpl.
 
   (* LOW *)
-  apply typof_towidth.
+  apply hastyp_towidth.
 
   (* HIGH *)
   apply TVN, cast_high_bound; assumption.
@@ -520,8 +624,8 @@ Proof.
 Qed.
 
 Theorem typesafe_getmem:
-  forall mw len m a e (TV: typof_val (VaM m mw) (MemT mw)),
-  typof_val (VaN (getmem e len m a) (Mb*len)) (NumT (Mb*len)).
+  forall mw len m a e (TV: hastyp_val (VaM m mw) (MemT mw)),
+  hastyp_val (VaN (getmem e len m a) (Mb*len)) (NumT (Mb*len)).
 Proof.
   intros. apply TVN. apply getmem_bound. eapply mem_welltyped. eassumption.
 Qed.
@@ -550,9 +654,9 @@ Qed.
 
 Corollary typesafe_setmem:
   forall len mw m a v e
-         (TV1: typof_val (VaM m mw) (MemT mw))
-         (TV3: typof_val (VaN v (Mb*len)) (NumT (Mb*len))),
-  typof_val (VaM (setmem e len m a v) mw) (MemT mw).
+         (TV1: hastyp_val (VaM m mw) (MemT mw))
+         (TV3: hastyp_val (VaN v (Mb*len)) (NumT (Mb*len))),
+  hastyp_val (VaM (setmem e len m a v) mw) (MemT mw).
 Proof.
   intros. apply TVM, setmem_welltyped.
     eapply mem_welltyped. eassumption.
@@ -564,7 +668,7 @@ Qed.
    that are well-typed with respect to c. *)
 Definition models (c:typctx) (s:store) : Prop :=
   forall v t (CV: c v = Some t),
-  exists u, s v = Some u /\ typof_val u t.
+  exists u, s v = Some u /\ hastyp_val u t.
 
 (* Values read from well-typed memory and registers have appropriate bitwidth. *)
 Theorem models_wtm:
@@ -600,12 +704,12 @@ Qed.
 (* Every result of evaluating a well-typed expression is a well-typed value. *)
 Lemma preservation_eval_exp:
   forall {h s e c t u}
-         (MCS: models c s) (TE: typof_exp c e t) (E: eval_exp h s e u),
-  typof_val u t.
+         (MCS: models c s) (TE: hastyp_exp c e t) (E: eval_exp h s e u),
+  hastyp_val u t.
 Proof.
   intros. revert s u MCS E. dependent induction TE; intros;
   inversion E; subst;
-  repeat (match goal with [ IH: forall _ _, models _ _ -> eval_exp ?h _ ?e _ -> typof_val _ _,
+  repeat (match goal with [ IH: forall _ _, models _ _ -> eval_exp ?h _ ?e _ -> hastyp_val _ _,
                             M: models _ ?s,
                             EE: eval_exp ?h ?s ?e _ |- _ ] =>
             specialize (IH s _ MCS EE); try (inversion IH; [idtac]; subst) end).
@@ -664,13 +768,13 @@ Qed.
 Lemma progress_eval_exp:
   forall {s e c t}
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
-         (MCS: models c s) (T: typof_exp c e t),
+         (MCS: models c s) (T: hastyp_exp c e t),
   exists u, eval_exp htotal s e u.
 Proof.
   intros. revert s MCS. dependent induction T; intros;
   repeat match reverse goal with [ IH: forall _, models ?C _ -> exists _, eval_exp _ _ ?e _,
                                     M: models ?c ?s,
-                                    T: typof_exp ?c ?e _ |- _ ] =>
+                                    T: hastyp_exp ?c ?e _ |- _ ] =>
     specialize (IH s M);
     let u':=fresh "u" in let EE:=fresh "E" in let TV:=fresh "TV" in
       destruct IH as [u' EE];
@@ -724,8 +828,8 @@ Proof.
 Qed.
 
 Remark welltyped_rep:
-  forall e c0 c q n (TS: typof_stmt c0 c (Rep e q) c),
-  typof_stmt c0 c (N.iter n (Seq q) Nop) c.
+  forall e c0 c q n (TS: hastyp_stmt c0 c (Rep e q) c),
+  hastyp_stmt c0 c (N.iter n (Seq q) Nop) c.
 Proof.
   intros. inversion TS; subst. apply Niter_invariant.
     apply TNop.
@@ -735,7 +839,7 @@ Qed.
 (* Statement execution preserves the modeling relation. *)
 Lemma preservation_exec_stmt:
   forall {h s q c0 c c' s'}
-         (MCS: models c s) (T: typof_stmt c0 c q c') (XS: exec_stmt h s q s' None),
+         (MCS: models c s) (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' None),
   models c' s'.
 Proof.
   intros. revert c c' MCS T. dependent induction XS; intros; inversion T; subst;
@@ -770,7 +874,7 @@ Qed.
 (* Execution also preserves modeling the frame context c0. *)
 Lemma pres_frame_exec_stmt:
   forall {h s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
-         (T: typof_stmt c0 c q c') (XS: exec_stmt h s q s' x),
+         (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' x),
   models c0 s'.
 Proof.
   intros. revert c c' MCS T. dependent induction XS; intros;
@@ -805,7 +909,7 @@ Qed.
 Lemma progress_exec_stmt:
   forall {s q c0 c c'}
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
-         (MCS: models c s) (T: typof_stmt c0 c q c'),
+         (MCS: models c s) (T: hastyp_stmt c0 c q c'),
   exists s' x, exec_stmt htotal s q s' x.
 Proof.
   intros. revert c c' s T MCS. induction q using stmt_ind2; intros;
@@ -862,10 +966,10 @@ Proof.
   intros. revert a s x MCS XS. induction n; intros; inversion XS; clear XS; subst.
     assumption.
     eapply IHn.
-      specialize (WP a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
+      specialize (WP s a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
         exact MCS. exact MCS. exact TS. exact XS0.
       exact XP.
-    specialize (WP a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
+    specialize (WP s a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
       exact MCS. exact MCS. exact TS. exact XS0.
 Qed.
 
@@ -876,11 +980,11 @@ Theorem progress_exec_prog:
   forall p c0 s0 n a s1 a'
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c0 s0) (WP: welltyped_prog c0 p)
-         (XP: exec_prog htotal p a s0 n s1 (Exit a')) (IL: p a' <> None),
+         (XP: exec_prog htotal p a s0 n s1 (Exit a')) (IL: p s1 a' <> None),
   exists s' x, exec_prog htotal p a s0 (S n) s' x.
 Proof.
   intros.
-  assert (WPA':=WP a'). destruct (p a') as [(sz,q)|] eqn:IL'; [|contradict IL; reflexivity]. clear IL.
+  assert (WPA':=WP s1 a'). destruct (p s1 a') as [(sz,q)|] eqn:IL'; [|contradict IL; reflexivity]. clear IL.
   destruct WPA' as [c' T]. eapply progress_exec_stmt in T.
     destruct T as [s' [x XS]]. exists s'. eapply exec_prog_append in XS; [|exact XP | exact IL'].
       destruct x as [e|]; [destruct e|]; eexists; exact XS.
@@ -888,30 +992,374 @@ Proof.
     eapply preservation_exec_prog. exact MCS. exact WP. exact XP.
 Qed.
 
-(* Attempt to automatically solve a goal of one of the following forms:
-   (1) welltyped_prog c p
-   (2) typof_stmt c0 c q ?c'
-   (3) typof_exp c e ?t
-   This tactic only succeeds on common-case programs, statements, and expressions generated
-   by the lifter.  More exotic goals may need manual proof effort. *)
+
+(* We next define an effective procedure for type-checking expressions and
+   statements.  This procedure is sound but incomplete: it can determine well-
+   typedness of most statements, but there exist well-typed statements for
+   which it cannot decide their well-typedness.  This happens because the
+   formal semantics above allow arbitrary ("magic") context-weakening within
+   the rules for Seq, If, and Rep, wherein an effective procedure must guess
+   the greatest-lower-bound context sufficient to type-check the remainder of
+   the statement.  The procedure below makes the following guesses, which
+   suffice to prove well-typedness for IL encodings of all ISAs so far:
+     (1) No weakening occurs within Seq.
+     (2) If-contexts are weakened to the lattice-meet of the two branches.
+     (3) Rep-contexts are weakened to the input context, to get a fixpoint.
+   If these guesses cannot typecheck some statements in your ISA, consider
+   changing the lifter for your ISA to produce IL encodings whose variable
+   types are not path-sensitive. *)
+
+(* Type-check an expression in a given typing context. *)
+Fixpoint typchk_exp (e:exp) (c:typctx): option typ :=
+  match e with
+  | Var v => c v
+  | Word n w => if n <? 2^w then Some (NumT w) else None
+  | Load e1 e2 _ len =>
+      match typchk_exp e1 c, typchk_exp e2 c with
+      | Some (MemT w1), Some (NumT w2) => if w1 =? w2 then Some (NumT (Mb*len)) else None
+      | _, _ => None
+      end
+  | Store e1 e2 e3 _ len =>
+      match typchk_exp e1 c, typchk_exp e2 c, typchk_exp e3 c with
+      | Some (MemT w1), Some (NumT w2), Some (NumT w) =>
+          if andb (w1 =? w2) (w =? Mb*len) then Some (MemT w1) else None
+      | _, _, _ => None
+      end
+  | BinOp bop e1 e2 =>
+      match typchk_exp e1 c, typchk_exp e2 c with
+      | Some (NumT w1), Some (NumT w2) =>
+          if w1 =? w2 then Some (NumT (widthof_binop bop w1)) else None
+      | _, _ => None
+      end
+  | UnOp uop e1 => match typchk_exp e1 c with Some (NumT w) => Some (NumT w)
+                                            | _ => None end
+  | Cast ct w' e1 =>
+      match typchk_exp e1 c with Some (NumT w) => 
+        if match ct with CAST_UNSIGNED | CAST_SIGNED => w <=? w'
+                       | CAST_HIGH | CAST_LOW => w' <=? w end then Some (NumT w') else None
+      | _ => None
+      end
+  | Let v e1 e2 =>
+      match typchk_exp e1 c with Some t => typchk_exp e2 (c[v:=Some t])
+                               | None => None end
+  | Unknown w => Some (NumT w)
+  | Ite e1 e2 e3 =>
+      match typchk_exp e1 c, typchk_exp e2 c, typchk_exp e3 c with
+      | Some (NumT w), Some t1, Some t2 => if t1 == t2 then Some t1 else None
+      | _, _, _ => None
+      end
+  | Extract n1 n2 e1 =>
+      match typchk_exp e1 c with
+      | Some (NumT w) => if andb (n2 <=? n1) (n1 <? w) then Some (NumT (N.succ (n1-n2))) else None
+      | _ => None
+      end
+  | Concat e1 e2 =>
+      match typchk_exp e1 c, typchk_exp e2 c with
+      | Some (NumT w1), Some (NumT w2) => Some (NumT (w1+w2))
+      | _, _ => None
+      end
+  end.
+
+(* Compute the meet of two input contexts. *)
+Definition typctx_meet (c1 c2:typctx) v :=
+  match c1 v, c2 v with
+  | Some t1, Some t2 => if t1 == t2 then Some t1 else None
+  | _, _ => None
+  end.
+
+(* Type-check a statement given a frame-context and initial context. *)
+Fixpoint typchk_stmt (q:stmt) (c0 c:typctx): option typctx :=
+  match q with
+  | Nop => Some c
+  | Move v e =>
+      match typchk_exp e c with
+      | Some t => match c0 v with
+                  | None => Some (c[v:=Some t])
+                  | Some t' => if t == t' then Some (c[v:=Some t]) else None
+                  end
+      | None => None
+      end
+  | Jmp e => match typchk_exp e c with Some (NumT _) => Some c | _ => None end
+  | Exn _ => Some c
+  | Seq q1 q2 => match typchk_stmt q1 c0 c with
+                 | None => None
+                 | Some c2 => typchk_stmt q2 c0 c2
+                 end
+  | If e q1 q2 =>
+      match typchk_exp e c, typchk_stmt q1 c0 c, typchk_stmt q2 c0 c with
+      | Some (NumT 1), Some c1, Some c2 => Some (typctx_meet c1 c2)
+      | _, _, _ => None
+      end
+  | Rep e q1 =>
+      match typchk_exp e c, typchk_stmt q1 c c with
+      | Some (NumT _), Some _ => Some c
+      | _, _ => None
+      end
+  end.
+
+
+(* The expression type-checker is sound. *)
+Theorem typchk_exp_sound:
+  forall e c t, typchk_exp e c = Some t -> hastyp_exp c e t.
+Proof.
+  induction e; simpl; intros.
+
+  (* Var *)
+  apply TVar. assumption.
+
+  (* Word *)
+  destruct (n <? 2^w) eqn:LT.
+    injection H; intro; subst. apply TWord, N.ltb_lt, LT.
+    discriminate.
+
+  (* Load *)
+  specialize (IHe1 c). specialize (IHe2 c).
+  destruct (typchk_exp e1 c) as [t1|]; [destruct t1|]; try discriminate.
+  destruct (typchk_exp e2 c) as [t2|]; [destruct t2|]; try discriminate.
+  destruct (w0 =? w1) eqn:EQ; [|discriminate].
+  apply Neqb_ok in EQ. injection H; intro; subst.
+  eapply TLoad.
+    apply IHe1. reflexivity.
+    apply IHe2. reflexivity.
+
+  (* Store *)
+  specialize (IHe1 c). specialize (IHe2 c). specialize (IHe3 c).
+  destruct (typchk_exp e1 c) as [t1|]; [destruct t1|]; try discriminate.
+  destruct (typchk_exp e2 c) as [t2|]; [destruct t2|]; try discriminate.
+  destruct (typchk_exp e3 c) as [t3|]; [destruct t3|]; try discriminate.
+  destruct (w0 =? w1) eqn:EQ1; [|discriminate].
+  destruct (w2 =? _) eqn:EQ2; [|discriminate].
+  apply Neqb_ok in EQ1. apply Neqb_ok in EQ2. injection H; intro; subst.
+  apply TStore.
+    apply IHe1. reflexivity.
+    apply IHe2. reflexivity.
+    apply IHe3. reflexivity.
+
+  (* BinOp *)
+  specialize (IHe1 c). specialize (IHe2 c).
+  destruct (typchk_exp e1 c) as [t1|]; [destruct t1|]; try discriminate.
+  destruct (typchk_exp e2 c) as [t2|]; [destruct t2|]; try discriminate.
+  destruct (w =? w0) eqn:EQ; [|discriminate].
+  apply Neqb_ok in EQ. injection H; intro; subst.
+  apply TBinOp.
+    apply IHe1. reflexivity.
+    apply IHe2. reflexivity.
+
+  (* UnOp *)
+  specialize (IHe c).
+  destruct (typchk_exp e c) as [t1|]; [destruct t1|]; try discriminate.
+  injection H; intro; subst.
+  apply TUnOp. apply IHe. reflexivity.
+
+  (* Cast *)
+  specialize (IHe c0).
+  destruct (typchk_exp e c0) as [t1|]; [destruct t1|]; try discriminate.
+  destruct c; destruct (_ <=? _) eqn:LE; try discriminate;
+  apply N.leb_le in LE; injection H; intro; subst;
+  (eapply TCast; [ apply IHe; reflexivity | exact LE ]).
+
+  (* Let *)
+  specialize (IHe1 c). destruct (typchk_exp e1 c); [|discriminate].
+  eapply TLet.
+    apply IHe1. reflexivity.
+    apply IHe2. assumption.
+
+  (* Unknown *)
+  injection H; intro; subst. apply TUnknown.
+
+  (* Ite *)
+  specialize (IHe1 c). specialize (IHe2 c). specialize (IHe3 c).
+  destruct (typchk_exp e1 c) as [t1|]; [destruct t1|]; try discriminate.
+  destruct (typchk_exp e2 c) as [t2|]; [|discriminate].
+  destruct (typchk_exp e3 c) as [t3|]; [|discriminate].
+  destruct (typ_eqdec t2 t3); [|discriminate].
+  injection H; intro; subst.
+  eapply TIte.
+    apply IHe1. reflexivity.
+    apply IHe2. reflexivity.
+    apply IHe3. reflexivity.
+
+  (* Extract *)
+  specialize (IHe c).
+  destruct (typchk_exp e c) as [t1|]; [destruct t1|]; try discriminate.
+  destruct (n2 <=? n1) eqn:LE; [|discriminate]. apply N.leb_le in LE.
+  destruct (n1 <? w) eqn:LT; [|discriminate]. apply N.ltb_lt in LT.
+  injection H; intro; subst.
+  eapply TExtract.
+    apply IHe. reflexivity.
+    exact LE.
+    exact LT.
+
+  (* Concat *)
+  specialize (IHe1 c). specialize (IHe2 c).
+  destruct (typchk_exp e1 c) as [t1|]; [destruct t1|]; try discriminate.
+  destruct (typchk_exp e2 c) as [t2|]; [destruct t2|]; try discriminate.
+  injection H; intro; subst.
+  apply TConcat.
+    apply IHe1. reflexivity.
+    apply IHe2. reflexivity.
+Qed.
+
+(* The meet of two contexts is bounded above by the contexts. *)
+Lemma typctx_meet_subset:
+  forall c1 c2, typctx_meet c1 c2 ⊆ c1.
+Proof.
+  intros c1 c2 v t H. unfold typctx_meet in H.
+  destruct (c1 v) as [t1|]; [|discriminate].
+  destruct (c2 v) as [t2|]; [|discriminate].
+  destruct (t1 == t2). exact H. discriminate.
+Qed.
+
+(* Context-meet is commutative. *)
+Lemma typctx_meet_comm:
+  forall c1 c2, typctx_meet c1 c2 = typctx_meet c2 c1.
+Proof.
+  intros. extensionality v. unfold typctx_meet.
+  destruct (c1 v), (c2 v); try reflexivity.
+  destruct (t == t0).
+    subst. destruct (t0 == t0). reflexivity. contradict n. reflexivity.
+    destruct (t0 == t). contradict n. symmetry. assumption. reflexivity.
+Qed.
+
+(* Context-meet computes the greatest of the lower bounds of the inputs. *)
+Lemma typctx_meet_lowbound:
+  forall c0 c1 c2 (SS1: c0 ⊆ c1) (SS2: c0 ⊆ c2), c0 ⊆ typctx_meet c1 c2.
+Proof.
+  unfold "⊆", typctx_meet. intros.
+  rewrite (SS1 _ _ H). rewrite (SS2 _ _ H).
+  destruct (y == y); [|contradict n]; reflexivity.
+Qed.
+
+(* The type-checker preserves the frame context. *)
+Lemma typchk_stmt_mono:
+  forall c0 q c c' (TS: typchk_stmt q c0 c = Some c') (SS: c0 ⊆ c), c0 ⊆ c'.
+Proof.
+  induction q; simpl; intros.
+
+  (* Nop *)
+  injection TS; intro; subst. exact SS.
+
+  (* Move *)
+  destruct (typchk_exp e c) as [t|]; [|discriminate].
+  destruct (c0 v) as [t'|] eqn:C0V.
+    destruct (typ_eqdec t t').
+      injection TS; intro; subst. intros v0 t0 H. destruct (v0 == v).
+        subst v0. rewrite update_updated, <- C0V, <- H. reflexivity.
+        rewrite update_frame by assumption. apply SS, H.
+      discriminate.
+    injection TS; intro; subst. intros v0 t0 H. destruct (v0 == v).
+      subst v0. rewrite C0V in H. discriminate.
+      rewrite update_frame by assumption. apply SS, H.
+
+  (* Jmp *)
+  destruct (typchk_exp e c) as [[t|]|]; try discriminate.
+  injection TS; intro; subst. exact SS.
+
+  (* Exn *)
+  injection TS; intro; subst. exact SS.
+
+  (* Seq *)
+  destruct (typchk_stmt q1 c0 c) as [c1|] eqn:TS1; [|discriminate].
+  eapply IHq2. exact TS.
+  eapply IHq1. exact TS1. exact SS.
+
+  (* If *)
+  destruct (typchk_exp e c) as [[[|[| |]]|]|]; try discriminate.
+  destruct (typchk_stmt q1 c0 c) as [c1|] eqn:TS1; [|discriminate].
+  destruct (typchk_stmt q2 c0 c) as [c2|] eqn:TS2; [|discriminate].
+  injection TS; intro; subst.
+  apply typctx_meet_lowbound.
+    eapply IHq1. exact TS1. exact SS.
+    eapply IHq2. exact TS2. exact SS.
+
+  (* Rep *)
+  destruct (typchk_exp e c) as [[|]|]; try discriminate.
+  destruct (typchk_stmt q c c) eqn:TS1; [|discriminate].
+  injection TS; intro; subst.
+  exact SS.
+Qed.
+
+(* The statement type-checker is sound. *)
+Theorem typchk_stmt_sound:
+  forall q c0 c c' (SS: c0 ⊆ c) (TS: typchk_stmt q c0 c = Some c'),
+  hastyp_stmt c0 c q c'.
+Proof.
+  induction q; intros; simpl in TS.
+
+  (* Nop *)
+  injection TS; intro; subst. apply TNop.
+
+  (* Move *)
+  destruct (typchk_exp e c) eqn:TE; [|discriminate].
+  destruct (c0 v) eqn:C0V; [destruct (typ_eqdec t _)|];
+  try (injection TS; intro); subst;
+  first [ discriminate | apply TMove ].
+    right. exact C0V. apply typchk_exp_sound. exact TE.
+    left. exact C0V. apply typchk_exp_sound. exact TE.
+
+  (* Jmp *)
+  destruct (typchk_exp e c) as [t|] eqn:TE; [destruct t|]; try discriminate.
+  injection TS; intro; subst.
+  eapply TJmp. apply typchk_exp_sound. exact TE.
+
+  (* Exn *)
+  injection TS; intro; subst. apply TExn.
+
+  (* Seq *)
+  specialize (IHq1 c0 c). destruct (typchk_stmt q1 c0 c) as [c1|] eqn:TS1; [|discriminate].
+  specialize (IHq2 c0 c1). destruct (typchk_stmt q2 c0 c1); [|discriminate].
+  injection TS; intro; subst.
+  eapply TSeq.
+    reflexivity.
+    apply IHq1. exact SS. reflexivity.
+    apply IHq2. eapply typchk_stmt_mono; eassumption. reflexivity.
+
+  (* If *)
+  destruct (typchk_exp e c) as [[[|[|p|]]|]|] eqn:TE; try discriminate.
+  destruct (typchk_stmt q1 c0 c) as [c1|] eqn:TS1; [|discriminate].
+  destruct (typchk_stmt q2 c0 c) as [c2|] eqn:TS2; [|discriminate].
+  injection TS; intro; subst.
+  eapply TIf.
+    apply typctx_meet_subset.
+    rewrite typctx_meet_comm. apply typctx_meet_subset.
+    apply typchk_exp_sound. exact TE.
+    apply IHq1. exact SS. exact TS1.
+    apply IHq2. exact SS. exact TS2.
+
+  (* Rep *)
+  destruct (typchk_exp e c) as [[|]|] eqn:TE; try discriminate.
+  specialize (IHq c c). destruct (typchk_stmt q c c) as [c1|] eqn:TS1; [|discriminate].
+  injection TS; intro; subst.
+  eapply TRep. all:cycle 1.
+    apply typchk_exp_sound. exact TE.
+    eapply hastyp_stmt_weaken. apply IHq. reflexivity. reflexivity. exact SS.
+    eapply typchk_stmt_mono. exact TS1. reflexivity.
+Qed.
+
+(* Create a theorem that transforms a type-safety goal into an application of
+   the type-checker.  This allows type-safety goals to be solved by any of
+   Coq's fast reduction tactics, such as vm_compute or native_compute. *)
+Corollary typchk_stmt_compute:
+  forall q c (TS: if typchk_stmt q c c then True else False),
+  exists c', hastyp_stmt c c q c'.
+Proof.
+  intros. destruct (typchk_stmt q c c) as [c'|] eqn:TS1.
+    exists c'. apply typchk_stmt_sound. reflexivity. exact TS1.
+    contradict TS.
+Qed.
+
+(* Attempt to automatically solve a goal of the form (welltyped_prog c p).
+   Statements in p that cannot be type-checked automatically (using context-
+   meets at conditionals and the incoming context as the fixpoint of loops)
+   are left as subgoals for the user to solve.  For most ISAs, this should
+   not happen; the algorithm should fully solve all the goals. *)
 Ltac Picinae_typecheck :=
-  repeat lazymatch goal with
-  | [ |- welltyped_prog _ _ ] => let a := fresh "a" in
-      intro a;
-      destruct a as [|a]; repeat first [ exact I | destruct a as [a|a|] ];
-      eexists
-  | [ |- typof_exp _ (BinOp _ _ _) _ ] => eapply typchk_binop
-  | [ |- typof_exp _ (Extract _ _ _) _ ] => eapply typchk_extract
-  | [ |- typof_exp _ (Concat _ _) _ ] => eapply typchk_concat
-  | [ |- typof_stmt _ _ _ _ ] => econstructor
-  | [ |- typof_exp _ _ _ ] => econstructor
-  | [ |- update _ _ _ _ = _ ] => repeat (rewrite update_frame; [|discriminate 1]);
-                                   solve [ apply update_updated | reflexivity ]
-  | [ |- _ = _ \/ _ = _ ] => solve [ left;reflexivity | right;reflexivity ]
-  | [ |- _ ⊆ _ ] => reflexivity
-  | [ |- _ = _ ] => reflexivity
-  | [ |- _ < _ ] => reflexivity
-  | [ |- _ <= _ ] => discriminate 1
+  lazymatch goal with [ |- welltyped_prog _ _ ] =>
+    let s := fresh "s" in let a := fresh "a" in
+    intros s a;
+    destruct a as [|a]; repeat first [ exact I | destruct a as [a|a|] ];
+    try (apply typchk_stmt_compute; vm_compute; exact I)
+  | _ => fail "goal is not of the form (welltyped_prog c p)"
   end.
 
 End PICINAE_STATICS.

@@ -102,10 +102,10 @@ Proof. intro. destruct u as [u|]; [destruct u|]; reflexivity. Qed.
    unknown.  In order to assign a unique unknown-identifier to each unknown
    appearing in the statement without preprocessing the statement to count
    them all, we use a trick from proofs about partitioning countably infinite
-   domains into multiple countably infinite domains:  To assign mutually
-   exclusive identifiers to two expressions e1 and e2, we assign only even
-   identifiers to unknowns in e1 and only odd identifiers to unknowns in e2.
-   When this strategy is followed recursively, all unknowns get unique ids. *)
+   domains:  To assign mutually exclusive identifiers to two expressions e1
+   and e2, we assign only even identifiers to unknowns in e1 and only odd
+   identifiers to unknowns in e2.  When this strategy is followed recursively,
+   all unknowns get unique ids. *)
 
 Definition unknowns0 f i : N := f (xO i).
 Definition unknowns1 f i : N := f (xI i).
@@ -114,13 +114,13 @@ Definition unknowns01 f i : N := f (xI (xO i)).
 Definition unknowns10 f i : N := f (xO (xI i)).
 
 
-(* The interpreter accmulates memory access predicates as a separate list
+(* The interpreter accumulates memory access predicates as a separate list
    of propositions during interpretation.  This allows the proof to infer
    memory accessibility facts from successful executions.  The list of
    propositions is later assembled into a conjunction, which is then split
    off into separate hypotheses in the proof context.  Sometimes it is
    useful to end the conjunction with a prop of "True" (to signal the end)
-   while other times it is more succinct to not include this end-prop.
+   while other times it is more succinct to not include the extra "True".
    We therefore define functions for both treatments. *)
 
 Definition conjallT := List.fold_right and True.
@@ -157,7 +157,7 @@ Qed.
    intractable for users (and very slow for Coq to manipulate).  To control
    and limit this expansion, we create a Module that hides the expansions of
    functions we don't want vm_compute to evaluate.  After vm_compute completes,
-   we replace the opaque functions with the real ones (using autorewrite). *)
+   we replace the opaque functions with the real ones (using rewrite). *)
 
 Module Type NOEXPAND.
   Parameter negb: bool -> bool.
@@ -281,43 +281,6 @@ Module NoE : NOEXPAND.
   Theorem vwidth_eq: _vwidth = vwidth. Proof eq_refl.
 End NoE.
 
-Create HintDb feval discriminated.
-Global Hint Rewrite NoE.negb_eq : feval.
-Global Hint Rewrite NoE.add_eq : feval.
-Global Hint Rewrite NoE.sub_eq : feval.
-Global Hint Rewrite NoE.mul_eq : feval.
-Global Hint Rewrite NoE.div_eq : feval.
-Global Hint Rewrite NoE.quot_eq : feval.
-Global Hint Rewrite NoE.rem_eq : feval.
-Global Hint Rewrite NoE.modulo_eq : feval.
-Global Hint Rewrite NoE.pow_eq : feval.
-Global Hint Rewrite NoE.shiftl_eq : feval.
-Global Hint Rewrite NoE.shiftr_eq : feval.
-Global Hint Rewrite NoE.ashiftr_eq : feval.
-Global Hint Rewrite NoE.land_eq : feval.
-Global Hint Rewrite NoE.lor_eq : feval.
-Global Hint Rewrite NoE.lxor_eq : feval.
-Global Hint Rewrite NoE.lnot_eq : feval.
-Global Hint Rewrite NoE.eqb_eq : feval.
-Global Hint Rewrite NoE.ltb_eq : feval.
-Global Hint Rewrite NoE.leb_eq : feval.
-Global Hint Rewrite NoE.slt_eq : feval.
-Global Hint Rewrite NoE.sle_eq : feval.
-Global Hint Rewrite NoE.sbop_eq : feval.
-Global Hint Rewrite NoE.scast_eq : feval.
-Global Hint Rewrite NoE.Niter_eq : feval.
-Global Hint Rewrite NoE.vtyp_eq : feval.
-Global Hint Rewrite NoE.vnum_eq : feval.
-Global Hint Rewrite NoE.vmem_eq : feval.
-Global Hint Rewrite NoE.vwidth_eq : feval.
-Global Hint Rewrite vtyp_num : feval.
-Global Hint Rewrite vtyp_mem : feval.
-Global Hint Rewrite vnum_num : feval.
-Global Hint Rewrite vmem_mem : feval.
-Global Hint Rewrite vwidth_num : feval.
-Global Hint Rewrite vwidth_mem : feval.
-Global Hint Rewrite fold_vget : feval.
-
 
 (* Functionally evaluate binary and unary operations using the opaque
    functions above. *)
@@ -369,7 +332,7 @@ Definition feval_cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
   end.
 
 
-(* Functional interpretation of expressions and statements requires instantiating
+(* Functional interpretation of expressions and statements entails instantiating
    a functor that accepts the architecture-specific IL syntax and semantics. *)
 
 Module Type PICINAE_FINTERP (IL: PICINAE_IL).
@@ -411,11 +374,57 @@ Module NoEMem : NOEMEM.
   Theorem memaccw_eq: memaccw = MemAcc mem_writable. Proof eq_refl.
 End NoEMem.
 
-Global Hint Rewrite NoEMem.getmem_eq : feval.
-Global Hint Rewrite NoEMem.setmem_eq : feval.
-Global Hint Rewrite NoEMem.vupdate_eq : feval.
-Global Hint Rewrite NoEMem.memaccr_eq : feval.
-Global Hint Rewrite NoEMem.memaccw_eq : feval.
+(* Implementation note:  The following tactic uses 'rewrite' with a list of
+   lemmas rather than using autorewrite or rewrite_strat because 'rewrite'
+   with a list of lemmas is currently faster (as of Coq 8.8.0). *)
+
+Ltac NoE_rewrite H :=
+  rewrite 1?NoE.negb_eq,
+          1?NoE.add_eq,
+          1?NoE.sub_eq,
+          1?NoE.mul_eq,
+          1?NoE.div_eq,
+          1?NoE.quot_eq,
+          1?NoE.rem_eq,
+          1?NoE.modulo_eq,
+          1?NoE.pow_eq,
+          1?NoE.shiftl_eq,
+          1?NoE.shiftr_eq,
+          1?NoE.ashiftr_eq,
+          1?NoE.land_eq,
+          1?NoE.lor_eq,
+          1?NoE.lxor_eq,
+          1?NoE.lnot_eq,
+          1?NoE.eqb_eq,
+          1?NoE.ltb_eq,
+          1?NoE.leb_eq,
+          1?NoE.slt_eq,
+          1?NoE.sle_eq,
+          1?NoE.sbop_eq,
+          1?NoE.scast_eq,
+          1?NoE.Niter_eq,
+          1?NoE.vtyp_eq,
+          1?NoE.vnum_eq,
+          1?NoE.vmem_eq,
+          1?NoE.vwidth_eq,
+          1?NoEMem.getmem_eq,
+          1?NoEMem.setmem_eq,
+          1?NoEMem.vupdate_eq,
+          1?NoEMem.memaccr_eq,
+          1?NoEMem.memaccw_eq,
+          ?vtyp_num,
+          ?vtyp_mem,
+          ?vnum_num,
+          ?vmem_mem,
+          ?vwidth_num,
+          ?vwidth_mem,
+          ?fold_vget
+  in H.
+
+Ltac NoE_rewrite_goal :=
+  lazymatch goal with |- ?G =>
+    let H := fresh in let Heq := fresh in remember G as H eqn:Heq; NoE_rewrite Heq; subst H
+  end.
 
 Definition bits_of_mem len := N.mul Mb len.
 
@@ -544,7 +553,7 @@ Proof.
 
   (* Var *)
   exists (fun _ => N0). split.
-    simpl. rewrite SV. autorewrite with feval. destruct u; reflexivity.
+    simpl. rewrite SV. NoE_rewrite_goal. destruct u; reflexivity.
     exact I.
 
   (* Word *)
@@ -560,7 +569,7 @@ Proof.
   destruct (feval_exp e1 _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
   destruct (feval_exp e2 _ _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
   simpl in U1,U2. destruct z; destruct z0; try discriminate. injection U1; injection U2; intros; subst.
-  autorewrite with feval. split.
+  NoE_rewrite_goal. split.
     reflexivity.
     split.
       exact R.
@@ -575,7 +584,7 @@ Proof.
   destruct (feval_exp e2 _ _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
   destruct (feval_exp e3 _ _ _) as (u3,ma3). destruct u3. destruct E3 as [U3 M3].
   simpl in U1,U2,U3. destruct z; destruct z0; destruct z1; try discriminate. injection U1; injection U2; injection U3; intros; subst.
-  autorewrite with feval. split.
+  NoE_rewrite_goal. split.
     reflexivity.
     split.
       exact W.
@@ -590,7 +599,7 @@ Proof.
   destruct (feval_exp e2 _ _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
   simpl in U1,U2. destruct z; destruct z0; try discriminate. injection U1; injection U2; intros; subst.
   split.
-    destruct b; simpl; autorewrite with feval; reflexivity.
+    destruct b; simpl; NoE_rewrite_goal; reflexivity.
     apply conjallT_app; assumption.
 
   (* UnOp *)
@@ -601,7 +610,7 @@ Proof.
   destruct (feval_exp e _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
   simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
   split.
-    destruct u; simpl; autorewrite with feval; reflexivity.
+    destruct u; simpl; NoE_rewrite_goal; reflexivity.
     assumption.
 
   (* Cast *)
@@ -612,7 +621,7 @@ Proof.
   destruct (feval_exp e _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
   simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
   split.
-    destruct c; simpl; autorewrite with feval; reflexivity.
+    destruct c; simpl; NoE_rewrite_goal; reflexivity.
     assumption.
 
   (* Let *)
@@ -630,7 +639,7 @@ Proof.
   (* Unknown *)
   exists (fun _ => n).
   unfold feval_exp; fold feval_exp.
-  simpl. autorewrite with feval. split.
+  simpl. NoE_rewrite_goal. split.
     rewrite N.mod_small by assumption. reflexivity.
     exact I.
 
@@ -676,7 +685,7 @@ Proof.
   destruct (feval_exp e _ _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
   simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
   split.
-    simpl. autorewrite with feval. reflexivity.
+    simpl. NoE_rewrite_goal. reflexivity.
     assumption.
 
   (* Concat *)
@@ -688,7 +697,7 @@ Proof.
   destruct (feval_exp e2 _ _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
   simpl in U1,U2. destruct z; destruct z0; try discriminate. injection U1; injection U2; intros; subst.
   split.
-    simpl. autorewrite with feval. reflexivity.
+    simpl. NoE_rewrite_goal. reflexivity.
     apply conjallT_app; assumption.
 Qed.
 
@@ -863,10 +872,10 @@ Tactic Notation "stock_store" "in" hyp(XS) :=
 
 (* To prevent vm_compute from expanding symbolic expressions that the user
    already has in a desired form, the following lemmas introduce symbolic
-   constants for those expressions that are set equal to the original terms.
+   constants for those expressions and sets them equal to the original terms.
    The "destruct" tactic can then be used to separate those terms out into
-   a different hypothesis to which vm_compute is not applied, and then
-   use "subst" to substitute them back into the evaluated term after vm_compute
+   a different hypothesis to which vm_compute is not applied, and then use
+   "subst" to substitute them back into the evaluated term after vm_compute
    is done. *)
 
 Lemma fexec_stmt_init:
@@ -910,7 +919,7 @@ Qed.
    applying the reduce_stmt theorem to convert it into an fexec_stmt expression,
    launching vm_compute on it, then abstracting any unknowns as unique proof
    context variables, and finally substituting any removed or opaque expressions
-   back in to the evaluated expression. *)
+   back into the evaluated expression. *)
 
 Ltac step_stmt XS :=
   lazymatch type of XS with exec_stmt ?h _ _ ?s' ?x =>
@@ -927,11 +936,13 @@ Ltac step_stmt XS :=
         apply reduce_stmt in XS; let unk := fresh "unknown" in (
           destruct XS as [unk XS];
           vm_compute in XS;
-          revert XS; repeat lazymatch goal with |- context [ unk ?i ] =>
-            generalize (unk i); let u := fresh "u" in intro u
-          end; intro XS; try clear unk
+          repeat match type of XS with context [ unk ?i ] =>
+            pattern (unk i) in XS;
+            apply ex_intro in XS;
+            let u := fresh "u" in destruct XS as [u XS]
+          end; try clear unk
         );
-        autorewrite with feval in XS;
+        NoE_rewrite XS;
         subst _h _s _s' _x
       );
       repeat lazymatch type of EQs with (?_nmu = _) /\ _ =>
@@ -950,11 +961,13 @@ Ltac step_stmt XS :=
 Ltac destruct_memaccs XS :=
   let ACCs := fresh "ACCs" in
     destruct XS as [XS ACCs];
-    repeat lazymatch type of ACCs with ?H1 /\ _ =>
-      lazymatch goal with [ H0:H1 |- _ ] => apply proj2 in ACCs
-      | _ => let ACC := fresh "ACC" in destruct ACCs as [ACC ACCs]
-      end
+    repeat lazymatch type of ACCs with
+    | ?H1 /\ _ =>
+        lazymatch goal with [ H0:H1 |- _ ] => apply proj2 in ACCs
+        | _ => let ACC := fresh "ACC" in destruct ACCs as [ACC ACCs]
+        end
     | True => clear ACCs
+    | _ => let ACC := fresh "ACC" in rename ACCs into ACC
     end.
 
 End PICINAE_FINTERP.

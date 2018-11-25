@@ -33,6 +33,10 @@ Open Scope N.
 (* Use a flat memory model for these proofs. *)
 Definition fh := htotal.
 
+(* The x86 lifter models non-writable code. *)
+Theorem strlen_nwc: forall s2 s1, strlen_i386 s1 = strlen_i386 s2.
+Proof. reflexivity. Qed.
+
 (* Example #1: Type safety
    We first prove that the program is well-typed (automated by the Picinae_typecheck tactic).
    This is useful for later inferring that all CPU registers and memory contents have
@@ -90,12 +94,12 @@ Definition strlen_esp_invset esp :=
   invs (esp_invs esp) (esp_post esp).
 
 (* Now we pose a theorem that asserts that this invariant-set is satisfied at
-   the conclusion of the subroutine.  The "trueif_inv" function asserts that
+   all points in the subroutine.  The "trueif_inv" function asserts that
    anywhere an invariant exists (e.g., at the post-condition), it is true. *)
 Theorem strlen_preserves_esp:
   forall s esp mem n s' x'
          (ESP0: s R_ESP = Ⓓ esp) (MEM0: s V_MEM32 = Ⓜ mem)
-         (RET: strlen_i386 (mem Ⓓ[esp]) = None)
+         (RET: strlen_i386 s (mem Ⓓ[esp]) = None)
          (XP0: exec_prog fh strlen_i386 0 s n s' x'),
   trueif_inv (strlen_esp_invset esp strlen_i386 x' s').
 Proof.
@@ -121,6 +125,7 @@ Proof.
   intros.
   assert (MEM: s1 V_MEM32 = Ⓜ mem).
     rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
+  rewrite (strlen_nwc s1) in RET.
   clear s MEM0 XP0 ESP0 XP.
 
   (* We are now ready to break the goal down into one case for each invariant-point.
@@ -721,7 +726,7 @@ Theorem strlen_partial_correctness:
          (MDL0: models x86typctx s)
          (ESPLO: esp + 8 <= 2^32)
          (ESP0: s R_ESP = Ⓓ esp) (MEM0: s V_MEM32 = Ⓜ mem)
-         (RET: strlen_i386 (mem Ⓓ[esp]) = None)
+         (RET: strlen_i386 s (mem Ⓓ[esp]) = None)
          (XP0: exec_prog fh strlen_i386 0 s n s' x),
   trueif_inv (strlen_invset mem esp strlen_i386 x s').
 Proof.
@@ -743,6 +748,7 @@ Proof.
     unfold mem_readable. intro H. destruct H as [r [H1 H2]]. apply HI0.
     exists r. split; [|exact H2].
     erewrite <- strlen_preserves_readable; eassumption.
+  rewrite (strlen_nwc s1) in RET.
   assert (ESP := strlen_preserves_esp _ _ _ _ _ (Exit a1) ESP0 MEM0 RET XP).
   clear s HI0 MDL0 MEM0 ESP0 XP XP0.
 

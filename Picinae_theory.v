@@ -775,24 +775,25 @@ Theorem exec_prog_deterministic:
   (XP1: exec_prog h p a s n s1 x1) (XP2: exec_prog h p a s n s2 x2),
   s1 = s2 /\ x1 = x2.
 Proof.
-  intros. revert s2 x2 XP2. dependent induction XP1; intros; inversion XP2; subst;
-  assert (NUa:=NU a);
-  try (rewrite LU0 in LU; first [ discriminate LU
-                                | injection LU; clear LU; intros; subst; rewrite LU0 in NUa ]);
-  try solve [ split;reflexivity ];
-  assert (ESD:=exec_stmt_deterministic (NUa _ _ (eq_refl _)) XS XS0);
-  destruct ESD as [ESD1 ESD2]; try (injection ESD2; clear ESD2; intro); subst.
+  intros. revert s2 x2 XP2. dependent induction XP1; intros; inversion XP2; subst.
 
-  replace a'0 with a' in XP.
-    apply IHXP1. assumption.
-    destruct x0 as [x0|]; [destruct x0|]; first
-    [ discriminate
-    | injection EX; injection EX0; intros; subst; subst; reflexivity ].
+  split; reflexivity.
 
-  destruct x2; discriminate.
+  rewrite LU in LU0; injection LU0; clear LU0; intros; subst.
+  destruct (exec_stmt_deterministic (NU _ _ _ _ LU) XS XS0); subst.
+  rewrite EX in EX0; injection EX0; clear EX0; intros; subst.
+  apply IHXP1. assumption.
 
-  destruct x; discriminate.
+  rewrite LU in LU0; injection LU0; clear LU0; intros; subst.
+  destruct (exec_stmt_deterministic (NU _ _ _ _ LU) XS XS0); subst.
+  discriminate EX.
 
+  rewrite LU in LU0; injection LU0; clear LU0; intros; subst.
+  destruct (exec_stmt_deterministic (NU _ _ _ _ LU) XS XS0); subst.
+  discriminate EX.
+
+  rewrite LU in LU0; injection LU0; clear LU0; intros; subst.
+  destruct (exec_stmt_deterministic (NU _ _ _ _ LU) XS XS0); injection H0; intro; subst.
   split; reflexivity.
 Qed.
 
@@ -938,7 +939,8 @@ Proof.
 Qed.
 
 Theorem exec_prog_smono:
-  forall p s1 s2 h a n s1' x (SS: s1 ⊆ s2)
+  forall p (PS: forall s1 s2, s1 ⊆ s2 -> p s1 ⊆ p s2)
+         s1 s2 h a n s1' x (SS: s1 ⊆ s2)
          (XP: exec_prog h p a s1 n s1' x),
   exec_prog h p a s2 n (updateall s2 s1') x.
 Proof.
@@ -949,7 +951,7 @@ Proof.
     symmetry. apply updateall_subset. assumption.
 
   apply XStep with (sz:=sz) (q:=q) (s2:=updateall s0 s2) (x1:=x1) (a':=a').
-    assumption.
+    eapply PS. exact SS. assumption.
     eapply exec_stmt_smono; eassumption.
     assumption.
     replace (updateall s0 s') with (updateall (updateall s0 s2) s').
@@ -959,19 +961,23 @@ Proof.
         rewrite H. reflexivity. reflexivity.
 
   apply XAbort with (sz:=sz) (q:=q).
-    assumption.
+    eapply PS. exact SS. assumption.
     eapply exec_stmt_smono; eassumption.
-    assumption.
 Qed.
 
 (* exec_prog is monotonic with respect to programs.  Enlarging the space of known
    instructions in memory preserves executions. *)
 Theorem exec_prog_pmono:
-  forall p1 p2 s h a n s' x (PS: p1 ⊆ p2)
-         (XP: exec_prog h p1 a s n s' x),
+  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
+         s h a n s' x (XP: exec_prog h p1 a s n s' x),
   exec_prog h p2 a s n s' x.
 Proof.
-  intros. dependent induction XP; econstructor; try apply PS; eassumption.
+  intros. dependent induction XP.
+    apply XDone.
+    eapply XStep; try eassumption.
+      erewrite PS. reflexivity. exact LU.
+    eapply XAbort; try eassumption.
+      erewrite PS. reflexivity. exact LU.
 Qed.
 
 End Monotonicity.
@@ -1002,7 +1008,7 @@ Qed.
 Theorem exec_prog_append:
   forall h p n a s sz q s2 a1 s' x'
          (XP: exec_prog h p a s n s2 (Exit a1))
-         (LU: p a1 = Some (sz,q))
+         (LU: p s2 a1 = Some (sz,q))
          (XS: exec_stmt h s2 q s' x'),
     exec_prog h p a s (S n) s' (match x' with None => Exit (a1+sz)
                                             | Some x' => x' end).
@@ -1010,7 +1016,6 @@ Proof.
   induction n; intros; inversion XP; subst.
     destruct x'; [destruct e|]; econstructor; solve [ eassumption | reflexivity | apply XDone ].
     eapply XStep; try eassumption. eapply IHn; eassumption.
-    discriminate.
 Qed.
 
 (* Split an exec_prog computation into two parts. *)
@@ -1041,7 +1046,6 @@ Proof.
      exact XP0.
      inversion XP1; subst.
        eapply XStep. exact LU. exact XS. exact EX. inversion XP; subst. exact XP2.
-       discriminate EX.
 Qed.
 
 (* To prove that a property holds at the conclusion of a program's execution, it suffices
@@ -1049,7 +1053,7 @@ Qed.
 Theorem prog_inv_universal:
   forall (P: exit -> store -> Prop)
          h p a0 s0 n s' x' (XP: exec_prog h p a0 s0 n s' x') (PRE: P (Exit a0) s0)
-         (INV: forall a1 s1 sz q s1' x1 (IL: p a1 = Some (sz,q)) (PRE: P (Exit a1) s1)
+         (INV: forall a1 s1 sz q s1' x1 (IL: p s1 a1 = Some (sz,q)) (PRE: P (Exit a1) s1)
                       (XS: exec_stmt h s1 q s1' x1),
                P (match x1 with None => Exit (a1 + sz)
                               | Some x => x end) s1'),
@@ -1062,7 +1066,7 @@ Proof.
       specialize (INV a0 s0 sz q s2 x1 LU PRE XS). destruct x1; [destruct e|]; first
       [ discriminate EX
       | injection EX; intro; subst a'; exact INV ].
-    specialize (INV a0 s0 sz q s' (Some x') LU PRE XS). exact INV.
+    specialize (INV _ _ _ _ _ _ LU PRE XS). exact INV.
 Qed.
 
 (* Alternatively, one may prove that the property is preserved by all the reachable statements.
@@ -1070,14 +1074,13 @@ Qed.
 Theorem prog_inv_reachable:
   forall (P: exit -> store -> nat -> Prop)
          h p a0 s0 n s' x' (XP: exec_prog h p a0 s0 n s' x') (PRE: P (Exit a0) s0 O)
-         (INV: forall a1 s1 n1 sz q s1' x1 (IL: p a1 = Some (sz,q)) (PRE: P (Exit a1) s1 n1) (LT: (n1 < n)%nat)
+         (INV: forall a1 s1 n1 sz q s1' x1 (IL: p s1 a1 = Some (sz,q)) (PRE: P (Exit a1) s1 n1) (LT: (n1 < n)%nat)
                       (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
                       (XS: exec_stmt h s1 q s1' x1)
                       (XP': match x1 with None => exec_prog h p (a1+sz) s1' (n - S n1) s' x'
                                         | Some (Exit a2) => exec_prog h p a2 s1' (n - S n1) s' x'
                                         | Some x2 => x'=x2 end),
-               P (match x1 with None => Exit (a1 + sz)
-                              | Some x => x end) s1' (S n1)),
+               P (exitof (a1 + sz) x1) s1' (S n1)),
   P x' s' n.
 Proof.
   intros.
@@ -1105,17 +1108,13 @@ Proof.
           injection EX. intro. subst a'. apply INV. exact XP.
 
         destruct n. inversion LE. apply le_S_n in LE. rewrite Nat.sub_succ_l; [|exact LE].
-        replace (Exit a') with (match x1 with None => Exit (a1 + sz)
-                                            | Some x => x end).
+        replace (Exit a') with (exitof (a1 + sz) x1).
           eapply exec_prog_append. exact XP1. exact LU. exact XS.
-          destruct x1; [destruct e|]; first [ discriminate EX | injection EX; intro; subst; reflexivity ].
 
         exact XP.
-      specialize (INV a1 s1 (n-1)%nat sz q s' (Some x') LU PRE1 (Nat.sub_lt n 1 LE Nat.lt_0_1) XP1 XS).
+      specialize (INV _ _ (n-1)%nat _ _ _ _ LU PRE1 (Nat.sub_lt n 1 LE Nat.lt_0_1) XP1 XS).
       rewrite minus_Sn_m, Nat.sub_succ, Nat.sub_0_r in INV by exact LE.
-      apply INV. destruct x'.
-        discriminate EX.
-        reflexivity.
+      apply INV. reflexivity.
 Qed.
 
 (* Rather than assigning and proving an invariant at every machine instruction, we can generalize
@@ -1154,9 +1153,8 @@ Inductive nextinv PS p h: bool -> exit -> store -> Prop :=
 | NIStep (b:bool) s a
          (NOI: (if b then PS p (Exit a) s else None) = None)
          (STEP: forall sz q s1 x1
-                       (IL: p a = Some (sz,q)) (XS: exec_stmt h s q s1 x1),
-                nextinv PS p h true
-                        match x1 with None => Exit (a+sz) | Some x1 => x1 end s1):
+                       (IL: p s a = Some (sz,q)) (XS: exec_stmt h s q s1 x1),
+                nextinv PS p h true (exitof (a+sz) x1) s1):
     nextinv PS p h b (Exit a) s.
 
 (* Proving the "next invariant satisfied" property for all invariant points proves partial
@@ -1193,7 +1191,7 @@ Qed.
    raising an exception or reaching an address outside the subroutine. *)
 Definition invs PS Q (p:program) x (s:store) : option Prop :=
   match x with
-  | Exit a => match p a with None => Some (Q x s) | Some _ => PS a s end
+  | Exit a => match p s a with None => Some (Q x s) | Some _ => PS a s end
   | Raise _ => Some (Q x s)
   end.
 
@@ -1206,7 +1204,7 @@ Proof. intros. apply NIHere. rewrite INV. exact TRU. Qed.
 
 Lemma nextinv_ret:
   forall PS (Q: exit -> store -> Prop) p h r s
-         (IL: p r = None) (POST: Q (Exit r) s),
+         (IL: p s r = None) (POST: Q (Exit r) s),
   nextinv (invs PS Q) p h true (Exit r) s.
 Proof. intros. apply NIHere. unfold invs. rewrite IL. exact POST. Qed.
 
@@ -1226,12 +1224,12 @@ Theorem prove_invs:
     (PRE: true_inv (invs PS Q p (Exit a0) s0))
     (CASES: forall a1 s1 n1
       (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
-      (PRE: true_inv (if p a1 then PS a1 s1 else None)),
+      (PRE: true_inv (if p s1 a1 then PS a1 s1 else None)),
       nextinv (invs PS Q) p h false (Exit a1) s1),
   trueif_inv (invs PS Q p x s').
 Proof.
   intros. eapply prog_inv. exact XP0. exact PRE.
-  intros. unfold invs in PRE0. destruct (p a1) eqn:PA1.
+  intros. unfold invs in PRE0. destruct (p s1 a1) eqn:PA1.
     eapply CASES. exact XP. rewrite PA1. exact PRE0.
     apply NIStep. reflexivity. intros. rewrite PA1 in IL. discriminate IL.
 Qed.
@@ -1278,7 +1276,7 @@ Ltac shelve_cases_loop H a :=
   try (simple apply trueinv_none in H; exfalso; exact H).
 
 Tactic Notation "shelve_cases" int_or_var(i) hyp(H) :=
-  lazymatch type of H with true_inv (if ?p ?a then _ else None) =>
+  lazymatch type of H with true_inv (if ?p ?s ?a then _ else None) =>
     is_var a; case a as [|a]; [ shelve_case H | do i shelve_cases_loop H a ];
     fail "bit width" i "is insufficient to explore the invariant space"
   | _ => fail "hypothesis" H "is not a precondition of the form"
@@ -1330,7 +1328,7 @@ Proof.
     reflexivity.
     intros. rewrite <- PRE. apply (noassign_stmt_same v) in XS.
       exact XS.
-      specialize (NA a1). rewrite IL in NA. exact NA.
+      specialize (NA s1 a1). rewrite IL in NA. exact NA.
 Qed.
 
 End FrameTheorems.
@@ -1339,7 +1337,7 @@ End FrameTheorems.
    statements having assignments to v. *)
 Ltac prove_noassign :=
   try lazymatch goal with [ |- prog_noassign _ _ ] => let a := fresh "a" in
-    let a := fresh "a" in intro a; destruct a as [|a];
+    let s := fresh "s" in let a := fresh "a" in intros s a; destruct a as [|a];
     repeat first [ exact I | destruct a as [a|a|] ]
   end;
   repeat lazymatch goal with [ |- _ <> _ ] => discriminate 1

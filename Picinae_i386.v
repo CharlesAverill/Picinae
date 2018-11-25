@@ -308,38 +308,25 @@ Remark if_not_if:
 Proof. intros. destruct b; reflexivity. Qed.
 
 
-Create HintDb mod_pow2 discriminated.
-Global Hint Rewrite N.sub_0_r : mod_pow2.
-Global Hint Rewrite N.add_0_l : mod_pow2.
-Global Hint Rewrite N.add_0_r : mod_pow2.
-Global Hint Rewrite N.mul_0_l : mod_pow2.
-Global Hint Rewrite N.mul_0_r : mod_pow2.
-Global Hint Rewrite N.land_0_l : mod_pow2.
-Global Hint Rewrite N.land_0_r : mod_pow2.
-Global Hint Rewrite N.lor_0_l : mod_pow2.
-Global Hint Rewrite N.lor_0_r : mod_pow2.
-Global Hint Rewrite N.lxor_0_l : mod_pow2.
-Global Hint Rewrite N.lxor_0_r : mod_pow2.
-Global Hint Rewrite getmem_1 : mod_pow2.
-Global Hint Rewrite N.mul_1_l : mod_pow2.
-Global Hint Rewrite N.mul_1_r : mod_pow2.
-Global Hint Rewrite fold_parity : mod_pow2.
-Global Hint Rewrite N.lxor_nilpotent : mod_pow2.
-Global Hint Rewrite N.mod_same using discriminate 1 : mod_pow2.
-Global Hint Rewrite N.mod_mul using discriminate 1 : mod_pow2.
-Global Hint Rewrite lxor_land using reflexivity : mod_pow2.
-Global Hint Rewrite dblmod_l using discriminate 1 : mod_pow2.
-Global Hint Rewrite dblmod_r using discriminate 1 : mod_pow2.
-Global Hint Rewrite mod_mul_l using discriminate 1 : mod_pow2.
-Global Hint Rewrite mod_add_l using discriminate 1 : mod_pow2.
-Global Hint Rewrite mod_add_r using discriminate 1 : mod_pow2.
-Global Hint Rewrite mod_add_mul_lr using discriminate 1 : mod_pow2.
-Global Hint Rewrite mod_add_mul_ll using discriminate 1 : mod_pow2.
-Global Hint Rewrite mod_add_mul_rr using discriminate 1 : mod_pow2.
-Global Hint Rewrite mod_add_mul_rl using discriminate 1 : mod_pow2.
-Global Hint Rewrite mem_small using assumption : mod_pow2.
-Global Hint Rewrite if_if : mod_pow2.
-Global Hint Rewrite if_not_if : mod_pow2.
+(* Implementation note:  The following tactic repeatedly applies all the above
+   rewriting lemmas using repeat+rewrite with a long list of lemma names.  This
+   seems to be faster than rewrite_strat or autorewrite with a hint database
+   (as of Coq 8.8.0).  Consider changing if performance of rewrite_strat or
+   autorewrite improves in future Coq versions. *)
+
+Ltac x86_rewrite_rules H :=
+  repeat rewrite
+     ?N.sub_0_r, ?N.add_0_l, ?N.add_0_r, ?N.mul_0_l, ?N.mul_0_r,
+     ?N.land_0_l, ?N.land_0_r, ?N.lor_0_l, ?N.lor_0_r, ?N.lxor_0_l, ?N.lxor_0_r,
+     ?N.mul_1_l, ?N.mul_1_r, ?N.lxor_nilpotent,
+
+     ?N.mod_same, ?N.mod_mul, ?dblmod_l, ?dblmod_r, ?mod_mul_l, ?mod_add_l, ?mod_add_r,
+     ?mod_add_mul_lr, ?mod_add_mul_ll, ?mod_add_mul_rr, ?mod_add_mul_rl,
+
+     ?lxor_land,
+
+     ?mem_small
+    in H by solve [ discriminate 1 | assumption | reflexivity ].
 
 
 (* When reducing modulo operations, try auto-solving inequalities of the form
@@ -365,33 +352,26 @@ with solve_lt :=
 
 
 (* Try to auto-simplify modular arithmetic expressions within a Coq expression
-   resulting from functional interpretation of an x86 IL statement.
-
-   Implementation notes:  Currently I am using a combination of autorewrite and
-   repeated context-matching for this, since it's the fastest solution I can
-   find (as of Coq 8.0).  Using rewrite_strat with topdown strategy is much
-   slower; I'm not sure why. *)
+   resulting from functional interpretation of an x86 IL statement. *)
 
 Tactic Notation "simpl_x86" "in" hyp(H) :=
-  autorewrite with mod_pow2 in H;
-  repeat (match type of H with
-  | context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a) in H; [| assumption | discriminate 1 ]
-  | context [ N.shiftr ?x ?y ] => rewrite (shiftr_low_pow2 x y) in H by solve_lt
-  | context [ ?x mod ?m ] => rewrite (N.mod_small x m) in H by solve_lt
-  | context [ N.land ?x ?y ] => (erewrite (land_mod_r x y) in H +
-                                 erewrite (land_mod_l x y) in H); [| reflexivity | simpl;reflexivity ]
-  end; autorewrite with mod_pow2 in H).
+  rewrite ?fold_parity, ?if_if, ?if_not_if, ?getmem_1 in H;
+  x86_rewrite_rules H;
+  repeat (
+    match type of H with
+    | context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a) in H; [| assumption | discriminate 1 ]
+    | context [ N.shiftr ?x ?y ] => rewrite (shiftr_low_pow2 x y) in H by solve_lt
+    | context [ ?x mod ?m ] => rewrite (N.mod_small x m) in H by solve_lt
+    | context [ N.land ?x ?y ] => (erewrite (land_mod_r x y) in H +
+                                   erewrite (land_mod_l x y) in H); [| reflexivity | simpl;reflexivity ]
+    end;
+    x86_rewrite_rules H
+  ).
 
 Ltac simpl_x86 :=
-  autorewrite with mod_pow2;
-  repeat (match goal with
-  | |- context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a); [| assumption | discriminate 1 ]
-  | |- context [ N.shiftr ?x ?y ] => rewrite (shiftr_low_pow2 x y) by solve_lt
-  | |- context [ ?x mod ?m ] => rewrite (N.mod_small x m) by solve_lt
-  | |- context [ N.land ?x ?y ] => (erewrite (land_mod_r x y) +
-                                    erewrite (land_mod_l x y)); [| reflexivity | simpl;reflexivity ]
-  end; autorewrite with mod_pow2).
-
+  lazymatch goal with |- ?G => let H := fresh in let Heq := fresh in
+    remember G as H eqn:Heq; simpl_x86 in Heq; subst H
+  end.
 
 
 (* Introduce automated machinery for verifying an x86 machine code subroutine
@@ -421,6 +401,10 @@ Remark inj_prog_stmt: forall (sz1 sz2: N) (q1 q2: stmt),
                       Some (sz1,q1) = Some (sz2,q2) -> sz1=sz2 /\ q1=q2.
 Proof. injection 1 as. split; assumption. Qed.
 
+(* Simplify (exitof a x) without expanding a. *)
+Remark exitof_none a: exitof a None = Exit a. Proof eq_refl.
+Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
+
 (* Simplify x86 memory access assertions produced by step_stmt. *)
 Ltac simpl_memaccs H :=
   repeat first [ rewrite memacc_read_updated in H
@@ -438,20 +422,36 @@ Ltac x86_step_stmt XS :=
 (* Values of IL temp variables are ignored by the x86 interpreter once the IL
    block that generated them completes.  We can therefore generalize them
    away at IL block boundaries to simplify the expression. *)
-Ltac generalize_temps :=
-  repeat match goal with |- context C [ update ?s (V_TEMP ?n) (Some ?u) ] => lazymatch goal with |- ?G =>
-    let t := fresh "tmp" in
-      set (t := Some u) in |- * at 0;
-      let C' := context C[update s (V_TEMP n) t] in
-        change G with C'; generalize t; clear t; intro
-  end end.
+Remark generalize_temp upd (s:store) n u:
+  upd = update s (V_TEMP n) u -> exists tmp, upd = update s (V_TEMP n) tmp.
+Proof. intro. exists u. assumption. Qed.
+
+Ltac generalize_temps H :=
+  repeat lazymatch type of H with context [ update ?s (V_TEMP ?n) ?u ] =>
+    tryif is_var u then fail else let upd := fresh in let Heq := fresh in
+    remember (update s (V_TEMP n) u) as upd eqn:Heq in H;
+    simple apply (generalize_temp upd s n u) in Heq;
+    let tmp := fresh "tmp" in destruct Heq as [tmp Heq];
+    subst upd
+  end.
+
+(* Solve a goal of the form (p s a = None), which indicates that program p is
+   exiting the subroutine.  For now, we automatically solve for three common
+   cases: (A) address a is a constant, allowing function p to fully evaluate
+   (reflexivity); (B) the goal is an assumption, or (C) the code is immutable,
+   so there is an assumption of the form (H: forall s, p s a = None) for a
+   particular return address a.  Cases other than these three forms will need
+   to be solved manually by the user. *)
+Ltac prove_prog_exits :=
+  solve [ reflexivity | assumption |
+    match goal with [ H: forall s, ?p s ?a = None |- ?p _ ?a = None ] => apply H end ].
 
 (* If asked to step the computation when we're already at an invariant point,
    just make the proof goal be the invariant. *)
 Ltac x86_invhere :=
   first [ eapply nextinv_here; [reflexivity|]
-        | apply nextinv_ret; [ first [assumption|reflexivity] |]
-        | apply nextinv_exn ];
+        | apply nextinv_exn
+        | apply nextinv_ret; [ prove_prog_exits |] ];
   simpl_stores; simpl_x86.
 
 (* Symbolically evaluate an x86 machine instruction for one step, and simplify
@@ -459,7 +459,7 @@ Ltac x86_invhere :=
 Ltac x86_step_and_simplify XS :=
   stock_store in XS;
   x86_step_stmt XS;
-  revert XS; generalize_temps; intro XS;
+  generalize_temps XS;
   simpl_x86 in XS.
 
 (* If we're not at an invariant, symbolically interpret the program for one
@@ -472,7 +472,6 @@ Ltac x86_invseek :=
   let IL := fresh "IL" in let XS := fresh "XS" in
   intros sz q s x IL XS;
   apply inj_prog_stmt in IL; destruct IL; subst sz q;
-  lazymatch goal with |- context [ Exit (?x + ?y) ] => simpl (x+y) end;
   x86_step_and_simplify XS;
   try lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ =>
     (let BC := fresh "BC" in destruct c eqn:BC);
@@ -480,7 +479,9 @@ Ltac x86_invseek :=
   end;
   repeat match goal with [ u:value |- _ ] => clear u
                        | [ u:option value |- _ ] => clear u end;
-  lazymatch type of XS with s=_ /\ x=_ => destruct XS; subst s x end.
+  lazymatch type of XS with s=_ /\ x=_ => destruct XS; subst s x end;
+  try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
+  try first [ rewrite exitof_none | rewrite exitof_some ].
 
 (* Clear any stale memory-access hypotheses (arising from previous computation
    steps) and either step to the next machine instruction (if we're not at an

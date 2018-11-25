@@ -57,9 +57,9 @@ Fixpoint varmap_stmt f q :=
   | Rep e q1 => Rep (varmap_exp f e) (varmap_stmt f q1)
   end.
 
-Definition reg_realloc f (p: program) :=
-  fun a => match p a with None => None
-                        | Some (sz,q) => Some (sz, varmap_stmt f q) end.
+Definition reg_realloc f (p:program) :=
+  fun s a => match p s a with None => None
+                            | Some (sz,q) => Some (sz, varmap_stmt f q) end.
 
 
 (* The register remapping must be bijective.  To avoid axiom of choice, we define
@@ -170,18 +170,18 @@ Qed.
 Theorem register_reallocation_correct:
   forall f h p n a s s' x
          (BI: bijective f) (PA: preserves_access f)
+         (NWC: forall s1 s2, p s1 = p s2)
          (XP: exec_prog h p a (varmap_store f s) n (varmap_store f s') x),
     exec_prog h (reg_realloc f p) a s n s' x.
 Proof.
   intros. revert a s s' x XP. induction n; intros; inversion XP; subst.
     apply varmap_store_eq in H. subst s'. apply XDone. apply BI.
     destruct (varmap_store_inv f s2 BI) as [s2' H]. subst s2. eapply XStep.
-      unfold reg_realloc. rewrite LU. reflexivity.
+      unfold reg_realloc. erewrite NWC. rewrite LU. reflexivity.
       apply reg_realloc_stmt. apply BI. apply PA. exact XS.
       exact EX.
       apply IHn. assumption.
     eapply XAbort.
-      unfold reg_realloc. rewrite LU. reflexivity.
+      unfold reg_realloc. erewrite NWC. rewrite LU. reflexivity.
       apply reg_realloc_stmt. apply BI. apply PA. exact XS.
-      exact EX.
 Qed.

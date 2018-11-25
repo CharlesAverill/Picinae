@@ -3,7 +3,7 @@ Require Import NArith.
 Open Scope N.
 Open Scope stmt_scope.
 
-Definition strlen_i386 : program := fun a => match a with
+Definition strlen_i386 : program := fun _ a => match a with
 
 (* 0x74820: movl 0x4(%esp), %eax *)
 | 0 => Some (4,

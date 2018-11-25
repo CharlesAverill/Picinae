@@ -241,13 +241,9 @@ Definition cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
    or raising an exception (Raise). *)
 Inductive exit : Type := Exit (a:addr) | Raise (i:N).
 
-(* Helper function to compute the address of the next assembly code
-   instruction to execute: *)
-Definition exitaddr (a:addr) (x:option exit) : option addr :=
-  match x with None => Some a
-             | Some (Exit a') => Some a'
-             | _ => None
-  end.
+(* Helper function to convert fall-throughs to exits: *)
+Definition exitof (a:addr) (sx:option exit) : exit :=
+  match sx with None => Exit a | Some x => x end.
 
 
 
@@ -335,7 +331,7 @@ Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : stmt_s
    address a+sz.  We express programs as functions instead of lists in order
    to correctly model architectures and programs with unaligned instructions
    (or those whose alignments are unknown prior to the analysis). *)
-Definition program := addr -> option (N * stmt).
+Definition program := store -> addr -> option (N * stmt).
 
 (* Memory accessor functions getmem and setmem read/store w-bit numbers to/from memory.
    Since w could be large on some architectures, we express both as recursions over N,
@@ -426,13 +422,13 @@ Inductive exec_stmt (s:store): stmt -> store -> option exit -> Prop :=
    returning a store and exit condition. *)
 Inductive exec_prog (p:program) (a:addr) (s:store): nat -> store -> exit -> Prop :=
 | XDone: exec_prog p a s O s (Exit a)
-| XStep n sz q s2 x1 a' s' x' (LU: p a = Some (sz,q))
-        (XS: exec_stmt s q s2 x1) (EX: exitaddr (a+sz) x1 = Some a')
+| XStep n sz q s2 x1 a' s' x' (LU: p s a = Some (sz,q))
+        (XS: exec_stmt s q s2 x1) (EX: exitof (a+sz) x1 = Exit a')
         (XP: exec_prog p a' s2 n s' x'):
     exec_prog p a s (S n) s' x'
-| XAbort sz q s' x (LU: p a = Some (sz,q))
-         (XS: exec_stmt s q s' (Some x)) (EX: exitaddr (a+sz) (Some x) = None):
-    exec_prog p a s (S O) s' x.
+| XAbort sz q s' i (LU: p s a = Some (sz,q))
+         (XS: exec_stmt s q s' (Some (Raise i))):
+    exec_prog p a s (S O) s' (Raise i).
 
 End InterpreterEngine.
 
@@ -474,13 +470,13 @@ Definition exists_exp_in_stmt := exps_in_stmt or False.
 Definition forall_stmts_in_stmt := stmts_in_stmt and.
 Definition exists_stmt_in_stmt := stmts_in_stmt or.
 Definition forall_exps_in_prog P (p:program) :=
-  forall a q sz, p a = Some (sz,q) -> forall_exps_in_stmt P q.
+  forall s a q sz, p s a = Some (sz,q) -> forall_exps_in_stmt P q.
 Definition exists_exp_in_prog P (p:program) :=
-  exists a q sz, p a = Some (sz,q) /\ exists_exp_in_stmt P q.
+  exists s a q sz, p s a = Some (sz,q) /\ exists_exp_in_stmt P q.
 Definition forall_stmts_in_prog P (p:program) :=
-  forall a q sz, p a = Some (sz,q) -> forall_stmts_in_stmt P q.
+  forall s a q sz, p s a = Some (sz,q) -> forall_stmts_in_stmt P q.
 Definition exists_stmt_in_prog P (p:program) :=
-  exists a q sz, p a = Some (sz,q) /\ exists_stmt_in_stmt P q.
+  exists s a q sz, p s a = Some (sz,q) /\ exists_stmt_in_stmt P q.
 
 Definition forall_vars_in_exp (P: var -> Prop) :=
   forall_exps_in_exp (fun e => match e with Var v | Let v _ _ => P v | _ => True end).
@@ -525,7 +521,7 @@ Inductive allassigns (P: var -> Prop) : stmt -> Prop :=
 Definition noassign v := allassigns (fun v0 => v0 <> v).
 
 Definition prog_noassign v (p:program) :=
-  forall a, match p a with None => True | Some (_,q) => noassign v q end.
+  forall s a, match p s a with None => True | Some (_,q) => noassign v q end.
 
 End Quantification.
 

@@ -330,7 +330,7 @@ Definition frames_stmt (R: hsprop var) q :=
   allassigns (upd_pres R (resths h (to_hstore s)) (resthv h (to_hval u))) q.
 
 Definition frames_prog (R: hsprop var) (p:program) :=
-  forall a, match p a with None => True | Some (_,q) => frames_stmt R q end.
+  forall s a, match p s a with None => True | Some (_,q) => frames_stmt R q end.
 
 
 (* Duals to the above:  We need duals to each of the above because if R contains
@@ -345,7 +345,7 @@ Definition frames'_stmt (R: hsprop var) q :=
   allassigns (upd_pres R (resths h (to_hstore s)) (resthv h (to_hval u))) q.
 
 Definition frames'_prog (R: hsprop var) (p:program) :=
-  forall a, match p a with None => True | Some (_,q) => frames'_stmt R q end.
+  forall s a, match p s a with None => True | Some (_,q) => frames'_stmt R q end.
 
 
 
@@ -520,9 +520,9 @@ Proof.
     eapply IHn. eassumption.
       eapply hmodels_prog. eassumption.
       eapply framed_stmt; try eassumption.
-        specialize (FR a). rewrite LU in FR. exact FR.
+        specialize (FR s a). rewrite LU in FR. exact FR.
         eapply hmodels_stmt. eassumption.
-    eapply framed_stmt; try eassumption. specialize (FR a). rewrite LU in FR. exact FR.
+    eapply framed_stmt; try eassumption. specialize (FR s a). rewrite LU in FR. exact FR.
 Qed.
 
 
@@ -633,7 +633,7 @@ Theorem frames_prog_sep:
   forall P Q p (FR1: frames_prog P p) (FR2: frames_prog Q p),
   frames_prog (sep P Q) p.
 Proof.
-  unfold frames_prog. intros. specialize (FR1 a). specialize (FR2 a). destruct (p a) as [(sz,q)|].
+  unfold frames_prog. intros. specialize (FR1 s a). specialize (FR2 s a). destruct (p s a) as [(sz,q)|].
     apply frames_stmt_sep; assumption.
     exact I.
 Qed.
@@ -642,7 +642,7 @@ Theorem frames'_prog_sep:
   forall P Q p (FR1: frames'_prog P p) (FR2: frames'_prog Q p),
   frames'_prog (sep P Q) p.
 Proof.
-  unfold frames'_prog. intros. specialize (FR1 a). specialize (FR2 a). destruct (p a) as [(sz,q)|].
+  unfold frames'_prog. intros. specialize (FR1 s a). specialize (FR2 s a). destruct (p s a) as [(sz,q)|].
     apply frames'_stmt_sep; assumption.
     exact I.
 Qed.
@@ -661,14 +661,14 @@ Qed.
 
 Theorem frames_prog_htrue: forall p, frames_prog htrue p.
 Proof.
-  unfold htrue,frames_prog. intros. destruct (p a) as [(sz,q)|].
+  unfold htrue,frames_prog. intros. destruct (p s a) as [(sz,q)|].
     apply frames_stmt_htrue.
     exact I.
 Qed.
 
 Theorem frames'_prog_htrue: forall p, frames'_prog htrue p.
 Proof.
-  unfold htrue,frames'_prog. intros. destruct (p a) as [(sz,q)|].
+  unfold htrue,frames'_prog. intros. destruct (p s a) as [(sz,q)|].
     apply frames'_stmt_htrue.
     exact I.
 Qed.
@@ -687,14 +687,14 @@ Qed.
 
 Theorem frames_prog_hfalse: forall p, frames_prog hfalse p.
 Proof.
-  unfold hfalse,frames_prog. intros. destruct (p a) as [(sz,q)|].
+  unfold hfalse,frames_prog. intros. destruct (p s a) as [(sz,q)|].
     apply frames_stmt_hfalse.
     exact I.
 Qed.
 
 Theorem frames'_prog_hfalse: forall p, frames'_prog hfalse p.
 Proof.
-  unfold hfalse,frames'_prog. intros. destruct (p a) as [(sz,q)|].
+  unfold hfalse,frames'_prog. intros. destruct (p s a) as [(sz,q)|].
     apply frames'_stmt_hfalse.
     exact I.
 Qed.
@@ -753,7 +753,7 @@ Qed.
 Theorem frames_prog_hprop:
   forall R p, frames_prog (hprop var R) p.
 Proof.
-  unfold frames_prog. intros. destruct (p a) as [(sz,q)|].
+  unfold frames_prog. intros. destruct (p s a) as [(sz,q)|].
     apply frames_stmt_hprop.
     exact I.
 Qed.
@@ -826,7 +826,7 @@ Theorem frames_prog_impl:
   forall P Q p (M1: monotonic' P) (FR1: frames'_prog P p) (FR2: frames_prog Q p),
   frames_prog (fun hs => P hs -> Q hs) p.
 Proof.
-  intros. intro a. specialize (FR1 a). specialize (FR2 a). destruct (p a) as [(sz,q)|].
+  intros. intros s a. specialize (FR1 s a). specialize (FR2 s a). destruct (p s a) as [(sz,q)|].
     apply frames_stmt_impl; assumption.
     exact I.
 Qed.
@@ -835,7 +835,7 @@ Theorem frames'_prog_impl:
   forall P Q p (M1: monotonic' P) (FR1: frames'_prog P p) (FR2: frames'_prog Q p),
   frames'_prog (fun hs => P hs -> Q hs) p.
 Proof.
-  intros. intro a. specialize (FR1 a). specialize (FR2 a). destruct (p a) as [(sz,q)|].
+  intros. intros s a. specialize (FR1 s a). specialize (FR2 s a). destruct (p s a) as [(sz,q)|].
     apply frames'_stmt_impl; assumption.
     exact I.
 Qed.
