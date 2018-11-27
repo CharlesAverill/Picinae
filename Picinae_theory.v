@@ -41,6 +41,9 @@ Require Setoid.
 
 
 
+(* Define some tactics for reasoning about IL variable identifier equalities
+   of the form "v1 == v2", which asserts that v1 and v2 are the same IL var. *)
+
 (* Tactic "vreflexivity v" reduces "v==v" to true (actually "left _"). *)
 Theorem iseq_refl {A} {_:EqDec A}:
   forall (x:A), exists (H: x = x), (x == x) = left H.
@@ -74,7 +77,41 @@ Ltac vantisym v1 v2 :=
     clear H1 H2; try clear Hv1v2 |].
 
 
-Section PartialFunctionTheory.
+(* Define the partial order of A-to-B partial functions ordered by subset. *)
+
+Definition pfsub {A B:Type} (f g: A -> option B) : Prop :=
+  forall x y, f x = Some y -> g x = Some y.
+
+Notation "f ⊆ g" := (pfsub f g) (at level 70, right associativity).
+
+Theorem pfsub_refl {A B}: forall (f:A->option B), f ⊆ f.
+Proof. unfold pfsub. intros. assumption. Qed.
+
+Theorem pfsub_antisym {A B}:
+  forall (f g:A->option B), f ⊆ g -> g ⊆ f -> f = g.
+Proof.
+  unfold pfsub. intros f g FG GF. extensionality v.
+  specialize (FG v). specialize (GF v). destruct (f v) as [b|].
+    symmetry. apply FG. reflexivity.
+    destruct (g v). apply GF. reflexivity. reflexivity.
+Qed.
+
+Theorem pfsub_trans {A B}:
+  forall (f g h:A->option B), f ⊆ g -> g ⊆ h -> f ⊆ h.
+Proof. unfold pfsub. intros f g h FG GH x y FX. apply GH,FG. assumption. Qed.
+
+Theorem pfsub_contrapos {A B}:
+  forall (f g: A -> option B) x, f ⊆ g -> g x = None -> f x = None.
+Proof.
+  unfold pfsub. intros f g x SS H. specialize (SS x). destruct (f x).
+    symmetry. rewrite <- H. apply SS. reflexivity.
+    reflexivity.
+Qed.
+
+Add Parametric Relation {A B:Type}: (A -> option B) pfsub
+  reflexivity proved by pfsub_refl
+  transitivity proved by pfsub_trans
+as pfsubset.
 
 (* Symmetric updates preserve the partial order relation. *)
 Theorem pfsub_update {A B} {_: EqDec A}:
@@ -165,7 +202,7 @@ Qed.
    reveal the values of known variables, allowing tactics to use that information to
    make progress without searching the rest of the proof context. *)
 Theorem store_upd_eq {A B} {_: EqDec A}:
-  forall (s: A -> option B) v u (SV: s v = u),
+  forall (s: A -> B) v u (SV: s v = u),
   s = update s v u.
 Proof.
   intros.
@@ -175,7 +212,6 @@ Proof.
     rewrite update_frame. reflexivity. assumption.
 Qed.
 
-End PartialFunctionTheory.
 
 
 Section TwosComplement.
@@ -731,7 +767,6 @@ Proof.
          end;
   try reflexivity.
 
-  rewrite SV in SV0. injection SV0. intro. assumption.
   exfalso. assumption.
 Qed.
 
@@ -804,30 +839,7 @@ Section Monotonicity.
 
 (* Some monotonicity properties: *)
 
-(* exec_stmt and exec_prog are monotonic with respect to their input and output
-   stores (i.e., there is no "delete variable" operation). *)
-
-Theorem exec_stmt_nodelete:
-  forall {h s q s' x} (XS: exec_stmt h s q s' x) v (V': s' v = None),
-  s v = None.
-Proof.
-  intros. dependent induction XS; try apply IHXS; try assumption.
-  unfold update in V'. destruct (v0 == v). discriminate. assumption.
-  apply IHXS1, IHXS2. assumption.
-Qed.
-
-Theorem exec_prog_nodelete:
-  forall {h p a s n s' x} (XP: exec_prog h p a s n s' x)
-         v (V': s' v = None),
-  s v = None.
-Proof.
-  intros. dependent induction XP; try assumption;
-  apply (exec_stmt_nodelete XS); try apply IHXP; assumption.
-Qed.
-
-
-(* eval_exp, exec_stmt, and exec_prog are monotonic with respect to heaps and
-   stores: Enlarging the heap and/or store preserves the relations. *)
+(* eval_exp, exec_stmt, and exec_prog are monotonic with respect to heaps. *)
 
 Theorem eval_exp_hmono:
   forall h1 h2 s e u (HS: h1 ⊆ h2) (E: eval_exp h1 s e u),
@@ -850,37 +862,6 @@ Proof.
     eapply IHe2; eassumption.
 Qed.
 
-Theorem eval_exp_smono:
-  forall s1 s2 h e u (SS: s1 ⊆ s2) (E: eval_exp h s1 e u),
-  eval_exp h s2 e u.
-Proof.
-  intros until e. revert s1 s2. induction e; intros;
-  inversion E; clear E; subst;
-  repeat match goal with [ IH: forall _ _ _, _ -> eval_exp ?h _ ?e _ -> eval_exp ?h _ ?e _,
-                           H: eval_exp ?h _ ?e _ |- _ ] =>
-    eapply IH in H; [|exact SS]
-  end;
-  econstructor; try eassumption.
-
-  apply SS. assumption.
-
-  intros. split.
-    apply R. assumption.
-    eapply mem_readable_mono. exact SS. apply R. assumption.
-
-  intros. split.
-    apply W. assumption.
-    eapply mem_writable_mono. exact SS. apply W. assumption.
-
-  eapply IHe2; [|eassumption].
-  intros x y. unfold update. intro. destruct (x == v). assumption.
-  apply SS. assumption.
-
-  destruct n1.
-    eapply IHe3; eassumption.
-    eapply IHe2; eassumption.
-Qed.
-
 Theorem exec_stmt_hmono:
   forall h1 h2 s q s' x (HS: h1 ⊆ h2)
          (XS: exec_stmt h1 s q s' x),
@@ -888,40 +869,6 @@ Theorem exec_stmt_hmono:
 Proof.
   intros. dependent induction XS; econstructor;
     try eapply eval_exp_hmono; eassumption.
-Qed.
-
-Theorem exec_stmt_smono:
-  forall s1 s2 h q s1' x (SS: s1 ⊆ s2) (XS: exec_stmt h s1 q s1' x),
-  exec_stmt h s2 q (updateall s2 s1') x.
-Proof.
-  intros. revert s2 SS. dependent induction XS; intros;
-  try (rewrite updateall_subset; [ try constructor | assumption ]).
-
-  replace (updateall s2 (s[v:=Some u])) with (s2[v:=Some u]).
-    apply XMove. eapply eval_exp_smono; eassumption.
-    extensionality x. unfold update, updateall. destruct (x == v).
-      reflexivity.
-      unfold pfsub in SS. specialize SS with (x:=x). destruct (s x).
-        apply SS. reflexivity.
-        reflexivity.
-
-  apply XJmp with (w:=w). eapply eval_exp_smono; eassumption.
-
-  apply XSeq1. apply IHXS. assumption.
-
-  apply XSeq2 with (s2:=updateall s0 s2).
-    apply IHXS1. assumption.
-    replace (updateall s0 s') with (updateall (updateall s0 s2) s').
-      apply IHXS2. apply subset_updateall.
-      extensionality z. unfold updateall. assert (H:=exec_stmt_nodelete XS2 z). destruct (s' z).
-        reflexivity.
-        rewrite H. reflexivity. reflexivity.
-
-  apply XIf with (c:=c). eapply eval_exp_smono; eassumption. apply IHXS. assumption.
-
-  apply XRep with (n:=n) (w:=w).
-    eapply eval_exp_smono; eassumption.
-    apply IHXS. assumption.
 Qed.
 
 Theorem exec_prog_hmono:
@@ -936,33 +883,6 @@ Proof.
       apply IHn. assumption.
     eapply XAbort; try apply PS; try eassumption.
       eapply exec_stmt_hmono; eassumption.
-Qed.
-
-Theorem exec_prog_smono:
-  forall p (PS: forall s1 s2, s1 ⊆ s2 -> p s1 ⊆ p s2)
-         s1 s2 h a n s1' x (SS: s1 ⊆ s2)
-         (XP: exec_prog h p a s1 n s1' x),
-  exec_prog h p a s2 n (updateall s2 s1') x.
-Proof.
-  intros. revert s2 SS. dependent induction XP; intros.
-
-  replace (updateall s2 s) with s2.
-    constructor.
-    symmetry. apply updateall_subset. assumption.
-
-  apply XStep with (sz:=sz) (q:=q) (s2:=updateall s0 s2) (x1:=x1) (a':=a').
-    eapply PS. exact SS. assumption.
-    eapply exec_stmt_smono; eassumption.
-    assumption.
-    replace (updateall s0 s') with (updateall (updateall s0 s2) s').
-      apply IHXP. apply subset_updateall.
-      extensionality z. unfold updateall. assert (H:=exec_prog_nodelete XP z). destruct (s' z).
-        reflexivity.
-        rewrite H. reflexivity. reflexivity.
-
-  apply XAbort with (sz:=sz) (q:=q).
-    eapply PS. exact SS. assumption.
-    eapply exec_stmt_smono; eassumption.
 Qed.
 
 (* exec_prog is monotonic with respect to programs.  Enlarging the space of known
@@ -1280,7 +1200,7 @@ Tactic Notation "shelve_cases" int_or_var(i) hyp(H) :=
     is_var a; case a as [|a]; [ shelve_case H | do i shelve_cases_loop H a ];
     fail "bit width" i "is insufficient to explore the invariant space"
   | _ => fail "hypothesis" H "is not a precondition of the form"
-              "(true_inv (if [program] [addr] then [invariant-set] else None))"
+              "(true_inv (if [program] [store] [addr] then [invariant-set] else None))"
   end.
 
 (* Tactic "focus_addr n" isolates the goal for the invariant at address n

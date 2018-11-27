@@ -88,17 +88,11 @@ End MiniX86VarEq.
 Module X86Arch <: Architecture.
   Module Var := Make_UDT MiniX86VarEq.
   Definition var := Var.t.
-  Definition store := var -> option value.
+  Definition store := var -> value.
 
   Definition mem_bits := 8%positive.
-  Definition mem_readable s a := exists r, s A_READ = Some (VaM r 32) /\ r a <> 0.
-  Definition mem_writable s a := exists w, s A_WRITE = Some (VaM w 32) /\ w a <> 0.
-  Theorem mem_readable_mono:
-    forall s1 s2 a, s1 ⊆ s2 -> mem_readable s1 a -> mem_readable s2 a.
-  Proof. intros. destruct H0. eexists. split; [apply H|]; apply H0. Qed.
-  Theorem mem_writable_mono:
-    forall s1 s2 a, s1 ⊆ s2 -> mem_writable s1 a -> mem_writable s2 a.
-  Proof. intros. destruct H0. eexists. split; [apply H|]; apply H0. Qed.
+  Definition mem_readable s a := exists r, s A_READ = VaM r 32 /\ r a <> 0.
+  Definition mem_writable s a := exists w, s A_WRITE = VaM w 32 /\ w a <> 0.
 End X86Arch.
 
 (* Instantiate the Picinae modules with the x86 identifiers above. *)
@@ -132,8 +126,8 @@ Definition x86typctx v :=
   | V_TEMP _ => None
   end.
 
-Definition x86_wtm {s v mem mw} := @models_wtm x86typctx s v mem mw.
-Definition x86_regsize {s v u w} := @models_regsize x86typctx s v u w.
+Definition x86_wtm {s v m w} := @models_wtm v x86typctx s m w.
+Definition x86_regsize {s v n w} := @models_regsize v x86typctx s n w.
 
 
 
@@ -337,7 +331,7 @@ Ltac solve_lt_prim :=
   eassumption +
   match goal with
   | [ |- _ mod _ < _ ] => apply N.mod_upper_bound; discriminate 1
-  | [ M: models x86typctx ?s, R: ?s _ = Some (VaN ?x _) |- ?x < _ ] => apply (x86_regsize M R)
+  | [ M: models x86typctx ?s, R: ?s _ = VaN ?x _ |- ?x < _ ] => apply (x86_regsize M R)
   | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM
   | [ |- getmem _ _ _ _ < 2^_ ] => apply getmem_bound; assumption
   | [ |- N.lxor _ _ < 2^_ ] => apply lxor_bound; solve_lt
@@ -493,14 +487,14 @@ Ltac x86_step :=
 
 Module X86Notations.
 
-Notation "Ⓜ m" := (Some (VaM m 32)) (at level 20). (* memory value *)
-Notation "ⓑ u" := (Some (VaN u 1)) (at level 20). (* bit value *)
-Notation "Ⓑ u" := (Some (VaN u 8)) (at level 20). (* byte value *)
-Notation "Ⓦ u" := (Some (VaN u 16)) (at level 20). (* word value *)
-Notation "Ⓓ u" := (Some (VaN u 32)) (at level 20). (* dword value *)
-Notation "Ⓠ u" := (Some (VaN u 64)) (at level 20). (* quad word value *)
-Notation "Ⓧ u" := (Some (VaN u 128)) (at level 20). (* xmm value *)
-Notation "Ⓨ u" := (Some (VaN u 256)) (at level 20). (* ymm value *)
+Notation "Ⓜ m" := (VaM m 32) (at level 20). (* memory value *)
+Notation "ⓑ u" := (VaN u 1) (at level 20). (* bit value *)
+Notation "Ⓑ u" := (VaN u 8) (at level 20). (* byte value *)
+Notation "Ⓦ u" := (VaN u 16) (at level 20). (* word value *)
+Notation "Ⓓ u" := (VaN u 32) (at level 20). (* dword value *)
+Notation "Ⓠ u" := (VaN u 64) (at level 20). (* quad word value *)
+Notation "Ⓧ u" := (VaN u 128) (at level 20). (* xmm value *)
+Notation "Ⓨ u" := (VaN u 256) (at level 20). (* ymm value *)
 Notation "m Ⓑ[ a  ]" := (getmem LittleE 1 m a) (at level 10). (* read byte from memory *)
 Notation "m Ⓦ[ a  ]" := (getmem LittleE 2 m a) (at level 10). (* read word from memory *)
 Notation "m Ⓓ[ a  ]" := (getmem LittleE 4 m a) (at level 10). (* read dword from memory *)

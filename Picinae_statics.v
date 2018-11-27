@@ -667,28 +667,23 @@ Qed.
 (* Context c "models" a store s if all variables in c have values in s
    that are well-typed with respect to c. *)
 Definition models (c:typctx) (s:store) : Prop :=
-  forall v t (CV: c v = Some t),
-  exists u, s v = Some u /\ hastyp_val u t.
+  forall v t (CV: c v = Some t), hastyp_val (s v) t.
 
 (* Values read from well-typed memory and registers have appropriate bitwidth. *)
 Theorem models_wtm:
-  forall {c s v mem mw} (MDL: models c s) (MEM: s v = Some (VaM mem mw)),
-  match c v with Some _ => welltyped_memory mem | None => True end.
+  forall v {c s m w} (MDL: models c s) (SV: s v = VaM m w),
+  match c v with Some _ => welltyped_memory m | None => True end.
 Proof.
-  intros. specialize (MDL v). destruct (c v); [|exact I].
-  destruct (MDL t (eq_refl _)) as [x [H1 H2]].
-  rewrite H1 in MEM. injection MEM as. subst x.
-  inversion H2. assumption.
+  intros. destruct (c v) eqn:CV; [|exact I].
+  specialize (MDL v t CV). rewrite SV in MDL. inversion MDL. assumption.
 Qed.
 
 Theorem models_regsize:
-  forall {c s v u w} (MDL: models c s) (VAL: s v = Some (VaN u w)),
-  match c v with Some _ => u < 2^w | None => True end.
+  forall v {c s n w} (MDL: models c s) (SV: s v = VaN n w),
+  match c v with Some _ => n < 2^w | None => True end.
 Proof.
-  intros. specialize (MDL v). destruct (c v); [|exact I].
-  destruct (MDL t (eq_refl _)) as [x [H1 H2]].
-  rewrite H1 in VAL. injection VAL as. subst x.
-  inversion H2. assumption.
+  intros. destruct (c v) eqn:CV; [|exact I].
+  specialize (MDL v t CV). rewrite SV in MDL. inversion MDL. assumption.
 Qed.
 
 (* Shrinking the typing context preserves the modeling relation. *)
@@ -696,9 +691,7 @@ Lemma models_subset:
   forall c s c' (M: models c s) (SS: c' ⊆ c),
   models c' s.
 Proof.
-  unfold models. intros.
-  apply SS in CV. apply M in CV. destruct CV as [u [SV T]].
-  exists u. split; assumption.
+  unfold models. intros. apply M, SS, CV.
 Qed.
 
 (* Every result of evaluating a well-typed expression is a well-typed value. *)
@@ -715,9 +708,7 @@ Proof.
             specialize (IH s _ MCS EE); try (inversion IH; [idtac]; subst) end).
 
   (* Var *)
-  apply MCS in CV. destruct CV as [u' [SID TVU]].
-  rewrite SID in SV. injection SV. intro. subst.
-  assumption.
+  apply MCS, CV.
 
   (* Word *)
   apply TVN. assumption.
@@ -738,11 +729,10 @@ Proof.
   apply typesafe_cast; assumption.
 
   (* Let *)
-  assert (CS': models (c[v:=Some t1]) (s[v:=Some u1])).
-    unfold update. intros v0 t0 VEQT. destruct (v0 == v).
-      exists u1. split. reflexivity. injection VEQT. intro. subst t0. assumption.
-      apply MCS in VEQT. assumption.
-  revert CS' E2. apply IHTE2.
+  eapply IHTE2; [|exact E2].
+  unfold update. intros v0 t0 VEQT. destruct (v0 == v).
+    inversion VEQT. subst. exact IHTE1.
+    apply MCS. exact VEQT.
 
   (* Unknown *)
   apply TVN. assumption.
@@ -783,8 +773,7 @@ Proof.
   end.
 
   (* Var *)
-  apply MCS in CV. destruct CV as [u [SV TV]].
-  exists u. apply EVar; assumption.
+  exists (s v). apply EVar.
 
   (* Word *)
   exists (VaN n w). apply EWord; assumption.
@@ -805,13 +794,11 @@ Proof.
   eexists. apply ECast; eassumption.
 
   (* Let *)
-  assert (CS': models (c[v:=Some t1]) (s[v:=Some u])).
+  destruct (IHT2 (s[v:=u])) as [u' E2].
     unfold update. intros v0 t0 VEQT. destruct (v0 == v).
-      exists u. split. reflexivity. injection VEQT. intro. subst t0. assumption.
-      apply MCS in VEQT. assumption.
-  edestruct IHT2 as [u2 EE2].
-    apply CS'.
-    exists u2. eapply ELet; eassumption.
+      inversion VEQT. subst. assumption.
+      apply MCS. exact VEQT.
+    exists u'. eapply ELet; eassumption.
 
   (* Unknown *)
   exists (VaN 0 w). apply EUnknown. apply Nlt_0_pow2.
@@ -846,7 +833,7 @@ Proof.
   try assumption.
 
   unfold update. intros v0 t0 T0. destruct (v0 == v).
-    subst. injection T0; intro; subst. exists u. split. reflexivity. apply (preservation_eval_exp MCS TE E).
+    inversion T0. subst. apply (preservation_eval_exp MCS TE E).
     apply MCS; assumption.
 
   apply IHXS2 with (c:=c2).
@@ -882,10 +869,10 @@ Proof.
   inversion T; subst.
 
   intros v0 t0 CV0. unfold update. destruct (v0 == v).
-    subst. exists u. split. reflexivity. destruct CV as [CV|CV]; rewrite CV0 in CV.
+    subst. destruct CV as [CV|CV]; rewrite CV0 in CV.
       discriminate.
-      injection CV. intro. subst t0. apply (preservation_eval_exp MCS TE E).
-    apply MC0S in CV0. destruct CV0 as [u0 [SV0 TV0]]. exists u0. split; assumption.
+      inversion CV. subst t0. apply (preservation_eval_exp MCS TE E).
+    apply MC0S, CV0.
 
   apply IHXS with (c:=c) (c':=c1); assumption.
 
@@ -920,7 +907,7 @@ Proof.
 
   (* Move *)
   destruct (progress_eval_exp RW MCS TE) as [u E].
-  exists (s[v:=Some u]),None. apply XMove. assumption.
+  exists (s[v:=u]),None. apply XMove. assumption.
 
   (* Jmp *)
   destruct (progress_eval_exp RW MCS TE) as [u E].
@@ -1002,11 +989,11 @@ Qed.
    the greatest-lower-bound context sufficient to type-check the remainder of
    the statement.  The procedure below makes the following guesses, which
    suffice to prove well-typedness for IL encodings of all ISAs so far:
-     (1) No weakening occurs within Seq.
+     (1) Do not perform any weakening within Seq.
      (2) If-contexts are weakened to the lattice-meet of the two branches.
      (3) Rep-contexts are weakened to the input context, to get a fixpoint.
    If these guesses cannot typecheck some statements in your ISA, consider
-   changing the lifter for your ISA to produce IL encodings whose variable
+   changing your lifter for your ISA to produce IL encodings whose variable
    types are not path-sensitive. *)
 
 (* Type-check an expression in a given typing context. *)

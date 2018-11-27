@@ -56,7 +56,7 @@ Require Import List.
 
 Inductive uvalue := VaU (z:bool) (m:addr->N) (n:N) (w:N).
 
-Definition uvalue_of (v:value) :=
+Definition vget (v:value) :=
   match v with
   | VaN n w => VaU true (fun _ => 0) n w
   | VaM m w => VaU false m 0 w
@@ -64,33 +64,28 @@ Definition uvalue_of (v:value) :=
 
 
 (* When the interpreter cannot determine an IL variable's type and/or value
-   (e.g., because store s is a Coq variable), the interpreter returns an
+   (e.g., because store s is a proof variable), the interpreter returns an
    expression that contains the following accessor functions to refer to the
    unknown type/value. *)
 
-Definition vtyp (u: option value) :=
-  match u with Some (VaM _ _) => false | _ => true end.
+Definition vtyp (u:value) :=
+  match u with VaM _ _ => false | VaN _ _ => true end.
 
-Definition vnum (u: option value) :=
-  match u with Some (VaN n _) => n | _ => N0 end.
+Definition vnum (u:value) :=
+  match u with VaN n _ => n | VaM _ _ => N0 end.
 
-Definition vmem (u: option value) :=
-  match u with Some (VaM m _) => m | _ => (fun _ => N0) end.
+Definition vmem (u:value) :=
+  match u with VaM m _ => m | VaN _ _ => (fun _ => N0) end.
 
-Definition vwidth (u: option value) :=
-  match u with Some (VaN _ w) | Some (VaM _ w) => w | None => N0 end.
+Definition vwidth (u:value) :=
+  match u with VaN _ w | VaM _ w => w end.
 
-Definition vget (u:option value) : uvalue :=
-  match u with None => VaU true (fun _ => 0) 0 0
-             | Some u => uvalue_of u
-  end.
-
-Lemma vtyp_num n w: vtyp (Some (VaN n w)) = true. Proof eq_refl.
-Lemma vtyp_mem m w: vtyp (Some (VaM m w)) = false. Proof eq_refl.
-Lemma vnum_num n w: vnum (Some (VaN n w)) = n. Proof eq_refl.
-Lemma vmem_mem m w: vmem (Some (VaM m w)) = m. Proof eq_refl.
-Lemma vwidth_num n w: vwidth (Some (VaN n w)) = w. Proof eq_refl.
-Lemma vwidth_mem m w: vwidth (Some (VaM m w)) = w. Proof eq_refl.
+Lemma vtyp_num n w: vtyp (VaN n w) = true. Proof eq_refl.
+Lemma vtyp_mem m w: vtyp (VaM m w) = false. Proof eq_refl.
+Lemma vnum_num n w: vnum (VaN n w) = n. Proof eq_refl.
+Lemma vmem_mem m w: vmem (VaM m w) = m. Proof eq_refl.
+Lemma vwidth_num n w: vwidth (VaN n w) = w. Proof eq_refl.
+Lemma vwidth_mem m w: vwidth (VaM m w) = w. Proof eq_refl.
 
 Lemma fold_vget:
   forall u, VaU (vtyp u) (vmem u) (vnum u) (vwidth u) = vget u.
@@ -154,7 +149,7 @@ Qed.
 (* For speed, the interpreter function is designed to be evaluated using
    vm_compute or native_compute.  However, those tactics perform uncontrolled
    expansion of every term, resulting in huge terms that are completely
-   intractable for users (and very slow for Coq to manipulate).  To control
+   intractable for users (and very slow for Coq) to manipulate.  To control
    and limit this expansion, we create a Module that hides the expansions of
    functions we don't want vm_compute to evaluate.  After vm_compute completes,
    we replace the opaque functions with the real ones (using rewrite). *)
@@ -185,10 +180,10 @@ Module Type NOEXPAND.
   Parameter scast: bitwidth -> bitwidth -> N -> N.
   Parameter Niter: N -> forall {A}, (A -> A) -> A -> A.
   Parameter zstore: addr -> N.
-  Parameter _vtyp: option value -> bool.
-  Parameter _vnum: option value -> N.
-  Parameter _vmem: option value -> addr -> N.
-  Parameter _vwidth: option value -> N.
+  Parameter _vtyp: value -> bool.
+  Parameter _vnum: value -> N.
+  Parameter _vmem: value -> addr -> N.
+  Parameter _vwidth: value -> N.
 
   Axiom negb_eq: negb = Coq.Init.Datatypes.negb.
   Axiom add_eq: add = N.add.
@@ -341,7 +336,7 @@ Import IL.
 Module PTheory := PicinaeTheory IL.
 Import PTheory.
 
-Definition vupdate := @Picinae_core.update var (option value) VarEqDec.
+Local Definition vupdate := @Picinae_core.update var value VarEqDec.
 
 (* Memory access propositions resulting from functional interpretation are
    encoded as (MemAcc (mem_readable|mem_writable) heap store addr length). *)
@@ -351,12 +346,12 @@ Definition MemAcc (P: store -> addr -> Prop) h s a len :=
 Module Type NOEMEM.
   Parameter getmem: endianness -> bitwidth -> (addr -> N) -> addr -> N.
   Parameter setmem: endianness -> bitwidth -> (addr -> N) -> addr -> N -> addr -> N.
-  Parameter vupdate: store -> var -> option value -> store.
+  Parameter vupdate: store -> var -> value -> store.
   Parameter memaccr: hdomain -> store -> N -> N -> Prop.
   Parameter memaccw: hdomain -> store -> N -> N -> Prop.
   Axiom getmem_eq: getmem = IL.getmem.
   Axiom setmem_eq: setmem = IL.setmem.
-  Axiom vupdate_eq: vupdate = @Picinae_core.update var (option value) VarEqDec.
+  Axiom vupdate_eq: vupdate = @Picinae_core.update var value VarEqDec.
   Axiom memaccr_eq: memaccr = MemAcc mem_readable.
   Axiom memaccw_eq: memaccw = MemAcc mem_writable.
 End NOEMEM.
@@ -364,7 +359,7 @@ End NOEMEM.
 Module NoEMem : NOEMEM.
   Definition getmem := IL.getmem.
   Definition setmem := IL.setmem.
-  Definition vupdate := @update var (option value) VarEqDec.
+  Definition vupdate := @update var value VarEqDec.
   Definition memaccr := MemAcc mem_readable.
   Definition memaccw := MemAcc mem_writable.
   Theorem getmem_eq: getmem = IL.getmem. Proof eq_refl.
@@ -378,7 +373,7 @@ End NoEMem.
    lemmas rather than using autorewrite or rewrite_strat because 'rewrite'
    with a list of lemmas is currently faster (as of Coq 8.8.0). *)
 
-Ltac NoE_rewrite H :=
+Local Ltac NoE_rewrite H :=
   rewrite 1?NoE.negb_eq,
           1?NoE.add_eq,
           1?NoE.sub_eq,
@@ -421,7 +416,7 @@ Ltac NoE_rewrite H :=
           ?fold_vget
   in H.
 
-Ltac NoE_rewrite_goal :=
+Local Ltac NoE_rewrite_goal :=
   lazymatch goal with |- ?G =>
     let H := fresh in let Heq := fresh in remember G as H eqn:Heq; NoE_rewrite Heq; subst H
   end.
@@ -463,7 +458,7 @@ Fixpoint feval_exp e h s unk :=
       end
   | Let v e1 e2 =>
       match feval_exp e1 h s (unknowns0 unk) with (u,ma1) =>
-        match feval_exp e2 h (fun upd => upd (s upd) v (Some (of_uvalue u))) (unknowns1 unk) with
+        match feval_exp e2 h (fun upd => upd (s upd) v (of_uvalue u)) (unknowns1 unk) with
         | (u',ma2) => (u', ma1++ma2)
         end
       end
@@ -488,11 +483,11 @@ Fixpoint feval_exp e h s unk :=
 
 
 (* Convert a list of variables and their values to a store function. *)
-Fixpoint updlst s (l: list (var * option value)) upd : store :=
+Fixpoint updlst s (l: list (var * value)) upd : store :=
   match l with nil => s | (v,u)::t => upd (updlst s t upd) v u end.
 
 (* Remove a variable from a list of variables and their values. *)
-Fixpoint remlst v l : list (var * option value) :=
+Fixpoint remlst v l : list (var * value) :=
   match l with nil => nil | (v',u)::t => if v == v' then t else (v',u)::(remlst v t) end.
 
 
@@ -508,13 +503,13 @@ Fixpoint remlst v l : list (var * option value) :=
 Inductive finterp_cont := FIExit (x: option exit) | FIStmt (q: stmt).
 
 Inductive finterp_state :=
-| FIS (l: list (var * option value)) (xq: finterp_cont) (ma: list Prop).
+| FIS (l: list (var * value)) (xq: finterp_cont) (ma: list Prop).
 
 Fixpoint fexec_stmt q h s unk l :=
   match q with
   | Nop => FIS l (FIExit None) nil
   | Move v e => match feval_exp e h (updlst s l) unk with
-                | (u,ma) => FIS ((v, Some (of_uvalue u))::remlst v l) (FIExit None) ma
+                | (u,ma) => FIS ((v, of_uvalue u)::remlst v l) (FIExit None) ma
                 end
   | Jmp e => match feval_exp e h (updlst s l) unk with
              | (VaU _ _ n _, ma) => FIS l (FIExit (Some (Exit n))) ma
@@ -553,7 +548,7 @@ Proof.
 
   (* Var *)
   exists (fun _ => N0). split.
-    simpl. rewrite SV. NoE_rewrite_goal. destruct u; reflexivity.
+    simpl. NoE_rewrite_goal. destruct (s vupdate v); reflexivity.
     exact I.
 
   (* Word *)
@@ -625,7 +620,7 @@ Proof.
     assumption.
 
   (* Let *)
-  change (s vupdate [v:=Some u1]) with ((fun upd => upd (s upd) v (Some u1)) vupdate) in E2.
+  change (s vupdate [v:=u1]) with ((fun upd => upd (s upd) v u1) vupdate) in E2.
   apply IHe1 in E1. apply IHe2 in E2. clear IHe1 IHe2.
   destruct E1 as [unk1 E1]. destruct E2 as [unk2 E2].
   exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
@@ -803,10 +798,7 @@ Qed.
    attempting to execute the entire program.  Our objective is to infer a
    reasonably small, well-formed symbolic expression that captures the result
    of executing each assembly instruction.  This result can be further reduced
-   by the user (e.g., using "simpl") if desired.  Call-by-value strategy is
-   used here, since our goal is usually to reduce as much as possible of the
-   target expression, which might include arguments of an enclosing unexpandable
-   function. *)
+   by the user (e.g., using "simpl") if desired. *)
 
 (* Statement simplification most often gets stuck at variable-reads, since the
    full content of the store is generally not known (s is a symbolic expression).
@@ -885,8 +877,8 @@ Proof. split. assumption. exact I. Qed.
 
 Lemma fexec_stmt_updn:
   forall h s v n w l q s' x EQs,
-  exec_stmt h (updlst (vupdate s v (Some (VaN n w))) (rev l) vupdate) q s' x /\ EQs ->
-  exists a, exec_stmt h (updlst s (rev ((v, Some (VaN a w))::l)) vupdate) q s' x /\ (a=n /\ EQs).
+  exec_stmt h (updlst (vupdate s v (VaN n w)) (rev l) vupdate) q s' x /\ EQs ->
+  exists a, exec_stmt h (updlst s (rev ((v, VaN a w)::l)) vupdate) q s' x /\ (a=n /\ EQs).
 Proof.
   intros. exists n. split.
     rewrite <- update_updlst. apply H.
@@ -895,8 +887,8 @@ Qed.
 
 Lemma fexec_stmt_updm:
   forall h s v m w l q s' x EQs,
-  exec_stmt h (updlst (vupdate s v (Some (VaM m w))) (rev l) vupdate) q s' x /\ EQs ->
-  exists a, exec_stmt h (updlst s (rev ((v, Some (VaM a w))::l)) vupdate) q s' x /\ (a=m /\ EQs).
+  exec_stmt h (updlst (vupdate s v (VaM m w)) (rev l) vupdate) q s' x /\ EQs ->
+  exists a, exec_stmt h (updlst s (rev ((v, VaM a w)::l)) vupdate) q s' x /\ (a=m /\ EQs).
 Proof.
   intros. exists m. split.
     rewrite <- update_updlst. apply H.
@@ -924,9 +916,17 @@ Qed.
 Ltac step_stmt XS :=
   lazymatch type of XS with exec_stmt ?h _ _ ?s' ?x =>
     apply fexec_stmt_init in XS;
-    repeat first [ apply fexec_stmt_updn in XS; let _n := fresh "_n" in destruct XS as [_n XS]
-                 | apply fexec_stmt_updm in XS; let _m := fresh "_m" in destruct XS as [_m XS]
-                 | apply fexec_stmt_updu in XS; let _u := fresh "_u" in destruct XS as [_u XS] ];
+    repeat lazymatch type of XS with
+    | exec_stmt h (updlst (update ?s ?v (VaN ?n ?w)) (rev ?l) vupdate) ?q s' x /\ ?EQs =>
+        simple apply (fexec_stmt_updn h s v n w l q s' x EQs) in XS;
+        let _n := fresh "_n" in destruct XS as [_n XS]
+    | exec_stmt h (updlst (update ?s ?v (VaM ?m ?w)) (rev ?l) vupdate) ?q s' x /\ ?EQs =>
+        simple apply (fexec_stmt_updm h s v m w l q s' x EQs) in XS;
+        let _m := fresh "_m" in destruct XS as [_m XS]
+    | exec_stmt h (updlst (update ?s ?v ?u) (rev ?l) vupdate) ?q s' x /\ ?EQs =>
+        simple apply (fexec_stmt_updu h s v u l q s' x EQs) in XS;
+        let _u := fresh "_u" in destruct XS as [_u XS]
+    end;
     let EQs := fresh in (
       destruct XS as [XS EQs];
       let _h := fresh "_h" in let _s := fresh "_s" in let _s' := fresh "_s'" in let _x := fresh "_x" in (

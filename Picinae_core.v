@@ -36,45 +36,8 @@ Require Import NArith.
 Require Import ZArith.
 Require Import FunctionalExtensionality.
 Require Import Structures.Equalities.
-Require Setoid.
 Open Scope N.
 
-
-(* First define the partial order of A-to-B partial functions ordered by subset. *)
-
-Definition pfsub {A B:Type} (f g: A -> option B) : Prop :=
-  forall x y, f x = Some y -> g x = Some y.
-
-Notation "f ⊆ g" := (pfsub f g) (at level 70, right associativity).
-
-Theorem pfsub_refl {A B}: forall (f:A->option B), f ⊆ f.
-Proof. unfold pfsub. intros. assumption. Qed.
-
-Theorem pfsub_antisym {A B}:
-  forall (f g:A->option B), f ⊆ g -> g ⊆ f -> f = g.
-Proof.
-  unfold pfsub. intros f g FG GF. extensionality v.
-  specialize (FG v). specialize (GF v). destruct (f v) as [b|].
-    symmetry. apply FG. reflexivity.
-    destruct (g v). apply GF. reflexivity. reflexivity.
-Qed.
-
-Theorem pfsub_trans {A B}:
-  forall (f g h:A->option B), f ⊆ g -> g ⊆ h -> f ⊆ h.
-Proof. unfold pfsub. intros f g h FG GH x y FX. apply GH,FG. assumption. Qed.
-
-Theorem pfsub_contrapos {A B}:
-  forall (f g: A -> option B) x, f ⊆ g -> g x = None -> f x = None.
-Proof.
-  unfold pfsub. intros f g x SS H. specialize (SS x). destruct (f x).
-    symmetry. rewrite <- H. apply SS. reflexivity.
-    reflexivity.
-Qed.
-
-Add Parametric Relation {A B:Type}: (A -> option B) pfsub
-  reflexivity proved by pfsub_refl
-  transitivity proved by pfsub_trans
-as pfsubset.
 
 
 (* Introduce a typeclass for equality decision procedures, so that we can
@@ -99,7 +62,7 @@ Bind Scope N_scope with bitwidth.
 Definition addr := N.
 Bind Scope N_scope with addr.
 
-(* Abstract values are binary numbers (N) or memory states. *)
+(* Abstract values are binary numbers (VaN) or memory states (VaM). *)
 Inductive avalue (T:Type) : Type :=
 | VaN (n:N) (w:bitwidth)
 | VaM (m:addr->T) (w:bitwidth).
@@ -117,7 +80,7 @@ Definition htotal : hdomain := fun _ => Some tt.
 Definition toZ (w:bitwidth) (n:N) : Z :=
   if N.testbit n (N.pred w) then Z.of_N n - Z.of_N (2^w) else Z.of_N n.
 
-(* Convert an integer back to 2's complement form. *)
+(* Convert an integer back to two's complement form. *)
 Definition ofZ (w:bitwidth) (z:Z) : N :=
   Z.to_N (z mod (Z.of_N (2^w))).
 
@@ -149,16 +112,13 @@ Definition tobit (b:bool) : value := VaN (N.b2n b) 1.
 Global Arguments tobit / b.
 
 (* Perform signed less-than comparison. *)
-Definition slt (w n1 n2:N) : bool :=
-  Z.ltb (toZ w n1) (toZ w n2).
+Definition slt (w n1 n2:N) : bool := Z.ltb (toZ w n1) (toZ w n2).
 
 (* Perform signed less-or-equal comparison. *)
-Definition sle (w n1 n2:N) : bool :=
-  Z.leb (toZ w n1) (toZ w n2).
+Definition sle (w n1 n2:N) : bool := Z.leb (toZ w n1) (toZ w n2).
 
 (* Perform a bitwidth cast operation. *)
-Definition scast (w w':bitwidth) (n:N) : N :=
-  ofZ w' (toZ w n).
+Definition scast (w w':bitwidth) (n:N) : N := ofZ w' (toZ w n).
 
 (* Endianness: *)
 Inductive endianness : Type := BigE | LittleE.
@@ -253,24 +213,15 @@ Definition exitof (a:addr) (sx:option exit) : exit :=
    (usually 8 for byte-granularity), and propositions that express the CPU's memory
    access model. Specifically, mem_readable and mem_writable must be propositions
    that are satisfied when an address is readable/writable in the context of a
-   given store.  The definitions of these propositions can be mostly arbitrary,
-   but they must reason monotonically about store content (e.g., access must be
-   denied if the store variables that are the basis for the decision are
-   undefined).  This ensures that learning more information about a computation
-   state never invalidates conclusions proved using less knowledge. *)
+   given store. *)
 Module Type Architecture.
   Declare Module Var : UsualDecidableType.
   Definition var := Var.t.
-  Definition store := var -> option value.
+  Definition store := var -> value.
 
   Parameter mem_bits: positive.
   Parameter mem_readable: store -> addr -> Prop.
   Parameter mem_writable: store -> addr -> Prop.
-
-  Axiom mem_readable_mono:
-    forall s1 s2 a, s1 ⊆ s2 -> mem_readable s1 a -> mem_readable s2 a.
-  Axiom mem_writable_mono:
-    forall s1 s2 a, s1 ⊆ s2 -> mem_writable s1 a -> mem_writable s2 a.
 End Architecture.
 
 
@@ -330,18 +281,22 @@ Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : stmt_s
    that encodes the instruction.  If q falls through, control flows to
    address a+sz.  We express programs as functions instead of lists in order
    to correctly model architectures and programs with unaligned instructions
-   (or those whose alignments are unknown prior to the analysis). *)
+   (or those whose alignments are unknown prior to the analysis).  Program
+   functions additionally accept a store as input, in order to (optionally)
+   support self-modifying code. *)
 Definition program := store -> addr -> option (N * stmt).
 
-(* Memory accessor functions getmem and setmem read/store w-bit numbers to/from memory.
-   Since w could be large on some architectures, we express both as recursions over N,
-   using Peano recursion (P w -> P (N.succ w)).  Proofs must therefore typically use the
-   N.peano_ind inductive principle to reason about them.  (Picinae_theory provides machinery
-   for doing so.)  These functions are also carefully defined to behave reasonably when the
-   value being read/stored is not well-typed (i.e., larger than 2^w).  In particular, the extra
-   bits are stored into the most significant byte (violating memory well-typedness), except
-   that when w=0, the value argument is ignored and 0 is returned/stored.  This behavior is
-   useful because it facilitates theorems whose correctness are independent of type-safety. *)
+(* Memory accessor functions getmem and setmem read/store w-bit numbers to/from
+   memory.  Since w could be large on some architectures, we express both as
+   recursions over N, using Peano recursion (P w -> P (N.succ w)).  Proofs must
+   therefore typically use the N.peano_ind inductive principle to reason about
+   them.  (Picinae_theory provides machinery for doing so.)  These functions
+   are also carefully defined to behave reasonably when the value being read/
+   stored is not well-typed (i.e., larger than 2^w).  In particular, the extra
+   bits are stored into the most significant byte (violating memory well-
+   typedness), except that when w=0, the value argument is ignored and 0 is
+   returned/stored.  This behavior is useful because it facilitates theorems
+   whose correctness are independent of type-safety. *)
 
 (* Interpret len bytes at address a of memory m as an e-endian number. *)
 Definition getmem_big mem len rec a := N.lor (rec (N.succ a)) (N.shiftl (mem a) (Mb*len)).
@@ -366,10 +321,10 @@ Variable h : hdomain.
 (* Evaluate an expression in the context of a store, returning a value.  Note
    that the semantics of EUnknown are non-deterministic: an EUnknown expression
    evaluates to any well-typed value.  Thus, eval_exp and the other interpreter
-   semantic definitions that follow should be considered statements of
-   possibility in an alethic modal logic. *)
+   semantic definitions that follow formalize statements of possibility in an
+   alethic modal logic. *)
 Inductive eval_exp (s:store): exp -> value -> Prop :=
-| EVar v u (SV: s v = Some u): eval_exp s (Var v) u
+| EVar v: eval_exp s (Var v) (s v)
 | EWord n w: eval_exp s (Word n w) (VaN n w)
 | ELoad e1 e2 en len mw m a (E1: eval_exp s e1 (VaM m mw)) (E2: eval_exp s e2 (VaN a mw))
         (R: forall n, n < len -> h (a+n) = Some tt /\ mem_readable s (a+n)):
@@ -384,7 +339,7 @@ Inductive eval_exp (s:store): exp -> value -> Prop :=
         eval_exp s (UnOp uop e1) (eval_unop uop n1 w1)
 | ECast ct w w' e1 n (E1: eval_exp s e1 (VaN n w)):
         eval_exp s (Cast ct w' e1) (VaN (cast ct w w' n) w')
-| ELet v e1 e2 u1 u2 (E1: eval_exp s e1 u1) (E2: eval_exp (update s v (Some u1)) e2 u2):
+| ELet v e1 e2 u1 u2 (E1: eval_exp s e1 u1) (E2: eval_exp (update s v u1) e2 u2):
        eval_exp s (Let v e1 e2) u2
 | EUnknown n w (LT: n < 2^w): eval_exp s (Unknown w) (VaN n w)
 | EIte e1 e2 e3 n1 w1 u' (E1: eval_exp s e1 (VaN n1 w1))
@@ -402,7 +357,7 @@ Inductive eval_exp (s:store): exp -> value -> Prop :=
 Inductive exec_stmt (s:store): stmt -> store -> option exit -> Prop :=
 | XNop: exec_stmt s Nop s None
 | XMove v e u (E: eval_exp s e u):
-    exec_stmt s (Move v e) (update s v (Some u)) None
+    exec_stmt s (Move v e) (update s v u) None
 | XJmp e a w (E: eval_exp s e (VaN a w)):
     exec_stmt s (Jmp e) s (Some (Exit a))
 | XExn i: exec_stmt s (Exn i) s (Some (Raise i))
@@ -507,8 +462,15 @@ Global Arguments forall_vars_in_stmt P q /.
 Global Arguments exists_var_in_exp P e /.
 Global Arguments exists_var_in_stmt P q /.
 
+(* "Unknown" expressions are the sole source of non-determinism in the IL
+   semantics, so it is useful to have a special test for those, which can
+   be combined with the quantifiers above to find all "Unknowns". *)
 Definition not_unknown e := match e with Unknown _ => False | _ => True end.
 
+(* Many proofs have trivial cases that prove that a variable v is invariant
+   because it is never assigned.  To assist these proofs, the following
+   inductive predicate defines a universal quantifier over all variables
+   appearing on the left of any "Move" statements. *)
 Inductive allassigns (P: var -> Prop) : stmt -> Prop :=
 | AANop: allassigns P Nop
 | AAMove v e (PV: P v): allassigns P (Move v e)

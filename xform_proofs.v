@@ -127,7 +127,7 @@ Proof.
     [ IH: forall _ _, _ -> eval_exp ?h _ ?e _ |- eval_exp ?h _ ?e _ ] => eapply IH; eassumption
   end).
 
-  assumption.
+  unfold varmap_store. apply EVar.
   unfold mem_readable. rewrite <- (proj1 PA). assumption.
   unfold mem_writable. rewrite <- (proj2 PA). assumption.
   eapply IHe2; try eassumption. rewrite varmap_update. assumption. apply INV.

@@ -73,14 +73,13 @@ Definition to_heap (m: addr -> N) a := Some (m a).
 Definition to_hval (u:value) :=
   match u with VaN n w => VaN n w | VaM m w => VaM (to_heap m) w end.
 
-Definition hstore (V:Type) := V -> option hval.
-Definition to_hstore {V} s (v:V) := option_map to_hval (s v).
+Definition hstore (V:Type) := V -> hval.
+Definition to_hstore {V} s (v:V) := to_hval (s v).
 
 (* restriction of heapy values and heapy stores to a given domain: *)
 Definition resthv {A} (h:heap A) (hu:hval) :=
   match hu with VaN n w => VaN n w | VaM h' w => VaM (resth h h') w end.
-Definition resths {V A} (h:heap A) (hs:hstore V) v :=
-  match hs v with None => None | Some hv => Some (resthv h hv) end.
+Definition resths {V A} (h:heap A) (hs:hstore V) v := resthv h (hs v).
 
 
 (* Propositional operators from separation logic are here defined as Coq Props: *)
@@ -96,7 +95,7 @@ Definition sepconj V P Q : hsprop V :=
    can have many heaps (or none), not just one.  We therefore define heap
    propositions as properties satisfied by ALL heaps in the store. *)
 Definition hprop V (P: heap N -> Prop): hsprop V :=
-  fun hs => forall v m w (SV: hs v = Some (VaM m w)), P m.
+  fun hs => forall v m w (SV: hs v = VaM m w), P m.
 
 Definition hfalse {A:Type} (_:A) := False.
 
@@ -116,20 +115,10 @@ Definition sepimp (P Q: heap N -> Prop) (h: heap N) :=
   forall h' (DJ: hdisj h h'), P h' -> Q (updateall h h').
 
 
-(* Meta-properties of heap-properties: *)
-
-(* monotonic properties are preserved by domain expansion. *)
-Definition monotonic {A B} (P: (A -> option B) -> Prop) :=
-  forall h1 h2 (SS: h1 ⊆ h2), P h1 -> P h2.
-
-(* monotonic' properties are preserved by domain contraction. *)
-Definition monotonic' {A B} (P: (A -> option B) -> Prop) :=
-  forall h1 h2 (SS: h2 ⊆ h1), P h1 -> P h2.
-
 (* update-preserving heapy-store-properties are preserved by updating var v to
    heapy value hu. *)
 Definition upd_pres {V} {_:EqDec V} (R: hsprop V) hs hu v :=
-  R hs -> R (update hs v (Some hu)).
+  R hs -> R (update hs v hu).
 
 
 (* Helper lemmas concerning heaps and heap domains: *)
@@ -240,38 +229,26 @@ Qed.
 Lemma resths_hdom:
   forall {V A} (h:heap A) (hs:hstore V), resths (hdom h) hs = resths h hs.
 Proof.
-  intros. extensionality a. unfold resths. destruct (hs a).
-    rewrite resthv_hdom. reflexivity.
-    reflexivity.
+  intros. extensionality a. unfold resths. rewrite resthv_hdom. reflexivity.
 Qed.
 
 Lemma resths_assoc:
   forall {V A B} (h1: heap A) (h2: heap B) (hs:hstore V),
   resths h1 (resths h2 hs) = resths (resth h1 h2) hs.
 Proof.
-  intros. extensionality v. unfold resths. destruct (hs v).
-    rewrite resthv_assoc. reflexivity.
-    reflexivity.
-Qed.
-
-Lemma resths_mono_r:
-  forall {V A} (h1 h2: hstore V) (h: heap A) (SS: h1 ⊆ h2), resths h h1 ⊆ resths h h2.
-Proof.
-  unfold resths, pfsub. intros. specialize (SS x). destruct (h1 x), (h2 x); try discriminate.
-    specialize (SS _ (eq_refl _)). injection SS as; subst. assumption.
-    specialize (SS _ (eq_refl _)). discriminate.
+  intros. extensionality v. unfold resths. rewrite resthv_assoc. reflexivity.
 Qed.
 
 Lemma to_hstore_update {V} {ED:EqDec V}:
-  forall s (v:V) u, to_hstore (s[v := Some u]) = (to_hstore s)[v := Some (to_hval u)].
+  forall s (v:V) u, to_hstore (s[v:=u]) = (to_hstore s)[v := to_hval u].
 Proof.
-  intros. extensionality v0. unfold to_hstore,update. simpl. destruct (v0 == v); reflexivity.
+  intros. extensionality v0. unfold to_hstore,update. destruct (v0 == v); reflexivity.
 Qed.
 
 Lemma resths_update {V} {ED:EqDec V}:
-  forall {A} (h:heap A) hs (v:V) hu, resths h (hs[v := Some hu]) = (resths h hs)[v := Some (resthv h hu)].
+  forall {A} (h:heap A) hs (v:V) hu, resths h (hs[v:=hu]) = (resths h hs)[v := resthv h hu].
 Proof.
-  intros. extensionality v0. unfold resths,update. simpl. destruct (v0 == v); reflexivity.
+  intros. extensionality v0. unfold resths,update. destruct (v0 == v); reflexivity.
 Qed.
 
 
@@ -310,11 +287,11 @@ Definition htrip_prog P p a n Q :=
    the following modeling relation: *)
 Inductive hmodels (s:store) (h:hdomain) : value -> Prop :=
 | HMN n w: hmodels s h (VaN n w)
-| HMM m w v m' (SV: s v = Some (VaM m' w)) (FR: forall a, h a = None -> m a = m' a):
+| HMM m w v m' (SV: s v = VaM m' w) (FR: forall a, h a = None -> m a = m' a):
     hmodels s h (VaM m w).
 
 Definition hmodels_store (h:hdomain) (s s':store) :=
-  forall v u, s' v = Some u -> hmodels s h u.
+  forall v, hmodels s h (s' v).
 
 
 (* Our goal is to prove the soundness of the frame rule: {P}q{Q} -> {P*R}q{Q*R}.
@@ -388,20 +365,22 @@ Qed.
 Lemma hmodels_refl:
   forall h s, hmodels_store h s s.
 Proof.
-  intros h s v u H. destruct u.
+  intros h s v. destruct (s v) eqn:SV.
     apply HMN.
-    eapply HMM. eassumption. reflexivity.
+    eapply HMM. exact SV. reflexivity.
 Qed.
 
 Lemma hmodels_trans:
   forall h s1 s2 s3, hmodels_store h s1 s2 -> hmodels_store h s2 s3 ->
   hmodels_store h s1 s3.
 Proof.
-  intros h s1 s2 s3 H1 H2 v u S3V.
-  specialize (H2 v u S3V). inversion H2; subst.
+  intros h s1 s2 s3 H1 H2 v.
+  specialize (H2 v). inversion H2.
     apply HMN.
-    specialize (H1 _ _ SV). inversion H1; subst.
-      eapply HMM. eassumption. intros. rewrite (FR a H). apply FR0. assumption.
+    specialize (H1 v0). inversion H1.
+      rewrite SV in H3. discriminate.
+      rewrite SV in H3. inversion H3. subst. eapply HMM. eassumption.
+        intros. rewrite (FR a H). apply FR0. assumption.
 Qed.
 
 Lemma hmodels_mono:
@@ -419,7 +398,7 @@ Theorem hmodels_exp:
   hmodels s h u.
 Proof.
   intros. revert s u E. induction e; intros; inversion E; subst; try apply HMN.
-    destruct u; econstructor. eassumption. reflexivity.
+    destruct (s v) eqn:SV; econstructor. exact SV. reflexivity.
 
     apply IHe1 in E1. inversion E1; subst.
     eapply HMM. eassumption.
@@ -436,9 +415,9 @@ Proof.
     destruct u; apply HMN.
 
     apply IHe2 in E2. inversion E2; subst. apply HMN. destruct (vareq v0 v).
-      subst v0. rewrite update_updated in SV. injection SV as; subst. apply IHe1 in E1. inversion E1; subst.
+      subst v0. rewrite update_updated in SV. subst. apply IHe1 in E1. inversion E1; subst.
         eapply HMM. eassumption. intros. rewrite (FR a H). apply FR0. assumption.
-      eapply HMM. intros. rewrite update_frame in SV by assumption. eassumption. assumption.
+      eapply HMM. rewrite update_frame in SV by assumption. eassumption. assumption.
 
     destruct n1; [ apply IHe3 | apply IHe2 ]; assumption.
 Qed.
@@ -448,9 +427,9 @@ Theorem hmodels_stmt:
   hmodels_store h s s'.
 Proof.
   intros. dependent induction XS; intros; try solve [ apply hmodels_refl | assumption ].
-    intros v' u' H. destruct u'. apply HMN. destruct (vareq v' v).
-      subst v'. rewrite update_updated in H. injection H as; subst. eapply hmodels_exp; eassumption.
-      rewrite update_frame in H by assumption. eapply HMM. eassumption. reflexivity.
+    intro v'. destruct ((s[v:=u]) v') eqn:SV'. apply HMN. destruct (vareq v' v).
+      subst v'. rewrite update_updated in SV'. subst. eapply hmodels_exp; eassumption.
+      rewrite update_frame in SV' by assumption. eapply HMM. eassumption. reflexivity.
     eapply hmodels_trans; eassumption.
 Qed.
 
@@ -492,6 +471,7 @@ Proof.
       rewrite resths_hdom. assumption.
 
     eapply IHq1; try eassumption. apply FR.
+
     eapply IHq2. eassumption.
       apply FR.
       eapply hmodels_stmt. eassumption.
@@ -744,7 +724,7 @@ Remark frames'_stmt_hprop_useless:
   forall R v e, (frames'_stmt (hprop var R) (Move v e)) -> (forall h, R h).
 Proof.
   intros.
-  specialize (H (fun _ => None) (hdom h) (VaM (fun a => match h a with None => 0 | Some n => n end) 0)).
+  specialize (H (fun _ => VaN 0 0) (hdom h) (VaM (fun a => match h a with None => 0 | Some n => n end) 0)).
   inversion H; subst. eapply PV. discriminate.
   rewrite update_updated. simpl. replace (resth _ _) with h. reflexivity.
   extensionality a. unfold to_heap, resth, hdom. destruct (h a); reflexivity.
@@ -758,25 +738,21 @@ Proof.
     exact I.
 Qed.
 
-(* (P -> Q) frames q if: P is inverse-monotonic and universally-frames q,
-   and Q frames q. *)
+(* (P -> Q) frames q if: P universally-frames q and Q frames q. *)
 Theorem frames_stmt_impl:
-  forall P Q q (M1: monotonic' P) (FR1: frames'_stmt P q) (FR2: frames_stmt Q q),
+  forall P Q q (FR1: frames'_stmt P q) (FR2: frames_stmt Q q),
   frames_stmt (fun hs => P hs -> Q hs) q.
 Proof.
   induction q; intros; unfold frames_stmt; intros; try solve [ constructor ].
 
     apply AAMove. unfold upd_pres. intros.
     apply destruct_frames'_stmt in FR1. apply destruct_frames_stmt in FR2.
-    apply FR2. assumption. apply H. destruct (s v) as [u0|] eqn:SV.
-      replace (resths _ _) with (resths h (to_hstore (s[v:=Some u])) [ v := Some (resthv h (to_hval u0)) ]).
-        apply FR1. rewrite to_hstore_update, resths_update. assumption.
-        rewrite to_hstore_update, resths_update, update_cancel. extensionality v0. destruct (vareq v0 v).
-          subst v0. rewrite update_updated. unfold to_hstore, resths. rewrite SV. reflexivity.
-          rewrite update_frame by assumption. reflexivity.
-      eapply M1; [|eassumption]. intros v0 hv SS. destruct (vareq v0 v).
-        subst. unfold resths, to_hstore in SS. rewrite SV in SS. discriminate.
-        rewrite update_frame; assumption.
+    apply FR2. assumption. apply H.
+    replace (resths _ _) with (resths h (to_hstore (s[v:=u])) [v := resthv h (to_hval (s v))]).
+      apply FR1. rewrite to_hstore_update, resths_update. assumption.
+      rewrite to_hstore_update, resths_update, update_cancel. extensionality v0. destruct (vareq v0 v).
+        subst v0. rewrite update_updated. unfold to_hstore, resths. reflexivity.
+        rewrite update_frame by assumption. reflexivity.
 
     apply AASeq; [ apply IHq1 | apply IHq2 ]; try assumption; solve
     [ apply destruct_frames'_stmt in FR1; apply FR1
@@ -792,22 +768,19 @@ Proof.
 Qed.
 
 Theorem frames'_stmt_impl:
-  forall P Q q (M1: monotonic' P) (FR1: frames'_stmt P q) (FR2: frames'_stmt Q q),
+  forall P Q q (FR1: frames'_stmt P q) (FR2: frames'_stmt Q q),
   frames'_stmt (fun hs => P hs -> Q hs) q.
 Proof.
   induction q; intros; unfold frames'_stmt; intros; try solve [ constructor ].
 
     apply AAMove. unfold upd_pres. intros.
     apply destruct_frames'_stmt in FR1. apply destruct_frames'_stmt in FR2.
-    apply FR2. apply H. destruct (s v) as [u0|] eqn:SV.
-      replace (resths _ _) with (resths h (to_hstore (s[v:=Some u])) [ v := Some (resthv h (to_hval u0)) ]).
-        apply FR1. rewrite to_hstore_update, resths_update. assumption.
-        rewrite to_hstore_update, resths_update, update_cancel. extensionality v0. destruct (vareq v0 v).
-          subst v0. rewrite update_updated. unfold to_hstore, resths. rewrite SV. reflexivity.
-          rewrite update_frame by assumption. reflexivity.
-      eapply M1; [|eassumption]. intros v0 hv SS. destruct (vareq v0 v).
-        subst. unfold resths, to_hstore in SS. rewrite SV in SS. discriminate.
-        rewrite update_frame; assumption.
+    apply FR2. apply H.
+    replace (resths _ _) with (resths h (to_hstore (s[v:=u])) [v := resthv h (to_hval (s v))]).
+      apply FR1. rewrite to_hstore_update, resths_update. assumption.
+      rewrite to_hstore_update, resths_update, update_cancel. extensionality v0. destruct (vareq v0 v).
+        subst v0. rewrite update_updated. unfold to_hstore, resths. reflexivity.
+        rewrite update_frame by assumption. reflexivity.
 
     apply AASeq; [ apply IHq1 | apply IHq2 ]; try assumption; solve
     [ apply destruct_frames'_stmt in FR1; apply FR1
@@ -823,7 +796,7 @@ Proof.
 Qed.
 
 Theorem frames_prog_impl:
-  forall P Q p (M1: monotonic' P) (FR1: frames'_prog P p) (FR2: frames_prog Q p),
+  forall P Q p (FR1: frames'_prog P p) (FR2: frames_prog Q p),
   frames_prog (fun hs => P hs -> Q hs) p.
 Proof.
   intros. intros s a. specialize (FR1 s a). specialize (FR2 s a). destruct (p s a) as [(sz,q)|].
@@ -832,7 +805,7 @@ Proof.
 Qed.
 
 Theorem frames'_prog_impl:
-  forall P Q p (M1: monotonic' P) (FR1: frames'_prog P p) (FR2: frames'_prog Q p),
+  forall P Q p (FR1: frames'_prog P p) (FR2: frames'_prog Q p),
   frames'_prog (fun hs => P hs -> Q hs) p.
 Proof.
   intros. intros s a. specialize (FR1 s a). specialize (FR2 s a). destruct (p s a) as [(sz,q)|].
@@ -841,31 +814,31 @@ Proof.
 Qed.
 
 Corollary frames_stmt_not:
-  forall P q (M: monotonic' P) (FR: frames'_stmt P q),
+  forall P q (FR: frames'_stmt P q),
   frames_stmt (fun hs => ~ P hs) q.
 Proof.
-  intros. apply frames_stmt_impl. assumption. assumption. apply frames_stmt_hfalse.
+  intros. apply frames_stmt_impl. assumption. apply frames_stmt_hfalse.
 Qed.
 
 Corollary frames'_stmt_not:
-  forall P q (M: monotonic' P) (FR: frames'_stmt P q),
+  forall P q (FR: frames'_stmt P q),
   frames'_stmt (fun hs => ~ P hs) q.
 Proof.
-  intros. apply frames'_stmt_impl. assumption. assumption. apply frames'_stmt_hfalse.
+  intros. apply frames'_stmt_impl. assumption. apply frames'_stmt_hfalse.
 Qed.
 
 Corollary frames_prog_not:
-  forall P p (M: monotonic' P) (FR: frames'_prog P p),
+  forall P p (FR: frames'_prog P p),
   frames_prog (fun hs => ~ P hs) p.
 Proof.
-  intros. apply frames_prog_impl. assumption. assumption. apply frames_prog_hfalse.
+  intros. apply frames_prog_impl. assumption. apply frames_prog_hfalse.
 Qed.
 
 Corollary frames_prog'_not:
-  forall P p (M: monotonic' P) (FR: frames'_prog P p),
+  forall P p (FR: frames'_prog P p),
   frames'_prog (fun hs => ~ P hs) p.
 Proof.
-  intros. apply frames'_prog_impl. assumption. assumption. apply frames'_prog_hfalse.
+  intros. apply frames'_prog_impl. assumption. apply frames'_prog_hfalse.
 Qed.
 
 End PICINAE_SLOGIC.
@@ -874,196 +847,3 @@ End PICINAE_SLOGIC.
 Module PicinaeSLogic (IL: PICINAE_IL) <: PICINAE_SLOGIC IL.
   Include PICINAE_SLOGIC IL.
 End PicinaeSLogic.
-
-
-
-
-(* Theorems about monotonicity of properties: *)
-
-Theorem mono_sep:
-  forall V P Q (M1: monotonic P) (M2: monotonic Q), monotonic (sepconj V P Q).
-Proof.
-  unfold monotonic. intros. destruct H as [dom [P1 Q1]]. exists dom. split.
-    eapply M1; [|eassumption]. apply resths_mono_r. assumption.
-    eapply M2; [|eassumption]. apply resths_mono_r. assumption.
-Qed.
-
-Theorem mono_htrue: forall A B, monotonic (@htrue (A -> option B)).
-Proof. unfold htrue,monotonic. intros. assumption. Qed.
-
-Theorem mono_hfalse: forall A B, monotonic (@hfalse (A -> option B)).
-Proof. unfold hfalse,monotonic. intros. assumption. Qed.
-
-(* Only tautological hprops are monotonic, since enlarging a store could add
-   unsatisfactory heaps to its co-domain.  It is therefore not useful to prove
-   any sufficiency conditions for store-monotonicity of hprops. *)
-Remark mono_hprop_useless:
-  forall V P, monotonic (hprop V P) -> (forall h, hprop V P h).
-Proof.
-  intros V P M h. apply (M (fun _ => None)).
-    intros x y H. discriminate.
-    intros v m w H. discriminate.
-Qed.
-
-(* Only contradictory pointsto properties are monotonic, since pointsto only
-   accepts heaps with singleton domains.  It is therefore not useful to prove
-   sufficiency conditions for store-monotonicity for pointsto properties. *)
-Remark mono_pointsto_useless:
-  forall a Q, monotonic (pointsto a Q) -> (forall h, ~ pointsto a Q h).
-Proof.
-  intros a Q M h PT.
-  assert (h ⊆ update h (N.succ a) (Some 0)).
-    unfold update. simpl. intros x y H. destruct (N.eq_dec x a).
-      subst x. destruct (N.eq_dec a (N.succ a)).
-        exfalso. eapply N.neq_succ_diag_l. symmetry. eassumption.
-        assumption.
-      contradict n. specialize (PT x). rewrite H in PT. apply PT.
-  unfold monotonic in M. apply M in H.
-    specialize (H (N.succ a)). rewrite update_updated in H. eapply N.neq_succ_diag_l. apply H.
-    apply PT.
-Qed.
-
-(* emp is not monotonic because enlarging a store could add non-empty heaps. *)
-Remark mono_emp_false: ~ monotonic emp.
-Proof.
-  intro.
-  assert (H': (fun (_:addr) => None) ⊆ (fun _ => Some 0)). discriminate.
-  unfold monotonic,emp in H. apply H in H'. discriminate. reflexivity. exact 0.
-Qed.
-
-Theorem mono_impl:
-  forall {A B} (P Q: (A -> option B) -> Prop) (M1: monotonic' P) (M2: monotonic Q),
-  monotonic (fun f => P f -> Q f).
-Proof.
-  unfold monotonic. intros. eapply M2.
-    eassumption.
-    apply H. eapply M1. eassumption. assumption.
-Qed.
-
-Corollary mono_not:
-  forall {A B} (P: (A -> option B) -> Prop) (M: monotonic' P),
-  monotonic (fun f => ~ P f).
-Proof.
-  intros. apply mono_impl. assumption. apply mono_hfalse.
-Qed.
-
-Theorem mono_sepimp:
-  forall P Q (M: monotonic Q), monotonic (sepimp P Q).
-Proof.
-  intros. intros h1 h2 SS H h' DJ PRE. eapply M.
-    apply updateall_mono. eassumption.
-    apply H.
-      eapply hdisj_mono. eassumption. assumption.
-      assumption.
-Qed.
-
-
-(* Dual results for monotonic': *)
-
-Theorem mono'_sep:
-  forall V P Q (M1: monotonic' P) (M2: monotonic' Q), monotonic' (sepconj V P Q).
-Proof.
-  unfold monotonic'. intros. destruct H as [dom [P1 Q1]]. exists dom. split.
-    eapply M1; [|eassumption]. apply resths_mono_r. assumption.
-    eapply M2; [|eassumption]. apply resths_mono_r. assumption.
-Qed.
-
-Theorem mono'_htrue: forall A B, monotonic' (@htrue (A -> option B)).
-Proof. unfold htrue,monotonic'. intros. assumption. Qed.
-
-Theorem mono'_hfalse: forall A B, monotonic' (@hfalse (A -> option B)).
-Proof. unfold hfalse,monotonic'. intros. assumption. Qed.
-
-Theorem mono'_hprop: forall V P, monotonic' (hprop V P).
-Proof. unfold hprop,monotonic'. intros. eapply H. apply SS. eassumption. Qed.
-
-(* Only contradictory pointsto properties are monotonic', since pointsto only
-   accepts heaps with singleton domains.  It is therefore not useful to prove
-   any sufficiency properties for monotonic' of pointsto. *)
-Remark mono'_pointsto_useless:
-  forall a Q, monotonic' (pointsto a Q) -> (forall h, ~ pointsto a Q h).
-Proof.
-  intros a Q M h PT.
-  assert ((fun _ => None) ⊆ h). intros x y H. discriminate.
-  unfold monotonic' in M. apply M in H.
-    specialize (H a). simpl in H. apply H. reflexivity.
-    apply PT.
-Qed.
-
-Theorem mono'_emp: monotonic' emp.
-Proof.
-  unfold monotonic', emp. intros. specialize (SS a). destruct (h2 a).
-    specialize (H a). rewrite (SS n) in H. assumption. reflexivity.
-    reflexivity.
-Qed.
-
-Theorem mono'_impl:
-  forall {A B} (P Q: (A -> option B) -> Prop) (M1: monotonic P) (M2: monotonic' Q),
-  monotonic' (fun f => P f -> Q f).
-Proof.
-  unfold monotonic'. intros. eapply M2.
-    eassumption.
-    apply H. eapply M1. eassumption. assumption.
-Qed.
-
-Corollary mono'_not:
-  forall {A B} (P: (A -> option B) -> Prop) (M: monotonic P),
-  monotonic' (fun f => ~ P f).
-Proof.
-  intros. apply mono'_impl. assumption. apply mono'_hfalse.
-Qed.
-
-(* TODO: What conditions are sufficient for monotonic' of sepimp?
-   For non-contradictory sepimp, we at least need P -> Q: *)
-Remark mono'_sepimp_impl:
-  forall P Q h0 (NC: sepimp P Q h0), monotonic' (sepimp P Q) -> (forall h, P h -> Q h).
-Proof.
-  intros P Q h0 NC M h Ph.
-  unfold monotonic' in M. apply M with (h2 := fun _ => None) in NC.
-    replace h with (updateall (fun _ => None) h).
-      apply NC. left. reflexivity. assumption.
-      extensionality a. unfold updateall. destruct (h a); reflexivity.
-    discriminate.
-Qed.
-(* Monotonicity of P or Q is too much, since that makes non-contradictory
-   sepimp tautological: *)
-Remark mono'_sepimp_tautological:
-  forall P Q h0 (NC: sepimp P Q h0) (M: monotonic P \/ monotonic Q),
-  monotonic' (sepimp P Q) -> (forall h, sepimp P Q h).
-Proof.
-  intros P Q h0 NC M M' h h' DJ Ph'. destruct M as [M|M].
-    eapply mono'_sepimp_impl; try eassumption. eapply M. apply subset_updateall. assumption.
-    eapply M. apply subset_updateall. eapply mono'_sepimp_impl; eassumption.
-Qed.
-(* But monotonicity' of P and Q is insufficient. Counter-example: *)
-Example mono'_sepimp_counterexample:
-  exists P Q h1 h2, monotonic' P /\ monotonic' Q /\
-    sepimp P Q h1 /\ h2 ⊆ h1 /\ ~sepimp P Q h2.
-Proof.
-  exists (fun h => forall a, h a = None \/ h a = Some 0),
-         (fun h => forall a, h a = None \/ h a = Some 1),
-         (fun _ => Some 1), (fun _ => None).
-  repeat split.
-    unfold monotonic'. intros. specialize (SS a). destruct (h2 a).
-      right. destruct (H a).
-        rewrite (SS n) in H0 by reflexivity. discriminate.
-        rewrite <- H0. symmetry. apply SS. reflexivity.
-      left. reflexivity.
-    unfold monotonic'. intros. specialize (SS a). destruct (h2 a).
-      right. destruct (H a).
-        rewrite (SS n) in H0 by reflexivity. discriminate.
-        rewrite <- H0. symmetry. apply SS. reflexivity.
-      left. reflexivity.
-    unfold sepimp,updateall,hdisj. intros. right. destruct (DJ a).
-      discriminate.
-      rewrite H0. reflexivity.
-    discriminate.
-    intro. edestruct H with (a:=0).
-      intro. left. reflexivity.
-      intro. right. reflexivity.
-      discriminate.
-      discriminate.
-Qed.
-(* Tentative conclusion: monotonic' of (sepimp P Q) doesn't seem to have any
-   general, obvious sufficiency condition on P and/or Q.  Proofs are specific
-   to each P and Q. *)
