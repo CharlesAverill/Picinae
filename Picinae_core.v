@@ -63,13 +63,9 @@ Definition addr := N.
 Bind Scope N_scope with addr.
 
 (* Abstract values are binary numbers (VaN) or memory states (VaM). *)
-Inductive avalue (T:Type) : Type :=
+Inductive value :=
 | VaN (n:N) (w:bitwidth)
-| VaM (m:addr->T) (w:bitwidth).
-Arguments VaN {T} n w.
-Arguments VaM {T} m w.
-
-Definition value := avalue N.
+| VaM (m:addr->N) (w:bitwidth).
 
 (* Heaps (for separation logic) define sets of accessible addresses. *)
 Definition heap (A:Type) := addr -> option A.
@@ -81,15 +77,14 @@ Definition toZ (w:bitwidth) (n:N) : Z :=
   if N.testbit n (N.pred w) then Z.of_N n - Z.of_N (2^w) else Z.of_N n.
 
 (* Convert an integer back to two's complement form. *)
-Definition ofZ (w:bitwidth) (z:Z) : N :=
-  Z.to_N (z mod (Z.of_N (2^w))).
+Definition ofZ w z := Z.to_N (z mod (Z.of_N (2^w))).
 
 (* Two's complement numbers of width w have values within the interval
    [ -2^(w-1), 2^(w-1) ), except that we adopt the convention that
    zero-bitwidth numbers always have value zero.  (Zero-bitwidth numbers
    occasionally appear in the context of bitwidth-subtraction, which can
    yield a difference of zero bits holding a value of zero.) *)
-Definition signed_range (w:N) (z:Z) :=
+Definition signed_range w z :=
   (match w with N0 => z = Z0 | _ =>
     - Z.of_N (2^N.pred w)%N <= z < Z.of_N (2^N.pred w)%N
    end)%Z.
@@ -97,28 +92,27 @@ Definition signed_range (w:N) (z:Z) :=
 (* Perform a signed operation by converting the unsigned operands to signed
    operands, applying the signed operation, and then converting the signed
    result back to unsigned. *)
-Definition sbop (bop:Z->Z->Z) (w:bitwidth) (n1 n2:N) : N :=
-  ofZ w (bop (toZ w n1) (toZ w n2)).
+Definition sbop bop w n1 n2 := ofZ w (bop (toZ w n1) (toZ w n2)).
 
 (* Compute an arithmetic shift-right (sign-extending shift-right). *)
-Definition ashiftr (w:bitwidth) := sbop Z.shiftr w.
+Definition ashiftr w := sbop Z.shiftr w.
 
 (* Force a result to a given width by dropping the high bits. *)
-Definition towidth (w:bitwidth) (n:N) : value := VaN (n mod (2^w)) w.
+Definition towidth w n : value := VaN (n mod (2^w)) w.
 Global Arguments towidth / w n.
 
 (* Force a result to a boolean value (1-bit integer). *)
-Definition tobit (b:bool) : value := VaN (N.b2n b) 1.
+Definition tobit b : value := VaN (N.b2n b) 1.
 Global Arguments tobit / b.
 
 (* Perform signed less-than comparison. *)
-Definition slt (w n1 n2:N) : bool := Z.ltb (toZ w n1) (toZ w n2).
+Definition slt w n1 n2 := Z.ltb (toZ w n1) (toZ w n2).
 
 (* Perform signed less-or-equal comparison. *)
-Definition sle (w n1 n2:N) : bool := Z.leb (toZ w n1) (toZ w n2).
+Definition sle w n1 n2 := Z.leb (toZ w n1) (toZ w n2).
 
 (* Perform a bitwidth cast operation. *)
-Definition scast (w w':bitwidth) (n:N) : N := ofZ w' (toZ w n).
+Definition scast w w' n := ofZ w' (toZ w n).
 
 (* Endianness: *)
 Inductive endianness : Type := BigE | LittleE.

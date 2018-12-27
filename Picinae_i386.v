@@ -100,10 +100,10 @@ Module IL_i386 := PicinaeIL X86Arch.
 Export IL_i386.
 Module Theory_i386 := PicinaeTheory IL_i386.
 Export Theory_i386.
-Module FInterp_i386 := PicinaeFInterp IL_i386.
-Export FInterp_i386.
 Module Statics_i386 := PicinaeStatics IL_i386.
 Export Statics_i386.
+Module FInterp_i386 := PicinaeFInterp IL_i386 Statics_i386.
+Export FInterp_i386.
 Module SLogic_i386 := PicinaeSLogic IL_i386.
 Export SLogic_i386.
 
@@ -290,22 +290,73 @@ Proof.
   apply N.shiftr_eq_0. apply N.log2_lt_pow2. reflexivity. assumption.
 Qed.
 
+(* Simplify zero-flag after cmp from a subtraction to a comparison. *)
+Lemma cmp_zf:
+  forall n1 n2 w (LT1: n1 < 2^w) (LT2: n2 < 2^w),
+  (0 =? (2^w + n1 - n2) mod 2^w) = (n1 =? n2).
+Proof.
+  intros. rewrite (N.eqb_compare n1 n2). destruct (n1 ?= n2) eqn:H.
+
+    apply N.compare_eq in H. subst. rewrite N.add_sub, N.mod_same.
+      reflexivity.
+      apply N.pow_nonzero. discriminate.
+
+    rewrite N.mod_small.
+      apply N.eqb_neq, N.neq_sym, N.sub_gt. eapply N.lt_le_trans.
+        exact LT2.
+        apply N.le_add_r.
+      eapply N.add_lt_mono_r. rewrite N.sub_add.
+        apply N.add_lt_mono_l. apply -> N.compare_lt_iff. exact H.
+        apply N.lt_le_incl, N.lt_lt_add_r, LT2.
+
+    rewrite <- N.add_sub_assoc by apply N.lt_le_incl, N.compare_gt_iff, H.
+    rewrite <- N.add_mod_idemp_l, N.mod_same by (apply N.pow_nonzero; discriminate).
+    rewrite N.add_0_l, N.mod_small.
+      apply N.eqb_neq, N.neq_sym, N.sub_gt, N.compare_gt_iff, H.
+      eapply N.le_lt_trans. apply N.le_sub_l. exact LT1.
+Qed.
+
 (* These nested-ifs arise from conditional branches on status flag expressions. *)
 Remark if_if:
-  forall (b:bool) (q1 q2:stmt),
-  (if (if b then 1 else N0) then q1 else q2) = (if b then q2 else q1).
+  forall A (b:bool) (x y:A),
+  (if (if b then 1 else N0) then x else y) = (if b then y else x).
 Proof. intros. destruct b; reflexivity. Qed.
 
 Remark if_not_if:
-  forall (b:bool) (q1 q2:stmt),
-  (if (N.lnot (if b then 1 else 0) 1) then q1 else q2) = (if b then q1 else q2).
+  forall A (b:bool) (x y:A),
+  (if (N.lnot (if b then 1 else 0) 1) then x else y) = (if b then x else y).
 Proof. intros. destruct b; reflexivity. Qed.
 
+Remark if_same:
+  forall A (b:bool) (x:A), (if b then x else x) = x.
+Proof. intros. destruct b; reflexivity. Qed.
+
+
+(* When reducing modulo operations, try auto-solving inequalities of the form
+   x < 2^w. *)
+
+Ltac solve_lt_prim := solve
+[ reflexivity (* solves "<" relations on closed terms *)
+| match goal with
+  | [ |- _ mod _ < _ ] => apply N.mod_upper_bound; discriminate 1
+  | [ M: models x86typctx ?s, R: ?s _ = VaN ?x _ |- ?x < _ ] => apply (x86_regsize M R)
+  | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM
+  | [ |- getmem _ _ _ _ < 2^_ ] => apply getmem_bound; assumption
+  | [ |- N.lxor _ _ < 2^_ ] => apply lxor_bound; solve_lt
+  | [ |- N.land _ _ < 2^_ ] => apply land_bound; solve_lt
+  | [ |- N.lor _ _ < 2^_ ] => apply lor_bound; solve_lt
+  | [ |- N.lnot _ _ < 2^_ ] => apply lnot_bound; solve_lt
+  end
+| (eapply N.le_lt_trans; [ apply N.le_sub_l | solve_lt ]) ]
+with solve_lt := solve
+[ assumption | solve_lt_prim
+| (eapply N.lt_le_trans; [ solve [ eassumption | solve_lt_prim ]
+                         | discriminate 1 ]) ].
 
 (* Implementation note:  The following tactic repeatedly applies all the above
    rewriting lemmas using repeat+rewrite with a long list of lemma names.  This
    seems to be faster than rewrite_strat or autorewrite with a hint database
-   (as of Coq 8.8.0).  Consider changing if performance of rewrite_strat or
+   (as of Coq 8.8.2).  Consider changing if performance of rewrite_strat or
    autorewrite improves in future Coq versions. *)
 
 Ltac x86_rewrite_rules H :=
@@ -323,33 +374,11 @@ Ltac x86_rewrite_rules H :=
     in H by solve [ discriminate 1 | assumption | reflexivity ].
 
 
-(* When reducing modulo operations, try auto-solving inequalities of the form
-   x < 2^w. *)
-
-Ltac solve_lt_prim :=
-  reflexivity (* solves "<" relations on closed terms *) +
-  eassumption +
-  match goal with
-  | [ |- _ mod _ < _ ] => apply N.mod_upper_bound; discriminate 1
-  | [ M: models x86typctx ?s, R: ?s _ = VaN ?x _ |- ?x < _ ] => apply (x86_regsize M R)
-  | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM
-  | [ |- getmem _ _ _ _ < 2^_ ] => apply getmem_bound; assumption
-  | [ |- N.lxor _ _ < 2^_ ] => apply lxor_bound; solve_lt
-  | [ |- N.land _ _ < 2^_ ] => apply land_bound; solve_lt
-  | [ |- N.lor _ _ < 2^_ ] => apply lor_bound; solve_lt
-  | [ |- N.lnot _ _ < 2^_ ] => apply lnot_bound; solve_lt
-  end +
-  (eapply N.le_lt_trans; [ apply N.le_sub_l | solve_lt ])
-with solve_lt :=
-  solve_lt_prim +
-  (eapply N.lt_le_trans; [ solve_lt_prim | discriminate 1 ]).
-
-
 (* Try to auto-simplify modular arithmetic expressions within a Coq expression
    resulting from functional interpretation of an x86 IL statement. *)
 
 Tactic Notation "simpl_x86" "in" hyp(H) :=
-  rewrite ?fold_parity, ?if_if, ?if_not_if, ?getmem_1 in H;
+  rewrite ?fold_parity, ?if_if, ?if_not_if, ?if_same, ?getmem_1 in H;
   x86_rewrite_rules H;
   repeat (
     match type of H with
@@ -366,6 +395,39 @@ Ltac simpl_x86 :=
   lazymatch goal with |- ?G => let H := fresh in let Heq := fresh in
     remember G as H eqn:Heq; simpl_x86 in Heq; subst H
   end.
+
+(* Simplify x86 memory access assertions produced by step_stmt. *)
+Ltac simpl_memaccs H :=
+  try lazymatch type of H with context [ MemAcc mem_writable ] =>
+    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
+  end;
+  try lazymatch type of H with context [ MemAcc mem_readable ] =>
+    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
+  end.
+
+(* Values of IL temp variables are ignored by the x86 interpreter once the IL
+   block that generated them completes.  We can therefore generalize them
+   away at IL block boundaries to simplify the expression. *)
+Ltac generalize_temps H :=
+  repeat match type of H with context [ update ?s (V_TEMP ?n) ?u ] =>
+    tryif is_var u then fail else
+    lazymatch type of H with context [ Var (V_TEMP ?n) ] => fail | _ =>
+      let tmp := fresh "tmp" in
+      pose (tmp := u);
+      change (update s (V_TEMP n) u) with (update s (V_TEMP n) tmp) in H;
+      clearbody tmp;
+      try fold value in tmp
+    end
+  end.
+
+(* Symbolically evaluate an x86 machine instruction for one step, and simplify
+   the resulting Coq expressions. *)
+Ltac x86_step_and_simplify XS :=
+  step_stmt XS;
+  simpl_memaccs XS;
+  destruct_memaccs XS;
+  generalize_temps XS;
+  simpl_x86 in XS.
 
 
 (* Introduce automated machinery for verifying an x86 machine code subroutine
@@ -399,36 +461,6 @@ Proof. injection 1 as. split; assumption. Qed.
 Remark exitof_none a: exitof a None = Exit a. Proof eq_refl.
 Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
 
-(* Simplify x86 memory access assertions produced by step_stmt. *)
-Ltac simpl_memaccs H :=
-  repeat first [ rewrite memacc_read_updated in H
-               | rewrite memacc_write_updated in H
-               | rewrite memacc_read_frame in H by discriminate 1
-               | rewrite memacc_write_frame in H by discriminate 1 ].
-
-(* Apply the functional interpreter, and then simplify and separate any
-   memory access assertions into separate hypotheses. *)
-Ltac x86_step_stmt XS :=
-  step_stmt XS;
-  simpl_memaccs XS;
-  destruct_memaccs XS.
-
-(* Values of IL temp variables are ignored by the x86 interpreter once the IL
-   block that generated them completes.  We can therefore generalize them
-   away at IL block boundaries to simplify the expression. *)
-Remark generalize_temp upd (s:store) n u:
-  upd = update s (V_TEMP n) u -> exists tmp, upd = update s (V_TEMP n) tmp.
-Proof. intro. exists u. assumption. Qed.
-
-Ltac generalize_temps H :=
-  repeat lazymatch type of H with context [ update ?s (V_TEMP ?n) ?u ] =>
-    tryif is_var u then fail else let upd := fresh in let Heq := fresh in
-    remember (update s (V_TEMP n) u) as upd eqn:Heq in H;
-    simple apply (generalize_temp upd s n u) in Heq;
-    let tmp := fresh "tmp" in destruct Heq as [tmp Heq];
-    subst upd
-  end.
-
 (* Solve a goal of the form (p s a = None), which indicates that program p is
    exiting the subroutine.  For now, we automatically solve for three common
    cases: (A) address a is a constant, allowing function p to fully evaluate
@@ -447,14 +479,6 @@ Ltac x86_invhere :=
         | apply nextinv_exn
         | apply nextinv_ret; [ prove_prog_exits |] ];
   simpl_stores; simpl_x86.
-
-(* Symbolically evaluate an x86 machine instruction for one step, and simplify
-   the resulting Coq expressions. *)
-Ltac x86_step_and_simplify XS :=
-  stock_store in XS;
-  x86_step_stmt XS;
-  generalize_temps XS;
-  simpl_x86 in XS.
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
@@ -513,8 +537,8 @@ Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* mod
 Notation "x << y" := (N.shiftl x y) (at level 40, left associativity). (* logical shift-left *)
 Notation "x >> y" := (N.shiftr x y) (at level 40, left associativity). (* logical shift-right *)
 Notation "x >>> y" := (ashiftr 32 x y) (at level 40, left associativity). (* arithmetic shift-right *)
-Notation "x .& y" := (N.land x y) (at level 55, left associativity). (* logical and *)
-Notation "x .^ y" := (N.lxor x y) (at level 55, left associativity). (* logical xor *)
-Notation "x .| y" := (N.lor x y) (at level 55, left associativity). (* logical or *)
+Notation "x .& y" := (N.land x y) (at level 25, left associativity). (* logical and *)
+Notation "x .^ y" := (N.lxor x y) (at level 25, left associativity). (* logical xor *)
+Notation "x .| y" := (N.lor x y) (at level 25, left associativity). (* logical or *)
 
 End X86Notations.

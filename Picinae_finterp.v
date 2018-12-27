@@ -16,9 +16,9 @@
    To compile this module, first load and compile:       MMMMMMMMMMMMMM7..$MNDM+
    * Picinae_core                                         MMDMMMMMMMMMZ7..$DM$77
    * Picinae_theory                                        MMMMMMM+MMMZ7..7ZM~++
-   Then compile this module with menu option                MMMMMMMMMMM7..ZNOOMZ
-   Compile->Compile_buffer.                                  MMMMMMMMMM$.$MOMO=7
-                                                              MDMMMMMMMO.7MDM7M+
+   * Picinae_statics                                        MMMMMMMMMMM7..ZNOOMZ
+   Then compile this module with menu option                 MMMMMMMMMM$.$MOMO=7
+   Compile->Compile_buffer.                                   MDMMMMMMMO.7MDM7M+
                                                                ZMMMMMMMM.$MM8$MN
                                                                $ZMMMMMMZ..MMMOMZ
                                                                 ?MMMMMM7..MNN7$M
@@ -32,7 +32,7 @@
                                                                          M 7N8ZD
  *)
 
-Require Import Picinae_theory.
+Require Import Picinae_statics.
 Require Import NArith.
 Require Import ZArith.
 Require Import List.
@@ -145,6 +145,41 @@ Proof.
       split. apply H. apply IHl, H.
 Qed.
 
+Inductive NoE_SETOP :=
+| NOE_ADD | NOE_SUB | NOE_MUL | NOE_DIV | NOE_MOD | NOE_POW
+| NOE_SHL | NOE_SHR | NOE_AND | NOE_OR  | NOE_XOR | NOE_NOT
+| NOE_NEG
+| NOE_EQB | NOE_LTB | NOE_LEB
+| NOE_SLT | NOE_SLE
+| NOE_QUO | NOE_REM | NOE_ASR
+| NOE_CAS
+| NOE_ZST
+| NOE_TYP
+| NOE_NUM | NOE_WID
+| NOE_MEM
+| NOE_GET | NOE_SET.
+
+Inductive NoE_TYPOP := NOE_ITR | NOE_UPD | NOE_MAR | NOE_MAW.
+
+
+
+(* Functional interpretation of expressions and statements entails instantiating
+   a functor that accepts the architecture-specific IL syntax and semantics. *)
+
+Module Type PICINAE_FINTERP (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL).
+
+Import IL.
+Module PTheory := PicinaeTheory IL.
+Import PTheory.
+Import TIL.
+
+Local Definition vupdate := @update var value VarEqDec.
+
+(* Memory access propositions resulting from functional interpretation are
+   encoded as (MemAcc (mem_readable|mem_writable) heap store addr length). *)
+Definition MemAcc (P: store -> addr -> Prop) h s a len :=
+  forall n, n < len -> h (a+n) = Some tt /\ P s (a+n).
+
 
 (* For speed, the interpreter function is designed to be evaluated using
    vm_compute or native_compute.  However, those tactics perform uncontrolled
@@ -154,127 +189,146 @@ Qed.
    functions we don't want vm_compute to evaluate.  After vm_compute completes,
    we replace the opaque functions with the real ones (using rewrite). *)
 
-Module Type NOEXPAND.
-  Parameter negb: bool -> bool.
-  Parameter add: N -> N -> N.
-  Parameter sub: N -> N -> N.
-  Parameter mul: N -> N -> N.
-  Parameter div: N -> N -> N.
-  Parameter quot: Z -> Z -> Z.
-  Parameter rem: Z -> Z -> Z.
-  Parameter modulo: N -> N -> N.
-  Parameter pow: N -> N -> N.
-  Parameter shiftl: N -> N -> N.
-  Parameter shiftr: N -> N -> N.
-  Parameter ashiftr: bitwidth -> N -> N -> N.
-  Parameter land: N -> N -> N.
-  Parameter lor: N -> N -> N.
-  Parameter lxor: N -> N -> N.
-  Parameter lnot: N -> N -> N.
-  Parameter eqb: N -> N -> bool.
-  Parameter ltb: N -> N -> bool.
-  Parameter leb: N -> N -> bool.
-  Parameter slt: N -> N -> N -> bool.
-  Parameter sle: N -> N -> N -> bool.
-  Parameter sbop: (Z -> Z -> Z) -> bitwidth -> N -> N -> N.
-  Parameter scast: bitwidth -> bitwidth -> N -> N.
-  Parameter Niter: N -> forall {A}, (A -> A) -> A -> A.
-  Parameter zstore: addr -> N.
-  Parameter _vtyp: value -> bool.
-  Parameter _vnum: value -> N.
-  Parameter _vmem: value -> addr -> N.
-  Parameter _vwidth: value -> N.
+(* First, enumerate the various operations whose expansion we wish to inhibit,
+   along with their type signatures.  We group these into two dependently
+   typed functions (for ops in Set and Type, respectively) instead of many
+   separate definitions for more efficient "rewrite" tactics. *)
 
-  Axiom negb_eq: negb = Coq.Init.Datatypes.negb.
-  Axiom add_eq: add = N.add.
-  Axiom sub_eq: sub = N.sub.
-  Axiom mul_eq: mul = N.mul.
-  Axiom div_eq: div = N.div.
-  Axiom quot_eq: quot = Z.quot.
-  Axiom rem_eq: rem = Z.rem.
-  Axiom modulo_eq: modulo = N.modulo.
-  Axiom pow_eq: pow = N.pow.
-  Axiom shiftl_eq: shiftl = N.shiftl.
-  Axiom shiftr_eq: shiftr = N.shiftr.
-  Axiom ashiftr_eq: ashiftr = Picinae_core.ashiftr.
-  Axiom land_eq: land = N.land.
-  Axiom lor_eq: lor = N.lor.
-  Axiom lxor_eq: lxor = N.lxor.
-  Axiom lnot_eq: lnot = N.lnot.
-  Axiom eqb_eq: eqb = N.eqb.
-  Axiom ltb_eq: ltb = N.ltb.
-  Axiom leb_eq: leb = N.leb.
-  Axiom slt_eq: slt = Picinae_core.slt.
-  Axiom sle_eq: sle = Picinae_core.sle.
-  Axiom sbop_eq: sbop = Picinae_core.sbop.
-  Axiom scast_eq: scast = Picinae_core.scast.
-  Axiom Niter_eq: Niter = N.iter.
-  Axiom vtyp_eq: _vtyp = vtyp.
-  Axiom vnum_eq: _vnum = vnum.
-  Axiom vmem_eq: _vmem = vmem.
-  Axiom vwidth_eq: _vwidth = vwidth.
+Definition noe_setop_typsig op :=
+  match op with
+  | NOE_ADD | NOE_SUB | NOE_MUL | NOE_DIV | NOE_MOD | NOE_POW
+  | NOE_SHL | NOE_SHR | NOE_AND | NOE_OR  | NOE_XOR | NOE_NOT => N -> N -> N
+  | NOE_NEG => bool -> bool
+  | NOE_EQB | NOE_LTB | NOE_LEB => N -> N -> bool
+  | NOE_SLT | NOE_SLE => bitwidth -> N -> N -> bool
+  | NOE_QUO | NOE_REM | NOE_ASR => bitwidth -> N -> N -> N
+  | NOE_CAS => bitwidth -> bitwidth -> N -> N
+  | NOE_ZST => addr -> N
+  | NOE_TYP => value -> bool
+  | NOE_NUM | NOE_WID => value -> N
+  | NOE_MEM => value -> addr -> N
+  | NOE_GET => endianness -> bitwidth -> (addr -> N) -> addr -> N
+  | NOE_SET => endianness -> bitwidth -> (addr -> N) -> addr -> N -> addr -> N
+  end.
+
+Definition noe_setop op : noe_setop_typsig op :=
+  match op with
+  | NOE_ADD => N.add
+  | NOE_SUB => N.sub
+  | NOE_MUL => N.mul
+  | NOE_DIV => N.div
+  | NOE_MOD => N.modulo
+  | NOE_POW => N.pow
+  | NOE_SHL => N.shiftl
+  | NOE_SHR => N.shiftr
+  | NOE_AND => N.land
+  | NOE_OR => N.lor
+  | NOE_XOR => N.lxor
+  | NOE_NOT => N.lnot
+  | NOE_NEG => negb
+  | NOE_EQB => N.eqb
+  | NOE_LTB => N.ltb
+  | NOE_LEB => N.leb
+  | NOE_SLT => slt
+  | NOE_SLE => sle
+  | NOE_QUO => sbop Z.quot
+  | NOE_REM => sbop Z.rem
+  | NOE_ASR => ashiftr
+  | NOE_CAS => scast
+  | NOE_ZST => (fun (_:addr) => N0)
+  | NOE_TYP => vtyp
+  | NOE_NUM => vnum
+  | NOE_WID => vwidth
+  | NOE_MEM => vmem
+  | NOE_GET => getmem
+  | NOE_SET => setmem
+  end.
+
+Definition noe_typop_typsig op :=
+  match op with
+  | NOE_ITR => N -> forall A, (A -> A) -> A -> A
+  | NOE_UPD => store -> var -> value -> store
+  | NOE_MAR | NOE_MAW => hdomain -> store -> N -> N -> Prop
+  end.
+
+Definition noe_typop op : noe_typop_typsig op :=
+  match op with
+  | NOE_ITR => N.iter
+  | NOE_UPD => @update var value VarEqDec
+  | NOE_MAR => MemAcc mem_readable
+  | NOE_MAW => MemAcc mem_writable
+  end.
+
+(* Now create a Module Type that hides the definitions within two Axioms. *)
+Module Type NOEXPAND.
+  Parameter f: forall op, noe_setop_typsig op.
+  Parameter g: forall op, noe_typop_typsig op.
+
+  Axiom f_eq: forall op, f op = match op with
+  | NOE_ADD => N.add
+  | NOE_SUB => N.sub
+  | NOE_MUL => N.mul
+  | NOE_DIV => N.div
+  | NOE_MOD => N.modulo
+  | NOE_POW => N.pow
+  | NOE_SHL => N.shiftl
+  | NOE_SHR => N.shiftr
+  | NOE_AND => N.land
+  | NOE_OR => N.lor
+  | NOE_XOR => N.lxor
+  | NOE_NOT => N.lnot
+  | NOE_NEG => negb
+  | NOE_EQB => N.eqb
+  | NOE_LTB => N.ltb
+  | NOE_LEB => N.leb
+  | NOE_SLT => slt
+  | NOE_SLE => sle
+  | NOE_QUO => sbop Z.quot
+  | NOE_REM => sbop Z.rem
+  | NOE_ASR => ashiftr
+  | NOE_CAS => scast
+  | NOE_ZST => (fun (_:addr) => N0)
+  | NOE_TYP => vtyp
+  | NOE_NUM => vnum
+  | NOE_WID => vwidth
+  | NOE_MEM => vmem
+  | NOE_GET => getmem
+  | NOE_SET => setmem
+  end.
+  Axiom g_eq: forall op, g op = match op with
+  | NOE_ITR => N.iter
+  | NOE_UPD => @update var value VarEqDec
+  | NOE_MAR => MemAcc mem_readable
+  | NOE_MAW => MemAcc mem_writable
+  end.
 End NOEXPAND.
 
+(* Instantiate the Module Type with our definitions. *)
 Module NoE : NOEXPAND.
-  Definition negb := negb.
-  Definition add := N.add.
-  Definition sub := N.sub.
-  Definition mul := N.mul.
-  Definition div := N.div.
-  Definition quot := Z.quot.
-  Definition rem := Z.rem.
-  Definition modulo := N.modulo.
-  Definition pow := N.pow.
-  Definition shiftl := N.shiftl.
-  Definition shiftr := N.shiftr.
-  Definition ashiftr := ashiftr.
-  Definition land := N.land.
-  Definition lor := N.lor.
-  Definition lxor := N.lxor.
-  Definition lnot := N.lnot.
-  Definition eqb := N.eqb.
-  Definition ltb := N.ltb.
-  Definition leb := N.leb.
-  Definition slt := slt.
-  Definition sle := sle.
-  Definition sbop := sbop.
-  Definition scast := scast.
-  Definition Niter := N.iter.
-  Definition zstore (_:addr) := 0.
-  Definition _vtyp := vtyp.
-  Definition _vnum := vnum.
-  Definition _vmem := vmem.
-  Definition _vwidth := vwidth.
+  Definition f := noe_setop.
+  Definition g := noe_typop.
 
-  Theorem negb_eq: negb = Coq.Init.Datatypes.negb. Proof eq_refl.
-  Theorem add_eq: add = N.add. Proof eq_refl.
-  Theorem sub_eq: sub = N.sub. Proof eq_refl.
-  Theorem mul_eq: mul = N.mul. Proof eq_refl.
-  Theorem div_eq: div = N.div. Proof eq_refl.
-  Theorem quot_eq: quot = Z.quot. Proof eq_refl.
-  Theorem rem_eq: rem = Z.rem. Proof eq_refl.
-  Theorem modulo_eq: modulo = N.modulo. Proof eq_refl.
-  Theorem pow_eq: pow = N.pow. Proof eq_refl.
-  Theorem shiftl_eq: shiftl = N.shiftl. Proof eq_refl.
-  Theorem shiftr_eq: shiftr = N.shiftr. Proof eq_refl.
-  Theorem ashiftr_eq: ashiftr = Picinae_core.ashiftr. Proof eq_refl.
-  Theorem land_eq: land = N.land. Proof eq_refl.
-  Theorem lor_eq: lor = N.lor. Proof eq_refl.
-  Theorem lxor_eq: lxor = N.lxor. Proof eq_refl.
-  Theorem lnot_eq: lnot = N.lnot. Proof eq_refl.
-  Theorem eqb_eq: eqb = N.eqb. Proof eq_refl.
-  Theorem ltb_eq: ltb = N.ltb. Proof eq_refl.
-  Theorem leb_eq: leb = N.leb. Proof eq_refl.
-  Theorem slt_eq: slt = Picinae_core.slt. Proof eq_refl.
-  Theorem sle_eq: sle = Picinae_core.sle. Proof eq_refl.
-  Theorem sbop_eq: sbop = Picinae_core.sbop. Proof eq_refl.
-  Theorem scast_eq: scast = Picinae_core.scast. Proof eq_refl.
-  Theorem Niter_eq: Niter = N.iter. Proof eq_refl.
-  Theorem vtyp_eq: _vtyp = vtyp. Proof eq_refl.
-  Theorem vnum_eq: _vnum = vnum. Proof eq_refl.
-  Theorem vmem_eq: _vmem = vmem. Proof eq_refl.
-  Theorem vwidth_eq: _vwidth = vwidth. Proof eq_refl.
+  Theorem f_eq op: f op = noe_setop op. Proof eq_refl.
+  Theorem g_eq op: g op = noe_typop op. Proof eq_refl.
 End NoE.
+
+(* Implementation note:  The following tactic uses "rewrite" with a list of
+   lemmas rather than using autorewrite or rewrite_strat because the former
+   currently seems to be the fastest method (tested with Coq 8.8.2). *)
+
+Ltac NoE_rewrite H :=
+  rewrite
+    ?NoE.f_eq, ?NoE.g_eq,
+    ?vtyp_num, ?vtyp_mem,
+    ?vnum_num, ?vmem_mem,
+    ?vwidth_num, ?vwidth_mem,
+    ?fold_vget
+  in H.
+
+Ltac NoE_rewrite_goal :=
+  lazymatch goal with |- ?G =>
+    let H := fresh in let Heq := fresh in remember G as H eqn:Heq; NoE_rewrite Heq; subst H
+  end.
 
 
 (* Functionally evaluate binary and unary operations using the opaque
@@ -284,165 +338,68 @@ Definition of_uvalue (u:uvalue) :=
   match u with VaU z m n w => if z then VaN n w else VaM m w end.
 
 Definition utowidth (w n:N) : uvalue :=
-  VaU true NoE.zstore (NoE.modulo n (NoE.pow 2 w)) w.
+  VaU true (NoE.f NOE_ZST) (NoE.f NOE_MOD n (NoE.f NOE_POW 2 w)) w.
 
 Definition utobit (b:bool) : uvalue :=
-  VaU true NoE.zstore (if b then 1 else 0) 1.
+  VaU true (NoE.f NOE_ZST) (if b then 1 else 0) 1.
 
 Definition feval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : uvalue :=
   match bop with
-  | OP_PLUS => utowidth w (NoE.add n1 n2)
-  | OP_MINUS => utowidth w (NoE.sub (NoE.add (NoE.pow 2 w) n1) n2)
-  | OP_TIMES => utowidth w (NoE.mul n1 n2)
-  | OP_DIVIDE => VaU true NoE.zstore (NoE.div n1 n2) w
-  | OP_SDIVIDE => VaU true NoE.zstore (NoE.sbop NoE.quot w n1 n2) w
-  | OP_MOD => VaU true NoE.zstore (NoE.modulo n1 n2) w
-  | OP_SMOD => VaU true NoE.zstore (NoE.sbop NoE.rem w n1 n2) w
-  | OP_LSHIFT => utowidth w (NoE.shiftl n1 n2)
-  | OP_RSHIFT => VaU true NoE.zstore (NoE.shiftr n1 n2) w
-  | OP_ARSHIFT => VaU true NoE.zstore (NoE.ashiftr w n1 n2) w
-  | OP_AND => VaU true NoE.zstore (NoE.land n1 n2) w
-  | OP_OR => VaU true NoE.zstore (NoE.lor n1 n2) w
-  | OP_XOR => VaU true NoE.zstore (NoE.lxor n1 n2) w
-  | OP_EQ => utobit (NoE.eqb n1 n2)
-  | OP_NEQ => utobit (NoE.negb (NoE.eqb n1 n2))
-  | OP_LT => utobit (NoE.ltb n1 n2)
-  | OP_LE => utobit (NoE.leb n1 n2)
-  | OP_SLT => utobit (NoE.slt w n1 n2)
-  | OP_SLE => utobit (NoE.sle w n1 n2)
+  | OP_PLUS => utowidth w (NoE.f NOE_ADD n1 n2)
+  | OP_MINUS => utowidth w (NoE.f NOE_SUB (NoE.f NOE_ADD (NoE.f NOE_POW 2 w) n1) n2)
+  | OP_TIMES => utowidth w (NoE.f NOE_MUL n1 n2)
+  | OP_DIVIDE => VaU true (NoE.f NOE_ZST) (NoE.f NOE_DIV n1 n2) w
+  | OP_SDIVIDE => VaU true (NoE.f NOE_ZST) (NoE.f NOE_QUO w n1 n2) w
+  | OP_MOD => VaU true (NoE.f NOE_ZST) (NoE.f NOE_MOD n1 n2) w
+  | OP_SMOD => VaU true (NoE.f NOE_ZST) (NoE.f NOE_REM w n1 n2) w
+  | OP_LSHIFT => utowidth w (NoE.f NOE_SHL n1 n2)
+  | OP_RSHIFT => VaU true (NoE.f NOE_ZST) (NoE.f NOE_SHR n1 n2) w
+  | OP_ARSHIFT => VaU true (NoE.f NOE_ZST) (NoE.f NOE_ASR w n1 n2) w
+  | OP_AND => VaU true (NoE.f NOE_ZST) (NoE.f NOE_AND n1 n2) w
+  | OP_OR => VaU true (NoE.f NOE_ZST) (NoE.f NOE_OR n1 n2) w
+  | OP_XOR => VaU true (NoE.f NOE_ZST) (NoE.f NOE_XOR n1 n2) w
+  | OP_EQ => utobit (NoE.f NOE_EQB n1 n2)
+  | OP_NEQ => utobit (NoE.f NOE_NEG (NoE.f NOE_EQB n1 n2))
+  | OP_LT => utobit (NoE.f NOE_LTB n1 n2)
+  | OP_LE => utobit (NoE.f NOE_LEB n1 n2)
+  | OP_SLT => utobit (NoE.f NOE_SLT w n1 n2)
+  | OP_SLE => utobit (NoE.f NOE_SLE w n1 n2)
   end.
 
 Definition feval_unop (uop:unop_typ) (n:N) (w:bitwidth) : uvalue :=
   match uop with
-  | OP_NEG => utowidth w (NoE.sub (NoE.pow 2 w) n)
-  | OP_NOT => VaU true NoE.zstore (NoE.lnot n w) w
+  | OP_NEG => utowidth w (NoE.f NOE_SUB (NoE.f NOE_POW 2 w) n)
+  | OP_NOT => VaU true (NoE.f NOE_ZST) (NoE.f NOE_NOT n w) w
   end.
 
 Definition feval_cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
   match c with
   | CAST_UNSIGNED => n
-  | CAST_SIGNED => NoE.scast w w' n
-  | CAST_HIGH => NoE.shiftr n (w - w')
-  | CAST_LOW => NoE.modulo n (NoE.pow 2 w')
+  | CAST_SIGNED => NoE.f NOE_CAS w w' n
+  | CAST_HIGH => NoE.f NOE_SHR n (w - w')
+  | CAST_LOW => NoE.f NOE_MOD n (NoE.f NOE_POW 2 w')
   end.
-
-
-(* Functional interpretation of expressions and statements entails instantiating
-   a functor that accepts the architecture-specific IL syntax and semantics. *)
-
-Module Type PICINAE_FINTERP (IL: PICINAE_IL).
-
-Import IL.
-Module PTheory := PicinaeTheory IL.
-Import PTheory.
-
-Local Definition vupdate := @Picinae_core.update var value VarEqDec.
-
-(* Memory access propositions resulting from functional interpretation are
-   encoded as (MemAcc (mem_readable|mem_writable) heap store addr length). *)
-Definition MemAcc (P: store -> addr -> Prop) h s a len :=
-  forall n, n < len -> h (a+n) = Some tt /\ P s (a+n).
-
-Module Type NOEMEM.
-  Parameter getmem: endianness -> bitwidth -> (addr -> N) -> addr -> N.
-  Parameter setmem: endianness -> bitwidth -> (addr -> N) -> addr -> N -> addr -> N.
-  Parameter vupdate: store -> var -> value -> store.
-  Parameter memaccr: hdomain -> store -> N -> N -> Prop.
-  Parameter memaccw: hdomain -> store -> N -> N -> Prop.
-  Axiom getmem_eq: getmem = IL.getmem.
-  Axiom setmem_eq: setmem = IL.setmem.
-  Axiom vupdate_eq: vupdate = @Picinae_core.update var value VarEqDec.
-  Axiom memaccr_eq: memaccr = MemAcc mem_readable.
-  Axiom memaccw_eq: memaccw = MemAcc mem_writable.
-End NOEMEM.
-
-Module NoEMem : NOEMEM.
-  Definition getmem := IL.getmem.
-  Definition setmem := IL.setmem.
-  Definition vupdate := @update var value VarEqDec.
-  Definition memaccr := MemAcc mem_readable.
-  Definition memaccw := MemAcc mem_writable.
-  Theorem getmem_eq: getmem = IL.getmem. Proof eq_refl.
-  Theorem setmem_eq: setmem = IL.setmem. Proof eq_refl.
-  Theorem vupdate_eq: vupdate = PICINAE_FINTERP.vupdate. Proof eq_refl.
-  Theorem memaccr_eq: memaccr = MemAcc mem_readable. Proof eq_refl.
-  Theorem memaccw_eq: memaccw = MemAcc mem_writable. Proof eq_refl.
-End NoEMem.
-
-(* Implementation note:  The following tactic uses 'rewrite' with a list of
-   lemmas rather than using autorewrite or rewrite_strat because 'rewrite'
-   with a list of lemmas is currently faster (as of Coq 8.8.0). *)
-
-Local Ltac NoE_rewrite H :=
-  rewrite 1?NoE.negb_eq,
-          1?NoE.add_eq,
-          1?NoE.sub_eq,
-          1?NoE.mul_eq,
-          1?NoE.div_eq,
-          1?NoE.quot_eq,
-          1?NoE.rem_eq,
-          1?NoE.modulo_eq,
-          1?NoE.pow_eq,
-          1?NoE.shiftl_eq,
-          1?NoE.shiftr_eq,
-          1?NoE.ashiftr_eq,
-          1?NoE.land_eq,
-          1?NoE.lor_eq,
-          1?NoE.lxor_eq,
-          1?NoE.lnot_eq,
-          1?NoE.eqb_eq,
-          1?NoE.ltb_eq,
-          1?NoE.leb_eq,
-          1?NoE.slt_eq,
-          1?NoE.sle_eq,
-          1?NoE.sbop_eq,
-          1?NoE.scast_eq,
-          1?NoE.Niter_eq,
-          1?NoE.vtyp_eq,
-          1?NoE.vnum_eq,
-          1?NoE.vmem_eq,
-          1?NoE.vwidth_eq,
-          1?NoEMem.getmem_eq,
-          1?NoEMem.setmem_eq,
-          1?NoEMem.vupdate_eq,
-          1?NoEMem.memaccr_eq,
-          1?NoEMem.memaccw_eq,
-          ?vtyp_num,
-          ?vtyp_mem,
-          ?vnum_num,
-          ?vmem_mem,
-          ?vwidth_num,
-          ?vwidth_mem,
-          ?fold_vget
-  in H.
-
-Local Ltac NoE_rewrite_goal :=
-  lazymatch goal with |- ?G =>
-    let H := fresh in let Heq := fresh in remember G as H eqn:Heq; NoE_rewrite Heq; subst H
-  end.
-
-Definition bits_of_mem len := N.mul Mb len.
 
 (* Functionally evaluate an expression.  Parameter unk is an oracle function
    that returns values of unknown expressions. *)
 Fixpoint feval_exp e h s unk :=
   match e with
-  | Var v => (VaU (NoE._vtyp (s vupdate v))
-                  (NoE._vmem (s vupdate v))
-                  (NoE._vnum (s vupdate v))
-                  (NoE._vwidth (s vupdate v)), nil)
-  | Word n w => (VaU true NoE.zstore n w, nil)
+  | Var v => (VaU (NoE.f NOE_TYP (s vupdate v))
+                  (NoE.f NOE_MEM (s vupdate v))
+                  (NoE.f NOE_NUM (s vupdate v))
+                  (NoE.f NOE_WID (s vupdate v)), nil)
+  | Word n w => (VaU true (NoE.f NOE_ZST) n w, nil)
   | Load e1 e2 en len =>
       match feval_exp e1 h s (unknowns0 unk), feval_exp e2 h s (unknowns1 unk) with
       | (VaU _ m _ _, ma1), (VaU _ _ n _, ma2) =>
-        (VaU true NoE.zstore (NoEMem.getmem en len m n) (bits_of_mem len),
-         NoEMem.memaccr h (s NoEMem.vupdate) n len :: ma1++ma2)
+        (VaU true (NoE.f NOE_ZST) (NoE.f NOE_GET en len m n) (Mb*len),
+         NoE.g NOE_MAR h (s (NoE.g NOE_UPD)) n len :: ma1++ma2)
       end
   | Store e1 e2 e3 en len =>
       match feval_exp e1 h s (unknowns00 unk), feval_exp e2 h s (unknowns01 unk), feval_exp e3 h s (unknowns10 unk) with
       | (VaU _ m _ mw, ma1), (VaU _ _ a _, ma2), (VaU _ _ v _, ma3) =>
-        (VaU false (NoEMem.setmem en len m a v) 0 mw,
-         NoEMem.memaccw h (s NoEMem.vupdate) a len :: ma1++ma2++ma3)
+        (VaU false (NoE.f NOE_SET en len m a v) 0 mw,
+         NoE.g NOE_MAW h (s (NoE.g NOE_UPD)) a len :: ma1++ma2++ma3)
       end
   | BinOp bop e1 e2 =>
       match feval_exp e1 h s (unknowns0 unk), feval_exp e2 h s (unknowns1 unk) with
@@ -454,7 +411,7 @@ Fixpoint feval_exp e h s unk :=
       end
   | Cast c w' e1 =>
       match feval_exp e1 h s unk with (VaU _ _ n w, ma) =>
-        (VaU true NoE.zstore (feval_cast c w w' n) w', ma)
+        (VaU true (NoE.f NOE_ZST) (feval_cast c w w' n) w', ma)
       end
   | Let v e1 e2 =>
       match feval_exp e1 h s (unknowns0 unk) with (u,ma1) =>
@@ -462,7 +419,7 @@ Fixpoint feval_exp e h s unk :=
         | (u',ma2) => (u', ma1++ma2)
         end
       end
-  | Unknown w => (VaU true NoE.zstore (NoE.modulo (unk xH) (NoE.pow 2 w)) w, nil)
+  | Unknown w => (VaU true (NoE.f NOE_ZST) (NoE.f NOE_MOD (unk xH) (NoE.f NOE_POW 2 w)) w, nil)
   | Ite e1 e2 e3 =>
       match feval_exp e1 h s (unknowns0 unk), feval_exp e2 h s (unknowns1 unk), feval_exp e3 h s (unknowns1 unk) with
       | (VaU _ _ n1 _, ma1), (VaU b2 m2 n2 w2, ma2), (VaU b3 m3 n3 w3, ma3) =>
@@ -471,13 +428,13 @@ Fixpoint feval_exp e h s unk :=
       end
   | Extract n1 n2 e1 =>
       match feval_exp e1 h s unk with
-      | (VaU _ _ n w, ma) => (VaU true NoE.zstore (feval_cast CAST_HIGH (N.succ n1) (N.succ (n1-n2))
-                                                  (feval_cast CAST_LOW w (N.succ n1) n)) (N.succ (n1-n2)), ma)
+      | (VaU _ _ n w, ma) => (VaU true (NoE.f NOE_ZST) (feval_cast CAST_HIGH (N.succ n1) (N.succ (n1-n2))
+                                                       (feval_cast CAST_LOW w (N.succ n1) n)) (N.succ (n1-n2)), ma)
       end
   | Concat e1 e2 =>
       match feval_exp e1 h s (unknowns0 unk), feval_exp e2 h s (unknowns1 unk) with
       | (VaU _ _ n1 w1, ma1), (VaU _ _ n2 w2, ma2) =>
-        (VaU true NoE.zstore (NoE.lor (NoE.shiftl n1 w2) n2) (w1+w2), ma1++ma2)
+        (VaU true (NoE.f NOE_ZST) (NoE.f NOE_OR (NoE.f NOE_SHL n1 w2) n2) (w1+w2), ma1++ma2)
       end
   end.
 
@@ -529,7 +486,7 @@ Fixpoint fexec_stmt q h s unk l :=
       end
   | Rep e q1 =>
       match feval_exp e h (updlst s l) unk with (VaU _ _ n _, ma0) =>
-        FIS l (FIStmt (NoE.Niter n (Seq q1) Nop)) ma0
+        FIS l (FIStmt (NoE.g NOE_ITR n stmt (Seq q1) Nop)) ma0
       end
   end.
 
@@ -711,11 +668,11 @@ Qed.
 Theorem reduce_stmt:
   forall s l q h s' x (XS: exec_stmt h (updlst s l vupdate) q s' x),
   exists unk, match fexec_stmt q h s unk l with
-              | FIS l' (FIExit x') ma => (s' = updlst s l' NoEMem.vupdate /\ x = x') /\ conjallT ma
-              | FIS l' (FIStmt q') ma => exec_stmt h (updlst s l' NoEMem.vupdate) q' s' x /\ conjallT ma
+              | FIS l' (FIExit x') ma => (s' = updlst s l' (NoE.g NOE_UPD) /\ x = x') /\ conjallT ma
+              | FIS l' (FIStmt q') ma => exec_stmt h (updlst s l' (NoE.g NOE_UPD)) q' s' x /\ conjallT ma
               end.
 Proof.
-  rewrite NoEMem.vupdate_eq.
+  NoE_rewrite_goal.
   intros s l q h. revert s l. induction q using stmt_ind2; intros;
   inversion XS; clear XS; subst.
 
@@ -778,7 +735,7 @@ Proof.
   exists unk. simpl.
   destruct (feval_exp _ _ _ _) as [u ma0].
   destruct E as [E M]. destruct u as [z m c ?]. destruct z; [|discriminate]. injection E; intros; subst.
-  rewrite NoE.Niter_eq. split; assumption.
+  NoE_rewrite_goal. split; assumption.
 Qed.
 
 Theorem update_updlst:
@@ -820,7 +777,8 @@ Ltac simpl_stores :=
   end.
 
 Tactic Notation "simpl_stores" "in" hyp(H) :=
-  repeat first [ rewrite update_updated in H | rewrite update_frame in H; [|discriminate 1] ];
+  repeat lazymatch type of H with context [ update _ ?v _ ?v ] => rewrite update_updated in H
+                                | context [ update _ _ _ _ ] => rewrite update_frame in H; [|discriminate 1] end;
   repeat rewrite if_N_same in H;
   repeat match type of H with context [ update ?S ?V ?U ] =>
     match S with context c [ update ?T V _ ] => let r := context c[T] in
@@ -835,14 +793,41 @@ Tactic Notation "simpl_stores" "in" hyp(H) :=
    to be simplified.  The "stock_store" tactic searches the proof context for
    hypotheses of the form "s var = value", where "var" is some variable
    appearing in the expression to be reduced and "s" is the store, and adds
-   "s[var:=value]" to the expression. *)
+   "s[var:=value]" to the expression.  If no such hypothesis is found for var,
+   it next looks for "models c s" where c is a typing context that assigns a
+   type to var.  If such a hypothesis exists, it creates a fresh name for the
+   value of var with the correct type.
+
+   Note: "stock_store" is no longer called by the functional interpreter.  The
+   interpreter now performs this task as part of populate_varlist, which is
+   faster.  However, we keep stock_store available in stand-alone form in case
+   the user wants to consolidate store info manually. *)
+
+Theorem models_val:
+  forall v s t (TV: hastyp_val (s v) t),
+  match t with
+  | NumT w => exists n, s = s [v := VaN n w]
+  | MemT w => exists m, s = s [v := VaM m w]
+  end.
+Proof.
+  intros. destruct t; inversion TV; subst;
+  eexists; apply store_upd_eq; symmetry; eassumption.
+Qed.
 
 Ltac stock_store :=
-  lazymatch goal with |- exec_stmt _ _ ?Q _ _ => repeat
-    match Q with context [ Var ?V ] =>
-      lazymatch goal with |- exec_stmt _ ?S _ _ _ =>
-        lazymatch S with context [ update _ V _ ] => fail | _ =>
-          erewrite (store_upd_eq S V) by (simpl_stores; eassumption)
+  lazymatch goal with |- exec_stmt _ _ ?q _ _ => repeat
+    match q with context [ Var ?v ] =>
+      lazymatch goal with |- exec_stmt _ ?s _ _ _ =>
+        lazymatch s with context [ update _ v _ ] => fail | _ => first
+        [ erewrite (store_upd_eq s v) by (simpl_stores; eassumption)
+        | match goal with [ MDL: models ?c _ |- _ ] => let H := fresh in
+            lazymatch eval hnf in (c v) with
+            | Some (NumT ?w) => destruct (models_val v s (NumT w)) as [?n H]
+            | Some (MemT ?w) => destruct (models_val v s (MemT w)) as [?m H]
+            end;
+            [ solve [ simpl_stores; apply MDL; reflexivity ]
+            | rewrite H; clear H ]
+          end ]
         end
       end
     end
@@ -850,11 +835,19 @@ Ltac stock_store :=
   end.
 
 Tactic Notation "stock_store" "in" hyp(XS) :=
-  lazymatch type of XS with exec_stmt _ _ ?Q _ _ => repeat
-    match Q with context [ Var ?V ] =>
-      lazymatch type of XS with exec_stmt _ ?S _ _ _ =>
-        lazymatch S with context [ update _ V _ ] => fail | _ =>
-          erewrite (store_upd_eq S V) in XS by (simpl_stores; eassumption)
+  lazymatch type of XS with exec_stmt _ _ ?q _ _ => repeat
+    match q with context [ Var ?v ] =>
+      lazymatch type of XS with exec_stmt _ ?s _ _ _ =>
+        lazymatch s with context [ update _ v _ ] => fail | _ => first
+        [ erewrite (store_upd_eq s v) in XS by (simpl_stores; eassumption)
+        | match goal with [ MDL: models ?c _ |- _ ] => let H := fresh in
+            lazymatch eval hnf in (c v) with
+            | Some (NumT ?w) => destruct (models_val v s (NumT w)) as [?n H]
+            | Some (MemT ?w) => destruct (models_val v s (MemT w)) as [?m H]
+            end;
+            [ solve [ simpl_stores; apply MDL; reflexivity ]
+            | rewrite H in XS; clear H ]
+          end ]
         end
       end
     end
@@ -905,6 +898,109 @@ Proof.
     split. reflexivity. apply H.
 Qed.
 
+Lemma fexec_stmt_hypn:
+  forall h s v n w l q s' x EQs (SV: s v = VaN n w),
+  exec_stmt h (updlst s (rev l) vupdate) q s' x /\ EQs ->
+  exists a, exec_stmt h (updlst s (rev ((v, VaN a w)::l)) vupdate) q s' x /\ (a=n /\ EQs).
+Proof.
+  intros. exists n. split.
+    rewrite <- update_updlst. change (vupdate s) with (update s). rewrite <- store_upd_eq by exact SV. apply H.
+    split. reflexivity. apply H.
+Qed.
+
+Lemma fexec_stmt_hypm:
+  forall h s v m w l q s' x EQs (SV: s v = VaM m w),
+  exec_stmt h (updlst s (rev l) vupdate) q s' x /\ EQs ->
+  exists a, exec_stmt h (updlst s (rev ((v, VaM a w)::l)) vupdate) q s' x /\ (a=m /\ EQs).
+Proof.
+  intros. exists m. split.
+    rewrite <- update_updlst. change (vupdate s) with (update s). rewrite <- store_upd_eq by exact SV. apply H.
+    split. reflexivity. apply H.
+Qed.
+
+Lemma fexec_stmt_hypu:
+  forall h s v u l q s' x EQs (SV: s v = u),
+  exec_stmt h (updlst s (rev l) vupdate) q s' x /\ EQs ->
+  exists a, exec_stmt h (updlst s (rev ((v,u)::l)) vupdate) q s' x /\ (a=u /\ EQs).
+Proof.
+  intros. exists u. split.
+    rewrite <- update_updlst. change (vupdate s) with (update s). rewrite <- store_upd_eq by exact SV. apply H.
+    split. reflexivity. apply H.
+Qed.
+
+Lemma fexec_stmt_typ:
+  forall h c s v t l q s' x EQs (MDL: models c s) (CV: c v = Some t),
+  exec_stmt h (updlst s (rev l) vupdate) q s' x /\ EQs ->
+  match t with NumT w => exists a, s v = VaN a w /\ exec_stmt h (updlst s (rev ((v, VaN a w)::l)) vupdate) q s' x /\ EQs
+             | MemT w => exists a, s v = VaM a w /\ exec_stmt h (updlst s (rev ((v, VaM a w)::l)) vupdate) q s' x /\ EQs
+  end.
+Proof.
+  intros. specialize (MDL _ _ CV). inversion MDL; subst;
+  eexists; rewrite <- update_updlst;
+  change (vupdate s) with (update s);
+  rewrite <- store_upd_eq by (symmetry; eassumption);
+  (split; [ reflexivity | exact H ]).
+Qed.
+
+
+(* Prepare an exec_stmt hypothesis for the symbolic interpreter by converting
+   its store argument s into an expression of the form (updlst s0 l), where
+   s0 is a store expression and l is a list of variable-value pairs. By passing
+   list l directly to the interpreter as a functional input, it can reduce many
+   variables to values without consulting the proof context (which it cannot
+   access programmatically) and without risking uncontrolled expansion of the
+   potentially complex original store expression s.  Members of list l can come
+   from three potential sources of information:
+
+   (1) If s has the form "s0[v1:=u1]...[vn:=un]", then (v1,u1),...,(vn,un) are
+       added to list l and s is reduced to s0.
+
+   (2) For each hypothesis of the form "s0 v = u", pair (v,u) is added to l.
+
+   (3) For any remaining variable v read by the statement being interpreted
+       whose value cannot be inferred by the above, if there is a hypothesis of
+       the form "models c s0" and typing context c assigns a type to v, then a
+       fresh proof variable is introduced for the value of v having appropriate
+       IL-type.  This allows the interpreter to at least infer the type of v
+       (including, most importantly, its bitwidth), which typically yields a
+       symbolic expression that is much simpler because it doesn't need to
+       generalize over bitwidths. *)
+
+Ltac populate_varlist XS :=
+  apply fexec_stmt_init in XS;
+  repeat lazymatch type of XS with
+  | exec_stmt ?h (updlst (update ?s ?v (VaN ?n ?w)) (rev ?l) vupdate) ?q ?s' ?x /\ ?EQs =>
+      simple apply (fexec_stmt_updn h s v n w l q s' x EQs) in XS;
+      let _n := fresh in destruct XS as [_n XS]
+  | exec_stmt ?h (updlst (update ?s ?v (VaM ?m ?w)) (rev ?l) vupdate) ?q ?s' ?x /\ ?EQs =>
+      simple apply (fexec_stmt_updm h s v m w l q s' x EQs) in XS;
+      let _m := fresh in destruct XS as [_m XS]
+  | exec_stmt ?h (updlst (update ?s ?v ?u) (rev ?l) vupdate) ?q ?s' ?x /\ ?EQs =>
+      simple apply (fexec_stmt_updu h s v u l q s' x EQs) in XS;
+      let _u := fresh in destruct XS as [_u XS]
+  end;
+  repeat lazymatch type of XS with exec_stmt ?h (updlst ?s (rev ?l) vupdate) ?q ?s' ?x /\ ?EQs =>
+    match q with context [ Var ?v ] =>
+      lazymatch l with context [ (v,_)::_ ] => fail | _ =>
+        match goal with
+        | [ SV: s v = VaN ?n ?w |- _ ] =>
+            simple apply (fexec_stmt_hypn h s v n w l q s' x EQs SV) in XS;
+            let _n := fresh in destruct XS as [_n XS]
+        | [ SV: s v = VaM ?m ?w |- _ ] =>
+            simple apply (fexec_stmt_hypm h s v m w l q s' x EQs SV) in XS;
+            let _m := fresh in destruct XS as [_m XS]
+        | [ MDL: models ?c s |- _ ] =>
+            lazymatch eval hnf in (c v) with Some ?t =>
+              simple apply (fexec_stmt_typ h c s v t l q s' x EQs MDL (eq_refl _)) in XS;
+              let _a := match t with NumT _ => fresh "n" | MemT _ => fresh "m" end in
+              let H := fresh "Hsv" in
+                destruct XS as [_a [H XS]]
+            end
+        end
+      end
+    end
+  end.
+
 
 (* Finally, simplifying a hypothesis H of the form (exec_stmt ...) entails first
    removing any user-supplied expressions in H that we don't want expanded, then
@@ -914,42 +1010,30 @@ Qed.
    back into the evaluated expression. *)
 
 Ltac step_stmt XS :=
-  lazymatch type of XS with exec_stmt ?h _ _ ?s' ?x =>
-    apply fexec_stmt_init in XS;
-    repeat lazymatch type of XS with
-    | exec_stmt h (updlst (update ?s ?v (VaN ?n ?w)) (rev ?l) vupdate) ?q s' x /\ ?EQs =>
-        simple apply (fexec_stmt_updn h s v n w l q s' x EQs) in XS;
-        let _n := fresh "_n" in destruct XS as [_n XS]
-    | exec_stmt h (updlst (update ?s ?v (VaM ?m ?w)) (rev ?l) vupdate) ?q s' x /\ ?EQs =>
-        simple apply (fexec_stmt_updm h s v m w l q s' x EQs) in XS;
-        let _m := fresh "_m" in destruct XS as [_m XS]
-    | exec_stmt h (updlst (update ?s ?v ?u) (rev ?l) vupdate) ?q s' x /\ ?EQs =>
-        simple apply (fexec_stmt_updu h s v u l q s' x EQs) in XS;
-        let _u := fresh "_u" in destruct XS as [_u XS]
-    end;
-    let EQs := fresh in (
-      destruct XS as [XS EQs];
-      let _h := fresh "_h" in let _s := fresh "_s" in let _s' := fresh "_s'" in let _x := fresh "_x" in (
-        lazymatch type of XS with exec_stmt _ (updlst ?s _ _) _ _ _ =>
-          remember h as _h; remember s as _s; remember s' as _s'; remember x as _x
+  lazymatch type of XS with exec_stmt _ _ _ _ _ =>
+    populate_varlist XS;
+    let EQs := fresh in destruct XS as [XS EQs];
+    lazymatch type of XS with exec_stmt ?h (updlst ?s _ _) _ ?s' ?x =>
+      let _h  := fresh in remember h  as _h  in XS;
+      let _s  := fresh in remember s  as _s  in XS;
+      let _s' := fresh in remember s' as _s' in XS;
+      let _x  := fresh in remember x  as _x  in XS;
+      apply reduce_stmt in XS;
+      let unk := fresh "unknown" in (
+        destruct XS as [unk XS];
+        vm_compute in XS;
+        repeat match type of XS with context [ unk ?i ] =>
+          let u := fresh "u" in set (u:=unk i) in XS; clearbody u
         end;
-        apply reduce_stmt in XS; let unk := fresh "unknown" in (
-          destruct XS as [unk XS];
-          vm_compute in XS;
-          repeat match type of XS with context [ unk ?i ] =>
-            pattern (unk i) in XS;
-            apply ex_intro in XS;
-            let u := fresh "u" in destruct XS as [u XS]
-          end; try clear unk
-        );
-        NoE_rewrite XS;
-        subst _h _s _s' _x
+        try clear unk
       );
-      repeat lazymatch type of EQs with (?_nmu = _) /\ _ =>
-        let H1 := fresh in destruct EQs as [H1 EQs]; subst _nmu
-      end;
-      clear EQs
-    )
+      NoE_rewrite XS;
+      subst _h _s _s' _x
+    end;
+    repeat lazymatch type of EQs with (?_nmu = _) /\ _ =>
+      let H1 := fresh in destruct EQs as [H1 EQs]; subst _nmu
+    end;
+    clear EQs
   | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
   end.
 
@@ -973,6 +1057,6 @@ Ltac destruct_memaccs XS :=
 End PICINAE_FINTERP.
 
 
-Module PicinaeFInterp (IL: PICINAE_IL) <: PICINAE_FINTERP IL.
-  Include PICINAE_FINTERP IL.
+Module PicinaeFInterp (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) <: PICINAE_FINTERP IL TIL.
+  Include PICINAE_FINTERP IL TIL.
 End PicinaeFInterp.

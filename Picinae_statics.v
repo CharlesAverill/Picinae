@@ -66,10 +66,10 @@ Section OpBounds.
 
 (* Establish upper bounds on various arithmetic and logical operations. *)
 
-Remark Nlt_0_pow2: forall p, 0 < 2^p.
+Lemma Nlt_0_pow2: forall p, 0 < 2^p.
 Proof. intros. apply N.neq_0_lt_0, N.pow_nonzero. discriminate 1. Qed.
 
-Remark Zlt_0_pow2: forall p, (0 < Z.of_N (2^p))%Z.
+Lemma Zlt_0_pow2: forall p, (0 < Z.of_N (2^p))%Z.
 Proof. intro. rewrite <- N2Z.inj_0. apply N2Z.inj_lt. apply Nlt_0_pow2. Qed.
 
 Lemma div_bound: forall n1 n2, N.div n1 n2 <= n1.
@@ -165,10 +165,10 @@ Proof.
 Qed.
 
 Lemma land_bound:
-  forall w x y, x < 2^w -> y < 2^w -> N.land x y < 2^w.
+  forall w x y, x < 2^w -> N.land x y < 2^w.
 Proof.
-  intros. apply logic_op_bound; try assumption.
-  intros. rewrite N.land_spec, Z1, Z2. reflexivity.
+  intros. apply hibits_zero_bound. intros.
+  erewrite N.land_spec, bound_hibits_zero; try eassumption. reflexivity.
 Qed.
 
 Lemma lor_bound:

@@ -68,17 +68,17 @@ Definition hdisj {A B} (h1: heap A) (h2: heap B) := forall a, h1 a = None \/ h2 
 
 (* A "heapy value" is like a regular value, except that if it is a memory (VaM),
    then it holds a partial function instead of a total function. *)
-Definition hval := avalue (option N).
+Inductive hval := HVN (n:N) (w:bitwidth) | HVM (m: addr -> option N) (w:bitwidth).
 Definition to_heap (m: addr -> N) a := Some (m a).
 Definition to_hval (u:value) :=
-  match u with VaN n w => VaN n w | VaM m w => VaM (to_heap m) w end.
+  match u with VaN n w => HVN n w | VaM m w => HVM (to_heap m) w end.
 
 Definition hstore (V:Type) := V -> hval.
 Definition to_hstore {V} s (v:V) := to_hval (s v).
 
 (* restriction of heapy values and heapy stores to a given domain: *)
 Definition resthv {A} (h:heap A) (hu:hval) :=
-  match hu with VaN n w => VaN n w | VaM h' w => VaM (resth h h') w end.
+  match hu with HVN n w => HVN n w | HVM h' w => HVM (resth h h') w end.
 Definition resths {V A} (h:heap A) (hs:hstore V) v := resthv h (hs v).
 
 
@@ -95,7 +95,7 @@ Definition sepconj V P Q : hsprop V :=
    can have many heaps (or none), not just one.  We therefore define heap
    propositions as properties satisfied by ALL heaps in the store. *)
 Definition hprop V (P: heap N -> Prop): hsprop V :=
-  fun hs => forall v m w (SV: hs v = VaM m w), P m.
+  fun hs => forall v m w (SV: hs v = HVM m w), P m.
 
 Definition hfalse {A:Type} (_:A) := False.
 
