@@ -11,7 +11,7 @@
                                                      MMM8MMMMMMMMMMM77   +MMMMZZ
                                                      MMMMMMMMMMMZMDMD77$.ZMZMM78
                                                       MMMMMMMMMMMMMMMMMMMZOMMM+Z
-   Instantiation of Picinae for Intel x86 ISA.         MMMMMMMMMMMMMMMMM^NZMMN+Z
+   Instantiation of Picinae for ARM ISA.               MMMMMMMMMMMMMMMMM^NZMMN+Z
                                                         MMMMMMMMMMMMMMM/.$MZM8O+
    To compile this module, first load and compile:       MMMMMMMMMMMMMM7..$MNDM+
    * Picinae_core                                         MMDMMMMMMMMMZ7..$DM$77
@@ -42,119 +42,94 @@ Require Import Program.Equality.
 Require Import Structures.Equalities.
 Open Scope N.
 
-(* Variables found in IL code lifted from x86 native code: *)
-Inductive x86var :=
-  (* Main memory: MemT 32 *)
-  | V_MEM32
-  (* Flags (1-bit registers): *)
-  | R_AF | R_CF | R_DF | R_OF | R_PF | R_SF | R_ZF (* NumT 1 *)
-  (* Segment selectors (16-bit registers): *)
-  | R_CS | R_DS | R_ES | R_FS | R_GS | R_SS (* NumT 16 *)
-  (* Floating point control register (16-bit): *)
-  | R_FPU_CONTROL (* NumT 16 *)
-  (* Floating point registers (80-bit): *)
-  | R_ST0 | R_ST1 | R_ST2 | R_ST3 | R_ST4 | R_ST5 | R_ST6 | R_ST7 (* NumT 80 *)
-  (* General-purpose registers (32-bit): *)
-  | R_EAX | R_EBX | R_ECX | R_EDX | R_EDI | R_ESI (* NumT 32 *)
-  (* Stack pointer and base pointer (32-bit): *)
-  | R_ESP | R_EBP (* NumT 32 *)
-  (* Modifiable segment base registers (32-bit): *)
-  | R_FS_BASE | R_GS_BASE (* NumT 32 *)
-  (* Descriptor table registers (32-bit): *)
-  | R_LDTR | R_GDTR (* NumT 32 *)
-  (* SSE control register (32-bit): *)
-  | R_MXCSR (* NumT 32 *)
-  (* MMX and SSE registers (256-bit): *)
-  | R_YMM0 | R_YMM1 | R_YMM2  | R_YMM3  | R_YMM4  | R_YMM5  | R_YMM6  | R_YMM7
-  | R_YMM8 | R_YMM9 | R_YMM10 | R_YMM11 | R_YMM12 | R_YMM13 | R_YMM14 | R_YMM15
+(* Variables found in IL code lifted from ARM native code: *)
+Inductive armvar :=
+  (* Main memory: swap between 32 bit(ARMv1-v8) mode and 64 bit(ARMv8) *)
+  | V_MEM32 | V_MEM64
+  (* no equivalent of the segment registers*)
+  (* Floating point (VFP) support and SIMD (NEON) are optional extensions to the ARMv7-A profile.*)
+  (* ARM’s pc register is analogous to IA-32’s EIP register *)
+  | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5 | R_R6 | R_R7
+  | R_R8 | R_R9 | R_R10 | R_R11 | R_R12
+  (*R13, the Stack Pointer |R14, the Link Register| R15, the Program Counter*)
+  | R_SP | R_LR | R_PC
+  (* Current Program Status Register (CPSR)*)
+  | R_M (*(bits 0–4) is the processor mode bits.*)
+  | R_T (* (bit 5) is the Thumb state bit. *)
+  | R_F (* (bit 6) is the FIQ disable bit. *)
+  | R_I (* (bit 7) is the IRQ disable bit. *)
+  | R_A (* (bit 8) is the imprecise data abort disable bit. *)
+  | R_E (* (bit 9) is the data endianness bit. *)
+  | R_IT (* (bits 10–15 and 25–26) is the if-then state bits. *)
+  | R_GE (* (bits 16–19) is the greater-than-or-equal-to bits. *)
+  | R_DNM (* (bits 20–23) is the do not modify bits. *)
+  | R_JF (* (bit 24) is the Java state bit. *)
+  | R_QF (* (bit 27) is the sticky overflow bit. *)
+  | R_VF (* (bit 28) is the overflow bit. *)
+  | R_CF (* (bit 29) is the carry/borrow/extend bit. *)
+  | R_ZF (* (bit 30) is the zero bit. *)
+  | R_NF (* (bit 31) is the negative/less than bit. *)
   (* These meta-variables model page access permissions: *)
   | A_READ | A_WRITE
-  (* Temporaries introduced by the BIL lifter: *)
-  | V_TEMP (n:N).
+  | V_TEMP (n:N) (* Temporaries introduced by the BIL lifter: *).
 
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
    input to the Architecture module, so that it understands how the variable
    identifiers chosen above are syntactically written and how to decide whether
    any two variable instances refer to the same variable. *)
 
-Module MiniX86VarEq <: MiniDecidableType.
-  Definition t := x86var.
-  Definition eq_dec (v1 v2:x86var) : {v1=v2}+{v1<>v2}.
+Module MiniARMVarEq <: MiniDecidableType.
+  Definition t := armvar.
+  Definition eq_dec (v1 v2:armvar) : {v1=v2}+{v1<>v2}.
     decide equality; apply N.eq_dec.
   Defined.  (* <-- This must be Defined (not Qed!) for finterp to work! *)
   Arguments eq_dec v1 v2 : simpl never.
-End MiniX86VarEq.
+End MiniARMVarEq.
 
-Module X86Arch <: Architecture.
-  Module Var := Make_UDT MiniX86VarEq.
+Module ARMArch <: Architecture.
+  Module Var := Make_UDT MiniARMVarEq.
   Definition var := Var.t.
   Definition store := var -> value.
 
   Definition mem_bits := 8%positive.
   Definition mem_readable s a := exists r, s A_READ = VaM r 32 /\ r a <> 0.
   Definition mem_writable s a := exists w, s A_WRITE = VaM w 32 /\ w a <> 0.
-End X86Arch.
+End ARMArch.
 
-(* Instantiate the Picinae modules with the x86 identifiers above. *)
-Module IL_i386 := PicinaeIL X86Arch.
-Export IL_i386.
-Module Theory_i386 := PicinaeTheory IL_i386.
-Export Theory_i386.
-Module Statics_i386 := PicinaeStatics IL_i386.
-Export Statics_i386.
-Module FInterp_i386 := PicinaeFInterp IL_i386 Statics_i386.
-Export FInterp_i386.
-Module SLogic_i386 := PicinaeSLogic IL_i386.
-Export SLogic_i386.
+(* Instantiate the Picinae modules with the arm identifiers above. *)
+Module IL_arm := PicinaeIL ARMArch.
+Export IL_arm.
+Module Theory_arm := PicinaeTheory IL_arm.
+Export Theory_arm.
+Module FInterp_arm := PicinaeFInterp IL_arm.
+Export FInterp_arm.
+Module Statics_arm := PicinaeStatics IL_arm.
+Export Statics_arm.
+Module SLogic_arm := PicinaeSLogic IL_arm.
+Export SLogic_arm.
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
-Definition x86typctx v :=
-  match v with
+Definition armtypctx (id:var) : option typ :=
+  match id with
   | V_MEM32 => Some (MemT 32)
-  | R_AF | R_CF | R_DF | R_OF | R_PF | R_SF | R_ZF => Some (NumT 1)
-  | R_CS | R_DS | R_ES | R_FS | R_GS | R_SS => Some (NumT 16)
-  | R_FPU_CONTROL => Some (NumT 16)
-  | R_ST0 | R_ST1 | R_ST2 | R_ST3 | R_ST4 | R_ST5 | R_ST6 | R_ST7 => Some (NumT 80)
-  | R_EAX | R_EBX | R_ECX | R_EDX | R_EDI | R_ESI => Some (NumT 32)
-  | R_ESP | R_EBP => Some (NumT 32)
-  | R_FS_BASE | R_GS_BASE => Some (NumT 32)
-  | R_LDTR | R_GDTR => Some (NumT 32)
-  | R_MXCSR => Some (NumT 32)
-  | R_YMM0 | R_YMM1 | R_YMM2  | R_YMM3  | R_YMM4  | R_YMM5  | R_YMM6  | R_YMM7
-  | R_YMM8 | R_YMM9 | R_YMM10 | R_YMM11 | R_YMM12 | R_YMM13 | R_YMM14 | R_YMM15 => Some (NumT 256)
+  | V_MEM64 => Some (MemT 64)
+  | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5 | R_R6 | R_R7 => Some (NumT 32)
+  | R_R8 | R_R9 | R_R10 | R_R11 | R_R12 => Some (NumT 32)
+  | R_SP | R_LR | R_PC => Some (NumT 32)
+  | R_M => Some (NumT 5)
+  | R_T | R_F | R_I | R_A | R_E => Some (NumT 1)
+  | R_IT => Some (NumT 8)
+  | R_GE => Some (NumT 4)
+  | R_DNM => Some (NumT 4)
+  | R_JF | R_QF | R_VF | R_CF | R_ZF | R_NF => Some (NumT 1)
   | A_READ | A_WRITE => Some (MemT 32)
   | V_TEMP _ => None
-  end.
+end.
 
-Definition x86_wtm {s v m w} := @models_wtm v x86typctx s m w.
-Definition x86_regsize {s v n w} := @models_regsize v x86typctx s n w.
+Definition arm_wtm {s v m w} := @models_wtm v armtypctx s m w.
+Definition arm_regsize {s v n w} := @models_regsize v armtypctx s n w.
 
-
-
-(* Create some automated machinery for simplifying symbolic expressions commonly
-   arising from x86 instruction operations.  Mostly this involves simplifying
-   (e mod 2^w) whenever e < 2^w. *)
-
-(* Define an abbreviation for x86's parity flag computation, which produces
-   uncomfortably large symbolic expressions. *)
-Definition parity n :=
-  N.lnot ((N.lxor
-    (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
-                      (N.lxor (N.shiftr n 4) n)) 1)
-    (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
-            (N.lxor (N.shiftr n 4) n))) mod 2^1) 1.
-
-Lemma fold_parity: forall n,
-  N.lnot ((N.lxor
-    (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
-                      (N.lxor (N.shiftr n 4) n)) 1)
-    (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
-            (N.lxor (N.shiftr n 4) n))) mod 2^1) 1
-  = parity n.
-Proof. intro. reflexivity. Qed.
-
-
-(* Simplify memory access propositions by observing that on x86, the only part
+(* Simplify memory access propositions by observing that on arm, the only part
    of the store that affects memory accessibility are the page-access bits
    (A_READ and A_WRITE). *)
 
@@ -290,76 +265,25 @@ Proof.
   apply N.shiftr_eq_0. apply N.log2_lt_pow2. reflexivity. assumption.
 Qed.
 
-(* Simplify zero-flag after cmp from a subtraction to a comparison. *)
-Lemma cmp_zf:
-  forall n1 n2 w (LT1: n1 < 2^w) (LT2: n2 < 2^w),
-  (0 =? (2^w + n1 - n2) mod 2^w) = (n1 =? n2).
-Proof.
-  intros. rewrite (N.eqb_compare n1 n2). destruct (n1 ?= n2) eqn:H.
-
-    apply N.compare_eq in H. subst. rewrite N.add_sub, N.mod_same.
-      reflexivity.
-      apply N.pow_nonzero. discriminate.
-
-    rewrite N.mod_small.
-      apply N.eqb_neq, N.neq_sym, N.sub_gt. eapply N.lt_le_trans.
-        exact LT2.
-        apply N.le_add_r.
-      eapply N.add_lt_mono_r. rewrite N.sub_add.
-        apply N.add_lt_mono_l. apply -> N.compare_lt_iff. exact H.
-        apply N.lt_le_incl, N.lt_lt_add_r, LT2.
-
-    rewrite <- N.add_sub_assoc by apply N.lt_le_incl, N.compare_gt_iff, H.
-    rewrite <- N.add_mod_idemp_l, N.mod_same by (apply N.pow_nonzero; discriminate).
-    rewrite N.add_0_l, N.mod_small.
-      apply N.eqb_neq, N.neq_sym, N.sub_gt, N.compare_gt_iff, H.
-      eapply N.le_lt_trans. apply N.le_sub_l. exact LT1.
-Qed.
-
 (* These nested-ifs arise from conditional branches on status flag expressions. *)
 Remark if_if:
-  forall A (b:bool) (x y:A),
-  (if (if b then 1 else N0) then x else y) = (if b then y else x).
+  forall (b:bool) (q1 q2:stmt),
+  (if (if b then 1 else N0) then q1 else q2) = (if b then q2 else q1).
 Proof. intros. destruct b; reflexivity. Qed.
 
 Remark if_not_if:
-  forall A (b:bool) (x y:A),
-  (if (N.lnot (if b then 1 else 0) 1) then x else y) = (if b then x else y).
+  forall (b:bool) (q1 q2:stmt),
+  (if (N.lnot (if b then 1 else 0) 1) then q1 else q2) = (if b then q1 else q2).
 Proof. intros. destruct b; reflexivity. Qed.
 
-Remark if_same:
-  forall A (b:bool) (x:A), (if b then x else x) = x.
-Proof. intros. destruct b; reflexivity. Qed.
-
-
-(* When reducing modulo operations, try auto-solving inequalities of the form
-   x < 2^w. *)
-
-Ltac solve_lt_prim := solve
-[ reflexivity (* solves "<" relations on closed terms *)
-| match goal with
-  | [ |- _ mod _ < _ ] => apply N.mod_upper_bound; discriminate 1
-  | [ M: models x86typctx ?s, R: ?s _ = VaN ?x _ |- ?x < _ ] => apply (x86_regsize M R)
-  | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM
-  | [ |- getmem _ _ _ _ < 2^_ ] => apply getmem_bound; assumption
-  | [ |- N.lxor _ _ < 2^_ ] => apply lxor_bound; solve_lt
-  | [ |- N.land _ _ < 2^_ ] => apply land_bound; solve_lt
-  | [ |- N.lor _ _ < 2^_ ] => apply lor_bound; solve_lt
-  | [ |- N.lnot _ _ < 2^_ ] => apply lnot_bound; solve_lt
-  end
-| (eapply N.le_lt_trans; [ apply N.le_sub_l | solve_lt ]) ]
-with solve_lt := solve
-[ assumption | solve_lt_prim
-| (eapply N.lt_le_trans; [ solve [ eassumption | solve_lt_prim ]
-                         | discriminate 1 ]) ].
 
 (* Implementation note:  The following tactic repeatedly applies all the above
    rewriting lemmas using repeat+rewrite with a long list of lemma names.  This
    seems to be faster than rewrite_strat or autorewrite with a hint database
-   (as of Coq 8.8.2).  Consider changing if performance of rewrite_strat or
+   (as of Coq 8.8.0).  Consider changing if performance of rewrite_strat or
    autorewrite improves in future Coq versions. *)
 
-Ltac x86_rewrite_rules H :=
+Ltac arm_rewrite_rules H :=
   repeat rewrite
      ?N.sub_0_r, ?N.add_0_l, ?N.add_0_r, ?N.mul_0_l, ?N.mul_0_r,
      ?N.land_0_l, ?N.land_0_r, ?N.lor_0_l, ?N.lor_0_r, ?N.lxor_0_l, ?N.lxor_0_r,
@@ -374,12 +298,34 @@ Ltac x86_rewrite_rules H :=
     in H by solve [ discriminate 1 | assumption | reflexivity ].
 
 
-(* Try to auto-simplify modular arithmetic expressions within a Coq expression
-   resulting from functional interpretation of an x86 IL statement. *)
+(* When reducing modulo operations, try auto-solving inequalities of the form
+   x < 2^w. *)
 
-Tactic Notation "simpl_x86" "in" hyp(H) :=
-  rewrite ?fold_parity, ?if_if, ?if_not_if, ?if_same, ?getmem_1 in H;
-  x86_rewrite_rules H;
+Ltac solve_lt_prim :=
+  reflexivity (* solves "<" relations on closed terms *) +
+  eassumption +
+  match goal with
+  | [ |- _ mod _ < _ ] => apply N.mod_upper_bound; discriminate 1
+  | [ M: models armtypctx ?s, R: ?s _ = VaN ?x _ |- ?x < _ ] => apply (arm_regsize M R)
+  | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM
+  | [ |- getmem _ _ _ _ < 2^_ ] => apply getmem_bound; assumption
+  | [ |- N.lxor _ _ < 2^_ ] => apply lxor_bound; solve_lt
+  | [ |- N.land _ _ < 2^_ ] => apply land_bound; solve_lt
+  | [ |- N.lor _ _ < 2^_ ] => apply lor_bound; solve_lt
+  | [ |- N.lnot _ _ < 2^_ ] => apply lnot_bound; solve_lt
+  end +
+  (eapply N.le_lt_trans; [ apply N.le_sub_l | solve_lt ])
+with solve_lt :=
+  solve_lt_prim +
+  (eapply N.lt_le_trans; [ solve_lt_prim | discriminate 1 ]).
+
+
+(* Try to auto-simplify modular arithmetic expressions within a Coq expression
+   resulting from functional interpretation of an arm IL statement. *)
+
+Tactic Notation "simpl_arm" "in" hyp(H) :=
+  rewrite ?if_if, ?if_not_if, ?getmem_1 in H;
+  arm_rewrite_rules H;
   repeat (
     match type of H with
     | context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a) in H; [| assumption | discriminate 1 ]
@@ -388,49 +334,16 @@ Tactic Notation "simpl_x86" "in" hyp(H) :=
     | context [ N.land ?x ?y ] => (erewrite (land_mod_r x y) in H +
                                    erewrite (land_mod_l x y) in H); [| reflexivity | simpl;reflexivity ]
     end;
-    x86_rewrite_rules H
+    arm_rewrite_rules H
   ).
 
-Ltac simpl_x86 :=
+Ltac simpl_arm :=
   lazymatch goal with |- ?G => let H := fresh in let Heq := fresh in
-    remember G as H eqn:Heq; simpl_x86 in Heq; subst H
+    remember G as H eqn:Heq; simpl_arm in Heq; subst H
   end.
 
-(* Simplify x86 memory access assertions produced by step_stmt. *)
-Ltac simpl_memaccs H :=
-  try lazymatch type of H with context [ MemAcc mem_writable ] =>
-    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
-  end;
-  try lazymatch type of H with context [ MemAcc mem_readable ] =>
-    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
-  end.
 
-(* Values of IL temp variables are ignored by the x86 interpreter once the IL
-   block that generated them completes.  We can therefore generalize them
-   away at IL block boundaries to simplify the expression. *)
-Ltac generalize_temps H :=
-  repeat match type of H with context [ update ?s (V_TEMP ?n) ?u ] =>
-    tryif is_var u then fail else
-    lazymatch type of H with context [ Var (V_TEMP ?n) ] => fail | _ =>
-      let tmp := fresh "tmp" in
-      pose (tmp := u);
-      change (update s (V_TEMP n) u) with (update s (V_TEMP n) tmp) in H;
-      clearbody tmp;
-      try fold value in tmp
-    end
-  end.
-
-(* Symbolically evaluate an x86 machine instruction for one step, and simplify
-   the resulting Coq expressions. *)
-Ltac x86_step_and_simplify XS :=
-  step_stmt XS;
-  simpl_memaccs XS;
-  destruct_memaccs XS;
-  generalize_temps XS;
-  simpl_x86 in XS.
-
-
-(* Introduce automated machinery for verifying an x86 machine code subroutine
+(* Introduce automated machinery for verifying an arm machine code subroutine
    (or collection of subroutines) by (1) defining a set of Floyd-Hoare
    invariants (including pre- and post-conditions) and (2) proving that
    symbolically executing the program starting at any invariant point in a
@@ -461,6 +374,36 @@ Proof. injection 1 as. split; assumption. Qed.
 Remark exitof_none a: exitof a None = Exit a. Proof eq_refl.
 Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
 
+(* Simplify arm memory access assertions produced by step_stmt. *)
+Ltac simpl_memaccs H :=
+  repeat first [ rewrite memacc_read_updated in H
+               | rewrite memacc_write_updated in H
+               | rewrite memacc_read_frame in H by discriminate 1
+               | rewrite memacc_write_frame in H by discriminate 1 ].
+
+(* Apply the functional interpreter, and then simplify and separate any
+   memory access assertions into separate hypotheses. *)
+Ltac arm_step_stmt XS :=
+  step_stmt XS;
+  simpl_memaccs XS;
+  destruct_memaccs XS.
+
+(* Values of IL temp variables are ignored by the arm interpreter once the IL
+   block that generated them completes.  We can therefore generalize them
+   away at IL block boundaries to simplify the expression. *)
+Remark generalize_temp upd (s:store) n u:
+  upd = update s (V_TEMP n) u -> exists tmp, upd = update s (V_TEMP n) tmp.
+Proof. intro. exists u. assumption. Qed.
+
+Ltac generalize_temps H :=
+  repeat lazymatch type of H with context [ update ?s (V_TEMP ?n) ?u ] =>
+    tryif is_var u then fail else let upd := fresh in let Heq := fresh in
+    remember (update s (V_TEMP n) u) as upd eqn:Heq in H;
+    simple apply (generalize_temp upd s n u) in Heq;
+    let tmp := fresh "tmp" in destruct Heq as [tmp Heq];
+    subst upd
+  end.
+
 (* Solve a goal of the form (p s a = None), which indicates that program p is
    exiting the subroutine.  For now, we automatically solve for three common
    cases: (A) address a is a constant, allowing function p to fully evaluate
@@ -474,26 +417,34 @@ Ltac prove_prog_exits :=
 
 (* If asked to step the computation when we're already at an invariant point,
    just make the proof goal be the invariant. *)
-Ltac x86_invhere :=
+Ltac arm_invhere :=
   first [ eapply nextinv_here; [reflexivity|]
         | apply nextinv_exn
         | apply nextinv_ret; [ prove_prog_exits |] ];
-  simpl_stores; simpl_x86.
+  simpl_stores; simpl_arm.
+
+(* Symbolically evaluate an arm machine instruction for one step, and simplify
+   the resulting Coq expressions. *)
+Ltac arm_step_and_simplify XS :=
+  stock_store in XS;
+  arm_step_stmt XS;
+  generalize_temps XS;
+  simpl_arm in XS.
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
    instructions, but often it is wiser to pause and do some manual
    simplification of the state at various points.) *)
-Ltac x86_invseek :=
+Ltac arm_invseek :=
   apply NIStep; [reflexivity|];
   let sz := fresh "sz" in let q := fresh "q" in let s := fresh "s" in let x := fresh "x" in
   let IL := fresh "IL" in let XS := fresh "XS" in
   intros sz q s x IL XS;
   apply inj_prog_stmt in IL; destruct IL; subst sz q;
-  x86_step_and_simplify XS;
+  arm_step_and_simplify XS;
   try lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ =>
     (let BC := fresh "BC" in destruct c eqn:BC);
-    x86_step_and_simplify XS
+    arm_step_and_simplify XS
   end;
   repeat match goal with [ u:value |- _ ] => clear u
                        | [ u:option value |- _ ] => clear u end;
@@ -504,12 +455,12 @@ Ltac x86_invseek :=
 (* Clear any stale memory-access hypotheses (arising from previous computation
    steps) and either step to the next machine instruction (if we're not at an
    invariant) or produce an invariant as a proof goal. *)
-Ltac x86_step :=
+Ltac arm_step :=
   repeat match goal with [ H: MemAcc _ _ _ _ _ |- _ ] => clear H end;
-  first [ x86_invseek; try x86_invhere | x86_invhere ].
+  first [ arm_invseek; try arm_invhere | arm_invhere ].
 
 
-Module X86Notations.
+Module ARMNotations.
 
 Notation "Ⓜ m" := (VaM m 32) (at level 20). (* memory value *)
 Notation "ⓑ u" := (VaN u 1) (at level 20). (* bit value *)
@@ -537,8 +488,8 @@ Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* mod
 Notation "x << y" := (N.shiftl x y) (at level 40, left associativity). (* logical shift-left *)
 Notation "x >> y" := (N.shiftr x y) (at level 40, left associativity). (* logical shift-right *)
 Notation "x >>> y" := (ashiftr 32 x y) (at level 40, left associativity). (* arithmetic shift-right *)
-Notation "x .& y" := (N.land x y) (at level 25, left associativity). (* logical and *)
-Notation "x .^ y" := (N.lxor x y) (at level 25, left associativity). (* logical xor *)
-Notation "x .| y" := (N.lor x y) (at level 25, left associativity). (* logical or *)
+Notation "x .& y" := (N.land x y) (at level 55, left associativity). (* logical and *)
+Notation "x .^ y" := (N.lxor x y) (at level 55, left associativity). (* logical xor *)
+Notation "x .| y" := (N.lor x y) (at level 55, left associativity). (* logical or *)
 
-End X86Notations.
+End ARMNotations.
