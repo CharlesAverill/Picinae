@@ -264,7 +264,7 @@ Proof.
   rewrite N.land_lor_distr_l, N.lor_0_r in H.
   replace ((m (N.succ a) 
         .| (m (N.succ (N.succ a)) 
-        .| m (N.succ (N.succ (N.succ a))) << 8) << 8) << 8 .& 255)
+        .| (m (N.succ (N.succ (N.succ a))) << 8) << 8) << 8) .& 255)
     with 0 in H.
   rewrite N.lor_0_r in H. replace 255 with (N.ones 8) in H by reflexivity.
   rewrite N.land_ones, N.mod_small in H by apply WTM.
@@ -272,7 +272,7 @@ Proof.
   clear H. symmetry.
   remember (m (N.succ a) 
         .| (m (N.succ (N.succ a)) 
-        .| m (N.succ (N.succ (N.succ a))) << 8) << 8)
+        .| (m (N.succ (N.succ (N.succ a))) << 8) << 8))
   as z.
   destruct z; try reflexivity.
 Qed.
@@ -292,7 +292,7 @@ Proof.
   apply N.gt_lt, N.mul_lt_mono_pos_r, N.lt_gt in H.
   rewrite N.land_lor_distr_l in H.
   replace ((m (N.succ (N.succ a)) 
-         .| m (N.succ (N.succ (N.succ a))) << 8) << 8 .& 255)
+         .| (m (N.succ (N.succ (N.succ a))) << 8) << 8) .& 255)
     with 0 in H.
   rewrite N.lor_0_r in H. replace 255 with (N.ones 8) in H by reflexivity.
   rewrite N.land_ones, N.mod_small in H by apply WTM.
@@ -300,7 +300,7 @@ Proof.
   assumption.
   clear H. symmetry.
   remember (m (N.succ (N.succ a)) 
-         .| m (N.succ (N.succ (N.succ a))) << 8)
+         .| (m (N.succ (N.succ (N.succ a))) << 8))
   as z.
   destruct z; try reflexivity.
   reflexivity.
@@ -323,12 +323,12 @@ Proof.
   replace 0 with (0*2^8) in H by reflexivity.
   apply N.gt_lt, N.mul_lt_mono_pos_r, N.lt_gt in H; try reflexivity.
   rewrite N.land_lor_distr_l in H.
-  replace (m (N.succ a) .& 255 << 8) with 0 in H.
+  replace (m (N.succ a) .& (255 << 8)) with 0 in H.
   rewrite N.lor_0_l, <- N.shiftl_land, N.shiftl_mul_pow2 in H.
   replace 0 with (0*2^8) in H by reflexivity.
   apply N.gt_lt, N.mul_lt_mono_pos_r, N.lt_gt in H; try reflexivity.
   rewrite N.land_lor_distr_l in H.
-  replace (m (N.succ (N.succ (N.succ a))) << 8 .& 255) with 0 in H.
+  replace ((m (N.succ (N.succ (N.succ a))) << 8) .& 255) with 0 in H.
   rewrite N.lor_0_r in H. replace 255 with (N.ones 8) in H by reflexivity.
   rewrite N.land_ones, N.mod_small in H by apply WTM.
   replace (a+2) with (a+(1+1)) by reflexivity.
@@ -356,12 +356,12 @@ Proof.
   replace 0 with (0*2^8) in H by reflexivity.
   apply N.gt_lt, N.mul_lt_mono_pos_r, N.lt_gt in H; try reflexivity.
   rewrite N.land_lor_distr_l in H.
-  replace (m (N.succ a) .& 255 << 8 << 8) with 0 in H.
+  replace (m (N.succ a) .& (255 << 8 << 8)) with 0 in H.
   rewrite N.lor_0_l, <- N.shiftl_land, N.shiftl_mul_pow2 in H.
   replace 0 with (0*2^8) in H by reflexivity.
   apply N.gt_lt, N.mul_lt_mono_pos_r, N.lt_gt in H; try reflexivity.
   rewrite N.land_lor_distr_l in H.
-  replace (m (N.succ (N.succ a)) .& 255 << 8) with 0 in H.
+  replace (m (N.succ (N.succ a)) .& (255 << 8)) with 0 in H.
   rewrite N.lor_0_l in H. replace 255 with (N.ones 8) in H by reflexivity.
   rewrite <- N.shiftl_land, N.land_ones, N.mod_small in H by apply WTM.
   replace (a+3) with (a+(1+1+1)) by reflexivity.

@@ -101,10 +101,10 @@ Module IL_arm := PicinaeIL ARMArch.
 Export IL_arm.
 Module Theory_arm := PicinaeTheory IL_arm.
 Export Theory_arm.
-Module FInterp_arm := PicinaeFInterp IL_arm.
-Export FInterp_arm.
 Module Statics_arm := PicinaeStatics IL_arm.
 Export Statics_arm.
+Module FInterp_arm := PicinaeFInterp IL_arm Statics_arm.
+Export FInterp_arm.
 Module SLogic_arm := PicinaeSLogic IL_arm.
 Export SLogic_arm.
 
@@ -488,8 +488,8 @@ Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* mod
 Notation "x << y" := (N.shiftl x y) (at level 40, left associativity). (* logical shift-left *)
 Notation "x >> y" := (N.shiftr x y) (at level 40, left associativity). (* logical shift-right *)
 Notation "x >>> y" := (ashiftr 32 x y) (at level 40, left associativity). (* arithmetic shift-right *)
-Notation "x .& y" := (N.land x y) (at level 55, left associativity). (* logical and *)
-Notation "x .^ y" := (N.lxor x y) (at level 55, left associativity). (* logical xor *)
-Notation "x .| y" := (N.lor x y) (at level 55, left associativity). (* logical or *)
+Notation "x .& y" := (N.land x y) (at level 25, left associativity). (* logical and *)
+Notation "x .^ y" := (N.lxor x y) (at level 25, left associativity). (* logical xor *)
+Notation "x .| y" := (N.lor x y) (at level 25, left associativity). (* logical or *)
 
 End ARMNotations.
