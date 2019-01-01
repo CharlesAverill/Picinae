@@ -276,6 +276,17 @@ Remark if_not_if:
   (if (N.lnot (if b then 1 else 0) 1) then q1 else q2) = (if b then q1 else q2).
 Proof. intros. destruct b; reflexivity. Qed.
 
+Remark if_compare0:
+  forall x y, ((if x =? y then 1 else 0) =? 0) = negb (x =? y).
+Proof. intros. destruct (x =? y); reflexivity. Qed.
+
+Remark if_compare1:
+  forall x y, ((if x =? y then 1 else 0) =? 1) = (x =? y).
+Proof. intros. destruct (x =? y); reflexivity. Qed.
+
+Remark if_negb:
+  forall A x (y z:A), (if negb x then y else z) = (if x then z else y).
+Proof. intros. destruct x; reflexivity. Qed.
 
 (* Implementation note:  The following tactic repeatedly applies all the above
    rewriting lemmas using repeat+rewrite with a long list of lemma names.  This
@@ -324,7 +335,8 @@ with solve_lt :=
    resulting from functional interpretation of an arm IL statement. *)
 
 Tactic Notation "simpl_arm" "in" hyp(H) :=
-  rewrite ?if_if, ?if_not_if, ?getmem_1 in H;
+  repeat rewrite ?if_if, ?if_not_if, ?if_compare0, ?if_compare1, ?if_negb in H;
+  rewrite ?getmem_1 in H;
   arm_rewrite_rules H;
   repeat (
     match type of H with
@@ -363,6 +375,39 @@ Ltac simpl_arm :=
    from a larger program), leaving the non-subroutine code undefined (None). *)
 
 
+(* Simplify arm memory access assertions produced by step_stmt. *)
+Ltac simpl_memaccs H :=
+  try lazymatch type of H with context [ MemAcc mem_writable ] =>
+    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
+  end;
+  try lazymatch type of H with context [ MemAcc mem_readable ] =>
+    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
+  end.
+
+(* Values of IL temp variables are ignored by the arm interpreter once the IL
+   block that generated them completes.  We can therefore generalize them
+   away at IL block boundaries to simplify the expression. *)
+Ltac generalize_temps H :=
+  repeat match type of H with context [ update ?s (V_TEMP ?n) ?u ] =>
+    tryif is_var u then fail else
+    lazymatch type of H with context [ Var (V_TEMP ?n) ] => fail | _ =>
+      let tmp := fresh "tmp" in
+      pose (tmp := u);
+      change (update s (V_TEMP n) u) with (update s (V_TEMP n) tmp) in H;
+      clearbody tmp;
+      try fold value in tmp
+    end
+  end.
+
+(* Symbolically evaluate an arm machine instruction for one step, and simplify
+   the resulting Coq expressions. *)
+Ltac arm_step_and_simplify XS :=
+  step_stmt XS;
+  simpl_memaccs XS;
+  destruct_memaccs XS;
+  generalize_temps XS;
+  simpl_arm in XS.
+
 (* Some versions of Coq check injection-heavy proofs very slowly (at Qed).
    This slow-down can be avoided by sequestering prevalent injections into
    lemmas, as we do here. *)
@@ -374,35 +419,6 @@ Proof. injection 1 as. split; assumption. Qed.
 Remark exitof_none a: exitof a None = Exit a. Proof eq_refl.
 Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
 
-(* Simplify arm memory access assertions produced by step_stmt. *)
-Ltac simpl_memaccs H :=
-  repeat first [ rewrite memacc_read_updated in H
-               | rewrite memacc_write_updated in H
-               | rewrite memacc_read_frame in H by discriminate 1
-               | rewrite memacc_write_frame in H by discriminate 1 ].
-
-(* Apply the functional interpreter, and then simplify and separate any
-   memory access assertions into separate hypotheses. *)
-Ltac arm_step_stmt XS :=
-  step_stmt XS;
-  simpl_memaccs XS;
-  destruct_memaccs XS.
-
-(* Values of IL temp variables are ignored by the arm interpreter once the IL
-   block that generated them completes.  We can therefore generalize them
-   away at IL block boundaries to simplify the expression. *)
-Remark generalize_temp upd (s:store) n u:
-  upd = update s (V_TEMP n) u -> exists tmp, upd = update s (V_TEMP n) tmp.
-Proof. intro. exists u. assumption. Qed.
-
-Ltac generalize_temps H :=
-  repeat lazymatch type of H with context [ update ?s (V_TEMP ?n) ?u ] =>
-    tryif is_var u then fail else let upd := fresh in let Heq := fresh in
-    remember (update s (V_TEMP n) u) as upd eqn:Heq in H;
-    simple apply (generalize_temp upd s n u) in Heq;
-    let tmp := fresh "tmp" in destruct Heq as [tmp Heq];
-    subst upd
-  end.
 
 (* Solve a goal of the form (p s a = None), which indicates that program p is
    exiting the subroutine.  For now, we automatically solve for three common
@@ -423,14 +439,6 @@ Ltac arm_invhere :=
         | apply nextinv_ret; [ prove_prog_exits |] ];
   simpl_stores; simpl_arm.
 
-(* Symbolically evaluate an arm machine instruction for one step, and simplify
-   the resulting Coq expressions. *)
-Ltac arm_step_and_simplify XS :=
-  stock_store in XS;
-  arm_step_stmt XS;
-  generalize_temps XS;
-  simpl_arm in XS.
-
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
    instructions, but often it is wiser to pause and do some manual
@@ -442,13 +450,17 @@ Ltac arm_invseek :=
   intros sz q s x IL XS;
   apply inj_prog_stmt in IL; destruct IL; subst sz q;
   arm_step_and_simplify XS;
-  try lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ =>
-    (let BC := fresh "BC" in destruct c eqn:BC);
-    arm_step_and_simplify XS
-  end;
+  repeat lazymatch type of XS with
+         | s=_ /\ x=_ => destruct XS; subst s x
+         | exec_stmt _ _ (if ?c then _ else _) _ _ =>
+             let BC := fresh "BC" in destruct c eqn:BC;
+             arm_step_and_simplify XS
+         | exec_stmt _ _ (N.iter _ _ _) _ _ => fail
+         | _ => arm_step_and_simplify XS
+         end;
   repeat match goal with [ u:value |- _ ] => clear u
-                       | [ u:option value |- _ ] => clear u end;
-  lazymatch type of XS with s=_ /\ x=_ => destruct XS; subst s x end;
+                       | [ n:N |- _ ] => clear n
+                       | [ m:addr->N |- _ ] => clear m end;
   try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
   try first [ rewrite exitof_none | rewrite exitof_some ].
 

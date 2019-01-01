@@ -145,7 +145,7 @@ Proof.
      Fortunately, since this is a pretty simple invariant-set, the symbolic state
      inferred for all the goals trivially satisfies the theorem.  We can solve
      all by assumption or reflexivity: *)
-  all: solve [ reflexivity | assumption ].
+  all: try solve [ reflexivity | assumption ].
 
   (* At Qed, Coq re-checks the proof, including all those symbolic interpretation
      steps, so please be patient again... *)

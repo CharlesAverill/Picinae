@@ -226,6 +226,7 @@ Module Type PICINAE_CORE (Arch: Architecture).
 Import Arch.
 Definition Mb := Npos mem_bits.
 Definition vareq := Var.eq_dec.
+Definition vareqb v1 v2 := if vareq v1 v2 then true else false.
 Instance VarEqDec : EqDec var := { iseq := vareq }.
 
 (* IL expression syntax *)

@@ -966,39 +966,74 @@ Qed.
        symbolic expression that is much simpler because it doesn't need to
        generalize over bitwidths. *)
 
+Definition list_union {A} (eqb: A -> A -> bool) (l1 l2: list A) :=
+  List.fold_left (fun l x => if existsb (eqb x) l2 then l else (x::l)) l1 l2.
+
+Fixpoint vars_read_by_exp e :=
+  match e with 
+  | Var v => v::nil
+  | Word _ _ | Unknown _ => nil
+  | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => vars_read_by_exp e1
+  | Load e1 e2 _ _ | BinOp _ e1 e2 | Concat e1 e2 => list_union vareqb (vars_read_by_exp e1) (vars_read_by_exp e2)
+  | Store e1 e2 e3 _ _ | Ite e1 e2 e3 => list_union vareqb (list_union vareqb (vars_read_by_exp e1) (vars_read_by_exp e2)) (vars_read_by_exp e3)
+  | Let v e1 e2 => list_union vareqb (vars_read_by_exp e1) (List.remove vareq v (vars_read_by_exp e2))
+  end.
+
+Fixpoint noassignb q v :=
+  match q with
+  | Nop | Jmp _ | Exn _ => true
+  | Move v0 _ => if vareq v0 v then false else true
+  | Seq q1 q2 | If _ q1 q2 => andb (noassignb q1 v) (noassignb q2 v)
+  | Rep _ q1 => noassignb q1 v
+  end.
+
+Fixpoint vars_read_by_stmt q :=
+  match q with
+  | Nop | Exn _ => nil
+  | Move _ e | Jmp e => vars_read_by_exp e
+  | Seq q1 q2 => list_union vareqb (vars_read_by_stmt q1) (List.filter (noassignb q1) (vars_read_by_stmt q2))
+  | If e q1 q2 => list_union vareqb (vars_read_by_exp e) (list_union vareqb (vars_read_by_stmt q1) (vars_read_by_stmt q2))
+  | Rep e q1 => list_union vareqb (vars_read_by_exp e) (vars_read_by_stmt q1)
+  end.
+
+Definition other_vars_read (l: list (var * value)) q :=
+  let old := List.map fst l in
+  List.filter (fun v => negb (existsb (vareqb v) old)) (vars_read_by_stmt q).
+
+Ltac tacmap T l :=
+  match l with nil => idtac | ?h::?t => T h; tacmap T t end.
+
 Ltac populate_varlist XS :=
   apply fexec_stmt_init in XS;
   repeat lazymatch type of XS with
   | exec_stmt ?h (updlst (update ?s ?v (VaN ?n ?w)) (rev ?l) vupdate) ?q ?s' ?x /\ ?EQs =>
       simple apply (fexec_stmt_updn h s v n w l q s' x EQs) in XS;
-      let _n := fresh in destruct XS as [_n XS]
+      let _n := fresh "_n" in destruct XS as [_n XS]
   | exec_stmt ?h (updlst (update ?s ?v (VaM ?m ?w)) (rev ?l) vupdate) ?q ?s' ?x /\ ?EQs =>
       simple apply (fexec_stmt_updm h s v m w l q s' x EQs) in XS;
-      let _m := fresh in destruct XS as [_m XS]
+      let _m := fresh "_m" in destruct XS as [_m XS]
   | exec_stmt ?h (updlst (update ?s ?v ?u) (rev ?l) vupdate) ?q ?s' ?x /\ ?EQs =>
       simple apply (fexec_stmt_updu h s v u l q s' x EQs) in XS;
-      let _u := fresh in destruct XS as [_u XS]
+      let _u := fresh "_u" in destruct XS as [_u XS]
   end;
-  repeat lazymatch type of XS with exec_stmt ?h (updlst ?s (rev ?l) vupdate) ?q ?s' ?x /\ ?EQs =>
-    match q with context [ Var ?v ] =>
-      lazymatch l with context [ (v,_)::_ ] => fail | _ =>
-        match goal with
-        | [ SV: s v = VaN ?n ?w |- _ ] =>
-            simple apply (fexec_stmt_hypn h s v n w l q s' x EQs SV) in XS;
-            let _n := fresh in destruct XS as [_n XS]
-        | [ SV: s v = VaM ?m ?w |- _ ] =>
-            simple apply (fexec_stmt_hypm h s v m w l q s' x EQs SV) in XS;
-            let _m := fresh in destruct XS as [_m XS]
-        | [ MDL: models ?c s |- _ ] =>
-            lazymatch eval hnf in (c v) with Some ?t =>
-              simple apply (fexec_stmt_typ h c s v t l q s' x EQs MDL (eq_refl _)) in XS;
-              let _a := match t with NumT _ => fresh "n" | MemT _ => fresh "m" end in
-              let H := fresh "Hsv" in
-                destruct XS as [_a [H XS]]
-            end
-        end
-      end
-    end
+  lazymatch type of XS with exec_stmt ?h (updlst ?s (rev ?l) vupdate) ?q ?s' ?x /\ _ =>
+    let vs := (eval compute in (other_vars_read l q)) in
+    tacmap ltac:(fun v =>
+      try match goal with
+      | [ SV: s v = VaN ?n ?w |- _ ] =>
+          apply (fexec_stmt_hypn h s v n w _ q s' x _ SV) in XS;
+          let _n := fresh "_n" in destruct XS as [_n XS]
+      | [ SV: s v = VaM ?m ?w |- _ ] =>
+          apply (fexec_stmt_hypm h s v m w _ q s' x _ SV) in XS;
+          let _m := fresh "_m" in destruct XS as [_m XS]
+      | [ MDL: models ?c s |- _ ] =>
+          lazymatch eval hnf in (c v) with Some ?t =>
+            apply (fexec_stmt_typ h c s v t _ q s' x _ MDL (eq_refl _)) in XS;
+            let _a := match t with NumT _ => fresh "n" | MemT _ => fresh "m" end in
+            let H := fresh "Hsv" in
+              destruct XS as [_a [H XS]]
+          end
+      end) vs
   end.
 
 

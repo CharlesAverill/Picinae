@@ -511,13 +511,17 @@ Ltac rv_invseek :=
   intros sz q s x IL XS;
   apply inj_prog_stmt in IL; destruct IL; subst sz q;
   rv_step_and_simplify XS;
-  try lazymatch type of XS with exec_stmt _ _ (if ?c then _ else _) _ _ =>
-    (let BC := fresh "BC" in destruct c eqn:BC);
-    rv_step_and_simplify XS
-  end;
+  repeat lazymatch type of XS with
+         | s=_ /\ x=_ => destruct XS; subst s x
+         | exec_stmt _ _ (if ?c then _ else _) _ _ =>
+             let BC := fresh "BC" in destruct c eqn:BC;
+             rv_step_and_simplify XS
+         | exec_stmt _ _ (N.iter _ _ _) _ _ => fail
+         | _ => rv_step_and_simplify XS
+         end;
   repeat match goal with [ u:value |- _ ] => clear u
-                       | [ u:option value |- _ ] => clear u end;
-  lazymatch type of XS with s=_ /\ x=_ => destruct XS; subst s x end;
+                       | [ n:N |- _ ] => clear n
+                       | [ m:addr->N |- _ ] => clear m end;
   try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
   try first [ rewrite exitof_none | rewrite exitof_some ].
 
