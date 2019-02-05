@@ -505,3 +505,124 @@ Notation "x .^ y" := (N.lxor x y) (at level 25, left associativity). (* logical 
 Notation "x .| y" := (N.lor x y) (at level 25, left associativity). (* logical or *)
 
 End ARMNotations.
+
+Definition arm7_varid (n:N) := (* TODO Finish implementation *)
+  match n with
+  | 0 => R_R0
+  | _ => R_R1
+  end.
+
+Inductive arm7asm :=
+| ARM7_And (cond i s rn rd op2:N)
+| ARM7_Eor (cond i s rn rd op2:N)
+| ARM7_Sub (cond i s rn rd op2:N)
+| ARM7_Rsb (cond i s rn rd op2:N)
+| ARM7_Add (cond i s rn rd op2:N)
+| ARM7_Adc (cond i s rn rd op2:N)
+| ARM7_Sbc (cond i s rn rd op2:N)
+| ARM7_Rsc (cond i s rn rd op2:N)
+| ARM7_Tst (cond i s rn rd op2:N)
+| ARM7_Teq (cond i s rn rd op2:N)
+| ARM7_Cmp (cond i s rn rd op2:N)
+| ARM7_Cmn (cond i s rn rd op2:N)
+| ARM7_Orr (cond i s rn rd op2:N)
+| ARM7_Mov (cond i s rn rd op2:N)
+| ARM7_Bic (cond i s rn rd op2:N)
+| ARM7_Mvn (cond i s rn rd op2:N)
+| ARM7_InvalidI (cond i s rn rd op2:N)
+.
+
+Definition xbits n i j := N.land (N.shiftr n i) (N.ones (j - i)).
+
+Definition arm_decode n :=
+  match xbits n 21 24 with
+  | 0 => ARM7_And
+  | 1 => ARM7_Eor
+  | 2 => ARM7_Sub
+  | 3 => ARM7_Rsb
+  | 4 => ARM7_Add
+  | 5 => ARM7_Adc
+  | 6 => ARM7_Sbc
+  | 7 => ARM7_Rsc
+  | 8 => ARM7_Tst
+  | 9 => ARM7_Teq
+  | 10 => ARM7_Cmp
+  | 11 => ARM7_Cmn
+  | 12 => ARM7_Orr
+  | 13 => ARM7_Mov
+  | 14 => ARM7_Bic
+  | 15 => ARM7_Mvn
+  | _ => ARM7_InvalidI (* TODO Implement other instructions *)
+  end (xbits n 28 31) (xbits n 24 25) (xbits n 19 20) (xbits n 16 19) (xbits n 12 15) (xbits n 0 11).
+
+Definition cond_eval cond il :=
+  match cond with
+  | 0 => If (BinOp OP_EQ (Var R_ZF) (Word 1 1)) (il) (Nop)
+  | 1 => If (BinOp OP_EQ (Var R_ZF) (Word 1 0)) (il) (Nop)
+  | 14 => il
+  | _ => il (* TODO Implement other conditions *)
+end.
+
+Definition op2shift op2 := xbits op2 4 11.
+Definition op2rm op2 := xbits op2 0 3.
+Definition op2rot op2 := xbits op2 8 11.
+Definition op2imm op2 := xbits op2 0 7.
+
+Definition op2var i op2 :=
+  match i with
+  | 0 => Var (arm7_varid (op2rm op2))
+  | _ => Word 32 (op2imm op2)
+end.
+
+Definition op2eval i op2 :=
+  match i with
+  | 0 => (BinOp OP_LSHIFT (Word 32 (op2shift op2)) (Var (arm7_varid (op2rm op2))))
+  | _ => (BinOp OP_LSHIFT (Word 32 (op2shift op2)) (Word 32 (op2imm op2)))
+  (* TODO Need to handle arshift and rotate *)
+  end.
+
+Open Scope stmt_scope.
+
+Definition arm_cpsr_update s rd stmts :=
+  match s with
+  | 0 => Nop
+  | _ => match (arm7_varid rd) with
+         | R_PC => Nop
+         | _ => stmts
+         end
+  end.
+
+Definition arm2il (a:addr) armi :=
+  match armi with
+  | ARM7_And cond i s rn rd op2 => Some(4,
+      cond_eval cond (
+        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (op2eval i op2)) $;
+        arm_cpsr_update s rd (
+          Move R_CF (Unknown 1) $;
+          Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32)) $;
+          Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
+        )
+      )
+    )
+  | ARM7_Eor cond i s rn rd op2 => Some(4,
+      cond_eval cond (
+        Move (arm7_varid rd) (BinOp OP_XOR (Var (arm7_varid rn)) (op2eval i op2)) $;
+        arm_cpsr_update s rd (
+          Move R_CF (Unknown 1) $;
+          Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32)) $;
+          Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
+        )
+      )
+    )
+  | ARM7_Sub cond i s rn rd op2 => Some(4,
+      cond_eval cond (
+        Move (arm7_varid rd) (BinOp OP_MINUS (Var (arm7_varid rn)) (op2eval i op2)) $;
+        arm_cpsr_update s rd (
+          Move R_CF (BinOp OP_LE (Var (arm7_varid rd)) (op2var i op2)) $;
+          Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32)) $;
+          Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
+        )
+      )
+    )
+  | _ => Some(4, Nop)
+  end.
