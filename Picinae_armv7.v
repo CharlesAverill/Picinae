@@ -563,10 +563,14 @@ Definition cond_eval cond il :=
   | _ => il (* TODO Implement other conditions *)
 end.
 
-Definition op2shift op2 := xbits op2 4 11.
+Definition op2shift op2 := xbits op2 6 11.
 Definition op2rm op2 := xbits op2 0 3.
-Definition op2rot op2 := xbits op2 8 11.
 Definition op2imm op2 := xbits op2 0 7.
+Definition op2rs op2 := xbits op2 7 11.
+Definition op2shift_type op2 := match xbits op2 5 7 with | 0 => OP_LSHIFT | 1 => OP_RSHIFT | 2 => OP_ARSHIFT | _ => OP_ROT end.
+Definition op2reg_shift_field op2 := xbits op2 3 4.
+Definition op2reg_shift_by_amt op2 := xbits op2 6 11.
+Definition op2rot op2 := xbits op2 7 11.
 
 Definition op2var i op2 :=
   match i with
@@ -576,9 +580,14 @@ end.
 
 Definition op2eval i op2 :=
   match i with
-  | 0 => (BinOp OP_LSHIFT (Word 32 (op2shift op2)) (Var (arm7_varid (op2rm op2))))
-  | _ => (BinOp OP_LSHIFT (Word 32 (op2shift op2)) (Word 32 (op2imm op2)))
-  (* TODO Need to handle arshift and rotate *)
+  | 0 => match op2reg_shift_field op2 with
+         (* Shift Rm by the the 6-bit value in bits 6-11 *)
+         | 0 => (BinOp (op2shift_type op2) (Var (arm7_varid (op2rm op2))) (Word 32 (op2reg_shift_by_amt op2)))
+         (* Shift Rm by the value in the shift register Rs *)
+         | _ => (BinOp (op2shift_type op2) (Var (arm7_varid (op2rm op2))) (Var (arm7_varid (op2rs op2))))
+         end
+  (* Rotate the immediate 8-bit value in bits 0-7 by two times the 4-bit value in bits 8-11. *)
+  | _ => BinOp OP_ROT (Word 32 (op2imm op2)) (Word 32 (2 * (op2rot op2)))
   end.
 
 Open Scope stmt_scope.
