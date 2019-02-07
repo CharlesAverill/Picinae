@@ -535,7 +535,7 @@ Inductive arm7asm :=
 Definition xbits n i j := N.land (N.shiftr n i) (N.ones (j - i)).
 
 Definition arm_decode n :=
-  match xbits n 21 24 with
+  match xbits n 20 24 with
   | 0 => ARM7_And
   | 1 => ARM7_Eor
   | 2 => ARM7_Sub
@@ -553,7 +553,7 @@ Definition arm_decode n :=
   | 14 => ARM7_Bic
   | 15 => ARM7_Mvn
   | _ => ARM7_InvalidI (* TODO Implement other instructions *)
-  end (xbits n 28 31) (xbits n 24 25) (xbits n 19 20) (xbits n 16 19) (xbits n 12 15) (xbits n 0 11).
+  end (xbits n 27 31) (xbits n 24 25) (xbits n 19 20) (xbits n 15 19) (xbits n 11 15) (xbits n 0 11).
 
 Definition cond_eval cond il :=
   match cond with
