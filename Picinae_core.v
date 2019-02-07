@@ -97,6 +97,9 @@ Definition sbop bop w n1 n2 := ofZ w (bop (toZ w n1) (toZ w n2)).
 (* Compute an arithmetic shift-right (sign-extending shift-right). *)
 Definition ashiftr w := sbop Z.shiftr w.
 
+(* Compute rotate right *)
+Definition rot w n1 n2 := (N.shiftr n1 (n2 mod w)) + (N.shiftl n1 (w - (n2 mod w))).
+
 (* Force a result to a given width by dropping the high bits. *)
 Definition towidth w n : value := VaN (n mod (2^w)) w.
 Global Arguments towidth / w n.
@@ -129,6 +132,7 @@ Inductive binop_typ : Type :=
 | OP_LSHIFT (* Left shift *)
 | OP_RSHIFT (* Right shift, fill with 0 *)
 | OP_ARSHIFT (* Right shift, sign extend *)
+| OP_ROT (* Right rotate *)
 | OP_AND (* Bitwise and *)
 | OP_OR (* Bitwise or *)
 | OP_XOR (* Bitwise xor *)
@@ -164,6 +168,7 @@ Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
   | OP_LSHIFT => towidth w (N.shiftl n1 n2)
   | OP_RSHIFT => VaN (N.shiftr n1 n2) w
   | OP_ARSHIFT => VaN (ashiftr w n1 n2) w
+  | OP_ROT => towidth w (rot w n1 n2)
   | OP_AND => VaN (N.land n1 n2) w
   | OP_OR => VaN (N.lor n1 n2) w
   | OP_XOR => VaN (N.lxor n1 n2) w

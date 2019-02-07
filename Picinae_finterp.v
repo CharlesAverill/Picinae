@@ -147,7 +147,7 @@ Qed.
 
 Inductive NoE_SETOP :=
 | NOE_ADD | NOE_SUB | NOE_MUL | NOE_DIV | NOE_MOD | NOE_POW
-| NOE_SHL | NOE_SHR | NOE_AND | NOE_OR  | NOE_XOR | NOE_NOT
+| NOE_SHL | NOE_SHR | NOE_AND | NOE_OR  | NOE_XOR | NOE_NOT | NOE_ROT
 | NOE_NEG
 | NOE_EQB | NOE_LTB | NOE_LEB
 | NOE_SLT | NOE_SLE
@@ -201,7 +201,7 @@ Definition noe_setop_typsig op :=
   | NOE_NEG => bool -> bool
   | NOE_EQB | NOE_LTB | NOE_LEB => N -> N -> bool
   | NOE_SLT | NOE_SLE => bitwidth -> N -> N -> bool
-  | NOE_QUO | NOE_REM | NOE_ASR => bitwidth -> N -> N -> N
+  | NOE_QUO | NOE_REM | NOE_ASR | NOE_ROT => bitwidth -> N -> N -> N
   | NOE_CAS => bitwidth -> bitwidth -> N -> N
   | NOE_ZST => addr -> N
   | NOE_TYP => value -> bool
@@ -221,6 +221,7 @@ Definition noe_setop op : noe_setop_typsig op :=
   | NOE_POW => N.pow
   | NOE_SHL => N.shiftl
   | NOE_SHR => N.shiftr
+  | NOE_ROT => rot
   | NOE_AND => N.land
   | NOE_OR => N.lor
   | NOE_XOR => N.lxor
@@ -273,6 +274,7 @@ Module Type NOEXPAND.
   | NOE_POW => N.pow
   | NOE_SHL => N.shiftl
   | NOE_SHR => N.shiftr
+  | NOE_ROT => rot
   | NOE_AND => N.land
   | NOE_OR => N.lor
   | NOE_XOR => N.lxor
@@ -355,6 +357,7 @@ Definition feval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : uvalue :=
   | OP_LSHIFT => utowidth w (NoE.f NOE_SHL n1 n2)
   | OP_RSHIFT => VaU true (NoE.f NOE_ZST) (NoE.f NOE_SHR n1 n2) w
   | OP_ARSHIFT => VaU true (NoE.f NOE_ZST) (NoE.f NOE_ASR w n1 n2) w
+  | OP_ROT => utowidth w (NoE.f NOE_ROT w n1 n2)
   | OP_AND => VaU true (NoE.f NOE_ZST) (NoE.f NOE_AND n1 n2) w
   | OP_OR => VaU true (NoE.f NOE_ZST) (NoE.f NOE_OR n1 n2) w
   | OP_XOR => VaU true (NoE.f NOE_ZST) (NoE.f NOE_XOR n1 n2) w
