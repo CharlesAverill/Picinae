@@ -513,47 +513,196 @@ Definition arm7_varid (n:N) := (* TODO Finish implementation *)
   end.
 
 Inductive arm7asm :=
-| ARM7_And (cond i s rn rd op2:N)
-| ARM7_Eor (cond i s rn rd op2:N)
-| ARM7_Sub (cond i s rn rd op2:N)
-| ARM7_Rsb (cond i s rn rd op2:N)
-| ARM7_Add (cond i s rn rd op2:N)
-| ARM7_Adc (cond i s rn rd op2:N)
-| ARM7_Sbc (cond i s rn rd op2:N)
-| ARM7_Rsc (cond i s rn rd op2:N)
-| ARM7_Tst (cond i s rn rd op2:N)
-| ARM7_Teq (cond i s rn rd op2:N)
-| ARM7_Cmp (cond i s rn rd op2:N)
-| ARM7_Cmn (cond i s rn rd op2:N)
-| ARM7_Orr (cond i s rn rd op2:N)
-| ARM7_Mov (cond i s rn rd op2:N)
-| ARM7_Bic (cond i s rn rd op2:N)
-| ARM7_Mvn (cond i s rn rd op2:N)
-| ARM7_InvalidI (cond i s rn rd op2:N)
+(* Data proc with immediate values *)
+| ARM7_AndI (cond s rn rd rot imm:N)
+| ARM7_EorI (cond s rn rd rot imm:N)
+| ARM7_SubI (cond s rn rd rot imm:N)
+| ARM7_RsbI (cond s rn rd rot imm:N)
+| ARM7_AddI (cond s rn rd rot imm:N)
+| ARM7_AdcI (cond s rn rd rot imm:N)
+| ARM7_SbcI (cond s rn rd rot imm:N)
+| ARM7_RscI (cond s rn rd rot imm:N)
+| ARM7_TstI (cond s rn rd rot imm:N)
+| ARM7_TeqI (cond s rn rd rot imm:N)
+| ARM7_CmpI (cond s rn rd rot imm:N)
+| ARM7_CmnI (cond s rn rd rot imm:N)
+| ARM7_OrrI (cond s rn rd rot imm:N)
+| ARM7_MovI (cond s rn rd rot imm:N)
+| ARM7_BicI (cond s rn rd rot imm:N)
+| ARM7_MvnI (cond s rn rd rot imm:N)
+| ARM7_InvalidOpI (cond s rn rd rot imm:N)
+(* Data proc with shift amount *)
+| ARM7_AndS (cond s rn rd sa st rm:N)
+| ARM7_EorS (cond s rn rd sa st rm:N)
+| ARM7_SubS (cond s rn rd sa st rm:N)
+| ARM7_RsbS (cond s rn rd sa st rm:N)
+| ARM7_AddS (cond s rn rd sa st rm:N)
+| ARM7_AdcS (cond s rn rd sa st rm:N)
+| ARM7_SbcS (cond s rn rd sa st rm:N)
+| ARM7_RscS (cond s rn rd sa st rm:N)
+| ARM7_TstS (cond s rn rd sa st rm:N)
+| ARM7_TeqS (cond s rn rd sa st rm:N)
+| ARM7_CmpS (cond s rn rd sa st rm:N)
+| ARM7_CmnS (cond s rn rd sa st rm:N)
+| ARM7_OrrS (cond s rn rd sa st rm:N)
+| ARM7_MovS (cond s rn rd sa st rm:N)
+| ARM7_BicS (cond s rn rd sa st rm:N)
+| ARM7_MvnS (cond s rn rd sa st rm:N)
+| ARM7_InvalidOpS (cond s rn rd sa st rm:N)
+(* Data proc with shift register *)
+| ARM7_AndR (cond s rn rd rs st rm:N)
+| ARM7_EorR (cond s rn rd rs st rm:N)
+| ARM7_SubR (cond s rn rd rs st rm:N)
+| ARM7_RsbR (cond s rn rd rs st rm:N)
+| ARM7_AddR (cond s rn rd rs st rm:N)
+| ARM7_AdcR (cond s rn rd rs st rm:N)
+| ARM7_SbcR (cond s rn rd rs st rm:N)
+| ARM7_RscR (cond s rn rd rs st rm:N)
+| ARM7_TstR (cond s rn rd rs st rm:N)
+| ARM7_TeqR (cond s rn rd rs st rm:N)
+| ARM7_CmpR (cond s rn rd rs st rm:N)
+| ARM7_CmnR (cond s rn rd rs st rm:N)
+| ARM7_OrrR (cond s rn rd rs st rm:N)
+| ARM7_MovR (cond s rn rd rs st rm:N)
+| ARM7_BicR (cond s rn rd rs st rm:N)
+| ARM7_MvnR (cond s rn rd rs st rm:N)
+| ARM7_InvalidOpR (cond s rn rd rs st rm:N)
+| ARM7_Invalid
+| ARM7_Unsupported
 .
 
-Definition xbits n i j := N.land (N.shiftr n i) (N.ones (j - i)).
+Definition bits4 b3 b2 b1 b0 := b3*8 + b2*4 + b1*2 + b0.
+Definition bits5 b4 b3 b2 b1 b0 := b4*16 + (bits4 b3 b2 b1 b0).
+Definition bits8 b7 b6 b5 b4 b3 b2 b1 b0 := (bits4 b7 b6 b5 b4)*16 + (bits4 b3 b2 b1 b0).
 
-Definition arm_decode n :=
-  match xbits n 20 24 with
-  | 0 => ARM7_And
-  | 1 => ARM7_Eor
-  | 2 => ARM7_Sub
-  | 3 => ARM7_Rsb
-  | 4 => ARM7_Add
-  | 5 => ARM7_Adc
-  | 6 => ARM7_Sbc
-  | 7 => ARM7_Rsc
-  | 8 => ARM7_Tst
-  | 9 => ARM7_Teq
-  | 10 => ARM7_Cmp
-  | 11 => ARM7_Cmn
-  | 12 => ARM7_Orr
-  | 13 => ARM7_Mov
-  | 14 => ARM7_Bic
-  | 15 => ARM7_Mvn
-  | _ => ARM7_InvalidI (* TODO Implement other instructions *)
-  end (xbits n 27 31) (xbits n 24 25) (xbits n 19 20) (xbits n 15 19) (xbits n 11 15) (xbits n 0 11).
+Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 b17 b16 
+                        b15 b14 b13 b12 b11 b10 b9  b8  b7  b6  b5  b4  b3  b2  b1  b0:N) :=
+
+  match b27,  b26,  b25,  b24,  b23,  b22,  b21,  b20,  b19,  b18,  b17,  b16,  b15,  b14,
+        b13,  b12,  b11,  b10,  b9,    b8,   b7,   b6,   b5,   b4,   b3,   b2,   b1,   b0
+  with
+
+  (* Data proc with shift register *)
+  |    0,    0,    0,  oc3,  oc2,  oc1,  oc0,    s,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
+     rd1,  rd0,  rs3,  rs2,  rs1,  rs0,    0,  st1,  st0,    1,  rm3,  rm2,  rm1,  rm0 =>
+    match bits4 oc3 oc2 oc1 oc0 with
+    | 0 => ARM7_AndR
+    | 1 => ARM7_EorR
+    | 2 => ARM7_SubR
+    | 3 => ARM7_RsbR
+    | 4 => ARM7_AddR
+    | 5 => ARM7_AdcR
+    | 6 => ARM7_SbcR
+    | 7 => ARM7_RscR
+    | 8 => ARM7_TstR
+    | 9 => ARM7_TeqR
+    | 10 => ARM7_CmpR
+    | 11 => ARM7_CmnR
+    | 12 => ARM7_OrrR
+    | 13 => ARM7_MovR
+    | 14 => ARM7_BicR
+    | 15 => ARM7_MvnR
+    | _ => ARM7_InvalidOpS end (bits4 b31 b30 b29 b28) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
+                               (bits4 rs3 rs2 rs1 rs0) (bits4 0 0 st1 st0) (bits4 rm3 rm2 rm1 rm0)
+
+  (* Data proc with shift amount *)
+  |    0,    0,    0,  oc3,  oc2,  oc1,  oc0,    s,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
+     rd1,  rd0,  sa4,  sa3,  sa2,  sa1,  sa0,  st1,  st0,    0,  rm3,  rm2,  rm1,  rm0 =>
+    match bits4 oc3 oc2 oc1 oc0 with
+    | 0 => ARM7_AndS
+    | 1 => ARM7_EorS
+    | 2 => ARM7_SubS
+    | 3 => ARM7_RsbS
+    | 4 => ARM7_AddS
+    | 5 => ARM7_AdcS
+    | 6 => ARM7_SbcS
+    | 7 => ARM7_RscS
+    | 8 => ARM7_TstS
+    | 9 => ARM7_TeqS
+    | 10 => ARM7_CmpS
+    | 11 => ARM7_CmnS
+    | 12 => ARM7_OrrS
+    | 13 => ARM7_MovS
+    | 14 => ARM7_BicS
+    | 15 => ARM7_MvnS
+    | _ => ARM7_InvalidOpS end (bits4 b31 b30 b29 b28) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
+                               (bits5 sa4 sa3 sa2 sa1 sa0) (bits4 0 0 st1 st0) (bits4 rm3 rm2 rm1 rm0)
+
+  (* Data proc with immediate values *)
+  |    0,    0,    1,  oc3,  oc2,  oc1,  oc0,    s,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
+     rd1,  rd0, rot3, rot2, rot1, rot0, imm7, imm6, imm5, imm4, imm3, imm2, imm1, imm0 => 
+    match bits4 oc3 oc2 oc1 oc0 with
+    | 0 => ARM7_AndI
+    | 1 => ARM7_EorI
+    | 2 => ARM7_SubI
+    | 3 => ARM7_RsbI
+    | 4 => ARM7_AddI
+    | 5 => ARM7_AdcI
+    | 6 => ARM7_SbcI
+    | 7 => ARM7_RscI
+    | 8 => ARM7_TstI
+    | 9 => ARM7_TeqI
+    | 10 => ARM7_CmpI
+    | 11 => ARM7_CmnI
+    | 12 => ARM7_OrrI
+    | 13 => ARM7_MovI
+    | 14 => ARM7_BicI
+    | 15 => ARM7_MvnI
+    | _ => ARM7_InvalidOpI end (bits4 b31 b30 b29 b28) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
+                               (bits4 rot3 rot2 rot1 rot0) (bits8 imm7 imm6 imm5 imm4 imm3 imm2 imm1 imm0)
+
+  (* Multiply *)
+  |    0,    0,    0,    0,    0,    0,    a,    s,  rd3,  rd2,  rd1,  rd0,  rn3,  rn2,  
+     rn1,  rn0,  rs3,  rs2,  rs1,  rs0,    1,    0,    0,    1,  rm3,  rm2,  rm1,  rm0 => ARM7_Unsupported
+
+  (* Multiply Long *)
+  |    0,    0,    0,    0,    1,    u,    a,    s,  rd7,  rd6,  rd5,  rd4,  rd3,  rd2,
+     rd1,  rd0,  rn3,  rn2,  rn1,  rn0,    1,    0,    0,    1,  rm3,  rm2,  rm1,  rm0 => ARM7_Unsupported
+
+  (* Branch and exchange *)
+  |    0,    0,    0,    1,    0,    b,    0,    0,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
+     rd1,  rd0,    0,    0,    0,    0,    1,    0,    0,    1,  rm3,  rm2,  rm1,  rm0 => ARM7_Unsupported
+
+  (* Half word data transfer register offset *)
+  |    0,    0,    0,    p,    u,    0,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
+     rd1,  rd0,    0,    0,    0,    0,    1,    s,    h,    1,  rm3,  rm2,  rm1,  rm0 => ARM7_Unsupported
+
+  (* Half word data transfer immediate offset *)
+  |    0,    0,    0,    p,    u,    1,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
+     rd1,  rd0, o1_3, o1_2, o1_1, o1_0,    1,    s,    h,    1, o2_3, o2_2, o2_1, o2_0 => ARM7_Unsupported
+
+  (* Single data transfer *)
+  |    0,    1,    i,    p,    u,    b,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
+     rd1,  rd0,  o11,  o10,   o9,   o8,   o7,   o6,   o5,   o4,   o3,   o2,   o1,   o0 => ARM7_Unsupported
+
+  (* Block data transfer *)
+  |    1,    0,    0,    p,    u,    s,    w,    l,  rn3,  rn2,  rn1,  rn0, rl15, rl14,
+    rl13, rl12, rl11, rl10,  rl9,  rl8,  rl7,  rl6,  rl5,  rl4,  rl3,  rl2,  rl1,  rl0 => ARM7_Unsupported
+
+  (* Branch *)
+  |    1,    0,    1,    l,  o23,  o22,  o21,  o20,  o19,  o18,  o17,  o16,  o15,  o14,
+     o13,  o12,  o11,  o10,   o9,   o8,   o7,   o6,   o5,   o4,   o3,   o2,   o1,   o0 => ARM7_Unsupported
+
+  (* Coprocessor Data Transfer *)
+  |    1,    1,    0,    p,    u,    n,    w,    l,  rn3,  rn2,  rn1,  rn0, crd3, crd2, 
+    crd1, crd0, cpn3, cpn2, cpn1, cpn0,   o7,   o6,   o5,   o4,   o3,   o2,   o1,   o0 => ARM7_Unsupported
+
+  (* Coprocessor Data Ooperation *)
+  |    1,    1,    1,    0,  oc3,  oc2,  oc1,  oc0, crn3, crn2, crn1, crn0, crd3, crd2, 
+    crd1, crd0, cpn3, cpn2, cpn1, cpn0,  cp2,  cp1,  cp0,    0, crm3, crm2, crm1, crm0 => ARM7_Unsupported
+
+  (* Coprocessor Register Transfer *)
+  |    1,    1,    1,    0,  oc3,  oc2,  oc1,    l, crn3, crn2, crn1, crn0,  rd3,  rd2,
+     rd1,  rd0, cpn3, cpn2, cpn1, cpn0,  cp2,  cp1,  cp0,    1, crm3, crm2, crm1, crm0 => ARM7_Unsupported
+
+  (* Software Interrupt *)
+  |    1,    1,    1,    1,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,
+       _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _  => ARM7_Unsupported
+
+  (* Invalid instruction *)
+  |    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,
+       _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _ => ARM7_Invalid
+  end.
 
 Definition cond_eval cond il :=
   match cond with
@@ -563,32 +712,7 @@ Definition cond_eval cond il :=
   | _ => il (* TODO Implement other conditions *)
 end.
 
-Definition op2shift op2 := xbits op2 6 11.
-Definition op2rm op2 := xbits op2 0 3.
-Definition op2imm op2 := xbits op2 0 7.
-Definition op2rs op2 := xbits op2 7 11.
-Definition op2shift_type op2 := match xbits op2 5 7 with | 0 => OP_LSHIFT | 1 => OP_RSHIFT | 2 => OP_ARSHIFT | _ => OP_ROT end.
-Definition op2reg_shift_field op2 := xbits op2 3 4.
-Definition op2reg_shift_by_amt op2 := xbits op2 6 11.
-Definition op2rot op2 := xbits op2 7 11.
-
-Definition op2var i op2 :=
-  match i with
-  | 0 => Var (arm7_varid (op2rm op2))
-  | _ => Word 32 (op2imm op2)
-end.
-
-Definition op2eval i op2 :=
-  match i with
-  | 0 => match op2reg_shift_field op2 with
-         (* Shift Rm by the the 6-bit value in bits 6-11 *)
-         | 0 => (BinOp (op2shift_type op2) (Var (arm7_varid (op2rm op2))) (Word 32 (op2reg_shift_by_amt op2)))
-         (* Shift Rm by the value in the shift register Rs *)
-         | _ => (BinOp (op2shift_type op2) (Var (arm7_varid (op2rm op2))) (Var (arm7_varid (op2rs op2))))
-         end
-  (* Rotate the immediate 8-bit value in bits 0-7 by two times the 4-bit value in bits 8-11. *)
-  | _ => BinOp OP_ROT (Word 32 (op2imm op2)) (Word 32 (2 * (op2rot op2)))
-  end.
+Definition arm7_st st := match st with | 0 => OP_LSHIFT | 1 => OP_RSHIFT | 2 => OP_ARSHIFT | _ => OP_ROT end.
 
 Open Scope stmt_scope.
 
@@ -603,9 +727,9 @@ Definition arm_cpsr_update s rd stmts :=
 
 Definition arm2il (a:addr) armi :=
   match armi with
-  | ARM7_And cond i s rn rd op2 => Some(4,
+  | ARM7_AndI cond s rn rd rot imm => Some(4,
       cond_eval cond (
-        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (op2eval i op2)) $;
+        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp OP_ROT (Word 32 imm) (Word 32 (2 * rot)))) $;
         arm_cpsr_update s rd (
           Move R_CF (Unknown 1) $;
           Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32)) $;
@@ -613,9 +737,9 @@ Definition arm2il (a:addr) armi :=
         )
       )
     )
-  | ARM7_Eor cond i s rn rd op2 => Some(4,
+  | ARM7_AndR cond s rn rd rs st rm => Some(4,
       cond_eval cond (
-        Move (arm7_varid rd) (BinOp OP_XOR (Var (arm7_varid rn)) (op2eval i op2)) $;
+        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Var (arm7_varid rs)))) $;
         arm_cpsr_update s rd (
           Move R_CF (Unknown 1) $;
           Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32)) $;
@@ -623,11 +747,11 @@ Definition arm2il (a:addr) armi :=
         )
       )
     )
-  | ARM7_Sub cond i s rn rd op2 => Some(4,
+  | ARM7_AndS cond s rn rd sa st rm => Some(4,
       cond_eval cond (
-        Move (arm7_varid rd) (BinOp OP_MINUS (Var (arm7_varid rn)) (op2eval i op2)) $;
+        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa))) $;
         arm_cpsr_update s rd (
-          Move R_CF (BinOp OP_LE (Var (arm7_varid rd)) (op2var i op2)) $;
+          Move R_CF (Unknown 1) $;
           Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32)) $;
           Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
         )
