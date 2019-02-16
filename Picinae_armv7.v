@@ -568,7 +568,8 @@ Inductive arm7asm :=
 | ARM7_MvnR (cond s rn rd rs st rm:N)
 | ARM7_InvalidOpR (cond s rn rd rs st rm:N)
 (* Multiplication *)
-| ARM7_Mul (cond s rd rn rs rm:N)
+| ARM7_Mul (cond a s rd rn rs rm:N)
+| ARM7_Mull (cond u a s rd_hi rd_lo rs rm:N)
 | ARM7_Invalid
 | ARM7_Unsupported
 .
@@ -653,16 +654,17 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
     | _ => ARM7_InvalidOpI end (bits4 b31 b30 b29 b28) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
                                (bits4 rot3 rot2 rot1 rot0) (bits8 imm7 imm6 imm5 imm4 imm3 imm2 imm1 imm0)
 
-  (* Multiply - rd=rm*rs+a*rn. a is the accumulate flag. 1 means accumulate, 0 means don't accmulate.
-     We use a*rn to simplify the implementation of arm2il *)
+  (* Multiply *)
   |    0,    0,    0,    0,    0,    0,    a,    s,  rd3,  rd2,  rd1,  rd0,  rn3,  rn2,
      rn1,  rn0,  rs3,  rs2,  rs1,  rs0,    1,    0,    0,    1,  rm3,  rm2,  rm1,  rm0 =>
-     ARM7_Mul (bits4 b31 b30 b29 b28) s (bits4 rd3 rd2 rd1 rd0) (a * (bits4 rn3 rn2 rn1 rn0))
+     ARM7_Mul (bits4 b31 b30 b29 b28) a s (bits4 rd3 rd2 rd1 rd0) (bits4 rn3 rn2 rn1 rn0)
               (bits4 rs3 rs2 rs1 rs0) (bits4 rm3 rm2 rm1 rm0)
 
   (* Multiply Long *)
   |    0,    0,    0,    0,    1,    u,    a,    s,  rd7,  rd6,  rd5,  rd4,  rd3,  rd2,
-     rd1,  rd0,  rn3,  rn2,  rn1,  rn0,    1,    0,    0,    1,  rm3,  rm2,  rm1,  rm0 => ARM7_Unsupported
+     rd1,  rd0,  rs3,  rs2,  rs1,  rs0,    1,    0,    0,    1,  rm3,  rm2,  rm1,  rm0 =>
+     ARM7_Mull (bits4 b31 b30 b29 b28) u a s (bits4 rd7 rd6 rd5 rd4) (bits4 rd3 rd2 rd1 rd0)
+     (bits4 rs3 rs2 rs1 rs0) (bits4 rm3 rm2 rm1 rm0)
 
   (* Branch and exchange *)
   |    0,    0,    0,    1,    0,    b,    0,    0,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
@@ -762,14 +764,40 @@ Definition arm2il (a:addr) armi :=
         )
       )
     )
-  | ARM7_Mul cond s rd rn rs rm => Some(4,
+  | ARM7_Mul cond a s rd rn rs rm => Some(4,
       cond_eval cond (
         Move (arm7_varid rd) (BinOp OP_TIMES (Var (arm7_varid rm)) (Var (arm7_varid rs))) $;
-        Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Var (arm7_varid rn))) $;
+        If (BinOp OP_EQ (Word 32 a) (Word 32 1)) (
+          Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Var (arm7_varid rn)))
+        ) (
+          Nop
+        ) $;
         arm_cpsr_update s rd (
           Move R_CF (Unknown 1) $;
           Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd))) $;
           Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32))
+        )
+      )
+    )
+  | ARM7_Mull cond u a s rd_hi rd_lo rs rm => Some(4,
+      cond_eval cond (
+        If (BinOp OP_EQ (Word 32 a) (Word 32 1)) (
+          Move (arm7_varid rd_hi) (BinOp OP_PLUS (Var (arm7_varid rd_hi))
+                                                 (Cast CAST_HIGH 32 (BinOp OP_TIMES (Var (arm7_varid rm)) (Var (arm7_varid rs))))) $;
+          Move (arm7_varid rd_hi) (BinOp OP_PLUS (Var (arm7_varid rd_hi))
+                                                 (Cast CAST_HIGH 32 (BinOp OP_TIMES (Var (arm7_varid rm)) (Var (arm7_varid rs)))))
+        ) (
+          Move (arm7_varid rd_hi) (Cast CAST_HIGH 32 (BinOp OP_TIMES (Var (arm7_varid rm)) (Var (arm7_varid rs)))) $;
+          Move (arm7_varid rd_lo) (Cast CAST_HIGH 32 (BinOp OP_TIMES (Var (arm7_varid rm)) (Var (arm7_varid rs))))
+        ) $;
+        arm_cpsr_update s rd_hi (
+          Move R_CF (Unknown 1) $;
+          If (BinOp OP_EQ (Word 32 u) (Word 32 0)) (
+            Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd_hi)))
+          ) (
+            Move R_NF (Word 1 0)
+          ) $;
+          Move R_ZF (BinOp OP_AND (BinOp OP_EQ (Var (arm7_varid rd_hi)) (Word 0 32)) (BinOp OP_EQ (Var (arm7_varid rd_lo)) (Word 0 32)))
         )
       )
     )
