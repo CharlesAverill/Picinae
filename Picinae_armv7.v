@@ -582,6 +582,13 @@ Inductive arm7asm :=
 | ARM7_BicR (cond s rn rd rs st rm:N)
 | ARM7_MvnR (cond s rn rd rs st rm:N)
 | ARM7_InvalidOpR (cond s rn rd rs st rm:N)
+(* MSR and MRS instructions -- subset of data operations *)
+| ARM7_MsrCpsrI (cond s rn rd rot imm:N)
+| ARM7_MsrSpsrI (cond s rn rd rot imm:N)
+| ARM7_MsrCpsr (cond s rn rd sa st rm:N)
+| ARM7_MsrSpsr (cond s rn rd sa st rm:N)
+| ARM7_MrsCpsr (cond s rn rd sa st rm:N)
+| ARM7_MrsSpsr (cond s rn rd sa st rm:N)
 (* Multiplication *)
 | ARM7_Mul (cond a s rd rn rs rm:N)
 | ARM7_Mull (cond u a s rd_hi rd_lo rs rm:N)
@@ -640,10 +647,22 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
     | 5 => ARM7_AdcS
     | 6 => ARM7_SbcS
     | 7 => ARM7_RscS
-    | 8 => ARM7_TstS
-    | 9 => ARM7_TeqS
-    | 10 => ARM7_CmpS
-    | 11 => ARM7_CmnS
+    | 8 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
+           |     0,   1,   0,   0,   1,   1,   1,   1,   1 => ARM7_MrsSpsr
+           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_TstS
+           end
+    | 9 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
+           |     0,   1,   0,   0,   1,   1,   1,   1,   1 => ARM7_MsrCpsr
+           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_TeqS
+           end
+    | 10 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
+           |     0,   1,   0,   0,   1,   1,   1,   1,   1 => ARM7_MrsCpsr
+           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_CmpS
+           end
+    | 11 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
+           |     0,   1,   0,   0,   1,   1,   1,   1,   1 => ARM7_MsrSpsr
+           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_CmnS
+           end
     | 12 => ARM7_OrrS
     | 13 => ARM7_MovS
     | 14 => ARM7_BicS
@@ -664,9 +683,15 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
     | 6 => ARM7_SbcI
     | 7 => ARM7_RscI
     | 8 => ARM7_TstI
-    | 9 => ARM7_TeqI
+    | 9 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
+           |     0,   1,   0,   0,   0,   1,   1,   1,   1 => ARM7_MsrCpsrI
+           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_TeqI
+           end
     | 10 => ARM7_CmpI
-    | 11 => ARM7_CmnI
+    | 11 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
+           |     0,   1,   0,   0,   0,   1,   1,   1,   1 => ARM7_MsrSpsrI
+           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_CmnI
+           end
     | 12 => ARM7_OrrI
     | 13 => ARM7_MovI
     | 14 => ARM7_BicI
