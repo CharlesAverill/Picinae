@@ -594,6 +594,11 @@ Inductive arm7asm :=
 | ARM7_Mull (cond u a s rd_hi rd_lo rs rm:N)
 (* Branch *)
 | ARM7_Branch (cond l offset:N)
+(* Load and store *)
+| ARM7_LdrI (cond p u b w rn rd imm:N)
+| ARM7_StrI (cond p u b w rn rd imm:N)
+| ARM7_LdrS (cond p u b w rn rd sa st rm:N)
+| ARM7_StrS (cond p u b w rn rd sa st rm:N)
 | ARM7_Invalid
 | ARM7_Unsupported
 .
@@ -601,6 +606,8 @@ Inductive arm7asm :=
 Definition bits4 b3 b2 b1 b0 := b3*8 + b2*4 + b1*2 + b0.
 Definition bits5 b4 b3 b2 b1 b0 := b4*16 + (bits4 b3 b2 b1 b0).
 Definition bits8 b7 b6 b5 b4 b3 b2 b1 b0 := (bits4 b7 b6 b5 b4)*16 + (bits4 b3 b2 b1 b0).
+Definition bits12 b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1 b0 :=
+  (bits4 b11 b10 b9 b8)*256 + (bits4 b7 b6 b5 b4)*16 + (bits4 b3 b2 b1 b0).
 Definition bits24 b23 b22 b21 b20 b19 b18 b17 b16 b15 b14 b13 b12 b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1 b0 :=
   (bits4 b23 b22 b21 b20)*1048576 + (bits4 b19 b18 b17 b16)*65536 + (bits4 b15 b14 b13 b12)*4096 + 
   (bits4 b11 b10 b9 b8)*256 + (bits4 b7 b6 b5 b4)*16 + (bits4 b3 b2 b1 b0).
@@ -723,9 +730,23 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
   |    0,    0,    0,    p,    u,    1,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
      rd1,  rd0, o1_3, o1_2, o1_1, o1_0,    1,    s,    h,    1, o2_3, o2_2, o2_1, o2_0 => ARM7_Unsupported
 
-  (* Single data transfer *)
-  |    0,    1,    i,    p,    u,    b,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
-     rd1,  rd0,  o11,  o10,   o9,   o8,   o7,   o6,   o5,   o4,   o3,   o2,   o1,   o0 => ARM7_Unsupported
+  (* Single data transfer register offset *)
+  |    0,    1,    0,    p,    u,    b,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
+     rd1,  rd0,  sa4,  sa3,  sa2,  sa1,  sa0,  st1,  st0,    0,  rm0,  rm1,  rm2,  rm3 =>
+    match l with
+    | 0 => ARM7_StrS
+    | _ => ARM7_LdrS
+    end (bits4 b31 b30 b29 b28) p u b w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
+        (bits5 sa4 sa3 sa2 sa1 sa0) (bits4 0 0 st1 st0) (bits4 rm3 rm2 rm1 rm0)
+
+  (* Single data transfer immediate offset *)
+  |    0,    1,    1,    p,    u,    b,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
+     rd1,  rd0,imm11,imm10, imm9, imm8, imm7, imm6, imm5, imm4, imm3, imm2, imm1, imm0 =>
+    match l with
+    | 0 => ARM7_StrI
+    | _ => ARM7_LdrI
+    end (bits4 b31 b30 b29 b28) p u b w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
+        (bits12 imm1 imm10 imm9 imm8 imm7 imm6 imm5 imm4 imm3 imm2 imm1 imm0)
 
   (* Block data transfer *)
   |    1,    0,    0,    p,    u,    s,    w,    l,  rn3,  rn2,  rn1,  rn0, rl15, rl14,
