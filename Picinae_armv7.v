@@ -800,6 +800,9 @@ Definition arm_cpsr_update s rd stmts :=
          end
   end.
 
+Definition ldr_str_word_bit b := match b with | 0 => 4 | _ => 1 end.
+Definition ldr_str_up_bit u := match u with | 0 => OP_MINUS | _ => OP_PLUS end.
+
 Definition arm2il (ad:addr) armi :=
   match armi with
   | ARM7_AndI cond s rn rd rot imm => Some(4,
@@ -938,6 +941,60 @@ Definition arm2il (ad:addr) armi :=
                   (BinOp match u with | 0 => OP_MINUS | _ => OP_PLUS end
                          (Var (arm7_varid rn))
                          (Word 32 imm))
+      end
+    )
+  | ARM7_LdrS cond p u b w rn rd sa st rm => Some(4,
+      match p with
+      | 1 =>
+        Move (arm7_varid rd)
+             (Load (Var V_MEM32)
+                   (BinOp (ldr_str_up_bit u)
+                          (Var (arm7_varid rn))
+                          (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa)))
+                          LittleE
+                          (ldr_str_word_bit w)
+             )
+      | _ =>
+        Move (arm7_varid rd)
+             (Load (Var V_MEM32)
+                   (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa))
+                   LittleE
+                   (ldr_str_word_bit w)
+             )
+      end $;
+      match w with
+      | 0 => Nop
+      | _ => Move (arm7_varid rn)
+                  (BinOp (ldr_str_up_bit u)
+                         (Var (arm7_varid rn))
+                         (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa)))
+      end
+    )
+  | ARM7_StrS cond p u b w rn rd sa st rm => Some(4,
+      match p with
+      | 1 =>
+        Move V_MEM32 (Store (Var V_MEM32)
+                            (BinOp (ldr_str_up_bit u)
+                                   (Var (arm7_varid rn))
+                                   (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa)))
+                            (Var (arm7_varid rd))
+                            LittleE
+                            (ldr_str_word_bit w)
+                     )
+      | _ =>
+        Move (arm7_varid rd)
+             (Load (Var V_MEM32)
+                   (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa))
+                   LittleE
+                   (ldr_str_word_bit w)
+             )
+      end $;
+      match w with
+      | 0 => Nop
+      | _ => Move (arm7_varid rn)
+                  (BinOp (ldr_str_up_bit u)
+                         (Var (arm7_varid rn))
+                         (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa)))
       end
     )
   | _ => Some(4, Nop)
