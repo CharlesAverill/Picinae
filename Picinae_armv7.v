@@ -891,56 +891,32 @@ Definition arm2il (ad:addr) armi :=
     )
   | ARM7_LdrI cond p u b w rn rd imm => Some(4,
       match p with
-      | 1 =>
-        Move (arm7_varid rd)
-             (Load (Var V_MEM32)
-                   (BinOp match u with | 0 => OP_MINUS | _ => OP_PLUS end
-                          (Var (arm7_varid rn))
-                          (Word 32 imm))
-                          LittleE
-                          match b with | 0 => 1 | _ => 4 end
-             )
-      | _ =>
-        Move (arm7_varid rd)
-             (Load (Var V_MEM32)
-                   (Word 32 imm)
-                   LittleE
-                   match b with | 0 => 1 | _ => 4 end
-             )
+      | 1 => Move (arm7_varid rd) (Load (Var V_MEM32)
+                                        (BinOp (ldr_str_up_bit u) (Var (arm7_varid rn)) (Word 32 imm))
+                                        LittleE
+                                        (ldr_str_word_bit b))
+      | _ => Move (arm7_varid rd) (Load (Var V_MEM32)
+                                        (Word 32 imm)
+                                        LittleE
+                                        (ldr_str_word_bit b))
       end $;
       match w with
       | 0 => Nop
-      | _ => Move (arm7_varid rn)
-                  (BinOp match u with | 0 => OP_MINUS | _ => OP_PLUS end
-                         (Var (arm7_varid rn))
-                         (Word 32 imm))
+      | _ => Move (arm7_varid rn) (BinOp (ldr_str_up_bit u) (Var (arm7_varid rn)) (Word 32 imm))
       end
     )
   | ARM7_StrI cond p u b w rn rd imm => Some(4,
       match p with
-      | 1 =>
-        Move V_MEM32 (Store (Var V_MEM32)
-                            (BinOp match u with | 0 => OP_MINUS | _ => OP_PLUS end
-                                   (Var (arm7_varid rn))
-                                   (Word 32 imm))
-                            (Var (arm7_varid rd))
-                            LittleE
-                            match b with | 0 => 1 | _ => 4 end
-                     )
-      | _ =>
-        Move (arm7_varid rd)
-             (Load (Var V_MEM32)
-                   (Word 32 imm)
-                   LittleE
-                   match b with | 0 => 1 | _ => 4 end
-             )
+      | 1 => Move V_MEM32 (Store (Var V_MEM32)
+                          (BinOp (ldr_str_up_bit u) (Var (arm7_varid rn)) (Word 32 imm))
+                          (Var (arm7_varid rd))
+                          LittleE
+                          (ldr_str_word_bit b))
+      | _ => Move (arm7_varid rd) (Load (Var V_MEM32) (Word 32 imm) LittleE (ldr_str_word_bit b))
       end $;
       match w with
       | 0 => Nop
-      | _ => Move (arm7_varid rn)
-                  (BinOp match u with | 0 => OP_MINUS | _ => OP_PLUS end
-                         (Var (arm7_varid rn))
-                         (Word 32 imm))
+      | _ => Move (arm7_varid rn) (BinOp (ldr_str_up_bit u) (Var (arm7_varid rn)) (Word 32 imm))
       end
     )
   | ARM7_LdrS cond p u b w rn rd sa st rm => Some(4,
@@ -951,15 +927,15 @@ Definition arm2il (ad:addr) armi :=
                    (BinOp (ldr_str_up_bit u)
                           (Var (arm7_varid rn))
                           (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa)))
-                          LittleE
-                          (ldr_str_word_bit w)
+                   LittleE
+                   (ldr_str_word_bit b)
              )
       | _ =>
         Move (arm7_varid rd)
              (Load (Var V_MEM32)
                    (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa))
                    LittleE
-                   (ldr_str_word_bit w)
+                   (ldr_str_word_bit b)
              )
       end $;
       match w with
@@ -972,22 +948,18 @@ Definition arm2il (ad:addr) armi :=
     )
   | ARM7_StrS cond p u b w rn rd sa st rm => Some(4,
       match p with
-      | 1 =>
-        Move V_MEM32 (Store (Var V_MEM32)
-                            (BinOp (ldr_str_up_bit u)
-                                   (Var (arm7_varid rn))
-                                   (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa)))
-                            (Var (arm7_varid rd))
-                            LittleE
-                            (ldr_str_word_bit w)
-                     )
-      | _ =>
-        Move (arm7_varid rd)
-             (Load (Var V_MEM32)
-                   (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa))
-                   LittleE
-                   (ldr_str_word_bit w)
-             )
+      | 1 => Move V_MEM32 (Store (Var V_MEM32)
+                                 (BinOp (ldr_str_up_bit u)
+                                        (Var (arm7_varid rn))
+                                        (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa)))
+                                 (Var (arm7_varid rd))
+                                 LittleE
+                                 (ldr_str_word_bit b))
+      | _ => Move (arm7_varid rd)
+                  (Load (Var V_MEM32)
+                        (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa))
+                        LittleE
+                        (ldr_str_word_bit b))
       end $;
       match w with
       | 0 => Nop
