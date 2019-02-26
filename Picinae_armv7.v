@@ -599,6 +599,10 @@ Inductive arm7asm :=
 | ARM7_StrI (cond p u b w rn rd imm:N)
 | ARM7_LdrS (cond p u b w rn rd sa st rm:N)
 | ARM7_StrS (cond p u b w rn rd sa st rm:N)
+| ARM7_LdrHI (cond p u w rn rd s h off:N)
+| ARM7_StrHI (cond p u w rn rd s h off:N)
+| ARM7_LdrHS (cond p u w rn rd s h rm:N)
+| ARM7_StrHS (cond p u w rn rd s h rm:N)
 (* Swap instruction *)
 | ARM7_Swp (cond b rn rd rm:N)
 | ARM7_Invalid
@@ -730,12 +734,21 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
     match s, h, l with
     | 0, 0, 0 => ARM7_Swp (bits4 b31 b30 b29 b28) b (bits4 rn3 rn2 rn1 rn0)
                           (bits4 rd3 rd2 rd1 rd0) (bits4 rm3 rm2 rm1 rm0)
-    | _, _, _ => ARM7_Unsupported
+    | _, _, 0 => ARM7_StrHS (bits4 b31 b30 b29 b28) p u w (bits4 rn3 rn2 rn1 rn0)
+                            (bits4 rd3 rd2 rd1 rd0) s h (bits4 rm3 rm2 rm1 rm0)
+    | _, _, _ => ARM7_LdrHS (bits4 b31 b30 b29 b28) p u w (bits4 rn3 rn2 rn1 rn0)
+                            (bits4 rd3 rd2 rd1 rd0) s h (bits4 rm3 rm2 rm1 rm0)
     end
 
   (* Half word data transfer immediate offset *)
   |    0,    0,    0,    p,    u,    1,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
-     rd1,  rd0, o1_3, o1_2, o1_1, o1_0,    1,    s,    h,    1, o2_3, o2_2, o2_1, o2_0 => ARM7_Unsupported
+     rd1,  rd0,   o7,   o6,   o5,   o4,    1,    s,    h,    1,   o3,   o2,   o1,   o0 =>
+    match l with
+    | 0 => ARM7_StrHI
+    | _ => ARM7_LdrHI
+    end (bits4 b31 b30 b29 b28) p u w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
+         s h (bits8 o7 o6 o5 o4 o3 o2 o1 o0)
+
 
   (* Single data transfer register offset *)
   |    0,    1,    0,    p,    u,    b,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
