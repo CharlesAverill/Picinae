@@ -1053,5 +1053,67 @@ Definition arm2il (ad:addr) armi :=
                          (Var (arm7_varid rm)))
       end
     )
+  | ARM7_LdrHI cond p u w rn rd s h off => Some(4,
+      match p with
+      | 1 =>
+        Move (arm7_varid rd)
+             (Load (Var V_MEM32)
+                   (Cast (ldr_str_signed_bit s)
+                         (ldr_str_half_word_bit h)
+                         (BinOp (ldr_str_up_bit u)
+                                (Var (arm7_varid rn))
+                                (Word 32 off))
+                   )
+                   LittleE
+                   4
+             )
+      | _ =>
+        Move (arm7_varid rd)
+             (Load (Var V_MEM32)
+                   (Cast (ldr_str_signed_bit s)
+                         (ldr_str_half_word_bit h)
+                         (Word 32 off)
+                   )
+                   LittleE
+                   4
+             )
+      end $;
+      match w with
+      | 0 => Nop
+      | _ => Move (arm7_varid rn)
+                  (BinOp (ldr_str_up_bit u)
+                         (Var (arm7_varid rn))
+                         (Word 32 off))
+      end
+    )
+  | ARM7_StrHI cond p u w rn rd s h off => Some(4,
+      match p with
+      | 1 => Move V_MEM32 (Store (Var V_MEM32)
+                                 (Cast (ldr_str_signed_bit s)
+                                       (ldr_str_half_word_bit h)
+                                       (BinOp (ldr_str_up_bit u)
+                                              (Var (arm7_varid rn))
+                                              (Word 32 off))
+                                       )
+                                 (Var (arm7_varid rd))
+                                 LittleE
+                                 4)
+      | _ => Move (arm7_varid rd)
+                  (Load (Var V_MEM32)
+                        (Cast (ldr_str_signed_bit s)
+                              (ldr_str_half_word_bit h)
+                              (Word 32 off)
+                        )
+                        LittleE
+                        4)
+      end $;
+      match w with
+      | 0 => Nop
+      | _ => Move (arm7_varid rn)
+                  (BinOp (ldr_str_up_bit u)
+                         (Var (arm7_varid rn))
+                         (Word 32 off))
+      end
+    )
   | _ => Some(4, Nop)
   end.
