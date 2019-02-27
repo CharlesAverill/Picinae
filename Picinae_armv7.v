@@ -799,15 +799,28 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
        _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _ => ARM7_Invalid
   end.
 
+Definition bit_set := (Word 1 1).
+Definition bit_clr := (Word 1 0).
+
 Definition cond_eval cond il :=
   match cond with
-  | 0 => If (BinOp OP_EQ (Var R_ZF) (Word 1 1)) (il) (Nop)
-  | 1 => If (BinOp OP_EQ (Var R_ZF) (Word 1 0)) (il) (Nop)
+  | 0 => If (BinOp OP_EQ (Var R_ZF) bit_set) (il) (Nop)
+  | 1 => If (BinOp OP_EQ (Var R_ZF) bit_clr) (il) (Nop)
+  | 2 => If (BinOp OP_EQ (Var R_CF) bit_set) (il) (Nop)
+  | 3 => If (BinOp OP_EQ (Var R_CF) bit_clr) (il) (Nop)
+  | 4 => If (BinOp OP_EQ (Var R_NF) bit_set) (il) (Nop)
+  | 5 => If (BinOp OP_EQ (Var R_NF) bit_clr) (il) (Nop)
+  | 6 => If (BinOp OP_EQ (Var R_VF) bit_set) (il) (Nop)
+  | 7 => If (BinOp OP_EQ (Var R_VF) bit_clr) (il) (Nop)
+  | 8 => If (BinOp OP_AND (BinOp OP_EQ (Var R_CF) bit_set) (BinOp OP_EQ (Var R_ZF) bit_clr)) (il) (Nop)
+  | 9 => If (BinOp OP_OR (BinOp OP_EQ (Var R_CF) bit_clr) (BinOp OP_EQ (Var R_ZF) bit_set)) (il) (Nop)
+  | 10 => If (BinOp OP_EQ (Var R_NF) (Var R_VF)) (il) (Nop)
+  | 11 => If (BinOp OP_NEQ (Var R_NF) (Var R_VF)) (il) (Nop)
+  | 12 => If (BinOp OP_AND (BinOp OP_EQ (Var R_ZF) bit_clr) (BinOp OP_EQ (Var R_NF) (Var R_VF))) (il) (Nop)
+  | 13 => If (BinOp OP_OR (BinOp OP_EQ (Var R_ZF) bit_set) (BinOp OP_NEQ (Var R_NF) (Var R_VF))) (il) (Nop)
   | 14 => il
-  | _ => il (* TODO Implement other conditions *)
+  | _ => il (* TODO Invalid condition.  Throw an exception? *)
 end.
-
-Definition arm7_st st := match st with | 0 => OP_LSHIFT | 1 => OP_RSHIFT | 2 => OP_ARSHIFT | _ => OP_ROT end.
 
 Open Scope stmt_scope.
 
@@ -820,6 +833,7 @@ Definition arm_cpsr_update s rd stmts :=
          end
   end.
 
+Definition arm7_st st := match st with | 0 => OP_LSHIFT | 1 => OP_RSHIFT | 2 => OP_ARSHIFT | _ => OP_ROT end.
 Definition ldr_str_word_bit b := match b with | 0 => 4 | _ => 1 end.
 Definition ldr_str_up_bit u := match u with | 0 => OP_MINUS | _ => OP_PLUS end.
 Definition ldr_str_half_word_bit h := match h with | 0 => 8 | _ => 16 end.
