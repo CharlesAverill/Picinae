@@ -913,6 +913,7 @@ Definition arm2il (ad:addr) armi :=
       )
     )
   | ARM7_LdrI cond p u b w rn rd imm => Some(4,
+      cond_eval cond (
       match p with
       | 1 => Move (arm7_varid rd) (Load (Var V_MEM32)
                                         (BinOp (ldr_str_up_bit u) (Var (arm7_varid rn)) (Word 32 imm))
@@ -926,9 +927,10 @@ Definition arm2il (ad:addr) armi :=
       match w with
       | 0 => Nop
       | _ => Move (arm7_varid rn) (BinOp (ldr_str_up_bit u) (Var (arm7_varid rn)) (Word 32 imm))
-      end
+      end)
     )
   | ARM7_StrI cond p u b w rn rd imm => Some(4,
+      cond_eval cond (
       match p with
       | 1 => Move V_MEM32 (Store (Var V_MEM32)
                           (BinOp (ldr_str_up_bit u) (Var (arm7_varid rn)) (Word 32 imm))
@@ -940,9 +942,10 @@ Definition arm2il (ad:addr) armi :=
       match w with
       | 0 => Nop
       | _ => Move (arm7_varid rn) (BinOp (ldr_str_up_bit u) (Var (arm7_varid rn)) (Word 32 imm))
-      end
+      end)
     )
   | ARM7_LdrS cond p u b w rn rd sa st rm => Some(4,
+      cond_eval cond (
       match p with
       | 1 =>
         Move (arm7_varid rd)
@@ -967,9 +970,10 @@ Definition arm2il (ad:addr) armi :=
                   (BinOp (ldr_str_up_bit u)
                          (Var (arm7_varid rn))
                          (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa)))
-      end
+      end)
     )
   | ARM7_StrS cond p u b w rn rd sa st rm => Some(4,
+      cond_eval cond (
       match p with
       | 1 => Move V_MEM32 (Store (Var V_MEM32)
                                  (BinOp (ldr_str_up_bit u)
@@ -990,9 +994,10 @@ Definition arm2il (ad:addr) armi :=
                   (BinOp (ldr_str_up_bit u)
                          (Var (arm7_varid rn))
                          (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa)))
-      end
+      end)
     )
   | ARM7_LdrHS cond p u w rn rd s h rm => Some(4,
+      cond_eval cond (
       match p with
       | 1 =>
         Move (arm7_varid rd)
@@ -1023,9 +1028,10 @@ Definition arm2il (ad:addr) armi :=
                   (BinOp (ldr_str_up_bit u)
                          (Var (arm7_varid rn))
                          (Var (arm7_varid rm)))
-      end
+      end)
     )
   | ARM7_StrHS cond p u w rn rd s h rm => Some(4,
+      cond_eval cond (
       match p with
       | 1 => Move V_MEM32 (Store (Var V_MEM32)
                                  (Cast (ldr_str_signed_bit s)
@@ -1052,9 +1058,10 @@ Definition arm2il (ad:addr) armi :=
                   (BinOp (ldr_str_up_bit u)
                          (Var (arm7_varid rn))
                          (Var (arm7_varid rm)))
-      end
+      end)
     )
   | ARM7_LdrHI cond p u w rn rd s h off => Some(4,
+      cond_eval cond (
       match p with
       | 1 =>
         Move (arm7_varid rd)
@@ -1085,9 +1092,10 @@ Definition arm2il (ad:addr) armi :=
                   (BinOp (ldr_str_up_bit u)
                          (Var (arm7_varid rn))
                          (Word 32 off))
-      end
+      end)
     )
   | ARM7_StrHI cond p u w rn rd s h off => Some(4,
+      cond_eval cond (
       match p with
       | 1 => Move V_MEM32 (Store (Var V_MEM32)
                                  (Cast (ldr_str_signed_bit s)
@@ -1114,7 +1122,7 @@ Definition arm2il (ad:addr) armi :=
                   (BinOp (ldr_str_up_bit u)
                          (Var (arm7_varid rn))
                          (Word 32 off))
-      end
+      end)
     )
   | ARM7_Swp cond b rn rd rm => Some(4,
       cond_eval cond (
