@@ -824,6 +824,7 @@ Definition ldr_str_word_bit b := match b with | 0 => 4 | _ => 1 end.
 Definition ldr_str_up_bit u := match u with | 0 => OP_MINUS | _ => OP_PLUS end.
 Definition ldr_str_half_word_bit h := match h with | 0 => 8 | _ => 16 end.
 Definition ldr_str_signed_bit s := match s with | 0 => CAST_UNSIGNED | _ => CAST_SIGNED end.
+Definition swp_word_bit b := match b with | 0 => 32 | _ => 8 end.
 
 Definition arm2il (ad:addr) armi :=
   match armi with
@@ -1114,6 +1115,12 @@ Definition arm2il (ad:addr) armi :=
                          (Var (arm7_varid rn))
                          (Word 32 off))
       end
+    )
+  | ARM7_Swp cond b rn rd rm => Some(4,
+      cond_eval cond (
+        Move (arm7_varid rd) (Load (Var V_MEM32) (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn))) LittleE 4) $;
+        Move V_MEM32 (Store (Var V_MEM32) (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn))) (Var (arm7_varid rm)) LittleE 4)
+      )
     )
   | _ => Some(4, Nop)
   end.
