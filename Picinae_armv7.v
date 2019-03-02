@@ -844,7 +844,7 @@ Definition arm2il (ad:addr) armi :=
   match armi with
   | ARM7_AndI cond s rn rd rot imm => Some(4,
       cond_eval cond (
-        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp OP_ROT (Word 32 imm) (Word 32 (2 * rot)))) $;
+        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp OP_ROT (Word imm 32) (Word (2 * rot) 32))) $;
         arm_cpsr_update s rd (
           Move R_CF (Unknown 1) $;
           Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32)) $;
@@ -1146,3 +1146,23 @@ Definition arm2il (ad:addr) armi :=
     )
   | _ => Some(4, Nop)
   end.
+
+Theorem arm7_il_welltyped:
+  forall i, match (arm2il 0 i) with | None => True | Some(_, q) => hastyp_stmt armtypctx armtypctx q armtypctx end.
+Proof.
+  intro.
+  induction i.
+  + destruct cond, s, rn, rd, rot, imm.
+  ++ simpl. eapply TIf.
+  +++ reflexivity.
+  +++ reflexivity.
+  +++ unfold bit_set. apply (TBinOp armtypctx OP_EQ (Var R_ZF) (Word 1 1) 1).
+  ++++ eapply TVar. reflexivity.
+  ++++ eapply TWord. reflexivity.
+  +++ eapply TSeq.
+  ++++ reflexivity.
+  ++++ eapply TMove.
+  +++++ right. reflexivity.
+  +++++ apply (TBinOp armtypctx OP_AND (Var R_R0) (BinOp OP_ROT (Word 0 32) (Word 0 32))). eapply TVar. reflexivity.
+        apply (TBinOp armtypctx OP_ROT (Word 0 32) (Word 0 32)). eapply TWord. reflexivity. eapply TWord. reflexivity.
+Admitted.
