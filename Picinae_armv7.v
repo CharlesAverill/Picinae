@@ -1147,22 +1147,85 @@ Definition arm2il (ad:addr) armi :=
   | _ => Some(4, Nop)
   end.
 
-Theorem arm7_il_welltyped:
-  forall i, match (arm2il 0 i) with | None => True | Some(_, q) => hastyp_stmt armtypctx armtypctx q armtypctx end.
+Theorem arm7_il_welltyped_stmts:
+  forall cond s rn rd rot imm (c':typctx), imm < 2^32 ->
+    match (arm2il 0 (ARM7_AndI cond s rn rd rot imm)) with | None => True | Some(_,q) =>
+      exists c', hastyp_stmt armtypctx armtypctx q c' end.
 Proof.
-  intro.
-  induction i.
-  + destruct cond, s, rn, rd, rot, imm.
-  ++ simpl. eapply TIf.
-  +++ reflexivity.
-  +++ reflexivity.
-  +++ unfold bit_set. apply (TBinOp armtypctx OP_EQ (Var R_ZF) (Word 1 1) 1).
-  ++++ eapply TVar. reflexivity.
-  ++++ eapply TWord. reflexivity.
-  +++ eapply TSeq.
-  ++++ reflexivity.
-  ++++ eapply TMove.
-  +++++ right. reflexivity.
-  +++++ apply (TBinOp armtypctx OP_AND (Var R_R0) (BinOp OP_ROT (Word 0 32) (Word 0 32))). eapply TVar. reflexivity.
-        apply (TBinOp armtypctx OP_ROT (Word 0 32) (Word 0 32)). eapply TWord. reflexivity. eapply TWord. reflexivity.
+  induction cond, s, rn, rd, rot, imm.
+  1: {
+    intros.
+    exists c'.
+    eapply TIf.
+    reflexivity.
+    reflexivity.
+    eapply hastyp_binop.
+    reflexivity.
+    eapply TVar. reflexivity.
+    unfold bit_set. eapply TWord. reflexivity.
+    eapply TSeq. reflexivity.
+    eapply TMove. right. reflexivity.
+    eapply hastyp_binop. reflexivity.
+    eapply TVar. reflexivity.
+    eapply hastyp_binop.
+    reflexivity.
+    eapply TWord. reflexivity.
+    eapply TWord. reflexivity.
+    simpl. (* eapply TNop. *) admit. (* TODO - Understand why eapply TNop fails *)
+    admit.
+  }
+Admitted.
+
+Theorem arm7_il_welltyped:
+  forall (i:arm7asm), welltyped_prog armtypctx (fun _ a => match a with | 0 => arm2il 0 i | _ => None end).
+Proof.
+  destruct i.
+  Picinae_typecheck.
+Admitted.
+
+Theorem arm7_andi_il_welltpyed:
+  forall cond s rn rd rot imm (c:typctx), imm < N.pos (2 ^ 32) ->
+      welltyped_prog armtypctx (fun _ a => match a with | 0 => arm2il 0 (ARM7_AndI cond s rn rd rot imm) | _ => None end).
+Proof.
+  intros.
+  induction cond, s, rn , rd, rot, imm.
+
+  (* The base case works with Picinae_typecheck because all variables are 0 *)
+  Picinae_typecheck.
+
+  (* Picinae_typecheck can't handle this case: imm is N.pos p, so rewrite with H then simplify. *)
+  1: {
+    intros s a.
+    destruct a as [|a].
+    apply typchk_stmt_compute.
+    simpl. apply N.ltb_lt in H. rewrite H. simpl. exact I. exact I.
+  }
+
+  (* This was an attempt prove the goal without Picinae_typecheck. It failed because of the context problem *)
+  1: {
+    intros s a.
+    destruct a as [|a].
+    simpl. exists c.
+    eapply TIf.
+    reflexivity.
+    reflexivity.
+    eapply hastyp_binop.
+    simpl. reflexivity.
+    eapply TVar. reflexivity.
+    unfold bit_set. eapply TWord. reflexivity.
+    eapply TSeq.
+    reflexivity.
+    eapply TMove.
+    right. reflexivity.
+    eapply hastyp_binop.
+    simpl. reflexivity.
+    eapply TVar. reflexivity.
+    eapply hastyp_binop.
+    reflexivity.
+    eapply TWord. assumption.
+    eapply TWord. admit. (* TODO FIXME *)
+    admit. (* TODO FIXME *)
+    admit.
+    exact I.
+  }
 Admitted.
