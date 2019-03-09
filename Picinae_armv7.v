@@ -37,6 +37,7 @@ Require Export Picinae_theory.
 Require Export Picinae_finterp.
 Require Export Picinae_statics.
 Require Export Picinae_slogic.
+Require Export Picinae_theory.
 Require Import NArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.
@@ -617,12 +618,13 @@ Definition bits12 b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1 b0 :=
 Definition bits24 b23 b22 b21 b20 b19 b18 b17 b16 b15 b14 b13 b12 b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1 b0 :=
   (bits4 b23 b22 b21 b20)*1048576 + (bits4 b19 b18 b17 b16)*65536 + (bits4 b15 b14 b13 b12)*4096 + 
   (bits4 b11 b10 b9 b8)*256 + (bits4 b7 b6 b5 b4)*16 + (bits4 b3 b2 b1 b0).
+Definition b (i:N) (n:N) := N.land (N.shiftr n i) 1.
+Definition xbits n i j := N.land (N.shiftr n i) (N.ones (j - i)).
 
-Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 b17 b16 
-                        b15 b14 b13 b12 b11 b10 b9  b8  b7  b6  b5  b4  b3  b2  b1  b0:N) :=
+Definition arm_dec_bin (n:N) :=
 
-  match b27,  b26,  b25,  b24,  b23,  b22,  b21,  b20,  b19,  b18,  b17,  b16,  b15,  b14,
-        b13,  b12,  b11,  b10,  b9,    b8,   b7,   b6,   b5,   b4,   b3,   b2,   b1,   b0
+  match b 27 n,  b 26 n,  b 25 n,  b 24 n,  b 23 n,  b 22 n,  b 21 n,  b 20 n,  b 19 n,  b 18 n,  b 17 n,  b 16 n,  b 15 n,  b 14 n,
+        b 13 n,  b 12 n,  b 11 n,  b 10 n,  b 9 n,    b 8 n,   b 7 n,   b 6 n,   b 5 n,   b 4 n,   b 3 n,   b 2 n,   b 1 n,   b 0 n
   with
 
   (* Data proc with shift register *)
@@ -645,7 +647,7 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
     | 13 => ARM7_MovR
     | 14 => ARM7_BicR
     | 15 => ARM7_MvnR
-    | _ => ARM7_InvalidOpS end (bits4 b31 b30 b29 b28) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
+    | _ => ARM7_InvalidOpS end (xbits n 27 31) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
                                (bits4 rs3 rs2 rs1 rs0) (bits4 0 0 st1 st0) (bits4 rm3 rm2 rm1 rm0)
 
   (* Data proc with shift amount *)
@@ -680,7 +682,7 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
     | 13 => ARM7_MovS
     | 14 => ARM7_BicS
     | 15 => ARM7_MvnS
-    | _ => ARM7_InvalidOpS end (bits4 b31 b30 b29 b28) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
+    | _ => ARM7_InvalidOpS end (xbits n 27 31) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
                                (bits5 sa4 sa3 sa2 sa1 sa0) (bits4 0 0 st1 st0) (bits4 rm3 rm2 rm1 rm0)
 
   (* Data proc with immediate values *)
@@ -709,19 +711,19 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
     | 13 => ARM7_MovI
     | 14 => ARM7_BicI
     | 15 => ARM7_MvnI
-    | _ => ARM7_InvalidOpI end (bits4 b31 b30 b29 b28) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
+    | _ => ARM7_InvalidOpI end (xbits n 27 31) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
                                (bits4 rot3 rot2 rot1 rot0) (bits8 imm7 imm6 imm5 imm4 imm3 imm2 imm1 imm0)
 
   (* Multiply *)
   |    0,    0,    0,    0,    0,    0,    a,    s,  rd3,  rd2,  rd1,  rd0,  rn3,  rn2,
      rn1,  rn0,  rs3,  rs2,  rs1,  rs0,    1,    0,    0,    1,  rm3,  rm2,  rm1,  rm0 =>
-     ARM7_Mul (bits4 b31 b30 b29 b28) a s (bits4 rd3 rd2 rd1 rd0) (bits4 rn3 rn2 rn1 rn0)
+     ARM7_Mul (xbits n 27 31) a s (bits4 rd3 rd2 rd1 rd0) (bits4 rn3 rn2 rn1 rn0)
               (bits4 rs3 rs2 rs1 rs0) (bits4 rm3 rm2 rm1 rm0)
 
   (* Multiply Long *)
   |    0,    0,    0,    0,    1,    u,    a,    s,  rd7,  rd6,  rd5,  rd4,  rd3,  rd2,
      rd1,  rd0,  rs3,  rs2,  rs1,  rs0,    1,    0,    0,    1,  rm3,  rm2,  rm1,  rm0 =>
-     ARM7_Mull (bits4 b31 b30 b29 b28) u a s (bits4 rd7 rd6 rd5 rd4) (bits4 rd3 rd2 rd1 rd0)
+     ARM7_Mull (xbits n 27 31) u a s (bits4 rd7 rd6 rd5 rd4) (bits4 rd3 rd2 rd1 rd0)
      (bits4 rs3 rs2 rs1 rs0) (bits4 rm3 rm2 rm1 rm0)
 
   (* Branch and exchange *)
@@ -732,11 +734,11 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
   |    0,    0,    0,    p,    u,    b,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
      rd1,  rd0,    0,    0,    0,    0,    1,    s,    h,    1,  rm3,  rm2,  rm1,  rm0 =>
     match s, h, l with
-    | 0, 0, 0 => ARM7_Swp (bits4 b31 b30 b29 b28) b (bits4 rn3 rn2 rn1 rn0)
+    | 0, 0, 0 => ARM7_Swp (xbits n 27 31) b (bits4 rn3 rn2 rn1 rn0)
                           (bits4 rd3 rd2 rd1 rd0) (bits4 rm3 rm2 rm1 rm0)
-    | _, _, 0 => ARM7_StrHS (bits4 b31 b30 b29 b28) p u w (bits4 rn3 rn2 rn1 rn0)
+    | _, _, 0 => ARM7_StrHS (xbits n 27 31) p u w (bits4 rn3 rn2 rn1 rn0)
                             (bits4 rd3 rd2 rd1 rd0) s h (bits4 rm3 rm2 rm1 rm0)
-    | _, _, _ => ARM7_LdrHS (bits4 b31 b30 b29 b28) p u w (bits4 rn3 rn2 rn1 rn0)
+    | _, _, _ => ARM7_LdrHS (xbits n 27 31) p u w (bits4 rn3 rn2 rn1 rn0)
                             (bits4 rd3 rd2 rd1 rd0) s h (bits4 rm3 rm2 rm1 rm0)
     end
 
@@ -746,7 +748,7 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
     match l with
     | 0 => ARM7_StrHI
     | _ => ARM7_LdrHI
-    end (bits4 b31 b30 b29 b28) p u w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
+    end (xbits n 27 31) p u w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
          s h (bits8 o7 o6 o5 o4 o3 o2 o1 o0)
 
 
@@ -756,7 +758,7 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
     match l with
     | 0 => ARM7_StrS
     | _ => ARM7_LdrS
-    end (bits4 b31 b30 b29 b28) p u b w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
+    end (xbits n 27 31) p u b w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
         (bits5 sa4 sa3 sa2 sa1 sa0) (bits4 0 0 st1 st0) (bits4 rm3 rm2 rm1 rm0)
 
   (* Single data transfer immediate offset *)
@@ -765,7 +767,7 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
     match l with
     | 0 => ARM7_StrI
     | _ => ARM7_LdrI
-    end (bits4 b31 b30 b29 b28) p u b w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
+    end (xbits n 27 31) p u b w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
         (bits12 imm1 imm10 imm9 imm8 imm7 imm6 imm5 imm4 imm3 imm2 imm1 imm0)
 
   (* Block data transfer *)
@@ -775,7 +777,7 @@ Definition arm_dec_bin (b31 b30 b29 b28 b27 b26 b25 b24 b23 b22 b21 b20 b19 b18 
   (* Branch *)
   |    1,    0,    1,    l,  o23,  o22,  o21,  o20,  o19,  o18,  o17,  o16,  o15,  o14,
      o13,  o12,  o11,  o10,   o9,   o8,   o7,   o6,   o5,   o4,   o3,   o2,   o1,   o0 =>
-    ARM7_Branch (bits4 b31 b30 b29 b28) l (bits24 o23 o22 o21 o20 o19 o18 o17 o16 o15 o14 o13 o12 o11 o10
+    ARM7_Branch (xbits n 27 31) l (bits24 o23 o22 o21 o20 o19 o18 o17 o16 o15 o14 o13 o12 o11 o10
                                                   o9 o8 o7 o6 o5 o4 o3 o2 o1 o0)
 
   (* Coprocessor Data Transfer *)
@@ -818,8 +820,7 @@ Definition cond_eval cond il :=
   | 11 => If (BinOp OP_NEQ (Var R_NF) (Var R_VF)) (il) (Nop)
   | 12 => If (BinOp OP_AND (BinOp OP_EQ (Var R_ZF) bit_clr) (BinOp OP_EQ (Var R_NF) (Var R_VF))) (il) (Nop)
   | 13 => If (BinOp OP_OR (BinOp OP_EQ (Var R_ZF) bit_set) (BinOp OP_NEQ (Var R_NF) (Var R_VF))) (il) (Nop)
-  | 14 => il
-  | _ => il (* TODO Invalid condition.  Throw an exception? *)
+  | _ => il
 end.
 
 Open Scope stmt_scope.
@@ -842,7 +843,7 @@ Definition swp_word_bit b := match b with | 0 => 32 | _ => 8 end.
 
 Definition arm2il (ad:addr) armi :=
   match armi with
-  | ARM7_AndI cond s rn rd rot imm => Some(4,
+  | ARM7_AndI cond s rn rd rot imm =>
       cond_eval cond (
         Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp OP_ROT (Word imm 32) (Word (2 * rot) 32))) $;
         arm_cpsr_update s rd (
@@ -851,8 +852,7 @@ Definition arm2il (ad:addr) armi :=
           Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
         )
       )
-    )
-  | ARM7_AndR cond s rn rd rs st rm => Some(4,
+  | ARM7_AndR cond s rn rd rs st rm =>
       cond_eval cond (
         Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Var (arm7_varid rs)))) $;
         arm_cpsr_update s rd (
@@ -861,8 +861,7 @@ Definition arm2il (ad:addr) armi :=
           Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
         )
       )
-    )
-  | ARM7_AndS cond s rn rd sa st rm => Some(4,
+  | ARM7_AndS cond s rn rd sa st rm =>
       cond_eval cond (
         Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa))) $;
         arm_cpsr_update s rd (
@@ -871,8 +870,7 @@ Definition arm2il (ad:addr) armi :=
           Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
         )
       )
-    )
-  | ARM7_Mul cond a s rd rn rs rm => Some(4,
+  | ARM7_Mul cond a s rd rn rs rm =>
       cond_eval cond (
         Move (arm7_varid rd) (BinOp OP_TIMES (Var (arm7_varid rm)) (Var (arm7_varid rs))) $;
         If (BinOp OP_EQ (Word 32 a) (Word 32 1)) (
@@ -886,8 +884,7 @@ Definition arm2il (ad:addr) armi :=
           Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32))
         )
       )
-    )
-  | ARM7_Mull cond u a s rd_hi rd_lo rs rm => Some(4,
+  | ARM7_Mull cond u a s rd_hi rd_lo rs rm =>
       cond_eval cond (
         Move (V_TEMP ad) (BinOp OP_TIMES (Var (arm7_varid rm)) (Var (arm7_varid rs))) $;
         If (BinOp OP_EQ (Word 32 a) (Word 32 1)) (
@@ -914,8 +911,7 @@ Definition arm2il (ad:addr) armi :=
       ) $;
       Move R_ZF (BinOp OP_AND (BinOp OP_EQ (Var (arm7_varid rd_hi)) (Word 0 32))
                               (BinOp OP_EQ (Var (arm7_varid rd_lo)) (Word 0 32)))
-    )
-  | ARM7_Branch cond l offset => Some(4,
+  | ARM7_Branch cond l offset =>
       cond_eval cond (
         Move (V_TEMP ad) (BinOp OP_PLUS (Word 32 ad) (Cast CAST_SIGNED 32 (BinOp OP_LSHIFT (Word 24 offset) (Word 32 2)))) $;
         If (BinOp OP_EQ (Word 32 l) (Word 32 1)) (
@@ -925,8 +921,7 @@ Definition arm2il (ad:addr) armi :=
         ) $;
         Jmp (Var (V_TEMP ad))
       )
-    )
-  | ARM7_LdrI cond p u b w rn rd imm => Some(4,
+  | ARM7_LdrI cond p u b w rn rd imm =>
       cond_eval cond (
       match p with
       | 1 => Move (arm7_varid rd) (Load (Var V_MEM32)
@@ -942,8 +937,7 @@ Definition arm2il (ad:addr) armi :=
       | 0 => Nop
       | _ => Move (arm7_varid rn) (BinOp (ldr_str_up_bit u) (Var (arm7_varid rn)) (Word 32 imm))
       end)
-    )
-  | ARM7_StrI cond p u b w rn rd imm => Some(4,
+  | ARM7_StrI cond p u b w rn rd imm =>
       cond_eval cond (
       match p with
       | 1 => Move V_MEM32 (Store (Var V_MEM32)
@@ -957,8 +951,7 @@ Definition arm2il (ad:addr) armi :=
       | 0 => Nop
       | _ => Move (arm7_varid rn) (BinOp (ldr_str_up_bit u) (Var (arm7_varid rn)) (Word 32 imm))
       end)
-    )
-  | ARM7_LdrS cond p u b w rn rd sa st rm => Some(4,
+  | ARM7_LdrS cond p u b w rn rd sa st rm =>
       cond_eval cond (
       match p with
       | 1 =>
@@ -985,8 +978,7 @@ Definition arm2il (ad:addr) armi :=
                          (Var (arm7_varid rn))
                          (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa)))
       end)
-    )
-  | ARM7_StrS cond p u b w rn rd sa st rm => Some(4,
+  | ARM7_StrS cond p u b w rn rd sa st rm =>
       cond_eval cond (
       match p with
       | 1 => Move V_MEM32 (Store (Var V_MEM32)
@@ -1009,8 +1001,7 @@ Definition arm2il (ad:addr) armi :=
                          (Var (arm7_varid rn))
                          (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa)))
       end)
-    )
-  | ARM7_LdrHS cond p u w rn rd s h rm => Some(4,
+  | ARM7_LdrHS cond p u w rn rd s h rm =>
       cond_eval cond (
       match p with
       | 1 =>
@@ -1043,8 +1034,7 @@ Definition arm2il (ad:addr) armi :=
                          (Var (arm7_varid rn))
                          (Var (arm7_varid rm)))
       end)
-    )
-  | ARM7_StrHS cond p u w rn rd s h rm => Some(4,
+  | ARM7_StrHS cond p u w rn rd s h rm =>
       cond_eval cond (
       match p with
       | 1 => Move V_MEM32 (Store (Var V_MEM32)
@@ -1073,8 +1063,7 @@ Definition arm2il (ad:addr) armi :=
                          (Var (arm7_varid rn))
                          (Var (arm7_varid rm)))
       end)
-    )
-  | ARM7_LdrHI cond p u w rn rd s h off => Some(4,
+  | ARM7_LdrHI cond p u w rn rd s h off =>
       cond_eval cond (
       match p with
       | 1 =>
@@ -1107,8 +1096,7 @@ Definition arm2il (ad:addr) armi :=
                          (Var (arm7_varid rn))
                          (Word 32 off))
       end)
-    )
-  | ARM7_StrHI cond p u w rn rd s h off => Some(4,
+  | ARM7_StrHI cond p u w rn rd s h off =>
       cond_eval cond (
       match p with
       | 1 => Move V_MEM32 (Store (Var V_MEM32)
@@ -1137,15 +1125,117 @@ Definition arm2il (ad:addr) armi :=
                          (Var (arm7_varid rn))
                          (Word 32 off))
       end)
-    )
-  | ARM7_Swp cond b rn rd rm => Some(4,
+  | ARM7_Swp cond b rn rd rm =>
       cond_eval cond (
         Move (arm7_varid rd) (Load (Var V_MEM32) (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn))) LittleE 4) $;
         Move V_MEM32 (Store (Var V_MEM32) (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn))) (Var (arm7_varid rm)) LittleE 4)
       )
-    )
-  | _ => Some(4, Nop)
+  | _ => Nop
   end.
+
+Theorem hastyp_varid:
+  forall n, armtypctx (arm7_varid n) = Some (NumT 32).
+Proof.
+  destruct n. reflexivity.
+  repeat first [ reflexivity | destruct p ].
+Qed.
+
+Theorem hastyp_bits8:
+  forall n, bits8 (b 7 n) (b 6 n) (b 5 n) (b 4 n) (b 3 n) (b 2 n) (b 1 n) (b 0 n) < 2 ^ 32.
+Proof.
+  destruct n. reflexivity.
+  repeat first [ reflexivity | destruct p ].
+Qed.
+
+Theorem hastyp_2bits4:
+  forall n, 2 * bits4 (b 3 n) (b 2 n) (b 1 n) (b 0 n) < 2 ^ 32.
+Proof.
+  destruct n. reflexivity.
+  repeat first [ reflexivity | destruct p ].
+Qed.
+
+Theorem arm7_il_welltyped_example:
+  exists c', hastyp_stmt armtypctx armtypctx 
+  (If (BinOp OP_EQ (Var R_ZF) (Word 1 1))
+     (Move (arm7_varid 0) (Word 0 32))
+     Nop) c'.
+Proof.
+  intros.
+  eexists.
+  eapply TIf.
+  reflexivity.
+  reflexivity.
+  eapply hastyp_binop.
+  reflexivity.
+  eapply TVar. reflexivity.
+  eapply TWord. reflexivity.
+  eapply TMove.
+  right. reflexivity.
+  eapply TWord.
+  reflexivity.
+  rewrite <- store_upd_eq.
+  eapply TNop.
+  reflexivity.
+Qed.
+
+Theorem arm7_il_welltyped_andi:
+forall a n,
+  exists c', hastyp_stmt armtypctx armtypctx (arm2il a
+    (ARM7_AndI (xbits n 27 31) 0 (bits4 (b 19 n) (b 18 n) (b 17 n) (b 16 n))
+       (bits4 (b 15 n) (b 14 n) (b 13 n) (b 12 n)) (bits4 (b 11 n) (b 10 n) (b 9 n) (b 8 n))
+       (bits8 (b 7 n) (b 6 n) (b 5 n) (b 4 n) (b 3 n) (b 2 n) (b 1 n) (b 0 n))))
+  c'.
+Proof.
+  intros.
+  eexists.
+  unfold arm2il.
+  unfold cond_eval.
+  generalize (xbits n 27 31). intro n0. destruct n0.
+  eapply TIf.
+  reflexivity.
+  reflexivity.
+  eapply hastyp_binop.
+  reflexivity.
+  eapply TVar. reflexivity.
+  unfold bit_set. eapply TWord. reflexivity.
+  eapply TSeq.
+  reflexivity.
+  eapply TMove.
+  right.
+  destruct (bits4 (b 15 n) (b 14 n) (b 13 n) (b 12 n)).
+  reflexivity.
+  apply hastyp_varid.
+
+  eapply hastyp_binop.
+  reflexivity.
+
+  eapply TVar.
+  apply hastyp_varid.
+
+  eapply hastyp_binop.
+  reflexivity.
+
+  eapply TWord.
+  eapply hastyp_bits8.
+
+  eapply TWord.
+  eapply hastyp_2bits4.
+
+  unfold arm_cpsr_update.
+  eapply TNop.
+  rewrite <- store_upd_eq.
+  eapply TNop.
+
+  eapply hastyp_varid.
+  
+Admitted.
+
+Theorem arm7_il_welltyped_decode:
+  forall a n, hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin n)) armtypctx.
+Proof.
+  intros. unfold arm_dec_bin.
+  repeat match goal with | [ |- context [ match ?x with _ => _ end ] ] => destruct x end.
+Admitted.
 
 Theorem arm7_il_welltyped_stmts:
   forall cond s rn rd rot imm (c':typctx), imm < 2^32 ->
@@ -1171,7 +1261,7 @@ Proof.
     reflexivity.
     eapply TWord. reflexivity.
     eapply TWord. reflexivity.
-    simpl. (* eapply TNop. *) admit. (* TODO - Understand why eapply TNop fails *)
+    simpl. admit.
     admit.
   }
 Admitted.
