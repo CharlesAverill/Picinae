@@ -38,6 +38,7 @@ Require Export Picinae_finterp.
 Require Export Picinae_statics.
 Require Export Picinae_slogic.
 Require Export Picinae_theory.
+Require Export BinNat.
 Require Import NArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.
@@ -621,6 +622,76 @@ Definition bits24 b23 b22 b21 b20 b19 b18 b17 b16 b15 b14 b13 b12 b11 b10 b9 b8 
 Definition b (i:N) (n:N) := N.land (N.shiftr n i) 1.
 Definition xbits n i j := N.land (N.shiftr n i) (N.ones (j - i)).
 
+Require Export Bool.
+
+Definition arm_dec_bin_opt (n:N) :=
+  if ((xbits n 24 3) =? 0) && ((b 7 n) =? 0) && ((b 4 n) =? 1) then (* Data proc with shift register *)
+    match (xbits n 21 25) with
+    | 0 => ARM7_AndR
+    | 1 => ARM7_EorR
+    | 2 => ARM7_SubR
+    | 3 => ARM7_RsbR
+    | 4 => ARM7_AddR
+    | 5 => ARM7_AdcR
+    | 6 => ARM7_SbcR
+    | 7 => ARM7_RscR
+    | 8 => ARM7_TstR
+    | 9 => ARM7_TeqR
+    | 10 => ARM7_CmpR
+    | 11 => ARM7_CmnR
+    | 12 => ARM7_OrrR
+    | 13 => ARM7_MovR
+    | 14 => ARM7_BicR
+    | 15 => ARM7_MvnR
+    | _ => ARM7_InvalidOpS
+    end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 5 7) (xbits n 0 4)
+  else if ((xbits n 24 3) =? 0) && ((b 4 n) =? 0) then (* Data proc with shift amount *)
+    match (xbits n 21 25) with
+    | 0 => ARM7_AndS
+    | 1 => ARM7_EorS
+    | 2 => ARM7_SubS
+    | 3 => ARM7_RsbS
+    | 4 => ARM7_AddS
+    | 5 => ARM7_AdcS
+    | 6 => ARM7_SbcS
+    | 7 => ARM7_RscS
+    | 8 => if (xbits n 12 21) =? 159 then ARM7_MrsSpsr else ARM7_TstS
+    | 9 => if (xbits n 12 21) =? 159 then ARM7_MsrCpsr else ARM7_TeqS
+    | 10 => if (xbits n 12 21) =? 159 then ARM7_MrsCpsr else ARM7_CmpS
+    | 11 => if (xbits n 12 21) =? 159 then ARM7_MsrSpsr else ARM7_CmnS
+    | 12 => ARM7_OrrS
+    | 13 => ARM7_MovS
+    | 14 => ARM7_BicS
+    | 15 => ARM7_MvnS
+    | _ => ARM7_InvalidOpS
+    end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 7 11) (xbits n 5 7) (xbits n 0 4)
+  else if ((xbits n 24 3) =? 1) then (* Data proc with immediate amount *)
+    match (xbits n 21 25) with
+    | 0 => ARM7_AndI
+    | 1 => ARM7_EorI
+    | 2 => ARM7_SubI
+    | 3 => ARM7_RsbI
+    | 4 => ARM7_AddI
+    | 5 => ARM7_AdcI
+    | 6 => ARM7_SbcI
+    | 7 => ARM7_RscI
+    | 8 => ARM7_TstI
+    | 9 =>  if (xbits n 12 21) =? 143 then ARM7_MsrCpsrI else ARM7_TeqI
+    | 10 => ARM7_CmpI
+    | 11 => if (xbits n 12 21) =? 143 then ARM7_MsrSpsrI else ARM7_CmnI
+    | 12 => ARM7_OrrI
+    | 13 => ARM7_MovI
+    | 14 => ARM7_BicI
+    | 15 => ARM7_MvnI
+    | _ => ARM7_InvalidOpI
+    end (xbits n 27 31) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
+  else if ((xbits n 22 6) =? 0) && ((xbits n 4 4) =? 9) then (* Multiply *)
+    ARM7_Mul (xbits n 28 32) (b 21 n) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
+  else if ((xbits n 23 5) =? 1) && ((xbits n 4 4) =? 9) then (* Multiply Long *)
+    ARM7_Mull (xbits n 28 32) (b 22 n) (b 21 n) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
+  else
+    ARM7_Unsupported.
+
 Definition arm_dec_bin (n:N) :=
 
   match b 27 n,  b 26 n,  b 25 n,  b 24 n,  b 23 n,  b 22 n,  b 21 n,  b 20 n,  b 19 n,  b 18 n,  b 17 n,  b 16 n,  b 15 n,  b 14 n,
@@ -802,7 +873,7 @@ Definition arm_dec_bin (n:N) :=
   end.
 
 Definition bit_set := (Word 1 1).
-Definition bit_clr := (Word 1 0).
+Definition bit_clr := (Word 0 1).
 
 Definition cond_eval cond il :=
   match cond with
@@ -825,64 +896,49 @@ end.
 
 Open Scope stmt_scope.
 
-Definition arm_cpsr_update s rd stmts :=
-  match s with
-  | 0 => Nop
-  | _ => match (arm7_varid rd) with
-         | R_PC => Nop
-         | _ => stmts
-         end
-  end.
-
 Definition arm7_st st := match st with | 0 => OP_LSHIFT | 1 => OP_RSHIFT | 2 => OP_ARSHIFT | _ => OP_ROT end.
 Definition ldr_str_word_bit b := match b with | 0 => 4 | _ => 1 end.
 Definition ldr_str_up_bit u := match u with | 0 => OP_MINUS | _ => OP_PLUS end.
 Definition ldr_str_half_word_bit h := match h with | 0 => 8 | _ => 16 end.
 Definition ldr_str_signed_bit s := match s with | 0 => CAST_UNSIGNED | _ => CAST_SIGNED end.
 Definition swp_word_bit b := match b with | 0 => 32 | _ => 8 end.
+Definition cpsr_update s rd :=
+  If (BinOp OP_EQ bit_set (Word s 1)) (
+    If (BinOp OP_EQ (Word rd 32) (Word 15 32)) (
+      Move R_CF (Unknown 1) $;
+      Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32))) $;
+      Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
+     )
+      (Nop)
+    )
+    (Nop).
 
 Definition arm2il (ad:addr) armi :=
   match armi with
   | ARM7_AndI cond s rn rd rot imm =>
       cond_eval cond (
         Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp OP_ROT (Word imm 32) (Word (2 * rot) 32))) $;
-        arm_cpsr_update s rd (
-          Move R_CF (Unknown 1) $;
-          Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32)) $;
-          Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
-        )
+        cpsr_update s rd
       )
   | ARM7_AndR cond s rn rd rs st rm =>
       cond_eval cond (
         Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Var (arm7_varid rs)))) $;
-        arm_cpsr_update s rd (
-          Move R_CF (Unknown 1) $;
-          Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32)) $;
-          Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
-        )
+        cpsr_update s rd
       )
   | ARM7_AndS cond s rn rd sa st rm =>
       cond_eval cond (
-        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word 32 sa))) $;
-        arm_cpsr_update s rd (
-          Move R_CF (Unknown 1) $;
-          Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32)) $;
-          Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
-        )
+        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32))) $;
+        cpsr_update s rd
       )
   | ARM7_Mul cond a s rd rn rs rm =>
       cond_eval cond (
         Move (arm7_varid rd) (BinOp OP_TIMES (Var (arm7_varid rm)) (Var (arm7_varid rs))) $;
-        If (BinOp OP_EQ (Word 32 a) (Word 32 1)) (
+        If (BinOp OP_EQ (Word a 32) (Word 1 32)) (
           Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Var (arm7_varid rn)))
         ) (
           Nop
         ) $;
-        arm_cpsr_update s rd (
-          Move R_CF (Unknown 1) $;
-          Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd))) $;
-          Move R_ZF (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32))
-        )
+        cpsr_update s rd
       )
   | ARM7_Mull cond u a s rd_hi rd_lo rs rm =>
       cond_eval cond (
@@ -907,10 +963,11 @@ Definition arm2il (ad:addr) armi :=
       If (BinOp OP_EQ (Word 32 u) (Word 32 0)) (
         Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd_hi)))
       ) (
-        Move R_NF (Word 1 0)
+        Move R_NF (Word 0 1)
       ) $;
-      Move R_ZF (BinOp OP_AND (BinOp OP_EQ (Var (arm7_varid rd_hi)) (Word 0 32))
-                              (BinOp OP_EQ (Var (arm7_varid rd_lo)) (Word 0 32)))
+      Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_AND (BinOp OP_EQ (Var (arm7_varid rd_hi)) (Word 0 32))
+                                  (BinOp OP_EQ (Var (arm7_varid rd_lo)) (Word 0 32))))
+(*
   | ARM7_Branch cond l offset =>
       cond_eval cond (
         Move (V_TEMP ad) (BinOp OP_PLUS (Word 32 ad) (Cast CAST_SIGNED 32 (BinOp OP_LSHIFT (Word 24 offset) (Word 32 2)))) $;
@@ -1130,7 +1187,8 @@ Definition arm2il (ad:addr) armi :=
         Move (arm7_varid rd) (Load (Var V_MEM32) (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn))) LittleE 4) $;
         Move V_MEM32 (Store (Var V_MEM32) (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn))) (Var (arm7_varid rm)) LittleE 4)
       )
-  | _ => Nop
+  *)
+  | ARM7_InvalidOp => Exn 0
   end.
 
 Theorem hastyp_varid:
@@ -1154,168 +1212,76 @@ Proof.
   repeat first [ reflexivity | destruct p ].
 Qed.
 
-Theorem arm7_il_welltyped_example:
-  exists c', hastyp_stmt armtypctx armtypctx 
-  (If (BinOp OP_EQ (Var R_ZF) (Word 1 1))
-     (Move (arm7_varid 0) (Word 0 32))
-     Nop) c'.
+Lemma xbits_bound:
+  forall n i j w, j-i <= w -> xbits n i j < 2^w.
 Proof.
-  intros.
-  eexists.
-  eapply TIf.
-  reflexivity.
-  reflexivity.
-  eapply hastyp_binop.
-  reflexivity.
-  eapply TVar. reflexivity.
-  eapply TWord. reflexivity.
-  eapply TMove.
-  right. reflexivity.
-  eapply TWord.
-  reflexivity.
-  rewrite <- store_upd_eq.
-  eapply TNop.
-  reflexivity.
+  intros. unfold xbits. eapply N.lt_le_trans.
+    rewrite N.land_ones. apply N.mod_upper_bound, N.pow_nonzero. discriminate 1.
+    apply N.pow_le_mono_r. discriminate 1. assumption.
 Qed.
 
-Theorem arm7_il_welltyped_andi:
-forall a n,
-  exists c', hastyp_stmt armtypctx armtypctx (arm2il a
-    (ARM7_AndI (xbits n 27 31) 0 (bits4 (b 19 n) (b 18 n) (b 17 n) (b 16 n))
-       (bits4 (b 15 n) (b 14 n) (b 13 n) (b 12 n)) (bits4 (b 11 n) (b 10 n) (b 9 n) (b 8 n))
-       (bits8 (b 7 n) (b 6 n) (b 5 n) (b 4 n) (b 3 n) (b 2 n) (b 1 n) (b 0 n))))
-  c'.
+Lemma xbits_bound_double:
+  forall n, 2 * xbits n 8 12 < 2 ^ 32.
+Proof.
+  intro n.
+  destruct n.
+  reflexivity.
+  repeat first [ reflexivity | destruct p ].
+Qed.
+
+Lemma bit_lt_o:
+  forall n m o, o > 1 -> b m n < o.
 Proof.
   intros.
-  eexists.
-  unfold arm2il.
-  unfold cond_eval.
-  generalize (xbits n 27 31). intro n0. destruct n0.
-  eapply TIf.
-  reflexivity.
-  reflexivity.
-  eapply hastyp_binop.
-  reflexivity.
-  eapply TVar. reflexivity.
-  unfold bit_set. eapply TWord. reflexivity.
-  eapply TSeq.
-  reflexivity.
-  eapply TMove.
-  right.
-  destruct (bits4 (b 15 n) (b 14 n) (b 13 n) (b 12 n)).
-  reflexivity.
-  apply hastyp_varid.
-
-  eapply hastyp_binop.
-  reflexivity.
-
-  eapply TVar.
-  apply hastyp_varid.
-
-  eapply hastyp_binop.
-  reflexivity.
-
-  eapply TWord.
-  eapply hastyp_bits8.
-
-  eapply TWord.
-  eapply hastyp_2bits4.
-
-  unfold arm_cpsr_update.
-  eapply TNop.
-  rewrite <- store_upd_eq.
-  eapply TNop.
-
-  eapply hastyp_varid.
-  
-Admitted.
-
-Theorem arm7_il_welltyped_decode:
-  forall a n, hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin n)) armtypctx.
-Proof.
-  intros. unfold arm_dec_bin.
-  repeat match goal with | [ |- context [ match ?x with _ => _ end ] ] => destruct x end.
-Admitted.
-
-Theorem arm7_il_welltyped_stmts:
-  forall cond s rn rd rot imm (c':typctx), imm < 2^32 ->
-    match (arm2il 0 (ARM7_AndI cond s rn rd rot imm)) with | None => True | Some(_,q) =>
-      exists c', hastyp_stmt armtypctx armtypctx q c' end.
-Proof.
-  induction cond, s, rn, rd, rot, imm.
-  1: {
-    intros.
-    exists c'.
-    eapply TIf.
-    reflexivity.
-    reflexivity.
-    eapply hastyp_binop.
-    reflexivity.
-    eapply TVar. reflexivity.
-    unfold bit_set. eapply TWord. reflexivity.
-    eapply TSeq. reflexivity.
-    eapply TMove. right. reflexivity.
-    eapply hastyp_binop. reflexivity.
-    eapply TVar. reflexivity.
-    eapply hastyp_binop.
-    reflexivity.
-    eapply TWord. reflexivity.
-    eapply TWord. reflexivity.
-    simpl. admit.
-    admit.
-  }
-Admitted.
+  unfold b.
+  remember (N.shiftr n m) as n'.
+  destruct o.
+  destruct n'.
+  discriminate.
+  discriminate.
+  destruct n'.
+  rewrite N.land_0_l. reflexivity.
+  destruct p0.
+  simpl. apply N.gt_lt. assumption.
+  simpl. reflexivity.
+  simpl. apply N.gt_lt. assumption.
+Qed.
 
 Theorem arm7_il_welltyped:
-  forall (i:arm7asm), welltyped_prog armtypctx (fun _ a => match a with | 0 => arm2il 0 i | _ => None end).
+  forall a n, exists c', hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin_opt n)) c'.
 Proof.
-  destruct i.
-  Picinae_typecheck.
-Admitted.
-
-Theorem arm7_andi_il_welltpyed:
-  forall cond s rn rd rot imm (c:typctx), imm < N.pos (2 ^ 32) ->
-      welltyped_prog armtypctx (fun _ a => match a with | 0 => arm2il 0 (ARM7_AndI cond s rn rd rot imm) | _ => None end).
-Proof.
-  intros.
-  induction cond, s, rn , rd, rot, imm.
-
-  (* The base case works with Picinae_typecheck because all variables are 0 *)
-  Picinae_typecheck.
-
-  (* Picinae_typecheck can't handle this case: imm is N.pos p, so rewrite with H then simplify. *)
-  1: {
-    intros s a.
-    destruct a as [|a].
-    apply typchk_stmt_compute.
-    simpl. apply N.ltb_lt in H. rewrite H. simpl. exact I. exact I.
-  }
-
-  (* This was an attempt prove the goal without Picinae_typecheck. It failed because of the context problem *)
-  1: {
-    intros s a.
-    destruct a as [|a].
-    simpl. exists c.
-    eapply TIf.
-    reflexivity.
-    reflexivity.
-    eapply hastyp_binop.
-    simpl. reflexivity.
-    eapply TVar. reflexivity.
-    unfold bit_set. eapply TWord. reflexivity.
-    eapply TSeq.
-    reflexivity.
-    eapply TMove.
-    right. reflexivity.
-    eapply hastyp_binop.
-    simpl. reflexivity.
-    eapply TVar. reflexivity.
-    eapply hastyp_binop.
-    reflexivity.
-    eapply TWord. assumption.
-    eapply TWord. admit. (* TODO FIXME *)
-    admit. (* TODO FIXME *)
-    admit.
-    exact I.
-  }
-Admitted.
+  intros. unfold arm_dec_bin_opt.
+  repeat match goal with [ |- context [ if ?x then _ else _ ] ] => destruct x end.
+  all: repeat match goal with |- context [ match ?x with _ => _ end ] =>
+    try destruct x
+  end.
+  all: repeat try unfold arm2il; 
+              try unfold cond_eval; 
+              try unfold bit_set;
+              try unfold bit_clr;
+              try unfold arm7_st.
+  all: repeat match goal with |- context [ match ?x with _ => _ end ] =>
+    try destruct x
+  end.
+  all: repeat match goal with |- context [ match ?x with _ => _ end ] =>
+    try destruct x
+  end.
+  all: repeat eexists; try apply TExn.
+  all: repeat first
+  [ reflexivity
+  | apply hastyp_varid
+  | eapply TWord
+  | apply TSeq
+  | apply TIf
+  | eapply hastyp_binop
+  | apply xbits_bound
+  | apply xbits_bound_double
+  | apply bit_lt_o
+  | apply ofZ_bound
+  | apply N.mod_lt
+  | rewrite <- store_upd_eq
+  | eapply TMove
+  | right
+  | discriminate 1
+  | econstructor ].
+Qed.
