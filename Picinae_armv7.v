@@ -125,7 +125,7 @@ Definition armtypctx (id:var) : option typ :=
   | R_DNM => Some (NumT 4)
   | R_JF | R_QF | R_VF | R_CF | R_ZF | R_NF => Some (NumT 1)
   | A_READ | A_WRITE => Some (MemT 32)
-  | V_TEMP _ => None
+  | V_TEMP _ => Some (NumT 32)
 end.
 
 Definition arm_wtm {s v m w} := @models_wtm v armtypctx s m w.
@@ -960,7 +960,7 @@ Definition arm2il (ad:addr) armi :=
       ) $;
       Move R_VF (Unknown 1) $;
       Move R_CF (Unknown 1) $;
-      If (BinOp OP_EQ (Word 32 u) (Word 32 0)) (
+      If (BinOp OP_EQ (Word 32 u) (Word 0 32)) (
         Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd_hi)))
       ) (
         Move R_NF (Word 0 1)
@@ -1284,4 +1284,5 @@ Proof.
   | right
   | discriminate 1
   | econstructor ].
+  simpl.
 Qed.
