@@ -73,6 +73,7 @@ Inductive armvar :=
   | R_NF (* (bit 31) is the negative/less than bit. *)
   (* These meta-variables model page access permissions: *)
   | A_READ | A_WRITE
+  | V_TEMP64 (n:N)
   | V_TEMP (n:N) (* Temporaries introduced by the BIL lifter: *).
 
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
@@ -126,6 +127,7 @@ Definition armtypctx (id:var) : option typ :=
   | R_JF | R_QF | R_VF | R_CF | R_ZF | R_NF => Some (NumT 1)
   | A_READ | A_WRITE => Some (MemT 32)
   | V_TEMP _ => Some (NumT 32)
+  | V_TEMP64 _ => Some (NumT 64)
 end.
 
 Definition arm_wtm {s v m w} := @models_wtm v armtypctx s m w.
@@ -942,29 +944,33 @@ Definition arm2il (ad:addr) armi :=
       )
   | ARM7_Mull cond u a s rd_hi rd_lo rs rm =>
       cond_eval cond (
-        Move (V_TEMP ad) (BinOp OP_TIMES (Var (arm7_varid rm)) (Var (arm7_varid rs))) $;
-        If (BinOp OP_EQ (Word 32 a) (Word 32 1)) (
-          Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad))
+        Move (V_TEMP64 ad) (BinOp OP_TIMES (Cast CAST_SIGNED 64 (Var (arm7_varid rm)))
+                                           (Cast CAST_SIGNED 64 (Var (arm7_varid rs)))) $;
+        If (BinOp OP_EQ (Word a 32) (Word 1 32)) (
+          Move (V_TEMP64 ad) (BinOp OP_PLUS (Var (V_TEMP64 ad))
                                           (BinOp OP_OR (Cast CAST_UNSIGNED 64 (BinOp OP_LSHIFT (Var (arm7_varid rd_hi)) (Word 32 32)))
                                                        (Cast CAST_UNSIGNED 64 (Var (arm7_varid rd_lo)))))
         ) (
           Nop
         ) $;
-        If (BinOp OP_EQ (Word 32 u) (Word 32 1)) (
-          Move (arm7_varid rd_hi) (Cast CAST_HIGH 32 (Cast CAST_UNSIGNED 64 (Var (V_TEMP ad)))) $;
-          Move (arm7_varid rd_lo) (Cast CAST_LOW 32 (Cast CAST_UNSIGNED 64 (Var (V_TEMP ad))))
+        If (BinOp OP_EQ (Word u 32) (Word 1 32)) (
+          Move (arm7_varid rd_hi) (Cast CAST_HIGH 32 (Cast CAST_UNSIGNED 64 (Var (V_TEMP64 ad)))) $;
+          Move (arm7_varid rd_lo) (Cast CAST_LOW 32 (Cast CAST_UNSIGNED 64 (Var (V_TEMP64 ad))))
         ) (
-          Move (arm7_varid rd_hi) (Cast CAST_HIGH 32 (Cast CAST_SIGNED 64 (Var (V_TEMP ad)))) $;
-          Move (arm7_varid rd_lo) (Cast CAST_LOW 32 (Cast CAST_SIGNED 64 (Var (V_TEMP ad))))
+          Nop
+        ) $;
+        (* TODO Understand why I can't put the two move statements below in the else block of the if statement above *)
+        If (BinOp OP_NEQ (Word u 32) (Word 1 32)) (
+          Move (arm7_varid rd_hi) (Cast CAST_HIGH 32 (Cast CAST_SIGNED 64 (Var (V_TEMP64 ad)))) $;
+          Move (arm7_varid rd_lo) (Cast CAST_LOW 32 (Cast CAST_SIGNED 64 (Var (V_TEMP64 ad))))
+        ) (
+          Nop
         )
       ) $;
       Move R_VF (Unknown 1) $;
       Move R_CF (Unknown 1) $;
-      If (BinOp OP_EQ (Word 32 u) (Word 0 32)) (
-        Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd_hi)))
-      ) (
-        Move R_NF (Word 0 1)
-      ) $;
+      Move R_NF (BinOp OP_AND (Cast CAST_LOW 1 (Word u 32))
+                              (Cast CAST_HIGH 1 (Var (arm7_varid rd_hi)))) $;
       Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_AND (BinOp OP_EQ (Var (arm7_varid rd_hi)) (Word 0 32))
                                   (BinOp OP_EQ (Var (arm7_varid rd_lo)) (Word 0 32))))
 (*
@@ -1266,7 +1272,7 @@ Proof.
   all: repeat match goal with |- context [ match ?x with _ => _ end ] =>
     try destruct x
   end.
-  all: repeat eexists; try apply TExn.
+  all: try apply TExn.
   all: repeat first
   [ reflexivity
   | apply hastyp_varid
@@ -1284,5 +1290,4 @@ Proof.
   | right
   | discriminate 1
   | econstructor ].
-  simpl.
 Qed.
