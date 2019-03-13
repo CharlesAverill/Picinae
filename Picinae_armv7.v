@@ -627,7 +627,8 @@ Definition xbits n i j := N.land (N.shiftr n i) (N.ones (j - i)).
 Require Export Bool.
 
 Definition arm_dec_bin_opt (n:N) :=
-  if ((xbits n 24 3) =? 0) && ((b 7 n) =? 0) && ((b 4 n) =? 1) then (* Data proc with shift register *)
+  (* Data proc with shift register *)
+  if ((xbits n 25 28) =? 0) && ((b 7 n) =? 0) && ((b 4 n) =? 1) then
     match (xbits n 21 25) with
     | 0 => ARM7_AndR
     | 1 => ARM7_EorR
@@ -647,7 +648,9 @@ Definition arm_dec_bin_opt (n:N) :=
     | 15 => ARM7_MvnR
     | _ => ARM7_InvalidOpS
     end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 5 7) (xbits n 0 4)
-  else if ((xbits n 24 3) =? 0) && ((b 4 n) =? 0) then (* Data proc with shift amount *)
+
+  (* Data proc with shift amount *)
+  else if ((xbits n 25 28) =? 0) && ((b 4 n) =? 0) then
     match (xbits n 21 25) with
     | 0 => ARM7_AndS
     | 1 => ARM7_EorS
@@ -667,7 +670,9 @@ Definition arm_dec_bin_opt (n:N) :=
     | 15 => ARM7_MvnS
     | _ => ARM7_InvalidOpS
     end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 7 11) (xbits n 5 7) (xbits n 0 4)
-  else if ((xbits n 24 3) =? 1) then (* Data proc with immediate amount *)
+
+  (* Data proc with immediate amount *)
+  else if ((xbits n 25 28) =? 1) then
     match (xbits n 21 25) with
     | 0 => ARM7_AndI
     | 1 => ARM7_EorI
@@ -687,11 +692,20 @@ Definition arm_dec_bin_opt (n:N) :=
     | 15 => ARM7_MvnI
     | _ => ARM7_InvalidOpI
     end (xbits n 27 31) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
-  else if ((xbits n 22 6) =? 0) && ((xbits n 4 4) =? 9) then (* Multiply *)
+
+  (* Multiply *)
+  else if ((xbits n 22 28) =? 0) && ((xbits n 4 8) =? 9) then 
     ARM7_Mul (xbits n 28 32) (b 21 n) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
-  else if ((xbits n 23 5) =? 1) && ((xbits n 4 4) =? 9) then (* Multiply Long *)
+
+  (* Multiply Long *)
+  else if ((xbits n 23 28) =? 1) && ((xbits n 4 8) =? 9) then
     ARM7_Mull (xbits n 28 32) (b 22 n) (b 21 n) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
+
+  (* Branch *)
+  else if (xbits n 24 27) =? 5 then
+    ARM7_Branch (xbits n 27 31) (xbits n 24 25) (xbits n 0 24)
   else
+
     ARM7_Unsupported.
 
 Definition arm_dec_bin (n:N) :=
@@ -973,7 +987,6 @@ Definition arm2il (ad:addr) armi :=
                               (Cast CAST_HIGH 1 (Var (arm7_varid rd_hi)))) $;
       Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_AND (BinOp OP_EQ (Var (arm7_varid rd_hi)) (Word 0 32))
                                   (BinOp OP_EQ (Var (arm7_varid rd_lo)) (Word 0 32))))
-(*
   | ARM7_Branch cond l offset =>
       cond_eval cond (
         Move (V_TEMP ad) (BinOp OP_PLUS (Word 32 ad) (Cast CAST_SIGNED 32 (BinOp OP_LSHIFT (Word 24 offset) (Word 32 2)))) $;
@@ -1193,7 +1206,6 @@ Definition arm2il (ad:addr) armi :=
         Move (arm7_varid rd) (Load (Var V_MEM32) (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn))) LittleE 4) $;
         Move V_MEM32 (Store (Var V_MEM32) (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn))) (Var (arm7_varid rm)) LittleE 4)
       )
-  *)
   | ARM7_InvalidOp => Exn 0
   end.
 
