@@ -40,6 +40,7 @@ Require Export Picinae_slogic.
 Require Export Picinae_theory.
 Require Export BinNat.
 Require Import NArith.
+Require Import ZArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.
 Open Scope N.
@@ -597,7 +598,7 @@ Inductive arm7asm :=
 | ARM7_Mul (cond a s rd rn rs rm:N)
 | ARM7_Mull (cond u a s rd_hi rd_lo rs rm:N)
 (* Branch *)
-| ARM7_Branch (cond l offset:N)
+| ARM7_Branch (cond l:N) (offset:Z)
 (* Load and store *)
 | ARM7_LdrI (cond p u b w rn rd imm:N)
 | ARM7_StrI (cond p u b w rn rd imm:N)
@@ -703,7 +704,7 @@ Definition arm_dec_bin_opt (n:N) :=
 
   (* Branch *)
   else if (xbits n 24 27) =? 5 then
-    ARM7_Branch (xbits n 27 31) (xbits n 24 25) (xbits n 0 24)
+    ARM7_Branch (xbits n 27 31) (xbits n 24 25) (toZ 24 (xbits n 0 24))
   else
 
     ARM7_Unsupported.
@@ -864,8 +865,8 @@ Definition arm_dec_bin (n:N) :=
   (* Branch *)
   |    1,    0,    1,    l,  o23,  o22,  o21,  o20,  o19,  o18,  o17,  o16,  o15,  o14,
      o13,  o12,  o11,  o10,   o9,   o8,   o7,   o6,   o5,   o4,   o3,   o2,   o1,   o0 =>
-    ARM7_Branch (xbits n 27 31) l (bits24 o23 o22 o21 o20 o19 o18 o17 o16 o15 o14 o13 o12 o11 o10
-                                                  o9 o8 o7 o6 o5 o4 o3 o2 o1 o0)
+    ARM7_Branch (xbits n 27 31) l (toZ 24 (bits24 o23 o22 o21 o20 o19 o18 o17 o16 o15 o14 o13 o12 o11 o10
+                                                  o9 o8 o7 o6 o5 o4 o3 o2 o1 o0))
 
   (* Coprocessor Data Transfer *)
   |    1,    1,    0,    p,    u,    n,    w,    l,  rn3,  rn2,  rn1,  rn0, crd3, crd2, 
@@ -989,13 +990,12 @@ Definition arm2il (ad:addr) armi :=
                                   (BinOp OP_EQ (Var (arm7_varid rd_lo)) (Word 0 32))))
   | ARM7_Branch cond l offset =>
       cond_eval cond (
-        Move (V_TEMP ad) (BinOp OP_PLUS (Word 32 ad) (Cast CAST_SIGNED 32 (BinOp OP_LSHIFT (Word 24 offset) (Word 32 2)))) $;
-        If (BinOp OP_EQ (Word 32 l) (Word 32 1)) (
-          Move R_PC (BinOp OP_PLUS (Word 32 ad) (Word 32 4))
+        If (BinOp OP_EQ (Word l 32) (Word 1 32)) (
+          Move R_PC (Word ((Z.to_N (Z.of_N ad + offset + 4)) mod 2^32) 32)
         ) (
           Nop
         ) $;
-        Jmp (Var (V_TEMP ad))
+        Jmp (Word ((Z.to_N (Z.of_N ad + offset)) mod 2^32) 32)
       )
   | ARM7_LdrI cond p u b w rn rd imm =>
       cond_eval cond (
@@ -1301,5 +1301,7 @@ Proof.
   | eapply TMove
   | right
   | discriminate 1
+  | apply ofZ_bound
+  | apply N.mod_lt
   | econstructor ].
 Qed.
