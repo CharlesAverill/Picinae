@@ -702,6 +702,17 @@ Definition arm_dec_bin_opt (n:N) :=
   else if ((xbits n 23 28) =? 1) && ((xbits n 4 8) =? 9) then
     ARM7_Mull (xbits n 28 32) (b 22 n) (b 21 n) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
 
+  (* Halfword data transfer: register offset *)
+  else if (((xbits 25 28 n) =? 0) && ((xbits 22 21 n) =? 0) && ((xbits 7 12 n) =? 1) && ((xbits 4 5n) =? 1)) then
+    match (b 6 n), (b 5 n), (b 20 n) with
+    | 0, 0, 0 => ARM7_Swp (xbits n 28 32) (xbits n 22 23) (xbits n 16 20) (xbits n 12 16) (xbits n 0 4)
+
+    | _, _, 0 => ARM7_StrHS (xbits n 28 32) (xbits n 24 25) (xbits n 23 24) (xbits n 21 22)
+                            (xbits n 16 20) (xbits n 12 16) (xbits n 6 7) (xbits n 5 6) (xbits n 0 4)
+    | _, _, _ => ARM7_LdrHS (xbits n 28 32) (xbits n 24 25) (xbits n 23 24) (xbits n 21 22)
+                            (xbits n 16 20) (xbits n 12 16) (xbits n 6 7) (xbits n 5 6) (xbits n 0 4)
+    end
+
   (* Branch *)
   else if (xbits n 24 27) =? 5 then
     ARM7_Branch (xbits n 27 31) (xbits n 24 25) (toZ 24 (xbits n 0 24))
@@ -1083,22 +1094,22 @@ Definition arm2il (ad:addr) armi :=
       | 1 =>
         Move (arm7_varid rd)
              (Load (Var V_MEM32)
-                   (Cast (ldr_str_signed_bit s)
-                         (ldr_str_half_word_bit h)
+                   (Cast (ldr_str_signed_bit s) 32
+                   (Cast CAST_LOW (ldr_str_half_word_bit h)
                          (BinOp (ldr_str_up_bit u)
                                 (Var (arm7_varid rn))
                                 (Var (arm7_varid rm)))
-                   )
+                   ))
                    LittleE
                    4
              )
       | _ =>
         Move (arm7_varid rd)
              (Load (Var V_MEM32)
-                   (Cast (ldr_str_signed_bit s)
-                         (ldr_str_half_word_bit h)
+                   (Cast (ldr_str_signed_bit s) 32
+                   (Cast CAST_LOW (ldr_str_half_word_bit h)
                          (Var (arm7_varid rm))
-                   )
+                   ))
                    LittleE
                    4
              )
@@ -1114,21 +1125,21 @@ Definition arm2il (ad:addr) armi :=
       cond_eval cond (
       match p with
       | 1 => Move V_MEM32 (Store (Var V_MEM32)
-                                 (Cast (ldr_str_signed_bit s)
-                                       (ldr_str_half_word_bit h)
+                                 (Cast (ldr_str_signed_bit s) 32
+                                 (Cast CAST_LOW (ldr_str_half_word_bit h)
                                        (BinOp (ldr_str_up_bit u)
                                               (Var (arm7_varid rn))
                                               (Var (arm7_varid rm)))
-                                       )
+                                       ))
                                  (Var (arm7_varid rd))
                                  LittleE
                                  4)
       | _ => Move (arm7_varid rd)
                   (Load (Var V_MEM32)
-                        (Cast (ldr_str_signed_bit s)
-                              (ldr_str_half_word_bit h)
+                        (Cast (ldr_str_signed_bit s) 32
+                        (Cast CAST_LOW (ldr_str_half_word_bit h)
                               (Var (arm7_varid rm))
-                        )
+                        ))
                         LittleE
                         4)
       end $;
@@ -1203,8 +1214,8 @@ Definition arm2il (ad:addr) armi :=
       end)
   | ARM7_Swp cond b rn rd rm =>
       cond_eval cond (
-        Move (arm7_varid rd) (Load (Var V_MEM32) (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn))) LittleE 4) $;
-        Move V_MEM32 (Store (Var V_MEM32) (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn))) (Var (arm7_varid rm)) LittleE 4)
+        Move (arm7_varid rd) (Load (Var V_MEM32) (Cast CAST_UNSIGNED 32 (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn)))) LittleE 4) $;
+        Move V_MEM32 (Store (Var V_MEM32) (Cast CAST_UNSIGNED 32 (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn)))) (Var (arm7_varid rm)) LittleE 4)
       )
   | ARM7_InvalidOp => Exn 0
   end.
@@ -1277,6 +1288,10 @@ Proof.
               try unfold cond_eval; 
               try unfold bit_set;
               try unfold bit_clr;
+              try unfold swp_word_bit;
+              try unfold ldr_str_signed_bit;
+              try unfold ldr_str_half_word_bit;
+              try unfold ldr_str_up_bit;
               try unfold arm7_st.
   all: repeat match goal with |- context [ match ?x with _ => _ end ] =>
     try destruct x
