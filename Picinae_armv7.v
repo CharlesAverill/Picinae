@@ -702,8 +702,16 @@ Definition arm_dec_bin_opt (n:N) :=
   else if ((xbits n 23 28) =? 1) && ((xbits n 4 8) =? 9) then
     ARM7_Mull (xbits n 28 32) (b 22 n) (b 21 n) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
 
+  (* Half word data transfer immediate offset *)
+  else if (((xbits 25 28 n) =? 0) && ((xbits 22 21 n) =? 1) && ((xbits 7 8 n) =? 1) && ((xbits 4 5 n) =? 1)) then
+    match (xbits n 20 21) with
+    | 0 => ARM7_StrHI
+    | _ => ARM7_LdrHI
+    end (xbits n 28 32) (xbits n 24 25) (xbits n 23 24) (xbits n 21 22)
+        (xbits n 16 20) (xbits n 12 16) (xbits n 6 7) (xbits n 5 6) (((xbits n 8 12) * 16) + (xbits n 0 4))
+
   (* Halfword data transfer: register offset *)
-  else if (((xbits 25 28 n) =? 0) && ((xbits 22 21 n) =? 0) && ((xbits 7 12 n) =? 1) && ((xbits 4 5n) =? 1)) then
+  else if (((xbits 25 28 n) =? 0) && ((xbits 22 21 n) =? 0) && ((xbits 7 12 n) =? 1) && ((xbits 4 5 n) =? 1)) then
     match (b 6 n), (b 5 n), (b 20 n) with
     | 0, 0, 0 => ARM7_Swp (xbits n 28 32) (xbits n 22 23) (xbits n 16 20) (xbits n 12 16) (xbits n 0 4)
 
@@ -1156,22 +1164,21 @@ Definition arm2il (ad:addr) armi :=
       | 1 =>
         Move (arm7_varid rd)
              (Load (Var V_MEM32)
-                   (Cast (ldr_str_signed_bit s)
-                         (ldr_str_half_word_bit h)
+                   (Cast (ldr_str_signed_bit s) 32
+                   (Cast CAST_LOW (ldr_str_half_word_bit h)
                          (BinOp (ldr_str_up_bit u)
                                 (Var (arm7_varid rn))
-                                (Word 32 off))
-                   )
+                                (Word off 32))
+                   ))
                    LittleE
                    4
              )
       | _ =>
         Move (arm7_varid rd)
              (Load (Var V_MEM32)
-                   (Cast (ldr_str_signed_bit s)
-                         (ldr_str_half_word_bit h)
-                         (Word 32 off)
-                   )
+                   (Cast (ldr_str_signed_bit s) 32
+                   (Cast CAST_LOW (ldr_str_half_word_bit h) (Word off 32)
+                   ))
                    LittleE
                    4
              )
@@ -1181,27 +1188,26 @@ Definition arm2il (ad:addr) armi :=
       | _ => Move (arm7_varid rn)
                   (BinOp (ldr_str_up_bit u)
                          (Var (arm7_varid rn))
-                         (Word 32 off))
+                         (Word off 32))
       end)
   | ARM7_StrHI cond p u w rn rd s h off =>
       cond_eval cond (
       match p with
       | 1 => Move V_MEM32 (Store (Var V_MEM32)
-                                 (Cast (ldr_str_signed_bit s)
-                                       (ldr_str_half_word_bit h)
+                                 (Cast (ldr_str_signed_bit s) 32
+                                 (Cast CAST_LOW (ldr_str_half_word_bit h)
                                        (BinOp (ldr_str_up_bit u)
                                               (Var (arm7_varid rn))
-                                              (Word 32 off))
-                                       )
+                                              (Word off 32))
+                                       ))
                                  (Var (arm7_varid rd))
                                  LittleE
                                  4)
       | _ => Move (arm7_varid rd)
                   (Load (Var V_MEM32)
-                        (Cast (ldr_str_signed_bit s)
-                              (ldr_str_half_word_bit h)
-                              (Word 32 off)
-                        )
+                        (Cast (ldr_str_signed_bit s) 32
+                        (Cast CAST_LOW (ldr_str_half_word_bit h) (Word off 32)
+                        ))
                         LittleE
                         4)
       end $;
@@ -1210,7 +1216,7 @@ Definition arm2il (ad:addr) armi :=
       | _ => Move (arm7_varid rn)
                   (BinOp (ldr_str_up_bit u)
                          (Var (arm7_varid rn))
-                         (Word 32 off))
+                         (Word off 32))
       end)
   | ARM7_Swp cond b rn rd rm =>
       cond_eval cond (
@@ -1258,6 +1264,15 @@ Proof.
   repeat first [ reflexivity | destruct p ].
 Qed.
 
+Lemma xbits_16:
+  forall n, xbits n 8 12 * 16 + xbits n 0 4 < 2 ^ 32.
+Proof.
+  intro n.
+  destruct n.
+  reflexivity.
+  repeat first [ reflexivity | destruct p ].
+Qed.
+
 Lemma bit_lt_o:
   forall n m o, o > 1 -> b m n < o.
 Proof.
@@ -1296,9 +1311,6 @@ Proof.
   all: repeat match goal with |- context [ match ?x with _ => _ end ] =>
     try destruct x
   end.
-  all: repeat match goal with |- context [ match ?x with _ => _ end ] =>
-    try destruct x
-  end.
   all: try apply TExn.
   all: repeat first
   [ reflexivity
@@ -1309,6 +1321,7 @@ Proof.
   | eapply hastyp_binop
   | apply xbits_bound
   | apply xbits_bound_double
+  | apply xbits_16
   | apply bit_lt_o
   | apply ofZ_bound
   | apply N.mod_lt
