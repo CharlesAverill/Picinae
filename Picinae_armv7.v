@@ -528,8 +528,7 @@ Definition arm7_varid (n:N) :=
   | 12 => R_R12
   | 13 => R_SP
   | 14 => R_LR
-  | 15 => R_PC
-  | _ => R_R0 (* TODO How to handle invalid register number? *)
+  | _ => R_PC
   end.
 
 Inductive arm7asm :=
@@ -923,9 +922,29 @@ Definition arm_dec_bin (n:N) :=
        _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _ => ARM7_Invalid
   end.
 
+Open Scope stmt_scope.
+
 Definition bit_set := (Word 1 1).
 Definition bit_clr := (Word 0 1).
-
+Definition arm7_st st := match st with | 0 => OP_LSHIFT | 1 => OP_RSHIFT | 2 => OP_ARSHIFT | _ => OP_ROT end.
+Definition ldr_str_word_bit b := match b with | 0 => 32 | _ => 8 end.
+Definition ldr_str_up_bit u := match u with | 0 => OP_MINUS | _ => OP_PLUS end.
+Definition ldr_str_half_word_bit h := match h with | 0 => 8 | _ => 16 end.
+Definition ldr_str_signed_bit s := match s with | 0 => CAST_UNSIGNED | _ => CAST_SIGNED end.
+Definition swp_word_bit b := match b with | 0 => 32 | _ => 8 end.
+Definition data_proc_imm op rd rn imm rot := Move (arm7_varid rd) (BinOp op (Var (arm7_varid rn)) (BinOp OP_ROT (Word imm 32) (Word (2 * rot) 32))).
+Definition data_proc_reg op rd rn st rm rs := Move (arm7_varid rd) (BinOp op (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Var (arm7_varid rs)))).
+Definition data_proc_shift op rd rn st sa rm := Move (arm7_varid rd) (BinOp op (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32))) .
+Definition cpsr_update s rd :=
+  If (BinOp OP_EQ bit_set (Word s 1)) (
+    If (BinOp OP_NEQ (Word rd 32) (Word 15 32)) (
+      Move R_CF (Unknown 1) $;
+      Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32))) $;
+      Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
+     )
+      (Nop)
+    )
+    (Nop).
 Definition cond_eval cond il :=
   match cond with
   | 0 => If (BinOp OP_EQ (Var R_ZF) bit_set) (il) (Nop)
@@ -944,43 +963,27 @@ Definition cond_eval cond il :=
   | 13 => If (BinOp OP_OR (BinOp OP_EQ (Var R_ZF) bit_set) (BinOp OP_NEQ (Var R_NF) (Var R_VF))) (il) (Nop)
   | _ => il
 end.
-
-Open Scope stmt_scope.
-
-Definition arm7_st st := match st with | 0 => OP_LSHIFT | 1 => OP_RSHIFT | 2 => OP_ARSHIFT | _ => OP_ROT end.
-Definition ldr_str_word_bit b := match b with | 0 => 32 | _ => 8 end.
-Definition ldr_str_up_bit u := match u with | 0 => OP_MINUS | _ => OP_PLUS end.
-Definition ldr_str_half_word_bit h := match h with | 0 => 8 | _ => 16 end.
-Definition ldr_str_signed_bit s := match s with | 0 => CAST_UNSIGNED | _ => CAST_SIGNED end.
-Definition swp_word_bit b := match b with | 0 => 32 | _ => 8 end.
-Definition cpsr_update s rd :=
-  If (BinOp OP_EQ bit_set (Word s 1)) (
-    If (BinOp OP_EQ (Word rd 32) (Word 15 32)) (
-      Move R_CF (Unknown 1) $;
-      Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32))) $;
-      Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
-     )
-      (Nop)
-    )
-    (Nop).
-
 Definition arm2il (ad:addr) armi :=
   match armi with
-  | ARM7_AndI cond s rn rd rot imm =>
-      cond_eval cond (
-        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp OP_ROT (Word imm 32) (Word (2 * rot) 32))) $;
-        cpsr_update s rd
-      )
-  | ARM7_AndR cond s rn rd rs st rm =>
-      cond_eval cond (
-        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Var (arm7_varid rs)))) $;
-        cpsr_update s rd
-      )
-  | ARM7_AndS cond s rn rd sa st rm =>
-      cond_eval cond (
-        Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32))) $;
-        cpsr_update s rd
-      )
+  | ARM7_AndI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_AND rd rn imm rot) $; cpsr_update s rd)
+  | ARM7_AndR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_AND rd rn st rm rs) $; cpsr_update s rd)
+  | ARM7_AndS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_AND rd rn st sa rm $; cpsr_update s rd)
+  | ARM7_EorI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_XOR rd rn imm rot) $; cpsr_update s rd)
+  | ARM7_EorR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_XOR rd rn st rm rs) $; cpsr_update s rd)
+  | ARM7_EorS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_XOR rd rn st sa rm $; cpsr_update s rd)
+  | ARM7_OrrI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_OR rd rn imm rot) $; cpsr_update s rd)
+  | ARM7_OrrR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_OR rd rn st rm rs) $; cpsr_update s rd)
+  | ARM7_OrrS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_OR rd rn st sa rm $; cpsr_update s rd)
+  | ARM7_AddI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_PLUS rd rn imm rot) $; cpsr_update s rd)
+  | ARM7_AddR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_PLUS rd rn st rm rs) $; cpsr_update s rd)
+  | ARM7_AddS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_PLUS rd rn st sa rm $; cpsr_update s rd)
+  | ARM7_SubI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_MINUS rd rn imm rot) $; cpsr_update s rd)
+  | ARM7_SubR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_MINUS rd rn st rm rs) $; cpsr_update s rd)
+  | ARM7_SubS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_MINUS rd rn st sa rm $; cpsr_update s rd)
+  | ARM7_MovI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_PLUS rd rn 0 0) $; cpsr_update s rd)
+  | ARM7_MovR cond s rn rd rs st rm => cond_eval cond ((data_proc_imm OP_PLUS rd rn 0 0) $; cpsr_update s rd)
+  | ARM7_MovS cond s rn rd sa st rm => cond_eval cond ((data_proc_imm OP_PLUS rd rn 0 0) $; cpsr_update s rd)
+
   | ARM7_Mul cond a s rd rn rs rm =>
       cond_eval cond (
         Move (arm7_varid rd) (BinOp OP_TIMES (Var (arm7_varid rm)) (Var (arm7_varid rs))) $;
@@ -1335,7 +1338,10 @@ Proof.
     try destruct x
   end.
   all: repeat try unfold arm2il; 
-              try unfold cond_eval; 
+              try unfold cond_eval;
+              try unfold data_proc_imm;
+              try unfold data_proc_reg;
+              try unfold data_proc_shift;
               try unfold bit_set;
               try unfold bit_clr;
               try unfold swp_word_bit;
@@ -1343,29 +1349,30 @@ Proof.
               try unfold ldr_str_half_word_bit;
               try unfold ldr_str_up_bit;
               try unfold ldr_str_word_bit;
+              try unfold cpsr_update;
               try unfold arm7_st.
   all: repeat match goal with |- context [ match ?x with _ => _ end ] =>
     try destruct x
   end.
-  all: try apply TExn.
+  all: eexists; try apply TExn.
   all: repeat first
   [ reflexivity
-  | apply hastyp_varid
-  | eapply TWord
-  | apply TSeq
-  | apply TIf
-  | eapply hastyp_binop
-  | apply xbits_bound
-  | apply xbits_bound_double
   | apply xbits_16
   | apply bit_lt_o
   | apply ofZ_bound
   | apply N.mod_lt
-  | rewrite <- store_upd_eq
-  | eapply TMove
-  | right
-  | discriminate 1
+  | apply xbits_bound
+  | apply xbits_bound_double
   | apply ofZ_bound
   | apply N.mod_lt
+  | right
+  | discriminate 1
+  | eapply TWord
+  | eapply TMove
+  | apply TSeq
+  | apply TIf
+  | eapply hastyp_binop
+  | rewrite <- store_upd_eq
+  | apply hastyp_varid
   | econstructor ].
 Qed.
