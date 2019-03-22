@@ -1,0 +1,73 @@
+{r0 = s (the string), r1 = c (the value), r2 = n (amount to set)}
+(* 0xc0000040: mov r3, r0 *) {r3 = r0 = s}
+(* 0xc0000044: cmp r2, #8 *)
+(* 0xc0000048: blo #0x44 *)
+{r2 u>= 8} or go to 0x...94
+(* 0xc000004c: tst r3, #3 *)
+(* 0xc0000050: strbne r1, [r3], #1 *)
+(* 0xc0000054: subne r2, r2, #1 *)
+(* 0xc0000058: bne #-0x14 *)
+{bytes have been copied from the start of s to the first dword}
+{r3 ends in two zero bits (i.e. r3 is an aligned pointer)}
+(* 0xc000005c: and r1, r1, #255 *)
+(* 0xc0000060: orr r1, r1, r1, lsl #8 *)
+(* 0xc0000064: orr r1, r1, r1, lsl #16 *)
+{r1 = a dword containing c (cast to a byte) four times}
+(* 0xc0000068: mov r12, r1 *)
+{{r1,r12} = a qword containing c eight times}
+{from 0xc000008c}
+(hs means u>=: "unsigned higher or same (aka carry set/cs)")
+({r2>=8} subs(hs),stmhs {r2-=8,qword stored,r3+=8})
+({r2<8} subs,stmhs {r2-=8/r2 rolled over to negative})
+({r2<8 && hs} subshs,stmhs {r2-=8/r2 rolled over to negative})
+(* 0xc000006c: subs r2, r2, #8 *)
+(* 0xc0000070: stmhs r3!, {r1, r12} *)
+(* 0xc0000074: subshs r2, r2, #8 *)
+(* 0xc0000078: stmhs r3!, {r1, r12} *)
+(* 0xc000007c: subshs r2, r2, #8 *)
+(* 0xc0000080: stmhs r3!, {r1, r12} *)
+(* 0xc0000084: subshs r2, r2, #8 *)
+(* 0xc0000088: stmhs r3!, {r1, r12} *)
+{up to 8*4 bytes have been stored}
+{r3 has been decremented/incremented appropriately}
+{r2 either has one extra subtraction or has been decremented appropriately}
+{hs if there are qwords remaining/r2>0}
+(* 0xc000008c: bhs #-0x28 *)
+{number of bytes left to copy < 8, stored in r2's lower three bits}
+(* 0xc0000090: and r2, r2, #7 *)
+{altentry from 0x...48 when r2 < 8}
+{r2 < 8 is number of bytes left to copy}
+(this is the same as 0x...6c, but storing single bytes)
+(* 0xc0000094: subs r2, r2, #1 *)
+(* 0xc0000098: strbhs r1, [r3], #1 *)
+(* 0xc000009c: subshs r2, r2, #1 *)
+(* 0xc00000a0: strbhs r1, [r3], #1 *)
+(* 0xc00000a4: subshs r2, r2, #1 *)
+(* 0xc00000a8: strbhs r1, [r3], #1 *)
+(* 0xc00000ac: subshs r2, r2, #1 *)
+(* 0xc00000b0: strbhs r1, [r3], #1 *)
+(* 0xc00000b4: bhs #-0x28 *)
+{r2 is -1, r0 contains original s, with n bytes of c written to it}
+(* 0xc00000b8: bx lr *)
+
+Basically, the code is:
+memset(r0=s,r1=c,r2=n) {
+  r3=r0;
+  while (r2 & 0b11) {
+    (char *)*r3 = r1;
+    r0++;
+    r2--;
+  }
+  if r2 < 8 goto skip;
+  (qword){r1,r12} = {(char)r1,(char)r1,...*8};
+  while ((r2-=8)>0) { *UNROLLED 4 TIMES*
+    (qword *)*r3 = {r1,r12};
+  }
+  r2 &= 0x7;
+  skip:
+  while ((r2-=1 > 0) { *UNROLLED 4 TIMES*
+    (char *)*r3 = r1;
+    r3++;
+  }
+  return r0=r0; *mov is unnecessary*
+}
