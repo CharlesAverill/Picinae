@@ -932,17 +932,17 @@ Definition ldr_str_up_bit u := match u with | 0 => OP_MINUS | _ => OP_PLUS end.
 Definition ldr_str_half_word_bit h := match h with | 0 => 8 | _ => 16 end.
 Definition ldr_str_signed_bit s := match s with | 0 => CAST_UNSIGNED | _ => CAST_SIGNED end.
 Definition swp_word_bit b := match b with | 0 => 32 | _ => 8 end.
-Definition data_proc_imm op rd rn imm rot := Move (arm7_varid rd) (BinOp op (Var (arm7_varid rn)) (BinOp OP_ROT (Word imm 32) (Word (2 * rot) 32))).
-Definition data_proc_reg op rd rn st rm rs := Move (arm7_varid rd) (BinOp op (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Var (arm7_varid rs)))).
-Definition data_proc_shift op rd rn st sa rm := Move (arm7_varid rd) (BinOp op (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32))) .
-Definition cpsr_update s rd :=
+Definition data_proc_imm op dst rn imm rot := Move dst (BinOp op (Var (arm7_varid rn)) (BinOp OP_ROT (Word imm 32) (Word (2 * rot) 32))).
+Definition data_proc_reg op dst rn st rm rs := Move dst (BinOp op (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Var (arm7_varid rs)))).
+Definition data_proc_shift op dst rn st sa rm := Move dst (BinOp op (Var (arm7_varid rn)) (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32))) .
+Definition cpsr_update s dst :=
   If (BinOp OP_EQ bit_set (Word s 1)) (
-    If (BinOp OP_NEQ (Word rd 32) (Word 15 32)) (
+    if dst == R_PC then
+      Nop
+    else
       Move R_CF (Unknown 1) $;
-      Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_EQ (Var (arm7_varid rd)) (Word 0 32))) $;
-      Move R_NF (Cast CAST_HIGH 1 (Var (arm7_varid rd)))
-     )
-      (Nop)
+      Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_EQ (Var dst) (Word 0 32))) $;
+      Move R_NF (Cast CAST_HIGH 1 (Var dst))
     )
     (Nop).
 Definition cond_eval cond il :=
@@ -965,25 +965,36 @@ Definition cond_eval cond il :=
 end.
 Definition arm2il (ad:addr) armi :=
   match armi with
-  | ARM7_AndI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_AND rd rn imm rot) $; cpsr_update s rd)
-  | ARM7_AndR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_AND rd rn st rm rs) $; cpsr_update s rd)
-  | ARM7_AndS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_AND rd rn st sa rm $; cpsr_update s rd)
-  | ARM7_EorI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_XOR rd rn imm rot) $; cpsr_update s rd)
-  | ARM7_EorR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_XOR rd rn st rm rs) $; cpsr_update s rd)
-  | ARM7_EorS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_XOR rd rn st sa rm $; cpsr_update s rd)
-  | ARM7_OrrI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_OR rd rn imm rot) $; cpsr_update s rd)
-  | ARM7_OrrR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_OR rd rn st rm rs) $; cpsr_update s rd)
-  | ARM7_OrrS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_OR rd rn st sa rm $; cpsr_update s rd)
-  | ARM7_AddI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_PLUS rd rn imm rot) $; cpsr_update s rd)
-  | ARM7_AddR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_PLUS rd rn st rm rs) $; cpsr_update s rd)
-  | ARM7_AddS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_PLUS rd rn st sa rm $; cpsr_update s rd)
-  | ARM7_SubI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_MINUS rd rn imm rot) $; cpsr_update s rd)
-  | ARM7_SubR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_MINUS rd rn st rm rs) $; cpsr_update s rd)
-  | ARM7_SubS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_MINUS rd rn st sa rm $; cpsr_update s rd)
-  | ARM7_MovI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_PLUS rd rn 0 0) $; cpsr_update s rd)
-  | ARM7_MovR cond s rn rd rs st rm => cond_eval cond ((data_proc_imm OP_PLUS rd rn 0 0) $; cpsr_update s rd)
-  | ARM7_MovS cond s rn rd sa st rm => cond_eval cond ((data_proc_imm OP_PLUS rd rn 0 0) $; cpsr_update s rd)
-
+  | ARM7_AndI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_AND (arm7_varid rd) rn imm rot) $; cpsr_update s (arm7_varid rd))
+  | ARM7_AndR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_AND (arm7_varid rd) rn st rm rs) $; cpsr_update s (arm7_varid rd))
+  | ARM7_AndS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_AND (arm7_varid rd) rn st sa rm $; cpsr_update s (arm7_varid rd))
+  | ARM7_EorI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_XOR (arm7_varid rd) rn imm rot) $; cpsr_update s (arm7_varid rd))
+  | ARM7_EorR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_XOR (arm7_varid rd) rn st rm rs) $; cpsr_update s (arm7_varid rd))
+  | ARM7_EorS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_XOR (arm7_varid rd) rn st sa rm $; cpsr_update s (arm7_varid rd))
+  | ARM7_OrrI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_OR (arm7_varid rd) rn imm rot) $; cpsr_update s (arm7_varid rd))
+  | ARM7_OrrR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_OR (arm7_varid rd) rn st rm rs) $; cpsr_update s (arm7_varid rd))
+  | ARM7_OrrS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_OR (arm7_varid rd) rn st sa rm $; cpsr_update s (arm7_varid rd))
+  | ARM7_AddI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_PLUS (arm7_varid rd) rn imm rot) $; cpsr_update s (arm7_varid rd))
+  | ARM7_AddR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_PLUS (arm7_varid rd) rn st rm rs) $; cpsr_update s (arm7_varid rd))
+  | ARM7_AddS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_PLUS (arm7_varid rd) rn st sa rm $; cpsr_update s (arm7_varid rd))
+  | ARM7_SubI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_MINUS (arm7_varid rd) rn imm rot) $; cpsr_update s (arm7_varid rd))
+  | ARM7_SubR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_MINUS (arm7_varid rd) rn st rm rs) $; cpsr_update s (arm7_varid rd))
+  | ARM7_SubS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_MINUS (arm7_varid rd) rn st sa rm $; cpsr_update s (arm7_varid rd))
+  | ARM7_MovI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_PLUS (arm7_varid rd) rn 0 0) $; cpsr_update s (arm7_varid rd))
+  | ARM7_MovR cond s rn rd rs st rm => cond_eval cond ((data_proc_imm OP_PLUS (arm7_varid rd) rn 0 0) $; cpsr_update s (arm7_varid rd))
+  | ARM7_MovS cond s rn rd sa st rm => cond_eval cond ((data_proc_imm OP_PLUS (arm7_varid rd) rn 0 0) $; cpsr_update s (arm7_varid rd))
+  | ARM7_TstI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_AND (V_TEMP ad) rn imm rot) $; cpsr_update s (V_TEMP ad))
+  | ARM7_TstR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_AND (V_TEMP ad) rn st rm rs) $; cpsr_update s (V_TEMP ad))
+  | ARM7_TstS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_AND (V_TEMP ad) rn st sa rm $; cpsr_update s (V_TEMP ad))
+  | ARM7_TeqI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_XOR (V_TEMP ad) rn imm rot) $; cpsr_update s (V_TEMP ad))
+  | ARM7_TeqR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_XOR (V_TEMP ad) rn st rm rs) $; cpsr_update s (V_TEMP ad))
+  | ARM7_TeqS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_XOR (V_TEMP ad) rn st sa rm $; cpsr_update s (V_TEMP ad))
+  | ARM7_CmpI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_MINUS (V_TEMP ad) rn imm rot) $; cpsr_update s (V_TEMP ad))
+  | ARM7_CmpR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_MINUS (V_TEMP ad) rn st rm rs) $; cpsr_update s (V_TEMP ad))
+  | ARM7_CmpS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_MINUS (V_TEMP ad) rn st sa rm $; cpsr_update s (V_TEMP ad))
+  | ARM7_CmnI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_PLUS (V_TEMP ad) rn imm rot) $; cpsr_update s (V_TEMP ad))
+  | ARM7_CmnR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_PLUS (V_TEMP ad) rn st rm rs) $; cpsr_update s (V_TEMP ad))
+  | ARM7_CmnS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_PLUS (V_TEMP ad) rn st sa rm $; cpsr_update s (V_TEMP ad))
   | ARM7_Mul cond a s rd rn rs rm =>
       cond_eval cond (
         Move (arm7_varid rd) (BinOp OP_TIMES (Var (arm7_varid rm)) (Var (arm7_varid rs))) $;
@@ -992,7 +1003,7 @@ Definition arm2il (ad:addr) armi :=
         ) (
           Nop
         ) $;
-        cpsr_update s rd
+        cpsr_update s (arm7_varid rd)
       )
   | ARM7_Mull cond u a s rd_hi rd_lo rs rm =>
       cond_eval cond (
@@ -1355,6 +1366,8 @@ Proof.
     try destruct x
   end.
   all: eexists; try apply TExn.
+  Optimize Proof.
+  Optimize Heap.
   all: repeat first
   [ reflexivity
   | apply xbits_16
