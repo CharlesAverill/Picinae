@@ -645,8 +645,7 @@ Definition arm_dec_bin_opt (n:N) :=
     | 12 => ARM7_OrrR
     | 13 => ARM7_MovR
     | 14 => ARM7_BicR
-    | 15 => ARM7_MvnR
-    | _ => ARM7_InvalidOpS
+    | _ => ARM7_MvnR
     end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 5 7) (xbits n 0 4)
 
   (* Data proc with shift amount *)
@@ -667,8 +666,7 @@ Definition arm_dec_bin_opt (n:N) :=
     | 12 => ARM7_OrrS
     | 13 => ARM7_MovS
     | 14 => ARM7_BicS
-    | 15 => ARM7_MvnS
-    | _ => ARM7_InvalidOpS
+    | _ => ARM7_MvnS
     end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 7 11) (xbits n 5 7) (xbits n 0 4)
 
   (* Data proc with immediate amount *)
@@ -689,8 +687,7 @@ Definition arm_dec_bin_opt (n:N) :=
     | 12 => ARM7_OrrI
     | 13 => ARM7_MovI
     | 14 => ARM7_BicI
-    | 15 => ARM7_MvnI
-    | _ => ARM7_InvalidOpI
+    | _ => ARM7_MvnI
     end (xbits n 27 31) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
 
   (* Multiply *)
@@ -960,8 +957,7 @@ Definition cond_eval cond il :=
   | 10 => If (BinOp OP_EQ (Var R_NF) (Var R_VF)) (il) (Nop)
   | 11 => If (BinOp OP_NEQ (Var R_NF) (Var R_VF)) (il) (Nop)
   | 12 => If (BinOp OP_AND (BinOp OP_EQ (Var R_ZF) bit_clr) (BinOp OP_EQ (Var R_NF) (Var R_VF))) (il) (Nop)
-  | 13 => If (BinOp OP_OR (BinOp OP_EQ (Var R_ZF) bit_set) (BinOp OP_NEQ (Var R_NF) (Var R_VF))) (il) (Nop)
-  | _ => il
+  | _ => If (BinOp OP_OR (BinOp OP_EQ (Var R_ZF) bit_set) (BinOp OP_NEQ (Var R_NF) (Var R_VF))) (il) (Nop)
 end.
 Definition arm2il (ad:addr) armi :=
   match armi with
@@ -980,6 +976,9 @@ Definition arm2il (ad:addr) armi :=
   | ARM7_SubI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_MINUS (arm7_varid rd) rn imm rot) $; cpsr_update s (arm7_varid rd))
   | ARM7_SubR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_MINUS (arm7_varid rd) rn st rm rs) $; cpsr_update s (arm7_varid rd))
   | ARM7_SubS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_MINUS (arm7_varid rd) rn st sa rm $; cpsr_update s (arm7_varid rd))
+  | ARM7_RsbI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_MINUS (arm7_varid rd) rn imm rot) $; Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $; cpsr_update s (arm7_varid rd))
+  | ARM7_RsbR cond s rn rd rs st rm => cond_eval cond ((data_proc_reg OP_MINUS (arm7_varid rd) rn st rm rs) $; Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $; cpsr_update s (arm7_varid rd))
+  | ARM7_RsbS cond s rn rd sa st rm => cond_eval cond (data_proc_shift OP_MINUS (arm7_varid rd) rn st sa rm $; Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $; cpsr_update s (arm7_varid rd))
   | ARM7_MovI cond s rn rd rot imm => cond_eval cond ((data_proc_imm OP_PLUS (arm7_varid rd) rn 0 0) $; cpsr_update s (arm7_varid rd))
   | ARM7_MovR cond s rn rd rs st rm => cond_eval cond ((data_proc_imm OP_PLUS (arm7_varid rd) rn 0 0) $; cpsr_update s (arm7_varid rd))
   | ARM7_MovS cond s rn rd sa st rm => cond_eval cond ((data_proc_imm OP_PLUS (arm7_varid rd) rn 0 0) $; cpsr_update s (arm7_varid rd))
@@ -1340,35 +1339,29 @@ Proof.
   simpl. apply N.gt_lt. assumption.
 Qed.
 
-Theorem arm7_il_welltyped:
-  forall a n, exists c', hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin_opt n)) c'.
-Proof.
-  intros. unfold arm_dec_bin_opt.
-  repeat match goal with [ |- context [ if ?x then _ else _ ] ] => destruct x end.
-  all: repeat match goal with |- context [ match ?x with _ => _ end ] =>
+Ltac explode_arm2il :=
+repeat try unfold arm2il; 
+       try unfold cond_eval;
+       try unfold data_proc_imm;
+       try unfold data_proc_reg;
+       try unfold data_proc_shift;
+       try unfold bit_set;
+       try unfold bit_clr;
+       try unfold swp_word_bit;
+       try unfold ldr_str_signed_bit;
+       try unfold ldr_str_half_word_bit;
+       try unfold ldr_str_up_bit;
+       try unfold ldr_str_word_bit;
+       try unfold cpsr_update;
+       try unfold arm7_st.
+
+Ltac explode_matches :=
+repeat match goal with |- context [ match ?x with _ => _ end ] =>
     try destruct x
-  end.
-  all: repeat try unfold arm2il; 
-              try unfold cond_eval;
-              try unfold data_proc_imm;
-              try unfold data_proc_reg;
-              try unfold data_proc_shift;
-              try unfold bit_set;
-              try unfold bit_clr;
-              try unfold swp_word_bit;
-              try unfold ldr_str_signed_bit;
-              try unfold ldr_str_half_word_bit;
-              try unfold ldr_str_up_bit;
-              try unfold ldr_str_word_bit;
-              try unfold cpsr_update;
-              try unfold arm7_st.
-  all: repeat match goal with |- context [ match ?x with _ => _ end ] =>
-    try destruct x
-  end.
-  all: eexists; try apply TExn.
-  Optimize Proof.
-  Optimize Heap.
-  all: repeat first
+end.
+
+Ltac solve_arm2il_subgoals :=
+repeat first
   [ reflexivity
   | apply xbits_16
   | apply bit_lt_o
@@ -1388,4 +1381,51 @@ Proof.
   | rewrite <- store_upd_eq
   | apply hastyp_varid
   | econstructor ].
+
+Ltac clear_exceptions := eexists; try apply TExn.
+
+Ltac solve_arm := explode_arm2il; explode_matches; clear_exceptions; solve_arm2il_subgoals.
+
+Theorem arm7_il_welltyped:
+  forall a n, exists c', hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin_opt n)) c'.
+Proof.
+  intros. unfold arm_dec_bin_opt.
+  repeat match goal with [ |- context [ if ?x then _ else _ ] ] => destruct x end.
+  all: explode_matches.
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. }
+  Optimize Proof.
+  Optimize Heap.
 Qed.
