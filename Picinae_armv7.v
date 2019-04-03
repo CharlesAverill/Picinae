@@ -609,6 +609,9 @@ Inductive arm7asm :=
 | ARM7_StrHS (cond p u w rn rd s h rm:N)
 (* Swap instruction *)
 | ARM7_Swp (cond b rn rd rm:N)
+(* Block data transfer *)
+| ARM7_Ldm (cond p u s w rn r15 r14 r13 r12 r11 r10 r9 r8 r7 r6 r5 r4 r3 r2 r1 r0:N)
+| ARM7_Stm (cond p u s w rn r15 r14 r13 r12 r11 r10 r9 r8 r7 r6 r5 r4 r3 r2 r1 r0:N)
 | ARM7_Invalid
 | ARM7_Unsupported
 .
@@ -734,8 +737,18 @@ Definition arm_dec_bin_opt (n:N) :=
         (xbits n 16 20) (xbits n 12 16) (xbits n 0 12)
 
   (* Branch *)
-  else if (xbits n 24 27) =? 5 then
+  else if (xbits n 25 28) =? 5 then
     ARM7_Branch (xbits n 27 31) (xbits n 24 25) (toZ 24 (xbits n 0 24))
+
+  (* Block data transfer *)
+  else if (xbits n 25 28) =? 4 then
+    match (xbits n 20 21) with
+    | 0 => ARM7_Stm
+    | _ => ARM7_Ldm
+    end (xbits n 28 32) (xbits n 24 25) (xbits n 23 24) (xbits n 22 23) (xbits n 21 22) (xbits n 16 20)
+        (xbits n 15 16) (xbits n 14 15) (xbits n 13 14) (xbits n 12 13) (xbits n 11 12) (xbits n 10 11)
+        (xbits n 9 10)  (xbits n 8 9)   (xbits n 7 8)   (xbits n 6 7)   (xbits n 5 6)   (xbits n 4 5)
+        (xbits n 3 4)   (xbits n 2 1)   (xbits n 1 2)   (xbits n 0 1)
   else
     ARM7_Unsupported.
 
@@ -938,6 +951,8 @@ Definition mov_reg op dst rn st rm rs := Move dst (BinOp op (Var (arm7_varid rn)
 
 Definition mov_shift_op2 st rm sa := (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32)).
 Definition mov_shift op dst rn st sa rm := Move dst (BinOp op (Var (arm7_varid rn)) (mov_shift_op2 st rm sa)).
+
+Definition pre_post p exp1 exp2 := if p =? 0 then exp1 $; exp2 else exp2 $; exp1.
 
 Definition cpsr_update s dst :=
   If (BinOp OP_EQ bit_set (Word s 1)) (
@@ -1323,6 +1338,94 @@ Definition arm2il (ad:addr) armi :=
         Move (arm7_varid rd) (Load (Var V_MEM32) (Cast CAST_UNSIGNED 32 (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn)))) LittleE 4) $;
         Move V_MEM32 (Store (Var V_MEM32) (Cast CAST_UNSIGNED 32 (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn)))) (Var (arm7_varid rm)) LittleE 4)
       )
+  | ARM7_Ldm cond p u s w rn r15 r14 r13 r12 r11 r10 r9 r8 r7 r6 r5 r4 r3 r2 r1 r0 =>
+      cond_eval cond (
+        Move (V_TEMP ad) (Word (4 * (r15 + r14 + r13 + r12 +r11 +r10 +r9 + r8 + r7 + r6 + r5 + r4 + r3 + r2 + r1 + r0)) 32) $;
+        Nop
+      )
+  | ARM7_Stm cond p u s w rn r15 r14 r13 r12 r11 r10 r9 r8 r7 r6 r5 r4 r3 r2 r1 r0 =>
+      cond_eval cond (
+        Move (V_TEMP ad) (Var (arm7_varid rn)) $;
+        if r0 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R0) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r1 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R1) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r2 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R2) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r3 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R3) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r4 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R4) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r5 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R5) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r6 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R6) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r7 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R7) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r8 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R8) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r9 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R9) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r10 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R10) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r11 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R11) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r12 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_R12) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r13 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_SP) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r14 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_LR) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+        $;
+        if r15 =? 1 then
+          pre_post p (Move V_MEM32 (Store (Var V_MEM32) (Var (arm7_varid rn)) (Var R_PC) LittleE 4))
+                     (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+        else Nop
+      )
   | ARM7_InvalidOp => Exn 0
   end.
 
@@ -1392,7 +1495,7 @@ Proof.
 Qed.
 
 Ltac explode_arm2il :=
-repeat try unfold arm2il; 
+repeat try unfold arm2il;
        try unfold cond_eval;
        try unfold mov_imm;
        try unfold mov_reg;
@@ -1408,7 +1511,8 @@ repeat try unfold arm2il;
        try unfold ldr_str_up_bit;
        try unfold ldr_str_word_bit;
        try unfold cpsr_update;
-       try unfold arm7_st.
+       try unfold arm7_st;
+       try unfold pre_post.
 
 Ltac explode_matches :=
 repeat match goal with |- context [ match ?x with _ => _ end ] =>
