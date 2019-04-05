@@ -1338,11 +1338,6 @@ Definition arm2il (ad:addr) armi :=
         Move (arm7_varid rd) (Load (Var V_MEM32) (Cast CAST_UNSIGNED 32 (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn)))) LittleE 4) $;
         Move V_MEM32 (Store (Var V_MEM32) (Cast CAST_UNSIGNED 32 (Cast CAST_LOW (swp_word_bit b) (Var (arm7_varid rn)))) (Var (arm7_varid rm)) LittleE 4)
       )
-  | ARM7_Ldm cond p u s w rn r15 r14 r13 r12 r11 r10 r9 r8 r7 r6 r5 r4 r3 r2 r1 r0 =>
-      cond_eval cond (
-        Move (V_TEMP ad) (Word (4 * (r15 + r14 + r13 + r12 +r11 +r10 +r9 + r8 + r7 + r6 + r5 + r4 + r3 + r2 + r1 + r0)) 32) $;
-        Nop
-      )
   | ARM7_Stm cond p u s w rn r15 r14 r13 r12 r11 r10 r9 r8 r7 r6 r5 r4 r3 r2 r1 r0 =>
       cond_eval cond (
         if u =? 1 then
@@ -1508,6 +1503,175 @@ Definition arm2il (ad:addr) armi :=
                        (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
           else Nop
         $;
+        if w =? 1 then
+          Move (arm7_varid rn) (Var (V_TEMP ad))
+        else Nop
+      )
+  | ARM7_Ldm cond p u s w rn r15 r14 r13 r12 r11 r10 r9 r8 r7 r6 r5 r4 r3 r2 r1 r0 =>
+      cond_eval cond (
+        if u =? 1 then
+          Move (V_TEMP ad) (Var (arm7_varid rn)) $;
+          if r0 =? 1 then
+            pre_post p (Move R_R0 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r1 =? 1 then
+            pre_post p (Move R_R1 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r2 =? 1 then
+            pre_post p (Move R_R2 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r3 =? 1 then
+            pre_post p (Move R_R3 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r4 =? 1 then
+            pre_post p (Move R_R4 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r5 =? 1 then
+            pre_post p (Move R_R5 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r6 =? 1 then
+            pre_post p (Move R_R6 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r7 =? 1 then
+            pre_post p (Move R_R7 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r8 =? 1 then
+            pre_post p (Move R_R8 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r9 =? 1 then
+            pre_post p (Move R_R9 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r10 =? 1 then
+            pre_post p (Move R_R10 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r11 =? 1 then
+            pre_post p (Move R_R11 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r12 =? 1 then
+            pre_post p (Move R_R12 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r13 =? 1 then
+            pre_post p (Move R_SP (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r14 =? 1 then
+            pre_post p (Move R_LR (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r15 =? 1 then
+            pre_post p (Move R_PC (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_PLUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+        else
+          Move (V_TEMP ad) (Var (arm7_varid rn)) $;
+          if r15 =? 1 then
+            pre_post p (Move R_PC (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r14 =? 1 then
+            pre_post p (Move R_LR (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r13 =? 1 then
+            pre_post p (Move R_SP (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r12 =? 1 then
+            pre_post p (Move R_R12 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r11 =? 1 then
+            pre_post p (Move R_R11 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r10 =? 1 then
+            pre_post p (Move R_R10 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r9 =? 1 then
+            pre_post p (Move R_R9 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r8 =? 1 then
+            pre_post p (Move R_R8 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r7 =? 1 then
+            pre_post p (Move R_R7 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r6 =? 1 then
+            pre_post p (Move R_R6 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r5 =? 1 then
+            pre_post p (Move R_R5 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r4 =? 1 then
+            pre_post p (Move R_R4 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r3 =? 1 then
+            pre_post p (Move R_R3 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r2 =? 1 then
+            pre_post p (Move R_R2 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r1 =? 1 then
+            pre_post p (Move R_R1 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
+          if r0 =? 1 then
+            pre_post p (Move R_R0 (Load (Var V_MEM32) (Var (V_TEMP ad)) LittleE 4))
+                       (Move (V_TEMP ad) (BinOp OP_MINUS (Var (V_TEMP ad)) (Word 4 32)))
+          else Nop
+          $;
         if w =? 1 then
           Move (arm7_varid rn) (Var (V_TEMP ad))
         else Nop
