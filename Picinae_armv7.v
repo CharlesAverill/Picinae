@@ -701,7 +701,7 @@ Definition arm_dec_bin_opt (n:N) :=
   else if ((xbits n 23 28) =? 1) && ((xbits n 4 8) =? 9) then
     ARM7_Mull (xbits n 28 32) (b 22 n) (b 21 n) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
 
-  else if (((xbits 25 28 n) =? 0) && ((xbits 22 21 n) =? 0) && ((xbits 7 12 n) =? 1) && ((xbits 4 5 n) =? 1)) then
+  else if (((xbits n 25 28) =? 0) && ((xbits n 22 21) =? 0) && ((xbits n 7 12) =? 1) && ((xbits n 4 5) =? 1)) then
     (* Single data swap *)
     match (b 6 n), (b 5 n), (b 20 n) with
     | 0, 0, 0 => ARM7_Swp (xbits n 28 32) (xbits n 22 23) (xbits n 16 20) (xbits n 12 16) (xbits n 0 4)
@@ -713,7 +713,7 @@ Definition arm_dec_bin_opt (n:N) :=
     end
 
   (* Half word data transfer immediate offset *)
-  else if (((xbits 25 28 n) =? 0) && ((xbits 22 21 n) =? 1) && ((xbits 7 8 n) =? 1) && ((xbits 4 5 n) =? 1)) then
+  else if (((xbits n 25 28) =? 0) && ((xbits n 22 21) =? 1) && ((xbits n 7 8) =? 1) && ((xbits n 4 5) =? 1)) then
     match (xbits n 20 21) with
     | 0 => ARM7_StrHI
     | _ => ARM7_LdrHI
@@ -721,7 +721,7 @@ Definition arm_dec_bin_opt (n:N) :=
         (xbits n 16 20) (xbits n 12 16) (xbits n 6 7) (xbits n 5 6) (((xbits n 8 12) * 16) + (xbits n 0 4))
 
   (* Single data transfer register offset *)
-  else if ((xbits 25 28 n) =? 2) && ((xbits n 4 5) =? 0) then
+  else if ((xbits n 25 28) =? 2) && ((xbits n 4 5) =? 0) then
     match (xbits n 20 21) with
     | 0 => ARM7_StrS
     | _ => ARM7_LdrS
@@ -729,7 +729,7 @@ Definition arm_dec_bin_opt (n:N) :=
         (xbits n 16 20) (xbits n 12 16) (xbits n 7 12) (xbits n 5 7) (xbits n 0 4)
 
   (* Single data transfer immediate offset *)
-  else if ((xbits 25 28 n) =? 3) then
+  else if ((xbits n 25 28) =? 3) then
     match (xbits n 20 21) with
     | 0 => ARM7_StrI
     | _ => ARM7_LdrI
