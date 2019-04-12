@@ -701,7 +701,7 @@ Definition arm_dec_bin_opt (n:N) :=
   else if ((xbits n 23 28) =? 1) && ((xbits n 4 8) =? 9) then
     ARM7_Mull (xbits n 28 32) (b 22 n) (b 21 n) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
 
-  else if (((xbits n 25 28) =? 0) && ((xbits n 22 21) =? 0) && ((xbits n 7 12) =? 1) && ((xbits n 4 5) =? 1)) then
+  else if (((xbits n 25 28) =? 0) && ((xbits n 21 22) =? 0) && ((xbits n 7 12) =? 1) && ((xbits n 4 5) =? 1)) then
     (* Single data swap *)
     match (b 6 n), (b 5 n), (b 20 n) with
     | 0, 0, 0 => ARM7_Swp (xbits n 28 32) (xbits n 22 23) (xbits n 16 20) (xbits n 12 16) (xbits n 0 4)
@@ -713,7 +713,7 @@ Definition arm_dec_bin_opt (n:N) :=
     end
 
   (* Half word data transfer immediate offset *)
-  else if (((xbits n 25 28) =? 0) && ((xbits n 22 21) =? 1) && ((xbits n 7 8) =? 1) && ((xbits n 4 5) =? 1)) then
+  else if (((xbits n 25 28) =? 0) && ((xbits n 21 22) =? 1) && ((xbits n 7 8) =? 1) && ((xbits n 4 5) =? 1)) then
     match (xbits n 20 21) with
     | 0 => ARM7_StrHI
     | _ => ARM7_LdrHI
@@ -1794,6 +1794,14 @@ repeat first
 Ltac clear_exceptions := eexists; try apply TExn.
 
 Ltac solve_arm := explode_arm2il; explode_matches; clear_exceptions; solve_arm2il_subgoals.
+
+(* Strcmp instructions *)
+Compute arm_dec_bin_opt 989984784.
+Compute arm_dec_bin_opt 721549329.
+Compute arm_dec_bin_opt 1116975387.
+Compute arm_dec_bin_opt 446222584.
+Compute arm_dec_bin_opt 1112557424.
+Compute arm_dec_bin_opt 3204466544.
 
 Theorem arm7_il_welltyped:
   forall a n, exists c', hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin_opt n)) c'.
