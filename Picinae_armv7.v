@@ -691,7 +691,7 @@ Definition arm_dec_bin_opt (n:N) :=
     | 13 => ARM7_MovI
     | 14 => ARM7_BicI
     | _ => ARM7_MvnI
-    end (xbits n 27 31) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
+    end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
 
   (* Multiply *)
   else if ((xbits n 22 28) =? 0) && ((xbits n 4 8) =? 9) then 
@@ -738,7 +738,7 @@ Definition arm_dec_bin_opt (n:N) :=
 
   (* Branch *)
   else if (xbits n 25 28) =? 5 then
-    ARM7_Branch (xbits n 27 31) (xbits n 24 25) (toZ 24 (xbits n 0 24))
+    ARM7_Branch (xbits n 28 32) (xbits n 24 25) (toZ 24 (xbits n 0 24))
 
   (* Block data transfer *)
   else if (xbits n 25 28) =? 4 then
@@ -1797,11 +1797,12 @@ Ltac solve_arm := explode_arm2il; explode_matches; clear_exceptions; solve_arm2i
 
 (* Strcmp instructions *)
 Compute arm_dec_bin_opt 989984784.
-Compute arm_dec_bin_opt 721549329.
-Compute arm_dec_bin_opt 1116975387.
-Compute arm_dec_bin_opt 446222584.
-Compute arm_dec_bin_opt 1112557424.
-Compute arm_dec_bin_opt 3204466544.
+Compute arm2il 0 (arm_dec_bin_opt 989984784). (* 0011 1011 0000 0001 1111 1000 0001 0000 *)
+Compute arm2il 4 (arm_dec_bin_opt 721549329).
+Compute arm2il 8 (arm_dec_bin_opt 1116975387).
+Compute arm2il 12 (arm_dec_bin_opt 446222584).
+Compute arm2il 16 (arm_dec_bin_opt 1112557424).
+Compute arm2il 20 (arm_dec_bin_opt 3204466544).
 
 Theorem arm7_il_welltyped:
   forall a n, exists c', hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin_opt n)) c'.
