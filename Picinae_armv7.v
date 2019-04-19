@@ -691,7 +691,7 @@ Definition arm_dec_bin_opt (n:N) :=
     | 13 => ARM7_MovI
     | 14 => ARM7_BicI
     | _ => ARM7_MvnI
-    end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
+    end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 8)
 
   (* Multiply *)
   else if ((xbits n 22 28) =? 0) && ((xbits n 4 8) =? 9) then 
@@ -954,16 +954,18 @@ Definition mov_shift op dst rn st sa rm := Move dst (BinOp op (Var (arm7_varid r
 
 Definition pre_post p exp1 exp2 := if p =? 0 then exp1 $; exp2 else exp2 $; exp1.
 
-Definition cpsr_update s dst :=
+Definition cpsr_update_arith s dst carry_cond :=
   If (BinOp OP_EQ bit_set (Word s 1)) (
     if dst == R_PC then
       Nop
     else
-      Move R_CF (Unknown 1) $;
+      Move R_CF (carry_cond) $;
       Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_EQ (Var dst) (Word 0 32))) $;
       Move R_NF (Cast CAST_HIGH 1 (Var dst))
     )
     (Nop).
+
+Definition cpsr_update s dst := cpsr_update_arith s dst (Unknown 1).
 
 Definition cond_eval cond il :=
   match cond with
@@ -997,7 +999,7 @@ Definition arm2il (ad:addr) armi :=
   | ARM7_RsbI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_MINUS (arm7_varid rd) rn imm rot) $; Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $; cpsr_update s (arm7_varid rd))
   | ARM7_RsbR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_MINUS (arm7_varid rd) rn st rm rs) $; Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $; cpsr_update s (arm7_varid rd))
   | ARM7_RsbS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_MINUS (arm7_varid rd) rn st sa rm $; Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $; cpsr_update s (arm7_varid rd))
-  | ARM7_AddI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_PLUS (arm7_varid rd) rn imm rot) $; cpsr_update s (arm7_varid rd))
+  | ARM7_AddI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_PLUS (arm7_varid rd) rn imm rot) $; cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (Var (arm7_varid rd)) (mov_imm_op2 imm rot)))
   | ARM7_AddR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_PLUS (arm7_varid rd) rn st rm rs) $; cpsr_update s (arm7_varid rd))
   | ARM7_AddS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_PLUS (arm7_varid rd) rn st sa rm $; cpsr_update s (arm7_varid rd))
   | ARM7_AdcI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_PLUS (arm7_varid rd) rn imm rot) $;
@@ -1799,7 +1801,8 @@ Ltac solve_arm := explode_arm2il; explode_matches; clear_exceptions; solve_arm2i
 Compute arm_dec_bin_opt 989984784.
 Compute arm2il 0 (arm_dec_bin_opt 989984784). (* 0011 1011 0000 0001 1111 1000 0001 0000 *)
 Compute arm2il 4 (arm_dec_bin_opt 721549329).
-Compute arm2il 8 (arm_dec_bin_opt 1116975387).
+Compute arm_dec_bin_opt 1116975387.
+Compute arm2il 8 (arm_dec_bin_opt 1116975387). (* 0100 0010 1001 0011 1011 0001 0001 1011 *)
 Compute arm2il 12 (arm_dec_bin_opt 446222584).
 Compute arm2il 16 (arm_dec_bin_opt 1112557424).
 Compute arm2il 20 (arm_dec_bin_opt 3204466544).
