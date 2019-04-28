@@ -959,6 +959,7 @@ Definition cpsr_update_arith s dst carry_cond :=
     if dst == R_PC then
       Nop
     else
+      Move R_VF (BinOp OP_XOR (carry_cond) (Var R_CF)) $;
       Move R_CF (carry_cond) $;
       Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_EQ (Var dst) (Word 0 32))) $;
       Move R_NF (Cast CAST_HIGH 1 (Var dst))
@@ -994,11 +995,11 @@ Definition arm2il (ad:addr) armi :=
   | ARM7_EorR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_XOR (arm7_varid rd) rn st rm rs) $; cpsr_update s (arm7_varid rd))
   | ARM7_EorS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_XOR (arm7_varid rd) rn st sa rm $; cpsr_update s (arm7_varid rd))
   | ARM7_SubI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_MINUS (arm7_varid rd) rn imm rot) $; 
-                                      cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_imm_op2 imm rot) (Var (arm7_varid rd))))
+                                      cpsr_update_arith s (arm7_varid rd) (BinOp OP_LE (Var (arm7_varid rd)) (Var (arm7_varid rn))))
   | ARM7_SubR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_MINUS (arm7_varid rd) rn st rm rs) $;
-                                       cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_reg_op2 st rm rs) (Var (arm7_varid rd))))
+                                      cpsr_update_arith s (arm7_varid rd) (BinOp OP_LE (Var (arm7_varid rd)) (Var (arm7_varid rn))))
   | ARM7_SubS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_MINUS (arm7_varid rd) rn st sa rm $;
-                                       cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_shift_op2 st rm sa) (Var (arm7_varid rd))))
+                                      cpsr_update_arith s (arm7_varid rd) (BinOp OP_LE (Var (arm7_varid rd)) (Var (arm7_varid rn))))
   | ARM7_RsbI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_MINUS (arm7_varid rd) rn imm rot) $;
                                       Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $;
                                       cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_imm_op2 imm rot) (Var (arm7_varid rd))))
