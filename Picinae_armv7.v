@@ -1001,13 +1001,13 @@ Definition arm2il (ad:addr) armi :=
                                        cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_shift_op2 st rm sa) (Var (arm7_varid rd))))
   | ARM7_RsbI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_MINUS (arm7_varid rd) rn imm rot) $;
                                       Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $;
-                                      cpsr_update s (arm7_varid rd))
+                                      cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_imm_op2 imm rot) (Var (arm7_varid rd))))
   | ARM7_RsbR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_MINUS (arm7_varid rd) rn st rm rs) $;
                                        Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $;
-                                       cpsr_update s (arm7_varid rd))
+                                       cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_reg_op2 st rm rs) (Var (arm7_varid rd))))
   | ARM7_RsbS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_MINUS (arm7_varid rd) rn st sa rm $;
                                        Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $;
-                                       cpsr_update s (arm7_varid rd))
+                                       cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_shift_op2 st rm sa) (Var (arm7_varid rd))))
   | ARM7_AddI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_PLUS (arm7_varid rd) rn imm rot) $;
                                       cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (Var (arm7_varid rd)) (mov_imm_op2 imm rot)))
   | ARM7_AddR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_PLUS (arm7_varid rd) rn st rm rs) $;
@@ -1016,40 +1016,40 @@ Definition arm2il (ad:addr) armi :=
                                        cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (Var (arm7_varid rd)) (mov_shift_op2 st rm sa)))
   | ARM7_AdcI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_PLUS (arm7_varid rd) rn imm rot) $;
                                       Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Cast CAST_UNSIGNED 32 (Var R_CF))) $;
-                                      cpsr_update s (arm7_varid rd))
+                                      cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (Var (arm7_varid rd)) (mov_imm_op2 imm rot)))
   | ARM7_AdcR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_PLUS (arm7_varid rd) rn st rm rs) $;
                                        Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Cast CAST_UNSIGNED 32 (Var R_CF))) $;
-                                       cpsr_update s (arm7_varid rd))
+                                       cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (Var (arm7_varid rd)) (mov_reg_op2 st rm rs)))
   | ARM7_AdcS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_PLUS (arm7_varid rd) rn st sa rm $;
                                        Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Cast CAST_UNSIGNED 32 (Var R_CF))) $;
-                                       cpsr_update s (arm7_varid rd))
+                                       cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (Var (arm7_varid rd)) (mov_shift_op2 st rm sa)))
   | ARM7_SbcI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_MINUS (arm7_varid rd) rn imm rot) $;
                                       Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Cast CAST_UNSIGNED 32 (Var R_CF))) $;
                                       Move (arm7_varid rd) (BinOp OP_MINUS (Var (arm7_varid rd)) (Word 1 32)) $;
-                                      cpsr_update s (arm7_varid rd))
+                                      cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_imm_op2 imm rot) (Var (arm7_varid rd))))
   | ARM7_SbcR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_MINUS (arm7_varid rd) rn st rm rs) $;
                                        Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Cast CAST_UNSIGNED 32 (Var R_CF))) $;
                                        Move (arm7_varid rd) (BinOp OP_MINUS (Var (arm7_varid rd)) (Word 1 32)) $;
-                                       cpsr_update s (arm7_varid rd))
+                                      cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_reg_op2 st rm rs) (Var (arm7_varid rd))))
   | ARM7_SbcS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_MINUS (arm7_varid rd) rn st sa rm $;
                                        Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Cast CAST_UNSIGNED 32 (Var R_CF))) $;
                                        Move (arm7_varid rd) (BinOp OP_MINUS (Var (arm7_varid rd)) (Word 1 32)) $;
-                                       cpsr_update s (arm7_varid rd))
+                                       cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_shift_op2 st rm sa) (Var (arm7_varid rd))))
   | ARM7_RscI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_MINUS (arm7_varid rd) rn imm rot) $;
                                       Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $;
                                       Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Cast CAST_UNSIGNED 32 (Var R_CF))) $;
                                       Move (arm7_varid rd) (BinOp OP_MINUS (Var (arm7_varid rd)) (Word 1 32)) $;
-                                      cpsr_update s (arm7_varid rd))
+                                      cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_imm_op2 imm rot) (Var (arm7_varid rd))))
   | ARM7_RscR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_MINUS (arm7_varid rd) rn st rm rs) $;
                                        Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $;
                                        Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Cast CAST_UNSIGNED 32 (Var R_CF))) $;
                                        Move (arm7_varid rd) (BinOp OP_MINUS (Var (arm7_varid rd)) (Word 1 32)) $;
-                                       cpsr_update s (arm7_varid rd))
+                                      cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_reg_op2 st rm rs) (Var (arm7_varid rd))))
   | ARM7_RscS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_MINUS (arm7_varid rd) rn st sa rm $;
                                        Move (arm7_varid rd) (UnOp OP_NEG (Var (arm7_varid rd))) $;
                                        Move (arm7_varid rd) (BinOp OP_PLUS (Var (arm7_varid rd)) (Cast CAST_UNSIGNED 32 (Var R_CF))) $;
                                        Move (arm7_varid rd) (BinOp OP_MINUS (Var (arm7_varid rd)) (Word 1 32)) $;
-                                       cpsr_update s (arm7_varid rd))
+                                       cpsr_update_arith s (arm7_varid rd) (BinOp OP_LT (mov_shift_op2 st rm sa) (Var (arm7_varid rd))))
   | ARM7_TstI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_AND (V_TEMP ad) rn imm rot) $; cpsr_update s (V_TEMP ad))
   | ARM7_TstR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_AND (V_TEMP ad) rn st rm rs) $; cpsr_update s (V_TEMP ad))
   | ARM7_TstS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_AND (V_TEMP ad) rn st sa rm $; cpsr_update s (V_TEMP ad))
@@ -1102,7 +1102,6 @@ Definition arm2il (ad:addr) armi :=
         ) (
           Nop
         ) $;
-        (* TODO Understand why I can't put the two move statements below in the else block of the if statement above *)
         If (BinOp OP_NEQ (Word u 32) (Word 1 32)) (
           Move (arm7_varid rd_hi) (Cast CAST_HIGH 32 (Cast CAST_SIGNED 64 (Var (V_TEMP64 ad)))) $;
           Move (arm7_varid rd_lo) (Cast CAST_LOW 32 (Cast CAST_SIGNED 64 (Var (V_TEMP64 ad))))
@@ -1775,6 +1774,7 @@ repeat try unfold arm2il;
        try unfold ldr_str_up_bit;
        try unfold ldr_str_word_bit;
        try unfold cpsr_update;
+       try unfold cpsr_update_arith;
        try unfold arm7_st;
        try unfold pre_post.
 
