@@ -1777,7 +1777,7 @@ Proof.
   simpl. apply N.gt_lt. assumption.
 Qed.
 
-Ltac explode_arm2il :=
+Ltac unfold_arm2il :=
 repeat try unfold arm2il;
        try unfold cond_eval;
        try unfold mov_imm;
@@ -1799,7 +1799,7 @@ repeat try unfold arm2il;
        try unfold arm7_st;
        try unfold pre_post.
 
-Ltac explode_matches :=
+Ltac destruct_match :=
 repeat match goal with |- context [ match ?x with _ => _ end ] =>
     try destruct x
 end.
@@ -1828,14 +1828,14 @@ repeat first
 
 Ltac clear_exceptions := eexists; try apply TExn.
 
-Ltac solve_arm := explode_arm2il; explode_matches; clear_exceptions; solve_arm2il_subgoals.
+Ltac solve_arm := unfold_arm2il; destruct_match; clear_exceptions; solve_arm2il_subgoals.
 
 Theorem arm7_il_welltyped:
   forall a n, exists c', hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin_opt n)) c'.
 Proof.
   intros. unfold arm_dec_bin_opt.
   repeat match goal with [ |- context [ if ?x then _ else _ ] ] => destruct x end.
-  all: explode_matches.
+  all: destruct_match.
   1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
   1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
   1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
