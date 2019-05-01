@@ -966,22 +966,21 @@ Definition cpsr_update_arith s dst carry :=
     )
     (Nop).
 
-Definition cpsr_update_logical_imm s dst src st sa :=
-  If (BinOp OP_EQ bit_set (Word s 1)) (
+Definition cpsr_update_logical s dst src st sa :=
+  if s =? 1 then
     if dst == R_PC then
       Nop
     else
-      if sa =? 0 then
-        Nop
-      else
-        if st =? 0 then
-          Move R_CF (Cast CAST_HIGH 1 (BinOp OP_LSHIFT src (BinOp OP_MINUS (Word sa 32) (Word 1 32))))
+      If (BinOp OP_NEQ sa (Word 0 32))
+        (if st =? 0 then
+            (Move R_CF (Cast CAST_HIGH 1 (BinOp OP_LSHIFT src (BinOp OP_MINUS sa (Word 1 32)))))
         else
-          Move R_CF (Cast CAST_LOW 1 (BinOp OP_RSHIFT src (BinOp OP_MINUS (Word sa 32) (Word 1 32))))
+            (Move R_CF (Cast CAST_LOW 1 (BinOp OP_RSHIFT src (BinOp OP_MINUS sa (Word 1 32))))))
+        Nop
       $;
       Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_EQ (Var dst) (Word 0 32))) $;
       Move R_NF (Cast CAST_HIGH 1 (Var dst))
-    )
+    else
     (Nop).
 
 Definition cpsr_update s dst := cpsr_update_arith s dst (Unknown 1).
@@ -1077,24 +1076,24 @@ Definition arm2il (ad:addr) armi :=
   | ARM7_CmnR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_PLUS (V_TEMP ad) rn st rm rs) $; cpsr_update s (V_TEMP ad))
   | ARM7_CmnS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_PLUS (V_TEMP ad) rn st sa rm $; cpsr_update s (V_TEMP ad))
   (* Logical data processing operations *)
-  | ARM7_AndI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_AND (arm7_varid rd) rn imm rot) $; cpsr_update_logical_imm s (arm7_varid rd) (Word imm 32) 1 (2 * rot))
-  | ARM7_AndR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_AND (arm7_varid rd) rn st rm rs) $; cpsr_update s (arm7_varid rd))
-  | ARM7_AndS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_AND (arm7_varid rd) rn st sa rm $; cpsr_update s (arm7_varid rd))
-  | ARM7_EorI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_XOR (arm7_varid rd) rn imm rot) $; cpsr_update s (arm7_varid rd))
-  | ARM7_EorR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_XOR (arm7_varid rd) rn st rm rs) $; cpsr_update s (arm7_varid rd))
-  | ARM7_EorS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_XOR (arm7_varid rd) rn st sa rm $; cpsr_update s (arm7_varid rd))
-  | ARM7_OrrI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_OR (arm7_varid rd) rn imm rot) $; cpsr_update s (arm7_varid rd))
-  | ARM7_OrrR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_OR (arm7_varid rd) rn st rm rs) $; cpsr_update s (arm7_varid rd))
-  | ARM7_OrrS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_OR (arm7_varid rd) rn st sa rm $; cpsr_update s (arm7_varid rd))
-  | ARM7_MovI cond s rn rd rot imm => cond_eval cond (Move (arm7_varid rd) (mov_imm_op2 imm rot)) $; cpsr_update s (arm7_varid rd)
-  | ARM7_MovR cond s rn rd rs st rm => cond_eval cond (Move (arm7_varid rd) (mov_reg_op2 st rm rs)) $; cpsr_update s (arm7_varid rd)
-  | ARM7_MovS cond s rn rd sa st rm => cond_eval cond (Move (arm7_varid rd) (mov_shift_op2 st rm sa)) $; cpsr_update s (arm7_varid rd)
-  | ARM7_BicI cond s rn rd rot imm => cond_eval cond (Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (UnOp OP_NOT (mov_imm_op2 imm rot)))) $; cpsr_update s (arm7_varid rd)
-  | ARM7_BicR cond s rn rd rs st rm => cond_eval cond (Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (UnOp OP_NOT (mov_reg_op2 st rm rs)))) $; cpsr_update s (arm7_varid rd)
-  | ARM7_BicS cond s rn rd sa st rm => cond_eval cond (Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (UnOp OP_NOT (mov_shift_op2 st rm sa)))) $; cpsr_update s (arm7_varid rd)
-  | ARM7_MvnI cond s rn rd rot imm => cond_eval cond (Move (arm7_varid rd) (UnOp OP_NOT (mov_imm_op2 imm rot))) $; cpsr_update s (arm7_varid rd)
-  | ARM7_MvnR cond s rn rd rs st rm => cond_eval cond (Move (arm7_varid rd) (UnOp OP_NOT (mov_reg_op2 st rm rs))) $; cpsr_update s (arm7_varid rd)
-  | ARM7_MvnS cond s rn rd sa st rm => cond_eval cond (Move (arm7_varid rd) (UnOp OP_NOT (mov_shift_op2 st rm sa))) $; cpsr_update s (arm7_varid rd)
+  | ARM7_AndI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_AND (arm7_varid rd) rn imm rot) $; cpsr_update_logical s (arm7_varid rd) (Word imm 32) 1 (Word (2 * rot) 32))
+  | ARM7_AndR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_AND (arm7_varid rd) rn st rm rs) $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Var (arm7_varid rs)))
+  | ARM7_AndS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_AND (arm7_varid rd) rn st sa rm $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Word sa 32))
+  | ARM7_EorI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_XOR (arm7_varid rd) rn imm rot) $; cpsr_update_logical s (arm7_varid rd) (Word imm 32) 1 (Word (2 * rot) 32))
+  | ARM7_EorR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_XOR (arm7_varid rd) rn st rm rs) $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Var (arm7_varid rs)))
+  | ARM7_EorS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_XOR (arm7_varid rd) rn st sa rm $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Word sa 32))
+  | ARM7_OrrI cond s rn rd rot imm => cond_eval cond ((mov_imm OP_OR (arm7_varid rd) rn imm rot) $; cpsr_update_logical s (arm7_varid rd) (Word imm 32) 1 (Word (2 * rot) 32))
+  | ARM7_OrrR cond s rn rd rs st rm => cond_eval cond ((mov_reg OP_OR (arm7_varid rd) rn st rm rs) $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Var (arm7_varid rs)))
+  | ARM7_OrrS cond s rn rd sa st rm => cond_eval cond (mov_shift OP_OR (arm7_varid rd) rn st sa rm $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Word sa 32))
+  | ARM7_MovI cond s rn rd rot imm => cond_eval cond (Move (arm7_varid rd) (mov_imm_op2 imm rot) $; cpsr_update_logical s (arm7_varid rd) (Word imm 32) 1 (Word (2 * rot) 32))
+  | ARM7_MovR cond s rn rd rs st rm => cond_eval cond (Move (arm7_varid rd) (mov_reg_op2 st rm rs) $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Var (arm7_varid rs)))
+  | ARM7_MovS cond s rn rd sa st rm => cond_eval cond (Move (arm7_varid rd) (mov_shift_op2 st rm sa) $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Word sa 32))
+  | ARM7_BicI cond s rn rd rot imm => cond_eval cond (Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (UnOp OP_NOT (mov_imm_op2 imm rot))) $; cpsr_update_logical s (arm7_varid rd) (Word imm 32) 1 (Word (2 * rot) 32))
+  | ARM7_BicR cond s rn rd rs st rm => cond_eval cond (Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (UnOp OP_NOT (mov_reg_op2 st rm rs))) $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Var (arm7_varid rs)))
+  | ARM7_BicS cond s rn rd sa st rm => cond_eval cond (Move (arm7_varid rd) (BinOp OP_AND (Var (arm7_varid rn)) (UnOp OP_NOT (mov_shift_op2 st rm sa))) $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Word sa 32))
+  | ARM7_MvnI cond s rn rd rot imm => cond_eval cond (Move (arm7_varid rd) (UnOp OP_NOT (mov_imm_op2 imm rot)) $; cpsr_update_logical s (arm7_varid rd) (Word imm 32) 1 (Word (2 * rot) 32))
+  | ARM7_MvnR cond s rn rd rs st rm => cond_eval cond (Move (arm7_varid rd) (UnOp OP_NOT (mov_reg_op2 st rm rs)) $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Var (arm7_varid rs)))
+  | ARM7_MvnS cond s rn rd sa st rm => cond_eval cond (Move (arm7_varid rd) (UnOp OP_NOT (mov_shift_op2 st rm sa)) $; cpsr_update_logical s (arm7_varid rd) (Var (arm7_varid rm)) st (Word sa 32))
 
   | ARM7_Mul cond a s rd rn rs rm =>
       cond_eval cond (
@@ -1796,7 +1795,7 @@ repeat try unfold arm2il;
        try unfold ldr_str_word_bit;
        try unfold cpsr_update;
        try unfold cpsr_update_arith;
-       try unfold cpsr_update_logical_imm;
+       try unfold cpsr_update_logical;
        try unfold arm7_st;
        try unfold pre_post.
 
@@ -1830,16 +1829,6 @@ repeat first
 Ltac clear_exceptions := eexists; try apply TExn.
 
 Ltac solve_arm := explode_arm2il; explode_matches; clear_exceptions; solve_arm2il_subgoals.
-
-(* Strcmp instructions *)
-Compute arm_dec_bin_opt 989984784.
-Compute arm2il 0 (arm_dec_bin_opt 989984784). (* 0011 1011 0000 0001 1111 1000 0001 0000 *)
-Compute arm2il 4 (arm_dec_bin_opt 721549329).
-Compute arm_dec_bin_opt 1116975387.
-Compute arm2il 8 (arm_dec_bin_opt 1116975387). (* 0100 0010 1001 0011 1011 0001 0001 1011 *)
-Compute arm2il 12 (arm_dec_bin_opt 446222584).
-Compute arm2il 16 (arm_dec_bin_opt 1112557424).
-Compute arm2il 20 (arm_dec_bin_opt 3204466544).
 
 Theorem arm7_il_welltyped:
   forall a n, exists c', hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin_opt n)) c'.
