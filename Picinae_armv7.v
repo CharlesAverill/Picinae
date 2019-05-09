@@ -955,7 +955,7 @@ Definition mov_shift op dst rn st sa rm := Move dst (BinOp op (Var (arm7_varid r
 Definition pre_post p exp1 exp2 := if p =? 0 then exp1 $; exp2 else exp2 $; exp1.
 
 Definition cpsr_update_arith s dst carry :=
-  If (BinOp OP_EQ bit_set (Word s 1)) (
+  if s =? 1 then
     if dst == R_PC then
       Nop
     else
@@ -963,8 +963,8 @@ Definition cpsr_update_arith s dst carry :=
       Move R_CF (carry) $;
       Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_EQ (Var dst) (Word 0 32))) $;
       Move R_NF (Cast CAST_HIGH 1 (Var dst))
-    )
-    (Nop).
+  else
+    Nop.
 
 Definition cpsr_update_logical s dst src st sa :=
   if s =? 1 then
@@ -980,8 +980,8 @@ Definition cpsr_update_logical s dst src st sa :=
       $;
       Move R_ZF (Cast CAST_HIGH 1 (BinOp OP_EQ (Var dst) (Word 0 32))) $;
       Move R_NF (Cast CAST_HIGH 1 (Var dst))
-    else
-    (Nop).
+  else
+    Nop.
 
 Definition cpsr_update s dst := cpsr_update_arith s dst (Unknown 1).
 
@@ -1828,7 +1828,7 @@ repeat first
 
 Ltac clear_exceptions := eexists; try apply TExn.
 
-Ltac solve_arm := unfold_arm2il; destruct_match; clear_exceptions; solve_arm2il_subgoals.
+Ltac solve_arm := unfold_arm2il; destruct_match; clear_exceptions; solve_arm2il_subgoals. Optimize Heap.
 
 Theorem arm7_il_welltyped:
   forall a n, exists c', hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin_opt n)) c'.
