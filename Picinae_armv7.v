@@ -616,22 +616,13 @@ Inductive arm7asm :=
 | ARM7_Unsupported
 .
 
-Definition bits4 b3 b2 b1 b0 := b3*8 + b2*4 + b1*2 + b0.
-Definition bits5 b4 b3 b2 b1 b0 := b4*16 + (bits4 b3 b2 b1 b0).
-Definition bits8 b7 b6 b5 b4 b3 b2 b1 b0 := (bits4 b7 b6 b5 b4)*16 + (bits4 b3 b2 b1 b0).
-Definition bits12 b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1 b0 :=
-  (bits4 b11 b10 b9 b8)*256 + (bits4 b7 b6 b5 b4)*16 + (bits4 b3 b2 b1 b0).
-Definition bits24 b23 b22 b21 b20 b19 b18 b17 b16 b15 b14 b13 b12 b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1 b0 :=
-  (bits4 b23 b22 b21 b20)*1048576 + (bits4 b19 b18 b17 b16)*65536 + (bits4 b15 b14 b13 b12)*4096 + 
-  (bits4 b11 b10 b9 b8)*256 + (bits4 b7 b6 b5 b4)*16 + (bits4 b3 b2 b1 b0).
-Definition b (i:N) (n:N) := N.land (N.shiftr n i) 1.
 Definition xbits n i j := N.land (N.shiftr n i) (N.ones (j - i)).
 
 Require Export Bool.
 
-Definition arm_dec_bin_opt (n:N) :=
+Definition arm_dec_bin (n:N) :=
   (* Data proc with shift register *)
-  if ((xbits n 25 28) =? 0) && ((b 7 n) =? 0) && ((b 4 n) =? 1) then
+  if ((xbits n 25 28) =? 0) && ((xbits n 7 8) =? 0) && ((xbits n 4 5) =? 1) then
     match (xbits n 21 25) with
     | 0 => ARM7_AndR
     | 1 => ARM7_EorR
@@ -649,10 +640,10 @@ Definition arm_dec_bin_opt (n:N) :=
     | 13 => ARM7_MovR
     | 14 => ARM7_BicR
     | _ => ARM7_MvnR
-    end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 5 7) (xbits n 0 4)
+    end (xbits n 28 32) (xbits n 20 21) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 5 7) (xbits n 0 4)
 
   (* Data proc with shift amount *)
-  else if ((xbits n 25 28) =? 0) && ((b 4 n) =? 0) then
+  else if ((xbits n 25 28) =? 0) && ((xbits n 4 5) =? 0) then
     match (xbits n 21 25) with
     | 0 => ARM7_AndS
     | 1 => ARM7_EorS
@@ -670,7 +661,7 @@ Definition arm_dec_bin_opt (n:N) :=
     | 13 => ARM7_MovS
     | 14 => ARM7_BicS
     | _ => ARM7_MvnS
-    end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 7 11) (xbits n 5 7) (xbits n 0 4)
+    end (xbits n 28 32) (xbits n 20 21) (xbits n 16 20) (xbits n 12 16) (xbits n 7 11) (xbits n 5 7) (xbits n 0 4)
 
   (* Data proc with immediate amount *)
   else if ((xbits n 25 28) =? 1) then
@@ -691,19 +682,19 @@ Definition arm_dec_bin_opt (n:N) :=
     | 13 => ARM7_MovI
     | 14 => ARM7_BicI
     | _ => ARM7_MvnI
-    end (xbits n 28 32) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 8)
+    end (xbits n 28 32) (xbits n 20 21) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 8)
 
   (* Multiply *)
   else if ((xbits n 22 28) =? 0) && ((xbits n 4 8) =? 9) then 
-    ARM7_Mul (xbits n 28 32) (b 21 n) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
+    ARM7_Mul (xbits n 28 32) (xbits n 21 22) (xbits n 20 21) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
 
   (* Multiply Long *)
   else if ((xbits n 23 28) =? 1) && ((xbits n 4 8) =? 9) then
-    ARM7_Mull (xbits n 28 32) (b 22 n) (b 21 n) (b 20 n) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
+    ARM7_Mull (xbits n 28 32) (xbits n 22 23) (xbits n 21 22) (xbits n 20 21) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 4)
 
   else if (((xbits n 25 28) =? 0) && ((xbits n 21 22) =? 0) && ((xbits n 7 12) =? 1) && ((xbits n 4 5) =? 1)) then
     (* Single data swap *)
-    match (b 6 n), (b 5 n), (b 20 n) with
+    match (xbits n 6 7), (xbits n 5 6), (xbits n 20 21) with
     | 0, 0, 0 => ARM7_Swp (xbits n 28 32) (xbits n 22 23) (xbits n 16 20) (xbits n 12 16) (xbits n 0 4)
     (* Halfword data transfer: register offset *)
     | _, _, 0 => ARM7_StrHS (xbits n 28 32) (xbits n 24 25) (xbits n 23 24) (xbits n 21 22)
@@ -751,186 +742,6 @@ Definition arm_dec_bin_opt (n:N) :=
         (xbits n 3 4)   (xbits n 2 1)   (xbits n 1 2)   (xbits n 0 1)
   else
     ARM7_Unsupported.
-
-Definition arm_dec_bin (n:N) :=
-
-  match b 27 n,  b 26 n,  b 25 n,  b 24 n,  b 23 n,  b 22 n,  b 21 n,  b 20 n,  b 19 n,  b 18 n,  b 17 n,  b 16 n,  b 15 n,  b 14 n,
-        b 13 n,  b 12 n,  b 11 n,  b 10 n,  b 9 n,    b 8 n,   b 7 n,   b 6 n,   b 5 n,   b 4 n,   b 3 n,   b 2 n,   b 1 n,   b 0 n
-  with
-
-  (* Data proc with shift register *)
-  |    0,    0,    0,  oc3,  oc2,  oc1,  oc0,    s,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
-     rd1,  rd0,  rs3,  rs2,  rs1,  rs0,    0,  st1,  st0,    1,  rm3,  rm2,  rm1,  rm0 =>
-    match bits4 oc3 oc2 oc1 oc0 with
-    | 0 => ARM7_AndR
-    | 1 => ARM7_EorR
-    | 2 => ARM7_SubR
-    | 3 => ARM7_RsbR
-    | 4 => ARM7_AddR
-    | 5 => ARM7_AdcR
-    | 6 => ARM7_SbcR
-    | 7 => ARM7_RscR
-    | 8 => ARM7_TstR
-    | 9 => ARM7_TeqR
-    | 10 => ARM7_CmpR
-    | 11 => ARM7_CmnR
-    | 12 => ARM7_OrrR
-    | 13 => ARM7_MovR
-    | 14 => ARM7_BicR
-    | 15 => ARM7_MvnR
-    | _ => ARM7_InvalidOpS end (xbits n 27 31) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
-                               (bits4 rs3 rs2 rs1 rs0) (bits4 0 0 st1 st0) (bits4 rm3 rm2 rm1 rm0)
-
-  (* Data proc with shift amount *)
-  |    0,    0,    0,  oc3,  oc2,  oc1,  oc0,    s,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
-     rd1,  rd0,  sa4,  sa3,  sa2,  sa1,  sa0,  st1,  st0,    0,  rm3,  rm2,  rm1,  rm0 =>
-    match bits4 oc3 oc2 oc1 oc0 with
-    | 0 => ARM7_AndS
-    | 1 => ARM7_EorS
-    | 2 => ARM7_SubS
-    | 3 => ARM7_RsbS
-    | 4 => ARM7_AddS
-    | 5 => ARM7_AdcS
-    | 6 => ARM7_SbcS
-    | 7 => ARM7_RscS
-    | 8 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
-           |     0,   1,   0,   0,   1,   1,   1,   1,   1 => ARM7_MrsSpsr
-           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_TstS
-           end
-    | 9 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
-           |     0,   1,   0,   0,   1,   1,   1,   1,   1 => ARM7_MsrCpsr
-           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_TeqS
-           end
-    | 10 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
-           |     0,   1,   0,   0,   1,   1,   1,   1,   1 => ARM7_MrsCpsr
-           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_CmpS
-           end
-    | 11 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
-           |     0,   1,   0,   0,   1,   1,   1,   1,   1 => ARM7_MsrSpsr
-           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_CmnS
-           end
-    | 12 => ARM7_OrrS
-    | 13 => ARM7_MovS
-    | 14 => ARM7_BicS
-    | 15 => ARM7_MvnS
-    | _ => ARM7_InvalidOpS end (xbits n 27 31) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
-                               (bits5 sa4 sa3 sa2 sa1 sa0) (bits4 0 0 st1 st0) (bits4 rm3 rm2 rm1 rm0)
-
-  (* Data proc with immediate values *)
-  |    0,    0,    1,  oc3,  oc2,  oc1,  oc0,    s,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
-     rd1,  rd0, rot3, rot2, rot1, rot0, imm7, imm6, imm5, imm4, imm3, imm2, imm1, imm0 => 
-    match bits4 oc3 oc2 oc1 oc0 with
-    | 0 => ARM7_AndI
-    | 1 => ARM7_EorI
-    | 2 => ARM7_SubI
-    | 3 => ARM7_RsbI
-    | 4 => ARM7_AddI
-    | 5 => ARM7_AdcI
-    | 6 => ARM7_SbcI
-    | 7 => ARM7_RscI
-    | 8 => ARM7_TstI
-    | 9 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
-           |     0,   1,   0,   0,   0,   1,   1,   1,   1 => ARM7_MsrCpsrI
-           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_TeqI
-           end
-    | 10 => ARM7_CmpI
-    | 11 => match s, rn3, rn2, rn1, rn0, rd3, rd2, rd1, rd0 with
-           |     0,   1,   0,   0,   0,   1,   1,   1,   1 => ARM7_MsrSpsrI
-           |     _,   _,   _,   _,   _,   _,   _,   _,   _ => ARM7_CmnI
-           end
-    | 12 => ARM7_OrrI
-    | 13 => ARM7_MovI
-    | 14 => ARM7_BicI
-    | 15 => ARM7_MvnI
-    | _ => ARM7_InvalidOpI end (xbits n 27 31) s (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0) 
-                               (bits4 rot3 rot2 rot1 rot0) (bits8 imm7 imm6 imm5 imm4 imm3 imm2 imm1 imm0)
-
-  (* Multiply *)
-  |    0,    0,    0,    0,    0,    0,    a,    s,  rd3,  rd2,  rd1,  rd0,  rn3,  rn2,
-     rn1,  rn0,  rs3,  rs2,  rs1,  rs0,    1,    0,    0,    1,  rm3,  rm2,  rm1,  rm0 =>
-     ARM7_Mul (xbits n 27 31) a s (bits4 rd3 rd2 rd1 rd0) (bits4 rn3 rn2 rn1 rn0)
-              (bits4 rs3 rs2 rs1 rs0) (bits4 rm3 rm2 rm1 rm0)
-
-  (* Multiply Long *)
-  |    0,    0,    0,    0,    1,    u,    a,    s,  rd7,  rd6,  rd5,  rd4,  rd3,  rd2,
-     rd1,  rd0,  rs3,  rs2,  rs1,  rs0,    1,    0,    0,    1,  rm3,  rm2,  rm1,  rm0 =>
-     ARM7_Mull (xbits n 27 31) u a s (bits4 rd7 rd6 rd5 rd4) (bits4 rd3 rd2 rd1 rd0)
-     (bits4 rs3 rs2 rs1 rs0) (bits4 rm3 rm2 rm1 rm0)
-
-  (* Branch and exchange *)
-  |    0,    0,    0,    1,    0,    b,    0,    0,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
-     rd1,  rd0,    0,    0,    0,    0,    1,    0,    0,    1,  rm3,  rm2,  rm1,  rm0 => ARM7_Unsupported
-
-  (* Half word data transfer register offset *)
-  |    0,    0,    0,    p,    u,    b,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
-     rd1,  rd0,    0,    0,    0,    0,    1,    s,    h,    1,  rm3,  rm2,  rm1,  rm0 =>
-    match s, h, l with
-    | 0, 0, 0 => ARM7_Swp (xbits n 27 31) b (bits4 rn3 rn2 rn1 rn0)
-                          (bits4 rd3 rd2 rd1 rd0) (bits4 rm3 rm2 rm1 rm0)
-    | _, _, 0 => ARM7_StrHS (xbits n 27 31) p u w (bits4 rn3 rn2 rn1 rn0)
-                            (bits4 rd3 rd2 rd1 rd0) s h (bits4 rm3 rm2 rm1 rm0)
-    | _, _, _ => ARM7_LdrHS (xbits n 27 31) p u w (bits4 rn3 rn2 rn1 rn0)
-                            (bits4 rd3 rd2 rd1 rd0) s h (bits4 rm3 rm2 rm1 rm0)
-    end
-
-  (* Half word data transfer immediate offset *)
-  |    0,    0,    0,    p,    u,    1,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
-     rd1,  rd0,   o7,   o6,   o5,   o4,    1,    s,    h,    1,   o3,   o2,   o1,   o0 =>
-    match l with
-    | 0 => ARM7_StrHI
-    | _ => ARM7_LdrHI
-    end (xbits n 27 31) p u w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
-         s h (bits8 o7 o6 o5 o4 o3 o2 o1 o0)
-
-
-  (* Single data transfer register offset *)
-  |    0,    1,    0,    p,    u,    b,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
-     rd1,  rd0,  sa4,  sa3,  sa2,  sa1,  sa0,  st1,  st0,    0,  rm0,  rm1,  rm2,  rm3 =>
-    match l with
-    | 0 => ARM7_StrS
-    | _ => ARM7_LdrS
-    end (xbits n 27 31) p u b w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
-        (bits5 sa4 sa3 sa2 sa1 sa0) (bits4 0 0 st1 st0) (bits4 rm3 rm2 rm1 rm0)
-
-  (* Single data transfer immediate offset *)
-  |    0,    1,    1,    p,    u,    b,    w,    l,  rn3,  rn2,  rn1,  rn0,  rd3,  rd2,
-     rd1,  rd0,imm11,imm10, imm9, imm8, imm7, imm6, imm5, imm4, imm3, imm2, imm1, imm0 =>
-    match l with
-    | 0 => ARM7_StrI
-    | _ => ARM7_LdrI
-    end (xbits n 27 31) p u b w (bits4 rn3 rn2 rn1 rn0) (bits4 rd3 rd2 rd1 rd0)
-        (bits12 imm1 imm10 imm9 imm8 imm7 imm6 imm5 imm4 imm3 imm2 imm1 imm0)
-
-  (* Block data transfer *)
-  |    1,    0,    0,    p,    u,    s,    w,    l,  rn3,  rn2,  rn1,  rn0, rl15, rl14,
-    rl13, rl12, rl11, rl10,  rl9,  rl8,  rl7,  rl6,  rl5,  rl4,  rl3,  rl2,  rl1,  rl0 => ARM7_Unsupported
-
-  (* Branch *)
-  |    1,    0,    1,    l,  o23,  o22,  o21,  o20,  o19,  o18,  o17,  o16,  o15,  o14,
-     o13,  o12,  o11,  o10,   o9,   o8,   o7,   o6,   o5,   o4,   o3,   o2,   o1,   o0 =>
-    ARM7_Branch (xbits n 27 31) l (toZ 24 (bits24 o23 o22 o21 o20 o19 o18 o17 o16 o15 o14 o13 o12 o11 o10
-                                                  o9 o8 o7 o6 o5 o4 o3 o2 o1 o0))
-
-  (* Coprocessor Data Transfer *)
-  |    1,    1,    0,    p,    u,    n,    w,    l,  rn3,  rn2,  rn1,  rn0, crd3, crd2, 
-    crd1, crd0, cpn3, cpn2, cpn1, cpn0,   o7,   o6,   o5,   o4,   o3,   o2,   o1,   o0 => ARM7_Unsupported
-
-  (* Coprocessor Data Ooperation *)
-  |    1,    1,    1,    0,  oc3,  oc2,  oc1,  oc0, crn3, crn2, crn1, crn0, crd3, crd2, 
-    crd1, crd0, cpn3, cpn2, cpn1, cpn0,  cp2,  cp1,  cp0,    0, crm3, crm2, crm1, crm0 => ARM7_Unsupported
-
-  (* Coprocessor Register Transfer *)
-  |    1,    1,    1,    0,  oc3,  oc2,  oc1,    l, crn3, crn2, crn1, crn0,  rd3,  rd2,
-     rd1,  rd0, cpn3, cpn2, cpn1, cpn0,  cp2,  cp1,  cp0,    1, crm3, crm2, crm1, crm0 => ARM7_Unsupported
-
-  (* Software Interrupt *)
-  |    1,    1,    1,    1,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,
-       _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _  => ARM7_Unsupported
-
-  (* Invalid instruction *)
-  |    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,
-       _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _,    _ => ARM7_Invalid
-  end.
 
 Open Scope stmt_scope.
 
@@ -1719,20 +1530,6 @@ Proof.
   repeat first [ reflexivity | destruct p ].
 Qed.
 
-Theorem hastyp_bits8:
-  forall n, bits8 (b 7 n) (b 6 n) (b 5 n) (b 4 n) (b 3 n) (b 2 n) (b 1 n) (b 0 n) < 2 ^ 32.
-Proof.
-  destruct n. reflexivity.
-  repeat first [ reflexivity | destruct p ].
-Qed.
-
-Theorem hastyp_2bits4:
-  forall n, 2 * bits4 (b 3 n) (b 2 n) (b 1 n) (b 0 n) < 2 ^ 32.
-Proof.
-  destruct n. reflexivity.
-  repeat first [ reflexivity | destruct p ].
-Qed.
-
 Lemma xbits_bound:
   forall n i j w, j-i <= w -> xbits n i j < 2^w.
 Proof.
@@ -1757,24 +1554,6 @@ Proof.
   destruct n.
   reflexivity.
   repeat first [ reflexivity | destruct p ].
-Qed.
-
-Lemma bit_lt_o:
-  forall n m o, o > 1 -> b m n < o.
-Proof.
-  intros.
-  unfold b.
-  remember (N.shiftr n m) as n'.
-  destruct o.
-  destruct n'.
-  discriminate.
-  discriminate.
-  destruct n'.
-  rewrite N.land_0_l. reflexivity.
-  destruct p0.
-  simpl. apply N.gt_lt. assumption.
-  simpl. reflexivity.
-  simpl. apply N.gt_lt. assumption.
 Qed.
 
 Ltac unfold_arm2il :=
@@ -1808,7 +1587,6 @@ Ltac solve_arm2il_subgoals :=
 repeat first
   [ reflexivity
   | apply xbits_16
-  | apply bit_lt_o
   | apply ofZ_bound
   | apply N.mod_lt
   | apply xbits_bound
@@ -1831,9 +1609,9 @@ Ltac clear_exceptions := eexists; try apply TExn.
 Ltac solve_arm := unfold_arm2il; destruct_match; clear_exceptions; solve_arm2il_subgoals. Optimize Heap.
 
 Theorem arm7_il_welltyped:
-  forall a n, exists c', hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin_opt n)) c'.
+  forall a n, exists c', hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin n)) c'.
 Proof.
-  intros. unfold arm_dec_bin_opt.
+  intros. unfold arm_dec_bin.
   repeat match goal with [ |- context [ if ?x then _ else _ ] ] => destruct x end.
   all: destruct_match.
   1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
