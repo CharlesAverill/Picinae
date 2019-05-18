@@ -57,7 +57,7 @@ Instance TypEqDec : EqDec typ := { iseq := typ_eqdec }.
 Definition widthof_binop (bop:binop_typ) (w:bitwidth) : bitwidth :=
   match bop with
   | OP_PLUS | OP_MINUS | OP_TIMES | OP_DIVIDE | OP_SDIVIDE | OP_MOD | OP_SMOD
-  | OP_LSHIFT | OP_RSHIFT | OP_ARSHIFT | OP_ROT | OP_AND | OP_OR | OP_XOR => w
+  | OP_LSHIFT | OP_RSHIFT | OP_ARSHIFT | OP_AND | OP_OR | OP_XOR => w
   | OP_EQ | OP_NEQ | OP_LT | OP_LE | OP_SLT | OP_SLE => 1
   end.
 
