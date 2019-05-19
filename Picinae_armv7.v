@@ -747,20 +747,27 @@ Open Scope stmt_scope.
 
 Definition bit_set := (Word 1 1).
 Definition bit_clr := (Word 0 1).
-Definition arm7_st st := match st with | 0 => OP_LSHIFT | 1 => OP_RSHIFT | 2 => OP_ARSHIFT | _ => OP_ROT end.
+
 Definition ldr_str_word_bit b := match b with | 0 => 32 | _ => 8 end.
 Definition ldr_str_up_bit u := match u with | 0 => OP_MINUS | _ => OP_PLUS end.
 Definition ldr_str_half_word_bit h := match h with | 0 => 8 | _ => 16 end.
 Definition ldr_str_signed_bit s := match s with | 0 => CAST_UNSIGNED | _ => CAST_SIGNED end.
 Definition swp_word_bit b := match b with | 0 => 32 | _ => 8 end.
 
-Definition mov_imm_op2 imm rot := BinOp OP_ROT (Word imm 32) (Word (2 * rot) 32).
+Definition shift st arg1 arg2 := match st with
+  | 0 => (BinOp OP_LSHIFT arg1 arg2)
+  | 1 => (BinOp OP_RSHIFT arg1 arg2)
+  | 2 => (BinOp OP_ARSHIFT arg1 arg2)
+  | _ => (BinOp OP_PLUS (BinOp OP_LSHIFT arg1 arg2) (BinOp OP_RSHIFT arg1 arg2))
+  end.
+
+Definition mov_imm_op2 imm rot := shift 3 (Word imm 32) (Word (2 * rot) 32).
 Definition mov_imm op dst rn imm rot := Move dst (BinOp op (Var (arm7_varid rn)) (mov_imm_op2 imm rot)).
 
-Definition mov_reg_op2 st rm rs := (BinOp (arm7_st st) (Var (arm7_varid rm)) (Var (arm7_varid rs))).
+Definition mov_reg_op2 st rm rs := shift st (Var (arm7_varid rm)) (Var (arm7_varid rs)).
 Definition mov_reg op dst rn st rm rs := Move dst (BinOp op (Var (arm7_varid rn)) (mov_reg_op2 st rm rs)).
 
-Definition mov_shift_op2 st rm sa := (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32)).
+Definition mov_shift_op2 st rm sa := shift st (Var (arm7_varid rm)) (Word sa 32).
 Definition mov_shift op dst rn st sa rm := Move dst (BinOp op (Var (arm7_varid rn)) (mov_shift_op2 st rm sa)).
 
 Definition pre_post p exp1 exp2 := if p =? 0 then exp1 $; exp2 else exp2 $; exp1.
@@ -1007,7 +1014,7 @@ Definition arm2il (ad:addr) armi :=
                       (Cast CAST_LOW (ldr_str_word_bit b)
                           (BinOp (ldr_str_up_bit u)
                               (Var (arm7_varid rn))
-                              (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32)))))
+                              (shift st (Var (arm7_varid rm)) (Word sa 32)))))
                    LittleE
                    4
              )
@@ -1016,7 +1023,7 @@ Definition arm2il (ad:addr) armi :=
              (Load (Var V_MEM32)
                    (Cast CAST_SIGNED 32
                       (Cast CAST_LOW (ldr_str_word_bit b)
-                          (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32))))
+                          (shift st (Var (arm7_varid rm)) (Word sa 32))))
                    LittleE
                    4
              )
@@ -1026,7 +1033,7 @@ Definition arm2il (ad:addr) armi :=
       | _ => Move (arm7_varid rn)
                   (BinOp (ldr_str_up_bit u)
                          (Var (arm7_varid rn))
-                         (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32)))
+                         (shift st (Var (arm7_varid rm)) (Word sa 32)))
       end)
   | ARM7_StrS cond p u b w rn rd sa st rm =>
       cond_eval cond (
@@ -1036,7 +1043,7 @@ Definition arm2il (ad:addr) armi :=
                                     (Cast CAST_LOW (ldr_str_word_bit b)
                                         (BinOp (ldr_str_up_bit u)
                                             (Var (arm7_varid rn))
-                                            (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32)))))
+                                            (shift st (Var (arm7_varid rm)) (Word sa 32)))))
                                  (Var (arm7_varid rd))
                                  LittleE
                                  4)
@@ -1053,7 +1060,7 @@ Definition arm2il (ad:addr) armi :=
       | _ => Move (arm7_varid rn)
                   (BinOp (ldr_str_up_bit u)
                          (Var (arm7_varid rn))
-                         (BinOp (arm7_st st) (Var (arm7_varid rm)) (Word sa 32)))
+                         (shift st (Var (arm7_varid rm)) (Word sa 32)))
       end)
   | ARM7_LdrHS cond p u w rn rd s h rm =>
       cond_eval cond (
@@ -1575,7 +1582,7 @@ repeat try unfold arm2il;
        try unfold cpsr_update;
        try unfold cpsr_update_arith;
        try unfold cpsr_update_logical;
-       try unfold arm7_st;
+       try unfold shift;
        try unfold pre_post.
 
 Ltac destruct_match :=
@@ -1608,45 +1615,62 @@ Ltac clear_exceptions := eexists; try apply TExn.
 
 Ltac solve_arm := unfold_arm2il; destruct_match; clear_exceptions; solve_arm2il_subgoals. Optimize Heap.
 
+Theorem arm7_mvns_welltyped:
+  forall a n, exists c',
+  hastyp_stmt armtypctx armtypctx
+    (arm2il a
+       (ARM7_MvnS (xbits n 28 32) (xbits n 20 21) (xbits n 16 20) (xbits n 12 16) (xbits n 7 11) 
+          (xbits n 5 7) (xbits n 0 4))) c'.
+Proof.
+  intros. solve_arm.
+Qed.
+
+Theorem arm7_mvnr_welltyped:
+  forall a n, exists c',
+  hastyp_stmt armtypctx armtypctx
+    (arm2il a
+       (ARM7_MvnR (xbits n 28 32) (xbits n 20 21) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12)
+          (xbits n 5 7) (xbits n 0 4))) c'.
+Proof.
+  intros. solve_arm.
+Qed.
+
+Theorem arm7_mvni_welltyped:
+  forall a n, exists c',
+  hastyp_stmt armtypctx armtypctx
+    (arm2il a
+       (ARM7_MvnI (xbits n 28 32) (xbits n 20 21) (xbits n 16 20) (xbits n 12 16) (xbits n 8 12) (xbits n 0 8))) c'.
+Proof.
+  intros. solve_arm.
+Qed.
+
 Theorem arm7_il_welltyped:
   forall a n, exists c', hastyp_stmt armtypctx armtypctx (arm2il a (arm_dec_bin n)) c'.
 Proof.
   intros. unfold arm_dec_bin.
   repeat match goal with [ |- context [ if ?x then _ else _ ] ] => destruct x end.
   all: destruct_match.
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
-  1: { solve_arm. } 1: { solve_arm. }  1: { solve_arm. }
-  Optimize Proof.
+  all: try apply arm7_mvns_welltyped.
+  all: try apply arm7_mvni_welltyped.
+  all: try apply arm7_mvnr_welltyped.
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+  1: { solve_arm. } 1: { solve_arm. } 1: { solve_arm. }
+ Optimize Proof.
 Qed.
