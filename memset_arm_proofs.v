@@ -218,380 +218,199 @@ Theorem mod2_eq : forall n w, mod2 n w = n mod 2^w.
     destruct (_ mod _),w; simpl; reflexivity.
 Qed.
 
-Definition typType t :=
-  match t with | NumT _ => N | MemT _ => addr -> N end.
-Print armtypctx.
-Definition opTypType t :=
-  match t with | None => value | Some t' => typType t' end.
+Search 0%N N.modulo.
 
-Print hastyp_val.
-Print welltyped_memory.
-
-Print VaM.
-Print unit.
-
-Print hastyp_val.
-Program Definition wtgetval v t : hastyp_val v t -> typType t :=
-  match t as t return hastyp_val v t -> typType t with
-  | NumT w => fun H => match v with VaN n _ => n | _ => False_rec _ _ end
-  | MemT _ => fun H => match v with VaM m _ => m | _ => False_rec _ _ end
-  end.
-Next Obligation. inversion H. subst. eapply H0. reflexivity. Qed.
-Next Obligation. inversion H. subst. eapply H1. reflexivity. Qed.
-Print models.
-
-Print typctx.
-Print models.
-
-Definition hasoptyp_val v t :=
-  match t with None => True | Some t' => hastyp_val v t' end.
-
-Definition wtgetoptval v t : hasoptyp_val v t -> opTypType t :=
-  match t with
-  | Some t' => fun H => wtgetval v t' H
-  | None => fun _ => v
-  end.
-
-Definition wtref' tc st id (H : models tc st)
-  : opTypType (tc id) :=
-  let v := st id in
-  wtgetoptval v (tc id)
-              (match tc id as t
-                     return (forall t', t = Some t' -> hasoptyp_val v (Some t'))
-                            -> hasoptyp_val (st id) t with
-               | None => fun _ => I
-               | Some t' => fun H => H t' eq_refl
-               end (H id)).
-Print False_rec.
-(* Program Definition wtref' tc st id (H : models tc st) *)
-(*   : opTypType (tc id) := *)
-(*   (match tc id as t *)
-(*          return match t with None => unit | Some t' => hastyp_val (st id) t' end *)
-(*                 -> opTypType t *)
-(*    with *)
-(*    | None => fun _ => st id *)
-(*    | Some tc' => wtgetval (st id) tc' *)
-(*    end) _. *)
-(* Next Obligation. specialize (H id). destruct (tc id); auto. constructor. Qed. *)
-
-Print store.
-Definition wtstore ctx := { st | models ctx st }.
-
-Locate "{ _ | _ }".
-Print sig.
-Definition wtref tc wts id :=
-  match wts with | exist _ st H => wtref' tc st id H end.
-
-Print store.
-Print wtref.
-
-Definition wtutref tc wts id : value :=
-  match tc id as tc' return opTypType tc' -> value with
-  | Some (NumT w) => fun n => VaN n w
-  | Some (MemT w) => fun m => VaM m w
-  | None => fun v => v
-  end (wtref tc wts id).
-
-Theorem wtntref : forall ctx st id MDL,
-    st id = wtutref ctx (exist _ st MDL) id.
-  intros.
-  unfold wtutref,wtref,wtref'.
-  simpl.
-  unfold models in *.
-  generalize (MDL id).
-  intros.
-  destruct (ctx id); auto.
-  generalize dependent (h t eq_refl).
-  clear MDL h.
-  intros.
-  destruct (st id),t; simpl; inversion h; subst; reflexivity.
+Search N.add 0%N.
+Theorem xplusid' : forall n, n ⊕ 0 = n mod 2^32.
+  intro n.
+  rewrite N.add_0_r.
+  reflexivity.
 Qed.
 
-Compute (fun st => wtref armtypctx st R_R0).
-Compute (opTypType (armtypctx R_R0)).
-
-Definition memset_invs_alt' (s:addr) (c:N) n (a:addr) (st:store) :=
-  let wts MDL := wtref armtypctx (exist _ st MDL) in
-  let common_inv MDL :=
-      exists prog,
-        (* st V_MEM32 = Ⓜm *)
-        (* /\ st R_R0 = Ⓓs *)
-        (* /\ st R_R1 = Ⓓr1 *)
-        (* /\ st R_R2 = Ⓓr2 *)
-        (* /\ st R_R3 = Ⓓr3 *)
-        s = wts MDL R_R0
-        /\ c = wts MDL R_R1 mod 2^8
-        /\ wts MDL R_R3 = s ⊕ prog
-        /\ memfilled (wts MDL V_MEM32) s c (n - wts MDL R_R2)
-  in match a with
-     | 0 => Some (fun MDL =>
-                    s = wts MDL R_R0
-                    /\ c = wts MDL R_R1 mod 2^8
-                    /\ n = wts MDL R_R2)
-     (* | 4 => Some (st R_R2 = Ⓓn /\ common_inv) *)
-     | 12 => Some common_inv
-     | 44 => Some (fun MDL =>
-                     wts MDL R_R1 = memset_bytedup c
-                     /\ wts MDL R_R12 = wts MDL R_R1
-                     /\ common_inv MDL)
-     | 84 => Some common_inv
-     | _ => None
-     end.
-
-Definition memset_invs_alt s c n a st :=
-  option_map (fun P => exists MDL, P MDL) (memset_invs_alt' s c n a st).
-
-Definition memset_invset_alt s c n :=
-  invs (memset_invs_alt s c n) (memset_post s c n).
-
-Check wtref'.
-Check hastyp_val.
-Theorem hastyp_preserve : forall tc st a v,
-    models tc st
-    -> match (tc a) with | Some t => hastyp_val v t | _ => True end
-    -> models tc (update st a v).
+Theorem xplusinv' : forall b c, b < 2^32 -> b ⊕ (2^32 + c ⊖ b) = c mod 2^32.
   intros.
-  unfold models in *.
+  rewrite (N.add_comm (2^32)).
+  rewrite N.add_comm.
+  destruct b.
+  rewrite N.add_0_r.
+  rewrite N.sub_0_r.
+  rewrite mod_add_r; try discriminate.
+  apply mod_same.
+  discriminate.
+  assert (N.pos p <= 2^32); auto using N.lt_le_incl.
+  rewrite <- N.add_sub_assoc; auto.
+  rewrite <- xplus_assoc.
+  rewrite N.sub_add; auto.
+  rewrite N.mod_same; try discriminate.
+  rewrite N.add_0_r.
+  reflexivity.
+Qed.
+
+Theorem xplusinv : forall b c, b < 2^32 -> c < 2^32 -> b ⊕ (2^32 + c ⊖ b) = c.
   intros.
-  specialize (H v0 t CV).
-  unfold update.
-  simpl.
-  destruct vareq; subst; auto.
-  rewrite CV in H0.
+  rewrite xplusinv'; auto.
+  apply N.mod_small.
   assumption.
 Qed.
 
-Print iseq.
-Print sumbool.
+Theorem set_dword : forall m a v,
+    m [Ⓓa := v]
+    = m [Ⓑa := v mod 2^8]
+        [Ⓑa+1 := v >> 8 mod 2^8]
+        [Ⓑa+2 := v >> 16 mod 2^8]
+        [Ⓑa+3 := v >> 24].
+  intros.
+  repeat rewrite setmem_1.
+  simpl setmem.
+  unfold setmem,setmem_little,Mb,ARMArch.mem_bits.
+  repeat rewrite <- N.add_1_r.
+  repeat rewrite <- N.add_assoc.
+  simpl (1+_).
+  repeat f_equal.
+Qed.
+Print N.testbit.
+Print N.b2n.
 
-Theorem wtupdate : forall tc st a v,
-    models tc st -> hasoptyp_val v (tc a) -> models tc (update st a v).
-  intros.
-  unfold models in *.
-  intros.
-  specialize (H v0 t CV).
-  unfold update.
-  destruct (_ == _); subst; auto.
-  rewrite CV in H0.
-  assumption.
+(* Theorem bin_rect : forall (P : N -> Type), *)
+(*     P 0 -> (forall p, P (N.pos p) -> P (N.pos p~0) -> (forall p, P (N.pos p) -> P (N.pos p~1)) *)
+(*     -> forall a, P a. *)
+(*   induction a; auto. *)
+(*   induction p; auto. *)
+(*   specialize (X1 (N.pos p) IHp). *)
+(*   rewrite <- N.double_spec in *. *)
+(*   rewrite N.add_1_r in *. *)
+(*   assumption. *)
+(*   specialize (X0 (N.pos p) IHp). *)
+(*   assumption. *)
+(*   apply (X1 0). *)
+(*   assumption. *)
+(* Qed. *)
+
+(* Search "recompose". *)
+
+(* Search (_ mod (2^_)). *)
+
+Theorem andshiftlzero' : forall a b w,
+    (a mod 2^w) .& (b << w) = 0.
+  destruct a,b,w; try rewrite N.mod_1_r;
+    try rewrite N.shiftl_0_l,N.land_0_r; auto.
+  rewrite <- mod2_eq.
+  simpl.
+  generalize dependent p.
+  generalize dependent p0.
+  induction p1 using Pos.peano_ind; simpl; auto.
+  destruct p; reflexivity.
+  destruct p; simpl; try rewrite Pos.pred_succ; rewrite Pos.iter_succ; auto;
+    destruct (Pos.succ p1); auto; specialize (IHp1 p0 p);
+      destruct posmod2; auto; simpl in *; rewrite IHp1; reflexivity.
 Qed.
 
-Theorem wtref'_update' : forall tc st id a v H1 H2 H3,
-    wtref' tc (update st a v) id H3 =
-    match (iseq id a) with
-    | left eq_refl => wtgetoptval v _ H2
-    | _ => wtref' tc st id H1
-    end.
-  unfold update.
+Theorem andshiftlzero : forall a b w,
+    a < 2^w -> a .& (b << w) = 0.
+  intros a b w.
+  rewrite <- N.shiftl_1_l.
+  destruct a,b,w; simpl; auto.
+  intros.
+  destruct p; discriminate.
+  unfold N.lt.
   simpl.
+  (* fold (Pos.lt p (Pos.iter xO 1%positive p1)). *)
+  generalize dependent p0.
+  generalize dependent p.
+  induction p1 using Pos.peano_ind; simpl; auto.
   intros.
-  unfold wtref'.
+  destruct p; simpl; auto.
+  destruct p; inversion H.
+  destruct p; inversion H.
+  intros a b.
+  repeat rewrite Pos.iter_succ.
+  intros.
+  destruct a; simpl; auto; rewrite IHp1; auto.
+  (* generalize dependent H. *)
+  generalize dependent (Pos.iter xO 1%positive p1).
+  intros.
+  clear IHp1.
+  fold (N.compare (N.pos a) (N.pos p)).
+  fold (N.lt (N.pos a) (N.pos p)).
+  rewrite N.mul_lt_mono_pos_l.
+  repeat rewrite <- N.double_spec.
   simpl.
-  generalize (H3 id),(H1 id).
-  destruct vareq; intros; simpl; destruct (tc id); subst; auto; simpl.
-  simpl in H2.
-  destruct v,t; inversion H2; subst; reflexivity.
-  generalize (h t eq_refl).
-  intros.
-  destruct (st id),t; inversion h1; subst; reflexivity.
-Qed.
-Check wtref'_update'.
-
-Require Import Program.
-
-Theorem wtref'_update : forall tc st id a v H1 H2,
-    wtref' tc (update st a v) id (wtupdate tc st a v H1 H2) =
-    match (iseq id a) return hasoptyp_val v (tc a) -> opTypType (tc id) with
-    | left p => match p with eq_refl => fun H2 => wtgetoptval v _ H2 end
-    | _ => fun _ => wtref' tc st id H1
-    end H2.
-  intros.
-  generalize (wtupdate tc st a v H1 H2).
-  intros.
-  unfold models,update in *.
+  eapply N.lt_trans.
+  apply N.lt_succ_diag_r.
   simpl.
-  unfold wtref'.
-  simpl.
-  unfold wtgetoptval.
-  simpl.
-  generalize (H1 id).
-  generalize (m id).
-  intros.
-  destruct st.
-  destruct (h0 (tc id)).
-  destruct (tc id).
-  destruct t.
-  specialize (h0 (NumT w0) eq_refl).
-  inversion h0; subst; auto.
-  specialize (h0 (MemT w0) eq_refl).
-  inversion h0.
-  inversion h0.
-  subst.
-  inversion h0.
-  reflexivity.
-  inversion h0.
-  destruct (st id).
-  destruct (tc id).
-  assert (X := vareq id a).
-  destruct X.
-  subst.
-  assert (forall x, exists y, vareq x x = left y).
-  intros.
-  destruct vareq.
-  exists e.
-  reflexivity.
-  destruct n.
-  reflexivity.
-  specialize (H a).
-  destruct H.
-  2: { destruct vareq.
-  destruct (vareq a a),(tc a).
-  rewrite H.
-  dependent rewrite (H a).
-  rewrite H0.
-  destruct x; econstructor; try reflexivity.
-  destruct vareq.
-  simpl.
-  assert (forall m, N.eq_dec m m = left eq_refl).
-  intros.
-  destruct N.eq_dec; try discriminate.
-  compute.
-  dependent destruction e.
   auto.
   reflexivity.
-  destruct N.eq_dec; simpl.
-  reflexivity.
-  simpl.
-  destruct n; auto.
-  simpl.
-  destruct (V_TEMP n); auto.
-  Print V_TEMP.
-  destruct (V_TEMP n).
-  fold (iseq a a).
-  destruct vareq.
-  destruct vareq as [[]|[]].
-  unfold update.
-  intros.
-  (* destruct id,a; compute. *)
-  unfold wtref',wtgetoptval.
-  simpl.
-  generalize (wtupdate tc st a v H1 H2 id).
-  generalize (H1 id).
-  intros.
-  simpl.
-  rename h into Q1111.
-  rename h0 into Q1112.
-  destruct vareq,(tc id).
-  generalize (wtgetval_obligation_1 _ _).
-  destruct (tc id).
-  compute.
-  dependent destruction (tc id).
-  destruct (st id).
-  dependent destruction (vareq id a).
-  destruct vareq.
-  destruct vareq.
-  erewrite wtref'_update'.
-  Unshelve.
-  all: auto.
-  2: {
-  apply wtref'_update'.
-  unfold update.
-  simpl.
-  intros.
-  unfold wtref'.
-  simpl.
-  generalize (H3 id),(H1 id).
-  destruct vareq; intros; simpl; destruct (tc id); subst; auto; simpl.
-  simpl in H2.
-  destruct v,t; inversion H2; subst; reflexivity.
-  generalize (h t eq_refl).
-  intros.
-  destruct (st id),t; inversion h1; subst; reflexivity.
 Qed.
 
-Theorem strlen_partial_correctness_alt:
-  forall st lr s ci c n q st' x m
-         (MDL0: models armtypctx st)
-         (LR0: st R_LR = Ⓓlr) (MEM0: st V_MEM32 = Ⓜm)
-         (R0: st R_R0 = Ⓓs) (R1: st R_R1 = Ⓓci) (R2: st R_R2 = Ⓓn)
-         (C: c = ci mod 2^8)
-         (RET: memset_arm st lr = None)
-         (XP0: exec_prog fh memset_arm 0 st q st' x),
-    trueif_inv (memset_invset_alt s c n memset_arm x st').
+Theorem bytedup_spec : forall c,
+    c < 2^8
+    -> memset_bytedup c mod 2^8 = c
+    /\ memset_bytedup c >> 8 mod 2^8 = c
+    /\ memset_bytedup c >> 16 mod 2^8 = c
+    /\ memset_bytedup c >> 24 = c.
+  unfold memset_bytedup.
+  all: replace 32 with (24+8); replace 24 with (16+8);
+    replace 16 with (8+8); auto.
   intros.
-  eapply prove_invs.
-  exact XP0.
+  assert (Q : c + (c << 8) < 2^(8+8)).
+  rewrite N.shiftl_mul_pow2.
+  eapply N.lt_le_trans.
+  apply N.add_lt_mono_r; eassumption.
+  rewrite <- Nmult_Sn_m.
+  rewrite N.pow_add_r.
+  apply N.mul_le_mono_pos_r; try reflexivity.
+  rewrite N.le_succ_l.
+  apply H.
+  replace ((c << 8) mod 2^(8+8+8+8)) with (c<<8).
+  2: { symmetry. apply N.mod_small. eapply N.le_lt_trans. apply N.le_add_r.
+       rewrite N.add_comm. eapply N.lt_trans; try eassumption. reflexivity. }
+  replace ((c .| (c<<8) << (8+8)) mod 2^(8+8+8+8)) with (c .| (c<<8) << 8 << 8).
+  2: { symmetry. rewrite N.shiftl_shiftl. apply N.mod_small.
+       repeat rewrite N.shiftl_mul_pow2 in *. repeat rewrite N.pow_add_r.
+       rewrite <- N.mul_assoc. apply N.mul_lt_mono_pos_r; try reflexivity.
+       repeat rewrite <- N.pow_add_r. rewrite lor_plus; auto.
+       rewrite <- N.shiftl_mul_pow2. apply andshiftlzero. assumption. }
+  repeat (rewrite N.shiftl_lor + rewrite N.shiftr_lor
+          + rewrite <- N.shiftl_shiftl + rewrite <- N.shiftr_shiftr
+          + rewrite N.add_assoc + rewrite N.shiftr_shiftl_l,N.shiftl_0_r);
+    try discriminate.
+  replace (c >> 8) with 0; try rewrite shiftr_low_pow2; auto; try reflexivity.
+  repeat rewrite N.shiftr_0_l.
   simpl.
-  exists MDL0.
-  assert (X := fun id => wtntref armtypctx st id MDL0).
-  unfold wtutref,wtref in X.
-  rewrite X in *; simpl in *.
-  inversion R0; subst.
-  inversion R1; subst.
-  inversion R2; subst.
-  tauto.
-  intros.
-  shelve_cases 32 PRE. Unshelve.
-  destruct PRE.
-  intuition.
-  Local Ltac step := time arm_step.
-  repeat step.
-  econstructor.
-  econstructor.
-  unfold wtref.
-  repeat split.
-  erewrite wtref'_update.
-  erewrite wtref'_update.
-  erewrite wtref'_update.
-  erewrite wtref'_update.
-  erewrite wtref'_update.
-  erewrite wtref'_update.
-  erewrite wtref'_update.
-  erewrite wtref'_update.
-  simpl.
-  erewrite (wtntref armtypctx) in Hsv.
-  unfold wtutref in Hsv.
-  simpl in Hsv.
-  inversion Hsv.
-  rewrite H0.
-  simpl.
-  reflexivity.
-  5: { destruct PRE. destruct H. intuition. repeat step.
-       all: try discriminate.
-       do 2 econstructor.
-       intuition.
-       unfold wtref.
-       erewrite wtref'_update.
-       erewrite wtref'_update.
-       simpl.
-       rewrite
-       erewrite wtref'_update.
-       erewrite wtref'_update.
-       erewrite wtref'_update.
-       erewrite wtref'_update.
-       erewrite wtref'_update.
-       erewrite wtref'_update.
-       simpl.
-  simpl.
-  rewrite H0.
-  simpl.
-  unfold wtref'.
-  simpl.
-  generalize (eq_refl (s1 R_R0)).
-  Search wtref.
-  simpl.
-  rewrite Hsv.
-  destruct e.
-  destruct (s1 R_R0).
-  rewrite Hsv.
-  red.
-  simpl 1.
-  simpl 1.
-  simpl .
-  red.
-  simpl.
+  repeat rewrite <- N.shiftl_lor.
+  simpl in Q.
+  repeat rewrite lor_plus; auto using andshiftlzero.
+  repeat rewrite N.shiftl_mul_pow2.
+  repeat rewrite N.mod_add; try discriminate.
+  repeat rewrite N.mod_small; try assumption.
+  repeat split; reflexivity.
+  rewrite N.shiftl_shiftl.
+  apply andshiftlzero.
+  assumption.
+Qed.
 
-Theorem strlen_partial_correctness:
+Theorem memset_preserves_lr :
+  forall s n s' x,
+    exec_prog fh memset_arm 0 s n s' x -> s' R_LR = s R_LR.
+  intros.
+  eapply noassign_prog_same; try eassumption.
+  prove_noassign.
+Qed.
+
+Theorem memfilled_succ : forall m s c n,
+    memfilled m s c n -> memfilled (update m (s ⊕ n) c) s c (N.succ n).
+  intros.
+  unfold memfilled,update in *.
+  intros.
+  destruct iseq; auto.
+  rewrite N.lt_succ_r in H0.
+  rewrite N.le_lteq in H0.
+  destruct H0; subst; auto.
+  destruct n0.
+  reflexivity.
+Qed.
+
+Theorem memset_partial_correctness:
   forall st lr s ci c n q st' x m
          (MDL0: models armtypctx st)
          (LR0: st R_LR = Ⓓlr) (MEM0: st V_MEM32 = Ⓜm)
@@ -723,35 +542,252 @@ Theorem strlen_partial_correctness:
   reflexivity.
   Search setmem.
   rewrite H6.
-  assert (xplusinv : forall b c,
-             b < 2^32 -> c < 2^32 -> b ⊕ (2^32 + c ⊖ b) = c).
-  intros.
-  rewrite N.add_mod_idemp_r; try discriminate.
-  rewrite N.add_comm.
-  rewrite (N.add_comm (2^32)).
-  rewrite N.sub_add.
-  rewrite mod_add_r; try discriminate.
-  apply N.mod_small; auto.
-  eapply N.le_trans.
-  apply N.lt_le_incl.
-  eassumption.
-  rewrite N.add_comm.
-  apply N.le_add_r.
   repeat rewrite <- xplus_assoc.
   assert (8 < 2^8); try reflexivity.
-  repeat rewrite xplusinv;
+  do 3 try rewrite xplusinv;
     try reflexivity; try apply N.mod_upper_bound; try discriminate.
+  rewrite xplusinv'; try reflexivity.
   rewrite xplus_assoc.
   rewrite <- H6.
-  assumption.
-  (* not sure this can be proven, may need to carry around type in invariants *)
-  admit.
-  Print setmem.
-  Print setmem_big.
-  Print setmem.
+  rewrite N.add_mod_idemp_r; try assumption.
+  discriminate.
+  repeat rewrite <- xplus_assoc.
+  simpl N.add.
+  repeat rewrite N.mod_same.
+  Search N.modulo N.add.
+  repeat rewrite N.add_mod_idemp_r; try discriminate.
   Locate "[".
-  Print memfilled.
+  Import ARMNotations.
+  Locate "[".
+  Check getmem_1.
+  Locate "[Ⓑ".
+  assert (set_dword : forall m a v,
+             m [Ⓓa := v]
+             = m [Ⓑa := v mod 2^8]
+                 [Ⓑa+1 := v >> 8 mod 2^8]
+                 [Ⓑa+2 := v >> 16 mod 2^8]
+                 [Ⓑa+3 := v >> 24]).
+  intros.
+  repeat rewrite setmem_1.
+  simpl setmem.
+  unfold setmem,setmem_little,Mb,ARMArch.mem_bits.
+  Search N.succ N.add.
+  repeat rewrite <- N.add_1_r.
+  repeat rewrite <- N.add_assoc.
+  simpl (1+_).
+  repeat f_equal.
+  repeat rewrite set_dword; repeat rewrite setmem_1.
+  rewrite <- H1.
+  rewrite H3.
+  simpl vnum.
+  (* These two lemmas are false, I need to replace them with alignment lemmas *)
+  assert (BAD : forall a b, a + b = (a + b) mod 2^32).
+  admit.
+  assert (BAD2 : forall a b c, (a ⊕ b) + c = (a + b + c) mod 2^32).
+  intros.
+  rewrite BAD.
+  apply N.add_mod_idemp_l.
+  discriminate.
+  repeat rewrite BAD2.
+  repeat rewrite <- N.add_assoc.
+  simpl N.add.
+  rewrite (BAD x2 1).
+  rewrite (BAD x2 2).
+  rewrite (BAD x2 3).
+  clear BAD.
+  clear BAD2.
+  assert (bytedup_spec : forall c,
+             c < 2^8 ->
+             memset_bytedup c mod 2^8 = c /\
+             memset_bytedup c >> 8 mod 2^8 = c /\
+             memset_bytedup c >> 16 mod 2^8 = c /\
+             memset_bytedup c >> 24 = c).
+  admit.
+  rewrite H in H3.
+  inversion H3.
+  destruct (bytedup_spec c).
+  rewrite H7.
+  apply N.mod_upper_bound.
+  discriminate.
+  destruct H12.
+  destruct H13.
+  rewrite H9,H12,H13,H14.
+  apply memfilled_mod.
+  apply memfilled_split.
+  Search memfilled.
+  repeat apply memfilled_update.
+  assumption.
+  Search memfilled.
+  rewrite H6.
+  repeat rewrite N.add_mod_idemp_l; try discriminate.
+  assert (memfilled_succ : forall m s c n,
+             memfilled m s c n -> memfilled (update m (s ⊕ n) c) s c (N.succ n)).
+  intros.
+  unfold memfilled.
+  unfold memfilled in H15.
+  Search N.lt N.succ.
+  Search N.lt "dec".
+  intros.
+  unfold update.
+  destruct iseq; auto.
+  rewrite N.lt_succ_r in H16.
+  rewrite N.le_lteq in H16.
+  destruct H16; auto.
+  rewrite H16 in n2.
+  destruct n2.
+  reflexivity.
+  rewrite <- (N.add_0_r (s+x3)) at 1.
+  repeat apply memfilled_succ.
+  unfold memfilled.
+  destruct i; discriminate.
+  1-3: admit.
+  do 5 econstructor.
+  intuition.
+  exact H6.
+  rewrite H8.
+  repeat f_equal.
+  Search N.leb.
+  destruct (N.leb_spec 8 x1); try discriminate.
+  destruct x1; auto.
+  compute in H9.
+  do 4 (destruct p; auto); discriminate.
+  assumption.
+  assert (RLR_pres : s1 R_LR = st R_LR).
+  eapply noassign_prog_same; try apply XP.
+  prove_noassign.
+  destruct PRE.
+  destruct H.
+  destruct H.
+  destruct H.
+  destruct H.
+  intuition.
+  repeat (discriminate + step).
+  intuition.
+  repeat rewrite setmem_1.
+  do 5 econstructor.
+  intuition.
+  rewrite H4.
+  repeat rewrite <- xplus_assoc.
+  simpl (1+_).
+  rewrite (N.add_mod_idemp_r x3); try discriminate.
+  rewrite N.add_mod_idemp_r; try discriminate.
+  reflexivity.
+  repeat rewrite <- xplus_assoc.
+  do 3 try rewrite xplusinv;
+    try reflexivity; try apply N.mod_upper_bound; try discriminate.
+  rewrite xplusinv'; try reflexivity.
+  rewrite N.add_mod_idemp_r; try discriminate.
+  assumption.
+  assert (memfilled_succ : forall m s c n,
+             memfilled m s c n -> memfilled (update m (s ⊕ n) c) s c (N.succ n)).
+  admit.
+  rewrite <- H5.
+  apply memfilled_split.
+  repeat apply memfilled_update.
+  assumption.
+  rewrite H4.
+  repeat rewrite <- xplus_assoc.
+  simpl (1⊕_).
+  repeat rewrite (N.add_mod_idemp_r x3); try discriminate.
+  repeat rewrite N.add_mod_idemp_r; try discriminate.
+  rewrite <- (N.add_0_r x3) at 1.
+  repeat rewrite N.add_assoc.
+  repeat apply memfilled_succ.
+  unfold memfilled.
+  destruct i; discriminate.
+  all: rewrite RLR_pres; rewrite LR0; simpl (vnum (Ⓓ _)).
+  Print nextinv.
+  Print invs.
+  apply NIHere.
+  red.
+  red.
+  red.
+  destruct lr.
+  discriminate.
+  destruct p.
+  3: { red. econstructor. intuition. repeat rewrite setmem_1.
+       assert (3 <= x1).
+       destruct x1; try discriminate.
+       compute.
+       destruct p; try discriminate; destruct p; try discriminate.
+       Search N.lt N.le.
+       rewrite N.lt_eq_cases in H7.
+       destruct H7.
+       Search N.add N.sub.
+       Search N.leb.
+       destruct (N.leb_spec 1 x1); try discriminate.
+       destruct (N.leb_spec 1 (2 ^ 32 + x1 ⊖ 1)); try discriminate.
+       destruct (N.leb_spec 1 (2 ^ 32 + (2 ^ 32 + x1 ⊖ 1) ⊖ 1)); try discriminate.
+       destruct (N.leb_spec 1 (2 ^ 32 + (2 ^ 32 + (2 ^ 32 + x1 ⊖ 1) ⊖ 1) ⊖ 1));
+         try discriminate.
+       Search "xplus".
+       Search N.add N.sub.
+       repeat rewrite <- (N.add_sub_assoc (2^32)) in H12; try assumption.
+       Search N.leb.
+       destruct (N.leb_spec 1 x1).
+       do 3 rewrite <- (N.add_sub_assoc (2^32)) in BC6.
+       Search x1
+       destruct p; auto.
+       compute.
+       destruct (N.leb_spec 1 x1) in BC6.
+       assert (x1 = 3).
+       destruct x1; try discriminate.
+       f_equal.
+       destruct p; try discriminate.
+       f_equal.
+       destruct p; auto; try discriminate.
+       destruct x1.
+       assert 
+       discriminate.
+       destruct p; try discriminate.
+       destruct p; try discriminate.
+       destruct p; try discriminate.
+  simpl in BC6.
+  red.
+  discriminate.
+  econstructor.
+  econstructor.
+  discriminate.
+  split.
+  Search update.
+  do 3 (rewrite update_frame; try discriminate).
+  discriminate.
+  discriminate.
+  intuition.
+  unfold update.
+  simpl (iseq).
+  unfold vareq.
+  destruct ARMArch.Var.eq_dec.
+  inversion e.
+  destruct
+  unfold ARMArch.Var.eq_dec.
+  red.
+  red.
+  simpl.
+  red.
+  rewrite RLR_pres.
+  red.
+  unfold true_inv.
+  simpl.
+  Print nextinv.
+  apply NIHere.
+  Print true_inv.
+  red.
+  red.
+  red.
+  red.
+  red.
+  unfold 
+  repeat rewrite xplus_assoc.
+  rewrite <- N.add_assoc at 1.
+  repeat apply memfilled_succ.
+  rewrite xplusinv.
+  Set Printing All.
+  rewrite mod_same.
+  repeat rewrite setmem_1.
+  auto.
   assert (memfilled_bytedup : forall m s c,
+             m [Ⓓs := memset_bytedup c] s c 4 =
              c < 2 ^ 8 -> memfilled (m [Ⓓs := memset_bytedup c]) s c 4).
   intros.
   unfold memfilled.
@@ -936,8 +972,6 @@ Theorem strlen_partial_correctness:
   Locate "⊖".
   (* group operations? *)
   rewrite H4.
-  assert (xplus_assoc : forall a b c, a ⊕ (b ⊕ c) = (a ⊕ b) ⊕ c).
-  admit.
   repeat rewrite <- (xplus_assoc s).
   reflexivity.
   rewrite H6.
