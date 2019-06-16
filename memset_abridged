@@ -1,0 +1,126 @@
+ >>>>>>> Library Top
+fh : hdomain
+strlen_nwc : ∀ s2 s1 : ARMArch.store, memset_arm s1 = memset_arm s2
+xcomp : N → N
+xminus_zero : ∀ n : N, n _⊖_ n = 0
+xminus_alt' : ∀ n m : N, m < 2 ^ 32 → 2 ^ 32 + n ⊖ m = n mod 2 ^ 32 _⊖_ m
+xminus_alt : ∀ n m : N, n < 2 ^ 32 → m < 2 ^ 32 → 2 ^ 32 + n ⊖ m = n _⊖_ m
+mod_n_n : ∀ n d : N, d ≠ 0 → (n mod d) mod d = n mod d
+xcomp_mod : ∀ n : N, xcomp n mod 2 ^ 32 = xcomp n
+xcomp_mod_in : ∀ n : N, xcomp (n mod 2 ^ 32) = xcomp n
+xplus_minus : ∀ n m : N, m < n → n ⊖ m = n _⊖_ m
+xcomp_plus_dist' : ∀ n m : N, xcomp n _⊖_ m = xcomp (n + m)
+xcomp_plus_dist : ∀ n m : N, xcomp n _⊖_ m = xcomp (n ⊕ m)
+xplus_id_l' : ∀ n : N, n ⊕ 0 = n mod 2 ^ 32
+xplus_id_l : ∀ n : N, n < 2 ^ 32 → n ⊕ 0 = n
+xplus_id_r' : ∀ n : N, 0 ⊕ n = n mod 2 ^ 32
+xplus_id_r : ∀ n : N, n < 2 ^ 32 → 0 ⊕ n = n
+xplus_comm : ∀ n m : N, n ⊕ m = m ⊕ n
+xplus_assoc : ∀ a b c : N, a ⊕ (b ⊕ c) = a ⊕ b ⊕ c
+mod_greater : ∀ n d1 d2 : N, d1 ≠ 0 → d1 <= d2 → (n mod d1) mod d2 = n mod d1
+posmod2 : positive → positive → N
+mod2 : N → N → N
+npossucc : ∀ p : positive, N.pos (Pos.succ p) = N.succ (N.pos p)
+mod2_eq : ∀ n w : N, mod2 n w = n mod 2 ^ w
+xplusid' : ∀ n : N, n ⊕ 0 = n mod 2 ^ 32
+xplusinv' : ∀ b c : N, b < 2 ^ 32 → b ⊕ (2 ^ 32 + c ⊖ b) = c mod 2 ^ 32
+xplusinv : ∀ b c : N, b < 2 ^ 32 → c < 2 ^ 32 → b ⊕ (2 ^ 32 + c ⊖ b) = c
+minus_n_mod_n : ∀ n m : N, 0 < m → m < n → (n - m) mod m = n mod m
+xcomp_comp : ∀ n : N, n < 2 ^ 32 → xcomp (xcomp n) = n
+xeq_xplus_r : ∀ n m p : N, n < 2 ^ 32 → p < 2 ^ 32 → n ⊕ m = p ↔ n = p _⊖_ m
+xeq_xplus_l : ∀ n m p : N, m < 2 ^ 32 → p < 2 ^ 32 → n ⊕ m = p ↔ m = xcomp n ⊕ p
+xeq_xcomp_r : ∀ n m p : N, n < 2 ^ 32 → p < 2 ^ 32 → n _⊖_ m = p ↔ n = p ⊕ m
+xeq_xcomp_l : ∀ n m p : N, m < 2 ^ 32 → p < 2 ^ 32 → xcomp n ⊕ m = p ↔ m = n ⊕ p
+xplus_minus' : ∀ n m : N, m <= n → n ⊖ m = n _⊖_ m
+xplus_minus'' : ∀ n m : N, n < 2 ^ 32 → m <= n → n - m = n _⊖_ m
+xlt_minus : ∀ n m p : N, n < 2 ^ 32 → n _⊖_ m < p → n < p + m
+sub_eq_r : ∀ n m p : N, n <= m → p <= m - n ↔ p + n <= m
+xminus_eq_r : ∀ n m p : N, n < 2 ^ 32 → m <= n → p <= n _⊖_ m ↔ p + m <= n
+andshiftlzero' : ∀ a b w : N, (a mod 2 ^ w) .& (b << w) = 0
+andshiftlzero : ∀ a b w : N, a < 2 ^ w → a .& (b << w) = 0
+set_dword : 
+∀ (m : addr → N) (a : addr) (v : N),
+  m [Ⓓa := v ] =
+  m [Ⓑa := v mod 2 ^ 8 ] [Ⓑa + 1 := (v >> 8) mod 2 ^ 8 ] [Ⓑa + 2 := (v >> 16) mod 2 ^ 8 ]
+  [Ⓑa + 3 := v >> 24 ]
+set_dword_aligned : 
+∀ (m : addr → N) (a v : N),
+  a < 2 ^ 32
+  → a mod 2 ^ 2 = 0
+    → m [Ⓓa := v ] =
+      m [Ⓑa := v mod 2 ^ 8 ] [Ⓑa ⊕ 1 := (v >> 8) mod 2 ^ 8 ] [Ⓑ
+      a ⊕ 2 := (v >> 16) mod 2 ^ 8 ] [Ⓑa ⊕ 3 := v >> 24 ]
+tc_extract : 
+∀ (tc : typctx) (reg : var) (st : store),
+  models tc st
+  → match tc reg with
+    | Some (NumT w) => vnum (st reg) < 2 ^ w
+    | Some (MemT _) => welltyped_memory (vmem (st reg))
+    | None => True
+    end
+armcc_vreg : list armvar
+cons_eq : 
+∀ (A : Type) (x : A) (xs : list A) (y : A) (ys : list A),
+  x = y → xs = ys → x :: xs = y :: ys
+arm_vreg_preserves : program → Prop
+memset_preserves_vreg : arm_vreg_preserves memset_arm
+memset_preserves_rsp : 
+∀ (s : ARMArch.store) (n : nat) (s' : ARMArch.store) (x : exit),
+  exec_prog fh memset_arm 0 s n s' x → s' R_SP = s R_SP
+memset_ret : 
+∀ (s : ARMArch.store) (n : nat) (s' : ARMArch.store) (x : exit),
+  exec_prog fh memset_arm 0 s n s' x → s' R_R0 = s R_R0
+memfilled : (addr → N) → addr → N → N → Prop
+memset_bytedup : N → N
+memset_post : N → N → N → exit → store → Prop
+memset_invs : addr → N → N → addr → store → option Prop
+memset_invset : addr → N → N → program → exit → store → option Prop
+memfilled_split : 
+∀ (m : addr → N) (s : addr) (c n1 n2 : N),
+  memfilled m s c n1 → memfilled m (s + n1) c n2 → memfilled m s c (n1 + n2)
+memfilled_split' : 
+∀ (m : addr → N) (s : addr) (c n1 n2 : N),
+  memfilled m s c n1 → memfilled m (s ⊕ n1) c n2 → memfilled m s c (n1 + n2)
+memfilled_mod : 
+∀ (m : addr → N) (s : addr) (c n : N), memfilled m s c n → memfilled m s c (n mod 2 ^ 32)
+memfilled_update : 
+∀ (m : addr → N) (s : addr) (c n : N) (a : addr),
+  memfilled m s c n → memfilled (m [Ⓑa := c ]) s c n
+bytedup_spec : 
+∀ c : N,
+  c < 2 ^ 8
+  → memset_bytedup c mod 2 ^ 8 = c
+    ∧ (memset_bytedup c >> 8) mod 2 ^ 8 = c
+      ∧ (memset_bytedup c >> 16) mod 2 ^ 8 = c ∧ memset_bytedup c >> 24 = c
+memset_preserves_lr : 
+∀ (s : ARMArch.store) (n : nat) (s' : ARMArch.store) (x : exit),
+  exec_prog fh memset_arm 0 s n s' x → s' R_LR = s R_LR
+memfilled_succ : 
+∀ (m : addr → N) (s : addr) (c n : N),
+  memfilled m s c n → memfilled (m [s ⊕ n := c]) s c (N.succ n)
+memset_welltyped : welltyped_prog armtypctx memset_arm
+memfilled_zero : ∀ (m : addr → N) (s : addr) (c : N), memfilled m s c 0
+memfilled_one' : ∀ (m : N → N) (s c : N), memfilled (m [s mod 2 ^ 32 := c]) s c 1
+memfilled_one : ∀ (m : N → N) (s c : N), s < 2 ^ 32 → memfilled (m [s := c]) s c 1
+memfilled_xcomp : 
+∀ (m : addr → N) (s : addr) (c skip n : N),
+  memfilled m s c (xcomp s ⊕ skip)
+  → memfilled m skip c n → memfilled m s c (xcomp s ⊕ skip ⊕ n)
+memset_partial_correctness : 
+∀ (st : store) (lr s ci c n : N) (q : nat) (st' : ARMArch.store) (x : exit) (m : addr → N),
+  models armtypctx st
+  → st R_LR = Ⓓ lr
+    → st V_MEM32 = Ⓜ m
+      → st R_R0 = Ⓓ s
+        → st R_R1 = Ⓓ ci
+          → st R_R2 = Ⓓ n
+            → c = ci mod 2 ^ 8
+              → memset_arm st lr = None
+                → exec_prog fh memset_arm 0 st q st' x
+                  → trueif_inv (memset_invset s c n memset_arm x st')
+memset_invset =
+λ (s : addr) (c n : N), invs (memset_invs s c n) (memset_post s c n)
+memset_post =
+λ (s c n : N) (_ : exit) (st : store),
+  ∃ m : addr → N, st V_MEM32 = Ⓜ m ∧ st R_R0 = Ⓓ s ∧ memfilled m s c n
+     : N → N → N → exit → store → Prop

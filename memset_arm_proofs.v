@@ -18,12 +18,15 @@ Definition fh := htotal.
 Theorem strlen_nwc: forall s2 s1, memset_arm s1 = memset_arm s2.
 Proof. reflexivity. Qed.
 
-Definition xcomp n := ((2^32 - (n mod (2^32))) mod (2^32)).
-Definition xminus n m := n ⊕ (xcomp m).
-Notation "x _⊖_ y" := (x ⊕ (xcomp y)) (at level 50, left associativity).
+Print models.
+Check (fun s (m : models armtypctx _) => m R_R0 (NumT 32)).
 
-Theorem xminus_zero n : xminus n n = 0.
-  unfold xminus,xcomp.
+Definition xcomp n := ((2^32 - (n mod (2^32))) mod (2^32)).
+Notation "⊖ x" := (xcomp x) (at level 20).
+Notation "x _⊖_ y" := (x ⊕ ⊖y) (at level 50, left associativity).
+
+Theorem xminus_zero n : n _⊖_ n = 0.
+  unfold xcomp.
   rewrite N.add_mod_idemp_r by discriminate.
   rewrite <- N.add_mod_idemp_l by discriminate.
   rewrite N.add_comm.
@@ -32,7 +35,7 @@ Theorem xminus_zero n : xminus n n = 0.
   reflexivity.
 Qed.
 
-Theorem xminus_alt' n m : m < 2^32 -> 2 ^ 32 + n ⊖ m = n mod (2^32) ⊕ (xcomp m).
+Theorem xminus_alt' n m : m < 2^32 -> 2 ^ 32 + n ⊖ m = n mod (2^32) _⊖_ m.
   intro H.
   rewrite N.add_comm.
   rewrite <- N.add_sub_assoc; auto using N.lt_le_incl.
@@ -43,7 +46,7 @@ Theorem xminus_alt' n m : m < 2^32 -> 2 ^ 32 + n ⊖ m = n mod (2^32) ⊕ (xcomp
   reflexivity.
 Qed.
 
-Theorem xminus_alt n m : n < 2^32 -> m < 2^32 -> 2 ^ 32 + n ⊖ m = n ⊕ (xcomp m).
+Theorem xminus_alt n m : n < 2^32 -> m < 2^32 -> 2 ^ 32 + n ⊖ m = n _⊖_ m.
   intros H1 H2.
   rewrite xminus_alt' by assumption.
   rewrite (N.mod_small n) by assumption.
@@ -57,27 +60,25 @@ Theorem mod_n_n (n d:N) : d ≠ 0 -> (n mod d) mod d = n mod d.
   exact H.
 Qed.
 
-Theorem xcomp_mod n : xcomp n mod (2^32) = xcomp n.
+Theorem xcomp_mod n : ⊖n mod (2^32) = ⊖n.
   unfold xcomp.
   apply mod_n_n.
   discriminate.
 Qed.
 
-Theorem xcomp_mod_in n : xcomp (n mod (2^32)) = xcomp n.
+Theorem xcomp_mod_in n : ⊖(n mod (2^32)) = ⊖n.
   unfold xcomp.
   rewrite mod_n_n by discriminate.
   reflexivity.
 Qed.
 
-Theorem xplus_minus n m : m < n -> (n-m) mod (2^32) = xminus n m.
+Theorem xplus_minus n m : m < n -> (n-m) mod (2^32) = n _⊖_ m.
   intros.
   assert (Q : m / (2^32) <= n / (2^32)).
   apply N.div_le_mono; try discriminate.
   apply N.lt_le_incl.
   assumption.
-  Search N.add N.sub N.le.
-  unfold xminus,xcomp.
-  Search N.add N.sub.
+  unfold xcomp.
   rewrite N.add_mod_idemp_r by discriminate.
   rewrite N.add_sub_assoc by
       (apply N.lt_le_incl; apply N.mod_upper_bound; discriminate).
@@ -118,7 +119,7 @@ Theorem xplus_minus n m : m < n -> (n-m) mod (2^32) = xminus n m.
   exact H.
 Qed.
 
-Theorem xcomp_plus_dist' n m : xcomp n ⊕ xcomp m = xcomp (n+m).
+Theorem xcomp_plus_dist' n m : ⊖n ⊕ ⊖m = ⊖(n+m).
   unfold xcomp.
   rewrite N.add_mod_idemp_r by discriminate.
   rewrite N.add_mod_idemp_l by discriminate.
@@ -130,7 +131,6 @@ Theorem xcomp_plus_dist' n m : xcomp n ⊕ xcomp m = xcomp (n+m).
   rewrite <- N.sub_add_distr.
   rewrite xplus_minus by
       (apply N.add_lt_mono; apply N.mod_upper_bound; discriminate).
-  unfold xminus.
   rewrite <- N.add_mod_idemp_l at 1 by discriminate.
   rewrite N.add_0_l.
   unfold xcomp.
@@ -140,7 +140,7 @@ Theorem xcomp_plus_dist' n m : xcomp n ⊕ xcomp m = xcomp (n+m).
   discriminate.
 Qed.
 
-Theorem xcomp_plus_dist n m : xcomp n ⊕ xcomp m = xcomp (n⊕m).
+Theorem xcomp_plus_dist n m : ⊖n ⊕ ⊖m = ⊖(n⊕m).
   rewrite xcomp_plus_dist'.
   unfold xcomp.
   rewrite mod_n_n by discriminate.
@@ -255,47 +255,42 @@ Theorem minus_n_mod_n n m : 0 < m -> m < n -> (n - m) mod m = n mod m.
   intros H0 H1.
   rewrite (N.div_mod' n m) at 1.
   assert (Q : m <= m * (n / m)).
-  Search "/" "<=".
   rewrite <- N.mul_1_r at 1.
-  Search (_*_ <= _*_).
   apply N.mul_le_mono_pos_l; [exact H0|].
-  Search (_ <= _/_).
   destruct m; inversion H0.
   apply N.div_le_lower_bound; [discriminate|].
   rewrite N.mul_1_r.
   apply N.lt_le_incl.
   exact H1.
   rewrite N.add_sub_swap by exact Q.
-  Search N.mul N.pred.
   rewrite <- N.mul_pred_r.
-  Search "*" "mod".
   destruct m; inversion H0.
   rewrite mod_add_mul_ll by discriminate.
   apply mod_n_n.
   discriminate.
 Qed.
-Theorem xcomp_comp n : n < 2^32 -> xcomp (xcomp n) = n.
+
+Theorem xcomp_comp n : n < 2^32 -> ⊖(⊖n) = n.
   intro H.
   rewrite <- (xplus_id_l n) at 2 by assumption.
-  rewrite <- (xminus_zero (xcomp n)).
-  unfold xminus.
+  rewrite <- (xminus_zero (⊖n)).
   rewrite xplus_assoc.
-  fold (xminus n n).
+  fold (n _⊖_ n).
   rewrite xminus_zero.
   rewrite xplus_id_r by (apply N.mod_upper_bound; discriminate).
   reflexivity.
 Qed.
 
 Theorem xeq_xplus_r n m p :
-  n < 2^32 -> p < 2^32 -> n ⊕ m = p <-> n = p ⊕ xcomp m.
+  n < 2^32 -> p < 2^32 -> n ⊕ m = p <-> n = p _⊖_ m.
   intros.
   split; intros; subst; rewrite <- xplus_assoc; [|rewrite (N.add_comm _ m)];
-    fold (xminus m m); rewrite xminus_zero; rewrite xplus_id_l by assumption;
+    rewrite xminus_zero; rewrite xplus_id_l by assumption;
       reflexivity.
 Qed.
 
 Theorem xeq_xplus_l n m p :
-  m < 2^32 -> p < 2^32 -> n ⊕ m = p <-> m = xcomp n ⊕ p.
+  m < 2^32 -> p < 2^32 -> n ⊕ m = p <-> m = ⊖n ⊕ p.
   intros.
   rewrite xplus_comm.
   rewrite xeq_xplus_r by assumption.
@@ -304,10 +299,9 @@ Theorem xeq_xplus_l n m p :
 Qed.
 
 Theorem xeq_xcomp_r n m p :
-  n < 2^32 -> p < 2^32 -> n ⊕ xcomp m = p <-> n = p ⊕ m.
+  n < 2^32 -> p < 2^32 -> n _⊖_ m = p <-> n = p ⊕ m.
   intros.
   rewrite xeq_xplus_r by assumption.
-  Search xcomp N.modulo.
   rewrite <- (xcomp_mod_in m).
   rewrite xcomp_comp by (apply N.mod_upper_bound; discriminate).
   rewrite N.add_mod_idemp_r by discriminate.
@@ -315,7 +309,7 @@ Theorem xeq_xcomp_r n m p :
 Qed.
 
 Theorem xeq_xcomp_l n m p :
-  m < 2^32 -> p < 2^32 -> xcomp n ⊕ m = p <-> m = n ⊕ p.
+  m < 2^32 -> p < 2^32 -> ⊖n ⊕ m = p <-> m = n ⊕ p.
   intros.
   rewrite xplus_comm.
   rewrite xeq_xcomp_r by assumption.
@@ -323,7 +317,7 @@ Theorem xeq_xcomp_l n m p :
   reflexivity.
 Qed.
 
-Theorem xplus_minus' n m : m <= n → n ⊖ m = xminus n m.
+Theorem xplus_minus' n m : m <= n → n ⊖ m = n _⊖_ m.
   intro H.
   rewrite N.lt_eq_cases in H.
   destruct H; [apply xplus_minus; assumption|].
@@ -334,7 +328,7 @@ Theorem xplus_minus' n m : m <= n → n ⊖ m = xminus n m.
 Qed.
 
 Theorem xplus_minus'' n m :
-  n < 2^32 -> m <= n → n - m = n ⊕ xcomp m.
+  n < 2^32 -> m <= n → n - m = n _⊖_ m.
   intros H0 H1.
   unfold xcomp.
   rewrite N.add_mod_idemp_r by discriminate.
@@ -352,14 +346,13 @@ Theorem xplus_minus'' n m :
 Qed.
 
 Theorem xlt_minus n m p :
-  n < 2^32 -> n ⊕ xcomp m < p -> n < p + m.
+  n < 2^32 -> n _⊖_ m < p -> n < p + m.
   intros H1 H2.
   destruct (N.lt_ge_cases n m) as [H3|H3].
   eapply N.lt_le_trans; [exact H3|].
   rewrite N.add_comm.
   apply N.le_add_r.
   rewrite <- xplus_minus'' in H2 by assumption.
-  Search N.add N.sub N.lt.
   apply N.lt_sub_lt_add_r.
   assumption.
 Qed.
@@ -372,7 +365,7 @@ Theorem sub_eq_r n m p : n <= m -> p <= m - n <-> p + n <= m.
 Qed.
 
 Theorem xminus_eq_r n m p :
-  n < 2^32 -> m <= n -> p <= n ⊕ xcomp m <-> p + m <= n.
+  n < 2^32 -> m <= n -> p <= n _⊖_ m <-> p + m <= n.
   intros H0 H1.
   rewrite <- xplus_minus'' by assumption.
   apply sub_eq_r.
@@ -464,7 +457,6 @@ Theorem set_dword_aligned : forall m a v,
   rewrite mod2_eq.
   rewrite N.mod_small.
   repeat split; reflexivity.
-  Search (_*_<_*_).
   rewrite (N.mul_lt_mono_pos_l 4); auto.
   reflexivity.
   intuition.
@@ -547,7 +539,7 @@ Definition memset_invs (s:addr) (c:N) n (a:addr) (st:store) :=
   let r2 := vnum (st R_R2) in
   let r3 := vnum (st R_R3) in
   let m := vmem (st V_MEM32) in
-  let common_inv := s ⊕ n = r3 ⊕ r2 /\ memfilled m s c (xcomp s ⊕ r3) in
+  let common_inv := s ⊕ n = r3 ⊕ r2 /\ memfilled m s c (⊖s ⊕ r3) in
   match a with
   | 0 => Some (vnum (st R_R0) = s /\ r2 = n /\ r1 mod (2^8) = c)
   | 12 => Some (r1 mod (2^8) = c /\ common_inv)
@@ -722,14 +714,13 @@ Theorem memfilled_one m s c : s < 2^32 -> memfilled (update m s c) s c 1.
 Qed.
 
 Theorem memfilled_xcomp m s c skip n :
-  memfilled m s c (xcomp s ⊕ skip)
+  memfilled m s c (⊖s ⊕ skip)
   -> memfilled m skip c n
-  -> memfilled m s c (xcomp s ⊕ skip ⊕ n).
+  -> memfilled m s c (⊖s ⊕ skip ⊕ n).
   intros H H0.
   apply memfilled_mod.
   apply memfilled_split'; [exact H|].
   rewrite xplus_assoc.
-  fold (xminus s s).
   rewrite xminus_zero.
   rewrite N.add_0_l.
   unfold memfilled in *.
@@ -737,8 +728,6 @@ Theorem memfilled_xcomp m s c skip n :
   rewrite N.add_mod_idemp_l by discriminate.
   apply H0.
 Qed.
-
-Print All.
 
 Theorem memset_partial_correctness:
   forall st lr s ci c n q st' x m
@@ -749,6 +738,9 @@ Theorem memset_partial_correctness:
          (RET: memset_arm st lr = None)
          (XP0: exec_prog fh memset_arm 0 st q st' x),
     trueif_inv (memset_invset s c n memset_arm x st').
+  (* most of the proof here is setting up to either: *)
+  (* 1: solve "obvious" portions of the proof *)
+  (* 2: apply memfilled lemmas *)
   intros.
   eapply prove_invs; [exact XP0|simpl;rewrite R0,R1,R2,C;tauto|].
   intros.
@@ -790,7 +782,7 @@ Theorem memset_partial_correctness:
   do 3 step.
   1-2: rewrite H2.
   1-2: unfold vnum,vmem in *; rewrite Hsv,Hsv0 in *; intuition.
-  1-2: rewrite N.add_comm; fold (xminus n n); rewrite (xminus_zero n).
+  1-2: rewrite N.add_comm; fold (n _⊖_ n); rewrite (xminus_zero n).
   1-2: apply memfilled_zero.
 
   (* proof of first loop *)
@@ -804,7 +796,6 @@ Theorem memset_partial_correctness:
   rewrite <- xplus_assoc.
   rewrite xplusinv; [assumption|reflexivity|assumption].
   rewrite xplus_assoc.
-  Set Nested Proofs Allowed.
   apply memfilled_xcomp; [apply memfilled_update; assumption|].
   apply memfilled_one.
   assumption.
@@ -831,7 +822,6 @@ Theorem memset_partial_correctness:
   rewrite (xplus_comm 8).
   rewrite <- xplus_assoc.
   rewrite (xplus_comm _ 8).
-  fold (xminus 8 8).
   rewrite xminus_zero.
   rewrite N.add_0_r.
   rewrite (N.mod_small n0); assumption.
@@ -846,9 +836,11 @@ Theorem memset_partial_correctness:
   (* some things are tricky to prove, shelve them to prove them later *)
   2-4: intuition; [shelve|].
   5: intuition; shelve.
-  1-4: rewrite (xplus_assoc (xcomp s)).
+  1-4: rewrite (xplus_assoc (⊖s)).
   (* note that the memory access needs to be aligned to words *)
   (* this is the reason why the invariants contain alignment statements *)
+  (* this tactic does everything necessary to show alignment for offsets *)
+  (* this yields a proof effectively solvable with the memfilled goals *)
   1-4: repeat rewrite set_dword_aligned by
       (apply N.mod_upper_bound; discriminate) +
       (rewrite dblmod_r by discriminate;
@@ -856,7 +848,7 @@ Theorem memset_partial_correctness:
        rewrite N.add_0_r;
        assumption) + assumption.
   1-4: repeat rewrite setmem_1.
-  1-4: rewrite H3,H6,H5,H8.
+  1-4: rewrite H3,H6,H5,H8. (* eliminate memset_bytedup *)
   1-4: apply memfilled_xcomp; [repeat apply memfilled_update; assumption|].
   1-4: repeat rewrite <- xplus_assoc.
   1-4: repeat apply memfilled_succ.
@@ -865,9 +857,9 @@ Theorem memset_partial_correctness:
   (* prove the last loop *)
   (* n ends up being too opaque to use for most of the memfilled proofs *)
   (* replace it before starting to simplify things *)
-  assert (Q : (xcomp s ⊕ vnum (s1 R_R3) ⊕ vnum (s1 R_R2)) = n).
+  assert (Q : (⊖s ⊕ vnum (s1 R_R3) ⊕ vnum (s1 R_R2)) = n).
   rewrite <- xplus_assoc. rewrite <- H1. rewrite xplus_assoc.
-  rewrite (xplus_comm _ s). fold (xminus s s). rewrite xminus_zero.
+  rewrite (xplus_comm _ s). rewrite xminus_zero.
   rewrite N.add_0_l. apply N.mod_small. pose (Q := tc_extract _ R_R2 _ MDL0).
   rewrite R2 in Q. exact Q.
   subst.
@@ -878,14 +870,13 @@ Theorem memset_partial_correctness:
   intuition.
   repeat rewrite <- xplus_assoc.
   rewrite xplus_assoc.
-  fold (xminus s s).
   rewrite xminus_zero.
   rewrite N.add_0_l.
   rewrite mod_n_n by discriminate.
   repeat rewrite xplusinv; try reflexivity;
     try apply N.mod_upper_bound; try discriminate; assumption.
-  repeat rewrite (xplus_assoc (xcomp s)).
-  repeat rewrite <- (xplus_assoc (xcomp s ⊕ n0)).
+  repeat rewrite (xplus_assoc (⊖s)).
+  repeat rewrite <- (xplus_assoc (⊖s ⊕ n0)).
   1-4: rewrite H.
   1-5: apply memfilled_xcomp; [repeat apply memfilled_update; assumption|].
   1-5: repeat rewrite <- xplus_assoc.
@@ -896,24 +887,20 @@ Theorem memset_partial_correctness:
          match goal with
            [ _ : context [ ?x <=? ?y ] |- _] => destruct (N.leb_spec x y)
          end; try discriminate.
-  (* this next bit will be rewritten in the next version of this proof *)
-  (* the value of n is actually known from here on *)
-  (* right now, n is given manually when it shouldn't be *)
+  (* the next 3 tactics get the value of n *)
   all: rewrite N.lt_1_r in *.
-  4: subst; apply memfilled_zero.
-  3: replace n with 1; [apply memfilled_one; assumption|].
-  2: replace n with 2; [apply memfilled_succ,memfilled_one; assumption|].
-  1: replace n with 3;
-    [apply memfilled_succ,memfilled_succ,memfilled_one; assumption|].
-  all: rewrite (xminus_alt n) in H0 by assumption + reflexivity.
-  all: repeat rewrite xminus_alt in H0 by
-      (apply N.mod_upper_bound; discriminate) + reflexivity.
-
-  (* all: repeat match goal with H : _=0 |- _ => symmetry in H end. *)
-  all: repeat rewrite xeq_xcomp_r in * by
-      (reflexivity + assumption + apply N.mod_upper_bound; discriminate).
+  1-3: match goal with
+         H : (2^32 + _ ⊖ 1) = 0 |- _ =>
+         repeat
+           (rewrite xminus_alt in H by
+               (assumption + reflexivity + (apply N.mod_upper_bound; discriminate));
+            rewrite xeq_xplus_r in H by
+                (assumption + reflexivity + (apply N.mod_upper_bound; discriminate)));
+           compute in H
+       end.
   all: subst.
-  all: reflexivity.
+  4: apply memfilled_zero.
+  all: repeat apply memfilled_succ; apply memfilled_one; assumption.
 
   (* the tricky goals from the second loop *)
   (* basically, this is showing that s ⊕ n = r3 ⊕ r2 *)
@@ -946,7 +933,7 @@ Theorem memset_partial_correctness:
   all: repeat match goal with H : _ < 2^32 |- _ => clear H end.
   all: simpl (_<_) in *.
   all: simpl (_<=_) in *.
-  (* brute force all possible values of n *)
+  (* brute force all possible values of n (at most 8) *)
   all: repeat
          match goal with
            H : _ < N.pos _ |- _ =>
@@ -961,14 +948,21 @@ Theorem memset_partial_correctness:
   all: tauto.
 Qed.
 
-Print All.
-
 (* Pain points:
    - "mod 2^32" gets attached to everything
+     => solution: use xplus/xminus as much as possible
+        staying inside the group operations of modular arithmetic
+        keeps things working
    - conditional instructions duplicate program proofs
+     => solution: use repeat (discriminate + step)
    - "s [Ⓑv := a] v" should be a, but isn't easily turned into a
+     => solution: rewrite setmem_1,update_updated
    - subtraction adds 2^32 (for modular arithmetic)
+     => solution: use (a _⊖_ b) := a ⊕ ⊖b where ⊖ denotes modular inverse
    - Ⓓ, Ⓜ frequently require existentials to extract
+     => solution: use vnum/vmem
    - (related to the previous) Ⓓ, Ⓜ are secretly dynamic types
+     => solution: use vnum/vmem, which is secretly a type cast
    - It's easy to construct "impossible states" (i.e. VaN 32 2^64)
+     => solution: prove that the program is well-typed to extract types
  *)
