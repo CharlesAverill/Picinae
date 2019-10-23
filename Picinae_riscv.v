@@ -47,8 +47,6 @@ Open Scope N.
 Inductive riscvvar :=
   (* Main memory: MemT 32 *)
   | V_MEM32
-  (* Hard-wired zero register *)
-  | R_ZERO
   (* Return address, stack pointer, global poniter, thread pointer *)
   | R_RA | R_SP | R_GP | R_TP
   (* Temporary registers *)
@@ -59,9 +57,7 @@ Inductive riscvvar :=
   | R_S0 | R_S1 | R_S2 | R_S3 | R_S4 | R_S5 | R_S6
   | R_S7 | R_S8 | R_S9 | R_S10 | R_S11
   (* These meta-variables model page access permissions: *)
-  | A_READ | A_WRITE
-  (* Invalid register *)
-  | R_INVALID.
+  | A_READ | A_WRITE | A_EXEC.
 
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
    input to the Architecture module, so that it understands how the variable
@@ -101,7 +97,7 @@ Export SLogic_RISCV.
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
 Definition rvtypctx (v:riscvvar) :=
   match v with
-  | V_MEM32 => Some (MemT 32)
+  | V_MEM32 | A_WRITE | A_READ | A_EXEC => Some (MemT 32)
   | _ => Some (NumT 32)
   end.
 
@@ -155,17 +151,36 @@ Inductive rv_asm :=
 
 Definition xbits n i j := N.land (N.shiftr n i) (N.ones (j - i)).
 
-Definition rv_decode n :=
-  match N.land n (N.ones 7) with
-  | 3 => (* Load *)
-    match xbits n 12 15 with
-    | 0 => R5_Lb
-    | 1 => R5_Lh
-    | 2 => R5_Lw
-    | 4 => R5_Lbu
-    | 5 => R5_Lhu
-    | _ => (fun _ _ _ => R5_InvalidI)
-    end (xbits n 7 12) (xbits n 15 20) (xbits n 20 32)
+Definition rv_decode_load n :=
+  match xbits n 12 15 with
+  | 0 => R5_Lb | 1 => R5_Lh | 2 => R5_Lw | 4 => R5_Lbu | 5 => R5_Lhu
+  | _ => (fun _ _ _ => R5_InvalidI)
+  end.
+
+Definition rv_decode_store n :=
+  match xbits n 12 15 with
+  | 0 => R5_Sb | 1 => R5_Sh | 2 => R5_Sw
+  | _ => (fun _ _ _ => R5_InvalidI)
+  end.
+
+Definition rv_decode_binop n :=
+  match N.lor (xbits n 12 15) (N.shiftl (xbits n 25 32) 3) with
+  | 0 => R5_Add | 256 => R5_Sub
+  | 1 => R5_Sll | 2 => R5_Slt | 3 => R5_Sltu | 4 => R5_Xor
+  | 5 => R5_Srl | 261 => R5_Sra
+  | 6 => R5_Or | 7 => R5_And
+  | _ => (fun _ _ _ => R5_InvalidI)
+  end.
+
+Definition rv_decode_branch n :=
+  match N.lor (xbits n 12 15) (N.land n 256) with 
+  | 0 => R5_Beq | 1 => R5_Bne | 4 => R5_Blt | 5 => R5_Bge | 6 => R5_Bltu | 7 => R5_Bgeu
+  | _ => (fun _ _ _ => R5_InvalidI)
+  end.
+
+Definition rv_decode_op op n :=
+  match op with
+  | 3 => rv_decode_load n (xbits n 7 12) (xbits n 15 20) (xbits n 20 32)
   | 15 => (* Fence *)
     match N.shiftr n 7 with
     | 32 => R5_Fence_i
@@ -176,74 +191,51 @@ Definition rv_decode n :=
     end
   | 19 => (* Op_Imm *)
     match xbits n 12 15 with
-    | 0 => R5_Addi
+    | 0 => R5_Addi (xbits n 7 12) (xbits n 15 20) (scast 12 32 (xbits n 20 32))
     | 1 => match xbits n 25 32 with
-           | 0 => R5_Slli
-           | _ => (fun _ _ _ => R5_InvalidI)
+           | 0 => R5_Slli (xbits n 7 12) (xbits n 15 20) (xbits n 20 25)
+           | _ => R5_InvalidI
            end
-    | 2 => R5_Slti
-    | 3 => R5_Sltiu
-    | 4 => R5_Xori
+    | 2 => R5_Slti (xbits n 7 12) (xbits n 15 20) (scast 12 32 (xbits n 20 32))
+    | 3 => R5_Sltiu (xbits n 7 12) (xbits n 15 20) (scast 12 32 (xbits n 20 32))
+    | 4 => R5_Xori (xbits n 7 12) (xbits n 15 20) (scast 12 32 (xbits n 20 32))
     | 5 => match xbits n 25 32 with
-           | 0 => R5_Srli
-           | 32 => (fun x y z => R5_Srai x y (z mod 2^5))
-           | _ => (fun _ _ _ => R5_InvalidI)
+           | 0 => R5_Srli (xbits n 7 12) (xbits n 15 20) (xbits n 20 25)
+           | 32 => R5_Srai (xbits n 7 12) (xbits n 15 20) (xbits n 20 25)
+           | _ => R5_InvalidI
            end
-    | 6 => R5_Ori
-    | _ => R5_Andi
-    end (xbits n 7 12) (xbits n 15 20) (xbits n 20 32)
+    | 6 => R5_Ori (xbits n 7 12) (xbits n 15 20) (scast 12 32 (xbits n 20 32))
+    | _ => R5_Andi (xbits n 7 12) (xbits n 15 20) (scast 12 32 (xbits n 20 32))
+    end
   | 23 => R5_Auipc (xbits n 7 12) (N.land n (N.shiftl (N.ones 20) 12))
-  | 35 => (* Store *)
-    match xbits n 12 15 with
-    | 0 => R5_Sb
-    | 1 => R5_Sh
-    | 2 => R5_Sw
-    | _ => (fun _ _ _ => R5_InvalidI)
-    end (xbits n 15 20) (xbits n 20 25)
-        (toZ 12 (N.lor (N.shiftl (xbits n 25 32) 5) (xbits n 7 12)))
-  | 51 => (* Binary ops *)
-    match N.lor (xbits n 12 15) (N.shiftl (xbits n 25 32) 3) with
-    | 0 => R5_Add
-    | 256 => R5_Sub
-    | 1 => R5_Sll
-    | 2 => R5_Slt
-    | 3 => R5_Sltu
-    | 4 => R5_Xor
-    | 5 => R5_Srl
-    | 261 => R5_Sra
-    | 6 => R5_Or
-    | 7 => R5_And
-    | _ => (fun _ _ _ => R5_InvalidI)
-    end (xbits n 7 12) (xbits n 15 20) (xbits n 20 25)
+  | 35 => rv_decode_store n (xbits n 15 20) (xbits n 20 25)
+            (toZ 12 (N.lor (N.shiftl (xbits n 25 32) 5) (xbits n 7 12)))
+  | 51 => rv_decode_binop n (xbits n 7 12) (xbits n 15 20) (xbits n 20 25)
   | 55 => R5_Lui (xbits n 7 12) (N.land n (N.shiftl (N.ones 20) 12))
-  | 99 => (* Branch *)
-    match xbits n 12 15 with 
-    | 0 => R5_Beq
-    | 1 => R5_Bne
-    | 4 => R5_Blt
-    | 5 => R5_Bge
-    | 6 => R5_Bltu
-    | 7 => R5_Bgeu
-    | _ => (fun _ _ _ => R5_InvalidI)
-    end (xbits n 15 20) (xbits n 20 25)
-        (toZ 13 (N.lor (N.shiftl (xbits n 8 12) 1)
-                  (N.lor (N.shiftl (xbits n 25 31) 5)
-                    (N.lor (N.shiftl (xbits n 7 8) 11)
-                      (N.shiftl (xbits n 31 32) 12)))))
+  | 99 => rv_decode_branch n (xbits n 15 20) (xbits n 20 25)
+            (toZ 13 (N.lor (N.shiftl (xbits n 8 12) 1)
+                      (N.lor (N.shiftl (xbits n 25 31) 5)
+                        (N.lor (N.shiftl (xbits n 7 8) 11)
+                          (N.shiftl (xbits n 31 32) 12)))))
   | 103 => match xbits n 12 15 with
            | 0 => R5_Jalr (xbits n 7 12) (xbits n 15 20) (toZ 12 (xbits n 20 32))
            | _ => R5_InvalidI
            end
-  | 111 => R5_Jal (xbits n 7 12) (toZ 21 (N.lor (N.shiftl (xbits n 21 31) 1)
+  | 111 => match xbits n 21 22 with
+           | 0 => R5_Jal (xbits n 7 12) (toZ 21 (N.lor (N.shiftl (xbits n 21 31) 1)
                                            (N.lor (N.shiftl (xbits n 20 21) 11)
                                              (N.lor (N.shiftl (xbits n 12 20) 12)
                                                (N.shiftl (xbits n 31 32) 20)))))
+           | _ => R5_InvalidI
+           end
   | _ => R5_InvalidI
   end.
 
+Definition rv_decode n :=
+  rv_decode_op (N.land n (N.ones 7)) n.
+
 Definition rv_varid (n:N) :=
   match n with
-  | 0 => R_ZERO
   | 1 => R_RA | 2 => R_SP | 3 => R_GP | 4 => R_TP
   | 5 => R_T0 | 6 => R_T1 | 7 => R_T2
   | 8 => R_S0
@@ -255,8 +247,11 @@ Definition rv_varid (n:N) :=
   | 28 => R_T3 | 29 => R_T4 | 30 => R_T5 | _ => R_T6
   end.
 
+Definition r5var n :=
+  match n with N0 => Word 0 32 | N.pos _ => Var (rv_varid n) end.
+
 Definition r5mov n e :=
-  match rv_varid n with R_ZERO => Nop | v => Move v e end.
+  match n with N0 => Nop | N.pos _ => Move (rv_varid n) e end.
 
 Definition r5branch e a off :=
   If e (Jmp (Word ((Z.to_N (Z.of_N a + off)) mod 2^32) 32)) Nop.
@@ -264,65 +259,72 @@ Definition r5branch e a off :=
 Definition rv2il (a:addr) rvi :=
   match rvi with
   | R5_InvalidI => Exn 6
-  | R5_Fence _ _ => Nop (* not supported. *)
-  | R5_Fence_i => Nop (* not supported *)
+  | R5_Fence _ _ => Nop (* no effect on single-threaded machine *)
+  | R5_Fence_i => Nop (* no effect on single-threaded machine *)
 
   (* Integer Computational Instructions *)
-  | R5_Andi rd rs imm => r5mov rd (BinOp OP_AND (Var (rv_varid rs)) (Word imm 32))
-  | R5_Xori rd rs imm => r5mov rd (BinOp OP_XOR (Var (rv_varid rs)) (Word imm 32))
-  | R5_Ori rd rs imm => r5mov rd (BinOp OP_OR (Var (rv_varid rs)) (Word imm 32))
-  | R5_Addi rd rs imm => r5mov rd (BinOp OP_PLUS (Var (rv_varid rs)) (Word imm 32))
-  | R5_Sub rd rs1 rs2 => r5mov rd (BinOp OP_MINUS (Var (rv_varid rs1)) (Var (rv_varid rs2)))
-  | R5_And rd rs1 rs2 => r5mov rd (BinOp OP_AND (Var (rv_varid rs1)) (Var (rv_varid rs2)))
-  | R5_Xor rd rs1 rs2 => r5mov rd (BinOp OP_XOR (Var (rv_varid rs1)) (Var (rv_varid rs2)))
-  | R5_Or rd rs1 rs2 => r5mov rd (BinOp OP_OR (Var (rv_varid rs1)) (Var (rv_varid rs2)))
-  | R5_Add rd rs1 rs2 => r5mov rd (BinOp OP_PLUS (Var (rv_varid rs1)) (Var (rv_varid rs2)))
+  | R5_Andi rd rs imm => r5mov rd (BinOp OP_AND (r5var rs) (Word imm 32))
+  | R5_Xori rd rs imm => r5mov rd (BinOp OP_XOR (r5var rs) (Word imm 32))
+  | R5_Ori rd rs imm => r5mov rd (BinOp OP_OR (r5var rs) (Word imm 32))
+  | R5_Addi rd rs imm => r5mov rd (BinOp OP_PLUS (r5var rs) (Word imm 32))
+  | R5_Sub rd rs1 rs2 => r5mov rd (BinOp OP_MINUS (r5var rs1) (r5var rs2))
+  | R5_And rd rs1 rs2 => r5mov rd (BinOp OP_AND (r5var rs1) (r5var rs2))
+  | R5_Xor rd rs1 rs2 => r5mov rd (BinOp OP_XOR (r5var rs1) (r5var rs2))
+  | R5_Or rd rs1 rs2 => r5mov rd (BinOp OP_OR (r5var rs1) (r5var rs2))
+  | R5_Add rd rs1 rs2 => r5mov rd (BinOp OP_PLUS (r5var rs1) (r5var rs2))
   | R5_Lui rd imm => r5mov rd (BinOp OP_LSHIFT (Word imm 32) (Word 20 32))
-  | R5_Sll rd rs1 rs2 => r5mov rd (BinOp OP_LSHIFT (Var (rv_varid rs1)) (Var (rv_varid rs2)))
-  | R5_Srl rd rs1 rs2 => r5mov rd (BinOp OP_RSHIFT (Var (rv_varid rs1)) (Var (rv_varid rs2)))
-  | R5_Sra rd rs1 rs2 => r5mov rd (BinOp OP_ARSHIFT (Var (rv_varid rs1)) (Var (rv_varid rs2)))
-  | R5_Slli rd rs1 shamt => r5mov rd (BinOp OP_LSHIFT (Var (rv_varid rs1)) (Word shamt 32))
-  | R5_Slti rd rs1 imm => r5mov rd (Cast CAST_UNSIGNED 32 (BinOp OP_SLT (Var (rv_varid rs1)) (Word imm 32)))
-  | R5_Sltiu rd rs1 imm => r5mov rd (Cast CAST_UNSIGNED 32 (BinOp OP_SLT (Var (rv_varid rs1)) (Word imm 32)))
-  | R5_Srli rd rs1 shamt => r5mov rd (BinOp OP_RSHIFT (Var (rv_varid rs1)) (Word shamt 32))
-  | R5_Srai rd rs1 shamt => r5mov rd (BinOp OP_ARSHIFT (Var (rv_varid rs1)) (Word shamt 32))
-  | R5_Sltu rd rs1 rs2 => r5mov rd (Cast CAST_UNSIGNED 32 (BinOp OP_LT (Var (rv_varid rs1)) (Var (rv_varid rs2))))
-  | R5_Slt rd rs1 rs2 => r5mov rd (Cast CAST_UNSIGNED 32 (BinOp OP_SLT (Var (rv_varid rs1)) (Var (rv_varid rs2))))
+  | R5_Sll rd rs1 rs2 => r5mov rd (BinOp OP_LSHIFT (r5var rs1) (r5var rs2))
+  | R5_Srl rd rs1 rs2 => r5mov rd (BinOp OP_RSHIFT (r5var rs1) (r5var rs2))
+  | R5_Sra rd rs1 rs2 => r5mov rd (BinOp OP_ARSHIFT (r5var rs1) (r5var rs2))
+  | R5_Slli rd rs1 shamt => r5mov rd (BinOp OP_LSHIFT (r5var rs1) (Word shamt 32))
+  | R5_Slti rd rs1 imm => r5mov rd (Cast CAST_UNSIGNED 32 (BinOp OP_SLT (r5var rs1) (Word imm 32)))
+  | R5_Sltiu rd rs1 imm => r5mov rd (Cast CAST_UNSIGNED 32 (BinOp OP_LT (r5var rs1) (Word imm 32)))
+  | R5_Srli rd rs1 shamt => r5mov rd (BinOp OP_RSHIFT (r5var rs1) (Word shamt 32))
+  | R5_Srai rd rs1 shamt => r5mov rd (BinOp OP_ARSHIFT (r5var rs1) (Word shamt 32))
+  | R5_Sltu rd rs1 rs2 => r5mov rd (Cast CAST_UNSIGNED 32 (BinOp OP_LT (r5var rs1) (r5var rs2)))
+  | R5_Slt rd rs1 rs2 => r5mov rd (Cast CAST_UNSIGNED 32 (BinOp OP_SLT (r5var rs1) (r5var rs2)))
 
   (* Conditional Transfer Instructions *)
-  | R5_Bltu rs1 rs2 off => r5branch (BinOp OP_LT (Var (rv_varid rs1)) (Var (rv_varid rs2))) a off
-  | R5_Blt rs1 rs2 off => r5branch (BinOp OP_SLT (Var (rv_varid rs1)) (Var (rv_varid rs2))) a off
-  | R5_Bgeu rs1 rs2 off => r5branch (UnOp OP_NOT (BinOp OP_LT (Var (rv_varid rs1)) (Var (rv_varid rs2)))) a off
-  | R5_Bge rs1 rs2 off => r5branch (UnOp OP_NOT (BinOp OP_SLT (Var (rv_varid rs1)) (Var (rv_varid rs2)))) a off
-  | R5_Bne rs1 rs2 off => r5branch (BinOp OP_NEQ (Var (rv_varid rs1)) (Var (rv_varid rs2))) a off
-  | R5_Beq rs1 rs2 off => r5branch (BinOp OP_EQ (Var (rv_varid rs1)) (Var (rv_varid rs2))) a off
+  | R5_Bltu rs1 rs2 off => r5branch (BinOp OP_LT (r5var rs1) (r5var rs2)) a off
+  | R5_Blt rs1 rs2 off => r5branch (BinOp OP_SLT (r5var rs1) (r5var rs2)) a off
+  | R5_Bgeu rs1 rs2 off => r5branch (UnOp OP_NOT (BinOp OP_LT (r5var rs1) (r5var rs2))) a off
+  | R5_Bge rs1 rs2 off => r5branch (UnOp OP_NOT (BinOp OP_SLT (r5var rs1) (r5var rs2))) a off
+  | R5_Bne rs1 rs2 off => r5branch (BinOp OP_NEQ (r5var rs1) (r5var rs2)) a off
+  | R5_Beq rs1 rs2 off => r5branch (BinOp OP_EQ (r5var rs1) (r5var rs2)) a off
   (* Unconditional jumps *)
-  | R5_Jalr rd rs1 imm => Jmp (BinOp OP_PLUS (Var (rv_varid rs1)) (Word (ofZ 32 imm) 32))
-  | R5_Jal rd off => Jmp (Word ((Z.to_N (Z.of_N a + off)) mod 2^32) 32)
+  | R5_Jalr rd rs1 imm => Seq (r5mov rd (Word ((a+4) mod 2^32) 32))
+                              (Jmp (BinOp OP_PLUS (r5var rs1) (Word (ofZ 32 imm) 32)))
+  | R5_Jal rd off => Seq (r5mov rd (Word ((a+4) mod 2^32) 32))
+                         (Jmp (Word ((Z.to_N (Z.of_N a + off)) mod 2^32) 32))
   | R5_Auipc rd off => r5mov rd (Word ((a + N.shiftl off 12) mod 2^32) 32)
 
   (* Load and Store Instructions *)
-  | R5_Lb rd rs1 imm => r5mov rd (Cast CAST_SIGNED 32 (Load (Var V_MEM32) (BinOp OP_PLUS (Var (rv_varid rs1)) (Word imm 32)) LittleE 1))
-  | R5_Lh rd rs1 imm => r5mov rd (Cast CAST_SIGNED 32 (Load (Var V_MEM32) (BinOp OP_PLUS (Var (rv_varid rs1)) (Word imm 32)) LittleE 2))
-  | R5_Lbu rd rs1 imm => r5mov rd (Cast CAST_UNSIGNED 32 (Load (Var V_MEM32) (BinOp OP_PLUS (Var (rv_varid rs1)) (Word imm 32)) LittleE 1))
-  | R5_Lhu rd rs1 imm => r5mov rd (Cast CAST_UNSIGNED 32 (Load (Var V_MEM32) (BinOp OP_PLUS (Var (rv_varid rs1)) (Word imm 32)) LittleE 2))
-  | R5_Lw rd rs1 imm => r5mov rd (Load (Var V_MEM32) (BinOp OP_PLUS (Var (rv_varid rs1)) (Word imm 32)) LittleE 4)
-  | R5_Sb rb rs imm => Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (Var (rv_varid rb)) (Word (ofZ 32 imm) 32)) (Cast CAST_LOW 8 (Var (rv_varid rs))) LittleE 1)
-  | R5_Sh rb rs imm => Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (Var (rv_varid rb)) (Word (ofZ 32 imm) 32)) (Cast CAST_LOW 16 (Var (rv_varid rs))) LittleE 2)
-  | R5_Sw rb rs imm => Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (Var (rv_varid rb)) (Word (ofZ 32 imm) 32)) (Var (rv_varid rs)) LittleE 4)
+  | R5_Lb rd rs1 imm => r5mov rd (Cast CAST_SIGNED 32 (Load (Var V_MEM32) (BinOp OP_PLUS (r5var rs1) (Word imm 32)) LittleE 1))
+  | R5_Lh rd rs1 imm => r5mov rd (Cast CAST_SIGNED 32 (Load (Var V_MEM32) (BinOp OP_PLUS (r5var rs1) (Word imm 32)) LittleE 2))
+  | R5_Lbu rd rs1 imm => r5mov rd (Cast CAST_UNSIGNED 32 (Load (Var V_MEM32) (BinOp OP_PLUS (r5var rs1) (Word imm 32)) LittleE 1))
+  | R5_Lhu rd rs1 imm => r5mov rd (Cast CAST_UNSIGNED 32 (Load (Var V_MEM32) (BinOp OP_PLUS (r5var rs1) (Word imm 32)) LittleE 2))
+  | R5_Lw rd rs1 imm => r5mov rd (Load (Var V_MEM32) (BinOp OP_PLUS (r5var rs1) (Word imm 32)) LittleE 4)
+  | R5_Sb rb rs imm => Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (r5var rb) (Word (ofZ 32 imm) 32)) (Cast CAST_LOW 8 (r5var rs)) LittleE 1)
+  | R5_Sh rb rs imm => Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (r5var rb) (Word (ofZ 32 imm) 32)) (Cast CAST_LOW 16 (r5var rs)) LittleE 2)
+  | R5_Sw rb rs imm => Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (r5var rb) (Word (ofZ 32 imm) 32)) (r5var rs) LittleE 4)
   end.
 
+Definition rv_stmt m a := rv2il a (rv_decode (getmem LittleE 4 m a)).
+
 Definition rv_prog : program :=
-  fun s a => match s V_MEM32 with
-             | VaN _ _ => None
-             | VaM m _ => Some (2, rv2il a (rv_decode (m a)))
+  fun s a => match s V_MEM32, s A_EXEC with
+             | VaM m _, VaM e _ => match e a with
+                                   | N0 => None
+                                   | _ => Some (4, rv_stmt m a)
+                                   end
+             | _, _ => None
              end.
 
 Lemma hastyp_r5mov:
   forall c0 c n e (TS: hastyp_stmt c0 c (Move (rv_varid n) e) c),
   hastyp_stmt c0 c (r5mov n e) c.
 Proof.
-  intros. unfold r5mov. destruct (rv_varid n); try assumption. apply TNop.
+  intros. destruct n. apply TNop. exact TS.
 Qed.
 
 Lemma hastyp_rvmov:
@@ -336,7 +338,7 @@ Proof.
     destruct n as [|n]. reflexivity. repeat first [ reflexivity | destruct n as [n|n|] ].
 Qed.
 
-Lemma hastyp_rvstore:
+Lemma hastyp_r5store:
   forall e (TE: hastyp_exp rvtypctx e (MemT 32)),
   hastyp_stmt rvtypctx rvtypctx (Move V_MEM32 e) rvtypctx.
 Proof.
@@ -347,12 +349,12 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma hastyp_rvvar:
-  forall n, hastyp_exp rvtypctx (Var (rv_varid n)) (NumT 32).
+Lemma hastyp_r5var:
+  forall n, hastyp_exp rvtypctx (r5var n) (NumT 32).
 Proof.
   intro. destruct n as [|n].
-    apply TVar. reflexivity.
-    repeat first [ apply TVar; reflexivity | destruct n as [n|n|] ].
+    apply TWord. reflexivity.
+    apply TVar. repeat first [ reflexivity | destruct n as [n|n|] ].
 Qed.
 
 Lemma xbits_bound:
@@ -366,7 +368,8 @@ Qed.
 Theorem welltyped_rv2il:
   forall a n, hastyp_stmt rvtypctx rvtypctx (rv2il a (rv_decode n)) rvtypctx.
 Proof.
-  intros. unfold rv_decode.
+  intros. unfold rv_decode, rv_decode_op, rv_decode_load, rv_decode_store,
+                 rv_decode_binop, rv_decode_branch.
 
   repeat match goal with |- context [ match ?x with _ => _ end ] =>
     let op := fresh "op" in
@@ -380,8 +383,8 @@ Proof.
   | discriminate 1
   | apply hastyp_r5mov
   | apply hastyp_rvmov
-  | apply hastyp_rvvar
-  | apply hastyp_rvstore
+  | apply hastyp_r5var
+  | apply hastyp_r5store
   | apply TBinOp with (w:=32)
   | apply xbits_bound
   | apply ofZ_bound
@@ -389,13 +392,14 @@ Proof.
   | econstructor ].
 
   rewrite N.land_comm. eapply land_bound, N.lt_le_trans. apply shiftl_bound, ones_bound. reflexivity.
-  etransitivity. apply N.mod_lt. discriminate. reflexivity.
 Qed.
 
 Theorem welltyped_rvprog:
   welltyped_prog rvtypctx rv_prog.
 Proof.
-  intros s a. unfold rv_prog. destruct (s V_MEM32).
+  intros s a. unfold rv_prog.
+  destruct (s V_MEM32), (s A_EXEC); try exact I.
+  destruct (m0 a).
     exact I.
     exists rvtypctx. apply welltyped_rv2il.
 Qed.
@@ -557,3 +561,52 @@ Notation "x .^ y" := (N.lxor x y) (at level 25, left associativity). (* logical 
 Notation "x .| y" := (N.lor x y) (at level 25, left associativity). (* logical or *)
 
 End RISCVNotations.
+
+Inductive rv_encode_type : Set :=
+  | R5ER | R5EI | R5ES | R5EU.
+
+Print rv_asm.
+
+Definition rv_type :=
+  | R5_Lb : N -> N -> N -> rv_asm
+  | R5_Lh : N -> N -> N -> rv_asm
+  | R5_Lw : N -> N -> N -> rv_asm
+  | R5_Lbu : N -> N -> N -> rv_asm
+  | R5_Lhu : N -> N -> N -> rv_asm
+  | R5_Auipc : N -> N -> rv_asm
+  | R5_Sb : N -> N -> Z -> rv_asm
+  | R5_Sh : N -> N -> Z -> rv_asm
+  | R5_Sw : N -> N -> Z -> rv_asm
+  | R5_Add : N -> N -> N -> rv_asm
+  | R5_Sub : N -> N -> N -> rv_asm
+  | R5_Sll : N -> N -> N -> rv_asm
+  | R5_Slt : N -> N -> N -> rv_asm
+  | R5_Sltu : N -> N -> N -> rv_asm
+  | R5_Xor : N -> N -> N -> rv_asm
+  | R5_Srl : N -> N -> N -> rv_asm
+  | R5_Sra : N -> N -> N -> rv_asm
+  | R5_Or : N -> N -> N -> rv_asm
+  | R5_And : N -> N -> N -> rv_asm
+  | R5_Lui : N -> N -> rv_asm
+  | R5_Beq : N -> N -> Z -> rv_asm
+  | R5_Bne : N -> N -> Z -> rv_asm
+  | R5_Blt : N -> N -> Z -> rv_asm
+  | R5_Bge : N -> N -> Z -> rv_asm
+  | R5_Bltu : N -> N -> Z -> rv_asm
+  | R5_Bgeu : N -> N -> Z -> rv_asm
+  | R5_Jalr : N -> N -> Z -> rv_asm
+  | R5_Jal : N -> Z -> rv_asm
+  | R5_Addi : N -> N -> N -> rv_asm
+  | R5_Slli : N -> N -> N -> rv_asm
+  | R5_Slti : N -> N -> N -> rv_asm
+  | R5_Sltiu : N -> N -> N -> rv_asm
+  | R5_Xori : N -> N -> N -> rv_asm
+  | R5_Ori : N -> N -> N -> rv_asm
+  | R5_Andi : N -> N -> N -> rv_asm
+  | R5_Srli : N -> N -> N -> rv_asm
+  | R5_Srai : N -> N -> N -> rv_asm
+  | R5_Fence : N -> N -> rv_asm
+  | R5_Fence_i : rv_asm
+  | R5_InvalidI : rv_asm
+
+Definition rv_encode :=
