@@ -971,8 +971,8 @@ Qed.
 (* To prove that a property holds at the conclusion of a program's execution, it suffices
    to prove that the property is preserved by every statement in the program. *)
 Theorem prog_inv_universal:
-  forall (P: exit -> store -> Prop)
-         h p a0 s0 n s' x' (XP: exec_prog h p a0 s0 n s' x') (PRE: P (Exit a0) s0)
+  forall (P: exit -> store -> Prop) h p a0 s0 n s' x' (XP: exec_prog h p a0 s0 n s' x')
+         (PRE: P (Exit a0) s0)
          (INV: forall a1 s1 sz q s1' x1 (IL: p s1 a1 = Some (sz,q)) (PRE: P (Exit a1) s1)
                       (XS: exec_stmt h s1 q s1' x1),
                P (match x1 with None => Exit (a1 + sz)
@@ -992,9 +992,12 @@ Qed.
 (* Alternatively, one may prove that the property is preserved by all the reachable statements.
    (The user's invariant may adopt a precondition of False for unreachable statements.) *)
 Theorem prog_inv_reachable:
-  forall (P: exit -> store -> nat -> Prop)
-         h p a0 s0 n s' x' (XP: exec_prog h p a0 s0 n s' x') (PRE: P (Exit a0) s0 O)
-         (INV: forall a1 s1 n1 sz q s1' x1 (IL: p s1 a1 = Some (sz,q)) (PRE: P (Exit a1) s1 n1) (LT: (n1 < n)%nat)
+  forall (P: exit -> store -> nat -> Prop) h p a0 s0 n s' x' (XP: exec_prog h p a0 s0 n s' x')
+         (PRE: P (Exit a0) s0 O)
+         (INV: forall a1 s1 n1 sz q s1' x1
+                      (IL: p s1 a1 = Some (sz,q))
+                      (PRE: P (Exit a1) s1 n1)
+                      (LT: (n1 < n)%nat)
                       (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
                       (XS: exec_stmt h s1 q s1' x1)
                       (XP': match x1 with None => exec_prog h p (a1+sz) s1' (n - S n1) s' x'
