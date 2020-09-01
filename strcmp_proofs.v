@@ -35,7 +35,7 @@ Definition fh := htotal.
 
 (* The x86 lifter models non-writable code. *)
 Theorem strcmp_nwc: forall s2 s1, strcmp_i386 s1 = strcmp_i386 s2.
-Proof. reflexivity. Qed.
+Proof. reflexivity. Qed. (* C:regular *)
 
 (* CATEGORY: PICINAE lemmas *)
 (* Example #1: Type safety
@@ -44,7 +44,7 @@ Proof. reflexivity. Qed.
    values of appropriate bitwidth throughout the program's execution. *)
 Theorem strcmp_welltyped: welltyped_prog x86typctx strcmp_i386.
 Proof.
-  Picinae_typecheck.
+  Picinae_typecheck. (* C:picinae *)
 Qed.
 
 (* Example #2: Memory safety
@@ -53,8 +53,8 @@ Theorem strlen_preserves_memory:
   forall s n s' x,
   exec_prog fh strcmp_i386 0 s n s' x -> s' V_MEM32 = s V_MEM32.
 Proof.
-  intros. eapply noassign_prog_same; [|eassumption].
-  prove_noassign.
+  intros. eapply noassign_prog_same; [|eassumption]. (* C:picinae *)
+  prove_noassign. (* C:picinae *)
 Qed.
 
 
@@ -67,16 +67,16 @@ Theorem strcmp_preserves_ebx:
   forall s n s' x,
   exec_prog fh strcmp_i386 0 s n s' x -> s' R_EBX = s R_EBX.
 Proof.
-  intros. eapply noassign_prog_same; [|eassumption].
-  prove_noassign.
+  intros. eapply noassign_prog_same; [|eassumption]. (* C:picinae *)
+  prove_noassign. (* C:picinae *)
 Qed.
 
 Theorem strcmp_preserves_readable:
   forall s n s' x,
   exec_prog fh strcmp_i386 0 s n s' x -> s' A_READ = s A_READ.
 Proof.
-  intros. eapply noassign_prog_same; [|eassumption].
-  prove_noassign.
+  intros. eapply noassign_prog_same; [|eassumption]. (* C:picinae *)
+  prove_noassign. (* C:picinae *)
 Qed.
 
 (* CATEGORY: memory safety *)
@@ -104,14 +104,14 @@ Theorem strcmp_preserves_esp:
          (XP0: exec_prog fh strcmp_i386 0 s n s' x'),
   trueif_inv (strcmp_esp_invset esp strcmp_i386 x' s').
 Proof.
-  intros.
+  intros. (* C:regular *)
 
   (* Use the prove_inv inductive principle from Picinae_theory.v. *)
-  eapply prove_invs. exact XP0.
+  eapply prove_invs. exact XP0. (* C:picinae *)
 
   (* We must first prove the pre-condition, which says that the invariant-set is
      satisfied on entry to the subroutine.  This is proved by assumption ESP0. *)
-  exact ESP0.
+  exact ESP0. (* C:picinae *)
 
   (* Now we enter the inductive case, wherein Coq asks us to prove that the invariant-set
      is preserved by every (reachable) instruction in the program.  Before breaking the
@@ -123,29 +123,29 @@ Proof.
      ESP and MEM.  The value of ESP will be revealed by our pre-condition (PRE).  We can
      get the value of MEM from MEM0 using our previously proved strlen_preserves_memory
      theorem. *)
-  intros.
-  assert (MEM: s1 V_MEM32 = Ⓜ mem).
-    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
-  rewrite (strcmp_nwc s1) in RET.
-  clear s MEM0 XP0 ESP0 XP.
+  intros. (* C:picinae *)
+  assert (MEM: s1 V_MEM32 = Ⓜ mem). (* C:picinae *)
+    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP. (* C:picinae *)
+  rewrite (strcmp_nwc s1) in RET. (* C:picinae *)
+  clear s MEM0 XP0 ESP0 XP. (* C:picinae *)
 
   (* We are now ready to break the goal down into one case for each invariant-point.
      The shelve_cases tactic finds all the invariants defined by the invariant-set
      in a precondition hypothesis (PRE).  Its first argument is the address bitwidth
      of the ISA (32 bits in this case).  After shelve_cases, use Coq's "Unshelve"
      command to recover the list of goals that the tactic "shelved" for you. *)
-  shelve_cases 32 PRE.
-  Unshelve.
+  shelve_cases 32 PRE. (* C:picinae *)
+  Unshelve. (* C:picinae *)
 
   (* Now we launch the symbolic interpreter on all goals in parallel. *)
-  all: x86_step.
+  all: x86_step. (* C:picinae *)
 
   (* Note that we wind up with more goals that we started with, since some of the
      instructions branch, requiring us to prove the goal for each possible destination.
      Fortunately, since this is a pretty simple invariant-set, the symbolic state
      inferred for all the goals trivially satisfies the theorem.  We can solve
      all by assumption or reflexivity: *)
-  all: solve [ reflexivity | assumption ].
+  all: solve [ reflexivity | assumption ]. (* C:picinae *)
 Qed.
 
 
@@ -189,10 +189,10 @@ Definition strcmp_invset (mem:addr->N) (esp:N) :=
 Lemma lshift_lor_byte:
   forall n1 n2 w, ((n1 << w) .| n2) mod 2^w = n2 mod 2^w.
 Proof.
-  intros.
-  rewrite <- (N.land_ones _ w), N.land_lor_distr_l, !(N.land_ones _ w).
-  rewrite N.shiftl_mul_pow2, N.mod_mul by (apply N.pow_nonzero; discriminate).
-  apply N.lor_0_l.
+  intros. (* C:regular *)
+  rewrite <- (N.land_ones _ w), N.land_lor_distr_l, !(N.land_ones _ w). (* C:bitarith *)
+  rewrite N.shiftl_mul_pow2, N.mod_mul by (apply N.pow_nonzero; discriminate). (* C:bitarith *)
+  apply N.lor_0_l. (* C:bitarith *)
 Qed.
 
 (* CATEGORY: strcmp proof *)
@@ -206,68 +206,68 @@ Theorem strcmp_partial_correctness:
          (XP0: exec_prog fh strcmp_i386 0 s n s' x),
   trueif_inv (strcmp_invset mem esp strcmp_i386 x s').
 Proof.
-  intros.
-  eapply prove_invs. exact XP0.
+  intros. (* C:regular *)
+  eapply prove_invs. exact XP0. (* C:picinae *)
 
   (* The pre-condition (True) is trivially satisfied. *)
-  exact I.
+  exact I. (* C:picinae *)
 
   (* Before splitting into cases, translate each hypothesis about the
      entry point store s to each instruction's starting store s1: *)
-  intros.
-  assert (MDL: models x86typctx s1).
-    eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
-  assert (MEM: s1 V_MEM32 = Ⓜ mem).
-    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
-  assert (WTM := x86_wtm MDL MEM). simpl in WTM.
-  rewrite (strcmp_nwc s1) in RET.
-  assert (ESP := strcmp_preserves_esp _ _ _ _ _ (Exit a1) ESP0 MEM0 RET XP).
-  clear s MDL0 MEM0 ESP0 XP XP0.
+  intros. (* C:picinae *)
+  assert (MDL: models x86typctx s1). (* C:picinae *)
+    eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP. (* C:picinae *)
+  assert (MEM: s1 V_MEM32 = Ⓜ mem). (* C:picinae *)
+    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP. (* C:picinae *)
+  assert (WTM := x86_wtm MDL MEM). simpl in WTM. (* C:picinae *)
+  rewrite (strcmp_nwc s1) in RET. (* C:picinae *)
+  assert (ESP := strcmp_preserves_esp _ _ _ _ _ (Exit a1) ESP0 MEM0 RET XP). (* C:picinae *)
+  clear s MDL0 MEM0 ESP0 XP XP0. (* C:picinae *)
 
   (* Break the proof into cases, one for each invariant-point. *)
-  shelve_cases 32 PRE. Unshelve.
+  shelve_cases 32 PRE. Unshelve. (* C:picinae *)
 
   (* Time how long it takes for each symbolic interpretation step to complete
      (for profiling and to give visual cues that something is happening...). *)
-  Local Ltac step := time x86_step.
+  Local Ltac step := time x86_step. (* C:picinae *)
 
   (* Address 0 *)
-  step. step. exists 0.
-  rewrite 2!N.add_0_r. rewrite !(N.mod_small (getmem _ _ _ _)) by apply getmem_bound, WTM.
-  split. reflexivity. split. reflexivity.
-  intros i LT. destruct i; discriminate.
+  step. step. exists 0. (* C:picinae *)
+  rewrite 2!N.add_0_r. rewrite !(N.mod_small (getmem _ _ _ _)) by apply getmem_bound, WTM. (* C:bitarith *)
+  split. reflexivity. split. reflexivity. (* C:regular *)
+  intros i LT. destruct i; discriminate. (* C:regular *)
 
   (* Address 8 *)
-  destruct PRE as [k [ECX [EDX SEQ]]].
-  step. step.
-    rewrite cmp_zf; [| apply N.mod_upper_bound, N.pow_nonzero; discriminate | apply WTM].
-    rewrite lshift_lor_byte, (N.mod_small (mem _)) by apply WTM.
-  step.
+  destruct PRE as [k [ECX [EDX SEQ]]]. (* C:picinae *)
+  step. step. (* C:picinae *)
+    rewrite cmp_zf; [| apply N.mod_upper_bound, N.pow_nonzero; discriminate | apply WTM]. (* C:binarith *)
+    rewrite lshift_lor_byte, (N.mod_small (mem _)) by apply WTM. (* C:binarith *)
+  step. (* C:picinae *)
 
     (* Address 14 *)
-    step. step. step. rewrite lshift_lor_byte, (N.mod_small (mem _)) by apply WTM. step.
+    step. step. step. rewrite lshift_lor_byte, (N.mod_small (mem _)) by apply WTM. step. (* C:picinae *)
 
       (* Address 20 *)
-      step. step.
-      exists 0, k. simpl_stores. repeat first [ exact SEQ | split ].
-        intro. symmetry. apply Neqb_ok, BC0.
-        apply N.compare_eq_iff, Neqb_ok, BC.
+      step. step. (* C:picinae *)
+      exists 0, k. simpl_stores. repeat first [ exact SEQ | split ]. (* C:picinae *)
+        intro. symmetry. apply Neqb_ok, BC0. (* C:regular *)
+        apply N.compare_eq_iff, Neqb_ok, BC. (* C:regular *)
 
       (* loop back to Address 8 *)
-      exists (k+1). rewrite !N.add_assoc, !N.add_mod_idemp_l by (apply N.pow_nonzero; discriminate).
-      split. reflexivity. split. reflexivity.
-      intros i IK. rewrite N.add_1_r in IK. apply N.lt_succ_r, N.le_lteq in IK. destruct IK as [IK|IK].
-        apply SEQ, IK.
-        subst. split.
-          apply Neqb_ok. assumption.
-          apply N.neq_0_lt_0, N.neq_sym, N.eqb_neq. assumption.
+      exists (k+1). rewrite !N.add_assoc, !N.add_mod_idemp_l by (apply N.pow_nonzero; discriminate). (* C:bitarith *)
+      split. reflexivity. split. reflexivity. (* C:regular *)
+      intros i IK. rewrite N.add_1_r in IK. apply N.lt_succ_r, N.le_lteq in IK. destruct IK as [IK|IK]. (* C:regular *)
+        apply SEQ, IK. (* C:bitarith *)
+        subst. split. (* C:regular *)
+          apply Neqb_ok. assumption. (* C:regular *)
+          apply N.neq_0_lt_0, N.neq_sym, N.eqb_neq. assumption. (* C:regular *)
 
     (* Address 23 *)
-    step. step. step. step.
-    eexists. exists k. simpl_stores. split. reflexivity. split. exact SEQ. split.
-      intro. destruct (_ <? _); discriminate.
-      apply N.eqb_neq, N.lt_gt_cases in BC. destruct BC as [BC|BC].
-        rewrite (proj2 (N.compare_lt_iff _ _)), (proj2 (N.ltb_lt _ _)) by exact BC. reflexivity.
-        rewrite (proj2 (N.compare_gt_iff _ _)) by exact BC. rewrite (proj2 (N.ltb_ge _ _)) by apply N.lt_le_incl, BC. reflexivity.
+    step. step. step. step. (* C:picinae *)
+    eexists. exists k. simpl_stores. split. reflexivity. split. exact SEQ. split. (* C:regular *)
+      intro. destruct (_ <? _); discriminate. (* C:regular *)
+      apply N.eqb_neq, N.lt_gt_cases in BC. destruct BC as [BC|BC]. (* C:regular *)
+        rewrite (proj2 (N.compare_lt_iff _ _)), (proj2 (N.ltb_lt _ _)) by exact BC. reflexivity. (* C:regular *)
+        rewrite (proj2 (N.compare_gt_iff _ _)) by exact BC. rewrite (proj2 (N.ltb_ge _ _)) by apply N.lt_le_incl, BC. reflexivity. (* C:regular *)
 Qed.
 (* CATEGORY: END *)

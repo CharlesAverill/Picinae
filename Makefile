@@ -24,14 +24,15 @@ memset_arm_proofs.vo: $(ARMPIC) memset_arm.vo
 
 # i386 proofs
 I386PIC=$(PICBASE) Picinae_i386.vo
-I386CODE=strlen_i386.vo strcmp_i386.vo
-I386PROOF=strlen_proofs.vo strcmp_proofs.vo
+I386CODE=strlen_i386.vo strcmp_i386.vo strtok_i386.vo
+I386PROOF=strlen_proofs.vo strcmp_proofs.vo strtok_proofs.vo
 
 i386: i386pic $(I386CODE) $(I386PROOF)
 i386pic: $(I386PIC)
 Picinae_i386.vo: $(PICBASE)
 strlen_proofs.vo: $(I386PIC) strlen_i386.vo
 strcmp_proofs.vo: $(I386PIC) strcmp_i386.vo
+strtok_proofs.vo: $(I386PIC) strtok_i386.vo
 
 # RISC-V proofs
 RISCVPIC=$(PICBASE) Picinae_i386.vo
