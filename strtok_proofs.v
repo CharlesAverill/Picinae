@@ -89,15 +89,15 @@ Definition strtok_post loc m strarg delim (_:exit) s' :=
         | cons h _ => ~List.In h delimstr /\ cstring m' (m' Ⓓ[loc]) reststr
         end.
 
-Definition strtok_invs loc morig strarg string delim delimstr a s :=
-  let args_inv :=
-      vmem (s V_MEM32) = 
-  let charset_inv :=
-      forall c,
-        List.In c delimstr
-        -> strtok_charset (vmem (s V_MEM32)) (vnum (s R_ESP)) c
-  in
-  match a with
-  | 18 =>
-    s R_EAX = None
-  end.
+(* Definition strtok_invs loc morig strarg string delim delimstr a s := *)
+(*   let args_inv := *)
+(*       vmem (s V_MEM32) =  *)
+(*   let charset_inv := *)
+(*       forall c, *)
+(*         List.In c delimstr *)
+(*         -> strtok_charset (vmem (s V_MEM32)) (vnum (s R_ESP)) c *)
+(*   in *)
+(*   match a with *)
+(*   | 18 => *)
+(*     s R_EAX = None *)
+(*   end. *)

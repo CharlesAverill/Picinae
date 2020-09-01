@@ -106,8 +106,8 @@ Theorem strcmp_preserves_esp:
 Proof.
   intros. (* C:regular *)
 
-  (* Use the prove_inv inductive principle from Picinae_theory.v. *)
-  eapply prove_invs. exact XP0. (* C:picinae *)
+  (* Use the prove_invs inductive principle from Picinae_theory.v. *)
+  eapply prove_invs. exact XP0.
 
   (* We must first prove the pre-condition, which says that the invariant-set is
      satisfied on entry to the subroutine.  This is proved by assumption ESP0. *)
@@ -176,9 +176,9 @@ Definition strcmp_invs (m:addr->N) (esp:N) (a:addr) (s:store) :=
    zero if the kth bytes are both nil. *)
 Definition strcmp_post (m:addr->N) (esp:N) (_:exit) (s:store) :=
   ∃ n k, s R_EAX = Ⓓn /\
-  streq m (m Ⓓ[esp⊕4]) (m Ⓓ[esp⊕8]) k /\
-  (n=0 -> m (m Ⓓ[esp⊕4] ⊕ k) = 0) /\
-  (m (m Ⓓ[esp⊕4] ⊕ k) ?= m (m Ⓓ[esp⊕8] ⊕ k)) = (toZ 32 n ?= Z0)%Z.
+         streq m (m Ⓓ[esp⊕4]) (m Ⓓ[esp⊕8]) k /\
+         (n=0 -> m (m Ⓓ[esp⊕4] ⊕ k) = 0) /\
+         (m (m Ⓓ[esp⊕4] ⊕ k) ?= m (m Ⓓ[esp⊕8] ⊕ k)) = (toZ 32 n ?= Z0)%Z.
 
 (* The invariant-set and post-conditions are combined as usual: *)
 Definition strcmp_invset (mem:addr->N) (esp:N) :=
