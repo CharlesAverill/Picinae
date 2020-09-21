@@ -232,6 +232,12 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma hub_sym:
+  forall A B (f g: A -> option B), has_upper_bound f g -> has_upper_bound g f.
+Proof.
+  intros. intros x gx fx H1 H2. symmetry. eapply H; eassumption.
+Qed.
+
 Lemma hub_subset:
   forall A B (f g f' g': A -> option B) (HUB: has_upper_bound f g)
          (SS1: f' ⊆ f) (SS2: g' ⊆ g),
@@ -331,36 +337,27 @@ Inductive hastyp_exp (c:typctx): exp -> typ -> Prop :=
    by checking assigned value types against c0 at every Move, but only updating c.
 
    (2) Since variable initialization states are mutable, we need static rules
-   that support meets and joins of contexts.  But a general weakening rule is
-   inconveniently broad; it hampers syntax-directed inductive proofs, since it
-   is potentially applicable to all statement forms during inversions.
-
-   To avoid this, we instead define a strategically chosen weakening clause
-   within the sequence typing rule (TSeq), along with a fixed point requirement
-   for loops (TRep).  An IL program that only assigns values of one type to
-   each variable per instruction encoding can be safely type-checked by ignoring
-   both clauses; the fixed point condition is automatically satisfied if the
-   weakening clause is never utilized.  But including these two clauses yields
-   a provably type-safe semantics because the weakening clause adds just enough
-   flexibility to prove satisfaction of the fixed point requirement without
-   having to cope with a fully generalized weakening rule. *)
+   that support meets and joins of contexts.  However, a general cut rule is
+   cumbersome because it hampers syntax-directed type-safety proofs.  We therefore
+   instead introduce a weakening option within each syntax-directed typing rule.
+   This avoids superfluous double-cuts by in-lining a single cut into each rule. *)
 
 Inductive hastyp_stmt (c0 c:typctx): stmt -> typctx -> Prop :=
-| TNop: hastyp_stmt c0 c Nop c
-| TMove v t e (CV: c0 v = None \/ c0 v = Some t) (TE: hastyp_exp c e t):
-    hastyp_stmt c0 c (Move v e) (c[v:=Some t])
-| TJmp e w (TE: hastyp_exp c e (NumT w)): hastyp_stmt c0 c (Jmp e) c
-| TExn ex: hastyp_stmt c0 c (Exn ex) c
-| TSeq q1 q2 c1 c2 c' (SS: c2 ⊆ c1)
-       (TS1: hastyp_stmt c0 c q1 c1) (TS2: hastyp_stmt c0 c2 q2 c'):
+| TNop c' (SS: c' ⊆ c): hastyp_stmt c0 c Nop c'
+| TMove v t e c' (CV: c0 v = None \/ c0 v = Some t) (TE: hastyp_exp c e t) (SS: c' ⊆ c[v:=Some t]):
+    hastyp_stmt c0 c (Move v e) c'
+| TJmp e w c' (TE: hastyp_exp c e (NumT w)) (SS: c' ⊆ c): hastyp_stmt c0 c (Jmp e) c'
+| TExn ex c' (SS: c' ⊆ c): hastyp_stmt c0 c (Exn ex) c'
+| TSeq q1 q2 c1 c2 c'
+       (TS1: hastyp_stmt c0 c q1 c1) (TS2: hastyp_stmt c0 c1 q2 c2) (SS: c' ⊆ c2):
     hastyp_stmt c0 c (Seq q1 q2) c'
-| TIf e q1 q2 c1 c2 c' (SS1: c' ⊆ c1) (SS2: c' ⊆ c2)
+| TIf e q1 q2 c2 c'
       (TE: hastyp_exp c e (NumT 1))
-      (TS1: hastyp_stmt c0 c q1 c1) (TS2: hastyp_stmt c0 c q2 c2):
+      (TS1: hastyp_stmt c0 c q1 c2) (TS2: hastyp_stmt c0 c q2 c2) (SS: c' ⊆ c2):
     hastyp_stmt c0 c (If e q1 q2) c'
-| TRep e w q c' (SS: c ⊆ c')
-    (TE: hastyp_exp c e (NumT w)) (TS: hastyp_stmt c0 c q c'):
-    hastyp_stmt c0 c (Rep e q) c.
+| TRep e w q c'
+    (TE: hastyp_exp c e (NumT w)) (TS: hastyp_stmt c0 c q c) (SS: c' ⊆ c):
+    hastyp_stmt c0 c (Rep e q) c'.
 
 (* A program is well-typed if all its statements are well-typed. *)
 Definition welltyped_prog (c0:typctx) (p:program) : Prop :=
@@ -449,31 +446,7 @@ Proof.
   reflexivity.
 Qed.
 
-(* Statement types are compatible (though not necessarily unique). *)
-Theorem hastyp_stmt_compat:
-  forall c0 q c1 c2 c1' c2'
-         (HUB: has_upper_bound c1 c2)
-         (TS1: hastyp_stmt c0 c1 q c1') (TS2: hastyp_stmt c0 c2 q c2'),
-  has_upper_bound c1' c2'.
-Proof.
-  induction q; intros; inversion TS1; inversion TS2; clear TS1 TS2; subst;
-  try exact HUB.
-
-  (* Move *)
-  replace t0 with t in * by (eapply hastyp_exp_unique; eassumption).
-  apply hub_update. exact HUB.
-
-  (* Seq *)
-  eapply IHq2; [|eassumption..].
-  eapply hub_subset; [|eassumption..].
-  eapply IHq1; eassumption.
-
-  (* If *)
-  clear SS2 SS3. eapply hub_subset; [|eassumption..].
-  eapply IHq1; eassumption.
-Qed.
-
-(* Expression typing contexts can be safely weakened. *)
+(* Expression typing contexts can be weakened. *)
 Theorem hastyp_exp_weaken:
   forall c1 c2 e t (TE: hastyp_exp c1 e t) (SS: c1 ⊆ c2),
   hastyp_exp c2 e t.
@@ -486,30 +459,62 @@ Proof.
     apply SS. assumption.
 Qed.
 
-(* Statement frame contexts can be safely weakened. *)
+(* Statement types can be weakened. *)
 Theorem hastyp_stmt_weaken:
+  forall c0 c c' c'' q (TS: hastyp_stmt c0 c q c') (SS: c'' ⊆ c'),
+  hastyp_stmt c0 c q c''.
+Proof.
+  intros. inversion TS; clear TS; subst;
+  econstructor; first [ eassumption | transitivity c'; assumption ].
+Qed.
+
+(* Statement types agree (though not necessarily unique). *)
+Theorem hastyp_stmt_compat:
+  forall c0 q c1 c2 c1' c2'
+         (HUB: has_upper_bound c1 c2)
+         (TS1: hastyp_stmt c0 c1 q c1') (TS2: hastyp_stmt c0 c2 q c2'),
+  has_upper_bound c1' c2'.
+Proof.
+  induction q; intros; inversion TS1; inversion TS2; clear TS1 TS2; subst;
+  try solve [ apply (hub_subset _ _ _ _ _ _ HUB); assumption ].
+    eapply hub_subset; [|eassumption..]. replace t0 with t.
+      apply hub_update, HUB.
+      eapply hastyp_exp_unique; eassumption.
+    eapply IHq2.
+      eapply IHq1; eassumption.
+      eapply hastyp_stmt_weaken. exact TS3. exact SS.
+      eapply hastyp_stmt_weaken. exact TS5. exact SS0.
+    eapply hub_subset; [|eassumption..]. eapply IHq1; eassumption.
+Qed.
+
+(* Statement frame contexts can be weakened. *)
+Theorem hastyp_stmt_frame_weaken:
   forall c0 c0' q c c' (TS: hastyp_stmt c0 c q c') (SS: c0' ⊆ c0),
   hastyp_stmt c0' c q c'.
 Proof.
   induction q; intros; inversion TS; subst.
-    apply TNop.
-    apply TMove.
+    apply TNop. assumption.
+    eapply TMove.
       specialize (SS v). destruct (c0' v).
-        right. rewrite (SS t0 (eq_refl _)) in CV. destruct CV. discriminate. assumption.
+        right. rewrite (SS t0 (eq_refl _)) in CV. destruct CV. discriminate. eassumption.
         left. reflexivity.
       exact TE.
-    eapply TJmp. exact TE.
-    apply TExn.
-    eapply TSeq. exact SS0.
+      assumption.
+    eapply TJmp. exact TE. assumption.
+    apply TExn. assumption.
+    eapply TSeq.
       apply IHq1. exact TS1. exact SS.
       apply IHq2. exact TS2. exact SS.
-    eapply TIf. exact SS1. exact SS2.
+      exact SS0.
+    eapply TIf.
       exact TE.
       apply IHq1. exact TS1. exact SS.
       apply IHq2. exact TS2. exact SS.
-    eapply TRep. exact SS0.
+      exact SS0.
+    eapply TRep.
       exact TE.
       apply IHq. exact TS0. exact SS.
+      exact SS0.
 Qed.
 
 
@@ -519,7 +524,7 @@ Qed.
 
    (1) memory access violation ("mem_readable" or "mem_writable" is falsified), or
 
-   (2) a type-mismatch occurs (e.g., addition applied to memory stores).
+   (2) a type-mismatch occurs (e.g., arithmetic applied to memory state values).
 
    Type-safety proves that if type-checking succeeds, then the only reachable
    stuck-states are case (1).  That is, runtime type-mismatches are precluded,
@@ -686,7 +691,7 @@ Proof.
   specialize (MDL v t CV). rewrite SV in MDL. inversion MDL. assumption.
 Qed.
 
-(* Shrinking the typing context preserves the modeling relation. *)
+(* Weakening the typing context preserves the modeling relation. *)
 Lemma models_subset:
   forall c s c' (M: models c s) (SS: c' ⊆ c),
   models c' s.
@@ -819,7 +824,7 @@ Remark welltyped_rep:
   hastyp_stmt c0 c (N.iter n (Seq q) Nop) c.
 Proof.
   intros. inversion TS; subst. apply Niter_invariant.
-    apply TNop.
+    apply TNop. reflexivity.
     intros. eapply TSeq; eassumption.
 Qed.
 
@@ -829,33 +834,28 @@ Lemma preservation_exec_stmt:
          (MCS: models c s) (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' None),
   models c' s'.
 Proof.
-  intros. revert c c' MCS T. dependent induction XS; intros; inversion T; subst;
-  try assumption.
+  intros. revert c c' MCS T. dependent induction XS; intros; inversion T; subst.
+
+  eapply models_subset; eassumption.
 
   unfold update. intros v0 t0 T0. destruct (v0 == v).
-    inversion T0. subst. apply (preservation_eval_exp MCS TE E).
-    apply MCS; assumption.
+    subst. replace t0 with t.
+      apply (preservation_eval_exp MCS TE E).
+      specialize (SS _ _ T0). rewrite update_updated in SS. inversion SS. reflexivity.
+    apply MCS. specialize (SS _ _ T0). rewrite update_frame in SS; assumption.
 
-  apply IHXS2 with (c:=c2).
-    reflexivity.
-    apply models_subset with (c:=c1).
-      apply IHXS1 with (c:=c). reflexivity. assumption. assumption.
-      assumption.
-    assumption.
+  eapply models_subset; [|exact SS].
+  eapply IHXS2; [reflexivity| |exact TS2].
+  eapply IHXS1; [reflexivity| |exact TS1]. exact MCS.
 
-  destruct c.
-    apply models_subset with (c:=c3).
-      apply IHXS with (c:=c1). reflexivity. assumption. assumption.
-      assumption.
-    apply models_subset with (c:=c2).
-      apply IHXS with (c:=c1). reflexivity. assumption. assumption.
-      assumption.
+  eapply models_subset; [|exact SS]. destruct c.
+    eapply IHXS; [reflexivity| |exact TS2]. exact MCS.
+    eapply IHXS; [reflexivity| |exact TS1]. exact MCS.
 
-  apply IHXS with (c:=c') (c':=c').
-    reflexivity.
-    assumption.
-
-  eapply welltyped_rep; eassumption.
+  eapply models_subset; [|exact SS].
+  eapply IHXS. reflexivity. exact MCS.
+  eapply welltyped_rep.
+  econstructor. exact TE. exact TS. reflexivity.
 Qed.
 
 (* Execution also preserves modeling the frame context c0. *)
@@ -876,19 +876,15 @@ Proof.
 
   apply IHXS with (c:=c) (c':=c1); assumption.
 
-  apply IHXS2 with (c:=c2) (c':=c').
-    apply IHXS1 with (c:=c) (c':=c1); assumption.
-    apply models_subset with (c:=c1).
-      apply (preservation_exec_stmt MCS TS1 XS1).
-      assumption.
-    assumption.
+  eapply IHXS2; [| |exact TS2].
+    eapply IHXS1; eassumption.
+    eapply preservation_exec_stmt; eassumption.
 
-  destruct c.
-    apply IHXS with (c:=c1) (c':=c3); assumption.
-    apply IHXS with (c:=c1) (c':=c2); assumption.
+  destruct c; eapply IHXS; eassumption.
 
-  apply IHXS with (c:=c') (c':=c'); try assumption.
-  eapply welltyped_rep; eassumption.
+  eapply IHXS. assumption. exact MCS.
+  eapply welltyped_rep.
+  econstructor. exact TE. exact TS. reflexivity.
 Qed.
 
 (* Well-typed statements never get "stuck" except for memory access violations.
@@ -923,7 +919,7 @@ Proof.
     destruct (IHq2 _ _ s2 TS2) as [s' [x' XS2]].
       eapply models_subset.
         eapply preservation_exec_stmt; eassumption.
-        exact SS.
+        reflexivity.
       exists s',x'. eapply XSeq2; eassumption.
 
   (* If *)
@@ -936,10 +932,10 @@ Proof.
   (* Rep *)
   destruct (progress_eval_exp RW MCS TE) as [u E].
   assert (TV:=preservation_eval_exp MCS TE E). inversion TV; subst.
-  destruct (IHq2 n c' c' s) as [s' [x XS]].
+  destruct (IHq2 n c c' s) as [s' [x XS]].
     apply Niter_invariant.
-      apply TNop.
-      intros. eapply TSeq; eassumption.
+      apply TNop. exact SS.
+      intros. eapply TSeq. exact TS. exact IH. reflexivity.
     exact MCS.
     exists s',x. eapply XRep. exact E. assumption.
 Qed.
@@ -985,13 +981,13 @@ Qed.
    typedness of most statements, but there exist well-typed statements for
    which it cannot decide their well-typedness.  This happens because the
    formal semantics above allow arbitrary ("magic") context-weakening within
-   the rules for Seq, If, and Rep, wherein an effective procedure must guess
+   each well-typedness rule, wherein an effective procedure must guess
    the greatest-lower-bound context sufficient to type-check the remainder of
    the statement.  The procedure below makes the following guesses, which
    suffice to prove well-typedness for IL encodings of all ISAs so far:
-     (1) Do not perform any weakening within Seq.
-     (2) If-contexts are weakened to the lattice-meet of the two branches.
-     (3) Rep-contexts are weakened to the input context, to get a fixpoint.
+     (1) If-contexts are weakened to the lattice-meet of the two branches.
+     (2) Rep-contexts are weakened to the input context, to get a fixpoint.
+     (3) No other contexts are weakened.
    If these guesses cannot typecheck some statements in your ISA, consider
    changing your lifter for your ISA to produce IL encodings whose variable
    types are not path-sensitive. *)
@@ -1274,53 +1270,57 @@ Proof.
   induction q; intros; simpl in TS.
 
   (* Nop *)
-  injection TS; intro; subst. apply TNop.
+  injection TS; intro; subst. apply TNop. reflexivity.
 
   (* Move *)
   destruct (typchk_exp e c) eqn:TE; [|discriminate].
   destruct (c0 v) eqn:C0V; [destruct (typ_eqdec t _)|];
-  try (injection TS; intro); subst;
-  first [ discriminate | apply TMove ].
+  try (injection TS; clear TS; intro); subst;
+  first [ discriminate | eapply TMove; [| |reflexivity] ].
     right. exact C0V. apply typchk_exp_sound. exact TE.
     left. exact C0V. apply typchk_exp_sound. exact TE.
 
   (* Jmp *)
   destruct (typchk_exp e c) as [t|] eqn:TE; [destruct t|]; try discriminate.
   injection TS; intro; subst.
-  eapply TJmp. apply typchk_exp_sound. exact TE.
+  eapply TJmp. apply typchk_exp_sound. exact TE. reflexivity.
 
   (* Exn *)
-  injection TS; intro; subst. apply TExn.
+  injection TS; intro; subst. apply TExn. reflexivity.
 
   (* Seq *)
   specialize (IHq1 c0 c). destruct (typchk_stmt q1 c0 c) as [c1|] eqn:TS1; [|discriminate].
   specialize (IHq2 c0 c1). destruct (typchk_stmt q2 c0 c1); [|discriminate].
-  injection TS; intro; subst.
+  injection TS; clear TS; intro; subst.
   eapply TSeq.
-    reflexivity.
     apply IHq1. exact SS. reflexivity.
-    apply IHq2. eapply typchk_stmt_mono; eassumption. reflexivity.
+    apply IHq2. eapply typchk_stmt_mono; eassumption. reflexivity. reflexivity.
 
   (* If *)
   destruct (typchk_exp e c) as [[[|[|p|]]|]|] eqn:TE; try discriminate.
   destruct (typchk_stmt q1 c0 c) as [c1|] eqn:TS1; [|discriminate].
   destruct (typchk_stmt q2 c0 c) as [c2|] eqn:TS2; [|discriminate].
-  injection TS; intro; subst.
+  injection TS; clear TS; intro; subst.
   eapply TIf.
-    apply typctx_meet_subset.
-    rewrite typctx_meet_comm. apply typctx_meet_subset.
     apply typchk_exp_sound. exact TE.
-    apply IHq1. exact SS. exact TS1.
-    apply IHq2. exact SS. exact TS2.
+    eapply hastyp_stmt_weaken.
+      apply IHq1. exact SS. exact TS1.
+      apply typctx_meet_subset.
+    eapply hastyp_stmt_weaken.
+      apply IHq2. exact SS. exact TS2.
+      rewrite typctx_meet_comm. apply typctx_meet_subset.
+    reflexivity.
 
   (* Rep *)
   destruct (typchk_exp e c) as [[|]|] eqn:TE; try discriminate.
   specialize (IHq c c). destruct (typchk_stmt q c c) as [c1|] eqn:TS1; [|discriminate].
-  injection TS; intro; subst.
-  eapply TRep. all:cycle 1.
+  injection TS; clear TS; intro; subst.
+  eapply TRep.
     apply typchk_exp_sound. exact TE.
-    eapply hastyp_stmt_weaken. apply IHq. reflexivity. reflexivity. exact SS.
-    eapply typchk_stmt_mono. exact TS1. reflexivity.
+    eapply hastyp_stmt_frame_weaken; [|exact SS]. eapply hastyp_stmt_weaken.
+      apply IHq. reflexivity. reflexivity.
+      eapply typchk_stmt_mono. exact TS1. reflexivity.
+    reflexivity.
 Qed.
 
 (* Create a theorem that transforms a type-safety goal into an application of

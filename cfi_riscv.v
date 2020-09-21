@@ -215,12 +215,13 @@ Fixpoint newinstrs l1 l2 :=
 
 (* Rewrite a code block according to a policy.  Inputs:
    pol = the policy specification
-   l = the list of 32-bit numbers that comprises the original code *)
+   l = the list of 32-bit numbers that comprises the original code
+   base = the desired base address / 4 of the new code segment *)
 Definition todata x :=
   match x with ((iid,(oid,sd)),n) => Data iid oid sd n false end.
-Definition newcode (pol:policy) l :=
+Definition newcode (pol:policy) l base :=
   let d := shrink nil (map todata (combine pol l)) in
-  if sumsizes d <? 2^30 then newinstrs nil d else None.
+  if sumsizes d <? 2^30 - base then newinstrs nil d else None.
 
 
 
@@ -236,8 +237,8 @@ Fixpoint indexmap' (l': list (list Z)) i' :=
      if i' <? length b then O else S (indexmap' t (i' - length b))
    end)%nat.
 
-Definition indexmap pol l i' :=
-  match newcode pol l with None => O | Some l' => indexmap' l' i' end.
+Definition indexmap pol l bi i' :=
+  match newcode pol l (Z.of_nat bi) with None => O | Some l' => indexmap' l' i' end.
 
 
 (* We define "safety" as a proposition on policies satisfied by an
@@ -259,35 +260,35 @@ Definition policytarget (pol:policy) i i' :=
   end.
 
 Definition safety (pol:policy) r im :=
-  forall (l: list Z) l' h s0 m0 j0 n s s' q j j' x
+  forall (l: list Z) l' h s0 m0 bi j0 n s s' q j j' x
 
-    (* Assume rewriter r returns rewritten code l' (instead of rejecting or aborting) *)
-    (NC: r l = Some l')
+    (* Let l' be the rewritten code returned by rewriter r. *)
+    (NC: r l (Z.of_nat bi) = Some l')
 
     (* Let m0 be the memory contents at program-start *)
     (S0: s0 V_MEM32 = VaM m0 32)
 
-    (* Assume m0 contains the rewritten code starting at address 0 *)
+    (* Assume m0 contains the rewritten code starting at instruction index i *)
     (CS: forall i n, nth_error (concat l') i = Some n ->
-                     getmem LittleE 4 m0 (4 * N.of_nat i) = Z.to_N n)
+                     getmem LittleE 4 m0 (4 * N.of_nat (bi+i)) = Z.to_N n)
 
-    (* Assume the code section is non-writable. *)
-    (NWC: forall n s x m w i, exec_prog h rv_prog (4 * N.of_nat j0) s0 n s x ->
+    (* Assume the code section remains non-writable. *)
+    (NWC: forall n s x m w i, exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n s x ->
                               s V_MEM32 = VaM m w -> (i < length (concat l'))%nat ->
-          getmem LittleE 4 m (4 * N.of_nat i) = getmem LittleE 4 m0 (4 * N.of_nat i))
+          getmem LittleE 4 m (4 * N.of_nat (bi+i)) = getmem LittleE 4 m0 (4 * N.of_nat (bi+i)))
 
-    (* Assume memory outside the code section is non-executable. *)
-    (NXD: forall n s x e w i, exec_prog h rv_prog (4 * N.of_nat j0) s0 n s x ->
-                              s A_EXEC = VaM e w -> (length (concat l') <= i)%nat ->
+    (* Assume memory outside the code section remains non-executable. *)
+    (NXD: forall n s x e w i, exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n s x ->
+                              s A_EXEC = VaM e w -> (i < bi \/ bi + length (concat l') <= i)%nat ->
                         (e (4 * N.of_nat i) = 0)%N)
 
-    (* Assume execution of the new code begins at address j0, which is a block boundary. *)
+    (* Assume execution of the new code begins at index j0, which is a block boundary. *)
     (BB: blockboundary l' j0)
 
-    (* Let j be the index of an instruction reached during execution (located at address 4*j). *)
-    (XP0: exec_prog h rv_prog (4 * N.of_nat j0) s0 n s (Exit (4 * N.of_nat j)))
+    (* Let j be the index of an instruction reached during execution. *)
+    (XP0: exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n s (Exit (4 * N.of_nat j)))
 
-    (* Let q be the IL statement that encodes instruction j. *)
+    (* Let q be the IL statement that encodes the instruction at index j. *)
     (LU: (rv_prog s (4 * N.of_nat j) = Some (4,q))%N)
 
     (* Let s' and x be the store and exit state after executing q. *)
@@ -300,9 +301,10 @@ Definition safety (pol:policy) r im :=
       (a) j and j' are within a common rewritten block (i.e., an IRM-added branch),
       (b) edge (j,j') is explicitly permitted by the policy, or
       (c) j' is the security abort handler appended to the rewritten code. *)
-  im l j = im l j' \/
-  (blockboundary l' j' /\ policytarget pol (im l j) (im l j')) \/
-  (length (concat l') <= j')%nat.
+  (im l bi (j-bi) = im l bi (j'-bi) \/
+   (blockboundary l' (j'-bi) /\ policytarget pol (im l bi (j-bi)) (im l bi (j'-bi))) \/
+   j' < bi \/ bi + length (concat l') <= j')%nat.
+
 
 
 
@@ -1297,7 +1299,7 @@ Proof.
 Qed.
 
 Lemma newcode_nonnil:
-  forall ids l l' i b (NC: newcode ids l = Some l')
+  forall ids l base l' i b (NC: newcode ids l base = Some l')
          (LT: nth_error l' i = Some b),
   b <> nil.
 Proof.
@@ -1319,7 +1321,7 @@ Proof.
 Qed.
 
 Lemma newcode_length:
-  forall ids l l', newcode ids l = Some l' -> length l' = min (length ids) (length l).
+  forall ids l base l', newcode ids l base = Some l' -> length l' = min (length ids) (length l).
 Proof.
   unfold newcode. intros.
   destruct (_ <? _); [|discriminate].
@@ -2303,31 +2305,32 @@ Proof.
   destruct in_dec as [?|?]. assumption. discriminate.
 Qed.
 
-Definition execution_IH l' h j0 s0 n :=
+Definition execution_IH l' h bi j0 s0 n :=
   forall n0 : nat, (n0 < n)%nat ->
   forall s j q s' x j'
-    (XP: exec_prog h rv_prog (4 * N.of_nat j0) s0 n0 s (Exit (4 * N.of_nat j)))
+    (XP: exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n0 s (Exit (4 * N.of_nat j)))
     (LU: rv_prog s (4 * N.of_nat j)%N = Some (4%N, q))
     (XS: exec_stmt h s q s' x)
     (EX: exitof (4 * N.of_nat (S j)) x = Exit (4 * N.of_nat j')),
-  indexmap' l' j = indexmap' l' j' \/
-  blockboundary l' j' \/
-  (length (concat l') <= j')%nat.
+  (bi <= j)%nat /\
+  (indexmap' l' (j-bi) = indexmap' l' (j'-bi) \/
+   blockboundary l' (j'-bi) \/
+   j' < bi \/ bi + length (concat l') <= j')%nat.
 
-Definition codebytes l' h j0 s0 :=
+Definition codebytes l' h bi j0 s0 :=
   forall s n x m w i
-    (XP: exec_prog h rv_prog (4 * N.of_nat j0) s0 n s x)
+    (XP: exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n s x)
     (MEM: s V_MEM32 = VaM m w),
   match nth_error (concat l') i with
-  | Some ie => m Ⓓ[4 * N.of_nat i] = Z.to_N ie
+  | Some ie => m Ⓓ[4 * N.of_nat (bi+i)] = Z.to_N ie
   | None => True
   end.
 
-Definition nonexecutable_data (l':list (list Z)) h j0 s0 :=
+Definition nonexecutable_data (l':list (list Z)) h bi j0 s0 :=
   forall n s x e w i
-    (XP: exec_prog h rv_prog (4 * N.of_nat j0) s0 n s x)
+    (XP: exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n s x)
     (EXEC: s A_EXEC = VaM e w)
-    (HI: (length (concat l') <= i)%nat),
+    (OUT: (i < bi \/ bi + length (concat l') <= i)%nat),
   (e (4 * N.of_nat i) = 0)%N.
 
 Lemma boundary_offset_iszero:
@@ -2350,19 +2353,19 @@ Proof.
 Qed.
 
 Lemma exec_prev_in_block:
-  forall l' h j0 s0 n i b k' s'
-    (IH: execution_IH l' h j0 s0 n)
+  forall l' h bi j0 s0 n i b k' s'
+    (IH: execution_IH l' h bi j0 s0 n)
     (BLK : nth_error l' i = Some b)
     (BB: blockboundary l' j0)
-    (XP: exec_prog h rv_prog (4 * N.of_nat j0) s0 n s' (Exit (4 * N.of_nat (length (concat (firstn i l')) + S k'))))
+    (XP: exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n s' (Exit (4 * N.of_nat (bi + (length (concat (firstn i l')) + S k')))))
     (BND: (S k' < length b)%nat),
   exists n0 s1 k,
     n = S n0 /\ (k < length b)%nat /\
-    exec_prog h rv_prog (4 * N.of_nat j0) s0 n0 s1 (Exit (4 * N.of_nat (length (concat (firstn i l')) + k))) /\
-    exec_prog h rv_prog (4 * N.of_nat (length (concat (firstn i l')) + k)) s1 1 s' (Exit (4 * N.of_nat (length (concat (firstn i l')) + S k'))).
+    exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n0 s1 (Exit (4 * N.of_nat (bi + (length (concat (firstn i l')) + k)))) /\
+    exec_prog h rv_prog (4 * N.of_nat (bi + (length (concat (firstn i l')) + k))) s1 1 s' (Exit (4 * N.of_nat (bi + (length (concat (firstn i l')) + S k')))).
 Proof.
   intros. destruct n as [|n0].
-    set (m4 := N.mul 4) in XP. inversion XP; subst. subst m4. apply N.mul_cancel_l, Nat2N.inj in H; [|discriminate]. subst j0.
+    set (m4 := N.mul 4) in XP. inversion XP; subst. subst m4. apply N.mul_cancel_l, Nat2N.inj, Nat.add_cancel_l in H; [|discriminate]. subst j0.
     destruct BB as [i0 BB]. exfalso. destruct (Nat.le_ge_cases i0 i).
 
       rewrite <- (firstn_skipn i0 l') in BB at 1. 
@@ -2381,20 +2384,24 @@ Proof.
   unfold rv_stmt in LU'. destruct (a mod 4)%N eqn:A4; [| inversion LU'; subst; inversion XS; subst; discriminate ].
   inversion LU'. subst sz. clear LU' H1.
   rewrite (N.div_mod' a 4), A4, N.add_0_r in XP1, LU, EX. rewrite (N.mul_comm _ 4) in EX.
-  specialize (IH n0 (Nat.lt_succ_diag_r _) s1 (N.to_nat (a/4)) q s' x1 (length (concat (firstn i l')) + S k')%nat).
-  rewrite Nat2N.inj_succ, N2Nat.id, N.mul_succ_r in IH. specialize (IH XP1 LU XS EX).
-  destruct IH as [IH|[IH|IH]].
+  specialize (IH n0 (Nat.lt_succ_diag_r _) s1 (N.to_nat (a/4)) q s' x1 (bi + (length (concat (firstn i l')) + S k'))%nat).
+  rewrite Nat2N.inj_succ, N2Nat.id, N.mul_succ_r, minus_plus in IH. specialize (IH XP1 LU XS EX).
+  destruct IH as [HI [IH|[IH|[IH|IH]]]].
 
     rewrite indexmap_length, Nat.min_l in IH by (apply Nat.lt_le_incl, nth_error_Some; rewrite BLK; discriminate).
     assert (H:=BLK). rewrite nth_skipn in H. unfold hd_error in H. destruct (skipn i l') as [|b' t]. discriminate. apply invSome in H. subst b'.
     unfold indexmap' in IH at 2. rewrite (proj2 (Nat.ltb_lt _ _) BND), Nat.add_0_r in IH.
-    exists n0, s1, (N.to_nat (a/4) - length (concat (firstn i l')))%nat.
-    rewrite le_plus_minus_r by (rewrite <- IH; apply firstn_indexmap_above).
+    exists n0, s1, (N.to_nat (a/4) - (bi + length (concat (firstn i l'))))%nat.
+    rewrite Nat.add_assoc, le_plus_minus_r by (rewrite <- IH; etransitivity;
+    [ apply plus_le_compat_l, firstn_indexmap_above | rewrite le_plus_minus_r by exact HI; reflexivity ]).
     rewrite N2Nat.id. repeat split.
 
-      apply le_S_gt. rewrite <- Nat.sub_succ_l by (rewrite <- IH; apply firstn_indexmap_above).
-      apply Nat.le_sub_le_add_l, lt_le_S. rewrite <- app_length, concat_last, firstn_app_nth by exact BLK.
-      rewrite <- IH. apply firstn_indexmap_below, Nat.nle_gt. intro H. rewrite (proj2 (nth_error_None _ _)) in BLK. discriminate.
+      apply le_S_gt. rewrite <- Nat.sub_succ_l by (rewrite <- IH; etransitivity;
+      [ apply plus_le_compat_l, firstn_indexmap_above | rewrite le_plus_minus_r by exact HI; reflexivity ]).
+      apply Nat.le_sub_le_add_l, lt_le_S. rewrite <- Nat.add_assoc, <- app_length, concat_last, firstn_app_nth by exact BLK.
+      rewrite <- IH. eapply Nat.le_lt_trans; [| apply Nat.add_lt_mono_l, firstn_indexmap_below].
+        rewrite le_plus_minus_r by exact HI. reflexivity.
+      apply Nat.nle_gt. intro H. rewrite (proj2 (nth_error_None _ _)) in BLK. discriminate.
       rewrite <- (app_nil_r l'), indexmap_app2, Nat.add_0_r in IH by apply H. rewrite IH. reflexivity.
 
       exact XP1.
@@ -2403,9 +2410,11 @@ Proof.
 
     eapply boundary_offset_iszero in IH. discriminate. exact BLK. exact BND.
 
+    contradict IH. apply le_not_lt, Nat.le_add_r.
+
     contradict IH. apply lt_not_le. rewrite <- (firstn_skipn i l') at 2. rewrite concat_app, app_length.
     apply Nat.add_lt_mono_l. rewrite nth_skipn in BLK. destruct (skipn i l'). discriminate.
-    apply invSome in BLK. rewrite BLK, concat_cons, app_length. apply Nat.lt_lt_add_r, BND.
+    apply invSome in BLK. rewrite BLK, concat_cons, app_length. apply Nat.add_lt_mono_l, Nat.lt_lt_add_r, BND.
 Qed.
 
 Inductive rv_trace h a0 s0: list (addr * store) -> addr -> store -> Prop :=
@@ -2427,25 +2436,25 @@ Proof.
     simpl. destruct a. inversion TR1; subst. eapply RVT_Step; try eassumption. eapply IHt1; eassumption.
 Qed.
 
-Definition inblock (l': list (list Z)) i (p : addr * store) :=
-  (N.of_nat (length (concat (firstn i l'))) < fst p < N.of_nat (length (concat (firstn (S i) l'))))%N.
+Definition inblock bi (l': list (list Z)) i (p : addr * store) :=
+  (N.of_nat (bi + length (concat (firstn i l'))) < fst p < N.of_nat (bi + length (concat (firstn (S i) l'))))%N.
 
 Lemma exec_start_block:
-  forall l' h j0 s0 n i b k' s'
-    (IH: execution_IH l' h j0 s0 n)
+  forall l' h bi j0 s0 n i b k' s'
+    (IH: execution_IH l' h bi j0 s0 n)
     (BLK : nth_error l' i = Some b)
     (BB: blockboundary l' j0)
-    (XP: exec_prog h rv_prog (4 * N.of_nat j0) s0 n s' (Exit (4 * N.of_nat (length (concat (firstn i l')) + k'))))
+    (XP: exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n s' (Exit (4 * N.of_nat (bi + (length (concat (firstn i l')) + k')))))
     (BND: (k' < length b)%nat),
   exists s1 t,
-    exec_prog h rv_prog (4 * N.of_nat j0) s0 (n - length t) s1 (Exit (4 * N.of_nat (length (concat (firstn i l'))))) /\
-    rv_trace h (N.of_nat (length (concat (firstn i l')))) s1 t (N.of_nat (length (concat (firstn i l')) + k')) s' /\
-    Forall (inblock l' i) t.
+    exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 (n - length t) s1 (Exit (4 * N.of_nat (bi + length (concat (firstn i l'))))) /\
+    rv_trace h (N.of_nat (bi + length (concat (firstn i l')))) s1 t (N.of_nat (bi + (length (concat (firstn i l')) + k'))) s' /\
+    Forall (inblock bi l' i) t.
 Proof.
   set (m4 := N.mul 4). intros. revert n k' s' XP BND IH. induction n; intros.
 
     exists s0, nil.
-    inversion XP; subst; subst m4. apply N.mul_cancel_l in H; [|discriminate]. apply Nat2N.inj in H. subst j0.
+    inversion XP; subst; subst m4. apply N.mul_cancel_l in H; [|discriminate]. apply Nat2N.inj, Nat.add_cancel_l in H. subst j0.
     replace k' with O.
       rewrite Nat.add_0_r. repeat split. apply XDone. apply RVT_End. apply Forall_nil.
       symmetry. eapply boundary_offset_iszero; eassumption.
@@ -2467,9 +2476,9 @@ Proof.
             rewrite app_length, length_cons, Nat.add_1_r, Nat.sub_succ. exact XP1'.
             eapply trace_append. exact RVT. eapply RVT_Step.
               exact LU. exact XS. rewrite N.mul_succ_r. exact EX. apply RVT_End.
-            apply Forall_app. exact FA. apply Forall_cons; [|apply Forall_nil]. unfold fst. split.
-              apply Nat2N_lt, Nat.lt_add_pos_r, Nat.lt_0_succ.
-              rewrite firstn_last, BLK, concat_app, concat_cons, app_nil_r, app_length. apply Nat2N_lt, Nat.add_lt_mono_l, BND.
+            apply Forall_app. exact FA. apply Forall_cons; [|apply Forall_nil]. split.
+              apply Nat2N_lt, Nat.add_lt_mono_l, Nat.lt_add_pos_r, Nat.lt_0_succ.
+              rewrite firstn_last, BLK, concat_app, concat_cons, app_nil_r, app_length. apply Nat2N_lt, Nat.add_lt_mono_l, Nat.add_lt_mono_l, BND.
 Qed.
 
 Lemma notLui0_imp_not55:
@@ -2578,24 +2587,24 @@ Proof.
   rewrite concat_cons, nth_error_app1. assumption. apply nth_error_Some. rewrite H0. discriminate.
 Qed.
 
-Lemma step_in_block {l' h j0 s0 n1 s1 i t s' k' b ie}:
+Lemma step_in_block {l' h bi j0 s0 n1 s1 i t s' k' b ie}:
   forall k1
-    (CODE: codebytes l' h j0 s0)
-    (XP: exec_prog h rv_prog (4 * N.of_nat j0) s0 n1 s1 (Exit (4 * N.of_nat (length (concat (firstn i l')) + k1))))
-    (TR: rv_trace h (N.of_nat (length (concat (firstn i l')) + k1)) s1 t (N.of_nat (length (concat (firstn i l')) + k')) s')
+    (CODE: codebytes l' h bi j0 s0)
+    (XP: exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n1 s1 (Exit (4 * N.of_nat (bi + (length (concat (firstn i l')) + k1)))))
+    (TR: rv_trace h (N.of_nat (bi + (length (concat (firstn i l')) + k1))) s1 t (N.of_nat (bi + (length (concat (firstn i l')) + k'))) s')
     (BLK: nth_error l' i = Some b)
     (IE: nth_error b k1 = Some ie)
     (END: (k' - k1 <> 0)%nat),
   exists s2 x a' t2,
-    exec_stmt h s1 (rv2il (4 * N.of_nat (length (concat (firstn i l')) + k1)) (rv_decode (Z.to_N ie))) s2 x /\
-    exitof (4 * N.of_nat (length (concat (firstn i l')) + S k1)) x = Exit (4 * a') /\
+    exec_stmt h s1 (rv2il (4 * N.of_nat (bi + (length (concat (firstn i l')) + k1))) (rv_decode (Z.to_N ie))) s2 x /\
+    exitof (4 * N.of_nat (bi + (length (concat (firstn i l')) + S k1))) x = Exit (4 * a') /\
     t = (a',s2)::t2 /\
-    exec_prog h rv_prog (4 * N.of_nat j0) s0 (S n1) s2 (Exit (4 * a')) /\
-    rv_trace h a' s2 t2 (N.of_nat (length (concat (firstn i l')) + k')) s'.
+    exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 (S n1) s2 (Exit (4 * a')) /\
+    rv_trace h a' s2 t2 (N.of_nat (bi + (length (concat (firstn i l')) + k'))) s'.
 Proof.
   set (m4 := N.mul 4). intros.
   destruct t. contradict END.
-    inversion TR. apply Nat2N.inj, Nat.add_cancel_l in H. subst k'. apply Nat.sub_diag.
+    inversion TR. apply Nat2N.inj, Nat.add_cancel_l, Nat.add_cancel_l in H. subst k'. apply Nat.sub_diag.
   specialize (CODE s1).
   destruct p. inversion TR; clear TR; subst.
   assert (LU1:=LU). unfold rv_prog in LU1. destruct (s1 V_MEM32); [|destruct (s1 A_EXEC); [|destruct (m0 _)]]; try discriminate.
@@ -2604,25 +2613,25 @@ Proof.
   unfold rv_stmt in LU1. rewrite CODE in LU1. rewrite N.mul_comm, N.mod_mul in LU1 by discriminate.
   inversion LU1; clear LU1; subst. subst m4. eexists _, _, _, _. repeat split.
     rewrite N.mul_comm. exact XS.
-    rewrite Nat.add_succ_r, Nat2N.inj_succ. exact EX.
+    rewrite !Nat.add_succ_r, Nat2N.inj_succ. exact EX.
     eapply exec_prog_append in XP; [| exact LU | exact XS ]. unfold exitof in EX. rewrite <- N.mul_succ_r, EX in XP. exact XP.
     exact TR0.
 Qed.
 
-Corollary step_after_tag {l' h j0 s0 n1 s1 i t s' k' d b ie}:
+Corollary step_after_tag {l' h bi j0 s0 n1 s1 i t s' k' d b ie}:
   forall k1
-    (CODE: codebytes l' h j0 s0)
-    (XP: exec_prog h rv_prog (4 * N.of_nat j0) s0 n1 s1 (Exit (4 * N.of_nat (length (concat (firstn i l')) + (length (newtag d) + k1)))))
-    (TR: rv_trace h (N.of_nat (length (concat (firstn i l')) + (length (newtag d) + k1))) s1 t (N.of_nat (length (concat (firstn i l')) + (length (newtag d) + k'))) s')
+    (CODE: codebytes l' h bi j0 s0)
+    (XP: exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n1 s1 (Exit (4 * N.of_nat (bi + (length (concat (firstn i l')) + (length (newtag d) + k1))))))
+    (TR: rv_trace h (N.of_nat (bi + (length (concat (firstn i l')) + (length (newtag d) + k1)))) s1 t (N.of_nat (bi + (length (concat (firstn i l')) + (length (newtag d) + k')))) s')
     (BLK: nth_error l' i = Some (newtag d ++ b))
     (IE: nth_error b k1 = Some ie)
     (END: (k' - k1 <> 0)%nat),
   exists s2 x a' t2,
-    exec_stmt h s1 (rv2il (4 * N.of_nat (length (concat (firstn i l')) + (length (newtag d) + k1))) (rv_decode (Z.to_N ie))) s2 x /\
-    exitof (4 * N.of_nat (length (concat (firstn i l')) + (length (newtag d) + S k1))) x = Exit (4 * a') /\
+    exec_stmt h s1 (rv2il (4 * N.of_nat (bi + (length (concat (firstn i l')) + (length (newtag d) + k1)))) (rv_decode (Z.to_N ie))) s2 x /\
+    exitof (4 * N.of_nat (bi + (length (concat (firstn i l')) + (length (newtag d) + S k1)))) x = Exit (4 * a') /\
     t = (a',s2)::t2 /\
-    exec_prog h rv_prog (4 * N.of_nat j0) s0 (S n1) s2 (Exit (4 * a')) /\
-    rv_trace h a' s2 t2 (N.of_nat (length (concat (firstn i l')) + (length (newtag d) + k'))) s'.
+    exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 (S n1) s2 (Exit (4 * a')) /\
+    rv_trace h a' s2 t2 (N.of_nat (bi + (length (concat (firstn i l')) + (length (newtag d) + k')))) s'.
 Proof.
   intros. rewrite Nat.add_succ_r. eapply step_in_block; try eassumption.
     rewrite nth_error_app2, minus_plus by apply Nat.le_add_r. exact IE.
@@ -2662,10 +2671,10 @@ Proof.
 Qed.
 
 Lemma newijump_indirect_exit:
-  forall l l' i iid oid sd z sb b ie h j0 s0 n s s' x' j'
-    (IH: execution_IH l' h j0 s0 n)
-    (CODE: codebytes l' h j0 s0)
-    (SIZ: (N.of_nat (length (concat l')) < 2^30)%N)
+  forall l l' i iid oid sd z sb b ie h bi j0 s0 n s s' x' j'
+    (IH: execution_IH l' h bi j0 s0 n)
+    (CODE: codebytes l' h bi j0 s0)
+    (SIZ: (N.of_nat (bi + length (concat l')) < 2^30)%N)
     (NC: newinstrs nil l = Some l')
     (DAT: nth_error l i = Some (Data iid oid sd z sb))
     (OP0: 0 <= z) (OP103: z #& 127 = 103)
@@ -2673,12 +2682,13 @@ Lemma newijump_indirect_exit:
     (NIJ: newijump (rev (firstn i l)) (Data iid oid sd z sb) (skipn (S i) l) = Some b)
     (IE: nth_error b (Nat.pred (length b)) = Some ie)
     (BB: blockboundary l' j0)
-    (XP: exec_prog h rv_prog (4 * N.of_nat j0) s0 n s (Exit (4 * N.of_nat (Nat.pred (length (concat (firstn (S i) l')))))))
-    (XS': exec_stmt h s (rv2il (4 * N.of_nat (Nat.pred (length (concat (firstn (S i) l'))))) (rv_decode (Z.to_N ie))) s' x')
-    (EX': exitof (4 * N.of_nat (length (concat (firstn (S i) l')))) x' = Exit (4 * N.of_nat j')),
-  match nth_error l (indexmap' l' j') with
-  | Some (Data (Some iid') _ _ _ _) => blockboundary l' j' /\ eqm (2^20) oid iid'
-  | None => (length (concat l') <= j')%nat
+    (XP: exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n s (Exit (4 * N.of_nat (bi + Nat.pred (length (concat (firstn (S i) l')))))))
+    (XS': exec_stmt h s (rv2il (4 * N.of_nat (bi + Nat.pred (length (concat (firstn (S i) l'))))) (rv_decode (Z.to_N ie))) s' x')
+    (EX': exitof (4 * N.of_nat (bi + length (concat (firstn (S i) l')))) x' = Exit (4 * N.of_nat j'))
+    (HI: (bi <= j')%nat),
+  match nth_error l (indexmap' l' (j'-bi)) with
+  | Some (Data (Some iid') _ _ _ _) => blockboundary l' (j'-bi) /\ eqm (2^20) oid iid'
+  | None => (bi + length (concat l') <= j')%nat
   | _ => False
   end.
 Proof.
@@ -2695,15 +2705,17 @@ Proof.
   set (n1 := (n - length t)%nat) in XP. clearbody n1. clear n IH.
   remember (length t) as tlen eqn:TLEN. revert t n1 s1 s s' x' j' TLEN XP TR INB XS' EX'. pattern tlen. apply strong_induction. intros. clear tlen TLEN. move IH at top.
 *)
-  destruct (nth_error l (indexmap' l' j')) as [d'|] eqn:DAT'; [| erewrite <- (firstn_all2 l');
-  [ apply firstn_indexmap_above
-  | rewrite (newinstrs_length _ _ _ NC); apply nth_error_None, DAT' ] ].
+  destruct (nth_error l (indexmap' l' (j'-bi))) as [d'|] eqn:DAT';
+  [| erewrite <- (firstn_all2 l') by (rewrite (newinstrs_length _ _ _ NC); apply nth_error_None, DAT');
+     etransitivity;
+     [ apply Nat.add_le_mono_l, firstn_indexmap_above
+     | rewrite (le_plus_minus_r _ _ HI); reflexivity ] ].
 
   (* Execute the tag, if one exists. *)
   assert (H: exists n1 t1,
-      exec_prog h rv_prog (4 * N.of_nat j0) s0 n1 s1 (Exit (4 * N.of_nat (ilen + taglen))) /\
-      rv_trace h (N.of_nat (ilen + taglen)) s1 t1 (N.of_nat (ilen + (taglen + Nat.pred (length b)))) s /\
-      Forall (inblock l' i) t1).
+      exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n1 s1 (Exit (4 * N.of_nat (bi + (ilen + taglen)))) /\
+      rv_trace h (N.of_nat (bi + (ilen + taglen))) s1 t1 (N.of_nat (bi + (ilen + (taglen + Nat.pred (length b))))) s /\
+      Forall (inblock bi l' i) t1).
   destruct iid as [iid|].
     rewrite <- (Nat.add_0_r ilen) in XP, TR at 1.
     destruct (step_in_block 0 CODE XP TR BLK (eq_refl _)) as [s2 [x [a [t' [XS [EX [TL [XP' TR']]]]]]]].
@@ -2736,9 +2748,9 @@ Proof.
   simpl in IE. simpl Nat.pred in TR. rewrite <- (Nat.add_0_r taglen) in XP, TR at 1.
 
   assert (H: exists m2 a' s2 n2 t2,
-      exec_prog h rv_prog (4 * N.of_nat j0) s0 n2 s2 (Exit (4 * N.of_nat (ilen + (taglen + 8)))) /\
-      rv_trace h (N.of_nat (ilen + (taglen + 8))) s2 t2 (N.of_nat (ilen + (taglen + (length b + 9)))) s /\
-      Forall (inblock l' i) t2 /\
+      exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n2 s2 (Exit (4 * N.of_nat (bi + (ilen + (taglen + 8))))) /\
+      rv_trace h (N.of_nat (bi + (ilen + (taglen + 8)))) s2 t2 (N.of_nat (bi + (ilen + (taglen + (length b + 9))))) s /\
+      Forall (inblock bi l' i) t2 /\
       s2 V_MEM32 = Ⓜm2 /\
       s2 v3 = Ⓓa' /\ (a' < 2^32)%N /\ (a' mod 4 = 0)%N /\
       s2 v1 = Ⓓm2 Ⓓ[a']).
@@ -2770,7 +2782,7 @@ Proof.
     inversion E1; clear E1; subst. rename H into MEM1. erewrite <- (update_frame (s1[v3:=_]) v1) in MEM1;
     [ eassert (CODE1:=CODE _ _ _ _ _ (N.to_nat (m Ⓓ[a] / 4)) XP MEM1)
     | apply rv_varid_nonmem ].
-    rewrite N2Nat.id in CODE1. rewrite !update_frame in MEM1 by apply rv_varid_nonmem.
+    rewrite Nat2N.inj_add, N2Nat.id in CODE1. rewrite !update_frame in MEM1 by apply rv_varid_nonmem.
     inversion E2; clear E2; subst.
     inversion E0; clear E0; subst. rewrite N.add_0_r in CODE1, XP, TR.
     inversion E1; clear E1; subst. rewrite update_updated in H. inversion H; clear H; subst n1.
@@ -2793,9 +2805,11 @@ Proof.
     change 16 with (Z.of_N (4*N.of_nat 4)) in XS. rewrite <- N2Z.inj_add, N2Z.id, <- N.mul_add_distr_l in XS.
     change (2^32)%N with (4*2^30)%N in XS. rewrite N.mul_mod_distr_l in XS by discriminate.
     rewrite <- Nat2N.inj_add, <- Nat.add_assoc in XS. simpl (3+4)%nat in XS.
+
     rewrite N.mod_small in XS by
     ( eapply N.le_lt_trans; [apply Nat2N_le | exact SIZ];
-      rewrite <- (firstn_skipn i l') at 2; rewrite concat_app, app_length; apply Nat.add_le_mono_l;
+      apply Nat.add_le_mono_l;
+      rewrite <- (firstn_skipn i l') at 2; rewrite concat_app, app_length, <- Nat.add_assoc; apply Nat.add_le_mono_l;
       rewrite nth_skipn in BLK; destruct skipn; [discriminate|]; apply invSome in BLK; rewrite BLK;
       rewrite concat_cons, !app_length, <- !Nat.add_assoc;
       apply Nat.add_le_mono_l, le_plus_trans; repeat apply le_n_S; apply Nat.le_0_l ).
@@ -2853,8 +2867,8 @@ Proof.
       clear p E. inversion XS0; clear XS0; subst.
       inversion E; clear E; subst. apply invExit in EX. subst m4. apply N.mul_cancel_l in EX; [|discriminate]. subst a.
       eexists _, _, _, _. repeat split.
-        rewrite <- Nat.add_assoc in XP. exact XP.
-        rewrite <- (Nat.add_1_r (length b)), !plus_n_Sm, <- Nat.add_assoc in TR. exact TR.
+        rewrite <- !Nat.add_assoc in XP. exact XP.
+        rewrite <- (Nat.add_1_r (length b)), !plus_n_Sm, <- !Nat.add_assoc in TR. exact TR.
         repeat apply Forall_tail in INB. exact INB.
         rewrite !update_frame by apply rv_varid_nonmem. apply MEM1.
         rewrite 2!update_frame, update_updated by assumption. reflexivity.
@@ -2885,9 +2899,9 @@ Proof.
   inversion E1; clear E1; subst. rewrite update_updated in H. inversion H; clear H; subst.
 
   assert (H: exists n3 s3 t3,
-      exec_prog h rv_prog (4 * N.of_nat j0) s0 n3 s3 (Exit (4 * N.of_nat (ilen + (taglen + (length b + 9))))) /\
-      rv_trace h (N.of_nat (ilen + (taglen + (length b + 9)))) s3 t3 (N.of_nat (ilen + (taglen + (length b + 9)))) s /\
-      Forall (inblock l' i) t3 /\ m2 Ⓓ[a'] = (Z.to_N (oid mod pow20) << 12) .| 55 /\
+      exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n3 s3 (Exit (4 * N.of_nat (bi + (ilen + (taglen + (length b + 9)))))) /\
+      rv_trace h (N.of_nat (bi + (ilen + (taglen + (length b + 9))))) s3 t3 (N.of_nat (bi + (ilen + (taglen + (length b + 9))))) s /\
+      Forall (inblock bi l' i) t3 /\ m2 Ⓓ[a'] = (Z.to_N (oid mod pow20) << 12) .| 55 /\
       s3 V_MEM32 = Ⓜm2 /\ s3 v3 = Ⓓa' /\ s3 v1 = Ⓓm2 Ⓓ[a'] /\ s3 v2 = Ⓓ ((Z.to_N (oid mod pow20) << 12) .| 55) /\
       rv_decode (Z.to_N ie) = R5_Jalr (xbits (Z.to_N z) 7 12) (N.pos tmp3) 0).
 
@@ -2901,7 +2915,7 @@ Proof.
       [ discriminate 1 | clear XP TR; subst t; rename XP' into XP; rename TR' into TR; rename t' into t; fold taglen in XS, EX, TR ].
       rewrite ASM10 in XS. unfold rv2il, r5branch, r5var in XS. fold v1 v2 in XS.
       rewrite N2Z.inj_mul, <- Z.mul_add_distr_l, Z2N_inj_mul, nat_N_Z in XS by (left; discriminate 1).
-      rewrite Nat2Z.inj_add, <- (sumsizes_newinstrs _ _ _ NC) in XS.
+      rewrite 2!Nat2Z.inj_add, <- (sumsizes_newinstrs _ _ _ NC) in XS.
       assert (IL: (i < length l)%nat). rewrite <- (newinstrs_length _ _ _ NC). apply lt_le_S, nth_error_Some. rewrite BLK. discriminate 1.
       rewrite skipn_length, minus_Sn_m, Nat.sub_succ in XS by exact IL.
       rewrite newoffset_index in XS.
@@ -2909,8 +2923,8 @@ Proof.
       rewrite rev_involutive, firstn_cons_skipn, firstn_all in XS by exact DAT.
       rewrite sumsizes_cons, sumsizes_rev, (newsize_length _ _ _ _ _ NC DAT BLK), app_length, !Nat2Z.inj_add in XS.
       rewrite <- Z.add_sub_assoc, (Z.add_comm _ 12), !Z.sub_add_distr, (Z.sub_opp_l 10), <- !Z.add_opp_r, (Z.add_comm (-_+_)), <- !Z.opp_add_distr in XS.
-      rewrite Z.add_opp_r, Zplus_minus in XS.
-      rewrite (sumsizes_newinstrs_all _ _ _ NC), Nat2Z2N in XS.
+      rewrite <- (Z.add_assoc (Z.of_nat bi)), Z.add_opp_r, Zplus_minus in XS.
+      rewrite (sumsizes_newinstrs_all _ _ _ NC), <- Nat2Z.inj_add, Nat2Z2N in XS.
       change (2^32)%N with (4*2^30)%N in XS. rewrite N.mul_mod_distr_l in XS by discriminate 1. rewrite N.mod_small in XS by exact SIZ.
       fold m4 in XS. inversion XS; clear XS; subst.
       inversion E; clear E; subst.
@@ -2935,15 +2949,15 @@ Proof.
         inversion XS0; clear XS0; subst. apply invExit in EX. subst a0.
         fold m4 in E. inversion E; clear E; subst. subst m4. apply N.mul_cancel_l in H; [|discriminate]. subst a.
         do 2 apply Forall_tail in INB. apply Forall_inv, proj2 in INB. contradict INB. apply N.le_ngt, Nat2N_le.
-        rewrite <- (firstn_skipn (S i) l') at 2. rewrite concat_app, app_length. apply Nat.le_add_r.
+        rewrite <- (firstn_skipn (S i) l') at 2. rewrite concat_app, app_length. apply Nat.add_le_mono_l, Nat.le_add_r.
 
       (* R5_Beq tmp1, tmp2, +8 *)
       destruct (step_after_tag 10 CODE XP TR BLK (eq_refl _)) as [s2 [x [a [t' [XS [EX [TL [XP' TR']]]]]]]];
       [ discriminate 1 | clear XP TR; subst t; rename XP' into XP; rename TR' into TR; rename t' into t; fold taglen in XS, EX, TR ].
       rewrite ASM10 in XS. unfold rv2il, r5branch, r5var in XS. fold v1 v2 in XS.
-      rewrite Z2N.inj_add, N2Z.id, <- (N.mul_add_distr_l 4 _ 2), <- (Nat2N.inj_add _ 2), Nat.add_assoc, <- Nat.add_assoc, N.mod_small in XS; [
+      rewrite Z2N.inj_add, N2Z.id, <- (N.mul_add_distr_l 4 _ 2), <- (Nat2N.inj_add _ 2), <- !Nat.add_assoc, (Nat.add_assoc _ taglen), N.mod_small in XS; [
       | change (2^32)%N with (4*2^30)%N; apply N.mul_lt_mono_pos_l; [reflexivity|]; eapply N.le_lt_trans; [|exact SIZ];
-        rewrite <- (firstn_cons_skipn _ _ l' i BLK) at 2; rewrite concat_app, app_length, <- Nat.add_assoc; apply Nat2N_le, Nat.add_le_mono_l;
+        rewrite <- (firstn_cons_skipn _ _ l' i BLK) at 2; rewrite concat_app, app_length, <- Nat.add_assoc; apply Nat2N_le, Nat.add_le_mono_l, Nat.add_le_mono_l;
         rewrite concat_cons, !app_length, <- !Nat.add_assoc; apply Nat.add_le_mono_l, le_plus_trans, leb_complete; reflexivity
       | Z_nonneg..].
       fold m4 in XS. inversion XS; clear XS; subst.
@@ -2977,15 +2991,16 @@ Proof.
         erewrite sumsizes_cons, sumsizes_rev, sumsizes_newinstrs in XS by exact NC. erewrite newsize_length in XS by eassumption.
         rewrite app_length, (Nat.add_comm _ 13), (Nat2Z.inj_add 13), <- Z.add_sub_assoc, <- Z.add_assoc, Z.sub_add_distr in XS.
         rewrite Z.add_sub_assoc, (Z.add_opp_r _ 11), <- Z.sub_add_distr, <- Nat2Z.inj_add in XS.
+        rewrite (Nat2Z.inj_add bi), <- Z.add_assoc in XS.
         rewrite <- (Nat2Z.inj_add 11), (Nat.add_assoc 11), (Nat.add_comm 11 _), (Nat.add_comm (_+11)), Zplus_minus in XS.
         rewrite Z2N_inj_mul, simpl_jal_dest in XS by (left; discriminate 1).
-        rewrite (sumsizes_newinstrs_all _ _ _ NC), Nat2Z2N, N.mod_small in XS by exact SIZ.
+        rewrite (sumsizes_newinstrs_all _ _ _ NC), <- Nat2Z.inj_add, Nat2Z2N, N.mod_small in XS by exact SIZ.
         inversion XS; [ solve [ inversion XS0 ] | clear XS; subst ].
           inversion XS1; clear XS1; subst.
           inversion XS0; clear XS0; subst. inversion E; clear E; subst.
         rewrite (N.mul_comm _ 4) in EX. apply invExit, N.mul_cancel_l in EX; [|discriminate 1]. subst a.
         do 3 apply Forall_tail in INB. apply Forall_inv, proj2 in INB. contradict INB. apply N.le_ngt.
-        rewrite <- (firstn_skipn (S i) l') at 2. rewrite concat_app, app_length. apply Nat2N_le, Nat.le_add_r.
+        rewrite <- (firstn_skipn (S i) l') at 2. rewrite concat_app, app_length. apply Nat2N_le, Nat.add_le_mono_l, Nat.le_add_r.
 
   clear s1 MEM1 S1V3 S1V1 XP TR INB. destruct H as [n' [s3 [t3 [XP [TR [INB [CMP [MEM2 [S3V3 [S3V1 [S3V2 ASM]]]]]]]]]]].
 
@@ -3003,18 +3018,17 @@ Proof.
     inversion XS0; clear XS0; subst; [ apply r5mov_fallthru in XS; discriminate XS |].
     assert (TMP:=XS1). apply r5mov_notmp in TMP. rewrite update_updated in TMP.
     apply r5mov_nomem in XS1. rewrite !update_frame in XS1 by (discriminate 1 + apply rv_varid_nonmem). rename XS1 into MEM'.
-    inversion XS2; clear XS2; subst; [| solve [ inversion XS1 ] ].
-    inversion XS; clear XS; subst e s2 x. inversion E; clear E; subst. rewrite TMP in H. inversion H; clear H; subst.
+    inversion XS2; clear XS2; subst e s2 x'. inversion E; clear E; subst. rewrite TMP in H. inversion H; clear H; subst.
     apply invExit in EX'. change 4294967294%N with ((N.ones 30 << 2) .| 2) in EX'.
     rewrite N.mod_small in EX', TMP by exact A'LO.
     rewrite (N.div_mod' a' 4), A'4, N.add_0_r, N.mul_comm, <- (N.shiftl_mul_pow2 _ 2), N.land_lor_distr_r, (N_shiftl_land_0 _ _ 2), N.lor_0_r in EX' by reflexivity.
     rewrite <- N.shiftl_land, N.shiftl_mul_pow2, N.mul_comm, N.land_ones, N.mod_small in EX' by (apply N.div_lt_upper_bound; [ discriminate 1 | exact A'LO ]).
     apply N.mul_cancel_l, (f_equal N.to_nat) in EX'; [|discriminate 1]. rewrite Nat2N.id in EX'. subst j'.
 
-    specialize (CODE _ _ _ _ _ (N.to_nat (a'/4)) XP MEM2).
-    assert (H: (N.to_nat (a'/4) < length (concat l'))%nat).
+    specialize (CODE _ _ _ _ _ (N.to_nat (a'/4) - bi)%nat XP MEM2). rewrite le_plus_minus_r in CODE by exact HI.
+    assert (H: (N.to_nat (a'/4) - bi < length (concat l'))%nat).
       apply indexmap_inlist. rewrite (newinstrs_length _ _ _ NC). apply nth_error_Some. rewrite DAT'. discriminate 1.
-    apply nth_error_Some in H. destruct (nth_error (concat l') (N.to_nat (a'/4))) as [ie'|] eqn:IE'; [clear H|contradiction].
+    apply nth_error_Some in H. destruct (nth_error (concat l') (N.to_nat (a'/4) - bi)%nat) as [ie'|] eqn:IE'; [clear H|contradiction].
     rewrite N2Nat.id, <- (N.add_0_r (4*_)), <- A'4, <- N.div_mod' in CODE. rewrite CODE in CMP.
     assert (IE'NN: 0 <= ie').
       eapply Forall_forall; [|eapply nth_error_In, IE'].
@@ -3046,19 +3060,22 @@ Proof.
     inversion XS0; clear XS0; subst; [ apply r5mov_fallthru in XS; discriminate XS |].
     assert (TMP2:=XS1). apply r5mov_notmp in TMP2. rewrite update_updated in TMP2.
     apply r5mov_nomem in XS1. rewrite update_frame, MEM2 in XS1 by (discriminate 1 + apply rv_varid_nonmem). rename XS1 into MEM3.
-    inversion XS2; clear XS2; subst; [| solve [ inversion XS1 ] ].
-    inversion XS; clear XS; subst e s2 x0. inversion E; clear E; subst. rewrite TMP2 in H. inversion H; clear H; subst.
+    inversion XS2; clear XS2; subst e s2 x. inversion E; clear E; subst. rewrite TMP2 in H. inversion H; clear H; subst.
     apply invExit in EX. change 4294967294%N with ((N.ones 30 << 2) .| 2) in EX.
     rewrite N.mod_small in EX by exact A'LO.
     rewrite (N.div_mod' a' 4), A'4, N.add_0_r, N.mul_comm, <- (N.shiftl_mul_pow2 _ 2), N.land_lor_distr_r, (N_shiftl_land_0 _ _ 2), N.lor_0_r in EX by reflexivity.
     rewrite <- N.shiftl_land, N.shiftl_mul_pow2, N.mul_comm, N.land_ones, N.mod_small in EX by (apply N.div_lt_upper_bound; [ discriminate 1 | exact A'LO ]).
     apply N.mul_cancel_l in EX; [|discriminate 1]. subst a1.
 
-    specialize (CODE _ _ _ _ _ (N.to_nat (a'/4)) XP MEM2). apply Forall_inv in INB.
-    assert (H: (N.to_nat (a'/4) < length (concat l'))%nat). eapply Nat.lt_le_trans.
-      apply Nat2N_lt. rewrite N2Nat.id. apply INB.
-      rewrite <- (firstn_skipn (S i) l') at 2. rewrite concat_app, app_length. apply Nat.le_add_r.
-    apply nth_error_Some in H. destruct (nth_error (concat l') (N.to_nat (a'/4))) as [ie'|] eqn:IE'; [clear H|contradiction].
+    apply Forall_inv in INB.
+    assert (HI': (bi <= N.to_nat (a'/4))%nat).
+      apply Nat2N_le. rewrite N2Nat.id. etransitivity. apply N.le_add_r. rewrite <- Nat2N.inj_add. apply N.lt_le_incl, INB.
+    specialize (CODE _ _ _ _ _ (N.to_nat (a'/4) - bi)%nat XP MEM2). rewrite le_plus_minus_r in CODE by exact HI'.
+    assert (H: (N.to_nat (a'/4) - bi < length (concat l'))%nat).
+      eapply Nat.add_lt_mono_l. rewrite le_plus_minus_r by exact HI'. eapply Nat.lt_le_trans.
+        apply Nat2N_lt. rewrite N2Nat.id. apply INB.
+        rewrite <- (firstn_skipn (S i) l') at 2. rewrite concat_app, app_length. apply Nat.add_le_mono_l, Nat.le_add_r.
+    apply nth_error_Some in H. destruct (nth_error (concat l') (N.to_nat (a'/4) - bi)%nat) as [ie'|] eqn:IE'; [clear H|contradiction].
     rewrite N2Nat.id, <- (N.add_0_r (4*_)), <- A'4, <- N.div_mod' in CODE. rewrite CODE in CMP.
     assert (IE'NN: 0 <= ie').
       eapply Forall_forall; [|eapply nth_error_In, IE'].
@@ -3072,11 +3089,11 @@ Proof.
     destruct INB as [INB1 INB2]. simpl fst in INB1, INB2.
     destruct (Nat.le_gt_cases i' i) as [H|H].
 
-      contradict INB1. apply N.le_ngt, N2Nat_le. rewrite BB', Nat2N.id.
+      contradict INB1. apply N.le_ngt, N2Nat_le. rewrite Nat2N.id. apply Nat.le_sub_le_add_l. rewrite BB'.
       rewrite <- (firstn_skipn i' l') at 2. rewrite firstn_app, firstn_firstn, min_r, concat_app, app_length by exact H.
       apply Nat.le_add_r.
 
-      contradict INB2. apply N.le_ngt, N2Nat_le. rewrite BB', Nat2N.id.
+      contradict INB2. apply N.le_ngt, N2Nat_le. rewrite Nat2N.id, (le_plus_minus _ _ HI'). apply Nat.add_le_mono_l. rewrite BB'.
       rewrite <- (firstn_skipn (S i) l') at 2. rewrite firstn_app, firstn_firstn, min_r, concat_app, app_length by exact H.
       apply Nat.le_add_r.
 Qed.
@@ -3090,33 +3107,39 @@ Proof.
   unfold safety. intros. unfold indexmap. rewrite NC.
   revert s j q s' x j' XP0 LU XS EX. pattern n. apply strong_induction. intros.
   clear n. rename n1 into n.
-  assert (IHe: execution_IH l' h j0 s0 n). intros n0 LT s1 j1 q1 s1' x1 j1' XP1 LU1 XS1 EX1.
-    destruct (IH n0 LT s1 j1 q1 s1' x1 j1' XP1 LU1 XS1 EX1) as [H1|[H2|H3]].
+  assert (IHe: execution_IH l' h bi j0 s0 n). intros n0 LT s1 j1 q1 s1' x1 j1' XP1 LU1 XS1 EX1. split.
+    apply Nat.nlt_ge. intro H1. contradict LU1.
+      unfold rv_prog. destruct (s1 V_MEM32); [discriminate|]. destruct (s1 A_EXEC) eqn:H2; [discriminate|].
+      rewrite (NXD _ _ _ _ _ j1 XP1 H2). discriminate 1. left. exact H1.
+    destruct (IH n0 LT s1 j1 q1 s1' x1 j1' XP1 LU1 XS1 EX1) as [H1|[H2|[H3|H4]]].
       left. exact H1.
       right. left. eapply proj1, H2.
-      right. right. exact H3.
-  clear IH. move IHe at top. fold (nonexecutable_data l' h j0 s0) in NXD.
+      right. right. left. exact H3.
+      do 3 right. exact H4.
+  clear IH. move IHe at top. fold (nonexecutable_data l' h bi j0 s0) in NXD.
 
   (* Infer that current code equals statically rewritten code. *)
-  assert (CODE: codebytes l' h j0 s0).
+  assert (CODE: codebytes l' h bi j0 s0).
     intros n0 s1 x1 m w i XP1 MEM1. destruct nth_error eqn:NTH; [|exact I]. etransitivity.
       eapply NWC; try eassumption. apply nth_error_Some. rewrite NTH. discriminate.
       apply CS. exact NTH.
   clear CS NWC. move CODE before NC.
   unfold rv_prog in LU. assert (CODE1 := CODE s n). assert (NXD1 := NXD n s).
-  destruct (s V_MEM32) as [|m mw]. discriminate. specialize (CODE1 _ m mw j XP0 (eq_refl _)).
+  destruct (s V_MEM32) as [|m mw]. discriminate. specialize (CODE1 _ m mw (j-bi)%nat XP0 (eq_refl _)).
   destruct (s A_EXEC) as [|e ew]. discriminate. specialize (NXD1 _ e ew j XP0 (eq_refl _)).
   destruct (e (4 * N.of_nat j)%N). discriminate.
   replace q with (rv_stmt m (4 * N.of_nat j)%N) in XS by (inversion LU; reflexivity). clear q LU.
-  destruct (Nat.le_gt_cases (length (concat l')) j) as [LE|LT]. apply NXD1 in LE. discriminate.
+  assert (JHI: (bi <= j)%nat). apply Nat.le_ngt. intro H. discriminate NXD1. left. exact H.
+  eassert (JLO: (j - bi < _)%nat).
+    eapply Nat.add_lt_mono_l. rewrite (le_plus_minus_r _ _ JHI). apply Nat.lt_nge. intro H. discriminate NXD1. right. exact H.
   unfold rv_stmt in XS. destruct (_ mod 4)%N; [| inversion XS; subst; discriminate ].
-  destruct nth_error as [ie'|] eqn:IE'; [| apply nth_error_Some in LT; rewrite IE' in LT; contradiction ].
-  rewrite CODE1 in XS. clear m mw e ew p CODE1 NXD1.
+  destruct nth_error as [ie'|] eqn:IE'; [| apply nth_error_Some in JLO; rewrite IE' in JLO; contradiction ].
+  rewrite (le_plus_minus_r _ _ JHI) in CODE1. rewrite CODE1 in XS. clear m mw e ew p CODE1 NXD1.
 
   (* Derive the metadata (before and after shrink-optimization) used in rewriting. *)
-  apply find_block in LT. unfold policytarget. set (i:=indexmap' l' j) in *.
-  destruct LT as [b0 [BLK BND]].
-  unfold newcode in NC. destruct (sumsizes _ <? _) eqn:SIZ; [|discriminate]. apply Z.ltb_lt in SIZ.
+  apply find_block in JLO. unfold policytarget. set (i:=indexmap' l' (j-bi)) in *.
+  destruct JLO as [b0 [BLK BND]].
+  unfold newcode in NC. destruct (sumsizes _ <? _) eqn:SIZ; [|discriminate]. apply Z.ltb_lt, Z.lt_add_lt_sub_l in SIZ.
   assert (NIS:=nth_newinstrs _ _ _ i NC). rewrite BLK in NIS.
   destruct (nth_error (shrink _ _) _) as [d'|] eqn:DAT'; [|discriminate].
   destruct (newinstr _ d' _) as [b|] eqn:NI; [|discriminate]. rewrite app_nil_r in NI.
@@ -3145,15 +3168,15 @@ Proof.
   destruct (skipn i l') as [|bb t] eqn:BLK0. discriminate.
   apply invSome in BLK'. subst bb.
   rewrite concat_cons, nth_error_app1 in IE' by (eapply Nat.add_lt_mono_l; rewrite <- le_plus_minus; apply BND).
-  destruct (Nat.lt_ge_cases j (length (concat (firstn i l')) + length (newtag (Data iid oid sd ie sb)))) as [TAG|TAG].
+  destruct (Nat.lt_ge_cases (j-bi) (length (concat (firstn i l')) + length (newtag (Data iid oid sd ie sb)))) as [TAG|TAG].
   rewrite nth_error_app1 in IE' by (eapply Nat.add_lt_mono_l; rewrite <- le_plus_minus by apply BND; exact TAG).
   eapply newtag_exit, proj2 in XS; [| exact IE' ]. subst x. apply invExit in EX. apply N.mul_cancel_l, Nat2N.inj in EX; [| discriminate ]. subst j'.
   left. eapply indexmap_same.
     exact BLK.
     apply BND.
-    apply Nat.le_succ_r.
+    apply Nat.sub_le_mono_r, Nat.le_succ_r.
     left. reflexivity.
-    rewrite app_length, Nat.add_assoc, <- Nat.add_1_r. apply Nat.add_lt_le_mono.
+    rewrite app_length, Nat.add_assoc, (Nat.sub_succ_l _ _ JHI), <- Nat.add_1_r. apply Nat.add_lt_le_mono.
       exact TAG.
       destruct b. contradict NI. apply newinstr_nonnil. apply le_n_S, Nat.le_0_l.
 
@@ -3168,11 +3191,12 @@ Proof.
   destruct (mem 1 sd) eqn:IN1; [|discriminate].
   apply invSome in NI. subst b.
   rewrite app_length, Nat.add_assoc in BND.
-  assert (IDX := Nat_squeeze j _ TAG (proj2 BND)). clear TAG.
+  assert (IDX := Nat_squeeze (j-bi) _ TAG (proj2 BND)). clear TAG.
   rewrite IDX in IE' at 1. rewrite <- Nat.sub_add_distr, Nat.sub_diag in IE'.
   apply invSome in IE'. subst ie'.
   inversion XS; clear XS; subst s' x.
-  apply invExit, N.mul_cancel_l, Nat2N.inj in EX; [|discriminate]. rewrite <- Nat.add_1_r in EX. subst j'.
+  apply invExit, N.mul_cancel_l, Nat2N.inj in EX; [|discriminate].
+  rewrite <- Nat.add_1_r in EX. subst j'. rewrite (Nat.add_sub_swap _ 1 _ JHI).
   split.
 
     change 1%nat with (length (16435::nil)).
@@ -3184,7 +3208,7 @@ Proof.
     rewrite nth_skipn in BLK. destruct (skipn i l'). discriminate. apply invSome in BLK. subst l0.
     rewrite concat_app. simpl. rewrite app_nil_r. reflexivity.
 
-    left. replace (indexmap' _ _) with (indexmap' l' j + 1)%nat.
+    left. replace (indexmap' _ _) with (indexmap' l' (j-bi) + 1)%nat.
       rewrite Nat2Z.inj_add, Z.add_simpl_l. apply mem_In, IN1.
     symmetry. rewrite IDX. rewrite <- Nat.add_assoc.
     change 1%nat with (length (16435::nil)) at 1. rewrite <- 2!app_length.
@@ -3221,10 +3245,11 @@ Proof.
       rewrite Nat.add_comm, <- Nat.add_assoc, <- app_length in FT2.
       apply Nat.le_lteq in FT2. destruct FT2 as [SAME|NXT].
 
-        left. eapply indexmap_same. exact BLK. apply BND. apply Nat.le_add_r. apply Nat.lt_add_lt_sub_l, SAME.
+        left. eapply indexmap_same. exact BLK. apply BND. apply Nat.sub_le_mono_r, Nat.le_add_r.
+        rewrite Nat.add_comm, <- (Nat.add_sub_assoc _ _ _ JHI). apply Nat.lt_add_lt_sub_r, SAME.
 
-        apply (Nat.add_cancel_l _ _ j) in NXT. rewrite <- le_plus_minus in NXT by apply Nat.lt_le_incl, BND.
-        rewrite NXT, <- app_length, concat_last, firstn_app_nth by exact BLK.
+        apply (Nat.add_cancel_l _ _ (j-bi)) in NXT. rewrite <- le_plus_minus in NXT by apply Nat.lt_le_incl, BND.
+        rewrite (Nat.add_sub_swap _ _ _ JHI), NXT, <- app_length, concat_last, firstn_app_nth by exact BLK.
         right. left. split; [|left].
 
           eexists. reflexivity.
@@ -3236,18 +3261,19 @@ Proof.
       apply N.mul_cancel_l in JMP; [|discriminate].
       rewrite nat_N_Z, <- Nat2Z.inj_add, Nat.add_sub_assoc in JMP by
       (apply Nat.le_sub_le_add_l; rewrite <- Nat.add_assoc, <- app_length; apply Nat.lt_le_incl, BND).
-      rewrite Nat.add_comm in JMP. rewrite <- Nat.add_sub_assoc in JMP by apply Nat.le_sub_l.
-      rewrite Nat_sub_sub_cancel in JMP by exact TAG.
-      rewrite Nat.add_comm, <- Nat.add_assoc, <- !app_length, concat_last, firstn_app_nth in JMP by exact BLK.
-      rewrite <- (sumsizes_newinstrs _ _ _ NC), N.mod_small in JMP by (
+      rewrite Nat.add_comm, <- Nat.sub_add_distr, <- Nat.add_sub_assoc in JMP by apply Nat.le_sub_l.
+      rewrite Nat_sub_sub_cancel in JMP by (rewrite (le_plus_minus _ _ JHI); apply Nat.add_le_mono_l, TAG).
+      rewrite Nat.add_comm, <- !Nat.add_assoc, <- !app_length, concat_last, firstn_app_nth in JMP by exact BLK.
+      rewrite Nat2Z.inj_add, <- (sumsizes_newinstrs _ _ _ NC), N.mod_small in JMP by (
         rewrite <- (N2Z.id (2^30)%N);
         (apply Z2N_lt; [reflexivity|]);
         (eapply Z.le_lt_trans; [apply Z.add_le_mono_l, newoffset_bounds|]);
-        rewrite Z.add_assoc, Z.sub_add, <- sumsizes_app, firstn_skipn; exact SIZ ).
+        rewrite Z.add_assoc, Z.sub_add, <- Z.add_assoc, <- sumsizes_app, firstn_skipn; exact SIZ ).
       rewrite newoffset_index, rev_involutive, firstn_cons_skipn, Z.add_sub_assoc, Z.sub_add_simpl_r_r, sumsizes_cons,
-              sumsizes_rev, (Z.add_comm (newsize _)), <- sumsizes_firstn_S, Z.add_simpl_l in JMP by exact DAT'.
-      rewrite (sumsizes_newinstrs _ _ _ NC), Nat2Z2N in JMP. apply Nat2N.inj in JMP.
-      right. left. subst j'. split; [|left].
+              sumsizes_rev, (Z.add_comm (newsize _)), <- sumsizes_firstn_S in JMP by exact DAT'.
+      rewrite <- Z.add_sub_assoc, <- Z.add_assoc, Zplus_minus in JMP.
+      rewrite (sumsizes_newinstrs _ _ _ NC), <- Nat2Z.inj_add, Nat2Z2N in JMP. apply Nat2N.inj in JMP.
+      right. left. subst j'. rewrite minus_plus. split; [|left].
 
         eexists. reflexivity.
 
@@ -3264,20 +3290,20 @@ Proof.
 
     rewrite <- Nat2N.inj_add, Nat.add_sub_assoc by
     (apply Nat.le_sub_le_add_l; rewrite <- Nat.add_assoc, <- app_length; apply Nat.lt_le_incl, BND).
-    rewrite Nat.add_comm, <- Nat.add_sub_assoc by apply Nat.le_sub_l.
-    rewrite Nat_sub_sub_cancel, Nat.add_comm, <- Nat.add_assoc by exact TAG.
-    apply N2Z.inj_lt. rewrite nat_N_Z, Nat2Z.inj_add, <- (sumsizes_newinstrs _ _ _ NC), <- NS.
+    rewrite Nat.add_comm, <- Nat.add_sub_assoc by (rewrite <- Nat.sub_add_distr; apply Nat.le_sub_l).
+    rewrite <- Nat.sub_add_distr, Nat_sub_sub_cancel, Nat.add_comm, <- !Nat.add_assoc by (rewrite (le_plus_minus _ _ JHI); apply Nat.add_le_mono_l, TAG).
+    apply N2Z.inj_lt. rewrite nat_N_Z, 2!Nat2Z.inj_add, <- (sumsizes_newinstrs _ _ _ NC), <- NS.
     rewrite <- sumsizes_firstn_S by exact DAT'.
-    eapply Z.le_lt_trans. apply sumsizes_firstn_le. exact SIZ.
+    eapply Z.le_lt_trans. apply Z.add_le_mono_l, sumsizes_firstn_le. exact SIZ.
 
   (* If the original code was an indirect jump... *)
   destruct (ie #& 127 =? 103) eqn:OP103. clear OP55 OP99. apply Z.eqb_eq in OP103.
-  set (k := (j - _ - _)%nat) in IE'.
-  assert (K: (k < length b)%nat). apply nth_error_Some. rewrite IE'. discriminate.
+  set (k := (j - bi - _ - _)%nat) in IE'.
+  assert (K: (k < length b)%nat). apply nth_error_Some. rewrite IE'. discriminate 1.
   apply Nat.lt_le_pred, Nat.le_lteq in K. destruct K as [K|K].
 
     (* All the direct control-flows within the guard code are policy-compliant. *)
-    assert (JBK: (j + (length b - k))%nat = length (concat (firstn (S i) l'))).
+    assert (JBK: (j - bi + (length b - k))%nat = length (concat (firstn (S i) l'))).
       unfold k. rewrite <- Nat.sub_add_distr, Nat_sub_sub_distr by (exact TAG +
         apply Nat.le_sub_le_add_l; rewrite <- Nat.add_assoc, <- app_length; apply Nat.lt_le_incl, BND).
       rewrite (Nat.add_comm (length b)), <- Nat.add_assoc, <- app_length, le_plus_minus_r by apply Nat.lt_le_incl, BND.
@@ -3287,32 +3313,33 @@ Proof.
       destruct NI as [[k' [NI1 NI2]]|NI].
 
         left. apply (f_equal N.to_nat) in NI1. rewrite N2Nat.inj_add, !Nat2N.id in NI1. subst j'.
-        eapply indexmap_same. eassumption. apply BND. apply Nat.le_add_r.
-        rewrite <- app_length, concat_last, (firstn_app_nth _ _ _ _ BLK), <- JBK. apply Nat.add_lt_mono_l, NI2.
+        eapply indexmap_same. eassumption. apply BND. apply Nat.sub_le_mono_r, Nat.le_add_r.
+        rewrite <- app_length, concat_last, (firstn_app_nth _ _ _ _ BLK), <- JBK, (Nat.add_sub_swap _ _ _ JHI). apply Nat.add_lt_mono_l, NI2.
 
-        right. right.
-        apply (f_equal N.to_nat) in NI. rewrite !N2Nat.inj_add, !Nat2N.id, Z_N_nat, Nat.add_assoc, JBK in NI.
-        subst j'. apply Nat2Z.inj_le.
+        right. right. right.
+        apply (f_equal N.to_nat) in NI. rewrite !N2Nat.inj_add, !Nat2N.id, Z_N_nat, Nat.add_assoc, (le_plus_minus _ _ JHI), <- (Nat.add_assoc bi), JBK in NI.
+        subst j'. rewrite <- Nat.add_assoc. apply Nat.add_le_mono_l, Nat2Z.inj_le.
         rewrite Nat2Z.inj_add, Z2Nat.id, <- (sumsizes_newinstrs _ _ _ NC), <- sumsizes_app, firstn_skipn by apply sumsizes_nonneg.
         erewrite sumsizes_newinstrs_all by exact NC. reflexivity.
 
-      apply N2Z.inj_lt. rewrite <- Nat2N.inj_add, JBK, N2Z.inj_add, nat_N_Z, Z2N.id by apply sumsizes_nonneg.
-      rewrite <- (sumsizes_newinstrs _ _ _ NC), <- sumsizes_app, firstn_skipn. exact SIZ.
+      apply N2Z.inj_lt. rewrite <- Nat2N.inj_add, (le_plus_minus _ _ JHI), <- Nat.add_assoc, JBK, N2Z.inj_add, nat_N_Z, Z2N.id by apply sumsizes_nonneg.
+      rewrite Nat2Z.inj_add, <- (sumsizes_newinstrs _ _ _ NC), <- Z.add_assoc, <- sumsizes_app, firstn_skipn. exact SIZ.
 
     (* The final indirect jump is safe due to the guard code. *)
-    right.
+    right. destruct (Nat.le_gt_cases bi j') as [BIJ'|J'BI]; [| right; left; exact J'BI ].
     unfold k in K. rewrite <- Nat.sub_add_distr in K. eapply Nat.add_cancel_r in K. rewrite Nat.sub_add in K by apply TAG.
     rewrite Nat.add_pred_l in K by (erewrite newijump_size by exact NI; destruct sb; discriminate 1).
     rewrite Nat.add_comm, <- Nat.add_assoc in K. rewrite <- !app_length, concat_last, firstn_app_nth in K by exact BLK.
-    rewrite K in XP0, XS, EX. rewrite Nat.succ_pred_pos in EX by (destruct l'; [ discriminate BLK | destruct l0; [ apply (newinstrs_nonnil _ _ _ O) in NC; contradiction | apply Nat.lt_0_succ ] ] ).
+    eapply Nat.add_cancel_l in K. rewrite (le_plus_minus_r _ _ JHI) in K.
+    rewrite K in XP0, XS, EX. rewrite plus_n_Sm, Nat.succ_pred_pos in EX by (destruct l'; [ discriminate BLK | destruct l0; [ apply (newinstrs_nonnil _ _ _ O) in NC; contradiction | apply Nat.lt_0_succ ] ] ).
     eapply newijump_indirect_exit in XP0; try eassumption.
-      destruct (nth_error _ (indexmap' l' j')) as [[[iid2|] oid2 sd2 ie2 sb2]|] eqn:DAT2.
+      destruct (nth_error _ (indexmap' l' (j'-bi))) as [[[iid2|] oid2 sd2 ie2 sb2]|] eqn:DAT2.
         left. split. apply XP0. right. exists iid2, (oid2, sd2). split; [|apply XP0]. eapply nth_shrink_preserves. exact DAT2.
         contradiction.
-        right. exact XP0.
-      apply N2Z.inj_lt. rewrite nat_N_Z, <- (sumsizes_newinstrs_all _ _ _ NC). exact SIZ.
+        right. right. exact XP0.
+      apply N2Z.inj_lt. rewrite nat_N_Z, Nat2Z.inj_add, <- (sumsizes_newinstrs_all _ _ _ NC). exact SIZ.
       replace (Nat.pred _) with k. exact IE'.
-        subst k. rewrite K, firstn_last, BLK, concat_app, concat_cons, app_nil_r, !app_length, Nat.add_assoc, <- Nat.sub_add_distr, <- Nat.add_pred_r.
+        subst k. rewrite K, minus_plus, firstn_last, BLK, concat_app, concat_cons, app_nil_r, !app_length, Nat.add_assoc, <- Nat.sub_add_distr, <- Nat.add_pred_r.
           apply minus_plus.
           erewrite newijump_size by exact NI. destruct sb; discriminate 1.
 
@@ -3329,9 +3356,11 @@ Proof.
   rewrite sumsizes_cons, sumsizes_rev, NS, Nat2Z.inj_add, (sumsizes_newinstrs _ _ _ NC i) in EX.
   rewrite app_length, Nat.add_assoc in BND. rewrite (newjump_size _ _ _ _ _ _ NI) in EX, BND.
   rewrite (Z.add_comm (Z.of_nat (length _)) (Z.of_nat 1)), <- Z.add_assoc, Z.add_add_simpl_r_l in EX.
+  rewrite (le_plus_minus _ _ JHI), Nat2Z.inj_add, <- Z.add_assoc in EX.
   rewrite (Nat_squeeze _ _ TAG (proj2 BND)), Nat.add_comm, Nat2Z.inj_add, Zplus_minus in EX.
-  rewrite N.mod_small in EX by (rewrite <- (N2Z.id (2^30)); apply Z2N_lt; [ reflexivity | eapply Z.le_lt_trans; [ apply sumsizes_firstn_le | exact SIZ ] ]).
-  rewrite (sumsizes_newinstrs _ _ _ NC), Nat2Z2N in EX. apply Nat2N.inj in EX. subst j'. split; [|left].
+  rewrite N.mod_small in EX by (rewrite <- (N2Z.id (2^30)); apply Z2N_lt; [ reflexivity | eapply Z.le_lt_trans; [ apply Z.add_le_mono_l, sumsizes_firstn_le | exact SIZ ] ]).
+  rewrite Z2N.inj_add, (sumsizes_newinstrs _ _ _ NC), !Nat2Z2N, <- Nat2N.inj_add in EX by (apply Nat2Z.is_nonneg + apply sumsizes_nonneg).
+  apply Nat2N.inj in EX. subst j'. rewrite minus_plus. split; [|left].
 
     eexists. reflexivity.
 
@@ -3349,7 +3378,7 @@ Proof.
   right. left.
   destruct mem eqn:IN1; [|discriminate].
   apply invSome in NI. subst b.
-  destruct (j - _ - _)%nat; [|destruct n0; discriminate]. apply invSome in IE'. subst ie'.
+  destruct (j - bi - _ - _)%nat; [|destruct n0; discriminate]. apply invSome in IE'. subst ie'.
   apply rv_fallthru in XS; try assumption. destruct XS; subst x; [|discriminate].
   apply invExit, N.mul_cancel_l, Nat2N.inj in EX; [|discriminate]. subst j'.
   rewrite app_length, Nat.add_assoc in BND. apply Nat_squeeze in TAG; [|apply BND].
@@ -3358,7 +3387,7 @@ Proof.
   rewrite <- (Nat2Z.id (_+length _)), <- NS, <- (Nat2Z.id (length _)), <- (sumsizes_newinstrs _ _ _ NC) in TAG.
   rewrite <- Z2Nat.inj_add in TAG; [|apply sumsizes_nonneg | etransitivity; [|apply newsize_pos]; discriminate].
   rewrite <- (sumsizes_firstn_S _ _ _ DAT'), (sumsizes_newinstrs _ _ _ NC), Nat2Z.id, Nat.sub_1_r in TAG.
-  rewrite TAG, Nat.succ_pred by (rewrite firstn_last, BLK, <- concat_last, <- rev_length, !rev_app_distr, !app_length; discriminate).
+  rewrite (Nat.sub_succ_l _ _ JHI), TAG, Nat.succ_pred by (rewrite firstn_last, BLK, <- concat_last, <- rev_length, !rev_app_distr, !app_length; discriminate).
   split; [|left].
 
     eexists. reflexivity.
