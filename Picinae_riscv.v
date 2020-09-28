@@ -304,7 +304,7 @@ Definition rv2il (a:addr) rvi :=
   | R5_Jalr rd rs1 imm => Seq (Move V_TMP (BinOp OP_AND (BinOp OP_PLUS (r5var rs1) (Word (ofZ 32 imm) 32))
                                                         (Word (N.ones 32 - 1) 32)))
                               (Seq (r5mov rd (Word ((a+4) mod 2^32) 32))
-                                   (Seq (Jmp (Var V_TMP)) Nop))
+                                   (Jmp (Var V_TMP)))
   | R5_Jal rd off => Seq (r5mov rd (Word ((a+4) mod 2^32) 32))
                          (Jmp (Word (N.land (Z.to_N (Z.of_N a + off)) (N.ones 32 - 1)) 32))
   | R5_Auipc rd off => r5mov rd (Word ((a + N.shiftl off 12) mod 2^32) 32)
@@ -336,7 +336,7 @@ Lemma hastyp_r5mov:
   forall c0 c n e (TS: hastyp_stmt c0 c (Move (rv_varid n) e) c),
   hastyp_stmt c0 c (r5mov n e) c.
 Proof.
-  intros. destruct n. apply TNop. exact TS.
+  intros. destruct n. apply TNop. reflexivity. exact TS.
 Qed.
 
 Lemma hastyp_rvmov:
@@ -344,9 +344,10 @@ Lemma hastyp_rvmov:
   hastyp_stmt rvtypctx rvtypctx (Move (rv_varid n) e) rvtypctx.
 Proof.
   intros. erewrite store_upd_eq at 3.
-    apply TMove.
+    eapply TMove.
       right. destruct n as [|n]. reflexivity. repeat first [ reflexivity | destruct n as [n|n|] ].
       exact TE.
+      reflexivity.
     destruct n as [|n]. reflexivity. repeat first [ reflexivity | destruct n as [n|n|] ].
 Qed.
 
@@ -355,9 +356,10 @@ Lemma hastyp_r5store:
   hastyp_stmt rvtypctx rvtypctx (Move V_MEM32 e) rvtypctx.
 Proof.
   intros. erewrite store_upd_eq at 3.
-    apply TMove.
+    eapply TMove.
       right. reflexivity.
       exact TE.
+      reflexivity.
     reflexivity.
 Qed.
 
@@ -403,26 +405,32 @@ Proof.
   | apply N.mod_lt
   | econstructor ] ].
 
-  econstructor. reflexivity.
+  econstructor.
     apply hastyp_r5mov, hastyp_rvmov. econstructor. apply N.mod_lt. discriminate 1.
     econstructor. econstructor.
-      change (_-1) with (N.land (N.ones 32 - 1) (N.ones 32)). rewrite N.land_assoc, N.land_ones.
-      apply N.mod_lt. discriminate 1.
+      change (_-1) with (N.land (N.ones 32 - 1) (N.ones 32)). rewrite N.land_assoc, N.land_ones. apply N.mod_lt. discriminate 1.
+      reflexivity.
+    reflexivity.
 
-  econstructor. reflexivity.
+  econstructor.
     econstructor.
       left. reflexivity.
       econstructor.
         econstructor. apply hastyp_r5var. econstructor. apply ofZ_bound.
         econstructor. reflexivity.
-    econstructor. reflexivity.
+      reflexivity.
+    econstructor.
       apply hastyp_r5mov. erewrite store_upd_eq.
-        apply TMove.
+        eapply TMove.
           right. destruct xbits as [|r]. reflexivity. repeat first [ reflexivity | destruct r as [r|r|] ].
           econstructor. apply N.mod_lt. discriminate 1.
+          reflexivity.
         destruct xbits as [|r]. reflexivity. repeat first [ reflexivity | destruct r as [r|r|] ].
-      econstructor; [|repeat econstructor; reflexivity..].
-        intros r t H. rewrite <- H. destruct r; apply update_frame; discriminate.
+      econstructor.
+        econstructor. apply update_updated.
+        reflexivity.
+      reflexivity.
+    intros r t H. rewrite <- H. destruct r; apply update_frame; discriminate.
 Qed.
 
 Theorem welltyped_rvprog:
@@ -434,7 +442,7 @@ Proof.
     exact I.
     exists rvtypctx. unfold rv_stmt. destruct (a mod 4).
       apply welltyped_rv2il.
-      apply TExn.
+      apply TExn. reflexivity.
 Qed.
 
 
