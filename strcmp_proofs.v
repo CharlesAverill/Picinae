@@ -129,12 +129,10 @@ Proof.
   clear s MEM0 XP0 ESP0 XP.
 
   (* We are now ready to break the goal down into one case for each invariant-point.
-     The shelve_cases tactic finds all the invariants defined by the invariant-set
+     The destruct_inv tactic finds all the invariants defined by the invariant-set
      in a precondition hypothesis (PRE).  Its first argument is the address bitwidth
-     of the ISA (32 bits in this case).  After shelve_cases, use Coq's "Unshelve"
-     command to recover the list of goals that the tactic "shelved" for you. *)
-  shelve_cases 32 PRE.
-  Unshelve.
+     of the ISA (32 bits in this case). *)
+  destruct_inv 32 PRE.
 
   (* Now we launch the symbolic interpreter on all goals in parallel. *)
   all: x86_step.
@@ -221,7 +219,7 @@ Proof.
   clear s MDL0 MEM0 ESP0 XP XP0.
 
   (* Break the proof into cases, one for each invariant-point. *)
-  shelve_cases 32 PRE. Unshelve.
+  destruct_inv 32 PRE.
 
   (* Time how long it takes for each symbolic interpretation step to complete
      (for profiling and to give visual cues that something is happening...). *)

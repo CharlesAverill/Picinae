@@ -1159,11 +1159,10 @@ Qed.
 
 End InvariantProofs.
 
-(* Tactic "shelve_cases w PRE" divides the inductive case of prove_invs into subgoals,
-   one for each invariant point defined by precondition PRE, and shelves them in
-   ascending order by address.  Shelved goals can then be unshelved by the user using
-   the "Unshelve" Coq vernacular command.  Argument w should be the max bitwidth of
-   addresses to consider (e.g., 32 on 32-bit ISAs). *)
+(* Tactic "destruct_inv w PRE" divides the inductive case of prove_invs into subgoals,
+   one for each invariant point defined by precondition PRE, and puts the goals in
+   ascending order by address.  Argument w should be the max bitwidth of addresses to
+   consider (e.g., 32 on 32-bit ISAs). *)
 
 Tactic Notation "simpl_trueif" "in" hyp(H) :=
   first [ simple apply trueif_none in H; clear H
@@ -1187,14 +1186,11 @@ Ltac shelve_case H :=
   end.
 
 Ltac shelve_cases_loop H a :=
-  let g := numgoals in (
-    do g (
-      (only 1: (case a as [a|a|]; [| |shelve_case H]));
-      (only 2-2097152: cycle g);
-      revgoals; cycle g; revgoals;
-      cycle 1
-    );
-    cycle g
+  let g := numgoals in do g (
+    (only 1: (case a as [a|a|]; [| |shelve_case H]));
+    (unshelve (only 2: shelve; cycle g));
+    revgoals; cycle g; revgoals;
+    cycle 1
   );
   try (simple apply trueinv_none in H; exfalso; exact H).
 
@@ -1206,11 +1202,14 @@ Tactic Notation "shelve_cases" int_or_var(i) hyp(H) :=
               "(true_inv (if [program] [store] [addr] then [invariant-set] else None))"
   end.
 
-(* Tactic "focus_addr n" isolates the goal for the invariant at address n
-   from a sea of goals unshelved from shelve_cases, re-shelving the rest. *)
+Tactic Notation "destruct_inv" int_or_var(i) hyp(H) :=
+  unshelve (shelve_cases i H).
+
+(* Tactic "focus_addr n" brings the goal for the invariant at address n
+   to the head of the goal list. *)
 Tactic Notation "focus_addr" constr(n) :=
-  lazymatch goal with |- nextinv _ _ _ _ (Exit n) _ => idtac
-                    | _ => shelve end.
+  unshelve (lazymatch goal with |- nextinv _ _ _ _ (Exit n) _ => shelve
+                              | _ => idtac end).
 
 
 
