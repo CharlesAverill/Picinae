@@ -135,7 +135,7 @@ Proof.
   destruct_inv 32 PRE.
 
   (* Now we launch the symbolic interpreter on all goals in parallel. *)
-  all: x86_step.
+  all: x86_step'.
 
   (* Note that we wind up with more goals that we started with, since some of the
      instructions branch, requiring us to prove the goal for each possible destination.
@@ -144,7 +144,6 @@ Proof.
      all by assumption or reflexivity: *)
   all: solve [ reflexivity | assumption ].
 Qed.
-
 
 
 
@@ -223,7 +222,7 @@ Proof.
 
   (* Time how long it takes for each symbolic interpretation step to complete
      (for profiling and to give visual cues that something is happening...). *)
-  Local Ltac step := time x86_step.
+  Local Ltac step := time x86_step'.
 
   (* Address 0 *)
   step. step. exists 0.
@@ -233,22 +232,19 @@ Proof.
 
   (* Address 8 *)
   destruct PRE as [k [ECX [EDX SEQ]]].
-  step. step.
-    rewrite cmp_zf; [| apply N.mod_upper_bound, N.pow_nonzero; discriminate | apply WTM].
-    rewrite lshift_lor_byte, (N.mod_small (mem _)) by apply WTM.
-  step.
+  step. step. step.
 
     (* Address 14 *)
-    step. step. step. rewrite lshift_lor_byte, (N.mod_small (mem _)) by apply WTM. step.
+    step. step. step. step.
 
       (* Address 20 *)
       step. step.
-      exists 0, k. simpl_stores. repeat first [ exact SEQ | split ].
+      exists 0, k. psimpl_goal. repeat first [ exact SEQ | split ].
         intro. symmetry. apply Neqb_ok, BC0.
         apply N.compare_eq_iff, Neqb_ok, BC.
 
       (* loop back to Address 8 *)
-      exists (k+1). rewrite !N.add_assoc, !N.add_mod_idemp_l by (apply N.pow_nonzero; discriminate).
+      exists (k+1). rewrite !N.add_assoc.
       split. reflexivity. split. reflexivity.
       intros i IK. rewrite N.add_1_r in IK. apply N.lt_succ_r, N.le_lteq in IK. destruct IK as [IK|IK].
         apply SEQ, IK.
@@ -258,7 +254,7 @@ Proof.
 
     (* Address 23 *)
     step. step. step. step.
-    eexists. exists k. simpl_stores. split. reflexivity. split. exact SEQ. split.
+    eexists. exists k. psimpl_goal. split. reflexivity. split. exact SEQ. split.
       intro. destruct (_ <? _); discriminate.
       apply N.eqb_neq, N.lt_gt_cases in BC. destruct BC as [BC|BC].
         rewrite (proj2 (N.compare_lt_iff _ _)), (proj2 (N.ltb_lt _ _)) by exact BC. reflexivity.

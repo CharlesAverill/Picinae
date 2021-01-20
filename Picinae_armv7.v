@@ -34,8 +34,9 @@
 
 Require Export Picinae_core.
 Require Export Picinae_theory.
-Require Export Picinae_finterp.
 Require Export Picinae_statics.
+Require Export Picinae_finterp.
+Require Export Picinae_simplifier.
 Require Export Picinae_slogic.
 Require Import NArith.
 Require Import Program.Equality.
@@ -51,10 +52,10 @@ Inductive armvar :=
   (* ARM’s pc register is analogous to IA-32’s EIP register *)
   | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5 | R_R6 | R_R7
   | R_R8 | R_R9 | R_R10 | R_R11 | R_R12
-  (*R13, the Stack Pointer |R14, the Link Register| R15, the Program Counter*)
+  (* R13: stack pointer | R14: link register | R15: program counter *)
   | R_SP | R_LR | R_PC
   (* Current Program Status Register (CPSR)*)
-  | R_M (*(bits 0–4) is the processor mode bits.*)
+  | R_M (* (bits 0–4) are the processor mode bits.*)
   | R_T (* (bit 5) is the Thumb state bit. *)
   | R_F (* (bit 6) is the FIQ disable bit. *)
   | R_I (* (bit 7) is the IRQ disable bit. *)
@@ -105,6 +106,8 @@ Module Statics_arm := PicinaeStatics IL_arm.
 Export Statics_arm.
 Module FInterp_arm := PicinaeFInterp IL_arm Statics_arm.
 Export FInterp_arm.
+Module PSimp_arm := PicinaeSimplifier IL_arm Statics_arm FInterp_arm.
+Export PSimp_arm.
 Module SLogic_arm := PicinaeSLogic IL_arm.
 Export SLogic_arm.
 
@@ -166,215 +169,6 @@ Proof.
 Qed.
 
 
-(* getmem assembles bytes into words by logical-or'ing them together, but
-   sometimes it is easier to reason about them as if they were summed.  The
-   following theorem proves that logical-or and addition are the same when
-   the operands share no common bits. *)
-Theorem lor_plus:
-  forall a b (A0: N.land a b = 0), N.lor a b = a + b.
-Proof.
-  intros. rewrite <- N.lxor_lor, N.add_nocarry_lxor by assumption. reflexivity.
-Qed.
-
-(* ((width) memory[...]) mod 2^width = (width) memory[...] *)
-Lemma memlo: forall len w m a, welltyped_memory m -> Mb*len <= w ->
-  (getmem LittleE len m a) mod 2^w = getmem LittleE len m a.
-Proof.
-  intros. apply N.mod_small. eapply N.lt_le_trans.
-    apply getmem_bound. assumption.
-    apply N.pow_le_mono_r. discriminate 1. assumption.
-Qed.
-
-(* (e mod 2^b) mod 2^c = e mod 2^(min b c) *)
-Lemma dblmod_l: forall a b c, b <= c -> (a mod 2^b) mod 2^c = a mod 2^b.
-Proof.
-  intros. repeat rewrite <- N.land_ones.
-  rewrite <- N.land_assoc, (N.land_comm (N.ones _)), N.land_ones, N.ones_mod_pow2.
-  reflexivity. assumption.
-Qed.
-
-Lemma dblmod_r: forall a b c, c <= b -> (a mod 2^b) mod 2^c = a mod 2^c.
-Proof.
-  intros. repeat rewrite <- N.land_ones.
-  rewrite <- N.land_assoc, N.land_ones, N.ones_mod_pow2.
-  reflexivity. assumption.
-Qed.
-
-(* e & (N.ones w) = e mod 2^w *)
-Remark land_mod_r: forall x y z, N.log2 (N.succ y) = N.succ (N.log2 y) -> z = N.log2 (N.succ y) ->
-  N.land x y = x mod 2^z.
-Proof.
-  intros x y z H1 H2. subst z. destruct y.
-    rewrite N.mod_1_r. apply N.land_0_r.
-
-    apply N.log2_eq_succ_iff_pow2 in H1; [|reflexivity]. destruct H1 as [b H1].
-    rewrite H1, N.log2_pow2 by apply N.le_0_l.
-    rewrite <- (N.pred_succ (Npos p)), H1, <- N.ones_equiv.
-    apply N.land_ones.
-Qed.
-
-(* (a & b) ^ c = (a ^ c) & b whenever b & c = c *)
-Lemma lxor_land:
-  forall a b c, N.land b c = c -> N.lxor (N.land a b) c = N.land (N.lxor a c) b.
-Proof.
- intros. apply N.bits_inj. apply N.bits_inj_iff in H. intro n. specialize (H n).
- do 2 rewrite N.land_spec, N.lxor_spec. rewrite <- H, N.land_spec.
- repeat destruct (N.testbit _ n); reflexivity.
-Qed.
-
-Remark land_mod_l: forall x y z, N.log2 (N.succ x) = N.succ (N.log2 x) -> z = N.log2 (N.succ x) ->
-  N.land x y = y mod 2^z.
-Proof. intros x y. rewrite N.land_comm. apply land_mod_r. Qed.
-
-(* (x*y) mod x = 0 *)
-Remark mod_mul_l: forall x y, x<>0 -> (x*y) mod x = 0.
-Proof. intros. rewrite N.mul_comm. apply N.mod_mul. assumption. Qed.
-
-(* (x+y) mod x = y mod x *)
-Remark mod_add_l: forall x y, x<>0 -> (x+y) mod x = y mod x.
-Proof. intros. rewrite <- N.add_mod_idemp_l, N.mod_same, N.add_0_l by assumption. reflexivity. Qed.
-
-(* (y+x) mod x = y mod x *)
-Remark mod_add_r: forall x y, y<>0 -> (x+y) mod y = x mod y.
-Proof. intros. rewrite <- N.add_mod_idemp_r, N.mod_same, N.add_0_r by assumption. reflexivity. Qed.
-
-(* (x*z + y) mod z = y mod z *)
-Remark mod_add_mul_lr: forall x y z, z<>0 -> (x*z + y) mod z = y mod z.
-Proof. intros. rewrite <- N.add_mod_idemp_l, N.mod_mul, N.add_0_l by assumption. reflexivity. Qed.
-
-(* (z*x + y) mod z = y mod z *)
-Remark mod_add_mul_ll: forall x y z, z<>0 -> (z*x + y) mod z = y mod z.
-Proof. intros. rewrite <- N.add_mod_idemp_l, mod_mul_l, N.add_0_l by assumption. reflexivity. Qed.
-
-(* (x + y*z) mod z = x mod z *)
-Remark mod_add_mul_rr: forall x y z, z<>0 -> (x + y*z) mod z = x mod z.
-Proof. intros. rewrite <- N.add_mod_idemp_r, N.mod_mul, N.add_0_r by assumption. reflexivity. Qed.
-
-(* (x + z*y) mod z = x mod z *)
-Remark mod_add_mul_rl: forall x y z, z<>0 -> (x + z*y) mod z = x mod z.
-Proof. intros. rewrite <- N.add_mod_idemp_r, mod_mul_l, N.add_0_r by assumption. reflexivity. Qed.
-
-(* (mem a) mod 2^8 = mem a *)
-Remark mem_small: forall m a, welltyped_memory m -> (m a) mod 2^Mb = m a.
-Proof. intros. apply N.mod_small, H. Qed.
-
-(* e << w = 0 whenever e < 2^w *)
-Lemma shiftr_low_pow2: forall a n, a < 2^n -> N.shiftr a n = 0.
-Proof.
-  intros. destruct a. apply N.shiftr_0_l.
-  apply N.shiftr_eq_0. apply N.log2_lt_pow2. reflexivity. assumption.
-Qed.
-
-(* These nested-ifs arise from conditional branches on status flag expressions. *)
-Remark if_if:
-  forall (b:bool) (q1 q2:stmt),
-  (if (if b then 1 else N0) then q1 else q2) = (if b then q2 else q1).
-Proof. intros. destruct b; reflexivity. Qed.
-
-Remark if_not_if:
-  forall (b:bool) (q1 q2:stmt),
-  (if (N.lnot (if b then 1 else 0) 1) then q1 else q2) = (if b then q1 else q2).
-Proof. intros. destruct b; reflexivity. Qed.
-
-Remark if_compare0:
-  forall x y, ((if x =? y then 1 else 0) =? 0) = negb (x =? y).
-Proof. intros. destruct (x =? y); reflexivity. Qed.
-
-Remark if_compare1:
-  forall x y, ((if x =? y then 1 else 0) =? 1) = (x =? y).
-Proof. intros. destruct (x =? y); reflexivity. Qed.
-
-Remark if_negb:
-  forall A x (y z:A), (if negb x then y else z) = (if x then z else y).
-Proof. intros. destruct x; reflexivity. Qed.
-
-(* Implementation note:  The following tactic repeatedly applies all the above
-   rewriting lemmas using repeat+rewrite with a long list of lemma names.  This
-   seems to be faster than rewrite_strat or autorewrite with a hint database
-   (as of Coq 8.8.0).  Consider changing if performance of rewrite_strat or
-   autorewrite improves in future Coq versions. *)
-
-Ltac arm_rewrite_rules H :=
-  repeat rewrite
-     ?N.sub_0_r, ?N.add_0_l, ?N.add_0_r, ?N.mul_0_l, ?N.mul_0_r,
-     ?N.land_0_l, ?N.land_0_r, ?N.lor_0_l, ?N.lor_0_r, ?N.lxor_0_l, ?N.lxor_0_r,
-     ?N.mul_1_l, ?N.mul_1_r, ?N.lxor_nilpotent,
-
-     ?N.mod_same, ?N.mod_mul, ?dblmod_l, ?dblmod_r, ?mod_mul_l, ?mod_add_l, ?mod_add_r,
-     ?mod_add_mul_lr, ?mod_add_mul_ll, ?mod_add_mul_rr, ?mod_add_mul_rl,
-
-     ?lxor_land,
-
-     ?mem_small
-    in H by solve [ discriminate 1 | assumption | reflexivity ].
-
-
-(* When reducing modulo operations, try auto-solving inequalities of the form
-   x < 2^w. *)
-
-Ltac solve_lt_prim :=
-  reflexivity (* solves "<" relations on closed terms *) +
-  eassumption +
-  match goal with
-  | [ |- _ mod _ < _ ] => apply N.mod_upper_bound; discriminate 1
-  | [ M: models armtypctx ?s, R: ?s _ = VaN ?x _ |- ?x < _ ] => apply (arm_regsize M R)
-  | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM
-  | [ |- getmem _ _ _ _ < 2^_ ] => apply getmem_bound; assumption
-  | [ |- N.lxor _ _ < 2^_ ] => apply lxor_bound; solve_lt
-  | [ |- N.land _ _ < 2^_ ] => apply land_bound; solve_lt
-  | [ |- N.lor _ _ < 2^_ ] => apply lor_bound; solve_lt
-  | [ |- N.lnot _ _ < 2^_ ] => apply lnot_bound; solve_lt
-  end +
-  (eapply N.le_lt_trans; [ apply N.le_sub_l | solve_lt ])
-with solve_lt :=
-  solve_lt_prim +
-  (eapply N.lt_le_trans; [ solve_lt_prim | discriminate 1 ]).
-
-
-(* Try to auto-simplify modular arithmetic expressions within a Coq expression
-   resulting from functional interpretation of an arm IL statement. *)
-
-Tactic Notation "simpl_arm" "in" hyp(H) :=
-  repeat rewrite ?if_if, ?if_not_if, ?if_compare0, ?if_compare1, ?if_negb in H;
-  rewrite ?getmem_1 in H;
-  arm_rewrite_rules H;
-  repeat (
-    match type of H with
-    | context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a) in H; [| assumption | discriminate 1 ]
-    | context [ N.shiftr ?x ?y ] => rewrite (shiftr_low_pow2 x y) in H by solve_lt
-    | context [ ?x mod ?m ] => rewrite (N.mod_small x m) in H by solve_lt
-    | context [ N.land ?x ?y ] => (erewrite (land_mod_r x y) in H +
-                                   erewrite (land_mod_l x y) in H); [| reflexivity | simpl;reflexivity ]
-    end;
-    arm_rewrite_rules H
-  ).
-
-Ltac simpl_arm :=
-  lazymatch goal with |- ?G => let H := fresh in let Heq := fresh in
-    remember G as H eqn:Heq; simpl_arm in Heq; subst H
-  end.
-
-
-(* Introduce automated machinery for verifying an arm machine code subroutine
-   (or collection of subroutines) by (1) defining a set of Floyd-Hoare
-   invariants (including pre- and post-conditions) and (2) proving that
-   symbolically executing the program starting at any invariant point in a
-   state that satisfies the program until the next invariant point always
-   yields a state that satisfies the reached invariant.  This proves partial
-   correctness of the subroutine.
-
-   In order for this methodology to prove that a post-condition holds at
-   subroutine exit, we must attach one of these invariants (the post-condition)
-   to the return address of the subroutine.  This is a somewhat delicate
-   process, since unlike most other code addresses, the exact value of the
-   return address is an unknown (defined by the caller).  We therefore adopt
-   the convention that subroutines "exit" whenever control flows to an address
-   for which no IL code is defined at that address.  This allows proving
-   correctness of a subroutine by lifting only the subroutine to IL code (or
-   using the pmono theorems from Picinae_theory to isolate only the subroutine
-   from a larger program), leaving the non-subroutine code undefined (None). *)
-
-
 (* Simplify arm memory access assertions produced by step_stmt. *)
 Ltac simpl_memaccs H :=
   try lazymatch type of H with context [ MemAcc mem_writable ] =>
@@ -403,10 +197,29 @@ Ltac generalize_temps H :=
    the resulting Coq expressions. *)
 Ltac arm_step_and_simplify XS :=
   step_stmt XS;
+  psimpl_values XS;
   simpl_memaccs XS;
   destruct_memaccs XS;
-  generalize_temps XS;
-  simpl_arm in XS.
+  generalize_temps XS.
+
+(* Introduce automated machinery for verifying an x86 machine code subroutine
+   (or collection of subroutines) by (1) defining a set of Floyd-Hoare
+   invariants (including pre- and post-conditions) and (2) proving that
+   symbolically executing the program starting at any invariant point in a
+   state that satisfies the program until the next invariant point always
+   yields a state that satisfies the reached invariant.  This proves partial
+   correctness of the subroutine.
+
+   In order for this methodology to prove that a post-condition holds at
+   subroutine exit, we must attach one of these invariants (the post-condition)
+   to the return address of the subroutine.  This is a somewhat delicate
+   process, since unlike most other code addresses, the exact value of the
+   return address is an unknown (defined by the caller).  We therefore adopt
+   the convention that subroutines "exit" whenever control flows to an address
+   for which no IL code is defined at that address.  This allows proving
+   correctness of a subroutine by lifting only the subroutine to IL code (or
+   using the pmono theorems from Picinae_theory to isolate only the subroutine
+   from a larger program), leaving the non-subroutine code undefined (None). *)
 
 (* Some versions of Coq check injection-heavy proofs very slowly (at Qed).
    This slow-down can be avoided by sequestering prevalent injections into
@@ -437,7 +250,7 @@ Ltac arm_invhere :=
   first [ eapply nextinv_here; [reflexivity|]
         | apply nextinv_exn
         | apply nextinv_ret; [ prove_prog_exits |] ];
-  simpl_stores; simpl_arm.
+  psimpl_goal.
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many

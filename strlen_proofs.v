@@ -1,24 +1,3 @@
-(* Example proofs using Picinae for Intel x86 Architecture
-
-   Copyright (c) 2018 Kevin W. Hamlen
-   Computer Science Department
-   The University of Texas at Dallas
-
-   Any use, commercial or otherwise, requires the express permission of
-   the author.
-
-   To run this module, first load and compile:
-   * Picinae_syntax
-   * Picinae_theory
-   * Picinae_finterp
-   * Picinae_statics
-   * Picinae_slogic
-   * Picinae_i386
-   * strlen_i386
-   (in that order) and then compile this module using menu option
-   Compile->Compile buffer.
- *)
-
 Require Import Utf8.
 Require Import FunctionalExtensionality.
 Require Import Arith.
@@ -150,8 +129,6 @@ Proof.
 Qed.
 
 
-
-
 (* Example #4: Partial correctness
    Proving full partial correctness of strlen is challenging because strlen's
    binary implementation relies on some obscure properties of bit arithmetic
@@ -218,6 +195,7 @@ Proof.
   symmetry. apply N.sub_add. assumption.
 Qed.
 
+(*
 Lemma Nmod_add_sub_assoc:
   forall x y z w, z <= 2^w -> z <= y ->
   (2^w + ((x + y) mod 2^w) - z) mod 2^w = (x + (y - z)) mod 2^w.
@@ -248,22 +226,6 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma getmem_mod:
-  forall n2 n1 m a (WTM: welltyped_memory m),
-  (getmem LittleE n1 m a) mod 2^(Mb*n2) = getmem LittleE (N.min n1 n2) m a.
-Proof.
-  intros. destruct (N.le_ge_cases n1 n2).
-
-    rewrite N.min_l by assumption. apply N.mod_small. eapply N.lt_le_trans.
-      apply getmem_bound, WTM.
-      apply N.pow_le_mono_r. discriminate. apply N.mul_le_mono_l. assumption.
-
-    rewrite N.min_r, <- (N.add_sub n1 n2), N.add_comm, <- N.add_sub_assoc by assumption.
-    rewrite getmem_split, <- N.land_ones, N.land_lor_distr_l, 2!N.land_ones, N.shiftl_mul_pow2.
-    rewrite N.mod_mul, N.lor_0_r by (apply N.pow_nonzero; discriminate).
-    apply N.mod_small, getmem_bound, WTM.
-Qed.
-
 Lemma Nmod_sub_add_less:
   forall x y z w, y <= 2^w -> z <= y ->
   ((2^w + x - y) mod 2^w + z) mod 2^w = (2^w + x - (y - z)) mod 2^w.
@@ -290,6 +252,7 @@ Proof.
     rewrite N.shiftr_lor, N.shiftr_shiftl_r, N.sub_diag, N.shiftr_0_r by apply N.le_refl.
     rewrite shiftr_low_pow2 by apply getmem_bound, WTM. reflexivity.
 Qed.
+*)
 
 Lemma land_lohi_0:
   forall x y n, x < 2^n -> N.land x (N.shiftl y n) = 0.
@@ -381,18 +344,13 @@ Proof.
 Qed.
 
 Lemma sub_lnot: forall x w, x < 2^w ->
-  (2^w + (2^w - x) mod 2^w - 1) mod 2^w = N.lnot x w.
+  N.lnot x w = 2^w - x - 1.
 Proof.
   intros.
-  rewrite Nmod_sub_neg, N.add_mod_idemp_l, N.add_sub_assoc, N.add_comm,
-          <- N.add_sub_assoc, <- N.add_mod_idemp_l, N.mod_same
-  by solve [ apply (N.le_succ_l 0), Nlt_0_pow2
-           | apply N.pow_nonzero; discriminate
-           | apply N.le_add_le_sub_l; rewrite N.add_1_r; apply N.le_succ_l, H ].
-  rewrite N.add_0_l, <- N.sub_add_distr, N.add_comm, N.sub_add_distr, <- N.pred_sub, <- N.ones_equiv.
-  rewrite N.mod_small by (eapply N.le_lt_trans; [ apply N.le_sub_l | apply ones_bound ]).
-  destruct x. rewrite N.sub_0_r. reflexivity.
-  symmetry. apply N.lnot_sub_low, N.log2_lt_pow2. reflexivity. assumption.
+  rewrite <- N.sub_add_distr, N.add_comm, N.sub_add_distr, N.sub_1_r, <- N.ones_equiv.
+  destruct x.
+    rewrite N.sub_0_r. apply N.lnot_0_l.
+    apply N.lnot_sub_low, N.log2_lt_pow2. reflexivity. assumption.
 Qed.
 
 Lemma bytes_pos_lobound:
@@ -785,10 +743,10 @@ Lemma strlen_loopexit1:
   forall m p k (WTM: welltyped_memory m) (NF: nilfree m p k)
          (PK4: (p + k) mod 4 = 0)
          (BC1: (m Ⓓ[p⊕k] ⊕ 4278124287 <? m Ⓓ[p⊕k]) = true)
-         (BC2: (0 =? (2^32 + (2^32 ⊖ m Ⓓ[p⊕k]) ⊖ 1) .^ (m Ⓓ[p⊕k] ⊕ 4278124287) .& 16843008) = true),
-  ∃ k0, (Ⓓ (p ⊕ k ⊕ 4) : value) = Ⓓ (p ⊕ k0) /\
+         (BC2: (0 =? (2^32 - m Ⓓ[p⊕k] - 1) .^ (m Ⓓ[p⊕k] + 16711423) .& 16843008) = true),
+  ∃ k0, (Ⓓ (p + k ⊕ 4) : value) = Ⓓ (p ⊕ k0) /\
         nilfree m p k0 /\
-        (Ⓓ ((2^32 + (2^32 ⊖ m Ⓓ[p⊕k]) ⊖ 1) .^ (m Ⓓ[p⊕k] ⊕ 4278124287) .& 16843008) : value) = Ⓓ 0 /\
+        Ⓓ ((2^32 - m Ⓓ[p⊕k] - 1) .^ (m Ⓓ[p⊕k] + 16711423) .& 16843008) = Ⓓ 0 /\
         (p + k0) mod 4 = 0.
 Proof.
   intros.
@@ -797,7 +755,7 @@ Proof.
     apply (add_sub_mod_le _ (2^32)). discriminate. apply N.ltb_lt, BC1.
 
   exists (k+4). repeat split.
-    rewrite N.add_assoc, N.add_mod_idemp_l by discriminate. reflexivity.
+    rewrite N.add_assoc. reflexivity.
     intros i H. destruct (N.lt_ge_cases i k).
       apply NF; assumption.
 
@@ -809,14 +767,13 @@ Proof.
           exact WTM.
           exact LE.
 
-          rewrite <- sub_lnot by apply getmem_bound, WTM.
-          change 4278124287 with (2^32 - Ones 8 4) in BC2.
-          rewrite N.add_sub_assoc, (N.add_comm _ (2^32)) in BC2 by discriminate.
-          rewrite <- (N.add_sub_assoc _ _ (Ones 8 4)) in BC2 by exact LE.
-          rewrite <- (N.add_mod_idemp_l (2^32)), N.mod_same, N.add_0_l in BC2 by discriminate.
-          rewrite (N.mod_small (_ - Ones 8 4)) in BC2 by
-            (eapply N.le_lt_trans; [ apply N.le_sub_l | apply getmem_bound, WTM ]).
-          symmetry. apply Neqb_ok, BC2.
+          rewrite sub_lnot by apply getmem_bound, WTM.
+          change (Ones Mb 4 - 1) with (N.ones 25 .& 16843008).
+          rewrite N.land_assoc, N.land_ones, N_lxor_mod_pow2.
+          rewrite <- (N.mod_add (_ - Ones Mb 4) 1), <- N.add_sub_swap, <- N.add_sub_assoc by
+            first [ discriminate 1 | apply LE ].
+          rewrite <- N_lxor_mod_pow2, <- N.land_ones, <- N.land_assoc.
+          symmetry. apply Neqb_ok. apply BC2.
 
           eapply N.add_lt_mono_l. rewrite N.add_comm, N.sub_add; assumption.
         rewrite <- add_assoc_mod4.
@@ -831,11 +788,11 @@ Qed.
 Lemma strlen_loopexit2:
   forall m p k (WTM: welltyped_memory m) (NF: nilfree m p k) (PK4: (p+k) mod 4 = 0)
          (BC1: (m Ⓓ[p⊕k] ⊕ 4278124287 <? m Ⓓ[p⊕k]) = true)
-         (BC2: (0 =? (2^32 + (2^32 ⊖ m Ⓓ[p⊕k]) ⊖ 1) .^ (m Ⓓ[p⊕k] ⊕ 4278124287) .& 16843008) = false),
-  ∃ k0, (Ⓓ (p ⊕ k ⊕ 4) : value) = Ⓓ (p ⊕ k0) /\
+         (BC2: (0 =? (2^32 - m Ⓓ[p⊕k] - 1) .^ (m Ⓓ[p⊕k] + 16711423) .& 16843008) = false),
+  ∃ k0, (Ⓓ (p + k ⊕ 4) : value) = Ⓓ (p ⊕ k0) /\
         nilfree m p (k0 - 4) /\
         4 <= k0 /\
-        (Ⓓ (m Ⓓ[p⊕k] ⊕ 4278124287) : value) = Ⓓ (2^32 + m Ⓓ[p⊕(k0-4)] ⊖ Ones 8 4) /\
+        Ⓓ (m Ⓓ[p⊕k] ⊕ 4278124287) = Ⓓ (2^32 + m Ⓓ[p⊕(k0-4)] ⊖ Ones 8 4) /\
         (p+k0) mod 4 = 0 /\
         (∃ i, i < 4 /\ m (p ⊕ (k0 - 4 + i)) = 0).
 Proof.
@@ -845,19 +802,18 @@ Proof.
     apply (add_sub_mod_le _ (2^32)). discriminate. apply N.ltb_lt, BC1.
 
   exists (k+4). rewrite N.add_sub. repeat split.
-    rewrite N.add_assoc, N.add_mod_idemp_l by discriminate. reflexivity.
+    rewrite N.add_assoc. reflexivity.
     exact NF.
     rewrite N.add_comm. apply N.le_add_r.
     change 4278124287 with (2^32 - Ones 8 4). rewrite N.add_sub_assoc, N.add_comm by discriminate. reflexivity.
     rewrite N.add_assoc, <- N.add_mod_idemp_r, N.add_0_r by discriminate. assumption.
 
-    rewrite sub_lnot in BC2 by apply getmem_bound, WTM.
-    change 4278124287 with (2^32 - Ones 8 4) in BC2.
-    rewrite N.add_sub_assoc, (N.add_comm _ (2^32)) in BC2 by discriminate.
-    rewrite <- (N.add_sub_assoc _ _ (Ones 8 4)) in BC2 by exact LE.
-    rewrite <- (N.add_mod_idemp_l (2^32)), N.mod_same, N.add_0_l in BC2 by discriminate.
-    rewrite (N.mod_small (_ - Ones 8 4)) in BC2 by
-      (eapply N.le_lt_trans; [ apply N.le_sub_l | apply getmem_bound, WTM ]).
+    rewrite <- sub_lnot in BC2 by apply getmem_bound, WTM.
+    change 16711423 with (1*2^25 - Ones 8 4) in BC2.
+    rewrite N.add_sub_assoc, N.add_sub_swap in BC2; [| apply LE | discriminate].
+    change 16843008 with (N.ones 25 .& 16843008) in BC2.
+    rewrite N.land_assoc, N.land_ones, N_lxor_mod_pow2, N.mod_add in BC2 by discriminate.
+    rewrite <- N_lxor_mod_pow2, <- N.land_ones, <- N.land_assoc in BC2.
     apply N.eqb_neq, N.neq_sym, borrow_nil in BC2; try assumption.
     destruct BC2 as [i [I4 NIL]]. exists i. split. exact I4.
     rewrite add_assoc_mod4; assumption.
@@ -866,16 +822,16 @@ Qed.
 Lemma strlen_loopexit3:
   forall m p k (WTM: welltyped_memory m) (NF: nilfree m p k) (PK4: (p+k) mod 4 = 0)
          (BC: (m Ⓓ[p⊕k] ⊕ 4278124287 <? m Ⓓ[p⊕k]) = false),
-  ∃ k0, (Ⓓ (p ⊕ k ⊕ 4) : value) = Ⓓ (p ⊕ k0) /\
+  ∃ k0, Ⓓ (p + k ⊕ 4) = Ⓓ (p ⊕ k0) /\
         nilfree m p (k0 - 4) /\
         4 <= k0 /\
-        (Ⓓ (m Ⓓ[p⊕k] ⊕ 4278124287) : value) = Ⓓ (2^32 + m Ⓓ[ p ⊕ (k0 - 4) ] ⊖ Ones 8 4) /\
+        Ⓓ (m Ⓓ[p⊕k] ⊕ 4278124287) = Ⓓ (2^32 + m Ⓓ[ p ⊕ (k0 - 4) ] ⊖ Ones 8 4) /\
         (p+k0) mod 4 = 0 /\
         (∃ i, i < 4 ∧ m (p ⊕ (k0 - 4 + i)) = 0).
 Proof.
   change 4278124287 with (2^32 - Ones 8 4).
   intros. exists (k+4). rewrite N.add_sub. repeat split.
-    rewrite N.add_assoc, N.add_mod_idemp_l by discriminate. reflexivity.
+    rewrite N.add_assoc. reflexivity.
     exact NF.
     rewrite N.add_comm. apply N.le_add_r.
     rewrite N.add_sub_assoc, N.add_comm by discriminate. reflexivity.
@@ -920,7 +876,6 @@ Proof.
   (* Time how long it takes for each symbolic interpretation step to complete
      (for profiling and to give visual cues that something is happening...). *)
   Local Ltac step := time x86_step.
-  Set Ltac Profiling.
 
   (* Address 0 *)
   step. step. step. step. exists 0. repeat split.
@@ -939,15 +894,13 @@ Proof.
     symmetry. apply Neqb_ok. assumption.
   apply nilfree_succ in NF; [|exact BC2].
   step. step. step. apply Neqb_ok, eq_sym in BC3. exists 2. repeat split.
-    rewrite N.add_mod_idemp_l, <- N.add_assoc by discriminate. reflexivity.
     exact NF.
     rewrite BC3. reflexivity.
-    apply N.lxor_eq in BC3. change (2^2) with 4 in BC3. rewrite N.add_mod, BC3 by discriminate. reflexivity.
+    apply N.lxor_eq in BC3. rewrite N.add_mod, BC3 by discriminate. reflexivity.
   exists 2. eexists. repeat split.
-    rewrite N.add_mod_idemp_l, <- N.add_assoc by discriminate. reflexivity.
     exact NF.
-    change 4 with (2^2) at 3. apply lxor_bound. apply N.mod_upper_bound. discriminate. reflexivity.
-    change (2^2) with 4 in *. rewrite <- N.add_mod_idemp_l by discriminate. destruct (_ mod 4) eqn:H.
+    change 4 with (2^2) at 4. apply lxor_bound. apply N.mod_upper_bound. discriminate. reflexivity.
+    rewrite <- N.add_mod_idemp_l by discriminate. destruct (_ mod 4) eqn:H.
       discriminate.
       assert (LT: N.pos p < 4). rewrite <- H. apply N.mod_upper_bound. discriminate.
       repeat first [ discriminate | destruct p ]. reflexivity.
@@ -955,7 +908,7 @@ Proof.
     rewrite N.add_0_r, (N.mod_small (getmem _ _ _ _)) by apply getmem_bound, WTM. reflexivity.
     apply nilfree0.
     change 4 with (2^2) at 3. apply N.mod_upper_bound. discriminate.
-    change (2^2) with 4 in *. rewrite N.add_0_r. destruct (_ mod 4) eqn:H.
+    rewrite N.add_0_r. destruct (_ mod 4) eqn:H.
       discriminate.
       assert (LT: N.pos p0 < 4). rewrite <- H. apply N.mod_upper_bound. discriminate.
       repeat first [ discriminate | destruct p0 ]. reflexivity.
@@ -966,7 +919,7 @@ Proof.
     exact NF.
     symmetry. apply Neqb_ok. assumption.
   step. step. exists (N.succ k). repeat split.
-    rewrite N.add_mod_idemp_l, <- N.add_assoc, N.add_1_r. reflexivity. discriminate.
+    rewrite <- N.add_assoc, N.add_1_r. reflexivity.
     apply nilfree_succ; assumption.
     rewrite <- N.add_1_r, N.add_assoc, <- N.add_mod_idemp_l, MOD4 by discriminate. reflexivity.
 
@@ -987,51 +940,60 @@ Proof.
       rewrite <- N.mul_sub_distr_l, N.mul_mod_distr_l by discriminate.
       apply N.mul_le_mono_l, N.lt_le_pred, N.mod_upper_bound. discriminate.
   step. step. step.
-    rewrite (Nmod_sub_neg _ (Ones 8 4)), <- (dblmod_r _ 32 8), Nmod_add_sub, dblmod_r by discriminate.
-    rewrite (getmem_mod 1), getmem_1 by apply WTM.
+    rewrite (N.add_comm _ (getmem _ _ _ _)), <- (N.add_sub_assoc _ _ (Ones 8 4)) by discriminate.
+    rewrite (N.add_comm _ (_+(_-_))), <- (N.add_sub_assoc _ _ 4278124287), <- N.add_assoc by discriminate.
+    simpl (_-_+(_-_)).
+    rewrite (N.add_comm (2^8)), <- (N.add_sub_assoc _ _ 255), <- (N.add_assoc _ (_-_)) by discriminate.
+    simpl (_-_+(_-_)).
   step. exists (k-4). repeat split.
-    rewrite Nmod_add_sub_assoc. reflexivity. discriminate. exact K4.
+    rewrite <- N.add_sub_assoc.
+      rewrite <- N.add_sub_assoc by exact K4. psimpl_goal. reflexivity.
+      transitivity k. apply K4. rewrite N.add_comm. apply N.le_add_r.
     exact NF.
     symmetry. apply Neqb_ok, BC.
   apply (nilfree_succ _ _ _ BC) in NF. rewrite <- N.add_1_r, <- Nsub_distr in NF by (discriminate + exact K4).
-  step. step. rewrite ?N.land_diag, (getmem_mod 2), (getmem_shiftr 1), getmem_1, PKI by (reflexivity + exact WTM).
+  step. step. rewrite PKI by (reflexivity + exact WTM).
   step. exists (k-3). repeat split.
-    rewrite Nmod_sub_add_less, Nmod_add_sub_assoc; try (discriminate + reflexivity).
+    rewrite <- Nsub_distr, <- !N.add_sub_assoc. psimpl_goal. reflexivity.
       transitivity 4. discriminate. exact K4.
+      transitivity 4. discriminate. transitivity k. exact K4. rewrite N.add_comm. apply N.le_add_r.
+      discriminate.
+      transitivity (2^32). discriminate. apply N.le_add_r.
     exact NF.
     symmetry. apply Neqb_ok. exact BC0.
   apply (nilfree_succ _ _ _ BC0) in NF. rewrite <- N.add_1_r, <- Nsub_distr in NF;
     [|discriminate | transitivity 4; [ discriminate | exact K4 ]].
-  step. step. step. rewrite (getmem_shiftr 2), (getmem_mod 1), PKI by (reflexivity + exact WTM).
+  step. step. step. rewrite PKI by (reflexivity + exact WTM).
   step. exists (k-2). repeat split.
-    rewrite 2!Nmod_sub_add_less, Nmod_add_sub_assoc; try (discriminate + reflexivity).
+    rewrite <- Nsub_distr, N.add_assoc, <- N.add_sub_assoc, <- N.add_assoc, <- N.add_mod_idemp_l, N.mod_same, N.add_0_l;
+      try (discriminate || reflexivity).
       transitivity 4. discriminate. exact K4.
+      etransitivity; [|apply N.le_add_r]. discriminate.
     exact NF.
     symmetry. apply Neqb_ok. exact BC1.
   apply (nilfree_succ _ _ _ BC1) in NF. rewrite <- N.add_1_r, <- Nsub_distr in NF;
     [|discriminate | transitivity 4; [ discriminate | exact K4 ]].
   step. exists (k-1). repeat split.
-    rewrite 3!Nmod_sub_add_less, Nmod_add_sub_assoc; try (discriminate + reflexivity).
+    rewrite <- Nsub_distr, N.add_assoc, <- N.add_sub_assoc, <- N.add_assoc, <- N.add_mod_idemp_l, N.add_0_l;
+      try (discriminate || reflexivity).
       transitivity 4. discriminate. exact K4.
+      etransitivity; [|apply N.le_add_r]. discriminate.
     exact NF.
 
     destruct NIL as [i [H NIL]]. change 4 with (N.succ (N.succ (N.succ (N.succ 0)))) in H.
     repeat (apply N.lt_succ_r, N.le_lteq in H; destruct H as [H|H]);
     [ destruct i; discriminate
-    | subst i; rewrite N.add_0_r in NIL + (simpl (N.succ _) in NIL; rewrite <- Nsub_distr in NIL by (discriminate + exact K4));
-      solve [ rewrite NIL in *; discriminate | exact NIL ]..].
+    | subst i; rewrite <- Nsub_distr in NIL by (discriminate || exact K4);
+      simpl (k-_) in NIL; rewrite NIL in *; (discriminate || reflexivity)..].
 
   (* Address 182 *)
   destruct PRE as [k [EAX [NF NIL]]].
   step. exists (k mod 2^32). repeat split.
-    rewrite N.add_sub_swap, N.add_mod_idemp_r, N.add_assoc, N.sub_add, <- N.add_mod_idemp_l
-      by solve [ discriminate | apply N.lt_le_incl, getmem_bound, WTM ]. reflexivity.
+    rewrite (N.add_comm _ k), N.add_assoc, N.add_sub, <- N.add_mod_idemp_l, N.add_0_l by discriminate. reflexivity.
     intros i H. apply NF. eapply N.lt_le_trans. exact H. apply N.mod_le. discriminate.
     rewrite N.add_mod_idemp_r by discriminate. exact NIL.
 
   (* Address 186 *)
   destruct PRE as [k [EAX [NF NIL]]].
   step. split; simpl_stores. reflexivity. exists k. repeat split; assumption.
-
-  Show Ltac Profile.
 Qed.

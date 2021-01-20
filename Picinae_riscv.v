@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2021 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2018 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -34,8 +34,9 @@
 
 Require Export Picinae_core.
 Require Export Picinae_theory.
-Require Export Picinae_finterp.
 Require Export Picinae_statics.
+Require Export Picinae_finterp.
+Require Export Picinae_simplifier.
 Require Export Picinae_slogic.
 Require Import NArith.
 Require Import ZArith.
@@ -93,6 +94,8 @@ Module Statics_RISCV := PicinaeStatics IL_RISCV.
 Export Statics_RISCV.
 Module FInterp_RISCV := PicinaeFInterp IL_RISCV Statics_RISCV.
 Export FInterp_RISCV.
+Module PSimp_RISCV := PicinaeSimplifier IL_RISCV Statics_RISCV FInterp_RISCV.
+Export PSimp_RISCV.
 Module SLogic_RISCV := PicinaeSLogic IL_RISCV.
 Export SLogic_RISCV.
 
@@ -498,12 +501,28 @@ Ltac simpl_memaccs H :=
     rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
   end.
 
+(* Values of IL temp variables are ignored by the x86 interpreter once the IL
+   block that generated them completes.  We can therefore generalize them
+   away at IL block boundaries to simplify the expression. *)
+Ltac generalize_temps H :=
+  repeat match type of H with context [ update ?s V_TMP ?u ] =>
+    tryif is_var u then fail else
+    lazymatch type of H with context [ Var V_TMP ] => fail | _ =>
+      let tmp := fresh "tmp" in
+      pose (tmp := u);
+      change (update s V_TMP u) with (update s V_TMP tmp) in H;
+      clearbody tmp;
+      try fold value in tmp
+    end
+  end.
+
 (* Symbolically evaluate a RISC-V machine instruction for one step. *)
 Ltac rv_step_and_simplify XS :=
   step_stmt XS;
+  psimpl_values XS;
   simpl_memaccs XS;
-  destruct_memaccs XS.
-
+  destruct_memaccs XS;
+  generalize_temps XS.
 
 (* Some versions of Coq check injection-heavy proofs very slowly (at Qed).  This slow-down can
    be avoided by sequestering prevalent injections into lemmas, as we do here. *)
@@ -532,7 +551,7 @@ Ltac rv_invhere :=
   first [ eapply nextinv_here; [reflexivity|]
         | apply nextinv_exn
         | apply nextinv_ret; [ prove_prog_exits |] ];
-  simpl_stores.
+  psimpl_goal.
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
