@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2018 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2021 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -151,9 +151,6 @@ Inductive rv_asm :=
 | R5_Jalr (r1 r2:N) (i:Z)
 | R5_Jal (r:N) (i:Z)
 | R5_InvalidI.
-
-Definition xbits n i j := N.land (N.shiftr n i) (N.ones (j - i)).
-Arguments xbits / !n !i !j.
 
 Definition rv_decode_load f :=
   match f with
@@ -371,14 +368,6 @@ Proof.
     apply TVar. repeat first [ reflexivity | destruct n as [n|n|] ].
 Qed.
 
-Lemma xbits_bound:
-  forall n i j w, j-i <= w -> xbits n i j < 2^w.
-Proof.
-  intros. unfold xbits. eapply N.lt_le_trans.
-    rewrite N.land_ones. apply N.mod_upper_bound, N.pow_nonzero. discriminate 1.
-    apply N.pow_le_mono_r. discriminate 1. assumption.
-Qed.
-
 Theorem welltyped_rv2il:
   forall a n, hastyp_stmt rvtypctx rvtypctx (rv2il a (rv_decode n)) rvtypctx.
 Proof.
@@ -400,7 +389,7 @@ Proof.
   | apply hastyp_r5var
   | apply hastyp_r5store
   | apply TBinOp with (w:=32)
-  | apply xbits_bound
+  | eapply N.lt_le_trans; [apply xbits_bound|]
   | apply ofZ_bound
   | apply N.mod_lt
   | econstructor ] ].

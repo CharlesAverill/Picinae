@@ -1,6 +1,6 @@
 (* Example proofs using Picinae for Intel x86 Architecture
 
-   Copyright (c) 2018 Kevin W. Hamlen
+   Copyright (c) 2021 Kevin W. Hamlen
    Computer Science Department
    The University of Texas at Dallas
 

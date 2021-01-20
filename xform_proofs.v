@@ -1,6 +1,6 @@
 (* Example proofs using Picinae for reasoning about x86 code transformations
 
-   Copyright (c) 2018 Kevin W. Hamlen
+   Copyright (c) 2021 Kevin W. Hamlen
    Computer Science Department
    The University of Texas at Dallas
 

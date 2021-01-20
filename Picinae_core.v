@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2018 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2021 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -73,11 +73,11 @@ Definition hdomain := heap unit.
 Definition htotal : hdomain := fun _ => Some tt.
 
 (* Reinterpret an unsigned integer as a two's complement signed integer. *)
-Definition toZ (w:bitwidth) (n:N) : Z :=
-  if N.testbit n (N.pred w) then Z.of_N n - Z.of_N (2^w) else Z.of_N n.
+Definition canonicalZ w z := ((z + 2^Z.pred w) mod 2^w - 2^Z.pred w)%Z.
+Definition toZ (w:bitwidth) (n:N) : Z := canonicalZ (Z.of_N w) (Z.of_N n).
 
 (* Convert an integer back to two's complement form. *)
-Definition ofZ w z := Z.to_N (z mod (Z.of_N (2^w))).
+Definition ofZ (w:bitwidth) (z:Z) := Z.to_N (z mod (2^Z.of_N w)).
 
 (* Two's complement numbers of width w have values within the interval
    [ -2^(w-1), 2^(w-1) ), except that we adopt the convention that
@@ -85,17 +85,16 @@ Definition ofZ w z := Z.to_N (z mod (Z.of_N (2^w))).
    occasionally appear in the context of bitwidth-subtraction, which can
    yield a difference of zero bits holding a value of zero.) *)
 Definition signed_range w z :=
-  (match w with N0 => z = Z0 | _ =>
-    - Z.of_N (2^N.pred w)%N <= z < Z.of_N (2^N.pred w)%N
-   end)%Z.
+  (-(2^Z.pred (Z.of_N w)) <= z < 2^Z.of_N (N.pred w))%Z.
 
 (* Perform a signed operation by converting the unsigned operands to signed
    operands, applying the signed operation, and then converting the signed
    result back to unsigned. *)
-Definition sbop bop w n1 n2 := ofZ w (bop (toZ w n1) (toZ w n2)).
+Definition sbop1 bop w n1 n2 := ofZ w (bop (toZ w n1) (Z.of_N n2)).
+Definition sbop2 bop w n1 n2 := ofZ w (bop (toZ w n1) (toZ w n2)).
 
 (* Compute an arithmetic shift-right (sign-extending shift-right). *)
-Definition ashiftr w := sbop Z.shiftr w.
+Definition ashiftr w := sbop1 Z.shiftr w.
 
 (* Force a result to a given width by dropping the high bits. *)
 Definition towidth w n : value := VaN (n mod (2^w)) w.
@@ -111,7 +110,11 @@ Definition slt w n1 n2 := Z.ltb (toZ w n1) (toZ w n2).
 (* Perform signed less-or-equal comparison. *)
 Definition sle w n1 n2 := Z.leb (toZ w n1) (toZ w n2).
 
-(* Perform a bitwidth cast operation. *)
+(* Unsigned cast: extract bits i to i+j-1 of an unsigned binary number. *)
+Definition xbits n i j := (N.shiftr n i) mod 2^(j - i).
+Arguments xbits / !n !i !j.
+
+(* Signed cast: extract the low w' bits of a w-width signed number, preserving sign *)
 Definition scast w w' n := ofZ w' (toZ w n).
 
 (* Endianness: *)
@@ -158,9 +161,9 @@ Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
   | OP_MINUS => towidth w (2^w + n1 - n2)
   | OP_TIMES => towidth w (n1*n2)
   | OP_DIVIDE => VaN (n1/n2) w
-  | OP_SDIVIDE => VaN (sbop Z.quot w n1 n2) w
+  | OP_SDIVIDE => VaN (sbop2 Z.quot w n1 n2) w
   | OP_MOD => VaN (N.modulo n1 n2) w
-  | OP_SMOD => VaN (sbop Z.rem w n1 n2) w
+  | OP_SMOD => VaN (sbop2 Z.rem w n1 n2) w
   | OP_LSHIFT => towidth w (N.shiftl n1 n2)
   | OP_RSHIFT => VaN (N.shiftr n1 n2) w
   | OP_ARSHIFT => VaN (ashiftr w n1 n2) w
@@ -190,6 +193,8 @@ Definition cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
   | CAST_HIGH => N.shiftr n (w - w')
   | CAST_LOW => n mod 2^w'
   end.
+
+
 
 (* A program exits by jumping to an address outside the program (Exit),
    or raising an exception (Raise). *)
@@ -268,6 +273,7 @@ Inductive stmt : Type :=
    Note that the sequence infix operator $; is RIGHT-associative.  This is critical
    because it allows sequences to be easily analyzed in forward order, which is the
    natural order in which most proofs progress. *)
+Declare Scope stmt_scope.
 Delimit Scope stmt_scope with stmt.
 Bind Scope stmt_scope with stmt.
 Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : stmt_scope.
@@ -341,8 +347,7 @@ Inductive eval_exp (s:store): exp -> value -> Prop :=
        (E': eval_exp s (match n1 with N0 => e3 | _ => e2 end) u'):
        eval_exp s (Ite e1 e2 e3) u'
 | EExtract w n1 n2 e1 n (E1: eval_exp s e1 (VaN n w)):
-           eval_exp s (Extract n1 n2 e1) (VaN (cast CAST_HIGH (N.succ n1) (N.succ (n1-n2))
-                                                 (cast CAST_LOW w (N.succ n1) n)) (N.succ (n1-n2)))
+           eval_exp s (Extract n1 n2 e1) (VaN (xbits n n2 (N.succ n1)) (N.succ n1 - n2))
 | EConcat e1 e2 n1 w1 n2 w2 (E1: eval_exp s e1 (VaN n1 w1)) (E2: eval_exp s e2 (VaN n2 w2)):
           eval_exp s (Concat e1 e2) (VaN (N.lor (N.shiftl n1 w2) n2) (w1+w2)).
 
