@@ -34,8 +34,9 @@
 
 Require Export Picinae_core.
 Require Export Picinae_theory.
-Require Export Picinae_finterp.
 Require Export Picinae_statics.
+Require Export Picinae_finterp.
+Require Export Picinae_simplifier.
 Require Export Picinae_slogic.
 Require Import NArith.
 Require Import ZArith.
@@ -93,6 +94,8 @@ Module Statics_RISCV := PicinaeStatics IL_RISCV.
 Export Statics_RISCV.
 Module FInterp_RISCV := PicinaeFInterp IL_RISCV Statics_RISCV.
 Export FInterp_RISCV.
+Module PSimp_RISCV := PicinaeSimplifier IL_RISCV Statics_RISCV FInterp_RISCV.
+Export PSimp_RISCV.
 Module SLogic_RISCV := PicinaeSLogic IL_RISCV.
 Export SLogic_RISCV.
 
@@ -151,9 +154,6 @@ Inductive rv_asm :=
 | R5_Jalr (r1 r2:N) (i:Z)
 | R5_Jal (r:N) (i:Z)
 | R5_InvalidI.
-
-Definition xbits n i j := N.land (N.shiftr n i) (N.ones (j - i)).
-Arguments xbits / !n !i !j.
 
 Definition rv_decode_load f :=
   match f with
@@ -371,14 +371,6 @@ Proof.
     apply TVar. repeat first [ reflexivity | destruct n as [n|n|] ].
 Qed.
 
-Lemma xbits_bound:
-  forall n i j w, j-i <= w -> xbits n i j < 2^w.
-Proof.
-  intros. unfold xbits. eapply N.lt_le_trans.
-    rewrite N.land_ones. apply N.mod_upper_bound, N.pow_nonzero. discriminate 1.
-    apply N.pow_le_mono_r. discriminate 1. assumption.
-Qed.
-
 Theorem welltyped_rv2il:
   forall a n, hastyp_stmt rvtypctx rvtypctx (rv2il a (rv_decode n)) rvtypctx.
 Proof.
@@ -400,7 +392,7 @@ Proof.
   | apply hastyp_r5var
   | apply hastyp_r5store
   | apply TBinOp with (w:=32)
-  | apply xbits_bound
+  | eapply N.lt_le_trans; [apply xbits_bound|]
   | apply ofZ_bound
   | apply N.mod_lt
   | econstructor ] ].
@@ -509,12 +501,28 @@ Ltac simpl_memaccs H :=
     rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
   end.
 
+(* Values of IL temp variables are ignored by the x86 interpreter once the IL
+   block that generated them completes.  We can therefore generalize them
+   away at IL block boundaries to simplify the expression. *)
+Ltac generalize_temps H :=
+  repeat match type of H with context [ update ?s V_TMP ?u ] =>
+    tryif is_var u then fail else
+    lazymatch type of H with context [ Var V_TMP ] => fail | _ =>
+      let tmp := fresh "tmp" in
+      pose (tmp := u);
+      change (update s V_TMP u) with (update s V_TMP tmp) in H;
+      clearbody tmp;
+      try fold value in tmp
+    end
+  end.
+
 (* Symbolically evaluate a RISC-V machine instruction for one step. *)
 Ltac rv_step_and_simplify XS :=
   step_stmt XS;
+  psimpl_values XS;
   simpl_memaccs XS;
-  destruct_memaccs XS.
-
+  destruct_memaccs XS;
+  generalize_temps XS.
 
 (* Some versions of Coq check injection-heavy proofs very slowly (at Qed).  This slow-down can
    be avoided by sequestering prevalent injections into lemmas, as we do here. *)
@@ -543,7 +551,7 @@ Ltac rv_invhere :=
   first [ eapply nextinv_here; [reflexivity|]
         | apply nextinv_exn
         | apply nextinv_ret; [ prove_prog_exits |] ];
-  simpl_stores.
+  psimpl_goal.
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many

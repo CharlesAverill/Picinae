@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2018 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2021 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -88,33 +88,39 @@ Lemma rem_bound:
 Proof.
   assert (BP: forall p1 p2, (0 <= Z.rem (Z.pos p1) (Z.pos p2) < Z.pos p2)%Z).
     intros. apply Z.rem_bound_pos. apply Pos2Z.is_nonneg. apply Pos2Z.is_pos.
-  intros. destruct w as [|w]. unfold signed_range in RX,RY. subst. reflexivity.
+  intros. destruct w as [|w]. apply signed_range_0_l in RX. apply signed_range_0_l in RY. subst. apply signed_range_0_r.
   destruct y as [|p2|p2]; destruct x as [|p1|p1]; try assumption;
   specialize (BP p1 p2); destruct BP as [BP1 BP2].
 
   (* x>0, y>0 *)
-  unfold signed_range. split.
-    transitivity Z0. apply Z.opp_nonpos_nonneg. rewrite <- N2Z.inj_0. apply N2Z.inj_le. apply N.le_0_l. assumption.
-    transitivity (Z.pos p2). assumption. apply (proj2 RY).
+  split.
+    transitivity Z0. apply Z.opp_nonpos_nonneg. apply Z.pow_nonneg. discriminate. assumption.
+    transitivity (Z.pos p2). assumption. apply RY.
 
   (* x<0, y>0 *)
   rewrite <- Pos2Z.opp_pos, Z.rem_opp_l; [|discriminate]. split.
-    apply -> Z.opp_le_mono. apply Z.lt_le_incl. transitivity (Z.pos p2). assumption. apply (proj2 RY).
-    apply Z.le_lt_trans with (m:=Z0). apply Z.opp_nonpos_nonneg. assumption. apply Zlt_0_pow2.
+    apply -> Z.opp_le_mono. apply Z.lt_le_incl. transitivity (Z.pos p2).
+      assumption.
+      rewrite <- N2Z.inj_pred by reflexivity. apply RY.
+    apply Z.le_lt_trans with (m:=Z0). apply Z.opp_nonpos_nonneg.
+      assumption.
+      apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
 
   (* x>0, y<0 *)
   rewrite <- Pos2Z.opp_pos, Z.rem_opp_r; [|discriminate]. split.
-    transitivity Z0. apply Z.opp_nonpos_nonneg. rewrite <- N2Z.inj_0. apply N2Z.inj_le. apply N.le_0_l. assumption.
+    transitivity Z0. apply Z.opp_nonpos_nonneg, Z.pow_nonneg. discriminate. assumption.
     apply Z.lt_le_trans with (m:=Z.pos p2).
       assumption.
-      apply proj1 in RY. rewrite <- Pos2Z.opp_pos in RY. apply Z.opp_le_mono in RY. assumption.
+      apply Z.opp_le_mono. rewrite N2Z.inj_pred, Pos2Z.opp_pos by reflexivity. apply RY.
 
   (* x<0, y<0 *)
   do 2 rewrite <- Pos2Z.opp_pos. rewrite Z.rem_opp_r,Z.rem_opp_l; try discriminate. split.
     apply -> Z.opp_le_mono. transitivity (Z.pos p1).
       apply Z.rem_le. apply Pos2Z.is_nonneg. apply Pos2Z.is_pos.
-      apply proj1 in RX. rewrite <- Pos2Z.opp_pos in RX. apply Z.opp_le_mono. assumption.
-    apply Z.le_lt_trans with (m:=Z0). apply Z.opp_nonpos_nonneg. assumption. apply Zlt_0_pow2.
+      apply Z.opp_le_mono. rewrite Pos2Z.opp_pos. apply RX.
+    apply Z.le_lt_trans with (m:=Z0).
+      apply Z.opp_nonpos_nonneg. assumption.
+      apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
 Qed.
 
 Lemma mod_bound:
@@ -316,8 +322,8 @@ Inductive hastyp_exp (c:typctx): exp -> typ -> Prop :=
        (T1: hastyp_exp c e1 (NumT w)) (T2: hastyp_exp c e2 t) (T3: hastyp_exp c e3 t):
        hastyp_exp c (Ite e1 e2 e3) t
 | TExtract w n1 n2 e1
-           (T1: hastyp_exp c e1 (NumT w)) (LO: n2 <= n1) (HI: n1 < w):
-           hastyp_exp c (Extract n1 n2 e1) (NumT (N.succ (n1-n2)))
+           (T1: hastyp_exp c e1 (NumT w)) (HI: n1 < w):
+           hastyp_exp c (Extract n1 n2 e1) (NumT (N.succ n1 - n2))
 | TConcat e1 e2 w1 w2
           (T1: hastyp_exp c e1 (NumT w1)) (T2: hastyp_exp c e2 (NumT w2)):
           hastyp_exp c (Concat e1 e2) (NumT (w1+w2)).
@@ -395,11 +401,11 @@ Proof.
 Qed.
 
 Lemma hastyp_extract:
-  forall w c n1 n2 e1 w' (W: N.succ (n1-n2) = w')
-         (T1: hastyp_exp c e1 (NumT w)) (LO: n2 <= n1) (HI: n1 < w),
+  forall w c n1 n2 e1 w' (W: N.succ n1 - n2 = w')
+         (T1: hastyp_exp c e1 (NumT w)) (HI: n1 < w),
   hastyp_exp c (Extract n1 n2 e1) (NumT w').
 Proof.
-  intros. rewrite <- W. apply TExtract with (w:=w); assumption.
+  intros. rewrite <- W. eapply TExtract; eassumption.
 Qed.
 
 Lemma hastyp_concat:
@@ -748,9 +754,7 @@ Proof.
     revert MCS E'. apply IHTE2.
 
   (* Extract *)
-  apply typesafe_cast.
-    apply typesafe_cast. assumption. apply N.le_succ_l. assumption.
-    apply -> N.succ_le_mono. apply N.le_sub_l.
+  apply TVN, xbits_bound.
 
   (* Concat *)
   apply TVN. apply concat_bound; assumption.
@@ -813,7 +817,7 @@ Proof.
   apply EIte with (n1:=n) (w1:=w). assumption. destruct n; assumption.
 
   (* Extract *)
-  eexists. apply EExtract; eassumption.
+  eexists. eapply EExtract. eassumption.
 
   (* Concat *)
   eexists. apply EConcat; eassumption.
@@ -1033,7 +1037,7 @@ Fixpoint typchk_exp (e:exp) (c:typctx): option typ :=
       end
   | Extract n1 n2 e1 =>
       match typchk_exp e1 c with
-      | Some (NumT w) => if andb (n2 <=? n1) (n1 <? w) then Some (NumT (N.succ (n1-n2))) else None
+      | Some (NumT w) => if (n1 <? w) then Some (NumT (N.succ n1 - n2)) else None
       | _ => None
       end
   | Concat e1 e2 =>
@@ -1165,12 +1169,10 @@ Proof.
   (* Extract *)
   specialize (IHe c).
   destruct (typchk_exp e c) as [t1|]; [destruct t1|]; try discriminate.
-  destruct (n2 <=? n1) eqn:LE; [|discriminate]. apply N.leb_le in LE.
   destruct (n1 <? w) eqn:LT; [|discriminate]. apply N.ltb_lt in LT.
   injection H; intro; subst.
   eapply TExtract.
     apply IHe. reflexivity.
-    exact LE.
     exact LT.
 
   (* Concat *)

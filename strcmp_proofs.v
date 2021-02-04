@@ -1,6 +1,6 @@
 (* Example proofs using Picinae for Intel x86 Architecture
 
-   Copyright (c) 2018 Kevin W. Hamlen
+   Copyright (c) 2021 Kevin W. Hamlen
    Computer Science Department
    The University of Texas at Dallas
 
@@ -130,15 +130,13 @@ Proof.
   clear s MEM0 XP0 ESP0 XP. (* C:picinae *)
 
   (* We are now ready to break the goal down into one case for each invariant-point.
-     The shelve_cases tactic finds all the invariants defined by the invariant-set
+     The destruct_inv tactic finds all the invariants defined by the invariant-set
      in a precondition hypothesis (PRE).  Its first argument is the address bitwidth
-     of the ISA (32 bits in this case).  After shelve_cases, use Coq's "Unshelve"
-     command to recover the list of goals that the tactic "shelved" for you. *)
-  shelve_cases 32 PRE. (* C:picinae *)
-  Unshelve. (* C:picinae *)
+     of the ISA (32 bits in this case). *)
+  destruct_inv 32 PRE.
 
   (* Now we launch the symbolic interpreter on all goals in parallel. *)
-  all: x86_step. (* C:picinae *)
+  all: x86_step'.
 
   (* Note that we wind up with more goals that we started with, since some of the
      instructions branch, requiring us to prove the goal for each possible destination.
@@ -150,7 +148,6 @@ Qed.
 
 
 
-(* CATEGORY: strcmp specification *)
 (* Example #4: Partial correctness
    Finally, we can prove that strcmp returns the correct answer: EAX equals zero
    if the input strings are equal, EAX is negative if the first lexicographically
@@ -225,11 +222,11 @@ Proof.
   clear s MDL0 MEM0 ESP0 XP XP0. (* C:picinae *)
 
   (* Break the proof into cases, one for each invariant-point. *)
-  shelve_cases 32 PRE. Unshelve. (* C:picinae *)
+  destruct_inv 32 PRE.
 
   (* Time how long it takes for each symbolic interpretation step to complete
      (for profiling and to give visual cues that something is happening...). *)
-  Local Ltac step := time x86_step. (* C:picinae *)
+  Local Ltac step := time x86_step'.
 
   (* Address 0 *)
   step. step. exists 0. (* C:picinae *)
@@ -238,36 +235,33 @@ Proof.
   intros i LT. destruct i; discriminate. (* C:regular *)
 
   (* Address 8 *)
-  destruct PRE as [k [ECX [EDX SEQ]]]. (* C:picinae *)
-  step. step. (* C:picinae *)
-    rewrite cmp_zf; [| apply N.mod_upper_bound, N.pow_nonzero; discriminate | apply WTM]. (* C:binarith *)
-    rewrite lshift_lor_byte, (N.mod_small (mem _)) by apply WTM. (* C:binarith *)
-  step. (* C:picinae *)
+  destruct PRE as [k [ECX [EDX SEQ]]].
+  step. step. step.
 
     (* Address 14 *)
-    step. step. step. rewrite lshift_lor_byte, (N.mod_small (mem _)) by apply WTM. step. (* C:picinae *)
+    step. step. step. step.
 
       (* Address 20 *)
-      step. step. (* C:picinae *)
-      exists 0, k. simpl_stores. repeat first [ exact SEQ | split ]. (* C:picinae *)
-        intro. symmetry. apply Neqb_ok, BC0. (* C:regular *)
-        apply N.compare_eq_iff, Neqb_ok, BC. (* C:regular *)
+      step. step.
+      exists 0, k. psimpl_goal. repeat first [ exact SEQ | split ].
+        intro. symmetry. apply Neqb_ok, BC0.
+        apply N.compare_eq_iff, Neqb_ok, BC.
 
       (* loop back to Address 8 *)
-      exists (k+1). rewrite !N.add_assoc, !N.add_mod_idemp_l by (apply N.pow_nonzero; discriminate). (* C:bitarith *)
-      split. reflexivity. split. reflexivity. (* C:regular *)
-      intros i IK. rewrite N.add_1_r in IK. apply N.lt_succ_r, N.le_lteq in IK. destruct IK as [IK|IK]. (* C:regular *)
-        apply SEQ, IK. (* C:bitarith *)
-        subst. split. (* C:regular *)
-          apply Neqb_ok. assumption. (* C:regular *)
-          apply N.neq_0_lt_0, N.neq_sym, N.eqb_neq. assumption. (* C:regular *)
+      exists (k+1). rewrite !N.add_assoc.
+      split. reflexivity. split. reflexivity.
+      intros i IK. rewrite N.add_1_r in IK. apply N.lt_succ_r, N.le_lteq in IK. destruct IK as [IK|IK].
+        apply SEQ, IK.
+        subst. split.
+          apply Neqb_ok. assumption.
+          apply N.neq_0_lt_0, N.neq_sym, N.eqb_neq. assumption.
 
     (* Address 23 *)
-    step. step. step. step. (* C:picinae *)
-    eexists. exists k. simpl_stores. split. reflexivity. split. exact SEQ. split. (* C:regular *)
-      intro. destruct (_ <? _); discriminate. (* C:regular *)
-      apply N.eqb_neq, N.lt_gt_cases in BC. destruct BC as [BC|BC]. (* C:regular *)
-        rewrite (proj2 (N.compare_lt_iff _ _)), (proj2 (N.ltb_lt _ _)) by exact BC. reflexivity. (* C:regular *)
-        rewrite (proj2 (N.compare_gt_iff _ _)) by exact BC. rewrite (proj2 (N.ltb_ge _ _)) by apply N.lt_le_incl, BC. reflexivity. (* C:regular *)
+    step. step. step. step.
+    eexists. exists k. psimpl_goal. split. reflexivity. split. exact SEQ. split.
+      intro. destruct (_ <? _); discriminate.
+      apply N.eqb_neq, N.lt_gt_cases in BC. destruct BC as [BC|BC].
+        rewrite (proj2 (N.compare_lt_iff _ _)), (proj2 (N.ltb_lt _ _)) by exact BC. reflexivity.
+        rewrite (proj2 (N.compare_gt_iff _ _)) by exact BC. rewrite (proj2 (N.ltb_ge _ _)) by apply N.lt_le_incl, BC. reflexivity.
 Qed.
 (* CATEGORY: END *)

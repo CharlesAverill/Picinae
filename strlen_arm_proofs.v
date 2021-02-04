@@ -246,7 +246,7 @@ Proof.
   apply (arm_regsize MDL0) in R0. simpl in R0. rename R0 into P32.
   clear s MDL0 MEM0 LR0 XP XP0.
 
-  shelve_cases 32 PRE. Unshelve.
+  destruct_inv 32 PRE.
 
   Local Ltac step := time arm_step.
 

@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2018 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2021 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -34,8 +34,9 @@
 
 Require Export Picinae_core.
 Require Export Picinae_theory.
-Require Export Picinae_finterp.
 Require Export Picinae_statics.
+Require Export Picinae_finterp.
+Require Export Picinae_simplifier.
 Require Export Picinae_slogic.
 Require Import NArith.
 Require Import Program.Equality.
@@ -104,6 +105,8 @@ Module Statics_i386 := PicinaeStatics IL_i386.
 Export Statics_i386.
 Module FInterp_i386 := PicinaeFInterp IL_i386 Statics_i386.
 Export FInterp_i386.
+Module PSimp_i386 := PicinaeSimplifier IL_i386 Statics_i386 FInterp_i386.
+Export PSimp_i386.
 Module SLogic_i386 := PicinaeSLogic IL_i386.
 Export SLogic_i386.
 
@@ -201,43 +204,6 @@ Proof.
   intros. rewrite <- N.lxor_lor, N.add_nocarry_lxor by assumption. reflexivity.
 Qed.
 
-(* ((width) memory[...]) mod 2^width = (width) memory[...] *)
-Lemma memlo: forall len w m a, welltyped_memory m -> Mb*len <= w ->
-  (getmem LittleE len m a) mod 2^w = getmem LittleE len m a.
-Proof.
-  intros. apply N.mod_small. eapply N.lt_le_trans.
-    apply getmem_bound. assumption.
-    apply N.pow_le_mono_r. discriminate 1. assumption.
-Qed.
-
-(* (e mod 2^b) mod 2^c = e mod 2^(min b c) *)
-Lemma dblmod_l: forall a b c, b <= c -> (a mod 2^b) mod 2^c = a mod 2^b.
-Proof.
-  intros. repeat rewrite <- N.land_ones.
-  rewrite <- N.land_assoc, (N.land_comm (N.ones _)), N.land_ones, N.ones_mod_pow2.
-  reflexivity. assumption.
-Qed.
-
-Lemma dblmod_r: forall a b c, c <= b -> (a mod 2^b) mod 2^c = a mod 2^c.
-Proof.
-  intros. repeat rewrite <- N.land_ones.
-  rewrite <- N.land_assoc, N.land_ones, N.ones_mod_pow2.
-  reflexivity. assumption.
-Qed.
-
-(* e & (N.ones w) = e mod 2^w *)
-Remark land_mod_r: forall x y z, N.log2 (N.succ y) = N.succ (N.log2 y) -> z = N.log2 (N.succ y) ->
-  N.land x y = x mod 2^z.
-Proof.
-  intros x y z H1 H2. subst z. destruct y.
-    rewrite N.mod_1_r. apply N.land_0_r.
-
-    apply N.log2_eq_succ_iff_pow2 in H1; [|reflexivity]. destruct H1 as [b H1].
-    rewrite H1, N.log2_pow2 by apply N.le_0_l.
-    rewrite <- (N.pred_succ (Npos p)), H1, <- N.ones_equiv.
-    apply N.land_ones.
-Qed.
-
 (* (a & b) ^ c = (a ^ c) & b whenever b & c = c *)
 Lemma lxor_land:
   forall a b c, N.land b c = c -> N.lxor (N.land a b) c = N.land (N.lxor a c) b.
@@ -246,155 +212,6 @@ Proof.
  do 2 rewrite N.land_spec, N.lxor_spec. rewrite <- H, N.land_spec.
  repeat destruct (N.testbit _ n); reflexivity.
 Qed.
-
-Remark land_mod_l: forall x y z, N.log2 (N.succ x) = N.succ (N.log2 x) -> z = N.log2 (N.succ x) ->
-  N.land x y = y mod 2^z.
-Proof. intros x y. rewrite N.land_comm. apply land_mod_r. Qed.
-
-(* (x*y) mod x = 0 *)
-Remark mod_mul_l: forall x y, x<>0 -> (x*y) mod x = 0.
-Proof. intros. rewrite N.mul_comm. apply N.mod_mul. assumption. Qed.
-
-(* (x+y) mod x = y mod x *)
-Remark mod_add_l: forall x y, x<>0 -> (x+y) mod x = y mod x.
-Proof. intros. rewrite <- N.add_mod_idemp_l, N.mod_same, N.add_0_l by assumption. reflexivity. Qed.
-
-(* (y+x) mod x = y mod x *)
-Remark mod_add_r: forall x y, y<>0 -> (x+y) mod y = x mod y.
-Proof. intros. rewrite <- N.add_mod_idemp_r, N.mod_same, N.add_0_r by assumption. reflexivity. Qed.
-
-(* (x*z + y) mod z = y mod z *)
-Remark mod_add_mul_lr: forall x y z, z<>0 -> (x*z + y) mod z = y mod z.
-Proof. intros. rewrite <- N.add_mod_idemp_l, N.mod_mul, N.add_0_l by assumption. reflexivity. Qed.
-
-(* (z*x + y) mod z = y mod z *)
-Remark mod_add_mul_ll: forall x y z, z<>0 -> (z*x + y) mod z = y mod z.
-Proof. intros. rewrite <- N.add_mod_idemp_l, mod_mul_l, N.add_0_l by assumption. reflexivity. Qed.
-
-(* (x + y*z) mod z = x mod z *)
-Remark mod_add_mul_rr: forall x y z, z<>0 -> (x + y*z) mod z = x mod z.
-Proof. intros. rewrite <- N.add_mod_idemp_r, N.mod_mul, N.add_0_r by assumption. reflexivity. Qed.
-
-(* (x + z*y) mod z = x mod z *)
-Remark mod_add_mul_rl: forall x y z, z<>0 -> (x + z*y) mod z = x mod z.
-Proof. intros. rewrite <- N.add_mod_idemp_r, mod_mul_l, N.add_0_r by assumption. reflexivity. Qed.
-
-(* (mem a) mod 2^8 = mem a *)
-Remark mem_small: forall m a, welltyped_memory m -> (m a) mod 2^Mb = m a.
-Proof. intros. apply N.mod_small, H. Qed.
-
-(* e << w = 0 whenever e < 2^w *)
-Lemma shiftr_low_pow2: forall a n, a < 2^n -> N.shiftr a n = 0.
-Proof.
-  intros. destruct a. apply N.shiftr_0_l.
-  apply N.shiftr_eq_0. apply N.log2_lt_pow2. reflexivity. assumption.
-Qed.
-
-(* Simplify zero-flag after cmp from a subtraction to a comparison. *)
-Lemma cmp_zf:
-  forall n1 n2 w (LT1: n1 < 2^w) (LT2: n2 < 2^w),
-  (0 =? (2^w + n1 - n2) mod 2^w) = (n1 =? n2).
-Proof.
-  intros. rewrite (N.eqb_compare n1 n2). destruct (n1 ?= n2) eqn:H.
-
-    apply N.compare_eq in H. subst. rewrite N.add_sub, N.mod_same.
-      reflexivity.
-      apply N.pow_nonzero. discriminate.
-
-    rewrite N.mod_small.
-      apply N.eqb_neq, N.neq_sym, N.sub_gt. eapply N.lt_le_trans.
-        exact LT2.
-        apply N.le_add_r.
-      eapply N.add_lt_mono_r. rewrite N.sub_add.
-        apply N.add_lt_mono_l. apply -> N.compare_lt_iff. exact H.
-        apply N.lt_le_incl, N.lt_lt_add_r, LT2.
-
-    rewrite <- N.add_sub_assoc by apply N.lt_le_incl, N.compare_gt_iff, H.
-    rewrite <- N.add_mod_idemp_l, N.mod_same by (apply N.pow_nonzero; discriminate).
-    rewrite N.add_0_l, N.mod_small.
-      apply N.eqb_neq, N.neq_sym, N.sub_gt, N.compare_gt_iff, H.
-      eapply N.le_lt_trans. apply N.le_sub_l. exact LT1.
-Qed.
-
-(* These nested-ifs arise from conditional branches on status flag expressions. *)
-Remark if_if:
-  forall A (b:bool) (x y:A),
-  (if (if b then 1 else N0) then x else y) = (if b then y else x).
-Proof. intros. destruct b; reflexivity. Qed.
-
-Remark if_not_if:
-  forall A (b:bool) (x y:A),
-  (if (N.lnot (if b then 1 else 0) 1) then x else y) = (if b then x else y).
-Proof. intros. destruct b; reflexivity. Qed.
-
-Remark if_same:
-  forall A (b:bool) (x:A), (if b then x else x) = x.
-Proof. intros. destruct b; reflexivity. Qed.
-
-
-(* When reducing modulo operations, try auto-solving inequalities of the form
-   x < 2^w. *)
-
-Ltac solve_lt_prim := solve
-[ reflexivity (* solves "<" relations on closed terms *)
-| match goal with
-  | [ |- _ mod _ < _ ] => apply N.mod_upper_bound; discriminate 1
-  | [ M: models x86typctx ?s, R: ?s _ = VaN ?x _ |- ?x < _ ] => apply (x86_regsize M R)
-  | [ WTM: welltyped_memory ?m |- ?m _ < _ ] => apply WTM
-  | [ |- getmem _ _ _ _ < 2^_ ] => apply getmem_bound; assumption
-  | [ |- N.lxor _ _ < 2^_ ] => apply lxor_bound; solve_lt
-  | [ |- N.land _ _ < 2^_ ] => apply land_bound; solve_lt
-  | [ |- N.lor _ _ < 2^_ ] => apply lor_bound; solve_lt
-  | [ |- N.lnot _ _ < 2^_ ] => apply lnot_bound; solve_lt
-  end
-| (eapply N.le_lt_trans; [ apply N.le_sub_l | solve_lt ]) ]
-with solve_lt := solve
-[ assumption | solve_lt_prim
-| (eapply N.lt_le_trans; [ solve [ eassumption | solve_lt_prim ]
-                         | discriminate 1 ]) ].
-
-(* Implementation note:  The following tactic repeatedly applies all the above
-   rewriting lemmas using repeat+rewrite with a long list of lemma names.  This
-   seems to be faster than rewrite_strat or autorewrite with a hint database
-   (as of Coq 8.8.2).  Consider changing if performance of rewrite_strat or
-   autorewrite improves in future Coq versions. *)
-
-Ltac x86_rewrite_rules H :=
-  repeat rewrite
-     ?N.sub_0_r, ?N.add_0_l, ?N.add_0_r, ?N.mul_0_l, ?N.mul_0_r,
-     ?N.land_0_l, ?N.land_0_r, ?N.lor_0_l, ?N.lor_0_r, ?N.lxor_0_l, ?N.lxor_0_r,
-     ?N.mul_1_l, ?N.mul_1_r, ?N.lxor_nilpotent,
-
-     ?N.mod_same, ?N.mod_mul, ?dblmod_l, ?dblmod_r, ?mod_mul_l, ?mod_add_l, ?mod_add_r,
-     ?mod_add_mul_lr, ?mod_add_mul_ll, ?mod_add_mul_rr, ?mod_add_mul_rl,
-
-     ?lxor_land,
-
-     ?mem_small
-    in H by solve [ discriminate 1 | assumption | reflexivity ].
-
-
-(* Try to auto-simplify modular arithmetic expressions within a Coq expression
-   resulting from functional interpretation of an x86 IL statement. *)
-
-Tactic Notation "simpl_x86" "in" hyp(H) :=
-  rewrite ?fold_parity, ?if_if, ?if_not_if, ?if_same, ?getmem_1 in H;
-  x86_rewrite_rules H;
-  repeat (
-    match type of H with
-    | context [ (getmem LittleE ?len ?m ?a) mod 2^?w ] => rewrite (memlo len w m a) in H; [| assumption | discriminate 1 ]
-    | context [ N.shiftr ?x ?y ] => rewrite (shiftr_low_pow2 x y) in H by solve_lt
-    | context [ ?x mod ?m ] => rewrite (N.mod_small x m) in H by solve_lt
-    | context [ N.land ?x ?y ] => (erewrite (land_mod_r x y) in H +
-                                   erewrite (land_mod_l x y) in H); [| reflexivity | simpl;reflexivity ]
-    end;
-    x86_rewrite_rules H
-  ).
-
-Ltac simpl_x86 :=
-  lazymatch goal with |- ?G => let H := fresh in let Heq := fresh in
-    remember G as H eqn:Heq; simpl_x86 in Heq; subst H
-  end.
 
 (* Simplify x86 memory access assertions produced by step_stmt. *)
 Ltac simpl_memaccs H :=
@@ -424,11 +241,10 @@ Ltac generalize_temps H :=
    the resulting Coq expressions. *)
 Ltac x86_step_and_simplify XS :=
   step_stmt XS;
+  psimpl_values XS;
   simpl_memaccs XS;
   destruct_memaccs XS;
-  generalize_temps XS;
-  simpl_x86 in XS.
-
+  generalize_temps XS.
 
 (* Introduce automated machinery for verifying an x86 machine code subroutine
    (or collection of subroutines) by (1) defining a set of Floyd-Hoare
@@ -478,7 +294,7 @@ Ltac x86_invhere :=
   first [ eapply nextinv_here; [reflexivity|]
         | apply nextinv_exn
         | apply nextinv_ret; [ prove_prog_exits |] ];
-  simpl_stores; simpl_x86.
+  psimpl_goal.
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
