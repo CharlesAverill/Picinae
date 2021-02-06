@@ -85,6 +85,10 @@ Definition Z1079005203 := 1079005203.
 Definition Z4290801683 := 4290801683.
 Definition Z4293918720 := 4293918720.
 
+(* Encode 2^20 and 2^30 as constants because OCaml does not have integer exponent *)
+Definition Z2power20 := Z2^Z20.
+Definition Z2power30 := Z2^Z30.
+
 (* Helper functions to encode/decode branch/jump instruction operands: *)
 
 Definition encode_branch_offset o :=
@@ -133,6 +137,7 @@ Definition newoffset l1 d c l2 i :=
   (if (Z0 <=? i) then sum_n_sizes i (d::l2) Z0 else -(sum_n_sizes (-i) l1 Z0))
   + c - newsize d.
 
+
 (* Initially we conservatively select a long-jump encoding of all rewritten jumps.
    The following function finds jumps whose destinations are near enough to permit
    a short encoding, and shortens them accordingly.  It can potentially be
@@ -144,7 +149,7 @@ Fixpoint shrink l1 l2 :=
      if orb (op =? Z99) (op =? Z103) then (* remapped branch or guarded jalr *)
        let o := if op =? Z99 then newoffset l1 d Z1 t (twoscomp Z1024 (decode_branch_offset n))
                              else newoffset l1 d Z2 t (Z.of_nat (length t))
-       in andb (Z_1024 <=? o) (o <? Z1024)
+       in (andb (Z_1024 <=? o) (o <? Z1024))
      else true (* other instruction (unshrinkable) *)
     )))::l1) t
   end.
@@ -153,7 +158,7 @@ Fixpoint shrink l1 l2 :=
    the rewritten version of an instruction. *)
 Definition newtag d :=
   match d with Data None _ _ _ _ => nil
-             | Data (Some iid) _ _ _ _ => (Z55 #| ((iid mod Z2^Z20) #<< Z12))::nil
+             | Data (Some iid) _ _ _ _ => (Z55 #| ((iid mod Z2power20) #<< Z12))::nil
   end.
 
 (* Generate a rewritten static jump instruction.  Inputs are:
@@ -211,7 +216,7 @@ Definition newijump l1 d l2 :=
       (Z1079005203 #| (tmp1 #<< Z7) #| (tmp1 #<< Z15))::              (* Srai tmp1, tmp1, 5 *)
       (Z51 #| (tmp3 #<< Z7) #| (tmp3 #<< Z15) #| (tmp1 #<< Z20))::    (* Add tmp3, tmp3, tmp1 *)
       (Z8195 #| (tmp1 #<< Z7) #| (tmp3 #<< Z15))::                    (* Lw tmp1, tmp3, 0 *)
-      (Z55 #| (tmp2 #<< Z7) #| ((oid mod Z2^Z20) #<< Z12))::          (* Lui tmp2, out_id *)
+      (Z55 #| (tmp2 #<< Z7) #| ((oid mod Z2power20) #<< Z12))::          (* Lui tmp2, out_id *)
       (Z57696275 #| (tmp2 #<< Z7) #| (tmp2 #<< Z15))::                (* Ori tmp2, tmp2, 55 *)
       (br ++                                                          (* Bne tmp1, tmp2, abort *)
       ((n #& Z4095) #| (tmp3 #<< Z15))::nil))                         (* Jalr rd, tmp3, 0 *)
@@ -241,7 +246,7 @@ Definition newinstr l1 d l2 :=
     else if op =? Z111 then (* Jal *)
       let i := twoscomp Z262144 (decode_jump_offset n) in
       if ((mem i sd) && (0 <=? Z.of_nat (length l1) + i) && (i <=? Z.of_nat (length l2)))%bool
-        then newjump ((n #>> 7) #& Z31) (newoffset l1 d Z1 l2 i)
+        then newjump ((n #>> Z7) #& Z31) (newoffset l1 d Z1 l2 i)
       else None
     else
       if mem Z1 sd then Some (n::nil) else None
@@ -268,7 +273,6 @@ Fixpoint newtable base base' acc i l2 :=
   match l2 with nil => rev acc | d::t =>
     newtable base base' ((i - (base' - base)) #<< Z7 :: acc) (i + newsize d - Z1) t
   end.
-
 (* Rewrite a code section according to a policy. Inputs:
    pol = the policy specification
    l = the list of 32-bit numbers that comprises the original code
@@ -279,7 +283,7 @@ Definition todata x :=
   match x with ((iid,(oid,sd)),n) => Data iid oid sd n false end.
 Definition newcode (pol:policy) l base base' :=
   let d := shrink nil (map todata (combine pol l)) in
-  (newtable base base' nil 0 d, if sumsizes d <? Z2^Z30 - base' then newinstrs nil nil d else None).
+  (newtable base base' nil 0 d, if sumsizes d <? Z2power30 - base' then newinstrs nil nil d else None).
 
 
 (* The following is an example extraction of the above CFI rewriter to OCaml.
@@ -300,10 +304,17 @@ Require Extraction.
 Extraction Language OCaml.
 Extract Inductive Z => int [ "0" "" "(~-)" ].
 Extract Inductive N => int [ "0" "((+)1)" ].
+
+(* see: https://coq.inria.fr/refman/addendum/extraction.html#realizing-inductive-types *)
+(* This is because part of the definition uses the S constructor for nat, thus it must 
+  be extracted. This definition was lifted from the official documentation *)
+Extract Inductive nat => int [ "0" "succ" ] "(fun fO fS n -> if n=0 then fO () else fS (n-1))".
+
 Extract Inductive bool => "bool" [ "true" "false" ].
 Extract Inductive option => "option" [ "Some" "None" ].
 Extract Inductive prod => "(*)"  [ "(,)" ].
 Extract Inductive list => "list" [ "[]" "(::)" ].
+
 Extract Inlined Constant Z1 => "1".
 Extract Inlined Constant Z2 => "2".
 Extract Inlined Constant Z7 => "7".
@@ -330,7 +341,9 @@ Extract Inlined Constant Z504 => "504".
 Extract Inlined Constant Z511 => "511".
 Extract Inlined Constant Z512 => "512".
 Extract Inlined Constant Z1024 => "1024".
-Extract Inlined Constant Z_1024 => "-1024".
+
+(* When extracting, negative numbers must be surrounded by () to ensure correct parsing in OCaml *)
+Extract Inlined Constant Z_1024 => "(-1024)".
 Extract Inlined Constant Z2048 => "2048".
 Extract Inlined Constant Z4095 => "4095".
 Extract Inlined Constant Z4096 => "4096".
@@ -340,7 +353,7 @@ Extract Inlined Constant Z8195 => "8195".
 Extract Inlined Constant Z16435 => "16435".
 Extract Inlined Constant Z261120 => "261120".
 Extract Inlined Constant Z262144 => "262144".
-Extract Inlined Constant Z_262144 => "-262144".
+Extract Inlined Constant Z_262144 => "(-262144)".
 Extract Inlined Constant Z524288 => "524288".
 Extract Inlined Constant Z33550463 => "33550463".
 Extract Inlined Constant Z57696275 => "57696275".
@@ -348,6 +361,10 @@ Extract Inlined Constant Z133197843 => "133197843".
 Extract Inlined Constant Z1079005203 => "1079005203".
 Extract Inlined Constant Z4290801683 => "4290801683".
 Extract Inlined Constant Z4293918720 => "4293918720".
+
+(* Extract the constants for 2^20 and 2^30 as their actual values, as OCaml does not have int exponent *)
+Extract Inlined Constant Z2power20 => "1048576".
+Extract Inlined Constant Z2power30 => "1073741824".
 Extract Inlined Constant Z.opp => "(~-)".
 Extract Inlined Constant Z.ltb => "(<)".
 Extract Inlined Constant Z.leb => "(<=)".
@@ -355,8 +372,12 @@ Extract Inlined Constant Z.add => "(+)".
 Extract Inlined Constant Z.sub => "(-)".
 Extract Inlined Constant Z.mul => "( * )".
 Extract Inlined Constant Z.modulo => "(mod)".
-Extract Inlined Constant Z.pow => "(^)".
+
+(* OCaml does not have exponentiation for `int`, only `float` and `Z.t`. And Zarith's Z.pow requires an extra
+  library to be linked in. the (^) operator is string concat *)
+(* Extract Inlined Constant Z.pow => "Z.pow". *)
 Extract Inlined Constant Z.shiftl => "(lsl)".
+Extract Inlined Constant Z.shiftr => "(lsr)".
 Extract Inlined Constant Z.land => "(land)".
 Extract Inlined Constant Z.lor => "(lor)".
 Extract Inlined Constant Z.lxor => "(lxor)".
@@ -364,10 +385,15 @@ Extract Inlined Constant Z.eqb => "(=)".
 Extract Inlined Constant length => "List.length".
 Extract Inlined Constant app => "List.append".
 Extract Inlined Constant rev => "List.rev".
-Extract Inlined Constant fold_left => "List.fold_left".
+
+(* from Daniel G: swap the order of arguemnts of fold_left as it is different in ocaml *)
+Extract Inlined Constant fold_left => "(fun f l a -> List.fold_left f a l)".
+
 Extract Inlined Constant mem => "List.mem".
 Extract Inlined Constant Z.to_nat => "".
 Extract Inlined Constant Z.of_nat => "".
+Extract Inlined Constant map => "List.map".
+Extract Inlined Constant combine => "List.combine".
 Extraction policy.
 Extraction instr_data.
 Extraction twoscomp.
@@ -375,8 +401,11 @@ Extraction newsize.
 Extraction sumsizes.
 Extraction sum_n_sizes.
 Extraction newoffset.
+Extraction decode_branch_offset.
+Extraction decode_jump_offset.
 Extraction shrink.
 Extraction newtag.
+Extraction encode_jump_offset.
 Extraction newjump.
 Extraction encode_branch_offset.
 Extraction newbranch.
