@@ -387,7 +387,7 @@ Proof.
         rewrite (proj2 (N.sub_0_le j i)) by assumption. apply N.land_0_r.
 Qed.
 
-Lemma xbits_shiftr:
+Theorem xbits_shiftr:
   forall n k i j, xbits (N.shiftr n k) i j = xbits n (i+k) (j+k).
 Proof.
   intros. unfold xbits.

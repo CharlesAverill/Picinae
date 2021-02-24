@@ -78,9 +78,11 @@ Definition Z261120 := 261120.
 Definition Z262144 := 262144.
 Definition Z_262144 := -262144.
 Definition Z524288 := 524288.
+Definition Z1048576 := 1048576. (* 2^20 *)
 Definition Z33550463 := 33550463.
 Definition Z57696275 := 57696275.
 Definition Z133197843 := 133197843.
+Definition Z1073741824 := 1073741824. (* 2^30 *)
 Definition Z1079005203 := 1079005203.
 Definition Z4290801683 := 4290801683.
 Definition Z4293918720 := 4293918720.
@@ -153,7 +155,7 @@ Fixpoint shrink l1 l2 :=
    the rewritten version of an instruction. *)
 Definition newtag d :=
   match d with Data None _ _ _ _ => nil
-             | Data (Some iid) _ _ _ _ => (Z55 #| ((iid mod Z2^Z20) #<< Z12))::nil
+             | Data (Some iid) _ _ _ _ => (Z55 #| ((iid mod Z1048576) #<< Z12))::nil
   end.
 
 (* Generate a rewritten static jump instruction.  Inputs are:
@@ -201,7 +203,7 @@ Definition newijump l1 d l2 :=
     let tmp1 := if rs1 <? Z31 then Z31 else Z29 in
     let tmp2 := if rs1 =? Z30 then Z29 else Z30 in
     let tmp3 := if Z29 <? rs1 then rs1 else Z29 in
-    match newbranch l1 d Z2 l2 (Z4195 #| (tmp1 #<< Z15) #| (tmp2 #<< Z20)) (Z.of_nat (S (List.length l2)))
+    match newbranch l1 d Z2 l2 (Z4195 #| (tmp1 #<< Z15) #| (tmp2 #<< Z20)) (Z1 + Z.of_nat (List.length l2))
     with None => None | Some br => Some (
       (Z19 #| (tmp3 #<< Z7) #| (rs1 #<< Z15) #| (n #& Z4293918720)):: (* Addi tmp3, rs1, imm *)
       (Z4290801683 #| (tmp3 #<< Z7) #| (tmp3 #<< Z15))::              (* Andi tmp3, tmp3, -4 *)
@@ -211,7 +213,7 @@ Definition newijump l1 d l2 :=
       (Z1079005203 #| (tmp1 #<< Z7) #| (tmp1 #<< Z15))::              (* Srai tmp1, tmp1, 5 *)
       (Z51 #| (tmp3 #<< Z7) #| (tmp3 #<< Z15) #| (tmp1 #<< Z20))::    (* Add tmp3, tmp3, tmp1 *)
       (Z8195 #| (tmp1 #<< Z7) #| (tmp3 #<< Z15))::                    (* Lw tmp1, tmp3, 0 *)
-      (Z55 #| (tmp2 #<< Z7) #| ((oid mod Z2^Z20) #<< Z12))::          (* Lui tmp2, out_id *)
+      (Z55 #| (tmp2 #<< Z7) #| ((oid mod Z1048576) #<< Z12))::          (* Lui tmp2, out_id *)
       (Z57696275 #| (tmp2 #<< Z7) #| (tmp2 #<< Z15))::                (* Ori tmp2, tmp2, 55 *)
       (br ++                                                          (* Bne tmp1, tmp2, abort *)
       ((n #& Z4095) #| (tmp3 #<< Z15))::nil))                         (* Jalr rd, tmp3, 0 *)
@@ -241,7 +243,7 @@ Definition newinstr l1 d l2 :=
     else if op =? Z111 then (* Jal *)
       let i := twoscomp Z262144 (decode_jump_offset n) in
       if ((mem i sd) && (0 <=? Z.of_nat (length l1) + i) && (i <=? Z.of_nat (length l2)))%bool
-        then newjump ((n #>> 7) #& Z31) (newoffset l1 d Z1 l2 i)
+        then newjump ((n #>> Z7) #& Z31) (newoffset l1 d Z1 l2 i)
       else None
     else
       if mem Z1 sd then Some (n::nil) else None
@@ -279,7 +281,7 @@ Definition todata x :=
   match x with ((iid,(oid,sd)),n) => Data iid oid sd n false end.
 Definition newcode (pol:policy) l base base' :=
   let d := shrink nil (map todata (combine pol l)) in
-  (newtable base base' nil 0 d, if sumsizes d <? Z2^Z30 - base' then newinstrs nil nil d else None).
+  (newtable base base' nil 0 d, if sumsizes d <? Z1073741824 - base' then newinstrs nil nil d else None).
 
 
 (* The following is an example extraction of the above CFI rewriter to OCaml.
@@ -330,7 +332,7 @@ Extract Inlined Constant Z504 => "504".
 Extract Inlined Constant Z511 => "511".
 Extract Inlined Constant Z512 => "512".
 Extract Inlined Constant Z1024 => "1024".
-Extract Inlined Constant Z_1024 => "-1024".
+Extract Inlined Constant Z_1024 => "(-1024)".
 Extract Inlined Constant Z2048 => "2048".
 Extract Inlined Constant Z4095 => "4095".
 Extract Inlined Constant Z4096 => "4096".
@@ -340,11 +342,13 @@ Extract Inlined Constant Z8195 => "8195".
 Extract Inlined Constant Z16435 => "16435".
 Extract Inlined Constant Z261120 => "261120".
 Extract Inlined Constant Z262144 => "262144".
-Extract Inlined Constant Z_262144 => "-262144".
+Extract Inlined Constant Z_262144 => "(-262144)".
 Extract Inlined Constant Z524288 => "524288".
+Extract Inlined Constant Z1048576 => "1048576".
 Extract Inlined Constant Z33550463 => "33550463".
 Extract Inlined Constant Z57696275 => "57696275".
 Extract Inlined Constant Z133197843 => "133197843".
+Extract Inlined Constant Z1073741824 => "1073741824".
 Extract Inlined Constant Z1079005203 => "1079005203".
 Extract Inlined Constant Z4290801683 => "4290801683".
 Extract Inlined Constant Z4293918720 => "4293918720".
@@ -355,8 +359,8 @@ Extract Inlined Constant Z.add => "(+)".
 Extract Inlined Constant Z.sub => "(-)".
 Extract Inlined Constant Z.mul => "( * )".
 Extract Inlined Constant Z.modulo => "(mod)".
-Extract Inlined Constant Z.pow => "(^)".
 Extract Inlined Constant Z.shiftl => "(lsl)".
+Extract Inlined Constant Z.shiftr => "(lsr)".
 Extract Inlined Constant Z.land => "(land)".
 Extract Inlined Constant Z.lor => "(lor)".
 Extract Inlined Constant Z.lxor => "(lxor)".
@@ -366,6 +370,8 @@ Extract Inlined Constant app => "List.append".
 Extract Inlined Constant rev => "List.rev".
 Extract Inlined Constant fold_left => "List.fold_left".
 Extract Inlined Constant mem => "List.mem".
+Extract Inlined Constant map => "List.map".
+Extract Inlined Constant combine => "List.combine".
 Extract Inlined Constant Z.to_nat => "".
 Extract Inlined Constant Z.of_nat => "".
 Extraction policy.
@@ -375,6 +381,8 @@ Extraction newsize.
 Extraction sumsizes.
 Extraction sum_n_sizes.
 Extraction newoffset.
+Extraction decode_branch_offset.
+Extraction decode_jump_offset.
 Extraction shrink.
 Extraction newtag.
 Extraction newjump.
@@ -2071,7 +2079,7 @@ Theorem newijump_asm:
   let tmp1 := (if rs1 <? 31 then 31 else 29)%N in
   let tmp2 := (if rs1 =? 30 then 29 else 30)%N in
   let tmp3 := (if 29 <? rs1 then rs1 else 29)%N in
-  let o := newoffset l1 (Data iid oid sd z sb) 2 l2 (Z.of_nat (S (List.length l2))) in
+  let o := newoffset l1 (Data iid oid sd z sb) 2 l2 (1 + Z.of_nat (List.length l2)) in
   map rv_decode (map Z.to_N b) =
     R5_Addi tmp3 rs1 (scast 12 32 (xbits n 20 32)) ::
     R5_Andi tmp3 tmp3 4294967292 ::
@@ -2292,6 +2300,7 @@ Proof.
   repeat (apply invCons in NIJ; destruct k;
   [ apply proj1 in NIJ; apply invSome in IE; rewrite <- IE, NIJ in XS
   | apply proj2 in NIJ ]);
+  try rewrite Z.add_1_l, <- Nat2Z.inj_succ in XS;
   try solve [ destruct k; discriminate | contradict K; apply Nat.lt_irrefl ].
 
     destruct x as [x|].
@@ -2981,7 +2990,7 @@ Proof.
       rewrite N2Z.inj_mul, <- Z.mul_add_distr_l, Z2N_inj_mul, nat_N_Z in XS by (left; discriminate 1).
       rewrite 2!Nat2Z.inj_add, <- (sumsizes_newinstrs _ _ _ NC) in XS.
       assert (IL: (i < length l)%nat). rewrite <- (newinstrs_length _ _ _ NC). apply lt_le_S, nth_error_Some. rewrite BLK. discriminate 1.
-      rewrite skipn_length, minus_Sn_m, Nat.sub_succ in XS by exact IL.
+      rewrite Z.add_1_l, <- Nat2Z.inj_succ, skipn_length, minus_Sn_m, Nat.sub_succ in XS by exact IL.
       rewrite newoffset_index in XS.
       rewrite rev_length, firstn_length_le, <- Nat2Z.inj_add, le_plus_minus_r, Nat2Z.id in XS by apply Nat.lt_le_incl, IL.
       rewrite rev_involutive, firstn_cons_skipn, firstn_all in XS by exact DAT.
@@ -3050,7 +3059,7 @@ Proof.
         destruct (step_after_tag 11 CODE XP TR BLK (eq_refl _)) as [s2 [x [a [t' [XS [EX [TL [XP' TR']]]]]]]];
         [ discriminate 1 | clear XP TR; subst t; rename XP' into XP; rename TR' into TR; rename t' into t; fold taglen in XS, EX, TR ].
         rewrite ASM11 in XS. unfold rv2il, r5mov in XS.
-        rewrite N2Z.inj_mul, <- Z.mul_add_distr_l, nat_N_Z, newoffset_index, <- Nat2Z.inj_add, Nat2Z.id in XS.
+        rewrite Z.add_1_l, <- Nat2Z.inj_succ, N2Z.inj_mul, <- Z.mul_add_distr_l, nat_N_Z, newoffset_index, <- Nat2Z.inj_add, Nat2Z.id in XS.
         erewrite rev_involutive, rev_length, <- length_cons, <- app_length, firstn_all, firstn_cons_skipn in XS by exact DAT.
         erewrite sumsizes_cons, sumsizes_rev, sumsizes_newinstrs in XS by exact NC. erewrite newsize_length in XS by eassumption.
         rewrite app_length, (Nat.add_comm _ 13), (Nat2Z.inj_add 13), <- Z.add_sub_assoc, <- Z.add_assoc, Z.sub_add_distr in XS.
