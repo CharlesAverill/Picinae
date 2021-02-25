@@ -368,7 +368,7 @@ Extract Inlined Constant Z.eqb => "(=)".
 Extract Inlined Constant length => "List.length".
 Extract Inlined Constant app => "List.append".
 Extract Inlined Constant rev => "List.rev".
-Extract Inlined Constant fold_left => "List.fold_left".
+Extract Inlined Constant fold_left => "(fun f l a -> List.fold_left f a l)".
 Extract Inlined Constant mem => "List.mem".
 Extract Inlined Constant map => "List.map".
 Extract Inlined Constant combine => "List.combine".
@@ -385,6 +385,7 @@ Extraction decode_branch_offset.
 Extraction decode_jump_offset.
 Extraction shrink.
 Extraction newtag.
+Extraction encode_jump_offset.
 Extraction newjump.
 Extraction encode_branch_offset.
 Extraction newbranch.
