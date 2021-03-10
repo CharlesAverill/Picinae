@@ -435,46 +435,122 @@ Qed.
 (* Qed. *)
 
 (* CATEGORY: memory lemmas *)
-Theorem set_dword : forall m a v,
+Theorem set_dword' : forall m a v,
     m [Ⓓa := v]
-    = m [Ⓑa := v mod 2^8]
-        [Ⓑa+1 := v >> 8 mod 2^8]
-        [Ⓑa+2 := v >> 16 mod 2^8]
+    = m [Ⓑa := xbits v 0 8]
+        [Ⓑa+1 := xbits v 8 16]
+        [Ⓑa+2 := xbits v 16 24]
         [Ⓑa+3 := v >> 24].
+Proof.
   intros.
   repeat rewrite setmem_1.
   simpl setmem.
   unfold setmem,setmem_little,Mb,ARMArch.mem_bits.
   repeat rewrite <- N.add_1_r.
   repeat rewrite <- N.add_assoc.
-  simpl (1+_).
-  repeat f_equal.
+  reflexivity.
 Qed.
 
-Theorem set_dword_aligned : forall m a v,
-    a < 2^32
+Theorem set_dword : forall m a v,
+    v < 2^32
+    -> m [Ⓓa := v]
+       = m [Ⓑa := xbits v 0 8]
+           [Ⓑa+1 := xbits v 8 16]
+           [Ⓑa+2 := xbits v 16 24]
+           [Ⓑa+3 := xbits v 24 32].
+Proof.
+  intros.
+  repeat rewrite setmem_1.
+  simpl setmem.
+  unfold setmem,setmem_little,Mb,ARMArch.mem_bits.
+  repeat rewrite <- N.add_1_r.
+  repeat rewrite <- N.add_assoc.
+  f_equal.
+  repeat rewrite N.shiftr_shiftr.
+  rewrite xbits_equiv.
+  rewrite N.mod_small by assumption.
+  reflexivity.
+Qed.
+
+Theorem shl_add_lor_eq x l y :
+  y < 2^l -> (x << l) + y = (x << l) .| y.
+Proof.
+  rewrite N.shiftl_mul_pow2.
+  revert x y.
+  induction l using N.peano_ind; intros.
+  {
+    simpl.
+    rewrite N.lt_1_r in *.
+    subst.
+    rewrite N.mul_1_r, N.lor_0_r, N.add_0_r.
+    reflexivity.
+  }
+  {
+    rewrite N.pow_succ_r,N.mul_assoc,(N.mul_comm x),<- N.mul_assoc in *
+      by apply N.le_0_l.
+    rewrite (N.div2_odd y), N.div2_div.
+    assert (THM : forall n, (n<<1)+1 = (n<<1).|1).
+    {
+      clear.
+      destruct n; [reflexivity|].
+      induction p; auto.
+    }
+    rewrite N.add_assoc,<- N.mul_add_distr_l.
+    apply N.div_lt_upper_bound in H; [|discriminate].
+    rewrite IHl by assumption.
+    repeat rewrite N.mul_assoc.
+    repeat rewrite (N.mul_comm 2 _).
+    replace 2 with (2^1) by reflexivity.
+    repeat rewrite <- N.shiftl_mul_pow2.
+    destruct N.odd.
+    {
+      simpl N.b2n.
+      repeat rewrite THM.
+      rewrite N.shiftl_lor,N.lor_assoc.
+      repeat rewrite N.shiftl_shiftl.
+      rewrite (N.add_comm 1).
+      reflexivity.
+    }
+    {
+      repeat rewrite N.add_0_r.
+      rewrite N.shiftl_lor.
+      repeat rewrite N.shiftl_shiftl.
+      rewrite (N.add_comm 1).
+      reflexivity.
+    }
+  }
+Qed.
+
+Theorem set_dword_aligned m a v :
+    v < 2^32
+    -> a < 2^32
     -> a mod 2^2 = 0
     -> m [Ⓓa := v]
-       = m [Ⓑa := v mod 2^8]
-           [Ⓑa⊕1 := v >> 8 mod 2^8]
-           [Ⓑa⊕2 := v >> 16 mod 2^8]
-           [Ⓑa⊕3 := v >> 24].
+       = m [Ⓑa := xbits v 0 8]
+           [Ⓑa⊕1 := xbits v 8 16]
+           [Ⓑa⊕2 := xbits v 16 24]
+           [Ⓑa⊕3 := xbits v 24 32].
   intros.
-  rewrite <- mod2_eq in H0.
-  assert (a⊕1=a+1/\a⊕2=a+2/\a⊕3=a+3).
-  repeat rewrite <- mod2_eq.
-  destruct a; auto.
-  destruct p; inversion H0; destruct p; inversion H0.
-  simpl.
-  fold (mod2 (N.pos p) 30).
-  rewrite mod2_eq.
-  rewrite N.mod_small.
-  repeat split; reflexivity.
-  rewrite (N.mul_lt_mono_pos_l 4); auto.
-  reflexivity.
-  intuition.
-  rewrite H2,H1,H4.
+  assert (HS3: a+3<2^32).
+  {
+    replace a with (xbits a 0 32)
+      by (rewrite xbits_0_i; apply N.mod_small; assumption).
+    rewrite <- xbits_0_i in H1.
+    rewrite (xbits_split 0 2 32) by discriminate.
+    rewrite H1, N.lor_0_l.
+    rewrite shl_add_lor_eq by reflexivity.
+    apply lor_bound; [|reflexivity].
+    Search (_ << _ < _).
+    replace 32 with (30+2) by reflexivity.
+    apply shiftl_bound,xbits_bound.
+  }
+  assert (HS2: a+2<2^32)
+    by (eapply N.lt_trans; [|eassumption]; apply N.add_lt_mono_l; reflexivity).
+  assert (HS1: a+1<2^32)
+    by (eapply N.lt_trans; [|eassumption]; apply N.add_lt_mono_l; reflexivity).
+  repeat rewrite N.mod_small; auto.
   apply set_dword.
+  assumption.
 Qed.
 
 (* CATEGORY: calling convention *)
@@ -796,14 +872,15 @@ Theorem memset_partial_correctness:
   Local Ltac step := time arm_step.
 
   (* Proving postcondition from final invariant *)
-  5: { step.
-       unfold memset_post.
-       repeat rewrite update_frame by discriminate.
-       specialize (WTM V_MEM32 _ eq_refl).
-       inversion WTM; subst.
-       rewrite <- H0 in *.
-       eexists; intuition; eauto.
-       erewrite memset_ret; eauto.
+  5: {
+    step.
+    unfold memset_post.
+    repeat rewrite update_frame by discriminate.
+    specialize (WTM V_MEM32 _ eq_refl).
+    inversion WTM; subst.
+    rewrite <- H0 in *.
+    eexists; intuition; eauto.
+    erewrite memset_ret; eauto.
   }
 
   {
@@ -837,18 +914,12 @@ Theorem memset_partial_correctness:
       intuition.
       {
         unfold memset_bytedup.
-        repeat rewrite N.shiftl_lor.
-        repeat rewrite N.shiftl_shiftl.
-        simpl (8+16).
         repeat rewrite <- xbits_0_i.
-        repeat rewrite <- xbits_spec.
-        repeat rewrite xbits_lor.
-        repeat rewrite xbits_shiftl.
-        simpl (_-_).
+        repeat rewrite xbits_lor + rewrite xbits_shiftl.
+        repeat rewrite xbits_nested_l by discriminate.
         repeat rewrite xbits_0_i.
+        simpl (_-_).
         rewrite H.
-        repeat rewrite mod_greater by discriminate.
-        rewrite N.shiftl_shiftl.
         reflexivity.
       }
       {
@@ -859,16 +930,7 @@ Theorem memset_partial_correctness:
   }
 
   {
-    assert (memset_bytedup (ci mod 2^8) mod 2^8 = ci mod 2^8).
-    {
-      unfold memset_bytedup.
-      repeat rewrite <- xbits_0_i.
-      repeat (rewrite xbits_lor + rewrite xbits_shiftl + rewrite xbits_0_j).
-      repeat rewrite N.lor_0_r.
-      repeat rewrite xbits_0_i.
-      rewrite N.mod_mod by discriminate.
-      reflexivity.
-    }
+    destruct (bytedup_spec' ci) as [BD1 [BD2 [BD3 BD4]]].
     repeat (discriminate + step).
     all: unfold vnum,vmem in *.
     all: rewrite Hsv,Hsv0,Hsv1,Hsv2,Hsv3 in *.
@@ -909,19 +971,38 @@ Theorem memset_partial_correctness:
     all: try (rewrite N_mod_mod_pow2_min,<- N.add_mod_idemp_r,N.add_0_r
                by discriminate;
               assumption).
+    all: assert (NP28 : 2^8 = N.pos (2^8)) by reflexivity.
+    all: rewrite NP28 in *.
+    all: repeat rewrite BD1.
+    all: repeat rewrite BD2.
+    all: repeat rewrite BD3.
+    all: repeat rewrite BD4.
     all: repeat rewrite setmem_1.
-    1-4: repeat rewrite set_dword_aligned by
-        (apply N.mod_upper_bound; discriminate) +
-        (rewrite dblmod_r by discriminate;
-         rewrite <- N.add_mod_idemp_r by discriminate;
-         rewrite N.add_0_r;
-         assumption) + assumption.
-    1-4: repeat rewrite setmem_1.
-    1-4: rewrite H3,H6,H5,H8. (* eliminate memset_bytedup *)
-    1-4: apply memfilled_xcomp; [repeat apply memfilled_update; assumption|].
-    1-4: repeat rewrite <- xplus_assoc.
-    1-4: repeat apply memfilled_succ.
-    1-4: apply memfilled_one; assumption.
+    (* all: repeat rewrite <- xplus_assoc. *)
+    (* all: repeat rewrite N.add_mod_idemp_r by discriminate. *)
+    all: repeat rewrite xplus_assoc.
+    all: apply memfilled_xcomp; [repeat apply memfilled_update; assumption|].
+    all: repeat rewrite <- xplus_assoc.
+    all: repeat apply memfilled_succ.
+    all: apply memfilled_one; assumption.
+    (* CATEGORY: proof of second loop (part 2) *)
+    (* the tricky goals from the second loop *)
+    (* basically, this is showing that s ⊕ n = r3 ⊕ r2 *)
+    Unshelve.
+    all: rewrite H2.
+    all: do 2 f_equal.
+    4: rewrite N.mod_small by assumption; reflexivity.
+    all: match goal with
+           |- (_ = ?x ⊕ _) =>
+           erewrite <- (xadd_sub x) at 1
+             by (eassumption + reflexivity)
+         end.
+    all: do 2 f_equal.
+    all: erewrite <- N.mod_small at 1 by eassumption.
+    all: rewrite (N_mod_mod_pow2_min _ _ 3),N.add_comm.
+    all: rewrite <- N.add_sub_assoc by discriminate.
+    all: rewrite <- N.add_mod_idemp_r,N.add_0_r by discriminate.
+    all: reflexivity.
   }
 
   {
@@ -930,10 +1011,12 @@ Theorem memset_partial_correctness:
     (* n ends up being too opaque to use for most of the memfilled proofs *)
     (* replace it before starting to simplify things *)
     assert (Q : (⊖s ⊕ vnum (s1 R_R3) ⊕ vnum (s1 R_R2)) = n).
-    rewrite <- xplus_assoc. rewrite <- H1. rewrite xplus_assoc.
-    rewrite (xplus_comm _ s). rewrite xminus_zero.
-    rewrite N.add_0_l. apply N.mod_small. pose (Q := tc_extract _ R_R2 _ MDL0).
-    rewrite R2 in Q. exact Q.
+    {
+      rewrite <- xplus_assoc. rewrite <- H1. rewrite xplus_assoc.
+      rewrite (xplus_comm _ s). rewrite xminus_zero.
+      rewrite N.add_0_l. apply N.mod_small. pose (Q := tc_extract _ R_R2 _ MDL0).
+      rewrite R2 in Q. exact Q.
+    }
     subst.
     repeat (discriminate + step).
     all: unfold vnum,vmem,memset_post in *; rewrite Hsv,Hsv0,Hsv1,Hsv2 in *.
@@ -943,101 +1026,54 @@ Theorem memset_partial_correctness:
     {
       repeat rewrite <- xplus_assoc.
       rewrite xplus_assoc.
-      admit.
-      (* rewrite xminus_zero. *)
-      (* rewrite N.add_0_l. *)
-      (* rewrite mod_n_n by discriminate. *)
-      (* repeat rewrite xplusinv; try reflexivity; *)
-      (*   try apply N.mod_upper_bound; try discriminate; assumption. *)
+      rewrite xminus_zero, N.add_0_l, mod_n_n by discriminate.
+      do 2 f_equal.
+      repeat rewrite <- N.sub_add_distr.
+      symmetry.
+      apply xadd_sub; [reflexivity|assumption].
     }
-    all: admit.
-    (* repeat rewrite (xplus_assoc (⊖s)). *)
-    (* repeat rewrite <- (xplus_assoc (⊖s ⊕ n0)). *)
-    (* 1-4: rewrite H. *)
-    (* 1-5: apply memfilled_xcomp; [repeat apply memfilled_update; assumption|]. *)
-    (* 1-5: repeat rewrite <- xplus_assoc. *)
-    (* repeat apply memfilled_succ. *)
-    (* apply memfilled_one. *)
-    (* assumption. *)
-    (* all: repeat *)
-    (*        match goal with *)
-    (*          [ _ : context [ ?x <=? ?y ] |- _] => destruct (N.leb_spec x y) *)
-    (*        end; try discriminate. *)
-    (* (* the next 3 tactics get the value of n *) *)
-    (* all: rewrite N.lt_1_r in *. *)
-    (* 1-3: match goal with *)
-    (*        H : (2^32 + _ ⊖ 1) = 0 |- _ => *)
-    (*        repeat *)
-    (*          (rewrite xminus_alt in H by *)
-    (*              (assumption + reflexivity + (apply N.mod_upper_bound; discriminate)); *)
-    (*           rewrite xeq_xplus_r in H by *)
-    (*               (assumption + reflexivity + (apply N.mod_upper_bound; discriminate))); *)
-    (*          compute in H *)
-    (*      end. *)
-    (* all: subst. *)
-    (* 4: apply memfilled_zero. *)
-    (* all: repeat apply memfilled_succ; apply memfilled_one; assumption. *)
+    repeat rewrite (xplus_assoc (⊖s)).
+    repeat rewrite <- (xplus_assoc (⊖s ⊕ n0)).
+    1-4: rewrite H.
+    1-5: apply memfilled_xcomp; [repeat apply memfilled_update; assumption|].
+    1-5: repeat rewrite <- xplus_assoc.
+    1: {
+      repeat apply memfilled_succ.
+      apply memfilled_one.
+      assumption.
+    }
+    all: repeat
+           match goal with
+             [ _ : context [ ?x <=? ?y ] |- _] => destruct (N.leb_spec x y)
+           end; try discriminate.
+    (* the next 3 tactics get the value of n *)
+    all: rewrite N.lt_1_r in *.
+    all: repeat rewrite <- N.sub_add_distr in *.
+    all: simpl (1 + _) in *.
+    4: subst; apply memfilled_zero.
+    all: match goal with
+           H : (2^32 + _ ⊖ ?x = _) |- _ =>
+           (apply (f_equal (fun y => x ⊕ y)) in H;
+            rewrite xadd_sub in H by (reflexivity + assumption);
+            compute in H)
+         end.
+    all: subst.
+    all: repeat apply memfilled_succ.
+    all: apply memfilled_one.
+    all: assumption.
   }
-
-  (* CATEGORY: proof of second loop (part 2) *)
-  (* the tricky goals from the second loop *)
-  (* basically, this is showing that s ⊕ n = r3 ⊕ r2 *)
-  (* Unshelve. *)
-  (* all: rewrite H2. *)
-  (* all: do 2 f_equal. *)
-  (* all: repeat rewrite xminus_alt in * by *)
-  (*     (reflexivity + assumption + apply N.mod_upper_bound; discriminate). *)
-  (* all: repeat (apply xlt_minus in H1; *)
-  (*              (assumption + reflexivity +  *)
-  (*               (try apply N.mod_upper_bound; try discriminate))). *)
-  (* (* an upper bound on r2 is known at this point *) *)
-  (* (* it's possible to complete the proof by brute force here *) *)
-  (* (* now we need to prove a lower bound *) *)
-  (* (* before doing that, get rid of a pointless 2 ^ 32 *) *)
-  (* all: replace (2^32) with (2^29 * 2^3) by reflexivity. *)
-  (* all: rewrite mod_add_mul_lr by discriminate. *)
-  (* all: replace (2^29 * 2^3) with (2^32) by reflexivity. *)
-
-  (* all: fold (2^32) in *. *)
-  (* all: repeat rewrite <- xplus_assoc in *. *)
-  (* all: repeat rewrite xcomp_plus_dist' in *. *)
-  (* all: repeat match goal with *)
-  (*               [H1 : ?m <= ?n, H2 : ?n < 2^32 |- _] => *)
-  (*               rewrite (xminus_eq_r n m) in * by exact H2 + exact H1 *)
-  (*             end. *)
-
-  (* (* upper and lower bounds on n0 are now known *) *)
-  (* (* simplify the proof context so we have it all directly *) *)
-  (* all: repeat match goal with H : _ < 2^32 |- _ => clear H end. *)
-  (* all: simpl (_<_) in *. *)
-  (* all: simpl (_<=_) in *. *)
-  (* (* brute force all possible values of n (at most 8) *) *)
-  (* all: repeat *)
-  (*        match goal with *)
-  (*          H : _ < N.pos _ |- _ => *)
-  (*          apply N.lt_le_pred in H; rewrite N.le_lteq in H; destruct H; *)
-  (*            [simpl in H|rewrite H; reflexivity] *)
-  (*        end. *)
-  (* (* all statements now contain a contradiction *) *)
-  (* (* discriminate doesn't solve this, however *) *)
-  (* (* demonstrate the contradiction manually *) *)
-  (* 4: edestruct N.nlt_0_r; eassumption. *)
-  (* all: rewrite N.le_ngt in *. *)
-  (* all: tauto. *)
-Abort.
+Qed.
 (* CATEGORY: END *)
 
-(* Pain points:
+(* Pain points (that I should document later):
    - "mod 2^32" gets attached to everything
-     => solution: use xplus/xminus as much as possible
-        staying inside the group operations of modular arithmetic
-        keeps things working
+     => solution: cry? the situation's getting better
    - conditional instructions duplicate program proofs
      => solution: use repeat (discriminate + step)
    - "s [Ⓑv := a] v" should be a, but isn't easily turned into a
      => solution: rewrite setmem_1,update_updated
    - subtraction adds 2^32 (for modular arithmetic)
-     => solution: use (a _⊖_ b) := a ⊕ ⊖b where ⊖ denotes modular inverse
+     => solution: probably add some stuff to psimpl
    - Ⓓ, Ⓜ frequently require existentials to extract
      => solution: use vnum/vmem
    - (related to the previous) Ⓓ, Ⓜ are secretly dynamic types
