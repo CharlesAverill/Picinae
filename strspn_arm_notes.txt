@@ -1,0 +1,128 @@
+{ r0 = s, r1 = accept }
+(* 0xc0000034: ldrb r12, [r0] *)
+(* 0xc0000038: cmp r12, #0 *)
+(* 0xc000003c: beq #0x50 *) => 96
+{ r0 = s, r1 = accept }
+(* 0xc0000040: push {r4, lr} *)
+(* 0xc0000044: mov lr, r0 *)
+(* 0xc0000048: mov r0, #0 *)
+(* 0xc000004c: ldrb r4, [r1] *)
+{ r0 = 0, r1 = accept, r4 = *accept, r12 = *s, lr = s }
+(=> 28: n=0)
+
+{ exists n, r0 = n /\ r1 = accept /\ r4 = accept[0] /\ r12 = s[n] /\ lr = s+n
+  /\ forall i < n, s[i] in accept }
+28:
+(* 0xc0000050: cmp r4, #0 *)
+(* 0xc0000054: popeq {r4, pc} *)
+(* 0xc0000058: cmp r4, r12 *)
+(* 0xc000005c: beq #0x1c *) => 76
+(* 0xc0000060: mov r2, r1 *)
+(* 0xc0000064: b #0x4 *) => 60
+{ FALSE }
+
+(not strictly necessary)
+{ exists n m, r0 = n
+  /\ r1 = accept /\ r2 = accept+m /\ r3 = accept[m] /\ r4 = accept[0]
+  /\ r12 = s[n] /\ lr = s+n
+  /\ s[n] not in accept[0..m-1] /\ forall i < n, s[i] in accept }
+52:
+(* 0xc0000068: cmp r3, r12 *)
+(* 0xc000006c: beq #0xc *) => 76
+
+{ exists n m, r0 = n
+  /\ r1 = accept /\ r2 = accept+m /\ r3 = accept[m]
+  /\ r12 = s[n] /\ lr = s+n
+  /\ s[n] not in accept[0..m] /\ forall i < n, s[i] in accept }
+60:
+(* 0xc0000070: ldrb r3, [r2, #0x1]! *) r2 += 1; r3 = *r2
+(* 0xc0000074: cmp r3, #0 *)
+(* 0xc0000078: bne #-0x18 *) => 52 (if r3 != 0)
+(* 0xc000007c: pop {r4, pc} *)
+
+(not strictly necessary)
+{ exists n m, r0 = n
+  /\ r1 = accept /\ r2 = accept+m, r3 = accept[m] /\ r12 = s[n] /\ lr = s+n
+  /\ s[n] == accept[m] /\ forall i < n, s[i] in accept }
+76:
+(* 0xc0000080: ldrb r12, [lr, #0x1]! *)
+(* 0xc0000084: add r0, r0, #1 *)
+(* 0xc0000088: cmp r12, #0 *)
+(* 0xc000008c: bne #-0x44 *) => 28
+
+{ all characters of s also in accept, r0 is strlen }
+END:
+(* 0xc0000090: pop {r4, pc} *)
+
+{ r0 = s, *s == 0, r12 == 0 }
+96: (alternate exit)
+(* 0xc0000094: mov r0, r12 *)
+(* 0xc0000098: bx lr *)
+
+pseudo-C:
+// raw gotos
+size_t strspn(char *s, char *accept) {
+  r0 = s;
+  r1 = accept;
+  r12 = *s;
+  if (r12 == '\0') return r12;
+  lr = r0;
+  r0 = 0;
+  r4 = *r1;
+a:
+  if (r4 == '\0') return r0; // why is this here?
+  if (r4 == r12) goto next;
+  r2 = r1;
+  goto c;
+b:
+  if (r3 == r12) goto next;
+c:
+  r2 += 1;
+  r3 = *r2;
+  if (r3 != '\0') goto b;
+  else return r0;
+next:
+  lr += 1;
+  r12 = *1r;
+  r0 += 1;
+  if (r12 != '\0') goto a;
+  else return r0;
+}
+// (unrolled) loops
+size_t strspn(char *s, char *accept) {
+  r0 = s;
+  r1 = accept;
+  r12 = *s;
+  if (r12 == '\0') return r12;
+  lr = r0;
+  r0 = 0;
+  r4 = *r1;
+  do {
+    if (r4 == '\0') return r0; // first iteration of inner loop
+    if (r4 == r12) goto next;
+    r2 = r1;
+    do {
+      r2 += 1;
+      r3 = *r2;
+      if (r3 == '\0') return r0;
+    } while (r3 != r12);
+    lr += 1;
+    r12 = *1r;
+    r0 += 1;
+  } while (r12 != '\0');
+  return r0;
+}
+
+// while loops
+size_t strspn(char *s, char *accept) {
+  int result = 0;
+  while (s[result] != '\0') {
+    char *accm = accept;
+    while (s[result] != *accm) {
+      if (*accm == '\0') return result;
+      accm++;
+    }
+    result++;
+  }
+  return result;
+}

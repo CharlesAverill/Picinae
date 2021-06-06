@@ -3,8 +3,8 @@ Require Import FunctionalExtensionality.
 Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
-Require Import Picinae_i386.
-Require Import strtok_i386.
+Require Import Picinae_armv7.
+Require Import strtok_armv7.
 Import List.
 
 Import X86Notations.
