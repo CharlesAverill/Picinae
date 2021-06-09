@@ -86,6 +86,7 @@ Definition strspn_invs strloc acceptloc accept m a s :=
           cstring m acceptloc accept /\
           (forall i, i < strind -> In (m (strloc⊕i)) accept) /\
           (forall i, i < acceptind ->
+                     m (strloc⊕strind) <> 0 /\
                      m (strloc⊕strind) <> m (acceptloc⊕i)))
   | _ => None
   end.
@@ -117,9 +118,76 @@ Proof.
   eapply IHs; eassumption.
 Qed.
 
-Theorem mod_sub_eq w n m :
-  n < 2^w -> m < 2^w -> ((2 ^ w + n) - m) mod 2^w = 0 -> n = m.
-Admitted.
+(* Theorem sub_lt' n m : m < n -> n - m < n. *)
+(*   intros. *)
+(*   destruct (N.compare_spec 0 m). *)
+(*   { *)
+(*     subst. *)
+(*     Search (_-0=_). *)
+(*     rewrite N.sub_0_r. *)
+(*   apply N.sub_lt. *)
+
+Theorem sub_self_sub n m : n < m -> m - (m - n) = n.
+Proof.
+  intros.
+  apply N.add_sub_eq_r.
+  rewrite N.add_sub_assoc by (apply N.lt_le_incl; assumption).
+  rewrite N.add_sub_swap by apply N.le_refl.
+  rewrite N.sub_diag.
+  apply N.add_0_l.
+Qed.
+
+Theorem add_sub_sub x n m :
+  n < m -> m < x -> x + n - m = x - (m - n).
+Proof.
+  intros.
+  apply (Nplus_reg_l m).
+  repeat rewrite (N.add_comm m).
+  rewrite (N.sub_add m) by apply N.lt_le_incl,N.lt_lt_add_r,H0.
+  rewrite <- N.add_sub_swap by
+      eauto using N.le_trans,N.lt_le_incl,N.le_sub_l.
+  rewrite <- N.add_sub_assoc by apply N.le_sub_l.
+  f_equal.
+  clear x H0.
+  symmetry.
+  apply sub_self_sub.
+  assumption.
+Qed.
+
+Theorem mod_sub_eq n m x :
+  n < x -> m < x -> ((x + n) - m) mod x = 0 -> n = m.
+Proof.
+  intros.
+  (* rewrite N.add_sub_swap in H1 by (eapply N.lt_le_incl;eassumption). *)
+  destruct (N.compare_spec n m); [assumption| |].
+  {
+    rewrite N.mod_small in H1.
+    {
+      exfalso.
+      rewrite N.sub_0_le in H1.
+      apply (N.lt_irrefl x).
+      eapply N.le_lt_trans; [|eassumption].
+      eapply N.le_trans; [|eassumption].
+      apply N.le_add_r.
+    }
+    {
+      rewrite add_sub_sub; auto.
+      apply N.sub_lt; [|apply N.lt_add_lt_sub_l; rewrite N.add_0_r; assumption].
+      eapply N.lt_le_incl, N.le_lt_trans; [apply N.le_sub_l|eassumption].
+    }
+  }
+  {
+    exfalso.
+    rewrite <- N.add_sub_assoc in H1; eauto using N.lt_le_incl.
+    assert (x <> 0) by (intro; subst; eapply N.nlt_0_r; eassumption).
+    rewrite <- N.add_mod_idemp_l,N.mod_same,N.add_0_l in H1 by eassumption.
+    rewrite N.mod_small in H1 by
+        eauto using N.le_lt_trans,N.le_sub_l.
+    rewrite N.sub_0_le in H1.
+    rewrite N.le_ngt in H1.
+    tauto.
+  }
+Qed.
 
 Theorem substr_accept_addone m strloc strind (accept : list N) :
   In (m (strloc ⊕ strind)) accept ->
@@ -152,6 +220,67 @@ Proof.
   eapply substr_accept_mod; [|apply H1].
   apply substr_accept_addone; auto.
 Qed.
+
+Theorem cstr_accept_after m loc accept ind :
+  loc < 2^32 ->
+  cstring m loc accept ->
+  ind < N.of_nat (length accept) ->
+  In (m (loc ⊕ ind)) accept.
+Proof.
+  revert loc accept.
+  induction ind using N.peano_ind.
+  {
+    intros.
+    rewrite N.add_0_r,N.mod_small by assumption.
+    destruct accept; [discriminate|].
+    simpl in *.
+    intuition.
+  }
+  {
+    intros.
+    rewrite <- N.add_succ_comm.
+    destruct accept; [edestruct N.nlt_0_r; eassumption|].
+    simpl length in H1.
+    rewrite Nat2N.inj_succ in H1.
+    rewrite <- N.succ_lt_mono in H1.
+    simpl in H0.
+    rewrite <- N.add_1_r.
+    Search (_ + _ mod _).
+    rewrite <- N.add_mod_idemp_l; [|discriminate].
+    simpl.
+    right.
+    apply IHind; intuition.
+    Search (_ mod _ < _).
+    apply N.mod_upper_bound.
+    discriminate.
+  }
+Qed.
+
+Theorem cstr_accept_after' m loc accept ind :
+  loc < 2^32 ->
+  cstring m loc accept ->
+  (forall n, n < ind -> m (loc ⊕ n) <> 0) ->
+  m (loc ⊕ ind) <> 0 ->
+  In (m (loc ⊕ ind)) accept.
+Proof.
+  revert loc accept.
+  induction ind using N.peano_ind.
+  {
+    intros.
+    rewrite N.add_0_r,N.mod_small in * by assumption.
+    destruct accept; [contradiction|].
+    simpl in *.
+    intuition.
+  }
+  {
+    intros.
+    rewrite <- N.add_succ_comm in *.
+    rewrite <- N.add_mod_idemp_l; [|discriminate].
+    admit.
+  }
+Abort.
+
+Set Nested Proofs Allowed.
 
 Theorem strspn_partial_correctness_loop:
   forall s strloc acceptloc accept sp m n s' x
@@ -337,64 +466,6 @@ Proof.
       apply mod_sub_eq in HEq1; auto.
       rewrite <- HEq1.
       assert (LEN : pacceptind < N.of_nat (length accept)) by admit.
-      Set Nested Proofs Allowed.
-      Theorem cstr_accept_after m loc accept ind :
-        loc < 2^32 ->
-        cstring m loc accept ->
-        ind < N.of_nat (length accept) ->
-        In (m (loc ⊕ ind)) accept.
-      Proof.
-        revert loc accept.
-        induction ind using N.peano_ind.
-        {
-          intros.
-          rewrite N.add_0_r,N.mod_small by assumption.
-          destruct accept; [discriminate|].
-          simpl in *.
-          intuition.
-        }
-        {
-          intros.
-          rewrite <- N.add_succ_comm.
-          destruct accept; [edestruct N.nlt_0_r; eassumption|].
-          simpl length in H1.
-          rewrite Nat2N.inj_succ in H1.
-          rewrite <- N.succ_lt_mono in H1.
-          simpl in H0.
-          rewrite <- N.add_1_r.
-          Search (_ + _ mod _).
-          rewrite <- N.add_mod_idemp_l; [|discriminate].
-          simpl.
-          right.
-          apply IHind; intuition.
-          Search (_ mod _ < _).
-          apply N.mod_upper_bound.
-          discriminate.
-        }
-      Qed.
-      Theorem cstr_accept_after' m loc accept ind :
-        loc < 2^32 ->
-        cstring m loc accept ->
-        (forall n, n < ind -> m (loc ⊕ n) <> 0) ->
-        m (loc ⊕ ind) <> 0 ->
-        In (m (loc ⊕ ind)) accept.
-      Proof.
-        revert loc accept.
-        induction ind using N.peano_ind.
-        {
-          intros.
-          rewrite N.add_0_r,N.mod_small in * by assumption.
-          destruct accept; [contradiction|].
-          simpl in *.
-          intuition.
-        }
-        {
-          intros.
-          rewrite <- N.add_succ_comm in *.
-          rewrite <- N.add_mod_idemp_l; [|discriminate].
-          admit.
-        }
-      Abort.
       rewrite <- N.add_assoc.
       apply cstr_accept_after; auto.
       admit.
