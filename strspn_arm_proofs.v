@@ -25,11 +25,47 @@ Qed.
 
 Print list.
 
-Fixpoint cstring m loc s :=
-  match s with
-  | [] => m loc = 0
-  | x :: xs => x <> 0 /\ m loc = x /\ cstring m (loc⊕1) xs
-  end.
+Definition cstringlen m loc len :=
+  (forall i, i < len -> m (loc ⊕ len) <> 0) /\ m (loc ⊕ len) = 0.
+
+Theorem cstringlen_det m loc len1 len2 :
+  cstringlen m loc len1 -> cstringlen m loc len2 -> len1 = len2.
+Proof.
+  unfold cstringlen.
+  intuition.
+  specialize (H1 len2).
+  specialize (H len1).
+  destruct (N.compare_spec len1 len2); tauto.
+Qed.
+
+Definition cstringmem m loc c :=
+  exists cind, (forall i, i <= cind -> m (loc ⊕ i) <> 0) /\ c = m (loc ⊕ cind).
+
+Theorem cstr_mematind m loc len cind :
+  cstringlen m loc len -> cind < len -> cstringmem m loc (m (loc ⊕ cind)).
+Proof.
+  unfold cstringlen,cstringmem.
+  intros.
+  exists cind.
+  intuition.
+  eauto.
+Qed.
+
+Theorem cstr_nonil m loc : ~cstringmem m loc 0.
+Proof.
+  unfold cstringmem,cstringlen.
+  intro H.
+  destruct H as [? [H1 H2]].
+  rewrite H2 in H1.
+  eapply H1; [|reflexivity].
+  apply N.le_refl.
+Qed.
+
+(* Fixpoint cstring m loc s := *)
+(*   match s with *)
+(*   | [] => m loc = 0 *)
+(*   | x :: xs => x <> 0 /\ m loc = x /\ cstring m (loc⊕1) xs *)
+(*   end. *)
 
 (* Inductive cstring : (addr -> N) -> addr -> list N -> Prop := *)
 (* | CStrNil m loc : m Ⓑ[loc] = 0 -> cstring m loc [] *)
@@ -42,81 +78,79 @@ Fixpoint cstring m loc s :=
 (*   ~In 0 s /\ *)
 (*   forall n, (n < length s)%nat -> m Ⓑ[loc ⊕ N.of_nat n] = nth n s 0. *)
 
-Definition strspn_post strloc acceptloc accept m (_ : exit) s :=
+Definition strspn_post m str accept (_ : exit) s :=
   exists answer,
     (* s V_MEM32 = Ⓜm /\ *)
     (* s R_R0 = Ⓓstr /\ *)
-    (* s R_R1 = Ⓓacceptloc /\ *)
+    (* s R_R1 = Ⓓaccept /\ *)
     s R_R0 = Ⓓanswer /\
-    cstring m acceptloc accept /\
-    (forall n, n < answer -> In (m (strloc ⊕ n)) accept) /\
-    ~In (m (strloc ⊕ answer)) accept.
+    (forall n, n < answer -> cstringmem m accept (m (str ⊕ n))) /\
+    ~cstringmem m accept (m (str ⊕ answer)).
 
-Definition strspn_invs strloc acceptloc accept m a s :=
+Definition strspn_invs m str accept a s :=
   (* let common n m := *)
   (*     s R_R0 = n /\ *)
-  (*     s R_R1 = acceptloc /\ *)
-  (*     s R_R4 = Ⓓ(m Ⓑ[acceptloc]) /\ *)
-  (*     s R_R12 = Ⓓ(m Ⓑ[strloc+n]) /\ *)
-  (*     s R_LR = Ⓓ(strloc+n) *)
+  (*     s R_R1 = accept /\ *)
+  (*     s R_R4 = Ⓓ(m Ⓑ[accept]) /\ *)
+  (*     s R_R12 = Ⓓ(m Ⓑ[str+n]) /\ *)
+  (*     s R_LR = Ⓓ(str+n) *)
   match a with
   | 16 =>
-    Some (s R_R0 = Ⓓstrloc /\ s R_R1 = Ⓓacceptloc /\ s V_MEM32 = Ⓜm /\
-          s R_R12 = Ⓓ(m strloc))
+    Some (s R_R0 = Ⓓstr /\ s R_R1 = Ⓓaccept /\ s V_MEM32 = Ⓜm /\
+          s R_R12 = Ⓓ(m str))
   | 28 =>
     Some
       (exists strind,
           s R_R0 = Ⓓstrind /\
-          s R_R1 = Ⓓacceptloc /\
-          s R_R4 = Ⓓ(m acceptloc) /\
-          s R_R12 = Ⓓ(m (strloc⊕strind)) /\
-          s R_LR = Ⓓ(strloc⊕strind) /\
-          cstring m acceptloc accept /\
-          forall i, i < strind -> In (m (strloc⊕i)) accept)
+          s R_R1 = Ⓓaccept /\
+          s R_R4 = Ⓓ(m accept) /\
+          s R_R12 = Ⓓ(m (str⊕strind)) /\
+          s R_LR = Ⓓ(str⊕strind) /\
+          forall i, i < strind -> cstringmem m accept (m (str⊕i)))
   | 60 =>
     Some
       (exists strind acceptind,
           s R_R0 = Ⓓstrind /\
-          s R_R1 = Ⓓacceptloc /\
-          s R_R2 = Ⓓ(acceptloc⊕acceptind) /\
-          (* s R_R3 = Ⓓ(m Ⓑ[acceptloc⊕acceptind]) /\ *)
-          s R_R4 = Ⓓ(m acceptloc) /\
-          s R_R12 = Ⓓ(m (strloc⊕strind)) /\
-          s R_LR = Ⓓ(strloc⊕strind) /\
-          cstring m acceptloc accept /\
-          (forall i, i < strind -> In (m (strloc⊕i)) accept) /\
-          (forall i, i < acceptind ->
-                     m (strloc⊕strind) <> 0 /\
-                     m (strloc⊕strind) <> m (acceptloc⊕i)))
+          s R_R1 = Ⓓaccept /\
+          s R_R2 = Ⓓ(accept⊕acceptind) /\
+          (* s R_R3 = Ⓓ(m Ⓑ[accept⊕acceptind]) /\ *)
+          s R_R4 = Ⓓ(m accept) /\
+          s R_R12 = Ⓓ(m (str⊕strind)) /\
+          s R_LR = Ⓓ(str⊕strind) /\
+          (* cstring m accept accept /\ *)
+          (forall i, i < strind -> cstringmem m accept (m (str⊕i))) /\
+          (forall i, i <= acceptind ->
+                     m (accept⊕i) <> 0 /\
+                     m (str⊕strind) <> m (accept⊕i)))
   | _ => None
   end.
 
-Definition strspn_invset strloc acceptloc accept m :=
-  invs (strspn_invs strloc acceptloc accept m)
-       (strspn_post strloc acceptloc accept m).
+Definition strspn_invset m str accept :=
+  invs (strspn_invs m str accept)
+       (strspn_post m str accept).
 
-Theorem un_d_ify x y : Ⓓx = Ⓓy -> x = y.
-  intro H.
-  inversion H.
-  reflexivity.
-Qed.
+(* Theorem un_d_ify x y : Ⓓx = Ⓓy -> x = y. *)
+(*   intro H. *)
+(*   inversion H. *)
+(*   reflexivity. *)
+(* Qed. *)
 
-Local Ltac un_d_ify :=
-  repeat
-    match goal with
-    | [ HX : Ⓓ_ = Ⓓ_ |- _ ] => apply un_d_ify in HX
-    end; subst.
+(* Local Ltac un_d_ify := *)
+(*   repeat *)
+(*     match goal with *)
+(*     | [ HX : Ⓓ_ = Ⓓ_ |- _ ] => apply un_d_ify in HX *)
+(*     end; subst. *)
 
-Theorem cstr_nonil m loc s: cstring m loc s -> ~In 0 s.
-Proof.
-  intros.
-  generalize dependent loc.
-  induction s; [tauto|].
-  intros.
-  simpl in *.
-  intuition.
-  eapply IHs; eassumption.
-Qed.
+(* Theorem cstr_nonil m loc s: cstring m loc s -> ~In 0 s. *)
+(* Proof. *)
+(*   intros. *)
+(*   generalize dependent loc. *)
+(*   induction s; [tauto|]. *)
+(*   intros. *)
+(*   simpl in *. *)
+(*   intuition. *)
+(*   eapply IHs; eassumption. *)
+(* Qed. *)
 
 (* Theorem sub_lt' n m : m < n -> n - m < n. *)
 (*   intros. *)
@@ -189,120 +223,163 @@ Proof.
   }
 Qed.
 
-Theorem substr_accept_addone m strloc strind (accept : list N) :
-  In (m (strloc ⊕ strind)) accept ->
-  (forall n, n < strind -> In (m (strloc ⊕ n)) accept) ->
-  forall n, n < strind + 1 -> In (m (strloc ⊕ n)) accept.
+(* Theorem substr_accept_addone m strloc strind (accept : list N) : *)
+(*   In (m (strloc ⊕ strind)) accept -> *)
+(*   (forall n, n < strind -> In (m (strloc ⊕ n)) accept) -> *)
+(*   forall n, n < strind + 1 -> In (m (strloc ⊕ n)) accept. *)
+(* Proof. *)
+(*   intros. *)
+(*   rewrite N.add_1_r in H1. *)
+(*   rewrite N.lt_succ_r in H1. *)
+(*   rewrite N.le_lteq in H1. *)
+(*   destruct H1; subst; auto. *)
+(* Qed. *)
+
+(* Theorem substr_accept_mod m strloc strind (accept : list N) : *)
+(*   (forall n, n < strind -> In (m (strloc ⊕ n)) accept) -> *)
+(*   forall n, n < strind mod 2^32 -> In (m (strloc ⊕ n)) accept. *)
+(* Proof. *)
+(*   intros. *)
+(*   apply H. *)
+(*   eapply N.lt_le_trans; [eassumption|]. *)
+(*   apply N_mod_le. *)
+(* Qed. *)
+
+(* Theorem substr_accept_xaddone m strloc strind (accept : list N) : *)
+(*   In (m (strloc ⊕ strind)) accept -> *)
+(*   (forall n, n < strind -> In (m (strloc ⊕ n)) accept) -> *)
+(*   forall n, n < strind ⊕ 1 -> In (m (strloc ⊕ n)) accept. *)
+(* Proof. *)
+(*   intros. *)
+(*   eapply substr_accept_mod; [|apply H1]. *)
+(*   apply substr_accept_addone; auto. *)
+(* Qed. *)
+
+(* Theorem cstr_accept_after m loc accept ind : *)
+(*   loc < 2^32 -> *)
+(*   cstring m loc accept -> *)
+(*   ind < N.of_nat (length accept) -> *)
+(*   In (m (loc ⊕ ind)) accept. *)
+(* Proof. *)
+(*   revert loc accept. *)
+(*   induction ind using N.peano_ind. *)
+(*   { *)
+(*     intros. *)
+(*     rewrite N.add_0_r,N.mod_small by assumption. *)
+(*     destruct accept; [discriminate|]. *)
+(*     simpl in *. *)
+(*     intuition. *)
+(*   } *)
+(*   { *)
+(*     intros. *)
+(*     rewrite <- N.add_succ_comm. *)
+(*     destruct accept; [edestruct N.nlt_0_r; eassumption|]. *)
+(*     simpl length in H1. *)
+(*     rewrite Nat2N.inj_succ in H1. *)
+(*     rewrite <- N.succ_lt_mono in H1. *)
+(*     simpl in H0. *)
+(*     rewrite <- N.add_1_r. *)
+(*     Search (_ + _ mod _). *)
+(*     rewrite <- N.add_mod_idemp_l; [|discriminate]. *)
+(*     simpl. *)
+(*     right. *)
+(*     apply IHind; intuition. *)
+(*     Search (_ mod _ < _). *)
+(*     apply N.mod_upper_bound. *)
+(*     discriminate. *)
+(*   } *)
+(* Qed. *)
+
+(* Theorem cstr_accept_after' m loc accept ind : *)
+(*   loc < 2^32 -> *)
+(*   cstring m loc accept -> *)
+(*   (forall n, n < ind -> m (loc ⊕ n) <> 0) -> *)
+(*   m (loc ⊕ ind) <> 0 -> *)
+(*   In (m (loc ⊕ ind)) accept. *)
+(* Proof. *)
+(*   revert loc accept. *)
+(*   induction ind using N.peano_ind. *)
+(*   { *)
+(*     intros. *)
+(*     rewrite N.add_0_r,N.mod_small in * by assumption. *)
+(*     destruct accept; [contradiction|]. *)
+(*     simpl in *. *)
+(*     intuition. *)
+(*   } *)
+(*   { *)
+(*     intros. *)
+(*     rewrite <- N.add_succ_comm in *. *)
+(*     rewrite <- N.add_mod_idemp_l; [|discriminate]. *)
+(*     admit. *)
+(*   } *)
+(* Abort. *)
+
+Theorem cstr_straccept_next' m str accept strind :
+  (forall i, i < strind -> cstringmem m accept (m (str ⊕ i))) ->
+  cstringmem m accept (m (str ⊕ strind)) ->
+  (forall i, i < strind + 1 -> cstringmem m accept (m (str ⊕ i))).
 Proof.
+  unfold cstringmem.
   intros.
-  rewrite N.add_1_r in H1.
-  rewrite N.lt_succ_r in H1.
-  rewrite N.le_lteq in H1.
-  destruct H1; subst; auto.
+  destruct (N.ltb_spec i strind); [apply H; assumption|].
+  destruct H0 as [cind ?].
+  exists cind.
+  assert (i = strind); subst; [|assumption].
+  apply N.le_antisymm; [|assumption].
+  apply N.lt_succ_r.
+  rewrite <- N.add_1_r.
+  assumption.
 Qed.
 
-Theorem substr_accept_mod m strloc strind (accept : list N) :
-  (forall n, n < strind -> In (m (strloc ⊕ n)) accept) ->
-  forall n, n < strind mod 2^32 -> In (m (strloc ⊕ n)) accept.
+Theorem cstr_straccept_mod m str accept strind :
+  (forall i, i < strind -> cstringmem m accept (m (str ⊕ i))) ->
+  (forall i, i < strind mod (2^32) -> cstringmem m accept (m (str ⊕ i))).
 Proof.
   intros.
   apply H.
   eapply N.lt_le_trans; [eassumption|].
-  apply N_mod_le.
+  apply N.mod_le.
+  discriminate.
 Qed.
 
-Theorem substr_accept_xaddone m strloc strind (accept : list N) :
-  In (m (strloc ⊕ strind)) accept ->
-  (forall n, n < strind -> In (m (strloc ⊕ n)) accept) ->
-  forall n, n < strind ⊕ 1 -> In (m (strloc ⊕ n)) accept.
+Theorem cstr_straccept_next m str accept strind :
+  (forall i, i < strind -> cstringmem m accept (m (str ⊕ i))) ->
+  cstringmem m accept (m (str ⊕ strind)) ->
+  (forall i, i < strind ⊕ 1 -> cstringmem m accept (m (str ⊕ i))).
 Proof.
-  intros.
-  eapply substr_accept_mod; [|apply H1].
-  apply substr_accept_addone; auto.
+  intros H1 H2.
+  eapply cstr_straccept_mod.
+  eapply cstr_straccept_next'; assumption.
 Qed.
-
-Theorem cstr_accept_after m loc accept ind :
-  loc < 2^32 ->
-  cstring m loc accept ->
-  ind < N.of_nat (length accept) ->
-  In (m (loc ⊕ ind)) accept.
-Proof.
-  revert loc accept.
-  induction ind using N.peano_ind.
-  {
-    intros.
-    rewrite N.add_0_r,N.mod_small by assumption.
-    destruct accept; [discriminate|].
-    simpl in *.
-    intuition.
-  }
-  {
-    intros.
-    rewrite <- N.add_succ_comm.
-    destruct accept; [edestruct N.nlt_0_r; eassumption|].
-    simpl length in H1.
-    rewrite Nat2N.inj_succ in H1.
-    rewrite <- N.succ_lt_mono in H1.
-    simpl in H0.
-    rewrite <- N.add_1_r.
-    Search (_ + _ mod _).
-    rewrite <- N.add_mod_idemp_l; [|discriminate].
-    simpl.
-    right.
-    apply IHind; intuition.
-    Search (_ mod _ < _).
-    apply N.mod_upper_bound.
-    discriminate.
-  }
-Qed.
-
-Theorem cstr_accept_after' m loc accept ind :
-  loc < 2^32 ->
-  cstring m loc accept ->
-  (forall n, n < ind -> m (loc ⊕ n) <> 0) ->
-  m (loc ⊕ ind) <> 0 ->
-  In (m (loc ⊕ ind)) accept.
-Proof.
-  revert loc accept.
-  induction ind using N.peano_ind.
-  {
-    intros.
-    rewrite N.add_0_r,N.mod_small in * by assumption.
-    destruct accept; [contradiction|].
-    simpl in *.
-    intuition.
-  }
-  {
-    intros.
-    rewrite <- N.add_succ_comm in *.
-    rewrite <- N.add_mod_idemp_l; [|discriminate].
-    admit.
-  }
-Abort.
 
 Set Nested Proofs Allowed.
 
 Theorem strspn_partial_correctness_loop:
-  forall s strloc acceptloc accept sp m n s' x
+  forall s str accept sp m n s' x
          (MDL0: models armtypctx s)
          (MEM0: s V_MEM32 = Ⓜm) (SP0: s R_SP = Ⓓsp)
-         (ARGSTRING: s R_R0 = Ⓓstrloc) (ARGACCEPT: s R_R1 = Ⓓacceptloc)
-         (INITCHAR: s R_R12 = Ⓓm (strloc))
-         (ACCEPT: cstring m acceptloc accept)
+         (ARGSTRING: s R_R0 = Ⓓstr) (ARGACCEPT: s R_R1 = Ⓓaccept)
+         (INITCHAR: s R_R12 = Ⓓm (str))
          (RET: strspn_arm s (m Ⓓ[ sp ⊕ 4 ]) = None)
          (XP0: exec_prog fh strspn_arm 16 s n s' x),
-    trueif_inv (strspn_invset strloc acceptloc accept m strspn_arm x s').
+    trueif_inv (strspn_invset m str accept strspn_arm x s').
 Proof.
   intros.
   eapply prove_invs; [exact XP0|repeat split;assumption|].
   intros.
   assert (MDL: models armtypctx s1)
     by (eapply preservation_exec_prog; eauto; apply strspn_welltyped).
-  assert (MEM: s1 V_MEM32 = Ⓜm) by admit.
-  assert (SP: s1 R_SP = Ⓓsp) by admit.
+  assert (MEM: s1 V_MEM32 = Ⓜm) by admit. (* preserves memory *)
+  assert (SP: s1 R_SP = Ⓓsp) by admit. (* preserves SP *)
 
   assert (WTM := arm_wtm MDL MEM).
   simpl in WTM.
+  assert (WTM32 : forall a, m a < 2 ^ 32).
+  {
+    intros.
+    eapply N.lt_trans; eauto.
+    reflexivity.
+  }
   rewrite (strspn_nwc s1) in RET.
   apply (arm_regsize MDL0) in ARGSTRING.
   apply (arm_regsize MDL0) in ARGACCEPT.
@@ -313,134 +390,86 @@ Proof.
   Local Ltac step := time arm_step.
 
   {
-    repeat step.
     intuition.
-    rewrite Hsv,Hsv0 in *.
-    inversion H; subst.
-    inversion H1; subst.
-    rewrite H3.
+    repeat step.
     exists 0.
-    rewrite N.add_0_r.
-    rewrite N.mod_small by assumption.
+    psimpl_goal.
     intuition.
   }
   {
+    destruct PRE as [prestrind HPRE].
+    intuition.
     repeat step.
     {
       (* accept is empty *)
       unfold strspn_post.
-      destruct PRE as [answer HPRE].
+      psimpl_goal.
+      destruct (N.eqb_spec (m accept) 0); [|discriminate].
+      exists prestrind.
       intuition.
-      rewrite Hsv in *.
-      apply un_d_ify in H0.
-      subst.
-      exists answer.
-      intuition; subst; intuition.
-      apply Neqb_ok in BC.
-      destruct (m _) eqn:R in BC; [|discriminate].
-      destruct accept; [assumption|].
-      red in H4.
+      destruct H4.
       intuition.
+      eapply (H6 0); [apply N.le_0_l|].
+      rewrite N.add_0_r,N.mod_small; assumption.
     }
     {
-      destruct PRE as [prestrind HPRE].
-      intuition.
-      rewrite Hsv in *.
-      rewrite Hsv0 in *.
-      rewrite Hsv1 in *.
-      rewrite Hsv2 in *.
-      un_d_ify.
       eexists.
       split; [reflexivity|].
       psimpl_goal.
       rewrite N.add_assoc.
       intuition.
-      eapply substr_accept_xaddone; eauto.
-      apply Neqb_ok in BC0.
-      destruct (_ =? 0) eqn:HEq in BC0; [|discriminate].
+      eapply cstr_straccept_next; eauto.
+      unfold cstringmem.
+      destruct (_ =? _) eqn:HEq in BC0 at 2; [|discriminate].
       apply Neqb_ok in HEq.
-      unfold welltyped_memory in WTM.
-      assert (WTM32 : forall a, m a < 2 ^ 32).
-      {
-        intros.
-        eapply N.lt_trans; eauto.
-        reflexivity.
-      }
-      apply mod_sub_eq in HEq; [|apply WTM32|apply WTM32].
-      destruct accept; simpl in H4; [rewrite H4 in BC;discriminate|].
-      simpl.
-      left.
-      rewrite HEq in H4.
+      apply mod_sub_eq in HEq; auto.
+      destruct (N.eqb_spec (m accept) 0); [discriminate|].
+      exists 0.
+      rewrite N.add_0_r,(N.mod_small accept) by assumption.
       intuition.
+      apply N.le_0_r in H6.
+      subst.
+      rewrite N.add_0_r,(N.mod_small accept) in H7 by assumption.
+      tauto.
       (* GOAL: all previous characters in accept -> next character in accept *)
     }
     {
       unfold strspn_post.
-      rewrite Hsv in *.
-      rewrite Hsv0 in *.
-      rewrite Hsv1 in *.
-      rewrite Hsv2 in *.
-      destruct PRE as [prestrind HPRE].
-      intuition.
-      un_d_ify.
-      rewrite N.eqb_neq in BC1.
-      destruct (_ =? 0) eqn:HEq in BC1; [|contradiction].
-      apply Neqb_ok in HEq.
+      psimpl_goal.
       eexists.
       split; [reflexivity|].
-      apply Neqb_ok in BC0.
-      destruct (_ =? _) eqn:HEq1 in BC0; [|discriminate].
-      apply Neqb_ok in HEq1.
-      assert (WTM32 : forall a, m a < 2 ^ 32).
-      {
-        intros.
-        eapply N.lt_trans; eauto.
-        reflexivity.
-      }
-      apply mod_sub_eq in HEq1; [|apply WTM32|apply WTM32].
-      split; [assumption|].
-      split.
-      {
-        apply substr_accept_xaddone; [|assumption].
-        rewrite N.eqb_neq in BC.
-        destruct (_ =? _) eqn:HEq2 in BC; [contradiction|].
-        rewrite N.eqb_neq in HEq2.
-        destruct accept; [contradiction|].
-        simpl in H4.
-        intuition.
-        subst.
-        simpl.
-        left.
-        assumption.
-      }
-      {
-        rewrite N.add_mod_idemp_r by discriminate.
-        rewrite N.add_assoc.
-        rewrite N.add_mod_idemp_l in HEq by discriminate.
-        replace (m Ⓑ[ strloc + prestrind ⊕ 1 ]) with 0.
-        2: {
-          rewrite <- HEq.
-          simpl.
-          unfold getmem_little.
-          rewrite N.lor_0_r.
-          reflexivity.
-        }
-        rewrite HEq.
-        eapply cstr_nonil.
-        eassumption.
-      }
+      psimpl_goal.
+      Local Ltac eq_unbool :=
+        repeat
+          match goal with
+          | [ H : context[if ?x =? ?y then _ else _] |- _ ] =>
+            destruct (N.eqb_spec x y); try discriminate
+          end.
+      eq_unbool.
+      psimpl (str ⊕ _).
+      apply mod_sub_eq in e0; auto.
+      rewrite N.add_assoc,e.
+      split; [|apply cstr_nonil].
+      apply cstr_straccept_next; [assumption|].
+      exists 0.
+      psimpl (_ ⊕ 0).
+      intuition.
+      apply N.le_0_r in H4.
+      subst.
+      psimpl (_ ⊕ 0) in H6.
+      tauto.
     }
     {
-      rewrite Hsv in *.
-      rewrite Hsv0 in *.
-      rewrite Hsv1 in *.
-      destruct PRE as [strind HPRE].
-      intuition.
-      un_d_ify.
-      exists strind,0.
-      rewrite N.add_0_r.
-      rewrite N.mod_small by assumption.
-      intuition.
+      exists prestrind,0.
+      eq_unbool.
+      psimpl (_ ⊕ 0).
+      Search (_ <= 0).
+      assert (HA: accept ⊕ 0 = accept) by (psimpl (_ ⊕ 0); reflexivity).
+      intuition; rewrite N.le_0_r in *; subst; rewrite HA in *; auto.
+      apply n0.
+      rewrite H6.
+      psimpl (_ mod _).
+      reflexivity.
     }
   }
   {
@@ -448,39 +477,83 @@ Proof.
     intuition.
     repeat step.
     {
+      eq_unbool.
+      apply mod_sub_eq in e; auto.
       eexists.
       split; [reflexivity|].
       psimpl_goal.
       rewrite N.add_assoc.
       intuition.
-      eapply substr_accept_xaddone; [|eassumption|eassumption].
-      apply Neqb_ok in BC0.
-      destruct (_ =? 0) eqn:HEq1 in BC0; [|discriminate].
-      apply Neqb_ok in HEq1.
-      assert (WTM32 : forall a, m a < 2 ^ 32).
-      {
-        intros.
-        eapply N.lt_trans; eauto.
-        reflexivity.
-      }
-      apply mod_sub_eq in HEq1; auto.
-      rewrite <- HEq1.
-      assert (LEN : pacceptind < N.of_nat (length accept)) by admit.
-      rewrite <- N.add_assoc.
-      apply cstr_accept_after; auto.
-      admit.
+      eapply cstr_straccept_next; eauto.
+      exists (pacceptind+1).
+      rewrite N.add_assoc.
+      intuition.
+      rewrite N.add_1_r in H8.
+      rewrite N.le_succ_r in H8.
+      destruct H8; [destruct (H7 i0); [assumption|tauto]|].
+      subst.
+      apply n2.
+      rewrite <- N.add_1_r,N.add_assoc in H9.
+      assumption.
     }
     {
+      eq_unbool.
       unfold strspn_post.
+      psimpl_goal.
       eexists.
       split; [reflexivity|].
-      admit.
+      psimpl (_ ⊕ (_ ⊕ _)).
+      rewrite N.add_assoc,e.
+      split; [|apply cstr_nonil].
+      apply cstr_straccept_next; [assumption|].
+      apply mod_sub_eq in e0; auto.
+      unfold cstringmem.
+      rewrite <- e0.
+      exists (pacceptind + 1).
+      rewrite N.add_assoc.
+      split; [|reflexivity].
+      intros.
+      rewrite N.add_1_r in H6.
+      rewrite N.le_succ_r in H6.
+      destruct H6; [destruct (H7 i); [assumption|tauto]|].
+      subst.
+      rewrite <- N.add_1_r,N.add_assoc.
+      assumption.
     }
     {
+      eq_unbool.
       exists pstrind, (pacceptind⊕1).
       psimpl_goal.
       rewrite N.add_assoc.
       intuition.
+      {
+        Theorem cstring_nonnil_next' m loc ind :
+          (forall i, i < ind -> m (loc ⊕ i) <> 0) ->
+          m (loc ⊕ ind) <> 0 ->
+          (forall i, i < (ind+1) -> m (loc ⊕ i) <> 0).
+        Proof.
+          intros.
+          specialize (H i).
+          rewrite N.add_1_r in H1.
+          rewrite N.lt_succ_r in H1.
+          rewrite N.lt_eq_cases in H1.
+          intuition.
+          subst.
+          tauto.
+        Qed.
+        Theorem cstring_nonnil_mod m loc ind x :
+          (forall i, i < ind -> m (loc ⊕ i) <> 0) ->
+          (forall i, i < (ind mod x) -> m (loc ⊕ i) <> 0).
+        Proof.
+          intros.
+          apply H.
+          eapply N.lt_le_trans; [eassumption|].
+          apply N_mod_le.
+        Qed.
+        Theorem cstring_nonnil_next' m loc ind :
+          (forall i, i < ind -> m (loc ⊕ i) <> 0) ->
+          m (loc ⊕ ind) <> 0 ->
+          (forall i, i < (ind ⊕ 1) -> m (loc ⊕ i) <> 0).
       admit.
     }
     {
