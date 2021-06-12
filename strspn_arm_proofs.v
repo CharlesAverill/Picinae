@@ -61,52 +61,64 @@ Proof.
   apply N.le_refl.
 Qed.
 
-Definition strspn_post m str accept (_ : exit) s :=
-  exists answer,
-    s R_R0 = Ⓓanswer /\
-    (forall n, n < answer -> cstringmem m accept (m (str ⊕ n))) /\
-    ~cstringmem m accept (m (str ⊕ answer)).
-
-Definition strspn_invs m sp str accept a s :=
+Definition strspn_invs m sp lr r4 str accept a s :=
+  let m' := m [Ⓓsp⊕4294967292 := lr] [Ⓓsp⊕4294967288 := r4] in
   match a with
-  | 16 =>
+  | 0 =>
     Some (s R_R0 = Ⓓstr /\
           s R_R1 = Ⓓaccept /\
           s V_MEM32 = Ⓜm /\
           s R_SP = Ⓓsp /\
-          s R_R12 = Ⓓ(m str))
+          s R_LR = Ⓓlr /\
+          s R_R4 = Ⓓr4)
+  | 16 =>
+    Some (s R_R0 = Ⓓstr /\
+          s R_R1 = Ⓓaccept /\
+          s V_MEM32 = Ⓜm' /\
+          s R_SP = Ⓓ(sp⊕4294967288) /\
+          s R_R12 = Ⓓ(m' str))
   | 28 =>
     Some
       (exists strind,
           s R_R0 = Ⓓstrind /\
           s R_R1 = Ⓓaccept /\
-          s R_R4 = Ⓓ(m accept) /\
-          s R_R12 = Ⓓ(m (str⊕strind)) /\
+          s R_R4 = Ⓓ(m' accept) /\
+          s R_R12 = Ⓓ(m' (str⊕strind)) /\
           s R_LR = Ⓓ(str⊕strind) /\
-          s V_MEM32 = Ⓜm /\
-          s R_SP = Ⓓsp /\
-          forall i, i < strind -> cstringmem m accept (m (str⊕i)))
+          s V_MEM32 = Ⓜm' /\
+          s R_SP = Ⓓ(sp⊕4294967288) /\
+          forall i, i < strind -> cstringmem m' accept (m' (str⊕i)))
   | 60 =>
     Some
       (exists strind acceptind,
           s R_R0 = Ⓓstrind /\
           s R_R1 = Ⓓaccept /\
           s R_R2 = Ⓓ(accept⊕acceptind) /\
-          s R_R4 = Ⓓ(m accept) /\
-          s R_R12 = Ⓓ(m (str⊕strind)) /\
+          s R_R4 = Ⓓ(m' accept) /\
+          s R_R12 = Ⓓ(m' (str⊕strind)) /\
           s R_LR = Ⓓ(str⊕strind) /\
-          s V_MEM32 = Ⓜm /\
-          s R_SP = Ⓓsp /\
-          (forall i, i < strind -> cstringmem m accept (m (str⊕i))) /\
+          s V_MEM32 = Ⓜm' /\
+          s R_SP = Ⓓ(sp⊕4294967288) /\
+          (forall i, i < strind -> cstringmem m' accept (m' (str⊕i))) /\
           (forall i, i <= acceptind ->
-                     m (accept⊕i) <> 0 /\
-                     m (str⊕strind) <> m (accept⊕i)))
+                     m' (accept⊕i) <> 0 /\
+                     m' (str⊕strind) <> m' (accept⊕i)))
   | _ => None
   end.
 
-Definition strspn_invset m sp str accept :=
-  invs (strspn_invs m sp str accept)
-       (strspn_post m str accept).
+Definition strspn_post' m str accept (_ : exit) s :=
+  exists answer,
+    s R_R0 = Ⓓanswer /\
+    (forall n, n < answer -> cstringmem m accept (m (str ⊕ n))) /\
+    ~cstringmem m accept (m (str ⊕ answer)).
+
+Definition strspn_post m sp lr r4 str accept (x : exit) s :=
+  strspn_post' m str accept x s \/
+  strspn_post' (m [Ⓓsp⊕4294967292 := lr] [Ⓓsp⊕4294967288 := r4]) str accept x s.
+
+Definition strspn_invset m sp lr r4 str accept :=
+  invs (strspn_invs m sp lr r4 str accept)
+       (strspn_post m sp lr r4 str accept).
 
 Theorem sub_self_sub n m : n < m -> m - (m - n) = n.
 Proof.
@@ -271,38 +283,97 @@ Local Ltac eq_unbool :=
       destruct (N.eqb_spec x y); try discriminate
     end.
 
+Theorem getmem_setmem_cancel' e len1 len2 m a1 a2 v :
+  (forall i1 i2, i1 < len1 -> i2 < len2 -> a1 ⊕ i1 <> a2 ⊕ i2) ->
+  getmem e len1 (setmem e len2 m a2 v) a1 = getmem e len1 m a1.
+Admitted.
+
+Theorem getmem_setmem_cancel e len1 len2 m a1 a2 v :
+  len1 <= ((2^32 + a2) - a1) mod (2^32) ->
+  len2 <= ((2^32 + a1) - a2) mod (2^32) ->
+  getmem e len1 (setmem e len2 m a2 v) a1 = getmem e len1 m a1.
+Admitted.
+
 Theorem strspn_partial_correctness_loop:
-  forall s str accept sp m n s' x
+  forall s str accept sp lr r4 m n s' x
          (MDL0: models armtypctx s)
          (MEM0: s V_MEM32 = Ⓜm) (SP0: s R_SP = Ⓓsp)
          (ARGSTRING: s R_R0 = Ⓓstr) (ARGACCEPT: s R_R1 = Ⓓaccept)
          (INITCHAR: s R_R12 = Ⓓm str)
-         (RET: strspn_arm s (m Ⓓ[ sp ⊕ 4 ]) = None)
-         (XP0: exec_prog fh strspn_arm 16 s n s' x),
-    trueif_inv (strspn_invset m sp str accept strspn_arm x s').
+         (LR: s R_LR = Ⓓlr)
+         (R4: s R_R4 = Ⓓr4)
+         (RET: strspn_arm s lr = None)
+         (NONINT: Ⓓ m str =
+                  Ⓓ (m [Ⓓsp ⊕ 4294967292 := lr ] [Ⓓsp ⊕ 4294967288 := r4 ]) str)
+         (XP0: exec_prog fh strspn_arm 0 s n s' x),
+    trueif_inv (strspn_invset m sp lr r4 str accept strspn_arm x s').
 Proof.
   intros.
   eapply prove_invs; [exact XP0|repeat split;assumption|].
   intros.
   assert (MDL: models armtypctx s1)
     by (eapply preservation_exec_prog; eauto; apply strspn_welltyped).
-  assert (WTM := arm_wtm MDL0 MEM0).
-  simpl in WTM.
-  assert (WTM32 : forall a, m a < 2 ^ 32).
-  {
-    intros.
-    eapply N.lt_trans; eauto.
-    reflexivity.
-  }
+  pose (m' := m [Ⓓsp ⊕ 4294967292 := lr] [Ⓓsp⊕4294967288 := r4]).
+  assert (WTM0 := arm_wtm MDL0 MEM0).
+  simpl in WTM0.
+  assert (WTM0_32 : forall a, m a < 2 ^ 32) by
+      (intros; eapply N.lt_trans; eauto; reflexivity).
   rewrite (strspn_nwc s1) in RET.
   apply (arm_regsize MDL0) in ARGSTRING.
   apply (arm_regsize MDL0) in ARGACCEPT.
-  simpl in ARGSTRING,ARGACCEPT.
+  apply (arm_regsize MDL0) in LR.
+  apply (arm_regsize MDL0) in R4.
+  simpl in ARGSTRING,ARGACCEPT,LR,R4.
+  assert (WTM' : welltyped_memory m') by
+      (unfold m'; repeat apply setmem_welltyped; assumption).
+  assert (WTM32' : forall a, m' a < 2 ^ 32) by
+      (intros; eapply N.lt_trans; eauto; reflexivity).
+  assert (RET' : strspn_arm s (m' Ⓓ[ sp ⊕ 4294967292 ]) = None).
+  {
+    unfold m'.
+    (* replace 4294967292 with ((2^32+0-4) mod 2^32) by reflexivity. *)
+    (* replace 4294967288 with ((2^32+0-8) mod 2^32) by reflexivity. *)
+    rewrite getmem_setmem_cancel.
+    {
+      rewrite getmem_setmem.
+      erewrite strspn_nwc.
+      eassumption.
+    }
+    {
+      admit.
+    }
+    {
+      admit.
+    }
+  }
+  unfold m' in *.
 
   destruct_inv 32 PRE.
 
   Local Ltac step := time arm_step.
 
+  {
+    intuition.
+    repeat step.
+    {
+      unfold strspn_post,strspn_post'.
+      psimpl_goal.
+      eq_unbool.
+      left.
+      exists 0.
+      psimpl (_ mod _).
+      rewrite e.
+      intuition.
+      eapply cstr_nonil.
+      eassumption.
+    }
+    {
+      intuition.
+      rewrite N.add_sub_swap,N.add_comm at 1 by discriminate.
+      psimpl_goal.
+      reflexivity.
+    }
+  }
   {
     intuition.
     repeat step.
@@ -316,15 +387,16 @@ Proof.
     repeat step.
     {
       (* accept is empty *)
-      unfold strspn_post.
+      unfold strspn_post, strspn_post'.
       psimpl_goal.
-      destruct (N.eqb_spec (m accept) 0); [|discriminate].
+      eq_unbool.
+      right.
       exists prestrind.
       intuition.
       destruct H6.
       intuition.
       eapply (H8 0); [apply N.le_0_l|].
-      psimpl (_ mod _).
+      psimpl (_⊕0).
       assumption.
     }
     {
@@ -335,10 +407,8 @@ Proof.
       intuition.
       eapply cstr_straccept_next; eauto.
       unfold cstringmem.
-      destruct (_ =? _) eqn:HEq in BC0 at 2; [|discriminate].
-      apply Neqb_ok in HEq.
-      apply mod_sub_eq in HEq; auto.
-      destruct (N.eqb_spec (m accept) 0); [discriminate|].
+      eq_unbool.
+      apply mod_sub_eq in e; auto.
       exists 0.
       psimpl (_ ⊕ 0).
       intuition.
@@ -349,8 +419,9 @@ Proof.
       (* GOAL: all previous characters in accept -> next character in accept *)
     }
     {
-      unfold strspn_post.
+      unfold strspn_post,strspn_post'.
       psimpl_goal.
+      right.
       eexists.
       split; [reflexivity|].
       psimpl_goal.
@@ -372,7 +443,6 @@ Proof.
       exists prestrind,0.
       eq_unbool.
       psimpl (_ ⊕ 0).
-      Search (_ <= 0).
       assert (HA: accept ⊕ 0 = accept) by (psimpl (_ ⊕ 0); reflexivity).
       intuition; rewrite N.le_0_r in *; subst; rewrite HA in *; auto.
       apply n0.
@@ -407,8 +477,9 @@ Proof.
     }
     {
       eq_unbool.
-      unfold strspn_post.
+      unfold strspn_post,strspn_post'.
       psimpl_goal.
+      right.
       eexists.
       split; [reflexivity|].
       psimpl (_ ⊕ (_ ⊕ _)).
@@ -458,7 +529,8 @@ Proof.
     }
     {
       eq_unbool.
-      unfold strspn_post.
+      unfold strspn_post,strspn_post'.
+      right.
       psimpl_goal.
       eexists.
       split; [eassumption|].
@@ -469,7 +541,7 @@ Proof.
       {
         subst.
         eapply HX1; [apply N.le_refl|].
-        psimpl (_ mod _).
+        psimpl (_⊕(_⊕_)).
         rewrite N.add_assoc.
         assumption.
       }
@@ -482,7 +554,7 @@ Proof.
       {
         apply (HX1 (pacceptind ⊕ 1)); [apply N.lt_le_incl; assumption|].
         (* REDUNDANT? *)
-        psimpl (_ mod _).
+        psimpl (_⊕(_⊕_)).
         rewrite N.add_assoc.
         assumption.
       }
