@@ -283,16 +283,23 @@ Local Ltac eq_unbool :=
       destruct (N.eqb_spec x y); try discriminate
     end.
 
-Theorem getmem_setmem_cancel' e len1 len2 m a1 a2 v :
-  (forall i1 i2, i1 < len1 -> i2 < len2 -> a1 ⊕ i1 <> a2 ⊕ i2) ->
-  getmem e len1 (setmem e len2 m a2 v) a1 = getmem e len1 m a1.
-Admitted.
+(* Theorem getmem_setmem_cancel' e len1 len2 m a1 a2 v : *)
+(*   (forall i1 i2, i1 < len1 -> i2 < len2 -> a1 ⊕ i1 <> a2 ⊕ i2) -> *)
+(*   getmem e len1 (setmem e len2 m a2 v) a1 = getmem e len1 m a1. *)
+(* Admitted. *)
 
-Theorem getmem_setmem_cancel e len1 len2 m a1 a2 v :
-  len1 <= ((2^32 + a2) - a1) mod (2^32) ->
-  len2 <= ((2^32 + a1) - a2) mod (2^32) ->
-  getmem e len1 (setmem e len2 m a2 v) a1 = getmem e len1 m a1.
-Admitted.
+(* Theorem getmem_setmem_cancel e len1 len2 m a1 a2 v : *)
+(*   len1 <= ((2^32 + a2) - a1) mod (2^32) -> *)
+(*   len2 <= ((2^32 + a1) - a2) mod (2^32) -> *)
+(*   getmem e len1 (setmem e len2 m a2 v) a1 = getmem e len1 m a1. *)
+(* Admitted. *)
+
+Theorem getmem_frame_gen e1 e2 len1 len2 m a1 a2 v:
+  a1 + len1 <= a2 \/ a2 + len2 <= a1 ->
+  getmem e1 len1 (setmem e2 len2 m a2 v) a1 = getmem e1 len1 m a1.
+  intro H.
+  destruct H; auto using getmem_frame_low,getmem_frame_high.
+Qed.
 
 Theorem strspn_partial_correctness_loop:
   forall s str accept sp lr r4 m n s' x
@@ -331,19 +338,41 @@ Proof.
   assert (RET' : strspn_arm s (m' Ⓓ[ sp ⊕ 4294967292 ]) = None).
   {
     unfold m'.
-    (* replace 4294967292 with ((2^32+0-4) mod 2^32) by reflexivity. *)
-    (* replace 4294967288 with ((2^32+0-8) mod 2^32) by reflexivity. *)
-    rewrite getmem_setmem_cancel.
+    erewrite getmem_frame_gen,getmem_setmem,strspn_nwc; [eassumption|].
+    destruct (N.lt_ge_cases sp 4).
     {
-      rewrite getmem_setmem.
-      erewrite strspn_nwc.
-      eassumption.
+      right.
+      repeat rewrite N.mod_small.
+      {
+        rewrite <- N.add_assoc.
+        apply N.le_refl.
+      }
+      {
+        apply (N.lt_le_trans _ (4+4294967292)); [|discriminate].
+        apply N.add_lt_le_mono; [assumption|discriminate].
+      }
+      {
+        apply (N.lt_le_trans _ (4+4294967288)); [|discriminate].
+        apply N.add_lt_le_mono; [assumption|discriminate].
+      }
+    }
+    destruct (N.lt_ge_cases sp 8).
+    {
+      left.
+      rewrite <- (N.sub_add 4 sp) at 1 by assumption.
+      rewrite <- N.add_assoc.
+      psimpl ((_+_) mod _).
+      rewrite N.sub_add by assumption.
+      rewrite N.mod_small; [apply N.le_add_r|].
+      apply (N.lt_le_trans _ (8+4294967288)); [|discriminate].
+      apply N.add_lt_le_mono; [assumption|discriminate].
     }
     {
-      admit.
-    }
-    {
-      admit.
+      right.
+      rewrite <- (N.sub_add 8 sp) by assumption.
+      repeat rewrite <- N.add_assoc.
+      repeat psimpl ((_+_) mod _).
+      apply N.le_refl.
     }
   }
   unfold m' in *.
