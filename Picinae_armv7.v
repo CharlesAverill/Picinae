@@ -36,7 +36,7 @@ Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
 Require Export Picinae_finterp.
-Require Export Picinae_simplifier.
+Require Export Picinae_simplifier_v1_0.
 Require Export Picinae_slogic.
 Require Import NArith.
 Require Import Program.Equality.
@@ -44,7 +44,7 @@ Require Import Structures.Equalities.
 Open Scope N.
 
 (* Variables found in IL code lifted from ARM native code: *)
-Inductive armvar :=
+Inductive arm7var :=
   (* Main memory: swap between 32 bit(ARMv1-v8) mode and 64 bit(ARMv8) *)
   | V_MEM32 | V_MEM64
   (* no equivalent of the segment registers*)
@@ -79,40 +79,41 @@ Inductive armvar :=
    identifiers chosen above are syntactically written and how to decide whether
    any two variable instances refer to the same variable. *)
 
-Module MiniARMVarEq <: MiniDecidableType.
-  Definition t := armvar.
-  Definition eq_dec (v1 v2:armvar) : {v1=v2}+{v1<>v2}.
+Module MiniARM7VarEq <: MiniDecidableType.
+  Definition t := arm7var.
+  Definition eq_dec (v1 v2:arm7var) : {v1=v2}+{v1<>v2}.
     decide equality; apply N.eq_dec.
   Defined.  (* <-- This must be Defined (not Qed!) for finterp to work! *)
   Arguments eq_dec v1 v2 : simpl never.
-End MiniARMVarEq.
+End MiniARM7VarEq.
 
-Module ARMArch <: Architecture.
-  Module Var := Make_UDT MiniARMVarEq.
+Module ARM7Arch <: Architecture.
+  Module Var := Make_UDT MiniARM7VarEq.
   Definition var := Var.t.
   Definition store := var -> value.
 
   Definition mem_bits := 8%positive.
   Definition mem_readable s a := exists r, s A_READ = VaM r 32 /\ r a <> 0.
   Definition mem_writable s a := exists w, s A_WRITE = VaM w 32 /\ w a <> 0.
-End ARMArch.
+End ARM7Arch.
 
 (* Instantiate the Picinae modules with the arm identifiers above. *)
-Module IL_arm := PicinaeIL ARMArch.
-Export IL_arm.
-Module Theory_arm := PicinaeTheory IL_arm.
-Export Theory_arm.
-Module Statics_arm := PicinaeStatics IL_arm.
-Export Statics_arm.
-Module FInterp_arm := PicinaeFInterp IL_arm Statics_arm.
-Export FInterp_arm.
-Module PSimp_arm := PicinaeSimplifier IL_arm Statics_arm FInterp_arm.
-Export PSimp_arm.
-Module SLogic_arm := PicinaeSLogic IL_arm.
-Export SLogic_arm.
+Module IL_arm7 := PicinaeIL ARM7Arch.
+Export IL_arm7.
+Module Theory_arm7 := PicinaeTheory IL_arm7.
+Export Theory_arm7.
+Module Statics_arm7 := PicinaeStatics IL_arm7.
+Export Statics_arm7.
+Module FInterp_arm7 := PicinaeFInterp IL_arm7 Statics_arm7.
+Export FInterp_arm7.
+Module PSimpl_arm7 := Picinae_Simplifier_v1_0 IL_arm7 Statics_arm7 FInterp_arm7.
+Export PSimpl_arm7.
+Ltac PSimplifier ::= PSimplifier_v1_0.
+Module SLogic_arm7 := PicinaeSLogic IL_arm7.
+Export SLogic_arm7.
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
-Definition armtypctx (id:var) : option typ :=
+Definition arm7typctx (id:var) : option typ :=
   match id with
   | V_MEM32 => Some (MemT 32)
   | V_MEM64 => Some (MemT 64)
@@ -129,8 +130,8 @@ Definition armtypctx (id:var) : option typ :=
   | V_TEMP _ => None
 end.
 
-Definition arm_wtm {s v m w} := @models_wtm v armtypctx s m w.
-Definition arm_regsize {s v n w} := @models_regsize v armtypctx s n w.
+Definition arm7_wtm {s v m w} := @models_wtm v arm7typctx s m w.
+Definition arm7_regsize {s v n w} := @models_regsize v arm7typctx s n w.
 
 (* Simplify memory access propositions by observing that on arm, the only part
    of the store that affects memory accessibility are the page-access bits
@@ -195,9 +196,9 @@ Ltac generalize_temps H :=
 
 (* Symbolically evaluate an arm machine instruction for one step, and simplify
    the resulting Coq expressions. *)
-Ltac arm_step_and_simplify XS :=
+Ltac arm7_step_and_simplify XS :=
   step_stmt XS;
-  psimpl_values XS;
+  psimpl in XS;
   simpl_memaccs XS;
   destruct_memaccs XS;
   generalize_temps XS.
@@ -246,30 +247,30 @@ Ltac prove_prog_exits :=
 
 (* If asked to step the computation when we're already at an invariant point,
    just make the proof goal be the invariant. *)
-Ltac arm_invhere :=
+Ltac arm7_invhere :=
   first [ eapply nextinv_here; [reflexivity|]
         | apply nextinv_exn
         | apply nextinv_ret; [ prove_prog_exits |] ];
-  psimpl_goal.
+  psimpl.
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
    instructions, but often it is wiser to pause and do some manual
    simplification of the state at various points.) *)
-Ltac arm_invseek :=
+Ltac arm7_invseek :=
   apply NIStep; [reflexivity|];
   let sz := fresh "sz" in let q := fresh "q" in let s := fresh "s" in let x := fresh "x" in
   let IL := fresh "IL" in let XS := fresh "XS" in
   intros sz q s x IL XS;
   apply inj_prog_stmt in IL; destruct IL; subst sz q;
-  arm_step_and_simplify XS;
+  arm7_step_and_simplify XS;
   repeat lazymatch type of XS with
          | s=_ /\ x=_ => destruct XS; subst s x
          | exec_stmt _ _ (if ?c then _ else _) _ _ =>
              let BC := fresh "BC" in destruct c eqn:BC;
-             arm_step_and_simplify XS
+             arm7_step_and_simplify XS
          | exec_stmt _ _ (N.iter _ _ _) _ _ => fail
-         | _ => arm_step_and_simplify XS
+         | _ => arm7_step_and_simplify XS
          end;
   repeat match goal with [ u:value |- _ ] => clear u
                        | [ n:N |- _ ] => clear n
@@ -280,12 +281,12 @@ Ltac arm_invseek :=
 (* Clear any stale memory-access hypotheses (arising from previous computation
    steps) and either step to the next machine instruction (if we're not at an
    invariant) or produce an invariant as a proof goal. *)
-Ltac arm_step :=
+Ltac arm7_step :=
   repeat match goal with [ H: MemAcc _ _ _ _ _ |- _ ] => clear H end;
-  first [ arm_invseek; try arm_invhere | arm_invhere ].
+  first [ arm7_invseek; try arm7_invhere | arm7_invhere ].
 
 
-Module ARMNotations.
+Module ARM7Notations.
 
 Notation "Ⓜ m" := (VaM m 32) (at level 20). (* memory value *)
 Notation "ⓑ u" := (VaN u 1) (at level 20). (* bit value *)
@@ -317,4 +318,4 @@ Notation "x .& y" := (N.land x y) (at level 25, left associativity). (* logical 
 Notation "x .^ y" := (N.lxor x y) (at level 25, left associativity). (* logical xor *)
 Notation "x .| y" := (N.lor x y) (at level 25, left associativity). (* logical or *)
 
-End ARMNotations.
+End ARM7Notations.

@@ -36,7 +36,7 @@ Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
 Require Export Picinae_finterp.
-Require Export Picinae_simplifier.
+Require Export Picinae_simplifier_v1_0.
 Require Export Picinae_slogic.
 Require Import NArith.
 Require Import Program.Equality.
@@ -105,8 +105,9 @@ Module Statics_i386 := PicinaeStatics IL_i386.
 Export Statics_i386.
 Module FInterp_i386 := PicinaeFInterp IL_i386 Statics_i386.
 Export FInterp_i386.
-Module PSimp_i386 := PicinaeSimplifier IL_i386 Statics_i386 FInterp_i386.
-Export PSimp_i386.
+Module PSimpl_i386 := Picinae_Simplifier_v1_0 IL_i386 Statics_i386 FInterp_i386.
+Export PSimpl_i386.
+Ltac PSimplifier ::= PSimplifier_v1_0.
 Module SLogic_i386 := PicinaeSLogic IL_i386.
 Export SLogic_i386.
 
@@ -241,7 +242,7 @@ Ltac generalize_temps H :=
    the resulting Coq expressions. *)
 Ltac x86_step_and_simplify XS :=
   step_stmt XS;
-  psimpl_values XS;
+  psimpl in XS;
   simpl_memaccs XS;
   destruct_memaccs XS;
   generalize_temps XS.
@@ -294,7 +295,7 @@ Ltac x86_invhere :=
   first [ eapply nextinv_here; [reflexivity|]
         | apply nextinv_exn
         | apply nextinv_ret; [ prove_prog_exits |] ];
-  psimpl_goal.
+  psimpl.
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
