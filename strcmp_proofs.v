@@ -83,25 +83,25 @@ Qed.
    requires stepwise symbolic interpretation of the program to verify.  We first
    define a set of invariants, one for each program point.  In this simple case,
    all program points have the same invariant, so we return the same one for all. *)
-Definition esp_invs (esp:N) (_:addr) (s:store) := Some (s R_ESP = Ⓓ esp).
+Definition esp_invs (esp0:N) (_:addr) (s:store) := Some (s R_ESP = Ⓓ esp0).
 
 (* Next, we define the post-condition we wish to prove: *)
-Definition esp_post (esp:N) (_:exit) (s:store) := s R_ESP = Ⓓ (esp ⊕ 4).
+Definition esp_post (esp0:N) (_:exit) (s:store) := s R_ESP = Ⓓ (esp0 ⊕ 4).
 
 (* The invariant set and post-condition are combined into a single invariant-set
    using the "invs" function. *)
-Definition strcmp_esp_invset esp :=
-  invs (esp_invs esp) (esp_post esp).
+Definition strcmp_esp_invset esp0 :=
+  invs (esp_invs esp0) (esp_post esp0).
 
 (* Now we pose a theorem that asserts that this invariant-set is satisfied at
    all points in the subroutine.  The "trueif_inv" function asserts that
    anywhere an invariant exists (e.g., at the post-condition), it is true. *)
 Theorem strcmp_preserves_esp:
-  forall s esp mem n s' x'
-         (ESP0: s R_ESP = Ⓓ esp) (MEM0: s V_MEM32 = Ⓜ mem)
-         (RET: strcmp_i386 s (mem Ⓓ[esp]) = None)
+  forall s esp0 mem n s' x'
+         (ESP0: s R_ESP = Ⓓ esp0) (MEM0: s V_MEM32 = Ⓜ mem)
+         (RET: strcmp_i386 s (mem Ⓓ[esp0]) = None)
          (XP0: exec_prog fh strcmp_i386 0 s n s' x'),
-  trueif_inv (strcmp_esp_invset esp strcmp_i386 x' s').
+  trueif_inv (strcmp_esp_invset esp0 strcmp_i386 x' s').
 Proof.
   intros.
 
@@ -116,11 +116,11 @@ Proof.
      is preserved by every (reachable) instruction in the program.  Before breaking the
      goal down into many cases (one for each instruction in this case), it is wise to
      simplify and/or remove anything in the context that is unnecessary. In order for
-     symbolic interpretation to succeed, the context must reveal the values of all
+     symbolic interpretation to succeed, the proof context must reveal the values of all
      relevant variables in store s1 (which denotes the store on entry to each instruction
      for which the goal must be proved).  The only two variables in our invariant-set are
-     ESP and MEM.  The value of ESP will be revealed by our pre-condition (PRE).  We can
-     get the value of MEM from MEM0 using our previously proved strlen_preserves_memory
+     ESP and MEM.  The value of ESP is already revealed by pre-condition (PRE), and we
+     can get the value of MEM from MEM0 using our previously proved strlen_preserves_memory
      theorem. *)
   intros.
   assert (MEM: s1 V_MEM32 = Ⓜ mem).
@@ -135,7 +135,7 @@ Proof.
   destruct_inv 32 PRE.
 
   (* Now we launch the symbolic interpreter on all goals in parallel. *)
-  all: x86_step'.
+  all: x86_step.
 
   (* Note that we wind up with more goals that we started with, since some of the
      instructions branch, requiring us to prove the goal for each possible destination.
@@ -190,7 +190,13 @@ Proof.
 Qed.
 
 (* Our partial correctness theorem makes the following assumptions:
-   (MDL0) Assume that on entry the processor is in a valid state. *)
+   (MDL0) Assume that on entry the processor is in a valid state.
+   (ESP0) Let esp be the value of the ESP register on entry.
+   (MEM0) Let mem be the memory state on entry.
+   (RET) Assume the return address on the stack on entry is not within strcmp(!)
+   (XP0) Let x and s' be the exit condition and store after n instructions execute.
+   From these, we prove that all invariants (including the post-condition) hold
+   true for arbitrarily long executions (i.e., arbitrary n). *)
 Theorem strcmp_partial_correctness:
   forall s esp mem n s' x
          (MDL0: models x86typctx s)
@@ -222,7 +228,7 @@ Proof.
 
   (* Time how long it takes for each symbolic interpretation step to complete
      (for profiling and to give visual cues that something is happening...). *)
-  Local Ltac step := time x86_step'.
+  Local Ltac step := time x86_step.
 
   (* Address 0 *)
   step. step. exists 0.
@@ -239,7 +245,7 @@ Proof.
 
       (* Address 20 *)
       step. step.
-      exists 0, k. psimpl_goal. repeat first [ exact SEQ | split ].
+      exists 0, k. psimpl. repeat first [ exact SEQ | split ].
         intro. symmetry. apply Neqb_ok, BC0.
         apply N.compare_eq_iff, Neqb_ok, BC.
 
@@ -254,7 +260,7 @@ Proof.
 
     (* Address 23 *)
     step. step. step. step.
-    eexists. exists k. psimpl_goal. split. reflexivity. split. exact SEQ. split.
+    eexists. exists k. psimpl. split. reflexivity. split. exact SEQ. split.
       intro. destruct (_ <? _); discriminate.
       apply N.eqb_neq, N.lt_gt_cases in BC. destruct BC as [BC|BC].
         rewrite (proj2 (N.compare_lt_iff _ _)), (proj2 (N.ltb_lt _ _)) by exact BC. reflexivity.

@@ -43,6 +43,7 @@ Inductive instr_data := Data (iid:option Z) (oid:Z) (sd:list Z) (n:Z) (sb:bool).
 Definition Z1 := 1.
 Definition Z2 := 2.
 Definition Z7 := 7.
+Definition Z8 := 8.
 Definition Z9 := 9.
 Definition Z11 := 11.
 Definition Z12 := 12.
@@ -52,6 +53,7 @@ Definition Z19 := 19.
 Definition Z20 := 20.
 Definition Z21 := 21.
 Definition Z22 := 22.
+Definition Z23 := 23.
 Definition Z29 := 29.
 Definition Z30 := 30.
 Definition Z31 := 31.
@@ -68,12 +70,14 @@ Definition Z512 := 512.
 Definition Z1024 := 1024.
 Definition Z_1024 := -1024.
 Definition Z2048 := 2048.
+Definition Z3968 := 3968.
 Definition Z4095 := 4095.
 Definition Z4096 := 4096.
 Definition Z4195 := 4195.
 Definition Z6243 := 6243.
 Definition Z8195 := 8195.
 Definition Z16435 := 16435.
+Definition Z24595 := 24595.
 Definition Z261120 := 261120.
 Definition Z262144 := 262144.
 Definition Z_262144 := -262144.
@@ -86,6 +90,7 @@ Definition Z1073741824 := 1073741824. (* 2^30 *)
 Definition Z1079005203 := 1079005203.
 Definition Z4290801683 := 4290801683.
 Definition Z4293918720 := 4293918720.
+Definition Z4294963200 := 4294963200. (* 2^32 - 2^12 *)
 
 (* Helper functions to encode/decode branch/jump instruction operands: *)
 
@@ -111,7 +116,8 @@ Definition newsize d :=
   match d with Data iid _ _ n sb =>
     match iid with None => Z0 | Some _ => Z1 end +
     let op := n #& Z127 in
-      if op =? Z99 then Z1 + (if sb then Z0 else Z1)
+      if op =? Z23 then (if n #& Z3968 =? Z0 then Z1 else Z2)
+      else if op =? Z99 then Z1 + (if sb then Z0 else Z1)
       else if op =? Z103 then Z12 + (if sb then Z0 else Z1)
       else Z1
   end.
@@ -213,7 +219,7 @@ Definition newijump l1 d l2 :=
       (Z1079005203 #| (tmp1 #<< Z7) #| (tmp1 #<< Z15))::              (* Srai tmp1, tmp1, 5 *)
       (Z51 #| (tmp3 #<< Z7) #| (tmp3 #<< Z15) #| (tmp1 #<< Z20))::    (* Add tmp3, tmp3, tmp1 *)
       (Z8195 #| (tmp1 #<< Z7) #| (tmp3 #<< Z15))::                    (* Lw tmp1, tmp3, 0 *)
-      (Z55 #| (tmp2 #<< Z7) #| ((oid mod Z1048576) #<< Z12))::          (* Lui tmp2, out_id *)
+      (Z55 #| (tmp2 #<< Z7) #| ((oid mod Z1048576) #<< Z12))::        (* Lui tmp2, out_id *)
       (Z57696275 #| (tmp2 #<< Z7) #| (tmp2 #<< Z15))::                (* Ori tmp2, tmp2, 55 *)
       (br ++                                                          (* Bne tmp1, tmp2, abort *)
       ((n #& Z4095) #| (tmp3 #<< Z15))::nil))                         (* Jalr rd, tmp3, 0 *)
@@ -223,17 +229,40 @@ Definition newijump l1 d l2 :=
 (* Test membership of an integer (Z) in a list of numbers. *)
 Definition mem z l := if (in_dec Z.eq_dec z l) then true else false.
 
+(* Rewrite an AUIPC instruction, which computes destination addresses for position-
+   independent code.  We replace these with a pair of instructions that compute the
+   original address that the original code would have computed.  For now, these new
+   instructions are not position-independent.  In future they could be made so as
+   long as the relative positions of the original and rewritten code sections can
+   be fixed and less than 2^32 bytes apart.  Inputs:
+   base = original code base address / 4
+   l1 = list of data for instructions preceding this one, in reverse order
+   d = data for the auipc instruction being rewriten *)
+Definition new_auipc base (l1:list instr_data) d :=
+  match d with Data _ _ sd n _ =>
+    if ((Z0 <=? base) && (mem Z1 sd))%bool then
+      if n #& Z3968 =? Z0 then Some (Z16435::nil) (* Xor r0, r0, r0 *)
+      else let new_target := base + Z.of_nat (length l1) + (n #& Z4294963200) in
+           let rd := n #& Z3968 in Some (
+        (Z55 #| rd #| (new_target #& Z4294963200))::                     (* Lui rd, new_target[31:12] *)
+        (Z24595 #| rd #| (rd #<< Z8) #| ((new_target #& Z4095) #<< Z20)) (* Ori rd, rd, new_target[11:0] *)
+      ::nil)
+    else None
+  end.
+
 (* Rewrite an old instruction to a new instruction block.  Inputs:
+   base = original code base address / 4
    l1 = list of data for instructions preceding this one, in reverse order
    d = data for instruction being rewritten
    l2 = list of data for instructions following this one (in forward order) *)
-Definition newinstr l1 d l2 :=
+Definition newinstr base l1 d l2 :=
   match d with Data _ _ sd n _ =>
     if n <? Z0 then None
     else if n #& Z4095 =? Z55 then (* Lui r0, ... *)
       if mem Z1 sd then Some (Z16435::nil) else None (* Xor r0, r0, r0 *)
     else let op := n #& Z127 in
-    if op =? Z99 then (* Bcc *)
+    if op =? Z23 then new_auipc base l1 d (* Auipc *)
+    else if op =? Z99 then (* Bcc *)
       let i := twoscomp Z1024 (decode_branch_offset n) in
       if ((n #& Z256 =? 0) && (mem Z1 sd) && (mem i sd) &&
           (Z0 <=? Z.of_nat (length l1) + i) && (i <=? Z.of_nat (length l2)))%bool
@@ -250,13 +279,14 @@ Definition newinstr l1 d l2 :=
   end.
 
 (* Rewrite all instructions in a code section. Inputs:
+   base = original code base address / 4
    l' = nil
    l1 = nil
    l2 = list of instruction data (returned by todata) for original code *)
-Fixpoint newinstrs l' l1 l2 {struct l2} :=
+Fixpoint newinstrs base l' l1 l2 {struct l2} :=
   match l2 with nil => Some (rev l') | d::t =>
-    match newinstr l1 d t with None => None | Some x =>
-      newinstrs ((newtag d ++ x)::l') (d::l1) t
+    match newinstr base l1 d t with None => None | Some x =>
+      newinstrs base ((newtag d ++ x)::l') (d::l1) t
     end
   end.
 
@@ -281,7 +311,7 @@ Definition todata x :=
   match x with ((iid,(oid,sd)),n) => Data iid oid sd n false end.
 Definition newcode (pol:policy) l base base' :=
   let d := shrink nil (map todata (combine pol l)) in
-  (newtable base base' nil 0 d, if sumsizes d <? Z1073741824 - base' then newinstrs nil nil d else None).
+  (newtable base base' nil 0 d, if sumsizes d <? Z1073741824 - base' then newinstrs base nil nil d else None).
 
 
 (* The following is an example extraction of the above CFI rewriter to OCaml.
@@ -309,6 +339,7 @@ Extract Inductive list => "list" [ "[]" "(::)" ].
 Extract Inlined Constant Z1 => "1".
 Extract Inlined Constant Z2 => "2".
 Extract Inlined Constant Z7 => "7".
+Extract Inlined Constant Z8 => "8".
 Extract Inlined Constant Z9 => "9".
 Extract Inlined Constant Z11 => "11".
 Extract Inlined Constant Z12 => "12".
@@ -318,6 +349,7 @@ Extract Inlined Constant Z19 => "19".
 Extract Inlined Constant Z20 => "20".
 Extract Inlined Constant Z21 => "21".
 Extract Inlined Constant Z22 => "22".
+Extract Inlined Constant Z23 => "23".
 Extract Inlined Constant Z29 => "29".
 Extract Inlined Constant Z30 => "30".
 Extract Inlined Constant Z31 => "31".
@@ -334,12 +366,14 @@ Extract Inlined Constant Z512 => "512".
 Extract Inlined Constant Z1024 => "1024".
 Extract Inlined Constant Z_1024 => "(-1024)".
 Extract Inlined Constant Z2048 => "2048".
+Extract Inlined Constant Z3968 => "3968".
 Extract Inlined Constant Z4095 => "4095".
 Extract Inlined Constant Z4096 => "4096".
 Extract Inlined Constant Z4195 => "4195".
 Extract Inlined Constant Z6243 => "6243".
 Extract Inlined Constant Z8195 => "8195".
 Extract Inlined Constant Z16435 => "16435".
+Extract Inlined Constant Z24595 => "24595".
 Extract Inlined Constant Z261120 => "261120".
 Extract Inlined Constant Z262144 => "262144".
 Extract Inlined Constant Z_262144 => "(-262144)".
@@ -352,6 +386,7 @@ Extract Inlined Constant Z1073741824 => "1073741824".
 Extract Inlined Constant Z1079005203 => "1079005203".
 Extract Inlined Constant Z4290801683 => "4290801683".
 Extract Inlined Constant Z4293918720 => "4293918720".
+Extract Inlined Constant Z4294963200 => "4294963200".
 Extract Inlined Constant Z.opp => "(~-)".
 Extract Inlined Constant Z.ltb => "(<)".
 Extract Inlined Constant Z.leb => "(<=)".
@@ -390,6 +425,7 @@ Extraction newjump.
 Extraction encode_branch_offset.
 Extraction newbranch.
 Extraction newijump.
+Extraction new_auipc.
 Extraction newinstr.
 Extraction newinstrs.
 Extraction newtable.
@@ -495,16 +531,16 @@ Tactic Notation "ereplace" constr(t) "in" hyp(H) :=
   end.
 
 Ltac unfold_consts := unfold
-  Z1, Z2, Z7, Z9, Z11, Z12, Z13, Z15, Z19, Z20, Z21, Z22, Z29, Z30, Z31, Z51, Z55, Z99,
-  Z103, Z111, Z127, Z256, Z504, Z511, Z512, Z1024, Z_1024, Z2048, Z4095, Z4096, Z4195,
-  Z6243, Z8195, Z16435, Z261120, Z262144, Z_262144, Z524288, Z33550463, Z57696275,
-  Z133197843, Z1079005203, Z4290801683, Z4293918720
+  Z1, Z2, Z7, Z8, Z9, Z11, Z12, Z13, Z15, Z19, Z20, Z21, Z22, Z23, Z29, Z30, Z31, Z51, Z55, Z99,
+  Z103, Z111, Z127, Z256, Z504, Z511, Z512, Z1024, Z_1024, Z2048, Z3968, Z4095, Z4096, Z4195,
+  Z6243, Z8195, Z16435, Z24595, Z261120, Z262144, Z_262144, Z524288, Z33550463, Z57696275,
+  Z133197843, Z1079005203, Z4290801683, Z4293918720, Z4294963200
 .
 Tactic Notation "unfold_consts" "in" hyp(H) := unfold
-  Z1, Z2, Z7, Z9, Z11, Z12, Z13, Z15, Z19, Z20, Z21, Z22, Z29, Z30, Z31, Z51, Z55, Z99,
-  Z103, Z111, Z127, Z256, Z504, Z511, Z512, Z1024, Z_1024, Z2048, Z4095, Z4096, Z4195,
-  Z6243, Z8195, Z16435, Z261120, Z262144, Z_262144, Z524288, Z33550463, Z57696275,
-  Z133197843, Z1079005203, Z4290801683, Z4293918720
+  Z1, Z2, Z7, Z8, Z9, Z11, Z12, Z13, Z15, Z19, Z20, Z21, Z22, Z23, Z29, Z30, Z31, Z51, Z55, Z99,
+  Z103, Z111, Z127, Z256, Z504, Z511, Z512, Z1024, Z_1024, Z2048, Z3968, Z4095, Z4096, Z4195,
+  Z6243, Z8195, Z16435, Z24595, Z261120, Z262144, Z_262144, Z524288, Z33550463, Z57696275,
+  Z133197843, Z1079005203, Z4290801683, Z4293918720, Z4294963200
 in H.
 
 Lemma invSome: forall A (x y:A), Some x = Some y -> x = y.
@@ -958,8 +994,8 @@ Ltac Z_nonneg :=
   | apply Z.land_nonneg; (right + left)
   | apply Z.mod_pos_bound
   | apply N2Z.is_nonneg
+  | apply Nat2Z.is_nonneg
   | apply Z.add_nonneg_nonneg ].
-
 
 Lemma xbits_land_cancel_r:
   forall m n i j, N.ones (j - i) .& m = N.ones (j - i) -> (xbits n i j) .& m = xbits n i j.
@@ -974,8 +1010,6 @@ Proof.
   rewrite <- (N.land_diag (N.ones _)), N.land_assoc. rewrite <- H0 at 2.
   rewrite N.land_ones. fold (xbits n i j). rewrite <- xbits_land, H. apply xbits_0_l.
 Qed.
-
-
 
 Lemma ebo_bitmask:
   forall o, encode_branch_offset o #& 33550463 = 0.
@@ -1062,14 +1096,26 @@ Proof.
   apply Forall_nil.
 Qed.
 
+Lemma newauipc_nonneg:
+  forall base l1 d b (NI: new_auipc base l1 d = Some b), Forall (Z.le 0) b.
+Proof.
+  unfold new_auipc. intros. destruct d as [iid oid sd n sb].
+  destruct (_ && _)%bool.
+    destruct (_ =? 0).
+      apply invSome in NI. subst b. apply Forall_cons. discriminate 1. apply Forall_nil.
+      apply invSome in NI. subst b. do 2 (apply Forall_cons; Z_nonneg). apply Forall_nil.
+    discriminate NI.
+Qed.
+
 Lemma newinstr_nonneg:
-  forall l1 d l2 b, newinstr l1 d l2 = Some b -> Forall (Z.le 0) b.
+  forall base l1 d l2 b, newinstr base l1 d l2 = Some b -> Forall (Z.le 0) b.
 Proof.
   unfold newinstr. unfold_consts. intros. destruct d as [iid oid sd z sb].
   destruct (z <? 0) eqn:H1; [discriminate|].
   destruct (_ =? 55).
     destruct mem; [|discriminate]. apply invSome in H. subst b.
     apply Forall_cons. discriminate 1. apply Forall_nil.
+  destruct (_ =? 23). eapply newauipc_nonneg. exact H.
   destruct (_ =? 99).
     destruct andb; [|discriminate]. eapply newbranch_nonneg, H.
   destruct (_ =? 103). eapply newijump_nonneg, H.
@@ -1082,9 +1128,9 @@ Proof.
 Qed.
 
 Lemma newinstrs_nonneg:
-  forall l1 l2 l', newinstrs nil l1 l2 = Some l' -> Forall (Forall (Z.le 0)) l'.
+  forall base l1 l2 l', newinstrs base nil l1 l2 = Some l' -> Forall (Forall (Z.le 0)) l'.
 Proof.
-  intros l1 l2 l'. assert (H:=Forall_nil (Forall (Z.le 0))). revert l1 l' H. generalize (@nil (list Z)) as acc.
+  intros base l1 l2 l'. assert (H:=Forall_nil (Forall (Z.le 0))). revert l1 l' H. generalize (@nil (list Z)) as acc.
   induction l2; intros.
     apply invSome in H0. subst l'. apply Forall_rev, H.
 
@@ -1095,11 +1141,15 @@ Proof.
 Qed.
 
 Lemma newinstr_nonnil:
-  forall l1 d l2, newinstr l1 d l2 <> Some nil.
+  forall base l1 d l2, newinstr base l1 d l2 <> Some nil.
 Proof.
   intros. destruct d. unfold newinstr.
-  destruct (_ <? 0). discriminate.
+  destruct (_ <? 0). discriminate 1.
   destruct (_ =? _). destruct mem; discriminate.
+  destruct (_ =? _). unfold new_auipc.
+    destruct (_ && _)%bool.
+      destruct (_ =? _); discriminate 1.
+      discriminate 1.
   destruct (_ =? _). destruct andb; [|discriminate]. unfold newbranch. destruct sb.
     destruct andb; discriminate.
     destruct newjump; discriminate.
@@ -1121,14 +1171,14 @@ Definition optcons {A} (oh: option A) ot :=
 
 Definition optlist {A} := fold_right optcons (Some (@nil A)).
 
-Fixpoint newinstrs' l1 l2 {struct l2} :=
+Fixpoint newinstrs' base l1 l2 {struct l2} :=
   match l2 with nil => nil | d::t =>
-    (option_map (app (newtag d)) (newinstr l1 d t)) :: newinstrs' (d::l1) t
+    (option_map (app (newtag d)) (newinstr base l1 d t)) :: newinstrs' base (d::l1) t
   end.
 
 Lemma newinstrs_newinstrs':
-  forall l' l1 l2,
-  newinstrs l' l1 l2 = optlist (map Some (rev l') ++ newinstrs' l1 l2).
+  forall base l' l1 l2,
+  newinstrs base l' l1 l2 = optlist (map Some (rev l') ++ newinstrs' base l1 l2).
 Proof.
   intros. revert l' l1. induction l2; intros.
     rewrite app_nil_r. simpl. induction (rev l').
@@ -1142,13 +1192,13 @@ Proof.
 Qed.
 
 Lemma nth_newinstrs:
-  forall l1 l2 l' i (NIS: newinstrs nil l1 l2 = Some l'),
+  forall base l1 l2 l' i (NIS: newinstrs base nil l1 l2 = Some l'),
   nth_error l' i = match nth_error l2 i with None => None | Some d =>
     option_map (app (newtag d))
-               (newinstr (rev (firstn i l2) ++ l1) d (skipn (S i) l2))
+               (newinstr base (rev (firstn i l2) ++ l1) d (skipn (S i) l2))
   end.
 Proof.
-  intros l1 l2 l'. rewrite newinstrs_newinstrs', app_nil_l. revert l1 l'. induction l2; intros.
+  intros base l1 l2 l'. rewrite newinstrs_newinstrs', app_nil_l. revert base l1 l'. induction l2; intros.
     apply invSome in NIS. subst l'. destruct i; reflexivity.
     simpl. destruct i; simpl; simpl in NIS.
       destruct newinstr; [destruct optlist|]; [|discriminate..]. apply invSome in NIS. subst l'. reflexivity.
@@ -1160,7 +1210,7 @@ Proof.
 Qed.
 
 Lemma newinstrs_nonnil:
-  forall l1 l2 l' n, newinstrs nil l1 l2 = Some l' -> nth_error l' n <> Some nil.
+  forall base l1 l2 l' n, newinstrs base nil l1 l2 = Some l' -> nth_error l' n <> Some nil.
 Proof.
   intros.
   erewrite nth_newinstrs by exact H.
@@ -1194,7 +1244,7 @@ Proof.
 Qed.
 
 Lemma indexmap_inv:
-  forall l1 l2 l' n (NC: newinstrs nil l1 l2 = Some l') (LEN: (n <= length l')%nat),
+  forall {base l1 l2 l'} n (NC: newinstrs base nil l1 l2 = Some l') (LEN: (n <= length l')%nat),
   (indexmap' l' (length (concat (firstn n l'))) = n)%nat.
 Proof.
   intros.
@@ -1339,16 +1389,16 @@ Proof.
 Qed.
 
 Lemma newinstrs_length:
-  forall l2 l1 l', newinstrs nil l1 l2 = Some l' -> length l' = length l2.
+  forall {base l2 l1 l'} (NC: newinstrs base nil l1 l2 = Some l'), length l' = length l2.
 Proof.
-  intros. rewrite newinstrs_newinstrs', app_nil_l in H. transitivity (length (newinstrs' l1 l2)).
-    revert l' H. induction (newinstrs' l1 l2); intros.
-      apply invSome in H. subst l'. reflexivity.
-      destruct l'; simpl in H.
+  intros. rewrite newinstrs_newinstrs', app_nil_l in NC. transitivity (length (newinstrs' base l1 l2)).
+    revert l' NC. induction (newinstrs' base l1 l2); intros.
+      apply invSome in NC. subst l'. reflexivity.
+      destruct l'; simpl in NC.
         destruct a; [destruct optlist|]; discriminate.
-        simpl. erewrite <- IHl. reflexivity. destruct a; [destruct optlist|]; try discriminate H.
-          apply invSome, invCons, proj2 in H. subst l'. reflexivity.
-    clear l' H. revert l1. induction l2; intro. reflexivity. simpl. rewrite IHl2. reflexivity.
+        simpl. erewrite <- IHl. reflexivity. destruct a; [destruct optlist|]; try discriminate NC.
+          apply invSome, invCons, proj2 in NC. subst l'. reflexivity.
+    clear l' NC. revert l1. induction l2; intro. reflexivity. simpl. rewrite IHl2. reflexivity.
 Qed.
 
 Lemma newcode_nonnil:
@@ -1358,7 +1408,7 @@ Lemma newcode_nonnil:
 Proof.
   unfold newcode. intros. intro H. subst b.
   destruct (_ <? _); [|discriminate].
-  apply invPair in NC. destruct NC as [NT NC]. rewrite (nth_newinstrs _ _ _ i NC) in LT.
+  apply invPair in NC. destruct NC as [NT NC]. rewrite (nth_newinstrs _ _ _ _ i NC) in LT.
   destruct (nth_error _ _); [|discriminate].
   destruct (newinstr _ _ _) eqn:NI; [|discriminate].
   eapply newinstr_nonnil. rewrite NI. apply f_equal.
@@ -1616,32 +1666,39 @@ Proof.
 Qed.
 
 Theorem newsize_newinstr:
-  forall l1 d l2 l,
-    newinstr l1 d l2 = Some l -> newsize d = Z.of_nat (length (newtag d) + length l).
+  forall {base l1 d l2 l} (NI: newinstr base l1 d l2 = Some l),
+  newsize d = Z.of_nat (length (newtag d) + length l).
 Proof.
   unfold newinstr, newsize. unfold_consts. intros. destruct d. rewrite Nat2Z.inj_add. apply f_equal2.
     destruct iid; reflexivity.
 
     destruct (_ <? 0). discriminate.
     destruct (n #& 4095 =? 55) eqn:N55.
-    destruct mem; [|discriminate]. apply invSome in H. subst l.
+    destruct mem; [|discriminate]. apply invSome in NI. subst l.
     apply Z.eqb_eq, (f_equal (Z.land 127)) in N55. rewrite Z.land_comm, <- Z.land_assoc in N55. simpl in N55. rewrite N55.
     rewrite !(proj2 (Z.eqb_neq _ _)) by discriminate. reflexivity.
 
-    destruct (n #& 127 =? 99).
-      destruct andb; [|discriminate]. unfold newbranch in H. destruct sb.
-        destruct andb; [|discriminate]. apply invSome in H. subst l. reflexivity.
-        unfold newjump in H. destruct andb; [|discriminate]. apply invSome in H. subst l. reflexivity.
+    destruct (n #& 127 =? 23) eqn:OP23; [|clear OP23]. unfold new_auipc in NI.
+      destruct (_ && _)%bool.
+        destruct (_ =? 0).
+          apply invSome in NI. subst l. reflexivity.
+          apply invSome in NI. subst l. reflexivity.
+        discriminate NI.
 
-    destruct (n #& 127 =? 103). unfold newijump, newbranch in H. destruct sb.
-      destruct andb; [|discriminate]. apply invSome in H. subst l. reflexivity.
-      unfold newjump in H. destruct andb; [|discriminate]. apply invSome in H. subst l. reflexivity.
+    destruct (n #& 127 =? 99).
+      destruct andb; [|discriminate]. unfold newbranch in NI. destruct sb.
+        destruct andb; [|discriminate]. apply invSome in NI. subst l. reflexivity.
+        unfold newjump in NI. destruct andb; [|discriminate]. apply invSome in NI. subst l. reflexivity.
+
+    destruct (n #& 127 =? 103). unfold newijump, newbranch in NI. destruct sb.
+      destruct andb; [|discriminate]. apply invSome in NI. subst l. reflexivity.
+      unfold newjump in NI. destruct andb; [|discriminate]. apply invSome in NI. subst l. reflexivity.
 
     destruct (n #& 127 =? 111).
       destruct andb; [|discriminate].
-      unfold newjump in H. destruct andb; [|discriminate]. apply invSome in H. subst l. reflexivity.
+      unfold newjump in NI. destruct andb; [|discriminate]. apply invSome in NI. subst l. reflexivity.
 
-    destruct mem; [|discriminate]. apply invSome in H. subst l. reflexivity.
+    destruct mem; [|discriminate]. apply invSome in NI. subst l. reflexivity.
 Qed.
 
 Lemma sumsizes_foldmap:
@@ -1653,16 +1710,16 @@ Proof.
 Qed.
 
 Theorem sumsizes_newinstrs:
-  forall l2 l1 l', newinstrs nil l1 l2 = Some l' ->
-  forall n, sumsizes (firstn n l2) = Z.of_nat (length (concat (firstn n l'))).
+  forall {base l2 l1 l'} n (NC:newinstrs base nil l1 l2 = Some l'),
+  sumsizes (firstn n l2) = Z.of_nat (length (concat (firstn n l'))).
 Proof.
-  intros. rewrite newinstrs_newinstrs', app_nil_l in H.
+  intros. rewrite newinstrs_newinstrs', app_nil_l in NC.
   unfold sumsizes. rewrite <- (Z.add_0_l (Z.of_nat _)). generalize 0. intro b.
-  revert l1 l' b H n. induction l2; intros.
-    apply invSome in H. subst l'. rewrite !firstn_nil. rewrite Z.add_0_r. reflexivity.
+  revert l1 l' b NC n. induction l2; intros.
+    apply invSome in NC. subst l'. rewrite !firstn_nil. rewrite Z.add_0_r. reflexivity.
 
-    simpl in H. specialize (IHl2 (a::l1)). destruct newinstr eqn:NI; destruct optlist; try discriminate.
-    apply invSome in H. subst l'.
+    simpl in NC. specialize (IHl2 (a::l1)). destruct newinstr eqn:NI; destruct optlist; try discriminate.
+    apply invSome in NC. subst l'.
     destruct n. rewrite Z.add_0_r. reflexivity.
     simpl. rewrite !app_length. erewrite IHl2 by reflexivity.
     rewrite Nat2Z.inj_add, Z.add_assoc. apply Z.add_cancel_r, Z.add_cancel_l.
@@ -1670,7 +1727,7 @@ Proof.
 Qed.
 
 Corollary sumsizes_newinstrs_all:
-  forall l2 l1 l', newinstrs nil l1 l2 = Some l' ->
+  forall {base l2 l1 l'} (NC:newinstrs base nil l1 l2 = Some l'),
   sumsizes l2 = Z.of_nat (length (concat l')).
 Proof.
   intros. rewrite <- (firstn_all l2), <- (firstn_all l'). erewrite newinstrs_length by eassumption.
@@ -1755,7 +1812,7 @@ Proof.
 Qed.
 
 Theorem newsize_length:
-  forall l l' i d b (NC: newinstrs nil nil l = Some l'),
+  forall base l l' i d b (NC: newinstrs base nil nil l = Some l'),
     nth_error l i = Some d -> nth_error l' i = Some b -> newsize d = Z.of_nat (length b).
 Proof.
   intros.
@@ -1767,7 +1824,7 @@ Proof.
 Qed.
 
 Lemma indexmap_skipn_next:
-  forall l1 l2 l' i b (NC: newinstrs nil l1 l2 = Some l'),
+  forall base l1 l2 l' i b (NC: newinstrs base nil l1 l2 = Some l'),
     nth_error l' i = Some b -> indexmap' (skipn i l') (length b) = 1%nat.
 Proof.
   intros. rewrite nth_skipn in H. destruct skipn eqn:H1.
@@ -1780,8 +1837,8 @@ Proof.
 Qed.
 
 Lemma indexmap_newoffset:
-  forall l l' d i c o
-    (NC: newinstrs nil nil l = Some l') (DAT: nth_error l i = Some d),
+  forall base l l' d i c o
+    (NC: newinstrs base nil nil l = Some l') (DAT: nth_error l i = Some d),
   indexmap' l' (Z.to_nat (sumsizes (firstn (S i) l) - c
                           + newoffset (rev (firstn i l)) d c (skipn (S i) l) o))
   = Nat.min (Z.to_nat (Z.of_nat i + o)) (length l').
@@ -1792,9 +1849,9 @@ Proof.
   rewrite Z.add_sub_swap, <- (Z.sub_sub_distr _ _ c), Zplus_minus.
   rewrite rev_involutive, firstn_cons_skipn, rev_length by exact DAT.
   rewrite firstn_length_le by (apply Nat.lt_le_incl, nth_error_Some; rewrite DAT; discriminate).
-  rewrite (sumsizes_newinstrs _ _ _ NC), Nat2Z.id.
+  rewrite (sumsizes_newinstrs _ NC), Nat2Z.id.
   rewrite <- (Nat.add_0_r (length _)), indexmap_length.
-  rewrite indexmap_0 by (rewrite <- nth_skipn; apply (newinstrs_nonnil _ _ _ _ NC)).
+  rewrite indexmap_0 by (rewrite <- nth_skipn; apply (newinstrs_nonnil _ _ _ _ _ NC)).
   apply Nat.add_0_r.
 Qed.
 
@@ -1908,7 +1965,6 @@ Proof.
   rewrite !Z.land_lor_distr_l, !Z.shiftl_land, Z.shiftr_land, <- !Z.land_assoc, !Z.land_0_r.
   reflexivity.
 Qed.
-
 
 Lemma xbits_land_clear_r:
   forall n i j m, (N.ones (j-i) .& m = 0 -> xbits n i j .& m = 0)%N.
@@ -2146,6 +2202,58 @@ Proof.
   unfold rv_decode_branch, opposite_branch.
   replace (xbits tmp1 5 10) with N0 by (destruct (rs1 <? 31)%N; reflexivity).
   rewrite N.lor_0_l, !xbits_0_land. reflexivity.
+Qed.
+
+Theorem newauipc_asm:
+  forall base l1 iid oid sd z sb b (OP0: 0 <= z)
+    (NI: new_auipc base l1 (Data iid oid sd z sb) = Some b),
+  let n := Z.to_N z in
+  let rd := xbits n 7 12 in
+  let t := Z.to_N (base + Z.of_nat (length l1) + z #& (2^32 - 2^12)) in
+  map rv_decode (map Z.to_N b) =
+  if z #& 3968 =? 0 then R5_Xor 0 0 0 :: nil else
+    R5_Lui rd (xbits t 12 32) ::
+    R5_Ori rd rd (scast 12 32 (xbits (t << 20) 20 32)) :: nil.
+Proof.
+  unfold new_auipc. unfold_consts. intros.
+  destruct (_ && _)%bool eqn:B0; [|discriminate NI].
+  destruct (_ =? 0). apply invSome in NI. subst b. reflexivity.
+  apply andb_prop, proj1, Z.leb_le in B0.
+  apply invSome in NI. subst b.
+  unfold map, rv_decode.
+  rewrite !Z2N_inj_lor, !Z.shiftl_land, !Z2N_inj_land by Z_nonneg.
+  rewrite !N.land_lor_distr_l, <- !N.land_assoc, !N.land_0_r, !N.lor_0_r. simpl (_ .& N.ones 7).
+  unfold rv_decode_op.
+  rewrite !xbits_lor, !xbits_land, !N.land_0_r, !N.lor_0_r. change (xbits _ 12 15) with 6%N.
+  unfold rv_decode_op_imm.
+  rewrite !N.lor_0_l. rewrite !xbits_land_cancel_r by reflexivity.
+  rewrite !xbits_lor, !xbits_land, !N.land_0_r, !N.lor_0_r, !N.lor_0_l.
+  rewrite !xbits_land_cancel_r by reflexivity.
+  rewrite Z2N_inj_shiftl, xbits_shiftl, N.shiftl_0_r by solve [ discriminate 1 | assumption ].
+  rewrite Z2N_inj_shiftl by Z_nonneg. reflexivity.
+Qed.
+
+Theorem newauipc_exit:
+  forall base l1 iid oid sd z sb b k z' h s a s' x
+    (OP0: 0 <= z)
+    (NI: new_auipc base l1 (Data iid oid sd z sb) = Some b)
+    (RC: nth_error b k = Some z')
+    (XS: exec_stmt h s (rv2il (4 * a) (rv_decode (Z.to_N z'))) s' x),
+  x = None.
+Proof.
+  intros. apply newauipc_asm in NI; [|exact OP0].
+
+  destruct (_ =? 0).
+  destruct b. discriminate. destruct b; [|discriminate].
+  unfold map in NI. apply invCons, proj1 in NI.
+  destruct k; [|destruct k; discriminate RC]. apply invSome in RC. subst z'.
+  rewrite NI in XS. inversion XS. reflexivity.
+
+  repeat (destruct b; try discriminate).
+  unfold map in NI. apply invCons in NI. destruct NI as [NI1 NI2]. apply invCons, proj1 in NI2.
+  destruct k; [|destruct k; [| destruct k; discriminate RC]]; apply invSome in RC; subst z'.
+    rewrite NI1 in XS. eapply r5mov_fallthru. exact XS.
+    rewrite NI2 in XS. eapply r5mov_fallthru. exact XS.
 Qed.
 
 Theorem newtag_exit:
@@ -2570,7 +2678,7 @@ Proof.
 Qed.
 
 Lemma newinstr_notags:
-  forall l1 d l2 b (NI: newinstr l1 d l2 = Some b),
+  forall base l1 d l2 b (NI: newinstr base l1 d l2 = Some b),
   Forall (fun ie => ie #& 4095 <> 55) b.
 Proof.
   intros. destruct d as [iid oid sd z sb].
@@ -2580,6 +2688,24 @@ Proof.
   destruct (z #& 4095 =? 55) eqn:OP55.
   destruct mem; [|discriminate]. apply invSome in NI. subst b.
   apply Forall_cons. discriminate. apply Forall_nil.
+
+  destruct (z #& 127 =? 23).
+  apply notLui0_imp_not55. eapply newauipc_nonneg. exact NI.
+  apply newauipc_asm in NI; [|exact OP0]. destruct (_ =? 0) eqn:H1.
+
+    destruct b. discriminate. destruct b; [|discriminate]. unfold map.
+    apply invCons, proj1 in NI. rewrite NI.
+    apply Forall_cons. exact I. apply Forall_nil.
+
+    destruct b. discriminate. destruct b. discriminate. destruct b; [|discriminate]. unfold map.
+    apply invCons in NI. destruct NI as [NI1 NI2]. apply invCons, proj1 in NI2. rewrite NI1, NI2.
+    repeat constructor. destruct xbits eqn:H2; [|exact I].
+    apply Z.eqb_neq in H1. apply H1.
+    apply Z2N.inj; Z_nonneg. rewrite Z2N_inj_land; Z_nonneg.
+    rewrite <- (recompose_bytes 7 (Z.to_N z)). unfold xbits in H2.
+    rewrite <- N.land_ones, N.land_lor_distr_l, <- N.land_assoc, N.land_0_r.
+    change (Z.to_N 3968) with (N.ones (12-7) << 7). rewrite <- N.shiftl_land, N.land_ones, H2.
+    reflexivity.
 
   destruct (z #& 127 =? 99) eqn:OP99. apply Z.eqb_eq in OP99.
   destruct andb eqn:OP256; [|discriminate]. do 4 apply andb_prop, proj1 in OP256. apply Z.eqb_eq in OP256.
@@ -2611,15 +2737,15 @@ Proof.
 Qed.
 
 Lemma tags_at_blockboundaries:
-  forall l2 l1 l' j ie
-    (NC: newinstrs nil l1 l2 = Some l')
+  forall base l2 l1 l' j ie
+    (NC: newinstrs base nil l1 l2 = Some l')
     (NTH: nth_error (concat l') j = Some ie)
     (OP55: ie #& 4095 = 55),
   exists i d, j = length (concat (firstn i l')) /\
     nth_error l2 i = Some d /\
     match d with Data (Some iid) _ _ _ _ => ie #>> 12 = iid mod 2^20 | _ => False end.
 Proof.
-  intros l2 l1 l'. rewrite newinstrs_newinstrs', app_nil_l. revert l1 l'. induction l2 as [|d]; intros.
+  intros base l2 l1 l'. rewrite newinstrs_newinstrs', app_nil_l. revert l1 l'. induction l2 as [|d]; intros.
     apply invSome in NC. subst l'. destruct j; discriminate.
 
     unfold newinstrs' in NC; fold newinstrs' in NC.
@@ -2739,11 +2865,11 @@ Proof.
 Qed.
 
 Lemma newijump_indirect_exit:
-  forall l l' i iid oid sd z sb b ie h bi j0 s0 n s s' x' j'
+  forall base l l' i iid oid sd z sb b ie h bi j0 s0 n s s' x' j'
     (IH: execution_IH l' h bi j0 s0 n)
     (CODE: codebytes l' h bi j0 s0)
     (SIZ: (N.of_nat (bi + length (concat l')) < 2^30)%N)
-    (NC: newinstrs nil nil l = Some l')
+    (NC: newinstrs base nil nil l = Some l')
     (DAT: nth_error l i = Some (Data iid oid sd z sb))
     (OP0: 0 <= z) (OP103: z #& 127 = 103)
     (BLK: nth_error l' i = Some (newtag (Data iid oid sd z sb) ++ b))
@@ -2774,7 +2900,7 @@ Proof.
   remember (length t) as tlen eqn:TLEN. revert t n1 s1 s s' x' j' TLEN XP TR INB XS' EX'. pattern tlen. apply strong_induction. intros. clear tlen TLEN. move IH at top.
 *)
   destruct (nth_error l (indexmap' l' (j'-bi))) as [d'|] eqn:DAT';
-  [| erewrite <- (firstn_all2 l') by (rewrite (newinstrs_length _ _ _ NC); apply nth_error_None, DAT');
+  [| erewrite <- (firstn_all2 l') by (rewrite (newinstrs_length NC); apply nth_error_None, DAT');
      etransitivity;
      [ apply Nat.add_le_mono_l, firstn_indexmap_above
      | rewrite (le_plus_minus_r _ _ HI); reflexivity ] ].
@@ -2989,16 +3115,16 @@ Proof.
       [ discriminate 1 | clear XP TR; subst t; rename XP' into XP; rename TR' into TR; rename t' into t; fold taglen in XS, EX, TR ].
       rewrite ASM10 in XS. unfold rv2il, r5branch, r5var in XS. fold v1 v2 in XS.
       rewrite N2Z.inj_mul, <- Z.mul_add_distr_l, Z2N_inj_mul, nat_N_Z in XS by (left; discriminate 1).
-      rewrite 2!Nat2Z.inj_add, <- (sumsizes_newinstrs _ _ _ NC) in XS.
-      assert (IL: (i < length l)%nat). rewrite <- (newinstrs_length _ _ _ NC). apply lt_le_S, nth_error_Some. rewrite BLK. discriminate 1.
+      rewrite 2!Nat2Z.inj_add, <- (sumsizes_newinstrs _ NC) in XS.
+      assert (IL: (i < length l)%nat). rewrite <- (newinstrs_length NC). apply lt_le_S, nth_error_Some. rewrite BLK. discriminate 1.
       rewrite Z.add_1_l, <- Nat2Z.inj_succ, skipn_length, minus_Sn_m, Nat.sub_succ in XS by exact IL.
       rewrite newoffset_index in XS.
       rewrite rev_length, firstn_length_le, <- Nat2Z.inj_add, le_plus_minus_r, Nat2Z.id in XS by apply Nat.lt_le_incl, IL.
       rewrite rev_involutive, firstn_cons_skipn, firstn_all in XS by exact DAT.
-      rewrite sumsizes_cons, sumsizes_rev, (newsize_length _ _ _ _ _ NC DAT BLK), app_length, !Nat2Z.inj_add in XS.
+      rewrite sumsizes_cons, sumsizes_rev, (newsize_length _ _ _ _ _ _ NC DAT BLK), app_length, !Nat2Z.inj_add in XS.
       rewrite <- Z.add_sub_assoc, (Z.add_comm _ 12), !Z.sub_add_distr, (Z.sub_opp_l 10), <- !Z.add_opp_r, (Z.add_comm (-_+_)), <- !Z.opp_add_distr in XS.
       rewrite <- (Z.add_assoc (Z.of_nat bi)), Z.add_opp_r, Zplus_minus in XS.
-      rewrite (sumsizes_newinstrs_all _ _ _ NC), <- Nat2Z.inj_add, Nat2Z2N in XS.
+      rewrite (sumsizes_newinstrs_all NC), <- Nat2Z.inj_add, Nat2Z2N in XS.
       change (2^32)%N with (4*2^30)%N in XS. rewrite N.mul_mod_distr_l in XS by discriminate 1. rewrite N.mod_small in XS by exact SIZ.
       fold m4 in XS. inversion XS; clear XS; subst.
       inversion E; clear E; subst.
@@ -3068,7 +3194,7 @@ Proof.
         rewrite (Nat2Z.inj_add bi), <- Z.add_assoc in XS.
         rewrite <- (Nat2Z.inj_add 11), (Nat.add_assoc 11), (Nat.add_comm 11 _), (Nat.add_comm (_+11)), Zplus_minus in XS.
         rewrite Z2N_inj_mul, simpl_jal_dest in XS by (left; discriminate 1).
-        rewrite (sumsizes_newinstrs_all _ _ _ NC), <- Nat2Z.inj_add, Nat2Z2N, N.mod_small in XS by exact SIZ.
+        rewrite (sumsizes_newinstrs_all NC), <- Nat2Z.inj_add, Nat2Z2N, N.mod_small in XS by exact SIZ.
         inversion XS; [ solve [ inversion XS0 ] | clear XS; subst ].
           inversion XS1; clear XS1; subst.
           inversion XS0; clear XS0; subst. inversion E; clear E; subst.
@@ -3101,7 +3227,7 @@ Proof.
 
     specialize (CODE _ _ _ _ _ (N.to_nat (a'/4) - bi)%nat XP MEM2). rewrite le_plus_minus_r in CODE by exact HI.
     assert (H: (N.to_nat (a'/4) - bi < length (concat l'))%nat).
-      apply indexmap_inlist. rewrite (newinstrs_length _ _ _ NC). apply nth_error_Some. rewrite DAT'. discriminate 1.
+      apply indexmap_inlist. rewrite (newinstrs_length NC). apply nth_error_Some. rewrite DAT'. discriminate 1.
     apply nth_error_Some in H. destruct (nth_error (concat l') (N.to_nat (a'/4) - bi)%nat) as [ie'|] eqn:IE'; [clear H|contradiction].
     rewrite N2Nat.id, <- (N.add_0_r (4*_)), <- A'4, <- N.div_mod' in CODE. rewrite CODE in CMP.
     assert (IE'NN: 0 <= ie').
@@ -3113,7 +3239,7 @@ Proof.
     eapply tags_at_blockboundaries in IE'; [| exact NC |
       rewrite Z.land_lor_distr_l, (shiftl_landones_0 12) by discriminate 1; reflexivity ].
     destruct IE' as [i' [[iid' oid' sd' ie' sb'] [H1 [H2 H3]]]].
-    erewrite H1, (indexmap_inv _ _ _ _ NC), H2 in DAT' by (rewrite (newinstrs_length _ _ _ NC); apply Nat.lt_le_incl, nth_error_Some; rewrite H2; discriminate 1).
+    erewrite H1, (indexmap_inv _ NC), H2 in DAT' by (rewrite (newinstrs_length NC); apply Nat.lt_le_incl, nth_error_Some; rewrite H2; discriminate 1).
     apply invSome in DAT'. subst d'. destruct iid'; [split|exact H3].
       eexists. exact H1.
       rewrite Z.shiftr_lor, Z.lor_0_r, Z.shiftr_shiftl_l, Z.shiftl_0_r in H3 by discriminate 1. exact H3.
@@ -3215,9 +3341,9 @@ Proof.
   destruct JLO as [b0 [BLK BND]].
   unfold newcode in NC. apply invPair, proj2 in NC.
   destruct (sumsizes _ <? _) eqn:SIZ; [|discriminate]. apply Z.ltb_lt, Z.lt_add_lt_sub_l in SIZ.
-  assert (NIS:=nth_newinstrs _ _ _ i NC). rewrite BLK in NIS.
+  assert (NIS:=nth_newinstrs _ _ _ _ i NC). rewrite BLK in NIS.
   destruct (nth_error (shrink _ _) _) as [d'|] eqn:DAT'; [|discriminate].
-  destruct (newinstr _ d' _) as [b|] eqn:NI; [|discriminate]. rewrite app_nil_r in NI.
+  destruct (newinstr _ _ d' _) as [b|] eqn:NI; [|discriminate]. rewrite app_nil_r in NI.
   apply invSome in NIS. subst b0.
   destruct (nth_error (map todata (combine pol l)) i) as [d|] eqn:DAT;
   [| contradict DAT; apply nth_error_Some;
@@ -3257,7 +3383,7 @@ Proof.
 
   (* Otherwise the current instruction is in the non-tag portion of the block. *)
   rewrite nth_error_app2 in IE' by apply Nat.le_add_le_sub_l, TAG.
-  assert (NS := newsize_newinstr _ _ _ _ NI).
+  assert (NS := newsize_newinstr NI).
   unfold newinstr in NI. unfold_consts in NI. destruct (ie <? 0) eqn:IE0. discriminate. apply Z.ltb_ge in IE0.
 
   (* If the original code was a tag, the rewritten code falls thru to next block. *)
@@ -3300,6 +3426,28 @@ Proof.
       intro H. apply app_eq_nil, proj2 in H. discriminate.
       eapply newinstrs_nonnil. exact NC.
 
+  (* If the original code was a position-independent code address computation,
+     the rewritten code falls thru to the next block. *)
+  destruct (ie #& 127 =? 23) eqn:OP23.
+  eapply newauipc_exit in XS; try eassumption. subst x.
+  apply invExit, N.mul_cancel_l, Nat2N.inj in EX; [|discriminate 1]. subst j'.
+  unfold new_auipc in NI. destruct (mem Z1 sd) eqn:IN1; [clear NI|rewrite Bool.andb_false_r in NI; discriminate NI].
+  rewrite (Nat.sub_succ_l _ _ JHI) in *.
+  assert (HI:=proj2 BND). apply lt_le_S, Nat.le_lteq in HI. destruct HI as [HI|HI].
+    left. eapply indexmap_same.
+      eassumption.
+      apply BND.
+      apply Nat.lt_le_incl, Nat.lt_succ_diag_r.
+      apply HI.
+    right. left. split.
+      exists (S i). rewrite firstn_last, BLK, <- concat_last, app_length. apply HI.
+      left. rewrite HI, <- app_length, concat_last. replace (_++_) with (firstn (S i) l').
+        erewrite indexmap_inv.
+          rewrite Nat2Z.inj_succ, Z.sub_succ_l, Z.sub_diag. apply mem_In, IN1.
+          exact NC.
+          apply lt_le_S, nth_error_Some. rewrite BLK. discriminate 1.
+        rewrite firstn_last, BLK. reflexivity.
+
   (* If the original code was a branch... *)
   destruct (ie #& 127 =? 99) eqn:OP99. clear OP55. apply Z.eqb_eq in OP99.
   destruct andb eqn:H; [|discriminate].
@@ -3329,7 +3477,7 @@ Proof.
 
           eexists. reflexivity.
 
-          rewrite (indexmap_inv _ _ _ _ NC) by (apply lt_le_S, nth_error_Some; rewrite BLK; discriminate).
+          rewrite (indexmap_inv _ NC) by (apply lt_le_S, nth_error_Some; rewrite BLK; discriminate).
           rewrite Nat2Z.inj_succ, Z.sub_succ_l, Z.sub_diag. apply mem_In, IN1.
 
       (* If the branch jumps, the target satisfies the policy. *)
@@ -3339,7 +3487,7 @@ Proof.
       rewrite Nat.add_comm, <- Nat.sub_add_distr, <- Nat.add_sub_assoc in JMP by apply Nat.le_sub_l.
       rewrite Nat_sub_sub_cancel in JMP by (rewrite (le_plus_minus _ _ JHI); apply Nat.add_le_mono_l, TAG).
       rewrite Nat.add_comm, <- !Nat.add_assoc, <- !app_length, concat_last, firstn_app_nth in JMP by exact BLK.
-      rewrite Nat2Z.inj_add, <- (sumsizes_newinstrs _ _ _ NC), N.mod_small in JMP by (
+      rewrite Nat2Z.inj_add, <- (sumsizes_newinstrs _ NC), N.mod_small in JMP by (
         rewrite <- (N2Z.id (2^30)%N);
         (apply Z2N_lt; [reflexivity|]);
         (eapply Z.le_lt_trans; [apply Z.add_le_mono_l, newoffset_bounds|]);
@@ -3347,17 +3495,17 @@ Proof.
       rewrite newoffset_index, rev_involutive, firstn_cons_skipn, Z.add_sub_assoc, Z.sub_add_simpl_r_r, sumsizes_cons,
               sumsizes_rev, (Z.add_comm (newsize _)), <- sumsizes_firstn_S in JMP by exact DAT'.
       rewrite <- Z.add_sub_assoc, <- Z.add_assoc, Zplus_minus in JMP.
-      rewrite (sumsizes_newinstrs _ _ _ NC), <- Nat2Z.inj_add, Nat2Z2N in JMP. apply Nat2N.inj in JMP.
+      rewrite (sumsizes_newinstrs _ NC), <- Nat2Z.inj_add, Nat2Z2N in JMP. apply Nat2N.inj in JMP.
       right. left. subst j'. rewrite minus_plus. split; [|left].
 
         eexists. reflexivity.
 
         rewrite rev_length, firstn_length_le by (apply Nat.lt_le_incl, nth_error_Some; rewrite DAT'; discriminate).
-        rewrite skipn_length, <- (newinstrs_length _ _ _ NC), Nat.sub_succ_r, Nat2Z.inj_pred in I'LE by
+        rewrite skipn_length, <- (newinstrs_length NC), Nat.sub_succ_r, Nat2Z.inj_pred in I'LE by
         ( apply Nat.lt_add_lt_sub_r, nth_error_Some; rewrite Nat.add_0_l, BLK; discriminate ).
         rewrite rev_length, firstn_length_le in I'GE by
-        ( rewrite <- (newinstrs_length _ _ _ NC); apply Nat.lt_le_incl, nth_error_Some; rewrite BLK; discriminate ).
-        rewrite (indexmap_inv _ _ _ _ NC).
+        ( rewrite <- (newinstrs_length NC); apply Nat.lt_le_incl, nth_error_Some; rewrite BLK; discriminate ).
+        rewrite (indexmap_inv _ NC).
           rewrite Z2Nat.id, Z.add_simpl_l by exact I'GE. apply mem_In, IN'.
 
           rewrite <- (Nat2Z.id (length l')). apply Z2Nat_le, Z.le_add_le_sub_l.
@@ -3368,7 +3516,7 @@ Proof.
     (apply Nat.le_sub_le_add_l; rewrite <- Nat.add_assoc, <- app_length; apply Nat.lt_le_incl, BND).
     rewrite Nat.add_comm, <- Nat.add_sub_assoc by (rewrite <- Nat.sub_add_distr; apply Nat.le_sub_l).
     rewrite <- Nat.sub_add_distr, Nat_sub_sub_cancel, Nat.add_comm, <- !Nat.add_assoc by (rewrite (le_plus_minus _ _ JHI); apply Nat.add_le_mono_l, TAG).
-    apply N2Z.inj_lt. rewrite nat_N_Z, 2!Nat2Z.inj_add, <- (sumsizes_newinstrs _ _ _ NC), <- NS.
+    apply N2Z.inj_lt. rewrite nat_N_Z, 2!Nat2Z.inj_add, <- (sumsizes_newinstrs _ NC), <- NS.
     rewrite <- sumsizes_firstn_S by exact DAT'.
     eapply Z.le_lt_trans. apply Z.add_le_mono_l, sumsizes_firstn_le. exact SIZ.
 
@@ -3395,11 +3543,11 @@ Proof.
         right. right. right.
         apply (f_equal N.to_nat) in NI. rewrite !N2Nat.inj_add, !Nat2N.id, Z_N_nat, Nat.add_assoc, (le_plus_minus _ _ JHI), <- (Nat.add_assoc bi'), JBK in NI.
         subst j'. rewrite <- Nat.add_assoc. apply Nat.add_le_mono_l, Nat2Z.inj_le.
-        rewrite Nat2Z.inj_add, Z2Nat.id, <- (sumsizes_newinstrs _ _ _ NC), <- sumsizes_app, firstn_skipn by apply sumsizes_nonneg.
+        rewrite Nat2Z.inj_add, Z2Nat.id, <- (sumsizes_newinstrs _ NC), <- sumsizes_app, firstn_skipn by apply sumsizes_nonneg.
         erewrite sumsizes_newinstrs_all by exact NC. reflexivity.
 
       apply N2Z.inj_lt. rewrite <- Nat2N.inj_add, (le_plus_minus _ _ JHI), <- Nat.add_assoc, JBK, N2Z.inj_add, nat_N_Z, Z2N.id by apply sumsizes_nonneg.
-      rewrite Nat2Z.inj_add, <- (sumsizes_newinstrs _ _ _ NC), <- Z.add_assoc, <- sumsizes_app, firstn_skipn. exact SIZ.
+      rewrite Nat2Z.inj_add, <- (sumsizes_newinstrs _ NC), <- Z.add_assoc, <- sumsizes_app, firstn_skipn. exact SIZ.
 
     (* The final indirect jump is safe due to the guard code. *)
     right. destruct (Nat.le_gt_cases bi' j') as [BIJ'|J'BI]; [| right; left; exact J'BI ].
@@ -3407,13 +3555,13 @@ Proof.
     rewrite Nat.add_pred_l in K by (erewrite newijump_size by exact NI; destruct sb; discriminate 1).
     rewrite Nat.add_comm, <- Nat.add_assoc in K. rewrite <- !app_length, concat_last, firstn_app_nth in K by exact BLK.
     eapply Nat.add_cancel_l in K. rewrite (le_plus_minus_r _ _ JHI) in K.
-    rewrite K in XP0, XS, EX. rewrite plus_n_Sm, Nat.succ_pred_pos in EX by (destruct l'; [ discriminate BLK | destruct l0; [ apply (newinstrs_nonnil _ _ _ O) in NC; contradiction | apply Nat.lt_0_succ ] ] ).
+    rewrite K in XP0, XS, EX. rewrite plus_n_Sm, Nat.succ_pred_pos in EX by (destruct l'; [ discriminate BLK | destruct l0; [ apply (newinstrs_nonnil _ _ _ _ O) in NC; contradiction | apply Nat.lt_0_succ ] ] ).
     eapply newijump_indirect_exit in XP0; try eassumption.
       destruct (nth_error _ (indexmap' l' (j'-bi'))) as [[[iid2|] oid2 sd2 ie2 sb2]|] eqn:DAT2.
         left. split. apply XP0. right. exists iid2, (oid2, sd2). split; [|apply XP0]. eapply nth_shrink_preserves. exact DAT2.
         contradiction.
         right. right. exact XP0.
-      apply N2Z.inj_lt. rewrite nat_N_Z, Nat2Z.inj_add, <- (sumsizes_newinstrs_all _ _ _ NC). exact SIZ.
+      apply N2Z.inj_lt. rewrite nat_N_Z, Nat2Z.inj_add, <- (sumsizes_newinstrs_all NC). exact SIZ.
       replace (Nat.pred _) with k. exact IE'.
         subst k. rewrite K, minus_plus, firstn_last, BLK, concat_app, concat_cons, app_nil_r, !app_length, Nat.add_assoc, <- Nat.sub_add_distr, <- Nat.add_pred_r.
           apply minus_plus.
@@ -3429,22 +3577,22 @@ Proof.
   destruct XS as [[J'LB J'UB] H]. subst x.
   apply invExit, N.mul_cancel_l in EX; [|discriminate].
   rewrite nat_N_Z, newoffset_index, rev_involutive, rev_length, firstn_cons_skipn in EX by exact DAT'.
-  rewrite firstn_length_le in EX by (rewrite <- (newinstrs_length _ _ _ NC); apply Nat.lt_le_incl, nth_error_Some; rewrite BLK; discriminate).
-  rewrite sumsizes_cons, sumsizes_rev, NS, Nat2Z.inj_add, (sumsizes_newinstrs _ _ _ NC i) in EX.
+  rewrite firstn_length_le in EX by (rewrite <- (newinstrs_length NC); apply Nat.lt_le_incl, nth_error_Some; rewrite BLK; discriminate).
+  rewrite sumsizes_cons, sumsizes_rev, NS, Nat2Z.inj_add, (sumsizes_newinstrs i NC) in EX.
   rewrite app_length, Nat.add_assoc in BND. rewrite (newjump_size _ _ _ NI) in EX, BND.
   rewrite (Z.add_comm (Z.of_nat (length _)) (Z.of_nat 1)), <- Z.add_assoc, Z.add_add_simpl_r_l in EX.
   rewrite (le_plus_minus _ _ JHI), Nat2Z.inj_add, <- Z.add_assoc in EX.
   rewrite (Nat_squeeze _ _ TAG (proj2 BND)), Nat.add_comm, Nat2Z.inj_add, Zplus_minus in EX.
   rewrite N.mod_small in EX by (rewrite <- (N2Z.id (2^30)); apply Z2N_lt; [ reflexivity | eapply Z.le_lt_trans; [ apply Z.add_le_mono_l, sumsizes_firstn_le | exact SIZ ] ]).
-  rewrite Z2N.inj_add, (sumsizes_newinstrs _ _ _ NC), !Nat2Z2N, <- Nat2N.inj_add in EX by (apply Nat2Z.is_nonneg + apply sumsizes_nonneg).
+  rewrite Z2N.inj_add, (sumsizes_newinstrs _ NC), !Nat2Z2N, <- Nat2N.inj_add in EX by (apply Nat2Z.is_nonneg + apply sumsizes_nonneg).
   apply Nat2N.inj in EX. subst j'. rewrite minus_plus. split; [|left].
 
     eexists. reflexivity.
 
     assert (IL': (i < length l')%nat). apply nth_error_Some. rewrite BLK. discriminate.
-    rewrite rev_length, firstn_length_le in I'GE by (rewrite <- (newinstrs_length _ _ _ NC); apply Nat.lt_le_incl, IL').
-    rewrite skipn_length, <- (newinstrs_length _ _ _ NC), Nat.sub_succ_r, Nat2Z.inj_pred in I'LE by apply Nat.lt_add_lt_sub_r, IL'.
-    rewrite (indexmap_inv _ _ _ _ NC).
+    rewrite rev_length, firstn_length_le in I'GE by (rewrite <- (newinstrs_length NC); apply Nat.lt_le_incl, IL').
+    rewrite skipn_length, <- (newinstrs_length NC), Nat.sub_succ_r, Nat2Z.inj_pred in I'LE by apply Nat.lt_add_lt_sub_r, IL'.
+    rewrite (indexmap_inv _ NC).
       rewrite Z2Nat.id, Z.add_simpl_l by exact I'GE. apply mem_In, IN'.
       apply Nat2Z.inj_le. rewrite Z2Nat.id.
         apply Z.le_add_le_sub_l. rewrite <- Nat2Z.inj_sub by apply Nat.lt_le_incl, IL'.
@@ -3461,14 +3609,14 @@ Proof.
   rewrite app_length, Nat.add_assoc in BND. apply Nat_squeeze in TAG; [|apply BND].
   rewrite <- (Nat.add_sub (length (newtag _)) (length (ie::nil))) in TAG.
   rewrite Nat.add_sub_assoc in TAG by apply le_plus_r.
-  rewrite <- (Nat2Z.id (_+length _)), <- NS, <- (Nat2Z.id (length _)), <- (sumsizes_newinstrs _ _ _ NC) in TAG.
+  rewrite <- (Nat2Z.id (_+length _)), <- NS, <- (Nat2Z.id (length _)), <- (sumsizes_newinstrs _ NC) in TAG.
   rewrite <- Z2Nat.inj_add in TAG; [|apply sumsizes_nonneg | etransitivity; [|apply newsize_pos]; discriminate].
-  rewrite <- (sumsizes_firstn_S _ _ _ DAT'), (sumsizes_newinstrs _ _ _ NC), Nat2Z.id, Nat.sub_1_r in TAG.
+  rewrite <- (sumsizes_firstn_S _ _ _ DAT'), (sumsizes_newinstrs _ NC), Nat2Z.id, Nat.sub_1_r in TAG.
   rewrite (Nat.sub_succ_l _ _ JHI), TAG, Nat.succ_pred by (rewrite firstn_last, BLK, <- concat_last, <- rev_length, !rev_app_distr, !app_length; discriminate).
   split; [|left].
 
     eexists. reflexivity.
 
-    rewrite (indexmap_inv _ _ _ _ NC) by (apply lt_le_S, nth_error_Some; rewrite BLK; discriminate).
+    rewrite (indexmap_inv _ NC) by (apply lt_le_S, nth_error_Some; rewrite BLK; discriminate).
     rewrite Nat2Z.inj_succ, Z.sub_succ_l, Z.sub_diag. apply mem_In, IN1.
 Qed.
