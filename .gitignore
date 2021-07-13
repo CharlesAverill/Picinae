@@ -4,3 +4,9 @@
 *.#*#
 *.swp
 *.*~
+*.pyc
+*.vok
+*.vos
+*.bin
+*.plugin
+_build

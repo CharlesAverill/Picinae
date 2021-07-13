@@ -109,6 +109,6 @@ let decode_instr (encoded:int32) :(riscv_instr option) =
 (* given an decoded instruction (as struct), encode it as an int32 *)
 let encode_instr (decoded:riscv_instr) :int32 = 
   match decoded with 
-  | Utype {imm, rd, opcode} -> 0l
-  | Itype {imm, rs1, funct3, rd, opcode} ->0l
+  | Utype {imm = _; rd = _; opcode = _} -> 0l
+  | Itype {imm = _; rs1 = _; funct3 = _; rd = _; opcode = _} ->0l
 
