@@ -947,14 +947,14 @@ Proof.
     simpl (_-_+(_-_)).
   step. exists (k-4). repeat split.
     rewrite <- N.add_sub_assoc.
-      rewrite <- N.add_sub_assoc by exact K4. psimpl_goal. reflexivity.
+      rewrite <- N.add_sub_assoc by exact K4. psimpl. reflexivity.
       transitivity k. apply K4. rewrite N.add_comm. apply N.le_add_r.
     exact NF.
     symmetry. apply Neqb_ok, BC.
   apply (nilfree_succ _ _ _ BC) in NF. rewrite <- N.add_1_r, <- Nsub_distr in NF by (discriminate + exact K4).
   step. step. rewrite PKI by (reflexivity + exact WTM).
   step. exists (k-3). repeat split.
-    rewrite <- Nsub_distr, <- !N.add_sub_assoc. psimpl_goal. reflexivity.
+    rewrite <- Nsub_distr, <- !N.add_sub_assoc. psimpl. reflexivity.
       transitivity 4. discriminate. exact K4.
       transitivity 4. discriminate. transitivity k. exact K4. rewrite N.add_comm. apply N.le_add_r.
       discriminate.

@@ -36,6 +36,7 @@ Require Import Picinae_statics.
 Require Import NArith.
 Require Import ZArith.
 Require Import List.
+Require Import FunctionalExtensionality.
 
 (* Functional Interpretation of Programs:
    This module defines an IL interpreter that is purely functional instead of
@@ -56,8 +57,8 @@ Require Import List.
 
 Inductive uvalue := VaU (z:bool) (m:addr->N) (n:N) (w:N).
 
-Definition vget (v:value) :=
-  match v with
+Definition vget (u:value) :=
+  match u with
   | VaN n w => VaU true (fun _ => 0) n w
   | VaM m w => VaU false m 0 w
   end.
@@ -277,6 +278,46 @@ Ltac rewrite_finterp_funcs :=
   cbn beta match delta [ vtyp vnum vmem vwidth ];
   rewrite ?fold_vget.
 
+(* Decide whether an expression e's type is statically known given a list l of
+   variables and their values, and return its bitwidth if so.  When e's result
+   type can be statically predicted, the functional interpreter can expand and
+   reduce much more of the expression, yielding smaller terms and improving speed.
+   The type inferred here is the type of the value yielded by evaluating e even
+   if e is not well-typed according to the static semantics.  This allows the
+   functional interpreter to work without requiring the user to supply a proof
+   of well-typedness for e. *)
+
+Definition feval_varwidth l v :=
+  option_map (fun p => vwidth (snd p)) (find (fun p => if v == fst p then true else false) l).
+Arguments feval_varwidth !l / v.
+
+Fixpoint feval_width (l:list (var*value)) e {struct e} :=
+  match e with
+  | Var v => feval_varwidth l v
+  | Word _ w | Cast _ w _ | Unknown w => Some w
+  | Load _ _ _ len => Some (Mb*len)
+  | Store e1 _ _ _ _ | UnOp _ e1 => feval_width l e1
+  | BinOp bop e1 _ =>
+    match bop with
+    | OP_EQ | OP_NEQ | OP_LT | OP_LE | OP_SLT | OP_SLE => Some 1
+    | _ => feval_width l e1
+    end
+  | Let v e1 e2 => feval_width
+      match feval_width l e1 with
+      | None => filter (fun p => if v == fst p then false else true) l
+      | Some w => (v,VaN 0 w)::l
+      end e2
+  | Ite _ e2 e3 => match feval_width l e2 with None => None | Some w1 =>
+                     match feval_width l e3 with None => None | Some w2 =>
+                       if w1 =? w2 then Some w1 else None
+                     end
+                   end
+  | Extract n1 n2 _ => Some (N.succ n1 - n2)
+  | Concat e1 e2 => match feval_width l e1 with None => None | Some w1 =>
+                      option_map (N.add w1) (feval_width l e2)
+                    end
+  end.
+
 (* Functionally evaluate binary and unary operations using the opaque
    functions above. *)
 
@@ -326,67 +367,6 @@ Definition feval_cast (c:cast_typ) (noe:forall op, noe_setop_typsig op) (w w':bi
   | CAST_LOW => noe NOE_MOD n (noe NOE_POW 2 w')
   end.
 
-(* Functionally evaluate an expression.  Parameter unk is an oracle function
-   that returns values of unknown expressions. *)
-Definition feval_exp (noe:forall op, noe_setop_typsig op) (noet:forall op, noe_typop_typsig op) h :=
-  fix feval_exp' e s unk := match e with
-  | Var v => (VaU (noe NOE_TYP (s vupdate v))
-                  (noe NOE_MEM (s vupdate v))
-                  (noe NOE_NUM (s vupdate v))
-                  (noe NOE_WID (s vupdate v)), nil)
-  | Word n w => (VaU true (noe NOE_ZST) n w, nil)
-  | Load e1 e2 en len =>
-      match feval_exp' e1 s (unknowns0 unk), feval_exp' e2 s (unknowns1 unk) with
-      | (VaU _ m _ _, ma1), (VaU _ _ n _, ma2) =>
-        (VaU true (noe NOE_ZST) (noe NOE_GET en len m n) (Mb*len),
-         noet NOE_MAR h (s (noet NOE_UPD)) n len :: ma1++ma2)
-      end
-  | Store e1 e2 e3 en len =>
-      match feval_exp' e1 s (unknowns00 unk), feval_exp' e2 s (unknowns01 unk), feval_exp' e3 s (unknowns10 unk) with
-      | (VaU _ m _ mw, ma1), (VaU _ _ a _, ma2), (VaU _ _ v _, ma3) =>
-        (VaU false (noe NOE_SET en len m a v) 0 mw,
-         noet NOE_MAW h (s (noet NOE_UPD)) a len :: ma1++ma2++ma3)
-      end
-  | BinOp bop e1 e2 =>
-      match feval_exp' e1 s (unknowns0 unk), feval_exp' e2 s (unknowns1 unk) with
-      | (VaU _ _ n1 w, ma1), (VaU _ _ n2 _, ma2) => (feval_binop bop noe w n1 n2, ma1++ma2)
-      end
-  | UnOp uop e1 =>
-      match feval_exp' e1 s unk with (VaU _ _ n w, ma) =>
-        (feval_unop uop noe n w, ma)
-      end
-  | Cast c w' e1 =>
-      match feval_exp' e1 s unk with (VaU _ _ n w, ma) =>
-        (VaU true (noe NOE_ZST) (feval_cast c noe w w' n) w', ma)
-      end
-  | Let v e1 e2 =>
-      match feval_exp' e1 s (unknowns0 unk) with (u,ma1) =>
-        match feval_exp' e2 (fun upd => upd (s upd) v (of_uvalue u)) (unknowns1 unk) with
-        | (u',ma2) => (u', ma1++ma2)
-        end
-      end
-  | Unknown w => (VaU true (noe NOE_ZST) (noe NOE_MOD (unk xH) (noe NOE_POW 2 w)) w, nil)
-  | Ite e1 e2 e3 =>
-      match feval_exp' e1 s (unknowns0 unk), feval_exp' e2 s (unknowns1 unk), feval_exp' e3 s (unknowns1 unk) with
-      | (VaU _ _ n1 _, ma1), (VaU b2 m2 n2 w2, ma2), (VaU b3 m3 n3 w3, ma3) =>
-        (VaU (if Bool.eqb b2 b3 then b2 else if n1 then b3 else b2)
-             (if n1 then m3 else m2) (if n1 then n3 else n2)
-             (if w2 =? w3 then w2 else if n1 then w3 else w2),
-         match ma2,ma3 with nil,nil => ma1 | _,_ => ma1++(if n1 then conjall ma3 else conjall ma2)::nil end)
-      end
-  | Extract n1 n2 e1 =>
-      match feval_exp' e1 s unk with
-      | (VaU _ _ n w, ma) => (VaU true (noe NOE_ZST)
-          (noe NOE_MOD (noe NOE_SHR n n2) (noe NOE_POW 2 (N.succ n1 - n2))) (N.succ n1 - n2), ma)
-      end
-  | Concat e1 e2 =>
-      match feval_exp' e1 s (unknowns0 unk), feval_exp' e2 s (unknowns1 unk) with
-      | (VaU _ _ n1 w1, ma1), (VaU _ _ n2 w2, ma2) =>
-        (VaU true (noe NOE_ZST) (noe NOE_OR (noe NOE_SHL n1 w2) n2) (w1+w2), ma1++ma2)
-      end
-  end.
-
-
 (* Convert a list of variables and their values to a store function. *)
 Fixpoint updlst s (l: list (var * value)) upd : store :=
   match l with nil => s | (v,u)::t => upd (updlst s t upd) v u end.
@@ -394,6 +374,71 @@ Fixpoint updlst s (l: list (var * value)) upd : store :=
 (* Remove a variable from a list of variables and their values. *)
 Fixpoint remlst v (l: list (var * value)) : list (var * value) :=
   match l with nil => nil | (v',u)::t => if v == v' then t else (v',u)::(remlst v t) end.
+
+(* Functionally evaluate an expression.  Parameter unk is an oracle function
+   that returns values of unknown expressions. *)
+Definition feval_exp (noe:forall op, noe_setop_typsig op) (noet:forall op, noe_typop_typsig op) h s :=
+  fix feval_exp' e unk l {struct e} := match e with
+  | Var v => let u := updlst s l vupdate v in
+             (match feval_width l e with
+              | None => VaU (noe NOE_TYP u) (noe NOE_MEM u) (noe NOE_NUM u) (noe NOE_WID u)
+              | Some _ => VaU (vtyp u) (vmem u) (vnum u) (vwidth u)
+              end, nil)
+  | Word n w => (VaU true (noe NOE_ZST) n w, nil)
+  | Load e1 e2 en len =>
+      match feval_exp' e1 (unknowns0 unk) l, feval_exp' e2 (unknowns1 unk) l with
+      | (VaU _ m _ _, ma1), (VaU _ _ n _, ma2) =>
+        (VaU true (noe NOE_ZST) (noe NOE_GET en len m n) (Mb*len),
+         noet NOE_MAR h (updlst s l (noet NOE_UPD)) n len :: ma1++ma2)
+      end
+  | Store e1 e2 e3 en len =>
+      match feval_exp' e1 (unknowns00 unk) l, feval_exp' e2 (unknowns01 unk) l, feval_exp' e3 (unknowns10 unk) l with
+      | (VaU _ m _ mw, ma1), (VaU _ _ a _, ma2), (VaU _ _ v _, ma3) =>
+        (VaU false (noe NOE_SET en len m a v) 0 mw,
+         noet NOE_MAW h (updlst s l (noet NOE_UPD)) a len :: ma1++ma2++ma3)
+      end
+  | BinOp bop e1 e2 =>
+      match feval_exp' e1 (unknowns0 unk) l, feval_exp' e2 (unknowns1 unk) l with
+      | (VaU _ _ n1 w, ma1), (VaU _ _ n2 _, ma2) => (feval_binop bop noe w n1 n2, ma1++ma2)
+      end
+  | UnOp uop e1 =>
+      match feval_exp' e1 unk l with (VaU _ _ n w, ma) =>
+        (feval_unop uop noe n w, ma)
+      end
+  | Cast c w' e1 =>
+      match feval_exp' e1 unk l with (VaU _ _ n w, ma) =>
+        (VaU true (noe NOE_ZST) (feval_cast c noe w w' n) w', ma)
+      end
+  | Let v e1 e2 =>
+      match feval_exp' e1 (unknowns0 unk) l with (u,ma1) =>
+        match feval_exp' e2 (unknowns1 unk) ((v,of_uvalue u)::remlst v l) with
+        | (u',ma2) => (u', ma1++ma2)
+        end
+      end
+  | Unknown w => (VaU true (noe NOE_ZST) (noe NOE_MOD (unk xH) (noe NOE_POW 2 w)) w, nil)
+  | Ite e1 e2 e3 =>
+      match feval_exp' e1 (unknowns0 unk) l, feval_exp' e2 (unknowns1 unk) l, feval_exp' e3 (unknowns1 unk) l with
+      | (VaU _ _ n1 _, ma1), (VaU b2 m2 n2 w2, ma2), (VaU b3 m3 n3 w3, ma3) =>
+        (match feval_width l e with
+         | Some w => VaU (if Bool.eqb b2 b3 then b2 else if n1 then b3 else b2)
+                         (if n1 then m3 else m2) (if n1 then n3 else n2) w
+         | None => VaU (if n1 then b3 else b2) (if n1 then m3 else m2)
+                       (if n1 then n3 else n2) (if n1 then w3 else w2)
+         end,
+         match ma2,ma3 with nil,nil => ma1 | _,_ => ma1++(if n1 then conjall ma3 else conjall ma2)::nil end)
+      end
+  | Extract n1 n2 e1 =>
+      match feval_exp' e1 unk l with
+      | (VaU _ _ n w, ma) => (VaU true (noe NOE_ZST)
+          (noe NOE_MOD (noe NOE_SHR n n2) (noe NOE_POW 2 (N.succ n1 - n2))) (N.succ n1 - n2), ma)
+      end
+  | Concat e1 e2 =>
+      match feval_exp' e1 (unknowns0 unk) l, feval_exp' e2 (unknowns1 unk) l with
+      | (VaU _ _ n1 w1, ma1), (VaU _ _ n2 w2, ma2) =>
+        (VaU true (noe NOE_ZST) (noe NOE_OR (noe NOE_SHL n1 w2) n2)
+        match feval_width l e with None => noe NOE_ADD w1 w2 | Some w => w end, ma1++ma2)
+      end
+  end.
 
 
 (* The statement interpreter returns a list of known variables and their values,
@@ -413,10 +458,10 @@ Inductive finterp_state :=
 Definition fexec_stmt (noe:forall op, noe_setop_typsig op) (noet:forall op, noe_typop_typsig op) h :=
   fix fexec_stmt' q s unk l := match q with
   | Nop => FIS l (FIExit None) nil
-  | Move v e => match feval_exp noe noet h e (updlst s l) unk with
+  | Move v e => match feval_exp noe noet h s e unk l with
                 | (u,ma) => FIS ((v, of_uvalue u)::remlst v l) (FIExit None) ma
                 end
-  | Jmp e => match feval_exp noe noet h e (updlst s l) unk with
+  | Jmp e => match feval_exp noe noet h s e unk l with
              | (VaU _ _ n _, ma) => FIS l (FIExit (Some (Exit n))) ma
              end
   | Exn i => FIS l (FIExit (Some (Raise i))) nil
@@ -429,11 +474,11 @@ Definition fexec_stmt (noe:forall op, noe_setop_typsig op) (noet:forall op, noe_
                                     end
       end
   | If e q1 q2 =>
-      match feval_exp noe noet h e (updlst s l) unk with (VaU _ _ n _, ma0) =>
+      match feval_exp noe noet h s e unk l with (VaU _ _ n _, ma0) =>
         FIS l (FIStmt (if n then q2 else q1)) ma0
       end
   | Rep e q1 =>
-      match feval_exp noe noet h e (updlst s l) unk with (VaU _ _ n _, ma0) =>
+      match feval_exp noe noet h s e unk l with (VaU _ _ n _, ma0) =>
         FIS l (FIStmt (noet NOE_ITR n stmt (Seq q1) Nop)) ma0
       end
   end.
@@ -444,18 +489,184 @@ Definition fexec_stmt (noe:forall op, noe_setop_typsig op) (noet:forall op, noe_
    propositions to feval_exp and fexec_stmt functions that can be evaluated using
    vm_compute or other reduction tactics. *)
 
+Lemma updlst_remlst:
+  forall v u l s, updlst s (remlst v l) vupdate [v:=u] = updlst s l vupdate [v:=u].
+Proof.
+  induction l; intros.
+    reflexivity.
+    destruct a as (v1,u1). simpl. destruct (v == v1).
+      subst. unfold vupdate at 2. rewrite update_cancel. reflexivity.
+      simpl. unfold vupdate at 1 3. rewrite update_swap.
+        rewrite IHl. rewrite update_swap by assumption. reflexivity.
+        intro H. apply n. symmetry. exact H.
+Qed.
+
+Lemma find_filter:
+  forall {A} f g (H: forall x:A, g x = false -> f x = false) l,
+  find f (filter g l) = find f l.
+Proof.
+  induction l; intros.
+    reflexivity.
+    simpl. specialize (H a). destruct (g a).
+      rewrite <- IHl. reflexivity.
+      rewrite H by reflexivity. apply IHl.
+Qed.
+
+Lemma find_filter_none:
+  forall {A} f g (H: forall x:A, f x = true -> g x = false) l,
+  find f (filter g l) = None.
+Proof.
+  induction l; intros.
+    reflexivity.
+    simpl. specialize (H a). destruct (g a).
+      simpl. destruct (f a). discriminate H. reflexivity. apply IHl.
+      apply IHl.
+Qed.
+
+Theorem feval_width_mono:
+  forall l1 l2 (SS: feval_varwidth l1 ⊆ feval_varwidth l2), feval_width l1 ⊆ feval_width l2.
+Proof.
+  intros. intros e w H. revert l1 l2 w SS H. induction e; intros; try assumption.
+
+  (* Var *)
+  apply SS. assumption.
+
+  (* Store *)
+  eapply IHe1; eassumption.
+
+  (* BinOp *)
+  destruct b; solve [ assumption | eapply IHe1; eassumption ].
+
+  (* UnOp *)
+  destruct u; eapply IHe; eassumption.
+
+  (* Let *)
+  simpl in *. destruct (feval_width l1 e1) as [w1|] eqn:FEW1.
+    erewrite IHe1; [eapply IHe2|..]; [|eassumption..]. simpl. intros v0 w0 H0. destruct (v0 == v).
+      subst v0. exact H0.
+      apply SS. exact H0.
+    eapply IHe2; [|exact H]. clear - SS. destruct (feval_width l2 e1) as [w2|].
+      intros v0 w0 H0. destruct (v0 == v).
+        subst v0. unfold feval_varwidth in H0. destruct find eqn:F in H0.
+          apply find_some in F. destruct F as [IN F]. apply filter_In, proj2 in IN. destruct (v == fst p); discriminate.
+          discriminate H0.
+        simpl. vantisym v0 v; [|assumption]. apply SS. unfold feval_varwidth in H0. destruct find eqn:F in H0.
+          unfold feval_varwidth. replace (find _ l1) with (Some p).
+            exact H0.
+            rewrite <- F. clear - n. apply find_filter. intros p H. destruct p as (v1,u1). simpl in *. destruct (v == v1).
+              subst v1. vantisym v0 v. reflexivity. assumption.
+              discriminate H.
+          discriminate H0.
+      intros v0 w0 H0. unfold feval_varwidth in *. destruct (v == v0).
+        subst v0. simpl in H0. rewrite find_filter_none in H0.
+          discriminate H0.
+          intros p H1. destruct (v == fst p). reflexivity. discriminate H1.
+        rewrite !find_filter in * by
+          ( intros p H1; destruct p as (v1,u1); simpl in *; destruct (v == v1);
+            [ subst v1; vantisym v0 v; [ reflexivity | apply not_eq_sym, n ]
+            | discriminate H1 ]).
+          apply SS. exact H0.
+
+  (* Ite *)
+  simpl in *.
+  destruct (feval_width l1 e2) as [w2|] eqn:FEW2; [|discriminate]. erewrite IHe2 by eassumption.
+  destruct (feval_width l1 e3) as [w3|] eqn:FEW3; [|discriminate]. erewrite IHe3 by eassumption.
+  assumption.
+
+  (* Concat *)
+  simpl in *.
+  destruct (feval_width l1 e1) as [w1|] eqn:FEW1; [|discriminate]. erewrite IHe1 by eassumption.
+  destruct (feval_width l1 e2) as [w2|] eqn:FEW2; [|discriminate]. erewrite IHe2 by eassumption.
+  assumption.
+Qed.
+
+Corollary feval_width_eq:
+  forall l1 l2 (EQ: feval_varwidth l1 = feval_varwidth l2), feval_width l1 = feval_width l2.
+Proof.
+  intros. apply pfsub_antisym; apply feval_width_mono; rewrite EQ; reflexivity.
+Qed.
+
+Theorem feval_width_sound:
+  forall h s e l w u
+    (FW: feval_width l e = Some w)
+    (E: eval_exp h (updlst s l vupdate) e u),
+  w = vwidth u.
+Proof.
+  induction e; intros; inversion E; subst;
+  try solve [ inversion FW; reflexivity ].
+
+  (* Var *)
+  simpl in FW. unfold feval_varwidth in FW. destruct find eqn:F in FW; [|discriminate].
+  inversion FW. destruct p as (v',u). simpl.
+  replace v' with v in F.
+    clear FW E H0 h w v'. revert F. induction l; intros.
+      discriminate F.
+      destruct a as (v0,u0). simpl. unfold vupdate. destruct (v == v0).
+        subst v0. simpl in F. vreflexivity v. inversion F.
+          rewrite update_updated. reflexivity.
+        simpl in F. vantisym v v0; [|assumption].
+          rewrite update_frame by assumption. apply IHl. assumption.
+    destruct (v == v').
+      assumption.
+      apply find_some, proj2 in F. simpl in F. vantisym v v'. discriminate. assumption.
+
+  (* Store *)
+  change (vwidth _) with (vwidth (VaM m mw)). eapply IHe1; eassumption.
+
+  (* BinOp *)
+  destruct b; solve
+  [ change (vwidth _) with (vwidth (VaN n1 w0)); eapply IHe1; eassumption
+  | inversion FW; reflexivity ].
+
+  (* UnOp *)
+  destruct u;
+  change (vwidth _) with (vwidth (VaN n1 w1)); eapply IHe; eassumption.
+
+  (* Let *)
+  apply IHe2 with (l := (v,u1)::l); [|exact E2].
+  simpl in FW. destruct (feval_width l e1) eqn:FW1 in FW.
+    erewrite feval_width_eq. exact FW. extensionality v0. simpl. destruct (v0 == v).
+      simpl. erewrite <- IHe1. reflexivity. exact FW1. exact E1.
+      reflexivity.
+    eapply feval_width_mono; [|exact FW]. unfold feval_varwidth. intros v0 w0 H0. simpl. destruct (v0 == v).
+      subst v0. rewrite find_filter_none in H0.
+        discriminate H0.
+        intro p. destruct (v == fst p). reflexivity. discriminate 1.
+      rewrite find_filter in H0. assumption. intros (v2,u2) H. unfold fst in *. destruct (v0 == v2).
+        subst v0. vantisym v v2. discriminate H. apply not_eq_sym, n.
+        reflexivity.
+
+  (* Ife *)
+  simpl in FW.
+  destruct (feval_width l e2) eqn:FW2 in FW; [|discriminate].
+  destruct (feval_width l e3) eqn:FW3 in FW; [|discriminate].
+  destruct (b =? b0) eqn:W; [|discriminate].
+  apply N.eqb_eq in W. subst b0. inversion FW. subst b.
+  destruct n1.
+    eapply IHe3; eassumption.
+    eapply IHe2; eassumption.
+
+  (* Concat *)
+  simpl in FW.
+  destruct (feval_width l e1) eqn:FW1 in FW; [|discriminate].
+  destruct (feval_width l e2) eqn:FW2 in FW; [|discriminate].
+  inversion FW. apply f_equal2.
+    change w1 with (vwidth (VaN n1 w1)). eapply IHe1; eassumption.
+    change w2 with (vwidth (VaN n2 w2)). eapply IHe2; eassumption.
+Qed.
+
 Theorem reduce_exp:
-  forall noe noet h e s u (E: eval_exp h (s vupdate) e u)
+  forall noe noet h s e u l (E: eval_exp h (updlst s l vupdate) e u)
          (NOE: noe = noe_setop) (NOET: noet = noe_typop),
-  exists unk, match feval_exp noe noet h e s unk with (u',ma) =>
+  exists unk, match feval_exp noe noet h s e unk l with (u',ma) =>
     u = of_uvalue u' /\ conjallT ma end.
 Proof.
-  intros. subst noe noet. revert s u E.
-  induction e; intros; inversion E; clear E; subst.
+  intros. subst noe noet. revert u l E.
+  induction e; intros; inversion E; rename E into E0; subst.
 
   (* Var *)
   exists (fun _ => N0). split.
-    simpl. destruct (s vupdate v); reflexivity.
+    destruct feval_width; simpl; destruct (updlst s l vupdate v); reflexivity.
     exact I.
 
   (* Word *)
@@ -468,8 +679,8 @@ Proof.
   destruct E1 as [unk1 E1]. destruct E2 as [unk2 E2].
   exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
   simpl. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
-  destruct (feval_exp _ _ _ e1 _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
-  destruct (feval_exp _ _ _ e2 _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
+  destruct (feval_exp _ _ _ _ e1 _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  destruct (feval_exp _ _ _ _ e2 _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
   simpl in U1,U2. destruct z; destruct z0; try discriminate. injection U1; injection U2; intros; subst.
   split.
     reflexivity.
@@ -482,9 +693,9 @@ Proof.
   destruct E1 as [unk1 E1]. destruct E2 as [unk2 E2]. destruct E3 as [unk3 E3].
   exists (fun i => match i with xO (xO j) => unk1 j | xI (xO j) => unk2 j | xO (xI j) => unk3 j | _ => N0 end).
   simpl. change (unknowns00 _) with unk1. change (unknowns01 _) with unk2. change (unknowns10 _) with unk3.
-  destruct (feval_exp _ _ _ e1 _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
-  destruct (feval_exp _ _ _ e2 _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
-  destruct (feval_exp _ _ _ e3 _ _) as (u3,ma3). destruct u3. destruct E3 as [U3 M3].
+  destruct (feval_exp _ _ _ _ e1 _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  destruct (feval_exp _ _ _ _ e2 _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
+  destruct (feval_exp _ _ _ _ e3 _ _) as (u3,ma3). destruct u3. destruct E3 as [U3 M3].
   simpl in U1,U2,U3. destruct z; destruct z0; destruct z1; try discriminate. injection U1; injection U2; injection U3; intros; subst.
   split.
     reflexivity.
@@ -497,8 +708,8 @@ Proof.
   destruct E1 as [unk1 E1]. destruct E2 as [unk2 E2].
   exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
   simpl. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
-  destruct (feval_exp _ _ _ e1 _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
-  destruct (feval_exp _ _ _ e2 _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
+  destruct (feval_exp _ _ _ _ e1 _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  destruct (feval_exp _ _ _ _ e2 _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
   simpl in U1,U2. destruct z; destruct z0; try discriminate. injection U1; injection U2; intros; subst.
   split.
     destruct b; reflexivity.
@@ -509,7 +720,7 @@ Proof.
   destruct E1 as [unk1 E1].
   exists unk1.
   simpl.
-  destruct (feval_exp _ _ _ e _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  destruct (feval_exp _ _ _ _ e _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
   simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
   split.
     destruct u; reflexivity.
@@ -520,20 +731,21 @@ Proof.
   destruct E1 as [unk1 E1].
   exists unk1.
   simpl.
-  destruct (feval_exp _ _ _ e _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  destruct (feval_exp _ _ _ _ e _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
   simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
   split.
     destruct c; reflexivity.
     assumption.
 
   (* Let *)
-  change (s vupdate [v:=u1]) with ((fun upd => upd (s upd) v u1) vupdate) in E2.
+  rewrite <- updlst_remlst in E2.
+  change (updlst s _ vupdate [v:=u1]) with (updlst s ((v,u1)::remlst v l) vupdate) in E2.
   apply IHe1 in E1. apply IHe2 in E2. clear IHe1 IHe2.
   destruct E1 as [unk1 E1]. destruct E2 as [unk2 E2].
   exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
   simpl. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
-  destruct (feval_exp _ _ _ e1 _ _) as (u0,ma1). destruct E1 as [U1 M1]. subst.
-  destruct (feval_exp _ _ _ e2 _ _) as (u2,ma2). destruct E2 as [U2 M2]. subst.
+  destruct (feval_exp _ _ _ _ e1 _ _) as (u0,ma1). destruct E1 as [U1 M1]. subst.
+  destruct (feval_exp _ _ _ _ e2 _ _) as (u2,ma2). destruct E2 as [U2 M2]. subst.
   split.
     reflexivity.
     apply conjallT_app; assumption.
@@ -545,75 +757,65 @@ Proof.
     exact I.
 
   (* Ife *)
-  apply IHe1 in E1. clear IHe1. destruct E1 as [unk1 E1].
-  destruct n1.
+  specialize (IHe1 _ _ E1). destruct IHe1 as [unk1 IHe1].
+  rename n1 into c. rename w1 into w.
+  eassert (IHe': exists unk', match c with 0 => _ | _ => _ end).
+    destruct c. exact (IHe3 _ _ E'). exact (IHe2 _ _ E').
+  clear IHe2 IHe3. destruct IHe' as [unk' IHe'].
+  exists (fun i => match i with xO j => unk1 j | xI j => unk' j | _ => N0 end).
+  cbn - [feval_width].
+  change (unknowns0 _) with unk1. change (unknowns1 _) with unk'.
+  destruct (feval_exp _ _ _ _ e1 _ _) as [[b1 m1 n1 w1] ma1].
+  destruct IHe1 as [U1 M1]. destruct b1; [|discriminate U1]. inversion U1. subst c w. clear U1.
+  destruct (feval_exp _ _ _ _ e2 _ _) as [[b2 m2 n2 w2] ma2].
+  destruct (feval_exp _ _ _ _ e3 _ _) as [[b3 m3 n3 w3] ma3].
+  replace (if (_:bool) then b2 else _) with (if n1 then b3 else b2) by (destruct n1, b3, b2; reflexivity).
+  split.
+    destruct feval_width as [w|] eqn:FW.
 
-    apply IHe3 in E'. clear IHe2 IHe3. destruct E' as [unk3 E3].
-    exists (fun i => match i with xO j => unk1 j | xI j => unk3 j | _ => N0 end).
-    simpl. change (unknowns0 _) with unk1. change (unknowns1 _) with unk3.
-    destruct (feval_exp _ _ _ e1 _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
-    destruct (feval_exp _ _ _ e3 _ _) as (u3,ma3). destruct u3. destruct E3 as [U3 M3]. subst.
-    simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
-    destruct (feval_exp _ _ _ e2 _ _) as (u2,ma2). destruct u2.
-    replace (if Bool.eqb z z0 then z else z0) with z0 by (destruct z, z0; reflexivity).
-    replace (if w1 =? w0 then w1 else w0) with w0 by (destruct (w1 =? w0) eqn:H; [ symmetry; apply N.eqb_eq, H | reflexivity ]).
-    split.
-      reflexivity.
-      destruct ma2; destruct ma3.
-        assumption.
-        apply conjallT_app. assumption. split. apply conjall_iffT. assumption. exact I.
-        apply conjallT_app. assumption. split; exact I.
-        apply conjallT_app. assumption. split. apply conjall_iffT. assumption. exact I.
+      simpl in FW.
+      destruct (feval_width l e2) as [w2'|] eqn:FEW2; [|discriminate].
+      destruct (feval_width l e3) as [w3'|] eqn:FEW3; [|discriminate].
+      destruct (w2' =? w3') eqn:WEQ; [|discriminate].
+      inversion FW. subst w2'. apply N.eqb_eq in WEQ. subst w3'.
+      destruct n1; apply proj1 in IHe'; subst u.
+        eapply feval_width_sound in FEW3; [|exact E']. subst w. destruct b3; reflexivity.
+        eapply feval_width_sound in FEW2; [|exact E']. subst w. destruct b2; reflexivity.
 
-    apply IHe2 in E'. clear IHe2 IHe3. destruct E' as [unk2 E2].
-    exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
-    simpl. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
-    destruct (feval_exp _ _ _ e1 _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
-    destruct (feval_exp _ _ _ e2 _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2]. subst.
-    simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
-    destruct (feval_exp _ _ _ e3 _ _) as (u3,ma3). destruct u3.
-    replace (if Bool.eqb z0 z then z0 else z0) with z0 by (destruct Bool.eqb; reflexivity).
-    replace (if w0 =? w1 then w0 else w0) with w0 by (destruct (w0 =? w1); reflexivity).
-    split.
-      reflexivity.
-      destruct ma3; destruct ma2.
+      destruct n1; apply IHe'.
+
+    destruct ma2.
+      destruct ma3.
         assumption.
-        apply conjallT_app. assumption. split. apply conjall_iffT. assumption. exact I.
-        apply conjallT_app. assumption. split; exact I.
-        apply conjallT_app. assumption. split. apply conjall_iffT. assumption. exact I.
+        apply conjallT_app. assumption. split.
+          destruct n1. apply conjall_iffT, IHe'. exact I.
+          exact I.
+      apply conjallT_app. assumption. split.
+        destruct n1; apply conjall_iffT, IHe'.
+        exact I.
 
   (* Extract *)
   apply IHe in E1. clear IHe.
   destruct E1 as [unk1 E1].
   exists unk1.
   simpl.
-  destruct (feval_exp _ _ _ e _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
+  destruct (feval_exp _ _ _ _ e _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
   simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
   split. reflexivity. assumption.
 
   (* Concat *)
-  apply IHe1 in E1. apply IHe2 in E2. clear IHe1 IHe2.
-  destruct E1 as [unk1 E1]. destruct E2 as [unk2 E2].
+  specialize (IHe1 _ _ E1). destruct IHe1 as [unk1 IHe1].
+  specialize (IHe2 _ _ E2). destruct IHe2 as [unk2 IHe2].
   exists (fun i => match i with xO j => unk1 j | xI j => unk2 j | _ => N0 end).
-  simpl. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
-  destruct (feval_exp _ _ _ e1 _ _) as (u1,ma1). destruct u1. destruct E1 as [U1 M1].
-  destruct (feval_exp _ _ _ e2 _ _) as (u2,ma2). destruct u2. destruct E2 as [U2 M2].
+  cbn - [feval_width]. change (unknowns0 _) with unk1. change (unknowns1 _) with unk2.
+  destruct (feval_exp _ _ _ _ e1 _ _) as (u1,ma1). destruct u1. destruct IHe1 as [U1 M1].
+  destruct (feval_exp _ _ _ _ e2 _ _) as (u2,ma2). destruct u2. destruct IHe2 as [U2 M2].
   simpl in U1,U2. destruct z; destruct z0; try discriminate. injection U1; injection U2; intros; subst.
   split.
-    reflexivity.
+    destruct feval_width eqn:FW.
+      eapply feval_width_sound in FW; [|econstructor; eassumption]. subst. reflexivity.
+      reflexivity.
     apply conjallT_app; assumption.
-Qed.
-
-Lemma updlst_remlst:
-  forall v u l s, updlst s (remlst v l) vupdate [v:=u] = updlst s l vupdate [v:=u].
-Proof.
-  induction l; intros.
-    reflexivity.
-    destruct a as (v1,u1). simpl. destruct (vareq v v1).
-      subst. unfold vupdate at 2. rewrite update_cancel. reflexivity.
-      simpl. unfold vupdate at 1 3. rewrite update_swap.
-        rewrite IHl. rewrite update_swap by assumption. reflexivity.
-        intro H. apply n. symmetry. exact H.
 Qed.
 
 Theorem reduce_stmt:
@@ -634,7 +836,7 @@ Proof.
 
   (* Move *)
   eapply reduce_exp in E; [|reflexivity..]. destruct E as [unk E]. exists unk.
-  simpl. destruct (feval_exp _ _ _ _ _ _) as (u1,ma1).
+  simpl. destruct feval_exp as (u1,ma1).
   destruct E as [U1 M1]. subst.
   repeat split.
     simpl. rewrite updlst_remlst. reflexivity.
@@ -642,7 +844,7 @@ Proof.
 
   (* Jmp *)
   eapply reduce_exp in E; [|reflexivity..]. destruct E as [unk E]. exists unk.
-  simpl. destruct (feval_exp _ _ _ _ _ _) as (u1,ma1). destruct u1.
+  simpl. destruct feval_exp as (u1,ma1). destruct u1.
   destruct E as [U1 M1]. simpl in U1. destruct z; try discriminate. injection U1; intros; subst.
   repeat split. exact M1.
 
@@ -654,7 +856,7 @@ Proof.
   apply IHq1 in XS0. clear IHq1. destruct XS0 as [unk XS1].
   exists (fun i => match i with xO j => unk j | _ => N0 end).
   simpl. change (unknowns0 _) with unk.
-  destruct (fexec_stmt _ _ _ _ _ _ _) as [l1 [x1|q1'] ma1].
+  destruct fexec_stmt as [l1 [x1|q1'] ma1].
     destruct XS1 as [[S1 X1] M1]. subst. repeat split. exact M1.
     split; try apply XSeq1; apply XS1.
 
@@ -678,14 +880,14 @@ Proof.
   (* If *)
   eapply reduce_exp in E; [|reflexivity..]. destruct E as [unk E].
   exists unk. simpl.
-  destruct (feval_exp _ _ _ _) as [u ma0].
+  destruct feval_exp as [u ma0].
   destruct E as [E M]. destruct u as [z m n w]. destruct z; [|discriminate]. injection E; intros; subst.
   split; assumption.
 
   (* Rep *)
   eapply reduce_exp in E; [|reflexivity..]. destruct E as [unk E].
   exists unk. simpl.
-  destruct (feval_exp _ _ _ _) as [u ma0].
+  destruct feval_exp as [u ma0].
   destruct E as [E M]. destruct u as [z m c ?]. destruct z; [|discriminate]. injection E; intros; subst.
   split; assumption.
 Qed.

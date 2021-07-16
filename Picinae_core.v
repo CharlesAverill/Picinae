@@ -44,6 +44,7 @@ Open Scope N.
    henceforth refer to instances of types that instantiate the typeclass
    as "equal" without explicitly supplying the equality decision procedure. *)
 Class EqDec A : Type := { iseq: forall (a b:A), {a=b}+{a<>b} }.
+Arguments iseq {A EqDec} a b : simpl never.
 Instance NEqDec : EqDec N := { iseq := N.eq_dec }.
 Notation "x == y" := (iseq x y) (at level 70, no associativity).
 

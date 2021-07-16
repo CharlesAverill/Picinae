@@ -634,6 +634,37 @@ Proof.
         apply IHlen.
 Qed.
 
+Theorem getmem_mod:
+  forall n2 n1 m a (WTM: welltyped_memory m),
+  (getmem LittleE n1 m a) mod 2^(Mb*n2) = getmem LittleE (N.min n1 n2) m a.
+Proof.
+  intros. destruct (N.le_ge_cases n1 n2).
+
+    rewrite N.min_l by assumption. apply N.mod_small. eapply N.lt_le_trans.
+      apply getmem_bound, WTM.
+      apply N.pow_le_mono_r. discriminate. apply N.mul_le_mono_l. assumption.
+
+    rewrite N.min_r, <- (N.add_sub n1 n2), N.add_comm, <- N.add_sub_assoc by assumption.
+    rewrite PTheory.getmem_split, <- N.land_ones, N.land_lor_distr_l, 2!N.land_ones, N.shiftl_mul_pow2.
+    rewrite N.mod_mul, N.lor_0_r by (apply N.pow_nonzero; discriminate).
+    apply N.mod_small, getmem_bound, WTM.
+Qed.
+
+Theorem shiftr_getmem:
+  forall n2 n1 m a (WTM: welltyped_memory m),
+  N.shiftr (getmem LittleE n1 m a) (Mb*n2) = getmem LittleE (n1-n2) m (a+n2).
+Proof.
+  intros. destruct (N.le_ge_cases n1 n2).
+
+    rewrite (proj2 (N.sub_0_le _ _)), PTheory.getmem_0 by assumption. eapply shiftr_low_pow2, N.lt_le_trans.
+      apply getmem_bound, WTM.
+      apply N.pow_le_mono_r. discriminate. apply N.mul_le_mono_l. assumption.
+
+    rewrite <- (N.add_sub n1 n2) at 1. rewrite N.add_comm, <- N.add_sub_assoc, PTheory.getmem_split by assumption.
+    rewrite N.shiftr_lor, N.shiftr_shiftl_r, N.sub_diag, N.shiftr_0_r by apply N.le_refl.
+    rewrite shiftr_low_pow2 by apply getmem_bound, WTM. reflexivity.
+Qed.
+
 Theorem typesafe_getmem:
   forall mw len m a e (TV: hastyp_val (VaM m mw) (MemT mw)),
   hastyp_val (VaN (getmem e len m a) (Mb*len)) (NumT (Mb*len)).
@@ -1159,7 +1190,7 @@ Proof.
   destruct (typchk_exp e1 c) as [t1|]; [destruct t1|]; try discriminate.
   destruct (typchk_exp e2 c) as [t2|]; [|discriminate].
   destruct (typchk_exp e3 c) as [t3|]; [|discriminate].
-  destruct (typ_eqdec t2 t3); [|discriminate].
+  destruct (t2 == t3); [|discriminate].
   injection H; intro; subst.
   eapply TIte.
     apply IHe1. reflexivity.
@@ -1227,7 +1258,7 @@ Proof.
   (* Move *)
   destruct (typchk_exp e c) as [t|]; [|discriminate].
   destruct (c0 v) as [t'|] eqn:C0V.
-    destruct (typ_eqdec t t').
+    destruct (t == t').
       injection TS; intro; subst. intros v0 t0 H. destruct (v0 == v).
         subst v0. rewrite update_updated, <- C0V, <- H. reflexivity.
         rewrite update_frame by assumption. apply SS, H.
@@ -1276,7 +1307,7 @@ Proof.
 
   (* Move *)
   destruct (typchk_exp e c) eqn:TE; [|discriminate].
-  destruct (c0 v) eqn:C0V; [destruct (typ_eqdec t _)|];
+  destruct (c0 v) eqn:C0V; [destruct (t == _)|];
   try (injection TS; clear TS; intro); subst;
   first [ discriminate | eapply TMove; [| |reflexivity] ].
     right. exact C0V. apply typchk_exp_sound. exact TE.

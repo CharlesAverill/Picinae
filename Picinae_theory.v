@@ -54,10 +54,13 @@ Proof.
 Qed.
 
 Ltac vreflexivity v :=
-  let Hveq := fresh "H" v "eq" in let H := fresh in
-  destruct (iseq_refl v) as [Hveq H];
-  rewrite H in *;
-  clear H; try clear Hveq.
+  let H := fresh in
+  let t Hveq :=
+    destruct (iseq_refl v) as [Hveq H];
+    rewrite H in *;
+    clear H; try clear Hveq
+  in first [ let Hveq := fresh "H" v "eq" in t Hveq
+           | let Hveq := fresh "Heq" in t Hveq ].
 
 (* Tactic "vantisym v1 v2" reduces "v1==v2" to false (actually "right _")
    and introduces a subgoal of "v1<>v2". *)
@@ -69,12 +72,20 @@ Proof.
     eexists. reflexivity.
 Qed.
 
-Ltac vantisym v1 v2 :=
-  let H1 := fresh in let Hv1v2 := fresh "H" v1 v2 in let H2 := fresh in
-  enough (H1: v1 <> v2);
-  [ destruct (iseq_antisym v1 v2 H1) as [Hv1v2 H2];
-    rewrite H2 in *;
-    clear H1 H2; try clear Hv1v2 |].
+Tactic Notation "vantisym" constr(v1) constr(v2) :=
+  let H1 := fresh in let H2 := fresh in
+  let t Hv1v2 :=
+    enough (H1: v1 <> v2);
+    [ destruct (iseq_antisym v1 v2 H1) as [Hv1v2 H2];
+      rewrite H2 in *;
+      clear H1 H2; try clear Hv1v2 |]
+  in first [ let Hv1v2 := fresh "H" v1 v2 in t Hv1v2
+           | let Hv1 := fresh "H" v1 in t Hv1
+           | let Hv2 := fresh "H" v2 in t Hv2
+           | let H := fresh in t H ].
+
+Tactic Notation "vantisym" constr(v1) constr(v2) "by" tactic(T) :=
+  vantisym v1 v2; [|solve T].
 
 
 (* Define the partial order of A-to-B partial functions ordered by subset. *)
@@ -1930,6 +1941,62 @@ End TwosComplement.
 
 
 
+Section BitOps.
+
+Definition bitop_has_spec f g := forall a a' n, N.testbit (f a a') n = g (N.testbit a n) (N.testbit a' n).
+
+Theorem bitop_mod_pow2:
+  forall f g (SPEC: bitop_has_spec f g) (PZ: g false false = false),
+  forall n1 n2 p, f n1 n2 mod 2^p = f (n1 mod 2^p) (n2 mod 2^p).
+Proof.
+  intros. rewrite <- !N.land_ones. apply N.bits_inj. intro i. rewrite N.land_spec, !SPEC, !N.land_spec.
+  destruct (N.le_gt_cases p i).
+    rewrite N.ones_spec_high, !Bool.andb_false_r by assumption. symmetry. apply PZ.
+    rewrite N.ones_spec_low, !Bool.andb_true_r by assumption. reflexivity.
+Qed.
+
+Definition N_land_mod_pow2 := bitop_mod_pow2 N.land andb N.land_spec (eq_refl false).
+Definition N_lor_mod_pow2 := bitop_mod_pow2 N.lor orb N.lor_spec (eq_refl false).
+Definition N_lxor_mod_pow2 := bitop_mod_pow2 N.lxor xorb N.lxor_spec (eq_refl false).
+
+Theorem N_mod_mod_pow2_min:
+  forall n p1 p2, (n mod 2^p1) mod 2^p2 = n mod 2^N.min p1 p2.
+Proof.
+  intros. rewrite <- 2!N.land_ones, <- N.land_assoc, N.land_ones. destruct (N.le_gt_cases p2 p1).
+    rewrite N.ones_mod_pow2, N.min_r by assumption. apply N.land_ones.
+    rewrite N.min_l, N.mod_small. apply N.land_ones.
+      rewrite N.ones_equiv. apply N.lt_lt_pred, N.pow_lt_mono_r. reflexivity. assumption.
+      apply N.lt_le_incl, H.
+Qed.
+
+Theorem N_land_mod_pow2_move:
+  forall p x y, N.land (x mod 2^p) y = N.land x (y mod 2^p).
+Proof.
+  intros.
+  rewrite <- N.land_ones, <- N.land_assoc, (N.land_comm _ y), N.land_ones.
+  reflexivity.
+Qed.
+
+Theorem N_land_mod_pow2_moveout:
+  forall p x y, N.land x (y mod 2^p) = (N.land x y) mod 2^p.
+Proof.
+  intros.
+  rewrite N.land_comm, <- N.mod_mod, N_land_mod_pow2_move, N.land_comm by (apply N.pow_nonzero; discriminate).
+  symmetry. apply N_land_mod_pow2.
+Qed.
+
+Theorem land_mod_min:
+  forall p x y, N.land x (y mod 2^p) = N.land (x mod 2^(N.min (N.size y) p)) y.
+Proof.
+  intros.
+  rewrite <- (N.mod_small y (2^N.size y)) at 1 by apply N.size_gt.
+  rewrite N_mod_mod_pow2_min.
+  symmetry. apply N_land_mod_pow2_move.
+Qed.
+
+End BitOps.
+
+
 Section NInduction.
 
 (* Analogues of theorems about Pos.iter, but for N.iter. *)
@@ -2196,6 +2263,12 @@ Proof.
   intros. apply getmem_frame. intros. apply setmem_frame_high. etransitivity.
     apply LT.
     apply H.
+Qed.
+
+Lemma shiftr_low_pow2: forall a n, a < 2^n -> N.shiftr a n = 0.
+Proof.
+  intros. destruct a. apply N.shiftr_0_l.
+  apply N.shiftr_eq_0. apply N.log2_lt_pow2. reflexivity. assumption.
 Qed.
 
 End StoreTheory.
