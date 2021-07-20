@@ -1,7 +1,6 @@
 Require Import Picinae_i386.
 Require Import NArith.
 Open Scope N.
-Open Scope stmt_scope.
 
 Definition strlen_i386 : program := fun _ a => match a with
 

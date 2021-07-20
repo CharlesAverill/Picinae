@@ -286,6 +286,12 @@ Ltac arm7_step :=
   first [ arm7_invseek; try arm7_invhere | arm7_invhere ].
 
 
+Declare Scope arm7_scope.
+Delimit Scope arm7_scope with arm7.
+Bind Scope arm7_scope with stmt exp typ.
+Open Scope arm7_scope.
+Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : arm7_scope.
+
 Module ARM7Notations.
 
 Notation "Ⓜ m" := (VaM m 32) (at level 20). (* memory value *)
@@ -296,18 +302,18 @@ Notation "Ⓓ u" := (VaN u 32) (at level 20). (* dword value *)
 Notation "Ⓠ u" := (VaN u 64) (at level 20). (* quad word value *)
 Notation "Ⓧ u" := (VaN u 128) (at level 20). (* xmm value *)
 Notation "Ⓨ u" := (VaN u 256) (at level 20). (* ymm value *)
-Notation "m Ⓑ[ a  ]" := (getmem LittleE 1 m a) (at level 10). (* read byte from memory *)
-Notation "m Ⓦ[ a  ]" := (getmem LittleE 2 m a) (at level 10). (* read word from memory *)
-Notation "m Ⓓ[ a  ]" := (getmem LittleE 4 m a) (at level 10). (* read dword from memory *)
-Notation "m Ⓠ[ a  ]" := (getmem LittleE 8 m a) (at level 10). (* read quad word from memory *)
-Notation "m Ⓧ[ a  ]" := (getmem LittleE 16 m a) (at level 10). (* read xmm from memory *)
-Notation "m Ⓨ[ a  ]" := (getmem LittleE 32 m a) (at level 10). (* read ymm from memory *)
-Notation "m [Ⓑ a := v  ]" := (setmem LittleE 1 m a v) (at level 50, left associativity). (* write byte to memory *)
-Notation "m [Ⓦ a := v  ]" := (setmem LittleE 2 m a v) (at level 50, left associativity). (* write word to memory *)
-Notation "m [Ⓓ a := v  ]" := (setmem LittleE 4 m a v) (at level 50, left associativity). (* write dword to memory *)
-Notation "m [Ⓠ a := v  ]" := (setmem LittleE 8 m a v) (at level 50, left associativity). (* write quad word to memory *)
-Notation "m [Ⓧ a := v  ]" := (setmem LittleE 16 m a v) (at level 50, left associativity). (* write xmm to memory *)
-Notation "m [Ⓨ a := v  ]" := (setmem LittleE 32 m a v) (at level 50, left associativity). (* write ymm to memory *)
+Notation "m Ⓑ[ a  ]" := (getmem LittleE 1 m a) (at level 10) : arm7_scope. (* read byte from memory *)
+Notation "m Ⓦ[ a  ]" := (getmem LittleE 2 m a) (at level 10) : arm7_scope. (* read word from memory *)
+Notation "m Ⓓ[ a  ]" := (getmem LittleE 4 m a) (at level 10) : arm7_scope. (* read dword from memory *)
+Notation "m Ⓠ[ a  ]" := (getmem LittleE 8 m a) (at level 10) : arm7_scope. (* read quad word from memory *)
+Notation "m Ⓧ[ a  ]" := (getmem LittleE 16 m a) (at level 10) : arm7_scope. (* read xmm from memory *)
+Notation "m Ⓨ[ a  ]" := (getmem LittleE 32 m a) (at level 10) : arm7_scope. (* read ymm from memory *)
+Notation "m [Ⓑ a := v  ]" := (setmem LittleE 1 m a v) (at level 50, left associativity) : arm7_scope. (* write byte to memory *)
+Notation "m [Ⓦ a := v  ]" := (setmem LittleE 2 m a v) (at level 50, left associativity) : arm7_scope. (* write word to memory *)
+Notation "m [Ⓓ a := v  ]" := (setmem LittleE 4 m a v) (at level 50, left associativity) : arm7_scope. (* write dword to memory *)
+Notation "m [Ⓠ a := v  ]" := (setmem LittleE 8 m a v) (at level 50, left associativity) : arm7_scope. (* write quad word to memory *)
+Notation "m [Ⓧ a := v  ]" := (setmem LittleE 16 m a v) (at level 50, left associativity) : arm7_scope. (* write xmm to memory *)
+Notation "m [Ⓨ a := v  ]" := (setmem LittleE 32 m a v) (at level 50, left associativity) : arm7_scope. (* write ymm to memory *)
 Notation "x ⊕ y" := ((x+y) mod 2^32) (at level 50, left associativity). (* modular addition *)
 Notation "x ⊖ y" := ((x-y) mod 2^32) (at level 50, left associativity). (* modular subtraction *)
 Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* modular multiplication *)

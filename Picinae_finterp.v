@@ -188,14 +188,12 @@ Definition parity8 n :=
 (* Functional interpretation of expressions and statements entails instantiating
    a functor that accepts the architecture-specific IL syntax and semantics. *)
 
-Module Type PICINAE_FINTERP (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL).
+Module Type PICINAE_FINTERP_DEFS (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL).
 
 Import IL.
-Module PTheory := PicinaeTheory IL.
-Import PTheory.
 Import TIL.
 
-Local Definition vupdate := @update var value VarEqDec.
+Definition vupdate := @update var value VarEqDec.
 
 (* Memory access propositions resulting from functional interpretation are
    encoded as (MemAcc (mem_readable|mem_writable) heap store addr length). *)
@@ -265,18 +263,6 @@ Definition noe_typop op : noe_typop_typsig op :=
   | NOE_MAR => MemAcc mem_readable
   | NOE_MAW => MemAcc mem_writable
   end.
-
-(* Implementation note:  The following tactic uses "rewrite" with a list of
-   lemmas rather than using autorewrite or rewrite_strat because the former
-   currently seems to be the fastest method (tested with Coq 8.8.2). *)
-
-Ltac rewrite_finterp_funcs_in H :=
-  cbn beta match delta [ vtyp vnum vmem vwidth ] in H;
-  rewrite ?fold_vget in H.
-
-Ltac rewrite_finterp_funcs :=
-  cbn beta match delta [ vtyp vnum vmem vwidth ];
-  rewrite ?fold_vget.
 
 (* Decide whether an expression e's type is statically known given a list l of
    variables and their values, and return its bitwidth if so.  When e's result
@@ -483,11 +469,334 @@ Definition fexec_stmt (noe:forall op, noe_setop_typsig op) (noet:forall op, noe_
       end
   end.
 
+Definition list_union {A} (eqb: A -> A -> bool) (l1 l2: list A) :=
+  List.fold_left (fun l x => if existsb (eqb x) l2 then l else (x::l)) l1 l2.
 
-(* Now we prove that the functional interpreter obeys the operational semantics.
-   The proved theorems can be used as tactics that convert eval_exp and exec_stmt
-   propositions to feval_exp and fexec_stmt functions that can be evaluated using
-   vm_compute or other reduction tactics. *)
+Fixpoint vars_read_by_exp e :=
+  match e with 
+  | Var v => v::nil
+  | Word _ _ | Unknown _ => nil
+  | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => vars_read_by_exp e1
+  | Load e1 e2 _ _ | BinOp _ e1 e2 | Concat e1 e2 => list_union vareqb (vars_read_by_exp e1) (vars_read_by_exp e2)
+  | Store e1 e2 e3 _ _ | Ite e1 e2 e3 => list_union vareqb (list_union vareqb (vars_read_by_exp e1) (vars_read_by_exp e2)) (vars_read_by_exp e3)
+  | Let v e1 e2 => list_union vareqb (vars_read_by_exp e1) (List.remove vareq v (vars_read_by_exp e2))
+  end.
+
+Fixpoint noassignb q v :=
+  match q with
+  | Nop | Jmp _ | Exn _ => true
+  | Move v0 _ => if vareq v0 v then false else true
+  | Seq q1 q2 | If _ q1 q2 => andb (noassignb q1 v) (noassignb q2 v)
+  | Rep _ q1 => noassignb q1 v
+  end.
+
+Fixpoint vars_read_by_stmt q :=
+  match q with
+  | Nop | Exn _ => nil
+  | Move _ e | Jmp e => vars_read_by_exp e
+  | Seq q1 q2 => list_union vareqb (vars_read_by_stmt q1) (List.filter (noassignb q1) (vars_read_by_stmt q2))
+  | If e q1 q2 => list_union vareqb (vars_read_by_exp e) (list_union vareqb (vars_read_by_stmt q1) (vars_read_by_stmt q2))
+  | Rep e q1 => list_union vareqb (vars_read_by_exp e) (vars_read_by_stmt q1)
+  end.
+
+Definition other_vars_read (l: list (var * value)) q :=
+  let old := List.map fst l in
+  List.filter (fun v => negb (existsb (vareqb v) old)) (vars_read_by_stmt q).
+
+End PICINAE_FINTERP_DEFS.
+
+
+
+Module Type PICINAE_FINTERP (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL).
+
+Import IL.
+Import TIL.
+Include PICINAE_FINTERP_DEFS IL TIL.
+
+Ltac rewrite_finterp_funcs_in H :=
+  cbn beta match delta [ vtyp vnum vmem vwidth ] in H;
+  rewrite ?fold_vget in H.
+
+Ltac rewrite_finterp_funcs :=
+  cbn beta match delta [ vtyp vnum vmem vwidth ];
+  rewrite ?fold_vget.
+
+(* Using the functional interpreter, we now define a set of tactics that reduce
+   expressions to values, and statements to stores & exits.  These tactics are
+   carefully implemented to avoid simplifying anything other than the machinery
+   of the functional interpreter, so that Coq does not spin out of control
+   attempting to execute the entire program.  Our objective is to infer a
+   reasonably small, well-formed symbolic expression that captures the result
+   of executing each assembly instruction.  This result can be further reduced
+   by the user (e.g., using "psimpl") if desired. *)
+
+(* Statement simplification most often gets stuck at variable-reads, since the
+   full content of the store is generally not known (s is a symbolic expression).
+   We can often push past this obstacle by applying the update_updated and
+   update_frame theorems to automatically infer that the values of variables not
+   being read are irrelevant.  The "simpl_stores" tactic does so. *)
+
+Parameter if_N_same: forall A (n:N) (a:A), (if n then a else a) = a.
+
+Ltac simpl_stores :=
+  repeat first [ rewrite update_updated | rewrite update_frame; [|discriminate 1] ];
+  repeat rewrite if_N_same;
+  repeat match goal with |- context [ update ?S ?V ?U ] =>
+    match S with context c [ update ?T V _ ] => let r := context c[T] in
+      replace (update S V U) with (update r V U) by
+        (symmetry; repeat apply update_inner_same; apply update_cancel)
+    end
+  end.
+
+Tactic Notation "simpl_stores" "in" hyp(H) :=
+  repeat lazymatch type of H with context [ update _ ?v _ ?v ] => rewrite update_updated in H
+                                | context [ update _ _ _ _ ] => rewrite update_frame in H; [|discriminate 1] end;
+  repeat rewrite if_N_same in H;
+  repeat match type of H with context [ update ?S ?V ?U ] =>
+    match S with context c [ update ?T V _ ] => let r := context c[T] in
+      replace (update S V U) with (update r V U) in H by
+        (symmetry; repeat apply update_inner_same; apply update_cancel)
+    end
+  end.
+
+(* To facilitate expression simplification, it is often convenient to first
+   consolidate all information about known variable values into the expression
+   to be simplified.  The "stock_store" tactic searches the proof context for
+   hypotheses of the form "s var = value", where "var" is some variable
+   appearing in the expression to be reduced and "s" is the store, and adds
+   "s[var:=value]" to the expression.  If no such hypothesis is found for var,
+   it next looks for "models c s" where c is a typing context that assigns a
+   type to var.  If such a hypothesis exists, it creates a fresh name for the
+   value of var with the correct type.
+
+   Note: "stock_store" is no longer called by the functional interpreter.  The
+   interpreter now performs this task as part of populate_varlist, which is
+   faster.  However, we keep stock_store available in stand-alone form in case
+   the user wants to consolidate store info manually. *)
+
+Parameter models_val:
+  forall v s t (TV: hastyp_val (s v) t),
+  match t with
+  | NumT w => exists n, s = s [v := VaN n w]
+  | MemT w => exists m, s = s [v := VaM m w]
+  end.
+
+Ltac stock_store :=
+  lazymatch goal with |- exec_stmt _ _ ?q _ _ => repeat
+    match q with context [ Var ?v ] =>
+      lazymatch goal with |- exec_stmt _ ?s _ _ _ =>
+        lazymatch s with context [ update _ v _ ] => fail | _ => first
+        [ erewrite (store_upd_eq s v) by (simpl_stores; eassumption)
+        | match goal with [ MDL: models ?c _ |- _ ] => let H := fresh in
+            lazymatch eval hnf in (c v) with
+            | Some (NumT ?w) => destruct (models_val v s (NumT w)) as [?n H]
+            | Some (MemT ?w) => destruct (models_val v s (MemT w)) as [?m H]
+            end;
+            [ solve [ simpl_stores; apply MDL; reflexivity ]
+            | rewrite H; clear H ]
+          end ]
+        end
+      end
+    end
+  | _ => fail "Goal is not of the form (exec_stmt ...)"
+  end.
+
+Tactic Notation "stock_store" "in" hyp(XS) :=
+  lazymatch type of XS with exec_stmt _ _ ?q _ _ => repeat
+    match q with context [ Var ?v ] =>
+      lazymatch type of XS with exec_stmt _ ?s _ _ _ =>
+        lazymatch s with context [ update _ v _ ] => fail | _ => first
+        [ erewrite (store_upd_eq s v) in XS by (simpl_stores; eassumption)
+        | match goal with [ MDL: models ?c _ |- _ ] => let H := fresh in
+            lazymatch eval hnf in (c v) with
+            | Some (NumT ?w) => destruct (models_val v s (NumT w)) as [?n H]
+            | Some (MemT ?w) => destruct (models_val v s (MemT w)) as [?m H]
+            end;
+            [ solve [ simpl_stores; apply MDL; reflexivity ]
+            | rewrite H in XS; clear H ]
+          end ]
+        end
+      end
+    end
+  | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
+  end.
+
+(* To prevent vm_compute from expanding symbolic expressions that the user
+   already has in a desired form, the following lemmas introduce symbolic
+   constants for those expressions and sets them equal to the original terms.
+   The "destruct" tactic can then be used to separate those terms out into
+   a different hypothesis to which vm_compute is not applied, and then use
+   "subst" to substitute them back into the evaluated term after vm_compute
+   is done. *)
+
+(* Prepare an exec_stmt hypothesis for the symbolic interpreter by converting
+   its store argument s into an expression of the form (updlst s0 l), where
+   s0 is a store expression and l is a list of variable-value pairs. By passing
+   list l directly to the interpreter as a functional input, it can reduce many
+   variables to values without consulting the proof context (which it cannot
+   access programmatically) and without risking uncontrolled expansion of the
+   potentially complex original store expression s.  Members of list l can come
+   from three potential sources of information:
+
+   (1) If s has the form "s0[v1:=u1]...[vn:=un]", then (v1,u1),...,(vn,un) are
+       added to list l and s is reduced to s0.
+
+   (2) For each hypothesis of the form "s0 v = u", pair (v,u) is added to l.
+
+   (3) For any remaining variable v read by the statement being interpreted
+       whose value cannot be inferred by the above, if there is a hypothesis of
+       the form "models c s0" and typing context c assigns a type to v, then a
+       fresh proof variable is introduced for the value of v having appropriate
+       IL-type.  This allows the interpreter to at least infer the type of v
+       (including, most importantly, its bitwidth), which typically yields a
+       symbolic expression that is much simpler because it doesn't need to
+       generalize over bitwidths. *)
+
+Parameter fexec_stmt_init:
+  forall {EQT} (eq1 eq2:EQT) h s q s' x (XS: exec_stmt h s q s' x),
+  eq1=eq2 -> exec_stmt h (updlst s (rev nil) vupdate) q s' x /\ (eq1=eq2).
+
+Parameter fexec_stmt_fin:
+  forall a_h a_s a_s' a_x h s l q s' x, 
+  exec_stmt h (updlst s l vupdate) q s' x /\ (a_h,a_s,a_s',a_x)=(h,s,s',x) ->
+  exec_stmt a_h (updlst a_s l vupdate) q a_s' a_x.
+
+Parameter fexec_stmt_updn:
+  forall {EQT} a (eq1 eq2:EQT) h s v n w l q s' x,
+  exec_stmt h (updlst (vupdate s v (VaN n w)) (rev l) vupdate) q s' x /\ (eq1,a)=(eq2,n) ->
+  exec_stmt h (updlst s (rev ((v, VaN a w)::l)) vupdate) q s' x /\ eq1=eq2.
+
+Parameter fexec_stmt_updm:
+  forall {EQT} a (eq1 eq2:EQT) h s v m w l q s' x,
+  exec_stmt h (updlst (vupdate s v (VaM m w)) (rev l) vupdate) q s' x /\ (eq1,a)=(eq2,m) ->
+  exec_stmt h (updlst s (rev ((v, VaM a w)::l)) vupdate) q s' x /\ eq1=eq2.
+
+Parameter fexec_stmt_updu:
+  forall {EQT} a (eq1 eq2:EQT) h s v u l q s' x,
+  exec_stmt h (updlst (vupdate s v u) (rev l) vupdate) q s' x /\ (eq1,a)=(eq2,u) ->
+  exec_stmt h (updlst s (rev ((v,u)::l)) vupdate) q s' x /\ eq1=eq2.
+
+Parameter fexec_stmt_hypn:
+  forall {EQT} a (eq1 eq2:EQT) h s v n w l q s' x (SV: s v = VaN n w),
+  exec_stmt h (updlst s (rev l) vupdate) q s' x /\ (eq1,a)=(eq2,n) ->
+  exec_stmt h (updlst s (rev ((v, VaN a w)::l)) vupdate) q s' x /\ eq1=eq2.
+
+Parameter fexec_stmt_hypm:
+  forall {EQT} a (eq1 eq2:EQT) h s v m w l q s' x (SV: s v = VaM m w),
+  exec_stmt h (updlst s (rev l) vupdate) q s' x /\ (eq1,a)=(eq2,m) ->
+  exec_stmt h (updlst s (rev ((v, VaM a w)::l)) vupdate) q s' x /\ eq1=eq2.
+
+Parameter fexec_stmt_hypu:
+  forall {EQT} a (eq1 eq2:EQT) h s v u l q s' x (SV: s v = u),
+  exec_stmt h (updlst s (rev l) vupdate) q s' x /\ (eq1,a)=(eq2,u) ->
+  exec_stmt h (updlst s (rev ((v,u)::l)) vupdate) q s' x /\ eq1=eq2.
+
+Parameter fexec_stmt_typ:
+  forall h c s v t l q s' x EQs (MDL: models c s) (CV: c v = Some t),
+  exec_stmt h (updlst s (rev l) vupdate) q s' x /\ EQs ->
+  match t with NumT w => exists a, s v = VaN a w /\ exec_stmt h (updlst s (rev ((v, VaN a w)::l)) vupdate) q s' x /\ EQs
+             | MemT w => exists a, s v = VaM a w /\ exec_stmt h (updlst s (rev ((v, VaM a w)::l)) vupdate) q s' x /\ EQs
+  end.
+
+Ltac tacmap T l :=
+  match l with nil => idtac | ?h::?t => T h; tacmap T t end.
+
+Ltac populate_varlist XS :=
+  eapply fexec_stmt_init in XS; [
+  repeat lazymatch type of XS with
+  | exec_stmt _ (updlst (update _ _ (VaN _ _)) (rev _) vupdate) _ _ _ /\ _ =>
+      eapply fexec_stmt_updn in XS
+  | exec_stmt _ (updlst (update _ _ (VaM _ _)) (rev _) vupdate) _ _ _ /\ _ =>
+      eapply fexec_stmt_updm in XS
+  | exec_stmt _ (updlst (update _ _ _) (rev _) vupdate) _ _ _ /\ _ =>
+      eapply fexec_stmt_updu in XS
+  end;
+  lazymatch type of XS with exec_stmt ?h (updlst ?s (rev ?l) vupdate) ?q ?s' ?x /\ _ =>
+    let vs := (eval compute in (other_vars_read l q)) in
+    tacmap ltac:(fun v =>
+      try match goal with
+      | [ SV: s v = VaN ?n ?w |- _ ] =>
+          eapply (fexec_stmt_hypn _ _ _ h s v n w _ q s' x SV) in XS
+      | [ SV: s v = VaM ?m ?w |- _ ] =>
+          eapply (fexec_stmt_hypm _ _ _ h s v m w _ q s' x SV) in XS
+      | [ MDL: models ?c s |- _ ] =>
+          lazymatch eval hnf in (c v) with Some ?t =>
+            apply (fexec_stmt_typ h c s v t _ q s' x _ MDL (eq_refl _)) in XS;
+            let _a := match t with NumT _ => fresh "n" | MemT _ => fresh "m" end in
+            let H := fresh "Hsv" in
+              destruct XS as [_a [H XS]]
+          end
+      end) vs
+  end;
+  eapply fexec_stmt_fin in XS |].
+
+(* The main theorem proves that the functional interpreter obeys the operational
+   semantics.  Tactics apply this to convert eval_exp and exec_stmt propositions
+   to feval_exp and fexec_stmt functions that can be evaluated using vm_compute
+   or other reduction tactics. *)
+
+Parameter reduce_stmt:
+  forall noe noet s l q h s' x (XS: exec_stmt h (updlst s l vupdate) q s' x)
+         (NOE: noe = noe_setop) (NOET: noet = noe_typop),
+  exists unk, match fexec_stmt noe noet h q s unk l with
+              | FIS l' (FIExit x') ma => (s' = updlst s l' (noet NOE_UPD) /\ x = x') /\ conjallT ma
+              | FIS l' (FIStmt q') ma => exec_stmt h (updlst s l' (noet NOE_UPD)) q' s' x /\ conjallT ma
+              end.
+
+(* Finally, simplifying a hypothesis H of the form (exec_stmt ...) entails first
+   removing any user-supplied expressions in H that we don't want expanded, then
+   applying the reduce_stmt theorem to convert it into an fexec_stmt expression,
+   launching vm_compute on it, then abstracting any unknowns as unique proof
+   context variables, and finally substituting any removed or opaque expressions
+   back into the evaluated expression. *)
+
+Ltac step_stmt XS :=
+  lazymatch type of XS with exec_stmt _ _ _ _ _ =>
+    populate_varlist XS;
+    [ eapply reduce_stmt in XS;
+      [ let unk := fresh "unknown" in (
+          destruct XS as [unk XS];
+          compute in XS;
+          repeat match type of XS with context [ unk ?i ] =>
+            let u := fresh "u" in set (u:=unk i) in XS; clearbody u
+          end;
+          try clear unk
+        )
+      | reflexivity | reflexivity ];
+      cbv beta match delta [ noe_setop noe_typop ] in XS;
+      rewrite_finterp_funcs_in XS
+    | reflexivity ]
+  | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
+  end.
+
+
+(* We can then break the memory access part of XS resulting from step_stmt into
+   separate hypotheses.  This is provided as a separate tactic because often
+   the user may want to perform some sort of simplification before splitting. *)
+
+Ltac destruct_memaccs XS :=
+  let ACCs := fresh "ACCs" in
+    destruct XS as [XS ACCs];
+    repeat lazymatch type of ACCs with
+    | ?H1 /\ _ =>
+        lazymatch goal with [ H0:H1 |- _ ] => apply proj2 in ACCs
+        | _ => let ACC := fresh "ACC" in destruct ACCs as [ACC ACCs]
+        end
+    | True => clear ACCs
+    | _ => let ACC := fresh "ACC" in rename ACCs into ACC
+    end.
+
+End PICINAE_FINTERP.
+
+
+
+Module PicinaeFInterp (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) : PICINAE_FINTERP IL TIL.
+
+Import IL.
+Import TIL.
+Module PTheory := PicinaeTheory IL.
+Import PTheory.
+Include PICINAE_FINTERP_DEFS IL TIL.
 
 Lemma updlst_remlst:
   forall v u l s, updlst s (remlst v l) vupdate [v:=u] = updlst s l vupdate [v:=u].
@@ -901,61 +1210,8 @@ Proof.
     simpl. rewrite IHl'. reflexivity.
 Qed.
 
-
-(* Using the functional interpreter, we now define a set of tactics that reduce
-   expressions to values, and statements to stores & exits.  These tactics are
-   carefully implemented to avoid simplifying anything other than the machinery
-   of the functional interpreter, so that Coq does not spin out of control
-   attempting to execute the entire program.  Our objective is to infer a
-   reasonably small, well-formed symbolic expression that captures the result
-   of executing each assembly instruction.  This result can be further reduced
-   by the user (e.g., using "simpl") if desired. *)
-
-(* Statement simplification most often gets stuck at variable-reads, since the
-   full content of the store is generally not known (s is a symbolic expression).
-   We can often push past this obstacle by applying the update_updated and
-   update_frame theorems to automatically infer that the values of variables not
-   being read are irrelevant.  The "simpl_stores" tactic does so. *)
-
-Remark if_N_same: forall A (n:N) (a:A), (if n then a else a) = a.
+Theorem if_N_same: forall A (n:N) (a:A), (if n then a else a) = a.
 Proof. intros. destruct n; reflexivity. Qed.
-
-Ltac simpl_stores :=
-  repeat first [ rewrite update_updated | rewrite update_frame; [|discriminate 1] ];
-  repeat rewrite if_N_same;
-  repeat match goal with |- context [ update ?S ?V ?U ] =>
-    match S with context c [ update ?T V _ ] => let r := context c[T] in
-      replace (update S V U) with (update r V U) by
-        (symmetry; repeat apply update_inner_same; apply update_cancel)
-    end
-  end.
-
-Tactic Notation "simpl_stores" "in" hyp(H) :=
-  repeat lazymatch type of H with context [ update _ ?v _ ?v ] => rewrite update_updated in H
-                                | context [ update _ _ _ _ ] => rewrite update_frame in H; [|discriminate 1] end;
-  repeat rewrite if_N_same in H;
-  repeat match type of H with context [ update ?S ?V ?U ] =>
-    match S with context c [ update ?T V _ ] => let r := context c[T] in
-      replace (update S V U) with (update r V U) in H by
-        (symmetry; repeat apply update_inner_same; apply update_cancel)
-    end
-  end.
-
-
-(* To facilitate expression simplification, it is often convenient to first
-   consolidate all information about known variable values into the expression
-   to be simplified.  The "stock_store" tactic searches the proof context for
-   hypotheses of the form "s var = value", where "var" is some variable
-   appearing in the expression to be reduced and "s" is the store, and adds
-   "s[var:=value]" to the expression.  If no such hypothesis is found for var,
-   it next looks for "models c s" where c is a typing context that assigns a
-   type to var.  If such a hypothesis exists, it creates a fresh name for the
-   value of var with the correct type.
-
-   Note: "stock_store" is no longer called by the functional interpreter.  The
-   interpreter now performs this task as part of populate_varlist, which is
-   faster.  However, we keep stock_store available in stand-alone form in case
-   the user wants to consolidate store info manually. *)
 
 Theorem models_val:
   forall v s t (TV: hastyp_val (s v) t),
@@ -967,55 +1223,6 @@ Proof.
   intros. destruct t; inversion TV; subst;
   eexists; apply store_upd_eq; symmetry; eassumption.
 Qed.
-
-Ltac stock_store :=
-  lazymatch goal with |- exec_stmt _ _ ?q _ _ => repeat
-    match q with context [ Var ?v ] =>
-      lazymatch goal with |- exec_stmt _ ?s _ _ _ =>
-        lazymatch s with context [ update _ v _ ] => fail | _ => first
-        [ erewrite (store_upd_eq s v) by (simpl_stores; eassumption)
-        | match goal with [ MDL: models ?c _ |- _ ] => let H := fresh in
-            lazymatch eval hnf in (c v) with
-            | Some (NumT ?w) => destruct (models_val v s (NumT w)) as [?n H]
-            | Some (MemT ?w) => destruct (models_val v s (MemT w)) as [?m H]
-            end;
-            [ solve [ simpl_stores; apply MDL; reflexivity ]
-            | rewrite H; clear H ]
-          end ]
-        end
-      end
-    end
-  | _ => fail "Goal is not of the form (exec_stmt ...)"
-  end.
-
-Tactic Notation "stock_store" "in" hyp(XS) :=
-  lazymatch type of XS with exec_stmt _ _ ?q _ _ => repeat
-    match q with context [ Var ?v ] =>
-      lazymatch type of XS with exec_stmt _ ?s _ _ _ =>
-        lazymatch s with context [ update _ v _ ] => fail | _ => first
-        [ erewrite (store_upd_eq s v) in XS by (simpl_stores; eassumption)
-        | match goal with [ MDL: models ?c _ |- _ ] => let H := fresh in
-            lazymatch eval hnf in (c v) with
-            | Some (NumT ?w) => destruct (models_val v s (NumT w)) as [?n H]
-            | Some (MemT ?w) => destruct (models_val v s (MemT w)) as [?m H]
-            end;
-            [ solve [ simpl_stores; apply MDL; reflexivity ]
-            | rewrite H in XS; clear H ]
-          end ]
-        end
-      end
-    end
-  | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
-  end.
-
-
-(* To prevent vm_compute from expanding symbolic expressions that the user
-   already has in a desired form, the following lemmas introduce symbolic
-   constants for those expressions and sets them equal to the original terms.
-   The "destruct" tactic can then be used to separate those terms out into
-   a different hypothesis to which vm_compute is not applied, and then use
-   "subst" to substitute them back into the evaluated term after vm_compute
-   is done. *)
 
 Lemma fexec_stmt_init:
   forall {EQT} (eq1 eq2:EQT) h s q s' x (XS: exec_stmt h s q s' x),
@@ -1104,142 +1311,4 @@ Proof.
   (split; [ reflexivity | exact H ]).
 Qed.
 
-
-(* Prepare an exec_stmt hypothesis for the symbolic interpreter by converting
-   its store argument s into an expression of the form (updlst s0 l), where
-   s0 is a store expression and l is a list of variable-value pairs. By passing
-   list l directly to the interpreter as a functional input, it can reduce many
-   variables to values without consulting the proof context (which it cannot
-   access programmatically) and without risking uncontrolled expansion of the
-   potentially complex original store expression s.  Members of list l can come
-   from three potential sources of information:
-
-   (1) If s has the form "s0[v1:=u1]...[vn:=un]", then (v1,u1),...,(vn,un) are
-       added to list l and s is reduced to s0.
-
-   (2) For each hypothesis of the form "s0 v = u", pair (v,u) is added to l.
-
-   (3) For any remaining variable v read by the statement being interpreted
-       whose value cannot be inferred by the above, if there is a hypothesis of
-       the form "models c s0" and typing context c assigns a type to v, then a
-       fresh proof variable is introduced for the value of v having appropriate
-       IL-type.  This allows the interpreter to at least infer the type of v
-       (including, most importantly, its bitwidth), which typically yields a
-       symbolic expression that is much simpler because it doesn't need to
-       generalize over bitwidths. *)
-
-Definition list_union {A} (eqb: A -> A -> bool) (l1 l2: list A) :=
-  List.fold_left (fun l x => if existsb (eqb x) l2 then l else (x::l)) l1 l2.
-
-Fixpoint vars_read_by_exp e :=
-  match e with 
-  | Var v => v::nil
-  | Word _ _ | Unknown _ => nil
-  | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => vars_read_by_exp e1
-  | Load e1 e2 _ _ | BinOp _ e1 e2 | Concat e1 e2 => list_union vareqb (vars_read_by_exp e1) (vars_read_by_exp e2)
-  | Store e1 e2 e3 _ _ | Ite e1 e2 e3 => list_union vareqb (list_union vareqb (vars_read_by_exp e1) (vars_read_by_exp e2)) (vars_read_by_exp e3)
-  | Let v e1 e2 => list_union vareqb (vars_read_by_exp e1) (List.remove vareq v (vars_read_by_exp e2))
-  end.
-
-Fixpoint noassignb q v :=
-  match q with
-  | Nop | Jmp _ | Exn _ => true
-  | Move v0 _ => if vareq v0 v then false else true
-  | Seq q1 q2 | If _ q1 q2 => andb (noassignb q1 v) (noassignb q2 v)
-  | Rep _ q1 => noassignb q1 v
-  end.
-
-Fixpoint vars_read_by_stmt q :=
-  match q with
-  | Nop | Exn _ => nil
-  | Move _ e | Jmp e => vars_read_by_exp e
-  | Seq q1 q2 => list_union vareqb (vars_read_by_stmt q1) (List.filter (noassignb q1) (vars_read_by_stmt q2))
-  | If e q1 q2 => list_union vareqb (vars_read_by_exp e) (list_union vareqb (vars_read_by_stmt q1) (vars_read_by_stmt q2))
-  | Rep e q1 => list_union vareqb (vars_read_by_exp e) (vars_read_by_stmt q1)
-  end.
-
-Definition other_vars_read (l: list (var * value)) q :=
-  let old := List.map fst l in
-  List.filter (fun v => negb (existsb (vareqb v) old)) (vars_read_by_stmt q).
-
-Ltac tacmap T l :=
-  match l with nil => idtac | ?h::?t => T h; tacmap T t end.
-
-Ltac populate_varlist XS :=
-  eapply fexec_stmt_init in XS; [
-  repeat lazymatch type of XS with
-  | exec_stmt _ (updlst (update _ _ (VaN _ _)) (rev _) vupdate) _ _ _ /\ _ =>
-      eapply fexec_stmt_updn in XS
-  | exec_stmt _ (updlst (update _ _ (VaM _ _)) (rev _) vupdate) _ _ _ /\ _ =>
-      eapply fexec_stmt_updm in XS
-  | exec_stmt _ (updlst (update _ _ _) (rev _) vupdate) _ _ _ /\ _ =>
-      eapply fexec_stmt_updu in XS
-  end;
-  lazymatch type of XS with exec_stmt ?h (updlst ?s (rev ?l) vupdate) ?q ?s' ?x /\ _ =>
-    let vs := (eval compute in (other_vars_read l q)) in
-    tacmap ltac:(fun v =>
-      try match goal with
-      | [ SV: s v = VaN ?n ?w |- _ ] =>
-          eapply (fexec_stmt_hypn _ _ _ h s v n w _ q s' x SV) in XS
-      | [ SV: s v = VaM ?m ?w |- _ ] =>
-          eapply (fexec_stmt_hypm _ _ _ h s v m w _ q s' x SV) in XS
-      | [ MDL: models ?c s |- _ ] =>
-          lazymatch eval hnf in (c v) with Some ?t =>
-            apply (fexec_stmt_typ h c s v t _ q s' x _ MDL (eq_refl _)) in XS;
-            let _a := match t with NumT _ => fresh "n" | MemT _ => fresh "m" end in
-            let H := fresh "Hsv" in
-              destruct XS as [_a [H XS]]
-          end
-      end) vs
-  end;
-  eapply fexec_stmt_fin in XS |].
-
-(* Finally, simplifying a hypothesis H of the form (exec_stmt ...) entails first
-   removing any user-supplied expressions in H that we don't want expanded, then
-   applying the reduce_stmt theorem to convert it into an fexec_stmt expression,
-   launching vm_compute on it, then abstracting any unknowns as unique proof
-   context variables, and finally substituting any removed or opaque expressions
-   back into the evaluated expression. *)
-
-Ltac step_stmt XS :=
-  lazymatch type of XS with exec_stmt _ _ _ _ _ =>
-    populate_varlist XS;
-    [ eapply reduce_stmt in XS;
-      [ let unk := fresh "unknown" in (
-          destruct XS as [unk XS];
-          compute in XS;
-          repeat match type of XS with context [ unk ?i ] =>
-            let u := fresh "u" in set (u:=unk i) in XS; clearbody u
-          end;
-          try clear unk
-        )
-      | reflexivity | reflexivity ];
-      cbv beta match delta [ noe_setop noe_typop ] in XS;
-      rewrite_finterp_funcs_in XS
-    | reflexivity ]
-  | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
-  end.
-
-
-(* We can then break the memory access part of XS resulting from step_stmt into
-   separate hypotheses.  This is provided as a separate tactic because often
-   the user may want to perform some sort of simplification before splitting. *)
-
-Ltac destruct_memaccs XS :=
-  let ACCs := fresh "ACCs" in
-    destruct XS as [XS ACCs];
-    repeat lazymatch type of ACCs with
-    | ?H1 /\ _ =>
-        lazymatch goal with [ H0:H1 |- _ ] => apply proj2 in ACCs
-        | _ => let ACC := fresh "ACC" in destruct ACCs as [ACC ACCs]
-        end
-    | True => clear ACCs
-    | _ => let ACC := fresh "ACC" in rename ACCs into ACC
-    end.
-
-End PICINAE_FINTERP.
-
-
-Module PicinaeFInterp (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) <: PICINAE_FINTERP IL TIL.
-  Include PICINAE_FINTERP IL TIL.
 End PicinaeFInterp.

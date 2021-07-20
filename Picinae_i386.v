@@ -330,9 +330,15 @@ Ltac x86_step :=
   first [ x86_invseek; try x86_invhere | x86_invhere ].
 
 
+Declare Scope i386_scope.
+Delimit Scope i386_scope with i386.
+Bind Scope i386_scope with stmt exp typ.
+Open Scope i386_scope.
+Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : i386_scope.
+
 Module X86Notations.
 
-Notation "Ⓜ m" := (VaM m 32) (at level 20). (* memory value *)
+Notation "Ⓜ m" := (VaM m 32) (at level 20) : i386_scope. (* memory value *)
 Notation "ⓑ u" := (VaN u 1) (at level 20). (* bit value *)
 Notation "Ⓑ u" := (VaN u 8) (at level 20). (* byte value *)
 Notation "Ⓦ u" := (VaN u 16) (at level 20). (* word value *)
@@ -340,18 +346,18 @@ Notation "Ⓓ u" := (VaN u 32) (at level 20). (* dword value *)
 Notation "Ⓠ u" := (VaN u 64) (at level 20). (* quad word value *)
 Notation "Ⓧ u" := (VaN u 128) (at level 20). (* xmm value *)
 Notation "Ⓨ u" := (VaN u 256) (at level 20). (* ymm value *)
-Notation "m Ⓑ[ a  ]" := (getmem LittleE 1 m a) (at level 10). (* read byte from memory *)
-Notation "m Ⓦ[ a  ]" := (getmem LittleE 2 m a) (at level 10). (* read word from memory *)
-Notation "m Ⓓ[ a  ]" := (getmem LittleE 4 m a) (at level 10). (* read dword from memory *)
-Notation "m Ⓠ[ a  ]" := (getmem LittleE 8 m a) (at level 10). (* read quad word from memory *)
-Notation "m Ⓧ[ a  ]" := (getmem LittleE 16 m a) (at level 10). (* read xmm from memory *)
-Notation "m Ⓨ[ a  ]" := (getmem LittleE 32 m a) (at level 10). (* read ymm from memory *)
-Notation "m [Ⓑ a := v  ]" := (setmem LittleE 1 m a v) (at level 50, left associativity). (* write byte to memory *)
-Notation "m [Ⓦ a := v  ]" := (setmem LittleE 2 m a v) (at level 50, left associativity). (* write word to memory *)
-Notation "m [Ⓓ a := v  ]" := (setmem LittleE 4 m a v) (at level 50, left associativity). (* write dword to memory *)
-Notation "m [Ⓠ a := v  ]" := (setmem LittleE 8 m a v) (at level 50, left associativity). (* write quad word to memory *)
-Notation "m [Ⓧ a := v  ]" := (setmem LittleE 16 m a v) (at level 50, left associativity). (* write xmm to memory *)
-Notation "m [Ⓨ a := v  ]" := (setmem LittleE 32 m a v) (at level 50, left associativity). (* write ymm to memory *)
+Notation "m Ⓑ[ a  ]" := (getmem LittleE 1 m a) (at level 10) : i386_scope. (* read byte from memory *)
+Notation "m Ⓦ[ a  ]" := (getmem LittleE 2 m a) (at level 10) : i386_scope. (* read word from memory *)
+Notation "m Ⓓ[ a  ]" := (getmem LittleE 4 m a) (at level 10) : i386_scope. (* read dword from memory *)
+Notation "m Ⓠ[ a  ]" := (getmem LittleE 8 m a) (at level 10) : i386_scope. (* read quad word from memory *)
+Notation "m Ⓧ[ a  ]" := (getmem LittleE 16 m a) (at level 10) : i386_scope. (* read xmm from memory *)
+Notation "m Ⓨ[ a  ]" := (getmem LittleE 32 m a) (at level 10) : i386_scope. (* read ymm from memory *)
+Notation "m [Ⓑ a := v  ]" := (setmem LittleE 1 m a v) (at level 50, left associativity) : i386_scope. (* write byte to memory *)
+Notation "m [Ⓦ a := v  ]" := (setmem LittleE 2 m a v) (at level 50, left associativity) : i386_scope. (* write word to memory *)
+Notation "m [Ⓓ a := v  ]" := (setmem LittleE 4 m a v) (at level 50, left associativity) : i386_scope. (* write dword to memory *)
+Notation "m [Ⓠ a := v  ]" := (setmem LittleE 8 m a v) (at level 50, left associativity) : i386_scope. (* write quad word to memory *)
+Notation "m [Ⓧ a := v  ]" := (setmem LittleE 16 m a v) (at level 50, left associativity) : i386_scope. (* write xmm to memory *)
+Notation "m [Ⓨ a := v  ]" := (setmem LittleE 32 m a v) (at level 50, left associativity) : i386_scope. (* write ymm to memory *)
 Notation "x ⊕ y" := ((x+y) mod 2^32) (at level 50, left associativity). (* modular addition *)
 Notation "x ⊖ y" := ((x-y) mod 2^32) (at level 50, left associativity). (* modular subtraction *)
 Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* modular multiplication *)

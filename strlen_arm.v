@@ -1,7 +1,6 @@
 Require Import Picinae_armv7.
 Require Import NArith.
 Open Scope N.
-Open Scope stmt_scope.
 
 Definition strlen_arm : program := fun _ a => match a with
 

@@ -1467,6 +1467,9 @@ Import IL.
 Import TIL.
 Import FIL.
 Include PSIMPL_DEFS_V1_0 IL TIL FIL.
+Module PTheory := PicinaeTheory IL.
+Import PTheory.
+
 
 (* Proof of soundness for SAST-equivalence algorithm *)
 
@@ -1949,7 +1952,7 @@ Theorem simpl_getmem_len_sound:
 Proof.
   intros. destruct len as [|len]. reflexivity.
   destruct len; try reflexivity.
-  symmetry. apply PTheory.getmem_1.
+  symmetry. apply getmem_1.
 Qed.
 
 Theorem simpl_getmem_sound:
@@ -1963,13 +1966,13 @@ Proof.
   apply andb_prop in H. destruct H as [EEQ H]. apply endianness_eq_sound in EEQ. subst en0.
   apply andb_prop in H. destruct H as [LEN AEQ]. apply N.eqb_eq in LEN. subst len0.
   apply (sastN_eq_sound mvt) in AEQ.
-    rewrite <- AEQ, PTheory.getmem_setmem. destruct len; reflexivity.
+    rewrite <- AEQ, getmem_setmem. destruct len; reflexivity.
 
   destruct (sastN_le _ _ a0) eqn:ALE; [|clear ALE]. apply sastN_le_sound in ALE.
-  rewrite PTheory.getmem_frame_low by apply ALE. apply IHm.
+  rewrite getmem_frame_low by apply ALE. apply IHm.
 
   destruct (sastN_le _ _ a) eqn:ALE; [|clear ALE]. apply sastN_le_sound in ALE.
-  rewrite PTheory.getmem_frame_high by apply ALE. apply IHm.
+  rewrite getmem_frame_high by apply ALE. apply IHm.
 
   apply simpl_getmem_len_sound.
 Qed.
@@ -2519,7 +2522,7 @@ Proof.
   intro. apply sast_mind; intros; simpl; try rewrite H; try rewrite H0; try rewrite H1; try reflexivity.
     apply simpl_out_const_sound.
     destruct (len =? 1) eqn:H1.
-      apply N.eqb_eq in H1. subst len. rewrite PTheory.getmem_1. reflexivity.
+      apply N.eqb_eq in H1. subst len. rewrite getmem_1. reflexivity.
       reflexivity.
 Qed.
 

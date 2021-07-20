@@ -587,6 +587,13 @@ Ltac rv_step :=
   first [ rv_invseek; try rv_invhere | rv_invhere ].
 
 
+
+Declare Scope r5_scope.
+Delimit Scope r5_scope with risc5.
+Bind Scope r5_scope with stmt exp typ.
+Open Scope r5_scope.
+Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : r5_scope.
+
 Module RISCVNotations.
 
 Notation "Ⓜ m" := (VaM m 32) (at level 20). (* memory value *)
@@ -594,12 +601,12 @@ Notation "ⓑ u" := (VaN u 1) (at level 20). (* bit value *)
 Notation "Ⓑ u" := (VaN u 8) (at level 20). (* byte value *)
 Notation "Ⓦ u" := (VaN u 16) (at level 20). (* word value *)
 Notation "Ⓓ u" := (VaN u 32) (at level 20). (* dword value *)
-Notation "m Ⓑ[ a  ]" := (getmem LittleE 1 m a) (at level 10). (* read byte from memory *)
-Notation "m Ⓦ[ a  ]" := (getmem LittleE 2 m a) (at level 10). (* read word from memory *)
-Notation "m Ⓓ[ a  ]" := (getmem LittleE 4 m a) (at level 10). (* read dword from memory *)
-Notation "m [Ⓑ a := v  ]" := (setmem LittleE 1 m a v) (at level 50, left associativity). (* write byte to memory *)
-Notation "m [Ⓦ a := v  ]" := (setmem LittleE 2 m a v) (at level 50, left associativity). (* write word to memory *)
-Notation "m [Ⓓ a := v  ]" := (setmem LittleE 4 m a v) (at level 50, left associativity). (* write dword to memory *)
+Notation "m Ⓑ[ a  ]" := (getmem LittleE 1 m a) (at level 10) : r5_scope. (* read byte from memory *)
+Notation "m Ⓦ[ a  ]" := (getmem LittleE 2 m a) (at level 10) : r5_scope. (* read word from memory *)
+Notation "m Ⓓ[ a  ]" := (getmem LittleE 4 m a) (at level 10) : r5_scope. (* read dword from memory *)
+Notation "m [Ⓑ a := v  ]" := (setmem LittleE 1 m a v) (at level 50, left associativity) : r5_scope. (* write byte to memory *)
+Notation "m [Ⓦ a := v  ]" := (setmem LittleE 2 m a v) (at level 50, left associativity) : r5_scope. (* write word to memory *)
+Notation "m [Ⓓ a := v  ]" := (setmem LittleE 4 m a v) (at level 50, left associativity) : r5_scope. (* write dword to memory *)
 Notation "x ⊕ y" := ((x+y) mod 2^32) (at level 50, left associativity). (* modular addition *)
 Notation "x ⊖ y" := ((x-y) mod 2^32) (at level 50, left associativity). (* modular subtraction *)
 Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* modular multiplication *)

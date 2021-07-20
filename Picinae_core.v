@@ -270,15 +270,6 @@ Inductive stmt : Type :=
 | If (e:exp) (q1 q2:stmt) (* If e<>0 then q1 else q2 *)
 | Rep (e:exp) (q:stmt) (* Repeat q for e iterations *).
 
-(* Convenient notation for sequence:
-   Note that the sequence infix operator $; is RIGHT-associative.  This is critical
-   because it allows sequences to be easily analyzed in forward order, which is the
-   natural order in which most proofs progress. *)
-Declare Scope stmt_scope.
-Delimit Scope stmt_scope with stmt.
-Bind Scope stmt_scope with stmt.
-Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : stmt_scope.
-
 (* Programs map addresses to an instruction size sz and an IL statement q
    that encodes the instruction.  If q falls through, control flows to
    address a+sz.  We express programs as functions instead of lists in order
