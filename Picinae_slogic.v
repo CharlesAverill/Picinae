@@ -253,12 +253,9 @@ Qed.
 
 
 
-Module Type PICINAE_SLOGIC (IL: PICINAE_IL).
+Module Type PICINAE_SLOGIC_DEFS (IL: PICINAE_IL).
 
 Import IL.
-Module PTheory := PicinaeTheory IL.
-Import PTheory.
-Open Scope N.
 
 Definition sep := sepconj var.
 
@@ -277,8 +274,6 @@ Definition htrip_stmt P q Q :=
 Definition htrip_prog P p a n Q :=
   forall s h s' x (PRE: P (resths h (to_hstore s))) (XP: exec_prog htotal p a s n s' x),
     exec_prog h p a s n s' x /\ Q (resths h (to_hstore s')).
-
-
 
 
 (* The key idea behind the following proofs is that executing any expression or
@@ -324,9 +319,190 @@ Definition frames'_stmt (R: hsprop var) q :=
 Definition frames'_prog (R: hsprop var) (p:program) :=
   forall s a, match p s a with None => True | Some (_,q) => frames'_stmt R q end.
 
+End PICINAE_SLOGIC_DEFS.
 
+
+
+Module Type PICINAE_SLOGIC (IL: PICINAE_IL).
+
+Import IL.
+Include PICINAE_SLOGIC_DEFS IL.
 
 (* Helper lemmas for breaking "frames" hypotheses down into their premises: *)
+
+Parameter destruct_frames_stmt:
+  forall R q (FR: frames_stmt R q),
+  match q with
+  | Nop | Jmp _ | Exn _ => True
+  | Move v _ => forall s (h:hdomain) hu (HM: hmodels s (hopp h) hu), upd_pres R (resths h (to_hstore s)) (resthv h (to_hval hu)) v
+  | Seq q1 q2 => frames_stmt R q1 /\ frames_stmt R q2
+  | Rep _ q1 => frames_stmt R q1
+  | If _ q1 q2 => frames_stmt R q1 /\ frames_stmt R q2
+  end.
+
+Parameter destruct_frames'_stmt:
+  forall R q (FR: frames'_stmt R q),
+  match q with
+  | Nop | Jmp _ | Exn _ => True
+  | Move v _ => forall s (h:hdomain) hu, upd_pres R (resths h (to_hstore s)) (resthv h (to_hval hu)) v
+  | Seq q1 q2 => frames'_stmt R q1 /\ frames'_stmt R q2
+  | Rep _ q1 => frames'_stmt R q1
+  | If _ q1 q2 => frames'_stmt R q1 /\ frames'_stmt R q2
+  end.
+
+
+(* The IL semantics obey the modeling relation: *)
+
+Parameter hmodels_refl:
+  forall h s, hmodels_store h s s.
+
+Parameter hmodels_trans:
+  forall h s1 s2 s3, hmodels_store h s1 s2 -> hmodels_store h s2 s3 ->
+  hmodels_store h s1 s3.
+
+Parameter hmodels_mono:
+  forall s h1 h2 u (SS: h1 ⊆ h2) (HM: hmodels s h1 u), hmodels s h2 u.
+
+Parameter hmodels_exp:
+  forall h s e u (E: eval_exp h s e u),
+  hmodels s h u.
+
+Parameter hmodels_stmt:
+  forall h s q s' x (XS: exec_stmt h s q s' x),
+  hmodels_store h s s'.
+
+Parameter hmodels_prog:
+  forall h p a s n s' x (XP: exec_prog h p a s n s' x),
+  hmodels_store h s s'.
+
+
+(* If R frames q, then executing q preserves R. *)
+
+Parameter frames_rep:
+  forall R e q (FR: frames_stmt R q), frames_stmt R (Seq q (Rep e q)).
+
+Parameter framed_stmt:
+  forall {A} (R: hsprop var) (h:heap A) s q s' x (FR: frames_stmt R q)
+         (XS: exec_stmt (hopp h) s q s' x)
+         (HS: hmodels_store (hopp h) s s') (PRE: R (resths h (to_hstore s))),
+  R (resths h (to_hstore s')).
+
+Parameter framed_prog:
+  forall {A} (R: hsprop var) (h:heap A) p a s n s' x (FR: frames_prog R p)
+         (XP: exec_prog (hopp h) p a s n s' x)
+         (HS: hmodels_store (hopp h) s s') (PRE: R (resths h (to_hstore s))),
+  R (resths h (to_hstore s')).
+
+
+(* Main result: The frame rule of separation logic is sound.  In particular,
+   if {P}q{Q} holds, and if R frames q, then {P*R}q{Q*R} holds. *)
+
+Parameter stmt_frame:
+  forall q (P Q R: hsprop var) (FR: frames_stmt R q)
+         (HT: htrip_stmt P q Q),
+  htrip_stmt (sep P R) q (sep Q R).
+
+Parameter prog_frame:
+  forall p a n (P Q R: hsprop var) (FR: frames_prog R p)
+         (HT: htrip_prog P p a n Q),
+  htrip_prog (sep P R) p a n (sep Q R).
+
+
+(* At this point we have our main result, but it requires users to prove that
+   R frames q in order to use it.  We here prove some general sufficiency
+   conditions to help users prove this meta-property. *)
+
+Parameter upd_pres_sep:
+  forall P Q hs hu v
+         (UP1: forall (h:hdomain), upd_pres P (resths h hs) (resthv h hu) v)
+         (UP2: forall (h:hdomain), upd_pres Q (resths h hs) (resthv h hu) v),
+  upd_pres (sep P Q) hs hu v.
+
+(* P*Q (universally-)frames q if P and Q both (universally-)frame q. *)
+Parameter frames_stmt_sep:
+  forall P Q q (FR1: frames_stmt P q) (FR2: frames_stmt Q q),
+  frames_stmt (sep P Q) q.
+
+Parameter frames'_stmt_sep:
+  forall P Q q (FR1: frames'_stmt P q) (FR2: frames'_stmt Q q),
+  frames'_stmt (sep P Q) q.
+
+Parameter frames_prog_sep:
+  forall P Q p (FR1: frames_prog P p) (FR2: frames_prog Q p),
+  frames_prog (sep P Q) p.
+
+Parameter frames'_prog_sep:
+  forall P Q p (FR1: frames'_prog P p) (FR2: frames'_prog Q p),
+  frames'_prog (sep P Q) p.
+
+(* htrue and hfalse (universally-)frame everything. *)
+Parameter frames_stmt_htrue: forall q, frames_stmt htrue q.
+Parameter frames'_stmt_htrue: forall q, frames'_stmt htrue q.
+Parameter frames_prog_htrue: forall p, frames_prog htrue p.
+Parameter frames'_prog_htrue: forall p, frames'_prog htrue p.
+Parameter frames_stmt_hfalse: forall q, frames_stmt hfalse q.
+Parameter frames'_stmt_hfalse: forall q, frames'_stmt hfalse q.
+Parameter frames_prog_hfalse: forall p, frames_prog hfalse p.
+Parameter frames'_prog_hfalse: forall p, frames'_prog hfalse p.
+
+(* To prove that R (universally-)frames q, it sufficies to prove that R is
+   update-preserving for all possible stores. *)
+Parameter frames_stmt_anystore:
+  forall R q, (forall s (h:hdomain) u v (HM: hmodels s (hopp h) u), upd_pres R (resths h (to_hstore s)) (resthv h (to_hval u)) v) ->
+  frames_stmt R q.
+
+Parameter frames'_stmt_anystore:
+  forall R q, (forall s (h:hdomain) u v, upd_pres R (resths h (to_hstore s)) (resthv h (to_hval u)) v) ->
+  frames'_stmt R q.
+
+(* It follows that all heap-properties frame everything. *)
+Parameter frames_stmt_hprop: forall R q, frames_stmt (hprop var R) q.
+Parameter frames_prog_hprop: forall R p, frames_prog (hprop var R) p.
+
+(* (P -> Q) frames q if P universally-frames q and Q frames q. *)
+Parameter frames_stmt_impl:
+  forall P Q q (FR1: frames'_stmt P q) (FR2: frames_stmt Q q),
+  frames_stmt (fun hs => P hs -> Q hs) q.
+
+Parameter frames'_stmt_impl:
+  forall P Q q (FR1: frames'_stmt P q) (FR2: frames'_stmt Q q),
+  frames'_stmt (fun hs => P hs -> Q hs) q.
+
+Parameter frames_prog_impl:
+  forall P Q p (FR1: frames'_prog P p) (FR2: frames_prog Q p),
+  frames_prog (fun hs => P hs -> Q hs) p.
+
+Parameter frames'_prog_impl:
+  forall P Q p (FR1: frames'_prog P p) (FR2: frames'_prog Q p),
+  frames'_prog (fun hs => P hs -> Q hs) p.
+
+(* ~P frames and universally-frames q if P universally-frames q. *)
+Parameter frames_stmt_not:
+  forall P q (FR: frames'_stmt P q),
+  frames_stmt (fun hs => ~ P hs) q.
+
+Parameter frames'_stmt_not:
+  forall P q (FR: frames'_stmt P q),
+  frames'_stmt (fun hs => ~ P hs) q.
+
+Parameter frames_prog_not:
+  forall P p (FR: frames'_prog P p),
+  frames_prog (fun hs => ~ P hs) p.
+
+Parameter frames_prog'_not:
+  forall P p (FR: frames'_prog P p),
+  frames'_prog (fun hs => ~ P hs) p.
+
+End PICINAE_SLOGIC.
+
+
+
+Module PicinaeSLogic (IL: PICINAE_IL) : PICINAE_SLOGIC IL.
+
+Import IL.
+Include PICINAE_SLOGIC_DEFS IL.
+Module PTheory := PicinaeTheory IL.
+Import PTheory.
 
 Lemma destruct_frames_stmt:
   forall R q (FR: frames_stmt R q),
@@ -357,10 +533,6 @@ Proof.
   [ exact I
   | try split; intros s dom u; specialize (FR s dom u); inversion FR; assumption ].
 Qed.
-
-
-
-(* Proof that the IL semantics obey the modeling relation: *)
 
 Lemma hmodels_refl:
   forall h s, hmodels_store h s s.
@@ -443,10 +615,6 @@ Proof.
     eapply hmodels_stmt. eassumption.
 Qed.
 
-
-
-(* Proof that if R frames q, then executing q preserves R. *)
-
 Lemma frames_rep:
   forall R e q (FR: frames_stmt R q), frames_stmt R (Seq q (Rep e q)).
 Proof.
@@ -505,10 +673,6 @@ Proof.
     eapply framed_stmt; try eassumption. specialize (FR s a). rewrite LU in FR. exact FR.
 Qed.
 
-
-(* Main result: The frame rule of separation logic is sound.  In particular,
-   if {P}q{Q} holds, and if R frames q, then {P*R}q{Q*R} holds. *)
-
 Theorem stmt_frame:
   forall q (P Q R: hsprop var) (FR: frames_stmt R q)
          (HT: htrip_stmt P q Q),
@@ -549,13 +713,6 @@ Proof.
           rewrite resth_comm. apply HT. exact PS. exact XP.
 Qed.
 
-
-
-(* At this point we have our main result, but it requires users to prove that
-   R frames q in order to use it.  We here prove some general sufficiency
-   conditions to help users prove this meta-property. *)
-
-(* Sufficiency conditions for proving "R (universally-)frames q": *)
 Lemma upd_pres_sep:
   forall P Q hs hu v
          (UP1: forall (h:hdomain), upd_pres P (resths h hs) (resthv h hu) v)
@@ -587,7 +744,6 @@ Proof.
     apply AARep, IHq; intros; assumption.
 Qed.
 
-(* P*Q universally-frames q if both P and Q universally-frame q. *)
 Theorem frames'_stmt_sep:
   forall P Q q (FR1: frames'_stmt P q) (FR2: frames'_stmt Q q),
   frames'_stmt (sep P Q) q.
@@ -679,8 +835,6 @@ Proof.
     exact I.
 Qed.
 
-(* To prove that R (universally-)frames q, it sufficies to prove that R is
-   update-preserving for all possible stores. *)
 Lemma frames_stmt_anystore:
   forall R q, (forall s (h:hdomain) u v (HM: hmodels s (hopp h) u), upd_pres R (resths h (to_hstore s)) (resthv h (to_hval u)) v) ->
   frames_stmt R q.
@@ -697,7 +851,6 @@ Proof.
   apply H.
 Qed.
 
-(* It follows that all heap-properties frame q. *)
 Theorem frames_stmt_hprop:
   forall R q, frames_stmt (hprop var R) q.
 Proof.
@@ -738,7 +891,6 @@ Proof.
     exact I.
 Qed.
 
-(* (P -> Q) frames q if: P universally-frames q and Q frames q. *)
 Theorem frames_stmt_impl:
   forall P Q q (FR1: frames'_stmt P q) (FR2: frames_stmt Q q),
   frames_stmt (fun hs => P hs -> Q hs) q.
@@ -841,9 +993,4 @@ Proof.
   intros. apply frames'_prog_impl. assumption. apply frames'_prog_hfalse.
 Qed.
 
-End PICINAE_SLOGIC.
-
-
-Module PicinaeSLogic (IL: PICINAE_IL) <: PICINAE_SLOGIC IL.
-  Include PICINAE_SLOGIC IL.
 End PicinaeSLogic.

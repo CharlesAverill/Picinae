@@ -267,7 +267,7 @@ End HasUpperBound.
 
 
 
-Module Type PICINAE_STATICS (IL: PICINAE_IL).
+Module Type PICINAE_STATICS_DEFS (IL: PICINAE_IL).
 
 (* This module proves that the semantics of the IL are type-safe in the sense that
    programs whose constants have proper bitwidths never produce variable values or
@@ -277,8 +277,6 @@ Module Type PICINAE_STATICS (IL: PICINAE_IL).
    registers and memory contents always have values of appropriate bitwidths. *)
 
 Import IL.
-Module PTheory := PicinaeTheory IL.
-Import PTheory.
 Open Scope N.
 
 (* Memory is well-typed if every address holds a byte. *)
@@ -370,615 +368,10 @@ Definition welltyped_prog (c0:typctx) (p:program) : Prop :=
   forall s a, match p s a with None => True | Some (_,q) =>
                 exists c', hastyp_stmt c0 c0 q c' end.
 
-
-(* Convenience lemmas for inverted reasoning about hastyp_val. *)
-
-Lemma value_bound:
-  forall n w (TV: hastyp_val (VaN n w) (NumT w)), n < 2^w.
-Proof. intros. inversion TV. assumption. Qed.
-
-Lemma mem_welltyped:
-  forall m w (TV: hastyp_val (VaM m w) (MemT w)), welltyped_memory m.
-Proof. intros. inversion TV. assumption. Qed.
-
-Lemma hastyp_towidth:
-  forall w n, hastyp_val (towidth w n) (NumT w).
-Proof.
-  intros. apply TVN.
-  apply N.mod_upper_bound.
-  apply N.pow_nonzero.
-  intro. discriminate.
-Qed.
-
-
-(* These short lemmas are helpful when automating type-checking in tactics. *)
-Lemma hastyp_binop:
-  forall bop c e1 e2 w w' (W: widthof_binop bop w = w')
-         (T1: hastyp_exp c e1 (NumT w)) (T2: hastyp_exp c e2 (NumT w)),
-  hastyp_exp c (BinOp bop e1 e2) (NumT w').
-Proof.
-  intros. rewrite <- W. apply TBinOp; assumption.
-Qed.
-
-Lemma hastyp_extract:
-  forall w c n1 n2 e1 w' (W: N.succ n1 - n2 = w')
-         (T1: hastyp_exp c e1 (NumT w)) (HI: n1 < w),
-  hastyp_exp c (Extract n1 n2 e1) (NumT w').
-Proof.
-  intros. rewrite <- W. eapply TExtract; eassumption.
-Qed.
-
-Lemma hastyp_concat:
-  forall c e1 e2 w1 w2 w' (W: w1+w2 = w')
-         (T1: hastyp_exp c e1 (NumT w1)) (T2: hastyp_exp c e2 (NumT w2)),
-  hastyp_exp c (Concat e1 e2) (NumT w').
-Proof.
-  intros. rewrite <- W. apply TConcat; assumption.
-Qed.
-
-
-(* Expression types are unique. *)
-Theorem hastyp_exp_unique:
-  forall e c1 c2 t1 t2 (HUB: has_upper_bound c1 c2)
-         (TE1: hastyp_exp c1 e t1) (TE2: hastyp_exp c2 e t2),
-  t1 = t2.
-Proof.
-  intros. revert c1 c2 t1 t2 HUB TE1 TE2. induction e; intros;
-  inversion TE1; inversion TE2; clear TE1 TE2; subst;
-  try reflexivity.
-
-  (* Var *)
-  eapply HUB; eassumption.
-
-  (* Store *)
-  eapply IHe1; eassumption.
-
-  (* BinOp *)
-  specialize (IHe1 _ _ _ _ HUB T1 T0). inversion IHe1. reflexivity.
-
-  (* UnOp *)
-  specialize (IHe _ _ _ _ HUB T1 T0). inversion IHe. reflexivity.
-
-  (* Let *)
-  specialize (IHe1 _ _ _ _ HUB T1 T0). subst.
-  refine (IHe2 _ _ _ _ _ T2 T3). apply hub_update. exact HUB.
-
-  (* Extract *)
-  exact (IHe2 _ _ _ _ HUB T2 T4).
-
-  (* Concat *)
-  specialize (IHe1 _ _ _ _ HUB T1 T0). inversion IHe1. subst.
-  specialize (IHe2 _ _ _ _ HUB T2 T3). inversion IHe2. subst.
-  reflexivity.
-Qed.
-
-(* Expression typing contexts can be weakened. *)
-Theorem hastyp_exp_weaken:
-  forall c1 c2 e t (TE: hastyp_exp c1 e t) (SS: c1 ⊆ c2),
-  hastyp_exp c2 e t.
-Proof.
-  intros. revert c2 SS. dependent induction TE; intros; econstructor;
-  try (try first [ apply IHTE | apply IHTE1 | apply IHTE2 | apply IHTE3 | apply SS ]; assumption).
-
-  apply IHTE2. unfold update. intros v0 t CV. destruct (v0 == v).
-    assumption.
-    apply SS. assumption.
-Qed.
-
-(* Statement types can be weakened. *)
-Theorem hastyp_stmt_weaken:
-  forall c0 c c' c'' q (TS: hastyp_stmt c0 c q c') (SS: c'' ⊆ c'),
-  hastyp_stmt c0 c q c''.
-Proof.
-  intros. inversion TS; clear TS; subst;
-  econstructor; first [ eassumption | transitivity c'; assumption ].
-Qed.
-
-(* Statement types agree (though not necessarily unique). *)
-Theorem hastyp_stmt_compat:
-  forall c0 q c1 c2 c1' c2'
-         (HUB: has_upper_bound c1 c2)
-         (TS1: hastyp_stmt c0 c1 q c1') (TS2: hastyp_stmt c0 c2 q c2'),
-  has_upper_bound c1' c2'.
-Proof.
-  induction q; intros; inversion TS1; inversion TS2; clear TS1 TS2; subst;
-  try solve [ apply (hub_subset _ _ _ _ _ _ HUB); assumption ].
-    eapply hub_subset; [|eassumption..]. replace t0 with t.
-      apply hub_update, HUB.
-      eapply hastyp_exp_unique; eassumption.
-    eapply IHq2.
-      eapply IHq1; eassumption.
-      eapply hastyp_stmt_weaken. exact TS3. exact SS.
-      eapply hastyp_stmt_weaken. exact TS5. exact SS0.
-    eapply hub_subset; [|eassumption..]. eapply IHq1; eassumption.
-Qed.
-
-(* Statement frame contexts can be weakened. *)
-Theorem hastyp_stmt_frame_weaken:
-  forall c0 c0' q c c' (TS: hastyp_stmt c0 c q c') (SS: c0' ⊆ c0),
-  hastyp_stmt c0' c q c'.
-Proof.
-  induction q; intros; inversion TS; subst.
-    apply TNop. assumption.
-    eapply TMove.
-      specialize (SS v). destruct (c0' v).
-        right. rewrite (SS t0 (eq_refl _)) in CV. destruct CV. discriminate. eassumption.
-        left. reflexivity.
-      exact TE.
-      assumption.
-    eapply TJmp. exact TE. assumption.
-    apply TExn. assumption.
-    eapply TSeq.
-      apply IHq1. exact TS1. exact SS.
-      apply IHq2. exact TS2. exact SS.
-      exact SS0.
-    eapply TIf.
-      exact TE.
-      apply IHq1. exact TS1. exact SS.
-      apply IHq2. exact TS2. exact SS.
-      exact SS0.
-    eapply TRep.
-      exact TE.
-      apply IHq. exact TS0. exact SS.
-      exact SS0.
-Qed.
-
-
-(* We next prove type-safety of the IL with respect to the above static semantics.
-   In general, interpretation of an arbitrary, unchecked IL program can fail
-   (i.e., exec_prog is underivable) for only the following reasons:
-
-   (1) memory access violation ("mem_readable" or "mem_writable" is falsified), or
-
-   (2) a type-mismatch occurs (e.g., arithmetic applied to memory state values).
-
-   Type-safety proves that if type-checking succeeds, then the only reachable
-   stuck-states are case (1).  That is, runtime type-mismatches are precluded,
-   and all computed values have proper types.
-
-   This property is important in the context of formal validation of native
-   code programs because proofs about such code typically rely upon the types
-   of values that each cpu state element can hold (e.g., 32-bit registers always
-   contain 32-bit numbers).  Proving type-safety allows us to verify these
-   basic properties within other proofs by first running the type-checker (as a
-   tactic), and then applying the type-soundness theorem(s). *)
-
-
-(* Binary operations on well-typed values yield well-typed values. *)
-Theorem typesafe_binop:
-  forall bop n1 n2 w
-         (TV1: hastyp_val (VaN n1 w) (NumT w)) (TV2: hastyp_val (VaN n2 w) (NumT w)),
-  hastyp_val (eval_binop bop w n1 n2) (NumT (widthof_binop bop w)).
-Proof.
-  intros. destruct bop; try first [ apply hastyp_towidth | apply TVN, bit_bound ];
-  apply TVN; try apply ofZ_bound.
-
-  (* DIV *)
-  eapply N.le_lt_trans. apply div_bound. apply value_bound. assumption.
-
-  (* SMOD *)
-  apply mod_bound; apply value_bound; assumption.
-
-  (* SHIFTR *)
-  eapply N.lt_le_trans.
-    apply shiftr_bound. apply value_bound. eassumption.
-    apply N.pow_le_mono_r. discriminate 1. apply N.le_sub_l.
-
-  (* LAND *)
-  apply land_bound; apply value_bound; assumption.
-
-  (* LOR *)
-  apply lor_bound; apply value_bound; assumption.
-
-  (* LXOR *)
-  apply lxor_bound; apply value_bound; assumption.
-Qed.
-
-(* Unary operations on well-typed values yield well-typed values. *)
-Theorem typesafe_unop:
-  forall uop n w
-         (TV: hastyp_val (VaN n w) (NumT w)),
-  hastyp_val (eval_unop uop n w) (NumT w).
-Proof.
-  intros. destruct uop; apply TVN.
-
-  (* NEG *)
-  apply N.mod_upper_bound, N.pow_nonzero. discriminate 1.
-
-  (* NOT *)
-  apply lnot_bound, value_bound. assumption.
-Qed.
-
-(* Casts of well-typed values yield well-typed values. *)
-Theorem typesafe_cast:
-  forall c n w w' (TV: hastyp_val (VaN n w) (NumT w))
-    (T: match c with CAST_UNSIGNED | CAST_SIGNED => w<=w'
-                   | CAST_HIGH | CAST_LOW => w'<=w end),
-  hastyp_val (VaN (cast c w w' n) w') (NumT w').
-Proof.
-  intros. inversion TV. subst. destruct c; simpl.
-
-  (* LOW *)
-  apply hastyp_towidth.
-
-  (* HIGH *)
-  apply TVN, cast_high_bound; assumption.
-
-  (* SIGNED *)
-  apply TVN, ofZ_bound.
-
-  (* UNSIGNED *)
-  apply TVN. eapply N.lt_le_trans. eassumption.
-  apply N.pow_le_mono_r. discriminate 1. assumption.
-Qed.
-
-(* Memory-loads of well-typed arguments yield well-typed results. *)
-Theorem getmem_bound:
-  forall e len m a (WTM: welltyped_memory m),
-  getmem e len m a < 2^(Mb*len).
-Proof.
-  intros. revert a. induction len using N.peano_ind; intro.
-    rewrite N.mul_0_r. apply Nlt_0_pow2.
-    rewrite getmem_succ. destruct e; apply lor_bound.
-      eapply N.lt_le_trans.
-        apply IHlen.
-        apply N.pow_le_mono_r. discriminate 1. apply N.mul_le_mono_nonneg_l. apply N.le_0_l. apply N.le_succ_diag_r.
-      rewrite N.shiftl_mul_pow2, N.mul_succ_r, N.add_comm, N.pow_add_r. apply N.mul_lt_mono_pos_r.
-        apply Nlt_0_pow2.
-        apply WTM.
-      eapply N.lt_le_trans.
-        apply WTM.
-        apply N.pow_le_mono_r. discriminate 1. rewrite N.mul_succ_r, N.add_comm. apply N.le_add_r.
-      rewrite N.shiftl_mul_pow2, N.mul_succ_r, N.pow_add_r. apply N.mul_lt_mono_pos_r.
-        apply Nlt_0_pow2.
-        apply IHlen.
-Qed.
-
-Theorem typesafe_getmem:
-  forall mw len m a e (TV: hastyp_val (VaM m mw) (MemT mw)),
-  hastyp_val (VaN (getmem e len m a) (Mb*len)) (NumT (Mb*len)).
-Proof.
-  intros. apply TVN. apply getmem_bound. eapply mem_welltyped. eassumption.
-Qed.
-
-(* Stores into well-typed memory yield well-typed memory. *)
-Theorem setmem_welltyped:
-  forall e len m a v (WTM: welltyped_memory m) (VM: v < 2^(Mb*len)),
-  welltyped_memory (setmem e len m a v).
-Proof.
-  induction len using N.peano_ind; intros.
-    rewrite setmem_0. apply WTM.
-    rewrite setmem_succ. destruct e; (apply IHlen; [intro a'; destruct (N.eq_dec a' a); [subst a'|]|]).
-      rewrite update_updated, N.shiftr_div_pow2. apply N.div_lt_upper_bound.
-        apply N.pow_nonzero. discriminate 1.
-        rewrite <- N.pow_add_r, <- N.mul_succ_r. exact VM.
-      rewrite update_frame by assumption. apply WTM.
-      apply N.mod_lt, N.pow_nonzero. discriminate 1.
-      rewrite update_updated. destruct len.
-        eapply N.lt_le_trans. exact VM. rewrite N.mul_1_r. reflexivity.
-        apply N.mod_lt, N.pow_nonzero. discriminate 1.
-      rewrite update_frame by assumption. apply WTM.
-      rewrite N.shiftr_div_pow2. apply N.div_lt_upper_bound.
-        apply N.pow_nonzero. discriminate 1.
-        rewrite <- N.pow_add_r, N.add_comm, <- N.mul_succ_r. exact VM.
-Qed.
-
-Corollary typesafe_setmem:
-  forall len mw m a v e
-         (TV1: hastyp_val (VaM m mw) (MemT mw))
-         (TV3: hastyp_val (VaN v (Mb*len)) (NumT (Mb*len))),
-  hastyp_val (VaM (setmem e len m a v) mw) (MemT mw).
-Proof.
-  intros. apply TVM, setmem_welltyped.
-    eapply mem_welltyped. eassumption.
-    apply value_bound. assumption.
-Qed.
-
-
 (* Context c "models" a store s if all variables in c have values in s
    that are well-typed with respect to c. *)
 Definition models (c:typctx) (s:store) : Prop :=
   forall v t (CV: c v = Some t), hastyp_val (s v) t.
-
-(* Values read from well-typed memory and registers have appropriate bitwidth. *)
-Theorem models_wtm:
-  forall v {c s m w} (MDL: models c s) (SV: s v = VaM m w),
-  match c v with Some _ => welltyped_memory m | None => True end.
-Proof.
-  intros. destruct (c v) eqn:CV; [|exact I].
-  specialize (MDL v t CV). rewrite SV in MDL. inversion MDL. assumption.
-Qed.
-
-Theorem models_regsize:
-  forall v {c s n w} (MDL: models c s) (SV: s v = VaN n w),
-  match c v with Some _ => n < 2^w | None => True end.
-Proof.
-  intros. destruct (c v) eqn:CV; [|exact I].
-  specialize (MDL v t CV). rewrite SV in MDL. inversion MDL. assumption.
-Qed.
-
-(* Weakening the typing context preserves the modeling relation. *)
-Lemma models_subset:
-  forall c s c' (M: models c s) (SS: c' ⊆ c),
-  models c' s.
-Proof.
-  unfold models. intros. apply M, SS, CV.
-Qed.
-
-(* Every result of evaluating a well-typed expression is a well-typed value. *)
-Lemma preservation_eval_exp:
-  forall {h s e c t u}
-         (MCS: models c s) (TE: hastyp_exp c e t) (E: eval_exp h s e u),
-  hastyp_val u t.
-Proof.
-  intros. revert s u MCS E. dependent induction TE; intros;
-  inversion E; subst;
-  repeat (match goal with [ IH: forall _ _, models _ _ -> eval_exp ?h _ ?e _ -> hastyp_val _ _,
-                            M: models _ ?s,
-                            EE: eval_exp ?h ?s ?e _ |- _ ] =>
-            specialize (IH s _ MCS EE); try (inversion IH; [idtac]; subst) end).
-
-  (* Var *)
-  apply MCS, CV.
-
-  (* Word *)
-  apply TVN. assumption.
-
-  (* Load *)
-  eapply typesafe_getmem; eassumption.
-
-  (* Store *)
-  apply typesafe_setmem; assumption.
-
-  (* BinOp *)
-  apply typesafe_binop; assumption.
-
-  (* UnOp *)
-  apply typesafe_unop; assumption.
-
-  (* Cast *)
-  apply typesafe_cast; assumption.
-
-  (* Let *)
-  eapply IHTE2; [|exact E2].
-  unfold update. intros v0 t0 VEQT. destruct (v0 == v).
-    inversion VEQT. subst. exact IHTE1.
-    apply MCS. exact VEQT.
-
-  (* Unknown *)
-  apply TVN. assumption.
-
-  (* Ite *)
-  destruct n1.
-    revert MCS E'. apply IHTE3.
-    revert MCS E'. apply IHTE2.
-
-  (* Extract *)
-  apply TVN, xbits_bound.
-
-  (* Concat *)
-  apply TVN. apply concat_bound; assumption.
-Qed.
-
-
-(* If an expression is well-typed and there are no memory access violations,
-   then evaluating it always succeeds (never gets "stuck"). *)
-
-Lemma progress_eval_exp:
-  forall {s e c t}
-         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
-         (MCS: models c s) (T: hastyp_exp c e t),
-  exists u, eval_exp htotal s e u.
-Proof.
-  intros. revert s MCS. dependent induction T; intros;
-  repeat match reverse goal with [ IH: forall _, models ?C _ -> exists _, eval_exp _ _ ?e _,
-                                    M: models ?c ?s,
-                                    T: hastyp_exp ?c ?e _ |- _ ] =>
-    specialize (IH s M);
-    let u':=fresh "u" in let EE:=fresh "E" in let TV:=fresh "TV" in
-      destruct IH as [u' EE];
-      assert (TV:=preservation_eval_exp M T EE);
-      try (inversion TV; [idtac]; subst)
-  end.
-
-  (* Var *)
-  exists (s v). apply EVar.
-
-  (* Word *)
-  exists (VaN n w). apply EWord; assumption.
-
-  (* Load *)
-  eexists. eapply ELoad; try eassumption. intros. split. reflexivity. apply RW.
-
-  (* Store *)
-  eexists. eapply EStore; try eassumption. intros. split. reflexivity. apply RW.
-
-  (* BinOp *)
-  eexists. apply EBinOp; eassumption.
-
-  (* UnOp *)
-  eexists. apply EUnOp; eassumption.
-
-  (* Cast *)
-  eexists. apply ECast; eassumption.
-
-  (* Let *)
-  destruct (IHT2 (s[v:=u])) as [u' E2].
-    unfold update. intros v0 t0 VEQT. destruct (v0 == v).
-      inversion VEQT. subst. assumption.
-      apply MCS. exact VEQT.
-    exists u'. eapply ELet; eassumption.
-
-  (* Unknown *)
-  exists (VaN 0 w). apply EUnknown. apply Nlt_0_pow2.
-
-  (* Ite *)
-  eexists (match n with N0 => u0 | _ => u end).
-  apply EIte with (n1:=n) (w1:=w). assumption. destruct n; assumption.
-
-  (* Extract *)
-  eexists. eapply EExtract. eassumption.
-
-  (* Concat *)
-  eexists. apply EConcat; eassumption.
-Qed.
-
-Remark welltyped_rep:
-  forall e c0 c q n (TS: hastyp_stmt c0 c (Rep e q) c),
-  hastyp_stmt c0 c (N.iter n (Seq q) Nop) c.
-Proof.
-  intros. inversion TS; subst. apply Niter_invariant.
-    apply TNop. reflexivity.
-    intros. eapply TSeq; eassumption.
-Qed.
-
-(* Statement execution preserves the modeling relation. *)
-Lemma preservation_exec_stmt:
-  forall {h s q c0 c c' s'}
-         (MCS: models c s) (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' None),
-  models c' s'.
-Proof.
-  intros. revert c c' MCS T. dependent induction XS; intros; inversion T; subst.
-
-  eapply models_subset; eassumption.
-
-  unfold update. intros v0 t0 T0. destruct (v0 == v).
-    subst. replace t0 with t.
-      apply (preservation_eval_exp MCS TE E).
-      specialize (SS _ _ T0). rewrite update_updated in SS. inversion SS. reflexivity.
-    apply MCS. specialize (SS _ _ T0). rewrite update_frame in SS; assumption.
-
-  eapply models_subset; [|exact SS].
-  eapply IHXS2; [reflexivity| |exact TS2].
-  eapply IHXS1; [reflexivity| |exact TS1]. exact MCS.
-
-  eapply models_subset; [|exact SS]. destruct c.
-    eapply IHXS; [reflexivity| |exact TS2]. exact MCS.
-    eapply IHXS; [reflexivity| |exact TS1]. exact MCS.
-
-  eapply models_subset; [|exact SS].
-  eapply IHXS. reflexivity. exact MCS.
-  eapply welltyped_rep.
-  econstructor. exact TE. exact TS. reflexivity.
-Qed.
-
-(* Execution also preserves modeling the frame context c0. *)
-Lemma pres_frame_exec_stmt:
-  forall {h s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
-         (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' x),
-  models c0 s'.
-Proof.
-  intros. revert c c' MCS T. dependent induction XS; intros;
-  try assumption;
-  inversion T; subst.
-
-  intros v0 t0 CV0. unfold update. destruct (v0 == v).
-    subst. destruct CV as [CV|CV]; rewrite CV0 in CV.
-      discriminate.
-      inversion CV. subst t0. apply (preservation_eval_exp MCS TE E).
-    apply MC0S, CV0.
-
-  apply IHXS with (c:=c) (c':=c1); assumption.
-
-  eapply IHXS2; [| |exact TS2].
-    eapply IHXS1; eassumption.
-    eapply preservation_exec_stmt; eassumption.
-
-  destruct c; eapply IHXS; eassumption.
-
-  eapply IHXS. assumption. exact MCS.
-  eapply welltyped_rep.
-  econstructor. exact TE. exact TS. reflexivity.
-Qed.
-
-(* Well-typed statements never get "stuck" except for memory access violations.
-   They either exit or run to completion. *)
-Lemma progress_exec_stmt:
-  forall {s q c0 c c'}
-         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
-         (MCS: models c s) (T: hastyp_stmt c0 c q c'),
-  exists s' x, exec_stmt htotal s q s' x.
-Proof.
-  intros. revert c c' s T MCS. induction q using stmt_ind2; intros;
-  try (inversion T; subst).
-
-  (* Nop *)
-  exists s,None. apply XNop.
-
-  (* Move *)
-  destruct (progress_eval_exp RW MCS TE) as [u E].
-  exists (s[v:=u]),None. apply XMove. assumption.
-
-  (* Jmp *)
-  destruct (progress_eval_exp RW MCS TE) as [u E].
-  assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [a' w'|]; subst.
-  exists s,(Some (Exit a')). apply XJmp with (w:=w). assumption.
-
-  (* Exn *)
-  exists s,(Some (Raise i)). apply XExn.
-
-  (* Seq *)
-  destruct (IHq1 _ _ _ TS1 MCS) as [s2 [x2 XS1]]. destruct x2.
-    exists s2,(Some e). apply XSeq1. exact XS1.
-    destruct (IHq2 _ _ s2 TS2) as [s' [x' XS2]].
-      eapply models_subset.
-        eapply preservation_exec_stmt; eassumption.
-        reflexivity.
-      exists s',x'. eapply XSeq2; eassumption.
-
-  (* If *)
-  destruct (progress_eval_exp RW MCS TE) as [u E].
-  assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [cnd w|]; subst.
-  destruct cnd as [|cnd].
-    destruct (IHq2 _ _ _ TS2 MCS) as [s'2 [x2 XS2]]. exists s'2,x2. apply XIf with (c:=0); assumption.
-    destruct (IHq1 _ _ _ TS1 MCS) as [s'1 [x1 XS1]]. exists s'1,x1. apply XIf with (c:=N.pos cnd); assumption.
-
-  (* Rep *)
-  destruct (progress_eval_exp RW MCS TE) as [u E].
-  assert (TV:=preservation_eval_exp MCS TE E). inversion TV; subst.
-  destruct (IHq2 n c c' s) as [s' [x XS]].
-    apply Niter_invariant.
-      apply TNop. exact SS.
-      intros. eapply TSeq. exact TS. exact IH. reflexivity.
-    exact MCS.
-    exists s',x. eapply XRep. exact E. assumption.
-Qed.
-
-(* Well-typed programs preserve the modeling relation at every execution step. *)
-Theorem preservation_exec_prog:
-  forall h p c s n a s' x (MCS: models c s)
-         (WP: welltyped_prog c p) (XS: exec_prog h p a s n s' x),
-  models c s'.
-Proof.
-  intros. revert a s x MCS XS. induction n; intros; inversion XS; clear XS; subst.
-    assumption.
-    eapply IHn.
-      specialize (WP s a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
-        exact MCS. exact MCS. exact TS. exact XS0.
-      exact XP.
-    specialize (WP s a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
-      exact MCS. exact MCS. exact TS. exact XS0.
-Qed.
-
-(* Well-typed programs never get "stuck" except for memory access violations.
-   They exit, or run to completion.  They never get "stuck" due to a runtime
-   type-mismatch. *)
-Theorem progress_exec_prog:
-  forall p c0 s0 n a s1 a'
-         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
-         (MCS: models c0 s0) (WP: welltyped_prog c0 p)
-         (XP: exec_prog htotal p a s0 n s1 (Exit a')) (IL: p s1 a' <> None),
-  exists s' x, exec_prog htotal p a s0 (S n) s' x.
-Proof.
-  intros.
-  assert (WPA':=WP s1 a'). destruct (p s1 a') as [(sz,q)|] eqn:IL'; [|contradict IL; reflexivity]. clear IL.
-  destruct WPA' as [c' T]. eapply progress_exec_stmt in T.
-    destruct T as [s' [x XS]]. exists s'. eapply exec_prog_append in XS; [|exact XP | exact IL'].
-      destruct x as [e|]; [destruct e|]; eexists; exact XS.
-    exact RW.
-    eapply preservation_exec_prog. exact MCS. exact WP. exact XP.
-Qed.
-
 
 (* We next define an effective procedure for type-checking expressions and
    statements.  This procedure is sound but incomplete: it can determine well-
@@ -1084,8 +477,842 @@ Fixpoint typchk_stmt (q:stmt) (c0 c:typctx): option typctx :=
       end
   end.
 
+End PICINAE_STATICS_DEFS.
+
+
+
+Module Type PICINAE_STATICS (IL: PICINAE_IL).
+
+Include IL.
+Include PICINAE_STATICS_DEFS IL.
+
+(* Convenience lemmas for inverted reasoning about hastyp_val. *)
+
+Parameter value_bound:
+  forall n w (TV: hastyp_val (VaN n w) (NumT w)), n < 2^w.
+
+Parameter mem_welltyped:
+  forall m w (TV: hastyp_val (VaM m w) (MemT w)), welltyped_memory m.
+
+Parameter hastyp_towidth:
+  forall w n, hastyp_val (towidth w n) (NumT w).
+
+
+(* These short lemmas are helpful when automating type-checking in tactics. *)
+
+Parameter hastyp_binop:
+  forall bop c e1 e2 w w' (W: widthof_binop bop w = w')
+         (T1: hastyp_exp c e1 (NumT w)) (T2: hastyp_exp c e2 (NumT w)),
+  hastyp_exp c (BinOp bop e1 e2) (NumT w').
+
+Parameter hastyp_extract:
+  forall w c n1 n2 e1 w' (W: N.succ n1 - n2 = w')
+         (T1: hastyp_exp c e1 (NumT w)) (HI: n1 < w),
+  hastyp_exp c (Extract n1 n2 e1) (NumT w').
+
+Parameter hastyp_concat:
+  forall c e1 e2 w1 w2 w' (W: w1+w2 = w')
+         (T1: hastyp_exp c e1 (NumT w1)) (T2: hastyp_exp c e2 (NumT w2)),
+  hastyp_exp c (Concat e1 e2) (NumT w').
+
+
+(* Expression types are unique. *)
+Parameter hastyp_exp_unique:
+  forall e c1 c2 t1 t2 (HUB: has_upper_bound c1 c2)
+         (TE1: hastyp_exp c1 e t1) (TE2: hastyp_exp c2 e t2),
+  t1 = t2.
+
+(* Expression typing contexts can be weakened. *)
+Parameter hastyp_exp_weaken:
+  forall c1 c2 e t (TE: hastyp_exp c1 e t) (SS: c1 ⊆ c2),
+  hastyp_exp c2 e t.
+
+(* Statement types can be weakened. *)
+Parameter hastyp_stmt_weaken:
+  forall c0 c c' c'' q (TS: hastyp_stmt c0 c q c') (SS: c'' ⊆ c'),
+  hastyp_stmt c0 c q c''.
+
+(* Statement types agree (though not necessarily unique). *)
+Parameter hastyp_stmt_compat:
+  forall c0 q c1 c2 c1' c2'
+         (HUB: has_upper_bound c1 c2)
+         (TS1: hastyp_stmt c0 c1 q c1') (TS2: hastyp_stmt c0 c2 q c2'),
+  has_upper_bound c1' c2'.
+
+(* Statement frame contexts can be weakened. *)
+Parameter hastyp_stmt_frame_weaken:
+  forall c0 c0' q c c' (TS: hastyp_stmt c0 c q c') (SS: c0' ⊆ c0),
+  hastyp_stmt c0' c q c'.
+
+(* We next prove type-safety of the IL with respect to the above static semantics.
+   In general, interpretation of an arbitrary, unchecked IL program can fail
+   (i.e., exec_prog is underivable) for only the following reasons:
+
+   (1) memory access violation ("mem_readable" or "mem_writable" is falsified), or
+
+   (2) a type-mismatch occurs (e.g., arithmetic applied to memory state values).
+
+   Type-safety proves that if type-checking succeeds, then the only reachable
+   stuck-states are case (1).  That is, runtime type-mismatches are precluded,
+   and all computed values have proper types.
+
+   This property is important in the context of formal validation of native
+   code programs because proofs about such code typically rely upon the types
+   of values that each cpu state element can hold (e.g., 32-bit registers always
+   contain 32-bit numbers).  Proving type-safety allows us to verify these
+   basic properties within other proofs by first running the type-checker (as a
+   tactic), and then applying the type-soundness theorem(s). *)
+
+
+(* Binary operations on well-typed values yield well-typed values. *)
+Parameter typesafe_binop:
+  forall bop n1 n2 w
+         (TV1: hastyp_val (VaN n1 w) (NumT w)) (TV2: hastyp_val (VaN n2 w) (NumT w)),
+  hastyp_val (eval_binop bop w n1 n2) (NumT (widthof_binop bop w)).
+
+(* Unary operations on well-typed values yield well-typed values. *)
+Parameter typesafe_unop:
+  forall uop n w
+         (TV: hastyp_val (VaN n w) (NumT w)),
+  hastyp_val (eval_unop uop n w) (NumT w).
+
+(* Casts of well-typed values yield well-typed values. *)
+Parameter typesafe_cast:
+  forall c n w w' (TV: hastyp_val (VaN n w) (NumT w))
+    (T: match c with CAST_UNSIGNED | CAST_SIGNED => w<=w'
+                   | CAST_HIGH | CAST_LOW => w'<=w end),
+  hastyp_val (VaN (cast c w w' n) w') (NumT w').
+
+(* Memory-loads of well-typed arguments yield well-typed results. *)
+Parameter getmem_bound:
+  forall e len m a (WTM: welltyped_memory m),
+  getmem e len m a < 2^(Mb*len).
+
+Parameter getmem_mod:
+  forall n2 n1 m a (WTM: welltyped_memory m),
+  (getmem LittleE n1 m a) mod 2^(Mb*n2) = getmem LittleE (N.min n1 n2) m a.
+
+Parameter shiftr_getmem:
+  forall n2 n1 m a (WTM: welltyped_memory m),
+  N.shiftr (getmem LittleE n1 m a) (Mb*n2) = getmem LittleE (n1-n2) m (a+n2).
+
+Parameter typesafe_getmem:
+  forall mw len m a e (TV: hastyp_val (VaM m mw) (MemT mw)),
+  hastyp_val (VaN (getmem e len m a) (Mb*len)) (NumT (Mb*len)).
+
+(* Stores into well-typed memory yield well-typed memory. *)
+Parameter setmem_welltyped:
+  forall e len m a v (WTM: welltyped_memory m) (VM: v < 2^(Mb*len)),
+  welltyped_memory (setmem e len m a v).
+
+Parameter typesafe_setmem:
+  forall len mw m a v e
+         (TV1: hastyp_val (VaM m mw) (MemT mw))
+         (TV3: hastyp_val (VaN v (Mb*len)) (NumT (Mb*len))),
+  hastyp_val (VaM (setmem e len m a v) mw) (MemT mw).
+
+(* Values read from well-typed memory and registers have appropriate bitwidth. *)
+Parameter models_wtm:
+  forall v {c s m w} (MDL: models c s) (SV: s v = VaM m w),
+  match c v with Some _ => welltyped_memory m | None => True end.
+
+Parameter models_regsize:
+  forall v {c s n w} (MDL: models c s) (SV: s v = VaN n w),
+  match c v with Some _ => n < 2^w | None => True end.
+
+(* Weakening the typing context preserves the modeling relation. *)
+Parameter models_subset:
+  forall c s c' (M: models c s) (SS: c' ⊆ c),
+  models c' s.
+
+(* Every result of evaluating a well-typed expression is a well-typed value. *)
+Parameter preservation_eval_exp:
+  forall {h s e c t u}
+         (MCS: models c s) (TE: hastyp_exp c e t) (E: eval_exp h s e u),
+  hastyp_val u t.
+
+(* If an expression is well-typed and there are no memory access violations,
+   then evaluating it always succeeds (never gets "stuck"). *)
+Parameter progress_eval_exp:
+  forall {s e c t}
+         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
+         (MCS: models c s) (T: hastyp_exp c e t),
+  exists u, eval_exp htotal s e u.
+
+(* Statement execution preserves the modeling relation. *)
+Parameter preservation_exec_stmt:
+  forall {h s q c0 c c' s'}
+         (MCS: models c s) (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' None),
+  models c' s'.
+
+(* Execution also preserves modeling the frame context c0. *)
+Parameter pres_frame_exec_stmt:
+  forall {h s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
+         (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' x),
+  models c0 s'.
+
+(* Well-typed statements never get "stuck" except for memory access violations.
+   They either exit or run to completion. *)
+Parameter progress_exec_stmt:
+  forall {s q c0 c c'}
+         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
+         (MCS: models c s) (T: hastyp_stmt c0 c q c'),
+  exists s' x, exec_stmt htotal s q s' x.
+
+(* Well-typed programs preserve the modeling relation at every execution step. *)
+Parameter preservation_exec_prog:
+  forall h p c s n a s' x (MCS: models c s)
+         (WP: welltyped_prog c p) (XS: exec_prog h p a s n s' x),
+  models c s'.
+
+(* Well-typed programs never get "stuck" except for memory access violations.
+   They exit, or run to completion.  They never get "stuck" due to a runtime
+   type-mismatch. *)
+Parameter progress_exec_prog:
+  forall p c0 s0 n a s1 a'
+         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
+         (MCS: models c0 s0) (WP: welltyped_prog c0 p)
+         (XP: exec_prog htotal p a s0 n s1 (Exit a')) (IL: p s1 a' <> None),
+  exists s' x, exec_prog htotal p a s0 (S n) s' x.
 
 (* The expression type-checker is sound. *)
+Parameter typchk_exp_sound:
+  forall e c t, typchk_exp e c = Some t -> hastyp_exp c e t.
+
+(* The meet of two contexts is bounded above by the contexts. *)
+Parameter typctx_meet_subset:
+  forall c1 c2, typctx_meet c1 c2 ⊆ c1.
+
+(* Context-meet is commutative. *)
+Parameter typctx_meet_comm:
+  forall c1 c2, typctx_meet c1 c2 = typctx_meet c2 c1.
+
+(* Context-meet computes the greatest of the lower bounds of the inputs. *)
+Parameter typctx_meet_lowbound:
+  forall c0 c1 c2 (SS1: c0 ⊆ c1) (SS2: c0 ⊆ c2), c0 ⊆ typctx_meet c1 c2.
+
+(* The type-checker preserves the frame context. *)
+Parameter typchk_stmt_mono:
+  forall c0 q c c' (TS: typchk_stmt q c0 c = Some c') (SS: c0 ⊆ c), c0 ⊆ c'.
+
+(* The statement type-checker is sound. *)
+Parameter typchk_stmt_sound:
+  forall q c0 c c' (SS: c0 ⊆ c) (TS: typchk_stmt q c0 c = Some c'),
+  hastyp_stmt c0 c q c'.
+
+(* Create a theorem that transforms a type-safety goal into an application of
+   the type-checker.  This allows type-safety goals to be solved by any of
+   Coq's fast reduction tactics, such as vm_compute or native_compute. *)
+Parameter typchk_stmt_compute:
+  forall q c (TS: if typchk_stmt q c c then True else False),
+  exists c', hastyp_stmt c c q c'.
+
+(* Attempt to automatically solve a goal of the form (welltyped_prog c p).
+   Statements in p that cannot be type-checked automatically (using context-
+   meets at conditionals and the incoming context as the fixpoint of loops)
+   are left as subgoals for the user to solve.  For most ISAs, this should
+   not happen; the algorithm should fully solve all the goals. *)
+Ltac Picinae_typecheck :=
+  lazymatch goal with [ |- welltyped_prog _ _ ] =>
+    let s := fresh "s" in let a := fresh "a" in
+    intros s a;
+    destruct a as [|a]; repeat first [ exact I | destruct a as [a|a|] ];
+    try (apply typchk_stmt_compute; vm_compute; exact I)
+  | _ => fail "goal is not of the form (welltyped_prog c p)"
+  end.
+
+End PICINAE_STATICS.
+
+
+Module PicinaeStatics (IL: PICINAE_IL) : PICINAE_STATICS IL.
+
+Include IL.
+Include PICINAE_STATICS_DEFS IL.
+Module PTheory := PicinaeTheory IL.
+Import PTheory.
+
+Lemma value_bound:
+  forall n w (TV: hastyp_val (VaN n w) (NumT w)), n < 2^w.
+Proof. intros. inversion TV. assumption. Qed.
+
+Lemma mem_welltyped:
+  forall m w (TV: hastyp_val (VaM m w) (MemT w)), welltyped_memory m.
+Proof. intros. inversion TV. assumption. Qed.
+
+Lemma hastyp_towidth:
+  forall w n, hastyp_val (towidth w n) (NumT w).
+Proof.
+  intros. apply TVN.
+  apply N.mod_upper_bound.
+  apply N.pow_nonzero.
+  intro. discriminate.
+Qed.
+
+Lemma hastyp_binop:
+  forall bop c e1 e2 w w' (W: widthof_binop bop w = w')
+         (T1: hastyp_exp c e1 (NumT w)) (T2: hastyp_exp c e2 (NumT w)),
+  hastyp_exp c (BinOp bop e1 e2) (NumT w').
+Proof.
+  intros. rewrite <- W. apply TBinOp; assumption.
+Qed.
+
+Lemma hastyp_extract:
+  forall w c n1 n2 e1 w' (W: N.succ n1 - n2 = w')
+         (T1: hastyp_exp c e1 (NumT w)) (HI: n1 < w),
+  hastyp_exp c (Extract n1 n2 e1) (NumT w').
+Proof.
+  intros. rewrite <- W. eapply TExtract; eassumption.
+Qed.
+
+Lemma hastyp_concat:
+  forall c e1 e2 w1 w2 w' (W: w1+w2 = w')
+         (T1: hastyp_exp c e1 (NumT w1)) (T2: hastyp_exp c e2 (NumT w2)),
+  hastyp_exp c (Concat e1 e2) (NumT w').
+Proof.
+  intros. rewrite <- W. apply TConcat; assumption.
+Qed.
+
+Theorem hastyp_exp_unique:
+  forall e c1 c2 t1 t2 (HUB: has_upper_bound c1 c2)
+         (TE1: hastyp_exp c1 e t1) (TE2: hastyp_exp c2 e t2),
+  t1 = t2.
+Proof.
+  intros. revert c1 c2 t1 t2 HUB TE1 TE2. induction e; intros;
+  inversion TE1; inversion TE2; clear TE1 TE2; subst;
+  try reflexivity.
+
+  (* Var *)
+  eapply HUB; eassumption.
+
+  (* Store *)
+  eapply IHe1; eassumption.
+
+  (* BinOp *)
+  specialize (IHe1 _ _ _ _ HUB T1 T0). inversion IHe1. reflexivity.
+
+  (* UnOp *)
+  specialize (IHe _ _ _ _ HUB T1 T0). inversion IHe. reflexivity.
+
+  (* Let *)
+  specialize (IHe1 _ _ _ _ HUB T1 T0). subst.
+  refine (IHe2 _ _ _ _ _ T2 T3). apply hub_update. exact HUB.
+
+  (* Extract *)
+  exact (IHe2 _ _ _ _ HUB T2 T4).
+
+  (* Concat *)
+  specialize (IHe1 _ _ _ _ HUB T1 T0). inversion IHe1. subst.
+  specialize (IHe2 _ _ _ _ HUB T2 T3). inversion IHe2. subst.
+  reflexivity.
+Qed.
+
+Theorem hastyp_exp_weaken:
+  forall c1 c2 e t (TE: hastyp_exp c1 e t) (SS: c1 ⊆ c2),
+  hastyp_exp c2 e t.
+Proof.
+  intros. revert c2 SS. dependent induction TE; intros; econstructor;
+  try (try first [ apply IHTE | apply IHTE1 | apply IHTE2 | apply IHTE3 | apply SS ]; assumption).
+
+  apply IHTE2. unfold update. intros v0 t CV. destruct (v0 == v).
+    assumption.
+    apply SS. assumption.
+Qed.
+
+Theorem hastyp_stmt_weaken:
+  forall c0 c c' c'' q (TS: hastyp_stmt c0 c q c') (SS: c'' ⊆ c'),
+  hastyp_stmt c0 c q c''.
+Proof.
+  intros. inversion TS; clear TS; subst;
+  econstructor; first [ eassumption | transitivity c'; assumption ].
+Qed.
+
+Theorem hastyp_stmt_compat:
+  forall c0 q c1 c2 c1' c2'
+         (HUB: has_upper_bound c1 c2)
+         (TS1: hastyp_stmt c0 c1 q c1') (TS2: hastyp_stmt c0 c2 q c2'),
+  has_upper_bound c1' c2'.
+Proof.
+  induction q; intros; inversion TS1; inversion TS2; clear TS1 TS2; subst;
+  try solve [ apply (hub_subset _ _ _ _ _ _ HUB); assumption ].
+    eapply hub_subset; [|eassumption..]. replace t0 with t.
+      apply hub_update, HUB.
+      eapply hastyp_exp_unique; eassumption.
+    eapply IHq2.
+      eapply IHq1; eassumption.
+      eapply hastyp_stmt_weaken. exact TS3. exact SS.
+      eapply hastyp_stmt_weaken. exact TS5. exact SS0.
+    eapply hub_subset; [|eassumption..]. eapply IHq1; eassumption.
+Qed.
+
+Theorem hastyp_stmt_frame_weaken:
+  forall c0 c0' q c c' (TS: hastyp_stmt c0 c q c') (SS: c0' ⊆ c0),
+  hastyp_stmt c0' c q c'.
+Proof.
+  induction q; intros; inversion TS; subst.
+    apply TNop. assumption.
+    eapply TMove.
+      specialize (SS v). destruct (c0' v).
+        right. rewrite (SS t0 (eq_refl _)) in CV. destruct CV. discriminate. eassumption.
+        left. reflexivity.
+      exact TE.
+      assumption.
+    eapply TJmp. exact TE. assumption.
+    apply TExn. assumption.
+    eapply TSeq.
+      apply IHq1. exact TS1. exact SS.
+      apply IHq2. exact TS2. exact SS.
+      exact SS0.
+    eapply TIf.
+      exact TE.
+      apply IHq1. exact TS1. exact SS.
+      apply IHq2. exact TS2. exact SS.
+      exact SS0.
+    eapply TRep.
+      exact TE.
+      apply IHq. exact TS0. exact SS.
+      exact SS0.
+Qed.
+
+Theorem typesafe_binop:
+  forall bop n1 n2 w
+         (TV1: hastyp_val (VaN n1 w) (NumT w)) (TV2: hastyp_val (VaN n2 w) (NumT w)),
+  hastyp_val (eval_binop bop w n1 n2) (NumT (widthof_binop bop w)).
+Proof.
+  intros. destruct bop; try first [ apply hastyp_towidth | apply TVN, bit_bound ];
+  apply TVN; try apply ofZ_bound.
+
+  (* DIV *)
+  eapply N.le_lt_trans. apply div_bound. apply value_bound. assumption.
+
+  (* SMOD *)
+  apply mod_bound; apply value_bound; assumption.
+
+  (* SHIFTR *)
+  eapply N.lt_le_trans.
+    apply shiftr_bound. apply value_bound. eassumption.
+    apply N.pow_le_mono_r. discriminate 1. apply N.le_sub_l.
+
+  (* LAND *)
+  apply land_bound; apply value_bound; assumption.
+
+  (* LOR *)
+  apply lor_bound; apply value_bound; assumption.
+
+  (* LXOR *)
+  apply lxor_bound; apply value_bound; assumption.
+Qed.
+
+Theorem typesafe_unop:
+  forall uop n w
+         (TV: hastyp_val (VaN n w) (NumT w)),
+  hastyp_val (eval_unop uop n w) (NumT w).
+Proof.
+  intros. destruct uop; apply TVN.
+
+  (* NEG *)
+  apply N.mod_upper_bound, N.pow_nonzero. discriminate 1.
+
+  (* NOT *)
+  apply lnot_bound, value_bound. assumption.
+Qed.
+
+Theorem typesafe_cast:
+  forall c n w w' (TV: hastyp_val (VaN n w) (NumT w))
+    (T: match c with CAST_UNSIGNED | CAST_SIGNED => w<=w'
+                   | CAST_HIGH | CAST_LOW => w'<=w end),
+  hastyp_val (VaN (cast c w w' n) w') (NumT w').
+Proof.
+  intros. inversion TV. subst. destruct c; simpl.
+
+  (* LOW *)
+  apply hastyp_towidth.
+
+  (* HIGH *)
+  apply TVN, cast_high_bound; assumption.
+
+  (* SIGNED *)
+  apply TVN, ofZ_bound.
+
+  (* UNSIGNED *)
+  apply TVN. eapply N.lt_le_trans. eassumption.
+  apply N.pow_le_mono_r. discriminate 1. assumption.
+Qed.
+
+Theorem getmem_bound:
+  forall e len m a (WTM: welltyped_memory m),
+  getmem e len m a < 2^(Mb*len).
+Proof.
+  intros. revert a. induction len using N.peano_ind; intro.
+    rewrite N.mul_0_r. apply Nlt_0_pow2.
+    rewrite getmem_succ. destruct e; apply lor_bound.
+      eapply N.lt_le_trans.
+        apply IHlen.
+        apply N.pow_le_mono_r. discriminate 1. apply N.mul_le_mono_nonneg_l. apply N.le_0_l. apply N.le_succ_diag_r.
+      rewrite N.shiftl_mul_pow2, N.mul_succ_r, N.add_comm, N.pow_add_r. apply N.mul_lt_mono_pos_r.
+        apply Nlt_0_pow2.
+        apply WTM.
+      eapply N.lt_le_trans.
+        apply WTM.
+        apply N.pow_le_mono_r. discriminate 1. rewrite N.mul_succ_r, N.add_comm. apply N.le_add_r.
+      rewrite N.shiftl_mul_pow2, N.mul_succ_r, N.pow_add_r. apply N.mul_lt_mono_pos_r.
+        apply Nlt_0_pow2.
+        apply IHlen.
+Qed.
+
+Theorem getmem_mod:
+  forall n2 n1 m a (WTM: welltyped_memory m),
+  (getmem LittleE n1 m a) mod 2^(Mb*n2) = getmem LittleE (N.min n1 n2) m a.
+Proof.
+  intros. destruct (N.le_ge_cases n1 n2).
+
+    rewrite N.min_l by assumption. apply N.mod_small. eapply N.lt_le_trans.
+      apply getmem_bound, WTM.
+      apply N.pow_le_mono_r. discriminate. apply N.mul_le_mono_l. assumption.
+
+    rewrite N.min_r, <- (N.add_sub n1 n2), N.add_comm, <- N.add_sub_assoc by assumption.
+    rewrite PTheory.getmem_split, <- N.land_ones, N.land_lor_distr_l, 2!N.land_ones, N.shiftl_mul_pow2.
+    rewrite N.mod_mul, N.lor_0_r by (apply N.pow_nonzero; discriminate).
+    apply N.mod_small, getmem_bound, WTM.
+Qed.
+
+Theorem shiftr_getmem:
+  forall n2 n1 m a (WTM: welltyped_memory m),
+  N.shiftr (getmem LittleE n1 m a) (Mb*n2) = getmem LittleE (n1-n2) m (a+n2).
+Proof.
+  intros. destruct (N.le_ge_cases n1 n2).
+
+    rewrite (proj2 (N.sub_0_le _ _)), PTheory.getmem_0 by assumption. eapply shiftr_low_pow2, N.lt_le_trans.
+      apply getmem_bound, WTM.
+      apply N.pow_le_mono_r. discriminate. apply N.mul_le_mono_l. assumption.
+
+    rewrite <- (N.add_sub n1 n2) at 1. rewrite N.add_comm, <- N.add_sub_assoc, PTheory.getmem_split by assumption.
+    rewrite N.shiftr_lor, N.shiftr_shiftl_r, N.sub_diag, N.shiftr_0_r by apply N.le_refl.
+    rewrite shiftr_low_pow2 by apply getmem_bound, WTM. reflexivity.
+Qed.
+
+Theorem typesafe_getmem:
+  forall mw len m a e (TV: hastyp_val (VaM m mw) (MemT mw)),
+  hastyp_val (VaN (getmem e len m a) (Mb*len)) (NumT (Mb*len)).
+Proof.
+  intros. apply TVN. apply getmem_bound. eapply mem_welltyped. eassumption.
+Qed.
+
+Theorem setmem_welltyped:
+  forall e len m a v (WTM: welltyped_memory m) (VM: v < 2^(Mb*len)),
+  welltyped_memory (setmem e len m a v).
+Proof.
+  induction len using N.peano_ind; intros.
+    rewrite setmem_0. apply WTM.
+    rewrite setmem_succ. destruct e; (apply IHlen; [intro a'; destruct (N.eq_dec a' a); [subst a'|]|]).
+      rewrite update_updated, N.shiftr_div_pow2. apply N.div_lt_upper_bound.
+        apply N.pow_nonzero. discriminate 1.
+        rewrite <- N.pow_add_r, <- N.mul_succ_r. exact VM.
+      rewrite update_frame by assumption. apply WTM.
+      apply N.mod_lt, N.pow_nonzero. discriminate 1.
+      rewrite update_updated. destruct len.
+        eapply N.lt_le_trans. exact VM. rewrite N.mul_1_r. reflexivity.
+        apply N.mod_lt, N.pow_nonzero. discriminate 1.
+      rewrite update_frame by assumption. apply WTM.
+      rewrite N.shiftr_div_pow2. apply N.div_lt_upper_bound.
+        apply N.pow_nonzero. discriminate 1.
+        rewrite <- N.pow_add_r, N.add_comm, <- N.mul_succ_r. exact VM.
+Qed.
+
+Corollary typesafe_setmem:
+  forall len mw m a v e
+         (TV1: hastyp_val (VaM m mw) (MemT mw))
+         (TV3: hastyp_val (VaN v (Mb*len)) (NumT (Mb*len))),
+  hastyp_val (VaM (setmem e len m a v) mw) (MemT mw).
+Proof.
+  intros. apply TVM, setmem_welltyped.
+    eapply mem_welltyped. eassumption.
+    apply value_bound. assumption.
+Qed.
+
+Theorem models_wtm:
+  forall v {c s m w} (MDL: models c s) (SV: s v = VaM m w),
+  match c v with Some _ => welltyped_memory m | None => True end.
+Proof.
+  intros. destruct (c v) eqn:CV; [|exact I].
+  specialize (MDL v t CV). rewrite SV in MDL. inversion MDL. assumption.
+Qed.
+
+Theorem models_regsize:
+  forall v {c s n w} (MDL: models c s) (SV: s v = VaN n w),
+  match c v with Some _ => n < 2^w | None => True end.
+Proof.
+  intros. destruct (c v) eqn:CV; [|exact I].
+  specialize (MDL v t CV). rewrite SV in MDL. inversion MDL. assumption.
+Qed.
+
+Lemma models_subset:
+  forall c s c' (M: models c s) (SS: c' ⊆ c),
+  models c' s.
+Proof.
+  unfold models. intros. apply M, SS, CV.
+Qed.
+
+Lemma preservation_eval_exp:
+  forall {h s e c t u}
+         (MCS: models c s) (TE: hastyp_exp c e t) (E: eval_exp h s e u),
+  hastyp_val u t.
+Proof.
+  intros. revert s u MCS E. dependent induction TE; intros;
+  inversion E; subst;
+  repeat (match goal with [ IH: forall _ _, models _ _ -> eval_exp ?h _ ?e _ -> hastyp_val _ _,
+                            M: models _ ?s,
+                            EE: eval_exp ?h ?s ?e _ |- _ ] =>
+            specialize (IH s _ MCS EE); try (inversion IH; [idtac]; subst) end).
+
+  (* Var *)
+  apply MCS, CV.
+
+  (* Word *)
+  apply TVN. assumption.
+
+  (* Load *)
+  eapply typesafe_getmem; eassumption.
+
+  (* Store *)
+  apply typesafe_setmem; assumption.
+
+  (* BinOp *)
+  apply typesafe_binop; assumption.
+
+  (* UnOp *)
+  apply typesafe_unop; assumption.
+
+  (* Cast *)
+  apply typesafe_cast; assumption.
+
+  (* Let *)
+  eapply IHTE2; [|exact E2].
+  unfold update. intros v0 t0 VEQT. destruct (v0 == v).
+    inversion VEQT. subst. exact IHTE1.
+    apply MCS. exact VEQT.
+
+  (* Unknown *)
+  apply TVN. assumption.
+
+  (* Ite *)
+  destruct n1.
+    revert MCS E'. apply IHTE3.
+    revert MCS E'. apply IHTE2.
+
+  (* Extract *)
+  apply TVN, xbits_bound.
+
+  (* Concat *)
+  apply TVN. apply concat_bound; assumption.
+Qed.
+
+Lemma progress_eval_exp:
+  forall {s e c t}
+         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
+         (MCS: models c s) (T: hastyp_exp c e t),
+  exists u, eval_exp htotal s e u.
+Proof.
+  intros. revert s MCS. dependent induction T; intros;
+  repeat match reverse goal with [ IH: forall _, models ?C _ -> exists _, eval_exp _ _ ?e _,
+                                    M: models ?c ?s,
+                                    T: hastyp_exp ?c ?e _ |- _ ] =>
+    specialize (IH s M);
+    let u':=fresh "u" in let EE:=fresh "E" in let TV:=fresh "TV" in
+      destruct IH as [u' EE];
+      assert (TV:=preservation_eval_exp M T EE);
+      try (inversion TV; [idtac]; subst)
+  end.
+
+  (* Var *)
+  exists (s v). apply EVar.
+
+  (* Word *)
+  exists (VaN n w). apply EWord; assumption.
+
+  (* Load *)
+  eexists. eapply ELoad; try eassumption. intros. split. reflexivity. apply RW.
+
+  (* Store *)
+  eexists. eapply EStore; try eassumption. intros. split. reflexivity. apply RW.
+
+  (* BinOp *)
+  eexists. apply EBinOp; eassumption.
+
+  (* UnOp *)
+  eexists. apply EUnOp; eassumption.
+
+  (* Cast *)
+  eexists. apply ECast; eassumption.
+
+  (* Let *)
+  destruct (IHT2 (s[v:=u])) as [u' E2].
+    unfold update. intros v0 t0 VEQT. destruct (v0 == v).
+      inversion VEQT. subst. assumption.
+      apply MCS. exact VEQT.
+    exists u'. eapply ELet; eassumption.
+
+  (* Unknown *)
+  exists (VaN 0 w). apply EUnknown. apply Nlt_0_pow2.
+
+  (* Ite *)
+  eexists (match n with N0 => u0 | _ => u end).
+  apply EIte with (n1:=n) (w1:=w). assumption. destruct n; assumption.
+
+  (* Extract *)
+  eexists. eapply EExtract. eassumption.
+
+  (* Concat *)
+  eexists. apply EConcat; eassumption.
+Qed.
+
+Remark welltyped_rep:
+  forall e c0 c q n (TS: hastyp_stmt c0 c (Rep e q) c),
+  hastyp_stmt c0 c (N.iter n (Seq q) Nop) c.
+Proof.
+  intros. inversion TS; subst. apply Niter_invariant.
+    apply TNop. reflexivity.
+    intros. eapply TSeq; eassumption.
+Qed.
+
+Lemma preservation_exec_stmt:
+  forall {h s q c0 c c' s'}
+         (MCS: models c s) (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' None),
+  models c' s'.
+Proof.
+  intros. revert c c' MCS T. dependent induction XS; intros; inversion T; subst.
+
+  eapply models_subset; eassumption.
+
+  unfold update. intros v0 t0 T0. destruct (v0 == v).
+    subst. replace t0 with t.
+      apply (preservation_eval_exp MCS TE E).
+      specialize (SS _ _ T0). rewrite update_updated in SS. inversion SS. reflexivity.
+    apply MCS. specialize (SS _ _ T0). rewrite update_frame in SS; assumption.
+
+  eapply models_subset; [|exact SS].
+  eapply IHXS2; [reflexivity| |exact TS2].
+  eapply IHXS1; [reflexivity| |exact TS1]. exact MCS.
+
+  eapply models_subset; [|exact SS]. destruct c.
+    eapply IHXS; [reflexivity| |exact TS2]. exact MCS.
+    eapply IHXS; [reflexivity| |exact TS1]. exact MCS.
+
+  eapply models_subset; [|exact SS].
+  eapply IHXS. reflexivity. exact MCS.
+  eapply welltyped_rep.
+  econstructor. exact TE. exact TS. reflexivity.
+Qed.
+
+Lemma pres_frame_exec_stmt:
+  forall {h s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
+         (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' x),
+  models c0 s'.
+Proof.
+  intros. revert c c' MCS T. dependent induction XS; intros;
+  try assumption;
+  inversion T; subst.
+
+  intros v0 t0 CV0. unfold update. destruct (v0 == v).
+    subst. destruct CV as [CV|CV]; rewrite CV0 in CV.
+      discriminate.
+      inversion CV. subst t0. apply (preservation_eval_exp MCS TE E).
+    apply MC0S, CV0.
+
+  apply IHXS with (c:=c) (c':=c1); assumption.
+
+  eapply IHXS2; [| |exact TS2].
+    eapply IHXS1; eassumption.
+    eapply preservation_exec_stmt; eassumption.
+
+  destruct c; eapply IHXS; eassumption.
+
+  eapply IHXS. assumption. exact MCS.
+  eapply welltyped_rep.
+  econstructor. exact TE. exact TS. reflexivity.
+Qed.
+
+Lemma progress_exec_stmt:
+  forall {s q c0 c c'}
+         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
+         (MCS: models c s) (T: hastyp_stmt c0 c q c'),
+  exists s' x, exec_stmt htotal s q s' x.
+Proof.
+  intros. revert c c' s T MCS. induction q using stmt_ind2; intros;
+  try (inversion T; subst).
+
+  (* Nop *)
+  exists s,None. apply XNop.
+
+  (* Move *)
+  destruct (progress_eval_exp RW MCS TE) as [u E].
+  exists (s[v:=u]),None. apply XMove. assumption.
+
+  (* Jmp *)
+  destruct (progress_eval_exp RW MCS TE) as [u E].
+  assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [a' w'|]; subst.
+  exists s,(Some (Exit a')). apply XJmp with (w:=w). assumption.
+
+  (* Exn *)
+  exists s,(Some (Raise i)). apply XExn.
+
+  (* Seq *)
+  destruct (IHq1 _ _ _ TS1 MCS) as [s2 [x2 XS1]]. destruct x2.
+    exists s2,(Some e). apply XSeq1. exact XS1.
+    destruct (IHq2 _ _ s2 TS2) as [s' [x' XS2]].
+      eapply models_subset.
+        eapply preservation_exec_stmt; eassumption.
+        reflexivity.
+      exists s',x'. eapply XSeq2; eassumption.
+
+  (* If *)
+  destruct (progress_eval_exp RW MCS TE) as [u E].
+  assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [cnd w|]; subst.
+  destruct cnd as [|cnd].
+    destruct (IHq2 _ _ _ TS2 MCS) as [s'2 [x2 XS2]]. exists s'2,x2. apply XIf with (c:=0); assumption.
+    destruct (IHq1 _ _ _ TS1 MCS) as [s'1 [x1 XS1]]. exists s'1,x1. apply XIf with (c:=N.pos cnd); assumption.
+
+  (* Rep *)
+  destruct (progress_eval_exp RW MCS TE) as [u E].
+  assert (TV:=preservation_eval_exp MCS TE E). inversion TV; subst.
+  destruct (IHq2 n c c' s) as [s' [x XS]].
+    apply Niter_invariant.
+      apply TNop. exact SS.
+      intros. eapply TSeq. exact TS. exact IH. reflexivity.
+    exact MCS.
+    exists s',x. eapply XRep. exact E. assumption.
+Qed.
+
+Theorem preservation_exec_prog:
+  forall h p c s n a s' x (MCS: models c s)
+         (WP: welltyped_prog c p) (XS: exec_prog h p a s n s' x),
+  models c s'.
+Proof.
+  intros. revert a s x MCS XS. induction n; intros; inversion XS; clear XS; subst.
+    assumption.
+    eapply IHn.
+      specialize (WP s a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
+        exact MCS. exact MCS. exact TS. exact XS0.
+      exact XP.
+    specialize (WP s a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
+      exact MCS. exact MCS. exact TS. exact XS0.
+Qed.
+
+Theorem progress_exec_prog:
+  forall p c0 s0 n a s1 a'
+         (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
+         (MCS: models c0 s0) (WP: welltyped_prog c0 p)
+         (XP: exec_prog htotal p a s0 n s1 (Exit a')) (IL: p s1 a' <> None),
+  exists s' x, exec_prog htotal p a s0 (S n) s' x.
+Proof.
+  intros.
+  assert (WPA':=WP s1 a'). destruct (p s1 a') as [(sz,q)|] eqn:IL'; [|contradict IL; reflexivity]. clear IL.
+  destruct WPA' as [c' T]. eapply progress_exec_stmt in T.
+    destruct T as [s' [x XS]]. exists s'. eapply exec_prog_append in XS; [|exact XP | exact IL'].
+      destruct x as [e|]; [destruct e|]; eexists; exact XS.
+    exact RW.
+    eapply preservation_exec_prog. exact MCS. exact WP. exact XP.
+Qed.
+
 Theorem typchk_exp_sound:
   forall e c t, typchk_exp e c = Some t -> hastyp_exp c e t.
 Proof.
@@ -1159,7 +1386,7 @@ Proof.
   destruct (typchk_exp e1 c) as [t1|]; [destruct t1|]; try discriminate.
   destruct (typchk_exp e2 c) as [t2|]; [|discriminate].
   destruct (typchk_exp e3 c) as [t3|]; [|discriminate].
-  destruct (typ_eqdec t2 t3); [|discriminate].
+  destruct (t2 == t3); [|discriminate].
   injection H; intro; subst.
   eapply TIte.
     apply IHe1. reflexivity.
@@ -1185,7 +1412,6 @@ Proof.
     apply IHe2. reflexivity.
 Qed.
 
-(* The meet of two contexts is bounded above by the contexts. *)
 Lemma typctx_meet_subset:
   forall c1 c2, typctx_meet c1 c2 ⊆ c1.
 Proof.
@@ -1195,7 +1421,6 @@ Proof.
   destruct (t1 == t2). exact H. discriminate.
 Qed.
 
-(* Context-meet is commutative. *)
 Lemma typctx_meet_comm:
   forall c1 c2, typctx_meet c1 c2 = typctx_meet c2 c1.
 Proof.
@@ -1206,7 +1431,6 @@ Proof.
     destruct (t0 == t). contradict n. symmetry. assumption. reflexivity.
 Qed.
 
-(* Context-meet computes the greatest of the lower bounds of the inputs. *)
 Lemma typctx_meet_lowbound:
   forall c0 c1 c2 (SS1: c0 ⊆ c1) (SS2: c0 ⊆ c2), c0 ⊆ typctx_meet c1 c2.
 Proof.
@@ -1215,7 +1439,6 @@ Proof.
   destruct (y == y); [|contradict n]; reflexivity.
 Qed.
 
-(* The type-checker preserves the frame context. *)
 Lemma typchk_stmt_mono:
   forall c0 q c c' (TS: typchk_stmt q c0 c = Some c') (SS: c0 ⊆ c), c0 ⊆ c'.
 Proof.
@@ -1227,7 +1450,7 @@ Proof.
   (* Move *)
   destruct (typchk_exp e c) as [t|]; [|discriminate].
   destruct (c0 v) as [t'|] eqn:C0V.
-    destruct (typ_eqdec t t').
+    destruct (t == t').
       injection TS; intro; subst. intros v0 t0 H. destruct (v0 == v).
         subst v0. rewrite update_updated, <- C0V, <- H. reflexivity.
         rewrite update_frame by assumption. apply SS, H.
@@ -1264,7 +1487,6 @@ Proof.
   exact SS.
 Qed.
 
-(* The statement type-checker is sound. *)
 Theorem typchk_stmt_sound:
   forall q c0 c c' (SS: c0 ⊆ c) (TS: typchk_stmt q c0 c = Some c'),
   hastyp_stmt c0 c q c'.
@@ -1276,7 +1498,7 @@ Proof.
 
   (* Move *)
   destruct (typchk_exp e c) eqn:TE; [|discriminate].
-  destruct (c0 v) eqn:C0V; [destruct (typ_eqdec t _)|];
+  destruct (c0 v) eqn:C0V; [destruct (t == _)|];
   try (injection TS; clear TS; intro); subst;
   first [ discriminate | eapply TMove; [| |reflexivity] ].
     right. exact C0V. apply typchk_exp_sound. exact TE.
@@ -1325,9 +1547,6 @@ Proof.
     reflexivity.
 Qed.
 
-(* Create a theorem that transforms a type-safety goal into an application of
-   the type-checker.  This allows type-safety goals to be solved by any of
-   Coq's fast reduction tactics, such as vm_compute or native_compute. *)
 Corollary typchk_stmt_compute:
   forall q c (TS: if typchk_stmt q c c then True else False),
   exists c', hastyp_stmt c c q c'.
@@ -1337,23 +1556,4 @@ Proof.
     contradict TS.
 Qed.
 
-(* Attempt to automatically solve a goal of the form (welltyped_prog c p).
-   Statements in p that cannot be type-checked automatically (using context-
-   meets at conditionals and the incoming context as the fixpoint of loops)
-   are left as subgoals for the user to solve.  For most ISAs, this should
-   not happen; the algorithm should fully solve all the goals. *)
-Ltac Picinae_typecheck :=
-  lazymatch goal with [ |- welltyped_prog _ _ ] =>
-    let s := fresh "s" in let a := fresh "a" in
-    intros s a;
-    destruct a as [|a]; repeat first [ exact I | destruct a as [a|a|] ];
-    try (apply typchk_stmt_compute; vm_compute; exact I)
-  | _ => fail "goal is not of the form (welltyped_prog c p)"
-  end.
-
-End PICINAE_STATICS.
-
-
-Module PicinaeStatics (IL: PICINAE_IL) <: PICINAE_STATICS IL.
-  Include PICINAE_STATICS IL.
 End PicinaeStatics.
