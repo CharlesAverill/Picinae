@@ -10,3 +10,9 @@
 *.bin
 *.plugin
 _build
+*~
+*.o
+*.table
+*.text
+*.entry
+*.patched
