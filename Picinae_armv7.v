@@ -106,11 +106,20 @@ Module Statics_arm7 := PicinaeStatics IL_arm7.
 Export Statics_arm7.
 Module FInterp_arm7 := PicinaeFInterp IL_arm7 Statics_arm7.
 Export FInterp_arm7.
-Module PSimpl_arm7 := Picinae_Simplifier_v1_0 IL_arm7 Statics_arm7 FInterp_arm7.
-Export PSimpl_arm7.
-Ltac PSimplifier ::= PSimplifier_v1_0.
 Module SLogic_arm7 := PicinaeSLogic IL_arm7.
 Export SLogic_arm7.
+
+Module PSimplVer_arm7:PSIMPL_VERSION_CONTROL. End PSimplVer_arm7.
+Export PSimplVer_arm7.
+Module PSimpl_arm7 := Picinae_Simplifier_v1_0 PSimplVer_arm7 IL_arm7 Statics_arm7 FInterp_arm7.
+Export PSimpl_arm7.
+Ltac PSimplifier ::= PSimplifier_v1_0.
+
+(* Introduce unique aliases for tactics in case user loads multiple architectures. *)
+Tactic Notation "arm7_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
+Tactic Notation "arm7_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+Tactic Notation "arm7_psimpl" "in" hyp(H) := psimpl_hyp H.
+Tactic Notation "arm7_psimpl" := psimpl_goal.
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
 Definition arm7typctx (id:var) : option typ :=

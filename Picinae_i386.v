@@ -105,11 +105,20 @@ Module Statics_i386 := PicinaeStatics IL_i386.
 Export Statics_i386.
 Module FInterp_i386 := PicinaeFInterp IL_i386 Statics_i386.
 Export FInterp_i386.
-Module PSimpl_i386 := Picinae_Simplifier_v1_0 IL_i386 Statics_i386 FInterp_i386.
-Export PSimpl_i386.
-Ltac PSimplifier ::= PSimplifier_v1_0.
 Module SLogic_i386 := PicinaeSLogic IL_i386.
 Export SLogic_i386.
+
+Module PSimplVer_i386:PSIMPL_VERSION_CONTROL. End PSimplVer_i386.
+Export PSimplVer_i386.
+Module PSimpl_i386 := Picinae_Simplifier_v1_0 PSimplVer_i386 IL_i386 Statics_i386 FInterp_i386.
+Export PSimpl_i386.
+Ltac PSimplifier ::= PSimplifier_v1_0.
+
+(* Introduce unique aliases for tactics in case user loads multiple architectures. *)
+Tactic Notation "i386_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
+Tactic Notation "i386_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+Tactic Notation "i386_psimpl" "in" hyp(H) := psimpl_hyp H.
+Tactic Notation "i386_psimpl" := psimpl_goal.
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
 Definition x86typctx v :=

@@ -548,7 +548,7 @@ Ltac simpl_stores :=
     end
   end.
 
-Tactic Notation "simpl_stores" "in" hyp(H) :=
+Ltac simpl_stores_in H :=
   repeat lazymatch type of H with context [ update _ ?v _ ?v ] => rewrite update_updated in H
                                 | context [ update _ _ _ _ ] => rewrite update_frame in H; [|discriminate 1] end;
   repeat rewrite if_N_same in H;
@@ -558,6 +558,8 @@ Tactic Notation "simpl_stores" "in" hyp(H) :=
         (symmetry; repeat apply update_inner_same; apply update_cancel)
     end
   end.
+
+Tactic Notation "simpl_stores" "in" hyp(H) := simpl_stores_in H.
 
 (* To facilitate expression simplification, it is often convenient to first
    consolidate all information about known variable values into the expression
@@ -601,7 +603,7 @@ Ltac stock_store :=
   | _ => fail "Goal is not of the form (exec_stmt ...)"
   end.
 
-Tactic Notation "stock_store" "in" hyp(XS) :=
+Ltac stock_store_in XS :=
   lazymatch type of XS with exec_stmt _ _ ?q _ _ => repeat
     match q with context [ Var ?v ] =>
       lazymatch type of XS with exec_stmt _ ?s _ _ _ =>
@@ -620,6 +622,8 @@ Tactic Notation "stock_store" "in" hyp(XS) :=
     end
   | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
   end.
+
+Tactic Notation "stock_store" "in" hyp(XS) := stock_store_in XS.
 
 (* To prevent vm_compute from expanding symbolic expressions that the user
    already has in a desired form, the following lemmas introduce symbolic

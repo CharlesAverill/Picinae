@@ -1,4 +1,4 @@
-(* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
+ (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
    Copyright (c) 2021 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
@@ -74,15 +74,13 @@ Qed.
 
 Tactic Notation "vantisym" constr(v1) constr(v2) :=
   let H1 := fresh in let H2 := fresh in
-  let t Hv1v2 :=
+  let t Hneq :=
     enough (H1: v1 <> v2);
-    [ destruct (iseq_antisym v1 v2 H1) as [Hv1v2 H2];
+    [ destruct (iseq_antisym v1 v2 H1) as [Hneq H2];
       rewrite H2 in *;
-      clear H1 H2; try clear Hv1v2 |]
-  in first [ let Hv1v2 := fresh "H" v1 v2 in t Hv1v2
-           | let Hv1 := fresh "H" v1 in t Hv1
-           | let Hv2 := fresh "H" v2 in t Hv2
-           | let H := fresh in t H ].
+      clear H1 H2; try clear Hneq |]
+  in first [ let Hneq := fresh "H" v1 "neq" in t Hneq
+           | let Hneq := fresh "Hneq" in t Hneq ].
 
 Tactic Notation "vantisym" constr(v1) constr(v2) "by" tactic(T) :=
   vantisym v1 v2; [|solve T].
@@ -1997,6 +1995,7 @@ Qed.
 End BitOps.
 
 
+
 Section NInduction.
 
 (* Analogues of theorems about Pos.iter, but for N.iter. *)
@@ -2033,6 +2032,84 @@ Proof.
 Qed.
 
 End NInduction.
+
+
+
+Section InvariantMaps.
+
+(* Sometimes we want to assert that an invariant is present and satisfied, while other times we
+   want to more leniently stipulate that an invariant is satisfied if present: *)
+Definition true_inv (OP: option Prop) := match OP with Some P => P | None => False end.
+Definition trueif_inv (OP: option Prop) := match OP with Some P => P | None => True end.
+
+Lemma trueif_true_inv: forall OP, true_inv OP -> trueif_inv OP.
+Proof. unfold true_inv, trueif_inv. intros. destruct OP. assumption. exact I. Qed.
+
+Lemma trueif_some: forall P, trueif_inv (Some P) -> P.
+Proof. intros. assumption. Qed.
+
+Lemma trueif_none: trueif_inv None -> True.
+Proof. intro. assumption. Qed.
+
+Lemma trueinv_some: forall P, true_inv (Some P) -> P.
+Proof. intros. assumption. Qed.
+
+Lemma trueinv_none: ~ true_inv None.
+Proof. intro. assumption. Qed.
+
+End InvariantMaps.
+
+(* Tactic "destruct_inv w PRE" divides the inductive case of prove_invs into subgoals,
+   one for each invariant point defined by precondition PRE, and puts the goals in
+   ascending order by address.  Argument w should be the max bitwidth of addresses to
+   consider (e.g., 32 on 32-bit ISAs). *)
+
+Tactic Notation "simpl_trueif" "in" hyp(H) :=
+  first [ simple apply trueif_none in H; clear H
+        | apply trueif_some in H ].
+
+Tactic Notation "simpl_trueinv" "in" hyp(H) :=
+  first [ simple apply trueinv_none in H; exfalso; exact H
+        | apply trueinv_some in H ].
+
+Ltac shelve_case H :=
+  tryif (simple apply trueinv_none in H) then (exfalso; exact H)
+  else tryif (apply trueinv_some in H) then
+    (repeat match goal with [ H: true_inv _ |- _ ] => simpl_trueinv in H
+                          | [ H: trueif_inv _ |- _ ] => simpl_trueif in H
+            end;
+     shelve)
+  else lazymatch type of H with
+  | true_inv (if _ ?a then _ else _) =>
+      fail "unable to simplify" H "to an invariant for address" a
+  | _ => fail "unable to simplify" H "to an invariant"
+  end.
+
+Ltac shelve_cases_loop H a :=
+  let g := numgoals in do g (
+    (only 1: (case a as [a|a|]; [| |shelve_case H]));
+    (unshelve (only 2: shelve; cycle g));
+    revgoals; cycle g; revgoals;
+    cycle 1
+  );
+  try (simple apply trueinv_none in H; exfalso; exact H).
+
+Tactic Notation "shelve_cases" int_or_var(i) hyp(H) :=
+  lazymatch type of H with true_inv (if ?p ?s ?a then _ else None) =>
+    is_var a; case a as [|a]; [ shelve_case H | do i shelve_cases_loop H a ];
+    fail "bit width" i "is insufficient to explore the invariant space"
+  | _ => fail "hypothesis" H "is not a precondition of the form"
+              "(true_inv (if [program] [store] [addr] then [invariant-set] else None))"
+  end.
+
+Tactic Notation "destruct_inv" int_or_var(i) hyp(H) :=
+  unshelve (shelve_cases i H).
+
+(* Tactic "focus_addr n" brings the goal for the invariant at address n
+   to the head of the goal list. *)
+Tactic Notation "focus_addr" constr(n) :=
+  unshelve (lazymatch goal with |- _ _ _ _ _ (Exit n) _ => shelve
+                              | _ => idtac end).
 
 
 
@@ -2577,26 +2654,6 @@ Qed.
    all the invariants are satisfied, the user can prove that any execution that starts in an
    invariant-satisfying state and that reaches another invariant always satisfies the latter. *)
 
-(* Sometimes we want to assert that an invariant is present and satisfied, while other times we
-   want to more leniently stipulate that an invariant is satisfied if present: *)
-Definition true_inv (OP: option Prop) := match OP with Some P => P | None => False end.
-Definition trueif_inv (OP: option Prop) := match OP with Some P => P | None => True end.
-
-Lemma trueif_true_inv: forall OP, true_inv OP -> trueif_inv OP.
-Proof. unfold true_inv, trueif_inv. intros. destruct OP. assumption. exact I. Qed.
-
-Lemma trueif_some: forall P, trueif_inv (Some P) -> P.
-Proof. intros. assumption. Qed.
-
-Lemma trueif_none: trueif_inv None -> True.
-Proof. intro. assumption. Qed.
-
-Lemma trueinv_some: forall P, true_inv (Some P) -> P.
-Proof. intros. assumption. Qed.
-
-Lemma trueinv_none: ~ true_inv None.
-Proof. intro. assumption. Qed.
-
 (* The "next invariant" property is true if the computation always eventually
    reaches a "next" invariant, and in a state that satisfies that invariant.
    (If the computation is already at an invariant, it is considered its own "next"
@@ -2690,58 +2747,6 @@ Proof.
 Qed.
 
 End InvariantProofs.
-
-(* Tactic "destruct_inv w PRE" divides the inductive case of prove_invs into subgoals,
-   one for each invariant point defined by precondition PRE, and puts the goals in
-   ascending order by address.  Argument w should be the max bitwidth of addresses to
-   consider (e.g., 32 on 32-bit ISAs). *)
-
-Tactic Notation "simpl_trueif" "in" hyp(H) :=
-  first [ simple apply trueif_none in H; clear H
-        | apply trueif_some in H ].
-
-Tactic Notation "simpl_trueinv" "in" hyp(H) :=
-  first [ simple apply trueinv_none in H; exfalso; exact H
-        | apply trueinv_some in H ].
-
-Ltac shelve_case H :=
-  tryif (simple apply trueinv_none in H) then (exfalso; exact H)
-  else tryif (apply trueinv_some in H) then
-    (repeat match goal with [ H: true_inv _ |- _ ] => simpl_trueinv in H
-                          | [ H: trueif_inv _ |- _ ] => simpl_trueif in H
-            end;
-     shelve)
-  else lazymatch type of H with
-  | true_inv (if _ ?a then _ else _) =>
-      fail "unable to simplify" H "to an invariant for address" a
-  | _ => fail "unable to simplify" H "to an invariant"
-  end.
-
-Ltac shelve_cases_loop H a :=
-  let g := numgoals in do g (
-    (only 1: (case a as [a|a|]; [| |shelve_case H]));
-    (unshelve (only 2: shelve; cycle g));
-    revgoals; cycle g; revgoals;
-    cycle 1
-  );
-  try (simple apply trueinv_none in H; exfalso; exact H).
-
-Tactic Notation "shelve_cases" int_or_var(i) hyp(H) :=
-  lazymatch type of H with true_inv (if ?p ?s ?a then _ else None) =>
-    is_var a; case a as [|a]; [ shelve_case H | do i shelve_cases_loop H a ];
-    fail "bit width" i "is insufficient to explore the invariant space"
-  | _ => fail "hypothesis" H "is not a precondition of the form"
-              "(true_inv (if [program] [store] [addr] then [invariant-set] else None))"
-  end.
-
-Tactic Notation "destruct_inv" int_or_var(i) hyp(H) :=
-  unshelve (shelve_cases i H).
-
-(* Tactic "focus_addr n" brings the goal for the invariant at address n
-   to the head of the goal list. *)
-Tactic Notation "focus_addr" constr(n) :=
-  unshelve (lazymatch goal with |- nextinv _ _ _ _ (Exit n) _ => shelve
-                              | _ => idtac end).
 
 
 

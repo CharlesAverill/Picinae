@@ -94,11 +94,20 @@ Module Statics_RISCV := PicinaeStatics IL_RISCV.
 Export Statics_RISCV.
 Module FInterp_RISCV := PicinaeFInterp IL_RISCV Statics_RISCV.
 Export FInterp_RISCV.
-Module PSimpl_RISCV := Picinae_Simplifier_v1_0 IL_RISCV Statics_RISCV FInterp_RISCV.
-Export PSimpl_RISCV.
-Ltac PSimplifier ::= PSimplifier_v1_0.
 Module SLogic_RISCV := PicinaeSLogic IL_RISCV.
 Export SLogic_RISCV.
+
+Module PSimplVer_RISCV:PSIMPL_VERSION_CONTROL. End PSimplVer_RISCV.
+Export PSimplVer_RISCV.
+Module PSimpl_RISCV := Picinae_Simplifier_v1_0 PSimplVer_RISCV IL_RISCV Statics_RISCV FInterp_RISCV.
+Export PSimpl_RISCV.
+Ltac PSimplifier ::= PSimplifier_v1_0.
+
+(* Introduce unique aliases for tactics in case user loads multiple architectures. *)
+Tactic Notation "r5_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
+Tactic Notation "r5_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+Tactic Notation "r5_psimpl" "in" hyp(H) := psimpl_hyp H.
+Tactic Notation "r5_psimpl" := psimpl_goal.
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
 Definition rvtypctx (v:riscvvar) :=

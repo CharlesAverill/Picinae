@@ -1121,7 +1121,8 @@ End PSIMPL_DEFS_V1_0.
    (see Picinae_simplifier_base.v), along with type signatures of any theorems
    those tactics apply. *)
 
-Module Type PICINAE_SIMPLIFIER_V1_0 (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL).
+Module Type PICINAE_SIMPLIFIER_V1_0 (Ver: PSIMPL_VERSION_CONTROL)
+  (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL).
 
 Import IL.
 Import TIL.
@@ -1132,6 +1133,14 @@ Parameter simplify_sastN_hyp:
   forall (x e:N) (noe: forall op, noe_setop_typsig op) (mvt:metavar_tree) (t:sastN)
          (NOE: noe = noe_setop) (H': e = eval_sastN mvt t) (H: x = e),
   x = simpl_outN noe mvt (simpl_sastN mvt t).
+Parameter simplify_sastB_hyp:
+  forall (x e:bool) (noe: forall op, noe_setop_typsig op) (mvt:metavar_tree) (t:sastB)
+         (NOE: noe = noe_setop) (H': e = eval_sastB mvt t) (H: x = e),
+  x = simpl_outB noe mvt (simpl_sastB mvt t).
+Parameter simplify_sastM_hyp:
+  forall (x e: addr -> N) (noe: forall op, noe_setop_typsig op) (mvt:metavar_tree) (t:sastM)
+         (NOE: noe = noe_setop) (H': e = eval_sastM mvt t) (H: x = e),
+  x = simpl_outM noe mvt (simpl_sastM mvt t).
 Parameter simplify_sastV_hyp:
   forall {P:Prop} (noe: forall op, noe_typop_typsig op) (t:sastV Prop)
     (NOE: noe = noe_typop) (H': P = eval_sastV t) (H:P),
@@ -1386,13 +1395,18 @@ Local Ltac psimp_verify_frontend :=
     reflexivity
   end.
 
-Local Ltac psimplN_hyp t H :=
-  let t2 := eval lazy [t simpl_evarsN simpl_evarsB simpl_evarsM] in (simpl_evarsN t) in
-  let mvt := eval compute in (make_mvtN t2) in
-  eapply (simplify_sastN_hyp _ mvt t2) in H;
+Local Ltac psimpl_hyp_with _simpl_evars _make_mvt _simplify_sast_hyp t H :=
+  let t2 := eval lazy [t simpl_evarsN simpl_evarsB simpl_evarsM] in (_simpl_evars t) in
+  let mvt := eval compute in (_make_mvt t2) in
+  eapply (_simplify_sast_hyp _ mvt t2) in H;
   [ compute in H
   | unify t t2; reflexivity
   | psimp_verify_frontend ].
+
+Local Ltac psimplN_hyp := psimpl_hyp_with simpl_evarsN make_mvtN simplify_sastN_hyp.
+Local Ltac psimplB_hyp := psimpl_hyp_with simpl_evarsB make_mvtB simplify_sastB_hyp.
+Local Ltac psimplM_hyp := psimpl_hyp_with simpl_evarsM make_mvtM simplify_sastM_hyp.
+
 Local Ltac psimplV_hyp t H :=
   let t2 := eval lazy [t simpl_evarsV simpl_evarsS] in (simpl_evarsV t) in
   eapply (simplify_sastV_hyp _ t2) in H;
@@ -1420,8 +1434,8 @@ Local Ltac psimplU_goal t :=
   | unify t t2; reflexivity
   | psimp_verify_frontend ].
 
-Local Ltac psimplN_exhyp H := cbv beta match delta [noe_setop] in H.
-Local Ltac psimplN_exgoal := cbv beta match delta [noe_setop].
+Local Ltac psimplNBM_exhyp H := cbv beta match delta [noe_setop] in H.
+Local Ltac psimplNBM_exgoal := cbv beta match delta [noe_setop].
 Local Ltac psimplV_exhyp H := cbv beta match delta [noe_typop] in H.
 Local Ltac psimplV_exgoal := cbv beta match delta [noe_typop].
 Local Ltac psimplU_exhyp H :=
@@ -1433,23 +1447,32 @@ Local Ltac psimplU_exgoal :=
 
 Ltac PSimplifier_v1_0 tac :=
   lazymatch tac with
-  | PSIMPL_INIT => idtac
   | PSIMPL_GENN => sastN_gen
+  | PSIMPL_GENB => sastB_gen
+  | PSIMPL_GENM => sastM_gen
   | PSIMPL_GENV => sastV_gen
   | PSIMPL_GENU => sastU_gen
   | PSIMPL_POPULATE_VAR_IDS => populate_var_ids
   | PSIMPL_N_HYP => psimplN_hyp
+  | PSIMPL_B_HYP => psimplB_hyp
+  | PSIMPL_M_HYP => psimplM_hyp
   | PSIMPL_V_HYP => psimplV_hyp
   | PSIMPL_V_GOAL => psimplV_goal
   | PSIMPL_U_HYP => psimplU_hyp
   | PSIMPL_U_GOAL => psimplU_goal
-  | PSIMPL_EXHYP_N => psimplN_exhyp
-  | PSIMPL_EXGOAL_N => psimplN_exgoal
+  | PSIMPL_EXHYP_N => psimplNBM_exhyp
+  | PSIMPL_EXGOAL_N => psimplNBM_exgoal
+  | PSIMPL_EXHYP_B => psimplNBM_exhyp
+  | PSIMPL_EXGOAL_B => psimplNBM_exgoal
+  | PSIMPL_EXHYP_M => psimplNBM_exhyp
+  | PSIMPL_EXGOAL_M => psimplNBM_exgoal
   | PSIMPL_EXHYP_V => psimplV_exhyp
   | PSIMPL_EXGOAL_V => psimplV_exgoal
   | PSIMPL_EXHYP_U => psimplU_exhyp
   | PSIMPL_EXGOAL_U => psimplU_exgoal
   end.
+
+Include Picinae_Simplifier_Base Ver.
 
 End PICINAE_SIMPLIFIER_V1_0.
 
@@ -1461,7 +1484,8 @@ End PICINAE_SIMPLIFIER_V1_0.
    since those are drawn from the module type when the module is loaded and Coq
    doesn't require that the module body reiterate them.) *)
 
-Module Picinae_Simplifier_v1_0 (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL) : PICINAE_SIMPLIFIER_V1_0 IL TIL FIL.
+Module Picinae_Simplifier_v1_0 (Ver: PSIMPL_VERSION_CONTROL)
+  (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL) : PICINAE_SIMPLIFIER_V1_0 Ver IL TIL FIL.
 
 Import IL.
 Import TIL.
@@ -2574,6 +2598,26 @@ Theorem simplify_sastN_hyp:
   x = simpl_outN noe mvt (simpl_sastN mvt t).
 Proof.
   intros. subst noe x e. erewrite simpl_outN_sound, <- simpl_sastN_sound. reflexivity.
+Qed.
+
+Theorem simplify_sastB_hyp:
+  forall {x e} noe mvt t
+    (NOE: noe = noe_setop)
+    (H': e = eval_sastB mvt t)
+    (H: x = e),
+  x = simpl_outB noe mvt (simpl_sastB mvt t).
+Proof.
+  intros. subst noe x e. erewrite simpl_outB_sound, <- simpl_sastB_sound. reflexivity.
+Qed.
+
+Theorem simplify_sastM_hyp:
+  forall {x e} noe mvt t
+    (NOE: noe = noe_setop)
+    (H': e = eval_sastM mvt t)
+    (H: x = e),
+  x = simpl_outM noe mvt (simpl_sastM mvt t).
+Proof.
+  intros. subst noe x e. erewrite simpl_outM_sound, <- simpl_sastM_sound. reflexivity.
 Qed.
 
 Theorem simplify_sastV_hyp:
