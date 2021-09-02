@@ -68,19 +68,13 @@ Inductive psimpl_tactic :=
 
 
 
-(* Create an initial dummy definition for PSimplifier that will later be replaced
-   by one of the real simplifier definitions. *)
-Module Type PSIMPL_VERSION_CONTROL.
-  Ltac PSimplifier tac := fail "PSimplifier undefined. Define it with: Ltac PSimplifier ::= PSimplifier_v1_0".
-End PSIMPL_VERSION_CONTROL.
-
-
-
 (*** TOP-LEVEL SIMPLIFIER INTERFACE ***)
 
-Module Picinae_Simplifier_Base (Ver: PSIMPL_VERSION_CONTROL).
+Module Picinae_Simplifier_Base.
 
-Include Ver.
+(* Create an initial dummy definition for PSimplifier that will later be replaced
+   by one of the real simplifier definitions. *)
+Ltac PSimplifier tac := fail "PSimplifier undefined. Define it with: Ltac PSimplifier ::= PSimplifier_v1_0".
 
 
 (* Syntax: psimpl in H.

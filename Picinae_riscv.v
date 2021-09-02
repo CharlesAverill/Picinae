@@ -36,7 +36,7 @@ Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
 Require Export Picinae_finterp.
-Require Export Picinae_simplifier_v1_0.
+Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_slogic.
 Require Import NArith.
 Require Import ZArith.
@@ -97,17 +97,23 @@ Export FInterp_RISCV.
 Module SLogic_RISCV := PicinaeSLogic IL_RISCV.
 Export SLogic_RISCV.
 
-Module PSimplVer_RISCV:PSIMPL_VERSION_CONTROL. End PSimplVer_RISCV.
-Export PSimplVer_RISCV.
-Module PSimpl_RISCV := Picinae_Simplifier_v1_0 PSimplVer_RISCV IL_RISCV Statics_RISCV FInterp_RISCV.
+Module PSimpl_RISCV := Picinae_Simplifier_Base.
 Export PSimpl_RISCV.
-Ltac PSimplifier ::= PSimplifier_v1_0.
+Module PSimpl_RISCV_v1_1 := Picinae_Simplifier_v1_1 IL_RISCV Statics_RISCV FInterp_RISCV.
+Ltac PSimplifier ::= PSimpl_RISCV_v1_1.PSimplifier.
 
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
 Tactic Notation "r5_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
 Tactic Notation "r5_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
 Tactic Notation "r5_psimpl" "in" hyp(H) := psimpl_hyp H.
 Tactic Notation "r5_psimpl" := psimpl_goal.
+
+(* To use a different simplifier version (e.g., v1_0) put the following atop
+   your proof .v file:
+Require Import Picinae_simplifier_v1_0.
+Module PSimpl_RISCV_v1_0 := Picinae_Simplifier_v1_0 IL_RISCV Statics_RISCV FInterp_RISCV.
+Ltac PSimplifier ::= PSimpl_RISCV_v1_0.PSimplifier.
+*)
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
 Definition rvtypctx (v:riscvvar) :=

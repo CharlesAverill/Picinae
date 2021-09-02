@@ -36,7 +36,7 @@ Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
 Require Export Picinae_finterp.
-Require Export Picinae_simplifier_v1_0.
+Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_slogic.
 Require Import NArith.
 Require Import Program.Equality.
@@ -109,17 +109,23 @@ Export FInterp_arm7.
 Module SLogic_arm7 := PicinaeSLogic IL_arm7.
 Export SLogic_arm7.
 
-Module PSimplVer_arm7:PSIMPL_VERSION_CONTROL. End PSimplVer_arm7.
-Export PSimplVer_arm7.
-Module PSimpl_arm7 := Picinae_Simplifier_v1_0 PSimplVer_arm7 IL_arm7 Statics_arm7 FInterp_arm7.
+Module PSimpl_arm7 := Picinae_Simplifier_Base.
 Export PSimpl_arm7.
-Ltac PSimplifier ::= PSimplifier_v1_0.
+Module PSimpl_arm7_v1_1 := Picinae_Simplifier_v1_1 IL_arm7 Statics_arm7 FInterp_arm7.
+Ltac PSimplifier ::= PSimpl_arm7_v1_1.PSimplifier.
 
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
 Tactic Notation "arm7_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
 Tactic Notation "arm7_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
 Tactic Notation "arm7_psimpl" "in" hyp(H) := psimpl_hyp H.
 Tactic Notation "arm7_psimpl" := psimpl_goal.
+
+(* To use a different simplifier version (e.g., v1_0) put the following atop
+   your proof .v file:
+Require Import Picinae_simplifier_v1_0.
+Module PSimpl_arm7_v1_0 := Picinae_Simplifier_v1_0 IL_arm7 Statics_arm7 FInterp_arm7.
+Ltac PSimplifier ::= PSimpl_arm7_v1_0.PSimplifier.
+*)
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
 Definition arm7typctx (id:var) : option typ :=

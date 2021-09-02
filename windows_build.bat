@@ -18,6 +18,8 @@
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_simplifier_v1_0.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% Picinae_simplifier_v1_1.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_i386.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_armv7.v

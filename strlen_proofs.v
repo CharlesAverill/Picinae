@@ -77,6 +77,7 @@ Definition strlen_esp_invset esp :=
    anywhere an invariant exists (e.g., at the post-condition), it is true. *)
 Theorem strlen_preserves_esp:
   forall s esp mem n s' x'
+         (MDL0: models x86typctx s)
          (ESP0: s R_ESP = Ⓓ esp) (MEM0: s V_MEM32 = Ⓜ mem)
          (RET: strlen_i386 s (mem Ⓓ[esp]) = None)
          (XP0: exec_prog fh strlen_i386 0 s n s' x'),
@@ -102,10 +103,12 @@ Proof.
      get the value of MEM from MEM0 using our previously proved strlen_preserves_memory
      theorem. *)
   intros.
+  assert (MDL: models x86typctx s1).
+    eapply preservation_exec_prog. exact MDL0. apply strlen_welltyped. exact XP.
   assert (MEM: s1 V_MEM32 = Ⓜ mem).
     rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
   rewrite (strlen_nwc s1) in RET.
-  clear s MEM0 XP0 ESP0 XP.
+  clear s MDL0 MEM0 XP0 ESP0 XP.
 
   (* We are now ready to break the goal down into one case for each invariant-point.
      The destruct_inv tactic finds all the invariants defined by the invariant-set
@@ -194,65 +197,6 @@ Proof.
   rewrite <- N.add_assoc, (N.add_comm z y), N.add_assoc, N.add_sub.
   symmetry. apply N.sub_add. assumption.
 Qed.
-
-(*
-Lemma Nmod_add_sub_assoc:
-  forall x y z w, z <= 2^w -> z <= y ->
-  (2^w + ((x + y) mod 2^w) - z) mod 2^w = (x + (y - z)) mod 2^w.
-Proof.
-  intros.
-  rewrite N.add_sub_swap by assumption.
-  rewrite N.add_mod_idemp_r by (apply N.pow_nonzero; discriminate).
-  rewrite N.add_comm, <- N.add_assoc, N.add_sub_assoc, (N.add_comm y),
-          <- N.add_sub_assoc, (N.add_comm (2^w)), N.add_assoc by assumption.
-  rewrite <- N.add_mod_idemp_r, N.mod_same by (apply N.pow_nonzero; discriminate).
-  rewrite N.add_0_r. reflexivity.
-Qed.
-
-Lemma Nmod_sub_neg:
-  forall x y w, y <= 2^w -> (2^w + x - y) mod 2^w = (x + (2^w - y)) mod 2^w.
-Proof.
-  intros. rewrite N.add_comm. rewrite N.add_sub_assoc by assumption. reflexivity.
-Qed.
-
-Lemma Nmod_add_sub:
-  forall x y w, y <= 2^w -> (2^w + (x + y) mod 2^w - y) mod 2^w = x mod 2^w.
-Proof.
-  intros.
-  rewrite N.add_sub_swap by assumption.
-  rewrite N.add_mod_idemp_r by (apply N.pow_nonzero; discriminate).
-  rewrite (N.add_comm x), N.add_assoc, N.sub_add by assumption.
-  rewrite <- N.add_mod_idemp_l, N.mod_same by (apply N.pow_nonzero; discriminate).
-  reflexivity.
-Qed.
-
-Lemma Nmod_sub_add_less:
-  forall x y z w, y <= 2^w -> z <= y ->
-  ((2^w + x - y) mod 2^w + z) mod 2^w = (2^w + x - (y - z)) mod 2^w.
-Proof.
-  intros.
-  rewrite N.add_mod_idemp_l by (apply N.pow_nonzero; discriminate).
-  rewrite Nsub_distr.
-    reflexivity.
-    assumption.
-    etransitivity. eassumption. apply N.le_add_r.
-Qed.
-
-Lemma getmem_shiftr:
-  forall n2 n1 m a (WTM: welltyped_memory m),
-  getmem LittleE n1 m a >> (Mb*n2) = getmem LittleE (n1-n2) m (a+n2).
-Proof.
-  intros. destruct (N.le_ge_cases n1 n2).
-
-    rewrite (proj2 (N.sub_0_le _ _)), getmem_0 by assumption. eapply shiftr_low_pow2, N.lt_le_trans.
-      apply getmem_bound, WTM.
-      apply N.pow_le_mono_r. discriminate. apply N.mul_le_mono_l. assumption.
-
-    rewrite <- (N.add_sub n1 n2) at 1. rewrite N.add_comm, <- N.add_sub_assoc, getmem_split by assumption.
-    rewrite N.shiftr_lor, N.shiftr_shiftl_r, N.sub_diag, N.shiftr_0_r by apply N.le_refl.
-    rewrite shiftr_low_pow2 by apply getmem_bound, WTM. reflexivity.
-Qed.
-*)
 
 Lemma land_lohi_0:
   forall x y n, x < 2^n -> N.land x (N.shiftl y n) = 0.
@@ -867,7 +811,7 @@ Proof.
     rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
   assert (WTM := x86_wtm MDL MEM). simpl in WTM.
   rewrite (strlen_nwc s1) in RET.
-  assert (ESP := strlen_preserves_esp _ _ _ _ _ (Exit a1) ESP0 MEM0 RET XP).
+  assert (ESP := strlen_preserves_esp _ _ _ _ _ (Exit a1) MDL0 ESP0 MEM0 RET XP).
   clear s MDL0 MEM0 ESP0 XP XP0.
 
   (* Break the proof into cases, one for each invariant-point. *)
