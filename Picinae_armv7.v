@@ -112,7 +112,7 @@ Export SLogic_arm7.
 Module PSimpl_arm7 := Picinae_Simplifier_Base.
 Export PSimpl_arm7.
 Module PSimpl_arm7_v1_1 := Picinae_Simplifier_v1_1 IL_arm7 Statics_arm7 FInterp_arm7.
-Ltac PSimplifier ::= PSimpl_arm7_v1_1.PSimplifier.
+Ltac PSimpl_arm7.PSimplifier ::= PSimpl_arm7_v1_1.PSimplifier.
 
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
 Tactic Notation "arm7_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
@@ -124,7 +124,7 @@ Tactic Notation "arm7_psimpl" := psimpl_goal.
    your proof .v file:
 Require Import Picinae_simplifier_v1_0.
 Module PSimpl_arm7_v1_0 := Picinae_Simplifier_v1_0 IL_arm7 Statics_arm7 FInterp_arm7.
-Ltac PSimplifier ::= PSimpl_arm7_v1_0.PSimplifier.
+Ltac PSimpl_arm7.PSimplifier ::= PSimpl_arm7_v1_0.PSimplifier.
 *)
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
