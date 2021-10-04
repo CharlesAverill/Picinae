@@ -1,3 +1,4 @@
+-R . Picinae
 Picinae_core.v
 Picinae_theory.v
 Picinae_statics.v
@@ -8,3 +9,4 @@ Picinae_simplifier_v1_0.v
 Picinae_i386.v
 Picinae_armv7.v
 Picinae_riscv.v
+cfi_riscv_extraction.v

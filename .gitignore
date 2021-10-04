@@ -16,3 +16,6 @@ _build
 *.text
 *.entry
 *.patched
+Makefile.coq
+Makefile.coq.conf
+.Makefile.coq.d

@@ -334,7 +334,7 @@ Extract Inductive Z => int [ "0" "" "(~-)" ].
 Extract Inductive N => int [ "0" "((+)1)" ].
 Extract Inductive bool => "bool" [ "true" "false" ].
 Extract Inductive option => "option" [ "Some" "None" ].
-Extract Inductive prod => "(*)"  [ "(,)" ].
+Extract Inductive prod => "( * )"  [ "(,)" ].
 Extract Inductive list => "list" [ "[]" "(::)" ].
 Extract Inlined Constant Z1 => "1".
 Extract Inlined Constant Z2 => "2".
@@ -409,6 +409,8 @@ Extract Inlined Constant map => "List.map".
 Extract Inlined Constant combine => "List.combine".
 Extract Inlined Constant Z.to_nat => "".
 Extract Inlined Constant Z.of_nat => "".
+Extraction "print_segments/extraction.ml" newcode mapaddr.
+(*
 Extraction policy.
 Extraction instr_data.
 Extraction twoscomp.
@@ -431,6 +433,7 @@ Extraction newinstrs.
 Extraction newtable.
 Extraction todata.
 Extraction newcode.
+*)
 
 
 (* Now we define "soundness" of a CFI implementation.  Soundness is unavoidably
