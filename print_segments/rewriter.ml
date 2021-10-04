@@ -114,8 +114,8 @@ let write_bigstring ~output bigstring_source =
   Bigstring.blito ~src:bigstring_source ~dst:destination ()
 
 (* given the return of a call to Extraction.newcode, produce an int32 list * int32 list *)
-let prep_transform (input:(int * int list) * int list list option) = 
-  let ((_, jumptable), suffix) = input in 
+let prep_transform (input:int list * int list list option) = 
+  let (jumptable, suffix) = input in 
   let a = Stdlib.List.map Stdlib.Int32.of_int jumptable in
   let b = Stdlib.List.map Stdlib.Int32.of_int @@ Stdlib.List.concat @@ Stdlib.Option.get suffix in
   (a, b) 
@@ -139,9 +139,9 @@ let rewrite image table_output text_output =
       insns_as_pure_int
       segment_addr(*base *)
       final_addr(*base'*)
-      offset_entry_point
     ) in 
-    let ((new_entry_offset, _), generated_suffix) = generated_code in
+    let new_entry_offset = Extraction.mapaddr generated_policy insns_as_pure_int
+          offset_entry_point in
     let new_entrypoint = (final_addr + (new_entry_offset* 4)) in
     (Format.printf "0x%x\n" new_entrypoint);
     let chunk1,suffix1 = prep_transform @@ generated_code in

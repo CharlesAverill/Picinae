@@ -5,7 +5,7 @@ bap must be installed from OPAM:
 
 Three Python modules must be installed:
 recordclass
-constructs
+construct
 bitstruct
 
 Process:

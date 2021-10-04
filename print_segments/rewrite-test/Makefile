@@ -8,7 +8,7 @@ TABLES = $(patsubst %, %.table, $(TARGETS))
 TEXTS = $(patsubst %, %.text, $(TARGETS))
 PATCHED = $(patsubst %, %.patched, $(TARGETS))
 
-all: $(TARGETS) hello-main
+all: $(TARGETS) $(PATCHED) hello-main
 
 clean:
 	rm -f $(TARGETS) hello-main

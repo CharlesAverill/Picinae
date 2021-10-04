@@ -1,4 +1,4 @@
-type policy = (int option*(int*int list)) list
+type policy = (int option * (int * int list)) list
 type instr_data =
 | Data of int option * int * int list * int * bool
 (** val twoscomp : int -> int -> int **)
@@ -13,9 +13,11 @@ let newsize = function
        | Some _ -> 1
        | None -> 0)
     (let op = (land) n0 127 in
-     if (=) op 99
-     then (+) 1 (if sb then 0 else 1)
-     else if (=) op 103 then (+) 12 (if sb then 0 else 1) else 1)
+     if (=) op 23
+     then if (=) ((land) n0 3968) 0 then 1 else 2
+     else if (=) op 99
+          then (+) 1 (if sb then 0 else 1)
+          else if (=) op 103 then (+) 12 (if sb then 0 else 1) else 1)
 (** val sumsizes : instr_data list -> int **)
 
 let sumsizes l =
@@ -141,51 +143,74 @@ let newijump l1 d l2 =
        ((lor) ((lor) 57696275 ((lsl) tmp2 7)) ((lsl) tmp2 15))::
        (List.append br (((lor) ((land) n0 4095) ((lsl) tmp3 15))::[]))))))))))))
    | None -> None)
-(** val newinstr :
-    instr_data list -> instr_data -> instr_data list -> int list option **)
+(** val new_auipc :
+    int -> instr_data list -> instr_data -> int list option **)
 
-let newinstr l1 d l2 =
+let new_auipc base l1 = function
+| Data (_, _, sd, n0, _) ->
+  if if (<=) 0 base then List.mem 1 sd else false
+  then if (=) ((land) n0 3968) 0
+       then Some (16435::[])
+       else let new_target =
+              (+) ((+) base ((lsl) ( (List.length l1)) 2))
+                ((land) n0 4294963200)
+            in
+            let rd = (land) n0 3968 in
+            Some
+            (((lor) ((lor) 55 rd) ((land) new_target 4294963200))::(
+            ((lor) ((lor) ((lor) 24595 rd) ((lsl) rd 8))
+              ((lsl) ((land) new_target 4095) 20))::[]))
+  else None
+(** val newinstr :
+    int -> instr_data list -> instr_data -> instr_data list -> int list
+    option **)
+
+let newinstr base l1 d l2 =
   let Data (_, _, sd, n0, _) = d in
   if (<) n0 0
   then None
   else if (=) ((land) n0 4095) 55
        then if List.mem 1 sd then Some (16435::[]) else None
        else let op = (land) n0 127 in
-            if (=) op 99
-            then let i = twoscomp 1024 (decode_branch_offset n0) in
-                 if if if if if (=) ((land) n0 256) 0
-                             then List.mem 1 sd
-                             else false
-                          then List.mem i sd
-                          else false
-                       then (<=) 0 ((+) ( (List.length l1)) i)
-                       else false
-                    then (<=) i ( (List.length l2))
-                    else false
-                 then newbranch l1 d 1 l2 n0 i
-                 else None
-            else if (=) op 103
-                 then newijump l1 d l2
-                 else if (=) op 111
-                      then let i = twoscomp 262144 (decode_jump_offset n0) in
-                           if if if List.mem i sd
-                                 then (<=) 0 ((+) ( (List.length l1)) i)
-                                 else false
-                              then (<=) i ( (List.length l2))
-                              else false
-                           then newjump ((land) ((lsr) n0 7) 31)
-                                  (newoffset l1 d 1 l2 i)
-                           else None
-                      else if List.mem 1 sd then Some (n0::[]) else None
+            if (=) op 23
+            then new_auipc base l1 d
+            else if (=) op 99
+                 then let i = twoscomp 1024 (decode_branch_offset n0) in
+                      if if if if if (=) ((land) n0 256) 0
+                                  then List.mem 1 sd
+                                  else false
+                               then List.mem i sd
+                               else false
+                            then (<=) 0 ((+) ( (List.length l1)) i)
+                            else false
+                         then (<=) i ( (List.length l2))
+                         else false
+                      then newbranch l1 d 1 l2 n0 i
+                      else None
+                 else if (=) op 103
+                      then newijump l1 d l2
+                      else if (=) op 111
+                           then let i =
+                                  twoscomp 262144 (decode_jump_offset n0)
+                                in
+                                if if if List.mem i sd
+                                      then (<=) 0 ((+) ( (List.length l1)) i)
+                                      else false
+                                   then (<=) i ( (List.length l2))
+                                   else false
+                                then newjump ((land) ((lsr) n0 7) 31)
+                                       (newoffset l1 d 1 l2 i)
+                                else None
+                           else if List.mem 1 sd then Some (n0::[]) else None
 (** val newinstrs :
-    int list list -> instr_data list -> instr_data list -> int list list
-    option **)
+    int -> int list list -> instr_data list -> instr_data list -> int list
+    list option **)
 
-let rec newinstrs l' l1 = function
+let rec newinstrs base l' l1 = function
 | [] -> Some (List.rev l')
 | d::t ->
-  (match newinstr l1 d t with
-   | Some x -> newinstrs ((List.append (newtag d) x)::l') (d::l1) t
+  (match newinstr base l1 d t with
+   | Some x -> newinstrs base ((List.append (newtag d) x)::l') (d::l1) t
    | None -> None)
 (** val newtable :
     int -> int -> int list -> int -> instr_data list -> int list **)
@@ -195,15 +220,19 @@ let rec newtable base base' acc i = function
 | d::t ->
   newtable base base' (((lsl) ((-) i ((-) base' base)) 7)::acc)
     ((-) ((+) i (newsize d)) 1) t
-(** val todata : ((int option*(int*int list))*int) -> instr_data **)
+(** val todata : ((int option * (int * int list)) * int) -> instr_data **)
 
 let todata = function
 | y,n -> let iid,y0 = y in let oid,sd = y0 in Data (iid, oid, sd, n, false)
 (** val newcode :
-    policy -> int list -> int -> int -> int -> (int*int list)*int list list
-    option **)
+    policy -> int list -> int -> int -> int list * int list list option **)
 
-let newcode pol l base base' old_entrypoint =
+let newcode pol l base base' =
   let d = shrink [] (List.map todata (List.combine pol l)) in
-  ((sum_n_sizes old_entrypoint d 0),(newtable base base' [] 0 d)),(
-  if (<) (sumsizes d) ((-) 1073741824 base') then newinstrs [] [] d else None)
+  (newtable base base' [] 0 d),(if (<) (sumsizes d) ((-) 1073741824 base')
+                                then newinstrs base [] [] d
+                                else None)
+(** val mapaddr : policy -> int list -> int -> int **)
+
+let mapaddr pol l addr =
+  sum_n_sizes addr (shrink [] (List.map todata (List.combine pol l))) 0

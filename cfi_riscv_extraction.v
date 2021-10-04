@@ -242,7 +242,7 @@ Definition new_auipc base (l1:list instr_data) d :=
   match d with Data _ _ sd n _ =>
     if ((Z0 <=? base) && (mem Z1 sd))%bool then
       if n #& Z3968 =? Z0 then Some (Z16435::nil) (* Xor r0, r0, r0 *)
-      else let new_target := base + Z.of_nat (length l1) + (n #& Z4294963200) in
+      else let new_target := base + Z.of_nat (length l1) #<< Z2 + (n #& Z4294963200) in
            let rd := n #& Z3968 in Some (
         (Z55 #| rd #| (new_target #& Z4294963200))::                     (* Lui rd, new_target[31:12] *)
         (Z24595 #| rd #| (rd #<< Z8) #| ((new_target #& Z4095) #<< Z20)) (* Ori rd, rd, new_target[11:0] *)
@@ -312,6 +312,10 @@ Definition todata x :=
 Definition newcode (pol:policy) l base base' :=
   let d := shrink nil (map todata (combine pol l)) in
   (newtable base base' nil 0 d, if sumsizes d <? Z1073741824 - base' then newinstrs base nil nil d else None).
+
+(* need some proof for this *)
+Definition mapaddr (pol:policy) l addr :=
+  sum_n_sizes addr (shrink nil (map todata (combine pol l))) 0.
 
 
 (* The following is an example extraction of the above CFI rewriter to OCaml.
@@ -409,8 +413,6 @@ Extract Inlined Constant map => "List.map".
 Extract Inlined Constant combine => "List.combine".
 Extract Inlined Constant Z.to_nat => "".
 Extract Inlined Constant Z.of_nat => "".
-Extraction "print_segments/extraction.ml" newcode mapaddr.
-(*
 Extraction policy.
 Extraction instr_data.
 Extraction twoscomp.
@@ -433,8 +435,7 @@ Extraction newinstrs.
 Extraction newtable.
 Extraction todata.
 Extraction newcode.
-*)
-
+Extraction mapaddr.
 
 (* Now we define "soundness" of a CFI implementation.  Soundness is unavoidably
    parameterized by a (not necessarily one-to-one) mapping from the rewritten
@@ -2212,7 +2213,7 @@ Theorem newauipc_asm:
     (NI: new_auipc base l1 (Data iid oid sd z sb) = Some b),
   let n := Z.to_N z in
   let rd := xbits n 7 12 in
-  let t := Z.to_N (base + Z.of_nat (length l1) + z #& (2^32 - 2^12)) in
+  let t := Z.to_N (base + Z.of_nat (length l1) #<< 2 + z #& (2^32 - 2^12)) in
   map rv_decode (map Z.to_N b) =
   if z #& 3968 =? 0 then R5_Xor 0 0 0 :: nil else
     R5_Lui rd (xbits t 12 32) ::
