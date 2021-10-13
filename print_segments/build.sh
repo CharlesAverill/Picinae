@@ -1,4 +1,4 @@
 #/bin/bash
 
-bapbuild segments.plugin && bapbundle install segments.plugin
+bapbuild -package ppx_let segments.plugin && bapbundle install segments.plugin
 
