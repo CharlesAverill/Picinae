@@ -5,7 +5,7 @@ open Bap_main
 
 module Unix = UnixLabels
 
-(* a "chunk" defines an offset (in number of bytes from the start of the file) 
+(* a "chunk" defines an offset (in number of bytes from the start of the file)
   and a Core_kernel.Bigstring.t that efficiently represents the data for that "chunk",
   which in this case is analogus to an ELF binary "section" *)
 type chunk = {
