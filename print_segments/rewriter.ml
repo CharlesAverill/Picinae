@@ -2,6 +2,8 @@
 open Core_kernel
 open Bap.Std
 open Bap_main
+open Bap_elf.Std.Elf
+open Elf_write
 
 module Unix = UnixLabels
 
@@ -114,9 +116,10 @@ let prep_transform (input:int list * int list list option) =
   let%map  b = convNumb @@ List.concat insns in
   (a, b)
 
-(* Given a binary transformation function (from the extraction), a Bap.Std.Image, and an output file
-  from Bap, do the transformat on the original image and write it out to the output file *)
-let rewrite image table_output text_output =
+(* Given a binary transformation function (from the extraction),
+   a Bap.Std.Image, and an output file from Bap, do the transformat on the
+   original image and write it out to the output file *)
+let rewrite image =
   let open Result.Let_syntax in
   let%bind section = Result.of_option ~error:(Error.of_string
     "Cannot find text section") @@ find_section image ".text" in
@@ -131,6 +134,7 @@ let rewrite image table_output text_output =
   let new_entry_offset = Extraction.mapaddr generated_policy insns_int
         offset_entry_point in
   let new_entrypoint = final_addr + new_entry_offset * 4 in
+  (Format.printf "0x%x\n" new_entrypoint);
   let generated_code = (Extraction.newcode
     generated_policy
     insns_int

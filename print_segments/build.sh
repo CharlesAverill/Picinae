@@ -1,4 +1,8 @@
 #/bin/bash
 
-bapbuild -package ppx_let segments.plugin && bapbundle install segments.plugin
+set -e
+
+(cd ./rewrite-test && make clean)
+
+bapbuild -package ppx_let -package bap-elf segments.plugin && bapbundle install segments.plugin
 

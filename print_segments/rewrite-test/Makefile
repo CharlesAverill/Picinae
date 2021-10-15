@@ -22,11 +22,8 @@ $(TARGETS): %: %.o
 $(OBJECTS): %.o: %.s
 	riscv32-unknown-linux-gnu-as -o $@ $<
 
-$(PATCHED): %.patched: % %.table %.text %.entry
-	../glue/glue.py $< $<.table $<.text `cat $<.entry`
-
-%.table %.text %.entry: %
-	bap segments $< $<.table $<.text > $<.entry
+$(PATCHED): %.patched: %
+	bap segments $< $<.patched
 
 hello-main: hello-main.s
 	riscv32-unknown-linux-gnu-gcc -static -o hello-main hello-main.s

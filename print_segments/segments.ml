@@ -11,18 +11,33 @@ let fail e = SegmentFailure e
 $ bap segments /path/to/riscv32/binary
 *)
 let input = Extension.Command.argument
-  ~doc:"The input file" Extension.Type.("FILE" %: string =? "a.in" )
-let table_output = Extension.Command.argument
-  ~doc:"The table output file" Extension.Type.("FILE" %: string =? "table.bin" )
-let text_output = Extension.Command.argument
-  ~doc:"The text output file" Extension.Type.("FILE" %: string =? "text.bin" )
+  ~doc:"The input file" Extension.Type.("FILE" %: string =? "a.out" )
+let output = Extension.Command.argument
+  ~doc:"The output file" Extension.Type.("FILE" %: string =? "a.out.patched" )
+
+let main input output =
+  let open Result.Let_syntax in
+  let open Elf_segments in
+  let%bind image = load_image input in
+  let%bind (image, segm) = new_segment
+    ?filesz:(Some 0x1000)
+    ?p_flags:(Some [])
+    image AnySpec in
+  let%map (image, segm) = new_segment
+    ?filesz:(Some 0x1000)
+    image AnySpec in
+  save_image image output
+
 let () = Extension.Command.(begin
-    declare "segments" (args $input $table_output $text_output)
+    declare "segments" (args $input $output)
       ~requires:["loader"]
-  end) @@ fun input table_output text_output _ctxt ->
+  end) @@ fun input output _ctxt ->
     let res = let open Result.Let_syntax in
+      (*
       let%bind (img,_warns) = Image.create ~backend:"llvm" input in
       let%map _ = Rewriter.rewrite img table_output text_output in ()
+      *)
+      main input output
      in Result.map_error ~f:fail res
 
 let () = Extension.Error.register_printer @@ function

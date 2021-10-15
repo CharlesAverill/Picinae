@@ -1,12 +1,12 @@
 
 (* print the policy *)
-let pp_policy (int32_insns_list :int32 list) generated_policy =
+let pp_policy (int32_insns_list: int32 list) generated_policy =
   (* Print all the numbers in this segment *)
   (Stdlib.List.fold_left2
     (fun _ b (_, (_, rel_dests)) ->
-      (Format.printf "[0x%lx], policy is :" b);
-      (Stdlib.List.fold_left (fun _ b -> Format.printf "<%d> " b) () rel_dests);
-      (Format.printf "\n")
+      (Printf.eprintf "[0x%lx], policy is :" b);
+      (Stdlib.List.fold_left (fun _ b -> Printf.eprintf "<%d> " b) () rel_dests);
+      (Printf.eprintf "\n")
     )
     ()
     int32_insns_list
@@ -15,17 +15,17 @@ let pp_policy (int32_insns_list :int32 list) generated_policy =
 
 (* from `cfi_riscv_extraction.v`:
   "(2) an "output identifier", which identifies the equivalence class of targets
-    to which this instruction is permitted to indirectly jump;"
-  We have this as the magic number "13" in that, for simplicity, all jumps are given the same
-  class targets that an instruction can jump.
-    *)
+  to which this instruction is permitted to indirectly jump;" We have this as
+  the magic number "13" in that, for simplicity, all jumps are given the same
+  class targets that an instruction can jump. *)
 let equiv_class_targets:int = 13
 
-(* Given a policy, raise an exception if the policy violates the "simple" jump correctness:
-    That is, make sure that every static jump will jump to somewhere inside the code segment.
-    We verify this by taking the instruction's position in the list (its offset from the first inst)
-    and adding (one by one) all the relative targets associated with it in the policy, and verifying
-    that the resulting inst offset is inside the code segment. *)
+(* Given a policy, raise an exception if the policy violates the "simple" jump
+   correctness: That is, make sure that every static jump will jump to somewhere
+   inside the code segment.  We verify this by taking the instruction's position
+   in the list (its offset from the first inst) and adding (one by one) all the
+   relative targets associated with it in the policy, and verifying that the
+   resulting inst offset is inside the code segment. *)
 exception InvalidJump of string
 let verify_policy_jump_ranges (policy : Extraction.policy) =
   (Stdlib.List.fold_left
@@ -88,5 +88,9 @@ let generate_static_policy (int_list_mem : int32 list) :Extraction.policy =
     )
     [] (* initialize with empty list *)
     int_list_mem (* use the list of int32 numbers *)
-  ) in (List.rev to_return)(* in ignore (verify_policy_jump_ranges to_return); to_return*)
+  ) in
+  pp_policy int_list_mem (List.rev to_return);
+  (List.rev to_return)
+
+  (* in ignore (verify_policy_jump_ranges to_return); to_return*)
 

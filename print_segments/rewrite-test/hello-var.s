@@ -23,4 +23,5 @@ getlen_loop_exit:
 	addi a7, x0, 93		# exit syscall
 	ecall
 
+.data
 str:	.asciz "Hello, World!\n"
