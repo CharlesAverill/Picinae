@@ -1,65 +1,29 @@
 
-open Core_kernel
 open Bap.Std
 open Bap_main
 open Bap_elf.Std.Elf
+open Core_extend
 open Elf_write
+open Elf_segments
 
 module Unix = UnixLabels
 
-(* a "chunk" defines an offset (in number of bytes from the start of the file)
-  and a Core_kernel.Bigstring.t that efficiently represents the data for that "chunk",
-  which in this case is analogus to an ELF binary "section" *)
-type chunk = {
-  offset : int;
-  data: Bigstring.t
-}
+let init_time = Unix.gettimeofday()
+let is_debug = ref false
+let debug s =
+  if !is_debug then
+    let open Float in
+    let line = sprintf "[%010.3f] %s" (Unix.gettimeofday() - init_time) s in
+    prerr_endline line
+  else ()
+let debugf fmt = ksprintf debug fmt
 
-type patch = {
-  chunks: chunk list;
-  suffix: Bigstring.t;
-}
+(* given a list of int32 values, create a Bigstring.t that holds those values,
+   sequentially *)
 
-(* Given a Bap.Std.Memory, find its offset from the start of the file *)
-let offset mem =
-  Bigsubstring.pos (Memory.to_buffer mem)
+type policy = (int option * (int * int list)) list
+  [@@deriving sexp]
 
-(* Given a Bap.Std.Image and a string that is the name of a symbol, return an
-  option of that symbol*)
-let find_symbol image name =
-  Image.memory image |>  (* Get a Memmap from the image *)
-  Memmap.to_sequence |>  (* Get a Sequence from said image *)
-  Seq.find_map ~f:(fun (data, annotation) -> (* iterate and return an option for the thing we want *)
-    match Value.get Image.symbol annotation with
-    | None -> None
-    | Some section -> Option.some_if (String.equal section name) data)
-
-(* Given a Bap.Std.Image and a string that is the name of an ELF section, return an
-  option of that section *)
-let find_section image name =
-  Image.memory image |>  (* Get a Memmap from the image *)
-  Memmap.to_sequence |>  (* Get a Sequence from said image *)
-  Seq.find_map ~f:(fun (data, annotation) -> (* iterate and return an option for the thing we want *)
-    match Value.get Image.section annotation with
-    | None -> None
-    | Some section -> Option.some_if (String.equal section name) data)
-
-(* given a Bap.Std.Memory, assume it is a list of 32 bit integers and return it as such. *)
-let list_of_mem (mem :Memory.t) : (int32 list) =
-  List.rev @@
-  Memory.fold mem ~word_size:`r32 ~init:[] ~f:(fun w ws ->
-      Word.to_int32_exn w :: ws)
-
-(* use memory mapping to map a file to a Bigarray.t *)
-let mapfile fd size =
-  Bigarray.array1_of_genarray @@ (Unix.map_file fd
-    ~pos:0L
-    ~kind:Bigarray.char
-    ~layout:Bigarray.c_layout
-    ~shared:true
-    ~dims:([|size |]))
-
-(* given a list of int32 values, create a Bigstring.t that holds those values, sequentially *)
 let bigstring_of_int32_list input_list =
   let size = (List.length input_list) * 4 in (* multiply by 4 to get number of bytes, not instructions *)
   let destination = Bigstring.create size in
@@ -68,82 +32,89 @@ let bigstring_of_int32_list input_list =
     Bigstring.set_int32_t_le destination ~pos:(i*4) x); (* semicolon operator to return value *)
   destination (* return the now-filled destination *)
 
-(* given an output file, a "source" (a Bap.Std.Image) and a record, apply the
-   patch and write it to the file and return unit*)
-let apply_patch ~output source new_entrypoint mypatch =
-  let {chunks; suffix} = mypatch in
-  let fd = Unix.openfile output
-    ~mode:Unix.[O_RDWR; O_CREAT]
-    ~perm:0o600 in
-  (* The size of the new file, with suffix *)
-  let size = Bigstring.length source + Bigstring.length suffix in
-  (* the contents of the output file, memory mapped *)
-  let destination = mapfile fd size in
-  (* Set the entry point as the 24th byte in the file (the offset of `e_entry` in the ELF header) *)
-  (Bigstring.set_int32_t_le source ~pos:24 new_entrypoint);
-  (* Blit the input data *)
-  Bigstring.blito ~src:source ~dst:destination ();
-  (* append the suffix *)
-  (Format.printf "The output number is %d\n" (Bigstring.length source));
-  Bigstring.blito ~src:suffix ~dst:destination ~dst_pos:(Bigstring.length source) ();
-  (* For each chunk, blit it to the output. these are the overwritten chunks *)
-  List.iter chunks ~f:(fun chunk ->
-    let {offset; data} = chunk in
-    Bigstring.blito ~src:data ~dst:destination ~dst_pos:offset ()
-  );
-  Unix.close fd
-
-let write_bigstring ~output bigstring_source =
-  let fd = Unix.openfile output
-    ~mode:Unix.[O_RDWR; O_CREAT]
-    ~perm:0o600 in
-  (* The size of the new file, with suffix *)
-  let size = Bigstring.length bigstring_source in
-  (* the contents of the output file, memory mapped *)
-  let destination = mapfile fd size in
-  (* Blit the input data *)
-  Bigstring.blito ~src:bigstring_source ~dst:destination ()
-
-(* given the return of a call to Extraction.newcode, produce an int32 list * int32 list *)
+(* given the return of a call to Extraction.newcode, produce an int32 list
+ * int32 list *)
 let prep_transform (input:int list * int list list option) =
   let open Result.Let_syntax in
   let (jumptable, suffix) = input in
-  let%bind insns = Result.of_option ~error:(Error.of_string
-    "Unable to transform code due to some illegal jumps") suffix in
-  let convNumb lst = Result.of_option ~error:(Error.of_string
-    "Overflowing integer") @@ Option.all @@ List.map ~f:Int32.of_int lst in
-  let%bind a = convNumb jumptable in
-  let%map  b = convNumb @@ List.concat insns in
+  let%map insns = Result.of_option ~error:(Error.of_string
+    "Unable to transform code.") suffix in
+  let convNumb lst = List.map ~f:Int32.of_int_trunc lst in
+  let a = convNumb jumptable in
+  let b = convNumb @@ List.concat insns in
   (a, b)
 
-(* Given a binary transformation function (from the extraction),
-   a Bap.Std.Image, and an output file from Bap, do the transformat on the
-   original image and write it out to the output file *)
+
+(* Rewrites the binary pointed by this elf image object and adds the rewritten
+   code back in as a brand-new code segment *)
+let spacer_size = 0x10000
+let mask_int32 = 0xFFFFFFFFL
 let rewrite image =
+  let () = debugf "Loaded image" in
   let open Result.Let_syntax in
-  let%bind section = Result.of_option ~error:(Error.of_string
-    "Cannot find text section") @@ find_section image ".text" in
-  let insns_int32 = list_of_mem section in
-  let generated_policy = Policy.generate_static_policy insns_int32 in
-  let segment_addr = Word.to_int_exn @@ Memory.min_addr section in
-  let final_addr = Bigstring.length @@ Image.data image in
-  (* Note that to_int_exn should never throw in 64-bit mode *)
-  let insns_int = List.map ~f:Int32.to_int_exn insns_int32 in
-  let offset_entry_point = Int.shift_right
-    ((Word.to_int_exn @@ Image.entry_point image) - segment_addr) 2 in
-  let new_entry_offset = Extraction.mapaddr generated_policy insns_int
-        offset_entry_point in
-  let new_entrypoint = final_addr + new_entry_offset * 4 in
-  (Format.printf "0x%x\n" new_entrypoint);
-  let generated_code = (Extraction.newcode
-    generated_policy
-    insns_int
-    segment_addr(*base *)
-    final_addr(*base'*)
-  ) in
-  let%map chunk1,suffix1 = prep_transform @@ generated_code in
+  (* We assume that all code sections and ONLY code sections are marked as
+     executable and that they are contiguous. With that in mind, we need to
+     gather the base address of the code section, and the size of this
+     code section. *)
+  let%bind (mcode_base, code_size) =
+    image.i_elf.elf_.e_sections |>
+    Sequence.filter ~f:(fun sect -> Option.is_some @@
+      List.locate SHF_EXECINSTR sect.sh_flags &&
+      phys_equal sect.sh_type SHT_PROGBITS) |>
+    Sequence.to_list |>
+    List.sort_on ~f:sh_addr ~cmp:Int64.compare |>
+    List.fold_result ~init:(None, 0L) ~f:(fun (mbase, size) sect ->
+      Option.inject (Ok (Some sect.sh_addr, sect.sh_size)) (fun base ->
+        let open Int64 in
+        let%map _ = Result.of_option
+          ~error:(fail "Not contiguous code sections") @@
+          Option.guard (base + size = sect.sh_addr) in
+        (Some base, size + sect.sh_size)) mbase) in
+  let%bind code_base = Result.of_option
+    ~error:(fail "No code sections found") mcode_base in
+  let () = debugf "Found code base at: %016Lx +%08Lx" code_base code_size in
+
+  let%bind code_mem_r = mem_of_address image code_base code_size >>| Memory.read in
+  let () = debugf "Reading %d instructions" (Bigstring.length code_mem_r / 4) in
+  let%bind insns = Result.all @@
+    List.init ~f:(fun pos ->
+      Int64.to_int_err @@ Int64.bit_and mask_int32 @@ Int64.of_int32 @@
+      Bigstring.get_int32_t_le ~pos:(pos * 4) code_mem_r) @@
+    Bigstring.length code_mem_r / 4 in
+  let () = debugf "Loaded instructions" in
+
+  (* Create a code spacer *)
+  let%bind (image, segm_spacer, _) = Elf_segments.new_segment
+    ~p_flags:[] ~filesz:0 ~memsz:spacer_size image AnySpec in
+
+  (* Parameters for newcode *)
+  let generated_policy = Policy.generate_static_policy insns in
+  let open Int64 in
+  let%bind orig_addr = to_int_err code_base in
+  let%bind final_addr = to_int_err @@ align_up ~align:page_align @@
+    segm_spacer.p_vaddr + segm_spacer.p_memsz in
+  let%bind entrypoint = to_int_err image.i_elf.elf_.e_entry in
+  let new_entrypoint = Int.(Extraction.mapaddr generated_policy insns
+    (shift_right (entrypoint - orig_addr) 2) * 4 + final_addr) in
+  let image = {image with i_elf = {image.i_elf with elf_ = {
+    image.i_elf.elf_ with e_entry = of_int new_entrypoint
+  }}} in
+
+  (* Calling rewriting*)
+  let () = debugf "Rewriting instructions..." in
+  let generated_code = Extraction.newcode generated_policy insns
+    orig_addr final_addr in
+  let () = debugf "Code rewritten" in
+  let%bind chunk1,suffix1 = prep_transform @@ generated_code in
+
+  (* Write new code back into the image *)
   let table = bigstring_of_int32_list chunk1 in
-  let text = bigstring_of_int32_list suffix1 in
-  (write_bigstring ~output:table_output table);
-  (write_bigstring ~output:text_output text);
+  let newcode = bigstring_of_int32_list suffix1 in
+  let%bind (image, _, _) = Elf_segments.new_segment
+    ~content:newcode ~p_flags:[PF_R; PF_X]
+    image (AddressOnlySpec (Int64.of_int final_addr)) in
+  let%bind code_mem = mem_of_address image code_base code_size in
+  let%map () = Memory.write code_mem table in
+  let () = debugf "Rewritten back into image" in
+  image
 (* TODO: do some rewriting into a custom binary *)

@@ -1,4 +1,4 @@
-open Core_kernel
+open Core_extend
 open Bap_elf
 open Std.Elf
 
@@ -179,7 +179,7 @@ let flag_val to_flag flags = let open Int64 in
   List.map ~f:(Fn.compose (shift_left 1L) to_flag) flags
 
 exception Pure_error of unit
-let elf_err = Error.of_string "Invalid ELF input"
+let elf_err = fail "Invalid ELF input"
 let purify fn =
   try Result.Ok (fn @@ Pure_error ())
   with Pure_error () -> Result.Error elf_err
@@ -324,7 +324,7 @@ let extend_elf_hdr elf raw_info =
           _rest      : -1 : bitstring
         |} -> Result.Ok
           (Int64.of_int32 e_phoff, Int64.of_int32 e_shoff, e_flags)
-      | {| _ |} -> Result.Error (Error.of_string "Invalid ELF header"))
+      | {| _ |} -> Result.Error (fail "Invalid ELF header"))
   | ELFCLASS64 -> (match%bitstring raw_info with
       | {|0x7F:8; "ELF": 24: string;
           _magic     : 12*8: bitstring;
@@ -337,7 +337,7 @@ let extend_elf_hdr elf raw_info =
           e_flags    : 32 : endian (endian);
           _rest      : -1 : bitstring
         |} -> Result.Ok (e_phoff, e_shoff, e_flags)
-      | {| _ |} -> Result.Error (Error.of_string "Invalid ELF header")) in
+      | {| _ |} -> Result.Error (fail "Invalid ELF header")) in
   let (e_ehsize, e_phentsize, e_shentsize) =
     match elf.e_class with
     | ELFCLASS32 -> elf_32_sizes
@@ -359,8 +359,7 @@ let write_elf_phdr elf bs =
   let open Result.Let_syntax in
   let%bind () = Sequence.fold_m ~bind:Result.bind ~return:Result.return ~init:()
     ~f:(const @@ construct_segment buf elf) elf.elf_.e_segments in
-  let%map off = Result.of_option ~error:(Error.of_string "offset overflow") @@
-    Int64.to_int elf.e_phoff in
+  let%map off = Int64.to_int_err elf.e_phoff in
   let (data, _, _) = Bitstring.Buffer.contents buf in
   Bigstring.From_bytes.blito ~src:data ~dst:bs ~dst_pos:off ()
 
@@ -369,7 +368,6 @@ let write_elf_shdr elf bs =
   let open Result.Let_syntax in
   let%bind () = Sequence.fold_m ~bind:Result.bind ~return:Result.return ~init:()
     ~f:(const @@ construct_section buf elf) elf.elf_.e_sections in
-  let%map off = Result.of_option ~error:(Error.of_string "offset overflow") @@
-    Int64.to_int elf.e_shoff in
+  let%map off = Int64.to_int_err elf.e_shoff in
   let (data, _, _) = Bitstring.Buffer.contents buf in
   Bigstring.From_bytes.blito ~src:data ~dst:bs ~dst_pos:off ()

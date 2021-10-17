@@ -1,4 +1,4 @@
-open Core_kernel
+open Core_extend
 open Bap_elf.Std.Elf
 open Bap.Std
 
@@ -25,18 +25,6 @@ let page_align   = 0x1000L
 let min_phdr_expand = 0x300L
 
 let nil = Bigstring.create 0
-
-let align_up addr ~align = let open Int64 in
-  bit_and (addr + align - 1L) (-align)
-let align_down addr ~align = let open Int64 in
-  bit_and addr (-align)
-
-let assert_opt cond = if cond then Some () else None
-let fail = Error.of_string
-let optional def fn = function
-  | Some s -> fn s
-  | None   -> def
-let sort_on cmp f = List.sort ~compare:(Comparable.lift cmp ~f)
 
 let s_loads segs = List.map ~f:snd (Map.to_alist segs.s_loads_by_vaddr)
 
@@ -82,6 +70,44 @@ let mapfile fd ~size ~shared =
 
 let bitstring_of_bytes b = b, 0, Bytes.length b * 8
 
+module Memory = struct
+  type t = Bigstring.t list
+
+  let singleton bs = [bs]
+
+  let length = List.sum (module Int) ~f:Bigstring.length
+
+  let read mem = Bigstring.concat mem
+
+  let write ?(src_pos=0) ?(dst_pos=0) mem src =
+    let open Result.Let_syntax in
+    (* Do bounds check of the src_pos and dst_pos *)
+    let%bind _ = Result.of_option
+      ~error:(failf "Illegal src_pos (%d)" src_pos) @@
+      Option.guard (src_pos <= Bigstring.length src) in
+    let%map _ = Result.of_option
+      ~error:(failf "Illegal dst_pos (%d)" dst_pos) @@
+      Option.guard (dst_pos + (Bigstring.length src - src_pos) <=
+        length mem) in
+    (* Do the actual copying *)
+    List.fold_until mem
+      ~init:(src_pos, dst_pos)
+      ~finish:ignore
+      ~f:(fun (src_pos, dst_pos) dstmem ->
+        let open Continue_or_stop.Let_syntax in
+        (* Break if src_pos reaches end *)
+        let%bind _ = Continue_or_stop.guard ~stop:()
+          (src_pos < Bigstring.length src) in
+        (* Otherwise, write into the segment *)
+        if dst_pos >= Bigstring.length dstmem
+        then return (src_pos, dst_pos - Bigstring.length dstmem)
+        else
+          let len = min (Bigstring.length src - src_pos)
+            (Bigstring.length dstmem - dst_pos) in
+          Bigstring.blit ~src ~src_pos ~dst:dstmem ~dst_pos ~len;
+          return (src_pos + len, 0))
+end
+
 let save_image image path =
   let fd = Unix.openfile path
     ~mode:[Unix.O_RDWR; Unix.O_CREAT; Unix.O_TRUNC]
@@ -108,15 +134,15 @@ let load_image path =
           if in_head
           then (true, segm :: heads, loads, others, ents + 1)
           else (false, heads, loads, segm :: others, ents + 1)) elf.e_segments in
-  let loads_sorted_vaddr = sort_on Int64.compare p_vaddr loads in
+  let loads_sorted_vaddr = List.sort_on ~cmp:Int64.compare ~f:p_vaddr loads in
   let has_pairing fn lst = snd @@ List.fold_left ~init:(None, false)
-      ~f:(fun (mprev, pred) cur -> (Some cur, optional pred
+      ~f:(fun (mprev, pred) cur -> (Some cur, Option.inject pred
         (fun prev -> pred || fn prev cur) mprev)) lst in
   let open Int64 in
   let overlapping_vaddr = has_pairing seg_olap_vaddr loads_sorted_vaddr in
   let%bind _ = Result.of_option
     ~error:(fail "Overlapping LOAD segments") @@
-    assert_opt @@ not overlapping_vaddr in
+    Option.guard @@ not overlapping_vaddr in
   let%bind loads_offset = Map.of_alist_or_error @@ List.map ~f:(fun seg ->
       (seg.p_offset, seg)) loads in
   let%map loads_vaddr = Map.of_alist_or_error @@ List.map ~f:(fun seg ->
@@ -145,8 +171,7 @@ let ensure_mem_size image memsize' =
   if old_size < memsize
   then
     let enlarge = (memsize - old_size + 0x2000) in
-    let tmp = Bigstring.create enlarge in
-    Bigstring.memset ~pos:0 ~len:enlarge tmp '\x00';
+    let tmp = Bigstring.make enlarge '\x00' in
     let mem' = Bigstring.concat [image.i_mem; tmp] in
     {image with i_mem = mem'}
   else image
@@ -218,7 +243,7 @@ let resize_phdr_table_extend_unused image min_phdr_size =
           })
         rem_segs in
       let%bind seg = res.f_res in
-      let%map _ = assert_opt (res.f_largest_unused_space >= min_phdr_size) in
+      let%map _ = Option.guard (res.f_largest_unused_space >= min_phdr_size) in
       let new_seg_sz = seg.p_memsz + res.f_largest_unused_space in
       let phdr_virt_addr = align_up ~align:phdr_align @@
         seg.p_vaddr + seg.p_memsz in
@@ -254,7 +279,7 @@ let resize_phdr_table_extend_last image min_phdr_size =
   let open Int64 in
   let%bind (_, first_seg) = Map.min_elt image.i_segs.s_loads_by_vaddr in
   let%bind (_, last_seg)  = Map.max_elt image.i_segs.s_loads_by_vaddr in
-  let%map _ = assert_opt ((last_seg.p_offset - first_seg.p_offset) =
+  let%map _ = Option.guard ((last_seg.p_offset - first_seg.p_offset) =
     (last_seg.p_vaddr - first_seg.p_vaddr)) in
   let new_seg_sz = last_seg.p_memsz + min_phdr_size in
   let seg_ext = { last_seg with
@@ -379,8 +404,46 @@ let ensure_phdr_cap ?(insert_cnt = 1) image =
   if image.i_phdr_cap < need_cap
   then
     resize_phdr_table
-      ?need_phdr_entries:(Some (need_cap - image.i_phdr_cap)) image
+      ~need_phdr_entries:(need_cap - image.i_phdr_cap) image
   else Result.Ok image
+
+
+let mem_of_address image addr size =
+  let rec helper addr size acc =
+    let open Int64 in
+    if size = 0L then Result.Ok acc else
+      let open Result.Let_syntax in
+      let err_ill_mem = fail @@ Printf.sprintf
+        "Illegal memory access (0x%016Lx)." addr in
+      let%bind (_, seg) = Result.of_option ~error:err_ill_mem @@
+        Map.closest_key image.i_segs.s_loads_by_vaddr `Less_or_equal_to addr in
+      let%bind _ = Result.of_option ~error:err_ill_mem @@
+        Option.guard (seg.p_vaddr + seg.p_memsz > addr) in
+      let seg_offset = addr - seg.p_vaddr in
+      let%bind (buff, sz_i) = if seg.p_vaddr + seg.p_filesz <= addr
+        (* Return a memory of null bytes *)
+        then
+          let%map sz = to_int_err @@ min size @@ seg.p_memsz - seg_offset in
+          (Bigstring.make sz '\x00', sz)
+        else
+          let%bind sz = to_int_err @@ min size @@ seg.p_filesz - seg_offset in
+          let%map off = to_int_err @@ seg_offset + seg.p_offset in
+          let bs = Bigstring.sub_shared image.i_mem
+            ~pos:off ~len:sz in
+          (bs, sz) in
+      let sz = of_int sz_i in
+      helper (addr + sz) (size - sz) (buff :: acc)
+  in Result.map ~f:List.rev @@ helper addr size []
+
+let mem_of_offset image offset size =
+  let open Result.Let_syntax in
+  let%bind offset_i = Int64.to_int_err offset in
+  let%map size_i = Int64.to_int_err size in
+  Memory.singleton @@
+    Bigstring.sub_shared ~pos:offset_i ~len:size_i image.i_mem
+
+let mem_of_segment image segm =
+  mem_of_offset image segm.p_offset segm.p_filesz
 
 type address_spec =
   | OffsetAddressSpec of (int64 * int64)
@@ -391,9 +454,9 @@ type address_spec =
 (* This creates a new program segment of some size that can be written to  *)
 let new_segment ?(content = nil) ?(p_flags = [PF_R; PF_W; PF_X])
   ?(p_type = PT_LOAD) ?filesz ?memsz ?(p_align = 0x1000L) image addr_spec =
-    let p_filesz = Int64.of_int @@ optional
+    let p_filesz = Int64.of_int @@ Option.inject
       (Bigstring.length content + 0x10) ident filesz in
-    let p_memsz = optional p_filesz Int64.of_int memsz in
+    let p_memsz = Option.inject p_filesz Int64.of_int memsz in
     let open Result.Let_syntax in
     let open Int64 in
     (* Fix PHDR as needed *)
@@ -430,7 +493,7 @@ let new_segment ?(content = nil) ?(p_flags = [PF_R; PF_W; PF_X])
     (* Ensure that the offset and address values have the same page alignment *)
     let%bind _ = Result.of_option
       ~error:(fail "Offset and address not same page align") @@
-      assert_opt (page_offset p_offset = page_offset p_vaddr) in
+      Option.guard (page_offset p_offset = page_offset p_vaddr) in
     let segm = {
       p_type; p_flags; p_offset; p_align; p_memsz;
       p_filesz; p_vaddr; p_paddr = p_vaddr;
@@ -446,7 +509,7 @@ let new_segment ?(content = nil) ?(p_flags = [PF_R; PF_W; PF_X])
     ] in
     let%bind _ = Result.of_option
       ~error:(fail "Overlapping address or offset") @@
-      assert_opt @@ not overlaps in
+      Option.guard @@ not overlaps in
 
     (* Reallocate memory/PHDR as needed *)
     let image = ensure_mem_size image (p_offset + p_filesz) in
@@ -454,12 +517,6 @@ let new_segment ?(content = nil) ?(p_flags = [PF_R; PF_W; PF_X])
     (* Add in our new segment and update our image *)
     let%bind image = update_phdr_table image @@
       update_load_seg image.i_segs segm in
-    let%bind p_offset_i = Result.of_option
-      ~error:(fail "Integer overflow") @@
-      Int64.to_int p_offset in
-    let%map p_filesz_i = Result.of_option
-      ~error:(fail "Integer overflow") @@
-      Int64.to_int p_filesz in
-    (image, Bigstring.sub_shared
-      ?pos:(Some p_offset_i) ?len:(Some p_filesz_i)
-      image.i_mem)
+    let%bind mem = mem_of_segment image segm in
+    let%map _ = Memory.write mem content in
+    (image, segm, mem)

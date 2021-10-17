@@ -2,7 +2,7 @@
 *.glob
 *.vo
 *.#*#
-*.swp
+*.sw?
 *.*~
 *.pyc
 *.vok
@@ -16,6 +16,7 @@ _build
 *.text
 *.entry
 *.patched
+*.orig
 Makefile.coq
 Makefile.coq.conf
 .Makefile.coq.d

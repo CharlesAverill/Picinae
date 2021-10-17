@@ -2,7 +2,5 @@
 
 set -e
 
-(cd ./test && make clean)
-
-bapbuild -package ppx_let -package bap-elf segments.plugin && bapbundle install segments.plugin
+bapbuild -pkgs ppx_let,bap-elf segments.plugin && bapbundle install segments.plugin
 

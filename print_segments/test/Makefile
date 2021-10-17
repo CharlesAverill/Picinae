@@ -2,28 +2,28 @@
 # TARGETS = $(patsubst %.s, %, $(SOURCES))
 # OBJECTS = $(patsubst %.s, %.o, $(TARGETS))
 
-TARGETS = hello hello-var hello-invalid exit-42
-OBJECTS = $(patsubst %, %.o, $(TARGETS))
-TABLES = $(patsubst %, %.table, $(TARGETS))
-TEXTS = $(patsubst %, %.text, $(TARGETS))
+TARGETS = hello hello-var hello-invalid exit-42 jump hello-libc
 PATCHED = $(patsubst %, %.patched, $(TARGETS))
 
-all: $(TARGETS) $(PATCHED) hello-main
+CC=riscv32-unknown-linux-gnu-gcc
+AS=riscv32-unknown-linux-gnu-as
+LD=riscv32-unknown-linux-gnu-ld
+CFLAGS=-static
+
+all: $(PATCHED)
 
 clean:
-	rm -f $(TARGETS) hello-main
+	rm -f $(TARGETS:%=%.patched)
 	rm -f *.o
 
 .PHONY: all clean
 
-$(TARGETS): %: %.o
-	riscv32-unknown-linux-gnu-ld -o $@ $<
+hello-libc.orig: hello-libc.c
+	riscv32-unknown-linux-gnu-gcc -static -o $@ $<
 
-$(OBJECTS): %.o: %.s
-	riscv32-unknown-linux-gnu-as -o $@ $<
+%.orig: %.o
+	$(LD) -o $@ $<
 
-$(PATCHED): %.patched: %
-	bap segments $< $<.patched
+$(PATCHED): %.patched: %.orig
+	bap segments -v -i $< -o $@
 
-hello-main: hello-main.s
-	riscv32-unknown-linux-gnu-gcc -static -o hello-main hello-main.s

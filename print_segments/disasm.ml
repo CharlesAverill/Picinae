@@ -1,68 +1,40 @@
+open Core_extend
 
-(* logical-and out bits 6:0, which represents the opcode *)
-let opcode_of_int32 (inst:int32) :int32
-  = Stdlib.Int32.logand inst 0x0000007fl
+(* Obtains a chunk of bits *)
+let bits_of inst ~bitoff ~bitlen =
+  (inst lsr bitoff) land ((1 lsl bitlen) - 1)
 
-(* logical-and out bits 11:7. this represents rd of R I U J *)
-let rd_of_int32 (inst:int32) :int32
-  = (Stdlib.Int32.shift_right (Stdlib.Int32.logand inst 0x00000f80l) 7)
+(* Combine a set of bit offsets/bit lengths formed in the bitspec parameter *)
+let bits_combine ?(initoff = 0) ?signbit inst ~bitspec =
+  let res, reslen = List.fold_left bitspec ~init:(0, initoff)
+    ~f:(fun (curval, dstoff) (bitoff, bitlen) ->
+      (curval lor bits_of inst ~bitoff ~bitlen lsl dstoff, dstoff + bitlen)) in
+  match signbit with
+  | Some signbit ->
+      (-1 * bits_of inst ~bitoff:signbit ~bitlen:1) lsl reslen lor res
+  | None -> res
 
-(* logical-and out bits 19:15. this represents the rs1 of R, I, S, B types *)
-let rs1_of_int32 (inst:int32) :int32
-  = (Stdlib.Int32.shift_right (Stdlib.Int32.logand inst 0x000f8000l) 15)
+(* opcode: I[6:0] *)
+let opcode = bits_of ~bitoff:0 ~bitlen:7
+(* rd [R I U J insn]: I[11:7] *)
+let rd = bits_of ~bitoff:7 ~bitlen:5
+(* rs1 [R I S B insn]: I[19:15] *)
+let rs1 = bits_of ~bitoff:15 ~bitlen:5
+(* funct3 [R I S B insn]: I[14:12] *)
+let funct3 = bits_of ~bitoff:12 ~bitlen:3
+(* imm [I insn]: I[31:20] *)
+let imm_of_itype = bits_of ~bitoff:20 ~bitlen:12
+(* imm [U insn]: I[31:12] *)
+let imm_of_utype = bits_of ~bitoff:12 ~bitlen:20
+(* imm [J insn]: I[!31|19:12|20|30:21];
+   see pages 16 and 130 of the RISC-V spec *)
+let imm_of_jtype = bits_combine ~initoff:1 ~signbit:31
+  ~bitspec:[ (21, 10); (20, 1); (12, 8) ]
+(* imm [B insn]: I[!31|7|30:25|11:8]; *)
+let imm_of_btype = bits_combine ~initoff:1 ~signbit:31
+  ~bitspec:[ (8, 4); (25, 6); (7, 1) ]
 
-(* logical-and out bits 14:12. this represents funct3 of R, I, S, B types *)
-let funct3_of_int32 (inst:int32) :int32
-  = (Stdlib.Int32.shift_right (Stdlib.Int32.logand inst 0x00003000l) 12)
-
-(* logical-and out bits 31:25. this represents the imm of an I type *)
-let imm_of_itype (inst:int32) :int32
-  = (Stdlib.Int32.shift_right (Stdlib.Int32.logand inst 0xfff00000l) 25)
-
-(* logical-and out bits 31:12. this represents immediate of a u type *)
-let imm_of_utype (inst:int32) :int32
-  = (Stdlib.Int32.shift_right (Stdlib.Int32.logand inst 0xfffff000l) 12)
-
-(* see pages 16 and 130 of the RISC-V spec
-  J-type instruction: intermediate is
-  imm[20|10:1|11|19:12] *)
-let imm_of_jtype (inst:int32) :int32 =
-  (* logical-or all these numbers together *)
-  let unsigned_imm = (Stdlib.List.fold_left
-    Stdlib.Int32.logor 0l (* 0 to make the 0th bit 0 *)
-    [ (* See page 17 of the RISC-V Spec for encoding *)
-      (* move one bit 31 to pos 20 *)
-      (Stdlib.Int32.shift_right (Stdlib.Int32.logand inst 0x80000000l) 11);
-      (* eight bits 19:12 are the same in both inst and imm *)
-      (Stdlib.Int32.logand inst 0x000ff000l);
-      (* move one bit 20 to pos 11 *)
-      (Stdlib.Int32.shift_right (Stdlib.Int32.logand inst 0x00100000l) 9);
-      (* move ten bits 30:21 to pos 10:1 *)
-      (Stdlib.Int32.shift_right (Stdlib.Int32.logand inst 0x7fe00000l) 20);
-    ]
-  ) in unsigned_imm
-  (* signed-ed ness is handled by the fact that Stdlib.Int32.shift_right is arithmetic, and guaranteed the
-    sign bit of the original instrucion is the MSB of the immediate *)
-
-(* see pages 16 and 130 of the RISC-V spec
-  B-type instruction: intermediate is
-  imm[12|10:5|4:1|11 *)
-let imm_of_btype (inst:int32) :int32 =
-  (* logical-or all these numbers together *)
-  let unsigned_imm = (Stdlib.List.fold_left
-    Stdlib.Int32.logor 0l  (* 0 to make the 0th bit 0 *)
-    [ (* See page 17 of the RISC-V Spec for encoding *)
-      (* move one bit 31 to pos 12 *)
-      (Stdlib.Int32.shift_right (Stdlib.Int32.logand inst 0x80000000l) 19);
-      (* move one bit 7 to pos 11 *)
-      (Stdlib.Int32.shift_left (Stdlib.Int32.logand inst 0x00000080l) 4);
-      (* move six bits 30:25 to pos 10:5 *)
-      (Stdlib.Int32.shift_right (Stdlib.Int32.logand inst 0x7e000000l) 20);
-      (* move four bits 11:8 to pos 4:1 *)
-      (Stdlib.Int32.shift_right (Stdlib.Int32.logand inst 0x00000f00l) 7);
-    ]
-  ) in unsigned_imm
-
+(*
 (* type to represent a RISC-V instruction that has been decoded *)
 (* Not going to do S type or R type *)
 type riscv_instr =
@@ -112,3 +84,4 @@ let encode_instr (decoded:riscv_instr) :int32 =
   | Utype {imm = _; rd = _; opcode = _} -> 0l
   | Itype {imm = _; rs1 = _; funct3 = _; rd = _; opcode = _} ->0l
 
+  *)
