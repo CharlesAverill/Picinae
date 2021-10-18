@@ -35,8 +35,10 @@ let main mmapfile minput moutput =
   save_image image output
 
 let () = Extension.Command.(begin
-    declare "segments" (args $debug $mapfile $input $output)
+    declare "riscv-cfi" (args $debug $mapfile $input $output)
+      ~doc:"Rewrites Riscv32 binaries to have CFI"
       ~requires:["loader"]
+
   end) @@ fun debug mapfile input output _ctxt ->
     let open Result.Let_syntax in
     let () = Rewriter.is_debug := debug in
@@ -44,5 +46,5 @@ let () = Extension.Command.(begin
     Result.map_error ~f:(fun e -> SegmentFailure e) res
 
 let () = Extension.Error.register_printer @@ function
-  | SegmentFailure err -> Some ("segments: " ^ Error.to_string_hum err)
+  | SegmentFailure err -> Some ("riscv-cfi: " ^ Error.to_string_hum err)
   | _ -> None

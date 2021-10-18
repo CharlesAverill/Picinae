@@ -2,5 +2,5 @@
 
 set -e
 
-bapbuild -pkgs ppx_let,bap-elf segments.plugin && bapbundle install segments.plugin
+bapbuild -pkgs ppx_let,bap-elf riscv_cfi.plugin && bapbundle install riscv_cfi.plugin
 
