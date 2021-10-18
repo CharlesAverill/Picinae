@@ -17,6 +17,7 @@ _build
 *.entry
 *.patched
 *.orig
+*.map
 Makefile.coq
 Makefile.coq.conf
 .Makefile.coq.d

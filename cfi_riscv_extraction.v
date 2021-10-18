@@ -242,7 +242,7 @@ Definition new_auipc base (l1:list instr_data) d :=
   match d with Data _ _ sd n _ =>
     if ((Z0 <=? base) && (mem Z1 sd))%bool then
       if n #& Z3968 =? Z0 then Some (Z16435::nil) (* Xor r0, r0, r0 *)
-      else let new_target := base + Z.of_nat (length l1) #<< Z2 + (n #& Z4294963200) in
+      else let new_target := (base + Z.of_nat (length l1)) #<< Z2 + (n #& Z4294963200) in
            let rd := n #& Z3968 in Some (
         (Z55 #| rd #| (new_target #& Z4294963200))::                     (* Lui rd, new_target[31:12] *)
         (Z24595 #| rd #| (rd #<< Z8) #| ((new_target #& Z4095) #<< Z20)) (* Ori rd, rd, new_target[11:0] *)
@@ -298,7 +298,7 @@ Fixpoint newinstrs base l' l1 l2 {struct l2} :=
    l2 = list of instruction data (returned by todata) for original code *)
 Fixpoint newtable base base' acc i l2 :=
   match l2 with nil => rev acc | d::t =>
-    newtable base base' ((i - (base' - base)) #<< Z7 :: acc) (i + newsize d - Z1) t
+    newtable base base' ((base' - base + i) #<< Z7 :: acc) (i + newsize d - Z1) t
   end.
 
 (* Rewrite a code section according to a policy. Inputs:
@@ -2213,7 +2213,7 @@ Theorem newauipc_asm:
     (NI: new_auipc base l1 (Data iid oid sd z sb) = Some b),
   let n := Z.to_N z in
   let rd := xbits n 7 12 in
-  let t := Z.to_N (base + Z.of_nat (length l1) #<< 2 + z #& (2^32 - 2^12)) in
+  let t := Z.to_N ((base + Z.of_nat length l1) #<< 2 + z #& (2^32 - 2^12)) in
   map rv_decode (map Z.to_N b) =
   if z #& 3968 =? 0 then R5_Xor 0 0 0 :: nil else
     R5_Lui rd (xbits t 12 32) ::

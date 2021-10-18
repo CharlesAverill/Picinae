@@ -138,7 +138,7 @@ let newijump l1 d l2 =
          ((lsl) tmp1 20))::(((lor) ((lor) 8195 ((lsl) tmp1 7))
                               ((lsl) tmp3 15))::(((lor)
                                                  ((lor) 55 ((lsl) tmp2 7))
-                                                 ((lsl)
+                                                 ((lsl) 
                                                  ((mod) oid 1048576) 12))::(
        ((lor) ((lor) 57696275 ((lsl) tmp2 7)) ((lsl) tmp2 15))::
        (List.append br (((lor) ((land) n0 4095) ((lsl) tmp3 15))::[]))))))))))))
@@ -152,7 +152,7 @@ let new_auipc base l1 = function
   then if (=) ((land) n0 3968) 0
        then Some (16435::[])
        else let new_target =
-              (+) ((+) base ((lsl) ( (List.length l1)) 2))
+              (+) ((lsl) ((+) base ( (List.length l1))) 2)
                 ((land) n0 4294963200)
             in
             let rd = (land) n0 3968 in
@@ -218,7 +218,7 @@ let rec newinstrs base l' l1 = function
 let rec newtable base base' acc i = function
 | [] -> List.rev acc
 | d::t ->
-  newtable base base' (((lsl) ((-) i ((-) base' base)) 7)::acc)
+  newtable base base' (((lsl) ((+) ((-) base' base) i) 7)::acc)
     ((-) ((+) i (newsize d)) 1) t
 (** val todata : ((int option * (int * int list)) * int) -> instr_data **)
 
