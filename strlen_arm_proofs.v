@@ -126,13 +126,19 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma simpl_bc:
+  forall (b:bool) p, (if b then 0 else 1) = N.pos p -> (if b then 0 else 1) = 1.
+Proof.
+  intros. destruct b. discriminate. reflexivity.
+Qed.
+
 Lemma nilfree_extend:
   forall j m p k (WTM: welltyped_memory m) (P32: p < 2^32) (J4: j <= 4)
          (NF: nilfree m p (4*k - p mod 4))
          (NN: forall i, i < j ->
-              ((if (if k then getmem LittleE (N.succ i) m (p - p mod 4) .| N.ones (p mod 4 * 8)
-                         else getmem LittleE (N.succ i) m (p - p mod 4 ⊕ 4*k)) .& (N.ones 8 << (8*i)) =? 0
-                then 1 else 0) =? 0) = true),
+              (if (if k then getmem LittleE (N.succ i) m (p - p mod 4) .| N.ones (p mod 4 * 8)
+                        else getmem LittleE (N.succ i) m (p - p mod 4 ⊕ 4*k)) .& (N.ones 8 << (8*i)) =? 0
+               then 0 else 1) = 1),
   nilfree m p (4*k + j - p mod 4).
 Proof.
   intros. intros i LT. destruct k as [|k].
@@ -175,12 +181,12 @@ Theorem nilterminate:
   forall j m p k (WTM: welltyped_memory m) (P32: p < 2^32) (J4: j < 4)
          (NF: nilfree m p (4*k - p mod 4))
          (NN: forall i, i < j ->
-              ((if (if k then getmem LittleE (N.succ i) m (p - p mod 4) .| N.ones (p mod 4 * 8)
-                         else getmem LittleE (N.succ i) m (p - p mod 4 ⊕ 4*k)) .& (N.ones 8 << (8*i)) =? 0
-                then 1 else 0) =? 0) = true)
-         (NIL: ((if (if k then getmem LittleE (N.succ j) m (p - p mod 4) .| N.ones (p mod 4 * 8)
-                          else getmem LittleE (N.succ j) m (p - p mod 4 ⊕ 4*k)) .& (N.ones 8 << (8*j)) =? 0
-                 then 1 else 0) =? 0) = false),
+              (if (if k then getmem LittleE (N.succ i) m (p - p mod 4) .| N.ones (p mod 4 * 8)
+                        else getmem LittleE (N.succ i) m (p - p mod 4 ⊕ 4*k)) .& (N.ones 8 << (8*i)) =? 0
+               then 0 else 1) = 1)
+         (NIL: (if (if k then getmem LittleE (N.succ j) m (p - p mod 4) .| N.ones (p mod 4 * 8)
+                         else getmem LittleE (N.succ j) m (p - p mod 4 ⊕ 4*k)) .& (N.ones 8 << (8*j)) =? 0
+                 then 0 else 1) = 0),
   nilfree m p (2^32 - p mod 4 + 4*k ⊕ j) /\
   m (p ⊕ (2^32 - p mod 4 + 4*k ⊕ j)) = 0.
 Proof.
@@ -268,8 +274,14 @@ Proof.
     rewrite shiftr_low_pow2 by exact H. clear H.
     rewrite modsubcmp by exact LE1.
   step. step.
+    destruct (p mod 4 =? 1) eqn:BC1; [clear BC0|discriminate].
+    apply Neqb_ok in BC1. rewrite BC1, N.sub_diag, N.add_0_r.
+  step. exists 0.
+    change (2^2) with 4 in BC1. rewrite BC1. repeat split.
+    intros i LT. destruct i; discriminate.
+  step.
     destruct (p mod 4 =? 1) eqn:BC1; [discriminate|clear BC0]. apply N.eqb_neq in BC1.
-    assert (LE2: 1 <= p mod 4 - 1). destruct (p mod 4). contradict BC;reflexivity. repeat (discriminate + (contradict BC1;reflexivity) + destruct p0).
+    assert (LE2: 1 <= p mod 4 - 1). destruct (p mod 4). contradict BC;reflexivity. repeat (discriminate + (contradict BC1;reflexivity) + destruct p1).
     rewrite <- N.add_sub_assoc by exact LE2.
     rewrite <- (N.add_mod_idemp_l (2^32)), N.mod_same, N.add_0_l by (apply N.pow_nonzero; discriminate).
     assert (H: p mod 4 - 1 - 1 < 2^31). eapply N.le_lt_trans, N.le_lt_trans, N.lt_le_trans; try (apply N.mod_lt + apply N.le_sub_l); discriminate.
@@ -277,19 +289,13 @@ Proof.
     rewrite shiftr_low_pow2 by exact H. clear H.
     rewrite 2!modsubcmp by (exact LE1 + exact LE2).
   step.
-    exists 0. replace (p mod 4) with 3.
-      rewrite <- !N.lor_assoc. repeat split. intros i LT. destruct i; discriminate.
-      assert (LT3: p mod 4 < 4). apply N.mod_lt. discriminate.
-      destruct (p mod 4). contradict BC; reflexivity. repeat (discriminate + destruct p0). reflexivity. exfalso. apply LE2. reflexivity.
     exists 0. destruct (p mod 4 =? 2) eqn:BC2; [clear BC0|discriminate].
       apply Neqb_ok in BC2. rewrite BC2, <- N.lor_assoc. repeat split.
       intros i LT. destruct i; discriminate.
-  step.
-    destruct (p mod 4 =? 1) eqn:BC1; [clear BC0|discriminate].
-    apply Neqb_ok in BC1. rewrite BC1, N.sub_diag, N.add_0_r.
-  step. exists 0.
-    change (2^2) with 4 in BC1. rewrite BC1. repeat split.
-    intros i LT. destruct i; discriminate.
+    exists 0. replace (p mod 4) with 3.
+      rewrite <- !N.lor_assoc. repeat split. intros i LT. destruct i; discriminate.
+      assert (LT3: p mod 4 < 4). apply N.mod_lt. discriminate.
+      destruct (p mod 4). contradict BC; reflexivity. repeat (discriminate + destruct p2). reflexivity. exfalso. apply LE2. reflexivity.
 
   (* Address 40 *)
   destruct PRE as [k [R0 [R1 [R2 NF]]]].
@@ -299,27 +305,25 @@ Proof.
     change (N.ones 8) with (N.ones 8 << (8*0)) in H
   end end.
 
+    (* nil at offset 4k+0 *)
+    eexists. psimpl. split. reflexivity. rewrite <- (N.add_0_r (_+_)). apply nilterminate; try assumption. reflexivity.
+    intros i LT. destruct i; discriminate LT.
+
+    (* nil at offset 4k+1 *)
+    eexists. psimpl. split. reflexivity. apply nilterminate; try assumption. reflexivity.
+    intros i LT. destruct i as [|i]; repeat (discriminate LT + (eapply simpl_bc; eassumption) + destruct i as [i|i|]).
+
+    (* nil at offset 4k+2 *)
+    eexists. psimpl. split. reflexivity. apply nilterminate; try assumption. reflexivity.
+    intros i LT. destruct i as [|i]; repeat (discriminate LT + (eapply simpl_bc; eassumption) + destruct i as [i|i|]).
+
+    (* nil at offset 4k+3 *)
+    eexists. psimpl. split. reflexivity. apply nilterminate; try assumption. reflexivity.
+    intros i LT. destruct i as [|i]; repeat (discriminate LT + (eapply simpl_bc; eassumption) + destruct i as [i|i|]).
+
     (* no nils from 4k+0 to 4k+3: iterate loop *)
     exists (N.succ k). rewrite <- !N.add_assoc, <- !N.mul_succ_r. repeat split.
       destruct k; reflexivity.
       rewrite N.mul_succ_r. apply nilfree_extend; try assumption. reflexivity.
-        intros i LT. destruct i as [|i].
-          assumption.
-          repeat (discriminate LT + assumption + destruct i as [i|i|]).
-
-    (* nil at offset 4k+3 *)
-    eexists. psimpl. split. reflexivity. apply nilterminate; try assumption. reflexivity.
-    intros i LT. destruct i as [|i]. assumption. repeat (discriminate LT + assumption + destruct i as [i|i|]).
-
-    (* nil at offset 4k+2 *)
-    eexists. psimpl. split. reflexivity. apply nilterminate; try assumption. reflexivity.
-    intros i LT. destruct i as [|i]. assumption. repeat (discriminate LT + assumption + destruct i as [i|i|]).
-
-    (* nil at offset 4k+1 *)
-    eexists. psimpl. split. reflexivity. apply nilterminate; try assumption. reflexivity.
-    intros i LT. destruct i as [|i]. assumption. repeat (discriminate LT + assumption + destruct i as [i|i|]).
-
-    (* nil at offset 4k+0 *)
-    eexists. psimpl. split. reflexivity. rewrite <- (N.add_0_r (_+_)). apply nilterminate; try assumption. reflexivity.
-    intros i LT. destruct i; discriminate LT.
+    intros i LT. destruct i as [|i]; repeat (discriminate LT + (eapply simpl_bc; eassumption) + destruct i as [i|i|]).
 Qed.

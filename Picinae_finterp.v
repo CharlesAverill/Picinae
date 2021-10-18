@@ -57,13 +57,6 @@ Require Import FunctionalExtensionality.
 
 Inductive uvalue := VaU (z:bool) (m:addr->N) (n:N) (w:N).
 
-Definition vget (u:value) :=
-  match u with
-  | VaN n w => VaU true (fun _ => 0) n w
-  | VaM m w => VaU false m 0 w
-  end.
-
-
 (* When the interpreter cannot determine an IL variable's type and/or value
    (e.g., because store s is a proof variable), the interpreter returns an
    expression that contains the following accessor functions to refer to the
@@ -80,10 +73,6 @@ Definition vmem (u:value) :=
 
 Definition vwidth (u:value) :=
   match u with VaN _ w | VaM _ w => w end.
-
-Lemma fold_vget:
-  forall u, VaU (vtyp u) (vmem u) (vnum u) (vwidth u) = vget u.
-Proof. intro. destruct u as [u|]; [destruct u|]; reflexivity. Qed.
 
 
 (* Unknowns are modeled as return values of an oracle function f that maps
@@ -285,8 +274,9 @@ Fixpoint feval_width (l:list (var*value)) e {struct e} :=
   | Store e1 _ _ _ _ | UnOp _ e1 => feval_width l e1
   | BinOp bop e1 _ =>
     match bop with
+    | OP_PLUS | OP_MINUS | OP_TIMES | OP_DIVIDE | OP_SDIVIDE | OP_MOD | OP_SMOD
+    | OP_LSHIFT | OP_RSHIFT | OP_ARSHIFT | OP_AND | OP_OR | OP_XOR => feval_width l e1
     | OP_EQ | OP_NEQ | OP_LT | OP_LE | OP_SLT | OP_SLE => Some 1
-    | _ => feval_width l e1
     end
   | Let v e1 e2 => feval_width
       match feval_width l e1 with
@@ -302,6 +292,74 @@ Fixpoint feval_width (l:list (var*value)) e {struct e} :=
   | Concat e1 e2 => match feval_width l e1 with None => None | Some w1 =>
                       option_map (N.add w1) (feval_width l e2)
                     end
+  end.
+
+(* The following implements a safety check that can optionally be executed prior
+   to evaluating a stmt to warn the user that the term is likely to blow up due
+   to unknown-type subexpressions.  Unknown types usually arise from references
+   to IL variables not in the typing context.  This usually indicates a missing
+   "models" hypothesis or read from an uninitialized temp var. *)
+
+Fixpoint feval_check (l:list (var*value)) e {struct e} :=
+  match e with
+  | Var v => match feval_varwidth l v with None => Some e | Some _ => None end
+  | Word _ _ | Unknown _ => None
+  | Load e1 e2 _ _ | BinOp _ e1 e2 | Concat e1 e2 =>
+      match feval_check l e1 with Some e' => Some e' | None => feval_check l e2 end
+  | Store e1 e2 e3 _ _ =>
+      match feval_check l e1 with Some e' => Some e' | None =>
+        match feval_check l e2 with Some e' => Some e' | None =>
+          feval_check l e3
+        end
+      end
+  | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => feval_check l e1
+  | Let v e1 e2 =>
+      match feval_check l e1 with Some e' => Some e' | None =>
+        feval_check match feval_width l e1 with
+        | None => filter (fun p => if v == fst p then false else true) l
+        | Some w => ((v,VaN 0 w)::l)
+        end e2
+      end
+  | Ite e1 e2 e3 =>
+      match feval_check l e1 with Some e' => Some e' | None =>
+        match feval_check l e2 with Some e' => Some e' | None =>
+          match feval_check l e3 with Some e' => Some e' | None =>
+            match feval_width l e2, feval_width l e3 with
+            | Some w1, Some w2 => if w1 =? w2 then None else Some e
+            | _,_ => Some e
+            end
+          end
+        end
+      end
+  end.
+
+Inductive fxc_context := FXC_Vars (l: list (var*value)) | FXC_Err (e:exp).
+
+Fixpoint fexec_check (l:list (var*value)) q {struct q} :=
+  match q with
+  | Nop | Exn _ => FXC_Vars l
+  | Move v e => match feval_check l e with Some e' => FXC_Err e' | None =>
+                  match feval_width l e with None => FXC_Err e | Some w =>
+                    FXC_Vars ((v,VaN 0 w)::l)
+                  end
+                end
+  | Jmp e => match feval_check l e with Some e' => FXC_Err e' | None => FXC_Vars l end
+  | Seq q1 q2 => match fexec_check l q1 with
+                 | FXC_Err e => FXC_Err e
+                 | FXC_Vars l2 => fexec_check l2 q2
+                 end
+  | If e q1 q2 =>
+      match feval_check l e with Some e' => FXC_Err e' | None =>
+        match fexec_check l q1 with FXC_Err e' => FXC_Err e' | FXC_Vars l1 =>
+          match fexec_check l q2 with FXC_Err e' => FXC_Err e' | FXC_Vars l2 =>
+            FXC_Vars (filter (fun v1 => existsb (fun v2 => if fst v1 == fst v2 then true else false) l2) l1)
+          end
+        end
+      end
+  | Rep e q1 =>
+      match feval_check l e with Some e' => FXC_Err e' | None =>
+        match fexec_check l q1 with FXC_Err e' => FXC_Err e' | FXC_Vars _ => FXC_Vars l end
+      end
   end.
 
 (* Functionally evaluate binary and unary operations using the opaque
@@ -513,14 +571,6 @@ Import IL.
 Import TIL.
 Include PICINAE_FINTERP_DEFS IL TIL.
 
-Ltac rewrite_finterp_funcs_in H :=
-  cbn beta match delta [ vtyp vnum vmem vwidth ] in H;
-  rewrite ?fold_vget in H.
-
-Ltac rewrite_finterp_funcs :=
-  cbn beta match delta [ vtyp vnum vmem vwidth ];
-  rewrite ?fold_vget.
-
 (* Using the functional interpreter, we now define a set of tactics that reduce
    expressions to values, and statements to stores & exits.  These tactics are
    carefully implemented to avoid simplifying anything other than the machinery
@@ -548,7 +598,7 @@ Ltac simpl_stores :=
     end
   end.
 
-Tactic Notation "simpl_stores" "in" hyp(H) :=
+Ltac simpl_stores_in H :=
   repeat lazymatch type of H with context [ update _ ?v _ ?v ] => rewrite update_updated in H
                                 | context [ update _ _ _ _ ] => rewrite update_frame in H; [|discriminate 1] end;
   repeat rewrite if_N_same in H;
@@ -558,6 +608,8 @@ Tactic Notation "simpl_stores" "in" hyp(H) :=
         (symmetry; repeat apply update_inner_same; apply update_cancel)
     end
   end.
+
+Tactic Notation "simpl_stores" "in" hyp(H) := simpl_stores_in H.
 
 (* To facilitate expression simplification, it is often convenient to first
    consolidate all information about known variable values into the expression
@@ -601,7 +653,7 @@ Ltac stock_store :=
   | _ => fail "Goal is not of the form (exec_stmt ...)"
   end.
 
-Tactic Notation "stock_store" "in" hyp(XS) :=
+Ltac stock_store_in XS :=
   lazymatch type of XS with exec_stmt _ _ ?q _ _ => repeat
     match q with context [ Var ?v ] =>
       lazymatch type of XS with exec_stmt _ ?s _ _ _ =>
@@ -620,6 +672,8 @@ Tactic Notation "stock_store" "in" hyp(XS) :=
     end
   | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
   end.
+
+Tactic Notation "stock_store" "in" hyp(XS) := stock_store_in XS.
 
 (* To prevent vm_compute from expanding symbolic expressions that the user
    already has in a desired form, the following lemmas introduce symbolic
@@ -743,6 +797,18 @@ Parameter reduce_stmt:
               | FIS l' (FIStmt q') ma => exec_stmt h (updlst s l' (noet NOE_UPD)) q' s' x /\ conjallT ma
               end.
 
+(* Check a statement for typeability before interpreting it, since statements that
+   cannot be statically typed can potentially blow up into huge terms. *)
+
+Ltac step_precheck XS :=
+  lazymatch type of XS with exec_stmt _ (updlst _ ?l _) ?q _ _ =>
+    lazymatch (eval compute in (fexec_check l q)) with
+    | FXC_Err ?e => fail 1 "Untyped subexpression:" e
+    | FXC_Vars _ => idtac
+    end
+  | _ => idtac
+  end.
+
 (* Finally, simplifying a hypothesis H of the form (exec_stmt ...) entails first
    removing any user-supplied expressions in H that we don't want expanded, then
    applying the reduce_stmt theorem to convert it into an fexec_stmt expression,
@@ -753,7 +819,8 @@ Parameter reduce_stmt:
 Ltac step_stmt XS :=
   lazymatch type of XS with exec_stmt _ _ _ _ _ =>
     populate_varlist XS;
-    [ eapply reduce_stmt in XS;
+    [ step_precheck XS;
+      eapply reduce_stmt in XS;
       [ let unk := fresh "unknown" in (
           destruct XS as [unk XS];
           compute in XS;
@@ -763,8 +830,7 @@ Ltac step_stmt XS :=
           try clear unk
         )
       | reflexivity | reflexivity ];
-      cbv beta match delta [ noe_setop noe_typop ] in XS;
-      rewrite_finterp_funcs_in XS
+      cbv beta match delta [ noe_setop noe_typop ] in XS
     | reflexivity ]
   | _ => fail "Hypothesis is not of the form (exec_stmt ...)"
   end.
@@ -962,6 +1028,39 @@ Proof.
   inversion FW. apply f_equal2.
     change w1 with (vwidth (VaN n1 w1)). eapply IHe1; eassumption.
     change w2 with (vwidth (VaN n2 w2)). eapply IHe2; eassumption.
+Qed.
+
+Theorem feval_check_imp_width:
+  forall e l (CHK: feval_check l e = None), feval_width l e <> None.
+Proof.
+  induction e; intros l CHK FEW; simpl in CHK; simpl in FEW; try discriminate.
+    rewrite FEW in CHK. discriminate.
+    specialize (IHe1 l). destruct (feval_check l e1).
+      discriminate.
+      apply IHe1. reflexivity. exact FEW.
+    specialize (IHe1 l). destruct (feval_check l e1).
+      discriminate.
+      apply IHe1. reflexivity. destruct b; solve [ exact FEW | discriminate FEW ].
+    eapply IHe; eassumption.
+    specialize (IHe1 l). destruct (feval_check l e1).
+      discriminate.
+      destruct (feval_width l e1).
+        eapply IHe2; eassumption.
+        apply IHe1; reflexivity.
+
+    specialize (IHe1 l). destruct (feval_check l e1). discriminate.
+    specialize (IHe2 l). destruct (feval_check l e2). discriminate.
+    destruct (feval_width l e2); [| apply IHe2; reflexivity ].
+    specialize (IHe3 l). destruct (feval_check l e3). discriminate.
+    destruct (feval_width l e3); [| apply IHe3; reflexivity ].
+    destruct (_ =? _); discriminate.
+
+    specialize (IHe1 l). destruct (feval_check l e1). discriminate.
+    destruct (feval_width l e1); [| apply IHe1; reflexivity ].
+    specialize (IHe2 l). destruct (feval_check l e2). discriminate.
+    destruct (feval_width l e2).
+      discriminate.
+      apply IHe2; reflexivity.
 Qed.
 
 Theorem reduce_exp:

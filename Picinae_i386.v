@@ -36,7 +36,7 @@ Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
 Require Export Picinae_finterp.
-Require Export Picinae_simplifier_v1_0.
+Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_slogic.
 Require Import NArith.
 Require Import Program.Equality.
@@ -105,11 +105,26 @@ Module Statics_i386 := PicinaeStatics IL_i386.
 Export Statics_i386.
 Module FInterp_i386 := PicinaeFInterp IL_i386 Statics_i386.
 Export FInterp_i386.
-Module PSimpl_i386 := Picinae_Simplifier_v1_0 IL_i386 Statics_i386 FInterp_i386.
-Export PSimpl_i386.
-Ltac PSimplifier ::= PSimplifier_v1_0.
 Module SLogic_i386 := PicinaeSLogic IL_i386.
 Export SLogic_i386.
+
+Module PSimpl_i386 := Picinae_Simplifier_Base.
+Export PSimpl_i386.
+Module PSimpl_i386_v1_1 := Picinae_Simplifier_v1_1 IL_i386 Statics_i386 FInterp_i386.
+Ltac PSimplifier ::= PSimpl_i386_v1_1.PSimplifier.
+
+(* Introduce unique aliases for tactics in case user loads multiple architectures. *)
+Tactic Notation "i386_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
+Tactic Notation "i386_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+Tactic Notation "i386_psimpl" "in" hyp(H) := psimpl_hyp H.
+Tactic Notation "i386_psimpl" := psimpl_goal.
+
+(* To use a different simplifier version (e.g., v1_0) put the following atop
+   your proof .v file:
+Require Import Picinae_simplifier_v1_0.
+Module PSimpl_i386_v1_0 := Picinae_Simplifier_v1_0 IL_i386 Statics_i386 FInterp_i386.
+Ltac PSimplifier ::= PSimpl_i386_v1_0.PSimplifier.
+*)
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
 Definition x86typctx v :=

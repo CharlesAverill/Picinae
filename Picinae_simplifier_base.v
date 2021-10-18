@@ -33,6 +33,7 @@
  *)
 
 Require Import BinNums.
+Require Import Picinae_core.
 
 (* This file defines the central tactic notations that launch Picinae's auto-
    simplification process for symbolic expressions yielded by the IL interperter.
@@ -53,65 +54,33 @@ Require Import BinNums.
 
 
 
-(* Create an initial dummy definition for PSimplifier that will later be replaced
-   by one of the real simplifier definitions. *)
-
-Ltac PSimplifier tac := fail "PSimplifier undefined. Define it with: Ltac PSimplifier ::= PSimplifier_v1_0".
-
-
 (* Define tokens to denote each ltac exported by a simplifier. *)
 
 Inductive psimpl_tactic :=
-| PSIMPL_INIT
-| PSIMPL_GENN | PSIMPL_GENV | PSIMPL_GENU
+| PSIMPL_GENN | PSIMPL_GENM | PSIMPL_GENB | PSIMPL_GENS | PSIMPL_GENV | PSIMPL_GENU
 | PSIMPL_POPULATE_VAR_IDS
-| PSIMPL_N_HYP | PSIMPL_V_HYP | PSIMPL_V_GOAL | PSIMPL_U_HYP | PSIMPL_U_GOAL
-| PSIMPL_EXHYP_N | PSIMPL_EXGOAL_N | PSIMPL_EXHYP_V | PSIMPL_EXGOAL_V | PSIMPL_EXHYP_U | PSIMPL_EXGOAL_U.
+| PSIMPL_N_HYP | PSIMPL_EXHYP_N | PSIMPL_EXGOAL_N
+| PSIMPL_B_HYP | PSIMPL_EXHYP_B | PSIMPL_EXGOAL_B
+| PSIMPL_M_HYP | PSIMPL_EXHYP_M | PSIMPL_EXGOAL_M
+| PSIMPL_S_HYP | PSIMPL_EXHYP_S | PSIMPL_EXGOAL_S
+| PSIMPL_V_HYP | PSIMPL_EXHYP_V | PSIMPL_EXGOAL_V | PSIMPL_V_GOAL
+| PSIMPL_U_HYP | PSIMPL_EXHYP_U | PSIMPL_EXGOAL_U | PSIMPL_U_GOAL.
+
 
 
 (*** TOP-LEVEL SIMPLIFIER INTERFACE ***)
 
-(* Syntax: psimpl e in H.
-   Description: Simplify numeric subexpression e (must have type N) in hypothesis H.
-   Note: e may be a pattern with wildcards (underscores). *)
+Module Picinae_Simplifier_Base.
 
-Tactic Notation "psimpl" uconstr(e) "in" hyp(H) :=
-  PSimplifier PSIMPL_INIT;
-  let x := fresh "n" in let H' := fresh "Heq" x in remember (e:N) as x eqn:H' in H;
-  let t1 := fresh "sast" in
-  (match type of H' with x = ?n =>
-     let p := (let t := (let u := PSimplifier PSIMPL_GENN n in type_term u) in PSimplifier PSIMPL_POPULATE_VAR_IDS N0 t)
-     in epose(t1:=p)
-   end);
-  PSimplifier PSIMPL_N_HYP t1 H';
-  clear t1;
-  PSimplifier PSIMPL_EXHYP_N H';
-  rewrite H' in H;
-  clear x H'.
+(* Create an initial dummy definition for PSimplifier that will later be replaced
+   by one of the real simplifier definitions. *)
+Ltac PSimplifier tac := fail "PSimplifier undefined. Define it with: Ltac PSimplifier ::= PSimplifier_v1_0".
 
-(* Syntax: psimpl e.
-   Description: Simplify numeric subexpression e (must have type N) in the goal.
-   Note: e may be a pattern with wildcards (underscores). *)
-
-Tactic Notation "psimpl" uconstr(e) :=
-  PSimplifier PSIMPL_INIT;
-  let x := fresh "n" in let H' := fresh "Heq" x in remember (e:N) as x eqn:H' in |- *;
-  let t1 := fresh "sast" in
-  (match type of H' with x = ?n =>
-     let p := (let t := (let u := PSimplifier PSIMPL_GENN n in type_term u) in PSimplifier PSIMPL_POPULATE_VAR_IDS N0 t)
-     in epose(t1:=p)
-   end);
-  PSimplifier PSIMPL_N_HYP t1 H';
-  clear t1;
-  PSimplifier PSIMPL_EXHYP_N H';
-  rewrite H';
-  clear x H'.
 
 (* Syntax: psimpl in H.
    Description: Simplify all Picinae IL values (VaN/VaM) in hypothesis H. *)
 
-Tactic Notation "psimpl" "in" hyp(H) :=
-  PSimplifier PSIMPL_INIT;
+Ltac psimpl_hyp H :=
   let t1 := fresh "sast" in
   (let t := (let Htyp := type of H in PSimplifier PSIMPL_GENV Htyp) in
    (* idtac "SASTV:" t; *) epose (t1:=t));
@@ -126,11 +95,13 @@ Tactic Notation "psimpl" "in" hyp(H) :=
   clear t1;
   PSimplifier PSIMPL_EXHYP_U H.
 
+Tactic Notation "psimpl" "in" hyp(H) := psimpl_hyp H.
+
+
 (* Syntax: psimpl.
    Description: Simplify all Picinae IL values (VaN/VaM) in the goal. *)
 
-Tactic Notation "psimpl" :=
-  PSimplifier PSIMPL_INIT;
+Ltac psimpl_goal :=
   let t1 := fresh "sast" in
   (let t := (lazymatch goal with |- ?g => PSimplifier PSIMPL_GENV g end) in
    (* idtac "SASTV:" t; *) epose (t1:=t));
@@ -144,3 +115,54 @@ Tactic Notation "psimpl" :=
   PSimplifier PSIMPL_U_GOAL t1;
   clear t1;
   PSimplifier PSIMPL_EXGOAL_U.
+
+Tactic Notation "psimpl" := psimpl_goal.
+
+
+Ltac _psimpl_hyp GEN HYP EXHYP x H' :=
+  let t1 := fresh "sast" in
+  (match type of H' with x = ?e =>
+     let p := (let t := (let u := PSimplifier GEN e in type_term u) in PSimplifier PSIMPL_POPULATE_VAR_IDS N0 t)
+     in epose(t1:=p)
+   end);
+  PSimplifier HYP t1 H';
+  clear t1;
+  PSimplifier EXHYP H'.
+
+Ltac _psimpl_exp_hyp x H' :=
+  lazymatch type of x with
+  | N        => _psimpl_hyp PSIMPL_GENN PSIMPL_N_HYP PSIMPL_EXHYP_N x H'
+  | bool     => _psimpl_hyp PSIMPL_GENB PSIMPL_B_HYP PSIMPL_EXHYP_B x H'
+  | addr->N  => _psimpl_hyp PSIMPL_GENM PSIMPL_M_HYP PSIMPL_EXHYP_M x H'
+  | _ => psimpl_hyp H'
+  end.
+
+
+(* Syntax: psimpl e in H.
+   Description: Simplify subexpression e (must have type N, bool, mem, value, or store)
+   in hypothesis H.  Note: e may be a pattern with wildcards (underscores). *)
+
+Ltac psimpl_exp_hyp e H :=
+  let x := fresh in let H' := fresh in
+  remember e as x eqn:H' in H;
+  _psimpl_exp_hyp x H';
+  rewrite H' in H;
+  clear x H'.
+
+Tactic Notation "psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
+
+
+(* Syntax: psimpl e.
+   Description: Simplify subexpression e (must have type N, bool, mem, value, or store)
+   in the goal.  Note: e may be a pattern with wildcards (underscores). *)
+
+Ltac psimpl_exp_goal e :=
+  let x := fresh in let H' := fresh in
+  remember e as x eqn:H' in |- *;
+  _psimpl_exp_hyp x H';
+  rewrite H';
+  clear x H'.
+
+Tactic Notation "psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+
+End Picinae_Simplifier_Base.
