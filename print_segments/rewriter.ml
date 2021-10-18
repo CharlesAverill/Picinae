@@ -49,7 +49,7 @@ let prep_transform (input:int list * int list list option) =
    code back in as a brand-new code segment *)
 let spacer_size = 0x10000
 let mask_int32 = 0xFFFFFFFFL
-let rewrite image =
+let rewrite image mapfile =
   let () = debugf "Loaded image" in
   let open Result.Let_syntax in
   (* We assume that all code sections and ONLY code sections are marked as
@@ -64,12 +64,13 @@ let rewrite image =
     Sequence.to_list |>
     List.sort_on ~f:sh_addr ~cmp:Int64.compare |>
     List.fold_result ~init:(None, 0L) ~f:(fun (mbase, size) sect ->
-      Option.inject (Ok (Some sect.sh_addr, sect.sh_size)) (fun base ->
-        let open Int64 in
-        let%map _ = Result.of_option
-          ~error:(fail "Not contiguous code sections") @@
-          Option.guard (base + size = sect.sh_addr) in
-        (Some base, size + sect.sh_size)) mbase) in
+      Option.inject mbase ~def:(Ok (Some sect.sh_addr, sect.sh_size))
+        ~f:(fun base ->
+          let open Int64 in
+          let%map _ = Result.of_option
+            ~error:(fail "Not contiguous code sections") @@
+            Option.guard (base + size = sect.sh_addr) in
+          (Some base, size + sect.sh_size))) in
   let%bind code_base = Result.of_option
     ~error:(fail "No code sections found") mcode_base in
   let () = debugf "Found code base at: %016Lx +%08Lx" code_base code_size in
@@ -102,19 +103,40 @@ let rewrite image =
 
   (* Calling rewriting*)
   let () = debugf "Rewriting instructions..." in
-  let generated_code = Extraction.newcode generated_policy insns
-    orig_addr final_addr in
+  let (newtable, mnewcode) = Extraction.newcode generated_policy insns
+    Int.(orig_addr/4) Int.(final_addr/4) in
   let () = debugf "Code rewritten" in
-  let%bind chunk1,suffix1 = prep_transform @@ generated_code in
+  let%bind newcode = Result.of_option ~error:(Error.of_string
+    "Unable to transform code.") mnewcode in
+  let newtable_data = bigstring_of_int32_list @@
+    List.map ~f:Int32.of_int_trunc newtable in
+  let newcode_data = bigstring_of_int32_list @@
+    List.map ~f:Int32.of_int_trunc @@
+    List.concat newcode in
 
   (* Write new code back into the image *)
-  let table = bigstring_of_int32_list chunk1 in
-  let newcode = bigstring_of_int32_list suffix1 in
-  let%bind (image, _, _) = Elf_segments.new_segment
-    ~content:newcode ~p_flags:[PF_R; PF_X]
+  let%bind (image, new_segm, _) = Elf_segments.new_segment
+    ~content:newcode_data ~p_flags:[PF_R; PF_X]
     image (AddressOnlySpec (Int64.of_int final_addr)) in
   let%bind code_mem = mem_of_address image code_base code_size in
-  let%map () = Memory.write code_mem table in
+  let%map () = Memory.write code_mem newtable_data in
   let () = debugf "Rewritten back into image" in
+
+  (* Write map file if needed *)
+  let () = Option.inject mapfile ~def:() ~f:(fun mapfile ->
+    (* Open the map file*)
+    let fd = Unix.openfile mapfile
+      ~mode:[Unix.O_RDWR; Unix.O_CREAT; Unix.O_TRUNC]
+      ~perm:0o644 in
+    let out = Unix.out_channel_of_descr fd in
+
+    (* For each instruction, compute the mapping *)
+    let (_, _) = List.fold_left newcode ~init:(code_base, new_segm.p_vaddr)
+      ~f:(fun (oldbase, newbase) insns ->
+        let () = fprintf out "0x%08Lx: 0x%08Lx\n" oldbase newbase in
+        (oldbase + 4L, newbase + 4L * (Int64.of_int @@ List.length insns))) in
+
+    (* Close the file *)
+    let () = Out_channel.close out in
+    let () = debugf "Written map file" in ()) in
   image
-(* TODO: do some rewriting into a custom binary *)

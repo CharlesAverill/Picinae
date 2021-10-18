@@ -136,8 +136,8 @@ let load_image path =
           else (false, heads, loads, segm :: others, ents + 1)) elf.e_segments in
   let loads_sorted_vaddr = List.sort_on ~cmp:Int64.compare ~f:p_vaddr loads in
   let has_pairing fn lst = snd @@ List.fold_left ~init:(None, false)
-      ~f:(fun (mprev, pred) cur -> (Some cur, Option.inject pred
-        (fun prev -> pred || fn prev cur) mprev)) lst in
+      ~f:(fun (mprev, pred) cur -> (Some cur, Option.inject mprev ~def:pred
+        ~f:(fun prev -> pred || fn prev cur))) lst in
   let open Int64 in
   let overlapping_vaddr = has_pairing seg_olap_vaddr loads_sorted_vaddr in
   let%bind _ = Result.of_option
@@ -454,9 +454,9 @@ type address_spec =
 (* This creates a new program segment of some size that can be written to  *)
 let new_segment ?(content = nil) ?(p_flags = [PF_R; PF_W; PF_X])
   ?(p_type = PT_LOAD) ?filesz ?memsz ?(p_align = 0x1000L) image addr_spec =
-    let p_filesz = Int64.of_int @@ Option.inject
-      (Bigstring.length content + 0x10) ident filesz in
-    let p_memsz = Option.inject p_filesz Int64.of_int memsz in
+    let p_filesz = Int64.of_int @@ Option.inject filesz
+      ~def:(Bigstring.length content + 0x10) ~f:ident in
+    let p_memsz = Option.inject ~def:p_filesz ~f:Int64.of_int memsz in
     let open Result.Let_syntax in
     let open Int64 in
     (* Fix PHDR as needed *)

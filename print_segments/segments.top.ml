@@ -6,7 +6,7 @@
 #load_rec "policy.cmo";;
 #load_rec "extraction.cmo";;
 
-open Core_kernel
+open Core_extend
 open Bap_elf
 open Bap.Std
 open Bap_main

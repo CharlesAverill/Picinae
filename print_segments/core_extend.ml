@@ -29,8 +29,8 @@ module type Intable_intf = sig
   val to_int: t -> int option
 end
 
-let fail s = Error.of_string @@ Printf.sprintf "%s\n%s" s @@
-  Backtrace.to_string @@ Backtrace.get ()
+let fail s = Error.of_string @@ Printf.sprintf "%s\n**%s" s @@
+  String.concat ~sep:"\n  " @@ Backtrace.to_string_list @@ Backtrace.get ()
 
 let failf fmt = (ksprintf fail) fmt
 
@@ -110,8 +110,8 @@ module Option = struct
 
   let guard cond = if cond then Some () else None
 
-  let inject def fn = function
-    | Some s -> fn s
+  let inject opt ~def ~f = match opt with
+    | Some s -> f s
     | None   -> def
 end
 

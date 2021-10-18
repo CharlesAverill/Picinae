@@ -25,5 +25,5 @@ hello-libc.orig: hello-libc.c
 	$(LD) -o $@ $<
 
 $(PATCHED): %.patched: %.orig
-	bap segments -v -i $< -o $@
+	bap segments -v -i $< -o $@ -m $*.map
 
