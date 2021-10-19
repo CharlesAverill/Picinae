@@ -2213,7 +2213,7 @@ Theorem newauipc_asm:
     (NI: new_auipc base l1 (Data iid oid sd z sb) = Some b),
   let n := Z.to_N z in
   let rd := xbits n 7 12 in
-  let t := Z.to_N ((base + Z.of_nat length l1) #<< 2 + z #& (2^32 - 2^12)) in
+  let t := Z.to_N (base + Z.of_nat (length l1) #<< 2 + z #& (2^32 - 2^12)) in
   map rv_decode (map Z.to_N b) =
   if z #& 3968 =? 0 then R5_Xor 0 0 0 :: nil else
     R5_Lui rd (xbits t 12 32) ::
