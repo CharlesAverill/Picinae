@@ -8,6 +8,7 @@ Example installation process:
 git clone --recursive https://github.com/riscv-collab/riscv-gnu-toolchain
 cd riscv-gnu-toolchain
 ./configure --prefix=/usr/local/ \
+  --enable-linux \
   --with-arch=rv32g --with-abi=ilp32d \
   --with-target-cflags="-ffixed-t5 -ffixed-t6 -ffixed-t4" \
   --with-target-cxxflags="-ffixed-t5 -ffixed-t6 -ffixed-t4"
@@ -39,6 +40,12 @@ SYNOPSIS
        Rewrites Riscv32 binaries to have CFI
 
 OPTIONS
+       --handler-linux-abort
+           Inserts a linux syscall to kill(getpid(), ABORT)
+
+       --handler-none
+           (default) Insert no abort handler for CFI faults
+
        --help[=FMT] (default=auto)
            Show this help in format FMT. The value FMT must be one of `auto',
            `pager', `groff' or `plain'. With `auto', the format is `pager` or

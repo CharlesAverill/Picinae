@@ -2,12 +2,14 @@
 # TARGETS = $(patsubst %.s, %, $(SOURCES))
 # OBJECTS = $(patsubst %.s, %.o, $(TARGETS))
 
-TARGETS = hello hello-var hello-invalid exit-42 jump hello-libc jal jal_min
+LIBC_TARGETS = hello-libc test-cfi
+ASM_TARGETS = hello hello-var hello-invalid exit-42 jump jal jal_min
+TARGETS = $(ASM_TARGETS) $(LIBC_TARGETS)
 PATCHED = $(patsubst %, %.patched, $(TARGETS))
 
-CC=riscv32-unknown-elf-gcc
-AS=riscv32-unknown-elf-as
-LD=riscv32-unknown-elf-ld
+CC=riscv32-unknown-linux-gnu-gcc
+AS=riscv32-unknown-linux-gnu-as
+LD=riscv32-unknown-linux-gnu-ld
 CFLAGS=-static
 
 all: $(PATCHED)
@@ -18,12 +20,12 @@ clean:
 
 .PHONY: all clean
 
-hello-libc.orig: hello-libc.c
+$(LIBC_TARGETS:%=%.orig): %.orig: %.c
 	$(CC) -static -o $@ $<
 
-%.orig: %.o
+$(ASM_TARGETS:%=%.orig): %.orig: %.o
 	$(LD) -o $@ $<
 
 $(PATCHED): %.patched: %.orig
-	bap riscv-cfi -v -i $< -o $@ -m $*.map
+	bap riscv-cfi --handler-linux-abort -v -i $< -o $@ -m $*.map
 

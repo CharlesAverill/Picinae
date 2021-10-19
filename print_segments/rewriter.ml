@@ -49,7 +49,7 @@ let prep_transform (input:int list * int list list option) =
    code back in as a brand-new code segment *)
 let spacer_size = 0x10000
 let mask_int32 = 0xFFFFFFFFL
-let rewrite image mapfile =
+let rewrite image mapfile abort_handler =
   let () = debugf "Loaded image" in
   let open Result.Let_syntax in
   (* We assume that all code sections and ONLY code sections are marked as
@@ -112,7 +112,8 @@ let rewrite image mapfile =
     List.map ~f:Int32.of_int_trunc newtable in
   let newcode_data = bigstring_of_int32_list @@
     List.map ~f:Int32.of_int_trunc @@
-    List.concat newcode in
+    List.concat @@
+    List.append newcode [abort_handler] in
 
   (* Write new code back into the image *)
   let%bind (image, new_segm, _) = Elf_segments.new_segment
