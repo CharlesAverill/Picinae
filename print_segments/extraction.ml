@@ -151,14 +151,19 @@ let new_auipc base l1 = function
   if if (<=) 0 base then List.mem 1 sd else false
   then if (=) ((land) n0 3968) 0
        then Some (16435::[])
-       else let new_target =
+       else let new_target' =
               (+) ((lsl) ((+) base ( (List.length l1))) 2)
                 ((land) n0 4294963200)
+            in
+            let new_target =
+              if (<=) 2048 ((land) new_target' 4095)
+              then (+) new_target' 4096
+              else new_target'
             in
             let rd = (land) n0 3968 in
             Some
             (((lor) ((lor) 55 rd) ((land) new_target 4294963200))::(
-            ((lor) ((lor) ((lor) 24595 rd) ((lsl) rd 8))
+            ((lor) ((lor) ((lor) 19 rd) ((lsl) rd 8))
               ((lsl) ((land) new_target 4095) 20))::[]))
   else None
 (** val newinstr :

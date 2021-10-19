@@ -122,3 +122,13 @@ module Bigstring = struct
     let bs = create ?max_mem_waiting_gc size in
     memset ~pos:0 ~len:size bs ch; bs
 end
+
+let init_time = UnixLabels.gettimeofday()
+let is_debug = ref false
+let debug s =
+  if !is_debug then
+    let open Float in
+    let line = sprintf "[%010.3f] %s" (UnixLabels.gettimeofday() - init_time) s in
+    prerr_endline line
+  else ()
+let debugf fmt = ksprintf debug fmt

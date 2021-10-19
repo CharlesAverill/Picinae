@@ -226,14 +226,19 @@ let resize_phdr_table_extend_unused image min_phdr_size =
            * away from the first loaded LOAD segment (due to some weirdness
            * in the loader/kernel, the kernel believes the PHDR entry in
            * memory as the FIRST_LOAD_SEGMENT + e_phoff, rather than using
-           * the PHDR entry). *)
+           * the PHDR entry).
+           *
+           * For now we also need filesz == memsz too!
+           *
+           * TODO: check if any section header data also overlap here too! *)
           let is_viable_for_phdr = equal (seg_end_poff - first_seg.p_offset)
-            (seg_end_vaddr - first_seg.p_vaddr) in
+            (seg_end_vaddr - first_seg.p_vaddr) &&
+            equal (acc.f_prevseg.p_memsz) (acc.f_prevseg.p_filesz) in
           if is_viable_for_phdr && (cur_unused_space >
             acc.f_largest_unused_space)
           then {
             f_largest_unused_space = cur_unused_space;
-            f_res = Some seg;
+            f_res = Some acc.f_prevseg;
             f_prevseg = seg;
           }
           else {
@@ -265,6 +270,7 @@ let resize_phdr_table_extend_unused image min_phdr_size =
         p_align  = phdr_align;
       } in
       let new_segs = update_load_seg image.i_segs seg_ext in
+      let () = debugf "Resizing PHDR using 'extend unused' method" in
       (new_segs, new_phdr_ent)
 
 (* This strategy for program header resizing extends the last program segment.
@@ -279,8 +285,11 @@ let resize_phdr_table_extend_last image min_phdr_size =
   let open Int64 in
   let%bind (_, first_seg) = Map.min_elt image.i_segs.s_loads_by_vaddr in
   let%bind (_, last_seg)  = Map.max_elt image.i_segs.s_loads_by_vaddr in
-  let%map _ = Option.guard ((last_seg.p_offset - first_seg.p_offset) =
+  let%bind _ = Option.guard ((last_seg.p_offset - first_seg.p_offset) =
     (last_seg.p_vaddr - first_seg.p_vaddr)) in
+  (* TODO: maybe try to make this more efficient? *)
+  let%map _ = Option.guard @@
+    equal (last_seg.p_memsz) (last_seg.p_filesz) in
   let new_seg_sz = last_seg.p_memsz + min_phdr_size in
   let seg_ext = { last_seg with
     p_memsz  = new_seg_sz;
@@ -301,6 +310,7 @@ let resize_phdr_table_extend_last image min_phdr_size =
     p_align  = phdr_align;
   } in
   let new_segs = update_load_seg image.i_segs seg_ext in
+  let () = debugf "Resizing PHDR using 'extend last' method" in
   (new_segs, new_phdr_ent)
 
 (* This strategy for program header resizing creates a new segment and uses that
@@ -342,6 +352,7 @@ let resize_phdr_table_create image min_phdr_size =
     p_align  = page_align;
   } in
   let new_segs = update_load_seg image.i_segs new_phdr_load_ent in
+  let () = debugf "Resizing PHDR using 'create' method" in
   (new_segs, new_phdr_ent)
 
 

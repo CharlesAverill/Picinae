@@ -8,16 +8,6 @@ open Elf_segments
 
 module Unix = UnixLabels
 
-let init_time = Unix.gettimeofday()
-let is_debug = ref false
-let debug s =
-  if !is_debug then
-    let open Float in
-    let line = sprintf "[%010.3f] %s" (Unix.gettimeofday() - init_time) s in
-    prerr_endline line
-  else ()
-let debugf fmt = ksprintf debug fmt
-
 (* given a list of int32 values, create a Bigstring.t that holds those values,
    sequentially *)
 
