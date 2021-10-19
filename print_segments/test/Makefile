@@ -2,7 +2,7 @@
 # TARGETS = $(patsubst %.s, %, $(SOURCES))
 # OBJECTS = $(patsubst %.s, %.o, $(TARGETS))
 
-TARGETS = hello hello-var hello-invalid exit-42 jump hello-libc
+TARGETS = hello hello-var hello-invalid exit-42 jump hello-libc jal jal_min
 PATCHED = $(patsubst %, %.patched, $(TARGETS))
 
 CC=riscv32-unknown-elf-gcc

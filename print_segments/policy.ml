@@ -72,7 +72,8 @@ let generate_static_policy (insns : int list): Extraction.policy =
              instr offset, not addr)
       *)
       | 0b1101111 ->
-      (None, (equiv_class_targets, [1; Disasm.imm_of_jtype inst / 4]))::accum
+      ((Some equiv_class_targets),
+        (equiv_class_targets, [1; Disasm.imm_of_jtype inst / 4]))::accum
       (* if the opcode is any of the "branch" instructions, which is:
         BEQ BNE BLT BEG BLTU BGEU
         see page 130 of the RISC-V spec
@@ -84,8 +85,8 @@ let generate_static_policy (insns : int list): Extraction.policy =
             -the immediate of the jump instruction, integer div by 4 (for the
              instr offset, not addr)
       *)
-      | 0b1100011 ->
-      (None, (equiv_class_targets, [1; Disasm.imm_of_btype inst / 4]))::accum
+      | 0b1100011 -> ((Some equiv_class_targets),
+        (equiv_class_targets, [1; Disasm.imm_of_btype inst / 4]))::accum
       (* if the opcode isn't a branch instruction, we are only allowed to
          fallthrough *)
       | _ -> ((Some equiv_class_targets), (equiv_class_targets, [1]))::accum) in
