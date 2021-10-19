@@ -1,12 +1,24 @@
-Requirements:
+# Requirements
 
-bap must be installed from OPAM:
-`opam install bap`
+## Riscv-32 Toolchain
+You must install [riscv32 gcc toolchains][1] toolchains to the PATH.
 
-Process:
+Example installation process:
+```bash
+git clone --recursive https://github.com/riscv-collab/riscv-gnu-toolchain
+cd riscv-gnu-toolchain
+./configure --prefix=/usr/local/ \
+  --with-arch=rv32g --with-abi=ilp32d \
+  --with-target-cflags="-ffixed-t5 -ffixed-t6 -ffixed-t4" \
+  --with-target-cxxflags="-ffixed-t5 -ffixed-t6 -ffixed-t4"
+sudo make # Note that this step both builds and installs riscv!!!
+```
 
-Build `segments` plugin for BAP:
-`./build.sh`
+## Bap
+bap must be installed from OPAM: `opam install bap`
+
+# Building and running
+Build `segments` plugin for BAP: `./build.sh`
 
 You must specify a `-i` and `-o` option to `bap riscv-cfi`
 
@@ -17,7 +29,6 @@ rewriter to be happy (it will reject if any instructions are supposedly invalid,
 even if those areas are unreachable, and are simply just data sections).
 
 ## Usage
-
 ```
 NAME
        bap-riscv-cfi - rewrites Riscv32 binaries to have CFI
@@ -50,3 +61,5 @@ OPTIONS
            Show version information.
 
 ```
+
+[1]: https://github.com/riscv-collab/riscv-gnu-toolchain
