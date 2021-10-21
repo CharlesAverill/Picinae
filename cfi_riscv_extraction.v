@@ -242,10 +242,14 @@ Definition new_auipc base (l1:list instr_data) d :=
   match d with Data _ _ sd n _ =>
     if ((Z0 <=? base) && (mem Z1 sd))%bool then
       if n #& Z3968 =? Z0 then Some (Z16435::nil) (* Xor r0, r0, r0 *)
-      else let new_target := base + Z.of_nat (length l1) + (n #& Z4294963200) in
+      else let new_target' := (base + Z.of_nat (length l1)) #<< Z2 + (n #& Z4294963200) in
+           (* If low 12-bits become negative, we must add 4096 to upper bytes
+            * to compensate *)
+           let new_target := if (Z2048 <=? new_target' #& Z4095)
+                             then new_target' + Z4096 else new_target' in
            let rd := n #& Z3968 in Some (
-        (Z55 #| rd #| (new_target #& Z4294963200))::                     (* Lui rd, new_target[31:12] *)
-        (Z24595 #| rd #| (rd #<< Z8) #| ((new_target #& Z4095) #<< Z20)) (* Ori rd, rd, new_target[11:0] *)
+        (Z55 #| rd #| (new_target #& Z4294963200))::                  (* Lui rd, new_target[31:12] *)
+        (Z19 #| rd #| (rd #<< Z8) #| ((new_target #& Z4095) #<< Z20)) (* Addi rd, rd, new_target[11:0] *)
       ::nil)
     else None
   end.
@@ -298,7 +302,7 @@ Fixpoint newinstrs base l' l1 l2 {struct l2} :=
    l2 = list of instruction data (returned by todata) for original code *)
 Fixpoint newtable base base' acc i l2 :=
   match l2 with nil => rev acc | d::t =>
-    newtable base base' ((i - (base' - base)) #<< Z7 :: acc) (i + newsize d - Z1) t
+    newtable base base' ((base' - base + i) #<< Z7 :: acc) (i + newsize d - Z1) t
   end.
 
 (* Rewrite a code section according to a policy. Inputs:
@@ -312,6 +316,10 @@ Definition todata x :=
 Definition newcode (pol:policy) l base base' :=
   let d := shrink nil (map todata (combine pol l)) in
   (newtable base base' nil 0 d, if sumsizes d <? Z1073741824 - base' then newinstrs base nil nil d else None).
+
+(* need some proof for this *)
+Definition mapaddr (pol:policy) l addr :=
+  sum_n_sizes addr (shrink nil (map todata (combine pol l))) 0.
 
 
 (* The following is an example extraction of the above CFI rewriter to OCaml.
@@ -334,7 +342,7 @@ Extract Inductive Z => int [ "0" "" "(~-)" ].
 Extract Inductive N => int [ "0" "((+)1)" ].
 Extract Inductive bool => "bool" [ "true" "false" ].
 Extract Inductive option => "option" [ "Some" "None" ].
-Extract Inductive prod => "(*)"  [ "(,)" ].
+Extract Inductive prod => "( * )"  [ "(,)" ].
 Extract Inductive list => "list" [ "[]" "(::)" ].
 Extract Inlined Constant Z1 => "1".
 Extract Inlined Constant Z2 => "2".
@@ -431,7 +439,7 @@ Extraction newinstrs.
 Extraction newtable.
 Extraction todata.
 Extraction newcode.
-
+Extraction mapaddr.
 
 (* Now we define "soundness" of a CFI implementation.  Soundness is unavoidably
    parameterized by a (not necessarily one-to-one) mapping from the rewritten
@@ -2209,28 +2217,31 @@ Theorem newauipc_asm:
     (NI: new_auipc base l1 (Data iid oid sd z sb) = Some b),
   let n := Z.to_N z in
   let rd := xbits n 7 12 in
-  let t := Z.to_N (base + Z.of_nat (length l1) + z #& (2^32 - 2^12)) in
+  let t' := (base + Z.of_nat (length l1)) #<< 2 + z #& (2^32 - 2^12) in
+  let t := Z.to_N (if 2048%Z <=? t' #& 4095%Z then t' + 4096%Z else t') in
   map rv_decode (map Z.to_N b) =
   if z #& 3968 =? 0 then R5_Xor 0 0 0 :: nil else
     R5_Lui rd (xbits t 12 32) ::
-    R5_Ori rd rd (scast 12 32 (xbits (t << 20) 20 32)) :: nil.
+    R5_Addi rd rd (scast 12 32 (xbits (t << 20) 20 32)) :: nil.
 Proof.
   unfold new_auipc. unfold_consts. intros.
   destruct (_ && _)%bool eqn:B0; [|discriminate NI].
   destruct (_ =? 0). apply invSome in NI. subst b. reflexivity.
-  apply andb_prop, proj1, Z.leb_le in B0.
-  apply invSome in NI. subst b.
-  unfold map, rv_decode.
-  rewrite !Z2N_inj_lor, !Z.shiftl_land, !Z2N_inj_land by Z_nonneg.
-  rewrite !N.land_lor_distr_l, <- !N.land_assoc, !N.land_0_r, !N.lor_0_r. simpl (_ .& N.ones 7).
-  unfold rv_decode_op.
-  rewrite !xbits_lor, !xbits_land, !N.land_0_r, !N.lor_0_r. change (xbits _ 12 15) with 6%N.
-  unfold rv_decode_op_imm.
-  rewrite !N.lor_0_l. rewrite !xbits_land_cancel_r by reflexivity.
-  rewrite !xbits_lor, !xbits_land, !N.land_0_r, !N.lor_0_r, !N.lor_0_l.
-  rewrite !xbits_land_cancel_r by reflexivity.
-  rewrite Z2N_inj_shiftl, xbits_shiftl, N.shiftl_0_r by solve [ discriminate 1 | assumption ].
-  rewrite Z2N_inj_shiftl by Z_nonneg. reflexivity.
+  destruct (2048 <=? _) eqn:Signed;
+  apply andb_prop, proj1, Z.leb_le in B0;
+  apply invSome in NI; subst b;
+  unfold map, rv_decode;
+  rewrite !Z2N_inj_lor, !Z.shiftl_land, !Z2N_inj_land by Z_nonneg;
+  rewrite !N.land_lor_distr_l, <- !N.land_assoc, !N.land_0_r, !N.lor_0_r; simpl (_ .& N.ones 7);
+  unfold rv_decode_op;
+  rewrite !xbits_lor, !xbits_land, !N.land_0_r, !N.lor_0_r;
+  change (xbits _ 12 15) with 0%N;
+  unfold rv_decode_op_imm;
+  rewrite !N.lor_0_l; rewrite !xbits_land_cancel_r by reflexivity;
+  rewrite !xbits_lor, !xbits_land, !N.land_0_r, !N.lor_0_r, !N.lor_0_l;
+  rewrite !xbits_land_cancel_r by reflexivity;
+  rewrite Z2N_inj_shiftl, xbits_shiftl, N.shiftl_0_r by solve [ discriminate 1 | assumption ];
+  rewrite Z2N_inj_shiftl by Z_nonneg; reflexivity.
 Qed.
 
 Theorem newauipc_exit:

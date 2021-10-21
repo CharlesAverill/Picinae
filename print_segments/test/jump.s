@@ -1,0 +1,34 @@
+.text
+	.global _start
+
+
+_start:
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  la a1, _hello
+  jr a1
+_hello:
+	addi a0, x0, 1		# fd
+	la a1, str		# buf
+	addi a2, x0, 14		# len
+	addi a7, x0, 64		# write syscall
+	ecall
+
+	addi a0, x0, 0		# return value
+	addi a7, x0, 93		# exit syscall
+	ecall
+
+.data
+str:	.asciz "Hello, World!\n"
