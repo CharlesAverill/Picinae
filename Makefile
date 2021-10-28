@@ -25,6 +25,9 @@ phony: ;
 cfi_riscv_extraction.v: ;
 
 include Makefile.coq.conf
+%.vo: %.v
+	coqc -R . Picinae $<
+
 print_segments/extraction.ml: cfi_riscv_extraction.v $(COQMF_VFILES:%.v=%.vo)
 	coqc -R . Picinae $< > $@
 

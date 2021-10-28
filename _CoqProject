@@ -1,4 +1,5 @@
 -R . Picinae
+Looping.v
 Picinae_core.v
 Picinae_theory.v
 Picinae_statics.v

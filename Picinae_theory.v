@@ -38,6 +38,7 @@ Require Import ZArith.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
 Require Setoid.
+Require Looping.
 
 
 
@@ -2801,6 +2802,82 @@ Ltac prove_noassign :=
   end;
   repeat lazymatch goal with [ |- _ <> _ ] => discriminate 1
                            | _ => constructor; let g:=numgoals in guard g<=2 end.
+
+(* Introduce up to the inductive case goal *)
+Ltac match_inv_CASES tac :=
+  intros;
+  (* Matches on the invariant type.
+     NOTE: This should change if prove_invs changes *)
+  lazymatch goal with
+  | [a1: addr, s1: store, n1: nat |- _] =>
+      lazymatch goal with
+      | [XP: exec_prog ?h ?p ?a0 ?s0 n1 s1 (Exit a1),
+         PRE: true_inv (if ?p s1 a1 then ?PS a1 s1 else None) |-
+             nextinv (invs ?PS ?Q) ?p ?h false (Exit a1) s1] => (tac XP s0 s1)
+      end
+  end.
+
+Ltac inv_CASES_inductive :=
+  (* Enter loop *)
+  Looping.init;
+
+  (* Find the end of the loop by reorganizing all premises that depend on
+   * initial state *)
+  match_inv_CASES ltac:(fun XP s0 s1 =>
+    (* Revert until loop start, then do dependent revert on all things that
+     * depend on s0 *)
+    Looping.to_start; revert dependent s0; intro s0;
+
+    (* Add loop end *)
+    Looping.init_end);
+
+  (* Now we actually start rewriting all the premises containing the initial
+   * state to push the induction forward. Here, initialize the marker *)
+  Looping.binit;
+
+  (* Recursive looping *)
+  let rec go := ltac:(
+    (* Helper tactic for going to next premise *)
+    let go_next := ltac:(Looping.bnext; go) in
+    (* For each premise *)
+    let each_premise := ltac:(fun H =>
+      match_inv_CASES ltac:(fun XP s0 s1 =>
+        let Htmp := fresh in
+        let H' := fresh H "'" in
+        let typ := type of H in
+
+        (* Create a temp copy of H that takes some state s (from s0) *)
+        assert (Htmp: typ); [exact H|];
+        pattern s0 in Htmp;
+
+        lazymatch type of Htmp with
+        | ?prop s0 =>
+            (* Can we trivially prove (H': prop s1)?  *)
+            first [ assert (H': prop s1); [ eassumption |];
+                    cbv beta in H'; clear Htmp; go_next
+            (* Okay then the user has to prove it then.  *)
+                  | assert (H': prop s1);
+                      [ Looping.final | cbv beta in H'; clear Htmp; go_next ]]
+        end)) in
+    let loop_end := ltac:(fun _ => Looping.final) in
+    Looping.get_or_else each_premise loop_end) in go.
+
+Tactic Notation "induction" "on" "invariant" ident(precondition) :=
+  (* Make a marker here. Then we have to introduce as much as we can *)
+  Looping.init; intros;
+  (* Use the prove_invs inductive principle from Picinae_theory.v. *)
+  eapply prove_invs;
+  (* XP0 -- probably is in one of the assumptions. We do need to have this run
+   * before so that we can resolve some existential types *)
+  [ eassumption
+  (* We must first prove the pre-condition, which says that the invariant-set is
+     satisfied on entry to the subroutine.  This is proved by our presumed
+     precondition. *)
+  | exact precondition
+  (* Now we enter the inductive case. We remove the marker and then apply the
+   * induction tactic *)
+  | Looping.final; revert dependent precondition; inv_CASES_inductive ].
+
 
 End PICINAE_THEORY.
 

@@ -104,32 +104,12 @@ Theorem strcmp_preserves_esp:
          (XP0: exec_prog fh strcmp_i386 0 s n s' x'),
   trueif_inv (strcmp_esp_invset esp0 strcmp_i386 x' s').
 Proof.
-  intros.
+  intros. revert XP0. induction on invariant ESP0; intros.
 
-  (* Use the prove_invs inductive principle from Picinae_theory.v. *)
-  eapply prove_invs. exact XP0.
-
-  (* We must first prove the pre-condition, which says that the invariant-set is
-     satisfied on entry to the subroutine.  This is proved by assumption ESP0. *)
-  exact ESP0.
-
-  (* Now we enter the inductive case, wherein Coq asks us to prove that the invariant-set
-     is preserved by every (reachable) instruction in the program.  Before breaking the
-     goal down into many cases (one for each instruction in this case), it is wise to
-     simplify and/or remove anything in the context that is unnecessary. In order for
-     symbolic interpretation to succeed, the proof context must reveal the values of all
-     relevant variables in store s1 (which denotes the store on entry to each instruction
-     for which the goal must be proved).  The only two variables in our invariant-set are
-     ESP and MEM.  The value of ESP is already revealed by pre-condition (PRE), and we
-     can get the value of MEM from MEM0 using our previously proved strlen_preserves_memory
-     theorem. *)
-  intros.
-  assert (MDL: models x86typctx s1).
-    eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
-  assert (MEM: s1 V_MEM32 = Ⓜ mem).
-    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
-  rewrite (strcmp_nwc s1) in RET.
-  clear s MDL0 MEM0 XP0 ESP0 XP.
+  (* MEM *)
+  rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
+  (* MDL *)
+  eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
 
   (* We are now ready to break the goal down into one case for each invariant-point.
      The destruct_inv tactic finds all the invariants defined by the invariant-set
@@ -208,23 +188,22 @@ Theorem strcmp_partial_correctness:
          (XP0: exec_prog fh strcmp_i386 0 s n s' x),
   trueif_inv (strcmp_invset mem esp strcmp_i386 x s').
 Proof.
-  intros.
-  eapply prove_invs. exact XP0.
+  intros. revert XP0.
 
   (* The pre-condition (True) is trivially satisfied. *)
-  exact I.
+  generalize I. intros PRE0. revert ESP0. induction on invariant PRE0; intros.
 
-  (* Before splitting into cases, translate each hypothesis about the
-     entry point store s to each instruction's starting store s1: *)
-  intros.
-  assert (MDL: models x86typctx s1).
-    eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
-  assert (MEM: s1 V_MEM32 = Ⓜ mem).
-    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
-  assert (WTM := x86_wtm MDL MEM). simpl in WTM.
-  rewrite (strcmp_nwc s1) in RET.
+  (* Prove MEM1 *)
+  rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
+
+  (* Prove MDL1 *)
+  eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
+
+  (* Here, we need an explicit invariant for ESP since if we are exiting the
+   * function (i.e. via a return) s1 R_ESP != Ⓓ esp (namingly,
+   * s1 R_ESP = Ⓓ (esp + 4) *)
   assert (ESP := strcmp_preserves_esp _ _ _ _ _ (Exit a1) MDL0 ESP0 MEM0 RET XP).
-  clear s MDL0 MEM0 ESP0 XP XP0.
+  clear s MDL0 MEM0 ESP0 XP XP0 RET.
 
   (* Break the proof into cases, one for each invariant-point. *)
   destruct_inv 32 PRE.
@@ -235,6 +214,7 @@ Proof.
 
   (* Address 0 *)
   step. step. exists 0.
+  assert (WTM := x86_wtm MDL0' MEM0'). simpl in WTM.
   rewrite 2!N.add_0_r. rewrite !(N.mod_small (getmem _ _ _ _)) by apply getmem_bound, WTM.
   split. reflexivity. split. reflexivity.
   intros i LT. destruct i; discriminate.
