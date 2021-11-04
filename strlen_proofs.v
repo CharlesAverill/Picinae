@@ -77,20 +77,26 @@ Definition strlen_esp_invset esp :=
    anywhere an invariant exists (e.g., at the post-condition), it is true. *)
 Theorem strlen_preserves_esp:
   forall s esp mem n s' x'
-         (MDL0: models x86typctx s)
-         (ESP0: s R_ESP = Ⓓ esp) (MEM0: s V_MEM32 = Ⓜ mem)
+         (MDL: models x86typctx s)
+         (ESP0: s R_ESP = Ⓓ esp) (MEM: s V_MEM32 = Ⓜ mem)
          (RET: strlen_i386 s (mem Ⓓ[esp]) = None)
          (XP0: exec_prog fh strlen_i386 0 s n s' x'),
   trueif_inv (strlen_esp_invset esp strlen_i386 x' s').
 Proof.
-  intros.
+  intros. revert MDL MEM RET.
 
-  (* Use the prove_inv inductive principle from Picinae_theory.v. *)
-  eapply prove_invs. exact XP0.
 
-  (* We must first prove the pre-condition, which says that the invariant-set is
-     satisfied on entry to the subroutine.  This is proved by assumption ESP0. *)
+  induction on invariant XP0; intros.
+
+  (* Base case *)
   exact ESP0.
+
+  (* Prove MEM *)
+  rewrite <- MEM. eapply strlen_preserves_memory. exact XP.
+
+  (* Prove MDL *)
+  eapply preservation_exec_prog. exact MDL. apply strlen_welltyped. exact XP.
+
 
   (* Now we enter the inductive case, wherein Coq asks us to prove that the invariant-set
      is preserved by every (reachable) instruction in the program.  Before breaking the
@@ -102,13 +108,6 @@ Proof.
      ESP and MEM.  The value of ESP will be revealed by our pre-condition (PRE).  We can
      get the value of MEM from MEM0 using our previously proved strlen_preserves_memory
      theorem. *)
-  intros.
-  assert (MDL: models x86typctx s1).
-    eapply preservation_exec_prog. exact MDL0. apply strlen_welltyped. exact XP.
-  assert (MEM: s1 V_MEM32 = Ⓜ mem).
-    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
-  rewrite (strlen_nwc s1) in RET.
-  clear s MDL0 MEM0 XP0 ESP0 XP.
 
   (* We are now ready to break the goal down into one case for each invariant-point.
      The destruct_inv tactic finds all the invariants defined by the invariant-set
@@ -790,29 +789,30 @@ Qed.
 (* Finally we're ready to prove the main partial correctness theorem. *)
 Theorem strlen_partial_correctness:
   forall s esp m n s' x
-         (MDL0: models x86typctx s)
-         (ESP0: s R_ESP = Ⓓesp) (MEM0: s V_MEM32 = Ⓜm)
+         (MDL: models x86typctx s)
+         (ESP: s R_ESP = Ⓓesp) (MEM: s V_MEM32 = Ⓜm)
          (RET: strlen_i386 s (m Ⓓ[esp]) = None)
          (XP0: exec_prog fh strlen_i386 0 s n s' x),
   trueif_inv (strlen_invset m esp strlen_i386 x s').
 Proof.
   intros.
-  eapply prove_invs. exact XP0.
+
+  invariant strlen_preserves_esp from ESP.
+  revert MDL MEM RET.
+
+  induction on invariant XP0; intros.
 
   (* The pre-condition (True) is trivially satisfied. *)
   exact I.
 
-  (* Before splitting into cases, translate each hypothesis about the
-     entry point store s to each instruction's starting store s1: *)
-  intros.
-  assert (MDL: models x86typctx s1).
-    eapply preservation_exec_prog. exact MDL0. apply strlen_welltyped. exact XP.
-  assert (MEM: s1 V_MEM32 = Ⓜm).
-    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
-  assert (WTM := x86_wtm MDL MEM). simpl in WTM.
-  rewrite (strlen_nwc s1) in RET.
-  assert (ESP := strlen_preserves_esp _ _ _ _ _ (Exit a1) MDL0 ESP0 MEM0 RET XP).
-  clear s MDL0 MEM0 ESP0 XP XP0.
+  (* MEM *)
+  rewrite <- MEM. eapply strlen_preserves_memory. exact XP.
+
+  (* MDL *)
+  eapply preservation_exec_prog. exact MDL. apply strlen_welltyped. exact XP.
+
+  (* Define WTM before we destruct into cases. *)
+  assert (WTM := x86_wtm MDL' MEM'). simpl in WTM.
 
   (* Break the proof into cases, one for each invariant-point. *)
   destruct_inv 32 PRE.

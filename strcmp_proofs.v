@@ -98,18 +98,20 @@ Definition strcmp_esp_invset esp0 :=
    anywhere an invariant exists (e.g., at the post-condition), it is true. *)
 Theorem strcmp_preserves_esp:
   forall s esp0 mem n s' x'
-         (MDL0: models x86typctx s)
-         (ESP0: s R_ESP = Ⓓ esp0) (MEM0: s V_MEM32 = Ⓜ mem)
+         (MDL: models x86typctx s)
+         (ESP0: s R_ESP = Ⓓ esp0) (MEM: s V_MEM32 = Ⓜ mem)
          (RET: strcmp_i386 s (mem Ⓓ[esp0]) = None)
          (XP0: exec_prog fh strcmp_i386 0 s n s' x'),
   trueif_inv (strcmp_esp_invset esp0 strcmp_i386 x' s').
 Proof.
-  intros. revert XP0. induction on invariant ESP0; intros.
+  intros. revert MDL MEM RET. induction on invariant XP0; intros.
 
+  (* Precondition *)
+  exact ESP0.
   (* MEM *)
-  rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
+  rewrite <- MEM. eapply strlen_preserves_memory. exact XP.
   (* MDL *)
-  eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
+  eapply preservation_exec_prog. exact MDL. apply strcmp_welltyped. exact XP.
 
   (* We are now ready to break the goal down into one case for each invariant-point.
      The destruct_inv tactic finds all the invariants defined by the invariant-set
@@ -182,28 +184,30 @@ Qed.
    true for arbitrarily long executions (i.e., arbitrary n). *)
 Theorem strcmp_partial_correctness:
   forall s esp mem n s' x
-         (MDL0: models x86typctx s)
-         (ESP0: s R_ESP = Ⓓ esp) (MEM0: s V_MEM32 = Ⓜ mem)
+         (MDL: models x86typctx s)
+         (ESP: s R_ESP = Ⓓ esp) (MEM: s V_MEM32 = Ⓜ mem)
          (RET: strcmp_i386 s (mem Ⓓ[esp]) = None)
          (XP0: exec_prog fh strcmp_i386 0 s n s' x),
   trueif_inv (strcmp_invset mem esp strcmp_i386 x s').
 Proof.
-  intros. revert XP0.
+  intros.
+
+  invariant strcmp_preserves_esp from ESP.
+  revert MDL MEM RET.
+
+  induction on invariant XP0; intros.
 
   (* The pre-condition (True) is trivially satisfied. *)
-  generalize I. intros PRE0. revert ESP0. induction on invariant PRE0; intros.
+  exact I.
 
-  (* Prove MEM1 *)
-  rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
+  (* Prove MEM *)
+  rewrite <- MEM. eapply strlen_preserves_memory. exact XP.
 
-  (* Prove MDL1 *)
-  eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
+  (* Prove MDL *)
+  eapply preservation_exec_prog. exact MDL. apply strcmp_welltyped. exact XP.
 
-  (* Here, we need an explicit invariant for ESP since if we are exiting the
-   * function (i.e. via a return) s1 R_ESP != Ⓓ esp (namingly,
-   * s1 R_ESP = Ⓓ (esp + 4) *)
-  assert (ESP := strcmp_preserves_esp _ _ _ _ _ (Exit a1) MDL0 ESP0 MEM0 RET XP).
-  clear s MDL0 MEM0 ESP0 XP XP0 RET.
+  (* Define WTM before we destruct the invariant-points *)
+  assert (WTM := x86_wtm MDL' MEM'). simpl in WTM.
 
   (* Break the proof into cases, one for each invariant-point. *)
   destruct_inv 32 PRE.
@@ -214,7 +218,6 @@ Proof.
 
   (* Address 0 *)
   step. step. exists 0.
-  assert (WTM := x86_wtm MDL0' MEM0'). simpl in WTM.
   rewrite 2!N.add_0_r. rewrite !(N.mod_small (getmem _ _ _ _)) by apply getmem_bound, WTM.
   split. reflexivity. split. reflexivity.
   intros i LT. destruct i; discriminate.

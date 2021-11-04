@@ -232,26 +232,25 @@ Qed.
 
 Theorem strlen_partial_correctness:
   forall s p lr m n s' x
-         (MDL0: models arm7typctx s)
-         (MEM0: s V_MEM32 = Ⓜm) (LR0: s R_LR = Ⓓlr) (R0: s R_R0 = Ⓓp)
+         (MDL: models arm7typctx s)
+         (MEM: s V_MEM32 = Ⓜm) (LR: s R_LR = Ⓓlr) (R0: s R_R0 = Ⓓp)
          (RET: strlen_arm s lr = None)
          (XP0: exec_prog fh strlen_arm 0 s n s' x),
   trueif_inv (strlen_invset m p strlen_arm x s').
 Proof.
   intros.
-  eapply prove_invs. exact XP0.
+  apply (arm7_regsize MDL) in R0 as P32. simpl in P32.
+  revert MDL MEM LR RET. induction on invariant XP0; intros.
+  (* Base case *)
   exact R0.
-  intros.
-  assert (MDL: models arm7typctx s1).
-    eapply preservation_exec_prog. exact MDL0. apply strlen_welltyped. exact XP.
-  assert (MEM: s1 V_MEM32 = Ⓜm).
-    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
-  assert (LR: s1 R_LR = Ⓓlr).
-    rewrite <- LR0. eapply strlen_preserves_lr. eassumption.
-  assert (WTM := arm7_wtm MDL MEM). simpl in WTM.
-  rewrite (strlen_nwc s1) in RET.
-  apply (arm7_regsize MDL0) in R0. simpl in R0. rename R0 into P32.
-  clear s MDL0 MEM0 LR0 XP XP0.
+  (* LR' *)
+  rewrite <- LR. eapply strlen_preserves_lr. eassumption.
+  (* MEM' *)
+  rewrite <- MEM. eapply strlen_preserves_memory. exact XP.
+  (* MDL' *)
+  eapply preservation_exec_prog. exact MDL. apply strlen_welltyped. exact XP.
+
+  assert (WTM := arm7_wtm MDL' MEM'). simpl in WTM.
 
   destruct_inv 32 PRE.
 
@@ -259,7 +258,7 @@ Proof.
 
   (* Address 0 *)
   step. step. step. step.
-    rewrite <- N.ldiff_land_low by (destruct p; [|apply N.log2_lt_pow2;[|apply (arm7_regsize MDL PRE)]]; reflexivity).
+    rewrite <- N.ldiff_land_low by (destruct p; [|apply N.log2_lt_pow2;[|apply (arm7_regsize MDL' PRE)]]; reflexivity).
     change 3 with (N.ones 2). rewrite ldiff_sub, N.land_ones.
   step. exists 0.
     apply Neqb_ok in BC. destruct (p mod 4); [|discriminate BC]. rewrite !N.sub_0_r, N.mul_0_r, N.lor_0_r. repeat split.
