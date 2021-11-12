@@ -56,46 +56,53 @@ Definition sexp_width (e: simple_exp) :=
   | Complex => None
   end.
 
-Inductive hastyp_simple_exp (c: typctx): simple_exp -> typ -> Prop :=
+Inductive hastyp_simple_exp (c0: typctx): simple_exp -> typ -> Prop :=
   | TSE_Num (n: N) (w: bitwidth) (LT: n < 2 ^ w):
-      hastyp_simple_exp c (Number n w) (NumT w)
-  | TSE_VarOff (v: var) (w: bitwidth) (off: N) (CV: c v = Some (NumT w))
-      (LT: off < 2 ^ w): hastyp_simple_exp c (VarOff v off w) (NumT w).
+      hastyp_simple_exp c0 (Number n w) (NumT w)
+  | TSE_VarOff (v: var) (w: bitwidth) (off: N) (CV: c0 v = Some (NumT w))
+      (LT: off < 2 ^ w): hastyp_simple_exp c0 (VarOff v off w) (NumT w).
+
+Inductive eval_simple_exp (s: store): simple_exp -> value -> Prop :=
+  | ESE_Number n w: eval_simple_exp s (Number n w) (VaN n w)
+  | ESE_VarOff v n off w (SV: s v = VaN n w): eval_simple_exp s
+      (VarOff v off w) (VaN ((n + off) mod 2 ^ w) w).
+
+Definition has_delta (s s': store) (δ: store_delta) :=
+  forall v val (ESE: eval_simple_exp s (δ v) val), s' v = val.
+
+Definition safety (c0: typctx) (se: simple_exp) :=
+  forall v0 off w (EQ_V: se = VarOff v0 off w), c0 v0 = Some (NumT w).
+
+Definition delta_safety (c0: typctx) (δ: store_delta) :=
+  forall v, safety c0 (δ v).
+
+Definition delta_models (c0 c: typctx) (δ: store_delta) :=
+  forall v t (CV: c v = Some t), hastyp_simple_exp c0 (δ v) t.
 
 Lemma hastyp_simple_exp_num:
-  forall c e t (TSE: hastyp_simple_exp c e t), exists w, t = NumT w.
+  forall c0 e t (TSE: hastyp_simple_exp c0 e t), exists w, t = NumT w.
 Proof.
   intros. inversion TSE; eexists; reflexivity.
 Qed.
 
-Lemma sexp_width_type_correct: forall c e w (TSE: hastyp_simple_exp c e (NumT w)),
-  sexp_width e = Some w.
-Proof.
-  intros. inversion TSE; reflexivity.
-Qed.
-
-Fixpoint simplify_exp (c0: typctx) (δ: store_delta) e :=
+Fixpoint simplify_exp (δ: store_delta) e :=
   match e with
   | Var v => δ v
   | Word n w => Number n w
   | Load _ _ _ _ => Complex
   | Store _ _ _ _ _ => Complex
   | BinOp op e1 e2 =>
-      let of_oper v offset n (is_inverted: bool) :=
-        match c0 v with
-        | Some (NumT w) =>
-            match op with
-            | OP_PLUS => if is_inverted then
-                VarOff v ((n + offset) mod 2 ^ w) w
-              else
-                VarOff v ((offset + n) mod 2 ^ w) w
-            | OP_MINUS => if is_inverted then Complex else
-                VarOff v ((offset + 2 ^ w - n) mod 2 ^ w) w
-            | _ => Complex
-            end
-        | None | Some (MemT _) => Complex
+      let of_oper w v offset n (is_inverted: bool) :=
+        match op with
+        | OP_PLUS => if is_inverted then
+            VarOff v ((n + offset) mod 2 ^ w) w
+          else
+            VarOff v ((offset + n) mod 2 ^ w) w
+        | OP_MINUS => if is_inverted then Complex else
+            VarOff v ((offset + 2 ^ w - n) mod 2 ^ w) w
+        | _ => Complex
         end in
-      match simplify_exp c0 δ e1, simplify_exp c0 δ e2 with
+      match simplify_exp δ e1, simplify_exp δ e2 with
       | Complex, _ | _, Complex | VarOff _ _ _, VarOff _ _ _ => Complex
       | Number n1 w1, Number n2 w2 =>
           if w1 == w2 then
@@ -105,15 +112,15 @@ Fixpoint simplify_exp (c0: typctx) (δ: store_delta) e :=
             end
           else Complex
       | VarOff v1 off1 w1, Number n2 w2 =>
-          if w1 == w2 then of_oper v1 off1 n2 false
+          if w1 == w2 then of_oper w1 v1 off1 n2 false
           else Complex
       | Number n1 w1, VarOff v2 off2 w2 =>
-          if w1 == w2 then of_oper v2 off2 n1 true
+          if w1 == w2 then of_oper w1 v2 off2 n1 true
           else Complex
       end
   | UnOp _ _ => Complex
   | Cast typ w' e =>
-      let se := simplify_exp c0 δ e in
+      let se := simplify_exp δ e in
       match sexp_width se with
       | Some w =>
           match se with
@@ -130,207 +137,288 @@ Fixpoint simplify_exp (c0: typctx) (δ: store_delta) e :=
       | None => Complex
       end
   | Let v e e_in =>
-      simplify_exp c0 (update δ v (simplify_exp c0 δ e)) e_in
+      (* TODO: annoying to prove when this evaluates to a complex value! *)
+      match simplify_exp δ e with
+      | Complex => Complex
+      | se => simplify_exp (update δ v se) e_in
+      end
   | Unknown _ => Complex
   | Ite _ _ _ => Complex
   | Extract _ _ _ => Complex
   | Concat _ _ => Complex
   end.
 
-Inductive eval_stack_exp (s: store): simple_exp -> value -> Prop :=
-  | ESE_Number n w: eval_stack_exp s (Number n w) (VaN n w)
-  | ESE_VarOff v n off w (SV: s v = VaN n w): eval_stack_exp s
-      (VarOff v off w) (VaN ((n + off) mod 2 ^ w) w).
+Lemma sexp_width_type_correct: forall c0 e w (TSE: hastyp_simple_exp c0 e (NumT w)),
+  sexp_width e = Some w.
+Proof.
+  intros. inversion TSE; reflexivity.
+Qed.
 
-Lemma eval_stack_exp_num: forall s se v (ESE: eval_stack_exp s se v),
+Lemma eval_simple_exp_num: forall s se v (ESE: eval_simple_exp s se v),
   exists n w, v = VaN n w.
 Proof.
   intros. inversion ESE; subst; clear ESE; eexists; eexists; reflexivity.
 Qed.
 
-Definition has_delta (s s': store) (δ: store_delta) :=
-  forall v val (ESE: eval_stack_exp s (δ v) val), s' v = val.
-
-Definition delta_safety (c0: typctx) (δ: store_delta) :=
-  forall v0 v off w (EQ_V: (δ v) = VarOff v0 off w), c0 v0 = Some (NumT w).
-
-Definition delta_models (c: typctx) (δ: store_delta) :=
-  forall v t (CV: c v = Some t), hastyp_simple_exp c (δ v) t.
-
-(*
-Theorem stack_equiv_imp_models: forall c s st
-  (MDL: models c s) (SEQ: stack_equiv s st), stack_models c st.
+Theorem simplify_eval_binop_destruct: forall (P: simple_exp -> Prop) se op e1 e2 δ
+  (SE: se = simplify_exp δ (BinOp op e1 e2))
+  (Complex: forall (EQ: se = Complex), P se)
+  (ImmOpImm: forall w w' n' n1 n2 (EQ: se = Number n' w')
+    (SE1: simplify_exp δ e1 = Number n1 w)
+    (SE2: simplify_exp δ e2 = Number n2 w)
+    (EBO: eval_binop op w n1 n2 = VaN n' w'), P se)
+  (ImmPlusVar: forall w n v off (EQ: se = VarOff v ((n + off) mod 2 ^ w) w)
+    (OP: op = OP_PLUS) (SE1: simplify_exp δ e1 = Number n w)
+    (SE2: simplify_exp δ e2 = VarOff v off w), P se)
+  (VarPlusImm: forall w n v off (EQ: se = VarOff v ((off + n) mod 2 ^ w) w)
+    (OP: op = OP_PLUS) (SE1: simplify_exp δ e1 = VarOff v off w)
+    (SE2: simplify_exp δ e2 = Number n w), P se)
+  (VarMinusImm: forall w n v off (EQ: se = VarOff v ((off + 2 ^ w - n) mod 2 ^ w) w)
+    (OP: op = OP_MINUS) (SE1: simplify_exp δ e1 = VarOff v off w)
+    (SE2: simplify_exp δ e2 = Number n w), P se),
+  P se.
 Proof.
-  unfold stack_models. intros.
-  specialize (MDL _ _ CV) as MDL_V. inversion MDL_V. subst. clear MDL_V.
-  specialize (MDL _ _ C_SP). inversion MDL. subst. clear MDL.
-  destruct (st v) eqn: ST; inversion SEW; subst; clear SEW.
-  - (* Imm *) erewrite SEQ in H0; [|rewrite ST; constructor]. inversion H0.
-    reflexivity.
-  - (* VarOff *) erewrite SEQ in H0; [|rewrite ST; constructor;
-    symmetry; eassumption]. inversion H0. reflexivity.
+  intros. subst. simpl in *.
+  Local Ltac hyp :=
+    try match goal with
+        | [H: _ |- _] => solve [eapply H; (reflexivity + eassumption)]
+        end.
+  destruct (simplify_exp _ e1) eqn: SE1; try hyp;
+  destruct (simplify_exp _ e2) eqn: SE2; try hyp;
+  destruct (_ == _) eqn: EQB; try hyp.
+  - (* imm *) destruct (eval_binop _ _ _ _) eqn: EBO. subst. hyp. hyp.
+  - (* imm OP var *) destruct op; hyp. subst. hyp.
+  - (* var OP imm *) destruct op; hyp; subst; hyp.
 Qed.
 
-Theorem preservation_simplify_exp0: forall e w w' c st
-  (ETyp: hastyp_exp c e (NumT w)) (SMDL: stack_models c st)
-  (ESBits: Some w' = sexp_width (simplify_exp0 st e))
-  (C_SP: c sp_reg = Some (NumT reg_bitwidth)), w = w'.
+Tactic Notation "destruct_ext" uconstr(exp) :=
+  let SE := fresh "SE" in
+  let se := fresh "se" in
+  remember exp as se eqn: SE; pattern se; eapply simplify_eval_binop_destruct;
+  try exact SE; intros; move SE at bottom; subst.
+
+Lemma simplify_eval_imp_no_complex: forall e δ s0 vs
+  (ESE: eval_simple_exp s0 (simplify_exp δ e) vs),
+  simplify_exp δ e <> Complex.
 Proof.
-  intros.
-  (* assert SP < 2 ^ reg_bitwidth *)
-  revert e st c w w' C_SP SMDL ETyp ESBits.
-  induction e; intros; try discriminate.
-  - (* Var *) simpl in ESBits. inversion ETyp. subst. eapply SMDL; eassumption.
-  - (* Word *) inversion ESBits. inversion ETyp. reflexivity.
-  - (* Binop *) inversion ETyp. subst. clear ETyp. simpl in ESBits.
-    specialize (IHe1 st). specialize (IHe2 st).
-    destruct (simplify_exp0 _ e1) eqn: C1; try discriminate;
-    destruct (simplify_exp0 _ e2) eqn: C2; try discriminate;
-    destruct (_ == _) eqn: EQB; try discriminate;
-    destruct b; try solve
-      [ discriminate
-      | inversion ESBits; reflexivity
-      | (eapply IHe1 + eapply IHe2); eassumption ].
-  - (* Cast *) inversion ETyp. subst. clear ETyp. simpl in ESBits.
-    specialize (IHe st). destruct (sexp_width _) eqn: SEW; try discriminate.
-    replace b with w1; [| eapply IHe; solve [eassumption|reflexivity]].
-    destruct (simplify_exp0 _ _) eqn: C1; try discriminate.
+  intros. destruct (simplify_exp _ _); solve [inversion ESE|discriminate].
+Qed.
+
+Lemma neq_sym: forall A (n m: A), n <> m -> m <> n.
+Proof.
+  intros. intro. subst. apply H. reflexivity.
+Qed.
+
+Lemma delta_safety_assign: forall c0 v se δ (DS: delta_safety c0 δ)
+  (SSE: safety c0 se), delta_safety c0 (δ [v := se]).
+Proof.
+  unfold delta_safety, safety. intros.
+  destruct (v == v0).
+  - (* accessing our newly scoped variable *) subst.
+    rewrite update_updated in EQ_V. eapply SSE. eassumption.
+  - (* accessing some other variable *) apply neq_sym in n.
+    rewrite update_frame in EQ_V by assumption. eapply DS. eassumption.
+Qed.
+
+Lemma delta_models_assign: forall c0 c v δ se t (DMDL: delta_models c0 c δ)
+  (TSE: hastyp_simple_exp c0 se t), delta_models c0 (c [v := Some t]) (δ [v := se]).
+Proof.
+  unfold delta_models. intros.
+  destruct (v == v0).
+  - subst. rewrite update_updated. rewrite update_updated in CV. inversion CV.
+    subst. inversion TSE; constructor; try assumption.
+  - apply neq_sym in n. rewrite update_frame in CV by assumption.
+    rewrite update_frame by assumption.
+    specialize (DMDL _ _ CV). inversion DMDL; subst; constructor; assumption.
+Qed.
+
+Lemma safety_simplify_exp: forall c0 e δ
+  (DS: delta_safety c0 δ), safety c0 (simplify_exp δ e).
+Proof.
+  unfold safety. induction e; intros; try discriminate.
+  - (* Var *) eapply DS. eassumption.
+  - (* Binop *) destruct_ext (simplify_exp _ (BinOp _ _ _));
+    solve [ discriminate
+          | inversion EQ; subst; (eapply IHe1 + eapply IHe2); eassumption ].
+  - (* Cast *) simpl in *.
+    destruct (sexp_width _) eqn: SEW; try discriminate.
+    destruct (simplify_exp _) eqn: SE1; try discriminate.
+    destruct c; destruct (_ <=? _) eqn: LEB; try discriminate;
+    apply N.leb_le in LEB; simpl in SEW; inversion SEW; inversion EQ_V;
+    subst; clear SEW EQ_V; eapply IHe; eassumption.
+  - (* Let *)
+    eassert (DS': delta_safety c0 (δ [v := _])). eapply delta_safety_assign.
+    eassumption. unfold safety. eapply IHe1. eassumption.
+
+    simpl in *; destruct (simplify_exp _ e1) eqn: SE1; try discriminate;
+    eapply (IHe2 (δ[_ := _])); eassumption.
+Qed.
+
+Ltac einversion0 H :=
+  (lazymatch type of H with
+   | ?t1 -> ?t2 =>
+       let H0 := fresh in
+       assert (H0: t1); [clear H|specialize (H H0); clear H0; einversion0 H]
+   | forall v, @?F v => epose proof (H ?[?v]) as H; einversion0 H
+   | _ => inversion H; clear H
+   end).
+
+Tactic Notation "einversion" constr(H) :=
+  let Htmp := fresh in
+  pose proof H as Htmp; einversion0 Htmp.
+
+Theorem preservation_simplify_exp: forall c0 e δ c s0 t vs
+  (DS: delta_safety c0 δ) (ETyp: hastyp_exp c e t) (DMDL: delta_models c0 c δ)
+  (ESE: eval_simple_exp s0 (simplify_exp δ e) vs),
+  hastyp_simple_exp c0 (simplify_exp δ e) t.
+Proof.
+  intros. apply simplify_eval_imp_no_complex in ESE. clear s0 vs.
+  repeat match goal with [H: _ |- _] => revert H end.
+
+  Local Ltac invalid H := contradiction H; reflexivity.
+
+  induction e; intros; try invalid ESE.
+  - (* Var *) inversion ETyp. subst. clear ETyp. simpl in *. apply DMDL in CV.
+    destruct (δ v) eqn: Dv; try invalid ESE; inversion CV; subst. constructor.
+    assumption. constructor; [eapply DS|]; eassumption.
+  - (* Word *) inversion ETyp. simpl. constructor. assumption.
+  - (* Binop *) inversion ETyp. subst. clear ETyp.
+    specialize (IHe1 δ). specialize (IHe2 δ).
+
+    (* This is a common assumption that we will have to make *)
+    assert (2 ^ w <> 0). destruct w; discriminate.
+
+    destruct_ext (simplify_exp _ (BinOp _ _ _)); try invalid ESE;
+
+    (* Push inductive hypothesis *)
+    rewrite SE1 in *; rewrite SE2 in *; einversion IHe1; einversion IHe2;
+    try solve [eassumption|discriminate]; inversion H4; try inversion H8; subst;
+    clear IHe1 IHe2 SE; simpl in *.
+
+    (* imm OP imm *)
+    eassert (TV: hastyp_val (eval_binop _ _ _ _) _). eapply typesafe_binop;
+    constructor; [apply LT|apply LT0]. inversion TV. rewrite EBO in H1.
+    inversion H1. subst. constructor. assumption.
+
+    all: constructor; try assumption; apply N.mod_lt; assumption.
+  - (* Cast *) inversion ETyp. subst. simpl in *.
+    destruct (sexp_width _) eqn: EQW; try invalid ESE.
+    destruct (simplify_exp _ _) eqn: SE; try invalid ESE;
+    (* Push inductive hypothesis *)
+    (eassert (TSE: hastyp_simple_exp _ _ _);
+      [eapply IHe; try eassumption; rewrite SE; discriminate|]);
+    rewrite SE in *; inversion TSE; subst; clear TSE IHe;
+    inversion EQW; subst.
 
     (* Imm *)
-    inversion ESBits. reflexivity.
+    constructor. eassert (TV: hastyp_val (VaN (cast _ _ _ _) _) _).
+    apply typesafe_cast. constructor. eassumption. eassumption.
+    inversion TV. subst. assumption.
 
-    (* VarOff *)
-    inversion SEW. subst. clear SEW. assert (w1 = reg_bitwidth);
-      [eapply IHe; solve [eassumption|reflexivity]|subst].
-    destruct c; destruct (_ <=? _) eqn: LEB; try discriminate;
-    apply N.leb_le in LEB; inversion ESBits; subst; clear ESBits;
-    apply N.le_antisymm;eassumption.
-  - (* Let *) inversion ETyp. subst. simpl in ESBits.
-    destruct (sp_reg == v); try discriminate.
-    eapply (IHe2 (fun v' => if v' == v then _ else _) (c[_ := _])); try eassumption.
-
-    (* C_SP' *) rewrite update_frame by assumption. assumption.
-
-    (* SMDL' *) unfold stack_models. intros. { destruct (v0 == v).
-      - subst. eapply IHe1; try eassumption.
-        rewrite update_updated in CV. inversion CV.
-        subst. clear CV. assumption.
-      - subst. rewrite update_frame in CV by assumption. eapply SMDL; eassumption.
+    (* Var *)
+    destruct c; destruct (_ <=? _) eqn: LEB; try invalid ESE;
+    apply N.leb_le in LEB; (assert (b = w);
+      [apply N.le_antisymm; assumption|subst; constructor; assumption]).
+  - (* Let *) inversion ETyp. subst. clear ETyp. simpl in *.
+    eassert (DS': delta_safety c0 (δ [v := _])).
+      apply delta_safety_assign, safety_simplify_exp; eassumption.
+    eassert (DMDL': delta_models c0 (c [v := _]) (δ [v := _])). {
+      apply delta_models_assign. assumption.
+      destruct (simplify_exp δ e1) eqn: SE1.
+      + eapply (IHe1 δ c); try eassumption. rewrite SE1. discriminate.
+      + eapply (IHe1 δ c); try eassumption. rewrite SE1. discriminate.
+      + invalid ESE.
     }
-Qed.
-*)
 
-Theorem preservation_simplify_exp: forall e t c δ
-  (ETyp: hastyp_exp c e t) (DMDL: delta_models c δ),
-  hastyp_simple_exp c (simplify_exp c δ e) t.
-Proof.
-Admitted.
-
-Corollary preservation_bitwidth_simplify_exp: forall e c δ w
-  (TE: hastyp_exp c e (NumT w)) (DMDL: delta_models c δ),
-  sexp_width (simplify_exp c δ e) = Some w.
-Proof.
-  intros. eapply sexp_width_type_correct. eapply preservation_simplify_exp;
-  eassumption.
+    destruct (simplify_exp _ e1) eqn: SE1; try invalid ESE; rewrite <- SE1 in *;
+    eapply IHe2; try eassumption.
 Qed.
 
-Theorem simplify_exp_correct: forall e h s0 s δ vs ve c t
-  (ETyp: hastyp_exp c e t) (MDL0: models c s0) (MDL: models c s)
-  (DS: delta_safety c δ) (DMDL: delta_models c δ) (HD: has_delta s0 s δ)
-  (EE: eval_exp h s e ve) (ESE: eval_stack_exp s0 (simplify_exp c δ e) vs), ve = vs.
+Theorem simplify_exp_correct: forall e h s0 s c0 c δ vs ve t
+  (ETyp: hastyp_exp c e t) (MDL0: models c0 s0) (MDL: models c s)
+  (DS: delta_safety c0 δ) (DMDL: delta_models c0 c δ) (HD: has_delta s0 s δ)
+  (EE: eval_exp h s e ve) (ESE: eval_simple_exp s0 (simplify_exp δ e) vs), ve = vs.
 Proof.
   intros.
 
   (* Specify vs *)
-  apply eval_stack_exp_num in ESE as VS. destruct VS as [n' [w' VS]]. subst.
+  apply eval_simple_exp_num in ESE as VS. destruct VS as [n' [w' VS]]. subst.
 
-  (*
-  assert (SMDL: stack_models c st). eapply stack_equiv_imp_models; eassumption.
-  (* assert SP < 2 ^ reg_bitwidth *)
-  specialize (MDL sp_reg _ SP_Reg) as MDL_SP. inversion MDL_SP. subst.
-  symmetry in H0. clear MDL_SP.
-   *)
-  revert c s δ n' w' ve t MDL0 MDL DMDL DS HD ETyp EE ESE.
+  revert c s δ n' w' ve t MDL DMDL DS HD ETyp EE ESE.
   induction e; intros; try solve [inversion ESE].
   - (* Var *) inversion EE. subst. eapply HD. eassumption.
   - (* Word *) inversion EE. inversion ESE. subst. reflexivity.
   - (* BinOp *) inversion EE. inversion ETyp. subst. clear EE ETyp.
 
     (* Clean up some of the bitwidth variables, to ensure w = w0 *)
-    eassert (TV1: hastyp_val _ _). eapply (preservation_eval_exp MDL T1);
-      eassumption.
-    eassert (TV2: hastyp_val _ _). eapply (preservation_eval_exp MDL T2);
-      eassumption.
-    eassert (TSE1: hastyp_simple_exp _ (simplify_exp _ _ e1) _).
-      eapply preservation_simplify_exp; eassumption.
-    eassert (TSE2: hastyp_simple_exp _ (simplify_exp _ _ e2) _).
-      eapply preservation_simplify_exp; eassumption.
+    assert (TV1 := preservation_eval_exp MDL T1 E1).
+    assert (TV2 := preservation_eval_exp MDL T2 E2).
+    epose proof (preservation_simplify_exp c0 e1 δ) as TSE1.
+    epose proof (preservation_simplify_exp c0 e2 δ) as TSE2.
     inversion TV1. inversion TV2. subst. clear TV1 TV2 H5.
 
     (* This is a common assumption that we will have to make *)
     assert (2 ^ w0 <> 0). destruct w0; discriminate.
 
     (* Do a bunch of case destructions *)
-    simpl in ESE. destruct (simplify_exp _ _ e1) eqn: C1; try solve [inversion ESE];
-    destruct (simplify_exp _ _ e2) eqn: C2; try solve [inversion ESE];
-    destruct (w == _) eqn: EQW; try solve [inversion ESE];
-    try destruct (c v) eqn: CV; try solve [inversion ESE];
-    try destruct t; try solve [inversion ESE];
-    inversion TSE1; inversion TSE2; subst;
-    destruct b; simpl in ESE; inversion ESE; subst; clear ESE;
-    try (rewrite CV0 in CV; inversion CV; subst; clear CV);
+    destruct_ext (simplify_exp _ (BinOp _ _ _)); inversion ESE; subst; clear ESE;
 
-    (* Push indutive hypothesis*)
-    (eassert (Equiv1: VaN n1 _ = VaN _ _); [
-      eapply IHe1; solve [eassumption|rewrite C1; econstructor; eassumption]
-    |]); inversion Equiv1; subst; clear Equiv1;
-    (eassert (Equiv2: VaN n2 _ = VaN _ _); [
-      eapply IHe2; solve [eassumption|rewrite C2; econstructor; eassumption]
-    |]); inversion Equiv2; subst; clear Equiv2;
+    (* Inversion on inductive hypothesis *)
+    einversion IHe1; try solve [eassumption|rewrite SE1; constructor;
+        eassumption];
+    einversion IHe2; try solve [eassumption|rewrite SE2; constructor;
+        eassumption];
+    inversion H2; inversion H3; subst; clear H2 H3 H6 IHe1; simpl;
 
-    (* Trivial cases for imm OP imm *)
-    try reflexivity;
+    (* imm OP imm is trivial*)
+    try assumption;
 
-    (* Next we need to extract condition for register to be smaller than 2 ^ w' *)
-    (eassert (TV: hastyp_val _ _); [eapply MDL0; eassumption|
-    inversion TV; rewrite SV in H1; inversion H1; subst; clear TV H1; simpl]).
+    (* Ensure that n0 < 2 ^ w' *)
+    rewrite SE2, SE1 in *; einversion TSE1; try solve
+      [eassumption|econstructor|constructor; eassumption];
+    einversion TSE2; try solve
+      [eassumption|econstructor|constructor; eassumption]; subst;
+    einversion (MDL0 v); try eassumption; rewrite SV in H2; inversion H2;
+    subst; clear TSE1 TSE2.
 
-      (* imm + var *)
-      erewrite <- (N.mod_small n) at 1 by eassumption.
-      erewrite <- (N.mod_small n0) at -1; [|eassumption].
-      repeat rewrite <- N.add_mod by assumption. f_equal. f_equal.
-      rewrite N.add_assoc, N.add_assoc. f_equal. apply N.add_comm.
+    (* imm + var *)
+    erewrite <- (N.mod_small n) at 1 by eassumption.
+    erewrite <- (N.mod_small n0) at -1 by eassumption.
+    repeat rewrite <- N.add_mod by assumption. f_equal. f_equal.
+    rewrite N.add_assoc, N.add_assoc. f_equal. apply N.add_comm.
 
-      (* var + imm *)
-      erewrite <- (N.mod_small n) at 1 by eassumption.
-      erewrite <- (N.mod_small n0) at -1; [|eassumption].
-      repeat rewrite <- N.add_mod by assumption. f_equal. f_equal.
-      rewrite N.add_assoc. reflexivity.
+    (* var + imm *)
+    erewrite <- (N.mod_small n) at 1 by eassumption.
+    erewrite <- (N.mod_small n0) at -1; [|eassumption].
+    repeat rewrite <- N.add_mod by assumption. f_equal. f_equal.
+    rewrite N.add_assoc. reflexivity.
 
-      (* var - imm *)
-      rewrite N.add_comm. f_equal.
-      apply N.lt_le_incl in LT0. rewrite <- N.add_sub_assoc, <- N.add_sub_assoc,
-        N.add_mod, N.mod_mod, <- N.add_mod, (N.add_mod n0), N.mod_mod,
-      <- N.add_mod, N.add_assoc by assumption. reflexivity.
+    (* var - imm *)
+    rewrite N.add_comm. f_equal.
+    apply N.lt_le_incl in LT0. rewrite <- N.add_sub_assoc, <- N.add_sub_assoc,
+      N.add_mod, N.mod_mod, <- N.add_mod, (N.add_mod n0), N.mod_mod,
+    <- N.add_mod, N.add_assoc by assumption. reflexivity.
   - (* Cast *) inversion EE. inversion ETyp. subst.
     specialize (preservation_eval_exp MDL T1 E1) as TV. inversion TV. subst.
 
     (* sexp_width _ = Some w1 *)
     clear EE ETyp TV. simpl in ESE. destruct (sexp_width _) eqn: EQW;
-      try solve [inversion ESE]. symmetry in EQW.
-    assert (w1 = b). eapply preservation_simplify_exp0; eassumption. subst.
+      try solve [inversion ESE].
 
-    (* Speciailize IH *)
-    assert (IHe2: forall ve vs, eval_exp h s e ve ->
-      eval_stack_exp s (simplify_exp0 st e) vs -> ve = vs).
-    intros. eapply IHe; eassumption.
+    (* Specialize IH *)
+    eassert (IHe2: forall ve n' w', eval_exp h s e ve ->
+      eval_simple_exp s0 (simplify_exp _ _ e) (VaN n' w') -> ve = (VaN n' w')).
+    intros. eapply IHe; eassumption. clear IHe.
 
-    destruct (simplify_exp0 _ e) eqn: C'; try solve [inversion ESE].
+    eassert (TSE: hastyp_simple_exp _ (simplify_exp _ _ e) _).
+      eapply preservation_simplify_exp; eassumption.
+
+    inversion TSE; rewrite <- H0 in *; inversion EQW; subst; clear H0 TSE.
 
     (* For Imm *)
     inversion ESE. subst. clear ESE. f_equal. f_equal.
-    assert (Equiv1: VaN n0 b = VaN n1 w0). eapply IHe2;
-    try solve [eassumption|constructor]. inversion Equiv1. reflexivity.
+    assert (Equiv1: VaN n b = VaN n0 b). eapply IHe2. assumption. constructor.
+    inversion Equiv1. reflexivity.
 
     (* For VarOff *)
     destruct c; destruct (_ <=? _) eqn: LEB; try solve [inversion ESE];
@@ -345,8 +433,8 @@ Proof.
     + (* CAST_UNSIGNED *) simpl. eapply IHe2; try eassumption.
   - (* Let *) inversion EE. inversion ETyp. subst. clear EE ETyp.
     simpl in ESE. destruct (sp_reg == v). inversion ESE.
-    eassert (ESE': eval_stack_exp (s[_ := _]) (simplify_exp0 _ e2) vs). {
-      destruct (simplify_exp0 _ e2) eqn: C2; rewrite C2; inversion ESE; subst.
+    eassert (ESE': eval_simple_exp (s[_ := _]) (simplify_exp0 _ e2) vs). {
+      destruct (simplify_exp0 _ e2) eqn: SE2; rewrite SE2; inversion ESE; subst.
       - constructor.
       - constructor. rewrite update_frame. assumption. eassumption.
     }
@@ -367,7 +455,7 @@ Proof.
     (* SP_REG' *) rewrite update_frame by assumption. assumption.
     (* SEQ' *) unfold stack_equiv. intros v0 val ESE1. { destruct (v0 == v).
       - subst. rewrite update_updated. eapply IHe1; try eassumption.
-        destruct (simplify_exp0 _ e1) eqn: C1; inversion ESE1; subst.
+        destruct (simplify_exp0 _ e1) eqn: SE1; inversion ESE1; subst.
         + constructor.
         + constructor. rewrite update_frame in S_SP by assumption. assumption.
       - rewrite update_frame by assumption. eapply SEQ.
@@ -379,7 +467,7 @@ Qed.
 
 Theorem simplify_exp_red: forall e h s vs ve c t
   (ETyp: hastyp_exp c e t) (MDL: models c s)
-  (EE: eval_exp h s e ve) (ESE: eval_stack_exp s (simplify_exp e) vs)
+  (EE: eval_exp h s e ve) (ESE: eval_simple_exp s (simplify_exp e) vs)
   (SP_Reg: c sp_reg = Some (NumT reg_bitwidth)), ve = vs.
 Proof.
   intros. eapply simplify_exp0_red; try eassumption.
@@ -400,7 +488,7 @@ Definition check_fallthru must_fall (x: option exit) :=
 
 Inductive exec_stack_oper (s: store):
   store -> (option exit -> Prop) -> stack_oper -> Prop :=
-  | ESO_UpdateSP e off v must_fall (ESE: eval_stack_exp s e v)
+  | ESO_UpdateSP e off v must_fall (ESE: eval_simple_exp s e v)
       (E_VarOff: e = VarOff off): exec_stack_oper s (s[sp_reg := v])
       (check_fallthru must_fall) (SPOper must_fall off)
   | ESO_OtherOper must_fall: exec_stack_oper s s
@@ -508,8 +596,8 @@ Proof.
     econstructor. eassumption. reflexivity. rewrite N.add_comm. reflexivity.
   - (* Jmp *) inversion XS. subst. constructor. reflexivity.
   - (* Exn *) inversion XS. subst. constructor. reflexivity.
-  - (* Seq *) inversion XS; subst; destruct (simplify_stmt q1) eqn: C1;
-    destruct (simplify_stmt q2) eqn: C2; try constructor; inversion XS; subst;
+  - (* Seq *) inversion XS; subst; destruct (simplify_stmt q1) eqn: SE1;
+    destruct (simplify_stmt q2) eqn: SE2; try constructor; inversion XS; subst;
     try solve
       [ (* When we execute only the first statement, but it is SNop *)
         specialize (IHq1 _ _ _ _ _ _ _ XS0 TS1); inversion IHq1;
@@ -533,7 +621,7 @@ Proof.
   - (* If *) inversion XS. subst. clear E. clear c' TE SS. destruct c;
     [ specialize (IHq2 _ _ _ _ _ _ _ XS TS2); rename IHq2 into IHq
     | specialize (IHq1 _ _ _ _ _ _ _ XS TS1); rename IHq1 into IHq];
-    destruct (simplify_stmt q1) eqn: C1; destruct (simplify_stmt q2) eqn: C2;
+    destruct (simplify_stmt q1) eqn: SE1; destruct (simplify_stmt q2) eqn: SE2;
     inversion IHq; subst; constructor; solve [reflexivity|assumption].
   - (* Rep *) assert (IHq2: ∀ (s s' : store) (x : option exit)
       (XS : exec_stmt h s q s' x), exec_stack_oper h s q s' x XS (simplify_stmt q)).
