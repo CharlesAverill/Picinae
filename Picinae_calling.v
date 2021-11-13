@@ -199,6 +199,14 @@ Proof.
   intros. destruct (simplify_exp _ _); solve [inversion ESE|discriminate].
 Qed.
 
+Lemma eval_simple_exp_unique: forall se s0 v1 v2
+  (ESE1: eval_simple_exp s0 se v1) (ESE2: eval_simple_exp s0 se v2),
+  v1 = v2.
+Proof.
+  intros. inversion ESE1; inversion ESE2; subst; inversion H1; subst.
+  reflexivity. rewrite SV0 in SV. inversion SV. subst. reflexivity.
+Qed.
+
 Lemma neq_sym: forall A (n m: A), n <> m -> m <> n.
 Proof.
   intros. intro. subst. apply H. reflexivity.
@@ -223,7 +231,7 @@ Ltac einversion0 H :=
        let H0 := fresh in
        assert (H0: t1); [clear H|specialize (H H0); clear H0; einversion0 H]
    | forall v, @?F v => epose proof (H ?[?v]) as H; einversion0 H
-   | _ => inversion H; clear H; repeat progress subst
+   | _ => inversion H; clear H; subst
    end).
 
 Tactic Notation "einversion" constr(H) :=
@@ -232,6 +240,17 @@ Tactic Notation "einversion" constr(H) :=
 
 Tactic Notation "einversion" "assume" constr(H) :=
   einversion H; try solve [eassumption|discriminate]; subst.
+
+Lemma models_assign: forall c h s v e u t (MDL: models c s)
+  (TE: hastyp_exp c e t) (EE: eval_exp h s e u),
+  models (c [v := Some t]) (s [v := u]).
+Proof.
+  unfold models. intros. destruct (v0 == v).
+  - subst. rewrite update_updated. rewrite update_updated in CV. inversion CV.
+    subst. eapply preservation_eval_exp; eassumption.
+  - rewrite update_frame by assumption. rewrite update_frame in CV by
+    assumption. apply MDL in CV. assumption.
+Qed.
 
 Lemma delta_models_assign: forall c0 c v δ se t (DMDL: delta_models c0 c δ)
   (TSE: se = Complex \/ hastyp_simple_exp c0 se t),
@@ -247,6 +266,19 @@ Proof.
     try invalid NotCpx; rewrite <- LUv0 in *; einversion assume DMDL;
     rewrite LUv0; rewrite LUv0 in H1; inversion H1; subst; constructor;
     assumption.
+Qed.
+
+Lemma has_delta_assign: forall s s' δ v se u (HD: has_delta s s' δ)
+  (ESE: se = Complex \/ eval_simple_exp s se u),
+  has_delta s (s' [v := u]) (δ [v := se]).
+Proof.
+  unfold has_delta. intros.
+  destruct (v == v0).
+  - subst. rewrite update_updated. rewrite update_updated in ESE0.
+    destruct ESE; subst. try solve [inversion ESE0].
+    eapply eval_simple_exp_unique; eassumption.
+  - apply neq_sym in n. rewrite update_frame in ESE0 by assumption.
+    rewrite update_frame in * by assumption. apply HD. assumption.
 Qed.
 
 Lemma safety_simplify_exp: forall c0 e δ
@@ -304,13 +336,11 @@ Proof.
 
     all: constructor; try assumption; apply N.mod_lt; assumption.
   - (* Cast *) inversion ETyp. subst. simpl in *.
-    destruct (sexp_width _) eqn: EQW; try invalid ESE.
     destruct (simplify_exp _ _) eqn: SE; try invalid ESE;
     (* Push inductive hypothesis *)
     (eassert (TSE: hastyp_simple_exp _ _ _);
       [eapply IHe; try eassumption; rewrite SE; discriminate|]);
-    rewrite SE in *; inversion TSE; subst; clear TSE IHe;
-    inversion EQW; subst.
+    rewrite SE in *; inversion TSE; subst; clear TSE IHe; subst; simpl in *.
 
     (* Imm *)
     constructor. eassert (TV: hastyp_val (VaN (cast _ _ _ _) _) _).
@@ -319,8 +349,8 @@ Proof.
 
     (* Var *)
     destruct c; destruct (_ <=? _) eqn: LEB; try invalid ESE;
-    apply N.leb_le in LEB; (assert (b = w);
-      [apply N.le_antisymm; assumption|subst; constructor; assumption]).
+    apply N.leb_le in LEB; einversion assume N.le_antisymm;
+    constructor; assumption.
   - (* Let *) inversion ETyp. subst. clear ETyp. simpl in *.
     eassert (DS': delta_safety c0 (δ [v := _])).
       apply delta_safety_assign, safety_simplify_exp; eassumption.
@@ -344,7 +374,7 @@ Proof.
   intros.
 
   (* Specify vs *)
-  apply eval_simple_exp_num in ESE as VS. destruct VS as [n' [w' VS]]. subst.
+  apply eval_simple_exp_num in ESE as VS. destruct VS as [n' [w' ?]]. subst.
 
   revert c s δ n' w' ve t MDL DMDL DS HD ETyp EE ESE.
   induction e; intros; try solve [inversion ESE].
@@ -396,8 +426,6 @@ Proof.
     apply N.lt_le_incl in LT0. rewrite <- N.add_sub_assoc, <- N.add_sub_assoc,
       N.add_mod, N.mod_mod, <- N.add_mod, (N.add_mod n0), N.mod_mod,
     <- N.add_mod, N.add_assoc by assumption. reflexivity.
-
-    Unshelve. all: exact s0.
   - (* Cast *) inversion EE. inversion ETyp. subst. simpl in ESE.
     assert (X: 2 ^ w' <> 0). destruct w'; discriminate.
 
@@ -418,99 +446,40 @@ Proof.
     + (* CAST_SIGNED *) unfold scast. rewrite ofZ_toZ, N.mod_mod. reflexivity.
       assumption.
     + (* CAST_UNSIGNED *) reflexivity.
+  - (* Let *) inversion EE. inversion ETyp. simpl in ESE. subst.
+    assert (SV: forall v0 off w, simplify_exp δ e1 = VarOff v0 off w ->
+      exists n, s0 v0 = VaN n w).
+    { intros. einversion (MDL0 v0). eapply safety_simplify_exp; eassumption.
+      all: inversion H3. eexists. reflexivity. }
 
-  - inversion EE. inversion ETyp. simpl in ESE. subst. eapply IHe2.
-    7:{ apply ESE. }
-    6:{ apply E2. }
-    5:{ apply T2. }
-    unfold models. intros. { destruct (v0 == v).
-    + subst. rewrite update_updated. rewrite update_updated in CV. inversion CV.
-      subst. eapply preservation_eval_exp; eassumption.
-    + rewrite update_frame by assumption. rewrite update_frame in CV by
-      assumption. apply MDL in CV. assumption. }
-    apply delta_models_assign; try assumption. { destruct (simplify_exp _ e1) eqn: SE1.
+    eapply IHe2; try apply ESE; try apply E2; try apply T2.
+
+    (* MDL' *) eapply models_assign; eassumption.
+    (* DMDL' *) {
+      apply delta_models_assign; try assumption.
+      destruct (simplify_exp _ e1) eqn: SE1.
       - right. rewrite <- SE1 in *. eapply preservation_simplify_exp;
         try eassumption. rewrite SE1. constructor.
-      - right. rewrite <- SE1 in *. eapply preservation_simplify_exp;
-        try eassumption. rewrite SE1. econstructor.
-        einversion assume (MDL0 v0).
-        specialize (safety_simplify_exp c0 e1 δ DS). unfold safety.
-        Search safety.
-        specialize (DS v0 ).
-        einversion (DS.
-      - right. rewrite <- SE1 in 
+      - right. rewrite <- SE1 in *. einversion assume SV.
+        eapply preservation_simplify_exp; try eassumption. rewrite SE1.
+        constructor. eassumption.
+      - left. reflexivity.
     }
-    unfold delta_models. intros. { destruct (v0 == v).
-    + subst. rewrite update_updated. rewrite update_updated in CV. inversion CV.
-      subst. eapply preservation_eval_exp; eassumption.
-    + rewrite update_frame by assumption. rewrite update_frame in CV by
-      assumption. apply MDL in CV. assumption. }
+    (* DS' *) apply delta_safety_assign; try assumption.
+    apply safety_simplify_exp. assumption.
+    (* HD' *) {
+      apply has_delta_assign. assumption.
 
-
-
-
-    destruct simplify_exp
-    eqn:H_sexp; try solve [inversion ESE]; subst. eapply IHe2. 7 : { apply ESE. }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    (* Let *) inversion EE. inversion ETyp. subst. clear EE ETyp.
-    simpl in ESE. destruct (sp_reg == v). inversion ESE.
-    eassert (ESE': eval_simple_exp (s[_ := _]) (simplify_exp0 _ e2) vs). {
-      destruct (simplify_exp0 _ e2) eqn: SE2; rewrite SE2; inversion ESE; subst.
-      - constructor.
-      - constructor. rewrite update_frame. assumption. eassumption.
+      destruct (simplify_exp _ e1) eqn: SE1.
+      - right. einversion assume IHe1. rewrite SE1. econstructor.
+        subst. constructor.
+      - right. einversion SV. reflexivity. einversion assume IHe1.
+        rewrite SE1. constructor. eassumption. subst. constructor.
+        assumption.
+      - left. reflexivity.
     }
-    eapply (IHe2 (c[_ := _]) (s[_ := _])); try eassumption; clear ESE'.
 
-    (* S_SP' *) rewrite update_frame by assumption. assumption.
-    (* SMDL' *) unfold stack_models. intros. { destruct (v0 == v).
-      - subst. rewrite update_updated in CV. inversion CV.
-        subst. clear CV. eapply preservation_simplify_exp0; eassumption.
-      - subst. rewrite update_frame in CV by assumption. eapply SMDL; eassumption.
-    }
-    (* MDL *) unfold models. intros. { destruct (v0 == v).
-      - subst. rewrite update_updated in CV. inversion CV. subst. clear CV.
-        rewrite update_updated. eapply preservation_eval_exp; eassumption.
-      - subst. rewrite update_frame in CV by assumption.
-        rewrite update_frame by assumption. apply MDL; assumption.
-    }
-    (* SP_REG' *) rewrite update_frame by assumption. assumption.
-    (* SEQ' *) unfold stack_equiv. intros v0 val ESE1. { destruct (v0 == v).
-      - subst. rewrite update_updated. eapply IHe1; try eassumption.
-        destruct (simplify_exp0 _ e1) eqn: SE1; inversion ESE1; subst.
-        + constructor.
-        + constructor. rewrite update_frame in S_SP by assumption. assumption.
-      - rewrite update_frame by assumption. eapply SEQ.
-        destruct (st v0) eqn: CS; inversion ESE1; subst.
-        + constructor.
-        + constructor. rewrite update_frame in S_SP by assumption. assumption.
-    }
-Qed.
-
-Theorem simplify_exp_red: forall e h s vs ve c t
-  (ETyp: hastyp_exp c e t) (MDL: models c s)
-  (EE: eval_exp h s e ve) (ESE: eval_simple_exp s (simplify_exp e) vs)
-  (SP_Reg: c sp_reg = Some (NumT reg_bitwidth)), ve = vs.
-Proof.
-  intros. eapply simplify_exp0_red; try eassumption.
-  unfold stack_equiv. intros v0 val ESE1.
-  destruct (sp_reg == v0); inversion ESE1; subst; clear ESE1.
-  rewrite S_SP. f_equal. rewrite N.add_0_r, N.mod_small. reflexivity.
-  specialize (MDL _ _ SP_Reg). inversion MDL. subst. rewrite <- H0 in S_SP.
-  inversion S_SP. subst. assumption.
+Unshelve. all: exact s0.
 Qed.
 
 Inductive stack_oper :=
