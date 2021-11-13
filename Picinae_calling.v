@@ -143,6 +143,31 @@ Fixpoint simplify_exp (δ: store_delta) e :=
   | Concat _ _ => Complex
   end.
 
+Ltac einst0 H tac :=
+  (lazymatch type of H with
+   | ?t1 -> ?t2 =>
+       let H0 := fresh in
+       assert (H0: t1); [clear H|specialize (H H0); clear H0; einst0 H tac]
+   | forall v, @?F v => epose proof (H ?[?v]) as H; einst0 H tac
+   | _ => tac
+   end).
+
+Tactic Notation "einversion" constr(H) :=
+  let Htmp := fresh in
+  pose proof H as Htmp; einst0 Htmp ltac:(inversion Htmp; clear Htmp; subst).
+
+Tactic Notation "einversion" "trivial" constr(H) :=
+  einversion H; try solve [eassumption|discriminate|reflexivity]; subst.
+
+Tactic Notation "einstantiate" constr(H) :=
+  let Htmp := fresh in
+  pose proof H as Htmp; einst0 Htmp ltac:(idtac).
+
+Tactic Notation "einstantiate" "trivial" constr(H) :=
+  einstantiate H; try solve [eassumption|discriminate|reflexivity]; subst.
+
+Ltac invalid H := contradiction H; reflexivity.
+
 Lemma sexp_width_type_correct: forall c0 e w (TSE: hastyp_simple_exp c0 e (NumT w)),
   sexp_width e = Some w.
 Proof.
@@ -153,6 +178,16 @@ Lemma eval_simple_exp_num: forall s se v (ESE: eval_simple_exp s se v),
   exists n w, v = VaN n w.
 Proof.
   intros. inversion ESE; subst; clear ESE; eexists; eexists; reflexivity.
+Qed.
+
+Lemma eval_simple_exp_total: forall s0 c0 se (Safe: safety c0 se)
+  (MDL0: models c0 s0) (NCPX: se <> Complex), exists u, eval_simple_exp s0 se u.
+Proof.
+  intros. destruct se.
+  - eexists. constructor.
+  - einversion (MDL0 v); try (eapply Safe; reflexivity); inversion H2. subst.
+    eexists. constructor. symmetry. eassumption.
+  - invalid NCPX.
 Qed.
 
 Theorem simplify_eval_binop_destruct: forall (P: simple_exp -> Prop) se op e1 e2 δ
@@ -222,24 +257,6 @@ Proof.
   - (* accessing some other variable *) apply neq_sym in n.
     rewrite update_frame in EQ_V by assumption. eapply DS. eassumption.
 Qed.
-
-Ltac invalid H := contradiction H; reflexivity.
-
-Ltac einversion0 H :=
-  (lazymatch type of H with
-   | ?t1 -> ?t2 =>
-       let H0 := fresh in
-       assert (H0: t1); [clear H|specialize (H H0); clear H0; einversion0 H]
-   | forall v, @?F v => epose proof (H ?[?v]) as H; einversion0 H
-   | _ => inversion H; clear H; subst
-   end).
-
-Tactic Notation "einversion" constr(H) :=
-  let Htmp := fresh in
-  pose proof H as Htmp; einversion0 Htmp.
-
-Tactic Notation "einversion" "trivial" constr(H) :=
-  einversion H; try solve [eassumption|discriminate|reflexivity]; subst.
 
 Lemma models_assign: forall c h s v e u t (MDL: models c s)
   (TE: hastyp_exp c e t) (EE: eval_exp h s e u),
@@ -483,56 +500,144 @@ Proof.
 Unshelve. all: exact s0.
 Qed.
 
-Inductive stack_oper :=
-  | SPOper (must_fall: bool) (off: N)
-  | OtherOper (must_fall: bool)
-  | ErrorOper.
+Definition trace_states := option ((addr -> store_delta) * Prop * list addr).
+Definition trace_state_res := option (list (store_delta * option exit)).
+Definition h_conj h1 h2 := fun (v: var) =>
+  match h1 v, h2 v with
+  | None, p | p, None => p
+  | Some p1, Some p2 => Some (p1 /\ p2)
+  end.
+Definition true_hyp {V} hyps (v:V) :=
+  match hyps v with
+  | Some hyp => hyp
+  | None => True
+  end.
 
-Definition check_fallthru must_fall (x: option exit) :=
-  must_fall = false \/ x = None.
-
-Inductive exec_stack_oper (s: store):
-  store -> (option exit -> Prop) -> stack_oper -> Prop :=
-  | ESO_UpdateSP e off v must_fall (ESE: eval_simple_exp s e v)
-      (E_VarOff: e = VarOff off): exec_stack_oper s (s[sp_reg := v])
-      (check_fallthru must_fall) (SPOper must_fall off)
-  | ESO_OtherOper must_fall: exec_stack_oper s s
-      (check_fallthru must_fall) (OtherOper must_fall).
-
-(* Classifies a statement by what it does to the stack. *)
-Fixpoint simplify_stmt (q: stmt): stack_oper :=
-  match q with
-  | Nop => OtherOper true
-  | Move v e =>
-      if sp_reg == v then
-        match simplify_exp e with
-        | Imm _ _ => ErrorOper
-        | VarOff off => SPOper true off
-        | Complex => ErrorOper
-        end
-      else OtherOper true
-  | Jmp _ => OtherOper false
-  | Exn _ => OtherOper false
-  | Seq q1 q2 =>
-      match simplify_stmt q1, simplify_stmt q2 with
-      | OtherOper true, x | x, OtherOper true => x
-      | SPOper true off, OtherOper false => SPOper false off
-      | SPOper true off1, SPOper true off2 => SPOper true (off1 + off2)
-      | OtherOper false, OtherOper false => OtherOper false
-      | _, _ => ErrorOper
-      end
-  | If _ q1 q2 =>
-      match simplify_stmt q1, simplify_stmt q2 with
-      | OtherOper falls, OtherOper falls2 =>
-          OtherOper (falls && falls2)%bool
-      | _, _ => ErrorOper
-      end
-  | Rep _ s =>
-      match simplify_stmt s with
-      | OtherOper falls => OtherOper falls
-      | _ => ErrorOper
+Fixpoint map_option {A B} (f: A -> option B) (l: list A): option (list B) :=
+  match l with
+  | nil => Some nil
+  | a :: t =>
+      match f a with
+      | None => None
+      | Some b =>
+          match map_option f t with
+          | None => None
+          | Some t' => Some (b :: t')
+          end
       end
   end.
+
+(*
+Lemma list_option_traverse_correct: forall A l',
+  Forall (fun x => exists x', x = Some x') l <-> list_option_traverse l = Some 
+ *)
+
+Check concat.
+
+Fixpoint simple_trace_stmt (δ: store_delta) (q: stmt): trace_state_res :=
+  match q with
+  | Nop => Some ((δ, None) :: nil)
+  | Move v e => Some ((δ[v := simplify_exp δ e], None) :: nil)
+  | Jmp e =>
+      match simplify_exp δ e with
+      | Number n _ => Some ((δ, Some (Exit n)) :: nil)
+      | _ => None
+      end
+  | Exn n => Some ((δ, Some (Raise n)) :: nil)
+  | Seq q1 q2 =>
+      match simple_trace_stmt δ q1 with
+      | None => None
+      | Some paths1 =>
+          let res := map_option (fun '(δ', x) =>
+            match x with
+            | None =>
+                match simple_trace_stmt δ' q2 with
+                | None => None
+                | Some paths2 => Some paths2
+                end
+            | Some _ => Some ((δ', x) :: nil)
+            end) paths1 in
+          match res with
+          | None => None
+          | Some ll => Some (concat ll)
+          end
+      end
+  | If _ q1 q2 =>
+      match simple_trace_stmt δ q1, simple_trace_stmt δ q2 with
+      | None, _ | _, None => None
+      | Some paths1, Some paths2 =>
+          Some (paths1 ++ paths2)
+      end
+  | Rep _ s => None
+  end.
+
+Theorem simple_trace_stmt_correct: forall c0 s0 q paths c c' h s s' x δ
+  (MDL0: models c0 s0) (STyp: hastyp_stmt c0 c q c') (MDL: models c s)
+  (DMDL: delta_models c0 c δ) (DS: delta_safety c0 δ) (HD: has_delta s0 s δ)
+  (XS: exec_stmt h s q s' x) (STS: simple_trace_stmt δ q = Some paths),
+  Exists (fun '(δ', x') => x' = x /\ has_delta s0 s' δ') paths.
+Proof.
+  induction q; intros; inversion XS; inversion STS; inversion STyp; subst;
+  clear XS STS STyp.
+  - (* Nop *) constructor. split. reflexivity. assumption.
+  - (* Move *) constructor. split. reflexivity. apply has_delta_assign.
+    assumption. eassert (Safe: safety c0 _). apply safety_simplify_exp.
+    eassumption. destruct simplify_exp eqn: SE.
+    + right. einversion trivial eval_simple_exp_total.
+      erewrite (simplify_exp_correct _ _ s0); try rewrite SE; try eassumption.
+    + right. einversion trivial eval_simple_exp_total.
+      erewrite (simplify_exp_correct _ _ s0); try rewrite SE; try eassumption.
+    + left. assumption.
+  - (* Jmp *) eassert (Safe: safety c0 _). apply safety_simplify_exp. eassumption.
+    destruct simplify_exp eqn: SE; inversion H3; subst. constructor. split;
+    try assumption. einversion trivial eval_simple_exp_total. rewrite SE. discriminate.
+    erewrite <- (simplify_exp_correct _ _ s0) in H0 by eassumption.
+    rewrite SE in H0. inversion H0. reflexivity.
+  - (* Exn *) constructor. split. reflexivity. assumption.
+  - (* Seq, exit 1 *) destruct simple_trace_stmt as [paths1|] eqn: SQ1; try discriminate.
+    einstantiate trivial (IHq1).
+    eapply incl_Exists; [|eapply IHq1; eassumption]; clear IHq1 IHq2.
+    destruct map_option eqn: Map; inversion H4. subst. clear H4.
+    Search fold_left.
+
+
+    (* Prove that paths1 ⊆ paths *) admit.
+
+    (* Prove that hyps1 -> hyps *) intros. destruct a as [δ' x'].
+    destruct H as [Eqx HD']. split. assumption. eapply has_delta'_impl;
+    try eassumption. admit.
+
+Qed.
+
+
+Definition get_reg v (ts: trace_state_res) :=
+  match ts with
+  | None => nil
+  | Some (paths, _) => map (fun '(δ, _) => δ v) paths
+  end.
+Require Import strchr_i386.
+Require Import fstat_i386.
+Definition null_state: store := fun _ => VaN 0 0.
+
+Definition simple_trace_stmt_at (p: program) (a: addr):
+  option (N * list simple_exp) :=
+  match p null_state a with
+  | Some (sz, q) => Some (sz, get_reg R_ESP (simple_trace_stmt (fun v => VarOff v 0 32) q))
+  | None => None
+  end.
+
+Fixpoint addrs (x:nat) :=
+  match x with
+  | O => 0 :: nil
+  | S x' => N.of_nat x :: addrs x'
+  end.
+
+Compute rev (filter
+  (fun x => match snd x with
+            | Some _ => true
+            | None => false
+            end)
+  (map (fun a => (a, simple_trace_stmt_at fstat_i386 a)) (addrs 450))).
 
 (*
 Lemma simplify_rep_stmt_red: forall q e h s s' x
@@ -647,11 +752,6 @@ Definition simplify_stmt_at (p: program) (a: addr): option (N * stack_oper) :=
   | None => None
   end.
 
-Fixpoint addrs (x:nat) :=
-  match x with
-  | O => 0 :: nil
-  | S x' => N.of_nat x :: addrs x'
-  end.
 
 Check filter.
 Require Import fstat_i386.
