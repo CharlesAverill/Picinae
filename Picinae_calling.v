@@ -238,8 +238,8 @@ Tactic Notation "einversion" constr(H) :=
   let Htmp := fresh in
   pose proof H as Htmp; einversion0 Htmp.
 
-Tactic Notation "einversion" "assume" constr(H) :=
-  einversion H; try solve [eassumption|discriminate]; subst.
+Tactic Notation "einversion" "trivial" constr(H) :=
+  einversion H; try solve [eassumption|discriminate|reflexivity]; subst.
 
 Lemma models_assign: forall c h s v e u t (MDL: models c s)
   (TE: hastyp_exp c e t) (EE: eval_exp h s e u),
@@ -263,7 +263,7 @@ Proof.
     inversion H; constructor; try assumption.
   - apply neq_sym in n. rewrite update_frame in CV by assumption.
     rewrite update_frame in * by assumption. destruct (δ _) eqn: LUv0;
-    try invalid NotCpx; rewrite <- LUv0 in *; einversion assume DMDL;
+    try invalid NotCpx; rewrite <- LUv0 in *; einversion trivial DMDL;
     rewrite LUv0; rewrite LUv0 in H1; inversion H1; subst; constructor;
     assumption.
 Qed.
@@ -312,7 +312,7 @@ Proof.
   repeat match goal with [H: _ |- _] => revert H end.
   induction e; intros; try invalid ESE.
   - (* Var *) inversion ETyp. subst. clear ETyp. simpl in *. apply DMDL in CV.
-    destruct (δ v) eqn: Dv; try invalid ESE; einversion assume CV; subst. constructor.
+    destruct (δ v) eqn: Dv; try invalid ESE; einversion trivial CV; subst. constructor.
     assumption. constructor; [eapply DS|]; eassumption.
   - (* Word *) inversion ETyp. simpl. constructor. assumption.
   - (* Binop *) inversion ETyp. subst. clear ETyp.
@@ -325,7 +325,7 @@ Proof.
 
     (* Push inductive hypothesis *)
     rewrite SE1 in *; rewrite SE2 in *;
-    einversion assume IHe1; einversion assume IHe2;
+    einversion trivial IHe1; einversion trivial IHe2;
     inversion H4; try inversion H8; subst;
     clear IHe1 IHe2 SE; simpl in *.
 
@@ -349,7 +349,7 @@ Proof.
 
     (* Var *)
     destruct c; destruct (_ <=? _) eqn: LEB; try invalid ESE;
-    apply N.leb_le in LEB; einversion assume N.le_antisymm;
+    apply N.leb_le in LEB; einversion trivial N.le_antisymm;
     constructor; assumption.
   - (* Let *) inversion ETyp. subst. clear ETyp. simpl in *.
     eassert (DS': delta_safety c0 (δ [v := _])).
@@ -396,17 +396,17 @@ Proof.
     destruct_ext (simplify_exp _ (BinOp _ _ _)); inversion ESE; subst; clear ESE;
 
     (* Inversion on inductive hypothesis *)
-    einversion assume IHe1; try solve [rewrite SE1; constructor; eassumption];
-    einversion assume IHe2; try solve [rewrite SE2; constructor; eassumption];
+    einversion trivial IHe1; try solve [rewrite SE1; constructor; eassumption];
+    einversion trivial IHe2; try solve [rewrite SE2; constructor; eassumption];
     inversion H2; inversion H3; subst; clear H2 H3 H6 IHe1; simpl;
 
     (* imm OP imm is trivial*)
     try assumption;
 
     (* Ensure that n0 < 2 ^ w' *)
-    rewrite SE2, SE1 in *; einversion assume TSE1; try solve [econstructor|constructor; eassumption];
-    einversion assume TSE2; try solve [econstructor|constructor; eassumption]; subst;
-    einversion assume (MDL0 v); try eassumption; rewrite SV in H2; inversion H2;
+    rewrite SE2, SE1 in *; einversion trivial TSE1; try solve [econstructor|constructor; eassumption];
+    einversion trivial TSE2; try solve [econstructor|constructor; eassumption]; subst;
+    einversion trivial (MDL0 v); try eassumption; rewrite SV in H2; inversion H2;
     subst; clear TSE1 TSE2.
 
     (* imm + var *)
@@ -432,15 +432,16 @@ Proof.
     destruct (simplify_exp δ e) eqn:Se; try solve [inversion ESE].
 
     (* imm *)
-    inversion ESE. subst. f_equal. simpl in ESE. einversion assume IHe.
+    inversion ESE. subst. f_equal. simpl in ESE. einversion trivial IHe.
     rewrite Se. econstructor. inversion H1. subst. reflexivity.
 
     (* var off *)
     simpl in ESE.
     destruct c; destruct (_ <=? _) eqn: LEB; inversion ESE; subst;
-    einversion assume @preservation_eval_exp; inversion H1;
-    inversion H2; subst; rewrite <- Se in ESE; einversion assume IHe;
-    inversion H3; subst; rewrite N.leb_le in LEB; einversion assume N.le_antisymm; simpl.
+    einversion trivial @preservation_eval_exp; inversion H1;
+    inversion H2; subst; rewrite <- Se in ESE; einversion trivial IHe;
+    inversion H3; subst; rewrite N.leb_le in LEB;
+    einversion trivial N.le_antisymm; simpl.
     + (* CAST_LOW *) rewrite N.mod_mod by assumption. reflexivity.
     + (* CAST_HIGH *) rewrite N.sub_diag. simpl. reflexivity.
     + (* CAST_SIGNED *) unfold scast. rewrite ofZ_toZ, N.mod_mod. reflexivity.
@@ -460,7 +461,7 @@ Proof.
       destruct (simplify_exp _ e1) eqn: SE1.
       - right. rewrite <- SE1 in *. eapply preservation_simplify_exp;
         try eassumption. rewrite SE1. constructor.
-      - right. rewrite <- SE1 in *. einversion assume SV.
+      - right. rewrite <- SE1 in *. einversion trivial SV.
         eapply preservation_simplify_exp; try eassumption. rewrite SE1.
         constructor. eassumption.
       - left. reflexivity.
@@ -471,9 +472,9 @@ Proof.
       apply has_delta_assign. assumption.
 
       destruct (simplify_exp _ e1) eqn: SE1.
-      - right. einversion assume IHe1. rewrite SE1. econstructor.
+      - right. einversion trivial IHe1. rewrite SE1. econstructor.
         subst. constructor.
-      - right. einversion SV. reflexivity. einversion assume IHe1.
+      - right. einversion trivial SV. einversion trivial IHe1.
         rewrite SE1. constructor. eassumption. subst. constructor.
         assumption.
       - left. reflexivity.
