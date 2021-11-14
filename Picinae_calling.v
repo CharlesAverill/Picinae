@@ -531,7 +531,15 @@ Lemma map_option_includes: forall A B (f: A -> option B) l l' a b
   (Maps: map_option f l = Some l') (F: f a = Some b) (InL: In a l),
   In b l'.
 Proof.
-Admitted.
+  induction l.
+    intros. simpl in Maps. inversion InL.
+    intros. simpl in Maps. destruct f eqn:DF; try solve [inversion Maps]. 
+      destruct (map_option); inversion Maps.
+      inversion InL.
+        subst. rewrite DF in F. inversion F. subst. constructor. reflexivity.
+        destruct l'; try solve [inversion H0]. apply in_cons. clear DF Maps InL H0 a. eapply IHl.
+          reflexivity. apply F. assumption.
+Qed.
 
 Fixpoint simple_trace_stmt (δ: store_delta) (q: stmt): trace_state_res :=
   match q with
