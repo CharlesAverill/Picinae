@@ -527,12 +527,11 @@ Fixpoint map_option {A B} (f: A -> option B) (l: list A): option (list B) :=
       end
   end.
 
-(*
-Lemma list_option_traverse_correct: forall A l',
-  Forall (fun x => exists x', x = Some x') l <-> list_option_traverse l = Some 
- *)
-
-Check concat.
+Lemma map_option_includes: forall A B (f: A -> option B) l l' a b
+  (Maps: map_option f l = Some l') (F: f a = Some b) (InL: In a l),
+  In b l'.
+Proof.
+Admitted.
 
 Fixpoint simple_trace_stmt (δ: store_delta) (q: stmt): trace_state_res :=
   match q with
@@ -571,6 +570,7 @@ Fixpoint simple_trace_stmt (δ: store_delta) (q: stmt): trace_state_res :=
   | Rep _ s => None
   end.
 
+
 Theorem simple_trace_stmt_correct: forall c0 s0 q paths c c' h s s' x δ
   (MDL0: models c0 s0) (STyp: hastyp_stmt c0 c q c') (MDL: models c s)
   (DMDL: delta_models c0 c δ) (DS: delta_safety c0 δ) (HD: has_delta s0 s δ)
@@ -578,7 +578,7 @@ Theorem simple_trace_stmt_correct: forall c0 s0 q paths c c' h s s' x δ
   Exists (fun '(δ', x') => x' = x /\ has_delta s0 s' δ') paths.
 Proof.
   induction q; intros; inversion XS; inversion STS; inversion STyp; subst;
-  clear XS STS STyp.
+  clear XS STS.
   - (* Nop *) constructor. split. reflexivity. assumption.
   - (* Move *) constructor. split. reflexivity. apply has_delta_assign.
     assumption. eassert (Safe: safety c0 _). apply safety_simplify_exp.
@@ -595,20 +595,21 @@ Proof.
     rewrite SE in H0. inversion H0. reflexivity.
   - (* Exn *) constructor. split. reflexivity. assumption.
   - (* Seq, exit 1 *) destruct simple_trace_stmt as [paths1|] eqn: SQ1; try discriminate.
-    einstantiate trivial (IHq1).
-    eapply incl_Exists; [|eapply IHq1; eassumption]; clear IHq1 IHq2.
-    destruct map_option eqn: Map; inversion H4. subst. clear H4.
-    Search fold_left.
-
-
-    (* Prove that paths1 ⊆ paths *) admit.
-
-    (* Prove that hyps1 -> hyps *) intros. destruct a as [δ' x'].
-    destruct H as [Eqx HD']. split. assumption. eapply has_delta'_impl;
-    try eassumption. admit.
-
-Qed.
-
+    einstantiate trivial (IHq1). destruct map_option eqn: Map; inversion H4.
+    subst. clear H4. rename l into paths_res. apply Exists_exists in H.
+    destruct H as [[δ1 x1] [InP1 [X HD1]]]; subst. apply Exists_exists.
+    exists (δ1, Some x0). repeat split; [|assumption]. apply in_concat. eexists.
+    split; [|apply in_eq]. eapply map_option_includes; try eassumption.
+    reflexivity.
+  - (* Seq, exit 2 *) destruct (simple_trace_stmt) eqn:SQ1; [|discriminate].
+    destruct map_option eqn:MO; inversion H4. subst. clear H4. einstantiate
+    trivial IHq1. apply Exists_exists in H. apply Exists_exists.
+    destruct H as [[δ1 x1] [InP1 [X HD1]]]. subst.
+    destruct (simple_trace_stmt δ1 q2) eqn:SQ2. einstantiate IHq2; try assumption;
+    try apply SQ2; try apply TS2; try apply XS0. eapply preservation_exec_stmt;
+    eassumption. all: admit.
+  - (* If/else *) admit.
+Admitted.
 
 Definition get_reg v (ts: trace_state_res) :=
   match ts with
