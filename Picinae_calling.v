@@ -531,8 +531,11 @@ Proof.
 Unshelve. all: exact s0.
 Qed.
 
-Definition trace_states := option ((addr -> store_delta) * Prop * list addr).
+Definition trace_states := ((addr -> option store_delta) * list addr)%type.
+Definition trace_states_prop := (trace_states * (var -> option Prop))%type.
 Definition trace_state_res := option (list (store_delta * option exit)).
+Definition trace_state_res_with_prop :=
+  option (list (store_delta * option exit) * (var -> option Prop)).
 Definition h_conj h1 h2 := fun (v: var) =>
   match h1 v, h2 v with
   | None, p | p, None => p
@@ -790,10 +793,13 @@ Definition delta_differentb vars (δ1 δ2: store_delta) :=
 Definition delta_different (δ1 δ2: store_delta) :=
   exists v, δ1 v <> δ2 v.
 
+Definition delta_same (δ1 δ2: store_delta) :=
+  forall v, δ1 v = δ2 v.
+
 Definition domain_total vars (δ: store_delta) :=
   forall v, δ v <> Complex -> In v vars.
 
-Definition delta_different_differentb_equiv: forall vars δ1 δ2
+Theorem delta_different_differentb_equiv: forall vars δ1 δ2
   (DT1: domain_total vars δ1) (DT2: domain_total vars δ2),
   delta_differentb vars δ1 δ2 = true <-> delta_different δ1 δ2.
 Proof.
@@ -809,7 +815,88 @@ Proof.
       contradiction (NEQ eq_refl).
 Qed.
 
-Definition trace_program vars p ps ts
+Corollary delta_different_differentb_equiv_contra: forall vars δ1 δ2
+  (DT1: domain_total vars δ1) (DT2: domain_total vars δ2),
+  delta_differentb vars δ1 δ2 = false <-> ~ delta_different δ1 δ2.
+Proof.
+  intros. einstantiate trivial (delta_different_differentb_equiv vars δ1 δ2) as Equiv.
+  split.
+  - intros N_DDB DB. apply Equiv in DB. rewrite N_DDB in DB. discriminate.
+  - intros N_DD. destruct delta_differentb; try reflexivity.
+    contradiction N_DD. apply Equiv. reflexivity.
+Qed.
+
+Theorem delta_different_same: forall δ1 δ2,
+  delta_same δ1 δ2 <-> ~ delta_different δ1 δ2.
+Proof.
+  split.
+  - (* -> *) intro DS. intro. destruct H. apply H. apply DS.
+  - (* <- *) intros DS. intro v. destruct (δ1 v == δ2 v); try assumption.
+    destruct DS. exists v. apply n.
+Qed.
+
+Definition merge_state (δ1 δ2: store_delta): store_delta :=
+  fun v => if δ1 v == δ2 v then δ2 v else Complex.
+
+Definition null_state: store := fun _ => VaN 0 0.
+
+Definition trace_program (vars: list var) (p: program) (tsp: trace_states_prop)
+  (fn: store_delta -> stmt -> trace_state_res_with_prop): option trace_states_prop :=
+  let '((fδ, working), P) := tsp in
+  (* Extract first address in the working set. Otherwise just terminate with
+   * steady state *)
+  match working with
+  | nil => Some tsp
+  | a :: working =>
+      (* If this is a proper address in program, process that. *)
+      match p null_state a with
+      | None => Some (fδ, working, P)
+      | Some (sz, q) =>
+          (* Check if the statement tracer can handle this type of statement.
+           * If it can't, then we terminate on error *)
+          match fδ a with
+          | None => None
+          | Some δ_a =>
+              match fn δ_a q with
+              | None => None
+              | Some (next_states, P') =>
+                  (* Iterate through the set of next_states, merging states that we
+                   * currently have for these addresses and what the tracer
+                   * generated. *)
+                  let '(fδ', new_working) := fold_left (fun '(fδ', new_working) '(δ', x) =>
+                    (* If this exited to an address, update state on that address
+                     * Otherwise if it is a raise, we don't actually care about
+                     * what state we end up in (nothing to merge with), since
+                     * there is no way for us to return back later on to a valid
+                     * address. *)
+                    match exitof (a + sz) x with
+                    | Exit next_addr =>
+                        (* Either set the state for the particular address if
+                         * we have not visited before, or check if the merge state
+                         * changed and add the address if we changed the state for
+                         * that address *)
+                        match fδ' next_addr with
+                        | None => (fδ', next_addr :: new_working)
+                        | Some δ_next_addr =>
+                          let δ_merge := merge_state δ' δ_next_addr in
+                          (update fδ' next_addr (Some δ_merge),
+                            if delta_differentb vars δ_next_addr δ_merge
+                            then next_addr :: new_working else new_working)
+                        end
+                    | Raise _ => (fδ', new_working)
+                    end) next_states (fδ, nil) in
+                  Some ((fδ', working ++ new_working), h_conj P P')
+              end
+          end
+      end
+  end.
+
+Definition trace_program_def vars p tsp :=
+  trace_program vars p tsp (fun δ q =>
+    match simple_trace_stmt δ q with
+    | Some x => Some (x, ⊥)
+    | None => None
+    end).
 
 Definition get_reg v (ts: trace_state_res) :=
   match ts with
@@ -818,7 +905,6 @@ Definition get_reg v (ts: trace_state_res) :=
   end.
 Require Import strchr_i386.
 Require Import fstat_i386.
-Definition null_state: store := fun _ => VaN 0 0.
 
 Definition simple_trace_stmt_at (p: program) (a: addr):
   option (N * list simple_exp) :=
