@@ -41,113 +41,6 @@ Notation "x ⇀ y" := (pfunc x y) (at level 99, y at level 200, right associativ
 
 (* the empty function (bottom) *)
 Notation "⊥" := (fun _ => None).
-
-Inductive simple_exp :=
-  | Number (n: N) (w: bitwidth)
-  | VarOff (v: var) (off: N) (w: bitwidth)
-  | Complex.
-
-Definition simple_exp_eq: forall (a b: simple_exp), {a=b}+{a<>b}.
-Proof. decide equality; solve [apply N.eq_dec|apply vareq]. Defined.
-
-Instance simple_exp_EqDec: EqDec simple_exp := { iseq := simple_exp_eq }.
-
-Definition store_delta := var -> simple_exp.
-
-Definition sexp_width (e: simple_exp) :=
-  match e with
-  | Number _ w => Some w
-  | VarOff _ _ w => Some w
-  | Complex => None
-  end.
-
-Inductive hastyp_simple_exp (c0: typctx): simple_exp -> typ -> Prop :=
-  | TSE_Num (n: N) (w: bitwidth) (LT: n < 2 ^ w):
-      hastyp_simple_exp c0 (Number n w) (NumT w)
-  | TSE_VarOff (v: var) (w: bitwidth) (off: N) (CV: c0 v = Some (NumT w))
-      (LT: off < 2 ^ w): hastyp_simple_exp c0 (VarOff v off w) (NumT w).
-
-Inductive eval_simple_exp (s: store): simple_exp -> value -> Prop :=
-  | ESE_Number n w: eval_simple_exp s (Number n w) (VaN n w)
-  | ESE_VarOff v n off w (SV: s v = VaN n w): eval_simple_exp s
-      (VarOff v off w) (VaN ((n + off) mod 2 ^ w) w).
-
-Definition has_delta (s s': store) (δ: store_delta) :=
-  forall v val (ESE: eval_simple_exp s (δ v) val), s' v = val.
-
-Definition safety (c0: typctx) (se: simple_exp) :=
-  forall v0 off w (EQ_V: se = VarOff v0 off w), c0 v0 = Some (NumT w).
-
-Definition delta_safety (c0: typctx) (δ: store_delta) :=
-  forall v, safety c0 (δ v).
-
-Definition delta_models (c0 c: typctx) (δ: store_delta) :=
-  forall v t (CV: c v = Some t) (NotCpx: δ v <> Complex), hastyp_simple_exp c0 (δ v) t.
-
-Lemma hastyp_simple_exp_num:
-  forall c0 e t (TSE: hastyp_simple_exp c0 e t), exists w, t = NumT w.
-Proof.
-  intros. inversion TSE; eexists; reflexivity.
-Qed.
-
-Fixpoint simplify_exp (δ: store_delta) e :=
-  match e with
-  | Var v => δ v
-  | Word n w => Number n w
-  | Load _ _ _ _ => Complex
-  | Store _ _ _ _ _ => Complex
-  | BinOp op e1 e2 =>
-      let of_oper w v offset n (is_inverted: bool) :=
-        match op with
-        | OP_PLUS => if is_inverted then
-            VarOff v ((n + offset) mod 2 ^ w) w
-          else
-            VarOff v ((offset + n) mod 2 ^ w) w
-        | OP_MINUS => if is_inverted then Complex else
-            VarOff v ((offset + 2 ^ w - n) mod 2 ^ w) w
-        | _ => Complex
-        end in
-      match simplify_exp δ e1, simplify_exp δ e2 with
-      | Complex, _ | _, Complex | VarOff _ _ _, VarOff _ _ _ => Complex
-      | Number n1 w1, Number n2 w2 =>
-          if w1 == w2 then
-            match eval_binop op w1 n1 n2 with
-            | VaN n w' => Number n w'
-            | VaM _ _ => Complex
-            end
-          else Complex
-      | VarOff v1 off1 w1, Number n2 w2 =>
-          if w1 == w2 then of_oper w1 v1 off1 n2 false
-          else Complex
-      | Number n1 w1, VarOff v2 off2 w2 =>
-          if w1 == w2 then of_oper w1 v2 off2 n1 true
-          else Complex
-      end
-  | UnOp _ _ => Complex
-  | Cast typ w' e =>
-      let se := simplify_exp δ e in
-      match sexp_width se with
-      | Some w =>
-          match se with
-          | Number n _ => Number (cast typ w w' n) w'
-          | VarOff _ _ _ =>
-              match typ with
-              | CAST_LOW | CAST_HIGH => (* narrowing *)
-                  if w <=? w' then se else Complex
-              | CAST_UNSIGNED | CAST_SIGNED => (* widening *)
-                  if w' <=? w then se else Complex
-              end
-          | Complex => Complex
-          end
-      | None => Complex
-      end
-  | Let v e e_in => simplify_exp (update δ v (simplify_exp δ e)) e_in
-  | Unknown _ => Complex
-  | Ite _ _ _ => Complex
-  | Extract _ _ _ => Complex
-  | Concat _ _ => Complex
-  end.
-
 Ltac einst0 H tac :=
   (lazymatch type of H with
    | ?t1 -> ?t2 =>
@@ -197,94 +90,98 @@ Tactic Notation "einstantiate" "trivial" constr(H) :=
 
 Ltac invalid H := contradiction H; reflexivity.
 
-Lemma sexp_width_type_correct: forall c0 e w (TSE: hastyp_simple_exp c0 e (NumT w)),
-  sexp_width e = Some w.
+(* Some equality definitions *)
+Program Instance endian_EqDec: EqDec endianness.
+Next Obligation. Proof. decide equality. Defined.
+
+Program Instance binop_EqDec: EqDec binop_typ.
+Next Obligation. Proof. decide equality. Defined.
+
+Program Instance unop_EqDec: EqDec unop_typ.
+Next Obligation. Proof. decide equality. Defined.
+
+Program Instance cast_EqDec: EqDec cast_typ.
+Next Obligation. Proof. decide equality. Defined.
+
+Program Instance exp_EqDec: EqDec exp.
+Next Obligation. Proof. decide equality; apply iseq. Defined.
+
+Program Instance option_EqDec A `(EA : EqDec A) : EqDec (option A).
+Next Obligation. Proof. decide equality. apply iseq. Defined.
+
+(* We define a store delta as a  *)
+Definition store_delta := var -> option exp.
+
+Definition has_delta (h: hdomain) (s0 s: store) (δ: store_delta) :=
+  forall v e val (LUv: δ v = Some e) (EE: eval_exp h s0 e val), s v = val.
+
+(*
+Definition safety (c0: typctx) (se: simple_exp) :=
+  forall v0 off w (EQ_V: se = VarOff v0 off w), c0 v0 = Some (NumT w).
+
+Definition delta_safety (c0: typctx) (δ: store_delta) :=
+  forall v, safety c0 (δ v).
+
+Definition delta_models (c0 c: typctx) (δ: store_delta) :=
+  forall v t (CV: c v = Some t) (NotCpx: δ v <> Complex), hastyp_simple_exp c0 (δ v) t.
+*)
+
+Definition delta_nounk (δ: store_delta) :=
+  forall v e (LUv: δ v = Some e), forall_exps_in_exp not_unknown e.
+
+Definition delta_differentb vars (δ1 δ2: store_delta) :=
+  existsb (fun v => if δ1 v == δ2 v then false else true) vars.
+
+Definition delta_different (δ1 δ2: store_delta) :=
+  exists v, δ1 v <> δ2 v.
+
+Definition delta_same (δ1 δ2: store_delta) :=
+  forall v, δ1 v = δ2 v.
+
+Definition delta_same_domain (δ1 δ2: store_delta) :=
+  forall v, match (δ1 v), (δ2 v) with
+            | Some _, Some _ => True
+            | None, None => True
+            | _, _ => False
+            end.
+
+Definition domain_total vars (δ: store_delta) :=
+  forall v e, δ v = Some e -> In v vars.
+
+Theorem delta_different_differentb_equiv: forall vars δ1 δ2
+  (DT1: domain_total vars δ1) (DT2: domain_total vars δ2),
+  delta_differentb vars δ1 δ2 = true <-> delta_different δ1 δ2.
 Proof.
-  intros. inversion TSE; reflexivity.
+  unfold delta_different, delta_differentb, domain_total. split.
+  - (* -> *) intro DDB. unfold delta_different. apply existsb_exists in DDB.
+    destruct DDB as [v [InDomain EQ]]. eexists. destruct iseq. discriminate.
+    eassumption.
+  - (* <- *) intro DB. apply existsb_exists. destruct DB as [v NEQ]. eexists.
+    split; [|vantisym (δ1 v) (δ2 v); [reflexivity|assumption]].
+    destruct (δ1 v) eqn: LU1; destruct (δ2 v) eqn: LU2;
+      (* When one is not empty *) try ((eapply DT1 + eapply DT2); eassumption).
+      (* Both are empty, discriminate. *) rewrite <- LU1 in NEQ.
+      contradiction (NEQ eq_refl).
 Qed.
 
-Lemma eval_simple_exp_num: forall s se v (ESE: eval_simple_exp s se v),
-  exists n w, v = VaN n w.
+Corollary delta_different_differentb_equiv_contra: forall vars δ1 δ2
+  (DT1: domain_total vars δ1) (DT2: domain_total vars δ2),
+  delta_differentb vars δ1 δ2 = false <-> ~ delta_different δ1 δ2.
 Proof.
-  intros. inversion ESE; subst; clear ESE; eexists; eexists; reflexivity.
+  intros. einstantiate trivial (delta_different_differentb_equiv vars δ1 δ2) as Equiv.
+  split.
+  - intros N_DDB DB. apply Equiv in DB. rewrite N_DDB in DB. discriminate.
+  - intros N_DD. destruct delta_differentb; try reflexivity.
+    contradiction N_DD. apply Equiv. reflexivity.
 Qed.
 
-Lemma eval_simple_exp_total: forall s0 c0 se (Safe: safety c0 se)
-  (MDL0: models c0 s0) (NCPX: se <> Complex), exists u, eval_simple_exp s0 se u.
+Theorem delta_different_same: forall δ1 δ2,
+  delta_same δ1 δ2 <-> ~ delta_different δ1 δ2.
 Proof.
-  intros. destruct se.
-  - eexists. constructor.
-  - einversion (MDL0 v); try (eapply Safe; reflexivity); inversion H2. subst.
-    eexists. constructor. symmetry. eassumption.
-  - invalid NCPX.
-Qed.
-
-Theorem simplify_eval_binop_destruct: forall (P: simple_exp -> Prop) se op e1 e2 δ
-  (SE: se = simplify_exp δ (BinOp op e1 e2))
-  (Complex: forall (EQ: se = Complex), P se)
-  (ImmOpImm: forall w w' n' n1 n2 (EQ: se = Number n' w')
-    (SE1: simplify_exp δ e1 = Number n1 w)
-    (SE2: simplify_exp δ e2 = Number n2 w)
-    (EBO: eval_binop op w n1 n2 = VaN n' w'), P se)
-  (ImmPlusVar: forall w n v off (EQ: se = VarOff v ((n + off) mod 2 ^ w) w)
-    (OP: op = OP_PLUS) (SE1: simplify_exp δ e1 = Number n w)
-    (SE2: simplify_exp δ e2 = VarOff v off w), P se)
-  (VarPlusImm: forall w n v off (EQ: se = VarOff v ((off + n) mod 2 ^ w) w)
-    (OP: op = OP_PLUS) (SE1: simplify_exp δ e1 = VarOff v off w)
-    (SE2: simplify_exp δ e2 = Number n w), P se)
-  (VarMinusImm: forall w n v off (EQ: se = VarOff v ((off + 2 ^ w - n) mod 2 ^ w) w)
-    (OP: op = OP_MINUS) (SE1: simplify_exp δ e1 = VarOff v off w)
-    (SE2: simplify_exp δ e2 = Number n w), P se),
-  P se.
-Proof.
-  intros. subst. simpl in *.
-  Local Ltac hyp :=
-    try match goal with
-        | [H: _ |- _] => solve [eapply H; (reflexivity + eassumption)]
-        end.
-  destruct (simplify_exp _ e1) eqn: SE1; try hyp;
-  destruct (simplify_exp _ e2) eqn: SE2; try hyp;
-  destruct (_ == _) eqn: EQB; try hyp.
-  - (* imm *) destruct (eval_binop _ _ _ _) eqn: EBO. subst. hyp. hyp.
-  - (* imm OP var *) destruct op; hyp. subst. hyp.
-  - (* var OP imm *) destruct op; hyp; subst; hyp.
-Qed.
-
-Tactic Notation "destruct_ext" uconstr(exp) :=
-  let SE := fresh "SE" in
-  let se := fresh "se" in
-  remember exp as se eqn: SE; pattern se; eapply simplify_eval_binop_destruct;
-  try exact SE; intros; move SE at bottom; subst.
-
-Lemma simplify_eval_imp_no_complex: forall e δ s0 vs
-  (ESE: eval_simple_exp s0 (simplify_exp δ e) vs),
-  simplify_exp δ e <> Complex.
-Proof.
-  intros. destruct (simplify_exp _ _); solve [inversion ESE|discriminate].
-Qed.
-
-Lemma eval_simple_exp_unique: forall se s0 v1 v2
-  (ESE1: eval_simple_exp s0 se v1) (ESE2: eval_simple_exp s0 se v2),
-  v1 = v2.
-Proof.
-  intros. inversion ESE1; inversion ESE2; subst; inversion H1; subst.
-  reflexivity. rewrite SV0 in SV. inversion SV. subst. reflexivity.
-Qed.
-
-Lemma neq_sym: forall A (n m: A), n <> m -> m <> n.
-Proof.
-  intros. intro. subst. apply H. reflexivity.
-Qed.
-
-Lemma delta_safety_assign: forall c0 v se δ (DS: delta_safety c0 δ)
-  (SSE: safety c0 se), delta_safety c0 (δ [v := se]).
-Proof.
-  unfold delta_safety, safety. intros.
-  destruct (v == v0).
-  - (* accessing our newly scoped variable *) subst.
-    rewrite update_updated in EQ_V. eapply SSE. eassumption.
-  - (* accessing some other variable *) apply neq_sym in n.
-    rewrite update_frame in EQ_V by assumption. eapply DS. eassumption.
+  split.
+  - (* -> *) intro DS. intro. destruct H. apply H. apply DS.
+  - (* <- *) intros DS. intro v. destruct (δ1 v == δ2 v); try assumption.
+    destruct DS. exists v. apply n.
 Qed.
 
 Lemma models_assign: forall c h s v e u t (MDL: models c s)
@@ -296,6 +193,215 @@ Proof.
     subst. eapply preservation_eval_exp; eassumption.
   - rewrite update_frame by assumption. rewrite update_frame in CV by
     assumption. apply MDL in CV. assumption.
+Qed.
+
+Lemma neq_sym: forall A (n m: A), n <> m -> m <> n.
+Proof.
+  intros. intro. subst. apply H. reflexivity.
+Qed.
+
+Lemma has_delta_assign_None: forall h s s' δ v u (HD: has_delta h s s' δ),
+  has_delta h s (s' [v := u]) (δ [v := None]).
+Proof.
+  unfold has_delta. intros. destruct (v == v0).
+  - subst. rewrite update_updated. rewrite update_updated in LUv. discriminate.
+  - apply neq_sym in n. rewrite update_frame in LUv by assumption.
+    rewrite update_frame in * by assumption. eapply HD; eassumption.
+Qed.
+
+Lemma has_delta_assign_Some: forall h s s' δ v e u (HD: has_delta h s s' δ)
+  (EQ: forall u' (EE: eval_exp h s e u'), u = u'),
+  has_delta h s (s' [v := u]) (δ [v := Some e]).
+Proof.
+  unfold has_delta. intros. destruct (v == v0).
+  - subst. rewrite update_updated. rewrite update_updated in LUv.
+    inversion LUv; subst. apply EQ. assumption.
+  - apply neq_sym in n. rewrite update_frame in LUv by assumption.
+    rewrite update_frame in * by assumption. eapply HD; eassumption.
+Qed.
+
+Lemma delta_nounk_assign_None: forall v δ (DNU: delta_nounk δ),
+  delta_nounk (δ [v := None]).
+Proof.
+  unfold delta_nounk. intros. destruct (v == v0).
+  - subst. rewrite update_updated in LUv. discriminate.
+  - apply neq_sym in n. rewrite update_frame in LUv by assumption.
+    eapply DNU; eassumption.
+Qed.
+
+Lemma delta_nounk_assign_Some: forall v δ e (DNU: delta_nounk δ)
+  (NUnk: forall_exps_in_exp not_unknown e),
+  delta_nounk (δ [v := Some e]).
+Proof.
+  unfold delta_nounk. intros. destruct (v == v0).
+  - subst. rewrite update_updated in LUv. inversion LUv; subst. assumption.
+  - apply neq_sym in n. rewrite update_frame in LUv by assumption.
+    eapply DNU; eassumption.
+Qed.
+
+Theorem delta_same_domain_refl: forall δ, delta_same_domain δ δ.
+Proof.
+  unfold delta_same_domain. intros.
+  destruct (δ v); reflexivity.
+Qed.
+
+Theorem delta_same_domain_assign: forall v δ1 δ2 o1 o2
+  (Sim: match o1, o2 with
+        | Some _, Some _ => True
+        | None, None => True
+        | _, _ => False
+        end)
+  (DSD: delta_same_domain δ1 δ2),
+  delta_same_domain (δ1 [v := o1]) (δ2 [v := o2]).
+Proof.
+  unfold delta_same_domain. intros. destruct (v == v0).
+  - subst. repeat rewrite update_updated. destruct o1, o2;
+    solve [reflexivity|contradiction Sim].
+  - apply neq_sym in n. repeat rewrite update_frame by assumption. apply DSD.
+Qed.
+
+Fixpoint subst_valid (δ: store_delta) e: bool :=
+  match e with
+  | Var v =>
+      match δ v with
+      | Some e => true
+      | None => false
+      end
+  | Word _ _ => true
+  | Load e1 e2 _ _ => subst_valid δ e1 && subst_valid δ e2
+  | Store e1 e2 e3 _ _ => subst_valid δ e1 && subst_valid δ e2 && subst_valid δ e3
+  | BinOp _ e1 e2 => subst_valid δ e1 && subst_valid δ e2
+  | UnOp _ e => subst_valid δ e
+  | Cast _ _ e => subst_valid δ e
+  | Let v e e_in => false
+  | Unknown _ => false
+  | Ite e1 e2 e3 => subst_valid δ e1 && subst_valid δ e2 && subst_valid δ e3
+  | Extract _ _ e => subst_valid δ e
+  | Concat e1 e2 => subst_valid δ e1 && subst_valid δ e2
+  end.
+
+Fixpoint subst_exp0 (δ: store_delta) e: exp :=
+  match e with
+  | Var v =>
+      match δ v with
+      | Some e => e
+      | None => Unknown 0 (* Note we should return error in subst_err here *)
+      end
+  | Word _ _ => e
+  | Load e1 e2 en len => Load (subst_exp0 δ e1) (subst_exp0 δ e2) en len
+  | Store e1 e2 e3 en len => Store (subst_exp0 δ e1) (subst_exp0 δ e2)
+      (subst_exp0 δ e3) en len
+  | BinOp op e1 e2 => BinOp op (subst_exp0 δ e1) (subst_exp0 δ e2)
+  | UnOp op e => UnOp op (subst_exp0 δ e)
+  | Cast typ w' e => Cast typ w' (subst_exp0 δ e)
+  | Let v e e_in => Unknown 0 (* Error *)
+  | Unknown _ => e
+  | Ite e1 e2 e3 => Ite (subst_exp0 δ e1) (subst_exp0 δ e2) (subst_exp0 δ e3)
+  | Extract n1 n2 e => Extract n1 n2 (subst_exp0 δ e)
+  | Concat e1 e2 => Concat (subst_exp0 δ e1) (subst_exp0 δ e2)
+  end.
+
+Definition subst_exp (δ: store_delta) e: option exp :=
+  if subst_valid δ e then Some (subst_exp0 δ e) else None.
+
+Theorem subst_valid_any_Some: forall e δ1 δ2
+  (DSD: delta_same_domain δ1 δ2),
+  subst_valid δ1 e = subst_valid δ2 e.
+Proof.
+  induction e; intros; simpl; try erewrite IHe1 by eassumption;
+  try erewrite IHe2 by eassumption; try erewrite IHe3 by eassumption;
+  try erewrite IHe by eassumption; try reflexivity.
+
+  (* Var *) specialize (DSD v). destruct (δ1 v), (δ2 v);
+  try solve [contradiction DSD|reflexivity].
+Qed.
+
+Local Ltac exp_destruction_nounk :=
+  lazymatch goal with
+  | δ: store_delta |- _ =>
+      (* Specialize the δ, allowing destruct to do automatic rewrites *)
+      repeat match goal with
+             | IH: forall (δ0: store_delta), _ |- _ => specialize (IH δ)
+             end;
+      (* Destruct on all the subst_valid _ e? *)
+      repeat destruct (subst_valid _ _); inversion SE;
+      (* Destruct on any conditionals *)
+      repeat match goal with
+             | n: N |- _ => destruct n
+             end;
+      repeat lazymatch goal with
+             | IH: forall (DNU: delta_nounk δ), _ |- _ => idtac IH;
+                 einstantiate trivial IH as IH
+             end
+  end.
+
+Theorem subst_exp0_nounk: forall e δ (DNU: delta_nounk δ)
+  (SE: subst_valid δ e = true), forall_exps_in_exp not_unknown (subst_exp0 δ e).
+Proof.
+  unfold subst_exp; induction e; intros; simpl in SE;
+  try solve [exp_destruction_nounk; repeat split; assumption + reflexivity].
+
+  (* Var *) destruct (δ v) eqn: LUv; inversion SE. subst. eapply DNU. simpl.
+  rewrite LUv. reflexivity.
+Qed.
+
+Theorem subst_exp_nounk: forall e e' δ (DNU: delta_nounk δ)
+  (SE: subst_exp δ e = Some e'), forall_exps_in_exp not_unknown e'.
+Proof.
+  unfold subst_exp. intros. destruct subst_valid eqn: SV; inversion SE.
+  subst. apply subst_exp0_nounk; assumption.
+Qed.
+
+Local Ltac exp_destruction_correct :=
+  lazymatch goal with
+  | δ: store_delta, e': exp |- _ =>
+      lazymatch goal with
+      | SE: _ = Some e', EE': eval_exp _ _ e' _ |- _ =>
+          (* Specialize the δ, allowing destruct to do automatic rewrites *)
+          repeat match goal with
+                 | IH: forall (δ0: store_delta), _ |- _ => specialize (IH δ)
+                 end;
+          (* Destruct on all the subst_valid _ e? *)
+          repeat destruct (subst_valid _ _);
+          (* Do rest of inversions *)
+          inversion SE; subst; inversion EE'; subst;
+          (* Destruct on any conditionals *)
+          repeat match goal with
+                 | n: N |- _ => destruct n
+                 end;
+          repeat lazymatch goal with
+                 | IH: forall (e': exp), _ |- _ =>
+                     einstantiate trivial IH as IH; inversion IH
+                 end
+      end
+  end.
+
+Theorem subst_exp_correct: forall s0 h e e' s δ v v'
+  (HD: has_delta h s0 s δ) (SE: subst_exp δ e = Some e') (EE: eval_exp h s e v)
+  (EE': eval_exp h s0 e' v'), v = v'.
+Proof.
+
+  intros. move δ before e. repeat lazymatch goal with H:_ |- _ => revert H end.
+
+  unfold subst_exp; induction e; intros; inversion EE; subst;
+  simpl in SE; clear EE; try solve [exp_destruction_correct; reflexivity].
+  - (* Var *) destruct (δ v) eqn: LUv; inversion SE. subst. erewrite HD;
+    solve [reflexivity|eassumption].
+  - (* Ite *) exp_destruction_correct. einstantiate trivial IHe1 as IHe1.
+      einstantiate trivial IHe1 as IHe1. einstantiate trivial IHe1 as IHe1.
+      einstantiate trivial IHe2 as IHe2.
+Qed.
+
+(*
+Lemma delta_safety_assign: forall c0 v se δ (DS: delta_safety c0 δ)
+  (SSE: safety c0 se), delta_safety c0 (δ [v := se]).
+Proof.
+  unfold delta_safety, safety. intros.
+  destruct (v == v0).
+  - (* accessing our newly scoped variable *) subst.
+    rewrite update_updated in EQ_V. eapply SSE. eassumption.
+  - (* accessing some other variable *) apply neq_sym in n.
+    rewrite update_frame in EQ_V by assumption. eapply DS. eassumption.
 Qed.
 
 Lemma delta_models_weaken: forall c0 c c' δ (DMDL: delta_models c0 c δ)
@@ -320,232 +426,17 @@ Proof.
     rewrite LUv0; rewrite LUv0 in H1; inversion H1; subst; constructor;
     assumption.
 Qed.
+ *)
 
-Lemma has_delta_assign: forall s s' δ v se u (HD: has_delta s s' δ)
-  (ESE: se = Complex \/ eval_simple_exp s se u),
-  has_delta s (s' [v := u]) (δ [v := se]).
-Proof.
-  unfold has_delta. intros.
-  destruct (v == v0).
-  - subst. rewrite update_updated. rewrite update_updated in ESE0.
-    destruct ESE; subst. try solve [inversion ESE0].
-    eapply eval_simple_exp_unique; eassumption.
-  - apply neq_sym in n. rewrite update_frame in ESE0 by assumption.
-    rewrite update_frame in * by assumption. apply HD. assumption.
-Qed.
+Definition trace_states := (addr ⇀ store_delta).
 
-Lemma safety_simplify_exp: forall c0 e δ
-  (DS: delta_safety c0 δ), safety c0 (simplify_exp δ e).
-Proof.
-  unfold safety. induction e; intros; try discriminate.
-  - (* Var *) eapply DS. eassumption.
-  - (* Binop *) destruct_ext (simplify_exp _ (BinOp _ _ _));
-    solve [ discriminate
-          | inversion EQ; subst; (eapply IHe1 + eapply IHe2); eassumption ].
-  - (* Cast *) simpl in *.
-    destruct (sexp_width _) eqn: SEW; try discriminate.
-    destruct (simplify_exp _) eqn: SE1; try discriminate.
-    destruct c; destruct (_ <=? _) eqn: LEB; try discriminate;
-    apply N.leb_le in LEB; simpl in SEW; inversion SEW; inversion EQ_V;
-    subst; clear SEW EQ_V; eapply IHe; eassumption.
-  - (* Let *)
-    eassert (DS': delta_safety c0 (δ [v := _])). eapply delta_safety_assign.
-    eassumption. unfold safety. eapply IHe1. eassumption.
-
-    simpl in *; destruct (simplify_exp _ e1) eqn: SE1; try discriminate;
-    eapply (IHe2 (δ[_ := _])); eassumption.
-Qed.
-
-Theorem preservation_simplify_exp: forall c0 e δ c s0 t vs
-  (DS: delta_safety c0 δ) (ETyp: hastyp_exp c e t) (DMDL: delta_models c0 c δ)
-  (ESE: eval_simple_exp s0 (simplify_exp δ e) vs),
-  hastyp_simple_exp c0 (simplify_exp δ e) t.
-Proof.
-  intros. apply simplify_eval_imp_no_complex in ESE. clear s0 vs.
-  repeat match goal with [H: _ |- _] => revert H end.
-  induction e; intros; try invalid ESE.
-  - (* Var *) inversion ETyp. subst. clear ETyp. simpl in *. apply DMDL in CV.
-    destruct (δ v) eqn: Dv; try invalid ESE; einversion trivial CV; subst. constructor.
-    assumption. constructor; [eapply DS|]; eassumption.
-  - (* Word *) inversion ETyp. simpl. constructor. assumption.
-  - (* Binop *) inversion ETyp. subst. clear ETyp.
-    specialize (IHe1 δ). specialize (IHe2 δ).
-
-    (* This is a common assumption that we will have to make *)
-    assert (2 ^ w <> 0). destruct w; discriminate.
-
-    destruct_ext (simplify_exp _ (BinOp _ _ _)); try invalid ESE;
-
-    (* Push inductive hypothesis *)
-    rewrite SE1 in *; rewrite SE2 in *;
-    einversion trivial IHe1; einversion trivial IHe2;
-    inversion H4; try inversion H8; subst;
-    clear IHe1 IHe2 SE; simpl in *.
-
-    (* imm OP imm *)
-    eassert (TV: hastyp_val (eval_binop _ _ _ _) _). eapply typesafe_binop;
-    constructor; [apply LT|apply LT0]. inversion TV. rewrite EBO in H1.
-    inversion H1. subst. constructor. assumption.
-
-    all: constructor; try assumption; apply N.mod_lt; assumption.
-  - (* Cast *) inversion ETyp. subst. simpl in *.
-    destruct (simplify_exp _ _) eqn: SE; try invalid ESE;
-    (* Push inductive hypothesis *)
-    (eassert (TSE: hastyp_simple_exp _ _ _);
-      [eapply IHe; try eassumption; rewrite SE; discriminate|]);
-    rewrite SE in *; inversion TSE; subst; clear TSE IHe; subst; simpl in *.
-
-    (* Imm *)
-    constructor. eassert (TV: hastyp_val (VaN (cast _ _ _ _) _) _).
-    apply typesafe_cast. constructor. eassumption. eassumption.
-    inversion TV. subst. assumption.
-
-    (* Var *)
-    destruct c; destruct (_ <=? _) eqn: LEB; try invalid ESE;
-    apply N.leb_le in LEB; einversion trivial N.le_antisymm;
-    constructor; assumption.
-  - (* Let *) inversion ETyp. subst. clear ETyp. simpl in *.
-    eassert (DS': delta_safety c0 (δ [v := _])).
-      apply delta_safety_assign, safety_simplify_exp; eassumption.
-    eassert (DMDL': delta_models c0 (c [v := _]) (δ [v := _])). {
-      apply delta_models_assign. assumption.
-      destruct (simplify_exp δ e1) eqn: SE1.
-      + right. eapply (IHe1 δ c); try eassumption. rewrite SE1. discriminate.
-      + right. eapply (IHe1 δ c); try eassumption. rewrite SE1. discriminate.
-      + left. assumption.
-    }
-
-    destruct (simplify_exp _ e1) eqn: SE1; try invalid ESE; rewrite <- SE1 in *;
-    eapply IHe2; try eassumption.
-Qed.
-
-Theorem simplify_exp_correct: forall e h s0 s c0 c δ vs ve t
-  (ETyp: hastyp_exp c e t) (MDL0: models c0 s0) (MDL: models c s)
-  (DS: delta_safety c0 δ) (DMDL: delta_models c0 c δ) (HD: has_delta s0 s δ)
-  (EE: eval_exp h s e ve) (ESE: eval_simple_exp s0 (simplify_exp δ e) vs), ve = vs.
-Proof.
-  intros.
-
-  (* Specify vs *)
-  apply eval_simple_exp_num in ESE as VS. destruct VS as [n' [w' ?]]. subst.
-
-  revert c s δ n' w' ve t MDL DMDL DS HD ETyp EE ESE.
-  induction e; intros; try solve [inversion ESE].
-  - (* Var *) inversion EE. subst. eapply HD. eassumption.
-  - (* Word *) inversion EE. inversion ESE. subst. reflexivity.
-  - (* BinOp *) inversion EE. inversion ETyp. subst. clear EE ETyp.
-
-    (* Clean up some of the bitwidth variables, to ensure w = w0 *)
-    assert (TV1 := preservation_eval_exp MDL T1 E1).
-    assert (TV2 := preservation_eval_exp MDL T2 E2).
-    epose proof (preservation_simplify_exp c0 e1 δ) as TSE1.
-    epose proof (preservation_simplify_exp c0 e2 δ) as TSE2.
-    inversion TV1. inversion TV2. subst. clear TV1 TV2 H5.
-
-    (* This is a common assumption that we will have to make *)
-    assert (2 ^ w0 <> 0). destruct w0; discriminate.
-
-    (* Do a bunch of case destructions *)
-    destruct_ext (simplify_exp _ (BinOp _ _ _)); inversion ESE; subst; clear ESE;
-
-    (* Inversion on inductive hypothesis *)
-    einversion trivial IHe1; try solve [rewrite SE1; constructor; eassumption];
-    einversion trivial IHe2; try solve [rewrite SE2; constructor; eassumption];
-    inversion H2; inversion H3; subst; clear H2 H3 H6 IHe1; simpl;
-
-    (* imm OP imm is trivial*)
-    try assumption;
-
-    (* Ensure that n0 < 2 ^ w' *)
-    rewrite SE2, SE1 in *; einversion trivial TSE1; try solve [econstructor|constructor; eassumption];
-    einversion trivial TSE2; try solve [econstructor|constructor; eassumption]; subst;
-    einversion trivial (MDL0 v); try eassumption; rewrite SV in H2; inversion H2;
-    subst; clear TSE1 TSE2.
-
-    (* imm + var *)
-    erewrite <- (N.mod_small n) at 1 by eassumption.
-    erewrite <- (N.mod_small n0) at -1 by eassumption.
-    repeat rewrite <- N.add_mod by assumption. f_equal. f_equal.
-    rewrite N.add_assoc, N.add_assoc. f_equal. apply N.add_comm.
-
-    (* var + imm *)
-    erewrite <- (N.mod_small n) at 1 by eassumption.
-    erewrite <- (N.mod_small n0) at -1; [|eassumption].
-    repeat rewrite <- N.add_mod by assumption. f_equal. f_equal.
-    rewrite N.add_assoc. reflexivity.
-
-    (* var - imm *)
-    rewrite N.add_comm. f_equal.
-    apply N.lt_le_incl in LT0. rewrite <- N.add_sub_assoc, <- N.add_sub_assoc,
-      N.add_mod, N.mod_mod, <- N.add_mod, (N.add_mod n0), N.mod_mod,
-    <- N.add_mod, N.add_assoc by assumption. reflexivity.
-  - (* Cast *) inversion EE. inversion ETyp. subst. simpl in ESE.
-    assert (X: 2 ^ w' <> 0). destruct w'; discriminate.
-
-    destruct (simplify_exp δ e) eqn:Se; try solve [inversion ESE].
-
-    (* imm *)
-    inversion ESE. subst. f_equal. simpl in ESE. einversion trivial IHe.
-    rewrite Se. econstructor. inversion H1. subst. reflexivity.
-
-    (* var off *)
-    simpl in ESE.
-    destruct c; destruct (_ <=? _) eqn: LEB; inversion ESE; subst;
-    einversion trivial @preservation_eval_exp; inversion H1;
-    inversion H2; subst; rewrite <- Se in ESE; einversion trivial IHe;
-    inversion H3; subst; rewrite N.leb_le in LEB;
-    einversion trivial N.le_antisymm; simpl.
-    + (* CAST_LOW *) rewrite N.mod_mod by assumption. reflexivity.
-    + (* CAST_HIGH *) rewrite N.sub_diag. simpl. reflexivity.
-    + (* CAST_SIGNED *) unfold scast. rewrite ofZ_toZ, N.mod_mod. reflexivity.
-      assumption.
-    + (* CAST_UNSIGNED *) reflexivity.
-  - (* Let *) inversion EE. inversion ETyp. simpl in ESE. subst.
-    assert (SV: forall v0 off w, simplify_exp δ e1 = VarOff v0 off w ->
-      exists n, s0 v0 = VaN n w).
-    { intros. einversion (MDL0 v0). eapply safety_simplify_exp; eassumption.
-      all: inversion H3. eexists. reflexivity. }
-
-    eapply IHe2; try apply ESE; try apply E2; try apply T2.
-
-    (* MDL' *) eapply models_assign; eassumption.
-    (* DMDL' *) {
-      apply delta_models_assign; try assumption.
-      destruct (simplify_exp δ e1 == Complex); subst.
-      - left. assumption.
-      - right. einversion trivial (eval_simple_exp_total s0 c0).
-        apply safety_simplify_exp. assumption. eapply preservation_simplify_exp;
-        try eassumption.
-    }
-    (* DS' *) apply delta_safety_assign; try assumption.
-    apply safety_simplify_exp. assumption.
-    (* HD' *) {
-      apply has_delta_assign. assumption.
-
-      destruct (simplify_exp δ e1 == Complex); subst.
-      - left. assumption.
-      - right. einversion trivial (eval_simple_exp_total s0 c0).
-        apply safety_simplify_exp. assumption. destruct x;
-        try solve [inversion H0]. einversion trivial IHe1. assumption.
-    }
-Unshelve. all: exact s0.
-Qed.
-
-Definition trace_states := ((addr -> option store_delta) * list addr)%type.
+  (*
+ * list addr)%type.
 Definition trace_states_prop := (trace_states * (var -> option Prop))%type.
+   *)
 Definition trace_state_res := option (list (store_delta * option exit)).
 Definition trace_state_res_with_prop :=
   option (list (store_delta * option exit) * (var -> option Prop)).
-Definition h_conj h1 h2 := fun (v: var) =>
-  match h1 v, h2 v with
-  | None, p | p, None => p
-  | Some p1, Some p2 => Some (p1 /\ p2)
-  end.
-Definition true_hyp {V} hyps (v:V) :=
-  match hyps v with
-  | Some hyp => hyp
-  | None => True
-  end.
 
 Fixpoint map_option {A B} (f: A -> option B) (l: list A): option (list B) :=
   match l with
@@ -617,10 +508,10 @@ Qed.
 Fixpoint simple_trace_stmt (δ: store_delta) (q: stmt): trace_state_res :=
   match q with
   | Nop => Some ((δ, None) :: nil)
-  | Move v e => Some ((δ[v := simplify_exp δ e], None) :: nil)
+  | Move v e => Some ((δ[v := subst_exp δ e], None) :: nil)
   | Jmp e =>
-      match simplify_exp δ e with
-      | Number n _ => Some ((δ, Some (Exit n)) :: nil)
+      match subst_exp δ e with
+      | Some (Word n _) => Some ((δ, Some (Exit n)) :: nil)
       | _ => None
       end
   | Exn n => Some ((δ, Some (Raise n)) :: nil)
@@ -651,40 +542,7 @@ Fixpoint simple_trace_stmt (δ: store_delta) (q: stmt): trace_state_res :=
   | Rep _ s => None
   end.
 
-Theorem safety_simple_trace_stmt: forall c0 s0 q paths δ
-  (MDL0: models c0 s0) (DS: delta_safety c0 δ)
-  (STS: simple_trace_stmt δ q = Some paths),
-  Forall (fun '(δ', _) => delta_safety c0 δ') paths.
-Proof.
-  induction q; intros; inversion STS; subst; clear STS; repeat constructor.
-  - (* Nop *) assumption.
-  - (* Move *) apply delta_safety_assign. assumption.
-    apply safety_simplify_exp. assumption.
-  - (* Jump *) destruct simplify_exp; inversion H0. repeat constructor.
-    assumption.
-  - (* Exception *) assumption.
-  - (* Seq *) destruct simple_trace_stmt eqn: STS1; try discriminate.
-    destruct map_option eqn: MO; inversion H0. subst. rename l into paths1.
-    rename l0 into paths_res. clear H0. einstantiate trivial IHq1 as X.
-    einversion Forall_forall. specialize (H0 X) as DSp1. clear X H0 H1.
-
-    clear IHq1 STS1. revert DSp1.
-    induction_map paths1 maps_to paths_res; intros. constructor.
-    simpl. apply Forall_app. split.
-    + (* Top case *) destruct a as [δ1 [x|]]; inversion F; subst.
-      -- repeat constructor. specialize (DSp1 (δ1, (Some x))). simpl in DSp1.
-         apply DSp1. left. reflexivity.
-      -- destruct simple_trace_stmt as [paths2|] eqn: STS2; inversion F.
-         subst. clear F H0. eapply (IHq2 _ δ1); try eassumption.
-         specialize (DSp1 (δ1, (None))). simpl in DSp1. apply DSp1. left.
-         reflexivity.
-    + (* Inductive case *) apply IHab. intros. destruct x as [δ1 x1].
-      specialize (DSp1 (δ1, x1)). simpl in DSp1. apply DSp1. right. assumption.
-  - (* If *) destruct simple_trace_stmt eqn: STS1; try discriminate.
-    destruct (simple_trace_stmt _ q2) eqn: STS2; try discriminate. inversion H0.
-    subst. apply Forall_app. split; (eapply IHq1 + eapply IHq2); eassumption.
-Qed.
-
+(*
 Theorem preservation_simple_trace_stmt: forall c0 s0 q paths c c' δ
   (MDL0: models c0 s0) (STyp: hastyp_stmt c0 c q c')
   (DMDL: delta_models c0 c δ) (DS: delta_safety c0 δ)
@@ -726,29 +584,23 @@ Proof.
     eapply hastyp_stmt_weaken in TS2; try eassumption. split;
       (eapply IHq1 + eapply IHq2); eassumption.
 Qed.
+*)
 
-Theorem simple_trace_stmt_correct: forall c0 s0 q paths c c' h s s' x δ
-  (MDL0: models c0 s0) (STyp: hastyp_stmt c0 c q c') (MDL: models c s)
-  (DMDL: delta_models c0 c δ) (DS: delta_safety c0 δ) (HD: has_delta s0 s δ)
-  (XS: exec_stmt h s q s' x) (STS: simple_trace_stmt δ q = Some paths),
-  Exists (fun '(δ', x') => x' = x /\ has_delta s0 s' δ') paths.
+Theorem simple_trace_stmt_correct: forall s0 q paths h s s' x δ
+  (HD: has_delta h s0 s δ) (XS: exec_stmt h s q s' x)
+  (STS: simple_trace_stmt δ q = Some paths),
+  Exists (fun '(δ', x') => x' = x /\ has_delta h s0 s' δ') paths.
 Proof.
-  induction q; intros; inversion XS; inversion STS; inversion STyp; subst;
-  clear XS STS.
+  induction q; intros; inversion XS; inversion STS; subst; clear XS STS.
   - (* Nop *) constructor. split. reflexivity. assumption.
-  - (* Move *) constructor. split. reflexivity. apply has_delta_assign.
-    assumption. eassert (Safe: safety c0 _). apply safety_simplify_exp.
-    eassumption. destruct simplify_exp eqn: SE.
-    + right. einversion trivial eval_simple_exp_total.
-      erewrite (simplify_exp_correct _ _ s0); try rewrite SE; try eassumption.
-    + right. einversion trivial eval_simple_exp_total.
-      erewrite (simplify_exp_correct _ _ s0); try rewrite SE; try eassumption.
-    + left. assumption.
-  - (* Jmp *) eassert (Safe: safety c0 _). apply safety_simplify_exp. eassumption.
-    destruct simplify_exp eqn: SE; inversion H3; subst. constructor. split;
-    try assumption. einversion trivial eval_simple_exp_total. rewrite SE. discriminate.
-    erewrite <- (simplify_exp_correct _ _ s0) in H0 by eassumption.
-    rewrite SE in H0. inversion H0. reflexivity.
+  - (* Move *) constructor. split. reflexivity. destruct subst_exp eqn: SE1.
+    + apply has_delta_assign_Some. assumption. intros.
+      eapply subst_exp_correct; eassumption.
+    + apply has_delta_assign_None. assumption.
+  - (* Jmp *) destruct (subst_exp _ _) eqn: SE; try destruct e0; inversion H3.
+    subst. constructor. split; try assumption.
+    einstantiate trivial subst_exp_correct as Res. constructor. inversion Res.
+    reflexivity.
   - (* Exn *) constructor. split. reflexivity. assumption.
   - (* Seq, exit 1 *) destruct simple_trace_stmt as [paths1|] eqn: SQ1; try discriminate.
     einstantiate trivial (IHq1). destruct map_option eqn: Map; inversion H4.
@@ -763,14 +615,7 @@ Proof.
     destruct H as [[δ1 x1] [InP1 [X HD1]]]. subst.
     destruct (simple_trace_stmt δ1 q2) eqn:SQ2.
     + einstantiate IHq2 as IHq2; try assumption; try apply SQ2; try apply TS2;
-      try apply XS0; try eassumption.
-      (* MDL1 *) eapply preservation_exec_stmt; eassumption.
-      (* DMDL1 *) einstantiate preservation_simple_trace_stmt as DMDL';
-      try exact MDL0; try exact SQ1; try eassumption. eapply Forall_forall in DMDL';
-      try eassumption. simpl in DMDL'. apply DMDL'. reflexivity.
-      (* DS1 *) einstantiate safety_simple_trace_stmt as DS'; try exact MDL0;
-      try exact SQ1; try eassumption. eapply Forall_forall in DS';
-      try eassumption. apply DS'. apply Exists_exists in IHq2.
+      try apply XS0; try eassumption. apply Exists_exists in IHq2.
       destruct IHq2 as [[δ' x'] [Inl1 HD']]. eexists. split.
 
       (* Prove that state is in concat l0 *) apply in_concat. eexists.
@@ -778,7 +623,7 @@ Proof.
       simpl. rewrite SQ2. reflexivity. simpl. assumption.
     + erewrite map_option_fails in MO; try solve [discriminate|eassumption].
       simpl. rewrite SQ2. reflexivity.
-  - (* If/else *) destruct c1;
+  - (* If/else *) destruct c;
     (destruct (simple_trace_stmt) eqn: ST1; [|discriminate]);
     (destruct (simple_trace_stmt δ q2) eqn: ST2; [|discriminate]).
     + (* q2 *) einstantiate trivial IHq2. eapply incl_Exists.
@@ -787,60 +632,70 @@ Proof.
       inversion H5. apply incl_appl. apply incl_refl. assumption.
 Qed.
 
-Definition delta_differentb vars (δ1 δ2: store_delta) :=
-  existsb (fun v => if δ1 v == δ2 v then false else true) vars.
-
-Definition delta_different (δ1 δ2: store_delta) :=
-  exists v, δ1 v <> δ2 v.
-
-Definition delta_same (δ1 δ2: store_delta) :=
-  forall v, δ1 v = δ2 v.
-
-Definition domain_total vars (δ: store_delta) :=
-  forall v, δ v <> Complex -> In v vars.
-
-Theorem delta_different_differentb_equiv: forall vars δ1 δ2
-  (DT1: domain_total vars δ1) (DT2: domain_total vars δ2),
-  delta_differentb vars δ1 δ2 = true <-> delta_different δ1 δ2.
-Proof.
-  unfold delta_different, delta_differentb, domain_total. split.
-  - (* -> *) intro DDB. unfold delta_different. apply existsb_exists in DDB.
-    destruct DDB as [v [InDomain EQ]]. eexists. destruct iseq. discriminate.
-    eassumption.
-  - (* <- *) intro DB. apply existsb_exists. destruct DB as [v NEQ]. eexists.
-    split; [|vantisym (δ1 v) (δ2 v); [reflexivity|assumption]].
-    destruct (δ1 v == Complex), (δ2 v == Complex);
-      (* When one is not complex*) try ((apply DT1 + apply DT2); assumption).
-      (* Both complex == discriminate *) rewrite e, e0 in NEQ.
-      contradiction (NEQ eq_refl).
-Qed.
-
-Corollary delta_different_differentb_equiv_contra: forall vars δ1 δ2
-  (DT1: domain_total vars δ1) (DT2: domain_total vars δ2),
-  delta_differentb vars δ1 δ2 = false <-> ~ delta_different δ1 δ2.
-Proof.
-  intros. einstantiate trivial (delta_different_differentb_equiv vars δ1 δ2) as Equiv.
-  split.
-  - intros N_DDB DB. apply Equiv in DB. rewrite N_DDB in DB. discriminate.
-  - intros N_DD. destruct delta_differentb; try reflexivity.
-    contradiction N_DD. apply Equiv. reflexivity.
-Qed.
-
-Theorem delta_different_same: forall δ1 δ2,
-  delta_same δ1 δ2 <-> ~ delta_different δ1 δ2.
-Proof.
-  split.
-  - (* -> *) intro DS. intro. destruct H. apply H. apply DS.
-  - (* <- *) intros DS. intro v. destruct (δ1 v == δ2 v); try assumption.
-    destruct DS. exists v. apply n.
-Qed.
-
-Definition merge_state (δ1 δ2: store_delta): store_delta :=
-  fun v => if δ1 v == δ2 v then δ2 v else Complex.
+Definition join_states_if_changed (vars: list var) (δ1: option store_delta)
+  (δ2: store_delta): option store_delta :=
+  match δ1 with
+  | Some δ1 =>
+      if delta_differentb vars δ1 δ2
+      then Some (fun v => if δ1 v == δ2 v then δ2 v else None)
+      else None
+  | None => Some δ2
+  end.
 
 Definition null_state: store := fun _ => VaN 0 0.
 
-Definition trace_program (vars: list var) (p: program) (tsp: trace_states_prop)
+Definition h_conj h1 h2 := fun (v: var) =>
+  match h1 v, h2 v with
+  | None, p | p, None => p
+  | Some p1, Some p2 => Some (p1 /\ p2)
+  end.
+
+Definition true_hyp {V} hyps (v:V) :=
+  match hyps v with
+  | Some hyp => hyp
+  | None => True
+  end.
+
+Definition process_state (vars: list var) (exitof: option exit -> exit)
+  (accum: (addr -> option store_delta) * bool) (st: store_delta * option exit) :=
+  let '(fδ', changed) := accum in
+  let '(δ', x) := st in
+  (* If this exited to an address, update state on that address
+   * Otherwise if it is a raise, we don't actually care about
+   * what state we end up in (nothing to merge with), since
+   * there is no way for us to return back later on to a valid
+   * address. *)
+  match exitof x with
+  | Exit next_addr =>
+      (* Check if joining states changed something. If so, we update and mark
+       * this as changed *)
+      match join_states_if_changed vars (fδ' next_addr) δ' with
+      | Some δ_merge => (update fδ' next_addr (Some δ_merge), true)
+      | None => (fδ', changed)
+      end
+  | Raise _ => (fδ', changed)
+  end.
+
+Definition trace_program_step_at (vars: list var)
+
+Definition dependent_correctness h p a0 s0 fδ a working conds := forall a1,
+  (Exists (fun w => reachable_thru h p a0 s0 w a1) working) \/
+  (forall s1 n1 δ (XP1: exec_prog h p a0 s0 n1 s1 (Exit a1))
+    (LUdelta: fδ a1 = Some δ), has_delta' s0 s1 δ conds).
+
+Theorem process_state_correct: forall q sz h vars p a0 s0 a
+  next_states st' fδ fδ' δ working new_working conds
+  (SS: incl st' next_states)
+  (NWC: forall s1 s2, p s1 = p s2)
+  (* TODO: something for domain_complete *)
+  (LUa: fδ a = Some δ) (PA: p null_state a = Some (sz, q))
+  (PS: process_state vars (exitof (a + sz)))
+  (IHfδ: state_correctness h p a0 s0 fδ (a :: working) conds),
+  state_correctness h p a0 s0 fδ' working' (h_conj conds P').
+Proof.
+Abort.
+
+Definition trace_program_step (vars: list var) (p: program) (tsp: trace_states_prop)
   (fn: store_delta -> stmt -> trace_state_res_with_prop): option trace_states_prop :=
   let '((fδ, working), P) := tsp in
   (* Extract first address in the working set. Otherwise just terminate with
@@ -850,7 +705,9 @@ Definition trace_program (vars: list var) (p: program) (tsp: trace_states_prop)
   | a :: working =>
       (* If this is a proper address in program, process that. *)
       match p null_state a with
-      | None => Some (fδ, working, P)
+      (* TODO: implement calls for here. This happens when we reached a none
+       * spot. *)
+      | None => None (*Some (fδ, working, P)*)
       | Some (sz, q) =>
           (* Check if the statement tracer can handle this type of statement.
            * If it can't, then we terminate on error *)
@@ -863,33 +720,118 @@ Definition trace_program (vars: list var) (p: program) (tsp: trace_states_prop)
                   (* Iterate through the set of next_states, merging states that we
                    * currently have for these addresses and what the tracer
                    * generated. *)
-                  let '(fδ', new_working) := fold_left (fun '(fδ', new_working) '(δ', x) =>
-                    (* If this exited to an address, update state on that address
-                     * Otherwise if it is a raise, we don't actually care about
-                     * what state we end up in (nothing to merge with), since
-                     * there is no way for us to return back later on to a valid
-                     * address. *)
-                    match exitof (a + sz) x with
-                    | Exit next_addr =>
-                        (* Either set the state for the particular address if
-                         * we have not visited before, or check if the merge state
-                         * changed and add the address if we changed the state for
-                         * that address *)
-                        match fδ' next_addr with
-                        | None => (fδ', next_addr :: new_working)
-                        | Some δ_next_addr =>
-                          let δ_merge := merge_state δ' δ_next_addr in
-                          (update fδ' next_addr (Some δ_merge),
-                            if delta_differentb vars δ_next_addr δ_merge
-                            then next_addr :: new_working else new_working)
-                        end
-                    | Raise _ => (fδ', new_working)
-                    end) next_states (fδ, nil) in
+                  let '(fδ', new_working) := fold_left (process_state vars
+                    (exitof (a + sz))) next_states (fδ, nil) in
                   Some ((fδ', working ++ new_working), h_conj P P')
               end
           end
       end
   end.
+
+Definition init_store_delta (c: typctx): store_delta :=
+  fun v =>
+    match c v with
+    | Some (NumT w) => VarOff v 0 w
+    | Some (MemT _) | None => Complex
+    end.
+
+(*
+N.iter
+Definition trace_program (ct: N) (c: typctx) (vars: list var) (p: program)
+  (entry: addr) (fn: store_delta -> stmt -> trace_state_res_with_prop):
+  option trace_states_prop :=
+  let tsp := (update ⊥ entry (init_store_delta c), [entry], ⊥)
+  match ct with
+  | 0 => Some tsp
+  | n
+ *)
+
+Definition reachable_thru h p a0 s0 a1 a' := exists s' n0 n1 s1,
+  exec_prog h p a0 s0 n0 s1 (Exit a1) /\ exec_prog h p a1 s1 n1 s' (Exit a').
+
+Definition has_delta' (s s': store) (δ: store_delta) (P: var -> option Prop) :=
+  forall v val (ESE: eval_simple_exp s (δ v) val) (PP: true_hyp P v), s' v = val.
+
+(* For all address in the delta store map, either we are reachable through the
+ * working set, or the delta_stores are in fact correct for all possible
+ * executions *)
+Definition state_correctness h p a0 s0 fδ working conds := forall a1,
+  (Exists (fun w => reachable_thru h p a0 s0 w a1) working) \/
+  (forall s1 n1 δ (XP1: exec_prog h p a0 s0 n1 s1 (Exit a1))
+    (LUdelta: fδ a1 = Some δ), has_delta' s0 s1 δ conds).
+
+Theorem has_delta'_weaken: forall s s' δ P1 P2
+  (IMP: forall v, true_hyp P2 v -> true_hyp P1 v)
+  (HD': has_delta' s s' δ P1), has_delta' s s' δ P2.
+Proof.
+  unfold has_delta'. intros. apply IMP in PP. eapply HD'; try eassumption.
+Qed.
+
+Lemma reachable_exec_prog: forall h p a0 s0 a1 a'
+  (Reach: reachable_thru h p a0 s0 a1 a'),
+  exists s' n0 n1, exec_prog h p a0 s0 (n0 + n1) s' (Exit a').
+Proof.
+  unfold reachable_thru. intros. destruct Reach as [s' [n0 [n1 [s1 [XP1 XP2]]]]].
+  repeat eexists. eapply exec_prog_concat; eassumption.
+Qed.
+
+(* Temporarily admit this, so that we can destruct on whether a *)
+Axiom middle_excluded: forall P, P \/ not P.
+
+Theorem trace_program_step_preserved_stmt: forall q sz h ts_fn vars p a0 s0 a
+  next_states st' fδ fδ' δ working working' conds P'
+  (SS: incl st' next_states)
+  (NWC: forall s1 s2, p s1 = p s2)
+  (* TODO: something for domain_complete *)
+  (LUa: fδ a = Some δ) (TSQ: ts_fn δ q = Some (next_states, P'))
+  (PA: p null_state a = Some (sz, q))
+  (TP: trace_program_step vars p (fδ, (a :: working), conds) ts_fn =
+    Some (fδ', working', h_conj conds P'))
+  (IHfδ: state_correctness h p a0 s0 fδ (a :: working) conds),
+  state_correctness h p a0 s0 fδ' working' (h_conj conds P').
+Proof.
+  induction next_states; intros; simpl in TP; rewrite PA, LUa, TSQ in TP;
+  remember (fold_left _ _ _) as res eqn: TP2; destruct res as [fδ1' new_working];
+  inversion TP; subst; clear TP; simpl in TP2.
+  - (* nil *) inversion TP2. subst. unfold state_correctness in *. intros.
+    pose (reachable2 := fun a2 a1 => reachable_thru h p a0 s0 a1 a2).
+    destruct (IHfδ a1) as [Working_a1|HD'_a1].
+    (* Exists in a::working *)
+    + rewrite app_nil_r. inversion Working_a1 as [? ? Reach_a1|];
+      [|left; assumption]. subst. destruct Reach_a1 as
+        [s_a1 [n_0a [n_a_a1 [s_a [XP_0a XP_a_a1]]]]].
+      (* Contradiction between XP_a_a1 and PA and TSQ *)
+      admit.
+    + (* Already correct *) right. intros. eapply has_delta'_weaken;
+      try eapply HD'_a1; try eassumption. intros. unfold h_conj, true_hyp in *.
+      destruct (conds v), (P' v); try destruct H; solve [reflexivity|assumption].
+  - 
+
+    simpl in TP2.
+Admitted.
+ *)
+
+Theorem trace_program_step_preserved: forall vars ts_fn p a0 s0 fδ fδ' h
+  working working' conds conds' (NWC: forall s1 s2, p s1 = p s2)
+  (* TODO: something for domain_complete *)
+  (TP: trace_program_step vars p (fδ, working, conds) ts_fn =
+    Some (fδ', working', conds'))
+  (IHfδ: state_correctness h p a0 s0 fδ working conds),
+  state_correctness h p a0 s0 fδ' working' conds'.
+Proof.
+  intros. destruct working.
+  - (* nil *) unfold state_correctness in *. intros. inversion TP. subst.
+    destruct (IHfδ a1); (left + right); assumption.
+  - (* a :: working' *) simpl in TP.
+    destruct (p _ a) eqn: PA; [|inversion TP]. (* Is it a valid program address *)
+    destruct p0 as [sz q]. destruct (fδ a) eqn: LUa; [|inversion TP].
+    destruct (ts_fn _ _) eqn: TSQ; [|inversion TP]. destruct p0 as [next_states P'].
+    remember (fold_left _ _ _) as res eqn: TP2. destruct res as [fδ1' new_working].
+    inversion TP. subst. clear TP. eapply trace_program_step_preserved_stmt;
+    try eassumption. simpl. rewrite PA, LUa, TSQ.
+    rewrite <- TP2. reflexivity.
+Qed.
+
 
 Definition trace_program_def vars p tsp :=
   trace_program vars p tsp (fun δ q =>
