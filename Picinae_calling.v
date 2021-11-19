@@ -273,7 +273,10 @@ Fixpoint subst_valid (δ: store_delta) e: bool :=
   | BinOp _ e1 e2 => subst_valid δ e1 && subst_valid δ e2
   | UnOp _ e => subst_valid δ e
   | Cast _ _ e => subst_valid δ e
-  | Let v e e_in => false
+  | Let v e e_in =>
+      if subst_valid δ e
+      then subst_valid (update δ v (Some (Word 0 0))) e_in
+      else subst_valid (update δ v None) e_in
   | Unknown _ => false
   | Ite e1 e2 e3 => subst_valid δ e1 && subst_valid δ e2 && subst_valid δ e3
   | Extract _ _ e => subst_valid δ e
@@ -294,7 +297,10 @@ Fixpoint subst_exp0 (δ: store_delta) e: exp :=
   | BinOp op e1 e2 => BinOp op (subst_exp0 δ e1) (subst_exp0 δ e2)
   | UnOp op e => UnOp op (subst_exp0 δ e)
   | Cast typ w' e => Cast typ w' (subst_exp0 δ e)
-  | Let v e e_in => Unknown 0 (* Error *)
+  | Let v e e_in =>
+      if subst_valid δ e
+      then subst_exp0 (update δ v (Some (subst_exp0 δ e))) e_in
+      else subst_exp0 (update δ v None) e_in
   | Unknown _ => e
   | Ite e1 e2 e3 => Ite (subst_exp0 δ e1) (subst_exp0 δ e2) (subst_exp0 δ e3)
   | Extract n1 n2 e => Extract n1 n2 (subst_exp0 δ e)
@@ -314,6 +320,9 @@ Proof.
 
   (* Var *) specialize (DSD v). destruct (δ1 v), (δ2 v);
   try solve [contradiction DSD|reflexivity].
+
+  (* Let *) destruct subst_valid eqn: SV1; erewrite IHe2; try reflexivity;
+  (apply delta_same_domain_assign; [reflexivity|assumption]).
 Qed.
 
 Local Ltac exp_destruction_nounk :=
@@ -340,9 +349,14 @@ Theorem subst_exp0_nounk: forall e δ (DNU: delta_nounk δ)
 Proof.
   unfold subst_exp; induction e; intros; simpl in SE;
   try solve [exp_destruction_nounk; repeat split; assumption + reflexivity].
-
-  (* Var *) destruct (δ v) eqn: LUv; inversion SE. subst. eapply DNU. simpl.
-  rewrite LUv. reflexivity.
+  - (* Var *) destruct (δ v) eqn: LUv; inversion SE. subst. eapply DNU. simpl.
+    rewrite LUv. reflexivity.
+  - (* Let *) simpl. destruct subst_valid eqn: SV1.
+    + (* e1 is valid *) apply IHe2. apply delta_nounk_assign_Some. assumption.
+      apply IHe1; assumption. erewrite subst_valid_any_Some. eassumption.
+      apply delta_same_domain_assign. reflexivity. apply delta_same_domain_refl.
+    + (* e1 is not valid *) apply IHe2. apply delta_nounk_assign_None.
+      assumption. assumption.
 Qed.
 
 Theorem subst_exp_nounk: forall e e' δ (DNU: delta_nounk δ)
@@ -387,6 +401,14 @@ Proof.
   simpl in SE; clear EE; try solve [exp_destruction_correct; reflexivity].
   - (* Var *) destruct (δ v) eqn: LUv; inversion SE. subst. erewrite HD;
     solve [reflexivity|eassumption].
+  - (* Let *) destruct subst_valid eqn: SV1.
+    + (* e1 is valid *) erewrite subst_valid_any_Some in SE. eapply IHe2;
+      [| eassumption | eassumption | eassumption]. apply has_delta_assign_Some.
+      assumption. intros. destruct (subst_valid _ e2) eqn: SV2; inversion SE.
+      eapply IHe1; try eassumption. rewrite SV1. reflexivity.
+      apply delta_same_domain_assign. reflexivity. apply delta_same_domain_refl.
+    + (* e1 is not valid *) eapply IHe2; [| eassumption | eassumption | eassumption].
+      apply has_delta_assign_None. assumption.
   - (* Ite *) exp_destruction_correct. einstantiate trivial IHe1 as IHe1.
       einstantiate trivial IHe1 as IHe1. einstantiate trivial IHe1 as IHe1.
       einstantiate trivial IHe2 as IHe2.
