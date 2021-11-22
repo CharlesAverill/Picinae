@@ -1019,7 +1019,7 @@ Proof.
     destruct (a1 == a1'); try discriminate. subst. assumption.
 Admitted.
 
-Fixpoint stmt_jumps (s: stmt): option (set addr * bool) :=
+Fixpoint stmt_reachable (s: stmt): option (set addr * bool) :=
   match s with
   | Nop => Some (set_nil, true)
   | Move _ _ => Some (set_nil, true)
@@ -1030,21 +1030,21 @@ Fixpoint stmt_jumps (s: stmt): option (set addr * bool) :=
       end
   | Exn _ => Some (set_nil, false)
   | Seq s1 s2 =>
-      match (stmt_jumps s1, stmt_jumps s2) with
+      match (stmt_reachable s1, stmt_reachable s2) with
       | (Some (j1, false), _) => Some (j1, false)
       | (_, None) => None
       | (None, _) => None
       | (Some (j1, true), Some (j2, falls2)) => Some (set_ap j1 j2, falls2)
       end
   | If _ s1 s2 =>
-      match (stmt_jumps s1, stmt_jumps s2) with
+      match (stmt_reachable s1, stmt_reachable s2) with
       | (_, None) => None
       | (None, _) => None
       | (Some (j1, falls1), Some (j2, falls2)) =>
           Some (set_ap j1 j2, falls1 || falls2)
       end
   | Rep _ s =>
-      match stmt_jumps s with
+      match stmt_reachable s with
       | Some (jmps, falls) => Some (jmps, true)
       | None => None
       end
@@ -1064,7 +1064,7 @@ Qed.
 
 Theorem stmt_jumps_complete: forall q h s0 s1 x jmps falls
   (XS: exec_stmt h s0 q s1 x)
-  (JMPS: Some (jmps, falls) = stmt_jumps q),
+  (JMPS: Some (jmps, falls) = stmt_reachable q),
   match x with
   | Some (Exit a') => set_has jmps a' = true
   | Some (Raise _) => True
@@ -1077,18 +1077,18 @@ Proof.
   - (* Jmp *) inversion E; subst; simpl in *; clear E; try discriminate.
     inversion JMPS. eapply set_has_in. reflexivity. apply set_add_correct.
   - (* Exn *) reflexivity.
-  - (* Seq, exit in q1 *) destruct (stmt_jumps q1) as [[j1 falls1]|] eqn: J1;
-    try solve [destruct (stmt_jumps q2) eqn: J2; discriminate]. destruct falls1.
+  - (* Seq, exit in q1 *) destruct (stmt_reachable q1) as [[j1 falls1]|] eqn: J1;
+    try solve [destruct (stmt_reachable q2) eqn: J2; discriminate]. destruct falls1.
     + (* Can fall-through *) destruct x0; try reflexivity.
-      destruct (stmt_jumps q2) as [[j2 falls2]|] eqn: J2; try discriminate.
+      destruct (stmt_reachable q2) as [[j2 falls2]|] eqn: J2; try discriminate.
       inversion JMPS. subst. destruct (set_ap) as [l_res UNIQ_res] eqn: SAP.
       eapply set_has_in. reflexivity. erewrite set_intros_l by eassumption.
       eapply set_ap_left. eapply set_has_in. reflexivity. einstantiate trivial IHq1.
     + (* Cannot fall-through *) inversion JMPS. subst. destruct x0;
       try reflexivity. einstantiate trivial IHq1.
-  - (* Seq, exit in q2 *) destruct (stmt_jumps q1) as [[j1 falls1]|] eqn: J1;
-    try solve [destruct (stmt_jumps q2) eqn: J2; discriminate]. destruct falls1.
-    + (* Can fall-through *) destruct (stmt_jumps q2) as [[j2 falls2]|] eqn: J2;
+  - (* Seq, exit in q2 *) destruct (stmt_reachable q1) as [[j1 falls1]|] eqn: J1;
+    try solve [destruct (stmt_reachable q2) eqn: J2; discriminate]. destruct falls1.
+    + (* Can fall-through *) destruct (stmt_reachable q2) as [[j2 falls2]|] eqn: J2;
       try discriminate. inversion JMPS. subst. einstantiate trivial IHq2 as IHq2.
       destruct x as [[a|n]|]; trivial2.
       destruct (set_ap) as [l_res UNIQ_res] eqn: SAP. eapply set_has_in.
@@ -1096,8 +1096,8 @@ Proof.
       eapply set_has_in. reflexivity. assumption.
     + (* Cannot fall-through; contradiction *) inversion JMPS.
       subst. einstantiate trivial IHq1 as IHq1.
-  - (* If *) destruct (stmt_jumps q1) as [[j1 falls1]|] eqn: J1;
-    destruct (stmt_jumps q2) as [[j2 falls2]|] eqn: J2; try discriminate.
+  - (* If *) destruct (stmt_reachable q1) as [[j1 falls1]|] eqn: J1;
+    destruct (stmt_reachable q2) as [[j2 falls2]|] eqn: J2; try discriminate.
     inversion JMPS. subst. clear JMPS. destruct x as [[a|n]|]; try reflexivity.
     + (* Jumped *) destruct (set_ap) as [l_res UNIQ_res] eqn: SAP.
       eapply set_has_in. reflexivity. erewrite set_intros_l by eassumption.
@@ -1107,7 +1107,7 @@ Proof.
     + (* Fallthrough *) apply orb_true_intro. destruct c;
       [einstantiate trivial IHq2; right | einstantiate trivial IHq1; left];
       assumption.
-  - (* Evil rep *) destruct stmt_jumps as [[jmps' falls']|] eqn: Jinner;
+  - (* Evil rep *) destruct stmt_reachable as [[jmps' falls']|] eqn: Jinner;
     inversion JMPS. subst. destruct x as [[a|?]|]; try reflexivity.
     einstantiate trivial rep_exits_total as RET.
     destruct RET as [s2 [s2' XSinner]]. einstantiate trivial IHq.
@@ -1123,7 +1123,7 @@ Definition expand_jumps (hints: program -> addr -> option (set addr))
   (p: program) (accum: option (set addr * bool)) addr :=
   match accum with
   | Some (jmps, changed)
-  stmt_jumps
+  stmt_reachable
 
 
 
@@ -1400,7 +1400,7 @@ Compute rev (filter
 Fixpoint push_stack_offsets (p: program) (a: addr): option (set addr, ) :=
   match p null_state a with
   | Some (sz, q) =>
-      match stmt_jumps q with
+      match stmt_reachable q with
       | Some jmps =>
           fold_left
           set_add jmps (a + sz)
