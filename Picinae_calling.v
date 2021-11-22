@@ -109,7 +109,177 @@ Next Obligation. Proof. decide equality; apply iseq. Defined.
 Program Instance option_EqDec A `(EA : EqDec A) : EqDec (option A).
 Next Obligation. Proof. decide equality. apply iseq. Defined.
 
-(* We define a store delta as a  *)
+(* Sets *)
+Inductive set A: Type :=
+  | set_set (l: list A) (UNIQ: NoDup l).
+
+Arguments set_set {_} _ _.
+
+Definition set_nil {A} {e: EqDec A}: set A :=
+  set_set nil (NoDup_nil A).
+Definition set_elems {A} (s: set A): list A :=
+  match s with set_set l _ => l end.
+Theorem set_intros_l: forall {A} (s: set A) l UNIQ
+  (EQ: s = set_set l UNIQ), l = set_elems s.
+Proof. intros. subst. reflexivity. Qed.
+
+Theorem set_elems_nodup: forall {A} (s: set A), NoDup (set_elems s).
+Proof. intros. destruct s. assumption. Qed.
+
+Definition set_has {A} {e: EqDec A} (s: set A) (a: A): bool :=
+  existsb (fun a' => if a == a' then true else false) (set_elems s).
+Theorem set_has_in: forall {A} {e: EqDec A} (l: list A) (UNIQ: NoDup l) a s
+  (EQ: s = set_set l UNIQ),
+  set_has s a = true <-> In a l.
+Proof.
+  unfold set_has, set_elems. split; subst.
+  - (* -> *) intro EX. apply existsb_exists in EX. destruct EX as [a' [InL EQ]].
+    destruct (a == a'); try discriminate. subst. assumption.
+  - (* <- *) intro InL. apply existsb_exists. exists a. split. assumption.
+    vreflexivity a. reflexivity.
+Qed.
+Corollary set_has_in_contra: forall {A} {e: EqDec A} (l: list A) (UNIQ: NoDup l) a
+  s (EQ: s = set_set l UNIQ),
+  set_has (set_set l UNIQ) a = false <-> ~In a l.
+Proof.
+  split; intro H; (apply not_true_iff_false || apply not_true_iff_false in H);
+  contradict H; eapply set_has_in; solve [reflexivity|eassumption].
+Qed.
+
+Definition set_add' {A} {e: EqDec A} (s: set A) (a: A): list A :=
+  if (set_has s a) then set_elems s else a :: set_elems s.
+Theorem set_add_nodup {A} {e: EqDec A} (s: set A) (a: A): NoDup (set_add' s a).
+Proof.
+  destruct s. unfold set_add'.
+  destruct set_has eqn: EX.
+  - (* Already exists, so we just return l *) assumption.
+  - (* Does not exists, we can return (a :: l) *) econstructor; [|eassumption].
+    intro InL. eapply set_has_in_contra in EX. apply EX. assumption.
+    reflexivity.
+Qed.
+Definition set_add {A} {e: EqDec A} (s: set A) (a: A): set A :=
+  set_set (set_add' s a) (set_add_nodup s a).
+Theorem fold_set_add: forall A (e: EqDec A) s (a: A),
+  set_add' s a = set_elems (set_add s a).
+Proof. intros. reflexivity. Qed.
+Theorem set_add_preserves: forall A (e: EqDec A) (s: set A) a1 a2
+  (InOld: In a1 (set_elems s)), In a1 (set_elems (set_add s a2)).
+Proof.
+  intros. simpl. unfold set_add'. destruct set_has.
+  - assumption.
+  - simpl. right. assumption.
+Qed.
+Theorem set_add_frame: forall A (e: EqDec A) (s: set A) a1 a2
+  (NEQ: a1 ≠ a2) (InAdd: In a1 (set_elems (set_add s a2))), In a1 (set_elems s).
+Proof.
+  intros. simpl in *. unfold set_add' in *. destruct set_has.
+  - assumption.
+  - simpl in InAdd. destruct InAdd; [|assumption]. subst. contradiction NEQ.
+    reflexivity.
+Qed.
+Theorem set_add_correct: forall A (e: EqDec A) (s: set A) a,
+  In a (set_elems (set_add s a)).
+Proof.
+  unfold set_add, set_add', set_elems. intros.
+  destruct s. destruct set_has eqn: EX.
+  - (* contains a *) eapply set_has_in. reflexivity. eassumption.
+  - (* no contains a *) constructor. reflexivity.
+Qed.
+
+Fixpoint set_ap' {A} {e: EqDec A} (l1: list A) (s2: set A): set A :=
+  match l1 with
+  | nil => s2
+  | h::t => set_add (set_ap' t s2) h
+  end.
+Definition set_ap {A} {e: EqDec A} (s1 s2: set A): set A :=
+  set_ap' (set_elems s1) s2.
+Theorem fold_set_ap: forall {A} {e: EqDec A} {l1} (UNIQ1: NoDup l1) (s2: set A),
+  set_ap' l1 s2 = set_ap (set_set l1 UNIQ1) s2.
+Proof. reflexivity. Qed.
+
+Theorem set_ap_correct: forall A (e: EqDec A) (s1 s2: set A) a,
+  (In a (set_elems s1) \/ In a (set_elems s2)) <->
+  In a (set_elems (set_ap s1 s2)).
+Proof.
+  unfold set_ap. destruct s1 as [l1 UNIQ1], s2 as [l2 UNIQ2]. split.
+  - (* -> *) intro In12. destruct In12 as [In1|In2]; simpl in *; clear UNIQ1.
+    + (* In1 *) revert In1. induction l1; intros.
+      * (* nil *) inversion In1.
+      * (* no nil *) inversion In1.
+        -- (* a = a0 *) subst. simpl. apply set_add_correct.
+        -- (* a in l *) simpl. apply set_add_preserves. apply IHl1; assumption.
+    + (* In2 *) induction l1.
+      * (* nil *) assumption.
+      * (* no nil *) simpl. apply set_add_preserves. apply IHl1.
+  - (* <- *) intro InRes. simpl in *. clear UNIQ1. revert l2 UNIQ2 a InRes.
+    induction l1; intros.
+    + (* nil *) right. assumption.
+    + (* no nil *) simpl in InRes. destruct (a0 == a); subst.
+      * (* a = a0 *) left. left. reflexivity.
+      * (* a ≠ a0 *) apply set_add_frame in InRes; [|assumption].
+        einversion trivial IHl1 as [InL1|InL2].
+        -- left. right. assumption.
+        -- right. assumption.
+Qed.
+Corollary set_ap_left: forall A (e: EqDec A) (s1 s2: set A) a
+  (In1: In a (set_elems s1)), In a (set_elems (set_ap s1 s2)).
+Proof. intros. apply set_ap_correct. left. assumption. Qed.
+Corollary set_ap_right: forall A (e: EqDec A) (s1 s2: set A) a
+  (In2: In a (set_elems s2)), In a (set_elems (set_ap s1 s2)).
+Proof. intros. apply set_ap_correct. right. assumption. Qed.
+
+Definition set_length {A} (s: set A): nat := length (set_elems s).
+
+Definition set_equivb {A} {e: EqDec A} (s1 s2: set A): bool :=
+  ((set_length s1 =? set_length s2) &&
+  (set_length s1 =? set_length (set_ap s1 s2)))%nat.
+
+Definition set_equiv {A} (s1 s2: set A): Prop :=
+  incl (set_elems s1) (set_elems s2) /\ incl (set_elems s2) (set_elems s1).
+
+(* Show that by checking if the sets are equal size that they must be
+ * equivalent *)
+Theorem set_equivb_equiv_same: forall A (e: EqDec A) (s1 s2: set A),
+  set_equivb s1 s2 = true <-> set_equiv s1 s2.
+Proof.
+  intros. unfold set_equiv, set_equivb, set_length. destruct s1 as [l1 UNIQ1],
+    s2 as [l2 UNIQ2], set_ap as [l_res UNIQ_res] eqn: SAP.
+  assert (Incl_1_res: incl l1 l_res). intros a In1.
+    erewrite set_intros_l by eassumption. apply set_ap_left. assumption.
+  assert (Incl_2_res: incl l2 l_res). intros a In2.
+    erewrite set_intros_l by eassumption. apply set_ap_right. assumption.
+
+  split.
+  - (* -> *) intro LEQ. apply andb_prop in LEQ. destruct LEQ as [L12 L1U].
+    apply Nat.eqb_eq in L12, L1U. simpl in L12, L1U.
+    assert (Incl_res_1: incl l_res l1).
+      eapply NoDup_length_incl; try eassumption. rewrite L1U. reflexivity.
+    assert (Incl_res_2: incl l_res l2).
+      eapply NoDup_length_incl; try eassumption. rewrite <- L12, L1U. reflexivity.
+    split; eapply incl_tran; eassumption.
+  - (* <- *) intros [Incl_12 Incl_21].
+    (* Show that l_res ≡ l1 by showing that it must be containing either l1 or l2
+     * and that l1 ≡ l2. *)
+    assert (Incl_res_1: incl l_res l1). intros a InRes.
+      remember (set_set _ _) as s1. remember (set_set l2 _) as s2.
+      remember (set_set l_res _) as s_res.
+      einversion trivial (set_ap_correct _ _ s1 s2) as [_ [In1|In2]].
+      erewrite set_intros_l in InRes. eassumption. eassumption.
+      assumption. apply Incl_21. assumption.
+
+    (* Given the sets are all equivalent, we show they are the same size too. *)
+    simpl. einstantiate trivial (@NoDup_incl_length _ l1 l_res).
+    einstantiate trivial (@NoDup_incl_length _ l_res l1).
+    erewrite (Nat.le_antisymm (length l_res)) by eassumption.
+    einstantiate trivial (@NoDup_incl_length _ l1 l2) as Le1.
+    einstantiate trivial (@NoDup_incl_length _ l2 l1) as Le2.
+    erewrite (Nat.le_antisymm (length l1)) by eassumption.
+    rewrite Nat.eqb_refl. reflexivity.
+Qed.
+
+(* We define a store delta as a variable to partial mapping onto
+ * some expression. This is partial to account for "undefined" variables (which
+ * could also be undefined "memory" variables) *)
 Definition store_delta := var -> option exp.
 
 Definition has_delta (h: hdomain) (s0 s: store) (δ: store_delta) :=
@@ -339,7 +509,7 @@ Local Ltac exp_destruction_nounk :=
              | n: N |- _ => destruct n
              end;
       repeat lazymatch goal with
-             | IH: forall (DNU: delta_nounk δ), _ |- _ => idtac IH;
+             | IH: forall (DNU: delta_nounk δ), _ |- _ =>
                  einstantiate trivial IH as IH
              end
   end.
@@ -366,7 +536,7 @@ Proof.
   subst. apply subst_exp0_nounk; assumption.
 Qed.
 
-Local Ltac exp_destruction_correct :=
+Ltac exp_destruction_correct :=
   lazymatch goal with
   | δ: store_delta, e': exp |- _ =>
       lazymatch goal with
@@ -679,8 +849,8 @@ Definition true_hyp {V} hyps (v:V) :=
   end.
 
 Definition process_state (vars: list var) (exitof: option exit -> exit)
-  (accum: (addr -> option store_delta) * bool) (st: store_delta * option exit) :=
-  let '(fδ', changed) := accum in
+  (accum: trace_states * bool) (st: store_delta * option exit) :=
+  let '(ts, changed) := accum in
   let '(δ', x) := st in
   (* If this exited to an address, update state on that address
    * Otherwise if it is a raise, we don't actually care about
@@ -691,64 +861,275 @@ Definition process_state (vars: list var) (exitof: option exit -> exit)
   | Exit next_addr =>
       (* Check if joining states changed something. If so, we update and mark
        * this as changed *)
-      match join_states_if_changed vars (fδ' next_addr) δ' with
-      | Some δ_merge => (update fδ' next_addr (Some δ_merge), true)
-      | None => (fδ', changed)
+      match join_states_if_changed vars (ts next_addr) δ' with
+      | Some δ_merge => (update ts next_addr (Some δ_merge), true)
+      | None => (ts, changed)
       end
-  | Raise _ => (fδ', changed)
+  | Raise _ => (ts, changed)
   end.
 
-Definition trace_program_step_at (vars: list var)
+Definition sub_prog p domain: program :=
+  fun s a =>
+    if existsb (fun a' => if iseq a a' then true else false) domain
+    then p s a
+    else None.
 
-Definition dependent_correctness h p a0 s0 fδ a working conds := forall a1,
-  (Exists (fun w => reachable_thru h p a0 s0 w a1) working) \/
-  (forall s1 n1 δ (XP1: exec_prog h p a0 s0 n1 s1 (Exit a1))
-    (LUdelta: fδ a1 = Some δ), has_delta' s0 s1 δ conds).
-
-Theorem process_state_correct: forall q sz h vars p a0 s0 a
-  next_states st' fδ fδ' δ working new_working conds
-  (SS: incl st' next_states)
-  (NWC: forall s1 s2, p s1 = p s2)
-  (* TODO: something for domain_complete *)
-  (LUa: fδ a = Some δ) (PA: p null_state a = Some (sz, q))
-  (PS: process_state vars (exitof (a + sz)))
-  (IHfδ: state_correctness h p a0 s0 fδ (a :: working) conds),
-  state_correctness h p a0 s0 fδ' working' (h_conj conds P').
+Theorem exec_sub_prog_pmono: forall d1 d2 p s h a n s' x
+  (SS: incl d1 d2) (XP: exec_prog h (sub_prog p d1) a s n s' x),
+  exec_prog h (sub_prog p d2) a s n s' x.
 Proof.
-Abort.
+  intros. apply (exec_prog_pmono (sub_prog p d1)); [|assumption].
+  unfold sub_prog, pfsub. intros s0 x0 [sz q] ImpD1.
+  destruct existsb eqn: E1; destruct (existsb _ d2) eqn: E2;
+  try solve [discriminate|assumption]. eapply existsb_exists, Exists_exists,
+    incl_Exists, Exists_exists, existsb_exists in E1. rewrite E1 in E2.
+  discriminate. assumption.
+Qed.
 
-Definition trace_program_step (vars: list var) (p: program) (tsp: trace_states_prop)
-  (fn: store_delta -> stmt -> trace_state_res_with_prop): option trace_states_prop :=
-  let '((fδ, working), P) := tsp in
-  (* Extract first address in the working set. Otherwise just terminate with
-   * steady state *)
-  match working with
-  | nil => Some tsp
-  | a :: working =>
-      (* If this is a proper address in program, process that. *)
-      match p null_state a with
-      (* TODO: implement calls for here. This happens when we reached a none
-       * spot. *)
-      | None => None (*Some (fδ, working, P)*)
-      | Some (sz, q) =>
-          (* Check if the statement tracer can handle this type of statement.
-           * If it can't, then we terminate on error *)
-          match fδ a with
-          | None => None
-          | Some δ_a =>
-              match fn δ_a q with
+Definition stmt_correct q δ x := forall s0 h s s' (XS: exec_stmt h s q s' x),
+  has_delta h s0 s' δ.
+
+Definition correctness_sub_prog p domain ts h a0 s0 :=
+  (forall a1 s1 n1 δ
+    (XP: exec_prog h (sub_prog p domain) a0 s0 n1 s1 (Exit a1))
+    (TS2: ts a1 = Some δ), has_delta h s0 s1 δ).
+
+Inductive subgoals: Set :=
+  .
+
+Definition trace_program_step_at (vars: list var) (p: program)
+  (hints: program -> addr -> trace_states -> option (trace_states * bool))
+  (accum: option (trace_states * bool)) addr :=
+  match accum with
+  | None => None
+  | Some (ts, changed) =>
+      (* Use hints if we have information *)
+      match hints p addr ts with
+      | None =>
+          (* If this is a proper address in program, process that. *)
+          match p null_state addr with
+          (* TODO: some logic saying that for all possible executions that there
+           * exists some point later on in this execution such that it matches
+           * one of the store deltas that we recorded. *)
+          | None => None (*Some (ts, working, P)*)
+          | Some (sz, q) =>
+              (* Sanity check for if we have already visited this address *)
+              match ts addr with
               | None => None
-              | Some (next_states, P') =>
-                  (* Iterate through the set of next_states, merging states that we
-                   * currently have for these addresses and what the tracer
-                   * generated. *)
-                  let '(fδ', new_working) := fold_left (process_state vars
-                    (exitof (a + sz))) next_states (fδ, nil) in
-                  Some ((fδ', working ++ new_working), h_conj P P')
+              | Some δ_a =>
+                  match simple_trace_stmt δ_a q with
+                  | None => None
+                  | Some next_states =>
+                      let res := fold_left (process_state vars
+                        (exitof (addr + sz))) next_states (ts, changed) in
+                      Some res
+                  end
               end
           end
+      | Some (ts', changed') => Some (ts', changed || changed')
       end
   end.
+
+Inductive exec_prog2 (h: hdomain) (p:program) (a:addr) (s:store): nat -> store -> exit -> Prop :=
+| X2Done: exec_prog2 h p a s O s (Exit a)
+| X2Step n sz q s2 a1 s' x' (LU: p s2 a1 = Some (sz,q))
+        (XP: exec_prog2 h p a s n s2 (Exit a1))
+        (XS: exec_stmt h s2 q s' x'):
+    exec_prog2 h p a s (S n) s' (exitof (a1+sz) x')
+| X2Abort sz q s' i (LU: p s a = Some (sz,q))
+         (XS: exec_stmt h s q s' (Some (Raise i))):
+    exec_prog2 h p a s (S O) s' (Raise i).
+
+Theorem exec_prog_equiv_exec_prog2: forall n h p a s s' x,
+  (exec_prog h p a s n s' x <-> exec_prog2 h p a s n s' x).
+Proof.
+  induction n; intros.
+  - (* n = 0 *) split; intros XP; inversion XP; subst; constructor.
+  - split; intros XP.
+    + (* -> *) inversion XP; try econstructor; try eassumption; subst.
+      destruct n.
+      * (* n = 1 *) inversion XP0. subst. rewrite <- EX. econstructor;
+        try eassumption. constructor.
+      * rewrite <- Nat.add_1_r in XP0. einstantiate trivial exec_prog_split as XPS.
+        destruct XPS as [s1 [a1 [XP_middle XP_end]]]. inversion XP_end. subst.
+        inversion XP1. subst. rewrite <- EX0. econstructor; try eassumption.
+        apply IHn. rewrite <- Nat.add_1_l. eapply exec_prog_concat;
+        [|apply XP_middle]. econstructor; try eassumption. econstructor.
+        subst. replace (Raise i) with (exitof (a1+sz0) (Some (Raise i))).
+        econstructor; try eassumption. apply IHn. rewrite <- Nat.add_1_l.
+        eapply exec_prog_concat; try eassumption. econstructor; try eassumption.
+        econstructor. reflexivity.
+    + (* <- *) inversion XP; try solve [econstructor; eassumption]. subst.
+      destruct n.
+      * (* n = 1 *) inversion XP0. subst. destruct exitof eqn: EX.
+        -- econstructor; try eassumption. constructor.
+        -- destruct x'; try discriminate. eapply XAbort. eassumption.
+           destruct e; inversion EX. subst. assumption.
+      * apply IHn in XP0. rewrite <- Nat.add_1_r. eapply exec_prog_concat;
+        try eassumption. destruct exitof eqn: EX.
+        -- econstructor; try eassumption. constructor.
+        -- destruct x'; try discriminate. eapply XAbort. eassumption.
+           destruct e; inversion EX. subst. assumption.
+Qed.
+
+Theorem trace_program_step_at_steady_correct: forall p vars a_new al hints ts
+  h a0 s0 (IHal: correctness_sub_prog p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
+  (Total: Forall (fun a1 => exists δ1, ts a1 = Some δ1) (a_new :: al))
+  (TPSA: trace_program_step_at vars p hints (Some (ts, false)) a_new =
+    Some (ts, false))
+  (HintsCorrect: forall ts ts' h a0 s0
+    (IHal: correctness_sub_prog p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
+    (Total: Forall (fun a1 => exists δ1, ts a1 = Some δ1) (a_new :: al))
+    (Hint: hints p a_new ts = Some (ts', false)),
+    correctness_sub_prog p (a_new :: al) ts h a0 s0),
+  correctness_sub_prog p (a_new :: al) ts h a0 s0.
+Proof.
+  (* Destruct trace_program_step_at function. *)
+  unfold correctness_sub_prog. intros. simpl in TPSA.
+
+  (* Using hint if available *)
+  destruct hints as [[ts' changed']|] eqn: Hint. inversion TPSA. subst.
+  eapply HintsCorrect; try eassumption. clear HintsCorrect.
+
+  destruct (p _ _) as [[sz_new q_new]|] eqn: LUa_new; try discriminate.
+  destruct (ts _) as [δ_a_new|] eqn: TSa_new; try discriminate.
+  destruct simple_trace_stmt as [next_states|] eqn: Fn; try discriminate.
+  rename a1 into a', s1 into s', n1 into n', δ into δ', XP into XP',
+    TS2 into TS'.
+
+  (* Main case has the flow a0 ~> a1 -> a' *)
+  apply exec_prog_equiv_exec_prog2 in XP'. revert a' s' δ' XP' TS'.
+  induction n'; intros; inversion XP'; subst.
+  - (* n = 0 *) eapply IHal. constructor. assumption.
+  - (* n > 0 *) rename s2 into s1. eapply Forall_forall in Total.
+    destruct Total as [δ1 TS1]. einstantiate trivial IHn' as HD1.
+
+    (* Here we need to prove that process_state correctly processes all states,
+     * i.e. given that the deltas are correct up to a1, we show that the deltas
+     * are correct for a'. We know that a1 flows into a'. We should check if
+     * a' == a_new. If it is, we check correctness of that, otherwise we use
+     * inductive hypothesis *)
+    admit.
+    (*destruct (a' == a_new). subst. admit.*)
+
+    (* Prove that a1 is in the domain. Holds true because a1 was in the
+     * sub-program because of our execution flow, so must be in subdomain. *)
+    unfold sub_prog in LU. destruct existsb eqn: EXa2; try discriminate.
+    apply existsb_exists in EXa2. destruct EXa2 as [a1' [InDomain Eq]].
+    destruct (a1 == a1'); try discriminate. subst. assumption.
+Admitted.
+
+Fixpoint stmt_jumps (s: stmt): option (set addr * bool) :=
+  match s with
+  | Nop => Some (set_nil, true)
+  | Move _ _ => Some (set_nil, true)
+  | Jmp e =>
+      match e with
+      | Word loc _ => Some (set_add set_nil loc, false)
+      | _ => None
+      end
+  | Exn _ => Some (set_nil, false)
+  | Seq s1 s2 =>
+      match (stmt_jumps s1, stmt_jumps s2) with
+      | (Some (j1, false), _) => Some (j1, false)
+      | (_, None) => None
+      | (None, _) => None
+      | (Some (j1, true), Some (j2, falls2)) => Some (set_ap j1 j2, falls2)
+      end
+  | If _ s1 s2 =>
+      match (stmt_jumps s1, stmt_jumps s2) with
+      | (_, None) => None
+      | (None, _) => None
+      | (Some (j1, falls1), Some (j2, falls2)) =>
+          Some (set_ap j1 j2, falls1 || falls2)
+      end
+  | Rep _ s =>
+      match stmt_jumps s with
+      | Some (jmps, falls) => Some (jmps, true)
+      | None => None
+      end
+  end.
+
+Lemma rep_exits_total: forall e q h s s' x a
+  (XS: exec_stmt h s (Rep e q) s' x) (EX: x = Some a),
+  exists s0 s0', exec_stmt h s0 q s0' x.
+Proof.
+  intros. inversion XS; subst; clear XS; simpl in *.
+  rewrite N2Nat.inj_iter in XS0. remember (N.to_nat n) as nn.
+  clear e w E n Heqnn. revert q h s s' a XS0.
+  induction nn; intros. inversion XS0. inversion XS0; subst; clear XS0.
+  - eexists. eexists. eassumption.
+  - eapply IHnn. eassumption.
+Qed.
+
+Theorem stmt_jumps_complete: forall q h s0 s1 x jmps falls
+  (XS: exec_stmt h s0 q s1 x)
+  (JMPS: Some (jmps, falls) = stmt_jumps q),
+  match x with
+  | Some (Exit a') => set_has jmps a' = true
+  | Some (Raise _) => True
+  | None => falls = true
+  end.
+Proof.
+  induction q; intros; inversion XS; subst; simpl in *.
+  - (* Nop *) inversion JMPS. reflexivity.
+  - (* Assign *) inversion JMPS. reflexivity.
+  - (* Jmp *) inversion E; subst; simpl in *; clear E; try discriminate.
+    inversion JMPS. eapply set_has_in. reflexivity. apply set_add_correct.
+  - (* Exn *) reflexivity.
+  - (* Seq, exit in q1 *) destruct (stmt_jumps q1) as [[j1 falls1]|] eqn: J1;
+    try solve [destruct (stmt_jumps q2) eqn: J2; discriminate]. destruct falls1.
+    + (* Can fall-through *) destruct x0; try reflexivity.
+      destruct (stmt_jumps q2) as [[j2 falls2]|] eqn: J2; try discriminate.
+      inversion JMPS. subst. destruct (set_ap) as [l_res UNIQ_res] eqn: SAP.
+      eapply set_has_in. reflexivity. erewrite set_intros_l by eassumption.
+      eapply set_ap_left. eapply set_has_in. reflexivity. einstantiate trivial IHq1.
+    + (* Cannot fall-through *) inversion JMPS. subst. destruct x0;
+      try reflexivity. einstantiate trivial IHq1.
+  - (* Seq, exit in q2 *) destruct (stmt_jumps q1) as [[j1 falls1]|] eqn: J1;
+    try solve [destruct (stmt_jumps q2) eqn: J2; discriminate]. destruct falls1.
+    + (* Can fall-through *) destruct (stmt_jumps q2) as [[j2 falls2]|] eqn: J2;
+      try discriminate. inversion JMPS. subst. einstantiate trivial IHq2 as IHq2.
+      destruct x as [[a|n]|]; trivial2.
+      destruct (set_ap) as [l_res UNIQ_res] eqn: SAP. eapply set_has_in.
+      reflexivity. erewrite set_intros_l by eassumption. eapply set_ap_right.
+      eapply set_has_in. reflexivity. assumption.
+    + (* Cannot fall-through; contradiction *) inversion JMPS.
+      subst. einstantiate trivial IHq1 as IHq1.
+  - (* If *) destruct (stmt_jumps q1) as [[j1 falls1]|] eqn: J1;
+    destruct (stmt_jumps q2) as [[j2 falls2]|] eqn: J2; try discriminate.
+    inversion JMPS. subst. clear JMPS. destruct x as [[a|n]|]; try reflexivity.
+    + (* Jumped *) destruct (set_ap) as [l_res UNIQ_res] eqn: SAP.
+      eapply set_has_in. reflexivity. erewrite set_intros_l by eassumption.
+      apply set_ap_correct. destruct c; [einstantiate trivial IHq2; right|
+        einstantiate trivial IHq1; left]; eapply set_has_in;
+        solve [reflexivity|eassumption].
+    + (* Fallthrough *) apply orb_true_intro. destruct c;
+      [einstantiate trivial IHq2; right | einstantiate trivial IHq1; left];
+      assumption.
+  - (* Evil rep *) destruct stmt_jumps as [[jmps' falls']|] eqn: Jinner;
+    inversion JMPS. subst. destruct x as [[a|?]|]; try reflexivity.
+    einstantiate trivial rep_exits_total as RET.
+    destruct RET as [s2 [s2' XSinner]]. einstantiate trivial IHq.
+
+(* Try to solve all NoDup constraints *)
+Unshelve. all:
+  match goal with
+  | s: set addr |- NoDup _ => destruct s; assumption
+  end.
+Qed.
+
+Definition expand_jumps (hints: program -> addr -> option (set addr))
+  (p: program) (accum: option (set addr * bool)) addr :=
+  match accum with
+  | Some (jmps, changed)
+  stmt_jumps
+
+
+
+Definition expand_jumps: 
+
+Definition jump_set_complete 
 
 Definition init_store_delta (c: typctx): store_delta :=
   fun v =>
@@ -1019,7 +1400,7 @@ Compute rev (filter
 Fixpoint push_stack_offsets (p: program) (a: addr): option (set addr, ) :=
   match p null_state a with
   | Some (sz, q) =>
-      match get_jumps q with
+      match stmt_jumps q with
       | Some jmps =>
           fold_left
           set_add jmps (a + sz)
