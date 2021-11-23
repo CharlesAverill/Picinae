@@ -849,7 +849,7 @@ Definition true_hyp {V} hyps (v:V) :=
   end.
 
 Definition process_state (vars: list var) (exitof: option exit -> exit)
-  (accum: trace_states * bool) (st: store_delta * option exit) :=
+  (st: store_delta * option exit) (accum: trace_states * bool) :=
   let '(ts, changed) := accum in
   let '(δ', x) := st in
   (* If this exited to an address, update state on that address
@@ -899,7 +899,7 @@ Inductive subgoals: Set :=
 
 Definition trace_program_step_at (vars: list var) (p: program)
   (hints: program -> addr -> trace_states -> option (trace_states * bool))
-  (accum: option (trace_states * bool)) addr :=
+  addr (accum: option (trace_states * bool)) :=
   match accum with
   | None => None
   | Some (ts, changed) =>
@@ -920,8 +920,8 @@ Definition trace_program_step_at (vars: list var) (p: program)
                   match simple_trace_stmt δ_a q with
                   | None => None
                   | Some next_states =>
-                      let res := fold_left (process_state vars
-                        (exitof (addr + sz))) next_states (ts, changed) in
+                      let res := fold_right (process_state vars
+                        (exitof (addr + sz))) (ts, changed) next_states in
                       Some res
                   end
               end
@@ -929,6 +929,18 @@ Definition trace_program_step_at (vars: list var) (p: program)
       | Some (ts', changed') => Some (ts', changed || changed')
       end
   end.
+
+Definition trace_program_once (vars: list var) (p: program)
+  (hints: program -> addr -> trace_states -> option (trace_states * bool))
+  (reachable: set addr) (init_ts: trace_states): option (trace_states * bool) :=
+  fold_right (trace_program_step_at vars p hints) (Some (init_ts, false))
+    (set_elems reachable).
+
+Lemma fold_trace_program_once: forall vars p hints reachable init_ts,
+  fold_right (trace_program_step_at vars p hints) (Some (init_ts, false))
+    (set_elems reachable) =
+  trace_program_once vars p hints reachable init_ts.
+Proof. reflexivity. Qed.
 
 Inductive exec_prog2 (h: hdomain) (p:program) (a:addr) (s:store): nat -> store -> exit -> Prop :=
 | X2Done: exec_prog2 h p a s O s (Exit a)
@@ -973,14 +985,15 @@ Proof.
 Qed.
 
 Theorem trace_program_step_at_steady_correct: forall p vars a_new al hints ts
-  h a0 s0 (IHal: correctness_sub_prog p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
+  h a0 s0 (Init: forall δ s, ts a0 = Some δ -> has_delta h s s δ)
+  (IHal: correctness_sub_prog p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
   (Total: Forall (fun a1 => exists δ1, ts a1 = Some δ1) (a_new :: al))
-  (TPSA: trace_program_step_at vars p hints (Some (ts, false)) a_new =
+  (TPSA: trace_program_step_at vars p hints a_new (Some (ts, false)) =
     Some (ts, false))
-  (HintsCorrect: forall ts ts' h a0 s0
+  (HintsCorrect: forall a_new al ts h a0 s0
     (IHal: correctness_sub_prog p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
     (Total: Forall (fun a1 => exists δ1, ts a1 = Some δ1) (a_new :: al))
-    (Hint: hints p a_new ts = Some (ts', false)),
+    (Hint: hints p a_new ts = Some (ts, false)),
     correctness_sub_prog p (a_new :: al) ts h a0 s0),
   correctness_sub_prog p (a_new :: al) ts h a0 s0.
 Proof.
@@ -992,7 +1005,7 @@ Proof.
   eapply HintsCorrect; try eassumption. clear HintsCorrect.
 
   destruct (p _ _) as [[sz_new q_new]|] eqn: LUa_new; try discriminate.
-  destruct (ts _) as [δ_a_new|] eqn: TSa_new; try discriminate.
+  destruct (ts a_new) as [δ_a_new|] eqn: TSa_new; try discriminate.
   destruct simple_trace_stmt as [next_states|] eqn: Fn; try discriminate.
   rename a1 into a', s1 into s', n1 into n', δ into δ', XP into XP',
     TS2 into TS'.
@@ -1000,7 +1013,7 @@ Proof.
   (* Main case has the flow a0 ~> a1 -> a' *)
   apply exec_prog_equiv_exec_prog2 in XP'. revert a' s' δ' XP' TS'.
   induction n'; intros; inversion XP'; subst.
-  - (* n = 0 *) eapply IHal. constructor. assumption.
+  - (* n = 0 *) apply Init. assumption.
   - (* n > 0 *) rename s2 into s1. eapply Forall_forall in Total.
     destruct Total as [δ1 TS1]. einstantiate trivial IHn' as HD1.
 
@@ -1017,6 +1030,31 @@ Proof.
     unfold sub_prog in LU. destruct existsb eqn: EXa2; try discriminate.
     apply existsb_exists in EXa2. destruct EXa2 as [a1' [InDomain Eq]].
     destruct (a1 == a1'); try discriminate. subst. assumption.
+Admitted.
+
+Theorem trace_program_once_steady_correct: forall p vars hints reachable ts
+  h a0 s0 (Init: forall δ s, ts a0 = Some δ -> has_delta h s s δ)
+  (TPO: trace_program_once vars p hints reachable ts = Some (ts, false))
+  (HintsCorrect: forall a_new al ts h a0 s0
+    (IHal: correctness_sub_prog p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
+    (Total: Forall (fun a1 => exists δ1, ts a1 = Some δ1) (a_new :: al))
+    (Hint: hints p a_new ts = Some (ts, false)),
+    correctness_sub_prog p (a_new :: al) ts h a0 s0),
+  correctness_sub_prog p (set_elems reachable) ts h a0 s0.
+Proof.
+  intros until reachable. destruct reachable as [al UNIQ_al]. revert UNIQ_al.
+  induction al; intros; unfold correctness_sub_prog; intros.
+  - unfold sub_prog in XP. simpl in XP. inversion XP; subst.
+    + apply Init. assumption.
+    + inversion LU.
+  - inversion UNIQ_al as [|? ? InAl UNIQ_al']. subst.
+    unfold trace_program_once in TPO. simpl in TPO.
+    erewrite (set_intros_l _ al UNIQ_al') in TPO by reflexivity.
+    rewrite fold_trace_program_once in TPO.
+    eapply trace_program_step_at_steady_correct; try eassumption.
+    eapply IHal; try eassumption. admit. (* trivial *)
+    admit. (* trivial *)
+    admit. (* trivial *)
 Admitted.
 
 Fixpoint stmt_reachable (s: stmt): option (set addr * bool) :=
@@ -1119,17 +1157,27 @@ Unshelve. all:
   end.
 Qed.
 
-Definition expand_jumps (hints: program -> addr -> option (set addr))
-  (p: program) (accum: option (set addr * bool)) addr :=
+Definition reachables_at (hints: program -> addr -> option (set addr))
+  (p: program) (accum: option (set addr)) addr :=
   match accum with
-  | Some (jmps, changed)
-  stmt_reachable
-
-
-
-Definition expand_jumps: 
-
-Definition jump_set_complete 
+  | Some jmps =>
+      match hints p addr with
+      | Some jmps' => Some (set_ap jmps jmps')
+      | None =>
+          match p null_state addr with
+          | Some (sz, q) =>
+              match stmt_reachable q with
+              | Some (jmps, falls) => Some
+                  (if falls
+                  then set_add jmps (addr+sz)
+                  else jmps)
+              | None => None
+              end
+          | None => None
+          end
+      end
+  | None => None
+  end.
 
 Definition init_store_delta (c: typctx): store_delta :=
   fun v =>
