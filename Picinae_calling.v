@@ -930,16 +930,16 @@ Definition trace_program_step_at (vars: list var) (p: program)
       end
   end.
 
-Definition trace_program_once (vars: list var) (p: program)
+Definition expand_trace_program (vars: list var) (p: program)
   (hints: program -> addr -> trace_states -> option (trace_states * bool))
   (reachable: set addr) (init_ts: trace_states): option (trace_states * bool) :=
   fold_right (trace_program_step_at vars p hints) (Some (init_ts, false))
     (set_elems reachable).
 
-Lemma fold_trace_program_once: forall vars p hints reachable init_ts,
+Lemma fold_expand_trace_program: forall vars p hints reachable init_ts,
   fold_right (trace_program_step_at vars p hints) (Some (init_ts, false))
     (set_elems reachable) =
-  trace_program_once vars p hints reachable init_ts.
+  expand_trace_program vars p hints reachable init_ts.
 Proof. reflexivity. Qed.
 
 Inductive exec_prog2 (h: hdomain) (p:program) (a:addr) (s:store): nat -> store -> exit -> Prop :=
@@ -1032,9 +1032,9 @@ Proof.
     destruct (a1 == a1'); try discriminate. subst. assumption.
 Admitted.
 
-Theorem trace_program_once_steady_correct: forall p vars hints reachable ts
+Theorem expand_trace_program_steady_correct: forall p vars hints reachable ts
   h a0 s0 (Init: forall δ s, ts a0 = Some δ -> has_delta h s s δ)
-  (TPO: trace_program_once vars p hints reachable ts = Some (ts, false))
+  (TPO: expand_trace_program vars p hints reachable ts = Some (ts, false))
   (HintsCorrect: forall a_new al ts h a0 s0
     (IHal: correctness_sub_prog p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
     (Total: Forall (fun a1 => exists δ1, ts a1 = Some δ1) (a_new :: al))
@@ -1048,9 +1048,9 @@ Proof.
     + apply Init. assumption.
     + inversion LU.
   - inversion UNIQ_al as [|? ? InAl UNIQ_al']. subst.
-    unfold trace_program_once in TPO. simpl in TPO.
+    unfold expand_trace_program in TPO. simpl in TPO.
     erewrite (set_intros_l _ al UNIQ_al') in TPO by reflexivity.
-    rewrite fold_trace_program_once in TPO.
+    rewrite fold_expand_trace_program in TPO.
     eapply trace_program_step_at_steady_correct; try eassumption.
     eapply IHal; try eassumption. admit. (* trivial *)
     admit. (* trivial *)
