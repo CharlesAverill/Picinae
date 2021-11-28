@@ -1031,6 +1031,59 @@ Proof.
     apply existsb_exists in EXa2. destruct EXa2 as [a1' [InDomain Eq]].
     destruct (a1 == a1'); try discriminate. subst. assumption.
 Admitted.
+Definition hintCorrect hints p : Prop := forall a_new al ts h a0 s0
+    (IHal: correctness_sub_prog p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
+    (Total: Forall (fun a1 => exists δ1, ts a1 = Some δ1) (a_new :: al))
+    (Hint: hints p a_new ts = Some (ts, false)),
+    correctness_sub_prog p (a_new :: al) ts h a0 s0.
+
+(*MARK*)
+Theorem expand_trace_program_steady_correct: forall p vars hints reachable ts
+  h a0 s0 
+  (INIT: forall δ, ts a0 = Some δ -> has_delta h s0 s0 δ)
+  (HINT: hintCorrect hints p)
+  (TPO: expand_trace_program vars p hints reachable ts = Some (ts, false)),
+  correctness_sub_prog p (set_elems reachable) ts h a0 s0.
+Proof.
+  intros. revert HINT INIT. revert TPO s0. revert a0 h ts hints vars p. destruct reachable as [reachable_addrs UNIQ_reachable_addrs]. 
+  induction reachable_addrs.
+  - intros. unfold correctness_sub_prog. intros. simpl in XP. inversion XP. subst. apply INIT. assumption. inversion LU. 
+  - intros. unfold correctness_sub_prog in IHreachable_addrs. simpl in IHreachable_addrs.
+      unfold expand_trace_program in TPO. unfold expand_trace_program. simpl in TPO. simpl.
+      unfold trace_program_step_at in TPO. destruct fold_right in TPO; try solve [inversion TPO].
+      destruct p0 in TPO. destruct (hints) in TPO. 
+      + simpl in TPO. destruct p0 in TPO. inversion TPO.
+
+  - intros. unfold correctness_sub_prog in IHreachable_addrs. intros. 
+      simpl in IHreachable_addrs. eapply IHreachable_addrs.
+      unfold expand_trace_program in TPO. unfold expand_trace_program. simpl in TPO. simpl.
+      unfold trace_program_step_at in TPO. destruct fold_right in TPO; try solve [inversion TPO].
+      destruct p0 in TPO. destruct (hints) in TPO. 
+      + simpl in TPO. destruct p0 in TPO. inversion TPO.
+Qed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Theorem expand_trace_program_steady_correct: forall p vars hints reachable ts
   h a0 s0 (Init: forall δ s, ts a0 = Some δ -> has_delta h s s δ)
