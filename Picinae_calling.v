@@ -1239,6 +1239,7 @@ Definition hintCorrect hints p : Prop := forall a_new al ts h a0 s0
     correctness_sub_prog p (a_new :: al) ts h a0 s0.
 
 (*MARK*)
+(*
 Theorem expand_trace_program_steady_correct: forall p vars hints reachable ts
   h a0 s0 
   (INIT: forall δ, ts a0 = Some δ -> has_delta h s0 s0 δ)
@@ -1249,8 +1250,8 @@ Proof.
   intros. revert HINT INIT. revert TPO s0. revert a0 h ts hints vars p. destruct reachable as [reachable_addrs UNIQ_reachable_addrs]. 
   induction reachable_addrs.
   - intros. unfold correctness_sub_prog. intros. simpl in XP. inversion XP. subst. apply INIT. assumption. inversion LU. 
-  - intros. unfold correctness_sub_prog in IHreachable_addrs. simpl in IHreachable_addrs.
-      unfold expand_trace_program in TPO. unfold expand_trace_program. simpl in TPO. simpl.
+  - intros. unfold correctness_sub_prog in *. simpl in *.
+      unfold expand_trace_program in TPO. unfold expand_trace_program. simpl in *.
       unfold trace_program_step_at in TPO. destruct fold_right in TPO; try solve [inversion TPO].
       destruct p0 in TPO. destruct (hints) in TPO. 
       + simpl in TPO. destruct p0 in TPO. inversion TPO.
@@ -1262,8 +1263,46 @@ Proof.
       destruct p0 in TPO. destruct (hints) in TPO. 
       + simpl in TPO. destruct p0 in TPO. inversion TPO.
 Qed.
+ *)
+Theorem test: forall (p : store → addr → option (N * stmt)) hints reachable ts p vars q sz s2 a2
+    (TPO : expand_trace_program vars p hints reachable ts = Some (ts, false))
+    (LU : sub_prog p (set_elems reachable) s2 a2 = Some (sz, q)),
+    exists δ, ts a2 = Some δ.
+Proof.
+  intros. revert TPO LU. revert ts vars q sz s2 a2. destruct reachable as [reachable_addrs UNIQ_reachable_addrs]. 
+  (*intros.  unfold expand_trace_program in TPO. unfold trace_program_step_at in TPO.*)
+  induction reachable_addrs.
+  - intros. subst. simpl in TPO. unfold sub_prog in LU. simpl in LU. inversion LU.
+  - intros. 
+    simpl in LU. unfold sub_prog in LU. destruct existsb; try discriminate.
+    unfold expand_trace_program in *. simpl in *. unfold trace_program_step_at in TPO.
+    destruct fold_right eqn:H_fr; try solve [inversion TPO].    
+    destruct p1 eqn:H_p1. destruct hints in TPO. admit. simpl in TPO. 
+    destruct p0 eqn:H_p; try solve [inversion TPO]. destruct p1; try solve [inversion TPO]. 
+    destruct t; try solve [inversion TPO]. destruct simple_trace_stmt; try solve [inversion TPO]. inversion TPO.
+    unfold expand_trace_program.
+
+    eapply IHreachable_addrs. clear IHreachable_addrs.
+    intros. 
+Theorem expand_trace_program_steady_correct_n: forall p vars hints reachable ts
+  h a0 s0 
+  (INIT: forall δ, ts a0 = Some δ -> has_delta h s0 s0 δ)
+  (HINT: hintCorrect hints p)
+  (TPO: expand_trace_program vars p hints reachable ts = Some (ts, false)),
+  correctness_sub_prog p (set_elems reachable) ts h a0 s0.
+Proof.
+  unfold correctness_sub_prog. intros. revert HINT INIT XP TS2 TPO. revert a0 h ts hints vars p s0 a1 s1 δ. induction n1.
+  - intros.  simpl in XP. inversion XP. subst. apply INIT. assumption.
+  - intros. apply exec_prog_equiv_exec_prog2 in XP. inversion XP. subst. einstantiate IHn1.
+      exact HINT.
+      exact INIT.
+      apply exec_prog_equiv_exec_prog2 in XP0. exact XP0.   
+      2: { exact TPO. } 
+      unfold expand_trace_program in TPO. simpl in TPO. unfold trace_program_step_at in TPO.
 
 
+
+Qed.
 
 
 
