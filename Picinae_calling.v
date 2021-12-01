@@ -1232,12 +1232,16 @@ Proof.
     apply existsb_exists in EXa2. destruct EXa2 as [a1' [InDomain Eq]].
     destruct (a1 == a1'); try discriminate. subst. assumption.
 Admitted.
+
+Definition hintDelta (hints: program → addr → trace_states → option (trace_states * bool))  (p : program) : 
+    Prop := forall a_new ts b,
+   hints p a_new ts = Some (ts, b) -> (forall a, exists δ1, ts a = Some δ1).
+ 
 Definition hintCorrect hints p : Prop := forall a_new al ts h a0 s0
     (IHal: correctness_sub_prog p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
     (Total: Forall (fun a1 => exists δ1, ts a1 = Some δ1) (a_new :: al))
     (Hint: hints p a_new ts = Some (ts, false)),
     correctness_sub_prog p (a_new :: al) ts h a0 s0.
-
 (*MARK*)
 (*
 Theorem expand_trace_program_steady_correct: forall p vars hints reachable ts
@@ -1264,8 +1268,34 @@ Proof.
       + simpl in TPO. destruct p0 in TPO. inversion TPO.
 Qed.
  *)
+Theorem process_state_vars_nochange: forall l t b ts a n vars,
+  fold_right (process_state vars (exitof (a + n))) (t, b) l = (ts, false) -> (t,b) = (ts,false).
+Proof.
+  induction l.
+    intros. simpl in H. inversion H. reflexivity.
+    intros. simpl in H. destruct fold_right eqn:H_fr in H.
+    unfold process_state in H. destruct a. destruct (exitof (a0 + n) o) in H.
+      destruct join_states_if_changed eqn:H_jsic in H; inversion H.
+        subst. apply IHl in H_fr. inversion H_fr. reflexivity.
+      inversion H. subst. apply IHl in H_fr. inversion H_fr. reflexivity.
+Qed.  
+(*
+Theorem trace_program_step_at_nochange: forall reachable_addrs p hints ts vars t,
+fold_right (trace_program_step_at vars p hints) (Some (ts, false)) reachable_addrs = Some (t, false) -> t = ts.
+Proof.
+  induction reachable_addrs.
+    intros. simpl in H. inversion H. reflexivity.
+
+    intros. simpl in H. destruct fold_right eqn:H_fr in H.
+    unfold trace_program_step_at in H. 
+      destruct p0. destruct hints. 
+        destruct p0. in H.
+Qed.
+ *)
+(*MARKK*)
 Theorem test: forall (p : store → addr → option (N * stmt)) hints reachable ts p vars q sz s2 a2
     (TPO : expand_trace_program vars p hints reachable ts = Some (ts, false))
+    (HINT: hintDelta hints p)
     (LU : sub_prog p (set_elems reachable) s2 a2 = Some (sz, q)),
     exists δ, ts a2 = Some δ.
 Proof.
@@ -1274,16 +1304,23 @@ Proof.
   induction reachable_addrs.
   - intros. subst. simpl in TPO. unfold sub_prog in LU. simpl in LU. inversion LU.
   - intros. 
-    simpl in LU. unfold sub_prog in LU. destruct existsb; try discriminate.
-    unfold expand_trace_program in *. simpl in *. unfold trace_program_step_at in TPO.
-    destruct fold_right eqn:H_fr; try solve [inversion TPO].    
-    destruct p1 eqn:H_p1. destruct hints in TPO. admit. simpl in TPO. 
+    (*simpl in LU. unfold sub_prog in LU. destruct existsb; try discriminate.*)
+    unfold expand_trace_program in *. simpl in *. 
+    destruct fold_right eqn:H_fr; try solve [inversion TPO].  
+    destruct p1 eqn:H_p1. unfold trace_program_step_at in TPO.
+    destruct hints eqn:H_hint in TPO. admit.
+    (*unfold hintDelta in HINT. destruct p2. inversion TPO. subst. eapply HINT in H_hint. (*hints will have to be asserted*). simpl in TPO. *)
     destruct p0 eqn:H_p; try solve [inversion TPO]. destruct p1; try solve [inversion TPO]. 
-    destruct t; try solve [inversion TPO]. destruct simple_trace_stmt; try solve [inversion TPO]. inversion TPO.
-    unfold expand_trace_program.
+    destruct p2 eqn:H_p2. subst.  destruct t eqn:H_t; try solve [inversion TPO]. 
+    destruct simple_trace_stmt eqn:H_sts; try solve [inversion TPO]. inversion TPO.
+    apply process_state_vars_nochange in H0. inversion H0. subst. clear H0.
+    inversion H_p1. subst. clear H_p1. clear TPO. unfold sub_prog in LU. destruct existsb eqn:H_existsb; try discriminate. 
+    inversion H_existsb. apply orb_prop in H0. destruct H0.
+    apply iseqb_iff_eq in H. subst. split with (x:= s0). apply H_t. 
+    eapply IHreachable_addrs.
+      inversion UNIQ_reachable_addrs. subst. apply H3. apply H_fr. unfold sub_prog. rewrite -> H. apply LU.
+Admitted.
 
-    eapply IHreachable_addrs. clear IHreachable_addrs.
-    intros. 
 Theorem expand_trace_program_steady_correct_n: forall p vars hints reachable ts
   h a0 s0 
   (INIT: forall δ, ts a0 = Some δ -> has_delta h s0 s0 δ)
