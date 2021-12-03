@@ -1243,31 +1243,16 @@ Definition hintCorrect hints p : Prop := forall a_new al ts h a0 s0
     (Hint: hints p a_new ts = Some (ts, false)),
     correctness_sub_prog p (a_new :: al) ts h a0 s0.
 (*MARK*)
-(*
-Theorem expand_trace_program_steady_correct: forall p vars hints reachable ts
-  h a0 s0 
-  (INIT: forall δ, ts a0 = Some δ -> has_delta h s0 s0 δ)
-  (HINT: hintCorrect hints p)
-  (TPO: expand_trace_program vars p hints reachable ts = Some (ts, false)),
-  correctness_sub_prog p (set_elems reachable) ts h a0 s0.
+Theorem process_state_nofold_nochange: forall vars xit k t b ts,
+    process_state vars xit k (t, b) = (ts, false) -> (t, b) = (ts, false).
 Proof.
-  intros. revert HINT INIT. revert TPO s0. revert a0 h ts hints vars p. destruct reachable as [reachable_addrs UNIQ_reachable_addrs]. 
-  induction reachable_addrs.
-  - intros. unfold correctness_sub_prog. intros. simpl in XP. inversion XP. subst. apply INIT. assumption. inversion LU. 
-  - intros. unfold correctness_sub_prog in *. simpl in *.
-      unfold expand_trace_program in TPO. unfold expand_trace_program. simpl in *.
-      unfold trace_program_step_at in TPO. destruct fold_right in TPO; try solve [inversion TPO].
-      destruct p0 in TPO. destruct (hints) in TPO. 
-      + simpl in TPO. destruct p0 in TPO. inversion TPO.
-
-  - intros. unfold correctness_sub_prog in IHreachable_addrs. intros. 
-      simpl in IHreachable_addrs. eapply IHreachable_addrs.
-      unfold expand_trace_program in TPO. unfold expand_trace_program. simpl in TPO. simpl.
-      unfold trace_program_step_at in TPO. destruct fold_right in TPO; try solve [inversion TPO].
-      destruct p0 in TPO. destruct (hints) in TPO. 
-      + simpl in TPO. destruct p0 in TPO. inversion TPO.
+  intros. unfold process_state in H.
+  destruct k.
+  destruct xit.
+    destruct join_states_if_changed.
+  inversion H. assumption. assumption.
 Qed.
- *)
+
 Theorem process_state_vars_nochange: forall l t b ts a n vars,
   fold_right (process_state vars (exitof (a + n))) (t, b) l = (ts, false) -> (t,b) = (ts,false).
 Proof.
@@ -1279,85 +1264,176 @@ Proof.
         subst. apply IHl in H_fr. inversion H_fr. reflexivity.
       inversion H. subst. apply IHl in H_fr. inversion H_fr. reflexivity.
 Qed. 
-Theorem trace_program_step_at_nochange: forall reachable_addrs vars p hints t ts, 
-  fold_right (trace_program_step_at vars p hints) (Some (t, false)) reachable_addrs = Some (ts, false) -> t = ts.
+Theorem trace_program_step_at_nochange: forall vars p hints a2 t b ts, 
+   trace_program_step_at vars p hints a2 (Some (t, b)) = Some (ts, false) -> (t, b) = (ts, false).
+Proof.
+    intros.
+      unfold trace_program_step_at in H.
+      destruct hints eqn:H_hint in H.
+        destruct p0. admit.
+    destruct p eqn:H_p; try solve [inversion H]. destruct p0; try solve [inversion H]. 
+    destruct t eqn:H_t. 
+      destruct simple_trace_stmt eqn:H_sts; try discriminate. inversion H. apply process_state_vars_nochange in H1. 
+      inversion H1. subst. inversion H. rewrite -> H2. rewrite -> H2. reflexivity.
+      inversion H. subst. reflexivity.
+Admitted. (*admitted due to hints.*)
+
+Theorem fold_trace_program_step_at_nochange: forall reachable_addrs vars p hints t ts b, 
+  fold_right (trace_program_step_at vars p hints) (Some (t, b)) reachable_addrs = Some (ts, false) -> (t, b) = (ts, false).
 Proof.
   induction reachable_addrs.  
     intros. simpl in H. inversion H. reflexivity.
     intros. simpl in H. destruct fold_right eqn:H_fr; try solve [inversion H].  
-      unfold trace_program_step_at in H.
-      destruct p0 eqn:H_p0. unfold trace_program_step_at in H.
-      destruct hints eqn:H_hint in H.
-        admit.
-    destruct p eqn:H_p; try solve [inversion H]. destruct p1; try solve [inversion H]. 
-    destruct t0 eqn:H_t. 
-      destruct simple_trace_stmt eqn:H_sts; try discriminate. inversion H. apply process_state_vars_nochange in H1. 
-         inversion H1. subst. eapply IHreachable_addrs. apply H_fr. 
-      inversion H. subst. eapply IHreachable_addrs.  apply H_fr.
-Admitted.
-(*MARKK*)
-Theorem test2: forall (p : store → addr → option (N * stmt)) hints reachable ts p vars q sz s2 a2
-    (TPO : expand_trace_program vars p hints reachable ts = Some (ts, false))
-    (HINT: hintDelta hints p)
-    (LU : sub_prog p (set_elems reachable) s2 a2 = Some (sz, q)),
-    exists δ, ts a2 = Some δ.
-Proof.
- intros. revert TPO LU. revert ts vars q sz s2 a2. destruct reachable as [reachable_addrs UNIQ_reachable_addrs]. 
-  (*intros.  unfold expand_trace_program in TPO. unfold trace_program_step_at in TPO.*)
-  induction reachable_addrs.
-  - intros. subst. simpl in TPO. unfold sub_prog in LU. simpl in LU. inversion LU.
-  - intros. 
-    unfold expand_trace_program in *.  simpl in *. destruct fold_right eqn:H_fr; try solve [inversion TPO].  
-    destruct p1. 
- 
-Qed.
-(*MARKK*)
-Theorem test: forall (p : store → addr → option (N * stmt)) hints reachable ts p vars q sz s2 a2
-    (TPO : expand_trace_program vars p hints reachable ts = Some (ts, false))
-    (HINT: hintDelta hints p)
-    (LU : sub_prog p (set_elems reachable) s2 a2 = Some (sz, q)),
-    exists δ, ts a2 = Some δ.
-Proof.
-  intros. revert TPO LU. revert ts vars q sz s2 a2. destruct reachable as [reachable_addrs UNIQ_reachable_addrs]. 
-  (*intros.  unfold expand_trace_program in TPO. unfold trace_program_step_at in TPO.*)
-  induction reachable_addrs.
-  - intros. subst. simpl in TPO. unfold sub_prog in LU. simpl in LU. inversion LU.
-  - intros. 
-    (*simpl in LU. unfold sub_prog in LU. destruct existsb; try discriminate.*)
-    unfold expand_trace_program in *. simpl in *. 
-    destruct fold_right eqn:H_fr; try solve [inversion TPO].  
-    destruct p1 eqn:H_p1. unfold trace_program_step_at in TPO.
-    destruct hints eqn:H_hint in TPO. 
-    unfold hintDelta in HINT. destruct p2. eapply HINT. apply H_hint. (*hints will have to be asserted*). simpl in TPO.
-    destruct p0 eqn:H_p; try solve [inversion TPO]. destruct p1; try solve [inversion TPO]. 
-    destruct p2 eqn:H_p2. subst.  destruct t eqn:H_t; try solve [inversion TPO]. 
-    destruct simple_trace_stmt eqn:H_sts; try solve [inversion TPO]. inversion TPO.
-    apply process_state_vars_nochange in H0. inversion H0. subst. clear H0.
-    inversion H_p1. subst. clear H_p1. clear TPO. unfold sub_prog in LU. destruct existsb eqn:H_existsb; try discriminate. 
-    inversion H_existsb. apply orb_prop in H0. destruct H0.
-    apply iseqb_iff_eq in H. subst. split with (x:= s0). apply H_t. 
-    eapply IHreachable_addrs.
-      inversion UNIQ_reachable_addrs. subst. apply H3. apply H_fr. unfold sub_prog. rewrite -> H. apply LU.
+      destruct p0. apply trace_program_step_at_nochange in H. inversion H. subst. apply IHreachable_addrs in H_fr. rewrite H_fr.
+      reflexivity.
 Qed.
 
+Theorem fold_process_state_changed: forall l t ts xit vars b,
+  fold_right (process_state vars xit) (t, true) l = (ts, b) -> b = true.
+Proof.
+  induction l.
+    intros. simpl in H. inversion H. reflexivity.
+    intros. simpl in H.
+      destruct fold_right eqn:H_fr in H.
+      unfold process_state in H.
+      destruct a in H.
+      destruct xit in H.
+      destruct join_states_if_changed in H.
+        inversion H. reflexivity. 
+      inversion H. subst. eapply IHl. apply H_fr.
+      inversion H. subst. eapply IHl. apply H_fr.
+Qed.
+
+Theorem trace_program_step_at_changed: forall a vars p hints t ts b, 
+  trace_program_step_at vars p hints a (Some (t, true)) =  Some (ts, b) -> b = true.
+Proof.
+  intros.
+  unfold trace_program_step_at in H. simpl in H.
+    destruct hints.
+      destruct p0. inversion H. reflexivity.
+    destruct p; try discriminate.
+    destruct t.
+      destruct p0. destruct simple_trace_stmt in H; try discriminate.
+      simpl in H. inversion H. apply fold_process_state_changed in H1. assumption.
+    destruct p0. inversion H. reflexivity.
+Qed.
+
+Theorem fold_trace_program_step_at_changed: forall reachable_addrs vars p hints t ts b, 
+  fold_right (trace_program_step_at vars p hints) (Some (t, true)) reachable_addrs = Some (ts, b) -> b = true.
+Proof.
+  induction reachable_addrs.
+    intros. inversion H.  reflexivity.
+    intros. simpl in H. destruct fold_right eqn:H_fr in H. destruct p0. apply IHreachable_addrs in H_fr. subst.
+      apply trace_program_step_at_changed in H. assumption. inversion H. 
+Qed.
+
+(*MARKK*)
+(* this should be replaced by a library theorem, ie in_split.*)
+Theorem list_splittable: forall reachable_addrs (a:addr),
+  existsb (iseqb a) reachable_addrs = true ->
+    exists reachA reachB , reachable_addrs = reachA ++ a :: reachB.
+Proof.
+  induction reachable_addrs.
+    intros. simpl in H. inversion H.
+    intros. simpl in  *. apply orb_prop in H. destruct H.
+      apply iseqb_iff_eq in H. subst. exists nil. exists reachable_addrs. reflexivity.
+      apply  IHreachable_addrs in H. destruct H. destruct H. subst. exists (a::x). exists (x0). reflexivity.
+Qed.
+
+(*we will likely need to prove this. should be similar to main proof and not that hard. *)
+(*
+Theorem expand_trace_changed: forall n1 reachable hints p h a0 s0 s' a' sz q ts t' vars b sd
+    (HINT: hintDelta hints p)
+    (XP0 : exec_prog2 h (sub_prog p (set_elems reachable)) a0 s0 n1 s' (Exit a'))
+    (LU : sub_prog p (set_elems reachable) s' a' = Some (sz, q))
+    (TS0: ts a0 = Some sd)
+    (TS: ts a' = None),
+    expand_trace_program vars p hints reachable ts = Some (t', b) -> b = true.
+Proof.
+   destruct reachable as [reachable_addrs UNIQ_reachable_addrs].
+   induction n1.
+    intros. inversion XP0. subst. rewrite -> TS0 in TS. inversion TS.
+    intros. simpl in *. inversion XP0. subst. 
+      pose proof LU0 as LU0_2. unfold sub_prog in LU0. destruct existsb eqn:H_existsb; try discriminate. 
+      apply list_splittable in H_existsb. destruct H_existsb. destruct H0. subst.
+      
+
+      
+
+      
+  
+    intros. simpl in *. inversion XP0. subst. rewrite -> TS0 in TS. inversion TS.
+    intros. pose proof H as TRACE. clear H. inversion XP0. subst.
+      simpl in *. subst. pose proof LU0. unfold sub_prog in LU0. destruct existsb eqn:H_existsb; try discriminate.
+      apply list_splittable in H_existsb. destruct H_existsb. destruct H1. subst. 
+      pose proof TRACE. unfold expand_trace_program in TRACE. simpl in *. rewrite -> fold_right_app in TRACE.
+      simpl in TRACE. destruct (fold_right (trace_program_step_at vars p hints) (Some (ts, false)) x0) eqn:H_fr in TRACE.
+        destruct trace_program_step_at eqn:H_tpsa in TRACE.
+        destruct p0 eqn:H_p0 in TRACE. subst.
+        destruct b0. destruct p0. apply trace_program_step_at_nochange in H_tpsa. subst. apply fold_trace_program_step_at_changed in TRACE. assumption.
+        destruct p0.
+          unfold trace_program_step_at in H_tpsa. 
+          destruct hints in H_tpsa.
+            admit. (*hint case*)
+          destruct p in H_tpsa; try discriminate.
+          destruct p0 in H_tpsa; try discriminate.
+          destruct t eqn:H_ta. admit. (* first change happens when we propogate delta to a'*)
+          (* i think the einductive hypothesis should apply in this one.*)
+          eapply IHn1. apply HINT. apply XP. apply H0. apply H1. apply TS0. apply trace_program_step_at_nochange in H_fr. subst. apply H_ta.
+        admit. (*easy, needs lemma, contradiction *)
+        simpl in TRACE. admit. (*easy, needs lemma, contradiction *)
+Admitted.
+ *)
 Theorem expand_trace_program_steady_correct_n: forall p vars hints reachable ts
-  h a0 s0 
+  h a0 s0
   (INIT: forall δ, ts a0 = Some δ -> has_delta h s0 s0 δ)
   (HINT: hintCorrect hints p)
+  (NOMOD: forall sa sb a, p sa a = p sb a)
   (TPO: expand_trace_program vars p hints reachable ts = Some (ts, false)),
   correctness_sub_prog p (set_elems reachable) ts h a0 s0.
 Proof.
-  unfold correctness_sub_prog. intros. revert HINT INIT XP TS2 TPO. revert a0 h ts hints vars p s0 a1 s1 δ. induction n1.
-  - intros.  simpl in XP. inversion XP. subst. apply INIT. assumption.
-  - intros. apply exec_prog_equiv_exec_prog2 in XP. inversion XP. subst. einstantiate IHn1.
-      exact HINT.
-      exact INIT.
-      apply exec_prog_equiv_exec_prog2 in XP0. exact XP0.   
-      2: { exact TPO. } 
-      unfold expand_trace_program in TPO. simpl in TPO. unfold trace_program_step_at in TPO.
+  unfold correctness_sub_prog. intros. 
+  revert HINT INIT XP TS2 TPO NOMOD. revert a0 h ts hints vars p s0 a1 s1 δ. 
+  induction n1.
+  - intros. simpl in XP. inversion XP. subst. apply INIT. assumption.
+  - intros. apply exec_prog_equiv_exec_prog2 in XP. inversion XP. subst.
+    pose proof TPO as TPO2. unfold expand_trace_program in TPO2. 
+    unfold sub_prog in LU. destruct existsb eqn:H_exb in LU; try solve [inversion LU]. apply list_splittable in H_exb.
+    destruct H_exb. destruct H0. rewrite H0 in *.
+    rewrite fold_right_app in TPO2. simpl in TPO2. destruct trace_program_step_at eqn:H_tpsa in TPO2.
+    destruct p0. destruct fold_right eqn:H_fr1 in H_tpsa.
+    pose proof TPO2 as H_fr2. apply fold_trace_program_step_at_nochange in TPO2. inversion TPO2. subst. clear TPO2.
+    destruct p0. pose proof H_tpsa. apply trace_program_step_at_nochange in H1. inversion H1. subst. clear H1.
+    unfold trace_program_step_at in H_tpsa.
+    destruct hints eqn:H_hint. destruct p0.
+      admit. (*admit hint case*)
 
-
-
+    destruct p eqn:H_p in H_tpsa; try discriminate. rewrite NOMOD with (sb:=s2) in H_p. destruct p0; try discriminate.
+    destruct ts eqn:H_tsa2 in H_tpsa. (*second case is provably impossible to happen.*)
+    destruct simple_trace_stmt eqn:H_sts; try discriminate.
+    rewrite LU in H_p. inversion H_p. subst.
+    specialize simple_trace_stmt_correct. intros. 
+    assert (Exists (λ '(δ', x), x = x' ∧ has_delta h s0 s1 δ') l).
+    eapply H1.
+      eapply IHn1.
+      apply HINT. apply INIT. apply exec_prog_equiv_exec_prog2 in XP0. apply XP0. apply H_tsa2. apply TPO. apply NOMOD.
+      apply XS. apply H_sts. clear H1. 
+      apply Exists_exists in H2. destruct H2. destruct H1. apply in_split in H1. destruct H1. destruct H1. subst.
+      destruct x1 eqn:H_x1 in H2. destruct H2.
+      destruct fold_right eqn:H_tpsa_fr in H_tpsa. inversion H_tpsa. subst. clear H_tpsa.
+      rewrite fold_right_app in H_tpsa_fr. simpl in H_tpsa_fr. destruct process_state eqn:H_ps in H_tpsa_fr. 
+      pose proof H_tpsa_fr. apply process_state_vars_nochange in H_tpsa_fr. inversion H_tpsa_fr. subst. clear H_tpsa_fr.
+      destruct fold_right eqn:H_ps_fr in H_ps. pose proof H_ps. apply process_state_nofold_nochange in H_ps. inversion H_ps.
+      subst. clear H_ps. 
+      unfold process_state in H3. 
+      rewrite H in H3. unfold join_states_if_changed in H3. rewrite TS2 in H3. destruct delta_differentb eqn:H_done in H3. 
+        inversion H3.
+        clear H3.
+        unfold delta_differentb in H_done. clear H1. admit. (*very close, need to figure out final leap*)
+        (* ts a2 = None cannot be the case if there is a path to it and we are done. probably show with a
+        * lemma *) admit. 
+        simpl in H_tpsa. inversion H_tpsa.
+        admit. (*needs lemma to show that if accum is None output is None.*)
 Qed.
 
 
