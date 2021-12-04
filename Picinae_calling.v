@@ -1091,9 +1091,9 @@ Definition stmt_correct q δ x := forall s0 h s s' (XS: exec_stmt h s q s' x),
   has_delta h s0 s' δ.
 
 Definition correctness_sub_prog p domain ts h a0 s0 :=
-  (forall a1 s1 n1 δ
-    (XP: exec_prog h (sub_prog p domain) a0 s0 n1 s1 (Exit a1))
-    (TS2: ts a1 = Some δ), has_delta h s0 s1 δ).
+  (forall a1 s1 n1
+    (XP: exec_prog h (sub_prog p domain) a0 s0 n1 s1 (Exit a1)),
+    exists δ, ts a1 = Some δ /\ has_delta h s0 s1 δ).
 
 Inductive subgoals: Set :=
   .
@@ -1184,7 +1184,7 @@ Proof.
         -- destruct x'; try discriminate. eapply XAbort. eassumption.
            destruct e; inversion EX. subst. assumption.
 Qed.
-
+(*
 Theorem trace_program_step_at_steady_correct: forall p vars a_new al hints ts
   h a0 s0 (Init: forall δ s, ts a0 = Some δ -> has_delta h s s δ)
   (IHal: correctness_sub_prog p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
@@ -1232,7 +1232,7 @@ Proof.
     apply existsb_exists in EXa2. destruct EXa2 as [a1' [InDomain Eq]].
     destruct (a1 == a1'); try discriminate. subst. assumption.
 Admitted.
-
+ *)
 Definition hintDelta (hints: (store → addr → option (N * stmt)) → addr → (addr → option store_delta) -> option ((addr → option store_delta) * bool))  (p : store → addr → option (N * stmt)) : 
     Prop := forall a_new ts b,
    hints p a_new ts = Some (ts, b) -> (forall a, exists δ1, ts a = Some δ1).
@@ -1326,6 +1326,13 @@ Proof.
     intros. simpl in H. destruct fold_right eqn:H_fr in H. destruct p0. apply IHreachable_addrs in H_fr. subst.
       apply trace_program_step_at_changed in H. assumption. inversion H. 
 Qed.
+Theorem trace_program_step_at_none_acc: forall l vars p hints,
+  fold_right (trace_program_step_at vars p hints) None l = None.
+Proof.
+  induction l.
+    intros. reflexivity.
+    intros. simpl. rewrite IHl. reflexivity.
+Qed.
 
 (*MARKK*)
 (* this should be replaced by a library theorem, ie in_split.*)
@@ -1340,62 +1347,18 @@ Proof.
       apply  IHreachable_addrs in H. destruct H. destruct H. subst. exists (a::x). exists (x0). reflexivity.
 Qed.
 
-(*we will likely need to prove this. should be similar to main proof and not that hard. *)
-(*
-Theorem expand_trace_changed: forall n1 reachable hints p h a0 s0 s' a' sz q ts t' vars b sd
-    (HINT: hintDelta hints p)
-    (XP0 : exec_prog2 h (sub_prog p (set_elems reachable)) a0 s0 n1 s' (Exit a'))
-    (LU : sub_prog p (set_elems reachable) s' a' = Some (sz, q))
-    (TS0: ts a0 = Some sd)
-    (TS: ts a' = None),
-    expand_trace_program vars p hints reachable ts = Some (t', b) -> b = true.
-Proof.
-   destruct reachable as [reachable_addrs UNIQ_reachable_addrs].
-   induction n1.
-    intros. inversion XP0. subst. rewrite -> TS0 in TS. inversion TS.
-    intros. simpl in *. inversion XP0. subst. 
-      pose proof LU0 as LU0_2. unfold sub_prog in LU0. destruct existsb eqn:H_existsb; try discriminate. 
-      apply list_splittable in H_existsb. destruct H_existsb. destruct H0. subst.
-      
-
-      
-
-      
-  
-    intros. simpl in *. inversion XP0. subst. rewrite -> TS0 in TS. inversion TS.
-    intros. pose proof H as TRACE. clear H. inversion XP0. subst.
-      simpl in *. subst. pose proof LU0. unfold sub_prog in LU0. destruct existsb eqn:H_existsb; try discriminate.
-      apply list_splittable in H_existsb. destruct H_existsb. destruct H1. subst. 
-      pose proof TRACE. unfold expand_trace_program in TRACE. simpl in *. rewrite -> fold_right_app in TRACE.
-      simpl in TRACE. destruct (fold_right (trace_program_step_at vars p hints) (Some (ts, false)) x0) eqn:H_fr in TRACE.
-        destruct trace_program_step_at eqn:H_tpsa in TRACE.
-        destruct p0 eqn:H_p0 in TRACE. subst.
-        destruct b0. destruct p0. apply trace_program_step_at_nochange in H_tpsa. subst. apply fold_trace_program_step_at_changed in TRACE. assumption.
-        destruct p0.
-          unfold trace_program_step_at in H_tpsa. 
-          destruct hints in H_tpsa.
-            admit. (*hint case*)
-          destruct p in H_tpsa; try discriminate.
-          destruct p0 in H_tpsa; try discriminate.
-          destruct t eqn:H_ta. admit. (* first change happens when we propogate delta to a'*)
-          (* i think the einductive hypothesis should apply in this one.*)
-          eapply IHn1. apply HINT. apply XP. apply H0. apply H1. apply TS0. apply trace_program_step_at_nochange in H_fr. subst. apply H_ta.
-        admit. (*easy, needs lemma, contradiction *)
-        simpl in TRACE. admit. (*easy, needs lemma, contradiction *)
-Admitted.
- *)
 Theorem expand_trace_program_steady_correct_n: forall p vars hints reachable ts
   h a0 s0
-  (INIT: forall δ, ts a0 = Some δ -> has_delta h s0 s0 δ)
+  (INIT: exists δ, ts a0 = Some δ /\ has_delta h s0 s0 δ)
   (HINT: hintCorrect hints p)
   (NOMOD: forall sa sb a, p sa a = p sb a)
   (TPO: expand_trace_program vars p hints reachable ts = Some (ts, false)),
   correctness_sub_prog p (set_elems reachable) ts h a0 s0.
 Proof.
   unfold correctness_sub_prog. intros. 
-  revert HINT INIT XP TS2 TPO NOMOD. revert a0 h ts hints vars p s0 a1 s1 δ. 
+  revert HINT INIT XP TPO NOMOD. revert a0 h ts hints vars p s0 a1 s1. 
   induction n1.
-  - intros. simpl in XP. inversion XP. subst. apply INIT. assumption.
+  - intros. simpl in XP. inversion XP. subst. assumption.
   - intros. apply exec_prog_equiv_exec_prog2 in XP. inversion XP. subst.
     pose proof TPO as TPO2. unfold expand_trace_program in TPO2. 
     unfold sub_prog in LU. destruct existsb eqn:H_exb in LU; try solve [inversion LU]. apply list_splittable in H_exb.
@@ -1407,35 +1370,37 @@ Proof.
     unfold trace_program_step_at in H_tpsa.
     destruct hints eqn:H_hint. destruct p0.
       admit. (*admit hint case*)
-
     destruct p eqn:H_p in H_tpsa; try discriminate. rewrite NOMOD with (sb:=s2) in H_p. destruct p0; try discriminate.
+        eassert (∃ δ : store_delta, ts a2 = Some δ ∧ has_delta h s0 s2 δ).
+        eapply IHn1.  apply HINT. apply INIT. apply exec_prog_equiv_exec_prog2 in XP0. apply XP0. apply TPO. apply NOMOD.
+          destruct H1. destruct H1. 
     destruct ts eqn:H_tsa2 in H_tpsa. (*second case is provably impossible to happen.*)
     destruct simple_trace_stmt eqn:H_sts; try discriminate.
     rewrite LU in H_p. inversion H_p. subst.
     specialize simple_trace_stmt_correct. intros. 
     assert (Exists (λ '(δ', x), x = x' ∧ has_delta h s0 s1 δ') l).
-    eapply H1.
-      eapply IHn1.
-      apply HINT. apply INIT. apply exec_prog_equiv_exec_prog2 in XP0. apply XP0. apply H_tsa2. apply TPO. apply NOMOD.
-      apply XS. apply H_sts. clear H1. 
-      apply Exists_exists in H2. destruct H2. destruct H1. apply in_split in H1. destruct H1. destruct H1. subst.
-      destruct x1 eqn:H_x1 in H2. destruct H2.
+    eapply H3.
+    apply H2. apply XS. rewrite -> H_tsa2 in H1.  inversion H1. subst. apply H_sts.
+      apply Exists_exists in H4. destruct H4. destruct H4. apply in_split in H4. destruct H4. destruct H4. subst.
+      destruct x2 eqn:H_x2 in H5. destruct H5.
       destruct fold_right eqn:H_tpsa_fr in H_tpsa. inversion H_tpsa. subst. clear H_tpsa.
       rewrite fold_right_app in H_tpsa_fr. simpl in H_tpsa_fr. destruct process_state eqn:H_ps in H_tpsa_fr. 
       pose proof H_tpsa_fr. apply process_state_vars_nochange in H_tpsa_fr. inversion H_tpsa_fr. subst. clear H_tpsa_fr.
       destruct fold_right eqn:H_ps_fr in H_ps. pose proof H_ps. apply process_state_nofold_nochange in H_ps. inversion H_ps.
       subst. clear H_ps. 
-      unfold process_state in H3. 
-      rewrite H in H3. unfold join_states_if_changed in H3. rewrite TS2 in H3. destruct delta_differentb eqn:H_done in H3. 
-        inversion H3.
-        clear H3.
-        unfold delta_differentb in H_done. clear H1. admit. (*very close, need to figure out final leap*)
-        (* ts a2 = None cannot be the case if there is a path to it and we are done. probably show with a
-        * lemma *) admit. 
+      unfold process_state in H6. 
+      rewrite H in H6. unfold join_states_if_changed in H6. destruct (ts a1) eqn:H_tsa1 in H6.
+        destruct delta_differentb eqn:H_done in H6. 
+        inversion H6. clear H6. 
+        exists s5. split. apply H_tsa1.
+        apply delta_different_differentb_equiv_contra in H_done. rewrite <- delta_different_same in H_done. 
+        unfold has_delta. unfold has_delta in H5. intros. unfold delta_same in H_done.  rewrite -> H_done in LUv. apply H5 with (val:=val) in LUv. assumption.
+        apply EE. unfold domain_total. admit (*domain*). admit (*domain*). 
+        inversion H6. 
+        rewrite H_tsa2 in H1. inversion H1.
         simpl in H_tpsa. inversion H_tpsa.
-        admit. (*needs lemma to show that if accum is None output is None.*)
+        rewrite trace_program_step_at_none_acc in TPO2. inversion TPO2.
 Qed.
-
 
 
 
