@@ -83,7 +83,7 @@ Tactic Notation "vantisym" constr(v1) constr(v2) :=
            | let Hneq := fresh "Hneq" in t Hneq ].
 
 Tactic Notation "vantisym" constr(v1) constr(v2) "by" tactic(T) :=
-  vantisym v1 v2; [|solve T].
+  vantisym v1 v2; [|solve [T]].
 
 
 (* Define the partial order of A-to-B partial functions ordered by subset. *)

@@ -26,6 +26,8 @@ Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
 Require Import Bool.
+Require Import Etacs.
+Require Import Ntree.
 Require Import Picinae_i386.
 Require Import Coq.Program.Equality.
 
@@ -44,62 +46,6 @@ Notation "x ⇀ y" := (pfunc x y) (at level 99, y at level 200, right associativ
 
 (* the empty function (bottom) *)
 Notation "⊥" := (fun _ => None).
-Ltac einst0 H tac :=
-  (lazymatch type of H with
-   | ?t1 -> ?t2 =>
-       let H0 := fresh in
-       assert (H0: t1); [clear H|specialize (H H0); clear H0; einst0 H tac]
-   | forall v, @?F v => epose proof (H ?[?v]) as H; einst0 H tac
-   | _ => tac H
-   end).
-
-Ltac trivial2 := try solve [eassumption|discriminate|reflexivity].
-
-Ltac einversion0 H has_intros has_trivial intros_patt :=
-  let Htmp := fresh in
-  pose proof H as Htmp; einst0 Htmp ltac:(fun H' =>
-    lazymatch has_intros with
-    | true => inversion H' as intros_patt; clear H'
-    | false => inversion H'; clear H'
-    end);
-  lazymatch has_trivial with
-  | true => trivial2
-  | false => idtac
-  end; subst.
-
-Tactic Notation "einversion" constr(H) :=
-  einversion0 H constr:(false) constr:(false) H.
-
-Tactic Notation "einversion" "trivial" constr(H) :=
-  einversion0 H constr:(false) constr:(true) H.
-
-Tactic Notation "einversion" constr(H) "as" simple_intropattern(intros) :=
-  einversion0 H constr:(true) constr:(false) intros.
-
-Tactic Notation "einversion" "trivial" constr(H) "as" simple_intropattern(intros) :=
-  einversion0 H constr:(true) constr:(true) intros.
-
-Tactic Notation "einstantiate" constr(H) "as" simple_intropattern(Htmp) :=
-  pose proof H as Htmp; einst0 Htmp ltac:(fun _ => idtac).
-
-Tactic Notation "einstantiate" "trivial" constr(H) "as" simple_intropattern(Htmp):=
-  einstantiate H as Htmp; trivial2.
-
-Tactic Notation "einstantiate" constr(H) :=
-  let Htmp := fresh in einstantiate H as Htmp.
-
-Tactic Notation "einstantiate" "trivial" constr(H) :=
-  let Htmp := fresh in einstantiate trivial H as Htmp.
-
-Ltac invalid H := contradiction H; reflexivity.
-
-Ltac contrapositive Equiv :=
-  lazymatch goal with
-  | [|- not _ <-> not _] =>
-      let H := fresh in
-      split; intro H; contradict H; eapply Equiv; try eassumption
-  | _ => fail "Expects a contrapositive of the form ~ _ <-> ~ _"
-  end.
 
 (* Some equality definitions *)
 Program Instance endian_EqDec: EqDec endianness.
@@ -137,12 +83,18 @@ Proof.
   intros. rewrite <- not_true_iff_false. contrapositive iseqb_iff_eq.
 Qed.
 
-Definition set A := list A.
+Theorem Neqb_iseqb: forall a1 a2, (a1 =? a2) = iseqb a1 a2.
+Proof.
+  unfold iseqb. intros. destruct (a1 == a2);
+  [apply N.eqb_eq|apply N.eqb_neq]; assumption.
+Qed.
 
-Definition set_nil {A}: set A := @nil A.
-Definition set_elems {A} (s: set A): list A := s.
-Definition set_has {A} {e: EqDec A} (s: set A) (a: A): bool :=
-  existsb (iseqb a) (set_elems s).
+Theorem Neqb_iseqb_fn: N.eqb = iseqb.
+Proof.
+  apply functional_extensionality. intros. apply functional_extensionality.
+  apply Neqb_iseqb.
+Qed.
+
 Theorem existsb_iseqb_iff_in: forall A {e: EqDec A} l (a: A),
   existsb (iseqb a) l = true <-> In a l.
 Proof.
@@ -157,108 +109,131 @@ Theorem existsb_iseqb_iff_in_contra: forall A {e: EqDec A} l (a: A),
 Proof.
   intros. rewrite <- not_true_iff_false. contrapositive existsb_iseqb_iff_in.
 Qed.
-Theorem set_has_in: forall {A} {e: EqDec A} a s,
-  set_has s a = true <-> In a (set_elems s).
+
+Definition set := treeN unit.
+Declare Scope sets_scope.
+Bind Scope sets_scope with set.
+
+Definition set_nil: set := treeN_nil.
+Definition set_elems: set -> list N := tkeys_n.
+Definition set_has: set -> N -> bool := tcontains_n.
+
+Definition set_add a (s: set): set := s [Ⓝ  a := tt ].
+Arguments set_add: simpl never.
+Notation "h ~:: t" := (set_add h t) (at level 60, right associativity):
+  sets_scope.
+
+Fixpoint set_add_all (s1: set) (l2: list N): set :=
+  match l2 with
+  | nil => s1
+  | h::t => set_add h (set_add_all s1 t)
+  end.
+
+Definition set_ap (s1 s2: set): set :=
+  set_add_all s1 (set_elems s2).
+Arguments set_ap: simpl never.
+Notation "s1 ~++ s2" := (set_ap s1 s2) (at level 60, right associativity):
+  sets_scope.
+
+Notation "{{ x }}" := (set_add x set_nil): sets_scope.
+Notation "{{ x ; .. ; y ; z }}" :=
+  (set_add x (.. (set_add y (set_add z set_nil)) .. )) : sets_scope.
+
+Open Scope sets_scope.
+
+Program Instance unit_EqDec: EqDec unit.
+Next Obligation. decide equality. Defined.
+
+Program Instance set_EqDec: EqDec set.
+Next Obligation. decide equality; apply iseq. Defined.
+
+Theorem set_has_in: forall a s, set_has s a = true <-> In a (set_elems s).
 Proof.
-  unfold set_has, set_elems. intros. apply existsb_iseqb_iff_in.
+  unfold set_has, set_elems. intros. rewrite <- tkeys_n_get.
+  rewrite Neqb_iseqb_fn. apply existsb_iseqb_iff_in.
 Qed.
-Corollary set_has_in_contra: forall {A} {e: EqDec A} (s: set A) a,
+Corollary set_has_in_contra: forall (s: set) a,
   set_has s a = false <-> ~In a (set_elems s).
 Proof.
   intros. rewrite <- not_true_iff_false. contrapositive set_has_in.
 Qed.
+Corollary set_elems_nodup: forall (s: set), NoDup (set_elems s).
+Proof. apply tkeys_n_nodup. Qed.
 
-Definition set_add {A} {e: EqDec A} (s: set A) (a: A): set A :=
-  if (set_has s a) then set_elems s else a :: set_elems s.
-Theorem set_add_nodup {A} {e: EqDec A} (s: set A) (a: A)
-  (ND: NoDup (set_elems s)): NoDup (set_add s a).
+Theorem set_elems_equiv_inj: forall s1 s2
+  (EQV: list_equiv (set_elems s1) (set_elems s2)), s1 = s2.
 Proof.
-  unfold set_add. destruct set_has eqn: EX.
-  - (* Already exists, so we just return l *) assumption.
-  - (* Does not exists, we can return (a :: l) *) econstructor; [|eassumption].
-    intro InL. eapply set_has_in_contra in EX. apply EX. assumption.
-Qed.
-Theorem set_add_idempotent: forall A (e: EqDec A) (s: set A) a
-  (InOld: In a (set_elems s)), set_add s a = s.
-Proof.
-  intros. assert (set_add s a = set_elems s).
-    unfold set_add. destruct set_has eqn: SH; try reflexivity.
-    apply set_has_in in InOld. rewrite InOld in SH. discriminate.
-  unfold set_add. destruct set_has eqn: SH; try reflexivity.
-  apply set_has_in_contra in SH. contradiction SH.
-Qed.
-Theorem set_add_preserves: forall A (e: EqDec A) (s: set A) a1 a2
-  (InOld: In a1 (set_elems s)), In a1 (set_elems (set_add s a2)).
-Proof.
-  intros. unfold set_add. destruct set_has eqn: SH.
-  - assumption.
-  - simpl. right. assumption.
-Qed.
-Theorem set_add_frame: forall A (e: EqDec A) (s: set A) a1 a2
-  (NEQ: a1 ≠ a2) (InAdd: In a1 (set_elems (set_add s a2))), In a1 (set_elems s).
-Proof.
-  intros. simpl in *. unfold set_add in *. destruct set_has eqn: SH.
-  - assumption.
-  - simpl in InAdd. destruct InAdd; [|assumption]. subst. contradiction NEQ. reflexivity.
-Qed.
-Theorem set_add_correct: forall A (e: EqDec A) (s: set A) a,
-  In a (set_elems (set_add s a)).
-Proof.
-  unfold set_add, set_elems. intros.
-  destruct set_has eqn: EX.
-  - (* contains a *) apply set_has_in in EX. assumption.
-  - (* no contains a *) left. reflexivity.
+  intros. apply tkeys_n_inj, tkeys_n_equiv_equal; trivial2.
+
+  (* Due to the degeneracy of the values used (units), all values are equal. *)
+  unfold tcontains_n. intros. destruct tget_n, (tget_n s2); trivial2.
+  destruct u, u0. reflexivity.
 Qed.
 
-Fixpoint set_ap {A} {e: EqDec A} (l1: set A) (s2: set A): set A :=
-  match l1 with
-  | nil => s2
-  | h::t => set_add (set_ap t s2) h
-  end.
-Theorem set_ap_nodup: forall A (e: EqDec A) (s1 s2: set A)
-  (ND2: NoDup s2), NoDup (set_ap s1 s2).
+Theorem set_add_idempotent: forall (s: set) a
+  (InOld: In a (set_elems s)), a ~:: s = s.
 Proof.
-  induction s1; intros.
-  - assumption.
-  - simpl. apply set_add_nodup. apply IHs1. assumption.
+  unfold set_elems, set_add. intros. apply (existsb_iseqb_iff_in N) in InOld.
+  rewrite <- Neqb_iseqb_fn, tkeys_n_get in InOld. apply tupdate_n_idempotent.
+  unfold tcontains_n in InOld. destruct tget_n; [|discriminate].
+  destruct u. reflexivity.
 Qed.
-Theorem set_ap_correct: forall A (e: EqDec A) (s1 s2: set A) a,
+Theorem set_add_preserves: forall (s: set) a1 a2
+  (InOld: In a1 (set_elems s)), In a1 (set_elems (a2 ~:: s)).
+Proof.
+  intros. rewrite <- set_has_in in *. unfold set_add, set_has, tcontains_n in *.
+  destruct (a1 == a2).
+  - subst. rewrite tupdate_n_updated. reflexivity.
+  - rewrite tupdate_n_frame; assumption.
+Qed.
+Theorem set_add_frame: forall (s: set) a1 a2
+  (NEQ: a1 ≠ a2) (InAdd: In a1 (set_elems (a2 ~:: s))), In a1 (set_elems s).
+Proof.
+  intros. rewrite <- set_has_in in *. unfold set_add, set_has, tcontains_n in *.
+  rewrite tupdate_n_frame in InAdd; assumption.
+Qed.
+Theorem set_add_correct: forall (s: set) a,
+  In a (set_elems (a ~:: s)).
+Proof.
+  intros. rewrite <- set_has_in in *. unfold set_add, set_has, tcontains_n in *.
+  rewrite tupdate_n_updated. reflexivity.
+Qed.
+
+Theorem set_ap_correct: forall (s1 s2: set) a,
   (In a (set_elems s1) \/ In a (set_elems s2)) <->
-  In a (set_elems (set_ap s1 s2)).
+  In a (set_elems (s1 ~++ s2)).
 Proof.
-  unfold set_ap. split.
+  unfold set_ap. intros. remember (set_elems s2) as l2. clear dependent s2. split.
   - (* -> *) intro In12. destruct In12 as [In1|In2]; simpl in *.
-    + (* In1 *) revert In1. induction s1; intros.
-      * (* nil *) inversion In1.
-      * (* no nil *) inversion In1.
-        -- (* a = a0 *) subst. simpl. apply set_add_correct.
-        -- (* a in l *) simpl. apply set_add_preserves. apply IHs1; assumption.
-    + (* In2 *) induction s1.
+    + (* In1 *) revert In1. induction l2; intros.
       * (* nil *) assumption.
-      * (* no nil *) simpl. apply set_add_preserves. apply IHs1.
-  - (* <- *) intro InRes. simpl in *. revert s2 a InRes.
-    induction s1; intros.
-    + (* nil *) right. assumption.
-    + (* no nil *) simpl in InRes. destruct (a0 == a); subst.
-      * (* a = a0 *) left. left. reflexivity.
+      * (* no nil *) simpl. apply set_add_preserves. apply IHl2. assumption.
+    + (* In2 *) revert In2. induction l2; intros; inversion In2.
+      * (* a = a0 *) subst. simpl. apply set_add_correct.
+      * (* a in l *) simpl. apply set_add_preserves. apply IHl2; assumption.
+  - (* <- *) intro InRes. revert l2 a InRes.
+    induction l2; intros; simpl in InRes.
+    + (* nil *) left. assumption.
+    + (* no nil *) destruct (a0 == a); subst.
+      * (* a = a0 *) right. left. reflexivity.
       * (* a ≠ a0 *) apply set_add_frame in InRes; [|assumption].
-        einversion trivial IHs1 as [InL1|InL2].
-        -- left. right. assumption.
-        -- right. assumption.
+        einversion trivial IHl2 as [InL1|InL2].
+        -- left. assumption.
+        -- right. right. assumption.
 Qed.
-Corollary set_ap_left: forall A (e: EqDec A) (s1 s2: set A) a
+Corollary set_ap_left: forall (s1 s2: set) a
   (In1: In a (set_elems s1)), In a (set_elems (set_ap s1 s2)).
 Proof. intros. apply set_ap_correct. left. assumption. Qed.
-Corollary set_ap_right: forall A (e: EqDec A) (s1 s2: set A) a
+Corollary set_ap_right: forall (s1 s2: set) a
   (In2: In a (set_elems s2)), In a (set_elems (set_ap s1 s2)).
 Proof. intros. apply set_ap_correct. right. assumption. Qed.
-Corollary set_ap_incl_l: forall A (e: EqDec A) (s1 s2: set A),
+Corollary set_ap_incl_l: forall (s1 s2: set),
   incl (set_elems s1) (set_elems (set_ap s1 s2)).
 Proof. unfold incl. intros. apply set_ap_left; assumption. Qed.
-Corollary set_ap_incl_r: forall A (e: EqDec A) (s1 s2: set A),
+Corollary set_ap_incl_r: forall (s1 s2: set),
   incl (set_elems s2) (set_elems (set_ap s1 s2)).
 Proof. unfold incl. intros. apply set_ap_right; assumption. Qed.
-Theorem set_ap_has_split: forall A (e: EqDec A) (s1 s2: set A) a,
+Theorem set_ap_has_split: forall (s1 s2: set) a,
   set_has (set_ap s1 s2) a = set_has s1 a || set_has s2 a.
 Proof.
   intros. destruct set_has eqn: SHres.
@@ -269,193 +244,74 @@ Proof.
     destruct set_has eqn: SH; try reflexivity; apply set_has_in in SH;
     contradict SHres; apply set_ap_correct; (left + right); assumption.
 Qed.
-Corollary set_ap_has_l: forall A (e: EqDec A) (s1 s2: set A) a
+Corollary set_ap_in_split: forall (s1 s2: set) a,
+  In a (set_elems (set_ap s1 s2)) <-> In a (set_elems s1) \/ In a (set_elems s2).
+Proof.
+  (* Convert to set_has form *)
+  split; intros In12; repeat rewrite <- set_has_in in *;
+  [apply orb_prop; symmetry|apply orb_true_intro in In12];
+  rewrite <- In12; apply set_ap_has_split.
+Qed.
+Corollary set_ap_has_l: forall (s1 s2: set) a
   (SH1: set_has s1 a = true), set_has (set_ap s1 s2) a = true.
 Proof.
   intros. rewrite set_ap_has_split. rewrite SH1. apply orb_true_l.
 Qed.
-Corollary set_ap_has_r: forall A (e: EqDec A) (s1 s2: set A) a
+Corollary set_ap_has_r: forall (s1 s2: set) a
   (SH2: set_has s2 a = true), set_has (set_ap s1 s2) a = true.
 Proof.
   intros. rewrite set_ap_has_split. rewrite SH2. apply orb_true_r.
 Qed.
-Corollary set_ap_has_contra_l: forall A (e: EqDec A) (s1 s2: set A) a
+Corollary set_ap_has_contra_l: forall (s1 s2: set) a
   (SHres: set_has (set_ap s1 s2) a = false), set_has s1 a = false.
 Proof.
   intros. rewrite set_ap_has_split in SHres. apply orb_false_elim in SHres.
   destruct SHres. assumption.
 Qed.
-Corollary set_ap_has_contra_r: forall A (e: EqDec A) (s1 s2: set A) a
+Corollary set_ap_has_contra_r: forall (s1 s2: set) a
   (SHres: set_has (set_ap s1 s2) a = false), set_has s2 a = false.
 Proof.
   intros. rewrite set_ap_has_split in SHres. apply orb_false_elim in SHres.
   destruct SHres. assumption.
 Qed.
 
-Theorem set_ap_incl_equal: forall A (e: EqDec A) s1 s2
+Lemma set_ap_elems_comm_equiv: forall s1 s2,
+  list_equiv (set_elems (set_ap s1 s2)) (set_elems (set_ap s2 s1)).
+Proof.
+  intros. split; intros a InApp; repeat rewrite set_ap_in_split in *;
+  apply or_comm; assumption.
+Qed.
+
+Theorem set_ap_refl: forall s1, s1 = set_ap s1 s1.
+Proof.
+  intros. apply set_elems_equiv_inj. split; intros a InApp;
+  repeat rewrite set_ap_in_split in *; [left|destruct InApp]; assumption.
+Qed.
+
+Theorem set_ap_comm: forall s1 s2, set_ap s1 s2 = set_ap s2 s1.
+Proof.
+  intros. apply set_elems_equiv_inj. apply set_ap_elems_comm_equiv.
+Qed.
+
+Theorem set_ap_eclipse_l: forall s1 s2
   (Incl: incl (set_elems s1) (set_elems s2)),
-  set_elems (set_ap s1 s2) = set_elems s2.
+  set_ap s1 s2 = s2.
 Proof.
-  intros until s1. simpl. induction s1; intros.
-  - reflexivity.
-  - simpl. apply incl_cons_inv in Incl. destruct Incl. rewrite set_add_idempotent.
-    eapply IHs1; assumption. apply set_ap_right. assumption.
+  intros. apply set_elems_equiv_inj. split.
+  - intros a InAp. rewrite set_ap_in_split in InAp. destruct InAp; [|assumption].
+    apply Incl. assumption.
+  - apply set_ap_incl_r.
 Qed.
 
-Definition set_length {A} (s: set A): nat := length (set_elems s).
-
-Theorem set_add_length_min: forall A (e: EqDec A) s a,
-  (set_length s <= set_length (set_add s a))%nat.
+Theorem set_ap_eclipse_r: forall s1 s2
+  (Incl: incl (set_elems s2) (set_elems s1)),
+  set_ap s1 s2 = s1.
 Proof.
-  unfold set_add, set_elems, set_length. intros. destruct set_has.
-  - reflexivity.
-  - simpl. apply le_S. reflexivity.
+  intros. apply set_elems_equiv_inj. split.
+  - intros a InAp. rewrite set_ap_in_split in InAp. destruct InAp. assumption.
+    apply Incl. assumption.
+  - apply set_ap_incl_l.
 Qed.
-
-Theorem set_ap_length_min: forall A (e: EqDec A) (s1 s2: set A),
-  (set_length s2 <= set_length (set_ap s1 s2))%nat.
-Proof.
-  induction s1; intros.
-  - reflexivity.
-  - simpl. eapply le_trans. apply IHs1. apply set_add_length_min.
-Qed.
-
-Theorem set_ap_length_incl: forall A (e: EqDec A) (s1 s2: set A)
-  (LenEq: set_length (set_ap s1 s2) = set_length s2),
-  incl (set_elems s1) (set_elems s2).
-Proof.
-  unfold incl, set_elems. induction s1; intros.
-  - inversion H.
-  - simpl in LenEq. unfold set_add, set_elems in *. destruct set_has eqn: SH.
-    + rewrite set_ap_has_split in SH. apply orb_prop in SH. destruct SH as [SH|SH];
-      apply set_has_in in SH; inversion H; subst; (idtac + apply IHs1); assumption.
-    + einstantiate set_ap_length_min as Min. rewrite <- LenEq in Min.
-      simpl in Min. Search (S _ <= _)%nat. apply Nat.nle_succ_diag_l in Min.
-      destruct Min.
-Qed.
-
-Definition set_equivb {A} {e: EqDec A} (s1 s2: set A): bool :=
-  ((set_length s1 =? set_length s2) &&
-  (set_length s1 =? set_length (set_ap s1 s2)))%nat.
-
-Definition set_equiv {A} (s1 s2: set A): Prop :=
-  incl (set_elems s1) (set_elems s2) /\ incl (set_elems s2) (set_elems s1).
-
-Notation "a ~=~ b" := (set_equiv a b) (at level 80, right associativity): type_scope.
-
-Theorem set_equiv_refl: forall A (s1: set A), s1 ~=~ s1.
-Proof. intros. split; apply incl_refl. Qed.
-
-Theorem set_equiv_symm: forall A (s1 s2: set A),
-  s1 ~=~ s2 -> s2 ~=~ s1.
-Proof. intros. destruct H. split; assumption. Qed.
-
-Theorem set_equiv_tran: forall A (s1 s2 s3: set A),
-  s1 ~=~ s2 -> s2 ~=~ s3 -> s1 ~=~ s3.
-Proof. intros. destruct H, H0. split; eapply incl_tran; eassumption. Qed.
-
-Theorem set_equiv_intro: forall {A} (s1 s2: set A),
-  incl (set_elems s1) (set_elems s2) ->
-  incl (set_elems s2) (set_elems s1) -> s1 ~=~ s2.
-Proof. intros. split; assumption. Qed.
-
-Theorem set_add_equiv_equal: forall A (e: EqDec A) s s' a
-  (SAP: set_add s a = s') (Equiv: s ~=~ s'), s = s'.
-Proof.
-  unfold set_add, set_equiv. intros. subst. destruct Equiv as
-    [Incl_s_s' Incl_s'_s]. destruct s; simpl in *.
-  - (* nil *) einversion (Incl_s'_s a). left. reflexivity.
-  - (* non-nil *) destruct (_ || _) eqn: In_s'; try reflexivity.
-    apply orb_false_elim in In_s'. destruct In_s' as [NEQ NSH].
-    apply iseqb_iff_eq_contra in NEQ. apply set_has_in_contra in NSH.
-    unfold set_elems in *. einversion (Incl_s'_s a). left. reflexivity.
-    contradict NEQ. reflexivity. contradiction H0.
-Qed.
-
-Theorem set_ap_equiv_equal: forall A (e: EqDec A) s1 s2 s2'
-  (SAP: set_ap s1 s2 = s2') (Equiv: s2' ~=~ s2),
-  s2 = s2'.
-Proof.
-  induction s1; intros; subst; try reflexivity.
-
-  (* Show that equivalence across an add implies equivalence in the
-     underlying AP *)
-  assert (EQ_AP: s2 ~=~ set_ap s1 s2). {
-    destruct Equiv as [NoAdd _].
-    split; intros a2 HIn.
-    - apply set_ap_right. assumption.
-    - apply NoAdd, set_add_preserves. assumption.
-  }
-
-  einstantiate trivial set_add_equiv_equal as EQ_ADD. apply set_equiv_symm.
-  eapply set_equiv_tran; eassumption. apply set_equiv_symm in EQ_AP.
-  apply IHs1; solve [assumption|reflexivity].
-Qed.
-
-Theorem set_equiv_has: forall A (e: EqDec A) (s1 s2: set A) a
-  (Equiv: s1 ~=~ s2), set_has s1 a = set_has s2 a.
-Proof.
-  intros. destruct set_has eqn: SH1.
-  - apply set_has_in in SH1. symmetry. apply set_has_in. apply Equiv.
-    assumption.
-  - apply set_has_in_contra in SH1. symmetry. apply set_has_in_contra.
-    intro. apply SH1. apply Equiv. assumption.
-Qed.
-
-Theorem set_equiv_if_equivb: forall A (e: EqDec A) (s1 s2: set A) (ND1: NoDup s1)
-  (EQB: set_equivb s1 s2 = true), s1 ~=~ s2.
-Proof.
-  unfold set_equiv, set_equivb, set_length. intros.
-  remember (set_ap _ _) as s_res eqn: SAP.
-
-  assert (Incl_1_res: incl s1 s_res). intros a In1.
-    subst. apply set_ap_left. assumption.
-  assert (Incl_2_res: incl s2 s_res). intros a In2.
-    subst. apply set_ap_right. assumption.
-
-  apply andb_prop in EQB. destruct EQB as [L12 L1U].
-  apply Nat.eqb_eq in L12, L1U. simpl in L12, L1U. unfold set_elems in *.
-  split. eapply set_ap_length_incl. unfold set_length, set_elems.
-  rewrite <- L12, L1U, SAP. reflexivity. eapply incl_tran. eassumption.
-  eapply NoDup_length_incl; try eassumption. rewrite L1U. reflexivity.
-Qed.
-
-(* Show that by checking if the sets are equal size that they must be
- * equivalent *)
-Theorem set_equivb_iff_equiv: forall A (e: EqDec A) (s1 s2: set A)
-  (ND1: NoDup s1) (ND2: NoDup s2),
-  set_equivb s1 s2 = true <-> s1 ~=~ s2.
-Proof.
-  intros. split.
-  - (* -> *) intro. eapply set_equiv_if_equivb; eassumption.
-  - (* <- *) unfold set_elems. intros [Incl_12 Incl_21].
-    unfold set_equiv, set_equivb, set_length, set_elems in *.
-    remember (set_ap _ _) as s_res eqn: SAP.
-    assert (Incl_1_res: incl s1 s_res). intros a In1.
-      subst. apply set_ap_left. assumption.
-    assert (Incl_2_res: incl s2 s_res). intros a In2.
-      subst. apply set_ap_right. assumption.
-    (* Show that l_res ≡ l1 by showing that it must be containing either l1 or l2
-     * and that l1 ≡ l2. *)
-    assert (Incl_res_1: incl s_res s1). intros a InRes.
-      einversion trivial (set_ap_correct _ _ s1 s2) as [_ [In1|In2]].
-      eassumption. apply Incl_21. assumption.
-
-    (* Given the sets are all equivalent, we show they are the same size too. *)
-    simpl. einstantiate trivial (@NoDup_incl_length _ s1 s_res).
-    einstantiate trivial (@NoDup_incl_length _ s_res s1).
-      subst. apply set_ap_nodup. assumption.
-    erewrite (Nat.le_antisymm (length s_res)) by eassumption.
-    einstantiate trivial (@NoDup_incl_length _ s1 s2) as Le1.
-    einstantiate trivial (@NoDup_incl_length _ s2 s1) as Le2.
-    erewrite (Nat.le_antisymm (length s1)) by eassumption.
-    rewrite Nat.eqb_refl. reflexivity.
-Qed.
-
-Theorem set_equivb_if_equiv: forall A (e: EqDec A) (s1 s2: set A)
-  (ND1: NoDup s1) (ND2: NoDup s2),
-  s1 ~=~ s2 -> set_equivb s1 s2 = true.
-Proof. apply set_equivb_iff_equiv. Qed.
 
 (* We define a store delta as a variable to partial mapping onto
  * some expression. This is partial to account for "undefined" variables (which
@@ -1115,7 +971,7 @@ Definition trace_program_step_at (vars: list var) (p: program)
           | Some (sz, q) =>
               (* Sanity check for if we have already visited this address *)
               match ts addr with
-              | None => None
+              | None => Some (ts, changed)
               | Some δ_a =>
                   match simple_trace_stmt δ_a q with
                   | None => None
@@ -1132,9 +988,23 @@ Definition trace_program_step_at (vars: list var) (p: program)
 
 Definition expand_trace_program (vars: list var) (p: program)
   (hints: program -> addr -> trace_states -> option (trace_states * bool))
-  (reachable: set addr) (init_ts: trace_states): option (trace_states * bool) :=
+  (reachable: set) (init_ts: trace_states): option (trace_states * bool) :=
   fold_right (trace_program_step_at vars p hints) (Some (init_ts, false))
     (set_elems reachable).
+
+Definition iterM (n: N) {A} (f: A -> option A) (x: A) :=
+  N.iter n (fun x => match x with Some x => f x | None => None end) (Some x).
+
+Definition expand_trace_program_n (n: N)
+  (hints: program -> addr -> trace_states -> option (trace_states * bool))
+  (vars: list var) (p: program) (reachable: set) (init_ts: trace_states):
+  option (trace_states * bool) :=
+  N.iter n (fun x =>
+    match x with
+    | Some (ts, true) => expand_trace_program vars p hints reachable ts
+    | Some (ts, false) => Some (ts, false)
+    | None => None
+    end) (Some (init_ts, true)).
 
 Lemma fold_expand_trace_program: forall vars p hints reachable init_ts,
   fold_right (trace_program_step_at vars p hints) (Some (init_ts, false))
@@ -1257,13 +1127,13 @@ Proof.
 Admitted.
  *)
 
-Fixpoint stmt_reachable (s: stmt): option (set addr * bool) :=
+Fixpoint stmt_reachable (s: stmt): option (set * bool) :=
   match s with
   | Nop => Some (set_nil, true)
   | Move _ _ => Some (set_nil, true)
   | Jmp e =>
       match e with
-      | Word loc _ => Some (set_add set_nil loc, false)
+      | Word loc _ => Some ({{loc}}, false)
       | _ => None
       end
   | Exn _ => Some (set_nil, false)
@@ -1272,7 +1142,7 @@ Fixpoint stmt_reachable (s: stmt): option (set addr * bool) :=
       | (Some (j1, false), _) => Some (j1, false)
       | (_, None) => None
       | (None, _) => None
-      | (Some (j1, true), Some (j2, falls2)) => Some (set_ap j1 j2, falls2)
+      | (Some (j1, true), Some (j2, falls2)) => Some (j1 ~++ j2, falls2)
       end
   | If _ s1 s2 =>
       match (stmt_reachable s1, stmt_reachable s2) with
@@ -1288,19 +1158,19 @@ Fixpoint stmt_reachable (s: stmt): option (set addr * bool) :=
       end
   end.
 
-Definition reachables_at (hints: addr -> option (set addr))
-  (p: program) (a: addr) (accum: option (set addr)) :=
+Definition reachables_at (hints: addr -> option set)
+  (p: program) (a: addr) (accum: option set) :=
   match accum with
   | Some jmps =>
       match hints a with
-      | Some jmps' => Some (set_ap jmps' jmps)
+      | Some jmps' => Some (jmps' ~++ jmps)
       | None =>
           match p null_state a with
           | Some (sz, q) =>
               match stmt_reachable q with
               | Some (sjmps, falls) => Some
                   (set_ap (if falls
-                  then set_add sjmps (a+sz)
+                  then (a+sz) ~:: sjmps
                   else sjmps) jmps)
               | None => None
               end
@@ -1310,21 +1180,18 @@ Definition reachables_at (hints: addr -> option (set addr))
   | None => None
   end.
 
-Definition iterM (n: N) {A} (f: A -> option A) (x: A) :=
-  N.iter n (fun x => match x with Some x => f x | None => None end) (Some x).
-
-Definition expand_reachables (hints: addr -> option (set addr))
-  (p: program) (reachable: set addr) :=
+Definition expand_reachables (hints: addr -> option set)
+  (p: program) (reachable: set) :=
   match fold_right (reachables_at hints p) (Some reachable)
     (set_elems reachable) with
   | Some reachable' =>
-      Some (if set_equivb reachable reachable'
+      Some (if reachable == reachable'
       then (reachable, false)
       else (reachable', true))
   | None => None
   end.
 
-Definition expand_reachables_fast (hints: addr -> option (set addr))
+Definition expand_reachables_fast (hints: addr -> option set)
   (p: program) (accum: list addr * list addr): option (list addr * list addr) :=
   let '(reachable, frontier) := accum in
   match fold_right (reachables_at hints p) (Some set_nil)
@@ -1338,12 +1205,12 @@ Definition expand_reachables_fast (hints: addr -> option (set addr))
   | None => None
   end.
 
-Definition expand_reachables_n (hints: addr -> option (set addr))
-  (p: program) (reachable: set addr) (n: N) :=
-  iterM n (fun x: (set addr * bool) => let '(x, b) := x in
+Definition expand_reachables_n (hints: addr -> option set)
+  (p: program) (reachable: set) (n: N) :=
+  iterM n (fun x: (set * bool) => let '(x, b) := x in
     if b then expand_reachables hints p x else Some (x, false)) (reachable, true).
 
-Definition expand_reachables_fast_n (hints: addr -> option (set addr))
+Definition expand_reachables_fast_n (hints: addr -> option set)
   (p: program) (accum: list addr * list addr) (n: N): option (list addr * list addr) :=
   iterM n (expand_reachables_fast hints p) accum.
 
@@ -1371,7 +1238,7 @@ Proof.
   induction q; intros; inversion XS; subst; simpl in *.
   - (* Nop *) inversion JMPS. reflexivity.
   - (* Assign *) inversion JMPS. reflexivity.
-  - (* Jmp *) inversion E; subst; simpl in *; clear E; try discriminate.
+  - (* Jmp *) inversion E; subst; clear E; try discriminate; simpl in *.
     inversion JMPS. eapply set_has_in. apply set_add_correct.
   - (* Exn *) reflexivity.
   - (* Seq, exit in q1 *) destruct (stmt_reachable q1) as [[j1 falls1]|] eqn: J1;
@@ -1414,20 +1281,6 @@ Proof.
     inversion RA. subst. intros a2 InS. apply set_ap_right. assumption.
 Qed.
 
-Lemma reachables_equiv_equal: forall hints p a reaches reaches'
-  (RA: reachables_at hints p a (Some reaches) = Some reaches')
-  (EQ: reaches ~=~ reaches'), reaches = reaches'.
-Proof.
-  intros. unfold reachables_at in RA.
-  destruct EQ. destruct hints.
-  - inversion RA. subst. eapply set_ap_equiv_equal. reflexivity.
-    split; assumption.
-  - destruct p as [[sz q]|]; try discriminate.
-    destruct stmt_reachable as [[sjmps falls]|]; inversion RA.
-    subst. eapply set_ap_equiv_equal. reflexivity.
-    split; assumption.
-Qed.
-
 Lemma fold_right_reachables_incl: forall hints p addrs reaches reaches'
   (RA: fold_right (reachables_at hints p) (Some reaches) addrs = Some reaches'),
   incl (set_elems reaches) (set_elems reaches').
@@ -1447,7 +1300,7 @@ Lemma destruct_reachables_at_prin: forall {P hints p a_new reaches reaches'}
   (PDefault: forall sz q sjmps falls
     (LU: p null_state a_new = Some (sz, q))
     (SR: stmt_reachable q = Some (sjmps, falls))
-    (RA': set_ap (if falls then set_add sjmps (a_new + sz) else sjmps)
+    (RA': set_ap (if falls then (a_new + sz) ~:: sjmps  else sjmps)
       reaches = reaches'),
     P a_new),
   P a_new.
@@ -1467,25 +1320,6 @@ Ltac destruct_reachables_at RA :=
       intros; clear RA; subst
   end.
 
-Lemma fold_right_reachables_equiv_equal: forall hints p addrs reaches reaches'
-  (RA: fold_right (reachables_at hints p) (Some reaches) addrs = Some reaches')
-  (EQ: reaches ~=~ reaches'), reaches = reaches'.
-Proof.
-  unfold incl. induction addrs; intros.
-  - inversion RA. reflexivity.
-  - (* Set up list equalities *)
-    simpl in RA. destruct fold_right eqn: FR; try discriminate.
-    einstantiate trivial reachables_incl as Incl.
-    einstantiate trivial fold_right_reachables_incl.
-    einstantiate trivial IHaddrs. split. assumption. destruct EQ.
-    eapply incl_tran; eassumption. subst. destruct_reachables_at RA;
-
-    (* Because this is the result of an ap, they should be trivially equal since
-     * the resulting ap did not change anything *)
-    (eapply set_ap_equiv_equal; [reflexivity|apply set_equiv_symm in EQ;
-        assumption]).
-Qed.
-
 Definition reachables_hint_correct p h hints a0 s0 :=
   forall a_new addrs a1 s1 n a' s' x' q sz hints_res
     (Hints: hints a_new = Some hints_res)
@@ -1496,32 +1330,8 @@ Definition reachables_hint_correct p h hints a0 s0 :=
     (EX: exitof (a_new + sz) x' = Exit a'),
     set_has hints_res a' = true.
 
-Lemma reachables_at_nodup: forall p a_new hints reaches reaches'
-  (ND: NoDup reaches) (RA: reachables_at hints p a_new (Some reaches) = Some reaches'),
-  NoDup reaches'.
-Proof. intros. destruct_reachables_at RA; apply set_ap_nodup; assumption. Qed.
-
-Lemma fold_right_reachables_at_nodup: forall p hints addrs reaches reaches'
-  (ND: NoDup reaches)
-  (FR: fold_right (reachables_at hints p) (Some reaches) addrs = Some reaches'),
-  NoDup reaches'.
-Proof.
-  induction addrs; intros; simpl in *.
-  - inversion FR. subst. assumption.
-  - destruct fold_right as [reaches_fr|] eqn: FR'; try discriminate.
-    destruct (set_equivb reaches reaches_fr) eqn: EQB2.
-    + einstantiate reachables_at_nodup; [|eassumption|].
-      apply set_equiv_if_equivb in EQB2 as EQB3; try assumption.
-      eapply NoDup_incl_NoDup. eassumption.
-      unfold set_equivb in EQB2. apply andb_prop in EQB2. destruct EQB2.
-      apply Nat.eqb_eq in H. unfold set_length, set_elems in *. rewrite H.
-      reflexivity. apply EQB3. assumption.
-    + einstantiate reachables_at_nodup; [|eassumption|eassumption].
-      eapply IHaddrs; trivial2.
-Qed.
-
 Lemma expand_reachables_step: forall p h hints n addrs reaches s0 a0 s1 a1 s' a' x' q sz
-  (ND: NoDup reaches) (Init: set_has reaches a1 = true)
+  (Init: set_has reaches a1 = true)
   (NWC: forall s1 s2, p s1 = p s2) (HintsCorrect: reachables_hint_correct p h hints a0 s0)
   (FR: fold_right (reachables_at hints p) (Some reaches) addrs = Some reaches)
   (XP: exec_prog h p a0 s0 n s1 (Exit a1))
@@ -1532,11 +1342,10 @@ Proof.
   induction addrs as [|a_new addrs IHaddrs]; intros.
   - discriminate.
   - simpl in FR. destruct fold_right as [reaches'|] eqn: FR'; try discriminate.
-    assert (reaches ~=~ reaches'). split.
+    assert (reaches = reaches'). apply set_elems_equiv_inj. split.
       einstantiate trivial fold_right_reachables_incl.
-      einstantiate trivial reachables_incl.
-    einstantiate trivial fold_right_reachables_equiv_equal. subst.
-    destruct (a1 == a_new) eqn: EQ; subst.
+      einstantiate trivial reachables_incl. subst.
+    fold addr in a1. destruct (a1 == a_new) eqn: EQ; subst.
     + (* last statement at a_new *) destruct_reachables_at FR.
       * (* Provided by hint *) rewrite <- RA'. apply set_ap_has_l.
         eapply HintsCorrect; try eassumption.
@@ -1544,7 +1353,7 @@ Proof.
         erewrite sub_prog_SS in LU by eassumption. inversion LU. subst.
         einstantiate trivial stmt_reachable_complete. apply set_has_in.
         rewrite <- RA'. destruct x' as [[a|?]|]; try inversion EX; subst.
-        -- (* Some exit *) apply set_has_in in H0. apply set_ap_left.
+        -- (* Some exit *) apply set_has_in in H. apply set_ap_left.
            destruct falls; [apply set_add_preserves|]; assumption.
         -- (* fallthru *) apply set_ap_left. apply set_add_correct.
     + (* Already known, use IH *) simpl in LU.
@@ -1553,31 +1362,29 @@ Proof.
 Qed.
 
 Theorem expand_reachables_complete: forall hints p h n reaches s0 a0 s' a'
-  (ND: NoDup reaches) (Init: set_has reaches a0 = true)
+  (Init: set_has reaches a0 = true)
   (NWC: forall s1 s2, p s1 = p s2) (HintsCorrect: reachables_hint_correct p h hints a0 s0)
   (ER: expand_reachables hints p reaches = Some (reaches, false))
   (XP: exec_prog h p a0 s0 n s' (Exit a')),
   set_has reaches a' = true.
 Proof.
-  unfold expand_reachables. induction n; intros.
+  unfold expand_reachables. induction n; intros; fold addr in a0.
   - (* XP done *) inversion XP. subst. apply Init.
   - (* XP step *) apply exec_prog_equiv_exec_prog2 in XP. inversion XP. subst.
     apply exec_prog_equiv_exec_prog2 in XP0. assert (SH: set_has reaches a1 = true).
     eapply IHn; try eassumption. destruct fold_right eqn: FR; try discriminate.
-    destruct set_equivb eqn: EQB; inversion ER. rename s into reaches'.
-    einstantiate trivial fold_right_reachables_at_nodup.
-    apply set_equivb_iff_equiv in EQB; try assumption.
-    erewrite <- fold_right_reachables_equiv_equal with (reaches':=reaches') in FR by eassumption.
+    destruct (reaches == s); try discriminate. subst. rename s into reaches'.
     eapply expand_reachables_step; try eassumption.
     rewrite <- LU. unfold sub_prog. destruct existsb eqn: EXB; try reflexivity.
-    unfold set_has in SH. rewrite SH in EXB. discriminate.
+    rewrite existsb_iseqb_iff_in_contra in EXB. apply set_has_in in SH.
+    contradiction EXB.
 Qed.
 
 Definition reachable_inv reaches :=
   invs (fun a _ => Some (set_has reaches a = true)) (fun _ _ => True).
 
 Theorem expand_reachables_complete_inv: forall hints p h s0 a0 n reaches s' a'
-  (ND: NoDup reaches) (Init: set_has reaches a0 = true)
+  (Init: set_has reaches a0 = true)
   (NWC: forall s1 s2, p s1 = p s2) (HintsCorrect: reachables_hint_correct p h hints a0 s0)
   (ER: expand_reachables hints p reaches = Some (reaches, false))
   (XP: exec_prog h p a0 s0 n s' (Exit a')),
@@ -1592,17 +1399,17 @@ Theorem expand_reachables_equiv_equal: forall r1 r2 hints p
 Proof.
   intros. unfold expand_reachables in ER.
   destruct fold_right eqn: FR; try discriminate.
-  destruct set_equivb eqn: SE; inversion ER. reflexivity.
+  destruct (r1 == s); inversion ER. reflexivity.
 Qed.
 
 Theorem expand_reachables_n_complete_inv: forall hints iter p h reaches n s0 a0 s' a'
-  (ND: NoDup (set_elems reaches)) (Init: set_has reaches a0 = true)
+  (Init: set_has reaches a0 = true)
   (NWC: forall s1 s2, p s1 = p s2) (HintsCorrect: reachables_hint_correct p h hints a0 s0)
   (ER: expand_reachables_n hints p reaches iter = Some (reaches, false))
   (XP: exec_prog h p a0 s0 n s' (Exit a')),
   trueif_inv (reachable_inv reaches p (Exit a') s').
 Proof.
-  unfold expand_reachables_n, iterM. intros. revert ND ER XP.
+  unfold expand_reachables_n, iterM. intros. revert ER XP.
   remember (fun _ => _) as fn. pattern (N.iter iter fn (Some (reaches, true))).
   apply N.iter_invariant; try discriminate. intros. subst.
   destruct x as [[r fin]|]; try discriminate.
@@ -1614,9 +1421,9 @@ Qed.
 Ltac add_to_set s elem :=
   tryif is_var s then
     let tmp := eval compute in s in
-    clear s; pose (s := set_add tmp elem); compute in s
+    clear s; pose (s := elem ~:: tmp); compute in s
   else
-    pose (s := elem :: nil).
+    pose (s := {{elem}}).
 
 Ltac compute_reaches' iters hint r XP0 :=
   lazymatch type of XP0 with
@@ -1628,14 +1435,14 @@ Ltac compute_reaches' iters hint r XP0 :=
           match changing with
           | true => idtac "expand_reachable not done!"
           | false =>
-              let tmp1 := fresh in
+              let tmp1 := fresh r "_correct" in
               let tmp2 := fresh in
               let tmp3 := fresh in
               assert (tmp1: set_has r 0 = true); [reflexivity|];
               assert (tmp2: r = nodup iseq r); [reflexivity|];
-              assert (tmp3: NoDup r); [rewrite tmp2; apply NoDup_nodup|]
+              assert (tmp3: NoDup r); [rewrite tmp2; apply NoDup_nodup|];
               invariant (expand_reachables_complete_inv hint p h s0 a0) from tmp1;
-                try reflexivity; try eassumption; clear tmp1 tmp2 tmp3
+                try reflexivity; try eassumption; clear tmp2 tmp3
           end
       | None => fail "expand_reachable failed"
       | _ => fail "Reachables not fully computable! Perhaps there are"
@@ -1669,11 +1476,178 @@ Ltac compute_reaches iters hint r XP0 :=
   compute_reaches_fast iters hint r XP0;
   compute_reaches' 1 hint r XP0.
 
+Theorem welltyped_prog_sub: forall p a c (WT: welltyped_prog c p),
+  welltyped_prog c (sub_prog p a).
+Proof.
+  intros. unfold welltyped_prog. intros.
+  destruct sub_prog as [[sz q]|] eqn: SUB; try reflexivity.
+  specialize (WT s a0) as WT. unfold sub_prog in SUB.
+  destruct existsb; try discriminate. rewrite SUB in WT. assumption.
+Qed.
+
 Require Import Picinae_i386.
 Require Import strchr_i386.
+Require Import test.
 Import X86Notations.
 
+Definition compactify_delta (δ: store_delta): store_delta :=
+  fun (v: var) =>
+    match v with
+    | V_MEM32 => δ V_MEM32
+    (* Flags (1-bit registers): *)
+    | R_AF => δ R_AF
+    | R_CF => δ R_CF
+    | R_DF => δ R_DF
+    | R_OF => δ R_OF
+    | R_PF => δ R_PF
+    | R_SF => δ R_SF
+    | R_ZF => δ R_ZF
+    (* Segment selectors (16-bit registers): *)
+    | R_CS => δ R_CS
+    | R_DS => δ R_DS
+    | R_ES => δ R_ES
+    | R_FS => δ R_FS
+    | R_GS => δ R_GS
+    | R_SS => δ R_SS
+    (* Floating point control register (16-bit): *)
+    | R_FPU_CONTROL => δ R_FPU_CONTROL (* NumT 16 *)
+    (* Floating point registers (80-bit): *)
+    | R_ST0 => δ R_ST0
+    | R_ST1 => δ R_ST1
+    | R_ST2 => δ R_ST2
+    | R_ST3 => δ R_ST3
+    | R_ST4 => δ R_ST4
+    | R_ST5 => δ R_ST5
+    | R_ST6 => δ R_ST6
+    | R_ST7 => δ R_ST7 (* NumT 80 *)
+    (* General-purpose registers (32-bit): *)
+    | R_EAX => δ R_EAX
+    | R_EBX => δ R_EBX
+    | R_ECX => δ R_ECX
+    | R_EDX => δ R_EDX
+    | R_EDI => δ R_EDI
+    | R_ESI => δ R_ESI
+    (* Stack pointer and base pointer (32-bit): *)
+    | R_ESP => δ R_ESP
+    | R_EBP => δ R_EBP
+    (* Modifiable segment base registers (32-bit): *)
+    | R_FS_BASE => δ R_FS_BASE
+    | R_GS_BASE => δ R_GS_BASE
+    (* Descriptor table registers (32-bit): *)
+    | R_LDTR => δ R_LDTR
+    | R_GDTR => δ R_GDTR
+    (* SSE control register (32-bit): *)
+    | R_MXCSR => δ R_MXCSR (* NumT 32 *)
+    (* MMX and SSE registers (256-bit): *)
+    | R_YMM0 => δ R_YMM0
+    | R_YMM1 => δ R_YMM1
+    | R_YMM2 => δ R_YMM2
+    | R_YMM3 => δ R_YMM3
+    | R_YMM4 => δ R_YMM4
+    | R_YMM5 => δ R_YMM5
+    | R_YMM6 => δ R_YMM6
+    | R_YMM7 => δ R_YMM7
+    | R_YMM8 => δ R_YMM8
+    | R_YMM9 => δ R_YMM9
+    | R_YMM10 => δ R_YMM10
+    | R_YMM11 => δ R_YMM11
+    | R_YMM12 => δ R_YMM12
+    | R_YMM13 => δ R_YMM13
+    | R_YMM14 => δ R_YMM14
+    | R_YMM15 => δ R_YMM15
+    (* These meta-variables model page access permissions: *)
+    | A_READ => δ A_READ
+    | A_WRITE => δ A_WRITE
+    | V_TEMP n => δ (V_TEMP n)
+    end.
+
 Definition fh := htotal.
+
+Definition init_store_delta: store_delta :=
+  fun v => Some (Var v).
+
+Definition vars := R_EBP :: R_ESP :: nil.
+
+Definition simp_prog: program := fun _ a =>
+  match a with
+
+  (* 0x1: movl %esp, %ebp *)
+  | 0 => Some (1,
+      Move R_EBP (Var R_ESP)
+  )
+  | 1 => Some (1, Jmp (Word a 32))
+  | _ => None
+  end.
+
+Theorem simp_prog_welltyped: welltyped_prog x86typctx simp_prog.
+Proof.
+  Picinae_typecheck.
+Qed.
+
+Definition simp_prog_trace_hint (p: program) (a: addr) (ts: trace_states):
+  option (trace_states * bool) := None.
+
+Definition simp_prog_trace reachables := expand_trace_program_n 10
+  simp_prog_trace_hint vars simp_prog reachables (update ⊥ 0 (Some init_store_delta)).
+
+Goal True.
+Proof.
+
+  pose (x := match simp_prog_trace {{0;1}} with
+             | Some (ts, b) =>
+                 match ts 1 with
+                 | Some δ => Some (compactify_delta δ, b)
+                 | None => None
+                 end
+             | None => None
+             end).
+  compute in x.
+Abort.
+
+
+
+Theorem my_prog_welltyped: welltyped_prog x86typctx my_prog.
+Proof.
+  Picinae_typecheck.
+Qed.
+
+Definition my_prog_reachables_hint (ret: addr) (a: addr): option (set addr) :=
+  match a with
+  | 34 => Some (ret::nil)
+  | _ => None
+  end.
+
+Definition my_prog_reachables ret := expand_reachables_fast_n
+  (my_prog_reachables_hint ret) my_prog (0 :: nil, 0 :: nil) 100.
+
+Definition my_prog_trace_hint (p: program) (a: addr) (ts: trace_states):
+  option (trace_states * bool) :=
+  match a with
+  | 34 => Some (ts, false)
+  | _ => None
+  end.
+
+Definition my_prog_trace reachables := expand_trace_program_n 10
+  my_prog_trace_hint vars my_prog reachables (update ⊥ 0 (Some init_store_delta)).
+
+Goal True.
+Proof.
+
+  pose (x := my_prog_reachables 0).
+  compute in x.
+  match eval compute in x with
+  | Some (?v, nil) => clear x; pose (reachables := v)
+  end.
+  pose (x := match my_prog_trace reachables with
+             | Some (ts, b) =>
+                 match ts 34 with
+                 | Some δ => Some (compactify_delta δ, b)
+                 | None => None
+                 end
+             | None => None
+             end).
+  compute in x.
+Abort.
 
 Definition ret_pres (esp0:N) (mem:addr->N) (s:store) :=
   exists mem1, s V_MEM32 = Ⓜ mem1 /\ mem Ⓓ[ esp0 ] = mem1 Ⓓ[ esp0 ].
@@ -1687,28 +1661,11 @@ Definition ret_post (esp0:N) (mem:addr->N) (_:exit) (s:store) :=
 Definition strchr_ret_invset esp0 mem :=
   invs (ret_invs esp0 mem) (ret_post esp0 mem).
 
-Theorem welltyped_prog_sub: forall p a c (WT: welltyped_prog c p),
-  welltyped_prog c (sub_prog p a).
-Proof.
-  intros. unfold welltyped_prog. intros.
-  destruct sub_prog as [[sz q]|] eqn: SUB; try reflexivity.
-  specialize (WT s a0) as WT. unfold sub_prog in SUB.
-  destruct existsb; try discriminate. rewrite SUB in WT. assumption.
-Qed.
-
 Theorem strchr_welltyped: welltyped_prog x86typctx strchr_i386.
 Proof.
   Picinae_typecheck.
 Qed.
 
-Tactic Notation "unsimpl" uconstr(exp) :=
-  let tmp := fresh in
-  epose proof (tmp := eq_refl exp); simpl in tmp;
-  lazymatch type of tmp with
-  | ?exp' = _ =>
-      clear tmp; eassert (tmp: exp' = exp); [reflexivity|rewrite tmp in *];
-          clear tmp
-  end.
 
 
 Definition strchr_reachables_hint (ret: addr) (a: addr): option (set addr) :=
@@ -1716,6 +1673,59 @@ Definition strchr_reachables_hint (ret: addr) (a: addr): option (set addr) :=
   | 401 => Some (ret::nil)
   | _ => None
   end.
+
+Definition strchr_reachables ret := expand_reachables_fast_n
+  (strchr_reachables_hint ret) strchr_i386 (0 :: nil, 0 :: nil) 100.
+
+Definition strchr_trace_hint (p: program) (a: addr) (ts: trace_states):
+  option (trace_states * bool) :=
+  match a with
+  | 401 => Some (ts, false)
+  | _ => None
+  end.
+
+Definition strchr_trace reachables := expand_trace_program_n 1
+  strchr_trace_hint vars strchr_i386 reachables (update ⊥ 0 (Some init_store_delta)).
+
+Goal True.
+Proof.
+  idtac "DOING STRCHR_TRACE".
+
+  pose (x := strchr_reachables 0).
+  compute in x.
+  match eval compute in x with
+  | Some (?v, nil) => clear x; pose (reachables := v)
+  end.
+  pose (x := match strchr_trace reachables with
+             | Some (ts, b) =>
+                 match ts 401 with
+                 | Some δ => Some (compactify_delta δ, b)
+                 | None => None
+                 end
+             | None => None
+             end).
+  time (vm_compute in x).
+  idtac "DONE COMPUTATION".
+  match eval red in x with ?v => idtac v end.
+
+  match eval red in x with
+  | Some (?v, true) => idtac "STILL MORE"; clear x; pose (x := v)
+  | Some (?v, false) => clear x; pose (x := v)
+  end.
+Abort.
+
+  pose (vv2 := x V_MEM32). compute in vv2.
+
+
+
+
+
+Compute
+  match strchr_trace 1 with
+  | Some (ts, b) => Some (ts 401, b)
+  | None => None
+  end.
+
 
 Theorem strchr_preserves_ret:
   forall s esp0 mem n s' x' (ESP0: s R_ESP = Ⓓ esp0)
@@ -1737,18 +1747,6 @@ Proof.
   (* TODO: this 0 should actually be some symbolic value (optimally)! *)
   compute_reaches 100 (strchr_reachables_hint 0) reachable XP0.
 
-  assert (tmp1: set_has reachable 0 = true); [reflexivity|].
-  assert (tmp2: reachable = nodup iseq reachable); [reflexivity|].
-  assert (tmp3: NoDup reachable); [rewrite tmp2; apply NoDup_nodup|].
-  invariant (expand_reachables_complete_inv (strchr_reachables_hint 0)
-  strchr_i386) from tmp1;
-  try reflexivity.
-  invariant () from tmp1.
-  3: {
-  }
-  2: {
-  }
-
   (* Prove that the hint that we give is valid. *)
   unfold reachables_hint_correct. intros.
   destruct a_new as [|a]; repeat first [ discriminate | destruct a as [a|a|]].
@@ -1759,9 +1757,6 @@ Proof.
   (* Here we show that the return value is preserved!! *) admit.
 
   revert RET0 MDL0.
-  Search "prove_inv".
-  Print prove_invset.
-
   induction on invariant XP0; intros.
 
   apply Trivial.
@@ -1769,19 +1764,10 @@ Proof.
   (* MDL0 *)
   eapply preservation_exec_prog. exact MDL0. exact strchr_welltyped. exact XP.
 
-  compute in r.
-
-
+  destruct_inv 32 PRE.
 
 Abort.
 
-
-Definition init_store_delta (c: typctx): store_delta :=
-  fun v =>
-    match c v with
-    | Some (NumT w) => Var v 0 w
-    | Some (MemT _) | None => Complex
-    end.
 
 (*
 N.iter
