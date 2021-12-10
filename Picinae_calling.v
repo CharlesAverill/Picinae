@@ -1,24 +1,40 @@
-(* Example proofs using Picinae for Intel x86 Architecture
-
-   Copyright (c) 2021 Kevin W. Hamlen
-   Computer Science Department
-   The University of Texas at Dallas
-
-   Any use, commercial or otherwise, requires the express permission of
-   the author.
-
-   To run this module, first load and compile:
-   * Picinae_syntax
-   * Picinae_theory
-   * Picinae_finterp
-   * Picinae_statics
-   * Picinae_slogic
-   * Picinae_i386
-   * strcmp_i386
-   (in that order) and then compile this module using menu option
-   Compile->Compile buffer.
+ (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
+                                                                          $MNDM7
+   Copyright (c) 2021 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
+   Computer Science Department             Z$$ZM++O++                    7MMZZN+
+                                          ZZ$7Z.ZM~?                     7MZDNO$
+                                        ?Z8ZO7.OM=+?                     $OMO+Z+
+   Any use, commercial or otherwise       ?D=++M++ZMMNDNDZZ$$Z?           MM,IZ=
+   requires the express permission of        MZZZZZZ+...=.8NOZ8NZ$7       MM+$7M
+   the author.                                 ?NNMMM+.IZDMMMMZMD8O77     O7+MZ+
+                                                     MMM8MMMMMMMMMMM77   +MMMMZZ
+                                                     MMMMMMMMMMMZMDMD77$.ZMZMM78
+                                                      MMMMMMMMMMMMMMMMMMMZOMMM+Z
+   Calling convention preservation and tracing         MMMMMMMMMMMMMMMMM^NZMMN+Z
+   * traces states in all program executions            MMMMMMMMMMMMMMM/.$MZM8O+
+   * static assertions of preserved states               MMMMMMMMMMMMMM7..$MNDM+
+     throughout program execution                         MMDMMMMMMMMMZ7..$DM$77
+   * correctness/soundness of these static assertions      MMMMMMM+MMMZ7..7ZM~++
+                                                            MMMMMMMMMMM7..ZNOOMZ
+                                                             MMMMMMMMMM$.$MOMO=7
+                                                              MDMMMMMMMO.7MDM7M+
+                                                               ZMMMMMMMM.$MM8$MN
+   To compile this module, first load the Picinae_core         $ZMMMMMMZ..MMMOMZ
+   module and compile it with menu option                       ?MMMMMM7..MNN7$M
+   Compile->Compile_buffer.                                      ?MMMMMZ..MZM$ZZ
+                                                                  ?$MMMZ7.ZZM7DZ
+                                                                    7MMM$.7MDOD7
+                                                                     7MMM.7M77ZZ
+                                                                      $MM78ZDZ7Z
+                                                                        MM8D$7Z7
+                                                                        MM7O$$+Z
+                                                                         M 7N8ZD
  *)
 
+Require Import Picinae_theory.
+Require Import Picinae_statics.
+Require Import Picinae_finterp.
 Require Import Utf8.
 Require Import List.
 Require Import FunctionalExtensionality.
@@ -28,15 +44,11 @@ Require Import ZArith.
 Require Import Bool.
 Require Import Etacs.
 Require Import Ntree.
-Require Import Picinae_i386.
 Require Import Coq.Program.Equality.
 
 Open Scope bool.
 Open Scope list.
 Open Scope N.
-
-Tactic Notation "vantisym" constr(v1) constr(v2) "by" tactic(T) :=
-  vantisym v1 v2; [|solve [T]].
 
 (* partial functions *)
 Definition pfunc (A B:Type) := A -> option B.
@@ -46,6 +58,12 @@ Notation "x ⇀ y" := (pfunc x y) (at level 99, y at level 200, right associativ
 
 (* the empty function (bottom) *)
 Notation "⊥" := (fun _ => None).
+
+(* Functional interpretation of expressions and statements entails instantiating
+   a functor that accepts the architecture-specific IL syntax and semantics. *)
+Module Type PICINAE_CALLING_DEFS (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL).
+Import IL.
+Import TIL.
 
 (* Some equality definitions *)
 Program Instance endian_EqDec: EqDec endianness.
@@ -60,9 +78,6 @@ Next Obligation. Proof. decide equality. Defined.
 Program Instance cast_EqDec: EqDec cast_typ.
 Next Obligation. Proof. decide equality. Defined.
 
-Program Instance exp_EqDec: EqDec exp.
-Next Obligation. Proof. decide equality; apply iseq. Defined.
-
 Program Instance bool_EqDec : EqDec bool.
 Next Obligation. Proof. decide equality. Defined.
 
@@ -74,6 +89,9 @@ Next Obligation. Proof. decide equality; apply iseq. Defined.
 
 Program Instance list_EqDec A `(EA : EqDec A) : EqDec (list A).
 Next Obligation. Proof. decide equality. apply iseq. Defined.
+
+Program Instance exp_EqDec: EqDec exp.
+Next Obligation. Proof. decide equality; apply iseq. Defined.
 
 (* We define a store delta as a variable to partial mapping onto
  * some expression. This is partial to account for "undefined" variables (which
@@ -126,6 +144,304 @@ Definition delta_same_domain (vd: vdomain) (δ1 δ2: store_delta) :=
             | _, _ => False
             end.
 
+Fixpoint subst_valid (vd: vdomain) (δ: store_delta) e: bool :=
+  match e with
+  | Var v =>
+      match δ<{vd}>[[v]] with
+      | Some e => true
+      | None => false
+      end
+  | Word _ _ => true
+  | Load e1 e2 _ _ => subst_valid vd δ e1 && subst_valid vd δ e2
+  | Store e1 e2 e3 _ _ => subst_valid vd δ e1 && subst_valid vd δ e2 && subst_valid vd δ e3
+  | BinOp _ e1 e2 => subst_valid vd δ e1 && subst_valid vd δ e2
+  | UnOp _ e => subst_valid vd δ e
+  | Cast _ _ e => subst_valid vd δ e
+  | Let v e e_in =>
+      if subst_valid vd δ e
+      then subst_valid vd (δ[[v := (Some (Word 0 0))]]) e_in
+      else subst_valid vd (δ[[v := None]]) e_in
+  | Unknown _ => false
+  | Ite e1 e2 e3 => subst_valid vd δ e1 && subst_valid vd δ e2 && subst_valid vd δ e3
+  | Extract _ _ e => subst_valid vd δ e
+  | Concat e1 e2 => subst_valid vd δ e1 && subst_valid vd δ e2
+  end.
+
+Fixpoint subst_exp0 (vd: vdomain) (δ: store_delta) e: exp :=
+  match e with
+  | Var v =>
+      match δ<{vd}>[[v]] with
+      | Some e => e
+      | None => Unknown 0 (* Note we should return error in subst_err here *)
+      end
+  | Word _ _ => e
+  | Load e1 e2 en len => Load (subst_exp0 vd δ e1) (subst_exp0 vd δ e2) en len
+  | Store e1 e2 e3 en len => Store (subst_exp0 vd δ e1) (subst_exp0 vd δ e2)
+      (subst_exp0 vd δ e3) en len
+  | BinOp op e1 e2 => BinOp op (subst_exp0 vd δ e1) (subst_exp0 vd δ e2)
+  | UnOp op e => UnOp op (subst_exp0 vd δ e)
+  | Cast typ w' e => Cast typ w' (subst_exp0 vd δ e)
+  | Let v e e_in =>
+      if subst_valid vd δ e
+      then subst_exp0 vd (δ[[v := (Some (subst_exp0 vd δ e))]]) e_in
+      else subst_exp0 vd (δ[[v := None]]) e_in
+  | Unknown _ => e
+  | Ite e1 e2 e3 => Ite (subst_exp0 vd δ e1) (subst_exp0 vd δ e2) (subst_exp0 vd δ e3)
+  | Extract n1 n2 e => Extract n1 n2 (subst_exp0 vd δ e)
+  | Concat e1 e2 => Concat (subst_exp0 vd δ e1) (subst_exp0 vd δ e2)
+  end.
+
+Definition subst_exp (vd: vdomain) (δ: store_delta) e: option exp :=
+  if subst_valid vd δ e then Some (subst_exp0 vd δ e) else None.
+
+Definition trace_states := treeN store_delta.
+
+Inductive jump_target: Set :=
+  | jump_addr (a: addr)
+  | jump_symbolic. (* a call or return *)
+
+Inductive eval_jump (p: program) (s: store):
+  addr -> jump_target -> Prop :=
+  | EJ_jump_addr (a: addr): eval_jump p s a (jump_addr a)
+  | EJ_jump_symbolic (a: addr) (LU: p s a = None):
+      eval_jump p s a jump_symbolic.
+
+Definition eval_jump_targets p s a (jmps: list jump_target): Prop :=
+  Exists (eval_jump p s a) jmps.
+
+Inductive ts_evidence :=
+  | has_jump_targets (a1: addr) (q0: stmt) (δ: store_delta) (vd: vdomain)
+      (e: exp) (jmps: list jump_target).
+
+Inductive ts_evidence_proved (p: program) (h: hdomain)
+  (a0: addr) (s0: store): ts_evidence -> Prop :=
+  | EV_has_jump_targets (a1: addr) (q0: stmt) (δ: store_delta)
+      (vd: vdomain) (e: exp) (jmps: list jump_target) (EJT: forall n a' s0' s1
+        (XP: exec_prog h p a0 s0 n s0' (Exit a1))
+        (XS0: exec_stmt h s0' q0 s1 None)
+        (XS: exec_stmt h s1 (Jmp e) s1 (Some (Exit a')))
+        (HD: has_delta vd h s0 s1 δ),
+        eval_jump_targets p s1 a' jmps):
+        ts_evidence_proved p h a0 s0 (has_jump_targets a1 q0 δ vd e jmps).
+
+Definition trace_state_res :=
+  option (list (store_delta * option exit) * list ts_evidence).
+
+Definition sat_evidences (evs: list ts_evidence) p h a0 s0 :=
+  Forall (ts_evidence_proved p h a0 s0) evs.
+
+(* TODO: remove redundant ts_evidences *)
+Definition app_evidences (ev1 ev2: list ts_evidence) := ev1 ++ ev2.
+Notation "ev1 !++ ev2" := (app_evidences ev1 ev2) (at level 60, right associativity).
+
+Fixpoint map_option {A B} (f: A -> option B) (l: list A): option (list B) :=
+  match l with
+  | nil => Some nil
+  | a :: t =>
+      match f a with
+      | None => None
+      | Some b =>
+          match map_option f t with
+          | None => None
+          | Some t' => Some (b :: t')
+          end
+      end
+  end.
+
+Definition jump_hint := addr -> store_delta -> exp -> option (list jump_target).
+
+Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
+  (a: addr) (q0: stmt) (q: stmt): trace_state_res :=
+  match q with
+  | Nop => Some ((δ, None) :: nil, nil)
+  | Move v e => Some ((δ[[v := subst_exp vd δ e]], None) :: nil, nil)
+  | Jmp e =>
+      match hint a δ e with
+      | Some jmps =>
+          Some (flat_map (fun j =>
+            match j with
+            | jump_addr a => ((δ, Some (Exit a)) :: nil)
+            | jump_symbolic => nil
+            end) jmps, has_jump_targets a q0 δ vd e jmps :: nil)
+      | None =>
+          match subst_exp vd δ e with
+          | Some (Word n _) => Some ((δ, Some (Exit n)) :: nil, nil)
+          | _ => None
+          end
+      end
+  | Exn n => Some ((δ, Some (Raise n)) :: nil, nil)
+  | Seq q1 q2 =>
+      match simple_trace_stmt0 hint vd δ a q0 q1 with
+      | None => None
+      | Some (paths1, ev1) =>
+          let res := map_option (fun '(δ', x) =>
+            match x with
+            | None =>
+                match simple_trace_stmt0 hint vd δ' a (Seq q0 q1) q2 with
+                | None => None
+                | Some (paths2, _) => Some paths2
+                end
+            | Some _ => Some ((δ', x) :: nil)
+            end) paths1 in
+          let ev' := flat_map (fun '(δ', x) =>
+            match x with
+            | None =>
+                match simple_trace_stmt0 hint vd δ' a (Seq q0 q1) q2 with
+                | None => nil
+                | Some (_, ev2) => ev2
+                end
+            | Some _ => nil
+            end) paths1 !++ ev1 in
+          match res with
+          | None => None
+          | Some ll => Some (concat ll, ev')
+          end
+      end
+  | If _ q1 q2 =>
+      match simple_trace_stmt0 hint vd δ a q0 q1, simple_trace_stmt0 hint vd δ a q0 q2 with
+      | None, _ | _, None => None
+      | Some (paths1, ev1), Some (paths2, ev2) =>
+          Some (paths1 ++ paths2, ev1 !++ ev2)
+      end
+  | Rep _ s => None
+  end.
+
+Definition simple_trace_stmt (hint: jump_hint) (vd: vdomain) (δ: store_delta)
+  (a: addr) (q: stmt): trace_state_res :=
+  match simple_trace_stmt0 hint vd δ a Nop q with
+  | Some (next_states, evs) =>
+      Some (map (fun '(δ, x) => (trim_delta_state vd δ, x)) next_states, evs)
+  | None => None
+  end.
+
+Definition join_states_if_changed (vd: vdomain) (δ1: option store_delta)
+  (δ2: store_delta): option store_delta :=
+  match δ1 with
+  | Some δ1 =>
+      if delta_equivb vd δ1 δ2
+      then None
+      else let δ_merge := (fold_right (fun v δ' =>
+        δ'[[v := if δ1<{vd}>[[v]] == δ2<{vd}>[[v]] then δ2<{vd}>[[v]] else None]])
+        nil (delta_defined (δ1 ++ δ2))) in
+        if delta_equivb vd δ1 δ_merge then
+            None
+        else
+            Some δ_merge
+  | None => Some δ2
+  end.
+
+Definition null_state: store := fun _ => VaN 0 0.
+
+Definition process_state (vd: vdomain) (exitof: option exit -> exit)
+  (st: store_delta * option exit) (accum: trace_states * bool) :=
+  let '(ts, changed) := accum in
+  let '(δ', x) := st in
+  (* If this exited to an address, update state on that address
+   * Otherwise if it is a raise, we don't actually care about
+   * what state we end up in (nothing to merge with), since
+   * there is no way for us to return back later on to a valid
+   * address. *)
+  match exitof x with
+  | Exit next_addr =>
+      (* Check if joining states changed something. If so, we update and mark
+       * this as changed *)
+      match join_states_if_changed vd (tget_n ts next_addr) δ' with
+      | Some δ_merge => (tupdate_n ts next_addr δ_merge, true)
+      | None => (ts, changed)
+      end
+  | Raise _ => (ts, changed)
+  end.
+
+Definition stmt_correct vd q δ x := forall s0 h s s' (XS: exec_stmt h s q s' x),
+  has_delta vd h s0 s' δ.
+
+Definition correctness_sub_prog vd p domain ts h a0 s0 :=
+  (forall a1 s1 n1 δ
+    (XP: exec_prog h (sub_prog p domain) a0 s0 n1 s1 (Exit a1))
+    (TS2: tget_n ts a1 = Some δ), has_delta vd h s0 s1 δ).
+
+Definition trace_program_step_at (vd: vdomain) (p: program)
+  (hints: jump_hint) addr (accum: option (trace_states * bool * list ts_evidence)) :=
+  match accum with
+  | None => None
+  | Some (ts, changed, old_evs) =>
+      (* If this is a proper address in program, process that. Otherwise, this
+       * is an invalid execution, so wouldn't happen to begin with. *)
+      match p null_state addr with
+      | None => Some (ts, changed, old_evs)
+      | Some (sz, q) =>
+          (* We have to had visited this address to begin with; otherwise, we
+           * won't be able to push trace states for this address's successors. *)
+          match tget_n ts addr with
+          | None => Some (ts, changed, old_evs)
+          | Some δ_a =>
+              match simple_trace_stmt hints vd δ_a addr q with
+              | None => None
+              | Some (next_states, evs) =>
+                  let res := fold_right (process_state vd
+                    (exitof (addr + sz))) (ts, changed) next_states in
+                  Some (res, evs !++ old_evs)
+              end
+          end
+      end
+  end.
+
+Definition expand_trace_program (vd: vdomain) (p: program)
+  (hints: jump_hint) (init_ts: trace_states):
+  option (trace_states * bool * list ts_evidence) :=
+  fold_right (trace_program_step_at vd p hints) (Some (init_ts, false, nil))
+    (tkeys_n init_ts).
+
+Definition iterM (n: N) {A} (f: A -> option A) (x: A) :=
+  N.iter n (fun x => match x with Some x => f x | None => None end) (Some x).
+
+Definition expand_trace_program_n (n: N) (vd: vdomain)
+  (hints: jump_hint) (p: program) (init_ts: trace_states):
+  option (trace_states * bool * list ts_evidence) :=
+  N.iter n (fun x =>
+    match x with
+    | Some (ts, true, _) => expand_trace_program vd p hints ts
+    | Some (ts, false, ev) => Some (ts, false, ev)
+    | None => None
+    end) (Some (init_ts, true, nil)).
+
+End PICINAE_CALLING_DEFS.
+
+Module Type PICINAE_CALLING (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL).
+Import IL.
+Import TIL.
+Include PICINAE_CALLING_DEFS IL TIL.
+
+Module FInterp := PicinaeFInterp IL TIL.
+
+Ltac concretize_delta HD v :=
+  lazymatch type of HD with has_delta ?vd ?h ?s0 ?s1 ?δ =>
+  lazymatch eval compute in (δ<{vd}>[[v]]) with
+  | Some ?e =>
+      let EE := fresh in
+      FInterp.mk_eval_exp h s0 e EE; [|
+          let SV := fresh "Hsv" in
+          einstantiate trivial (HD v) as SV; clear EE]
+  | None => fail "Unknown value for " v
+  end
+  end.
+
+
+End PICINAE_CALLING.
+
+Module PicinaeCalling (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL): PICINAE_CALLING IL TIL.
+
+Import IL.
+Import TIL.
+
+Module PTheory := PicinaeTheory IL.
+Import PTheory.
+
+Module FInterp := PicinaeFInterp IL TIL.
+Import FInterp.
+
+Include PICINAE_CALLING_DEFS IL TIL.
+
 Theorem delta_updlst_def: forall f δ v (ND: ~(In v (delta_defined δ))),
   delta_updlst f δ v = f v.
 Proof.
@@ -144,7 +460,7 @@ Qed.
 Theorem delta_remlst_removed: forall δ fn v,
   delta_updlst fn (remlst v δ) v = fn v.
 Proof.
-  intros. apply delta_updlst_def. intros Contra. revert v Contra. induction δ; intros. 
+  intros. apply delta_updlst_def. intros Contra. revert v Contra. induction δ; intros.
   - inversion Contra.
   - simpl in Contra. destruct a as [v' u']. eapply IHδ. destruct (v == v').
     eassumption. apply neq_sym in n. destruct Contra; [contradiction n|assumption].
@@ -317,56 +633,6 @@ Proof.
   - apply neq_sym in n. repeat rewrite delta_update_frame by assumption. apply DSD.
 Qed.
 
-Fixpoint subst_valid (vd: vdomain) (δ: store_delta) e: bool :=
-  match e with
-  | Var v =>
-      match δ<{vd}>[[v]] with
-      | Some e => true
-      | None => false
-      end
-  | Word _ _ => true
-  | Load e1 e2 _ _ => subst_valid vd δ e1 && subst_valid vd δ e2
-  | Store e1 e2 e3 _ _ => subst_valid vd δ e1 && subst_valid vd δ e2 && subst_valid vd δ e3
-  | BinOp _ e1 e2 => subst_valid vd δ e1 && subst_valid vd δ e2
-  | UnOp _ e => subst_valid vd δ e
-  | Cast _ _ e => subst_valid vd δ e
-  | Let v e e_in =>
-      if subst_valid vd δ e
-      then subst_valid vd (δ[[v := (Some (Word 0 0))]]) e_in
-      else subst_valid vd (δ[[v := None]]) e_in
-  | Unknown _ => false
-  | Ite e1 e2 e3 => subst_valid vd δ e1 && subst_valid vd δ e2 && subst_valid vd δ e3
-  | Extract _ _ e => subst_valid vd δ e
-  | Concat e1 e2 => subst_valid vd δ e1 && subst_valid vd δ e2
-  end.
-
-Fixpoint subst_exp0 (vd: vdomain) (δ: store_delta) e: exp :=
-  match e with
-  | Var v =>
-      match δ<{vd}>[[v]] with
-      | Some e => e
-      | None => Unknown 0 (* Note we should return error in subst_err here *)
-      end
-  | Word _ _ => e
-  | Load e1 e2 en len => Load (subst_exp0 vd δ e1) (subst_exp0 vd δ e2) en len
-  | Store e1 e2 e3 en len => Store (subst_exp0 vd δ e1) (subst_exp0 vd δ e2)
-      (subst_exp0 vd δ e3) en len
-  | BinOp op e1 e2 => BinOp op (subst_exp0 vd δ e1) (subst_exp0 vd δ e2)
-  | UnOp op e => UnOp op (subst_exp0 vd δ e)
-  | Cast typ w' e => Cast typ w' (subst_exp0 vd δ e)
-  | Let v e e_in =>
-      if subst_valid vd δ e
-      then subst_exp0 vd (δ[[v := (Some (subst_exp0 vd δ e))]]) e_in
-      else subst_exp0 vd (δ[[v := None]]) e_in
-  | Unknown _ => e
-  | Ite e1 e2 e3 => Ite (subst_exp0 vd δ e1) (subst_exp0 vd δ e2) (subst_exp0 vd δ e3)
-  | Extract n1 n2 e => Extract n1 n2 (subst_exp0 vd δ e)
-  | Concat e1 e2 => Concat (subst_exp0 vd δ e1) (subst_exp0 vd δ e2)
-  end.
-
-Definition subst_exp (vd: vdomain) (δ: store_delta) e: option exp :=
-  if subst_valid vd δ e then Some (subst_exp0 vd δ e) else None.
-
 Theorem subst_valid_any_Some: forall vd e δ1 δ2
   (DSD: delta_same_domain vd δ1 δ2),
   subst_valid vd δ1 e = subst_valid vd δ2 e.
@@ -472,61 +738,6 @@ Proof.
       einstantiate trivial IHe2 as IHe2.
 Qed.
 
-Definition trace_states := treeN store_delta.
-
-Inductive jump_target: Set :=
-  | jump_addr (a: addr)
-  | jump_symbolic. (* a call or return *)
-
-
-Inductive eval_jump (p: program) (s: store):
-  addr -> jump_target -> Prop :=
-  | EJ_jump_addr (a: addr): eval_jump p s a (jump_addr a)
-  | EJ_jump_symbolic (a: addr) (LU: p s a = None):
-      eval_jump p s a jump_symbolic.
-
-Definition eval_jump_targets p s a (jmps: list jump_target): Prop :=
-  Exists (eval_jump p s a) jmps.
-
-Inductive ts_evidence :=
-  | has_jump_targets (a1: addr) (q0: stmt) (δ: store_delta) (vd: vdomain)
-      (e: exp) (jmps: list jump_target).
-
-Inductive ts_evidence_proved (p: program) (h: hdomain)
-  (a0: addr) (s0: store): ts_evidence -> Prop :=
-  | EV_has_jump_targets (a1: addr) (q0: stmt) (δ: store_delta)
-      (vd: vdomain) (e: exp) (jmps: list jump_target) (EJT: forall n a' s0' s1
-        (XP: exec_prog h p a0 s0 n s0' (Exit a1))
-        (XS0: exec_stmt h s0' q0 s1 None)
-        (XS: exec_stmt h s1 (Jmp e) s1 (Some (Exit a')))
-        (HD: has_delta vd h s0 s1 δ),
-        eval_jump_targets p s1 a' jmps):
-        ts_evidence_proved p h a0 s0 (has_jump_targets a1 q0 δ vd e jmps).
-
-Definition trace_state_res :=
-  option (list (store_delta * option exit) * list ts_evidence).
-
-Definition sat_evidences (evs: list ts_evidence) p h a0 s0 :=
-  Forall (ts_evidence_proved p h a0 s0) evs.
-
-(* TODO: remove redundant ts_evidences *)
-Definition app_evidences (ev1 ev2: list ts_evidence) := ev1 ++ ev2.
-Notation "ev1 !++ ev2" := (app_evidences ev1 ev2) (at level 60, right associativity).
-
-Fixpoint map_option {A B} (f: A -> option B) (l: list A): option (list B) :=
-  match l with
-  | nil => Some nil
-  | a :: t =>
-      match f a with
-      | None => None
-      | Some b =>
-          match map_option f t with
-          | None => None
-          | Some t' => Some (b :: t')
-          end
-      end
-  end.
-
 Theorem map_option_inductive_principal: forall {A B} (P: list A -> list B -> Prop)
   al bl (f: A -> option B) (MAPS: map_option f al = Some bl) (BASE: P nil nil)
   (INDUCT: forall a b (F: f a = Some b) al bl (MO: map_option f al = Some bl)
@@ -580,64 +791,6 @@ Proof.
     + simpl. erewrite IHl; try eassumption. destruct (f a); reflexivity.
 Qed.
 
-Definition jump_hint := addr -> store_delta -> exp -> option (list jump_target).
-
-Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
-  (a: addr) (q0: stmt) (q: stmt): trace_state_res :=
-  match q with
-  | Nop => Some ((δ, None) :: nil, nil)
-  | Move v e => Some ((δ[[v := subst_exp vd δ e]], None) :: nil, nil)
-  | Jmp e =>
-      match hint a δ e with
-      | Some jmps =>
-          Some (flat_map (fun j =>
-            match j with
-            | jump_addr a => ((δ, Some (Exit a)) :: nil)
-            | jump_symbolic => nil
-            end) jmps, has_jump_targets a q0 δ vd e jmps :: nil)
-      | None =>
-          match subst_exp vd δ e with
-          | Some (Word n _) => Some ((δ, Some (Exit n)) :: nil, nil)
-          | _ => None
-          end
-      end
-  | Exn n => Some ((δ, Some (Raise n)) :: nil, nil)
-  | Seq q1 q2 =>
-      match simple_trace_stmt0 hint vd δ a q0 q1 with
-      | None => None
-      | Some (paths1, ev1) =>
-          let res := map_option (fun '(δ', x) =>
-            match x with
-            | None =>
-                match simple_trace_stmt0 hint vd δ' a (Seq q0 q1) q2 with
-                | None => None
-                | Some (paths2, _) => Some paths2
-                end
-            | Some _ => Some ((δ', x) :: nil)
-            end) paths1 in
-          let ev' := flat_map (fun '(δ', x) =>
-            match x with
-            | None =>
-                match simple_trace_stmt0 hint vd δ' a (Seq q0 q1) q2 with
-                | None => nil
-                | Some (_, ev2) => ev2
-                end
-            | Some _ => nil
-            end) paths1 !++ ev1 in
-          match res with
-          | None => None
-          | Some ll => Some (concat ll, ev')
-          end
-      end
-  | If _ q1 q2 =>
-      match simple_trace_stmt0 hint vd δ a q0 q1, simple_trace_stmt0 hint vd δ a q0 q2 with
-      | None, _ | _, None => None
-      | Some (paths1, ev1), Some (paths2, ev2) =>
-          Some (paths1 ++ paths2, ev1 !++ ev2)
-      end
-  | Rep _ s => None
-  end.
-
 Theorem simple_trace_stmt0_correct: forall hints vd q q0 paths h p n
   a0 s0 s0' a1 s1 x2 s2 δ evs
   (HD: has_delta vd h s0 s1 δ) (XS: exec_stmt h s1 q s2 x2)
@@ -677,7 +830,7 @@ Proof.
     inversion H4. subst. clear XS H4. apply Forall_app in EV. destruct EV as [EV EV1].
     einstantiate trivial IHq1. apply Exists_exists in H.
     destruct H as [ [δ1 x1] [InP1 [X HD1] ] ]; subst. apply Exists_exists.
-    destruct (simple_trace_stmt0 hints vd δ1 a1 (q0 $; q1) q2) as [ [paths2 ev2]|] eqn:SQ2.
+    destruct (simple_trace_stmt0 hints vd δ1 a1 (Seq q0 q1) q2) as [ [paths2 ev2]|] eqn:SQ2.
     + (* Expand out IHq2. We have to show that ev2 is part of ev' *)
       einstantiate trivial IHq2 as IHq2. econstructor; eassumption.
       unfold sat_evidences. rewrite Forall_forall in *. intros ev' InEV2.
@@ -702,14 +855,6 @@ Proof.
       apply incl_appl. apply incl_refl. assumption.
 Qed.
 
-Definition simple_trace_stmt (hint: jump_hint) (vd: vdomain) (δ: store_delta)
-  (a: addr) (q: stmt): trace_state_res :=
-  match simple_trace_stmt0 hint vd δ a Nop q with
-  | Some (next_states, evs) =>
-      Some (map (fun '(δ, x) => (trim_delta_state vd δ, x)) next_states, evs)
-  | None => None
-  end.
-
 Theorem simple_trace_stmt_correct: forall hints vd q paths h p n
   a0 s0 a1 s1 x2 s2 δ evs (XP: exec_prog h p a0 s0 n s1 (Exit a1))
   (HD: has_delta vd h s0 s1 δ) (XS: exec_stmt h s1 q s2 x2)
@@ -731,101 +876,12 @@ Proof.
   apply trim_delta_state_correct. assumption.
 Qed.
 
-Definition join_states_if_changed (vd: vdomain) (δ1: option store_delta)
-  (δ2: store_delta): option store_delta :=
-  match δ1 with
-  | Some δ1 =>
-      if delta_equivb vd δ1 δ2
-      then None
-      else let δ_merge := (fold_right (fun v δ' =>
-        δ'[[v := if δ1<{vd}>[[v]] == δ2<{vd}>[[v]] then δ2<{vd}>[[v]] else None]])
-        nil (delta_defined (δ1 ++ δ2))) in
-        if delta_equivb vd δ1 δ_merge then
-            None
-        else
-            Some δ_merge
-  | None => Some δ2
-  end.
-
-Definition null_state: store := fun _ => VaN 0 0.
-
-Definition process_state (vd: vdomain) (exitof: option exit -> exit)
-  (st: store_delta * option exit) (accum: trace_states * bool) :=
-  let '(ts, changed) := accum in
-  let '(δ', x) := st in
-  (* If this exited to an address, update state on that address
-   * Otherwise if it is a raise, we don't actually care about
-   * what state we end up in (nothing to merge with), since
-   * there is no way for us to return back later on to a valid
-   * address. *)
-  match exitof x with
-  | Exit next_addr =>
-      (* Check if joining states changed something. If so, we update and mark
-       * this as changed *)
-      match join_states_if_changed vd (tget_n ts next_addr) δ' with
-      | Some δ_merge => (tupdate_n ts next_addr δ_merge, true)
-      | None => (ts, changed)
-      end
-  | Raise _ => (ts, changed)
-  end.
-
-Definition stmt_correct vd q δ x := forall s0 h s s' (XS: exec_stmt h s q s' x),
-  has_delta vd h s0 s' δ.
-
-Definition correctness_sub_prog vd p domain ts h a0 s0 :=
-  (forall a1 s1 n1 δ
-    (XP: exec_prog h (sub_prog p domain) a0 s0 n1 s1 (Exit a1))
-    (TS2: tget_n ts a1 = Some δ), has_delta vd h s0 s1 δ).
-
-Definition trace_program_step_at (vd: vdomain) (p: program)
-  (hints: jump_hint) addr (accum: option (trace_states * bool * list ts_evidence)) :=
-  match accum with
-  | None => None
-  | Some (ts, changed, old_evs) =>
-      (* If this is a proper address in program, process that. Otherwise, this
-       * is an invalid execution, so wouldn't happen to begin with. *)
-      match p null_state addr with
-      | None => Some (ts, changed, old_evs)
-      | Some (sz, q) =>
-          (* We have to had visited this address to begin with; otherwise, we
-           * won't be able to push trace states for this address's successors. *)
-          match tget_n ts addr with
-          | None => Some (ts, changed, old_evs)
-          | Some δ_a =>
-              match simple_trace_stmt hints vd δ_a addr q with
-              | None => None
-              | Some (next_states, evs) =>
-                  let res := fold_right (process_state vd
-                    (exitof (addr + sz))) (ts, changed) next_states in
-                  Some (res, evs !++ old_evs)
-              end
-          end
-      end
-  end.
-
-Definition expand_trace_program (vd: vdomain) (p: program)
-  (hints: jump_hint) (init_ts: trace_states):
-  option (trace_states * bool * list ts_evidence) :=
-  fold_right (trace_program_step_at vd p hints) (Some (init_ts, false, nil))
-    (tkeys_n init_ts).
-
-Definition iterM (n: N) {A} (f: A -> option A) (x: A) :=
-  N.iter n (fun x => match x with Some x => f x | None => None end) (Some x).
-
-Definition expand_trace_program_n (n: N) (vd: vdomain)
-  (hints: jump_hint) (p: program) (init_ts: trace_states):
-  option (trace_states * bool * list ts_evidence) :=
-  N.iter n (fun x =>
-    match x with
-    | Some (ts, true, _) => expand_trace_program vd p hints ts
-    | Some (ts, false, ev) => Some (ts, false, ev)
-    | None => None
-    end) (Some (init_ts, true, nil)).
-
 Lemma fold_expand_trace_program: forall vd p hints init_ts,
   fold_right (trace_program_step_at vd p hints) (Some (init_ts, false, nil))
     (tkeys_n init_ts) = expand_trace_program vd p hints init_ts.
 Proof. reflexivity. Qed.
+
+End PicinaeCalling.
 
 (*
 Theorem trace_program_step_at_steady_correct: forall vd p a_new al hints ts
@@ -1258,6 +1314,9 @@ Require Import Picinae_i386.
 Require Import strchr_i386.
 Import X86Notations.
 
+Module Calling_i386 := PicinaeCalling IL_i386 Statics_i386.
+Import Calling_i386.
+
 Definition fh := htotal.
 
 Definition simp_prog: program := fun _ a =>
@@ -1356,18 +1415,6 @@ Proof.
 
   eexists. exact EE.
 Qed.
-
-Ltac concretize_delta HD v :=
-  lazymatch type of HD with has_delta ?vd ?h ?s0 ?s1 ?δ =>
-  lazymatch eval compute in (δ<{vd}>[[v]]) with
-  | Some ?e =>
-      let EE := fresh in
-      mk_eval_exp h s0 e EE; [|
-          let SV := fresh "Hsv" in
-          einstantiate trivial (HD v) as SV; clear EE]
-  | None => fail "Unknown value for " v
-  end
-  end.
 
 Require Import mod_arith.
 
