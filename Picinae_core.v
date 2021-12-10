@@ -34,6 +34,7 @@
 
 Require Import NArith.
 Require Import ZArith.
+Require Import List.
 Require Import FunctionalExtensionality.
 Require Import Structures.Equalities.
 Open Scope N.
@@ -47,6 +48,8 @@ Class EqDec A : Type := { iseq: forall (a b:A), {a=b}+{a<>b} }.
 Arguments iseq {A EqDec} a b : simpl never.
 Instance NEqDec : EqDec N := { iseq := N.eq_dec }.
 Notation "x == y" := (iseq x y) (at level 70, no associativity).
+Definition iseqb {A} {e: EqDec A} (a1 a2: A): bool :=
+  if a1 == a2 then true else false.
 
 (* When there is an equality decision procedure for a function f's domain,
    we can "update" f by remapping a domain element x to a new co-domain
@@ -278,6 +281,13 @@ Inductive stmt : Type :=
    functions additionally accept a store as input, in order to (optionally)
    support self-modifying code. *)
 Definition program := store -> addr -> option (N * stmt).
+
+(* A sub-program represents a program defined over some sub-domain where the
+   domain is a list of address that the program should only be defined on.
+   FIXME: we should probably phase out using lists here, and try to use
+   a domain function instead. *)
+Definition sub_prog p domain: program :=
+  fun s a => if existsb (iseqb a) domain then p s a else None.
 
 (* Memory accessor functions getmem and setmem read/store w-bit numbers to/from
    memory.  Since w could be large on some architectures, we express both as

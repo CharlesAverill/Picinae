@@ -773,3 +773,210 @@ Proof.
     (* KEQ *) eapply map_inj; trivial2. prove_injective.
     (* INJ *) prove_injective.
 Qed.
+
+(* Set library *)
+Definition set := treeN unit.
+Declare Scope sets_scope.
+Bind Scope sets_scope with set.
+
+Definition set_nil: set := treeN_nil.
+Definition set_elems: set -> list N := tkeys_n.
+Definition set_has: set -> N -> bool := tcontains_n.
+
+Definition set_add a (s: set): set := s [Ⓝ  a := tt ].
+Arguments set_add: simpl never.
+Notation "h ~:: t" := (set_add h t) (at level 60, right associativity):
+  sets_scope.
+
+Fixpoint set_add_all (s1: set) (l2: list N): set :=
+  match l2 with
+  | nil => s1
+  | h::t => set_add h (set_add_all s1 t)
+  end.
+
+Definition list_to_set (l: list N): set := set_add_all set_nil l.
+
+Definition set_ap (s1 s2: set): set :=
+  set_add_all s1 (set_elems s2).
+Arguments set_ap: simpl never.
+Notation "s1 ~++ s2" := (set_ap s1 s2) (at level 60, right associativity):
+  sets_scope.
+
+Notation "{{ x }}" := (set_add x set_nil): sets_scope.
+Notation "{{ x ; .. ; y ; z }}" :=
+  (set_add x (.. (set_add y (set_add z set_nil)) .. )) : sets_scope.
+
+Open Scope sets_scope.
+
+Program Instance unit_EqDec: EqDec unit.
+Next Obligation. decide equality. Defined.
+
+Program Instance set_EqDec: EqDec set.
+Next Obligation. decide equality; apply iseq. Defined.
+
+Theorem set_has_in: forall a s, set_has s a = true <-> In a (set_elems s).
+Proof.
+  unfold set_has, set_elems. intros. rewrite <- tkeys_n_get.
+  rewrite Neqb_iseqb_fn. apply existsb_iseqb_iff_in.
+Qed.
+Corollary set_has_in_contra: forall (s: set) a,
+  set_has s a = false <-> ~In a (set_elems s).
+Proof.
+  intros. rewrite <- not_true_iff_false. contrapositive set_has_in.
+Qed.
+Corollary set_elems_nodup: forall (s: set), NoDup (set_elems s).
+Proof. apply tkeys_n_nodup. Qed.
+
+Theorem set_elems_equiv_inj: forall s1 s2
+  (EQV: list_equiv (set_elems s1) (set_elems s2)), s1 = s2.
+Proof.
+  intros. apply tkeys_n_inj, tkeys_n_equiv_equal; trivial2.
+
+  (* Due to the degeneracy of the values used (units), all values are equal. *)
+  unfold tcontains_n. intros. destruct tget_n, (tget_n s2); trivial2.
+  destruct u, u0. reflexivity.
+Qed.
+
+Theorem set_add_idempotent: forall (s: set) a
+  (InOld: In a (set_elems s)), a ~:: s = s.
+Proof.
+  unfold set_elems, set_add. intros. apply (existsb_iseqb_iff_in N) in InOld.
+  rewrite <- Neqb_iseqb_fn, tkeys_n_get in InOld. apply tupdate_n_idempotent.
+  unfold tcontains_n in InOld. destruct tget_n; [|discriminate].
+  destruct u. reflexivity.
+Qed.
+Theorem set_add_preserves: forall (s: set) a1 a2
+  (InOld: In a1 (set_elems s)), In a1 (set_elems (a2 ~:: s)).
+Proof.
+  intros. rewrite <- set_has_in in *. unfold set_add, set_has, tcontains_n in *.
+  destruct (a1 == a2).
+  - subst. rewrite tupdate_n_updated. reflexivity.
+  - rewrite tupdate_n_frame; assumption.
+Qed.
+Theorem set_add_frame: forall (s: set) a1 a2
+  (NEQ: a1 <> a2) (InAdd: In a1 (set_elems (a2 ~:: s))), In a1 (set_elems s).
+Proof.
+  intros. rewrite <- set_has_in in *. unfold set_add, set_has, tcontains_n in *.
+  rewrite tupdate_n_frame in InAdd; assumption.
+Qed.
+Theorem set_add_correct: forall (s: set) a,
+  In a (set_elems (a ~:: s)).
+Proof.
+  intros. rewrite <- set_has_in in *. unfold set_add, set_has, tcontains_n in *.
+  rewrite tupdate_n_updated. reflexivity.
+Qed.
+
+Theorem set_ap_correct: forall (s1 s2: set) a,
+  (In a (set_elems s1) \/ In a (set_elems s2)) <->
+  In a (set_elems (s1 ~++ s2)).
+Proof.
+  unfold set_ap. intros. remember (set_elems s2) as l2. clear dependent s2. split.
+  - (* -> *) intro In12. destruct In12 as [In1|In2]; simpl in *.
+    + (* In1 *) revert In1. induction l2; intros.
+      * (* nil *) assumption.
+      * (* no nil *) simpl. apply set_add_preserves. apply IHl2. assumption.
+    + (* In2 *) revert In2. induction l2; intros; inversion In2.
+      * (* a = a0 *) subst. simpl. apply set_add_correct.
+      * (* a in l *) simpl. apply set_add_preserves. apply IHl2; assumption.
+  - (* <- *) intro InRes. revert l2 a InRes.
+    induction l2; intros; simpl in InRes.
+    + (* nil *) left. assumption.
+    + (* no nil *) destruct (a0 == a); subst.
+      * (* a = a0 *) right. left. reflexivity.
+      * (* a ≠ a0 *) apply set_add_frame in InRes; [|assumption].
+        einversion trivial IHl2 as [InL1|InL2].
+        -- left. assumption.
+        -- right. right. assumption.
+Qed.
+Corollary set_ap_left: forall (s1 s2: set) a
+  (In1: In a (set_elems s1)), In a (set_elems (set_ap s1 s2)).
+Proof. intros. apply set_ap_correct. left. assumption. Qed.
+Corollary set_ap_right: forall (s1 s2: set) a
+  (In2: In a (set_elems s2)), In a (set_elems (set_ap s1 s2)).
+Proof. intros. apply set_ap_correct. right. assumption. Qed.
+Corollary set_ap_incl_l: forall (s1 s2: set),
+  incl (set_elems s1) (set_elems (set_ap s1 s2)).
+Proof. unfold incl. intros. apply set_ap_left; assumption. Qed.
+Corollary set_ap_incl_r: forall (s1 s2: set),
+  incl (set_elems s2) (set_elems (set_ap s1 s2)).
+Proof. unfold incl. intros. apply set_ap_right; assumption. Qed.
+Theorem set_ap_has_split: forall (s1 s2: set) a,
+  set_has (set_ap s1 s2) a = set_has s1 a || set_has s2 a.
+Proof.
+  intros. destruct set_has eqn: SHres.
+  - apply set_has_in in SHres. apply set_ap_correct in SHres.
+    repeat rewrite <- set_has_in in SHres. apply orb_true_intro in SHres.
+    symmetry. assumption.
+  - apply set_has_in_contra in SHres. symmetry. apply orb_false_intro;
+    destruct set_has eqn: SH; try reflexivity; apply set_has_in in SH;
+    contradict SHres; apply set_ap_correct; (left + right); assumption.
+Qed.
+Corollary set_ap_in_split: forall (s1 s2: set) a,
+  In a (set_elems (set_ap s1 s2)) <-> In a (set_elems s1) \/ In a (set_elems s2).
+Proof.
+  (* Convert to set_has form *)
+  split; intros In12; repeat rewrite <- set_has_in in *;
+  [apply orb_prop; symmetry|apply orb_true_intro in In12];
+  rewrite <- In12; apply set_ap_has_split.
+Qed.
+Corollary set_ap_has_l: forall (s1 s2: set) a
+  (SH1: set_has s1 a = true), set_has (set_ap s1 s2) a = true.
+Proof.
+  intros. rewrite set_ap_has_split. rewrite SH1. apply orb_true_l.
+Qed.
+Corollary set_ap_has_r: forall (s1 s2: set) a
+  (SH2: set_has s2 a = true), set_has (set_ap s1 s2) a = true.
+Proof.
+  intros. rewrite set_ap_has_split. rewrite SH2. apply orb_true_r.
+Qed.
+Corollary set_ap_has_contra_l: forall (s1 s2: set) a
+  (SHres: set_has (set_ap s1 s2) a = false), set_has s1 a = false.
+Proof.
+  intros. rewrite set_ap_has_split in SHres. apply orb_false_elim in SHres.
+  destruct SHres. assumption.
+Qed.
+Corollary set_ap_has_contra_r: forall (s1 s2: set) a
+  (SHres: set_has (set_ap s1 s2) a = false), set_has s2 a = false.
+Proof.
+  intros. rewrite set_ap_has_split in SHres. apply orb_false_elim in SHres.
+  destruct SHres. assumption.
+Qed.
+
+Lemma set_ap_elems_comm_equiv: forall s1 s2,
+  list_equiv (set_elems (set_ap s1 s2)) (set_elems (set_ap s2 s1)).
+Proof.
+  intros. split; intros a InApp; repeat rewrite set_ap_in_split in *;
+  apply or_comm; assumption.
+Qed.
+
+Theorem set_ap_refl: forall s1, s1 = set_ap s1 s1.
+Proof.
+  intros. apply set_elems_equiv_inj. split; intros a InApp;
+  repeat rewrite set_ap_in_split in *; [left|destruct InApp]; assumption.
+Qed.
+
+Theorem set_ap_comm: forall s1 s2, set_ap s1 s2 = set_ap s2 s1.
+Proof.
+  intros. apply set_elems_equiv_inj. apply set_ap_elems_comm_equiv.
+Qed.
+
+Theorem set_ap_eclipse_l: forall s1 s2
+  (Incl: incl (set_elems s1) (set_elems s2)),
+  set_ap s1 s2 = s2.
+Proof.
+  intros. apply set_elems_equiv_inj. split.
+  - intros a InAp. rewrite set_ap_in_split in InAp. destruct InAp; [|assumption].
+    apply Incl. assumption.
+  - apply set_ap_incl_r.
+Qed.
+
+Theorem set_ap_eclipse_r: forall s1 s2
+  (Incl: incl (set_elems s2) (set_elems s1)),
+  set_ap s1 s2 = s1.
+Proof.
+  intros. apply set_elems_equiv_inj. split.
+  - intros a InAp. rewrite set_ap_in_split in InAp. destruct InAp. assumption.
+    apply Incl. assumption.
+  - apply set_ap_incl_l.
+Qed.
+

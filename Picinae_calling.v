@@ -75,255 +75,6 @@ Next Obligation. Proof. decide equality; apply iseq. Defined.
 Program Instance list_EqDec A `(EA : EqDec A) : EqDec (list A).
 Next Obligation. Proof. decide equality. apply iseq. Defined.
 
-(* Sets *)
-Definition iseqb {A} {e: EqDec A} (a1 a2: A): bool :=
-  if a1 == a2 then true else false.
-Theorem iseqb_iff_eq: forall A (e: EqDec A) (a1 a2: A),
-  iseqb a1 a2 = true <-> a1 = a2.
-Proof.
-  unfold iseqb. intros. destruct (a1 == a2).
-  - subst. split; reflexivity.
-  - split; try discriminate. intros. contradiction n.
-Qed.
-
-Theorem iseqb_iff_eq_contra: forall A (e: EqDec A) (a1 a2: A),
-  iseqb a1 a2 = false <-> a1 <> a2.
-Proof.
-  intros. rewrite <- not_true_iff_false. contrapositive iseqb_iff_eq.
-Qed.
-
-Theorem Neqb_iseqb: forall a1 a2, (a1 =? a2) = iseqb a1 a2.
-Proof.
-  unfold iseqb. intros. destruct (a1 == a2);
-  [apply N.eqb_eq|apply N.eqb_neq]; assumption.
-Qed.
-
-Theorem Neqb_iseqb_fn: N.eqb = iseqb.
-Proof.
-  apply functional_extensionality. intros. apply functional_extensionality.
-  apply Neqb_iseqb.
-Qed.
-
-Theorem existsb_iseqb_iff_in: forall A {e: EqDec A} l (a: A),
-  existsb (iseqb a) l = true <-> In a l.
-Proof.
-  intros. split.
-  - (* -> *) intro EXB. apply existsb_exists in EXB. destruct EXB as [a' [InL EQ]].
-    apply iseqb_iff_eq in EQ. subst. assumption.
-  - (* <- *) intro InL. apply existsb_exists. eexists. split. eassumption.
-    apply iseqb_iff_eq. reflexivity.
-Qed.
-Theorem existsb_iseqb_iff_in_contra: forall A {e: EqDec A} l (a: A),
-  existsb (iseqb a) l = false <-> ~(In a l).
-Proof.
-  intros. rewrite <- not_true_iff_false. contrapositive existsb_iseqb_iff_in.
-Qed.
-
-Definition set := treeN unit.
-Declare Scope sets_scope.
-Bind Scope sets_scope with set.
-
-Definition set_nil: set := treeN_nil.
-Definition set_elems: set -> list N := tkeys_n.
-Definition set_has: set -> N -> bool := tcontains_n.
-
-Definition set_add a (s: set): set := s [Ⓝ  a := tt ].
-Arguments set_add: simpl never.
-Notation "h ~:: t" := (set_add h t) (at level 60, right associativity):
-  sets_scope.
-
-Fixpoint set_add_all (s1: set) (l2: list N): set :=
-  match l2 with
-  | nil => s1
-  | h::t => set_add h (set_add_all s1 t)
-  end.
-
-Definition list_to_set (l: list N): set := set_add_all set_nil l.
-
-Definition set_ap (s1 s2: set): set :=
-  set_add_all s1 (set_elems s2).
-Arguments set_ap: simpl never.
-Notation "s1 ~++ s2" := (set_ap s1 s2) (at level 60, right associativity):
-  sets_scope.
-
-Notation "{{ x }}" := (set_add x set_nil): sets_scope.
-Notation "{{ x ; .. ; y ; z }}" :=
-  (set_add x (.. (set_add y (set_add z set_nil)) .. )) : sets_scope.
-
-Open Scope sets_scope.
-
-Program Instance unit_EqDec: EqDec unit.
-Next Obligation. decide equality. Defined.
-
-Program Instance set_EqDec: EqDec set.
-Next Obligation. decide equality; apply iseq. Defined.
-
-Theorem set_has_in: forall a s, set_has s a = true <-> In a (set_elems s).
-Proof.
-  unfold set_has, set_elems. intros. rewrite <- tkeys_n_get.
-  rewrite Neqb_iseqb_fn. apply existsb_iseqb_iff_in.
-Qed.
-Corollary set_has_in_contra: forall (s: set) a,
-  set_has s a = false <-> ~In a (set_elems s).
-Proof.
-  intros. rewrite <- not_true_iff_false. contrapositive set_has_in.
-Qed.
-Corollary set_elems_nodup: forall (s: set), NoDup (set_elems s).
-Proof. apply tkeys_n_nodup. Qed.
-
-Theorem set_elems_equiv_inj: forall s1 s2
-  (EQV: list_equiv (set_elems s1) (set_elems s2)), s1 = s2.
-Proof.
-  intros. apply tkeys_n_inj, tkeys_n_equiv_equal; trivial2.
-
-  (* Due to the degeneracy of the values used (units), all values are equal. *)
-  unfold tcontains_n. intros. destruct tget_n, (tget_n s2); trivial2.
-  destruct u, u0. reflexivity.
-Qed.
-
-Theorem set_add_idempotent: forall (s: set) a
-  (InOld: In a (set_elems s)), a ~:: s = s.
-Proof.
-  unfold set_elems, set_add. intros. apply (existsb_iseqb_iff_in N) in InOld.
-  rewrite <- Neqb_iseqb_fn, tkeys_n_get in InOld. apply tupdate_n_idempotent.
-  unfold tcontains_n in InOld. destruct tget_n; [|discriminate].
-  destruct u. reflexivity.
-Qed.
-Theorem set_add_preserves: forall (s: set) a1 a2
-  (InOld: In a1 (set_elems s)), In a1 (set_elems (a2 ~:: s)).
-Proof.
-  intros. rewrite <- set_has_in in *. unfold set_add, set_has, tcontains_n in *.
-  destruct (a1 == a2).
-  - subst. rewrite tupdate_n_updated. reflexivity.
-  - rewrite tupdate_n_frame; assumption.
-Qed.
-Theorem set_add_frame: forall (s: set) a1 a2
-  (NEQ: a1 ≠ a2) (InAdd: In a1 (set_elems (a2 ~:: s))), In a1 (set_elems s).
-Proof.
-  intros. rewrite <- set_has_in in *. unfold set_add, set_has, tcontains_n in *.
-  rewrite tupdate_n_frame in InAdd; assumption.
-Qed.
-Theorem set_add_correct: forall (s: set) a,
-  In a (set_elems (a ~:: s)).
-Proof.
-  intros. rewrite <- set_has_in in *. unfold set_add, set_has, tcontains_n in *.
-  rewrite tupdate_n_updated. reflexivity.
-Qed.
-
-Theorem set_ap_correct: forall (s1 s2: set) a,
-  (In a (set_elems s1) \/ In a (set_elems s2)) <->
-  In a (set_elems (s1 ~++ s2)).
-Proof.
-  unfold set_ap. intros. remember (set_elems s2) as l2. clear dependent s2. split.
-  - (* -> *) intro In12. destruct In12 as [In1|In2]; simpl in *.
-    + (* In1 *) revert In1. induction l2; intros.
-      * (* nil *) assumption.
-      * (* no nil *) simpl. apply set_add_preserves. apply IHl2. assumption.
-    + (* In2 *) revert In2. induction l2; intros; inversion In2.
-      * (* a = a0 *) subst. simpl. apply set_add_correct.
-      * (* a in l *) simpl. apply set_add_preserves. apply IHl2; assumption.
-  - (* <- *) intro InRes. revert l2 a InRes.
-    induction l2; intros; simpl in InRes.
-    + (* nil *) left. assumption.
-    + (* no nil *) destruct (a0 == a); subst.
-      * (* a = a0 *) right. left. reflexivity.
-      * (* a ≠ a0 *) apply set_add_frame in InRes; [|assumption].
-        einversion trivial IHl2 as [InL1|InL2].
-        -- left. assumption.
-        -- right. right. assumption.
-Qed.
-Corollary set_ap_left: forall (s1 s2: set) a
-  (In1: In a (set_elems s1)), In a (set_elems (set_ap s1 s2)).
-Proof. intros. apply set_ap_correct. left. assumption. Qed.
-Corollary set_ap_right: forall (s1 s2: set) a
-  (In2: In a (set_elems s2)), In a (set_elems (set_ap s1 s2)).
-Proof. intros. apply set_ap_correct. right. assumption. Qed.
-Corollary set_ap_incl_l: forall (s1 s2: set),
-  incl (set_elems s1) (set_elems (set_ap s1 s2)).
-Proof. unfold incl. intros. apply set_ap_left; assumption. Qed.
-Corollary set_ap_incl_r: forall (s1 s2: set),
-  incl (set_elems s2) (set_elems (set_ap s1 s2)).
-Proof. unfold incl. intros. apply set_ap_right; assumption. Qed.
-Theorem set_ap_has_split: forall (s1 s2: set) a,
-  set_has (set_ap s1 s2) a = set_has s1 a || set_has s2 a.
-Proof.
-  intros. destruct set_has eqn: SHres.
-  - apply set_has_in in SHres. apply set_ap_correct in SHres.
-    repeat rewrite <- set_has_in in SHres. apply orb_true_intro in SHres.
-    symmetry. assumption.
-  - apply set_has_in_contra in SHres. symmetry. apply orb_false_intro;
-    destruct set_has eqn: SH; try reflexivity; apply set_has_in in SH;
-    contradict SHres; apply set_ap_correct; (left + right); assumption.
-Qed.
-Corollary set_ap_in_split: forall (s1 s2: set) a,
-  In a (set_elems (set_ap s1 s2)) <-> In a (set_elems s1) \/ In a (set_elems s2).
-Proof.
-  (* Convert to set_has form *)
-  split; intros In12; repeat rewrite <- set_has_in in *;
-  [apply orb_prop; symmetry|apply orb_true_intro in In12];
-  rewrite <- In12; apply set_ap_has_split.
-Qed.
-Corollary set_ap_has_l: forall (s1 s2: set) a
-  (SH1: set_has s1 a = true), set_has (set_ap s1 s2) a = true.
-Proof.
-  intros. rewrite set_ap_has_split. rewrite SH1. apply orb_true_l.
-Qed.
-Corollary set_ap_has_r: forall (s1 s2: set) a
-  (SH2: set_has s2 a = true), set_has (set_ap s1 s2) a = true.
-Proof.
-  intros. rewrite set_ap_has_split. rewrite SH2. apply orb_true_r.
-Qed.
-Corollary set_ap_has_contra_l: forall (s1 s2: set) a
-  (SHres: set_has (set_ap s1 s2) a = false), set_has s1 a = false.
-Proof.
-  intros. rewrite set_ap_has_split in SHres. apply orb_false_elim in SHres.
-  destruct SHres. assumption.
-Qed.
-Corollary set_ap_has_contra_r: forall (s1 s2: set) a
-  (SHres: set_has (set_ap s1 s2) a = false), set_has s2 a = false.
-Proof.
-  intros. rewrite set_ap_has_split in SHres. apply orb_false_elim in SHres.
-  destruct SHres. assumption.
-Qed.
-
-Lemma set_ap_elems_comm_equiv: forall s1 s2,
-  list_equiv (set_elems (set_ap s1 s2)) (set_elems (set_ap s2 s1)).
-Proof.
-  intros. split; intros a InApp; repeat rewrite set_ap_in_split in *;
-  apply or_comm; assumption.
-Qed.
-
-Theorem set_ap_refl: forall s1, s1 = set_ap s1 s1.
-Proof.
-  intros. apply set_elems_equiv_inj. split; intros a InApp;
-  repeat rewrite set_ap_in_split in *; [left|destruct InApp]; assumption.
-Qed.
-
-Theorem set_ap_comm: forall s1 s2, set_ap s1 s2 = set_ap s2 s1.
-Proof.
-  intros. apply set_elems_equiv_inj. apply set_ap_elems_comm_equiv.
-Qed.
-
-Theorem set_ap_eclipse_l: forall s1 s2
-  (Incl: incl (set_elems s1) (set_elems s2)),
-  set_ap s1 s2 = s2.
-Proof.
-  intros. apply set_elems_equiv_inj. split.
-  - intros a InAp. rewrite set_ap_in_split in InAp. destruct InAp; [|assumption].
-    apply Incl. assumption.
-  - apply set_ap_incl_r.
-Qed.
-
-Theorem set_ap_eclipse_r: forall s1 s2
-  (Incl: incl (set_elems s2) (set_elems s1)),
-  set_ap s1 s2 = s1.
-Proof.
-  intros. apply set_elems_equiv_inj. split.
-  - intros a InAp. rewrite set_ap_in_split in InAp. destruct InAp. assumption.
-    apply Incl. assumption.
-  - apply set_ap_incl_l.
-Qed.
-
 (* We define a store delta as a variable to partial mapping onto
  * some expression. This is partial to account for "undefined" variables (which
  * could also be undefined "memory" variables) *)
@@ -908,44 +659,6 @@ Definition process_state (vd: vdomain) (exitof: option exit -> exit)
   | Raise _ => (ts, changed)
   end.
 
-Definition sub_prog p domain: program :=
-  fun s a => if existsb (iseqb a) domain then p s a else None.
-
-Theorem sub_prog_SS: forall p s al, (sub_prog p al s ⊆ p s).
-Proof.
-  unfold sub_prog. intros p s al a q SS.
-  destruct existsb; [assumption|discriminate].
-Qed.
-
-Theorem sub_prog_incl_SS: forall p s al1 al2 (SS: incl al1 al2),
-  (sub_prog p al1 s ⊆ sub_prog p al2 s).
-Proof.
-  intros. unfold sub_prog, pfsub. intros.
-  destruct existsb eqn: EX1; try discriminate. rewrite H.
-  destruct (existsb _ al2) eqn: EX2; try reflexivity.
-  apply existsb_iseqb_iff_in in EX1. apply existsb_iseqb_iff_in_contra in EX2.
-  contradict EX2. apply SS. assumption.
-Qed.
-
-Theorem sub_prog_nwc_pres: forall p al (NWC: forall s1 s2, p s1 = p s2),
-  (forall s1 s2, sub_prog p al s1 = sub_prog p al s2).
-Proof.
-  intros. einstantiate NWC as NWC. apply functional_extensionality. intro a.
-  eapply equal_f in NWC. unfold sub_prog. destruct existsb; [eassumption|reflexivity].
-Qed.
-
-Theorem exec_sub_prog_pmono: forall d1 d2 p s h a n s' x
-  (SS: incl d1 d2) (XP: exec_prog h (sub_prog p d1) a s n s' x),
-  exec_prog h (sub_prog p d2) a s n s' x.
-Proof.
-  intros. apply (exec_prog_pmono (sub_prog p d1)); [|assumption].
-  unfold sub_prog, pfsub. intros s0 x0 [sz q] ImpD1.
-  destruct existsb eqn: E1; destruct (existsb _ d2) eqn: E2;
-  try solve [discriminate|assumption]. rewrite existsb_iseqb_iff_in in E1.
-  rewrite existsb_iseqb_iff_in_contra in E2. contradict E2.
-  apply SS. assumption.
-Qed.
-
 Definition stmt_correct vd q δ x := forall s0 h s s' (XS: exec_stmt h s q s' x),
   has_delta vd h s0 s' δ.
 
@@ -953,9 +666,6 @@ Definition correctness_sub_prog vd p domain ts h a0 s0 :=
   (forall a1 s1 n1 δ
     (XP: exec_prog h (sub_prog p domain) a0 s0 n1 s1 (Exit a1))
     (TS2: tget_n ts a1 = Some δ), has_delta vd h s0 s1 δ).
-
-Inductive subgoals: Set :=
-  .
 
 Definition trace_program_step_at (vd: vdomain) (p: program)
   (hints: program -> addr -> trace_states -> option (trace_states * bool))
@@ -1016,48 +726,7 @@ Lemma fold_expand_trace_program: forall vd p hints reachable init_ts,
   expand_trace_program vd p hints reachable init_ts.
 Proof. reflexivity. Qed.
 
-Inductive exec_prog2 (h: hdomain) (p:program) (a:addr) (s:store): nat -> store -> exit -> Prop :=
-| X2Done: exec_prog2 h p a s O s (Exit a)
-| X2Step n sz q s2 a1 s' x' (LU: p s2 a1 = Some (sz,q))
-        (XP: exec_prog2 h p a s n s2 (Exit a1))
-        (XS: exec_stmt h s2 q s' x'):
-    exec_prog2 h p a s (S n) s' (exitof (a1+sz) x')
-| X2Abort sz q s' i (LU: p s a = Some (sz,q))
-         (XS: exec_stmt h s q s' (Some (Raise i))):
-    exec_prog2 h p a s (S O) s' (Raise i).
-
-Theorem exec_prog_equiv_exec_prog2: forall n h p a s s' x,
-  (exec_prog h p a s n s' x <-> exec_prog2 h p a s n s' x).
-Proof.
-  induction n; intros.
-  - (* n = 0 *) split; intros XP; inversion XP; subst; constructor.
-  - split; intros XP.
-    + (* -> *) inversion XP; try econstructor; try eassumption; subst.
-      destruct n.
-      * (* n = 1 *) inversion XP0. subst. rewrite <- EX. econstructor;
-        try eassumption. constructor.
-      * rewrite <- Nat.add_1_r in XP0. einstantiate trivial exec_prog_split as XPS.
-        destruct XPS as [s1 [a1 [XP_middle XP_end] ] ]. inversion XP_end. subst.
-        inversion XP1. subst. rewrite <- EX0. econstructor; try eassumption.
-        apply IHn. rewrite <- Nat.add_1_l. eapply exec_prog_concat;
-        [|apply XP_middle]. econstructor; try eassumption. econstructor.
-        subst. replace (Raise i) with (exitof (a1+sz0) (Some (Raise i))).
-        econstructor; try eassumption. apply IHn. rewrite <- Nat.add_1_l.
-        eapply exec_prog_concat; try eassumption. econstructor; try eassumption.
-        econstructor. reflexivity.
-    + (* <- *) inversion XP; try solve [econstructor; eassumption]. subst.
-      destruct n.
-      * (* n = 1 *) inversion XP0. subst. destruct exitof eqn: EX.
-        -- econstructor; try eassumption. constructor.
-        -- destruct x'; try discriminate. eapply XAbort. eassumption.
-           destruct e; inversion EX. subst. assumption.
-      * apply IHn in XP0. rewrite <- Nat.add_1_r. eapply exec_prog_concat;
-        try eassumption. destruct exitof eqn: EX.
-        -- econstructor; try eassumption. constructor.
-        -- destruct x'; try discriminate. eapply XAbort. eassumption.
-           destruct e; inversion EX. subst. assumption.
-Qed.
-
+(*
 Theorem trace_program_step_at_steady_correct: forall vd p a_new al hints ts
   h a0 s0 (Init: forall δ s, tget_n ts a0 = Some δ -> has_delta vd h s s δ)
   (IHal: correctness_sub_prog vd p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
@@ -1071,6 +740,7 @@ Theorem trace_program_step_at_steady_correct: forall vd p a_new al hints ts
     correctness_sub_prog vd p (a_new :: al) ts h a0 s0),
   correctness_sub_prog vd p (a_new :: al) ts h a0 s0.
 Proof.
+Admitted.
   (* Destruct trace_program_step_at function. *)
   unfold correctness_sub_prog. intros. simpl in TPSA.
 
@@ -1105,6 +775,7 @@ Proof.
     apply existsb_exists in EXa2. destruct EXa2 as [a1' [InDomain Eq] ].
     destruct (a1 == a1'); try discriminate. subst. assumption.
 Admitted.
+ *)
 
 (*
 Theorem expand_trace_program_steady_correct: forall p vars hints reachable ts
@@ -1131,6 +802,7 @@ Proof.
 Admitted.
  *)
 
+(*
 Fixpoint stmt_reachable (s: stmt): option (set * bool) :=
   match s with
   | Nop => Some (set_nil, true)
@@ -1479,19 +1151,10 @@ Ltac compute_reaches_fast iters hint r XP0 :=
 Ltac compute_reaches iters hint r XP0 :=
   compute_reaches_fast iters hint r XP0;
   compute_reaches' 1 hint r XP0.
-
-Theorem welltyped_prog_sub: forall p a c (WT: welltyped_prog c p),
-  welltyped_prog c (sub_prog p a).
-Proof.
-  intros. unfold welltyped_prog. intros.
-  destruct sub_prog as [ [sz q]|] eqn: SUB; try reflexivity.
-  specialize (WT s a0) as WT. unfold sub_prog in SUB.
-  destruct existsb; try discriminate. rewrite SUB in WT. assumption.
-Qed.
+ *)
 
 Require Import Picinae_i386.
 Require Import strchr_i386.
-Require Import test.
 Import X86Notations.
 
 Definition fh := htotal.

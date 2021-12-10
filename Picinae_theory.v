@@ -32,9 +32,12 @@
                                                                          M 7N8ZD
  *)
 
+Require Export Etacs.
 Require Export Picinae_core.
 Require Import NArith.
 Require Import ZArith.
+Require Import List.
+Require Import Bool.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
 Require Setoid.
@@ -85,6 +88,52 @@ Tactic Notation "vantisym" constr(v1) constr(v2) :=
 Tactic Notation "vantisym" constr(v1) constr(v2) "by" tactic(T) :=
   vantisym v1 v2; [|solve [T]].
 
+(* Theorems to relate iseqb with equality. iseqb utilizes our EqDec instance
+ * in order to perform structural equality on any supported types. *)
+
+Theorem iseqb_iff_eq: forall A (e: EqDec A) (a1 a2: A),
+  iseqb a1 a2 = true <-> a1 = a2.
+Proof.
+  unfold iseqb. intros. destruct (a1 == a2).
+  - subst. split; reflexivity.
+  - split; try discriminate. intros. contradiction n.
+Qed.
+
+Theorem iseqb_iff_eq_contra: forall A (e: EqDec A) (a1 a2: A),
+  iseqb a1 a2 = false <-> a1 <> a2.
+Proof.
+  intros. rewrite <- not_true_iff_false. contrapositive iseqb_iff_eq.
+Qed.
+
+Theorem Neqb_iseqb: forall a1 a2, (a1 =? a2) = iseqb a1 a2.
+Proof.
+  unfold iseqb. intros. destruct (a1 == a2);
+  [apply N.eqb_eq|apply N.eqb_neq]; assumption.
+Qed.
+
+Theorem Neqb_iseqb_fn: N.eqb = iseqb.
+Proof.
+  apply functional_extensionality. intros. apply functional_extensionality.
+  apply Neqb_iseqb.
+Qed.
+
+(* Relating existsb (iseqb a) _ with the associated In proposition, both of
+ * which searches for the existence of a certain element inside some list, the
+ * former one being decidable, the lather being not decidable. *)
+Theorem existsb_iseqb_iff_in: forall A {e: EqDec A} l (a: A),
+  existsb (iseqb a) l = true <-> In a l.
+Proof.
+  intros. split.
+  - (* -> *) intro EXB. apply existsb_exists in EXB. destruct EXB as [a' [InL EQ]].
+    apply iseqb_iff_eq in EQ. subst. assumption.
+  - (* <- *) intro InL. apply existsb_exists. eexists. split. eassumption.
+    apply iseqb_iff_eq. reflexivity.
+Qed.
+Theorem existsb_iseqb_iff_in_contra: forall A {e: EqDec A} l (a: A),
+  existsb (iseqb a) l = false <-> ~(In a l).
+Proof.
+  intros. rewrite <- not_true_iff_false. contrapositive existsb_iseqb_iff_in.
+Qed.
 
 (* Define the partial order of A-to-B partial functions ordered by subset. *)
 
@@ -2384,7 +2433,34 @@ Qed.
 
 End StoreTheory.
 
+Section SubProg.
 
+(* Theories concerning the correctness of sub programs slices *)
+
+Theorem sub_prog_SS: forall p s al, (sub_prog p al s ⊆ p s).
+Proof.
+  unfold sub_prog. intros p s al a q SS.
+  destruct existsb; [assumption|discriminate].
+Qed.
+
+Theorem sub_prog_incl_SS: forall p s al1 al2 (SS: incl al1 al2),
+  (sub_prog p al1 s ⊆ sub_prog p al2 s).
+Proof.
+  intros. unfold sub_prog, pfsub. intros.
+  destruct existsb eqn: EX1; try discriminate. rewrite H.
+  destruct (existsb _ al2) eqn: EX2; try reflexivity.
+  apply existsb_iseqb_iff_in in EX1. apply existsb_iseqb_iff_in_contra in EX2.
+  contradict EX2. apply SS. assumption.
+Qed.
+
+Theorem sub_prog_nwc_pres: forall p al (NWC: forall s1 s2, p s1 = p s2),
+  (forall s1 s2, sub_prog p al s1 = sub_prog p al s2).
+Proof.
+  intros. einstantiate NWC as NWC. apply functional_extensionality. intro a.
+  eapply equal_f in NWC. unfold sub_prog. destruct existsb; [eassumption|reflexivity].
+Qed.
+
+End SubProg.
 
 Section Determinism.
 
@@ -2541,6 +2617,21 @@ Proof.
       erewrite PS. reflexivity. exact LU.
     eapply XAbort; try eassumption.
       erewrite PS. reflexivity. exact LU.
+Qed.
+
+(* exec_prog with a sub_prog instance is monotonic with respect to the domain.
+   Enlarging the domain of the program preserves execution. This follows from
+   above *)
+Theorem exec_sub_prog_pmono: forall d1 d2 p s h a n s' x
+  (SS: incl d1 d2) (XP: exec_prog h (sub_prog p d1) a s n s' x),
+  exec_prog h (sub_prog p d2) a s n s' x.
+Proof.
+  intros. apply (exec_prog_pmono (sub_prog p d1)); [|assumption].
+  unfold sub_prog, pfsub. intros s0 x0 [sz q] ImpD1.
+  destruct existsb eqn: E1; destruct (existsb _ d2) eqn: E2;
+  try solve [discriminate|assumption]. rewrite existsb_iseqb_iff_in in E1.
+  rewrite existsb_iseqb_iff_in_contra in E2. contradict E2.
+  apply SS. assumption.
 Qed.
 
 End Monotonicity.
@@ -2825,6 +2916,58 @@ Proof.
 Qed.
 
 End FrameTheorems.
+
+Section ExecProgEnd.
+
+(* exec_prog2 is an alternative way to represent execution of a program. This
+   differs from exec_prog in that the step operation steps a program from the
+   execution trace. For proofs that involve tracing backwards in the program
+   step, this allows an easy way to do so without excessive usages of
+   exec_prog_concat and exec_prog_split. *)
+
+Inductive exec_prog2 (h: hdomain) (p:program) (a:addr) (s:store): nat -> store -> exit -> Prop :=
+| X2Done: exec_prog2 h p a s O s (Exit a)
+| X2Step n sz q s2 a1 s' x' (LU: p s2 a1 = Some (sz,q))
+        (XP: exec_prog2 h p a s n s2 (Exit a1))
+        (XS: exec_stmt h s2 q s' x'):
+    exec_prog2 h p a s (S n) s' (exitof (a1+sz) x')
+| X2Abort sz q s' i (LU: p s a = Some (sz,q))
+         (XS: exec_stmt h s q s' (Some (Raise i))):
+    exec_prog2 h p a s (S O) s' (Raise i).
+
+Theorem exec_prog_equiv_exec_prog2: forall n h p a s s' x,
+  (exec_prog h p a s n s' x <-> exec_prog2 h p a s n s' x).
+Proof.
+  induction n; intros.
+  - (* n = 0 *) split; intros XP; inversion XP; subst; constructor.
+  - split; intros XP.
+    + (* -> *) inversion XP; try econstructor; try eassumption; subst.
+      destruct n.
+      * (* n = 1 *) inversion XP0. subst. rewrite <- EX. econstructor;
+        try eassumption. constructor.
+      * rewrite <- Nat.add_1_r in XP0. einstantiate trivial exec_prog_split as XPS.
+        destruct XPS as [s1 [a1 [XP_middle XP_end] ] ]. inversion XP_end. subst.
+        inversion XP1. subst. rewrite <- EX0. econstructor; try eassumption.
+        apply IHn. rewrite <- Nat.add_1_l. eapply exec_prog_concat;
+        [|apply XP_middle]. econstructor; try eassumption. econstructor.
+        subst. replace (Raise i) with (exitof (a1+sz0) (Some (Raise i))).
+        econstructor; try eassumption. apply IHn. rewrite <- Nat.add_1_l.
+        eapply exec_prog_concat; try eassumption. econstructor; try eassumption.
+        econstructor. reflexivity.
+    + (* <- *) inversion XP; try solve [econstructor; eassumption]. subst.
+      destruct n.
+      * (* n = 1 *) inversion XP0. subst. destruct exitof eqn: EX.
+        -- econstructor; try eassumption. constructor.
+        -- destruct x'; try discriminate. eapply XAbort. eassumption.
+           destruct e; inversion EX. subst. assumption.
+      * apply IHn in XP0. rewrite <- Nat.add_1_r. eapply exec_prog_concat;
+        try eassumption. destruct exitof eqn: EX.
+        -- econstructor; try eassumption. constructor.
+        -- destruct x'; try discriminate. eapply XAbort. eassumption.
+           destruct e; inversion EX. subst. assumption.
+Qed.
+
+End ExecProgEnd.
 
 (* Prove a goal of the form (prog_noassign v p) for a program p that contains no
    statements having assignments to v. *)
