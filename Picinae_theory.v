@@ -221,8 +221,6 @@ Proof.
     rewrite update_frame. reflexivity. assumption.
 Qed.
 
-
-
 (* Theory of bit-extraction. *)
 Section XBits.
 
@@ -2117,6 +2115,42 @@ Module Type PICINAE_THEORY (IL: PICINAE_IL).
 
 Import IL.
 Open Scope N.
+
+Theorem forall_exps_iff_forallb_exps: forall P (dec: forall e, {P e}+{~P e}) e,
+  forallb_exps_in_exp (fun e => if dec e then true else false) e = true <->
+  forall_exps_in_exp P e.
+Proof.
+  split.
+  - induction e; intros H; unfold forallb_exps_in_exp in *; simpl in H;
+    (destruct (dec _); [|discriminate]); simpl in H;
+    solve [ discriminate
+          | repeat rewrite Bool.andb_true_iff in H; decompose record H;
+              repeat lazymatch goal with
+                     | EQ: exps_in_exp andb _ ?e = true |- _ =>
+                         lazymatch goal with
+                         | IH: exps_in_exp andb _ e = true -> _ |- _ =>
+                             apply IH in EQ
+                         end
+                     end;
+              repeat split; try assumption
+          ].
+  - induction e; intros H; unfold forallb_exps_in_exp in *; simpl in *;
+    decompose record H; (destruct dec as [pos|neg]; [|contradiction neg]);
+    repeat lazymatch goal with
+           | |- context [exps_in_exp andb _ ?e] =>
+               lazymatch goal with
+               | IH: _ -> exps_in_exp andb _ e = true |- _ =>
+                   rewrite IH by assumption
+               end
+           end; reflexivity.
+Qed.
+
+Definition not_unknown_dec: forall e, {not_unknown e}+{~(not_unknown e)}.
+Proof.
+  intros. destruct e; solve [left; apply I | right; intro X; destruct X].
+Defined.
+
+Definition not_unknownb e := if not_unknown_dec e then true else false.
 
 (* Define an alternative inductive principle for structural inductions on stmts
    that works better for proving properties of *executed* stmts that might contain

@@ -410,6 +410,7 @@ Fixpoint stmts_in_stmt {T:Type} (C:T->T->T) (P:stmt->T) (q:stmt) : T :=
   | Seq q1 q2 | If _ q1 q2 => C (P q) (C (stmts_in_stmt C P q1) (stmts_in_stmt C P q2))
   end.
 
+Definition forallb_exps_in_exp := exps_in_exp andb.
 Definition forall_exps_in_exp := exps_in_exp and.
 Definition forall_exps_in_stmt := exps_in_stmt and True.
 Definition exists_exp_in_exp := exps_in_exp or.

@@ -32,11 +32,13 @@
                                                                          M 7N8ZD
  *)
 
+Require Import Picinae_theory.
 Require Import Picinae_statics.
 Require Import NArith.
 Require Import ZArith.
 Require Import List.
 Require Import FunctionalExtensionality.
+Require Import Etacs.
 
 (* Functional Interpretation of Programs:
    This module defines an IL interpreter that is purely functional instead of
@@ -570,6 +572,8 @@ Module Type PICINAE_FINTERP (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL).
 Import IL.
 Import TIL.
 Include PICINAE_FINTERP_DEFS IL TIL.
+Module PTheory := PicinaeTheory IL.
+Import PTheory.
 
 (* Using the functional interpreter, we now define a set of tactics that reduce
    expressions to values, and statements to stores & exits.  These tactics are
@@ -852,6 +856,150 @@ Ltac destruct_memaccs XS :=
     | _ => let ACC := fresh "ACC" in rename ACCs into ACC
     end.
 
+(* Similar as above, except this is for evaluating deterministic expressions *)
+Definition other_vars_read_exp (l: list (var * value)) e :=
+  let old := List.map fst l in
+  List.filter (fun v => negb (existsb (vareqb v) old)) (vars_read_by_exp e).
+
+Parameter fstore_init: forall s EQT (eq1 eq2: EQT),
+  eq1 = eq2 ->
+  (s = (updlst s (rev nil) update)) /\ eq1 = eq2.
+
+Parameter fstore_updu: forall {EQT} (eq1 eq2: EQT) s0 s v u l,
+  (s0 = updlst (update s v u) (rev l) update /\ eq1 = eq2) ->
+  (s0 = updlst s (rev ((v, u)::l)) update /\ eq1 = eq2).
+
+Parameter fstore_updn: forall {EQT} (eq1 eq2: EQT) s0 s v a w n l,
+  (s0 = updlst (update s v (VaN n w)) (rev l) update /\ (eq1, a) = (eq2, n)) ->
+  (s0 = updlst s (rev ((v, (VaN a w))::l)) update /\ eq1 = eq2).
+
+Parameter fstore_updm: forall {EQT} (eq1 eq2: EQT) s0 s v a w m l,
+  (s0 = updlst (update s v (VaM m w)) (rev l) update /\ (eq1, a) = (eq2, m)) ->
+  (s0 = updlst s (rev ((v, (VaM a w))::l)) update /\ eq1 = eq2).
+
+Parameter fstore_hypn: forall {EQT} {eq1 eq2: EQT} {s0 a s v n w l}
+  (SV: s v = VaN n w),
+  (s0 = updlst s (rev l) update /\ (eq1, a) = (eq2, n)) ->
+  (s0 = updlst s (rev ((v, (VaN a w))::l)) update /\ eq1 = eq2).
+
+Parameter fstore_hypm: forall {EQT} {eq1 eq2: EQT} {s0 a s v m w l}
+  (SV: s v = VaM m w),
+  (s0 = updlst s (rev l) update /\ (eq1, a) = (eq2, m)) ->
+  (s0 = updlst s (rev ((v, (VaM a w))::l)) update /\ eq1 = eq2).
+
+Parameter fstore_hypu: forall EQs s0 s v u l (SV: s v = u),
+  (s0 = updlst s (rev l) update /\ EQs) <->
+  (s0 = updlst s (rev ((v, u)::l)) update /\ EQs).
+
+Parameter fstore_typ: forall {c s0 s t l EQs} v (MDL: models c s) (CV: c v = Some t),
+  (s0 = updlst s (rev l) update /\ EQs) ->
+  match t with
+  | NumT w => exists a, s v = VaN a w /\ s0 =
+      updlst s (rev ((v, VaN a w) :: l)) update /\ EQs
+  | MemT w => exists a, s v = VaM a w /\ s0 =
+      updlst s (rev ((v, VaM a w) :: l)) update /\ EQs
+  end.
+
+Parameter fstore_fin: forall (h: hdomain) a_c a_h a_s0 a_s e c s0 s l t
+  (MDL: models c s0) (TE: hastyp_exp c e t),
+  (s0 = updlst s l update /\ (a_c, a_h, a_s0, a_s) = (c, h, s0, s)) ->
+  (a_h, a_s0) = (a_h, updlst a_s l update) /\
+    models a_c (updlst a_s l update) /\ hastyp_exp a_c e t.
+
+Parameter do_eval_exp:
+  forall h s e c t l noet noe u' ma (NU: forall_exps_in_exp not_unknown e)
+    (MDL: models c (updlst s l vupdate)) (TE: hastyp_exp c e t)
+    (FE: (feval_exp noe noet h s e (fun _ => 0) l) = (u', ma))
+    (CONJ: conjallT ma), (noet = noe_typop) -> (noe = noe_setop) ->
+    eval_exp h (updlst s l update) e (of_uvalue u').
+
+Ltac exp2_populate_varlist h s0 e ST MDL :=
+  let _ := eval hnf in (@eq_refl store s0) in idtac;
+  let _ := eval hnf in (@eq_refl exp e) in idtac;
+  einstantiate (fstore_init s0) as ST; try unfold s0 in ST;
+  [ | repeat match type of ST with
+           | _ = updlst (update _ _ (VaN _ _)) (rev _) update /\ _ =>
+               eapply fstore_updn in ST
+           | _ = updlst (update _ _ (VaM _ _)) (rev _) update /\ _ =>
+               eapply fstore_updm in ST
+           | _ = updlst (update _ _ _) (rev _) update /\ _ =>
+               eapply fstore_updu in ST
+           end;
+    lazymatch type of ST with
+    | _ = updlst ?s (rev ?l) update /\ _ =>
+        let vs := eval compute in (other_vars_read_exp l e) in
+        tacmap ltac:(fun v =>
+          try match goal with
+          | [ SV: s v = VaN _ _ |- _ ] =>
+              eapply (fstore_hypn SV) in ST
+          | [ SV: s v = VaM _ _ |- _ ] =>
+              eapply (fstore_hypm SV) in ST
+          | [ MDL: models ?c s |- _ ] =>
+              lazymatch eval hnf in (c v) with Some ?t =>
+                  eapply (fstore_typ v MDL (eq_refl _)) in ST;
+                  let _a := match t with NumT _ => fresh "n" | MemT _ => fresh "m" end in
+                  let SV := fresh "Hsv" in
+                  destruct ST as [_a [SV ST] ]
+              end
+          end) vs
+    end;
+    match type of MDL with models ?c _ =>
+    match eval compute in (typchk_exp e c) with
+    | None => fail "Cannot type check " e
+    | Some ?te =>
+        let TE := fresh "TE" in
+        pose proof (TE := typchk_exp_sound e c te eq_refl);
+        eapply (fstore_fin h) in ST; [|exact MDL|exact TE];
+        clear TE
+    end
+    end].
+
+Ltac exp2_eval_precheck e ST :=
+  lazymatch type of ST with _ = updlst _ ?l _ =>
+    lazymatch (eval compute in (feval_check l e)) with
+    | Some ?e => fail 1 "Untyped subexpression:" e
+    | None => idtac
+    end
+  end.
+
+Ltac mk_eval_exp h s e EE :=
+  let ST := fresh "ST" in
+  lazymatch eval compute in (IL.forallb_exps_in_exp not_unknownb e) with
+  | true => idtac
+  | false => fail "Cannot deterministically evaluate expression because it has some unknowns!"
+  end;
+  lazymatch goal with
+  | MDL: models ?c s |- _ =>
+      exp2_populate_varlist h s e ST MDL; [ |
+      match type of ST with (?h', _) = (_, updlst ?s' ?l _) /\ models ?c' _ /\ _ =>
+          let MDL' := fresh "MDL'" in
+          let TE' := fresh "TE'" in
+          destruct ST as [ST [MDL' TE'] ]; apply pair_equal_spec in ST;
+          destruct ST as [_ ST]; exp2_eval_precheck e ST;
+          einstantiate (do_eval_exp h' s' e c') as EE;
+          (* No unknowns because we computationally decided that it has
+             no unknowns *)
+          [ apply (forall_exps_iff_forallb_exps not_unknown not_unknown_dec);
+            reflexivity
+          (* Type-checked store and expression  *)
+          | exact MDL' | exact TE'
+          (* Here we compute the value of feval_exp with currently all the
+           * existential variables masking over any stuff we do not want
+           * expanded. NOTE: do NOT use vm_compute here, as this will cause a
+           * long lag on the magnitude of hours to complete Qed. *)
+          | compute
+          (* Finally fill out the existential variables for the operations *)
+          | | reflexivity | reflexivity | ];
+          (* feval_exp evaluates *)
+          [ reflexivity | | ];
+          (* Expand to the operators that we masked out only *)
+          cbv beta match delta [ noe_setop noe_typop of_uvalue ] in *
+      end ]; [reflexivity| |]; repeat rewrite <- ST in *; clear ST
+  | _ =>
+      let m := uconstr:(models ?c s) in
+      fail "Must have hypothesis of the form " m
+  end.
+
 End PICINAE_FINTERP.
 
 
@@ -874,6 +1022,17 @@ Proof.
       simpl. unfold vupdate at 1 3. rewrite update_swap.
         rewrite IHl. rewrite update_swap by assumption. reflexivity.
         intro H. apply n. symmetry. exact H.
+Qed.
+
+Lemma find_remlst:
+  forall f v (H: forall '(v', u), v = v' -> f (v, u) = false) l,
+  find f (remlst v l) = find f l.
+Proof.
+  induction l; intros.
+    reflexivity.
+    simpl. specialize (H a). destruct a as [v' u']. destruct (v == v').
+      subst. rewrite H by reflexivity. reflexivity.
+      simpl. rewrite <- IHl. reflexivity.
 Qed.
 
 Lemma find_filter:
@@ -1408,6 +1567,439 @@ Proof.
   change (vupdate s) with (update s);
   rewrite <- store_upd_eq by (symmetry; eassumption);
   (split; [ reflexivity | exact H ]).
+Qed.
+
+Definition other_vars_read_exp (l: list (var * value)) e :=
+  let old := List.map fst l in
+  List.filter (fun v => negb (existsb (vareqb v) old)) (vars_read_by_exp e).
+
+Lemma conjallT_Forall: forall l, Forall (fun a => a) l <-> conjallT l.
+Proof.
+  intros. rewrite Forall_fold_right. unfold conjallT. split; intro; assumption.
+Qed.
+
+Theorem fstore_init: forall s EQT (eq1 eq2: EQT),
+  eq1 = eq2 ->
+  (s = (updlst s (rev nil) update)) /\ eq1 = eq2.
+Proof. intros. subst. split; reflexivity. Qed.
+
+Theorem fstore_updu: forall {EQT} (eq1 eq2: EQT) s0 s v u l,
+  (s0 = updlst (update s v u) (rev l) update /\ eq1 = eq2) ->
+  (s0 = updlst s (rev ((v, u)::l)) update /\ eq1 = eq2).
+Proof.
+  intros. rewrite <- update_updlst. destruct H; subst; split; reflexivity.
+Qed.
+
+Theorem fstore_updn: forall {EQT} (eq1 eq2: EQT) s0 s v a w n l,
+  (s0 = updlst (update s v (VaN n w)) (rev l) update /\ (eq1, a) = (eq2, n)) ->
+  (s0 = updlst s (rev ((v, (VaN a w))::l)) update /\ eq1 = eq2).
+Proof.
+  intros. rewrite <- update_updlst. destruct H. inversion H0. subst.
+  split; reflexivity.
+Qed.
+
+Theorem fstore_updm: forall {EQT} (eq1 eq2: EQT) s0 s v a w m l,
+  (s0 = updlst (update s v (VaM m w)) (rev l) update /\ (eq1, a) = (eq2, m)) ->
+  (s0 = updlst s (rev ((v, (VaM a w))::l)) update /\ eq1 = eq2).
+Proof.
+  intros. rewrite <- update_updlst. destruct H. inversion H0. subst.
+  split; reflexivity.
+Qed.
+
+Theorem fstore_hypn: forall {EQT} {eq1 eq2: EQT} {s0 a s v n w l} (SV: s v = VaN n w),
+  (s0 = updlst s (rev l) update /\ (eq1, a) = (eq2, n)) ->
+  (s0 = updlst s (rev ((v, (VaN a w))::l)) update /\ eq1 = eq2).
+Proof.
+  intros. destruct H. inversion H0. subst.
+  rewrite <- update_updlst, <- store_upd_eq by exact SV. split; reflexivity.
+Qed.
+
+Theorem fstore_hypm: forall {EQT} {eq1 eq2: EQT} {s0 a s v m w l} (SV: s v = VaM m w),
+  (s0 = updlst s (rev l) update /\ (eq1, a) = (eq2, m)) ->
+  (s0 = updlst s (rev ((v, (VaM a w))::l)) update /\ eq1 = eq2).
+Proof.
+  intros. destruct H. inversion H0. subst.
+  rewrite <- update_updlst, <- store_upd_eq by exact SV. split; reflexivity.
+Qed.
+
+Theorem fstore_hypu: forall EQs s0 s v u l (SV: s v = u),
+  (s0 = updlst s (rev l) update /\ EQs) <->
+  (s0 = updlst s (rev ((v, u)::l)) update /\ EQs).
+Proof.
+  intros. rewrite <- update_updlst, <- store_upd_eq by exact SV.
+  split; intros; destruct H; split; assumption.
+Qed.
+
+Theorem fstore_typ: forall {c s0 s t l EQs} v (MDL: models c s) (CV: c v = Some t),
+  (s0 = updlst s (rev l) update /\ EQs) ->
+  match t with
+  | NumT w => exists a, s v = VaN a w /\ s0 =
+      updlst s (rev ((v, VaN a w) :: l)) update /\ EQs
+  | MemT w => exists a, s v = VaM a w /\ s0 =
+      updlst s (rev ((v, VaM a w) :: l)) update /\ EQs
+  end.
+Proof.
+  intros. einversion trivial (MDL v); eexists; split; try reflexivity;
+  rewrite <- fstore_hypu; symmetry in H2; try assumption.
+Qed.
+
+Theorem fstore_fin: forall (h: hdomain) a_c a_h a_s0 a_s e c s0 s l t
+  (MDL: models c s0) (TE: hastyp_exp c e t),
+  (s0 = updlst s l update /\ (a_c, a_h, a_s0, a_s) = (c, h, s0, s)) ->
+  (a_h, a_s0) = (a_h, updlst a_s l update) /\
+    models a_c (updlst a_s l update) /\ hastyp_exp a_c e t.
+Proof. intros. destruct H. inversion H0. subst. repeat split; trivial2. Qed.
+
+Lemma feval_binop_eq_eval_binop: forall b n1 n2 w,
+  of_uvalue (feval_binop b noe_setop w n1 n2) = eval_binop b w n1 n2.
+Proof. intros. destruct b; reflexivity. Qed.
+
+Lemma feval_unop_eq_eval_unop: forall op n1 w,
+  of_uvalue (feval_unop op noe_setop n1 w) = eval_unop op n1 w.
+Proof. intros. destruct op; reflexivity. Qed.
+
+Lemma feval_cast_eq_cast: forall op n1 w w',
+  feval_cast op noe_setop w w' n1 = cast op w w' n1.
+Proof. intros. destruct op; reflexivity. Qed.
+
+Theorem feval_width_sound2:
+  forall h s e l ma unk z m n w w' (FW: feval_width l e = Some w)
+    (FE: (feval_exp noe_setop noe_typop h s e unk l) = (VaU z m n w', ma)), w = w'.
+Proof.
+  induction e; intros; simpl in *.
+  - (* Var *) rewrite FW in FE. unfold feval_varwidth, vwidth in *.
+    destruct find eqn:Found; try discriminate. simpl in FW. destruct p as [v' u'].
+    inversion FE. inversion FW. subst. clear FW FE.
+    revert v' u' Found. induction l as [|[v'' u''] l]; intros.
+    + discriminate.
+    + simpl in Found. unfold vupdate in *. simpl. destruct (v == v'').
+      * inversion Found. subst. rewrite update_updated. reflexivity.
+      * rewrite update_frame by assumption. eapply IHl. eassumption.
+  - (* Word *) inversion FW. inversion FE. subst. reflexivity.
+  - (* Load *) inversion FW. destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    inversion FE. subst. reflexivity.
+  - (* Store *) destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e3) as [ [z3 m3 n3 w3] ma3] eqn: E3.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    inversion FE. subst. erewrite <- IHe1 by eassumption. reflexivity.
+  - (* Binop *) destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    destruct b; inversion FE; subst;
+    solve [einstantiate trivial IHe1|inversion FW; reflexivity].
+  - (* Unop *) destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E.
+    destruct u; inversion FE; subst; einstantiate trivial IHe.
+  - (* Cast *) destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E.
+    inversion FW. subst. destruct c; inversion FE; reflexivity.
+  - (* Let *) destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    inversion FE. subst. einstantiate IHe2; [|trivial2|trivial2]. simpl.
+    simpl in E2. erewrite feval_width_mono; [reflexivity| |eassumption]. simpl.
+    unfold feval_varwidth. intros v0 b LU1. destruct (v0 == v).
+    + subst. destruct (feval_width _ e1) eqn: FW1.
+      * simpl in *. vreflexivity v. simpl in *. inversion LU1. subst.
+        einstantiate trivial IHe1. subst. destruct z1; reflexivity.
+      * simpl in *. rewrite find_filter_none in LU1; try discriminate.
+        intros. destruct (v == fst x); [reflexivity|discriminate].
+    + destruct (feval_width _ e1) eqn: FW1; simpl in *.
+      * vantisym v0 v by assumption.
+        rewrite find_remlst; [|intros [? ?] ?; subst; simpl;
+        vantisym v0 v1; solve [assumption|reflexivity]]. assumption.
+      * rewrite find_filter in LU1. rewrite find_remlst. assumption.
+        intros [? ?] ?. subst. simpl. vantisym v0 v1 by assumption.
+        reflexivity. intros [? ?] ?. simpl in *. destruct (v == v1);
+        try discriminate. subst. vantisym v0 v1 by assumption. reflexivity.
+  - (* Unk *) inversion FE. inversion FW. subst. reflexivity.
+  - (* Ite *) destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2'] ma2] eqn: E2.
+    destruct (feval_exp _ _ _ _ e3) as [ [z3 m3 n3 w3'] ma3] eqn: E3.
+    inversion FE. subst. clear FE.
+    destruct feval_width as [w2|] eqn: FW2; try discriminate.
+    destruct (feval_width _ e3) as [w3|] eqn: FW3; try discriminate.
+    destruct (w2 =? w3) eqn: EQ; try discriminate.
+    apply N.eqb_eq in EQ. subst. inversion FW. subst. clear FW.
+    einstantiate trivial IHe2. einstantiate trivial IHe3. subst.
+    inversion H0. subst. reflexivity.
+  - (* Extract *) destruct feval_exp as [ [z0 m0 n0 w0] ma0] eqn: E0.
+    inversion FE. inversion FW. reflexivity.
+  - (* Concat *) destruct feval_exp as [ [z1 m1 n1 w1'] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2'] ma2] eqn: E2.
+    destruct feval_width as [w1|] eqn: FW1; try discriminate.
+    destruct (feval_width _ e2) as [w2|] eqn: FW2; try discriminate.
+    inversion FE. inversion FW. reflexivity.
+Qed.
+
+Theorem preservation_feval_exp:
+  forall h s e c t l u' ma unk
+    (MDL: models c (updlst s l vupdate)) (TE: hastyp_exp c e t)
+    (FE: (feval_exp noe_setop noe_typop h s e unk l) = (u', ma))
+    (CONJ: conjallT ma),
+    hastyp_val (of_uvalue u') t.
+Proof.
+  intros. subst. revert_all. induction e; intros; inversion TE; subst; clear TE.
+  - (* Var *) simpl in FE. einversion trivial (MDL v); rewrite <- H1 in *;
+    destruct feval_varwidth as [_|]; inversion FE; subst; simpl; constructor;
+    assumption.
+  - (* Word *) inversion FE. subst. simpl. constructor. assumption.
+  - (* Load *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    inversion FE. subst. unfold of_uvalue. constructor.
+
+    (* Break apart conjunctive preconditions *) apply conjallT_Forall in CONJ.
+    inversion CONJ. subst. apply Forall_app in H2. destruct H2 as [MA1 MA2].
+    rewrite conjallT_Forall in *.
+
+    einstantiate trivial IHe1 as IHe1. einstantiate trivial IHe2 as IHe2.
+    destruct z1; inversion IHe1; subst. destruct z2; inversion IHe2; subst.
+
+    apply getmem_bound. assumption.
+  - (* Store *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e3) as [ [z3 m3 n3 w3] ma3] eqn: E3.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    inversion FE. subst. unfold of_uvalue.
+
+    (* Break apart conjunctive preconditions *) apply conjallT_Forall in CONJ.
+    inversion CONJ. subst. repeat rewrite Forall_app in H2.
+    destruct H2 as [MA1 [MA2 MA3] ]. rewrite conjallT_Forall in *.
+
+    einstantiate trivial IHe1 as IHe1. destruct z1; inversion IHe1.
+    einstantiate trivial IHe3 as IHe3. destruct z3; inversion IHe3. subst.
+    constructor. apply setmem_welltyped; assumption.
+  - (* Binop *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    inversion FE. subst. rewrite feval_binop_eq_eval_binop.
+
+    (* Break apart conjunctive preconditions *) apply conjallT_Forall in CONJ.
+    repeat rewrite Forall_app in CONJ. destruct CONJ as [MA1 MA2].
+    rewrite conjallT_Forall in *.
+
+    einstantiate trivial IHe1 as IHe1. einstantiate trivial IHe2 as IHe2.
+    destruct z1; inversion IHe1; destruct z2; inversion IHe2; subst.
+
+    apply typesafe_binop; assumption.
+  - (* Unop *) simpl in FE. destruct feval_exp as [ [z m n w'] ma'] eqn: E.
+    inversion FE. subst. rewrite feval_unop_eq_eval_unop.
+
+    einstantiate trivial IHe as IHe. destruct z; inversion IHe. subst.
+    apply typesafe_unop; assumption.
+  - (* Cast *) simpl in FE. destruct feval_exp as [ [z m n w'] ma'] eqn: E.
+    inversion FE. subst. rewrite feval_cast_eq_cast. simpl. constructor.
+    einstantiate trivial IHe as IHe. destruct z; inversion IHe. subst.
+    einversion trivial typesafe_cast.
+  - (* Let *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    inversion FE. subst.
+
+    (* Break apart conjunctive preconditions *) apply conjallT_Forall in CONJ.
+    repeat rewrite Forall_app in CONJ. destruct CONJ as [MA1 MA2].
+    rewrite conjallT_Forall in *.
+
+    einstantiate trivial (IHe2 (c [v := Some t1])) as IHe2.
+    unfold models. intros. destruct (v0 == v).
+    + subst. unfold vupdate. simpl. rewrite update_updated.
+      rewrite update_updated in CV. inversion CV. subst.
+      einstantiate trivial IHe1 as IHe1.
+    + unfold vupdate. simpl. rewrite updlst_remlst.
+      rewrite update_frame in CV by assumption. rewrite update_frame by assumption.
+      apply MDL. assumption.
+  - (* Unknown *) simpl in FE. inversion FE. subst. simpl. constructor.
+    apply N.mod_lt. destruct w; discriminate.
+  - (* Ite *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2'] ma2] eqn: E2.
+    destruct (feval_exp _ _ _ _ e3) as [ [z3 m3 n3 w3'] ma3] eqn: E3.
+    inversion FE. subst.
+    eassert (X: of_uvalue _ = of_uvalue (if n1 then VaU z3 m3 n3 w3' else
+    VaU z2 m2 n2 w2')); [|rewrite X].
+      destruct feval_width as [w2|] eqn: FW2; [|destruct n1; reflexivity].
+      destruct (feval_width _ e3) as [w3|] eqn: FW3; [|destruct n1; reflexivity].
+      destruct (w2 =? w3) eqn: EQ; [|destruct n1; reflexivity].
+      apply N.eqb_eq in EQ. subst.
+      einstantiate trivial feval_width_sound2.
+      einstantiate trivial (feval_width_sound2 h s e2). subst.
+      destruct Bool.eqb eqn: Beq; destruct n1; try reflexivity.
+      apply Bool.eqb_prop in Beq. subst. reflexivity.
+    assert (conjallT (ma1 ++ (if n1 then conjall ma3 else conjall ma2) :: nil)).
+      destruct ma2, ma3; try solve [eapply eq_rect; trivial2].
+      apply conjallT_app. assumption. simpl. split; destruct n1; exact I.
+    rewrite <- conjallT_Forall, Forall_app in H. destruct H as [_ MA23].
+    inversion MA23 as [|? ? MA23']. subst.
+    destruct n1; rewrite <- conjall_iffT in MA23';
+    solve [einstantiate trivial IHe2|einstantiate trivial IHe3].
+  - (* Extract *) simpl in FE. destruct feval_exp as [ [z0 m0 n0 w0] ma0] eqn: E0.
+    inversion FE. subst. simpl. constructor. apply N.mod_lt.
+    destruct N.sub; discriminate.
+  - (* Concat *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1''] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2''] ma2] eqn: E2.
+    inversion FE; subst. clear FE.
+
+    (* Break apart conjunctive preconditions *) apply conjallT_Forall in CONJ.
+    repeat rewrite Forall_app in CONJ. destruct CONJ as [MA1 MA2].
+    rewrite conjallT_Forall in *.
+
+    einversion trivial IHe1. einversion trivial IHe2.
+    destruct z1; inversion H1. destruct z2; inversion H3.
+    inversion H2. inversion H4. subst. clear H1 H2 H3 H4.
+
+    assert (N.lor (N.shiftl n1 w2) n2 < 2 ^ (w1 + w2)).
+      apply lor_bound. apply shiftl_bound. assumption.
+      eapply N.lt_le_trans. eassumption. apply N.pow_le_mono_r. discriminate.
+      rewrite N.add_comm. apply N.le_add_r.
+
+    destruct feval_width as [w1'|] eqn: FW1; [|constructor; assumption].
+    destruct (feval_width _ e2) as [w2'|] eqn: FW2; [|constructor; assumption].
+    simpl. einstantiate trivial feval_width_sound2. clear FW2.
+    einstantiate trivial feval_width_sound2. subst. constructor. assumption.
+Qed.
+
+Theorem do_eval_exp:
+  forall h s e c t l noet noe u' ma (NU: forall_exps_in_exp not_unknown e)
+    (MDL: models c (updlst s l vupdate)) (TE: hastyp_exp c e t)
+    (FE: (feval_exp noe noet h s e (fun _ => 0) l) = (u', ma))
+    (CONJ: conjallT ma), (noet = noe_typop) -> (noe = noe_setop) ->
+    eval_exp h (updlst s l update) e (of_uvalue u').
+Proof.
+  intros. subst. remember (fun _ => 0) as unk. clear Hequnk. revert_all.
+  induction e; intros; inversion TE; subst; clear TE.
+  - (* Var *) inversion FE. subst. unfold of_uvalue.
+    destruct feval_varwidth; simpl; destruct (updlst s l vupdate v) eqn: Upd;
+    simpl; rewrite <- Upd; constructor.
+  - (* Word *) inversion FE. subst. unfold of_uvalue. constructor.
+  - (* Load *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    inversion FE. subst. unfold of_uvalue.
+
+    (* Break apart conjunctive preconditions *) apply conjallT_Forall in CONJ.
+    inversion CONJ. subst. apply Forall_app in H2. destruct H2 as [MA1 MA2].
+    rewrite conjallT_Forall in *.
+    (* Break apart not unknowns *) inversion NU as [_ [NU1 NU2] ].
+
+    einstantiate trivial IHe1 as IHe1. einstantiate trivial IHe2 as IHe2.
+    einversion trivial preservation_feval_exp. clear T2.
+    einversion trivial preservation_feval_exp. clear T1.
+    inversion H3. inversion H5. destruct z2, z1; inversion H2; inversion H4.
+    subst. clear H2 H3 H4 H5. econstructor; eassumption.
+  - (* Store *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e3) as [ [z3 m3 n3 w3] ma3] eqn: E3.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    inversion FE. subst. unfold of_uvalue.
+
+    (* Break apart conjunctive preconditions *) apply conjallT_Forall in CONJ.
+    inversion CONJ. subst. repeat rewrite Forall_app in H2.
+    destruct H2 as [MA1 [MA2 MA3]]. rewrite conjallT_Forall in *.
+    (* Break apart not unknowns *) inversion NU as [_ [NU1 [NU2 NU3]]].
+
+    einstantiate trivial IHe1 as IHe1. einstantiate trivial IHe2 as IHe2.
+    einstantiate trivial IHe3 as IHe3.
+
+    einversion trivial preservation_feval_exp. clear T3.
+    einversion trivial preservation_feval_exp. clear T2.
+    einversion trivial preservation_feval_exp. clear T1.
+
+    inversion H3. inversion H5. inversion H7.
+    destruct z3, z2, z1; inversion H2; inversion H4; inversion H6.
+    subst. clear H2 H3 H4 H5 H6 H7. econstructor; eassumption.
+  - (* Binop *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    inversion FE. subst. rewrite feval_binop_eq_eval_binop.
+
+    (* Break apart conjunctive preconditions *) apply conjallT_Forall in CONJ.
+    repeat rewrite Forall_app in CONJ. destruct CONJ as [MA1 MA2].
+    rewrite conjallT_Forall in *.
+    (* Break apart not unknowns *) inversion NU as [_ [NU1 NU2]].
+
+    einstantiate trivial IHe1 as IHe1. einstantiate trivial IHe2 as IHe2.
+    einversion trivial preservation_feval_exp. clear T2.
+    einversion trivial preservation_feval_exp. clear T1.
+
+    inversion H2. inversion H4. destruct z2, z1; inversion H1; inversion H3.
+    subst. clear H1 H2 H3 H4. constructor; assumption.
+  - (* Unop *) simpl in FE. destruct feval_exp as [ [z m n w'] ma'] eqn: E.
+    inversion FE. subst. rewrite feval_unop_eq_eval_unop.
+
+    (* Break apart not unknowns *) inversion NU as [_ NU1].
+
+    einstantiate trivial IHe as IHe. einversion trivial preservation_feval_exp.
+    destruct z; inversion H1. inversion H2. subst.
+    constructor. assumption.
+  - (* Cast *) simpl in FE. destruct feval_exp as [ [z m n w'] ma'] eqn: E.
+    inversion FE. subst. rewrite feval_cast_eq_cast. simpl.
+    (* Break apart not unknowns *) inversion NU as [_ NU1].
+    einstantiate trivial IHe as IHe. einversion trivial preservation_feval_exp.
+    destruct z; inversion H1. inversion H2. subst. constructor. assumption.
+  - (* Let *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2] ma2] eqn: E2.
+    inversion FE. subst.
+
+    (* Break apart conjunctive preconditions *) apply conjallT_Forall in CONJ.
+    repeat rewrite Forall_app in CONJ. destruct CONJ as [MA1 MA2].
+    rewrite conjallT_Forall in *.
+
+    (* Break apart not unknowns *) inversion NU as [_ [NU1 NU2]].
+
+    einstantiate trivial IHe1 as IHe1. econstructor. eassumption.
+    einstantiate trivial (IHe2 (c [v := Some t1])) as IHe2;
+    [| simpl in IHe2; rewrite updlst_remlst in IHe2; assumption].
+    unfold models. intros. destruct (v0 == v).
+    + subst. unfold vupdate. simpl. rewrite update_updated.
+      rewrite update_updated in CV. inversion CV. subst.
+      einstantiate trivial preservation_feval_exp.
+    + unfold vupdate. simpl. rewrite updlst_remlst.
+      rewrite update_frame in CV by assumption. rewrite update_frame by assumption.
+      apply MDL. assumption.
+  - (* Unknown *) inversion NU.
+  - (* Ite *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2'] ma2] eqn: E2.
+    destruct (feval_exp _ _ _ _ e3) as [ [z3 m3 n3 w3'] ma3] eqn: E3.
+    inversion FE. subst. clear FE.
+    eassert (X: of_uvalue _ = of_uvalue (if n1 then VaU z3 m3 n3 w3' else
+    VaU z2 m2 n2 w2')); [|rewrite X].
+      destruct feval_width as [w2|] eqn: FW2; [|destruct n1; reflexivity].
+      destruct (feval_width _ e3) as [w3|] eqn: FW3; [|destruct n1; reflexivity].
+      destruct (w2 =? w3) eqn: EQ; [|destruct n1; reflexivity].
+      apply N.eqb_eq in EQ. subst.
+      einstantiate trivial feval_width_sound2.
+      einstantiate trivial (feval_width_sound2 h s e2). subst.
+      destruct Bool.eqb eqn: Beq; destruct n1; try reflexivity.
+      apply Bool.eqb_prop in Beq. subst. reflexivity.
+    (* Conditionally break apart preconditions *)
+    assert (conjallT (ma1 ++ (if n1 then conjall ma3 else conjall ma2) :: nil)).
+      destruct ma2, ma3; try solve [eapply eq_rect; trivial2].
+      apply conjallT_app. assumption. simpl. split; destruct n1; exact I.
+    rewrite <- conjallT_Forall, Forall_app in H. destruct H as [MA1 MA23].
+    inversion MA23 as [|? ? MA23']. subst. rewrite conjallT_Forall in *.
+    (* Break apart not unknowns *) inversion NU as [_ [NU1 [NU2 NU3]]].
+
+    einstantiate trivial IHe1 as IHe1.
+    einversion trivial (preservation_feval_exp h s e1).
+    destruct z1; inversion H2. inversion H3. subst.
+    econstructor. eassumption. destruct n1; rewrite <- conjall_iffT in MA23';
+    solve [einstantiate trivial IHe2|einstantiate trivial IHe3].
+  - (* Extract *) simpl in FE. destruct feval_exp as [ [z0 m0 n0 w0] ma0] eqn: E0.
+    inversion FE. subst. simpl.
+    (* Break apart not unknowns *) inversion NU as [_ NU1].
+    einstantiate trivial IHe. einversion trivial preservation_feval_exp.
+    destruct z0; inversion H2. inversion H3. subst.
+    econstructor. eassumption.
+  - (* Concat *) simpl in FE. destruct feval_exp as [ [z1 m1 n1 w1''] ma1] eqn: E1.
+    destruct (feval_exp _ _ _ _ e2) as [ [z2 m2 n2 w2''] ma2] eqn: E2.
+    inversion FE; subst. clear FE.
+
+    (* Break apart conjunctive preconditions *) apply conjallT_Forall in CONJ.
+    repeat rewrite Forall_app in CONJ. destruct CONJ as [MA1 MA2].
+    rewrite conjallT_Forall in *.
+
+    (* Break apart not unknowns *) inversion NU as [_ [NU1 NU2]].
+
+    einstantiate trivial IHe1. einstantiate trivial IHe2.
+    einversion trivial preservation_feval_exp. clear T2.
+    einversion trivial preservation_feval_exp. clear T1.
+    inversion H4. inversion H6. destruct z2, z1; inversion H3; inversion H5. subst.
+
+    destruct feval_width as [w1'|] eqn: FW1; [|constructor; assumption].
+    destruct (feval_width _ e2) as [w2'|] eqn: FW2; [|constructor; assumption].
+    simpl. einstantiate trivial feval_width_sound2. clear FW2.
+    einstantiate trivial feval_width_sound2. subst. constructor. assumption.
+    assumption.
 Qed.
 
 End PicinaeFInterp.
