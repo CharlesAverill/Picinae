@@ -939,6 +939,43 @@ Definition hintDelta (hints: (store → addr → option (N * stmt)) → addr →
  *)
 
 (*MARK*)
+
+Theorem destruct_trace_program_step_at_prin: forall {P vd p hints addr accum res}
+  (TPSA: trace_program_step_at vd p hints addr accum = Some res)
+  (PInvalidLU: forall (TPSA': accum = Some res)
+    (LU: p null_state addr = None), P addr)
+  (PInvalidTS: forall ts changed evs sz q
+    (TPSA': accum = Some res) (RES: res = (ts, changed, evs))
+    (LU: p null_state addr = Some (sz, q))
+    (TS: ts Ⓝ[ addr ] = None), P addr)
+  (PDefault: forall ts changed evs evs' sz q δ_a next_states
+    (TPSA': accum = Some (ts, changed, evs))
+    (RES: res = (fold_right (process_state vd (exitof (addr + sz)))
+      (ts, changed) next_states, evs' !++ evs))
+    (LU: p null_state addr = Some (sz, q))
+    (TS: ts Ⓝ[ addr ] = Some δ_a)
+    (STS: simple_trace_stmt hints vd δ_a addr q = Some (next_states, evs')),
+    P addr), P addr.
+Proof.
+  intros. unfold trace_program_step_at in TPSA.
+  destruct accum as [ [ [ts changed] old_evs]|]; try discriminate.
+  destruct p as [ [sz q]|] eqn: LU; [|apply PInvalidLU; trivial2].
+  destruct tget_n as [δ_a|] eqn: TS; [|inversion TPSA; subst;
+      eapply PInvalidTS; trivial2].
+  destruct simple_trace_stmt as [ [next_states evs]|] eqn: STS; inversion TPSA.
+  subst. clear TPSA. eapply PDefault; trivial2.
+Qed.
+
+Ltac destruct_trace_program_step_at TPSA :=
+  lazymatch type of TPSA with
+  | trace_program_step_at _ _ _ ?addr _ = Some _ =>
+      move TPSA before addr; revert dependent addr;
+      intros addr TPSA; pattern addr;
+      apply (destruct_trace_program_step_at_prin TPSA);
+      intros; clear TPSA; subst
+  | _ => fail "Expected hypothesis to be of the form trace_program_step_at ..."
+  end.
+
 Lemma process_state_nofold_nochange: forall vars xit k t b ts,
     process_state vars xit k (t, b) = (ts, false) -> (t, b) = (ts, false).
 Proof.
@@ -961,28 +998,29 @@ Proof.
         subst. apply IHl in H_fr. inversion H_fr. reflexivity.
       inversion H. subst. apply IHl in H_fr. inversion H_fr. reflexivity.
 Qed.
-Theorem trace_program_step_at_nochange: forall vars p hints a2 t b ts, 
-   trace_program_step_at vars p hints a2 (Some (t, b)) = Some (ts, false) -> (t, b) = (ts, false).
-Proof.
-    intros.
-      unfold trace_program_step_at in H.
-      destruct hints eqn:H_hint in H.
-        destruct p0. admit.
-    destruct p eqn:H_p; try solve [inversion H]. destruct p0; try solve [inversion H]. 
-    destruct t eqn:H_t. 
-      destruct simple_trace_stmt eqn:H_sts; try discriminate. inversion H. apply process_state_vars_nochange in H1. 
-      inversion H1. subst. inversion H. rewrite -> H2. rewrite -> H2. reflexivity.
-      inversion H. subst. reflexivity.
-Admitted. (*admitted due to hints.*)
 
-Theorem fold_trace_program_step_at_nochange: forall reachable_addrs vars p hints t ts b, 
-  fold_right (trace_program_step_at vars p hints) (Some (t, b)) reachable_addrs = Some (ts, false) -> (t, b) = (ts, false).
+Lemma trace_program_step_at_nochange: forall vars p hints a2 inp ts ev
+   (TPSA: trace_program_step_at vars p hints a2 inp = Some (ts, false, ev)),
+   exists ev0, inp = Some (ts, false, ev0).
 Proof.
-  induction reachable_addrs.  
-    intros. simpl in H. inversion H. reflexivity.
-    intros. simpl in H. destruct fold_right eqn:H_fr; try solve [inversion H].  
-      destruct p0. apply trace_program_step_at_nochange in H. inversion H. subst. apply IHreachable_addrs in H_fr. rewrite H_fr.
-      reflexivity.
+  intros. destruct_trace_program_step_at TPSA.
+  - eexists. reflexivity.
+  - eexists. reflexivity.
+  - eexists. f_equal. f_equal. inversion RES.
+    eapply process_state_vars_nochange. symmetry. eassumption.
+Qed.
+
+Theorem fold_trace_program_step_at_nochange:
+  forall reachable_addrs vars p hints inp ts ev
+  (FR: fold_right (trace_program_step_at vars p hints) inp
+    reachable_addrs = Some (ts, false, ev)),
+  exists ev0, inp = Some (ts, false, ev0).
+Proof.
+  induction reachable_addrs; intros; simpl in FR.
+  - eexists. eassumption.
+  - destruct fold_right eqn: FR0; try discriminate.
+    edestruct trace_program_step_at_nochange as [ev0 EQ]; try eassumption.
+    inversion EQ. subst. eapply IHreachable_addrs. eassumption.
 Qed.
 
 Theorem fold_process_state_changed: forall l t ts xit vars b,
@@ -996,33 +1034,33 @@ Proof.
       destruct a in H.
       destruct xit in H.
       destruct join_states_if_changed in H.
-        inversion H. reflexivity. 
+        inversion H. reflexivity.
       inversion H. subst. eapply IHl. apply H_fr.
       inversion H. subst. eapply IHl. apply H_fr.
 Qed.
 
-Theorem trace_program_step_at_changed: forall a vars p hints t ts b, 
-  trace_program_step_at vars p hints a (Some (t, true)) =  Some (ts, b) -> b = true.
+Theorem trace_program_step_at_changed:
+  forall a vars p hints ev ev' ts ts' changed'
+  (TPSA: trace_program_step_at vars p hints a (Some (ts, true, ev)) =
+    Some (ts', changed', ev')), changed' = true.
 Proof.
-  intros.
-  unfold trace_program_step_at in H. simpl in H.
-    destruct hints.
-      destruct p0. inversion H. reflexivity.
-    destruct p; try discriminate.
-    destruct t.
-      destruct p0. destruct simple_trace_stmt in H; try discriminate.
-      simpl in H. inversion H. apply fold_process_state_changed in H1. assumption.
-    destruct p0. inversion H. reflexivity.
+  intros. destruct_trace_program_step_at TPSA; inversion TPSA'; try reflexivity.
+  inversion RES. subst. clear TPSA' RES. eapply fold_process_state_changed.
+  symmetry. eassumption.
 Qed.
 
-Theorem fold_trace_program_step_at_changed: forall reachable_addrs vars p hints t ts b, 
-  fold_right (trace_program_step_at vars p hints) (Some (t, true)) reachable_addrs = Some (ts, b) -> b = true.
+Theorem fold_trace_program_step_at_changed:
+  forall reachable_addrs vars p hints ts ts' changed' ev ev'
+  (FR: fold_right (trace_program_step_at vars p hints) (Some (ts, true, ev))
+    reachable_addrs = Some (ts', changed', ev')), changed' = true.
 Proof.
-  induction reachable_addrs.
-    intros. inversion H.  reflexivity.
-    intros. simpl in H. destruct fold_right eqn:H_fr in H. destruct p0. apply IHreachable_addrs in H_fr. subst.
-      apply trace_program_step_at_changed in H. assumption. inversion H. 
+  induction reachable_addrs; intros; simpl in FR.
+  - inversion FR. reflexivity.
+  - destruct fold_right as [ [ [ts1 changed1] ev1]|] eqn: FR1; try discriminate.
+    einstantiate trivial IHreachable_addrs. subst.
+    eapply trace_program_step_at_changed. eassumption.
 Qed.
+
 Theorem trace_program_step_at_none_acc: forall l vars p hints,
   fold_right (trace_program_step_at vars p hints) None l = None.
 Proof.
