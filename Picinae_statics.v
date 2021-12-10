@@ -35,6 +35,7 @@
 Require Export Picinae_theory.
 Require Import NArith.
 Require Import ZArith.
+Require Import List.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
 
@@ -706,6 +707,10 @@ Parameter typchk_stmt_sound:
 Parameter typchk_stmt_compute:
   forall q c (TS: if typchk_stmt q c c then True else False),
   exists c', hastyp_stmt c c q c'.
+
+(* A sub program will always be welltyped if its full program is welltyped *)
+Parameter welltyped_prog_sub: forall p a c (WT: welltyped_prog c p),
+  welltyped_prog c (sub_prog p a).
 
 (* Attempt to automatically solve a goal of the form (welltyped_prog c p).
    Statements in p that cannot be type-checked automatically (using context-
@@ -1554,6 +1559,15 @@ Proof.
   intros. destruct (typchk_stmt q c c) as [c'|] eqn:TS1.
     exists c'. apply typchk_stmt_sound. reflexivity. exact TS1.
     contradict TS.
+Qed.
+
+Theorem welltyped_prog_sub: forall p a c (WT: welltyped_prog c p),
+  welltyped_prog c (sub_prog p a).
+Proof.
+  intros. unfold welltyped_prog. intros.
+  destruct sub_prog as [ [sz q]|] eqn: SUB; try reflexivity.
+  specialize (WT s a0) as WT. unfold sub_prog in SUB.
+  destruct existsb; try discriminate. rewrite SUB in WT. assumption.
 Qed.
 
 End PicinaeStatics.

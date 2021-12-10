@@ -34,6 +34,7 @@
 
 Require Import NArith.
 Require Import ZArith.
+Require Import List.
 Require Import FunctionalExtensionality.
 Require Import Structures.Equalities.
 Open Scope N.
@@ -47,6 +48,8 @@ Class EqDec A : Type := { iseq: forall (a b:A), {a=b}+{a<>b} }.
 Arguments iseq {A EqDec} a b : simpl never.
 Instance NEqDec : EqDec N := { iseq := N.eq_dec }.
 Notation "x == y" := (iseq x y) (at level 70, no associativity).
+Definition iseqb {A} {e: EqDec A} (a1 a2: A): bool :=
+  if a1 == a2 then true else false.
 
 (* When there is an equality decision procedure for a function f's domain,
    we can "update" f by remapping a domain element x to a new co-domain
@@ -279,6 +282,13 @@ Inductive stmt : Type :=
    support self-modifying code. *)
 Definition program := store -> addr -> option (N * stmt).
 
+(* A sub-program represents a program defined over some sub-domain where the
+   domain is a list of address that the program should only be defined on.
+   FIXME: we should probably phase out using lists here, and try to use
+   a domain function instead. *)
+Definition sub_prog p domain: program :=
+  fun s a => if existsb (iseqb a) domain then p s a else None.
+
 (* Memory accessor functions getmem and setmem read/store w-bit numbers to/from
    memory.  Since w could be large on some architectures, we express both as
    recursions over N, using Peano recursion (P w -> P (N.succ w)).  Proofs must
@@ -410,6 +420,7 @@ Fixpoint stmts_in_stmt {T:Type} (C:T->T->T) (P:stmt->T) (q:stmt) : T :=
   | Seq q1 q2 | If _ q1 q2 => C (P q) (C (stmts_in_stmt C P q1) (stmts_in_stmt C P q2))
   end.
 
+Definition forallb_exps_in_exp := exps_in_exp andb.
 Definition forall_exps_in_exp := exps_in_exp and.
 Definition forall_exps_in_stmt := exps_in_stmt and True.
 Definition exists_exp_in_exp := exps_in_exp or.

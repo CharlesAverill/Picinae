@@ -30,6 +30,24 @@ Require Import strcmp_i386.
 Import X86Notations.
 Open Scope N.
 
+Ltac print_context :=
+  match goal with
+  | [|- ?orig_goal] =>
+      repeat lazymatch goal with
+             | [H: _ |- _] => revert H
+             end;
+      repeat progress lazymatch goal with
+                      | [|- orig_goal] => idtac
+                      | [|- ?H -> _] => intro;
+                          match goal with
+                          | [H: ?HType |- _] => idtac H ":" HType
+                          end
+                      end;
+      idtac "---------------------------------------";
+      idtac orig_goal;
+      idtac "======================================="
+  end.
+
 (* Use a flat memory model for these proofs. *)
 Definition fh := htotal.
 

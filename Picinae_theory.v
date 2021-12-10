@@ -32,9 +32,12 @@
                                                                          M 7N8ZD
  *)
 
+Require Export Etacs.
 Require Export Picinae_core.
 Require Import NArith.
 Require Import ZArith.
+Require Import List.
+Require Import Bool.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
 Require Setoid.
@@ -83,8 +86,54 @@ Tactic Notation "vantisym" constr(v1) constr(v2) :=
            | let Hneq := fresh "Hneq" in t Hneq ].
 
 Tactic Notation "vantisym" constr(v1) constr(v2) "by" tactic(T) :=
-  vantisym v1 v2; [|solve T].
+  vantisym v1 v2; [|solve [T]].
 
+(* Theorems to relate iseqb with equality. iseqb utilizes our EqDec instance
+ * in order to perform structural equality on any supported types. *)
+
+Theorem iseqb_iff_eq: forall A (e: EqDec A) (a1 a2: A),
+  iseqb a1 a2 = true <-> a1 = a2.
+Proof.
+  unfold iseqb. intros. destruct (a1 == a2).
+  - subst. split; reflexivity.
+  - split; try discriminate. intros. contradiction n.
+Qed.
+
+Theorem iseqb_iff_eq_contra: forall A (e: EqDec A) (a1 a2: A),
+  iseqb a1 a2 = false <-> a1 <> a2.
+Proof.
+  intros. rewrite <- not_true_iff_false. contrapositive iseqb_iff_eq.
+Qed.
+
+Theorem Neqb_iseqb: forall a1 a2, (a1 =? a2) = iseqb a1 a2.
+Proof.
+  unfold iseqb. intros. destruct (a1 == a2);
+  [apply N.eqb_eq|apply N.eqb_neq]; assumption.
+Qed.
+
+Theorem Neqb_iseqb_fn: N.eqb = iseqb.
+Proof.
+  apply functional_extensionality. intros. apply functional_extensionality.
+  apply Neqb_iseqb.
+Qed.
+
+(* Relating existsb (iseqb a) _ with the associated In proposition, both of
+ * which searches for the existence of a certain element inside some list, the
+ * former one being decidable, the lather being not decidable. *)
+Theorem existsb_iseqb_iff_in: forall A {e: EqDec A} l (a: A),
+  existsb (iseqb a) l = true <-> In a l.
+Proof.
+  intros. split.
+  - (* -> *) intro EXB. apply existsb_exists in EXB. destruct EXB as [a' [InL EQ]].
+    apply iseqb_iff_eq in EQ. subst. assumption.
+  - (* <- *) intro InL. apply existsb_exists. eexists. split. eassumption.
+    apply iseqb_iff_eq. reflexivity.
+Qed.
+Theorem existsb_iseqb_iff_in_contra: forall A {e: EqDec A} l (a: A),
+  existsb (iseqb a) l = false <-> ~(In a l).
+Proof.
+  intros. rewrite <- not_true_iff_false. contrapositive existsb_iseqb_iff_in.
+Qed.
 
 (* Define the partial order of A-to-B partial functions ordered by subset. *)
 
@@ -221,7 +270,356 @@ Proof.
     rewrite update_frame. reflexivity. assumption.
 Qed.
 
+(* More theories about inequalities in N *)
+Section NInequalities.
 
+Theorem le_add_le_sub_r_inv: forall m n p,
+  m <= p - n -> n <= p -> m + n <= p.
+Proof.
+  intros. erewrite <- N.sub_add; [apply N.add_le_mono_r|]; assumption.
+Qed.
+
+Theorem lt_sub_lt_add_r_inv: forall n m p : N,
+  0 < m -> n < m + p -> n - p < m.
+Proof.
+  intros. apply <- N.add_lt_mono_r.
+  destruct (p ?= n) eqn: CmpPN.
+  - rewrite N.sub_add. assumption. intro. rewrite CmpPN in *. discriminate.
+  - rewrite N.sub_add. assumption. intro. rewrite CmpPN in *. discriminate.
+  - replace (n - p) with 0. apply N.lt_add_pos_l. assumption. symmetry.
+    apply N.sub_0_le. rewrite N.compare_antisym in CmpPN. intro Contra.
+    rewrite Contra in CmpPN. discriminate.
+Qed.
+
+Lemma nonzero_gt_0: forall n, 0 <> n <-> 0 < n.
+Proof.
+  intros. split; intro Pre.
+  - destruct n. exfalso. apply Pre. reflexivity. reflexivity.
+  - destruct n. discriminate. intro. discriminate.
+Qed.
+
+Lemma le_le_add_l: forall m n p, m <= n -> m <= p + n.
+Proof.
+  intros. rewrite N.add_comm. eapply N.le_trans. eassumption. apply N.le_add_r.
+Qed.
+
+Lemma le_le_add_r: forall m n p, m <= n -> m <= n + p.
+Proof.
+  intros. rewrite N.add_comm. apply le_le_add_l; assumption.
+Qed.
+
+Lemma le_sub_add_r_sub: forall m n p q,
+  p + q <= n -> n <= m -> m - n + p <= m - q.
+Proof.
+  intros.
+
+  apply N.le_add_le_sub_r. rewrite <- N.add_assoc.
+  rewrite <- N.add_sub_swap; [|assumption].
+  apply N.le_sub_le_add_r, le_add_le_sub_r_inv;
+    [|apply le_le_add_l; assumption].
+  rewrite <- N.add_sub_assoc; [|assumption].
+  apply N.le_add_r.
+Qed.
+
+Lemma le_sub_add_r: forall m n p,
+  p <= n -> n <= m -> m - n + p <= m.
+Proof.
+  intros. assert (p + 0 <= n). rewrite N.add_0_r. assumption.
+  erewrite <- N.sub_0_r. apply le_sub_add_r_sub; assumption.
+Qed.
+
+Lemma lt_sub_lt_pow:
+  forall w n m, n < 2^w -> n - m < 2^w.
+Proof.
+  intros. apply lt_sub_lt_add_r_inv.
+  apply nonzero_gt_0, N.neq_sym, N.pow_nonzero. discriminate.
+  apply N.lt_lt_add_r. assumption.
+Qed.
+
+Lemma lt_sub: forall a b c,
+  a < c -> a - b < c.
+Proof.
+  intros. eapply N.le_lt_trans; [|eassumption]. apply N.le_sub_l.
+Qed.
+
+Theorem nle_sub: forall x y, 0 < y -> 0 < x -> x <= x - y -> False.
+Proof.
+  intros. assert (x - y <= x - 1). apply N.sub_le_mono_l.
+  apply N.lt_pred_le. assumption. eapply N.lt_irrefl.
+  rewrite <- N.le_succ_l, <- N.add_1_r. apply le_add_le_sub_r_inv.
+  eapply N.le_trans. exact H1. exact H2. apply N.lt_pred_le. assumption.
+Qed.
+
+End NInequalities.
+
+(* Some thoery for N div operations, and relating it to modulo *)
+Section NDivision.
+
+Lemma div_0_l: forall a, 0 / a = 0.
+Proof. intros. destruct a; reflexivity. Qed.
+
+Theorem div_eucl_add_one: forall a n q r (NE: n <> 0)
+  (DIV: N.div_eucl a n = (q, r)), N.div_eucl (a + n) n  = (N.succ q, r).
+Proof.
+  intros. destruct (N.div_eucl (a + n) n) as [q0 r0] eqn: DIV2.
+  specialize (N.div_eucl_spec a n) as SPEC.
+  specialize (N.div_eucl_spec (a + n) n) as SPEC2.
+  rewrite DIV in SPEC. rewrite DIV2 in SPEC2.
+  assert (a mod n = r). unfold N.modulo. rewrite DIV. reflexivity.
+  assert ((a + n) mod n = r0). unfold N.modulo. rewrite DIV2. reflexivity.
+  assert (r0 = r). subst. erewrite N.add_mod, N.mod_same, N.add_0_r,
+    N.mod_mod, N.add_comm, N.mul_comm, N.mod_add, <- H, N.mod_mod by trivial2.
+  reflexivity. clear H H0. subst. f_equal.
+  rewrite N.add_comm, N.add_assoc, <- (N.mul_1_r n), <- N.mul_add_distr_l,
+    N.add_1_l, N.add_cancel_r, N.mul_cancel_l in SPEC2 at 1 by assumption.
+  subst. reflexivity.
+Qed.
+
+Theorem div_add_one: forall a n (NE: n <> 0),
+  (a + n) / n = N.succ (a / n).
+Proof.
+  intros. destruct (N.div_eucl a n) as [q r] eqn:DIV.
+  einstantiate trivial (div_eucl_add_one) as DIV2. unfold N.div.
+  rewrite DIV, DIV2. reflexivity.
+Qed.
+
+Theorem div_add_distr_eq_noovf: forall a b n, a mod n + b mod n < n ->
+  a / n + b / n = (a + b) / n.
+Proof.
+  assert (mod_div: forall a n, ((a mod n) / n) = 0). intros.
+    destruct (n == 0). subst. destruct a; reflexivity.
+    apply N.div_small. apply N.mod_lt. assumption.
+
+  intros a b n NOFW. destruct (n == 0) as [|NE]. subst. destruct a, b; reflexivity.
+
+  rewrite (N.div_mod' a n), (N.div_mod' b n).
+  remember (a / n) as k. remember (b / n) as l. clear Heqk Heql.
+
+  rewrite (N.add_comm (n * k)), (N.add_comm (n * l)),
+    (N.mul_comm n), (N.mul_comm n), N.div_add, N.div_add, mod_div, mod_div,
+    N.add_0_l, N.add_0_l, N.add_assoc, N.div_add, <- N.add_assoc,
+    (N.add_comm (k * n)), N.add_assoc, N.div_add, N.div_small by trivial2.
+  reflexivity.
+Qed.
+
+Theorem div_squeeze: forall a k n, k * n <= a -> a < n + k * n ->
+  a / n = k.
+Proof.
+  intros. destruct (n == 0). subst. rewrite N.add_0_l, N.mul_0_r in H0.
+  destruct (N.nlt_0_r _ H0). rewrite N.mul_comm in *.
+  rewrite <- (N.mul_1_r n), <- N.mul_add_distr_l, N.add_1_l in H0 at 1.
+  einstantiate trivial N.div_le_lower_bound.
+  einstantiate trivial N.div_lt_upper_bound. rewrite N.lt_succ_r in H2.
+  apply N.le_antisymm; assumption.
+Qed.
+
+Theorem div_add_distr_eq_ovf: forall a b n, (n <> 0) -> n <= a mod n + b mod n ->
+  1 + a / n + b / n = (a + b) / n.
+Proof.
+  assert (mod_div: forall a n, ((a mod n) / n) = 0). intros.
+    destruct (n == 0). subst. destruct a; reflexivity.
+    apply N.div_small. apply N.mod_lt. assumption.
+
+  intros a b n NE NOFW.
+
+  rewrite (N.div_mod' a n), (N.div_mod' b n).
+  remember (a / n) as k. remember (b / n) as l. clear Heqk Heql.
+
+  einstantiate div_squeeze as DIV. rewrite N.mul_1_l. exact NOFW.
+  rewrite N.mul_1_l. apply N.add_lt_mono; apply N.mod_lt; assumption.
+
+  rewrite (N.add_comm (n * k)), (N.add_comm (n * l)),
+    (N.mul_comm n), (N.mul_comm n), N.div_add, N.div_add, mod_div, mod_div,
+    N.add_0_l, N.add_0_l, N.add_assoc, N.div_add, <- (N.add_assoc (_ mod _)),
+    (N.add_comm (k * n)), N.add_assoc, N.div_add, DIV by trivial2.
+  reflexivity.
+Qed.
+
+End NDivision.
+
+(* More theory for N modulo operations *)
+Section NModular.
+
+Lemma mod_small_sub: forall w n m, n < 2^w ->
+  m <= n -> (2^w + n - m) mod 2^w = n - m.
+Proof.
+  intros. rewrite N.add_comm, N.add_sub_swap, N.add_mod,
+    N.mod_same, N.add_0_r, N.mod_mod, N.mod_small; try apply N.pow_nonzero;
+    try trivial2. apply lt_sub_lt_pow. assumption.
+Qed.
+
+Lemma mod_small_sub2: forall m n w, m < 2^w ->
+  (m - n) mod 2^w = m - n.
+Proof.
+  intros. apply N.mod_small, lt_sub_lt_pow. assumption.
+Qed.
+
+Lemma sub_sub_distr: forall a b c, b <= c -> a + b - c = a - (c - b).
+Proof.
+  intros.
+  assert (SUM: c = b + (c - b)).
+    rewrite N.add_sub_assoc, N.add_sub_swap, N.sub_diag. reflexivity.
+    reflexivity. assumption.
+  rewrite SUM at 1. rewrite N.sub_add_distr, N.add_sub. reflexivity.
+Qed.
+
+Lemma mod_small_sub_add: forall m n p w, m < 2^w -> p <= n -> n <= m ->
+  (m - n + p) mod 2^w = m - n + p.
+Proof.
+  intros. rewrite N.mod_small; [reflexivity|].
+  rewrite <- N.add_sub_swap, sub_sub_distr by assumption.
+  apply lt_sub_lt_pow. assumption.
+Qed.
+
+Lemma fold_pow: forall a b, N.pos (a ^ b) = (N.pos a) ^ (N.pos b).
+Proof. reflexivity. Qed.
+
+Lemma mod_sub_extract: forall a b m, m <> 0 -> b <> 0 -> b <= m ->
+  (m + a - b) mod m = (a mod m + (m - b)) mod m.
+Proof.
+  intros.
+  assert (m - b < m). apply lt_sub_lt_add_r_inv.
+    destruct (N.eq_0_gt_0_cases m); [contradiction H|assumption].
+    apply N.lt_add_pos_r. destruct (N.eq_0_gt_0_cases b);
+    [contradiction H0|assumption].
+  rewrite N.add_sub_swap, N.add_mod, N.add_comm, (N.mod_small (m - b)) by assumption.
+  reflexivity.
+Qed.
+
+Theorem sub_comm: forall a b c, a - b - c = a - c - b.
+Proof.
+  intros. rewrite <- N.sub_add_distr, <- N.sub_add_distr, N.add_comm.
+  reflexivity.
+Qed.
+
+Theorem add_mod_noovf_bounded: forall n a b (NZ: n <> 0)
+  (NOFW: a mod n <= (a + b) mod n), a mod n + b mod n < n.
+Proof.
+  intros.
+  assert (a mod n < n). apply N.mod_lt. assumption.
+  assert (b mod n < n). apply N.mod_lt. assumption.
+  assert (b mod n <= n). apply N.lt_le_incl. apply N.mod_lt. assumption.
+
+  (* If a mod n == 0 or b mod n == 0, trivially is less than n *)
+  remember (a mod n) as a'. remember (b mod n) as b'.
+  destruct (a' == 0). rewrite e, N.add_0_l; assumption.
+  destruct (b' == 0). rewrite e, N.add_0_r; assumption. subst.
+
+  (* Assume n <= a mod n + b mod n... *)
+  rewrite N.neq_0_lt_0 in n0, n1. rewrite N.add_mod in NOFW by trivial2.
+  destruct (N.le_gt_cases n (a mod n + b mod n)) as [CMP|CMP]; try assumption.
+
+  (* Show that this leads to a contradiction *)
+  einstantiate div_squeeze as DIV. rewrite N.mul_1_l. exact CMP. rewrite N.mul_1_l.
+  apply N.add_lt_mono; apply N.mod_lt; assumption.
+  rewrite (N.mod_eq (_ + _)), DIV, N.mul_1_r, sub_sub_distr in NOFW by assumption.
+  edestruct nle_sub; try exact NOFW; try trivial2.
+  apply N.lt_add_lt_sub_r. assumption.
+Qed.
+
+Theorem add_mod_ovf_bounded: forall n a b (NZ: n <> 0)
+  (NOFW: (a + b) mod n < a mod n), n <= a mod n + b mod n.
+Proof.
+  intros.
+  assert (a mod n < n). apply N.mod_lt. assumption.
+  assert (b mod n < n). apply N.mod_lt. assumption.
+
+  (* Assume a mod n + b mod n < n... *)
+  rewrite N.add_mod in NOFW by trivial2.
+  destruct (N.le_gt_cases n (a mod n + b mod n)) as [CMP|CMP]. assumption.
+
+  (* Show that this leads to a contradiction *)
+  rewrite N.mod_small, <- N.add_0_r, <- N.add_lt_mono_l in NOFW by assumption.
+  destruct (N.nlt_0_r _ NOFW).
+Qed.
+
+End NModular.
+
+(* The absdist represents the "distance" between two numbers as if you were to
+   compute |a - b|, but carefully written to not avoid the clamping property of
+   subtraction. We also have a modulo version of it which performs modulo on the
+   operands before computing the distance. Note this does not equate to modular
+   subtraction. *)
+Section Nabsdist.
+
+Definition absdist a b :=
+  if a <=? b then b - a else a - b.
+
+Definition modabsdist n a b :=
+  absdist (a mod n) (b mod n).
+
+Theorem absdist_symm: forall a b, absdist a b = absdist b a.
+Proof.
+  intros. unfold absdist.
+  destruct (a <=? b) eqn: LE1, (b <=? a) eqn: LE2; try reflexivity.
+  - rewrite N.leb_le in *. einstantiate trivial N.le_antisymm. subst.
+    reflexivity.
+  - rewrite N.leb_gt in *. assert (b < b). eapply N.lt_trans; eassumption.
+    destruct (N.lt_irrefl _ H).
+Qed.
+
+Theorem modabsdist_symm: forall n a b, modabsdist n a b = modabsdist n b a.
+Proof. intros. unfold modabsdist. apply absdist_symm. Qed.
+
+Theorem modabsdist_eq_absdist: forall n a b,
+  a < n -> b < n -> modabsdist n a b = absdist a b.
+Proof.
+  intros. unfold modabsdist, absdist.
+  repeat rewrite N.mod_small by assumption. reflexivity.
+Qed.
+
+Theorem modabsdist_lt: forall n a b, n <> 0 -> modabsdist n a b < n.
+Proof.
+  unfold modabsdist, absdist. intros.
+  destruct (_ <=? _); apply lt_sub; apply N.mod_lt; assumption.
+Qed.
+
+Theorem modl_modabsdist: forall n a b, (n <> 0) ->
+  modabsdist n (a mod n) b = modabsdist n a b.
+Proof.
+  intros. unfold modabsdist. rewrite N.mod_mod by assumption. reflexivity.
+Qed.
+
+Theorem modr_modabsdist: forall n a b, (n <> 0) ->
+  modabsdist n a (b mod n) = modabsdist n a b.
+Proof.
+  intros. unfold modabsdist. rewrite N.mod_mod by assumption. reflexivity.
+Qed.
+
+Theorem modabsdist_add_l: forall n a b x, n <> 0 ->
+  modabsdist n a (b + a) = x -> x = b mod n \/ x = n - b mod n.
+Proof.
+  unfold modabsdist, absdist. intros.
+  assert (a mod n < n). apply N.mod_lt. assumption.
+  assert (b mod n < n). apply N.mod_lt. assumption.
+  assert (n * (a / n) <= a). rewrite (N.div_mod' a n) at -1. apply N.le_add_r.
+  assert (n * (b / n) <= b). rewrite (N.div_mod' b n) at -1. apply N.le_add_r.
+  subst. destruct (_ <=? _) eqn: LE.
+  - apply N.leb_le in LE. left. assert (DISTR: b / n + a / n = (b + a) / n).
+    apply div_add_distr_eq_noovf. rewrite N.add_comm. apply add_mod_noovf_bounded.
+    assumption. rewrite N.add_comm. assumption.
+    rewrite N.mod_eq, <- DISTR, (N.add_comm (b / n)),
+      N.mul_add_distr_l, N.sub_add_distr, <- N.add_sub_assoc, <- N.mod_eq,
+      sub_comm, N.add_sub, <- N.mod_eq by assumption.
+    reflexivity.
+  - apply N.leb_gt in LE. right. einstantiate add_mod_ovf_bounded as OVF.
+    eassumption. rewrite N.add_comm. eassumption.
+    einstantiate div_add_distr_eq_ovf as DISTR. eassumption.
+    rewrite N.add_comm. exact OVF.
+    rewrite (N.mod_eq (b + a)), <- DISTR, (N.add_comm _ (a / n)),
+    N.mul_add_distr_l, N.sub_add_distr, <- N.add_sub_assoc, <- N.mod_eq,
+    (N.add_comm 1), (N.add_comm b), N.mul_add_distr_l, N.sub_add_distr,
+    <- N.add_sub_assoc, <- N.mod_eq, N.mul_1_r, <- sub_sub_distr,
+    N.sub_add_distr, N.add_comm, N.add_sub; trivial2.
+Qed.
+
+Corollary modabsdist_add_r: forall n a b x, n <> 0 ->
+  modabsdist n (b + a) a = x -> x = b mod n \/ x = n - b mod n.
+Proof.
+  intros. rewrite modabsdist_symm in H0. eapply modabsdist_add_l; trivial2.
+Qed.
+
+End Nabsdist.
 
 (* Theory of bit-extraction. *)
 Section XBits.
@@ -2118,6 +2516,42 @@ Module Type PICINAE_THEORY (IL: PICINAE_IL).
 Import IL.
 Open Scope N.
 
+Theorem forall_exps_iff_forallb_exps: forall P (dec: forall e, {P e}+{~P e}) e,
+  forallb_exps_in_exp (fun e => if dec e then true else false) e = true <->
+  forall_exps_in_exp P e.
+Proof.
+  split.
+  - induction e; intros H; unfold forallb_exps_in_exp in *; simpl in H;
+    (destruct (dec _); [|discriminate]); simpl in H;
+    solve [ discriminate
+          | repeat rewrite Bool.andb_true_iff in H; decompose record H;
+              repeat lazymatch goal with
+                     | EQ: exps_in_exp andb _ ?e = true |- _ =>
+                         lazymatch goal with
+                         | IH: exps_in_exp andb _ e = true -> _ |- _ =>
+                             apply IH in EQ
+                         end
+                     end;
+              repeat split; try assumption
+          ].
+  - induction e; intros H; unfold forallb_exps_in_exp in *; simpl in *;
+    decompose record H; (destruct dec as [pos|neg]; [|contradiction neg]);
+    repeat lazymatch goal with
+           | |- context [exps_in_exp andb _ ?e] =>
+               lazymatch goal with
+               | IH: _ -> exps_in_exp andb _ e = true |- _ =>
+                   rewrite IH by assumption
+               end
+           end; reflexivity.
+Qed.
+
+Definition not_unknown_dec: forall e, {not_unknown e}+{~(not_unknown e)}.
+Proof.
+  intros. destruct e; solve [left; apply I | right; intro X; destruct X].
+Defined.
+
+Definition not_unknownb e := if not_unknown_dec e then true else false.
+
 (* Define an alternative inductive principle for structural inductions on stmts
    that works better for proving properties of *executed* stmts that might contain
    repeat-loops.  The cases for all non-repeat forms are the same as Coq's default
@@ -2350,7 +2784,34 @@ Qed.
 
 End StoreTheory.
 
+Section SubProg.
 
+(* Theories concerning the correctness of sub programs slices *)
+
+Theorem sub_prog_SS: forall p s al, (sub_prog p al s ⊆ p s).
+Proof.
+  unfold sub_prog. intros p s al a q SS.
+  destruct existsb; [assumption|discriminate].
+Qed.
+
+Theorem sub_prog_incl_SS: forall p s al1 al2 (SS: incl al1 al2),
+  (sub_prog p al1 s ⊆ sub_prog p al2 s).
+Proof.
+  intros. unfold sub_prog, pfsub. intros.
+  destruct existsb eqn: EX1; try discriminate. rewrite H.
+  destruct (existsb _ al2) eqn: EX2; try reflexivity.
+  apply existsb_iseqb_iff_in in EX1. apply existsb_iseqb_iff_in_contra in EX2.
+  contradict EX2. apply SS. assumption.
+Qed.
+
+Theorem sub_prog_nwc_pres: forall p al (NWC: forall s1 s2, p s1 = p s2),
+  (forall s1 s2, sub_prog p al s1 = sub_prog p al s2).
+Proof.
+  intros. einstantiate NWC as NWC. apply functional_extensionality. intro a.
+  eapply equal_f in NWC. unfold sub_prog. destruct existsb; [eassumption|reflexivity].
+Qed.
+
+End SubProg.
 
 Section Determinism.
 
@@ -2507,6 +2968,21 @@ Proof.
       erewrite PS. reflexivity. exact LU.
     eapply XAbort; try eassumption.
       erewrite PS. reflexivity. exact LU.
+Qed.
+
+(* exec_prog with a sub_prog instance is monotonic with respect to the domain.
+   Enlarging the domain of the program preserves execution. This follows from
+   above *)
+Theorem exec_sub_prog_pmono: forall d1 d2 p s h a n s' x
+  (SS: incl d1 d2) (XP: exec_prog h (sub_prog p d1) a s n s' x),
+  exec_prog h (sub_prog p d2) a s n s' x.
+Proof.
+  intros. apply (exec_prog_pmono (sub_prog p d1)); [|assumption].
+  unfold sub_prog, pfsub. intros s0 x0 [sz q] ImpD1.
+  destruct existsb eqn: E1; destruct (existsb _ d2) eqn: E2;
+  try solve [discriminate|assumption]. rewrite existsb_iseqb_iff_in in E1.
+  rewrite existsb_iseqb_iff_in_contra in E2. contradict E2.
+  apply SS. assumption.
 Qed.
 
 End Monotonicity.
@@ -2791,6 +3267,58 @@ Proof.
 Qed.
 
 End FrameTheorems.
+
+Section ExecProgEnd.
+
+(* exec_prog2 is an alternative way to represent execution of a program. This
+   differs from exec_prog in that the step operation steps a program from the
+   execution trace. For proofs that involve tracing backwards in the program
+   step, this allows an easy way to do so without excessive usages of
+   exec_prog_concat and exec_prog_split. *)
+
+Inductive exec_prog2 (h: hdomain) (p:program) (a:addr) (s:store): nat -> store -> exit -> Prop :=
+| X2Done: exec_prog2 h p a s O s (Exit a)
+| X2Step n sz q s2 a1 s' x' (LU: p s2 a1 = Some (sz,q))
+        (XP: exec_prog2 h p a s n s2 (Exit a1))
+        (XS: exec_stmt h s2 q s' x'):
+    exec_prog2 h p a s (S n) s' (exitof (a1+sz) x')
+| X2Abort sz q s' i (LU: p s a = Some (sz,q))
+         (XS: exec_stmt h s q s' (Some (Raise i))):
+    exec_prog2 h p a s (S O) s' (Raise i).
+
+Theorem exec_prog_equiv_exec_prog2: forall n h p a s s' x,
+  (exec_prog h p a s n s' x <-> exec_prog2 h p a s n s' x).
+Proof.
+  induction n; intros.
+  - (* n = 0 *) split; intros XP; inversion XP; subst; constructor.
+  - split; intros XP.
+    + (* -> *) inversion XP; try econstructor; try eassumption; subst.
+      destruct n.
+      * (* n = 1 *) inversion XP0. subst. rewrite <- EX. econstructor;
+        try eassumption. constructor.
+      * rewrite <- Nat.add_1_r in XP0. einstantiate trivial exec_prog_split as XPS.
+        destruct XPS as [s1 [a1 [XP_middle XP_end] ] ]. inversion XP_end. subst.
+        inversion XP1. subst. rewrite <- EX0. econstructor; try eassumption.
+        apply IHn. rewrite <- Nat.add_1_l. eapply exec_prog_concat;
+        [|apply XP_middle]. econstructor; try eassumption. econstructor.
+        subst. replace (Raise i) with (exitof (a1+sz0) (Some (Raise i))).
+        econstructor; try eassumption. apply IHn. rewrite <- Nat.add_1_l.
+        eapply exec_prog_concat; try eassumption. econstructor; try eassumption.
+        econstructor. reflexivity.
+    + (* <- *) inversion XP; try solve [econstructor; eassumption]. subst.
+      destruct n.
+      * (* n = 1 *) inversion XP0. subst. destruct exitof eqn: EX.
+        -- econstructor; try eassumption. constructor.
+        -- destruct x'; try discriminate. eapply XAbort. eassumption.
+           destruct e; inversion EX. subst. assumption.
+      * apply IHn in XP0. rewrite <- Nat.add_1_r. eapply exec_prog_concat;
+        try eassumption. destruct exitof eqn: EX.
+        -- econstructor; try eassumption. constructor.
+        -- destruct x'; try discriminate. eapply XAbort. eassumption.
+           destruct e; inversion EX. subst. assumption.
+Qed.
+
+End ExecProgEnd.
 
 (* Prove a goal of the form (prog_noassign v p) for a program p that contains no
    statements having assignments to v. *)
