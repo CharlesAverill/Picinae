@@ -196,6 +196,9 @@ Definition subst_exp (vd: vdomain) (δ: store_delta) e: option exp :=
 
 Definition trace_states := treeN store_delta.
 
+Definition init_ts a0: trace_states :=
+  tupdate_n treeN_nil a0 nil.
+
 Inductive jump_target: Set :=
   | jump_addr (a: addr)
   | jump_symbolic. (* a call or return *)
@@ -355,7 +358,7 @@ Definition process_state (vd: vdomain) (exitof: option exit -> exit)
 Definition stmt_correct vd q δ x := forall s0 h s s' (XS: exec_stmt h s q s' x),
   has_delta vd h s0 s' δ.
 
-Definition correctness_sub_prog vd p ts h a0 s0 :=
+Definition correct_trace_sub_prog vd p ts h a0 s0 :=
   (forall a1 s1 n1 sz' q'
     (XP: exec_prog h (sub_prog p (tkeys_n ts)) a0 s0 n1 s1 (Exit a1))
     (LU': p s1 a1 = Some (sz', q')),
@@ -406,6 +409,30 @@ Definition expand_trace_program_n (n: N) (vd: vdomain)
     | None => None
     end) (Some (init_ts, true, nil)).
 
+Definition compute_trace_program_n n vd hints p ts :=
+  match expand_trace_program_n n vd hints p ts with
+  | Some (ts, _, _) => ts
+  | None => ts
+  end.
+
+Definition check_trace_states (vd: vdomain) (hints: jump_hint)
+  (p: program) (ts: trace_states) (a0: addr): option (list ts_evidence) :=
+  match tget_n ts a0 with
+  | None => None
+  | Some δ =>
+      if forallb (fun '(v, e) =>
+          match e with
+          | None => true
+          | Some e => iseqb e (Var v)
+          end) δ
+      then match expand_trace_program vd p hints ts with
+           | None => None
+           | Some (_, true, _) => None
+           | Some (_, false, ev) => Some ev
+           end
+      else None
+  end.
+
 End PICINAE_CALLING_DEFS.
 
 Module Type PICINAE_CALLING (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL).
@@ -427,6 +454,12 @@ Ltac concretize_delta HD v :=
   end
   end.
 
+Parameter checked_trace_program_steady_correct:
+  forall vd p hints ts h a0 s0 evs
+  (NWC: forall sa sb a, p sa a = p sb a)
+  (CHK: check_trace_states vd hints p ts a0 = Some evs )
+  (SAT: sat_evidences evs p h a0 s0),
+  correct_trace_sub_prog vd p ts h a0 s0.
 
 End PICINAE_CALLING.
 
@@ -451,11 +484,6 @@ Proof.
   - simpl. destruct a as [v' e']. rewrite update_frame. apply IHδ.
     intros Contra. apply ND. right. assumption.
     intro. subst. apply ND. left. reflexivity.
-Qed.
-
-Lemma neq_sym: forall A (n m: A), n <> m -> m <> n.
-Proof.
-  intros. intro. subst. apply H. reflexivity.
 Qed.
 
 Theorem delta_remlst_removed: forall δ fn v,
@@ -511,6 +539,14 @@ Qed.
 Corollary delta_delta_updlst_iff_defined_contra: forall f δ v,
   ~ In v (delta_defined δ) <-> ~ In (v, delta_updlst f δ v) δ.
 Proof. intros. contrapositive delta_delta_updlst_iff_defined. Qed.
+
+Corollary delta_updlst_cases: forall f δ v,
+  (In (v, delta_updlst f δ v) δ) \/ delta_updlst f δ v = f v.
+Proof.
+  intros. edestruct (@in_dec var iseq).
+  - rewrite delta_delta_updlst_iff_defined in i. left. eassumption.
+  - right. apply delta_updlst_def. assumption.
+Qed.
 
 Theorem delta_equivb_iff_delta_equiv: forall vd δ1 δ2,
   delta_equivb vd δ1 δ2 = true <-> delta_equiv vd δ1 δ2.
@@ -880,11 +916,6 @@ Proof.
   apply trim_delta_state_correct. assumption.
 Qed.
 
-Lemma fold_expand_trace_program: forall vd p hints init_ts,
-  fold_right (trace_program_step_at vd p hints) (Some (init_ts, false, nil))
-    (tkeys_n init_ts) = expand_trace_program vd p hints init_ts.
-Proof. reflexivity. Qed.
-
 (*MARK*)
 
 Theorem destruct_trace_program_step_at_prin: forall {P vd p hints addr accum res}
@@ -973,44 +1004,6 @@ Proof.
     eapply incl_tran; eassumption.
 Qed.
 
-Theorem fold_process_state_changed: forall l t ts xit vars b,
-  fold_right (process_state vars xit) (t, true) l = (ts, b) -> b = true.
-Proof.
-  induction l.
-    intros. simpl in H. inversion H. reflexivity.
-    intros. simpl in H.
-      destruct fold_right eqn:H_fr in H.
-      unfold process_state in H.
-      destruct a in H.
-      destruct xit in H.
-      destruct join_states_if_changed in H.
-        inversion H. reflexivity.
-      inversion H. subst. eapply IHl. apply H_fr.
-      inversion H. subst. eapply IHl. apply H_fr.
-Qed.
-
-Theorem trace_program_step_at_changed:
-  forall a vars p hints ev ev' ts ts' changed'
-  (TPSA: trace_program_step_at vars p hints a (Some (ts, true, ev)) =
-    Some (ts', changed', ev')), changed' = true.
-Proof.
-  intros. destruct_trace_program_step_at TPSA; inversion TPSA'; try reflexivity.
-  inversion RES. subst. clear TPSA' RES. eapply fold_process_state_changed.
-  symmetry. eassumption.
-Qed.
-
-Theorem fold_trace_program_step_at_changed:
-  forall reachable_addrs vars p hints ts ts' changed' ev ev'
-  (FR: fold_right (trace_program_step_at vars p hints) (Some (ts, true, ev))
-    reachable_addrs = Some (ts', changed', ev')), changed' = true.
-Proof.
-  induction reachable_addrs; intros; simpl in FR.
-  - inversion FR. reflexivity.
-  - destruct fold_right as [ [ [ts1 changed1] ev1]|] eqn: FR1; try discriminate.
-    einstantiate trivial IHreachable_addrs. subst.
-    eapply trace_program_step_at_changed. eassumption.
-Qed.
-
 Theorem trace_program_step_at_none_acc: forall l vars p hints,
   fold_right (trace_program_step_at vars p hints) None l = None.
 Proof.
@@ -1020,15 +1013,15 @@ Proof.
 Qed.
 
 (*MARKK*)
-Theorem expand_trace_program_steady_correct_n:
+Theorem expand_trace_program_steady_correct:
   forall vd p hints ts h a0 s0 evs
   (INIT: exists δ, tget_n ts a0 = Some δ /\ has_delta vd h s0 s0 δ)
   (NWC: forall sa sb a, p sa a = p sb a)
   (TPO: expand_trace_program vd p hints ts = Some (ts, false, evs))
   (SAT: sat_evidences evs p h a0 s0),
-  correctness_sub_prog vd p ts h a0 s0.
+  correct_trace_sub_prog vd p ts h a0 s0.
 Proof.
-  unfold correctness_sub_prog, sat_evidences. intros.
+  unfold correct_trace_sub_prog, sat_evidences. intros.
   apply exec_prog_equiv_exec_prog2 in XP. revert a1 s1 sz' q' XP LU'.
   induction n1; intros; inversion XP; subst.
   - assumption.
@@ -1126,6 +1119,33 @@ Proof.
      *)
 Admitted.
 
+Theorem checked_trace_program_steady_correct:
+  forall vd p hints ts h a0 s0 evs
+  (NWC: forall sa sb a, p sa a = p sb a)
+  (CHK: check_trace_states vd hints p ts a0 = Some evs )
+  (SAT: sat_evidences evs p h a0 s0),
+  correct_trace_sub_prog vd p ts h a0 s0.
+Proof.
+  unfold check_trace_states. intros.
+  destruct tget_n as [δ|] eqn: TS; try discriminate.
+  destruct forallb eqn: INIT; try discriminate.
+  destruct expand_trace_program as [ [ [ts' [|] ] ev]|] eqn: ETP; try discriminate.
+  inversion CHK. subst. clear CHK.
+
+  eapply expand_trace_program_steady_correct; try eassumption.
+
+  eexists. split. eassumption. rewrite forallb_forall in INIT.
+  - (* Prove initial delta *) intros v e val LU EE. edestruct delta_updlst_cases.
+    + (* In delta store list *) einstantiate trivial INIT as EX.
+      rewrite LU in EX. unfold iseqb in EX. destruct (e == Var v); try discriminate.
+      subst. inversion EE. subst. reflexivity.
+    + (* Using default value *) rewrite H in LU. clear H. unfold init_delta in LU.
+      destruct vd; inversion LU. subst. inversion EE. subst. reflexivity.
+  - (* Prove etp returns properly *) unfold expand_trace_program in *.
+    einversion trivial fold_trace_program_step_at_nochange as [ev [EQ Incl] ].
+    inversion EQ. subst. eassumption.
+Qed.
+
 End PicinaeCalling.
 
 Require Import Picinae_i386.
@@ -1191,18 +1211,13 @@ Definition domain1 var :=
   | _ => true
   end.
 
-Definition my_prog_trace x := expand_trace_program_n x domain1
-  my_prog_jump_hints my_prog (tupdate_n treeN_nil 0 nil).
+Definition my_prog_ts := Eval compute in
+  compute_trace_program_n 100 domain1 my_prog_jump_hints my_prog
+    (init_ts 0).
 
-Ltac unbox_res v :=
-  match eval red in v with
-  | Some (?v', _) => clear v; pose (v := v')
-  end.
+Definition my_prog_trace :=
+  expand_trace_program domain1 my_prog my_prog_jump_hints my_prog_ts.
 
-Ltac unbox_Some v :=
-  match eval red in v with
-  | Some ?v' => clear v; pose (v := v')
-  end.
 Goal forall esp0 s0 (MDL0: models x86typctx s0)
   (SV2: s0 R_ESP = Ⓓ esp0),
   exists val,
@@ -1234,29 +1249,29 @@ Proof.
   eexists. exact EE.
 Qed.
 
-Require Import mod_arith.
 
 Theorem getmem_frame_absdist: forall e1 e2 len1 len2 m a1 a2 v,
   len1 <= absdist a1 a2 -> len2 <= absdist a1 a2 ->
   getmem e1 len1 (setmem e2 len2 m a2 v) a1 = getmem e1 len1 m a1.
 Proof.
   unfold absdist. intros. destruct (_ <=? _) eqn: LE.
-  - apply N.leb_le in LE. specialize (conv_le_add_le_sub_r _ _ _ H LE). intro.
+  - apply N.leb_le in LE. specialize (le_add_le_sub_r_inv _ _ _ H LE). intro.
     apply getmem_frame_low. rewrite N.add_comm. assumption.
   - apply not_true_iff_false in LE. assert (a2 < a1).
     apply N.lt_nge. revert LE. contrapositive N.leb_le.
-    apply getmem_frame_high. rewrite N.add_comm. apply conv_le_add_le_sub_r.
+    apply getmem_frame_high. rewrite N.add_comm. apply le_add_le_sub_r_inv.
     assumption. intros X. rewrite H1 in X. discriminate.
 Qed.
 
-Theorem my_prog_nwc: forall s2 s1, my_prog s1 = my_prog s2.
+Theorem my_prog_nwc: forall s1 s2 a, my_prog s1 a = my_prog s2 a.
 Proof. reflexivity. Qed.
 
 Theorem my_prog_hints_correct: forall esp0 mem s0 ts evs
-  (ESP0: s0 R_ESP = Ⓓ esp0) (MEM0: s0 V_MEM32 = Ⓜmem) (ESP_BIG: 8 <= esp0)
-  (RET: my_prog s0 (mem Ⓓ[ esp0 ]) = None) (WM: forall s0, s0 A_WRITE = Ⓜ (fun _ => 1))
+  (ESP0: s0 R_ESP = Ⓓ esp0) (MEM0: s0 V_MEM32 = Ⓜmem)
+  (RET: my_prog s0 (mem Ⓓ[ esp0 ]) = None)
+  (WM: forall s0, s0 A_WRITE = Ⓜ (fun _ => 1))
   (RM: forall s0, s0 A_READ = Ⓜ (fun _ => 1))
-  (MDL0: models x86typctx s0) (MPT: my_prog_trace 100 = Some (ts, false, evs)),
+  (MDL0: models x86typctx s0) (MPT: my_prog_trace = Some (ts, false, evs)),
   sat_evidences evs my_prog fh 0 s0.
 Proof.
   intros. vm_compute in MPT. inversion MPT. subst. clear MPT.
@@ -1299,17 +1314,49 @@ Proof.
   repeat rewrite getmem_frame_absdist; trivial2.
 Qed.
 
+Definition trace_invs (post: exit -> store -> Prop) :=
+  invs (fun _ _ => Some True) post.
+
 Definition ret_pres (esp0:N) (mem:addr->N) (s:store) :=
   exists mem1, s V_MEM32 = Ⓜ mem1 /\ mem Ⓓ[ esp0 ] = mem1 Ⓓ[ esp0 ].
 
-Definition ret_invs (esp0:N) (mem:addr->N) (_:addr) (s:store) :=
-  Some (ret_pres esp0 mem s).
+Definition my_prog_esp_ret_post (esp0:N) (mem:addr->N) (_:exit) (s:store) :=
+  ret_pres esp0 mem s /\ s R_ESP = Ⓓ (esp0 ⊕ 4).
 
-Definition ret_post (esp0:N) (mem:addr->N) (_:exit) (s:store) :=
-  ret_pres esp0 mem s.
+Definition my_prog_esp_ret_invset (esp0: N) (mem: addr -> N) :=
+  trace_invs (my_prog_esp_ret_post esp0 mem).
 
-Definition strchr_ret_invset esp0 mem :=
-  invs (ret_invs esp0 mem) (ret_post esp0 mem).
+Theorem my_prog_stack_preservation:
+  forall s0 esp0 mem n s' x' (ESP0: s0 R_ESP = Ⓓ esp0)
+  (MEM: s0 V_MEM32 = Ⓜ mem) (MDL0: models x86typctx s0)
+  (RET0: my_prog s0 (mem Ⓓ[esp0]) = None)
+  (WM: forall s0, s0 A_WRITE = Ⓜ (fun _ => 1))
+  (RM: forall s0, s0 A_READ = Ⓜ (fun _ => 1))
+  (XP0: exec_prog fh my_prog 0 s0 n s' x'),
+  trueif_inv (my_prog_esp_ret_invset esp0 mem my_prog x' s').
+Proof.
+  intros.
+
+  revert RET0. revert MDL0.
+
+  induction on invariant XP0; intros. exact I.
+  eapply preservation_exec_prog. exact MDL0. exact my_prog_welltyped. exact XP.
+
+  einstantiate (checked_trace_program_steady_correct domain1 my_prog
+    my_prog_jump_hints my_prog_ts fh 0) as TRACE.
+    exact my_prog_nwc.
+    reflexivity.
+    eapply my_prog_hints_correct; try eassumption. reflexivity.
+
+  unfold correct_trace_sub_prog in TRACE.
+
+  destruct_inv 32 PRE.
+
+  all: x86_step; try exact I.
+
+  einstantiate (TRACE 34).
+  apply program
+
 
 Theorem strchr_welltyped: welltyped_prog x86typctx strchr_i386.
 Proof.

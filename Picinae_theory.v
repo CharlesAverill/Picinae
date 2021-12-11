@@ -273,6 +273,11 @@ Qed.
 (* More theories about inequalities in N *)
 Section NInequalities.
 
+Lemma neq_sym: forall A (n m: A), n <> m -> m <> n.
+Proof.
+  intros. intro. subst. apply H. reflexivity.
+Qed.
+
 Theorem le_add_le_sub_r_inv: forall m n p,
   m <= p - n -> n <= p -> m + n <= p.
 Proof.
@@ -3339,9 +3344,9 @@ Ltac match_inv_CASES tac :=
   | [a1: addr, s1: store, n1: nat |- _] =>
       lazymatch goal with
       | [XP: exec_prog ?h ?p ?a0 ?s0 n1 s1 (Exit a1),
-         PRE: true_inv (if ?p s1 a1 then ?PS a1 s1 else None) |-
-             nextinv (invs ?PS ?Q) ?p ?h false (Exit a1) s1] =>
-             let PRE_T := constr:(true_inv (invs PS Q p (Exit a0) s0)) in
+         PRE: true_inv (if ?p s1 a1 then ?PS else None) |-
+             nextinv ?invset ?p ?h false (Exit a1) s1] =>
+             let PRE_T := constr:(true_inv (invset p (Exit a0) s0)) in
              (tac PRE_T XP s0 s1)
       end
   end.
@@ -3422,8 +3427,9 @@ Ltac inv_induction_priv XP0 :=
                else revert H
            end); intros; unmark 0;
   (* Next, remove XP0. *)
-  clear dependent XP0;
+  clear dependent XP0
   (* Next, remove those premises that we substituted from above. *)
+  (* Have this code commented out for now
   mk_marker 0; intros; to_marker 0 ltac:(fun H =>
     mk_marker 1;
     match_inv_CASES ltac:(fun PRE_T XP s0 s1 =>
@@ -3435,13 +3441,13 @@ Ltac inv_induction_priv XP0 :=
   (* Finally remove any remaining premises that contain initial s, but
    * warn the user that that is being removed. *)
   mk_marker 0; match_inv_CASES ltac:(fun PRE_T XP s0 s1 =>
-    clear XP;
+    clear XP(*;
     repeat lazymatch goal with
            | [H: context [s0] |- _] =>
                idtac "WARNING:" H "is being cleared because it uses" s0 "."
                "Maybe try rewriting in terms of" s1 "or reverting" H;
                clear H
-    end; clear s0); unmark 0; shelve.
+     end; clear s0*)); unmark 0; shelve*).
 
 Tactic Notation "induction" "on" "invariant" ident(XP0) :=
   unshelve (inv_induction_priv XP0).
