@@ -317,15 +317,18 @@ Definition simple_trace_stmt (hint: jump_hint) (vd: vdomain) (δ: store_delta)
   | None => None
   end.
 
+Definition delta_join (vd: vdomain) (δ1 δ2: store_delta): store_delta :=
+  fold_right (fun v δ' =>
+    δ'[[v := if δ1<{vd}>[[v]] == δ2<{vd}>[[v]] then δ2<{vd}>[[v]] else None]])
+  nil (delta_defined (δ1 ++ δ2)).
+
 Definition join_states_if_changed (vd: vdomain) (δ1: option store_delta)
   (δ2: store_delta): option store_delta :=
   match δ1 with
   | Some δ1 =>
       if delta_equivb vd δ1 δ2
       then None
-      else let δ_merge := (fold_right (fun v δ' =>
-        δ'[[v := if δ1<{vd}>[[v]] == δ2<{vd}>[[v]] then δ2<{vd}>[[v]] else None]])
-        nil (delta_defined (δ1 ++ δ2))) in
+      else let δ_merge := delta_join vd δ1 δ2 in
         if delta_equivb vd δ1 δ_merge then
             None
         else
@@ -361,6 +364,12 @@ Definition stmt_correct vd q δ x := forall s0 h s s' (XS: exec_stmt h s q s' x)
 Definition correct_trace_sub_prog vd p ts h a0 s0 :=
   (forall a1 s1 n1 sz' q'
     (XP: exec_prog h (sub_prog p (tkeys_n ts)) a0 s0 n1 s1 (Exit a1))
+    (LU': p s1 a1 = Some (sz', q')),
+    exists δ, tget_n ts a1 = Some δ /\ has_delta vd h s0 s1 δ).
+
+Definition correct_trace_prog vd p ts h a0 s0 :=
+  (forall a1 s1 n1 sz' q'
+    (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
     (LU': p s1 a1 = Some (sz', q')),
     exists δ, tget_n ts a1 = Some δ /\ has_delta vd h s0 s1 δ).
 
@@ -571,6 +580,36 @@ Proof.
   intros. rewrite <- not_true_iff_false.
   contrapositive delta_equivb_iff_delta_equiv.
 Qed.
+
+Lemma delta_equiv_has_delta: forall δ1 δ2 vd h s0 s
+  (EQ: delta_equiv vd δ1 δ2) (HD: has_delta vd h s0 s δ1),
+  has_delta vd h s0 s δ2.
+Proof.
+  unfold has_delta, delta_equiv. intros. eapply HD; try rewrite EQ; eassumption.
+Qed.
+
+Lemma delta_equiv_refl: forall vd δ1, delta_equiv vd δ1 δ1.
+Proof. unfold delta_equiv. reflexivity. Qed.
+
+Lemma delta_equiv_symm: forall vd δ1 δ2,
+  delta_equiv vd δ1 δ2 <-> delta_equiv vd δ2 δ1.
+Proof. unfold delta_equiv. split; intros; rewrite H; reflexivity. Qed.
+
+Lemma delta_defined_app: forall δ1 δ2,
+  delta_defined (δ1 ++ δ2) = delta_defined δ1 ++ delta_defined δ2.
+Proof. intros. unfold delta_defined. apply map_app. Qed.
+
+Lemma not_or: forall A B, ~(A \/ B) <-> ~A /\ ~B.
+Proof.
+  split; intros.
+  - split; contradict H; (left + right); apply H.
+  - intros Contra. destruct H as [HA HB]. destruct Contra as [X|X];
+    (apply HA + apply HB); apply X.
+Qed.
+
+Lemma not_in_app: forall A (a: A) l1 l2,
+  ~(In a (l1 ++ l2)) <-> ~(In a l1) /\ ~(In a l2).
+Proof. intros. rewrite <- not_or. contrapositive in_app_iff. Qed.
 
 Lemma trim_delta_state_preserve: forall vd δ v
   (VD: vd v = true), trim_delta_state vd δ <{vd}>[[v]] = δ<{vd}>[[v]].
@@ -1012,7 +1051,35 @@ Proof.
     intros. simpl. rewrite IHl. reflexivity.
 Qed.
 
-(*MARKK*)
+Lemma delta_join_cases: forall vd δ1 δ2 v e
+  (LU: (delta_join vd δ1 δ2)<{vd}>[[v]] = Some e),
+  δ1<{vd}>[[v]] = Some e /\ δ2<{vd}>[[v]] = Some e.
+Proof.
+  unfold delta_join. intros. remember (delta_defined _) as domain eqn: DD.
+  unshelve (edestruct (@in_dec var iseq); [|shelve]). shelve. shelve.
+  - rewrite not_in_app in n. destruct n as [NIn1 NIn2].
+    eapply delta_updlst_def in NIn1. rewrite NIn1.
+    eapply delta_updlst_def in NIn2. rewrite NIn2. clear DD.
+    revert LU. induction domain as [|v' domain IHdomain]; intros.
+    + simpl in LU. split; assumption.
+    + simpl in LU. unsimpl (delta_updlst _ (setlst _ v' _) v).
+      destruct (v == v').
+      * subst. rewrite NIn1, NIn2 in LU. vreflexivity (init_delta vd v').
+        rewrite delta_update_updated in LU. split; assumption.
+      * rewrite delta_update_frame in LU by assumption.
+        apply IHdomain. assumption.
+  - apply in_app_or in i as cases. rewrite <- delta_defined_app, <- DD in i.
+    clear DD. induction domain as [|v' domain IHdomain]; intros.
+    + inversion i.
+    + simpl in LU. unsimpl (delta_updlst _ (setlst _ v' _) v).
+      destruct (v == v').
+      * subst. rewrite delta_update_updated in LU. destruct (_ == _);
+        try discriminate. rewrite e0, LU. split; reflexivity.
+      * rewrite delta_update_frame in LU by assumption.
+        apply IHdomain. assumption. inversion i; try assumption.
+        symmetry in H. contradiction n.
+Qed.
+
 Theorem expand_trace_program_steady_correct:
   forall vd p hints ts h a0 s0 evs
   (INIT: exists δ, tget_n ts a0 = Some δ /\ has_delta vd h s0 s0 δ)
@@ -1023,101 +1090,87 @@ Theorem expand_trace_program_steady_correct:
 Proof.
   unfold correct_trace_sub_prog, sat_evidences. intros.
   apply exec_prog_equiv_exec_prog2 in XP. revert a1 s1 sz' q' XP LU'.
-  induction n1; intros; inversion XP; subst.
-  - assumption.
-  - unfold expand_trace_program in TPO.
-    unfold sub_prog in LU. destruct existsb eqn:EXB in LU;
-      try solve [inversion LU]. apply existsb_iseqb_iff_in in EXB.
-    apply in_split in EXB. destruct EXB as [r1 [r2 SPL] ]. rewrite SPL in *.
-    rewrite fold_right_app in TPO. simpl in TPO.
+  induction n1; intros; inversion XP; subst; try assumption.
 
-    (* Destruct TPSA out *)
-    destruct trace_program_step_at as [ [ [ts1 changed1] ev1]|] eqn: TPSA;
-      [|rewrite trace_program_step_at_none_acc in TPO; discriminate].
-    einversion fold_trace_program_step_at_nochange as [ev' [EQ EvIncl2] ]. exact TPO.
-    inversion EQ. subst. clear EQ.
+  unfold expand_trace_program in TPO.
+  unfold sub_prog in LU. destruct existsb eqn:EXB in LU;
+    try solve [inversion LU]. apply existsb_iseqb_iff_in in EXB.
+  apply in_split in EXB. destruct EXB as [r1 [r2 SPL] ]. rewrite SPL in *.
+  rewrite fold_right_app in TPO. simpl in TPO.
 
-    (* Destruct inner fold_right *)
-    destruct (fold_right _ _ r2) as [ [ [ts0 changed0] ev]|] eqn: FR0;
-        try discriminate.
-    einversion trace_program_step_at_nochange as [ev0 [EQ EvIncl] ]. exact TPSA.
-    inversion EQ. subst. clear EQ FR0 TPO.
+  (* Destruct TPSA out *)
+  destruct trace_program_step_at as [ [ [ts1 changed1] ev1]|] eqn: TPSA;
+    [|rewrite trace_program_step_at_none_acc in TPO; discriminate].
+  einversion fold_trace_program_step_at_nochange as [ev' [EQ EvIncl2] ]. exact TPO.
+  inversion EQ. subst. clear EQ.
 
-    (* Destruct TPSA *)
-    destruct_trace_program_step_at TPSA.
+  (* Destruct inner fold_right *)
+  destruct (fold_right _ _ r2) as [ [ [ts0 changed0] ev]|] eqn: FR0;
+      try discriminate.
+  einversion trace_program_step_at_nochange as [ev0 [EQ EvIncl] ]. exact TPSA.
+  inversion EQ. subst. clear EQ FR0 TPO.
 
-    (* ERR: Invalid program address *)
-    erewrite NWC, LU0 in LU. discriminate.
+  (* Destruct TPSA *)
+  destruct_trace_program_step_at TPSA.
 
-    (* ERR: Address not defined in ts *)
-    inversion TPSA'. inversion RES. subst.
-    einversion trivial IHn1 as [ δ_a2 [TS_a2 HD_a2] ].
-    rewrite TS_a2 in TS. discriminate.
+  (* ERR: Invalid program address *)
+  erewrite NWC, LU0 in LU. discriminate.
 
-    (* Show that when TPSA returns normally that it will give a correct value
-       when we execute from a0 ~> a2 -> a1. *)
-    inversion TPSA'. inversion RES. subst.
-    erewrite NWC, LU in LU0. inversion LU0. subst. clear LU0 RES TPSA'.
+  (* ERR: Address not defined in ts *)
+  inversion TPSA'. inversion RES. subst.
+  einversion trivial IHn1 as [ δ_a2 [TS_a2 HD_a2] ].
+  rewrite TS_a2 in TS. discriminate.
 
-    apply exec_prog_equiv_exec_prog2 in XP0 as XP0'.
-    einversion trivial IHn1 as [ δ_a2 [TS_a2 HD_a2] ].
-      erewrite NWC. eassumption.
-    rewrite TS in TS_a2. inversion TS_a2. subst.
-    einstantiate trivial simple_trace_stmt_correct as Correct.
-      (* Prove p s1 a1 is defined with jumps *)
-      destruct x' as [ [a1'|n]|]; try exact I. inversion H. subst.
-      eexists. eassumption.
+  (* Show that when TPSA returns normally that it will give a correct value
+     when we execute from a0 ~> a2 -> a1. *)
+  inversion TPSA'. inversion RES. subst.
+  erewrite NWC, LU in LU0. inversion LU0. subst. clear LU0 RES TPSA'.
 
-      (* Prove sat_evidences *)
-      eapply incl_Forall in SAT; try exact EvIncl2. apply Forall_app in SAT.
-      destruct SAT as [SAT _]. assumption.
+  apply exec_prog_equiv_exec_prog2 in XP0 as XP0'.
+  einversion trivial IHn1 as [ δ_a2 [TS_a2 HD_a2] ].
+    erewrite NWC. eassumption.
+  rewrite TS in TS_a2. inversion TS_a2. subst.
+  einstantiate trivial simple_trace_stmt_correct as Correct.
+    (* Prove p s1 a1 is defined with jumps *)
+    destruct x' as [ [a1'|n]|]; try exact I. inversion H. subst.
+    eexists. eassumption.
 
-    (* Corretness means next_states will contain a store_delta entry at a1
-     * that has the proper delta. *)
-    apply Exists_exists in Correct.
-    destruct Correct as [ [δ_a1 x] [InSt [EQ HD] ] ]. subst.
+    (* Prove sat_evidences *)
+    eapply incl_Forall in SAT; try exact EvIncl2. apply Forall_app in SAT.
+    destruct SAT as [SAT _]. assumption.
 
-    (* Take out the instance where process_state is processing our state *)
-    apply in_split in InSt. destruct InSt as [ns1 [ns2 EQ] ]. subst.
+  (* Corretness means next_states will contain a store_delta entry at a1
+   * that has the proper delta. *)
+  apply Exists_exists in Correct.
+  destruct Correct as [ [δ_a1 x] [InSt [EQ HD] ] ]. subst.
 
-    destruct fold_right eqn: FR_PS. inversion H4. symmetry in H1. subst.
-    clear TS_a2 H4. rewrite fold_right_app in FR_PS. simpl in FR_PS.
+  (* Take out the instance where process_state is processing our state *)
+  apply in_split in InSt. destruct InSt as [ns1 [ns2 EQ] ]. subst.
 
-    destruct process_state eqn: PS. apply process_state_vars_nochange in FR_PS.
-    inversion FR_PS. subst. clear FR_PS.
+  destruct fold_right eqn: FR_PS. inversion H4. symmetry in H1. subst.
+  clear TS_a2 H4. rewrite fold_right_app in FR_PS. simpl in FR_PS.
 
-    destruct fold_right. apply process_state_nofold_nochange in PS as PS'.
-    inversion PS'. subst. clear PS'.
+  destruct process_state eqn: PS. apply process_state_vars_nochange in FR_PS.
+  inversion FR_PS. subst. clear FR_PS.
 
-    (* Show that the delta written in trace states by process_state
-       is a preserving delta. *)
-    admit.
+  destruct fold_right. apply process_state_nofold_nochange in PS as PS'.
+  inversion PS'. subst. clear PS'.
 
-
-
-
-
-    (*
-      destruct x2 eqn:H_x2 in H5. destruct H5.
-      destruct fold_right eqn:H_tpsa_fr in H_tpsa. inversion H_tpsa. subst. clear H_tpsa.
-      rewrite fold_right_app in H_tpsa_fr. simpl in H_tpsa_fr. destruct process_state eqn:H_ps in H_tpsa_fr. 
-      pose proof H_tpsa_fr. apply process_state_vars_nochange in H_tpsa_fr. inversion H_tpsa_fr. subst. clear H_tpsa_fr.
-      destruct fold_right eqn:H_ps_fr in H_ps. pose proof H_ps. apply process_state_nofold_nochange in H_ps. inversion H_ps.
-      subst. clear H_ps. 
-      unfold process_state in H6. 
-      rewrite H in H6. unfold join_states_if_changed in H6. destruct (ts a1) eqn:H_tsa1 in H6.
-        destruct delta_differentb eqn:H_done in H6. 
-        inversion H6. clear H6. 
-        exists s5. split. apply H_tsa1.
-        apply delta_different_differentb_equiv_contra in H_done. rewrite <- delta_different_same in H_done. 
-        unfold has_delta. unfold has_delta in H5. intros. unfold delta_same in H_done.  rewrite -> H_done in LUv. apply H5 with (val:=val) in LUv. assumption.
-        apply EE. unfold domain_total. admit (*domain*). admit (*domain*). 
-        inversion H6. 
-        rewrite H_tsa2 in H1. inversion H1.
-        simpl in H_tpsa. inversion H_tpsa.
-        rewrite trace_program_step_at_none_acc in TPO2. inversion TPO2.
-     *)
-Admitted.
+  (* Show that the delta written in trace states by process_state
+     is a preserving delta. *)
+  unfold process_state in PS. rewrite H in PS.
+  destruct join_states_if_changed eqn: JS; try discriminate.
+  unfold join_states_if_changed in JS.
+  destruct (tget_n ts0 a1) as [δ_a1_old|] eqn: TS_a1; try discriminate.
+  eexists. split. reflexivity. destruct delta_equivb eqn: EQB.
+  - rewrite delta_equivb_iff_delta_equiv, delta_equiv_symm in EQB.
+    eapply delta_equiv_has_delta; eassumption.
+  - clear EQB. destruct delta_equivb eqn: EQB; try discriminate.
+    rewrite delta_equivb_iff_delta_equiv, delta_equiv_symm in EQB.
+    eapply delta_equiv_has_delta; try eassumption.
+    intros v e val DJ EE. apply delta_join_cases in DJ.
+    destruct DJ as [EQ1 EQ2]. eapply HD; eassumption.
+Qed.
 
 Theorem checked_trace_program_steady_correct:
   forall vd p hints ts h a0 s0 evs
