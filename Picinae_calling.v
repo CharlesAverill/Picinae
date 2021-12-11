@@ -426,20 +426,24 @@ Definition compute_trace_program_n n vd hints p ts :=
 
 Definition check_trace_states (vd: vdomain) (hints: jump_hint)
   (p: program) (ts: trace_states) (a0: addr): option (list ts_evidence) :=
-  match tget_n ts a0 with
+  match p null_state a0 with
   | None => None
-  | Some δ =>
-      if forallb (fun '(v, e) =>
-          match e with
-          | None => true
-          | Some e => iseqb e (Var v)
-          end) δ
-      then match expand_trace_program vd p hints ts with
-           | None => None
-           | Some (_, true, _) => None
-           | Some (_, false, ev) => Some ev
-           end
-      else None
+  | Some _ =>
+      match tget_n ts a0 with
+      | None => None
+      | Some δ =>
+          if forallb (fun '(v, e) =>
+              match e with
+              | None => true
+              | Some e => iseqb e (Var v)
+              end) δ
+          then match expand_trace_program vd p hints ts with
+               | None => None
+               | Some (_, true, _) => None
+               | Some (_, false, ev) => Some ev
+               end
+          else None
+      end
   end.
 
 End PICINAE_CALLING_DEFS.
@@ -468,7 +472,7 @@ Parameter checked_trace_program_steady_correct:
   (NWC: forall sa sb a, p sa a = p sb a)
   (CHK: check_trace_states vd hints p ts a0 = Some evs )
   (SAT: sat_evidences evs p h a0 s0),
-  correct_trace_sub_prog vd p ts h a0 s0.
+  correct_trace_prog vd p ts h a0 s0.
 
 End PICINAE_CALLING.
 
@@ -867,12 +871,12 @@ Proof.
     + simpl. erewrite IHl; try eassumption. destruct (f a); reflexivity.
 Qed.
 
-Theorem simple_trace_stmt0_correct: forall hints vd domain q q0 paths h p n
+Theorem simple_trace_stmt0_correct: forall hints vd q q0 paths h p n
   a0 s0 s0' a1 s1 x2 s2 δ evs
   (HD: has_delta vd h s0 s1 δ) (XS: exec_stmt h s1 q s2 x2)
   (LU2: forall a2, x2 = Some (Exit a2) -> exists insn, p s2 a2 = Some insn)
   (STS: simple_trace_stmt0 hints vd δ a1 q0 q = Some (paths, evs))
-  (XP: exec_prog h (sub_prog p domain) a0 s0 n s0' (Exit a1))
+  (XP: exec_prog h p a0 s0 n s0' (Exit a1))
   (XS0: exec_stmt h s0' q0 s1 None)
   (EV: sat_evidences evs p h a0 s0),
   Exists (fun '(δ', x') => x' = x2 /\ has_delta vd h s0 s2 δ') paths.
@@ -884,9 +888,7 @@ Proof.
     assumption. intros. eapply subst_exp_correct; eassumption.
   - (* Jmp *) destruct hints as [jmps|].
     + (* Use hint *) inversion H3. subst. clear H3. inversion EV. inversion H1.
-      subst. einstantiate trivial EJT as EJT. eapply exec_prog_pmono;
-        [|eassumption]. unfold sub_prog. intros s a' i SS.
-        destruct existsb; trivial2. apply Exists_exists in EJT.
+      subst. einstantiate trivial EJT as EJT. apply Exists_exists in EJT.
       apply Exists_exists. einversion trivial LU2 as [insn LU'].
       destruct EJT as [j [InJmps EJ] ]. inversion EJ;
       [|rewrite LU in LU'; discriminate]. subst. clear EJ.
@@ -934,8 +936,8 @@ Proof.
       apply incl_appl. apply incl_refl. assumption.
 Qed.
 
-Theorem simple_trace_stmt_correct: forall hints domain vd q paths h p n
-  a0 s0 a1 s1 x2 s2 δ evs (XP: exec_prog h (sub_prog p domain) a0 s0 n s1 (Exit a1))
+Theorem simple_trace_stmt_correct: forall hints vd q paths h p n
+  a0 s0 a1 s1 x2 s2 δ evs (XP: exec_prog h p a0 s0 n s1 (Exit a1))
   (HD: has_delta vd h s0 s1 δ) (XS: exec_stmt h s1 q s2 x2)
   (LU2: match x2 with
         | Some (Exit a2) => exists insn, p s2 a2 = Some insn
@@ -1086,16 +1088,17 @@ Theorem expand_trace_program_steady_correct:
   (NWC: forall sa sb a, p sa a = p sb a)
   (TPO: expand_trace_program vd p hints ts = Some (ts, false, evs))
   (SAT: sat_evidences evs p h a0 s0),
-  correct_trace_sub_prog vd p ts h a0 s0.
+  correct_trace_prog vd p ts h a0 s0.
 Proof.
-  unfold correct_trace_sub_prog, sat_evidences. intros.
+  unfold correct_trace_prog, sat_evidences, expand_trace_program. intros.
   apply exec_prog_equiv_exec_prog2 in XP. revert a1 s1 sz' q' XP LU'.
   induction n1; intros; inversion XP; subst; try assumption.
 
-  unfold expand_trace_program in TPO.
-  unfold sub_prog in LU. destruct existsb eqn:EXB in LU;
-    try solve [inversion LU]. apply existsb_iseqb_iff_in in EXB.
-  apply in_split in EXB. destruct EXB as [r1 [r2 SPL] ]. rewrite SPL in *.
+  einversion trivial IHn1 as [δ_a2 [TS_a2 HD_a2] ].
+  assert (InA2: In a2 (tkeys_n ts)). apply tkeys_n_in_contains.
+    unfold tcontains_n. rewrite TS_a2. reflexivity.
+
+  apply in_split in InA2. destruct InA2 as [r1 [r2 SPL] ]. rewrite SPL in *.
   rewrite fold_right_app in TPO. simpl in TPO.
 
   (* Destruct TPSA out *)
@@ -1118,7 +1121,6 @@ Proof.
 
   (* ERR: Address not defined in ts *)
   inversion TPSA'. inversion RES. subst.
-  einversion trivial IHn1 as [ δ_a2 [TS_a2 HD_a2] ].
   rewrite TS_a2 in TS. discriminate.
 
   (* Show that when TPSA returns normally that it will give a correct value
@@ -1127,8 +1129,6 @@ Proof.
   erewrite NWC, LU in LU0. inversion LU0. subst. clear LU0 RES TPSA'.
 
   apply exec_prog_equiv_exec_prog2 in XP0 as XP0'.
-  einversion trivial IHn1 as [ δ_a2 [TS_a2 HD_a2] ].
-    erewrite NWC. eassumption.
   rewrite TS in TS_a2. inversion TS_a2. subst.
   einstantiate trivial simple_trace_stmt_correct as Correct.
     (* Prove p s1 a1 is defined with jumps *)
@@ -1177,26 +1177,32 @@ Theorem checked_trace_program_steady_correct:
   (NWC: forall sa sb a, p sa a = p sb a)
   (CHK: check_trace_states vd hints p ts a0 = Some evs )
   (SAT: sat_evidences evs p h a0 s0),
-  correct_trace_sub_prog vd p ts h a0 s0.
+  correct_trace_prog vd p ts h a0 s0.
 Proof.
   unfold check_trace_states. intros.
+  destruct p as [x|] eqn: LU0; try discriminate.
   destruct tget_n as [δ|] eqn: TS; try discriminate.
   destruct forallb eqn: INIT; try discriminate.
   destruct expand_trace_program as [ [ [ts' [|] ] ev]|] eqn: ETP; try discriminate.
   inversion CHK. subst. clear CHK.
 
+  unfold correct_trace_prog. intros.
+
+  (* Prove etp returns properly *)
+  assert (ts = ts'). unfold expand_trace_program in *.
+  einversion trivial fold_trace_program_step_at_nochange as [ev [EQ Incl] ].
+  inversion EQ. subst. reflexivity. subst.
+
   eapply expand_trace_program_steady_correct; try eassumption.
 
+  (* Prove initial correctness *)
   eexists. split. eassumption. rewrite forallb_forall in INIT.
-  - (* Prove initial delta *) intros v e val LU EE. edestruct delta_updlst_cases.
-    + (* In delta store list *) einstantiate trivial INIT as EX.
-      rewrite LU in EX. unfold iseqb in EX. destruct (e == Var v); try discriminate.
-      subst. inversion EE. subst. reflexivity.
-    + (* Using default value *) rewrite H in LU. clear H. unfold init_delta in LU.
-      destruct vd; inversion LU. subst. inversion EE. subst. reflexivity.
-  - (* Prove etp returns properly *) unfold expand_trace_program in *.
-    einversion trivial fold_trace_program_step_at_nochange as [ev [EQ Incl] ].
-    inversion EQ. subst. eassumption.
+  intros v e val LU EE. edestruct delta_updlst_cases.
+  - (* In delta store list *) einstantiate trivial INIT as EX.
+    rewrite LU in EX. unfold iseqb in EX. destruct (e == Var v); try discriminate.
+    subst. inversion EE. subst. reflexivity.
+  - (* Using default value *) rewrite H in LU. clear H. unfold init_delta in LU.
+    destruct vd; inversion LU. subst. inversion EE. subst. reflexivity.
 Qed.
 
 End PicinaeCalling.
@@ -1322,8 +1328,8 @@ Proof. reflexivity. Qed.
 Theorem my_prog_hints_correct: forall esp0 mem s0 ts evs
   (ESP0: s0 R_ESP = Ⓓ esp0) (MEM0: s0 V_MEM32 = Ⓜmem)
   (RET: my_prog s0 (mem Ⓓ[ esp0 ]) = None)
-  (WM: forall s0, s0 A_WRITE = Ⓜ (fun _ => 1))
-  (RM: forall s0, s0 A_READ = Ⓜ (fun _ => 1))
+  (WM: s0 A_WRITE = Ⓜ (fun _ => 1))
+  (RM: s0 A_READ = Ⓜ (fun _ => 1))
   (MDL0: models x86typctx s0) (MPT: my_prog_trace = Some (ts, false, evs)),
   sat_evidences evs my_prog fh 0 s0.
 Proof.
@@ -1383,8 +1389,8 @@ Theorem my_prog_stack_preservation:
   forall s0 esp0 mem n s' x' (ESP0: s0 R_ESP = Ⓓ esp0)
   (MEM: s0 V_MEM32 = Ⓜ mem) (MDL0: models x86typctx s0)
   (RET0: my_prog s0 (mem Ⓓ[esp0]) = None)
-  (WM: forall s0, s0 A_WRITE = Ⓜ (fun _ => 1))
-  (RM: forall s0, s0 A_READ = Ⓜ (fun _ => 1))
+  (WM: s0 A_WRITE = Ⓜ (fun _ => 1))
+  (RM: s0 A_READ = Ⓜ (fun _ => 1))
   (XP0: exec_prog fh my_prog 0 s0 n s' x'),
   trueif_inv (my_prog_esp_ret_invset esp0 mem my_prog x' s').
 Proof.
@@ -1401,13 +1407,40 @@ Proof.
     reflexivity.
     eapply my_prog_hints_correct; try eassumption. reflexivity.
 
-  unfold correct_trace_sub_prog in TRACE.
+  unfold correct_trace_prog in TRACE.
 
   destruct_inv 32 PRE.
 
   all: x86_step; try exact I.
 
-  einstantiate (TRACE 34).
+  einversion trivial (TRACE 34) as [δ [EQ HD] ]. inversion EQ. subst. clear EQ.
+
+  concretize_delta HD V_MEM32. repeat split; try reflexivity;
+  unfold mem_readable, mem_writable; psimpl; eexists;
+  (split; [apply WM + apply RM|intro Contra; discriminate]).
+  rewrite Hsv2 in Hsv. remember (2 ^ 32). inversion Hsv. subst.
+  repeat unsimpl (setmem LittleE 4 _ _).
+
+  concretize_delta HD R_ESP. reflexivity.
+  apply nextinv_ret. psimpl.
+
+  specialize (x86_regsize MDL0 ESP0) as ESP_BND. cbv beta match delta [x86typctx] in ESP_BND.
+
+  assert (2 ^ 32 - 4 ⊕ esp0 < 2 ^ 32). apply N.mod_lt. discriminate.
+  assert (2 ^ 32 - 4 + esp0 ⊕ 4294967292 < 2 ^ 32). apply N.mod_lt. discriminate.
+  assert (4 <= absdist esp0 (2 ^ 32 + esp0 ⊖ 4)).
+    erewrite N.add_sub_swap, <- modabsdist_eq_absdist, modr_modabsdist by trivial2.
+    einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
+        rewrite MAD; discriminate.
+  assert (4 <= absdist esp0 (2 ^ 32 + esp0 - 4 ⊕ 4294967292)).
+    erewrite N.add_sub_swap, <- modabsdist_eq_absdist, modr_modabsdist by trivial2.
+    rewrite <- N.add_assoc, (N.add_comm esp0), N.add_assoc.
+    einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
+        rewrite MAD; discriminate.
+  repeat split; try reflexivity; unfold mem_readable, mem_writable; psimpl;
+  eexists; (split; [reflexivity|intro Contra; discriminate]).
+
+  reflexivity.
   apply program
 
 

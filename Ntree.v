@@ -567,6 +567,34 @@ Proof.
       destruct InKeys as [p' [EQ In]]. inversion EQ. subst. assumption.
 Qed.
 
+Corollary tkeys_p_in_contains: forall V k (t: treeP V),
+  tcontains_p t k = true <-> In k (tkeys_p t ident).
+Proof.
+  intros. rewrite <- (tkeys_p_get _ _ ident). unfold ident. split; intros.
+  - apply existsb_exists in H. destruct H as [x [InKeys EQ]].
+    apply Pos.eqb_eq in EQ. subst. assumption.
+  - apply existsb_exists. eexists. split. eassumption. apply Pos.eqb_refl.
+  - prove_injective.
+Qed.
+
+Corollary tkeys_p_in_contains_contra: forall V k (t: treeP V),
+  tcontains_p t k = false <-> ~(In k (tkeys_p t ident)).
+Proof.
+  intros. rewrite <- not_true_iff_false. contrapositive tkeys_p_in_contains.
+Qed.
+
+Corollary tkeys_n_in_contains: forall V k (t: treeN V),
+  tcontains_n t k = true <-> In k (tkeys_n t).
+Proof.
+  intros. rewrite <- tkeys_n_get, Neqb_iseqb_fn. apply existsb_iseqb_iff_in.
+Qed.
+
+Corollary tkeys_n_in_contains_contra: forall V k (t: treeN V),
+  tcontains_n t k = false <-> ~(In k (tkeys_n t)).
+Proof.
+  intros. rewrite <- not_true_iff_false. contrapositive tkeys_n_in_contains.
+Qed.
+
 Theorem tkeys_p_nodup: forall V (t: treeP V) fn (INJ: injective fn),
   NoDup (tkeys_p t fn).
 Proof.
