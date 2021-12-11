@@ -355,9 +355,10 @@ Definition process_state (vd: vdomain) (exitof: option exit -> exit)
 Definition stmt_correct vd q δ x := forall s0 h s s' (XS: exec_stmt h s q s' x),
   has_delta vd h s0 s' δ.
 
-Definition correctness_sub_prog vd p domain ts h a0 s0 :=
-  (forall a1 s1 n1
-    (XP: exec_prog h (sub_prog p domain) a0 s0 n1 s1 (Exit a1)),
+Definition correctness_sub_prog vd p ts h a0 s0 :=
+  (forall a1 s1 n1 sz' q'
+    (XP: exec_prog h (sub_prog p (tkeys_n ts)) a0 s0 n1 s1 (Exit a1))
+    (LU': p s1 a1 = Some (sz', q')),
     exists δ, tget_n ts a1 = Some δ /\ has_delta vd h s0 s1 δ).
 
 Definition trace_program_step_at (vd: vdomain) (p: program)
@@ -881,63 +882,6 @@ Lemma fold_expand_trace_program: forall vd p hints init_ts,
     (tkeys_n init_ts) = expand_trace_program vd p hints init_ts.
 Proof. reflexivity. Qed.
 
-(*
-Theorem trace_program_step_at_steady_correct: forall vd p a_new al hints ts
-  h a0 s0 (Init: forall δ s, tget_n ts a0 = Some δ -> has_delta vd h s s δ)
-  (IHal: correctness_sub_prog vd p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
-  (Total: Forall (fun a1 => exists δ1, tget_n ts a1 = Some δ1) (a_new :: al))
-  (TPSA: trace_program_step_at vd p hints a_new (Some (ts, false)) =
-    Some (ts, false))
-  (HintsCorrect: forall a_new al ts h a0 s0
-    (IHal: correctness_sub_prog vd p al ts h a0 s0) (UNIQ: NoDup (a_new :: al))
-    (Total: Forall (fun a1 => exists δ1, tget_n ts a1 = Some δ1) (a_new :: al))
-    (Hint: hints p a_new ts = Some (ts, false)),
-    correctness_sub_prog vd p (a_new :: al) ts h a0 s0),
-  correctness_sub_prog vd p (a_new :: al) ts h a0 s0.
-Proof.
-Admitted.
-  (* Destruct trace_program_step_at function. *)
-  unfold correctness_sub_prog. intros. simpl in TPSA.
-
-  (* Using hint if available *)
-  destruct hints as [ [ts' changed']|] eqn: Hint. inversion TPSA. subst.
-  eapply HintsCorrect; try eassumption. clear HintsCorrect.
-
-  destruct (p _ _) as [ [sz_new q_new]|] eqn: LUa_new; try discriminate.
-  destruct (tget_n ts a_new) as [δ_a_new|] eqn: TSa_new; try discriminate.
-  destruct simple_trace_stmt as [next_states|] eqn: Fn; try discriminate.
-  rename a1 into a', s1 into s', n1 into n', δ into δ', XP into XP',
-    TS2 into TS'.
-
-  (* Main case has the flow a0 ~> a1 -> a' *)
-  apply exec_prog_equiv_exec_prog2 in XP'. revert a' s' δ' XP' TS'.
-  induction n'; intros; inversion XP'; subst.
-  - (* n = 0 *) apply Init. assumption.
-  - (* n > 0 *) rename s2 into s1. eapply Forall_forall in Total.
-    destruct Total as [δ1 TS1]. einstantiate trivial IHn' as HD1.
-
-    (* Here we need to prove that process_state correctly processes all states,
-     * i.e. given that the deltas are correct up to a1, we show that the deltas
-     * are correct for a'. We know that a1 flows into a'. We should check if
-     * a' == a_new. If it is, we check correctness of that, otherwise we use
-     * inductive hypothesis *)
-    admit.
-    (*destruct (a' == a_new). subst. admit.*)
-
-    (* Prove that a1 is in the domain. Holds true because a1 was in the
-     * sub-program because of our execution flow, so must be in subdomain. *)
-    unfold sub_prog in LU. destruct existsb eqn: EXa2; try discriminate.
-    apply existsb_exists in EXa2. destruct EXa2 as [a1' [InDomain Eq] ].
-    destruct (a1 == a1'); try discriminate. subst. assumption.
-Admitted.
- *)
-
-(*
-Definition hintDelta (hints: (store → addr → option (N * stmt)) → addr → (addr → option store_delta) -> option ((addr → option store_delta) * bool))  (p : store → addr → option (N * stmt)) : 
-    Prop := forall a_new ts b,
-   hints p a_new ts = Some (ts, b) -> (forall a, exists δ1, ts a = Some δ1).
- *)
-
 (*MARK*)
 
 Theorem destruct_trace_program_step_at_prin: forall {P vd p hints addr accum res}
@@ -1001,26 +945,29 @@ Qed.
 
 Lemma trace_program_step_at_nochange: forall vars p hints a2 inp ts ev
    (TPSA: trace_program_step_at vars p hints a2 inp = Some (ts, false, ev)),
-   exists ev0, inp = Some (ts, false, ev0).
+   exists ev0, inp = Some (ts, false, ev0) /\ incl ev0 ev.
 Proof.
   intros. destruct_trace_program_step_at TPSA.
-  - eexists. reflexivity.
-  - eexists. reflexivity.
-  - eexists. f_equal. f_equal. inversion RES.
+  - eexists. split. reflexivity. apply incl_refl.
+  - eexists. split. reflexivity. apply incl_refl.
+  - eexists. inversion RES. split. f_equal. f_equal. subst.
     eapply process_state_vars_nochange. symmetry. eassumption.
+    apply incl_appr, incl_refl.
 Qed.
 
 Theorem fold_trace_program_step_at_nochange:
   forall reachable_addrs vars p hints inp ts ev
   (FR: fold_right (trace_program_step_at vars p hints) inp
     reachable_addrs = Some (ts, false, ev)),
-  exists ev0, inp = Some (ts, false, ev0).
+  exists ev0, inp = Some (ts, false, ev0) /\ incl ev0 ev.
 Proof.
   induction reachable_addrs; intros; simpl in FR.
-  - eexists. eassumption.
+  - eexists. split. eassumption. apply incl_refl.
   - destruct fold_right eqn: FR0; try discriminate.
-    edestruct trace_program_step_at_nochange as [ev0 EQ]; try eassumption.
-    inversion EQ. subst. eapply IHreachable_addrs. eassumption.
+    edestruct trace_program_step_at_nochange as [ev0 [EQ EvIncl] ]; try eassumption.
+    inversion EQ. subst. edestruct IHreachable_addrs as [ev1 [EQ2 Ev1Incl] ].
+    eassumption. subst. eexists. split. reflexivity.
+    eapply incl_tran; eassumption.
 Qed.
 
 Theorem fold_process_state_changed: forall l t ts xit vars b,
@@ -1075,48 +1022,96 @@ Theorem list_splittable: forall reachable_addrs (a:addr),
   existsb (iseqb a) reachable_addrs = true ->
     exists reachA reachB , reachable_addrs = reachA ++ a :: reachB.
 Proof.
-  induction reachable_addrs.
-    intros. simpl in H. inversion H.
-    intros. simpl in  *. apply orb_prop in H. destruct H.
-      apply iseqb_iff_eq in H. subst. exists nil. exists reachable_addrs. reflexivity.
-      apply  IHreachable_addrs in H. destruct H. destruct H. subst. exists (a::x). exists (x0). reflexivity.
+  intros. apply in_split. eapply existsb_iseqb_iff_in. assumption.
 Qed.
 
-Theorem expand_trace_program_steady_correct_n: forall p vars hints reachable ts
-  h a0 s0
-  (INIT: exists δ, ts a0 = Some δ /\ has_delta h s0 s0 δ)
-  (HINT: hintCorrect hints p)
-  (NOMOD: forall sa sb a, p sa a = p sb a)
-  (TPO: expand_trace_program vars p hints reachable ts = Some (ts, false)),
-  correctness_sub_prog p (set_elems reachable) ts h a0 s0.
+Theorem expand_trace_program_steady_correct_n:
+  forall vd p hints ts h a0 s0 evs
+  (INIT: exists δ, tget_n ts a0 = Some δ /\ has_delta vd h s0 s0 δ)
+  (NWC: forall sa sb a, p sa a = p sb a)
+  (TPO: expand_trace_program vd p hints ts = Some (ts, false, evs))
+  (SAT: sat_evidences evs (sub_prog p (tkeys_n ts)) h a0 s0),
+  correctness_sub_prog vd p ts h a0 s0.
 Proof.
-  unfold correctness_sub_prog. intros. 
-  revert HINT INIT XP TPO NOMOD. revert a0 h ts hints vars p s0 a1 s1. 
-  induction n1.
-  - intros. simpl in XP. inversion XP. subst. assumption.
-  - intros. apply exec_prog_equiv_exec_prog2 in XP. inversion XP. subst.
-    pose proof TPO as TPO2. unfold expand_trace_program in TPO2. 
-    unfold sub_prog in LU. destruct existsb eqn:H_exb in LU; try solve [inversion LU]. apply list_splittable in H_exb.
-    destruct H_exb. destruct H0. rewrite H0 in *.
-    rewrite fold_right_app in TPO2. simpl in TPO2. destruct trace_program_step_at eqn:H_tpsa in TPO2.
-    destruct p0. destruct fold_right eqn:H_fr1 in H_tpsa.
-    pose proof TPO2 as H_fr2. apply fold_trace_program_step_at_nochange in TPO2. inversion TPO2. subst. clear TPO2.
-    destruct p0. pose proof H_tpsa. apply trace_program_step_at_nochange in H1. inversion H1. subst. clear H1.
-    unfold trace_program_step_at in H_tpsa.
-    destruct hints eqn:H_hint. destruct p0.
-      admit. (*admit hint case*)
-    destruct p eqn:H_p in H_tpsa; try discriminate. rewrite NOMOD with (sb:=s2) in H_p. destruct p0; try discriminate.
-        eassert (∃ δ : store_delta, ts a2 = Some δ ∧ has_delta h s0 s2 δ).
-        eapply IHn1.  apply HINT. apply INIT. apply exec_prog_equiv_exec_prog2 in XP0. apply XP0. apply TPO. apply NOMOD.
-          destruct H1. destruct H1. 
-    destruct ts eqn:H_tsa2 in H_tpsa. (*second case is provably impossible to happen.*)
-    destruct simple_trace_stmt eqn:H_sts; try discriminate.
-    rewrite LU in H_p. inversion H_p. subst.
-    specialize simple_trace_stmt_correct. intros. 
-    assert (Exists (λ '(δ', x), x = x' ∧ has_delta h s0 s1 δ') l).
-    eapply H3.
-    apply H2. apply XS. rewrite -> H_tsa2 in H1.  inversion H1. subst. apply H_sts.
-      apply Exists_exists in H4. destruct H4. destruct H4. apply in_split in H4. destruct H4. destruct H4. subst.
+  unfold correctness_sub_prog, sat_evidences. intros.
+  apply exec_prog_equiv_exec_prog2 in XP. revert a1 s1 sz' q' XP LU'.
+  induction n1; intros; inversion XP; subst.
+  - assumption.
+  - unfold expand_trace_program in TPO.
+    unfold sub_prog in LU. destruct existsb eqn:EXB in LU;
+      try solve [inversion LU]. apply existsb_iseqb_iff_in in EXB.
+    apply in_split in EXB. destruct EXB as [r1 [r2 SPL] ]. rewrite SPL in *.
+    rewrite fold_right_app in TPO. simpl in TPO.
+
+    (* Destruct TPSA out *)
+    destruct trace_program_step_at as [ [ [ts1 changed1] ev1]|] eqn: TPSA;
+      [|rewrite trace_program_step_at_none_acc in TPO; discriminate].
+    einversion fold_trace_program_step_at_nochange as [ev' [EQ EvIncl2] ]. exact TPO.
+    inversion EQ. subst. clear EQ.
+
+    (* Destruct inner fold_right *)
+    destruct (fold_right _ _ r2) as [ [ [ts0 changed0] ev]|] eqn: FR0;
+        try discriminate.
+    einversion trace_program_step_at_nochange as [ev0 [EQ EvIncl] ]. exact TPSA.
+    inversion EQ. subst. clear EQ FR0 TPO.
+
+    (* Destruct TPSA *)
+    destruct_trace_program_step_at TPSA.
+
+    (* ERR: Invalid program address *)
+    erewrite NWC, LU0 in LU. discriminate.
+
+    (* ERR: Address not defined in ts *)
+    inversion TPSA'. inversion RES. subst.
+    einversion trivial IHn1 as [ δ_a2 [TS_a2 HD_a2] ].
+    rewrite TS_a2 in TS. discriminate.
+
+    (* Show that when TPSA returns normally that it will give a correct value
+       when we execute from a0 ~> a2 -> a1. *)
+    inversion TPSA'. inversion RES. subst.
+    erewrite NWC, LU in LU0. inversion LU0. subst. clear LU0 RES TPSA'.
+
+    apply exec_prog_equiv_exec_prog2 in XP0 as XP0'.
+    einversion trivial IHn1 as [ δ_a2 [TS_a2 HD_a2] ].
+      erewrite NWC. eassumption.
+    rewrite TS in TS_a2. inversion TS_a2. subst.
+    einstantiate trivial simple_trace_stmt_correct as Correct.
+      (* Prove p s1 a1 is defined with jumps *)
+      destruct x' as [ [a1'|n]|]; try exact I. inversion H. subst.
+      eexists. unfold sub_prog. assert (REACH: In a1 (r1 ++ a2 :: r2)).
+      admit. (* Prove that simple_trace_stmt reaches all single step possibilities *)
+      rewrite <- existsb_iseqb_iff_in in REACH. rewrite REACH. eassumption.
+
+      (* Prove sat_evidences *)
+      eapply incl_Forall in SAT; try exact EvIncl2. apply Forall_app in SAT.
+      destruct SAT as [SAT _]. assumption.
+
+    (* Corretness means next_states will contain a store_delta entry at a1
+     * that has the proper delta. *)
+    apply Exists_exists in Correct.
+    destruct Correct as [ [δ_a1 x] [InSt [EQ HD] ] ]. subst.
+
+    (* Take out the instance where process_state is processing our state *)
+    apply in_split in InSt. destruct InSt as [ns1 [ns2 EQ] ]. subst.
+
+    destruct fold_right eqn: FR_PS. inversion H4. symmetry in H1. subst.
+    clear TS_a2 H4. rewrite fold_right_app in FR_PS. simpl in FR_PS.
+
+    destruct process_state eqn: PS. apply process_state_vars_nochange in FR_PS.
+    inversion FR_PS. subst. clear FR_PS.
+
+    destruct fold_right. apply process_state_nofold_nochange in PS as PS'.
+    inversion PS'. subst. clear PS'.
+
+    (* Show that the delta written in trace states by process_state
+       is a preserving delta. *)
+    admit.
+
+
+
+
+
+    (*
       destruct x2 eqn:H_x2 in H5. destruct H5.
       destruct fold_right eqn:H_tpsa_fr in H_tpsa. inversion H_tpsa. subst. clear H_tpsa.
       rewrite fold_right_app in H_tpsa_fr. simpl in H_tpsa_fr. destruct process_state eqn:H_ps in H_tpsa_fr. 
@@ -1135,6 +1130,7 @@ Proof.
         rewrite H_tsa2 in H1. inversion H1.
         simpl in H_tpsa. inversion H_tpsa.
         rewrite trace_program_step_at_none_acc in TPO2. inversion TPO2.
+     *)
 Qed.
 
 
