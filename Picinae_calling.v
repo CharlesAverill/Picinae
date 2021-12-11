@@ -792,12 +792,13 @@ Proof.
     + simpl. erewrite IHl; try eassumption. destruct (f a); reflexivity.
 Qed.
 
-Theorem simple_trace_stmt0_correct: forall hints vd q q0 paths h p n
+Theorem simple_trace_stmt0_correct: forall hints vd domain q q0 paths h p n
   a0 s0 s0' a1 s1 x2 s2 δ evs
   (HD: has_delta vd h s0 s1 δ) (XS: exec_stmt h s1 q s2 x2)
   (LU2: forall a2, x2 = Some (Exit a2) -> exists insn, p s2 a2 = Some insn)
   (STS: simple_trace_stmt0 hints vd δ a1 q0 q = Some (paths, evs))
-  (XP: exec_prog h p a0 s0 n s0' (Exit a1)) (XS0: exec_stmt h s0' q0 s1 None)
+  (XP: exec_prog h (sub_prog p domain) a0 s0 n s0' (Exit a1))
+  (XS0: exec_stmt h s0' q0 s1 None)
   (EV: sat_evidences evs p h a0 s0),
   Exists (fun '(δ', x') => x' = x2 /\ has_delta vd h s0 s2 δ') paths.
 Proof.
@@ -808,7 +809,9 @@ Proof.
     assumption. intros. eapply subst_exp_correct; eassumption.
   - (* Jmp *) destruct hints as [jmps|].
     + (* Use hint *) inversion H3. subst. clear H3. inversion EV. inversion H1.
-      subst. einstantiate trivial EJT as EJT. apply Exists_exists in EJT.
+      subst. einstantiate trivial EJT as EJT. eapply exec_prog_pmono;
+        [|eassumption]. unfold sub_prog. intros s a' i SS.
+        destruct existsb; trivial2. apply Exists_exists in EJT.
       apply Exists_exists. einversion trivial LU2 as [insn LU'].
       destruct EJT as [j [InJmps EJ] ]. inversion EJ;
       [|rewrite LU in LU'; discriminate]. subst. clear EJ.
@@ -856,8 +859,8 @@ Proof.
       apply incl_appl. apply incl_refl. assumption.
 Qed.
 
-Theorem simple_trace_stmt_correct: forall hints vd q paths h p n
-  a0 s0 a1 s1 x2 s2 δ evs (XP: exec_prog h p a0 s0 n s1 (Exit a1))
+Theorem simple_trace_stmt_correct: forall hints domain vd q paths h p n
+  a0 s0 a1 s1 x2 s2 δ evs (XP: exec_prog h (sub_prog p domain) a0 s0 n s1 (Exit a1))
   (HD: has_delta vd h s0 s1 δ) (XS: exec_stmt h s1 q s2 x2)
   (LU2: match x2 with
         | Some (Exit a2) => exists insn, p s2 a2 = Some insn
@@ -1017,20 +1020,12 @@ Proof.
 Qed.
 
 (*MARKK*)
-(* this should be replaced by a library theorem, ie in_split.*)
-Theorem list_splittable: forall reachable_addrs (a:addr),
-  existsb (iseqb a) reachable_addrs = true ->
-    exists reachA reachB , reachable_addrs = reachA ++ a :: reachB.
-Proof.
-  intros. apply in_split. eapply existsb_iseqb_iff_in. assumption.
-Qed.
-
 Theorem expand_trace_program_steady_correct_n:
   forall vd p hints ts h a0 s0 evs
   (INIT: exists δ, tget_n ts a0 = Some δ /\ has_delta vd h s0 s0 δ)
   (NWC: forall sa sb a, p sa a = p sb a)
   (TPO: expand_trace_program vd p hints ts = Some (ts, false, evs))
-  (SAT: sat_evidences evs (sub_prog p (tkeys_n ts)) h a0 s0),
+  (SAT: sat_evidences evs p h a0 s0),
   correctness_sub_prog vd p ts h a0 s0.
 Proof.
   unfold correctness_sub_prog, sat_evidences. intros.
@@ -1078,9 +1073,7 @@ Proof.
     einstantiate trivial simple_trace_stmt_correct as Correct.
       (* Prove p s1 a1 is defined with jumps *)
       destruct x' as [ [a1'|n]|]; try exact I. inversion H. subst.
-      eexists. unfold sub_prog. assert (REACH: In a1 (r1 ++ a2 :: r2)).
-      admit. (* Prove that simple_trace_stmt reaches all single step possibilities *)
-      rewrite <- existsb_iseqb_iff_in in REACH. rewrite REACH. eassumption.
+      eexists. eassumption.
 
       (* Prove sat_evidences *)
       eapply incl_Forall in SAT; try exact EvIncl2. apply Forall_app in SAT.
@@ -1131,9 +1124,7 @@ Proof.
         simpl in H_tpsa. inversion H_tpsa.
         rewrite trace_program_step_at_none_acc in TPO2. inversion TPO2.
      *)
-Qed.
-
-
+Admitted.
 
 End PicinaeCalling.
 
