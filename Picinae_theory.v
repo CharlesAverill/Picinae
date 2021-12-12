@@ -479,14 +479,15 @@ Qed.
 Lemma fold_pow: forall a b, N.pos (a ^ b) = (N.pos a) ^ (N.pos b).
 Proof. reflexivity. Qed.
 
-Lemma mod_sub_extract: forall a b m, m <> 0 -> b <> 0 -> b <= m ->
+Lemma mod_sub_extract: forall a b m, m <> 0 -> b <= m ->
   (m + a - b) mod m = (a mod m + (m - b)) mod m.
 Proof.
-  intros.
+  intros. destruct (b == 0). subst. rewrite N.sub_0_r, N.sub_0_r,
+    N.add_mod_idemp_l, N.add_comm by assumption. reflexivity.
+  apply N.neq_0_lt_0 in n.
   assert (m - b < m). apply lt_sub_lt_add_r_inv.
     destruct (N.eq_0_gt_0_cases m); [contradiction H|assumption].
-    apply N.lt_add_pos_r. destruct (N.eq_0_gt_0_cases b);
-    [contradiction H0|assumption].
+    apply N.lt_add_pos_r. assumption.
   rewrite N.add_sub_swap, N.add_mod, N.add_comm, (N.mod_small (m - b)) by assumption.
   reflexivity.
 Qed.

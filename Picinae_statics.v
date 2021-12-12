@@ -626,6 +626,13 @@ Parameter models_subset:
   forall c s c' (M: models c s) (SS: c' ⊆ c),
   models c' s.
 
+(* Adding another variable to the typing context and store preserves
+   modeling relation if the added variable is well-typed from some
+   expression. *)
+Parameter models_assign: forall c h s v e u t (MDL: models c s)
+  (TE: hastyp_exp c e t) (EE: eval_exp h s e u),
+  models (c [v := Some t]) (s [v := u]).
+
 (* Every result of evaluating a well-typed expression is a well-typed value. *)
 Parameter preservation_eval_exp:
   forall {h s e c t u}
@@ -1109,6 +1116,17 @@ Proof.
 
   (* Concat *)
   apply TVN. apply concat_bound; assumption.
+Qed.
+
+Lemma models_assign: forall c h s v e u t (MDL: models c s)
+  (TE: hastyp_exp c e t) (EE: eval_exp h s e u),
+  models (c [v := Some t]) (s [v := u]).
+Proof.
+  unfold models. intros. destruct (v0 == v).
+  - subst. rewrite update_updated. rewrite update_updated in CV. inversion CV.
+    subst. eapply preservation_eval_exp; eassumption.
+  - rewrite update_frame by assumption. rewrite update_frame in CV by
+    assumption. apply MDL in CV. assumption.
 Qed.
 
 Lemma progress_eval_exp:

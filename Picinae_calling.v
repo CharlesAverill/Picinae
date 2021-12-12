@@ -144,6 +144,173 @@ Definition delta_same_domain (vd: vdomain) (δ1 δ2: store_delta) :=
             | _, _ => False
             end.
 
+Fixpoint simplify_exp_eval e: option (N * bitwidth) :=
+  match e with
+  | Var v => None
+  | Word n w => Some (n, w)
+  | Load _ _ _ _ => None
+  | Store _ _ _ _ _ => None
+  | BinOp op e1 e2 =>
+      match simplify_exp_eval e1 with
+      | None => None
+      | Some (n1, w1) =>
+          match simplify_exp_eval e2 with
+          | Some (n2, w2) =>
+              if w1 == w2 then
+                match eval_binop op w1 n1 n2 with
+                | VaN n w => Some (n, w)
+                | _ => None
+                end
+              else None
+          | None => None
+          end
+      end
+  | UnOp op e1 =>
+      match simplify_exp_eval e1 with
+      | None => None
+      | Some (n1, w1) =>
+          match eval_unop op n1 w1 with
+          | VaN n w => Some (n, w)
+          | _ => None
+          end
+      end
+  | Cast op w' e1 =>
+      match simplify_exp_eval e1 with
+      | None => None
+      | Some (n1, w1) => Some (cast op w1 w' n1, w')
+      end
+  | Let _ _ _ => None
+  | Ite e1 e2 e3 =>
+      match simplify_exp_eval e1 with
+      | None => None
+      | Some (0, _) => simplify_exp_eval e3
+      | Some (N.pos _, _) => simplify_exp_eval e2
+      end
+  | Extract n1 n2 e1 =>
+      match simplify_exp_eval e1 with
+      | None => None
+      | Some (n, w) => Some (xbits n n2 (N.succ n1), N.succ n1 - n2)
+      end
+  | Concat e1 e2 =>
+      match simplify_exp_eval e1 with
+      | None => None
+      | Some (n1, w1) =>
+          match simplify_exp_eval e2 with
+          | None => None
+          | Some (n2, w2) => Some (N.lor (N.shiftl n1 w2) n2, w1 + w2)
+          end
+      end
+  | Unknown _ => None
+  end.
+
+Inductive SimpExp :=
+  | SWord (n: N) (w: bitwidth)
+  | SExp (e: exp)
+  | SExpOff (e: exp) (n: N) (w: bitwidth).
+
+Inductive hastyp_se (c: typctx): SimpExp -> typ -> Prop :=
+  | SE_SWord (n: N) (w: bitwidth) (LT: n < 2 ^ w):
+      hastyp_se c (SWord n w) (NumT w)
+  | SE_SExp (e: exp) (t: typ) (TE: hastyp_exp c e t): hastyp_se c (SExp e) t
+  | SE_SExpOff (e: exp) (n: N) (w: bitwidth) (TE: hastyp_exp c e (NumT w))
+      (LT: n < 2 ^ w): hastyp_se c (SExpOff e n w) (NumT w).
+
+Theorem hastyp_se_deterministic: forall c se t1 t2
+  (TSE1: hastyp_se c se t1) (TSE2: hastyp_se c se t2), t1 = t2.
+Proof.
+  intros. destruct se; inversion TSE1; inversion TSE2; try reflexivity.
+  subst. einstantiate hastyp_exp_unique. apply hub_refl.
+  apply TE. apply TE0. assumption.
+Qed.
+
+Definition se_to_exp se :=
+  match se with
+  | SWord n w => Word n w
+  | SExp e => e
+  | SExpOff e n w => BinOp OP_PLUS e (Word n w)
+  end.
+
+Definition eval_binop_num bop w n1 n2 :=
+  match eval_binop bop w n1 n2 with
+  | VaN n _ => n
+  | _ => 0 (* should *never* happen *)
+  end.
+
+Definition se_eval_binop (flipped: bool) w op n1 e n2 :=
+  let def :=
+    if flipped then
+      SExp (BinOp op (se_to_exp (SExpOff e n2 w)) (se_to_exp (SWord n1 w)))
+    else
+      SExp (BinOp op (se_to_exp (SWord n1 w)) (se_to_exp (SExpOff e n2 w))) in
+  match op with
+  | OP_PLUS => SExpOff e ((n2 + n1) mod 2^w) w
+  | OP_MINUS =>
+      if flipped then SExpOff e ((n2 + 2^w - n1) mod 2^w) w
+      else def
+  | _ => def
+  end.
+
+Fixpoint simplify_exp_arith0 c e :=
+  match simplify_exp_eval e with
+  | Some (n, w) => SWord n w
+  | None =>
+      match e with
+      | Var _ => SExp e
+      | Word n w => SWord n w
+      | Load e1 e2 en w =>
+          let e1' := se_to_exp (simplify_exp_arith0 c e1) in
+          let e2' := se_to_exp (simplify_exp_arith0 c e2) in
+          SExp (Load e1' e2' en w)
+      | Store e1 e2 e3 en w =>
+          let e1' := se_to_exp (simplify_exp_arith0 c e1) in
+          let e2' := se_to_exp (simplify_exp_arith0 c e2) in
+          let e3' := se_to_exp (simplify_exp_arith0 c e3) in
+          SExp (Store e1' e2' e3' en w)
+      | BinOp bop e1 e2 =>
+          let se1 := simplify_exp_arith0 c e1 in
+          let se2 := simplify_exp_arith0 c e2 in
+          match se1, se2 with
+          | SExp e, SWord n2 w => se_eval_binop true w bop n2 e 0
+          | SWord n1 w, SExp e  => se_eval_binop false w bop n1 e 0
+          | SExpOff e n1 _, SWord n2 w => se_eval_binop true w bop n2 e n1
+          | SWord n1 w, SExpOff e n2 _  => se_eval_binop false w bop n1 e n2
+          | _, _ => SExp (BinOp bop (se_to_exp se1) (se_to_exp se2))
+          end
+      | UnOp uop e1 =>
+          SExp (UnOp uop (se_to_exp (simplify_exp_arith0 c e1)))
+      | Cast op w' e =>
+          let se := simplify_exp_arith0 c e in
+          match typchk_exp e c with
+          | Some (NumT w) =>
+              if w' == w then se
+              else SExp (Cast op w' (se_to_exp se))
+          | _ => SExp (Cast op w' (se_to_exp se))
+          end
+      | Let v e1 e2 =>
+          let e1' := se_to_exp (simplify_exp_arith0 c e1) in
+          match typchk_exp e1' c with
+          | Some t =>
+              let e2' := se_to_exp (simplify_exp_arith0 (c [v := Some t]) e2) in
+              SExp (Let v e1' e2')
+          | None => SExp e
+          end
+      | Unknown _ => SExp e
+      | Ite e1 e2 e3 =>
+          let e1' := se_to_exp (simplify_exp_arith0 c e1) in
+          let e2' := se_to_exp (simplify_exp_arith0 c e2) in
+          let e3' := se_to_exp (simplify_exp_arith0 c e3) in
+          SExp (Ite e1' e2' e3')
+      | Extract n1 n2 e1 =>
+          SExp (Extract n1 n2 (se_to_exp (simplify_exp_arith0 c e1)))
+      | Concat e1 e2 =>
+          let e1' := se_to_exp (simplify_exp_arith0 c e1) in
+          let e2' := se_to_exp (simplify_exp_arith0 c e2) in
+          SExp (Concat e1' e2')
+      end
+  end.
+
+Definition simplify_exp_arith c e := se_to_exp (simplify_exp_arith0 c e).
+
 Fixpoint subst_valid (vd: vdomain) (δ: store_delta) e: bool :=
   match e with
   | Var v =>
@@ -254,10 +421,16 @@ Fixpoint map_option {A B} (f: A -> option B) (l: list A): option (list B) :=
 Definition jump_hint := addr -> store_delta -> exp -> option (list jump_target).
 
 Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
-  (a: addr) (q0: stmt) (q: stmt): trace_state_res :=
+  (a: addr) (q0: stmt) (q: stmt) (c: typctx): trace_state_res :=
   match q with
   | Nop => Some ((δ, None) :: nil, nil)
-  | Move v e => Some ((δ[[v := subst_exp vd δ e]], None) :: nil, nil)
+  | Move v e =>
+      let exp :=
+        match subst_exp vd δ e with
+        | Some e' => Some (simplify_exp_arith c e')
+        | None => None
+        end in
+      Some ((δ[[v := exp]], None) :: nil, nil)
   | Jmp e =>
       match hint a δ e with
       | Some jmps =>
@@ -274,13 +447,13 @@ Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
       end
   | Exn n => Some ((δ, Some (Raise n)) :: nil, nil)
   | Seq q1 q2 =>
-      match simple_trace_stmt0 hint vd δ a q0 q1 with
+      match simple_trace_stmt0 hint vd δ a q0 q1 c with
       | None => None
       | Some (paths1, ev1) =>
           let res := map_option (fun '(δ', x) =>
             match x with
             | None =>
-                match simple_trace_stmt0 hint vd δ' a (Seq q0 q1) q2 with
+                match simple_trace_stmt0 hint vd δ' a (Seq q0 q1) q2 c with
                 | None => None
                 | Some (paths2, _) => Some paths2
                 end
@@ -289,7 +462,7 @@ Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
           let ev' := flat_map (fun '(δ', x) =>
             match x with
             | None =>
-                match simple_trace_stmt0 hint vd δ' a (Seq q0 q1) q2 with
+                match simple_trace_stmt0 hint vd δ' a (Seq q0 q1) q2 c with
                 | None => nil
                 | Some (_, ev2) => ev2
                 end
@@ -301,7 +474,8 @@ Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
           end
       end
   | If _ q1 q2 =>
-      match simple_trace_stmt0 hint vd δ a q0 q1, simple_trace_stmt0 hint vd δ a q0 q2 with
+      match simple_trace_stmt0 hint vd δ a q0 q1 c,
+            simple_trace_stmt0 hint vd δ a q0 q2 c with
       | None, _ | _, None => None
       | Some (paths1, ev1), Some (paths2, ev2) =>
           Some (paths1 ++ paths2, ev1 !++ ev2)
@@ -310,8 +484,8 @@ Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
   end.
 
 Definition simple_trace_stmt (hint: jump_hint) (vd: vdomain) (δ: store_delta)
-  (a: addr) (q: stmt): trace_state_res :=
-  match simple_trace_stmt0 hint vd δ a Nop q with
+  (a: addr) (q: stmt) (c: typctx): trace_state_res :=
+  match simple_trace_stmt0 hint vd δ a Nop q c with
   | Some (next_states, evs) =>
       Some (map (fun '(δ, x) => (trim_delta_state vd δ, x)) next_states, evs)
   | None => None
@@ -373,7 +547,7 @@ Definition correct_trace_prog vd p ts h a0 s0 :=
     (LU': p s1 a1 = Some (sz', q')),
     exists δ, tget_n ts a1 = Some δ /\ has_delta vd h s0 s1 δ).
 
-Definition trace_program_step_at (vd: vdomain) (p: program)
+Definition trace_program_step_at (vd: vdomain) (c: typctx) (p: program)
   (hints: jump_hint) addr (accum: option (trace_states * bool * list ts_evidence)) :=
   match accum with
   | None => None
@@ -388,7 +562,7 @@ Definition trace_program_step_at (vd: vdomain) (p: program)
           match tget_n ts addr with
           | None => Some (ts, changed, old_evs)
           | Some δ_a =>
-              match simple_trace_stmt hints vd δ_a addr q with
+              match simple_trace_stmt hints vd δ_a addr q c with
               | None => None
               | Some (next_states, evs) =>
                   let res := fold_right (process_state vd
@@ -399,32 +573,32 @@ Definition trace_program_step_at (vd: vdomain) (p: program)
       end
   end.
 
-Definition expand_trace_program (vd: vdomain) (p: program)
+Definition expand_trace_program (vd: vdomain) (c: typctx) (p: program)
   (hints: jump_hint) (init_ts: trace_states):
   option (trace_states * bool * list ts_evidence) :=
-  fold_right (trace_program_step_at vd p hints) (Some (init_ts, false, nil))
+  fold_right (trace_program_step_at vd c p hints) (Some (init_ts, false, nil))
     (tkeys_n init_ts).
 
 Definition iterM (n: N) {A} (f: A -> option A) (x: A) :=
   N.iter n (fun x => match x with Some x => f x | None => None end) (Some x).
 
-Definition expand_trace_program_n (n: N) (vd: vdomain)
+Definition expand_trace_program_n (n: N) (vd: vdomain) (c: typctx)
   (hints: jump_hint) (p: program) (init_ts: trace_states):
   option (trace_states * bool * list ts_evidence) :=
   N.iter n (fun x =>
     match x with
-    | Some (ts, true, _) => expand_trace_program vd p hints ts
+    | Some (ts, true, _) => expand_trace_program vd c p hints ts
     | Some (ts, false, ev) => Some (ts, false, ev)
     | None => None
     end) (Some (init_ts, true, nil)).
 
-Definition compute_trace_program_n n vd hints p ts :=
-  match expand_trace_program_n n vd hints p ts with
+Definition compute_trace_program_n n vd c hints p ts :=
+  match expand_trace_program_n n vd c hints p ts with
   | Some (ts, _, _) => ts
   | None => ts
   end.
 
-Definition check_trace_states (vd: vdomain) (hints: jump_hint)
+Definition check_trace_states (vd: vdomain) (c: typctx) (hints: jump_hint)
   (p: program) (ts: trace_states) (a0: addr): option (list ts_evidence) :=
   match p null_state a0 with
   | None => None
@@ -437,7 +611,7 @@ Definition check_trace_states (vd: vdomain) (hints: jump_hint)
               | None => true
               | Some e => iseqb e (Var v)
               end) δ
-          then match expand_trace_program vd p hints ts with
+          then match expand_trace_program vd c p hints ts with
                | None => None
                | Some (_, true, _) => None
                | Some (_, false, ev) => Some ev
@@ -468,9 +642,9 @@ Ltac concretize_delta HD v :=
   end.
 
 Parameter checked_trace_program_steady_correct:
-  forall vd p hints ts h a0 s0 evs
+  forall vd c p hints ts h a0 s0 evs
   (NWC: forall sa sb a, p sa a = p sb a)
-  (CHK: check_trace_states vd hints p ts a0 = Some evs )
+  (CHK: check_trace_states vd c hints p ts a0 = Some evs)
   (SAT: sat_evidences evs p h a0 s0),
   correct_trace_prog vd p ts h a0 s0.
 
@@ -642,17 +816,6 @@ Proof.
     simpl in *. rewrite VD in VD'. discriminate.
 Qed.
 
-Lemma models_assign: forall c h s v e u t (MDL: models c s)
-  (TE: hastyp_exp c e t) (EE: eval_exp h s e u),
-  models (c [v := Some t]) (s [v := u]).
-Proof.
-  unfold models. intros. destruct (v0 == v).
-  - subst. rewrite update_updated. rewrite update_updated in CV. inversion CV.
-    subst. eapply preservation_eval_exp; eassumption.
-  - rewrite update_frame by assumption. rewrite update_frame in CV by
-    assumption. apply MDL in CV. assumption.
-Qed.
-
 Lemma has_delta_assign_None: forall vd h s s' δ v u (HD: has_delta vd h s s' δ),
   has_delta vd h s (s' [v := u]) (δ [[v := None]]).
 Proof.
@@ -794,6 +957,373 @@ Local Ltac exp_destruction_correct :=
       end
   end.
 
+Lemma null_models: forall c, exists s, models c s.
+Proof.
+  intros. exists (fun v =>
+    match c v with
+    | Some (NumT w) => VaN 0 w
+    | Some (MemT w) => VaM (fun _ => 0) w
+    | None => VaN 0 1
+    end).
+  intros v t LU. rewrite LU.
+  destruct t.
+  - constructor. destruct w; reflexivity.
+  - constructor. intro a. reflexivity.
+Qed.
+
+Lemma simplify_exp_eval_sound: forall h s e n w
+  (SIMP: simplify_exp_eval e = Some (n, w)),
+  eval_exp h s e (VaN n w).
+Proof.
+  induction e; intros; try discriminate; simpl in SIMP.
+  - (* Word *) inversion SIMP. constructor.
+  - (* binop *) destruct simplify_exp_eval as [ [n1' w1]|] eqn: SIMP1; try discriminate.
+    destruct (simplify_exp_eval e2) as [ [n2' w2]|] eqn: SIMP2; try discriminate.
+    destruct (w1 == w2); try discriminate. subst.
+    destruct eval_binop as [n' w'|] eqn: EB; inversion SIMP. subst. rewrite <- EB.
+    repeat constructor. einstantiate trivial IHe1 as IHe1.
+    einstantiate trivial IHe2 as IHe2.
+  - (* Unop *) destruct simplify_exp_eval as [ [n1' w1']|] eqn: SIMP1; try discriminate.
+    destruct eval_unop as [n' w'|] eqn: EB; try discriminate. inversion SIMP.
+    subst. rewrite <- EB. constructor. einstantiate trivial IHe as IHe.
+  - (* Cast *) destruct simplify_exp_eval as [ [n1' w1']|] eqn: SIMP1; try discriminate.
+    inversion SIMP. subst. constructor. einstantiate trivial IHe as IHe.
+  - (* Ite *) destruct simplify_exp_eval as [ [n1' w1']|] eqn: SIMP1; try discriminate.
+    einstantiate trivial EIte. einstantiate trivial IHe1.
+    destruct n1'; [einstantiate trivial IHe3|einstantiate trivial IHe2].
+  - (* Extract *) destruct simplify_exp_eval as [ [n' w']|] eqn: SIMP1; try discriminate.
+    inversion SIMP. subst. econstructor. einstantiate trivial IHe as IHe.
+  - (* Concat *) destruct simplify_exp_eval as [ [n1' w1']|] eqn: SIMP1; try discriminate.
+    destruct (simplify_exp_eval e2) as [ [n2' w2']|] eqn: SIMP2; try discriminate.
+    inversion SIMP. subst. constructor. einstantiate trivial IHe1.
+    einstantiate trivial IHe2.
+Qed.
+
+Lemma eval_binop_num_correct: forall bop w n1 n2,
+  VaN (eval_binop_num bop w n1 n2) (widthof_binop bop w) = eval_binop bop w n1 n2.
+Proof. unfold eval_binop_num. intros. destruct bop; reflexivity. Qed.
+
+Lemma eval_binop_num_bounded: forall bop w n1 n2 (LT1: n1 < 2 ^ w)
+  (LT2: n2 < 2 ^ w), eval_binop_num bop w n1 n2 < 2 ^ (widthof_binop bop w).
+Proof.
+  intros. einversion typesafe_binop; try constructor. exact LT1. exact LT2.
+  rewrite <- eval_binop_num_correct in H1. inversion H1. subst. eassumption.
+Qed.
+
+Lemma hastyp_SExp: forall c e t,
+  hastyp_exp c e t <-> hastyp_se c (SExp e) t.
+Proof. intros. split; intros TE; [constructor|inversion TE]; assumption. Qed.
+
+Lemma preservation_se_exp: forall se c t,
+  hastyp_se c se t <-> hastyp_exp c (se_to_exp se) t.
+Proof.
+  intros. destruct se; simpl.
+  - split; intro TE; inversion TE; constructor; assumption.
+  - rewrite hastyp_SExp. apply iff_refl.
+  - split; [intro TSE|intro TE].
+    + inversion TSE. subst. unsimpl (widthof_binop OP_PLUS w).
+      repeat constructor; assumption.
+    + inversion TE. inversion T2. subst. constructor; assumption.
+Qed.
+
+Lemma eval_binop_plus_0_r: forall w n, n < 2 ^ w ->
+  VaN n w = eval_binop OP_PLUS w n 0.
+Proof. intros. simpl. rewrite N.add_0_r, N.mod_small; trivial2. Qed.
+
+Lemma se_eval_binop_type_sound: forall flipped op w n1 c e n2 t1 t2
+  (TE: hastyp_exp c (se_to_exp (se_eval_binop flipped w op n1 e n2)) t2)
+  (TSE: hastyp_se c (se_eval_binop flipped w op n1 e n2) t1), t1 = t2.
+Proof.
+  intros. destruct flipped.
+  - destruct op; inversion TSE; inversion TE; subst;
+    try solve [inversion TE0; inversion T2; inversion T3; subst; reflexivity].
+    + (* Plus *) inversion T2. subst. reflexivity.
+    + (* Minus *) inversion T2. subst. reflexivity.
+  - destruct op; inversion TSE; inversion TE; subst;
+    try solve [inversion TE0; inversion T0; inversion T1; subst; reflexivity].
+    inversion T2. subst. reflexivity.
+Qed.
+
+Lemma preservation_se_eval_binop: forall flipped op w n1 c e n2 t
+  (TSE1: hastyp_se c (SWord n1 w) t) (TSE2: hastyp_se c (SExpOff e n2 w) t),
+  hastyp_se c (se_eval_binop flipped w op n1 e n2) (NumT (widthof_binop op w)).
+Proof.
+  intros. inversion TSE1. inversion TSE2. subst. destruct flipped.
+  - destruct op; repeat constructor; try apply preservation_se_exp;
+    try solve [destruct w; trivial2|trivial2];
+    apply N.mod_lt; destruct w; discriminate.
+  - destruct op; repeat constructor; try apply preservation_se_exp;
+    try solve [destruct w; trivial2|trivial2];
+    apply N.mod_lt; destruct w; discriminate.
+Qed.
+
+Lemma mod_2pow_lt: forall n w, n mod 2 ^ w < 2 ^ w.
+Proof. intros. apply N.mod_lt. destruct w; discriminate. Qed.
+
+Lemma mod_mod2: forall a n, (a mod n) mod n = a mod n.
+Proof. intros. destruct n, a; try reflexivity. apply N.mod_mod. discriminate. Qed.
+
+Lemma se_eval_binop_sound: forall (flipped: bool) h s w op n1 c e n2 v t
+  (MDL: models c s) (TSE1: hastyp_se c (SWord n1 w) t)
+  (TSE2: hastyp_se c (SExpOff e n2 w) t),
+  (if flipped then
+    eval_exp h s (BinOp op (se_to_exp (SExpOff e n2 w))
+      (se_to_exp (SWord n1 w))) v
+  else
+    eval_exp h s (BinOp op (se_to_exp (SWord n1 w))
+      (se_to_exp (SExpOff e n2 w))) v) <->
+  eval_exp h s (se_to_exp (se_eval_binop flipped w op n1 e n2)) v.
+Proof.
+  intros. inversion TSE2. inversion TSE1. subst.
+  einstantiate trivial (preservation_se_eval_binop flipped op) as TSE_binop.
+  destruct flipped.
+  - split; intro EE.
+    + destruct op; try assumption; inversion EE; inversion E1; inversion E2;
+      inversion E3; subst; clear EE E1 E2 H17;
+      (assert (2 ^ w0 <> 0); [destruct w0; discriminate|]); simpl.
+      * (* Plus *) rewrite N.add_mod_idemp_l, <- N.add_assoc,
+          <- (N.add_mod_idemp_r n4) by assumption.
+        unsimpl (eval_binop OP_PLUS _ _ _). repeat constructor. assumption.
+      * (* Sub *) simpl. apply N.lt_le_incl in LT0.
+        rewrite mod_sub_extract, mod_mod2, N.add_mod_idemp_l, <- N.add_assoc,
+          <- N.add_mod_idemp_r, N.add_sub_assoc; trivial2.
+        unsimpl (eval_binop OP_PLUS _ _ _). repeat constructor. assumption.
+    + simpl. destruct op; inversion EE; subst; try (constructor; assumption).
+      * (* Plus *) assert (2 ^ w0 <> 0). destruct w0; discriminate.
+        inversion E2. subst. simpl. rewrite N.add_mod_idemp_r,
+          N.add_assoc, <- N.add_mod_idemp_l by assumption.
+        unsimpl (eval_binop OP_PLUS w0 _ _). repeat constructor.
+        unsimpl (eval_binop OP_PLUS w0 _ _). repeat constructor. assumption.
+      * (* Minus *) assert (2 ^ w0 <> 0). destruct w0; discriminate.
+        inversion E2. subst. simpl. apply N.lt_le_incl in LT0.
+        rewrite N.add_mod_idemp_r, <- N.add_sub_assoc, N.add_assoc,
+          <- N.add_mod_idemp_l, <- (mod_mod2 (n0 + n2)),
+          <- mod_sub_extract by trivial2.
+        unsimpl (eval_binop OP_MINUS _ _ _). repeat constructor.
+        unsimpl (eval_binop OP_PLUS _ _ _). repeat constructor. assumption.
+  - split; intro EE.
+    + destruct op; try assumption. inversion EE. inversion E1. inversion E2.
+      inversion E3. subst. clear EE E1 E2 E3 H17. simpl.
+      assert (2 ^ w0 <> 0). destruct w0; discriminate.
+      rewrite N.add_mod_idemp_r, (N.add_comm n0), <- N.add_assoc,
+        <- (N.add_mod_idemp_r n4) by assumption.
+      unsimpl (eval_binop OP_PLUS _ _ _). repeat constructor. assumption.
+    + destruct op; try assumption. inversion EE. subst.
+      assert (2 ^ w0 <> 0). destruct w0; discriminate.
+      inversion E2. subst. simpl. rewrite N.add_mod_idemp_r, N.add_assoc,
+        (N.add_comm _ n1), <- N.add_mod_idemp_r by assumption.
+      unsimpl (eval_binop OP_PLUS w0 _ _). repeat constructor.
+      unsimpl (eval_binop OP_PLUS w0 _ _). repeat constructor. assumption.
+Qed.
+
+Lemma preservation_simplify_exp_eval: forall c e t n w
+  (EVAL: simplify_exp_eval e = Some (n, w)) (TE: hastyp_exp c e t),
+  hastyp_se c (SWord n w) t.
+Proof.
+  intros. einversion null_models as [s MDL].
+  einstantiate trivial (simplify_exp_eval_sound htotal) as EE.
+  einversion trivial @preservation_eval_exp. inversion H1. subst.
+  constructor. assumption.
+Qed.
+
+Lemma preservation_simplify_exp_arith0: forall e c t
+  (TE: hastyp_exp c e t), hastyp_se c (simplify_exp_arith0 c e) t.
+Proof.
+  induction e; intros; simpl; inversion TE; subst;
+  match type of TE with
+  | hastyp_exp ?c ?e _ =>
+      try (try unsimpl (simplify_exp_eval e);
+      destruct (simplify_exp_eval _) as [ [? ?]|] eqn: EVAL;
+      [einstantiate trivial (preservation_simplify_exp_eval c e)|])
+  end.
+  - (* Var *) apply hastyp_SExp. assumption.
+  - (* Word *) constructor. assumption.
+  - (* Load *) rewrite <- hastyp_SExp. econstructor; apply preservation_se_exp.
+    einstantiate trivial IHe1. einstantiate trivial IHe2.
+  - (* Store *) rewrite <- hastyp_SExp. econstructor; apply preservation_se_exp.
+    einstantiate trivial IHe1. einstantiate trivial IHe2. einstantiate trivial IHe3.
+  - (* Binop *) assert (0 < 2 ^ w). destruct w; reflexivity.
+    einstantiate trivial IHe1 as IHe1. einstantiate trivial IHe2 as IHe2.
+    destruct simplify_exp_arith0 eqn: SE1, (simplify_exp_arith0 c e2) eqn: SE2;
+    inversion IHe1; inversion IHe2; subst;
+    repeat match goal with
+           | H: NumT _ = NumT _ |- _ => inversion H; subst; clear H
+           end;
+    try solve
+      [ eapply preservation_se_eval_binop; econstructor; trivial2
+      | repeat econstructor; trivial2
+      | repeat econstructor; apply preservation_se_exp;
+          repeat econstructor; trivial2
+      ].
+  - (* Unop *) repeat econstructor. apply preservation_se_exp. einstantiate trivial IHe.
+  - (* Cast *) einstantiate trivial IHe. destruct typchk_exp as [ [|]|] eqn: TCHK;
+    try (repeat econstructor; try apply preservation_se_exp; trivial2).
+    destruct (w == w1);
+      try (repeat econstructor; try apply preservation_se_exp; trivial2).
+    subst. einstantiate trivial typchk_exp_sound as SOUND. einstantiate trivial IHe.
+  - (* Let *) destruct typchk_exp eqn: CHK; [|constructor; assumption].
+    apply hastyp_SExp. einstantiate trivial typchk_exp_sound as SOUND.
+    apply preservation_se_exp in SOUND. einstantiate trivial IHe1 as IHe1.
+    einstantiate trivial IHe2 as IHe2. einstantiate hastyp_se_deterministic.
+    exact IHe1. exact SOUND. subst. econstructor; apply preservation_se_exp;
+    trivial2.
+  - (* Unknown *) constructor. assumption.
+  - (* Ite *) constructor. econstructor; apply preservation_se_exp.
+    einstantiate trivial IHe1. einstantiate trivial IHe2. einstantiate trivial IHe3.
+  - (* Extract *) constructor. econstructor. apply preservation_se_exp.
+    einstantiate trivial IHe. assumption.
+  - (* Concat *) constructor. econstructor; apply preservation_se_exp.
+    einstantiate trivial IHe1. einstantiate trivial IHe2.
+Qed.
+
+Lemma simplify_exp_arith0_eval_type_sound: forall e c t1 t2 n w
+  (EVAL: simplify_exp_eval e = Some (n, w))
+  (TE: hastyp_exp c e t1) (TSE: hastyp_se c (SWord n w) t2),
+  t1 = t2.
+Proof.
+  intros. einversion null_models as [s MDL].
+  einstantiate trivial (simplify_exp_eval_sound htotal) as EE.
+  einversion trivial @preservation_eval_exp. inversion H1. subst.
+  inversion TSE. reflexivity.
+Qed.
+
+Lemma simplify_exp_arith0_type_sound: forall e c t1 t2
+  (TE: hastyp_exp c e t1) (TSE: hastyp_se c (simplify_exp_arith0 c e) t2),
+  t1 = t2.
+Proof.
+  intros. apply preservation_simplify_exp_arith0 in TE.
+  einstantiate hastyp_se_deterministic. exact TE. exact TSE. assumption.
+Qed.
+
+
+Lemma simplify_exp_arith_sound_if_eval: forall h e s c v' v
+  (EVAL: simplify_exp_eval e = Some v')
+  (NU: forall_exps_in_exp not_unknown e),
+  eval_exp h s e v <-> eval_exp h s (simplify_exp_arith c e) v.
+Proof.
+  intros. destruct v' as [n w]. einstantiate trivial simplify_exp_eval_sound as EE.
+  split; intros EE2.
+  - specialize (eval_exp_deterministic NU EE EE2) as EQ. subst.
+    destruct e; unfold simplify_exp_arith, simplify_exp_arith0;
+    rewrite EVAL; econstructor.
+  - destruct e; unfold simplify_exp_arith, simplify_exp_arith0 in EE2;
+    rewrite EVAL in EE2; inversion EE2; assumption.
+Qed.
+
+Lemma cast_same_bitwidth_preserves: forall c w n,
+  n < 2 ^ w -> cast c w w n = n.
+Proof.
+  intros. destruct c; simpl.
+  - (* LOW *) apply N.mod_small. assumption.
+  - (* HIGH *) rewrite N.sub_diag. reflexivity.
+  - (* SIGNED *) unfold scast. rewrite ofZ_toZ. apply N.mod_small. assumption.
+  - (* UNSIGNED *) reflexivity.
+Qed.
+
+Local Ltac sexp_arith_sound_triv :=
+  let EE := fresh "EE" in
+  split; intros EE; inversion EE; subst; econstructor;
+  match goal with
+  | IH: forall c, _ |- _ => eapply IH; try eassumption
+  end.
+
+Lemma eval_binop_inj: forall {h s op e1 e1' e2 e2' v'}
+  (E1: forall v1, eval_exp h s e1 v1 <-> eval_exp h s e1' v1)
+  (E2: forall v2, eval_exp h s e2 v2 <-> eval_exp h s e2' v2),
+  eval_exp h s (BinOp op e1 e2) v' <-> eval_exp h s (BinOp op e1' e2') v'.
+Proof.
+  split; intros EE; inversion EE; subst; econstructor;
+  try apply E1; try apply E2; eassumption.
+Qed.
+
+Lemma eval_se_offset_0: forall h c s e v2 w
+  (MDL: models c s) (TE: hastyp_exp c e (NumT w)),
+  eval_exp h s (se_to_exp (SExp e)) v2 <-> eval_exp h s (se_to_exp (SExpOff e 0 w)) v2.
+Proof.
+  intros. simpl. split; intros EE.
+  - einversion trivial @preservation_eval_exp. inversion H2. subst.
+    erewrite <- (N.mod_small n), <- (N.add_0_r n) by eassumption.
+    unsimpl (eval_binop OP_PLUS _ _ _). repeat econstructor. eassumption.
+  - einversion EE. einversion E2. einversion trivial @preservation_eval_exp.
+    inversion H2. inversion H1. subst. simpl. rewrite N.add_0_r, N.mod_small;
+    assumption.
+Qed.
+
+Theorem simplify_exp_arith_sound: forall h e c s t v
+  (MDL: models c s) (TE: hastyp_exp c e t) (NU: forall_exps_in_exp not_unknown e),
+  eval_exp h s e v <-> eval_exp h s (simplify_exp_arith c e) v.
+Proof.
+  unfold simplify_exp_arith.
+  induction e; intros; simpl; inversion TE; simpl in NU; decompose record NU; subst;
+  (* First account for cases if we can simplify by fully evaluating the
+   * expression *)
+  match type of TE with
+  | hastyp_exp ?c ?e _ =>
+      try unsimpl (simplify_exp_eval e);
+      try (destruct (simplify_exp_eval _) as [ [? ?]|] eqn: EVAL;
+      [ try discriminate;
+        einstantiate trivial simplify_exp_arith_sound_if_eval as EVAL_sound;
+        unfold simplify_exp_arith in *; simpl in *; rewrite EVAL in *; trivial2 |])
+  end;
+  (* Solve trivial cases that directly follow from IH *)
+  try solve [sexp_arith_sound_triv].
+  - (* BinOp *) apply preservation_simplify_exp_arith0 in T1 as TSE1.
+    apply preservation_simplify_exp_arith0 in T2 as TSE2.
+    destruct simplify_exp_arith0 eqn: SE1,
+    (simplify_exp_arith0 c e2) eqn: SE2;
+    try solve
+      [ rewrite <- SE1, <- SE2 in *; simpl; sexp_arith_sound_triv ];
+    (* Solve cases that uses eval_binop *)
+    inversion TSE1; inversion TSE2; subst;
+    einstantiate trivial se_eval_binop_sound as SOUND;
+    match goal with
+    | _: hastyp_se _ (SExp _) _ |- hastyp_se c (SExpOff _ _ _) _ =>
+        econstructor; [eassumption|apply Nlt_0_pow2]
+    | |- eval_exp _ _ _ _ <-> eval_exp _ _ _ _ =>
+        eapply iff_trans; [|eapply SOUND]
+    end; eapply eval_binop_inj; intros;
+    lazymatch goal with
+    | SE: simplify_exp_arith0 _ ?e = SWord _ _ |-
+      eval_exp _ _ _ _ <-> eval_exp _ _ (se_to_exp (SWord _ _)) _ =>
+        rewrite <- SE
+    | SE: simplify_exp_arith0 _ ?e = SExp _ |-
+        eval_exp _ _ _ _ <-> eval_exp _ _ (se_to_exp (SExpOff _ _ _)) _ =>
+        rewrite <- eval_se_offset_0, <- SE by eassumption
+    | SE: simplify_exp_arith0 _ ?e = SExpOff _ _ _ |-
+        eval_exp _ _ _ _ <-> eval_exp _ _ (se_to_exp (SExpOff _ _ _)) _ =>
+        rewrite <- SE
+    end; einstantiate trivial IHe1; einstantiate trivial IHe2.
+    Unshelve.
+    all: match goal with
+         | c: typctx |- typctx => exact c
+         | v: value |- value => exact v
+         | _ => idtac
+         end.
+  - (* Cast *) destruct typchk_exp eqn: CHK; [|sexp_arith_sound_triv].
+    destruct t; [|sexp_arith_sound_triv].
+    destruct (w == w1); [|sexp_arith_sound_triv]. subst.
+    apply typchk_exp_sound in CHK. einstantiate hastyp_exp_unique as EQ.
+    apply hub_refl. exact CHK. exact T1. inversion EQ. subst.
+    split; intros EE.
+    + inversion EE; subst. clear EE. einversion trivial @preservation_eval_exp.
+      inversion H1. inversion H2. subst. einstantiate trivial IHe as IHe.
+      apply IHe. rewrite cast_same_bitwidth_preserves; assumption.
+    + einstantiate trivial IHe as IHe. apply IHe in EE.
+      einversion trivial @preservation_eval_exp. inversion H2. subst.
+      einstantiate trivial ECast as EE2.
+      erewrite cast_same_bitwidth_preserves in EE2; eassumption.
+  - (* Let *) destruct typchk_exp eqn: CHK; [|apply iff_refl].
+    apply typchk_exp_sound in CHK. apply preservation_se_exp in CHK.
+    einstantiate trivial (simplify_exp_arith0_type_sound e1). subst.
+    simpl. sexp_arith_sound_triv. eapply models_assign; trivial2.
+    eapply models_assign; trivial2. einstantiate trivial IHe1 as IHe1.
+    apply IHe1. eassumption.
+  - (* Unknown *) inversion NU.
+  - (* Ite *) split; intros EE; inversion EE; subst; econstructor;
+    try eapply IHe1; try eassumption; destruct n1; try eapply IHe2;
+    try eapply IHe3; try eassumption.
+Qed.
+
 Theorem subst_exp_correct: forall vd s0 h e e' s δ v v'
   (HD: has_delta vd h s0 s δ) (SE: subst_exp vd δ e = Some e') (EE: eval_exp h s e v)
   (EE': eval_exp h s0 e' v'), v = v'.
@@ -872,10 +1402,10 @@ Proof.
 Qed.
 
 Theorem simple_trace_stmt0_correct: forall hints vd q q0 paths h p n
-  a0 s0 s0' a1 s1 x2 s2 δ evs
+  a0 s0 s0' a1 s1 x2 s2 δ evs c
   (HD: has_delta vd h s0 s1 δ) (XS: exec_stmt h s1 q s2 x2)
   (LU2: forall a2, x2 = Some (Exit a2) -> exists insn, p s2 a2 = Some insn)
-  (STS: simple_trace_stmt0 hints vd δ a1 q0 q = Some (paths, evs))
+  (STS: simple_trace_stmt0 hints vd δ a1 q0 q c = Some (paths, evs))
   (XP: exec_prog h p a0 s0 n s0' (Exit a1))
   (XS0: exec_stmt h s0' q0 s1 None)
   (EV: sat_evidences evs p h a0 s0),
@@ -885,7 +1415,8 @@ Proof.
   - (* Nop *) constructor. split; trivial2.
   - (* Move *) constructor. split. reflexivity. destruct subst_exp eqn: SE1;
     [|apply has_delta_assign_None; assumption]. apply has_delta_assign_Some.
-    assumption. intros. eapply subst_exp_correct; eassumption.
+    assumption. intros. apply <- simplify_exp_arith_sound in EE.
+    eapply subst_exp_correct; eassumption. admit. admit. admit.
   - (* Jmp *) destruct hints as [jmps|].
     + (* Use hint *) inversion H3. subst. clear H3. inversion EV. inversion H1.
       subst. einstantiate trivial EJT as EJT. apply Exists_exists in EJT.
@@ -911,7 +1442,8 @@ Proof.
     inversion H4. subst. clear XS H4. apply Forall_app in EV. destruct EV as [EV EV1].
     einstantiate trivial IHq1. apply Exists_exists in H.
     destruct H as [ [δ1 x1] [InP1 [X HD1] ] ]; subst. apply Exists_exists.
-    destruct (simple_trace_stmt0 hints vd δ1 a1 (Seq q0 q1) q2) as [ [paths2 ev2]|] eqn:SQ2.
+    destruct (simple_trace_stmt0 hints vd δ1 a1 (Seq q0 q1) q2 c)
+        as [ [paths2 ev2]|] eqn:SQ2.
     + (* Expand out IHq2. We have to show that ev2 is part of ev' *)
       einstantiate trivial IHq2 as IHq2. econstructor; eassumption.
       unfold sat_evidences. rewrite Forall_forall in *. intros ev' InEV2.
@@ -925,7 +1457,7 @@ Proof.
       reflexivity. simpl. split; trivial2.
     + erewrite map_option_fails in Map; try solve [discriminate|eassumption].
       simpl. rewrite SQ2. reflexivity.
-  - (* If/else *) destruct c;
+  - (* If/else *) destruct c0;
     (destruct (simple_trace_stmt0) as [ [paths1 ev1]|] eqn: ST1; [|discriminate]);
     (destruct (simple_trace_stmt0 _ _ _ _ _ q2) as [ [paths2 ev2]|] eqn: ST2;
         [|discriminate]); inversion H5; subst; apply Forall_app in EV;
@@ -934,16 +1466,16 @@ Proof.
       apply incl_appr. apply incl_refl. assumption.
     + (* q1 *) einstantiate trivial IHq1. eapply incl_Exists.
       apply incl_appl. apply incl_refl. assumption.
-Qed.
+Admitted.
 
 Theorem simple_trace_stmt_correct: forall hints vd q paths h p n
-  a0 s0 a1 s1 x2 s2 δ evs (XP: exec_prog h p a0 s0 n s1 (Exit a1))
+  a0 s0 a1 s1 x2 s2 c δ evs (XP: exec_prog h p a0 s0 n s1 (Exit a1))
   (HD: has_delta vd h s0 s1 δ) (XS: exec_stmt h s1 q s2 x2)
   (LU2: match x2 with
         | Some (Exit a2) => exists insn, p s2 a2 = Some insn
         | _ => True
         end)
-  (STS: simple_trace_stmt hints vd δ a1 q = Some (paths, evs))
+  (STS: simple_trace_stmt hints vd δ a1 q c = Some (paths, evs))
   (EV: sat_evidences evs p h a0 s0),
   Exists (fun '(δ', x') => x' = x2 /\ has_delta vd h s0 s2 δ') paths.
 Proof.
@@ -959,8 +1491,8 @@ Qed.
 
 (*MARK*)
 
-Theorem destruct_trace_program_step_at_prin: forall {P vd p hints addr accum res}
-  (TPSA: trace_program_step_at vd p hints addr accum = Some res)
+Theorem destruct_trace_program_step_at_prin: forall {P vd c p hints addr accum res}
+  (TPSA: trace_program_step_at vd c p hints addr accum = Some res)
   (PInvalidLU: forall (TPSA': accum = Some res)
     (LU: p null_state addr = None), P addr)
   (PInvalidTS: forall ts changed evs sz q
@@ -973,7 +1505,7 @@ Theorem destruct_trace_program_step_at_prin: forall {P vd p hints addr accum res
       (ts, changed) next_states, evs' !++ evs))
     (LU: p null_state addr = Some (sz, q))
     (TS: ts Ⓝ[ addr ] = Some δ_a)
-    (STS: simple_trace_stmt hints vd δ_a addr q = Some (next_states, evs')),
+    (STS: simple_trace_stmt hints vd δ_a addr q c = Some (next_states, evs')),
     P addr), P addr.
 Proof.
   intros. unfold trace_program_step_at in TPSA.
@@ -987,7 +1519,7 @@ Qed.
 
 Ltac destruct_trace_program_step_at TPSA :=
   lazymatch type of TPSA with
-  | trace_program_step_at _ _ _ ?addr _ = Some _ =>
+  | trace_program_step_at _ _ _ _ ?addr _ = Some _ =>
       move TPSA before addr; revert dependent addr;
       intros addr TPSA; pattern addr;
       apply (destruct_trace_program_step_at_prin TPSA);
@@ -1018,8 +1550,8 @@ Proof.
       inversion H. subst. apply IHl in H_fr. inversion H_fr. reflexivity.
 Qed.
 
-Lemma trace_program_step_at_nochange: forall vars p hints a2 inp ts ev
-   (TPSA: trace_program_step_at vars p hints a2 inp = Some (ts, false, ev)),
+Lemma trace_program_step_at_nochange: forall vars p hints a2 inp ts ev c
+   (TPSA: trace_program_step_at vars c p hints a2 inp = Some (ts, false, ev)),
    exists ev0, inp = Some (ts, false, ev0) /\ incl ev0 ev.
 Proof.
   intros. destruct_trace_program_step_at TPSA.
@@ -1031,8 +1563,8 @@ Proof.
 Qed.
 
 Theorem fold_trace_program_step_at_nochange:
-  forall reachable_addrs vars p hints inp ts ev
-  (FR: fold_right (trace_program_step_at vars p hints) inp
+  forall reachable_addrs vars p hints inp ts ev c
+  (FR: fold_right (trace_program_step_at vars c p hints) inp
     reachable_addrs = Some (ts, false, ev)),
   exists ev0, inp = Some (ts, false, ev0) /\ incl ev0 ev.
 Proof.
@@ -1045,8 +1577,8 @@ Proof.
     eapply incl_tran; eassumption.
 Qed.
 
-Theorem trace_program_step_at_none_acc: forall l vars p hints,
-  fold_right (trace_program_step_at vars p hints) None l = None.
+Theorem trace_program_step_at_none_acc: forall l vars p c hints,
+  fold_right (trace_program_step_at vars c p hints) None l = None.
 Proof.
   induction l.
     intros. reflexivity.
@@ -1083,10 +1615,10 @@ Proof.
 Qed.
 
 Theorem expand_trace_program_steady_correct:
-  forall vd p hints ts h a0 s0 evs
+  forall vd c p hints ts h a0 s0 evs
   (INIT: exists δ, tget_n ts a0 = Some δ /\ has_delta vd h s0 s0 δ)
   (NWC: forall sa sb a, p sa a = p sb a)
-  (TPO: expand_trace_program vd p hints ts = Some (ts, false, evs))
+  (TPO: expand_trace_program vd c p hints ts = Some (ts, false, evs))
   (SAT: sat_evidences evs p h a0 s0),
   correct_trace_prog vd p ts h a0 s0.
 Proof.
@@ -1173,9 +1705,9 @@ Proof.
 Qed.
 
 Theorem checked_trace_program_steady_correct:
-  forall vd p hints ts h a0 s0 evs
+  forall vd c p hints ts h a0 s0 evs
   (NWC: forall sa sb a, p sa a = p sb a)
-  (CHK: check_trace_states vd hints p ts a0 = Some evs )
+  (CHK: check_trace_states vd c hints p ts a0 = Some evs )
   (SAT: sat_evidences evs p h a0 s0),
   correct_trace_prog vd p ts h a0 s0.
 Proof.
@@ -1235,7 +1767,7 @@ Qed.
 Definition simp_prog_jump_hints: jump_hint := fun a δ e => None.
 
 Definition simp_prog_trace := expand_trace_program_n 10 (fun _ => true)
-  simp_prog_jump_hints simp_prog (tupdate_n treeN_nil 0 nil).
+  x86typctx simp_prog_jump_hints simp_prog (tupdate_n treeN_nil 0 nil).
 
 Goal True.
 Proof.
@@ -1271,11 +1803,11 @@ Definition domain1 var :=
   end.
 
 Definition my_prog_ts := Eval compute in
-  compute_trace_program_n 100 domain1 my_prog_jump_hints my_prog
+  compute_trace_program_n 100 domain1 x86typctx my_prog_jump_hints my_prog
     (init_ts 0).
 
 Definition my_prog_trace :=
-  expand_trace_program domain1 my_prog my_prog_jump_hints my_prog_ts.
+  expand_trace_program domain1 x86typctx my_prog my_prog_jump_hints my_prog_ts.
 
 Goal forall esp0 s0 (MDL0: models x86typctx s0)
   (SV2: s0 R_ESP = Ⓓ esp0),
@@ -1325,6 +1857,9 @@ Qed.
 Theorem my_prog_nwc: forall s1 s2 a, my_prog s1 a = my_prog s2 a.
 Proof. reflexivity. Qed.
 
+Lemma mod_2pow_lt: forall n w, n mod 2 ^ w < 2 ^ w.
+Proof. intros. apply N.mod_lt. destruct w; discriminate. Qed.
+
 Theorem my_prog_hints_correct: forall esp0 mem s0 ts evs
   (ESP0: s0 R_ESP = Ⓓ esp0) (MEM0: s0 V_MEM32 = Ⓜmem)
   (RET: my_prog s0 (mem Ⓓ[ esp0 ]) = None)
@@ -1351,26 +1886,11 @@ Proof.
   subst. repeat unsimpl (getmem LittleE 4 _ _). repeat unsimpl (setmem LittleE 4 _ _).
   specialize (x86_regsize MDL0 ESP0) as ESP_BND. cbv beta match delta [x86typctx] in ESP_BND.
 
-  assert (4 <= 2 ^ 32 + esp0). apply le_le_add_r. discriminate.
-  assert (EQ_ESP0: 2 ^ 32 + esp0 - 4 ⊕ 4 = esp0).
-  rewrite <- N.add_sub_swap, <- N.add_sub_assoc, N.sub_diag, N.add_0_r,
-    N.add_mod, N.mod_same, N.add_0_l, N.mod_mod, N.mod_small by trivial2.
-  reflexivity. rewrite EQ_ESP0.
-
-  (* Figure the modular arithmetic stuff *)
-  assert (2 ^ 32 - 4 ⊕ esp0 < 2 ^ 32). apply N.mod_lt. discriminate.
-  assert (2 ^ 32 - 4 + esp0 ⊕ 4294967292 < 2 ^ 32). apply N.mod_lt. discriminate.
-  assert (4 <= absdist esp0 (2 ^ 32 + esp0 ⊖ 4)).
-    erewrite N.add_sub_swap, <- modabsdist_eq_absdist, modr_modabsdist by trivial2.
-    einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
+  repeat rewrite getmem_frame_absdist; trivial2;
+  erewrite N.add_comm, <- modabsdist_eq_absdist, modr_modabsdist; trivial2;
+  try apply mod_2pow_lt;
+  einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
         rewrite MAD; discriminate.
-  assert (4 <= absdist esp0 (2 ^ 32 + esp0 - 4 ⊕ 4294967292)).
-    erewrite N.add_sub_swap, <- modabsdist_eq_absdist, modr_modabsdist by trivial2.
-    rewrite <- N.add_assoc, (N.add_comm esp0), N.add_assoc.
-    einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
-        rewrite MAD; discriminate.
-
-  repeat rewrite getmem_frame_absdist; trivial2.
 Qed.
 
 Definition trace_invs (post: exit -> store -> Prop) :=
@@ -1424,7 +1944,8 @@ Proof.
   concretize_delta HD R_ESP. reflexivity.
   apply nextinv_ret. psimpl.
 
-  specialize (x86_regsize MDL0 ESP0) as ESP_BND. cbv beta match delta [x86typctx] in ESP_BND.
+  specialize (x86_regsize MDL0 ESP0) as ESP_BND.
+  cbv beta match delta [x86typctx] in ESP_BND.
 
   assert (2 ^ 32 - 4 ⊕ esp0 < 2 ^ 32). apply N.mod_lt. discriminate.
   assert (2 ^ 32 - 4 + esp0 ⊕ 4294967292 < 2 ^ 32). apply N.mod_lt. discriminate.
