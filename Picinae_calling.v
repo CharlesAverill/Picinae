@@ -722,6 +722,18 @@ Parameter checked_trace_program_steady_correct:
   (WTP: welltyped_prog c p) (SAT: sat_evidences evs p h a0 s0),
   correct_trace_prog vd p ts h a0 s0.
 
+(* Alternative main theorem, but has more premises than previous theorem.
+   Though, this one is faster *)
+Parameter expand_trace_program_steady_correct:
+  forall vd c0 p hints ts h a0 s0 evs
+  (INIT: exists δ, tget_n ts a0 = Some δ /\ has_delta vd h s0 s0 δ)
+  (NWC: forall sa sb a, p sa a = p sb a) (WTP: welltyped_prog c0 p)
+  (TPO: expand_trace_program vd c0 p hints ts = TPSA_Running (ts, false, evs))
+  (SAT: sat_evidences evs p h a0 s0)
+  (TS_MDL: forall a δ, tget_n ts a = Some δ -> delta_models vd c0 c0 δ)
+  (TS_NU: forall a δ, tget_n ts a = Some δ -> delta_nounk vd δ)
+  (MDL: models c0 s0), correct_trace_prog vd p ts h a0 s0.
+
 Ltac obtain_delta tdecl :=
   lazymatch eval hnf in tdecl with
   | tracing ?p ?vd ?hints ?ts =>
@@ -773,7 +785,7 @@ Ltac concretize_delta HD v :=
 
 End PICINAE_CALLING.
 
-Module PicinaeCalling (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL): PICINAE_CALLING IL TIL.
+Module PicinaeCalling (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) : PICINAE_CALLING IL TIL.
 
 Import IL.
 Import TIL.
@@ -2279,42 +2291,42 @@ Definition my_prog_esp_ret_post (esp0:N) (mem:addr->N) (_:exit) (s:store) :=
 Definition my_prog_esp_ret_invset (esp0: N) (mem: addr -> N) :=
   trace_invs (my_prog_esp_ret_post esp0 mem).
 
-Ltac obtain_delta tdecl :=
-  lazymatch eval hnf in tdecl with
-  | tracing ?p ?vd ?hints ?ts =>
-      lazymatch goal with
-      | XP: exec_prog ?h p ?a0 ?s0 ?n1 ?s1 (Exit ?a1) |- _=>
-          lazymatch eval hnf in (p s1 a1) with
-          | Some (?sz, ?q) =>
-              lazymatch goal with
-              | MDL0: models ?c0 s0 |- _ =>
-                  let TRACE := fresh "TRACE" in
-                  let res := constr:(check_trace_states vd c0 hints p ts a0) in
-                  check_trace_states_errors res;
-                  einstantiate (checked_trace_program_steady_correct vd c0 p hints
-                      ts h a0 s0) as TRACE;
-                      [ (* NWC *) trivial2 | (* MDL *) eapply MDL0
-                      | (* CHK *) compute; reflexivity
-                      | (* WTP *) | (* SAT *) |
-                      specialize (TRACE _ _ _ sz q XP eq_refl) as TRACE;
-                      let δ := fresh "δ" in
-                      let TS := fresh "TS" in
-                      let HD := fresh "HD" in
-                      destruct TRACE as [ δ [TS HD] ];
-                      inversion TS; subst; clear TS
-                  ]
-              | _ =>
-                  let mdl := uconstr:(models ?c0 s0) in
-                  fail "Unable to find" mdl "premise"
-              end
-          | None => fail "Invalid program address at:" a1
-          | _ => fail "Unable to evaluate program instruction at:" a1
-              " (Maybe you did not give a concrete address value)"
-          end
-      | _ => fail "Unable to find exec_prog premise"
-      end
-  | _ => fail "Expected argument of form (tracing ?p ?vd ?hints ?ts ?a0)"
-  end.
+Definition my_prog_chk := Eval vm_compute in
+  check_trace_states domain1 x86typctx my_prog_jump_hints my_prog my_prog_ts 0.
+
+Theorem my_prog_hints_correct: forall esp0 mem s0 evs
+  (ESP0: s0 R_ESP = Ⓓ esp0) (MEM0: s0 V_MEM32 = Ⓜmem)
+  (RET: my_prog s0 (mem Ⓓ[ esp0 ]) = None)
+  (WM: s0 A_WRITE = Ⓜ (fun _ => 1))
+  (RM: s0 A_READ = Ⓜ (fun _ => 1))
+  (MDL0: models x86typctx s0) (MPT: my_prog_chk = CHK_ok evs),
+  sat_evidences evs my_prog fh 0 s0.
+Proof.
+  intros. inversion MPT. subst. clear MPT.
+  repeat constructor. eassert (MDL': models _ s1).
+    eapply preservation_exec_stmt; [| |exact XS0].
+    eapply preservation_exec_prog; [|exact my_prog_welltyped|]; eassumption.
+    eapply typchk_stmt_sound; reflexivity. simpl in MDL'.
+
+  step_stmt XS. destruct XS as [ [? ?] ? ]. inversion H0. subst.
+
+  concretize_delta HD (V_TEMP 6).
+
+  (* Prove memory accesses *)
+  repeat split; try reflexivity; unfold mem_readable, mem_writable; psimpl;
+  eexists; (split; [apply WM + apply RM|intro Contra; discriminate]).
+
+  psimpl in Hsv1. rewrite Hsv1 in Hsv. remember (2 ^ 32). inversion Hsv.
+  subst. repeat unsimpl (getmem LittleE 4 _ _).
+  repeat unsimpl (setmem LittleE 4 _ _). clear Hsv H H1 H0 HD.
+  specialize (x86_regsize MDL0 ESP0) as ESP_BND. cbv beta match delta [x86typctx] in ESP_BND.
+
+  repeat rewrite getmem_frame_absdist; trivial2;
+  erewrite N.add_comm, <- modabsdist_eq_absdist, modr_modabsdist; trivial2;
+  try apply mod_2pow_lt;
+  einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
+        rewrite MAD; discriminate.
+Qed.
 
 Theorem my_prog_stack_preservation:
   forall s0 esp0 mem n s' x' (ESP0: s0 R_ESP = Ⓓ esp0)
@@ -2336,58 +2348,87 @@ Proof.
 
   all: x86_step; try exact I.
 
-  obtain_delta my_prog_trace. apply my_prog_welltyped. admit.
+  obtain_delta my_prog_trace. apply my_prog_welltyped.
+  eapply my_prog_hints_correct; trivial2.
 
   concretize_delta HD V_MEM32. repeat split; try reflexivity;
   unfold mem_readable, mem_writable; psimpl; eexists;
   (split; [apply WM + apply RM|intro Contra; discriminate]).
   concretize_delta HD R_ESP. reflexivity.
 
-  conc
-
-
-  einstantiate (checked_trace_program_steady_correct domain1 my_prog
-    my_prog_jump_hints my_prog_ts fh 0) as TRACE.
-    exact my_prog_nwc.
-    reflexivity.
-    eapply my_prog_hints_correct; try eassumption. reflexivity.
-
-  unfold correct_trace_prog in TRACE.
-
-  einversion trivial (TRACE 34) as [δ [EQ HD] ]. inversion EQ. subst. clear EQ.
-
-  rewrite Hsv2 in Hsv. remember (2 ^ 32). inversion Hsv. subst.
-  repeat unsimpl (setmem LittleE 4 _ _).
-
-  apply nextinv_ret. psimpl.
+  clear HD. remember (2 ^ 32). rewrite Hsv3 in Hsv0. rewrite Hsv2 in Hsv.
+  inversion Hsv. inversion Hsv0. subst. repeat unsimpl (getmem LittleE 4 _ _).
+  repeat unsimpl (setmem LittleE 4 _ _). clear Hsv0 Hsv.
 
   specialize (x86_regsize MDL0 ESP0) as ESP_BND.
-  cbv beta match delta [x86typctx] in ESP_BND.
+  unfold x86typctx in ESP_BND.
+  apply nextinv_ret. erewrite my_prog_nwc.
 
-Theorem my_prog_hints_correct: forall esp0 mem s0 ts evs
+  rewrite N.add_0_r, (N.mod_small esp0) by assumption.
+  repeat rewrite getmem_frame_absdist; trivial2;
+  erewrite N.add_comm, <- modabsdist_eq_absdist, modr_modabsdist; trivial2;
+  try apply mod_2pow_lt;
+  einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
+        rewrite MAD; discriminate.
+
+  psimpl. split.
+  + eexists. split. reflexivity.
+    repeat rewrite getmem_frame_absdist; trivial2;
+    erewrite N.add_comm, <- modabsdist_eq_absdist, modr_modabsdist; trivial2;
+    try apply mod_2pow_lt;
+    einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
+          rewrite MAD; discriminate.
+  + psimpl. reflexivity.
+Qed.
+
+Definition strchr_jump_hints: jump_hint := fun a δ e =>
+  match a with
+  | 401 => Some (jump_symbolic :: nil)
+  | _ => None
+  end.
+
+Definition strchr_prog_ts := Eval vm_compute in
+  compute_trace_program_n 20 domain1 x86typctx strchr_jump_hints strchr_i386
+    (init_ts 0).
+
+Definition strchr_prog_trace :=
+  tracing strchr_i386 domain1 strchr_jump_hints strchr_prog_ts.
+
+Definition strchr_chk := Eval vm_compute in
+  check_trace_states domain1 x86typctx strchr_jump_hints strchr_i386
+  strchr_prog_ts 0.
+
+Theorem strchr_welltyped: welltyped_prog x86typctx strchr_i386.
+Proof.
+  Picinae_typecheck.
+Qed.
+
+
+Theorem strchr_hints_correct: forall esp0 mem s0 evs
   (ESP0: s0 R_ESP = Ⓓ esp0) (MEM0: s0 V_MEM32 = Ⓜmem)
-  (RET: my_prog s0 (mem Ⓓ[ esp0 ]) = None)
+  (RET: strchr_i386 s0 (mem Ⓓ[ esp0 ]) = None)
   (WM: s0 A_WRITE = Ⓜ (fun _ => 1))
   (RM: s0 A_READ = Ⓜ (fun _ => 1))
-  (MDL0: models x86typctx s0) (MPT: my_prog_trace = Some (ts, false, evs)),
-  sat_evidences evs my_prog fh 0 s0.
+  (MDL0: models x86typctx s0) (MPT: strchr_chk = CHK_ok evs),
+  sat_evidences evs strchr_i386 fh 0 s0.
 Proof.
-  intros. vm_compute in MPT. inversion MPT. subst. clear MPT.
+  intros. inversion MPT. subst. clear MPT.
   repeat constructor. eassert (MDL': models _ s1).
     eapply preservation_exec_stmt; [| |exact XS0].
-    eapply preservation_exec_prog; [|exact my_prog_welltyped|]; eassumption.
+    eapply preservation_exec_prog; [|exact strchr_welltyped|]; eassumption.
     eapply typchk_stmt_sound; reflexivity. simpl in MDL'.
 
   step_stmt XS. destruct XS as [ [? ?] ? ]. inversion H0. subst.
 
-  concretize_delta HD (V_TEMP 6).
+  concretize_delta HD (V_TEMP 117).
 
   (* Prove memory accesses *)
   repeat split; try reflexivity; unfold mem_readable, mem_writable; psimpl;
   eexists; (split; [apply WM + apply RM|intro Contra; discriminate]).
 
   psimpl in Hsv1. rewrite Hsv1 in Hsv. remember (2 ^ 32). inversion Hsv.
-  subst. repeat unsimpl (getmem LittleE 4 _ _). repeat unsimpl (setmem LittleE 4 _ _).
+  subst. repeat unsimpl (getmem LittleE 4 _ _).
+  repeat unsimpl (setmem LittleE 4 _ _). clear Hsv H H1 H0 HD.
   specialize (x86_regsize MDL0 ESP0) as ESP_BND. cbv beta match delta [x86typctx] in ESP_BND.
 
   repeat rewrite getmem_frame_absdist; trivial2;
@@ -2397,417 +2438,56 @@ Proof.
         rewrite MAD; discriminate.
 Qed.
 
-  assert (2 ^ 32 - 4 ⊕ esp0 < 2 ^ 32). apply N.mod_lt. discriminate.
-  assert (2 ^ 32 - 4 + esp0 ⊕ 4294967292 < 2 ^ 32). apply N.mod_lt. discriminate.
-  assert (4 <= absdist esp0 (2 ^ 32 + esp0 ⊖ 4)).
-    erewrite N.add_sub_swap, <- modabsdist_eq_absdist, modr_modabsdist by trivial2.
-    einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
-        rewrite MAD; discriminate.
-  assert (4 <= absdist esp0 (2 ^ 32 + esp0 - 4 ⊕ 4294967292)).
-    erewrite N.add_sub_swap, <- modabsdist_eq_absdist, modr_modabsdist by trivial2.
-    rewrite <- N.add_assoc, (N.add_comm esp0), N.add_assoc.
-    einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
-        rewrite MAD; discriminate.
-  repeat split; try reflexivity; unfold mem_readable, mem_writable; psimpl;
-  eexists; (split; [reflexivity|intro Contra; discriminate]).
-
-  reflexivity.
-  apply program
-
-
-Theorem strchr_welltyped: welltyped_prog x86typctx strchr_i386.
-Proof.
-  Picinae_typecheck.
-Qed.
-
-Definition strchr_reachables_hint (ret: addr) (a: addr): option set :=
-  match a with
-  | 401 => Some {{ret}}
-  | _ => None
-  end.
-
-Definition strchr_reachables ret := expand_reachables_fast_n
-  (strchr_reachables_hint ret) strchr_i386 (0 :: nil, 0 :: nil) 100.
-
-Definition strchr_trace_hint (p: program) (a: addr) (ts: trace_states):
-  option (trace_states * bool) :=
-  match a with
-  | 401 => Some (ts, false)
-  | _ => None
-  end.
-
-Require Extraction.
-Extraction Language OCaml.
-
-Definition strchr_trace reachables := expand_trace_program_n 100 (fun _ => true)
-  strchr_trace_hint strchr_i386 reachables (tupdate_n treeN_nil 0 nil).
-
-Definition strchr_trace2 reachables := expand_trace_program_n 100 domain1
-  strchr_trace_hint strchr_i386 reachables (tupdate_n treeN_nil 0 nil).
-
-Extract Inductive bool => "bool" [ "true" "false" ].
-Extract Inductive option => "option" [ "Some" "None" ].
-Extract Inductive prod => "( * )"  [ "(,)" ].
-Extract Inductive list => "list" [ "[]" "(::)" ].
-Require Import ExtrOcamlIntConv.
-Extraction "calling" strchr_trace strchr_trace2 strchr_reachables list_to_set
-  n_of_int int_of_n.
-
-Goal True.
-Proof.
-  idtac "DOING STRCHR_TRACE".
-
-  pose (x := strchr_reachables 0).
-  compute in x.
-  match eval compute in x with
-  | Some (?v, nil) => clear x; pose (reachables := v)
-  end.
-  pose (x := strchr_trace2 (list_to_set reachables)).
-  time (vm_compute in x). unbox_res x.
-
-  pose (y := tget_n x 401); compute in y.
-
-  pose (x := match strchr_trace reachables with
-             | Some (ts, b) =>
-                 match ts 401 with
-                 | Some δ => Some (compactify_delta δ, b)
-                 | None => None
-                 end
-             | None => None
-             end).
-  time (vm_compute in x).
-  idtac "DONE COMPUTATION".
-  match eval red in x with ?v => idtac v end.
-
-  match eval red in x with
-  | Some (?v, true) => idtac "STILL MORE"; clear x; pose (x := v)
-  | Some (?v, false) => clear x; pose (x := v)
-  end.
-Abort.
-
-  pose (vv2 := x V_MEM32). compute in vv2.
-
-
-
-
-
-Compute
-  match strchr_trace 1 with
-  | Some (ts, b) => Some (ts 401, b)
-  | None => None
-  end.
-
-
-Theorem strchr_preserves_ret:
-  forall s esp0 mem n s' x' (ESP0: s R_ESP = Ⓓ esp0)
-         (MDL0: models x86typctx s)
-         (MEM: forall s, s V_MEM32 = Ⓜ mem)
-         (RET0: strchr_i386 s (mem Ⓓ[esp0]) = None)
-         (XP0: exec_prog fh strchr_i386 0 s n s' x'),
-         trueif_inv (strchr_ret_invset esp0 mem strchr_i386 x' s').
+Theorem strchr_stack_preservation:
+  forall s0 esp0 mem n s' x' (ESP0: s0 R_ESP = Ⓓ esp0)
+  (MEM: s0 V_MEM32 = Ⓜ mem) (MDL0: models x86typctx s0)
+  (RET0: my_prog s0 (mem Ⓓ[esp0]) = None)
+  (WM: s0 A_WRITE = Ⓜ (fun _ => 1))
+  (RM: s0 A_READ = Ⓜ (fun _ => 1))
+  (XP0: exec_prog fh strchr_i386 0 s0 n s' x'),
+  trueif_inv (my_prog_esp_ret_invset esp0 mem strchr_i386 x' s').
 Proof.
   intros.
 
+  revert RET0. revert MDL0.
 
-  (* Trivial base case *)
-  assert (Trivial:
-    trueif_inv (strchr_ret_invset esp0 mem strchr_i386 (Exit 0) s)).
-    exists mem. split. apply MEM. reflexivity.
-  clear ESP0.
-
-  (* TODO: this 0 should actually be some symbolic value (optimally)! *)
-  compute_reaches 100 (strchr_reachables_hint 0) reachable XP0.
-
-  (* Prove that the hint that we give is valid. *)
-  unfold reachables_hint_correct. intros.
-  destruct a_new as [|a]; repeat first [ discriminate | destruct a as [a|a|]].
-  compute in LU. inversion LU. subst. clear dependent reachable.
-  inversion Hints. subst. einstantiate trivial preservation_exec_prog as MDL.
-  exact strchr_welltyped. step_stmt XS. destruct XS as [[ST' EX'] [? _]]. subst.
-  inversion EX. subst. unsimpl (getmem LittleE 4 _ _). clear EX.
-  (* Here we show that the return value is preserved!! *) admit.
-
-  revert RET0 MDL0.
-  induction on invariant XP0; intros.
-
-  apply Trivial.
-
-  (* MDL0 *)
+  induction on invariant XP0; intros. exact I.
   eapply preservation_exec_prog. exact MDL0. exact strchr_welltyped. exact XP.
 
   destruct_inv 32 PRE.
 
-Abort.
+  all: x86_step; try exact I.
 
+  obtain_delta strchr_prog_trace. apply my_prog_welltyped.
+  eapply my_prog_hints_correct; trivial2.
 
-(*
-N.iter
-Definition trace_program (ct: N) (c: typctx) (vars: list var) (p: program)
-  (entry: addr) (fn: store_delta -> stmt -> trace_state_res_with_prop):
-  option trace_states_prop :=
-  let tsp := (update ⊥ entry (init_store_delta c), [entry], ⊥)
-  match ct with
-  | 0 => Some tsp
-  | n
- *)
+  concretize_delta HD V_MEM32. repeat split; try reflexivity;
+  unfold mem_readable, mem_writable; psimpl; eexists;
+  (split; [apply WM + apply RM|intro Contra; discriminate]).
+  concretize_delta HD R_ESP. reflexivity.
 
-Definition reachable_thru h p a0 s0 a1 a' := exists s' n0 n1 s1,
-  exec_prog h p a0 s0 n0 s1 (Exit a1) /\ exec_prog h p a1 s1 n1 s' (Exit a').
+  clear HD. remember (2 ^ 32). rewrite Hsv3 in Hsv0. rewrite Hsv2 in Hsv.
+  inversion Hsv. inversion Hsv0. subst. repeat unsimpl (getmem LittleE 4 _ _).
+  repeat unsimpl (setmem LittleE 4 _ _). clear Hsv0 Hsv.
 
-Definition has_delta' (s s': store) (δ: store_delta) (P: var -> option Prop) :=
-  forall v val (ESE: eval_simple_exp s (δ v) val) (PP: true_hyp P v), s' v = val.
+  specialize (x86_regsize MDL0 ESP0) as ESP_BND.
+  unfold x86typctx in ESP_BND.
+  apply nextinv_ret. erewrite my_prog_nwc.
 
-(* For all address in the delta store map, either we are reachable through the
- * working set, or the delta_stores are in fact correct for all possible
- * executions *)
-Definition state_correctness h p a0 s0 fδ working conds := forall a1,
-  (Exists (fun w => reachable_thru h p a0 s0 w a1) working) \/
-  (forall s1 n1 δ (XP1: exec_prog h p a0 s0 n1 s1 (Exit a1))
-    (LUdelta: fδ a1 = Some δ), has_delta' s0 s1 δ conds).
+  rewrite N.add_0_r, (N.mod_small esp0) by assumption.
+  repeat rewrite getmem_frame_absdist; trivial2;
+  erewrite N.add_comm, <- modabsdist_eq_absdist, modr_modabsdist; trivial2;
+  try apply mod_2pow_lt;
+  einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
+        rewrite MAD; discriminate.
 
-Theorem has_delta'_weaken: forall s s' δ P1 P2
-  (IMP: forall v, true_hyp P2 v -> true_hyp P1 v)
-  (HD': has_delta' s s' δ P1), has_delta' s s' δ P2.
-Proof.
-  unfold has_delta'. intros. apply IMP in PP. eapply HD'; try eassumption.
+  psimpl. split.
+  + eexists. split. reflexivity.
+    repeat rewrite getmem_frame_absdist; trivial2;
+    erewrite N.add_comm, <- modabsdist_eq_absdist, modr_modabsdist; trivial2;
+    try apply mod_2pow_lt;
+    einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
+          rewrite MAD; discriminate.
+  + psimpl. reflexivity.
 Qed.
 
-Lemma reachable_exec_prog: forall h p a0 s0 a1 a'
-  (Reach: reachable_thru h p a0 s0 a1 a'),
-  exists s' n0 n1, exec_prog h p a0 s0 (n0 + n1) s' (Exit a').
-Proof.
-  unfold reachable_thru. intros. destruct Reach as [s' [n0 [n1 [s1 [XP1 XP2]]]]].
-  repeat eexists. eapply exec_prog_concat; eassumption.
-Qed.
-
-(* Temporarily admit this, so that we can destruct on whether a *)
-Axiom middle_excluded: forall P, P \/ not P.
-
-Theorem trace_program_step_preserved_stmt: forall q sz h ts_fn vars p a0 s0 a
-  next_states st' fδ fδ' δ working working' conds P'
-  (SS: incl st' next_states)
-  (NWC: forall s1 s2, p s1 = p s2)
-  (* TODO: something for domain_complete *)
-  (LUa: fδ a = Some δ) (TSQ: ts_fn δ q = Some (next_states, P'))
-  (PA: p null_state a = Some (sz, q))
-  (TP: trace_program_step vars p (fδ, (a :: working), conds) ts_fn =
-    Some (fδ', working', h_conj conds P'))
-  (IHfδ: state_correctness h p a0 s0 fδ (a :: working) conds),
-  state_correctness h p a0 s0 fδ' working' (h_conj conds P').
-Proof.
-  induction next_states; intros; simpl in TP; rewrite PA, LUa, TSQ in TP;
-  remember (fold_left _ _ _) as res eqn: TP2; destruct res as [fδ1' new_working];
-  inversion TP; subst; clear TP; simpl in TP2.
-  - (* nil *) inversion TP2. subst. unfold state_correctness in *. intros.
-    pose (reachable2 := fun a2 a1 => reachable_thru h p a0 s0 a1 a2).
-    destruct (IHfδ a1) as [Working_a1|HD'_a1].
-    (* Exists in a::working *)
-    + rewrite app_nil_r. inversion Working_a1 as [? ? Reach_a1|];
-      [|left; assumption]. subst. destruct Reach_a1 as
-        [s_a1 [n_0a [n_a_a1 [s_a [XP_0a XP_a_a1]]]]].
-      (* Contradiction between XP_a_a1 and PA and TSQ *)
-      admit.
-    + (* Already correct *) right. intros. eapply has_delta'_weaken;
-      try eapply HD'_a1; try eassumption. intros. unfold h_conj, true_hyp in *.
-      destruct (conds v), (P' v); try destruct H; solve [reflexivity|assumption].
-  - 
-
-    simpl in TP2.
-Admitted.
- *)
-
-Theorem trace_program_step_preserved: forall vars ts_fn p a0 s0 fδ fδ' h
-  working working' conds conds' (NWC: forall s1 s2, p s1 = p s2)
-  (* TODO: something for domain_complete *)
-  (TP: trace_program_step vars p (fδ, working, conds) ts_fn =
-    Some (fδ', working', conds'))
-  (IHfδ: state_correctness h p a0 s0 fδ working conds),
-  state_correctness h p a0 s0 fδ' working' conds'.
-Proof.
-  intros. destruct working.
-  - (* nil *) unfold state_correctness in *. intros. inversion TP. subst.
-    destruct (IHfδ a1); (left + right); assumption.
-  - (* a :: working' *) simpl in TP.
-    destruct (p _ a) eqn: PA; [|inversion TP]. (* Is it a valid program address *)
-    destruct p0 as [sz q]. destruct (fδ a) eqn: LUa; [|inversion TP].
-    destruct (ts_fn _ _) eqn: TSQ; [|inversion TP]. destruct p0 as [next_states P'].
-    remember (fold_left _ _ _) as res eqn: TP2. destruct res as [fδ1' new_working].
-    inversion TP. subst. clear TP. eapply trace_program_step_preserved_stmt;
-    try eassumption. simpl. rewrite PA, LUa, TSQ.
-    rewrite <- TP2. reflexivity.
-Qed.
-
-
-Definition trace_program_def vars p tsp :=
-  trace_program vars p tsp (fun δ q =>
-    match simple_trace_stmt δ q with
-    | Some x => Some (x, ⊥)
-    | None => None
-    end).
-
-Definition get_reg v (ts: trace_state_res) :=
-  match ts with
-  | None => nil
-  | Some (paths, _) => map (fun '(δ, _) => δ v) paths
-  end.
-Require Import strchr_i386.
-Require Import fstat_i386.
-
-Definition simple_trace_stmt_at (p: program) (a: addr):
-  option (N * list simple_exp) :=
-  match p null_state a with
-  | Some (sz, q) => Some (sz, get_reg R_ESP (simple_trace_stmt (fun v => VarOff v 0 32) q))
-  | None => None
-  end.
-
-Fixpoint addrs (x:nat) :=
-  match x with
-  | O => 0 :: nil
-  | S x' => N.of_nat x :: addrs x'
-  end.
-
-Compute rev (filter
-  (fun x => match snd x with
-            | Some _ => true
-            | None => false
-            end)
-  (map (fun a => (a, simple_trace_stmt_at fstat_i386 a)) (addrs 450))).
-
-(*
-Lemma simplify_rep_stmt_red: forall q e h s s' x
-  (EX: exec_stmt h s (Rep e q) s' x)
-  (IHq : ∀ (s s' : store) (x : option exit) (EX : exec_stmt h s q s' x),
-        exec_stack_oper h s q s' x EX (simplify_stmt q)),
-  match simplify_stmt q with
-  | SNop => x = None /\ s sp_reg = s' sp_reg
-  | SOther => s sp_reg = s' sp_reg
-  | _ => True
-  end.
-Proof.
-  intros.
-  inversion EX. subst. clear EX E w e. rewrite N2Nat.inj_iter in *.
-  remember (N.to_nat n) as nn. clear n Heqnn. move nn at top. move IHq at top.
-  repeat match goal with [H: _ |- _] => revert H end.
-  induction nn; intros.
-  - (* n = 0 *) inversion XS. subst. clear XS. destruct simplify_stmt;
-    constructor; reflexivity.
-  - (* n > 0 *) inversion XS; subst; clear XS.
-
-    (* Terminated loop at this step *)
-    specialize (IHq _ _ _ XS0).
-    destruct simplify_stmt; try solve [constructor]; inversion IHq.
-    discriminate. assumption.
-
-    (* Continue onwards in the loop *)
-    specialize (IHq _ _ _ XS1).
-    specialize (IHnn _ _ _ XS0).
-    destruct simplify_stmt; try solve [constructor]; inversion IHq.
-
-    destruct IHnn. split. assumption.
-    all: eapply eq_trans; eassumption.
-Qed.
-*)
-Ltac fallthrus :=
-  (left + right); reflexivity.
-
-Theorem simplify_stmt_red_sp: forall q h s s' s1' x c0 c1 c' Xcond
-  (XS: exec_stmt h s q s' x) (ESO: exec_stack_oper s s1' Xcond (simplify_stmt q))
-  (STyp: hastyp_stmt c0 c1 q c'), Xcond x /\ s' sp_reg = s1' sp_reg.
-Proof.
-  induction q; intros; simpl in *;
-  inversion STyp; subst; clear STyp.
-  - (* Nop *) inversion XS. inversion ESO. subst. clear XS ESO. split.
-    fallthrus. reflexivity.
-  - (* Move *) inversion XS. split. inversion ESO; fallthrus. subst.
-    destruct (sp_reg == v);
-    [|constructor; [|reflexivity]; rewrite update_frame; [reflexivity|assumption]].
-    (* Destruct on expression. For the error cases, anything happens, so ignore *)
-    inversion E; subst; clear E; try constructor;
-    inversion TE; subst; clear TE;
-    inversion E1; subst; clear E1; try constructor;
-    inversion T1; subst; clear T1;
-    inversion E2; subst; clear E2; try constructor;
-    inversion T2; subst; clear T2;
-    destruct (sp_reg == v); try constructor;
-    destruct bop; try constructor;
-    subst; simpl in *.
-
-    (* sp + n *)
-    econstructor; solve [eassumption|reflexivity].
-    (* sp - n *)
-    econstructor; solve [eassumption|reflexivity].
-    (* sp - n *)
-    econstructor. eassumption. reflexivity. rewrite N.add_comm. reflexivity.
-  - (* Jmp *) inversion XS. subst. constructor. reflexivity.
-  - (* Exn *) inversion XS. subst. constructor. reflexivity.
-  - (* Seq *) inversion XS; subst; destruct (simplify_stmt q1) eqn: SE1;
-    destruct (simplify_stmt q2) eqn: SE2; try constructor; inversion XS; subst;
-    try solve
-      [ (* When we execute only the first statement, but it is SNop *)
-        specialize (IHq1 _ _ _ _ _ _ _ XS0 TS1); inversion IHq1;
-        discriminate
-      | (* When we only execute the first statement, and it is SOther *)
-        specialize (IHq1 _ _ _ _ _ _ _ XS0 TS1); inversion IHq1;
-        assumption
-      | (* When we execute both statements, and it is both SNop and SOther *)
-        specialize (IHq1 _ _ _ _ _ _ _ XS1 TS1); inversion IHq1;
-        specialize (IHq2 _ _ _ _ _ _ _ XS0 TS2); inversion IHq2;
-        eapply eq_trans; eassumption
-      | (* When we only execute the first statement, and it is arithmetic *)
-        specialize (IHq1 _ _ _ _ _ _ _ XS0 TS1); inversion IHq1;
-        econstructor; solve [eassumption|reflexivity]
-      | (* When we execute both statements, either is arithmetic *)
-        specialize (IHq1 _ _ _ _ _ _ _ XS1 TS1); inversion IHq1;
-        specialize (IHq2 _ _ _ _ _ _ _ XS0 TS2); inversion IHq2;
-        try first [rewrite <- SP_EQ in *|rewrite SP_EQ in *]; econstructor;
-        solve [eassumption|reflexivity]
-      ].
-  - (* If *) inversion XS. subst. clear E. clear c' TE SS. destruct c;
-    [ specialize (IHq2 _ _ _ _ _ _ _ XS TS2); rename IHq2 into IHq
-    | specialize (IHq1 _ _ _ _ _ _ _ XS TS1); rename IHq1 into IHq];
-    destruct (simplify_stmt q1) eqn: SE1; destruct (simplify_stmt q2) eqn: SE2;
-    inversion IHq; subst; constructor; solve [reflexivity|assumption].
-  - (* Rep *) assert (IHq2: ∀ (s s' : store) (x : option exit)
-      (XS : exec_stmt h s q s' x), exec_stack_oper h s q s' x XS (simplify_stmt q)).
-    intros. eapply IHq; eassumption.
-    specialize (simplify_rep_stmt_semequiv _ _ _ _ _ _ XS IHq2) as Eq.
-
-    destruct (simplify_stmt) eqn: CS; try constructor.
-    destruct Eq. assumption. destruct Eq. assumption.
-    assumption.
-Qed.
-
-Require Import Picinae_i386.
-Require Import strchr_i386.
-Definition null_state: store := fun _ => VaN 0 0.
-Definition simplify_stmt_at (p: program) (a: addr): option (N * stack_oper) :=
-  match p null_state a with
-  | Some (sz, q) => Some (sz, simplify_stmt q)
-  | None => None
-  end.
-
-
-Check filter.
-Require Import fstat_i386.
-Compute rev (filter
-  (fun x => match snd x with
-            | Some (_, SNop) => false
-            | Some (_, SOther) => false
-            | Some _ => true
-            | None => false
-            end)
-  (map (fun a => (a, simplify_stmt_at fstat_i386 a)) (addrs 450))).
-
-
-Fixpoint push_stack_offsets (p: program) (a: addr): option (set addr, ) :=
-  match p null_state a with
-  | Some (sz, q) =>
-      match stmt_reachable q with
-      | Some jmps =>
-          fold_left
-          set_add jmps (a + sz)
-      | None => None
-  | None => None.
-
-Fixpoint get_reachable (p: program) (a: addr) :=
-  get_jumps
