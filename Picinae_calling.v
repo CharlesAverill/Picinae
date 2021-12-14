@@ -1774,7 +1774,7 @@ Proof.
     rewrite <- Forall_app, Forall_forall in IHq12.
     specialize (IHq12 _ InPaths). simpl in *.
     intros. apply IHq12 in H. eapply delta_models_weaken; eassumption.
-Admitted.
+Qed.
 
 Theorem simple_trace_stmt0_correct: forall hints vd q q0 paths h p n
   a0 s0 s0' a1 s1 x2 s2 δ evs c0 c c'
