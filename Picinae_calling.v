@@ -2234,7 +2234,7 @@ Definition simp_prog_jump_hints: jump_hint := fun a δ e => None.
 Definition simp_prog_trace := expand_trace_program_n 10 (fun _ => true)
   x86typctx simp_prog_jump_hints simp_prog (tupdate_n treeN_nil 0 nil).
 
-Require Import test.
+Require Import my_prog.
 Theorem my_prog_welltyped: welltyped_prog x86typctx my_prog.
 Proof.
   Picinae_typecheck.
