@@ -718,8 +718,12 @@ Proof.
     rewrite <- list_equiv_map_iff in EQV_P by prove_injective. assumption.
 Qed.
 
-Theorem is_empty_forallb: forall A (l: list A),
+Lemma is_empty_forallb: forall A (l: list A),
   is_empty l = forallb (fun _ => false) l.
+Proof. intros. destruct l; reflexivity. Qed.
+
+Lemma is_empty_length: forall A (l: list A),
+  is_empty l = (length l =? 0)%nat.
 Proof. intros. destruct l; reflexivity. Qed.
 
 Theorem tempty_p_keys_empty: forall V (t: treeP V) fn,
@@ -743,6 +747,21 @@ Proof.
   - (* ~1 *) rewrite IHk. repeat rewrite andb_false_r. reflexivity.
   - (* ~0 *) rewrite IHk. repeat rewrite andb_false_r. reflexivity.
   - (* H *) reflexivity.
+Qed.
+
+Theorem tempty_n_keys_empty: forall V (t: treeN V),
+  tempty_n t = is_empty (tkeys_n t).
+Proof.
+  intros. destruct t, v0. reflexivity. simpl. rewrite is_empty_length,
+  map_length, <- is_empty_length. apply tempty_p_keys_empty.
+Qed.
+
+Lemma tupdate_n_nonempty: forall V (v: V) k t,
+  is_empty (tkeys_n (t [Ⓝ  k := v])) = false.
+Proof.
+  intros. rewrite <- tempty_n_keys_empty. destruct t, k. reflexivity. simpl.
+  destruct v0; try reflexivity. erewrite tempty_p_keys_empty with (fn:=ident).
+  apply tupdate_p_nonempty.
 Qed.
 
 Theorem tkeys_p_inj: forall V (t1 t2: treeP V) fn
@@ -810,6 +829,7 @@ Bind Scope sets_scope with set.
 Definition set_nil: set := treeN_nil.
 Definition set_elems: set -> list N := tkeys_n.
 Definition set_has: set -> N -> bool := tcontains_n.
+Definition set_empty: set -> bool := tempty_n.
 
 Definition set_add a (s: set): set := s [Ⓝ  a := tt ].
 Arguments set_add: simpl never.
@@ -863,6 +883,19 @@ Proof.
   (* Due to the degeneracy of the values used (units), all values are equal. *)
   unfold tcontains_n. intros. destruct tget_n, (tget_n s2); trivial2.
   destruct u, u0. reflexivity.
+Qed.
+
+Theorem set_add_nonempty: forall (s: set) a,
+  set_empty (a ~:: s) = false.
+Proof.
+  intros. unfold set_empty, set_add. rewrite tempty_n_keys_empty.
+  apply tupdate_n_nonempty.
+Qed.
+
+Theorem set_empty_nil: forall (s: set), s = set_nil <-> set_empty s = true.
+Proof.
+  split. intro Nil. subst. reflexivity. intro Empty. destruct s.
+  destruct v0; try discriminate. destruct tp; trivial2.
 Qed.
 
 Theorem set_add_idempotent: forall (s: set) a

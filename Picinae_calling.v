@@ -101,7 +101,10 @@ Definition store_delta := list (var * option exp).
 
 (* Convert a list of variables and their values to a store function. *)
 Fixpoint delta_updlst s (l: store_delta) : var ⇀ exp :=
-  match l with nil => s | (v,e)::t => update (delta_updlst s t) v e end.
+  match l with
+  | nil => s
+  | (v,e)::t => update (delta_updlst s t) v e
+  end.
 
 (* Remove a variable from a list of variables and their values. *)
 Fixpoint remlst v (l: store_delta) : store_delta :=
@@ -425,7 +428,7 @@ Fixpoint map_option {A B} (f: A -> option B) (l: list A): option (list B) :=
 
 Definition jump_hint := addr -> store_delta -> exp -> option (list jump_target).
 
-Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
+Fixpoint trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
   (a: addr) (q0: stmt) (q: stmt) (c: typctx): trace_state_res :=
   match q with
   | Nop => Some ((δ, None) :: nil, nil)
@@ -452,13 +455,13 @@ Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
       end
   | Exn n => Some ((δ, Some (Raise n)) :: nil, nil)
   | Seq q1 q2 =>
-      match simple_trace_stmt0 hint vd δ a q0 q1 c with
+      match trace_stmt0 hint vd δ a q0 q1 c with
       | None => None
       | Some (paths1, ev1) =>
           let res := map_option (fun '(δ', x) =>
             match x with
             | None =>
-                match simple_trace_stmt0 hint vd δ' a (Seq q0 q1) q2 c with
+                match trace_stmt0 hint vd δ' a (Seq q0 q1) q2 c with
                 | None => None
                 | Some (paths2, _) => Some paths2
                 end
@@ -467,7 +470,7 @@ Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
           let ev' := flat_map (fun '(δ', x) =>
             match x with
             | None =>
-                match simple_trace_stmt0 hint vd δ' a (Seq q0 q1) q2 c with
+                match trace_stmt0 hint vd δ' a (Seq q0 q1) q2 c with
                 | None => nil
                 | Some (_, ev2) => ev2
                 end
@@ -479,8 +482,8 @@ Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
           end
       end
   | If _ q1 q2 =>
-      match simple_trace_stmt0 hint vd δ a q0 q1 c,
-            simple_trace_stmt0 hint vd δ a q0 q2 c with
+      match trace_stmt0 hint vd δ a q0 q1 c,
+            trace_stmt0 hint vd δ a q0 q2 c with
       | None, _ | _, None => None
       | Some (paths1, ev1), Some (paths2, ev2) =>
           Some (paths1 ++ paths2, ev1 !++ ev2)
@@ -488,9 +491,9 @@ Fixpoint simple_trace_stmt0 (hint: jump_hint) (vd: vdomain) (δ: store_delta)
   | Rep _ s => None
   end.
 
-Definition simple_trace_stmt (hint: jump_hint) (vd: vdomain) (δ: store_delta)
+Definition trace_stmt (hint: jump_hint) (vd: vdomain) (δ: store_delta)
   (a: addr) (q: stmt) (c: typctx): trace_state_res :=
-  match simple_trace_stmt0 hint vd δ a Nop q c with
+  match trace_stmt0 hint vd δ a Nop q c with
   | Some (next_states, evs) =>
       Some (map (fun '(δ, x) => (trim_delta_state vd δ, x)) next_states, evs)
   | None => None
@@ -518,7 +521,7 @@ Definition join_states_if_changed (vd: vdomain) (δ1: option store_delta)
 Definition null_state: store := fun _ => VaN 0 0.
 
 Definition process_state (vd: vdomain) (exitof: option exit -> exit)
-  (st: store_delta * option exit) (accum: trace_states * bool) :=
+  (st: store_delta * option exit) (accum: trace_states * set) :=
   let '(ts, changed) := accum in
   let '(δ', x) := st in
   (* If this exited to an address, update state on that address
@@ -531,7 +534,7 @@ Definition process_state (vd: vdomain) (exitof: option exit -> exit)
       (* Check if joining states changed something. If so, we update and mark
        * this as changed *)
       match join_states_if_changed vd (tget_n ts next_addr) δ' with
-      | Some δ_merge => (tupdate_n ts next_addr δ_merge, true)
+      | Some δ_merge => (tupdate_n ts next_addr δ_merge, next_addr ~:: changed)
       | None => (ts, changed)
       end
   | Raise _ => (ts, changed)
@@ -558,7 +561,7 @@ Inductive tpsa_res {A: Type} :=
 Arguments tpsa_res _: clear implicits.
 
 Definition trace_program_step_at (vd: vdomain) (c: typctx) (p: program)
-  (hints: jump_hint) addr (accum: tpsa_res (trace_states * bool * list ts_evidence)) :=
+  (hints: jump_hint) addr (accum: tpsa_res (trace_states * set * list ts_evidence)) :=
   match accum with
   | TPSA_Error _ => accum
   | TPSA_Running (ts, changed, old_evs) =>
@@ -572,7 +575,7 @@ Definition trace_program_step_at (vd: vdomain) (c: typctx) (p: program)
           match tget_n ts addr with
           | None => TPSA_Running (ts, changed, old_evs)
           | Some δ_a =>
-              match simple_trace_stmt hints vd δ_a addr q c with
+              match trace_stmt hints vd δ_a addr q c with
               | None => TPSA_Error addr
               | Some (next_states, evs) =>
                   let res := fold_right (process_state vd
@@ -583,28 +586,55 @@ Definition trace_program_step_at (vd: vdomain) (c: typctx) (p: program)
       end
   end.
 
-Definition expand_trace_program (vd: vdomain) (c: typctx) (p: program)
+Definition trace_program (vd: vdomain) (c: typctx) (p: program)
   (hints: jump_hint) (init_ts: trace_states):
-  tpsa_res (trace_states * bool * list ts_evidence) :=
+  tpsa_res ((trace_states * set) * list ts_evidence) :=
   fold_right (trace_program_step_at vd c p hints)
-    (TPSA_Running (init_ts, false, nil)) (tkeys_n init_ts).
+    (TPSA_Running (init_ts, set_nil, nil)) (tkeys_n init_ts).
+
+Definition trace_program_fast (vd: vdomain) (c: typctx) (p: program)
+  (hints: jump_hint) (init_ts: trace_states) (frontier: set):
+  tpsa_res (trace_states * set) :=
+  match fold_right (trace_program_step_at vd c p hints)
+    (TPSA_Running (init_ts, set_nil, nil)) (set_elems frontier) with
+  | TPSA_Running (res, _) => TPSA_Running res
+  | TPSA_Error e => TPSA_Error e
+  end.
 
 Definition iterM (n: N) {A} (f: A -> option A) (x: A) :=
   N.iter n (fun x => match x with Some x => f x | None => None end) (Some x).
 
-Definition expand_trace_program_n (n: N) (vd: vdomain) (c: typctx)
+Definition trace_program_n (n: N) (vd: vdomain) (c: typctx)
   (hints: jump_hint) (p: program) (init_ts: trace_states):
-  tpsa_res (trace_states * bool * list ts_evidence) :=
+  tpsa_res (trace_states * set * list ts_evidence) :=
   N.iter n (fun x =>
     match x with
-    | TPSA_Running (ts, true, _) => expand_trace_program vd c p hints ts
-    | TPSA_Running (_, false, _) => x
+    | TPSA_Running (ts, changes, _) =>
+        if set_empty changes then x
+        else trace_program vd c p hints ts
     | TPSA_Error _ => x
-    end) (TPSA_Running (init_ts, true, nil)).
+    end) (TPSA_Running (init_ts, 0 ~:: set_nil, nil)).
 
 Definition compute_trace_program_n n vd c hints p ts :=
-  match expand_trace_program_n n vd c hints p ts with
+  match trace_program_n n vd c hints p ts with
   | TPSA_Running (ts, _, _) => ts
+  | TPSA_Error _ => ts
+  end.
+
+Definition trace_program_fast_n (n: N) (vd: vdomain) (c: typctx)
+  (hints: jump_hint) (p: program) (init_ts: trace_states):
+  tpsa_res (trace_states * set) :=
+  N.iter n (fun x =>
+    match x with
+    | TPSA_Running (ts, changes) =>
+        if set_empty changes then x
+        else trace_program_fast vd c p hints ts changes
+    | TPSA_Error _ => x
+    end) (TPSA_Running (init_ts, list_to_set (tkeys_n init_ts))).
+
+Definition compute_trace_program_fast_n n vd c hints p ts :=
+  match trace_program_fast_n n vd c hints p ts with
+  | TPSA_Running (ts, _) => ts
   | TPSA_Error _ => ts
   end.
 
@@ -669,10 +699,11 @@ Definition check_trace_states (vd: vdomain) (c: typctx) (hints: jump_hint)
                       | None => true
                       | Some e => iseqb e (Var v)
                       end) δ
-                  then match expand_trace_program vd c p hints ts with
+                  then match trace_program vd c p hints ts with
                        | TPSA_Error addr => CHK_tpsa_failed addr
-                       | TPSA_Running (_, true, _) => CHK_not_fixpoint
-                       | TPSA_Running (_, false, ev) => CHK_ok ev
+                       | TPSA_Running (_, changes, ev) =>
+                           if set_empty changes then CHK_ok ev
+                           else CHK_not_fixpoint
                        end
                   else CHK_invalid_init_ts
               end
@@ -724,11 +755,11 @@ Parameter checked_trace_program_steady_correct:
 
 (* Alternative main theorem, but has more premises than previous theorem.
    Though, this one is faster *)
-Parameter expand_trace_program_steady_correct:
+Parameter trace_program_steady_correct:
   forall vd c0 p hints ts h a0 s0 evs
   (INIT: exists δ, tget_n ts a0 = Some δ /\ has_delta vd h s0 s0 δ)
   (NWC: forall sa sb a, p sa a = p sb a) (WTP: welltyped_prog c0 p)
-  (TPO: expand_trace_program vd c0 p hints ts = TPSA_Running (ts, false, evs))
+  (TPO: trace_program vd c0 p hints ts = TPSA_Running (ts, set_nil, evs))
   (SAT: sat_evidences evs p h a0 s0)
   (TS_MDL: forall a δ, tget_n ts a = Some δ -> delta_models vd c0 c0 δ)
   (TS_NU: forall a δ, tget_n ts a = Some δ -> delta_nounk vd δ)
@@ -1668,8 +1699,8 @@ Proof.
   eassumption. eapply Forall_forall; eassumption.
 Qed.
 
-Lemma simple_trace_stmt0_delta_nounk: forall hints vd q q0 c0 δ paths evs a
-  (STS: simple_trace_stmt0 hints vd δ a q0 q c0 = Some (paths, evs))
+Lemma trace_stmt0_delta_nounk: forall hints vd q q0 c0 δ paths evs a
+  (STS: trace_stmt0 hints vd δ a q0 q c0 = Some (paths, evs))
   (DNU: delta_nounk vd δ), Forall (fun '(δ', x') => delta_nounk vd δ') paths.
 Proof.
   induction q; intros; apply Forall_forall; intros [δ1 x1] InPaths;
@@ -1691,7 +1722,7 @@ Proof.
       destruct e0; try discriminate.
       inversion H0. subst. inversion InPaths as [EQ|[] ]; inversion EQ; subst.
       assumption.
-  - (* Seq *) destruct (simple_trace_stmt0 _ _ _ _ _ q1 _) as [ [? ?]|] eqn: STS1;
+  - (* Seq *) destruct (trace_stmt0 _ _ _ _ _ q1 _) as [ [? ?]|] eqn: STS1;
     try destruct map_option eqn: MO; try discriminate. inversion H0. subst. clear H0.
     einstantiate trivial IHq1 as IHq1. clear STS. apply in_concat in InPaths.
     destruct InPaths as [paths [InConcat InPaths] ].
@@ -1701,11 +1732,11 @@ Proof.
     rewrite Forall_forall in IHq1. specialize (IHq1 _ InL). destruct x1.
     + (* Exit at s1 *) inversion DEF. subst. inversion InPaths as [EQ|[] ].
       inversion EQ. subst. assumption.
-    + (* Exit at s2 *) clear STS1. destruct simple_trace_stmt0 as [ [? ?]|] eqn: STS2;
+    + (* Exit at s2 *) clear STS1. destruct trace_stmt0 as [ [? ?]|] eqn: STS2;
       try discriminate. inversion DEF. subst. einstantiate trivial IHq2 as IHq2.
       rewrite Forall_forall in IHq2. einstantiate trivial IHq2.
-  - (* If *) destruct (simple_trace_stmt0 _ _ _ _ _ q1 _) as [ [? ?]|] eqn: STS1;
-    try destruct (simple_trace_stmt0 _ _ _ _ _ q2 _) as [ [? ?]|] eqn: STS2;
+  - (* If *) destruct (trace_stmt0 _ _ _ _ _ q1 _) as [ [? ?]|] eqn: STS1;
+    try destruct (trace_stmt0 _ _ _ _ _ q2 _) as [ [? ?]|] eqn: STS2;
         inversion H0. subst. clear H0. einstantiate trivial IHq1 as IHq1.
     einstantiate trivial IHq2 as IHq2. pose proof (IHq12 := conj IHq1 IHq2).
     rewrite <- Forall_app, Forall_forall in IHq12.
@@ -1727,9 +1758,9 @@ Proof.
   eapply DMDL; try apply SS; eassumption.
 Qed.
 
-Lemma preservation_simple_trace_stmt0: forall hints vd q q0 δ a1 paths
+Lemma preservation_trace_stmt0: forall hints vd q q0 δ a1 paths
   evs c0 c c' (DMDL: delta_models vd c0 c δ)
-  (STS: simple_trace_stmt0 hints vd δ a1 q0 q c0 = Some (paths, evs))
+  (STS: trace_stmt0 hints vd δ a1 q0 q c0 = Some (paths, evs))
   (TS: hastyp_stmt c0 c q c'),
   Forall (fun '(δ', x') => x' = None -> delta_models vd c0 c' δ') paths.
 Proof.
@@ -1751,7 +1782,7 @@ Proof.
       inversion InPaths as [|[] ]. inversion H.
   - (* Exn *) eapply delta_models_weaken; eassumption.
   - (* Seq *) rewrite Forall_forall. intros [δ1 x1] InPaths.
-    destruct (simple_trace_stmt0 _ _ _ _ _ q1 _) as [ [? ?]|] eqn: STS1;
+    destruct (trace_stmt0 _ _ _ _ _ q1 _) as [ [? ?]|] eqn: STS1;
     try destruct map_option eqn: MO; try discriminate. inversion H3. subst. clear H3.
     einstantiate trivial IHq1 as IHq1. apply in_concat in InPaths.
     destruct InPaths as [paths [InConcat InPaths] ]. clear STS1.
@@ -1761,14 +1792,14 @@ Proof.
     rewrite Forall_forall in IHq1. specialize (IHq1 _ InL). destruct x1.
     + (* Exit at s1 *) inversion DEF. subst. inversion InPaths as [EQ|[] ].
       inversion EQ.
-    + (* Exit at s2 *) destruct simple_trace_stmt0 as [ [? ?]|] eqn: STS2;
+    + (* Exit at s2 *) destruct trace_stmt0 as [ [? ?]|] eqn: STS2;
       try discriminate. einstantiate trivial IHq1. inversion DEF. subst.
       einstantiate trivial IHq2 as IHq2. rewrite Forall_forall in IHq2.
       einstantiate trivial IHq2. simpl in H0. einstantiate trivial H0.
       eapply delta_models_weaken; eassumption.
   - (* If *) rewrite Forall_forall. intros [δ1 x1] InPaths.
-    destruct (simple_trace_stmt0 _ _ _ _ _ q1 _) as [ [? ?]|] eqn: STS1;
-    try destruct (simple_trace_stmt0 _ _ _ _ _ q2 _) as [ [? ?]|] eqn: STS2;
+    destruct (trace_stmt0 _ _ _ _ _ q1 _) as [ [? ?]|] eqn: STS1;
+    try destruct (trace_stmt0 _ _ _ _ _ q2 _) as [ [? ?]|] eqn: STS2;
         inversion H4. subst. clear H4. einstantiate trivial IHq1 as IHq1.
     einstantiate trivial IHq2 as IHq2. pose proof (IHq12 := conj IHq1 IHq2).
     rewrite <- Forall_app, Forall_forall in IHq12.
@@ -1776,11 +1807,11 @@ Proof.
     intros. apply IHq12 in H. eapply delta_models_weaken; eassumption.
 Qed.
 
-Theorem simple_trace_stmt0_correct: forall hints vd q q0 paths h p n
+Theorem trace_stmt0_correct: forall hints vd q q0 paths h p n
   a0 s0 s0' a1 s1 x2 s2 δ evs c0 c c'
   (HD: has_delta vd h s0 s1 δ) (XS: exec_stmt h s1 q s2 x2)
   (LU2: forall a2, x2 = Some (Exit a2) -> exists insn, p s2 a2 = Some insn)
-  (STS: simple_trace_stmt0 hints vd δ a1 q0 q c0 = Some (paths, evs))
+  (STS: trace_stmt0 hints vd δ a1 q0 q c0 = Some (paths, evs))
   (XP: exec_prog h p a0 s0 n s0' (Exit a1))
   (XS0: exec_stmt h s0' q0 s1 None) (EV: sat_evidences evs p h a0 s0)
   (DNU: delta_nounk vd δ) (TS0: hastyp_stmt c0 c0 q0 c) (TS: hastyp_stmt c0 c q c')
@@ -1809,7 +1840,7 @@ Proof.
       einstantiate trivial subst_exp_correct as Res. constructor. inversion Res.
       subst. reflexivity.
   - (* Exn *) constructor. split; trivial2.
-  - (* Seq, exit 1 *) destruct simple_trace_stmt0 as [res1|] eqn: SQ1;
+  - (* Seq, exit 1 *) destruct trace_stmt0 as [res1|] eqn: SQ1;
       try discriminate.
     destruct res1 as [paths1 ev1]. destruct map_option as [path_res|] eqn: Map;
     inversion H4. subst. clear XS H4. apply Forall_app in EV.
@@ -1817,12 +1848,12 @@ Proof.
     destruct H as [ [δ1 x1] [InP1 [X HD1] ] ]; subst. apply Exists_exists.
     exists (δ1, Some x). repeat split; try assumption. apply in_concat. eexists.
     split; [|apply in_eq].  eapply map_option_includes; try eassumption. reflexivity.
-  - (* Seq, exit 2 *) destruct simple_trace_stmt0 as [res1|] eqn:SQ1; [|discriminate].
+  - (* Seq, exit 2 *) destruct trace_stmt0 as [res1|] eqn:SQ1; [|discriminate].
     destruct res1 as [paths1 ev1]. destruct map_option as [path_res|] eqn: Map;
     inversion H4. subst. clear XS H4. apply Forall_app in EV. destruct EV as [EV EV1].
     einstantiate trivial IHq1. apply Exists_exists in H.
     destruct H as [ [δ1 x1] [InP1 [X HD1] ] ]; subst. apply Exists_exists.
-    destruct (simple_trace_stmt0 hints vd δ1 a1 (Seq q0 q1) q2 c0)
+    destruct (trace_stmt0 hints vd δ1 a1 (Seq q0 q1) q2 c0)
         as [ [paths2 ev2]|] eqn:SQ2.
     + (* Expand out IHq2. *)
       einstantiate trivial IHq2 as IHq2. econstructor; eassumption.
@@ -1833,14 +1864,14 @@ Proof.
       simpl. rewrite SQ2. eassumption.
 
       (* Show that the new delta has no unknowns *)
-      einstantiate trivial (simple_trace_stmt0_delta_nounk hints vd q1) as DNU'.
+      einstantiate trivial (trace_stmt0_delta_nounk hints vd q1) as DNU'.
       rewrite Forall_forall in DNU'. specialize (DNU' _ InP1). assumption.
 
       (* Show that the new q0 is well-typed *)
       econstructor. eassumption. eassumption. apply pfsub_refl.
 
       (* Show that the new delta is modeled by new typing context *)
-      einstantiate trivial preservation_simple_trace_stmt0 as STS_pres.
+      einstantiate trivial preservation_trace_stmt0 as STS_pres.
       rewrite Forall_forall in STS_pres. einstantiate trivial STS_pres.
       simpl in H. apply H. reflexivity.
       rewrite Exists_exists in IHq2. destruct IHq2 as [ [δ' x'] [InP2 [EQ HD'] ] ].
@@ -1852,8 +1883,8 @@ Proof.
     + erewrite map_option_fails in Map; try solve [discriminate|eassumption].
       simpl. rewrite SQ2. reflexivity.
   - (* If/else *) destruct c1;
-    (destruct (simple_trace_stmt0) as [ [paths1 ev1]|] eqn: ST1; [|discriminate]);
-    (destruct (simple_trace_stmt0 _ _ _ _ _ q2) as [ [paths2 ev2]|] eqn: ST2;
+    (destruct (trace_stmt0) as [ [paths1 ev1]|] eqn: ST1; [|discriminate]);
+    (destruct (trace_stmt0 _ _ _ _ _ q2) as [ [paths2 ev2]|] eqn: ST2;
         [|discriminate]); inversion H5; subst; apply Forall_app in EV;
     destruct EV.
     + (* q2 *) einstantiate trivial IHq2. eapply incl_Exists.
@@ -1862,21 +1893,21 @@ Proof.
       apply incl_appl. apply incl_refl. assumption.
 Qed.
 
-Theorem simple_trace_stmt_correct: forall hints vd q paths h p n
+Theorem trace_stmt_correct: forall hints vd q paths h p n
   a0 s0 a1 s1 x2 s2 c0 c' δ evs (XP: exec_prog h p a0 s0 n s1 (Exit a1))
   (HD: has_delta vd h s0 s1 δ) (XS: exec_stmt h s1 q s2 x2)
   (LU2: match x2 with
         | Some (Exit a2) => exists insn, p s2 a2 = Some insn
         | _ => True
         end)
-  (STS: simple_trace_stmt hints vd δ a1 q c0 = Some (paths, evs))
+  (STS: trace_stmt hints vd δ a1 q c0 = Some (paths, evs))
   (EV: sat_evidences evs p h a0 s0) (TE: hastyp_stmt c0 c0 q c')
   (MDL: models c0 s0) (DMDL: delta_models vd c0 c0 δ) (DNU: delta_nounk vd δ),
   Exists (fun '(δ', x') => x' = x2 /\ has_delta vd h s0 s2 δ') paths.
 Proof.
-  intros. unfold simple_trace_stmt in STS.
-  destruct simple_trace_stmt0 as [ [next_states evs']|] eqn: STS0; try discriminate.
-  inversion STS. subst. clear STS. einstantiate trivial simple_trace_stmt0_correct.
+  intros. unfold trace_stmt in STS.
+  destruct trace_stmt0 as [ [next_states evs']|] eqn: STS0; try discriminate.
+  inversion STS. subst. clear STS. einstantiate trivial trace_stmt0_correct.
   intros. subst. assumption. constructor. constructor. reflexivity.
   rewrite Exists_exists in *. destruct H as [ [δ' x'] [InX [EQ HD0] ] ]. subst.
   eexists (_, x2). repeat split. eassert (X: (_, x2) = _ _);
@@ -1900,7 +1931,7 @@ Theorem destruct_trace_program_step_at_prin: forall {P vd c p hints addr accum r
       (ts, changed) next_states, evs' !++ evs))
     (LU: p null_state addr = Some (sz, q))
     (TS: ts Ⓝ[ addr ] = Some δ_a)
-    (STS: simple_trace_stmt hints vd δ_a addr q c = Some (next_states, evs')),
+    (STS: trace_stmt hints vd δ_a addr q c = Some (next_states, evs')),
     P addr), P addr.
 Proof.
   intros. unfold trace_program_step_at in TPSA.
@@ -1908,7 +1939,7 @@ Proof.
   destruct p as [ [sz q]|] eqn: LU; [|apply PInvalidLU; trivial2].
   destruct tget_n as [δ_a|] eqn: TS; [|inversion TPSA; subst;
       eapply PInvalidTS; trivial2].
-  destruct simple_trace_stmt as [ [next_states evs]|] eqn: STS; inversion TPSA.
+  destruct trace_stmt as [ [next_states evs]|] eqn: STS; inversion TPSA.
   subst. clear TPSA. eapply PDefault; trivial2.
 Qed.
 
@@ -1923,32 +1954,30 @@ Ltac destruct_trace_program_step_at TPSA :=
   end.
 
 Lemma process_state_nofold_nochange: forall vars xit k t b ts,
-    process_state vars xit k (t, b) = (ts, false) -> (t, b) = (ts, false).
+    process_state vars xit k (t, b) = (ts, set_nil) -> (t, b) = (ts, set_nil).
 Proof.
   intros. unfold process_state in H.
   destruct k.
-  destruct xit.
-    destruct join_states_if_changed.
-  inversion H. assumption. assumption.
+  destruct xit; try (inversion H; subst; reflexivity).
+  destruct join_states_if_changed; inversion H; subst; try reflexivity.
+  rewrite set_empty_nil, set_add_nonempty in H2. discriminate.
 Qed.
 
 Lemma process_state_vars_nochange: forall l t b ts a n vars,
-  fold_right (process_state vars (exitof (a + n))) (t, b) l = (ts, false) ->
-    (t,b) = (ts,false).
+  fold_right (process_state vars (exitof (a + n))) (t, b) l = (ts, set_nil) ->
+    (t,b) = (ts,set_nil).
 Proof.
   induction l.
     intros. simpl in H. inversion H. reflexivity.
     intros. simpl in H. destruct fold_right eqn:H_fr in H.
-    unfold process_state in H. destruct a. destruct (exitof (a0 + n) o) in H.
-      destruct join_states_if_changed eqn:H_jsic in H; inversion H.
-        subst. apply IHl in H_fr. inversion H_fr. reflexivity.
-      inversion H. subst. apply IHl in H_fr. inversion H_fr. reflexivity.
+    apply process_state_nofold_nochange in H. inversion H. subst.
+    apply IHl in H_fr. inversion H_fr. subst. reflexivity.
 Qed.
 
 Lemma trace_program_step_at_nochange: forall vars p hints a2 inp ts ev c
    (TPSA: trace_program_step_at vars c p hints a2 inp =
-     TPSA_Running (ts, false, ev)),
-   exists ev0, inp = TPSA_Running (ts, false, ev0) /\ incl ev0 ev.
+     TPSA_Running (ts, set_nil, ev)),
+   exists ev0, inp = TPSA_Running (ts, set_nil, ev0) /\ incl ev0 ev.
 Proof.
   intros. destruct_trace_program_step_at TPSA.
   - eexists. split. reflexivity. apply incl_refl.
@@ -1961,8 +1990,8 @@ Qed.
 Theorem fold_trace_program_step_at_nochange:
   forall reachable_addrs vars p hints inp ts ev c
   (FR: fold_right (trace_program_step_at vars c p hints) inp
-    reachable_addrs = TPSA_Running (ts, false, ev)),
-  exists ev0, inp = TPSA_Running (ts, false, ev0) /\ incl ev0 ev.
+    reachable_addrs = TPSA_Running (ts, set_nil, ev)),
+  exists ev0, inp = TPSA_Running (ts, set_nil, ev0) /\ incl ev0 ev.
 Proof.
   induction reachable_addrs; intros; simpl in FR.
   - eexists. split. eassumption. apply incl_refl.
@@ -2010,17 +2039,17 @@ Proof.
         symmetry in H. contradiction n.
 Qed.
 
-Theorem expand_trace_program_steady_correct:
+Theorem trace_program_steady_correct:
   forall vd c0 p hints ts h a0 s0 evs
   (INIT: exists δ, tget_n ts a0 = Some δ /\ has_delta vd h s0 s0 δ)
   (NWC: forall sa sb a, p sa a = p sb a) (WTP: welltyped_prog c0 p)
-  (TPO: expand_trace_program vd c0 p hints ts = TPSA_Running (ts, false, evs))
+  (TPO: trace_program vd c0 p hints ts = TPSA_Running (ts, set_nil, evs))
   (SAT: sat_evidences evs p h a0 s0)
   (TS_MDL: forall a δ, tget_n ts a = Some δ -> delta_models vd c0 c0 δ)
   (TS_NU: forall a δ, tget_n ts a = Some δ -> delta_nounk vd δ)
   (MDL: models c0 s0), correct_trace_prog vd p ts h a0 s0.
 Proof.
-  unfold correct_trace_prog, sat_evidences, expand_trace_program. intros.
+  unfold correct_trace_prog, sat_evidences, trace_program. intros.
   apply exec_prog_equiv_exec_prog2 in XP. revert a1 s1 sz' q' XP LU'.
   induction n1; intros; inversion XP; subst; try assumption.
 
@@ -2062,7 +2091,7 @@ Proof.
   rewrite TS in TS_a2. inversion TS_a2. subst.
   einstantiate trivial (WTP null_state) as TyS. rewrite LU in TyS.
   destruct TyS as [c' TyS].
-  einstantiate trivial simple_trace_stmt_correct as Correct.
+  einstantiate trivial trace_stmt_correct as Correct.
     (* Prove p s1 a1 is defined with jumps *)
     destruct x' as [ [a1'|n]|]; try exact I. inversion H. subst.
     eexists. eassumption.
@@ -2094,7 +2123,8 @@ Proof.
   (* Show that the delta written in trace states by process_state
      is a preserving delta. *)
   unfold process_state in PS. rewrite H in PS.
-  destruct join_states_if_changed eqn: JS; try discriminate.
+  destruct join_states_if_changed eqn: JS; inversion PS.
+    rewrite set_empty_nil, set_add_nonempty in H2. discriminate.
   unfold join_states_if_changed in JS.
   destruct (tget_n ts0 a1) as [δ_a1_old|] eqn: TS_a1; try discriminate.
   eexists. split. reflexivity. destruct delta_equivb eqn: EQB.
@@ -2155,26 +2185,28 @@ Proof.
   destruct flat_map as [|[ [? ?] ?] ?] eqn: DNU; try discriminate.
     rewrite flat_map_concat_map, concat_nil_Forall in DNU.
     einstantiate (mk_trace_state_property vd) as DNU'; [|apply DNU|]. intros.
-    unfold init_delta. simpl. destruct vd; intros; reflexivity. clear DNU.
+    unfold init_delta. simpl.
+    destruct vd; intros; reflexivity. clear DNU.
   destruct flat_map as [|[ [? ?] ?] ?] eqn: DMDL; try discriminate.
     rewrite flat_map_concat_map, concat_nil_Forall in DMDL.
     einstantiate (mk_trace_state_property vd) as DMDL'; [|apply DMDL|]. intros.
-    unfold init_delta. simpl. destruct vd; try reflexivity. intros. simpl.
-    destruct c; try vreflexivity t; reflexivity. clear DMDL.
+    unfold init_delta. simpl. destruct vd; try reflexivity.
+    intros. simpl. destruct c; try vreflexivity t; reflexivity. clear DMDL.
 
   destruct tget_n as [δ|] eqn: TS; try discriminate.
   destruct forallb eqn: INIT; try discriminate.
-  destruct expand_trace_program as [ [ [ts' [|] ] ev]|] eqn: ETP; try discriminate.
-  inversion CHK. subst. clear CHK.
+  destruct trace_program as [ [ [ts'] ev]|] eqn: ETP; try discriminate.
+  destruct set_empty eqn: EMPTY; inversion CHK. subst. clear CHK.
+  apply set_empty_nil in EMPTY. subst.
 
   unfold correct_trace_prog. intros.
 
   (* Prove etp returns properly *)
-  assert (ts = ts'). unfold expand_trace_program in *.
+  assert (ts = ts'). unfold trace_program in *.
   einversion trivial fold_trace_program_step_at_nochange as [ev [EQ Incl] ].
   inversion EQ. subst. reflexivity. subst.
 
-  eapply expand_trace_program_steady_correct; try eassumption.
+  eapply trace_program_steady_correct; try eassumption.
 
   (* Prove initial correctness *) {
   eexists. split. eassumption. rewrite forallb_forall in INIT.
@@ -2231,7 +2263,7 @@ Qed.
 
 Definition simp_prog_jump_hints: jump_hint := fun a δ e => None.
 
-Definition simp_prog_trace := expand_trace_program_n 10 (fun _ => true)
+Definition simp_prog_trace := trace_program_fast_n 10 (fun _ => true)
   x86typctx simp_prog_jump_hints simp_prog (tupdate_n treeN_nil 0 nil).
 
 Require Import my_prog.
@@ -2267,7 +2299,7 @@ Proof.
 Qed.
 
 Definition my_prog_ts := Eval compute in
-  compute_trace_program_n 100 domain1 x86typctx my_prog_jump_hints my_prog
+  compute_trace_program_fast_n 100 domain1 x86typctx my_prog_jump_hints my_prog
     (init_ts 0).
 
 Definition my_prog_trace :=
@@ -2379,7 +2411,8 @@ Proof.
     einversion trivial (modabsdist_add_l (2 ^ 32)) as [MAD|MAD];
           rewrite MAD; discriminate.
   + psimpl. reflexivity.
-Qed.
+(*Qed.*)
+Abort.
 
 Definition strchr_jump_hints: jump_hint := fun a δ e =>
   match a with
@@ -2490,4 +2523,5 @@ Proof.
           rewrite MAD; discriminate.
   + psimpl. reflexivity.
 Qed.
+
 
