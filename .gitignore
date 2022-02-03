@@ -21,3 +21,4 @@ _build
 Makefile.coq
 Makefile.coq.conf
 .Makefile.coq.d
+*.cache
