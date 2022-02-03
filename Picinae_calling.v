@@ -51,14 +51,10 @@ Open Scope bool.
 Open Scope list.
 Open Scope N.
 
-(* Functional interpretation of expressions and statements entails instantiating
-   a functor that accepts the architecture-specific IL syntax and semantics. *)
 Module Type PICINAE_CALLING_DEFS (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL).
 Import IL.
 Import TIL.
 Module PTheory := PicinaeTheory IL.
-
-(* Some equality definitions *)
 
 Parameter expeqb : forall (e1 e2 : exp), bool.
 Parameter expeq : forall (e1 e2 : exp), Prop.
@@ -70,17 +66,6 @@ Axiom expeq_symm : forall e1 e2 (HEq : expeq e1 e2), expeq e2 e1.
 Axiom eval_expeq :
   forall h st e1 e2 v (HEq : expeq e1 e2) (HE : eval_exp h st e2 v),
     eval_exp h st e1 v.
-
-Definition store_accesses_more s1 s2 :=
-  forall a,
-    (forall (HR : mem_readable s1 a), mem_readable s2 a) /\
-      (forall (HR : mem_writable s1 a), mem_writable s2 a).
-
-Parameter mem_access_rel_vars : list var.
-Axiom mem_access_irrel_store :
-  forall s1 s2
-         (HSVar : forall v (HSVarIn : In v mem_access_rel_vars), s1 v = s2 v),
-    store_accesses_more s1 s2.
 
 Definition store_delta := alist var (option exp).
 
@@ -167,9 +152,7 @@ Fixpoint subst_exp (d: store_delta) e : option exp :=
       | _ => None
       end
   | Let var val body =>
-      if in_dec iseq var mem_access_rel_vars
-      then None
-      else subst_exp (d[[var := subst_exp d val]]) body
+      subst_exp (d[[var := subst_exp d val]]) body
   | Unknown _ => None
   | Ite e1 e2 e3 =>
       match subst_exp d e1,subst_exp d e2,subst_exp d e3 with
@@ -199,10 +182,7 @@ Fixpoint trace_stmt
   : trace_state_res :=
   match q with
   | Nop => next d
-  | Move v e =>
-      if in_dec iseq v mem_access_rel_vars
-      then None
-      else next (d[[v := subst_exp d e]])
+  | Move v e => next (d[[v := subst_exp d e]])
   | Jmp e =>
       match subst_exp d e with
       | Some e' => Some ((d,exit_exp e') :: nil)
@@ -255,18 +235,8 @@ Definition delta_le (d1 d2 : store_delta) :=
 Definition delta_eq d1 d2 := delta_le d1 d2 /\ delta_le d2 d1.
 
 Definition delta_models h d st st' :=
-  forall v ev (HX : d[[v]] = Some ev), eval_exp h st ev (st' v).
-
-Definition delta_models_alt h d st st' :=
   forall v ev val (HX : d[[v]] = Some ev) (HME : eval_exp h st ev val),
     st' v = val.
-
-Definition delta_access_irrel d :=
-  forall v (HV : In v mem_access_rel_vars),
-    match d [[v]] with
-    | Some e => expeq e (Var v)
-    | None => False
-    end.
 
 Definition trace_state_models_exit h '(d,ax) st st' x :=
   delta_models h d st st' /\
@@ -274,7 +244,7 @@ Definition trace_state_models_exit h '(d,ax) st st' x :=
     | AEExn n,Raise n'
     | AELoc n,Exit n' => n = n'
     | AEExp e',Exit n =>
-        exists e w, subst_exp d e = Some e' /\ eval_exp h st' e (VaN n w)
+        forall n' w (HME : eval_exp h st e' (VaN n' w)), n = n'
     | _,_ => False
     end.
 
@@ -289,9 +259,6 @@ Definition trace_states_model h tsl st st' x :=
 
 Definition trace_states_modelo h P tsl st st' ox :=
   Exists (fun ts => trace_state_models_oexit h P ts st st' ox) tsl.
-
-Definition trace_ostates_modelo h P otsl st st' ox :=
-  forall tsl (HOTSL : otsl = Some tsl), trace_states_modelo h P tsl st st' ox.
 
 Definition info_models_loc h info n st st' :=
   match treeN_lookup info n with
@@ -309,16 +276,6 @@ Definition exec_inter_prog h p a st time1 st' a' time2 st'' x :=
   exec_prog h p a st time1 st' (Exit a') /\
     exec_prog h p a' st' time2 st'' x.
 
-Definition trace_state_models_exec
-           h '((d,ae) : trace_state) p a st st'' x :=
-  trace_state_models_exit h (d,ae) st st'' x \/
-    exists st' time1 time2 a',
-      exec_inter_prog h p a st time1 st' a' time2 st'' x /\
-        trace_state_models_exit h (d,ae) st st' (Exit a').
-
-Definition trace_states_model_exec h tsl p a st st' x :=
-  Exists (fun ts => trace_state_models_exec h ts p a st st' x) tsl.
-
 Definition trace_result_models_exit h '(info,tsl) st st' x :=
   info_models_exit h info st st' x \/ trace_states_model h tsl st st' x.
 
@@ -331,12 +288,6 @@ Definition trace_result_consistent h '(info,tsl) p st :=
 
 Definition trace_inter_consistent h '((info,tsl1),tsl2) p st :=
   trace_result_consistent h (info,tsl1 ++ tsl2) p st.
-
-Definition store_accesses_eq s1 s2 :=
-  store_accesses_more s1 s2 /\ store_accesses_more s2 s1.
-
-Definition info_mem_irrel info :=
-  forall a d (HD : treeN_lookup info a = Some d), delta_access_irrel d.
 
 Theorem delta_le_match d1 d2 :
   delta_le d1 d2 <->
@@ -681,21 +632,21 @@ Theorem delta_models_match h d st st' :
   delta_models h d st st' <->
     forall v,
       match d[[v]] with
-      | Some ev => eval_exp h st ev (st' v)
+      | Some ev => forall val, eval_exp h st ev val -> st' v = val
       | None => True
       end.
 Proof.
-  unfold delta_models in *.
-  split; intros HM v; specialize (HM v).
+  unfold delta_models.
+  split; intro HM; intro v; specialize (HM v).
   {
     destruct (d [[v]]); [|tauto].
-    apply HM.
+    intro; apply HM.
     reflexivity.
   }
   {
-    intros ev HX.
-    rewrite HX in *.
-    assumption.
+    intros.
+    rewrite HX in HM.
+    apply HM,HME.
   }
 Qed.
 
@@ -703,45 +654,17 @@ Theorem delta_models_le h d1 d2 st st'
         (HL : delta_le d1 d2) (HM : delta_models h d2 st st') :
   delta_models h d1 st st'.
 Proof.
-  unfold delta_le,delta_models in *.
-  intros v e HX.
-  specialize (HL v).
+  rewrite delta_models_match,delta_le_matchx in *.
+  intro.
   specialize (HM v).
-  apply HL in HX.
-  destruct HX as [? [HX1 HX2] ].
-  eapply eval_expeq; [apply HX2|].
+  specialize (HL v).
+  destruct (d1 [[v]]); [|apply I].
+  destruct (d2 [[v]]); [|tauto].
+  intros.
   apply HM.
+  eapply eval_expeq; [|eassumption].
+  apply expeq_symm.
   assumption.
-Qed.
-
-Theorem store_accesses_more_trans s1 s2 s3
-        (HA1 : store_accesses_more s1 s2)
-        (HA2 : store_accesses_more s2 s3) :
-  store_accesses_more s1 s3.
-Proof.
-  unfold store_accesses_more in *.
-  intro a.
-  specialize (HA1 a).
-  specialize (HA2 a).
-  tauto.
-Qed.
-
-Theorem store_access_irrel h d s1 s2
-        (HIrrel : delta_access_irrel d)
-        (HM : delta_models h d s1 s2) :
-  store_accesses_eq s1 s2.
-Proof.
-  unfold store_accesses_eq.
-  unfold delta_models,delta_access_irrel in *.
-  assert (HX : forall v (HIn : In v mem_access_rel_vars), s1 v = s2 v);
-    [|split; apply mem_access_irrel_store;
-      intros; rewrite HX by assumption; reflexivity].
-  intros v HIn.
-  apply HIrrel in HIn.
-  destruct (d [[v]]) eqn:HD; [|tauto].
-  apply HM in HD.
-  eapply eval_expeq in HD; [|apply expeq_symm;eassumption].
-  inversion HD; subst; tauto.
 Qed.
 
 Theorem delta_merge_witness' d1 d2 v :
@@ -796,71 +719,28 @@ Proof.
   tauto.
 Qed.
 
-Theorem delta_merge_access_irrel d1 d2
-        (HIrrel1 : delta_access_irrel d1)
-        (HIrrel2 : delta_access_irrel d2) :
-  delta_access_irrel (delta_merge d1 d2).
-Proof.
-  unfold delta_access_irrel in *.
-  intros v HV.
-  specialize (HIrrel1 v HV).
-  specialize (HIrrel2 v HV).
-  destruct (d1 [[v]]) eqn:HD1; [|tauto].
-  destruct (d2 [[v]]) eqn:HD2; [|tauto].
-  edestruct delta_merge_witness as [? [HX [? ?] ] ];
-    [apply HD1|apply HD2| |rewrite HX; eapply expeq_trans; eassumption].
-  eapply expeq_trans; [eassumption|].
-  apply expeq_symm.
-  assumption.
-Qed.
-
-Theorem delta_access_irrel_update d v e
-        (HIn : ~In v mem_access_rel_vars)
-        (HIrrel : delta_access_irrel d) :
-  delta_access_irrel (d [[v := e]]).
-Proof.
-  unfold delta_access_irrel in *.
-  intros v' HInX.
-  rewrite delta_lookup_cons.
-  destruct iseq; [subst;tauto|apply HIrrel;assumption].
-Qed.
-
-Theorem subst_exp_model h d s s' e val
-        (HST : delta_models_alt h d s s')
+Theorem subst_exp_model' h d s s' e val
+        (HST : delta_models h d s s')
         (HE1 : eval_exp h s' e val) :
   match subst_exp d e with
   | Some e' => forall val' (HE2 : eval_exp h s e' val'), val = val'
   | None => True
   end.
 Proof.
+  rewrite delta_models_match in *.
   revert d s HST.
   induction HE1; simpl; intros.
   1: {
-    intros.
-    unfold delta_models_alt in HST.
-    specialize (HST v).
-    destruct (d [[v]]); [|tauto].
-    intros.
-    apply HST in HE2; [assumption|reflexivity].
+    apply HST.
   }
   7: {
-    destruct in_dec as [|HX]; [tauto|].
-    clear HX.
     apply IHHE1_2.
-    unfold delta_models_alt.
-    intros.
+    intro v'.
     rewrite delta_lookup_cons in *.
-    destruct iseq; subst.
-    {
-      rewrite update_updated.
-      specialize (IHHE1_1 d).
-      rewrite HX in IHHE1_1.
-      eapply IHHE1_1; eassumption.
-    }
-    {
-      rewrite update_frame by assumption.
-      eapply HST; eassumption.
-    }
+    destruct iseq; subst; [|rewrite update_frame by assumption; apply HST].
+    rewrite update_updated.
+    apply IHHE1_1.
+    assumption.
   }
   all:
     repeat match goal with
@@ -882,96 +762,26 @@ Proof.
            end; reflexivity.
 Qed.
 
-Theorem subst_exp_comp' h d st1 st2 e val
-        (HMem : delta_access_irrel d)
-        (HST : delta_models h d st1 st2)
-        (HE : eval_exp h st2 e val) :
-  match subst_exp d e with
-  | Some e' => eval_exp h st1 e' val
-  | None => True
-  end.
+Theorem subst_exp_model h d s s' e val e' val'
+        (HST : delta_models h d s s')
+        (HS : subst_exp d e = Some e')
+        (HE1 : eval_exp h s' e val)
+        (HE2 : eval_exp h s e' val') :
+  val = val'.
 Proof.
-  rewrite delta_models_match in HST.
-  revert d st1 HST HMem.
-  induction HE; intros; try solve [econstructor; eassumption].
-  1: {
-    simpl in *.
-    specialize (HST v).
-    destruct (d [[_]]); [assumption|constructor].
-  }
-  6: {
-    simpl.
-    specialize (IHHE1 _ _ HST).
-    specialize (IHHE2 (d [[v := subst_exp d e1]])).
-    destruct in_dec as [?|HIn]; [constructor|].
-    destruct (subst_exp _ e2); [|constructor].
-    apply IHHE2; [|apply delta_access_irrel_update; assumption].
-    intros v'.
-    specialize (HST v').
-    unfold delta_lookup in *.
-    rewrite assoc_cons_lookup; simpl.
-    destruct iseq; subst.
-    {
-      rewrite update_updated.
-      destruct subst_exp; [tauto|constructor].
-    }
-    {
-      rewrite update_frame by assumption.
-      apply HST.
-    }
-  }
-  6: {
-    simpl in *;
-    repeat match goal with
-           | [IH : forall d _ _ _, match subst_exp d ?e with _ => _ end
-                               |- _] =>
-               specialize (IH _ _ HST HMem)
-           end.
-    destruct n1;
-      repeat match goal with
-             | [|- context [match subst_exp _ _ with _ => _ end] ] =>
-                 destruct subst_exp
-             end; try solve [econstructor; eassumption].
-  }
-  all: simpl in *;
-    repeat match goal with
-           | [IH : forall d _ _ _, match subst_exp d ?e with _ => _ end |- _] =>
-               specialize (IH _ _ HST HMem)
-           end;
-    repeat match goal with
-           | [|- context [match subst_exp _ _ with _ => _ end] ] =>
-               destruct subst_exp
-           end; try solve [econstructor; eassumption].
-  all: rewrite <- delta_models_match in HST.
-  1,2: econstructor; try eassumption; intro n.
-  1: specialize (R n).
-  2: specialize (W n).
-  1,2: intuition; eapply store_access_irrel; eassumption.
-Qed.
-
-Theorem subst_exp_comp h d st1 st2 e e' val
-        (HMem : delta_access_irrel d)
-        (HST : delta_models h d st1 st2)
-        (HE : eval_exp h st2 e val)
-        (HS : subst_exp d e = Some e') :
-  eval_exp h st1 e' val.
-Proof.
-  assert (HX := subst_exp_comp' h d st1 st2 e val).
-  rewrite HS in HX.
-  apply HX; assumption.
+  eapply subst_exp_model' in HE1; [|eassumption].
+  rewrite HS in *.
+  apply HE1,HE2.
 Qed.
 
 Theorem trace_stmt_result' h P st st' st'' d q next ox
-        (HMem : delta_access_irrel d)
         (HD : delta_models h d st st')
         (HE : exec_stmt h st' q st'' ox)
         (HN : match ox with
               | None =>
-                  forall d'
-                         (HND : delta_models h d' st st'')
-                         (HNDM : delta_access_irrel d'),
+                  forall d' (HND : delta_models h d' st st''),
                     match next d' with
-                    | Some tsl' => trace_states_modelo h P tsl' st st'' None
+                    | Some tsl' => Exists P tsl'
                     | None => True
                     end
               | Some x => True
@@ -981,98 +791,74 @@ Theorem trace_stmt_result' h P st st' st'' d q next ox
   | None => True
   end.
 Proof.
-  revert P st d next HMem HD HN.
-  unfold trace_states_modelo.
+  revert P st d next HD HN.
+  unfold trace_states_modelo in *.
   induction HE; simpl in *; intros.
   {
-    eapply HN; eassumption.
+    apply HN.
+    assumption.
   }
   {
-    destruct in_dec; [tauto|].
-    eapply HN; [|apply delta_access_irrel_update;assumption].
-    rewrite delta_models_match.
+    apply HN.
+    rewrite delta_models_match in *.
     intros v'.
-    unfold delta_lookup in *.
-    rewrite assoc_cons_lookup.
-    simpl.
-    destruct iseq; subst.
-    {
-      rewrite update_updated.
-      destruct subst_exp eqn:HX; [|tauto].
-      eapply subst_exp_comp in HX; eassumption.
-    }
-    {
-      unfold delta_models,delta_lookup in HD.
-      specialize (HD v').
-      rewrite update_frame by assumption.
-      destruct assoc as [ [?|]|]; [|tauto|]; apply HD; reflexivity.
-    }
+    rewrite delta_lookup_cons in *.
+    destruct iseq; subst; [|rewrite update_frame by assumption; apply HD].
+    rewrite update_updated.
+    eapply subst_exp_model'; [|eassumption].
+    apply delta_models_match.
+    assumption.
   }
   {
-    destruct subst_exp as [es|] eqn:HX; [|tauto].
-    rewrite Exists_cons.
-    left.
+    destruct subst_exp eqn:HS; [|tauto].
+    constructor.
     simpl.
     split; [assumption|].
-    do 3 econstructor; eassumption.
+    intros.
+    eapply subst_exp_model in HS; try eassumption.
+    inversion HS; subst.
+    reflexivity.
   }
   {
-    rewrite Exists_cons.
-    left.
+    constructor.
     simpl.
     tauto.
   }
   {
-    eapply IHHE; tauto.
+    apply IHHE; assumption.
   }
   {
-    eapply IHHE1; [eassumption|eassumption|].
+    eapply IHHE1; [apply HD|].
     intros.
-    eapply IHHE2; try eassumption.
+    apply IHHE2; assumption.
   }
   {
-    destruct (trace_stmt q1) eqn:HT1, (trace_stmt q2) eqn:HT2; simpl; try tauto.
-    apply Exists_app.
-    specialize (IHHE P st d next HMem HD HN).
-    destruct c; [right;rewrite HT2 in IHHE|left;rewrite HT1 in IHHE]; assumption.
+    eapply IHHE in HD; [|apply HN].
+    destruct c; do 2 destruct trace_stmt; try apply I;
+      simpl; rewrite Exists_app; tauto.
   }
   {
-    tauto.
+    apply I.
   }
 Qed.
 
 Theorem trace_stmt_result h st st' st'' d q n ox tsl
-        (HMem : delta_access_irrel d)
         (HD : delta_models h d st st')
         (HE : exec_stmt h st' q st'' ox)
         (HTS: trace_stmt q (trace_exit_res n) d = Some tsl) :
   trace_states_model h tsl st st'' (exitof n ox).
 Proof.
   pose (P := fun ts => trace_state_models_exit h ts st st'' (Exit n)).
-  assert (HX := trace_stmt_result' h P st st' st'' d q (trace_exit_res n) ox).
-  specialize (HX HMem HD HE).
+  assert
+    (HX := trace_stmt_result' h P st st' st'' d q (trace_exit_res n) ox).
   rewrite HTS in HX.
+  specialize (HX HD HE).
   destruct ox; apply HX; [tauto|].
+  unfold P.
   simpl.
-  intros d' HND.
-  unfold trace_states_modelo.
-  rewrite Exists_cons.
+  intros.
+  constructor.
   simpl.
-  tauto.
-Qed.
-
-Theorem exec_prog_inter h p a st time1 st' a' time2 st'' x
-        (HE : exec_inter_prog h p a st time1 st' a' time2 st'' x) :
-  exec_prog h p a st (time1 + time2) st'' x.
-Proof.
-  destruct HE as [HE1 HE2].
-  pose (xa := Exit a').
-  fold xa in HE1.
-  assert (HXA : xa = Exit a') by reflexivity.
-  generalize dependent xa; intros.
-  induction HE1; inversion HXA; subst; [assumption|].
-  simpl.
-  econstructor; [eassumption|eassumption|eassumption|].
   tauto.
 Qed.
 
@@ -1088,9 +874,8 @@ Theorem trace_result_consistent_exec h info tsl p a st st' time st'' x
         trace_states_model h tsl st st'x (Exit a').
 Proof.
   revert HInfo.
-  induction HE; simpl; [tauto| |].
+  induction HE; simpl; [tauto| |]; intro.
   {
-    intros.
     assert (HCX := XS).
     eapply HC in HCX; [|eassumption].
     specialize (HCX LU).
@@ -1118,7 +903,6 @@ Proof.
     }
   }
   {
-    intros.
     eapply HC in XS; [|eassumption].
     apply XS in LU.
     left.
@@ -1156,52 +940,20 @@ Proof.
   eapply delta_models_le; eassumption.
 Qed.
 
-Theorem trace_state_models_exit_promote h d e st st' x ul
-        (HDIrrel : delta_access_irrel d)
-        (HM : trace_state_models_exit h (d, AEExp e) st st' x)
-        (HME :
-          forall u w (HE : eval_exp h st e (VaN u w)),
-            In u ul) :
-  trace_states_model h (map (fun x => (d,AELoc x)) ul) st st' x.
-  simpl in *.
-  destruct HM as [HDM HX].
-  destruct x as [n|n]; [|tauto].
-  unfold trace_states_model.
-  rewrite Exists_exists.
-  destruct HX as [e' [w [HX1 HX2] ] ].
-  specialize (HME n w).
-  exists (d,AELoc n).
-  simpl.
-  repeat split; [|assumption].
-  apply in_map_iff.
-  exists n.
-  split; [reflexivity|].
-  apply HME.
-  eapply subst_exp_comp; eassumption.
-Qed.
-
 Theorem trace_state_models_exit_promote_word h d n w st st' x
-        (HDIrrel : delta_access_irrel d)
         (HM : trace_state_models_exit h (d, AEExp (Word n w)) st st' x) :
   trace_state_models_exit h (d, AELoc n) st st' x.
 Proof.
-  eapply (trace_state_models_exit_promote _ _ _ _ _ _ (n::nil)) in HM;
-    [|assumption|].
-  {
-    apply Exists_cons in HM.
-    destruct HM as [?|HM]; [eassumption|].
-    inversion HM.
-  }
-  {
-    intros.
-    inversion HE; subst.
-    simpl.
-    tauto.
-  }
+  simpl in *.
+  destruct HM as [? HM].
+  split; [assumption|].
+  destruct x; [|tauto].
+  symmetry.
+  eapply HM.
+  constructor.
 Qed.
 
 Theorem trace_step_promote_word h p st tn tsl d n w
-        (HDIrrel : delta_access_irrel d)
         (HPrev : trace_result_consistent h (tn,(d,AEExp (Word n w))::tsl) p st) :
   trace_result_consistent h (tn,(d,AELoc n)::tsl) p st.
 Proof.
@@ -1214,7 +966,7 @@ Proof.
   destruct HPrev as [?|[HPrev|?] ]; [tauto| |tauto].
   right.
   left.
-  eapply trace_state_models_exit_promote_word; [assumption|].
+  eapply trace_state_models_exit_promote_word.
   eassumption.
 Qed.
 
@@ -1222,8 +974,6 @@ Theorem trace_step_stmt_consistent h p st tn d tsl tsl' n sz q
         (od' := treeN_lookup tn n)
         (dm := odelta_merge d od')
         (HP : forall st' n, p st' n = p st n)
-        (HTMem1 : delta_access_irrel d)
-        (HTMem2 : forall d', od' = Some d' -> delta_access_irrel d')
         (HTX : p st n = Some (sz,q))
         (HT : trace_stmt q (trace_exit_res (n + sz)) dm = Some tsl')
         (HPrev : trace_result_consistent h (tn,(d,AELoc n)::tsl) p st) :
@@ -1245,10 +995,7 @@ Proof.
     inversion HPX; subst.
     right.
     right.
-    eapply trace_stmt_result; [|eassumption|eassumption|eassumption].
-    destruct treeN_lookup; [|assumption].
-    specialize (HTMem2 _ eq_refl).
-    apply delta_merge_access_irrel; assumption.
+    eapply trace_stmt_result; eassumption.
   }
   {
     apply N.eqb_neq in HX.
@@ -1285,8 +1032,6 @@ Proof.
 Qed.
 
 Theorem trace_step_models_consistent h p st tn tsl ts
-        (HTMem : info_mem_irrel tn)
-        (HMem : delta_access_irrel (fst ts))
         (HP : forall st' n, p st' n = p st n)
         (HPrev : trace_result_consistent h (tn,ts::tsl) p st) :
   trace_inter_consistent h (step_trace (p st) (tn,tsl) ts) p st.
@@ -1308,35 +1053,8 @@ Proof.
   }
   {
     destruct trace_stmt eqn:HTR; [|assumption].
-    specialize (HTMem n).
     eapply trace_step_stmt_consistent; eassumption.
   }
-Qed.
-
-Theorem trace_step_models_irrel p info tsl ts
-        (HTMem : info_mem_irrel info)
-        (HMem : delta_access_irrel (fst ts)) :
-  info_mem_irrel (fst (fst (step_trace p (info,tsl) ts))).
-Proof.
-  unfold step_trace.
-  destruct ts as [d ae].
-  destruct ae; [|assumption|assumption].
-  destruct p as [ [? ?]|]; [|assumption].
-  destruct odelta_leb; [assumption|].
-  destruct trace_stmt; [|assumption].
-  simpl.
-  unfold info_mem_irrel.
-  intros a d' HX.
-  specialize (HTMem a).
-  rewrite treeN_lookup_update in HX.
-  destruct (n =? a) eqn:HN; [|apply HTMem; assumption].
-  apply Neqb_ok in HN; subst.
-  inversion HX; subst.
-  destruct (treeN_lookup info a); [|assumption].
-  simpl.
-  apply delta_merge_access_irrel; [assumption|].
-  apply HTMem.
-  reflexivity.
 Qed.
 
 Theorem eval_expeq_altdef_bad h st
