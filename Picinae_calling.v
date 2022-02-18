@@ -60,8 +60,8 @@ Module Type PICINAE_CALLING_DEFS (IL: PICINAE_IL).
       exple e1 e3.
   Axiom exple_refl : forall e, exple e e.
   Axiom eval_exple :
-    forall h st e1 e2 v (HEq : exple e1 e2) (HE : eval_exp h st e1 v),
-      eval_exp h st e2 v.
+    forall h st e1 e2 v (HEq : exple e1 e2) (HE : eval_exp h st e2 v),
+      eval_exp h st e1 v.
 End PICINAE_CALLING_DEFS.
 
 Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
@@ -233,12 +233,12 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
 
   Definition delta_eq d1 d2 := delta_le d1 d2 /\ delta_le d2 d1.
 
-  Definition delta_models h d st st' :=
-    forall v ev val (HX : d[[v]] = Some ev) (HME : eval_exp h st ev val),
-      st' v = val.
-
   (* Definition delta_models h d st st' := *)
-  (*   forall v ev (HX : d[[v]] = Some ev), eval_exp h st ev (st' v). *)
+  (*   forall v ev val (HX : d[[v]] = Some ev) (HME : eval_exp h st ev val), *)
+  (*     st' v = val. *)
+
+  Definition delta_models h d st st' :=
+    forall v ev (HX : d[[v]] = Some ev), eval_exp h st ev (st' v).
 
   Definition trace_state_models_exit h '(d,ax) st st' x :=
     delta_models h d st st' /\
@@ -246,7 +246,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
       | AEExn n,Raise n'
       | AELoc n,Exit n' => n = n'
       | AEExp e',Exit n =>
-          forall n' w (HME : eval_exp h st e' (VaN n' w)), n = n'
+          exists w, eval_exp h st e' (VaN n w)
       | _,_ => False
       end.
 
@@ -292,22 +292,6 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     trace_result_consistent h (info,tsl1 ++ tsl2) p st.
 
   Theorem delta_le_match d1 d2 :
-    delta_le d1 d2 <->
-      forall v,
-        match d1[[v]] with
-        | Some e => exists e', d2[[v]] = Some e' /\ exple e e'
-        | None => True
-        end.
-  Proof.
-    unfold delta_le.
-    split; intros HX v; specialize (HX v);
-      [destruct (d1 [[v]]);try apply HX;tauto|].
-    intros e HV.
-    rewrite HV in HX.
-    assumption.
-  Qed.
-
-  Theorem delta_le_matchx d1 d2 :
     delta_le d1 d2 <->
       forall v,
         match d1[[v]],d2[[v]] with
@@ -478,7 +462,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   Theorem delta_merge_symm d1 d2 :
     delta_le (delta_merge d1 d2) (delta_merge d2 d1).
   Proof.
-    rewrite delta_le_matchx.
+    rewrite delta_le_match.
     intro v.
     repeat rewrite delta_merge_lookup.
     unfold delta_merge_var.
@@ -491,7 +475,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   Theorem delta_merge_le_l d1 d2 :
     delta_le (delta_merge d1 d2) d1.
   Proof.
-    rewrite delta_le_matchx.
+    rewrite delta_le_match.
     intro v.
     rewrite delta_merge_lookup.
     destruct (d1 [[v]]) as [e1|]; simpl; [|exact I].
@@ -571,7 +555,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   (* Proof. *)
   (*   rewrite delta_models_match in *. *)
   (*   intro v. *)
-  (*   rewrite delta_le_matchx in HL. *)
+  (*   rewrite delta_le_match in HL. *)
   (*   specialize (HM v). *)
   (*   specialize (HL v). *)
   (*   destruct (d1 [[v]]); [|exact I]. *)
@@ -585,7 +569,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     delta_models h d st st' <->
       forall v,
         match d[[v]] with
-        | Some ev => forall val, eval_exp h st ev val -> st' v = val
+        | Some ev => eval_exp h st ev (st' v)
         | None => True
         end.
   Proof.
@@ -593,13 +577,12 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     split; intro HM; intro v; specialize (HM v).
     {
       destruct (d [[v]]); [|tauto].
-      intro; apply HM.
-      reflexivity.
+      apply HM,eq_refl.
     }
     {
       intros.
       rewrite HX in HM.
-      apply HM,HME.
+      assumption.
     }
   Qed.
 
@@ -607,14 +590,13 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
           (HL : delta_le d1 d2) (HM : delta_models h d2 st st') :
     delta_models h d1 st st'.
   Proof.
-    rewrite delta_models_match,delta_le_matchx in *.
+    rewrite delta_models_match,delta_le_match in *.
     intro.
     specialize (HM v).
     specialize (HL v).
     destruct (d1 [[v]]); [|apply I].
     destruct (d2 [[v]]); [|tauto].
     intros.
-    apply HM.
     eapply eval_exple; eassumption.
   Qed.
 
@@ -622,7 +604,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
           (HST : delta_models h d s s')
           (HE1 : eval_exp h s' e val) :
     match subst_exp d e with
-    | Some e' => forall val' (HE2 : eval_exp h s e' val'), val = val'
+    | Some e' => eval_exp h s e' val
     | None => True
     end.
   Proof.
@@ -652,25 +634,19 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
              | [|- context [match subst_exp _ _ with _ => _ end] ] =>
                  destruct subst_exp
              end; try solve [apply I].
-    all: intros; inversion HE2; subst.
-    all:
-      repeat match goal with
-             | [IH : forall _, (eval_exp _ _ ?e _) -> _ = _,
-                  E : eval_exp _ _ ?e _ |- _] =>
-                 specialize (IH _ E); inversion IH; subst
-             end; reflexivity.
-  Qed.
+    all: econstructor; try eassumption.
+    all: try (econstructor; eassumption).
+  Admitted.
 
-  Theorem subst_exp_model h d s s' e val e' val'
+  Theorem subst_exp_model h d s s' e val e'
           (HST : delta_models h d s s')
           (HS : subst_exp d e = Some e')
-          (HE1 : eval_exp h s' e val)
-          (HE2 : eval_exp h s e' val') :
-    val = val'.
+          (HE1 : eval_exp h s' e val) :
+    eval_exp h s e' val.
   Proof.
     eapply subst_exp_model' in HE1; [|eassumption].
     rewrite HS in *.
-    apply HE1,HE2.
+    assumption.
   Qed.
 
   Theorem trace_stmt_result' h P st st' st'' d q next ox
@@ -713,10 +689,8 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
       constructor.
       simpl.
       split; [assumption|].
-      intros.
-      eapply subst_exp_model in HS; try eassumption.
-      inversion HS; subst.
-      reflexivity.
+      exists w.
+      eapply subst_exp_model; eassumption.
     }
     {
       constructor.
@@ -848,8 +822,9 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     split; [assumption|].
     destruct x; [|tauto].
     symmetry.
-    eapply HM.
-    constructor.
+    destruct HM as [? HM].
+    inversion HM; subst.
+    reflexivity.
   Qed.
 
   Theorem trace_step_promote_word h p st tn tsl d n w
@@ -1021,8 +996,8 @@ Module PICINAE_CALLING_DEFS_EQ (IL : PICINAE_IL) <: PICINAE_CALLING_DEFS IL.
     reflexivity.
   Qed.
   Definition exple_refl (e : exp) := eq_refl e.
-  Theorem eval_exple h st e1 e2 v (HEq : exple e1 e2) (HE : eval_exp h st e1 v) :
-    eval_exp h st e2 v.
+  Theorem eval_exple h st e1 e2 v (HEq : exple e1 e2) (HE : eval_exp h st e2 v) :
+    eval_exp h st e1 v.
   Proof.
     unfold exple in *.
     subst.
