@@ -10,6 +10,7 @@ Picinae_simplifier_v1_1.v
 Picinae_i386.v
 Picinae_armv7.v
 Picinae_riscv.v
+Picinae_simplifier_exps.v
 Etacs.v
 Ntree.v
 Picinae_calling.v

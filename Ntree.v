@@ -65,25 +65,26 @@ Section assoc.
     destruct iseq; [reflexivity|assumption].
   Qed.
 
-  (* Theorem assoc_in' k l : *)
-  (*   match assoc k l with *)
-  (*   | Some v => In (k,v) l *)
-  (*   | None => forall v, ~In (k,v) l *)
-  (*   end. *)
-  (* Proof. *)
-  (*   induction l as [|[? ?] ?]; simpl; [tauto|]. *)
-  (*   destruct iseq; subst; [tauto|]. *)
-  (*   destruct assoc; [tauto|]. *)
-  (*   intros v' HX. *)
-  (*   destruct HX as [HX|HX]; [|eapply IHl,HX]. *)
-  (*   inversion HX; subst. *)
-  (*   tauto. *)
-  (* Qed. *)
+  Theorem assoc_inx k l :
+    match assoc k l with
+    | Some v => In (k,v) l
+    | None => forall v, ~In (k,v) l
+    end.
+  Proof.
+    induction l as [|[? ?] ?]; simpl; [tauto|].
+    destruct iseq; subst; [tauto|].
+    destruct assoc; [tauto|].
+    intros v' HX.
+    destruct HX as [HX|HX]; [|eapply IHl,HX].
+    inversion HX; subst.
+    tauto.
+  Qed.
 
   Theorem assoc_in k l v (HA : assoc k l = Some v) : In (k,v) l.
   Proof.
-    induction l as [|[? ?] ?]; [discriminate|]; simpl in *.
-    destruct iseq; subst; [inversion HA; subst|]; tauto.
+    assert (HX := assoc_inx k l).
+    destruct assoc; [|discriminate].
+    inversion HA; subst; assumption.
   Qed.
 
   Theorem assoc_remove_lookup kr l k :
@@ -111,7 +112,8 @@ Arguments assoc_remove {_ _ _}.
 Arguments assoc_cons {_ _ _}.
 Arguments assoc_cons_raw {_ _ _}.
 
-Theorem assoc_map {K1 K2 V} {_ : EqDec K1} {_ : EqDec K2} (f : K1 -> K2) k l
+Theorem assoc_map {K1 K2 V : Type} {_ : EqDec K1} {_ : EqDec K2}
+        (f : K1 -> K2) k l
         (HF : forall x1 x2 (HEq : f x1 = f x2), x1 = x2) :
   assoc (f k) (map (fun kv : K1 * V => (f (fst kv),snd kv)) l) = assoc k l.
 Proof.

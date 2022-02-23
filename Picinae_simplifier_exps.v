@@ -22,6 +22,12 @@ Include M.
 Inductive sastNM :=
   ASTNum (a:sastN) (w:bitwidth) | ASTMem (a:sastM) (w:bitwidth).
 
+Definition simpl_sastNM t e :=
+  match e with
+  | ASTNum e' w => ASTNum (simpl_sastN t e') w
+  | ASTMem e' w => ASTMem (simpl_sastM t e') w
+  end.
+
 (* The mvtree nodes must contain Coq terms returning the actual values of the
    IL variables v.  These terms typically have the form (s v) where s is a
    Coq proof variable (and therefore unexpandable).  However, we need to at
@@ -500,6 +506,8 @@ Import TIL.
 Import FIL.
 Include PSIMPL_EXPS_DEFS IL TIL FIL.
 Module PTheory := PicinaeTheory IL.
+(* Module PSimp := Picinae_Simplifier_v1_1 IL TIL FIL. *)
+Import SIL.
 Import PTheory.
 Import List.
 
@@ -569,6 +577,12 @@ Theorem exp2sast_soundgen h c s MDL e x :
 Proof.
   intro.
   apply exp2sast_soundgen'.
+Qed.
+
+Theorem eval_sastNM_simpl t e x (HE : eval_sastNM t e x) :
+  eval_sastNM t (simpl_sastNM t e) x.
+Proof.
+  destruct e; inversion HE; subst; constructor.
 Qed.
 
 End PSimpl_Exps.

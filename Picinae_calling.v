@@ -51,18 +51,554 @@ Open Scope bool.
 Open Scope list.
 Open Scope N.
 
-Module Type PICINAE_CALLING_DEFS (IL: PICINAE_IL).
+Module Type PICINAE_TRACING_DEFS (IL: PICINAE_IL).
   Import IL.
-  Parameter expleb : forall (e1 e2 : exp), bool.
-  Parameter exple : forall (e1 e2 : exp), Prop.
-  Axiom expleb_exple : forall e1 e2, expleb e1 e2 = true <-> exple e1 e2.
-  Axiom exple_trans : forall e1 e2 e3 (HE1 : exple e1 e2) (HE2 : exple e2 e3),
-      exple e1 e3.
-  Axiom exple_refl : forall e, exple e e.
-  Axiom eval_exple :
-    forall h st e1 e2 v (HEq : exple e1 e2) (HE : eval_exp h st e2 v),
-      eval_exp h st e1 v.
-End PICINAE_CALLING_DEFS.
+  Parameter absexp : Type.
+  Parameter absenv : Type.
+
+  Parameter absleb : absenv -> absenv -> bool.
+  Parameter absle : absenv -> absenv -> Prop.
+
+  Parameter absenv_init : absenv.
+  Parameter absenv_bind : absenv -> var -> absexp -> absenv.
+  Parameter absenv_meet : absenv -> absenv -> absenv.
+
+  Parameter absexp_abstract : exp -> absenv -> absexp.
+  Parameter absexp_models : hdomain -> store -> absexp -> value -> Prop.
+  Parameter absexp_vals : absexp -> option (list value).
+
+  Axiom absexp_models_eval :
+    forall h st st' exp v aenv,
+      (forall var,
+          absexp_models h st (absexp_abstract (Var var) aenv) (st' var)) ->
+      eval_exp h st' exp v ->
+      absexp_models h st (absexp_abstract exp aenv) v.
+
+  Axiom absleb_absle : forall e1 e2, absleb e1 e2 = true <-> absle e1 e2.
+  Axiom absle_trans : forall e1 e2 e3 (HE1 : absle e1 e2) (HE2 : absle e2 e3),
+      absle e1 e3.
+  Axiom absle_refl : forall e, absle e e.
+  Axiom absle_meet_l : forall a1 a2, absle (absenv_meet a1 a2) a1.
+  Axiom absle_meet_r : forall a1 a2, absle (absenv_meet a1 a2) a2.
+  Axiom absle_models :
+    forall h st e aenv1 aenv2 v,
+      absle aenv1 aenv2 ->
+      absexp_models h st (absexp_abstract e aenv2) v ->
+      absexp_models h st (absexp_abstract e aenv1) v.
+End PICINAE_TRACING_DEFS.
+
+Module Type PICINAE_ABSEXP_ASSOC_DEFS (IL : PICINAE_IL).
+  Import IL.
+  Parameter absexp : Type.
+
+  Parameter absexp_default : var -> absexp.
+  Parameter absexp_meet : absexp -> absexp -> absexp.
+  Parameter absexp_abstract : exp -> alist var absexp -> absexp.
+  Parameter absexp_models : hdomain -> store -> absexp -> value -> Prop.
+  Parameter absexp_vals : absexp -> option (list value).
+
+  Parameter absexple : absexp -> absexp -> Prop.
+  Parameter absexpleb : absexp -> absexp -> bool.
+
+  (* Axiom absexp_abstract_var : *)
+  (*   forall v a, *)
+  (*     absexple (assoc_def v a (absexp_default v)) (absexp_abstract (Var v) a). *)
+  Axiom absexp_models_eval :
+    forall h st st' e val aenv,
+      (forall v, absexp_models h st (absexp_abstract (Var v) aenv) (st' v)) ->
+      eval_exp h st' e val ->
+      absexp_models h st (absexp_abstract e aenv) val.
+
+  Axiom absexpleb_absexple : forall e1 e2, absexpleb e1 e2 = true <-> absexple e1 e2.
+  Axiom absexple_trans :
+    forall e1 e2 e3, absexple e1 e2 -> absexple e2 e3 -> absexple e1 e3.
+  Axiom absexple_refl : forall e, absexple e e.
+  Axiom absexple_meet_l : forall a1 a2, absexple (absexp_meet a1 a2) a1.
+  Axiom absexple_meet_r : forall a1 a2, absexple (absexp_meet a1 a2) a2.
+  Axiom absexple_meet_glb :
+    forall a1 a2 al,
+      absexple al a1 -> absexple al a2 -> absexple al (absexp_meet a1 a2).
+  Axiom absexple_models :
+    forall h st e1 e2 v,
+      absexple e1 e2 -> absexp_models h st e2 v -> absexp_models h st e1 v.
+  Axiom absexple_abstract :
+    forall a1 a2 e,
+      (forall v,
+          absexple (assoc_def v a1 (absexp_default v))
+                   (assoc_def v a2 (absexp_default v))) ->
+      absexple (absexp_abstract e a1) (absexp_abstract e a2).
+End PICINAE_ABSEXP_ASSOC_DEFS.
+
+Module PICINAE_ABSEXP_ASSOC
+       (IL : PICINAE_IL) (DEFS : PICINAE_ABSEXP_ASSOC_DEFS IL)
+<: PICINAE_TRACING_DEFS IL.
+  Import IL.
+
+  Definition absexp := DEFS.absexp.
+  Definition absenv := alist var absexp.
+
+  Definition alookup v a :=
+    match assoc v a with
+    | Some x => x
+    | None => DEFS.absexp_default v
+    end.
+
+  Definition absleb a1 a2 :=
+    forallb (fun v => DEFS.absexpleb (alookup v a1) (alookup v a2))
+            (map fst (a1 ++ a2)).
+  Definition absle a1 a2 :=
+    forall v, DEFS.absexple (alookup v a1) (alookup v a2).
+
+  Definition absenv_init : absenv := nil.
+  Definition absenv_bind a v e : absenv := assoc_cons v e a.
+  Fixpoint absenv_meet' a1 a2 vars :=
+    match vars with
+    | nil => absenv_init
+    | v::vs =>
+        absenv_bind (absenv_meet' a1 a2 vs)
+                    v
+                    (DEFS.absexp_meet (alookup v a1) (alookup v a2))
+    end.
+  Definition absenv_meet a1 a2 := absenv_meet' a1 a2 (map fst (a1 ++ a2)).
+
+  Definition absexp_abstract := DEFS.absexp_abstract.
+  Definition absexp_models := DEFS.absexp_models.
+  Definition absexp_vals := DEFS.absexp_vals.
+  Definition absexp_models_eval := DEFS.absexp_models_eval.
+
+  Theorem absleb_absle e1 e2 : absleb e1 e2 = true <-> absle e1 e2.
+  Proof.
+    unfold absleb,absle.
+    rewrite forallb_forall.
+    split; intros HX v; specialize (HX v).
+    {
+      apply DEFS.absexpleb_absexple.
+      rewrite map_app,in_app_iff in HX.
+      unfold alookup in *.
+      assert (HA1 := assoc_inx _ _ _ v e1).
+      assert (HA2 := assoc_inx _ _ _ v e2).
+      destruct assoc; [apply (in_map fst) in HA1;tauto|].
+      destruct assoc; [apply (in_map fst) in HA2;tauto|].
+      apply DEFS.absexpleb_absexple,DEFS.absexple_refl.
+    }
+    {
+      intro HIn.
+      apply DEFS.absexpleb_absexple.
+      assumption.
+    }
+  Qed.
+
+  Theorem absle_trans a1 a2 a3 (HL1 : absle a1 a2) (HL2 : absle a2 a3) :
+    absle a1 a3.
+  Proof.
+    intro.
+    eapply DEFS.absexple_trans; [apply HL1|apply HL2].
+  Qed.
+
+  Theorem absle_refl a : absle a a.
+  Proof.
+    intro.
+    apply DEFS.absexple_refl.
+  Qed.
+
+  Theorem absle_models h st e a1 a2 val
+             (HL : absle a1 a2)
+             (HM : absexp_models h st (absexp_abstract e a2) val) :
+    absexp_models h st (absexp_abstract e a1) val.
+  Proof.
+    eapply DEFS.absexple_models; [apply DEFS.absexple_abstract|]; eassumption.
+  Qed.
+
+  Theorem absenv_meet'_lookup a1 a2 v vl :
+    alookup v (absenv_meet' a1 a2 vl) =
+      if in_dec iseq v vl
+      then DEFS.absexp_meet (alookup v a1) (alookup v a2)
+      else DEFS.absexp_default v.
+  Proof.
+    destruct in_dec as [HIn|HNIn].
+    {
+      induction vl; simpl in *; [tauto|].
+      unfold alookup,absenv_bind.
+      rewrite assoc_cons_lookup.
+      simpl.
+      destruct iseq; subst; [reflexivity|].
+      apply IHvl.
+      destruct HIn; subst; tauto.
+    }
+    {
+      induction vl; [reflexivity|].
+      simpl.
+      unfold alookup,absenv_bind.
+      rewrite assoc_cons_lookup.
+      simpl in *.
+      destruct iseq; subst; tauto.
+    }
+  Qed.
+
+  Theorem absle_meet_swap a1 a2 : absle (absenv_meet a1 a2) (absenv_meet a2 a1).
+  Proof.
+    intro v.
+    unfold absenv_meet.
+    repeat rewrite absenv_meet'_lookup,map_app.
+    Search In app.
+    do 2 destruct in_dec; repeat rewrite in_app_iff in *; try tauto;
+    [|apply DEFS.absexple_refl].
+    apply DEFS.absexple_meet_glb;
+      [apply DEFS.absexple_meet_r|apply DEFS.absexple_meet_l].
+  Qed.
+
+  Theorem absle_meet_l a1 a2 : absle (absenv_meet a1 a2) a1.
+  Proof.
+    intro v.
+    unfold absenv_meet.
+    rewrite absenv_meet'_lookup.
+    destruct in_dec as [_|HNIn]; [apply DEFS.absexple_meet_l|].
+    assert (HA1 := assoc_inx _ _ _ v a1).
+    unfold alookup.
+    destruct assoc; [|apply DEFS.absexple_refl].
+    apply (in_map fst) in HA1.
+    rewrite map_app,in_app_iff in HNIn.
+    tauto.
+  Qed.
+
+  Theorem absle_meet_r a1 a2 : absle (absenv_meet a1 a2) a2.
+  Proof.
+    eapply absle_trans; [apply absle_meet_swap|apply absle_meet_l].
+  Qed.
+
+  Theorem absle_meet_glb a1 a2 al (HL1 : absle al a1) (HL2 : absle al a2) :
+    absle al (absenv_meet a1 a2).
+  Proof.
+    intro v.
+    specialize (HL1 v).
+    specialize (HL2 v).
+    revert HL1 HL2.
+    generalize (alookup v al).
+    intros x HL1 HL2.
+    unfold absenv_meet.
+    rewrite absenv_meet'_lookup.
+    destruct in_dec as [_|HNIn]; [apply DEFS.absexple_meet_glb;assumption|].
+    assert (HA1 := assoc_inx _ _ _ v a1).
+    assert (HA2 := assoc_inx _ _ _ v a2).
+    rewrite map_app,in_app_iff in HNIn.
+    unfold alookup in *.
+    destruct assoc; [apply (in_map fst) in HA1|]; [tauto|].
+    destruct assoc; [apply (in_map fst) in HA2|]; [tauto|].
+    assumption.
+  Qed.
+End PICINAE_ABSEXP_ASSOC.
+
+Program Instance endian_EqDec: EqDec endianness.
+Next Obligation. Proof. decide equality. Defined.
+
+Program Instance binop_EqDec: EqDec binop_typ.
+Next Obligation. Proof. decide equality. Defined.
+
+Program Instance unop_EqDec: EqDec unop_typ.
+Next Obligation. Proof. decide equality. Defined.
+
+Program Instance cast_EqDec: EqDec cast_typ.
+Next Obligation. Proof. decide equality. Defined.
+
+Program Instance bool_EqDec : EqDec bool.
+Next Obligation. Proof. decide equality. Defined.
+
+Program Instance option_EqDec A `(EA : EqDec A) : EqDec (option A).
+Next Obligation. Proof. decide equality. apply iseq. Defined.
+
+Program Instance tuple_EqDec A B `(EA : EqDec A) `(EA : EqDec B): EqDec (A * B).
+Next Obligation. Proof. decide equality; apply iseq. Defined.
+
+Program Instance list_EqDec A `(EA : EqDec A) : EqDec (list A).
+Next Obligation. Proof. decide equality. apply iseq. Defined.
+
+Module PICINAE_ABSEXP_OPTEXPEQ (IL : PICINAE_IL) <: PICINAE_ABSEXP_ASSOC_DEFS IL.
+  Import IL.
+  Definition absexp := option exp.
+  Definition absexp_default v := Some (Var v).
+
+  Program Instance exp_EqDec : EqDec exp.
+  Next Obligation. Proof. decide equality; apply iseq. Defined.
+
+  Fixpoint subst_exp e d : option exp :=
+    match e with
+    | Var v => assoc_def v d (Some (Var v))
+    | Word _ _ => Some e
+    | Load e1 e2 en len =>
+        match subst_exp e1 d,subst_exp e2 d with
+        | Some e1',Some e2' => Some (Load e1' e2' en len)
+        | _,_ => None
+        end
+    | Store e1 e2 e3 en len =>
+        match subst_exp e1 d,subst_exp e2 d,subst_exp e3 d with
+        | Some e1',Some e2',Some e3' => Some (Store e1' e2' e3' en len)
+        | _,_,_ => None
+        end
+    | BinOp op e1 e2 =>
+        match subst_exp e1 d,subst_exp e2 d with
+        | Some e1',Some e2' => Some (BinOp op e1' e2')
+        | _,_ => None
+        end
+    | UnOp op e' =>
+        match subst_exp e' d with
+        | Some e'' => Some (UnOp op e'')
+        | _ => None
+        end
+    | Cast typ w e' =>
+        match subst_exp e' d with
+        | Some e'' => Some (Cast typ w e'')
+        | _ => None
+        end
+    | Let var val body =>
+        subst_exp body (assoc_cons var (subst_exp val d) d)
+    | Unknown _ => None
+    | Ite e1 e2 e3 =>
+        match subst_exp e1 d,subst_exp e2 d,subst_exp e3 d with
+        | Some e1',Some e2',Some e3' => Some (Ite e1' e2' e3')
+        | _,_,_ => None
+        end
+    | Extract n1 n2 e' =>
+        match subst_exp e' d with
+        | Some e'' => Some (Extract n1 n2 e'')
+        | _ => None
+        end
+    | Concat e1 e2 =>
+        match subst_exp e1 d,subst_exp e2 d with
+        | Some e1',Some e2' => Some (Concat e1' e2')
+        | _,_ => None
+        end
+    end.
+
+  Definition absexp_abstract := subst_exp.
+  Definition absexp_meet oe1 oe2 : absexp :=
+    match oe1,oe2 with
+    | Some e1,Some e2 => if e1 == e2 then Some e1 else None
+    | _,_ => None
+    end.
+
+  Inductive eval_exp_na (s : store) : exp → value → Prop :=
+    ENVar :
+      forall v : var, eval_exp_na s (Var v) (s v)
+  | ENWord :
+    forall (n : N) (w : bitwidth), eval_exp_na s (Word n w) (VaN n w)
+  | ENLoad :
+    forall (e1 e2 : exp) (en : endianness) (len : N) (mw : bitwidth) (m : addr → N) (a : N),
+      eval_exp_na s e1 (VaM m mw)
+      → eval_exp_na s e2 (VaN a mw)
+      → eval_exp_na s (Load e1 e2 en len) (VaN (getmem en len m a) (Mb * len))
+  | ENStore :
+    forall (e1 e2 e3 : exp) (en : endianness) (len : N) (mw : bitwidth) (m : addr → N) (a v : N),
+      eval_exp_na s e1 (VaM m mw)
+      → eval_exp_na s e2 (VaN a mw)
+      → eval_exp_na s e3 (VaN v (Mb * len))
+      → eval_exp_na s (Store e1 e2 e3 en len) (VaM (setmem en len m a v) mw)
+  | ENBinOp :
+    forall (bop : binop_typ) (e1 e2 : exp) (n1 n2 : N) (w : bitwidth),
+      eval_exp_na s e1 (VaN n1 w)
+      → eval_exp_na s e2 (VaN n2 w) → eval_exp_na s (BinOp bop e1 e2) (eval_binop bop w n1 n2)
+  | ENUnOp :
+    forall (uop : unop_typ) (e1 : exp) (n1 : N) (w1 : bitwidth),
+      eval_exp_na s e1 (VaN n1 w1) → eval_exp_na s (UnOp uop e1) (eval_unop uop n1 w1)
+  | ENCast :
+    forall (ct : cast_typ) (w w' : bitwidth) (e1 : exp) (n : N),
+      eval_exp_na s e1 (VaN n w) → eval_exp_na s (Cast ct w' e1) (VaN (cast ct w w' n) w')
+  | ENLet :
+    forall (v : var) (e1 e2 : exp) (u1 u2 : value),
+      eval_exp_na s e1 u1 → eval_exp_na (s [v := u1]) e2 u2 → eval_exp_na s (Let v e1 e2) u2
+  | ENUnknown :
+    forall n w : N, n < 2 ^ w → eval_exp_na s (Unknown w) (VaN n w)
+  | ENIte :
+    forall (e1 e2 e3 : exp) (n1 : N) (w1 : bitwidth) (u' : value),
+      eval_exp_na s e1 (VaN n1 w1)
+      → eval_exp_na s match n1 with
+                      | 0 => e3
+                      | N.pos _ => e2
+                      end u' → eval_exp_na s (Ite e1 e2 e3) u'
+  | ENExtract :
+    forall (w : bitwidth) (n1 n2 : N) (e1 : exp) (n : N),
+      eval_exp_na s e1 (VaN n w)
+      → eval_exp_na s (Extract n1 n2 e1) (VaN (xbits n n2 (N.succ n1)) (N.succ n1 - n2))
+  | ENConcat :
+    forall (e1 e2 : exp) (n1 : N) (w1 : bitwidth) (n2 : N) (w2 : bitwidth),
+      eval_exp_na s e1 (VaN n1 w1)
+      → eval_exp_na s e2 (VaN n2 w2)
+      → eval_exp_na s (Concat e1 e2) (VaN (N.lor (N.shiftl n1 w2) n2) (w1 + w2)).
+
+  Definition absexp_models (h : hdomain) s oe val :=
+    match oe with
+    | Some e => eval_exp_na s e val
+    | None => True
+    end.
+  Definition absexp_vals oe :=
+    match oe with
+    | Some (Word n w) => Some (cons (VaN n w) nil)
+    | _ => None
+    end.
+  Definition absexple (oe1 oe2 : absexp) :=
+    match oe1,oe2 with
+    | Some e1,Some e2 => e1 = e2
+    | None,_ => True
+    | Some _,None => False
+    end.
+  Definition absexpleb (oe1 oe2 : absexp) :=
+    match oe1,oe2 with
+    | Some e1,Some e2 => if e1 == e2 then true else false
+    | None,_ => true
+    | Some _,None => false
+    end.
+
+  Theorem eval_exp_na_degraded h s e val (HE : eval_exp h s e val) :
+    eval_exp_na s e val.
+  Proof.
+    induction HE; econstructor; eassumption.
+  Qed.
+
+  Theorem absexp_models_eval h s s' e val a
+          (HM : forall v, absexp_models h s (absexp_abstract (Var v) a) (s' v))
+          (HE : eval_exp h s' e val) :
+    absexp_models h s (absexp_abstract e a) val.
+  Proof.
+    unfold absexp_models.
+    revert s a HM.
+    induction HE; intros sx aenv HM; simpl.
+    {
+      apply HM.
+    }
+    7: {
+      specialize (IHHE1 _ _ HM).
+      apply IHHE2.
+      simpl.
+      unfold assoc_def.
+      intro v'.
+      rewrite assoc_cons_lookup.
+      simpl.
+      unfold update.
+      destruct iseq; subst; [apply IHHE1|apply HM].
+    }
+    all:
+      repeat match goal with
+             | [IH : forall _ d _, match absexp_abstract ?e d with _ => _ end |- _] =>
+                 specialize (IH _ _ HM)
+             end.
+    8: destruct n1.
+    all:
+      repeat match goal with
+             | [|- context [match absexp_abstract _ _ with _ => _ end] ] =>
+                 destruct absexp_abstract
+             end; try solve [apply I].
+    all: econstructor; eassumption.
+  Qed.
+
+  Theorem absexpleb_absexple e1 e2 : absexpleb e1 e2 = true <-> absexple e1 e2.
+  Proof.
+    unfold absexpleb,absexple.
+    destruct e1,e2; try solve [intuition].
+    destruct iseq; subst; intuition.
+  Qed.
+
+  Theorem absexple_trans e1 e2 e3 (HL1 : absexple e1 e2) (HL2 : absexple e2 e3) :
+    absexple e1 e3.
+  Proof.
+    unfold absexple in *.
+    destruct e1,e2,e3; subst; tauto.
+  Qed.
+
+  Theorem absexple_refl oe : absexple oe oe.
+  Proof.
+    destruct oe; constructor.
+  Qed.
+
+  Theorem absexple_meet_l a1 a2 : absexple (absexp_meet a1 a2) a1.
+  Proof.
+    unfold absexple,absexp_meet.
+    destruct a1,a2; try exact I.
+    destruct iseq; subst; tauto.
+  Qed.
+
+  Theorem absexple_meet_r a1 a2 : absexple (absexp_meet a1 a2) a2.
+  Proof.
+    unfold absexple,absexp_meet.
+    destruct a1,a2; try exact I.
+    destruct iseq; subst; tauto.
+  Qed.
+
+  Theorem absexple_meet_glb a1 a2 al
+          (HL1 : absexple al a1) (HL2 : absexple al a2) :
+    absexple al (absexp_meet a1 a2).
+  Proof.
+    unfold absexple in *.
+    destruct al,a1,a2; subst; try tauto.
+    simpl.
+    destruct iseq; tauto.
+  Qed.
+
+  Theorem absexple_models h st e1 e2 v
+          (HL : absexple e1 e2) (HE : absexp_models h st e2 v) :
+    absexp_models h st e1 v.
+  Proof.
+    destruct e1,e2; simpl in *; subst; tauto.
+  Qed.
+
+  Theorem absexple_abstract a1 a2 e
+          (HA : forall v, absexple (assoc_def v a1 (absexp_default v))
+                                   (assoc_def v a2 (absexp_default v))) :
+    absexple (absexp_abstract e a1) (absexp_abstract e a2).
+  Proof.
+    unfold absexple.
+    revert a1 a2 HA.
+    induction e; simpl; intros a1 a2 HA.
+    {
+      apply HA.
+    }
+    7: {
+      apply IHe2.
+      intro v'.
+      unfold absexple,assoc_def.
+      repeat rewrite assoc_cons_lookup.
+      simpl.
+      destruct iseq; subst; [apply IHe1,HA|apply HA].
+    }
+    all: try tauto.
+    all:
+      repeat match goal with
+               [ H :
+                 forall _ _, _ -> match absexp_abstract ?e _ with _ => _ end |- _ ] =>
+                 specialize (H _ _ HA);
+                 destruct (absexp_abstract e a1),(absexp_abstract e a2);
+                 subst; try tauto
+             end; try tauto.
+  Qed.
+End PICINAE_ABSEXP_OPTEXPEQ.
+
+Module PICINAE_CALLING_DEFS_EQ (IL : PICINAE_IL) <: PICINAE_CALLING_DEFS IL.
+  Import IL.
+
+  Program Instance exp_EqDec: EqDec exp.
+  Next Obligation. Proof. decide equality; apply iseq. Defined.
+
+  Definition absle (e1 e2 : exp) := e1 = e2.
+  Definition absleb e1 e2 := if e1 == e2 then true else false.
+  Theorem absleb_absle e1 e2 : absleb e1 e2 = true <-> absle e1 e2.
+  Proof.
+    unfold absleb,absle.
+    destruct iseq; intuition.
+  Qed.
+  Theorem absle_trans e1 e2 e3 (HEq1 : absle e1 e2) (HEq2 : absle e2 e3) :
+    absle e1 e3.
+  Proof.
+    unfold absle in *.
+    subst.
+    reflexivity.
+  Qed.
+  Definition absle_refl (e : exp) := eq_refl e.
+  Theorem eval_absle h st e1 e2 v (HEq : absle e1 e2) (HE : eval_exp h st e2 v) :
+    eval_exp h st e1 v.
+  Proof.
+    unfold absle in *.
+    subst.
+    assumption.
+  Qed.
+End PICINAE_CALLING_DEFS_EQ.
 
 Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   Import IL.
@@ -85,7 +621,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   Definition delta_merge_var oe1 oe2 :=
     match oe1,oe2 with
     | Some e1,Some e2 =>
-        match expleb e1 e2,expleb e2 e1 with
+        match absleb e1 e2,absleb e2 e1 with
         | true,_ => Some e1
         | _,true => Some e2
         | false,false => None
@@ -106,7 +642,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     match d1[[v]],d2[[v]] with
     | None,_ => true
     | Some _,None => false
-    | Some e1,Some e2 => expleb e1 e2
+    | Some e1,Some e2 => absleb e1 e2
     end.
 
   Definition delta_leb (d1 d2 : store_delta) :=
@@ -125,55 +661,6 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     match res1,res2 with
     | Some p1,Some p2 => Some (p1 ++ p2)
     | _,_ => None
-    end.
-
-  Fixpoint subst_exp (d: store_delta) e : option exp :=
-    match e with
-    | Var v => d[[v]]
-    | Word _ _ => Some e
-    | Load e1 e2 en len =>
-        match subst_exp d e1,subst_exp d e2 with
-        | Some e1',Some e2' => Some (Load e1' e2' en len)
-        | _,_ => None
-        end
-    | Store e1 e2 e3 en len =>
-        match subst_exp d e1,subst_exp d e2,subst_exp d e3 with
-        | Some e1',Some e2',Some e3' => Some (Store e1' e2' e3' en len)
-        | _,_,_ => None
-        end
-    | BinOp op e1 e2 =>
-        match subst_exp d e1,subst_exp d e2 with
-        | Some e1',Some e2' => Some (BinOp op e1' e2')
-        | _,_ => None
-        end
-    | UnOp op e' =>
-        match subst_exp d e' with
-        | Some e'' => Some (UnOp op e'')
-        | _ => None
-        end
-    | Cast typ w e' =>
-        match subst_exp d e' with
-        | Some e'' => Some (Cast typ w e'')
-        | _ => None
-        end
-    | Let var val body =>
-        subst_exp (d[[var := subst_exp d val]]) body
-    | Unknown _ => None
-    | Ite e1 e2 e3 =>
-        match subst_exp d e1,subst_exp d e2,subst_exp d e3 with
-        | Some e1',Some e2',Some e3' => Some (Ite e1' e2' e3')
-        | _,_,_ => None
-        end
-    | Extract n1 n2 e' =>
-        match subst_exp d e' with
-        | Some e'' => Some (Extract n1 n2 e'')
-        | _ => None
-        end
-    | Concat e1 e2 =>
-        match subst_exp d e1,subst_exp d e2 with
-        | Some e1',Some e2' => Some (Concat e1' e2')
-        | _,_ => None
-        end
     end.
 
   Fixpoint trace_stmt
@@ -229,7 +716,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
 
   Definition delta_le (d1 d2 : store_delta) :=
     forall v e (HV : d1[[v]] = Some e),
-    exists e', d2[[v]] = Some e' /\ exple e e'.
+    exists e', d2[[v]] = Some e' /\ absle e e'.
 
   Definition delta_eq d1 d2 := delta_le d1 d2 /\ delta_le d2 d1.
 
@@ -295,7 +782,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     delta_le d1 d2 <->
       forall v,
         match d1[[v]],d2[[v]] with
-        | Some e1,Some e2 => exple e1 e2
+        | Some e1,Some e2 => absle e1 e2
         | Some _,None => False
         | None,_ => True
         end.
@@ -333,7 +820,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
       apply (in_map fst) in HA1.
       apply HL1 in HA1.
       destruct (assoc v d2) as [ [?|]|] eqn:HA2; [|discriminate|];
-        econstructor; (split; [reflexivity|apply expleb_exple; eassumption]).
+        econstructor; (split; [reflexivity|apply absleb_absle; eassumption]).
     }
     {
       destruct (assoc v d2) as [o|] eqn:HA2.
@@ -342,12 +829,12 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
         apply (in_map fst) in HA2.
         apply HL2 in HA2.
         destruct o; [|discriminate].
-        apply expleb_exple in HA2.
+        apply absleb_absle in HA2.
         econstructor; (split; [reflexivity|eassumption]).
       }
       {
         econstructor; (split; [reflexivity|]).
-        apply exple_refl.
+        apply absle_refl.
       }
     }
   Qed.
@@ -361,7 +848,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     destruct (d1 [[v]]); [|reflexivity].
     destruct (HL _ eq_refl) as [? [HX ?] ].
     rewrite HX.
-    apply expleb_exple.
+    apply absleb_absle.
     assumption.
   Qed.
 
@@ -372,14 +859,14 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     intros v e HV.
     edestruct HL1 as [? [? ?] ]; [eassumption|].
     edestruct HL2 as [? [? ?] ]; [eassumption|].
-    econstructor; split; [|eapply exple_trans]; eassumption.
+    econstructor; split; [|eapply absle_trans]; eassumption.
   Qed.
 
   Theorem delta_le_refl d : delta_le d d.
   Proof.
     intros v e HV.
     exists e.
-    split; [eassumption|apply exple_refl].
+    split; [eassumption|apply absle_refl].
   Qed.
 
   Theorem delta_lookup_cons d v x k :
@@ -392,10 +879,10 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     destruct x; reflexivity.
   Qed.
 
-  Theorem expleb_dest e1 e2 :
-    if expleb e1 e2 then exple e1 e2 else ~exple e1 e2.
+  Theorem absleb_dest e1 e2 :
+    if absleb e1 e2 then absle e1 e2 else ~absle e1 e2.
   Proof.
-    destruct expleb eqn:HX; rewrite <- expleb_exple,HX; [tauto|discriminate].
+    destruct absleb eqn:HX; rewrite <- absleb_absle,HX; [tauto|discriminate].
   Qed.
 
   Theorem delta_merge'_in d1 d2 vl v (HIn : In v vl) :
@@ -453,10 +940,10 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
       [apply assoc_in,(in_map fst) in HA1; tauto|].
     destruct (assoc v d2) as [|] eqn:HA2;
       [apply assoc_in,(in_map fst) in HA2; tauto|].
-    assert (HD := expleb_dest (Var v) (Var v)).
-    destruct expleb; [reflexivity|].
+    assert (HD := absleb_dest (Var v) (Var v)).
+    destruct absleb; [reflexivity|].
     destruct HD.
-    apply exple_refl.
+    apply absle_refl.
   Qed.
 
   Theorem delta_merge_symm d1 d2 :
@@ -467,9 +954,9 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     repeat rewrite delta_merge_lookup.
     unfold delta_merge_var.
     destruct (d1 [[v]]) as [e1|],(d2 [[v]]) as [e2|]; try exact I.
-    assert (HX1 := expleb_dest e1 e2).
-    assert (HX2 := expleb_dest e2 e1).
-    do 2 destruct expleb; apply exple_refl + tauto.
+    assert (HX1 := absleb_dest e1 e2).
+    assert (HX2 := absleb_dest e2 e1).
+    do 2 destruct absleb; apply absle_refl + tauto.
   Qed.
 
   Theorem delta_merge_le_l d1 d2 :
@@ -480,9 +967,9 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     rewrite delta_merge_lookup.
     destruct (d1 [[v]]) as [e1|]; simpl; [|exact I].
     destruct (d2 [[v]]) as [e2|]; simpl; [|exact I].
-    assert (HX1 := expleb_dest e1 e2).
-    assert (HX2 := expleb_dest e2 e1).
-    do 2 destruct expleb; apply exple_refl + tauto.
+    assert (HX1 := absleb_dest e1 e2).
+    assert (HX2 := absleb_dest e2 e1).
+    do 2 destruct absleb; apply absle_refl + tauto.
   Qed.
 
   Theorem delta_merge_le_r d1 d2 :
@@ -509,13 +996,13 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   (*     { *)
   (*       econstructor. *)
   (*       split; [reflexivity|]. *)
-  (*       eapply exple_trans; [apply HL1X|]. *)
-  (*       apply exple_symm. *)
+  (*       eapply absle_trans; [apply HL1X|]. *)
+  (*       apply absle_symm. *)
   (*       assumption. *)
   (*     } *)
   (*     { *)
-  (*       eapply exple_trans; [|eassumption]. *)
-  (*       apply exple_symm. *)
+  (*       eapply absle_trans; [|eassumption]. *)
+  (*       apply absle_symm. *)
   (*       assumption. *)
   (*     } *)
   (*   } *)
@@ -560,7 +1047,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   (*   specialize (HL v). *)
   (*   destruct (d1 [[v]]); [|exact I]. *)
   (*   destruct (d2 [[v]]); [|destruct HL]. *)
-  (*   eapply eval_exple. *)
+  (*   eapply eval_absle. *)
   (*   unfold delta_models in *. *)
     
   (* Qed. *)
@@ -597,7 +1084,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     destruct (d1 [[v]]); [|apply I].
     destruct (d2 [[v]]); [|tauto].
     intros.
-    eapply eval_exple; eassumption.
+    eapply eval_absle; eassumption.
   Qed.
 
   Theorem subst_exp_model' h d s s' e val
@@ -931,76 +1418,22 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     }
   Qed.
 
-  Theorem eval_exple_altdef_bad h st
-          (exple : forall e1 e2, Prop)
-          (* (exple_symm : forall e1 e2, exple e1 e2 -> exple e2 e1) *)
-          (exple_refl : forall e, exple e e)
-          (* (exple_trans : *)
-          (*   forall e1 e2 e3, exple e1 e2 -> exple e2 e3 -> exple e1 e3) *)
-          (eval_exple :
+  Theorem eval_absle_altdef_bad h st
+          (absle : forall e1 e2, Prop)
+          (* (absle_symm : forall e1 e2, absle e1 e2 -> absle e2 e1) *)
+          (absle_refl : forall e, absle e e)
+          (* (absle_trans : *)
+          (*   forall e1 e2 e3, absle e1 e2 -> absle e2 e3 -> absle e1 e3) *)
+          (eval_absle :
             forall e1 e2 v1 v2
-                   (HEq : exple e1 e2)
+                   (HEq : absle e1 e2)
                    (HE1 : eval_exp h st e1 v1)
                    (HE2 : eval_exp h st e2 v2),
               v1 = v2) :
     False.
   Proof.
-    specialize (eval_exple (Unknown 1) _ (VaN 0 1) (VaN 1 1) (exple_refl _)).
+    specialize (eval_absle (Unknown 1) _ (VaN 0 1) (VaN 1 1) (absle_refl _)).
     assert (HX : VaN 0 1 <> VaN 1 1) by (intro BAD; inversion BAD).
-    apply HX,eval_exple; constructor; reflexivity.
+    apply HX,eval_absle; constructor; reflexivity.
   Qed.
 End PICINAE_CALLING.
-
-Program Instance endian_EqDec: EqDec endianness.
-Next Obligation. Proof. decide equality. Defined.
-
-Program Instance binop_EqDec: EqDec binop_typ.
-Next Obligation. Proof. decide equality. Defined.
-
-Program Instance unop_EqDec: EqDec unop_typ.
-Next Obligation. Proof. decide equality. Defined.
-
-Program Instance cast_EqDec: EqDec cast_typ.
-Next Obligation. Proof. decide equality. Defined.
-
-Program Instance bool_EqDec : EqDec bool.
-Next Obligation. Proof. decide equality. Defined.
-
-Program Instance option_EqDec A `(EA : EqDec A) : EqDec (option A).
-Next Obligation. Proof. decide equality. apply iseq. Defined.
-
-Program Instance tuple_EqDec A B `(EA : EqDec A) `(EA : EqDec B): EqDec (A * B).
-Next Obligation. Proof. decide equality; apply iseq. Defined.
-
-Program Instance list_EqDec A `(EA : EqDec A) : EqDec (list A).
-Next Obligation. Proof. decide equality. apply iseq. Defined.
-
-Module PICINAE_CALLING_DEFS_EQ (IL : PICINAE_IL) <: PICINAE_CALLING_DEFS IL.
-  Import IL.
-
-  Program Instance exp_EqDec: EqDec exp.
-  Next Obligation. Proof. decide equality; apply iseq. Defined.
-
-  Definition exple (e1 e2 : exp) := e1 = e2.
-  Definition expleb e1 e2 := if e1 == e2 then true else false.
-  Theorem expleb_exple e1 e2 : expleb e1 e2 = true <-> exple e1 e2.
-  Proof.
-    unfold expleb,exple.
-    destruct iseq; intuition.
-  Qed.
-  Theorem exple_trans e1 e2 e3 (HEq1 : exple e1 e2) (HEq2 : exple e2 e3) :
-    exple e1 e3.
-  Proof.
-    unfold exple in *.
-    subst.
-    reflexivity.
-  Qed.
-  Definition exple_refl (e : exp) := eq_refl e.
-  Theorem eval_exple h st e1 e2 v (HEq : exple e1 e2) (HE : eval_exp h st e2 v) :
-    eval_exp h st e1 v.
-  Proof.
-    unfold exple in *.
-    subst.
-    assumption.
-  Qed.
-End PICINAE_CALLING_DEFS_EQ.
