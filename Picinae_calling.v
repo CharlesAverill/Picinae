@@ -68,11 +68,25 @@ Module Type PICINAE_TRACING_DEFS (IL: PICINAE_IL).
   Parameter absexp_vals : absexp -> option (list value).
 
   Axiom absexp_models_eval :
-    forall h st st' exp v aenv,
+    forall h st st' exp val aenv,
       (forall var,
           absexp_models h st (absexp_abstract (Var var) aenv) (st' var)) ->
-      eval_exp h st' exp v ->
-      absexp_models h st (absexp_abstract exp aenv) v.
+      eval_exp h st' exp val ->
+      absexp_models h st (absexp_abstract exp aenv) val.
+
+  Axiom absenv_init_models :
+    forall h st var,
+      absexp_models h st (absexp_abstract (Var var) absenv_init) (st var).
+  Axiom absenv_bind_models :
+    forall h st v e1 e2 val a,
+      absexp_models h st (absexp_abstract (Let v e1 e2) a) val ->
+      absexp_models h
+                    st
+                    (absexp_abstract e2 (absenv_bind a v (absexp_abstract e1 a)))
+                    val.
+  Axiom absexp_vals_model :
+    forall h st ae val l,
+      absexp_vals ae = Some l -> In val l -> absexp_models h st ae val.
 
   Axiom absleb_absle : forall e1 e2, absleb e1 e2 = true <-> absle e1 e2.
   Axiom absle_trans : forall e1 e2 e3 (HE1 : absle e1 e2) (HE2 : absle e2 e3),
@@ -165,6 +179,27 @@ Module PICINAE_ABSEXP_ASSOC
   Definition absexp_models := DEFS.absexp_models.
   Definition absexp_vals := DEFS.absexp_vals.
   Definition absexp_models_eval := DEFS.absexp_models_eval.
+
+  Theorem absenv_init_models h st v :
+      absexp_models h st (absexp_abstract (Var v) absenv_init) (st v).
+  Proof.
+  Admitted.
+
+  Theorem absenv_bind_models :
+    forall h st v e1 e2 val a,
+      absexp_models h st (absexp_abstract (Let v e1 e2) a) val ->
+      absexp_models h
+                    st
+                    (absexp_abstract e2 (absenv_bind a v (absexp_abstract e1 a)))
+                    val.
+  Proof.
+  Admitted.
+
+  Theorem absexp_vals_model :
+    forall h st ae val l,
+      absexp_vals ae = Some l -> In val l -> absexp_models h st ae val.
+  Proof.
+  Admitted.
 
   Theorem absleb_absle e1 e2 : absleb e1 e2 = true <-> absle e1 e2.
   Proof.
@@ -570,91 +605,47 @@ Module PICINAE_ABSEXP_OPTEXPEQ (IL : PICINAE_IL) <: PICINAE_ABSEXP_ASSOC_DEFS IL
   Qed.
 End PICINAE_ABSEXP_OPTEXPEQ.
 
-Module PICINAE_CALLING_DEFS_EQ (IL : PICINAE_IL) <: PICINAE_CALLING_DEFS IL.
-  Import IL.
+(* Module PICINAE_CALLING_DEFS_EQ (IL : PICINAE_IL) <: PICINAE_CALLING_DEFS IL. *)
+(*   Import IL. *)
 
-  Program Instance exp_EqDec: EqDec exp.
-  Next Obligation. Proof. decide equality; apply iseq. Defined.
+(*   Program Instance exp_EqDec: EqDec exp. *)
+(*   Next Obligation. Proof. decide equality; apply iseq. Defined. *)
 
-  Definition absle (e1 e2 : exp) := e1 = e2.
-  Definition absleb e1 e2 := if e1 == e2 then true else false.
-  Theorem absleb_absle e1 e2 : absleb e1 e2 = true <-> absle e1 e2.
-  Proof.
-    unfold absleb,absle.
-    destruct iseq; intuition.
-  Qed.
-  Theorem absle_trans e1 e2 e3 (HEq1 : absle e1 e2) (HEq2 : absle e2 e3) :
-    absle e1 e3.
-  Proof.
-    unfold absle in *.
-    subst.
-    reflexivity.
-  Qed.
-  Definition absle_refl (e : exp) := eq_refl e.
-  Theorem eval_absle h st e1 e2 v (HEq : absle e1 e2) (HE : eval_exp h st e2 v) :
-    eval_exp h st e1 v.
-  Proof.
-    unfold absle in *.
-    subst.
-    assumption.
-  Qed.
-End PICINAE_CALLING_DEFS_EQ.
+(*   Definition absle (e1 e2 : exp) := e1 = e2. *)
+(*   Definition absleb e1 e2 := if e1 == e2 then true else false. *)
+(*   Theorem absleb_absle e1 e2 : absleb e1 e2 = true <-> absle e1 e2. *)
+(*   Proof. *)
+(*     unfold absleb,absle. *)
+(*     destruct iseq; intuition. *)
+(*   Qed. *)
+(*   Theorem absle_trans e1 e2 e3 (HEq1 : absle e1 e2) (HEq2 : absle e2 e3) : *)
+(*     absle e1 e3. *)
+(*   Proof. *)
+(*     unfold absle in *. *)
+(*     subst. *)
+(*     reflexivity. *)
+(*   Qed. *)
+(*   Definition absle_refl (e : exp) := eq_refl e. *)
+(*   Theorem eval_absle h st e1 e2 v (HEq : absle e1 e2) (HE : eval_exp h st e2 v) : *)
+(*     eval_exp h st e1 v. *)
+(*   Proof. *)
+(*     unfold absle in *. *)
+(*     subst. *)
+(*     assumption. *)
+(*   Qed. *)
+(* End PICINAE_CALLING_DEFS_EQ. *)
 
-Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
+Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
   Import IL.
   Import DEFS.
-  Definition store_delta := alist var (option exp).
 
-  Definition delta_lookup (l: store_delta) v : option exp :=
-    match assoc v l with
-    | Some (Some e) => Some e
-    | Some None => None
-    | None => Some (Var v)
-    end.
+  Inductive absexit := AELoc (n : N) | AEExp (e : absexp) | AEExn (n : N).
 
-  Notation "f [[ x := y ]]" :=
-    (assoc_cons x y f) (at level 50, left associativity).
+  Definition trace_state : Type := absexit * absenv.
 
-  Notation "f [[ v ]]" :=
-    (delta_lookup f v) (at level 50, left associativity).
+  Definition trace_state_step := option (list trace_state).
 
-  Definition delta_merge_var oe1 oe2 :=
-    match oe1,oe2 with
-    | Some e1,Some e2 =>
-        match absleb e1 e2,absleb e2 e1 with
-        | true,_ => Some e1
-        | _,true => Some e2
-        | false,false => None
-        end
-    | None,_ | _,None => None
-    end.
-
-  Fixpoint delta_merge' (d1 d2 : store_delta) vl :=
-    match vl with
-    | nil => nil
-    | v::vs => (delta_merge' d1 d2 vs) [[v:=delta_merge_var (d1[[v]]) (d2[[v]])]]
-    end.
-
-  Definition delta_merge (d1 d2 : store_delta) :=
-    delta_merge' d1 d2 (map fst d1 ++ map fst d2).
-
-  Definition delta_leb_var d1 d2 v :=
-    match d1[[v]],d2[[v]] with
-    | None,_ => true
-    | Some _,None => false
-    | Some e1,Some e2 => absleb e1 e2
-    end.
-
-  Definition delta_leb (d1 d2 : store_delta) :=
-    forallb (fun v => delta_leb_var d1 d2 v) (map fst d1 ++ map fst d2).
-
-  Inductive absexit := AELoc (n : N) | AEExp (e : exp) | AEExn (n : N).
-
-  Definition trace_state : Type := store_delta * absexit.
-
-  Definition trace_state_res := option (list trace_state).
-
-  Definition trace_result : Type := treeN store_delta * list trace_state.
+  Definition trace_result : Type := treeN absenv * list trace_state.
   Definition trace_inter : Type := trace_result * list trace_state.
 
   Definition join_res {A} res1 res2 : option (list A) :=
@@ -664,48 +655,38 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     end.
 
   Fixpoint trace_stmt
-           (q : stmt) (next : store_delta -> trace_state_res) (d : store_delta)
-    : trace_state_res :=
+           (q : stmt) (next : absenv -> trace_state_step) (d : absenv)
+    : trace_state_step :=
     match q with
     | Nop => next d
-    | Move v e => next (d[[v := subst_exp d e]])
-    | Jmp e =>
-        match subst_exp d e with
-        | Some e' => Some ((d,AEExp e') :: nil)
-        | _ => None
-        end
-    | Exn n => Some ((d, AEExn n) :: nil)
+    | Move v e => next (absenv_bind d v (absexp_abstract e d))
+    | Jmp e => Some ((AEExp (absexp_abstract e d),d) :: nil)
+    | Exn n => Some ((AEExn n,d) :: nil)
     | Seq q1 q2 => trace_stmt q1 (trace_stmt q2 next) d
     | If _ q1 q2 => join_res (trace_stmt q1 next d) (trace_stmt q2 next d)
     | Rep _ s => None
     end.
 
-  Definition trace_exit_res n d : trace_state_res := Some ((d,AELoc n)::nil).
+  Definition trace_exit_res n d : trace_state_step := Some ((AELoc n,d)::nil).
 
-  Definition odelta_leb od1 od2 :=
-    match od1,od2 with
-    | Some d1,Some d2 => delta_leb d1 d2
-    | None,Some _ => false
-    | _,None => true
-    end.
-
-  Definition odelta_merge d1 od2 :=
-    match od2 with
-    | Some d2 => delta_merge d1 d2
-    | None => d1
-    end.
-
-  Definition step_trace prog '(info,r) '(d,ae) :=
-    let skip := ((info,(d,ae)::r),nil) in
+  Definition step_trace prog '(info,r) '(ae,d) :=
+    let skip := ((info,(ae,d)::r),nil) in
     match ae with
     | AELoc n =>
         match prog n with
         | None => skip
         | Some (sz,q) =>
             let odn := treeN_lookup info n in
-            if odelta_leb odn (Some d)
+            if match odn with
+               | None => false
+               | Some dx => absleb dx d
+               end
             then ((info,r),nil)
-            else let d' := odelta_merge d odn in
+            else let d' :=
+                   match odn with
+                   | None => d
+                   | Some dx => absenv_meet d dx
+                   end in
                  match trace_stmt q (trace_exit_res (n + sz)) d' with
                  | None => skip
                  | Some t => ((treeN_update info n (Some d'),r),t)
@@ -714,26 +695,16 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     | _ => skip
     end.
 
-  Definition delta_le (d1 d2 : store_delta) :=
-    forall v e (HV : d1[[v]] = Some e),
-    exists e', d2[[v]] = Some e' /\ absle e e'.
+  Definition absmodels h d st st' :=
+    forall e val (HM : eval_exp h st' e val),
+      absexp_models h st (absexp_abstract e d) val.
 
-  Definition delta_eq d1 d2 := delta_le d1 d2 /\ delta_le d2 d1.
-
-  (* Definition delta_models h d st st' := *)
-  (*   forall v ev val (HX : d[[v]] = Some ev) (HME : eval_exp h st ev val), *)
-  (*     st' v = val. *)
-
-  Definition delta_models h d st st' :=
-    forall v ev (HX : d[[v]] = Some ev), eval_exp h st ev (st' v).
-
-  Definition trace_state_models_exit h '(d,ax) st st' x :=
-    delta_models h d st st' /\
+  Definition trace_state_models_exit h '(ax,d) st st' x :=
+    absmodels h d st st' /\
       match ax,x with
       | AEExn n,Raise n'
       | AELoc n,Exit n' => n = n'
-      | AEExp e',Exit n =>
-          exists w, eval_exp h st e' (VaN n w)
+      | AEExp e',Exit n => exists w, absexp_models h st e' (VaN n w)
       | _,_ => False
       end.
 
@@ -751,7 +722,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
 
   Definition info_models_loc h info n st st' :=
     match treeN_lookup info n with
-    | Some d => delta_models h d st st'
+    | Some d => absmodels h d st st'
     | None => False
     end.
 
@@ -778,370 +749,43 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   Definition trace_inter_consistent h '((info,tsl1),tsl2) p st :=
     trace_result_consistent h (info,tsl1 ++ tsl2) p st.
 
-  Theorem delta_le_match d1 d2 :
-    delta_le d1 d2 <->
-      forall v,
-        match d1[[v]],d2[[v]] with
-        | Some e1,Some e2 => absle e1 e2
-        | Some _,None => False
-        | None,_ => True
-        end.
-  Proof.
-    unfold delta_le.
-    split; intros HX v; specialize (HX v).
-    {
-      destruct (d1 [[v]]);[|tauto].
-      destruct (HX _ eq_refl) as [? [HEq ?] ].
-      rewrite HEq.
-      assumption.
-    }
-    {
-      intros e HV.
-      rewrite HV in HX.
-      destruct (d2 [[v]]); [|tauto].
-      econstructor; split; [reflexivity|eassumption].
-    }
-  Qed.
-
-  Theorem delta_le_leb d1 d2 (HL : delta_leb d1 d2 = true) : delta_le d1 d2.
-  Proof.
-    unfold delta_le,delta_leb,delta_leb_var,delta_lookup in *.
-    intros v e HV.
-    rewrite forallb_app in HL.
-    rewrite andb_true_iff in HL.
-    repeat rewrite forallb_forall in HL.
-    destruct HL as [HL1 HL2].
-    specialize (HL1 v).
-    specialize (HL2 v).
-    destruct (assoc v d1) as [ [?|]|] eqn:HA1;
-      [|discriminate|]; inversion HV; subst.
-    {
-      apply assoc_in in HA1.
-      apply (in_map fst) in HA1.
-      apply HL1 in HA1.
-      destruct (assoc v d2) as [ [?|]|] eqn:HA2; [|discriminate|];
-        econstructor; (split; [reflexivity|apply absleb_absle; eassumption]).
-    }
-    {
-      destruct (assoc v d2) as [o|] eqn:HA2.
-      {
-        apply assoc_in in HA2.
-        apply (in_map fst) in HA2.
-        apply HL2 in HA2.
-        destruct o; [|discriminate].
-        apply absleb_absle in HA2.
-        econstructor; (split; [reflexivity|eassumption]).
-      }
-      {
-        econstructor; (split; [reflexivity|]).
-        apply absle_refl.
-      }
-    }
-  Qed.
-
-  Theorem delta_leb_le d1 d2 (HL : delta_le d1 d2) : delta_leb d1 d2 = true.
-  Proof.
-    unfold delta_le,delta_leb,delta_leb_var in *.
-    rewrite forallb_forall.
-    intros v HIn.
-    specialize (HL v).
-    destruct (d1 [[v]]); [|reflexivity].
-    destruct (HL _ eq_refl) as [? [HX ?] ].
-    rewrite HX.
-    apply absleb_absle.
-    assumption.
-  Qed.
-
-  Theorem delta_le_trans d1 d2 d3 (HL1 : delta_le d1 d2) (HL2 : delta_le d2 d3) :
-    delta_le d1 d3.
-  Proof.
-    unfold delta_le in *.
-    intros v e HV.
-    edestruct HL1 as [? [? ?] ]; [eassumption|].
-    edestruct HL2 as [? [? ?] ]; [eassumption|].
-    econstructor; split; [|eapply absle_trans]; eassumption.
-  Qed.
-
-  Theorem delta_le_refl d : delta_le d d.
-  Proof.
-    intros v e HV.
-    exists e.
-    split; [eassumption|apply absle_refl].
-  Qed.
-
-  Theorem delta_lookup_cons d v x k :
-    d [[v := x]] [[k]] = if k == v then x else d [[k]].
-  Proof.
-    unfold delta_lookup.
-    rewrite assoc_cons_lookup.
-    simpl.
-    destruct iseq; [|reflexivity].
-    destruct x; reflexivity.
-  Qed.
-
-  Theorem absleb_dest e1 e2 :
-    if absleb e1 e2 then absle e1 e2 else ~absle e1 e2.
-  Proof.
-    destruct absleb eqn:HX; rewrite <- absleb_absle,HX; [tauto|discriminate].
-  Qed.
-
-  Theorem delta_merge'_in d1 d2 vl v (HIn : In v vl) :
-    delta_merge' d1 d2 vl [[v]] = delta_merge_var (d1 [[v]]) (d2 [[v]]).
-  Proof.
-    induction vl; simpl in HIn; [tauto|].
-    simpl.
-    rewrite delta_lookup_cons.
-    destruct iseq; subst; [tauto|].
-    apply IHvl.
-    destruct HIn; [|assumption].
-    subst.
-    tauto.
-  Qed.
-
-  Theorem delta_merge'_notin' d1 d2 vl v (HNIn : ~In v vl) :
-    assoc v (delta_merge' d1 d2 vl) = None.
-  Proof.
-    induction vl; [reflexivity|].
-    simpl in *.
-    rewrite assoc_remove_lookup.
-    destruct iseq; subst; tauto.
-  Qed.
-
-  Theorem delta_merge'_notin d1 d2 vl v (HNIn : ~In v vl) :
-    (delta_merge' d1 d2 vl) [[v]] = Some (Var v).
-  Proof.
-    unfold delta_lookup.
-    rewrite delta_merge'_notin' by assumption.
-    reflexivity.
-  Qed.
-
-  Theorem delta_merge'_lookup d1 d2 vl v :
-    (delta_merge' d1 d2 vl) [[v]] =
-      if in_dec iseq v vl
-      then delta_merge_var (d1 [[v]]) (d2 [[v]])
-      else Some (Var v).
-  Proof.
-    destruct in_dec; [apply delta_merge'_in|apply delta_merge'_notin];
-      assumption.
-  Qed.
-
-  Theorem delta_merge_lookup d1 d2 v :
-    delta_merge d1 d2 [[v]] = delta_merge_var (d1 [[v]]) (d2 [[v]]).
-  Proof.
-    unfold delta_merge.
-    rewrite delta_merge'_lookup.
-    destruct in_dec as [|HX]; [reflexivity|].
-    unfold delta_merge_var.
-    unfold delta_lookup.
-    rewrite in_app_iff in HX.
-    apply Decidable.not_or in HX.
-    destruct HX as [HX1 HX2].
-    destruct (assoc v d1) as [|] eqn:HA1;
-      [apply assoc_in,(in_map fst) in HA1; tauto|].
-    destruct (assoc v d2) as [|] eqn:HA2;
-      [apply assoc_in,(in_map fst) in HA2; tauto|].
-    assert (HD := absleb_dest (Var v) (Var v)).
-    destruct absleb; [reflexivity|].
-    destruct HD.
-    apply absle_refl.
-  Qed.
-
-  Theorem delta_merge_symm d1 d2 :
-    delta_le (delta_merge d1 d2) (delta_merge d2 d1).
-  Proof.
-    rewrite delta_le_match.
-    intro v.
-    repeat rewrite delta_merge_lookup.
-    unfold delta_merge_var.
-    destruct (d1 [[v]]) as [e1|],(d2 [[v]]) as [e2|]; try exact I.
-    assert (HX1 := absleb_dest e1 e2).
-    assert (HX2 := absleb_dest e2 e1).
-    do 2 destruct absleb; apply absle_refl + tauto.
-  Qed.
-
-  Theorem delta_merge_le_l d1 d2 :
-    delta_le (delta_merge d1 d2) d1.
-  Proof.
-    rewrite delta_le_match.
-    intro v.
-    rewrite delta_merge_lookup.
-    destruct (d1 [[v]]) as [e1|]; simpl; [|exact I].
-    destruct (d2 [[v]]) as [e2|]; simpl; [|exact I].
-    assert (HX1 := absleb_dest e1 e2).
-    assert (HX2 := absleb_dest e2 e1).
-    do 2 destruct absleb; apply absle_refl + tauto.
-  Qed.
-
-  Theorem delta_merge_le_r d1 d2 :
-    delta_le (delta_merge d1 d2) d2.
-  Proof.
-    eapply delta_le_trans; [apply delta_merge_symm|apply delta_merge_le_l].
-  Qed.
-
-  (* Theorem delta_merge_glb d1 d2 dx (HL1 : delta_le dx d1) (HL2 : delta_le dx d2) : *)
-  (*   delta_le dx (delta_merge d1 d2). *)
-  (* Proof. *)
-  (*   unfold delta_le in *. *)
-  (*   intros v e HV. *)
-  (*   specialize (HL1 v e HV). *)
-  (*   specialize (HL2 v e HV). *)
-  (*   clear dx HV. *)
-  (*   unfold delta_merge. *)
-  (*   destruct HL1 as [? [HD1 HL1X] ], HL2 as [? [HD2 HL2X] ]. *)
-  (*   destruct (in_dec iseq v (map fst d1 ++ map fst d2)) as [HX|HX]. *)
-  (*   { *)
-  (*     apply (delta_merge'_in d1 d2) in HX. *)
-  (*     rewrite HD1,HD2 in HX. *)
-  (*     destruct (delta_merge' _ _ _ [[v]]); destruct HX. *)
-  (*     { *)
-  (*       econstructor. *)
-  (*       split; [reflexivity|]. *)
-  (*       eapply absle_trans; [apply HL1X|]. *)
-  (*       apply absle_symm. *)
-  (*       assumption. *)
-  (*     } *)
-  (*     { *)
-  (*       eapply absle_trans; [|eassumption]. *)
-  (*       apply absle_symm. *)
-  (*       assumption. *)
-  (*     } *)
-  (*   } *)
-  (*   { *)
-  (*     rewrite delta_merge'_notin by assumption. *)
-  (*     econstructor. *)
-  (*     split; [reflexivity|]. *)
-  (*     unfold delta_lookup in HD1. *)
-  (*     destruct assoc eqn:HIn; [|inversion HD1; subst; assumption]. *)
-  (*     destruct HX. *)
-  (*     apply in_or_app. *)
-  (*     apply assoc_in in HIn. *)
-  (*     apply (in_map fst) in HIn. *)
-  (*     left. *)
-  (*     assumption. *)
-  (*   } *)
-  (* Qed. *)
-
-  (* Theorem delta_models_match h d st st' : *)
-  (*   delta_models h d st st' <-> *)
+  (* Theorem absmodels_match h d st st' : *)
+  (*   absmodels h d st st' <-> *)
   (*     forall v, *)
   (*       match d[[v]] with *)
   (*       | Some ev => eval_exp h st ev (st' v) *)
   (*       | None => True *)
   (*       end. *)
   (* Proof. *)
-  (*   unfold delta_models. *)
-  (*   split; intros HM v; specialize (HM v); *)
-  (*     [|intros ? HX; rewrite HX in HM; assumption]. *)
-  (*   destruct (d [[v]]); [|exact I]. *)
-  (*   apply HM,eq_refl. *)
+  (*   unfold absmodels. *)
+  (*   split; intro HM; intro v; specialize (HM v). *)
+  (*   { *)
+  (*     destruct (d [[v]]); [|tauto]. *)
+  (*     apply HM,eq_refl. *)
+  (*   } *)
+  (*   { *)
+  (*     intros. *)
+  (*     rewrite HX in HM. *)
+  (*     assumption. *)
+  (*   } *)
   (* Qed. *)
 
-  (* Theorem delta_models_le h d1 d2 st st' *)
-  (*         (HL : delta_le d1 d2) (HM : delta_models h d2 st st') : *)
-  (*   delta_models h d1 st st'. *)
-  (* Proof. *)
-  (*   rewrite delta_models_match in *. *)
-  (*   intro v. *)
-  (*   rewrite delta_le_match in HL. *)
-  (*   specialize (HM v). *)
-  (*   specialize (HL v). *)
-  (*   destruct (d1 [[v]]); [|exact I]. *)
-  (*   destruct (d2 [[v]]); [|destruct HL]. *)
-  (*   eapply eval_absle. *)
-  (*   unfold delta_models in *. *)
-    
-  (* Qed. *)
-
-  Theorem delta_models_match h d st st' :
-    delta_models h d st st' <->
-      forall v,
-        match d[[v]] with
-        | Some ev => eval_exp h st ev (st' v)
-        | None => True
-        end.
+  Theorem absmodels_le h d1 d2 st st'
+          (HL : absle d1 d2) (HM : absmodels h d2 st st') :
+    absmodels h d1 st st'.
   Proof.
-    unfold delta_models.
-    split; intro HM; intro v; specialize (HM v).
-    {
-      destruct (d [[v]]); [|tauto].
-      apply HM,eq_refl.
-    }
-    {
-      intros.
-      rewrite HX in HM.
-      assumption.
-    }
-  Qed.
-
-  Theorem delta_models_le h d1 d2 st st'
-          (HL : delta_le d1 d2) (HM : delta_models h d2 st st') :
-    delta_models h d1 st st'.
-  Proof.
-    rewrite delta_models_match,delta_le_match in *.
-    intro.
-    specialize (HM v).
-    specialize (HL v).
-    destruct (d1 [[v]]); [|apply I].
-    destruct (d2 [[v]]); [|tauto].
-    intros.
-    eapply eval_absle; eassumption.
-  Qed.
-
-  Theorem subst_exp_model' h d s s' e val
-          (HST : delta_models h d s s')
-          (HE1 : eval_exp h s' e val) :
-    match subst_exp d e with
-    | Some e' => eval_exp h s e' val
-    | None => True
-    end.
-  Proof.
-    rewrite delta_models_match in *.
-    revert d s HST.
-    induction HE1; simpl; intros.
-    1: {
-      apply HST.
-    }
-    7: {
-      apply IHHE1_2.
-      intro v'.
-      rewrite delta_lookup_cons in *.
-      destruct iseq; subst; [|rewrite update_frame by assumption; apply HST].
-      rewrite update_updated.
-      apply IHHE1_1.
-      assumption.
-    }
-    all:
-      repeat match goal with
-             | [IH : forall d _ _, match subst_exp d ?e with _ => _ end |- _] =>
-                 specialize (IH _ _ HST)
-             end.
-    8: destruct n1.
-    all:
-      repeat match goal with
-             | [|- context [match subst_exp _ _ with _ => _ end] ] =>
-                 destruct subst_exp
-             end; try solve [apply I].
-    all: econstructor; try eassumption.
-    all: try (econstructor; eassumption).
-  Admitted.
-
-  Theorem subst_exp_model h d s s' e val e'
-          (HST : delta_models h d s s')
-          (HS : subst_exp d e = Some e')
-          (HE1 : eval_exp h s' e val) :
-    eval_exp h s e' val.
-  Proof.
-    eapply subst_exp_model' in HE1; [|eassumption].
-    rewrite HS in *.
-    assumption.
+    unfold absmodels in *.
+    intros ? ? HE.
+    apply HM in HE.
+    eapply absle_models; eassumption.
   Qed.
 
   Theorem trace_stmt_result' h P st st' st'' d q next ox
-          (HD : delta_models h d st st')
+          (HD : absmodels h d st st')
           (HE : exec_stmt h st' q st'' ox)
           (HN : match ox with
                 | None =>
-                    forall d' (HND : delta_models h d' st st''),
+                    forall d' (HND : absmodels h d' st st''),
                       match next d' with
                       | Some tsl' => Exists P tsl'
                       | None => True
@@ -1162,22 +806,20 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     }
     {
       apply HN.
-      rewrite delta_models_match in *.
-      intros v'.
-      rewrite delta_lookup_cons in *.
-      destruct iseq; subst; [|rewrite update_frame by assumption; apply HD].
-      rewrite update_updated.
-      eapply subst_exp_model'; [|eassumption].
-      apply delta_models_match.
-      assumption.
+      intros e' val HE.
+      apply absenv_bind_models.
+      eapply absexp_models_eval; [intro;apply HD;constructor|].
+      econstructor; eassumption.
     }
     {
-      destruct subst_exp eqn:HS; [|tauto].
       constructor.
       simpl.
-      split; [assumption|].
+      split; [tauto|].
       exists w.
-      eapply subst_exp_model; eassumption.
+      eapply absexp_models_eval; [|eassumption].
+      intro.
+      apply HD.
+      constructor.
     }
     {
       constructor.
@@ -1203,7 +845,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   Qed.
 
   Theorem trace_stmt_result h st st' st'' d q n ox tsl
-          (HD : delta_models h d st st')
+          (HD : absmodels h d st st')
           (HE : exec_stmt h st' q st'' ox)
           (HTS: trace_stmt q (trace_exit_res n) d = Some tsl) :
     trace_states_model h tsl st st'' (exitof n ox).
@@ -1280,8 +922,8 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
 
   Theorem trace_step_modelled h p st tn tsl tnd d n
           (HTN : treeN_lookup tn n = Some tnd)
-          (HLE : delta_le tnd d)
-          (HPrev : trace_result_consistent h (tn,(d,AELoc n)::tsl) p st) :
+          (HLE : absle tnd d)
+          (HPrev : trace_result_consistent h (tn,(AELoc n,d)::tsl) p st) :
     trace_result_consistent h (tn,tsl) p st.
   Proof.
     unfold trace_result_consistent in *.
@@ -1297,51 +939,53 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     unfold info_models_loc.
     rewrite HTN.
     left.
-    eapply delta_models_le; eassumption.
+    eapply absmodels_le; eassumption.
   Qed.
 
-  Theorem trace_state_models_exit_promote_word h d n w st st' x
-          (HM : trace_state_models_exit h (d, AEExp (Word n w)) st st' x) :
-    trace_state_models_exit h (d, AELoc n) st st' x.
-  Proof.
-    simpl in *.
-    destruct HM as [? HM].
-    split; [assumption|].
-    destruct x; [|tauto].
-    symmetry.
-    destruct HM as [? HM].
-    inversion HM; subst.
-    reflexivity.
-  Qed.
+  (* Theorem trace_state_models_exit_promote_word h d n w st st' x *)
+  (*         (HM : trace_state_models_exit h (AEExp (Word n w)) st st' x) : *)
+  (*   trace_state_models_exit h (d, AELoc n) st st' x. *)
+  (* Proof. *)
+  (*   simpl in *. *)
+  (*   destruct HM as [? HM]. *)
+  (*   split; [assumption|]. *)
+  (*   destruct x; [|tauto]. *)
+  (*   symmetry. *)
+  (*   destruct HM as [? HM]. *)
+  (*   inversion HM; subst. *)
+  (*   reflexivity. *)
+  (* Qed. *)
 
-  Theorem trace_step_promote_word h p st tn tsl d n w
-          (HPrev : trace_result_consistent h (tn,(d,AEExp (Word n w))::tsl) p st) :
-    trace_result_consistent h (tn,(d,AELoc n)::tsl) p st.
-  Proof.
-    unfold trace_result_consistent in *.
-    unfold trace_result_models_exit in *.
-    intros.
-    specialize (HPrev st' a st'' x sz q HInfo HE HP).
-    unfold trace_states_model in *.
-    rewrite Exists_cons in *.
-    destruct HPrev as [?|[HPrev|?] ]; [tauto| |tauto].
-    right.
-    left.
-    eapply trace_state_models_exit_promote_word.
-    eassumption.
-  Qed.
+  (* Theorem trace_step_promote_word h p st tn tsl d n w *)
+  (*         (HPrev : trace_result_consistent h (tn,(AEExp (Word n w),d)::tsl) p st) : *)
+  (*   trace_result_consistent h (tn,(d,AELoc n)::tsl) p st. *)
+  (* Proof. *)
+  (*   unfold trace_result_consistent in *. *)
+  (*   unfold trace_result_models_exit in *. *)
+  (*   intros. *)
+  (*   specialize (HPrev st' a st'' x sz q HInfo HE HP). *)
+  (*   unfold trace_states_model in *. *)
+  (*   rewrite Exists_cons in *. *)
+  (*   destruct HPrev as [?|[HPrev|?] ]; [tauto| |tauto]. *)
+  (*   right. *)
+  (*   left. *)
+  (*   eapply trace_state_models_exit_promote_word. *)
+  (*   eassumption. *)
+  (* Qed. *)
 
   Theorem trace_step_stmt_consistent h p st tn d tsl tsl' n sz q
-          (od' := treeN_lookup tn n)
-          (dm := odelta_merge d od')
+          (dm := match treeN_lookup tn n with
+                 | None => d
+                 | Some d' => absenv_meet d d'
+                 end)
           (HP : forall st' n, p st' n = p st n)
           (HTX : p st n = Some (sz,q))
           (HT : trace_stmt q (trace_exit_res (n + sz)) dm = Some tsl')
-          (HPrev : trace_result_consistent h (tn,(d,AELoc n)::tsl) p st) :
+          (HPrev : trace_result_consistent h (tn,(AELoc n,d)::tsl) p st) :
     trace_inter_consistent h ((treeN_update tn n (Some dm),tsl),tsl') p st.
   Proof.
-    unfold dm,od' in *.
-    clear dm od'.
+    unfold dm in *.
+    clear dm.
     unfold trace_inter_consistent,trace_result_consistent in *.
     intros st' a st'' x sz' q' HInfo HE HPX.
     unfold trace_result_models_exit,trace_states_model in *.
@@ -1374,8 +1018,8 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
         apply Neqb_ok in HXX.
         subst.
         destruct (treeN_lookup tn a'); [|tauto].
-        eapply delta_models_le; [|eassumption].
-        apply delta_merge_le_r.
+        eapply absmodels_le; [|eassumption].
+        apply absle_meet_r.
       }
       {
         left.
@@ -1386,8 +1030,8 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
         unfold info_models_loc.
         rewrite treeN_update_updated.
         destruct treeN_lookup; [|assumption].
-        eapply delta_models_le; [|eassumption].
-        apply delta_merge_le_l.
+        eapply absmodels_le; [|eassumption].
+        apply absle_meet_l.
       }
     }
   Qed.
@@ -1400,40 +1044,20 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     assert (HSkip : trace_inter_consistent h ((tn,ts::tsl),nil) p st)
       by (simpl; rewrite app_nil_r; assumption).
     simpl.
-    destruct ts as [d ae].
+    destruct ts as [ae d].
     destruct ae; [|assumption|assumption].
     destruct p as [ [? ?]|] eqn:HPX1; [|assumption].
-    destruct odelta_leb eqn:HL.
+    destruct (match treeN_lookup tn n with _ => _ end : bool) eqn:HL.
     {
       unfold trace_inter_consistent.
       rewrite app_nil_r.
-      unfold odelta_leb in HL.
       destruct treeN_lookup eqn:?; [|discriminate].
-      apply delta_le_leb in HL.
+      apply absleb_absle in HL.
       eapply trace_step_modelled; eassumption.
     }
     {
       destruct trace_stmt eqn:HTR; [|assumption].
       eapply trace_step_stmt_consistent; eassumption.
     }
-  Qed.
-
-  Theorem eval_absle_altdef_bad h st
-          (absle : forall e1 e2, Prop)
-          (* (absle_symm : forall e1 e2, absle e1 e2 -> absle e2 e1) *)
-          (absle_refl : forall e, absle e e)
-          (* (absle_trans : *)
-          (*   forall e1 e2 e3, absle e1 e2 -> absle e2 e3 -> absle e1 e3) *)
-          (eval_absle :
-            forall e1 e2 v1 v2
-                   (HEq : absle e1 e2)
-                   (HE1 : eval_exp h st e1 v1)
-                   (HE2 : eval_exp h st e2 v2),
-              v1 = v2) :
-    False.
-  Proof.
-    specialize (eval_absle (Unknown 1) _ (VaN 0 1) (VaN 1 1) (absle_refl _)).
-    assert (HX : VaN 0 1 <> VaN 1 1) by (intro BAD; inversion BAD).
-    apply HX,eval_absle; constructor; reflexivity.
   Qed.
 End PICINAE_CALLING.
