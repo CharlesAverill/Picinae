@@ -114,14 +114,27 @@ Module Type PICINAE_ABSEXP_ASSOC_DEFS (IL : PICINAE_IL).
   Parameter absexple : absexp -> absexp -> Prop.
   Parameter absexpleb : absexp -> absexp -> bool.
 
-  (* Axiom absexp_abstract_var : *)
-  (*   forall v a, *)
-  (*     absexple (assoc_def v a (absexp_default v)) (absexp_abstract (Var v) a). *)
   Axiom absexp_models_eval :
     forall h st st' e val aenv,
       (forall v, absexp_models h st (absexp_abstract (Var v) aenv) (st' v)) ->
       eval_exp h st' e val ->
       absexp_models h st (absexp_abstract e aenv) val.
+
+  Axiom absexp_nil_models :
+    forall h st var,
+      absexp_models h st (absexp_abstract (Var var) nil) (st var).
+
+  Axiom absexp_bind_models :
+    forall h st v e1 e2 val a,
+      absexp_models h st (absexp_abstract (Let v e1 e2) a) val ->
+      absexp_models h
+                    st
+                    (absexp_abstract e2 (assoc_cons v (absexp_abstract e1 a) a))
+                    val.
+
+  Axiom absexp_vals_model :
+    forall h st ae val l,
+      absexp_vals ae = Some l -> In val l -> absexp_models h st ae val.
 
   Axiom absexpleb_absexple : forall e1 e2, absexpleb e1 e2 = true <-> absexple e1 e2.
   Axiom absexple_trans :
@@ -179,27 +192,9 @@ Module PICINAE_ABSEXP_ASSOC
   Definition absexp_models := DEFS.absexp_models.
   Definition absexp_vals := DEFS.absexp_vals.
   Definition absexp_models_eval := DEFS.absexp_models_eval.
-
-  Theorem absenv_init_models h st v :
-      absexp_models h st (absexp_abstract (Var v) absenv_init) (st v).
-  Proof.
-  Admitted.
-
-  Theorem absenv_bind_models :
-    forall h st v e1 e2 val a,
-      absexp_models h st (absexp_abstract (Let v e1 e2) a) val ->
-      absexp_models h
-                    st
-                    (absexp_abstract e2 (absenv_bind a v (absexp_abstract e1 a)))
-                    val.
-  Proof.
-  Admitted.
-
-  Theorem absexp_vals_model :
-    forall h st ae val l,
-      absexp_vals ae = Some l -> In val l -> absexp_models h st ae val.
-  Proof.
-  Admitted.
+  Definition absenv_init_models := DEFS.absexp_nil_models.
+  Definition absenv_bind_models := DEFS.absexp_bind_models.
+  Definition absexp_vals_model := DEFS.absexp_vals_model.
 
   Theorem absleb_absle e1 e2 : absleb e1 e2 = true <-> absle e1 e2.
   Proof.
@@ -524,6 +519,36 @@ Module PICINAE_ABSEXP_OPTEXPEQ (IL : PICINAE_IL) <: PICINAE_ABSEXP_ASSOC_DEFS IL
     all: econstructor; eassumption.
   Qed.
 
+  Theorem absexp_nil_models h st v :
+      absexp_models h st (absexp_abstract (Var v) nil) (st v).
+  Proof.
+    constructor.
+  Qed.
+
+  Theorem absexp_bind_models h st v e1 e2 val a
+      (HM : absexp_models h st (absexp_abstract (Let v e1 e2) a) val) :
+    absexp_models h
+                  st
+                  (absexp_abstract e2 (assoc_cons v (absexp_abstract e1 a) a))
+                  val.
+  Proof.
+    assumption.
+  Qed.
+
+  Theorem absexp_vals_model h st ae val l
+          (HV : absexp_vals ae = Some l)
+          (HIn : In val l) :
+    absexp_models h st ae val.
+  Proof.
+    unfold absexp_vals in *.
+    destruct ae as [e|]; [|discriminate].
+    destruct e; try discriminate.
+    inversion HV; subst.
+    simpl in HIn.
+    intuition; subst.
+    constructor.
+  Qed.
+
   Theorem absexpleb_absexple e1 e2 : absexpleb e1 e2 = true <-> absexple e1 e2.
   Proof.
     unfold absexpleb,absexple.
@@ -604,36 +629,6 @@ Module PICINAE_ABSEXP_OPTEXPEQ (IL : PICINAE_IL) <: PICINAE_ABSEXP_ASSOC_DEFS IL
              end; try tauto.
   Qed.
 End PICINAE_ABSEXP_OPTEXPEQ.
-
-(* Module PICINAE_CALLING_DEFS_EQ (IL : PICINAE_IL) <: PICINAE_CALLING_DEFS IL. *)
-(*   Import IL. *)
-
-(*   Program Instance exp_EqDec: EqDec exp. *)
-(*   Next Obligation. Proof. decide equality; apply iseq. Defined. *)
-
-(*   Definition absle (e1 e2 : exp) := e1 = e2. *)
-(*   Definition absleb e1 e2 := if e1 == e2 then true else false. *)
-(*   Theorem absleb_absle e1 e2 : absleb e1 e2 = true <-> absle e1 e2. *)
-(*   Proof. *)
-(*     unfold absleb,absle. *)
-(*     destruct iseq; intuition. *)
-(*   Qed. *)
-(*   Theorem absle_trans e1 e2 e3 (HEq1 : absle e1 e2) (HEq2 : absle e2 e3) : *)
-(*     absle e1 e3. *)
-(*   Proof. *)
-(*     unfold absle in *. *)
-(*     subst. *)
-(*     reflexivity. *)
-(*   Qed. *)
-(*   Definition absle_refl (e : exp) := eq_refl e. *)
-(*   Theorem eval_absle h st e1 e2 v (HEq : absle e1 e2) (HE : eval_exp h st e2 v) : *)
-(*     eval_exp h st e1 v. *)
-(*   Proof. *)
-(*     unfold absle in *. *)
-(*     subst. *)
-(*     assumption. *)
-(*   Qed. *)
-(* End PICINAE_CALLING_DEFS_EQ. *)
 
 Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
   Import IL.
