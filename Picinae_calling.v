@@ -112,15 +112,31 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   Definition delta_leb (d1 d2 : store_delta) :=
     forallb (fun v => delta_leb_var d1 d2 v) (map fst d1 ++ map fst d2).
 
+  (*
+    models exit as either 
+    AELoc: a jump to n,
+    AEExp: a value modelled by an expression (used for jumps, I think)
+    AEExn: or a hardware exception
+  *)
   Inductive absexit := AELoc (n : N) | AEExp (e : exp) | AEExn (n : N).
 
+  (*
+     the "delta" for an exit, associated with that exit in a tuple.
+  *)
   Definition trace_state : Type := store_delta * absexit.
 
+  (*
+     literally "trace_state_result"
+  *)
   Definition trace_state_res := option (list trace_state).
 
   Definition trace_result : Type := treeN store_delta * list trace_state.
   Definition trace_inter : Type := trace_result * list trace_state.
 
+  (*
+     I don't know why this is called join_res, I would call it join_option or something.
+     it just joins two optional lists into a single optional list.
+  *)
   Definition join_res {A} res1 res2 : option (list A) :=
     match res1,res2 with
     | Some p1,Some p2 => Some (p1 ++ p2)
@@ -195,6 +211,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
 
   Definition trace_exit_res n d : trace_state_res := Some ((d,AELoc n)::nil).
 
+  (*less than or equal to relationship for option deltas*)
   Definition odelta_leb od1 od2 :=
     match od1,od2 with
     | Some d1,Some d2 => delta_leb d1 d2
@@ -208,6 +225,33 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     | None => d1
     end.
 
+  (*
+     prog: prog
+      -- the program we're stepping through
+
+     info: treeN store_delta 
+      -- association between addresses and store_deltas.
+     r: list (trace_state)
+      -- this isn't used outside of setp_trace, i can only assume that its intent is to catalogue all the deltas for instructions we cannot model
+       - for instance, if we jump out of the program, we (None => skip match below) we just add our asserted delta d to the response list.
+       - in other words, I believe its used to catalogue values for exits.
+    (info, r) : trace_result
+
+
+     d:  store_delta
+      -- the delta we are asserting for this current address
+    ae: absexit
+      -- the value inside this exit points us to instruction we're analyzing. it must be an AELoc.
+    (d, ae): trace_state 
+
+     return value: (option store_delta) * treeP store_delta * list (trace_state) * list (trace_state)
+     -->  trace_result *  list trace_state 
+     -- list trace_state is a list places that the address we're looking at exits to and their associated new deltas.
+    where: 
+      Type trace_state := (store_delta * absexit)
+      Type treeN store_delta := (option store_delta) * (treeP store_delta)
+        the first element of the tuple is the 0th element of the tree, per the definition of 
+  *)
   Definition step_trace prog '(info,r) '(d,ae) :=
     let skip := ((info,(d,ae)::r),nil) in
     match ae with
@@ -217,8 +261,10 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
         | Some (sz,q) =>
             let odn := treeN_lookup info n in
             if odelta_leb odn (Some d)
-            then ((info,r),nil)
-            else let d' := odelta_merge d odn in
+            then ((info,r),nil) (*if the existing delta in info is (less than or equal to ) (that is
+                                  to say, consistent) with the one we are asserting, then keep that one.*)
+                                (*otherwise, recalculate...*)
+            else let d' := odelta_merge d odn in (*otherwise, we merge the deltas.*)
                  match trace_stmt q (trace_exit_res (n + sz)) d' with
                  | None => skip
                  | Some t => ((treeN_update info n (Some d'),r),t)
@@ -227,7 +273,23 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     | _ => skip
     end.
 
-  Definition delta_le (d1 d2 : store_delta) :=
+  Definition promote (tsl : list (trace_state)) :=
+    fold_left  (fun acc '(d,ae) =>
+        match ae with
+        | AEExp (Word n w) => (d, AELoc n)::acc
+        | _ => (d,ae)::acc
+        end
+      ) tsl nil.
+  Definition trace_prog_accum_func prog '(a_info, a_ts) ts :=
+      let (a_info', n_ts):= (step_trace prog a_info ts) in
+      let n_ts_promote := promote n_ts in
+      (a_info',n_ts_promote++a_ts).
+
+  Definition trace_prog prog '((info,r), tsl)  :=
+    let trace_prog_accum_func0 := trace_prog_accum_func prog in
+    fold_left trace_prog_accum_func0 tsl ((info,r), nil).
+
+  Definition delta_le (d1 d2 : store_delta) := 
     forall v e (HV : d1[[v]] = Some e),
     exists e', d2[[v]] = Some e' /\ exple e e'.
 
@@ -237,9 +299,32 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   (*   forall v ev val (HX : d[[v]] = Some ev) (HME : eval_exp h st ev val), *)
   (*     st' v = val. *)
 
+  (*
+    (h : hdomain) 
+    (d : store_delta)
+    (st : store)
+    (st' : store)
+
+    FORALL: (v : var) (ev : exp) (val : value)
+    SUCH THAT "d" (which is an associative list from vars to expressions, similar to how it
+     was in calling_int) has  Some expression "ev" in it for variable "v",
+    AND evaluating "ev" under "h" and "st" yields "val",
+    IT FOLLOWS THAT st' v = val.
+
+    In simple terms, this proposition holds if all the delta expressions in d model the variable changes
+     between st and st'.
+  *)
   Definition delta_models h d st st' :=
     forall v ev (HX : d[[v]] = Some ev), eval_exp h st ev (st' v).
 
+  (*
+     (h : hdomain) 
+    '(d : store_delta
+     , ax : absexit)
+    (st : store)
+    (st' : store)
+    (x : exit)
+  *)
   Definition trace_state_models_exit h '(d,ax) st st' x :=
     delta_models h d st st' /\
       match ax,x with
@@ -256,12 +341,19 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     | None => P ts
     end.
 
+  (*
+    trace_states_model holds IF
+      there exists an element "ts" of tsl for which trace_state_models_exit holds
+  *)
   Definition trace_states_model h tsl st st' x :=
     Exists (fun ts => trace_state_models_exit h ts st st' x) tsl.
 
   Definition trace_states_modelo h P tsl st st' ox :=
     Exists (fun ts => trace_state_models_oexit h P ts st st' ox) tsl.
 
+  (*
+     this holds if there is a delta store for n that models the difference between st and st'
+   *)
   Definition info_models_loc h info n st st' :=
     match treeN_lookup info n with
     | Some d => delta_models h d st st'
@@ -274,13 +366,41 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     | Exit n => info_models_loc h info n st st'
     end.
 
+  (*
+     exec_inter_prog holds IF 
+      there is some path of execution in p from address a to time1  that exits to a'
+      there is some path of execution in p from address a' to time2  that ends in st''
+      nothing uses this.
+  *)
   Definition exec_inter_prog h p a st time1 st' a' time2 st'' x :=
     exec_prog h p a st time1 st' (Exit a') /\
       exec_prog h p a' st' time2 st'' x.
 
+  (*
+     either x exits into an address covered by info, and info has a delta that models st->st',
+     or x jumps into an address covered by tsl and the delta store for that address in tsl covers it.
+   *)
   Definition trace_result_models_exit h '(info,tsl) st st' x :=
     info_models_exit h info st st' x \/ trace_states_model h tsl st st' x.
 
+  (*
+    (h : hdomain) 
+    '(info, tsl) 
+    (p : (var → value) → N → option (N * stmt)) 
+      (aka p : program)
+    (st : store)
+
+    trace_result_consistent holds IF:
+    FORALL (st' : var → value) (a : N) (st'' : store) (x : option exit) 
+      (sz : N) (q : stmt)
+    SUCH THAT
+      -> HInfo: "info" delta_store for address "a" models the difference between st and st'
+      -> HE: executing instruction "q" with store "st'" yields st'' and exit x,
+      -> HP: instruction "q" is at address "a" in program "p" with size "sz"
+    IT FOLLOWS THAT
+      -> either x exits into an address covered by info, and info has a delta that models st->st'',
+       or x jumps into an address covered by tsl and the delta store for that address in tsl covers it.
+  *)
   Definition trace_result_consistent h '(info,tsl) p st :=
     forall st' a st'' x sz q
            (HInfo : info_models_loc h info a st st')
@@ -288,6 +408,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
            (HP : p st' a = Some (sz,q)),
       trace_result_models_exit h (info,tsl) st st'' (exitof (a+sz) x).
 
+  (*This exists since step_trace returns deltas for unexplored or unresolved addresses in tsl2.*)
   Definition trace_inter_consistent h '((info,tsl1),tsl2) p st :=
     trace_result_consistent h (info,tsl1 ++ tsl2) p st.
 
@@ -735,6 +856,20 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     tauto.
   Qed.
 
+  (*
+    GIVEN THAT,
+      HC: 
+      HInfo:
+      HE: there's some execution path of "time" steps to exit x
+    IT FOLLOWS THAT 
+      EITHER (info,tsl) models the change from st to st'' to x
+      or there's some intermediate execution in those "time" number of steps that is modelled by tsl.
+
+     this is interesting, but is not the proof nor definition of correctness needed for trace_prog.
+     i think what we need is basically this, but without the OR qualifier in the conclusion.
+      
+      This is not used by anything.
+  *)
   Theorem trace_result_consistent_exec h info tsl p a st st' time st'' x
           (HC : trace_result_consistent h (info,tsl) p st)
           (HInfo : info_models_loc h info a st st')
@@ -847,7 +982,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
   Theorem trace_step_stmt_consistent h p st tn d tsl tsl' n sz q
           (od' := treeN_lookup tn n)
           (dm := odelta_merge d od')
-          (HP : forall st' n, p st' n = p st n)
+          (HP : forall st' n, p st' n = p st n) (*code is non-modifiable*)
           (HTX : p st n = Some (sz,q))
           (HT : trace_stmt q (trace_exit_res (n + sz)) dm = Some tsl')
           (HPrev : trace_result_consistent h (tn,(d,AELoc n)::tsl) p st) :
@@ -904,9 +1039,18 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
       }
     }
   Qed.
+  (*
+     Theorem:
+     IF 
+     -> HP: code is non-self-modifying
+     -> HPrev for every address in the program p that has an address q, there is an element of
+     ts::tsl that models the exit and change of executing that statement (this is a bad definition but it works)
+     IT FOLLOWS THAT
+     -> step_trace preserves that, or something.
+  *)  
 
   Theorem trace_step_models_consistent h p st tn tsl ts
-          (HP : forall st' n, p st' n = p st n)
+          (HP : forall st' n, p st' n = p st n) (*code is non-modifible*)
           (HPrev : trace_result_consistent h (tn,ts::tsl) p st) :
     trace_inter_consistent h (step_trace (p st) (tn,tsl) ts) p st.
   Proof.
@@ -949,6 +1093,16 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     assert (HX : VaN 0 1 <> VaN 1 1) by (intro BAD; inversion BAD).
     apply HX,eval_exple; constructor; reflexivity.
   Qed.
+
+  Theorem trace_prog_complete:
+    forall h a_0 st_0 st_1 n st_n info info' r r' tsl x (prog: program)
+    (H1: ((info',r'), nil) = trace_prog (prog st_0) ((info,r),tsl))
+    (H2: info_models_loc h info' a_0 st_0 st_1) 
+    (H3: exec_prog h prog a_0 st_1 n st_n x)
+    (HP : forall st_e1 st_e2 n_e, prog st_e1 n_e = prog st_e2 n_e),
+    trace_result_models_exit h (info',r') st_0 st_n x.
+  Proof.
+  Admitted.
 End PICINAE_CALLING.
 
 Program Instance endian_EqDec: EqDec endianness.
