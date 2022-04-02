@@ -634,7 +634,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
   Import IL.
   Import DEFS.
 
-  Inductive absexit := AELoc (n : N) | AEExp (e : absexp) | AEExn (n : N).
+  Inductive absexit := AELoc (n : N) | AEExp (e : exp) | AEExn (n : N).
 
   Definition trace_state : Type := absexit * absenv.
 
@@ -655,7 +655,7 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
     match q with
     | Nop => next d
     | Move v e => next (absenv_bind d v (absexp_abstract e d))
-    | Jmp e => Some ((AEExp (absexp_abstract e d),d) :: nil)
+    | Jmp e => Some ((AEExp e,d) :: nil)
     | Exn n => Some ((AEExn n,d) :: nil)
     | Seq q1 q2 => trace_stmt q1 (trace_stmt q2 next) d
     | If _ q1 q2 => join_res (trace_stmt q1 next d) (trace_stmt q2 next d)
@@ -699,7 +699,8 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
       match ax,x with
       | AEExn n,Raise n'
       | AELoc n,Exit n' => n = n'
-      | AEExp e',Exit n => exists w, absexp_models h st e' (VaN n w)
+      | AEExp e',Exit n =>
+          exists w, absexp_models h st (absexp_abstract e' d) (VaN n w)
       | _,_ => False
       end.
 
