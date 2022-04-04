@@ -5,6 +5,7 @@ Require Export Picinae_simplifier_v1_1.
 Require Import FunctionalExtensionality.
 Require Import NArith.
 Require Import ZArith.
+Require Import Picinae_calling.
 Open Scope list_scope.
 
 Theorem unk_bound (n w:N): n mod 2^w < 2^w.
@@ -492,23 +493,21 @@ Definition ustore_of_store (c:typctx) (s:store) : var -> option uvalue :=
 Parameter make_ustore_boundedness:
   forall (c:typctx) (s:store) (MDL:models c s), ustore_boundedness (ustore_of_store c s).
 
-(* Then we need the main soundness proof.  I think it looks like
-   the following, but I'm not sure. *)
-
 End PSIMPL_EXPS_SIG.
 
 
 Module PSimpl_Exps
-  (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL) : PSIMPL_EXPS_SIG IL TIL FIL.
+       (IL: PICINAE_IL)
+       (TIL: PICINAE_STATICS IL)
+       (FIL: PICINAE_FINTERP IL TIL) : PSIMPL_EXPS_SIG IL TIL FIL.
 
 Import IL.
 Import TIL.
 Import FIL.
 Include PSIMPL_EXPS_DEFS IL TIL FIL.
-Module PTheory := PicinaeTheory IL.
 (* Module PSimp := Picinae_Simplifier_v1_1 IL TIL FIL. *)
-Import SIL.
-Import PTheory.
+(* Import PSimp. *)
+(* Import PTheory. *)
 Import List.
 
 (* This should be generalized and never expanded at computation time. *)
@@ -582,7 +581,68 @@ Qed.
 Theorem eval_sastNM_simpl t e x (HE : eval_sastNM t e x) :
   eval_sastNM t (simpl_sastNM t e) x.
 Proof.
-  destruct e; inversion HE; subst; constructor.
-Qed.
+  destruct e; inversion HE; subst; constructor; admit.
+Admitted.
 
 End PSimpl_Exps.
+
+Require Import Ntree.
+
+Module PSimpl_Exps_absexp
+       (IL: PICINAE_IL)
+       (TIL: PICINAE_STATICS IL)
+       (FIL: PICINAE_FINTERP IL TIL) : PICINAE_ABSEXP_ASSOC_DEFS IL.
+  Import IL.
+  Module M := PSimpl_Exps IL TIL FIL.
+  Import M.
+  Definition absexp := option sastNM.
+  Definition absexp_default (v : var) : absexp := None.
+  Definition absexp_meet x1 x2 :=
+    match x1,x2 with
+    | Some e1,Some e2 => if e1 == e2 then x1 else None
+    | None,_ | _,None => None
+    end.
+  Fixpoint absenv_elim (l : list (var * absexp)) :=
+    match l with
+    | nil => nil
+    | (v,Some e)::xs => (v,e)::absenv_elim xs
+    | (v,None)::xs => assoc_remove v (absenv_elim xs)
+    end.
+
+  Definition absexp_abstract : exp -> list (_ * absexp) -> absexp :=
+    fun e l => exp2sast e (absenv_elim l).
+
+  Print PICINAE_ABSEXP_ASSOC_DEFS.
+  Print simpl_sastN.
+
+     (* Parameter absexp : Type. *)
+     (* Parameter absexp_default : IL0.var -> absexp. *)
+     (* Parameter absexp_meet : absexp -> absexp -> absexp. *)
+     (* Parameter absexp_abstract : IL0.exp -> alist IL0.var absexp -> absexp. *)
+     (* Parameter absexp_models : hdomain -> IL0.store -> absexp -> value -> Prop. *)
+     (* Parameter absexple : absexp -> absexp -> Prop. *)
+     (* Parameter absexpleb : absexp -> absexp -> bool. *)
+     (* Parameter absexp_abstract_lookup : *)
+     (*   forall (v : IL0.var) (a : alist IL0.var absexp), *)
+     (*   absexp_abstract (IL0.Var v) a = assoc_def v a (absexp_default v). *)
+     (* Parameter absexp_models_eval : *)
+     (*   forall (h : hdomain) (st : IL0.store) (st' : IL0.var -> value) (e : IL0.exp) (val : value) *)
+     (*     (aenv : alist IL0.var absexp), *)
+     (*   (forall v : IL0.var, absexp_models h st (absexp_abstract (IL0.Var v) aenv) (st' v)) -> *)
+     (*   IL0.eval_exp h st' e val -> absexp_models h st (absexp_abstract e aenv) val. *)
+     (* Parameter absexpleb_absexple : forall e1 e2 : absexp, absexpleb e1 e2 = true <-> absexple e1 e2. *)
+     (* Parameter absexple_trans : forall e1 e2 e3 : absexp, absexple e1 e2 -> absexple e2 e3 -> absexple e1 e3. *)
+     (* Parameter absexple_refl : forall e : absexp, absexple e e. *)
+     (* Parameter absexple_meet_l : forall a1 a2 : absexp, absexple (absexp_meet a1 a2) a1. *)
+     (* Parameter absexple_meet_r : forall a1 a2 : absexp, absexple (absexp_meet a1 a2) a2. *)
+     (* Parameter absexple_meet_glb : *)
+     (*   forall a1 a2 al : absexp, absexple al a1 -> absexple al a2 -> absexple al (absexp_meet a1 a2). *)
+     (* Parameter absexple_models : *)
+     (*   forall (h : hdomain) (st : IL0.store) (e1 e2 : absexp) (v : value), *)
+     (*   absexple e1 e2 -> absexp_models h st e2 v -> absexp_models h st e1 v. *)
+     (* Parameter absexple_abstract : *)
+     (*   forall (a1 a2 : alist IL0.var absexp) (e : IL0.exp), *)
+     (*   (forall v : IL0.var, absexple (absexp_abstract (IL0.Var v) a1) (absexp_abstract (IL0.Var v) a2)) -> *)
+     (*   absexple (absexp_abstract e a1) (absexp_abstract e a2). *)
+
+  Definition absexp_models 
