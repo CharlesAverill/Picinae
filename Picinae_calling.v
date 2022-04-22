@@ -62,13 +62,13 @@ Module Type PICINAE_TRACING_DEFS (IL: PICINAE_IL).
   Parameter absenv_meet : absenv -> absenv -> absenv.
 
   Parameter absenv_models :
-    hdomain -> abspar -> absenv -> store -> store -> Prop.
+    hdomain -> abspar -> absenv -> store -> Prop.
 
   Axiom absenv_bind_models :
-    forall h ap st ae st' exp val v,
-      absenv_models h ap ae st st' ->
+    forall h ap ae st' exp val v,
+      absenv_models h ap ae st' ->
       eval_exp h st' exp val ->
-      absenv_models h ap (absenv_bind ae v exp) st (st' [v := val]).
+      absenv_models h ap (absenv_bind ae v exp) (st' [v := val]).
 
   Axiom absleb_absle : forall e1 e2, absleb e1 e2 = true <-> absle e1 e2.
   Axiom absle_trans : forall e1 e2 e3 (HE1 : absle e1 e2) (HE2 : absle e2 e3),
@@ -77,10 +77,10 @@ Module Type PICINAE_TRACING_DEFS (IL: PICINAE_IL).
   Axiom absle_meet_l : forall a1 a2, absle (absenv_meet a1 a2) a1.
   Axiom absle_meet_r : forall a1 a2, absle (absenv_meet a1 a2) a2.
   Axiom absle_models :
-    forall h ap st aenv1 aenv2 st',
+    forall h ap aenv1 aenv2 st',
       absle aenv1 aenv2 ->
-      absenv_models h ap aenv2 st st' ->
-      absenv_models h ap aenv1 st st'.
+      absenv_models h ap aenv2 st' ->
+      absenv_models h ap aenv1 st'.
 End PICINAE_TRACING_DEFS.
 
 Module Type PICINAE_ABSEXP_ASSOC_DEFS (IL : PICINAE_IL).
@@ -92,7 +92,7 @@ Module Type PICINAE_ABSEXP_ASSOC_DEFS (IL : PICINAE_IL).
   Parameter absexp_meet : absexp -> absexp -> absexp.
   Parameter absexp_abstract : exp -> alist var absexp -> absexp.
   Parameter absexp_models :
-    hdomain -> abspar -> store -> absexp -> value -> Prop.
+    hdomain -> abspar -> absexp -> value -> Prop.
 
   Parameter absexple : absexp -> absexp -> Prop.
   Parameter absexpleb : absexp -> absexp -> bool.
@@ -101,10 +101,10 @@ Module Type PICINAE_ABSEXP_ASSOC_DEFS (IL : PICINAE_IL).
     forall v a, absexp_abstract (Var v) a = assoc_def v a (absexp_default v).
 
   Axiom absexp_models_eval :
-    forall h ap st st' e val aenv,
-      (forall v, absexp_models h ap st (absexp_abstract (Var v) aenv) (st' v)) ->
-      eval_exp h st' e val ->
-      absexp_models h ap st (absexp_abstract e aenv) val.
+    forall h ap st e val aenv,
+      (forall v, absexp_models h ap (absexp_abstract (Var v) aenv) (st v)) ->
+      eval_exp h st e val ->
+      absexp_models h ap (absexp_abstract e aenv) val.
 
   Axiom absexpleb_absexple :
     forall e1 e2, absexpleb e1 e2 = true <-> absexple e1 e2.
@@ -117,8 +117,8 @@ Module Type PICINAE_ABSEXP_ASSOC_DEFS (IL : PICINAE_IL).
     forall a1 a2 al,
       absexple al a1 -> absexple al a2 -> absexple al (absexp_meet a1 a2).
   Axiom absexple_models :
-    forall h ap st e1 e2 v,
-      absexple e1 e2 -> absexp_models h ap st e2 v -> absexp_models h ap st e1 v.
+    forall h ap e1 e2 v,
+      absexple e1 e2 -> absexp_models h ap e2 v -> absexp_models h ap e1 v.
 End PICINAE_ABSEXP_ASSOC_DEFS.
 
 Module PICINAE_ABSEXP_ASSOC
@@ -152,13 +152,13 @@ Module PICINAE_ABSEXP_ASSOC
   Definition absexp_abstract := DEFS.absexp_abstract.
   Definition absexp_models_eval := DEFS.absexp_models_eval.
 
-  Definition absenv_models h ap ae st st' :=
-    forall v, DEFS.absexp_models h ap st (alookup v ae) (st' v).
+  Definition absenv_models h ap ae st' :=
+    forall v, DEFS.absexp_models h ap (alookup v ae) (st' v).
 
-  Theorem absenv_bind_models h ap st ae st' exp val v
-          (HM : absenv_models h ap ae st st')
+  Theorem absenv_bind_models h ap ae st' exp val v
+          (HM : absenv_models h ap ae st')
           (HE : eval_exp h st' exp val) :
-    absenv_models h ap (absenv_bind ae v exp) st (st' [v := val]).
+    absenv_models h ap (absenv_bind ae v exp) (st' [v := val]).
   Proof.
     intro v'.
     unfold absenv_bind,alookup.
@@ -210,10 +210,10 @@ Module PICINAE_ABSEXP_ASSOC
     apply DEFS.absexple_refl.
   Qed.
 
-  Theorem absle_models h ap st a1 a2 st'
+  Theorem absle_models h ap a1 a2 st'
           (HL : absle a1 a2)
-          (HM : absenv_models h ap a2 st st') :
-    absenv_models h ap a1 st st'.
+          (HM : absenv_models h ap a2 st') :
+    absenv_models h ap a1 st'.
   Proof.
     intro v.
     specialize (HM v).
@@ -332,7 +332,7 @@ Next Obligation. Proof. decide equality. apply iseq. Defined.
 
 Module PICINAE_ABSEXP_OPTEXPEQ (IL : PICINAE_IL) <: PICINAE_ABSEXP_ASSOC_DEFS IL.
   Import IL.
-  Definition abspar := unit.
+  Definition abspar := store.
   Definition absexp := option exp.
   Definition absexp_default v := Some (Var v).
 
@@ -443,7 +443,7 @@ Module PICINAE_ABSEXP_OPTEXPEQ (IL : PICINAE_IL) <: PICINAE_ABSEXP_ASSOC_DEFS IL
       → eval_exp_na s e2 (VaN n2 w2)
       → eval_exp_na s (Concat e1 e2) (VaN (N.lor (N.shiftl n1 w2) n2) (w1 + w2)).
 
-  Definition absexp_models (h : hdomain) (ap : unit) s oe val :=
+  Definition absexp_models (h : hdomain) s oe val :=
     match oe with
     | Some e => eval_exp_na s e val
     | None => True
@@ -473,10 +473,10 @@ Module PICINAE_ABSEXP_OPTEXPEQ (IL : PICINAE_IL) <: PICINAE_ABSEXP_ASSOC_DEFS IL
     induction HE; econstructor; eassumption.
   Qed.
 
-  Theorem absexp_models_eval h ap s s' e val a
-          (HM : forall v, absexp_models h ap s (absexp_abstract (Var v) a) (s' v))
+  Theorem absexp_models_eval h s s' e val a
+          (HM : forall v, absexp_models h s (absexp_abstract (Var v) a) (s' v))
           (HE : eval_exp h s' e val) :
-    absexp_models h ap s (absexp_abstract e a) val.
+    absexp_models h s (absexp_abstract e a) val.
   Proof.
     unfold absexp_models.
     revert s a HM.
@@ -509,17 +509,16 @@ Module PICINAE_ABSEXP_OPTEXPEQ (IL : PICINAE_IL) <: PICINAE_ABSEXP_ASSOC_DEFS IL
     all: econstructor; eassumption.
   Qed.
 
-  Theorem absexp_nil_models h ap st v :
-      absexp_models h ap st (absexp_abstract (Var v) nil) (st v).
+  Theorem absexp_nil_models h ap v :
+      absexp_models h ap (absexp_abstract (Var v) nil) (ap v).
   Proof.
     constructor.
   Qed.
 
-  Theorem absexp_bind_models h ap st v e1 e2 val a
-      (HM : absexp_models h ap st (absexp_abstract (Let v e1 e2) a) val) :
+  Theorem absexp_bind_models h ap v e1 e2 val a
+      (HM : absexp_models h ap (absexp_abstract (Let v e1 e2) a) val) :
     absexp_models h
                   ap
-                  st
                   (absexp_abstract e2 (assoc_cons v (absexp_abstract e1 a) a))
                   val.
   Proof.
@@ -569,9 +568,9 @@ Module PICINAE_ABSEXP_OPTEXPEQ (IL : PICINAE_IL) <: PICINAE_ABSEXP_ASSOC_DEFS IL
     destruct iseq; tauto.
   Qed.
 
-  Theorem absexple_models h ap st e1 e2 v
-          (HL : absexple e1 e2) (HE : absexp_models h ap st e2 v) :
-    absexp_models h ap st e1 v.
+  Theorem absexple_models h ap e1 e2 v
+          (HL : absexple e1 e2) (HE : absexp_models h ap e2 v) :
+    absexp_models h ap e1 v.
   Proof.
     destruct e1,e2; simpl in *; subst; tauto.
   Qed.
@@ -637,62 +636,62 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
     | _ => skip
     end.
 
-  Definition trace_state_models_exit h ap '(ax,d) st st' x :=
-    absenv_models h ap d st st' /\
+  Definition trace_state_models_exit h ap '(ax,d) st x :=
+    absenv_models h ap d st /\
       match ax,x with
       | AEExn n,Raise n'
       | AELoc n,Exit n' => n = n'
-      | AEExp e,Exit n => exists w, eval_exp h st' e (VaN n w)
+      | AEExp e,Exit n => exists w, eval_exp h st e (VaN n w)
       | _,_ => False
       end.
 
-  Definition trace_state_models_oexit h ap P ts st st' ox :=
+  Definition trace_state_models_oexit h ap P ts st ox :=
     match ox with
-    | Some x => trace_state_models_exit h ap ts st st' x
+    | Some x => trace_state_models_exit h ap ts st x
     | None => P ts
     end.
 
-  Definition trace_states_model h ap tsl st st' x :=
-    Exists (fun ts => trace_state_models_exit h ap ts st st' x) tsl.
+  Definition trace_states_model h ap tsl st x :=
+    Exists (fun ts => trace_state_models_exit h ap ts st x) tsl.
 
-  Definition trace_states_modelo h ap P tsl st st' ox :=
-    Exists (fun ts => trace_state_models_oexit h ap P ts st st' ox) tsl.
+  Definition trace_states_modelo h ap P tsl st ox :=
+    Exists (fun ts => trace_state_models_oexit h ap P ts st ox) tsl.
 
-  Definition info_models_loc h ap info n st st' :=
+  Definition info_models_loc h ap info n st :=
     match treeN_lookup info n with
-    | Some d => absenv_models h ap d st st'
+    | Some d => absenv_models h ap d st
     | None => False
     end.
 
-  Definition info_models_exit h ap info st st' x :=
+  Definition info_models_exit h ap info st x :=
     match x with
     | Raise _ => False
-    | Exit n => info_models_loc h ap info n st st'
+    | Exit n => info_models_loc h ap info n st
     end.
 
   Definition exec_inter_prog h p a st time1 st' a' time2 st'' x :=
     exec_prog h p a st time1 st' (Exit a') /\
       exec_prog h p a' st' time2 st'' x.
 
-  Definition trace_result_models_exit h ap '(info,tsl) st st' x :=
-    info_models_exit h ap info st st' x \/ trace_states_model h ap tsl st st' x.
+  Definition trace_result_models_exit h ap '(info,tsl) st x :=
+    info_models_exit h ap info st x \/ trace_states_model h ap tsl st x.
 
-  Definition trace_result_consistent h ap '(info,tsl) p st :=
-    forall st' a st'' x sz q
-           (HInfo : info_models_loc h ap info a st st')
-           (HE : exec_stmt h st' q st'' x)
+  Definition trace_result_consistent h ap '(info,tsl) p :=
+    forall st a st' x sz q
+           (HInfo : info_models_loc h ap info a st)
+           (HE : exec_stmt h st q st' x)
            (HP : p st' a = Some (sz,q)),
-      trace_result_models_exit h ap (info,tsl) st st'' (exitof (a+sz) x).
+      trace_result_models_exit h ap (info,tsl) st' (exitof (a+sz) x).
 
-  Definition trace_inter_consistent h ap '((info,tsl1),tsl2) p st :=
-    trace_result_consistent h ap (info,tsl1 ++ tsl2) p st.
+  Definition trace_inter_consistent h ap '((info,tsl1),tsl2) p :=
+    trace_result_consistent h ap (info,tsl1 ++ tsl2) p.
 
-  Theorem trace_stmt_result' h ap P st st' st'' d q next ox
-          (HD : absenv_models h ap d st st')
-          (HE : exec_stmt h st' q st'' ox)
+  Theorem trace_stmt_result' h ap P st st' d q next ox
+          (HD : absenv_models h ap d st)
+          (HE : exec_stmt h st q st' ox)
           (HN : match ox with
                 | None =>
-                    forall d' (HND : absenv_models h ap d' st st''),
+                    forall d' (HND : absenv_models h ap d' st'),
                       match next d' with
                       | Some tsl' => Exists P tsl'
                       | None => True
@@ -700,11 +699,11 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
                 | Some x => True
                 end) :
     match trace_stmt q next d with
-    | Some tsl => trace_states_modelo h ap P tsl st st'' ox
+    | Some tsl => trace_states_modelo h ap P tsl st' ox
     | None => True
     end.
   Proof.
-    revert P st d next HD HN.
+    revert P ap d next HD HN.
     unfold trace_states_modelo in *.
     induction HE; simpl in *; intros.
     {
@@ -745,15 +744,14 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
     }
   Qed.
 
-  Theorem trace_stmt_result h ap st st' st'' d q n ox tsl
-          (HD : absenv_models h ap d st st')
-          (HE : exec_stmt h st' q st'' ox)
+  Theorem trace_stmt_result h ap st st' d q n ox tsl
+          (HD : absenv_models h ap d st)
+          (HE : exec_stmt h st q st' ox)
           (HTS: trace_stmt q (trace_exit_res n) d = Some tsl) :
-    trace_states_model h ap tsl st st'' (exitof n ox).
+    trace_states_model h ap tsl st' (exitof n ox).
   Proof.
-    pose (P := fun ts => trace_state_models_exit h ap ts st st'' (Exit n)).
-    assert
-      (HX := trace_stmt_result' h ap P st st' st'' d q (trace_exit_res n) ox).
+    pose (P := fun ts => trace_state_models_exit h ap ts st' (Exit n)).
+    assert (HX := trace_stmt_result' h ap P st st' d q (trace_exit_res n) ox).
     rewrite HTS in HX.
     specialize (HX HD HE).
     destruct ox; apply HX; [tauto|].
@@ -765,22 +763,24 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
     tauto.
   Qed.
 
-  Theorem trace_result_consistent_exec h ap info tsl p a st st' time st'' x
-          (HC : trace_result_consistent h ap (info,tsl) p st)
-          (HInfo : info_models_loc h ap info a st st')
-          (HE : exec_prog h p a st' time st'' x) :
-    trace_result_models_exit h ap (info,tsl) st st'' x \/
-      exists time1 time2 st'x a',
+  Theorem trace_result_consistent_exec h ap info tsl p a st time st' x
+          (HP : forall st st' n, p st' n = p st n)
+          (HC : trace_result_consistent h ap (info,tsl) p)
+          (HInfo : info_models_loc h ap info a st)
+          (HE : exec_prog h p a st time st' x) :
+    trace_result_models_exit h ap (info,tsl) st' x \/
+      exists time1 time2 stx a',
         time = (time1 + time2)%nat /\
-          exec_prog h p a st' time1 st'x (Exit a') /\
-          exec_prog h p a' st'x time2 st'' x /\
-          trace_states_model h ap tsl st st'x (Exit a').
+          exec_prog h p a st time1 stx (Exit a') /\
+          exec_prog h p a' stx time2 st' x /\
+          trace_states_model h ap tsl stx (Exit a').
   Proof.
     revert HInfo.
     induction HE; simpl; [tauto| |]; intro.
     {
       assert (HCX := XS).
       eapply HC in HCX; [|eassumption].
+      rewrite (HP s) in *.
       specialize (HCX LU).
       simpl in *.
       rewrite EX in *.
@@ -807,29 +807,30 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
     }
     {
       eapply HC in XS; [|eassumption].
+      rewrite (HP s) in *.
       apply XS in LU.
       left.
       assumption.
     }
   Qed.
 
-  Theorem trace_result_consistent_init h ap tsl p st :
-    trace_result_consistent h ap (treeN_nil,tsl) p st.
+  Theorem trace_result_consistent_init h ap tsl p :
+    trace_result_consistent h ap (treeN_nil,tsl) p.
   Proof.
     simpl.
     intros.
     destruct a; compute in HInfo; tauto.
   Qed.
 
-  Theorem trace_step_modelled h ap p st tn tsl tnd d n
+  Theorem trace_step_modelled h ap p tn tsl tnd d n
           (HTN : treeN_lookup tn n = Some tnd)
           (HLE : absle tnd d)
-          (HPrev : trace_result_consistent h ap (tn,(AELoc n,d)::tsl) p st) :
-    trace_result_consistent h ap (tn,tsl) p st.
+          (HPrev : trace_result_consistent h ap (tn,(AELoc n,d)::tsl) p) :
+    trace_result_consistent h ap (tn,tsl) p.
   Proof.
     unfold trace_result_consistent in *.
     intros.
-    specialize (HPrev st' a st'' x sz q HInfo HE HP).
+    specialize (HPrev st a st' x sz q HInfo HE HP).
     unfold trace_result_models_exit,trace_states_model in *.
     rewrite Exists_cons in HPrev.
     destruct HPrev as [?|[HPrev|?] ]; [tauto| |tauto].
@@ -843,9 +844,9 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
     eapply absle_models; eassumption.
   Qed.
 
-  Theorem trace_state_models_exit_promote_word h ap d n w st st' x
-    (HM : trace_state_models_exit h ap (AEExp (Word n w), d) st st' x) :
-    trace_state_models_exit h ap (AELoc n, d) st st' x.
+  Theorem trace_state_models_exit_promote_word h ap d n w st' x
+    (HM : trace_state_models_exit h ap (AEExp (Word n w), d) st' x) :
+    trace_state_models_exit h ap (AELoc n, d) st' x.
   Proof.
     simpl in *.
     destruct HM as [? HM].
@@ -857,14 +858,14 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
     reflexivity.
   Qed.
 
-  Theorem trace_step_promote_word h ap p st tn tsl d n w
-    (HPrev : trace_result_consistent h ap (tn,(AEExp (Word n w),d)::tsl) p st) :
-    trace_result_consistent h ap (tn,(AELoc n,d)::tsl) p st.
+  Theorem trace_step_promote_word h ap p tn tsl d n w
+    (HPrev : trace_result_consistent h ap (tn,(AEExp (Word n w),d)::tsl) p) :
+    trace_result_consistent h ap (tn,(AELoc n,d)::tsl) p.
   Proof.
     unfold trace_result_consistent in *.
     unfold trace_result_models_exit in *.
     intros.
-    specialize (HPrev st' a st'' x sz q HInfo HE HP).
+    specialize (HPrev st a st' x sz q HInfo HE HP).
     unfold trace_states_model in *.
     rewrite Exists_cons in *.
     destruct HPrev as [?|[HPrev|?] ]; [tauto| |tauto].
@@ -882,8 +883,8 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
           (HP : forall st' n, p st' n = p st n)
           (HTX : p st n = Some (sz,q))
           (HT : trace_stmt q (trace_exit_res (n + sz)) dm = Some tsl')
-          (HPrev : trace_result_consistent h ap (tn,(AELoc n,d)::tsl) p st) :
-    trace_inter_consistent h ap ((treeN_update tn n (Some dm),tsl),tsl') p st.
+          (HPrev : trace_result_consistent h ap (tn,(AELoc n,d)::tsl) p) :
+    trace_inter_consistent h ap ((treeN_update tn n (Some dm),tsl),tsl') p.
   Proof.
     unfold dm in *.
     clear dm.
@@ -939,10 +940,10 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_TRACING_DEFS IL).
 
   Theorem trace_step_models_consistent h ap p st tn tsl ts
           (HP : forall st' n, p st' n = p st n)
-          (HPrev : trace_result_consistent h ap (tn,ts::tsl) p st) :
-    trace_inter_consistent h ap (step_trace (p st) (tn,tsl) ts) p st.
+          (HPrev : trace_result_consistent h ap (tn,ts::tsl) p) :
+    trace_inter_consistent h ap (step_trace (p st) (tn,tsl) ts) p.
   Proof.
-    assert (HSkip : trace_inter_consistent h ap ((tn,ts::tsl),nil) p st)
+    assert (HSkip : trace_inter_consistent h ap ((tn,ts::tsl),nil) p)
       by (simpl; rewrite app_nil_r; assumption).
     simpl.
     destruct ts as [ae d].

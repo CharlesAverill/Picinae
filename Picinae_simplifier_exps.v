@@ -613,7 +613,7 @@ Module PSimpl_Exps_absexp
     end.
 
   Definition absexp_abstract e l := exp2sast e (absenv_elim l).
-  Definition absexp_models (_ : hdomain) t (_ : var -> value) ax v :=
+  Definition absexp_models (_ : hdomain) t ax v :=
     match ax with
     | Some x => eval_sastNM t x v
     | None => True
@@ -644,10 +644,10 @@ Module PSimpl_Exps_absexp
     destruct iseq; tauto.
   Qed.
 
-  Theorem absexp_models_eval h t st st' e val aenv :
-    (forall v, absexp_models h t st (absexp_abstract (Var v) aenv) (st' v)) ->
-    eval_exp h st' e val ->
-    absexp_models h t st' (absexp_abstract e aenv) val.
+  Theorem absexp_models_eval h t st e val aenv :
+    (forall v, absexp_models h t (absexp_abstract (Var v) aenv) (st v)) ->
+    eval_exp h st e val ->
+    absexp_models h t (absexp_abstract e aenv) val.
   Proof.
     apply exp2sast_sound.
   Qed.
@@ -697,9 +697,9 @@ Module PSimpl_Exps_absexp
     eapply sasteq_trans; [apply sasteq_symm|]; eassumption.
   Qed.
 
-  Theorem absexple_models h t st e1 e2 v
-    (HL : absexple e1 e2) (HM : absexp_models h t st e2 v) :
-    absexp_models h t st e1 v.
+  Theorem absexple_models h t e1 e2 v
+    (HL : absexple e1 e2) (HM : absexp_models h t e2 v) :
+    absexp_models h t e1 v.
   Proof.
     unfold absexp_models,absexple in *.
     destruct e1,e2; try tauto.
