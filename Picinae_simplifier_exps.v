@@ -6,6 +6,7 @@ Require Import FunctionalExtensionality.
 Require Import NArith.
 Require Import ZArith.
 Require Import Picinae_calling.
+Require Import Ntree.
 Open Scope list_scope.
 
 Theorem unk_bound (n w:N): n mod 2^w < 2^w.
@@ -53,12 +54,6 @@ Definition ouvalue_boundedness (ou:option uvalue) :=
 Definition ustore_boundedness (us:var -> option uvalue) :=
   forall v, ouvalue_boundedness (us v).
 
-Fixpoint lookup {A B : Type} {EQD:EqDec A} (var : A) (kvl:list (A*B)) : option B :=
-  match kvl with
-  | cons (k,val) kvs => if iseq var k then Some val else lookup var kvs
-  | nil => None
-  end.
-
 Theorem mvt_lookup_insert t v d : mvt_lookup (mvt_insert t v d) v = d.
 Proof.
   revert t.
@@ -96,14 +91,12 @@ Variable USB : ustore_boundedness us.
           that cannot be represented as an sast.  We cannot simplify those.
    Some (t',a) = Sast "a" evaluated in context t' denotes the same set of values
                  as expression e evaluated in context us. *)
-Definition typ_lookup (c : list (var * option typ)) v :=
-  match lookup v c with | Some (Some t) => Some t | _ => None end.
 
 Fixpoint exp2sast (e:exp) (env:list (var * sastNM)) {struct e}
   : option sastNM :=
   let rec := fun e => exp2sast e env in
   match e with
-  | Var v => lookup v env
+  | Var v => assoc v env
   | Unknown _ => None
   | Word n w => Some (ASTNum (SIMP_Const n) w)
   | Load e1 e2 en len =>
@@ -187,7 +180,7 @@ Inductive eval_sastNM (t:metavar_tree) : sastNM -> value -> Prop :=
 
 Theorem exp2sast_sound e env h st t v :
   (forall v,
-      match lookup v env with
+      match assoc v env with
       | Some x => eval_sastNM t x (st v)
       | None => True
       end) ->
@@ -387,7 +380,7 @@ Qed.
 Theorem build_env_max l v t n d env e val :
   (length l <= n)%nat ->
   build_env l = Some env ->
-  lookup v env = Some e ->
+  assoc v env = Some e ->
   eval_sastNM (mvt_insert t (Pos.of_succ_nat n) d) e val <->
   eval_sastNM t e val.
 Proof.
@@ -419,7 +412,7 @@ Qed.
 Theorem build_env_lookup_us l v :
   match build_env l with
   | Some env =>
-    match lookup v env with
+    match assoc v env with
       | Some _ => exists y, us v = Some y
       | None => True
     end
@@ -439,7 +432,7 @@ Qed.
 Theorem build_mvt_env_works l v :
   match build_mvt l,build_env l with
   | Some t,Some env =>
-    match lookup v env,us v with
+    match assoc v env,us v with
     | Some x,Some u => eval_sastNM t x (of_uvalue u)
     | None,_ | _,None => True
     end
@@ -464,7 +457,7 @@ Proof.
     destruct z; constructor; simpl; rewrite mvt_lookup_insert; reflexivity.
   }
   {
-    destruct lookup eqn:HX; auto.
+    destruct assoc eqn:HX; auto.
     destruct (us v) as [[[|] ? ? ?]|]; auto; eapply HM; eauto.
   }
 Qed.
@@ -553,7 +546,7 @@ Proof.
   intro.
   specialize (HX v).
   specialize (HL v).
-  destruct lookup; auto.
+  destruct assoc; auto.
   destruct HL.
   unfold ustore_of_store,val_to_uval,option_map in *.
   destruct c; [|discriminate].
@@ -586,8 +579,6 @@ Admitted.
 
 End PSimpl_Exps.
 
-Require Import Ntree.
-
 Module PSimpl_Exps_absexp
        (IL: PICINAE_IL)
        (TIL: PICINAE_STATICS IL)
@@ -595,11 +586,23 @@ Module PSimpl_Exps_absexp
   Import IL.
   Module M := PSimpl_Exps IL TIL FIL.
   Import M.
+  Definition abspar := metavar_tree.
   Definition absexp := option sastNM.
+
+  Axiom sasteq : sastNM -> sastNM -> Prop.
+  Axiom sasteqb : sastNM -> sastNM -> bool.
+  Axiom sasteq_refl : forall x, sasteq x x.
+  Axiom sasteq_trans :
+    forall x1 x2 x3, sasteq x1 x2 -> sasteq x2 x3 -> sasteq x1 x3.
+  Axiom sasteq_symm : forall x1 x2, sasteq x1 x2 -> sasteq x2 x1.
+  Axiom sasteq_val :
+    forall t x1 x2 v, sasteq x1 x2 -> eval_sastNM t x1 v -> eval_sastNM t x2 v.
+  Axiom sasteqb_sasteq : forall x1 x2, sasteqb x1 x2 = true <-> sasteq x1 x2.
+
   Definition absexp_default (v : var) : absexp := None.
   Definition absexp_meet x1 x2 :=
     match x1,x2 with
-    | Some e1,Some e2 => if e1 == e2 then x1 else None
+    | Some e1,Some e2 => if sasteqb e1 e2 then x1 else None
     | None,_ | _,None => None
     end.
   Fixpoint absenv_elim (l : list (var * absexp)) :=
@@ -609,40 +612,99 @@ Module PSimpl_Exps_absexp
     | (v,None)::xs => assoc_remove v (absenv_elim xs)
     end.
 
-  Definition absexp_abstract : exp -> list (_ * absexp) -> absexp :=
-    fun e l => exp2sast e (absenv_elim l).
+  Definition absexp_abstract e l := exp2sast e (absenv_elim l).
+  Definition absexp_models (_ : hdomain) t (_ : var -> value) ax v :=
+    match ax with
+    | Some x => eval_sastNM t x v
+    | None => True
+    end.
 
-  Print PICINAE_ABSEXP_ASSOC_DEFS.
-  Print simpl_sastN.
+  Definition absexpleb x1 x2 :=
+    match x1,x2 with
+    | Some e1,Some e2 => sasteqb e1 e2
+    | Some _,None => false
+    | None,_ => true
+    end.
+  Definition absexple x1 x2 :=
+    match x1,x2 with
+    | Some e1,Some e2 => sasteq e1 e2
+    | Some _,None => False
+    | None,_ => True
+    end.
 
-     (* Parameter absexp : Type. *)
-     (* Parameter absexp_default : IL0.var -> absexp. *)
-     (* Parameter absexp_meet : absexp -> absexp -> absexp. *)
-     (* Parameter absexp_abstract : IL0.exp -> alist IL0.var absexp -> absexp. *)
-     (* Parameter absexp_models : hdomain -> IL0.store -> absexp -> value -> Prop. *)
-     (* Parameter absexple : absexp -> absexp -> Prop. *)
-     (* Parameter absexpleb : absexp -> absexp -> bool. *)
-     (* Parameter absexp_abstract_lookup : *)
-     (*   forall (v : IL0.var) (a : alist IL0.var absexp), *)
-     (*   absexp_abstract (IL0.Var v) a = assoc_def v a (absexp_default v). *)
-     (* Parameter absexp_models_eval : *)
-     (*   forall (h : hdomain) (st : IL0.store) (st' : IL0.var -> value) (e : IL0.exp) (val : value) *)
-     (*     (aenv : alist IL0.var absexp), *)
-     (*   (forall v : IL0.var, absexp_models h st (absexp_abstract (IL0.Var v) aenv) (st' v)) -> *)
-     (*   IL0.eval_exp h st' e val -> absexp_models h st (absexp_abstract e aenv) val. *)
-     (* Parameter absexpleb_absexple : forall e1 e2 : absexp, absexpleb e1 e2 = true <-> absexple e1 e2. *)
-     (* Parameter absexple_trans : forall e1 e2 e3 : absexp, absexple e1 e2 -> absexple e2 e3 -> absexple e1 e3. *)
-     (* Parameter absexple_refl : forall e : absexp, absexple e e. *)
-     (* Parameter absexple_meet_l : forall a1 a2 : absexp, absexple (absexp_meet a1 a2) a1. *)
-     (* Parameter absexple_meet_r : forall a1 a2 : absexp, absexple (absexp_meet a1 a2) a2. *)
-     (* Parameter absexple_meet_glb : *)
-     (*   forall a1 a2 al : absexp, absexple al a1 -> absexple al a2 -> absexple al (absexp_meet a1 a2). *)
-     (* Parameter absexple_models : *)
-     (*   forall (h : hdomain) (st : IL0.store) (e1 e2 : absexp) (v : value), *)
-     (*   absexple e1 e2 -> absexp_models h st e2 v -> absexp_models h st e1 v. *)
-     (* Parameter absexple_abstract : *)
-     (*   forall (a1 a2 : alist IL0.var absexp) (e : IL0.exp), *)
-     (*   (forall v : IL0.var, absexple (absexp_abstract (IL0.Var v) a1) (absexp_abstract (IL0.Var v) a2)) -> *)
-     (*   absexple (absexp_abstract e a1) (absexp_abstract e a2). *)
+  Theorem absexp_abstract_lookup v a :
+    absexp_abstract (Var v) a = assoc_def v a (absexp_default v).
+  Proof.
+    unfold absexp_abstract,assoc_def.
+    simpl.
+    induction a as [|[? ae] ?]; [reflexivity|].
+    simpl.
+    destruct ae; [simpl;destruct iseq;tauto|].
+    rewrite assoc_remove_lookup.
+    destruct iseq; tauto.
+  Qed.
 
-  Definition absexp_models 
+  Theorem absexp_models_eval h t st st' e val aenv :
+    (forall v, absexp_models h t st (absexp_abstract (Var v) aenv) (st' v)) ->
+    eval_exp h st' e val ->
+    absexp_models h t st' (absexp_abstract e aenv) val.
+  Proof.
+    apply exp2sast_sound.
+  Qed.
+
+  Theorem absexpleb_absexple e1 e2 : absexpleb e1 e2 = true <-> absexple e1 e2.
+  Proof.
+    destruct e1,e2; simpl; try solve [intuition].
+    apply sasteqb_sasteq.
+  Qed.
+  Theorem absexple_trans e1 e2 e3 (HL1 : absexple e1 e2) (HL2 : absexple e2 e3) :
+    absexple e1 e3.
+  Proof.
+    unfold absexple in *.
+    destruct e1,e2,e3; try tauto.
+    eapply sasteq_trans; eassumption.
+  Qed.
+  Theorem absexple_refl e : absexple e e.
+    destruct e; [apply sasteq_refl|exact I].
+  Qed.
+
+  Theorem absexple_meet_l a1 a2 : absexple (absexp_meet a1 a2) a1.
+  Proof.
+    destruct a1,a2; try exact I.
+    simpl.
+    destruct sasteqb; [|exact I].
+    apply sasteq_refl.
+  Qed.
+
+  Theorem absexple_meet_r a1 a2 : absexple (absexp_meet a1 a2) a2.
+  Proof.
+    destruct a1,a2; try exact I.
+    simpl.
+    destruct sasteqb eqn:?; [|exact I].
+    apply sasteqb_sasteq.
+    assumption.
+  Qed.
+
+  Theorem absexple_meet_glb a1 a2 al
+    (HL1 : absexple al a1) (HL2 : absexple al a2)
+    : absexple al (absexp_meet a1 a2).
+  Proof.
+    destruct al,a1,a2; try tauto.
+    simpl in *.
+    replace (sasteqb s0 s1) with true; [assumption|].
+    symmetry.
+    apply sasteqb_sasteq.
+    eapply sasteq_trans; [apply sasteq_symm|]; eassumption.
+  Qed.
+
+  Theorem absexple_models h t st e1 e2 v
+    (HL : absexple e1 e2) (HM : absexp_models h t st e2 v) :
+    absexp_models h t st e1 v.
+  Proof.
+    unfold absexp_models,absexple in *.
+    destruct e1,e2; try tauto.
+    eapply sasteq_val; [|eassumption].
+    apply sasteq_symm.
+    assumption.
+  Qed.
+End PSimpl_Exps_absexp.
