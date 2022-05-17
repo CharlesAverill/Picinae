@@ -1170,16 +1170,48 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
       * simpl in H1. rewrite fold_left_rev_right in H1. eapply IHtsl in H1. apply H1. apply H.
 Qed.
 
+Theorem exec_prog_induct:
+  forall n h prog a_0 st_1 st_sn x
+  (H: exec_prog h prog a_0 st_1 (S n) st_sn x),
+  exists e_st_n e_a, 
+    exec_prog h prog a_0 st_1 n e_st_n (Exit e_a) /\
+    exec_prog h prog e_a e_st_n 1 st_sn x.
+Proof.
+    induction n.
+    intros. inversion H. subst. split with (x:=st_1). split with (x:=a_0). split. 
+      apply XDone. apply H. 
+      
+      split with (x:=st_1). split with (x:=a_0). split. apply XDone. subst. apply H. 
+
+    intros.
+      inversion H. subst. apply IHn in XP. destruct XP. destruct H0. destruct H0. split with (x:=x0). split with (x:=x2).
+      split; try apply H1. eapply XStep. apply LU. apply XS. apply EX. apply H0.
+Qed.
+
+
 Theorem trace_prog_complete:
-    forall h a_0 st_0 st_1 n st_n info info' r r' tsl x (prog: program)
+    forall n h a_0 st_0 st_1 st_n info info' r r' tsl x (prog: program)
     (H1: ((info',r'), nil) = trace_prog (prog st_0) ((info,r),tsl))
     (H2: info_models_loc h info' a_0 st_0 st_1) 
     (H3: exec_prog h prog a_0 st_1 n st_n x)
     (HP : forall st_e1 st_e2 n_e, prog st_e1 n_e = prog st_e2 n_e),
     trace_result_models_exit h (info',r') st_0 st_n x.
   Proof.
-  Admitted.
+    (*first thought: induction on n. this is what we did for the previous version of trace_prog*)
+    induction n.
+    intros. inversion H3. subst. simpl. left. apply H2.
+    intros. apply exec_prog_induct in H3. destruct H3 as  (st', (a',H)). destruct H.eapply IHn in H1.
+      2:{ apply H2. }
+      2:{ apply H. }
+      2:{ apply HP. }
+      inversion H0. subst.
+      pose proof XP as X.
+
+Qed.
 End PICINAE_CALLING.
+
+
+
 
 Program Instance endian_EqDec: EqDec endianness.
 Next Obligation. Proof. decide equality. Defined.
