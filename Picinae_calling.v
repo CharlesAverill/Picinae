@@ -273,13 +273,16 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     | _ => skip
     end.
 
-  Definition promote (tsl : list (trace_state)) :=
-    fold_left  (fun acc '(d,ae) =>
+	Definition promote_accum acc (ts : trace_state) :=
+				let (d,ae) := ts in
         match ae with
         | AEExp (Word n w) => (d, AELoc n)::acc
         | _ => (d,ae)::acc
-        end
-      ) tsl nil.
+        end.
+
+  Definition promote (tsl : list (trace_state)) :=
+    fold_left  promote_accum tsl nil.
+
   Definition trace_prog_accum_func prog '(a_info, a_ts) ts :=
       let (a_info', n_ts):= (step_trace prog a_info ts) in
       let n_ts_promote := promote n_ts in
@@ -1094,7 +1097,80 @@ Module PICINAE_CALLING (IL: PICINAE_IL) (DEFS : PICINAE_CALLING_DEFS IL).
     apply HX,eval_exple; constructor; reflexivity.
   Qed.
 
-  Theorem trace_prog_complete:
+  Theorem trace_stmt_not_nil :
+      forall q d k next ts
+      (Hts: ts <> nil)
+      (Hnext: next d = Some ts),
+      trace_stmt q next d = Some k -> k <> nil.
+  Proof.
+    induction q.
+      intros. simpl in H.
+
+  Admitted.
+
+  Theorem trace_prog_accum_func_monotonic:
+    forall t a a' r p, (a',nil) = fold_left (trace_prog_accum_func p) t (a, r) -> r = nil.
+  Proof.
+    induction t. 
+    intros. simpl in H. inversion H. reflexivity.
+    intros. simpl in H. destruct (step_trace p a0 a). apply IHt in H. rewrite <- H.
+    apply app_eq_nil in H. destruct H. subst. rewrite app_nil_r. symmetry. assumption.
+  Qed.
+
+  Theorem promote_accum_func_monotonic:
+  	forall l k k2 a (H:fold_left promote_accum l k = k2), In a k -> In a k2.
+  Proof.
+		induction l.
+			intros. simpl in H. subst. apply H0.
+			intros. eapply IHl in H. apply H. unfold promote_accum. destruct a. destruct a. 
+			apply in_cons. apply H0.  destruct e; apply in_cons; apply H0. apply in_cons. apply H0.
+  Qed.
+
+  Theorem promote_nil:
+  	forall l, promote l = nil -> l = nil.
+	Proof.
+		destruct l.
+			tauto.
+			intros. unfold promote in H. simpl in H.
+			destruct (promote_accum nil t) eqn:H_pa. unfold promote_accum in H_pa. 
+				destruct t; destruct a; try destruct e; inversion H_pa.
+				eapply promote_accum_func_monotonic in H. inversion H. apply in_eq. 
+	Qed.
+
+  Theorem trace_prog_at_nil:
+    forall tsl info info' r r' prog n s
+    (H1: ((info',r'), nil) = trace_prog prog ((info,r),tsl)),
+		treeN_lookup info n = Some s -> treeN_lookup info' n = Some s.
+  Proof.
+    
+    induction tsl.
+      intros. simpl in H1. inversion H1. assumption.
+      (*inductive case begins*)
+      (*step 1: break processing into a and the rest*)
+      intros.
+      unfold trace_prog in H1. rewrite <- fold_left_rev_right in H1.  (*use fold_right app*)
+      rewrite <- rev_involutive with (l:=tsl) in H1.  rewrite <- rev_unit in H1. rewrite rev_involutive in H1. 
+      rewrite fold_right_app in H1. simpl in H1.
+
+      (*step 2: destruct cases of step_trace*)
+      destruct a eqn:H_a. destruct a0 eqn:H_a0. destruct (prog n0) eqn:H_p0. destruct p. destruct (odelta_leb (treeN_lookup info n0) (Some s0)) eqn:H_leb.
+      (*3: handle cases. only the second case is special -- that's the one where an update (potentially) occurs. proof automation would make this cleaner *)
+      * simpl in H1. rewrite fold_left_rev_right in H1. eapply IHtsl in H1. apply H1. apply H.
+      * simpl in H1. rewrite fold_left_rev_right in H1.
+        destruct (trace_stmt s1 (trace_exit_res (n0 + n1))
+              (odelta_merge s0 (treeN_lookup info n0))) eqn:H_tstmt.
+        - apply trace_prog_accum_func_monotonic in H1. rewrite -> app_nil_r in H1.  
+              apply promote_nil in H1. subst.
+              eapply trace_stmt_not_nil in H_tstmt. contradiction H_tstmt. reflexivity.
+							2 : { unfold trace_exit_res. reflexivity. } 
+							discriminate.
+        -  simpl in H1.  eapply IHtsl in H1. apply H1. apply H.
+      * simpl in H1. rewrite fold_left_rev_right in H1. eapply IHtsl in H1. apply H1. apply H.
+      * simpl in H1. rewrite fold_left_rev_right in H1. eapply IHtsl in H1. apply H1. apply H.
+      * simpl in H1. rewrite fold_left_rev_right in H1. eapply IHtsl in H1. apply H1. apply H.
+Qed.
+
+Theorem trace_prog_complete:
     forall h a_0 st_0 st_1 n st_n info info' r r' tsl x (prog: program)
     (H1: ((info',r'), nil) = trace_prog (prog st_0) ((info,r),tsl))
     (H2: info_models_loc h info' a_0 st_0 st_1) 
