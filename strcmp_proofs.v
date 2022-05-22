@@ -48,7 +48,7 @@ Qed.
 
 (* Example #2: Memory safety
    Strcmp contains no memory-writes, and is therefore trivially memory-safe. *)
-Theorem strlen_preserves_memory:
+Theorem strcmp_preserves_memory:
   forall s n s' x,
   exec_prog fh strcmp_i386 0 s n s' x -> s' V_MEM32 = s V_MEM32.
 Proof.
@@ -127,7 +127,7 @@ Proof.
   assert (MDL: models x86typctx s1).
     eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
   assert (MEM: s1 V_MEM32 = Ⓜ mem).
-    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
+    rewrite <- MEM0. eapply strcmp_preserves_memory. exact XP.
   rewrite (strcmp_nwc s1) in RET.
   clear s MDL0 MEM0 XP0 ESP0 XP.
 
@@ -220,7 +220,7 @@ Proof.
   assert (MDL: models x86typctx s1).
     eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
   assert (MEM: s1 V_MEM32 = Ⓜ mem).
-    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
+    rewrite <- MEM0. eapply strcmp_preserves_memory. exact XP.
   assert (WTM := x86_wtm MDL MEM). simpl in WTM.
   rewrite (strcmp_nwc s1) in RET.
   assert (ESP := strcmp_preserves_esp _ _ _ _ _ (Exit a1) MDL0 ESP0 MEM0 RET XP).
