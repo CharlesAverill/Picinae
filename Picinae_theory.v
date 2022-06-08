@@ -564,54 +564,80 @@ Proof.
   intros. unfold N.leb. rewrite Z2N.inj_compare by assumption. reflexivity.
 Qed.
 
-Definition Z_xbits z i j := ((Z.shiftr z i) mod 2^(j - i))%Z.
+Definition Z_xbits z i j := ((Z.shiftr z i) mod 2^Z.max 0 (j - i))%Z.
 
 Theorem Z_xbits_spec:
-  forall z i j b, (0 <= b -> Z.testbit (Z_xbits z i j) b = andb (Z.testbit z (b + i)) (b + i <? j))%Z.
+  forall z i j b, (Z.testbit (Z_xbits z i j) b = Z.testbit z (b + i) && (b + i <? j) && (0 <=? b))%Z%bool.
 Proof.
-  symmetry. unfold Z_xbits. destruct (Z.neg_nonneg_cases (j-i)) as [H1|H1].
-    rewrite (Z.pow_neg_r _ _ H1), Zmod_0_r, Z.bits_0.
-      eapply Bool.andb_false_intro2, Z.ltb_ge, Z.le_sub_le_add_r, Z.lt_le_incl, Z.lt_le_trans; eassumption.
-    rewrite <- (Z.land_ones _ _ H1), Z.land_spec, (Z.shiftr_spec _ _ _ H), (Z.testbit_ones _ _ H1), (proj2 (Z.leb_le _ _) H).
-      apply f_equal. destruct (b <? j - i)%Z eqn:H2.
-        apply Z.ltb_lt, Z.lt_add_lt_sub_r, Z.ltb_lt, H2.
-        apply Z.ltb_ge, Z.le_sub_le_add_r, Z.ltb_ge, H2.
+  intros. destruct (Z.le_gt_cases 0 b).
+
+  unfold Z_xbits.
+  rewrite <- Z.land_ones by apply Z.le_max_l.
+  rewrite Z.land_spec, Z.shiftr_spec by assumption.
+  rewrite Z.testbit_ones by apply Z.le_max_l.
+  rewrite <- Bool.andb_assoc, (Bool.andb_comm (_ <? _)%Z).
+  apply f_equal, f_equal. destruct (b + i <? j)%Z eqn:H1.
+    apply Z.ltb_lt, Z.max_lt_iff. right. apply Z.lt_add_lt_sub_r, Z.ltb_lt, H1.
+    apply Z.ltb_ge, Z.max_lub. assumption. apply Z.le_sub_le_add_r, Z.ltb_ge, H1.
+
+  rewrite Z.testbit_neg_r by assumption.
+  symmetry. apply Bool.andb_false_intro2, Z.leb_gt, H.
 Qed.
 
 Theorem Z_xbits_nonneg:
   forall z i j, (0 <= Z_xbits z i j)%Z.
 Proof.
-  intros. unfold Z_xbits. destruct (j-i)%Z.
-    rewrite Z.mod_1_r. reflexivity.
-    apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. discriminate.
-    rewrite Zmod_0_r. reflexivity.
+  intros. unfold Z_xbits. apply Z.mod_pos_bound, Z.pow_pos_nonneg.
+    reflexivity.
+    apply Z.le_max_l.
+Qed.
+
+Theorem Z_xbits_0_l:
+  forall i j, Z_xbits 0 i j = Z0.
+Proof.
+  intros. unfold Z_xbits. rewrite Z.shiftr_0_l. apply Z.mod_0_l, Z.pow_nonzero.
+    discriminate 1.
+    apply Z.le_max_l.
 Qed.
 
 Theorem N2Z_xbits:
   forall n i j, Z.of_N (xbits n i j) = Z_xbits (Z.of_N n) (Z.of_N i) (Z.of_N j).
 Proof.
-  intros. unfold Z_xbits. destruct (N.le_gt_cases i j) as [H1|H1].
-    unfold xbits. rewrite <- (N2Z.inj_sub _ _ H1), N2Z.inj_mod, N2Z_inj_shiftr, N2Z.inj_pow. reflexivity.
-      apply N.pow_nonzero. discriminate.
-    rewrite xbits_none, Z.pow_neg_r, Zmod_0_r. reflexivity.
-      apply Z.lt_sub_0, N2Z.inj_lt, H1.
-      apply N.lt_le_incl, H1.
+  intros. unfold xbits, Z_xbits.
+  rewrite N2Z.inj_mod, N2Z_inj_shiftr, N2Z.inj_pow, N2Z.inj_sub_max.
+  reflexivity.
+Qed.
+
+Theorem Z2N_xbits:
+  forall n i j, (0 <= n -> 0 <= i -> 0 <= j ->
+  Z.to_N (Z_xbits n i j) = xbits (Z.to_N n) (Z.to_N i) (Z.to_N j))%Z.
+Proof.
+  intros. apply N2Z.inj. rewrite N2Z_xbits, !Z2N.id; try assumption.
+    reflexivity.
+    apply Z_xbits_nonneg.
+Qed.
+
+Theorem Z_xbits_equiv:
+  forall z i j, Z_xbits z i j =  Z.shiftr (z mod 2^Z.max 0 j) i.
+Proof.
+  intros. apply Z.bits_inj. intro b. rewrite Z_xbits_spec, <- Z.land_ones by apply Z.le_max_l. destruct (Z.le_gt_cases 0 b).
+    rewrite Z.shiftr_spec, Z.land_spec, (proj2 (Z.leb_le 0 b)), Bool.andb_true_r by assumption. destruct (Z.le_gt_cases 0 (b+i)).
+      destruct (Z.le_ge_cases 0 j).
+        rewrite Z.max_r, Z.testbit_ones, Zle_imp_le_bool by assumption. reflexivity.
+        rewrite Z.max_l, Z.testbit_0_l, (proj2 (Z.ltb_ge _ _)). reflexivity.
+          transitivity Z0; assumption.
+          assumption.
+      rewrite Z.testbit_neg_r by assumption. reflexivity.
+    rewrite (proj2 (Z.leb_gt _ _)), Bool.andb_false_r, Z.testbit_neg_r by assumption. reflexivity.
 Qed.
 
 Theorem xbits_Z2N:
   forall z i j, (0 <= z)%Z -> xbits (Z.to_N z) i j = Z.to_N (Z_xbits z (Z.of_N i) (Z.of_N j)).
 Proof.
-  intros. unfold Z_xbits. destruct (N.le_gt_cases i j) as [H1|H1].
-    unfold xbits. rewrite <- (N2Z.inj_sub _ _ H1), Z2N.inj_mod, Z2N_inj_shiftr, Z2N.inj_pow, !N2Z.id. reflexivity.
-      discriminate 1.
-      apply N2Z.is_nonneg.
-      assumption.
-      apply N2Z.is_nonneg.
-      apply Z.shiftr_nonneg. assumption.
-      apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
-    rewrite xbits_none, Z.pow_neg_r, Zmod_0_r. reflexivity.
-      apply Z.lt_sub_0, N2Z.inj_lt, H1.
-      apply N.lt_le_incl, H1.
+  intros. rewrite Z2N_xbits, !N2Z.id. reflexivity.
+    assumption.
+    apply N2Z.is_nonneg.
+    apply N2Z.is_nonneg.
 Qed.
 
 End XBits.
@@ -664,25 +690,20 @@ Proof.
 Qed.
 
 Lemma Z_mod_mod_pow:
-  forall z a b c, (0 <= a -> z mod a^b mod a^c = z mod a^Z.min b c)%Z.
+  forall z a b c, (0 < a -> 0 <= b -> 0 <= c -> z mod a^b mod a^c = z mod a^Z.min b c)%Z.
 Proof.
-  intros. destruct a as [|a|a]; try contradiction; destruct b as [|b|b], c as [|c|c];
-  try (
-    rewrite <- ?Pos2Z.inj_min, ?Z.pow_0_l, ?Z.mod_1_r, ?Zmod_0_r by reflexivity;
-    solve [ reflexivity 
-          | symmetry; edestruct Zmin_irreducible as [H1|H1]; rewrite H1; apply Zmod_0_r ]
-  ).
-  destruct (Z.le_ge_cases (Z.pos b) (Z.pos c)) as [H1|H1].
-    rewrite (Z.min_l _ _ H1). apply Z.mod_small. split.
-      apply Z.mod_pos_bound. apply Z.pow_pos_nonneg. reflexivity. discriminate.
+  intros. destruct (Z.le_ge_cases b c).
+    rewrite Z.min_l by assumption. apply Z.mod_small. split.
+      apply Z.mod_pos_bound. apply Z.pow_pos_nonneg; assumption.
       eapply Z.lt_le_trans.
-        apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. discriminate.
-        apply Z.pow_le_mono_r. reflexivity. exact H1.
-    rewrite (Z.min_r _ _ H1), <- (Z.sub_add (Z.pos c) (Z.pos b)), Z.pow_add_r,
-            Z.mul_comm, Z.rem_mul_r, Z.mul_comm, Z.mod_add, Z.mod_mod by
-      first [ try apply Z.pow_nonzero; discriminate
-            | try (apply Z.pow_pos_nonneg; [reflexivity|]); apply Z.le_0_sub, H1 ].
-      reflexivity.
+        apply Z.mod_pos_bound, Z.pow_pos_nonneg; assumption.
+        apply Z.pow_le_mono_r; assumption.
+    rewrite Z.min_r, <- (Zplus_minus c b), Z.pow_add_r, Z.rem_mul_r, Z.mul_comm, Z_mod_plus_full. apply Zmod_mod.
+      apply Z.pow_nonzero. apply not_eq_sym, Z.lt_neq. assumption. assumption.
+      apply Z.pow_pos_nonneg. assumption. apply Z.le_0_sub. assumption.
+      assumption.
+      apply Z.le_0_sub. assumption.
+      assumption.
 Qed.
 
 Theorem signed_range_0_l:
@@ -884,13 +905,17 @@ Theorem ofZ_0_r:
   forall w, ofZ w 0 = 0.
 Proof. reflexivity. Qed.
 
-Theorem canonicalZ_nonpos_l:
-  forall w z, (w <= 0 -> canonicalZ w z = 0)%Z.
+Theorem canonicalZ_neg_l:
+  forall w z, (w < 0)%Z -> canonicalZ w z = z.
 Proof.
-  intros. unfold canonicalZ. destruct w as [|w|w].
-    rewrite Z.mod_1_r. reflexivity.
-    contradiction.
-    rewrite (Z.pow_neg_r 2 (Z.neg w)), Zmod_0_r by reflexivity. reflexivity.
+  intros. unfold canonicalZ.
+  rewrite (Z.pow_neg_r _ w), Zmod_0_r by assumption. apply Z.add_simpl_r.
+Qed.
+
+Theorem canonicalZ_0_l:
+  forall z, canonicalZ 0 z = Z0.
+Proof.
+  intros. unfold canonicalZ. rewrite Z.mod_1_r. reflexivity.
 Qed.
 
 Theorem canonicalZ_0_r:
@@ -901,7 +926,7 @@ Proof.
     unfold canonicalZ. rewrite Z.add_0_l, Z.mod_small. apply Z.sub_diag. split.
       apply Z.pow_nonneg. discriminate.
       apply Z.pow_lt_mono_r. reflexivity. discriminate. apply Z.lt_pred_l.
-    apply canonicalZ_nonpos_l. discriminate.
+    apply canonicalZ_neg_l. reflexivity.
 Qed.
 
 Corollary toZ_0_l:
@@ -953,40 +978,47 @@ Proof.
 Qed.
 
 Theorem eqm_canonicalZ:
-  forall w' w z, (w' <= w)%Z -> eqm (2^w') (canonicalZ w z) z.
+  forall w' w z, (0 <= w' -> w' <= w -> eqm (2^w') (canonicalZ w z) z)%Z.
 Proof.
   intros. unfold eqm, canonicalZ.
-  rewrite <- Zminus_mod_idemp_l, Z_mod_mod_pow by discriminate.
-  rewrite Z.min_r, Zminus_mod_idemp_l, Z.add_simpl_r by assumption.
-  reflexivity.
+  rewrite <- Zminus_mod_idemp_l, Z_mod_mod_pow.
+    rewrite Z.min_r, Zminus_mod_idemp_l, Z.add_simpl_r by assumption. reflexivity.
+    reflexivity.
+    etransitivity; eassumption.
+    assumption.
 Qed.
 
 Theorem eqm_toZ:
-  forall w' w n, (w' <= Z.of_N w)%Z -> eqm (2^w') (toZ w n) (Z.of_N n).
+  forall w' w n, (0 <= w' -> w' <= Z.of_N w -> eqm (2^w') (toZ w n) (Z.of_N n))%Z.
 Proof.
-  intros. etransitivity. apply eqm_canonicalZ, H. reflexivity.
+  intros. etransitivity. apply eqm_canonicalZ.
+    assumption.
+    assumption.
+    reflexivity.
 Qed.
 
 Theorem eqm_ofZ:
-  forall w' w z, (w' <= Z.of_N w)%Z -> eqm (2^w') (Z.of_N (ofZ w z)) z.
+  forall w' w z, (0 <= w' -> w' <= Z.of_N w -> eqm (2^w') (Z.of_N (ofZ w z)) z)%Z.
 Proof.
   intros. unfold ofZ, eqm. rewrite Z2N.id.
-    rewrite <- (Z.min_r _ _ H) at 2. apply Z_mod_mod_pow. discriminate.
+    rewrite <- (Z.min_r _ _ H0) at 2. apply Z_mod_mod_pow. reflexivity. apply N2Z.is_nonneg. assumption.
     apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
 Qed.
 
 Theorem canonicalZ_mod_pow2:
-  forall w' w z, (w <= w')%Z -> canonicalZ w (z mod 2^w') = canonicalZ w z.
+  forall w' w z, (0 <= w -> w <= w' -> canonicalZ w (z mod 2^w') = canonicalZ w z)%Z.
 Proof.
-  intros. unfold canonicalZ at 1.
-  rewrite <- Zplus_mod_idemp_l, Z_mod_mod_pow, (Z.min_r _ _ H), Zplus_mod_idemp_l by discriminate.
-  reflexivity.
+  intros. unfold canonicalZ at 1. rewrite <- Zplus_mod_idemp_l, Z_mod_mod_pow, (Z.min_r _ _ H0), Zplus_mod_idemp_l.
+    reflexivity.
+    reflexivity.
+    etransitivity; eassumption.
+    assumption.
 Qed.
 
 Theorem mod_pow2_canonicalZ:
-  forall w w' z, (w' <= w -> (canonicalZ w z) mod 2^w' = z mod 2^w')%Z.
+  forall w w' z, (0 <= w' -> w' <= w -> (canonicalZ w z) mod 2^w' = z mod 2^w')%Z.
 Proof.
-  intros. apply eqm_canonicalZ, H.
+  intros. apply eqm_canonicalZ; assumption.
 Qed.
 
 Theorem toZ_mod_pow2:
@@ -994,14 +1026,14 @@ Theorem toZ_mod_pow2:
 Proof.
   intros. unfold toZ. rewrite N2Z.inj_mod, N2Z.inj_pow.
     apply canonicalZ_mod_pow2, N2Z.inj_le, H.
-    apply N.pow_nonzero. discriminate.
+    apply N2Z.is_nonneg.
 Qed.
 
 Theorem mod_pow2_toZ:
   forall w w' n, w' <= w  -> (toZ w n mod 2^Z.of_N w')%Z = Z.of_N (n mod 2^w').
 Proof.
   intros. unfold toZ. rewrite mod_pow2_canonicalZ, N2Z.inj_mod, N2Z.inj_pow. reflexivity.
-    apply N.pow_nonzero. discriminate.
+    apply N2Z.is_nonneg.
     apply N2Z.inj_le, H.
 Qed.
 
@@ -1010,7 +1042,9 @@ Theorem ofZ_mod_pow2:
 Proof.
   intros. unfold ofZ. rewrite Z_mod_mod_pow, Z.min_r. reflexivity.
     apply N2Z.inj_le, H.
-    discriminate.
+    reflexivity.
+    apply N2Z.is_nonneg.
+    apply N2Z.is_nonneg.
 Qed.
 
 Theorem mod_pow2_ofZ:
@@ -1018,32 +1052,37 @@ Theorem mod_pow2_ofZ:
 Proof.
   intros. unfold ofZ. eapply N.mod_small, N.lt_le_trans.
     apply ofZ_bound.
-    apply N.pow_le_mono_r. discriminate. exact H.
+    apply N.pow_le_mono_r. discriminate. assumption.
 Qed.
 
 Theorem ofZ_canonicalZ:
   forall w w' z, w' <= w -> ofZ w' (canonicalZ (Z.of_N w) z) = ofZ w' z.
 Proof.
   intros. unfold ofZ. rewrite mod_pow2_canonicalZ. reflexivity.
-  apply N2Z.inj_le, H.
+    apply N2Z.is_nonneg.
+    apply N2Z.inj_le, H.
 Qed.
 
 Theorem eqm_canonicalZ_op:
   forall f w z, (forall z0, eqm (2^w) (f z0) (f (z0 mod 2^w)%Z)) -> eqm (2^w) (f z) (f (canonicalZ w z)).
 Proof.
-  intros. etransitivity. apply H. rewrite <- (mod_pow2_canonicalZ w w z), <- H; reflexivity.
+  intros. destruct (Z.lt_ge_cases w 0).
+    rewrite canonicalZ_neg_l by assumption. reflexivity.
+    etransitivity. apply H. rewrite <- (mod_pow2_canonicalZ w w z), <- H. reflexivity. assumption. reflexivity.
 Qed.
 
 Theorem eqm_ofZ_canonicalZ:
   forall f w z, (forall z0, eqm (2^Z.of_N w) (f z0) (f (z0 mod 2^Z.of_N w)))%Z -> ofZ w (f (canonicalZ (Z.of_N w) z)) = ofZ w (f z).
 Proof.
-  intros. unfold ofZ. erewrite H, eqm_canonicalZ, <- H; reflexivity.
+  intros. unfold ofZ. erewrite H, eqm_canonicalZ, <- H. reflexivity.
+    apply N2Z.is_nonneg.
+    reflexivity.
 Qed.
 
 Theorem toZ_ofZ_canonicalZ:
   forall w' w z, w' <= w -> toZ w' (ofZ w z) = canonicalZ (Z.of_N w') z.
 Proof.
-  intros. unfold toZ. rewrite N2Z_ofZ. apply canonicalZ_mod_pow2, N2Z.inj_le, H.
+  intros. unfold toZ. rewrite N2Z_ofZ. apply canonicalZ_mod_pow2, N2Z.inj_le, H. apply N2Z.is_nonneg.
 Qed.
 
 Theorem canonicalZ_id:
@@ -1056,24 +1095,19 @@ Proof.
     rewrite <- (Z2N.id w) by exact H. apply (eqm_eq (Z.to_N w)).
       apply canonicalZ_bounds.
       eapply signed_range_mono_l; eassumption.
-      apply eqm_canonicalZ. reflexivity.
+      apply eqm_canonicalZ. apply N2Z.is_nonneg. reflexivity.
 Qed.
 
 Theorem canonicalZ_involutive:
-  forall w1 w2 z, canonicalZ w1 (canonicalZ w2 z) = canonicalZ (Z.min w1 w2) z.
+  forall w1 w2 z, (0 <= w1 -> 0 <= w2 -> canonicalZ w1 (canonicalZ w2 z) = canonicalZ (Z.min w1 w2) z)%Z.
 Proof.
   intros.
-  destruct (Z.nonpos_nonneg_cases w1) as [H1|H1].
-    rewrite (canonicalZ_nonpos_l _ _ H1). symmetry. apply canonicalZ_nonpos_l.
-    etransitivity. apply Z.le_min_l. apply H1.
-  destruct (Z.nonpos_nonneg_cases w2) as [H2|H2].
-    rewrite (canonicalZ_nonpos_l _ _ H2), canonicalZ_0_r. symmetry. apply canonicalZ_nonpos_l.
-    etransitivity. apply Z.le_min_r. apply H2.
-  destruct (Z.le_ge_cases w1 w2) as [H|H].
-    rewrite (Z.min_l _ _ H), <- (canonicalZ_mod_pow2 _ _ _ H), mod_pow2_canonicalZ.
-      rewrite (canonicalZ_mod_pow2 _ _ _ H). reflexivity.
+  destruct (Z.le_ge_cases w1 w2) as [H1|H1].
+    rewrite (Z.min_l _ _ H1), <- (canonicalZ_mod_pow2 _ _ _ H H1), mod_pow2_canonicalZ.
+      rewrite (canonicalZ_mod_pow2 _ _ _ H). reflexivity. assumption.
+      assumption.
       reflexivity.
-    rewrite (Z.min_r _ _ H). apply (canonicalZ_id (Z.to_N w2)).
+    rewrite (Z.min_r _ _ H1). apply (canonicalZ_id (Z.to_N w2)).
       apply Z2N.inj_le; assumption.
       rewrite <- (Z2N.id w2) at 2 by assumption. apply canonicalZ_bounds.
 Qed.
@@ -1093,7 +1127,9 @@ Theorem eqm_toZ_ofZ:
 Proof.
   intros.
   rewrite toZ_ofZ_canonicalZ by assumption.
-  apply eqm_canonicalZ, N2Z.inj_le. assumption.
+  apply eqm_canonicalZ, N2Z.inj_le.
+    apply N2Z.is_nonneg.
+    assumption.
 Qed.
 
 Corollary toZ_ofZ:
@@ -1124,37 +1160,32 @@ Theorem canonicalZ_nonneg:
   forall w z, (z mod 2^w < 2^Z.pred w -> canonicalZ w z = z mod 2^w)%Z.
 Proof.
   intros. destruct (Z.lt_trichotomy w 0) as [H2|[H2|H2]].
-    rewrite Z.pow_neg_r by exact H2. rewrite Zmod_0_r. apply canonicalZ_nonpos_l, Z.lt_le_incl, H2.
-    subst w. rewrite Z.mod_1_r. apply canonicalZ_nonpos_l. reflexivity.
-    erewrite <- canonicalZ_mod_pow2 by reflexivity. unfold canonicalZ. rewrite Z.mod_small, Z.add_simpl_r. reflexivity. split.
-      apply Z.add_nonneg_nonneg.
-        apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. apply Z.lt_le_incl, H2.
-        apply Z.pow_nonneg. discriminate.
-      rewrite <- (Z.succ_pred w) at 3. rewrite Z.pow_succ_r, <- Z.add_diag.
-        apply Z.add_lt_le_mono. assumption. reflexivity.
-        apply Z.lt_le_pred, H2.
+    rewrite Z.pow_neg_r, Zmod_0_r by exact H2. apply canonicalZ_neg_l. assumption.
+    subst w. rewrite Z.mod_1_r. apply canonicalZ_0_l.
+    erewrite <- canonicalZ_mod_pow2; [|apply Z.lt_le_incl, H2 | reflexivity].
+      unfold canonicalZ. rewrite Z.mod_small, Z.add_simpl_r. reflexivity. split.
+        apply Z.add_nonneg_nonneg.
+          apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. apply Z.lt_le_incl, H2.
+          apply Z.pow_nonneg. discriminate.
+        rewrite <- (Z.succ_pred w) at 3. rewrite Z.pow_succ_r, <- Z.add_diag.
+          apply Z.add_lt_le_mono. assumption. reflexivity.
+          apply Z.lt_le_pred, H2.
 Qed.
 
 Theorem canonicalZ_neg:
-  forall w z, (w <> 0 -> 2^Z.pred w <= z mod 2^w -> canonicalZ w z = z mod 2^w - 2^w)%Z.
+  forall w z, (0 < w -> 2^Z.pred w <= z mod 2^w -> canonicalZ w z = z mod 2^w - 2^w)%Z.
 Proof.
-  intros. destruct (Z.lt_trichotomy w 0) as [H2|[H2|H2]].
-
-    rewrite Z.pow_neg_r by exact H2. rewrite Zmod_0_r. apply canonicalZ_nonpos_l, Z.lt_le_incl, H2.
-
-    subst w. contradiction.
-
-    erewrite <- canonicalZ_mod_pow2 by reflexivity. unfold canonicalZ.
-    rewrite <- (Z.sub_add (2^Z.pred w) (z mod 2^w)) at 1.
-    rewrite <- Z.add_assoc, Z.add_diag, <- Z.pow_succ_r, Z.succ_pred by apply Z.lt_le_pred, H2.
-    rewrite <- Z.add_mod_idemp_r, Z.mod_same, Z.add_0_r by (apply Z.pow_nonzero; [ discriminate | apply Z.lt_le_incl, H2 ]).
-    rewrite Z.mod_small, <- Z.sub_add_distr, Z.add_diag.
-      rewrite <- Z.pow_succ_r, Z.succ_pred by apply Z.lt_le_pred, H2. reflexivity.
-      split.
-        apply Z.le_0_sub. assumption.
-        eapply Z.le_lt_trans.
-          apply Z.le_sub_nonneg, Z.pow_nonneg. discriminate.
-          apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. apply Z.lt_le_incl, H2.
+  intros. erewrite <- canonicalZ_mod_pow2; [|apply Z.lt_le_incl, H | reflexivity]. unfold canonicalZ.
+  rewrite <- (Z.sub_add (2^Z.pred w) (z mod 2^w)) at 1.
+  rewrite <- Z.add_assoc, Z.add_diag, <- Z.pow_succ_r, Z.succ_pred by apply Z.lt_le_pred, H.
+  rewrite <- Z.add_mod_idemp_r, Z.mod_same, Z.add_0_r by (apply Z.pow_nonzero; [ discriminate | apply Z.lt_le_incl, H ]).
+  rewrite Z.mod_small, <- Z.sub_add_distr, Z.add_diag.
+    rewrite <- Z.pow_succ_r, Z.succ_pred by apply Z.lt_le_pred, H. reflexivity.
+    split.
+      apply Z.le_0_sub. assumption.
+      eapply Z.le_lt_trans.
+        apply Z.le_sub_nonneg, Z.pow_nonneg. discriminate.
+        apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. apply Z.lt_le_incl, H.
 Qed.
 
 Theorem toZ_nonneg:
@@ -1165,7 +1196,7 @@ Proof.
     destruct w as [|w].
       rewrite N.mod_1_r. apply toZ_0_l.
       unfold toZ. rewrite canonicalZ_nonneg; change 2%Z with (Z.of_N 2); rewrite <- N2Z.inj_pow.
-        symmetry. apply N2Z.inj_mod, N.pow_nonzero. discriminate.
+        symmetry. apply N2Z.inj_mod.
 
         rewrite <- N2Z.inj_mod by (apply N.pow_nonzero; discriminate).
         rewrite <- N2Z.inj_pred, <- N2Z.inj_pow by reflexivity.
@@ -1183,11 +1214,10 @@ Proof.
   split; intro H1.
 
     unfold toZ. rewrite canonicalZ_neg; change 2%Z with (Z.of_N 2); try rewrite <- N2Z.inj_pow.
-      rewrite <-N2Z.inj_mod. reflexivity. apply N.pow_nonzero. discriminate.
-      discriminate.
+      rewrite <-N2Z.inj_mod. reflexivity.
+      reflexivity.
       rewrite <- N2Z.inj_pred, <- N2Z.inj_pow, <- N2Z.inj_mod.
         apply N2Z.inj_le, H1.
-        apply N.pow_nonzero. discriminate.
         reflexivity.
 
     apply Z.add_move_r, (f_equal Z.to_N) in H1. rewrite N2Z.id in H1. rewrite <- H1.
@@ -1216,12 +1246,9 @@ Proof.
 Qed.
 
 Theorem testbit_canonicalZ:
-  forall w z i, Z.testbit (canonicalZ w z) i = Z.testbit z (Z.min i (Z.pred w)).
+  forall w z i, (0 <= w -> Z.testbit (canonicalZ w z) i = Z.testbit z (Z.min i (Z.pred w)))%Z.
 Proof.
-  intros. destruct (Z.le_gt_cases w 0) as [H1|H1].
-    rewrite canonicalZ_nonpos_l by assumption. rewrite (Z.testbit_neg_r z).
-      apply Z.testbit_0_l.
-      eapply Z.le_lt_trans. apply Z.le_min_r. apply Z.lt_pred_le, H1.
+  intros. apply Z.le_lteq in H. destruct H.
     unfold canonicalZ. destruct (Z.le_gt_cases i (Z.pred w)) as [H2|H2].
 
       rewrite Z.min_l by assumption.
@@ -1230,20 +1257,23 @@ Proof.
       apply Z.mod_pow2_bits_low, Z.lt_le_pred, H2.
 
       rewrite Z.min_r by apply Z.lt_le_incl, H2.
-      rewrite <- (Z.sub_add (Z.pred w) i), <- Z.div_pow2_bits; [| apply Z.lt_le_pred, H1 | apply Z.le_0_sub, Z.lt_le_incl, H2].
-      rewrite <- Z.add_opp_r, Z.opp_eq_mul_m1, Z.mul_comm, Z.div_add by (apply Z.pow_nonzero; [ discriminate | apply Z.lt_le_pred, H1 ]).
-      rewrite <- Z.shiftr_div_pow2 by apply Z.lt_le_pred, H1.
-      rewrite <- Zplus_mod_idemp_l, <- !Z.land_ones, Z.shiftr_land by apply Z.lt_le_incl, H1.
-      rewrite Z.shiftr_div_pow2 by apply Z.lt_le_pred, H1.
+      rewrite <- (Z.sub_add (Z.pred w) i), <- Z.div_pow2_bits; [| apply Z.lt_le_pred, H | apply Z.le_0_sub, Z.lt_le_incl, H2].
+      rewrite <- Z.add_opp_r, Z.opp_eq_mul_m1, Z.mul_comm, Z.div_add by (apply Z.pow_nonzero; [ discriminate | apply Z.lt_le_pred, H ]).
+      rewrite <- Z.shiftr_div_pow2 by apply Z.lt_le_pred, H.
+      rewrite <- Zplus_mod_idemp_l, <- !Z.land_ones, Z.shiftr_land by apply Z.lt_le_incl, H.
+      rewrite Z.shiftr_div_pow2 by apply Z.lt_le_pred, H.
       rewrite <- (Z.mul_1_l (2^Z.pred w)) at 1.
-      rewrite Z.div_add by (apply Z.pow_nonzero; [ discriminate | apply Z.lt_le_pred, H1 ]).
-      rewrite <- Z.shiftr_div_pow2, Z.shiftr_land, !Z.shiftr_div_pow2 by apply Z.lt_le_pred, H1.
-      rewrite !Z.ones_div_pow2 by (split; [ apply Z.lt_le_pred, H1 | apply Z.le_pred_l ]).
+      rewrite Z.div_add by (apply Z.pow_nonzero; [ discriminate | apply Z.lt_le_pred, H ]).
+      rewrite <- Z.shiftr_div_pow2, Z.shiftr_land, !Z.shiftr_div_pow2 by apply Z.lt_le_pred, H.
+      rewrite !Z.ones_div_pow2 by (split; [ apply Z.lt_le_pred, H | apply Z.le_pred_l ]).
       rewrite Z.sub_pred_r, Z.sub_diag, (Z.land_ones (_/_) 1) by discriminate.
-      rewrite <- Z.testbit_spec' by apply Z.lt_le_pred, H1.
+      rewrite <- Z.testbit_spec' by apply Z.lt_le_pred, H.
       destruct (Z.testbit z (Z.pred w)).
         apply Z.bits_m1, Z.le_0_sub, Z.lt_le_incl, H2.
         apply Z.testbit_0_l.
+
+    subst w. rewrite canonicalZ_0_l, Z.bits_0. symmetry. apply Z.testbit_neg_r, Z.min_lt_iff.
+    right. reflexivity.
 Qed.
 
 Corollary testbit_toZ:
@@ -1253,6 +1283,7 @@ Proof.
   rewrite testbit_canonicalZ, <- N2Z.inj_pred, <- N2Z.inj_min.
     apply N2Z.inj_testbit.
     apply N.neq_0_lt_0, H.
+    apply N2Z.is_nonneg.
 Qed.
 
 Theorem signbit:
@@ -1304,12 +1335,12 @@ Theorem toZ_nop:
     (MOD: forall z1 z2, w <> 0 -> ((zop z1 z2) mod 2^Z.of_N w = (zop (z1 mod 2^Z.of_N w) (z2 mod 2^Z.of_N w)) mod 2^Z.of_N w)%Z),
   toZ w (nop n1 n2) = canonicalZ (Z.of_N w) (zop (toZ w n1) (toZ w n2)).
 Proof.
-  intros. destruct w as [|w]. rewrite canonicalZ_nonpos_l. apply toZ_0_l. discriminate.
+  intros. destruct w as [|w]. rewrite canonicalZ_0_l. apply toZ_0_l.
   unfold toZ at 1. rewrite N2Z.
   unfold toZ. unfold canonicalZ at 3 4. symmetry.
-  erewrite <- canonicalZ_mod_pow2 by reflexivity.
+  erewrite <- canonicalZ_mod_pow2; [| apply N2Z.is_nonneg | reflexivity ].
   rewrite MOD, !Zminus_mod_idemp_l, !Z.add_simpl_r, <- MOD by discriminate.
-  apply canonicalZ_mod_pow2. reflexivity.
+  apply canonicalZ_mod_pow2. apply N2Z.is_nonneg. reflexivity.
 Qed.
 
 Corollary nop_sbop2:
@@ -1491,7 +1522,7 @@ Proof.
   intros. unfold ofZ. rewrite Z2N.inj_mod.
     rewrite Z2N.inj_div, Z2N.inj_pow, !N2Z.id by first [ apply N2Z.is_nonneg | discriminate ]. reflexivity.
     apply Z_div_nonneg; apply N2Z.is_nonneg.
-    apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
+    apply Z.pow_nonneg. discriminate.
 Qed.
 
 Corollary div_sbop':
@@ -1510,7 +1541,7 @@ Proof.
   rewrite Z2N.inj_mod.
     rewrite Z2N.inj_pow, N2Z.id. reflexivity. discriminate. apply N2Z.is_nonneg.
     apply Z_div_nonneg; (apply Z.mod_pos_bound, Z.pow_pos_nonneg; [ reflexivity | apply N2Z.is_nonneg ]).
-    apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
+    apply Z.pow_nonneg. discriminate.
 Qed.
 
 Theorem toZ_div:
@@ -1529,9 +1560,9 @@ Proof.
       discriminate.
       apply N2Z.is_nonneg.
     apply N2Z.is_nonneg.
-    destruct n2. contradiction. reflexivity.
+    destruct n2. contradiction. apply N2Z.is_nonneg.
     apply Z.mod_pos_bound. destruct n2. contradiction. reflexivity.
-    apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
+    apply Z.pow_nonneg. discriminate.
 Qed.
 
 Corollary mod_sbop':
@@ -1551,7 +1582,7 @@ Proof.
   destruct H' as [H'|H']; [| rewrite <- H' in H; contradiction ].
   unfold ofZ. rewrite (Z.mod_small (_ mod _)); [|split]. apply Z2N.inj_mod.
     apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
-    apply H'.
+    apply Z.lt_le_incl, H'.
     apply Z.mod_pos_bound. apply H'.
     etransitivity.
       apply Z.mod_pos_bound. apply H'.
@@ -1559,9 +1590,9 @@ Proof.
 Qed.
 
 Theorem toZ_mod:
-  forall w n1 n2, n2 <> 0 -> toZ w (n1 mod n2) = canonicalZ (Z.of_N w) ((Z.of_N n1) mod (Z.of_N n2)).
+  forall w n1 n2, toZ w (n1 mod n2) = canonicalZ (Z.of_N w) ((Z.of_N n1) mod (Z.of_N n2)).
 Proof.
-  intros. unfold toZ. rewrite N2Z.inj_mod. reflexivity. assumption.
+  intros. unfold toZ. rewrite N2Z.inj_mod. reflexivity.
 Qed.
 
 Lemma Z_shiftl_eqm:
@@ -1610,11 +1641,15 @@ Theorem shiftr_sbop:
 Proof.
   intros. unfold ofZ.
   rewrite Z.shiftr_div_pow2 by apply N2Z.is_nonneg.
-  rewrite Z2N.inj_mod by
-  (try (apply Z.div_pos; [apply N2Z.is_nonneg|]); apply Z.pow_pos_nonneg; [ reflexivity | apply N2Z.is_nonneg ]).
-  rewrite Z2N.inj_div; [| apply N2Z.is_nonneg | apply Z.pow_nonneg; discriminate ].
-  rewrite !Z2N.inj_pow by first [ discriminate | apply N2Z.is_nonneg ].
-  rewrite <- N.shiftr_div_pow2, !N2Z.id. reflexivity.
+  rewrite Z2N.inj_mod.
+
+    rewrite Z2N.inj_div; [| apply N2Z.is_nonneg | apply Z.pow_nonneg; discriminate ].
+    rewrite !Z2N.inj_pow by first [ discriminate | apply N2Z.is_nonneg ].
+    rewrite <- N.shiftr_div_pow2, !N2Z.id. reflexivity.
+
+    apply Z.div_pos. apply N2Z.is_nonneg. apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
+
+    apply Z.pow_nonneg. discriminate.
 Qed.
 
 Theorem ofZ_shiftr:
@@ -1926,13 +1961,42 @@ Theorem xbits_ofZ:
 Proof.
   intros. apply N.bits_inj. intro b.
   rewrite <- (N2Z.id b) at 2. rewrite <- Z2N.inj_testbit by apply N2Z.is_nonneg. rewrite Z2N.id.
-    rewrite xbits_spec, testbit_ofZ, Z_xbits_spec, <- N2Z.inj_add, N2Z_inj_ltb, Bool.andb_comm, Bool.andb_assoc,
-            Bool.andb_comm by apply N2Z.is_nonneg. apply f_equal. destruct (_ <? N.min _ _) eqn:H.
+    rewrite xbits_spec, testbit_ofZ, Z_xbits_spec, <- N2Z.inj_add, N2Z_inj_ltb, Zle_imp_le_bool,
+            Bool.andb_true_r, Bool.andb_comm, Bool.andb_assoc, Bool.andb_comm by apply N2Z.is_nonneg.
+            apply f_equal. destruct (_ <? N.min _ _) eqn:H.
       apply N.ltb_lt, N.min_glb_lt_iff in H. destruct H. rewrite !(proj2 (N.ltb_lt _ _)) by assumption. reflexivity.
       apply N.ltb_ge, N.min_le in H. destruct H as [H|H]; apply N.ltb_ge in H; rewrite H.
         reflexivity.
         apply Bool.andb_false_r.
     apply Z_xbits_nonneg.
+Qed.
+
+Theorem add_mod_same_l:
+  forall w n, (2^w + n) mod 2^w = n mod 2^w.
+Proof.
+  intros.
+  rewrite <- N.add_mod_idemp_l, N.mod_same, N.add_0_l by (apply N.pow_nonzero; discriminate 1).
+  reflexivity.
+Qed.
+
+Theorem msub_diag:
+  forall w n, (2^w + n - n) mod 2^w = 0.
+Proof.
+  intros. rewrite N.add_sub. apply N.mod_same, N.pow_nonzero. discriminate 1.
+Qed.
+
+Theorem msub_0_r:
+  forall w n, (2^w + n - 0) mod 2^w = n mod 2^w.
+Proof.
+  intros. rewrite N.sub_0_r. apply add_mod_same_l.
+Qed.
+
+Theorem msub_add:
+  forall w n m, n < 2^w -> (2^w + m - n + n) mod 2^w = m mod 2^w.
+Proof.
+  intros. rewrite N.sub_add.
+    apply add_mod_same_l.
+    eapply N.lt_le_incl, N.lt_le_trans. eassumption. apply N.le_add_r.
 Qed.
 
 End TwosComplement.

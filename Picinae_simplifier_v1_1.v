@@ -1481,10 +1481,10 @@ End CheckFrontEnd.
    therefore be used in a tactic that can introduce existentials to the proof
    context (e.g., epose or refine). *)
 
-Local Ltac sastS_gen s :=
-  lazymatch s with
-  | update ?s0 ?v ?u => let t := sastS_gen s0 in uconstr:(SIMP_Update t v ?[?u] u)
-  | _ => uconstr:(SIMP_SVar ?[?s] s)
+Local Ltac sastS_gen _s :=
+  lazymatch _s with
+  | update ?s0 ?v ?_u => let t := sastS_gen s0 in uconstr:(SIMP_Update t v ?[?u] _u)
+  | _ => uconstr:(SIMP_SVar ?[?s] _s)
   end.
 
 Local Ltac sastV_gen e :=
@@ -1536,40 +1536,40 @@ Local Ltac pos_log2_pow2 p :=
 
 Local Ltac populate_var_ids id t :=
   lazymatch t with
-  | context [ SIMP_NVar N0 ?n SIMP_UBND N0 SIMP_UBND ] =>
+  | context [ SIMP_NVar N0 ?_n SIMP_UBND N0 SIMP_UBND ] =>
     let id' := (eval cbv in (N.succ id)) in
     let x := match goal with
-    | [ H: n < 2^?w |- _ ] =>
-      uconstr:(SIMP_NVar id' ?[?n] (SIMP_BND w ?[?BND]) n (SIMP_BND w H))
-    | [ H: n < N.shiftl 1 ?w |- _ ] =>
-      uconstr:(SIMP_NVar id' ?[?n] (SIMP_BND w ?[?BND]) n (SIMP_BND w (N_shiftl1_pow2 H)))
-    | [ H: n < N.pos ?p |- _ ] =>
+    | [ H: _n < 2^?w |- _ ] =>
+      uconstr:(SIMP_NVar id' ?[?n] (SIMP_BND w ?[?BND]) _n (SIMP_BND w H))
+    | [ H: _n < N.shiftl 1 ?w |- _ ] =>
+      uconstr:(SIMP_NVar id' ?[?n] (SIMP_BND w ?[?BND]) _n (SIMP_BND w (N_shiftl1_pow2 H)))
+    | [ H: _n < N.pos ?p |- _ ] =>
       let m := pos_log2_pow2 p in let w := (eval cbv in m) in
-      uconstr:(SIMP_NVar id' ?[?n] (SIMP_BND w ?[?BND]) n (SIMP_BND w H))
-    | [ H: ?s ?v = VaN n ?w, M: models ?c ?s |- _ ] =>
-      let a := constr:(@SIMP_BND n w (models_regsize v M H)) in
-      uconstr:(SIMP_NVar id' ?[?n] (SIMP_BND w ?[?BND]) n a)
-    | _ => uconstr:(SIMP_NVar id' ?[?n] SIMP_UBND n SIMP_UBND)
+      uconstr:(SIMP_NVar id' ?[?n] (SIMP_BND w ?[?BND]) _n (SIMP_BND w H))
+    | [ H: ?s ?v = VaN _n ?w, M: models ?c ?s |- _ ] =>
+      let a := constr:(@SIMP_BND _n w (models_regsize v M H)) in
+      uconstr:(SIMP_NVar id' ?[?n] (SIMP_BND w ?[?BND]) _n a)
+    | _ => uconstr:(SIMP_NVar id' ?[?n] SIMP_UBND _n SIMP_UBND)
     end in
-    lazymatch eval pattern (SIMP_NVar N0 n SIMP_UBND N0 SIMP_UBND) in t with ?f _ =>
+    lazymatch eval pattern (SIMP_NVar N0 _n SIMP_UBND N0 SIMP_UBND) in t with ?f _ =>
       let t' := populate_var_ids id' f in uconstr:(t' x)
     end
-  | context [ SIMP_BVar N0 ?b true ] =>
+  | context [ SIMP_BVar N0 ?_b true ] =>
     let id' := (eval cbv in (N.succ id)) in
-    lazymatch eval pattern (SIMP_BVar N0 b true) in t with ?f _ =>
-      let t' := populate_var_ids id' f in uconstr:(t' (SIMP_BVar id' ?[?b] b))
+    lazymatch eval pattern (SIMP_BVar N0 _b true) in t with ?f _ =>
+      let t' := populate_var_ids id' f in uconstr:(t' (SIMP_BVar id' ?[?b] _b))
     end
-  | context [ SIMP_MVar N0 ?m None zeromem None ] =>
+  | context [ SIMP_MVar N0 ?_m None zeromem None ] =>
     let id' := (eval cbv in (N.succ id)) in
     let x := match goal with
-    | [ H: welltyped_memory m |- _ ] =>
-      uconstr:(SIMP_MVar id' ?[?m] (Some ?[?WTM]) m (Some H))
-    | [ H: ?s ?v = VaM m ?mw, M: models ?c ?s |- _ ] =>
-      let a := constr:(@Some (welltyped_memory m) (models_wtm v M H)) in
-      uconstr:(SIMP_MVar id' ?[?m] (Some ?[?WTM]) m a)
-    | _ => uconstr:(SIMP_MVar id' ?[?m] None m None)
+    | [ H: welltyped_memory _m |- _ ] =>
+      uconstr:(SIMP_MVar id' ?[?m] (Some ?[?WTM]) _m (Some H))
+    | [ H: ?s ?v = VaM _m ?mw, M: models ?c ?s |- _ ] =>
+      let a := constr:(@Some (welltyped_memory _m) (models_wtm v M H)) in
+      uconstr:(SIMP_MVar id' ?[?m] (Some ?[?WTM]) _m a)
+    | _ => uconstr:(SIMP_MVar id' ?[?m] None _m None)
     end in
-    lazymatch eval pattern (SIMP_MVar N0 m None zeromem None) in t with ?f _ =>
+    lazymatch eval pattern (SIMP_MVar N0 _m None zeromem None) in t with ?f _ =>
       let t' := populate_var_ids id' f in uconstr:(t' x)
     end
   | _ => uconstr:(t) end.
@@ -2034,22 +2034,15 @@ Qed.
      O(c) total constructors and d is the nesting depth of the match expression). *)
 
 Local Ltac grab_matcharg v :=
-  let e := (eval cbv delta [v] in v) in
-  match e with context c [ match ?a with _ => _ end ] =>
-    let vm := fresh in epose (vm := _);
-    let x := (eval cbv delta [vm] in vm) in
-    let ex := context c [ x ] in unify e ex;
-    let m := (eval cbv delta [vm] in vm) in
-    clear vm;
-    set (vm := m) in v;
-    subst v;
-    set (v := a) in vm at 1;
-    subst vm
+  match goal with |- context [ match ?a with _ => _ end ] =>
+    let tmp := fresh in pose (tmp := a);
+    repeat (change a with tmp at 1; lazymatch goal with |- context [ match tmp with _ => _ end ] => fail | _ => idtac end);
+    set (v := a) at 1;
+    subst tmp
   end.
 
 Local Ltac destruct_match :=
   let va := fresh in
-  match goal with |- ?g => set (va:=g) end;
   grab_matcharg va;
   let Heqm := fresh "Heqm" in destruct va eqn:Heqm;
   subst va; try rewrite Heqm in *;
@@ -2057,7 +2050,6 @@ Local Ltac destruct_match :=
 
 Local Ltac destruct_match_def def :=
   let va := fresh in
-  match goal with |- ?g => set (va:=g) end;
   grab_matcharg va;
   let Hdef := fresh in let Heqm := fresh "Heqm" in
   unshelve eenough (Hdef:_); swap 1 2;
@@ -2113,7 +2105,7 @@ Theorem simpl_sub_sound:
   forall mvt e1 e2, eval_sastN mvt (simpl_sub mvt e1 e2) = eval_sastN mvt (SIMP_Sub e1 e2).
 Proof.
   symmetry. unfold simpl_sub. destruct_matches_def SIMP_NVar; try reflexivity.
-    apply (sastN_eq_sound mvt) in Heqm. simpl in Heqm |- *. rewrite Heqm. apply N.sub_diag.
+    apply (sastN_eq_sound mvt) in Heqm. simpl. rewrite Heqm. apply N.sub_diag.
 
     apply N.sub_0_r.
 
@@ -2419,7 +2411,7 @@ Proof.
   assert (SB2 := simpl_bounds_sound mvt e2). destruct (simpl_bounds mvt e2) as (lo2,ohi2).
 
   destruct_matches_def SIMP_NVar; try reflexivity; simpl;
-  try (symmetry; eapply dbl_mod; [|eassumption]; rewrite Heqm7; reflexivity);
+  try solve [ symmetry; eapply dbl_mod; [|eassumption]; rewrite Heqm7; reflexivity ];
   repeat match goal with [ H: (_ =? _) = true |- _ ] => apply N.eqb_eq in H; first [ rewrite <- H in * | rewrite H in * ]
                        | [ H: (_ <? _) = true |- _ ] => apply N.ltb_lt in H
                        | [ H: ?n <= _ <= ?n |- _ ] => apply N_le_le_eq in H; rewrite H in *
@@ -2727,7 +2719,7 @@ Lemma invert_ite_parts:
   e0=e0' /\ e1=e1' /\ e2=e2'.
 Proof.
   intros. inversion H. repeat split.
-  inversion_sigma. subst. rewrite (DecidableEqDepSet_NB.UIP_refl _ H0). reflexivity.
+  inversion_sigma. subst. erewrite (DecidableEqDepSet_NB.UIP_refl _ _). reflexivity.
 Qed.
 
 Theorem eval_ite_parts:

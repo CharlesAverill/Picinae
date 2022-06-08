@@ -51,7 +51,7 @@ Inductive typ : Type :=
 Theorem typ_eqdec: forall (t1 t2:typ), {t1=t2}+{t1<>t2}.
 Proof. decide equality; apply N.eq_dec. Defined.
 Arguments typ_eqdec t1 t2 : simpl never.
-Instance TypEqDec : EqDec typ := { iseq := typ_eqdec }.
+#[export] Instance TypEqDec : EqDec typ := { iseq := typ_eqdec }.
 
 (* The bitwidth of the result of a binary operation *)
 Definition widthof_binop (bop:binop_typ) (w:bitwidth) : bitwidth :=

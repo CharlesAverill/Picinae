@@ -1843,22 +1843,18 @@ Qed.
      O(c) total constructors and d is the nesting depth of the match expression). *)
 
 Local Ltac grab_matcharg v :=
-  let e := (eval cbv delta [v] in v) in
-  match e with context c [ match ?a with _ => _ end ] =>
-    let vm := fresh in epose (vm := _);
-    let x := (eval cbv delta [vm] in vm) in
-    let ex := context c [ x ] in unify e ex;
-    let m := (eval cbv delta [vm] in vm) in
-    clear vm;
-    set (vm := m) in v;
-    subst v;
-    set (v := a) in vm at 1;
-    subst vm
+  match goal with |- context c [ match ?a with _ => _ end ] =>
+    let m := fresh in epose (m := _);
+    let g := context c [ m ] in let H := fresh in enough (H: g); [exact H|];
+    pattern m;
+    let f := fresh in match goal with |- ?P m => set (f := P) end;
+    subst m;
+    set (v := a) at 1;
+    unfold f; clear f
   end.
 
 Local Ltac destruct_match :=
   let va := fresh in
-  match goal with |- ?g => set (va:=g) end;
   grab_matcharg va;
   let Heqm := fresh "Heqm" in destruct va eqn:Heqm;
   subst va; try rewrite Heqm in *;
@@ -1866,7 +1862,6 @@ Local Ltac destruct_match :=
 
 Local Ltac destruct_match_def def :=
   let va := fresh in
-  match goal with |- ?g => set (va:=g) end;
   grab_matcharg va;
   let Hdef := fresh in let Heqm := fresh "Heqm" in
   unshelve eenough (Hdef:_); swap 1 2;
@@ -2010,9 +2005,12 @@ Proof.
   destruct simpl_bounds as (lo,ohi). destruct (match ohi with Some 0 => _ | _ => _ end) eqn:H.
     destruct ohi as [[|hi]|]; try discriminate. apply proj2, N.le_0_r in SB. apply SB.
     clear lo ohi SB H. destruct_matches_def SIMP_NVar; try reflexivity.
-      rewrite simpl_getmem_len_sound. cbn [eval_sastN]. rewrite simpl_add_sound. replace (N.pos p) with (Mb*n0).
+
+      destruct N.div_eucl as (q,n0) eqn:Heqm7. destruct n0; try reflexivity.
+      rewrite simpl_getmem_len_sound. cbn [eval_sastN]. rewrite simpl_add_sound. replace (N.pos p) with (Mb*q).
         cbn [eval_sastN]. apply shiftr_getmem. simpl. rewrite Heqm5. assumption.
         assert (DIV := N.div_eucl_spec (N.pos p) Mb). rewrite Heqm7, N.add_0_r in DIV. symmetry. exact DIV.
+
       apply N.shiftr_0_l.
 Qed.
 
@@ -2221,7 +2219,6 @@ Proof.
   assert (SB2 := simpl_bounds_sound mvt e2). destruct (simpl_bounds mvt e2) as (lo2,ohi2).
 
   destruct_matches_def SIMP_NVar; try reflexivity; simpl;
-  try (symmetry; eapply dbl_mod; [|eassumption]; rewrite Heqm7; reflexivity);
   repeat match goal with [ H: (_ =? _) = true |- _ ] => apply N.eqb_eq in H; first [ rewrite <- H in * | rewrite H in * ]
                        | [ H: (_ <? _) = true |- _ ] => apply N.ltb_lt in H
                        | [ H: ?n <= _ <= ?n |- _ ] => apply N_le_le_eq in H; rewrite H in *
@@ -2230,8 +2227,14 @@ Proof.
     apply proj2, N.le_0_r in SB2. rewrite SB2. apply N_mod_0_r.
     apply N.mod_1_r.
     reflexivity.
+    destruct (match _ with Gt => _ | _ => _ end) eqn:Heqm7, N.pos_div_eucl eqn:Heqm8, n3.
+      symmetry. eapply dbl_mod; [|eassumption]. assumption.
+      reflexivity.
     apply proj2, N.le_0_r in SB2. rewrite SB2. apply N_mod_0_r.
     apply N.mod_1_r.
+    destruct (match _ with Gt => _ | _ => _ end) eqn:Heqm7, N.pos_div_eucl eqn:Heqm8, n2.
+      symmetry. eapply dbl_mod; [|eassumption]. assumption.
+      reflexivity.
 Qed.
 
 Lemma lmop2ge_is_ge:

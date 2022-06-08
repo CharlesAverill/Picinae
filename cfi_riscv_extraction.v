@@ -1540,7 +1540,7 @@ Proof.
     apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
     rewrite N2Z.inj_pow, N2Z.inj_add, Z.pow_add_r by apply N2Z.is_nonneg. apply Z.divide_factor_l.
     apply Z.mod_pos_bound. apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
-    apply N2Z_pow2_pos.
+    apply N2Z.is_nonneg.
 Qed.
 
 Lemma Zcmp_signed_range:
@@ -2031,7 +2031,7 @@ Proof.
   rewrite <- !N.shiftl_lor, <- !N.land_lor_distr_r, (N.land_ones _ 19).
 
   rewrite (N.shiftl_mul_pow2 _ 2).
-  change (2^19)%N with (Z.to_N (2^19)). rewrite <- Z2N.inj_mod, Zmod_mod by (try apply Z.mod_pos_bound; reflexivity).
+  change (2^19)%N with (Z.to_N (2^19)). rewrite <- Z2N.inj_mod, Zmod_mod; [| apply Z.mod_pos_bound; reflexivity | discriminate 1 ].
   change (2^2)%N with (Z.to_N 4). rewrite <- Z2N.inj_mul by (discriminate + (apply Z.mod_pos_bound; reflexivity)).
   rewrite <- Zmult_mod_distr_r, Z.mul_comm.
   change (Z.to_N (_ mod _)) with (ofZ 21 (4*o')). rewrite toZ_ofZ. reflexivity. split.
@@ -2162,9 +2162,10 @@ Theorem newijump_asm:
     R5_Jalr (xbits n 7 12) tmp3 0 :: nil.
 Proof.
   intros.
-  unfold newijump in NIJ. unfold_consts in NIJ. replace ((z #>> 15) #& 31) with (Z.of_N rs1) in NIJ by
-  ( unfold rs1, n; rewrite xbits_Z2N by exact OP0; rewrite Z2N.id by apply Z_xbits_nonneg;
-    unfold Z_xbits; rewrite <- Z.land_ones by discriminate 1; reflexivity ).
+  unfold newijump in NIJ. unfold_consts in NIJ. replace ((z #>> 15) #& 31) with (Z.of_N rs1) in NIJ; swap 1 2.
+    unfold rs1, n, xbits. apply Z2N.inj_iff. apply N2Z.is_nonneg. apply Z.land_nonneg. right. discriminate 1.
+    rewrite Z2N_inj_land, Z2N_inj_shiftr, <- N.land_ones. apply N2Z.id.
+      exact OP0. discriminate 1. apply Z.shiftr_nonneg, OP0. discriminate 1.
   change 29 with (Z.of_N 29) in NIJ. change 30 with (Z.of_N 30) in NIJ. change 31 with (Z.of_N 31) in NIJ.
   rewrite <- N2Z_inj_eqb, !N2Z_inj_ltb, <- !N2Z_inj_ifbool in NIJ. fold tmp1 tmp2 tmp3 in NIJ.
   destruct newbranch as [br|] eqn:NB; [|discriminate]. apply invSome in NIJ. subst b.

@@ -45,7 +45,7 @@ Open Scope N.
    as "equal" without explicitly supplying the equality decision procedure. *)
 Class EqDec A : Type := { iseq: forall (a b:A), {a=b}+{a<>b} }.
 Arguments iseq {A EqDec} a b : simpl never.
-Instance NEqDec : EqDec N := { iseq := N.eq_dec }.
+#[export] Instance NEqDec : EqDec N := { iseq := N.eq_dec }.
 Notation "x == y" := (iseq x y) (at level 70, no associativity).
 
 (* When there is an equality decision procedure for a function f's domain,
@@ -233,7 +233,7 @@ Import Arch.
 Definition Mb := Npos mem_bits.
 Definition vareq := Var.eq_dec.
 Definition vareqb v1 v2 := if vareq v1 v2 then true else false.
-Instance VarEqDec : EqDec var := { iseq := vareq }.
+#[export] Instance VarEqDec : EqDec var := { iseq := vareq }.
 
 (* IL expression syntax *)
 Inductive exp : Type :=
