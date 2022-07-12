@@ -79,6 +79,9 @@ Ltac initialize H s v n :=
     assert (H := init_thm v MDL); destruct H as [n H]
   end.
 
+Ltac report_failure :=
+  lazymatch goal with [ H: exec_prog _ _ 0 _ _ _ (Exit ?a) |- ?g ] => fail "(possible missing bounds-check): Cannot prove memory access bound" g "in basic block at offset" a end.
+
 Lemma invQ: forall x y, Ⓠ x = Ⓠ y -> x = y.
 Proof. intros. inversion H. reflexivity. Qed.
 
@@ -200,7 +203,7 @@ Qed.
    (RDILO) Precondition: The pointer argument must not point into the stack(!).
    (RET) Assume the return address on the stack on entry is not within the callee.
    (XP0) Let x and s' be the exit condition and store after n instructions execute.
-   From these, we prove that all invariants (including the post-condition) hold
+   From these, we try to prove that all invariants (including the post-condition) hold
    true for arbitrarily long executions (i.e., arbitrary n). *)
 Theorem return_address_integrity:
   forall s rsp rdi m n s' x
@@ -305,7 +308,7 @@ Proof.
     repeat split.
       apply P1.
       rewrite getmem_frame_high.
-        eapply N.le_lt_trans; [|exact P3]. admit.
+        eapply N.le_lt_trans; [|exact P3]. report_failure.
         rewrite N.add_1_r. apply N.le_succ_l. eapply N.lt_le_trans. exact P3. shelve.
     rewrite N.add_1_r. apply N.le_succ_l. eapply N.lt_le_trans. exact P3. rewrite Hrsp. apply N.le_sub_l.
 
@@ -340,7 +343,7 @@ Proof.
   (* Addresses 401-449 *)
   destruct PRE as [m1 [MEM1 PRE]].
   do 14 step. step; clear BC.
-  eexists. split. reflexivity. apply PRE. (* LIFTING ERROR: Address 451 was not lifted. *)
+  eexists. split. reflexivity. apply PRE. (* TODO: Address 451 not lifted (BAP bug). *)
   eexists. split. reflexivity. rewrite <- RBP0. apply PRE.
 
   (* Addresses 461-587 *)
