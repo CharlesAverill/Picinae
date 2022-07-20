@@ -146,7 +146,8 @@ Inductive binop_typ : Type :=
 (* IL unary operators *)
 Inductive unop_typ : Type :=
 | OP_NEG (* Negate (2's complement) *)
-| OP_NOT (* Bitwise not *).
+| OP_NOT (* Bitwise not *)
+| OP_POPCOUNT (* Count 1 bits *).
 
 (* IL bitwidth cast operators *)
 Inductive cast_typ : Type :=
@@ -179,11 +180,17 @@ Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
   | OP_SLE => tobit (sle w n1 n2)
   end.
 
+(* Count 1-bits *)
+Fixpoint Pos_popcount p := match p with
+| xH => xH | xO q => Pos_popcount q | xI q => Pos.succ (Pos_popcount q) end.
+Definition popcount n := match n with N0 => N0 | N.pos p => N.pos (Pos_popcount p) end.
+
 (* Perform a unary operation. *)
 Definition eval_unop (uop:unop_typ) (n:N) (w:bitwidth) : value :=
   match uop with
   | OP_NEG => towidth w (2^w - n)
   | OP_NOT => VaN (N.lnot n w) w
+  | OP_POPCOUNT => VaN (popcount n) w
   end.
 
 (* Cast a numeric value to a new bitwidth. *)

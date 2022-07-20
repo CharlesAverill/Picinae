@@ -2059,6 +2059,136 @@ Qed.
 End BitOps.
 
 
+Section Population_count.
+
+Theorem size_le_diag:
+  forall n, N.size n <= n.
+Proof.
+  destruct n as [|p]. discriminate. change (Pos.size p <= p)%positive.
+  induction p.
+    simpl. etransitivity.
+      apply -> Pos.succ_le_mono. apply IHp.
+      rewrite Pos.xI_succ_xO, <- Pos.add_diag. apply -> Pos.succ_le_mono. apply Pos.lt_le_incl, Pos.lt_add_r.
+    simpl. etransitivity.
+      apply -> Pos.succ_le_mono. apply IHp.
+      rewrite <- Pos.add_1_r, <- Pos.add_diag. apply Pos.add_le_mono_l, Pos.le_1_l.
+    reflexivity.
+Qed.
+
+Theorem Pos_popcount_bound:
+  forall p, (Pos_popcount p <= Pos.size p)%positive.
+Proof.
+  induction p.
+    apply -> Pos.succ_le_mono. assumption.
+    etransitivity.
+      apply Pos.lt_le_incl, Pos.lt_succ_diag_r.
+      apply -> Pos.succ_le_mono. assumption.
+    reflexivity.
+Qed.
+
+Theorem popcount_bound:
+  forall n, popcount n <= N.size n.
+Proof.
+  destruct n. reflexivity. apply Pos_popcount_bound.
+Qed.
+
+Theorem popcount_0:
+  forall n, popcount n = 0 -> n = 0.
+Proof.
+  intros. destruct n. reflexivity. discriminate.
+Qed.
+
+Theorem popcount_lor:
+  forall m n, N.land m n = 0 -> popcount (N.lor m n) = popcount m + popcount n.
+Proof.
+  intros.
+  destruct m as [|p]. reflexivity.
+  destruct n as [|q]. reflexivity.
+  simpl in *. apply f_equal. revert q H. induction p; intros.
+    destruct q; simpl in *.
+      destruct Pos.land; discriminate.
+      rewrite IHp.
+        rewrite Pos.add_succ_l. reflexivity.
+        destruct Pos.land. reflexivity. discriminate.
+      discriminate.
+    destruct q; simpl in *.
+      rewrite Pos.add_succ_r, IHp.
+        reflexivity.
+        destruct Pos.land. reflexivity. discriminate.
+      apply IHp. destruct Pos.land. reflexivity. discriminate.
+      rewrite Pos.add_1_r. reflexivity.
+    destruct q; try discriminate. rewrite Pos.add_1_l. reflexivity.
+Qed.
+
+Theorem popcount_double:
+  forall n, popcount (N.double n) = popcount n.
+Proof.
+  destruct n; reflexivity.
+Qed.
+
+Theorem popcount_shiftl:
+  forall n i, popcount (N.shiftl n i) = popcount n.
+Proof.
+  induction i using N.peano_ind.
+    rewrite N.shiftl_0_r. reflexivity.
+    rewrite N.shiftl_succ_r. rewrite popcount_double. apply IHi.
+Qed.
+
+Theorem popcount_pow2:
+  forall n, popcount (2^n) = 1.
+Proof.
+  intros. rewrite <- N.shiftl_1_l, popcount_shiftl. reflexivity.
+Qed.
+
+Theorem popcount_ones:
+  forall n, popcount (N.ones n) = n.
+Proof.
+  induction n using N.peano_ind. reflexivity.
+  rewrite <- N.add_1_r, N.ones_add, N.mul_1_r.
+  assert (H: N.land (2^n) (N.ones n) = 0).
+    rewrite <- N.shiftl_1_l.
+    rewrite <- (N.div_same (2^n)) by (apply N.pow_nonzero; discriminate).
+    rewrite <- N.shiftr_div_pow2, <- N.ldiff_ones_r.
+    apply N.land_ldiff.
+  rewrite N.add_nocarry_lxor, N.lxor_lor, popcount_lor by exact H.
+  rewrite popcount_pow2, IHn. apply N.add_comm.
+Qed.
+
+Definition parity8 n :=
+  N.lnot ((N.lxor
+    (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
+                      (N.lxor (N.shiftr n 4) n)) 1)
+    (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
+            (N.lxor (N.shiftr n 4) n))) mod 2^1) 1.
+
+Theorem parity8_byte:
+  forall n, parity8 n = parity8 (n mod 2^8).
+Proof.
+  intro. unfold parity8. rewrite <- !N.land_ones.
+  apply f_equal2; [|reflexivity].
+  apply N.bits_inj. intro i.
+  repeat rewrite !N.land_spec, ?N.lxor_spec, ?N.shiftr_spec'. rewrite !N_ones_spec_ltb.
+  destruct i.
+    rewrite !Bool.andb_true_r. reflexivity.
+    replace (N.pos p <? 1) with false.
+      rewrite !Bool.andb_false_r. reflexivity.
+      destruct p; reflexivity.
+Qed.
+
+Theorem parity8_popcount:
+  forall n, parity8 n = N.b2n (N.even (popcount (n mod 2^8))).
+Proof.
+  intro. rewrite parity8_byte. cut (n mod 2^8 < 2^8).
+
+    generalize (n mod 2^8). clear n. intros n H.
+    destruct n as [|p]. reflexivity.
+    repeat first [ discriminate H | destruct p as [p|p|] ]; reflexivity.
+
+    apply N.mod_lt. discriminate 1.
+Qed.
+
+End Population_count.
+
 
 Section NInduction.
 

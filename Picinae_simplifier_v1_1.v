@@ -152,6 +152,7 @@ Inductive sastN : Set :=
 | SIMP_Xor (e1 e2:sastN)
 | SIMP_ShiftR (e1 e2:sastN)
 | SIMP_ShiftL (e1 e2:sastN)
+| SIMP_Popcount (e1:sastN)
 | SIMP_Parity8 (e1:sastN)
 | SIMP_GetMem (en:endianness) (len:bitwidth) (m:sastM) (a:sastN)
 | SIMP_App (m:sastM) (a:sastN)
@@ -253,6 +254,7 @@ Fixpoint eval_sastN mvt e {struct e} : N :=
   | SIMP_Xor e1 e2 => N.lxor (eval_sastN mvt e1) (eval_sastN mvt e2)
   | SIMP_ShiftR e1 e2 => N.shiftr (eval_sastN mvt e1) (eval_sastN mvt e2)
   | SIMP_ShiftL e1 e2 => N.shiftl (eval_sastN mvt e1) (eval_sastN mvt e2)
+  | SIMP_Popcount e1 => popcount (eval_sastN mvt e1)
   | SIMP_Parity8 e1 => parity8 (eval_sastN mvt e1)
   | SIMP_GetMem en len m a => getmem en len (eval_sastM mvt m) (eval_sastN mvt a)
   | SIMP_App m a => (eval_sastM mvt m) (eval_sastN mvt a)
@@ -560,6 +562,7 @@ Fixpoint simpl_bounds mvt e {struct e} : N * option N :=
                           option_map (fun hi1 => N.shiftr hi1 lo2) ohi1)
   | SIMP_ShiftL e1 e2 => let (lo1,ohi1) := simpl_bounds mvt e1 in let (lo2,ohi2) := simpl_bounds mvt e2 in
                          (N.shiftl lo1 lo2, match ohi1 with None => None | Some hi1 => option_map (N.shiftl hi1) ohi2 end)
+  | SIMP_Popcount e1 => (0, option_map N.size (snd (simpl_bounds mvt e1)))
   | SIMP_Parity8 _ => (0, Some 1)
   | SIMP_GetMem _ len m _ =>
       (0, match m with SIMP_MVar (Npos id) _ _ _ _ =>
@@ -614,7 +617,7 @@ Fixpoint multiple_of_pow2 mvt e n {struct e} :=
           end
         | _ => false
         end
-    | SIMP_Parity8 _ | SIMP_NVar _ _ _ _ _ | SIMP_GetMem _ _ _ _ | SIMP_App _ _ => false
+    | SIMP_Popcount _ | SIMP_Parity8 _ | SIMP_NVar _ _ _ _ _ | SIMP_GetMem _ _ _ _ | SIMP_App _ _ => false
     end
   end.
 
@@ -907,7 +910,7 @@ Fixpoint simpl_under_modpow2 mvt e n {struct e} :=
         end
       end
     | SIMP_Pow _ _ (* SIMP_Pow should already have been simplified to SIMP_ShiftL when possible, so ignore here *)
-    | SIMP_NVar _ _ _ _ _ | SIMP_Parity8 _ | SIMP_App _ _ => e
+    | SIMP_NVar _ _ _ _ _ | SIMP_Popcount _ | SIMP_Parity8 _ | SIMP_App _ _ => e
     end
   end.
 
@@ -1034,7 +1037,8 @@ Definition simplN_dispatch mvt e :=
   | SIMP_Xor e1 e2 => simpl_xor e1 e2
   | SIMP_ShiftR e1 e2 => simpl_shiftr mvt e1 e2
   | SIMP_ShiftL e1 e2 => simpl_shiftl e1 e2
-  | SIMP_Parity8 e1 => e
+  | SIMP_Popcount _ => e
+  | SIMP_Parity8 _ => e
   | SIMP_GetMem en len m a => simpl_getmem mvt en len m a
   | SIMP_App m a => simpl_getmem mvt LittleE 1 m a
   | SIMP_IteNN e0 e1 e2 => simpl_ite SastN (NB2NBM SastN) mvt e0 e1 e2
@@ -1227,6 +1231,7 @@ Fixpoint simpl_outN (noe: forall op, noe_setop_typsig op) mvt e {struct e} : N :
   | SIMP_Xor e1 e2 => noe NOE_XOR (simpl_outN noe mvt e1) (simpl_outN noe mvt e2)
   | SIMP_ShiftR e1 e2 => noe NOE_SHR (simpl_outN noe mvt e1) (simpl_outN noe mvt e2)
   | SIMP_ShiftL e1 e2 => noe NOE_SHL (simpl_outN noe mvt e1) (simpl_outN noe mvt e2)
+  | SIMP_Popcount e1 => noe NOE_POPCOUNT (simpl_outN noe mvt e1)
   | SIMP_Parity8 e1 => noe NOE_PARITY8 (simpl_outN noe mvt e1)
   | SIMP_GetMem en len m a => (if len =? 1 then id else noe NOE_GET en len) (simpl_outM noe mvt m) (simpl_outN noe mvt a)
   | SIMP_App m a => (simpl_outM noe mvt m) (simpl_outN noe mvt a)
@@ -1383,7 +1388,7 @@ Local Ltac sastN_gen n :=
   | (match ?b with true => ?n1 | false => ?n2 end) =>
       let t0 := sastB_gen b in let t1 := sastN_gen n1 in let t2 := sastN_gen n2 in uconstr:(SIMP_IteBN t0 t1 t2)
   | getmem ?en ?len ?m ?a => let t1 := sastM_gen m in let t2 := sastN_gen a in uconstr:(SIMP_GetMem en len t1 t2)
-  | parity8 ?n1 => let t := sastN_gen n1 in uconstr:(SIMP_Parity8 t)
+  | popcount ?n1 => let t := sastN_gen n1 in uconstr:(SIMP_Popcount t)
   | N.lnot ((N.lxor (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr ?n1 4) ?n1) 2)
                                       (N.lxor (N.shiftr ?n1 4) ?n1)) 1)
                     (N.lxor (N.shiftr (N.lxor (N.shiftr ?n1 4) ?n1) 2)
@@ -1450,6 +1455,7 @@ Section CheckFrontEnd.
     check (if n1 then n2 else n3).
     check (if b1 then n1 else n2).
     check (getmem en n1 m1 n2).
+    check (popcount n1).
     check (parity8 n1).
     check (N.lnot ((N.lxor (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr n1 4) n1) 2)
                                              (N.lxor (N.shiftr n1 4) n1)) 1)
@@ -1830,6 +1836,13 @@ Proof.
     apply IHe1.
     apply N.pow_le_mono_r. discriminate. apply IHe2.
 
+  (* Popcount *)
+  split.
+    apply N.le_0_l.
+    destruct simpl_bounds as (lo,[hi|]).
+      simpl. etransitivity. apply popcount_bound. apply N_size_injle, IHe.
+      exact I.
+
   (* Parity8 *)
   split.
     apply N.le_0_l.
@@ -1862,7 +1875,6 @@ Proof.
     destruct ohi2; [|exact I]. destruct ohi3; [|exact I]. simpl. destruct (eval_sastB mvt e1).
       etransitivity. apply IHe1. apply N.le_max_l.
       etransitivity. apply IHe2. apply N.le_max_r.
-
 Qed.
 
 Corollary sastN_le_sound:
@@ -1985,7 +1997,6 @@ Proof.
 
   (* IteBN *)
   destruct (eval_sastB mvt e1); eexists; eassumption.
-
 Qed.
 
 

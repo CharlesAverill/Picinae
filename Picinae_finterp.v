@@ -135,7 +135,7 @@ Inductive NoE_SETOP :=
 | NOE_EQB | NOE_LTB | NOE_LEB
 | NOE_SLT | NOE_SLE
 | NOE_QUO | NOE_REM | NOE_ASR
-| NOE_PARITY8
+| NOE_POPCOUNT | NOE_PARITY8
 | NOE_CAS
 | NOE_BAND
 | NOE_ZST
@@ -154,7 +154,7 @@ Definition noe_setop_typsig op :=
   | NOE_EQB | NOE_LTB | NOE_LEB => N -> N -> bool
   | NOE_SLT | NOE_SLE => bitwidth -> N -> N -> bool
   | NOE_QUO | NOE_REM | NOE_ASR => bitwidth -> N -> N -> N
-  | NOE_PARITY8 => N -> N
+  | NOE_POPCOUNT | NOE_PARITY8 => N -> N
   | NOE_CAS => bitwidth -> bitwidth -> N -> N
   | NOE_BAND => bool -> bool -> bool
   | NOE_ZST => addr -> N
@@ -164,15 +164,6 @@ Definition noe_setop_typsig op :=
   | NOE_GET => endianness -> bitwidth -> (addr -> N) -> addr -> N
   | NOE_SET => endianness -> bitwidth -> (addr -> N) -> addr -> N -> addr -> N
   end.
-
-Definition parity8 n :=
-  N.lnot ((N.lxor
-    (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
-                      (N.lxor (N.shiftr n 4) n)) 1)
-    (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
-            (N.lxor (N.shiftr n 4) n))) mod 2^1) 1.
-
-
 
 (* Functional interpretation of expressions and statements entails instantiating
    a functor that accepts the architecture-specific IL syntax and semantics. *)
@@ -227,6 +218,7 @@ Definition noe_setop op : noe_setop_typsig op :=
   | NOE_REM => sbop2 Z.rem
   | NOE_ASR => ashiftr
   | NOE_CAS => scast
+  | NOE_POPCOUNT => popcount
   | NOE_PARITY8 => parity8
   | NOE_BAND => andb
   | NOE_ZST => (fun (_:addr) => N0)
@@ -401,6 +393,7 @@ Definition feval_unop (uop:unop_typ) (noe:forall op, noe_setop_typsig op) (n:N) 
   match uop with
   | OP_NEG => utowidth noe w (noe NOE_SUB (noe NOE_POW 2 w) n)
   | OP_NOT => VaU true (noe NOE_ZST) (noe NOE_NOT n w) w
+  | OP_POPCOUNT => VaU true (noe NOE_ZST) (noe NOE_POPCOUNT n) w
   end.
 
 Definition feval_cast (c:cast_typ) (noe:forall op, noe_setop_typsig op) (w w':bitwidth) (n:N) : N :=

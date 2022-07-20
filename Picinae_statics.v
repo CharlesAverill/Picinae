@@ -914,6 +914,10 @@ Proof.
 
   (* NOT *)
   apply lnot_bound, value_bound. assumption.
+
+  (* POPCOUNT *)
+  eapply N.le_lt_trans. apply popcount_bound.
+  eapply N.le_lt_trans. apply size_le_diag. apply value_bound, TV.
 Qed.
 
 Theorem typesafe_cast:
