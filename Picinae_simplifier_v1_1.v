@@ -1593,7 +1593,7 @@ Local Ltac psimp_verify_frontend :=
 Local Ltac psimpl_hyp_with _simpl_evars _make_mvt _simplify_sast_hyp t H :=
   let t2 := eval lazy [t simpl_evarsN simpl_evarsB simpl_evarsM] in (_simpl_evars t) in
   let mvt := eval compute in (_make_mvt t2) in
-  eapply (_simplify_sast_hyp _ mvt t2) in H;
+  eapply (_simplify_sast_hyp _ _ _ mvt t2) in H;
   [ compute in H
   | unify t t2; reflexivity
   | psimp_verify_frontend ].
