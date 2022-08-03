@@ -222,6 +222,64 @@ Proof.
 Qed.
 
 
+Section NInduction.
+
+(* Analogues of theorems about Pos.iter, but for N.iter. *)
+
+Corollary Niter_swap:
+  forall n {A} (f: A -> A) x, N.iter n f (f x) = f (N.iter n f x).
+Proof. intros. destruct n. reflexivity. apply Pos.iter_swap. Qed.
+
+Corollary Niter_succ:
+  forall n {A} (f: A -> A) x, N.iter (N.succ n) f x = f (N.iter n f x).
+Proof. intros. destruct n. reflexivity. apply Pos.iter_succ. Qed.
+
+Corollary Niter_invariant:
+  forall {A} (Inv: A -> Prop) f x
+         (BC: Inv x) (IC: forall x (IH: Inv x), Inv (f x)),
+  forall n, Inv (N.iter n f x).
+Proof.
+  intros. destruct n.
+    exact BC.
+    simpl. apply Pos.iter_invariant.
+      intros. apply IC. assumption.
+      exact BC.
+Qed.
+
+Corollary Niter_add:
+  forall m n {A} (f: A -> A) x,
+  N.iter (m+n) f x = N.iter m f (N.iter n f x).
+Proof.
+  intros. destruct m.
+    reflexivity.
+    destruct n.
+      rewrite N.add_0_r. reflexivity.
+      apply Pos.iter_add.
+Qed.
+
+Theorem N_bitwise_ind:
+  forall (P: N -> Prop) (BC: P 0)
+    (IC: forall n (IH: P (N.div2 n)), P n),
+  forall n, P n.
+Proof.
+  intros. destruct n as [|p]. exact BC.
+  induction p; apply IC; assumption.
+Qed.
+
+Theorem N_bitwise_ind2:
+  forall (P: N -> N -> Prop) (BC: P 0 0)
+    (IC: forall m n (IH: P (N.div2 m) (N.div2 n)), P m n),
+  forall m n, P m n.
+Proof.
+  intros. revert m. pattern n. apply N_bitwise_ind; intros.
+    pattern m. apply N_bitwise_ind.
+      exact BC.
+      intros. apply IC, IH.
+    apply IC, IH.
+Qed.
+
+End NInduction.
+
 
 (* Theory of bit-extraction. *)
 Section XBits.
@@ -242,6 +300,15 @@ Proof.
   apply f_equal. destruct (b + i <? j) eqn:H.
     apply N.ltb_lt, N.lt_add_lt_sub_r, N.ltb_lt, H.
     apply N.ltb_ge, N.le_sub_le_add_r, N.ltb_ge, H.
+Qed.
+
+Theorem testbit_xbits:
+  forall n i, N.testbit n i = N.odd (xbits n i (N.succ i)).
+Proof.
+  intros. unfold xbits.
+  rewrite N.testbit_odd, N.sub_succ_l, N.sub_diag by reflexivity.
+  rewrite <- N.bit0_mod, N.bit0_odd.
+  destruct N.odd; reflexivity.
 Qed.
 
 Theorem xbits_equiv:
@@ -2056,11 +2123,6 @@ Proof.
   symmetry. apply N_land_mod_pow2_move.
 Qed.
 
-End BitOps.
-
-
-Section Population_count.
-
 Theorem size_le_diag:
   forall n, N.size n <= n.
 Proof.
@@ -2098,32 +2160,108 @@ Proof.
   intros. destruct n. reflexivity. discriminate.
 Qed.
 
-Theorem popcount_lor:
-  forall m n, N.land m n = 0 -> popcount (N.lor m n) = popcount m + popcount n.
+Theorem popcount_pos:
+  forall n, 0 < popcount n <-> 0 < n.
 Proof.
-  intros.
-  destruct m as [|p]. reflexivity.
-  destruct n as [|q]. reflexivity.
-  simpl in *. apply f_equal. revert q H. induction p; intros.
-    destruct q; simpl in *.
-      destruct Pos.land; discriminate.
-      rewrite IHp.
-        rewrite Pos.add_succ_l. reflexivity.
-        destruct Pos.land. reflexivity. discriminate.
-      discriminate.
-    destruct q; simpl in *.
-      rewrite Pos.add_succ_r, IHp.
-        reflexivity.
-        destruct Pos.land. reflexivity. discriminate.
-      apply IHp. destruct Pos.land. reflexivity. discriminate.
-      rewrite Pos.add_1_r. reflexivity.
-    destruct q; try discriminate. rewrite Pos.add_1_l. reflexivity.
+  intro. split; intro; (destruct n; [ discriminate | reflexivity ]).
+Qed.
+
+Theorem popcount_bit:
+  forall n, popcount n = n <-> n < 2.
+Proof.
+  split; intro.
+
+    destruct n as [|n]. reflexivity.
+    rewrite <- (N.succ_pred (N.pos n)) in * by discriminate 1. destruct (N.pred _) as [|p]. reflexivity.
+    rewrite <- (N.succ_pred (N.pos p)) in * by discriminate 1. destruct (N.pred _) as [|q]. discriminate.
+    clear n p. contradict H. apply N.lt_neq.
+    eapply N.le_lt_trans. apply popcount_bound.
+    rewrite N.size_log2 by apply N.neq_succ_0. apply -> N.succ_lt_mono. apply N.lt_succ_r.
+    induction q using Pos.peano_ind.
+      discriminate 1.
+      etransitivity.
+        apply N.log2_succ_le.
+        apply (proj1 (N.succ_le_mono _ (N.pos q))). etransitivity.
+          apply IHq.
+          reflexivity.
+
+    destruct n as [|[n|n|]]; try reflexivity; destruct n; discriminate.
 Qed.
 
 Theorem popcount_double:
   forall n, popcount (N.double n) = popcount n.
 Proof.
   destruct n; reflexivity.
+Qed.
+
+Theorem popcount_succ_double:
+  forall n, popcount (N.succ_double n) = N.succ (popcount n).
+Proof.
+  destruct n; reflexivity.
+Qed.
+
+Theorem popcount_div2':
+  forall n, popcount n = popcount (N.div2 n) + n mod 2.
+Proof.
+  intro. change 2 with (2^1). rewrite <- N.land_ones.
+  destruct n as [|[p|p|]]; try reflexivity.
+  simpl. rewrite Pos.add_1_r. reflexivity.
+Qed.
+
+Theorem popcount_div2:
+  forall n, popcount (N.div2 n) = popcount n - n mod 2.
+Proof.
+  intro. eapply N.add_cancel_r. rewrite N.sub_add.
+    symmetry. apply popcount_div2'.
+    destruct n as [|n]. discriminate 1. transitivity 1.
+      apply (N.lt_le_pred _ 2), N.mod_lt. discriminate 1.
+      apply (N.le_succ_l 0), popcount_pos. reflexivity.
+Qed.
+
+Theorem popcount_lor_land:
+  forall m n, popcount (N.lor m n) + popcount (N.land m n) = popcount m + popcount n.
+Proof.
+  apply N_bitwise_ind2. reflexivity. intros.
+  rewrite (popcount_div2' m), (popcount_div2' n).
+  rewrite N.add_shuffle1. rewrite <- IH.
+  rewrite !N.div2_spec. rewrite <- N.shiftr_lor, <- N.shiftr_land. rewrite <- !N.div2_spec.
+  replace (m mod 2 + n mod 2) with (N.lor m n mod 2 + N.land m n mod 2).
+    rewrite <- N.add_shuffle1. rewrite <- !popcount_div2'. reflexivity.
+    rewrite (N_lor_mod_pow2 _ _ 1), (N_land_mod_pow2 _ _ 1), <- !N.bit0_mod.
+      do 2 destruct N.testbit; reflexivity.
+Qed.
+
+Corollary popcount_lor:
+  forall m n, popcount (N.lor m n) = popcount m + popcount n - popcount (N.land m n).
+Proof.
+  intros. rewrite <- popcount_lor_land, N.add_sub. reflexivity.
+Qed.
+
+Corollary popcount_land:
+  forall m n, popcount (N.land m n) = popcount m + popcount n - popcount (N.lor m n).
+Proof.
+  intros. rewrite <- popcount_lor_land, N.add_comm, N.add_sub. reflexivity.
+Qed.
+
+Theorem popcount_land_bound:
+  forall m n, popcount (N.land m n) <= N.min (popcount m) (popcount n).
+Proof.
+  assert (B: forall b, b mod 2^1 = 0 \/ b mod 2^1 = 1).
+    intro. apply N.le_1_r, (N.lt_le_pred _ 2), N.mod_lt. discriminate.
+  assert (H: forall m n, popcount (N.land m n) <= popcount m).
+    apply N_bitwise_ind2. reflexivity. intros.
+    rewrite popcount_div2, !N.div2_spec, <- N.shiftr_land, <- N.div2_spec, popcount_div2 in IH.
+    apply N.le_sub_le_add_r in IH. etransitivity. exact IH.
+    change 2 with (2^1). rewrite <- N.add_sub_swap.
+
+      apply N.le_sub_le_add_r, N.add_le_mono_l. rewrite N_land_mod_pow2.
+      destruct (B m) as [H1|H1], (B n) as [H2|H2]; rewrite H1, H2; discriminate 1.
+
+      specialize (B m). destruct B; rewrite H.
+        apply N.le_0_l.
+        apply (N.le_succ_l 0), popcount_pos. destruct m. discriminate. reflexivity.
+
+  intros. apply N.min_glb. apply H. rewrite N.land_comm. apply H.
 Qed.
 
 Theorem popcount_shiftl:
@@ -2134,10 +2272,28 @@ Proof.
     rewrite N.shiftl_succ_r. rewrite popcount_double. apply IHi.
 Qed.
 
-Theorem popcount_pow2:
+Corollary popcount_pow2:
   forall n, popcount (2^n) = 1.
 Proof.
   intros. rewrite <- N.shiftl_1_l, popcount_shiftl. reflexivity.
+Qed.
+
+Theorem popcount_shiftr':
+  forall n i, popcount n = popcount (N.shiftr n i) + popcount (n mod 2^i).
+Proof.
+  intros.
+  rewrite <- (N.lor_ldiff_and n (N.ones i)) at 1.
+  rewrite popcount_lor.
+  rewrite N.land_comm, N.land_assoc, N.land_ldiff, N.sub_0_r.
+  rewrite N.land_comm, N.land_ones.
+  rewrite N.ldiff_ones_r, popcount_shiftl.
+  reflexivity.
+Qed.
+
+Corollary popcount_shiftr:
+  forall n i, popcount (N.shiftr n i) = popcount n - popcount (n mod 2^i).
+Proof.
+  intros. rewrite (popcount_shiftr' n i), N.add_sub. reflexivity.
 Qed.
 
 Theorem popcount_ones:
@@ -2150,8 +2306,21 @@ Proof.
     rewrite <- (N.div_same (2^n)) by (apply N.pow_nonzero; discriminate).
     rewrite <- N.shiftr_div_pow2, <- N.ldiff_ones_r.
     apply N.land_ldiff.
-  rewrite N.add_nocarry_lxor, N.lxor_lor, popcount_lor by exact H.
-  rewrite popcount_pow2, IHn. apply N.add_comm.
+  rewrite N.add_nocarry_lxor, N.lxor_lor by exact H.
+  rewrite popcount_lor, H, N.sub_0_r, popcount_pow2, IHn.
+  apply N.add_comm.
+Qed.
+
+Theorem popcount_parity_lxor:
+  forall m n, N.even (popcount (N.lxor m n)) = N.even (popcount m + popcount n).
+Proof.
+  intros. pattern m, n. apply N_bitwise_ind2; intros. reflexivity.
+  clear m n. rename m0 into m, n0 into n.
+  rewrite (popcount_div2' m), (popcount_div2' n), N.add_shuffle1.
+  rewrite N.even_add, <- IH.
+  replace (N.even (_+_)) with (N.even (popcount (N.lxor m n mod 2))).
+    rewrite <- N.even_add, !N.div2_spec, <- N.shiftr_lxor, <- popcount_shiftr'. reflexivity.
+    rewrite <- !N.bit0_mod, N.lxor_spec. do 2 destruct N.testbit; reflexivity.
 Qed.
 
 Definition parity8 n :=
@@ -2178,54 +2347,38 @@ Qed.
 Theorem parity8_popcount:
   forall n, parity8 n = N.b2n (N.even (popcount (n mod 2^8))).
 Proof.
-  intro. rewrite parity8_byte. cut (n mod 2^8 < 2^8).
+  assert (H1: forall n i, xorb (N.testbit n i) (N.odd (popcount (n mod 2^i)))
+                          = N.odd (popcount (n mod 2^(N.succ i)))).
+    intros. rewrite (popcount_shiftr' (n mod 2^N.succ i) i), N.odd_add.
+    rewrite N_mod_mod_pow2_min, N.min_r by apply N.le_succ_diag_r.
+    rewrite testbit_xbits, <- xbits_equiv.
+    rewrite (proj2 (popcount_bit (xbits _ _ _))).
+      reflexivity.
+      replace 2 with (2^(N.succ i - i)).
+        apply xbits_bound.
+        rewrite N.sub_succ_l, N.sub_diag by reflexivity. reflexivity.
 
-    generalize (n mod 2^8). clear n. intros n H.
-    destruct n as [|p]. reflexivity.
-    repeat first [ discriminate H | destruct p as [p|p|] ]; reflexivity.
+  set (f x i := N.lxor (N.shiftr x i) x).
+  assert (H2: forall x i j, N.testbit (f x i) j = xorb (N.testbit x (j+i)) (N.testbit x j)).
+    intros. unfold f. rewrite N.lxor_spec, N.shiftr_spec'. reflexivity.
 
-    apply N.mod_lt. discriminate 1.
+  intro. rewrite parity8_byte. set (n8 := n mod _).
+  unfold parity8. fold (f n8 4) (f (f n8 4) 2) (f (f (f n8 4) 2) 1).
+  rewrite <- N.bit0_mod, !H2, !Bool.xorb_assoc. simpl.
+  repeat match goal with |- context [ xorb (N.testbit ?n ?i) (xorb (N.testbit ?n ?j) ?e) ] =>
+    lazymatch eval compute in (i <? j) with false => fail | true =>
+      rewrite <- (Bool.xorb_assoc (N.testbit n i) (N.testbit n j) e),
+              (Bool.xorb_comm (N.testbit n i) (N.testbit n j)), Bool.xorb_assoc
+    end
+  end.
+  replace (N.testbit n8 0) with (N.odd (popcount (n8 mod 2^N.succ 0))).
+    rewrite !H1, <- N.negb_even. simpl. subst n8. rewrite N.mod_mod.
+      destruct N.even; reflexivity.
+      discriminate 1. 
+    rewrite <- N.bit0_mod. destruct N.testbit; reflexivity.
 Qed.
 
-End Population_count.
-
-
-Section NInduction.
-
-(* Analogues of theorems about Pos.iter, but for N.iter. *)
-
-Corollary Niter_swap:
-  forall n {A} (f: A -> A) x, N.iter n f (f x) = f (N.iter n f x).
-Proof. intros. destruct n. reflexivity. apply Pos.iter_swap. Qed.
-
-Corollary Niter_succ:
-  forall n {A} (f: A -> A) x, N.iter (N.succ n) f x = f (N.iter n f x).
-Proof. intros. destruct n. reflexivity. apply Pos.iter_succ. Qed.
-
-Corollary Niter_invariant:
-  forall {A} (Inv: A -> Prop) f x
-         (BC: Inv x) (IC: forall x (IH: Inv x), Inv (f x)),
-  forall n, Inv (N.iter n f x).
-Proof.
-  intros. destruct n.
-    exact BC.
-    simpl. apply Pos.iter_invariant.
-      intros. apply IC. assumption.
-      exact BC.
-Qed.
-
-Corollary Niter_add:
-  forall m n {A} (f: A -> A) x,
-  N.iter (m+n) f x = N.iter m f (N.iter n f x).
-Proof.
-  intros. destruct m.
-    reflexivity.
-    destruct n.
-      rewrite N.add_0_r. reflexivity.
-      apply Pos.iter_add.
-Qed.
-
-End NInduction.
+End BitOps.
 
 
 
