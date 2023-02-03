@@ -1003,6 +1003,10 @@ Fixpoint simpl_modpow2_cancel w neg e2 e1 {struct e1} :=
 
 Fixpoint simpl_modpow2_addmsub w e1 (minus:bool) e2 {struct e2} :=
   match e2 with
+  | SIMP_Const n2 => 
+    match simpl_modpow2_cancel w minus e2 e1 with Some e' => e' | None =>
+      if minus then SIMP_MSub w e1 e2 else SIMP_Add e2 e1
+    end
   | SIMP_Add e2a e2b =>
     let e2a' := simpl_modpow2_addmsub w e1 minus e2a in
     match simpl_modpow2_cancel w minus e2b e2a' with Some e' => e' | None =>
@@ -1848,7 +1852,8 @@ Local Ltac populate_var_ids id t :=
   | _ => uconstr:(t) end.
 
 Local Ltac psimp_verify_frontend :=
-  cbv [ eval_sastV eval_sastS eval_sastU eval_sastN eval_sastB eval_sastM mvt_lookup simpl_exit simpl_MemAcc simpl_ifval simpl_ifbool parity8 ];
+  cbv [ eval_sastV eval_sastS eval_sastU eval_sastN eval_sastB eval_sastM mvt_lookup
+        simpl_exit simpl_MemAcc simpl_ifval simpl_ifbool parity8 _psiN _psiB _psiM ];
   lazymatch goal with
   | |- ?t = ?t => exact_no_check (eq_refl t)
   | |- ?t1 = ?t2 => (* DEBUG *)
@@ -3104,6 +3109,11 @@ Proof.
                 (if m then msub w else N.add) (eval_sastN mvt x) (eval_sastN mvt y)).
     intros. destruct m; reflexivity.
   induction e2; intros; try reflexivity; simpl.
+
+  (* SIMP_Const *)
+  destruct simpl_modpow2_cancel eqn:C.
+    apply (simpl_modpow2_cancel_sound mvt) in C. rewrite C. destruct m; reflexivity.
+    destruct m; simpl. reflexivity. rewrite N.add_comm. reflexivity.
 
   (* SIMP_Add *)
   destruct simpl_modpow2_cancel eqn:C1.
