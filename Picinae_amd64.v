@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2022 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -117,8 +117,8 @@ Ltac PSimplifier ::= PSimpl_amd64_v1_1.PSimplifier.
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
 Tactic Notation "amd64_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
 Tactic Notation "amd64_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
-Tactic Notation "amd64_psimpl" "in" hyp(H) := psimpl_hyp H.
-Tactic Notation "amd64_psimpl" := psimpl_goal.
+Tactic Notation "amd64_psimpl" "in" hyp(H) := psimpl_all_hyp H.
+Tactic Notation "amd64_psimpl" := psimpl_all_goal.
 
 (* To use a different simplifier version (e.g., v1_0) put the following atop
    your proof .v file:
@@ -259,7 +259,7 @@ Ltac generalize_temps H :=
    the resulting Coq expressions. *)
 Ltac x64_step_and_simplify XS :=
   step_stmt XS;
-  psimpl in XS;
+  psimpl_vals_hyp XS;
   simpl_memaccs XS;
   destruct_memaccs XS;
   generalize_temps XS.
@@ -312,7 +312,7 @@ Ltac x64_invhere :=
   first [ eapply nextinv_here; [reflexivity|]
         | apply nextinv_exn
         | apply nextinv_ret; [ prove_prog_exits |] ];
-  psimpl.
+  psimpl_vals_goal.
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
@@ -376,7 +376,7 @@ Notation "m [Ⓠ a := v  ]" := (setmem LittleE 8 m a v) (at level 50, left assoc
 Notation "m [Ⓧ a := v  ]" := (setmem LittleE 16 m a v) (at level 50, left associativity) : amd64_scope. (* write xmm to memory *)
 Notation "m [Ⓨ a := v  ]" := (setmem LittleE 32 m a v) (at level 50, left associativity) : amd64_scope. (* write ymm to memory *)
 Notation "x ⊕ y" := ((x+y) mod 2^64) (at level 50, left associativity). (* modular addition *)
-Notation "x ⊖ y" := ((x-y) mod 2^64) (at level 50, left associativity). (* modular subtraction *)
+Notation "x ⊖ y" := (msub 64 x y) (at level 50, left associativity). (* modular subtraction *)
 Notation "x ⊗ y" := ((x*y) mod 2^64) (at level 40, left associativity). (* modular multiplication *)
 Notation "x << y" := (N.shiftl x y) (at level 40, left associativity). (* logical shift-left *)
 Notation "x >> y" := (N.shiftr x y) (at level 40, left associativity). (* logical shift-right *)

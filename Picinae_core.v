@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2022 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -72,6 +72,9 @@ Inductive value :=
 Definition heap (A:Type) := addr -> option A.
 Definition hdomain := heap unit.
 Definition htotal : hdomain := fun _ => Some tt.
+
+(* Define w-bit modular subtraction. *)
+Definition msub w x y := (x + (2^w - y mod 2^w)) mod 2^w.
 
 (* Reinterpret an unsigned integer as a two's complement signed integer. *)
 Definition canonicalZ w z := ((z + 2^Z.pred w) mod 2^w - 2^Z.pred w)%Z.
@@ -160,7 +163,7 @@ Inductive cast_typ : Type :=
 Definition eval_binop (bop:binop_typ) (w:bitwidth) (n1 n2:N) : value :=
   match bop with
   | OP_PLUS => towidth w (n1+n2)
-  | OP_MINUS => towidth w (2^w + n1 - n2)
+  | OP_MINUS => VaN (msub w n1 n2) w
   | OP_TIMES => towidth w (n1*n2)
   | OP_DIVIDE => VaN (n1/n2) w
   | OP_SDIVIDE => VaN (sbop2 Z.quot w n1 n2) w
@@ -188,7 +191,7 @@ Definition popcount n := match n with N0 => N0 | N.pos p => N.pos (Pos_popcount 
 (* Perform a unary operation. *)
 Definition eval_unop (uop:unop_typ) (n:N) (w:bitwidth) : value :=
   match uop with
-  | OP_NEG => towidth w (2^w - n)
+  | OP_NEG => VaN (msub w 0 n) w
   | OP_NOT => VaN (N.lnot n w) w
   | OP_POPCOUNT => VaN (popcount n) w
   end.
@@ -299,18 +302,18 @@ Definition program := store -> addr -> option (N * stmt).
    whose correctness are independent of type-safety. *)
 
 (* Interpret len bytes at address a of memory m as an e-endian number. *)
-Definition getmem_big mem len rec a := N.lor (rec (N.succ a)) (N.shiftl (mem a) (Mb*len)).
-Definition getmem_little mem (len:bitwidth) rec a := N.lor (mem a) (N.shiftl (rec (N.succ a)) Mb).
-Definition getmem (e:endianness) (len:bitwidth) (mem:addr->N) : addr -> N :=
-  N.recursion (fun _ => N0) (match e with BigE => getmem_big | LittleE => getmem_little end mem) len.
+Definition getmem_big w mem len rec a := N.lor (rec (N.succ a)) (N.shiftl (mem (a mod 2^w) mod 2^Mb) (Mb*len)).
+Definition getmem_little w mem (len:bitwidth) rec a := N.lor (mem (a mod 2^w) mod 2^Mb) (N.shiftl (rec (N.succ a)) Mb).
+Definition getmem (w:bitwidth) (e:endianness) (len:bitwidth) (mem:addr->N) : addr -> N :=
+  N.recursion (fun _ => N0) (match e with BigE => getmem_big | LittleE => getmem_little end w mem) len.
 
 (* Store v as a len-byte, e-endian number at address a of memory m. *)
-Definition setmem_big len rec mem a v : addr -> N :=
-  rec (update mem a (N.shiftr v (Mb*len))) (N.succ a) (v mod 2^(Mb*len)).
-Definition setmem_little len rec mem a v : addr -> N :=
-  rec (update mem a (match len with N0 => v | Npos _ => v mod 2^Mb end)) (N.succ a) (N.shiftr v Mb).
-Definition setmem (e:endianness) (len:bitwidth) : (addr->N) -> addr -> N -> (addr -> N) :=
-  N.recursion (fun m _ _ => m) (match e with BigE => setmem_big | LittleE => setmem_little end) len.
+Definition setmem_big w len rec mem a v : addr -> N :=
+  rec (update mem (a mod 2^w) ((N.shiftr v (Mb*len)) mod 2^Mb)) (N.succ a) (v mod 2^(Mb*len)).
+Definition setmem_little w (len:N) rec mem a v : addr -> N :=
+  rec (update mem (a mod 2^w) (v mod 2^Mb)) (N.succ a) (N.shiftr v Mb).
+Definition setmem (w:bitwidth) (e:endianness) (len:bitwidth) : (addr->N) -> addr -> N -> (addr -> N) :=
+  N.recursion (fun m _ _ => m) (match e with BigE => setmem_big | LittleE => setmem_little end w) len.
 
 
 
@@ -326,13 +329,15 @@ Variable h : hdomain.
 Inductive eval_exp (s:store): exp -> value -> Prop :=
 | EVar v: eval_exp s (Var v) (s v)
 | EWord n w: eval_exp s (Word n w) (VaN n w)
-| ELoad e1 e2 en len mw m a (E1: eval_exp s e1 (VaM m mw)) (E2: eval_exp s e2 (VaN a mw))
-        (R: forall n, n < len -> h (a+n) = Some tt /\ mem_readable s (a+n)):
-        eval_exp s (Load e1 e2 en len) (VaN (getmem en len m a) (Mb*len))
-| EStore e1 e2 e3 en len mw m a v (E1: eval_exp s e1 (VaM m mw))
-         (E2: eval_exp s e2 (VaN a mw)) (E3: eval_exp s e3 (VaN v (Mb*len)))
-         (W: forall n, n < len -> h (a+n) = Some tt /\ mem_writable s (a+n)):
-         eval_exp s (Store e1 e2 e3 en len) (VaM (setmem en len m a v) mw)
+| ELoad e1 e2 en len mw m a
+        (E1: eval_exp s e1 (VaM m mw)) (E2: eval_exp s e2 (VaN a mw))
+        (R: forall n, n < len -> h ((a+n) mod 2^mw) = Some tt /\ mem_readable s ((a+n) mod 2^mw)):
+        eval_exp s (Load e1 e2 en len) (VaN (getmem mw en len m a) (Mb*len))
+| EStore e1 e2 e3 en len mw m a v
+         (E1: eval_exp s e1 (VaM m mw)) (E2: eval_exp s e2 (VaN a mw))
+         (E3: eval_exp s e3 (VaN v (Mb*len)))
+         (W: forall n, n < len -> h ((a+n) mod 2^mw) = Some tt /\ mem_writable s ((a+n) mod 2^mw)):
+         eval_exp s (Store e1 e2 e3 en len) (VaM (setmem mw en len m a v) mw)
 | EBinOp bop e1 e2 n1 n2 w (E1: eval_exp s e1 (VaN n1 w)) (E2: eval_exp s e2 (VaN n2 w)):
          eval_exp s (BinOp bop e1 e2) (eval_binop bop w n1 n2)
 | EUnOp uop e1 n1 w1 (E1: eval_exp s e1 (VaN n1 w1)):

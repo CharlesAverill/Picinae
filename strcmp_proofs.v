@@ -86,7 +86,7 @@ Qed.
 Definition esp_invs (esp0:N) (_:addr) (s:store) := Some (s R_ESP = Ⓓ esp0).
 
 (* Next, we define the post-condition we wish to prove: *)
-Definition esp_post (esp0:N) (_:exit) (s:store) := s R_ESP = Ⓓ (esp0 ⊕ 4).
+Definition esp_post (esp0:N) (_:exit) (s:store) := s R_ESP = Ⓓ (4 ⊕ esp0).
 
 (* The invariant set and post-condition are combined into a single invariant-set
    using the "invs" function. *)
@@ -111,7 +111,7 @@ Proof.
 
   (* We must first prove the pre-condition, which says that the invariant-set is
      satisfied on entry to the subroutine.  This is proved by assumption ESP0. *)
-  exact ESP0.
+  x86_step. exact ESP0.
 
   (* Now we enter the inductive case, wherein Coq asks us to prove that the invariant-set
      is preserved by every (reachable) instruction in the program.  Before breaking the
@@ -157,15 +157,14 @@ Qed.
 
 (* Define string equality: *)
 Definition streq (m:addr->N) (p1 p2:addr) (k:N) :=
-  ∀ i, i < k -> m (p1⊕i) = m (p2⊕i) /\ 0 < m (p1⊕i).
+  ∀ i, i < k -> m Ⓑ[p1⊕i] = m Ⓑ[p2⊕i] /\ 0 < m Ⓑ[p1⊕i].
 
 (* The invariant-set for this property makes no assumptions at program-start
    (address 0), and puts a loop-invariant at address 8. *)
 Definition strcmp_invs (m:addr->N) (esp:N) (a:addr) (s:store) :=
   match a with
-  |  0 => Some True
-  |  8 => Some (∃ k, s R_ECX = Ⓓ(m Ⓓ[esp⊕4] ⊕ k) /\ s R_EDX = Ⓓ(m Ⓓ[esp⊕8] ⊕ k) /\
-                streq m (m Ⓓ[esp⊕4]) (m Ⓓ[esp⊕8]) k)
+  |  8 => Some (∃ k, s R_ECX = Ⓓ(m Ⓓ[4⊕esp] ⊕ k) /\ s R_EDX = Ⓓ(m Ⓓ[8⊕esp] ⊕ k) /\
+                streq m (m Ⓓ[4⊕esp]) (m Ⓓ[8⊕esp]) k)
   | _ => None
   end.
 
@@ -175,9 +174,9 @@ Definition strcmp_invs (m:addr->N) (esp:N) (a:addr) (s:store) :=
    zero if the kth bytes are both nil. *)
 Definition strcmp_post (m:addr->N) (esp:N) (_:exit) (s:store) :=
   ∃ n k, s R_EAX = Ⓓn /\
-         streq m (m Ⓓ[esp⊕4]) (m Ⓓ[esp⊕8]) k /\
-         (n=0 -> m (m Ⓓ[esp⊕4] ⊕ k) = 0) /\
-         (m (m Ⓓ[esp⊕4] ⊕ k) ?= m (m Ⓓ[esp⊕8] ⊕ k)) = (toZ 32 n ?= Z0)%Z.
+         streq m (m Ⓓ[4⊕esp]) (m Ⓓ[8⊕esp]) k /\
+         (n=0 -> m Ⓑ[m Ⓓ[4⊕esp] ⊕ k] = 0) /\
+         (m Ⓑ[m Ⓓ[4⊕esp] ⊕ k] ?= m Ⓑ[m Ⓓ[8⊕esp] ⊕ k]) = (toZ 32 n ?= Z0)%Z.
 
 (* The invariant-set and post-conditions are combined as usual: *)
 Definition strcmp_invset (mem:addr->N) (esp:N) :=
@@ -209,13 +208,20 @@ Theorem strcmp_partial_correctness:
   trueif_inv (strcmp_invset mem esp strcmp_i386 x s').
 Proof.
   intros.
+  assert (WTM0 := x86_wtm MDL0 MEM0). simpl in WTM0.
   eapply prove_invs. exact XP0.
 
-  (* The pre-condition (True) is trivially satisfied. *)
-  exact I.
+  (* Time how long it takes for each symbolic interpretation step to complete
+     (for profiling and to give visual cues that something is happening...). *)
+  Local Ltac step := time x86_step.
+
+  (* Address 0 *)
+  step. step. exists 0. psimpl. split.
+    rewrite N.add_comm. reflexivity. split. rewrite N.add_comm. reflexivity.
+    intros i LT. destruct i; discriminate.
 
   (* Before splitting into cases, translate each hypothesis about the
-     entry point store s to each instruction's starting store s1: *)
+     entry point store s into an equivalent hypothesis about store s1: *)
   intros.
   assert (MDL: models x86typctx s1).
     eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
@@ -224,20 +230,17 @@ Proof.
   assert (WTM := x86_wtm MDL MEM). simpl in WTM.
   rewrite (strcmp_nwc s1) in RET.
   assert (ESP := strcmp_preserves_esp _ _ _ _ _ (Exit a1) MDL0 ESP0 MEM0 RET XP).
-  clear s MDL0 MEM0 ESP0 XP XP0.
+  clear s MDL0 MEM0 WTM0 ESP0 XP XP0.
 
   (* Break the proof into cases, one for each invariant-point. *)
   destruct_inv 32 PRE.
 
-  (* Time how long it takes for each symbolic interpretation step to complete
-     (for profiling and to give visual cues that something is happening...). *)
-  Local Ltac step := time x86_step.
-
-  (* Address 0 *)
-  step. step. exists 0.
-  rewrite 2!N.add_0_r. rewrite !(N.mod_small (getmem _ _ _ _)) by apply getmem_bound, WTM.
-  split. reflexivity. split. reflexivity.
-  intros i LT. destruct i; discriminate.
+  (* Optional: The following proof ignores all flag values except CF and ZF, so
+     we can make evaluation faster and shorter by telling Picinae to ignore the
+     other flags (i.e., abstract their values away). *)
+  Ltac x86_ignore v ::= constr:(match v with
+    R_AF | R_DF | R_OF | R_PF | R_SF => true
+  | _ => false end).
 
   (* Address 8 *)
   destruct PRE as [k [ECX [EDX SEQ]]].
@@ -247,18 +250,17 @@ Proof.
     step. step. step. step.
 
       (* Address 20 *)
-      step. step.
+      step. step. apply Neqb_ok in BC.
       exists 0, k. psimpl. repeat first [ exact SEQ | split ].
-        intro. symmetry. apply Neqb_ok, BC0.
-        apply N.compare_eq_iff, Neqb_ok, BC.
+        symmetry. apply Neqb_ok, BC0.
+        apply N.compare_eq_iff, BC.
 
       (* loop back to Address 8 *)
-      exists (k+1). rewrite !N.add_assoc.
-      split. reflexivity. split. reflexivity.
-      intros i IK. rewrite N.add_1_r in IK. apply N.lt_succ_r, N.le_lteq in IK. destruct IK as [IK|IK].
+      exists (k+1). psimpl. split. reflexivity. split. reflexivity.
+      intros i IK. rewrite N.add_1_l in IK. apply N.lt_succ_r, N.le_lteq in IK. destruct IK as [IK|IK].
         apply SEQ, IK.
         subst. split.
-          apply Neqb_ok. assumption.
+          apply Neqb_ok in BC. assumption.
           apply N.neq_0_lt_0, N.neq_sym, N.eqb_neq. assumption.
 
     (* Address 23 *)

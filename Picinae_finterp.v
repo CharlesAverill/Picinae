@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2022 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -129,7 +129,7 @@ Proof.
 Qed.
 
 Inductive NoE_SETOP :=
-| NOE_ADD | NOE_SUB | NOE_MUL | NOE_DIV | NOE_MOD | NOE_POW
+| NOE_ADD | NOE_SUB | NOE_MSUB | NOE_MUL | NOE_DIV | NOE_MOD | NOE_POW
 | NOE_SHL | NOE_SHR | NOE_AND | NOE_OR  | NOE_XOR | NOE_NOT
 | NOE_NEG
 | NOE_EQB | NOE_LTB | NOE_LEB
@@ -150,6 +150,7 @@ Definition noe_setop_typsig op :=
   match op with
   | NOE_ADD | NOE_SUB | NOE_MUL | NOE_DIV | NOE_MOD | NOE_POW
   | NOE_SHL | NOE_SHR | NOE_AND | NOE_OR  | NOE_XOR | NOE_NOT => N -> N -> N
+  | NOE_MSUB => N -> N -> N -> N
   | NOE_NEG => bool -> bool
   | NOE_EQB | NOE_LTB | NOE_LEB => N -> N -> bool
   | NOE_SLT | NOE_SLE => bitwidth -> N -> N -> bool
@@ -161,8 +162,8 @@ Definition noe_setop_typsig op :=
   | NOE_TYP => value -> bool
   | NOE_NUM | NOE_WID => value -> N
   | NOE_MEM => value -> addr -> N
-  | NOE_GET => endianness -> bitwidth -> (addr -> N) -> addr -> N
-  | NOE_SET => endianness -> bitwidth -> (addr -> N) -> addr -> N -> addr -> N
+  | NOE_GET => bitwidth -> endianness -> bitwidth -> (addr -> N) -> addr -> N
+  | NOE_SET => bitwidth -> endianness -> bitwidth -> (addr -> N) -> addr -> N -> addr -> N
   end.
 
 (* Functional interpretation of expressions and statements entails instantiating
@@ -176,9 +177,9 @@ Import TIL.
 Definition vupdate := @update var value VarEqDec.
 
 (* Memory access propositions resulting from functional interpretation are
-   encoded as (MemAcc (mem_readable|mem_writable) heap store addr length). *)
-Definition MemAcc (P: store -> addr -> Prop) h s a len :=
-  forall n, n < len -> h (a+n) = Some tt /\ P s (a+n).
+   encoded as (MemAcc (mem_readable|mem_writable) heap store addr addr_width length). *)
+Definition MemAcc (P: store -> addr -> Prop) h s a w len :=
+  forall n, n < len -> h ((a+n) mod 2^w) = Some tt /\ P s ((a+n) mod 2^w).
 
 
 (* For speed, the interpreter function is designed to be evaluated using
@@ -198,6 +199,7 @@ Definition noe_setop op : noe_setop_typsig op :=
   match op with
   | NOE_ADD => N.add
   | NOE_SUB => N.sub
+  | NOE_MSUB => msub
   | NOE_MUL => N.mul
   | NOE_DIV => N.div
   | NOE_MOD => N.modulo
@@ -234,7 +236,7 @@ Definition noe_typop_typsig op :=
   match op with
   | NOE_ITR => N -> forall A, (A -> A) -> A -> A
   | NOE_UPD => store -> var -> value -> store
-  | NOE_MAR | NOE_MAW => hdomain -> store -> N -> N -> Prop
+  | NOE_MAR | NOE_MAW => hdomain -> store -> N -> N -> N -> Prop
   end.
 
 Definition noe_typop op : noe_typop_typsig op :=
@@ -369,7 +371,7 @@ Definition utobit (noe:forall op, noe_setop_typsig op) (b:bool) : uvalue :=
 Definition feval_binop (bop:binop_typ) (noe:forall op, noe_setop_typsig op) (w:bitwidth) (n1 n2:N) : uvalue :=
   match bop with
   | OP_PLUS => utowidth noe w (noe NOE_ADD n1 n2)
-  | OP_MINUS => utowidth noe w (noe NOE_SUB (noe NOE_ADD (noe NOE_POW 2 w) n1) n2)
+  | OP_MINUS => VaU true (noe NOE_ZST) (noe NOE_MSUB w n1 n2) w
   | OP_TIMES => utowidth noe w (noe NOE_MUL n1 n2)
   | OP_DIVIDE => VaU true (noe NOE_ZST) (noe NOE_DIV n1 n2) w
   | OP_SDIVIDE => VaU true (noe NOE_ZST) (noe NOE_QUO w n1 n2) w
@@ -391,7 +393,7 @@ Definition feval_binop (bop:binop_typ) (noe:forall op, noe_setop_typsig op) (w:b
 
 Definition feval_unop (uop:unop_typ) (noe:forall op, noe_setop_typsig op) (n:N) (w:bitwidth) : uvalue :=
   match uop with
-  | OP_NEG => utowidth noe w (noe NOE_SUB (noe NOE_POW 2 w) n)
+  | OP_NEG => VaU true (noe NOE_ZST) (noe NOE_MSUB w 0 n) w
   | OP_NOT => VaU true (noe NOE_ZST) (noe NOE_NOT n w) w
   | OP_POPCOUNT => VaU true (noe NOE_ZST) (noe NOE_POPCOUNT n) w
   end.
@@ -424,15 +426,15 @@ Definition feval_exp (noe:forall op, noe_setop_typsig op) (noet:forall op, noe_t
   | Word n w => (VaU true (noe NOE_ZST) n w, nil)
   | Load e1 e2 en len =>
       match feval_exp' e1 (unknowns0 unk) l, feval_exp' e2 (unknowns1 unk) l with
-      | (VaU _ m _ _, ma1), (VaU _ _ n _, ma2) =>
-        (VaU true (noe NOE_ZST) (noe NOE_GET en len m n) (Mb*len),
-         noet NOE_MAR h (updlst s l (noet NOE_UPD)) n len :: ma1++ma2)
+      | (VaU _ m _ mw, ma1), (VaU _ _ n _, ma2) =>
+        (VaU true (noe NOE_ZST) (noe NOE_GET mw en len m n) (Mb*len),
+         noet NOE_MAR h (updlst s l (noet NOE_UPD)) n mw len :: ma1++ma2)
       end
   | Store e1 e2 e3 en len =>
       match feval_exp' e1 (unknowns00 unk) l, feval_exp' e2 (unknowns01 unk) l, feval_exp' e3 (unknowns10 unk) l with
       | (VaU _ m _ mw, ma1), (VaU _ _ a _, ma2), (VaU _ _ v _, ma3) =>
-        (VaU false (noe NOE_SET en len m a v) 0 mw,
-         noet NOE_MAW h (updlst s l (noet NOE_UPD)) a len :: ma1++ma2++ma3)
+        (VaU false (noe NOE_SET mw en len m a v) 0 mw,
+         noet NOE_MAW h (updlst s l (noet NOE_UPD)) a mw len :: ma1++ma2++ma3)
       end
   | BinOp bop e1 e2 =>
       match feval_exp' e1 (unknowns0 unk) l, feval_exp' e2 (unknowns1 unk) l with

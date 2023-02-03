@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2022 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -575,12 +575,10 @@ Proof.
     apply IHe1 in E1. inversion E1; subst.
     eapply HMM. eassumption.
     intros. rewrite <- (FR _ H).
-    destruct (N.lt_ge_cases a0 a). apply setmem_frame_low. assumption.
-    destruct (N.le_gt_cases (a+w) a0). apply setmem_frame_high. assumption.
-    rewrite <- (N.add_sub a0 a), N.add_comm, <- N.add_sub_assoc in H1 by assumption.
-    apply N.add_lt_mono_l, W in H1.
-    rewrite N.add_sub_assoc, N.add_comm, N.add_sub in H1 by assumption.
-    apply proj1 in H1. rewrite H in H1. discriminate H1.
+    destruct (N.le_gt_cases (2^mw) a0). apply setmem_frame. right. assumption.
+    destruct (N.le_gt_cases w (msub mw a0 a)).
+      apply setmem_frame. left. assumption.
+      apply W,proj1 in H1. rewrite add_msub, N.mod_small, H in H1 by assumption. discriminate H1.
 
     destruct b; apply HMN.
 

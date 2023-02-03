@@ -1,6 +1,6 @@
- (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
+ (* Picinae: Platform In Coq for INstruction Analysis of Executables      ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2022 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -284,6 +284,30 @@ End NInduction.
 (* Theory of bit-extraction. *)
 Section XBits.
 
+Theorem Nadd_modpow2_l:
+  forall m n w, (m mod 2^w + n) mod 2^w = (m + n) mod 2^w.
+Proof.
+  intros. apply N.add_mod_idemp_l, N.pow_nonzero. discriminate 1.
+Qed.
+
+Theorem Nadd_modpow2_r:
+  forall m n w, (m + n mod 2^w) mod 2^w = (m + n) mod 2^w.
+Proof.
+  intros. apply N.add_mod_idemp_r, N.pow_nonzero. discriminate 1.
+Qed.
+
+Theorem Nmodpow2_same:
+  forall w, 2^w mod 2^w = 0.
+Proof.
+  intros. apply N.mod_same, N.pow_nonzero. discriminate 1.
+Qed.
+
+Theorem Nmod_mod_pow2:
+  forall n w, n mod 2^w mod 2^w = n mod 2^w.
+Proof.
+  intros. apply N.mod_mod, N.pow_nonzero; discriminate 1.
+Qed.
+
 Lemma N_ones_spec_ltb:
   forall m n, N.testbit (N.ones m) n = (n <? m).
 Proof.
@@ -387,6 +411,18 @@ Proof.
     rewrite <- N.land_assoc. apply f_equal. rewrite N.land_comm, N.land_ones. apply N.mod_small, N.succ_lt_mono. rewrite N.ones_equiv, N.succ_pred.
       apply N.lt_succ_r, N.pow_le_mono_r. discriminate. assumption.
       apply N.pow_nonzero. discriminate.
+Qed.
+
+Corollary xbits_split_0:
+  forall n i j,
+  xbits n 0 (i+j) = N.lor (n mod 2^i) (N.shiftl (N.shiftr n i mod 2^j) i).
+Proof.
+  intros.
+  rewrite <- xbits_0_i.
+  rewrite <- (N.add_sub j i) at 2.
+  change (N.shiftr _ _ mod _) with (xbits n i (j+i)).
+  rewrite (N.add_comm j). rewrite <- (N.sub_0_r i) at 5.
+  apply xbits_split. apply N.le_0_l. apply N.le_add_r.
 Qed.
 
 Theorem xbits_ones:
@@ -756,6 +792,12 @@ Proof.
             N.mul_comm, N.mod_add, N.mod_mod by apply N.pow_nonzero, H. reflexivity.
 Qed.
 
+Corollary N_mod_mod_pow2:
+  forall n w1 w2, n mod 2^w1 mod 2^w2 = n mod 2^N.min w1 w2.
+Proof.
+  intros. apply N_mod_mod_pow. discriminate 1.
+Qed.
+
 Lemma Z_mod_mod_pow:
   forall z a b c, (0 < a -> 0 <= b -> 0 <= c -> z mod a^b mod a^c = z mod a^Z.min b c)%Z.
 Proof.
@@ -771,6 +813,60 @@ Proof.
       assumption.
       apply Z.le_0_sub. assumption.
       assumption.
+Qed.
+
+Corollary Z_mod_mod_pow2:
+  forall z w1 w2, (0 <= w1 -> 0 <= w2 -> z mod 2^w1 mod 2^w2 = z mod 2^Z.min w1 w2)%Z.
+Proof.
+  intros. apply Z_mod_mod_pow. reflexivity. assumption. assumption.
+Qed.
+
+Theorem N_sub_lt:
+  forall m n, m <> 0 -> n <> 0 -> m - n < m.
+Proof.
+  intros.
+  rewrite <- (N.succ_pred _ H), <- (N.succ_pred _ H0), N.sub_succ.
+  apply N.lt_succ_r. apply N.le_sub_l.
+Qed.
+
+Theorem N_sub_mod:
+  forall a b n, n <> 0 -> b <= a ->
+  (a - b) mod n = a mod n + n * N.b2n (a mod n <? b mod n) - b mod n.
+Proof.
+  intros.
+  rewrite (N.div_mod a n), (N.div_mod b n) at 1 by assumption.
+  rewrite N.sub_add_distr.
+  rewrite N.add_sub_swap by (apply N.mul_le_mono_l, N.div_le_mono; assumption).
+  rewrite <- N.mul_sub_distr_l, N.add_comm.
+  destruct (N.eq_0_gt_0_cases (a/n - b/n)).
+
+    assert (H2: b mod n <= a mod n).
+      eapply N.add_le_mono_l. rewrite <- N.div_mod by assumption.
+      etransitivity. eassumption.
+      rewrite (N.div_mod a n) at 1 by assumption.
+      apply N.add_le_mono_r, N.mul_le_mono_l, N.sub_0_le, H1.
+    rewrite H1, (proj2 (N.ltb_ge _ _) H2), N.mod_small. reflexivity.
+    eapply N.le_lt_trans. apply N.le_sub_l.
+    rewrite N.mul_0_r, N.add_0_r.
+    eapply N.mod_lt. assumption.
+
+    rewrite N.mul_comm. destruct (N.le_gt_cases (b mod n) (a mod n)).
+
+      rewrite N.add_sub_swap, N.mod_add by assumption.
+      rewrite (proj2 (N.ltb_ge _ _) H2), N.mul_0_r, N.add_0_r.
+      eapply N.mod_small, N.le_lt_trans. apply N.le_sub_l. apply N.mod_lt, H.
+
+      rewrite (proj2 (N.ltb_lt _ _) H2), N.mul_1_r.
+      rewrite <- (N.succ_pred (a/n-_)) by apply N.neq_sym, N.lt_neq, H1.
+      rewrite N.mul_succ_l, N.add_comm, <- N.add_assoc, (N.add_comm n).
+      rewrite <- N.add_sub_assoc by (rewrite N.add_comm; etransitivity;
+        [apply N.lt_le_incl, N.mod_lt,H|apply N.le_add_r]).
+      rewrite N.add_comm, N.mod_add by assumption.
+      eapply N.mod_small, N.add_lt_mono_r. rewrite N.sub_add.
+        rewrite N.add_comm. apply N.add_lt_mono_l, H2.
+        rewrite <- (N.add_0_l (b mod _)). apply N.add_le_mono.
+          apply N.le_0_l.
+          apply N.lt_le_incl, N.mod_lt, H.
 Qed.
 
 Theorem signed_range_0_l:
@@ -1048,9 +1144,8 @@ Theorem eqm_canonicalZ:
   forall w' w z, (0 <= w' -> w' <= w -> eqm (2^w') (canonicalZ w z) z)%Z.
 Proof.
   intros. unfold eqm, canonicalZ.
-  rewrite <- Zminus_mod_idemp_l, Z_mod_mod_pow.
+  rewrite <- Zminus_mod_idemp_l, Z_mod_mod_pow2.
     rewrite Z.min_r, Zminus_mod_idemp_l, Z.add_simpl_r by assumption. reflexivity.
-    reflexivity.
     etransitivity; eassumption.
     assumption.
 Qed.
@@ -1068,15 +1163,14 @@ Theorem eqm_ofZ:
   forall w' w z, (0 <= w' -> w' <= Z.of_N w -> eqm (2^w') (Z.of_N (ofZ w z)) z)%Z.
 Proof.
   intros. unfold ofZ, eqm. rewrite Z2N.id.
-    rewrite <- (Z.min_r _ _ H0) at 2. apply Z_mod_mod_pow. reflexivity. apply N2Z.is_nonneg. assumption.
+    rewrite <- (Z.min_r _ _ H0) at 2. apply Z_mod_mod_pow2. apply N2Z.is_nonneg. assumption.
     apply Z.mod_pos_bound, Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
 Qed.
 
 Theorem canonicalZ_mod_pow2:
   forall w' w z, (0 <= w -> w <= w' -> canonicalZ w (z mod 2^w') = canonicalZ w z)%Z.
 Proof.
-  intros. unfold canonicalZ at 1. rewrite <- Zplus_mod_idemp_l, Z_mod_mod_pow, (Z.min_r _ _ H0), Zplus_mod_idemp_l.
-    reflexivity.
+  intros. unfold canonicalZ at 1. rewrite <- Zplus_mod_idemp_l, Z_mod_mod_pow2, (Z.min_r _ _ H0), Zplus_mod_idemp_l.
     reflexivity.
     etransitivity; eassumption.
     assumption.
@@ -1107,9 +1201,8 @@ Qed.
 Theorem ofZ_mod_pow2:
   forall w w' z, w' <= w -> ofZ w' (z mod 2^Z.of_N w) = ofZ w' z.
 Proof.
-  intros. unfold ofZ. rewrite Z_mod_mod_pow, Z.min_r. reflexivity.
+  intros. unfold ofZ. rewrite Z_mod_mod_pow2, Z.min_r. reflexivity.
     apply N2Z.inj_le, H.
-    reflexivity.
     apply N2Z.is_nonneg.
     apply N2Z.is_nonneg.
 Qed.
@@ -1120,6 +1213,12 @@ Proof.
   intros. unfold ofZ. eapply N.mod_small, N.lt_le_trans.
     apply ofZ_bound.
     apply N.pow_le_mono_r. discriminate. assumption.
+Qed.
+
+Theorem toZ_ofZ_canonicalZ:
+  forall w' w z, w' <= w -> toZ w' (ofZ w z) = canonicalZ (Z.of_N w') z.
+Proof.
+  intros. unfold toZ. rewrite N2Z_ofZ. apply canonicalZ_mod_pow2, N2Z.inj_le, H. apply N2Z.is_nonneg.
 Qed.
 
 Theorem ofZ_canonicalZ:
@@ -1138,6 +1237,17 @@ Proof.
     etransitivity. apply H. rewrite <- (mod_pow2_canonicalZ w w z), <- H. reflexivity. assumption. reflexivity.
 Qed.
 
+Theorem eqm_canonicalZ_bop:
+  forall f w z1 z2, (forall z z', eqm (2^w) (f z z') (f (z mod 2^w) (z' mod 2^w))%Z) ->
+  eqm (2^w) (f z1 z2) (f (canonicalZ w z1) (canonicalZ w z2)).
+Proof.
+  intros. destruct (Z.lt_ge_cases w 0).
+    rewrite !canonicalZ_neg_l by assumption. reflexivity.
+    etransitivity. apply H.
+      rewrite <- (mod_pow2_canonicalZ w w z1), <- (mod_pow2_canonicalZ w w z2) by solve [ assumption | reflexivity ].
+      rewrite <- H. reflexivity.
+Qed.
+
 Theorem eqm_ofZ_canonicalZ:
   forall f w z, (forall z0, eqm (2^Z.of_N w) (f z0) (f (z0 mod 2^Z.of_N w)))%Z -> ofZ w (f (canonicalZ (Z.of_N w) z)) = ofZ w (f z).
 Proof.
@@ -1146,10 +1256,79 @@ Proof.
     reflexivity.
 Qed.
 
-Theorem toZ_ofZ_canonicalZ:
-  forall w' w z, w' <= w -> toZ w' (ofZ w z) = canonicalZ (Z.of_N w') z.
+Corollary canonicalZ_add_r:
+  forall w z1 z2,
+  ofZ w (z1 + canonicalZ (Z.of_N w) z2) = ofZ w (z1 + z2).
 Proof.
-  intros. unfold toZ. rewrite N2Z_ofZ. apply canonicalZ_mod_pow2, N2Z.inj_le, H. apply N2Z.is_nonneg.
+  intros. rewrite eqm_ofZ_canonicalZ. reflexivity.
+  symmetry. apply Zplus_mod_idemp_r.
+Qed.
+
+Corollary canonicalZ_add_l:
+  forall w z1 z2,
+  ofZ w (canonicalZ (Z.of_N w) z1 + z2) = ofZ w (z1 + z2).
+Proof.
+  intros. pose (f x := (x+z2)%Z).
+  change (z1 + z2)%Z with (f z1).
+  change (_ + z2)%Z with (f (canonicalZ (Z.of_N w) z1)).
+  apply eqm_ofZ_canonicalZ. symmetry. apply Zplus_mod_idemp_l.
+Qed.
+
+Corollary canonicalZ_add:
+  forall w z1 z2,
+  ofZ w (canonicalZ (Z.of_N w) z1 + canonicalZ (Z.of_N w) z2) = ofZ w (z1 + z2).
+Proof.
+  intros. rewrite canonicalZ_add_l, canonicalZ_add_r. reflexivity.
+Qed.
+
+Corollary canonicalZ_sub_r:
+  forall w z1 z2,
+  ofZ w (z1 - canonicalZ (Z.of_N w) z2) = ofZ w (z1 - z2).
+Proof.
+  intros. rewrite eqm_ofZ_canonicalZ. reflexivity.
+  symmetry. apply Zminus_mod_idemp_r.
+Qed.
+
+Corollary canonicalZ_sub_l:
+  forall w z1 z2,
+  ofZ w (canonicalZ (Z.of_N w) z1 - z2) = ofZ w (z1 - z2).
+Proof.
+  intros. pose (f x := (x-z2)%Z).
+  change (z1 - z2)%Z with (f z1).
+  change (_ - z2)%Z with (f (canonicalZ (Z.of_N w) z1)).
+  apply eqm_ofZ_canonicalZ. symmetry. apply Zminus_mod_idemp_l.
+Qed.
+
+Corollary canonicalZ_sub:
+  forall w z1 z2,
+  ofZ w (canonicalZ (Z.of_N w) z1 - canonicalZ (Z.of_N w) z2) = ofZ w (z1 - z2).
+Proof.
+  intros. rewrite canonicalZ_sub_l, canonicalZ_sub_r. reflexivity.
+Qed.
+
+Corollary canonicalZ_mul_r:
+  forall w z1 z2,
+  ofZ w (z1 * canonicalZ (Z.of_N w) z2) = ofZ w (z1 * z2).
+Proof.
+  intros. rewrite eqm_ofZ_canonicalZ. reflexivity.
+  symmetry. apply Zmult_mod_idemp_r.
+Qed.
+
+Corollary canonicalZ_mul_l:
+  forall w z1 z2,
+  ofZ w (canonicalZ (Z.of_N w) z1 * z2) = ofZ w (z1 * z2).
+Proof.
+  intros. pose (f x := (x*z2)%Z).
+  change (z1 * z2)%Z with (f z1).
+  change (_ * z2)%Z with (f (canonicalZ (Z.of_N w) z1)).
+  apply eqm_ofZ_canonicalZ. symmetry. apply Zmult_mod_idemp_l.
+Qed.
+
+Corollary canonicalZ_mul:
+  forall w z1 z2,
+  ofZ w (canonicalZ (Z.of_N w) z1 * canonicalZ (Z.of_N w) z2) = ofZ w (z1 * z2).
+Proof.
+  intros. rewrite canonicalZ_mul_l, canonicalZ_mul_r. reflexivity.
 Qed.
 
 Theorem canonicalZ_id:
@@ -1221,6 +1400,14 @@ Theorem ofZ_inj:
     ofZ w z1 = ofZ w z2 -> z1 = z2.
 Proof.
   intros. rewrite <- (toZ_ofZ w z1), <- (toZ_ofZ w z2), H by assumption. reflexivity.
+Qed.
+
+Theorem canonicalZ_toZ:
+  forall w w' z, w' <= w -> canonicalZ (Z.of_N w') (toZ w z) = toZ w' z.
+Proof.
+  intros.
+  erewrite <- toZ_ofZ_canonicalZ by eassumption.
+  rewrite ofZ_toZ. apply toZ_mod_pow2. assumption.
 Qed.
 
 Theorem canonicalZ_nonneg:
@@ -1461,7 +1648,7 @@ Proof.
 Qed.
 
 Theorem add_sbop:
-  forall w n1 n2, (n1 + n2) mod 2^w = sbop2 Z.add w n1 n2.
+  forall w n1 n2, (n1 + n2) mod 2^w = ofZ w (toZ w n1 + toZ w n2).
 Proof.
   intros. apply nop_sbop2.
     apply N2Z.inj_add.
@@ -1485,10 +1672,11 @@ Proof.
 Qed.
 
 Theorem sub_sbop:
-  forall w n1 n2, n2 < 2^w -> (2^w + n1 - n2) mod 2^w = sbop2 Z.sub w n1 n2.
+  forall w n1 n2, n2 < 2^w -> (n1 + (2^w - n2)) mod 2^w = ofZ w (toZ w n1 - toZ w n2).
 Proof.
   intros.
-  unfold sbop2. erewrite <- N.mod_mod, <- ofZ_mod_pow2; [| reflexivity | apply N.pow_nonzero; discriminate ].
+  rewrite N.add_sub_assoc, N.add_comm by apply N.lt_le_incl, H.
+  erewrite <- N.mod_mod, <- ofZ_mod_pow2; [| reflexivity | apply N.pow_nonzero; discriminate ].
   set (x := (_-_) mod _). set (y := ((_-_) mod _)%Z). pattern n1, n2 in x. pattern (toZ w n1), (toZ w n2) in y. subst x y.
   apply nop_sbop2.
 
@@ -1530,7 +1718,7 @@ Qed.
 Theorem neg_sbop:
   forall w n, n < 2^w -> (2^w - n) mod 2^w = ofZ w (- toZ w n).
 Proof.
-  intros. rewrite <- (N.add_0_r (2^w)) at 1. rewrite <- Z.sub_0_l, <- (toZ_0_r w).
+  intros. rewrite <- (N.add_0_l (_-_)). rewrite <- Z.sub_0_l, <- (toZ_0_r w).
   apply sub_sbop. assumption.
 Qed.
 
@@ -1542,7 +1730,7 @@ Proof.
 Qed.
 
 Theorem mul_sbop:
-  forall w n1 n2, (n1 * n2) mod 2^w = sbop2 Z.mul w n1 n2.
+  forall w n1 n2, (n1 * n2) mod 2^w = ofZ w (toZ w n1 * toZ w n2).
 Proof.
   intros. apply nop_sbop2.
     apply N2Z.inj_mul.
@@ -1680,11 +1868,11 @@ Proof.
 Qed.
 
 Theorem shiftl_sbop:
-  forall w n1 n2, (N.shiftl n1 n2) mod 2^w = sbop1 Z.shiftl w n1 n2.
+  forall w n1 n2, (N.shiftl n1 n2) mod 2^w = ofZ w (Z.shiftl (toZ w n1) (Z.of_N n2)).
 Proof.
   intros.
   pose (nop n := N.shiftl n n2). pose (zop z := Z.shiftl z (Z.of_N n2)).
-  change (N.shiftl _ _) with (nop n1). unfold sbop1. change (Z.shiftl _ _) with (zop (toZ w n1)).
+  change (N.shiftl _ _) with (nop n1). change (Z.shiftl _ _) with (zop (toZ w n1)).
   apply nop_sbop1. apply N2Z_inj_shiftl. intros. apply Z_shiftl_eqm, N2Z.is_nonneg.
 Qed.
 
@@ -1812,7 +2000,7 @@ Proof.
 Qed.
 
 Theorem land_sbop:
-  forall w n1 n2, (N.land n1 n2) mod 2^w = sbop2 Z.land w n1 n2.
+  forall w n1 n2, (N.land n1 n2) mod 2^w = ofZ w (Z.land (toZ w n1) (toZ w n2)).
 Proof.
   intros. apply nop_sbop2.
     apply N2Z_inj_land.
@@ -1846,7 +2034,7 @@ Proof.
 Qed.
 
 Theorem lor_sbop:
-  forall w n1 n2, (N.lor n1 n2) mod 2^w = sbop2 Z.lor w n1 n2.
+  forall w n1 n2, (N.lor n1 n2) mod 2^w = ofZ w (Z.lor (toZ w n1) (toZ w n2)).
 Proof.
   intros. apply nop_sbop2.
     apply N2Z_inj_lor.
@@ -1878,7 +2066,7 @@ Proof.
 Qed.
 
 Theorem lxor_sbop:
-  forall w n1 n2, (N.lxor n1 n2) mod 2^w = sbop2 Z.lxor w n1 n2.
+  forall w n1 n2, (N.lxor n1 n2) mod 2^w = ofZ w (Z.lxor (toZ w n1) (toZ w n2)).
 Proof.
   intros. apply nop_sbop2.
     apply N2Z_inj_lxor.
@@ -2038,27 +2226,510 @@ Proof.
     apply Z_xbits_nonneg.
 Qed.
 
+Theorem msub_lt:
+  forall w x y, msub w x y < 2^w.
+Proof.
+  intros. apply N.mod_lt, N.pow_nonzero. discriminate.
+Qed.
+
+Theorem msub_0:
+  forall x y, msub 0 x y = 0.
+Proof.
+  intros. apply N.mod_1_r.
+Qed.
+
+Theorem msub_mod_l:
+  forall w w' x y, w <= w' -> msub w (x mod 2^w') y = msub w x y.
+Proof.
+  intros. unfold msub.
+  rewrite <- Nadd_modpow2_l, N_mod_mod_pow2, N.min_r, Nadd_modpow2_l by assumption.
+  reflexivity.
+Qed.
+
+Theorem msub_mod_r:
+  forall w w' x y, w <= w' -> msub w x (y mod 2^w') = msub w x y.
+Proof.
+  intros. unfold msub.
+  rewrite N_mod_mod_pow2, N.min_r by assumption.
+  reflexivity.
+Qed.
+
+Theorem msub_sbop:
+  forall w x y, msub w x y = ofZ w (toZ w x - toZ w y).
+Proof.
+  intros.
+  rewrite <- (toZ_mod_pow2 w w y) by reflexivity.
+  unfold msub.
+  apply sub_sbop, N.mod_lt, N.pow_nonzero. discriminate.
+Qed.
+
+Theorem toZ_msub:
+  forall w x y, toZ w (msub w x y) = canonicalZ (Z.of_N w) (toZ w x - toZ w y).
+Proof.
+  intros. rewrite msub_sbop. apply toZ_ofZ_canonicalZ. reflexivity.
+Qed.
+
+Theorem N2Z_msub:
+  forall w m n, Z.of_N (msub w m n) = ((Z.of_N m - Z.of_N n) mod 2^Z.of_N w)%Z.
+Proof.
+  intros. unfold msub.
+  rewrite N2Z.inj_mod, N2Z.inj_add, N2Z.inj_sub by
+    (apply N.lt_le_incl, N.mod_lt, N.pow_nonzero; discriminate 1).
+  rewrite N2Z.inj_mod.
+  rewrite Z.add_sub_assoc, Zminus_mod_idemp_r, Z.add_comm, <- Z.add_sub_assoc.
+  rewrite <- Z.add_mod_idemp_l, Z.mod_same by apply N2Z_pow2_nonzero.
+  rewrite N2Z.inj_pow. reflexivity.
+Qed.
+
+Theorem msub_diag:
+  forall w x, msub w x x = 0.
+Proof.
+  intros. rewrite msub_sbop, Z.sub_diag. reflexivity.
+Qed.
+
+Theorem msub_0_r:
+  forall w x, msub w x 0 = x mod 2^w.
+Proof.
+  intros. rewrite msub_sbop, toZ_0_r, Z.sub_0_r. apply ofZ_toZ.
+Qed.
+
+Theorem msub_0_l:
+  forall w x, msub w 0 x = (2^w - x mod 2^w) mod 2^w.
+Proof. reflexivity. Qed.
+
+Theorem msub_0_l_neg:
+  forall w x, msub w 0 x = ofZ w (- toZ w x).
+Proof.
+  intros. rewrite msub_sbop, toZ_0_r, Z.sub_0_l. reflexivity.
+Qed.
+
+Theorem msub_mod_pow2:
+  forall w w' x y, (msub w x y) mod 2^w' = msub (N.min w w') x y.
+Proof.
+  intros. unfold msub at 1. rewrite N_mod_mod_pow2.
+  destruct (N.le_ge_cases w w').
+    rewrite N.min_l by assumption. reflexivity.
+
+    rewrite <- Nadd_modpow2_r, N_sub_mod by
+      (try apply N.lt_le_incl, N.mod_lt; apply N.pow_nonzero; discriminate 1).
+    rewrite N_mod_mod_pow2, !N.min_r by assumption.
+    rewrite <- (N.sub_add _ _ H) at 1 2.
+    rewrite N.pow_add_r, N.mod_mul by (apply N.pow_nonzero; discriminate 1).
+    destruct (y mod 2^w') eqn:H1 at 1.
+      erewrite N.mul_0_r, <- msub_mod_r, H1, N.add_0_r, msub_0_r by reflexivity. reflexivity.
+      rewrite N.mul_1_r. reflexivity.
+Qed.
+
+Theorem msub_add:
+  forall w x y, (msub w x y + y) mod 2^w = x mod 2^w.
+Proof.
+  intros.
+  rewrite msub_sbop, <- Nadd_modpow2_r, <- (ofZ_toZ w y), <- ofZ_add, Z.sub_add.
+  apply ofZ_toZ.
+Qed.
+
+Corollary add_msub:
+  forall w x y, (x + msub w y x) mod 2^w = y mod 2^w.
+Proof.
+  intros. rewrite N.add_comm. apply msub_add.
+Qed.
+
+Theorem add_msub_r:
+  forall w x y, msub w (x+y) y = x mod 2^w.
+Proof.
+  intros. rewrite msub_sbop, toZ_add, canonicalZ_sub_l, Z.add_simpl_r. apply ofZ_toZ.
+Qed.
+
+Corollary add_msub_l:
+  forall w x y, msub w (x+y) x = y mod 2^w.
+Proof.
+  intros. rewrite N.add_comm. apply add_msub_r.
+Qed.
+
+Theorem msub_comm:
+  forall w x y z, msub w (msub w x y) z = msub w (msub w x z) y.
+Proof.
+  intros. rewrite !msub_sbop.
+  erewrite !toZ_ofZ_canonicalZ by reflexivity.
+  rewrite !canonicalZ_sub_l, <- !Z.sub_add_distr, Z.add_comm.
+  reflexivity.
+Qed.
+
+Theorem msub_msub_distr:
+  forall w x y z, msub w x (msub w y z) = ((msub w x y) + z) mod 2^w.
+Proof.
+  intros. rewrite !msub_sbop, add_sbop. unfold sbop2.
+  erewrite !toZ_ofZ_canonicalZ by reflexivity.
+  rewrite canonicalZ_sub_r, canonicalZ_add_l, Z.sub_sub_distr.
+  reflexivity.
+Qed.
+
+Theorem msub_add_distr:
+  forall w x y z, msub w x (y+z) = msub w (msub w x y) z.
+Proof.
+  intros. rewrite !msub_sbop, toZ_add.
+  erewrite toZ_ofZ_canonicalZ by reflexivity.
+  rewrite canonicalZ_sub_r, canonicalZ_sub_l, Z.sub_add_distr. reflexivity.
+Qed.
+
+Theorem add_msub_assoc:
+  forall w m n p, (m + msub w n p) mod 2^w = msub w (m + n) p.
+Proof.
+  intros.
+  rewrite !msub_sbop, toZ_add, canonicalZ_sub_l, <- Z.add_sub_assoc, ofZ_add, ofZ_toZ, Nadd_modpow2_l.
+  reflexivity.
+Qed.
+
+Theorem add_msub_swap:
+  forall w m n p, msub w (m + n) p = (msub w m p + n) mod 2^w.
+Proof.
+  intros.
+  rewrite !msub_sbop, toZ_add, canonicalZ_sub_l, Z.add_sub_swap, ofZ_add, ofZ_toZ, Nadd_modpow2_r.
+  reflexivity.
+Qed.
+
+Theorem msub_cancel_l:
+  forall w m n p, msub w m n = msub w m p <-> n mod 2^w = p mod 2^w.
+Proof.
+  split; intro; [|unfold msub; rewrite H; reflexivity].
+  rewrite !msub_sbop in H.
+  apply f_equal with (f := fun x => (2^w + ((x + ofZ w (toZ w n)) mod 2^w + ofZ w (toZ w p)) mod 2^w
+                                     - ofZ w (toZ w m)) mod 2^w) in H.
+  symmetry in H.
+  rewrite <- !ofZ_add, <- Z.add_assoc, (Z.add_comm (toZ w n)), Z.add_assoc, !Z.sub_add,
+          <- !ofZ_sub, !Z.add_simpl_l, !ofZ_toZ in H.
+  assumption.
+Qed.
+
+Theorem msub_cancel_r:
+  forall w m n p, msub w m p = msub w n p <-> m mod 2^w = n mod 2^w.
+Proof.
+  split; intro.
+
+    rewrite !msub_sbop in H.
+    apply f_equal with (f := fun x => (x + ofZ w (toZ w p)) mod 2^w) in H.
+    rewrite <- !ofZ_add, !Z.sub_add, !ofZ_toZ in H.
+    assumption.
+
+    erewrite <- msub_mod_l by reflexivity. rewrite H. apply msub_mod_l. reflexivity.
+Qed.
+
+Theorem msub_move_0_r:
+  forall w m n, msub w m n = 0 <-> m mod 2^w = n mod 2^w.
+Proof.
+  split; intro.
+    eapply msub_cancel_r. rewrite (msub_diag w n). assumption.
+    erewrite <- msub_mod_l, H, msub_mod_l by reflexivity. apply msub_diag.
+Qed.
+
+Theorem madd_add_simpl_r_r:
+  forall w m n p, msub w (m+n) (p+n) = msub w m p.
+Proof.
+  intros.
+  rewrite !msub_sbop, !toZ_add, canonicalZ_sub, Z.add_add_simpl_r_r.
+  reflexivity.
+Qed.
+
+Theorem madd_add_simpl_r_l:
+  forall w m n p, msub w (m+n) (n+p) = msub w m p.
+Proof.
+  intros.
+  rewrite !msub_sbop, !toZ_add, canonicalZ_sub, Z.add_add_simpl_r_l.
+  reflexivity.
+Qed.
+
+Theorem madd_add_simpl_l_r:
+  forall w m n p, msub w (m+n) (p+m) = msub w n p.
+Proof.
+  intros.
+  rewrite !msub_sbop, !toZ_add, canonicalZ_sub, Z.add_add_simpl_l_r.
+  reflexivity.
+Qed.
+
+Theorem madd_add_simpl_l_l:
+  forall w m n p, msub w (m+n) (m+p) = msub w n p.
+Proof.
+  intros.
+  rewrite !msub_sbop, !toZ_add, canonicalZ_sub, Z.add_add_simpl_l_l.
+  reflexivity.
+Qed.
+
+Theorem msub_add_simpl_r_r:
+  forall w m n p, (msub w m n + (p + n)) mod 2^w = (m + p) mod 2^w.
+Proof.
+  intros.
+  rewrite (N.add_comm p n), N.add_assoc, <- Nadd_modpow2_l, msub_add, Nadd_modpow2_l.
+  reflexivity.
+Qed.
+
+Corollary msub_add_simpl_r_l:
+  forall w m n p, (msub w m n + (n+p)) mod 2^w = (m+p) mod 2^w.
+Proof.
+  intros. rewrite (N.add_comm n p). apply msub_add_simpl_r_r.
+Qed.
+
+Theorem msub_tele:
+  forall w x y z, msub w y x <= msub w z x -> msub w y x + msub w z y = msub w z x.
+Proof.
+  intros.
+  rewrite <- (N.sub_add _ _ H), N.add_comm. apply N.add_cancel_r.
+  apply (toZ_inj w).
+    apply msub_lt.
+    eapply N.le_lt_trans. apply N.le_sub_l. apply msub_lt.
+  rewrite toZ_sub by assumption.
+  rewrite !toZ_msub.
+  rewrite <- (toZ_ofZ_canonicalZ w w (canonicalZ _ _ - canonicalZ _ _)) by reflexivity.
+  rewrite canonicalZ_sub.
+  rewrite Z.sub_sub_distr, <- Z.add_sub_swap, Z.sub_add.
+  symmetry. apply toZ_ofZ_canonicalZ. reflexivity.
+Qed.
+
+Theorem msub_mtele:
+  forall w x y z, (msub w y x + msub w z y) mod 2^w = msub w z x.
+Proof.
+  intros. rewrite !msub_sbop, <- ofZ_add.
+  rewrite Z.add_comm, <- Z.sub_sub_distr, (Z.sub_sub_distr (toZ w y)), Z.sub_diag.
+  reflexivity.
+Qed.
+
+Theorem mul_msub_distr_l:
+  forall w m n p, (m * msub w n p) mod 2^w = msub w (m*n) (m*p).
+Proof.
+  intros. rewrite !msub_sbop.
+  rewrite <- N.mul_mod_idemp_l by (apply N.pow_nonzero; discriminate 1).
+  rewrite <- (ofZ_toZ w m) at 1.
+  rewrite <- ofZ_mul, !toZ_mul, canonicalZ_sub, Z.mul_sub_distr_l.
+  reflexivity.
+Qed.
+
+Corollary mul_msub_distr_r:
+  forall w m n p, (msub w m n * p) mod 2^w = msub w (m*p) (n*p).
+Proof.
+  intros. rewrite !(N.mul_comm _ p). apply mul_msub_distr_l.
+Qed.
+
+Theorem msub_nowrap:
+  forall w x y, x mod 2^w <= y mod 2^w -> msub w y x = y mod 2^w - x mod 2^w.
+Proof.
+  intros. rewrite msub_sbop, ofZ_sub, !ofZ_toZ, <- N.add_sub_assoc by assumption.
+  rewrite <- Nadd_modpow2_l, Nmodpow2_same.
+  eapply N.mod_small, N.le_lt_trans.
+    apply N.le_sub_l.
+    apply N.mod_lt, N.pow_nonzero. discriminate.
+Qed.
+
+Theorem msub_wrap:
+  forall w x y, x mod 2^w < y mod 2^w -> msub w x y = 2^w + x mod 2^w - y mod 2^w.
+Proof.
+  intros. rewrite msub_sbop. rewrite ofZ_sub. rewrite !ofZ_toZ. apply N.mod_small.
+  eapply N.add_lt_mono_r. rewrite N.sub_add.
+    apply N.add_lt_mono_l. assumption.
+    eapply N.lt_le_incl, N.lt_le_trans.
+      apply N.mod_lt, N.pow_nonzero. discriminate 1.
+      apply N.le_add_r.
+Qed.
+
+Theorem msub_inv:
+  forall w x y, x mod 2^w <> y mod 2^w -> msub w x y + msub w y x = 2^w.
+Proof.
+  intro w. eenough (H: _).
+  intros. apply N.lt_gt_cases in H0. destruct H0.
+    revert x y H0. exact H.
+    rewrite N.add_comm. revert y x H0. exact H.
+  intros. rewrite (msub_wrap _ _ _ H0). rewrite msub_nowrap.
+    rewrite N.add_sub_assoc.
+      rewrite N.sub_add.
+        apply N.add_sub.
+        etransitivity.
+          apply N.lt_le_incl, N.mod_lt, N.pow_nonzero. discriminate 1.
+          apply N.le_add_r.
+      apply N.lt_le_incl. assumption.
+    apply N.lt_le_incl. assumption.
+Qed.
+
+Theorem msub_inv_mod:
+  forall w x y, (msub w x y + msub w y x) mod 2^w = 0.
+Proof.
+  intros. destruct (N.eq_dec (x mod 2^w) (y mod 2^w)).
+    erewrite <- msub_mod_l, <- (msub_mod_r w w y), e, msub_mod_l, msub_mod_r, msub_diag
+             by reflexivity. apply N.mod_0_l, N.pow_nonzero. discriminate 1.
+    rewrite msub_inv by assumption. apply N.mod_same, N.pow_nonzero. discriminate 1.
+Qed.
+
+Theorem msub_neg:
+  forall w x y, msub w x y = (2^w - msub w y x) mod 2^w.
+Proof.
+  intros.
+  erewrite <- (N.add_0_l (_-_)), <- msub_inv_mod.
+  rewrite Nadd_modpow2_l.
+  rewrite N.add_sub_assoc by apply N.lt_le_incl, msub_lt.
+  rewrite N.add_comm, N.add_assoc, N.add_sub, <- Nadd_modpow2_l, Nmodpow2_same.
+  symmetry. apply N.mod_small, msub_lt.
+Qed.
+
+Theorem msub_lt_mono_r:
+  forall w m n p,
+    (p mod 2^w <= N.min (m mod 2^w) (n mod 2^w) \/
+     N.max (m mod 2^w) (n mod 2^w) < p mod 2^w) ->
+  ((m mod 2^w < n mod 2^w) <-> (msub w m p < msub w n p)).
+Proof.
+  intros.
+  destruct H; [ apply N.min_glb_iff in H | apply N.max_lub_lt_iff in H ];
+      destruct H as [H1 H2].
+    rewrite !msub_nowrap by assumption. split; intro.
+      eapply N.add_lt_mono_r. rewrite !N.sub_add; assumption.
+      eapply N.add_lt_mono_r in H. rewrite !N.sub_add in H; assumption.
+    rewrite !msub_wrap by assumption. split; intro.
+      apply N.lt_add_lt_sub_r. rewrite N.sub_add.
+        apply N.add_lt_mono_l. assumption.
+        etransitivity.
+          apply N.lt_le_incl, N.mod_lt, N.pow_nonzero. discriminate 1.
+          apply N.le_add_r.
+      apply N.lt_add_lt_sub_r in H. rewrite N.sub_add in H.
+        apply N.add_lt_mono_l in H. assumption.
+        etransitivity.
+          apply N.lt_le_incl, N.mod_lt, N.pow_nonzero. discriminate 1.
+          apply N.le_add_r.
+Qed.
+
+Theorem msub_le_mono_r:
+  forall w m n p,
+    (p mod 2^w <= N.min (m mod 2^w) (n mod 2^w) \/
+     N.max (m mod 2^w) (n mod 2^w) < p mod 2^w) ->
+  ((m mod 2^w <= n mod 2^w) <-> (msub w m p <= msub w n p)).
+Proof.
+  intros. apply msub_lt_mono_r in H. destruct H as [H1 H2].
+  split; intro H; apply N.le_lteq in H; destruct H.
+    apply N.lt_le_incl, H1, H.
+    erewrite <- msub_mod_l, H, msub_mod_l; reflexivity.
+    apply N.lt_le_incl, H2, H.
+    erewrite <- msub_add, H, msub_add. reflexivity.
+Qed.
+
+Theorem msub_lt_imono_r:
+  forall w m n p,
+    m mod 2^w < p mod 2^w ->
+    p mod 2^w <= n mod 2^w ->
+  msub w n p < msub w m p.
+Proof.
+  intros.
+  rewrite msub_nowrap, msub_wrap by assumption.
+  apply N.lt_add_lt_sub_r. rewrite N.sub_add by assumption.
+  eapply N.lt_le_trans.
+    apply N.mod_lt, N.pow_nonzero. discriminate 1.
+    apply N.le_add_r.
+Qed.
+
+Theorem msub_lt_mono_l:
+  forall w m n p,
+    m mod 2^w <= p mod 2^w ->
+    p mod 2^w < n mod 2^w ->
+  msub w p m < msub w p n.
+Proof.
+  intros.
+  rewrite msub_nowrap, msub_wrap by assumption.
+  apply N.lt_add_lt_sub_r.
+  rewrite <- N.add_sub_swap by assumption.
+  rewrite (N.add_comm (2^w)).
+  rewrite <- N.add_sub_assoc.
+    apply N.add_lt_mono_l. eapply N.le_lt_trans.
+      apply N.le_sub_l.
+      apply N.mod_lt, N.pow_nonzero. discriminate 1.
+    etransitivity. eassumption. apply N.lt_le_incl. assumption.
+Qed.
+
+Theorem msub_lt_imono_l:
+  forall w m n p,
+    (p mod 2^w < N.min (m mod 2^w) (n mod 2^w) \/
+     N.max (m mod 2^w) (n mod 2^w) <= p mod 2^w) ->
+  ((m mod 2^w < n mod 2^w) <-> (msub w p n < msub w p m)).
+Proof.
+  intros. destruct H; [ apply N.min_glb_lt_iff in H | apply N.max_lub_iff in H ];
+      destruct H as [H1 H2].
+    rewrite !msub_wrap by assumption. split; intro; (eapply N.le_lt_add_lt;
+    [ apply N.le_succ_l, H
+    | rewrite N.add_succ_r, ?(N.add_comm (_ mod _)), !N.sub_add by (etransitivity;
+        [ apply N.lt_le_incl, N.mod_lt, N.pow_nonzero; discriminate 1 | apply N.le_add_r ]);
+      apply N.lt_succ_diag_r ]).
+    rewrite !msub_nowrap by assumption. split; intro; (eapply N.le_lt_add_lt;
+      [ apply N.le_succ_l, H
+      | rewrite N.add_succ_r, ?(N.add_comm (_ mod _)), !N.sub_add by assumption;
+        apply N.lt_succ_diag_r ]).
+Qed.
+
+Theorem msub_le_imono_l:
+  forall w m n p,
+    (p mod 2^w < N.min (m mod 2^w) (n mod 2^w) \/
+     N.max (m mod 2^w) (n mod 2^w) <= p mod 2^w) ->
+  ((m mod 2^w <= n mod 2^w) <-> (msub w p n <= msub w p m)).
+Proof.
+  intros. apply msub_lt_imono_l in H. destruct H as [H1 H2].
+  split; intro H; apply N.le_lteq in H; destruct H.
+    apply N.lt_le_incl, H1, H.
+    erewrite <- msub_mod_r, <- H, msub_mod_r; reflexivity.
+    apply N.lt_le_incl, H2, H.
+    apply msub_cancel_l in H. rewrite H. reflexivity.
+Qed.
+
+Theorem le_msub_l:
+  forall w m n,
+  n mod 2^w <= m mod 2^w <-> msub w m n <= m mod 2^w.
+Proof.
+  split; intro.
+    rewrite (msub_nowrap _ _ _ H). apply N.le_sub_l.
+
+    intro H1. apply H. apply N.compare_gt_iff in H1. apply N.compare_gt_iff.
+    rewrite (msub_wrap _ _ _ H1), N.add_comm.
+    rewrite <- N.add_sub_assoc by (apply N.lt_le_incl, N.mod_lt, N.pow_nonzero; discriminate 1).
+    rewrite <- (N.add_0_r (m mod _)) at 1.
+    apply N.add_lt_mono_l, N.lt_add_lt_sub_r, N.mod_lt, N.pow_nonzero. discriminate 1.
+Qed.
+
+Corollary lt_msub_r:
+  forall w m n,
+  m mod 2^w < n mod 2^w <-> m mod 2^w < msub w m n.
+Proof.
+  split; intro; apply N.nle_gt; intro H1; contradict H.
+    apply N.le_ngt, le_msub_l, H1.
+    apply N.le_ngt. apply -> le_msub_l. apply H1.
+Qed.
+
+Theorem lt_msub_l:
+  forall w m n,
+  0 < n mod 2^w <= m mod 2^w <-> msub w m n < m mod 2^w.
+Proof.
+  split; intro.
+    rewrite msub_nowrap; [apply N.sub_lt|]; apply H.
+    split.
+      erewrite <- msub_mod_r in H by reflexivity. destruct (n mod 2^w).
+        contradict H. rewrite msub_0_r. apply N.lt_irrefl.
+        reflexivity.
+
+      apply N.le_ngt. intro H1. contradict H. apply N.nlt_ge.
+      rewrite msub_wrap by assumption.
+      rewrite N.add_comm, <- N.add_sub_assoc by (apply N.lt_le_incl, N.mod_lt, N.pow_nonzero; discriminate 1).
+      rewrite <- (N.add_0_r (m mod _)) at 1.
+      apply N.add_le_mono_l, N.le_add_le_sub_r, N.lt_le_incl, N.mod_lt, N.pow_nonzero. discriminate 1.
+Qed.
+
+Corollary le_msub_r:
+  forall w m n, 0 < n mod 2^w ->
+  m mod 2^w < n mod 2^w <-> m mod 2^w <= msub w m n.
+Proof.
+  split; intro.
+    apply N.le_ngt. intro H1. apply lt_msub_l in H1. contradict H0. apply N.le_ngt, H1.
+    apply N.lt_nge. intro H1. contradict H0. eapply N.lt_nge, lt_msub_l. split; assumption.
+Qed.
+
 Theorem add_mod_same_l:
   forall w n, (2^w + n) mod 2^w = n mod 2^w.
 Proof.
   intros.
-  rewrite <- N.add_mod_idemp_l, N.mod_same, N.add_0_l by (apply N.pow_nonzero; discriminate 1).
+  rewrite <- Nadd_modpow2_l, Nmodpow2_same, N.add_0_l.
   reflexivity.
 Qed.
 
-Theorem msub_diag:
-  forall w n, (2^w + n - n) mod 2^w = 0.
-Proof.
-  intros. rewrite N.add_sub. apply N.mod_same, N.pow_nonzero. discriminate 1.
-Qed.
-
-Theorem msub_0_r:
-  forall w n, (2^w + n - 0) mod 2^w = n mod 2^w.
-Proof.
-  intros. rewrite N.sub_0_r. apply add_mod_same_l.
-Qed.
-
-Theorem msub_add:
+Theorem mod_sub_add:
   forall w n m, n < 2^w -> (2^w + m - n + n) mod 2^w = m mod 2^w.
 Proof.
   intros. rewrite N.sub_add.
@@ -2067,6 +2738,173 @@ Proof.
 Qed.
 
 End TwosComplement.
+
+
+
+Section OpBounds.
+
+(* Establish upper bounds on various arithmetic and logical operations. *)
+
+Lemma Nlt_0_pow2: forall p, 0 < 2^p.
+Proof. intros. apply N.neq_0_lt_0, N.pow_nonzero. discriminate 1. Qed.
+
+Lemma Zlt_0_pow2: forall p, (0 < Z.of_N (2^p))%Z.
+Proof. intro. rewrite <- N2Z.inj_0. apply N2Z.inj_lt. apply Nlt_0_pow2. Qed.
+
+Lemma div_bound: forall n1 n2, N.div n1 n2 <= n1.
+Proof.
+  intros.
+  destruct n2. destruct n1. reflexivity. apply N.le_0_l.
+  apply N.div_le_upper_bound. discriminate 1.
+  destruct n1. reflexivity.
+  unfold N.le. simpl. change p0 with (1*p0)%positive at 1. rewrite Pos.mul_compare_mono_r.
+  destruct p; discriminate 1.
+Qed.
+
+Lemma rem_bound:
+  forall w x y (RX: signed_range w x) (RY: signed_range w y),
+  signed_range w (Z.rem x y).
+Proof.
+  assert (BP: forall p1 p2, (0 <= Z.rem (Z.pos p1) (Z.pos p2) < Z.pos p2)%Z).
+    intros. apply Z.rem_bound_pos. apply Pos2Z.is_nonneg. apply Pos2Z.is_pos.
+  intros. destruct w as [|w]. apply signed_range_0_l in RX. apply signed_range_0_l in RY. subst. apply signed_range_0_r.
+  destruct y as [|p2|p2]; destruct x as [|p1|p1]; try assumption;
+  specialize (BP p1 p2); destruct BP as [BP1 BP2].
+
+  (* x>0, y>0 *)
+  split.
+    transitivity Z0. apply Z.opp_nonpos_nonneg. apply Z.pow_nonneg. discriminate. assumption.
+    transitivity (Z.pos p2). assumption. apply RY.
+
+  (* x<0, y>0 *)
+  rewrite <- Pos2Z.opp_pos, Z.rem_opp_l; [|discriminate]. split.
+    apply -> Z.opp_le_mono. apply Z.lt_le_incl. transitivity (Z.pos p2).
+      assumption.
+      rewrite <- N2Z.inj_pred by reflexivity. apply RY.
+    apply Z.le_lt_trans with (m:=Z0). apply Z.opp_nonpos_nonneg.
+      assumption.
+      apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
+
+  (* x>0, y<0 *)
+  rewrite <- Pos2Z.opp_pos, Z.rem_opp_r; [|discriminate]. split.
+    transitivity Z0. apply Z.opp_nonpos_nonneg, Z.pow_nonneg. discriminate. assumption.
+    apply Z.lt_le_trans with (m:=Z.pos p2).
+      assumption.
+      apply Z.opp_le_mono. rewrite N2Z.inj_pred, Pos2Z.opp_pos by reflexivity. apply RY.
+
+  (* x<0, y<0 *)
+  do 2 rewrite <- Pos2Z.opp_pos. rewrite Z.rem_opp_r,Z.rem_opp_l; try discriminate. split.
+    apply -> Z.opp_le_mono. transitivity (Z.pos p1).
+      apply Z.rem_le. apply Pos2Z.is_nonneg. apply Pos2Z.is_pos.
+      apply Z.opp_le_mono. rewrite Pos2Z.opp_pos. apply RX.
+    apply Z.le_lt_trans with (m:=Z0).
+      apply Z.opp_nonpos_nonneg. assumption.
+      apply Z.pow_pos_nonneg. reflexivity. apply N2Z.is_nonneg.
+Qed.
+
+Lemma mod_bound:
+  forall w x y, x < 2^w -> y < 2^w -> x mod y < 2^w.
+Proof.
+  intros. destruct y as [|y].
+    destruct x; assumption.
+    etransitivity. apply N.mod_lt. discriminate 1. assumption.
+Qed.
+
+Lemma shiftl_bound:
+  forall w x y, x < 2^w -> N.shiftl x y < 2^(w+y).
+Proof.
+  intros. rewrite N.shiftl_mul_pow2, N.pow_add_r. apply N.mul_lt_mono_pos_r.
+    apply Nlt_0_pow2.
+    assumption.
+Qed.
+
+Lemma shiftr_bound:
+  forall w x y, x < 2^w -> N.shiftr x y < 2^(w-y).
+Proof.
+  intros. destruct (N.le_gt_cases y w).
+    rewrite N.shiftr_div_pow2. apply N.div_lt_upper_bound.
+      apply N.pow_nonzero. discriminate 1.
+      rewrite <- N.pow_add_r, N.add_sub_assoc, N.add_comm, N.add_sub; assumption.
+    destruct x as [|x]. 
+      rewrite N.shiftr_0_l. apply Nlt_0_pow2.
+      rewrite N.shiftr_eq_0. apply Nlt_0_pow2. apply N.log2_lt_pow2.
+        reflexivity.
+        etransitivity. eassumption. apply N.pow_lt_mono_r. reflexivity. assumption.
+Qed.
+
+Lemma shiftr_low_pow2: forall a n, a < 2^n -> N.shiftr a n = 0.
+Proof.
+  intros. destruct a. apply N.shiftr_0_l.
+  apply N.shiftr_eq_0. apply N.log2_lt_pow2. reflexivity. assumption.
+Qed.
+
+Lemma ones_bound:
+  forall w, N.ones w < 2^w.
+Proof.
+  intro. rewrite N.ones_equiv. apply N.lt_pred_l. apply N.pow_nonzero. discriminate 1.
+Qed.
+
+Lemma logic_op_bound:
+  forall w n1 n2 f
+         (Z: forall x y b (Z1: N.testbit x b = false) (Z2: N.testbit y b = false),
+             N.testbit (f x y) b = false)
+         (W1: n1 < 2^w) (W2: n2 < 2^w),
+  f n1 n2 < 2^w.
+Proof.
+  intros. apply hibits_zero_bound. intros. apply Z;
+    revert H; apply bound_hibits_zero; assumption.
+Qed.
+
+Lemma land_bound:
+  forall w x y, x < 2^w -> N.land x y < 2^w.
+Proof.
+  intros. apply hibits_zero_bound. intros.
+  erewrite N.land_spec, bound_hibits_zero; try eassumption. reflexivity.
+Qed.
+
+Lemma lor_bound:
+  forall w x y, x < 2^w -> y < 2^w -> N.lor x y < 2^w.
+Proof.
+  intros. apply logic_op_bound; try assumption.
+  intros. rewrite N.lor_spec, Z1, Z2. reflexivity.
+Qed.
+
+Lemma lxor_bound:
+  forall w x y, x < 2^w -> y < 2^w -> N.lxor x y < 2^w.
+Proof.
+  intros. apply logic_op_bound; try assumption.
+  intros. rewrite N.lxor_spec, Z1, Z2. reflexivity.
+Qed.
+
+Lemma lnot_bound:
+  forall w x, x < 2^w -> N.lnot x w < 2^w.
+Proof.
+  intros. unfold N.lnot. apply lxor_bound. assumption.
+  unfold N.ones. rewrite N.shiftl_1_l. apply N.lt_pred_l, N.pow_nonzero. discriminate 1.
+Qed.
+
+Lemma bit_bound:
+  forall (b:bool), (if b then 1 else 0) < 2.
+Proof. destruct b; reflexivity. Qed.
+
+Lemma cast_high_bound:
+  forall n w w', n < 2^w -> w' <= w -> N.shiftr n (w - w') < 2^w'.
+Proof.
+  intros. apply hibits_zero_bound. intros.
+  rewrite N.shiftr_spec by apply N.le_0_l. apply (bound_hibits_zero w). assumption.
+  rewrite N.add_sub_assoc, N.add_comm, <- N.add_sub_assoc by assumption.
+  apply N.le_add_r.
+Qed.
+
+Lemma concat_bound:
+  forall n1 n2 w1 w2, n1 < 2^w1 -> n2 < 2^w2 -> N.lor (N.shiftl n1 w2) n2 < 2^(w1+w2).
+Proof.
+  intros. apply lor_bound. apply shiftl_bound. assumption. eapply N.lt_le_trans.
+    eassumption.
+    apply N.pow_le_mono_r. discriminate 1. rewrite N.add_comm. apply N.le_add_r.
+Qed.
+
+End OpBounds.
 
 
 
@@ -2087,16 +2925,6 @@ Qed.
 Definition N_land_mod_pow2 := bitop_mod_pow2 N.land andb N.land_spec (eq_refl false).
 Definition N_lor_mod_pow2 := bitop_mod_pow2 N.lor orb N.lor_spec (eq_refl false).
 Definition N_lxor_mod_pow2 := bitop_mod_pow2 N.lxor xorb N.lxor_spec (eq_refl false).
-
-Theorem N_mod_mod_pow2_min:
-  forall n p1 p2, (n mod 2^p1) mod 2^p2 = n mod 2^N.min p1 p2.
-Proof.
-  intros. rewrite <- 2!N.land_ones, <- N.land_assoc, N.land_ones. destruct (N.le_gt_cases p2 p1).
-    rewrite N.ones_mod_pow2, N.min_r by assumption. apply N.land_ones.
-    rewrite N.min_l, N.mod_small. apply N.land_ones.
-      rewrite N.ones_equiv. apply N.lt_lt_pred, N.pow_lt_mono_r. reflexivity. assumption.
-      apply N.lt_le_incl, H.
-Qed.
 
 Theorem N_land_mod_pow2_move:
   forall p x y, N.land (x mod 2^p) y = N.land x (y mod 2^p).
@@ -2119,7 +2947,7 @@ Theorem land_mod_min:
 Proof.
   intros.
   rewrite <- (N.mod_small y (2^N.size y)) at 1 by apply N.size_gt.
-  rewrite N_mod_mod_pow2_min.
+  rewrite N_mod_mod_pow2.
   symmetry. apply N_land_mod_pow2_move.
 Qed.
 
@@ -2311,6 +3139,54 @@ Proof.
   apply N.add_comm.
 Qed.
 
+Theorem popcount_ldiff_land:
+  forall m n, popcount (N.ldiff m n) + popcount (N.land m n) = popcount m.
+Proof.
+  apply N_bitwise_ind2. reflexivity. intros.
+  rewrite (popcount_div2' (N.ldiff _ _)), (popcount_div2' (N.land _ _)).
+  rewrite !N.div2_spec, N.shiftr_ldiff, N.shiftr_land, <- !N.div2_spec.
+  rewrite N.add_shuffle1, IH.
+  symmetry. etransitivity. apply popcount_div2'. apply f_equal.
+  rewrite <- !N.bit0_mod, N.ldiff_spec, N.land_spec.
+  do 2 destruct N.testbit; reflexivity.
+Qed.
+
+Corollary popcount_ldiff:
+  forall m n, popcount (N.ldiff m n) = popcount m - popcount (N.land m n).
+Proof.
+  intros. symmetry. eapply N.add_cancel_r. rewrite popcount_ldiff_land. apply N.sub_add.
+  etransitivity. apply popcount_land_bound. apply N.le_min_l.
+Qed.
+
+Theorem popcount_bitmap:
+  forall f m n (H: forall i (H: N.testbit m i = true),
+                   N.testbit n (f i) = true /\ (forall j, f i = f j -> i = j)),
+  popcount m <= popcount n.
+Proof.
+  intros f m. revert f. induction m using N.binary_ind; intros.
+    apply N.le_0_l.
+    rewrite popcount_double. apply (IHm (fun k => f (N.succ k))). intros. split.
+      apply H. rewrite N.double_spec, N.double_bits_succ. assumption.
+      intros. apply N.succ_inj. apply H.
+        rewrite N.double_spec, N.double_bits_succ. assumption.
+        assumption.
+    replace (popcount n) with (N.succ (popcount (N.clearbit n (f 0)))).
+      rewrite popcount_succ_double. apply -> N.succ_le_mono. apply (IHm (fun k => f (N.succ k))). split.
+        replace (N.testbit _ _) with (N.testbit n (f (N.succ i))).
+          apply H. rewrite N.succ_double_spec, N.testbit_odd_succ by apply N.le_0_l. assumption.
+          symmetry. apply N.clearbit_neq. intro H1. apply (N.neq_succ_0 i), H.
+            rewrite N.succ_double_spec, N.testbit_odd_succ by apply N.le_0_l. assumption.
+            symmetry. assumption.
+        intros. apply N.succ_inj. apply H.
+          rewrite N.succ_double_spec, N.testbit_odd_succ by apply N.le_0_l. assumption.
+          assumption.
+      rewrite N.clearbit_spec', <- N.add_1_r, <- (popcount_pow2 (f 0)). replace (2^_) with (N.land n (2^f 0)) at 2.
+        apply popcount_ldiff_land.
+        apply N.bits_inj. intro i. rewrite N.land_spec, N.pow2_bits_eqb. destruct (_ =? _) eqn:H1.
+          rewrite Bool.andb_true_r. apply N.eqb_eq in H1. subst i. rewrite N.succ_double_spec in H. apply (H 0 (N.testbit_odd_0 _)).
+          apply Bool.andb_false_r.
+Qed.
+
 Theorem popcount_parity_lxor:
   forall m n, N.even (popcount (N.lxor m n)) = N.even (popcount m + popcount n).
 Proof.
@@ -2350,7 +3226,7 @@ Proof.
   assert (H1: forall n i, xorb (N.testbit n i) (N.odd (popcount (n mod 2^i)))
                           = N.odd (popcount (n mod 2^(N.succ i)))).
     intros. rewrite (popcount_shiftr' (n mod 2^N.succ i) i), N.odd_add.
-    rewrite N_mod_mod_pow2_min, N.min_r by apply N.le_succ_diag_r.
+    rewrite N_mod_mod_pow2, N.min_r by apply N.le_succ_diag_r.
     rewrite testbit_xbits, <- xbits_equiv.
     rewrite (proj2 (popcount_bit (xbits _ _ _))).
       reflexivity.
@@ -2515,30 +3391,29 @@ Section StoreTheory.
        or setmem_succ theorems. *)
 
 (* Base cases for getmem/setmem *)
-Theorem getmem_0: forall e m a, getmem e N0 m a = N0.
+Theorem getmem_0: forall w e m a, getmem w e N0 m a = N0.
 Proof. reflexivity. Qed.
 
-Theorem setmem_0: forall e m a v, setmem e N0 m a v = m.
+Theorem setmem_0: forall w e m a v, setmem w e N0 m a v = m.
 Proof. reflexivity. Qed.
 
 (* Unfold getmem/setmem by one byte (for inductive cases of proofs). *)
 Theorem getmem_succ:
-  forall e len m a, getmem e (N.succ len) m a =
-    match e with BigE => N.lor (getmem e len m (N.succ a)) (N.shiftl (m a) (Mb*len))
-               | LittleE => N.lor (m a) (N.shiftl (getmem e len m (N.succ a)) Mb)
+  forall w e len m a, getmem w e (N.succ len) m a =
+    match e with BigE => N.lor (getmem w e len m (N.succ a)) (N.shiftl (m (a mod 2^w) mod 2^Mb) (Mb*len))
+               | LittleE => N.lor (m (a mod 2^w) mod 2^Mb) (N.shiftl (getmem w e len m (N.succ a)) Mb)
     end.
 Proof.
-  intros. unfold getmem.
-  rewrite (N.recursion_succ (@eq (addr->N))).
+  intros. unfold getmem. rewrite (N.recursion_succ (@eq (addr->N))).
   destruct e; reflexivity.
   reflexivity.
   intros x y H1 f g H2. rewrite H1,H2. reflexivity.
 Qed.
 
 Theorem setmem_succ:
-  forall e len m a v, setmem e (N.succ len) m a v =
-    match e with BigE => setmem e len (update m a (N.shiftr v (Mb*len))) (N.succ a) (v mod 2^(Mb*len))
-               | LittleE => setmem e len (update m a match len with N0 => v | Npos _ => v mod 2^Mb end) (N.succ a) (N.shiftr v Mb)
+  forall w e len m a v, setmem w e (N.succ len) m a v =
+    match e with BigE => setmem w e len (update m (a mod 2^w) ((N.shiftr v (Mb*len)) mod 2^Mb)) (N.succ a) (v mod 2^(Mb*len))
+               | LittleE => setmem w e len (update m (a mod 2^w) (v mod 2^Mb)) (N.succ a) (N.shiftr v Mb)
     end.
 Proof.
   intros. unfold setmem.
@@ -2549,26 +3424,84 @@ Proof.
 Qed.
 
 (* special cases for when getmem/setmem are applied to access a single memory byte *)
-Corollary getmem_1: forall e m a, getmem e 1 m a = m a.
+Corollary getmem_1: forall w e m a, getmem w e 1 m a = m (a mod 2^w) mod 2^Mb.
 Proof.
   intros. change 1 with (N.succ 0).
   rewrite getmem_succ, getmem_0, N.mul_0_r, N.shiftl_0_r, N.lor_0_l, N.lor_0_r.
   destruct e; reflexivity.
 Qed.
 
-Corollary setmem_1: forall e, setmem e 1 = update.
+Corollary setmem_1: forall w e m a v, setmem w e 1 m a v = update m (a mod 2^w) (v mod 2^Mb).
 Proof.
-  intros. extensionality m. extensionality a. extensionality v.
+  intros.
   change 1 with (N.succ 0).
   rewrite setmem_succ, !setmem_0, N.mul_0_r, N.shiftr_0_r.
   destruct e; reflexivity.
 Qed.
 
+Theorem getmem_bound:
+  forall w e len m a, getmem w e len m a < 2^(Mb*len).
+Proof.
+  induction len using N.peano_ind; intros.
+    rewrite getmem_0. apply N.neq_0_lt_0, N.pow_nonzero. discriminate 1.
+    rewrite getmem_succ. destruct e; apply lor_bound.
+      eapply N.lt_le_trans. apply IHlen. apply N.pow_le_mono_r.
+        discriminate 1.
+        apply N.mul_le_mono_l, N.le_succ_diag_r.
+      rewrite N.mul_succ_r, N.add_comm. apply shiftl_bound, N.mod_lt, N.pow_nonzero. discriminate 1.
+      eapply N.lt_le_trans.
+        apply N.mod_lt, N.pow_nonzero. discriminate 1.
+        apply N.pow_le_mono_r. discriminate 1. rewrite N.mul_succ_r, N.add_comm. apply N.le_add_r.
+      rewrite N.mul_succ_r. apply shiftl_bound, IHlen.
+Qed.
+
+Theorem getmem_mod_l:
+  forall w e len m a, getmem w e len m (a mod 2^w) = getmem w e len m a.
+Proof.
+  induction len using N.peano_ind; intros.
+    reflexivity.
+
+    rewrite !getmem_succ, <- IHlen, <- N.add_1_r.
+    rewrite Nadd_modpow2_l, Nmod_mod_pow2.
+    rewrite N.add_1_r, IHlen. reflexivity.
+Qed.
+
+Theorem setmem_mod_l:
+  forall w e len m a v,
+  setmem w e len m (a mod 2^w) v = setmem w e len m a v.
+Proof.
+  induction len using N.peano_ind; intros.
+    rewrite !setmem_0. reflexivity.
+
+    rewrite !setmem_succ. rewrite <- N.add_1_r. rewrite <- !(IHlen _ (_+1)).
+    rewrite Nadd_modpow2_l, Nmod_mod_pow2.
+    rewrite N.add_1_r, !IHlen. reflexivity.
+Qed.
+
+Theorem setmem_mod_r:
+  forall w e len m a v,
+  setmem w e len m a (v mod 2^(Mb*len)) = setmem w e len m a v.
+Proof.
+  induction len using N.peano_ind; intros.
+    rewrite !setmem_0. reflexivity.
+    rewrite !setmem_succ. destruct e.
+
+      rewrite <- xbits_equiv. unfold xbits.
+      rewrite <- N.mul_sub_distr_l, <- N.add_1_l, N.add_sub, N.mul_1_r at 1.
+      rewrite N.mod_mod by (apply N.pow_nonzero; discriminate 1).
+      rewrite N_mod_mod_pow2, N.min_r. reflexivity.
+      apply N.mul_le_mono_l, N.le_succ_diag_r.
+
+      rewrite N_mod_mod_pow2. rewrite N.min_r.
+        rewrite <- xbits_equiv. unfold xbits. rewrite <- N.mul_pred_r, N.pred_succ. apply IHlen.
+        rewrite N.mul_succ_r, N.add_comm. apply N.le_add_r.
+Qed.
+
 (* Break an (i+j)-byte number read/stored to/from memory into two numbers of size i and j. *)
 Theorem getmem_split:
-  forall e i j m a, getmem e (i+j) m a =
-    match e with BigE => N.lor (getmem e j m (a+i)) (N.shiftl (getmem e i m a) (Mb*j))
-               | LittleE => N.lor (getmem e i m a) (N.shiftl (getmem e j m (a+i)) (Mb*i))
+  forall w e i j m a, getmem w e (i+j) m a =
+    match e with BigE => N.lor (getmem w e j m (a+i)) (N.shiftl (getmem w e i m a) (Mb*j))
+               | LittleE => N.lor (getmem w e i m a) (N.shiftl (getmem w e j m (a+i)) (Mb*i))
     end.
 Proof.
   induction i using N.peano_ind; intros.
@@ -2579,74 +3512,112 @@ Proof.
 Qed.
 
 Theorem setmem_split:
-  forall e i j m a v, setmem e (i+j) m a v =
-    match e with BigE => setmem e j (setmem e i m a (N.shiftr v (Mb*j))) (a+i) match i with N0 => v | Npos _ => v mod 2^(Mb*j) end
-               | LittleE => setmem e j (setmem e i m a match j with N0 => v | Npos _ => v mod 2^(Mb*i) end) (a+i) (N.shiftr v (Mb*i))
+  forall w e i j m a v, setmem w e (i+j) m a v =
+    match e with BigE => setmem w e j (setmem w e i m a (N.shiftr v (Mb*j))) (a+i) v
+               | LittleE => setmem w e j (setmem w e i m a (v mod 2^(Mb*i))) (a+i) (N.shiftr v (Mb*i))
     end.
 Proof.
   induction i using N.peano_ind; intros.
-    rewrite N.add_0_l, N.add_0_r, N.mul_0_r, N.shiftr_0_r, setmem_0, setmem_0. destruct e; reflexivity.
-    rewrite <- N.add_succ_comm, !setmem_succ, N.add_succ_l. destruct e.
+    rewrite N.add_0_r, N.shiftr_0_r, !setmem_0. destruct e; reflexivity.
+    rewrite N.add_succ_comm. rewrite IHi. rewrite !(setmem_succ _ _ j). destruct e.
 
-      rewrite <- (N.succ_pos_spec i), N.shiftr_shiftr, <- N.mul_add_distr_l, (N.add_comm j), setmem_succ, IHi.
-      rewrite <- N.land_ones, <- N.land_ones, N.shiftr_land, (N.shiftr_div_pow2 (N.ones _)).
-      rewrite N.ones_div_pow2 by (rewrite N.mul_add_distr_l, N.add_comm; apply N.le_add_r).
-      rewrite N.mul_add_distr_l at 2. rewrite N.add_sub, N.land_ones, <- N.land_assoc, N.land_ones, N.land_ones.
-      rewrite N.ones_mod_pow2 by (rewrite N.mul_add_distr_l, N.add_comm; apply N.le_add_r).
-      rewrite N.land_ones. destruct i; reflexivity.
+      erewrite <- setmem_1, <- N.add_1_r, N.mul_add_distr_l, <- N.shiftr_shiftr, <- IHi.
+      rewrite N.add_1_r, N.add_succ_r. apply setmem_mod_r.
 
-      rewrite setmem_succ, IHi. destruct j.
-        rewrite N.add_0_r, setmem_0, setmem_0. reflexivity.
-        destruct i.
-          rewrite N.mul_0_r, N.add_0_l, setmem_0, setmem_0, N.mul_1_r, N.shiftr_0_r. reflexivity.
-          destruct (N.pos _ + N.pos _) eqn:H.
-            apply N.eq_add_0 in H. destruct H. discriminate H.
-
-            rewrite N.shiftr_shiftr.
-            rewrite <- (N.land_ones _ (_*N.succ _)), <- (N.land_ones (N.land _ _)), <- N.land_assoc.
-            rewrite N.shiftr_land, (N.shiftr_div_pow2 (N.ones _)).
-            rewrite N.land_ones.
-            rewrite N.ones_mod_pow2, N.ones_div_pow2 by (rewrite N.mul_succ_r, N.add_comm; apply N.le_add_r).
-            rewrite N.land_ones, N.land_ones, N.mul_succ_r, N.add_sub, (N.add_comm (_*_)).
-            reflexivity.
+      erewrite <- setmem_1, <- IHi, N.add_succ_r, N.add_1_r, setmem_mod_r.
+      rewrite N.shiftr_shiftr, N.mul_succ_r. reflexivity.
 Qed.
 
-(* setmem doesn't modify addresses below a, or address at or above a+w. *)
-Theorem setmem_frame_low:
-  forall e len m a v a' (LT: a' < a),
-  setmem e len m a v a' = m a'.
+Theorem getmem_mod:
+  forall w e n2 n1 m a,
+    (getmem w e n1 m a) mod 2^(Mb*n2) = getmem w e (N.min n1 n2) m
+      match e with BigE => a + (n1 - n2) | LittleE => a end.
+Proof.
+  intros. destruct (N.le_ge_cases n1 n2).
+
+    rewrite N.min_l, (proj2 (N.sub_0_le _ _) H), N.add_0_r by assumption.
+    replace (match e with BigE => _ | _ => _ end) with a by (destruct e; reflexivity).
+    apply N.mod_small. eapply N.lt_le_trans.
+      apply getmem_bound.
+      apply N.pow_le_mono_r. discriminate 1. apply N.mul_le_mono_l. assumption.
+
+    rewrite N.min_r, <- N.land_ones by assumption. destruct e;
+      [ rewrite <- (N.sub_add _ _ H) at 1
+      | rewrite <- (N.add_sub n1 n2), N.add_comm, <- N.add_sub_assoc by assumption ];
+      rewrite getmem_split, N.land_lor_distr_l, 2!N.land_ones, N.shiftl_mul_pow2;
+      rewrite N.mod_mul, N.lor_0_r by (apply N.pow_nonzero; discriminate);
+      apply N.mod_small, getmem_bound.
+Qed.
+
+Theorem shiftr_getmem:
+  forall w e n2 n1 m a,
+  N.shiftr (getmem w e n1 m a) (Mb*n2) = getmem w e (n1-n2) m
+    match e with BigE => a | LittleE => a + n2 end.
+Proof.
+  intros. destruct (N.le_ge_cases n1 n2).
+
+    rewrite (proj2 (N.sub_0_le _ _)), getmem_0 by assumption. eapply shiftr_low_pow2, N.lt_le_trans.
+      apply getmem_bound.
+      apply N.pow_le_mono_r. discriminate 1. apply N.mul_le_mono_l. assumption.
+
+    destruct e;
+    [ rewrite <- (N.sub_add _ _ H) at 1
+    | rewrite <- (N.add_sub n1 n2), N.add_comm, <- N.add_sub_assoc at 1 by assumption ];
+    rewrite getmem_split, N.shiftr_lor, N.shiftr_shiftl_r, N.sub_diag, N.shiftr_0_r by apply N.le_refl;
+    rewrite shiftr_low_pow2 by apply getmem_bound; reflexivity.
+Qed.
+
+(* setmem doesn't modify addresses outside the interval [a, a+len). *)
+Theorem setmem_frame:
+  forall w e len m a v a' (LE: len <= msub w a' a \/ 2^w <= a'),
+  setmem w e len m a v a' = m a'.
 Proof.
   induction len using N.peano_ind; intros.
     rewrite setmem_0. reflexivity.
-    rewrite setmem_succ. destruct e;
-      rewrite IHlen by apply N.lt_lt_succ_r, LT; apply update_frame, N.lt_neq, LT.
+    rewrite setmem_succ. destruct e; rewrite IHlen by (
+        (destruct LE as [LE|LE]; [left|right;assumption]);
+        apply N.succ_le_mono; rewrite <- !N.add_1_r, N.add_1_r; etransitivity; [|apply N.mod_le];
+        [ rewrite <- add_msub_swap; rewrite madd_add_simpl_r_r; exact LE
+        | apply N.pow_nonzero; discriminate 1 ] );
+      apply update_frame; (destruct LE as [LE|LE];
+      [ intro H; revert LE; rewrite H, msub_mod_l, msub_diag by reflexivity; apply N.nle_succ_0
+      | eapply not_eq_sym, N.lt_neq, N.lt_le_trans;
+        [ apply N.mod_lt, N.pow_nonzero; discriminate 1 | apply LE ] ] ).
 Qed.
 
-Theorem setmem_frame_high:
-  forall e len m a v a' (LE: a + len <= a'),
-  setmem e len m a v a' = m a'.
-Proof.
-  induction len using N.peano_ind; intros.
-    rewrite setmem_0. reflexivity.
-
-    assert (LT: a < a'). eapply N.lt_le_trans; [|exact LE]. apply N.lt_add_pos_r, N.lt_0_succ.
-    rewrite setmem_succ. destruct e; (rewrite IHlen;
-    [ apply update_frame, not_eq_sym, N.lt_neq, LT
-    | rewrite N.add_succ_l; apply N.le_succ_l; (eapply N.lt_le_trans; [|exact LE]); apply N.add_lt_mono_l, N.lt_succ_diag_r ]).
-Qed.
-
-(* getmem doesn't read addresses below a, or address at or above a+w. *)
-Theorem getmem_frame:
-  forall e len m1 m2 a (FR: forall a', (a <= a' < a + len) -> m1 a' = m2 a'),
-  getmem e len m1 a = getmem e len m2 a.
+(* getmem doesn't read addresses outside the interval [a, a+len). *)
+Theorem getmem_frame_mem:
+  forall w e len m1 m2 a
+    (FR: forall a', (msub w a' a < len) -> m1 a' = m2 a'),
+  getmem w e len m1 a = getmem w e len m2 a.
 Proof.
   intros. revert a FR. induction len using N.peano_ind; intros.
     reflexivity.
-    rewrite !getmem_succ. rewrite !IHlen. replace (m2 a) with (m1 a). reflexivity. 
-      apply FR. split. reflexivity. apply N.lt_add_pos_r, N.lt_0_succ.
-      intros. apply FR. split.
-        etransitivity. apply N.le_succ_diag_r. apply H.
-        rewrite <- N.add_succ_comm. apply H.
+    rewrite !getmem_succ. rewrite !IHlen. replace (m2 (a mod 2^w)) with (m1 (a mod 2^w)). reflexivity.
+      apply FR. rewrite msub_mod_l, msub_diag by reflexivity. apply N.lt_0_succ.
+      intros. apply FR. rewrite <- (madd_add_simpl_l_l w 1), <- add_msub_assoc, !N.add_1_l. eapply N.le_lt_trans.
+        apply N.mod_le, N.pow_nonzero. discriminate 1.
+        apply -> N.succ_lt_mono. apply H.
+Qed.
+
+Theorem getmem_frame:
+  forall w e1 e2 len1 len2 m a1 a2 v
+    (LE1: len1 <= msub w a2 a1 \/ len2 = 0) (LE2: len2 <= msub w a1 a2 \/ len1 = 0),
+  getmem w e1 len1 (setmem w e2 len2 m a2 v) a1 = getmem w e1 len1 m a1.
+Proof.
+  intros.
+  destruct LE1 as [LE1|LE1]; [| rewrite LE1, setmem_0; reflexivity ].
+  destruct LE2 as [LE2|LE2]; [| rewrite LE2, getmem_0; reflexivity ].
+  apply getmem_frame_mem. intros. apply setmem_frame. left.
+  etransitivity. exact LE2.
+  etransitivity. apply N.le_add_r.
+  erewrite <- (N.mod_small (_+_)), msub_mtele. reflexivity.
+  eapply N.lt_le_trans. apply N.add_lt_mono_l, H.
+  etransitivity. apply N.add_le_mono_l, LE1.
+  rewrite msub_inv. reflexivity.
+  intro H1. contradict H.
+  erewrite <- msub_mod_l, <- msub_mod_r, H1, msub_diag in LE1 by reflexivity.
+  apply N.le_0_r in LE1. rewrite LE1. apply N.nlt_0_r.
 Qed.
 
 (* getmem inverts setmem *)
@@ -2659,40 +3630,488 @@ Proof.
 Qed.
 
 Theorem getmem_setmem:
-  forall e len m a v,
-  getmem e len (setmem e len m a v) a = match len with N0 => N0 | Npos _ => v end.
+  forall w e len m a v (LE: len <= 2^w),
+  getmem w e len (setmem w e len m a v) a = v mod 2^(Mb*len).
 Proof.
+  intros until len. eenough (H:_). revert len w.
   induction len using N.peano_ind; intros.
-    apply getmem_0.
-    rewrite <- N.succ_pos_spec at 3. rewrite getmem_succ, setmem_succ. destruct e; rewrite IHlen; destruct len.
-      rewrite N.lor_0_l, N.mul_0_r, setmem_0, N.shiftl_0_r, N.shiftr_0_r. apply update_updated.
-      rewrite setmem_frame_low by apply N.lt_succ_diag_r. rewrite update_updated. apply recompose_bytes.
-      rewrite setmem_0, N.shiftl_0_l, N.lor_0_r. apply update_updated.
-      rewrite setmem_frame_low by apply N.lt_succ_diag_r. rewrite update_updated. apply recompose_bytes.
+    rewrite N.mul_0_r, N.mod_1_r. apply getmem_0.
+    rewrite setmem_succ, getmem_succ. destruct e;
+      rewrite IHlen by (etransitivity; [ apply N.le_succ_diag_r | exact LE ]);
+      rewrite setmem_frame, update_updated by (left; clear IHlen; revert len w a LE; exact H);
+      rewrite !N.mod_mod by (apply N.pow_nonzero; discriminate 1);
+      rewrite <- xbits_split_0; rewrite N.mul_succ_r.
+
+      apply xbits_0_i.
+
+      rewrite N.add_comm. apply xbits_0_i.
+
+  clear. intros.
+  rewrite <- N.add_1_r, msub_mod_l, msub_add_distr, msub_diag, msub_0_l by reflexivity.
+  apply N.succ_le_mono. etransitivity. apply LE.
+  destruct w as [|w]. reflexivity.
+  rewrite (N.mod_small 1) by (apply N.pow_gt_1; [ reflexivity | discriminate 1 ]).
+  rewrite N.mod_small.
+    rewrite N.sub_1_r, N.succ_pred. reflexivity. apply N.pow_nonzero. discriminate 1.
+    apply N.sub_lt; [|reflexivity].
+      change 1 with (N.succ 0). apply N.le_succ_l, Nlt_0_pow2.
 Qed.
 
-Corollary getmem_frame_low:
-  forall e1 e2 len1 len2 m a1 a2 v (LT: a1 + len1 <= a2),
-  getmem e1 len1 (setmem e2 len2 m a2 v) a1 = getmem e1 len1 m a1.
+Theorem setmem_byte_anylen:
+  forall w en len i m a v (ILE: i < len),
+  setmem w en len m a v ((a+i) mod 2^w) = N.shiftr v (Mb *
+    match en with BigE => msub w (N.pred len) i
+                | LittleE => i + N.pred(len-i)/2^w*2^w end) mod (2^Mb).
 Proof.
-  intros. apply getmem_frame. intros. apply setmem_frame_low. eapply N.lt_le_trans.
-    apply H.
-    apply LT.
+  intros.
+  set (r := N.succ (msub w (N.pred len) i)).
+  assert (H: len = i + N.pred(len-i)/2^w*2^w + r). subst r.
+    rewrite <- (N.sub_add i len) at 1 by apply N.lt_le_incl, ILE.
+    rewrite <- (N.add_comm i), <- N.add_assoc. apply N.add_cancel_l.
+    rewrite <- (N.succ_pred (len-i)) at 1 by apply N.sub_gt, ILE.
+    rewrite (N.div_mod (N.pred(len - i)) (2^w)) at 1 by (apply N.pow_nonzero; discriminate 1).
+    rewrite N.mul_comm, <- N.add_succ_r.
+    apply N.add_cancel_l. apply f_equal.
+    rewrite <- N.sub_1_r, <- N.sub_add_distr, N.add_comm, N.sub_add_distr, N.sub_1_r.
+    rewrite <- ofZ_toZ, msub_sbop, toZ_sub by apply N.lt_le_pred, ILE.
+    erewrite ofZ_canonicalZ; reflexivity.
+  rewrite <- (N.sub_add r len) at 1 by (rewrite H, N.add_comm; apply N.le_add_r).
+  rewrite <- (N.succ_pred r) at 2 by apply N.neq_succ_0.
+  eenough (Hdef:_). rewrite setmem_split, !setmem_succ.
+  rewrite <- Nadd_modpow2_r.
+  replace ((len-r) mod 2^w) with (i mod 2^w) by (symmetry;
+    rewrite H, N.add_sub; apply N.mod_add, N.pow_nonzero; discriminate 1).
+  rewrite Nadd_modpow2_r.
+  destruct en.
+
+  rewrite setmem_frame by exact Hdef.
+  rewrite update_updated.
+  subst r. rewrite N.pred_succ. reflexivity.
+
+  rewrite setmem_frame by exact Hdef.
+  rewrite update_updated.
+  rewrite H at 1. rewrite N.add_sub. reflexivity.
+
+  left.
+  rewrite msub_mod_l, <- N.add_succ_r, madd_add_simpl_l_l by reflexivity.
+  erewrite H, N.add_sub, <- N.add_succ_l, <- msub_mod_r by reflexivity.
+  rewrite N.mod_add by (apply N.pow_nonzero; discriminate 1).
+  rewrite msub_mod_r by reflexivity.
+  rewrite <- N.add_1_l, <- (N.add_0_l i), madd_add_simpl_r_r at 1.
+  subst r. rewrite N.pred_succ.
+  destruct w as [|w]. rewrite msub_0. reflexivity.
+  rewrite (msub_wrap _ 0 1);
+    rewrite N.mod_0_l by (apply N.pow_nonzero; discriminate 1);
+    rewrite N.mod_1_l by (apply (N.lt_le_trans 1 (2^1));
+    [ reflexivity | apply N.pow_le_mono_r; [|destruct w]; discriminate 1 ]).
+
+    rewrite N.add_0_r, N.sub_1_r. apply N.lt_le_pred, msub_lt.
+    reflexivity.
 Qed.
 
-Corollary getmem_frame_high:
-  forall e1 e2 len1 len2 m a1 a2 v (LT: a2 + len2 <= a1),
-  getmem e1 len1 (setmem e2 len2 m a2 v) a1 = getmem e1 len1 m a1.
+Corollary setmem_byte:
+  forall w en len i m a v (ILE: i < len) (LEN: len <= 2^w),
+  setmem w en len m a v ((a+i) mod 2^w) = N.shiftr v (Mb *
+    match en with BigE => N.pred len - i | LittleE => i end) mod (2^Mb).
 Proof.
-  intros. apply getmem_frame. intros. apply setmem_frame_high. etransitivity.
-    apply LT.
-    apply H.
+  intros. rewrite setmem_byte_anylen by assumption.
+  assert (H: N.pred len < 2^w).
+    apply N.succ_lt_mono, N.lt_succ_r. rewrite N.succ_pred. assumption.
+    eapply N.neq_0_lt_0, N.lt_lt_0, ILE.
+  destruct en.
+
+    rewrite msub_nowrap;
+    [ rewrite (N.mod_small (N.pred len)), (N.mod_small i) | rewrite !N.mod_small ];
+    try first [ reflexivity | exact H | eapply N.lt_le_trans; eassumption ].
+    apply N.lt_le_pred, ILE.
+
+    rewrite N.div_small, N.mul_0_l, N.add_0_r. reflexivity.
+    apply N.succ_lt_mono, N.lt_succ_r. rewrite N.succ_pred.
+      etransitivity. apply N.le_sub_l. apply LEN.
+      apply N.sub_gt, ILE.
 Qed.
 
-Lemma shiftr_low_pow2: forall a n, a < 2^n -> N.shiftr a n = 0.
+Theorem getmem_setmem_xbits:
+  forall w en len i j m a v (LE: j + len <= 2^w),
+  getmem w en len (setmem w en (i+len+j) m a v) (a+i) =
+  match en with BigE => xbits v (Mb*j) (Mb*(j+len)) | LittleE => xbits v (Mb*i) (Mb*(i+len)) end.
 Proof.
-  intros. destruct a. apply N.shiftr_0_l.
-  apply N.shiftr_eq_0. apply N.log2_lt_pow2. reflexivity. assumption.
+  intros.
+  assert (H1: len <= len mod 2^w \/ j = 0). destruct j as [|j].
+    right. reflexivity.
+    left. rewrite N.mod_small. reflexivity. eapply N.add_lt_mono_l, N.le_lt_trans.
+      apply LE.
+      rewrite N.add_comm. apply N.lt_add_pos_r. reflexivity.
+  assert (H2: j <= msub w 0 len \/ len = 0).
+    destruct len as [|len]. right. reflexivity.
+    destruct j as [|j]. left. apply N.le_0_l.
+    left. assert (H2: N.pos len < 2^w).
+      eapply N.lt_le_trans; [|exact LE]. apply N.lt_add_pos_l. reflexivity.
+    eapply N.add_le_mono_r. rewrite msub_inv, msub_0_r, N.mod_small. assumption.
+      assumption.
+      rewrite N.mod_0_l, N.mod_small. discriminate 1.
+        assumption.
+        apply N.pow_nonzero. discriminate 1.
+  rewrite !setmem_split. destruct en; (rewrite getmem_frame;
+  [ (rewrite getmem_setmem; [| etransitivity;
+     [ apply N.le_add_r | rewrite N.add_comm; exact LE ] ])
+  | rewrite madd_add_simpl_l_l, add_msub_l; assumption
+  | rewrite madd_add_simpl_l_l, msub_add_distr, msub_diag; assumption ] ).
+
+    unfold xbits. rewrite <- N.mul_sub_distr_l, N.add_comm, N.add_sub. reflexivity.
+
+    rewrite N.add_comm, N.mul_add_distr_l, <- xbits_equiv. unfold xbits.
+    rewrite N.add_sub, N_mod_mod_pow2, N.min_id. reflexivity.
+Qed.
+
+Definition overlap w a1 len1 a2 len2 :=
+  exists i j, i < len1 /\ j < len2 /\ (a1 + i) mod 2^w = (a2 + j) mod 2^w.
+
+Theorem overlap_reflexivity:
+  forall w a len1 len2, 0 < len1 -> 0 < len2 -> overlap w a len1 a len2.
+Proof.
+  intros. exists 0,0. repeat split; assumption.
+Qed.
+
+Theorem overlap_symmetry:
+  forall w a1 len1 a2 len2, overlap w a1 len1 a2 len2 -> overlap w a2 len2 a1 len1.
+Proof.
+  unfold overlap. intros. destruct H as [i [j [H1 [H2 H3]]]].
+  exists j,i. repeat split; [..|symmetry]; assumption.
+Qed.
+
+Corollary noverlap_symmetry:
+  forall w a1 len1 a2 len2, ~overlap w a1 len1 a2 len2 -> ~overlap w a2 len2 a1 len1.
+Proof.
+  intros. intro H1. apply H, overlap_symmetry, H1.
+Qed.
+
+Theorem overlap_mod_l:
+  forall w a1 len1 a2 len2,
+  overlap w (a1 mod 2^w) len1 a2 len2 <-> overlap w a1 len1 a2 len2.
+Proof.
+  split; intro; destruct H as [i [j [H1 [H2 H3]]]]; exists i,j; repeat split; try assumption.
+    rewrite <- N.add_mod_idemp_l. assumption. apply N.pow_nonzero. discriminate.
+    rewrite N.add_mod_idemp_l. assumption. apply N.pow_nonzero. discriminate.
+Qed.
+
+Corollary overlap_mod_r:
+  forall w a1 len1 a2 len2,
+  overlap w a1 len1 (a2 mod 2^w) len2 <-> overlap w a1 len1 a2 len2.
+Proof.
+  split; intro; apply overlap_symmetry, overlap_mod_l, overlap_symmetry, H.
+Qed.
+
+Theorem overlap_0_l:
+  forall w a1 a2 len2, ~overlap w a1 0 a2 len2.
+Proof.
+  intros. intro H. destruct H as [i [j [H1 [H2 H3]]]]. eapply N.nlt_0_r, H1.
+Qed.
+
+Theorem overlap_0_r:
+  forall w a1 len1 a2, ~overlap w a1 len1 a2 0.
+Proof.
+  intros. intro H. eapply overlap_0_l, overlap_symmetry, H.
+Qed.
+
+Theorem noverlap:
+  forall w a1 len1 a2 len2,
+    ~overlap w a1 len1 a2 len2 <->
+    (forall i j, i < len1 -> j < len2 -> (a1 + i) mod 2^w <> (a2 + j) mod 2^w).
+Proof.
+  split; intros; intro.
+    apply H. exists i,j. repeat split; assumption.
+    destruct H0 as [i [j [H1 [H2 H3]]]]. eapply H; eassumption.
+Qed.
+
+Theorem overlap_grow:
+  forall w a1 len1 a2 len2 a1' len1',
+    msub w a1 a1' + len1 <= len1' ->
+  overlap w a1 len1 a2 len2 -> overlap w a1' len1' a2 len2.
+Proof.
+  intros. destruct H0 as [i [j [H1 [H2 H3]]]].
+  exists (msub w a1 a1' + i),j. repeat split.
+    eapply N.lt_le_trans. apply N.add_lt_mono_l, H1. exact H.
+    assumption.
+    rewrite N.add_assoc, <- N.add_mod_idemp_l, add_msub_assoc, add_msub_l,
+      N.add_mod_idemp_l by (apply N.pow_nonzero; discriminate 1). exact H3.
+Qed.
+
+Corollary noverlap_shrink:
+  forall w a1 len1 a2 len2 a1' len1',
+    msub w a1' a1 + len1' <= len1 ->
+  ~overlap w a1 len1 a2 len2 -> ~overlap w a1' len1' a2 len2.
+Proof.
+  intros. intro H1. apply H0. revert H1. apply overlap_grow. assumption.
+Qed.
+
+Theorem overlap_shiftr:
+  forall w a1 len1 a2 len2 i,
+  overlap w (a1+i) len1 (a2+i) len2 <-> overlap w a1 len1 a2 len2.
+Proof.
+  split; intro H; destruct H as [i1 [j1 [H1 [H2 H3]]]];
+  exists i1,j1; repeat split; try assumption.
+
+    rewrite !(N.add_comm _ i), <- !N.add_assoc in H3.
+    apply (f_equal (fun x => msub w x i)) in H3.
+    rewrite !msub_mod_l, !add_msub_l in H3 by reflexivity.
+    assumption.
+
+    rewrite (N.add_comm a1), (N.add_comm a2), <- !N.add_assoc.
+    rewrite <- !(Nadd_modpow2_r _ (_+_)), H3. reflexivity.
+Qed.
+
+Corollary noverlap_shiftr:
+  forall w a1 len1 a2 len2 i,
+  ~overlap w (a1+i) len1 (a2+i) len2 <-> ~overlap w a1 len1 a2 len2.
+Proof.
+  split; intros H H1; apply H.
+    apply overlap_shiftr, H1.
+    apply -> overlap_shiftr. apply H1.
+Qed.
+
+Theorem overlap_shiftl:
+  forall w a1 len1 a2 len2 i,
+  overlap w (msub w a1 i) len1 (msub w a2 i) len2 <->
+  overlap w a1 len1 a2 len2.
+Proof.
+  split; intro H; destruct H as [i1 [j1 [H1 [H2 H3]]]];
+  exists i1,j1; repeat split; try assumption.
+
+  rewrite <- !add_msub_swap in H3.
+  apply (f_equal (fun x => (x+i) mod 2^w)) in H3.
+  rewrite !msub_add in H3.
+  assumption.
+
+  rewrite <- !add_msub_swap, <- !(msub_mod_l w w (_+_)), H3; reflexivity.
+Qed.
+
+Corollary noverlap_shiftl:
+  forall w a1 len1 a2 len2 i,
+  ~overlap w (msub w a1 i) len1 (msub w a2 i) len2 <->
+  ~overlap w a1 len1 a2 len2.
+Proof.
+  split; intros H H1; apply H.
+    apply overlap_shiftl, H1.
+    apply -> overlap_shiftl. apply H1.
+Qed.
+
+Theorem overlap_rev:
+  forall w a1 len1 a2 len2 i,
+  overlap w (msub w i (a1+len1)) len1 (msub w i (a2+len2)) len2 <->
+  overlap w a1 len1 a2 len2.
+Proof.
+  assert (H: forall w a1 len1 a2 len2 i, overlap w a1 len1 a2 len2 ->
+             overlap w (msub w i (a1+len1)) len1 (msub w i (a2+len2)) len2).
+   intros. destruct H as [i1 [j1 [H1 [H2 H3]]]].
+   exists (len1-N.succ i1), (len2-N.succ j1). repeat split.
+    apply N_sub_lt.
+      eapply N.neq_0_lt_0, N.le_lt_trans. apply N.le_0_l. apply H1.
+      apply N.neq_succ_0.
+    apply N_sub_lt.
+      eapply N.neq_0_lt_0, N.le_lt_trans. apply N.le_0_l. apply H2.
+      apply N.neq_succ_0.
+    rewrite <- !add_msub_swap, !msub_sbop, !toZ_add, !canonicalZ_sub.
+    rewrite !toZ_sub by (apply N.le_succ_l; assumption).
+    rewrite !(Z.add_comm _ (canonicalZ _ _)), <- !Z.add_sub_assoc, !canonicalZ_add_l.
+    rewrite <- !Z.add_sub_swap, !Z.sub_add_distr, !Zplus_minus, <- !Z.sub_add_distr.
+    rewrite <- !(canonicalZ_sub_r _ _ (_+_)), <- !toZ_add, <- !N.add_1_r, !N.add_assoc.
+    rewrite<- (toZ_mod_pow2 w w (_+1)), <- Nadd_modpow2_l, H3, Nadd_modpow2_l, toZ_mod_pow2;
+    reflexivity.
+
+  split; [|apply H]. intro H1.
+  apply H with (i:=0) in H1.
+  rewrite <- !(msub_mod_r w w 0 (_+_)), <- !add_msub_swap, !madd_add_simpl_r_r in H1 by reflexivity.
+  rewrite !msub_msub_distr, <- !add_msub_swap, !N.add_0_l in H1.
+  revert H1. apply overlap_shiftl.
+Qed.
+
+Corollary noverlap_rev:
+  forall w a1 len1 a2 len2 i,
+  ~overlap w (msub w i (a1+len1)) len1 (msub w i (a2+len2)) len2 <->
+  ~overlap w a1 len1 a2 len2.
+Proof.
+  split; intros H H1; apply H.
+    apply overlap_rev, H1.
+    apply -> overlap_rev. apply H1.
+Qed.
+
+Theorem sep_noverlap:
+  forall w a1 len1 a2 len2
+    (LE1: len1 <= msub w a2 a1 \/ len2 = 0) (LE2: len2 <= msub w a1 a2 \/ len1 = 0),
+  ~overlap w a1 len1 a2 len2.
+Proof.
+  intros.
+  destruct LE1 as [LE1|H]; [|subst len2; apply overlap_0_r].
+  destruct LE2 as [LE2|H]; [|subst len1; apply overlap_0_l].
+  intro H. revert LE2. apply N.nle_gt.
+  destruct H as [i [j [H1 [H2 H3]]]].
+  destruct (N.le_gt_cases (2^w) len2) as [H4|H4].
+    eapply N.lt_le_trans. apply msub_lt. exact H4.
+  eapply N.le_lt_trans; [|exact H2].
+  rewrite <- (N.mod_small j (2^w)) by (etransitivity; eassumption).
+  rewrite <- (add_msub_l w a2 j).
+  rewrite <- (msub_mod_l w w (a2+j)) by reflexivity.
+  rewrite <- H3.
+  rewrite msub_mod_l by reflexivity.
+  rewrite add_msub_swap. rewrite N.mod_small. apply N.le_add_r.
+  eapply N.lt_le_trans. apply N.add_lt_mono_l. exact H1.
+  etransitivity. apply N.add_le_mono_l. exact LE1.
+  destruct (N.eq_dec (a1 mod 2^w) (a2 mod 2^w)).
+    rewrite <- (msub_mod_l w w a1), <- (msub_mod_r w w _ a1), e, msub_mod_l, msub_mod_r,
+            msub_diag by reflexivity. apply N.le_0_l.
+    rewrite msub_inv by assumption. reflexivity.
+Qed.
+
+Theorem noverlap_sep:
+  forall w a1 len1 a2 len2
+    (NO: ~overlap w a1 len1 a2 len2),
+  len2 <= msub w a1 a2 \/ len1 = 0.
+Proof.
+  intros.
+  destruct len1 as [|len1]. right. reflexivity. left.
+  intro H. apply N.compare_gt_iff in H. apply NO.
+  exists 0,(msub w a1 a2). repeat split.
+    assumption.
+    rewrite add_msub, N.add_0_r. reflexivity.
+Qed.
+
+Theorem noverlap_sum:
+  forall w a1 len1 a2 len2
+    (SZ: len1 + msub w a2 (a1+len1) + len2 <= 2^w),
+  ~overlap w a1 len1 a2 len2.
+Proof.
+  intros.
+  destruct len2 as [|len2]. apply overlap_0_r.
+  assert (GAP: len1 + msub w a2 (a1+len1) < 2^w).
+    eapply (N.le_lt_trans _ (_+0)). apply N.le_add_r. eapply N.lt_le_trans; [|exact SZ].
+    apply N.add_lt_mono_l. reflexivity.
+  assert (LEN1: len1 < 2^w).
+    eapply N.le_lt_trans. apply N.le_add_r. exact GAP.
+  apply sep_noverlap.
+
+  left. apply N.le_ngt. intro H. revert SZ. apply N.nle_gt.
+  rewrite msub_add_distr, msub_wrap by
+    (rewrite msub_mod_pow2, N.min_id, (N.mod_small _ _ LEN1); apply H).
+  rewrite msub_mod_pow2, N.min_id, N.mod_small, (N.add_comm len1) by assumption.
+  rewrite N.sub_add by (etransitivity; [ apply N.lt_le_incl, LEN1 | apply N.le_add_r ]).
+  rewrite <- N.add_assoc. apply N.lt_add_pos_r. destruct msub in |- *; reflexivity.
+
+  rewrite msub_add_distr in GAP.
+  destruct (N.eq_dec (a1 mod 2^w) (a2 mod 2^w)). right.
+    rewrite <- (msub_mod_r w w a2), e, msub_mod_r, msub_diag in GAP by reflexivity.
+    rewrite <- (N.mod_small _ _ LEN1), <- (msub_0_r w len1) in GAP at 1.
+    destruct len1. reflexivity. contradict GAP. rewrite msub_inv. apply N.lt_irrefl.
+    rewrite (N.mod_small _ _ LEN1), N.mod_0_l by (apply N.pow_nonzero; discriminate 1).
+    discriminate 1.
+  left. eapply N.add_le_mono_r. rewrite (msub_inv _ _ _ n), N.add_comm.
+  etransitivity; [|apply SZ]. apply N.add_le_mono_r.
+  etransitivity; [|apply N.mod_le, (N.pow_nonzero 2 w); discriminate 1].
+  rewrite msub_add_distr, add_msub, msub_mod_pow2, N.min_id. reflexivity.
+Qed.
+
+Theorem overlap_start:
+  forall w a1 len1 a2 len2
+    (OL: overlap w a1 len1 a2 len2),
+  msub w a1 a2 < len2 \/ msub w a2 a1 < len1.
+Proof.
+  intros.
+  destruct (N.lt_ge_cases (msub w a1 a2) len2). left. exact H. right.
+  apply N.nle_gt. intro H1. revert OL. apply sep_noverlap; left; assumption.
+Qed.
+
+(*
+Theorem overlap_end:
+  forall w a1 len1 a2 len2
+    (OL: overlap w a1 len1 a2 len2),
+  msub w (a1+len1) a2 < len2 \/ msub w (a2+len2) a1 < len1.
+Proof.
+  intros.
+  apply overlap_rev with (i:=0) in OL.
+  apply overlap_start in OL.
+  rewrite !msub_msub_distr, !msub_0_r, !Nadd_modpow2_l in OL.
+  rewrite <- !add_msub_swap, !N.add_0_l in OL.
+  destruct (N.lt_ge_cases (msub w (a1+len1) a2) len2). left. exact H. right.
+  apply N.nle_gt. intro H1. revert OL.
+  eapply noverlap_rev. apply sep_noverlap.
+  intro H2.
+  rewrite add_msub_swap in H,H1.
+  apply sep_noverlap.
+    left. assumption.
+Qed.
+*)
+
+Theorem overlap_dec:
+  forall w a1 len1 a2 len2, {overlap w a1 len1 a2 len2}+{~overlap w a1 len1 a2 len2}.
+Proof.
+  intros.
+  pose (f := fix f len := match len with O => false | S m => orb (msub w (a2 + N.of_nat m) a1 <? len1) (f m) end).
+  enough (H: f (N.to_nat len2) = true <-> overlap w a1 len1 a2 len2).
+  destruct (f (N.to_nat len2)).
+    left. apply H. reflexivity.
+    right. intro H0. apply H in H0. discriminate.
+  rewrite <- (N2Nat.id len2) at 2. generalize (N.to_nat len2). clear len2. intro len2.
+  split; intro; induction len2.
+    discriminate.
+    simpl in H. apply Bool.orb_prop in H. destruct H.
+      exists (msub w (a2 + N.of_nat len2) a1), (N.of_nat len2). repeat split.
+        apply N.ltb_lt, H.
+        rewrite Nat2N.inj_succ. apply N.lt_succ_diag_r.
+        rewrite add_msub. reflexivity.
+      eapply IHlen2 in H. destruct H as [i [j [H1 [H2 H3]]]]. exists i,j. repeat split; try assumption.
+        etransitivity. eassumption. rewrite Nat2N.inj_succ. apply N.lt_succ_diag_r.
+    contradict H. apply overlap_0_r.
+    destruct H as [i [j [H1 [H2 H3]]]]. rewrite Nat2N.inj_succ in H2. apply N.lt_succ_r, N.le_lteq in H2. destruct H2.
+      simpl. rewrite IHlen2.
+        apply Bool.orb_true_r.
+        exists i,j. repeat split; assumption.
+      simpl. rewrite (proj2 (N.ltb_lt _ len1)). reflexivity.
+        erewrite <- H, <- msub_mod_l, <- H3, msub_mod_l, add_msub_l by reflexivity. eapply N.le_lt_trans.
+          apply N.mod_le, N.pow_nonzero. discriminate.
+          assumption.
+Qed.
+
+Theorem update_frame_noverlap:
+  forall mem w a1 len1 a2 len2 (v:N)
+    (NO: ~overlap w a1 len1 a2 len2) (LT1: 0 < len1) (LT2: 0 < len2),
+  mem[a1 mod 2^w := v] (a2 mod 2^w) = mem (a2 mod 2^w).
+Proof.
+  intros. apply update_frame. intro H. apply NO. symmetry in H.
+  exists 0,0. repeat split; rewrite ?N.add_0_r; assumption.
+Qed.
+
+Theorem update_frame_noverlap_index:
+  forall mem w a1 len1 a2 len2 i j (v:N)
+    (NO: ~overlap w a1 len1 a2 len2) (LT1: i < len1) (LT2: j < len2),
+  mem[(a1 + i) mod 2^w := v]((a2+j) mod 2^w) = mem((a2+j) mod 2^w).
+Proof.
+  intros. apply update_frame. intro H. apply NO. symmetry in H.
+  exists i,j. repeat split; assumption.
+Qed.
+
+Theorem getmem_noverlap:
+  forall w e1 e2 len1 len2 m a1 a2 v
+    (NO: ~overlap w a1 len1 a2 len2),
+  getmem w e1 len1 (setmem w e2 len2 m a2 v) a1 = getmem w e1 len1 m a1.
+Proof.
+  intros.
+  assert (NO2 := noverlap_symmetry _ _ _ _ _ NO).
+  apply noverlap_sep in NO,NO2.
+  apply getmem_frame; assumption.
+Qed.
+
+Theorem getmem_frame_noverlap_index:
+  forall w e1 e2 mem a1 blen1 a2 blen2 i j len1 len2 v
+    (NO: ~overlap w a1 blen1 a2 blen2) (LE1: i + len1 <= blen1) (LE2: j + len2 <= blen2),
+  getmem w e2 len2 (setmem w e1 len1 mem (a1+i) v) (a2+j) = getmem w e2 len2 mem (a2+j).
+Proof.
+  intros. apply getmem_noverlap. eapply noverlap_shrink.
+    rewrite add_msub_l. etransitivity; [|exact LE2].
+      apply N.add_le_mono_r, N.mod_le, N.pow_nonzero. discriminate 1.
+    apply noverlap_symmetry. eapply noverlap_shrink.
+      rewrite add_msub_l. etransitivity; [|exact LE1].
+        apply N.add_le_mono_r, N.mod_le, N.pow_nonzero. discriminate 1.
+      exact NO.
 Qed.
 
 End StoreTheory.
@@ -3021,7 +4440,7 @@ Inductive nextinv PS p h: bool -> exit -> store -> Prop :=
 Theorem prog_inv:
   forall h p a0 s0 n PS s' x'
          (XP: exec_prog h p a0 s0 n s' x')
-         (PRE: true_inv (PS p (Exit a0) s0))
+         (PRE: nextinv PS p h true (Exit a0) s0)
          (INV: forall a1 s1 n1
                       (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
                       (PRE: true_inv (PS p (Exit a1) s1)),
@@ -3032,7 +4451,7 @@ Proof.
   assert (NI: nextinv PS p h true x' s').
     pattern x', s', n. eapply prog_inv_reachable.
       exact XP.
-      apply NIHere. exact PRE.
+      exact PRE.
       intros. inversion PRE0; subst.
         eapply INV in TRU.
           inversion TRU; subst. eapply STEP. exact IL. exact XS.
@@ -3074,13 +4493,13 @@ Lemma nextinv_exn:
 Proof. intros. apply NIHere. exact POST. Qed.
 
 (* To prove a subroutine invariant, it suffices to prove that
-   (1) the invariant-set is satisfied on entry (precondition), and
+   (1) the first invariant reached is satisfied (precondition), and
    (2) starting at any invariant point in the subroutine always yields a trace
        that reaches another invariant point and satisfies its invariant. *)
 Theorem prove_invs:
   forall h a0 s0 PS Q p x s' n
     (XP0: exec_prog h p a0 s0 n s' x)
-    (PRE: true_inv (invs PS Q p (Exit a0) s0))
+    (PRE: nextinv (invs PS Q) p h true (Exit a0) s0)
     (CASES: forall a1 s1 n1
       (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
       (PRE: true_inv (if p s1 a1 then PS a1 s1 else None)),

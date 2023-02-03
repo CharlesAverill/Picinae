@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2022 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -116,8 +116,8 @@ Ltac PSimplifier ::= PSimpl_i386_v1_1.PSimplifier.
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
 Tactic Notation "i386_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
 Tactic Notation "i386_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
-Tactic Notation "i386_psimpl" "in" hyp(H) := psimpl_hyp H.
-Tactic Notation "i386_psimpl" := psimpl_goal.
+Tactic Notation "i386_psimpl" "in" hyp(H) := psimpl_all_hyp H.
+Tactic Notation "i386_psimpl" := psimpl_all_goal.
 
 (* To use a different simplifier version (e.g., v1_0) put the following atop
    your proof .v file:
@@ -238,13 +238,40 @@ Ltac simpl_memaccs H :=
     rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
   end.
 
+(* The user can ignore all assigned values to specified variables by
+   redefining x86_ignore.  Example:
+     Ltac x86_ignore v ::= constr:(match v with R_EAX => true | _ => false end).
+ *)
+Ltac x86_ignore v := constr:(false).
+Ltac x86_abstract_vars H :=
+  repeat match type of H with context [ update ?s ?v ?u ] =>
+    let b := ltac:(x86_ignore v) in
+    lazymatch eval cbv in b with true =>
+      lazymatch u with
+      | VaN ?n ?w =>
+          tryif is_var n then fail else
+          let tmp := fresh "n" in
+          pose (tmp := n);
+          change (update s v (VaN n w)) with (update s v (VaN tmp w)) in H;
+          clearbody tmp
+      | VaM ?m ?w =>
+          tryif is_var m then fail else
+          let tmp := fresh "m" in
+          pose (tmp := m);
+          change (update s v (VaM m w)) with (update s v (VaM tmp w)) in H;
+          clearbody tmp
+      end
+    | _ => fail
+    end
+  end.
+
 (* Values of IL temp variables are ignored by the x86 interpreter once the IL
    block that generated them completes.  We can therefore generalize them
    away at IL block boundaries to simplify the expression. *)
 Ltac generalize_temps H :=
   repeat match type of H with context [ update ?s (V_TEMP ?n) ?u ] =>
     tryif is_var u then fail else
-    lazymatch type of H with context [ Var (V_TEMP ?n) ] => fail | _ =>
+    lazymatch type of H with context [ Var (V_TEMP n) ] => fail | _ =>
       let tmp := fresh "tmp" in
       pose (tmp := u);
       change (update s (V_TEMP n) u) with (update s (V_TEMP n) tmp) in H;
@@ -257,7 +284,8 @@ Ltac generalize_temps H :=
    the resulting Coq expressions. *)
 Ltac x86_step_and_simplify XS :=
   step_stmt XS;
-  psimpl in XS;
+  x86_abstract_vars XS;
+  psimpl_vals_hyp XS;
   simpl_memaccs XS;
   destruct_memaccs XS;
   generalize_temps XS.
@@ -310,7 +338,7 @@ Ltac x86_invhere :=
   first [ eapply nextinv_here; [reflexivity|]
         | apply nextinv_exn
         | apply nextinv_ret; [ prove_prog_exits |] ];
-  psimpl.
+  psimpl_vals_goal.
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
@@ -361,20 +389,20 @@ Notation "Ⓓ u" := (VaN u 32) (at level 20). (* dword value *)
 Notation "Ⓠ u" := (VaN u 64) (at level 20). (* quad word value *)
 Notation "Ⓧ u" := (VaN u 128) (at level 20). (* xmm value *)
 Notation "Ⓨ u" := (VaN u 256) (at level 20). (* ymm value *)
-Notation "m Ⓑ[ a  ]" := (getmem LittleE 1 m a) (at level 10) : i386_scope. (* read byte from memory *)
-Notation "m Ⓦ[ a  ]" := (getmem LittleE 2 m a) (at level 10) : i386_scope. (* read word from memory *)
-Notation "m Ⓓ[ a  ]" := (getmem LittleE 4 m a) (at level 10) : i386_scope. (* read dword from memory *)
-Notation "m Ⓠ[ a  ]" := (getmem LittleE 8 m a) (at level 10) : i386_scope. (* read quad word from memory *)
-Notation "m Ⓧ[ a  ]" := (getmem LittleE 16 m a) (at level 10) : i386_scope. (* read xmm from memory *)
-Notation "m Ⓨ[ a  ]" := (getmem LittleE 32 m a) (at level 10) : i386_scope. (* read ymm from memory *)
-Notation "m [Ⓑ a := v  ]" := (setmem LittleE 1 m a v) (at level 50, left associativity) : i386_scope. (* write byte to memory *)
-Notation "m [Ⓦ a := v  ]" := (setmem LittleE 2 m a v) (at level 50, left associativity) : i386_scope. (* write word to memory *)
-Notation "m [Ⓓ a := v  ]" := (setmem LittleE 4 m a v) (at level 50, left associativity) : i386_scope. (* write dword to memory *)
-Notation "m [Ⓠ a := v  ]" := (setmem LittleE 8 m a v) (at level 50, left associativity) : i386_scope. (* write quad word to memory *)
-Notation "m [Ⓧ a := v  ]" := (setmem LittleE 16 m a v) (at level 50, left associativity) : i386_scope. (* write xmm to memory *)
-Notation "m [Ⓨ a := v  ]" := (setmem LittleE 32 m a v) (at level 50, left associativity) : i386_scope. (* write ymm to memory *)
+Notation "m Ⓑ[ a  ]" := (getmem 32 LittleE 1 m a) (at level 10) : i386_scope. (* read byte from memory *)
+Notation "m Ⓦ[ a  ]" := (getmem 32 LittleE 2 m a) (at level 10) : i386_scope. (* read word from memory *)
+Notation "m Ⓓ[ a  ]" := (getmem 32 LittleE 4 m a) (at level 10) : i386_scope. (* read dword from memory *)
+Notation "m Ⓠ[ a  ]" := (getmem 32 LittleE 8 m a) (at level 10) : i386_scope. (* read quad word from memory *)
+Notation "m Ⓧ[ a  ]" := (getmem 32 LittleE 16 m a) (at level 10) : i386_scope. (* read xmm from memory *)
+Notation "m Ⓨ[ a  ]" := (getmem 32 LittleE 32 m a) (at level 10) : i386_scope. (* read ymm from memory *)
+Notation "m [Ⓑ a := v  ]" := (setmem 32 LittleE 1 m a v) (at level 50, left associativity) : i386_scope. (* write byte to memory *)
+Notation "m [Ⓦ a := v  ]" := (setmem 32 LittleE 2 m a v) (at level 50, left associativity) : i386_scope. (* write word to memory *)
+Notation "m [Ⓓ a := v  ]" := (setmem 32 LittleE 4 m a v) (at level 50, left associativity) : i386_scope. (* write dword to memory *)
+Notation "m [Ⓠ a := v  ]" := (setmem 32 LittleE 8 m a v) (at level 50, left associativity) : i386_scope. (* write quad word to memory *)
+Notation "m [Ⓧ a := v  ]" := (setmem 32 LittleE 16 m a v) (at level 50, left associativity) : i386_scope. (* write xmm to memory *)
+Notation "m [Ⓨ a := v  ]" := (setmem 32 LittleE 32 m a v) (at level 50, left associativity) : i386_scope. (* write ymm to memory *)
 Notation "x ⊕ y" := ((x+y) mod 2^32) (at level 50, left associativity). (* modular addition *)
-Notation "x ⊖ y" := ((x-y) mod 2^32) (at level 50, left associativity). (* modular subtraction *)
+Notation "x ⊖ y" := (msub 32 x y) (at level 50, left associativity). (* modular subtraction *)
 Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* modular multiplication *)
 Notation "x << y" := (N.shiftl x y) (at level 40, left associativity). (* logical shift-left *)
 Notation "x >> y" := (N.shiftr x y) (at level 40, left associativity). (* logical shift-right *)
