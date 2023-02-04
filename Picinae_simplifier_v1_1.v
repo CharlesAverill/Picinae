@@ -1014,11 +1014,11 @@ Fixpoint simpl_modpow2_cancel w neg e2 e1 {struct e1} :=
   | _ => match e1 with
     | SIMP_Add e1a e1b =>
       if andb neg (sastN_eq e1b e2) then Some e1a else
-      option_map (fun e1a' => SIMP_Add e1a' e1b) (simpl_modpow2_cancel w neg e2 e1a)
+      option_map (fun e1a' => simpl_modpow2_add_atoms w e1a' e1b) (simpl_modpow2_cancel w neg e2 e1a)
     | SIMP_MSub w' e1a e1b =>
       if w' <? w then None else
       if andb (negb neg) (sastN_eq e1b e2) then Some e1a else
-      option_map (fun e1a' => SIMP_MSub w e1a' e1b) (simpl_modpow2_cancel w neg e2 e1a)
+      option_map (fun e1a' => simpl_modpow2_msub_atoms w e1a' e1b) (simpl_modpow2_cancel w neg e2 e1a)
     | _ => None
     end
   end.
@@ -1028,17 +1028,17 @@ Fixpoint simpl_modpow2_addmsub w e1 (minus:bool) e2 {struct e2} :=
   | SIMP_Add e2a e2b =>
     let e2a' := simpl_modpow2_addmsub w e1 minus e2a in
     match simpl_modpow2_cancel w minus e2b e2a' with Some e' => e' | None =>
-      (if minus then SIMP_MSub w else SIMP_Add) e2a' e2b
+      (if minus then simpl_modpow2_msub_atoms else simpl_modpow2_add_atoms) w e2a' e2b
     end
   | SIMP_MSub w' e2a e2b =>
     if w' <? w then (if minus then SIMP_MSub w else SIMP_Add) e1 e2 else
     let e2a' := simpl_modpow2_addmsub w e1 minus e2a in
     match simpl_modpow2_cancel w (negb minus) e2b e2a' with Some e' => e' | None =>
-      (if minus then SIMP_Add else SIMP_MSub w) e2a' e2b
+      (if minus then simpl_modpow2_add_atoms else simpl_modpow2_msub_atoms) w e2a' e2b
     end
   | _ =>
     match simpl_modpow2_cancel w minus e2 e1 with Some e' => e' | None =>
-      if minus then SIMP_MSub w e1 e2 else SIMP_Add e1 e2
+      (if minus then simpl_modpow2_msub_atoms else simpl_modpow2_add_atoms) w e1 e2
     end
   end.
 
@@ -1644,6 +1644,9 @@ Local Ltac is_NorPos_const n :=
   | _ => constr:(false)
   end.
 
+Local Ltac is_endianness_const e :=
+  lazymatch e with LittleE => constr:(true) | BigE => constr:(true) | _ => constr:(false) end.
+
 Local Ltac sastN_gen n :=
   let rec mvar_or_const m :=
     lazymatch m with
@@ -1673,7 +1676,14 @@ Local Ltac sastN_gen n :=
       let t0 := sastN_gen n0 in let t1 := sastN_gen n1 in let t2 := sastN_gen n2 in uconstr:(SIMP_IteNN t0 t1 t2)
   | (match ?b with true => ?n1 | false => ?n2 end) =>
       let t0 := sastB_gen b in let t1 := sastN_gen n1 in let t2 := sastN_gen n2 in uconstr:(SIMP_IteBN t0 t1 t2)
-  | getmem ?w ?en ?len ?m ?a => let t1 := sastM_gen m in let t2 := sastN_gen a in uconstr:(SIMP_GetMem w en len t1 t2)
+  | getmem ?w ?en ?len ?m ?a =>
+    let tw := is_NorPos_const w in lazymatch tw with false => uconstr:(SIMP_NVar N0 n SIMP_UBND N0 SIMP_UBND) | true =>
+      let te := is_endianness_const en in lazymatch te with false => uconstr:(SIMP_NVar N0 n SIMP_UBND N0 SIMP_UBND) | true =>
+        let tlen := is_NorPos_const len in lazymatch tlen with false => uconstr:(SIMP_NVar N0 n SIMP_UBND N0 SIMP_UBND) | true =>
+          let t1 := sastM_gen m in let t2 := sastN_gen a in uconstr:(SIMP_GetMem w en len t1 t2)
+        end
+      end
+    end
   | popcount ?n1 => let t := sastN_gen n1 in uconstr:(SIMP_Popcount t)
   | N.lnot ((N.lxor (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr ?n1 4) ?n1) 2)
                                       (N.lxor (N.shiftr ?n1 4) ?n1)) 1)
@@ -1701,8 +1711,15 @@ with sastB_gen b :=
   end
 with sastM_gen m :=
   lazymatch m with
-  | setmem ?w ?en ?len ?m ?a ?n => let t1 := sastM_gen m in let t2 := sastN_gen a in let t3 := sastN_gen n in
-                                   uconstr:(SIMP_SetMem w en len t1 t2 t3)
+  | setmem ?w ?en ?len ?m' ?a ?n =>
+    let tw := is_NorPos_const w in lazymatch tw with false => uconstr:(SIMP_MVar N0 m None m None) | true =>
+      let te := is_endianness_const en in lazymatch te with false => uconstr:(SIMP_MVar N0 m None m None) | true =>
+        let tlen := is_NorPos_const len in lazymatch tlen with false => uconstr:(SIMP_MVar N0 m None m None) | true =>
+          let t1 := sastM_gen m' in let t2 := sastN_gen a in let t3 := sastN_gen n in
+          uconstr:(SIMP_SetMem w en len t1 t2 t3)
+        end
+      end
+    end
   | (match ?n with N0 => ?m2 | N.pos _ => ?m1 end) =>
       let t0 := sastN_gen n in let t1 := sastM_gen m1 in let t2 := sastM_gen m2 in uconstr:(SIMP_IteNM t0 t1 t2)
   | (match ?b with true => ?m1 | false => ?m2 end) =>
@@ -1724,7 +1741,7 @@ Section CheckFrontEnd.
   | ?t => fail "cannot parse type" t
   end.
 
-  Goal forall (n1 n2 n3 n4:N) (b1 b2 b3:bool) (en:endianness) (m1 m2:addr->N), True.
+  Goal forall (n1 n2 n3:N) (b1 b2 b3:bool) (en:endianness) (m1 m2:addr->N), True.
   Proof.
     intros.
 
@@ -1744,7 +1761,10 @@ Section CheckFrontEnd.
     check (N.pow 2 n2).
     check (if n1 then n2 else n3).
     check (if b1 then n1 else n2).
-    check (getmem n1 en n2 m1 n3).
+    check (getmem n1 BigE 4 m1 n2).  (* non-constant width *)
+    check (getmem 32 en 4 m1 n2).    (* non-constant endianness *)
+    check (getmem 32 BigE n1 m1 n2). (* non-constant length *)
+    check (getmem 32 BigE 4 m1 2).
     check (popcount n1).
     check (parity8 n1).
     check (N.lnot ((N.lxor (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr n1 4) n1) 2)
@@ -1764,7 +1784,10 @@ Section CheckFrontEnd.
 
     (* memory SAST checks *)
     check (m1).
-    check (setmem n1 en n2 m1 n3 n4).
+    check (setmem n1 BigE 4 m1 n2 n3).  (* non-constant width *)
+    check (setmem 32 en 4 m1 n2 n3).    (* non-constant endianness *)
+    check (setmem 32 BigE n1 m1 n2 n3). (* non-constant length *)
+    check (setmem 32 BigE 4 m1 n2 n3).
     check (if n1 then m1 else m2).
     check (if b1 then m1 else m2).
 
@@ -1882,9 +1905,10 @@ Local Ltac psimp_verify_frontend :=
         simpl_exit simpl_MemAcc simpl_ifval simpl_ifbool parity8 _psiN _psiB _psiM ];
   lazymatch goal with
   | |- ?t = ?t => exact_no_check (eq_refl t)
-  | |- ?t1 = ?t2 => (* DEBUG *)
-    idtac "***** frontend verification needing optimization *****";
-    idtac "T1:" t1; idtac "T2:" t2;
+  | |- ?t1 = ?t2 =>
+    try (is_ground (t1=t2); (* DEBUG *)
+         idtac "***** frontend verification needing optimization *****";
+         idtac "T1:" t1; idtac "T2:" t2);
     reflexivity
   end.
 
@@ -3118,7 +3142,7 @@ Proof with try (apply N.pow_nonzero; discriminate 1).
           inversion H. reflexivity.
 
           specialize (IH1 neg e2). destruct simpl_modpow2_cancel; [|discriminate H].
-          inversion H. simpl.
+          inversion H. rewrite simpl_modpow2_add_atoms_sound. simpl.
           rewrite <- N.add_mod_idemp_l, (IH1 _ (eq_refl _)), N.add_mod_idemp_l...
           destruct neg.
             rewrite add_msub_swap, N.mod_mod... reflexivity.
@@ -3132,7 +3156,7 @@ Proof with try (apply N.pow_nonzero; discriminate 1).
           inversion H. reflexivity.
 
           specialize (IH1 neg e2). destruct simpl_modpow2_cancel; [|discriminate H].
-          inversion H. simpl.
+          inversion H. rewrite simpl_modpow2_msub_atoms_sound. simpl.
           erewrite <- msub_mod_l, (IH1 _ (eq_refl _)), msub_mod_l by reflexivity.
           destruct neg.
             rewrite msub_comm. rewrite <- (N.min_r _ _ W) at 2. rewrite <- msub_mod_pow2, msub_mod_l; reflexivity.
@@ -3148,19 +3172,19 @@ Proof.
   intros. revert e1 m.
   assert (Hdef: forall e1 e2 m,
       eval_sastN mvt match simpl_modpow2_cancel w m e2 e1 with Some e' => e' | None =>
-        if m then SIMP_MSub w e1 e2 else SIMP_Add e1 e2 end mod 2^w =
+        (if m then simpl_modpow2_msub_atoms else simpl_modpow2_add_atoms) w e1 e2 end mod 2^w =
       eval_sastN mvt ((if m then SIMP_MSub w else SIMP_Add) e1 e2) mod 2 ^ w).
     intros. destruct simpl_modpow2_cancel eqn:C.
       apply (simpl_modpow2_cancel_sound mvt) in C. rewrite C. destruct m; reflexivity.
-      destruct m; simpl. reflexivity. rewrite N.add_comm. reflexivity.
+      destruct m. apply simpl_modpow2_msub_atoms_sound. apply simpl_modpow2_add_atoms_sound.
   assert (H1: forall (m:bool) x y, ((if m then msub w else N.add) x y) mod 2^w =
                ((if m then msub w else N.add) (x mod 2^w) (y mod 2^w)) mod 2^w).
     intros. destruct m.
       rewrite msub_mod_l, msub_mod_r; reflexivity.
       rewrite N.add_mod by (apply N.pow_nonzero; discriminate 1). reflexivity.
-  assert (H2: forall (m:bool) x y, eval_sastN mvt ((if m then SIMP_MSub w else SIMP_Add) x y) =
-                (if m then msub w else N.add) (eval_sastN mvt x) (eval_sastN mvt y)).
-    intros. destruct m; reflexivity.
+  assert (H2: forall (m:bool) x y, eval_sastN mvt ((if m then simpl_modpow2_msub_atoms else simpl_modpow2_add_atoms) w x y) mod 2^w =
+                (if m then msub w else N.add) (eval_sastN mvt x) (eval_sastN mvt y) mod 2^w).
+    intros. destruct m. apply simpl_modpow2_msub_atoms_sound. apply simpl_modpow2_add_atoms_sound.
   induction e2; intros; try solve [ apply Hdef ].
 
   (* SIMP_Add *)
@@ -3168,23 +3192,27 @@ Proof.
     eapply (simpl_modpow2_cancel_sound mvt) in C1. rewrite C1, H1, IHe2_1, <- H1. destruct m; simpl.
       rewrite msub_add_distr. reflexivity.
       rewrite N.add_assoc. reflexivity.
-    rewrite !H2, H1, IHe2_1, <- H1. destruct m; simpl.
+    rewrite H2, H1, IHe2_1, <- H1. destruct m; simpl.
       rewrite msub_add_distr. reflexivity.
       rewrite N.add_assoc. reflexivity.
 
   (* SIMP_MSub *)
   simpl. destruct (_ <? _) eqn:W. reflexivity. apply N.ltb_ge in W.
-  rewrite H2, H1. simpl. rewrite msub_mod_pow2.
+  (* rewrite H2, H1. simpl. rewrite msub_mod_pow2.
   replace (N.min w0 w) with (N.min w w) by (rewrite (N.min_r _ _ W); apply N.min_id).
-  rewrite <- msub_mod_pow2, <- H1 by reflexivity.
+  rewrite <- msub_mod_pow2, <- H1 by reflexivity. *)
   destruct simpl_modpow2_cancel eqn:C1.
     eapply simpl_modpow2_cancel_sound in C1. rewrite C1, H1, IHe2_1, <- H1. destruct m; simpl.
-      rewrite <- msub_msub_distr, msub_mod_pow2, N.min_id. reflexivity.
-      rewrite <- add_msub_assoc, N_mod_mod_pow, N.min_id by discriminate 1. reflexivity.
-    replace (if m then SIMP_Add else _) with (if negb m then SIMP_MSub w else SIMP_Add).
+      rewrite <- msub_msub_distr, msub_mod_pow2, N.min_id, <- (msub_mod_r w w _ (msub w0 _ _)),
+              msub_mod_pow2, (N.min_r _ _ W); reflexivity.
+      rewrite <- add_msub_assoc, N_mod_mod_pow, N.min_id by discriminate 1.
+        rewrite <- (Nadd_modpow2_r _ (msub w0 _ _)), msub_mod_pow2, (N.min_r _ _ W). reflexivity.
+    replace (if m then _ else _) with (if negb m then simpl_modpow2_msub_atoms else simpl_modpow2_add_atoms).
       rewrite H2, H1, IHe2_1, <- H1. destruct m; simpl.
-        rewrite msub_msub_distr, N_mod_mod_pow, N.min_id by discriminate 1. reflexivity.
-        rewrite add_msub_assoc, msub_mod_pow2, N.min_id. reflexivity.
+        rewrite <- (msub_mod_r w w _ (msub w0 _ _)), (msub_mod_pow2 w0 w), (N.min_r _ _ W) by reflexivity.
+          rewrite msub_msub_distr, N_mod_mod_pow, N.min_id by discriminate 1. reflexivity.
+        rewrite <- Nadd_modpow2_r, (msub_mod_pow2 w0 w), (N.min_r _ _ W) by reflexivity.
+          rewrite add_msub_assoc, msub_mod_pow2, N.min_id. reflexivity.
       destruct m; reflexivity.
 Qed.
 

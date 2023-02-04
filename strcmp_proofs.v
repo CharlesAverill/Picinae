@@ -1,6 +1,6 @@
 (* Example proofs using Picinae for Intel x86 Architecture
 
-   Copyright (c) 2022 Kevin W. Hamlen
+   Copyright (c) 2023 Kevin W. Hamlen
    Computer Science Department
    The University of Texas at Dallas
 
@@ -157,14 +157,14 @@ Qed.
 
 (* Define string equality: *)
 Definition streq (m:addr->N) (p1 p2:addr) (k:N) :=
-  ∀ i, i < k -> m Ⓑ[p1⊕i] = m Ⓑ[p2⊕i] /\ 0 < m Ⓑ[p1⊕i].
+  ∀ i, i < k -> m Ⓑ[p1+i] = m Ⓑ[p2+i] /\ 0 < m Ⓑ[p1+i].
 
 (* The invariant-set for this property makes no assumptions at program-start
    (address 0), and puts a loop-invariant at address 8. *)
 Definition strcmp_invs (m:addr->N) (esp:N) (a:addr) (s:store) :=
   match a with
-  |  8 => Some (∃ k, s R_ECX = Ⓓ(m Ⓓ[4⊕esp] ⊕ k) /\ s R_EDX = Ⓓ(m Ⓓ[8⊕esp] ⊕ k) /\
-                streq m (m Ⓓ[4⊕esp]) (m Ⓓ[8⊕esp]) k)
+  |  8 => Some (∃ k, s R_ECX = Ⓓ(m Ⓓ[4+esp] ⊕ k) /\ s R_EDX = Ⓓ(m Ⓓ[8+esp] ⊕ k) /\
+                streq m (m Ⓓ[4+esp]) (m Ⓓ[8+esp]) k)
   | _ => None
   end.
 
@@ -174,22 +174,13 @@ Definition strcmp_invs (m:addr->N) (esp:N) (a:addr) (s:store) :=
    zero if the kth bytes are both nil. *)
 Definition strcmp_post (m:addr->N) (esp:N) (_:exit) (s:store) :=
   ∃ n k, s R_EAX = Ⓓn /\
-         streq m (m Ⓓ[4⊕esp]) (m Ⓓ[8⊕esp]) k /\
-         (n=0 -> m Ⓑ[m Ⓓ[4⊕esp] ⊕ k] = 0) /\
-         (m Ⓑ[m Ⓓ[4⊕esp] ⊕ k] ?= m Ⓑ[m Ⓓ[8⊕esp] ⊕ k]) = (toZ 32 n ?= Z0)%Z.
+         streq m (m Ⓓ[4+esp]) (m Ⓓ[8+esp]) k /\
+         (n=0 -> m Ⓑ[m Ⓓ[4+esp] + k] = 0) /\
+         (m Ⓑ[m Ⓓ[4+esp] + k] ?= m Ⓑ[m Ⓓ[8+esp] + k]) = (toZ 32 n ?= Z0)%Z.
 
 (* The invariant-set and post-conditions are combined as usual: *)
 Definition strcmp_invset (mem:addr->N) (esp:N) :=
   invs (strcmp_invs mem esp) (strcmp_post mem esp).
-
-Lemma lshift_lor_byte:
-  forall n1 n2 w, ((n1 << w) .| n2) mod 2^w = n2 mod 2^w.
-Proof.
-  intros.
-  rewrite <- (N.land_ones _ w), N.land_lor_distr_l, !(N.land_ones _ w).
-  rewrite N.shiftl_mul_pow2, N.mod_mul by (apply N.pow_nonzero; discriminate).
-  apply N.lor_0_l.
-Qed.
 
 (* Our partial correctness theorem makes the following assumptions:
    (MDL0) Assume that on entry the processor is in a valid state.
@@ -215,9 +206,16 @@ Proof.
      (for profiling and to give visual cues that something is happening...). *)
   Local Ltac step := time x86_step.
 
+  (* Optional: The following proof ignores all flag values except CF and ZF, so
+     we can make evaluation faster and shorter by telling Picinae to ignore the
+     other flags (i.e., abstract their values away). *)
+  Ltac x86_ignore v ::= constr:(match v with
+    R_AF | R_DF | R_OF | R_PF | R_SF => true
+  | _ => false end).
+
   (* Address 0 *)
   step. step. exists 0. psimpl. split.
-    rewrite N.add_comm. reflexivity. split. rewrite N.add_comm. reflexivity.
+    reflexivity. split. reflexivity.
     intros i LT. destruct i; discriminate.
 
   (* Before splitting into cases, translate each hypothesis about the
@@ -234,13 +232,6 @@ Proof.
 
   (* Break the proof into cases, one for each invariant-point. *)
   destruct_inv 32 PRE.
-
-  (* Optional: The following proof ignores all flag values except CF and ZF, so
-     we can make evaluation faster and shorter by telling Picinae to ignore the
-     other flags (i.e., abstract their values away). *)
-  Ltac x86_ignore v ::= constr:(match v with
-    R_AF | R_DF | R_OF | R_PF | R_SF => true
-  | _ => false end).
 
   (* Address 8 *)
   destruct PRE as [k [ECX [EDX SEQ]]].
