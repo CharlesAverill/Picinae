@@ -971,20 +971,21 @@ Definition simpl_mod_core mvt e1 e2 :=
 Definition simpl_modpow2_add_atoms w e1 e2 :=
   match e1 with
   | SIMP_Const n1 =>
-    match n1 with 0 => e2 | _ =>
+    match n1 mod (N.shiftl 1 w) with 0 => e2 | _ =>
       match e2 with SIMP_Const n2 => SIMP_Const ((n1+n2) mod (N.shiftl 1 w)) | _ =>
         SIMP_Add e1 e2
       end
     end
-  | _ => match e2 with SIMP_Const n2 => match n2 with 0 => e1 | _ => SIMP_Add e2 e1 end
-                     | _ => SIMP_Add e1 e2
+  | _ => match e2 with SIMP_Const n2 =>
+           match n2 mod (N.shiftl 1 w) with 0 => e1 | _ => SIMP_Add e2 e1 end
+         | _ => SIMP_Add e1 e2
          end
   end.
 
 Definition simpl_modpow2_msub_atoms w e1 e2 :=
   match e2 with
   | SIMP_Const n2 =>
-    match n2 with 0 => e1 | _ =>
+    match n2 mod (N.shiftl 1 w) with 0 => e1 | _ =>
       match e1 with SIMP_Const n1 => SIMP_Const (msub w n1 n2) | _ => SIMP_MSub w e1 e2 end
     end
   | _ => SIMP_MSub w e1 e2
@@ -1005,7 +1006,7 @@ Fixpoint simpl_modpow2_add_const' w z e :=
   end.
 
 Definition simpl_modpow2_add_const w z e :=
-  match z with Z0 => Some e | _ => simpl_modpow2_add_const' w z e end.
+  match Z.modulo z (Z.of_N (N.shiftl 1 w)) with Z0 => Some e | _ => simpl_modpow2_add_const' w z e end.
 
 Fixpoint simpl_modpow2_cancel w neg e2 e1 {struct e1} :=
   if andb neg (sastN_eq e1 e2) then Some (SIMP_Const 0) else
@@ -2202,7 +2203,7 @@ Proof.
   [ apply N.le_0_l
   | etransitivity;
     [ apply N.div_le_mono; [ apply N.pow_nonzero; discriminate | apply IHe1 ]
-    | apply N.div_le_compat_l; split; [ apply Nlt_0_pow2 | apply N.pow_le_mono_r; [ discriminate | apply IHe2 ] ] ] ].
+    | apply N.div_le_compat_l; split; [ apply mp2_gt_0 | apply N.pow_le_mono_r; [ discriminate | apply IHe2 ] ] ] ].
 
   (* ShiftL *) split.
   rewrite !N.shiftl_mul_pow2. apply N.mul_le_mono.
@@ -3036,8 +3037,9 @@ Theorem simpl_modpow2_add_atoms_sound:
   eval_sastN mvt (simpl_modpow2_add_atoms w e1 e2) mod 2^w = eval_sastN mvt (SIMP_Add e1 e2) mod 2^w.
 Proof.
   intros. unfold simpl_modpow2_add_atoms. destruct_matches_def SIMP_NVar; try reflexivity.
-    cbn [eval_sastN]. rewrite N.shiftl_1_l. apply N.mod_mod, N.pow_nonzero. discriminate 1.
-    cbn [eval_sastN]. rewrite N.add_0_r. reflexivity.
+    cbn [eval_sastN]. rewrite <- mp2_add_l, <- N.shiftl_1_l, Heqm0, N.shiftl_1_l. reflexivity.
+    cbn [eval_sastN]. rewrite N.shiftl_1_l, N.mod_mod. reflexivity. apply N.pow_nonzero. discriminate 1.
+    cbn [eval_sastN]. rewrite N.shiftl_1_l in Heqm0. rewrite <- mp2_add_r, Heqm0, N.add_0_r. reflexivity.
     cbn [eval_sastN]. rewrite N.add_comm. reflexivity.
 Qed.
 
@@ -3046,7 +3048,8 @@ Theorem simpl_modpow2_msub_atoms_sound:
   eval_sastN mvt (simpl_modpow2_msub_atoms w e1 e2) mod 2^w = eval_sastN mvt (SIMP_MSub w e1 e2) mod 2^w.
 Proof.
   intros. unfold simpl_modpow2_msub_atoms. destruct_matches_def SIMP_NVar; try reflexivity.
-  cbn [eval_sastN]. rewrite msub_0_r. symmetry. apply N.mod_mod, N.pow_nonzero. discriminate 1.
+  cbn [eval_sastN]. rewrite N.shiftl_1_l in Heqm0. erewrite <- msub_mod_r, Heqm0, msub_0_r by reflexivity.
+    symmetry. apply N.mod_mod, N.pow_nonzero. discriminate 1.
 Qed.
 
 Theorem simpl_modpow2_add_const'_sound:
@@ -3061,15 +3064,15 @@ Proof.
 
     simpl in H. specialize (IHe1 z). destruct simpl_modpow2_add_const' as [e1'|].
       inversion H. rewrite simpl_modpow2_add_atoms_sound. simpl.
-        rewrite <- Nadd_modpow2_l, (IHe1 _ (eq_refl _)), Nadd_modpow2_l,
+        rewrite <- mp2_add_l, (IHe1 _ (eq_refl _)), mp2_add_l,
                 <- N.add_assoc, (N.add_comm (ofZ _ _)), N.add_assoc. reflexivity.
       specialize (IHe2 z). destruct simpl_modpow2_add_const' as [e2'|].
         inversion H. rewrite simpl_modpow2_add_atoms_sound. simpl.
-          rewrite <- Nadd_modpow2_r, (IHe2 _ (eq_refl _)), Nadd_modpow2_r, N.add_assoc. reflexivity.
+          rewrite <- mp2_add_r, (IHe2 _ (eq_refl _)), mp2_add_r, N.add_assoc. reflexivity.
         discriminate H.
 
     simpl in H. destruct (_ <? _) eqn:H1. discriminate H. apply N.ltb_ge in H1.
-    simpl. rewrite <- Nadd_modpow2_l, msub_mod_pow2, N.min_r by exact H1.
+    simpl. rewrite <- mp2_add_l, msub_mod_pow2, N.min_r by exact H1.
     specialize (IHe1 z). destruct simpl_modpow2_add_const' as [e1'|].
       inversion H. rewrite simpl_modpow2_msub_atoms_sound. simpl.
         erewrite <- msub_mod_l, (IHe1 _ (eq_refl _)), msub_mod_l, add_msub_swap by reflexivity.
@@ -3087,10 +3090,10 @@ Corollary simpl_modpow2_add_const_sound:
   forall mvt w z e e', simpl_modpow2_add_const w z e = Some e' ->
   (eval_sastN mvt e') mod 2^w = (eval_sastN mvt e + ofZ w z) mod 2^w.
 Proof.
-  intros. destruct z.
-    inversion H. rewrite N.add_0_r. reflexivity.
-    apply simpl_modpow2_add_const'_sound, H.
-    apply simpl_modpow2_add_const'_sound, H.
+  unfold simpl_modpow2_add_const. intros.
+  destruct (z mod _)%Z eqn:H'; [|apply simpl_modpow2_add_const'_sound, H..].
+  rewrite N.shiftl_1_l, N2Z.inj_pow in H'. change (Z.of_N 2) with 2%Z in H'.
+  inversion H. erewrite <- ofZ_mod_pow2, H', ofZ_0_r, N.add_0_r; reflexivity.
 Qed.
 
 Theorem simpl_modpow2_cancel_sound:
@@ -3206,12 +3209,12 @@ Proof.
       rewrite <- msub_msub_distr, msub_mod_pow2, N.min_id, <- (msub_mod_r w w _ (msub w0 _ _)),
               msub_mod_pow2, (N.min_r _ _ W); reflexivity.
       rewrite <- add_msub_assoc, N_mod_mod_pow, N.min_id by discriminate 1.
-        rewrite <- (Nadd_modpow2_r _ (msub w0 _ _)), msub_mod_pow2, (N.min_r _ _ W). reflexivity.
+        rewrite <- (mp2_add_r _ (msub w0 _ _)), msub_mod_pow2, (N.min_r _ _ W). reflexivity.
     replace (if m then _ else _) with (if negb m then simpl_modpow2_msub_atoms else simpl_modpow2_add_atoms).
       rewrite H2, H1, IHe2_1, <- H1. destruct m; simpl.
         rewrite <- (msub_mod_r w w _ (msub w0 _ _)), (msub_mod_pow2 w0 w), (N.min_r _ _ W) by reflexivity.
           rewrite msub_msub_distr, N_mod_mod_pow, N.min_id by discriminate 1. reflexivity.
-        rewrite <- Nadd_modpow2_r, (msub_mod_pow2 w0 w), (N.min_r _ _ W) by reflexivity.
+        rewrite <- mp2_add_r, (msub_mod_pow2 w0 w), (N.min_r _ _ W) by reflexivity.
           rewrite add_msub_assoc, msub_mod_pow2, N.min_id. reflexivity.
       destruct m; reflexivity.
 Qed.
@@ -3304,7 +3307,7 @@ Proof.
   subst from_set.
     erewrite simpl_xbytes_sound.
     rewrite <- setmem_mod_r, E, setmem_mod_r. subst diff.
-    rewrite <- getmem_mod_l, <- Nadd_modpow2_r, <- msub_neg, add_msub, getmem_mod_l.
+    rewrite <- getmem_mod_l, <- mp2_add_r, <- msub_neg, add_msub, getmem_mod_l.
     reflexivity.
 
     exact SXS.
@@ -3366,7 +3369,7 @@ Proof.
       contradict H1. rewrite (N.min_r _ _ H2). apply N.lt_irrefl.
     rewrite N.min_l by assumption.
     subst ds. unfold diff at 1.
-    rewrite N.add_assoc, <- overlap_mod_l, <- Nadd_modpow2_l, add_msub, Nadd_modpow2_l, overlap_mod_l.
+    rewrite N.add_assoc, <- overlap_mod_l, <- mp2_add_l, add_msub, mp2_add_l, overlap_mod_l.
     rewrite N.add_comm. rewrite <- (N.add_0_l (eval_sastN mvt sa)) at 2. apply noverlap_shiftr.
     apply noverlap_symmetry, noverlap_sum.
     rewrite N.add_0_l, msub_diag, N.add_0_r.
@@ -3376,7 +3379,7 @@ Proof.
     etransitivity. apply N.le_sub_l. apply RLEN.
 
   intros. rewrite <- (N.min_r _ _ H1) at 1. rewrite <- (N.min_r _ _ H2) at 2.
-  rewrite <- !N_mod_mod_pow2, !E, !N_mod_mod_pow2.
+  rewrite <- !mp2_mod_mod_min, !E, !mp2_mod_mod_min.
   rewrite !N.min_r by assumption. reflexivity.
 Qed.
 
@@ -3501,8 +3504,8 @@ Proof.
     assert (SB2:=simpl_bounds_sound mvt e2). destruct (simpl_bounds mvt e2) as (lo2,[hi2|]); [|reflexivity].
     rewrite simpl_shiftr_sound, <- N.land_ones. erewrite <- (N.add_sub n _) at 2.
     simpl. rewrite <- N.ones_div_pow2, <- N.shiftr_div_pow2, <- N.shiftr_land by (rewrite N.add_comm; apply N.le_add_r).
-    rewrite N.land_ones, <- (N.min_r (n+hi2) (n+eval_sastN _ _)), <- N_mod_mod_pow2, IH1,
-            N_mod_mod_pow2, N.min_r by apply N.add_le_mono_l, SB2.
+    rewrite N.land_ones, <- (N.min_r (n+hi2) (n+eval_sastN _ _)), <- mp2_mod_mod_min, IH1,
+            mp2_mod_mod_min, N.min_r by apply N.add_le_mono_l, SB2.
     rewrite <- N.land_ones, N.shiftr_land, (N.shiftr_div_pow2 (N.ones _)), N.ones_div_pow2
          by (rewrite N.add_comm; apply N.le_add_r).
     rewrite N.add_sub. apply N.land_ones.
@@ -3516,8 +3519,8 @@ Proof.
       rewrite N.mul_mod_distr_r by (apply N.pow_nonzero; discriminate).
       replace (n - eval_sastN mvt e2) with (N.min (n - lo2) (n - eval_sastN mvt e2)) by
         apply N.min_r, N.sub_le_mono_l, SB2.
-      rewrite <- N_mod_mod_pow2, IH1.
-      rewrite N_mod_mod_pow2, N.min_r by apply N.sub_le_mono_l, SB2.
+      rewrite <- mp2_mod_mod_min, IH1.
+      rewrite mp2_mod_mod_min, N.min_r by apply N.sub_le_mono_l, SB2.
       rewrite <- N.mul_mod_distr_r by (apply N.pow_nonzero; discriminate).
       rewrite <- N.pow_add_r, N.sub_add by assumption. reflexivity.
 
@@ -3537,7 +3540,7 @@ Proof.
   clearbody len'. destruct (_ <=? _) eqn:LE2. reflexivity.
   rewrite IH1. cbn [eval_sastN].
   replace n with (N.min (Mb*len') n) by apply N.min_r, LE1.
-  rewrite <- !N_mod_mod_pow2. destruct en; cbn [eval_sastN];
+  rewrite <- !mp2_mod_mod_min. destruct en; cbn [eval_sastN];
     rewrite !getmem_mod, N.min_id, 1?N.sub_diag, 1?N.add_0_r, N.min_r
       by apply N.lt_le_incl, N.leb_gt, LE2;
     reflexivity.

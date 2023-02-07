@@ -571,10 +571,7 @@ Proof. intros. inversion TV. assumption. Qed.
 Lemma hastyp_towidth:
   forall w n, hastyp_val (towidth w n) (NumT w).
 Proof.
-  intros. apply TVN.
-  apply N.mod_upper_bound.
-  apply N.pow_nonzero.
-  intro. discriminate.
+  intros. apply TVN, mp2_mod_lt.
 Qed.
 
 Lemma hastyp_binop:
@@ -740,7 +737,7 @@ Proof.
   intros. destruct uop; apply TVN.
 
   (* NEG *)
-  apply N.mod_upper_bound, N.pow_nonzero. discriminate 1.
+  apply mp2_mod_lt.
 
   (* NOT *)
   apply lnot_bound, value_bound. assumption.
@@ -922,7 +919,7 @@ Proof.
     exists u'. eapply ELet; eassumption.
 
   (* Unknown *)
-  exists (VaN 0 w). apply EUnknown. apply Nlt_0_pow2.
+  exists (VaN 0 w). apply EUnknown. apply mp2_gt_0.
 
   (* Ite *)
   eexists (match n with N0 => u0 | _ => u end).

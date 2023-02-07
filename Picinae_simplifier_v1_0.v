@@ -1706,7 +1706,7 @@ Proof.
   [ apply N.le_0_l
   | etransitivity;
     [ apply N.div_le_mono; [ apply N.pow_nonzero; discriminate | apply IHe1 ]
-    | apply N.div_le_compat_l; split; [ apply Nlt_0_pow2 | apply N.pow_le_mono_r; [ discriminate | apply IHe2 ] ] ] ].
+    | apply N.div_le_compat_l; split; [ apply mp2_gt_0 | apply N.pow_le_mono_r; [ discriminate | apply IHe2 ] ] ] ].
 
   (* ShiftL *) split.
   rewrite !N.shiftl_mul_pow2. apply N.mul_le_mono.
@@ -2422,8 +2422,8 @@ Proof.
     assert (SB2:=simpl_bounds_sound mvt e2). destruct (simpl_bounds mvt e2) as (lo2,[hi2|]); [|reflexivity].
     rewrite simpl_shiftr_sound, <- N.land_ones. erewrite <- (N.add_sub n _) at 2.
     simpl. rewrite <- N.ones_div_pow2, <- N.shiftr_div_pow2, <- N.shiftr_land by (rewrite N.add_comm; apply N.le_add_r).
-    rewrite N.land_ones, <- (N.min_r (n+hi2) (n+eval_sastN _ _)), <- N_mod_mod_pow2, IH1,
-            N_mod_mod_pow2, N.min_r by apply N.add_le_mono_l, SB2.
+    rewrite N.land_ones, <- (N.min_r (n+hi2) (n+eval_sastN _ _)), <- mp2_mod_mod_min, IH1,
+            mp2_mod_mod_min, N.min_r by apply N.add_le_mono_l, SB2.
     rewrite <- N.land_ones, N.shiftr_land, (N.shiftr_div_pow2 (N.ones _)), N.ones_div_pow2
          by (rewrite N.add_comm; apply N.le_add_r).
     rewrite N.add_sub. apply N.land_ones.
@@ -2437,8 +2437,8 @@ Proof.
       rewrite N.mul_mod_distr_r by (apply N.pow_nonzero; discriminate).
       replace (n - eval_sastN mvt e2) with (N.min (n - lo2) (n - eval_sastN mvt e2)) by
         apply N.min_r, N.sub_le_mono_l, SB2.
-      rewrite <- N_mod_mod_pow2, IH1.
-      rewrite N_mod_mod_pow2, N.min_r by apply N.sub_le_mono_l, SB2.
+      rewrite <- mp2_mod_mod_min, IH1.
+      rewrite mp2_mod_mod_min, N.min_r by apply N.sub_le_mono_l, SB2.
       rewrite <- N.mul_mod_distr_r by (apply N.pow_nonzero; discriminate).
       rewrite <- N.pow_add_r, N.sub_add by assumption. reflexivity.
 
