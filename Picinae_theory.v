@@ -631,6 +631,21 @@ Proof.
   reflexivity.
 Qed.
 
+Theorem xbits_above:
+  forall n i j, n < 2^i -> xbits n i j = 0.
+Proof.
+  intros. destruct n as [|n]. apply xbits_0_l.
+  unfold xbits. rewrite N.shiftr_eq_0.
+    apply mp2_mod_0_l.
+    apply N.log2_lt_pow2. reflexivity. assumption.
+Qed.
+
+Theorem xbits_below:
+  forall n i j, n mod 2^j = 0 -> xbits n i j = 0.
+Proof.
+  intros. rewrite xbits_equiv, H. apply N.shiftr_0_l.
+Qed.
+
 Lemma N2Z_inj_ones:
   forall n, Z.of_N (N.ones n) = Z.ones (Z.of_N n).
 Proof.
@@ -934,6 +949,17 @@ Proof.
   intros.
   rewrite <- (N.succ_pred _ H), <- (N.succ_pred _ H0), N.sub_succ.
   apply N.lt_succ_r. apply N.le_sub_l.
+Qed.
+
+Theorem N_sub_distr:
+  forall x y z, z <= y -> y <= x -> x - (y - z) = x - y + z.
+Proof.
+  intros.
+  apply (N.add_cancel_r _ _ (y-z)).
+  rewrite N.sub_add by (transitivity y; [ apply N.le_sub_l | assumption ]).
+  rewrite N.add_sub_assoc by assumption.
+  rewrite <- N.add_assoc, (N.add_comm z y), N.add_assoc, N.add_sub.
+  symmetry. apply N.sub_add. assumption.
 Qed.
 
 Theorem N_sub_mod:
@@ -2611,6 +2637,18 @@ Proof.
   intros. rewrite !(N.mul_comm _ p). apply mul_msub_distr_l.
 Qed.
 
+Theorem msub_sub:
+  forall w x y, y <= x -> msub w x y = (x - y) mod 2^w.
+Proof.
+  intros. unfold msub.
+  rewrite N.add_sub_assoc by apply N.lt_le_incl, mp2_mod_lt.
+  rewrite N.add_comm, <- N.add_sub_assoc by (etransitivity; [ apply mp2_mod_le | apply H ]).
+  rewrite <- mp2_add_l, mp2_mod_same, N.add_0_l.
+  erewrite <- (N.add_sub x) at 1. rewrite <- N.sub_add_distr, <- mp2_div_mod.
+  rewrite N.add_comm, <- N.add_sub_assoc by assumption.
+  rewrite N.add_comm, N.mul_comm, mp2_mod_add. reflexivity.
+Qed.
+
 Theorem msub_nowrap:
   forall w x y, x mod 2^w <= y mod 2^w -> msub w y x = y mod 2^w - x mod 2^w.
 Proof.
@@ -2833,6 +2871,18 @@ Section OpBounds.
 
 Lemma Zlt_0_pow2: forall p, (0 < Z.of_N (2^p))%Z.
 Proof. intro. rewrite <- N2Z.inj_0. apply N2Z.inj_lt. apply mp2_gt_0. Qed.
+
+Lemma N_le_div:
+  forall a b c, a <= b -> a/c <= b/c.
+Proof.
+  intros.
+  destruct c. destruct a; destruct b; reflexivity.
+  intro H2. apply H, N.lt_gt. eapply N.lt_le_trans.
+  rewrite (N.div_mod' b (N.pos p)) at 1.
+  apply N.add_lt_mono_l. eapply (N.lt_lt_add_r _ _ (a mod N.pos p)). apply N.mod_lt. discriminate 1.
+  rewrite N.add_assoc, <- N.mul_succ_r. rewrite (N.div_mod' a (N.pos p)) at 2.
+  apply N.add_le_mono_r, N.mul_le_mono_l, N.le_succ_l, N.gt_lt, H2.
+Qed.
 
 Lemma div_bound: forall n1 n2, N.div n1 n2 <= n1.
 Proof.
@@ -3547,6 +3597,12 @@ Proof.
     rewrite N.add_1_r, IHlen. reflexivity.
 Qed.
 
+Theorem getmem_mod_r:
+  forall w e len m a, (getmem w e len m a) mod 2^(Mb*len) = getmem w e len m a.
+Proof.
+  intros. apply N.mod_small. apply getmem_bound.
+Qed.
+
 Theorem setmem_mod_l:
   forall w e len m a v,
   setmem w e len m (a mod 2^w) v = setmem w e len m a v.
@@ -4092,27 +4148,6 @@ Proof.
   destruct (N.lt_ge_cases (msub w a1 a2) len2). left. exact H. right.
   apply N.nle_gt. intro H1. revert OL. apply sep_noverlap; left; assumption.
 Qed.
-
-(*
-Theorem overlap_end:
-  forall w a1 len1 a2 len2
-    (OL: overlap w a1 len1 a2 len2),
-  msub w (a1+len1) a2 < len2 \/ msub w (a2+len2) a1 < len1.
-Proof.
-  intros.
-  apply overlap_rev with (i:=0) in OL.
-  apply overlap_start in OL.
-  rewrite !msub_msub_distr, !msub_0_r, !Nadd_modpow2_l in OL.
-  rewrite <- !add_msub_swap, !N.add_0_l in OL.
-  destruct (N.lt_ge_cases (msub w (a1+len1) a2) len2). left. exact H. right.
-  apply N.nle_gt. intro H1. revert OL.
-  eapply noverlap_rev. apply sep_noverlap.
-  intro H2.
-  rewrite add_msub_swap in H,H1.
-  apply sep_noverlap.
-    left. assumption.
-Qed.
-*)
 
 Theorem overlap_dec:
   forall w a1 len1 a2 len2, {overlap w a1 len1 a2 len2}+{~overlap w a1 len1 a2 len2}.

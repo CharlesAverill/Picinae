@@ -1158,7 +1158,10 @@ Definition simpl_getmem mvt w en len m a :=
 (** Modular Subtraction simplification **)
 
 Definition simpl_msub mvt w e1 e2 :=
-  simpl_mod mvt (SIMP_MSub w e1 e2) (SIMP_Const (N.shiftl 1 w)).
+  simpl_mod_core mvt
+    (simpl_under_modpow2 mvt (SIMP_MSub w (simpl_under_modpow2 mvt e1 w)
+                                          (simpl_under_modpow2 mvt e2 w)) w)
+    (SIMP_Const (N.shiftl 1 w)).
 
 (** And simplification with and-to-mod conversion: (x & (2^y-1)) = (x mod 2^y) **)
 
@@ -3656,7 +3659,11 @@ Theorem simpl_msub_sound:
   eval_sastN mvt (simpl_msub mvt w e1 e2) = eval_sastN mvt (SIMP_MSub w e1 e2).
 Proof.
   intros. unfold simpl_msub.
-  rewrite simpl_mod_sound, N.shiftl_1_l. cbn [eval_sastN].
+  rewrite simpl_mod_core_sound, N.shiftl_1_l. cbn [eval_sastN].
+  rewrite simpl_under_modpow2_sound. cbn [eval_sastN].
+  erewrite <- msub_mod_l, <- msub_mod_r by reflexivity.
+  rewrite !simpl_under_modpow2_sound.
+  rewrite msub_mod_l, msub_mod_r by reflexivity.
   rewrite msub_mod_pow2, N.min_id. reflexivity.
 Qed.
 Local Hint Resolve simpl_msub_sound : picinae_simpl.
