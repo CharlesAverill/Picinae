@@ -12,14 +12,17 @@ Open Scope N.
 (* Use a flat memory model for these proofs. *)
 Definition fh := htotal.
 
+(* The ARM7 lifter creates non-writable code sections. *)
 Theorem strlen_nwc: forall s2 s1, strlen_arm s1 = strlen_arm s2.
 Proof. reflexivity. Qed.
 
+(* Verify that the lifted IL is type-safe. *)
 Theorem strlen_welltyped: welltyped_prog arm7typctx strlen_arm.
 Proof.
   Picinae_typecheck.
 Qed.
 
+(* Strlen does not corrupt memory. *)
 Theorem strlen_preserves_memory:
   forall s n s' x,
   exec_prog fh strlen_arm 0 s n s' x -> s' V_MEM32 = s V_MEM32.
@@ -28,6 +31,7 @@ Proof.
   prove_noassign.
 Qed.
 
+(* Strlen does not modify page permissions. *)
 Theorem strlen_preserves_readable:
   forall s n s' x,
   exec_prog fh strlen_arm 0 s n s' x -> s' A_READ = s A_READ.
@@ -36,6 +40,7 @@ Proof.
   prove_noassign.
 Qed.
 
+(* Strlen does not corrupt the LR register (call-return safety). *)
 Theorem strlen_preserves_lr:
   forall s n s' x,
   exec_prog fh strlen_arm 0 s n s' x -> s' R_LR = s R_LR.
@@ -44,9 +49,14 @@ Proof.
   prove_noassign.
 Qed.
 
+(* Correctness specification for strlen: *)
 Definition nilfree (m:addr->N) (p:addr) (k:N) :=
   forall i, i < k -> m Ⓑ[p+i] <> 0.
 
+Definition strlen_post (m:addr->N) (p:addr) (_:exit) (s:store) :=
+  ∃ k, s R_R0 = Ⓓk /\ nilfree m p k /\ m Ⓑ[p+k] = 0.
+
+(* Loop invariants for verifying the specification (not trusted). *)
 Definition strlen_invs (m:addr->N) (p a:addr) (s:store) :=
   match a with
   | 0 => Some (s R_R0 = Ⓓp)
@@ -58,19 +68,12 @@ Definition strlen_invs (m:addr->N) (p a:addr) (s:store) :=
   | _ => None
   end.
 
-Definition strlen_post (m:addr->N) (p:addr) (_:exit) (s:store) :=
-  ∃ k, s R_R0 = Ⓓk /\ nilfree m p k /\ m Ⓑ[p+k] = 0.
-
 Definition strlen_invset (m:addr->N) (p:addr) :=
   invs (strlen_invs m p) (strlen_post m p).
 
-Lemma ldiff_sub:
-  forall x y, N.ldiff x y = x - (x .& y).
-Proof.
-  intros. rewrite N.sub_nocarry_ldiff; apply N.bits_inj; intro n;
-  rewrite 2?N.ldiff_spec, N.land_spec, 1?N.bits_0;
-  repeat destruct (N.testbit _ _); reflexivity.
-Qed.
+
+(* Before proving correctness, prove some helper lemmas about binary arithmetic
+   operations associated with our specification: *)
 
 Lemma nilfree_mod:
   forall m p a w, nilfree m p a -> nilfree m p (a mod 2^w).
@@ -150,10 +153,11 @@ Theorem nilterminate:
                       else getmem 32 LittleE (N.succ j) m (p ⊖ p mod 4 ⊕ 4*k)) .& (N.ones 8 << (8*j)) =? 0) = true),
   nilfree m p (j + 4*k ⊖ p mod 4) /\ m Ⓑ[j + p + 4*k ⊖ p mod 4] = 0.
 Proof.
-  intros.
-  destruct N.land eqn:H in NIL; [|discriminate]. clear NIL. rename H into NIL.
+  intros. destruct N.land eqn:H in NIL; [|discriminate]. clear NIL. rename H into NIL.
   destruct (N.lt_ge_cases (4*k + j) (p mod 4)) as [JP1|JP1].
 
+  (* Strlen never yields negative lengths despite rounding the pointer down to a word boundary,
+     because it loads non-zero bytes into the buffer before the string starts. *)
   destruct k as [|k].
     contradict NIL. apply nonbyte. rewrite <- (N.add_0_l j). apply JP1.
     contradict JP1. apply N.nlt_ge. transitivity 4.
@@ -162,6 +166,7 @@ Proof.
 
   destruct (N.lt_ge_cases (4*k + j) (2^32 + p mod 4)) as [JP2|JP2].
 
+    (* Main proof: Termination of the main loop yields the correct length. *)
     split.
       unfold msub. psimpl. rewrite <- N.add_assoc, <- N.add_sub_assoc by
         (rewrite (N.add_comm j); assumption). psimpl.
@@ -173,6 +178,9 @@ Proof.
         rewrite getbyte, (N.add_comm p), <- add_msub_assoc, (N.add_comm (4*_)).
           rewrite N.shiftr_shiftl_l, N.sub_diag, N.shiftl_0_r; reflexivity.
 
+    (* Weird special case:  Strlen never terminates after exceeding 2^32 bytes because
+       at that point it is reading bytes previously recognized as non-nil (and it doesn't
+       modify memory as it iterates). *)
     destruct k as [|k]. contradict JP2. apply N.nle_gt. eapply N.lt_le_trans.
       apply J4. etransitivity; [|apply N.le_add_r]. discriminate 1.
     specialize (NF (4*N.pos k + j - (2^32 + p mod 4))). exfalso. apply NF.
@@ -184,18 +192,12 @@ Proof.
     rewrite getbyte, <- add_msub_swap, <- add_msub_assoc,
             <- getmem_mod_l, mp2_add_l, <- N.add_assoc, <- mp2_add_r, getmem_mod_l in NIL.
     apply N.shiftl_eq_0_iff in NIL. rewrite <- NIL.
-    rewrite (N.add_comm (2^32)), N.sub_add_distr, <- getmem_mod_l, <- mp2_add_r, N_sub_mod.
-      replace (_<?_) with false; symmetry. psimpl.
-        rewrite <- add_msub_assoc, <- getmem_mod_l, mp2_add_l, <- N.add_assoc,
-                <- mp2_add_r, <- add_msub_swap. unfold msub.
-          rewrite N.add_sub_assoc by (apply N.lt_le_incl, N.mod_lt; discriminate 1).
-          rewrite (N.add_comm (_+j)), <- N.add_sub_assoc by (psimpl; assumption).
-          psimpl. reflexivity.
-        apply N.ltb_ge. rewrite N.mod_same by discriminate 1. apply N.le_0_l.
-      discriminate 1.
-      apply N.le_add_le_sub_r, JP2.
+    rewrite <- getmem_mod_l. rewrite <- mp2_add_r, <- msub_sub by assumption.
+    rewrite <- add_msub_swap. psimpl. reflexivity.
 Qed.
 
+
+(* Main correctness theorem (and proof): *)
 Theorem strlen_partial_correctness:
   forall s p lr m n s' x
          (MDL0: models arm7typctx s)

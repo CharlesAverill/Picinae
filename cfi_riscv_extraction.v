@@ -486,12 +486,12 @@ Definition safety (pol:policy) r im :=
 
     (* Assume m0 contains the rewritten code starting at instruction index i *)
     (CS: forall i n, nth_error (concat l') i = Some n ->
-                     getmem LittleE 4 m0 (4 * N.of_nat (bi'+i)) = Z.to_N n)
+                     getmem 32 LittleE 4 m0 (4 * N.of_nat (bi'+i)) = Z.to_N n)
 
     (* Assume the code section remains non-writable. *)
     (NWC: forall n s x m w i, exec_prog h rv_prog (4 * N.of_nat (bi'+j0)) s0 n s x ->
                               s V_MEM32 = VaM m w -> (i < length (concat l'))%nat ->
-          getmem LittleE 4 m (4 * N.of_nat (bi'+i)) = getmem LittleE 4 m0 (4 * N.of_nat (bi'+i)))
+          getmem 32 LittleE 4 m (4 * N.of_nat (bi'+i)) = getmem 32 LittleE 4 m0 (4 * N.of_nat (bi'+i)))
 
     (* Assume memory outside the code section remains non-executable. *)
     (NXD: forall n s x e w i, exec_prog h rv_prog (4 * N.of_nat (bi'+j0)) s0 n s x ->
