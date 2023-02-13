@@ -4506,8 +4506,8 @@ Proof.
         transitivity (S n2). apply le_S, le_n. assumption.
 
         specialize (INV a1 s1 (n - S n2)%nat sz q s2 x1 LU PRE1 (Nat.sub_lt n (S n2) LE (Nat.lt_0_succ n2)) XP1 XS).
-        rewrite minus_Sn_m, Nat.sub_succ in INV by exact LE.
-        replace (n - (n - n2))%nat with n2 in INV by (apply plus_minus; symmetry; apply Nat.sub_add, le_Sn_le, LE).
+        rewrite <- Nat.sub_succ_l, Nat.sub_succ in INV by exact LE.
+        replace (n - (n - n2))%nat with n2 in INV by (symmetry; apply Nat.add_sub_eq_l, Nat.sub_add, Nat.lt_le_incl, LE).
         destruct x1; [destruct e|].
           injection EX. intro. subst a'. apply INV. exact XP.
           discriminate EX.
@@ -4519,7 +4519,7 @@ Proof.
 
         exact XP.
       specialize (INV _ _ (n-1)%nat _ _ _ _ LU PRE1 (Nat.sub_lt n 1 LE Nat.lt_0_1) XP1 XS).
-      rewrite minus_Sn_m, Nat.sub_succ, Nat.sub_0_r in INV by exact LE.
+      rewrite <- Nat.sub_succ_l, Nat.sub_succ, Nat.sub_0_r in INV by exact LE.
       apply INV. reflexivity.
 Qed.
 
