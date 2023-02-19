@@ -1053,6 +1053,7 @@ Definition simpl_joinbytes en x i y j :=
               | LittleE => simpl_lor x (simpl_shiftl y (SIMP_Const (Mb*i))) end.
 
 Definition simpl_xbytes mvt en sx xlen i ylen :=
+  if xlen <=? i then SIMP_Const 0 else
   let w := Mb * match en with BigE => xlen - i | LittleE => ylen + i end in
   simpl_shiftr mvt
     (simpl_mod_core mvt (sx w) (SIMP_Const (N.shiftl 1 w)))
@@ -3244,6 +3245,9 @@ Theorem simpl_xbytes_sound:
   getmem w en ylen (setmem w en xlen m a (eval_sastN mvt (sx (Mb*xlen)))) (a+i).
 Proof.
   intros. unfold simpl_xbytes.
+  destruct (xlen <=? i) eqn:XLI.
+    apply N.leb_le, N.sub_0_le in XLI. rewrite XLI in H2. apply N.le_0_r in H2. rewrite H2.
+    rewrite getmem_0. reflexivity.
   rewrite simpl_shiftr_sound. cbn [eval_sastN].
   rewrite simpl_mod_core_sound. cbn [eval_sastN].
   rewrite N.shiftl_1_l.
