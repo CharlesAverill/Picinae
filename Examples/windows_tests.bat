@@ -16,6 +16,21 @@
 %coqc% i386_strlen_proof.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 
+%coqc% arm7_strlen.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% arm7_strlen_proof.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+
+%coqc% i386_wcsspn.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% i386_wcsspn_proof.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+
+%coqc% arm7_memset.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% arm7_memset_proof.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+
 @ECHO Picinae tests succeeded!
 @GOTO Done
 :ErrorExit

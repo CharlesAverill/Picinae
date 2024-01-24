@@ -37,7 +37,7 @@ Require Export Picinae_theory.
 Require Export Picinae_statics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
-Require Export Picinae_slogic.
+(* Require Export Picinae_slogic. *)
 Require Import NArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.
@@ -105,8 +105,8 @@ Module Statics_i386 := PicinaeStatics IL_i386.
 Export Statics_i386.
 Module FInterp_i386 := PicinaeFInterp IL_i386 Statics_i386.
 Export FInterp_i386.
-Module SLogic_i386 := PicinaeSLogic IL_i386.
-Export SLogic_i386.
+(* Module SLogic_i386 := PicinaeSLogic IL_i386.
+Export SLogic_i386. *)
 
 Module PSimpl_i386 := Picinae_Simplifier_Base.
 Export PSimpl_i386.
@@ -178,33 +178,33 @@ Proof. intro. reflexivity. Qed.
    (A_READ and A_WRITE). *)
 
 Lemma memacc_read_frame:
-  forall h s v u (NE: v <> A_READ),
-  MemAcc mem_readable h (update s v u) = MemAcc mem_readable h s.
+  forall s v u (NE: v <> A_READ),
+  MemAcc mem_readable (update s v u) = MemAcc mem_readable s.
 Proof.
   intros. unfold MemAcc, mem_readable. rewrite update_frame. reflexivity.
   apply not_eq_sym. exact NE.
 Qed.
 
 Lemma memacc_write_frame:
-  forall h s v u (NE: v <> A_WRITE),
-  MemAcc mem_writable h (update s v u) = MemAcc mem_writable h s.
+  forall s v u (NE: v <> A_WRITE),
+  MemAcc mem_writable (update s v u) = MemAcc mem_writable s.
 Proof.
   intros. unfold MemAcc, mem_writable. rewrite update_frame. reflexivity.
   apply not_eq_sym. exact NE.
 Qed.
 
 Lemma memacc_read_updated:
-  forall h s v u1 u2,
-  MemAcc mem_readable h (update (update s v u2) A_READ u1) =
-  MemAcc mem_readable h (update s A_READ u1).
+  forall s v u1 u2,
+  MemAcc mem_readable (update (update s v u2) A_READ u1) =
+  MemAcc mem_readable (update s A_READ u1).
 Proof.
   intros. unfold MemAcc, mem_readable. rewrite !update_updated. reflexivity.
 Qed.
 
 Lemma memacc_write_updated:
-  forall h s v u1 u2,
-  MemAcc mem_writable h (update (update s v u2) A_WRITE u1) =
-  MemAcc mem_writable h (update s A_WRITE u1).
+  forall s v u1 u2,
+  MemAcc mem_writable (update (update s v u2) A_WRITE u1) =
+  MemAcc mem_writable (update s A_WRITE u1).
 Proof.
   intros. unfold MemAcc, mem_writable. rewrite !update_updated. reflexivity.
 Qed.
@@ -318,47 +318,34 @@ Remark inj_prog_stmt: forall (sz1 sz2: N) (q1 q2: stmt),
 Proof. injection 1 as. split; assumption. Qed.
 
 (* Simplify (exitof a x) without expanding a. *)
-Remark exitof_none a: exitof a None = Exit a. Proof eq_refl.
+Remark exitof_none a: exitof a None = Addr a. Proof eq_refl.
 Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
-
-(* Solve a goal of the form (p s a = None), which indicates that program p is
-   exiting the subroutine.  For now, we automatically solve for three common
-   cases: (A) address a is a constant, allowing function p to fully evaluate
-   (reflexivity); (B) the goal is an assumption, or (C) the code is immutable,
-   so there is an assumption of the form (H: forall s, p s a = None) for a
-   particular return address a.  Cases other than these three forms will need
-   to be solved manually by the user. *)
-Ltac prove_prog_exits :=
-  solve [ reflexivity | assumption |
-    match goal with [ H: forall s, ?p s ?a = None |- ?p _ ?a = None ] => apply H end ].
 
 (* If asked to step the computation when we're already at an invariant point,
    just make the proof goal be the invariant. *)
 Ltac x86_invhere :=
-  first [ eapply nextinv_here; [reflexivity|]
-        | apply nextinv_exn
-        | apply nextinv_ret; [ prove_prog_exits |] ];
-  psimpl_vals_goal.
+  eapply nextinv_here; [ reflexivity | red; psimpl_vals_goal ].
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
    instructions, but often it is wiser to pause and do some manual
    simplification of the state at various points.) *)
 Ltac x86_invseek :=
-  apply NIStep; [reflexivity|];
-  let sz := fresh "sz" in let q := fresh "q" in let s := fresh "s" in let x := fresh "x" in
-  let IL := fresh "IL" in let XS := fresh "XS" in
-  intros sz q s x IL XS;
-  apply inj_prog_stmt in IL; destruct IL; subst sz q;
+  eapply NIStep; [reflexivity|reflexivity|];
+  let s := fresh "s" in let x := fresh "x" in let XS := fresh "XS" in
+  intros s x XS;
   x86_step_and_simplify XS;
   repeat lazymatch type of XS with
          | s=_ /\ x=_ => destruct XS; subst s x
-         | exec_stmt _ _ (if ?c then _ else _) _ _ =>
+         | exec_stmt _ (if ?c then _ else _) _ _ =>
              let BC := fresh "BC" in destruct c eqn:BC;
              x86_step_and_simplify XS
-         | exec_stmt _ _ (N.iter _ _ _) _ _ => fail
+         | exec_stmt _ (N.iter _ _ _) _ _ => fail
          | _ => x86_step_and_simplify XS
          end;
+  try match goal with |- nextinv _ _ _ _ (_ :: ?xs :: ?t) =>
+    let t' := fresh t in generalize (xs::t); intro t'; clear t; rename t' into t
+  end;
   repeat match goal with [ u:value |- _ ] => clear u
                        | [ n:N |- _ ] => clear n
                        | [ m:addr->N |- _ ] => clear m end;
@@ -375,26 +362,26 @@ Ltac x86_step :=
 
 Declare Scope i386_scope.
 Delimit Scope i386_scope with i386.
-Bind Scope i386_scope with stmt exp typ.
+Bind Scope i386_scope with stmt exp typ trace.
 Open Scope i386_scope.
 Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : i386_scope.
 
 Module X86Notations.
 
-Notation "Ⓜ m" := (VaM m 32) (at level 20) : i386_scope. (* memory value *)
-Notation "ⓑ u" := (VaN u 1) (at level 20). (* bit value *)
-Notation "Ⓑ u" := (VaN u 8) (at level 20). (* byte value *)
-Notation "Ⓦ u" := (VaN u 16) (at level 20). (* word value *)
-Notation "Ⓓ u" := (VaN u 32) (at level 20). (* dword value *)
-Notation "Ⓠ u" := (VaN u 64) (at level 20). (* quad word value *)
-Notation "Ⓧ u" := (VaN u 128) (at level 20). (* xmm value *)
-Notation "Ⓨ u" := (VaN u 256) (at level 20). (* ymm value *)
-Notation "m Ⓑ[ a  ]" := (getmem 32 LittleE 1 m a) (at level 10) : i386_scope. (* read byte from memory *)
-Notation "m Ⓦ[ a  ]" := (getmem 32 LittleE 2 m a) (at level 10) : i386_scope. (* read word from memory *)
-Notation "m Ⓓ[ a  ]" := (getmem 32 LittleE 4 m a) (at level 10) : i386_scope. (* read dword from memory *)
-Notation "m Ⓠ[ a  ]" := (getmem 32 LittleE 8 m a) (at level 10) : i386_scope. (* read quad word from memory *)
-Notation "m Ⓧ[ a  ]" := (getmem 32 LittleE 16 m a) (at level 10) : i386_scope. (* read xmm from memory *)
-Notation "m Ⓨ[ a  ]" := (getmem 32 LittleE 32 m a) (at level 10) : i386_scope. (* read ymm from memory *)
+Notation "Ⓜ m" := (VaM m 32) (at level 20, format "'Ⓜ' m") : i386_scope. (* memory value *)
+Notation "ⓑ u" := (VaN u 1) (at level 20, format "'ⓑ' u"). (* bit value *)
+Notation "Ⓑ u" := (VaN u 8) (at level 20, format "'Ⓑ' u"). (* byte value *)
+Notation "Ⓦ u" := (VaN u 16) (at level 20, format "'Ⓦ' u"). (* word value *)
+Notation "Ⓓ u" := (VaN u 32) (at level 20, format "'Ⓓ' u"). (* dword value *)
+Notation "Ⓠ u" := (VaN u 64) (at level 20, format "'Ⓠ' u"). (* quad word value *)
+Notation "Ⓧ u" := (VaN u 128) (at level 20, format "'Ⓧ' u"). (* xmm value *)
+Notation "Ⓨ u" := (VaN u 256) (at level 20, format "'Ⓨ' u"). (* ymm value *)
+Notation "m Ⓑ[ a  ]" := (getmem 32 LittleE 1 m a) (at level 30) : i386_scope. (* read byte from memory *)
+Notation "m Ⓦ[ a  ]" := (getmem 32 LittleE 2 m a) (at level 30) : i386_scope. (* read word from memory *)
+Notation "m Ⓓ[ a  ]" := (getmem 32 LittleE 4 m a) (at level 30) : i386_scope. (* read dword from memory *)
+Notation "m Ⓠ[ a  ]" := (getmem 32 LittleE 8 m a) (at level 30) : i386_scope. (* read quad word from memory *)
+Notation "m Ⓧ[ a  ]" := (getmem 32 LittleE 16 m a) (at level 30) : i386_scope. (* read xmm from memory *)
+Notation "m Ⓨ[ a  ]" := (getmem 32 LittleE 32 m a) (at level 30) : i386_scope. (* read ymm from memory *)
 Notation "m [Ⓑ a := v  ]" := (setmem 32 LittleE 1 m a v) (at level 50, left associativity) : i386_scope. (* write byte to memory *)
 Notation "m [Ⓦ a := v  ]" := (setmem 32 LittleE 2 m a v) (at level 50, left associativity) : i386_scope. (* write word to memory *)
 Notation "m [Ⓓ a := v  ]" := (setmem 32 LittleE 4 m a v) (at level 50, left associativity) : i386_scope. (* write dword to memory *)
@@ -404,11 +391,11 @@ Notation "m [Ⓨ a := v  ]" := (setmem 32 LittleE 32 m a v) (at level 50, left a
 Notation "x ⊕ y" := ((x+y) mod 2^32) (at level 50, left associativity). (* modular addition *)
 Notation "x ⊖ y" := (msub 32 x y) (at level 50, left associativity). (* modular subtraction *)
 Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* modular multiplication *)
-Notation "x << y" := (N.shiftl x y) (at level 40, left associativity). (* logical shift-left *)
-Notation "x >> y" := (N.shiftr x y) (at level 40, left associativity). (* logical shift-right *)
-Notation "x >>> y" := (ashiftr 32 x y) (at level 40, left associativity). (* arithmetic shift-right *)
-Notation "x .& y" := (N.land x y) (at level 25, left associativity). (* logical and *)
-Notation "x .^ y" := (N.lxor x y) (at level 25, left associativity). (* logical xor *)
-Notation "x .| y" := (N.lor x y) (at level 25, left associativity). (* logical or *)
+Notation "x << y" := (N.shiftl x y) (at level 55, left associativity). (* logical shift-left *)
+Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logical shift-right *)
+Notation "x >>> y" := (ashiftr 32 x y) (at level 55, left associativity). (* arithmetic shift-right *)
+Notation "x .& y" := (N.land x y) (at level 56, left associativity). (* logical and *)
+Notation "x .^ y" := (N.lxor x y) (at level 57, left associativity). (* logical xor *)
+Notation "x .| y" := (N.lor x y) (at level 58, left associativity). (* logical or *)
 
 End X86Notations.

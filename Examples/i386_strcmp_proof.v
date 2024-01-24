@@ -30,9 +30,6 @@ Require Import i386_strcmp.
 Import X86Notations.
 Open Scope N.
 
-(* Use a flat memory model for these proofs. *)
-Definition fh := htotal.
-
 (* The x86 lifter models non-writable code. *)
 Theorem strcmp_nwc: forall s2 s1, strcmp_i386 s1 = strcmp_i386 s2.
 Proof. reflexivity. Qed.
@@ -49,10 +46,9 @@ Qed.
 (* Example #2: Memory safety
    Strcmp contains no memory-writes, and is therefore trivially memory-safe. *)
 Theorem strcmp_preserves_memory:
-  forall s n s' x,
-  exec_prog fh strcmp_i386 0 s n s' x -> s' V_MEM32 = s V_MEM32.
+  forall_endstates strcmp_i386 (fun _ s _ s' => s V_MEM32 = s' V_MEM32).
 Proof.
-  intros. eapply noassign_prog_same; [|eassumption].
+  apply noassign_prog_same.
   prove_noassign.
 Qed.
 
@@ -63,55 +59,55 @@ Qed.
    and it restores ESP on exit. *)
 
 Theorem strcmp_preserves_ebx:
-  forall s n s' x,
-  exec_prog fh strcmp_i386 0 s n s' x -> s' R_EBX = s R_EBX.
+  forall_endstates strcmp_i386 (fun _ s _ s' => s R_EBX = s' R_EBX).
 Proof.
-  intros. eapply noassign_prog_same; [|eassumption].
+  apply noassign_prog_same.
   prove_noassign.
 Qed.
 
 Theorem strcmp_preserves_readable:
-  forall s n s' x,
-  exec_prog fh strcmp_i386 0 s n s' x -> s' A_READ = s A_READ.
+  forall_endstates strcmp_i386 (fun _ s _ s' => s A_READ = s' A_READ).
 Proof.
-  intros. eapply noassign_prog_same; [|eassumption].
+  apply noassign_prog_same.
   prove_noassign.
 Qed.
 
+(* Proving that strlen preserves ESP is our first example of a property that
+   requires stepwise symbolic interpretation of the program to verify.  We must
+   first identify the instruction addresses that we wish to consider as subroutine
+   exit points (usually the return instructions).  This is where post-conditions
+   are placed, and where symbolic execution will stop during the proof. *)
+Definition strcmp_exit (t:trace) :=
+  match t with (Addr a,s)::_ => match a with
+  | 22 | 36 => true
+  | _ => false
+  end | _ => false end.
 
-(* Proving that strcmp restores ESP on exit is our first example of a property that
-   requires stepwise symbolic interpretation of the program to verify.  We first
-   define a set of invariants, one for each program point.  In this simple case,
-   all program points have the same invariant, so we return the same one for all. *)
-Definition esp_invs (esp0:N) (_:addr) (s:store) := Some (s R_ESP = Ⓓ esp0).
-
-(* Next, we define the post-condition we wish to prove: *)
-Definition esp_post (esp0:N) (_:exit) (s:store) := s R_ESP = Ⓓ (4 ⊕ esp0).
-
-(* The invariant set and post-condition are combined into a single invariant-set
-   using the "invs" function. *)
-Definition strcmp_esp_invset esp0 :=
-  invs (esp_invs esp0) (esp_post esp0).
+(* Next we define a set of invariants, one for each program point.  In this case,
+   all program points have the same invariant, so we define the same for all. *)
+Definition esp_invs (esp0:N) (t:trace) :=
+  match t with (Addr _,s)::_ =>
+    Some (s R_ESP = Ⓓesp0)
+  | _ => None end.
 
 (* Now we pose a theorem that asserts that this invariant-set is satisfied at
-   all points in the subroutine.  The "trueif_inv" function asserts that
-   anywhere an invariant exists (e.g., at the post-condition), it is true. *)
+   all points in the subroutine.  The "satisfies_all" function asserts that
+   anywhere an invariant exists (e.g., at the post-conditions), it is true. *)
 Theorem strcmp_preserves_esp:
-  forall s esp0 mem n s' x'
-         (MDL0: models x86typctx s)
-         (ESP0: s R_ESP = Ⓓ esp0) (MEM0: s V_MEM32 = Ⓜ mem)
-         (RET: strcmp_i386 s (mem Ⓓ[esp0]) = None)
-         (XP0: exec_prog fh strcmp_i386 0 s n s' x'),
-  trueif_inv (strcmp_esp_invset esp0 strcmp_i386 x' s').
+  forall s esp0 t s' x'
+         (ENTRY: startof t (x',s') = (Addr 0, s))
+         (MDL: models x86typctx s)
+         (ESP: s R_ESP = Ⓓesp0),
+  satisfies_all strcmp_i386 (esp_invs esp0) strcmp_exit ((x',s')::t).
 Proof.
   intros.
 
   (* Use the prove_invs inductive principle from Picinae_theory.v. *)
-  eapply prove_invs. exact XP0.
+  apply prove_invs.
 
   (* We must first prove the pre-condition, which says that the invariant-set is
-     satisfied on entry to the subroutine.  This is proved by assumption ESP0. *)
-  x86_step. exact ESP0.
+     satisfied on entry to the subroutine.  This is proved by assumption ESP. *)
+  simpl. rewrite ENTRY. x86_step. exact ESP.
 
   (* Now we enter the inductive case, wherein Coq asks us to prove that the invariant-set
      is preserved by every (reachable) instruction in the program.  Before breaking the
@@ -121,15 +117,11 @@ Proof.
      relevant variables in store s1 (which denotes the store on entry to each instruction
      for which the goal must be proved).  The only two variables in our invariant-set are
      ESP and MEM.  The value of ESP is already revealed by pre-condition (PRE), and we
-     can get the value of MEM from MEM0 using our previously proved strlen_preserves_memory
-     theorem. *)
+     can get the value of MEM using our previously proved strlen_preserves_memory theorem. *)
   intros.
-  assert (MDL: models x86typctx s1).
-    eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
-  assert (MEM: s1 V_MEM32 = Ⓜ mem).
-    rewrite <- MEM0. eapply strcmp_preserves_memory. exact XP.
-  rewrite (strcmp_nwc s1) in RET.
-  clear s MDL0 MEM0 XP0 ESP0 XP.
+  eapply startof_prefix in ENTRY; try eassumption.
+  eapply preservation_exec_prog in MDL; try (eassumption || apply strcmp_welltyped).
+  clear - PRE MDL. rename t1 into t. rename s1 into s.
 
   (* We are now ready to break the goal down into one case for each invariant-point.
      The destruct_inv tactic finds all the invariants defined by the invariant-set
@@ -155,83 +147,82 @@ Qed.
    if the input strings are equal, EAX is negative if the first lexicographically
    precedes the second, and EAX is positive otherwise. *)
 
-(* Define string equality: *)
+(* Define binary-level string equality: *)
 Definition streq (m:addr->N) (p1 p2:addr) (k:N) :=
   ∀ i, i < k -> m Ⓑ[p1+i] = m Ⓑ[p2+i] /\ 0 < m Ⓑ[p1+i].
-
-(* The invariant-set for this property makes no assumptions at program-start
-   (address 0), and puts a loop-invariant at address 8. *)
-Definition strcmp_invs (m:addr->N) (esp:N) (a:addr) (s:store) :=
-  match a with
-  | 8 => Some (∃ k, s R_ECX = Ⓓ(m Ⓓ[4+esp] ⊕ k) /\ s R_EDX = Ⓓ(m Ⓓ[8+esp] ⊕ k) /\
-               streq m (m Ⓓ[4+esp]) (m Ⓓ[8+esp]) k)
-  | _ => None
-  end.
 
 (* The post-condition says that interpreting EAX as a signed integer yields
    a number n whose sign equals the comparison of the kth byte in the two input
    strings, where the two strings are identical before k, and n may only be
    zero if the kth bytes are both nil. *)
-Definition strcmp_post (m:addr->N) (esp:N) (_:exit) (s:store) :=
+Definition postcondition (m:addr->N) (esp:N) (s:store) :=
   ∃ n k, s R_EAX = Ⓓn /\
          streq m (m Ⓓ[4+esp]) (m Ⓓ[8+esp]) k /\
          (n=0 -> m Ⓑ[m Ⓓ[4+esp] + k] = 0) /\
-         (m Ⓑ[m Ⓓ[4+esp] + k] ?= m Ⓑ[m Ⓓ[8+esp] + k]) = (toZ 32 n ?= Z0)%Z.
+         (m Ⓑ[m Ⓓ[4+esp] + k] ?= m Ⓑ[m Ⓓ[8+esp] + k]) = (toZ 32%N n ?= Z0)%Z.
 
-(* The invariant-set and post-conditions are combined as usual: *)
-Definition strcmp_invset (mem:addr->N) (esp:N) :=
-  invs (strcmp_invs mem esp) (strcmp_post mem esp).
+(* The invariant-set for this property makes no assumptions at program-start
+   (address 0), and puts a loop-invariant at address 8.  Putting a (trivial)
+   invariant at the entry point 0 is optional, but it can make proofs easier
+   because it will make the base case of your induction trivial to prove. *)
+Definition strcmp_invs (m:addr->N) (esp:N) (t:trace) :=
+  match t with (Addr a,s)::_ => match a with
+  | 0 => Some True  (* no assumptions at entry point *)
+  | 8 => Some (  (* loop invariant *)
+     ∃ k, s R_ECX = Ⓓ(m Ⓓ[4+esp] ⊕ k) /\ s R_EDX = Ⓓ(m Ⓓ[8+esp] ⊕ k) /\
+         streq m (m Ⓓ[4+esp]) (m Ⓓ[8+esp]) k
+    )
+  | 22 | 36 => Some (postcondition m esp s)
+  | _ => None
+  end | _ => None end.
 
 (* Our partial correctness theorem makes the following assumptions:
-   (MDL0) Assume that on entry the processor is in a valid state.
-   (ESP0) Let esp be the value of the ESP register on entry.
-   (MEM0) Let mem be the memory state on entry.
-   (RET) Assume the return address on the stack on entry is not within strcmp(!)
-   (XP0) Let x and s' be the exit condition and store after n instructions execute.
+   (ENTRY) Specify the start address and state of the subroutine.
+   (MDL) Assume that on entry the processor is in a valid state.
+   (ESP) Let esp be the value of the ESP register on entry.
+   (MEM) Let mem be the memory state on entry.
    From these, we prove that all invariants (including the post-condition) hold
-   true for arbitrarily long executions (i.e., arbitrary n). *)
+   true for arbitrarily long executions (i.e., arbitrary t). *)
 Theorem strcmp_partial_correctness:
-  forall s esp mem n s' x
-         (MDL0: models x86typctx s)
-         (ESP0: s R_ESP = Ⓓ esp) (MEM0: s V_MEM32 = Ⓜ mem)
-         (RET: strcmp_i386 s (mem Ⓓ[esp]) = None)
-         (XP0: exec_prog fh strcmp_i386 0 s n s' x),
-  trueif_inv (strcmp_invset mem esp strcmp_i386 x s').
+  forall s esp mem t s' x'
+         (ENTRY: startof t (x',s') = (Addr 0, s))
+         (MDL: models x86typctx s)
+         (ESP: s R_ESP = Ⓓesp) (MEM: s V_MEM32 = Ⓜmem),
+  satisfies_all strcmp_i386 (strcmp_invs mem esp) strcmp_exit ((x',s')::t).
 Proof.
+  (* Start the proof the same way as before. *)
+  intros. apply prove_invs.
+
+  (* Prove the base case similarly. *)
+  simpl. rewrite ENTRY. x86_step. exact I.
+
+  (* Change assumptions about s into assumptions about s1. *)
   intros.
-  assert (WTM0 := x86_wtm MDL0 MEM0). simpl in WTM0.
-  eapply prove_invs. exact XP0.
+  eapply startof_prefix in ENTRY; try eassumption.
+  eapply strcmp_preserves_esp, satall_trueif_inv in ESP; try eassumption. simpl in ESP.
+  erewrite strcmp_preserves_memory in MEM by eassumption.
+  eapply preservation_exec_prog in MDL; try (eassumption || apply strcmp_welltyped).
+  assert (WTM := x86_wtm MDL MEM). simpl in WTM.
+  clear - PRE ESP MEM MDL WTM. rename t1 into t. rename s1 into s.
 
   (* Time how long it takes for each symbolic interpretation step to complete
      (for profiling and to give visual cues that something is happening...). *)
   Local Ltac step := time x86_step.
 
-  (* Optional: The following proof ignores all flag values except CF and ZF, so
-     we can make evaluation faster and shorter by telling Picinae to ignore the
-     other flags (i.e., abstract their values away). *)
-  Ltac x86_ignore v ::= constr:(match v with
-    R_AF | R_DF | R_OF | R_PF | R_SF => true
-  | _ => false end).
+  (* Break the proof into cases, one for each invariant-point. *)
+  destruct_inv 32 PRE.
 
   (* Address 0 *)
   step. step. exists 0. psimpl. split.
     reflexivity. split. reflexivity.
     intros i LT. destruct i; discriminate.
 
-  (* Before splitting into cases, translate each hypothesis about the
-     entry point store s into an equivalent hypothesis about store s1: *)
-  intros.
-  assert (MDL: models x86typctx s1).
-    eapply preservation_exec_prog. exact MDL0. apply strcmp_welltyped. exact XP.
-  assert (MEM: s1 V_MEM32 = Ⓜ mem).
-    rewrite <- MEM0. eapply strcmp_preserves_memory. exact XP.
-  assert (WTM := x86_wtm MDL MEM). simpl in WTM.
-  rewrite (strcmp_nwc s1) in RET.
-  assert (ESP := strcmp_preserves_esp _ _ _ _ _ (Exit a1) MDL0 ESP0 MEM0 RET XP).
-  clear s MDL0 MEM0 WTM0 ESP0 XP XP0.
-
-  (* Break the proof into cases, one for each invariant-point. *)
-  destruct_inv 32 PRE.
+  (* Optional: The rest of the proof ignores all flag values except CF and ZF, so
+     we can make evaluation faster and shorter by telling Picinae to ignore the
+     other flags (i.e., abstract their values away). *)
+  Ltac x86_ignore v ::= constr:(match v with
+    R_AF | R_DF | R_OF | R_PF | R_SF => true
+  | _ => false end).
 
   (* Address 8 *)
   destruct PRE as [k [ECX [EDX SEQ]]].
@@ -241,7 +232,7 @@ Proof.
     step. step. step. step.
 
       (* Address 20 *)
-      step. step. apply Neqb_ok in BC.
+      step. apply Neqb_ok in BC.
       exists 0, k. psimpl. repeat first [ exact SEQ | split ].
         symmetry. apply Neqb_ok, BC0.
         apply N.compare_eq_iff, BC.
@@ -255,7 +246,7 @@ Proof.
           apply N.neq_0_lt_0, N.neq_sym, N.eqb_neq. assumption.
 
     (* Address 23 *)
-    step. step. step. step.
+    step. step. step.
     eexists. exists k. psimpl. split. reflexivity. split. exact SEQ. split.
       intro. destruct (_ <? _); discriminate.
       apply N.eqb_neq, N.lt_gt_cases in BC. destruct BC as [BC|BC].

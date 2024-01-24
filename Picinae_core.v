@@ -34,7 +34,7 @@
 
 Require Import NArith.
 Require Import ZArith.
-Require Import FunctionalExtensionality.
+Require Import List.
 Require Import Structures.Equalities.
 Open Scope N.
 
@@ -53,25 +53,22 @@ Notation "x == y" := (iseq x y) (at level 70, no associativity).
    element y. *)
 Definition update {A B:Type} {_: EqDec A} (f:A->B) (x:A) (y:B) (x0:A) : B :=
   if x0 == x then y else f x0.
-Notation "f [ x := y ]" := (update f x y) (at level 50, left associativity).
+
+(* Notation f[x:=y] means (update f x y) *)
+Notation "f [ x := y ]" := (update f x y) (at level 50, left associativity, format "f '/' [ x  :=  y ]").
 
 
 (* Bitwidths and addresses are expressed as binary natural numbers. *)
 Definition bitwidth := N.
-Bind Scope N_scope with bitwidth.
-
 Definition addr := N.
-Bind Scope N_scope with addr.
 
 (* Abstract values are binary numbers (VaN) or memory states (VaM). *)
-Inductive value :=
-| VaN (n:N) (w:bitwidth)
-| VaM (m:addr->N) (w:bitwidth).
+Inductive avalue {A:Set} : Set :=
+| VaN (n:A) (w:bitwidth)
+| VaM (m:addr->A) (w:bitwidth).
+Arguments avalue A : clear implicits.
 
-(* Heaps (for separation logic) define sets of accessible addresses. *)
-Definition heap (A:Type) := addr -> option A.
-Definition hdomain := heap unit.
-Definition htotal : hdomain := fun _ => Some tt.
+Definition value := avalue N.
 
 (* Define w-bit modular subtraction. *)
 Definition msub w x y := (x + (2^w - y mod 2^w)) mod 2^w.
@@ -117,6 +114,10 @@ Definition sle w n1 n2 := Z.leb (toZ w n1) (toZ w n2).
 (* Unsigned cast: extract bits i to i+j-1 of an unsigned binary number. *)
 Definition xbits n i j := (N.shiftr n i) mod 2^(j - i).
 Arguments xbits / !n !i !j.
+
+(* Concatenate high bits n1 onto width-i low bits n2 *)
+Definition cbits n1 i n2 := N.lor (N.shiftl n1 i) n2.
+Arguments cbits / !n1 !i !n2.
 
 (* Signed cast: extract the low w' bits of a w-width signed number, preserving sign *)
 Definition scast w w' n := ofZ w' (toZ w n).
@@ -207,15 +208,22 @@ Definition cast (c:cast_typ) (w w':bitwidth) (n:N) : N :=
 
 
 
-(* A program exits by jumping to an address outside the program (Exit),
+(* An execution exits an instruction by jumping to an address (Addr),
    or raising an exception (Raise). *)
-Inductive exit : Type := Exit (a:addr) | Raise (i:N).
+Inductive exit : Type := Addr (a:addr) | Raise (i:N).
 
 (* Helper function to convert fall-throughs to exits: *)
 Definition exitof (a:addr) (sx:option exit) : exit :=
-  match sx with None => Exit a | Some x => x end.
+  match sx with None => Addr a | Some x => x end.
 
+(* Convert a list of states into a list of adjecent state-pairs. *)
+Definition stepsof {A} (l:list A) := List.combine l (List.tl l).
+Arguments stepsof {A} / !l.
 
+(* Starts of traces are last elements of lists. *)
+Definition startof {A} := @List.last A.
+Definition ostartof {A} (l:list A) := match l with nil => None | a::t => Some (startof t a) end.
+Definition start_state {A} t (xs: exit * A) := snd (startof t xs).
 
 
 (* Each Picinae instantiation takes a machine architecture as input, expressed as
@@ -319,8 +327,6 @@ Definition setmem (w:bitwidth) (e:endianness) (len:bitwidth) : (addr->N) -> addr
 
 Section InterpreterEngine.
 
-Variable h : hdomain.
-
 (* Evaluate an expression in the context of a store, returning a value.  Note
    that the semantics of EUnknown are non-deterministic: an EUnknown expression
    evaluates to any well-typed value.  Thus, eval_exp and the other interpreter
@@ -331,12 +337,12 @@ Inductive eval_exp (s:store): exp -> value -> Prop :=
 | EWord n w: eval_exp s (Word n w) (VaN n w)
 | ELoad e1 e2 en len mw m a
         (E1: eval_exp s e1 (VaM m mw)) (E2: eval_exp s e2 (VaN a mw))
-        (R: forall n, n < len -> h ((a+n) mod 2^mw) = Some tt /\ mem_readable s ((a+n) mod 2^mw)):
+        (R: forall n, n < len -> mem_readable s ((a+n) mod 2^mw)):
         eval_exp s (Load e1 e2 en len) (VaN (getmem mw en len m a) (Mb*len))
 | EStore e1 e2 e3 en len mw m a v
          (E1: eval_exp s e1 (VaM m mw)) (E2: eval_exp s e2 (VaN a mw))
          (E3: eval_exp s e3 (VaN v (Mb*len)))
-         (W: forall n, n < len -> h ((a+n) mod 2^mw) = Some tt /\ mem_writable s ((a+n) mod 2^mw)):
+         (W: forall n, n < len -> mem_writable s ((a+n) mod 2^mw)):
          eval_exp s (Store e1 e2 e3 en len) (VaM (setmem mw en len m a v) mw)
 | EBinOp bop e1 e2 n1 n2 w (E1: eval_exp s e1 (VaN n1 w)) (E2: eval_exp s e2 (VaN n2 w)):
          eval_exp s (BinOp bop e1 e2) (eval_binop bop w n1 n2)
@@ -353,7 +359,7 @@ Inductive eval_exp (s:store): exp -> value -> Prop :=
 | EExtract w n1 n2 e1 n (E1: eval_exp s e1 (VaN n w)):
            eval_exp s (Extract n1 n2 e1) (VaN (xbits n n2 (N.succ n1)) (N.succ n1 - n2))
 | EConcat e1 e2 n1 w1 n2 w2 (E1: eval_exp s e1 (VaN n1 w1)) (E2: eval_exp s e2 (VaN n2 w2)):
-          eval_exp s (Concat e1 e2) (VaN (N.lor (N.shiftl n1 w2) n2) (w1+w2)).
+          eval_exp s (Concat e1 e2) (VaN (cbits n1 w2 n2) (w1+w2)).
 
 (* Execute an IL statement, returning a new store and possibly an exit (if the
    statement exited prematurely).  "None" is returned if the statement finishes
@@ -363,7 +369,7 @@ Inductive exec_stmt (s:store): stmt -> store -> option exit -> Prop :=
 | XMove v e u (E: eval_exp s e u):
     exec_stmt s (Move v e) (update s v u) None
 | XJmp e a w (E: eval_exp s e (VaN a w)):
-    exec_stmt s (Jmp e) s (Some (Exit a))
+    exec_stmt s (Jmp e) s (Some (Addr a))
 | XExn i: exec_stmt s (Exn i) s (Some (Raise i))
 | XSeq1 q1 q2 s' x (XS: exec_stmt s q1 s' (Some x)):
     exec_stmt s (Seq q1 q2) s' (Some x)
@@ -377,17 +383,14 @@ Inductive exec_stmt (s:store): stmt -> store -> option exit -> Prop :=
        (E: eval_exp s e (VaN n w)) (XS: exec_stmt s (N.iter n (Seq q) Nop) s' x):
     exec_stmt s (Rep e q) s' x.
 
-(* Execute exactly n machine instructions of a program p starting at address a,
-   returning a store and exit condition. *)
-Inductive exec_prog (p:program) (a:addr) (s:store): nat -> store -> exit -> Prop :=
-| XDone: exec_prog p a s O s (Exit a)
-| XStep n sz q s2 x1 a' s' x' (LU: p s a = Some (sz,q))
-        (XS: exec_stmt s q s2 x1) (EX: exitof (a+sz) x1 = Exit a')
-        (XP: exec_prog p a' s2 n s' x'):
-    exec_prog p a s (S n) s' x'
-| XAbort sz q s' i (LU: p s a = Some (sz,q))
-         (XS: exec_stmt s q s' (Some (Raise i))):
-    exec_prog p a s (S O) s' (Raise i).
+(* A program execution is a trace of consecutive statement executions. *)
+Definition trace := list (exit * store).
+
+Inductive can_step (p:program): ((exit*store) * (exit*store)) -> Prop :=
+| CanStep a s sz q s' x (LU: p s a = Some (sz,q)) (XS: exec_stmt s q s' x):
+    can_step p ((exitof (a+sz) x, s'),(Addr a, s)).
+
+Definition exec_prog (p:program) (t:trace) := Forall (can_step p) (stepsof t).
 
 End InterpreterEngine.
 
@@ -465,6 +468,13 @@ Global Arguments forall_vars_in_exp P e /.
 Global Arguments forall_vars_in_stmt P q /.
 Global Arguments exists_var_in_exp P e /.
 Global Arguments exists_var_in_stmt P q /.
+
+Definition forall_traces_in (p:program) (P: trace -> Prop) : Prop :=
+  forall t (XP: exec_prog p t), P t.
+
+Definition forall_endstates (p:program) (P: exit -> store -> exit -> store -> Prop) : Prop :=
+  forall t x s x' s' (XP: exec_prog p ((x',s')::t)) (ENTRY: startof t (x',s') = (x,s)),
+  P x s x' s'.
 
 (* "Unknown" expressions are the sole source of non-determinism in the IL
    semantics, so it is useful to have a special test for those, which can

@@ -39,6 +39,10 @@ Require Import Program.Equality.
 Require Import FunctionalExtensionality.
 Require Import NArith.
 
+Module Type PICINAE_SLOGIC_DEFS (IL: PICINAE_IL).
+
+Import IL.
+
 (* This module implements separation logic for local reasoning about memory in
    Picinae.  Rather than define a separation operators as an Inductive datatype
    with associated inference rules (which would confine proof authors to using
@@ -47,8 +51,265 @@ Require Import NArith.
    use Coq's entire proof logic for local reasoning by simply applying the
    Frame Rule as a theorem when desired. *)
 
+(* Heaps define sets of accessible addresses. *)
+Definition hvalue := avalue (option N).
+Definition heap := var -> hvalue.
 
-(* Heaps are partial functions from addr to N.  The IL interpreter expresses
+Definition extend_heapmem (u:value) (hm: addr -> option N) (a:addr) :=
+  match hm a with Some n => n | None =>
+    match u with VaN n _ => n | VaM m _ => m a end
+  end.
+
+Definition extend_heap (fs:store) (h:heap) : store := fun v =>
+  match h v with
+  | VaN hn w => VaN match hn with Some n => n | None =>
+                      match fs v with VaN n _ => n | VaM m _ => m N0 end end w
+  | VaM hm w => VaM (extend_heapmem (fs v) hm) w
+  end.
+
+Definition htrace := list (exit * heap).
+
+Definition extend_htrace (fr:list store) (ht:htrace) : trace :=
+  List.map (fun sh => match sh with (s,(x,h)) => (x,extend_heap s h) end) (List.combine fr ht).
+
+Definition extend_htrace1 (s:store) (ht:htrace) : trace :=
+  extend_htrace (List.repeat s (List.length ht)) ht.
+
+(* {P}p{Q} = if P is true at the start, then p when executed does not "go wrong", and if it terminates then Q is true.
+   "goes wrong" = p does not access memory outside the heap's domain *)
+
+(* {P}p{Q} = forall fs ht, if extend(fs,ht) is a valid trace of program p and the start of ht satisfies P,
+             then ht does not "go wrong", and the last state of ht satisifies Q.
+
+   ht does not "go wrong" = forall fs', extend(fs',ht) is a valid trace of program p *)
+
+Definition hexec_prog p xp ht :=
+  forall s, exec_prog p (extend_htrace1 s ht) /\ unterminated xp (extend_htrace1 s (List.tl ht)).
+
+Definition forall_endheaps (p:program) xp (P: htrace -> exit * heap -> Prop) : Prop :=
+  forall ht fr xh' (XP: exec_prog p (extend_htrace fr (xh'::ht))) (UT: unterminated xp (extend_htrace fr ht)),
+  P ht xh'.
+
+Definition sep_triple (P: exit -> heap -> Prop) (p:program) xp (Q: exit -> heap -> Prop) : Prop :=
+  forall_endheaps p xp (fun ht xh' =>
+    (let (x,h) := startof ht xh' in P x h) ->
+    hexec_prog p xp ht /\
+    (let (x',h') := xh' in Q x' h')
+  ).
+
+Definition mdisj (hm1 hm2: addr -> option N) :=
+  forall a, hm1 a = None \/ hm2 a = None.
+
+Definition hdisj (h1 h2: heap) : Prop :=
+  forall v, match h1 v with
+  | VaN None w => exists hn, h2 v = VaN hn w
+  | VaN (Some _) w => h2 v = VaN None w
+  | VaM hm1 w => exists hm2, h2 v = VaM hm2 w /\ mdisj hm1 hm2
+  end.
+
+Definition munion (hm1 hm2: addr -> option N) (a:addr) :=
+  match hm1 a with None => hm2 a | Some n => Some n end.
+
+Definition hunion (h1 h2: heap) : heap := fun v =>
+  match h1 v with
+  | VaN hn w => match hn with None => h2 v | Some _ => VaN hn w end
+  | VaM hm1 w => match h2 v with VaN _ _ => VaM hm1 w
+                               | VaM hm2 _ => VaM (munion hm1 hm2) w end
+  end.
+
+Definition hprop := heap -> Prop.
+
+Definition heap_of (s:store) : heap := fun v =>
+  match s v with
+  | VaN n w => VaN (Some n) w
+  | VaM m w => VaM (Basics.compose Some m) w
+  end.
+
+
+Definition sepconj (P Q: hprop) : hprop := fun h =>
+  exists h1 h2, hdisj h1 h2 /\ h = hunion h1 h2 /\ P h1 /\ Q h2.
+
+Definition emp : hprop := fun h =>
+  forall v, match h v with VaN hn _ => hn = None | VaM hm _ => forall a, hm a = None end.
+
+Definition vpointsto v (Q: hvalue -> Prop) : hprop := fun h =>
+  emp (update h v (VaN None 0)) /\ Q (h v).
+
+Definition mpointsto a (Q: N -> Prop) hu : Prop :=
+  match hu with
+  | VaN _ _ => False
+  | VaM hm _ => match hm a with None => False | Some n =>
+                  (forall a0, update hm a None a0 = None) /\ Q n
+                end
+  end.
+
+Definition pointsto v a Q : hprop := vpointsto v (mpointsto a Q).
+
+Definition sepimp (P Q: hprop) : hprop := fun h =>
+  forall h' (DIS: hdisj h' h) (PRE: P h'), Q (hunion h' h).
+
+Theorem sep_mp:
+  forall (P Q: hprop) h, sepconj P (sepimp P Q) h -> Q h.
+Proof.
+  intros.
+  destruct H as [h1 [h2 [DIS [HU [PH1 SI]]]]]. subst h.
+  apply SI; assumption.
+Qed.
+
+(* {P}c{Q}
+   ------------ mod(p) and fv(R) are disjoint
+   {P*R}c{Q*R}
+
+   {P}ht
+   -------------
+   {P*R}(ht*ht')
+*)
+
+Theorem sep_frame:
+  forall p xp (P Q R: exit -> heap -> Prop),
+  sep_triple P p xp Q ->
+  sep_triple (fun x => sepconj (P x) (R x)) p xp (fun x' => sepconj (Q x') (R x')).
+Proof.
+  unfold sep_triple, forall_endheaps. intros.
+  destruct xh' as (x',h'). destruct (startof ht (x',h')) as (x,h) eqn:ENTRY.
+  destruct H0 as [h1 [h2 [HD [HU [P1 R2]]]]]. subst h.
+  specialize (H _ _ _ XP UT). rewrite ENTRY in H.
+  split.
+
+    apply H.
+
+  destruct H0 as [h1 [h2 [HD [HU [P1 R2]]]]].
+  set (h1' v := match h1 v with
+                | VaN None w => VaN None w
+                | VaN (Some _) _ => heap_of s' v
+                | VaM hm _ => match s' v with
+                              | VaN n w => VaN (Some n) w
+                              | VaM m w => VaM (fun a => option_map (fun _ => m a) (hm a)) w
+                              end
+                end).
+  exists h1',h2. repeat split.
+
+  intro v. unfold h1'. specialize (HD v).
+  destruct (h1 v).
+    destruct n.
+      
+
+  eapply H in XP; try eassumption.
+Qed.
+
+Definition htprop := htrace -> Prop.
+
+Definition sep_triple (P: htprop) (p: program) (Q: htprop) : Prop :=
+
+
+
+
+Definition forall_heaps (P: hprop) : htprop := fun ht =>
+  List.Forall P (List.map snd ht).
+
+Definition hprop2 := heap -> hprop.
+Definition htprop2 := htrace -> htprop.
+
+Definition forall_heaps2 (P: hprop2) : htprop2 := fun ht1 ht2 =>
+  List.map fst ht1 = List.map fst ht2 /\
+  List.Forall2 P (List.map snd ht1) (List.map snd ht2).
+
+Definition htdisj : htprop2 := forall_heaps2 hdisj.
+
+Definition htmap2 (f: heap -> heap -> heap) (ht1 ht2: htrace) : htrace :=
+  List.map (fun xhxh => match xhxh with ((x1,h1),(_,h2)) => (x1,f h1 h2) end) (List.combine ht1 ht2).
+
+Definition htunion := htmap2 hunion.
+
+Definition tsepconj (P Q: htprop) : htprop := fun ht =>
+  exists ht1 ht2, htdisj ht1 ht2 /\ ht = htunion ht1 ht2 /\ P ht1 /\ Q ht2.
+
+(*
+Module Theory := PicinaeTheory IL.
+Import Theory.
+*)
+
+Definition hsatisfies_all (p:program) (Invs: htrace -> option Prop) (xp: list (exit*store) -> bool) (ht:htrace) :=
+  hexec_prog p xp ht -> trueif_inv (Invs ht).
+
+Theorem sep_frame:
+  forall R p Invs xp ht
+    (XP: hexec_prog p xp ht)
+    (SA: hsatisfies_all p Invs xp ht),
+  tsepconj (hsatisfies_all p Invs xp) (hsatisfies_all p R xp) ht.
+Proof.
+  intros.
+  apply SA in XP.
+  unfold tsepconj. unfold trueif_inv in XP.
+Qed.
+
+
+
+Theorem sep_frame:
+  forall p P R,
+  sep_triple p (forall_heaps P) -> sep_triple p (forall_heaps (sepconj P R)).
+Proof.
+  intros. intros ht H1.
+  eapply List.Forall_impl; [|apply H, H1].
+  intros h Ph.
+  destruct ht as [|(x',s') ht]. exact I.
+  intro PRE. destruct PRE as [h1 [h2 [DIS [HU [PH1 SI]]]]].
+  unfold sep_triple in H.
+Qed.
+
+
+
+
+
+
+
+
+
+
+Definition hdomain_of (h:heap) : hdomain := fun v a =>
+  match h v with HVNone => None | HVN _ _ => Some tt | HVM m _ =>
+    option_map (fun _ => tt) (m a)
+  end.
+
+Definition hdopp (d:hdomain) : hdomain := fun v a =>
+  match d v a with None => Some tt | Some tt => None end.
+
+Definition hrestrict (d:hdomain) (h:heap) : heap := fun v =>
+  match h v with
+  | HVNone => HVNone
+  | HVN n w => match d v N0 with None => HVNone | Some tt => HVN n w end
+  | HVM m w => HVM (fun a => match d v a with None => None | Some tt => m a end) w
+  end.
+
+Definition hdisj (h1 h2:heap) : Prop :=
+  forall v, match h1 v, h2 v with
+  | HVNone, _ | _, HVNone => True
+  | HVM m1 _, HVM m2 _ => forall a, m1 a = None \/ m2 a = None
+  | _,_ => False
+  end.
+
+Definition hprop := heap -> Prop.
+
+Definition sepconj P Q : hprop := fun h =>
+  exists (d:hdomain), P (hrestrict d h) /\ Q (hrestrict (hdopp d) h).
+
+Definition hfalse : hprop := fun _ => False.
+
+Definition htrue : hprop := fun _ => True.
+
+Definition vpointsto Q v (h:heap) :=
+  forall v0, if v0 == v then Q (h v0) else (h v0 = HVNone).
+
+Definition mpointsto Q a (hu:hvalue) :=
+  match hu with HVNone => False | HVN n _ => a = N0 /\ Q n | HVM m _ =>
+    forall a0, a0<>a \/ match m a0 with None => False | Some n => Q n end
+  end.
+
+Definition pointsto Q a := vpointsto (mpointsto Q a).
+
+
+
+(* Heaps are partial functions from var*addr to N.  The IL interpreter expresses
    memories m as total functions, so to make them act like heaps, we separately
    encode the heap's domain (h:hdomain), which we here express as a partial
    function from addr to unit.  For any addr 'a', if (h a = None) then address
@@ -56,12 +317,24 @@ Require Import NArith.
    (This is more convenient than representing h as a total function from addr
    to bool, since it allows functions and theorems concerning partial functions
    to be applied to heaps and their domains.) *)
-Definition hdom {A} (h: heap A) a := match h a with None => None | Some _ => Some tt end.
-Definition hopp {A} (h: heap A) a := match h a with None => Some tt | Some _ => None end.
+Definition hdom {A} (h: heap A) v a := match h v a with None => None | Some _ => Some tt end.
+Definition hopp {A} (h: heap A) v a := match h v a with None => Some tt | Some _ => None end.
 
 (* the restriction of heap h2 to the domain of h1: *)
-Definition resth {A B} (h1: heap A) (h2: heap B) a :=
-  match h1 a with None => None | Some _ => h2 a end.
+Definition resth {A B} (h1: heap A) (h2: heap B) v a :=
+  match h1 v a with None => None | Some _ => h2 v a end.
+
+(* a memory whose values outside of heap h are drawn from m: *)
+Definition hassign_mem {H B} (h: heap H) m' m a : B :=
+  match h a with None => m | Some _ => m' end a.
+Definition hassign {H V} (h: heap H) s s' (v:V) : value :=
+  match s' v with VaN n w => VaN n w | VaM m' w =>
+    VaM (hassign_mem h m' (match s v with VaN n _ => (fun _ => n) | VaM m _ => m end)) w
+  end.
+Definition hassign2 {H V} (h: heap H) (s: V -> value) xs :=
+  match xs with (x, s') => (x:exit, hassign h s s') end.
+Definition hassign_all {H V} (h: heap H) (s: V -> value) t :=
+  List.map (hassign2 h s) t.
 
 (* disjointedness of heaps *)
 Definition hdisj {A B} (h1: heap A) (h2: heap B) := forall a, h1 a = None \/ h2 a = None.
@@ -261,19 +534,25 @@ Definition sep := sepconj var.
 
 
 (* In separation logic, Hoare triple {P}q{Q} asserts that executing q on any
-   heap h that satisfyies P does not "go wrong" and yields a heap satisfying Q.
+   heap h that satisfies P does not "go wrong" and yields a heap satisfying Q.
    "Going wrong" in this context means accessing memory outside of h's domain.
    (It does not mean type-mismatch, which is handled by the static semantics.)
-   We therefore here define "go wrong" as "contracting the heap-domain of q
-   that otherwise stays right does not cause q to go wrong". *)
+   We therefore here define "go wrong" as "changes or depends upon any memory
+   contents outside the heap". *)
 
 Definition htrip_stmt P q Q :=
-  forall s h s' x (PRE: P (resths h (to_hstore s))) (XS: exec_stmt htotal s q s' x),
-    exec_stmt h s q s' x /\ Q (resths h (to_hstore s')).
+  forall s (h:hdomain) s' x
+    (PRE: P (resths h (to_hstore s)))
+    (XS: exec_stmt s q s' x),
+  s' = hassign h s s' /\ Q (resths h (to_hstore s')).
 
-Definition htrip_prog P p a n Q :=
-  forall s h s' x (PRE: P (resths h (to_hstore s))) (XP: exec_prog htotal p a s n s' x),
-    exec_prog h p a s n s' x /\ Q (resths h (to_hstore s')).
+Definition htrip_prog P p t Q :=
+  match t with nil => True | (x',s')::t' => let (x,s) := startof (x',s') t in
+    forall (h:hdomain)
+      (PRE: P (resths h (to_hstore s)))
+      (XP: exec_prog p t),
+    t = hassign_all h s t /\ Q (resths h (to_hstore s'))
+  end.
 
 
 (* The key idea behind the following proofs is that executing any expression or
@@ -363,6 +642,7 @@ Parameter hmodels_trans:
 Parameter hmodels_mono:
   forall s h1 h2 u (SS: h1 ⊆ h2) (HM: hmodels s h1 u), hmodels s h2 u.
 
+(*
 Parameter hmodels_exp:
   forall h s e u (E: eval_exp h s e u),
   hmodels s h u.
@@ -374,24 +654,26 @@ Parameter hmodels_stmt:
 Parameter hmodels_prog:
   forall h p a s n s' x (XP: exec_prog h p a s n s' x),
   hmodels_store h s s'.
-
+*)
 
 (* If R frames q, then executing q preserves R. *)
 
-Parameter frames_rep:
+Parameter framed_rep:
   forall R e q (FR: frames_stmt R q), frames_stmt R (Seq q (Rep e q)).
 
 Parameter framed_stmt:
   forall {A} (R: hsprop var) (h:heap A) s q s' x (FR: frames_stmt R q)
-         (XS: exec_stmt (hopp h) s q s' x)
+         (XS: exec_stmt s q s' x)
          (HS: hmodels_store (hopp h) s s') (PRE: R (resths h (to_hstore s))),
   R (resths h (to_hstore s')).
 
+(*
 Parameter framed_prog:
   forall {A} (R: hsprop var) (h:heap A) p a s n s' x (FR: frames_prog R p)
          (XP: exec_prog (hopp h) p a s n s' x)
          (HS: hmodels_store (hopp h) s s') (PRE: R (resths h (to_hstore s))),
   R (resths h (to_hstore s')).
+*)
 
 
 (* Main result: The frame rule of separation logic is sound.  In particular,
@@ -403,9 +685,9 @@ Parameter stmt_frame:
   htrip_stmt (sep P R) q (sep Q R).
 
 Parameter prog_frame:
-  forall p a n (P Q R: hsprop var) (FR: frames_prog R p)
-         (HT: htrip_prog P p a n Q),
-  htrip_prog (sep P R) p a n (sep Q R).
+  forall p t (P Q R: hsprop var) (FR: frames_prog R p)
+         (HT: htrip_prog P p t Q),
+  htrip_prog (sep P R) p t (sep Q R).
 
 
 (* At this point we have our main result, but it requires users to prove that
@@ -565,6 +847,7 @@ Proof.
       reflexivity.
 Qed.
 
+(*
 Theorem hmodels_exp:
   forall h s e u (E: eval_exp h s e u),
   hmodels s h u.
@@ -609,11 +892,12 @@ Theorem hmodels_prog:
 Proof.
   intros. dependent induction XP; intros.
     apply hmodels_refl.
-    eapply hmodels_trans. eapply hmodels_stmt. eassumption. eassumption.
+    eapply hmodels_trans. eassumption. eapply hmodels_stmt. eassumption.
     eapply hmodels_stmt. eassumption.
 Qed.
+*)
 
-Lemma frames_rep:
+Lemma framed_rep:
   forall R e q (FR: frames_stmt R q), frames_stmt R (Seq q (Rep e q)).
 Proof.
   intros. intros s h u HM. apply AASeq.
@@ -623,7 +907,7 @@ Qed.
 
 Lemma framed_stmt:
   forall {A} (R: hsprop var) (h:heap A) s q s' x (FR: frames_stmt R q)
-         (XS: exec_stmt (hopp h) s q s' x)
+         (XS: exec_stmt s q s' x)
          (HS: hmodels_store (hopp h) s s') (PRE: R (resths h (to_hstore s))),
   R (resths h (to_hstore s')).
 Proof.
@@ -663,11 +947,10 @@ Lemma framed_prog:
 Proof.
   intros. revert a s s' x XP HS PRE. induction n; intros; inversion XP; clear XP; subst.
     assumption.
-    eapply IHn. eassumption.
-      eapply hmodels_prog. eassumption.
-      eapply framed_stmt; try eassumption.
-        specialize (FR s a). rewrite LU in FR. exact FR.
-        eapply hmodels_stmt. eassumption.
+    eapply framed_stmt; try eassumption.
+      specialize (FR s2 a2). rewrite LU in FR. exact FR.
+      eapply hmodels_stmt. eassumption.
+      eapply IHn; try eassumption. eapply hmodels_prog. eassumption.
     eapply framed_stmt; try eassumption. specialize (FR s a). rewrite LU in FR. exact FR.
 Qed.
 

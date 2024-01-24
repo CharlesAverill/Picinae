@@ -12,8 +12,8 @@
 %coqc% Picinae_statics.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_finterp.v
-@IF ERRORLEVEL 1 GOTO :ErrorExit
-%coqc% Picinae_slogic.v
+@REM @IF ERRORLEVEL 1 GOTO :ErrorExit
+@REM %coqc% Picinae_slogic.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_simplifier_base.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit

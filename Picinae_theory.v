@@ -37,8 +37,9 @@ Require Import NArith.
 Require Import ZArith.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
+Require Import List.
 Require Setoid.
-
+Open Scope list_scope.
 
 
 (* Define some tactics for reasoning about IL variable identifier equalities
@@ -285,16 +286,16 @@ End NInduction.
 Section ModPow2.
 
 Theorem mp2_add_l: forall m n w, (m mod 2^w + n) mod 2^w = (m + n) mod 2^w.
-Proof. intros. apply N.add_mod_idemp_l, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.add_mod_idemp_l. Qed.
 
 Theorem mp2_add_r: forall m n w, (m + n mod 2^w) mod 2^w = (m + n) mod 2^w.
-Proof. intros. apply N.add_mod_idemp_r, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.add_mod_idemp_r. Qed.
 
 Theorem mp2_mod_same: forall w, 2^w mod 2^w = 0.
-Proof. intros. apply N.mod_same, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.mod_same. Qed.
 
 Theorem mp2_mod_mod: forall n w, n mod 2^w mod 2^w = n mod 2^w.
-Proof. intros. apply N.mod_mod, N.pow_nonzero; discriminate 1. Qed.
+Proof. intros. apply N.Div0.mod_mod. Qed.
 
 Theorem N_mod_mod_pow:
   forall n a b c, a <> 0 -> n mod a^b mod a^c = n mod a^N.min b c.
@@ -303,8 +304,8 @@ Proof.
     rewrite (N.min_l _ _ H1). eapply N.mod_small, N.lt_le_trans.
       apply N.mod_lt, N.pow_nonzero, H.
       apply N.pow_le_mono_r; assumption.
-    rewrite (N.min_r _ _ H1), <- (N.sub_add _ _ H1), N.pow_add_r, N.mul_comm, N.mod_mul_r,
-            N.mul_comm, N.mod_add, N.mod_mod by apply N.pow_nonzero, H. reflexivity.
+    rewrite (N.min_r _ _ H1), <- (N.sub_add _ _ H1), N.pow_add_r, N.mul_comm, N.Div0.mod_mul_r,
+            N.mul_comm, N.Div0.mod_add, N.Div0.mod_mod by apply N.pow_nonzero, H. reflexivity.
 Qed.
 
 Corollary mp2_mod_mod_min:
@@ -315,16 +316,16 @@ Theorem mp2_mod_lt: forall n w, n mod 2^w < 2^w.
 Proof. intros. apply N.mod_lt, N.pow_nonzero. discriminate 1. Qed.
 
 Theorem mp2_mod_le: forall n w, n mod 2^w <= n.
-Proof. intros. apply N.mod_le, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.mod_le. Qed.
 
 Theorem mp2_mod_mul: forall n w, (n * 2^w) mod 2^w = 0.
-Proof. intros. apply N.mod_mul, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.mod_mul. Qed.
 
 Theorem mp2_div_0_l: forall w, 0 / 2^w = 0.
-Proof. intros. apply N.div_0_l, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.div_0_l. Qed.
 
 Theorem mp2_mod_0_l: forall w, 0 mod 2^w = 0.
-Proof. intros. apply N.mod_0_l, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.mod_0_l. Qed.
 
 Theorem mp2_succ_pred: forall w, N.succ (N.pred (2^w)) = 2^w.
 Proof. intros. apply N.succ_pred, N.pow_nonzero. discriminate 1. Qed.
@@ -336,25 +337,25 @@ Theorem mp2_div_same: forall w, 2^w / 2^w = 1.
 Proof. intros. apply N.div_same, N.pow_nonzero. discriminate 1. Qed.
 
 Theorem mp2_mul_div_le: forall n w, 2^w * (n / 2^w) <= n.
-Proof. intros. apply N.mul_div_le, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.mul_div_le. Qed.
 
 Theorem mp2_div_mul_le: forall m n w, m * (n / 2^w) <= m * n / 2^w.
-Proof. intros. apply N.div_mul_le, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.div_mul_le. Qed.
 
 Theorem mp2_mul_r: forall m n w, (m * (n mod 2^w)) mod 2^w = (m * n) mod 2^w.
-Proof. intros. apply N.mul_mod_idemp_r, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.mul_mod_idemp_r. Qed.
 
 Theorem mp2_mod_add: forall m n w, (m + n * 2^w) mod 2^w = m mod 2^w.
-Proof. intros. apply N.mod_add, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.mod_add. Qed.
 
 Theorem mp2_mul_l: forall m n w, (m mod 2^w * n) mod 2^w = (m * n) mod 2^w.
-Proof. intros. apply N.mul_mod_idemp_l, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.mul_mod_idemp_l. Qed.
 
 Theorem mp2_div_mod: forall n w, n = 2^w * (n / 2^w) + n mod 2^w.
-Proof. intros. apply N.div_mod, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.div_mod. Qed.
 
 Theorem mp2_mod_eq: forall n w, n mod 2^w = n - 2^w * (n / 2^w).
-Proof. intros. apply N.mod_eq, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.mod_eq. Qed.
 
 Theorem mp2_div_add: forall m n w, (m + n * 2^w) / 2^w = m / 2^w + n.
 Proof. intros. apply N.div_add, N.pow_nonzero. discriminate 1. Qed.
@@ -363,34 +364,34 @@ Theorem mp2_div_add_l: forall m n w, (m * 2^w + n) / 2^w = m + n / 2^w.
 Proof. intros. apply N.div_add_l, N.pow_nonzero. discriminate 1. Qed.
 
 Theorem mp2_add_mod: forall m n w, (m + n) mod 2^w = (m mod 2^w + n mod 2^w) mod 2^w.
-Proof. intros. apply N.add_mod, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.add_mod. Qed.
 
 Theorem mp2_mul_mod: forall m n w, (m * n) mod 2^w = (m mod 2^w * (n mod 2^w)) mod 2^w.
-Proof. intros. apply N.mul_mod, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.mul_mod. Qed.
 
 Theorem mp2_gt_0: forall w, 0 < 2^w.
 Proof. intros. apply N.neq_0_lt_0, N.pow_nonzero. discriminate 1. Qed.
 
 Theorem mp2_div_le_mono: forall m n w, m <= n -> m / 2^w <= n / 2^w.
-Proof. intros m n w. apply N.div_le_mono, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros m n w. apply N.Div0.div_le_mono. Qed.
 
 Theorem mp2_div_mul_cancel: forall n w w', 2^w * n / (2^(w+w')) = n / 2^w'.
 Proof.
   intros. rewrite N.pow_add_r.
-  apply N.div_mul_cancel_l; apply N.pow_nonzero; discriminate 1.
+  apply N.Div0.div_mul_cancel_l, N.pow_nonzero; discriminate 1.
 Qed.
 
 Theorem mp2_div_div: forall n w1 w2, n / 2^w1 / 2^w2 = n / 2^(w1+w2).
 Proof.
   intros. rewrite N.pow_add_r.
-  apply N.div_div; apply N.pow_nonzero; discriminate 1.
+  apply N.Div0.div_div; apply N.pow_nonzero; discriminate 1.
 Qed.
 
 Theorem mp2_div_exact: forall n w, n = 2^w * (n / 2^w) <-> n mod 2^w = 0.
-Proof. intros. apply N.div_exact, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.div_exact. Qed.
 
 Theorem mp2_mod_divides: forall n w, n mod 2^w = 0 <-> exists m, n = 2^w * m.
-Proof. intros. apply N.mod_divides, N.pow_nonzero. discriminate 1. Qed.
+Proof. intros. apply N.Div0.mod_divides. Qed.
 
 Theorem mp2_pow_div_l: forall m n w, m mod 2^w = 0 -> (m / 2^w) ^ n = m ^ n / 2^(w*n).
 Proof.
@@ -399,10 +400,7 @@ Proof.
 Qed.
 
 Theorem mp2_mod_mul_r: forall n w1 w2, n mod (2^(w1+w2)) = n mod 2^w1 + 2^w1 * ((n / 2^w1) mod 2^w2).
-Proof.
-  intros. rewrite N.pow_add_r.
-  apply N.mod_mul_r; apply N.pow_nonzero; discriminate 1.
-Qed.
+Proof. intros. rewrite N.pow_add_r. apply N.Div0.mod_mul_r. Qed.
 
 Theorem add_mod_same_l:
   forall w n, (2^w + n) mod 2^w = n mod 2^w.
@@ -441,6 +439,12 @@ End ModPow2.
 
 (* Theory of bit-extraction. *)
 Section XBits.
+
+Theorem shiftr_mod_xbits:
+  forall n i k, N.shiftr n i mod 2^k = xbits n i (i+k).
+Proof.
+  intros. unfold xbits. rewrite N.add_comm. rewrite N.add_sub. reflexivity.
+Qed.
 
 Theorem xbits_spec:
   forall n i j b, N.testbit (xbits n i j) b = andb (N.testbit n (b + i)) (b + i <? j).
@@ -644,6 +648,72 @@ Theorem xbits_below:
   forall n i j, n mod 2^j = 0 -> xbits n i j = 0.
 Proof.
   intros. rewrite xbits_equiv, H. apply N.shiftr_0_l.
+Qed.
+
+Theorem fold_cbits:
+  forall n1 i n2, N.lor (N.shiftl n1 i) n2 = cbits n1 i n2.
+Proof. reflexivity. Qed.
+
+Theorem fold_cbits':
+  forall n1 i n2, N.lor n1 (N.shiftl n2 i) = cbits n2 i n1.
+Proof. intros. rewrite N.lor_comm. reflexivity. Qed.
+
+Theorem cbits_0_l:
+  forall i n2, cbits 0 i n2 = n2.
+Proof. intros. unfold cbits. rewrite N.shiftl_0_l. apply N.lor_0_l. Qed.
+
+Theorem cbits_0_r:
+  forall n1 i, cbits n1 i 0 = N.shiftl n1 i.
+Proof. intros. unfold cbits. apply N.lor_0_r. Qed.
+
+Theorem cbits_0_i:
+  forall n1 n2, cbits n1 0 n2 = N.lor n1 n2.
+Proof. intros. unfold cbits. rewrite N.shiftl_0_r. reflexivity. Qed.
+
+Theorem cbits_mod:
+  forall n1 n2 i, n2 < 2^i -> (cbits n1 i n2) mod 2^i = n2.
+Proof.
+  intros. unfold cbits. rewrite <- N.land_ones. rewrite N.land_lor_distr_l.
+  replace (N.land _ _) with 0.
+    rewrite N.lor_0_l, N.land_ones. apply N.mod_small, H.
+    symmetry. apply N.bits_inj_0. intro k. rewrite N.land_spec. destruct (N.le_gt_cases i k).
+      rewrite N.ones_spec_high by assumption. apply Bool.andb_false_r.
+      rewrite N.shiftl_spec_low by assumption. reflexivity.
+Qed.
+
+Theorem xbits_cbits_lo:
+  forall n1 n2 i, n2 < 2^i -> xbits (cbits n1 i n2) 0 i = n2.
+Proof.
+  intros. rewrite xbits_0_i. apply cbits_mod. assumption.
+Qed.
+
+Theorem xbits_cbits_hi:
+  forall n1 n2 i j, n2 < 2^i -> xbits (cbits n1 i n2) i j = n1 mod 2^(j-i).
+Proof.
+  intros. unfold cbits.
+  rewrite xbits_lor, xbits_shiftl, N.sub_diag, xbits_0_i, N.shiftl_0_r.
+  rewrite xbits_above by assumption. apply N.lor_0_r.
+Qed.
+
+Theorem shiftr_cbits:
+  forall n1 i n2, n2 < 2^i -> N.shiftr (cbits n1 i n2) i = n1.
+Proof.
+  intros. unfold cbits.
+  rewrite N.shiftr_lor, N.shiftr_shiftl_l, N.sub_diag, N.shiftl_0_r by reflexivity.
+  rewrite (proj2 (N.shiftr_eq_0_iff _ _)). apply N.lor_0_r.
+  destruct n2. left. reflexivity. right. split. reflexivity.
+  apply N.log2_lt_pow2. reflexivity. assumption.
+Qed.
+
+Theorem cbits_xbits:
+  forall n i j, cbits (xbits n i j) i (xbits n 0 i) = n mod 2^N.max i j.
+Proof.
+  intros. destruct (N.le_ge_cases i j).
+    unfold cbits. rewrite N.lor_comm. rewrite <- (N.sub_0_r i) at 3. rewrite <- xbits_split.
+      rewrite N.max_r by assumption. apply xbits_0_i.
+      apply N.le_0_l.
+      assumption.
+    rewrite xbits_none, N.max_l, xbits_0_i by assumption. apply cbits_0_l.
 Qed.
 
 Lemma N2Z_inj_ones:
@@ -969,7 +1039,7 @@ Proof.
   intros.
   rewrite (N.div_mod a n), (N.div_mod b n) at 1 by assumption.
   rewrite N.sub_add_distr.
-  rewrite N.add_sub_swap by (apply N.mul_le_mono_l, N.div_le_mono; assumption).
+  rewrite N.add_sub_swap by (apply N.mul_le_mono_l, N.Div0.div_le_mono; assumption).
   rewrite <- N.mul_sub_distr_l, N.add_comm.
   destruct (N.eq_0_gt_0_cases (a/n - b/n)).
 
@@ -985,7 +1055,7 @@ Proof.
 
     rewrite N.mul_comm. destruct (N.le_gt_cases (b mod n) (a mod n)).
 
-      rewrite N.add_sub_swap, N.mod_add by assumption.
+      rewrite N.add_sub_swap, N.Div0.mod_add by assumption.
       rewrite (proj2 (N.ltb_ge _ _) H2), N.mul_0_r, N.add_0_r.
       eapply N.mod_small, N.le_lt_trans. apply N.le_sub_l. apply N.mod_lt, H.
 
@@ -994,7 +1064,7 @@ Proof.
       rewrite N.mul_succ_l, N.add_comm, <- N.add_assoc, (N.add_comm n).
       rewrite <- N.add_sub_assoc by (rewrite N.add_comm; etransitivity;
         [apply N.lt_le_incl, N.mod_lt,H|apply N.le_add_r]).
-      rewrite N.add_comm, N.mod_add by assumption.
+      rewrite N.add_comm, N.Div0.mod_add by assumption.
       eapply N.mod_small, N.add_lt_mono_r. rewrite N.sub_add.
         rewrite N.add_comm. apply N.add_lt_mono_l, H2.
         rewrite <- (N.add_0_l (b mod _)). apply N.add_le_mono.
@@ -1899,8 +1969,7 @@ Remark N_div_le:
 Proof.
   intros. destruct b as [|b].
     destruct a; apply N.le_0_l.
-    apply N.div_le_upper_bound.
-      discriminate.
+    apply N.Div0.div_le_upper_bound.
       rewrite <- (N.mul_1_l a) at 1. apply N.mul_le_mono_r. destruct b; discriminate.
 Qed.
 
@@ -2443,7 +2512,7 @@ Proof.
     [| apply N.pow_nonzero; discriminate 1 | apply N.lt_le_incl, mp2_mod_lt ].
     rewrite mp2_mod_mod_min, !N.min_r by assumption.
     rewrite <- (N.sub_add _ _ H) at 1 2.
-    rewrite N.pow_add_r, N.mod_mul by (apply N.pow_nonzero; discriminate 1).
+    rewrite N.pow_add_r, N.Div0.mod_mul.
     destruct (y mod 2^w') eqn:H1 at 1.
       erewrite N.mul_0_r, <- msub_mod_r, H1, N.add_0_r, msub_0_r by reflexivity. reflexivity.
       rewrite N.mul_1_r. reflexivity.
@@ -2861,6 +2930,94 @@ Proof.
     apply N.lt_nge. intro H1. contradict H0. eapply N.lt_nge, lt_msub_l. split; assumption.
 Qed.
 
+Lemma lt_msub_iff:
+  forall w n m p,
+    (n mod 2^w + p < m mod 2^w \/ (m mod 2^w < n mod 2^w /\ n mod 2^w + p < 2^w + m mod 2^w))
+    <-> p < msub w m n.
+Proof.
+  split; intro.
+    destruct H as [H|[H1 H2]].
+
+      eapply N.add_lt_mono_l. eapply N.lt_le_trans. exact H.
+      destruct (N.lt_ge_cases (n mod 2^w + msub w m n) (2^w)) as [H1|H1].
+        rewrite <- (N.mod_small _ _ H1), N.Div0.add_mod_idemp_l, add_msub. reflexivity.
+        etransitivity. apply N.lt_le_incl, mp2_mod_lt. assumption.
+
+      rewrite msub_wrap by exact H1. apply N.lt_add_lt_sub_l, H2.
+
+    destruct (N.lt_ge_cases (m mod 2^w) (n mod 2^w)) as [H1|H1].
+      right. split.
+        exact H1.
+        apply N.lt_add_lt_sub_l. rewrite <- msub_wrap by exact H1. exact H.
+      left. apply N.lt_add_lt_sub_l. rewrite <- msub_nowrap by exact H1. exact H.
+Qed.
+
+Lemma le_msub_iff:
+  forall w n m p,
+    (n mod 2^w + p <= m mod 2^w \/ (m mod 2^w < n mod 2^w /\ n mod 2^w + p <= 2^w + m mod 2^w))
+    <-> p <= msub w m n.
+Proof.
+  split; intro.
+    destruct H as [H|[H1 H2]].
+      apply N.le_lteq in H. destruct H as [H|H].
+        apply N.lt_le_incl, lt_msub_iff. left. exact H.
+        rewrite msub_nowrap.
+          rewrite <- H, N.add_comm, N.add_sub. reflexivity.
+          etransitivity. apply N.le_add_r. rewrite H. reflexivity.
+      apply N.le_lteq in H2. destruct H2 as [H2|H2].
+        apply N.lt_le_incl, lt_msub_iff. right. split; assumption.
+        rewrite msub_wrap, <- H2 by exact H1. apply N.le_add_le_sub_l. reflexivity.
+    apply N.le_lteq in H. destruct H as [H|H].
+      apply lt_msub_iff in H. destruct H as [H|H].
+        left. apply N.lt_le_incl, H.
+        right. split. apply H. apply N.lt_le_incl, H.
+      subst. destruct (N.le_gt_cases (n mod 2^w) (m mod 2^w)) as [H|H].
+        left. rewrite N.add_comm, msub_nowrap, N.sub_add by apply H. reflexivity.
+        right. split.
+          apply H.
+          rewrite N.add_comm, msub_wrap, N.sub_add. reflexivity.
+            etransitivity. apply N.lt_le_incl, mp2_mod_lt. apply N.le_add_r.
+            apply H.
+Qed.
+
+Lemma msub_lt_iff:
+  forall w n m p,
+    (m mod 2^w < n mod 2^w + p /\ (n mod 2^w <= m mod 2^w \/ 2^w + m mod 2^w < n mod 2^w + p))
+    <-> msub w m n < p.
+Proof.
+  split; intro.
+    destruct H as [H1 H2]. apply N.nle_gt. intro H. apply le_msub_iff in H. destruct H as [H|H].
+      revert H1. apply N.nlt_ge, H.
+      destruct H as [H H']. destruct H2 as [H2|H2].
+        revert H. apply N.nlt_ge, H2.
+        revert H'. apply N.nle_gt, H2.
+    split.
+      apply N.nle_gt. intro H'. revert H. apply N.nlt_ge. apply le_msub_iff. left. exact H'. 
+      edestruct N.le_gt_cases.
+        left. eassumption.
+        right. apply N.nle_gt. intro H'. revert H. apply N.nlt_ge, le_msub_iff.
+          right. split; assumption.
+Qed.
+
+Lemma msub_le_iff:
+  forall w n m p,
+    (m mod 2^w <= n mod 2^w + p /\ (n mod 2^w <= m mod 2^w \/ 2^w + m mod 2^w <= n mod 2^w + p))
+    <-> msub w m n <= p.
+Proof.
+  split; intro.
+    destruct H as [H1 H2]. apply N.nlt_ge. intro H. apply lt_msub_iff in H. destruct H as [H|H].
+      revert H1. apply N.nle_gt, H.
+      destruct H as [H H']. destruct H2 as [H2|H2].
+        revert H. apply N.nlt_ge, H2.
+        revert H'. apply N.nlt_ge, H2.
+    split.
+      apply N.nlt_ge. intro H'. revert H. apply N.nle_gt. apply lt_msub_iff. left. exact H'.
+      edestruct N.le_gt_cases.
+        left. eassumption.
+        right. apply N.nlt_ge. intro H'. revert H. apply N.nle_gt, lt_msub_iff.
+          right. split; assumption.
+Qed.
+
 End TwosComplement.
 
 
@@ -2888,7 +3045,7 @@ Lemma div_bound: forall n1 n2, N.div n1 n2 <= n1.
 Proof.
   intros.
   destruct n2. destruct n1. reflexivity. apply N.le_0_l.
-  apply N.div_le_upper_bound. discriminate 1.
+  apply N.Div0.div_le_upper_bound.
   destruct n1. reflexivity.
   unfold N.le. simpl. change p0 with (1*p0)%positive at 1. rewrite Pos.mul_compare_mono_r.
   destruct p; discriminate 1.
@@ -2955,8 +3112,7 @@ Lemma shiftr_bound:
   forall w x y, x < 2^w -> N.shiftr x y < 2^(w-y).
 Proof.
   intros. destruct (N.le_gt_cases y w).
-    rewrite N.shiftr_div_pow2. apply N.div_lt_upper_bound.
-      apply N.pow_nonzero. discriminate 1.
+    rewrite N.shiftr_div_pow2. apply N.Div0.div_lt_upper_bound.
       rewrite <- N.pow_add_r, N.add_sub_assoc, N.add_comm, N.add_sub; assumption.
     destruct x as [|x]. 
       rewrite N.shiftr_0_l. apply mp2_gt_0.
@@ -3071,7 +3227,7 @@ Theorem N_land_mod_pow2_moveout:
   forall p x y, N.land x (y mod 2^p) = (N.land x y) mod 2^p.
 Proof.
   intros.
-  rewrite N.land_comm, <- N.mod_mod, N_land_mod_pow2_move, N.land_comm by (apply N.pow_nonzero; discriminate).
+  rewrite N.land_comm, <- N.Div0.mod_mod, N_land_mod_pow2_move, N.land_comm.
   symmetry. apply N_land_mod_pow2.
 Qed.
 
@@ -3379,9 +3535,8 @@ Proof.
     end
   end.
   replace (N.testbit n8 0) with (N.odd (popcount (n8 mod 2^N.succ 0))).
-    rewrite !H1, <- N.negb_even. simpl. subst n8. rewrite N.mod_mod.
+    rewrite !H1, <- N.negb_even. simpl. subst n8. rewrite N.Div0.mod_mod.
       destruct N.even; reflexivity.
-      discriminate 1. 
     rewrite <- N.bit0_mod. destruct N.testbit; reflexivity.
 Qed.
 
@@ -3389,52 +3544,499 @@ End BitOps.
 
 
 
+Section Traces.
+
+(* This is like nth_error except it recurses on l, for easier inductions on lists. *)
+Fixpoint ith {A} (l:list A) (i:nat) {struct l} :=
+  match l with nil => None | h::t =>
+    match i with O => Some h | S j => ith t j end
+  end.
+
+Theorem ith_cons {A}:
+  forall (a:A) l i, ith (a::l) (S i) = ith l i.
+Proof. reflexivity. Qed.
+
+Theorem ith_nth_error: @ith = @nth_error.
+Proof.
+  extensionality A. extensionality l. induction l; extensionality i.
+    destruct i; reflexivity.
+    destruct i. reflexivity. simpl. rewrite IHl. reflexivity.
+Qed.
+
+Theorem ith_skipn_hd {A}:
+  forall (l:list A) i, ith l i = hd_error (skipn i l).
+Proof.
+  induction l; intros.
+    rewrite skipn_nil. reflexivity.
+    destruct i.
+      reflexivity.
+      apply IHl.
+Qed.
+
+Theorem ith_In {A}:
+  forall (l:list A) i x, ith l i = Some x -> In x l.
+Proof. rewrite ith_nth_error. apply nth_error_In. Qed.
+
+Theorem In_ith {A}:
+  forall l (x:A), In x l -> exists i, ith l i = Some x.
+Proof. rewrite ith_nth_error. apply In_nth_error. Qed.
+
+Theorem ith_None {A}:
+  forall (l:list A) i, ith l i = None <-> (length l <= i)%nat.
+Proof. rewrite ith_nth_error. apply nth_error_None. Qed.
+
+Theorem ith_Some {A}:
+  forall (l:list A) i, ith l i <> None <-> (i < length l)%nat.
+Proof. rewrite ith_nth_error. apply nth_error_Some. Qed.
+
+Theorem ith_nth {A}:
+  forall l i (x d:A), ith l i = Some x -> nth i l d = x.
+Proof. rewrite ith_nth_error. apply nth_error_nth. Qed.
+
+Theorem ith_nth' {A}:
+  forall l i (d:A), (i < length l)%nat -> ith l i = Some (nth i l d).
+Proof. rewrite ith_nth_error. apply nth_error_nth'. Qed.
+
+Theorem ith_app1 {A}:
+  forall (l l':list A) i, (i < length l)%nat -> ith (l++l') i = ith l i.
+Proof. rewrite ith_nth_error. apply nth_error_app1. Qed.
+
+Theorem ith_app2 {A}:
+  forall (l l':list A) i, (length l <= i)%nat -> ith (l++l') i = ith l' (i - length l).
+Proof. rewrite ith_nth_error. apply nth_error_app2. Qed.
+
+Theorem ith_map {A B}:
+  forall (f: A -> B) i l, ith (map f l) i = option_map f (ith l i).
+Proof. rewrite ith_nth_error. apply nth_error_map. Qed.
+
+Theorem map_ith {A B}:
+  forall (f: A -> B) i l d, ith l i = Some d -> ith (map f l) i = Some (f d).
+Proof. rewrite ith_nth_error. apply map_nth_error. Qed.
+
+Theorem ith_split {A}:
+  forall l i (a:A), ith l i = Some a -> exists l1 l2, l = l1++a::l2 /\ length l1 = i.
+Proof. rewrite ith_nth_error. apply nth_error_split. Qed.
+
+Theorem ith_repeat {A}:
+  forall (a:A) n i, (i < n)%nat -> ith (repeat a n) i = Some a.
+Proof. rewrite ith_nth_error. apply nth_error_repeat. Qed.
+
+Theorem ith_middle {A}:
+  forall l l' (a:A), ith (l ++ a :: l') (length l) = Some a.
+Proof.
+  intros. rewrite ith_app2, Nat.sub_diag; reflexivity.
+Qed.
+
+Theorem NoDup_ith {A}:
+  forall (l: list A), NoDup l <->
+   (forall i j, (i < length l)%nat -> ith l i = ith l j -> i = j).
+Proof. rewrite ith_nth_error. apply NoDup_nth_error. Qed.
+
+Theorem ith_ext {A}:
+  forall (l1 l2:list A), (forall i, ith l1 i = ith l2 i) -> l1 = l2.
+Proof.
+  induction l1; intros.
+    destruct l2. reflexivity. specialize (H O). discriminate.
+    destruct l2.
+      specialize (H O). discriminate.
+      injection (H O). intro. subst. apply f_equal. apply IHl1. intro. apply (H (S i)).
+Qed.
+
+Theorem ith_tl {A}:
+  forall (l:list A) i, ith (tl l) i = ith l (S i).
+Proof.
+  intros. destruct l; reflexivity.
+Qed.
+
+Theorem ith_app {A}:
+  forall (l1 l2:list A) i,
+  ith (l1 ++ l2) i = ith (if i <? length l1 then l1 else l2)%nat
+                         (if i <? length l1 then i else i - length l1)%nat.
+Proof.
+  intros. rewrite !ith_nth_error. destruct Nat.ltb eqn:H.
+    apply nth_error_app1, Nat.ltb_lt, H.
+    apply nth_error_app2, Nat.ltb_ge, H.
+Qed.
+
+Theorem ith_removelast {A}:
+  forall (l:list A) i,
+  ith (removelast l) i = if (S i =? length l)%nat then None else ith l i.
+Proof.
+  induction l; intro.
+    reflexivity.
+    destruct l.
+      destruct i; reflexivity.
+      destruct i.
+        reflexivity.
+        change (removelast _) with (a::removelast (a0::l)). rewrite ith_cons, IHl. reflexivity.
+Qed.
+
+Theorem ith_rev {A}:
+  forall (l:list A) i,
+  (i < length l)%nat -> ith (rev l) i = ith l (length l - S i).
+Proof.
+  induction l; intros.
+  contradict H. apply Nat.nlt_0_r.
+  simpl in H. apply (proj1 (Nat.lt_succ_r _ _)), Nat.le_lteq in H. destruct H.
+
+    simpl length.
+    rewrite Nat.sub_succ_l, ith_cons by apply Nat.le_succ_l, H.
+    simpl. rewrite ith_app1 by (rewrite ?rev_length; assumption).
+    apply IHl, H.
+
+    rewrite H. simpl. rewrite ith_app, rev_length, Nat.ltb_irrefl, Nat.sub_diag. reflexivity.
+Qed.
+
+Theorem length_remove {A}:
+  forall eq (a:A) l, (length (remove eq a l) + count_occ eq l a)%nat = length l.
+Proof.
+  induction l. reflexivity.
+  simpl. do 2 destruct eq; subst; try contradiction.
+    rewrite Nat.add_succ_r, IHl. reflexivity.
+    simpl. rewrite IHl. reflexivity.
+Qed.
+
+Theorem ith_remove {A}:
+  forall eq (a:A) l i, ith l i <> Some a ->
+  ith (remove eq a l) (i - count_occ eq (firstn i l) a) = ith l i.
+Proof.
+  induction l; intros. reflexivity.
+  simpl. destruct i as [|i].
+    rewrite Nat.sub_0_l. destruct eq.
+      subst a0. contradict H. reflexivity.
+      reflexivity.
+    simpl count_occ. destruct eq.
+      subst a0. destruct eq; [|contradiction]. rewrite Nat.sub_succ. apply IHl. assumption.
+      destruct eq. subst a0. contradiction. rewrite Nat.sub_succ_l.
+        apply IHl. assumption.
+        etransitivity. apply count_occ_bound. apply firstn_le_length.
+Qed.
+
+Theorem length_concat {A}:
+  forall (l:list (list A)),
+  length (concat l) = fold_left (fun n a => n + length a)%nat l O.
+Proof.
+  intros. rewrite <- (Nat.add_0_l (length _)). generalize O.
+  induction l; intro. apply Nat.add_0_r.
+  simpl. rewrite app_length. rewrite <- IHl. apply Nat.add_assoc.
+Qed.
+
+Theorem ith_concat1 {A}:
+  forall (l1:list A) t i,
+  (i < length l1)%nat -> ith (concat (l1::t)) i = ith l1 i.
+Proof.
+  intros. simpl. apply ith_app1. assumption.
+Qed.
+
+Theorem ith_concat2 {A}:
+ forall (l:list (list A)) i n,
+   (length (concat (firstn n l)) <= i)%nat ->
+ ith (concat l) i = ith (concat (skipn n l)) (i - length (concat (firstn n l))).
+Proof.
+  intros.
+  rewrite <- (firstn_skipn n l) at 1. rewrite concat_app. apply ith_app2, H.
+Qed.
+
+Theorem ith_split_l {A B}:
+  forall (l:list (A*B)) i,
+  ith (fst (split l)) i = option_map fst (ith l i).
+Proof.
+  induction l; intro. reflexivity.
+  destruct i as [|i]; simpl; destruct a, split.
+    reflexivity.
+    apply IHl.
+Qed.
+
+Theorem ith_split_r {A B}:
+  forall (l:list (A*B)) i,
+  ith (snd (split l)) i = option_map snd (ith l i).
+Proof.
+  induction l; intro. reflexivity.
+  destruct i as [|i]; simpl; destruct a, split.
+    reflexivity.
+    apply IHl.
+Qed.
+
+Definition option_map2 {A B C} (f: A -> B -> C) o1 o2 :=
+  match o1 with None => None | Some a => option_map (f a) o2 end.
+
+Theorem option_map2_none_r {A B C}:
+  forall (f: A -> B -> C) o, option_map2 f o None = None.
+Proof. destruct o; reflexivity. Qed.
+
+Theorem ith_combine {A B}:
+  forall (l l':list (A*B)) i,
+  ith (combine l l') i = option_map2 pair (ith l i) (ith l' i).
+Proof.
+  induction l; intros. reflexivity.
+  destruct l' as [|b l']. simpl. symmetry. apply option_map2_none_r.
+  destruct i as [|i]. reflexivity.
+  simpl. apply IHl.
+Qed.
+
+Theorem ith_firstn {A}:
+  forall (l:list A) n i,
+  ith (firstn n l) i = if (i <? n)%nat then ith l i else None.
+Proof.
+  induction l; intros.
+    rewrite firstn_nil. destruct (_ <? _)%nat; reflexivity.
+    destruct n as [|n].
+      reflexivity.
+      destruct i as [|i].
+        reflexivity.
+        simpl. replace (S i <? S n)%nat with (i <? n)%nat.
+          apply IHl.
+          destruct (i <? n)%nat eqn:H; symmetry.
+            apply Nat.ltb_lt. apply -> Nat.succ_lt_mono. apply Nat.ltb_lt, H.
+            apply Nat.ltb_ge. apply -> Nat.succ_le_mono. apply Nat.ltb_ge, H.
+Qed.
+
+Theorem ith_skipn {A}:
+  forall (l:list A) n i,
+  ith (skipn n l) i = ith l (n + i).
+Proof.
+  induction l; intros.
+    rewrite skipn_nil. reflexivity.
+    destruct n as [|n].
+      reflexivity.
+      apply IHl.
+Qed.
+
+Theorem skipn_all3 {A}:
+  forall n (l:list A), skipn n l = nil -> (length l <= n)%nat.
+Proof.
+  induction n; intros.
+    rewrite skipn_O in H. subst. reflexivity.
+    destruct l.
+      apply Nat.le_0_l.
+      simpl. apply le_n_S, IHn, H.
+Qed.
+
+Theorem stepsof_cons {A}:
+  forall (x y:A) t, stepsof (x::y::t) = (x,y)::stepsof (y::t).
+Proof. reflexivity. Qed.
+
+Theorem ith_stepsof {A}:
+  forall (l:list A) i,
+  ith (stepsof l) i = match skipn i l with x::y::_ => Some (x,y) | _ => None end.
+Proof.
+  intros. revert l. induction i; intros.
+    destruct l as [|? [|]]; reflexivity.
+    destruct l. reflexivity. simpl skipn. rewrite <- IHi. destruct l.
+      destruct i; reflexivity.
+      reflexivity.
+Qed.
+
+Theorem length_cons {A}:
+  forall l (a:A), length (a::l) = S (length l).
+Proof. reflexivity. Qed.
+
+Theorem length_stepsof {A}:
+  forall (l:list A), length (stepsof l) = Nat.pred (length l).
+Proof.
+  induction l.
+    reflexivity.
+    destruct l as [|b l].
+      reflexivity.
+      rewrite stepsof_cons, !length_cons, IHl, length_cons, !Nat.pred_succ. reflexivity.
+Qed.
+
+Theorem rev_cons {A}:
+  forall l (a:A), rev (a::l) = rev l ++ a :: nil.
+Proof. reflexivity. Qed.
+
+Theorem startof_niltail {A}:
+  forall t (a d:A), startof (t ++ a :: nil) d = a.
+Proof. apply last_last. Qed.
+
+Theorem startof_cons_cons {A}:
+  forall (a b:A) t d, startof (a::b::t) d = startof (b::t) d.
+Proof. reflexivity. Qed.
+
+Theorem startof_nonnil {A}:
+  forall (a d1 d2:A) t, startof (a::t) d1 = startof (a::t) d2.
+Proof.
+  intros. revert a. induction t; intro.
+    reflexivity.
+    rewrite !startof_cons_cons. apply IHt.
+Qed.
+
+Theorem startof_cons {A}:
+  forall (a d:A) t, startof (a::t) d = startof t a.
+Proof.
+  intros. destruct t.
+    reflexivity.
+    rewrite startof_cons_cons. apply startof_nonnil.
+Qed.
+
+Theorem startof_hdrev {A}:
+  forall t (d:A), startof t d = hd d (rev t).
+Proof.
+  intros. rewrite <- (rev_involutive t) at 1. destruct (rev t).
+    reflexivity.
+    rewrite rev_cons, startof_niltail. reflexivity.
+Qed.
+
+Theorem startof_rev {A}:
+  forall t (a:A), startof (rev t) a = hd a t.
+Proof.
+  intros. rewrite startof_hdrev, rev_involutive. reflexivity.
+Qed.
+
+Theorem ostartof_niltail {A}:
+  forall t (a:A), ostartof (t ++ a :: nil) = Some a.
+Proof.
+  intros. destruct t.
+    reflexivity.
+    simpl. rewrite startof_niltail. reflexivity.
+Qed.
+
+Theorem startof_app {A}:
+  forall (a d:A) t1 t2, startof (t1++a::t2) d = startof t2 a.
+Proof.
+  intros. revert a d. induction t1; intros.
+    apply startof_cons.
+    simpl (_++_). rewrite startof_cons. apply IHt1.
+Qed.
+
+Theorem startof_prefix {A}:
+  forall (xs xs':A) t t1 t2 (SPL: xs'::t = t2++xs::t1),
+  startof t1 xs = startof t xs'.
+Proof.
+  symmetry. rewrite <- startof_cons with (d:=xs'). rewrite SPL.
+  apply startof_app.
+Qed.
+
+Theorem ostartof_cons {A}:
+  forall (a:A) t, ostartof (a::t) = Some (startof t a).
+Proof. reflexivity. Qed.
+
+Theorem ostartof_app {A}:
+  forall (a:A) t1 t2, ostartof (t1++a::t2) = ostartof (a::t2).
+Proof.
+  intros. destruct t1.
+    reflexivity.
+    simpl. rewrite startof_app. reflexivity.
+Qed.
+
+Theorem rev_destruct {A}:
+  forall (l:list A), {l=nil}+{exists l' a, l = l' ++ a :: nil}.
+Proof.
+  induction l.
+    left. reflexivity.
+    right. destruct IHl.
+      subst. exists nil,a. reflexivity.
+      destruct e as [l' [a1 H]]. subst. exists (a::l'),a1. reflexivity.
+Qed.
+
+Theorem stepsof_app {A}:
+  forall (l2 l1: list A),
+    stepsof (l2++l1) = (stepsof l2) ++
+                       match option_map2 pair (ostartof l2) (hd_error l1) with None => nil | Some xy => xy::nil end ++
+                       (stepsof l1).
+Proof.
+  intros.
+  destruct l1 as [|x l1']. simpl. rewrite option_map2_none_r, !app_nil_r. reflexivity.
+  destruct (rev_destruct l2). subst. reflexivity. destruct e as [l2' [y H]]. subst.
+  apply ith_ext. intro.
+  rewrite ith_app, ith_stepsof, !skipn_app, length_stepsof, last_length, Nat.pred_succ, ostartof_niltail.
+  destruct (_ <? _)%nat eqn:H1.
+    rewrite ith_stepsof, skipn_app, !(proj2 (Nat.sub_0_le i _)), !skipn_O.
+      destruct (skipn i l2') as [|a [|b l2'']] eqn:H; [|reflexivity..].
+        apply skipn_all3 in H. contradict H. apply Nat.lt_nge, Nat.ltb_lt, H1.
+      apply Nat.lt_le_incl, Nat.lt_lt_succ_r, Nat.ltb_lt, H1.
+      apply Nat.lt_le_incl, Nat.ltb_lt, H1.
+    apply Nat.ltb_ge, Nat.le_lteq in H1. destruct H1 as [H1|H1]; cycle 1.
+      rewrite <- H1, Nat.sub_diag, skipn_all, (proj2 (Nat.sub_0_le _ _)).
+        reflexivity.
+        apply Nat.le_succ_diag_r.
+      cbn - [ith stepsof]. rewrite 2!skipn_all2.
+        destruct i.
+          contradict H1. apply Nat.nlt_0_r.
+          rewrite Nat.sub_succ, Nat.sub_succ_l, ith_cons, ith_stepsof.
+            reflexivity.
+            apply Nat.lt_succ_r, H1.
+        apply Nat.le_add_le_sub_r, Nat.le_succ_l, H1.
+        apply Nat.lt_le_incl, H1.
+Qed.
+
+Inductive ForallPrefixes {A} (P: list A -> Prop) : list A -> Prop :=
+| ForallPrefixes_nil: P nil -> ForallPrefixes P nil
+| ForallPrefixes_cons (x:A) (l:list A): P (x::l) -> ForallPrefixes P l -> ForallPrefixes P (x::l).
+
+Theorem forallprefixes_app {A}:
+  forall P (t1 t2:list A) (FA: ForallPrefixes P (t1++t2)),
+  ForallPrefixes P t2.
+Proof.
+  induction t1; intros.
+    assumption.
+    apply IHt1. inversion FA. assumption.
+Qed.
+
+End Traces.
+
+
 Section InvariantMaps.
 
 (* Sometimes we want to assert that an invariant is present and satisfied, while other times we
    want to more leniently stipulate that an invariant is satisfied if present: *)
-Definition true_inv (OP: option Prop) := match OP with Some P => P | None => False end.
-Definition trueif_inv (OP: option Prop) := match OP with Some P => P | None => True end.
+Definition true_inv i := match i with Some P => P | None => False end.
+Definition trueif_inv i := match i with Some P => P | None => True end.
+Definition get_precondition {S T} (p: S -> _ -> option T) Invs (xp: _ -> bool) a1 (s1:S) t1 : option Prop :=
+  if xp ((Addr a1,s1)::t1) then None
+  else if p s1 a1 then Invs ((Addr a1,s1)::t1) else None.
 
-Lemma trueif_true_inv: forall OP, true_inv OP -> trueif_inv OP.
-Proof. unfold true_inv, trueif_inv. intros. destruct OP. assumption. exact I. Qed.
+Lemma trueif_true_inv: forall i, true_inv i -> trueif_inv i.
+Proof. intros. destruct i. assumption. contradiction. Qed.
 
-Lemma trueif_some: forall P, trueif_inv (Some P) -> P.
+Lemma trueif_None: trueif_inv None -> True.
+Proof. intro. exact I. Qed.
+
+Lemma trueif_Some: forall P, trueif_inv (Some P) -> P.
 Proof. intros. assumption. Qed.
 
-Lemma trueif_none: trueif_inv None -> True.
-Proof. intro. assumption. Qed.
-
-Lemma trueinv_some: forall P, true_inv (Some P) -> P.
+Lemma trueinv_Some: forall P, true_inv (Some P) -> P.
 Proof. intros. assumption. Qed.
 
-Lemma trueinv_none: ~ true_inv None.
+Lemma trueinv_None: ~ true_inv None.
 Proof. intro. assumption. Qed.
+
+Definition unterminated {A} xp :=
+  ForallPrefixes (fun (t:list A) => xp t = false).
+
+Lemma unterminated_cons {A}:
+  forall xp (a:A) t (H: xp (a::t) = false) (UT: unterminated xp t),
+  unterminated xp (a::t).
+Proof. intros. constructor; assumption. Qed.
+
+Lemma unterminated_tl {A}:
+  forall xp (a:A) t (UT: unterminated xp (a::t)), unterminated xp t.
+Proof. intros. inversion UT. assumption. Qed.
 
 End InvariantMaps.
 
 (* Tactic "destruct_inv w PRE" divides the inductive case of prove_invs into subgoals,
-   one for each invariant point defined by precondition PRE, and puts the goals in
+   one for each invariant point defined by hypothesis H, and puts the goals in
    ascending order by address.  Argument w should be the max bitwidth of addresses to
    consider (e.g., 32 on 32-bit ISAs). *)
 
 Tactic Notation "simpl_trueif" "in" hyp(H) :=
-  first [ simple apply trueif_none in H; clear H
-        | apply trueif_some in H ].
+  first [ simple apply trueif_None in H; clear H
+        | apply trueif_Some in H ].
 
 Tactic Notation "simpl_trueinv" "in" hyp(H) :=
-  first [ simple apply trueinv_none in H; exfalso; exact H
-        | apply trueinv_some in H ].
+  first [ simple apply trueinv_None in H; exfalso; exact H
+        | apply trueinv_Some in H ].
 
 Ltac shelve_case H :=
-  tryif (simple apply trueinv_none in H) then (exfalso; exact H)
-  else tryif (apply trueinv_some in H) then
+  tryif (simple apply trueinv_None in H) then (exfalso; exact H)
+  else tryif (apply trueinv_Some in H) then
     (repeat match goal with [ H: true_inv _ |- _ ] => simpl_trueinv in H
                           | [ H: trueif_inv _ |- _ ] => simpl_trueif in H
             end;
      shelve)
   else lazymatch type of H with
-  | true_inv (if _ ?a then _ else _) =>
+  | true_inv (get_precondition _ _ _ ?a _ _) =>
       fail "unable to simplify" H "to an invariant for address" a
   | _ => fail "unable to simplify" H "to an invariant"
   end.
@@ -3446,14 +4048,13 @@ Ltac shelve_cases_loop H a :=
     revgoals; cycle g; revgoals;
     cycle 1
   );
-  try (simple apply trueinv_none in H; exfalso; exact H).
+  try (first [ simple apply trueinv_None in H | apply trueinv_Some in H ]; exfalso; exact H).
 
 Tactic Notation "shelve_cases" int_or_var(i) hyp(H) :=
-  lazymatch type of H with true_inv (if ?p ?s ?a then _ else None) =>
+  lazymatch type of H with true_inv (get_precondition _ _ _ ?a _ _) =>
     is_var a; case a as [|a]; [ shelve_case H | do i shelve_cases_loop H a ];
     fail "bit width" i "is insufficient to explore the invariant space"
-  | _ => fail "hypothesis" H "is not a precondition of the form"
-              "(true_inv (if [program] [store] [addr] then [invariant-set] else None))"
+  | _ => fail "hypothesis" H "is not a precondition of the form (true_inv (get_precondition ...))"
   end.
 
 Tactic Notation "destruct_inv" int_or_var(i) hyp(H) :=
@@ -3462,7 +4063,7 @@ Tactic Notation "destruct_inv" int_or_var(i) hyp(H) :=
 (* Tactic "focus_addr n" brings the goal for the invariant at address n
    to the head of the goal list. *)
 Tactic Notation "focus_addr" constr(n) :=
-  unshelve (lazymatch goal with |- _ _ _ _ _ (Exit n) _ => shelve
+  unshelve (lazymatch goal with |- _ _ ((Addr n, _)::_) => shelve
                               | _ => idtac end).
 
 
@@ -3894,6 +4495,22 @@ Proof.
     rewrite N.add_sub, mp2_mod_mod. reflexivity.
 Qed.
 
+Theorem setmem_merge:
+  forall w e i j m a v1 v2,
+  setmem w e j (setmem w e i m a v1) (a+i) v2 =
+  setmem w e (i+j) m a match e with
+                       | BigE => cbits v1 (Mb*j) (v2 mod 2^(Mb*j))
+                       | LittleE => cbits v2 (Mb*i) (v1 mod 2^(Mb*i))
+                       end.
+Proof.
+  symmetry.
+  assert (H:=setmem_split w e i j m a). destruct e;
+  [ specialize (H (cbits v1 (Mb*j) (v2 mod 2^(Mb*j))))
+  | specialize (H (cbits v2 (Mb*i) (v1 mod 2^(Mb*i)))) ];
+  rewrite shiftr_cbits, <- (setmem_mod_r _ _ j), cbits_mod, !setmem_mod_r in H by apply mp2_mod_lt;
+  apply H.
+Qed.
+
 Definition overlap w a1 len1 a2 len2 :=
   exists i j, i < len1 /\ j < len2 /\ (a1 + i) mod 2^w = (a2 + j) mod 2^w.
 
@@ -4135,7 +4752,7 @@ Proof.
     discriminate 1.
   left. eapply N.add_le_mono_r. rewrite (msub_inv _ _ _ n), N.add_comm.
   etransitivity; [|apply SZ]. apply N.add_le_mono_r.
-  etransitivity; [|apply N.mod_le, (N.pow_nonzero 2 w); discriminate 1].
+  etransitivity; [|apply N.Div0.mod_le].
   rewrite msub_add_distr, add_msub, msub_mod_pow2, N.min_id. reflexivity.
 Qed.
 
@@ -4222,7 +4839,147 @@ Proof.
       exact NO.
 Qed.
 
+Theorem setmem_swap:
+  forall w e len1 len2 m a1 a2 v1 v2
+    (NO: ~overlap w a1 len1 a2 len2),
+  setmem w e len2 (setmem w e len1 m a1 v1) a2 v2 =
+  setmem w e len1 (setmem w e len2 m a2 v2) a1 v1.
+Proof.
+  intros. extensionality a'.
+  destruct (N.le_gt_cases (2^w) a') as [H1|H1].
+    rewrite !setmem_frame by (right; exact H1). reflexivity.
+  destruct (N.le_gt_cases len2 (msub w a' a2)) as [H2|H2].
+    rewrite setmem_frame by (left; exact H2). destruct (N.le_gt_cases len1 (msub w a' a1)) as [H3|H3].
+      rewrite !setmem_frame by (left; assumption). reflexivity.
+      rewrite <- (N.mod_small _ _ H1), <- (add_msub _ a1), !setmem_byte_anylen by assumption. reflexivity.
+    symmetry. rewrite setmem_frame.
+      rewrite <- (N.mod_small _ _ H1), <- (add_msub _ a2), !setmem_byte_anylen by assumption. reflexivity.
+      left. apply N.nlt_ge. intro H. apply NO. eexists _,_. repeat split; try eassumption.
+        rewrite !add_msub. reflexivity.
+Qed.
+
+Theorem setmem_merge_rev:
+  forall w e i j m a v1 v2, i + j < 2^w ->
+  setmem w e j (setmem w e i m a v2) (msub w a j) v1 =
+  setmem w e (i+j) m (msub w a j) match e with
+                                  | BigE => cbits v1 (Mb*i) (v2 mod 2^(Mb*i))
+                                  | LittleE => cbits v2 (Mb*j) (v1 mod 2^(Mb*j))
+                                  end.
+Proof.
+  intros.
+  rewrite setmem_swap.
+    rewrite N.add_comm, <- setmem_mod_l, <- (msub_add _ _ j), setmem_mod_l. apply setmem_merge.
+
+    apply noverlap_sum.
+    rewrite (N.add_comm i), <- N.add_assoc, msub_comm, <- (N.add_0_r a),
+            madd_add_simpl_l_l, <- msub_add_distr at 1.
+    destruct (N.eq_dec (i+j) 0) as [H'|H'].
+      rewrite H', msub_diag. apply N.le_0_l.
+      rewrite N.add_comm, <- (N.mod_small _ _ H), <- (msub_0_r w (i+j)), msub_inv at 1.
+        reflexivity.
+        rewrite (N.mod_small _ _ H). exact H'.
+Qed.
+
 End StoreTheory.
+
+
+
+Section XPPartitions.
+
+Definition can_step_between p (t1 t2:trace) :=
+  match t1, ostartof t2 with xs1::_, Some xs2 => can_step p (xs2,xs1) | _,_ => True end.
+
+Theorem exec_prog_nil:
+  forall p, exec_prog p nil.
+Proof. intro. apply Forall_nil. Qed.
+
+Theorem exec_prog_none:
+  forall p xs, exec_prog p (xs::nil).
+Proof. intros. apply Forall_nil. Qed.
+
+(* Add a next step to a trace. *)
+Theorem exec_prog_step:
+  forall p t xs' (XP: exec_prog p t)
+    (CS: match t with nil => True | xs::_ => can_step p (xs',xs) end),
+  exec_prog p (xs'::t).
+Proof.
+  intros. destruct t as [|xs t].
+    apply Forall_nil.
+    unfold exec_prog. rewrite stepsof_cons. apply Forall_cons; assumption.
+Qed.
+
+(* Delete the final step from a trace. *)
+Theorem exec_prog_tail:
+  forall p t xs' (XP: exec_prog p (xs'::t)),
+  exec_prog p t.
+Proof.
+  unfold exec_prog. intros. destruct t as [|xs t].
+    apply Forall_nil.
+    eapply Forall_inv_tail, XP.
+Qed.
+
+(* Extract the final step of a trace. *)
+Theorem exec_prog_final:
+  forall p t xs' xs (XP: exec_prog p (xs'::xs::t)),
+  can_step p (xs',xs).
+Proof.
+  intros. eapply Forall_inv, XP.
+Qed.
+
+(* Concatenate two exec_prog comptations into one whole. *)
+Theorem exec_prog_app:
+  forall p t1 t2
+    (XP1: exec_prog p t1) (CS: can_step_between p t1 t2) (XP2: exec_prog p t2),
+  exec_prog p (t2++t1).
+Proof.
+  intros. destruct t1 as [|xs1 t1].
+    rewrite app_nil_r. exact XP2.
+    unfold exec_prog. rewrite stepsof_app. apply Forall_app. split.
+      exact XP2.
+      apply Forall_app. split; [|apply XP1]. unfold can_step_between in CS. destruct ostartof as [xs2|].
+        apply Forall_cons. exact CS. apply Forall_nil.
+        apply Forall_nil.
+Qed.
+
+(* Prepend a step to an exec_prog computation. *)
+Corollary exec_prog_prepend:
+  forall xs0 p t (XP: exec_prog p t)
+    (CS: match ostartof t with None => True | Some xs1 => can_step p (xs1,xs0) end),
+    exec_prog p (t++xs0::nil).
+Proof.
+  intros. apply exec_prog_app.
+    apply Forall_nil.
+    unfold can_step_between. destruct ostartof as [xs1|].
+      exact CS.
+      exact I.
+    exact XP.
+Qed.
+
+(* Split an exec_prog computation into two parts. *)
+Theorem exec_prog_split:
+  forall p t1 t2 (XP: exec_prog p (t2++t1)),
+  exec_prog p t1 /\ can_step_between p t1 t2 /\ exec_prog p t2.
+Proof.
+  intros. unfold exec_prog in XP. rewrite stepsof_app in XP.
+  apply Forall_app in XP. destruct XP as [XP2 XP].
+  apply Forall_app in XP. destruct XP as [CS XP1].
+  split. exact XP1. split; [|exact XP2].
+  unfold can_step_between. destruct t1 as [|xs1].
+    exact I.
+    destruct ostartof as [xs2|].
+      eapply Forall_inv. exact CS.
+      exact I.
+Qed.
+
+(* Delete the first step from a trace. *)
+Corollary exec_prog_suffix:
+  forall p xs t (XP: exec_prog p (t++xs::nil)),
+  exec_prog p t.
+Proof.
+  intros. apply exec_prog_split in XP. apply XP.
+Qed.
+
+End XPPartitions.
 
 
 
@@ -4232,20 +4989,20 @@ Section Determinism.
    as long as there are no Unknown expressions. *)
 
 Theorem eval_exp_deterministic:
-  forall {h e s v1 v2} (NU: forall_exps_in_exp not_unknown e)
-         (E1: eval_exp h s e v1) (E2: eval_exp h s e v2), v1=v2.
+  forall {e s v1 v2} (NU: forall_exps_in_exp not_unknown e)
+         (E1: eval_exp s e v1) (E2: eval_exp s e v2), v1=v2.
 Proof.
   induction e; intros; inversion E1; inversion E2; clear E1 E2; subst;
   simpl in NU; repeat match type of NU with _ /\ _ => let H := fresh NU in destruct NU as [H NU] end;
   try (remember (match n0 with N0 => e3 | _ => e2 end) as e);
-  repeat match goal with [ IH: forall _ _ _, _ -> eval_exp ?h _ ?e _ -> eval_exp ?h _ ?e _ -> _=_,
+  repeat match goal with [ IH: forall _ _ _, _ -> eval_exp _ ?e _ -> eval_exp _ ?e _ -> _=_,
                            H0: exps_in_exp and not_unknown ?e,
-                           H1: eval_exp ?h ?s ?e ?v1,
-                           H2: eval_exp ?h ?s ?e ?v2 |- _ ] =>
+                           H1: eval_exp ?s ?e ?v1,
+                           H2: eval_exp ?s ?e ?v2 |- _ ] =>
            specialize (IH s v1 v2 H0 H1 H2); clear H0 H1 H2;
            try (injection IH; clear IH; intros); subst;
            try match type of E' with
-             eval_exp _ _ (match ?N with N0 => _ | _ => _ end) _ => destruct N
+             eval_exp _ (match ?N with N0 => _ | _ => _ end) _ => destruct N
            end
          end;
   try reflexivity.
@@ -4254,9 +5011,9 @@ Proof.
 Qed.
 
 Theorem exec_stmt_deterministic:
-  forall {h s q s1 x1 s2 x2} (NU: forall_exps_in_stmt not_unknown q)
-         (X1: exec_stmt h s q s1 x1) (X2: exec_stmt h s q s2 x2),
-  s1 = s2 /\ x1 = x2.
+  forall {s q s1 x1 s2 x2} (NU: forall_exps_in_stmt not_unknown q)
+         (X1: exec_stmt s q s1 x1) (X2: exec_stmt s q s2 x2),
+  (x1,s1) = (x2,s2).
 Proof.
   intros. revert s2 x2 X2.
   dependent induction X1; intros; inversion X2; subst;
@@ -4272,11 +5029,11 @@ Proof.
 
   apply IHX1; assumption.
 
-  apply (IHX1 NU1) in XS1. destruct XS1. discriminate.
+  apply (IHX1 NU1) in XS1. discriminate.
 
-  apply (IHX1_1 NU1) in XS. destruct XS. discriminate.
+  apply (IHX1_1 NU1) in XS. discriminate.
 
-  apply (IHX1_1 NU1),proj1 in XS1. subst. apply (IHX1_2 NU2) in XS0. assumption.
+  apply (IHX1_1 NU1) in XS1. inversion XS1. subst. apply (IHX1_2 NU2) in XS0. assumption.
 
   apply IHX1.
     destruct NU2. destruct c; assumption.
@@ -4289,30 +5046,30 @@ Proof.
 Qed.
 
 Theorem exec_prog_deterministic:
-  forall {p a h s n s1 x1 s2 x2} (NU: forall_exps_in_prog not_unknown p)
-  (XP1: exec_prog h p a s n s1 x1) (XP2: exec_prog h p a s n s2 x2),
-  s1 = s2 /\ x1 = x2.
+  forall {p t1 t2 xs} (NU: forall_exps_in_prog not_unknown p)
+  (XP1: exec_prog p (t1++xs::nil)) (XP2: exec_prog p (t2++xs::nil)),
+  exists t, t1 = t++t2 \/ t2 = t++t1.
 Proof.
-  intros. revert s2 x2 XP2. dependent induction XP1; intros; inversion XP2; subst.
+  intros. induction t1; intros.
+    exists t2. right. symmetry. apply app_nil_r.
+    destruct IHt1 as [t [IH|IH]].
+      eapply exec_prog_tail, XP1.
+      subst. exists (a::t). left. reflexivity.
+      subst. rewrite <- (rev_involutive t) in *. destruct (rev t) as [|b t'].
+        exists (a::nil). left. reflexivity.
+        replace b with a.
+          exists (rev t'). right. rewrite rev_cons, <- app_assoc. reflexivity.
 
-  split; reflexivity.
-
-  rewrite LU in LU0; injection LU0; clear LU0; intros; subst.
-  destruct (exec_stmt_deterministic (NU _ _ _ _ LU) XS XS0); subst.
-  rewrite EX in EX0; injection EX0; clear EX0; intros; subst.
-  apply IHXP1. assumption.
-
-  rewrite LU in LU0; injection LU0; clear LU0; intros; subst.
-  destruct (exec_stmt_deterministic (NU _ _ _ _ LU) XS XS0); subst.
-  discriminate EX.
-
-  rewrite LU in LU0; injection LU0; clear LU0; intros; subst.
-  destruct (exec_stmt_deterministic (NU _ _ _ _ LU) XS XS0); subst.
-  discriminate EX.
-
-  rewrite LU in LU0; injection LU0; clear LU0; intros; subst.
-  destruct (exec_stmt_deterministic (NU _ _ _ _ LU) XS XS0); injection H0; intro; subst.
-  split; reflexivity.
+  rewrite rev_cons in XP2. rewrite <- app_assoc in XP2. simpl in XP1.
+  destruct (t1++xs::nil) as [|(x,s) t1'] eqn:H.
+    apply app_eq_nil,proj2 in H. discriminate H.
+  apply exec_prog_final in XP1.
+  apply exec_prog_split,proj2,proj1 in XP2. simpl in XP2. rewrite ostartof_niltail in XP2.
+  inversion XP1; subst. inversion XP2; subst.
+  rewrite LU0 in LU. inversion LU; subst.
+  eapply exec_stmt_deterministic in XS. inversion XS; subst. reflexivity.
+    apply (NU _ _ _ _ LU0).
+    exact XS0.
 Qed.
 
 End Determinism.
@@ -4320,67 +5077,33 @@ End Determinism.
 
 Section Monotonicity.
 
-(* Some monotonicity properties: *)
-
-(* eval_exp, exec_stmt, and exec_prog are monotonic with respect to heaps. *)
-
-Theorem eval_exp_hmono:
-  forall h1 h2 s e u (HS: h1 ⊆ h2) (E: eval_exp h1 s e u),
-  eval_exp h2 s e u.
-Proof.
-  intros. revert s u HS E. induction e; intros;
-  inversion E; clear E; subst;
-  repeat match goal with [ IH: forall _ _, _ -> eval_exp _ _ ?e _ -> eval_exp _ _ ?e _,
-                           H: eval_exp _ _ ?e _ |- _ ] =>
-    eapply IH in H; [|exact HS]
-  end;
-  econstructor; try eassumption.
-
-  intros. split; [apply HS|]; apply R; assumption.
-
-  intros. split; [apply HS|]; apply W; assumption.
-
-  destruct n1.
-    eapply IHe3; eassumption.
-    eapply IHe2; eassumption.
-Qed.
-
-Theorem exec_stmt_hmono:
-  forall h1 h2 s q s' x (HS: h1 ⊆ h2)
-         (XS: exec_stmt h1 s q s' x),
-  exec_stmt h2 s q s' x.
-Proof.
-  intros. dependent induction XS; econstructor;
-    try eapply eval_exp_hmono; eassumption.
-Qed.
-
-Theorem exec_prog_hmono:
-  forall h1 h2 p s a n s' x (HS: h1 ⊆ h2)
-         (XP: exec_prog h1 p a s n s' x),
-  exec_prog h2 p a s n s' x.
-Proof.
-  intros. revert s a XP. induction n; intros; inversion XP; clear XP; subst.
-    apply XDone.
-    eapply XStep; try apply PS; try eassumption.
-      eapply exec_stmt_hmono; eassumption.
-      apply IHn. assumption.
-    eapply XAbort; try apply PS; try eassumption.
-      eapply exec_stmt_hmono; eassumption.
-Qed.
-
 (* exec_prog is monotonic with respect to programs.  Enlarging the space of known
    instructions in memory preserves executions. *)
+
+Theorem can_step_pmono:
+  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
+         xs xs' (CS: can_step p1 (xs',xs)),
+  can_step p2 (xs',xs).
+Proof.
+  intros. inversion CS; subst. econstructor.
+    apply PS, LU.
+    apply XS.
+Qed.
+
 Theorem exec_prog_pmono:
   forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
-         s h a n s' x (XP: exec_prog h p1 a s n s' x),
-  exec_prog h p2 a s n s' x.
+         t (XP: exec_prog p1 t),
+  exec_prog p2 t.
 Proof.
-  intros. dependent induction XP.
-    apply XDone.
-    eapply XStep; try eassumption.
-      erewrite PS. reflexivity. exact LU.
-    eapply XAbort; try eassumption.
-      erewrite PS. reflexivity. exact LU.
+  intros. induction t.
+    apply exec_prog_nil.
+    apply exec_prog_step.
+      eapply IHt, exec_prog_tail, XP.
+      destruct t as [|xs t].
+        exact I.
+        eapply can_step_pmono.
+          exact PS.
+          eapply exec_prog_final, XP.
 Qed.
 
 End Monotonicity.
@@ -4393,8 +5116,8 @@ Section InvariantProofs.
    that each loop iteration preserves the property. *)
 Theorem rep_inv:
   forall (P: store -> Prop)
-         h s e q s' x (XS: exec_stmt h s (Rep e q) s' x) (PRE: P s)
-         (INV: forall s s' x (PRE: P s) (XS: exec_stmt h s q s' x), P s'),
+         s e q s' x (XS: exec_stmt s (Rep e q) s' x) (PRE: P s)
+         (INV: forall s s' x (PRE: P s) (XS: exec_stmt s q s' x), P s'),
   P s'.
 Proof.
   intros. inversion XS; clear XS; subst.
@@ -4407,120 +5130,58 @@ Proof.
         exact XS2.
 Qed.
 
-(* Append a step to an exec_prog computation. *)
-Theorem exec_prog_append:
-  forall h p n a s sz q s2 a1 s' x'
-         (XP: exec_prog h p a s n s2 (Exit a1))
-         (LU: p s2 a1 = Some (sz,q))
-         (XS: exec_stmt h s2 q s' x'),
-    exec_prog h p a s (S n) s' (match x' with None => Exit (a1+sz)
-                                            | Some x' => x' end).
-Proof.
-  induction n; intros; inversion XP; subst.
-    destruct x'; [destruct e|]; econstructor; solve [ eassumption | reflexivity | apply XDone ].
-    eapply XStep; try eassumption. eapply IHn; eassumption.
-Qed.
-
-(* Split an exec_prog computation into two parts. *)
-Theorem exec_prog_split:
-  forall h p a s n1 n2 s' x'
-         (XP: exec_prog h p a s (n1 + S n2)%nat s' x'),
-  exists s1 a1, exec_prog h p a s n1 s1 (Exit a1) /\ exec_prog h p a1 s1 (S n2) s' x'.
-Proof.
-  intros. revert n2 XP. induction n1; intros.
-    exists s,a. split. apply XDone. exact XP.
-    rewrite Nat.add_succ_comm in XP. destruct (IHn1 _ XP) as [s1 [a1 [XP1 XP2]]]. inversion XP2; subst. exists s2,a'. split.
-      eapply exec_prog_append in XP1; [|exact LU | exact XS]. destruct x1 as [e|]; [destruct e|].
-        injection EX as; subst. exact XP1.
-        discriminate EX.
-        injection EX as; subst. exact XP1.
-      assumption.
-Qed.
-
-(* Concatenate two exec_prog comptations into one whole. *)
-Theorem exec_prog_concat:
-  forall h p a s n1 n2 s1 a1 s' x'
-         (XP1: exec_prog h p a s n1 s1 (Exit a1)) (XP2: exec_prog h p a1 s1 n2 s' x'),
-  exec_prog h p a s (n1 + n2)%nat s' x'.
-Proof.
-  intros. revert n2 s1 a1 XP1 XP2. induction n1; intros.
-    inversion XP1; subst. exact XP2.
-    rewrite <- Nat.add_1_r in XP1. apply exec_prog_split in XP1. destruct XP1 as [s2 [a2 [XP0 XP1]]]. rewrite Nat.add_succ_comm. eapply IHn1.
-     exact XP0.
-     inversion XP1; subst.
-       eapply XStep. exact LU. exact XS. exact EX. inversion XP; subst. exact XP2.
-Qed.
-
-(* To prove that a property holds at the conclusion of a program's execution, it suffices
-   to prove that the property is preserved by every statement in the program. *)
+(* To prove that a property holds for all states in a trace, it suffices to
+   prove that the property is preserved by every statement in the program. *)
 Theorem prog_inv_universal:
-  forall (P: exit -> store -> Prop) h p a0 s0 n s' x' (XP: exec_prog h p a0 s0 n s' x')
-         (PRE: P (Exit a0) s0)
-         (INV: forall a1 s1 sz q s1' x1 (IL: p s1 a1 = Some (sz,q)) (PRE: P (Exit a1) s1)
-                      (XS: exec_stmt h s1 q s1' x1),
-               P (match x1 with None => Exit (a1 + sz)
-                              | Some x => x end) s1'),
-  P x' s'.
+  forall (P: exit * store -> Prop) p t (XP: exec_prog p t)
+         (PRE: match ostartof t with None => True | Some xs0 => P xs0 end)
+         (INV: forall a1 s1 sz q s1' x1 (IL: p s1 a1 = Some (sz,q)) (PRE: P (Addr a1,s1))
+                      (XS: exec_stmt s1 q s1' x1),
+               P (exitof (a1 + sz) x1, s1')),
+  Forall P t.
 Proof.
-  intros. revert a0 s0 XP PRE. induction n; intros; inversion XP; subst.
-    exact PRE.
-    apply (IHn a' s2).
-      exact XP0.
-      specialize (INV a0 s0 sz q s2 x1 LU PRE XS). destruct x1; [destruct e|]; first
-      [ discriminate EX
-      | injection EX; intro; subst a'; exact INV ].
-    specialize (INV _ _ _ _ _ _ LU PRE XS). exact INV.
+  intros. induction t as [|xs' t]; intros.
+    apply Forall_nil.
+    apply Forall_cons.
+      destruct t as [|xs t].
+        apply PRE.
+        assert (CS:=exec_prog_final _ _ _ _ XP). inversion CS; subst. eapply INV.
+          exact LU.
+          eapply Forall_inv, IHt.
+            eapply exec_prog_tail, XP.
+            rewrite ostartof_cons, startof_cons in PRE. exact PRE.
+          exact XS.
+      apply IHt.
+        eapply exec_prog_tail, XP.
+        destruct t.
+          exact I.
+          rewrite ostartof_cons, startof_cons in PRE. exact PRE.
 Qed.
 
-(* Alternatively, one may prove that the property is preserved by all the reachable statements.
+(* Alternatively, one may prove that the property is preserved by all the reachable traces.
    (The user's invariant may adopt a precondition of False for unreachable statements.) *)
 Theorem prog_inv_reachable:
-  forall (P: exit -> store -> nat -> Prop) h p a0 s0 n s' x' (XP: exec_prog h p a0 s0 n s' x')
-         (PRE: P (Exit a0) s0 O)
-         (INV: forall a1 s1 n1 sz q s1' x1
+  forall (P: trace -> Prop) p t (XP: exec_prog p t)
+         (PRE: P match ostartof t with None => nil | Some xs0 => xs0::nil end)
+         (INV: forall a1 s1 sz q s1' x1 t1 t2
+                      (SPL: t = t2++((Addr a1,s1)::t1))
+                      (PRE: P ((Addr a1,s1)::t1))
                       (IL: p s1 a1 = Some (sz,q))
-                      (PRE: P (Exit a1) s1 n1)
-                      (LT: (n1 < n)%nat)
-                      (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
-                      (XS: exec_stmt h s1 q s1' x1)
-                      (XP': match x1 with None => exec_prog h p (a1+sz) s1' (n - S n1) s' x'
-                                        | Some (Exit a2) => exec_prog h p a2 s1' (n - S n1) s' x'
-                                        | Some x2 => x'=x2 end),
-               P (exitof (a1 + sz) x1) s1' (S n1)),
-  P x' s' n.
+                      (XS: exec_stmt s1 q s1' x1),
+               P ((exitof (a1 + sz) x1, s1')::(Addr a1,s1)::t1)),
+  P t.
 Proof.
-  intros.
-  assert (H: exists a1 s1 n2, (n2 <= n)%nat /\
-               exec_prog h p a0 s0 (n - n2) s1 (Exit a1) /\ P (Exit a1) s1 (n - n2)%nat /\
-               exec_prog h p a1 s1 n2 s' x').
-    exists a0,s0,n. rewrite Nat.sub_diag. repeat split.
-      apply le_n.
-      apply XDone.
+  induction t as [|xs' t]; intros.
+    exact PRE.
+    destruct t as [|xs t].
       exact PRE.
-      exact XP.
-  destruct H as [a1 [s1 [n2 [LE [XP1 [PRE1 XP2]]]]]].
-  clear XP. revert a1 s1 LE PRE1 XP1 XP2. induction n2; intros.
-    inversion XP2; clear XP2; subst. rewrite Nat.sub_0_r in PRE1. exact PRE1.
-    inversion XP2; clear XP2; subst.
-      apply (IHn2 a' s2).
-        transitivity (S n2). apply le_S, le_n. assumption.
-
-        specialize (INV a1 s1 (n - S n2)%nat sz q s2 x1 LU PRE1 (Nat.sub_lt n (S n2) LE (Nat.lt_0_succ n2)) XP1 XS).
-        rewrite <- Nat.sub_succ_l, Nat.sub_succ in INV by exact LE.
-        replace (n - (n - n2))%nat with n2 in INV by (symmetry; apply Nat.add_sub_eq_l, Nat.sub_add, Nat.lt_le_incl, LE).
-        destruct x1; [destruct e|].
-          injection EX. intro. subst a'. apply INV. exact XP.
-          discriminate EX.
-          injection EX. intro. subst a'. apply INV. exact XP.
-
-        destruct n. inversion LE. apply le_S_n in LE. rewrite Nat.sub_succ_l; [|exact LE].
-        replace (Exit a') with (exitof (a1 + sz) x1).
-          eapply exec_prog_append. exact XP1. exact LU. exact XS.
-
-        exact XP.
-      specialize (INV _ _ (n-1)%nat _ _ _ _ LU PRE1 (Nat.sub_lt n 1 LE Nat.lt_0_1) XP1 XS).
-      rewrite <- Nat.sub_succ_l, Nat.sub_succ, Nat.sub_0_r in INV by exact LE.
-      apply INV. reflexivity.
+      inversion XP. inversion H1. subst. eapply INV with (t2:=_::nil); [ | | eassumption..].
+        simpl. reflexivity.
+        apply IHt.
+          exact H2.
+          rewrite ostartof_cons, startof_cons in PRE. exact PRE.
+          intros. eapply INV; [|eassumption..].
+            rewrite SPL, app_comm_cons. reflexivity.
 Qed.
 
 (* Rather than assigning and proving an invariant at every machine instruction, we can generalize
@@ -4533,98 +5194,146 @@ Qed.
    (If the computation is already at an invariant, it is considered its own "next"
    invariant if parameter b=true; otherwise the computation must take at least
    one step before it can satisfy the "next invariant" property.) *)
-Inductive nextinv PS p h: bool -> exit -> store -> Prop :=
-| NIHere x s (TRU: true_inv (PS p x s)):
-    nextinv PS p h true x s
-| NIStep (b:bool) s a
-         (NOI: (if b then PS p (Exit a) s else None) = None)
-         (STEP: forall sz q s1 x1
-                       (IL: p s a = Some (sz,q)) (XS: exec_stmt h s q s1 x1),
-                nextinv PS p h true (exitof (a+sz) x1) s1):
-    nextinv PS p h b (Exit a) s.
+Inductive nextinv p Invs (xp: trace -> bool): bool -> trace -> Prop :=
+| NIHere (b:bool) t
+    (TRU: match Invs t with None => xp t = true
+                          | Some P => if xp t then P else if b then P else False end):
+    nextinv p Invs xp b t
+| NIStep b a s t sz q
+         (NOI: (if xp ((Addr a,s)::t) then true
+                else match Invs ((Addr a,s)::t) with None => false | Some _ => b end) = false)
+         (IL: p s a = Some (sz,q))
+         (STEP: forall s1 x1 (XS: exec_stmt s q s1 x1),
+                nextinv p Invs xp true ((exitof (a+sz) x1, s1)::(Addr a,s)::t)):
+    nextinv p Invs xp b ((Addr a, s)::t).
 
 (* Proving the "next invariant satisfied" property for all invariant points proves partial
    correctness of the program. *)
-Theorem prog_inv:
-  forall h p a0 s0 n PS s' x'
-         (XP: exec_prog h p a0 s0 n s' x')
-         (PRE: nextinv PS p h true (Exit a0) s0)
-         (INV: forall a1 s1 n1
-                      (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
-                      (PRE: true_inv (PS p (Exit a1) s1)),
-               nextinv PS p h false (Exit a1) s1),
-  trueif_inv (PS p x' s').
-Proof.
-  intros.
-  assert (NI: nextinv PS p h true x' s').
-    pattern x', s', n. eapply prog_inv_reachable.
-      exact XP.
-      exact PRE.
-      intros. inversion PRE0; subst.
-        eapply INV in TRU.
-          inversion TRU; subst. eapply STEP. exact IL. exact XS.
-          exact XP0.
-        eapply STEP. exact IL. exact XS.
-  inversion NI; subst.
-    apply trueif_true_inv. exact TRU.
-    rewrite NOI. exact I.
-Qed.
 
-(* Subroutine invariants can usually be defined in terms of an invariant-set
-   (which is a partial map from addresses and stores to invariants) and a
-   post-condition (a property of exits and stores).  The post-condition is
-   asserted to be satisfied when execution exits the subroutine either by
-   raising an exception or reaching an address outside the subroutine. *)
-Definition invs PS Q (p:program) x (s:store) : option Prop :=
-  match x with
-  | Exit a => match p s a with None => Some (Q x s) | Some _ => PS a s end
-  | Raise _ => Some (Q x s)
+Definition satisfies_all p Invs xp t : Prop :=
+  exec_prog p t -> unterminated xp (tl t) ->
+  match Invs t with Some P => P | None =>
+    xp t = true \/ match t with ((Addr a),s)::_ => p s a <> None | _ => False end
   end.
 
-(* The following lemmas apply-and-simplify the NIHere rule in tactics. *)
-Lemma nextinv_here:
-  forall P (PS: program -> exit -> store -> option Prop) p h x s
-         (INV: PS p x s = Some P) (TRU: P),
-  nextinv PS p h true x s.
-Proof. intros. apply NIHere. rewrite INV. exact TRU. Qed.
-
-Lemma nextinv_ret:
-  forall PS (Q: exit -> store -> Prop) p h r s
-         (IL: p s r = None) (POST: Q (Exit r) s),
-  nextinv (invs PS Q) p h true (Exit r) s.
-Proof. intros. apply NIHere. unfold invs. rewrite IL. exact POST. Qed.
-
-Lemma nextinv_exn:
-  forall PS (Q: exit -> store -> Prop) p h i s
-         (POST: Q (Raise i) s),
-  nextinv (invs PS Q) p h true (Raise i) s.
-Proof. intros. apply NIHere. exact POST. Qed.
-
-(* To prove a subroutine invariant, it suffices to prove that
-   (1) the first invariant reached is satisfied (precondition), and
-   (2) starting at any invariant point in the subroutine always yields a trace
-       that reaches another invariant point and satisfies its invariant. *)
-Theorem prove_invs:
-  forall h a0 s0 PS Q p x s' n
-    (XP0: exec_prog h p a0 s0 n s' x)
-    (PRE: nextinv (invs PS Q) p h true (Exit a0) s0)
-    (CASES: forall a1 s1 n1
-      (XP: exec_prog h p a0 s0 n1 s1 (Exit a1))
-      (PRE: true_inv (if p s1 a1 then PS a1 s1 else None)),
-      nextinv (invs PS Q) p h false (Exit a1) s1),
-  trueif_inv (invs PS Q p x s').
+Theorem satall_trueif_inv:
+  forall p Invs xp t
+    (SA: satisfies_all p Invs xp t) (XP: exec_prog p t) (UT: unterminated xp (tl t)),
+  trueif_inv (Invs t).
 Proof.
-  intros. eapply prog_inv. exact XP0. exact PRE.
-  intros. unfold invs in PRE0. destruct (p s1 a1) eqn:PA1.
-    eapply CASES. exact XP. rewrite PA1. exact PRE0.
-    apply NIStep. reflexivity. intros. rewrite PA1 in IL. discriminate IL.
+  unfold satisfies_all, trueif_inv. intros. destruct (Invs t).
+    apply SA; assumption.
+    exact I.
 Qed.
+
+Theorem prove_invs:
+  forall p Invs xp t
+         (PRE: nextinv p Invs xp true match ostartof t with None => nil | Some xs' => xs'::nil end)
+         (INV: forall t1 a1 s1 t2
+                      (SPL: t = (t2++(Addr a1,s1)::t1))
+                      (XP: exec_prog p ((Addr a1,s1)::t1))
+                      (UT: unterminated xp t1)
+                      (PRE: true_inv (get_precondition p Invs xp a1 s1 t1)),
+               nextinv p Invs xp false ((Addr a1,s1)::t1)),
+  satisfies_all p Invs xp t.
+Proof.
+  unfold get_precondition. intros. intros XP UT.
+  assert (NI: nextinv p Invs xp true t). revert UT. pattern t. eapply prog_inv_reachable.
+    exact XP.
+    intro. exact PRE.
+
+    intros. specialize (INV _ _ _ _ SPL). rewrite IL in INV.
+    simpl in UT. inversion UT; subst.
+    eenough (H:_); [ apply PRE0 in H; clear PRE0 | apply H2 ].
+    rewrite H1 in INV.
+    inversion H; clear H; subst.
+
+      rewrite H1 in TRU. destruct (Invs _) eqn:INVeq; [|discriminate].
+      apply INV in TRU. inversion TRU; subst.
+        rewrite INVeq in TRU0. rewrite H1 in TRU0. exfalso. assumption.
+        rewrite IL in IL0. inversion IL0; subst. eapply STEP. exact XS.
+          apply exec_prog_split in XP. apply XP.
+          apply H2.
+
+      rewrite IL in IL0. inversion IL0; subst. eapply STEP. exact XS.
+
+  inversion NI; subst.
+    destruct (Invs t). destruct (xp t); assumption. left. exact TRU.
+    destruct (Invs _). destruct (xp _); discriminate. right. rewrite IL. discriminate 1.
+Qed.
+
+Lemma nextinv_here:
+  forall p Invs (xp: trace -> bool) b t
+         (INV: (if xp t then true else match Invs t with None => false | Some _ => b end) = true)
+         (TRU: match Invs t with None => True | Some P => P end),
+    nextinv p Invs xp b t.
+Proof.
+  intros. apply NIHere. destruct (Invs t).
+    destruct (xp t); subst; assumption.
+    rewrite <- INV. destruct (xp t); reflexivity.
+Qed.
+
+(*
+Theorem nextinv_app:
+  forall p Invs xp xs t b
+    (NI: forall t'
+           (XP: exec_prog p (t'++xs::nil))
+           (INV: Invs (t'++xs::t) <> None \/ xp (t'++xs::t) = true)
+           (NOI: match t' with nil => True | _::t'' =>
+                   ForallPrefixes (fun t0 => Invs (t0++xs::t) = None /\ xp (t0++xs::t) = false) t''
+                 end),
+         exists t1' t2', t2'++t1' = t' /\
+         nextinv p Invs xp match t1' with nil => b | _ => true end (t1'++xs::t)),
+  nextinv p Invs xp b (xs::t).
+Proof.
+  intros.
+  destruct (xp (xs::t)) eqn:EX. destruct (NI nil) as [t1' [t2' [NI1 NI2]]].
+    destruct t; apply Forall_nil.
+    right. exact EX.
+    exact I.
+    apply app_eq_nil, proj2 in NI1. subst t1'. exact NI2.
+  destruct (Invs (xs::t)) eqn:INV. destruct (NI nil) as [t1' [t2' [NI1 NI2]]].
+    destruct t; apply Forall_nil.
+    left. simpl. rewrite INV. discriminate 1.
+    exact I.
+    apply app_eq_nil, proj2 in NI1. subst t1'. exact NI2.
+  
+Qed.
+
+Theorem nextinv_call:
+  forall p p' Invs Invs' xp xp' a s t
+    (SA: forall t' x' s' (ENTRY: startof t' (x',s') = (Addr a, s)), satisfies_all p' Invs' xp' t')
+    (CLO: forall xs t1 t2, true_inv (Invs (xs::t1)) -> true_inv (Invs (xs::t1++t2)))
+    (SS: forall s0, p' s0 ⊆ p s0)
+    (DISJ: forall a0 s0 t0, match Invs ((Addr a0,s0)::t0) with Some _ => p' s0 a0 | None => None end = None)
+    (RET: forall a' s' t'
+            (ENTRY: startof t' (Addr a', s') = (Addr a, s))
+            (EXIT: xp' ((Addr a',s')::t') = true)
+            (POST: true_inv (get_precondition p' Invs' xp' a' s' t')),
+          nextinv p Invs xp true ((Addr a',s')::t'++t)),
+  nextinv p Invs xp true ((Addr a,s)::t).
+Proof.
+  intros. destruct (xp' ((Addr a,s)::nil)) eqn:EX.
+    eapply NIHere.
+Qed.
+*)
 
 End InvariantProofs.
 
 
 
 Section FrameTheorems.
+
+Theorem startof_prefix:
+  forall {A} xs'' (t t2 t1: list A) xs' xs
+    (ENTRY: startof t xs'' = xs)
+    (SPL: xs''::t = t2 ++ xs' :: t1),
+  startof t1 xs' = xs.
+Proof.
+  intros.
+  erewrite <- (startof_app _ xs''), <- SPL, startof_cons.
+  exact ENTRY.
+Qed.
 
 (* Statements and programs that contain no assignments to some IL variable v
    leave that variable unchanged in the output store. *)
@@ -4636,31 +5345,32 @@ Proof.
 Qed.
 
 Theorem noassign_stmt_same:
-  forall v h q (NA: noassign v q) (s s':store) x,
-  exec_stmt h s q s' x -> s' v = s v.
+  forall v q (NA: noassign v q) (s s':store) x,
+  exec_stmt s q s' x -> s v = s' v.
 Proof.
   induction q; intros; inversion H; subst; try reflexivity.
-    inversion NA; subst. apply update_frame, not_eq_sym. assumption.
+    inversion NA; subst. symmetry. apply update_frame, not_eq_sym. assumption.
     eapply IHq1; try eassumption. inversion NA. assumption.
-    inversion NA. transitivity (s2 v); [ eapply IHq2 | eapply IHq1 ]; eassumption.
+    inversion NA. transitivity (s2 v); [ eapply IHq1 | eapply IHq2 ]; eassumption.
     inversion NA. destruct c; [ eapply IHq2 | eapply IHq1 ]; eassumption.
 
     pattern s'. eapply rep_inv.
       eassumption.
       reflexivity.
-      intros. rewrite <- PRE. eapply IHq. inversion NA. assumption. eassumption.
+      intros. rewrite PRE. eapply IHq. inversion NA. assumption. eassumption.
 Qed.
 
 Theorem noassign_prog_same:
-  forall v h p (NA: prog_noassign v p) s' x
-         n a s (EP: exec_prog h p a s n s' x),
-  s' v = s v.
+  forall v p (NA: prog_noassign v p),
+  forall_endstates p (fun _ s _ s' => s v = s' v).
 Proof.
-  intros. pattern x, s'. eapply prog_inv_universal.
-    exact EP.
-    reflexivity.
-    intros. rewrite <- PRE. apply (noassign_stmt_same v) in XS.
-      exact XS.
+  unfold forall_endstates. intros.
+  change s' with (snd (x',s')). set (xs':=(x',s')) in *. clearbody xs'.
+  pattern xs'. eapply Forall_inv. eapply prog_inv_universal.
+    exact XP.
+    simpl. rewrite ENTRY. reflexivity.
+    intros. apply (noassign_stmt_same v) in XS.
+      rewrite PRE. exact XS.
       specialize (NA s1 a1). rewrite IL in NA. exact NA.
 Qed.
 

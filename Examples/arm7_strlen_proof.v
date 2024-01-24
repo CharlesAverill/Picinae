@@ -9,8 +9,12 @@ Require Import arm7_strlen.
 Import ARM7Notations.
 Open Scope N.
 
-(* Use a flat memory model for these proofs. *)
-Definition fh := htotal.
+(* Define post-condition points for strlen: *)
+Definition strlen_exit (t:trace) :=
+  match t with (Addr a,_)::_ => match a with
+  | 92 => true
+  | _ => false
+  end | _ => false end.
 
 (* The ARM7 lifter creates non-writable code sections. *)
 Theorem strlen_nwc: forall s2 s1, strlen_arm s1 = strlen_arm s2.
@@ -24,28 +28,25 @@ Qed.
 
 (* Strlen does not corrupt memory. *)
 Theorem strlen_preserves_memory:
-  forall s n s' x,
-  exec_prog fh strlen_arm 0 s n s' x -> s' V_MEM32 = s V_MEM32.
+  forall_endstates strlen_arm (fun _ s _ s' => s V_MEM32 = s' V_MEM32).
 Proof.
-  intros. eapply noassign_prog_same; [|exact H].
+  apply noassign_prog_same.
   prove_noassign.
 Qed.
 
 (* Strlen does not modify page permissions. *)
 Theorem strlen_preserves_readable:
-  forall s n s' x,
-  exec_prog fh strlen_arm 0 s n s' x -> s' A_READ = s A_READ.
+  forall_endstates strlen_arm (fun _ s _ s' => s A_READ = s' A_READ).
 Proof.
-  intros. eapply noassign_prog_same; [|exact H].
+  apply noassign_prog_same.
   prove_noassign.
 Qed.
 
 (* Strlen does not corrupt the LR register (call-return safety). *)
 Theorem strlen_preserves_lr:
-  forall s n s' x,
-  exec_prog fh strlen_arm 0 s n s' x -> s' R_LR = s R_LR.
+  forall_endstates strlen_arm (fun _ s _ s' => s R_LR = s' R_LR).
 Proof.
-  intros. eapply noassign_prog_same; [|eassumption].
+  apply noassign_prog_same.
   prove_noassign.
 Qed.
 
@@ -53,23 +54,21 @@ Qed.
 Definition nilfree (m:addr->N) (p:addr) (k:N) :=
   forall i, i < k -> m Ⓑ[p+i] <> 0.
 
-Definition strlen_post (m:addr->N) (p:addr) (_:exit) (s:store) :=
+Definition postcondition (m:addr->N) (p:addr) (s:store) :=
   ∃ k, s R_R0 = Ⓓk /\ nilfree m p k /\ m Ⓑ[p+k] = 0.
 
 (* Loop invariants for verifying the specification (not trusted). *)
-Definition strlen_invs (m:addr->N) (p a:addr) (s:store) :=
-  match a with
+Definition strlen_invs (m:addr->N) (p:addr) (t:trace) :=
+  match t with (Addr a,s)::_ => match a with
   | 0 => Some (s R_R0 = Ⓓp)
   | 40 => Some (∃ k, s R_R0 = Ⓓ(4*k ⊖ p mod 4) /\
                      s R_R1 = Ⓓ(p ⊖ p mod 4 ⊕ 4*N.succ k) /\
                      s R_R2 = Ⓓ match k with N0 => m Ⓓ[ p ⊖ p mod 4 ] .| N.ones (p mod 4 * 8)
                                            | _ => m Ⓓ[ p ⊖ p mod 4 ⊕ 4*k ] end /\
                      nilfree m p (4*k - p mod 4))
+  | 92 => Some (postcondition m p s)
   | _ => None
-  end.
-
-Definition strlen_invset (m:addr->N) (p:addr) :=
-  invs (strlen_invs m p) (strlen_post m p).
+  end | _ => None end.
 
 
 (* Before proving correctness, prove some helper lemmas about binary arithmetic
@@ -79,7 +78,7 @@ Lemma nilfree_mod:
   forall m p a w, nilfree m p a -> nilfree m p (a mod 2^w).
 Proof.
   intros. intros i LT. apply H. eapply N.lt_le_trans. exact LT.
-  apply N.mod_le. apply N.pow_nonzero. discriminate.
+  apply N.Div0.mod_le.
 Qed.
 
 Lemma getbyte:
@@ -96,7 +95,7 @@ Qed.
 
 Lemma getbyte':
   forall len m a, a mod 4 <= len ->
-  getmem 32 LittleE (N.succ len) m (a ⊖ a mod 4) .| N.ones (a mod 4 * 8) .& (N.ones 8 << (8*len)) =
+  (getmem 32 LittleE (N.succ len) m (a ⊖ a mod 4) .| N.ones (a mod 4 * 8)) .& (N.ones 8 << (8*len)) =
   m Ⓑ[a ⊖ a mod 4+len] << (8*len).
 Proof.
   intros. rewrite N.land_lor_distr_l. rewrite getbyte. replace (_.&_) with 0. apply N.lor_0_r.
@@ -109,7 +108,7 @@ Qed.
 
 Lemma nonbyte:
   forall len m a, len < a mod 4 ->
-  getmem 32 LittleE (N.succ len) m (a ⊖ a mod 4) .| N.ones (a mod 4 * 8) .& (N.ones 8 << (8*len)) <> 0.
+  (getmem 32 LittleE (N.succ len) m (a ⊖ a mod 4) .| N.ones (a mod 4 * 8)) .& (N.ones 8 << (8*len)) <> 0.
 Proof.
   intros. intro H1. apply N.bits_inj_iff in H1. specialize (H1 (8*len)).
   revert H1. rewrite N.bits_0. apply Bool.not_false_iff_true.
@@ -199,33 +198,29 @@ Qed.
 
 (* Main correctness theorem (and proof): *)
 Theorem strlen_partial_correctness:
-  forall s p lr m n s' x
-         (MDL0: models arm7typctx s)
-         (MEM0: s V_MEM32 = Ⓜm) (LR0: s R_LR = Ⓓlr) (R0: s R_R0 = Ⓓp)
-         (RET: strlen_arm s lr = None)
-         (XP0: exec_prog fh strlen_arm 0 s n s' x),
-  trueif_inv (strlen_invset m p strlen_arm x s').
+  forall s p lr m t s' x'
+         (ENTRY: startof t (x',s') = (Addr 0,s))
+         (MDL: models arm7typctx s)
+         (MEM: s V_MEM32 = Ⓜm) (LR: s R_LR = Ⓓlr) (R0: s R_R0 = Ⓓp),
+  satisfies_all strlen_arm (strlen_invs m p) strlen_exit ((x',s')::t).
 Proof.
-  intros.
-  eapply prove_invs. exact XP0.
-
   Local Ltac step := time arm7_step.
 
-  (* Precondition *)
-  step. exact R0.
+  intros.
+  apply prove_invs.
+
+  (* Base case: *)
+  simpl. rewrite ENTRY. arm7_step. assumption.
 
   (* Inductive cases *)
   intros.
-  assert (MDL: models arm7typctx s1).
-    eapply preservation_exec_prog. exact MDL0. apply strlen_welltyped. exact XP.
-  assert (MEM: s1 V_MEM32 = Ⓜm).
-    rewrite <- MEM0. eapply strlen_preserves_memory. exact XP.
-  assert (LR: s1 R_LR = Ⓓlr).
-    rewrite <- LR0. eapply strlen_preserves_lr. eassumption.
+  eapply startof_prefix in ENTRY; try eassumption.
+  apply (arm7_regsize MDL) in R0. simpl in R0. rename R0 into P32.
+  eapply preservation_exec_prog in MDL; try (eassumption || apply strlen_welltyped).
+  erewrite strlen_preserves_memory in MEM by eassumption.
+  erewrite strlen_preserves_lr in LR by eassumption.
   assert (WTM := arm7_wtm MDL MEM). simpl in WTM.
-  rewrite (strlen_nwc s1) in RET.
-  apply (arm7_regsize MDL0) in R0. simpl in R0. rename R0 into P32.
-  clear s MDL0 MEM0 LR0 XP XP0.
+  clear - PRE LR P32 MEM MDL WTM. rename t1 into t. rename s1 into s.
 
   destruct_inv 32 PRE.
 
@@ -245,7 +240,7 @@ Proof.
     apply Neqb_ok in BC0. rewrite BC0.
     replace (p-1) with (p⊖1); cycle 1.
       rewrite msub_nowrap; psimpl. reflexivity.
-      etransitivity. apply LE1. apply N.mod_le. discriminate 1.
+      etransitivity. apply LE1. apply N.Div0.mod_le.
     psimpl.
   step. exists 0.
     rewrite BC0. simpl N.succ. psimpl. repeat split.
@@ -259,7 +254,7 @@ Proof.
     rewrite (msub_nowrap _ 2) at 3 by (psimpl; exact LE2).
     replace (1 <=? _) with true by (symmetry; psimpl; apply N.leb_le, N.le_add_le_sub_r, LE2).
     replace (p - p mod 4) with (p ⊖ p mod 4) by
-    ( rewrite msub_nowrap; psimpl; [ reflexivity | apply N.mod_le; discriminate 1 ] ).
+    ( rewrite msub_nowrap; psimpl; [ reflexivity | apply N.Div0.mod_le ] ).
     psimpl.
   step.
     exists 0.

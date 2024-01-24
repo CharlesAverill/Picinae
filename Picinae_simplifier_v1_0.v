@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2022 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -1138,7 +1138,7 @@ Fixpoint simpl_outU {A} noe mvt (t: sastU A) : A :=
   end.
 
 Definition simpl_N u := match u with VaN n _ => n | VaM _ _ => N0 end.
-Definition simpl_exit u := Exit (simpl_N u).
+Definition simpl_exit u := Addr (simpl_N u).
 Definition simpl_MemAcc P h s u := MemAcc P h s (simpl_N u).
 Definition simpl_if (u:value) (q1 q2:stmt) := if simpl_N u then q1 else q2.
 
@@ -1357,20 +1357,20 @@ Local Ltac sastV_gen e :=
 Local Ltac sastU_gen e :=
   let rec mark_simpl e :=
     lazymatch e with
-    | context c [ exec_stmt ?h ?s (if ?n then ?q1 else ?q2) ?s' ?x ] =>
-      let e' := context c [ exec_stmt h s (simpl_if (VaN n 1) q1 q2) s' x ] in mark_simpl e'
-    | context c [ Exit ?a ] =>
+    | context c [ exec_stmt ?s (if ?n then ?q1 else ?q2) ?s' ?x ] =>
+      let e' := context c [ exec_stmt s (simpl_if (VaN n 1) q1 q2) s' x ] in mark_simpl e'
+    | context c [ Addr ?a ] =>
       let e' := context c [ simpl_exit (VaN a 1) ] in mark_simpl e'
-    | context c [ MemAcc ?P ?h ?s ?a ] =>
-      let e' := context c [ simpl_MemAcc P h s (VaN a 1) ] in mark_simpl e'
+    | context c [ MemAcc ?P ?s ?a ] =>
+      let e' := context c [ simpl_MemAcc P s (VaN a 1) ] in mark_simpl e'
     | _ => e
     end in
   let rec to_ast e :=
     lazymatch e with
-    | context [ VaN ?n (N.pos ?w) ] => lazymatch eval pattern (VaN n (N.pos w)) in e with ?f _ =>
+    | context [ @VaN ?T ?n (N.pos ?w) ] => lazymatch eval pattern (@VaN T n (N.pos w)) in e with ?f _ =>
         let f' := to_ast f in let t := sastN_gen n in uconstr:(SIMP_BindN f' t (N.pos w))
       end
-    | context [ VaM ?m (N.pos ?mw) ] => lazymatch eval pattern (VaM m (N.pos mw)) in e with ?f _ =>
+    | context [ @VaM ?T ?m (N.pos ?mw) ] => lazymatch eval pattern (@VaM T m (N.pos mw)) in e with ?f _ =>
         let f' := to_ast f in let t := sastM_gen m in uconstr:(SIMP_BindM f' t (N.pos mw))
       end
     | _ => uconstr:(SIMP_RetU ?[?f] e)
@@ -1432,6 +1432,7 @@ Local Ltac populate_var_ids id t :=
 
 Local Ltac psimp_verify_frontend :=
   cbv [ eval_sastV eval_sastS eval_sastU eval_sastN eval_sastB eval_sastM mvt_lookup simpl_N simpl_exit simpl_MemAcc simpl_if parity8 ];
+  change addr with N; change bitwidth with N;
   lazymatch goal with
   | |- ?t = ?t => exact_no_check (eq_refl t)
   | |- ?t1 = ?t2 => (* DEBUG *)
@@ -1584,7 +1585,7 @@ Lemma N_mod_0_r: forall n, n mod 0 = n.
 Proof. destruct n; reflexivity. Qed.
 
 Lemma N_mod_le: forall m n, m mod n <= m.
-Proof. destruct n. rewrite N_mod_0_r. reflexivity. apply N.mod_le. discriminate. Qed.
+Proof. destruct n. rewrite N_mod_0_r. reflexivity. apply N.Div0.mod_le. Qed.
 
 Lemma N_size_injle: forall m n, m <= n -> N.size m <= N.size n.
 Proof.
@@ -1705,7 +1706,7 @@ Proof.
   destruct ohi2 as [hi2|]; (split; [|destruct ohi1 as [hi1|]; [|exact I]]); simpl; rewrite !N.shiftr_div_pow2; first
   [ apply N.le_0_l
   | etransitivity;
-    [ apply N.div_le_mono; [ apply N.pow_nonzero; discriminate | apply IHe1 ]
+    [ apply N.Div0.div_le_mono, IHe1
     | apply N.div_le_compat_l; split; [ apply mp2_gt_0 | apply N.pow_le_mono_r; [ discriminate | apply IHe2 ] ] ] ].
 
   (* ShiftL *) split.
@@ -1826,7 +1827,7 @@ Proof.
   apply IHe1 in H1. apply IHe2 in H2. destruct H1 as [m1 H1]. destruct H2 as [m2 H2].
   rewrite H1, H2, <- mul_msub_distr_l.
   set (x := msub _ _ _). erewrite <- (N.sub_add _ w) by apply N.ltb_ge, WP. subst x.
-  rewrite N.add_comm, N.pow_add_r, N.mul_mod_distr_l by (apply N.pow_nonzero; discriminate 1).
+  rewrite N.add_comm, N.pow_add_r, N.Div0.mul_mod_distr_l.
   eexists. reflexivity.
 
   (* Mul *)
@@ -1837,7 +1838,7 @@ Proof.
   (* Mod *)
   exists (m1 mod m2). rewrite H1, H2. destruct m2.
     rewrite N.mul_0_r, !N_mod_0_r. reflexivity.
-    rewrite N.mul_mod_distr_l. reflexivity. discriminate. apply N.pow_nonzero. discriminate.
+    rewrite N.Div0.mul_mod_distr_l. reflexivity.
 
   (* Pow *)
   cbn [multiple_of_pow2] in H. destruct e1; try discriminate. destruct n as [|p1]. discriminate.
@@ -2140,9 +2141,7 @@ Proof.
   cbn [ andb eval_sastB eval_sastN ]. rewrite <- H.
   rewrite N.eqb_compare. destruct (_ ?= _) eqn:H2.
 
-    apply N.compare_eq in H2. rewrite H2. rewrite N.add_sub, N.mod_same.
-      reflexivity.
-      apply N.neq_0_lt_0. assumption.
+    apply N.compare_eq in H2. rewrite H2. rewrite N.add_sub, N.Div0.mod_same. reflexivity.
 
     rewrite N.mod_small.
       rewrite (proj2 (N.eqb_neq _ _)). reflexivity. apply N.neq_sym, N.sub_gt. eapply N.lt_le_trans.
@@ -2153,7 +2152,7 @@ Proof.
         apply N.lt_le_incl, N.lt_lt_add_r. assumption.
 
     rewrite <- N.add_sub_assoc by apply N.lt_le_incl, N.compare_gt_iff, H2.
-    rewrite <- N.add_mod_idemp_l, N.mod_same by apply N.neq_0_lt_0, H0.
+    rewrite <- N.Div0.add_mod_idemp_l, N.Div0.mod_same.
     rewrite N.add_0_l, N.mod_small.
       rewrite (proj2 (N.eqb_neq _ _)). reflexivity. apply N.neq_sym, N.sub_gt, N.compare_gt_iff, H2.
       eapply N.le_lt_trans. apply N.le_sub_l. assumption.
@@ -2265,8 +2264,8 @@ Proof.
   match type of H1 with ?x = _ => assert (x=(p2,p1) \/ x=(p1,p2)) end.
     destruct (_ ?= _)%positive; (left + right); reflexivity.
   symmetry. destruct H; rewrite H in H1; inversion H1; clear.
-    change (N.pos (_*_)) with (N.pos d * N.pos pmin). rewrite N.mul_comm, N.mod_mul_r, N.mul_comm, N.mod_add;
-    [ apply N.mod_mod | ..]; discriminate 1.
+    change (N.pos (_*_)) with (N.pos d * N.pos pmin). rewrite N.mul_comm, N.Div0.mod_mul_r, N.mul_comm, N.Div0.mod_add;
+    [ apply N.Div0.mod_mod | ..].
     apply N.mod_small. eapply (N.lt_le_trans _ (1*_)).
       rewrite N.mul_1_l. apply N.mod_lt. discriminate 1.
       change (N.pos (_*_)) with (N.pos d * N.pos pmin). apply N.mul_le_mono.
@@ -2345,11 +2344,11 @@ Proof.
 
     (* Const *)
     unfold simpl_under_modpow2. rewrite N.shiftl_mul_pow2, N.mul_1_l.
-    simpl. apply N.mod_mod. discriminate.
+    simpl. apply N.Div0.mod_mod.
 
     (* Add *)
     simpl. rewrite simpl_add_sound. simpl.
-    rewrite N.add_mod, IH1, IH2, <- N.add_mod by discriminate 1.
+    rewrite N.Div0.add_mod, IH1, IH2, <- N.Div0.add_mod.
     reflexivity.
 
     (* Sub *)
@@ -2381,14 +2380,14 @@ Proof.
 
     (* Mul *)
     simpl. rewrite simpl_mul_sound. simpl.
-    rewrite N.mul_mod, IH1, IH2, <- N.mul_mod by discriminate 1.
+    rewrite N.Div0.mul_mod, IH1, IH2, <- N.Div0.mul_mod.
     reflexivity.
 
     (* Mod *)
     simpl. destruct multiple_of_pow2 eqn:MP2; [|reflexivity].
     apply mop2_sound in MP2. destruct MP2 as [m2 H2]. rewrite H2, IH1. destruct m2.
       rewrite N.mul_0_r, N_mod_0_r. reflexivity.
-      rewrite N.mod_mul_r, N.mul_comm, N.mod_add, N.mod_mod by (try apply N.pow_nonzero; discriminate). reflexivity.
+      rewrite N.Div0.mod_mul_r, N.mul_comm, N.Div0.mod_add, N.Div0.mod_mod. reflexivity.
 
     (* And *)
     cbn [simpl_under_modpow2]. rewrite !N.shiftl_mul_pow2, !N.mul_1_l.
@@ -2397,14 +2396,14 @@ Proof.
       destruct e1; try discriminate. inversion H. subst n0. clear H. rewrite (simpl_land_nomod_sound mvt).
       cbn [eval_sastN]. rewrite N.land_comm, land_mod_min, IH2, (N.land_comm n).
         rewrite <- land_mod_min, N_land_mod_pow2_moveout.
-        apply N.mod_mod, N.pow_nonzero. discriminate.
+        apply N.Div0.mod_mod.
 
       clear H. destruct (match e2 with SIMP_Const _ => _ | _ => _ end) eqn:H.
 
         destruct e2; try discriminate. inversion H. subst n0. clear H. rewrite (simpl_land_nomod_sound mvt).
         cbn [eval_sastN]. rewrite land_mod_min, IH1.
           rewrite <- land_mod_min, N_land_mod_pow2_moveout.
-          apply N.mod_mod, N.pow_nonzero. discriminate.
+          apply N.Div0.mod_mod.
 
         rewrite (simpl_land_nomod_sound mvt).
         cbn [eval_sastN]. rewrite N_land_mod_pow2, IH1, IH2. symmetry. apply N_land_mod_pow2.
@@ -2433,17 +2432,16 @@ Proof.
     assert (SB2:=simpl_bounds_sound mvt e2). destruct (simpl_bounds mvt e2) as (lo2,ohi2). unfold fst.
     rewrite simpl_shiftl_sound. simpl. rewrite !N.shiftl_mul_pow2. destruct (N.le_ge_cases (eval_sastN mvt e2) n).
 
-      erewrite <- (N.sub_add _ n H) at 2. rewrite N.pow_add_r.
-      rewrite N.mul_mod_distr_r by (apply N.pow_nonzero; discriminate).
+      erewrite <- (N.sub_add _ n H) at 2. rewrite N.pow_add_r, N.Div0.mul_mod_distr_r.
       replace (n - eval_sastN mvt e2) with (N.min (n - lo2) (n - eval_sastN mvt e2)) by
         apply N.min_r, N.sub_le_mono_l, SB2.
       rewrite <- mp2_mod_mod_min, IH1.
       rewrite mp2_mod_mod_min, N.min_r by apply N.sub_le_mono_l, SB2.
-      rewrite <- N.mul_mod_distr_r by (apply N.pow_nonzero; discriminate).
+      rewrite <- N.Div0.mul_mod_distr_r.
       rewrite <- N.pow_add_r, N.sub_add by assumption. reflexivity.
 
       rewrite <- (N.sub_add _ _ H).
-      rewrite N.pow_add_r, !N.mul_assoc, !N.mod_mul by (apply N.pow_nonzero; discriminate).
+      rewrite N.pow_add_r, !N.mul_assoc, !N.Div0.mod_mul.
       reflexivity.
 
   (* GetMem *)

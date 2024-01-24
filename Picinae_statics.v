@@ -456,8 +456,8 @@ Parameter models_subset:
 
 (* Every result of evaluating a well-typed expression is a well-typed value. *)
 Parameter preservation_eval_exp:
-  forall {h s e c t u}
-         (MCS: models c s) (TE: hastyp_exp c e t) (E: eval_exp h s e u),
+  forall {s e c t u}
+         (MCS: models c s) (TE: hastyp_exp c e t) (E: eval_exp s e u),
   hastyp_val u t.
 
 (* If an expression is well-typed and there are no memory access violations,
@@ -466,18 +466,18 @@ Parameter progress_eval_exp:
   forall {s e c t}
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c s) (T: hastyp_exp c e t),
-  exists u, eval_exp htotal s e u.
+  exists u, eval_exp s e u.
 
 (* Statement execution preserves the modeling relation. *)
 Parameter preservation_exec_stmt:
-  forall {h s q c0 c c' s'}
-         (MCS: models c s) (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' None),
+  forall {s q c0 c c' s'}
+         (MCS: models c s) (T: hastyp_stmt c0 c q c') (XS: exec_stmt s q s' None),
   models c' s'.
 
 (* Execution also preserves modeling the frame context c0. *)
 Parameter pres_frame_exec_stmt:
-  forall {h s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
-         (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' x),
+  forall {s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
+         (T: hastyp_stmt c0 c q c') (XS: exec_stmt s q s' x),
   models c0 s'.
 
 (* Well-typed statements never get "stuck" except for memory access violations.
@@ -486,23 +486,23 @@ Parameter progress_exec_stmt:
   forall {s q c0 c c'}
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c s) (T: hastyp_stmt c0 c q c'),
-  exists s' x, exec_stmt htotal s q s' x.
+  exists s' x, exec_stmt s q s' x.
 
 (* Well-typed programs preserve the modeling relation at every execution step. *)
 Parameter preservation_exec_prog:
-  forall h p c s n a s' x (MCS: models c s)
-         (WP: welltyped_prog c p) (XS: exec_prog h p a s n s' x),
-  models c s'.
+  forall p c (WP: welltyped_prog c p),
+  forall_endstates p (fun _ s _ s' => forall (MDL: models c s), models c s').
 
 (* Well-typed programs never get "stuck" except for memory access violations.
    They exit, or run to completion.  They never get "stuck" due to a runtime
    type-mismatch. *)
 Parameter progress_exec_prog:
-  forall p c0 s0 n a s1 a'
+  forall p c0 t a1 s1
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
-         (MCS: models c0 s0) (WP: welltyped_prog c0 p)
-         (XP: exec_prog htotal p a s0 n s1 (Exit a')) (IL: p s1 a' <> None),
-  exists s' x, exec_prog htotal p a s0 (S n) s' x.
+         (MCS: models c0 (snd (startof t (Addr a1,s1))))
+         (WP: welltyped_prog c0 p)
+         (XP: exec_prog p ((Addr a1,s1)::t)) (IL: p s1 a1 <> None),
+  exists xs', exec_prog p (xs'::(Addr a1,s1)::t).
 
 (* The expression type-checker is sound. *)
 Parameter typchk_exp_sound:
@@ -820,15 +820,15 @@ Proof.
 Qed.
 
 Lemma preservation_eval_exp:
-  forall {h s e c t u}
-         (MCS: models c s) (TE: hastyp_exp c e t) (E: eval_exp h s e u),
+  forall {s e c t u}
+         (MCS: models c s) (TE: hastyp_exp c e t) (E: eval_exp s e u),
   hastyp_val u t.
 Proof.
   intros. revert s u MCS E. dependent induction TE; intros;
   inversion E; subst;
-  repeat (match goal with [ IH: forall _ _, models _ _ -> eval_exp ?h _ ?e _ -> hastyp_val _ _,
+  repeat (match goal with [ IH: forall _ _, models _ _ -> eval_exp _ ?e _ -> hastyp_val _ _,
                             M: models _ ?s,
-                            EE: eval_exp ?h ?s ?e _ |- _ ] =>
+                            EE: eval_exp ?s ?e _ |- _ ] =>
             specialize (IH s _ MCS EE); try (inversion IH; [idtac]; subst) end).
 
   (* Var *)
@@ -877,10 +877,10 @@ Lemma progress_eval_exp:
   forall {s e c t}
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c s) (T: hastyp_exp c e t),
-  exists u, eval_exp htotal s e u.
+  exists u, eval_exp s e u.
 Proof.
   intros. revert s MCS. dependent induction T; intros;
-  repeat match reverse goal with [ IH: forall _, models ?C _ -> exists _, eval_exp _ _ ?e _,
+  repeat match reverse goal with [ IH: forall _, models ?C _ -> exists _, eval_exp _ ?e _,
                                     M: models ?c ?s,
                                     T: hastyp_exp ?c ?e _ |- _ ] =>
     specialize (IH s M);
@@ -897,10 +897,10 @@ Proof.
   exists (VaN n w). apply EWord; assumption.
 
   (* Load *)
-  eexists. eapply ELoad; try eassumption. intros. split. reflexivity. apply RW.
+  eexists. eapply ELoad; try eassumption. intros. apply RW.
 
   (* Store *)
-  eexists. eapply EStore; try eassumption. intros. split. reflexivity. apply RW.
+  eexists. eapply EStore; try eassumption. intros. apply RW.
 
   (* BinOp *)
   eexists. apply EBinOp; eassumption.
@@ -942,8 +942,8 @@ Proof.
 Qed.
 
 Lemma preservation_exec_stmt:
-  forall {h s q c0 c c' s'}
-         (MCS: models c s) (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' None),
+  forall {s q c0 c c' s'}
+         (MCS: models c s) (T: hastyp_stmt c0 c q c') (XS: exec_stmt s q s' None),
   models c' s'.
 Proof.
   intros. revert c c' MCS T. dependent induction XS; intros; inversion T; subst.
@@ -971,8 +971,8 @@ Proof.
 Qed.
 
 Lemma pres_frame_exec_stmt:
-  forall {h s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
-         (T: hastyp_stmt c0 c q c') (XS: exec_stmt h s q s' x),
+  forall {s q c0 c c' s' x} (MC0S: models c0 s) (MCS: models c s)
+         (T: hastyp_stmt c0 c q c') (XS: exec_stmt s q s' x),
   models c0 s'.
 Proof.
   intros. revert c c' MCS T. dependent induction XS; intros;
@@ -1002,7 +1002,7 @@ Lemma progress_exec_stmt:
   forall {s q c0 c c'}
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
          (MCS: models c s) (T: hastyp_stmt c0 c q c'),
-  exists s' x, exec_stmt htotal s q s' x.
+  exists s' x, exec_stmt s q s' x.
 Proof.
   intros. revert c c' s T MCS. induction q using stmt_ind2; intros;
   try (inversion T; subst).
@@ -1017,7 +1017,7 @@ Proof.
   (* Jmp *)
   destruct (progress_eval_exp RW MCS TE) as [u E].
   assert (TV:=preservation_eval_exp MCS TE E). inversion TV as [a' w'|]; subst.
-  exists s,(Some (Exit a')). apply XJmp with (w:=w). assumption.
+  exists s,(Some (Addr a')). apply XJmp with (w:=w). assumption.
 
   (* Exn *)
   exists s,(Some (Raise i)). apply XExn.
@@ -1050,34 +1050,36 @@ Proof.
 Qed.
 
 Theorem preservation_exec_prog:
-  forall h p c s n a s' x (MCS: models c s)
-         (WP: welltyped_prog c p) (XS: exec_prog h p a s n s' x),
-  models c s'.
+  forall p c (WP: welltyped_prog c p),
+  forall_endstates p (fun _ s _ s' => forall (MDL: models c s), models c s').
 Proof.
-  intros. revert a s x MCS XS. induction n; intros; inversion XS; clear XS; subst.
-    assumption.
-    eapply IHn.
-      specialize (WP s a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
-        exact MCS. exact MCS. exact TS. exact XS0.
-      exact XP.
-    specialize (WP s a). rewrite LU in WP. destruct WP as [c' TS]. eapply pres_frame_exec_stmt.
-      exact MCS. exact MCS. exact TS. exact XS0.
+  unfold forall_endstates. intros.
+  change s with (snd (x,s)) in MDL. rewrite <- ENTRY in MDL.
+  clear x s ENTRY. revert x' s' MDL XP. induction t as [|(x1,s1) t]; intros.
+    exact MDL.
+
+    assert (CS:=exec_prog_final _ _ _ _ XP). inversion CS; subst.
+    specialize (WP s1 a). rewrite LU in WP. destruct WP as [c' TS].
+    rewrite startof_cons in MDL. apply exec_prog_tail in XP. specialize (IHt _ _ MDL XP).
+    clear MDL. eapply pres_frame_exec_stmt; eassumption.
 Qed.
 
 Theorem progress_exec_prog:
-  forall p c0 s0 n a s1 a'
+  forall p c0 t a1 s1
          (RW: forall s0 a0, mem_readable s0 a0 /\ mem_writable s0 a0)
-         (MCS: models c0 s0) (WP: welltyped_prog c0 p)
-         (XP: exec_prog htotal p a s0 n s1 (Exit a')) (IL: p s1 a' <> None),
-  exists s' x, exec_prog htotal p a s0 (S n) s' x.
+         (MCS: models c0 (snd (startof t (Addr a1,s1))))
+         (WP: welltyped_prog c0 p)
+         (XP: exec_prog p ((Addr a1,s1)::t)) (IL: p s1 a1 <> None),
+  exists xs', exec_prog p (xs'::(Addr a1,s1)::t).
 Proof.
   intros.
-  assert (WPA':=WP s1 a'). destruct (p s1 a') as [(sz,q)|] eqn:IL'; [|contradict IL; reflexivity]. clear IL.
+  assert (WPA':=WP s1 a1). destruct (p s1 a1) as [(sz,q)|] eqn:IL'; [|contradict IL; reflexivity]. clear IL.
   destruct WPA' as [c' T]. eapply progress_exec_stmt in T.
-    destruct T as [s' [x XS]]. exists s'. eapply exec_prog_append in XS; [|exact XP | exact IL'].
-      destruct x as [e|]; [destruct e|]; eexists; exact XS.
+    destruct T as [s' [x' XS]]. eexists (_,s'). eapply exec_prog_step.
+      exact XP.
+      econstructor; eassumption.
     exact RW.
-    eapply preservation_exec_prog. exact MCS. exact WP. exact XP.
+    eapply preservation_exec_prog; try eassumption. apply surjective_pairing.
 Qed.
 
 Theorem typchk_exp_sound:
@@ -1105,7 +1107,6 @@ Proof.
     apply N.leb_le, EQ1.
     apply IHe1. reflexivity.
     apply IHe2. reflexivity.
-
 
   (* Store *)
   specialize (IHe1 c). specialize (IHe2 c). specialize (IHe3 c).
