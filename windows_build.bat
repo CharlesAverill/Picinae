@@ -4,6 +4,7 @@
   @ECHO Please edit the first line of this batch file to point to coqc.exe.
   @GOTO ErrorExit
 )
+@SET coqc=%coqc% -R . Picinae
 %coqc% Picinae_core.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_theory.v

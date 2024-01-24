@@ -4,7 +4,7 @@ Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
 Require Import Picinae_i386.
-Require Import strlen_i386.
+Require Import i386_strlen.
 
 Import X86Notations.
 Open Scope N.

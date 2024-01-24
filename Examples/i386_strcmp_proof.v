@@ -25,7 +25,7 @@ Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
 Require Import Picinae_i386.
-Require Import strcmp_i386.
+Require Import i386_strcmp.
 
 Import X86Notations.
 Open Scope N.
@@ -79,7 +79,7 @@ Proof.
 Qed.
 
 
-(* Proving that strlen restores ESP on exit is our first example of a property that
+(* Proving that strcmp restores ESP on exit is our first example of a property that
    requires stepwise symbolic interpretation of the program to verify.  We first
    define a set of invariants, one for each program point.  In this simple case,
    all program points have the same invariant, so we return the same one for all. *)
@@ -163,8 +163,8 @@ Definition streq (m:addr->N) (p1 p2:addr) (k:N) :=
    (address 0), and puts a loop-invariant at address 8. *)
 Definition strcmp_invs (m:addr->N) (esp:N) (a:addr) (s:store) :=
   match a with
-  |  8 => Some (∃ k, s R_ECX = Ⓓ(m Ⓓ[4+esp] ⊕ k) /\ s R_EDX = Ⓓ(m Ⓓ[8+esp] ⊕ k) /\
-                streq m (m Ⓓ[4+esp]) (m Ⓓ[8+esp]) k)
+  | 8 => Some (∃ k, s R_ECX = Ⓓ(m Ⓓ[4+esp] ⊕ k) /\ s R_EDX = Ⓓ(m Ⓓ[8+esp] ⊕ k) /\
+               streq m (m Ⓓ[4+esp]) (m Ⓓ[8+esp]) k)
   | _ => None
   end.
 
