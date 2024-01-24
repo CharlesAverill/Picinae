@@ -5273,51 +5273,6 @@ Proof.
     rewrite <- INV. destruct (xp t); reflexivity.
 Qed.
 
-(*
-Theorem nextinv_app:
-  forall p Invs xp xs t b
-    (NI: forall t'
-           (XP: exec_prog p (t'++xs::nil))
-           (INV: Invs (t'++xs::t) <> None \/ xp (t'++xs::t) = true)
-           (NOI: match t' with nil => True | _::t'' =>
-                   ForallPrefixes (fun t0 => Invs (t0++xs::t) = None /\ xp (t0++xs::t) = false) t''
-                 end),
-         exists t1' t2', t2'++t1' = t' /\
-         nextinv p Invs xp match t1' with nil => b | _ => true end (t1'++xs::t)),
-  nextinv p Invs xp b (xs::t).
-Proof.
-  intros.
-  destruct (xp (xs::t)) eqn:EX. destruct (NI nil) as [t1' [t2' [NI1 NI2]]].
-    destruct t; apply Forall_nil.
-    right. exact EX.
-    exact I.
-    apply app_eq_nil, proj2 in NI1. subst t1'. exact NI2.
-  destruct (Invs (xs::t)) eqn:INV. destruct (NI nil) as [t1' [t2' [NI1 NI2]]].
-    destruct t; apply Forall_nil.
-    left. simpl. rewrite INV. discriminate 1.
-    exact I.
-    apply app_eq_nil, proj2 in NI1. subst t1'. exact NI2.
-  
-Qed.
-
-Theorem nextinv_call:
-  forall p p' Invs Invs' xp xp' a s t
-    (SA: forall t' x' s' (ENTRY: startof t' (x',s') = (Addr a, s)), satisfies_all p' Invs' xp' t')
-    (CLO: forall xs t1 t2, true_inv (Invs (xs::t1)) -> true_inv (Invs (xs::t1++t2)))
-    (SS: forall s0, p' s0 ⊆ p s0)
-    (DISJ: forall a0 s0 t0, match Invs ((Addr a0,s0)::t0) with Some _ => p' s0 a0 | None => None end = None)
-    (RET: forall a' s' t'
-            (ENTRY: startof t' (Addr a', s') = (Addr a, s))
-            (EXIT: xp' ((Addr a',s')::t') = true)
-            (POST: true_inv (get_precondition p' Invs' xp' a' s' t')),
-          nextinv p Invs xp true ((Addr a',s')::t'++t)),
-  nextinv p Invs xp true ((Addr a,s)::t).
-Proof.
-  intros. destruct (xp' ((Addr a,s)::nil)) eqn:EX.
-    eapply NIHere.
-Qed.
-*)
-
 End InvariantProofs.
 
 
