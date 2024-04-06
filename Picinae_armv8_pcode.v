@@ -357,6 +357,11 @@ Ltac arm8_invseek :=
          | _ => arm8_step_and_simplify XS
          end;
   try generalize_trace;
+(* Removed in rebase process, does strspn proof still work?
+  try match goal with |- nextinv _ _ _ _ (_ :: ?xs :: ?t) =>
+    let t' := fresh t in generalize (xs::t); intro t'; clear t; rename t' into t
+  end;
+ *)
   repeat match goal with [ u:value |- _ ] => clear u
                        | [ n:N |- _ ] => clear n
                        | [ m:addr->N |- _ ] => clear m end;
