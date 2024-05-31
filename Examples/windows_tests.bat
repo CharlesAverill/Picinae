@@ -26,6 +26,11 @@
 %coqc% i386_wcsspn_proof.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 
+%coqc% i386_wcsnlen.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% i386_wcsnlen_proof.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+
 %coqc% arm7_memset.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% arm7_memset_proof.v
