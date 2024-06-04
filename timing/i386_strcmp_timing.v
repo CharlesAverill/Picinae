@@ -1,50 +1,31 @@
 Require Import Picinae_i386.
 Require Import NArith.
 Require Import i386_strcmp.
-Require Import Picinae_timing.
+Require Import i386Timing.
 Open Scope N.
 Open Scope i386_scope.
-
-(* Define variables for the Timing section*)
-Definition time_of_stmt (s : option (N * stmt)) : nat :=
-    match s with None => 0 | Some (_, s') => match s' with
-    | Move _ _ => 2
-    | If _ _ _ => 6
-    | Jmp _ => 9
-    | _ => 0
-    end end.
-
-Definition empty_store : store := fun _ => VaN 0 32.
-
-(* Redefine Timing section definitions for brevity*)
-Definition program := program store stmt.
-Definition timed_program := timed_program store stmt.
-Definition timed_program_of_program := timed_program_of_program store stmt time_of_stmt.
-Definition program_of_timed_program := program_of_timed_program store stmt.
-
-Tactic Notation "prog_eq_helper" integer(max) constr(Hmax_le) :=
-    unfold program_of_timed_program, timed_program_of_program;
-    prog_eq_helper store addr empty_store max constr:(Hmax_le).
 
 (* Properties of program *)
 Notation strcmp_bound := 36.
 
-(* Begin proofs *)
+(* Show that the program is bounded - that it has a finite representation *)
 Theorem strcmp_i386_bounded : 
-    program_bounded store strcmp_i386 strcmp_bound.
+    program_bounded strcmp_i386 strcmp_bound.
 Proof. prove_bounded. Qed.
 
+(* Show that the timed-program-generator is correct for strcmp *)
 Theorem strcmp_i386_conversion_safe : 
     program_of_timed_program (
         timed_program_of_program strcmp_i386 empty_store strcmp_bound
     ) empty_store strcmp_bound = strcmp_i386.
-Proof.
+Proof using.
     apply functional_extensionality. intro s.
     apply functional_extensionality. intro a.
     (* TODO : Figure a way to pass a Coq variable as an Ltac integer *)
     prog_eq_helper 37 strcmp_i386_bounded.
 Qed.
 
+(* Bad estimate of worst-case execution time (WCET) *)
 Fixpoint _instruction_time_of_timed_program s (max_addr : nat) (p : timed_program) : nat :=
     match max_addr with 
     | O => match p s 0 with None => 0 | Some (t, st) => t end
@@ -55,33 +36,37 @@ Fixpoint _instruction_time_of_timed_program s (max_addr : nat) (p : timed_progra
 Definition instruction_time_of_timed_program s m p :=
     _instruction_time_of_timed_program s (N.to_nat m) p.
 
+(* Definitions for code injectors *)
 Definition injector : Type := timed_program -> timed_program.
 Definition timing_policy : Type := nat.
 
+(* A poor definition of safety for a real-time code injector *)
 Definition injector_safe_too_strong (inj : injector) :=
     forall (p : timed_program) (tp : timing_policy) s max_addr,
     (instruction_time_of_timed_program s max_addr p <= tp ->
     instruction_time_of_timed_program s max_addr (inj p) <= tp)%nat.
 
+(* A better definition of safety *)
 Definition injector_safe (inj : injector) :=
     forall (p : timed_program) (tp : timing_policy) s max_addr indiff outdiff,
     (indiff + instruction_time_of_timed_program s max_addr p = tp ->
     outdiff + instruction_time_of_timed_program s max_addr (inj p) = tp ->
     outdiff <= indiff)%nat.
 
-Definition identity_injector (p : timed_program) : timed_program :=
-    p.
-
+(* A different approach at safety - prove safety for injector specific 
+    input-output pairs rather than all input-output pairs *)
 Definition injection_safe (input : timed_program) (inj : injector) 
         (wcet : timed_program -> nat) (max_addr : N) (tp : timing_policy) :=
     (wcet input <= tp)%nat ->
     (wcet (inj input) <= tp)%nat.
 
-Definition dumb_injector max_addr (p : timed_program) := 
-    insert_timed_instr store stmt time_of_stmt p max_addr empty_store (p empty_store 0) 1.
-
+(* The cycle-annotated form of strcmp *)
 Definition strcmp_i386_timed : timed_program :=
     timed_program_of_program strcmp_i386 empty_store strcmp_bound.
+
+(* Example 1: The identity injector *)
+Definition identity_injector (p : timed_program) : timed_program :=
+    p.
 
 Theorem identity_injector_safe_strcmp_i386 :
     injection_safe strcmp_i386_timed identity_injector 
@@ -90,10 +75,20 @@ Proof.
     intros ->. lia.
 Qed.
 
-Compute instruction_time_of_timed_program empty_store strcmp_bound strcmp_i386_timed.
+Theorem identity_injector_safe :
+    injector_safe identity_injector.
+Proof.
+    intros p tp s max_addr indiff outdiff IN OUT. 
+    unfold identity_injector in OUT.
+    rewrite <- OUT in IN.
+    apply PeanoNat.Nat.add_cancel_r in IN. subst. reflexivity.
+Qed.
 
-Compute instruction_time_of_timed_program empty_store 40 (dumb_injector strcmp_bound strcmp_i386_timed).
+(* Example 2: Duplicate the first instruction *)
+Definition dumb_injector max_addr (p : timed_program) := 
+    insert_timed_instr p max_addr empty_store (p empty_store 0) 1.
 
+(* A general-purpose tactic for proving correctness of input-output pair injections *)
 Ltac pair_val :=
     let x := fresh "x" in
     match goal with
@@ -106,19 +101,6 @@ Ltac pair_val :=
 Theorem dumb_injector_safe_strcmp_i386 :
     injection_safe strcmp_i386_timed (dumb_injector strcmp_bound) 
         (instruction_time_of_timed_program empty_store strcmp_bound) strcmp_bound 30%nat.
-Proof.
+Proof using.
     intros H. pair_val.
 Qed.
-
-Theorem identity_injector_safe :
-    injector_safe identity_injector.
-Proof.
-    intros p tp s max_addr indiff outdiff IN OUT. 
-    unfold identity_injector in OUT.
-    rewrite <- OUT in IN.
-    apply PeanoNat.Nat.add_cancel_r in IN. subst. reflexivity.
-Qed.
-
-(* what approach to take to compare pairs of execution
-    translation-based verification vs translator verification *)
-(* find reasonable embedded target *)
