@@ -199,7 +199,8 @@ Proof.
       rewrite NEXT; assumption.
 Qed.
 
-
+(* I don't remember what this is for.
+  - ilan *)
 Lemma post_satis_prev:
   ∀ i L m str_ptr accept_ptr, 
       i < L 
@@ -235,18 +236,18 @@ Proof.
 Qed.
 
 Lemma bitarray_nstr_str :
-  ∀ len mem accept_ptr bitmap_ptr,
-     bitarray_nstr mem bitmap_ptr accept_ptr len
-     /\ mem Ⓑ[ accept_ptr ⊕ len ] = 0
-     -> bitarray_str mem bitmap_ptr accept_ptr.
+  ∀ len mem accept_ptr bitmap_ptr
+     (BITNSTR: bitarray_nstr mem bitmap_ptr accept_ptr len)
+     (NIL: mem Ⓑ[ accept_ptr ⊕ len ] = 0),
+     bitarray_str mem bitmap_ptr accept_ptr.
 Proof.
 unfold bitarray_nstr.
 unfold bitarray_str.
-intros. destruct H as [BITNSTR NIL].
+intros. 
 split.
   intro BIT. apply BITNSTR in BIT. destruct BIT as [j [LEN [NILFREE MEM]]]. exists j. split.
   assumption. assumption. assumption.
-intro H; destruct H as [j [NILFREE MEM]]. apply BITNSTR. assumption. exists j. split.
+intro H2; destruct H2 as [j [NILFREE MEM]]. apply BITNSTR. assumption. exists j. split.
   apply (nilfree_lte mem accept_ptr j len). split; repeat assumption. split; repeat assumption.
 Qed.
 
