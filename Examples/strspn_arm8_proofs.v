@@ -32,6 +32,7 @@ Require Import NArith.
 Require Import ZArith.
 Require Import Picinae_armv8_pcode.
 Require Import strspn_arm8.
+Require Import Lia.
 
 (* Only used for bookkeeping *)
 Require Import String.
@@ -95,14 +96,18 @@ Definition nilfree mem p len :=
    only be half (128) of the maximum (256) size.
    Will this be an issue? *)
 (* Define a "correct" bit array. *)
+(* nilfree m p **(1+j)** so that p[j] != 0.
+   This makes it so a bitmap never records the null-terminating character
+   as an acceptable character which is the behavior used in this implementation
+   of strspn. This is practical in this case but may not be in others. *)
 Definition bitarray_nstr mem bitmap_ptr str_ptr len : Prop :=
   ∀ i, i < 256 -> (0 < bit mem bitmap_ptr i <-> 
-                       (∃ j, j <= len /\ nilfree mem str_ptr j /\ mem Ⓑ[str_ptr ⊕ j] = i)).
+                       (∃ j, j < len /\ nilfree mem str_ptr (1+j) /\ mem Ⓑ[str_ptr ⊕ j] = i)).
 
 (* bitmap bit is on iff the string has a corresponding character before or on \0 *)
 Definition bitarray_str mem bitmap_ptr str_ptr : Prop :=
   ∀ i, i < 256 -> (0 < bit mem bitmap_ptr i <-> 
-                       (∃ j, nilfree mem str_ptr j /\ mem Ⓑ[str_ptr ⊕ j] = i)).
+                       (∃ j, nilfree mem str_ptr (1+j) /\ mem Ⓑ[str_ptr ⊕ j] = i)).
 
 (* accept string contains string's i-length prefix.
    thinking of renaming this to `post_satis_i` because it doesn't say that the post
@@ -111,12 +116,6 @@ Definition post_satis_i (i:N) (m:addr -> N) (str_ptr:addr) (accept_ptr:addr):=
   ∀j, j < i -> 
   (∃ k : N, nilfree m accept_ptr (k + 1)
     ∧ m Ⓑ[ accept_ptr ⊕ k ] = m Ⓑ[ str_ptr ⊕ j ]).
-
-Theorem lt_le_incl : forall n m, n < m -> n <= m.
-Proof.
-intros. apply N.lt_eq_cases. Search (_ < _ -> _ <= _). now left.
-Qed.
-
 
 Lemma npred_1_plus_i : forall i, N.pred (1+i) = i.
 Proof.
@@ -143,29 +142,15 @@ Proof.
   intros. destruct n. left. reflexivity. right. reflexivity.
 Qed.
 
-(* FALSE PROPOSITION - to be removed
-   Prove the accept_ptr[x] is non-zero because the bit in the bitmap is on,
-   which cannot be the case for 0. In my mind this is a proof by contradication,
-   so it may be difficult to implement. Try using the N.lt_trichotomy and N.*cases
-   may be helpful for case distinction. 
-Lemma bitmap_on_imp_nzero :
-  ∀ char mem accept_ptr bitmap_ptr
-(BITMAP: bitarray_str mem bitmap_ptr accept_ptr)
-(ON : 0 < bit mem bitmap_ptr char),
-  0 < char.
+Lemma nilfree_prefx :
+  ∀ mem p x y
+    (NILFREE : nilfree mem p x)
+    (LT : y < x),
+  nilfree mem p y.
 Proof.
-  intros. unfold bitarray_str in BITMAP.
-  assert (H:= zero_or_gtz char). destruct H. subst char.
-  specialize (BITMAP 0).
-  assert (ON2: 0 < 256). {reflexivity. }
-  apply BITMAP in ON2. destruct ON2. apply H in ON; clear H. inversion ON. destruct H as [NILFREE NIL].
-  unfold nilfree in NILFREE.
-
-
-
-  assumption.
-Admitted.
-*)
+  intros. unfold nilfree in NILFREE; unfold nilfree.
+  intros. apply NILFREE. apply (N.lt_trans i y x); repeat assumption.
+Qed.
 
 (* If the post condition is satisfied for a prefix of length i, and the next character (index i)
    is not zero and in the bitmap then the post condition is satisfied for a prefix of length i+1
@@ -191,29 +176,11 @@ Proof.
     destruct H0 as [NILFREE CHAR].
     exists x. split.
     assert (H: ∃ j : N, nilfree mem accept_ptr j ∧ mem Ⓑ[ accept_ptr ⊕ j ] = char).
-      { exists x. split; repeat assumption. }
-    apply H1 in H. unfold nilfree. intros. rewrite N.add_comm in H0. apply lt_succ_imp_lte_pred in H0.
-    apply le_imp_lt_eq in H0. destruct H0.
-      unfold nilfree in NILFREE. apply NILFREE. assumption.
-      subst i0. rewrite CHAR. assumption.
-      rewrite NEXT; assumption.
+      { exists x. split; repeat assumption. 
+        apply (nilfree_prefx mem accept_ptr (1+x) x). assumption. lia. }
+      rewrite N.add_comm; assumption.
+    subst char; assumption.
 Qed.
-
-(* I don't remember what this is for.
-  - ilan *)
-Lemma post_satis_prev:
-  ∀ i L m str_ptr accept_ptr, 
-      i < L 
-      /\ post_satis L m str_ptr accept_ptr 
-      -> post_satis i m str_ptr accept_ptr.
-Proof.
-  intros.
-  destruct H.
-  inversion H0; destruct H1.
-  unfold post_satis.
-  (* This isn't exists x. *)
-Abort.
-
 
 Lemma mod_comm:
   ∀ x y, x ⊕ y = y ⊕ x.
@@ -245,10 +212,17 @@ unfold bitarray_nstr.
 unfold bitarray_str.
 intros. 
 split.
-  intro BIT. apply BITNSTR in BIT. destruct BIT as [j [LEN [NILFREE MEM]]]. exists j. split.
+  * intro BIT. apply BITNSTR in BIT. destruct BIT as [j [LEN [NILFREE MEM]]]. exists j. split.
   assumption. assumption. assumption.
-intro H2; destruct H2 as [j [NILFREE MEM]]. apply BITNSTR. assumption. exists j. split.
-  apply (nilfree_lte mem accept_ptr j len). split; repeat assumption. split; repeat assumption.
+  *
+ intro H2; destruct H2 as [j [NILFREE MEM]]. apply BITNSTR. assumption. exists j. split.
+  assert (TRI:= N.lt_trichotomy j len). destruct TRI as [LT | [EQ | GT]].
+    assumption.
+    subst j. unfold nilfree in NILFREE. specialize (NILFREE len). assert (H1: len < 1 + len). { lia. } apply NILFREE in H1. 
+      rewrite NIL in H1. discriminate.
+    unfold nilfree in NILFREE. specialize (NILFREE len). assert (H1: len < 1 + j). { lia. } apply NILFREE in H1.
+      rewrite  NIL in H1. discriminate.
+  split; assumption; assumption.
 Qed.
 
 Definition strspn_invs (m:addr->N) (str_ptr accept_ptr sp:addr) (t:trace) :=
@@ -283,8 +257,8 @@ Definition strspn_invs (m:addr->N) (str_ptr accept_ptr sp:addr) (t:trace) :=
      ∃ invariant_loc, invariant_loc = "0x41300068"%string ->
      ∃ L : N,
      s R_X0 = ⓆL ∧ (∀ i : N, i < L → 
-                    post_satis i m str_ptr accept_ptr 
-                    ∧ ¬ post_satis L m str_ptr accept_ptr))
+                    post_satis_i i m str_ptr accept_ptr)
+                    ∧ ¬ post_satis_i L m str_ptr accept_ptr)
   | _ => None
   end | _ => None end.
 
@@ -329,7 +303,7 @@ Lemma bitmap_0:
 Proof.
   intros.
   unfold bitarray_nstr.
-  
+
   intros. split; intros.
   unfold bit in H1. unfold xbits in H1.
 Admitted.
