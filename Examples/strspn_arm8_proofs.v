@@ -109,9 +109,8 @@ Definition bitarray_str mem bitmap_ptr str_ptr : Prop :=
   ∀ i, i < 256 -> (0 < bit mem bitmap_ptr i <-> 
                        (∃ j, nilfree mem str_ptr (1+j) /\ mem Ⓑ[str_ptr ⊕ j] = i)).
 
-(* accept string contains string's i-length prefix.
-   thinking of renaming this to `post_satis_i` because it doesn't say that the post
-   cond is satisfied for all chars, or a length, just the specific char at position i *)
+(* accept string contains all characters of str's i-length prefix.
+ *)
 Definition post_satis_i (i:N) (m:addr -> N) (str_ptr:addr) (accept_ptr:addr):= 
   ∀j, j < i -> 
   (∃ k : N, nilfree m accept_ptr (k + 1)
@@ -251,14 +250,13 @@ Definition strspn_invs (m:addr->N) (str_ptr accept_ptr sp:addr) (t:trace) :=
      ∃ invariant_loc, invariant_loc = "0x41300078"%string ->
      ∃ bitmap_ptr p L : N, s R_X0 = Ⓠp /\ s R_X1 = Ⓠ(p ⊕ L) /\
      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m bitmap_ptr accept_ptr /\
-     post_satis L m str_ptr accept_ptr)
+     post_satis_i L m str_ptr accept_ptr)
   (* 0x41300068: Return Invariant *)
   |  0x41300068 => Some(
      ∃ invariant_loc, invariant_loc = "0x41300068"%string ->
      ∃ L : N,
-     s R_X0 = ⓆL ∧ (∀ i : N, i < L → 
-                    post_satis_i i m str_ptr accept_ptr)
-                    ∧ ¬ post_satis_i L m str_ptr accept_ptr)
+     s R_X0 = ⓆL ∧ post_satis_i L m str_ptr accept_ptr
+                    ∧ ¬ post_satis_i (L+1) m str_ptr accept_ptr)
   | _ => None
   end | _ => None end.
 
@@ -355,21 +353,30 @@ intros.
   assert (ACPT' : s1 R_X1 = Ⓠaccept_ptr). { admit. }*)
   assert (SP' : s1 R_X3 = Ⓠsp). { admit. }
   assert (BITMAP': m Ⓨ[ sp ] = 0). { admit. }
-  assert (CHAR0': Ⓠ (m Ⓑ[ accept_ptr ]) = s1 R_X2). { admit. }
+  assert (CHAR0': s1 R_X2 = Ⓠ (m Ⓑ[ accept_ptr ])). { admit. }
   clear - PRE MDL MEM SP' BITMAP' CHAR0'. rename t1 into t. rename s1 into s.
   rename SP' into SP.
   rename BITMAP' into BITMAP. rename CHAR0' into CHAR0.
   (* PRE is the assertion the previous invariant gives us. *)
   destruct_inv 64 PRE.
   destruct PRE as [STR [ACPT BMP]].
-  Print step. Print arm8_step.
   step. step. step. 
   
   (* RET: Accept string empty *)
   step. exists "0x41300068"%string. intro LOC. 
   apply Neqb_ok in BC.
-  exists 0. split. reflexivity.
+  exists 0. split. reflexivity. split.
+  Check N.nlt_0_r.
+  unfold post_satis_i.
   intros. apply N.nlt_0_r in H. contradiction.
+  unfold post_satis_i. unfold not. intros.
+    specialize (H 0). simpl N.add in H. destruct H. apply N.lt_0_1.
+    psimpl in H. assert (Disj:= N.lt_trichotomy x 0). destruct Disj as [Lt | [Eq | Gt]].
+    apply N.nlt_0_r in Lt. contradiction.
+    subst x. psimpl in H. destruct H as [NILFREE _]. unfold nilfree in NILFREE. specialize (NILFREE 0).
+      assert (H:= N.lt_0_1). apply NILFREE in H. psimpl in H. rewrite BC in H. lia.
+    destruct H as [NILFREE _]. unfold nilfree in NILFREE. specialize (NILFREE 0). assert (H: 0<1+x). lia.
+      apply NILFREE in H. psimpl in H; rewrite BC in H; lia.
 
   (* TODO: clean and rename m0 into m. *)
   step. step. step. 
