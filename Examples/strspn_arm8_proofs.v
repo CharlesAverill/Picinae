@@ -231,24 +231,25 @@ Definition strspn_invs (m:addr->N) (str_ptr accept_ptr sp:addr) (t:trace) :=
   (* 0x41300054: Degenerative Loop (len(accept)==1) *)
   |  0x41300054 => Some( 
      ∃ invariant_loc, invariant_loc = "0x41300054"%string ->
-     ∃ p L : N, s R_X0 = Ⓠp /\ s R_X1 = Ⓠ(p ⊕ L) /\
+     ∃ L : N, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(str_ptr ⊕ L) /\
      ∀ i : N,  i < L → m Ⓑ[ accept_ptr ] = m Ⓑ[ str_ptr + i ])
-  (* 0x41300030: Map Maker Loop *)
-  |  0x41300030 =>  Some( 
-     ∃ invariant_loc, invariant_loc = "0x41300030"%string ->
-     ∃ bitmap_ptr L : N, s R_X1 = Ⓠ(accept_ptr ⊕ L) /\
+  (* 0x4130002c: Map Maker Loop *)
+  |  0x4130002c =>  Some( 
+     ∃ invariant_loc, invariant_loc = "0x4130002c"%string ->
+     ∃ bitmap_ptr L : N, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(accept_ptr ⊕ L) /\
+     m Ⓑ[ accept_ptr ] ≠ 0 /\ m Ⓑ[ 1 + accept_ptr ] ≠ 0 /\
      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_nstr m bitmap_ptr accept_ptr L)
   (* 0x41300094: Map Maker->Checker Transition 
                  Just turn bitarray_nstr to bitarray_str to make
                  the map checker loop simpler. *)
   |  0x41300094 => Some(
      ∃ invariant_loc, invariant_loc = "0x41300094"%string ->
-     ∃ bitmap_ptr p L, s R_X0 = Ⓠp /\ s R_X1 = Ⓠ(accept_ptr ⊕ L) /\
+     ∃ bitmap_ptr L, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(accept_ptr ⊕ L) /\
      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m bitmap_ptr accept_ptr)
   (* 0x41300078: Map Checker Loop *)
   |  0x41300078 => Some( 
      ∃ invariant_loc, invariant_loc = "0x41300078"%string ->
-     ∃ bitmap_ptr p L : N, s R_X0 = Ⓠp /\ s R_X1 = Ⓠ(p ⊕ L) /\
+     ∃ bitmap_ptr L : N, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(str_ptr ⊕ L) /\
      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m bitmap_ptr accept_ptr /\
      post_satis_i L m str_ptr accept_ptr)
   (* 0x41300068: Return Invariant *)
@@ -379,29 +380,28 @@ intros.
       apply NILFREE in H. psimpl in H; rewrite BC in H; lia.
 
   (* TODO: clean and rename m0 into m. *)
-  step. step. step. 
+  apply N.eqb_neq in BC; remember BC as ACPT_0_NNULL; clear HeqACPT_0_NNULL.
+  step. 
+  step. step. 
   (* SINGLE CHARACTER: This is the first loop iteration. *)
   step. exists "0x41300054"%string. intro LOC.
-    exists str_ptr. exists 0. split; try (assumption || reflexivity). split.
+    exists 0. split; try (assumption || reflexivity). split.
     psimpl; reflexivity. intros. apply N.nlt_0_r in H. contradiction.
 
-
+  apply N.eqb_neq in BC0; remember BC0 as ACPT_1_NNULL; clear HeqACPT_1_NNULL.
   step.
   (* MAP BUILDER: This is the first loop iteration. *)
   apply N.eqb_neq in BC. apply N.eqb_neq in BC0.
-  step. exists "0x41300030"%string. intro LOC.
+  exists "0x4130002c"%string. intro LOC.
   (* sp was stored in R_X3 *) 
   exists sp.
   (* First loop iteration, length should be 0 *)
-  exists 0. psimpl. split; try reflexivity; split; try assumption.  unfold bitarray_nstr.
+  exists 0. psimpl. split; try assumption. split; try reflexivity. split; try assumption. split. try admit.
+  split; try assumption.
+  (* Figure out why ACPT_1_NNUL uses m0 while ACPT_0_NNULL uses m.
+     Maybe strspn relies on accept string not overlapping with the bitmap. *)
   apply bitmap_0. apply BITMAP.
-  (* intros. split. intro.
-  (* I think we need to prove that there is a contradiction because
-     all the bits in the map are 0 - so no `i` can exist. This should
-     be true because this is the first loop. *)
-    admit.
-  intros. destruct H0 as [x [H01 [H02 H03]]]. 
-  apply N.nlt_0_r in H01. contradiction. *)
+
   destruct PRE as [loc [bitmap_ptr [L [H0 H1]]]].
   (* Our bookkeeping strategy introduces a new goal
      when destructing invariants:
@@ -409,28 +409,32 @@ intros.
      loc = "0x41300030"%string
   *)
   admit.
-
-  (* Hmmmm.... Why is the BITMAP assumption not updated to reflect
-     a change to it??? *)
-  destruct H1 as [BITMAP_PTR BITMAP_2].
+  destruct H1 as [ACCEPTL [ACPT_0_NNULL [ACPT_1_NNULL [BITMAP_PTR BITNSTR]]]].
 
   (* MAP BUILDER->CHECKER TRANSITION: only executed once*)
-  step. exists "0x41300094"%string. intros. exists sp. exists str_ptr. exists L.
-  split. admit. split. assumption. split. assumption. apply bitarray_nstr_str with (len:=L).
-  split. assert (BLA:sp=bitmap_ptr). { admit. }
- rewrite <-BLA in BITMAP_2. assumption. 
-  (* TODO: Resume here showing that ... 
-     We have a problem; `accept_ptr` is being used 2 ways:
-        1) Describing the pointer to the current character
-        2) Describing the original location (index 0)*) admit.
+  step. step. (* For map-maker inv at *2c: step. apply Neqb_ok in BC. contradiction.*)
+  exists "0x41300094"%string. intros. exists bitmap_ptr. exists L.
+  split. assumption. split. reflexivity. split. assumption. apply bitarray_nstr_str with (len:=L). assumption.
+  apply Neqb_ok in BC.
+  (*
+  BC : m0 Ⓑ[ accept_ptr + L ] = 0
+  ______________________________________(1/5)
+  m Ⓑ[ accept_ptr ⊕ L ] = 0
+  *)
+  admit.
 
-  step. step.  step. step.  step. step.
+  step. step.  step. step.  step. 
+  (* Store the character-bit in the bitmap: *) step.
   step.
   (* MAP BUILDER: This is the arbitrary loop iteration. *)
-  step. exists "0x41300030"%string. intro LOC.
-  exists sp. exists (L+1). psimpl; split; try reflexivity. split; try reflexivity.
+  exists "0x41300030"%string. intro LOC.
+  exists bitmap_ptr. exists (L+1). psimpl; split;
+    try assumption; split; try reflexivity; split; try assumption.
+    split; try assumption.
+  split. rewrite <-BITMAP_PTR; rewrite <-SP; reflexivity.
   unfold bitarray_nstr.
   admit.
+
 
   destruct PRE as [loc [p H]]. admit. destruct H as [L [STR_PTR [LEN PREFIX]]].
   step. step.  step.
