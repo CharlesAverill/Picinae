@@ -14,13 +14,18 @@ Tactic Notation "specialize" hyp(H) "by" tactic(tac) :=
 Module Type Timing.
     Parameter store : Type.
     Parameter stmt : Type.
-    Parameter time_of_stmt : option (N * stmt) -> nat.
     Parameter empty_store : store.
 End Timing.
 
-Module MakeTimingContents (T : Timing).
+Module Type TimingProgram (T : Timing).
     Export T.
+    Parameter time_of_addr : store -> addr -> N.
+End TimingProgram.
 
+Module MakeTimingContents (T : Timing) (TP : TimingProgram T).
+    Export T.
+    Export TP.
+    
     Definition size_stmt : Type := N * stmt.
 
     Definition program : Type :=
@@ -40,7 +45,7 @@ Module MakeTimingContents (T : Timing).
 
     Definition timed_program_well_formed (p : timed_program) (max : addr) :=
         program_bounded p max /\ (
-            forall a s, a <= max -> p s a = None \/ exists instr, p s a = Some (time_of_stmt (Some instr), instr)
+            forall a s, a <= max -> p s a = None \/ exists instr, p s a = Some (N.to_nat (time_of_addr s a), instr)
         ) /\ store_invariance p.
 
     Definition program_list : Type :=
@@ -84,7 +89,7 @@ Module MakeTimingContents (T : Timing).
         match l with
         | nil => fun _ _ => None
         | (ad, ins) :: t => match ins with Some s =>
-            update_timed_prog (timed_program_of_list t) ad (Some (time_of_stmt ins, s))
+            update_timed_prog (timed_program_of_list t) ad (Some (N.to_nat (time_of_addr empty_store ad), s))
             | None => timed_program_of_list t
             end
         end.
@@ -95,7 +100,7 @@ Module MakeTimingContents (T : Timing).
         match l with 
         | nil => fun _ _ => None
         | (ad, ins) :: t => match ins with Some s =>
-            update_timed_prog (helper t) ad (Some (time_of_stmt ins, s))
+            update_timed_prog (helper t) ad (Some (N.to_nat (time_of_addr empty_store ad), s))
             | None => helper t end
         end in helper instrs.
 
@@ -105,7 +110,11 @@ Module MakeTimingContents (T : Timing).
         match l with
         | nil => fun _ _ => None
         | (ad, ins) :: t => update_prog (helper t) ad ins
-        end in helper instrs. 
+        end in helper instrs.
+
+    Definition timed_conversion_safe (p : program) (bound : N) :=
+        forall (s : store),
+            program_of_timed_program (timed_program_of_program p s bound) s bound = p.
 
     (* Insert at index pos, or append if pos > len l *)
     Fixpoint insert {X : Type} (l : list X) (item : X) (pos : nat) : list X :=
@@ -227,7 +236,7 @@ Module MakeTimingContents (T : Timing).
             -- apply H4.
     Qed.
 
-    Lemma timed_untimed_convert : forall max p s,
+    (* Lemma timed_untimed_convert : forall max p s,
         timed_program_well_formed p max ->
         timed_program_of_program (program_of_timed_program p s max) s max = p.
     Proof.
@@ -251,7 +260,7 @@ Module MakeTimingContents (T : Timing).
                         now rewrite H1.
                 + rewrite (StoreInv 0 s s') in *. rewrite E.
                     unfold timed_program_of_program, list_of_program. simpl.
-    Abort.
+    Abort. *)
 
     Lemma program_list_conversion_safe : forall max p s,
         program_well_formed p (N.of_nat max) ->

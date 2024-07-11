@@ -5,6 +5,19 @@ Require Import i386Timing.
 Open Scope N.
 Open Scope i386_scope.
 
+Module strcmp_toa.
+    Definition time_of_addr (a : addr) : nat :=
+        match a with
+        | 0 => 7
+        | 4 => 15
+        | 8 => 2
+        | _ => 8
+        end.
+End strcmp_toa.
+
+Module i386T := MakeTimingContents i386Timing strcmp_toa.
+Import i386T.
+
 (* Properties of program *)
 Notation strcmp_bound := 36.
 
@@ -15,11 +28,10 @@ Proof. prove_bounded. Qed.
 
 (* Show that the timed-program-generator is correct for strcmp *)
 Theorem strcmp_i386_conversion_safe : 
-    program_of_timed_program (
-        timed_program_of_program strcmp_i386 empty_store strcmp_bound
-    ) empty_store strcmp_bound = strcmp_i386.
+    timed_conversion_safe strcmp_i386 strcmp_bound.
 Proof using.
-    apply functional_extensionality. intro s.
+    intro s.
+    apply functional_extensionality. intro s'.
     apply functional_extensionality. intro a.
     (* TODO : Figure a way to pass a Coq variable as an Ltac integer *)
     prog_eq_helper 37 strcmp_i386_bounded.
@@ -100,7 +112,30 @@ Ltac pair_val :=
 
 Theorem dumb_injector_safe_strcmp_i386 :
     injection_safe strcmp_i386_timed (dumb_injector strcmp_bound) 
-        (instruction_time_of_timed_program empty_store strcmp_bound) strcmp_bound 30%nat.
+        (instruction_time_of_timed_program empty_store strcmp_bound) strcmp_bound 128%nat.
 Proof using.
     intros H. pair_val.
 Qed.
+
+Definition edge : Type := addr * addr.
+
+Definition exp_processor (a : addr) (e : exp) : option edge :=
+    match e with Word n _ => Some (a, n) | Var _ => Some (a, strcmp_bound + 1) | _ => None end.
+
+Fixpoint edge_generator (a : addr) (s : stmt) : list edge :=
+    match s with
+    | Seq s1 s2 | If _ s1 s2 => edge_generator a s1 ++ edge_generator a s2
+    | Jmp e => match exp_processor a e with Some x => x :: nil | None => nil end
+    | _ => nil
+    end.
+
+Fixpoint dag_generator (p : program_list) : list edge :=
+    match p with
+    | nil => nil
+    | (src, oss) :: t => match oss with Some (_, s) =>
+        (edge_generator src s) ++ dag_generator t
+        | _ => dag_generator t
+        end
+    end.
+
+Compute dag_generator (list_of_program strcmp_i386 empty_store (N.to_nat strcmp_bound)).
