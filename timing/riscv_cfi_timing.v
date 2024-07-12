@@ -1,9 +1,10 @@
 Require Import Picinae_riscv.
 Require Import riscv_cfi.
 Require Import riscvTiming.
-
 Require Import List.
+Import RISCVNotations.
 Import ListNotations.
+
 Definition add_loop_riscv_offset : addr := 0x8%N.
 Definition add_loop_riscv : list N := [
     0x00106393          	(* ori	t2,zero,1 *);
@@ -35,16 +36,7 @@ End riscv_toa.
 Module riscvT := MakeTimingContents riscvTiming riscv_toa.
 Export riscvT.
 
-Fixpoint _instruction_time_of_timed_program s (max_addr : nat) (p : timed_program) : nat :=
-    match max_addr with 
-    | O => match p s 0%N with None => 0 | Some (t, st) => t end
-    | S n' => (match p s (N.of_nat max_addr) with | None => 0 | Some (t, st) => t end) +
-        _instruction_time_of_timed_program s n' p
-    end.
-
-Definition instruction_time_of_timed_program s m p :=
-    _instruction_time_of_timed_program s (N.to_nat m) p.
-
+(* Lifter machinery *)
 Definition range (base : N) (m : nat) : list N :=
     let fix aux max :=
         match max with
@@ -62,14 +54,12 @@ Definition rv_stmt' m a :=
 Definition il_list : program_list :=
     List.map (fun a => (a, Some (4, rv_stmt' (add_loop_riscv_fun empty_store) a))) (range add_loop_riscv_offset (List.length add_loop_riscv)).
 
+(* What gets plugged into the proof *)
 Definition lifted_addloop :=
     program_of_list il_list.
 
-Definition common_inv (sum_cycles : N) (m : store) (a : addr) :=
-    exists sum', sum' = sum_cycles + time_of_addr m a.
-Hint Unfold common_inv : core.
-
-Import RISCVNotations.
+(* Correctness proof *)
+Local Ltac step := time rv_step.
 Definition postcondition (s : store) (x y : N) :=
     s R_T1 = Ⓓ(x ⊕ y).
 Definition addloop_correctness_invs (_ : store) (p : addr) (x y : N) (t:trace) :=
@@ -103,9 +93,7 @@ Theorem addloop_partial_correctness:
     (addloop_correctness_invs s p a b)             (* Provide invariant set *)
     addloop_exit                                   (* Provide exit point *)
   ((x',s')::t).
-Proof.
-    Local Ltac step := time rv_step.
-
+Proof using.
     intros.
     apply prove_invs.
 
@@ -146,24 +134,13 @@ Proof.
         psimpl. assumption.
 Qed.
 
+(* Timing machinery *)
 Definition cycle_count_of_trace (t : trace) : N :=
     List.fold_left N.add (List.map 
         (fun '(e, s) => match e with 
             | Addr a => time_of_addr s a
             | Raise n => max32
             end) t) 0.
-
-Definition addloop_timing_invs (_ : store) (p : addr) (x y : N) (t:trace) :=
-match t with (Addr a, s) :: t' => match a with
-    | 0x8  => Some (s R_T0 = Ⓓx /\ s R_T1 = Ⓓy /\ cycle_count_of_trace t = 2)
-    | 0xc  => Some (s R_T0 = Ⓓx /\ s R_T2 = Ⓓ1 /\ cycle_count_of_trace t = 2 + 2)
-    | 0x10 => Some (exists t0, s R_T0 = Ⓓt0 /\ s R_T2 = Ⓓ1 /\ s R_T3 = Ⓓ0 /\ t0 <= x /\
-        cycle_count_of_trace t' = 2 + 2 + (x - t0) * (3 + 2 + 2 + (5 + (ML - 1))) /\ 
-        cycle_count_of_trace [(Addr a, s)] = (if t0 =? 0 then 5 + (ML - 1) else 3))
-    | 0x20 => Some (cycle_count_of_trace t = 2 + 2 + (5 + (ML - 1)) + x * (3 + 2 + 2 + (5 + (ML - 1))))
-    | _ => None end
-| _ => None
-end.
 
 Lemma fold_left_cons : forall {X : Type} (t : list X) (h : X) (f : X -> X -> X) (base : X) 
     (Comm : forall a b, f a b = f b a) (Assoc : forall a b c, f a (f b c) = f (f a b) c),
@@ -193,6 +170,35 @@ Proof.
     lia. lia.
 Qed.
 
+Definition addloop_timing_invs (_ : store) (p : addr) (x y : N) (t:trace) :=
+match t with (Addr a, s) :: t' => match a with
+    | 0xc  => Some (s R_T0 = Ⓓx /\ s R_T2 = Ⓓ1 /\ cycle_count_of_trace t = 2 + 2)
+    | 0x10 => Some (exists t0, s R_T0 = Ⓓt0 /\ s R_T2 = Ⓓ1 /\ s R_T3 = Ⓓ0 /\ t0 <= x /\
+        cycle_count_of_trace t' = 4 + (x - t0) * (12 + (ML - 1)))
+        (* 2 + 2 + (x - t0) * (3 + 2 + 2 + (5 + (ML - 1)) *)
+    | 0x20 => Some (cycle_count_of_trace t' = 9 + (ML - 1) + x * (12 + (ML - 1)))
+        (* 2 + 2 + (5 + (ML - 1)) + x * (3 + 2 + 2 + (5 + (ML - 1))) *)
+    | _ => None end
+| _ => None
+end.
+
+Ltac unfold_decompose :=
+    unfold decompose_Btype, decompose_Itype, decompose_Jtype, decompose_Rtype, decompose_Stype, decompose_Utype,
+        mask_bit_section; simpl (_ .& _).
+Tactic Notation "unfold_decompose" "in" hyp(H) :=
+    unfold decompose_Btype, decompose_Itype, decompose_Jtype, decompose_Rtype, decompose_Stype, decompose_Utype,
+        mask_bit_section in H; simpl (_ .& _) in H.
+
+Ltac unfold_time_of_addr :=
+    unfold time_of_addr, neorv32_cycles_upper_bound, add_loop_riscv_fun, riscv_opcode, rv_varid;
+    unfold_decompose; simpl (_ =? _); psimpl; simpl (_ || _)%bool; psimpl.
+Tactic Notation "unfold_time_of_addr" "in" hyp(H) :=
+    unfold time_of_addr, neorv32_cycles_upper_bound, add_loop_riscv_fun, riscv_opcode, rv_varid in H;
+    unfold_decompose in H; simpl (_ =? _) in H; psimpl in H; simpl (_ || _)%bool in H; psimpl in H.
+
+Ltac unfold_cycle_count_list :=
+    repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single.
+
 Theorem addloop_timing:
   forall s p t s' x' a b
          (ENTRY: startof t (x',s') = (Addr 0x8,s)) (* Define the entry point of the function *)
@@ -204,7 +210,7 @@ Theorem addloop_timing:
     (addloop_timing_invs s p a b)                  (* Provide invariant set *)
     addloop_exit                                   (* Provide exit point *)
   ((x',s')::t).
-Proof.
+Proof using.
     (* Local Ltac step := time rv_step. *)
 
     intros.
@@ -222,43 +228,37 @@ Proof.
     (* Meat of proof starts here *)
     destruct_inv 32 PRE.
 
-    (* Addr 0x8 *)
-    destruct PRE as [T0 [T1 Cycles]].
-    step. repeat split. assumption. rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single, Cycles. 
-    unfold time_of_addr, add_loop_riscv_fun, neorv32_cycles_upper_bound, riscv_opcode, mask_bit_section.
-    simpl (_ .& _). psimpl. unfold decompose_Itype, mask_bit_section. simpl (_ .& _). reflexivity.
-
     (* Addr 0xc *)
     destruct PRE as [T0 [T2 Cycles]].
     step. exists a. repeat split; try assumption. lia. psimpl. now rewrite Cycles.
-    rewrite cycle_count_of_trace_single. unfold time_of_addr, add_loop_riscv_fun, neorv32_cycles_upper_bound,
-        riscv_opcode, mask_bit_section. simpl (_ .& _). psimpl. unfold decompose_Btype, mask_bit_section.
-    simpl (_ .& _). psimpl. now rewrite T0.
 
     (* Addr 0x10 *)
-    destruct PRE as [t0 [T0 [T2 [T3 [T0_A [Cycles_t Cycles_16]]]]]]. psimpl in Cycles_t.
+    destruct PRE as [t0 [T0 [T2 [T3 [T0_A Cycles_t]]]]].
     step.
     - (* t0 = 0 -> postcondition *) 
-        rewrite N.eqb_eq in BC; subst. repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single.
-        unfold time_of_addr, neorv32_cycles_upper_bound. unfold add_loop_riscv_fun, riscv_opcode, mask_bit_section.
-        simpl (_ .& _). simpl (_ =? _). psimpl. simpl (_ || _)%bool. psimpl.
-        unfold decompose_Btype, mask_bit_section. simpl (_ .& _). psimpl. unfold rv_varid. rewrite T0, T3.
-        rewrite N.eqb_refl. rewrite Cycles_t. psimpl. reflexivity.
+        rewrite N.eqb_eq in BC; subst. unfold_cycle_count_list.
+        unfold_time_of_addr. rewrite T0, T3, N.eqb_refl, Cycles_t. now psimpl.
     - (* t0 <> 0 -> loop again *)
         step. step. step. assert (1 <= t0) by (apply N.eqb_neq in BC; lia). exists (t0 ⊖ 1). repeat split.
-        rewrite msub_nowrap. psimpl. lia. psimpl. assumption. psimpl.
-        repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single.
-        remember ((time_of_addr _) _). unfold time_of_addr, add_loop_riscv_fun, 
-            neorv32_cycles_upper_bound, riscv_opcode, decompose_Btype, mask_bit_section in Heqn0. 
-            simpl (_ .& _) in Heqn0. psimpl in Heqn0. unfold rv_varid in Heqn0. repeat psimpl in Heqn0.
-        remember ((time_of_addr _) _). unfold time_of_addr, add_loop_riscv_fun, 
-            neorv32_cycles_upper_bound, riscv_opcode, decompose_Rtype, mask_bit_section in Heqn1. 
-            simpl (_ .& _) in Heqn1. psimpl in Heqn1.
-        remember ((time_of_addr _) _). unfold time_of_addr, add_loop_riscv_fun, 
-            neorv32_cycles_upper_bound, riscv_opcode, decompose_Btype, mask_bit_section in Heqn2.
-            simpl (_ .& _) in Heqn2. psimpl in Heqn2. unfold rv_varid in Heqn2. rewrite T0, T3, BC in Heqn2.
-        rewrite Cycles_t. subst. psimpl. rewrite N.add_sub_assoc; cycle 1. apply ML_pos.
-         rewrite msub_nowrap; cycle 1. now psimpl.
-        psimpl. rewrite N_sub_distr; cycle 1. assumption. assumption. psimpl. rewrite N.mul_add_distr_r. psimpl.
-        rewrite (N.add_sub_assoc 16); cycle 1. apply ML_pos. psimpl. reflexivity.
+            rewrite msub_nowrap; psimpl; lia.
+        unfold_cycle_count_list.
+        repeat (let Y := fresh "H" in (remember ((time_of_addr _) _) eqn:Y; unfold_time_of_addr in Y; subst)).
+        rewrite T0, T3, BC, Cycles_t, N.add_sub_assoc, msub_nowrap, N_sub_distr.
+        psimpl. rewrite N.mul_add_distr_r. psimpl.
+        rewrite (N.add_sub_assoc 16).
+
+        all: psimpl; (assumption || lia || apply ML_pos).
 Qed.
+
+(* Define a policy for addloop with entries for each instruction and permissible jumps including fallthroughs *)
+Definition addloop_policy : policy :=
+[
+  (None, (0, [0xc]));      (* Instruction at 0x8 can fall through to 0xc *)
+  (None, (0, [0x10]));     (* Instruction at 0xc can fall through to 0x10 *)
+  (None, (0, [0x14; 0x20])); (* Instruction at 0x10 can fall through to 0x14 and jump to 0x20 *)
+  (None, (0, [0x18]));    (* Instruction at 0x14 can fall through to 0x18 *)
+  (None, (0, [0x1c]));    (* Instruction at 0x18 can fall through to 0x1c *)
+  (None, (0, [0x10]))     (* Instruction at 0x1c can jump to 0x10 *)
+]%Z.
+
+Compute newcode addloop_policy (List.map Z.of_N add_loop_riscv) 2 2.
