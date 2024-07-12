@@ -7,12 +7,14 @@ Import ListNotations.
 
 Definition add_loop_riscv_offset : addr := 0x8%N.
 Definition add_loop_riscv : list N := [
-    0x00106393          	(* ori	t2,zero,1 *);
-    0x000e7e13          	(* andi	t3,t3,0 *);
-    0x01c28863         	    (* beq	t0,t3,20 <end> *);
-    0x00130313          	(* addi	t1,t1,1 *);
-    0x407282b3          	(* sub	t0,t0,t2 *);
-    0xffce0ae3          	(* beq	t3,t3,10 <add> *)
+    0x00106393          	(* ori	t2,zero,1 *);           (* 2 cycles *)
+    0x000e7e13          	(* andi	t3,t3,0 *);             (* 2 cycles *)
+    0x01c28863         	    (* beq	t0,t3,20 <end> *);      (* if taken then 5 + (ML - 1) else 3 *)
+    0x00130313          	(* addi	t1,t1,1 *);             (* 2 cycles *)
+    0x407282b3          	(* sub	t0,t0,t2 *);            (* 2 cycles *)
+    0xffce0ae3          	(* beq	t3,t3,10 <add> *)       (* 5 + (ML - 1) (always taken) *)
+        (* addloop(x, y) cycles = 2 + 2 + x(3 + 2 + 2 + 5 + (ML - 1)) + 5 + (ML - 1) *)
+        (*                      = 9 + (ML - 1) + x(12 + (ML - 1)) *)
 ]%N.
 Definition add_loop_riscv_fun (_ : store) (a : addr) : N :=
     match a with
