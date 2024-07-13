@@ -13,7 +13,7 @@ Definition add_loop_riscv : list N := [
     0x00130313          	(* addi	t1,t1,1 *);             (* 2 cycles *)
     0x407282b3          	(* sub	t0,t0,t2 *);            (* 2 cycles *)
     0xffce0ae3          	(* beq	t3,t3,10 <add> *)       (* 5 + (ML - 1) (always taken) *)
-        (* addloop(x, y) cycles = 2 + 2 + x(3 + 2 + 2 + 5 + (ML - 1)) + 5 + (ML - 1) *)
+        (* addloop(x, y) cycles = 2 + 2 + x[3 + 2 + 2 + 5 + (ML - 1)] + 5 + (ML - 1) *)
         (*                      = 9 + (ML - 1) + x(12 + (ML - 1)) *)
 ]%N.
 Definition add_loop_riscv_fun (_ : store) (a : addr) : N :=
@@ -38,6 +38,8 @@ End riscv_toa.
 Module riscvT := MakeTimingContents riscvTiming riscv_toa.
 Export riscvT.
 
+Arguments N.add _ _ : simpl nomatch.
+
 (* Lifter machinery *)
 Definition range (base : N) (m : nat) : list N :=
     let fix aux max :=
@@ -55,7 +57,7 @@ Definition rv_stmt' m a :=
 
 Definition il_list : program_list :=
     List.map (fun a => (a, Some (4, rv_stmt' (add_loop_riscv_fun empty_store) a))) (range add_loop_riscv_offset (List.length add_loop_riscv)).
-
+Compute il_list.
 (* What gets plugged into the proof *)
 Definition lifted_addloop :=
     program_of_list il_list.
@@ -185,18 +187,22 @@ match t with (Addr a, s) :: t' => match a with
 end.
 
 Ltac unfold_decompose :=
-    unfold decompose_Btype, decompose_Itype, decompose_Jtype, decompose_Rtype, decompose_Stype, decompose_Utype,
-        mask_bit_section; simpl (_ .& _).
+    (* unfold decompose_Btype, decompose_Itype, decompose_Jtype, decompose_Rtype, decompose_Stype, decompose_Utype,
+        mask_bit_section; simpl (_ .& _). *)
+    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype decompose_Stype decompose_Utype mask_bit_section];
+        simpl (_ .& _).
+    (* cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype decompose_Stype 
+        decompose_Utype mask_bit_section N.land N.shiftr]. *)
 Tactic Notation "unfold_decompose" "in" hyp(H) :=
-    unfold decompose_Btype, decompose_Itype, decompose_Jtype, decompose_Rtype, decompose_Stype, decompose_Utype,
-        mask_bit_section in H; simpl (_ .& _) in H.
+    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype decompose_Stype decompose_Utype mask_bit_section] in H;
+        simpl (_ .& _) in H.
+    (* unfold decompose_Btype, decompose_Itype, decompose_Jtype, decompose_Rtype, decompose_Stype, decompose_Utype,
+        mask_bit_section in H; simpl (_ .& _) in H. *)
 
 Ltac unfold_time_of_addr :=
-    unfold time_of_addr, neorv32_cycles_upper_bound, add_loop_riscv_fun, riscv_opcode, rv_varid;
-    unfold_decompose; simpl (_ =? _); psimpl; simpl (_ || _)%bool; psimpl.
+    cbv [time_of_addr neorv32_cycles_upper_bound]; simpl.
 Tactic Notation "unfold_time_of_addr" "in" hyp(H) :=
-    unfold time_of_addr, neorv32_cycles_upper_bound, add_loop_riscv_fun, riscv_opcode, rv_varid in H;
-    unfold_decompose in H; simpl (_ =? _) in H; psimpl in H; simpl (_ || _)%bool in H; psimpl in H.
+    cbv [time_of_addr neorv32_cycles_upper_bound] in H; simpl in H.
 
 Ltac unfold_cycle_count_list :=
     repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single.
@@ -232,16 +238,17 @@ Proof using.
 
     (* Addr 0xc *)
     destruct PRE as [T0 [T2 Cycles]].
-    step. exists a. repeat split; try assumption. lia. psimpl. now rewrite Cycles.
+    step. exists a. repeat split; try assumption. lia. 
+    psimpl. now rewrite Cycles.
 
     (* Addr 0x10 *)
     destruct PRE as [t0 [T0 [T2 [T3 [T0_A Cycles_t]]]]].
     step.
-    - (* t0 = 0 -> postcondition *) 
+    - (* t0 = 0 -> postcondition *)
         rewrite N.eqb_eq in BC; subst. unfold_cycle_count_list.
-        unfold_time_of_addr. rewrite T0, T3, N.eqb_refl, Cycles_t. now psimpl.
+        unfold_time_of_addr. rewrite T0, T3, Cycles_t. now psimpl.
     - (* t0 <> 0 -> loop again *)
-        step. step. step. assert (1 <= t0) by (apply N.eqb_neq in BC; lia). exists (t0 ⊖ 1). repeat split.
+        step. step. step. exists (t0 ⊖ 1). assert (1 <= t0) by (apply N.eqb_neq in BC; lia). repeat split.
             rewrite msub_nowrap; psimpl; lia.
         unfold_cycle_count_list.
         repeat (let Y := fresh "H" in (remember ((time_of_addr _) _) eqn:Y; unfold_time_of_addr in Y; subst)).
@@ -264,3 +271,14 @@ Definition addloop_policy : policy :=
 ]%Z.
 
 Compute newcode addloop_policy (List.map Z.of_N add_loop_riscv) 2 2.
+
+(*
+    find some timing-critical code as a better example
+        - avoid async
+    clean up proof
+    get ride of decoding reuse
+    consider an automated proof writer 
+    teach new students on timing proofs rather than correctness
+    give picinae talk to trustlab
+    hamlen has picinae slides
+*)
