@@ -33,6 +33,7 @@ Require Import ZArith.
 Require Import Picinae_armv8_pcode.
 Require Import strspn_arm8.
 Require Import Lia.
+Require Import Bool.
 
 (* Only used for bookkeeping *)
 Require Import String.
@@ -60,7 +61,7 @@ Proof.
 Qed.
 
 (* Strspn does not corrupt memory. *)
-Theorem strspn_preserves_memory:
+Theorem strspn_preserves_memory32:
   forall_endstates musl_armv8_a_strspn_armv8 (fun _ s _ s' => s V_MEM32 = s' V_MEM32).
 Proof.
   apply noassign_prog_same.
@@ -90,6 +91,49 @@ Definition bit mem (p:addr) (i:N) := xbits (mem Ⓑ[p + (i >> 3)]) (i mod 2^3) 1
 (* Define what it means for a nil-terminated string to not have internal nils. *)
 Definition nilfree mem p len :=
   ∀ i, i < len -> 0 < mem Ⓑ[ p ⊕ i ].
+
+(* Added the two fixpoints below to describe a memory state that's been updated
+   to reflect the characters from an accept string in a bitmap datastructure.
+
+   TODO: Change the invariants to describe an updated memory and prove
+         the lemma bitarray_nstr_incr to prove the map-maker loop invariant.
+ *)
+Fixpoint nilfree_b mem p (len:nat) : bool :=
+  (0 <? mem Ⓑ[ p ⊕ (N.of_nat len) ]) &&
+  match len with
+    | O => true
+    | S len' => nilfree_b mem p len'
+  end.
+
+Fixpoint bitmap_updated (m:addr->N) (bitmap_ptr accept_ptr:addr) (k:nat) : addr -> N :=
+  let m' := match k with
+           | O => m
+           | S k' => bitmap_updated m bitmap_ptr accept_ptr k'
+           end
+    in
+  if nilfree_b m' accept_ptr k then
+    (* This formula copy-pasted-modified from picinae' *)
+    (* m [Ⓠ bitmap_ptr + (m Ⓑ[ accept_ptr + k ] >> 6 << 3)
+                  := 1 << m Ⓑ[ accept_ptr + k ] mod 64
+                     .| m Ⓠ[ bitmap_ptr + (m Ⓑ[ accept_ptr + k ] >> 6 << 3) ] *)
+    let char := m' Ⓑ[ accept_ptr + (N.of_nat k) ] in
+    let quadrant_index := char >> 6 << 3 in
+    let char_offset := char mod 64 in
+    m' [Ⓠ bitmap_ptr + quadrant_index
+                  := 1 << char_offset
+                     .| m' Ⓠ[ bitmap_ptr + quadrant_index ]]
+  else m'.
+
+Lemma bitarray_nstr_incr:
+  forall m m' L accept_ptr bitmap_ptr
+  (MEM: m' = m [Ⓠ bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3)
+                  := 1 << m Ⓑ[ accept_ptr + L ] mod 64
+                     .| m Ⓠ[ bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3) ]])
+  (BITNSTR: bitarray_nstr m bitmap_ptr accept_ptr L)
+  (CHAR: m Ⓑ[ accept_ptr + L ] ≠ 0),
+  bitarray_nstr m' bitmap_ptr accept_ptr (L+1).
+Proof.
+Admitted.
 
 (* Question: bitarray_nstr is for i < 256, while we expect only
    characters with value 127 or less. This means our map will
@@ -236,7 +280,8 @@ Definition strspn_invs (m:addr->N) (str_ptr accept_ptr sp:addr) (t:trace) :=
   (* 0x4130002c: Map Maker Loop *)
   |  0x4130002c =>  Some( 
      ∃ invariant_loc, invariant_loc = "0x4130002c"%string ->
-     ∃ bitmap_ptr L : N, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(accept_ptr ⊕ L) /\
+     ∃ bitmap_ptr L : N, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(accept_ptr ⊕ L)
+      /\ s R_X6 = Ⓠ1 /\
      m Ⓑ[ accept_ptr ] ≠ 0 /\ m Ⓑ[ 1 + accept_ptr ] ≠ 0 /\
      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_nstr m bitmap_ptr accept_ptr L)
   (* 0x41300094: Map Maker->Checker Transition 
@@ -322,7 +367,7 @@ Theorem strspn_partial_correctness:
                  into w2. *)
          (ENTRY: startof t (x',s') = (Addr 0x4130001c,s))
          (MDL: models arm8typctx s)
-         (MEM: s V_MEM32 = Ⓜm) 
+         (MEM: s V_MEM64 = Ⓜm) 
          (STR: s R_X0 = Ⓠstr_ptr) 
          (ACPT:  s R_X1 = Ⓠaccept_ptr)
          (SP: s R_X3 = Ⓠsp)
@@ -344,7 +389,8 @@ intros.
   intros. 
   eapply startof_prefix in ENTRY; try eassumption.
   eapply preservation_exec_prog in MDL; try (eassumption || apply strspn_welltyped).
-  erewrite strspn_preserves_memory in MEM by eassumption.
+  (* erewrite strspn_preserves_memory32 in MEM by eassumption. *)
+  assert (MEM': s1 V_MEM64 = Ⓜm). { admit. }
   (* ASSUMPTION PRESERVATION
      Our capturing of str_ptr and accept_ptr means we rely on 
      s - the initial state.
@@ -355,9 +401,10 @@ intros.
   assert (SP' : s1 R_X3 = Ⓠsp). { admit. }
   assert (BITMAP': m Ⓨ[ sp ] = 0). { admit. }
   assert (CHAR0': s1 R_X2 = Ⓠ (m Ⓑ[ accept_ptr ])). { admit. }
-  clear - PRE MDL MEM SP' BITMAP' CHAR0'. rename t1 into t. rename s1 into s.
+  clear - PRE MDL MEM' SP' BITMAP' CHAR0'. rename t1 into t. rename s1 into s.
   rename SP' into SP.
   rename BITMAP' into BITMAP. rename CHAR0' into CHAR0.
+  rename MEM' into MEM.
   (* PRE is the assertion the previous invariant gives us. *)
   destruct_inv 64 PRE.
   destruct PRE as [STR [ACPT BMP]].
@@ -396,8 +443,8 @@ intros.
   (* sp was stored in R_X3 *) 
   exists sp.
   (* First loop iteration, length should be 0 *)
-  exists 0. psimpl. split; try assumption. split; try reflexivity. split; try assumption. split. try admit.
-  split; try assumption.
+  exists 0. psimpl. split; try assumption. split; try reflexivity. split; try assumption. split.
+  split; try assumption. split; try assumption. split; try assumption.
   (* Figure out why ACPT_1_NNUL uses m0 while ACPT_0_NNULL uses m.
      Maybe strspn relies on accept string not overlapping with the bitmap. *)
   apply bitmap_0. apply BITMAP.
@@ -409,7 +456,7 @@ intros.
      loc = "0x41300030"%string
   *)
   admit.
-  destruct H1 as [ACCEPTL [ACPT_0_NNULL [ACPT_1_NNULL [BITMAP_PTR BITNSTR]]]].
+  destruct H1 as [ACCEPTL [X6_EQ_1 [ACPT_0_NNULL [ACPT_1_NNULL [BITMAP_PTR BITNSTR]]]]].
 
   (* MAP BUILDER->CHECKER TRANSITION: only executed once*)
   step. step. (* For map-maker inv at *2c: step. apply Neqb_ok in BC. contradiction.*)
@@ -423,7 +470,11 @@ intros.
   *)
   admit.
 
-  step. step.  step. step.  step. 
+  step. step.
+  (* n introduced: 
+      lsl x2, x6, x2 == x2 := x6 << (0x3f & x6) 
+   *) step.
+  step.  step. 
   (* Store the character-bit in the bitmap: *) step.
   step.
   (* MAP BUILDER: This is the arbitrary loop iteration. *)
@@ -434,6 +485,8 @@ intros.
   split. rewrite <-BITMAP_PTR; rewrite <-SP; reflexivity.
   unfold bitarray_nstr.
   admit.
+
+
 
 
   destruct PRE as [loc [p H]]. admit. destruct H as [L [STR_PTR [LEN PREFIX]]].
