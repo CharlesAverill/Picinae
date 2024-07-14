@@ -488,8 +488,8 @@ intros.
     unfold post_satis_i. unfold not. intros. apply N.eqb_neq in BC. specialize (H p).
     destruct H as [k [NILFREE NIL]]. lia.
     assert (KZERO: k = 0). { destruct k. reflexivity. unfold nilfree in NILFREE. specialize (NILFREE 1).
-      assert (C: 1 < N.pos p0 + 1) by lia. apply NILFREE in C. assert (ADMIT: accept_ptr ⊕ 1 = 1 + accept_ptr) by admit.
-      rewrite ADMIT in C. symmetry in ACPT_1_NULL.
+      assert (C: 1 < N.pos p0 + 1) by lia. apply NILFREE in C. psimpl in C.
+      symmetry in ACPT_1_NULL.
       destruct (m Ⓑ[ 1 + accept_ptr ]). discriminate. discriminate.
     }
     rewrite KZERO in NIL; psimpl in NIL. symmetry in NIL. contradiction.
@@ -559,7 +559,10 @@ intros.
   ______________________________________(1/5)
   m Ⓑ[ accept_ptr ⊕ L ] = 0
   *)
-  admit.
+  clear - BC.
+  rewrite getmem_mod_l with (a:=accept_ptr + L). 
+  assumption.
+
 
   all: cycle 1.
 
@@ -574,8 +577,7 @@ intros.
   exists m', bitmap_ptr, 0. psimpl.
   repeat (split; try easy).
   unfold post_satis_i. intros.
-  (* TODO: Prove contradiction on `H : j < 0` *)
-  admit.
+  apply N.nlt_0_r in H. contradiction.
 
   step. step.
 
@@ -590,7 +592,7 @@ intros.
   exists m'. exists bitmap_ptr. exists (L+1).
   repeat (split ; try easy). 2: { rewrite BITMAP_PTR in SP. inversion SP. reflexivity. }
   psimpl. reflexivity.
-  (* TODO: Use the post_satis_i_incr lemme (also a todo) to prove. *)
+  (* TODO: Use the post_satis_i_incr lemma (also a todo) to prove. *)
   admit.
 
   step. step.
