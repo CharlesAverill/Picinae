@@ -124,6 +124,7 @@ Fixpoint bitmap_updated (m:addr->N) (bitmap_ptr accept_ptr:addr) (k:nat) : addr 
                      .| m' Ⓠ[ bitmap_ptr + quadrant_index ]]
   else m'.
 
+(*
 Lemma bitarray_nstr_incr:
   forall m m' L accept_ptr bitmap_ptr
   (MEM: m' = m [Ⓠ bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3)
@@ -134,6 +135,7 @@ Lemma bitarray_nstr_incr:
   bitarray_nstr m' bitmap_ptr accept_ptr (L+1).
 Proof.
 Admitted.
+*)
 
 (* Question: bitarray_nstr is for i < 256, while we expect only
    characters with value 127 or less. This means our map will
@@ -275,33 +277,36 @@ Definition strspn_invs (m:addr->N) (str_ptr accept_ptr sp:addr) (t:trace) :=
   (* 0x41300054: Degenerative Loop (len(accept)==1) *)
   |  0x41300054 => Some( 
      ∃ invariant_loc, invariant_loc = "0x41300054"%string ->
-     ∃ L : N, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(str_ptr ⊕ L) /\
-     ∀ i : N,  i < L → m Ⓑ[ accept_ptr ] = m Ⓑ[ str_ptr + i ])
+     ∃ L : N, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(str_ptr ⊕ L) /\ 
+      m Ⓑ[ accept_ptr ] ≠ 0 /\ m Ⓑ[ 1 + accept_ptr ] = 0 /\
+      ∀ i : N,  i < L → m Ⓑ[ accept_ptr ] = m Ⓑ[ str_ptr + i ])
   (* 0x4130002c: Map Maker Loop *)
   |  0x4130002c =>  Some( 
      ∃ invariant_loc, invariant_loc = "0x4130002c"%string ->
-     ∃ bitmap_ptr L : N, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(accept_ptr ⊕ L)
-      /\ s R_X6 = Ⓠ1 /\
-     m Ⓑ[ accept_ptr ] ≠ 0 /\ m Ⓑ[ 1 + accept_ptr ] ≠ 0 /\
-     s R_X3 = Ⓠbitmap_ptr ∧ bitarray_nstr m bitmap_ptr accept_ptr L)
+     ∃ m' bitmap_ptr L, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(accept_ptr ⊕ L) /\
+      s R_X6 = Ⓠ1 /\
+      s V_MEM64 = Ⓜ m' /\
+      m' Ⓑ[ accept_ptr ] ≠ 0 /\ m' Ⓑ[ 1 + accept_ptr ] ≠ 0 /\
+      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_nstr m' bitmap_ptr accept_ptr L)
   (* 0x41300094: Map Maker->Checker Transition 
                  Just turn bitarray_nstr to bitarray_str to make
                  the map checker loop simpler. *)
   |  0x41300094 => Some(
      ∃ invariant_loc, invariant_loc = "0x41300094"%string ->
-     ∃ bitmap_ptr L, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(accept_ptr ⊕ L) /\
-     s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m bitmap_ptr accept_ptr)
+     ∃ m' bitmap_ptr L, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(accept_ptr ⊕ L) /\
+      s V_MEM64 = Ⓜ m' /\
+      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m' bitmap_ptr accept_ptr)
   (* 0x41300078: Map Checker Loop *)
   |  0x41300078 => Some( 
      ∃ invariant_loc, invariant_loc = "0x41300078"%string ->
-     ∃ bitmap_ptr L : N, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(str_ptr ⊕ L) /\
-     s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m bitmap_ptr accept_ptr /\
-     post_satis_i L m str_ptr accept_ptr)
+     ∃ m' bitmap_ptr L, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(str_ptr ⊕ L) /\
+      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m' bitmap_ptr accept_ptr /\
+      post_satis_i L m' str_ptr accept_ptr)
   (* 0x41300068: Return Invariant *)
   |  0x41300068 => Some(
      ∃ invariant_loc, invariant_loc = "0x41300068"%string ->
      ∃ L : N,
-     s R_X0 = ⓆL ∧ post_satis_i L m str_ptr accept_ptr
+      s R_X0 = ⓆL ∧ post_satis_i L m str_ptr accept_ptr
                     ∧ ¬ post_satis_i (L+1) m str_ptr accept_ptr)
   | _ => None
   end | _ => None end.
@@ -408,160 +413,201 @@ intros.
   (* PRE is the assertion the previous invariant gives us. *)
   destruct_inv 64 PRE.
   destruct PRE as [STR [ACPT BMP]].
-  step. step. step. 
-  
-  (* RET: Accept string empty *)
-  step. exists "0x41300068"%string. intro LOC. 
-  apply Neqb_ok in BC.
-  exists 0. split. reflexivity. split.
-  Check N.nlt_0_r.
-  unfold post_satis_i.
-  intros. apply N.nlt_0_r in H. contradiction.
-  unfold post_satis_i. unfold not. intros.
-    specialize (H 0). simpl N.add in H. destruct H. apply N.lt_0_1.
-    psimpl in H. assert (Disj:= N.lt_trichotomy x 0). destruct Disj as [Lt | [Eq | Gt]].
-    apply N.nlt_0_r in Lt. contradiction.
-    subst x. psimpl in H. destruct H as [NILFREE _]. unfold nilfree in NILFREE. specialize (NILFREE 0).
-      assert (H:= N.lt_0_1). apply NILFREE in H. psimpl in H. rewrite BC in H. lia.
-    destruct H as [NILFREE _]. unfold nilfree in NILFREE. specialize (NILFREE 0). assert (H: 0<1+x). lia.
-      apply NILFREE in H. psimpl in H; rewrite BC in H; lia.
-
-  (* TODO: clean and rename m0 into m. *)
-  apply N.eqb_neq in BC; remember BC as ACPT_0_NNULL; clear HeqACPT_0_NNULL.
-  step. 
-  step. step. 
-  (* SINGLE CHARACTER: This is the first loop iteration. *)
-  step. exists "0x41300054"%string. intro LOC.
-    exists 0. split; try (assumption || reflexivity). split.
-    psimpl; reflexivity. intros. apply N.nlt_0_r in H. contradiction.
-
-  apply N.eqb_neq in BC0; remember BC0 as ACPT_1_NNULL; clear HeqACPT_1_NNULL.
   step.
-  (* MAP BUILDER: This is the first loop iteration. *)
+
+  (* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *                                                             * * *)
+  (* * *                                                             * * *)
+  (* * *                   Empty Accept String                       * * *)
+  (* * *                                                             * * *)
+  (* * *                                                             * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *)
+  1: {
+    step. step. step.
+    (*  RET: Empty String *)
+    exists "0x41300068"%string. intro LOC.
+    apply Neqb_ok in BC.
+    exists 0. split. reflexivity. split.
+    Check N.nlt_0_r.
+    unfold post_satis_i.
+    intros. apply N.nlt_0_r in H. contradiction.
+    unfold post_satis_i. unfold not. intros.
+      specialize (H 0). simpl N.add in H. destruct H. apply N.lt_0_1.
+      psimpl in H. assert (Disj:= N.lt_trichotomy x 0). destruct Disj as [Lt | [Eq | Gt]].
+      apply N.nlt_0_r in Lt. contradiction.
+      subst x. psimpl in H. destruct H as [NILFREE _]. unfold nilfree in NILFREE. specialize (NILFREE 0).
+        assert (H:= N.lt_0_1). apply NILFREE in H. psimpl in H. rewrite BC in H. lia.
+      destruct H as [NILFREE _]. unfold nilfree in NILFREE. specialize (NILFREE 0). assert (H: 0<1+x). lia.
+        apply NILFREE in H. psimpl in H; rewrite BC in H; lia.
+  }
+  (* 0x4130006c: mov x1, x0 *)
+  apply N.eqb_neq in BC; remember BC as ACPT_0_NNULL; clear HeqACPT_0_NNULL.
+  step. step. step.
+
+  (* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *                                                             * * *)
+  (* * *                                                             * * *)
+  (* * *                   Single Character                          * * *)
+  (* * *                                                             * * *)
+  (* * *                                                             * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *)
+
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *          Loop Iteration 0           * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  step. exists "0x41300054"%string. intro LOC.
+    exists 0. apply Neqb_ok in BC0. psimpl; repeat (split; try easy).
+    intros. apply N.nlt_0_r in H. contradiction.
+  
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *          Loop Iteration N           * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  3: { 
+  destruct PRE as [loc [p [STR_PTR [LEN [ACPT_0_NNULL [ACPT_1_NULL PREFIX]]]]]]. admit.
+  pose (LOC_PREV := "0x41300054"%string).
+  step. step. step.
+  (* SINGLER CHARACTER: Loop Iteration *)
+  step. exists "0x41300054"%string. intro LOC.
+  apply Neqb_ok in BC.
+  exists (p+1). psimpl.
+    repeat (split; try easy).
+    intros. pose (N.lt_trichotomy i p) as Disj. destruct Disj as [LT | [EQ | GT]].
+    apply PREFIX; easy.
+    rewrite EQ; easy.
+    lia.
+
+  step. step. 
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *        Single Character RET         * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  exists "0x41300068"%string. intro LOC.
+  exists p. split. admit.
+    split. unfold post_satis_i. intros. exists 0. split.
+      psimpl. admit.
+      psimpl. apply PREFIX. assumption.
+    unfold post_satis_i. unfold not. intros. apply N.eqb_neq in BC. specialize (H p).
+    destruct H as [k [NILFREE NIL]]. lia.
+    assert (KZERO: k = 0). { destruct k. reflexivity. unfold nilfree in NILFREE. specialize (NILFREE 1).
+      assert (C: 1 < N.pos p0 + 1) by lia. apply NILFREE in C. assert (ADMIT: accept_ptr ⊕ 1 = 1 + accept_ptr) by admit.
+      rewrite ADMIT in C. symmetry in ACPT_1_NULL.
+      destruct (m Ⓑ[ 1 + accept_ptr ]). discriminate. discriminate.
+    }
+    rewrite KZERO in NIL; psimpl in NIL. symmetry in NIL. contradiction.
+  }
+
+  (* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *                                                             * * *)
+  (* * *                                                             * * *)
+  (* * *                       Map Maker                             * * *)
+  (* * *                                                             * * *)
+  (* * *                                                             * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *)
+
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *          Map Maker Loop 0           * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  step.
   apply N.eqb_neq in BC. apply N.eqb_neq in BC0.
   exists "0x4130002c"%string. intro LOC.
   (* sp was stored in R_X3 *) 
-  exists sp.
+  exists m, sp.
   (* First loop iteration, length should be 0 *)
-  exists 0. psimpl. split; try assumption. split; try reflexivity. split; try assumption. split.
-  split; try assumption. split; try assumption. split; try assumption.
-  (* Figure out why ACPT_1_NNUL uses m0 while ACPT_0_NNULL uses m.
-     Maybe strspn relies on accept string not overlapping with the bitmap. *)
+  exists 0. psimpl.
+  do 7 (split; try easy).
   apply bitmap_0. apply BITMAP.
 
-  destruct PRE as [loc [bitmap_ptr [L [H0 H1]]]].
-  (* Our bookkeeping strategy introduces a new goal
-     when destructing invariants:
-    ------------------------------------(1/4)
-     loc = "0x41300030"%string
-  *)
-  admit.
-  destruct H1 as [ACCEPTL [X6_EQ_1 [ACPT_0_NNULL [ACPT_1_NNULL [BITMAP_PTR BITNSTR]]]]].
+  destruct PRE as [loc [m' [bitmap_ptr [L [STR_PTR [ACPT_L [X6_EQ_1 
+    [MEM' [ACPT_0_NNULL [ACPT_1_NNULL [BITMAP_PTR BITNSTR]]]]]]]]]]]. admit.
+  pose (LOC_PREV := "0x4130002c"%string).
 
-  (* MAP BUILDER->CHECKER TRANSITION: only executed once*)
-  step. step. (* For map-maker inv at *2c: step. apply Neqb_ok in BC. contradiction.*)
-  exists "0x41300094"%string. intros. exists bitmap_ptr. exists L.
-  split. assumption. split. reflexivity. split. assumption. apply bitarray_nstr_str with (len:=L). assumption.
+  step. step. all: cycle 1.
+
+  step. step. step. step. step. step. step.
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *          Map Maker Loop N           * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  exists "0x4130002c"%string. intro LOC.
+  eexists.
+  exists bitmap_ptr, (L+1).
+  split; try easy.
+  split. psimpl; easy.
+  split; try easy.
+  split. eauto.
+  (* TODO: get this automation to not expand bitarray_nstr *)
+  repeat (split; try easy).
+  (* Here we'll need to use non-overlapping memory assumptions *)
+  admit. admit.
+  rewrite BITMAP_PTR in SP; inversion SP. easy.
+  (* admit the two expanded bitarray_nstr from above. *)
+  admit. admit.
+
+  destruct PRE as [loc [m' [bitmap_ptr [L [STR_PTR [STR_L [BITMAP_PTR [BITARRAY_STR POST]]]]]]]]. admit.
+  pose (LOC_PREV := "0x41300078"%string).
+
+  all: cycle -1.
+
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *     Maker -> Checker Transition     * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  exists "0x41300094"%string. intro LOC. exists m', bitmap_ptr, L.
+  do 3 (split; try easy). admit. split; try easy.
+  apply bitarray_nstr_str with (len:=L). assumption.
   apply Neqb_ok in BC.
+  rewrite MEM' in MEM. inversion MEM.
   (*
-  BC : m0 Ⓑ[ accept_ptr + L ] = 0
+  BC : m Ⓑ[ accept_ptr + L ] = 0
   ______________________________________(1/5)
   m Ⓑ[ accept_ptr ⊕ L ] = 0
   *)
   admit.
 
+  all: cycle 1.
+
+  destruct PRE as [_ [m' [bitmap_ptr [L [STR_PTR [ACPT_L [MEM' [BITMAP_PTR BITARRAY]]]]]]]]. admit.
+  pose (LOC_PREV:= "0x41300094"%string).
   step. step.
-  (* n introduced: 
-      lsl x2, x6, x2 == x2 := x6 << (0x3f & x6) 
-   *) step.
-  step.  step. 
-  (* Store the character-bit in the bitmap: *) step.
-  step.
-  (* MAP BUILDER: This is the arbitrary loop iteration. *)
-  exists "0x41300030"%string. intro LOC.
-  exists bitmap_ptr. exists (L+1). psimpl; split;
-    try assumption; split; try reflexivity; split; try assumption.
-    split; try assumption.
-  split. rewrite <-BITMAP_PTR; rewrite <-SP; reflexivity.
-  unfold bitarray_nstr.
+
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *         Map Checker Loop 0          * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  exists "0x41300078"%string. intro LOC_NOW.
+  exists m', bitmap_ptr, 0. psimpl.
+  repeat (split; try easy).
+  unfold post_satis_i. intros.
+  (* TODO: Prove contradiction on `H : j < 0` *)
   admit.
 
+  step. step.
 
+  all: cycle 1.
+  step. step. step. step.
+  all: cycle 1. step.
 
-
-  destruct PRE as [loc [p H]]. admit. destruct H as [L [STR_PTR [LEN PREFIX]]].
-  step. step.  step.
-  (* SINGLE CHARACTER: This is the arbitrary loop iteration. *)
-  step. exists "0x41300054"%string. intro LOC.
-  exists p. exists (1+L). 
-    split. assumption.
-    split. psimpl. reflexivity.
-    intros. apply PREFIX.
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *         Map Checker Loop N          * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  exists "0x41300078"%string. intro LOC_NOW.
+  exists m'. exists bitmap_ptr. exists (L+1).
+  repeat (split ; try easy). 2: { rewrite BITMAP_PTR in SP. inversion SP. reflexivity. }
+  psimpl. reflexivity.
+  (* TODO: Use the post_satis_i_incr lemme (also a todo) to prove. *)
   admit.
 
-  
-  step. 
-  (* RET: Single character fall-through *)
-  step. exists "0x41300068"%string. intro LOC.
-  exists L. split. admit.
-    split. unfold post_satis. exists 0. split.
-      psimpl. admit.
-      psimpl. apply PREFIX. apply H.
-    unfold post_satis.
-    admit.
+  step. step.
 
-  destruct PRE as [loc [bitmap_ptr H]]. admit. destruct H as [p [L [STR_PTR [LEN [BITMAP_PTR [BITARRAY POST]]]]]].
-  step. step. step.
-  (* RET: Map checker fails to match *) 
-  step. exists "0x41300068"%string. intro LOC. 
-  exists (L mod 2 ^ 64). split.
-    reflexivity.
-    intros. split.
-
-      (* apply post_satis_prev *) admit.
-      admit.
-
-  step. step. step. step. step. step.
-  (* RET: Map checker reaches end of string *)
-  step. exists "0x41300068"%string. intro LOC.
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *        Ret: Checker Found \0        * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  exists "0x41300068"%string. intro LOC_NOW.
   exists L. split.
-    (* apply Q_address_eq. *) psimpl. admit. (* Q_address_eq was the unproven statement Ⓠa = Ⓠb <-> a mod 64 = b mod 64*)
-    intros. split. 
-      (* apply post_satis_prev *) admit.
-      admit.
+    admit. split. admit. admit.
 
+  step. step. step.
 
-  (* MAP CHECKER: This is the first loop iteration. *)
-  step. exists "0x41300078"%string. intro LOC.
-  exists bitmap_ptr. exists p. exists (L+1). psimpl.
-  split. assumption. split. try reflexivity. split. symmetry in SP. 
-  rewrite BITMAP_PTR in SP. assumption.
-  split. assumption.
-  (* TODO: continue here restructuring the proof and breaking the PREs*)
-  (* k is unknown, but the statement is still true *)
-  unfold post_satis.
-  intros. 
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  (* * *   Ret: Checker Found Unlisted Char  * * *)
+  (* * * * * * * * * * * * * * * * * * * * * * * *)
+  exists "0x41300068"%string. intro LOC_NOW.
   admit.
-  (* intros. destruct H1 as [j [HL _]]. apply N.nlt_0_r in HL. contradiction. *)
-
-  step. step. (* step. step. step. step. step. *)
-
-  
-  destruct PRE as [locstring [p H1]]. admit. destruct H1 as [p0 [L [sRx0 [sRx1 [sRx3 IH]]]]].
-  (* step. step. step. step. step. step. *)
-
-
-  (* MAP CHECKER: This is the arbitrary loop iteration. *)
-  exists "0x41300078"%string. intro LOC.
-  exists (p). exists p0. exists (0).
-  rewrite <- sRx0. 
-      split. symmetry. assumption.
-      split. rewrite sRx0 in Hsv. inversion Hsv. rewrite <- H0. psimpl. reflexivity.
-      split. assumption.
-      split.
-        apply IH. 
-        unfold post_satis. 
-          psimpl.
-          admit.
 
 Abort.
