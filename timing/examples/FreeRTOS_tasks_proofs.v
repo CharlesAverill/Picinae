@@ -152,19 +152,27 @@ match t with (Addr a, s) :: t' => match a with
         s R_A2 = Ⓓ(mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
         s R_A4 = Ⓓ((0xa5a5a << 12) + 1445) /\
         cycle_count_of_trace t' = 6 + 9 * time_mem + time_branch)
+    (* | 0x80001624 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]] !=? 0xa5a5a5a5 = false) *)
+    | 0x80001628 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
+        s R_A2 = Ⓓ(mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A3 = Ⓓ(mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
+        (mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] !=? (678490 << 12) + 1445) = false /\
+        cycle_count_of_trace t' = 
+            (* if (mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] !=? 0xa5a5a5a5) then 
+                (9 + 10 * time_mem + time_branch)
+            else *)
+                ((if mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] !=? 0xa5a5a5a5 then time_branch else 3) + 
+                    (6 + 10 * time_mem + time_branch)))
     | 0x8000163c => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
         s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
         cycle_count_of_trace t' = 6 + 9 * time_mem + time_branch + 
-            if mem Ⓓ[mem Ⓓ[ 48 + pxCurrentTCB gp mem ]] !=? 0xa5a5a5a5 then time_branch else 3
+            (if mem Ⓓ[mem Ⓓ[ 48 + pxCurrentTCB gp mem ]] !=? 0xa5a5a5a5 then time_branch else
+                3 + 
+                (if mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]] !=? mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]] then 
+                    time_branch + time_mem else 3))
     )
     | 0x80001648 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ cycle_count_of_trace t' = 8 + 11 * time_mem + 2 * time_branch)
-    | 0x80001628 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ 
-        cycle_count_of_trace t' = 
-            if (mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] !=? 0xa5a5a5a5) then 
-                (9 + 10 * time_mem + time_branch)
-            else
-                ((if mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] !=? 0xa5a5a5a5 then time_branch else 3) + 
-                    (6 + 10 * time_mem + time_branch)))
     | 0x80001630 | 0x80001638 
         | 0x80001654 | 0x80001674 | 0x80001688 | 0x800016ac => Some (cycle_count_of_trace t' = 99)
     | 0x800015f0 | 0x800016e8 => Some (
@@ -256,18 +264,19 @@ Proof using.
     destruct PRE as [mem [gp [MEM [GP [SP [A5 [A2 [A4 Cycles]]]]]]]].
     step. handle_ex.
         hammer. change ((678490 << 12) + 1445) with 0xa5a5a5a5 in *.
-        rewrite A2, A4, Cycles. lia.
+        rewrite A2, A4, BC, Cycles. lia.
     step. handle_ex.
         hammer. change ((678490 << 12) + 1445) with 0xa5a5a5a5 in *.
         rewrite A2, A4, Cycles, BC. lia.
 
-    (* 0x80001620 *)
-    destruct PRE as [mem [gp [MEM [GP Cycles]]]].
+    (* 0x80001628 *)
+    destruct PRE as [mem [gp [MEM [GP [A2 [A3 [A5 [Memcontents Cycles]]]]]]]].
     step.
-        handle_ex. hammer. rewrite Hsv, A2, Cycles.
+        handle_ex. hammer. change ((678490 << 12) + 1445) with 0xa5a5a5a5 in *. 
+        rewrite A2, A3, BC, Cycles, Memcontents. lia.
 
     (* 0x80001624 *)
-    step. hammer. rewrite Hsv0, Hsv, BC, PRE. lia.
+    step. hammer. rewrite A2, A3, BC, Cycles. (* STOPPED HERE *) lia.
 
     (* 0x80001628 *)
     step. step. step. step. hammer. rewrite Hsv0, Hsv, BC, PRE. psimpl.
