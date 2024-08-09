@@ -23,22 +23,22 @@ Definition time_branch : N :=
     5 + (ML - 1).
 
 Definition uxSchedulerSuspended (gp : N) (mem : addr -> N) : N :=
-    mem â¹[2144 + gp].
+    mem Ⓓ[2144 + gp].
     (* This should actually be the below expression. Unclear on whether lifter
        has bug, seems like it isn't treating immediate as signed
     *)
-    (* mem â¹[gp - 1952]. *)
+    (* mem Ⓓ[gp - 1952]. *)
 
 Definition addr_xYieldPendings (gp : N) : N :=
     gp - 1932.
 
 Definition pxCurrentTCB (gp : N) (mem : addr -> N) : N :=
-    mem â¹[2200 + gp].
+    mem Ⓓ[2200 + gp].
     (* Same as above *)
-    (* mem â¹[gp - 1896]. *)
+    (* mem Ⓓ[gp - 1896]. *)
 
 Definition uxTopReadyPriority (gp : N) (mem : addr -> N) : N :=
-    mem â¹[gp - 1920].
+    mem Ⓓ[gp - 1920].
 
 Definition addr_pxReadyTasksLists (gp : N) : N :=
     gp - 924.
@@ -63,16 +63,16 @@ Definition addr_pxReadyTasksLists (gp : N) : N :=
     | 0x80001618 => 0x0007a603 (* lw a2,0(a5)  *)                                       time_mem
     | 0x8000161c => 0x5a570713 (* add a4,a4,1445 # a5a5a5a5 <_stack_top+0x259c48b7>  *) 2
     | 0x80001620 => 0x00e61e63 (* bne a2,a4,8000163c <vTaskSwitchContext+0x5c>  *)
-        if mem â¹[mem â¹[48 + pxCurrentTCB gp mem]] !=? 0xa5a5a5a5 then time_branch else 3
+        if mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]] !=? 0xa5a5a5a5 then time_branch else 3
     | 0x80001624 => 0x0047a683 (* lw a3,4(a5)  *)                                       time_mem
     | 0x80001628 => 0x00c69a63 (* bne a3,a2,8000163c <vTaskSwitchContext+0x5c>  *)
-        if mem â¹[4 + (48 + pxCurrentTCB gp mem)] !=? mem â¹[mem â¹[48 + pxCurrentTCB gp mem]] then time_branch else 3
+        if mem Ⓓ[4 + (48 + pxCurrentTCB gp mem)] !=? mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]] then time_branch else 3
     | 0x8000162c => 0x0087a703 (* lw a4,8(a5)  *)                                       time_mem
     | 0x80001630 => 0x00d71663 (* bne a4,a3,8000163c <vTaskSwitchContext+0x5c>  *)
-        if mem â¹[8 + (48 + pxCurrentTCB gp mem)] !=? mem â¹[4 + (48 + pxCurrentTCB gp mem)] then time_branch else 3
+        if mem Ⓓ[8 + (48 + pxCurrentTCB gp mem)] !=? mem Ⓓ[4 + (48 + pxCurrentTCB gp mem)] then time_branch else 3
     | 0x80001634 => 0x00c7a783 (* lw a5,12(a5)  *)                                      time_mem
     | 0x80001638 => 0x00e78a63 (* beq a5,a4,8000164c <vTaskSwitchContext+0x6c>  *)
-        if mem â¹[12 + (48 + pxCurrentTCB gp mem)] !=? mem â¹[8 + (48 + pxCurrentTCB gp mem)] then time_branch else 3
+        if mem Ⓓ[12 + (48 + pxCurrentTCB gp mem)] !=? mem Ⓓ[8 + (48 + pxCurrentTCB gp mem)] then time_branch else 3
     | 0x8000163c => 0x8981a583 (* lw a1,-1896(gp) # 80080098 <pxCurrentTCB>  *)         time_mem
     | 0x80001640 => 0x8981a503 (* lw a0,-1896(gp) # 80080098 <pxCurrentTCB>  *)         time_mem
     | 0x80001644 => 0x03458593 (* add a1,a1,52  *)                                      2
@@ -88,7 +88,7 @@ Definition addr_pxReadyTasksLists (gp : N) : N :=
     | 0x8000166c => 0x00e787b3 (* add a5,a5,a4  *)                                      2
     | 0x80001670 => 0x0007a783 (* lw a5,0(a5)  *)                                       time_mem
     | 0x80001674 => 0x00079c63 (* bnez a5,8000168c <vTaskSwitchContext+0xac>  *)
-        if mem â¹[(GP - 924) + ((31 - mem â¹[GP - 1920]) * 20)] !=? 0 then time_branch else 3
+        if mem Ⓓ[(GP - 924) + ((31 - mem Ⓓ[GP - 1920]) * 20)] !=? 0 then time_branch else 3
     | 0x80001678 => 0x000015b7 (* lui a1,0x1  *)                                        2
     | 0x8000167c => 0x80014537 (* lui a0,0x80014  *)                                    2
     | 0x80001680 => 0x41358593 (* add a1,a1,1043 # 1413 <__stack_size+0x12b5>  *)       2
@@ -103,7 +103,7 @@ Definition addr_pxReadyTasksLists (gp : N) : N :=
     | 0x800016a4 => 0x0046a683 (* lw a3,4(a3)  *)                                       time_mem
     | 0x800016a8 => 0x00d72223 (* sw a3,4(a4)  *)                                       time_mem
     | 0x800016ac => 0x00f69663 (* bne a3,a5,800016b8 <vTaskSwitchContext+0xd8>  *)
-        if mem â¹[4 + mem â¹[4 + (addr_pxReadyTasksLists + ((31 - uxTopReadyPriority) * 20))]] !=? 
+        if mem Ⓓ[4 + mem Ⓓ[4 + (addr_pxReadyTasksLists + ((31 - uxTopReadyPriority) * 20))]] !=? 
             (addr_pxReadyTasksLists + (((31 - uxTopReadyPriority) * 20) + 8)) then time_branch else 3
     | 0x800016b0 => 0x00c72783 (* lw a5,12(a4)  *)                                      time_mem
     | 0x800016b4 => 0x00f72223 (* sw a5,4(a4)  *)                                       time_mem
@@ -139,36 +139,36 @@ Definition gp_sp_noverlap (gp sp : N) : Prop :=
 Definition vTaskSwitchContext_timing_invs (_ : store) (p : addr) (base_sp : N) (t:trace) :=
 match t with (Addr a, s) :: t' => match a with
     | 0x800015e4 => Some (
-        exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\ s R_SP = â¹base_sp /\ s R_A4 = â¹(uxSchedulerSuspended gp mem) /\ gp_sp_noverlap gp base_sp /\
+        exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ s R_SP = Ⓓbase_sp /\ s R_A4 = Ⓓ(uxSchedulerSuspended gp mem) /\ gp_sp_noverlap gp base_sp /\
         cycle_count_of_trace t' = time_mem)
     (* The proof expressions get big, so throw in a few intermediate invariants to constrain the goal space's size *)
-    (* | 0x80001610 => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\ s R_SP = â¹(base_sp â 16)  /\ gp_sp_noverlap gp base_sp /\
-        s R_A5 = â¹(mem â¹[48 + pxCurrentTCB gp mem]) /\
-        s R_A4 = â¹(0xa5a5a) /\
+    (* | 0x80001610 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ s R_SP = Ⓓ(base_sp ⊖ 16)  /\ gp_sp_noverlap gp base_sp /\
+        s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
+        s R_A4 = Ⓓ(0xa5a5a) /\
         cycle_count_of_trace t' = 4 + 6 * time_mem + time_branch
     ) *)
-    | 0x80001620 => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\ s R_SP = â¹(base_sp â 16) /\
-        s R_A5 = â¹(mem â¹[48 + pxCurrentTCB gp mem]) /\
-        s R_A2 = â¹(mem â¹[mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A4 = â¹((0xa5a5a << 12) + 1445) /\
+    | 0x80001620 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ s R_SP = Ⓓ(base_sp ⊖ 16) /\
+        s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
+        s R_A2 = Ⓓ(mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A4 = Ⓓ((0xa5a5a << 12) + 1445) /\
         cycle_count_of_trace t' = 6 + 9 * time_mem + time_branch)
-    | 0x8000163c => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
-        s R_A5 = â¹(mem â¹[48 + pxCurrentTCB gp mem]) /\
+    | 0x8000163c => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
+        s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
         cycle_count_of_trace t' = 6 + 9 * time_mem + time_branch + 
-            if mem â¹[mem â¹[ 48 + pxCurrentTCB gp mem ]] !=? 0xa5a5a5a5 then time_branch else 3
+            if mem Ⓓ[mem Ⓓ[ 48 + pxCurrentTCB gp mem ]] !=? 0xa5a5a5a5 then time_branch else 3
     )
-    | 0x80001648 => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\ cycle_count_of_trace t' = 8 + 11 * time_mem + 2 * time_branch)
-    | 0x80001628 => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\ 
+    | 0x80001648 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ cycle_count_of_trace t' = 8 + 11 * time_mem + 2 * time_branch)
+    | 0x80001628 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ 
         cycle_count_of_trace t' = 
-            if (mem â¹[ mem â¹[ 48 + pxCurrentTCB gp mem ] ] !=? 0xa5a5a5a5) then 
+            if (mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] !=? 0xa5a5a5a5) then 
                 (9 + 10 * time_mem + time_branch)
             else
-                ((if mem â¹[ mem â¹[ 48 + pxCurrentTCB gp mem ] ] !=? 0xa5a5a5a5 then time_branch else 3) + 
+                ((if mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] !=? 0xa5a5a5a5 then time_branch else 3) + 
                     (6 + 10 * time_mem + time_branch)))
     | 0x80001630 | 0x80001638 
         | 0x80001654 | 0x80001674 | 0x80001688 | 0x800016ac => Some (cycle_count_of_trace t' = 99)
     | 0x800015f0 | 0x800016e8 => Some (
-        exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
+        exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
             timing_postcondition t gp mem)
     | _ => None end
 | _ => None
@@ -212,8 +212,8 @@ Theorem vTaskSwitchContext_timing:
   forall s p t s' x' gp sp
          (ENTRY: startof t (x',s') = (Addr start_vTaskSwitchContext,s)) (* Define the entry point of the function *)
          (MDL: models rvtypctx s)
-         (GP : s R_GP = â¹gp)
-         (SP : s R_SP = â¹sp)
+         (GP : s R_GP = Ⓓgp)
+         (SP : s R_SP = Ⓓsp)
          (GP_SP_FAR : gp_sp_noverlap gp sp),
   satisfies_all 
     lifted_vTaskSwitchContext                                 (* Provide lifted code *)
