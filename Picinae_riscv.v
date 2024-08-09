@@ -608,7 +608,7 @@ Notation "m Ⓦ[ a  ]" := (getmem 32 LittleE 2 m a) (at level 30) : r5_scope. (*
 Notation "m Ⓓ[ a  ]" := (getmem 32 LittleE 4 m a) (at level 30) : r5_scope. (* read dword from memory *)
 Notation "m [Ⓑ a := v  ]" := (setmem 32 LittleE 1 m a v) (at level 50, left associativity) : r5_scope. (* write byte to memory *)
 Notation "m [Ⓦ a := v  ]" := (setmem 32 LittleE 2 m a v) (at level 50, left associativity) : r5_scope. (* write word to memory *)
-Notation "m [Ⓓ a := v  ]" := (setmem 23 LittleE 4 m a v) (at level 50, left associativity) : r5_scope. (* write dword to memory *)
+Notation "m [Ⓓ a := v  ]" := (setmem 32 LittleE 4 m a v) (at level 50, left associativity) : r5_scope. (* write dword to memory *)
 Notation "x ⊕ y" := ((x+y) mod 2^32) (at level 50, left associativity). (* modular addition *)
 Notation "x ⊖ y" := (msub 32 x y) (at level 50, left associativity). (* modular subtraction *)
 Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* modular multiplication *)

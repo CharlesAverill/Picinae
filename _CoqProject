@@ -16,3 +16,4 @@ Examples/riscv_cfi.v
 timing/i386Timing.v
 timing/riscvTiming.v
 Examples/arm7_strlen.v
+timing/examples/lifted_RTOSDemo.v
