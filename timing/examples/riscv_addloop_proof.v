@@ -80,7 +80,7 @@ Definition add_loop_end   : N := 0x1c.
     in a 'mod 2^32', hence the circle plus).
 *)
 Definition postcondition (s : store) (x y : N) :=
-    s R_T1 = â¹(x â y).
+    s R_T1 = Ⓓ(x ⊕ y).
 
 (*
     We really only have one invariant here (because we only have one loop in the
@@ -108,8 +108,8 @@ Definition addloop_correctness_invs (_ : store) (p : addr) (x y : N) (t:trace) :
     match t with (Addr a, s) :: _ => match a with
         | 0x8  => Some (s R_T0 = VaN x 32 /\ s R_T1 = VaN y 32)
         | 0x10 => Some (exists t0 t1, 
-            s R_T0 = â¹t0 /\ s R_T1 = â¹t1 /\ s R_T2 = â¹1 /\ s R_T3 = â¹0 /\ 
-                t0 â t1 = x â y)
+            s R_T0 = Ⓓt0 /\ s R_T1 = Ⓓt1 /\ s R_T2 = Ⓓ1 /\ s R_T3 = Ⓓ0 /\ 
+                t0 ⊕ t1 = x ⊕ y)
         | 0x20 => Some (postcondition s x y)
         | _ => None end
     | _ => None
@@ -189,7 +189,7 @@ Proof.
         unfold postcondition. psimpl. rewrite <- Eq. assumption.
     (* Loop case - prove the invariant again *)
     step. step. step.
-        rewrite N.eqb_neq in BC. exists (t0 â 1), (1 â t1). repeat split.
+        rewrite N.eqb_neq in BC. exists (t0 ⊖ 1), (1 ⊕ t1). repeat split.
         psimpl. assumption.
 Qed.
 
@@ -212,8 +212,8 @@ Arguments N.add _ _ : simpl nomatch.
 
 Definition addloop_timing_invs (_ : store) (p : addr) (x y : N) (t:trace) :=
 match t with (Addr a, s) :: t' => match a with
-    | 0xc  => Some (s R_T0 = â¹x /\ s R_T2 = â¹1 /\ cycle_count_of_trace t = 2 + 2)
-    | 0x10 => Some (exists t0, s R_T0 = â¹t0 /\ s R_T2 = â¹1 /\ s R_T3 = â¹0 /\ t0 <= x /\
+    | 0xc  => Some (s R_T0 = Ⓓx /\ s R_T2 = Ⓓ1 /\ cycle_count_of_trace t = 2 + 2)
+    | 0x10 => Some (exists t0, s R_T0 = Ⓓt0 /\ s R_T2 = Ⓓ1 /\ s R_T3 = Ⓓ0 /\ t0 <= x /\
         cycle_count_of_trace t' = 4 + (x - t0) * (12 + (ML - 1)))
         (* 2 + 2 + (x - t0) * (3 + 2 + 2 + (5 + (ML - 1)) *)
     | 0x20 => Some (cycle_count_of_trace t' = 9 + (ML - 1) + x * (12 + (ML - 1)))
@@ -276,7 +276,7 @@ Proof using.
         rewrite N.eqb_eq in BC; subst. unfold_cycle_count_list.
         unfold_time_of_addr. rewrite T0, T3, Cycles_t. now psimpl.
     - (* t0 <> 0 -> loop again *)
-        step. step. step. exists (t0 â 1). assert (1 <= t0) by (apply N.eqb_neq in BC; lia). repeat split.
+        step. step. step. exists (t0 ⊖ 1). assert (1 <= t0) by (apply N.eqb_neq in BC; lia). repeat split.
             rewrite msub_nowrap; psimpl; lia.
         unfold_cycle_count_list.
         repeat (let Y := fresh "H" in (remember ((time_of_addr _) _) eqn:Y; unfold_time_of_addr in Y; subst)).
