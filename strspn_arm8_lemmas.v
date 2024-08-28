@@ -1,0 +1,1080 @@
+Require Import Arith.
+Require Import NArith.
+Require Import Picinae_armv8_pcode.
+Require Import Lia.
+Require Import Bool.
+Require Import Utf8.
+Require Import strspn_arm8.
+
+Import ARM8Notations.
+Open Scope N.
+
+(* Extract a bit from a bit-array. *)
+Definition bit mem (p:addr) (i:N) := xbits (mem Ⓑ[p + (i >> 3)]) (i mod 2^3) (1 + (i mod 2^3)).
+
+Lemma bit_set_preservation_byte:
+  forall m a i_set i
+  (LTISET : i_set < 8)
+  (LTI : i < 8)
+  (NEQ : i <> i_set),
+  bit (m [Ⓑ  a := m Ⓑ[ a ] .| (1 << i_set) ]) a i = bit m a i.
+Proof.
+  intros. unfold bit.
+  assert (X: 2 ^ 3 = 8) by lia.
+  assert (GETMEMBOUND:= getmem_bound 64 LittleE 1 m a).
+  assert (SHIFTBOUND: 1 << i_set < 2 ^ (1 + i_set)). { apply (shiftl_bound 1 1 i_set). lia. }
+  apply N.lt_le_trans with (p:= 2 ^ 8) in SHIFTBOUND.
+    2:{ destruct i_set; try lia. repeat (lia || destruct p0).
+     apply N.pow_le_mono_r; lia. }
+  assert (HMb: IL_arm8.Mb = 8) by reflexivity.
+
+  destruct i.
+  (* 0 *)
+  destruct i_set; [ contradiction  |
+  repeat (discriminate || contradiction || reflexivity || destruct p)];
+    simpl (_ >> _); rewrite N.add_0_r; rewrite X;
+    rewrite N.mod_small; try lia; simpl (1 + _);
+    rewrite getmem_setmem; try lia;
+    rewrite N.mod_small; try lia;
+    rewrite HMb in *; rewrite N.mul_1_r in *;
+    try (apply lor_bound; lia);
+
+    unfold xbits; psimpl; unfold N.shiftr;
+    destruct (m Ⓑ[ a ]); simpl (_ .| _); try ( reflexivity || discriminate);
+    simpl (_ << _) in * |-.
+  (* i = N.pos p *)
+
+  repeat (discriminate || destruct p);
+    simpl (_ >> _); rewrite N.add_0_r; rewrite X;
+    rewrite N.mod_small; try lia; simpl (1 + _);
+    rewrite getmem_setmem; try lia;
+    rewrite N.mod_small; try lia;
+    rewrite HMb in *; rewrite N.mul_1_r in *;
+    try (apply lor_bound; lia);
+    clear HMb X;
+
+    unfold xbits; destruct i_set; psimpl; unfold N.shiftr;
+    destruct (m Ⓑ[ a ]); simpl (_ .| _); try ( reflexivity || discriminate);
+    simpl (_ << _) in * |-.
+    all:repeat (discriminate || reflexivity || contradiction || destruct p).
+    (* This all: command takes a while *)
+    all: time repeat (discriminate || contradiction || reflexivity || destruct p0).
+Qed.
+
+(* Define what it means for a nil-terminated string to not have internal nils. *)
+Definition nilfree mem p len :=
+  ∀ i, i < len -> 0 <> mem Ⓑ[ p + i ].
+
+Lemma nilfree0:
+  forall m p, nilfree m p 0.
+Proof.
+ unfold nilfree; intros m p i H; now apply N.nlt_0_r in H.
+Qed.
+
+Definition strlen mem p len :=
+  nilfree mem p len /\ mem Ⓑ[ p + len ] = 0.
+
+Lemma nflen_lt:
+  forall m p len z
+  (NF: nilfree m p len)
+  (Z:  getmem 64 LittleE 1 m z = 0),
+  len < 2 ^ 64.
+Proof.
+  intros. unfold nilfree in NF.
+  destruct (N.lt_trichotomy len (2 ^ 64)) as [Lt | [Eq | Gt]]; try lia.
+  - subst len. remember (msub 64 z p) as offset.
+    specialize (NF offset). destruct NF. rewrite Heqoffset; apply msub_lt.
+    subst offset; psimpl; congruence.
+  - remember (msub 64 z p) as offset.
+    specialize (NF offset). destruct NF. apply N.lt_trans with (m:= 2^64);[ rewrite Heqoffset; apply msub_lt | assumption].
+    subst offset; psimpl; congruence.
+Qed.
+
+Lemma nilfree_grow:
+  forall m p len
+  (NF: nilfree m p len)
+  (NZ: m Ⓑ[ p + len ] <> 0),
+  nilfree m p (1+len).
+Proof.
+  intros.
+  intro; intro. unfold nilfree in NF.
+  destruct (N.lt_trichotomy i len) as [Lt | [Eq | Gt]]; try lia; clear H.
+  - specialize (NF i); apply NF; assumption.
+  - subst i. congruence.
+Qed.
+
+(* Define a "correct" bit array.
+
+   Note: `nilfree m p __(1+j)__` so that p[j] != 0.
+
+   This makes it so a bitmap never records the null-terminating character
+   as an acceptable character which is the behavior used in this implementation
+   of strspn. This is practical in this case but may not be in others. *)
+Definition bitarray_nstr mem bitmap_ptr str_ptr len : Prop :=
+  ∀ i, i < 256 -> (0 < bit mem bitmap_ptr i <->
+                  (∃ j, j < len /\ nilfree mem str_ptr (1+j) /\ mem Ⓑ[str_ptr + j] = i)).
+
+(* bitmap bit is on iff the string has a corresponding character before or on \0 *)
+Definition bitarray_str mem bitmap_ptr str_ptr : Prop :=
+  ∀ i, i < 256 -> (0 < bit mem bitmap_ptr i <->
+                  (∃ j, nilfree mem str_ptr (1+j) /\ mem Ⓑ[str_ptr ⊕ j] = i)).
+
+Lemma strlen_incr :
+  forall mem p len k
+    (LEN : strlen mem p len)
+    (LE : k <= len)
+    (NNULL : mem Ⓑ[ p + k ] <> 0),
+     k < len.
+Proof.
+  intros. unfold strlen in LEN.
+  apply N.lt_eq_cases in LE. destruct LE as [LT | EQ]. easy.
+  destruct LEN as [NF NIL]. now subst k.
+Qed.
+
+Lemma nilfree_le_len :
+  forall mem p len k
+    (LEN : strlen mem p len)
+    (LE  : k <= len),
+    nilfree mem p k.
+Proof.
+  intros.
+  unfold strlen in LEN; destruct LEN as [NF _].
+  apply N.lt_eq_cases in LE. destruct LE as [LT | EQ].
+  (* LT: k < len *)
+  unfold nilfree in NF; unfold nilfree. intros. apply NF. lia.
+  (* EQ: k = len *)
+  now subst k.
+Qed.
+
+
+
+Lemma noverlap_index:
+  forall w a1 len1 a2 len2 index size
+  (NO : ~ overlap w a1 len1 a2 len2)
+  (IN : index + size <= len1),
+  ~ overlap w (a1 + index) size a2 len2.
+Proof.
+  intros.
+  remember (a1 + index) as a1'. apply noverlap_shrink with (a1:=a1) (len1:=len1).
+  rewrite Heqa1'. rewrite add_msub_l.
+  apply N.le_trans with (m:=index+size). rewrite <-N.add_le_mono_r. apply N.Div0.mod_le.
+  assumption.
+  assumption.
+Qed.
+
+Lemma noverlap_index_index:
+  forall w a1 len1 a2 len2 index1 size1 index2 size2
+  (NO  : ~ overlap w a1 len1 a2 len2)
+  (IN1 : index1 + size1 <= len1)
+  (IN2 : index2 + size2 <= len2),
+  ~ overlap w (a1 + index1) size1 (a2 + index2) size2.
+Proof. 
+  intros. apply noverlap_index with (len1:=len1).
+  apply noverlap_symmetry. apply noverlap_index with (len1:=len2).
+  apply noverlap_symmetry.
+  all: assumption.
+Qed.
+
+Lemma bit_update_noverlap_simpl:
+  forall m bmp acpt acpt_len bmp_i acpt_i char
+  (NO : ~ overlap 64 acpt acpt_len bmp 32)
+  (LEN : strlen m acpt acpt_len)
+  (BMPI : bmp_i < 256)
+  (ACPTI : acpt_i < acpt_len)
+  (VAL : m Ⓑ[ acpt + acpt_i ] = char),
+  m [Ⓨ bmp := (m Ⓨ[ bmp ] .| (1 << (bmp_i mod 256)) )] Ⓑ[ acpt + acpt_i ] = char.
+Proof.
+  intros. rewrite <-VAL. eapply getmem_noverlap.
+  apply noverlap_index with (len1:=acpt_len); try (assumption || lia).
+Qed.
+
+Lemma nilfree_noverlap :
+  forall mem p nflen a writelen e v
+    (NO: ~overlap 64 p nflen a writelen),
+  nilfree mem p nflen <->
+  nilfree (setmem 64 e writelen mem a v) p nflen.
+Proof.
+  intros. unfold nilfree. split; intros. rewrite getmem_noverlap.
+    now apply H in H0. eapply noverlap_index; (eassumption || lia). remember H0 as H1; clear HeqH1.
+    apply H in H0. rewrite getmem_noverlap in H0; try assumption.
+    eapply noverlap_index; (eassumption || lia).
+Qed.
+
+Lemma Ndiv2_mono_succ:
+  forall x1,
+  N.div2 x1 <= N.div2 (N.succ x1).
+Proof.
+  intro. destruct x1; try reflexivity.
+  simpl. destruct p; simpl; try (reflexivity || lia).
+Qed.
+
+Lemma Ndiv2_mono_friend:
+  forall x a,
+  N.div2 x <= N.div2 (a+x).
+Proof.
+  intros. induction a using N.peano_ind.
+    simpl; reflexivity.
+    rewrite N.add_succ_l.
+    apply N.le_trans with (m:=N.div2 (a+x)); try assumption.
+    apply Ndiv2_mono_succ.
+Qed.
+
+Lemma Ndiv2_mono:
+  forall x1 x2,
+  x1 <= x2 -> N.div2 x1 <= N.div2 x2.
+Proof.
+  intros. remember (x2-x1) as a. assert (Hx2: x2 = a + x1). subst a. lia.
+  rewrite Hx2. apply Ndiv2_mono_friend.
+Qed.
+
+Lemma Pos_N_succ_comm: forall p, N.pos (Pos.succ p) = N.succ (N.pos p).
+Proof. intro; unfold N.succ; reflexivity. Qed.
+
+Lemma Nshiftr_mono:
+  forall x1 x2 shift,
+  x1 <= x2 -> N.shiftr x1 shift <= N.shiftr x2 shift.
+Proof.
+  intros. generalize dependent x2. generalize dependent x1.
+  induction shift using N.peano_ind; intros; try assumption.
+  unfold N.shiftr. destruct (N.succ shift) eqn:Eqn. apply N.neq_succ_0 in Eqn; contradiction.
+  destruct shift. simpl in Eqn. destruct p eqn:Eqnp; try simpl in Eqn; try discriminate.
+  simpl; apply Ndiv2_mono; assumption.
+  rewrite <-Pos_N_succ_comm in Eqn. injection Eqn; intro Eqnp. subst p.
+  do 2 rewrite Pos.iter_succ_r.
+  unfold N.shiftr in IHshift. apply IHshift, Ndiv2_mono; assumption.
+Qed.
+
+Lemma Nshiftl_mono:
+  forall x1 x2 shift,
+  x1 <= x2 -> N.shiftl x1 shift <= N.shiftl x2 shift.
+Proof.
+  intros. generalize dependent x2; generalize dependent x1.
+  induction shift using N.peano_ind; intros; simpl; try reflexivity.
+  (* 0 *)
+  unfold N.shiftl. destruct x1 eqn:Eqx1, x2;
+    (reflexivity ||
+    apply N.le_0_l ||
+    (try  rewrite N.le_0_r in H; discriminate  ) ||
+    simpl; assumption) .
+  (* N.succ shift *)
+  unfold N.shiftl. destruct x1 eqn:Eqx1, x2;
+    try (reflexivity ||
+    apply N.le_0_l ||
+    (try  rewrite N.le_0_r in H; discriminate  )) .
+  unfold Pos.shiftl. destruct shift eqn:Eqshift. simpl.
+  apply N.double_le_mono in H. simpl in H. assumption.
+  simpl. unfold N.shiftl in IHshift; specialize (IHshift (N.pos p~0) (N.pos p0~0)); simpl in IHshift.
+  apply IHshift in H.
+  do 2 rewrite Pos.iter_succ_r; assumption.
+Qed.
+(*
+  The bitmap update doesn't change any of the characters in the accept string.
+
+  m - memory
+  bmp - bitmap pointer
+  acpt - accept pointer
+  acpt_len - the length of the accept string (acpt[acpt_len] = 0)
+  bmp_i - the index of the bitmap we're updating. In the code this corresponds
+          to `L`
+  acpt_i - an index ranging over all of acpt
+  char - value of acpt[acpt_i] used to prove it is the same after the update
+*)
+Lemma bit_update_noverlap:
+  forall m bmp acpt acpt_len L char acpt_i any_char
+  (NO : ~ overlap 64 acpt acpt_len bmp 32)
+  (LEN : strlen m acpt acpt_len)
+  (BMPI : m Ⓑ[ acpt + L ] = char)
+  (ACPTI : acpt_i < acpt_len)
+  (ACPT_RANGE : m Ⓑ[ acpt + acpt_i ] = any_char),
+  m [Ⓠ bmp + (char >> 6 << 3) := 1 << char mod 64
+      .| m Ⓠ[ bmp + (char >> 6 << 3) ] ] Ⓑ[ acpt + acpt_i ] = any_char.
+Proof.
+  intros. rewrite <-ACPT_RANGE. eapply getmem_noverlap.
+  apply noverlap_index_index with (len1:=acpt_len) (len2:=32).
+  all: try (assumption || lia).
+  assert (H:char < 256). { rewrite <-BMPI. apply getmem_bound. }
+  assert (Htemp: 32 = 24 + 8) by lia. rewrite Htemp; clear Htemp.
+  apply N.add_le_mono; try lia.
+  apply N.lt_le_pred in H; simpl in H.
+  apply (Nshiftr_mono _ _ 6), (Nshiftl_mono _ _ 3) in H. simpl (255 >> 6 << 3) in H.
+  assumption.
+Qed.
+
+
+Lemma Nsucc_le__lt:
+  forall x a, N.succ x <= a -> x < a.
+Proof.
+  intros.
+  apply N.lt_le_trans with (n:=x) (m:=N.succ x) (p:=a).
+  apply N.lt_succ_diag_r.
+  assumption.
+Qed.
+
+Lemma add_sub_cancel:
+  forall x a
+    (LE: x <= a),
+  x + (a - x) = a.
+Proof.
+  intro x. induction x using N.peano_ind; intros.
+  - destruct a; reflexivity.
+  - rewrite N.sub_succ_r.
+    remember (Nsucc_le__lt _ _ LE) as LT; clear HeqLT.
+    rewrite N.add_succ_comm. rewrite (N.succ_pred_pos (a-x)).
+    apply IHx. now apply N.lt_le_incl in LT.
+    lia.
+Qed.
+
+
+Lemma Nshiftl_mono_lt_iff:
+  forall x1 x2 shift,
+  x1 < x2 <-> N.shiftl x1 shift < N.shiftl x2 shift.
+Proof.
+  split.
+  (* -> *)
+  generalize dependent x2; generalize dependent x1.
+  induction shift using N.peano_ind; intros; simpl; try reflexivity.
+  (* 0 *)
+  unfold N.shiftl. destruct x1 eqn:Eqx1, x2;
+    (reflexivity ||
+    apply N.le_0_l ||
+    (try  rewrite N.le_0_r in H; discriminate  ) ||
+    simpl; assumption) .
+  (* N.succ shift *)
+  unfold N.shiftl. destruct x1 eqn:Eqx1, x2;
+    try (reflexivity ||
+    apply N.le_0_l ||
+    (try  rewrite N.le_0_r in H; discriminate  )) .
+  unfold Pos.shiftl. destruct shift eqn:Eqshift. simpl.
+  apply N.double_lt_mono in H. simpl in H. assumption.
+  simpl. unfold N.shiftl in IHshift; specialize (IHshift (N.pos p~0) (N.pos p0~0)); simpl in IHshift.
+  apply IHshift in H.
+  do 2 rewrite Pos.iter_succ_r; assumption.
+
+  (* <- *)
+  intro H.
+  generalize dependent x2. generalize dependent x1.
+  induction shift using N.peano_ind; intros.
+  - unfold N.shiftl in H; simpl in H.
+    destruct x1; destruct x2; try discriminate; try lia.
+  - destruct shift.
+    + (* shift = 0 *)
+      simpl in H. destruct x1; destruct x2; try discriminate; try lia.
+      unfold N.shiftl in H. unfold Pos.shiftl in H. simpl in H.
+      unfold N.lt, N.compare, Pos.compare, Pos.compare_cont in H |- *.
+      assumption.
+    + simpl in H; destruct x1; destruct x2; try discriminate; try lia.
+      assert (H2: forall p p2, N.pos p << N.pos (Pos.succ p2) = N.pos p~0 << N.pos p2) by (
+        intros x shift; unfold N.shiftl, Pos.shiftl; simpl; now rewrite Pos.iter_succ_r).
+      rewrite H2 in H; rewrite H2 in H. now apply IHshift in H.
+Qed.
+
+Lemma pos_div2_lt:
+  forall x y, (N.pos x~1 < N.pos y~0) \/ (N.pos x~0 < N.pos y~0) -> N.pos x < N.pos y.
+Proof.
+  intros x. induction x using positive_ind.
+  3: intros y [H1 | H0]; repeat (discriminate || reflexivity || destruct y).
+  intros.
+    destruct y; [
+      apply N.lt_trans with (m:=N.pos y~0); try lia
+      |
+      | destruct H; discriminate].
+    destruct H; unfold N.lt, N.compare, Pos.compare, Pos.compare_cont in H |- *; assumption.
+    intros.
+    destruct y; [
+      |
+      | destruct H; discriminate].
+    destruct H; unfold N.lt, N.compare, Pos.compare, Pos.compare_cont in H |- *; try assumption.
+    destruct H; [apply (N.lt_trans (N.pos x~0~0) (N.pos x~0~1) (N.pos y~0~0)) in H; try lia | ].
+    now unfold N.lt, N.compare, Pos.compare, Pos.compare_cont in H |- *.
+Qed.
+
+Lemma Possucc_inj:
+  forall x y, x = y <-> Pos.succ x = Pos.succ y.
+Proof.
+  intros; split; intros.
+    + rewrite H; reflexivity.
+    + generalize dependent y. induction x using Pos.peano_ind; intros.
+      - repeat (discriminate || reflexivity || destruct y).
+      - rewrite <-Pos.add_1_r in H.
+        assert (H1: Pos.succ x = (Pos.succ y - 1)%positive). lia.
+        rewrite Pos.sub_1_r in H1. now rewrite Pos.pred_succ in H1.
+Qed.
+
+Lemma Pospred_inj:
+  forall x y, x <> 1%positive -> y <> 1%positive -> x = y <-> Pos.pred x = Pos.pred y.
+Proof.
+  intros; split; intros.
+  + rewrite H1; reflexivity.
+  + generalize dependent y. induction x using Pos.peano_ind; intros.
+      - repeat (discriminate || reflexivity || contradiction || destruct y).
+      - rewrite <-Pos.add_1_r in H.
+        assert (H2: Pos.succ x = (Pos.succ y - 1)%positive); try lia.
+Qed.
+
+Lemma pos_exp_double:
+  forall p, 2 ^ (N.double p) = 4 ^ p.
+Proof.
+  intro. rewrite N.double_spec.
+  apply N.pow_mul_r.
+Qed.
+
+Lemma Pos_succ_mul:
+  forall a b c, N.pos (a * (Pos.succ b * c)) = N.pos a * (N.pos c + N.pos b * N.pos c).
+Proof.
+  intros.
+  apply N.eq_stepl with (x:=N.pos a * (N.succ (N.pos b) * N.pos c)); try reflexivity.
+  assert (H: N.succ (N.pos b) * N.pos c = N.pos c + N.pos b * N.pos c) by lia.
+  rewrite H. reflexivity.
+Qed.
+(*  2 * (Pos.succ x * 2 ^ p)  *)
+
+Lemma Nshiftr_mono_lt_helper:
+  forall x p, N.pos (x * 2 ^ p)~0 < N.pos (x * 2 ^ p~0)~0.
+Proof.
+    assert (H1: forall p':positive, xO p' = (2*p')%positive) by reflexivity.
+    assert (H2: forall a b c : positive, N.pos (a * b ^ c)%positive =
+                                       (N.pos a) * (N.pos b) ^ (N.pos c))
+            by reflexivity.
+    induction x using Pos.peano_ind; intros; simpl.
+    - rewrite H1, (H1 (2 ^ p~0)%positive).
+      rewrite H2. rewrite H2.
+      rewrite <-(N.mul_lt_mono_pos_l 2); try lia.
+      apply N.pow_lt_mono_r; try lia.
+    - assert (H3: forall p', N.pos (2^p') = N.pos 2 ^ N.pos p') by reflexivity.
+      rewrite H1, (H1 (Pos.succ x * 2 ^ p~0)%positive).
+      rewrite Pos_succ_mul, Pos_succ_mul.
+      rewrite <-N.mul_lt_mono_pos_l; try lia.
+      apply N.add_lt_mono.
+      rewrite H3, H3.
+      rewrite <-N.pow_lt_mono_r_iff; try lia.
+      rewrite <-N.mul_lt_mono_pos_l; try lia.
+      rewrite H3, H3, <-N.pow_lt_mono_r_iff; try lia.
+Qed.
+
+Lemma Nshiftr_mono_lt:
+  forall x y shift,
+    x < y * 2 ^ shift -> x >> shift < (y * 2 ^ shift) >> shift.
+Proof.
+  intros. generalize dependent y. generalize dependent x.
+  induction shift using N.peano_ind; simpl; intros x y LT.
+  (* 0 *)
+  assumption.
+  (* N.succ shift *)
+  destruct shift as [|shiftp].
+    (* shift = 0 *)
+    -
+    simpl in *. rewrite N.mul_comm in *. simpl in *. destruct y; try now apply N.nlt_0_r in LT .
+    simpl.
+    destruct x. simpl; try lia.
+    simpl; destruct p0; try reflexivity.
+    apply (N.lt_trans (N.pos p0~0) (N.pos p0~1)) in LT; try lia.
+    now unfold N.lt, N.compare, Pos.compare, Pos.compare_cont in LT |- *.
+    (* shift = N.pos p *)
+    - (*-2--*)
+    assert (IHspec:= IHshift x (2*y)).
+    assert (H1: forall p', y * 2 ^ N.succ (N.pos p') = y * 2 * 2 ^ N.pos p') by
+      (intros; rewrite N.pow_succ_r'; rewrite N.mul_assoc; reflexivity);
+    remember LT as LTog; clear HeqLTog;
+    rewrite H1 in LT; rewrite (N.mul_comm y 2) in LT.
+    apply IHspec in LT.
+    unfold N.shiftr. destruct (N.succ (N.pos shiftp)) as [|shiftp_id] eqn:Eqp; try assumption.
+
+    (* p0 = shift + 1 (shiftp_id) *)
+    (* p0' = shift  (shiftp_pred) *)
+    remember (Pos.pred shiftp_id) as shiftp_pred.
+
+        assert (H2: forall n, N.div2 (2 * n) = n). {
+          intro. clear - n. unfold N.div2. unfold N.mul. destruct n; reflexivity.
+        }
+
+    destruct shiftp_id; try lia; apply Possucc_inj in Heqshiftp_pred; rewrite Pos.succ_pred in Heqshiftp_pred; try lia;
+    inversion Heqshiftp_pred;
+
+    rewrite <-Heqshiftp_pred in Eqp; rewrite Pos_N_succ_comm in Eqp;
+    apply N.succ_inj in Eqp; inversion Eqp as [Eqpp']; subst shiftp_pred;
+    rewrite Pos_N_succ_comm;
+
+    rewrite H1; rewrite (N.mul_comm y 2);
+    rewrite Pos.iter_succ_r, Pos.iter_succ_r;
+    rewrite <-N.mul_assoc.
+
+    + rewrite <-(Pos.succ_pred (shiftp_id~1)%positive) in H0; try lia.
+        rewrite <-Possucc_inj in H0. simpl in H0. subst shiftp.
+        clear Heqshiftp_pred Eqp.
+        rewrite H2 with (n:=y*2^N.pos shiftp_id~0).
+        apply IHshift.
+        rewrite Nshiftl_mono_lt_iff with (shift:=1).
+        assert (H3: y * 2 ^ N.pos shiftp_id~0 << 1 = y * 2 ^ N.pos shiftp_id~1). {
+         assert (HDoubleSucc: forall p, (2 * 2 ^ p = 2 ^ Pos.succ p)%positive). {
+            intros. unfold Pos.pow. rewrite Pos.iter_succ. reflexivity.
+          }
+          unfold N.shiftl. destruct (y) eqn:EQ; try (simpl in LTog; now apply N.nlt_0_r in LTog).
+          simpl.
+        assert (Hmul2: forall p, (2*p = p~0)%positive) by reflexivity.
+          rewrite <-Hmul2; clear Hmul2.
+          rewrite Pos.mul_assoc, (Pos.mul_comm 2%positive p), <-Pos.mul_assoc, HDoubleSucc.
+          simpl (Pos.succ shiftp_id~0). reflexivity.
+        }
+        rewrite H3. remember x as xog; remember y as yog; rewrite Heqxog, Heqyog in *.
+
+        clear IHshift IHspec H1 H2 H3.
+
+        destruct x as [|xp]; destruct y as [|yp]; simpl in *; try (discriminate || constructor).
+          destruct xp as [xp | xp |]; destruct yp as [yp | yp |];
+          try (apply N.lt_le_trans with (m:= N.pos xp~1); simpl (_ << _); lia);
+          simpl (_ << 1); try (apply N.lt_le_trans with (m:=1); lia).
+      + rewrite H2 with (n:=y*2^N.pos shiftp).
+        apply IHshift.
+        rewrite Nshiftl_mono_lt_iff with (shift:=1).
+        rewrite Pospred_inj, Pos.pred_succ in H0; try lia; subst shiftp.
+        clear - LT LTog IHshift.
+
+        assert (Hmul2: forall p, (2*p = p~0)%positive) by reflexivity.
+        assert (H: forall x shift, N.pos (x * 2 ^ shift~0) = N.pos (x * 2 ^ Pos.pred_double shift)~0). {
+          clear - Hmul2. intros. assert (H1:forall p, N.pos (2*p) = N.pos (p~0)%positive) by reflexivity.
+          rewrite <-H1. rewrite Pos.mul_assoc, (Pos.mul_comm 2 x).
+          assert (H2: forall p, (2 * 2 ^ p = 2 ^ Pos.succ p)%positive). {
+            intros. unfold Pos.pow. rewrite Pos.iter_succ.
+            now rewrite Hmul2.
+          }
+          rewrite <-Pos.mul_assoc.
+          rewrite H2 with (p:=Pos.pred_double shift).
+          rewrite Pos.succ_pred_double. reflexivity.
+        }
+        destruct x as [|xp]; destruct y as [|yp]; simpl in LTog |- *; try (discriminate || constructor).
+          destruct xp as [xp | xp |]; destruct yp as [yp | yp |];
+          try (apply N.lt_le_trans with (m:= N.pos xp~1); simpl (_ << _); lia);
+          simpl (_ << 1); try (apply N.lt_le_trans with (m:=1); lia).
+        all: try (apply N.lt_le_trans with (m:=N.pos xp~1); try lia;
+        rewrite <-H; now apply N.lt_le_incl).
+        all: try (rewrite <-H; assumption).
+Qed.
+
+Lemma Nshiftr_mono_le:
+  forall x y shift,
+    x <= y * 2 ^ shift -> x >> shift <= (y * 2 ^ shift) >> shift.
+Proof.
+  intros. destruct (N.lt_trichotomy (x) (y * 2 ^ shift)) as [LT|[EQ|GT]];
+    [ | | apply N.lt_gt in GT; unfold N.gt, N.le in * |-; contradiction].
+  clear H; apply N.lt_le_incl, Nshiftr_mono_lt; assumption.
+  clear H.
+  subst x; reflexivity.
+Qed.
+
+(* Useful:
+N.succ_inj: ∀ n1 n2 : N, N.succ n1 = N.succ n2 → n1 = n2
+N.pow_succ_r': ∀ a b : N, a ^ N.succ b = a * a ^ b
+N.pow_mul_r: ∀ a b c : N, a ^ (b * c) = (a ^ b) ^ c
+Pos.succ_pred: ∀ p : positive, p ≠ 1%positive → Pos.succ (Pos.pred p) = p
+Possucc_inj2
+     : ∀ x y : positive, x = y → Pos.succ x = Pos.succ y
+Pos_N_succ_comm: ∀ p : positive, N.pos (Pos.succ p) = N.succ (N.pos p)
+*)
+
+Theorem setmem_split_swap:
+  forall w e i j m a v (LEN: i+j < 2 ^ w), setmem w e (i+j) m a v =
+    match e with BigE => setmem w e i (setmem w e j m (a+i) v) a (N.shiftr v (Mb*j))
+               | LittleE => setmem w e i (setmem w e j m (a+i) (N.shiftr v (Mb*i))) a (v mod 2^(Mb*i))
+    end.
+Proof.
+  intros. rewrite setmem_split. rewrite setmem_swap. rewrite setmem_swap with (len2:=j).
+  reflexivity.
+  all: apply noverlap_sum; rewrite msub_diag, N.add_0_r; now apply N.lt_le_incl.
+Qed.
+
+Theorem getmem_setmem:
+  forall w e len m a v (LE: len <= 2^w),
+  getmem w e len (setmem w e len m a v) a = v mod 2^(Mb*len).
+Proof.
+  intros until len. eenough (H:_). revert len w.
+  induction len using N.peano_ind; intros.
+    rewrite N.mul_0_r, N.mod_1_r. apply getmem_0.
+    rewrite setmem_succ, getmem_succ. destruct e;
+      rewrite IHlen by (etransitivity; [ apply N.le_succ_diag_r | exact LE ]);
+      rewrite setmem_frame, update_updated by (left; clear IHlen; revert len w a LE; exact H);
+      rewrite !mp2_mod_mod;
+      rewrite <- xbits_split_0; rewrite N.mul_succ_r.
+
+      apply xbits_0_i.
+
+      rewrite N.add_comm. apply xbits_0_i.
+
+  clear. intros.
+  rewrite <- N.add_1_r, msub_mod_l, msub_add_distr, msub_diag, msub_0_l by reflexivity.
+  apply N.succ_le_mono. etransitivity. apply LE.
+  destruct w as [|w]. reflexivity.
+  rewrite (N.mod_small 1) by (apply N.pow_gt_1; [ reflexivity | discriminate 1 ]).
+  rewrite N.mod_small.
+    rewrite N.sub_1_r, mp2_succ_pred. reflexivity.
+    apply N.sub_lt; [|reflexivity].
+      change 1 with (N.succ 0). apply N.le_succ_l, mp2_gt_0.
+Qed.
+
+Corollary msbits_indexed_section_contained:
+  forall m n, (m Ⓑ[ n ] >> 6 << 3) + 8 <= 32.
+Proof.
+  intros.
+  change 32 with ((3 << 3) + 8).
+  rewrite <- N.add_le_mono_r.
+  apply Nshiftl_mono.
+  change 3 with (N.pred ((4 * 2^6) >> 6)).
+  apply N.lt_le_pred.
+  apply Nshiftr_mono_lt. change (4 * 2 ^ 6) with 256.
+  apply getmem_bound.
+Qed.
+
+Lemma nilfree_lte :
+  ∀ mem accept_ptr j len,
+  nilfree mem accept_ptr j /\ mem Ⓑ[ accept_ptr + len ] = 0
+  -> j <= len.
+Proof.
+  intros mem accept_ptr j len [J Len].
+  unfold nilfree in J.
+  specialize (N.le_gt_cases j len); intro Disj.
+  destruct Disj as [Lte | Gt].
+  assumption.
+  specialize J with len. apply J in Gt. rewrite Len in Gt. now contradiction Gt.
+Qed.
+
+Lemma nilfree_shrink :
+  ∀ mem p x y
+    (NILFREE : nilfree mem p x)
+    (LT : y < x),
+  nilfree mem p y.
+Proof.
+  intros. unfold nilfree in NILFREE; unfold nilfree.
+  intros. apply NILFREE. apply (N.lt_trans i y x); repeat assumption.
+Qed.
+
+
+Lemma bla:
+  forall w e m a1 a2 n v,
+  msub w a1 a2 > n ->
+  msub w a2 a1 > n ->
+    getmem w e n (setmem w e n m a2 v) a1 = getmem w e n m a1.
+Proof.
+  intros.
+  apply getmem_noverlap.
+  clear - H H0.
+  apply sep_noverlap; try (left; lia || right; lia).
+Qed.
+
+Lemma getmem_shiftr8__getmem':
+  forall w len m a,
+  (getmem w LittleE len m a) >> (N.pos mem_bits) =
+  getmem w LittleE (N.pred len) m (N.succ a).
+Proof.
+  intros. destruct len using N.peano_ind. reflexivity.
+  rewrite getmem_succ.
+  rewrite N.shiftr_lor.
+  assert (H: IL_arm8.Mb = N.pos mem_bits). reflexivity. rewrite <-H.
+  enough (m (a mod 2 ^ w) mod 2 ^ IL_arm8.Mb >> IL_arm8.Mb = 0).
+  rewrite H0, N.lor_0_l. rewrite N.shiftr_shiftl_r. simpl.
+  rewrite N.pred_succ. reflexivity.
+  lia.
+  apply shiftr_low_pow2. apply N.mod_lt. lia.
+Qed.
+
+Lemma getmem_shiftr8:
+  forall w len m a bytes,
+  (getmem w LittleE len m a) >> bytes * (N.pos mem_bits) =
+  getmem w LittleE (N.iter bytes N.pred len) m (bytes + a).
+Proof.
+  intros. generalize dependent a. generalize dependent len. generalize dependent bytes.
+  induction bytes using N.peano_ind.
+  - intros. simpl. reflexivity.
+  - intros. rewrite N.mul_comm. rewrite N.mul_succ_r.
+    rewrite N.add_comm. rewrite <-N.shiftr_shiftr.
+    rewrite getmem_shiftr8__getmem'. rewrite N.mul_comm, (IHbytes (N.pred len) (N.succ a)).
+    rewrite N.add_succ_r, N.add_succ_l. rewrite N.iter_succ_r. reflexivity.
+Qed.
+
+Lemma brute_bitmap_lookup_eq_bit:
+  forall  str_ptr sp m L,
+   (m Ⓠ[ sp + (m Ⓑ[ str_ptr + L ] >> 6 << 3) ] >> m Ⓑ[ str_ptr + L ] mod 64) mod 2 =
+     bit m sp (m Ⓑ[ str_ptr + L ]).
+Proof.
+  intros.
+  unfold bit.
+  assert (BOUND:=getmem_bound 64 LittleE 1 m (str_ptr + L)); change (2 ^ (IL_arm8.Mb * 1)) with 256 in BOUND.
+  remember (m Ⓑ[ str_ptr + L ]) as char. unfold xbits. psimpl.
+  destruct char. psimpl; reflexivity.
+  repeat (discriminate || destruct p); clear BOUND Heqchar.
+  all:psimpl.
+  all: try (match goal with
+  | [ |- N.shiftr _ ?SHIFT = N.shiftr _ ?S ] =>
+        change SHIFT with (7 * 8 + S) ||
+        change SHIFT with (6 * 8 + S) ||
+        change SHIFT with (5 * 8 + S) ||
+        change SHIFT with (4 * 8 + S) ||
+        change SHIFT with (3 * 8 + S) ||
+        change SHIFT with (2 * 8 + S) ||
+        change SHIFT with (1 * 8 + S)
+  end; rewrite <-N.shiftr_shiftr; rewrite getmem_shiftr8;
+    simpl N.iter; psimpl; reflexivity
+  ).
+  all: try reflexivity.
+  all: try (match goal with
+  | [ |- N.modulo (N.shiftr _ ?SHIFT) _ = N.modulo (N.shiftr _ ?S) _ ] =>
+        change SHIFT with (7 * 8 + S) ||
+        change SHIFT with (6 * 8 + S) ||
+        change SHIFT with (5 * 8 + S) ||
+        change SHIFT with (4 * 8 + S) ||
+        change SHIFT with (3 * 8 + S) ||
+        change SHIFT with (2 * 8 + S) ||
+        change SHIFT with (1 * 8 + S)
+  end; rewrite <-N.shiftr_shiftr; rewrite getmem_shiftr8;
+    simpl N.iter; psimpl; reflexivity
+  ).
+  all: try (match goal with
+  | [ |- N.modulo (N.shiftr _ ?SHIFT) _ = N.modulo _ _ ] =>
+        change SHIFT with (7 * 8) ||
+        change SHIFT with (6 * 8) ||
+        change SHIFT with (5 * 8) ||
+        change SHIFT with (4 * 8) ||
+        change SHIFT with (3 * 8) ||
+        change SHIFT with (2 * 8) ||
+        change SHIFT with (1 * 8)
+  end; rewrite getmem_shiftr8;
+    simpl N.iter; psimpl; reflexivity
+  ).
+Qed.
+
+Lemma map_checker_n_helper:
+  forall m bitmap_ptr str_ptr L
+  (BC : (m Ⓑ[ str_ptr + L ]) ≠ 0)
+  (BC0 : (((m Ⓠ[ bitmap_ptr + (((m Ⓑ[ str_ptr + L ]) >> 6) << 3) ]) >>
+        ((m Ⓑ[ str_ptr + L ]) mod 64)) mod 2) ≠ 0)
+  ,
+  (bit m bitmap_ptr (m Ⓑ[ str_ptr + L ])) = 1.
+Proof.
+  intros. rewrite brute_bitmap_lookup_eq_bit in BC0. unfold bit in *.
+  psimpl. unfold xbits in *. psimpl. psimpl in BC0. remember (m Ⓑ[ bitmap_ptr + (m Ⓑ[ str_ptr + L ] >> 3) ] >>
+       m Ⓑ[ str_ptr + L ] mod 8) as x. clear - BC0.
+  enough (H: x mod 2 <> 0 -> x mod 2 = 1).
+  auto. clear BC0.
+
+  intros. rewrite <- N.bit0_mod in *. destruct x; try contradiction.
+  destruct p; simpl; try (reflexivity || contradiction).
+Qed.
+
+
+
+
+(* * * * * * * * * * * * * * * * * * * * * * * * *)
+(*                                               *)
+(*                 From Shreya                   *)
+(*                                               *)
+(* v v v v v v v v v v v v v v v v v v v v v v v *)
+
+(*
+Lemma changed_mem_incr_other_way bitmap_ptr accept_ptr m :
+forall c L
+(LT: c < 2^8) (*some byte that represents a character*)
+(NN: ∀ i : N, i < L → m Ⓑ[ accept_ptr + i ] ≠ 0)
+(BMAP: forall i, i<256 -> (bitmap_value_alt m bitmap_ptr i) <-> (exists j, j<L -> ( m Ⓑ[ accept_ptr + j ] = i)))
+(IMPT: (c = m Ⓑ[ accept_ptr + L ] /\ exists i, i<L -> m Ⓑ[ accept_ptr + i ] = c) \/ c <> m Ⓑ[ accept_ptr + L ]
+)
+,
+
+((bit_new2 (changed_mem bitmap_ptr accept_ptr L m m) bitmap_ptr (c)) = true) ->
+(bit_new2 m bitmap_ptr (c) = true)
+.
+
+Proof. do 6 intro.
+unfold bit_new2, changed_mem.
+destruct IMPT.
+destruct H as [IMPT1 IMPT2].
+apply <- BMAP in IMPT2.
+intro.
+unfold bitmap_value_alt in IMPT2. unfold bit_new2 in IMPT2. assumption. lia.
+
+rename H into IMPT.
+(*1 << m Ⓑ[ accept_ptr + L ] mod 64 .| m Ⓠ[ bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3) ]*)
+destruct (overlap_dec 64 (bitmap_ptr + c) 1 (bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3)) 8).
+rename o into H0.
+unfold overlap in H0.
+
+
+destruct H0 as [i' [j [C1 [C2 EQ]]]]. assert (i' < 1 -> i' = 0). lia. apply H in C1.
+rewrite C1 in EQ.
+
+(*mod plus bound assumptions*)
+(*mod_plus 0 to plus 0*)
+assert(bitmap_ptr + c ⊕ 0 = bitmap_ptr + c + 0). admit.
+rewrite H0 in EQ. psimpl in EQ. clear H0.
+(*mod_plus j to plus j*)
+assert(bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3) ⊕ j = bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3) + j). admit.
+rewrite H0 in EQ. rewrite EQ.
+clear H0.
+(*write to testbit assumption*)
+
+assert(exists b, b + 1 + j = 8). admit.
+destruct H0 as [b H3].
+rewrite getmem_setmem_xbits_helper with (j:= b). (*FIXME: can apply xbits without the helper.*)
+rewrite getmem_setmem_xbits.
+unfold IL_arm8.Mb. unfold ARM8Arch.mem_bits.
+rewrite N.lor_comm.
+rewrite N.shiftl_1_l.
+
+rewrite testbit_xbits.
+unfold N.succ.
+
+
+rewrite xbits_nested.
+replace (8 * j + 1) with (N.succ (8 * j)).
+rewrite <- N.setbit_spec'.
+remember (8*j) as g.
+rewrite <- testbit_xbits.
+
+
+rewrite N.setbit_neq.
+
+
+rewrite Heqg.
+rewrite testbit_xbits.
+replace (N.succ (8 * j)) with (8*j + 1).
+rewrite xbyte_to_xbit_2.
+
+rewrite <- testbit_xbits. intro. assumption.
+
+admit. (*8 * j + 1 = N.succ (8 * j)*)
+admit. (*i think this is provable just havent gotten to it yet*)
+lia.
+lia.
+admit. admit. lia.
+
+(*write sm that says not (overlap ) = noverlap?*)
+rewrite noverlap in n. rewrite <- noverlap in n.
+apply noverlap_symmetry in n.
+
+
+rewrite getmem_frame. intro. assumption.
+apply noverlap_sep in n. assumption.
+apply noverlap_symmetry in n.
+apply noverlap_sep in n. assumption.
+
+Abort.
+*)
+
+(* ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ *)
+(*                                               *)
+(*              END OF From Shreya               *)
+(*                                               *)
+(* * * * * * * * * * * * * * * * * * * * * * * * *)
+
+
+
+
+
+
+
+
+
+
+(* * * * * * * * * * * * * * * * * * * * * * * * *)
+(*                                               *)
+(*             Experimental Section              *)
+(*                                               *)
+(* v v v v v v v v v v v v v v v v v v v v v v v *)
+
+
+Lemma byte0_bits0:
+  ∀ m bp i, i<8 /\ m Ⓑ[ bp ] = 0 -> bit m bp i = 0.
+Proof.
+  intros. destruct H.
+  unfold bit. unfold xbits. psimpl. destruct i.
+    psimpl. rewrite H0. psimpl. reflexivity.
+    rewrite H0. psimpl. reflexivity.
+Qed.
+
+(* Induction Example: Picinary_theory.getmem_bound *)
+(* First version is not quite right because with len = 0
+   we're not getting any bits out of memory, but we're
+   claiming `bit m a 0 = 0`, which we can't guarantee.
+   We can't guarantee something given nothing.
+
+   The real base case we have in mind is when len = 1.
+   This gives us information about, namely it equals 0
+   and for this we can show that all bits are 0. See
+   the lemma `byte0_bits0` above. *)
+Lemma val0_bits0_v1:
+  ∀ len m a, getmem 64 LittleE len m a = 0 -> ∀ i, i < 2^(Mb*len) -> bit m a i = 0.
+Proof.
+  induction len using N.peano_ind; intros. simpl in H0. destruct i.
+Abort.
+
+
+Lemma val0_bits0_v2:
+  ∀  len m a, getmem 64 LittleE len m a = 0 /\ 0 < len
+    ->  ∀ i, i < 2^(Mb*len) -> bit m a i = 0.
+Proof.
+  induction len using N.peano_ind; intros; destruct H. inversion H1.
+  unfold bit. unfold xbits.
+Abort.
+
+
+Lemma bitmap_0:
+  ∀ m sp ap, m Ⓨ[ sp ] = 0 -> bitarray_nstr m sp ap 0.
+Proof.
+  intros.
+  unfold bitarray_nstr.
+
+  intros. split; intros.
+  unfold bit in H1. unfold xbits in H1.
+Admitted.
+(*
+  This lemma is for proving that the bit corresponding to character j is 1 in
+  the memory updated by the bitmap_update function. This is the function which
+  we've defined to reflect the strspn implementation.
+*)
+(*
+Lemma bit_update :
+  forall m m' bmp acpt acpt_len j i
+    (H : i < 256)
+    (ACPT_LEN : strlen m acpt acpt_len)
+    (NO : ¬ overlap 64 acpt acpt_len bmp 32)
+    (BC : m Ⓑ[ acpt + j ] ≠ 0)
+    (MEM' : m' = bitmap_update m bmp acpt (S (N.to_nat j)))
+    (J : j < acpt_len)
+    (M : m' Ⓑ[ acpt ⊕ j ] = i),
+  0 <
+  bit
+    (m' [Ⓠ bmp + (m Ⓑ[ acpt + j ] >> 6 << 3)
+     := 1 << m Ⓑ[ acpt + j ] mod 64 .| m Ⓠ[ bmp + (m Ⓑ[ acpt + j ] >> 6 << 3) ] ]) bmp
+    i.
+Proof.
+  intros.
+  induction j using N.peano_ind.
+  (* psimpl does not simplify + 0 *)
+  psimpl. rewrite N.add_0_r. psimpl in M. simpl (S (N.to_nat 0)) in MEM'.
+  unfold bitmap_update in MEM'.
+  assert (NF0: nilfree m acpt 0). {
+    apply nilfree_le_len with (len:=acpt_len); try easy.
+    apply N.lt_le_incl; try easy.
+  }
+  apply nilfree_iff in NF0. simpl (N.to_nat 0) in NF0.
+  rewrite NF0 in MEM'; simpl (acpt + N.of_nat 0) in MEM'; rewrite N.add_0_r in MEM'.
+  unfold nilfree_b in MEM'.
+  assert (NFB: nilfree_b m acpt 1 = true). {
+    rewrite <-(Nat2N.id 1). simpl (N.of_nat 1).
+    rewrite <-nilfree_iff.
+    simpl (acpt + N.of_nat 0) in MEM'; rewrite N.add_0_r in MEM'.
+    apply nilfree_le_len with (len:=acpt_len); try easy.
+
+(*
+    erewrite (nilfree_noverlap m acpt 1 (bmp + (m Ⓑ[ acpt + N.of_nat 0 ] >> 6 << 3)) 4 64 _ _ ).
+  }rewrite nilfree_noverlap in MEM'.
+  simpl in MEM'.
+  apply (getmem_noverlap _ _ _ in M.
+  rewrite M.
+
+  admit
+*)
+Abort.
+*)
+
+Lemma bit_update_preservation:
+  forall m a len i_set i
+  (LEN : len < 2 ^ 64)
+  (NEQ : i <> i_set)
+  (LTI : i < len * 8)
+  (LTISET : i_set < len * 8),
+  bit (setmem 64 LittleE len m a (getmem 64 LittleE len m a .| (1 << i_set))) a i
+  = bit m a i.
+Proof.
+  intros.
+  assert (NZLEN: len <> 0) by (intro; subst len; simpl in *; now apply N.nlt_0_r in LTI).
+
+  unfold bit. remember (a + (i >> 3)) as a_i; remember (a + (i_set >> 3)) as a_i_set.
+  destruct (overlap_dec 64 a_i 1 a_i_set 1) as [HOverlap | HNOverlap].
+  (* bit set and read overlap *)
+  admit.
+  (* bit set and read do not overlap *)
+  enough (H: ((setmem 64 LittleE len m a ((getmem 64 LittleE len m a) .| (1 << i_set)))
+    Ⓑ[ a_i ]) = (m Ⓑ[ a_i ])); try now rewrite H.
+  assert (MEMSPLIT1: len = (1+(i>>3)) + (len-(1+(i>>3)))). {
+    rewrite (add_sub_cancel (1+(i>>3)) len).
+      reflexivity.
+      apply Nshiftr_mono_lt with (shift:=3) in LTI. rewrite <-N.shiftl_mul_pow2 in LTI.
+      rewrite N.shiftr_shiftl_r in LTI; simpl (len >> (3-3)) in LTI; try lia.
+  }
+  Definition setmem' a len m v := setmem 64 LittleE len m a v.
+  assert (SETMEM': forall len m a v, setmem 64 LittleE len m a v = setmem' a len m v) by reflexivity.
+(*   CONTINUE: do twice: split the memory write and destruct on whether the inner
+    memory write had the 1<<i_index overlap it. If it didn't use getmem_noverlap to show it
+    is the same write and then show it had no effect on memory. If it did overlap show a contradiction.
+    Doing this for all bytes above and below the one we're reading simplifies to showing
+    the byte is unchanged. *)
+
+  rewrite MEMSPLIT1. rewrite setmem_split; try lia.
+  rewrite getmem_noverlap.
+  2: {
+    rewrite Heqa_i, MEMSPLIT1. apply noverlap_sum.
+    psimpl. lia.
+  }
+  rewrite N.add_comm. rewrite setmem_split_swap; try lia.
+  rewrite getmem_noverlap.
+  2: {
+    rewrite Heqa_i. apply noverlap_sum. psimpl.
+    apply Nshiftr_mono_lt with (shift:=3) in LTI.
+
+(*
+N.shiftr_shiftl_l: ∀ a n m : N, m <= n → a << n >> m = a << n - m
+N.shiftr_div_pow2: ∀ a n : N, a >> n = a / 2 ^ n
+*)
+Abort.
+
+(*
+  Kevin:
+    This lemma corresponds to the bitmap-maker n'th iteration proof. Whatever
+    it takes to prove the conclusion will be added to the invariant.
+*)
+Lemma bitarray_nstr_incr:
+forall m acpt acpt_len bmp bmp_i (L : N)
+  (* Current Hypothesis Space : *)
+  (ACPT_LEN : strlen m acpt acpt_len)
+  (NO : ¬ overlap 64 acpt acpt_len bmp 32)
+  (BITNSTR : bitarray_nstr m bmp acpt L)
+  (BC : m Ⓑ[ acpt + L ] ≠ 0)
+  (BMPI : m Ⓑ[ acpt + L ] = bmp_i)
+  (* Experimental Hypotheses : *)
+  (L_LT_LEN : L < acpt_len) (* provable by the strlen_incr lemma *)
+  (NF : nilfree m acpt L)
+,
+(* (m [Ⓠ bmp + (m Ⓑ[ acpt + L ] >> 6 << 3)
+   := 1 << m Ⓑ[ acpt + L ] mod 64
+      .| m Ⓠ[ bmp + (m Ⓑ[ acpt + L ] >> 6 << 3) ] ])
+  *)
+  (* Simplified for now *)
+bitarray_nstr
+  (m [Ⓨ bmp := (m Ⓨ[ bmp ] .| (1 << (bmp_i mod 256)) )])
+  bmp acpt
+  (L + 1).
+Proof.
+  intros. unfold bitarray_nstr. split. unfold bitarray_nstr in BITNSTR.
+    intros; destruct (i =? bmp_i) eqn:Eqi.
+      apply Neqb_ok in Eqi. subst i. exists L; repeat split.
+        lia. rewrite <-nilfree_noverlap.
+          unfold nilfree. intro. destruct (i =? L) eqn:Heqi; (apply Neqb_ok in Heqi || apply N.eqb_neq in Heqi).
+            subst i. intro; symmetry; assumption.
+            intro. unfold nilfree in NF. specialize (NF i). destruct (N.lt_trichotomy i L) as [LT | [EQ | GT]];
+              (now apply NF in LT ||
+              contradiction ||
+              lia).
+            apply noverlap_shrink with (a1:=acpt) (len1:=acpt_len);
+              (rewrite msub_diag, N.add_0_l; lia) || assumption.
+            rewrite getmem_noverlap. assumption.
+          apply noverlap_index with (a1:=acpt) (len1:=acpt_len); (assumption || lia).
+      apply N.eqb_neq in Eqi; specialize (BITNSTR i); apply BITNSTR in H; clear BITNSTR. destruct H as [BitImpChar CharImpBit].
+    destruct BitImpChar as [j [Lt  [NFj  Charj]]]. admit. exists j; repeat split; try lia.
+    apply nilfree_noverlap. apply noverlap_shrink with (a1:=acpt) (len1:=acpt_len).
+Abort.
+
+
+
+(* ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ *)
+(*                                               *)
+(*          END OF Experimental Section          *)
+(*                                               *)
+(* * * * * * * * * * * * * * * * * * * * * * * * *)
