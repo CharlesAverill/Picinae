@@ -404,8 +404,15 @@ Fixpoint program_of_list l :=
 Definition lift_via_list (f : store -> addr -> N) (prog_start prog_end : N) : program :=
     program_of_list (il_list f prog_start prog_end).
 
-Definition lift_riscv (f : store -> addr -> N) s a :=
-    Some (4, rv2il a (rv_decode (f s a))).
+Definition lift_riscv (f : addr -> N) (s : store) (a : addr) :=
+    Some (4, rv2il a (rv_decode (f a))).
+
+Theorem lift_riscv_welltyped:
+    forall p, welltyped_prog rvtypctx (lift_riscv p).
+Proof.
+    intros s a a0. unfold lift_riscv.
+    exists rvtypctx. apply welltyped_rv2il.
+Qed.
 
 (* Timing machinery *)
 Definition cycle_count_of_trace (time_of_addr : store -> addr -> N) (t : trace) : N :=
