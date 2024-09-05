@@ -61,6 +61,7 @@ Proof.
     all: time repeat (discriminate || contradiction || reflexivity || destruct p0).
 Qed.
 
+
 (* Define what it means for a nil-terminated string to not have internal nils. *)
 Definition nilfree mem p len :=
   ∀ i, i < len -> 0 <> mem Ⓑ[ p + i ].
@@ -103,6 +104,19 @@ Proof.
   - subst i. congruence.
 Qed.
 
+Definition mem_region_unchanged m m' p len :=
+  ∀ i, i < len ->  m Ⓑ[ p + i ] = m' Ⓑ[ p + i ].
+
+Lemma mem_eq_region_unchanged :
+  forall m p len, mem_region_unchanged m m p len.
+Proof.
+  intros. unfold mem_region_unchanged. intros. reflexivity.
+Qed.
+
+(* Do we even want this? *)
+Definition mem_string_unchanged m m' p :=
+  exists len:N, strlen m p len -> mem_region_unchanged m m' p (N.succ len).
+
 (* Define a "correct" bit array.
 
    Note: `nilfree m p __(1+j)__` so that p[j] != 0.
@@ -129,6 +143,18 @@ Proof.
   intros. unfold strlen in LEN.
   apply N.lt_eq_cases in LE. destruct LE as [LT | EQ]. easy.
   destruct LEN as [NF NIL]. now subst k.
+Qed.
+
+(* Unused, but fun *)
+Lemma strlen_unique :
+  forall m p len1 len2,
+    strlen m p len1 -> strlen m p len2 -> len1 = len2.
+Proof.
+  unfold strlen. unfold nilfree. intros.
+  destruct H as [NF1 Nil1]; destruct H0 as [NF2 Nil2].
+  destruct (N.lt_trichotomy len1 len2) as [H | [Eq | H]]; try assumption; exfalso.
+  - specialize (NF2 len1); apply NF2 in H. congruence.
+  - specialize (NF1 len2); apply NF1 in H; congruence.
 Qed.
 
 Lemma nilfree_le_len :
