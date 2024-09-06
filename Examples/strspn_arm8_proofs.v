@@ -82,46 +82,24 @@ Proof.
 Qed.
 
 
-(* accept string contains all characters of str's i-length prefix.
+(* acpt string contains all characters of str's i-length prefix.
  *)
-Definition post_satis_i (i:N) (m:addr -> N) (str_ptr:addr) (accept_ptr:addr):=
+Definition post_satis_i (i:N) (m:addr -> N) (str_ptr:addr) (acpt_ptr:addr):=
   ∀j, j < i ->
-  (∃ k : N, nilfree m accept_ptr (k + 1)
-    ∧ m Ⓑ[ accept_ptr ⊕ k ] = m Ⓑ[ str_ptr ⊕ j ]).
-(*
-Lemma npred_1_plus_i : forall i, N.pred (1+i) = i.
-Proof.
-Admitted.
-
-Lemma lt_succ_imp_lte_pred : forall j i, j < 1 + i -> j <= i.
-Proof.
-  intros.
-  apply N.lt_le_pred in H. rewrite npred_1_plus_i in H.
-  assumption.
-Qed.
-
-Lemma le_imp_lt_eq: forall i x, i <= x -> i < x \/ i = x.
-Proof. Admitted.
-
-Lemma byte_upper_bound: forall i mem, mem Ⓑ[ i ] < 256.
-Proof.
- intros.
- apply (getmem_bound 64 LittleE 1 mem i).
-Qed.
-*)
-
+  (∃ k : N, nilfree m acpt_ptr (k + 1)
+    ∧ m Ⓑ[ acpt_ptr ⊕ k ] = m Ⓑ[ str_ptr ⊕ j ]).
 
 (* If the post condition is satisfied for a prefix of length i, and the next character (index i)
    is not zero and in the bitmap then the post condition is satisfied for a prefix of length i+1
  *)
 Lemma post_satis_incr :
-  ∀ i char mem str_ptr accept_ptr bitmap_ptr
-     (POST:   post_satis_i i mem str_ptr accept_ptr   )
-     (BITMAP: bitarray_str mem bitmap_ptr accept_ptr  )
+  ∀ i char mem str_ptr acpt_ptr bitmap_ptr
+     (POST:   post_satis_i i mem str_ptr acpt_ptr   )
+     (BITMAP: bitarray_str mem bitmap_ptr acpt_ptr  )
      (NEXT:   mem Ⓑ[ str_ptr ⊕ i ] = char            )
      (CHAR_BIT:     bit mem bitmap_ptr char = 1       )
      (CHAR_NOT_NIL: 0 < char                          ),
-     post_satis_i (1+i) mem str_ptr accept_ptr.
+     post_satis_i (1+i) mem str_ptr acpt_ptr.
 Proof.
   intros.
   remember BITMAP as BITMAP2. clear HeqBITMAP2.
@@ -135,18 +113,18 @@ Proof.
     rewrite CHAR_BIT in H0; destruct H0. apply N.lt_0_1. subst j.
     destruct H0 as [NILFREE CHAR].
     exists x. split.
-    assert (H: ∃ j : N, nilfree mem accept_ptr j ∧ mem Ⓑ[ accept_ptr ⊕ j ] = char).
+    assert (H: ∃ j : N, nilfree mem acpt_ptr j ∧ mem Ⓑ[ acpt_ptr ⊕ j ] = char).
       { exists x. split; repeat assumption.
-        apply (nilfree_shrink mem accept_ptr (1+x) x). assumption. lia. }
+        apply (nilfree_shrink mem acpt_ptr (1+x) x). assumption. lia. }
       rewrite N.add_comm; assumption.
     subst char; assumption.
 Qed.
 
 Lemma bitarray_nstr_str :
-  ∀ len mem accept_ptr bitmap_ptr
-     (BITNSTR: bitarray_nstr mem bitmap_ptr accept_ptr len)
-     (NIL: mem Ⓑ[ accept_ptr + len ] = 0),
-     bitarray_str mem bitmap_ptr accept_ptr.
+  ∀ len mem acpt_ptr bitmap_ptr
+     (BITNSTR: bitarray_nstr mem bitmap_ptr acpt_ptr len)
+     (NIL: mem Ⓑ[ acpt_ptr + len ] = 0),
+     bitarray_str mem bitmap_ptr acpt_ptr.
 Proof.
 unfold bitarray_nstr.
 unfold bitarray_str.
@@ -165,92 +143,108 @@ split.
   split. assumption. rewrite getmem_mod_l in MEM; assumption.
 Qed.
 
-Definition strspn_invs (m:addr->N) (str_ptr accept_ptr sp:addr) (acpt_len:N) (t:trace) :=
+Definition strspn_invs (m:addr->N) (str_ptr acpt_ptr sp:addr) (acpt_len:N) (t:trace) :=
   match t with (Addr a,s)::_ => match a with
 
   (* 0x4130001c: Entry invariant *)
   |  0x4130001c => Some ( s V_MEM64 = Ⓜm /\ m Ⓨ[ sp ] = 0 /\ s R_X0 = Ⓠstr_ptr 
-                          /\ s R_X1 = Ⓠaccept_ptr /\ s R_X2 = Ⓠ (m Ⓑ[ accept_ptr ]) /\ s R_X3 = Ⓠsp)
+                          /\ s R_X1 = Ⓠacpt_ptr /\ s R_X2 = Ⓠ (m Ⓑ[ acpt_ptr ]) /\ s R_X3 = Ⓠsp)
 
-  (* 0x41300054: Degenerative Loop (len(accept)==1) *)
+  (* 0x41300054: Degenerative Loop (len(acpt)==1) *)
   |  0x41300054 => Some(
-     ∃ invariant_loc, invariant_loc = "0x41300054"%string ->
-     ∃ L : N, s V_MEM64 = Ⓜm  /\ s R_X0 = Ⓠstr_ptr /\ s R_X2 = Ⓠ (m Ⓑ[ accept_ptr ]) /\ s R_X1 = Ⓠ(str_ptr ⊕ L) /\
-      m Ⓑ[ accept_ptr ] ≠ 0 /\ m Ⓑ[ 1 + accept_ptr ] = 0 /\
+(*      ∃ invariant_loc, invariant_loc = "0x41300054"%string -> *)
+     ∃ L : N, s V_MEM64 = Ⓜm  /\ s R_X0 = Ⓠstr_ptr /\ s R_X2 = Ⓠ (m Ⓑ[ acpt_ptr ]) /\ s R_X1 = Ⓠ(str_ptr ⊕ L) /\
+      m Ⓑ[ acpt_ptr ] ≠ 0 /\ m Ⓑ[ 1 + acpt_ptr ] = 0 /\
       nilfree m str_ptr L /\
-      ∀ i : N,  i < L → m Ⓑ[ accept_ptr ] = m Ⓑ[ str_ptr + i ])
+      ∀ i : N,  i < L → m Ⓑ[ acpt_ptr ] = m Ⓑ[ str_ptr + i ])
 
   (* 0x4130002c: Map Maker Loop *)
   |  0x4130002c =>  Some(
-     ∃ invariant_loc, invariant_loc = "0x4130002c"%string ->
-     ∃ m' bitmap_ptr L, s R_X3 = Ⓠsp /\ s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(accept_ptr ⊕ L) /\
+(*      ∃ invariant_loc, invariant_loc = "0x4130002c"%string -> *)
+     ∃ m' bitmap_ptr L, s R_X3 = Ⓠsp /\ s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(acpt_ptr ⊕ L) /\
       s R_X6 = Ⓠ1 /\
       s V_MEM64 = Ⓜ m' /\
-      m' Ⓑ[ accept_ptr ] ≠ 0 /\ m' Ⓑ[ 1 + accept_ptr ] ≠ 0 /\
-      strlen m' accept_ptr acpt_len /\ L <= acpt_len /\
-      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_nstr m' bitmap_ptr accept_ptr L /\
-      mem_region_unchanged m m' accept_ptr acpt_len)
+      m' Ⓑ[ acpt_ptr ] ≠ 0 /\ m' Ⓑ[ 1 + acpt_ptr ] ≠ 0 /\
+      strlen m' acpt_ptr acpt_len /\ L <= acpt_len /\
+      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_nstr m' bitmap_ptr acpt_ptr L /\
+      mem_region_unchanged m m' acpt_ptr acpt_len)
 
   (* 0x41300094: Map Maker->Checker Transition
                  Just turn bitarray_nstr to bitarray_str to make
                  the map checker loop simpler. *)
   |  0x41300094 => Some(
-     ∃ invariant_loc, invariant_loc = "0x41300094"%string ->
-     ∃ m' bitmap_ptr L, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(accept_ptr ⊕ L) /\
+(*      ∃ invariant_loc, invariant_loc = "0x41300094"%string -> *)
+     ∃ m' bitmap_ptr L, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(acpt_ptr ⊕ L) /\
       s V_MEM64 = Ⓜ m' /\
-      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m' bitmap_ptr accept_ptr /\
-      mem_region_unchanged m m' accept_ptr acpt_len)
+      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m' bitmap_ptr acpt_ptr /\
+      mem_region_unchanged m m' acpt_ptr acpt_len)
 
   (* 0x41300078: Map Checker Loop *)
   |  0x41300078 => Some(
-     ∃ invariant_loc, invariant_loc = "0x41300078"%string ->
+(*      ∃ invariant_loc, invariant_loc = "0x41300078"%string -> *)
      ∃ m' bitmap_ptr L, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(str_ptr ⊕ L) /\
       s V_MEM64 = Ⓜ m' /\
-      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m' bitmap_ptr accept_ptr /\
-      post_satis_i L m' str_ptr accept_ptr /\
+      s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m' bitmap_ptr acpt_ptr /\
+      post_satis_i L m' str_ptr acpt_ptr /\
       nilfree m' str_ptr L /\
-      mem_region_unchanged m m' accept_ptr acpt_len)
+      mem_region_unchanged m m' acpt_ptr acpt_len)
 
   (* 0x41300068: Return Invariant *)
   |  0x41300068 => Some(
      ∃ invariant_loc, invariant_loc = "0x41300068"%string ->
      ∃ L : N,
-      s R_X0 = ⓆL ∧ post_satis_i L m str_ptr accept_ptr
-                    ∧ ¬ post_satis_i (L+1) m str_ptr accept_ptr)
+      s R_X0 = ⓆL ∧ post_satis_i L m str_ptr acpt_ptr
+                    ∧ ¬ post_satis_i (L+1) m str_ptr acpt_ptr)
   | _ => None
   end | _ => None end.
 
+(* * * * * * * * * *        ~~ Glossary ~~        * * * * * * * * * -)
 
+  str_ptr : N
+      pointer to the string whose prefix is checked
+  acpt_ptr : N
+      pointer to the string whose characters comprise an OK prefix
+  acpt_len : N
+      the length of the string starting at acpt_ptr
+  s : store
+      initial store
+  sp : N
+      stack pointer
+  m : addr -> N
+      memory at the start of execution
+  t : trace
+      execution trace that begins at the entry to the function and
+      ends right before the one of the exit points registered in 
+      strspn_exit is reach (only one exit point registered)
+  s' : store
+      the store when exit point x' is reached
+  x' : exit
+      the exit point that terminates trace t
 
-
-(* Main correctness theorem (and proof): *)
-
-(* TODO:
-      *  Prove the admits...
-*)
+( * * * * * * * * *         ~~ ~~~~~~~~ ~~        * * * * * * * * * *)
 Theorem strspn_partial_correctness:
-  ∀ s str_ptr accept_ptr acpt_len sp m t s' x'
+  ∀ s str_ptr acpt_ptr acpt_len sp m t s' x'
          (* Enter right after "st1" instruction that prepares
             the bitmap. This skips 2 things worth mentioning:
               1) The stackpointer is subtracted 0x20 to make room
                  for the bitmap.
-              2) the first character of 'accept_ptr' is loaded
+              2) the first character of 'acpt_ptr' is loaded
                  into w2. *)
          (ENTRY: startof t (x',s') = (Addr 0x4130001c,s))
          (MDL: models arm8typctx s)
          (MEM: s V_MEM64 = Ⓜm)
          (STR: s R_X0 = Ⓠstr_ptr)
-         (ACPT:  s R_X1 = Ⓠaccept_ptr)
-         (ACPT_LEN: strlen m accept_ptr acpt_len)
-         (NO: ~overlap 64 accept_ptr (N.succ acpt_len) sp 32)
+         (ACPT:  s R_X1 = Ⓠacpt_ptr)
+         (ACPT_LEN: strlen m acpt_ptr acpt_len)
+         (NO: ~overlap 64 acpt_ptr (N.succ acpt_len) sp 32)
          (SP: s R_X3 = Ⓠsp)
          (* Assume the bitmap addressed by X3 is zero'd because
             the lifted "st1" instruction that does this isn't
             implemented. *)
          (BITMAP: m Ⓨ[ sp ] = 0)
-         (CHAR0:  s R_X2 = Ⓠ (m Ⓑ[ accept_ptr ]))
+         (CHAR0:  s R_X2 = Ⓠ (m Ⓑ[ acpt_ptr ]))
 ,
-  satisfies_all musl_armv8_a_strspn_armv8 (strspn_invs m str_ptr accept_ptr sp acpt_len) strspn_exit ((x',s')::t).
+  satisfies_all musl_armv8_a_strspn_armv8 (strspn_invs m str_ptr acpt_ptr sp acpt_len) strspn_exit ((x',s')::t).
 Proof.
 Local Ltac step := time arm8_step.
 intros.
@@ -265,7 +259,7 @@ intros.
   clear - PRE MDL NO ACPT_LEN. rename t1 into t. rename s1 into s.
   (* PRE is the assertion the previous invariant gives us. *)
   destruct_inv 64 PRE.
-  destruct PRE as [MEM [BITMAP_0 [STR [ACPT [ACCPT_0 BMP]]]]].
+  destruct PRE as [MEM [BITMAP_0 [STR [ACPT [ACPT_0 BMP]]]]].
   step. step. step. step.
 
   (* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *)
@@ -303,7 +297,7 @@ intros.
   (* * * * * * * * * * * * * * * * * * * * * * * *)
   (* * *          Loop Iteration 0           * * *)
   (* * * * * * * * * * * * * * * * * * * * * * * *)
-  step. exists "0x41300054"%string. intro LOC.
+  step.
     exists 0. apply Neqb_ok in BC0. psimpl; repeat (split; try easy).
     apply nilfree0.
     intros. apply N.nlt_0_r in H. contradiction.
@@ -312,11 +306,10 @@ intros.
   (* * *          Loop Iteration N           * * *)
   (* * * * * * * * * * * * * * * * * * * * * * * *)
   3: {
-  destruct PRE as [loc [p [MEM [STR_PTR [ACPT_CHAR_0 [LEN [ACPT_0_NNULL [ACPT_1_NULL [NF PREFIX]]]]]]]]]. admit.
-  pose (LOC_PREV := "0x41300054"%string).
+  destruct PRE as [p [MEM [STR_PTR [ACPT_CHAR_0 [LEN [ACPT_0_NNULL [ACPT_1_NULL [NF PREFIX]]]]]]]].
   step. step. step.
   (* SINGLER CHARACTER: Loop Iteration *)
-  step. exists "0x41300054"%string. intro LOC.
+  step.
   apply Neqb_ok in BC.
   exists (p+1). psimpl.
     repeat (split; try easy).
@@ -333,7 +326,7 @@ intros.
   exists "0x41300068"%string. intro LOC.
   exists p. split.
   enough (LSMALL: p mod 2 ^ 64 = p); try now rewrite LSMALL. apply N.mod_small.
-    apply (nflen_lt m str_ptr p (1+accept_ptr)); assumption. split.
+    apply (nflen_lt m str_ptr p (1+acpt_ptr)); assumption. split.
     unfold post_satis_i. intros. exists 0. split.
       psimpl. unfold nilfree. intros. destruct i.
         psimpl; now symmetry.
@@ -362,7 +355,6 @@ intros.
   (* * * * * * * * * * * * * * * * * * * * * * * *)
   step.
   apply N.eqb_neq in BC. apply N.eqb_neq in BC0.
-  exists "0x4130002c"%string. intro LOC.
   (* sp was stored in R_X3 *)
   exists m, sp.
   (* First loop iteration, length should be 0 *)
@@ -374,10 +366,9 @@ intros.
   split.
   apply bitmap_0. assumption.
   apply mem_eq_region_unchanged.
-  destruct PRE as [loc [m' [bitmap_ptr [L [SP [STR_PTR [ACPT_L [X6_EQ_1
-    [MEM' [ACPT_0_NNULL [ACPT_1_NNULL [STRLEN [L_LT_STRLEN [BITMAP_PTR [BITNSTR ACPT_SAME]]]]]]]]]]]]]]]. admit.
+  destruct PRE as [m' [bitmap_ptr [L [SP [STR_PTR [ACPT_L [X6_EQ_1
+    [MEM' [ACPT_0_NNULL [ACPT_1_NNULL [STRLEN [L_LT_STRLEN [BITMAP_PTR [BITNSTR ACPT_SAME]]]]]]]]]]]]]].
 (*   rewrite MEM' in MEM; inversion MEM as [MEM_EQ]; subst m'; clear MEM; rename MEM' into MEM. *)
-  pose (LOC_PREV := "0x4130002c"%string).
 
   step. step. all: cycle 1.
 
@@ -386,18 +377,17 @@ intros.
   (* * *          Map Maker Loop N           * * *)
   (* * *     0x4130002c:  ldrb w2, [x1]      * * *)
   (* * * * * * * * * * * * * * * * * * * * * * * *)
-  exists "0x4130002c"%string. intros _.
   eexists.
   exists bitmap_ptr, (L+1).
   apply N.eqb_neq in BC.
   idtac || clear - BC SP MDL BITNSTR BITMAP_PTR ACPT_1_NNULL ACPT_0_NNULL
     X6_EQ_1 ACPT_L STR_PTR NO ACPT_LEN. clear ACPT_LEN.
   clear tmp tmp0 tmp1 tmp2 tmp3 tmp4 tmp5 tmp6 tmp7 tmp8 tmp9 tmp10 tmp14 tmp15 tmp16 tmp17
-    t loc.
+    t.
 
   rewrite BITMAP_PTR in SP; inversion SP; subst sp; clear SP.
-  assert (NO': ¬ overlap 64 accept_ptr acpt_len bitmap_ptr 32)
-    by (apply (noverlap_shrink _ accept_ptr (N.succ acpt_len)); [psimpl;lia | assumption]).
+  assert (NO': ¬ overlap 64 acpt_ptr acpt_len bitmap_ptr 32)
+    by (apply (noverlap_shrink _ acpt_ptr (N.succ acpt_len)); [psimpl;lia | assumption]).
 
   repeat (
     match goal with
@@ -407,16 +397,16 @@ intros.
     end
   ).
   rewrite getmem_noverlap; try assumption; try psimpl.
-  change accept_ptr with (0 + accept_ptr) at 1; rewrite (N.add_comm 0 accept_ptr).
-  apply (noverlap_index_index 64 accept_ptr acpt_len bitmap_ptr 32 0 1 (m' Ⓑ[ accept_ptr + L ] >> 6 << 3) 8);
+  change acpt_ptr with (0 + acpt_ptr) at 1; rewrite (N.add_comm 0 acpt_ptr).
+  apply (noverlap_index_index 64 acpt_ptr acpt_len bitmap_ptr 32 0 1 (m' Ⓑ[ acpt_ptr + L ] >> 6 << 3) 8);
     try (assumption).
     simpl; destruct (N.lt_trichotomy 1 acpt_len) as [Lt | [Eq | Gt]]; try lia.
       destruct acpt_len; try lia. unfold strlen in STRLEN; destruct STRLEN as [NF ZERO].
       rewrite N.add_0_r in ZERO; contradiction.
     apply msbits_indexed_section_contained.
-  (* proving m' (B) [1 + accept_ptr] <> 0 *)
-  rewrite getmem_noverlap; try assumption. rewrite (N.add_comm 1 accept_ptr).
-  apply (noverlap_index_index 64 accept_ptr acpt_len bitmap_ptr 32); try assumption; try lia.
+  (* proving m' (B) [1 + acpt_ptr] <> 0 *)
+  rewrite getmem_noverlap; try assumption. rewrite (N.add_comm 1 acpt_ptr).
+  apply (noverlap_index_index 64 acpt_ptr acpt_len bitmap_ptr 32); try assumption; try lia.
     idtac || clear - L_LT_STRLEN ACPT_1_NNULL ACPT_0_NNULL STRLEN BC NO.
     simpl. destruct (N.lt_ge_cases acpt_len 2); try assumption.
     (* showing a contradiction if acpt_len < 2 *) {
@@ -428,8 +418,8 @@ intros.
     }
     apply msbits_indexed_section_contained.
   apply nilfree_noverlap.
-  change accept_ptr with (0 + accept_ptr) at 1; rewrite (N.add_comm 0 accept_ptr).
-  apply (noverlap_index_index 64 accept_ptr acpt_len bitmap_ptr 32);
+  change acpt_ptr with (0 + acpt_ptr) at 1; rewrite (N.add_comm 0 acpt_ptr).
+  apply (noverlap_index_index 64 acpt_ptr acpt_len bitmap_ptr 32);
     try (assumption || lia); apply msbits_indexed_section_contained.
     unfold strlen in STRLEN; destruct STRLEN as [T _]; assumption.
   rewrite getmem_noverlap. unfold strlen in STRLEN. destruct STRLEN as [NF NULL]. assumption.
@@ -440,10 +430,12 @@ intros.
     now rewrite Eq.
     destruct (N.lt_trichotomy L acpt_len) as [Lt' | [Eq' | Gt']]; try lia. subst L. now destruct STRLEN.
   (* bitarray_nstr_incr *)
+  {
   admit.
-  (* mem_region_unchanged m m' accept_ptr acpt_len *)
+  }
+  (* mem_region_unchanged m m' acpt_ptr acpt_len *)
   unfold mem_region_unchanged in *. intros. rewrite getmem_noverlap. apply (ACPT_SAME i); assumption.
-  apply (noverlap_index_index 64 accept_ptr (N.succ acpt_len) bitmap_ptr 32 i 1 (m' Ⓑ[ accept_ptr + L ] >> 6 << 3) 8).
+  apply (noverlap_index_index 64 acpt_ptr (N.succ acpt_len) bitmap_ptr 32 i 1 (m' Ⓑ[ acpt_ptr + L ] >> 6 << 3) 8).
   assumption. lia. apply msbits_indexed_section_contained.
 
   all: cycle -1.
@@ -452,7 +444,7 @@ intros.
   (* * *     Maker -> Checker Transition     * * *)
   (* * *      0x41300094:  mov  x1,  x0      * * *)
   (* * * * * * * * * * * * * * * * * * * * * * * *)
-  exists "0x41300094"%string. intro LOC. eexists. exists bitmap_ptr, L.
+  eexists. exists bitmap_ptr, L.
   do 3 (split; try easy). split; try easy. split.
   apply bitarray_nstr_str with (len:=L). assumption.
   apply Neqb_ok in BC.
@@ -461,15 +453,13 @@ intros.
   assumption.
   all: cycle 1.
 
-  destruct PRE as [_ [m' [bitmap_ptr [L [STR_PTR [ACPT_L [MEM' [BITMAP_PTR [BITARRAY ACPT_SAME]]]]]]]]]. admit.
-  pose (LOC_PREV:= "0x41300094"%string).
+  destruct PRE as [m' [bitmap_ptr [L [STR_PTR [ACPT_L [MEM' [BITMAP_PTR [BITARRAY ACPT_SAME]]]]]]]].
   step. step.
 
   (* * * * * * * * * * * * * * * * * * * * * * * *)
   (* * *         Map Checker Loop 0          * * *)
   (* * *      0x41300078:  ldrb w4, [x1]     * * *)
   (* * * * * * * * * * * * * * * * * * * * * * * *)
-  exists "0x41300078"%string. intro LOC_NOW.
   exists m', bitmap_ptr, 0. psimpl.
   repeat (split; try easy).
   unfold post_satis_i. intros.
@@ -477,8 +467,7 @@ intros.
   intros i Ilt0; now apply N.nlt_0_r in Ilt0.
   (* * * * * * * * * * * * * * * * * * * * * * * *)
 
-  destruct PRE as [loc [m' [bitmap_ptr [L [STR_PTR [STR_L [MEM' [BITMAP_PTR [BITARRAY_STR [POST [NF ACPT_SAME]]]]]]]]]]]. admit.
-  pose (LOC_PREV := "0x41300078"%string).
+  destruct PRE as [m' [bitmap_ptr [L [STR_PTR [STR_L [MEM' [BITMAP_PTR [BITARRAY_STR [POST [NF ACPT_SAME]]]]]]]]]].
   step. step.
 
   all: cycle 1.
@@ -489,15 +478,12 @@ intros.
   (* * *         Map Checker Loop N          * * *)
   (* * *      0x41300078:  ldrb w4, [x1]     * * *)
   (* * * * * * * * * * * * * * * * * * * * * * * *)
-  exists "0x41300078"%string. intro LOC_NOW.
   eexists. exists bitmap_ptr, (L+1).
   clear tmp tmp0 tmp1 tmp2 tmp3 tmp4 tmp5 tmp6 tmp7 tmp8 tmp9 tmp10 tmp11 tmp12
-    tmp13 tmp14 tmp15 tmp16 tmp17 t LOC_NOW LOC_PREV.
+    tmp13 tmp14 tmp15 tmp16 tmp17 t.
   apply N.eqb_neq in BC, BC0.
   do 6 (split ; try (psimpl; easy)).
 
-  (* TODO: Use the post_satis_i_incr lemma (also a todo) to prove. *)
-  Check post_satis_incr.
   rewrite N.add_comm. apply post_satis_incr with (char:=m' Ⓑ[ str_ptr + L ]) (bitmap_ptr:=bitmap_ptr);
     try (assumption || rewrite getmem_mod_l; reflexivity).
   apply map_checker_n_helper; assumption.
@@ -514,10 +500,7 @@ intros.
   (* * *        Ret: Checker Found \0        * * *)
   (* * * * * * * * * * * * * * * * * * * * * * * *)
   exists "0x41300068"%string. intro LOC_NOW.
-  exists L.
-
-
-  clear tmp tmp0 tmp1 tmp2 tmp3 t LOC_NOW LOC_PREV.
+  exists L. clear tmp tmp0 tmp1 tmp2 tmp3 t LOC_NOW.
   apply Neqb_ok in BC.
   split.
     enough (LSMALL: L mod 2 ^ 64 = L); try now rewrite LSMALL. apply N.mod_small.
@@ -544,7 +527,7 @@ intros.
   split.
   enough (LSMALL: L mod 2 ^ 64 = L); try now rewrite LSMALL. apply N.mod_small.
     unfold strlen in ACPT_LEN; destruct ACPT_LEN as [_ ZERO].
-    apply (nflen_lt m str_ptr L (accept_ptr+acpt_len)); assumption.
+    apply (nflen_lt m str_ptr L (acpt_ptr+acpt_len)); assumption.
   split. assumption.
   unfold post_satis_i. intro H. specialize (H L). assert (HELP:L<L+1) by lia; apply H in HELP; clear H. (*; destruct HELP as [k [NF' CHAREQ']].*)
 
@@ -555,7 +538,7 @@ intros.
      so we don't have to do this massaging. *)
   rewrite getmem_mod_l in HELP.
   destruct HELP as [k [HNF HMEQ]]. rewrite N.add_comm in HNF.
-  assert (HELP: ∃ j : N, nilfree m accept_ptr (1 + j) ∧ m Ⓑ[ accept_ptr ⊕ j ] = m Ⓑ[ str_ptr + L ])
+  assert (HELP: ∃ j : N, nilfree m acpt_ptr (1 + j) ∧ m Ⓑ[ acpt_ptr ⊕ j ] = m Ⓑ[ str_ptr + L ])
     by (exists k; split; assumption).
   (* end of massage *)
   rewrite <-HELP' in HELP; clear - HELP BC0.
