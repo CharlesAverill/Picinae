@@ -30,7 +30,7 @@ Require Import NArith.
 Require Import ZArith.
 Require Import Picinae_armv8_pcode.
 Require Import strspn_arm8.
-Require Import strspn_arm8_lemmas.
+Require Import strspn_arm8_lemmas_shreya.
 Require Import Lia.
 Require Import Bool.
 
@@ -108,7 +108,7 @@ Proof.
   rename H into H'.
   destruct (N.lt_trichotomy j i) as [H | [H | Gt]];[ clear H' | clear H' | rewrite N.lt_nge in Gt; contradiction].
     unfold post_satis_i in POST. specialize (POST j). apply POST in H. assumption.
-    unfold bitarray_str in BITMAP; specialize (BITMAP char); destruct BITMAP.
+    unfold bitarray_str in BITMAP. specialize (BITMAP char). destruct BITMAP as [H0 _].
     rewrite <-NEXT; apply getmem_bound.
     rewrite CHAR_BIT in H0; destruct H0. apply N.lt_0_1. subst j.
     destruct H0 as [NILFREE CHAR].
@@ -143,6 +143,14 @@ split.
   split. assumption. rewrite getmem_mod_l in MEM; assumption.
 Qed.
 
+Definition strspn_security_invs (m:addr->N) (sp:addr) (acpt_len:N) (t:trace):=
+  match t with (Addr a,s)::_ => match a with
+  |  0x41300068 => Some(
+      True 
+     )
+  | _ => None
+  end | _ => None end.
+
 Definition strspn_invs (m:addr->N) (str_ptr acpt_ptr sp:addr) (acpt_len:N) (t:trace) :=
   match t with (Addr a,s)::_ => match a with
 
@@ -167,7 +175,7 @@ Definition strspn_invs (m:addr->N) (str_ptr acpt_ptr sp:addr) (acpt_len:N) (t:tr
       m' Ⓑ[ acpt_ptr ] ≠ 0 /\ m' Ⓑ[ 1 + acpt_ptr ] ≠ 0 /\
       strlen m' acpt_ptr acpt_len /\ L <= acpt_len /\
       s R_X3 = Ⓠbitmap_ptr ∧ bitarray_nstr m' bitmap_ptr acpt_ptr L /\
-      mem_region_unchanged m m' acpt_ptr acpt_len)
+      mem_region_unchanged m m' acpt_ptr (N.succ acpt_len))
 
   (* 0x41300094: Map Maker->Checker Transition
                  Just turn bitarray_nstr to bitarray_str to make
@@ -177,7 +185,7 @@ Definition strspn_invs (m:addr->N) (str_ptr acpt_ptr sp:addr) (acpt_len:N) (t:tr
      ∃ m' bitmap_ptr L, s R_X0 = Ⓠstr_ptr /\ s R_X1 = Ⓠ(acpt_ptr ⊕ L) /\
       s V_MEM64 = Ⓜ m' /\
       s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m' bitmap_ptr acpt_ptr /\
-      mem_region_unchanged m m' acpt_ptr acpt_len)
+      mem_region_unchanged m m' acpt_ptr (N.succ acpt_len))
 
   (* 0x41300078: Map Checker Loop *)
   |  0x41300078 => Some(
@@ -187,14 +195,17 @@ Definition strspn_invs (m:addr->N) (str_ptr acpt_ptr sp:addr) (acpt_len:N) (t:tr
       s R_X3 = Ⓠbitmap_ptr ∧ bitarray_str m' bitmap_ptr acpt_ptr /\
       post_satis_i L m' str_ptr acpt_ptr /\
       nilfree m' str_ptr L /\
-      mem_region_unchanged m m' acpt_ptr acpt_len)
+      mem_region_unchanged m m' acpt_ptr (N.succ acpt_len))
 
   (* 0x41300068: Return Invariant *)
   |  0x41300068 => Some(
      ∃ invariant_loc, invariant_loc = "0x41300068"%string ->
-     ∃ L : N,
-      s R_X0 = ⓆL ∧ post_satis_i L m str_ptr acpt_ptr
-                    ∧ ¬ post_satis_i (L+1) m str_ptr acpt_ptr)
+     ∃ m' (L : N),
+      (* this captures the property of the memory at the end of the call.
+         alternatives are considered below. *)
+      s V_MEM64 = Ⓜ m' /\
+      s R_X0 = ⓆL ∧ post_satis_i L m' str_ptr acpt_ptr
+                    ∧ ¬ post_satis_i (L+1) m' str_ptr acpt_ptr)
   | _ => None
   end | _ => None end.
 
@@ -247,7 +258,7 @@ Theorem strspn_partial_correctness:
   satisfies_all musl_armv8_a_strspn_armv8 (strspn_invs m str_ptr acpt_ptr sp acpt_len) strspn_exit ((x',s')::t).
 Proof.
 Local Ltac step := time arm8_step.
-intros.
+intros. unfold satisfies_all.
   apply prove_invs.
   (* Base case: *)
   simpl. rewrite ENTRY. step. repeat (split; try assumption).
@@ -271,7 +282,7 @@ intros.
 
     exists "0x41300068"%string. intro LOC.
     apply Neqb_ok in BC.
-    exists 0. split. reflexivity. split.
+    exists m, 0. split. assumption. split. reflexivity. split.
     unfold post_satis_i.
     intros. apply N.nlt_0_r in H. contradiction.
     unfold post_satis_i. unfold not. intros.
@@ -324,7 +335,7 @@ intros.
   (* * *        Single Character RET         * * *)
   (* * * * * * * * * * * * * * * * * * * * * * * *)
   exists "0x41300068"%string. intro LOC.
-  exists p. split.
+  exists m, p. split; try reflexivity. split.
   enough (LSMALL: p mod 2 ^ 64 = p); try now rewrite LSMALL. apply N.mod_small.
     apply (nflen_lt m str_ptr p (1+acpt_ptr)); assumption. split.
     unfold post_satis_i. intros. exists 0. split.
@@ -500,17 +511,17 @@ intros.
   (* * *        Ret: Checker Found \0        * * *)
   (* * * * * * * * * * * * * * * * * * * * * * * *)
   exists "0x41300068"%string. intro LOC_NOW.
-  exists L. clear tmp tmp0 tmp1 tmp2 tmp3 t LOC_NOW.
+  exists m', L. clear tmp tmp0 tmp1 tmp2 tmp3 t LOC_NOW.
   apply Neqb_ok in BC.
-  split.
+  split; try reflexivity; split.
     enough (LSMALL: L mod 2 ^ 64 = L); try now rewrite LSMALL. apply N.mod_small.
     apply (nflen_lt m' str_ptr L (str_ptr+L)); assumption. split.
   (* CONTINUE HERE: figure out what to do with the m in the goal and m' in the hypothesis *)
   unfold post_satis_i.
-  assumption. unfold post_satis_i. intro.
+  assumption || admit. unfold post_satis_i. intro.
   specialize (H L). assert (HELP:L < L+1) by lia. apply H in HELP. destruct HELP.
   destruct H0 as [NFAcpt Z]. unfold nilfree in NFAcpt. specialize (NFAcpt x). assert (HELP:x<x+1) by lia; apply NFAcpt in HELP.
-  do 2 rewrite getmem_mod_l in Z. rewrite BC in Z. congruence.
+  do 2 rewrite getmem_mod_l in Z. rewrite BC in Z; congruence.
 
   step. step. step.
 
@@ -518,21 +529,20 @@ intros.
   (* * *   Ret: Checker Found Unlisted Char  * * *)
   (* * * * * * * * * * * * * * * * * * * * * * * *)
   exists "0x41300068"%string. intro LOC_NOW.
-  exists L.
-  rewrite MEM in MEM'; inversion MEM'; subst m'; clear MEM'.
-  rewrite BITMAP_PTR in SP; inversion SP; subst bitmap_ptr; clear SP.
+  exists m', L. apply (strlen_unchanged _ _ _ _ ACPT_SAME) in ACPT_LEN. clear ACPT_SAME m; rename m' into m.
   clear tmp tmp0 tmp1 tmp2 tmp3 tmp4 tmp5 tmp6 tmp7 tmp8 tmp9 tmp10 tmp11 tmp12 tmp13 tmp14 tmp15
-    tmp16 tmp17 t LOC_NOW LOC_PREV Hsv loc n.
-  apply N.eqb_neq in BC. apply Neqb_ok in BC0.
+    tmp16 tmp17 t LOC_NOW Hsv n.
+  apply N.eqb_neq in BC. apply Neqb_ok in BC0. split; try reflexivity.
   split.
   enough (LSMALL: L mod 2 ^ 64 = L); try now rewrite LSMALL. apply N.mod_small.
     unfold strlen in ACPT_LEN; destruct ACPT_LEN as [_ ZERO].
-    apply (nflen_lt m str_ptr L (acpt_ptr+acpt_len)); assumption.
-  split. assumption.
+    Check nflen_lt.
+    apply (nflen_lt m str_ptr L (acpt_ptr+acpt_len)); try assumption || admit.
+  split. assumption || admit.
   unfold post_satis_i. intro H. specialize (H L). assert (HELP:L<L+1) by lia; apply H in HELP; clear H. (*; destruct HELP as [k [NF' CHAREQ']].*)
-
+  clear - BITARRAY_STR HELP BC0.
   unfold bitarray_str in BITARRAY_STR. specialize (BITARRAY_STR (m Ⓑ[ str_ptr + L ])). assert (HELP':= getmem_bound 64 LittleE 1 m (str_ptr + L )).
-  change (IL_arm8.Mb * 1) with 8 in HELP'. change (2^8) with 256 in HELP'.
+  change (2 ^ (IL_arm8.Mb * 1)) with 256 in HELP'.
   apply BITARRAY_STR in HELP'.
   (* TODO: get post_satis_i `nilfree` and `mem ... = mem ...` to match the format in bitarray_str
      so we don't have to do this massaging. *)
@@ -542,10 +552,9 @@ intros.
     by (exists k; split; assumption).
   (* end of massage *)
   rewrite <-HELP' in HELP; clear - HELP BC0.
-  enough (Heq: (m Ⓠ[ sp + (m Ⓑ[ str_ptr + L ] >> 6 << 3) ] >>
-       m Ⓑ[ str_ptr + L ] mod 64) mod 2 = bit m sp (m Ⓑ[ str_ptr + L ])).
+  enough (Heq: (m Ⓠ[ bitmap_ptr + (m Ⓑ[ str_ptr + L ] >> 6 << 3) ] >>
+       m Ⓑ[ str_ptr + L ] mod 64) mod 2 = bit m bitmap_ptr (m Ⓑ[ str_ptr + L ])).
   rewrite Heq in BC0. rewrite BC0 in HELP. now apply N.nlt_0_r in HELP.
   rewrite brute_bitmap_lookup_eq_bit. reflexivity.
-
-
-Abort.
+Admitted.
+Print Assumptions strspn_partial_correctness.
