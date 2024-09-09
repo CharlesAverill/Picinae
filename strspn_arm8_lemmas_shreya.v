@@ -12,6 +12,20 @@ Open Scope N.
 (* Extract a bit from a bit-array. *)
 Definition bit mem (p:addr) (i:N) := xbits (mem Ⓑ[p + (i >> 3)]) (i mod 2^3) (1 + (i mod 2^3)).
 
+(*EDIT: This tests whether a bit is 0 or 1- used in replacement of bit*)
+Definition bit_test mem (bmp:addr) (i:N) := (N.testbit (mem Ⓨ[bmp]) (i) = true).
+
+Definition mem_region_unchanged m m' p len :=
+  ∀ i, i < len ->  m Ⓑ[ p + i ] = m' Ⓑ[ p + i ].
+
+Lemma mem_eq_region_unchanged :
+  forall m p len, mem_region_unchanged m m p len.
+Proof.
+  intros. unfold mem_region_unchanged. intros. reflexivity.
+Qed.
+
+
+
 Lemma bit_set_preservation_byte:
   forall m a i_set i
   (LTISET : i_set < 8)
@@ -61,7 +75,6 @@ Proof.
     all: time repeat (discriminate || contradiction || reflexivity || destruct p0).
 Qed.
 
-
 (* Define what it means for a nil-terminated string to not have internal nils. *)
 Definition nilfree mem p len :=
   ∀ i, i < len -> 0 <> mem Ⓑ[ p + i ].
@@ -104,31 +117,6 @@ Proof.
   - subst i. congruence.
 Qed.
 
-Definition mem_region_unchanged m m' p len :=
-  ∀ i, i < len ->  m Ⓑ[ p + i ] = m' Ⓑ[ p + i ].
-
-Lemma mem_eq_region_unchanged :
-  forall m p len, mem_region_unchanged m m p len.
-Proof.
-  intros. unfold mem_region_unchanged. intros. reflexivity.
-Qed.
-
-Theorem strlen_unchanged:
-  forall m m' p len 
-    (STR : strlen m p len)
-    (MEM : mem_region_unchanged m m' p (N.succ len)),
-  strlen m' p len.
-Proof.
-  unfold strlen, mem_region_unchanged. intros. destruct STR as [NF NIL].
-  split. unfold nilfree in *. Search (_ < N.succ _).
-  intros i Lt; specialize (MEM i (N.lt_lt_succ_r _ _ Lt)). rewrite <-MEM; now specialize (NF i Lt).
-  specialize (MEM len (N.lt_succ_diag_r len)); now rewrite <-MEM.
-Qed.
-
-(* Do we even want this? *)
-Definition mem_string_unchanged m m' p :=
-  exists len:N, strlen m p len -> mem_region_unchanged m m' p (N.succ len).
-
 (* Define a "correct" bit array.
 
    Note: `nilfree m p __(1+j)__` so that p[j] != 0.
@@ -145,6 +133,7 @@ Definition bitarray_str mem bitmap_ptr str_ptr : Prop :=
   ∀ i, i < 256 -> (0 < bit mem bitmap_ptr i <->
                   (∃ j, nilfree mem str_ptr (1+j) /\ mem Ⓑ[str_ptr ⊕ j] = i)).
 
+
 Lemma strlen_incr :
   forall mem p len k
     (LEN : strlen mem p len)
@@ -155,18 +144,6 @@ Proof.
   intros. unfold strlen in LEN.
   apply N.lt_eq_cases in LE. destruct LE as [LT | EQ]. easy.
   destruct LEN as [NF NIL]. now subst k.
-Qed.
-
-(* Unused, but fun *)
-Lemma strlen_unique :
-  forall m p len1 len2,
-    strlen m p len1 -> strlen m p len2 -> len1 = len2.
-Proof.
-  unfold strlen. unfold nilfree. intros.
-  destruct H as [NF1 Nil1]; destruct H0 as [NF2 Nil2].
-  destruct (N.lt_trichotomy len1 len2) as [H | [Eq | H]]; try assumption; exfalso.
-  - specialize (NF2 len1); apply NF2 in H. congruence.
-  - specialize (NF1 len2); apply NF1 in H; congruence.
 Qed.
 
 Lemma nilfree_le_len :
@@ -184,6 +161,30 @@ Proof.
   now subst k.
 Qed.
 
+Theorem strlen_unchanged:
+  forall m m' p len 
+    (MEM : mem_region_unchanged m m' p (N.succ len))
+    (STR : strlen m p len),
+  strlen m' p len.
+Proof.
+  unfold strlen, mem_region_unchanged. intros. destruct STR as [NF NIL].
+  split. unfold nilfree in *. Search (_ < N.succ _).
+  intros i Lt; specialize (MEM i (N.lt_lt_succ_r _ _ Lt)). rewrite <-MEM; now specialize (NF i Lt).
+  specialize (MEM len (N.lt_succ_diag_r len)); now rewrite <-MEM.
+Qed.
+
+(* IXB_EDIT
+added this lemma *)
+Lemma nilfree_le_zero:
+  forall mem p len j
+    (NIL : mem Ⓑ[ p + len ] = 0)
+    (NFj : nilfree mem p j),
+    j <= len.
+Proof.
+  unfold nilfree; intros.
+  destruct (N.le_gt_cases j len) as [Le | Gt]; [ assumption | exfalso].
+  specialize (NFj len). apply NFj. lia. now symmetry.
+Qed.
 
 
 Lemma noverlap_index:
@@ -206,7 +207,7 @@ Lemma noverlap_index_index:
   (IN1 : index1 + size1 <= len1)
   (IN2 : index2 + size2 <= len2),
   ~ overlap w (a1 + index1) size1 (a2 + index2) size2.
-Proof. 
+Proof.
   intros. apply noverlap_index with (len1:=len1).
   apply noverlap_symmetry. apply noverlap_index with (len1:=len2).
   apply noverlap_symmetry.
@@ -798,118 +799,6 @@ Qed.
 
 
 
-
-(* * * * * * * * * * * * * * * * * * * * * * * * *)
-(*                                               *)
-(*                 From Shreya                   *)
-(*                                               *)
-(* v v v v v v v v v v v v v v v v v v v v v v v *)
-
-(*
-Lemma changed_mem_incr_other_way bitmap_ptr accept_ptr m :
-forall c L
-(LT: c < 2^8) (*some byte that represents a character*)
-(NN: ∀ i : N, i < L → m Ⓑ[ accept_ptr + i ] ≠ 0)
-(BMAP: forall i, i<256 -> (bitmap_value_alt m bitmap_ptr i) <-> (exists j, j<L -> ( m Ⓑ[ accept_ptr + j ] = i)))
-(IMPT: (c = m Ⓑ[ accept_ptr + L ] /\ exists i, i<L -> m Ⓑ[ accept_ptr + i ] = c) \/ c <> m Ⓑ[ accept_ptr + L ]
-)
-,
-
-((bit_new2 (changed_mem bitmap_ptr accept_ptr L m m) bitmap_ptr (c)) = true) ->
-(bit_new2 m bitmap_ptr (c) = true)
-.
-
-Proof. do 6 intro.
-unfold bit_new2, changed_mem.
-destruct IMPT.
-destruct H as [IMPT1 IMPT2].
-apply <- BMAP in IMPT2.
-intro.
-unfold bitmap_value_alt in IMPT2. unfold bit_new2 in IMPT2. assumption. lia.
-
-rename H into IMPT.
-(*1 << m Ⓑ[ accept_ptr + L ] mod 64 .| m Ⓠ[ bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3) ]*)
-destruct (overlap_dec 64 (bitmap_ptr + c) 1 (bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3)) 8).
-rename o into H0.
-unfold overlap in H0.
-
-
-destruct H0 as [i' [j [C1 [C2 EQ]]]]. assert (i' < 1 -> i' = 0). lia. apply H in C1.
-rewrite C1 in EQ.
-
-(*mod plus bound assumptions*)
-(*mod_plus 0 to plus 0*)
-assert(bitmap_ptr + c ⊕ 0 = bitmap_ptr + c + 0). admit.
-rewrite H0 in EQ. psimpl in EQ. clear H0.
-(*mod_plus j to plus j*)
-assert(bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3) ⊕ j = bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3) + j). admit.
-rewrite H0 in EQ. rewrite EQ.
-clear H0.
-(*write to testbit assumption*)
-
-assert(exists b, b + 1 + j = 8). admit.
-destruct H0 as [b H3].
-rewrite getmem_setmem_xbits_helper with (j:= b). (*FIXME: can apply xbits without the helper.*)
-rewrite getmem_setmem_xbits.
-unfold IL_arm8.Mb. unfold ARM8Arch.mem_bits.
-rewrite N.lor_comm.
-rewrite N.shiftl_1_l.
-
-rewrite testbit_xbits.
-unfold N.succ.
-
-
-rewrite xbits_nested.
-replace (8 * j + 1) with (N.succ (8 * j)).
-rewrite <- N.setbit_spec'.
-remember (8*j) as g.
-rewrite <- testbit_xbits.
-
-
-rewrite N.setbit_neq.
-
-
-rewrite Heqg.
-rewrite testbit_xbits.
-replace (N.succ (8 * j)) with (8*j + 1).
-rewrite xbyte_to_xbit_2.
-
-rewrite <- testbit_xbits. intro. assumption.
-
-admit. (*8 * j + 1 = N.succ (8 * j)*)
-admit. (*i think this is provable just havent gotten to it yet*)
-lia.
-lia.
-admit. admit. lia.
-
-(*write sm that says not (overlap ) = noverlap?*)
-rewrite noverlap in n. rewrite <- noverlap in n.
-apply noverlap_symmetry in n.
-
-
-rewrite getmem_frame. intro. assumption.
-apply noverlap_sep in n. assumption.
-apply noverlap_symmetry in n.
-apply noverlap_sep in n. assumption.
-
-Abort.
-*)
-
-(* ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ *)
-(*                                               *)
-(*              END OF From Shreya               *)
-(*                                               *)
-(* * * * * * * * * * * * * * * * * * * * * * * * *)
-
-
-
-
-
-
-
-
-
-
 (* * * * * * * * * * * * * * * * * * * * * * * * *)
 (*                                               *)
 (*             Experimental Section              *)
@@ -961,6 +850,7 @@ Proof.
   intros. split; intros.
   unfold bit in H1. unfold xbits in H1.
 Admitted.
+
 (*
   This lemma is for proving that the bit corresponding to character j is 1 in
   the memory updated by the bitmap_update function. This is the function which
@@ -1086,11 +976,15 @@ forall m acpt acpt_len bmp bmp_i (L : N)
   *)
   (* Simplified for now *)
 bitarray_nstr
-  (m [Ⓨ bmp := (m Ⓨ[ bmp ] .| (1 << (bmp_i mod 256)) )])
+  ((m [Ⓠ bmp + (m Ⓑ[ acpt + L ] >> 6 << 3)
+   := 1 << m Ⓑ[ acpt + L ] mod 64
+      .| m Ⓠ[ bmp + (m Ⓑ[ acpt + L ] >> 6 << 3) ] ]))
   bmp acpt
   (L + 1).
 Proof.
-  intros. unfold bitarray_nstr. split. unfold bitarray_nstr in BITNSTR.
+  intros. unfold bitarray_nstr. 
+  
+  split. unfold bitarray_nstr in BITNSTR.
     intros; destruct (i =? bmp_i) eqn:Eqi.
       apply Neqb_ok in Eqi. subst i. exists L; repeat split.
         lia. rewrite <-nilfree_noverlap.
@@ -1100,14 +994,14 @@ Proof.
               (now apply NF in LT ||
               contradiction ||
               lia).
-            apply noverlap_shrink with (a1:=acpt) (len1:=acpt_len);
+(*           apply noverlap_shrink with (a1:=acpt) (len1:=acpt_len);
               (rewrite msub_diag, N.add_0_l; lia) || assumption.
             rewrite getmem_noverlap. assumption.
           apply noverlap_index with (a1:=acpt) (len1:=acpt_len); (assumption || lia).
       apply N.eqb_neq in Eqi; specialize (BITNSTR i); apply BITNSTR in H; clear BITNSTR. destruct H as [BitImpChar CharImpBit].
     destruct BitImpChar as [j [Lt  [NFj  Charj]]]. admit. exists j; repeat split; try lia.
-    apply nilfree_noverlap. apply noverlap_shrink with (a1:=acpt) (len1:=acpt_len).
-Abort.
+    apply nilfree_noverlap. apply noverlap_shrink with (a1:=acpt) (len1:=acpt_len). *)
+Admitted.
 
 
 
@@ -1116,3 +1010,551 @@ Abort.
 (*          END OF Experimental Section          *)
 (*                                               *)
 (* * * * * * * * * * * * * * * * * * * * * * * * *)
+(*Beginning of EDIT*)
+
+(*EDIT: These are the new versions of bitarray_nstr and bitarray_str*)
+Definition bitarray_nstr_new mem bitmap_ptr str_ptr len : Prop :=
+  ∀ i, i < 256 -> (bit_test mem bitmap_ptr i <->
+                  (∃ j, j < len /\ nilfree mem str_ptr (1+j) /\ mem Ⓑ[str_ptr + j] = i)).
+
+(* IXB_EDIT 
+changed the -> to <-> *)
+Definition bitarray_str_new mem bitmap_ptr str_ptr : Prop :=
+  ∀ i, i < 256 -> (bit_test mem bitmap_ptr i <->
+                  (∃ j, nilfree mem str_ptr (1+j) /\ mem Ⓑ[str_ptr ⊕ j] = i)).
+
+(*represent complicated memory*)
+Definition changed_mem bitmap_ptr accept_ptr L m:=
+  (m [Ⓠ bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3) := 1 <<
+  m Ⓑ[ accept_ptr + L ] mod 64 .| m Ⓠ[ bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >>6 <<3)]]).
+
+(*The following Lemmas help us write the changed memory as
+  a change in 256 bits directly.*)
+
+Lemma quad_less_than:
+forall m x y
+, (64 < y)->
+(m Ⓠ[ x ] <  2 ^ y) .
+Proof.
+intros.
+rewrite getmem_bound. unfold IL_arm8.Mb.
+unfold ARM8Arch.mem_bits. psimpl (8*8).
+rewrite <- N.pow_lt_mono_r_iff. assumption. lia.
+Qed.
+
+(*TODO: these are easily provable, just spam 
+N.lor_assoc and N.lor_comm*)
+Lemma lor_der_1 : 
+forall a b c d e,
+a .| b .| c .| d .| e = b .| c .| a.| d .| e.
+Proof. intros. 
+Admitted.
+
+Lemma lor_der_2 : 
+forall a b c d e,
+a .| b .| c .| d .| e = b .| c .| d.| a .| e.
+Proof.
+Admitted.
+
+Lemma equals_sandwich : 
+forall x y, x < (y+1) /\ y <= x -> x = y. Proof. lia. Qed.
+
+Lemma range_eq :
+forall k b
+(HYP0: k <= 4)
+(HYP1:  b < 64*(k + 1) /\ 64*k <= b)
+,
+((b >> 6 << 3) = 8*k).
+Proof. 
+intros.  rewrite N.shiftl_mul_pow2. psimpl (2^3). rewrite N.mul_comm.
+rewrite N.mul_cancel_l. destruct HYP1. rewrite N.shiftr_div_pow2.
+rewrite <- N.mul_cancel_l with (p:= 64). psimpl (2^6).
+apply N.div_le_lower_bound with (a:= b) (b:= 64) (q:= k) in H0.
+apply N.Div0.div_lt_upper_bound in H.
+assert (b / 64 = k).
+apply equals_sandwich. split; assumption. rewrite H1. reflexivity.
+all:lia.
+
+Qed.
+
+Lemma helper_2 :
+forall m x y
+, (64 < y)->
+(m Ⓠ[ x ] mod  2 ^ y) = m Ⓠ[ x ] .
+Proof.
+intros.
+rewrite N.mod_small. reflexivity.
+rewrite getmem_bound. unfold IL_arm8.Mb.
+unfold ARM8Arch.mem_bits. psimpl (8*8).
+rewrite <- N.pow_lt_mono_r_iff. assumption. lia.
+Qed.
+
+Lemma helper_3 :
+forall m a x k
+(EQ1: x = 1 \/ x = 2 \/ x =3)
+(EQ2: k = 8*x),
+(m Ⓠ[ (k) + a ] << IL_arm8.Mb * (k)) mod 2 ^ 256 = (m Ⓠ[ (k) + a ] << IL_arm8.Mb * (k)).
+Proof.
+intros.
+rewrite EQ2.
+rewrite N.mod_small. reflexivity.
+unfold IL_arm8.Mb.
+unfold ARM8Arch.mem_bits.
+rewrite N.mul_assoc. psimpl (8*8).
+rewrite N.shiftl_mul_pow2.
+
+destruct EQ1.
+rewrite H. psimpl (8*1). psimpl (64*1).
+replace (2^256) with (2^192 * 2^64).
+rewrite <- N.mul_lt_mono_pos_r with (p:= 2^64).
+apply quad_less_than. lia. lia. lia.
+
+destruct H.
+rewrite H. psimpl (8*2). psimpl (2^(64*2)). 
+replace (2^256) with (2^128 * 2^128).
+rewrite <- N.mul_lt_mono_pos_r with (p:= 2^128).
+apply quad_less_than. lia. lia. lia.
+
+rewrite H. psimpl (8*3). psimpl (2^(64*3)). 
+replace (2^256) with (2^64 * 2^192).
+rewrite <- N.mul_lt_mono_pos_r with (p:= 2^192).
+apply getmem_bound. lia. lia.
+Qed.
+
+Lemma b_eq : 
+forall b k
+(HYP1: b >> 6 << 3 = 8*k)
+(HYP2: 64*k <= b)
+(HYP4: b < 256)
+,
+2 ^ b mod 2 ^ (IL_arm8.Mb * 32) = 2 ^ (b mod 64) * 2 ^ (IL_arm8.Mb * 8*k).
+Proof.
+intros.
+unfold IL_arm8.Mb. unfold ARM8Arch.mem_bits. 
+psimpl. repeat rewrite N.shiftl_1_l. rewrite <- N.pow_add_r.
+
+assert (forall a b, 2^a = 2^b <-> a = b).
+intuition. apply N.pow_inj_r with(a:=2) (b:=a)(c:=b0) in H. assumption. lia.
+rewrite H. reflexivity.
+
+assert(2^b < 2^256).
+rewrite <- N.pow_lt_mono_r_iff with (a:= 2). assumption. lia.
+
+rewrite H.
+replace (b = b mod 64 + 64*k) with (b + 64*k - 64*k = b mod 64 + 64*k).
+rewrite N.add_sub_swap with (p:= 64*k).
+rewrite N.add_cancel_r.
+rewrite N.Div0.mod_eq.
+rewrite N.shiftl_mul_pow2 in HYP1. psimpl (2^3) in HYP1. rewrite N.mul_comm in HYP1.
+rewrite N.mul_cancel_l in HYP1. rewrite N.shiftr_div_pow2 in HYP1.
+psimpl (2^6) in HYP1. rewrite HYP1. reflexivity.
+lia. assumption. psimpl (b + 64 * k - 64 * k). reflexivity.
+
+Qed.
+
+
+Theorem setmem_eq:
+  forall  m a b
+  (H: b < 256),
+    getmem 64 LittleE 32 (setmem 64 LittleE 32 m a (N.setbit (getmem 64 LittleE 32 m (a)) (b)))(a)=
+  getmem 64 LittleE 32 (setmem 64 LittleE 8 m (a + (b >> 6 << 3)) (N.setbit (getmem 64 LittleE 8 m (a + (b >> 6 << 3))) (b mod (8*8))))((a))  
+.
+Proof.
+intros.
+rewrite N.setbit_spec' .
+rewrite getmem_setmem.
+
+replace 32 with (24 + 8).
+rewrite getmem_split.
+replace 24 with (16 + 8).
+rewrite getmem_split.
+replace 16 with (8 + 8).
+rewrite getmem_split.
+
+replace 32 with (24 + 8).
+rewrite getmem_split.
+replace 24 with (16 + 8).
+rewrite getmem_split.
+replace 16 with (8 + 8).
+rewrite getmem_split.
+psimpl.
+
+repeat rewrite N.setbit_spec'.
+
+assert (b < 256 -> 0<= b /\ b < 64 \/ (64 <= b /\ b <128) \/ (128 <= b /\ b<192) \/ (192 <= b /\ b<256)). lia.
+
+specialize (H0 H). 
+destruct H0.
+assert ((b >> 6 << 3) = 8*0). apply range_eq. lia. destruct H0. split; psimpl. assumption. assumption. psimpl (8*0) in H1. 
+rewrite H1. psimpl. 
+repeat rewrite N.shiftl_1_l.
+replace (2 ^ (IL_arm8.Mb * 32)) with (2 ^ 256).
+rewrite N.lor_comm.
+repeat rewrite N.lor_assoc.
+
+replace (2 ^ b .| (m Ⓠ[ a ])) with ((m Ⓠ[ a ]).|2^b).
+do 4 rewrite N_lor_mod_pow2.
+rewrite helper_2.
+rewrite helper_3 with (x:= 1).
+rewrite helper_3 with (x:= 2).
+rewrite helper_3 with (x:= 3).
+
+rewrite N.mod_small.
+rewrite N.mod_small with (a:= b) (b:= 64).
+
+reflexivity. destruct H0. assumption. rewrite <- N.pow_lt_mono_r_iff. assumption. 
+ 
+all: try lia . apply N.lor_comm. unfold IL_arm8.Mb. unfold ARM8Arch.mem_bits. lia.
+
+
+destruct H0.
+
+assert ((b >> 6 << 3) = 8*1). apply range_eq. lia. destruct H0. split; psimpl. assumption. assumption. psimpl (8*1) in H1. 
+rewrite H1. replace (a + 8) with (8 + a). psimpl.
+repeat rewrite N.shiftl_1_l.
+
+rewrite N.shiftl_lor.
+rewrite N.lor_assoc.
+rewrite N.lor_comm. repeat rewrite N.lor_assoc.
+rewrite lor_der_1.
+do 4 rewrite N_lor_mod_pow2. 
+rewrite helper_2.
+rewrite helper_3 with (x:= 1).
+rewrite helper_3 with (x:= 2).
+rewrite helper_3 with (x:= 3).
+repeat rewrite N.shiftl_mul_pow2.
+rewrite b_eq with (k:= 1). reflexivity. psimpl. assumption.
+
+
+destruct H. psimpl. all: try lia. 
+unfold IL_arm8.Mb, ARM8Arch.mem_bits. lia. 
+
+
+destruct H0.
+assert ((b >> 6 << 3) = 8*2). apply range_eq. lia. destruct H0. split; psimpl. assumption. assumption. psimpl (8*2) in H1. 
+rewrite H1. replace (a + 16) with (16 + a). psimpl.
+repeat rewrite N.shiftl_1_l.
+
+rewrite N.shiftl_lor.
+rewrite N.lor_assoc.
+rewrite N.lor_comm. repeat rewrite N.lor_assoc.
+rewrite lor_der_2.
+do 4 rewrite N_lor_mod_pow2. 
+rewrite helper_2.
+rewrite helper_3 with (x:= 1).
+rewrite helper_3 with (x:= 2).
+rewrite helper_3 with (x:= 3).
+repeat rewrite N.shiftl_mul_pow2.
+rewrite b_eq with (k:= 2). reflexivity. psimpl. assumption.
+destruct H. psimpl. all: try lia.
+unfold IL_arm8.Mb, ARM8Arch.mem_bits. lia.
+
+destruct H0.
+assert ((b >> 6 << 3) = 8*3). apply range_eq. lia. split. psimpl. assumption. lia. psimpl (8*3) in H2. 
+rewrite H2. replace (a + 24) with (24 + a). psimpl.
+repeat rewrite N.shiftl_1_l.
+
+rewrite N.shiftl_lor.
+rewrite N.lor_assoc.
+repeat rewrite N.lor_assoc.
+do 4 rewrite N_lor_mod_pow2. 
+rewrite helper_2.
+rewrite helper_3 with (x:= 1).
+rewrite helper_3 with (x:= 2).
+rewrite helper_3 with (x:= 3).
+repeat rewrite N.shiftl_mul_pow2.
+rewrite b_eq with (k:= 3). reflexivity. psimpl. assumption. 
+psimpl. all: try lia. unfold IL_arm8.Mb, ARM8Arch.mem_bits. lia. 
+
+Qed.
+
+Lemma xbyte_to_xbit_3 :
+ ∀ (m : addr → N) (a : addr) (k : N),
+  xbits (m Ⓨ[ a +k ]) 0 64 =  m Ⓠ[ a + (k) ].
+Proof.
+intros.
+rewrite xbits_equiv.
+replace (2^64) with (2^(IL_arm8.Mb*8)).
+rewrite getmem_mod.
+replace ((N.min 32 8)) with (8).
+rewrite N.shiftr_0_r.
+reflexivity. lia. 
+
+unfold IL_arm8.Mb, ARM8Arch.mem_bits. lia.
+Qed.
+
+Lemma divide_helper :
+forall a x k
+(HYP1: a<>0),
+(a*k <= x < a*(k+1) -> x / a = k).
+Proof.
+intuition. apply N.div_le_lower_bound in H0.
+apply N.Div0.div_lt_upper_bound in H1.
+apply equals_sandwich. split; assumption. assumption.
+Qed.
+
+
+(*Made some small tweaks to the one we already have for greater ease of use*)
+Lemma bit_update_noverlap_new:
+  forall m bmp acpt acpt_len L acpt_i
+  (NO : ~ overlap 64 acpt acpt_len bmp 32)
+  (LEN : strlen m acpt acpt_len)
+  (ACPTI : acpt_i < acpt_len),
+  m [Ⓠ bmp + (m Ⓑ[ acpt + L ]  >> 6 << 3) := 1 << m Ⓑ[ acpt + L ]  mod 64
+      .| m Ⓠ[ bmp + (m Ⓑ[ acpt + L ]  >> 6 << 3) ] ] Ⓑ[ acpt + acpt_i ] = m Ⓑ[ acpt + acpt_i ].
+Proof.
+  intros. eapply getmem_noverlap.
+  apply noverlap_index_index with (len1:=acpt_len) (len2:=32).
+  all: try (assumption || lia).
+  assert (H:(m Ⓑ[ acpt + L ]) < 256). apply getmem_bound. 
+  assert (Htemp: 32 = 24 + 8) by lia. rewrite Htemp; clear Htemp.
+  apply N.add_le_mono; try lia.
+  apply N.lt_le_pred in H; simpl in H.
+  apply (Nshiftr_mono _ _ 6), (Nshiftl_mono _ _ 3) in H. simpl (255 >> 6 << 3) in H.
+  assumption.
+Qed.
+
+(*changed bitarray_nstr_incr *)
+Lemma bitarray_nstr_incr_new:
+forall m acpt acpt_len bmp (L : N)
+  (* Current Hypothesis Space : *)
+  (ACPT_LEN : strlen m acpt acpt_len)
+  (NO : ¬ overlap 64 acpt acpt_len bmp 32)
+  (BITNSTR : bitarray_nstr_new m bmp acpt L)
+  (BC : m Ⓑ[ acpt + L ] ≠ 0)
+  (* Experimental Hypotheses : *)
+  (L_LT_LEN : L < acpt_len) (* provable by the strlen_incr lemma *)
+,
+  
+bitarray_nstr_new (changed_mem bmp acpt L m) bmp acpt (L+1). 
+Proof.
+  intros.
+  unfold bitarray_nstr_new in BITNSTR.
+  unfold bitarray_nstr_new.
+
+  intros.
+  unfold bit_test in BITNSTR.
+  unfold bit_test.
+
+  split.
+  intros. rename H0 into H1.
+
+  unfold changed_mem in H1. 
+  rewrite testbit_xbits in H1. 
+  rewrite N.shiftl_1_l in H1.
+  rewrite N.lor_comm in H1.
+  rewrite <- N.setbit_spec' in H1.
+
+  rewrite <- setmem_eq in H1. rewrite <- testbit_xbits in H1.
+  rewrite getmem_setmem in H1. unfold IL_arm8.Mb, ARM8Arch.mem_bits in H1. psimpl (2 ^ (8 * 32)) in H1.
+  rewrite N.setbit_spec' in H1. rewrite N_lor_mod_pow2 in H1.
+  rewrite getmem_mod_r in H1. rewrite N.mod_small in H1.
+  rewrite <- N.setbit_spec' in H1. rewrite N.setbit_iff in H1.
+
+  specialize (BITNSTR i H).
+
+  destruct H1. admit.
+
+  apply BITNSTR in H0. destruct H0 as [j [H0 [H1 H2]]]. 
+  exists j. split. lia. split.
+  unfold nilfree in H1. unfold nilfree.
+  intros. apply H1 in H3.
+  unfold changed_mem.
+  rewrite bit_update_noverlap_new with (bmp:= bmp)(acpt_len:=acpt_len) (acpt_i:= i0).
+  assumption.
+
+  assumption. assumption. 
+  (*indx < acpt_len*)
+  admit. 
+
+  unfold changed_mem.
+  rewrite bit_update_noverlap_new with (bmp:= bmp)(acpt_len:=acpt_len) (acpt_i:= j).
+
+  all: try assumption. 
+  (*indx < acpt_len*)
+  admit. 
+  rewrite <- N.pow_lt_mono_r_iff.
+  apply getmem_bound. lia. lia. apply getmem_bound.
+
+intros.
+  destruct H0 as [j [H0 [H1 H2]]].
+  unfold changed_mem.
+  rewrite testbit_xbits, N.shiftl_1_l, N.lor_comm. rewrite <- N.setbit_spec'.
+
+  rewrite <- setmem_eq. rewrite <- testbit_xbits.
+  rewrite getmem_setmem. unfold IL_arm8.Mb, ARM8Arch.mem_bits. psimpl (2 ^ (8 * 32)).
+  rewrite N.setbit_spec', N_lor_mod_pow2, getmem_mod_r, N.mod_small.
+  rewrite <- N.setbit_spec'. rewrite N.setbit_iff.
+
+  specialize (BITNSTR i H).
+
+    unfold changed_mem in H2.
+  rewrite bit_update_noverlap_new with (bmp:= bmp)(acpt_len:=acpt_len) (acpt_i:= j) in H2.
+
+  assert (j < L + 1 -> j = L \/ j < L). lia.
+  specialize (H3 H0). destruct H3.
+
+  left. rewrite H3 in H2. assumption. 
+  (*current len is less than or eq to acpt string length*)
+
+  right. apply BITNSTR. exists j. split. assumption.
+  split.
+    unfold nilfree in H1. unfold nilfree.
+    intros. apply H1 in H4. unfold changed_mem in H4. rewrite bit_update_noverlap_new with (bmp:= bmp)(acpt_len:=acpt_len) (acpt_i:= i0) in H4.
+    assumption. assumption. assumption.
+  (*current indx is less than acpt_len*)
+  admit. 
+
+  all: try assumption. 
+  (*current indx is less than acpt_len*)
+  admit.
+
+  rewrite <- N.pow_lt_mono_r_iff.
+  apply getmem_bound.
+  lia. lia. apply getmem_bound. 
+  
+Admitted.
+
+(*EDIT: had to change this for the new definition*)
+Lemma bitmap_0_new:
+  ∀ m sp ap, m Ⓨ[ sp ] = 0 -> bitarray_nstr_new m sp ap 0.
+Proof.
+  intros.
+  unfold bitarray_nstr_new.
+
+  intuition. 
+Admitted.
+
+Lemma transform_changed_mem:
+forall bitmap_ptr accept_ptr L m, 
+(changed_mem bitmap_ptr accept_ptr L m) = (m [Ⓠ bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >> 6 << 3) := 1 <<
+m Ⓑ[ accept_ptr + L ] mod 64 .| m Ⓠ[ bitmap_ptr + (m Ⓑ[ accept_ptr + L ] >>6 <<3)]]).
+Proof.
+intros. unfold changed_mem. reflexivity.
+Qed.
+
+(* IXB_EDIT *)
+Lemma bitarray_nstr_str_new :
+  ∀ len mem accept_ptr bitmap_ptr
+     (BITNSTR: bitarray_nstr_new mem bitmap_ptr accept_ptr len)
+     (NIL: mem Ⓑ[ accept_ptr + len ] = 0),
+     bitarray_str_new mem bitmap_ptr accept_ptr.
+Proof.
+
+unfold bitarray_nstr_new, bitarray_str_new.
+intros. split; intros.
+
+- rename H0 into BIT. apply BITNSTR in BIT. destruct BIT as [j [LEN [NILFREE MEM]]]. exists j. split.
+  assumption. rewrite getmem_mod_l. assumption. assumption.
+
+- destruct H0 as [j [NFj Memji]]. enough (Help: exists g, g < len /\ nilfree mem accept_ptr (1+g) /\ mem Ⓑ[ accept_ptr + g ] = i).
+  specialize (BITNSTR i H). rewrite <-BITNSTR in Help. assumption.
+  rewrite getmem_mod_l in Memji.
+  exists j; repeat (assumption || split).
+  Search (_ < _ -> _ <= _ -> _ < _). apply N.lt_le_trans with (m:=1+j); try lia.
+  Check nilfree_le_zero.
+  apply (nilfree_le_zero mem accept_ptr len (1+j)); assumption.
+Qed.
+
+Print bitarray_nstr. Print bitarray_nstr_new.
+Print bit_test.
+Lemma bit_test_bit_equiv:
+  forall mem p i len (Lt : i < 8 * len), 0 < bit mem p i <-> N.testbit (getmem 64 LittleE len mem p) i = true.
+Proof.
+  intros. assert (H: 8 <> 0) by lia; assert (Eqi:=N.div_mod i 8 H).
+  remember (i/8) as byte_index; remember (i mod 8) as bit_index.
+  assert (Lt': bit_index < 8) by (rewrite Heqbit_index; apply N.mod_upper_bound; lia).
+  rewrite Eqi in *. clear - Lt' Lt. 
+    generalize dependent len. generalize dependent bit_index. generalize dependent p. generalize dependent mem.
+    induction byte_index using N.peano_ind.
+  - intros. simpl (8*0+bit_index) in *. split; intros.
+    + unfold N.testbit. Check getmem_split. unfold bit in H.
+      destruct len. simpl in Lt; now apply N.nlt_0_r in Lt.
+      
+Qed.
+
+Lemma bit_test_equivalence:
+  forall m bitmap_ptr i
+  (HYP1: i < 256)
+  (HYP2: N.testbit (m Ⓠ[ bitmap_ptr + (i >> 6 << 3)]) (i mod 64) = true),
+  N.testbit (m Ⓨ[ bitmap_ptr ])
+  (i) = true.
+Proof.
+  intros. 
+
+
+assert (forall b, b < 256 -> 0<= b /\ b < 64 \/ (64 <= b /\ b <128) \/ (128 <= b /\ b<192) \/ (192 <= b /\ b<256)). lia.
+specialize (H i HYP1).
+destruct H.
+rewrite <- HYP2.
+rewrite <- xbyte_to_xbit_3. rewrite xbits_spec.
+psimpl. psimpl (i mod 64 + 0). rewrite N.mod_small.
+assert (i >> 6 << 3 = 8*0). apply range_eq. lia. psimpl. lia.
+rewrite H0. psimpl (8*0). psimpl (bitmap_ptr + 0). reflexivity. lia.
+
+
+replace 32 with (24 + 8).
+rewrite getmem_split.
+replace 24 with (16 + 8).
+rewrite getmem_split.
+replace 16 with (8 + 8).
+rewrite getmem_split.
+repeat rewrite N.lor_spec.
+unfold IL_arm8.Mb, ARM8Arch.mem_bits. psimpl.
+
+destruct H.
+psimpl. assert ((i >> 6 << 3) = 8*1). apply range_eq. lia. psimpl. lia. rewrite H0 in HYP2. 
+assert(N.testbit (m Ⓠ[ bitmap_ptr + 8 ]) (i mod 64) = true -> N.testbit (m Ⓠ[ bitmap_ptr + 8 ] << 8 * 8) i = true).
+{ intros. psimpl (8*8).
+rewrite N.shiftl_spec_high'.
+assert(64 <= i < 128 -> i - 64 = i mod 64). 
+intros. rewrite N.Div0.mod_eq. 
+assert(i / 64 = 1). apply divide_helper. lia. psimpl. lia. rewrite H3. psimpl. reflexivity. specialize (H2 H). rewrite H2. assumption. lia. }
+specialize (H1 HYP2). rewrite H1. 
+rewrite orb_true_r. rewrite orb_comm. rewrite orb_assoc.
+rewrite orb_true_r. rewrite orb_comm. rewrite orb_true_r. reflexivity.
+
+
+destruct H.
+psimpl. assert ((i >> 6 << 3) = 8*2). { apply range_eq. lia. psimpl. lia. } rewrite H0 in HYP2. 
+assert(N.testbit (m Ⓠ[ bitmap_ptr + 8*2 ]) (i mod 64) = true -> N.testbit (m Ⓠ[ bitmap_ptr + (8 + 8) ] << 8 * (8 + 8)) i = true).
+{ intros. psimpl (8 + 8). replace (8*16) with (64*2).
+rewrite N.shiftl_spec_high'.
+assert(i - 64*2 = i mod 64). { rewrite N.Div0.mod_eq.
+assert(i / 64 = 2). apply divide_helper. lia. psimpl. lia. rewrite H2. reflexivity. }
+rewrite H2. assumption. lia. lia. }
+specialize (H1 HYP2). rewrite H1. 
+rewrite orb_true_r. rewrite orb_comm. rewrite orb_true_r. reflexivity.
+
+psimpl. assert ((i >> 6 << 3) = 8*3). { apply range_eq. lia. psimpl. lia. } rewrite H0 in HYP2. 
+assert(N.testbit (m Ⓠ[ bitmap_ptr + 8*3 ]) (i mod 64) = true -> N.testbit (m Ⓠ[ bitmap_ptr + (8 + 8 + 8) ] << 8 * (8 + 8 + 8)) i = true).
+{ intros. psimpl (8 + 8 + 8). replace (8*24) with (64*3).
+rewrite N.shiftl_spec_high'.
+assert(i - 64*3 = i mod 64). { rewrite N.Div0.mod_eq.
+assert(i / 64 = 3). apply divide_helper. lia. psimpl. lia. rewrite H2. reflexivity. }
+rewrite H2. assumption. lia. lia. }
+specialize (H1 HYP2). rewrite H1. 
+rewrite orb_true_r. reflexivity. all: try lia.
+
+Qed.
+
+
+Lemma map_checker_n_helper_new:
+  forall m bitmap_ptr str_ptr L
+  (BC : (m Ⓑ[ str_ptr + L ]) ≠ 0)
+  (BC0 : (((m Ⓠ[ bitmap_ptr + (((m Ⓑ[ str_ptr + L ]) >> 6) << 3) ]) >>
+        ((m Ⓑ[ str_ptr + L ]) mod 64)) mod 2) ≠ 0)
+  ,
+  (bit_test m bitmap_ptr (m Ⓑ[ str_ptr + L ])).
+Proof.
+  intros.
+  eapply bit_test_equivalence. admit. 
+  rewrite N.testbit_true.
+  rewrite <- N.shiftr_div_pow2. 
+  assert (forall a, 0<= a -> a mod 2 <> 0 -> a mod 2 = 1). { intros.
+  assert (0 <= a mod 2 < 2). apply N.mod_bound_pos. assumption. lia.
+  lia. }
+  apply H in BC0. assumption.
+  (*Prove memory values are <= 0*)
+  admit.  
+Admitted.
