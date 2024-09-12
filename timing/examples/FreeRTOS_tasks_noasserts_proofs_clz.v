@@ -1,6 +1,7 @@
 Require Import RTOSDemo_NoAsserts_Clz.
 Require Import riscvTiming.
 Import RISCVNotations.
+Require Import memsolve.
 
 Definition start_vTaskSwitchContext : N := 0x8000137c.
 Definition end_vTaskSwitchContext : N := 0x8000144c.
@@ -26,22 +27,22 @@ Definition time_branch : N :=
     5 + (ML - 1).
 
 Definition uxSchedulerSuspended (gp : N) (mem : addr -> N) : N :=
-    (* mem â¹[2144 + gp]. *)
+    (* mem Ⓓ[2144 + gp]. *)
     (* This should actually be the below expression. Unclear on whether lifter
        has bug, seems like it isn't treating immediate as signed
     *)
-    mem â¹[gp â 1952].
+    mem Ⓓ[gp ⊖ 1952].
 
 Definition addr_xYieldPendings (gp : N) : N :=
     gp - 1932.
 
 Definition pxCurrentTCB (gp : N) (mem : addr -> N) : N :=
-    (* mem â¹[2200 + gp]. *)
+    (* mem Ⓓ[2200 + gp]. *)
     (* Same as above *)
-    mem â¹[gp â 1896].
+    mem Ⓓ[gp ⊖ 1896].
 
 Definition uxTopReadyPriority (gp : N) (mem : addr -> N) : N :=
-    mem â¹[gp â 1920].
+    mem Ⓓ[gp ⊖ 1920].
 
 Definition addr_pxReadyTasksLists (gp : N) : N :=
     gp - 924.
@@ -52,10 +53,14 @@ Definition vTaskSwitchContext_exit (t:trace) :=
   | _ => false
   end | _ => false end.
 
-Definition timing_postcondition (t : trace) (s : store) (gp : N) (mem : addr -> N) a2 a5 : Prop :=
+Definition timing_postcondition (t : trace) (gp : N) (mem : addr -> N) : Prop :=
     if (uxSchedulerSuspended gp mem) =? 0 then
-        cycle_count_of_trace t = 25 + 3 * time_branch + 17 * time_mem + (
-            if a2 =? a5 then 3 + 2 * time_mem else time_branch)
+        cycle_count_of_trace t = 25 + 3 * time_branch + 17 * time_mem
+        + (if (4 + mem Ⓓ[ 4 + mem Ⓓ[ 4 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ]])
+            =? (mem Ⓓ[ 12 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ])
+            then 22 + clz (mem Ⓓ[ 4294965376 + gp ]) 32 + 5 * time_mem else
+            19 + time_branch + clz (mem Ⓓ[ 4294965376 + gp ]) 32 + 3 * time_mem
+        )
     else
         cycle_count_of_trace t = 5 + time_branch + 2 * time_mem.
 
@@ -71,7 +76,7 @@ Definition __stack_pointer : N :=
 Definition vTaskSwitchContext_stack_frame_size : N := 16.
 
 Definition gp_sp_noverlap (gp sp : N) : Prop :=
-    ~overlap 32 gp __global_size (sp - vTaskSwitchContext_stack_frame_size) vTaskSwitchContext_stack_frame_size.
+    ~overlap 32 (gp ⊖ __global_size) __global_size (sp ⊖ vTaskSwitchContext_stack_frame_size) vTaskSwitchContext_stack_frame_size.
 
 Fixpoint subtrace_since_address (t : trace) (a : addr) : trace :=
     match t with
@@ -111,6 +116,27 @@ Definition time_before_address (t : trace) (a : addr) :=
     Will have to revisit later, definitely need something like this for scaling up.
 *)
 
+Definition static_buffer_lengths_in_bytes (a : addr) : option N :=
+    match a with
+    (* uxSchedulerSuspended *)
+    | 1952
+    (* xYieldPendings*)
+    | 1932 
+    (* pxCurrentTCB *)
+    | 1896 
+    (* uxTopReadyPriority *)
+    | 1920 => Some 4
+    | _ => None
+    end.
+
+Definition smem_well_formed (gp : N) : Prop :=
+    forall x y len_x len_y,
+                static_buffer_lengths_in_bytes x = Some len_x ->
+                static_buffer_lengths_in_bytes y = Some len_y ->
+            ~ overlap 32
+                (gp ⊖ x) len_x
+                (gp ⊖ y) len_y.
+
 Definition vTaskSwitchContext_timing_invs (_ : store) (p : addr) (base_sp : N) (t:trace) :=
 match t with (Addr a, s) :: t' => match a with
     (* vApplicationStackOverflowHook *)
@@ -121,51 +147,66 @@ match t with (Addr a, s) :: t' => match a with
     | 0x8000e804 => Some True
     (* vTaskSwitchContext *)
     | 0x80001380 => Some (
-        exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\ s R_SP = â¹base_sp 
-            /\ s R_A4 = â¹(uxSchedulerSuspended gp mem) /\ gp_sp_noverlap gp base_sp /\
+        exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ s R_SP = Ⓓbase_sp 
+            /\ s R_A4 = Ⓓ(uxSchedulerSuspended gp mem) /\
+            gp_sp_noverlap gp base_sp /\
+            smem_well_formed gp /\
         cycle_count_of_trace t' = time_mem)
-    | 0x800013b4 => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\ s R_SP = â¹(base_sp â 16) /\
-        s R_A5 = â¹(mem â¹[48 + pxCurrentTCB gp mem]) /\
-        s R_A2 = â¹(mem â¹[mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A4 = â¹((0xa5a5a << 12) + 1445) /\
+    | 0x800013b4 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ s R_SP = Ⓓ(base_sp ⊖ 16) /\
+        s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
+        s R_A2 = Ⓓ(mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A4 = Ⓓ((0xa5a5a << 12) + 1445) /\
+        gp_sp_noverlap gp base_sp /\
+        smem_well_formed gp /\
         (uxSchedulerSuspended gp mem =? 0) = true /\
         cycle_count_of_trace t' = 6 + 7 * time_mem + time_branch)
-    | 0x800013bc => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
-        s R_A2 = â¹(mem â¹[mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A3 = â¹(mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A5 = â¹(mem â¹[48 + pxCurrentTCB gp mem]) /\
+    | 0x800013bc => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
+        s R_A2 = Ⓓ(mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A3 = Ⓓ(mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
+        gp_sp_noverlap gp base_sp /\
+        smem_well_formed gp /\
         (uxSchedulerSuspended gp mem =? 0) = true /\
-        (mem â¹[ mem â¹[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
+        (mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
         cycle_count_of_trace t' = 9 + 8 * time_mem + time_branch)
-    | 0x800013c4 => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
-        s R_A3 = â¹(mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A4 = â¹(mem â¹[8 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A5 = â¹(mem â¹[48 + pxCurrentTCB gp mem]) /\
-        (mem â¹[ mem â¹[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
-        (mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]] =? mem â¹[mem â¹[48 + pxCurrentTCB gp mem]]) = true /\
+    | 0x800013c4 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
+        s R_A3 = Ⓓ(mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A4 = Ⓓ(mem Ⓓ[8 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        gp_sp_noverlap gp base_sp /\
+        smem_well_formed gp /\
+        s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
+        (mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
+        (mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]] =? mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) = true /\
         (uxSchedulerSuspended gp mem =? 0) = true /\
         cycle_count_of_trace t' = 12 + 9 * time_mem + time_branch
     )
-    | 0x800013cc => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
-        s R_A3 = â¹(mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A4 = â¹(mem â¹[8 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A5 = â¹(mem â¹[12 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        (mem â¹[ mem â¹[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
-        (mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]] =? mem â¹[mem â¹[48 + pxCurrentTCB gp mem]]) = true /\
-        (mem â¹[8 + mem â¹[48 + pxCurrentTCB gp mem]] =? mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]]) = true /\
+    | 0x800013cc => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
+        s R_A3 = Ⓓ(mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A4 = Ⓓ(mem Ⓓ[8 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A5 = Ⓓ(mem Ⓓ[12 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        gp_sp_noverlap gp base_sp /\
+        smem_well_formed gp /\
+        (mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
+        (mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]] =? mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) = true /\
+        (mem Ⓓ[8 + mem Ⓓ[48 + pxCurrentTCB gp mem]] =? mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) = true /\
         (uxSchedulerSuspended gp mem =? 0) = true /\
         cycle_count_of_trace t' = 15 + 10 * time_mem + time_branch
     )
-    | 0x80001418 => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
-        s R_A1 = â¹(4 + mem â¹[4 + (mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]])]) /\
-        s R_A3 = â¹(mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A4 = â¹(mem â¹[8 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A5 = â¹(mem â¹[12 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
+    | 0x80001418 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
+        s R_A1 = Ⓓ(4 + mem Ⓓ[4 + (mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]])]) /\
+        s R_A3 = Ⓓ(mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A4 = Ⓓ(mem Ⓓ[8 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A5 = Ⓓ(mem Ⓓ[12 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        gp_sp_noverlap gp base_sp /\
+        smem_well_formed gp /\
         (uxSchedulerSuspended gp mem =? 0) = true /\
-        cycle_count_of_trace t' = 17 + 2 * time_branch + 11 * time_mem)
-    | 0x8000138c | 0x8000144c => Some (
-        exists mem gp a2 a5, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
-            timing_postcondition t s gp mem a2 a5)
+        (* cycle_count_of_trace t' = 17 + 2 * time_branch + 11 * time_mem) *)
+        cycle_count_of_trace t' = 36 + clz (mem Ⓓ[ 4294965376 + gp ]) 32 + 2 * time_branch + 14 * time_mem)
+    | 0x8000138c => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ timing_postcondition t gp mem)
+    | 0x8000144c => Some (
+        exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
+        s R_A5 = Ⓓ(mem Ⓓ[12 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        timing_postcondition t gp mem)
     | _ => None end
 | _ => None
 end.
@@ -223,13 +264,29 @@ Proof.
   apply sep_noverlap; try (left; lia || right; lia).
 Qed.
 
+(*
+Define some function f
+- f takes in index into GP 
+- f returns length of buffer that is at mem(gp - index) (or none if malformed)
+Assume in theorem that (forall x y, (assume f x, f y are Some number) 
+    x <> y -> ~ overlap (gp - x) (f x) (gp - y) (f y) )
+Assume (forall x, exists k, f x = Some k -> ~ overlap (gp - x) (f x) (sp (-) 16 16 ))
+Now we can specialize assumption for pxcurrenttcb, uxschedulersuspended etc.
+
+Do we assume that these buffers don't overlap with stack frame?
+*)
+
 Theorem vTaskSwitchContext_timing:
-  forall s p t s' x' gp sp
+  forall s p t s' x' gp sp mem
          (ENTRY: startof t (x',s') = (Addr start_vTaskSwitchContext,s)) (* Define the entry point of the function *)
          (MDL: models rvtypctx s)
-         (GP : s R_GP = â¹gp)
-         (SP : s R_SP = â¹sp)
-         (GP_SP_FAR : gp_sp_noverlap gp sp),
+         (GP : s R_GP = Ⓓgp)
+         (SP : s R_SP = Ⓓsp)
+         (MEM : s V_MEM32 = Ⓜmem)
+         (GP_SP_FAR : gp_sp_noverlap gp sp)
+         (SMEM_WELL_FORMED : smem_well_formed gp)
+         (* (TCB_STACK_NO : ~ overlap 32 (pxCurrentTCB gp mem) 52 (sp ⊖ 16) 16) *)
+         ,
   satisfies_all 
     lifted_vTaskSwitchContext                                 (* Provide lifted code *)
     (vTaskSwitchContext_timing_invs s p sp)                  (* Provide invariant set *)
@@ -240,10 +297,13 @@ Proof using.
     apply prove_invs.
     Local Ltac step := time rv_step.
     Local Ltac handle_ex := eexists; eexists; repeat split; try eassumption.
-    Local Ltac destruct_pre PRE := destruct PRE as [mem [gp [MEM [GP [GP_SP_FAR Cycles]]]]].
+    Ltac noverlap_prepare gp sp :=
+        _noverlap_prepare uxSchedulerSuspended pxCurrentTCB 
+            gp_sp_noverlap __global_size vTaskSwitchContext_stack_frame_size 
+            gp sp.
 
     (* Base case *)
-    simpl. rewrite ENTRY. step. rename m into mem.
+    simpl. rewrite ENTRY. step.
     exists mem, gp. repeat split; try assumption.
     unfold uxSchedulerSuspended. unfold msub. psimpl. reflexivity.
 
@@ -252,32 +312,34 @@ Proof using.
     eapply startof_prefix in ENTRY; try eassumption.
     eapply preservation_exec_prog in MDL; 
         try eassumption; [idtac|apply lift_riscv_welltyped].
-    clear - PRE MDL. rename t1 into t. rename s1 into s'.
+    clear - ENTRY PRE MDL. rename t1 into t. rename s1 into s'.
 
     (* Meat of proof starts here *)
     destruct_inv 32 PRE.
 
     (* 0x800015e4 *)
-    destruct PRE as [mem [gp [MEM [GP [SP [A4 [GP_SP_FAR Cycles]]]]]]].
+    destruct PRE as [mem [gp [MEM [GP [SP [A4 [GP_SP_FAR [SMEM_WELL_FORMED Cycles]]]]]]]].
     step. step. step. step. step. step. step. step. step. step.
     do 2 eexists. repeat split. unfold msub. now psimpl.
-        admit. admit.
-        (* unfold uxSchedulerSuspended. repeat rewrite getmem_noverlap.
-            apply BC.
-        1-5: try now (apply sep_noverlap; left; unfold msub; psimpl; lia).
-        1-4: apply noverlap_shrink with (a1 := gp) (len1 := __global_size); psimpl. *)
-        admit. (* Overlapping stuff *)
-        hammer. rewrite A4, BC, Cycles. psimpl. lia.
-    step. step. handle_ex. handle_ex.
+        {
+            noverlap_prepare gp sp; memsolve mem gp sp.
+            all: admit. (* Down to pxCurrentTCB overlaps *)
+        }
+        {
+            noverlap_prepare gp sp; memsolve mem gp sp.
+            all: admit. (* Down to pxCurrentTCB overlaps *)
+        } assumption. assumption.
+        { noverlap_prepare gp sp. memsolve mem gp sp. assumption. }
+        hammer. rewrite A4, BC, Cycles. lia.
+    step. step. handle_ex.
         unfold timing_postcondition. unfold uxSchedulerSuspended in *.
-            rewrite getmem_frame; cycle 1.
-                left. psimpl. lia.
-                left. psimpl. lia.
+            rewrite getmem_frame; try (left; psimpl; lia).
         rewrite BC.
         hammer. rewrite A4, BC, Cycles. lia.
 
     (* 0x800013c8 *)
-    destruct PRE as [mem [gp [MEM [GP [SP [A5 [A2 [A4 [BR0 Cycles]]]]]]]]].
+    destruct PRE as [mem [gp [MEM [GP [SP [A5 [A2 [A4 
+        [GP_SP_FAR [SMEM_WELL_FORMED [BR0 Cycles]]]]]]]]]]].
     step.
         step. step. step. step. step. step. step. step. step. step.
         exact I. (* Infinite loop, stack overflow detected *)
@@ -286,7 +348,8 @@ Proof using.
         hammer. rewrite A2, A4, BC, Cycles. lia.
 
     (* 0x800013d0 *)
-    destruct PRE as [mem [gp [MEM [GP [A2 [A3 [A5 [NotSuspended [Br Cycles]]]]]]]]].
+    destruct PRE as [mem [gp [MEM [GP [A2 [A3 [A5 [GP_SP_FAR [SMEM_WELL_FORMED 
+        [NotSuspended [Br Cycles]]]]]]]]]]].
     step.
         step. step. step. step. step. step. step. step. step. step.
         exact I. (* Infinite loop, stack overflow detected *)
@@ -295,7 +358,8 @@ Proof using.
         hammer. rewrite A2, A3, Cycles, BC. lia.
 
     (* 0x800013d8 *)
-    destruct PRE as [mem [gp [MEM [GP [A3 [A4 [A5 [B1 [B2 [NotSuspended Cycles]]]]]]]]]].
+    destruct PRE as [mem [gp [MEM [GP [A3 [A4 [A5 [GP_SP_FAR [SMEM_WELL_FORMED 
+        [B1 [B2 [NotSuspended Cycles]]]]]]]]]]]].
     step.
         step. step. step. step. step. step. step. step. step. step.
         exact I. (* Infinite loop, stack overflow detected *)
@@ -305,37 +369,99 @@ Proof using.
         hammer. rewrite A3, A4, BC, Cycles. lia.
 
     (* 0x800013e0 *)
-    destruct PRE as [mem [gp [MEM [GP [A3 [A4 [A5 [B1 [B2 [B3 [NotSuspended Cycles]]]]]]]]]]].
-    step. step. step. step. 
-        admit. (* Implement clz *)
+    destruct PRE as [mem [gp [MEM [GP [A3 [A4 [A5 [GP_SP_FAR [SMEM_WELL_FORMED 
+        [B1 [B2 [B3 [NotSuspended Cycles]]]]]]]]]]]]].
+    step. step. step. step. step. step. step. step. step. step. step.
+    step. step. step. step.
+        handle_ex. repeat split.
+        admit. admit. admit. admit. (* CLZ noverlap *)
+        {
+            noverlap_prepare gp sp; memsolve mem gp sp. assumption.
+            admit. (* CLZ noverlap *)
+        }
+        hammer. rewrite A4, A5, BC, Cycles. psimpl.
+        (* Can't infer placeholder? *)
+        replace ((mem[Ⓓ4294966376 + gp + (31 ⊖ clz (mem Ⓓ[ 4294965376 + gp ]) 32) * 20
+                    := mem Ⓓ[ 4 + mem Ⓓ[ 4294966376 + gp + 
+                                (31 ⊖ clz (mem Ⓓ[ 4294965376 + gp ]) 32) * 20 ]
+                            ] 
+                    ]) Ⓓ[ 4294965376 + gp ]) with (mem Ⓓ[ 4294965376 + gp ]).
+        lia.
+        {
+            noverlap_prepare gp sp. memsolve mem gp sp.
+            apply sep_noverlap; left; psimpl.
+            - clear. induction (31 ⊖ (clz _ _)) using N.peano_ind; psimpl.
+                lia. replace (N.succ n) with (1 + n) by lia.
+                rewrite N.mul_add_distr_r. psimpl.
+                etransitivity. eassumption. admit.
+            - clear. induction (31 ⊖ (clz _ _)) using N.peano_ind; psimpl. lia.
+                unfold msub. replace (N.succ n) with (1 + n) by lia.
+                rewrite N.mul_add_distr_r. psimpl.
+                admit.
+        }
     (* Inside vApplicationStackOverflowHook *)
     step. step. step. step. step. step. step. step. step. step. exact I.
 
     (* 0x8000142c *)
-    destruct PRE as [mem [gp [MEM [GP [A2 [A3 [A4 [A5 [NotSuspended Cycles]]]]]]]]].
+    destruct PRE as [mem [gp [MEM [GP [A1 [A3 [A4 [A5 [GP_SP_FAR [SMEM_WELL_FORMED 
+        [NotSuspended Cycles]]]]]]]]]]].
     step. step. step. step. step. step. step. step. step. step. step.
-        eexists. exists gp, (4 + mem â¹[ 4 + mem â¹[ 4 + mem â¹[ 48 + pxCurrentTCB gp mem ] ] ]),
-            (mem â¹[ 12 + mem â¹[ 48 + pxCurrentTCB gp mem ] ]).
-        repeat split.
+        handle_ex.
+        {
+            (* noverlap_prepare gp sp. memsolve mem gp sp. *)
+            (* There actually is an overlapping case here. Too overzealous
+               with getmem_noverlap? *)
+            admit.
+        }
         unfold timing_postcondition.
         replace (uxSchedulerSuspended gp _ =? 0) with true.
-        apply Bool.negb_true_iff in BC. rewrite BC.
-        hammer. rewrite A2, A5, BC, Cycles.
-        psimpl. cbn [negb]. lia.
-        admit. (* noverlap *)
+        apply Bool.negb_true_iff in BC. (* rewrite BC. *)
+        hammer. rewrite A1, A5, BC, Cycles.
+        cbn [negb]. replace (_ =? _) with 
+            (4 + mem Ⓓ[ 4 + mem Ⓓ[ 4 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] ] =?
+            mem Ⓓ[ 12 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ]).
+        rewrite BC. replace (
+            clz ((mem [Ⓓ4294965400 + gp
+                := mem
+                Ⓓ[ 12 +
+                    mem
+                    Ⓓ[ 4 + mem Ⓓ[ 8 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] +
+                        mem Ⓓ[ 4 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] * 20 ] ] ])
+            Ⓓ[ 4294965376 + gp ]) 32
+                    ) with (clz (mem Ⓓ[ 4294965376 + gp ]) 32).
+        lia.
+        noverlap_prepare gp n; memsolve mem gp n.
+        { admit. (* More actual overlapping stuff *)}
+        { unfold uxSchedulerSuspended. noverlap_prepare gp n. memsolve mem gp n.
+          now rewrite NotSuspended. }
     step. step. step. step. step. step. step. step. step. step. step.
     step.
-        eexists. exists gp, (4 + mem â¹[ 4 + mem â¹[ 4 + mem â¹[ 48 + pxCurrentTCB gp mem ] ] ]),
-            (mem â¹[ 12 + mem â¹[ 48 + pxCurrentTCB gp mem ] ]).
-        repeat split.
+        handle_ex.
+        { admit. (* More actual overlapping stuff *) }
         unfold timing_postcondition.
         replace (uxSchedulerSuspended gp _ =? 0) with true.
-        apply Bool.negb_false_iff in BC. rewrite BC.
-        hammer. rewrite A2, A5, BC, Cycles. cbn [negb]. lia.
-        admit. (* noverlap *)
+        apply Bool.negb_false_iff in BC.
+        hammer. rewrite A1, A5, BC, Cycles.
+        match goal with
+        | [H: (?a =? ?b) = true |- _ = (if ?x =? ?y then _ else _) ] =>
+            replace (x =? y) with (a =? b); [rewrite H|idtac]
+        | _ => idtac end.
+        cbn [negb].
+        replace (clz
+        ((mem [Ⓓ4 + n := mem Ⓓ[ 12 + n ] ] [Ⓓ4294965400 + gp
+          := (mem [Ⓓ4 + n := mem Ⓓ[ 12 + n ] ])
+             Ⓓ[ 12 +
+                (mem [Ⓓ4 + n := mem Ⓓ[ 12 + n ] ])
+                Ⓓ[ 4 + mem Ⓓ[ 8 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] +
+                   mem Ⓓ[ 4 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] * 20 ] ] ]) Ⓓ[ 
+         4294965376 + gp ]) 32) with (clz (mem Ⓓ[ 4294965376 + gp ]) 32).
+        lia.
+        { admit. (* pxCurrentTCB noverlaps, also some SP stuff. Need to bind to current SP
+            and update gp_sp_noverlap so that it takes into account the difference to SP over time *) }
+        { admit. (* More actual overlapping stuff *) }
+        { noverlap_prepare gp n0. memsolve mem gp n0. now rewrite NotSuspended.
+          admit. (* Need to pass in gp_sp_noverlap *) }
 
     step. exact I.
-
-    Unshelve. exact 0. exact 0.
 Admitted.
 
