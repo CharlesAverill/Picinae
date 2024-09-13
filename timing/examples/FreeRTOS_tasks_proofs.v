@@ -253,6 +253,9 @@ Fixpoint subtrace_before_address (t : trace) (a : addr) : trace :=
     | _ => nil
     end.
 
+Definition time_before_address (t : trace) (a : addr) :=
+    cycle_count_of_trace (subtrace_before_address t a).
+
 (* The goal with the above function is to use for function timing invariants, e.g.
         cycle_count_of_trace t' = 
             func_time + cycle_count_of_trace (subtrace_before_address t' func_entry_addr))
@@ -271,10 +274,18 @@ Fixpoint subtrace_before_address (t : trace) (a : addr) : trace :=
 Definition vTaskSwitchContext_timing_invs (_ : store) (p : addr) (base_sp : N) (t:trace) :=
 match t with (Addr a, s) :: t' => match a with
     (* vAssertCalled *)
-    | 0x800122e4 => Some (cycle_count_of_trace t' = 
-        vAssertCalled_time + (
-            40 + 3 * time_branch + 14 * time_mem            
-        ))
+        (* entry *)
+    | 0x80012290 => Some (
+        time_before_address t 0x80012290 = 40 + 3 * time_branch + 14 * time_mem
+    )
+    | 0x800122c4 => Some (
+        cycle_count_of_trace t' = 56 + 3 * time_branch + 19 * time_mem
+    )
+    | 0x800122d4 => Some (cycle_count_of_trace t' = 99)
+        (* exit *)
+    | 0x800122e4 => Some (
+        cycle_count_of_trace t' = vAssertCalled_time + time_before_address t' 0x80012290
+    )
     (* vApplicationStackOverflowHook *)
     (* NOTE : This function intentionally goes into an infinite loop when a
        stack overflow is detected.
@@ -477,17 +488,11 @@ Proof using.
     destruct PRE as [mem [gp [MEM [GP [SP [A4 [GP_SP_FAR Cycles]]]]]]].
     step. step. step. step. step. step. step. step. step. step. step. step.
     do 2 eexists. repeat split. unfold msub. now psimpl.
-        (* rewrite getmem_noverlap; cycle 1.
-            apply noverlap_shrink with (a1 := gp) (len1 := __global_size); cycle 1.
-            unfold gp_sp_noverlap in GP_SP_FAR.
-            apply noverlap_symmetry, 
-                noverlap_shrink with (a1 := (sp - vTaskSwitchContext_stack_frame_size)) (len1 := vTaskSwitchContext_stack_frame_size).
-            psimpl.  *)
         admit. admit.
-        unfold uxSchedulerSuspended. repeat rewrite getmem_noverlap.
+        (* unfold uxSchedulerSuspended. repeat rewrite getmem_noverlap.
             apply BC.
         1-5: try now (apply sep_noverlap; left; unfold msub; psimpl; lia).
-        1-4: apply noverlap_shrink with (a1 := gp) (len1 := __global_size); psimpl.
+        1-4: apply noverlap_shrink with (a1 := gp) (len1 := __global_size); psimpl. *)
         admit. (* Overlapping stuff *)
         hammer. rewrite A4, BC, Cycles. lia.
     step. step. handle_ex.
@@ -547,18 +552,33 @@ Proof using.
 
     (* 0x80001688 *)
     destruct PRE as [mem [gp [MEM [GP [A3 [A4 [A5 [NotSuspended Cycles]]]]]]]].
-    step. (* Now in vAssertCalled *)
-        admit. (* TODO : add two invariants for the branches here *)
+    step. 
+    
+    (* vAssertCalled callee-responsible pre-entry time *)
+        unfold time_before_address. cbn [subtrace_before_address].
+        cbn [N.eqb Pos.eqb]. hammer.
+    1-3: cycle 2. (* Put vAssertCalled first *)
+    {
+        step. step. step. step. step. step. step.
+        step. step. step. step. step. step.
+        hammer. unfold time_before_address, subtrace_before_address in PRE.
+        cbn [N.eqb Pos.eqb] in PRE. rewrite PRE. lia.
+    } 1-3: cycle 2. {
+        step. step. step. step. step. hammer.
+        rewrite Hsv, BC, PRE. psimpl.
+    }
 
     (* 0x800016ac *)
-    destruct PRE as [mem [gp [MEM [GP [NotSuspended Cycles]]]]].
+    destruct PRE as [mem [gp [MEM [GP [Suspended Cycles]]]]].
     step. step. step. step. step. step. step. step. step.
         step. step. step. step.
     handle_ex. unfold timing_postcondition.
     replace (uxSchedulerSuspended gp _ !=? 0) with false.
     hammer. rewrite Hsv, Hsv0, BC, Cycles. lia. 
 
-    unfold "!=?". admit. (* NotSuspended overlap goal *)
+    unfold uxSchedulerSuspended, "!=?" in *.
+        rewrite getmem_noverlap, Suspended. reflexivity.
+        admit. (* Suspended noverlap goal *)
 
     (* 0x800016b0 *)
     step. step. step. step. step. step. step. step. step.
@@ -566,10 +586,15 @@ Proof using.
     handle_ex. unfold timing_postcondition.
     replace (uxSchedulerSuspended gp _ !=? 0) with false.
     hammer. rewrite Hsv, Hsv0, BC, Cycles.
+    psimpl.
     (* Need to add another set of conditions to the postcondition for this exit
        point. Probably depends on output of __clzsi2. Where is its return value
        stored? It seems like s1 but that don't make no sense
-    *) admit. admit. (* NotSuspended overlap goal *)
+    *) admit.
+
+    unfold uxSchedulerSuspended, "!=?" in *.
+        repeat rewrite getmem_noverlap. rewrite Suspended. reflexivity.
+        1-2: admit. (* NotSuspended overlap goal *)
 
     step. exact I. (* Infinite loop case *)
 

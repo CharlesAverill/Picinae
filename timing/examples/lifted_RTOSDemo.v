@@ -10,7 +10,7 @@ Definition __stack_pointer : N :=
     (* https://cdn.hackaday.io/files/1741677451560928/NEORV32.pdf *)
     (2 ^ 32) - 4.
 
-Definition lifted_RTOSDemo (_ : store) (a : addr) : N :=
+Definition lifted_RTOSDemo (a : addr) : N :=
     match a with
     (* <_start> *)
     | 0x80000000 => 0x00081197 (* auipc gp,0x81  *)
@@ -20514,8 +20514,113 @@ Definition lifted_RTOSDemo (_ : store) (a : addr) : N :=
 Definition start_lifted_RTOSDemo : N := 0x80000000.
 Definition end_lifted_RTOSDemo : N := 0x80013bcc.
 
-Definition vTaskSwitchContext (_ : store) (a : addr) : N :=
+(* TODO : how to handle multiple functions?
+   Ideally, each function should be its own coq function.
+   But then you run into the issue of having to manually
+   link all of your functions together. For now, I'm going
+   to do this.
+*)
+Definition vTaskSwitchContext (a : addr) : N :=
     match a with
+    (* <vApplicationStackOverflowHook> *)
+    | 0x80012270 => 0x80014537 (* lui a0,0x80014  *)
+    | 0x80012274 => 0xff010113 (* add sp,sp,-16  *)
+    | 0x80012278 => 0x46050513 (* add a0,a0,1120 # 80014460 <_etext+0x890>  *)
+    | 0x8001227c => 0x00112623 (* sw ra,12(sp)  *)
+    (* WARNING/TODO/NOTICE : 
+        I'm manually replacing the instruction here at 0x80012280:
+            0x20d000ef (* jal 80012c8c <printf> *)
+        with a nop:
+            0x00000013 (* addi zero, zero, 0 *)
+        This is because dealing with printf is a huge pain for my timing proof,
+        and this goes into an infinite loop (by design)anyways just a few 
+        instructions later! So replacing this call has no bearing on a timing
+        proof (although it may have a bearing on future correctness proofs)
+
+        This is a lot easier than recompiling the operating system :)
+    *)
+    (* | 0x80012280 => 0x20d000ef (* jal 80012c8c <printf>  *) *)
+    | 0x80012280 => 0x00000013 (* addi zero, zero, 0 *)
+    (* TODO 
+       switch this back to
+            0x30047073 (* csrc mstatus,8  *)
+       I don't want to implement the ZICSR extension rn
+    *)
+    (* | 0x80012284 => 0x30047073 (* csrc mstatus,8  *) *)
+    | 0x80012284 => 0x00000013 (* addi zero, zero, 0 *)
+    | 0x80012288 => 0x0000006f (* j 80012288 <vApplicationStackOverflowHook+0x18>  *)
+    (* <vAssertCalled> *)
+    | 0x80012290 => 0x00050613 (* mv a2,a0  *)
+    | 0x80012294 => 0x80014537 (* lui a0,0x80014  *)
+    | 0x80012298 => 0xfe010113 (* add sp,sp,-32  *)
+    | 0x8001229c => 0x47c50513 (* add a0,a0,1148 # 8001447c <_etext+0x8ac>  *)
+    | 0x800122a0 => 0x00112e23 (* sw ra,28(sp)  *)
+    | 0x800122a4 => 0x00012623 (* sw zero,12(sp)  *)
+    (* WARNING/TODO/NOTICE : 
+        I'm manually replacing the instruction here at 0x80012280:
+            0x20d000ef (* jal 80012c8c <printf> *)
+        with a nop:
+            0x00000013 (* addi zero, zero, 0 *)
+        This is because dealing with printf is a huge pain for my timing proof,
+        and this goes into an infinite loop (by design)anyways just a few 
+        instructions later! So replacing this call has no bearing on a timing
+        proof (although it may have a bearing on future correctness proofs)
+
+        This is a lot easier than recompiling the operating system :)
+    *)
+    (* | 0x800122a8 => 0x1e5000ef (* jal 80012c8c <printf>  *) *)
+    | 0x800122a8 => 0x00000013 (* addi zero, zero, 0 *)
+    (* TODO 
+       switch this back to
+            0x30047073 (* csrc mstatus,8  *)
+       I don't want to implement the ZICSR extension rn
+    *)
+    (* | 0x800122ac => 0x30047073 (* csrc mstatus,8  *) *)
+    | 0x800122ac => 0x00000013 (* addi zero, zero, 0 *)
+    | 0x800122b0 => 0x80080737 (* lui a4,0x80080  *)
+    | 0x800122b4 => 0x00472783 (* lw a5,4(a4) # 80080004 <xCriticalNesting>  *)
+    | 0x800122b8 => 0x00178793 (* add a5,a5,1  *)
+    | 0x800122bc => 0x00f72223 (* sw a5,4(a4)  *)
+    | 0x800122c0 => 0x00c12783 (* lw a5,12(sp)  *)
+    | 0x800122c4 => 0x02078263 (* beqz a5,800122e8 <vAssertCalled+0x58>  *)
+    | 0x800122c8 => 0x00472783 (* lw a5,4(a4)  *)
+    | 0x800122cc => 0xfff78793 (* add a5,a5,-1  *)
+    | 0x800122d0 => 0x00f72223 (* sw a5,4(a4)  *)
+    | 0x800122d4 => 0x00079463 (* bnez a5,800122dc <vAssertCalled+0x4c>  *)
+    (* TODO 
+       switch this back to
+            0x30047073 (* csrc mstatus,8  *)
+       I don't want to implement the ZICSR extension rn
+    *)
+    (* | 0x800122d8 => 0x30046073 (* csrs mstatus,8  *) *)
+    | 0x800122d8 => 0x00000013 (* addi zero, zero, 0*)
+    | 0x800122dc => 0x01c12083 (* lw ra,28(sp)  *)
+    | 0x800122e0 => 0x02010113 (* add sp,sp,32  *)
+    | 0x800122e4 => 0x00008067 (* ret  *)
+    | 0x800122e8 => 0x00000013 (* nop  *)
+    | 0x800122ec => 0x00000013 (* nop  *)
+    | 0x800122f0 => 0xfd1ff06f (* j 800122c0 <vAssertCalled+0x30>  *)
+    (* <__clzsi2> *)
+    | 0x80013680 => 0x000107b7 (* lui a5,0x10  *)
+    | 0x80013684 => 0x02f57a63 (* bgeu a0,a5,800136b8 <__clzsi2+0x38>  *)
+    | 0x80013688 => 0x10053793 (* sltiu a5,a0,256  *)
+    | 0x8001368c => 0x0017b793 (* seqz a5,a5  *)
+    | 0x80013690 => 0x00379793 (* sll a5,a5,0x3  *)
+    | 0x80013694 => 0x80015737 (* lui a4,0x80015  *)
+    | 0x80013698 => 0x02000693 (* li a3,32  *)
+    | 0x8001369c => 0x40f686b3 (* sub a3,a3,a5  *)
+    | 0x800136a0 => 0x00f55533 (* srl a0,a0,a5  *)
+    | 0x800136a4 => 0xc5c70793 (* add a5,a4,-932 # 80014c5c <__clz_tab>  *)
+    | 0x800136a8 => 0x00a787b3 (* add a5,a5,a0  *)
+    | 0x800136ac => 0x0007c503 (* lbu a0,0(a5) # 10000 <__stack_size+0xfea2>  *)
+    | 0x800136b0 => 0x40a68533 (* sub a0,a3,a0  *)
+    | 0x800136b4 => 0x00008067 (* ret  *)
+    | 0x800136b8 => 0x01000737 (* lui a4,0x1000  *)
+    | 0x800136bc => 0x01800793 (* li a5,24  *)
+    | 0x800136c0 => 0xfce57ae3 (* bgeu a0,a4,80013694 <__clzsi2+0x14>  *)
+    | 0x800136c4 => 0x01000793 (* li a5,16  *)
+    | 0x800136c8 => 0xfcdff06f (* j 80013694 <__clzsi2+0x14>  *)
+    (* <vTsakSwitchContext> *)
     | 0x800015e0 => 0x8601a703 (* lw a4,-1952(gp) # 80080060 <uxSchedulerSuspended>  *)
     | 0x800015e4 => 0x00070863 (* beqz a4,800015f4 <vTaskSwitchContext+0x14>  *)
     | 0x800015e8 => 0x00100713 (* li a4,1  *)

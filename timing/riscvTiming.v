@@ -274,15 +274,34 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
             Some (3 + (reg_or_max rs2 / 4) + ((reg_or_max rs2) mod 4))%N
     else if op =? 19 then (* 0010011 : I-type *)
         let '(imm, rs1, funct3, rd, opcode) := decompose_Itype instr in
+        (* Could also be clz - R-type *)
+        let '(funct7, _, _, _, _, _) := decompose_Rtype instr in
         if contains [0;2;3;4;6;7] funct3 then
             (* addi xori ori andi slti sltiu *)
             Some 2%N
         else
-            (* slli srli srai : [ 3 + shamt/4 + shamt%4 ] *)
-            (* shamt := imm[0:4] *)
-            (* Constant shift times are possible with FAST_SHIFT_EN or TINY_SHIFT_EN enabled *)
-            let shamt := shamt_Itype imm in
-            Some (3 + (shamt / 4) + (shamt mod 4))%N
+            (* clz *)
+            (* NOTE : There is a super cool reason why CLZ and the below
+                shift instructions don't collide. They are I-type, which
+                would imply that they have a user-provided immediate on
+                the high bits of the instruction. Could this contain the
+                funct7 of CLZ, causing a parsing collision? No! These shift
+                instructions can only take five bits for their shamts, 
+                and the highest bits (colliding with CLZ) are forced to be
+                specific values that don't clash. Radical!
+            *)
+            if andb (funct3 =? 1) (funct7 =? 48) then
+                let rs1var := if rs1 =? 0 then VaN rs1 32 else s (rv_varid rs1) in
+                match rs1var with
+                | VaN r1 _ => Some (3 + clz r1 32)%N
+                | _ => None
+                end
+            else
+                (* slli srli srai : [ 3 + shamt/4 + shamt%4 ] *)
+                (* shamt := imm[0:4] *)
+                (* Constant shift times are possible with FAST_SHIFT_EN or TINY_SHIFT_EN enabled *)
+                let shamt := shamt_Itype imm in
+                Some (3 + (shamt / 4) + (shamt mod 4))%N
     else if op =? 3 then (* 0000011 : I-type *)
         let '(imm, rs1, funct3, rd, opcode) := decompose_Itype instr in
         (* lb lh lw lbu lhu : [ 5 + (ML - 2) ] *)

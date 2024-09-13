@@ -17,3 +17,6 @@ timing/i386Timing.v
 timing/riscvTiming.v
 Examples/arm7_strlen.v
 timing/examples/lifted_RTOSDemo.v
+timing/examples/RTOSDemo_NoAsserts.v
+timing/examples/RTOSDemo_NoAsserts_Clz.v
+timing/memsolve.v

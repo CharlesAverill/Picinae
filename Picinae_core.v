@@ -151,7 +151,8 @@ Inductive binop_typ : Type :=
 Inductive unop_typ : Type :=
 | OP_NEG (* Negate (2's complement) *)
 | OP_NOT (* Bitwise not *)
-| OP_POPCOUNT (* Count 1 bits *).
+| OP_POPCOUNT (* Count 1 bits *)
+| OP_CLZ (* Count leading zeroes *).
 
 (* IL bitwidth cast operators *)
 Inductive cast_typ : Type :=
@@ -189,12 +190,15 @@ Fixpoint Pos_popcount p := match p with
 | xH => xH | xO q => Pos_popcount q | xI q => Pos.succ (Pos_popcount q) end.
 Definition popcount n := match n with N0 => N0 | N.pos p => N.pos (Pos_popcount p) end.
 
+Definition clz (n w : N) : N := w - N.log2 n - 1.
+
 (* Perform a unary operation. *)
 Definition eval_unop (uop:unop_typ) (n:N) (w:bitwidth) : value :=
   match uop with
   | OP_NEG => VaN (msub w 0 n) w
   | OP_NOT => VaN (N.lnot n w) w
   | OP_POPCOUNT => VaN (popcount n) w
+  | OP_CLZ => VaN (clz n w) w
   end.
 
 (* Cast a numeric value to a new bitwidth. *)

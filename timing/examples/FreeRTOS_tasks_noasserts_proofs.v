@@ -26,22 +26,22 @@ Definition time_branch : N :=
     5 + (ML - 1).
 
 Definition uxSchedulerSuspended (gp : N) (mem : addr -> N) : N :=
-    (* mem â¹[2144 + gp]. *)
+    (* mem Ⓓ[2144 + gp]. *)
     (* This should actually be the below expression. Unclear on whether lifter
        has bug, seems like it isn't treating immediate as signed
     *)
-    mem â¹[gp â 1952].
+    mem Ⓓ[gp ⊖ 1952].
 
 Definition addr_xYieldPendings (gp : N) : N :=
     gp - 1932.
 
 Definition pxCurrentTCB (gp : N) (mem : addr -> N) : N :=
-    (* mem â¹[2200 + gp]. *)
+    (* mem Ⓓ[2200 + gp]. *)
     (* Same as above *)
-    mem â¹[gp â 1896].
+    mem Ⓓ[gp ⊖ 1896].
 
 Definition uxTopReadyPriority (gp : N) (mem : addr -> N) : N :=
-    mem â¹[gp â 1920].
+    mem Ⓓ[gp ⊖ 1920].
 
 Definition addr_pxReadyTasksLists (gp : N) : N :=
     gp - 924.
@@ -120,56 +120,56 @@ match t with (Addr a, s) :: t' => match a with
             ()) *)
     (* __clzsi2 correctness spec *)
     (* | 0x80001658 => Some (exists mem gp,
-        s R_A2 = â¹(mem â¹[mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A3 = â¹(mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A5 = â¹(mem â¹[48 + pxCurrentTCB gp mem]) /\
-        s R_A0 = (* bitwidth *) â¹(32 - (N.log2 (uxTopReadyPriority gp mem)))
+        s R_A2 = Ⓓ(mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A3 = Ⓓ(mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
+        s R_A0 = (* bitwidth *) Ⓓ(32 - (N.log2 (uxTopReadyPriority gp mem)))
     ) *)
     | 0x80001394 => Some (
-        exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\ s R_SP = â¹base_sp 
-            /\ s R_A4 = â¹(uxSchedulerSuspended gp mem) /\ gp_sp_noverlap gp base_sp /\
+        exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ s R_SP = Ⓓbase_sp 
+            /\ s R_A4 = Ⓓ(uxSchedulerSuspended gp mem) /\ gp_sp_noverlap gp base_sp /\
         cycle_count_of_trace t' = time_mem)
-    | 0x800013c8 => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\ s R_SP = â¹(base_sp â 16) /\
-        s R_A5 = â¹(mem â¹[48 + pxCurrentTCB gp mem]) /\
-        s R_A2 = â¹(mem â¹[mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A4 = â¹((0xa5a5a << 12) + 1445) /\
+    | 0x800013c8 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ s R_SP = Ⓓ(base_sp ⊖ 16) /\
+        s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
+        s R_A2 = Ⓓ(mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A4 = Ⓓ((0xa5a5a << 12) + 1445) /\
         (uxSchedulerSuspended gp mem =? 0) = true /\
         cycle_count_of_trace t' = 6 + 7 * time_mem + time_branch)
-    | 0x800013d0 => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
-        s R_A2 = â¹(mem â¹[mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A3 = â¹(mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A5 = â¹(mem â¹[48 + pxCurrentTCB gp mem]) /\
+    | 0x800013d0 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
+        s R_A2 = Ⓓ(mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A3 = Ⓓ(mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
         (uxSchedulerSuspended gp mem =? 0) = true /\
-        (mem â¹[ mem â¹[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
+        (mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
         cycle_count_of_trace t' = 9 + 8 * time_mem + time_branch)
-    | 0x800013d8 => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
-        s R_A3 = â¹(mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A4 = â¹(mem â¹[8 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A5 = â¹(mem â¹[48 + pxCurrentTCB gp mem]) /\
-        (mem â¹[ mem â¹[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
-        (mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]] =? mem â¹[mem â¹[48 + pxCurrentTCB gp mem]]) = true /\
+    | 0x800013d8 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
+        s R_A3 = Ⓓ(mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A4 = Ⓓ(mem Ⓓ[8 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A5 = Ⓓ(mem Ⓓ[48 + pxCurrentTCB gp mem]) /\
+        (mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
+        (mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]] =? mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) = true /\
         (uxSchedulerSuspended gp mem =? 0) = true /\
         cycle_count_of_trace t' = 12 + 9 * time_mem + time_branch
     )
-    | 0x800013e0 => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
-        s R_A3 = â¹(mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A4 = â¹(mem â¹[8 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A5 = â¹(mem â¹[12 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        (mem â¹[ mem â¹[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
-        (mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]] =? mem â¹[mem â¹[48 + pxCurrentTCB gp mem]]) = true /\
-        (mem â¹[8 + mem â¹[48 + pxCurrentTCB gp mem]] =? mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]]) = true /\
+    | 0x800013e0 => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
+        s R_A3 = Ⓓ(mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A4 = Ⓓ(mem Ⓓ[8 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A5 = Ⓓ(mem Ⓓ[12 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        (mem Ⓓ[ mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] =? 0xa5a5a5a5) = true /\
+        (mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]] =? mem Ⓓ[mem Ⓓ[48 + pxCurrentTCB gp mem]]) = true /\
+        (mem Ⓓ[8 + mem Ⓓ[48 + pxCurrentTCB gp mem]] =? mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) = true /\
         (uxSchedulerSuspended gp mem =? 0) = true /\
         cycle_count_of_trace t' = 15 + 10 * time_mem + time_branch
     )
-    | 0x8000142c => Some (exists mem gp, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
-        s R_A2 = â¹(4 + mem â¹[4 + (mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]])]) /\
-        s R_A3 = â¹(mem â¹[4 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A4 = â¹(mem â¹[8 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
-        s R_A5 = â¹(mem â¹[12 + mem â¹[48 + pxCurrentTCB gp mem]]) /\
+    | 0x8000142c => Some (exists mem gp, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
+        s R_A2 = Ⓓ(4 + mem Ⓓ[4 + (mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]])]) /\
+        s R_A3 = Ⓓ(mem Ⓓ[4 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A4 = Ⓓ(mem Ⓓ[8 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
+        s R_A5 = Ⓓ(mem Ⓓ[12 + mem Ⓓ[48 + pxCurrentTCB gp mem]]) /\
         (uxSchedulerSuspended gp mem =? 0) = true /\
         cycle_count_of_trace t' = 17 + 2 * time_branch + 11 * time_mem)
     | 0x800013a0 | 0x80001460 => Some (
-        exists mem gp a2 a5, s V_MEM32 = âmem /\ s R_GP = â¹gp /\
+        exists mem gp a2 a5, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\
             timing_postcondition t s gp mem a2 a5)
     | _ => None end
 | _ => None
@@ -232,8 +232,8 @@ Theorem vTaskSwitchContext_timing:
   forall s p t s' x' gp sp
          (ENTRY: startof t (x',s') = (Addr start_vTaskSwitchContext,s)) (* Define the entry point of the function *)
          (MDL: models rvtypctx s)
-         (GP : s R_GP = â¹gp)
-         (SP : s R_SP = â¹sp)
+         (GP : s R_GP = Ⓓgp)
+         (SP : s R_SP = Ⓓsp)
          (GP_SP_FAR : gp_sp_noverlap gp sp),
   satisfies_all 
     lifted_vTaskSwitchContext                                 (* Provide lifted code *)
@@ -319,8 +319,8 @@ Proof using.
     (* 0x8000142c *)
     destruct PRE as [mem [gp [MEM [GP [A2 [A3 [A4 [A5 [NotSuspended Cycles]]]]]]]]].
     step. step. step. step. step. step. step. step. step. step. step.
-        eexists. exists gp, (4 + mem â¹[ 4 + mem â¹[ 4 + mem â¹[ 48 + pxCurrentTCB gp mem ] ] ]),
-            (mem â¹[ 12 + mem â¹[ 48 + pxCurrentTCB gp mem ] ]).
+        eexists. exists gp, (4 + mem Ⓓ[ 4 + mem Ⓓ[ 4 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] ]),
+            (mem Ⓓ[ 12 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ]).
         repeat split.
         unfold timing_postcondition.
         replace (uxSchedulerSuspended gp _ =? 0) with true.
@@ -330,8 +330,8 @@ Proof using.
         admit. (* noverlap *)
     step. step. step. step. step. step. step. step. step. step. step.
     step.
-        eexists. exists gp, (4 + mem â¹[ 4 + mem â¹[ 4 + mem â¹[ 48 + pxCurrentTCB gp mem ] ] ]),
-            (mem â¹[ 12 + mem â¹[ 48 + pxCurrentTCB gp mem ] ]).
+        eexists. exists gp, (4 + mem Ⓓ[ 4 + mem Ⓓ[ 4 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] ]),
+            (mem Ⓓ[ 12 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ]).
         repeat split.
         unfold timing_postcondition.
         replace (uxSchedulerSuspended gp _ =? 0) with true.

@@ -37,6 +37,7 @@ Require Import NArith.
 Require Import ZArith.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
+Require Import Lia.
 
 
 
@@ -745,6 +746,16 @@ Proof.
   (* POPCOUNT *)
   eapply N.le_lt_trans. apply popcount_bound.
   eapply N.le_lt_trans. apply size_le_diag. apply value_bound, TV.
+
+  (* CLZ *)
+  unfold clz.
+  destruct w using N.peano_ind.
+  - lia.
+  - destruct (N.log2 n) using N.peano_ind.
+    -- rewrite N.sub_0_r. replace (N.succ w - 1) with (w) by lia.
+       transitivity (N.succ w). lia. apply N.pow_gt_lin_r. lia.
+    -- rewrite <- N.sub_add_distr. transitivity (N.succ w). 
+        lia. apply N.pow_gt_lin_r. lia.
 Qed.
 
 Theorem typesafe_cast:

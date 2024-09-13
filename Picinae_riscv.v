@@ -130,6 +130,7 @@ Definition rv_regsize {s v n w} := @models_regsize v rvtypctx s n w.
 (* Assembly-level RISC-V instruction syntax: *)
 
 Inductive rv_asm :=
+(** RV32I Base Integer Instructions *)
 | R5_Lb (r1 r2:N) (i:N)
 | R5_Lh (r1 r2:N) (i:N)
 | R5_Lw (r1 r2:N) (i:N)
@@ -169,6 +170,16 @@ Inductive rv_asm :=
 | R5_Bgeu (r1 r2:N) (i:Z)
 | R5_Jalr (r1 r2:N) (i:Z)
 | R5_Jal (r:N) (i:Z)
+(** RV32M Multiply Extension *)
+| R5_Mul (r1 r2 r3 : N)
+| R5_Mulh (r1 r2 r3 : N)
+| R5_Mulsu (r1 r2 r3 : N)
+| R5_Mulu (r1 r2 r3 : N)
+| R5_Div (r1 r2 r3 : N)
+| R5_Divu (r1 r2 r3 : N)
+| R5_Rem (r1 r2 r3 : N)
+| R5_Remu (r1 r2 r3 : N)
+| R5_Clz (r1 r2 : N)
 | R5_InvalidI.
 
 Definition rv_decode_load f :=
@@ -183,12 +194,17 @@ Definition rv_decode_store f :=
   | _ => (fun _ _ _ => R5_InvalidI)
   end.
 
-Definition rv_decode_binop f :=
-  match f with
+Definition rv_decode_binop (funct7_funct3 : N) :=
+  match funct7_funct3 with
+  (** RV32I Base Integer Instructions *)
   | 0 => R5_Add | 256 => R5_Sub
   | 1 => R5_Sll | 2 => R5_Slt | 3 => R5_Sltu | 4 => R5_Xor
   | 5 => R5_Srl | 261 => R5_Sra
   | 6 => R5_Or | 7 => R5_And
+  (** RV32M Multiply Extension *)
+  | 8  => R5_Mul | 9 => R5_Mulh | 10 => R5_Mulsu | 11 => R5_Mulu
+  | 12 => R5_Div | 13 => R5_Divu
+  | 14 => R5_Rem | 15 => R5_Remu
   | _ => (fun _ _ _ => R5_InvalidI)
   end.
 
@@ -203,6 +219,7 @@ Definition rv_decode_op_imm f n :=
   | 0 => R5_Addi (xbits n 7 12) (xbits n 15 20) (scast 12 32 (xbits n 20 32))
   | 1 => match xbits n 25 32 with
          | 0 => R5_Slli (xbits n 7 12) (xbits n 15 20) (xbits n 20 25)
+         | 48 => R5_Clz (xbits n 7 12) (xbits n 15 20)
          | _ => R5_InvalidI
          end
   | 2 => R5_Slti (xbits n 7 12) (xbits n 15 20) (scast 12 32 (xbits n 20 32))
@@ -226,31 +243,45 @@ Definition rv_decode_fence m n :=
          end
   end.
 
-Definition rv_decode_op op n :=
+Definition rv_decode_op (op instr : N) :=
   match op with
-  | 3 => rv_decode_load (xbits n 12 15) (xbits n 7 12) (xbits n 15 20) (xbits n 20 32)
-  | 15 => rv_decode_fence (N.shiftr n 7) n
-  | 19 => rv_decode_op_imm (xbits n 12 15) n
-  | 23 => R5_Auipc (xbits n 7 12) (N.land n (N.shiftl (N.ones 20) 12))
-  | 35 => rv_decode_store (xbits n 12 15) (xbits n 15 20) (xbits n 20 25)
-            (toZ 12 (N.lor (N.shiftl (xbits n 25 32) 5) (xbits n 7 12)))
-  | 51 => rv_decode_binop (N.lor (xbits n 12 15) (N.shiftl (xbits n 25 32) 3))
-                          (xbits n 7 12) (xbits n 15 20) (xbits n 20 25)
-  | 55 => R5_Lui (xbits n 7 12) (xbits n 12 32)
-  | 99 => rv_decode_branch (N.lor (xbits n 12 15) (N.land n 256)) (xbits n 15 20) (xbits n 20 25)
-            (toZ 13 (N.lor (N.shiftl (xbits n 8 12) 1)
-                      (N.lor (N.shiftl (xbits n 25 31) 5)
-                        (N.lor (N.shiftl (xbits n 7 8) 11)
-                          (N.shiftl (xbits n 31 32) 12)))))
-  | 103 => match xbits n 12 15 with
-           | 0 => R5_Jalr (xbits n 7 12) (xbits n 15 20) (toZ 12 (xbits n 20 32))
+  (** RV32I Base Integer Instructions *)
+  (************************************)
+  (* Loads - 0b0000011 *)
+  |  3 => rv_decode_load (xbits instr 12 15) (xbits instr 7 12) (xbits instr 15 20) (scast 12 32 (xbits instr 20 32))
+  (* Fence - 0b0001111 *)
+  | 15 => rv_decode_fence (N.shiftr instr 7) instr
+  (* Arithmetics with immediates - 0b0010011*)
+  | 19 => rv_decode_op_imm (xbits instr 12 15) instr
+  (* AUIPC - 0b0010111 *)
+  | 23 => R5_Auipc (xbits instr 7 12) (N.land instr (N.shiftl (N.ones 20) 12))
+  (* Stores - 0b100011 *)
+  | 35 => rv_decode_store (xbits instr 12 15) (xbits instr 15 20) (xbits instr 20 25)
+            (toZ 12 (N.lor (N.shiftl (xbits instr 25 32) 5) (xbits instr 7 12)))
+  (* Arithmetic - 0b0110011 *)
+  | 51 => rv_decode_binop 
+    (* OR together [funct7|funct3] to get a unique identifier for each instruction *)
+    (N.lor (xbits instr 12 15) (N.shiftl (xbits instr 25 32) 3))
+    (xbits instr 7 12) (xbits instr 15 20) (xbits instr 20 25)
+  (* LUI - 0b0110111 *)
+  | 55 => R5_Lui (xbits instr 7 12) (xbits instr 12 32)
+  (* Branches - 0b1100011 *)
+  | 99 => rv_decode_branch (N.lor (xbits instr 12 15) (N.land instr 256)) (xbits instr 15 20) (xbits instr 20 25)
+            (toZ 13 (N.lor (N.shiftl (xbits instr 8 12) 1)
+                      (N.lor (N.shiftl (xbits instr 25 31) 5)
+                        (N.lor (N.shiftl (xbits instr 7 8) 11)
+                          (N.shiftl (xbits instr 31 32) 12)))))
+  (* JALR - 0b1100111 *)
+  | 103 => match xbits instr 12 15 with
+           | 0 => R5_Jalr (xbits instr 7 12) (xbits instr 15 20) (toZ 12 (xbits instr 20 32))
            | _ => R5_InvalidI
            end
-  | 111 => match xbits n 21 22 with
-           | 0 => R5_Jal (xbits n 7 12) (toZ 21 (N.lor (N.shiftl (xbits n 21 31) 1)
-                                           (N.lor (N.shiftl (xbits n 20 21) 11)
-                                             (N.lor (N.shiftl (xbits n 12 20) 12)
-                                               (N.shiftl (xbits n 31 32) 20)))))
+  (* JAL - 0b1101111 *)
+  | 111 => match xbits instr 21 22 with
+           | 0 => R5_Jal (xbits instr 7 12) (toZ 21 (N.lor (N.shiftl (xbits instr 21 31) 1)
+                                           (N.lor (N.shiftl (xbits instr 20 21) 11)
+                                             (N.lor (N.shiftl (xbits instr 12 20) 12)
+                                               (N.shiftl (xbits instr 31 32) 20)))))
            | _ => R5_InvalidI
            end
   | _ => R5_InvalidI
@@ -281,9 +312,25 @@ Definition r5mov n e :=
 Definition r5branch e a off :=
   If e (Jmp (Word ((Z.to_N (Z.of_N a + off)) mod 2^32) 32)) Nop.
 
+(* Find the most significant bit in the expression.
+
+   Assumption: the value is expressed in 32 bits.
+
+   Sentinel value: 111...111 (32 ones) if there is no one bit.
+*)
+Fixpoint msbit (i:nat) (v:exp) : exp :=
+  match i with
+  | O => Word (N.ones 32) 32
+  | S i' => Ite (BinOp OP_NEQ (Word 0 32) (BinOp OP_AND v (Word (N.shiftl 1 (N.of_nat i')) 32)))
+                (Word (N.of_nat i') 32)
+                (msbit i' v)
+  end.
+
 Definition rv2il (a:addr) rvi :=
   match rvi with
   | R5_InvalidI => Exn 2
+  (** RV32I Base Integer Instructions *)
+  (************************************)
   | R5_Fence _ _ => Nop (* no effect on single-threaded machine *)
   | R5_Fence_i => Nop (* no effect on single-threaded machine *)
 
@@ -334,6 +381,15 @@ Definition rv2il (a:addr) rvi :=
   | R5_Sb rb rs imm => Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (r5var rb) (Word (ofZ 32 imm) 32)) (Cast CAST_LOW 8 (r5var rs)) LittleE 1)
   | R5_Sh rb rs imm => Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (r5var rb) (Word (ofZ 32 imm) 32)) (Cast CAST_LOW 16 (r5var rs)) LittleE 2)
   | R5_Sw rb rs imm => Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (r5var rb) (Word (ofZ 32 imm) 32)) (r5var rs) LittleE 4)
+
+  (** RV32M Multiply Extension *)
+  (*****************************)
+  (* Signed or unsigned operands *)
+  | R5_Mul rd rs1 rs2 => r5mov rd (BinOp OP_TIMES (r5var rs1) (r5var rs2))
+  (* TODO : Implement rest of M extension *)
+  (* Bit-Manipulation ISA-extension *)
+  | R5_Clz rd rs => r5mov rd (UnOp OP_CLZ (r5var rs))
+  | _ => Nop
   end.
 
 Definition rv_stmt m a :=

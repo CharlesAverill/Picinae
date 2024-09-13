@@ -14,14 +14,15 @@ Open Scope N_scope.
             andi t0, t0, 5
             andi t1, t1, 9
         start:
-            andi t2, t2, 1
-            andi t3, t3, 0
-        add:
-            beq t0, t3, end
-            addi t1, t1, 1
-            sub t0, t0, t2
-            beq t3, t3, add
-        end:
+            li t2, 1                2
+            andi t3, t3, 0          2
+        add:                        n * (12 + (ML - 1))
+            beq t0, t3, end         if taken then 5 + (ML - 1) else 3
+            addi t1, t1, 1          2
+            sub t0, t0, t2          2
+            beq t3, t3, add         5 + (ML - 1)
+        end:                        4 + (5 + (ML - 1)) + n * (12 + (ML - 1))
+                                        9 + (ML - 1) + n * (12 + (ML - 1))
 
     - Assembled it using a RISC-V cross-assembler
         https://github.com/riscv-collab/riscv-gnu-toolchain
@@ -106,7 +107,7 @@ Definition postcondition (s : store) (x y : N) :=
 *)
 Definition addloop_correctness_invs (_ : store) (p : addr) (x y : N) (t:trace) :=
     match t with (Addr a, s) :: _ => match a with
-        | 0x8  => Some (s R_T0 = VaN x 32 /\ s R_T1 = VaN y 32)
+        | 0x8  => Some (s R_T0 = Ⓓx /\ s R_T1 = Ⓓy)
         | 0x10 => Some (exists t0 t1, 
             s R_T0 = Ⓓt0 /\ s R_T1 = Ⓓt1 /\ s R_T2 = Ⓓ1 /\ s R_T3 = Ⓓ0 /\ 
                 t0 ⊕ t1 = x ⊕ y)
@@ -129,6 +130,8 @@ Definition addloop_exit (t:trace) :=
     the function above instead of all of this. Or maybe not. Hamlen question.
 *)
 Definition lifted_addloop := lift_via_list add_loop_riscv add_loop_start add_loop_end.
+
+Compute lifted_addloop.
 
 (*
     And now for the proofs:
@@ -186,7 +189,8 @@ Proof.
     (* Termination case - time to prove the postcondition *)
     step.
         rewrite N.eqb_eq in BC. subst. psimpl in Eq.
-        unfold postcondition. psimpl. rewrite <- Eq. assumption.
+        unfold postcondition. psimpl. rewrite T1.
+        rewrite Eq. reflexivity.
     (* Loop case - prove the invariant again *)
     step. step. step.
         rewrite N.eqb_neq in BC. exists (t0 ⊖ 1), (1 ⊕ t1). repeat split.
@@ -253,7 +257,12 @@ Proof using.
     apply prove_invs.
 
     (* Base case *)
-    simpl. rewrite ENTRY. step. now repeat split.
+    simpl. rewrite ENTRY. step.
+    split.
+        assumption.
+    split.
+        reflexivity.
+    reflexivity.
 
     (* Inductive step setup *)
     intros.
@@ -274,12 +283,11 @@ Proof using.
     step.
     - (* t0 = 0 -> postcondition *)
         rewrite N.eqb_eq in BC; subst. unfold_cycle_count_list.
-        unfold_time_of_addr. rewrite T0, T3, Cycles_t. now psimpl.
+        unfold_time_of_addr. rewrite T0, T3, Cycles_t. psimpl. reflexivity.
     - (* t0 <> 0 -> loop again *)
-        step. step. step. exists (t0 ⊖ 1). assert (1 <= t0) by (apply N.eqb_neq in BC; lia). repeat split.
-            rewrite msub_nowrap; psimpl; lia.
-        unfold_cycle_count_list.
-        repeat (let Y := fresh "H" in (remember ((time_of_addr _) _) eqn:Y; unfold_time_of_addr in Y; subst)).
+        step. step. step. exists (t0 ⊖ 1). assert (1 <= t0) by (apply N.eqb_neq in BC; lia).
+        repeat split. rewrite msub_nowrap; psimpl; lia.
+        unfold_cycle_count_list. unfold_time_of_addr.
         rewrite T0, T3, BC, Cycles_t, N.add_sub_assoc, msub_nowrap, N_sub_distr.
         psimpl. rewrite N.mul_add_distr_r. psimpl.
         rewrite (N.add_sub_assoc 16).

@@ -130,7 +130,7 @@ Qed.
 
 Inductive NoE_SETOP :=
 | NOE_ADD | NOE_SUB | NOE_MSUB | NOE_MUL | NOE_DIV | NOE_MOD | NOE_POW
-| NOE_SHL | NOE_SHR | NOE_AND | NOE_OR  | NOE_XOR | NOE_NOT
+| NOE_SHL | NOE_SHR | NOE_AND | NOE_OR  | NOE_XOR | NOE_NOT | NOE_CLZ
 | NOE_NEG
 | NOE_EQB | NOE_LTB | NOE_LEB
 | NOE_SLT | NOE_SLE
@@ -148,7 +148,7 @@ Inductive NoE_TYPOP := NOE_ITR | NOE_UPD | NOE_MAR | NOE_MAW.
 
 Definition noe_setop_typsig op :=
   match op with
-  | NOE_ADD | NOE_SUB | NOE_MUL | NOE_DIV | NOE_MOD | NOE_POW
+  | NOE_ADD | NOE_SUB | NOE_MUL | NOE_DIV | NOE_MOD | NOE_POW | NOE_CLZ
   | NOE_SHL | NOE_SHR | NOE_AND | NOE_OR  | NOE_XOR | NOE_NOT => N -> N -> N
   | NOE_MSUB => N -> N -> N -> N
   | NOE_NEG => bool -> bool
@@ -221,6 +221,7 @@ Definition noe_setop op : noe_setop_typsig op :=
   | NOE_ASR => ashiftr
   | NOE_CAS => scast
   | NOE_POPCOUNT => popcount
+  | NOE_CLZ => clz
   | NOE_PARITY8 => parity8
   | NOE_BAND => andb
   | NOE_ZST => (fun (_:addr) => N0)
@@ -396,6 +397,7 @@ Definition feval_unop (uop:unop_typ) (noe:forall op, noe_setop_typsig op) (n:N) 
   | OP_NEG => VaU true (noe NOE_ZST) (noe NOE_MSUB w 0 n) w
   | OP_NOT => VaU true (noe NOE_ZST) (noe NOE_NOT n w) w
   | OP_POPCOUNT => VaU true (noe NOE_ZST) (noe NOE_POPCOUNT n) w
+  | OP_CLZ => VaU true (noe NOE_ZST) (noe NOE_CLZ n w) w
   end.
 
 Definition feval_cast (c:cast_typ) (noe:forall op, noe_setop_typsig op) (w w':bitwidth) (n:N) : N :=
