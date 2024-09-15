@@ -271,7 +271,11 @@ match t with (Addr a, s) :: t' => match a with
         match (negb (mem' Ⓓ[ 4 + (gp ⊖ 924) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem') 32) * 20 ] =?
             gp ⊖ 916 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem') 32) * 20)) with
         | false => mem Ⓓ[(gp ⊖ 920) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)] 
-            = mem Ⓓ[(gp ⊖ 912) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)]
+                 = mem Ⓓ[(gp ⊖ 912) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)] /\
+                   mem Ⓓ[(gp ⊖ 912) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)]
+                 = mem' Ⓓ[(gp ⊖ 912) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem') 32)) * 20)] /\
+                   mem' Ⓓ[(gp ⊖ 920) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem') 32)) * 20)]
+                 = gp ⊖ 916 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20
         | true => mem = mem'
         end /\
         (* (negb (mem' Ⓓ[ 4 + (gp ⊖ 924) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem') 32) * 20 ] =?
@@ -921,7 +925,10 @@ Proof using.
             replace ((mem' [Ⓓ4 + (gp ⊖ 924) ⊕ (31 ⊖ clz (mem' Ⓓ[ gp ⊖ 1920 ]) 32) * 20
                 := mem' Ⓓ[ 12 + (gp ⊖ 924) ⊕ (31 ⊖ clz (mem' Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ])
                 Ⓓ[ gp ⊖ 1920 ]) with (mem' Ⓓ[ gp ⊖ 1920 ]).
-            psimpl. unfold msub. now psimpl.
+            psimpl. repeat split. 
+                unfold msub; now psimpl. 
+                apply Bool.negb_false_iff, N.eqb_eq in BC. unfold uxTopReadyPriority in BC. 
+                    rewrite <- BC. unfold msub; now psimpl.
                 rewrite getmem_mod_l.
                 replace (4294966384 + gp ⊕ (31 ⊕ (2 ^ 32 - clz (mem' Ⓓ[ gp ⊕ (2 ^ 32 - 1920 mod 2 ^ 32) ]) 32 mod 2 ^ 32)) * 20)
                 with (gp ⊖ 912 ⊕ (31 ⊕ (2 ^ 32 - clz (mem' Ⓓ[ gp ⊕ (2 ^ 32 - 1920 mod 2 ^ 32) ]) 32 mod 2 ^ 32)) * 20).
@@ -979,7 +986,7 @@ Proof using.
             apply SMEM_WELL_FORMED; auto. discriminate.
             apply noverlap_symmetry. auto.
             apply SMEM_WELL_FORMED; auto. discriminate.
-        }
+        } destruct BCPropagate as [M920_912 [M912_M'912 M'920_M916]].
         match goal with [|- context[if ?A then _ else _]] => 
             replace A with true end.
         rewrite <- getmem_mod_l, <- setmem_mod_l.
@@ -993,7 +1000,11 @@ Proof using.
             unfold uxTopReadyPriority, addr_pxReadyTasksLists in *.
             noverlap_prepare gp sp.
             rewrite <- getmem_mod_l.
-            memsolve mem gp sp. admit.
+            memsolve mem gp sp.
+            rewrite <- M'920_M916.
+            rewrite M912_M'912 in M920_912.
+            rewrite < 
+            rewrite M920_912.
             apply noverlap_symmetry. auto.
         }
         noverlap_prepare gp n; memsolve mem gp n. now rewrite NotSuspended.
