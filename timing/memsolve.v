@@ -215,22 +215,41 @@ Ltac clear_independent_hypotheses x y :=
 
 Ltac _noverlap_prepare uxSchedulerSuspended pxCurrentTCB gp_sp_noverlap
         __global_size vTaskSwitchContext_stack_frame_size gp sp := 
-    unfold uxSchedulerSuspended in *;
+    try (unfold uxSchedulerSuspended in *;
     (* clear_independent_hypotheses gp sp; *)
     unfold pxCurrentTCB in *;
-    unfold gp_sp_noverlap in *; unfold __global_size, vTaskSwitchContext_stack_frame_size in *;
+    unfold gp_sp_noverlap in *; unfold __global_size, vTaskSwitchContext_stack_frame_size in *);
     (* rewrite nasty large additions as their more human readable modular subtractions *)
     repeat match goal with
-    | [ |- context[?M [Ⓓ ?X + ?B := ?V]] ] =>
-        rewrite <-(setmem_mod_l _ _ _ M (X+B) V);
-        assert (Hhelp: (X ⊕ B) = (msub 32 B (2^32 - X))) by (rewrite N.add_comm; reflexivity);
-        psimpl in Hhelp; rewrite Hhelp; clear Hhelp
-    (* Grabs outermost getmem - not helpful *)
-    (* | [ |- context[?M Ⓓ[ ?X + ?Y ]] ] =>
-        rewrite <- (getmem_mod_l _ _ _ _ (X+Y));
-        assert (Hhelp: (X ⊕ Y) = (msub 32 Y (2^32 - X))) by (rewrite N.add_comm; reflexivity);
-        psimpl in Hhelp; rewrite Hhelp; clear Hhelp *)
-    end .
+    | [ |- context[?M [Ⓓ ?X + ?B + ?N := ?V]] ] =>
+      rewrite <-(setmem_mod_l _ _ _ M (X+B+N) V);
+      replace (M [ⒹX+B⊕N := V]) with
+        (M [Ⓓ(msub 32 B (2^32 - X)) ⊕ N := V]) by
+        (unfold msub; now psimpl);
+      simpl (2^32 - X)
+    | [ |- context[?M [Ⓓ?X + ?Y := ?V]]] =>
+      rewrite <- setmem_mod_l with (a := X + Y);
+      replace (X⊕Y) with (msub 32 Y (2^32 - X)) by (now rewrite N.add_comm);
+      simpl (2^32 - X)
+    | [ |- context[?M Ⓓ[ ?X + ?B + ?N]] ] =>
+      rewrite <-(getmem_mod_l _ _ _ M (X+B+N));
+      replace (M Ⓓ[X+B⊕N]) with
+        (M Ⓓ[(msub 32 B (2^32 - X)) ⊕ N]) by
+        (unfold msub; now psimpl);
+      simpl (2^32 - X)
+    | [ |- context[?M Ⓓ[?X + ?Y]]] =>
+      rewrite <- getmem_mod_l with (a := X + Y);
+      replace (X⊕Y) with (msub 32 Y (2^32 - X)) by (now rewrite N.add_comm);
+      simpl (2^32 - X)
+  end;
+  repeat match goal with
+    (* 48 is a special case *)
+    | [|- context[?N ⊖ 4294967248]] =>
+      replace (N ⊖ 4294967248) with (48 ⊕ N) by
+        (unfold msub; now psimpl);
+      (rewrite getmem_mod_l with (a := 48 + N) ||
+        rewrite setmem_mod_l with (a := 48 + N))
+  end.
 
 Ltac memsolve mem gp sp:=
     (* split up all the memory read-write dependencies with getmem_noverlap *)
