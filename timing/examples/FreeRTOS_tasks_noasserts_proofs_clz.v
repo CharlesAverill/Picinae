@@ -240,6 +240,12 @@ match t with (Addr a, s) :: t' => match a with
             common_noverlaps gp base_sp mem /\
             mem4_mem4_noverlap_stackframe gp base_sp mem /\
             mem4_mem4_noverlap_static gp mem /\
+            ~ overlap 32
+                (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+                (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ) 4 /\
+            ~ overlap 32
+                (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+                (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ]]) 4 /\
             uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
             mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (base_mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ]  /\
@@ -252,6 +258,12 @@ match t with (Addr a, s) :: t' => match a with
         common_noverlaps gp base_sp mem /\
         mem4_mem4_noverlap_stackframe gp base_sp mem /\
         mem4_mem4_noverlap_static gp mem /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+            (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ) 4 /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+            (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ]]) 4 /\
         uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ] =
         base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (base_mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ]  /\
@@ -265,6 +277,12 @@ match t with (Addr a, s) :: t' => match a with
         common_noverlaps gp base_sp mem /\
         mem4_mem4_noverlap_stackframe gp base_sp mem /\
         mem4_mem4_noverlap_static gp mem /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+            (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ) 4 /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+            (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ]]) 4 /\
         uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ] =
         base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (base_mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ]  /\
@@ -279,6 +297,12 @@ match t with (Addr a, s) :: t' => match a with
         common_noverlaps gp base_sp mem /\
         mem4_mem4_noverlap_stackframe gp base_sp mem /\
         mem4_mem4_noverlap_static gp mem /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+            (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ) 4 /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+            (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ]]) 4 /\
         uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ] =
         base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (base_mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ]  /\
@@ -295,6 +319,12 @@ match t with (Addr a, s) :: t' => match a with
         common_noverlaps gp base_sp mem /\
         mem4_mem4_noverlap_stackframe gp base_sp mem /\
         mem4_mem4_noverlap_static gp mem /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+            (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ) 4 /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+            (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ]]) 4 /\
         uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ] =
         base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (base_mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ]  /\
@@ -313,51 +343,12 @@ match t with (Addr a, s) :: t' => match a with
         s R_A5 = Ⓓ((gp ⊖ 916) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) /\
         common_noverlaps gp base_sp mem /\
         uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
-        mem Ⓓ[(gp ⊖ 920) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)] =
-            base_mem Ⓓ[ 4 + base_mem Ⓓ[(gp ⊖ 920) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp base_mem) 32)) * 20)]] /\
-        mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ] =
+        mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (base_mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ]  /\
         (uxSchedulerSuspended gp base_mem =? 0) = true /\
         (mem Ⓓ[ 12 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ] =?
             mem Ⓓ[ 8 + mem Ⓓ[ 48 + pxCurrentTCB gp mem ] ]) = true /\
         cycle_count_of_trace t' = 36 + clz (mem Ⓓ[ 4294965376 + gp ]) 32 + 2 * time_branch + 14 * time_mem)
-    (* | 0x80001424 => Some (exists mem' mem, s V_MEM32 = Ⓜmem /\
-        s R_GP = Ⓓgp /\ s R_SP = Ⓓ(base_sp ⊖ 16) /\
-        (* s R_A1 = Ⓓ(mem Ⓓ[4 + (gp ⊖ 924) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)]) /\ *)
-        s R_A2 = Ⓓ(addr_pxReadyTasksLists gp ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)) /\
-        s R_A3 = Ⓓ(31 ⊖ clz (uxTopReadyPriority gp mem) 32) /\
-        s R_A4 = Ⓓ(addr_pxReadyTasksLists gp) /\
-        (* s R_A5 = Ⓓ((gp ⊖ 916) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) /\ *)
-        common_noverlaps gp base_sp mem /\
-        uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
-        mem Ⓓ[(gp ⊖ 920) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)] =
-            mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (base_mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ]  /\
-        (uxSchedulerSuspended gp base_mem =? 0) = true /\
-        match (negb (mem' Ⓓ[ 4 + (gp ⊖ 924) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem') 32) * 20 ] =?
-            gp ⊖ 916 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem') 32) * 20)) with
-        | false => mem Ⓓ[(gp ⊖ 920) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)] 
-                 = mem Ⓓ[(gp ⊖ 912) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)] /\
-                   mem Ⓓ[(gp ⊖ 912) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)]
-                 = mem' Ⓓ[(gp ⊖ 912) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem') 32)) * 20)] /\
-                   mem' Ⓓ[(gp ⊖ 920) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem') 32)) * 20)]
-                 = gp ⊖ 916 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20
-        | true => mem = mem'
-        end /\
-        (* (negb (mem' Ⓓ[ 4 + (gp ⊖ 924) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem') 32) * 20 ] =?
-         gp ⊖ 916 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem') 32) * 20) = false ->
-         mem Ⓓ[(gp ⊖ 920) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)] 
-            = mem Ⓓ[(gp ⊖ 912) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)]) /\ *)
-        cycle_count_of_trace t' = 36 + clz (mem Ⓓ[ 4294965376 + gp ]) 32 + 2 * time_branch + 14 * time_mem + 
-            (
-                if negb 
-                    (mem' Ⓓ[4 + (gp ⊖ 924) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem') 32)) * 20)] 
-                        =? 
-                    (gp ⊖ 916 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem') 32) * 20))
-                then
-                    time_branch
-                else
-                    3 + 2 * time_mem
-            )) *)
     | 0x8000138c => Some (
         timing_postcondition t gp base_mem)
     | 0x8000144c => Some (
@@ -447,7 +438,13 @@ Theorem vTaskSwitchContext_timing:
          (NOVERLAPS : common_noverlaps gp sp mem)
          (MEM4_NOVERLAPS : 
             mem4_mem4_noverlap_stackframe gp sp mem /\
-            mem4_mem4_noverlap_static gp mem)
+            mem4_mem4_noverlap_static gp mem /\
+            ~ overlap 32
+                (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+                (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ) 4 /\
+            ~ overlap 32
+                (gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20) 4
+                (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ]]) 4)
          ,
   satisfies_all 
     lifted_vTaskSwitchContext                                 (* Provide lifted code *)
@@ -475,7 +472,7 @@ Proof using.
 
     (* Base case *)
     simpl. rewrite ENTRY. step.
-    exists mem. destruct MEM4_NOVERLAPS. repeat split; try assumption.
+    exists mem. destruct MEM4_NOVERLAPS, H0, H1. repeat split; try assumption.
     unfold uxSchedulerSuspended. unfold msub. psimpl. reflexivity.
 
     (* Inductive step setup *)
@@ -491,7 +488,8 @@ Proof using.
 
     (* 0x800015e4 *)
     destruct PRE as [mem [MEM [GP [SP [A4 [NOVERLAPS [MEM4_MEM4_NOL_SFRAME
-        [MEM4_MEM4_NOL_STATIC [PreservesPriority [Preserves920 Cycles]]]]]]]]]].
+        [MEM4_MEM4_NOL_STATIC [MEM4_920 [MEM4_MEM4_920 [PreservesPriority 
+        [Preserves920 Cycles]]]]]]]]]]]].
         destruct_noverlaps.
     step. step. step. step. step. step. step. step. step. step.
     handle_ex. unfold msub. now psimpl.
@@ -518,8 +516,7 @@ Proof using.
             noverlap_prepare gp sp; memsolve mem gp sp; auto.
         } {
             unfold clz_noverlap_smem in *. intros.
-            noverlap_prepare gp sp; memsolve mem gp sp.
-            eapply CLZ_NOL_STATIC; eassumption.
+            noverlap_prepare gp sp; memsolve mem gp sp; eauto.
         } {
             unfold mem_pxCurrentTCB_noverlap_stackframe in *.
             noverlap_prepare gp sp; memsolve mem gp sp; auto.
@@ -543,42 +540,41 @@ Proof using.
             noverlap_prepare gp sp; memsolve mem gp sp; auto.
         } {
             unfold mem4_pxCurrentTCB_noverlap_stackframe. intros.
-            noverlap_prepare gp sp; memsolve mem gp sp; auto.
-            apply noverlap_symmetry. auto.
-            apply noverlap_symmetry.
-            apply noverlap_shrink with (sp ⊖ 16) 16.
-                psimpl. lia.
-                auto.
-            apply noverlap_symmetry.
-            apply noverlap_shrink with (sp ⊖ 16) 16.
-                psimpl. lia.
-                auto.
+            noverlap_prepare gp sp; memsolve mem gp sp; eauto.
+            apply noverlap_symmetry; auto.
+            all: apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16;
+                [psimpl; lia|auto].
         } {
             unfold mem4_pxCurrentTCB_noverlap_static. intros.
-            noverlap_prepare gp sp; memsolve mem gp sp; auto.
-            eapply MEM4_PCT_NOL_STATIC; eassumption.
-            now eapply noverlap_symmetry, CLZ_NOL_STATIC.
+            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
             all: apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16; [
                 psimpl; lia | auto
             ]; apply noverlap_symmetry, PCT_NOL_SFRAME.
         } {
             unfold mem4_mem4_noverlap_stackframe.
-            noverlap_prepare gp sp; memsolve mem gp sp; auto.
-            all: apply noverlap_symmetry; eauto.
+            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
             all: try solve [
-                apply noverlap_shrink with (sp ⊖ 16) 16;
+                apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16;
                 [psimpl;lia|eauto]
             ].
-            now eapply MEM4_PCT_NOL_STATIC.
+            now eapply noverlap_symmetry, MEM4_PCT_NOL_STATIC.
         } {
             unfold mem4_mem4_noverlap_static. intros.
-            noverlap_prepare gp sp; memsolve mem gp sp; eauto.
-            all: apply noverlap_symmetry; eauto.
+            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
             all: try solve [
-                apply noverlap_shrink with (sp ⊖ 16) 16;
+                apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16;
                 [psimpl;lia|eauto]
             ].
-            now eapply MEM4_PCT_NOL_STATIC.
+            now eapply noverlap_symmetry, MEM4_PCT_NOL_STATIC.
+        } {
+            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
+            all: apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16;
+                [psimpl;lia|eauto].
+        } {
+            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
+            all: try solve [apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16;
+                [psimpl;lia|eauto]].
+            now eapply noverlap_symmetry, MEM4_PCT_NOL_STATIC.
         } {
             unfold uxTopReadyPriority. 
             noverlap_prepare gp sp; memsolve mem gp sp; auto.
@@ -586,13 +582,30 @@ Proof using.
             noverlap_prepare gp sp.
             repeat rewrite <- getmem_mod_l with (a := _ + _).
             rewrite getmem_mod_l.
-            memsolve mem gp sp;
-                try solve [apply noverlap_symmetry; auto].
-            repeat rewrite getmem_mod_l; now rewrite Preserves920.
+            replace (clz _ 32) with (clz (mem Ⓓ[gp ⊖ 1920]) 32) by memsolve mem gp sp.
+            replace ((mem [Ⓓgp ⊖ 1932 := 0 ] [Ⓓsp ⊖ 8 := n ] [Ⓓsp ⊖ 4 := n0 ])
+                Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ]) with
+                (mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ]); cycle 1.
+                memsolve mem gp sp. eauto using noverlap_symmetry.
+                1-2: try solve [apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16;
+                    [psimpl; lia|auto]].
+            rewrite getmem_mod_l.
+            replace ((mem [Ⓓgp ⊖ 1932 := 0 ] [Ⓓsp ⊖ 8 := n ] [Ⓓsp ⊖ 4 := n0 ])
+                Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ]) with
+                (mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ] ]); cycle 1.
+                memsolve mem gp sp. apply noverlap_symmetry.
+                    now eapply MEM4_PCT_NOL_STATIC.
+                1-2: try solve [apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16;
+                    [psimpl; lia|auto]].
+            memsolve mem gp sp; eauto using noverlap_symmetry.
+            now repeat rewrite getmem_mod_l; rewrite Preserves920.
             all: try solve [apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16;
                 [psimpl; lia|auto]].
-            now eapply noverlap_symmetry, MEM4_PCT_NOL_STATIC.
-        } 
+            all: apply noverlap_symmetry; rewrite<- getmem_mod_l. 
+                now eapply MEM4_PCT_NOL_STATIC.
+            all: apply noverlap_shrink with (sp ⊖ 16) 16;
+                [psimpl; lia|auto].
+        }
         hammer. rewrite A4, BC, Cycles. lia.
     step. step.
         unfold timing_postcondition.
@@ -601,7 +614,8 @@ Proof using.
 
     (* 0x800013c8 *)
     destruct PRE as [mem [MEM [GP [SP [A5 [A2 [A4 [NOVERLAPS [MEM4_MEM4_NOL_SFRAME
-        [MEM4_MEM4_NOL_STATIC [PreservesPriority [Preserves920 [BR0 Cycles]]]]]]]]]]]]]. 
+        [MEM4_MEM4_NOL_STATIC [MEM4_920 [MEM4_MEM4_920 [PreservesPriority 
+        [Preserves920 [BR0 Cycles]]]]]]]]]]]]]]].
         destruct_noverlaps.
     step.
         step. step. step. step. step. step. step. step. step. step.
@@ -613,7 +627,8 @@ Proof using.
 
     (* 0x800013d0 *)
     destruct PRE as [mem [MEM [GP [SP [A2 [A3 [A5 [NOVERLAPS [MEM4_MEM4_NOL_SFRAME
-        [MEM4_MEM4_NOL_STATIC [PreservesPriority [Preserves920 [NotSuspended [Br Cycles]]]]]]]]]]]]]]. 
+        [MEM4_MEM4_NOL_STATIC [MEM4_920 [MEM4_MEM4_920 [PreservesPriority [Preserves920 
+        [NotSuspended [Br Cycles]]]]]]]]]]]]]]]].
     destruct_noverlaps.
     step.
         step. step. step. step. step. step. step. step. step. step.
@@ -624,8 +639,8 @@ Proof using.
 
     (* 0x800013d8 *)
     destruct PRE as [mem [MEM [GP [SP [A3 [A4 [A5 [NOVERLAPS [MEM4_MEM4_NOL_SFRAME
-        [MEM4_MEM4_NOL_STATIC [PreservesPriority [Preserves920 [B1 [B2 
-        [NotSuspended Cycles]]]]]]]]]]]]]]]. destruct_noverlaps.
+        [MEM4_MEM4_NOL_STATIC [MEM4_920 [MEM4_MEM4_920 [PreservesPriority [Preserves920 
+        [B1 [B2 [NotSuspended Cycles]]]]]]]]]]]]]]]]]. destruct_noverlaps.
     step.
         step. step. step. step. step. step. step. step. step. step.
         exact I. (* Infinite loop, stack overflow detected *)
@@ -636,8 +651,8 @@ Proof using.
 
     (* 0x800013e0 *)
     destruct PRE as [mem [MEM [GP [SP [A3 [A4 [A5 [NOVERLAPS [MEM4_MEM4_NOL_SFRAME 
-        [MEM4_MEM4_NOL_STATIC [PreservesPriority [Preserves920 [B1 [B2 [B3 
-        [NotSuspended Cycles]]]]]]]]]]]]]]]]. destruct_noverlaps.
+        [MEM4_MEM4_NOL_STATIC [MEM4_920 [MEM4_MEM4_920 [PreservesPriority 
+        [Preserves920 [B1 [B2 [B3 [NotSuspended Cycles]]]]]]]]]]]]]]]]]]. destruct_noverlaps.
     step. step. step. step. step. step. step. step. step. step. step.
     step. step. step. step.
         handle_ex.
@@ -718,22 +733,12 @@ Proof using.
         } {
             unfold uxTopReadyPriority.
             noverlap_prepare gp sp; memsolve mem gp sp; auto.
-        } {
-            unfold uxTopReadyPriority in *.
-            noverlap_prepare gp sp.
-            replace (clz ((mem [Ⓓ_ := _ ]) Ⓓ[ gp ⊖ 1920 ]) 32) 
-                with (clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) by
-                (f_equal; rewrite getmem_noverlap; auto).
-            psimpl. now rewrite Preserves920.
         } { noverlap_prepare gp sp.
             replace (clz ((mem [Ⓓ_ := _ ]) Ⓓ[ gp ⊖ 1920 ]) 32) 
                 with (clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) by
                 (f_equal; rewrite getmem_noverlap; auto).
             psimpl.
-            rewrite <- Preserves920.
-            admit. (* True because both overlapping and non-overlapping are true *) 
-            (* Actually because addrs might not be byte-aligned, need another 
-            noverlap assumption? *)
+            now rewrite Preserves920.
         } { 
             noverlap_prepare gp sp; memsolve mem gp sp; auto.
         }
@@ -747,8 +752,7 @@ Proof using.
     step. step. step. step. step. step. step. step. step. step. exact I.
 
     destruct PRE as [mem [MEM [GP [SP [A1 [A2 [A3 [A4 [A5 [NOVERLAPS
-        [PreservesPriority [Preserves920 [PreservesMem4 [NotSuspended 
-        [B1 Cycles]]]]]]]]]]]]]]].
+        [PreservesPriority [Preserves920 [NotSuspended [B1 Cycles]]]]]]]]]]]]]].
     destruct_noverlaps.
     step. step. step. step. step. step. step. step. step. step. step.
     unfold timing_postcondition.
@@ -756,13 +760,15 @@ Proof using.
     replace (4 + (gp ⊖ 924) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) with
         ((gp ⊖ 920) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) in BC by
         (unfold msub; now psimpl).
-    rewrite <- Preserves920, <- PreservesPriority. 
+    rewrite <- getmem_mod_l with (m := base_mem) (a := gp ⊖ _ + _) in Preserves920.
+    unfold uxTopReadyPriority in *.
+    rewrite <- Preserves920, <- PreservesPriority.
     apply Bool.negb_true_iff in BC.
-    rewrite BC, NotSuspended.
+    rewrite getmem_mod_l in BC. rewrite BC, NotSuspended.
     hammer. rewrite A1, A5.
     replace (4 + _ ⊕ _) with ((gp ⊖ 920) ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20)
         by (unfold msub; now psimpl).
-    unfold uxTopReadyPriority in *. rewrite BC, Cycles.
+    rewrite getmem_mod_l, BC, Cycles.
     cbn [negb]. psimpl. unfold msub in PreservesPriority.
     psimpl in PreservesPriority. rewrite PreservesPriority. lia.
 
@@ -772,13 +778,15 @@ Proof using.
     replace (4 + _ ⊕ _) with ((gp ⊖ 920) ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20)
         in BC by (unfold msub; now psimpl).
     unfold uxTopReadyPriority in *.
+    rewrite <- getmem_mod_l with (m := base_mem) (a := gp ⊖ _ + _) in Preserves920.
+    rewrite getmem_mod_l in BC.
     rewrite <- Preserves920, <- PreservesPriority, BC, NotSuspended.
     hammer. rewrite A1, A5.
     replace (4 + _ ⊕ _) with ((gp ⊖ 920) ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20)
         by (unfold msub; now psimpl).
-    unfold uxTopReadyPriority in *. rewrite BC, Cycles.
+    unfold uxTopReadyPriority in *. rewrite getmem_mod_l, BC, Cycles.
     cbn [negb]. psimpl. unfold msub in PreservesPriority.
     psimpl in PreservesPriority. rewrite PreservesPriority. lia.
 
     step. exact I.
-Admitted.
+Qed.
