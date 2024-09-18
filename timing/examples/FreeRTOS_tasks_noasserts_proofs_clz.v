@@ -9,7 +9,7 @@ Variable ML_pos : 1 <= ML.
 Module riscv_toa.
     Definition time_of_addr (s : store) (a : addr) : N :=
         match neorv32_cycles_upper_bound ML s (RTOSDemo_NoAsserts_Clz a) with
-        | Some x => x | _ => 0 end.
+        | Some x => x | _ => 999 end.
 End riscv_toa.
 Module riscvT := MakeTimingContents riscvTiming riscv_toa.
 Export riscvT.
@@ -444,7 +444,7 @@ Proof using.
              mem_pxCurrentTCB_noverlap_static offset_mem_pxCurrentTCB_noverlap_clz
              clz_noverlap_sframe mem4_pxCurrentTCB_noverlap_stackframe
              mem4_pxCurrentTCB_noverlap_static uxTopReadyPriority mem4_mem4_noverlap_static
-             mem4_mem4_noverlap_stackframe
+             mem4_mem4_noverlap_stackframe addr_pxReadyTasksLists
             gp sp.
     Local Ltac destruct_noverlaps :=
         match goal with
@@ -561,7 +561,6 @@ Proof using.
     step. step. step. step. step. step. step. step. step. step. step.
     step. step. step. step.
         handle_ex.
-        Require Import memsolve.
             1-15: try solve [noverlap_prepare gp sp; memsolve mem gp sp].
         {
             unfold uxTopReadyPriority.
@@ -587,16 +586,8 @@ Proof using.
                Ⓓ[ 4 +
                   mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20 ]
                ] ]) Ⓓ[ gp ⊖ 1920 ]) with (mem Ⓓ[ gp ⊖ 1920 ]) by
-               (rewrite getmem_noverlap; auto).
-            rewrite N.add_comm.
-            now unfold msub; psimpl; simpl (2^32 - _ mod _).
-        } {
-            noverlap_prepare gp sp.
-            replace (clz ((mem [Ⓓ_ := _ ]) Ⓓ[ gp ⊖ 1920 ]) 32) 
-                with (clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) by
-                (f_equal; rewrite getmem_noverlap; auto).
-            psimpl.
-            rewrite <- getmem_mod_l with (a := gp ⊖ _ + _).
+               (rewrite getmem_noverlap; auto). psimpl.
+            rewrite <- getmem_mod_l with (a := _ ⊖ _ + _). 
             eapply MEM4_MEM4_NOL_SFRAME.
         } {
             noverlap_prepare gp sp.
