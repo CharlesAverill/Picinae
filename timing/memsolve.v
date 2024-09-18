@@ -213,12 +213,27 @@ Ltac clear_independent_hypotheses x y :=
         else fail
     end.
 
-Ltac _noverlap_prepare uxSchedulerSuspended pxCurrentTCB gp_sp_noverlap
-        __global_size vTaskSwitchContext_stack_frame_size gp sp := 
-    try (unfold uxSchedulerSuspended in *;
-    (* clear_independent_hypotheses gp sp; *)
-    unfold pxCurrentTCB in *;
-    unfold gp_sp_noverlap in *; unfold __global_size, vTaskSwitchContext_stack_frame_size in *);
+Ltac _noverlap_prepare 
+      uxSchedulerSuspended pxCurrentTCB __global_size
+      vTaskSwitchContext_stack_frame_size uxSchedulerSuspended 
+      gp_sp_noverlap smem_well_formed pxCurrentTCB_noverlap_static
+      pxCurrentTCB_noverlap_stackframe pxCurrentTCB_noverlap_clz_static
+      clz_noverlap_smem mem_pxCurrentTCB_noverlap_stackframe 
+      mem_pxCurrentTCB_noverlap_static offset_mem_pxCurrentTCB_noverlap_clz
+      clz_noverlap_sframe mem4_pxCurrentTCB_noverlap_stackframe
+      mem4_pxCurrentTCB_noverlap_static uxTopReadyPriority mem4_mem4_noverlap_static
+      mem4_mem4_noverlap_stackframe addr_pxReadyTasksLists
+      gp sp := 
+    unfold uxSchedulerSuspended, __global_size,
+    vTaskSwitchContext_stack_frame_size, uxSchedulerSuspended,
+    gp_sp_noverlap, smem_well_formed, pxCurrentTCB_noverlap_static,
+    pxCurrentTCB_noverlap_stackframe, pxCurrentTCB_noverlap_clz_static,
+    clz_noverlap_smem, mem_pxCurrentTCB_noverlap_stackframe,
+    mem_pxCurrentTCB_noverlap_static, offset_mem_pxCurrentTCB_noverlap_clz,
+    mem4_mem4_noverlap_static, mem4_mem4_noverlap_stackframe,
+    clz_noverlap_sframe, mem4_pxCurrentTCB_noverlap_stackframe,
+    mem4_pxCurrentTCB_noverlap_static, pxCurrentTCB, uxTopReadyPriority,
+    addr_pxReadyTasksLists in *; intros;
     (* rewrite nasty large additions as their more human readable modular subtractions *)
     repeat match goal with
     | [ |- context[?M [Ⓓ ?X + ?B + ?N := ?V]] ] =>
@@ -252,18 +267,13 @@ Ltac _noverlap_prepare uxSchedulerSuspended pxCurrentTCB gp_sp_noverlap
   end.
 
 Ltac memsolve mem gp sp:=
+    idtac "Mem solving...";
     (* split up all the memory read-write dependencies with getmem_noverlap *)
-    repeat rewrite getmem_noverlap; try now (unfold msub; psimpl);
-    try (
+    (repeat rewrite getmem_noverlap; try now (unfold msub; psimpl));
+    (try (
       (* goals involving noverlap of gp and gp *)
-      apply noverlap_mod_idemp_l, sep_noverlap; left; psimpl; lia);
-    try solve [apply noverlap_shrink with (gp ⊖ 2048) 2048; [
-                psimpl; lia |
-                (apply noverlap_symmetry; apply noverlap_shrink with (sp ⊖ 16) 16;
-                    [psimpl; lia | now apply noverlap_symmetry])
-    ]];
-    try assumption;
-    match goal with
+      apply noverlap_mod_idemp_l, sep_noverlap; left; psimpl; lia));
+    (try match goal with
     | [ |- ~ overlap _ (?P ⊖ ?X1) ?N (?P ⊖ ?X2) ?N] =>
         solve [apply sep_noverlap; (left; now psimpl) || (right; now psimpl)]
     | [ H : ~ overlap _ (?A1 ⊖ ?A1B) ?A1S  (?A2 ⊖ ?A2B) ?A2S
@@ -280,4 +290,23 @@ Ltac memsolve mem gp sp:=
         apply (noverlap_index_index _ (mem Ⓓ[ gp ⊖ 1896 ]) 52 (sp ⊖ 16) 16 48 4 (16-SPI) 4);
         lia || assumption
     | _ => idtac
-    end.
+    end); 
+    (try do 4 match goal with
+    | [|- ~ overlap _ (sp ⊖ _) 4 _ _] =>
+      try solve [apply noverlap_shrink with (sp ⊖ 16) 16; [psimpl; lia|
+        eauto using noverlap_symmetry;
+        (apply noverlap_symmetry, noverlap_shrink with (gp ⊖ 2048) 2048; [psimpl;lia|
+            eauto using noverlap_symmetry])
+      ]]
+    | [|- ~ overlap _ (gp ⊖ _) 4 _ _] =>
+      try solve [apply noverlap_shrink with (gp ⊖ 2048) 2048; 
+        [psimpl; lia|
+            eauto using noverlap_symmetry;
+            (apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16; 
+              [psimpl; lia|eauto using noverlap_symmetry])
+        ]]
+    | [|- ~ overlap _ _ _ (sp ⊖ _) 4] =>
+        apply noverlap_symmetry
+    | [|- ~overlap _ _ _ (gp ⊖ _) 4] =>
+        apply noverlap_symmetry
+    end); eauto using noverlap_symmetry.
