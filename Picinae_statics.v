@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -744,6 +744,9 @@ Proof.
 
   (* POPCOUNT *)
   eapply N.le_lt_trans. apply popcount_bound.
+  eapply N.le_lt_trans. apply size_le_diag. apply value_bound, TV.
+
+  (* BITWIDTH *)
   eapply N.le_lt_trans. apply size_le_diag. apply value_bound, TV.
 Qed.
 

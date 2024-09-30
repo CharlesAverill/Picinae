@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -224,9 +224,9 @@ Qed.
 Lemma lxor_land:
   forall a b c, N.land b c = c -> N.lxor (N.land a b) c = N.land (N.lxor a c) b.
 Proof.
- intros. apply N.bits_inj. apply N.bits_inj_iff in H. intro n. specialize (H n).
- do 2 rewrite N.land_spec, N.lxor_spec. rewrite <- H, N.land_spec.
- repeat destruct (N.testbit _ n); reflexivity.
+  intros. apply N.bits_inj. apply N.bits_inj_iff in H. intro n. specialize (H n).
+  do 2 rewrite N.land_spec, N.lxor_spec. rewrite <- H, N.land_spec.
+  repeat destruct (N.testbit _ n); reflexivity.
 Qed.
 
 (* Simplify x86 memory access assertions produced by step_stmt. *)
@@ -264,6 +264,32 @@ Ltac x86_abstract_vars H :=
     | _ => fail
     end
   end.
+
+(* Syntax: generalize_frame m as x
+   Result: Find any goal expressions of the form m[a1:=u1]...[an:=un] where
+   a1..an are adjacent memory addresses, and compact them to expressions
+   of the form m[a:=x], where a=max(a1,...,an) and x is a user-specified name.
+   This is useful for abstracting a series of pushes that form a callee's
+   local stack frame into a single write of the entire byte array. *)
+Ltac generalize_frame m bytes :=
+  match goal with |- context [ setmem ?w ?en ?len2 (setmem ?w ?en ?len1 m ?a1 ?u1) ?a2 ?u2 ] =>
+    let x := fresh in let H := fresh in let H' := fresh in
+    evar (x:N);
+    eassert (H: setmem w en len2 (setmem w en len1 m a1 u1) a2 u2 = setmem w en _ m a2 x);
+    [ subst x; eenough (H':_);
+      [ transitivity (setmem w en len2 (setmem w en len1 m a1 u1) (msub w a1 len2) u2);
+        [ apply f_equal2; [ exact H' | reflexivity ]
+        | etransitivity;
+          [ etransitivity;
+            [ apply setmem_merge_rev; reflexivity
+            | apply f_equal4; [psimpl|..]; reflexivity ]
+          | apply f_equal2; [ symmetry; exact H' | reflexivity ] ] ]
+      | psimpl; reflexivity ]
+    | rewrite H; clear H; clearbody x; try clear u1; try clear u2;
+      rename x into bytes ]
+  end.
+Tactic Notation "generalize_frame" constr(m) "as" ident(bytes) :=
+  generalize_frame m bytes; repeat generalize_frame m bytes.
 
 (* Values of IL temp variables are ignored by the x86 interpreter once the IL
    block that generated them completes.  We can therefore generalize them

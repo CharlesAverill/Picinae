@@ -151,30 +151,44 @@ Qed.
 Definition streq (m:addr->N) (p1 p2:addr) (k:N) :=
   ∀ i, i < k -> m Ⓑ[p1+i] = m Ⓑ[p2+i] /\ 0 < m Ⓑ[p1+i].
 
-(* The post-condition says that interpreting EAX as a signed integer yields
-   a number n whose sign equals the comparison of the kth byte in the two input
-   strings, where the two strings are identical before k, and n may only be
-   zero if the kth bytes are both nil. *)
-Definition postcondition (m:addr->N) (esp:N) (s:store) :=
-  ∃ n k, s R_EAX = Ⓓn /\
-         streq m (m Ⓓ[4+esp]) (m Ⓓ[8+esp]) k /\
-         (n=0 -> m Ⓑ[m Ⓓ[4+esp] + k] = 0) /\
-         (m Ⓑ[m Ⓓ[4+esp] + k] ?= m Ⓑ[m Ⓓ[8+esp] + k]) = (toZ 32%N n ?= Z0)%Z.
+(* Coq "Sections" provide a convenient way to write groups of definitions that
+   share some arguments.  Shared arguments are first declared as "Variables".
+   Any definition in the Section that refers to a Variable gets expanded by Coq
+   to include that variable as an argument.  The expansion process is recursive:
+   if definition y refers to variable x, and definition z refers to definition y,
+   then definitions y and z both get expanded to take x as an argument. *)
+Section Invariants.
 
-(* The invariant-set for this property makes no assumptions at program-start
-   (address 0), and puts a loop-invariant at address 8.  Putting a (trivial)
-   invariant at the entry point 0 is optional, but it can make proofs easier
-   because it will make the base case of your induction trivial to prove. *)
-Definition strcmp_invs (m:addr->N) (esp:N) (t:trace) :=
-  match t with (Addr a,s)::_ => match a with
-  | 0 => Some True  (* no assumptions at entry point *)
-  | 8 => Some (  (* loop invariant *)
-     ∃ k, s R_ECX = Ⓓ(m Ⓓ[4+esp] ⊕ k) /\ s R_EDX = Ⓓ(m Ⓓ[8+esp] ⊕ k) /\
-         streq m (m Ⓓ[4+esp]) (m Ⓓ[8+esp]) k
-    )
-  | 22 | 36 => Some (postcondition m esp s)
-  | _ => None
-  end | _ => None end.
+  Variable mem : addr -> N.  (* mem = initial memory state *)
+  Variable esp : N.          (* esp = initial stack pointer *)
+
+  Definition p1 := mem Ⓓ[4+esp].  (* 1st pointer arg on the stack *)
+  Definition p2 := mem Ⓓ[8+esp].  (* 2nd pointer arg on the stack *)
+
+  (* The post-condition says that interpreting EAX as a signed integer yields
+     a number n whose sign equals the comparison of the kth byte in the two input
+     strings, where the two strings are identical before k, and n may only be
+     zero if the kth bytes are both nil. *)
+  Definition postcondition (s:store) :=
+    ∃ n k, s R_EAX = Ⓓn /\
+           streq mem p1 p2 k /\
+           (n=0 -> mem Ⓑ[p1 + k] = 0) /\
+           (mem Ⓑ[p1 + k] ?= mem Ⓑ[p2 + k]) = (toZ 32%N n ?= Z0)%Z.
+
+  (* The invariant-set for this property makes no assumptions at program-start
+     (address 0), and puts a loop-invariant at address 8.  Putting a (trivial)
+     invariant at the entry point 0 is optional, but it can make proofs easier
+     because it will make the base case of your induction trivial to prove. *)
+  Definition strcmp_invs (t:trace) :=
+    match t with (Addr a,s)::_ => match a with
+    | 0 => Some True  (* no assumptions at entry point *)
+    | 8 => Some  (* loop invariant *)
+       (∃ k, s R_ECX = Ⓓ(p1 ⊕ k) /\ s R_EDX = Ⓓ(p2 ⊕ k) /\ streq mem p1 p2 k)
+    | 22 | 36 => Some (postcondition s)
+    | _ => None
+    end | _ => None end.
+
+End Invariants.
 
 (* Our partial correctness theorem makes the following assumptions:
    (ENTRY) Specify the start address and state of the subroutine.
@@ -213,7 +227,7 @@ Proof.
   destruct_inv 32 PRE.
 
   (* Address 0 *)
-  step. step. exists 0. psimpl. split.
+  step. step. exists 0. unfold p1,p2. psimpl. split.
     reflexivity. split. reflexivity.
     intros i LT. destruct i; discriminate.
 

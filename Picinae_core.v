@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -151,7 +151,8 @@ Inductive binop_typ : Type :=
 Inductive unop_typ : Type :=
 | OP_NEG (* Negate (2's complement) *)
 | OP_NOT (* Bitwise not *)
-| OP_POPCOUNT (* Count 1 bits *).
+| OP_POPCOUNT (* Count 1 bits *)
+| OP_BITWIDTH (* Log2 rounded up *).
 
 (* IL bitwidth cast operators *)
 Inductive cast_typ : Type :=
@@ -195,6 +196,7 @@ Definition eval_unop (uop:unop_typ) (n:N) (w:bitwidth) : value :=
   | OP_NEG => VaN (msub w 0 n) w
   | OP_NOT => VaN (N.lnot n w) w
   | OP_POPCOUNT => VaN (popcount n) w
+  | OP_BITWIDTH => VaN (N.size n) w
   end.
 
 (* Cast a numeric value to a new bitwidth. *)

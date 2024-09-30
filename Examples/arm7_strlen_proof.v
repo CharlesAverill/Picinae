@@ -51,24 +51,33 @@ Proof.
 Qed.
 
 (* Correctness specification for strlen: *)
-Definition nilfree (m:addr->N) (p:addr) (k:N) :=
-  forall i, i < k -> m Ⓑ[p+i] <> 0.
+Section Invariants.
 
-Definition postcondition (m:addr->N) (p:addr) (s:store) :=
-  ∃ k, s R_R0 = Ⓓk /\ nilfree m p k /\ m Ⓑ[p+k] = 0.
+  Variable mem : addr -> N.  (* initial memory state *)
+  Variable p : addr.         (* pointer argument *)
 
-(* Loop invariants for verifying the specification (not trusted). *)
-Definition strlen_invs (m:addr->N) (p:addr) (t:trace) :=
-  match t with (Addr a,s)::_ => match a with
-  | 0 => Some (s R_R0 = Ⓓp)
-  | 40 => Some (∃ k, s R_R0 = Ⓓ(4*k ⊖ p mod 4) /\
-                     s R_R1 = Ⓓ(p ⊖ p mod 4 ⊕ 4*N.succ k) /\
-                     s R_R2 = Ⓓ match k with N0 => m Ⓓ[ p ⊖ p mod 4 ] .| N.ones (p mod 4 * 8)
-                                           | _ => m Ⓓ[ p ⊖ p mod 4 ⊕ 4*k ] end /\
-                     nilfree m p (4*k - p mod 4))
-  | 92 => Some (postcondition m p s)
-  | _ => None
-  end | _ => None end.
+  (* The first k bytes are non-nil. *)
+  Definition nilfree (k:N) := ∀ i, i < k -> mem Ⓑ[p+i] <> 0.
+
+  (* strlen must return a number k such that the first k bytes of p are non-nil
+     and the k+1st byte is nil. *)
+  Definition postcondition (s:store) :=
+    ∃ k, s R_R0 = Ⓓk /\ nilfree k /\ mem Ⓑ[p+k] = 0.
+
+  (* Loop invariants for verifying the specification (not trusted). *)
+  Definition strlen_invs (t:trace) :=
+    match t with (Addr a,s)::_ => match a with
+    | 0 => Some (s R_R0 = Ⓓp)
+    | 40 => Some (∃ k, s R_R0 = Ⓓ(4*k ⊖ p mod 4) /\
+                       s R_R1 = Ⓓ(p ⊖ p mod 4 ⊕ 4*N.succ k) /\
+                       s R_R2 = Ⓓ match k with N0 => mem Ⓓ[ p ⊖ p mod 4 ] .| N.ones (p mod 4 * 8)
+                                             | _ => mem Ⓓ[ p ⊖ p mod 4 ⊕ 4*k ] end /\
+                       nilfree (4*k - p mod 4))
+    | 92 => Some (postcondition s)
+    | _ => None
+    end | _ => None end.
+
+End Invariants.
 
 
 (* Before proving correctness, prove some helper lemmas about binary arithmetic
@@ -96,7 +105,7 @@ Qed.
 Lemma getbyte':
   forall len m a, a mod 4 <= len ->
   (getmem 32 LittleE (N.succ len) m (a ⊖ a mod 4) .| N.ones (a mod 4 * 8)) .& (N.ones 8 << (8*len)) =
-  m Ⓑ[a ⊖ a mod 4+len] << (8*len).
+  m Ⓑ[a ⊖ a mod 4 + len] << (8*len).
 Proof.
   intros. rewrite N.land_lor_distr_l. rewrite getbyte. replace (_.&_) with 0. apply N.lor_0_r.
   symmetry. apply N.bits_inj_0. intro b.

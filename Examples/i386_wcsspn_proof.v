@@ -128,10 +128,7 @@ Proof.
     (* Address 0 (function start) *)
     destruct PRE as [MEM ESP].
     step. step. step. step. step. step. step.
-      change 8 with (4+4) at 1. rewrite msub_add_distr, setmem_merge_rev by reflexivity. simpl (4+4). psimpl.
-      change 12 with (8+4). rewrite msub_add_distr, setmem_merge_rev by reflexivity. simpl (8+4). psimpl.
-      change 16 with (12+4). rewrite msub_add_distr, setmem_merge_rev by reflexivity. simpl (12+4). psimpl.
-      set (fb := cbits _ _ _). clearbody fb.
+    generalize_frame mem as fb.
     step. step. step.
 
       (* Jump 18 -> 61 (wcs1 end reached) *)

@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2022 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -155,7 +155,15 @@ Ltac psimpl_all_hyp H :=
   let P := fresh in
   set (P:=_) in H;
   psimpl_mark_all_in P;
-  psimpl_vals_hyp H;
+  first [ psimpl_vals_hyp H (* <-- works if H:_ is a hypothesis *)
+  | (* The following works if H:=_ is a local definition: *)
+    let y := fresh in let Heq := fresh in
+      remember H as y eqn:Heq in *;
+      subst H;
+      psimpl_vals_hyp Heq;
+      lazymatch type of Heq with _ = ?e => set (H:=e) in Heq end;
+      try rewrite Heq in *;
+      clear y Heq ];
   unfold _psiN,_psiB,_psiM in H.
 
 Tactic Notation "psimpl_vals" "in" hyp(H) := psimpl_vals_hyp H.
@@ -218,7 +226,11 @@ Ltac psimpl_exp_hyp e H :=
   let x := fresh in let H' := fresh in
   remember e as x eqn:H' in H;
   _psimpl_exp_hyp x H';
-  rewrite H' in H;
+  first [ rewrite H' in H (* <-- works if H:_ is a hypothesis *)
+  | (* The following works if H:=_ is a local definition. *)
+    subst H;
+    lazymatch type of H' with _ = ?e => set (H:=e) in H' end;
+    try rewrite H' in * ];
   clear x H'.
 
 Ltac psimpl_exp_goal e :=

@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -228,7 +228,7 @@ Definition rv_decode_fence m n :=
 
 Definition rv_decode_op op n :=
   match op with
-  | 3 => rv_decode_load (xbits n 12 15) (xbits n 7 12) (xbits n 15 20) (xbits n 20 32)
+  | 3 => rv_decode_load (xbits n 12 15) (xbits n 7 12) (xbits n 15 20) (scast 12 32 (xbits n 20 32))
   | 15 => rv_decode_fence (N.shiftr n 7) n
   | 19 => rv_decode_op_imm (xbits n 12 15) n
   | 23 => R5_Auipc (xbits n 7 12) (N.land n (N.shiftl (N.ones 20) 12))

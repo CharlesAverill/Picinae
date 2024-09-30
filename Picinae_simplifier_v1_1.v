@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -155,6 +155,7 @@ Inductive sastN : Set :=
 | SIMP_ShiftR (e1 e2:sastN)
 | SIMP_ShiftL (e1 e2:sastN)
 | SIMP_Popcount (e1:sastN)
+| SIMP_Size (e1:sastN)
 | SIMP_Parity8 (e1:sastN)
 | SIMP_GetMem (w:bitwidth) (en:endianness) (len:bitwidth) (m:sastM) (a:sastN)
 | SIMP_App (m:sastM) (a:sastN)
@@ -261,6 +262,7 @@ Fixpoint eval_sastN mvt e {struct e} : N :=
   | SIMP_ShiftR e1 e2 => N.shiftr (eval_sastN mvt e1) (eval_sastN mvt e2)
   | SIMP_ShiftL e1 e2 => N.shiftl (eval_sastN mvt e1) (eval_sastN mvt e2)
   | SIMP_Popcount e1 => popcount (eval_sastN mvt e1)
+  | SIMP_Size e1 => N.size (eval_sastN mvt e1)
   | SIMP_Parity8 e1 => parity8 (eval_sastN mvt e1)
   | SIMP_GetMem w en len m a => getmem w en len (eval_sastM mvt m) (eval_sastN mvt a)
   | SIMP_App m a => (eval_sastM mvt m) (eval_sastN mvt a)
@@ -597,7 +599,7 @@ Fixpoint simpl_bounds mvt e {struct e} : N * option N :=
                           option_map (fun hi1 => N.shiftr hi1 lo2) ohi1)
   | SIMP_ShiftL e1 e2 => let (lo1,ohi1) := simpl_bounds mvt e1 in let (lo2,ohi2) := simpl_bounds mvt e2 in
                          (N.shiftl lo1 lo2, match ohi1 with None => None | Some hi1 => option_map (N.shiftl hi1) ohi2 end)
-  | SIMP_Popcount e1 => (0, option_map N.size (snd (simpl_bounds mvt e1)))
+  | SIMP_Popcount e1 | SIMP_Size e1 => (0, option_map N.size (snd (simpl_bounds mvt e1)))
   | SIMP_Parity8 _ => (0, Some 1)
   | SIMP_GetMem _ _ len m _ => (0, Some (N.ones (Mb*len)))
   | SIMP_App m _ => (0, if simpl_is_wtm mvt m then Some (N.ones Mb) else None)
@@ -647,7 +649,8 @@ Fixpoint multiple_of_pow2 mvt e n {struct e} :=
           end
         | _ => false
         end
-    | SIMP_LNot _ _ | SIMP_Popcount _ | SIMP_Parity8 _ | SIMP_NVar _ _ _ _ _ | SIMP_GetMem _ _ _ _ _ | SIMP_App _ _ => false
+    | SIMP_LNot _ _ | SIMP_Popcount _ | SIMP_Size _ | SIMP_Parity8 _
+    | SIMP_NVar _ _ _ _ _ | SIMP_GetMem _ _ _ _ _ | SIMP_App _ _ => false
     end
   end.
 
@@ -1165,7 +1168,7 @@ Fixpoint simpl_under_modpow2 mvt e w {struct e} :=
       else simpl_getmem' mvt mw en len' m
         match en with BigE => SIMP_Add a (SIMP_Const (len - len')) | LittleE => a end
     | SIMP_Pow _ _ (* SIMP_Pow should already have been simplified to SIMP_ShiftL when possible, so ignore here *)
-    | SIMP_NVar _ _ _ _ _ | SIMP_Popcount _ | SIMP_Parity8 _ | SIMP_App _ _ => e
+    | SIMP_NVar _ _ _ _ _ | SIMP_Popcount _ | SIMP_Size _ | SIMP_Parity8 _ | SIMP_App _ _ => e
     end
   end
 with simpl_getmem' mvt w en len m a {struct m} :=
@@ -1354,6 +1357,7 @@ Definition simplN_dispatch mvt e :=
   | SIMP_ShiftR e1 e2 => simpl_shiftr mvt e1 e2
   | SIMP_ShiftL e1 e2 => simpl_shiftl mvt e1 e2
   | SIMP_Popcount _ => e
+  | SIMP_Size _ => e
   | SIMP_Parity8 _ => e
   | SIMP_GetMem en len w m a => simpl_getmem mvt en len w m a
   | SIMP_App m a => e
@@ -1552,6 +1556,7 @@ Fixpoint simpl_outN (noe: forall op, noe_setop_typsig op) mvt e {struct e} : N :
   | SIMP_ShiftR e1 e2 => noe NOE_SHR (simpl_outN noe mvt e1) (simpl_outN noe mvt e2)
   | SIMP_ShiftL e1 e2 => noe NOE_SHL (simpl_outN noe mvt e1) (simpl_outN noe mvt e2)
   | SIMP_Popcount e1 => noe NOE_POPCOUNT (simpl_outN noe mvt e1)
+  | SIMP_Size e1 => noe NOE_SIZE (simpl_outN noe mvt e1)
   | SIMP_Parity8 e1 => noe NOE_PARITY8 (simpl_outN noe mvt e1)
   | SIMP_GetMem w en len m a => noe NOE_GET w en len (simpl_outM noe mvt m) (simpl_outN noe mvt a)
   | SIMP_App m a => (simpl_outM noe mvt m) (simpl_outN noe mvt a)
@@ -1735,6 +1740,7 @@ Local Ltac sastN_gen n :=
       end
     end
   | popcount ?n1 => let t := sastN_gen n1 in uconstr:(SIMP_Popcount t)
+  | N.size ?n1 => let t := sastN_gen n1 in uconstr:(SIMP_Size t)
   | N.lnot ((N.lxor (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr ?n1 4) ?n1) 2)
                                       (N.lxor (N.shiftr ?n1 4) ?n1)) 1)
                     (N.lxor (N.shiftr (N.lxor (N.shiftr ?n1 4) ?n1) 2)
@@ -1816,6 +1822,7 @@ Section CheckFrontEnd.
     check (getmem 32 BigE n1 m1 n2). (* non-constant length *)
     check (getmem 32 BigE 4 m1 2).
     check (popcount n1).
+    check (N.size n1).
     check (parity8 n1).
     check (N.lnot ((N.lxor (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr n1 4) n1) 2)
                                              (N.lxor (N.shiftr n1 4) n1)) 1)
@@ -2268,6 +2275,13 @@ Proof.
     apply N.le_0_l.
     destruct simpl_bounds as (lo,[hi|]).
       simpl. etransitivity. apply popcount_bound. apply N_size_injle, IHe.
+      exact I.
+
+  (* Size *)
+  split.
+    apply N.le_0_l.
+    destruct simpl_bounds as (lo,[hi|]).
+      simpl. apply N_size_injle, IHe.
       exact I.
 
   (* Parity8 *)
@@ -2953,7 +2967,7 @@ Proof.
   apply N.eqb_eq in H. subst hi2.
   apply N.le_antisymm; transitivity hi1; first [ apply SB1 | apply SB2].
 
-  revert dependent e1. revert dependent e2. eenough (Hdef1:_). eenough(Hdef2:_). intros.
+  generalize dependent e1. generalize dependent e2. eenough (Hdef1:_). eenough(Hdef2:_). intros.
   clear H. destruct_matches_def SIMP_NVar; try reflexivity.
 
   clear - Hdef1. cbn [eval_sastN eval_sastB]. rewrite (N.eqb_sym 0).

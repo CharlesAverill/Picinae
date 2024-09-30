@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -135,7 +135,7 @@ Inductive NoE_SETOP :=
 | NOE_EQB | NOE_LTB | NOE_LEB
 | NOE_SLT | NOE_SLE
 | NOE_QUO | NOE_REM | NOE_ASR
-| NOE_POPCOUNT | NOE_PARITY8
+| NOE_POPCOUNT | NOE_PARITY8 | NOE_SIZE
 | NOE_CAS
 | NOE_BAND
 | NOE_ZST
@@ -155,7 +155,7 @@ Definition noe_setop_typsig op :=
   | NOE_EQB | NOE_LTB | NOE_LEB => N -> N -> bool
   | NOE_SLT | NOE_SLE => bitwidth -> N -> N -> bool
   | NOE_QUO | NOE_REM | NOE_ASR => bitwidth -> N -> N -> N
-  | NOE_POPCOUNT | NOE_PARITY8 => N -> N
+  | NOE_POPCOUNT | NOE_PARITY8 | NOE_SIZE => N -> N
   | NOE_CAS => bitwidth -> bitwidth -> N -> N
   | NOE_BAND => bool -> bool -> bool
   | NOE_ZST => addr -> N
@@ -221,6 +221,7 @@ Definition noe_setop op : noe_setop_typsig op :=
   | NOE_ASR => ashiftr
   | NOE_CAS => scast
   | NOE_POPCOUNT => popcount
+  | NOE_SIZE => N.size
   | NOE_PARITY8 => parity8
   | NOE_BAND => andb
   | NOE_ZST => (fun (_:addr) => N0)
@@ -396,6 +397,7 @@ Definition feval_unop (uop:unop_typ) (noe:forall op, noe_setop_typsig op) (n:N) 
   | OP_NEG => VaU true (noe NOE_ZST) (noe NOE_MSUB w 0 n) w
   | OP_NOT => VaU true (noe NOE_ZST) (noe NOE_NOT n w) w
   | OP_POPCOUNT => VaU true (noe NOE_ZST) (noe NOE_POPCOUNT n) w
+  | OP_BITWIDTH => VaU true (noe NOE_ZST) (noe NOE_SIZE n) w
   end.
 
 Definition feval_cast (c:cast_typ) (noe:forall op, noe_setop_typsig op) (w w':bitwidth) (n:N) : N :=
