@@ -64,6 +64,7 @@ Inductive arm8var :=
   | R_Z21 | R_Z22 | R_Z23 | R_Z24 | R_Z25 | R_Z26 | R_Z27 | R_Z28 | R_Z29 | R_Z30 | R_Z31
   (* explicit registers for SIMD semantics calculations *)
   | R_TMPZ0 | R_TMPZ1 | R_TMPZ2 | R_TMPZ3 | R_TMPZ4 | R_TMPZ5 | R_TMPZ6
+  | R_TMP_LDXN
   (* These meta-variables model page access permissions: *)
   | A_READ | A_WRITE
   | V_TEMP (n:N) (* Temporaries introduced by the lifter: *).
@@ -137,6 +138,7 @@ Definition arm8typctx (id:var) : option typ :=
   | R_Z11 | R_Z12 | R_Z13 | R_Z14 | R_Z15 | R_Z16 | R_Z17 | R_Z18 | R_Z19 | R_Z20 => Some (NumT 256)
   | R_Z21 | R_Z22 | R_Z23 | R_Z24 | R_Z25 | R_Z26 | R_Z27 | R_Z28 | R_Z29 | R_Z30 | R_Z31 => Some (NumT 256)
   | R_TMPZ0 | R_TMPZ1 | R_TMPZ2 | R_TMPZ3 | R_TMPZ4 | R_TMPZ5 | R_TMPZ6 => Some(NumT 256)
+  | R_TMP_LDXN => Some(NumT 64)
 end.
 
 Definition arm8_wtm {s v m w} := @models_wtm v arm8typctx s m w.
