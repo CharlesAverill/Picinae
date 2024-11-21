@@ -11,3 +11,14 @@ Picinae_armv7.v
 Picinae_riscv.v
 Picinae_amd64.v
 Picinae_armv8_pcode.v
+Picinae_armv8_memsolve.v
+
+Examples/funccalls/nops_o_branch_nop_armv8.v
+Examples/funccalls/nops_o_call_test_armv8.v
+Examples/funccalls/nops_o_clobber_ret_armv8.v
+Examples/funccalls/nops_o_faith_ret_armv8.v
+Examples/funccalls/nops_o_loop_nop_armv8.v
+Examples/funccalls/nops_o_rec_nop_armv8.v
+Examples/funccalls/nops_o_short_nop_armv8.v
+Examples/funccalls/nops_o_tail_nop_armv8.v
+Examples/funccalls/nops_o_tiny_nop_armv8.v
