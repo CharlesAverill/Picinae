@@ -39,7 +39,6 @@ Proof.
   destruct_inv 64 PRE.
   rename PRE into S0.
   
-  Search update.
   repeat step; unfold arm8equiv in *; intros v SIG; specialize (S0 v SIG).
     destruct v; match goal with
     | [ |- context[or (eq true true) _] ] => now left
@@ -49,7 +48,6 @@ Proof.
       end
     end.
     2: { inversion S0; [discriminate | now rewrite <-H]. }
-    Search (setmem) (getmem).
   
   admit.
 Admitted.

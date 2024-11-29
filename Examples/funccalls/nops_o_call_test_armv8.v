@@ -16,7 +16,7 @@ Require Import nops_o_short_nop_armv8.
 Require Import nops_o_tiny_nop_armv8.
 Open Scope N.
 
-Definition call_test : program := fun _ a => match a with
+Definition call_test : program := fun s a => match a with
 
 (* 0x00100084: mov x0,x0 *)
 | 1048708 => Some (4,
@@ -67,12 +67,16 @@ Definition call_test : program := fun _ a => match a with
 	Move R_X0 (Var R_X0)
 )
 
+(* rec_nop - we're not ready for it quite yet. 
+      so we ignore it for now and replace it with the same nop
+      below*)
 (* 0x001000a8: bl 0x00100044 *)
-| 1048744 => Some (4,
+(*| 1048744 => Some (4,
 	Move R_X30 (BinOp OP_PLUS (Word 1048744 64) (Word 4 64)) $;
 	Jmp (Word 1048644 64)
-)
+)*)
 
+| 1048744
 (* 0x001000ac: mov x0,x0 *)
 | 1048748 => Some (4,
 	Move R_X0 (Var R_X0)
@@ -121,30 +125,31 @@ Definition call_test : program := fun _ a => match a with
 	Move R_PC (Var R_X30) $;
 	Jmp (Var R_PC)
 )
+| _ => None end.
+(*
+| _ => match branch_nop s a with
 
-| _ => match branch_nop a with
+| Some x => Some x
+| _ => match clobber_ret s a with
+| Some x => Some x
+| _ => match faith_ret s a with
+| Some x => Some x
+| _ => match loop_nop s a with
+| Some x => Some x
+| _ => match rec_nop s a with
+| Some x => Some x
+| _ => match short_nop s a with
+| Some x => Some x
+| _ => match tiny_nop s a with
+| Some x => Some x
+| _ => None
+end
+end
+end
+end
+end
+end
+end
+end.*)
 
-| Some x => Some x
-| _ => match clobber_ret a with
-| Some x => Some x
-| _ => match faith_ret a with
-| Some x => Some x
-| _ => match loop_nop a with
-| Some x => Some x
-| _ => match rec_nop a with
-| Some x => Some x
-| _ => match short_nop a with
-| Some x => Some x
-| _ => match tiny_nop a with
-| Some x => Some x
-| _ => none
-end.
-
-Require Import nops_o_branch_nop_armv8.
-Require Import nops_o_clobber_ret_armv8.
-Require Import nops_o_faith_ret_armv8.
-Require Import nops_o_loop_nop_armv8.
-Require Import nops_o_rec_nop_armv8.
-Require Import nops_o_short_nop_armv8.
-Require Import nops_o_tiny_nop_armv8.
 Theorem calltest_welltyped: welltyped_prog arm8typctx call_test. Proof. Picinae_typecheck. Qed.

@@ -5766,38 +5766,7 @@ Qed.
 End Determinism.
 
 
-Section Monotonicity.
 
-(* exec_prog is monotonic with respect to programs.  Enlarging the space of known
-   instructions in memory preserves executions. *)
-
-Theorem can_step_pmono:
-  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
-         xs xs' (CS: can_step p1 (xs',xs)),
-  can_step p2 (xs',xs).
-Proof.
-  intros. inversion CS; subst. econstructor.
-    apply PS, LU.
-    apply XS.
-Qed.
-
-Theorem exec_prog_pmono:
-  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
-         t (XP: exec_prog p1 t),
-  exec_prog p2 t.
-Proof.
-  intros. induction t.
-    apply exec_prog_nil.
-    apply exec_prog_step.
-      eapply IHt, exec_prog_tail, XP.
-      destruct t as [|xs t].
-        exact I.
-        eapply can_step_pmono.
-          exact PS.
-          eapply exec_prog_final, XP.
-Qed.
-
-End Monotonicity.
 
 
 
@@ -6441,9 +6410,324 @@ Proof.
       assumption.
 Qed.
 
+Lemma nextinv_equiv:
+  forall p Invs xp b t, nextinv p Invs xp b t <->
+    if (xp t || (b && if Invs t then true else false))%bool then
+      match Invs t with Some P => P | None => True end
+    else match t with (Addr a,s)::t' =>
+      match p s a with None => False | Some (sz,q) =>
+        forall s1 x1 (XS: exec_stmt s q s1 x1),
+          nextinv p Invs xp true ((exitof (a+sz) x1, s1)::(Addr a,s)::t')
+      end | _ => False end.
+Proof.
+  intros. destruct (xp t) eqn:H2.
+    simpl. destruct (Invs t) eqn:H3; split; intro H1.
+      inversion H1; subst.
+        rewrite H3,H2 in TRU. assumption.
+        rewrite H2 in NOI. discriminate.
+      apply NIHere. rewrite H3,H2. assumption.
+      exact I.
+      apply NIHere. rewrite H3. assumption.
+    destruct b; simpl.
+      destruct (Invs t) eqn:H3.
+        split; intro H1.
+          inversion H1; subst.
+            rewrite H3,H2 in TRU. assumption.
+            rewrite H2,H3 in NOI. discriminate.
+          apply NIHere. rewrite H3,H2. assumption.
+        split; intro H1.
+          inversion H1; subst.
+            rewrite H3,H2 in TRU. discriminate.
+            rewrite IL. exact STEP.
+          destruct t as [|[[a|i] s] t]; try contradiction. destruct (p s a) eqn:IL.
+            destruct p0 as (sz,q). eapply NIStep.
+              rewrite H2,H3. reflexivity.
+              exact IL.
+              assumption.
+            contradiction.
+      split; intro H1.
+        inversion H1; subst.
+          rewrite H2 in TRU. destruct (Invs t). contradiction. discriminate.
+          rewrite IL. exact STEP.
+        destruct t as [|[[a|i] s] t]; try contradiction. destruct (p s a) eqn:IL.
+          destruct p0 as (sz,q). eapply NIStep.
+            rewrite H2. destruct (Invs _); reflexivity.
+            exact IL.
+            assumption.
+          contradiction.
+Qed.
+
+(* The "effective invariant" at a code point is usually just the invariant
+   placed there, except for two corner cases:
+   1. If there's no invariant but the user has defined it to be an exit,
+      then it's treated as postcondition True.
+   2. If b=false (i.e., we're starting at this invariant so may not treat
+      it as the "next" invariant) and this isn't an exit, then ignore any
+      invariant here. *)
+Definition effinv b Inv xp (t:trace) :=
+  match Inv t with
+  | None => if xp t then Some True else None
+  | Some P => if orb b (xp t) then Some P else None
+  end.
+
+(* The following modifications to effective invariants preserve
+   nextinv properties:
+   1. Invariants that always imply the current proof Goal may be removed
+      (e.g., False invariants, which imply everything).
+   2. Always-true invariants may be added.
+   3. Invariant P may be weakened to Q if P -> Q. *)
+Definition effinv_impl (Inv1 Inv2:option Prop) (Goal:Prop) :=
+  match Inv1, Inv2 with
+  | None,None => True (* no change *)
+  | Some P,None => P -> Goal (* remove goal-implying invariant *)
+  | None,Some P => P  (* add tautological invariant *)
+  | Some P,Some Q => P -> Q (* weaken invariant *)
+  end.
+
+Lemma effinv_cases:
+  forall Invs1 Invs2 xp1 xp2 (Goal:Prop) b t
+    (EI: effinv_impl (effinv true Invs1 xp1 t) (effinv true Invs2 xp2 t) True)
+    (CASE1: xp1 t = true -> xp2 t = false -> trueif_inv (Invs1 t) -> Goal)
+    (CASE2: xp1 t = false -> xp2 t = false -> b = true -> Invs2 t = None -> true_inv (Invs1 t) -> Goal)
+    (CASE3: xp1 t = false -> xp2 t = true -> b = false -> trueif_inv (Invs1 t) \/ trueif_inv (Invs2 t)),
+  effinv_impl (effinv b Invs1 xp1 t) (effinv b Invs2 xp2 t) Goal.
+Proof.
+  unfold trueif_inv, effinv, effinv_impl. intros.
+  destruct (Invs1 _) eqn:INV1, (Invs2 _) eqn:INV2, (xp1 _) eqn:XP1, (xp2 _) eqn:XP2, b eqn:B; simpl in *;
+  try solve [ exact I | assumption | apply CASE1; reflexivity ].
+    destruct CASE3; try reflexivity. apply EI. assumption. assumption.
+    apply CASE2; reflexivity.
+Qed.
+
+Theorem nextinv_impl_invs:
+  forall p Invs1 Invs2 xp1 xp2 xs t1
+    (IMP: forall t2 (XP: exec_prog p (t2++xs::nil)),
+          effinv_impl (effinv true Invs1 xp1 (t2++xs::t1))
+                      (effinv true Invs2 xp2 (t2++xs::t1))
+                      (nextinv p Invs2 xp2 true (t2++xs::t1)))
+    (NI: nextinv p Invs1 xp1 true (xs::t1)),
+  nextinv p Invs2 xp2 true (xs::t1).
+Proof.
+  unfold effinv, effinv_impl. intros.
+  set (t2 := @nil (exit*store)).
+  change (xs::t1) with (t2++xs::t1) in NI |- *.
+  assert (XP: exec_prog p (t2++xs::nil)) by apply Forall_nil.
+  clearbody t2. dependent induction NI.
+
+    specialize (IMP t2 XP).
+    destruct (effinv true Invs2 xp2 (t2++xs::t1)) eqn:EI2; unfold effinv in EI2; [apply NIHere|];
+    destruct (Invs1 _), (Invs2 _), (xp1 _), (xp2 _); simpl in IMP;
+    solve [ reflexivity | discriminate | contradict TRU
+          | apply IMP; (exact I + assumption) ].
+
+    assert (IMP' := IMP t2 XP). rewrite x in NOI.
+    destruct (xp1 _). discriminate.
+    destruct (effinv true Invs2 xp2 (t2++xs::t1)) eqn:EI2;
+    [ apply NIHere | rewrite <- x; eapply NIStep; [rewrite x|eassumption|shelve] ];
+    unfold effinv in EI2;
+    destruct (Invs1 _), (Invs2 _), (xp2 _);
+    solve [ assumption | discriminate | reflexivity | apply IMP'; assumption ].
+
+    Unshelve. intros. rewrite x, app_comm_cons. eapply H; try eassumption.
+      reflexivity.
+      rewrite x. reflexivity.
+      rewrite <- app_comm_cons. apply exec_prog_step. assumption.
+      destruct t2 as [|xs' t2]; simpl;
+        inversion x; subst; eapply CanStep; eassumption.
+Qed.
+
+(*
+Theorem nextinv_impl_invs:
+  forall p Invs1 Invs2 xp1 xp2
+    (IMP: forall xs t, effinv_impl (effinv true Invs1 xp1 (xs::t))
+                                   (effinv true Invs2 xp2 (xs::t))
+                                   (nextinv p Invs2 xp2 true (xs::t)))
+    xs t (NI: nextinv p Invs1 xp1 true (xs::t)),
+  nextinv p Invs2 xp2 true (xs::t).
+Proof.
+  unfold effinv, effinv_impl. intros.
+  dependent induction NI.
+
+    specialize (IMP xs t).
+    destruct (effinv true Invs2 xp2 (xs::t)) eqn:EI2; unfold effinv in EI2; [apply NIHere|];
+    destruct (Invs1 _), (Invs2 _), (xp1 _), (xp2 _); simpl in IMP;
+    solve [ reflexivity | discriminate | contradict TRU | apply IMP,TRU | apply IMP,I ].
+
+    assert (IMP' := IMP (Addr a,s) t).
+    destruct (xp1 _). discriminate.
+    destruct (effinv true Invs2 xp2 ((Addr a,s)::t)) eqn:EI2;
+    [ apply NIHere | eapply NIStep; [|eassumption|intros;eapply H;trivial] ];
+    unfold effinv in EI2;
+    destruct (Invs1 _), (Invs2 _), (xp2 _);
+    solve [ assumption | discriminate | reflexivity ].
+Qed.
+*)
+
+(*
+Theorem nextinv_impl_invs:
+  forall p Invs1 Invs2 xp1 xp2
+    (IMP: forall t, effinv_impl (effinv Invs1 xp1 true t)
+                                (effinv Invs2 xp2 true t)
+                                (nextinv p Invs2 xp2 true t))
+    t (NI: nextinv p Invs1 xp1 true t),
+  nextinv p Invs2 xp2 true t.
+Proof.
+  unfold effinv, effinv_impl. intros.
+  dependent induction NI.
+
+    specialize (IMP t).
+    destruct (effinv Invs2 xp2 true t) eqn:EI2; unfold effinv in EI2; [apply NIHere|];
+    destruct (Invs1 t), (Invs2 t), (xp1 t), (xp2 t); simpl in IMP;
+    solve [ reflexivity | discriminate | contradict TRU | apply IMP,TRU | apply IMP,I ].
+
+    assert (IMP' := IMP t). specialize (IMP ((Addr a,s)::t)).
+    destruct (xp1 _). discriminate.
+    destruct (effinv Invs2 xp2 true ((Addr a,s)::t)) eqn:EI2;
+    [ apply NIHere | eapply NIStep; [|eassumption|intros;apply H;trivial] ];
+    unfold effinv in EI2;
+    destruct (Invs1 _), (Invs2 _), (xp2 _);
+    solve [ assumption | discriminate | reflexivity ].
+Qed.
+*)
+
+Theorem nextinv_apptrace:
+  forall p Invs xp b t1 t2 xs
+    (XP: forall xs t, xp (xs::t++t1) = xp (xs::t))
+    (NI: nextinv p (fun t => Invs match t with nil => nil | _ => t++t1 end) xp b (xs::t2)),
+  nextinv p Invs xp b (xs::t2++t1).
+Proof.
+  intros. dependent induction NI.
+    apply NIHere. rewrite XP. exact TRU.
+    eapply NIStep.
+      rewrite XP. apply NOI.
+      exact IL.
+      intros. rewrite app_comm_cons. eapply H.
+        exact XS.
+        exact XP.
+        reflexivity.
+Qed.
+
+Definition get_postcondition {S T} (p: S -> _ -> option T) Invs (xp: _ -> bool) a1 (s1:S) t1 : option Prop :=
+  if xp ((Addr a1,s1)::t1) then
+    (if p s1 a1 then Invs ((Addr a1,s1)::t1) else None)
+  else None.
+
+Theorem perform_call:
+  forall p Invs1 Invs2 xp1 xp2
+         (XP2NIL: xp2 nil = false)
+         (XP2RAISE: forall i s t, xp2 ((Raise i,s)::t) = false)
+         (XP2CODE: forall a s t, p s a = None -> xp2 ((Addr a,s)::t) = false)
+         (INV2RAISE: forall i s t, Invs2 ((Raise i,s)::t) = None)
+         (IMP: forall t, effinv_impl (effinv true Invs2 xp2 t) (effinv true Invs1 xp1 t) True)
+         (CI: forall t1 t2 xs, Invs2 (xs::t2++t1) = Invs2 (xs::t2) /\ xp2 (xs::t2++t1) = xp2 (xs::t2))
+         a1 s1
+         (CALLEE: forall t xs' (ENTRY: startof t xs' = (Addr a1, s1)),
+                  satisfies_all p Invs2 xp2 (xs'::t))
+         t1
+         (INV: forall a' s' t2
+                      (ENTRY: startof t2 (Addr a', s') = (Addr a1, s1))
+                      (XP: exec_prog p ((Addr a',s')::t2))
+                      (PRE: trueif_inv (get_postcondition p Invs2 xp2 a' s' (t2++t1))),
+               nextinv p Invs1 xp1 true ((Addr a',s')::t2++t1)),
+  nextinv p Invs1 xp1 true ((Addr a1,s1)::t1).
+Proof.
+  intros. apply nextinv_impl_invs with (Invs1:=Invs2) (xp1:=xp2).
+
+  intros.
+  change (t2++(Addr a1,s1)::t1) with (t2++(Addr a1,s1)::nil++t1).
+  rewrite app_comm_cons, app_assoc. rename t2 into t2'.
+  set (xs := hd (Addr a1,s1) t2'). set (t2 := tl (t2'++(Addr a1,s1)::nil)).
+  replace (t2'++(Addr a1,s1)::nil) with (xs::t2) in XP |- * by
+    (destruct t2'; reflexivity).
+  assert (ENTRY: startof t2 xs = (Addr a1, s1)).
+    destruct t2'. reflexivity. apply startof_niltail.
+  clearbody xs t2. clear t2'. rewrite <- app_comm_cons. destruct xs as (x,s).
+  apply effinv_cases; [apply IMP|..]; intros.
+
+    (* Drop callee exit and continue to return to caller. *)
+    destruct x as [a|i]; [|rewrite XP2RAISE in H; discriminate].
+    eapply INV. apply ENTRY. apply XP.
+      unfold get_postcondition. rewrite H. destruct (p s a) eqn:IL.
+        destruct (Invs2 _). assumption. exact I.
+        exact I.
+
+    (* Drop callee internal invariant. *)
+    destruct x as [a|i].
+      eapply INV. apply ENTRY. apply XP.
+        unfold get_postcondition. rewrite H. exact I.
+      rewrite INV2RAISE in H3. contradiction.
+
+    (* This case can only happen if the callee's entry point is a caller
+       exit point. Our theorem only applies when we've taken at least one
+       step to get from caller to callee (b=true), so this is a contradiction. *)
+    discriminate.
+
+  change ((Addr a1,s1)::t1) with (((Addr a1,s1)::nil)++t1).
+  apply nextinv_apptrace. intros. apply CI.
+  match goal with |- nextinv _ ?f _ _ _ => replace f with Invs2 end.
+    apply CALLEE. reflexivity. apply Forall_nil. apply ForallPrefixes_nil. exact XP2NIL.
+    extensionality t. destruct t. reflexivity. symmetry. apply CI.
+Qed.
+
 End InvariantProofs.
 
+Section Monotonicity.
 
+(* exec_prog is monotonic with respect to programs.  Enlarging the space of known
+   instructions in memory preserves executions. *)
+
+Theorem can_step_pmono:
+  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
+         xs xs' (CS: can_step p1 (xs',xs)),
+  can_step p2 (xs',xs).
+Proof.
+  intros. inversion CS; subst. econstructor.
+    apply PS, LU.
+    apply XS.
+Qed.
+
+Theorem exec_prog_pmono:
+  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
+         t (XP: exec_prog p1 t),
+  exec_prog p2 t.
+Proof.
+  intros. induction t.
+    apply exec_prog_nil.
+    apply exec_prog_step.
+      eapply IHt, exec_prog_tail, XP.
+      destruct t as [|xs t].
+        exact I.
+        eapply can_step_pmono.
+          exact PS.
+          eapply exec_prog_final, XP.
+Qed.
+
+Theorem nextinv_pmono:
+  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
+         t Invs xp b (NI: nextinv p1 Invs xp b t),
+  nextinv p2 Invs xp b t.
+Proof.
+  intros. induction NI.
+    now constructor.
+    apply NIStep with (sz:=sz) (q:=q).
+     destruct (xp ((Addr a, s) :: t)) eqn:XP; try discriminate.
+      assumption.
+      apply (PS s a _ IL).
+      assumption.
+Qed.
+
+Theorem satall_pmono:
+  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
+         t Invs xp 
+         (XP: exec_prog p1 t)
+         (SAT: satisfies_all p1 Invs xp t),
+  satisfies_all p2 Invs xp t.
+Proof.
+  unfold satisfies_all; intros. specialize (SAT XP H0).
+  apply (nextinv_pmono p1); assumption.
+Qed.
+
+End Monotonicity.
 
 Section FrameTheorems.
 

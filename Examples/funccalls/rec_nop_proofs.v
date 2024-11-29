@@ -15,7 +15,6 @@ Require Import String.
 Import ARM8Notations.
 Open Scope N.
 
-Print "=?".
 Definition valeqb (l r:value) : bool :=
   match l with
   | VaN nl wl => match r with VaN nr wr => andb (nl =? nr) (wl =? wr) | _ => false end

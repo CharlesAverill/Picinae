@@ -39,7 +39,6 @@ Proof.
   destruct_inv 64 PRE.
   rename PRE into S0.
   
-  Search update.
   repeat step; unfold arm8equiv in *; intros v SIG; specialize (S0 v SIG).
   destruct v;
       repeat (rewrite update_updated || rewrite update_frame); try easy.
