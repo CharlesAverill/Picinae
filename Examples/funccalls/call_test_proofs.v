@@ -111,17 +111,25 @@ Proof.
   eapply startof_prefix in ENTRY; try eassumption.
   eapply preservation_exec_prog in MDL; try (eassumption || apply whole_binary_welltyped).
   clear - PRE MDL. rename t1 into t. rename s into s0; rename s1 into s.
+  
+  Search trueinv_None.
   destruct_inv 64 PRE.
   rename PRE into S0.
   step. step.
   (* We are at the entry of tiny_nop (0x00100000), so apply perform_call *)
   remember (update (update s R_X0 (VaN n 64)) R_X30 (VaN 1048716 64)) as current_s.
   apply perform_call with (Invs2:=tiny_nop_invs current_s) (xp2:=tiny_nop_exit); try reflexivity.
-    intros; unfold tiny_nop_exit. destruct (N.eq_dec a 1048576).
-      subst. unfold whole_binary, combine_programs, funcs, tiny_nop in H. discriminate.
-      clear - n0. destruct a.
-        reflexivity.
+    (* CALLEE *)
+    intros. apply satall_pmono with (p1:=tiny_nop).
+      intro s1. apply (funcs_pfsub s1 tiny_nop). apply in_eq.
+      admit. (* Don't have enough to prove `exec_prog tiny_nop (xs'::t0) *)
+      destruct xs' as [x' s']. apply tiny_nop_pc.
+        assumption.
+        admit. (* Punting on proving store's typesafety *)
+    (* INVXP2 *)
+    intros. unfold whole_binary, tiny_nop_exit; destruct t0 as [|[[[|p]|i] s1] t0]; try easy.
         time repeat (reflexivity || contradiction || destruct p as [p|p|]).
+    (* IMP *)
     intro t'. unfold effinv_impl,effinv. rewrite Bool.orb_true_l, Bool.orb_true_l.
       unfold tiny_nop_invs, tiny_nop_exit, call_test_invs, call_test_exit.
       destruct t' as [|x_s t'];[easy|destruct x_s as [x s']]. destruct x; try easy.
@@ -133,21 +141,13 @@ Proof.
          trace matches our original store with some exceptions.
          This seems impossible...
        *) admit. admit.
+    (* CI *)
     intros; split; reflexivity.
-    intros. apply satall_pmono with (p1:=tiny_nop).
-      intro s1. apply (funcs_pfsub s1 tiny_nop). apply in_eq.
-      admit.
-      destruct xs' as [x' s']. apply tiny_nop_pc.
-        assumption.
-        admit. (* Punting on proving store's typesafety *)
-        
   (* Great! We're ready to keep going assuming all of our admits,
      ~~ including the impossible looking ones ~~
      are provable.
   *)
-     intros.
-     Print get_precondition.
-     Print get_postcondition.
-     Locate destruct_inv.
-     destruct_inv 64 PRE. step.
+  intros.
+  (* `destruct_inv 64 PRE` hangs... *)
+  destruct_inv 64 PRE. step.
 Qed.

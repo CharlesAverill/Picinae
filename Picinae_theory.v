@@ -5767,9 +5767,6 @@ End Determinism.
 
 
 
-
-
-
 Section InvariantProofs.
 
 (* To prove properties of states computed by repeat-loops, it suffices to prove
@@ -6410,6 +6407,8 @@ Proof.
       assumption.
 Qed.
 
+(* (* This lemma is currently unused.  I proved it to help me understand and confirm
+   the necessary and sufficient conditions for nextinv proofs. *)
 Lemma nextinv_equiv:
   forall p Invs xp b t, nextinv p Invs xp b t <->
     if (xp t || (b && if Invs t then true else false))%bool then
@@ -6456,6 +6455,7 @@ Proof.
             assumption.
           contradiction.
 Qed.
+*)
 
 (* The "effective invariant" at a code point is usually just the invariant
    placed there, except for two corner cases:
@@ -6536,60 +6536,6 @@ Proof.
         inversion x; subst; eapply CanStep; eassumption.
 Qed.
 
-(*
-Theorem nextinv_impl_invs:
-  forall p Invs1 Invs2 xp1 xp2
-    (IMP: forall xs t, effinv_impl (effinv true Invs1 xp1 (xs::t))
-                                   (effinv true Invs2 xp2 (xs::t))
-                                   (nextinv p Invs2 xp2 true (xs::t)))
-    xs t (NI: nextinv p Invs1 xp1 true (xs::t)),
-  nextinv p Invs2 xp2 true (xs::t).
-Proof.
-  unfold effinv, effinv_impl. intros.
-  dependent induction NI.
-
-    specialize (IMP xs t).
-    destruct (effinv true Invs2 xp2 (xs::t)) eqn:EI2; unfold effinv in EI2; [apply NIHere|];
-    destruct (Invs1 _), (Invs2 _), (xp1 _), (xp2 _); simpl in IMP;
-    solve [ reflexivity | discriminate | contradict TRU | apply IMP,TRU | apply IMP,I ].
-
-    assert (IMP' := IMP (Addr a,s) t).
-    destruct (xp1 _). discriminate.
-    destruct (effinv true Invs2 xp2 ((Addr a,s)::t)) eqn:EI2;
-    [ apply NIHere | eapply NIStep; [|eassumption|intros;eapply H;trivial] ];
-    unfold effinv in EI2;
-    destruct (Invs1 _), (Invs2 _), (xp2 _);
-    solve [ assumption | discriminate | reflexivity ].
-Qed.
-*)
-
-(*
-Theorem nextinv_impl_invs:
-  forall p Invs1 Invs2 xp1 xp2
-    (IMP: forall t, effinv_impl (effinv Invs1 xp1 true t)
-                                (effinv Invs2 xp2 true t)
-                                (nextinv p Invs2 xp2 true t))
-    t (NI: nextinv p Invs1 xp1 true t),
-  nextinv p Invs2 xp2 true t.
-Proof.
-  unfold effinv, effinv_impl. intros.
-  dependent induction NI.
-
-    specialize (IMP t).
-    destruct (effinv Invs2 xp2 true t) eqn:EI2; unfold effinv in EI2; [apply NIHere|];
-    destruct (Invs1 t), (Invs2 t), (xp1 t), (xp2 t); simpl in IMP;
-    solve [ reflexivity | discriminate | contradict TRU | apply IMP,TRU | apply IMP,I ].
-
-    assert (IMP' := IMP t). specialize (IMP ((Addr a,s)::t)).
-    destruct (xp1 _). discriminate.
-    destruct (effinv Invs2 xp2 true ((Addr a,s)::t)) eqn:EI2;
-    [ apply NIHere | eapply NIStep; [|eassumption|intros;apply H;trivial] ];
-    unfold effinv in EI2;
-    destruct (Invs1 _), (Invs2 _), (xp2 _);
-    solve [ assumption | discriminate | reflexivity ].
-Qed.
-*)
-
 Theorem nextinv_apptrace:
   forall p Invs xp b t1 t2 xs
     (XP: forall xs t, xp (xs::t++t1) = xp (xs::t))
@@ -6607,23 +6553,17 @@ Proof.
         reflexivity.
 Qed.
 
-Definition get_postcondition {S T} (p: S -> _ -> option T) Invs (xp: _ -> bool) a1 (s1:S) t1 : option Prop :=
-  if xp ((Addr a1,s1)::t1) then
-    (if p s1 a1 then Invs ((Addr a1,s1)::t1) else None)
-  else None.
-
 Theorem perform_call:
-  forall p Invs1 Invs2 xp1 xp2
-         (XP2NIL: xp2 nil = false)
-         (XP2RAISE: forall i s t, xp2 ((Raise i,s)::t) = false)
-         (XP2CODE: forall a s t, p s a = None -> xp2 ((Addr a,s)::t) = false)
-         (INV2RAISE: forall i s t, Invs2 ((Raise i,s)::t) = None)
-         (IMP: forall t, effinv_impl (effinv true Invs2 xp2 t) (effinv true Invs1 xp1 t) True)
-         (CI: forall t1 t2 xs, Invs2 (xs::t2++t1) = Invs2 (xs::t2) /\ xp2 (xs::t2++t1) = xp2 (xs::t2))
-         a1 s1
+  forall p Invs1 xp1 a1 s1 t1 Invs2 xp2
          (CALLEE: forall t xs' (ENTRY: startof t xs' = (Addr a1, s1)),
                   satisfies_all p Invs2 xp2 (xs'::t))
-         t1
+         (INVXP2: forall t, match t with
+                   | nil => xp2 t
+                   | (Raise _,_)::_ => if Invs2 t then true else xp2 t
+                   | (Addr a,s)::_ => if p s a then false else xp2 t
+                   end = false)
+         (IMP: forall t, effinv_impl (effinv true Invs2 xp2 t) (effinv true Invs1 xp1 t) True)
+         (CI: forall xs t, Invs2 (xs::t) = Invs2 (xs::nil) /\ xp2 (xs::t) = xp2 (xs::nil))
          (INV: forall a' s' t2
                       (ENTRY: startof t2 (Addr a', s') = (Addr a1, s1))
                       (XP: exec_prog p ((Addr a',s')::t2))
@@ -6641,21 +6581,23 @@ Proof.
     (destruct t2'; reflexivity).
   assert (ENTRY: startof t2 xs = (Addr a1, s1)).
     destruct t2'. reflexivity. apply startof_niltail.
-  clearbody xs t2. clear t2'. rewrite <- app_comm_cons. destruct xs as (x,s).
+  clearbody xs t2. clear t2'. rewrite <- app_comm_cons.
+  specialize (INVXP2 (xs::t2++t1)). destruct xs as (x,s). simpl in INVXP2.
   apply effinv_cases; [apply IMP|..]; intros.
 
     (* Drop callee exit and continue to return to caller. *)
-    destruct x as [a|i]; [|rewrite XP2RAISE in H; discriminate].
-    eapply INV. apply ENTRY. apply XP.
-      unfold get_postcondition. rewrite H. destruct (p s a) eqn:IL.
-        destruct (Invs2 _). assumption. exact I.
-        exact I.
+    destruct x as [a|i].
+      eapply INV. apply ENTRY. apply XP.
+        unfold get_postcondition. rewrite H. destruct (p s a) eqn:IL.
+          destruct (Invs2 _). assumption. exact I.
+          exact I.
+      destruct (Invs2 _); rewrite INVXP2 in H; discriminate.
 
     (* Drop callee internal invariant. *)
     destruct x as [a|i].
       eapply INV. apply ENTRY. apply XP.
         unfold get_postcondition. rewrite H. exact I.
-      rewrite INV2RAISE in H3. contradiction.
+      destruct (Invs2 _). discriminate. contradiction.
 
     (* This case can only happen if the callee's entry point is a caller
        exit point. Our theorem only applies when we've taken at least one
@@ -6663,13 +6605,15 @@ Proof.
     discriminate.
 
   change ((Addr a1,s1)::t1) with (((Addr a1,s1)::nil)++t1).
-  apply nextinv_apptrace. intros. apply CI.
+  apply nextinv_apptrace. intros. rewrite (proj2 (CI _ t)). apply CI.
   match goal with |- nextinv _ ?f _ _ _ => replace f with Invs2 end.
-    apply CALLEE. reflexivity. apply Forall_nil. apply ForallPrefixes_nil. exact XP2NIL.
-    extensionality t. destruct t. reflexivity. symmetry. apply CI.
+    apply CALLEE. reflexivity. apply Forall_nil. apply ForallPrefixes_nil. apply (INVXP2 nil).
+    extensionality t. destruct t. reflexivity. simpl. rewrite (proj1 (CI _ (_++_))). apply CI.
 Qed.
 
 End InvariantProofs.
+
+
 
 Section Monotonicity.
 
@@ -6728,6 +6672,8 @@ Proof.
 Qed.
 
 End Monotonicity.
+
+
 
 Section FrameTheorems.
 
