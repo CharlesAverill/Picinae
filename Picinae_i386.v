@@ -101,16 +101,16 @@ Module IL_i386 := PicinaeIL X86Arch.
 Export IL_i386.
 Module Theory_i386 := PicinaeTheory IL_i386.
 Export Theory_i386.
-Module Statics_i386 := PicinaeStatics IL_i386.
+Module Statics_i386 := PicinaeStatics IL_i386 Theory_i386.
 Export Statics_i386.
-Module FInterp_i386 := PicinaeFInterp IL_i386 Statics_i386.
+Module FInterp_i386 := PicinaeFInterp IL_i386 Theory_i386 Statics_i386.
 Export FInterp_i386.
 (* Module SLogic_i386 := PicinaeSLogic IL_i386.
 Export SLogic_i386. *)
 
 Module PSimpl_i386 := Picinae_Simplifier_Base.
 Export PSimpl_i386.
-Module PSimpl_i386_v1_1 := Picinae_Simplifier_v1_1 IL_i386 Statics_i386 FInterp_i386.
+Module PSimpl_i386_v1_1 := Picinae_Simplifier_v1_1 IL_i386 Theory_i386 Statics_i386 FInterp_i386.
 Ltac PSimplifier ::= PSimpl_i386_v1_1.PSimplifier.
 
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
@@ -265,28 +265,56 @@ Ltac x86_abstract_vars H :=
     end
   end.
 
+Ltac generalize_trace :=
+  lazymatch goal with
+  | [ |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?t1++?xs0::?t) ] =>
+    change (nextinv p Invs xp b (xs'::(xs1::t1)++(xs0::t)));
+    let t' := fresh t1 in generalize (xs1::t1); intro t'; clear t1; rename t' into t1
+  | [ |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?xs0::?t) ] =>
+    change (nextinv p Invs xp b (xs'::(xs1::nil)++(xs0::t)));
+    let t' := fresh "t" in generalize (xs1::nil); intro t'
+  end.
+
 (* Syntax: generalize_frame m as x
    Result: Find any goal expressions of the form m[a1:=u1]...[an:=un] where
    a1..an are adjacent memory addresses, and compact them to expressions
    of the form m[a:=x], where a=max(a1,...,an) and x is a user-specified name.
    This is useful for abstracting a series of pushes that form a callee's
    local stack frame into a single write of the entire byte array. *)
+Ltac generalize_frame_forward bytes w en m len1 a1 u1 len2 a2 u2 :=
+  let x := fresh in let H := fresh in let H' := fresh in
+  evar (x:N);
+  eassert (H: setmem w en len2 (setmem w en len1 m a1 u1) a2 u2 = setmem w en _ m a2 x);
+  [ subst x; eenough (H':_);
+    [ transitivity (setmem w en len2 (setmem w en len1 m a1 u1) (msub w a1 len2) u2);
+      [ apply f_equal2; [ exact H' | reflexivity ]
+      | etransitivity;
+        [ etransitivity;
+          [ apply setmem_merge_rev; reflexivity
+          | apply f_equal4; [psimpl|..]; reflexivity ]
+        | apply f_equal2; [ symmetry; exact H' | reflexivity ] ] ]
+    | psimpl; reflexivity ]
+  | rewrite H; clear H; clearbody x; try clear u1; try clear u2;
+    rename x into bytes ].
+Ltac generalize_frame_backward bytes w en m len1 a1 u1 len2 a2 u2 :=
+  let x := fresh in let H := fresh in let H' := fresh in
+  evar (x:N);
+  eassert (H: setmem w en len2 (setmem w en len1 m a1 u1) a2 u2 = setmem w en _ m a1 x);
+  [ subst x; eenough (H':_);
+    [ transitivity (setmem w en len2 (setmem w en len1 m a1 u1) ((a1+len1) mod 2^w) u2);
+      [ apply f_equal2; [ exact H' | reflexivity ]
+      | rewrite setmem_mod_l; etransitivity;
+        [ etransitivity;
+          [ apply setmem_merge; reflexivity
+          | apply f_equal4; [psimpl|..]; reflexivity ]
+        | apply f_equal2; reflexivity ] ]
+    | psimpl; try reflexivity ]
+  | rewrite H; clear H; clearbody x; try clear u1; try clear u2;
+    rename x into bytes ].
 Ltac generalize_frame m bytes :=
   match goal with |- context [ setmem ?w ?en ?len2 (setmem ?w ?en ?len1 m ?a1 ?u1) ?a2 ?u2 ] =>
-    let x := fresh in let H := fresh in let H' := fresh in
-    evar (x:N);
-    eassert (H: setmem w en len2 (setmem w en len1 m a1 u1) a2 u2 = setmem w en _ m a2 x);
-    [ subst x; eenough (H':_);
-      [ transitivity (setmem w en len2 (setmem w en len1 m a1 u1) (msub w a1 len2) u2);
-        [ apply f_equal2; [ exact H' | reflexivity ]
-        | etransitivity;
-          [ etransitivity;
-            [ apply setmem_merge_rev; reflexivity
-            | apply f_equal4; [psimpl|..]; reflexivity ]
-          | apply f_equal2; [ symmetry; exact H' | reflexivity ] ] ]
-      | psimpl; reflexivity ]
-    | rewrite H; clear H; clearbody x; try clear u1; try clear u2;
-      rename x into bytes ]
+    first [ generalize_frame_forward bytes w en m len1 a1 u1 len2 a2 u2
+          | generalize_frame_backward bytes w en m len1 a1 u1 len2 a2 u2 ]
   end.
 Tactic Notation "generalize_frame" constr(m) "as" ident(bytes) :=
   generalize_frame m bytes; repeat generalize_frame m bytes.
@@ -350,7 +378,7 @@ Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
 (* If asked to step the computation when we're already at an invariant point,
    just make the proof goal be the invariant. *)
 Ltac x86_invhere :=
-  eapply nextinv_here; [ reflexivity | red; psimpl_vals_goal ].
+  eapply nextinv_here; [ reflexivity | hnf; psimpl_vals_goal ].
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
@@ -369,9 +397,7 @@ Ltac x86_invseek :=
          | exec_stmt _ (N.iter _ _ _) _ _ => fail
          | _ => x86_step_and_simplify XS
          end;
-  try match goal with |- nextinv _ _ _ _ (_ :: ?xs :: ?t) =>
-    let t' := fresh t in generalize (xs::t); intro t'; clear t; rename t' into t
-  end;
+  try generalize_trace;
   repeat match goal with [ u:value |- _ ] => clear u
                        | [ n:N |- _ ] => clear n
                        | [ m:addr->N |- _ ] => clear m end;

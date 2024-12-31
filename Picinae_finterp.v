@@ -169,10 +169,10 @@ Definition noe_setop_typsig op :=
 (* Functional interpretation of expressions and statements entails instantiating
    a functor that accepts the architecture-specific IL syntax and semantics. *)
 
-Module Type PICINAE_FINTERP_DEFS (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL).
+Module Type PICINAE_FINTERP_DEFS (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL) (SIL: PICINAE_STATICS IL TIL).
 
 Import IL.
-Import TIL.
+Import SIL.
 
 Definition vupdate := @update var value VarEqDec.
 
@@ -562,11 +562,11 @@ End PICINAE_FINTERP_DEFS.
 
 
 
-Module Type PICINAE_FINTERP (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL).
+Module Type PICINAE_FINTERP (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL) (SIL: PICINAE_STATICS IL TIL).
 
 Import IL.
-Import TIL.
-Include PICINAE_FINTERP_DEFS IL TIL.
+Import SIL.
+Include PICINAE_FINTERP_DEFS IL TIL SIL.
 
 (* Using the functional interpreter, we now define a set of tactics that reduce
    expressions to values, and statements to stores & exits.  These tactics are
@@ -853,13 +853,12 @@ End PICINAE_FINTERP.
 
 
 
-Module PicinaeFInterp (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) : PICINAE_FINTERP IL TIL.
+Module PicinaeFInterp (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL) (SIL: PICINAE_STATICS IL TIL) : PICINAE_FINTERP IL TIL SIL.
 
 Import IL.
 Import TIL.
-Module PTheory := PicinaeTheory IL.
-Import PTheory.
-Include PICINAE_FINTERP_DEFS IL TIL.
+Import SIL.
+Include PICINAE_FINTERP_DEFS IL TIL SIL.
 
 Lemma updlst_remlst:
   forall v u l s, updlst s (remlst v l) vupdate [v:=u] = updlst s l vupdate [v:=u].

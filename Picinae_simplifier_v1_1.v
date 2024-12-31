@@ -88,9 +88,10 @@ Require Import ZArith.
 *)
 
 
-Module Type PSIMPL_DEFS_V1_1 (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL).
+Module Type PSIMPL_DEFS_V1_1 (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL) (SIL: PICINAE_STATICS IL TIL) (FIL: PICINAE_FINTERP IL TIL SIL).
 Import IL.
 Import TIL.
+Import SIL.
 Import FIL.
 
 (* Simplification Abstract Syntax Trees over Numbers, Bools, and Memory:
@@ -670,8 +671,9 @@ Fixpoint multiple_of_pow2 mvt e n {struct e} :=
    its arguments is the predecessor of a power of two (e.g., when simplifying
    x & (2^y-1) to x mod 2^y. *)
 
-(** Add/Sub simplification **)
+(** Non-modular Add/Sub simplification **)
 
+(* Add constant n to expression e and return a simplified expression e'. *)
 Fixpoint simpl_add_const mvt n e :=
   match n with 0 => e | _ =>
     match e with
@@ -695,6 +697,9 @@ Fixpoint simpl_add_const mvt n e :=
     end
   end.
 
+(* Try to subtract constant n from (unsigned) expression e, returning a simplified
+   (unsigned) expression e' along with a remainder n' that could not be subtracted
+   without making the expression negative.  In general:  e' = e - n + n' *)
 Fixpoint simpl_sub_const mvt n e :=
   match n with 0 => (e,0) | _ =>
     match e with
@@ -728,6 +733,7 @@ Fixpoint simpl_sub_const mvt n e :=
     end
   end.
 
+(* Subract expression e1 from e2, eliminating identical subterms of opposite sign. *)
 Fixpoint simpl_sub_cancel mvt e2 e1 {struct e1} :=
   if sastN_eq e1 e2 then Some (SIMP_Const 0) else
   match e1 with
@@ -741,6 +747,7 @@ Fixpoint simpl_sub_cancel mvt e2 e1 {struct e1} :=
   | _ => None
   end.
 
+(* Non-modularly add/subtract expressions e1 and e2, and simplify. *)
 Fixpoint simpl_add mvt e1 e2 {struct e2} :=
   match e2 with
   | SIMP_Const n2 => simpl_add_const mvt n2 e1
@@ -1014,29 +1021,38 @@ Definition simpl_mod_core mvt e1 e2 :=
     end
   end.
 
+(* Modularly add n or subtract 2^w-n to/from e, depending on which constant is smaller. *)
+Definition simpl_modpow2_add_small_const w e n :=
+  match n mod (N.shiftl 1 w) with N0 => e | m =>
+    if m <? 2^N.pred w then SIMP_Add (SIMP_Const m) e
+    else SIMP_MSub w e (SIMP_Const (N.shiftl 1 w - m))
+  end.
+
+(* Modularly add e1 and e2, simplifying when e1 and/or e2 are constants. *)
 Definition simpl_modpow2_add_atoms w e1 e2 :=
   match e1 with
   | SIMP_Const n1 =>
-    match n1 mod (N.shiftl 1 w) with 0 => e2 | _ =>
-      match e2 with SIMP_Const n2 => SIMP_Const ((n1+n2) mod (N.shiftl 1 w)) | _ =>
-        SIMP_Add e1 e2
-      end
+    match e2 with SIMP_Const n2 => SIMP_Const ((n1+n2) mod (N.shiftl 1 w)) | _ =>
+      simpl_modpow2_add_small_const w e2 n1
     end
   | _ => match e2 with SIMP_Const n2 =>
-           match n2 mod (N.shiftl 1 w) with 0 => e1 | _ => SIMP_Add e2 e1 end
+           simpl_modpow2_add_small_const w e1 n2
          | _ => SIMP_Add e1 e2
          end
   end.
 
+(* Modularly subtract e2 from e1, simplifying when e1 and/or e2 are constants. *)
 Definition simpl_modpow2_msub_atoms w e1 e2 :=
   match e2 with
   | SIMP_Const n2 =>
-    match n2 mod (N.shiftl 1 w) with 0 => e1 | _ =>
-      match e1 with SIMP_Const n1 => SIMP_Const (msub w n1 n2) | _ => SIMP_MSub w e1 e2 end
+    match e1 with SIMP_Const n1 => SIMP_Const (msub w n1 n2) | _ =>
+      simpl_modpow2_add_small_const w e1 (let p := N.shiftl 1 w in p - n2 mod p)
     end
   | _ => SIMP_MSub w e1 e2
   end.
 
+(* Modularly add signed constant z to expression e, recursively descending into
+   e to find any constant term to to which z can be added. *) 
 Fixpoint simpl_modpow2_add_const' w z e :=
   match e with
   | SIMP_Const n1 => Some (SIMP_Const (ofZ w (Z.of_N n1 + z)))
@@ -1054,6 +1070,8 @@ Fixpoint simpl_modpow2_add_const' w z e :=
 Definition simpl_modpow2_add_const w z e :=
   match Z.modulo z (Z.of_N (N.shiftl 1 w)) with Z0 => Some e | _ => simpl_modpow2_add_const' w z e end.
 
+(* Modularly add (or subtract if neg=true) e2 to/from e1, canceling any common terms with
+   opposite sign, and combining any constant terms. *)
 Fixpoint simpl_modpow2_cancel w neg e2 e1 {struct e1} :=
   if andb neg (sastN_eq e1 e2) then Some (SIMP_Const 0) else
   match e2 with
@@ -1070,6 +1088,7 @@ Fixpoint simpl_modpow2_cancel w neg e2 e1 {struct e1} :=
     end
   end.
 
+(* Combine all of the above modular add/sub simplifications. *)
 Fixpoint simpl_modpow2_addmsub w e1 (minus:bool) e2 {struct e2} :=
   match e2 with
   | SIMP_Add e2a e2b =>
@@ -1628,12 +1647,13 @@ End PSIMPL_DEFS_V1_1.
    those tactics apply. *)
 
 Module Type PICINAE_SIMPLIFIER_V1_1
-  (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL).
+  (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL) (SIL: PICINAE_STATICS IL TIL) (FIL: PICINAE_FINTERP IL TIL SIL).
 
 Import IL.
 Import TIL.
+Import SIL.
 Import FIL.
-Include PSIMPL_DEFS_V1_1 IL TIL FIL.
+Include PSIMPL_DEFS_V1_1 IL TIL SIL FIL.
 
 Parameter simplify_sastN_hyp:
   forall (x e:N) (noe: forall op, noe_setop_typsig op) (mvt:metavar_tree) (t:sastN)
@@ -2058,14 +2078,13 @@ End PICINAE_SIMPLIFIER_V1_1.
    doesn't require that the module body reiterate them.) *)
 
 Module Picinae_Simplifier_v1_1
-  (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL) : PICINAE_SIMPLIFIER_V1_1 IL TIL FIL.
+  (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL) (SIL: PICINAE_STATICS IL TIL) (FIL: PICINAE_FINTERP IL TIL SIL) : PICINAE_SIMPLIFIER_V1_1 IL TIL SIL FIL.
 
 Import IL.
 Import TIL.
+Import SIL.
 Import FIL.
-Include PSIMPL_DEFS_V1_1 IL TIL FIL.
-Module PTheory := PicinaeTheory IL.
-Import PTheory.
+Include PSIMPL_DEFS_V1_1 IL TIL SIL FIL.
 
 
 (* Proof of soundness for SAST-equivalence algorithm *)
@@ -3182,15 +3201,27 @@ Proof.
   exists (N.succ q). apply N.mul_comm.
 Qed.
 
+Theorem simpl_modpow2_add_small_const_sound:
+  forall mvt w e n,
+  eval_sastN mvt (simpl_modpow2_add_small_const w e n) mod 2^w = (eval_sastN mvt e + n) mod 2^w.
+Proof.
+  intros. unfold simpl_modpow2_add_small_const.
+  rewrite N.shiftl_1_l. destruct (n mod _) eqn:H.
+    rewrite <- mp2_add_r, H, N.add_0_r. reflexivity.
+    rewrite <- H. destruct (_ <? _).
+      rewrite <- mp2_add_r, N.add_comm. reflexivity.
+      cbn [eval_sastN]. rewrite <- (msub_mod_r w w), <- msub_0_l, msub_msub_distr,
+        msub_0_r, mp2_add_l by reflexivity. apply mp2_mod_mod.
+Qed.
+
 Theorem simpl_modpow2_add_atoms_sound:
   forall mvt w e1 e2,
   eval_sastN mvt (simpl_modpow2_add_atoms w e1 e2) mod 2^w = eval_sastN mvt (SIMP_Add e1 e2) mod 2^w.
 Proof.
   intros. unfold simpl_modpow2_add_atoms. destruct_matches_def SIMP_NVar; try reflexivity.
-    cbn [eval_sastN]. rewrite <- mp2_add_l, <- N.shiftl_1_l, Heqm0, N.shiftl_1_l. reflexivity.
     cbn [eval_sastN]. rewrite N.shiftl_1_l, N.Div0.mod_mod. reflexivity.
-    cbn [eval_sastN]. rewrite N.shiftl_1_l in Heqm0. rewrite <- mp2_add_r, Heqm0, N.add_0_r. reflexivity.
-    cbn [eval_sastN]. rewrite N.add_comm. reflexivity.
+    rewrite simpl_modpow2_add_small_const_sound, N.add_comm. reflexivity.
+    rewrite simpl_modpow2_add_small_const_sound. reflexivity.
 Qed.
 
 Theorem simpl_modpow2_msub_atoms_sound:
@@ -3198,8 +3229,9 @@ Theorem simpl_modpow2_msub_atoms_sound:
   eval_sastN mvt (simpl_modpow2_msub_atoms w e1 e2) mod 2^w = eval_sastN mvt (SIMP_MSub w e1 e2) mod 2^w.
 Proof.
   intros. unfold simpl_modpow2_msub_atoms. destruct_matches_def SIMP_NVar; try reflexivity.
-  cbn [eval_sastN]. rewrite N.shiftl_1_l in Heqm0. erewrite <- msub_mod_r, Heqm0, msub_0_r by reflexivity.
-    symmetry. apply N.Div0.mod_mod.
+  rewrite simpl_modpow2_add_small_const_sound.
+  rewrite N.shiftl_1_l, <- mp2_add_r, <- msub_0_l, add_msub_assoc, N.add_0_r.
+  cbn [eval_sastN]. rewrite msub_mod_pow2, N.min_id. reflexivity.
 Qed.
 
 Theorem simpl_modpow2_add_const'_sound:

@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -18,7 +18,7 @@
    * Picinae_theory                                        MMMMMMM+MMMZ7..7ZM~++
    * Picinae_finterp                                        MMMMMMMMMMM7..ZNOOMZ
    * Picinae_statics                                         MMMMMMMMMM$.$MOMO=7
-   * Picinae_slogic                                           MDMMMMMMMO.7MDM7M+
+                                                              MDMMMMMMMO.7MDM7M+
    Then compile this module with menu option                   ZMMMMMMMM.$MM8$MN
    Compile->Compile_buffer.                                    $ZMMMMMMZ..MMMOMZ
                                                                 ?MMMMMM7..MNN7$M
@@ -37,116 +37,112 @@ Require Export Picinae_theory.
 Require Export Picinae_statics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
-(* Require Export Picinae_slogic. *)
 Require Import NArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.
 Open Scope N.
 
 (* Variables found in IL code lifted from ARM native code: *)
-Inductive arm7var :=
+Inductive arm8var :=
   (* Main memory: swap between 32 bit(ARMv1-v8) mode and 64 bit(ARMv8) *)
   | V_MEM32 | V_MEM64
-  (* no equivalent of the segment registers*)
-  (* Floating point (VFP) support and SIMD (NEON) are optional extensions to the ARMv7-A profile.*)
-  (* ARM’s pc register is analogous to IA-32’s EIP register *)
-  | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5 | R_R6 | R_R7
-  | R_R8 | R_R9 | R_R10 | R_R11 | R_R12
-  (* R13: stack pointer | R14: link register | R15: program counter *)
+  (* X0-30 = 64bit registers. No need to explicitly define W0-30 since lifted code will address the lower 32 bits when using W registers *)
+  | R_X0 | R_X1 | R_X2 | R_X3 | R_X4 | R_X5 | R_X6 | R_X7 | R_X8 | R_X9 | R_X10
+  | R_X11 | R_X12 | R_X13 | R_X14 | R_X15 | R_X16 | R_X17 | R_X18 | R_X19 | R_X20
+  | R_X21 | R_X22 | R_X23 | R_X24 | R_X25 | R_X26 | R_X27 | R_X28 | R_X29 | R_X30
+  (* SP = stack pointer *)
   | R_SP | R_LR | R_PC
-  (* Current Program Status Register (CPSR)*)
-  | R_M (* (bits 0–4) are the processor mode bits.*)
-  | R_T (* (bit 5) is the Thumb state bit. *)
-  | R_F (* (bit 6) is the FIQ disable bit. *)
-  | R_I (* (bit 7) is the IRQ disable bit. *)
-  | R_A (* (bit 8) is the imprecise data abort disable bit. *)
-  | R_E (* (bit 9) is the data endianness bit. *)
-  | R_IT (* (bits 10–15 and 25–26) is the if-then state bits. *)
-  | R_GE (* (bits 16–19) is the greater-than-or-equal-to bits. *)
-  | R_DNM (* (bits 20–23) is the do not modify bits. *)
-  | R_JF (* (bit 24) is the Java state bit. *)
-  | R_QF (* (bit 27) is the sticky overflow bit. *)
-  | R_VF (* (bit 28) is the overflow bit. *)
-  | R_CF (* (bit 29) is the carry/borrow/extend bit. *)
-  | R_ZF (* (bit 30) is the zero bit. *)
-  | R_NF (* (bit 31) is the negative/less than bit. *)
+  (* ng = negative, zr = zero reg, cy = carry, ov = overflow ? *)
+  | R_NG | R_ZR | R_CY | R_OV
+  (* for modeling how the cpu handles flag updates *)
+  | R_TMPNG | R_TMPZR | R_TMPCY | R_TMPOV
+  (* zero reg *)
+  | R_XZR
+  (* FP/SIMD registers *)
+  | R_Z0 | R_Z1 | R_Z2 | R_Z3 | R_Z4 | R_Z5 | R_Z6 | R_Z7 | R_Z8 | R_Z9 | R_Z10
+  | R_Z11 | R_Z12 | R_Z13 | R_Z14 | R_Z15 | R_Z16 | R_Z17 | R_Z18 | R_Z19 | R_Z20
+  | R_Z21 | R_Z22 | R_Z23 | R_Z24 | R_Z25 | R_Z26 | R_Z27 | R_Z28 | R_Z29 | R_Z30 | R_Z31
+  (* explicit registers for SIMD semantics calculations *)
+  | R_TMPZ0 | R_TMPZ1 | R_TMPZ2 | R_TMPZ3 | R_TMPZ4 | R_TMPZ5 | R_TMPZ6
+  | R_TMP_LDXN
   (* These meta-variables model page access permissions: *)
   | A_READ | A_WRITE
-  | V_TEMP (n:N) (* Temporaries introduced by the BIL lifter: *).
+  | V_TEMP (n:N) (* Temporaries introduced by the lifter: *).
 
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
    input to the Architecture module, so that it understands how the variable
    identifiers chosen above are syntactically written and how to decide whether
    any two variable instances refer to the same variable. *)
 
-Module MiniARM7VarEq <: MiniDecidableType.
-  Definition t := arm7var.
-  Definition eq_dec (v1 v2:arm7var) : {v1=v2}+{v1<>v2}.
+Module MiniARM8VarEq <: MiniDecidableType.
+  Definition t := arm8var.
+  Definition eq_dec (v1 v2:arm8var) : {v1=v2}+{v1<>v2}.
     decide equality; apply N.eq_dec.
   Defined.  (* <-- This must be Defined (not Qed!) for finterp to work! *)
   Arguments eq_dec v1 v2 : simpl never.
-End MiniARM7VarEq.
+End MiniARM8VarEq.
 
-Module ARM7Arch <: Architecture.
-  Module Var := Make_UDT MiniARM7VarEq.
+Module ARM8Arch <: Architecture.
+  Module Var := Make_UDT MiniARM8VarEq.
   Definition var := Var.t.
   Definition store := var -> value.
 
   Definition mem_bits := 8%positive.
-  Definition mem_readable s a := exists r, s A_READ = VaM r 32 /\ r a <> 0.
-  Definition mem_writable s a := exists w, s A_WRITE = VaM w 32 /\ w a <> 0.
-End ARM7Arch.
+  Definition mem_readable s a := exists r, s A_READ = VaM r 64 /\ r a <> 0.
+  Definition mem_writable s a := exists w, s A_WRITE = VaM w 64 /\ w a <> 0.
+End ARM8Arch.
 
 (* Instantiate the Picinae modules with the arm identifiers above. *)
-Module IL_arm7 := PicinaeIL ARM7Arch.
-Export IL_arm7.
-Module Theory_arm7 := PicinaeTheory IL_arm7.
-Export Theory_arm7.
-Module Statics_arm7 := PicinaeStatics IL_arm7 Theory_arm7.
-Export Statics_arm7.
-Module FInterp_arm7 := PicinaeFInterp IL_arm7 Theory_arm7 Statics_arm7.
-Export FInterp_arm7.
-(*Module SLogic_arm7 := PicinaeSLogic IL_arm7.
-Export SLogic_arm7. *)
+Module IL_arm8 := PicinaeIL ARM8Arch.
+Export IL_arm8.
+Module Theory_arm8 := PicinaeTheory IL_arm8.
+Export Theory_arm8.
+Module Statics_arm8 := PicinaeStatics IL_arm8 Theory_arm8.
+Export Statics_arm8.
+Module FInterp_arm8 := PicinaeFInterp IL_arm8 Theory_arm8 Statics_arm8.
+Export FInterp_arm8.
 
-Module PSimpl_arm7 := Picinae_Simplifier_Base.
-Export PSimpl_arm7.
-Module PSimpl_arm7_v1_1 := Picinae_Simplifier_v1_1 IL_arm7 Theory_arm7 Statics_arm7 FInterp_arm7.
-Ltac PSimpl_arm7.PSimplifier ::= PSimpl_arm7_v1_1.PSimplifier.
+Module PSimpl_arm8 := Picinae_Simplifier_Base.
+Export PSimpl_arm8.
+Module PSimpl_arm8_v1_1 := Picinae_Simplifier_v1_1 IL_arm8 Theory_arm8 Statics_arm8 FInterp_arm8.
+Ltac PSimpl_arm8.PSimplifier ::= PSimpl_arm8_v1_1.PSimplifier.
 
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
-Tactic Notation "arm7_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
-Tactic Notation "arm7_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
-Tactic Notation "arm7_psimpl" "in" hyp(H) := psimpl_all_hyp H.
-Tactic Notation "arm7_psimpl" := psimpl_all_goal.
+Tactic Notation "arm8_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
+Tactic Notation "arm8_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+Tactic Notation "arm8_psimpl" "in" hyp(H) := psimpl_all_hyp H.
+Tactic Notation "arm8_psimpl" := psimpl_all_goal.
 
 (* To use a different simplifier version (e.g., v1_0) put the following atop
    your proof .v file:
 Require Import Picinae_simplifier_v1_0.
-Module PSimpl_arm7_v1_0 := Picinae_Simplifier_v1_0 IL_arm7 Statics_arm7 FInterp_arm7.
-Ltac PSimpl_arm7.PSimplifier ::= PSimpl_arm7_v1_0.PSimplifier.
+Module PSimpl_arm8_v1_0 := Picinae_Simplifier_v1_0 IL_arm8 Statics_arm8 FInterp_arm8.
+Ltac PSimpl_arm8.PSimplifier ::= PSimpl_arm8_v1_0.PSimplifier.
 *)
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
-Definition arm7typctx (id:var) : option typ :=
+Definition arm8typctx (id:var) : option typ :=
   match id with
   | V_MEM32 => Some (MemT 32)
   | V_MEM64 => Some (MemT 64)
-  | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5 | R_R6 | R_R7 => Some (NumT 32)
-  | R_R8 | R_R9 | R_R10 | R_R11 | R_R12 => Some (NumT 32)
-  | R_SP | R_LR | R_PC => Some (NumT 32)
-  | R_M => Some (NumT 5)
-  | R_T | R_F | R_I | R_A | R_E => Some (NumT 1)
-  | R_IT => Some (NumT 8)
-  | R_GE => Some (NumT 4)
-  | R_DNM => Some (NumT 4)
-  | R_JF | R_QF | R_VF | R_CF | R_ZF | R_NF => Some (NumT 1)
-  | A_READ | A_WRITE => Some (MemT 32)
+  | R_X0 | R_X1 | R_X2 | R_X3 | R_X4 | R_X5 | R_X6 | R_X7 | R_X8 | R_X9 | R_X10 => Some (NumT 64)
+  | R_X11 | R_X12 | R_X13 | R_X14 | R_X15 | R_X16 | R_X17 | R_X18 | R_X19 | R_X20 => Some (NumT 64)
+  | R_X21 | R_X22 | R_X23 | R_X24 | R_X25 | R_X26 | R_X27 | R_X28 | R_X29 | R_X30 => Some (NumT 64)
+  | R_XZR => Some (NumT 64)
+  | R_SP | R_LR | R_PC => Some (NumT 64)
+  | R_NG | R_ZR | R_CY | R_OV => Some (NumT 8)
+  | R_TMPNG | R_TMPZR | R_TMPCY | R_TMPOV => Some (NumT 8)
+  | A_READ | A_WRITE => Some (MemT 64)
   | V_TEMP _ => None
+  | R_Z0 | R_Z1 | R_Z2 | R_Z3 | R_Z4 | R_Z5 | R_Z6 | R_Z7 | R_Z8 | R_Z9 | R_Z10 => Some (NumT 256)
+  | R_Z11 | R_Z12 | R_Z13 | R_Z14 | R_Z15 | R_Z16 | R_Z17 | R_Z18 | R_Z19 | R_Z20 => Some (NumT 256)
+  | R_Z21 | R_Z22 | R_Z23 | R_Z24 | R_Z25 | R_Z26 | R_Z27 | R_Z28 | R_Z29 | R_Z30 | R_Z31 => Some (NumT 256)
+  | R_TMPZ0 | R_TMPZ1 | R_TMPZ2 | R_TMPZ3 | R_TMPZ4 | R_TMPZ5 | R_TMPZ6 => Some(NumT 256)
+  | R_TMP_LDXN => Some(NumT 64)
 end.
 
-Definition arm7_wtm {s v m w} := @models_wtm v arm7typctx s m w.
-Definition arm7_regsize {s v n w} := @models_regsize v arm7typctx s n w.
+Definition arm8_wtm {s v m w} := @models_wtm v arm8typctx s m w.
+Definition arm8_regsize {s v n w} := @models_regsize v arm8typctx s n w.
 
 (* Simplify memory access propositions by observing that on arm, the only part
    of the store that affects memory accessibility are the page-access bits
@@ -184,7 +180,6 @@ Proof.
   intros. unfold MemAcc, mem_writable. rewrite !update_updated. reflexivity.
 Qed.
 
-
 (* Simplify arm memory access assertions produced by step_stmt. *)
 Ltac simpl_memaccs H :=
   try lazymatch type of H with context [ MemAcc mem_writable ] =>
@@ -192,6 +187,33 @@ Ltac simpl_memaccs H :=
   end;
   try lazymatch type of H with context [ MemAcc mem_readable ] =>
     rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
+  end.
+
+(* The user can ignore all assigned values to specified variables by
+   redefining x86_ignore.  Example:
+     Ltac x86_ignore v ::= constr:(match v with R_EAX => true | _ => false end).
+ *)
+Ltac arm8_ignore v := constr:(false).
+Ltac arm8_abstract_vars H :=
+  repeat match type of H with context [ update ?s ?v ?u ] =>
+    let b := ltac:(arm8_ignore v) in
+    lazymatch eval cbv in b with true =>
+      lazymatch u with
+      | VaN ?n ?w =>
+          tryif is_var n then fail else
+          let tmp := fresh "n" in
+          pose (tmp := n);
+          change (update s v (VaN n w)) with (update s v (VaN tmp w)) in H;
+          clearbody tmp
+      | VaM ?m ?w =>
+          tryif is_var m then fail else
+          let tmp := fresh "m" in
+          pose (tmp := m);
+          change (update s v (VaM m w)) with (update s v (VaM tmp w)) in H;
+          clearbody tmp
+      end
+    | _ => fail
+    end
   end.
 
 (* Values of IL temp variables are ignored by the arm interpreter once the IL
@@ -207,16 +229,6 @@ Ltac generalize_temps H :=
       clearbody tmp;
       try fold value in tmp
     end
-  end.
-
-Ltac generalize_trace :=
-  lazymatch goal with
-  | [ |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?t1++?xs0::?t) ] =>
-    change (nextinv p Invs xp b (xs'::(xs1::t1)++(xs0::t)));
-    let t' := fresh t1 in generalize (xs1::t1); intro t'; clear t1; rename t' into t1
-  | [ |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?xs0::?t) ] =>
-    change (nextinv p Invs xp b (xs'::(xs1::nil)++(xs0::t)));
-    let t' := fresh "t" in generalize (xs1::nil); intro t'
   end.
 
 (* Syntax: generalize_frame m as x
@@ -263,10 +275,21 @@ Ltac generalize_frame m bytes :=
 Tactic Notation "generalize_frame" constr(m) "as" ident(bytes) :=
   generalize_frame m bytes; repeat generalize_frame m bytes.
 
+Ltac generalize_trace :=
+  lazymatch goal with
+  | [ |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?t1++?xs0::?t) ] =>
+    change (nextinv p Invs xp b (xs'::(xs1::t1)++(xs0::t)));
+    let t' := fresh t1 in generalize (xs1::t1); intro t'; clear t1; rename t' into t1
+  | [ |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?xs0::?t) ] =>
+    change (nextinv p Invs xp b (xs'::(xs1::nil)++(xs0::t)));
+    let t' := fresh "t" in generalize (xs1::nil); intro t'
+  end.
+
 (* Symbolically evaluate an arm machine instruction for one step, and simplify
    the resulting Coq expressions. *)
-Ltac arm7_step_and_simplify XS :=
+Ltac arm8_step_and_simplify XS :=
   step_stmt XS;
+  arm8_abstract_vars XS;
   psimpl_vals_hyp XS;
   simpl_memaccs XS;
   destruct_memaccs XS;
@@ -305,25 +328,33 @@ Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
 
 (* If asked to step the computation when we're already at an invariant point,
    just make the proof goal be the invariant. *)
-Ltac arm7_invhere :=
+Ltac arm8_invhere :=
   eapply nextinv_here; [ reflexivity | hnf; psimpl_vals_goal ].
 
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" to step through many
    instructions, but often it is wiser to pause and do some manual
    simplification of the state at various points.) *)
-Ltac arm7_invseek :=
+Ltac arm8_invseek :=
+  (* Updated to be similar to Picinae_armv7.v 
+     It was not working on Apr 5 2024, but was working December 2023.
+     - ilan
+  apply NIStep; [reflexivity|];
+  let sz := fresh "sz" in let q := fresh "q" in let s := fresh "s" in let x := fresh "x" in
+  let IL := fresh "IL" in let XS := fresh "XS" in
+  intros sz q s x IL XS;
+  apply inj_prog_stmt in IL; destruct IL; subst sz q; *)
   eapply NIStep; [reflexivity|reflexivity|];
   let s := fresh "s" in let x := fresh "x" in let XS := fresh "XS" in
   intros s x XS;
-  arm7_step_and_simplify XS;
+  arm8_step_and_simplify XS;
   repeat lazymatch type of XS with
          | s=_ /\ x=_ => destruct XS; subst s x
          | exec_stmt _ (if ?c then _ else _) _ _ =>
              let BC := fresh "BC" in destruct c eqn:BC;
-             arm7_step_and_simplify XS
+             arm8_step_and_simplify XS
          | exec_stmt _ (N.iter _ _ _) _ _ => fail
-         | _ => arm7_step_and_simplify XS
+         | _ => arm8_step_and_simplify XS
          end;
   try generalize_trace;
   repeat match goal with [ u:value |- _ ] => clear u
@@ -335,20 +366,20 @@ Ltac arm7_invseek :=
 (* Clear any stale memory-access hypotheses (arising from previous computation
    steps) and either step to the next machine instruction (if we're not at an
    invariant) or produce an invariant as a proof goal. *)
-Ltac arm7_step :=
+Ltac arm8_step :=
   repeat match goal with [ H: MemAcc _ _ _ _ _ |- _ ] => clear H end;
-  first [ arm7_invseek; try arm7_invhere | arm7_invhere ].
+  first [ arm8_invseek; try arm8_invhere | arm8_invhere ].
 
 
-Declare Scope arm7_scope.
-Delimit Scope arm7_scope with arm7.
-Bind Scope arm7_scope with stmt exp typ.
-Open Scope arm7_scope.
-Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : arm7_scope.
+Declare Scope arm8_scope.
+Delimit Scope arm8_scope with arm8.
+Bind Scope arm8_scope with stmt exp typ trace.
+Open Scope arm8_scope.
+Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : arm8_scope.
 
-Module ARM7Notations.
+Module ARM8Notations.
 
-Notation "Ⓜ m" := (VaM m 32) (at level 20, format "'Ⓜ' m") : arm7_scope. (* memory value *)
+Notation "Ⓜ m" := (VaM m 64) (at level 20, format "'Ⓜ' m"). (* memory value *)
 Notation "ⓑ u" := (VaN u 1) (at level 20, format "'ⓑ' u"). (* bit value *)
 Notation "Ⓑ u" := (VaN u 8) (at level 20, format "'Ⓑ' u"). (* byte value *)
 Notation "Ⓦ u" := (VaN u 16) (at level 20, format "'Ⓦ' u"). (* word value *)
@@ -356,26 +387,26 @@ Notation "Ⓓ u" := (VaN u 32) (at level 20, format "'Ⓓ' u"). (* dword value *
 Notation "Ⓠ u" := (VaN u 64) (at level 20, format "'Ⓠ' u"). (* quad word value *)
 Notation "Ⓧ u" := (VaN u 128) (at level 20, format "'Ⓧ' u"). (* xmm value *)
 Notation "Ⓨ u" := (VaN u 256) (at level 20, format "'Ⓨ' u"). (* ymm value *)
-Notation "m Ⓑ[ a  ]" := (getmem 32 LittleE 1 m a) (at level 30) : arm7_scope. (* read byte from memory *)
-Notation "m Ⓦ[ a  ]" := (getmem 32 LittleE 2 m a) (at level 30) : arm7_scope. (* read word from memory *)
-Notation "m Ⓓ[ a  ]" := (getmem 32 LittleE 4 m a) (at level 30) : arm7_scope. (* read dword from memory *)
-Notation "m Ⓠ[ a  ]" := (getmem 32 LittleE 8 m a) (at level 30) : arm7_scope. (* read quad word from memory *)
-Notation "m Ⓧ[ a  ]" := (getmem 32 LittleE 16 m a) (at level 30) : arm7_scope. (* read xmm from memory *)
-Notation "m Ⓨ[ a  ]" := (getmem 32 LittleE 32 m a) (at level 30) : arm7_scope. (* read ymm from memory *)
-Notation "m [Ⓑ a := v  ]" := (setmem 32 LittleE 1 m a v) (at level 50, left associativity) : arm7_scope. (* write byte to memory *)
-Notation "m [Ⓦ a := v  ]" := (setmem 32 LittleE 2 m a v) (at level 50, left associativity) : arm7_scope. (* write word to memory *)
-Notation "m [Ⓓ a := v  ]" := (setmem 32 LittleE 4 m a v) (at level 50, left associativity) : arm7_scope. (* write dword to memory *)
-Notation "m [Ⓠ a := v  ]" := (setmem 32 LittleE 8 m a v) (at level 50, left associativity) : arm7_scope. (* write quad word to memory *)
-Notation "m [Ⓧ a := v  ]" := (setmem 32 LittleE 16 m a v) (at level 50, left associativity) : arm7_scope. (* write xmm to memory *)
-Notation "m [Ⓨ a := v  ]" := (setmem 32 LittleE 32 m a v) (at level 50, left associativity) : arm7_scope. (* write ymm to memory *)
-Notation "x ⊕ y" := ((x+y) mod 2^32) (at level 50, left associativity). (* modular addition *)
-Notation "x ⊖ y" := (msub 32 x y) (at level 50, left associativity). (* modular subtraction *)
-Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* modular multiplication *)
+Notation "m Ⓑ[ a  ]" := (getmem 64 LittleE 1 m a) (at level 30) : arm8_scope. (* read byte from memory *)
+Notation "m Ⓦ[ a  ]" := (getmem 64 LittleE 2 m a) (at level 30) : arm8_scope. (* read word from memory *)
+Notation "m Ⓓ[ a  ]" := (getmem 64 LittleE 4 m a) (at level 30) : arm8_scope. (* read dword from memory *)
+Notation "m Ⓠ[ a  ]" := (getmem 64 LittleE 8 m a) (at level 30) : arm8_scope. (* read quad word from memory *)
+Notation "m Ⓧ[ a  ]" := (getmem 64 LittleE 16 m a) (at level 30) : arm8_scope. (* read xmm from memory *)
+Notation "m Ⓨ[ a  ]" := (getmem 64 LittleE 32 m a) (at level 30) : arm8_scope. (* read ymm from memory *)
+Notation "m [Ⓑ  a := v  ]" := (setmem 64 LittleE 1 m a v) (at level 50, left associativity) : arm8_scope. (* write byte to memory *)
+Notation "m [Ⓦ  a := v  ]" := (setmem 64 LittleE 2 m a v) (at level 50, left associativity) : arm8_scope. (* write word to memory *)
+Notation "m [Ⓓ  a := v  ]" := (setmem 64 LittleE 4 m a v) (at level 50, left associativity) : arm8_scope. (* write dword to memory *)
+Notation "m [Ⓠ  a := v  ]" := (setmem 64 LittleE 8 m a v) (at level 50, left associativity) : arm8_scope. (* write quad word to memory *)
+Notation "m [Ⓧ  a := v  ]" := (setmem 64 LittleE 16 m a v) (at level 50, left associativity) : arm8_scope. (* write xmm to memory *)
+Notation "m [Ⓨ  a := v  ]" := (setmem 64 LittleE 32 m a v) (at level 50, left associativity) : arm8_scope. (* write ymm to memory *)
+Notation "x ⊕ y" := ((x+y) mod 2^64) (at level 50, left associativity). (* modular addition *)
+Notation "x ⊖ y" := (msub 64 x y) (at level 50, left associativity). (* modular subtraction *)
+Notation "x ⊗ y" := ((x*y) mod 2^64) (at level 40, left associativity). (* modular multiplication *)
 Notation "x << y" := (N.shiftl x y) (at level 55, left associativity). (* logical shift-left *)
 Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logical shift-right *)
-Notation "x >>> y" := (ashiftr 32 x y) (at level 55, left associativity). (* arithmetic shift-right *)
+Notation "x >>> y" := (ashiftr 64 x y) (at level 55, left associativity). (* arithmetic shift-right *)
 Notation "x .& y" := (N.land x y) (at level 56, left associativity). (* logical and *)
 Notation "x .^ y" := (N.lxor x y) (at level 57, left associativity). (* logical xor *)
 Notation "x .| y" := (N.lor x y) (at level 58, left associativity). (* logical or *)
 
-End ARM7Notations.
+End ARM8Notations.

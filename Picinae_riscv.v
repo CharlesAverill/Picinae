@@ -90,16 +90,16 @@ Module IL_RISCV := PicinaeIL RISCVArch.
 Export IL_RISCV.
 Module Theory_RISCV := PicinaeTheory IL_RISCV.
 Export Theory_RISCV.
-Module Statics_RISCV := PicinaeStatics IL_RISCV.
+Module Statics_RISCV := PicinaeStatics IL_RISCV Theory_RISCV.
 Export Statics_RISCV.
-Module FInterp_RISCV := PicinaeFInterp IL_RISCV Statics_RISCV.
+Module FInterp_RISCV := PicinaeFInterp IL_RISCV Theory_RISCV Statics_RISCV.
 Export FInterp_RISCV.
 (* Module SLogic_RISCV := PicinaeSLogic IL_RISCV.
 Export SLogic_RISCV. *)
 
 Module PSimpl_RISCV := Picinae_Simplifier_Base.
 Export PSimpl_RISCV.
-Module PSimpl_RISCV_v1_1 := Picinae_Simplifier_v1_1 IL_RISCV Statics_RISCV FInterp_RISCV.
+Module PSimpl_RISCV_v1_1 := Picinae_Simplifier_v1_1 IL_RISCV Theory_RISCV Statics_RISCV FInterp_RISCV.
 Ltac PSimplifier ::= PSimpl_RISCV_v1_1.PSimplifier.
 
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
@@ -532,6 +532,16 @@ Ltac generalize_temps H :=
     end
   end.
 
+Ltac generalize_trace :=
+  lazymatch goal with
+  | [ |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?t1++?xs0::?t) ] =>
+    change (nextinv p Invs xp b (xs'::(xs1::t1)++(xs0::t)));
+    let t' := fresh t1 in generalize (xs1::t1); intro t'; clear t1; rename t' into t1
+  | [ |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?xs0::?t) ] =>
+    change (nextinv p Invs xp b (xs'::(xs1::nil)++(xs0::t)));
+    let t' := fresh "t" in generalize (xs1::nil); intro t'
+  end.
+
 (* Symbolically evaluate a RISC-V machine instruction for one step. *)
 Ltac rv_step_and_simplify XS :=
   step_stmt XS;
@@ -572,9 +582,7 @@ Ltac rv_invseek :=
          | exec_stmt _ (N.iter _ _ _) _ _ => fail
          | _ => rv_step_and_simplify XS
          end;
-  try match goal with |- nextinv _ _ _ _ (_ :: ?xs :: ?t) =>
-    let t' := fresh t in generalize (xs::t); intro t'; clear t; rename t' into t
-  end;
+  try generalize_trace;
   repeat match goal with [ u:value |- _ ] => clear u
                        | [ n:N |- _ ] => clear n
                        | [ m:addr->N |- _ ] => clear m end;

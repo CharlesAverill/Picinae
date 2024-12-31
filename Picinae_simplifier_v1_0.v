@@ -88,9 +88,10 @@ Require Import ZArith.
 *)
 
 
-Module Type PSIMPL_DEFS_V1_0 (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL).
+Module Type PSIMPL_DEFS_V1_0 (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL) (SIL: PICINAE_STATICS IL TIL) (FIL: PICINAE_FINTERP IL TIL SIL).
 Import IL.
 Import TIL.
+Import SIL.
 Import FIL.
 
 (* Simplification Abstract Syntax Trees over Numbers, Bools, and Memory:
@@ -1152,12 +1153,13 @@ End PSIMPL_DEFS_V1_0.
    those tactics apply. *)
 
 Module Type PICINAE_SIMPLIFIER_V1_0
-  (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL).
+  (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL) (SIL: PICINAE_STATICS IL TIL) (FIL: PICINAE_FINTERP IL TIL SIL).
 
 Import IL.
 Import TIL.
+Import SIL.
 Import FIL.
-Include PSIMPL_DEFS_V1_0 IL TIL FIL.
+Include PSIMPL_DEFS_V1_0 IL TIL SIL FIL.
 
 Parameter simplify_sastN_hyp:
   forall (x e:N) (noe: forall op, noe_setop_typsig op) (mvt:metavar_tree) (t:sastN)
@@ -1529,14 +1531,13 @@ End PICINAE_SIMPLIFIER_V1_0.
    doesn't require that the module body reiterate them.) *)
 
 Module Picinae_Simplifier_v1_0
-  (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL) : PICINAE_SIMPLIFIER_V1_0 IL TIL FIL.
+  (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL) (SIL: PICINAE_STATICS IL TIL) (FIL: PICINAE_FINTERP IL TIL SIL) : PICINAE_SIMPLIFIER_V1_0 IL TIL SIL FIL.
 
 Import IL.
 Import TIL.
+Import SIL.
 Import FIL.
-Include PSIMPL_DEFS_V1_0 IL TIL FIL.
-Module PTheory := PicinaeTheory IL.
-Import PTheory.
+Include PSIMPL_DEFS_V1_0 IL TIL SIL FIL.
 
 
 (* Proof of soundness for SAST-equivalence algorithm *)

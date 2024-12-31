@@ -214,6 +214,17 @@ Definition welltyped_prog (c0:typctx) (p:program) : Prop :=
 Definition models (c:typctx) (s:store) : Prop :=
   forall v t (CV: c v = Some t), hastyp_val (s v) t.
 
+Theorem models_update:
+  forall c s x y
+    (HTV: match c x with Some t => hastyp_val y t | None => True end)
+    (MDL: models c s),
+  models c (update s x y).
+Proof.
+  intros. intros v t CV. unfold update. destruct (v == x).
+    subst v. rewrite CV in HTV. assumption.
+    apply MDL, CV.
+Qed.
+
 (* We next define an effective procedure for type-checking expressions and
    statements.  This procedure is sound but incomplete: it can determine well-
    typedness of most statements, but there exist well-typed statements for
@@ -324,9 +335,10 @@ End PICINAE_STATICS_DEFS.
 
 
 
-Module Type PICINAE_STATICS (IL: PICINAE_IL).
+Module Type PICINAE_STATICS (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL).
 
-Include IL.
+Import IL.
+Import TIL.
 Include PICINAE_STATICS_DEFS IL.
 
 (* Convenience lemmas for inverted reasoning about hastyp_val. *)
@@ -342,6 +354,21 @@ Parameter hastyp_towidth:
 
 
 (* These short lemmas are helpful when automating type-checking in tactics. *)
+
+Parameter welltyped_memory_setmem:
+  forall w en len m a n
+    (WTM: welltyped_memory m),
+  welltyped_memory (setmem w en len m a n).
+
+Parameter models_update_val:
+  forall c s x y
+    (HTV: match c x with
+          | Some (NumT w1) => match y with VaN n w2 => if w1=?w2 then n < 2^w1 else False | _ => False end
+          | Some (MemT w1) => match y with VaM m w2 => if w1=?w2 then welltyped_memory m else False | _ => False end
+          | None => True
+          end)
+    (MDL: models c s),
+  models c (update s x y).
 
 Parameter hastyp_binop:
   forall bop c e1 e2 w w' (W: widthof_binop bop w = w')
@@ -550,15 +577,20 @@ Ltac Picinae_typecheck :=
   | _ => fail "goal is not of the form (welltyped_prog c p)"
   end.
 
+Parameter models_after_steps:
+  forall c p Invs xp b x s t1 x0 s0 t2
+    (MDL: models c s0) (WTP: welltyped_prog c p)
+    (H: forall (MDL: models c s), nextinv p Invs xp b ((x,s)::t1++(x0,s0)::t2)),
+  nextinv p Invs xp b ((x,s)::t1++(x0,s0)::t2).
+
 End PICINAE_STATICS.
 
 
-Module PicinaeStatics (IL: PICINAE_IL) : PICINAE_STATICS IL.
+Module PicinaeStatics (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL): PICINAE_STATICS IL TIL.
 
-Include IL.
+Import IL.
+Import TIL.
 Include PICINAE_STATICS_DEFS IL.
-Module PTheory := PicinaeTheory IL.
-Import PTheory.
 
 Lemma value_bound:
   forall n w (TV: hastyp_val (VaN n w) (NumT w)), n < 2^w.
@@ -572,6 +604,37 @@ Lemma hastyp_towidth:
   forall w n, hastyp_val (towidth w n) (NumT w).
 Proof.
   intros. apply TVN, mp2_mod_lt.
+Qed.
+
+Theorem welltyped_memory_setmem:
+  forall w en len m a n
+    (WTM: welltyped_memory m),
+  welltyped_memory (setmem w en len m a n).
+Proof.
+  unfold welltyped_memory. intros. destruct (N.lt_ge_cases a0 (2^w)).
+    destruct (N.le_gt_cases len (msub w a0 a)).
+      rewrite setmem_frame. apply WTM. left. assumption.
+      erewrite <- (N.mod_small _ _ H), <- add_msub. rewrite setmem_byte_anylen.
+        apply mp2_mod_lt.
+        assumption.
+    rewrite setmem_frame. apply WTM. right. assumption.
+Qed.
+
+Theorem models_update_val:
+  forall c s x y
+    (HTV: match c x with
+          | Some (NumT w1) => match y with VaN n w2 => if w1=?w2 then n < 2^w1 else False | _ => False end
+          | Some (MemT w1) => match y with VaM m w2 => if w1=?w2 then welltyped_memory m else False | _ => False end
+          | None => True
+          end)
+    (MDL: models c s),
+  models c (update s x y).
+Proof.
+  intros. apply models_update; [|assumption].
+  destruct (c x); [|exact I].
+  destruct t, y; (contradiction || (destruct (_=?_) eqn:H; [|contradiction])).
+    apply N.eqb_eq in H. subst. apply TVN, HTV.
+    apply N.eqb_eq in H. subst. apply TVM, HTV.
 Qed.
 
 Lemma hastyp_binop:
@@ -1332,6 +1395,23 @@ Proof.
   intros. destruct (typchk_stmt q c c) as [c'|] eqn:TS1.
     exists c'. apply typchk_stmt_sound. reflexivity. exact TS1.
     contradict TS.
+Qed.
+
+(* Use the exec_prog assumption within nextinv to prove that the "models"
+   relation has been preserved after a series of steps.  (This is
+   important for setting up the proof context for a subroutine call.) *)
+Theorem models_after_steps:
+  forall c p Invs xp b x s t1 x0 s0 t2
+    (MDL: models c s0) (WTP: welltyped_prog c p)
+    (H: forall (MDL: models c s), nextinv p Invs xp b ((x,s)::t1++(x0,s0)::t2)),
+  nextinv p Invs xp b ((x,s)::t1++(x0,s0)::t2).
+Proof.
+  intros. apply exec_prog_nextinv. intro XP. apply H.
+  eapply preservation_exec_prog.
+    apply WTP.
+    rewrite split_subtraces in XP. apply exec_prog_split,proj2,proj2 in XP. apply XP.
+    apply startof_niltail.
+    apply MDL.
 Qed.
 
 End PicinaeStatics.

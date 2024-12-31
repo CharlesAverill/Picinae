@@ -102,16 +102,16 @@ Module IL_amd64 := PicinaeIL X64Arch.
 Export IL_amd64.
 Module Theory_amd64 := PicinaeTheory IL_amd64.
 Export Theory_amd64.
-Module Statics_amd64 := PicinaeStatics IL_amd64.
+Module Statics_amd64 := PicinaeStatics IL_amd64 Theory_amd64.
 Export Statics_amd64.
-Module FInterp_amd64 := PicinaeFInterp IL_amd64 Statics_amd64.
+Module FInterp_amd64 := PicinaeFInterp IL_amd64 Theory_amd64 Statics_amd64.
 Export FInterp_amd64.
 (* Module SLogic_amd64 := PicinaeSLogic IL_amd64.
 Export SLogic_amd64. *)
 
 Module PSimpl_amd64 := Picinae_Simplifier_Base.
 Export PSimpl_amd64.
-Module PSimpl_amd64_v1_1 := Picinae_Simplifier_v1_1 IL_amd64 Statics_amd64 FInterp_amd64.
+Module PSimpl_amd64_v1_1 := Picinae_Simplifier_v1_1 IL_amd64 Theory_amd64 Statics_amd64 FInterp_amd64.
 Ltac PSimplifier ::= PSimpl_amd64_v1_1.PSimplifier.
 
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
@@ -255,6 +255,60 @@ Ltac generalize_temps H :=
     end
   end.
 
+Ltac generalize_trace :=
+  lazymatch goal with
+  | [ |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?t1++?xs0::?t) ] =>
+    change (nextinv p Invs xp b (xs'::(xs1::t1)++(xs0::t)));
+    let t' := fresh t1 in generalize (xs1::t1); intro t'; clear t1; rename t' into t1
+  | [ |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?xs0::?t) ] =>
+    change (nextinv p Invs xp b (xs'::(xs1::nil)++(xs0::t)));
+    let t' := fresh "t" in generalize (xs1::nil); intro t'
+  end.
+
+(* Syntax: generalize_frame m as x
+   Result: Find any goal expressions of the form m[a1:=u1]...[an:=un] where
+   a1..an are adjacent memory addresses, and compact them to expressions
+   of the form m[a:=x], where a=max(a1,...,an) and x is a user-specified name.
+   This is useful for abstracting a series of pushes that form a callee's
+   local stack frame into a single write of the entire byte array. *)
+Ltac generalize_frame_forward bytes w en m len1 a1 u1 len2 a2 u2 :=
+  let x := fresh in let H := fresh in let H' := fresh in
+  evar (x:N);
+  eassert (H: setmem w en len2 (setmem w en len1 m a1 u1) a2 u2 = setmem w en _ m a2 x);
+  [ subst x; eenough (H':_);
+    [ transitivity (setmem w en len2 (setmem w en len1 m a1 u1) (msub w a1 len2) u2);
+      [ apply f_equal2; [ exact H' | reflexivity ]
+      | etransitivity;
+        [ etransitivity;
+          [ apply setmem_merge_rev; reflexivity
+          | apply f_equal4; [psimpl|..]; reflexivity ]
+        | apply f_equal2; [ symmetry; exact H' | reflexivity ] ] ]
+    | psimpl; reflexivity ]
+  | rewrite H; clear H; clearbody x; try clear u1; try clear u2;
+    rename x into bytes ].
+Ltac generalize_frame_backward bytes w en m len1 a1 u1 len2 a2 u2 :=
+  let x := fresh in let H := fresh in let H' := fresh in
+  evar (x:N);
+  eassert (H: setmem w en len2 (setmem w en len1 m a1 u1) a2 u2 = setmem w en _ m a1 x);
+  [ subst x; eenough (H':_);
+    [ transitivity (setmem w en len2 (setmem w en len1 m a1 u1) ((a1+len1) mod 2^w) u2);
+      [ apply f_equal2; [ exact H' | reflexivity ]
+      | rewrite setmem_mod_l; etransitivity;
+        [ etransitivity;
+          [ apply setmem_merge; reflexivity
+          | apply f_equal4; [psimpl|..]; reflexivity ]
+        | apply f_equal2; reflexivity ] ]
+    | psimpl; try reflexivity ]
+  | rewrite H; clear H; clearbody x; try clear u1; try clear u2;
+    rename x into bytes ].
+Ltac generalize_frame m bytes :=
+  match goal with |- context [ setmem ?w ?en ?len2 (setmem ?w ?en ?len1 m ?a1 ?u1) ?a2 ?u2 ] =>
+    first [ generalize_frame_forward bytes w en m len1 a1 u1 len2 a2 u2
+          | generalize_frame_backward bytes w en m len1 a1 u1 len2 a2 u2 ]
+  end.
+Tactic Notation "generalize_frame" constr(m) "as" ident(bytes) :=
+  generalize_frame m bytes; repeat generalize_frame m bytes.
+
 (* Symbolically evaluate an x64 machine instruction for one step, and simplify
    the resulting Coq expressions. *)
 Ltac x64_step_and_simplify XS :=
@@ -317,9 +371,7 @@ Ltac x64_invseek :=
          | exec_stmt _ (N.iter _ _ _) _ _ => fail
          | _ => x64_step_and_simplify XS
          end;
-  try match goal with |- nextinv _ _ _ _ (_ :: ?xs :: ?t) =>
-    let t' := fresh t in generalize (xs::t); intro t'; clear t; rename t' into t
-  end;
+  try generalize_trace;
   repeat match goal with [ u:value |- _ ] => clear u
                        | [ n:N |- _ ] => clear n
                        | [ m:addr->N |- _ ] => clear m end;
