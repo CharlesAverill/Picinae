@@ -521,6 +521,12 @@ Proof.
   intros. unfold xbits. apply mp2_mod_lt.
 Qed.
 
+Theorem xnbits_bound:
+  forall n i j, xnbits n i j < 2^j.
+Proof.
+  intros. unfold xnbits, xbits. rewrite N.add_sub. apply mp2_mod_lt.
+Qed.
+
 Theorem xbits_le:
   forall n i j, xbits n i j <= n / 2^i.
 Proof.

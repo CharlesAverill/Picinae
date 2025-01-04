@@ -47,7 +47,7 @@ Inductive pil32var :=
   (* Main memory: 32 bit-width addresses, 2^32 bytes *)
   | V_MEM32
   (* 0-5, SP, LR = 32bit registers. *)
-  | R0 | R1 | R2 | R3 | R4 | R5
+  | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5
   (* SP = stack pointer *)
   | R_SP
   (* LR = link register *)
@@ -112,7 +112,7 @@ Ltac PSimpl_pil32.PSimplifier ::= PSimpl_pil32_v1_0.PSimplifier.
 Definition pil32typctx (id:var) : option typ :=
   match id with
   | V_MEM32 => Some (MemT 32)
-  | R0 | R1 | R2 | R3 | R4 | R5 => Some (NumT 32)
+  | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5 => Some (NumT 32)
   | R_SP | R_LR | R_PC => Some (NumT 32)
   | A_READ | A_WRITE | A_EXEC => Some (MemT 32)
 end.
@@ -121,7 +121,7 @@ end.
 Definition pil32equivctx (id:var) : bool :=
   match id with
   | V_MEM32
-  | R0 | R1 | R2 | R3 | R4 | R5
+  | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5
   | R_SP | R_LR => true
   | _ => false
   end.

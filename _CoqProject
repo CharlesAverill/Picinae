@@ -13,6 +13,7 @@ Picinae_amd64.v
 Picinae_armv8_pcode.v
 Picinae_armv8_memsolve.v
 Picinae_pilbox32.v
+Picinae_pilbox32_interpreter.v
 
 Examples/funccalls/nops_o_branch_nop_armv8.v
 Examples/funccalls/nops_o_call_test_armv8.v

@@ -77,6 +77,7 @@ intros. unfold satisfies_all.
   (* TODO: continue here - destruct_inv is hanging, maybe using the new
   definitions in the funccall branch will fix it? *)
   unfold true_inv, get_precondition, p32_prog in PRE.
+  simpl_inv PRE 0.
   (* PRE is the assertion the previous invariant gives us. *)
   destruct_inv 32 PRE.
   destruct PRE as [MEM [BITMAP_0 [STR [ACPT [ACPT_0 BMP]]]]].

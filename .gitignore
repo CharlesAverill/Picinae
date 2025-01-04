@@ -2,11 +2,13 @@
 *.glob
 *.vo
 *.#*#
+\#*#
 *.sw?
 *.*~
 *.pyc
 *.vok
 *.vos
+*.vbak
 *.bin
 *.plugin
 _build
@@ -22,3 +24,4 @@ Makefile.coq
 Makefile.coq.conf
 .Makefile.coq.d
 *.cache
+*.crashcoqide
