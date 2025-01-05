@@ -74,11 +74,8 @@ intros. unfold satisfies_all.
   eapply preservation_exec_prog in MDL; try (eassumption || apply welltyped_p32prog).
   clear - PRE MDL MEM. rename s into s0, t1 into t, s1 into s.
   
-  (* TODO: continue here - destruct_inv is hanging, maybe using the new
-  definitions in the funccall branch will fix it? *)
+  (* TODO: continue here - destruct_inv is hanging *)
   unfold true_inv, get_precondition, p32_prog in PRE.
-  simpl_inv PRE 0.
-  (* PRE is the assertion the previous invariant gives us. *)
   destruct_inv 32 PRE.
   destruct PRE as [MEM [BITMAP_0 [STR [ACPT [ACPT_0 BMP]]]]].
   step. step. step. step.
