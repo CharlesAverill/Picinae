@@ -296,20 +296,6 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma Ndiv2_mono:
-  forall x1 x2,
-  x1 <= x2 -> N.div2 x1 <= N.div2 x2.
-Proof.
-  assert (Ndiv2_mono_succ: forall x1, N.div2 x1 <= N.div2 (N.succ x1)) by
-    (intro x1; destruct x1;[ reflexivity | simpl; destruct p; simpl; try (reflexivity || lia)]).
-  assert (Ndiv2_mono_friend: forall x a, N.div2 x <= N.div2 (a+x)) by (
-  intros; induction a using N.peano_ind;[
-    simpl; reflexivity
-    | rewrite N.add_succ_l; apply N.le_trans with (m:=N.div2 (a+x)); try assumption; apply Ndiv2_mono_succ]).
-  intros. remember (x2-x1) as a. assert (Hx2: x2 = a + x1). subst a. lia.
-  rewrite Hx2. apply Ndiv2_mono_friend.
-Qed.
-
 Lemma Pos_N_succ_comm: forall p, N.pos (Pos.succ p) = N.succ (N.pos p).
 Proof. intro; unfold N.succ; reflexivity. Qed.
 
@@ -321,10 +307,10 @@ Proof.
   induction shift using N.peano_ind; intros; try assumption.
   unfold N.shiftr. destruct (N.succ shift) eqn:Eqn. apply N.neq_succ_0 in Eqn; contradiction.
   destruct shift. simpl in Eqn. destruct p eqn:Eqnp; try simpl in Eqn; try discriminate.
-  simpl; apply Ndiv2_mono; assumption.
+  simpl; apply N.div2_le_mono; assumption.
   rewrite <-Pos_N_succ_comm in Eqn. injection Eqn; intro Eqnp. subst p.
   do 2 rewrite Pos.iter_succ_r.
-  unfold N.shiftr in IHshift. apply IHshift, Ndiv2_mono; assumption.
+  unfold N.shiftr in IHshift. apply IHshift, N.div2_le_mono; assumption.
 Qed.
 
 Lemma Nshiftl_mono:
