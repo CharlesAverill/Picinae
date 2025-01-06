@@ -34,6 +34,7 @@ Require Import strspn_lemmas.
 Require Import Lia.
 Require Import Bool.
 
+Require Import Picinae_numbers.
 Import ARM8Notations.
 Open Scope N.
 
@@ -52,14 +53,6 @@ Proof. reflexivity. Qed.
 Theorem strspn_welltyped: welltyped_prog arm8typctx strspn2.
 Proof.
   Picinae_typecheck.
-Qed.
-
-(* Strspn does not corrupt memory. *)
-Theorem strspn_preserves_memory32:
-  forall_endstates strspn2 (fun _ s _ s' => s V_MEM32 = s' V_MEM32).
-Proof.
-  apply noassign_prog_same.
-  prove_noassign.
 Qed.
 
 (* Strspn does not modify page permissions. *)
