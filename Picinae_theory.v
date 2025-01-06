@@ -3571,408 +3571,7 @@ Qed.
 
 End OpBounds.
 
-
-
-Section BitOps.
-
-Definition bitop_has_spec f g := forall a a' n, N.testbit (f a a') n = g (N.testbit a n) (N.testbit a' n).
-
-Theorem bitop_mod_pow2:
-  forall f g (SPEC: bitop_has_spec f g) (PZ: g false false = false),
-  forall n1 n2 p, f n1 n2 mod 2^p = f (n1 mod 2^p) (n2 mod 2^p).
-Proof.
-  intros. rewrite <- !N.land_ones. apply N.bits_inj. intro i. rewrite N.land_spec, !SPEC, !N.land_spec.
-  destruct (N.le_gt_cases p i).
-    rewrite N.ones_spec_high, !Bool.andb_false_r by assumption. symmetry. apply PZ.
-    rewrite N.ones_spec_low, !Bool.andb_true_r by assumption. reflexivity.
-Qed.
-
-Definition N_land_mod_pow2 := bitop_mod_pow2 N.land andb N.land_spec (eq_refl false).
-Definition N_lor_mod_pow2 := bitop_mod_pow2 N.lor orb N.lor_spec (eq_refl false).
-Definition N_lxor_mod_pow2 := bitop_mod_pow2 N.lxor xorb N.lxor_spec (eq_refl false).
-
-Theorem N_land_mod_pow2_move:
-  forall p x y, N.land (x mod 2^p) y = N.land x (y mod 2^p).
-Proof.
-  intros.
-  rewrite <- N.land_ones, <- N.land_assoc, (N.land_comm _ y), N.land_ones.
-  reflexivity.
-Qed.
-
-Theorem N_land_mod_pow2_moveout:
-  forall p x y, N.land x (y mod 2^p) = (N.land x y) mod 2^p.
-Proof.
-  intros.
-  rewrite N.land_comm, <- N.Div0.mod_mod, N_land_mod_pow2_move, N.land_comm.
-  symmetry. apply N_land_mod_pow2.
-Qed.
-
-Theorem land_mod_min:
-  forall p x y, N.land x (y mod 2^p) = N.land (x mod 2^(N.min (N.size y) p)) y.
-Proof.
-  intros.
-  rewrite <- (N.mod_small y (2^N.size y)) at 1 by apply N.size_gt.
-  rewrite mp2_mod_mod_min.
-  symmetry. apply N_land_mod_pow2_move.
-Qed.
-
-Theorem size_le_diag:
-  forall n, N.size n <= n.
-Proof.
-  destruct n as [|p]. discriminate. change (Pos.size p <= p)%positive.
-  induction p.
-    simpl. etransitivity.
-      apply -> Pos.succ_le_mono. apply IHp.
-      rewrite Pos.xI_succ_xO, <- Pos.add_diag. apply -> Pos.succ_le_mono. apply Pos.lt_le_incl, Pos.lt_add_r.
-    simpl. etransitivity.
-      apply -> Pos.succ_le_mono. apply IHp.
-      rewrite <- Pos.add_1_r, <- Pos.add_diag. apply Pos.add_le_mono_l, Pos.le_1_l.
-    reflexivity.
-Qed.
-
-Theorem Pos_popcount_bound:
-  forall p, (Pos_popcount p <= Pos.size p)%positive.
-Proof.
-  induction p.
-    apply -> Pos.succ_le_mono. assumption.
-    etransitivity.
-      apply Pos.lt_le_incl, Pos.lt_succ_diag_r.
-      apply -> Pos.succ_le_mono. assumption.
-    reflexivity.
-Qed.
-
-Theorem popcount_bound:
-  forall n, popcount n <= N.size n.
-Proof.
-  destruct n. reflexivity. apply Pos_popcount_bound.
-Qed.
-
-Theorem popcount_0:
-  forall n, popcount n = 0 -> n = 0.
-Proof.
-  intros. destruct n. reflexivity. discriminate.
-Qed.
-
-Theorem popcount_pos:
-  forall n, 0 < popcount n <-> 0 < n.
-Proof.
-  intro. split; intro; (destruct n; [ discriminate | reflexivity ]).
-Qed.
-
-Theorem popcount_bit:
-  forall n, popcount n = n <-> n < 2.
-Proof.
-  split; intro.
-
-    destruct n as [|n]. reflexivity.
-    rewrite <- (N.succ_pred (N.pos n)) in * by discriminate 1. destruct (N.pred _) as [|p]. reflexivity.
-    rewrite <- (N.succ_pred (N.pos p)) in * by discriminate 1. destruct (N.pred _) as [|q]. discriminate.
-    clear n p. contradict H. apply N.lt_neq.
-    eapply N.le_lt_trans. apply popcount_bound.
-    rewrite N.size_log2 by apply N.neq_succ_0. apply -> N.succ_lt_mono. apply N.lt_succ_r.
-    induction q using Pos.peano_ind.
-      discriminate 1.
-      etransitivity.
-        apply N.log2_succ_le.
-        apply (proj1 (N.succ_le_mono _ (N.pos q))). etransitivity.
-          apply IHq.
-          reflexivity.
-
-    destruct n as [|[n|n|]]; try reflexivity; destruct n; discriminate.
-Qed.
-
-Theorem popcount_double:
-  forall n, popcount (N.double n) = popcount n.
-Proof.
-  destruct n; reflexivity.
-Qed.
-
-Theorem popcount_succ_double:
-  forall n, popcount (N.succ_double n) = N.succ (popcount n).
-Proof.
-  destruct n; reflexivity.
-Qed.
-
-Theorem popcount_div2':
-  forall n, popcount n = popcount (N.div2 n) + n mod 2.
-Proof.
-  intro. change 2 with (2^1). rewrite <- N.land_ones.
-  destruct n as [|[p|p|]]; try reflexivity.
-  simpl. rewrite Pos.add_1_r. reflexivity.
-Qed.
-
-Theorem popcount_div2:
-  forall n, popcount (N.div2 n) = popcount n - n mod 2.
-Proof.
-  intro. eapply N.add_cancel_r. rewrite N.sub_add.
-    symmetry. apply popcount_div2'.
-    destruct n as [|n]. discriminate 1. transitivity 1.
-      apply (N.lt_le_pred _ 2), N.mod_lt. discriminate 1.
-      apply (N.le_succ_l 0), popcount_pos. reflexivity.
-Qed.
-
-Theorem popcount_lor_land:
-  forall m n, popcount (N.lor m n) + popcount (N.land m n) = popcount m + popcount n.
-Proof.
-  apply N_bitwise_ind2. reflexivity. intros.
-  rewrite (popcount_div2' m), (popcount_div2' n).
-  rewrite N.add_shuffle1. rewrite <- IH.
-  rewrite !N.div2_spec. rewrite <- N.shiftr_lor, <- N.shiftr_land. rewrite <- !N.div2_spec.
-  replace (m mod 2 + n mod 2) with (N.lor m n mod 2 + N.land m n mod 2).
-    rewrite <- N.add_shuffle1. rewrite <- !popcount_div2'. reflexivity.
-    rewrite (N_lor_mod_pow2 _ _ 1), (N_land_mod_pow2 _ _ 1), <- !N.bit0_mod.
-      do 2 destruct N.testbit; reflexivity.
-Qed.
-
-Corollary popcount_lor:
-  forall m n, popcount (N.lor m n) = popcount m + popcount n - popcount (N.land m n).
-Proof.
-  intros. rewrite <- popcount_lor_land, N.add_sub. reflexivity.
-Qed.
-
-Corollary popcount_land:
-  forall m n, popcount (N.land m n) = popcount m + popcount n - popcount (N.lor m n).
-Proof.
-  intros. rewrite <- popcount_lor_land, N.add_comm, N.add_sub. reflexivity.
-Qed.
-
-Theorem popcount_land_bound:
-  forall m n, popcount (N.land m n) <= N.min (popcount m) (popcount n).
-Proof.
-  assert (B: forall b, b mod 2^1 = 0 \/ b mod 2^1 = 1).
-    intro. apply N.le_1_r, (N.lt_le_pred _ 2), N.mod_lt. discriminate.
-  assert (H: forall m n, popcount (N.land m n) <= popcount m).
-    apply N_bitwise_ind2. reflexivity. intros.
-    rewrite popcount_div2, !N.div2_spec, <- N.shiftr_land, <- N.div2_spec, popcount_div2 in IH.
-    apply N.le_sub_le_add_r in IH. etransitivity. exact IH.
-    change 2 with (2^1). rewrite <- N.add_sub_swap.
-
-      apply N.le_sub_le_add_r, N.add_le_mono_l. rewrite N_land_mod_pow2.
-      destruct (B m) as [H1|H1], (B n) as [H2|H2]; rewrite H1, H2; discriminate 1.
-
-      specialize (B m). destruct B; rewrite H.
-        apply N.le_0_l.
-        apply (N.le_succ_l 0), popcount_pos. destruct m. discriminate. reflexivity.
-
-  intros. apply N.min_glb. apply H. rewrite N.land_comm. apply H.
-Qed.
-
-Theorem popcount_shiftl:
-  forall n i, popcount (N.shiftl n i) = popcount n.
-Proof.
-  induction i using N.peano_ind.
-    rewrite N.shiftl_0_r. reflexivity.
-    rewrite N.shiftl_succ_r. rewrite popcount_double. apply IHi.
-Qed.
-
-Corollary popcount_pow2:
-  forall n, popcount (2^n) = 1.
-Proof.
-  intros. rewrite <- N.shiftl_1_l, popcount_shiftl. reflexivity.
-Qed.
-
-Theorem popcount_shiftr':
-  forall n i, popcount n = popcount (N.shiftr n i) + popcount (n mod 2^i).
-Proof.
-  intros.
-  rewrite <- (N.lor_ldiff_and n (N.ones i)) at 1.
-  rewrite popcount_lor.
-  rewrite N.land_comm, N.land_assoc, N.land_ldiff, N.sub_0_r.
-  rewrite N.land_comm, N.land_ones.
-  rewrite N.ldiff_ones_r, popcount_shiftl.
-  reflexivity.
-Qed.
-
-Corollary popcount_shiftr:
-  forall n i, popcount (N.shiftr n i) = popcount n - popcount (n mod 2^i).
-Proof.
-  intros. rewrite (popcount_shiftr' n i), N.add_sub. reflexivity.
-Qed.
-
-Theorem popcount_ones:
-  forall n, popcount (N.ones n) = n.
-Proof.
-  induction n using N.peano_ind. reflexivity.
-  rewrite <- N.add_1_r, N.ones_add, N.mul_1_r.
-  assert (H: N.land (2^n) (N.ones n) = 0).
-    erewrite <- N.shiftl_1_l, <- mp2_div_same, <- N.shiftr_div_pow2, <- N.ldiff_ones_r.
-    apply N.land_ldiff.
-  rewrite N.add_nocarry_lxor, N.lxor_lor by exact H.
-  rewrite popcount_lor, H, N.sub_0_r, popcount_pow2, IHn.
-  apply N.add_comm.
-Qed.
-
-Theorem popcount_ldiff_land:
-  forall m n, popcount (N.ldiff m n) + popcount (N.land m n) = popcount m.
-Proof.
-  apply N_bitwise_ind2. reflexivity. intros.
-  rewrite (popcount_div2' (N.ldiff _ _)), (popcount_div2' (N.land _ _)).
-  rewrite !N.div2_spec, N.shiftr_ldiff, N.shiftr_land, <- !N.div2_spec.
-  rewrite N.add_shuffle1, IH.
-  symmetry. etransitivity. apply popcount_div2'. apply f_equal.
-  rewrite <- !N.bit0_mod, N.ldiff_spec, N.land_spec.
-  do 2 destruct N.testbit; reflexivity.
-Qed.
-
-Corollary popcount_ldiff:
-  forall m n, popcount (N.ldiff m n) = popcount m - popcount (N.land m n).
-Proof.
-  intros. symmetry. eapply N.add_cancel_r. rewrite popcount_ldiff_land. apply N.sub_add.
-  etransitivity. apply popcount_land_bound. apply N.le_min_l.
-Qed.
-
-Theorem popcount_bitmap:
-  forall f m n (H: forall i (H: N.testbit m i = true),
-                   N.testbit n (f i) = true /\ (forall j, f i = f j -> i = j)),
-  popcount m <= popcount n.
-Proof.
-  intros f m. revert f. induction m using N.binary_ind; intros.
-    apply N.le_0_l.
-    rewrite popcount_double. apply (IHm (fun k => f (N.succ k))). intros. split.
-      apply H. rewrite N.double_spec, N.double_bits_succ. assumption.
-      intros. apply N.succ_inj. apply H.
-        rewrite N.double_spec, N.double_bits_succ. assumption.
-        assumption.
-    replace (popcount n) with (N.succ (popcount (N.clearbit n (f 0)))).
-      rewrite popcount_succ_double. apply -> N.succ_le_mono. apply (IHm (fun k => f (N.succ k))). split.
-        replace (N.testbit _ _) with (N.testbit n (f (N.succ i))).
-          apply H. rewrite N.succ_double_spec, N.testbit_odd_succ by apply N.le_0_l. assumption.
-          symmetry. apply N.clearbit_neq. intro H1. apply (N.neq_succ_0 i), H.
-            rewrite N.succ_double_spec, N.testbit_odd_succ by apply N.le_0_l. assumption.
-            symmetry. assumption.
-        intros. apply N.succ_inj. apply H.
-          rewrite N.succ_double_spec, N.testbit_odd_succ by apply N.le_0_l. assumption.
-          assumption.
-      rewrite N.clearbit_spec', <- N.add_1_r, <- (popcount_pow2 (f 0)). replace (2^_) with (N.land n (2^f 0)) at 2.
-        apply popcount_ldiff_land.
-        apply N.bits_inj. intro i. rewrite N.land_spec, N.pow2_bits_eqb. destruct (_ =? _) eqn:H1.
-          rewrite Bool.andb_true_r. apply N.eqb_eq in H1. subst i. rewrite N.succ_double_spec in H. apply (H 0 (N.testbit_odd_0 _)).
-          apply Bool.andb_false_r.
-Qed.
-
-Theorem popcount_parity_lxor:
-  forall m n, N.even (popcount (N.lxor m n)) = N.even (popcount m + popcount n).
-Proof.
-  intros. pattern m, n. apply N_bitwise_ind2; intros. reflexivity.
-  clear m n. rename m0 into m, n0 into n.
-  rewrite (popcount_div2' m), (popcount_div2' n), N.add_shuffle1.
-  rewrite N.even_add, <- IH.
-  replace (N.even (_+_)) with (N.even (popcount (N.lxor m n mod 2))).
-    rewrite <- N.even_add, !N.div2_spec, <- N.shiftr_lxor, <- popcount_shiftr'. reflexivity.
-    rewrite <- !N.bit0_mod, N.lxor_spec. do 2 destruct N.testbit; reflexivity.
-Qed.
-
-Definition parity8 n :=
-  N.lnot ((N.lxor
-    (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
-                      (N.lxor (N.shiftr n 4) n)) 1)
-    (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
-            (N.lxor (N.shiftr n 4) n))) mod 2^1) 1.
-
-Theorem parity8_byte:
-  forall n, parity8 n = parity8 (n mod 2^8).
-Proof.
-  intro. unfold parity8. rewrite <- !N.land_ones.
-  apply f_equal2; [|reflexivity].
-  apply N.bits_inj. intro i.
-  repeat rewrite !N.land_spec, ?N.lxor_spec, ?N.shiftr_spec'. rewrite !N_ones_spec_ltb.
-  destruct i.
-    rewrite !Bool.andb_true_r. reflexivity.
-    replace (N.pos p <? 1) with false.
-      rewrite !Bool.andb_false_r. reflexivity.
-      destruct p; reflexivity.
-Qed.
-
-Theorem parity8_popcount:
-  forall n, parity8 n = N.b2n (N.even (popcount (n mod 2^8))).
-Proof.
-  assert (H1: forall n i, xorb (N.testbit n i) (N.odd (popcount (n mod 2^i)))
-                          = N.odd (popcount (n mod 2^(N.succ i)))).
-    intros. rewrite (popcount_shiftr' (n mod 2^N.succ i) i), N.odd_add.
-    rewrite mp2_mod_mod_min, N.min_r by apply N.le_succ_diag_r.
-    rewrite testbit_xbits, <- xbits_equiv.
-    rewrite (proj2 (popcount_bit (xbits _ _ _))).
-      reflexivity.
-      replace 2 with (2^(N.succ i - i)).
-        apply xbits_bound.
-        rewrite N.sub_succ_l, N.sub_diag by reflexivity. reflexivity.
-
-  set (f x i := N.lxor (N.shiftr x i) x).
-  assert (H2: forall x i j, N.testbit (f x i) j = xorb (N.testbit x (j+i)) (N.testbit x j)).
-    intros. unfold f. rewrite N.lxor_spec, N.shiftr_spec'. reflexivity.
-
-  intro. rewrite parity8_byte. set (n8 := n mod _).
-  unfold parity8. fold (f n8 4) (f (f n8 4) 2) (f (f (f n8 4) 2) 1).
-  rewrite <- N.bit0_mod, !H2, !Bool.xorb_assoc. simpl.
-  repeat match goal with |- context [ xorb (N.testbit ?n ?i) (xorb (N.testbit ?n ?j) ?e) ] =>
-    lazymatch eval compute in (i <? j) with false => fail | true =>
-      rewrite <- (Bool.xorb_assoc (N.testbit n i) (N.testbit n j) e),
-              (Bool.xorb_comm (N.testbit n i) (N.testbit n j)), Bool.xorb_assoc
-    end
-  end.
-  replace (N.testbit n8 0) with (N.odd (popcount (n8 mod 2^N.succ 0))).
-    rewrite !H1, <- N.negb_even. simpl. subst n8. rewrite N.Div0.mod_mod.
-      destruct N.even; reflexivity.
-    rewrite <- N.bit0_mod. destruct N.testbit; reflexivity.
-Qed.
-
-(* Why is getmem not defined here? Because we have not "Import IL."
-   Can we? *)
-(*
-(* Extract a bit from a bit-array. *)
-Definition bit w e mem (p:addr) (i:N) := xbits (getmem w e 1 mem (p + (N.shiftr i 3))) (i mod 2^3) (1 + (i mod 2^3)).
-
-(* This helps interface with testbit_xbits *)
-Theorem xbits_odd_gtz:
-  forall n i, N.odd (xbits n i (N.succ i)) = true <->  0 < xbits n i (N.succ i).
-Proof.
-  assert (succ_sub_exact: forall i, N.succ i - i = 1) by lia.
-  split; intros. all:unfold xbits in *. all:rewrite succ_sub_exact in *.
-  - destruct (N.lt_trichotomy ((N.shiftr n i) mod 2 ^ (1)) 1) as [Lt | [Eq | Gt]];
-    [exfalso| |exfalso].
-    + destruct (N.eq_0_gt_0_cases ((N.shiftr n i) mod 2 ^ 1));[|exfalso].
-      rewrite H0 in *. unfold N.odd in H. simpl in H. discriminate. lia.
-    + rewrite Eq in *. lia.
-    + change (2^1) with 2 in *. remember (N.shiftr n i) as x. clear - Gt. 
-      assert (Help: 2 <> 0) by lia. assert (H':=N.mod_upper_bound x 2 Help). lia.
-  - destruct (N.lt_trichotomy ((N.shiftr n i) mod 2 ^ (1)) 1) as [Lt | [Eq | Gt]];
-    [exfalso | |exfalso]. 
-    + remember ((N.shiftr n i) mod 2 ^ 1) as x; lia.
-    + rewrite Eq in *. unfold N.odd; now simpl.
-    + assert (Help: 2 ^ 1 <> 0) by lia; remember (N.shiftr n i) as x;
-      apply (N.mod_upper_bound x (2^1)) in Help. clear - Gt Help; remember (x mod 2 ^ 1) as y; lia.
-Qed.
-
-Lemma bit_test_bit_equiv:
-  forall mem p i len (Lt : i < 8 * len), 0 < bit mem p i <-> N.testbit (getmem 64 LittleE len mem p) i = true.
-Proof.
-  (* Setup the way for byte_index induction *)
-  intros. assert (H: 8 <> 0) by lia; assert (Eqi:=N.div_mod i 8 H).
-  remember (i/8) as byte_index; remember (i mod 8) as bit_index.
-  assert (Lt': bit_index < 8) by (rewrite Heqbit_index; apply N.mod_upper_bound; lia).
-  rewrite Eqi in *. clear - Lt' Lt.
-  assert (8*byte_index + bit_index >> 3 = byte_index). induction byte_index using N.peano_ind. now psimpl.
-  Search (N.div (?x+_) ?x)  in N.
-  (* Get both sides in terms of N.testbit *)
-  unfold bit. rewrite N.shiftr_div_pow2. change (2^3) with 8.
-  rewrite <-N.div_unique with (q:=N.succ byte_index) (r:=bit_index); (reflexivity || assumption).
-
-  unfold bit. rewrite N.add_1_l, <-xbits_odd_gtz, <-testbit_xbits. rewrite H.
-  assert (Eq:(8 * byte_index + bit_index) mod 2 ^ 3 = bit_index). clear - byte_index bit_index Lt'.
-  change (2^3) with 8. rewrite N.add_comm, N.mul_comm, N.Div0.mod_add, N.mod_small; lia.
-  rewrite Eq in *. clear Eq.
-  (* Perform byte_index induction *)
-  generalize dependent len. generalize dependent bit_index. generalize dependent p. generalize dependent mem.
-
-  induction byte_index using N.peano_ind.
-  - intros. simpl (8*0+bit_index) in *. split; intros.
-    + unfold N.testbit. unfold bit in H.
-      destruct len. simpl in Lt; now apply N.nlt_0_r in Lt. 
-Qed.
-*)
-End BitOps.
-
-
+(* BitOps *)
 
 Section Traces.
 
@@ -4539,6 +4138,9 @@ Proof.
 Qed.
 
 
+Notation "x << y" := (N.shiftl x y) (at level 55, left associativity). (* logical shift-left *)
+Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logical shift-right *)
+
 Section StoreTheory.
 
 (* The getmem/setmem memory accessors are defined as Peano recursions over N,
@@ -4702,30 +4304,19 @@ Proof.
       rewrite N.shiftr_shiftr, N.mul_succ_r. reflexivity.
 Qed.
 
-Theorem setmem_split_swap:
-  forall w e i j m a v (LEN: i+j < 2 ^ w), setmem w e (i+j) m a v =
-    match e with BigE => setmem w e i (setmem w e j m (a+i) v) a (N.shiftr v (Mb*j))
-               | LittleE => setmem w e i (setmem w e j m (a+i) (N.shiftr v (Mb*i))) a (v mod 2^(Mb*i))
-    end.
-Proof.
-  intros. rewrite setmem_split. rewrite setmem_swap. rewrite setmem_swap with (len2:=j).
-  reflexivity.
-  all: apply noverlap_sum; rewrite msub_diag, N.add_0_r; now apply N.lt_le_incl.
-Qed.
-
 Lemma getmem_shiftr8__getmem':
   forall w len m a,
   (getmem w LittleE len m a) >> (N.pos mem_bits) =
   getmem w LittleE (N.pred len) m (N.succ a).
 Proof.
-  intros. destruct len using N.peano_ind. reflexivity.
+  intros. destruct len using N.peano_ind. simpl (N.pred _). rewrite getmem_0, getmem_0, N.shiftr_0_l. reflexivity.
   rewrite getmem_succ.
   rewrite N.shiftr_lor.
-  assert (H: IL_arm8.Mb = N.pos mem_bits). reflexivity. rewrite <-H.
-  enough (m (a mod 2 ^ w) mod 2 ^ IL_arm8.Mb >> IL_arm8.Mb = 0).
-  rewrite H0, N.lor_0_l. rewrite N.shiftr_shiftl_r. simpl.
-  rewrite N.pred_succ. reflexivity.
-  lia.
+  assert (H: IL.Mb = N.pos mem_bits). reflexivity. rewrite <-H.
+  enough (m (a mod 2 ^ w) mod 2 ^ IL.Mb >> IL.Mb = 0).
+  rewrite H0, N.lor_0_l. rewrite N.shiftr_shiftl_r; try lia. simpl.
+  rewrite N.pred_succ. rewrite Pos.sub_mask_diag; reflexivity.
+  
   apply shiftr_low_pow2. apply N.mod_lt. lia.
 Qed.
 
@@ -5394,6 +4985,17 @@ Proof.
         rewrite !add_msub. reflexivity.
 Qed.
 
+Theorem setmem_split_swap:
+  forall w e i j m a v (LEN: i+j < 2 ^ w), setmem w e (i+j) m a v =
+    match e with BigE => setmem w e i (setmem w e j m (a+i) v) a (N.shiftr v (Mb*j))
+               | LittleE => setmem w e i (setmem w e j m (a+i) (N.shiftr v (Mb*i))) a (v mod 2^(Mb*i))
+    end.
+Proof.
+  intros. rewrite setmem_split. rewrite setmem_swap. rewrite setmem_swap with (len2:=j).
+  reflexivity.
+  all: apply noverlap_sum; rewrite msub_diag, N.add_0_r; now apply N.lt_le_incl.
+Qed.
+
 Theorem setmem_merge_rev:
   forall w e i j m a v1 v2, i + j < 2^w ->
   setmem w e j (setmem w e i m a v2) (msub w a j) v1 =
@@ -5418,8 +5020,406 @@ Qed.
 
 End StoreTheory.
 
+Section BitOps.
+
+Definition bitop_has_spec f g := forall a a' n, N.testbit (f a a') n = g (N.testbit a n) (N.testbit a' n).
+
+Theorem bitop_mod_pow2:
+  forall f g (SPEC: bitop_has_spec f g) (PZ: g false false = false),
+  forall n1 n2 p, f n1 n2 mod 2^p = f (n1 mod 2^p) (n2 mod 2^p).
+Proof.
+  intros. rewrite <- !N.land_ones. apply N.bits_inj. intro i. rewrite N.land_spec, !SPEC, !N.land_spec.
+  destruct (N.le_gt_cases p i).
+    rewrite N.ones_spec_high, !Bool.andb_false_r by assumption. symmetry. apply PZ.
+    rewrite N.ones_spec_low, !Bool.andb_true_r by assumption. reflexivity.
+Qed.
+
+Definition N_land_mod_pow2 := bitop_mod_pow2 N.land andb N.land_spec (eq_refl false).
+Definition N_lor_mod_pow2 := bitop_mod_pow2 N.lor orb N.lor_spec (eq_refl false).
+Definition N_lxor_mod_pow2 := bitop_mod_pow2 N.lxor xorb N.lxor_spec (eq_refl false).
+
+Theorem N_land_mod_pow2_move:
+  forall p x y, N.land (x mod 2^p) y = N.land x (y mod 2^p).
+Proof.
+  intros.
+  rewrite <- N.land_ones, <- N.land_assoc, (N.land_comm _ y), N.land_ones.
+  reflexivity.
+Qed.
+
+Theorem N_land_mod_pow2_moveout:
+  forall p x y, N.land x (y mod 2^p) = (N.land x y) mod 2^p.
+Proof.
+  intros.
+  rewrite N.land_comm, <- N.Div0.mod_mod, N_land_mod_pow2_move, N.land_comm.
+  symmetry. apply N_land_mod_pow2.
+Qed.
+
+Theorem land_mod_min:
+  forall p x y, N.land x (y mod 2^p) = N.land (x mod 2^(N.min (N.size y) p)) y.
+Proof.
+  intros.
+  rewrite <- (N.mod_small y (2^N.size y)) at 1 by apply N.size_gt.
+  rewrite mp2_mod_mod_min.
+  symmetry. apply N_land_mod_pow2_move.
+Qed.
+
+Theorem size_le_diag:
+  forall n, N.size n <= n.
+Proof.
+  destruct n as [|p]. discriminate. change (Pos.size p <= p)%positive.
+  induction p.
+    simpl. etransitivity.
+      apply -> Pos.succ_le_mono. apply IHp.
+      rewrite Pos.xI_succ_xO, <- Pos.add_diag. apply -> Pos.succ_le_mono. apply Pos.lt_le_incl, Pos.lt_add_r.
+    simpl. etransitivity.
+      apply -> Pos.succ_le_mono. apply IHp.
+      rewrite <- Pos.add_1_r, <- Pos.add_diag. apply Pos.add_le_mono_l, Pos.le_1_l.
+    reflexivity.
+Qed.
+
+Theorem Pos_popcount_bound:
+  forall p, (Pos_popcount p <= Pos.size p)%positive.
+Proof.
+  induction p.
+    apply -> Pos.succ_le_mono. assumption.
+    etransitivity.
+      apply Pos.lt_le_incl, Pos.lt_succ_diag_r.
+      apply -> Pos.succ_le_mono. assumption.
+    reflexivity.
+Qed.
+
+Theorem popcount_bound:
+  forall n, popcount n <= N.size n.
+Proof.
+  destruct n. reflexivity. apply Pos_popcount_bound.
+Qed.
+
+Theorem popcount_0:
+  forall n, popcount n = 0 -> n = 0.
+Proof.
+  intros. destruct n. reflexivity. discriminate.
+Qed.
+
+Theorem popcount_pos:
+  forall n, 0 < popcount n <-> 0 < n.
+Proof.
+  intro. split; intro; (destruct n; [ discriminate | reflexivity ]).
+Qed.
+
+Theorem popcount_bit:
+  forall n, popcount n = n <-> n < 2.
+Proof.
+  split; intro.
+
+    destruct n as [|n]. reflexivity.
+    rewrite <- (N.succ_pred (N.pos n)) in * by discriminate 1. destruct (N.pred _) as [|p]. reflexivity.
+    rewrite <- (N.succ_pred (N.pos p)) in * by discriminate 1. destruct (N.pred _) as [|q]. discriminate.
+    clear n p. contradict H. apply N.lt_neq.
+    eapply N.le_lt_trans. apply popcount_bound.
+    rewrite N.size_log2 by apply N.neq_succ_0. apply -> N.succ_lt_mono. apply N.lt_succ_r.
+    induction q using Pos.peano_ind.
+      discriminate 1.
+      etransitivity.
+        apply N.log2_succ_le.
+        apply (proj1 (N.succ_le_mono _ (N.pos q))). etransitivity.
+          apply IHq.
+          reflexivity.
+
+    destruct n as [|[n|n|]]; try reflexivity; destruct n; discriminate.
+Qed.
+
+Theorem popcount_double:
+  forall n, popcount (N.double n) = popcount n.
+Proof.
+  destruct n; reflexivity.
+Qed.
+
+Theorem popcount_succ_double:
+  forall n, popcount (N.succ_double n) = N.succ (popcount n).
+Proof.
+  destruct n; reflexivity.
+Qed.
+
+Theorem popcount_div2':
+  forall n, popcount n = popcount (N.div2 n) + n mod 2.
+Proof.
+  intro. change 2 with (2^1). rewrite <- N.land_ones.
+  destruct n as [|[p|p|]]; try reflexivity.
+  simpl. rewrite Pos.add_1_r. reflexivity.
+Qed.
+
+Theorem popcount_div2:
+  forall n, popcount (N.div2 n) = popcount n - n mod 2.
+Proof.
+  intro. eapply N.add_cancel_r. rewrite N.sub_add.
+    symmetry. apply popcount_div2'.
+    destruct n as [|n]. discriminate 1. transitivity 1.
+      apply (N.lt_le_pred _ 2), N.mod_lt. discriminate 1.
+      apply (N.le_succ_l 0), popcount_pos. reflexivity.
+Qed.
+
+Theorem popcount_lor_land:
+  forall m n, popcount (N.lor m n) + popcount (N.land m n) = popcount m + popcount n.
+Proof.
+  apply N_bitwise_ind2. reflexivity. intros.
+  rewrite (popcount_div2' m), (popcount_div2' n).
+  rewrite N.add_shuffle1. rewrite <- IH.
+  rewrite !N.div2_spec. rewrite <- N.shiftr_lor, <- N.shiftr_land. rewrite <- !N.div2_spec.
+  replace (m mod 2 + n mod 2) with (N.lor m n mod 2 + N.land m n mod 2).
+    rewrite <- N.add_shuffle1. rewrite <- !popcount_div2'. reflexivity.
+    rewrite (N_lor_mod_pow2 _ _ 1), (N_land_mod_pow2 _ _ 1), <- !N.bit0_mod.
+      do 2 destruct N.testbit; reflexivity.
+Qed.
+
+Corollary popcount_lor:
+  forall m n, popcount (N.lor m n) = popcount m + popcount n - popcount (N.land m n).
+Proof.
+  intros. rewrite <- popcount_lor_land, N.add_sub. reflexivity.
+Qed.
+
+Corollary popcount_land:
+  forall m n, popcount (N.land m n) = popcount m + popcount n - popcount (N.lor m n).
+Proof.
+  intros. rewrite <- popcount_lor_land, N.add_comm, N.add_sub. reflexivity.
+Qed.
+
+Theorem popcount_land_bound:
+  forall m n, popcount (N.land m n) <= N.min (popcount m) (popcount n).
+Proof.
+  assert (B: forall b, b mod 2^1 = 0 \/ b mod 2^1 = 1).
+    intro. apply N.le_1_r, (N.lt_le_pred _ 2), N.mod_lt. discriminate.
+  assert (H: forall m n, popcount (N.land m n) <= popcount m).
+    apply N_bitwise_ind2. reflexivity. intros.
+    rewrite popcount_div2, !N.div2_spec, <- N.shiftr_land, <- N.div2_spec, popcount_div2 in IH.
+    apply N.le_sub_le_add_r in IH. etransitivity. exact IH.
+    change 2 with (2^1). rewrite <- N.add_sub_swap.
+
+      apply N.le_sub_le_add_r, N.add_le_mono_l. rewrite N_land_mod_pow2.
+      destruct (B m) as [H1|H1], (B n) as [H2|H2]; rewrite H1, H2; discriminate 1.
+
+      specialize (B m). destruct B; rewrite H.
+        apply N.le_0_l.
+        apply (N.le_succ_l 0), popcount_pos. destruct m. discriminate. reflexivity.
+
+  intros. apply N.min_glb. apply H. rewrite N.land_comm. apply H.
+Qed.
+
+Theorem popcount_shiftl:
+  forall n i, popcount (N.shiftl n i) = popcount n.
+Proof.
+  induction i using N.peano_ind.
+    rewrite N.shiftl_0_r. reflexivity.
+    rewrite N.shiftl_succ_r. rewrite popcount_double. apply IHi.
+Qed.
+
+Corollary popcount_pow2:
+  forall n, popcount (2^n) = 1.
+Proof.
+  intros. rewrite <- N.shiftl_1_l, popcount_shiftl. reflexivity.
+Qed.
+
+Theorem popcount_shiftr':
+  forall n i, popcount n = popcount (N.shiftr n i) + popcount (n mod 2^i).
+Proof.
+  intros.
+  rewrite <- (N.lor_ldiff_and n (N.ones i)) at 1.
+  rewrite popcount_lor.
+  rewrite N.land_comm, N.land_assoc, N.land_ldiff, N.sub_0_r.
+  rewrite N.land_comm, N.land_ones.
+  rewrite N.ldiff_ones_r, popcount_shiftl.
+  reflexivity.
+Qed.
+
+Corollary popcount_shiftr:
+  forall n i, popcount (N.shiftr n i) = popcount n - popcount (n mod 2^i).
+Proof.
+  intros. rewrite (popcount_shiftr' n i), N.add_sub. reflexivity.
+Qed.
+
+Theorem popcount_ones:
+  forall n, popcount (N.ones n) = n.
+Proof.
+  induction n using N.peano_ind. reflexivity.
+  rewrite <- N.add_1_r, N.ones_add, N.mul_1_r.
+  assert (H: N.land (2^n) (N.ones n) = 0).
+    erewrite <- N.shiftl_1_l, <- mp2_div_same, <- N.shiftr_div_pow2, <- N.ldiff_ones_r.
+    apply N.land_ldiff.
+  rewrite N.add_nocarry_lxor, N.lxor_lor by exact H.
+  rewrite popcount_lor, H, N.sub_0_r, popcount_pow2, IHn.
+  apply N.add_comm.
+Qed.
+
+Theorem popcount_ldiff_land:
+  forall m n, popcount (N.ldiff m n) + popcount (N.land m n) = popcount m.
+Proof.
+  apply N_bitwise_ind2. reflexivity. intros.
+  rewrite (popcount_div2' (N.ldiff _ _)), (popcount_div2' (N.land _ _)).
+  rewrite !N.div2_spec, N.shiftr_ldiff, N.shiftr_land, <- !N.div2_spec.
+  rewrite N.add_shuffle1, IH.
+  symmetry. etransitivity. apply popcount_div2'. apply f_equal.
+  rewrite <- !N.bit0_mod, N.ldiff_spec, N.land_spec.
+  do 2 destruct N.testbit; reflexivity.
+Qed.
+
+Corollary popcount_ldiff:
+  forall m n, popcount (N.ldiff m n) = popcount m - popcount (N.land m n).
+Proof.
+  intros. symmetry. eapply N.add_cancel_r. rewrite popcount_ldiff_land. apply N.sub_add.
+  etransitivity. apply popcount_land_bound. apply N.le_min_l.
+Qed.
+
+Theorem popcount_bitmap:
+  forall f m n (H: forall i (H: N.testbit m i = true),
+                   N.testbit n (f i) = true /\ (forall j, f i = f j -> i = j)),
+  popcount m <= popcount n.
+Proof.
+  intros f m. revert f. induction m using N.binary_ind; intros.
+    apply N.le_0_l.
+    rewrite popcount_double. apply (IHm (fun k => f (N.succ k))). intros. split.
+      apply H. rewrite N.double_spec, N.double_bits_succ. assumption.
+      intros. apply N.succ_inj. apply H.
+        rewrite N.double_spec, N.double_bits_succ. assumption.
+        assumption.
+    replace (popcount n) with (N.succ (popcount (N.clearbit n (f 0)))).
+      rewrite popcount_succ_double. apply -> N.succ_le_mono. apply (IHm (fun k => f (N.succ k))). split.
+        replace (N.testbit _ _) with (N.testbit n (f (N.succ i))).
+          apply H. rewrite N.succ_double_spec, N.testbit_odd_succ by apply N.le_0_l. assumption.
+          symmetry. apply N.clearbit_neq. intro H1. apply (N.neq_succ_0 i), H.
+            rewrite N.succ_double_spec, N.testbit_odd_succ by apply N.le_0_l. assumption.
+            symmetry. assumption.
+        intros. apply N.succ_inj. apply H.
+          rewrite N.succ_double_spec, N.testbit_odd_succ by apply N.le_0_l. assumption.
+          assumption.
+      rewrite N.clearbit_spec', <- N.add_1_r, <- (popcount_pow2 (f 0)). replace (2^_) with (N.land n (2^f 0)) at 2.
+        apply popcount_ldiff_land.
+        apply N.bits_inj. intro i. rewrite N.land_spec, N.pow2_bits_eqb. destruct (_ =? _) eqn:H1.
+          rewrite Bool.andb_true_r. apply N.eqb_eq in H1. subst i. rewrite N.succ_double_spec in H. apply (H 0 (N.testbit_odd_0 _)).
+          apply Bool.andb_false_r.
+Qed.
+
+Theorem popcount_parity_lxor:
+  forall m n, N.even (popcount (N.lxor m n)) = N.even (popcount m + popcount n).
+Proof.
+  intros. pattern m, n. apply N_bitwise_ind2; intros. reflexivity.
+  clear m n. rename m0 into m, n0 into n.
+  rewrite (popcount_div2' m), (popcount_div2' n), N.add_shuffle1.
+  rewrite N.even_add, <- IH.
+  replace (N.even (_+_)) with (N.even (popcount (N.lxor m n mod 2))).
+    rewrite <- N.even_add, !N.div2_spec, <- N.shiftr_lxor, <- popcount_shiftr'. reflexivity.
+    rewrite <- !N.bit0_mod, N.lxor_spec. do 2 destruct N.testbit; reflexivity.
+Qed.
+
+Definition parity8 n :=
+  N.lnot ((N.lxor
+    (N.shiftr (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
+                      (N.lxor (N.shiftr n 4) n)) 1)
+    (N.lxor (N.shiftr (N.lxor (N.shiftr n 4) n) 2)
+            (N.lxor (N.shiftr n 4) n))) mod 2^1) 1.
+
+Theorem parity8_byte:
+  forall n, parity8 n = parity8 (n mod 2^8).
+Proof.
+  intro. unfold parity8. rewrite <- !N.land_ones.
+  apply f_equal2; [|reflexivity].
+  apply N.bits_inj. intro i.
+  repeat rewrite !N.land_spec, ?N.lxor_spec, ?N.shiftr_spec'. rewrite !N_ones_spec_ltb.
+  destruct i.
+    rewrite !Bool.andb_true_r. reflexivity.
+    replace (N.pos p <? 1) with false.
+      rewrite !Bool.andb_false_r. reflexivity.
+      destruct p; reflexivity.
+Qed.
+
+Theorem parity8_popcount:
+  forall n, parity8 n = N.b2n (N.even (popcount (n mod 2^8))).
+Proof.
+  assert (H1: forall n i, xorb (N.testbit n i) (N.odd (popcount (n mod 2^i)))
+                          = N.odd (popcount (n mod 2^(N.succ i)))).
+    intros. rewrite (popcount_shiftr' (n mod 2^N.succ i) i), N.odd_add.
+    rewrite mp2_mod_mod_min, N.min_r by apply N.le_succ_diag_r.
+    rewrite testbit_xbits, <- xbits_equiv.
+    rewrite (proj2 (popcount_bit (xbits _ _ _))).
+      reflexivity.
+      replace 2 with (2^(N.succ i - i)).
+        apply xbits_bound.
+        rewrite N.sub_succ_l, N.sub_diag by reflexivity. reflexivity.
+
+  set (f x i := N.lxor (N.shiftr x i) x).
+  assert (H2: forall x i j, N.testbit (f x i) j = xorb (N.testbit x (j+i)) (N.testbit x j)).
+    intros. unfold f. rewrite N.lxor_spec, N.shiftr_spec'. reflexivity.
+
+  intro. rewrite parity8_byte. set (n8 := n mod _).
+  unfold parity8. fold (f n8 4) (f (f n8 4) 2) (f (f (f n8 4) 2) 1).
+  rewrite <- N.bit0_mod, !H2, !Bool.xorb_assoc. simpl.
+  repeat match goal with |- context [ xorb (N.testbit ?n ?i) (xorb (N.testbit ?n ?j) ?e) ] =>
+    lazymatch eval compute in (i <? j) with false => fail | true =>
+      rewrite <- (Bool.xorb_assoc (N.testbit n i) (N.testbit n j) e),
+              (Bool.xorb_comm (N.testbit n i) (N.testbit n j)), Bool.xorb_assoc
+    end
+  end.
+  replace (N.testbit n8 0) with (N.odd (popcount (n8 mod 2^N.succ 0))).
+    rewrite !H1, <- N.negb_even. simpl. subst n8. rewrite N.Div0.mod_mod.
+      destruct N.even; reflexivity.
+    rewrite <- N.bit0_mod. destruct N.testbit; reflexivity.
+Qed.
+
+(* This helps interface with testbit_xbits *)
+Theorem xbits_odd_gtz:
+  forall n i, N.odd (xbits n i (N.succ i)) = true <->  0 < xbits n i (N.succ i).
+Proof.
+  assert (succ_sub_exact: forall i, N.succ i - i = 1) by lia.
+  split; intros. all:unfold xbits in *. all:rewrite succ_sub_exact in *.
+  - destruct (N.lt_trichotomy ((N.shiftr n i) mod 2 ^ (1)) 1) as [Lt | [Eq | Gt]];
+    [exfalso| |exfalso].
+    + destruct (N.eq_0_gt_0_cases ((N.shiftr n i) mod 2 ^ 1));[|exfalso].
+      rewrite H0 in *. unfold N.odd in H. simpl in H. discriminate. lia.
+    + rewrite Eq in *. lia.
+    + change (2^1) with 2 in *. remember (N.shiftr n i) as x. clear - Gt. 
+      assert (Help: 2 <> 0) by lia. assert (H':=N.mod_upper_bound x 2 Help). lia.
+  - destruct (N.lt_trichotomy ((N.shiftr n i) mod 2 ^ (1)) 1) as [Lt | [Eq | Gt]];
+    [exfalso | |exfalso]. 
+    + remember ((N.shiftr n i) mod 2 ^ 1) as x; lia.
+    + rewrite Eq in *. unfold N.odd; now simpl.
+    + assert (Help: 2 ^ 1 <> 0) by lia; remember (N.shiftr n i) as x;
+      apply (N.mod_upper_bound x (2^1)) in Help. clear - Gt Help; remember (x mod 2 ^ 1) as y; lia.
+Qed.
+
+Definition bit w mem (p:addr) (i:N) := xbits (getmem w LittleE 1 mem (p + (i >> 3))) (i mod 2^3) (1 + (i mod 2^3)).
+
+Lemma bit_test_bit_equiv:
+  forall mem p i len (Lt : i < 8 * len), 0 < bit mem p i <-> N.testbit (getmem 64 LittleE len mem p) i = true.
+Proof.
+  (* Setup the way for byte_index induction *)
+  intros. assert (H: 8 <> 0) by lia; assert (Eqi:=N.div_mod i 8 H).
+  remember (i/8) as byte_index; remember (i mod 8) as bit_index.
+  assert (Lt': bit_index < 8) by (rewrite Heqbit_index; apply N.mod_upper_bound; lia).
+  rewrite Eqi in *. clear - Lt' Lt.
+  assert (8*byte_index + bit_index >> 3 = byte_index). induction byte_index using N.peano_ind. now psimpl.
+  Search (N.div (?x+_) ?x)  in N.
+  (* Get both sides in terms of N.testbit *)
+  unfold bit. rewrite N.shiftr_div_pow2. change (2^3) with 8.
+  rewrite <-N.div_unique with (q:=N.succ byte_index) (r:=bit_index); (reflexivity || assumption).
+
+  unfold bit. rewrite N.add_1_l, <-xbits_odd_gtz, <-testbit_xbits. rewrite H.
+  assert (Eq:(8 * byte_index + bit_index) mod 2 ^ 3 = bit_index). clear - byte_index bit_index Lt'.
+  change (2^3) with 8. rewrite N.add_comm, N.mul_comm, N.Div0.mod_add, N.mod_small; lia.
+  rewrite Eq in *. clear Eq.
+  (* Perform byte_index induction *)
+  generalize dependent len. generalize dependent bit_index. generalize dependent p. generalize dependent mem.
+
+  induction byte_index using N.peano_ind.
+  - intros. simpl (8*0+bit_index) in *. split; intros.
+    + unfold N.testbit. unfold bit in H.
+      destruct len. simpl in Lt; now apply N.nlt_0_r in Lt. 
+Qed.
+
+End BitOps.
+
 
 Section StringTheory.
+
+Notation "x << y" := (N.shiftl x y) (at level 55, left associativity). (* logical shift-left *)
+Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logical shift-right *)
 
 (* Define what it means for a nil-terminated string to not have internal nils. *)
 Definition nilfree w e mem p len :=
@@ -5543,26 +5543,28 @@ Theorem strlen_unchanged:
   strlen w e m' p len.
 Proof.
   unfold strlen, mem_region_unchanged. intros. destruct STR as [NF NIL].
-  split. unfold nilfree in *. Search (_ < N.succ _).
+  split. unfold nilfree in *.
   intros i Lt; specialize (MEM i (N.lt_lt_succ_r _ _ Lt)). rewrite <-MEM; now specialize (NF i Lt).
   specialize (MEM len (N.lt_succ_diag_r len)); now rewrite <-MEM.
 Qed.
 
 (* Define a "correct" bit array.
 
-   Note: `nilfree m p __(1+j)__` so that p[j] != 0.
+   Note: We check the string is nilfree for `1+j` characters, where `j`
+         is the index of the character with value equal to `i` the index
+         set in the bitmap.
 
    This makes it so a bitmap never records the null-terminating character
    as an acceptable character which is the behavior used in this implementation
    of strspn. This is practical in this case but may not be in others. *)
 Definition bitarray_nstr mem bitmap_ptr str_ptr len : Prop :=
-  ∀ i, i < 256 -> (0 < bit mem bitmap_ptr i <->
-                  (∃ j, j < len /\ nilfree mem str_ptr (1+j) /\ mem Ⓑ[str_ptr + j] = i)).
+  forall w e i, i < 256 -> (0 < bit w mem bitmap_ptr i <->
+                  (exists j, j < len /\ nilfree w e mem str_ptr (1+j) /\ getmem w e 1 mem (str_ptr + j) = i)).
 
 (* bitmap bit is on iff the string has a corresponding character before or on \0 *)
 Definition bitarray_str mem bitmap_ptr str_ptr : Prop :=
-  ∀ i, i < 256 -> (0 < bit mem bitmap_ptr i <->
-                  (∃ j, nilfree mem str_ptr (1+j) /\ mem Ⓑ[str_ptr ⊕ j] = i)).
+  forall w e i, i < 256 -> (0 < bit w mem bitmap_ptr i <->
+                  (exists j, nilfree w e mem str_ptr (1+j) /\ getmem w e 1 mem (str_ptr + j) = i)).
 End StringTheory.
 
 
