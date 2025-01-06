@@ -4362,9 +4362,9 @@ Definition true_inv i := match i with Some P => P | None => False end.
 Definition trueif_inv i := match i with Some P => P | None => True end.
 Definition get_precondition {S T} (p: S -> _ -> option T) Invs (xp: _ -> bool) a1 (s1:S) t1 : option Prop :=
   if xp ((Addr a1,s1)::t1) then None
-  else if p s1 a1 then Invs ((Addr a1,s1)::t1) else None.
+  else if (match p s1 a1 with _ => true end) then Invs ((Addr a1,s1)::t1) else None.
 Definition get_postcondition {S T} (p: S -> _ -> option T) Invs (xp: _ -> bool) a1 (s1:S) t1 : option Prop :=
-  if xp ((Addr a1,s1)::t1) then if p s1 a1 then
+  if xp ((Addr a1,s1)::t1) then if (match p s1 a1 with _ => true end) then
     Some match Invs ((Addr a1,s1)::t1) with Some P => P | None => True end
   else None else None.
 
@@ -5856,6 +5856,13 @@ Qed.
       (d) is nil (not a valid trace),
    then an invariant is forced at this location.  If the user's invariant set (Invs)
    already supplies an invariant, then use it (even if b=false); otherwise use False. *)
+
+(* effinv' reports the provided invariant P if the trace is effectively
+   "leaving" the code by 1) exiting, 2) moving to an undefined part of
+   the program p, or 3) at a hardware exception. Otherwise it reports
+   `None`.
+   It could be renamed "inv_iff_effexit"
+*)
 Definition effinv' (p:program) (xp:trace->bool) t (P:Prop) :=
   if xp t then Some P else
   match t with (Addr a,s)::_ => if p s a then None else Some P
@@ -5867,6 +5874,80 @@ Definition effinv (b:bool) (p:program) Inv (xp:trace->bool) t :=
   end.
 Global Arguments effinv' p xp / !t.
 Global Arguments effinv b p Inv xp / !t.
+
+Section EffinvRedefinitionProposal.
+Definition effexit (p:program) (xp:trace->bool) t :=
+  if xp t then true else
+  match t with (Addr a,s)::_ => if p s a then false else true
+             | _ => true end.
+Definition effinv_redef (b:bool) (p:program) Inv (xp:trace->bool) t :=
+  match Inv t with
+  | None => if effexit p xp t then Some False else None
+  | Some P => if orb b (effexit p xp t) then Some P else None
+  end.
+
+Theorem effinv_equiv:
+  forall b p Inv xp t, effinv b p Inv xp t = effinv_redef b p Inv xp t.
+Proof.
+  intros. unfold effinv, effinv', effinv_redef, effexit.
+  destruct b; destruct (Inv t); destruct (xp t); destruct t as [|[[a|i] s]];
+  simpl orb; try reflexivity.
+  all: destruct (p s a); reflexivity.
+Qed.
+
+(* May be useful to apply after destructing (effexit _ _ _). *)
+Theorem effexit_false:
+  forall p xp t (EX: effexit p xp t = false), 
+    exists s a t' insn, t = (Addr a,s)::t' /\ p s a = Some insn.
+Proof with (try discriminate).
+  unfold effexit. intros.
+  destruct (xp t)... destruct t as [|[[a|i] s]]... destruct (p s a) as [insn|] eqn: PSA...
+  exists s, a, t, insn; now split.
+Qed.
+
+(* This is a redefinition of effinv_none below. *)
+Theorem effinv_redef_none:
+  forall b p Inv xp t (NONE: effinv_redef b p Inv xp t = None),
+    match t with
+    | (Addr a, s) :: _ => exists insn, p s a = Some insn
+    | _ => False
+    end.
+Proof with (try discriminate).
+  unfold effinv_redef. intros. destruct (Inv t); destruct (effexit p xp t) eqn:EX;
+  [ now destruct b
+  | apply effexit_false in EX
+  | discriminate
+  | apply effexit_false in EX].
+    
+    all:destruct EX as [s [a [t' [insn [H1 H2]]]]]; destruct t as [| [[a2|i2] s2]];
+        try discriminate; inversion H1; subst; now exists insn.
+Qed.
+End EffinvRedefinitionProposal.
+
+
+(* This proof is not used. It just shows us humans that the only
+   way effinv evaluates to None is if the program finds an instruction
+   at the head of the trace. *)
+Theorem effinv_none:
+  forall b p Inv xp t (NONE: effinv b p Inv xp t = None),
+    match t with
+    | (Addr a, s) :: _ => exists insn, p s a = Some insn
+    | _ => False
+    end.
+Proof with (try discriminate).
+  unfold effinv, effinv'. intros.
+  destruct (Inv t) eqn:INVt.
+    destruct b...
+      destruct (xp t)...
+        destruct t as [| [x s]]...
+          destruct x... destruct (p s a) as [insn|] eqn:PSA...
+            exists insn. trivial.
+    destruct (xp t)...
+      destruct t as [| [x s]]...
+        destruct x...
+          destruct (p s a) as [insn|] eqn:PSA...
+            exists insn. trivial.
+Qed.
 
 (* The "next invariant" property is true if the computation always eventually
    reaches a "next" invariant, and in a state that satisfies that invariant.
@@ -5914,6 +5995,10 @@ Proof.
       destruct (Invs _). discriminate. assumption.
 Qed.
 
+(* The lesson here is that the only way to prove a nextinv' for a trace
+   that results in a hardware exception is by anticipating the exception
+   and placing a provable invariant there.
+*)
 Lemma nextinv_raise:
   forall p Invs xp b i s t,
   match Invs ((Raise i,s)::t) with None => False | Some P => P end <->
@@ -6014,10 +6099,10 @@ Proof.
         rewrite <- app_comm_cons, <- app_removelast_last by discriminate. reflexivity.
       apply Forall_nil.
       apply UT.
-      rewrite NXP,IL'. assumption.
+      rewrite NXP(* ,IL' *). assumption.
 
     intros.
-    assert (INV' := INV _ _ _ _ SPL). rewrite IL in INV'.
+    assert (INV' := INV _ _ _ _ SPL). (* rewrite IL in INV'. *)
     simpl in UT. inversion UT; subst. clear UT.
     eenough (H:_); [ apply PRE0 with (b:=b) in H; [clear PRE0 | eexists;reflexivity]
                    | apply H2 ].
@@ -6189,6 +6274,9 @@ Definition may_call
    | (Raise _,_)::_ => if callee_Invs t then true else callee_xp t
    | (Addr a,s)::_ => if p s a then false else callee_xp t
    end = false) /\
+  (* TODO: can omit `callee_xp nil = false`? I think the above
+           `match t with nil => callee_xp t | ... end = false` handles this
+  *)
   (callee_xp nil = false) /\
   (forall xs t, callee_Invs (xs::t) = callee_Invs (xs::nil)) /\
   (forall xs t, callee_xp (xs::t) = callee_xp (xs::nil)).
@@ -6273,6 +6361,7 @@ Qed.
 Definition nextinv p Invs xp b t : Prop :=
   exec_prog p t -> nextinv' p Invs xp b t.
 
+(* Why do we want this? *)
 Theorem exec_prog_nextinv:
   forall p Invs xp b t,
     (forall (XP: exec_prog p t), nextinv p Invs xp b t) ->
@@ -6330,7 +6419,7 @@ Qed.
 Definition inv_type T := N -> Prop -> T.
 Definition invariant_set :=
   forall T, (inv_type T) -> (inv_type T) -> T -> store -> addr -> T.
-
+Print invariant_set.
 Definition same_invset_family (f g:invariant_set) : Prop :=
   f _ (fun n _ => Some(false,n)) (fun n _ => Some(true,n)) None =
   g _ (fun n _ => Some(false,n)) (fun n _ => Some(true,n)) None.

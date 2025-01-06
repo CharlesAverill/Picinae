@@ -94,7 +94,7 @@ Definition call_test_invs (s0:store) (t:trace) :=
   | 0x00100084 => Some (arm8equiv s s0)
   | 0x001000cc => Some (arm8equiv_or s s0 (fun v => match v with | R_X0 | R_X30 => true | _ => false end))
   | _ => None end | _ => None end.
-  
+
 Theorem call_test_pc :
   forall s t x' s'
      (ENTRY: startof t (x',s') = (Addr 0x00100084,s))
@@ -118,6 +118,13 @@ Proof.
   step. step.
   (* We are at the entry of tiny_nop (0x00100000), so apply perform_call *)
   remember (update (update s R_X0 (VaN n 64)) R_X30 (VaN 1048716 64)) as current_s.
+
+  (* TODO: update the invariants, exit, and proof to use the new perform_call
+           machinery.
+  *)
+  
+  
+  (* Old code *)
   apply perform_call with (Invs2:=tiny_nop_invs current_s) (xp2:=tiny_nop_exit); try reflexivity.
     (* CALLEE *)
     intros. apply satall_pmono with (p1:=tiny_nop).
