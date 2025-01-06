@@ -97,15 +97,9 @@ Module IL_arm8 := PicinaeIL ARM8Arch.
 Export IL_arm8.
 Module Theory_arm8 := PicinaeTheory IL_arm8.
 Export Theory_arm8.
-<<<<<<< HEAD
 Module Statics_arm8 := PicinaeStatics IL_arm8 Theory_arm8.
 Export Statics_arm8.
 Module FInterp_arm8 := PicinaeFInterp IL_arm8 Theory_arm8 Statics_arm8.
-=======
-Module Statics_arm8 := PicinaeStatics IL_arm8.
-Export Statics_arm8.
-Module FInterp_arm8 := PicinaeFInterp IL_arm8 Statics_arm8.
->>>>>>> a719b71 (Add the incomplete strspn arm8 proof and the armv8_pcode file.)
 Export FInterp_arm8.
 
 Module PSimpl_arm8 := Picinae_Simplifier_Base.

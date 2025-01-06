@@ -2,11 +2,14 @@
 *.glob
 *.vo
 *.#*#
+\#*#
 *.sw?
 *.*~
 *.pyc
 *.vok
 *.vos
+*.vbak
+*.crashcoqide
 *.bin
 *.plugin
 _build

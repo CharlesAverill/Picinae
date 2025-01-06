@@ -30,7 +30,7 @@ Require Import NArith.
 Require Import ZArith.
 Require Import Picinae_armv8_pcode.
 Require Import arm8_strspn.
-Require Import strspn_lemmas.
+Require Import arm8_strspn_lemmas.
 Require Import Lia.
 Require Import Bool.
 
