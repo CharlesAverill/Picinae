@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2025 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -33,6 +33,7 @@
  *)
 
 Require Import Picinae_core.
+Require Import Picinae_theory.
 Require Import Picinae_statics.
 Require Import Picinae_finterp.
 Require Export Picinae_simplifier_base.
@@ -42,10 +43,14 @@ Require Import BinNums.
    allows the user to turn off all auto-simplification. *)
 
 Module Type PICINAE_SIMPLIFIER_V0
-  (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL).
+  (IL: PICINAE_IL)
+  (TIL: PICINAE_THEORY IL)
+  (SIL: PICINAE_STATICS IL TIL)
+  (FIL: PICINAE_FINTERP IL TIL SIL).
 
 Import IL.
 Import TIL.
+Import SIL.
 Import FIL.
 
 Local Ltac dummy_gen e := uconstr:(tt).
@@ -57,25 +62,20 @@ Ltac PSimplifier tac :=
   lazymatch tac with
   | PSIMPL_GENN => dummy_gen
   | PSIMPL_GENB => dummy_gen
-  | PSIMPL_GENM => dummy_gen
-  | PSIMPL_GENV => dummy_gen
+  | PSIMPL_GENS => dummy_gen
   | PSIMPL_GENU => dummy_gen
   | PSIMPL_POPULATE_VAR_IDS => dummy_populate
   | PSIMPL_N_HYP => idtac2
   | PSIMPL_B_HYP => idtac2
-  | PSIMPL_M_HYP => idtac2
-  | PSIMPL_V_HYP => idtac2
-  | PSIMPL_V_GOAL => idtac1
+  | PSIMPL_S_HYP => idtac2
   | PSIMPL_U_HYP => idtac2
   | PSIMPL_U_GOAL => idtac1
   | PSIMPL_EXHYP_N => idtac1
   | PSIMPL_EXGOAL_N => idtac
   | PSIMPL_EXHYP_B => idtac1
   | PSIMPL_EXGOAL_B => idtac
-  | PSIMPL_EXHYP_M => idtac1
-  | PSIMPL_EXGOAL_M => idtac
-  | PSIMPL_EXHYP_V => idtac1
-  | PSIMPL_EXGOAL_V => idtac
+  | PSIMPL_EXHYP_S => idtac1
+  | PSIMPL_EXGOAL_S => idtac
   | PSIMPL_EXHYP_U => idtac1
   | PSIMPL_EXGOAL_U => idtac
   end.
@@ -85,10 +85,15 @@ End PICINAE_SIMPLIFIER_V0.
 
 
 Module Picinae_Simplifier_v0
-  (IL: PICINAE_IL) (TIL: PICINAE_STATICS IL) (FIL: PICINAE_FINTERP IL TIL) : PICINAE_SIMPLIFIER_V0 IL TIL FIL.
+  (IL: PICINAE_IL)
+  (TIL: PICINAE_THEORY IL)
+  (SIL: PICINAE_STATICS IL TIL)
+  (FIL: PICINAE_FINTERP IL TIL SIL)
+  : PICINAE_SIMPLIFIER_V0 IL TIL SIL FIL.
 
 Import IL.
 Import TIL.
+Import SIL.
 Import FIL.
 
 End Picinae_Simplifier_v0.

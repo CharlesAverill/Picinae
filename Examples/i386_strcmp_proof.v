@@ -85,20 +85,19 @@ Definition strcmp_exit (t:trace) :=
 
 (* Next we define a set of invariants, one for each program point.  In this case,
    all program points have the same invariant, so we define the same for all. *)
-Definition esp_invs (esp0:N) (t:trace) :=
+Definition esp_invs (s0:store) (t:trace) :=
   match t with (Addr _,s)::_ =>
-    Some (s R_ESP = Ⓓesp0)
+    Some (s R_ESP = s0 R_ESP)
   | _ => None end.
 
 (* Now we pose a theorem that asserts that this invariant-set is satisfied at
    all points in the subroutine.  The "satisfies_all" function asserts that
    anywhere an invariant exists (e.g., at the post-conditions), it is true. *)
 Theorem strcmp_preserves_esp:
-  forall s esp0 t s' x'
+  forall s t s' x'
          (ENTRY: startof t (x',s') = (Addr 0, s))
-         (MDL: models x86typctx s)
-         (ESP: s R_ESP = Ⓓesp0),
-  satisfies_all strcmp_i386 (esp_invs esp0) strcmp_exit ((x',s')::t).
+         (MDL: models x86typctx s),
+  satisfies_all strcmp_i386 (esp_invs s) strcmp_exit ((x',s')::t).
 Proof.
   intros.
 
@@ -107,7 +106,7 @@ Proof.
 
   (* We must first prove the pre-condition, which says that the invariant-set is
      satisfied on entry to the subroutine.  This is proved by assumption ESP. *)
-  simpl. rewrite ENTRY. x86_step. exact ESP.
+  simpl. rewrite ENTRY. x86_step. reflexivity.
 
   (* Now we enter the inductive case, wherein Coq asks us to prove that the invariant-set
      is preserved by every (reachable) instruction in the program.  Before breaking the
@@ -121,7 +120,7 @@ Proof.
   intros.
   eapply startof_prefix in ENTRY; try eassumption.
   eapply preservation_exec_prog in MDL; try (eassumption || apply strcmp_welltyped).
-  clear - PRE MDL. rename t1 into t. rename s1 into s.
+  clear - PRE MDL. rename t1 into t. rename s into s0. rename s1 into s.
 
   (* We are now ready to break the goal down into one case for each invariant-point.
      The destruct_inv tactic finds all the invariants defined by the invariant-set
@@ -148,7 +147,7 @@ Qed.
    precedes the second, and EAX is positive otherwise. *)
 
 (* Define binary-level string equality: *)
-Definition streq (m:addr->N) (p1 p2:addr) (k:N) :=
+Definition streq (m:memory) (p1 p2:addr) (k:N) :=
   ∀ i, i < k -> m Ⓑ[p1+i] = m Ⓑ[p2+i] /\ 0 < m Ⓑ[p1+i].
 
 (* Coq "Sections" provide a convenient way to write groups of definitions that
@@ -159,8 +158,10 @@ Definition streq (m:addr->N) (p1 p2:addr) (k:N) :=
    then definitions y and z both get expanded to take x as an argument. *)
 Section Invariants.
 
-  Variable mem : addr -> N.  (* mem = initial memory state *)
-  Variable esp : N.          (* esp = initial stack pointer *)
+  Variable s0 : store.    (* initial cpu state *)
+
+  Definition mem := s0 V_MEM32.  (* mem = initial memory state *)
+  Definition esp := s0 R_ESP.    (* esp = initial stack pointer *)
 
   Definition p1 := mem Ⓓ[4+esp].  (* 1st pointer arg on the stack *)
   Definition p2 := mem Ⓓ[8+esp].  (* 2nd pointer arg on the stack *)
@@ -170,10 +171,9 @@ Section Invariants.
      strings, where the two strings are identical before k, and n may only be
      zero if the kth bytes are both nil. *)
   Definition postcondition (s:store) :=
-    ∃ n k, s R_EAX = Ⓓn /\
-           streq mem p1 p2 k /\
-           (n=0 -> mem Ⓑ[p1 + k] = 0) /\
-           (mem Ⓑ[p1 + k] ?= mem Ⓑ[p2 + k]) = (toZ 32%N n ?= Z0)%Z.
+    ∃ k, streq mem p1 p2 k /\
+         (s R_EAX = 0 -> mem Ⓑ[p1 + k] = 0) /\
+         (mem Ⓑ[p1 + k] ?= mem Ⓑ[p2 + k]) = (toZ 32%N (s R_EAX) ?= Z0)%Z.
 
   (* The invariant-set for this property makes no assumptions at program-start
      (address 0), and puts a loop-invariant at address 8.  Putting a (trivial)
@@ -183,7 +183,7 @@ Section Invariants.
     match t with (Addr a,s)::_ => match a with
     | 0 => Some True  (* no assumptions at entry point *)
     | 8 => Some  (* loop invariant *)
-       (∃ k, s R_ECX = Ⓓ(p1 ⊕ k) /\ s R_EDX = Ⓓ(p2 ⊕ k) /\ streq mem p1 p2 k)
+       (∃ k, s R_ECX = (p1 ⊕ k) /\ s R_EDX = (p2 ⊕ k) /\ streq mem p1 p2 k)
     | 22 | 36 => Some (postcondition s)
     | _ => None
     end | _ => None end.
@@ -198,11 +198,10 @@ End Invariants.
    From these, we prove that all invariants (including the post-condition) hold
    true for arbitrarily long executions (i.e., arbitrary t). *)
 Theorem strcmp_partial_correctness:
-  forall s esp mem t s' x'
+  forall s t s' x'
          (ENTRY: startof t (x',s') = (Addr 0, s))
-         (MDL: models x86typctx s)
-         (ESP: s R_ESP = Ⓓesp) (MEM: s V_MEM32 = Ⓜmem),
-  satisfies_all strcmp_i386 (strcmp_invs mem esp) strcmp_exit ((x',s')::t).
+         (MDL: models x86typctx s),
+  satisfies_all strcmp_i386 (strcmp_invs s) strcmp_exit ((x',s')::t).
 Proof.
   (* Start the proof the same way as before. *)
   intros. apply prove_invs.
@@ -213,11 +212,15 @@ Proof.
   (* Change assumptions about s into assumptions about s1. *)
   intros.
   eapply startof_prefix in ENTRY; try eassumption.
-  eapply strcmp_preserves_esp, satall_trueif_inv in ESP; try eassumption. simpl in ESP.
-  erewrite strcmp_preserves_memory in MEM by eassumption.
+  assert (ESP:=ENTRY).
+    eapply strcmp_preserves_esp, satall_trueif_inv in ESP; try eassumption.
+    simpl in ESP.
+  assert (MEM:=ENTRY).
+    eapply strcmp_preserves_memory in MEM; try eassumption.
+    symmetry in MEM.
+  assert (MDL0:=MDL).
   eapply preservation_exec_prog in MDL; try (eassumption || apply strcmp_welltyped).
-  assert (WTM := x86_wtm MDL MEM). simpl in WTM.
-  clear - PRE ESP MEM MDL WTM. rename t1 into t. rename s1 into s.
+  clear - PRE ESP MEM MDL MDL0. rename t1 into t. rename s into s0. rename s1 into s.
 
   (* Time how long it takes for each symbolic interpretation step to complete
      (for profiling and to give visual cues that something is happening...). *)
@@ -234,7 +237,7 @@ Proof.
   (* Optional: The rest of the proof ignores all flag values except CF and ZF, so
      we can make evaluation faster and shorter by telling Picinae to ignore the
      other flags (i.e., abstract their values away). *)
-  Ltac x86_ignore v ::= constr:(match v with
+  Ltac ignore_vars v ::= constr:(match v with
     R_AF | R_DF | R_OF | R_PF | R_SF => true
   | _ => false end).
 
@@ -247,7 +250,7 @@ Proof.
 
       (* Address 20 *)
       step. apply Neqb_ok in BC.
-      exists 0, k. psimpl. repeat first [ exact SEQ | split ].
+      exists k. repeat first [ exact SEQ | split ].
         symmetry. apply Neqb_ok, BC0.
         apply N.compare_eq_iff, BC.
 
@@ -261,7 +264,7 @@ Proof.
 
     (* Address 23 *)
     step. step. step.
-    eexists. exists k. psimpl. split. reflexivity. split. exact SEQ. split.
+    exists k. split. exact SEQ. split.
       intro. destruct (_ <? _); discriminate.
       apply N.eqb_neq, N.lt_gt_cases in BC. destruct BC as [BC|BC].
         rewrite (proj2 (N.compare_lt_iff _ _)), (proj2 (N.ltb_lt _ _)) by exact BC. reflexivity.

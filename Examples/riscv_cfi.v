@@ -2549,6 +2549,7 @@ Proof.
       apply Nat.add_lt_mono_l, Nat.lt_lt_add_r, BND.
 Qed.
 
+(*
 Lemma exec_prev_in_block:
   forall l' bi j0 s0 n t i b k' s',
     let addr' x := Addr (4 * N.of_nat (bi + (length (concat (firstn i l')) + x)))%N in forall
@@ -2558,7 +2559,7 @@ Lemma exec_prev_in_block:
     (ENTRY: startof t (addr' (S k'),s') = (Addr (4 * N.of_nat (bi+j0))%N, s0))
     (XP: exec_prog rv_prog ((addr' (S k'),s')::t))
     (BND: (S k' < length b)%nat),
-  exists s1 k t', (k < length b)%nat /\ t = (addr' k, s1)::t'.
+  exists s1 k t', (k < length b)%nat /\ t = (addr' k, s1)::t' /\
     n = S n0 /\ (k < length b)%nat /\
     exec_prog rv_prog (4 * N.of_nat (bi+j0))%N s0 n0 s1 (addr' k) /\
     exec_prog rv_prog (addr' k) s1 1 s' (addr' (S k')).
@@ -2680,6 +2681,7 @@ Proof.
               apply Nat2N_lt, Nat.add_lt_mono_l, Nat.lt_add_pos_r, Nat.lt_0_succ.
               rewrite firstn_last, BLK, concat_app, concat_cons, app_nil_r, app_length. apply Nat2N_lt, Nat.add_lt_mono_l, Nat.add_lt_mono_l, BND.
 Qed.
+*)
 
 Lemma notLui0_imp_not55:
   forall b
@@ -2806,6 +2808,7 @@ Proof.
   rewrite concat_cons, nth_error_app1. assumption. apply nth_error_Some. rewrite H0. discriminate.
 Qed.
 
+(*
 Lemma step_in_block {l' h bi j0 s0 n1 s1 i t s' k' b ie}:
   forall k1
     (CODE: codebytes l' h bi j0 s0)
@@ -2856,6 +2859,7 @@ Proof.
     rewrite nth_error_app2, Nat.add_comm, Nat.add_sub by apply Nat.le_add_r. exact IE.
     rewrite Nat.sub_add_distr, Nat.add_comm, Nat.add_sub. exact END.
 Qed.
+*)
 
 Lemma rv_varid_nonmem:
   forall id, V_MEM32 <> rv_varid id.
@@ -2865,7 +2869,7 @@ Proof.
 Qed.
 
 Lemma r5mov_nomem:
-  forall h s n e s' x (XS: exec_stmt h s (r5mov n e) s' x),
+  forall s n e s' x (XS: exec_stmt s (r5mov n e) s' x),
   s' V_MEM32 = s V_MEM32.
 Proof.
   intros. destruct n as [|n].
@@ -2881,7 +2885,7 @@ Proof.
 Qed.
 
 Lemma r5mov_notmp:
-  forall h s n e s' x (XS: exec_stmt h s (r5mov n e) s' x),
+  forall s n e s' x (XS: exec_stmt s (r5mov n e) s' x),
   s' V_TMP = s V_TMP.
 Proof.
   intros. destruct n as [|n].
@@ -2890,9 +2894,10 @@ Proof.
 Qed.
 
 Lemma newijump_indirect_exit:
-  forall base l l' i iid oid sd z sb b ie h bi j0 s0 n s s' x' j'
-    (IH: execution_IH l' h bi j0 s0 n)
-    (CODE: codebytes l' h bi j0 s0)
+  forall base l l' i iid oid sd z sb b ie bi j0 s0 n s t s' x' j',
+  let a' := (4 * N.of_nat (bi + Nat.pred (length (concat (firstn (S i) l')))))%N in forall
+    (IH: execution_IH l' bi j0 s0 n)
+    (CODE: codebytes l' bi j0 s0)
     (SIZ: (N.of_nat (bi + length (concat l')) < 2^30)%N)
     (NC: newinstrs base nil nil l = Some l')
     (DAT: nth_error l i = Some (Data iid oid sd z sb))
@@ -2901,9 +2906,10 @@ Lemma newijump_indirect_exit:
     (NIJ: newijump (rev (firstn i l)) (Data iid oid sd z sb) (skipn (S i) l) = Some b)
     (IE: nth_error b (Nat.pred (length b)) = Some ie)
     (BB: blockboundary l' j0)
-    (XP: exec_prog h rv_prog (4 * N.of_nat (bi+j0)) s0 n s (Exit (4 * N.of_nat (bi + Nat.pred (length (concat (firstn (S i) l')))))))
-    (XS': exec_stmt h s (rv2il (4 * N.of_nat (bi + Nat.pred (length (concat (firstn (S i) l'))))) (rv_decode (Z.to_N ie))) s' x')
-    (EX': exitof (4 * N.of_nat (bi + length (concat (firstn (S i) l')))) x' = Exit (4 * N.of_nat j'))
+    (ENTRY: startof t (Addr a', s) = (Addr (4 * N.of_nat (bi+j0))%N, s0))
+    (XP: exec_prog rv_prog ((Addr a', s)::t))
+    (XS': exec_stmt s (rv2il (4 * N.of_nat (bi + Nat.pred (length (concat (firstn (S i) l')))))%N (rv_decode (Z.to_N ie))) s' x')
+    (EX': exitof (4 * N.of_nat (bi + length (concat (firstn (S i) l'))))%N x' = Addr (4 * N.of_nat j')%N)
     (HI: (bi <= j')%nat),
   match nth_error l (indexmap' l' (j'-bi)) with
   | Some (Data (Some iid') _ _ _ _) => blockboundary l' (j'-bi) /\ eqm (2^20) oid iid'
@@ -2911,7 +2917,7 @@ Lemma newijump_indirect_exit:
   | _ => False
   end.
 Proof.
-  set (m4 := N.mul 4). intros.
+  set (m4 := N.mul 4). intros. subst a'.
   rewrite firstn_last, BLK, concat_app, concat_cons, app_nil_r, app_length, <- Nat.add_pred_r in XP
     by (erewrite app_length, newijump_size with (b:=b) by exact NIJ; destruct iid, sb; discriminate 1).
   eapply exec_start_block in XP; [| exact IH | exact BLK | exact BB

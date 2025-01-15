@@ -37,19 +37,19 @@ Definition tolower (c:N) : N :=
   if andb (65 <=? c mod 2^32) (c mod 2^32 <=? 90) then (c mod 2^32 .| 32) else c.
 
 (* Define binary length-bounded, case-insensitive string equality. *)
-Definition strcaseeq (m: addr -> N) (p1 p2: addr) (k: N) :=
+Definition strcaseeq (m:memory) (p1 p2: addr) (k: N) :=
   ∀ i, i < k -> tolower (m Ⓑ[p1+i]) = tolower (m Ⓑ[p2+i]) /\ 0 < m Ⓑ[p1+i].
 
 Section Invariants.
 
   Variable sp : N          (* initial stack pointer *).
-  Variable mem : addr -> N (* initial memory state *).
+  Variable mem : memory    (* initial memory state *).
   Variable raddr : N       (* return address (R_X30) *).
   Variable arg1 : N        (* strcasecmp: 1st pointer arg (R_X0)
                               tolower: input character (R_X0) *).
   Variable arg2 : N        (* strcasecmp: 2nd pointer arg (R_X1)
                               tolower: callee-save reg (R_X19) *).
-  Variable x20 x21 : value (* tolower: R_X20, R_X21 (callee-save regs) *).
+  Variable x20 x21 : N     (* tolower: R_X20, R_X21 (callee-save regs) *).
 
   Definition mem' fbytes := setmem 64 LittleE 40 mem (sp ⊖ 48) fbytes.
 
@@ -59,8 +59,8 @@ Section Invariants.
      zero if the kth bytes are both nil. *)
   Definition postcondition (s:store) :=
     ∃ n k fb,
-      s V_MEM64 = Ⓜ(mem' fb) /\
-      s R_X0 = Ⓠn /\
+      s V_MEM64 = mem' fb /\
+      s R_X0 = n /\
       strcaseeq (mem' fb) arg1 arg2 k /\
       (n=0 -> (mem' fb) Ⓑ[arg1+k] = 0) /\
       (tolower (mem' fb Ⓑ[arg1+k]) ?= tolower(mem' fb Ⓑ[arg2+k])) = (toZ 32%N n ?= Z0)%Z.
@@ -94,22 +94,22 @@ Section Invariants.
     match a with
     (* strcasecmp entry point *)
     | 1048576 => Inv 1 (
-        s R_SP = Ⓠsp /\ s V_MEM64 = Ⓜmem /\
-        s R_X0 = Ⓠarg1 /\ s R_X1 = Ⓠarg2
+        s R_SP = sp /\ s V_MEM64 = mem /\
+        s R_X0 = arg1 /\ s R_X1 = arg2
       )
 
     (* loop invariant *)
     | 1048600 => Inv 1 (∃ fb k,
         strcaseeq (mem' fb) arg1 arg2 k /\
-        s R_SP = Ⓠ(sp ⊖ 48) /\ s V_MEM64 = Ⓜ(mem' fb) /\
-        s R_X19 = Ⓠ(arg2 ⊕ k) /\ s R_X20 = Ⓠ(arg1 ⊕ k)
+        s R_SP = sp ⊖ 48 /\ s V_MEM64 = mem' fb /\
+        s R_X19 = arg2 ⊕ k /\ s R_X20 = arg1 ⊕ k
       )
 
     (* case-equal, non-null characters found *)
     | 1048688 => Inv 1 (∃ fb k,
         strcaseeq (mem' fb) arg1 arg2 k /\
-        s R_SP = Ⓠ(sp ⊖ 48) /\ s V_MEM64 = Ⓜ(mem' fb) /\
-        s R_X19 = Ⓠ(arg2 ⊕ k) /\ s R_X20 = Ⓠ(arg1 ⊕ k) /\
+        s R_SP = sp ⊖ 48 /\ s V_MEM64 = mem' fb /\
+        s R_X19 = arg2 ⊕ k /\ s R_X20 = arg1 ⊕ k /\
         (tolower(mem' fb Ⓑ[arg1 + k]) = tolower(mem' fb Ⓑ[arg2 + k])) /\
         mem' fb Ⓑ[arg1 + k] ≠ 0
       )
@@ -117,8 +117,8 @@ Section Invariants.
     (* case-unequal or null characters found *)
     | 1048648 => Inv 1 (∃ fb k,
         strcaseeq (mem' fb) arg1 arg2 k /\ (*characters before k matched*)
-        s R_SP = Ⓠ(sp ⊖ 48) /\ s V_MEM64 = Ⓜ(mem' fb) /\
-        s R_X19 = Ⓠ(arg2 ⊕ k) /\ s R_X20 = Ⓠ(arg1 ⊕ k) /\
+        s R_SP = sp ⊖ 48 /\ s V_MEM64 = mem' fb /\
+        s R_X19 = arg2 ⊕ k /\ s R_X20 = arg1 ⊕ k /\
           (tolower(mem' fb Ⓑ[arg1 + k]) ≠ tolower(mem' fb Ⓑ[arg2 + k]) \/
            mem' fb Ⓑ[arg1 + k] = 0)
       )
@@ -127,14 +127,14 @@ Section Invariants.
     | 1048684 => Post 1 (postcondition s)
 
     (* tolower entry point *)
-    | 2097152 => Inv 0 (s R_X0 = Ⓠarg1 /\ s R_X19 = Ⓠarg2 /\
+    | 2097152 => Inv 0 (s R_X0 = arg1 /\ s R_X19 = arg2 /\
          s R_X20 = x20 /\ s R_X21 = x21 /\
-         s R_X30 = Ⓠraddr /\ s R_SP = Ⓠsp /\ s V_MEM64 = Ⓜmem)
+         s R_X30 = raddr /\ s R_SP = sp /\ s V_MEM64 = mem)
 
     (* tolower return point *)
-    | 2097168 => Post 0 (s R_X0 = Ⓠ(tolower arg1) /\ s R_X19 = Ⓠarg2 /\
+    | 2097168 => Post 0 (s R_X0 = tolower arg1 /\ s R_X19 = arg2 /\
          s R_X20 = x20 /\ s R_X21 = x21 /\
-         s R_X30 = Ⓠraddr /\ s R_SP = Ⓠsp /\ s V_MEM64 = Ⓜmem)
+         s R_X30 = raddr /\ s R_SP = sp /\ s V_MEM64 = mem)
 
     | _ => NoInv
     end.
@@ -240,9 +240,9 @@ Theorem tolower_correctness:
   forall s sp mem t xs' arg1 arg2 a'
          (ENTRY: startof t xs' = (Addr 2097152, s))
          (MDL: models arm8typctx s)
-         (SP: s R_SP = Ⓠsp) (MEM: s V_MEM64 = Ⓜmem)
-         (X0: s R_X0 = Ⓠarg1) (X19: s R_X19 = Ⓠarg2)
-         (X30: s R_X30 = Ⓠa'),
+         (SP: s R_SP = sp) (MEM: s V_MEM64 = mem)
+         (X0: s R_X0 = arg1) (X19: s R_X19 = arg2)
+         (X30: s R_X30 = a'),
   satisfies_all strcasecmp (invs0  sp mem a' arg1 arg2 (s R_X20) (s R_X21))
                            (exits0 sp mem a' arg1 arg2 (s R_X20) (s R_X21)) (xs'::t).
 Proof.
@@ -285,8 +285,8 @@ Theorem strcmp_partial_correctness:
   forall s sp mem t s' x' arg1 arg2 a'
          (ENTRY: startof t (x',s') = (Addr 1048576, s))
          (MDL: models arm8typctx s)
-         (SP: s R_SP = Ⓠsp) (MEM: s V_MEM64 = Ⓜmem) (X30: s R_X30 = Ⓠa')
-         (RX0: s R_X0 = Ⓠarg1) (RX1: s R_X1 = Ⓠarg2),
+         (SP: s R_SP = sp) (MEM: s V_MEM64 = mem) (X30: s R_X30 = a')
+         (RX0: s R_X0 = arg1) (RX1: s R_X1 = arg2),
   satisfies_all strcasecmp (invs1  sp mem a' arg1 arg2 (s R_X20) (s R_X21))
                            (exits1 sp mem a' arg1 arg2 (s R_X20) (s R_X21)) ((x',s')::t).
 Proof.

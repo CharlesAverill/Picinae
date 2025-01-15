@@ -53,8 +53,8 @@ Qed.
 (* Correctness specification for strlen: *)
 Section Invariants.
 
-  Variable mem : addr -> N.  (* initial memory state *)
-  Variable p : addr.         (* pointer argument *)
+  Variable mem : memory.  (* initial memory state *)
+  Variable p : addr.      (* pointer argument *)
 
   (* The first k bytes are non-nil. *)
   Definition nilfree (k:N) := ∀ i, i < k -> mem Ⓑ[p+i] <> 0.
@@ -62,16 +62,16 @@ Section Invariants.
   (* strlen must return a number k such that the first k bytes of p are non-nil
      and the k+1st byte is nil. *)
   Definition postcondition (s:store) :=
-    ∃ k, s R_R0 = Ⓓk /\ nilfree k /\ mem Ⓑ[p+k] = 0.
+    ∃ k, s R_R0 = k /\ nilfree k /\ mem Ⓑ[p+k] = 0.
 
   (* Loop invariants for verifying the specification (not trusted). *)
   Definition strlen_invs (t:trace) :=
     match t with (Addr a,s)::_ => match a with
-    | 0 => Some (s R_R0 = Ⓓp)
-    | 40 => Some (∃ k, s R_R0 = Ⓓ(4*k ⊖ p mod 4) /\
-                       s R_R1 = Ⓓ(p ⊖ p mod 4 ⊕ 4*N.succ k) /\
-                       s R_R2 = Ⓓ match k with N0 => mem Ⓓ[ p ⊖ p mod 4 ] .| N.ones (p mod 4 * 8)
-                                             | _ => mem Ⓓ[ p ⊖ p mod 4 ⊕ 4*k ] end /\
+    | 0 => Some (s R_R0 = p)
+    | 40 => Some (∃ k, s R_R0 = 4*k ⊖ p mod 4 /\
+                       s R_R1 = p ⊖ p mod 4 ⊕ 4*N.succ k /\
+                       s R_R2 = match k with N0 => mem Ⓓ[ p ⊖ p mod 4 ] .| N.ones (p mod 4 * 8)
+                                           | _ => mem Ⓓ[ p ⊖ p mod 4 ⊕ 4*k ] end /\
                        nilfree (4*k - p mod 4))
     | 92 => Some (postcondition s)
     | _ => None
@@ -210,7 +210,7 @@ Theorem strlen_partial_correctness:
   forall s p lr m t s' x'
          (ENTRY: startof t (x',s') = (Addr 0,s))
          (MDL: models arm7typctx s)
-         (MEM: s V_MEM32 = Ⓜm) (LR: s R_LR = Ⓓlr) (R0: s R_R0 = Ⓓp),
+         (MEM: s V_MEM32 = m) (LR: s R_LR = lr) (R0: s R_R0 = p),
   satisfies_all strlen_arm (strlen_invs m p) strlen_exit ((x',s')::t).
 Proof.
   Local Ltac step := time arm7_step.
@@ -224,18 +224,17 @@ Proof.
   (* Inductive cases *)
   intros.
   eapply startof_prefix in ENTRY; try eassumption.
-  apply (arm7_regsize MDL) in R0. simpl in R0. rename R0 into P32.
+  assert (P32 := models_var R_R0 MDL). rewrite R0 in P32. unfold arm7typctx in P32.
   eapply preservation_exec_prog in MDL; try (eassumption || apply strlen_welltyped).
   erewrite strlen_preserves_memory in MEM by eassumption.
   erewrite strlen_preserves_lr in LR by eassumption.
-  assert (WTM := arm7_wtm MDL MEM). simpl in WTM.
-  clear - PRE LR P32 MEM MDL WTM. rename t1 into t. rename s1 into s.
+  clear - PRE P32 LR MEM MDL. rename t1 into t. rename s1 into s.
 
   destruct_inv 32 PRE.
 
   (* Address 0 *)
-  step. step. step. step.
-    rewrite <- (N.ldiff_land_low _ 3 32) by (destruct p; [|apply N.log2_lt_pow2;[|apply (arm7_regsize MDL PRE)]]; reflexivity).
+  step. step. step. step. rewrite <- (N.ldiff_land_low _ 3 32) by
+    (destruct p; [|apply N.log2_lt_pow2;[|assumption]]; reflexivity).
     change 3 with (N.ones 2). rewrite ldiff_sub, N.land_ones.
   step. exists 0.
     apply Neqb_ok in BC. rewrite BC. simpl N.succ. change (N.ones _) with 0. psimpl. repeat split.
