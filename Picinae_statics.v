@@ -107,12 +107,12 @@ Inductive hastyp_exp (c:typctx): exp -> bitwidth -> Prop :=
 | TVar v w (CV: c v = Some w): hastyp_exp c (Var v) w
 | TWord n w (LT: n < 2^w): hastyp_exp c (Word n w) w
 | TLoad e1 e2 en len w (LEN: len <= 2^w)
-        (T1: hastyp_exp c e1 (8*2^w)) (T2: hastyp_exp c e2 w):
-        hastyp_exp c (Load e1 e2 en len) (8*len)
+        (T1: hastyp_exp c e1 (2^w*8)) (T2: hastyp_exp c e2 w):
+        hastyp_exp c (Load e1 e2 en len) (len*8)
 | TStore e1 e2 e3 en len w (LEN: len <= 2^w)
-         (T1: hastyp_exp c e1 (8*2^w)) (T2: hastyp_exp c e2 w)
-         (T3: hastyp_exp c e3 (8*len)):
-         hastyp_exp c (Store e1 e2 e3 en len) (8*2^w)
+         (T1: hastyp_exp c e1 (2^w*8)) (T2: hastyp_exp c e2 w)
+         (T3: hastyp_exp c e3 (len*8)):
+         hastyp_exp c (Store e1 e2 e3 en len) (2^w*8)
 | TBinOp bop e1 e2 w
          (T1: hastyp_exp c e1 w) (T2: hastyp_exp c e2 w):
          hastyp_exp c (BinOp bop e1 e2) (widthof_binop bop w)
@@ -405,7 +405,7 @@ Parameter typesafe_cast:
 
 Parameter typesafe_getmem:
   forall w len m a e,
-  getmem w e len m a < 2^(8*len).
+  getmem w e len m a < 2^(len*8).
 
 Parameter typesafe_setmem:
   forall w len m a v e
@@ -539,9 +539,9 @@ Theorem setmem_welltyped:
     (WTM: m < memsize w),
   setmem w en len m a n < memsize w.
 Proof.
-  intros. rewrite <- fold_memsize in *.
-  rewrite <- (recompose_bytes (8*2^w) (setmem _ _ _ _ _ _)), setmem_highbits.
-  change 8 with (2^3). rewrite <- (N.pow_add_r 2 3 w), shiftr_low_pow2.
+  unfold memsize. intros.
+  rewrite <- (recompose_bytes (2^w*8) (setmem _ _ _ _ _ _)), setmem_highbits.
+  change 8 with (2^3). rewrite <- (N.pow_add_r 2 w 3), shiftr_low_pow2.
     rewrite N.shiftl_0_l, N.lor_0_r, N.pow_add_r. apply mp2_mod_lt.
     rewrite N.pow_add_r. assumption.
 Qed.
@@ -769,7 +769,7 @@ Qed.
 
 Theorem typesafe_getmem:
   forall w len m a e,
-  getmem w e len m a < 2 ^ (8*len).
+  getmem w e len m a < 2 ^ (len*8).
 Proof.
   intros. apply getmem_bound.
 Qed.
@@ -824,7 +824,7 @@ Proof.
   apply typesafe_getmem.
 
   (* Store *)
-  rewrite fold_memsize. apply typesafe_setmem. rewrite <- fold_memsize. assumption.
+  apply typesafe_setmem. assumption.
 
   (* BinOp *)
   apply typesafe_binop; assumption.
@@ -1033,7 +1033,7 @@ Qed.
 Lemma models_reset_temps:
   forall s2 s1 (MDL: models archtyps s2), models archtyps (reset_temps s1 s2).
 Proof.
-  intros. intros v w H. unfold reset_temps. rewrite H. apply MDL, H.
+  intros. intros v w H. unfold reset_temps, reset_vars. rewrite H. apply MDL, H.
 Qed.
 
 Theorem preservation_exec_prog:
@@ -1071,9 +1071,9 @@ Proof.
 Qed.
 
 Remark shiftl1_3pn:
-  forall n, N.shiftl 1 (3+n) = 8*2^n.
+  forall n, N.shiftl 1 (3+n) = 2^n*8.
 Proof.
-  intro. rewrite N.shiftl_1_l, N.pow_add_r. reflexivity.
+  intro. rewrite N.shiftl_1_l, N.pow_add_r, N.mul_comm. reflexivity.
 Qed.
 
 Theorem typchk_exp_sound:
@@ -1095,7 +1095,7 @@ Proof.
   destruct (typchk_exp e2 c) as [w2|]; try discriminate.
   destruct (_ <=? _) eqn:EQ1; [|discriminate].
   destruct (_ =? _) eqn:EQ2; [|discriminate].
-  rewrite N.mul_comm in H. inversion H. rewrite N.mul_comm.
+  rewrite N.mul_comm in H. inversion H.
   rewrite shiftl1_3pn in EQ2. apply N.eqb_eq in EQ2. subst.
   rewrite <- shiftl1_3pn, N.add_comm, <- N.shiftl_shiftl, N.shiftr_shiftl_l,
           N.sub_diag, N.shiftl_0_r, N.shiftl_1_l in EQ1 by reflexivity.
@@ -1120,7 +1120,7 @@ Proof.
     apply N.leb_le, EQ0.
     apply IHe1. rewrite <- shiftl1_3pn. reflexivity.
     apply IHe2. reflexivity.
-    apply IHe3. reflexivity.
+    apply IHe3. rewrite N.mul_comm. reflexivity.
 
   (* BinOp *)
   specialize (IHe1 c). specialize (IHe2 c).

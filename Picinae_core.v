@@ -121,20 +121,20 @@ Inductive endianness : Type := BigE | LittleE.
 
 (* Interpret a number N as an entire virtual address space. *)
 Definition getbyte (m:memory) (a:addr) (w:bitwidth) :=
-  xbits m (8*(a mod 2^w)) (8*N.succ (a mod 2^w)).
+  xbits m ((a mod 2^w)*8) (N.succ (a mod 2^w) * 8).
 Definition setbyte (m:memory) (a:addr) (n:N) (w:bitwidth) :=
-  N.lor (N.ldiff m (N.shiftl (N.ones 8) (8 * (a mod 2^w))))
-        (N.shiftl (n mod 2^8) (8 * (a mod 2^w))).
+  N.lor (N.ldiff m (N.shiftl (N.ones 8) ((a mod 2^w) * 8)))
+        (N.shiftl (n mod 2^8) ((a mod 2^w)*8)).
 
 (* Interpret len bytes at address a of memory m as an e-endian number. *)
-Definition getmem_big w m len rec a := N.lor (rec (N.succ a)) (N.shiftl (getbyte m a w) (8*len)).
+Definition getmem_big w m len rec a := N.lor (rec (N.succ a)) (N.shiftl (getbyte m a w) (len*8)).
 Definition getmem_little w m (len:bitwidth) rec a := N.lor (getbyte m a w) (N.shiftl (rec (N.succ a)) 8).
 Definition getmem (w:bitwidth) (e:endianness) (len:bitwidth) (m:memory) : addr -> N :=
   N.recursion (fun _ => N0) (match e with BigE => getmem_big | LittleE => getmem_little end w m) len.
 
 (* Store v as a len-byte, e-endian number at address a of memory m. *)
 Definition setmem_big w len rec m a v : N :=
-  rec (setbyte m a (N.shiftr v (8*len)) w) (N.succ a) (v mod 2^(8*len)).
+  rec (setbyte m a (N.shiftr v (len*8)) w) (N.succ a) (v mod 2^(len*8)).
 Definition setmem_little w (len:N) rec m a v : N :=
   rec (setbyte m a v w) (N.succ a) (N.shiftr v 8).
 Definition setmem (w:bitwidth) (e:endianness) (len:bitwidth) : memory -> addr -> N -> memory :=
@@ -334,14 +334,14 @@ Inductive eval_exp (c:typctx) (s:store): exp -> N -> bitwidth -> Prop :=
 | EVar v w (TYP: c v = Some w): eval_exp c s (Var v) (s v) w
 | EWord n w: eval_exp c s (Word n w) n w
 | ELoad e1 e2 en len w m a
-        (E1: eval_exp c s e1 m (8*2^w)) (E2: eval_exp c s e2 a w)
+        (E1: eval_exp c s e1 m (2^w*8)) (E2: eval_exp c s e2 a w)
         (R: forall n, n < len -> mem_readable s ((a+n) mod 2^w)):
-        eval_exp c s (Load e1 e2 en len) (getmem w en len m a) (8*len)
+        eval_exp c s (Load e1 e2 en len) (getmem w en len m a) (len*8)
 | EStore e1 e2 e3 en len w m a v
-         (E1: eval_exp c s e1 m (8*2^w)) (E2: eval_exp c s e2 a w)
-         (E3: eval_exp c s e3 v (8*len))
+         (E1: eval_exp c s e1 m (2^w*8)) (E2: eval_exp c s e2 a w)
+         (E3: eval_exp c s e3 v (len*8))
          (W: forall n, n < len -> mem_writable s ((a+n) mod 2^w)):
-         eval_exp c s (Store e1 e2 e3 en len) (setmem w en len m a v) (8*2^w)
+         eval_exp c s (Store e1 e2 e3 en len) (setmem w en len m a v) (2^w*8)
 | EBinOp bop e1 e2 n1 n2 w (E1: eval_exp c s e1 n1 w) (E2: eval_exp c s e2 n2 w):
          eval_exp c s (BinOp bop e1 e2) (eval_binop bop w n1 n2) (widthof_binop bop w)
 | EUnOp uop e1 n1 w (E1: eval_exp c s e1 n1 w):
@@ -385,8 +385,9 @@ Inductive exec_stmt (c:typctx) (s:store): stmt -> typctx -> store -> option exit
 (* A program execution is a trace of consecutive statement executions. *)
 Definition trace := list (exit * store).
 
-Definition reset_temps (s s':store) v :=
-  match archtyps v with None => s | Some _ => s' end v.
+Definition reset_vars (c:typctx) (s s':store) v :=
+  match c v with None => s | Some _ => s' end v.
+Definition reset_temps := reset_vars archtyps.
 
 Inductive can_step (p:program): ((exit*store) * (exit*store)) -> Prop :=
 | CanStep a s sz q c' s' x (LU: p s a = Some (sz,q)) (XS: exec_stmt archtyps s q c' s' x):

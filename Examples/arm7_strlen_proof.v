@@ -90,24 +90,24 @@ Proof.
   apply N.Div0.mod_le.
 Qed.
 
-Lemma getbyte:
+Lemma getmem_byte:
   forall len m a,
   getmem 32 LittleE (N.succ len) m a .& (N.ones 8 << (8*len)) = m Ⓑ[a+len] << (8*len).
 Proof.
-  intros. rewrite <- N.add_1_r, getmem_split, N.land_lor_distr_l, <- N.shiftl_land.
+  intros. rewrite <- N.add_1_r, getmem_split, N.mul_comm, N.land_lor_distr_l, <- N.shiftl_land.
   rewrite N.land_ones, N.mod_small by apply getmem_bound. replace (_.&_) with 0. reflexivity.
   symmetry. apply N.bits_inj_0. intro b.
   rewrite N.land_spec. destruct (N.lt_ge_cases b (8*len)).
     rewrite N.shiftl_spec_low by assumption. apply Bool.andb_false_r.
-    erewrite bound_hibits_zero. reflexivity. apply getmem_bound. assumption.
+    erewrite bound_hibits_zero. reflexivity. apply getmem_bound. rewrite N.mul_comm. assumption.
 Qed.
 
-Lemma getbyte':
+Lemma getmem_byte':
   forall len m a, a mod 4 <= len ->
   (getmem 32 LittleE (N.succ len) m (a ⊖ a mod 4) .| N.ones (a mod 4 * 8)) .& (N.ones 8 << (8*len)) =
   m Ⓑ[a ⊖ a mod 4 + len] << (8*len).
 Proof.
-  intros. rewrite N.land_lor_distr_l. rewrite getbyte. replace (_.&_) with 0. apply N.lor_0_r.
+  intros. rewrite N.land_lor_distr_l. rewrite getmem_byte. replace (_.&_) with 0. apply N.lor_0_r.
   symmetry. apply N.bits_inj_0. intro b.
   rewrite N.land_spec. destruct (N.lt_ge_cases b (a mod 4 * 8)).
     rewrite N.shiftl_spec_low. apply Bool.andb_false_r. eapply N.lt_le_trans. eassumption.
@@ -138,7 +138,7 @@ Proof.
   psimpl. destruct k as [|k].
     rewrite N.add_0_r in LT. apply N.lt_add_lt_sub_l in LT. specialize (NN _ LT).
     apply N.eqb_neq in NN. intro H. apply NN.
-    rewrite getbyte'. psimpl. rewrite H. apply N.shiftl_0_l. apply N.le_add_r.
+    rewrite getmem_byte'. psimpl. rewrite H. apply N.shiftl_0_l. apply N.le_add_r.
   destruct (N.lt_ge_cases i (4*N.pos k - p mod 4)) as [H1|H1]. apply NF. assumption.
   assert (H2: p mod 4 <= 4 * N.pos k). transitivity 4.
     apply N.lt_le_incl, N.mod_lt. discriminate 1.
@@ -146,7 +146,7 @@ Proof.
   rewrite <- N.add_sub_assoc in LT by assumption.
   rewrite <- (N.sub_add _ _ H1) in LT. apply N.add_lt_mono_r in LT.
   specialize (NN _ LT). apply N.eqb_neq in NN. intro H'. apply NN.
-  rewrite <- add_msub_swap, <- add_msub_assoc, getmem_mod_l, getbyte.
+  rewrite <- add_msub_swap, <- add_msub_assoc, getmem_mod_l, getmem_byte.
   rewrite <- N.add_assoc, <- (getmem_mod_l _ _ 1), <- ofZ_toZ, !toZ_add, toZ_msub, !toZ_sub by assumption.
   rewrite <- !toZ_msub, <- !toZ_add, ofZ_toZ. psimpl. rewrite H'. apply N.shiftl_0_l.
 Qed.
@@ -181,9 +181,9 @@ Proof.
         apply nilfree_mod, nilfree_extend; try assumption. apply N.lt_le_incl, J4.
       rewrite <- N.add_assoc, <- add_msub_assoc, N.add_comm, getmem_mod_l,
               <- (N.shiftr_0_l (8*j)), <- NIL. destruct k as [|k].
-        rewrite getbyte', N.add_0_r by exact JP1.
+        rewrite getmem_byte', N.add_0_r by exact JP1.
           rewrite N.shiftr_shiftl_l, N.sub_diag, N.shiftl_0_r; reflexivity.
-        rewrite getbyte, (N.add_comm p), <- add_msub_assoc, (N.add_comm (4*_)).
+        rewrite getmem_byte, (N.add_comm p), <- add_msub_assoc, (N.add_comm (4*_)).
           rewrite N.shiftr_shiftl_l, N.sub_diag, N.shiftl_0_r; reflexivity.
 
     (* Weird special case:  Strlen never terminates after exceeding 2^32 bytes because
@@ -197,7 +197,7 @@ Proof.
         transitivity 4. assumption. reflexivity.
         etransitivity; [|eassumption]. apply N.le_add_r.
       apply N.le_add_le_sub_l, JP2.
-    rewrite getbyte, <- add_msub_swap, <- add_msub_assoc,
+    rewrite getmem_byte, <- add_msub_swap, <- add_msub_assoc,
             <- getmem_mod_l, mp2_add_l, <- N.add_assoc, <- mp2_add_r, getmem_mod_l in NIL.
     apply N.shiftl_eq_0_iff in NIL. rewrite <- NIL.
     rewrite <- getmem_mod_l. rewrite <- mp2_add_r, <- msub_sub by assumption.

@@ -566,8 +566,8 @@ Fixpoint simpl_bounds mvt e {struct e} : N * option N :=
                          (N.shiftl lo1 lo2, match ohi1 with None => None | Some hi1 => option_map (N.shiftl hi1) ohi2 end)
   | SIMP_Popcount e1 | SIMP_Size e1 => (0, option_map N.size (snd (simpl_bounds mvt e1)))
   | SIMP_Parity8 _ => (0, Some 1)
-  | SIMP_GetMem _ _ len m _ => (0, Some (N.ones (8*len)))
-  | SIMP_SetMem _ _ _ _ _ _ => (0, None) (* return None since 2^(Mb*2^w) is unsafely large *)
+  | SIMP_GetMem _ _ len m _ => (0, Some (N.ones (len*8)))
+  | SIMP_SetMem _ _ _ _ _ _ => (0, None) (* return None since 2^(2^w*8) is unsafely large *)
   | SIMP_IteNN _ e1 e2 | SIMP_IteBN _ e1 e2 =>
       let (lo1,ohi1) := simpl_bounds mvt e1 in let (lo2,ohi2) := simpl_bounds mvt e2 in
       (N.min lo1 lo2, match ohi1 with None => None | Some hi1 => option_map (N.max hi1) ohi2 end)
@@ -2344,7 +2344,7 @@ Proof.
     rewrite update_frame by assumption. apply H.
 
   (* ResetTemps *)
-  unfold reset_temps. destruct (archtyps v).
+  unfold reset_temps, reset_vars. destruct (archtyps v).
     apply H0.
     apply H.
 Qed.
@@ -2498,7 +2498,7 @@ Proof.
     rewrite update_frame by assumption. apply H. assumption.
 
   (* ResetTemps *)
-  cbn [eval_sastS]. unfold reset_temps. cbn [var_multiple_of_pow2] in H1.
+  cbn [eval_sastS]. unfold reset_temps, reset_vars. cbn [var_multiple_of_pow2] in H1.
   destruct (archtyps v).
     apply H0. assumption.
     apply H. assumption.
@@ -2614,7 +2614,7 @@ Proof.
     destruct (v == v0).
       subst v0. symmetry. apply update_updated.
       cbn [eval_sastS]. rewrite update_frame; assumption.
-    cbn [eval_sastS]. unfold reset_temps. destruct (archtyps v); assumption.
+    cbn [eval_sastS]. unfold reset_temps, reset_vars. destruct (archtyps v); assumption.
 Qed.
 Local Hint Resolve simpl_readvar_sound : picinae_simpl.
 
@@ -2622,7 +2622,7 @@ Lemma reset_temps_distr:
   forall s1 s2 v, reset_temps s1 s2 v =
   if archtyps v then s2 v else s1 v.
 Proof.
-  intros. unfold reset_temps. destruct (archtyps v); reflexivity.
+  intros. unfold reset_temps, reset_vars. destruct (archtyps v); reflexivity.
 Qed.
 
 Theorem sastS_remove_vars_sound:
@@ -2638,7 +2638,7 @@ Proof.
         rewrite <- IHe2, <- IHe1. destruct (archtyps v).
           erewrite sastS_eq_sound by exact EQ. reflexivity.
           reflexivity.
-        simpl. unfold reset_temps. destruct (archtyps v).
+        simpl. unfold reset_temps, reset_vars. destruct (archtyps v).
           apply IHe2.
           apply IHe1.
 Qed.
@@ -2973,9 +2973,9 @@ Proof.
   destruct simpl_bounds as (lo,ohi). destruct (match ohi with Some 0 => _ | _ => _ end) eqn:H.
     destruct ohi as [[|hi]|]; try discriminate. apply proj2, N.le_0_r in SB. apply SB.
     clear lo ohi SB H. destruct_matches_def SIMP_NVar; try reflexivity.
-      rewrite simpl_getmem_len_sound. cbn [eval_sastN]. rewrite simpl_add_sound. replace (N.pos p) with (8*n2).
+      rewrite simpl_getmem_len_sound. cbn [eval_sastN]. rewrite simpl_add_sound. replace (N.pos p) with (n2*8).
         cbn [eval_sastN]. apply shiftr_getmem.
-        assert (DIV := N.div_eucl_spec (N.pos p) 8). rewrite Heqm6, N.add_0_r in DIV. symmetry. exact DIV.
+        assert (DIV := N.div_eucl_spec (N.pos p) 8). rewrite Heqm6, N.add_0_r, N.mul_comm in DIV. symmetry. exact DIV.
       apply N.shiftr_0_l.
 Qed.
 
@@ -3513,7 +3513,7 @@ Proof.
   symmetry. unfold simpl_joinbytes. destruct en;
     rewrite simpl_lor_sound; cbn [eval_sastN];
     rewrite simpl_shiftl_sound; cbn [eval_sastN];
-    rewrite E1, E2;
+    rewrite E1, E2, N.mul_comm;
     apply getmem_split.
 Qed.
 
@@ -3523,7 +3523,7 @@ Theorem simpl_xbytes_sound:
          eval_sastN mvt (sx w2) mod 2^w1 = eval_sastN mvt (sx w') mod 2^w1)
     (H2: ylen <= xlen - i) (H3: xlen <= 2^w),
   eval_sastN mvt (simpl_xbytes mvt en sx xlen i ylen) =
-  getmem w en ylen (setmem w en xlen m a (eval_sastN mvt (sx (8*xlen)))) (a+i).
+  getmem w en ylen (setmem w en xlen m a (eval_sastN mvt (sx (xlen*8)))) (a+i).
 Proof.
   intros. unfold simpl_xbytes.
   destruct ylen as [|ylen']. reflexivity. set (ylen := N.pos ylen') in *. clearbody ylen. clear ylen'.
@@ -3535,10 +3535,10 @@ Proof.
 
     rewrite simpl_shiftr_sound. cbn [eval_sastN].
     rewrite shiftr_mod_xbits, <- N.mul_add_distr_l, N.sub_add, xbits_equiv by assumption.
-    rewrite (H1 (8*xlen));
+    rewrite (H1 (xlen*8));
     [| reflexivity
-     | rewrite N.mul_sub_distr_l; apply N.le_sub_l ].
-    rewrite <- xbits_equiv.
+     | rewrite N.mul_comm, N.mul_sub_distr_r; apply N.le_sub_l ].
+    rewrite <- xbits_equiv, !(N.mul_comm 8).
     rewrite <- (N.sub_add ylen (xlen-i)) at 2 by assumption.
     rewrite <- (getmem_setmem_xbits w BigE ylen i _ m a).
       rewrite <- N.add_comm, (N.add_comm i), N.add_assoc, N.sub_add by assumption.
@@ -3552,10 +3552,10 @@ Proof.
       rewrite (proj2 (N.sub_0_le _ _) H) in H2. apply N.le_0_r in H2. rewrite H2.
       rewrite getmem_0, <- xbits_equiv. apply xbits_none. reflexivity.
     eapply N.add_le_mono_r in H2. rewrite N.sub_add, N.add_comm in H2 by assumption.
-    rewrite (H1 (8*xlen));
+    rewrite (H1 (xlen*8));
     [| reflexivity
-     | rewrite N.add_comm; apply N.mul_le_mono_l, H2 ].
-    rewrite <- xbits_equiv, (N.add_comm ylen i).
+     | rewrite N.mul_comm, N.add_comm; apply N.mul_le_mono_r, H2 ].
+    rewrite <- xbits_equiv, (N.add_comm ylen i), !(N.mul_comm 8).
     rewrite <- (getmem_setmem_xbits w LittleE ylen i (xlen-(i+ylen)) m a).
       rewrite N.add_sub_assoc, (N.add_comm _ xlen), N.add_sub by assumption. reflexivity.
       rewrite N.sub_add_distr, N.sub_add by apply N.le_add_le_sub_l, H2. etransitivity.
@@ -3824,7 +3824,7 @@ Proof.
   clearbody len'. destruct (_ <=? _) eqn:LE2. reflexivity.
   rewrite (proj2 (IHe1 w')). cbn [eval_sastN].
   replace n with (N.min (8*len') n) by apply N.min_r, LE1.
-  rewrite <- !mp2_mod_mod_min. destruct en; cbn [eval_sastN];
+  rewrite <- !mp2_mod_mod_min, N.mul_comm. destruct en; cbn [eval_sastN];
     rewrite !getmem_mod, N.min_id, 1?N.sub_diag, 1?N.add_0_r, N.min_r
       by apply N.lt_le_incl, N.leb_gt, LE2;
     reflexivity.
@@ -3986,8 +3986,8 @@ Local Hint Resolve simpl_land_sound : picinae_simpl.
 
 Theorem simpl_setmem_cancel_sound:
   forall mvt w len a m a' (LE: len <= msub w a' (eval_sastN mvt a) \/ 2^w <= a'),
-  xbits (eval_sastN mvt (simpl_setmem_cancel mvt w len a m)) (8*a') (8*N.succ a') =
-  xbits (eval_sastN mvt m) (8*a') (8*N.succ a').
+  xbits (eval_sastN mvt (simpl_setmem_cancel mvt w len a m)) (a'*8) (N.succ a'*8) =
+  xbits (eval_sastN mvt m) (a'*8) (N.succ a'*8).
 Proof.
   induction m; intros; try reflexivity.
 
@@ -4032,7 +4032,7 @@ Theorem simpl_setmem_sound:
   forall mvt en w len m a n,
   eval_sastN mvt (simpl_setmem mvt w en len m a n) = eval_sastN mvt (SIMP_SetMem w en len m a n).
 Proof.
-  intros. simpl. unfold simpl_setmem. rewrite N.shiftl_1_l.
+  intros. simpl. unfold simpl_setmem. rewrite N.shiftl_1_l, N.mul_comm.
   destruct (_ <=? _) eqn:LEN.
 
     apply N.leb_le in LEN.

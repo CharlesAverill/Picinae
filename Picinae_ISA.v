@@ -45,6 +45,7 @@ Open Scope N.
 (* getmem and setmem can potentially explode out of control when Coq checks
    term convertibility, so set them Opaque by default for most proofs. (The
    user can use the Transparent command to undo this, but be cautious!) *)
+Global Opaque memsize.
 Global Opaque getmem.
 Global Opaque setmem.
 

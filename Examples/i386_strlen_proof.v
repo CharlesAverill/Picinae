@@ -460,7 +460,7 @@ Proof.
   rewrite N.bits_0, N.land_spec in TST.
   rewrite <- extract_bit in TST.
   rewrite <- TST.
-  rewrite getmem_split, <- N.shiftr_div_pow2, N.shiftr_lor.
+  rewrite getmem_split, <- N.shiftr_div_pow2, N.shiftr_lor, (N.mul_comm 8).
   rewrite N.shiftr_shiftl_l by reflexivity.
   rewrite N.sub_diag, N.shiftl_0_r, N.shiftr_div_pow2.
   rewrite N.div_small by apply getmem_bound.
@@ -468,7 +468,7 @@ Proof.
   rewrite N.Div0.mod_mul.
   rewrite N.lor_0_r.
   rewrite N.mod_small by apply getmem_bound.
-  rewrite <- (N.mul_1_r 8) at 2. rewrite <- N.mul_add_distr_l. rewrite testbit_onesm1_true.
+  rewrite <- (N.mul_1_l 8) at 2. rewrite <- N.mul_add_distr_r, N.mul_comm. rewrite testbit_onesm1_true.
     rewrite Bool.andb_true_r. reflexivity.
     discriminate 1.
     rewrite N.add_1_l. apply N.succ_0_discr.
@@ -476,20 +476,20 @@ Proof.
 
   rewrite Ones_split, getmem_split in GM.
   rewrite lor_plus in GM by apply land_lohi_0, getmem_bound.
-  rewrite N.shiftl_mul_pow2 in GM.
-  apply (N.Div0.div_le_mono _ _ (2^(8*i))) in GM.
+  rewrite N.shiftl_mul_pow2, (N.mul_comm 8) in GM.
+  apply (N.Div0.div_le_mono _ _ (2^(i*8))) in GM.
   do 2 rewrite N.div_add in GM by (apply N.pow_nonzero; discriminate 1).
-  rewrite N.div_small in GM by apply Ones_bound.
-  rewrite N.div_small in GM by apply getmem_bound.
+  rewrite N.mul_comm, N.div_small in GM by apply Ones_bound.
+  rewrite N.mul_comm, N.div_small in GM by apply getmem_bound.
   apply N.le_succ_l. rewrite <- N.add_1_r, <- Ones_succ, getmem_split.
   rewrite lor_plus by apply land_lohi_0, getmem_bound.
   rewrite N.shiftl_mul_pow2.
-  rewrite N.div_add by (apply N.pow_nonzero; discriminate 1).
+  rewrite (N.mul_comm 8), N.div_add by (apply N.pow_nonzero; discriminate 1).
   rewrite N.div_small by apply getmem_bound.
   exact GM.
 
   rewrite getmem_split, <- N.land_ones, N.land_lor_distr_l, N.land_ones, N.land_ones, N.shiftl_mul_pow2.
-  rewrite N.Div0.mod_mul.
+  rewrite N.mul_comm, N.Div0.mod_mul.
   rewrite N.mod_small by apply getmem_bound.
   rewrite N.lor_0_r. apply bytes_pos_lobound. exact IHi.
 
@@ -600,7 +600,7 @@ Proof.
     rewrite N.add_comm in TST.
     rewrite getmem_split in TST.
     rewrite <- N.shiftr_div_pow2, N.shiftr_lor in TST.
-    rewrite shiftr_low_pow2 in TST by apply getmem_bound.
+    rewrite N.mul_comm, shiftr_low_pow2 in TST by apply getmem_bound.
     rewrite N.shiftr_shiftl_l in TST by reflexivity.
     rewrite N.lor_0_l, N.sub_diag, N.shiftl_0_r in TST.
     rewrite N.sub_succ_l in TST by (etransitivity; [ apply N.le_pred_l | exact JW ]).
@@ -622,7 +622,7 @@ Proof.
 
   rewrite <- (N.sub_add (N.pred (N.pos j)) (N.succ (Pos.pred_N w))) by apply N.le_le_pred, N.le_le_succ_r, JW.
   rewrite N.add_comm, getmem_split, <- N.land_ones, N.land_lor_distr_l, N.land_ones.
-  rewrite N.mod_small by apply getmem_bound.
+  rewrite N.mul_comm, N.mod_small by apply getmem_bound.
   rewrite N.land_ones, N.shiftl_mul_pow2, N.Div0.mod_mul, N.lor_0_r. exact LOJ.
 
   rewrite N.mul_succ_r, N.add_comm.

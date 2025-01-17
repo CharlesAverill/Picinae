@@ -353,14 +353,14 @@ Proof.
     (* end loop 3 (2nd exit point) *)
     step. step; cycle 1.
     repeat step. split. assumption. psimpl.
-      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (_*1) with 8. rewrite R1C, !setmem_mod_r.
+      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*8) with 8. rewrite R1C, !setmem_mod_r.
       apply (filled_n_more 1%nat len); try assumption.
         intros i H. apply N.lt_1_r in H. rewrite H, msub_0_r, msub_mod_pow2. assumption.
 
     (* end loop 3 (3rd exit point) *)
     step. step; cycle 1.
     repeat step. split. assumption. psimpl.
-      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (_*1) with 8. rewrite R1C, !setmem_mod_r.
+      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*_) with 8. rewrite R1C, !setmem_mod_r.
       rewrite <- (N.add_assoc 1). apply (filled_n_more 2%nat len); try assumption.
         intros i H. apply (N.lt_succ_r _ 1), N.le_1_r in H. destruct H; subst i.
           rewrite msub_0_r, msub_mod_pow2. assumption.
@@ -369,7 +369,7 @@ Proof.
     (* end loop 3 (4th exit point) *)
     step. step; cycle 1.
     repeat step. split. assumption. psimpl.
-      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (_*1) with 8. rewrite R1C, !setmem_mod_r.
+      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*_) with 8. rewrite R1C, !setmem_mod_r.
       rewrite <- !(N.add_assoc _ p k). apply (filled_n_more 3%nat len); try assumption.
         intros i H. apply (N.lt_succ_r _ 2), N.le_lteq in H. destruct H.
           apply (N.lt_succ_r _ 1), N.le_1_r in H. destruct H; subst i.
@@ -383,7 +383,7 @@ Proof.
       rewrite <- msub_add_distr in BC0,BC1,BC2. rewrite N.add_comm. change 4 with (1+1+1+1).
       repeat (rewrite 1?N.add_assoc; apply checked_add_true; try assumption).
     repeat eexists; psimpl; try (assumption || reflexivity).
-      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (_*1) with 8. rewrite R1C, !setmem_mod_r.
+      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*_) with 8. rewrite R1C, !setmem_mod_r.
         change (2+p) with (1+1+p). change (3+p) with (1+1+1+p).
         rewrite <- !(N.add_assoc 1), !N.add_1_l, <- !N.add_succ_r.
         rewrite !filled_succ by apply mp2_mod_lt.

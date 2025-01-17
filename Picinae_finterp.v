@@ -851,8 +851,11 @@ Proof.
   (* Var *)
   assumption.
 
+  (* Load *)
+  rewrite N.mul_comm. reflexivity.
+
   (* Store *)
-  eapply IHe1; eassumption.
+  eapply IHe1. eassumption.
 
   (* BinOp *)
   destruct b; solve
@@ -931,7 +934,7 @@ Proof.
   destruct (feval_exp _ _ _ _ e1 _ _) as (n1,ma1). destruct IHe1 as [H M1]. subst n1.
   destruct (feval_exp _ _ _ _ e2 _ _) as (n2,ma2). destruct IHe2 as [H M2]. subst n2.
   unfold feval_exptyp'. erewrite feval_exptyp_sound; [|eassumption].
-  rewrite N.mul_comm, <- (N.shiftl_mul_pow2 _ 3), N.shiftr_shiftl_l, N.shiftl_0_r,
+  rewrite <- (N.shiftl_mul_pow2 _ 3), N.shiftr_shiftl_l, N.shiftl_0_r,
           N.log2_pow2 by (reflexivity || apply N.le_0_l).
   split.
     reflexivity.
@@ -948,7 +951,7 @@ Proof.
   destruct (feval_exp _ _ _ _ e2 _ _) as (n2,ma2). destruct IHe2 as [H M2]. subst n2.
   destruct (feval_exp _ _ _ _ e3 _ _) as (n3,ma3). destruct IHe3 as [H M3]. subst n3.
   unfold feval_exptyp'. erewrite feval_exptyp_sound; [|eassumption].
-  rewrite N.mul_comm, <- (N.shiftl_mul_pow2 _ 3), N.shiftr_shiftl_l, N.shiftl_0_r,
+  rewrite <- (N.shiftl_mul_pow2 _ 3), N.shiftr_shiftl_l, N.shiftl_0_r,
           N.log2_pow2 by (reflexivity || apply N.le_0_l).
   split.
     reflexivity.
@@ -1225,19 +1228,19 @@ Lemma remove_temps_sound:
   forall l s,
   reset_temps s (updstr s l update) = updstr s (feval_remove_temps l) update.
 Proof.
-  induction l as [|[v n w] l]; intros; extensionality v0; simpl; unfold reset_temps.
+  induction l as [|[v n w] l]; intros; extensionality v0; simpl; unfold reset_temps, reset_vars.
     destruct (archtyps v0); reflexivity.
     destruct (v0 == v).
       subst v0. destruct (archtyps v) eqn:CV; simpl.
         rewrite !update_updated. reflexivity.
-        rewrite <- IHl. unfold reset_temps. rewrite CV. reflexivity.
+        rewrite <- IHl. unfold reset_temps, reset_vars. rewrite CV. reflexivity.
       destruct (archtyps v) eqn:CV.
-        simpl. rewrite update_frame, <- IHl by assumption. unfold reset_temps.
+        simpl. rewrite update_frame, <- IHl by assumption. unfold reset_temps, reset_vars.
           destruct (archtyps v0). apply update_frame. assumption. reflexivity.
         destruct (archtyps v0) eqn:CV0.
-          rewrite update_frame, <- IHl by assumption. unfold reset_temps.
+          rewrite update_frame, <- IHl by assumption. unfold reset_temps, reset_vars.
             rewrite CV0. reflexivity.
-          rewrite <- IHl. unfold reset_temps. rewrite CV0. reflexivity.
+          rewrite <- IHl. unfold reset_temps, reset_vars. rewrite CV0. reflexivity.
 Qed.
 
 Corollary reduce_stmt:

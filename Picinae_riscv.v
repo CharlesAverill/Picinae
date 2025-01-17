@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2025 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -410,7 +410,7 @@ Proof.
 Qed.
 
 Lemma hastyp_r5store:
-  forall e (TE: hastyp_exp rvtypctx e (8*2^32)),
+  forall e (TE: hastyp_exp rvtypctx e (2^32*8)),
   hastyp_stmt rvtypctx rvtypctx (Move V_MEM32 e) rvtypctx.
 Proof.
   intros. erewrite store_upd_eq at 3.
