@@ -8,6 +8,12 @@ Picinae_simplifier_v1_1.v
 Picinae_ISA.v
 Picinae_i386.v
 Picinae_armv7.v
+Picinae_armv8.v
 Picinae_riscv.v
 Picinae_amd64.v
-Picinae_armv8_pcode.v
+Picinae_armv8.v
+Picinae_pilbox32.v
+Picinae_numbers.v
+
+Examples/i386_strlen.v
+Examples/i386_strcmp.v

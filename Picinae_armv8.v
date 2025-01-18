@@ -120,13 +120,16 @@ Module IL_arm8 := PicinaeIL ARM8Arch.
 Export IL_arm8.
 Module Theory_arm8 := PicinaeTheory IL_arm8.
 Export Theory_arm8.
+
 Module Statics_arm8 := PicinaeStatics IL_arm8 Theory_arm8.
 Export Statics_arm8.
 Module FInterp_arm8 := PicinaeFInterp IL_arm8 Theory_arm8 Statics_arm8.
 Export FInterp_arm8.
 Module PSimpl_arm8 := Picinae_Simplifier_Base IL_arm8.
 Export PSimpl_arm8.
+
 Module PSimpl_arm8_v1_1 := Picinae_Simplifier_v1_1 IL_arm8 Theory_arm8 Statics_arm8 FInterp_arm8.
+
 Ltac PSimpl_arm8.PSimplifier ::= PSimpl_arm8_v1_1.PSimplifier.
 
 (* To use a different simplifier version (e.g., v1_0) put the following atop
@@ -151,6 +154,26 @@ Theorem memacc_respects_arm8typctx: memacc_respects_typctx arm8typctx.
 Proof.
   intros s1 s2 RV. rewrite <- RV. split; reflexivity.
 Qed.
+
+(* Declare which context values are used to define store equivalence *)
+Definition arm8equivctx (id:var) : bool :=
+  match id with
+  | V_MEM32 | V_MEM64
+  | R_X0 | R_X1 | R_X2 | R_X3 | R_X4 | R_X5 | R_X6 | R_X7 | R_X8 | R_X9 | R_X10
+  | R_X11 | R_X12 | R_X13 | R_X14 | R_X15 | R_X16 | R_X17 | R_X18 | R_X19 | R_X20
+  | R_X21 | R_X22 | R_X23 | R_X24 | R_X25 | R_X26 | R_X27 | R_X28 | R_X29 | R_X30
+  | R_SP | R_LR
+  | R_XZR
+  | R_Z0 | R_Z1 | R_Z2 | R_Z3 | R_Z4 | R_Z5 | R_Z6 | R_Z7 | R_Z8 | R_Z9 | R_Z10
+  | R_Z11 | R_Z12 | R_Z13 | R_Z14 | R_Z15 | R_Z16 | R_Z17 | R_Z18 | R_Z19 | R_Z20
+  | R_Z21 | R_Z22 | R_Z23 | R_Z24 | R_Z25 | R_Z26 | R_Z27 | R_Z28 | R_Z29 | R_Z30 | R_Z31
+    => true
+  | _ => false
+  end.
+Definition arm8equiv (s1 s2:store) :=
+  forall (v:arm8var), arm8equivctx v = true -> s1 v = s2 v.
+Definition arm8equiv_or (s1 s2:store) (or_exception : arm8var -> bool) :=
+  forall (v:arm8var), arm8equivctx v = true -> or_exception v = true \/ s1 v = s2 v.
 
 (* Simplify memory access propositions by observing that on arm, the only part
    of the store that affects memory accessibility are the page-access bits

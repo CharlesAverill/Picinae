@@ -224,96 +224,6 @@ Proof.
 Qed.
 
 
-Section Functional_choice.
-
-Definition fchoose {A B} (f:A->bool) (g h:A->B) (x:A) :=
-  if f x then h x else g x.
-
-Theorem fchoose_comm:
-  forall {A B} f (g h:A->B), fchoose f g h = fchoose (Basics.compose negb f) h g.
-Proof.
-  intros. extensionality x. unfold fchoose, Basics.compose. destruct (f x); reflexivity.
-Qed.
-
-Theorem fchoose_sup_l:
-  forall {A B} f1 f2 (g h:A->B), (forall x, Bool.le (f1 x) (f2 x)) ->
-  fchoose f1 (fchoose f2 g h) h = fchoose f2 g h.
-Proof.
-  intros. extensionality x. specialize (H x). unfold fchoose. destruct (f1 x).
-    destruct (f2 x). reflexivity. discriminate.
-    reflexivity.
-Qed.
-
-Theorem fchoose_sup_r:
-  forall {A B} f1 f2 (g h:A->B), (forall x, Bool.le (f2 x) (f1 x)) ->
-  fchoose f1 g (fchoose f2 g h) = fchoose f2 g h.
-Proof.
-  intros. extensionality x. specialize (H x). unfold fchoose. destruct (f1 x).
-    reflexivity.
-    destruct (f2 x). discriminate. reflexivity.
-Qed.
-
-Theorem fchoose_revert:
-  forall {A B} f (g h:A->B),
-  fchoose f g (fchoose f h g) = g.
-Proof.
-  intros. extensionality v. unfold fchoose. destruct (f v); reflexivity.
-Qed.
-
-Theorem fchoose_overwrite_l:
-  forall {A B} f (g h h':A->B),
-  fchoose f (fchoose f g h) h' = fchoose f g h'.
-Proof.
-  intros. extensionality x. unfold fchoose. destruct (f x); reflexivity.
-Qed.
-
-Theorem fchoose_overwrite_r:
-  forall {A B} f (g h h':A->B),
-  fchoose f g (fchoose f h h') = fchoose f g h'.
-Proof.
-  intros. extensionality x. unfold fchoose. destruct (f x); reflexivity.
-Qed.
-
-Theorem fchoose_update_distr:
-  forall {A B} {eq:EqDec A} f g h (x:A) (y:B),
-  (fchoose f g h)[x:=y] = fchoose f (g[x:=y]) (h[x:=y]).
-Proof.
-  intros. extensionality x'. unfold fchoose. destruct (x' == x).
-    subst x'. rewrite update_updated. symmetry. destruct (f x); apply update_updated.
-    rewrite update_frame by assumption. symmetry. destruct (f x'); apply update_frame; assumption.
-Qed.
-
-Theorem fchoose_update_l:
-  forall {A B} {eq:EqDec A} f g h (x:A) (y:B), f x = true ->
-  fchoose f (g[x:=y]) h = fchoose f g h.
-Proof.
-  intros. unfold fchoose. extensionality x'. destruct (x' == x).
-    subst x'. rewrite H. reflexivity.
-    destruct (f x'). reflexivity. apply update_frame. assumption.
-Qed.
-
-Theorem fchoose_update_r:
-  forall {A B} {eq:EqDec A} f g h (x:A) (y:B), f x = false ->
-  fchoose f g (h[x:=y]) = fchoose f g h.
-Proof.
-  intros. unfold fchoose. extensionality x'. destruct (x' == x).
-    subst x'. rewrite H. reflexivity.
-    destruct (f x'). apply update_frame. assumption. reflexivity.
-Qed.
-
-Theorem fchoose_update_c:
-  forall {A B} {eq:EqDec A} f g h (x:A) b (y:B),
-  (fchoose (f[x:=b]) g h)[x:=y] = (fchoose f g h)[x:=y].
-Proof.
-  intros. extensionality x'. destruct (x' == x).
-    subst x'. rewrite !update_updated. reflexivity.
-    unfold fchoose. rewrite !update_frame by assumption. reflexivity.
-Qed.
-
-End Functional_choice.
-
-
-
 Section NInduction.
 
 (* Analogues of theorems about Pos.iter, but for N.iter. *)
@@ -813,8 +723,6 @@ Proof.
   intros. apply N.bits_inj. apply N.bits_inj_iff in H. intro n. specialize (H n).
   do 2 rewrite N.land_spec, N.lxor_spec. rewrite <- H, N.land_spec.
   repeat destruct (N.testbit _ n); reflexivity.
-Qed.
-
 Lemma succ_mod_swap:
   forall c b, N.succ c mod b = N.succ (c mod b) mod b.
 Proof.
@@ -941,10 +849,6 @@ Proof.
       apply N.lt_succ_r, N.pow_le_mono_r. discriminate. assumption.
 Qed.
 
-Theorem xbits_split2: forall i a b j x n : N,
-i <= a -> a <= b -> b <= j -> xbits x i j = n -> xbits x a b = xbits n (a-i) (b-i).
-Proof. Admitted.
-
 Corollary xbits_split_0:
   forall n i j,
   xbits n 0 (i+j) = N.lor (n mod 2^i) (N.shiftl (N.shiftr n i mod 2^j) i).
@@ -1046,25 +950,6 @@ Proof.
   unfold xbits. rewrite N.shiftr_eq_0.
     apply mp2_mod_0_l.
     apply N.log2_lt_pow2. reflexivity. assumption.
-Qed.
-
-Theorem xbits_mod:
-  forall n i j k, xbits (n mod 2^(i+k)) i j = xbits n i j mod 2^k.
-Proof.
-  intros.
-  destruct (N.le_ge_cases j i). rewrite !xbits_none by assumption. reflexivity.
-  rewrite xbits_equiv. unfold xbits.
-  rewrite !mp2_mod_mod_min, <- !N.land_ones.
-  apply N.bits_inj. intro b.
-  rewrite N.land_spec, !N.shiftr_spec', N.land_spec.
-  apply f_equal. rewrite !N_ones_spec_ltb.
-  destruct (_<?_) eqn:H'; symmetry.
-    eapply N.ltb_lt, N.add_lt_mono_r, N.lt_le_trans.
-      apply N.ltb_lt, H'.
-      rewrite <- (N.add_sub k i) at 2. rewrite N.sub_min_distr_r, N.add_comm, N.min_comm. apply N.sub_add_le.
-    eapply N.ltb_ge, N.add_le_mono_r.
-      rewrite <- N.add_min_distr_r, N.min_comm, N.add_comm, (N.sub_add _ _ H).
-      apply N.ltb_ge, H'.
 Qed.
 
 Theorem xbits_below:
@@ -4193,10 +4078,10 @@ Proof.
 
     simpl length.
     rewrite Nat.sub_succ_l, ith_cons by apply Nat.le_succ_l, H.
-    simpl. rewrite ith_app1 by (rewrite ?length_rev; assumption).
+    simpl. rewrite ith_app1 by (rewrite ?rev_length; assumption).
     apply IHl, H.
 
-    rewrite H. simpl. rewrite ith_app, length_rev, Nat.ltb_irrefl, Nat.sub_diag. reflexivity.
+    rewrite H. simpl. rewrite ith_app, rev_length, Nat.ltb_irrefl, Nat.sub_diag. reflexivity.
 Qed.
 
 Theorem length_remove {A}:
@@ -4230,7 +4115,7 @@ Theorem length_concat {A}:
 Proof.
   intros. rewrite <- (Nat.add_0_l (length _)). generalize O.
   induction l; intro. apply Nat.add_0_r.
-  simpl. rewrite length_app. rewrite <- IHl. apply Nat.add_assoc.
+  simpl. rewrite app_length. rewrite <- IHl. apply Nat.add_assoc.
 Qed.
 
 Theorem ith_concat1 {A}:
@@ -4434,9 +4319,9 @@ Qed.
 
 Theorem startof_prefix {A}:
   forall (xs xs':A) t t1 t2 (SPL: xs'::t = t2++xs::t1),
-  startof t xs' = startof t1 xs.
+  startof t1 xs = startof t xs'.
 Proof.
-  intros. rewrite <- startof_cons with (d:=xs'). rewrite SPL.
+  symmetry. rewrite <- startof_cons with (d:=xs'). rewrite SPL.
   apply startof_app.
 Qed.
 
@@ -4504,15 +4389,6 @@ Proof.
   induction t1; intros.
     assumption.
     apply IHt1. inversion FA. assumption.
-Qed.
-
-Theorem forallprefixes_nil_inv {A}:
-  forall P (t: list A) (FA: ForallPrefixes P t),
-  P nil.
-Proof.
-  intros.
-  rewrite <- (app_nil_r t) in FA. apply forallprefixes_app in FA.
-  inversion FA. assumption.
 Qed.
 
 End Traces.
@@ -4610,9 +4486,50 @@ Tactic Notation "focus_addr" constr(n) :=
                               | _ => idtac end).
 
 
+<<<<<<< HEAD
 Section MemTheory.
+=======
+
+Module Type PICINAE_THEORY (IL: PICINAE_IL).
+
+Import IL.
+Open Scope N.
+
+(* Define an alternative inductive principle for structural inductions on stmts
+   that works better for proving properties of *executed* stmts that might contain
+   repeat-loops.  The cases for all non-repeat forms are the same as Coq's default
+   stmt_ind principle, but properties P of repeat-loops are provable from assuming
+   that the expansion of the loop into a sequence satisfies P.
+ *)
+Theorem stmt_ind2 (P: stmt -> Prop):
+  P Nop ->
+  (forall v e, P (Move v e)) ->
+  (forall e, P (Jmp e)) ->
+  (forall i, P (Exn i)) ->
+  (forall q1 q2 (IHq1: P q1) (IHq2: P q2), P (Seq q1 q2)) ->
+  (forall e q1 q2 (IHq1: P q1) (IHq2: P q2), P (If e q1 q2)) ->
+  (forall e q (IHq1: P q) (IHq2: forall n, P (N.iter n (Seq q) Nop)), P (Rep e q)) ->
+  forall (q:stmt), P q.
+Proof.
+  intros. induction q.
+    assumption.
+    apply H0.
+    apply H1.
+    apply H2.
+    apply H3; assumption.
+    apply H4; assumption.
+    apply H5. assumption. apply Niter_invariant.
+      apply H.
+      intros. apply H3; assumption.
+Qed.
+
+
 Notation "x << y" := (N.shiftl x y) (at level 55, left associativity). (* logical shift-left *)
 Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logical shift-right *)
+
+Section StoreTheory.
+>>>>>>> 4c730b0 (All commits merged into one! Includes arm8_strspn, PILbox32, Picinae_numbers, theorem addition, funccall playground)
+
 (* The getmem/setmem memory accessors are defined as Peano recursions over N,
    rather than natural number recursions.  This is important for keeping proof
    terms small, but can make it more difficult to write inductive proofs.  To
@@ -4631,11 +4548,16 @@ Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logica
    (3) Unfold inductive cases (where len = N.succ _) using the getmem_succ
        or setmem_succ theorems. *)
 
-(* The upper bound for the numeric representation of virtual memory is
-   2^(2^w*8), which is a huge number that Coq must avoid expanding.
-   We therefore create a special name for it here, allowing proof
-   environments to set it Opaque. *)
-Definition memsize w := 2^(2^w*8).
+(* Memory sizes are huge, so make "pow2 x" an unexpanding alias for 2^x. *)
+Theorem memsize_sig: sig (fun pow2 => N.pow 2 = pow2).
+Proof. econstructor. reflexivity. Qed.
+Definition pow2 := proj1_sig memsize_sig.
+Theorem fold_pow2: N.pow 2 = pow2.
+Proof. apply (proj2_sig memsize_sig). Qed.
+
+Definition memsize w := pow2 (8*2^w).
+Theorem fold_memsize: forall w, 2^(8*2^w) = memsize w.
+Proof. unfold memsize. rewrite fold_pow2. reflexivity. Qed.
 
 (* Base cases for getmem/setmem *)
 Theorem getmem_0: forall w e m a, getmem w e N0 m a = N0.
@@ -4647,7 +4569,7 @@ Proof. reflexivity. Qed.
 (* Unfold getmem/setmem by one byte (for inductive cases of proofs). *)
 Theorem getmem_succ:
   forall w e len m a, getmem w e (N.succ len) m a =
-    match e with BigE => N.lor (getmem w e len m (N.succ a)) (N.shiftl (getbyte m a w) (len*8))
+    match e with BigE => N.lor (getmem w e len m (N.succ a)) (N.shiftl (getbyte m a w) (8*len))
                | LittleE => N.lor (getbyte m a w) (N.shiftl (getmem w e len m (N.succ a)) 8)
     end.
 Proof.
@@ -4659,7 +4581,7 @@ Qed.
 
 Theorem setmem_succ:
   forall w e len m a v, setmem w e (N.succ len) m a v =
-    match e with BigE => setmem w e len (setbyte m a (N.shiftr v (len*8)) w) (N.succ a) (v mod 2^(len*8))
+    match e with BigE => setmem w e len (setbyte m a (N.shiftr v (8*len)) w) (N.succ a) (v mod 2^(8*len))
                | LittleE => setmem w e len (setbyte m a v w) (N.succ a) (N.shiftr v 8)
     end.
 Proof.
@@ -4674,7 +4596,7 @@ Qed.
 Corollary getmem_1: forall w e m a, getmem w e 1 m a = getbyte m a w.
 Proof.
   intros. change 1 with (N.succ 0).
-  rewrite getmem_succ, getmem_0, N.mul_0_l, N.shiftl_0_r, N.lor_0_l, N.lor_0_r.
+  rewrite getmem_succ, getmem_0, N.mul_0_r, N.shiftl_0_r, N.lor_0_l, N.lor_0_r.
   destruct e; reflexivity.
 Qed.
 
@@ -4682,34 +4604,34 @@ Corollary setmem_1: forall w e m a v, setmem w e 1 m a v = setbyte m a v w.
 Proof.
   intros.
   change 1 with (N.succ 0).
-  rewrite setmem_succ, !setmem_0, N.mul_0_l, N.shiftr_0_r.
+  rewrite setmem_succ, !setmem_0, N.mul_0_r, N.shiftr_0_r.
   destruct e; reflexivity.
 Qed.
 
 Theorem getbyte_bound:
   forall m a w, getbyte m a w < 2^8.
 Proof.
-  intros. rewrite <- (N.mul_1_l 8), <- (N.add_sub 1 (a mod 2^w)),
-                  N.add_1_l, N.mul_sub_distr_r.
+  intros. rewrite <- (N.mul_1_r 8), <- (N.add_sub 1 (a mod 2^w)),
+                  N.add_1_l, N.mul_sub_distr_l.
   apply xbits_bound.
 Qed.
 
 Theorem getmem_bound:
-  forall w e len m a, getmem w e len m a < 2^(len*8).
+  forall w e len m a, getmem w e len m a < 2^(8*len).
 Proof.
   induction len using N.peano_ind; intros.
     rewrite getmem_0. apply mp2_gt_0.
     rewrite getmem_succ. destruct e; apply lor_bound.
       eapply N.lt_le_trans. apply IHlen. apply N.pow_le_mono_r.
         discriminate 1.
-        apply N.mul_le_mono_r, N.le_succ_diag_r.
-      rewrite N.mul_succ_l, N.add_comm. apply shiftl_bound, getbyte_bound.
+        apply N.mul_le_mono_l, N.le_succ_diag_r.
+      rewrite N.mul_succ_r, N.add_comm. apply shiftl_bound, getbyte_bound.
       eapply N.lt_le_trans.
         apply mp2_mod_lt.
         apply N.pow_le_mono_r. discriminate 1.
-          rewrite <- N.mul_sub_distr_r, <- N.add_1_l, N.add_sub, <- N.add_1_l.
-          apply N.mul_le_mono. apply N.le_add_r. reflexivity.
-      rewrite N.mul_succ_l. apply shiftl_bound, IHlen.
+          rewrite <- N.mul_sub_distr_l, <- N.add_1_l, N.add_sub, <- N.add_1_l.
+          apply N.mul_le_mono. reflexivity. apply N.le_add_r.
+      rewrite N.mul_succ_r. apply shiftl_bound, IHlen.
 Qed.
 
 Theorem getbyte_mod_l:
@@ -4748,7 +4670,7 @@ Proof.
 Qed.
 
 Theorem getmem_mod_r:
-  forall w e len m a, (getmem w e len m a) mod 2^(len*8) = getmem w e len m a.
+  forall w e len m a, (getmem w e len m a) mod 2^(8*len) = getmem w e len m a.
 Proof.
   intros. apply N.mod_small. apply getmem_bound.
 Qed.
@@ -4781,70 +4703,72 @@ Qed.
 
 Theorem setmem_mod_r:
   forall w e len m a v,
-  setmem w e len m a (v mod 2^(len*8)) = setmem w e len m a v.
+  setmem w e len m a (v mod 2^(8*len)) = setmem w e len m a v.
 Proof.
   induction len using N.peano_ind; intros.
     rewrite !setmem_0. reflexivity.
     rewrite !setmem_succ. destruct e.
 
       rewrite <- xbits_equiv. unfold xbits.
-      rewrite <- N.mul_sub_distr_r, <- N.add_1_l, N.add_sub, N.mul_1_l at 1.
+      rewrite <- N.mul_sub_distr_l, <- N.add_1_l, N.add_sub, N.mul_1_r at 1.
       rewrite setbyte_mod_r, mp2_mod_mod_min, N.min_r. reflexivity.
-      apply N.mul_le_mono_r, N.le_succ_diag_r.
+      apply N.mul_le_mono_l, N.le_succ_diag_r.
 
       rewrite <- setbyte_mod_r, mp2_mod_mod_min, N.min_r, setbyte_mod_r.
-        rewrite <- xbits_equiv. unfold xbits. rewrite N.mul_comm, <- N.mul_pred_r, N.pred_succ, N.mul_comm. apply IHlen.
-        rewrite N.mul_succ_l. apply N.le_add_l.
+        rewrite <- xbits_equiv. unfold xbits. rewrite <- N.mul_pred_r, N.pred_succ. apply IHlen.
+        rewrite N.mul_succ_r, N.add_comm. apply N.le_add_r.
 Qed.
 
 (* Break an (i+j)-byte number read/stored to/from memory into two numbers of size i and j. *)
 Theorem getmem_split:
   forall w e i j m a, getmem w e (i+j) m a =
-    match e with BigE => N.lor (getmem w e j m (a+i)) (N.shiftl (getmem w e i m a) (j*8))
-               | LittleE => N.lor (getmem w e i m a) (N.shiftl (getmem w e j m (a+i)) (i*8))
+    match e with BigE => N.lor (getmem w e j m (a+i)) (N.shiftl (getmem w e i m a) (8*j))
+               | LittleE => N.lor (getmem w e i m a) (N.shiftl (getmem w e j m (a+i)) (8*i))
     end.
 Proof.
   induction i using N.peano_ind; intros.
-    rewrite N.add_0_l, N.add_0_r, N.mul_0_l, getmem_0, N.shiftl_0_l, N.shiftl_0_r, N.lor_0_r, N.lor_0_l. destruct e; reflexivity.
+    rewrite N.add_0_l, N.add_0_r, N.mul_0_r, getmem_0, N.shiftl_0_l, N.shiftl_0_r, N.lor_0_r, N.lor_0_l. destruct e; reflexivity.
     rewrite <- N.add_succ_comm, getmem_succ, N.add_succ_l. destruct e.
-      rewrite N.shiftl_lor, N.shiftl_shiftl, N.lor_assoc, <- IHi, <- N.mul_add_distr_r. apply getmem_succ.
-      rewrite (N.mul_succ_l i), <- N.shiftl_shiftl, <- N.lor_assoc, <- N.shiftl_lor, <- IHi. apply getmem_succ.
+      rewrite N.shiftl_lor, N.shiftl_shiftl, N.lor_assoc, <- IHi, <- N.mul_add_distr_l. apply getmem_succ.
+      rewrite (N.mul_succ_r _ i), <- N.shiftl_shiftl, <- N.lor_assoc, <- N.shiftl_lor, <- IHi. apply getmem_succ.
 Qed.
 
 Theorem setmem_split:
   forall w e i j m a v, setmem w e (i+j) m a v =
-    match e with BigE => setmem w e j (setmem w e i m a (N.shiftr v (j*8))) (a+i) v
-               | LittleE => setmem w e j (setmem w e i m a (v mod 2^(i*8))) (a+i) (N.shiftr v (i*8))
+    match e with BigE => setmem w e j (setmem w e i m a (N.shiftr v (8*j))) (a+i) v
+               | LittleE => setmem w e j (setmem w e i m a (v mod 2^(8*i))) (a+i) (N.shiftr v (8*i))
     end.
 Proof.
   induction i using N.peano_ind; intros.
     rewrite N.add_0_r, N.shiftr_0_r, !setmem_0. destruct e; reflexivity.
     rewrite N.add_succ_comm. rewrite IHi. rewrite !(setmem_succ _ _ j). destruct e.
 
-      erewrite <- setmem_1, <- N.add_1_r, N.mul_add_distr_r, <- N.shiftr_shiftr, <- IHi.
+      erewrite <- setmem_1, <- N.add_1_r, N.mul_add_distr_l, <- N.shiftr_shiftr, <- IHi.
       rewrite N.add_1_r, N.add_succ_r. apply setmem_mod_r.
 
       erewrite <- setmem_1, <- IHi, N.add_succ_r, N.add_1_r, setmem_mod_r.
-      rewrite N.shiftr_shiftr, N.mul_succ_l. reflexivity.
+      rewrite N.shiftr_shiftr, N.mul_succ_r. reflexivity.
 Qed.
-Locate ">>".
+
 Lemma getmem_shiftr8__getmem':
   forall w len m a,
-  (getmem w LittleE len m a) >> 8 =
+  (getmem w LittleE len m a) >> (N.pos mem_bits) =
   getmem w LittleE (N.pred len) m (N.succ a).
 Proof.
   intros. destruct len using N.peano_ind. simpl (N.pred _). rewrite getmem_0, getmem_0, N.shiftr_0_l. reflexivity.
   rewrite getmem_succ.
   rewrite N.shiftr_lor.
-  enough (getbyte m a w >> 8 = 0).
-  rewrite H, N.lor_0_l. rewrite N.shiftr_shiftl_r; try lia. simpl.
-  rewrite N.pred_succ. reflexivity.
-  apply shiftr_low_pow2. apply getbyte_bound.
+  assert (H: IL.Mb = N.pos mem_bits). reflexivity. rewrite <-H.
+  enough (m (a mod 2 ^ w) mod 2 ^ IL.Mb >> IL.Mb = 0).
+  rewrite H0, N.lor_0_l. rewrite N.shiftr_shiftl_r; try lia. simpl.
+  rewrite N.pred_succ. rewrite Pos.sub_mask_diag; reflexivity.
+  
+  apply shiftr_low_pow2. apply N.mod_lt. lia.
 Qed.
 
 Lemma getmem_shiftr8:
   forall w len m a bytes,
-  (getmem w LittleE len m a) >> bytes * 8 =
+  (getmem w LittleE len m a) >> bytes * (N.pos mem_bits) =
   getmem w LittleE (N.iter bytes N.pred len) m (bytes + a).
 Proof.
   intros. generalize dependent a. generalize dependent len. generalize dependent bytes.
@@ -4858,7 +4782,7 @@ Qed.
 
 Theorem getmem_mod:
   forall w e n2 n1 m a,
-    (getmem w e n1 m a) mod 2^(n2*8) = getmem w e (N.min n1 n2) m
+    (getmem w e n1 m a) mod 2^(8*n2) = getmem w e (N.min n1 n2) m
       match e with BigE => a + (n1 - n2) | LittleE => a end.
 Proof.
   intros. destruct (N.le_ge_cases n1 n2).
@@ -4867,7 +4791,7 @@ Proof.
     replace (match e with BigE => _ | _ => _ end) with a by (destruct e; reflexivity).
     apply N.mod_small. eapply N.lt_le_trans.
       apply getmem_bound.
-      apply N.pow_le_mono_r. discriminate 1. apply N.mul_le_mono_r. assumption.
+      apply N.pow_le_mono_r. discriminate 1. apply N.mul_le_mono_l. assumption.
 
     rewrite N.min_r, <- N.land_ones by assumption. destruct e;
       [ rewrite <- (N.sub_add _ _ H) at 1
@@ -4879,14 +4803,14 @@ Qed.
 
 Theorem shiftr_getmem:
   forall w e n2 n1 m a,
-  N.shiftr (getmem w e n1 m a) (n2*8) = getmem w e (n1-n2) m
+  N.shiftr (getmem w e n1 m a) (8*n2) = getmem w e (n1-n2) m
     match e with BigE => a | LittleE => a + n2 end.
 Proof.
   intros. destruct (N.le_ge_cases n1 n2).
 
     rewrite (proj2 (N.sub_0_le _ _)), getmem_0 by assumption. eapply shiftr_low_pow2, N.lt_le_trans.
       apply getmem_bound.
-      apply N.pow_le_mono_r. discriminate 1. apply N.mul_le_mono_r. assumption.
+      apply N.pow_le_mono_r. discriminate 1. apply N.mul_le_mono_l. assumption.
 
     destruct e;
     [ rewrite <- (N.sub_add _ _ H) at 1
@@ -4897,9 +4821,9 @@ Qed.
 
 Theorem getbyte_spec:
   forall m a w i, N.testbit (getbyte m a w) i =
-    andb (N.testbit m ((a mod 2^w)*8 + i)) (i <? 8).
+    andb (N.testbit m (8*(a mod 2^w) + i)) (i <? 8).
 Proof.
-  intros. unfold getbyte. rewrite xbits_spec, N.add_comm, N.mul_succ_l.
+  intros. unfold getbyte. rewrite xbits_spec, N.add_comm, N.mul_succ_r.
   apply f_equal. destruct (_ <? _) eqn:H; symmetry.
     eapply N.ltb_lt, N.add_lt_mono_l, N.ltb_lt, H.
     eapply N.ltb_ge, N.add_le_mono_l, N.ltb_ge, H.
@@ -4907,8 +4831,8 @@ Qed.
 
 Theorem setbyte_spec:
   forall m a v w i, N.testbit (setbyte m a v w) i =
-    if andb ((a mod 2^w)*8 <=? i) (i <? N.succ(a mod 2^w)*8)
-    then N.testbit v (i - (a mod 2^w)*8) else N.testbit m i.
+    if andb (8*(a mod 2^w) <=? i) (i <? 8*N.succ(a mod 2^w))
+    then N.testbit v (i - 8*(a mod 2^w)) else N.testbit m i.
 Proof.
   intros. unfold setbyte. rewrite N.lor_spec, N.ldiff_spec, <- (N.land_ones v).
   destruct (_ <=? _) eqn:H1.
@@ -4918,12 +4842,12 @@ Proof.
       rewrite N.ones_spec_low.
         rewrite Bool.andb_false_r, Bool.andb_true_r. reflexivity.
         eapply N.add_lt_mono_r. rewrite N.sub_add.
-          rewrite N.add_comm, <- N.mul_succ_l. apply N.ltb_lt, H2.
+          rewrite N.add_comm, <- N.mul_succ_r. apply N.ltb_lt, H2.
           apply N.leb_le, H1.
       rewrite N.ones_spec_high.
         rewrite Bool.andb_false_r, Bool.andb_true_r. apply Bool.orb_false_r.
         eapply N.add_le_mono_r. rewrite N.sub_add.
-          rewrite N.add_comm, <- N.mul_succ_l. apply N.ltb_ge, H2.
+          rewrite N.add_comm, <- N.mul_succ_r. apply N.ltb_ge, H2.
           apply N.leb_le, H1.
 
     rewrite !N.shiftl_spec_low by apply N.leb_gt, H1.
@@ -4943,12 +4867,12 @@ Proof.
         reflexivity.
         eapply N.lt_le_trans.
           apply N.add_lt_mono_l, H1.
-          rewrite <- N.mul_succ_l. apply N.mul_le_mono_r, N.le_succ_l, NE.
+          rewrite <- N.mul_succ_r. apply N.mul_le_mono_l, N.le_succ_l, NE.
       rewrite (proj2 (N.ltb_ge _ _)).
         rewrite Bool.andb_false_r. reflexivity.
         etransitivity.
-          apply N.mul_le_mono_r, N.le_succ_l, NE.
-          rewrite N.mul_comm. apply N.le_add_r.
+          apply N.mul_le_mono_l, N.le_succ_l, NE.
+          apply N.le_add_r.
 
     rewrite !Bool.andb_false_r. reflexivity.
 Qed.
@@ -4960,14 +4884,14 @@ Proof.
   intros. unfold getbyte, setbyte. rewrite EQ.
   rewrite xbits_lor, xbits_ldiff, !xbits_shiftl, xbits_ones.
   rewrite N.sub_diag, !N.shiftl_0_r, N.sub_0_r.
-  rewrite <- N.mul_sub_distr_r, <- N.add_1_l, N.add_sub, N.mul_1_l.
+  rewrite <- N.mul_sub_distr_l, <- N.add_1_l, N.add_sub, N.mul_1_r.
   rewrite N.min_id, xbits_0_i, mp2_mod_mod.
   set (x := xbits _ _ _). destruct (N.eq_0_gt_0_cases x) as [H|H].
     rewrite H, N.ldiff_0_l. apply N.lor_0_l.
     rewrite N.ldiff_ones_r_low.
       apply N.lor_0_l.
       apply N.log2_lt_pow2. apply H.
-        erewrite <- (N.mul_1_l 8), <- (N.add_sub 1), N.mul_sub_distr_r.
+        erewrite <- (N.mul_1_r 8), <- (N.add_sub 1), N.mul_sub_distr_l.
         apply xbits_bound.
 Qed.
 
@@ -4991,7 +4915,7 @@ Qed.
 
 Theorem setmem_highbits:
   forall w e len m a v,
-  N.shiftr (setmem w e len m a v) (2^w*8) = N.shiftr m (2^w*8).
+  N.shiftr (setmem w e len m a v) (8*2^w) = N.shiftr m (8*2^w).
 Proof.
   induction len using N.peano_ind; intros.
     rewrite setmem_0. reflexivity.
@@ -4999,7 +4923,7 @@ Proof.
      (rewrite !N.shiftr_spec', setbyte_spec, (proj2 (N.ltb_ge _ _));
       [ rewrite Bool.andb_false_r; reflexivity
       | etransitivity; [|apply N.le_add_l];
-          apply N.mul_le_mono_r, N.le_succ_l, mp2_mod_lt ]).
+          apply N.mul_le_mono_l, N.le_succ_l, mp2_mod_lt ]).
 Qed.
 
 (* getmem doesn't read addresses outside the interval [a, a+len). *)
@@ -5048,36 +4972,36 @@ Qed.
 Lemma setmem_frame_byte:
   forall a' w en len m a n
     (LE: a' < 2^w -> len <= msub w a' a),
-  xbits (setmem w en len m a n) (a' * 8) (N.succ a' * 8) =
-  xbits m (a' * 8) (N.succ a' * 8).
+  xbits (setmem w en len m a n) (8*a') (8*N.succ a') =
+  xbits m (8*a') (8*N.succ a').
 Proof.
   intros. destruct (N.lt_ge_cases a' (2^w)).
 
     rewrite <- (N.mod_small _ _ H). apply setmem_frame. apply LE, H.
 
-    rewrite <- (recompose_bytes (2^w*8) (setmem _ _ _ _ _ _)).
+    rewrite <- (recompose_bytes (8*2^w) (setmem _ _ _ _ _ _)).
     rewrite setmem_highbits, !xbits_lor.
     rewrite xbits_above, N.lor_0_l.
 
-      rewrite xbits_shiftl, <- !N.mul_sub_distr_r.
-      rewrite (proj2 (N.sub_0_le _ _) H), N.mul_0_l, N.shiftl_0_r.
-      rewrite xbits_shiftr, <- !N.mul_add_distr_r, !N.sub_add. reflexivity.
+      rewrite xbits_shiftl, <- !N.mul_sub_distr_l.
+      rewrite (proj2 (N.sub_0_le _ _) H), N.mul_0_r, N.shiftl_0_r.
+      rewrite xbits_shiftr, <- !N.mul_add_distr_l, !N.sub_add. reflexivity.
         etransitivity. apply H. apply N.le_succ_r. left. reflexivity.
         apply H.
 
       eapply N.lt_le_trans. apply mp2_mod_lt.
       apply N.pow_le_mono_r. discriminate.
-      apply N.mul_le_mono_r, H.
+      apply N.mul_le_mono_l, H.
 Qed.
 
 (* getmem inverts setmem *)
 Theorem getmem_setmem:
   forall w e len m a v (LE: len <= 2^w),
-  getmem w e len (setmem w e len m a v) a = v mod 2^(len*8).
+  getmem w e len (setmem w e len m a v) a = v mod 2^(8*len).
 Proof.
   intros until len. revert len w.
   induction len using N.peano_ind; intros.
-    rewrite N.mul_0_l, N.mod_1_r. apply getmem_0.
+    rewrite N.mul_0_r, N.mod_1_r. apply getmem_0.
 
     assert (LE': len <= msub w a (N.succ a)).
       rewrite <- N.add_1_r, msub_add_distr, msub_diag, msub_0_l by reflexivity.
@@ -5092,15 +5016,15 @@ Proof.
       rewrite IHlen by (etransitivity; [ apply N.le_succ_diag_r | exact LE ]);
       rewrite setmem_frame by apply LE';
       rewrite getbyte_setbyte by reflexivity.
-        rewrite mp2_mod_mod, <- xbits_split_0, N.mul_succ_l. apply xbits_0_i.
-        rewrite <- xbits_split_0, N.mul_succ_l, N.add_comm. apply xbits_0_i.
+        rewrite mp2_mod_mod, <- xbits_split_0, N.mul_succ_r. apply xbits_0_i.
+        rewrite <- xbits_split_0, N.mul_succ_r, N.add_comm. apply xbits_0_i.
 Qed.
 
 Theorem setmem_byte_anylen:
   forall w en len i m a v (ILE: i < len),
-  getbyte (setmem w en len m a v) (a+i) w = N.shiftr v (
+  getbyte (setmem w en len m a v) (a+i) w = N.shiftr v (8 *
     match en with BigE => msub w (N.pred len) i
-                | LittleE => i + N.pred(len-i)/2^w*2^w end * 8) mod (2^8).
+                | LittleE => i + N.pred(len-i)/2^w*2^w end) mod (2^8).
 Proof.
   intros.
   set (r := N.succ (msub w (N.pred len) i)).
@@ -5146,8 +5070,8 @@ Qed.
 
 Corollary setmem_byte:
   forall w en len i m a v (ILE: i < len) (LEN: len <= 2^w),
-  getbyte (setmem w en len m a v) (a+i) w = N.shiftr v (
-    match en with BigE => N.pred len - i | LittleE => i end * 8) mod (2^8).
+  getbyte (setmem w en len m a v) (a+i) w = N.shiftr v (8 *
+    match en with BigE => N.pred len - i | LittleE => i end) mod (2^8).
 Proof.
   intros. rewrite setmem_byte_anylen by assumption.
   assert (H: N.pred len < 2^w).
@@ -5168,14 +5092,14 @@ Qed.
 
 Theorem setmem_anybyte_anylen:
   forall a' w en len m a v,
-    xbits (setmem w en len m a v) (a' * 8) (N.succ a' * 8) =
+    xbits (setmem w en len m a v) (8*a') (8*N.succ a') =
     if ((msub w a' a <? len) && (a' <? 2^w))%bool then
-      N.shiftr v (
+      N.shiftr v (8 *
         match en with
         | BigE => msub w (a + N.pred len) a'
         | LittleE => msub w a' a + N.pred (len - msub w a' a) / 2^w * 2^w
-        end * 8) mod 2^8
-    else xbits m (a' * 8) (N.succ a' * 8).
+        end) mod 2^8
+    else xbits m (8*a') (8*N.succ a').
 Proof.
   intros. destruct andb eqn:H.
 
@@ -5193,7 +5117,7 @@ Qed.
 Theorem getmem_setmem_xbits:
   forall w en len i j m a v (LE: j + len <= 2^w),
   getmem w en len (setmem w en (i+len+j) m a v) (a+i) =
-  match en with BigE => xbits v (j*8) ((j+len)*8) | LittleE => xbits v (i*8) ((i+len)*8) end.
+  match en with BigE => xbits v (8*j) (8*(j+len)) | LittleE => xbits v (8*i) (8*(i+len)) end.
 Proof.
   intros.
   assert (H1: len <= len mod 2^w \/ j = 0). destruct j as [|j].
@@ -5215,40 +5139,24 @@ Proof.
   | rewrite madd_add_simpl_l_l, add_msub_l; assumption
   | rewrite madd_add_simpl_l_l, msub_add_distr, msub_diag; assumption ] ).
 
-    unfold xbits. rewrite <- N.mul_sub_distr_r, N.add_comm, N.add_sub. reflexivity.
+    unfold xbits. rewrite <- N.mul_sub_distr_l, N.add_comm, N.add_sub. reflexivity.
 
-    rewrite N.add_comm, N.mul_add_distr_r, <- xbits_equiv. unfold xbits.
+    rewrite N.add_comm, N.mul_add_distr_l, <- xbits_equiv. unfold xbits.
     rewrite N.add_sub, mp2_mod_mod. reflexivity.
-Qed.
-
-Theorem getmem_xbits:
-  forall w len m a (LT: len+a < 2^w),
-  getmem w LittleE len m a = xbits m (8*a) (8*(len+a)).
-Proof.
-  induction len using N.peano_ind.
-  
-  intros; rewrite! N.add_0_l in *. rewrite getmem_0, xbits_none; lia.
-  
-  intros. rewrite getmem_succ.
-  rewrite (xbits_split (8*a) (8* N.succ a) (8*(N.succ len + a))); try lia.
-  unfold getbyte.   rewrite (IHlen). rewrite! (N.mod_small a), (N.mul_comm 8 a), (N.mul_comm 8 (N.succ a)), N.add_succ_comm.
-  assert (Help:N.succ a * 8 - a * 8 = 8) by lia; rewrite Help; reflexivity.
-  apply N.lt_trans with (N.succ len + a); lia.
-  rewrite <-N.add_succ_comm; assumption.
 Qed.
 
 Theorem setmem_merge:
   forall w e i j m a v1 v2,
   setmem w e j (setmem w e i m a v1) (a+i) v2 =
   setmem w e (i+j) m a match e with
-                       | BigE => cbits v1 (j*8) (v2 mod 2^(j*8))
-                       | LittleE => cbits v2 (i*8) (v1 mod 2^(i*8))
+                       | BigE => cbits v1 (8*j) (v2 mod 2^(8*j))
+                       | LittleE => cbits v2 (8*i) (v1 mod 2^(8*i))
                        end.
 Proof.
   symmetry.
   assert (H:=setmem_split w e i j m a). destruct e;
-  [ specialize (H (cbits v1 (j*8) (v2 mod 2^(j*8))))
-  | specialize (H (cbits v2 (i*8) (v1 mod 2^(i*8)))) ];
+  [ specialize (H (cbits v1 (8*j) (v2 mod 2^(8*j))))
+  | specialize (H (cbits v2 (8*i) (v1 mod 2^(8*i)))) ];
   rewrite shiftr_cbits, <- (setmem_mod_r _ _ j), cbits_mod, !setmem_mod_r in H by apply mp2_mod_lt;
   apply H.
 Qed.
@@ -5664,9 +5572,9 @@ Qed.
 Theorem getbyte_mod_mem:
   forall m a w, getbyte (m mod (memsize w)) a w = getbyte m a w.
 Proof.
-  intros. unfold getbyte, memsize.
+  intros. rewrite <- fold_memsize. unfold getbyte.
   rewrite xbits_equiv, mp2_mod_mod_min, N.min_r, <- xbits_equiv. reflexivity.
-  apply N.mul_le_mono_r, N.le_succ_l, mp2_mod_lt.
+  apply N.mul_le_mono_l, N.le_succ_l, mp2_mod_lt.
 Qed.
 
 Theorem byte_equivalent:
@@ -5674,35 +5582,35 @@ Theorem byte_equivalent:
   m1 mod (memsize w) = m2 mod (memsize w).
 Proof.
   intros.
-  apply N.bits_inj. intro i. destruct (N.lt_ge_cases i (2^w*8)) as [H|H].
+  apply N.bits_inj. intro i. destruct (N.lt_ge_cases i (8*2^w)) as [H|H].
 
     rewrite <- (Bool.andb_true_r (N.testbit (m1 mod _) _)), <- (Bool.andb_true_r (N.testbit (m2 mod _) _)).
-    replace true with (i <? N.succ ((i/8) mod 2^w) * 8).
+    replace true with (i <? 8 * N.succ ((i/8) mod 2^w)).
     rewrite (N.div_mod' i 8), N.add_comm.
     rewrite <- !xbits_spec.
-    rewrite N.add_comm, <- N.div_mod', (N.mul_comm 8).
-    rewrite <- (N.mod_small (i/8) (2^w)) by (apply N.Div0.div_lt_upper_bound; rewrite N.mul_comm; apply H).
+    rewrite N.add_comm, <- N.div_mod'.
+    rewrite <- (N.mod_small (i/8) (2^w)) by apply N.Div0.div_lt_upper_bound, H.
     rewrite mp2_mod_mod.
     change (xbits (m1 mod _) _ _) with (getbyte (m1 mod memsize w) (i/8) w).
     rewrite getbyte_mod_mem, EQ, <- getbyte_mod_mem. reflexivity.
 
-      apply N.ltb_lt. rewrite N.mod_small by (apply N.Div0.div_lt_upper_bound; rewrite N.mul_comm; apply H).
-      rewrite (N.div_mod' i 8) at 1. rewrite N.mul_succ_l, (N.mul_comm 8).
+      apply N.ltb_lt. rewrite N.mod_small by apply N.Div0.div_lt_upper_bound, H.
+      rewrite (N.div_mod' i 8) at 1. rewrite N.mul_succ_r.
       apply N.add_lt_mono_l, N.mod_lt. discriminate.
 
-    unfold memsize. rewrite !N.mod_pow2_bits_high by apply H. reflexivity.
+    rewrite <- fold_memsize. rewrite !N.mod_pow2_bits_high by apply H. reflexivity.
 Qed.
 
 Theorem bytes_inj:
   forall m1 m2
-    (EQ: forall a, xbits m1 (a*8) (N.succ a * 8) = xbits m2 (a*8) (N.succ a * 8)),
+    (EQ: forall a, xbits m1 (8*a) (8*N.succ a) = xbits m2 (8*a) (8*N.succ a)),
   m1 = m2.
 Proof.
   intros. apply N.bits_inj. intro i.
-  rewrite (N.div_mod' i 8), N.mul_comm, N.add_comm, <- !N.shiftr_spec'.
+  rewrite (N.div_mod' i 8), N.add_comm, <- !N.shiftr_spec'.
   rewrite <- 2!(N.mod_pow2_bits_low (N.shiftr _ _) 8) by apply (mp2_mod_lt _ 3).
   specialize (EQ (i/8)). unfold xbits in EQ.
-  rewrite N.mul_succ_l, (N.add_comm _ 8), N.add_sub in EQ.
+  rewrite N.mul_succ_r, (N.add_comm _ 8), N.add_sub in EQ.
   rewrite EQ. reflexivity.
 Qed.
 
@@ -5713,10 +5621,10 @@ Theorem setmem_swap:
   setmem w e len1 (setmem w e len2 m a2 v2) a1 v1.
 Proof.
   intros.
-  rewrite <- (recompose_bytes (2^w*8) (setmem w e _ _ _ _)). symmetry.
-  rewrite <- (recompose_bytes (2^w*8) (setmem w e _ _ _ _)).
+  rewrite <- (recompose_bytes (8*2^w) (setmem w e _ _ _ _)). symmetry.
+  rewrite <- (recompose_bytes (8*2^w) (setmem w e _ _ _ _)).
   rewrite !setmem_highbits. apply f_equal2; [|reflexivity].
-  apply byte_equivalent. intro a.
+  rewrite fold_memsize. apply byte_equivalent. intro a.
   destruct (overlap_dec w a 1 a1 len1) as [H1|H1].
 
     erewrite overlap_getbyte_updated by assumption.
@@ -5732,12 +5640,11 @@ Qed.
 
 Theorem setmem_split_swap:
   forall w e i j m a v (LEN: i+j < 2 ^ w), setmem w e (i+j) m a v =
-    match e with BigE => setmem w e i (setmem w e j m (a+i) v) a (N.shiftr v (8*j))
-               | LittleE => setmem w e i (setmem w e j m (a+i) (N.shiftr v (8*i))) a (v mod 2^(8*i))
+    match e with BigE => setmem w e i (setmem w e j m (a+i) v) a (N.shiftr v (Mb*j))
+               | LittleE => setmem w e i (setmem w e j m (a+i) (N.shiftr v (Mb*i))) a (v mod 2^(Mb*i))
     end.
 Proof.
   intros. rewrite setmem_split. rewrite setmem_swap. rewrite setmem_swap with (len2:=j).
-  rewrite! (N.mul_comm 8).
   reflexivity.
   all: apply noverlap_sum; rewrite msub_diag, N.add_0_r; now apply N.lt_le_incl.
 Qed.
@@ -5746,8 +5653,8 @@ Theorem setmem_merge_rev:
   forall w e i j m a v1 v2, i + j < 2^w ->
   setmem w e j (setmem w e i m a v2) (msub w a j) v1 =
   setmem w e (i+j) m (msub w a j) match e with
-                                  | BigE => cbits v1 (i*8) (v2 mod 2^(i*8))
-                                  | LittleE => cbits v2 (j*8) (v1 mod 2^(j*8))
+                                  | BigE => cbits v1 (8*i) (v2 mod 2^(8*i))
+                                  | LittleE => cbits v2 (8*j) (v1 mod 2^(8*j))
                                   end.
 Proof.
   intros.
@@ -5767,8 +5674,6 @@ Qed.
 End MemTheory.
 
 Section MemBitOps.
-Notation "x << y" := (N.shiftl x y) (at level 55, left associativity). (* logical shift-left *)
-Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logical shift-right *)
 (* This helps interface with testbit_xbits *)
 Theorem xbits_odd_gtz:
   forall n i, N.odd (xbits n i (N.succ i)) = true <->  0 < xbits n i (N.succ i).
@@ -6203,6 +6108,7 @@ Qed.
 End Determinism.
 
 
+<<<<<<< HEAD
 Section Monotonicity.
 
 (* exec_prog is monotonic with respect to programs.  Enlarging the space of known
@@ -6249,198 +6155,11 @@ Proof.
     apply IHXS, H.
 Qed.
 
-(* eval_exp, exec_stmt, and exec_prog ignore the values of variables not in the
-   typing context. *)
-
-Definition memacc_respects_typctx (c:typctx) :=
-  forall s1 s2, reset_vars c s1 s2 = s1 ->
-  (mem_readable s1 = mem_readable s2) /\
-  (mem_writable s1 = mem_writable s2).
-
-Definition in_ctx (c:typctx) v := if c v then true else false.
-
-Lemma reset_vars_fchoose:
-  forall c, reset_vars c = fchoose (in_ctx c).
-Proof.
-  intros. extensionality s1. extensionality s2. extensionality v.
-  unfold reset_vars, fchoose, in_ctx. destruct (c v); reflexivity.
-Qed.
-
-Lemma reset_vars_sup_l:
-  forall c1 c2 s1 s2
-    (H: forall v, Bool.le (in_ctx c1 v) (in_ctx c2 v)),
-  reset_vars c1 (reset_vars c2 s1 s2) s2 = reset_vars c2 s1 s2.
-Proof.
-  intros. rewrite !reset_vars_fchoose. apply fchoose_sup_l. assumption.
-Qed.
-
-Lemma reset_vars_revert:
-  forall c s s', reset_vars c s' (reset_vars c s s') = s'.
-Proof.
-  intros. rewrite !reset_vars_fchoose. apply fchoose_revert.
-Qed.
-
-Lemma reset_vars_overwrite_l:
-  forall c s1 s2 s3,
-  reset_vars c (reset_vars c s1 s2) s3 = reset_vars c s1 s3.
-Proof.
-  intros. rewrite !reset_vars_fchoose. apply fchoose_overwrite_l.
-Qed.
-
-Lemma reset_vars_overwrite_r:
-  forall c s1 s2 s3,
-  reset_vars c s1 (reset_vars c s2 s3) = reset_vars c s1 s3.
-Proof.
-  intros. rewrite !reset_vars_fchoose. apply fchoose_overwrite_r.
-Qed.
-
-Lemma reset_vars_update_distr:
-  forall c s1 s2 v n,
-  reset_vars c s1 s2[v:=n] = reset_vars c (s1[v:=n]) (s2[v:=n]).
-Proof.
-  intros. rewrite !reset_vars_fchoose. apply fchoose_update_distr.
-Qed.
-
-Lemma reset_vars_update_c:
-  forall c s1 s2 v y n,
-  (reset_vars (c[v:=y]) s1 s2)[v:=n] = (reset_vars c s1 s2)[v:=n].
-Proof.
-  intros. rewrite !reset_vars_fchoose.
-  replace (in_ctx _) with ((in_ctx c)[v:=if y then true else false]).
-  apply fchoose_update_c.
-  extensionality v'. unfold in_ctx. destruct (v' == v).
-    subst v'. rewrite !update_updated. reflexivity.
-    rewrite !update_frame by assumption. reflexivity.
-Qed.
-
-Theorem eval_exp_cframe:
-  forall c (MRC: memacc_respects_typctx c) s1 s2 e n w
-    (RV: reset_vars c s1 s2 = s1)
-    (EE: eval_exp c s1 e n w),
-  eval_exp c s2 e n w.
-Proof.
-  intros. revert s2 RV. dependent induction EE; intros;
-  try (econstructor; try solve [ assumption
-  | (apply IHEE1 + apply IHEE2 + apply IHEE3 + apply IHEE); assumption ]).
-
-    rewrite <- RV. unfold reset_vars. rewrite TYP. apply EVar. assumption.
-    intros n LEN. rewrite <- (proj1 (MRC _ _ RV)). apply R. assumption.
-    intros n LEN. rewrite <- (proj2 (MRC _ _ RV)). apply W. assumption.
-    apply IHEE2.
-      intros s1' s2' RV'. apply MRC. rewrite <- RV'. apply reset_vars_sup_l.
-        intro v'. unfold in_ctx. destruct (v' == v).
-          subst v'. rewrite update_updated. destruct (c v); reflexivity.
-          rewrite update_frame by assumption. destruct (c v'); reflexivity.
-      rewrite <- reset_vars_update_distr, reset_vars_update_c, RV. reflexivity.
-Qed.
-
-Theorem exec_stmt_cframe:
- forall c (MRC: memacc_respects_typctx c) s1 s2 q c' s' x
-   (RV: reset_vars c s1 s2 = s1)
-   (XS: exec_stmt c s1 q c' s' x),
- exec_stmt c s2 q c' (reset_vars c' s2 s') x.
-Proof.
-  intros.
-  revert s2 RV. dependent induction XS; intros;
-    try (rewrite <- RV, reset_vars_revert).
-
-    apply XNop.
-    replace (reset_vars _ _ _) with (s2[v:=n]). apply XMove.
-      eapply eval_exp_cframe; eassumption.
-      extensionality v'. unfold reset_vars. destruct (v' == v).
-        subst v'. rewrite !update_updated. reflexivity.
-        rewrite !update_frame by assumption.
-          destruct (c v') eqn:CV'; [|reflexivity].
-          rewrite update_frame, <- RV by assumption. unfold reset_vars. rewrite CV'. reflexivity.
-    eapply XJmp. eapply eval_exp_cframe; eassumption.
-    apply XExn.
-    apply XSeq1. apply IHXS; assumption.
-
-    eapply XSeq2.
-      apply IHXS1; assumption.
-      eenough (H': reset_vars c' s0 s' = _). rewrite H'. eapply IHXS2.
-
-        intros s1' s2' RV'. apply MRC. extensionality v'.
-        assert (M1:=exec_stmt_cmono v' _ _ _ _ _ _ XS1).
-        unfold reset_vars. destruct (c v') eqn:CV'; [|reflexivity].
-        rewrite <- RV'. unfold reset_vars. destruct (c2 v').
-          reflexivity.
-          discriminate M1. reflexivity.
-
-        extensionality v'.
-        assert (M2:=exec_stmt_cmono v' _ _ _ _ _ _ XS2).
-        unfold reset_vars.
-        destruct (c2 v') eqn:C2V'; [|reflexivity].
-        rewrite C2V'. reflexivity.
-
-        extensionality v'.
-        assert (M2:=exec_stmt_cmono v' _ _ _ _ _ _ XS2).
-        unfold reset_vars.
-        destruct (c' v') eqn:C'V'. reflexivity.
-        rewrite M2; reflexivity.
-
-    eapply XIf.
-      eapply eval_exp_cframe; eassumption.
-      apply IHXS; assumption.
-    eapply XRep.
-      eapply eval_exp_cframe; eassumption.
-      apply IHXS; assumption.
-Qed.
-
-Theorem exec_prog_map:
-  forall f p t
-    (CS: forall xs' xs, can_step p (xs',xs) -> can_step p (f xs', f xs))
-    (XP: exec_prog p t),
-  exec_prog p (map f t).
-Proof.
-  intros. apply Forall_forall. intros (xs',xs) IN'.
-  apply In_ith in IN'. destruct IN' as [i IN'].
-  apply Forall_ith with (i:=i) in XP.
-  destruct (ith (stepsof t) i) as [(xs0',xs0)|] eqn:H.
-
-    rewrite ith_stepsof in IN'.
-    destruct (skipn i _) as [|xs1 l1] eqn:H1. discriminate.
-    destruct l1 as [|xs2 l2] eqn:H2. discriminate.
-    inversion IN'; clear IN'; subst.
-    rewrite skipn_map in H1.
-    rewrite ith_stepsof in H.
-    destruct (skipn i t) as [|xs1' l1'] eqn:H1'. discriminate.
-    destruct l1' as [|xs2' l2'] eqn:H2'. discriminate.
-    inversion H; clear H; subst.
-    inversion H1; clear H1; subst.
-    apply CS. assumption.
-
-    contradict H. apply ith_Some.
-    erewrite length_stepsof, <- length_map, <- length_stepsof.
-    apply ith_Some. rewrite IN'. discriminate.
-Qed.
-
-Theorem exec_prog_cframe:
-  forall p t s0
-    (MRC: memacc_respects_typctx archtyps)
-    (CODEACC: forall s, p s = p (reset_temps s0 s))
-    (XP: exec_prog p t),
-  exec_prog p (map (fun (xs:exit*store) => let (x,s) := xs in
-    (x, reset_temps s0 s)) t).
-Proof.
-  intros. apply exec_prog_map; [|assumption].
-  intros (x',s') (x,s) CS. inversion CS; clear CS; subst.
-
-  eenough (H: reset_temps _ _ = _).
-    rewrite H. eapply CanStep.
-      rewrite <- CODEACC. eassumption.
-      eapply exec_stmt_cframe in XS. exact XS. assumption.
-      apply reset_vars_revert.
-
-    unfold reset_temps.
-    rewrite reset_vars_overwrite_l, reset_vars_overwrite_r.
-    extensionality v. unfold reset_vars.
-    assert (M':=exec_stmt_cmono v _ _ _ _ _ _ XS).
-    destruct (archtyps v) eqn:CV; [|reflexivity].
-    destruct (c' v). reflexivity. discriminate M'. reflexivity.
-Qed.
-
 End Monotonicity.
+
+
+=======
+>>>>>>> 4c730b0 (All commits merged into one! Includes arm8_strspn, PILbox32, Picinae_numbers, theorem addition, funccall playground)
 
 Section InvariantProofs.
 
@@ -6950,6 +6669,10 @@ Definition may_call
    | (Raise _,_)::_ => if callee_Invs t then true else callee_xp t
    | (Addr a,s)::_ => if p s a then false else callee_xp t
    end = false) /\
+  (* TODO: can omit `callee_xp nil = false`? I think the above
+           `match t with nil => callee_xp t | ... end = false` handles this
+  *)
+  (callee_xp nil = false) /\
   (forall xs t, callee_Invs (xs::t) = callee_Invs (xs::nil)) /\
   (forall xs t, callee_xp (xs::t) = callee_xp (xs::nil)).
 
@@ -6969,14 +6692,15 @@ Theorem exec_subroutine:
   nextinv' p Invs1 xp1 true ((Addr a1,s1)::t1).
 Proof.
   intros.
-  destruct MC as [H [CI1 CI2]].
+  destruct MC as [H [UT0 [CI1 CI2]]].
   eassert (IMP: forall (t:trace), _). intro. exact (proj1 (H t)).
   eassert (INVXP2: forall (t:trace), _). intro. exact (proj2 (H t)).
+  clear H.
   apply nextinv_impl_invs with (Invs1:=Invs2) (xp1:=xp2) (P:=unterminated xp2).
-    apply ForallPrefixes_nil, (proj2 (H nil)).
+    apply ForallPrefixes_nil, UT0.
     intros. destruct t2; simpl in H2 |- *; apply unterminated_cons;
       rewrite CI2 in H2; try rewrite CI2; assumption.
-  clear H. intros.
+  intros.
   change (t2++(Addr a1,s1)::t1) with (t2++(Addr a1,s1)::nil++t1).
   rewrite app_comm_cons, app_assoc. rename t2 into t2'.
   set (xs := hd (Addr a1,s1) t2'). set (t2 := tl (t2'++(Addr a1,s1)::nil)) in IH.
@@ -7030,7 +6754,7 @@ Qed.
    facilitates proving premises of subroutine calls (e.g., "models"). We therefore
    define exported versions of nextinv and its constructors that retain exec_prog. *)
 Definition nextinv p Invs xp b t : Prop :=
-  forall (XP: exec_prog p t), nextinv' p Invs xp b t.
+  exec_prog p t -> nextinv' p Invs xp b t.
 
 (* Why do we want this? *)
 Theorem exec_prog_nextinv:
@@ -7060,23 +6784,6 @@ Proof.
   apply exec_prog_step. assumption. eapply CanStep; eassumption.
 Qed.
 
-Theorem NIStep_unterminated:
-  forall p Invs xp b a s t sz q
-         (NOI: effinv b p Invs xp ((Addr a, s)::t) = None)
-         (IL: p s a = Some (sz,q))
-         (STEP: forall c1 s1 x1 (XS: exec_stmt archtyps s q c1 s1 x1)
-                  (UT: unterminated xp ((Addr a,s)::t)),
-                nextinv p Invs xp true ((exitof (a+sz) x1, reset_temps s s1)::(Addr a,s)::t)),
-  unterminated xp t -> nextinv p Invs xp b ((Addr a,s)::t).
-Proof.
-  intros. eapply NIStep; try eassumption.
-  intros. eapply STEP. eassumption.
-  apply ForallPrefixes_cons; [|apply H].
-  unfold effinv, effinv' in NOI.
-  destruct (xp _); [|reflexivity].
-  destruct (Invs _); [destruct b|]; discriminate.
-Qed.
-
 Lemma nextinv_here:
   forall p Invs (xp: trace -> bool) b t P
          (INV: effinv b p Invs xp t = Some P)
@@ -7090,49 +6797,16 @@ Theorem prove_invs:
   forall p Invs xp t
          (PRE: nextinv p Invs xp true match ostartof t with None => nil | Some xs0 => xs0::nil end)
          (INV: forall t1 a1 s1 t2
-                      (UT: unterminated xp t1)
                       (SPL: t = (t2++(Addr a1,s1)::t1))
+                      (XP: exec_prog p ((Addr a1,s1)::t1))
+                      (UT: unterminated xp t1)
                       (PRE: true_inv (get_precondition p Invs xp a1 s1 t1)),
                nextinv p Invs xp false ((Addr a1,s1)::t1)),
   satisfies_all p Invs xp t.
 Proof.
   unfold nextinv, satisfies_all. intros. apply prove_invs'; try assumption.
-    apply forallprefixes_nil_inv in H0. apply PRE; destruct (ostartof t); constructor; assumption.
+    apply PRE. destruct (ostartof t); apply Forall_nil.
     intros. eapply INV; eassumption.
-Qed.
-
-(* If your current goal is a nextinv, and you've already proved a lemma L with conclusion
-   satisfies_all, use "eapply use_satall_lemma" to get L's invariant as a hypothesis.
-   Typical usage:
-     eapply use_satall_lemma. eassumption.
-     apply L. (* prove any of L's hypotheses here *)
-     intro H. simpl in H. *)
-Theorem use_satall_lemma:
-  forall p Invs Invs' xp b t
-    (UT: unterminated xp (tl t))
-    (SA: satisfies_all p Invs xp t)
-    (H: forall (INV: trueif_inv (Invs t)), nextinv p Invs' xp b t),
-  nextinv p Invs' xp b t.
-Proof.
-  intros. intro XP. apply H; [|exact XP].
-  eapply satall_trueif_inv; eassumption.
-Qed.
-
-(* If your current goal is a nextinv, and you've already proved a lemma L with conclusion
-   forall_endstates, use "eapply use_endstates_lemma" to get L's conclusion as a hypothesis.
-   Typical usage:
-     eapply use_endstates_lemma. eassumption.
-     apply L. (* prove any of L's hypotheses here *)
-     intro H. simpl in H. *)
-Theorem use_endstates_lemma:
-  forall P p Invs xp b t x x' s s'
-    (ENTRY: startof t (x',s') = (x,s))
-    (FE: forall_endstates p P)
-    (H: forall (INV: P x s x' s'), nextinv p Invs xp b ((x',s')::t)),
-  nextinv p Invs xp b ((x',s')::t).
-Proof.
-  intros. intro XP. apply H; [|exact XP].
-  eapply FE; eassumption.
 Qed.
 
 (* Introduce a convenient logic for subroutine calls. *)
@@ -7208,10 +6882,9 @@ Theorem perform_call n m (H: n <? m = true) f g p a1 s1 t1:
                nextinv p (make_invs m p f) (make_exits m p f) true ((Addr a',s')::t2++t1)),
   nextinv p (make_invs m p f) (make_exits m p f) true ((Addr a1,s1)::t1).
 Proof.
-  unfold nextinv. intros.
-  eapply exec_subroutine.
+  unfold nextinv. intros. eapply exec_subroutine.
     intros. apply CALLEE. exact ENTRY.
-    apply simple_may_call; assumption.
+    apply simple_may_call. exact SF. exact H.
     intros. apply POST; try assumption. rewrite app_comm_cons. apply exec_prog_app.
       eapply exec_prog_tail. eassumption.
       destruct t1. exact I. simpl. rewrite ENTRY. eapply exec_prog_final. eassumption.
@@ -7270,7 +6943,55 @@ Qed.
 
 End InvariantProofs.
 
+
+
+Section Monotonicity.
+
+(* exec_prog is monotonic with respect to programs.  Enlarging the space of known
+   instructions in memory preserves executions. *)
+
+Theorem can_step_pmono:
+  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
+         xs xs' (CS: can_step p1 (xs',xs)),
+  can_step p2 (xs',xs).
+Proof.
+  intros. inversion CS; subst. econstructor.
+    apply PS, LU.
+    apply XS.
+Qed.
+
+Theorem exec_prog_pmono:
+  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
+         t (XP: exec_prog p1 t),
+  exec_prog p2 t.
+Proof.
+  intros. induction t.
+    apply exec_prog_nil.
+    apply exec_prog_step.
+      eapply IHt, exec_prog_tail, XP.
+      destruct t as [|xs t].
+        exact I.
+        eapply can_step_pmono.
+          exact PS.
+          eapply exec_prog_final, XP.
+Qed.
+
+End Monotonicity.
+
+
+
 Section FrameTheorems.
+
+Theorem startof_prefix:
+  forall {A} xs'' (t t2 t1: list A) xs' xs
+    (ENTRY: startof t xs'' = xs)
+    (SPL: xs''::t = t2 ++ xs' :: t1),
+  startof t1 xs' = xs.
+Proof.
+  intros.
+  erewrite <- (startof_app _ xs''), <- SPL, startof_cons.
+  exact ENTRY.
+Qed.
 
 (* Statements and programs that contain no assignments to some IL variable v
    leave that variable unchanged in the output store. *)
@@ -7307,7 +7028,7 @@ Proof.
     exact XP.
     simpl. rewrite ENTRY. reflexivity.
     intros. apply (noassign_stmt_same v) in XS.
-      rewrite PRE. simpl. inversion XS. unfold reset_temps, reset_vars. destruct (archtyps v).
+      rewrite PRE. simpl. inversion XS. unfold reset_temps. destruct (archtyps v).
         assumption.
         reflexivity.
       specialize (NA s1 a1). rewrite IL in NA. exact NA.
