@@ -95,8 +95,12 @@ Definition slt w n1 n2 := Z.ltb (toZ w n1) (toZ w n2).
 (* Perform signed less-or-equal comparison. *)
 Definition sle w n1 n2 := Z.leb (toZ w n1) (toZ w n2).
 
-(* Unsigned cast: extract bits i to i+j-1 of an unsigned binary number. *)
+(* Unsigned cast: extract bits i to j-1 of an unsigned binary number. *)
 Definition xbits n i j := (N.shiftr n i) mod 2^(j - i).
+Arguments xbits / !n !i !j.
+
+(* Unsigned cast: extract bits i to i+j-1 of an unsigned binary number. *)
+Definition xnbits n i j := xbits n i (j+i).
 Arguments xbits / !n !i !j.
 
 (* Concatenate high bits n1 onto width-i low bits n2 *)
