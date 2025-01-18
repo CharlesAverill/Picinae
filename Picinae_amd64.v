@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2025 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -148,6 +148,12 @@ Tactic Notation "amd64_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
 Tactic Notation "amd64_psimpl" "in" hyp(H) := psimpl_hyp H.
 Tactic Notation "amd64_psimpl" := psimpl_goal.
 Ltac x64_step := ISA_step.
+
+(* The following is needed when applying cframe theorems from Picinae_theory. *)
+Theorem memacc_respects_x64typctx: memacc_respects_typctx x64typctx.
+Proof.
+  intros s1 s2 RV. rewrite <- RV. split; reflexivity.
+Qed.
 
 (* Simplify memory access propositions by observing that on x64, the only part
    of the store that affects memory accessibility are the page-access bits

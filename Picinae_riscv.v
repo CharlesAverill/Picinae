@@ -126,6 +126,11 @@ Tactic Notation "r5_psimpl" "in" hyp(H) := psimpl_hyp H.
 Tactic Notation "r5_psimpl" := psimpl_goal.
 Ltac r5_step := ISA_step.
 
+(* The following is needed when applying cframe theorems from Picinae_theory. *)
+Theorem memacc_respects_rvtypctx: memacc_respects_typctx rvtypctx.
+Proof.
+  intros s1 s2 RV. rewrite <- RV. split; reflexivity.
+Qed.
 
 (* Simplify memory access propositions by observing that on RISC, the only part
    of the store that affects memory accessibility are the page-access bits
