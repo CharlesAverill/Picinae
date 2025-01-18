@@ -768,7 +768,7 @@ Qed.
 Lemma pred_mod:
   forall w q, 0 < w -> 0 < w * q -> N.pred (w * q) mod w = N.pred w.
 Proof.
-  intros. rewrite N.pred_sub. 
+  intros. rewrite N.pred_sub.
   enough (Hhelp: exists q', q = N.succ q'); try destruct Hhelp.
   rewrite H1, N.mul_succ_r, <-N.add_sub_assoc, <-N.Div0.add_mod_idemp_l.
   rewrite N.mul_comm, N.Div0.mod_mul, N.add_0_l.
@@ -1204,7 +1204,7 @@ Lemma Z2N_inj_lxor:
   forall z1 z2, (0 <= z1 -> 0 <= z2 -> Z.to_N (Z.lxor z1 z2) = N.lxor (Z.to_N z1) (Z.to_N z2))%Z.
 Proof.
   intros. destruct z1, z2; try (reflexivity + contradiction).
-  apply N2Z.id. 
+  apply N2Z.id.
 Qed.
 
 Lemma N2Z_inj_ldiff:
@@ -1218,7 +1218,7 @@ Lemma Z2N_inj_ldiff:
   forall z1 z2, (0 <= z1 -> 0 <= z2 -> Z.to_N (Z.ldiff z1 z2) = N.ldiff (Z.to_N z1) (Z.to_N z2))%Z.
 Proof.
   intros. destruct z1, z2; try (reflexivity + contradiction).
-  apply N2Z.id. 
+  apply N2Z.id.
 Qed.
 
 Lemma N2Z_inj_shiftl:
@@ -2513,7 +2513,7 @@ Qed.
 Theorem toZ_shiftl:
   forall w n1 n2, toZ w (N.shiftl n1 n2) = canonicalZ (Z.of_N w) (Z.shiftl (Z.of_N n1) (Z.of_N n2)).
 Proof.
-  intros. unfold toZ. rewrite N2Z_inj_shiftl. reflexivity. 
+  intros. unfold toZ. rewrite N2Z_inj_shiftl. reflexivity.
 Qed.
 
 Theorem shiftr_sbop:
@@ -2721,7 +2721,7 @@ Proof.
           split. exact H1. exact H2.
         rewrite Z.ones_spec_high.
           rewrite !Bool.andb_false_r. reflexivity.
-          split. apply N2Z.is_nonneg. exact H2.  
+          split. apply N2Z.is_nonneg. exact H2.
     rewrite N2Z.id. reflexivity.
     apply hibits_signed_range. intros. rewrite !Z.lxor_spec.
       repeat erewrite (signed_range_hibits i w _ (toZ_bounds w _) H). reflexivity.
@@ -3059,7 +3059,7 @@ Proof.
     destruct (N.lt_trichotomy 0 rc) as [Gtrc | [Eqrc | Ltrc]]; [ | | lia]; cycle 1.
     (* 0 = rc *)
     subst rc; rewrite <-Eqrc, N.add_0_r in *. rewrite Eqa in H; rewrite Eqc in H0; clear - H H0 sub_pred sub_pred_succ.
-    unfold msub. rewrite (N.mul_comm _ qc) at 1. rewrite N.Div0.mod_mul, N.sub_0_r. rewrite <-(N.mul_1_r (2^w)) at 2. 
+    unfold msub. rewrite (N.mul_comm _ qc) at 1. rewrite N.Div0.mod_mul, N.sub_0_r. rewrite <-(N.mul_1_r (2^w)) at 2.
     rewrite <-N.mul_add_distr_l, N.mul_comm, N.Div0.mod_mul.
     rewrite pred_mod, sub_pred_succ; try lia.
     rewrite N.add_sub_assoc, <-N.add_succ_comm, N.succ_pred; try lia.
@@ -3078,7 +3078,7 @@ Proof.
     destruct (N.lt_trichotomy 0 rc) as [Gtrc | [Eqrc | Ltrc]]; [ | | lia]; cycle 1.
     (* 0 = rc *)
     subst rc; rewrite <-Eqrc, N.add_0_r. unfold msub. rewrite pred_mod; try lia.
-    rewrite <-N.add_pred_r; try lia. rewrite sub_pred; try lia. 
+    rewrite <-N.add_pred_r; try lia. rewrite sub_pred; try lia.
     rewrite (N.mul_comm _ qc) at 1. rewrite N.Div0.mod_mul, N.sub_0_r. rewrite N.add_comm, N.add_assoc.
     rewrite <-(N.mul_1_r (2^w)) at 1.
     rewrite <-N.mul_add_distr_l, N.mul_comm, <-(N.Div0.add_mod_idemp_l (_*2^w)), N.Div0.mod_mul, N.add_0_l.
@@ -3087,9 +3087,9 @@ Proof.
     rewrite <-N.Div0.add_mod_idemp_l, N.mul_comm, N.Div0.mod_mul, N.add_0_l, N.add_1_r, N.succ_pred, N.mod_small; try lia.
     (* 0 < rc *)
     rewrite <-N.add_pred_r, <-N.add_pred_r; try lia.
-    unfold msub at 2. 
-    (* TODO: Make this simplify automatically: 
-             2 ^ w * qc + N.pred rc) mod 2 ^ w *) 
+    unfold msub at 2.
+    (* TODO: Make this simplify automatically:
+             2 ^ w * qc + N.pred rc) mod 2 ^ w *)
     rewrite <-(N.Div0.add_mod_idemp_l (2^w*qc)), (N.mul_comm (2^w) qc), N.Div0.mod_mul, N.add_0_l.
     rewrite (N.mod_small (N.pred rc)); try lia.
     rewrite N.add_sub_assoc, <-(N.add_assoc _ (N.pred ra)), (N.add_comm _ (2^w)),N.add_assoc ; try lia.
@@ -3105,7 +3105,7 @@ Lemma msub_pred_succ:
   forall w a b, 0 < b -> (msub w a (N.pred b)) mod 2 ^ w = (N.succ (msub w a b)) mod 2 ^ w.
 Proof.
     intros w a b H; clear - H. generalize dependent a. generalize dependent b. induction b using N.peano_ind.
-    lia. 
+    lia.
     intros. rewrite N.pred_succ.
     destruct (N.lt_trichotomy 0 a) as [Gt | [Eq | Lt]]; try lia.
       rewrite <-(succ_msub_swap w).
@@ -3124,7 +3124,7 @@ Proof.
   - now rewrite N.sub_0_r, N.add_0_r.
   - rewrite N.add_succ_r.
     rewrite N.sub_succ_r.
-    rewrite (msub_pred_succ w); try lia. 
+    rewrite (msub_pred_succ w); try lia.
     rewrite (succ_mod_swap (msub w x (y - z))), succ_mod_swap. rewrite <-IHz. reflexivity. lia.
 Qed.
 
@@ -3508,7 +3508,7 @@ Proof.
         revert H. apply N.nlt_ge, H2.
         revert H'. apply N.nle_gt, H2.
     split.
-      apply N.nle_gt. intro H'. revert H. apply N.nlt_ge. apply le_msub_iff. left. exact H'. 
+      apply N.nle_gt. intro H'. revert H. apply N.nlt_ge. apply le_msub_iff. left. exact H'.
       edestruct N.le_gt_cases.
         left. eassumption.
         right. apply N.nle_gt. intro H'. revert H. apply N.nlt_ge, le_msub_iff.
@@ -3630,7 +3630,7 @@ Proof.
   intros. destruct (N.le_gt_cases y w).
     rewrite N.shiftr_div_pow2. apply N.Div0.div_lt_upper_bound.
       rewrite <- N.pow_add_r, N.add_sub_assoc, N.add_comm, N.add_sub; assumption.
-    destruct x as [|x]. 
+    destruct x as [|x].
       rewrite N.shiftr_0_l. apply mp2_gt_0.
       rewrite N.shiftr_eq_0. apply mp2_gt_0. apply N.log2_lt_pow2.
         reflexivity.
@@ -5226,9 +5226,9 @@ Theorem getmem_xbits:
   getmem w LittleE len m a = xbits m (8*a) (8*(len+a)).
 Proof.
   induction len using N.peano_ind.
-  
+
   intros; rewrite! N.add_0_l in *. rewrite getmem_0, xbits_none; lia.
-  
+
   intros. rewrite getmem_succ.
   rewrite (xbits_split (8*a) (8* N.succ a) (8*(N.succ len + a))); try lia.
   unfold getbyte.   rewrite (IHlen). rewrite! (N.mod_small a), (N.mul_comm 8 a), (N.mul_comm 8 (N.succ a)), N.add_succ_comm.
@@ -5558,12 +5558,12 @@ Proof.
 Qed.
 
 Theorem noverlap_reindex_msub:
-  forall w a1 len1 a2 len2 x y, y <= x -> 
+  forall w a1 len1 a2 len2 x y, y <= x ->
           ~ overlap w ( msub w a1 (x  - y)) len1 a2 len2 <->
           ~ overlap w ((msub w a1  x) + y ) len1 a2 len2.
 Proof.
   intros.
-  rewrite <-overlap_mod_l with (a1:=msub w a1 (x - y)). 
+  rewrite <-overlap_mod_l with (a1:=msub w a1 (x - y)).
   rewrite <-msub_le_distr; try assumption.
   rewrite  noverlap_mod_idemp_l. reflexivity.
 Qed.
@@ -5780,10 +5780,10 @@ Proof.
     + destruct (N.eq_0_gt_0_cases ((N.shiftr n i) mod 2 ^ 1));[|exfalso].
       rewrite H0 in *. unfold N.odd in H. simpl in H. discriminate. lia.
     + rewrite Eq in *. lia.
-    + change (2^1) with 2 in *. remember (N.shiftr n i) as x. clear - Gt. 
+    + change (2^1) with 2 in *. remember (N.shiftr n i) as x. clear - Gt.
       assert (Help: 2 <> 0) by lia. assert (H':=N.mod_upper_bound x 2 Help). lia.
   - destruct (N.lt_trichotomy ((N.shiftr n i) mod 2 ^ (1)) 1) as [Lt | [Eq | Gt]];
-    [exfalso | |exfalso]. 
+    [exfalso | |exfalso].
     + remember ((N.shiftr n i) mod 2 ^ 1) as x; lia.
     + rewrite Eq in *. unfold N.odd; now simpl.
     + assert (Help: 2 ^ 1 <> 0) by lia; remember (N.shiftr n i) as x;
@@ -5949,7 +5949,7 @@ Proof.
 Qed.
 
 Theorem strlen_unchanged:
-  forall w e m m' p len 
+  forall w e m m' p len
     (MEM : mem_region_unchanged w e m m' p (N.succ len))
     (STR : strlen w e m p len),
   strlen w e m' p len.
@@ -6572,7 +6572,7 @@ Qed.
 
 (* May be useful to apply after destructing (effexit _ _ _). *)
 Theorem effexit_false:
-  forall p xp t (EX: effexit p xp t = false), 
+  forall p xp t (EX: effexit p xp t = false),
     exists s a t' insn, t = (Addr a,s)::t' /\ p s a = Some insn.
 Proof with (try discriminate).
   unfold effexit. intros.
@@ -6593,7 +6593,7 @@ Proof with (try discriminate).
   | apply effexit_false in EX
   | discriminate
   | apply effexit_false in EX].
-    
+
     all:destruct EX as [s [a [t' [insn [H1 H2]]]]]; destruct t as [| [[a2|i2] s2]];
         try discriminate; inversion H1; subst; now exists insn.
 Qed.
@@ -6747,7 +6747,7 @@ Proof.
           apply nextinv_nocode; assumption.
       apply nextinv_noinv; assumption.
     apply nextinv_raise. inversion NI; subst.
-      simpl in TRU. destruct (Invs _). assumption. destruct (xp _); assumption. 
+      simpl in TRU. destruct (Invs _). assumption. destruct (xp _); assumption.
 Qed.
 
 Theorem prove_invs':

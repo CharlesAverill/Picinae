@@ -11,9 +11,12 @@ Picinae_armv7.v
 Picinae_armv8.v
 Picinae_riscv.v
 Picinae_amd64.v
-Picinae_armv8.v
-Picinae_pilbox32.v
-Picinae_numbers.v
 
 Examples/i386_strlen.v
 Examples/i386_strcmp.v
+Examples/p32_addloop.v
+Examples/arm8_strspn.v
+Examples/arm8_strspn_lemmas.v
+Picinae_pilbox32.v
+Picinae_pilbox32_interpreter.v
+Picinae_numbers.v

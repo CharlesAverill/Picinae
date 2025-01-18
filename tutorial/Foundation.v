@@ -34,8 +34,8 @@ Open Scope N.
 
 (** Each Picinae instantiation takes a machine architecture as input, expressed as
     a module that defines a type "var" for IL variables, a typing context "typctx"
-    that defines the type of each IL variable, and the CPU's memory access model 
-    expressed as propositions mem_readable and mem_writable that are satisfied 
+    that defines the type of each IL variable, and the CPU's memory access model
+    expressed as propositions mem_readable and mem_writable that are satisfied
     when an address is readable/writable in the context of a given store. *)
 Module Type Architecture.
   Declare Module Var : UsualDecidableType.
@@ -75,14 +75,14 @@ Definition a64typctx (id:a64var) : option N :=
     instruction semantics. *)
 
 (** With [a64var] and [a64typctx] specified, we're almost ready to create our first Architecture.
-    First we'll need to create UsualDecidableType module out of a64var. 
+    First we'll need to create UsualDecidableType module out of a64var.
     This is the standard module for encapsulating a type with its decision procedure,
     provided by [Structures.Equalities] in Rocq's standard library. *)
 
 Module MiniA64VarEq <: MiniDecidableType.
   Definition t := a64var.
   (** This definition of eq_dec uses proof-automation to synthesize the decision
-      procedure function.  
+      procedure function.
       <TODO: wording for this sentence:>
       This is a clever trick enabled by the Curry-Howard isomorphism at Rocq's foundation
       which treats proofs as terms of a type. To see the proof-term, equivalently the decision
@@ -100,7 +100,7 @@ End MiniA64VarEq.
     more properties to specify. *)
 
 Module A64Arch <: Architecture.
-  (** [Make_UDT] is a functor, a module-to-module function, which creates the desired UsualDecidableType module 
+  (** [Make_UDT] is a functor, a module-to-module function, which creates the desired UsualDecidableType module
       out of our MiniDecidableType module. *)
   Module Var := Make_UDT MiniA64VarEq.
   (** [Var.t] is an alias for [a64var], the type we specified earlier enumerating the hardware elements: registers, flags, and memory. *)
@@ -145,11 +145,11 @@ Definition vareqb v1 v2 := if vareq v1 v2 then true else false.
 (* end details *)
 
 (** We'll begin by looking at a simple subset of the expression language
-    and cover the syntax, semantics, and expression typing. 
- 
+    and cover the syntax, semantics, and expression typing.
+
     Our expressions include unary and binary operations.  These are encoded
     as an operator ([unop_typ] and [binop_typ]) and the one or two sub-expression
-    inputs to the operation.  The operators are also a subset of what Picinae supports. 
+    inputs to the operation.  The operators are also a subset of what Picinae supports.
     For the unary operations we'll only consider bitwise negation ([NOT]); for binary
     operations we'll consider some arithmetic ([PLUS], [MINUS]), bitwise ([AND],[OR],[XOR]),
     and comparison ([EQ],[LT]) operations. *)
@@ -200,7 +200,7 @@ Definition eval_unop (uop:unop_typ) (n:N) (w:bitwidth) : N :=
 (** Our first look at the expression language includes the operations just shown,
     variables ([Var]), and constants ([Word]).
     Variables are encoded by [Var (v:var)] where var is exactly the type enumerating our hardware elements.
-    For example, 
+    For example,
 
       * [Var R_R0] denotes the value stored in register R0.
       * [Var F_R] denotes the value of the memory-readable permission flag.
@@ -230,14 +230,14 @@ Definition r0_plus_r1 : exp :=
   BinOp OP_PLUS (Var R_R0) (Var R_R1).
 
 Definition r0_and_r1__plus__not_7 : exp :=
-  BinOp OP_PLUS 
-    (BinOp OP_AND (Var R_R0) (Var R_R1)) 
+  BinOp OP_PLUS
+    (BinOp OP_AND (Var R_R0) (Var R_R1))
     (UnOp OP_NOT (Word 7 32)).
 
 (** **** Exercise: 1 star, standard, optional (zero_expressions)
 
-   Replace `Word x x` below with three different expressions that you think will 
-   always evaluate to zero. You are allowed to use each operation at most once. 
+   Replace `Word x x` below with three different expressions that you think will
+   always evaluate to zero. You are allowed to use each operation at most once.
    I.e. if you use `OP_AND` in zero_expression1 then you may not use it in
    zero_expression2 nor zero_expression3.
 *)
@@ -254,12 +254,12 @@ Definition zero_expression3 := (* Fill in here *) Word 3 3.
     the form [eval_exp c s e n w] reads as:
 
         "given type context c and store s, expression e may evaluate to value n with
-        bitwidth w."  
+        bitwidth w."
 
     Each constructor of [eval_exp] corresponds to evaluating one of the constructors of [exp].
 
     TODO: A deeper explanation of the necessity of including the bitwidth of expressions.
-    
+
     Importantly, each expression has a bitwidth.
     *)
 
@@ -489,7 +489,7 @@ Ltac rewrite_widthof :=
       let w' := fresh "w" in
         evar (w':N);
         replace 1 with (widthof_binop op w'); unfold w'; constructor
-  | |- hastyp_exp _ (BinOp ?op _ _) ?w => 
+  | |- hastyp_exp _ (BinOp ?op _ _) ?w =>
         replace w with (widthof_binop op w); constructor
   end.
 
@@ -602,7 +602,7 @@ Definition eval_unop (uop:unop_typ) (n:N) (w:bitwidth) : N :=
       2.  CAST_HIGH removes the lower bits of a number, keeping the upper bits.
 
       3.  CAST_SIGNED extends the number by repeating its most significant bit.
-          This preserves its value when it is interpreted as a one's or 
+          This preserves its value when it is interpreted as a one's or
           two's complement number.
 
       4.  CAST_UNSIGNED extends the number with repeated 0-bits.  This preserves
@@ -656,11 +656,11 @@ Inductive eval_exp (c:typctx) (s:store): exp -> N -> bitwidth -> Prop :=
 | EConcat e' e n' w' n w (E': eval_exp c s e' n' w') (E: eval_exp c s e n w):
           eval_exp c s (Concat e' e) (cbits n' w n) (w'+w).
 
-(** Let's begin breaking these down. 
+(** Let's begin breaking these down.
 
 [| ECast ct w w' e1 n (E1: eval_exp c s e1 n w):
         eval_exp c s (Cast ct w' e1) (cast ct w w' n) w']
-  
+
     Casting takes the w-bit expression [e1] and, given it is well-typed, casts it
     to a w'-bit value according to the cast type [ct].
 
@@ -682,7 +682,7 @@ Inductive eval_exp (c:typctx) (s:store): exp -> N -> bitwidth -> Prop :=
       hi := 9
       lo := 4
       xbits val lo hi
-      = xbits val 9 4 
+      = xbits val 9 4
       = N.shiftr val 4 mod 2^(9-4)
       = N.shiftr val 4 mod 2^5
 
@@ -718,7 +718,7 @@ Inductive eval_exp (c:typctx) (s:store): exp -> N -> bitwidth -> Prop :=
           eval_exp c s (Concat e1 e2) (cbits n1 w2 n2) (w1+w2)]
 
     Concatenation combines the bitstrings of two values.  In the rule, the variables
-    with an apostrophe (viz. [e'], [n'], [w']) correspond to the expression that 
+    with an apostrophe (viz. [e'], [n'], [w']) correspond to the expression that
     gets put on the high end of the new value, that is, on the left.  The variables
     without the apostrophe are on the low end, on the right.  The resulting bitwidth
     is, unsurprisingly, the sum of each expression's bitwidth ([w'+w]).

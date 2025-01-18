@@ -15,7 +15,7 @@
    * Picinae_theory
    * Picinae_finterp
    * Picinae_statics
-   * Picinae_armv8_pcode
+   * Picinae_armv8
    * program_arm8
    (in that order) and then compile this module using menu option
    Compile->Compile buffer.
@@ -26,7 +26,7 @@ Require Import FunctionalExtensionality.
 Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
-Require Import Picinae_armv8_pcode.
+Require Import Picinae_armv8.
 Require Import Lia.
 Require Import Bool.
 

@@ -7,9 +7,9 @@ Import ListNotations.
 Open Scope N.
 
 Definition addloop_program := [
-  PIL_li 0 0; 
-  PIL_addi 1 1 1; 
-  PIL_subi 2 2 1; 
+  PIL_li 0 0;
+  PIL_addi 1 1 1;
+  PIL_subi 2 2 1;
   PIL_bne 0 2 (-8)%Z
 ].
 

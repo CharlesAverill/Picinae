@@ -244,7 +244,7 @@ Definition rv_decode_binop f :=
   end.
 
 Definition rv_decode_branch f :=
-  match f with 
+  match f with
   | 0 => R5_Beq | 1 => R5_Bne | 4 => R5_Blt | 5 => R5_Bge | 6 => R5_Bltu | 7 => R5_Bgeu
   | _ => (fun _ _ _ => R5_InvalidI)
   end.

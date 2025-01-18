@@ -57,7 +57,7 @@ Definition p32_decode_binop_reg op rd rs1 rs2 :=
   | 8 => PIL_not rd rs1
   | _ => PIL_InvalidI
   end.
- 
+
 Definition p32_decode_binop_imm op rd rs1 i :=
   match op with
   | 3 => PIL_addi rd rs1 i
@@ -125,7 +125,7 @@ Definition p32_decode n : p32_asm :=
 Definition p32_varid (n:N) :=
   match n with
   | 0 => R_R0 | 1 => R_R1 | 2 => R_R2 | 3 => R_R3
-  | 4 => R_R4 | 5 => R_R5 | 6 => R_SP | 7 => R_LR 
+  | 4 => R_R4 | 5 => R_R5 | 6 => R_SP | 7 => R_LR
   (* What to do for this invalid case? *)
   | _ => R_PC
   end.
@@ -172,7 +172,7 @@ Definition p322il a p32i :=
   | PIL_st rs rd imm => Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (p32var rd) (Word imm 32)) (p32var rs) LittleE 4)
 
   end.
-  
+
 
 (* Here we enforce that all instruction fetches must start at a word
    aligned boundary. When we have a variable-length interpreter we
@@ -248,13 +248,13 @@ Proof.
     1-4: destruct n as [|p];[
         intros; discriminate
       | repeat (intros;discriminate || destruct p as [p|p|])].
-  destruct (a==p32_varid n). 
+  destruct (a==p32_varid n).
     specialize (H a n e). destruct H as [H1 [H2 [H3 h4]]]. subst a. destruct (p32_varid n); easy.
     destruct a; try reflexivity.
 Qed.
 
 Theorem regupdate_nop:
-  forall r, match r with 
+  forall r, match r with
   | V_MEM32 | A_READ | A_WRITE | A_EXEC => True
   | _ => pil32typctx[r := Some ( 32)] = pil32typctx
   end.
@@ -275,7 +275,7 @@ Qed.
 
 Theorem hastyp_word:
   forall c n pl pr, pl <= pr -> hastyp_exp c (Word (n mod 2 ^ pl) pr) ( pr).
-Proof. 
+Proof.
   intros. econstructor. apply N.lt_le_trans with (m:=2^pl).
     apply mp2_mod_lt.
     apply N.pow_le_mono_r; lia.
@@ -317,23 +317,23 @@ Proof.
   Ltac duh := try right; try ( (apply hastyp_word; lia) || (apply hastyp_varupdate) ); try now rewrite p32varid_numt32;
     try (apply TBinOp with (w:=32); apply hastyp_p32var || apply hastyp_word; try lia).
   Ltac econs_duh := econstructor; duh.
-  all: econs_duh; repeat first 
+  all: econs_duh; repeat first
     [ apply TBinOp with (w:=32)
-    | apply hastyp_p32var 
+    | apply hastyp_p32var
     | apply hastyp_word
     | rewrite varupdate_nop
     |   match goal with
-        | [|-context[update _ ?R (Some ( 32))]] 
-            => rewrite (regupdate_nop R) 
+        | [|-context[update _ ?R (Some ( 32))]]
+            => rewrite (regupdate_nop R)
         end
     | lia
     | solve apply pfsub_refl
-    | econs_duh]. 
+    | econs_duh].
   all: try rewrite varupdate_nop; try apply pfsub_refl; try lia.
   1-2:eapply (hastyp_varupdate 7).
   unfold widthof_binop; lia.
   reflexivity.
-  Unshelve. all:exact 0.
+  Unshelve. all: exact 3.
 Qed.
 
 Theorem welltyped_p32prog:
@@ -375,14 +375,14 @@ Definition assemble_insn_op (insn:p32_asm) : N :=
 (* Definition p32_varid (n:N) :=
   match n with
   | 0 => R_R0 | 1 => R_R1 | 2 => R_R2 | 3 => R_R3
-  | 4 => R_R4 | 5 => R_R5 | 6 => R_SP | 7 => R_LR 
+  | 4 => R_R4 | 5 => R_R5 | 6 => R_SP | 7 => R_LR
   (* What to do for this invalid case? *)
   | _ => R_PC
   end.
 Definition assemble_reg (r:p32var) : option N :=
   match r with
   | R_R0 => 0 *)
-  
+
 Definition p32_decode_op_cp op n : p32_asm:=
   if N.testbit op 0 then PIL_li (xnbits n 1 3) (xnbits n 4 28) else
   match op >> 1 with
@@ -402,7 +402,7 @@ Definition assemble_insn (insn:p32_asm) : N :=
   | PIL_sub rd rs1 rs2
   | PIL_and rd rs1 rs2
   | PIL_or  rd rs1 rs2
-  | PIL_xor rd rs1 rs2 
+  | PIL_xor rd rs1 rs2
       => (assemble_insn_op insn) .| ( rd << 7) .| ( rs1 << 10) .| ( rs2 << 13)
   | PIL_addi rd rs1 i
   | PIL_subi rd rs1 i
@@ -434,7 +434,7 @@ Definition welltyped_p32_asm (insn:p32_asm) : Prop :=
   | PIL_sub rd rs1 rs2
   | PIL_and rd rs1 rs2
   | PIL_or  rd rs1 rs2
-  | PIL_xor rd rs1 rs2 
+  | PIL_xor rd rs1 rs2
       => rd < 8 /\ rs1 < 8 /\ rs2 < 8
   | PIL_addi rd rs1 i
   | PIL_subi rd rs1 i
@@ -501,7 +501,7 @@ Theorem decode_assemble_insn :
 Proof.
   unfold welltyped_p32_asm, p32_decode, assemble_insn, p32_decode_op, assemble_insn_op
     ; intros; destruct insn eqn:INSN;
-  repeat match goal with 
+  repeat match goal with
   | [H: _ /\ _ |- _] => destruct H
   end.
   all: rewrite N.land_spec, N.ones_spec_low, Bool.andb_true_r; try lia;
@@ -510,7 +510,7 @@ Proof.
   all: repeat rewrite Nshiftr_land_high_nop; try lia; simpl (_ << _ .& _); psimpl.
   all: unfold p32_decode_binop_reg, p32_decode_binop_imm, p32_decode_cf_simm, p32_decode_imm,
          p32_decode_reg, p32_decode_memacc, p32_decode_simm.
-  
+
   (* TODO: add this xbits simplification to psimpl *)
   all: unfold xnbits; repeat match goal with
   | [ |- context[xbits (?N .| ?M) ?i ?j] ] => rewrite (xbits_lor_high N M i j);[
@@ -520,16 +520,9 @@ Proof.
   | [ |- _ .| ?M < 2 ^ ?w ] => apply lor_bound; try solve [psimpl ; lia]
   (* TODO: prove the following case using the shiftr monotonicity theorem, the
     assert by lia ensures that this case is provable and the admit is reasonable *)
-  | [ |- _ << ?S < 2 ^ ?w ] => assert (S + 3 <= w) by lia; admit 
+  | [ |- _ << ?S < 2 ^ ?w ] => assert (S + 3 <= w) by lia; admit
   end.
   19: reflexivity.
-  5: { rewrite xbits_shiftl, xbits_shiftl; simpl (_-_) in *; psimpl;
-       rewrite xbits_0_low, xbits_0_low; try lia; reflexivity. }
-  (* TODO: psimpl does not simplify the following goal as desired:
-     PIL_li (xbits rd (1 - 1) (3 + 1 - 1)) (xbits i (4 - 4) (28 + 4 - 4)) = PIL_li rd i
-  *)
-  all: repeat rewrite xbits_shiftl; simpl (_-_) in *; psimpl.
-  all: repeat rewrite xbits_0_low; try first [ lia | reflexivity | apply ofZ_bound | now rewrite toZ_ofZ].
 Admitted.
 
 (* TODO:
@@ -545,21 +538,21 @@ Admitted.
 Definition insn_length (insn:p32_asm) : N := 4.
 
 (* Each assembly code is represented as
-      
+
       * a base address (e.g. 0x00100000)
       * a list of labels (strings) and instructions (p32_asm)
 *)
 Inductive p32_assembly :=
   P32_ASSEMBLY (base_addr:N) (code:list (sum string p32_asm)).
-  
+
 Fixpoint label_loc (label:string) (base_addr:N) (code:list (sum string p32_asm)) : option N :=
   match code with
   | nil => None
-  | inl label' :: t => if (label =? label')%string then Some base_addr 
+  | inl label' :: t => if (label =? label')%string then Some base_addr
       else label_loc label base_addr t
   | inr insn :: t => label_loc label (base_addr + (insn_length insn)) t
   end.
-  
+
 Import ListNotations.
 Open Scope string.
 
@@ -599,7 +592,7 @@ Program Fixpoint nat2str (n:nat) (acc:string) {measure n}: string :=
     | 7 => String "7" acc
     | 8 => String "8" acc
     | 9 => String "9" acc
-    | _ => nat2str (n/10) 
+    | _ => nat2str (n/10)
        (String (match n mod 10 with
          | O => "0"
          | 1 => "1"
@@ -633,8 +626,8 @@ Fixpoint p32_code_length (code:list p32_asm) : N:=
 
 Definition print_code_prop (code:list p32_asm) (base_addr:N) (name:string) :=
   ("Definition " ++ name ++ " (mem:N) : Prop :=" ++ newline ++
-  " xbits mem " ++ (N2str (base_addr * 8)) ++ " " ++ 
-  (N2str ((base_addr + (p32_code_length code)) * 8)) ++ " = " ++ 
+  " xbits mem " ++ (N2str (base_addr * 8)) ++ " " ++
+  (N2str ((base_addr + (p32_code_length code)) * 8)) ++ " = " ++
   "XXXX" ++ "." ++ newline ++
   "Definition " ++ name ++ "_aexec (mem:N) : Prop :=" ++ newline ++
   "  xbits mem " ++ (N2str base_addr) ++ " " ++
@@ -642,14 +635,14 @@ Definition print_code_prop (code:list p32_asm) (base_addr:N) (name:string) :=
   "XXXX" ++ "." ++ newline
   , (p32_assemble' 0 0 code)
   , N.ones (p32_code_length code) ).
-  
+
 (* Definition program' := [PIL_li 0 0; PIL_addi 1 1 1; PIL_subi 2 2 1; PIL_beq 0 2 (-12)%Z]. *)
 (* Compute p32_assemble 0x00100000 program'. *)
 (* Compute p32_code_length program'. *)
 (* Compute p32_assemble' 0 0 program'. *)
 (* Compute print_code_prop program' 0 "p". *)
-Ltac get_exec := 
-  repeat match goal with 
+Ltac get_exec :=
+  repeat match goal with
   | [P: ?prop ?v |- _ ] => unfold prop in P
   | [H: xbits (_ ?m) _ _ = _ |- context[N.testbit (update ?s _ _ ?m) _]] =>
     rewrite (update_frame s _ _ m); try easy

@@ -475,7 +475,7 @@ Definition policytarget (pol:policy) i i' :=
   | None => False
   end.
 
-Open Scope N. 
+Open Scope N.
 Definition safety (pol:policy) r im :=
   forall (l jmptbl: list Z) l' s0 m0 bi bi' j0 t s s' q j j' x
 
@@ -2047,7 +2047,7 @@ Proof.
 Qed.
 
 Definition opposite_branch n :=
-  (match n with 
+  (match n with
    | 0 => R5_Bne | 1 => R5_Beq | 4 => R5_Bge | 5 => R5_Blt | 6 => R5_Bgeu | 7 => R5_Bltu
    | _ => (fun _ _ _ => R5_InvalidI)
    end)%N.
@@ -2568,7 +2568,7 @@ Proof.
     set (m4 := N.mul 4) in XP. inversion XP; subst. subst m4. apply N.mul_cancel_l, Nat2N.inj, Nat.add_cancel_l in H; [|discriminate]. subst j0.
     destruct BB as [i0 BB]. exfalso. destruct (Nat.le_ge_cases i0 i).
 
-      rewrite <- (firstn_skipn i0 l') in BB at 1. 
+      rewrite <- (firstn_skipn i0 l') in BB at 1.
       rewrite firstn_app, firstn_firstn, Nat.min_r, concat_app, app_length, <- Nat.add_assoc, <- Nat.add_0_r in BB by assumption.
       apply Nat.add_cancel_l, Nat.eq_add_0, proj2 in BB. discriminate.
 

@@ -10,7 +10,7 @@ Definition dynamic_li_end   : N := 16.
 Section Invariants.
   Variables inp1 inp2 : N.
   Variable  s0 : store.
-  
+
   Definition postcondition (s:store) := s R_R5 = (777).
   Definition mem_unchanged (s:store) := s V_MEM32 = s0 V_MEM32 /\ s A_EXEC = s0 A_EXEC.
   Definition invs (t:trace) : option Prop:=
@@ -56,9 +56,9 @@ intros. unfold satisfies_all.
 
   (* Inductive cases *)
   intros.
-  (* somehow `startof_prefix` is bound to the wrong theorem here... 
+  (* somehow `startof_prefix` is bound to the wrong theorem here...
      In the strspn example the theorem is preferentially bound to
-     Picinae.Picinae_armv8_pcode.Theory_arm8.startof_prefix
+     Picinae.Picinae_armv8.Theory_arm8.startof_prefix
      rather than the alternative Picinae.Picinae_theory.startof_prefix.
      Here it is the opposite, so we must specify the arch-specific version*)
   eapply Picinae.Picinae_pilbox32.Theory_pil32.startof_prefix in ENTRY; try eassumption.
@@ -72,8 +72,8 @@ intros. unfold satisfies_all.
   step.
   step.
   rewrite <-MEMSAME in *.
-  Ltac get_exec ::= 
-  repeat match goal with 
+  Ltac get_exec ::=
+  repeat match goal with
   | [P: ?prop ?v |- _ ] => unfold prop in P
   | [H: xbits (_ ?m) _ _ = _ |- context[N.testbit (update ?s _ _ ?m) _]] =>
     rewrite (update_frame s _ _ m); try easy
@@ -89,7 +89,7 @@ Ltac effinv_none_hook ::= unfold effinv, effinv', p32_prog; get_exec.
    [ effinv_none_hook; reflexivity || fail_seek
    | psa_some_hook; reflexivity || fail_seek
    |  ].
-   
+
    (* TODO: Continue here. ISA_step_and_simplify is hanging *)
    (let c := fresh "c" in
     let s := fresh "s" in
@@ -97,13 +97,13 @@ Ltac effinv_none_hook ::= unfold effinv, effinv', p32_prog; get_exec.
     let XS := fresh "XS" in
     intros c s x XS).
    Print ISA_step_and_simplify.
-   
+
    Print step_stmt. Print exec_stmt.
    Print populate_varlist.
    Check fexec_stmt_init.
    generalize XS. Check update_frame.
 (* Ltac mem_simpl := *)
-  repeat match goal with 
+  repeat match goal with
   | [ |- context[getmem ?w ?e ?len (setmem ?w ?e ?len ?m ?a ?v) ?a]] => rewrite getmem_setmem
   | [ |- _ ] => rewrite update_frame;[|intro;discriminate]
   end.
@@ -188,13 +188,13 @@ $
       end; try (first [ rewrite exitof_none | rewrite exitof_some ])).
    Print ISA_invseek.
   eapply NIStep.
-  effinv_none_hook. 
-  
+  effinv_none_hook.
+
   unfold invs, dynamicli_exit. effinv_none_hook.
-  
+
   (p32_stmt (setmem 32 LittleE 4 (s V_MEM32) 12 12443) 12))
 
-  (* Notice our address, 12, is exactly the location where we stored a 
+  (* Notice our address, 12, is exactly the location where we stored a
      value, 12443, in memory. 12433 corresponds exactly to`PIL_li r5 777,`
      the instruction for loading the immediate 777 into register 5.
   *)

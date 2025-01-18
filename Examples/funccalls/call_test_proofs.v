@@ -5,7 +5,7 @@ Require Import NArith.
 Require Import ZArith.
 Require Import List.
 Import ListNotations.
-Require Import Picinae_armv8_pcode.
+Require Import Picinae_armv8.
 Require Import nops_o_branch_nop_armv8.
 Require Import nops_o_call_test_armv8.
 Require Import nops_o_clobber_ret_armv8.
@@ -63,7 +63,7 @@ Proof.
   *)
   Ltac unfold_all :=
     unfold whole_binary, combine_programs, funcs, pfsub,
-           tiny_nop, short_nop, branch_nop, loop_nop, 
+           tiny_nop, short_nop, branch_nop, loop_nop,
            rec_nop, tail_nop, clobber_ret, faith_ret, call_test.
   Ltac prove_pfsub x :=
     destruct x as [|p]; [
@@ -78,7 +78,7 @@ Proof.
   apply Forall_cons; unfold_all. intros x y a. prove_pfsub x.
   apply Forall_cons; unfold_all. intros x y a. prove_pfsub x.
   apply Forall_cons; unfold_all. intros x y a. prove_pfsub x.
-  apply Forall_nil. 
+  apply Forall_nil.
 
 Qed.
 
@@ -87,7 +87,7 @@ Definition call_test_exit (t:trace) :=
   match t with (Addr a, _)::_ => match a with
   | 0x001000cc => true
   | _ => false end | _ => false end.
-  
+
 Definition call_test_invs (s0:store) (t:trace) :=
   match t with (Addr a, s)::_ => match a with
   | 0x00100084 => Some (arm8equiv s s0)
@@ -101,16 +101,16 @@ Theorem call_test_pc :
      satisfies_all whole_binary (call_test_invs s) call_test_exit ((x',s')::t).
 Proof.
   Local Ltac step := time arm8_step.
-  intros. 
+  intros.
   (* Base case *)
-  apply prove_invs. simpl. rewrite ENTRY. step. 
+  apply prove_invs. simpl. rewrite ENTRY. step.
   unfold arm8equiv_or; intros. unfold arm8equiv; reflexivity.
   (* Inductive step *)
   intros.
   eapply startof_prefix in ENTRY; try eassumption.
   eapply preservation_exec_prog in MDL; try (eassumption || apply whole_binary_welltyped).
   clear - PRE MDL. rename t1 into t. rename s into s0; rename s1 into s.
-  
+
   Search trueinv_None.
   destruct_inv 64 PRE.
   rename PRE into S0.
@@ -121,8 +121,8 @@ Proof.
   (* TODO: update the invariants, exit, and proof to use the new perform_call
            machinery.
   *)
-  
-  
+
+
   (* Old code *)
   apply perform_call with (Invs2:=tiny_nop_invs current_s) (xp2:=tiny_nop_exit); try reflexivity.
     (* CALLEE *)

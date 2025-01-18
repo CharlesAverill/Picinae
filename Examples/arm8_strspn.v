@@ -4,7 +4,7 @@ file: strspn_arm8.so
 function: __strspn
 *)
 
-Require Import Picinae_armv8_pcode.
+Require Import Picinae_armv8.
 Require Import NArith.
 Open Scope N.
 
@@ -62,7 +62,7 @@ Definition strspn2 : program := fun _ a => match a with
 	Move (V_TEMP 0) (Var R_X3) $;
 	Move V_MEM64 (Store (Var V_MEM64) (Var (V_TEMP 0)) (Cast CAST_LOW 128 (Extract 127 0 (Var R_Z0))) LittleE 16) $;
 	Move (V_TEMP 0) (BinOp OP_PLUS (Var (V_TEMP 0)) (Word 16 64)) $;
-	Move V_MEM64 (Store (Var V_MEM64) (Var (V_TEMP 0)) (Cast CAST_LOW 128 (Extract 127 0 (Var R_Z1))) LittleE 16) 
+	Move V_MEM64 (Store (Var V_MEM64) (Var (V_TEMP 0)) (Cast CAST_LOW 128 (Extract 127 0 (Var R_Z1))) LittleE 16)
 )
 
 (* 0x0010001c: cbz w2,0x0010009c *)
@@ -338,5 +338,5 @@ Definition strspn2 : program := fun _ a => match a with
 | _ => None
 end.
 
-Theorem welltyped: welltyped_prog arm8typctx strspn2. 
+Theorem welltyped: welltyped_prog arm8typctx strspn2.
 Proof. Picinae_typecheck. Qed.

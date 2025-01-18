@@ -4,7 +4,7 @@ file: nops.o
 function: call_test
 *)
 
-Require Import Picinae_armv8_pcode.
+Require Import Picinae_armv8.
 Require Import NArith.
 
 Require Import nops_o_branch_nop_armv8.
@@ -67,7 +67,7 @@ Definition call_test : program := fun s a => match a with
 	Move R_X0 (Var R_X0)
 )
 
-(* rec_nop - we're not ready for it quite yet. 
+(* rec_nop - we're not ready for it quite yet.
       so we ignore it for now and replace it with the same nop
       below*)
 (* 0x001000a8: bl 0x00100044 *)

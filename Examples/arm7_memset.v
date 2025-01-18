@@ -10,7 +10,7 @@ Definition memset_arm : program := fun _ a => match a with
   )
 
 (* 0xc0000044: cmp r2, #8 *)
-| 4 => Some (4, 
+| 4 => Some (4,
     Move (V_TEMP 0 (* v130 *)) (Var R_R2) $;
     Move (V_TEMP 1 (* v128 *)) (BinOp OP_MINUS (Var R_R2) (Word 8 32)) $;
     Move R_CF (BinOp OP_LE (Word 8 32) (Var (V_TEMP 0 (* v130 *)))) $;
@@ -29,7 +29,7 @@ Definition memset_arm : program := fun _ a => match a with
   )
 
 (* 0xc000004c: tst r3, #3 *)
-| 12 => Some (4, 
+| 12 => Some (4,
     Move (V_TEMP 2 (* v132 *)) (BinOp OP_AND (Var R_R3) (Word 3 32)) $;
     Move R_CF (Unknown 1) $;
     Move R_NF (Cast CAST_HIGH 1 (Var (V_TEMP 2 (* v132 *)))) $;
@@ -38,7 +38,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc0000050: strbne r1, [r3], #1 *)
 | 16 => Some (4,
-    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) ( 
+    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (
       Move (V_TEMP 3 (* v135 *)) (Cast CAST_LOW 8 (Var R_R1)) $;
       Move V_MEM32 (Store (Var V_MEM32) (Var R_R3) (Var (V_TEMP 3 (* v135 *))) LittleE 1) $;
       Move R_R3 (BinOp OP_PLUS (Var R_R3) (Word 1 32))
@@ -71,13 +71,13 @@ Definition memset_arm : program := fun _ a => match a with
   )
 
 (* 0xc0000060: orr r1, r1, r1, lsl #8 *)
-| 32 => Some (4, 
+| 32 => Some (4,
     Move (V_TEMP 4 (* v140 *)) (Var R_R1) $;
     Move R_R1 (BinOp OP_OR (Var R_R1) (BinOp OP_LSHIFT (Var (V_TEMP 4 (* v140 *))) (Word 8 32)))
   )
 
 (* 0xc0000064: orr r1, r1, r1, lsl #16 *)
-| 36 => Some (4, 
+| 36 => Some (4,
     Move (V_TEMP 5 (* v141 *)) (Var R_R1) $;
     Move R_R1 (BinOp OP_OR (Var R_R1) (BinOp OP_LSHIFT (Var (V_TEMP 5 (* v141 *))) (Word 16 32)))
   )
@@ -88,7 +88,7 @@ Definition memset_arm : program := fun _ a => match a with
   )
 
 (* 0xc000006c: subs r2, r2, #8 *)
-| 44 => Some (4, 
+| 44 => Some (4,
     Move (V_TEMP 6 (* v144 *)) (Var R_R2) $;
     Move R_R2 (BinOp OP_MINUS (Var R_R2) (Word 8 32)) $;
     Move R_CF (BinOp OP_LE (Word 8 32) (Var (V_TEMP 6 (* v144 *)))) $;
@@ -99,7 +99,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc0000070: stmhs r3!, {r1, r12} *)
 | 48 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 7 (* v146 *)) (Var R_R3) $;
       Move V_MEM32 (Store (Var V_MEM32) (Var (V_TEMP 7 (* v146 *))) (Var R_R1) LittleE 4) $;
       Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (Var (V_TEMP 7 (* v146 *))) (Word 4 32)) (Var R_R12) LittleE 4) $;
@@ -111,7 +111,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc0000074: subshs r2, r2, #8 *)
 | 52 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 8 (* v148 *)) (Var R_R2) $;
       Move R_R2 (BinOp OP_MINUS (Var R_R2) (Word 8 32)) $;
       Move R_CF (BinOp OP_LE (Word 8 32) (Var (V_TEMP 8 (* v148 *)))) $;
@@ -125,7 +125,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc0000078: stmhs r3!, {r1, r12} *)
 | 56 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 9 (* v150 *)) (Var R_R3) $;
       Move V_MEM32 (Store (Var V_MEM32) (Var (V_TEMP 9 (* v150 *))) (Var R_R1) LittleE 4) $;
       Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (Var (V_TEMP 9 (* v150 *))) (Word 4 32)) (Var R_R12) LittleE 4) $;
@@ -137,7 +137,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc000007c: subshs r2, r2, #8 *)
 | 60 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 10 (* v152 *)) (Var R_R2) $;
       Move R_R2 (BinOp OP_MINUS (Var R_R2) (Word 8 32)) $;
       Move R_CF (BinOp OP_LE (Word 8 32) (Var (V_TEMP 10 (* v152 *)))) $;
@@ -151,7 +151,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc0000080: stmhs r3!, {r1, r12} *)
 | 64 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 11 (* v154 *)) (Var R_R3) $;
       Move V_MEM32 (Store (Var V_MEM32) (Var (V_TEMP 11 (* v154 *))) (Var R_R1) LittleE 4) $;
       Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (Var (V_TEMP 11 (* v154 *))) (Word 4 32)) (Var R_R12) LittleE 4) $;
@@ -163,7 +163,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc0000084: subshs r2, r2, #8 *)
 | 68 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 12 (* v156 *)) (Var R_R2) $;
       Move R_R2 (BinOp OP_MINUS (Var R_R2) (Word 8 32)) $;
       Move R_CF (BinOp OP_LE (Word 8 32) (Var (V_TEMP 12 (* v156 *)))) $;
@@ -177,7 +177,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc0000088: stmhs r3!, {r1, r12} *)
 | 72 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 13 (* v158 *)) (Var R_R3) $;
       Move V_MEM32 (Store (Var V_MEM32) (Var (V_TEMP 13 (* v158 *))) (Var R_R1) LittleE 4) $;
       Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (Var (V_TEMP 13 (* v158 *))) (Word 4 32)) (Var R_R12) LittleE 4) $;
@@ -202,7 +202,7 @@ Definition memset_arm : program := fun _ a => match a with
   )
 
 (* 0xc0000094: subs r2, r2, #1 *)
-| 84 => Some (4, 
+| 84 => Some (4,
     Move (V_TEMP 14 (* v108 *)) (Var R_R2) $;
     Move R_R2 (BinOp OP_MINUS (Var R_R2) (Word 1 32)) $;
     Move R_CF (BinOp OP_LE (Word 1 32) (Var (V_TEMP 14 (* v108 *)))) $;
@@ -213,7 +213,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc0000098: strbhs r1, [r3], #1 *)
 | 88 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 15 (* v111 *)) (Cast CAST_LOW 8 (Var R_R1)) $;
       Move V_MEM32 (Store (Var V_MEM32) (Var R_R3) (Var (V_TEMP 15 (* v111 *))) LittleE 1) $;
       Move R_R3 (BinOp OP_PLUS (Var R_R3) (Word 1 32))
@@ -224,7 +224,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc000009c: subshs r2, r2, #1 *)
 | 92 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 16 (* v113 *)) (Var R_R2) $;
       Move R_R2 (BinOp OP_MINUS (Var R_R2) (Word 1 32)) $;
       Move R_CF (BinOp OP_LE (Word 1 32) (Var (V_TEMP 16 (* v113 *)))) $;
@@ -238,7 +238,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc00000a0: strbhs r1, [r3], #1 *)
 | 96 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 17 (* v116 *)) (Cast CAST_LOW 8 (Var R_R1)) $;
       Move V_MEM32 (Store (Var V_MEM32) (Var R_R3) (Var (V_TEMP 17 (* v116 *))) LittleE 1) $;
       Move R_R3 (BinOp OP_PLUS (Var R_R3) (Word 1 32))
@@ -249,7 +249,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc00000a4: subshs r2, r2, #1 *)
 | 100 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 18 (* v118 *)) (Var R_R2) $;
       Move R_R2 (BinOp OP_MINUS (Var R_R2) (Word 1 32)) $;
       Move R_CF (BinOp OP_LE (Word 1 32) (Var (V_TEMP 18 (* v118 *)))) $;
@@ -263,7 +263,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc00000a8: strbhs r1, [r3], #1 *)
 | 104 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 19 (* v121 *)) (Cast CAST_LOW 8 (Var R_R1)) $;
       Move V_MEM32 (Store (Var V_MEM32) (Var R_R3) (Var (V_TEMP 19 (* v121 *))) LittleE 1) $;
       Move R_R3 (BinOp OP_PLUS (Var R_R3) (Word 1 32))
@@ -274,7 +274,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc00000ac: subshs r2, r2, #1 *)
 | 108 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 20 (* v123 *)) (Var R_R2) $;
       Move R_R2 (BinOp OP_MINUS (Var R_R2) (Word 1 32)) $;
       Move R_CF (BinOp OP_LE (Word 1 32) (Var (V_TEMP 20 (* v123 *)))) $;
@@ -288,7 +288,7 @@ Definition memset_arm : program := fun _ a => match a with
 
 (* 0xc00000b0: strbhs r1, [r3], #1 *)
 | 112 => Some (4,
-    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) ( 
+    If (BinOp OP_EQ (Var R_CF) (Word 1 1)) (
       Move (V_TEMP 21 (* v126 *)) (Cast CAST_LOW 8 (Var R_R1)) $;
       Move V_MEM32 (Store (Var V_MEM32) (Var R_R3) (Var (V_TEMP 21 (* v126 *))) LittleE 1) $;
       Move R_R3 (BinOp OP_PLUS (Var R_R3) (Word 1 32))
@@ -377,7 +377,7 @@ void* memset(void* dest, int value, size_t size) {
 		
 		// this does abs(size) if fallthrough from (size > 8) case
 		r2 &= 7;
-	} 
+	}
 	
 	// Repeatedly fill 1-byte blocks until size <= 0
 	do {

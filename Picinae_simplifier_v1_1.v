@@ -31,7 +31,7 @@
                                                                         MM7O$$+Z
                                                                          M 7N8ZD
  *)
- 
+
 Require Import Picinae_theory.
 Require Import Picinae_statics.
 Require Import Picinae_finterp.
@@ -461,7 +461,7 @@ Fixpoint sastN_eq (e1 e2: sastN) {struct e1} : bool
     case e1; revgoals;
     let ctrs := numgoals in do ctrs (
       let n := numgoals in only 1: (intros; case e2; cycle n; cycle -1;
-        (only 1: (clear e1 e2; 
+        (only 1: (clear e1 e2;
           lazymatch reverse goal with [ id:sastvar_id |- sastvar_id -> _ ] =>
               let id' := fresh id in intro id'; intros; exact (mvarid_eq id id')
           | _ => pairup_args; compare_pairs
@@ -1181,7 +1181,7 @@ Definition simpl_modpow2_msub_atoms w e1 e2 :=
   end.
 
 (* Modularly add signed constant z to expression e, recursively descending into
-   e to find any constant term to to which z can be added. *) 
+   e to find any constant term to to which z can be added. *)
 Fixpoint simpl_modpow2_add_const' w z e :=
   match e with
   | SIMP_Const n1 => Some (SIMP_Const (ofZ w (Z.of_N n1 + z)))
@@ -2223,7 +2223,7 @@ Theorem vareqb_sound:
 Proof.
   unfold vareqb. intros. destruct (v1 == v2).
     subst. reflexivity.
-    discriminate. 
+    discriminate.
 Qed.
 
 Theorem endianness_eq_sound:
@@ -2726,7 +2726,7 @@ Proof.
   rewrite <- (recompose_bytes jmax n) at 2. rewrite lor_plus by apply disjoint_bits.
   apply N.add_le_mono.
     rewrite <- (N.min_r _ _ JHI), <- mp2_mod_mod_min. apply N_mod_le.
-    rewrite !N.shiftl_mul_pow2, !N.shiftr_div_pow2. apply N.mul_le_mono_r, mp2_div_le_mono, NHL. 
+    rewrite !N.shiftl_mul_pow2, !N.shiftr_div_pow2. apply N.mul_le_mono_r, mp2_div_le_mono, NHL.
 Qed.
 
 Theorem simpl_bounds_xbits_sound:
@@ -4512,7 +4512,7 @@ Proof.
     cbn [eval_sastN]. destruct (eval_sastN _ e1). apply IHe3. apply IHe2.
 
   (* GetMem - IteNN *)
-  destruct len as [|len]. reflexivity. 
+  destruct len as [|len]. reflexivity.
   cbn [simpl_getmem' eval_sastN]. rewrite (proj2 (IHe2 _)), (proj2 (IHe3 _)).
   destruct (eval_sastN _ e1); reflexivity.
 
@@ -4524,7 +4524,7 @@ Proof.
     cbn [eval_sastN]. destruct (eval_sastB _ e1). apply IHe1. apply IHe2.
 
   (* GetMem - IteBN *)
-  destruct len as [|len]. reflexivity. 
+  destruct len as [|len]. reflexivity.
   cbn [simpl_getmem' eval_sastN]. rewrite (proj2 (IHe1 _)), (proj2 (IHe2 _)).
   destruct (eval_sastB _ e1); reflexivity.
 Qed.

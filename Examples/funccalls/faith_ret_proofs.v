@@ -3,7 +3,7 @@ Require Import FunctionalExtensionality.
 Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
-Require Import Picinae_armv8_pcode.
+Require Import Picinae_armv8.
 Require Import nops_o_faith_ret_armv8.
 
 Import ARM8Notations.
@@ -13,13 +13,13 @@ Definition faith_ret_exit (t:trace) :=
   match t with (Addr a, _)::_ => match a with
   | 0x00100078 => true
   | _ => false end | _ => false end.
-  
+
 Definition faith_ret_invs (s0:store) (t:trace) :=
   match t with (Addr a, s)::_ => match a with
   | 0x00100074 => Some (arm8equiv_or s s0 (fun v => match v with R_X30 => true | _ => false end))
   | 0x00100078 => Some (arm8equiv_or s s0 (fun v => match v with R_X30 => true | _ => false end))
   | _ => None end | _ => None end.
-  
+
 Theorem faith_ret_pc :
   forall s t x' s'
      (ENTRY: startof t (x',s') = (Addr 0x00100074,s))
@@ -27,9 +27,9 @@ Theorem faith_ret_pc :
      satisfies_all faith_ret (faith_ret_invs s) faith_ret_exit ((x',s')::t).
 Proof.
   Local Ltac step := time arm8_step.
-  intros. 
+  intros.
   (* Base case *)
-  apply prove_invs. simpl. rewrite ENTRY. step. 
+  apply prove_invs. simpl. rewrite ENTRY. step.
   unfold arm8equiv_or; intros. right; reflexivity.
   (* Inductive step *)
   intros.
@@ -38,11 +38,11 @@ Proof.
   clear - PRE MDL. rename t1 into t. rename s into s0; rename s1 into s.
   destruct_inv 64 PRE.
   rename PRE into S0.
-  
+
   repeat step; unfold arm8equiv_or in *; intros v SIG; specialize (S0 v SIG).
     destruct v; match goal with
     | [ |- context[or (eq true true) _] ] => now left
-    | _ => right; repeat (rewrite update_updated || rewrite update_frame); try easy; 
+    | _ => right; repeat (rewrite update_updated || rewrite update_frame); try easy;
       match goal with | [ H: or (eq false true) _ |- _ ] => inversion H; [discriminate | easy]
       | _ => idtac
       end

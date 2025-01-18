@@ -21,7 +21,7 @@ Definition strcmp_i386 : program := fun _ a => match a with
   )
 
 (* 0xc000008a: cmpb (%edx), %al *)
-| 10 => Some (2, 
+| 10 => Some (2,
     Move (V_TEMP 0 (* v19 *)) (BinOp OP_MINUS (Cast CAST_LOW 8 (Cast CAST_LOW 32 (Var R_EAX))) (Load (Var V_MEM32) (Cast CAST_UNSIGNED 32 (Cast CAST_LOW 32 (Var R_EDX))) LittleE 1)) $;
     Move R_CF (BinOp OP_LT (Cast CAST_LOW 8 (Cast CAST_LOW 32 (Var R_EAX))) (Load (Var V_MEM32) (Cast CAST_UNSIGNED 32 (Cast CAST_LOW 32 (Var R_EDX))) LittleE 1)) $;
     Move R_OF (Cast CAST_HIGH 1 (BinOp OP_AND (BinOp OP_XOR (Cast CAST_LOW 8 (Cast CAST_LOW 32 (Var R_EAX))) (Load (Var V_MEM32) (Cast CAST_UNSIGNED 32 (Cast CAST_LOW 32 (Var R_EDX))) LittleE 1)) (BinOp OP_XOR (Cast CAST_LOW 8 (Cast CAST_LOW 32 (Var R_EAX))) (Var (V_TEMP 0 (* v19 *)))))) $;
@@ -41,7 +41,7 @@ Definition strcmp_i386 : program := fun _ a => match a with
   )
 
 (* 0xc000008e: incl %ecx *)
-| 14 => Some (1, 
+| 14 => Some (1,
     Move (V_TEMP 2 (* v22 *)) (Cast CAST_LOW 32 (Var R_ECX)) $;
     Move R_ECX (BinOp OP_PLUS (Cast CAST_LOW 32 (Var R_ECX)) (Word 1 32)) $;
     Move R_OF (BinOp OP_AND (BinOp OP_EQ (Cast CAST_HIGH 1 (Var (V_TEMP 2 (* v22 *)))) (Word 0 1)) (BinOp OP_XOR (Cast CAST_HIGH 1 (Var (V_TEMP 2 (* v22 *)))) (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_ECX))))) $;
@@ -52,7 +52,7 @@ Definition strcmp_i386 : program := fun _ a => match a with
   )
 
 (* 0xc000008f: incl %edx *)
-| 15 => Some (1, 
+| 15 => Some (1,
     Move (V_TEMP 4 (* v24 *)) (Cast CAST_LOW 32 (Var R_EDX)) $;
     Move R_EDX (BinOp OP_PLUS (Cast CAST_LOW 32 (Var R_EDX)) (Word 1 32)) $;
     Move R_OF (BinOp OP_AND (BinOp OP_EQ (Cast CAST_HIGH 1 (Var (V_TEMP 4 (* v24 *)))) (Word 0 1)) (BinOp OP_XOR (Cast CAST_HIGH 1 (Var (V_TEMP 4 (* v24 *)))) (Cast CAST_HIGH 1 (Cast CAST_LOW 32 (Var R_EDX))))) $;
@@ -63,7 +63,7 @@ Definition strcmp_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000090: testb %al, %al *)
-| 16 => Some (2, 
+| 16 => Some (2,
     Move (V_TEMP 6 (* v26 *)) (Cast CAST_LOW 8 (Cast CAST_LOW 32 (Var R_EAX))) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
@@ -83,7 +83,7 @@ Definition strcmp_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000094: xorl %eax, %eax *)
-| 20 => Some (2, 
+| 20 => Some (2,
     Move R_EAX (Word 0 32) $;
     Move R_AF (Unknown 1) $;
     Move R_ZF (Word 1 1) $;
@@ -94,7 +94,7 @@ Definition strcmp_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000096: retl *)
-| 22 => Some (1, 
+| 22 => Some (1,
     Move (V_TEMP 8 (* v21 *)) (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32)) $;
     Jmp (Var (V_TEMP 8 (* v21 *)))
@@ -116,7 +116,7 @@ Definition strcmp_i386 : program := fun _ a => match a with
   )
 
 (* 0xc00000a4: retl *)
-| 36 => Some (1, 
+| 36 => Some (1,
     Move (V_TEMP 9 (* v28 *)) (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32)) $;
     Jmp (Var (V_TEMP 9 (* v28 *)))

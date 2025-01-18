@@ -517,7 +517,7 @@ Definition list_union {A} (eqb: A -> A -> bool) (l1 l2: list A) :=
   List.fold_left (fun l x => if existsb (eqb x) l2 then l else (x::l)) l1 l2.
 
 Fixpoint vars_read_by_exp e :=
-  match e with 
+  match e with
   | Var v => v::nil
   | Word _ _ | Unknown _ => nil
   | UnOp _ e1 | Cast _ _ e1 | Extract _ _ e1 => vars_read_by_exp e1
@@ -643,7 +643,7 @@ Parameter fexec_stmt_hypn:
   exec_stmt c (updstr s (rev (VarVal v a None :: l)) vupdate) q c' s' x /\ eq1=eq2.
 
 Parameter fexec_stmt_fin:
-  forall a_s a_s' a_x c s l q c' s' x, 
+  forall a_s a_s' a_x c s l q c' s' x,
   exec_stmt c (updstr s l vupdate) q c' s' x /\ (a_s,a_s',a_x)=(s,s',x) ->
   exec_stmt c (updstr a_s l vupdate) q c' a_s' a_x.
 
@@ -1206,7 +1206,7 @@ Lemma updctx_sound:
 Proof.
   induction l as [|[v n w] t]; intro.
     reflexivity.
-    rewrite rev_cons, updctx_last, IHt. apply feval_vartyp_update. 
+    rewrite rev_cons, updctx_last, IHt. apply feval_vartyp_update.
 Qed.
 
 Lemma feval_settyps_sound:
@@ -1308,7 +1308,7 @@ Proof.
 Qed.
 
 Lemma fexec_stmt_fin:
-  forall a_s a_s' a_x c s l q c' s' x, 
+  forall a_s a_s' a_x c s l q c' s' x,
   exec_stmt c (updstr s l vupdate) q c' s' x /\ (a_s,a_s',a_x)=(s,s',x) ->
   exec_stmt c (updstr a_s l vupdate) q c' a_s' a_x.
 Proof.
