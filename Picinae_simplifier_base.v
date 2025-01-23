@@ -70,12 +70,11 @@ Inductive psimpl_tactic :=
 
 Ltac find_containing_term H v A :=
   let v' := fresh A in
-  set (v':=_:A) in (value of H) at 1; first
-  [ let test := fresh in
-    set (test:=v) in (value of v') at 1;
-    subst test v;
-    rename v' into v
-  | subst v' ].
+  set (v':=_:A) in (value of H) at 1;
+  first [ assert_succeeds (set v in (value of v') at 1)
+        | let t := type of v in assert_fails (set (_:t) in (value of v') at 1) ];
+  cbv delta [v] in v';
+  clear v; rename v' into v.
 
 Definition _psimpl_ (A:Type) (x:A) := x.
 

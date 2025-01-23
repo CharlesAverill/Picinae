@@ -166,6 +166,7 @@ Inductive sastN : Type :=
 | SIMP_LNot (e1 e2:sastN)
 | SIMP_ShiftR (e1 e2:sastN)
 | SIMP_ShiftL (e1 e2:sastN)
+| SIMP_Xbits (e1 e2 e3:sastN)
 | SIMP_Popcount (e1:sastN)
 | SIMP_Size (e1:sastN)
 | SIMP_Parity8 (e1:sastN)
@@ -260,6 +261,7 @@ Fixpoint eval_sastN mvt e {struct e} : N :=
   | SIMP_LNot e1 e2 => N.lnot (eval_sastN mvt e1) (eval_sastN mvt e2)
   | SIMP_ShiftR e1 e2 => N.shiftr (eval_sastN mvt e1) (eval_sastN mvt e2)
   | SIMP_ShiftL e1 e2 => N.shiftl (eval_sastN mvt e1) (eval_sastN mvt e2)
+  | SIMP_Xbits e1 e2 e3 => xbits (eval_sastN mvt e1) (eval_sastN mvt e2) (eval_sastN mvt e3)
   | SIMP_Popcount e1 => popcount (eval_sastN mvt e1)
   | SIMP_Size e1 => N.size (eval_sastN mvt e1)
   | SIMP_Parity8 e1 => parity8 (eval_sastN mvt e1)
@@ -564,6 +566,19 @@ Fixpoint simpl_bounds mvt e {struct e} : N * option N :=
                           option_map (fun hi1 => N.shiftr hi1 lo2) ohi1)
   | SIMP_ShiftL e1 e2 => let (lo1,ohi1) := simpl_bounds mvt e1 in let (lo2,ohi2) := simpl_bounds mvt e2 in
                          (N.shiftl lo1 lo2, match ohi1 with None => None | Some hi1 => option_map (N.shiftl hi1) ohi2 end)
+  | SIMP_Xbits e1 e2 e3 => let (lo1,ohi1) := simpl_bounds mvt e1 in
+                           let (lo2,ohi2) := simpl_bounds mvt e2 in
+                           let (lo3,ohi3) := simpl_bounds mvt e3 in
+      (match ohi1 with None => 0 | Some hi1 => match ohi2 with None => 0 | Some hi2 =>
+         if N.shiftr lo1 lo3 =? N.shiftr hi1 lo3 then xbits lo1 hi2 lo3 else 0
+       end end,
+       match ohi3 with
+       | None => option_map (fun hi1 => N.shiftr hi1 lo2) ohi1
+       | Some hi3 => Some match ohi1 with None => N.ones (hi3 - lo2) | Some hi1 =>
+                            if N.shiftr lo1 hi3 =? N.shiftr hi1 hi3
+                            then xbits hi1 lo2 hi3 else N.ones (hi3 - lo2)
+                          end
+       end)
   | SIMP_Popcount e1 | SIMP_Size e1 => (0, option_map N.size (snd (simpl_bounds mvt e1)))
   | SIMP_Parity8 _ => (0, Some 1)
   | SIMP_GetMem _ _ len m _ => (0, Some (N.ones (len*8)))
@@ -611,7 +626,7 @@ Fixpoint multiple_of_pow2 mvt e n {struct e} :=
         andb (multiple_of_pow2 mvt e1 n) (multiple_of_pow2 mvt e2 n)
     | SIMP_MSub w e1 e2 => if w <? n then false else andb (multiple_of_pow2 mvt e1 n) (multiple_of_pow2 mvt e2 n)
     | SIMP_Mul e1 e2 | SIMP_LAnd e1 e2 => orb (multiple_of_pow2 mvt e1 n) (multiple_of_pow2 mvt e2 n)
-    | SIMP_ShiftR e1 e2 => match e2 with SIMP_Const n2 => multiple_of_pow2 mvt e1 (n+n2) | _ => false end
+    | SIMP_ShiftR e1 e2 | SIMP_Xbits e1 e2 _ => match e2 with SIMP_Const n2 => multiple_of_pow2 mvt e1 (n+n2) | _ => false end
     | SIMP_ShiftL e1 e2 => multiple_of_pow2 mvt e1 (n - fst (simpl_bounds mvt e2))
     | SIMP_Pow e1 e2 =>
         match e1 with SIMP_Const n1 =>
@@ -1011,6 +1026,26 @@ Definition simpl_land' f e1 e2 :=
 
 Definition simpl_land_nomod := simpl_land' (fun e1 p2 => SIMP_LAnd e1 (SIMP_Const (N.pos p2))).
 
+(** Xbits simplification without recursively simplifying e1 under mod 2^hi3 constraints
+   (so that simpl_xbits_basic can be called non-circularly within mod simplification). **)
+
+Definition simpl_xbits_basic mvt e1 e2 e3 :=
+  match simpl_sub mvt e3 e2 with SIMP_Const 0 => SIMP_Const 0 | _ =>
+    match simpl_bounds mvt e1 with (_,None) => SIMP_Xbits e1 e2 e3 | (lo1,Some hi1) =>
+      let (lo2,ohi2) := simpl_bounds mvt e2 in
+      let w1 := N.size hi1 in
+      if w1 <=? lo2 then SIMP_Const 0 else
+      let (lo3,ohi3) := simpl_bounds mvt e3 in
+      if w1 <=? lo3 then simpl_shiftr mvt e1 e2 else
+      if ((lo1 =? hi1) &&
+          match ohi2 with None => false | Some hi2 => lo2 =? hi2 end &&
+          match ohi3 with None => false | Some hi3 => lo3 =? hi3 end)%bool
+      then SIMP_Const (xbits lo1 lo2 lo3)
+      else SIMP_Xbits e1 e2 e3
+    end
+  end.
+
+
 (** Mod simplification **)
 
 Definition simpl_mod_core mvt e1 e2 :=
@@ -1192,6 +1227,10 @@ Fixpoint simpl_under_modpow2 mvt e w {struct e} :=
         (if w <=? fst (simpl_bounds mvt e2) then SIMP_Const w else e2)
     | SIMP_ShiftR e1 e2 => match simpl_bounds mvt e2 with (_, Some hi2) => simpl_shiftr mvt (simpl_under_modpow2 mvt e1 (w+hi2)) e2 | _ => e end
     | SIMP_ShiftL e1 e2 => simpl_shiftl mvt (simpl_under_modpow2 mvt e1 (w - fst (simpl_bounds mvt e2))) e2
+    | SIMP_Xbits e1 e2 e3 =>
+      match simpl_bounds mvt e2 with (_, None) => e | (_, Some hi2) =>
+        simpl_xbits_basic mvt (simpl_under_modpow2 mvt e1 (w+hi2)) e2 e3
+      end
     | SIMP_IteNN e0 e1 e2 => simpl_ite_sameN (SIMP_IteNN e0) (simpl_under_modpow2 mvt e1 w) (simpl_under_modpow2 mvt e2 w)
     | SIMP_IteBN e0 e1 e2 => simpl_ite_sameN (SIMP_IteBN e0) (simpl_under_modpow2 mvt e1 w) (simpl_under_modpow2 mvt e2 w)
     | SIMP_GetMem mw en len m a =>
@@ -1256,6 +1295,15 @@ Definition simpl_and2mod mvt e1 p2 :=
   else SIMP_LAnd (simpl_under_modpow2 mvt e1 (N.size (N.pos p2))) (SIMP_Const (N.pos p2)).
 
 Definition simpl_land mvt := simpl_land' (simpl_and2mod mvt).
+
+(** Xbits simplification **)
+
+Definition simpl_xbits mvt e1 e2 e3 :=
+  simpl_xbits_basic mvt
+    match simpl_bounds mvt e3 with
+    | (_,None) => e1
+    | (_,Some hi3) => simpl_under_modpow2 mvt e1 hi3
+    end e2 e3.
 
 (** SetMem simplification **)
 
@@ -1379,6 +1427,7 @@ Definition simplN_dispatch mvt e :=
   | SIMP_LNot e1 e2 => simpl_lnot e1 e2
   | SIMP_ShiftR e1 e2 => simpl_shiftr mvt e1 e2
   | SIMP_ShiftL e1 e2 => simpl_shiftl mvt e1 e2
+  | SIMP_Xbits e1 e2 e3 => simpl_xbits mvt e1 e2 e3
   | SIMP_Popcount _ => e
   | SIMP_Size _ => e
   | SIMP_Parity8 _ => e
@@ -1545,6 +1594,7 @@ Fixpoint simpl_outN (noe: forall op, noe_setop_typsig op) (noet: forall op, noe_
   | SIMP_LNot e1 e2 => noe NOE_NOT (simpl_outN noe noet mvt e1) (simpl_outN noe noet mvt e2)
   | SIMP_ShiftR e1 e2 => noe NOE_SHR (simpl_outN noe noet mvt e1) (simpl_outN noe noet mvt e2)
   | SIMP_ShiftL e1 e2 => noe NOE_SHL (simpl_outN noe noet mvt e1) (simpl_outN noe noet mvt e2)
+  | SIMP_Xbits e1 e2 e3 => noe NOE_XBITS (simpl_outN noe noet mvt e1) (simpl_outN noe noet mvt e2) (simpl_outN noe noet mvt e3)
   | SIMP_Popcount e1 => noe NOE_POPCOUNT (simpl_outN noe noet mvt e1)
   | SIMP_Size e1 => noe NOE_SIZE (simpl_outN noe noet mvt e1)
   | SIMP_Parity8 e1 => noe NOE_PARITY8 (simpl_outN noe noet mvt e1)
@@ -1724,6 +1774,7 @@ Local Ltac sastN_gen n :=
   | N.lxor ?n1 ?n2 => let t1 := sastN_gen n1 in let t2 := sastN_gen n2 in uconstr:(SIMP_Xor t1 t2)
   | N.shiftr ?n1 ?n2 => let t1 := sastN_gen n1 in let t2 := sastN_gen n2 in uconstr:(SIMP_ShiftR t1 t2)
   | N.shiftl ?n1 ?n2 => let t1 := sastN_gen n1 in let t2 := sastN_gen n2 in uconstr:(SIMP_ShiftL t1 t2)
+  | xbits ?n1 ?n2 ?n3 => let t1 := sastN_gen n1 in let t2 := sastN_gen n2 in let t3 := sastN_gen n3 in uconstr:(SIMP_Xbits t1 t2 t3)
   | N.pow ?n1 ?n2 => let t1 := sastN_gen n1 in let t2 := sastN_gen n2 in uconstr:(SIMP_Pow t1 t2)
   | (match ?n0 with N0 => ?n2 | N.pos _ => ?n1 end) =>
       let t0 := sastN_gen n0 in let t1 := sastN_gen n1 in let t2 := sastN_gen n2 in uconstr:(SIMP_IteNN t0 t1 t2)
@@ -1811,6 +1862,7 @@ Section CheckFrontEnd.
     check (N.lnot n1 n2).
     check (N.shiftr n1 n2).
     check (N.shiftl n1 n2).
+    check (xbits n1 n2 n3).
     check (N.pow 2 n2).
     check (if n1 then n2 else n3).
     check (if b1 then n1 else n2).
@@ -2141,6 +2193,67 @@ Proof.
     rewrite !N.size_log2 by discriminate. apply (proj1 (N.succ_le_mono _ _)), N.log2_le_mono, H.
 Qed.
 
+Lemma xbits_le_ones:
+  forall n i j i' j', i' <= i -> j <= j' ->
+  xbits n i j <= N.ones (j' - i').
+Proof.
+  intros.
+  destruct (N.le_gt_cases j i). rewrite xbits_none. apply N.le_0_l. assumption.
+  apply N.lt_succ_r.
+  rewrite N.ones_equiv, N.succ_pred by (apply N.pow_nonzero; discriminate).
+  eapply N.lt_le_trans. apply xbits_bound.
+  apply N.pow_le_mono_r. discriminate.
+  etransitivity; [ apply N.sub_le_mono_l | apply N.sub_le_mono_r]; eassumption.
+Qed.
+
+Lemma disjoint_bits:
+  forall x y i,
+  N.land (x mod 2^i) (N.shiftl y i) = 0.
+Proof.
+  intros. apply N.bits_inj_0. intro j.
+  rewrite N.land_spec. destruct (N.lt_ge_cases j i).
+    rewrite N.mod_pow2_bits_low, N.shiftl_spec_low by assumption. apply Bool.andb_false_r.
+    rewrite N.mod_pow2_bits_high. reflexivity. assumption.
+Qed.
+
+Lemma xbits_lower_bound:
+  forall n i j nmin nmax imax jmin
+    (NHL: nmin <= n <= nmax) (IHI: i <= imax) (JLO: jmin <= j)
+    (BITS: N.shiftr nmin jmin = N.shiftr nmax jmin),
+  xbits nmin imax jmin <= xbits n i j.
+Proof.
+  intros. rewrite !xbits_equiv, !N.shiftr_div_pow2.
+  etransitivity; revgoals. apply N.div_le_compat_l.
+    split. apply mp2_gt_0. apply N.pow_le_mono_r. discriminate. eassumption.
+  apply N_le_div.
+  eapply N.add_le_mono_r. rewrite <- lor_plus by apply disjoint_bits.
+  rewrite recompose_bytes, BITS.
+  etransitivity. apply NHL.
+  rewrite <- (recompose_bytes jmin n) at 1. rewrite lor_plus by apply disjoint_bits.
+  apply N.add_le_mono.
+    rewrite <- (N.min_r _ _ JLO), <- mp2_mod_mod_min. apply N_mod_le.
+    rewrite !N.shiftl_mul_pow2, !N.shiftr_div_pow2. apply N.mul_le_mono_r, mp2_div_le_mono, NHL.
+Qed.
+
+Lemma xbits_upper_bound:
+  forall n i j nmin nmax imin jmax
+    (NHL: nmin <= n <= nmax) (ILO: imin <= i) (JHI: j <= jmax)
+    (BITS: N.shiftr nmin jmax = N.shiftr nmax jmax),
+  xbits n i j <= xbits nmax imin jmax.
+Proof.
+  intros. rewrite !xbits_equiv, !N.shiftr_div_pow2.
+  etransitivity. apply N.div_le_compat_l.
+    split. apply mp2_gt_0. apply N.pow_le_mono_r. discriminate. eassumption.
+  apply mp2_div_le_mono.
+  eapply N.add_le_mono_r. rewrite <- (lor_plus (nmax mod _)) by apply disjoint_bits.
+  rewrite recompose_bytes, <- BITS.
+  etransitivity; [|apply NHL].
+  rewrite <- (recompose_bytes jmax n) at 2. rewrite lor_plus by apply disjoint_bits.
+  apply N.add_le_mono.
+    rewrite <- (N.min_r _ _ JHI), <- mp2_mod_mod_min. apply N_mod_le.
+    rewrite !N.shiftl_mul_pow2, !N.shiftr_div_pow2. apply N.mul_le_mono_r, mp2_div_le_mono, NHL. 
+Qed.
+
 Theorem simpl_bounds_sound':
   forall mvt,
     (forall e, match simpl_bounds mvt e with (lo,ohi) =>
@@ -2159,7 +2272,8 @@ Proof.
   | _ => intro end;
   try solve [ exact I ];
   try destruct (simpl_bounds mvt e1) as (lo1,ohi1);
-  try destruct (simpl_bounds mvt e2) as (lo2,ohi2).
+  try destruct (simpl_bounds mvt e2) as (lo2,ohi2);
+  try destruct (simpl_bounds mvt e3) as (lo3,ohi3).
   
   (* NVar *)
   destruct id as [|id]. split. apply N.le_0_l. exact I.
@@ -2286,6 +2400,28 @@ Proof.
   destruct ohi1 as [hi1|]; [|exact I]. destruct ohi2 as [hi2|]; [|exact I]. simpl. rewrite !N.shiftl_mul_pow2. apply N.mul_le_mono.
     apply IHe1.
     apply N.pow_le_mono_r. discriminate. apply IHe2.
+
+  (* Xbits *)
+  split.
+
+    destruct ohi1 as [hi1|]; [|apply N.le_0_l].
+    destruct ohi2 as [hi2|]; [|apply N.le_0_l].
+    destruct (_ =? _) eqn:H; [|apply N.le_0_l].
+    eapply xbits_lower_bound. apply IHe1. apply IHe2. apply IHe3. apply N.eqb_eq, H.
+
+    destruct ohi3 as [hi3|], ohi1 as [hi1|].
+      destruct (_ =? _) eqn:H.
+        eapply xbits_upper_bound. apply IHe1. apply IHe2. apply IHe3. apply N.eqb_eq, H.
+        apply xbits_le_ones. apply IHe2. apply IHe3.
+      apply xbits_le_ones. apply IHe2. apply IHe3.
+      simpl. rewrite xbits_equiv, !N.shiftr_div_pow2. etransitivity.
+        apply mp2_div_le_mono, N_mod_le.
+        etransitivity.
+          apply N_le_div, IHe1.
+          apply N.div_le_compat_l. split.
+            apply mp2_gt_0.
+            apply N.pow_le_mono_r. discriminate. apply IHe2.
+      exact I.
 
   (* Popcount *)
   split.
@@ -2484,6 +2620,19 @@ Proof.
         rewrite N.pow_add_r, <- N.mul_assoc. eexists. reflexivity.
         transitivity lo2. apply N.lt_le_incl. assumption. apply SB2.
       apply N.lt_le_incl. assumption.
+
+  (* Xbits *)
+  destruct e2; try discriminate. specialize (IHe1 _ H). destruct IHe1 as [m1 H1].
+  exists (m1 mod 2^(eval_sastN mvt e3 - n0 - Npos n)). simpl eval_sastN. rewrite H1.
+  unfold xbits. rewrite N.shiftr_div_pow2, N.pow_add_r, <- N.mul_assoc, (N.mul_comm _ m1), N.mul_assoc.
+  rewrite N.div_mul by (apply N.pow_nonzero; discriminate).
+  rewrite !(N.mul_comm (2^_)), <- !N.shiftl_mul_pow2, <- !N.land_ones.
+  apply N.bits_inj. intro i. rewrite N.land_spec. destruct (N.lt_ge_cases i (N.pos n)).
+    rewrite !N.shiftl_spec_low by assumption. reflexivity.
+    rewrite !N.shiftl_spec_high', N.land_spec by assumption. destruct (N.lt_ge_cases i (eval_sastN mvt e3 - n0)).
+      rewrite !N.ones_spec_low; [reflexivity| |assumption]. eapply N.add_lt_mono_r.
+        rewrite N.sub_add by assumption. eapply N.lt_le_trans. eassumption. apply N.sub_add_le.
+      rewrite !N.ones_spec_high; [reflexivity| |assumption]. apply N.sub_le_mono_r. assumption.
 
   (* IteNN *)
   destruct (eval_sastN mvt e0); eexists; eassumption.
@@ -3221,6 +3370,49 @@ Proof.
   intros. apply (simpl_land'_sound mvt). split; reflexivity.
 Qed.
 
+(* Xbits (without recursive simplification) simplification soundness *)
+
+Theorem simpl_xbits_basic_sound:
+  forall mvt e1 e2 e3,
+  eval_sastN mvt (simpl_xbits_basic mvt e1 e2 e3) = eval_sastN mvt (SIMP_Xbits e1 e2 e3).
+Proof.
+  intros. unfold simpl_xbits_basic.
+  eenough (H:_). destruct_match_def SIMP_NVar; [|exact H].
+    intro H1. destruct n; [|exact H].
+    symmetry. cbn [eval_sastN]. apply xbits_none. apply N.sub_0_le.
+    eapply (f_equal (_ _)) in H1. rewrite simpl_sub_sound in H1.
+    assumption.
+  assert (SB1:=simpl_bounds_sound mvt e1).
+  destruct (simpl_bounds mvt e1) as (lo1,[hi1|]); [|reflexivity].
+  assert (SB2:=simpl_bounds_sound mvt e2).
+  destruct (simpl_bounds mvt e2) as (lo2,ohi2).
+  destruct (_<=?_) eqn:H.
+    symmetry. cbn [eval_sastN]. apply xbits_above.
+    eapply N.lt_le_trans. apply N.size_gt.
+    apply N.pow_le_mono_r. discriminate.
+    etransitivity. apply N_size_injle, SB1.
+    etransitivity. apply N.leb_le, H.
+    apply SB2.
+  clear H.
+  assert (SB3:=simpl_bounds_sound mvt e3).
+  destruct (simpl_bounds mvt e3) as (lo3,ohi3).
+  destruct (_<=?_) eqn:H.
+    rewrite simpl_shiftr_sound. cbn [eval_sastN].
+    symmetry. apply N.mod_small, shiftr_bound.
+    eapply N.le_lt_trans. apply SB1.
+    eapply N.lt_le_trans. apply N.size_gt.
+    apply N.pow_le_mono_r. discriminate.
+    etransitivity. apply N.leb_le, H.
+    apply SB3.
+  clear H. destruct (lo1 =? hi1) eqn:H1; [|reflexivity].
+  destruct ohi2 as [hi2|]; [|reflexivity].
+  destruct (lo2 =? hi2) eqn:H2; [|reflexivity].
+  destruct ohi3 as [hi3|]; [|reflexivity].
+  destruct (lo3 =? hi3) eqn:H3; [|reflexivity].
+  apply N.eqb_eq in H1,H2,H3. subst.
+  simpl. apply f_equal3; apply N.le_antisymm; (apply SB1 || apply SB2 || apply SB3).
+Qed.
+
 (* Modulo simplification soundness *)
 
 Lemma N_le_le_eq:
@@ -3812,6 +4004,17 @@ Proof.
     rewrite N.pow_add_r, !N.mul_assoc, !N.Div0.mod_mul.
     reflexivity.
 
+  (* Xbits *)
+  cbn [simpl_under_modpow2].
+  assert (SB2:=simpl_bounds_sound mvt e2).
+  destruct (simpl_bounds mvt e2) as (lo2,[hi2|]); [|reflexivity].
+  rewrite simpl_xbits_basic_sound. cbn [eval_sastN].
+  rewrite <- !xbits_mod, N.add_comm.
+  rewrite <- (N.min_r _ _ (proj2 SB2)) at 1.
+  rewrite <- N.add_min_distr_r, <- mp2_mod_mod_min, IH1.
+  rewrite mp2_mod_mod_min, N.add_min_distr_r, (N.min_r _ _ (proj2 SB2)).
+  reflexivity.
+
   (* GetMem *)
   remember (N.pos w) as n. cbn [simpl_under_modpow2]. rewrite Heqn at 1.
   set (len' := let (q,n0) := N.div_eucl n 8 in _ : N).
@@ -3928,6 +4131,23 @@ Proof.
     apply simpl_mod_core_sound.
 Qed.
 Local Hint Resolve simpl_mod_sound : picinae_simpl.
+
+(* Xbits simplification soundness *)
+
+Theorem simpl_xbits_sound:
+  forall mvt e1 e2 e3,
+  eval_sastN mvt (simpl_xbits mvt e1 e2 e3) = eval_sastN mvt (SIMP_Xbits e1 e2 e3).
+Proof.
+  intros. unfold simpl_xbits. rewrite simpl_xbits_basic_sound. cbn [eval_sastN].
+  assert (SB3:=simpl_bounds_sound mvt e3).
+  destruct (simpl_bounds mvt e3) as (lo3,[hi3|]); [|reflexivity].
+  rewrite xbits_equiv.
+  rewrite <- (N.min_r _ _ (proj2 SB3)) at 1.
+  rewrite <- mp2_mod_mod_min, simpl_under_modpow2_sound.
+  rewrite mp2_mod_mod_min. rewrite (N.min_r _ _ (proj2 SB3)).
+  symmetry. apply xbits_equiv.
+Qed.
+Local Hint Resolve simpl_xbits_sound : picinae_simpl.
 
 (* Modular subtraction simplification soundness *)
 

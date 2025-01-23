@@ -106,6 +106,7 @@ Qed.
 Inductive NoE_SETOP :=
 | NOE_ADD | NOE_SUB | NOE_MSUB | NOE_MUL | NOE_DIV | NOE_MOD | NOE_POW
 | NOE_SHL | NOE_SHR | NOE_AND | NOE_OR  | NOE_XOR | NOE_NOT
+| NOE_XBITS
 | NOE_NEG
 | NOE_EQB | NOE_LTB | NOE_LEB
 | NOE_SLT | NOE_SLE
@@ -121,7 +122,7 @@ Definition noe_setop_typsig op :=
   match op with
   | NOE_ADD | NOE_SUB | NOE_MUL | NOE_DIV | NOE_MOD | NOE_POW
   | NOE_SHL | NOE_SHR | NOE_AND | NOE_OR  | NOE_XOR | NOE_NOT => N -> N -> N
-  | NOE_MSUB => N -> N -> N -> N
+  | NOE_MSUB | NOE_XBITS => N -> N -> N -> N
   | NOE_NEG => bool -> bool
   | NOE_EQB | NOE_LTB | NOE_LEB => N -> N -> bool
   | NOE_SLT | NOE_SLE => bitwidth -> N -> N -> bool
@@ -176,6 +177,7 @@ Definition noe_setop op : noe_setop_typsig op :=
   | NOE_OR => N.lor
   | NOE_XOR => N.lxor
   | NOE_NOT => N.lnot
+  | NOE_XBITS => xbits
   | NOE_NEG => negb
   | NOE_EQB => N.eqb
   | NOE_LTB => N.ltb

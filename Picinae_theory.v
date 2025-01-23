@@ -749,6 +749,25 @@ Proof.
     apply N.log2_lt_pow2. reflexivity. assumption.
 Qed.
 
+Theorem xbits_mod:
+  forall n i j k, xbits (n mod 2^(i+k)) i j = xbits n i j mod 2^k.
+Proof.
+  intros.
+  destruct (N.le_ge_cases j i). rewrite !xbits_none by assumption. reflexivity.
+  rewrite xbits_equiv. unfold xbits.
+  rewrite !mp2_mod_mod_min, <- !N.land_ones.
+  apply N.bits_inj. intro b.
+  rewrite N.land_spec, !N.shiftr_spec', N.land_spec.
+  apply f_equal. rewrite !N_ones_spec_ltb.
+  destruct (_<?_) eqn:H'; symmetry.
+    eapply N.ltb_lt, N.add_lt_mono_r, N.lt_le_trans.
+      apply N.ltb_lt, H'.
+      rewrite <- (N.add_sub k i) at 2. rewrite N.sub_min_distr_r, N.add_comm, N.min_comm. apply N.sub_add_le.
+    eapply N.ltb_ge, N.add_le_mono_r.
+      rewrite <- N.add_min_distr_r, N.min_comm, N.add_comm, (N.sub_add _ _ H).
+      apply N.ltb_ge, H'.
+Qed.
+
 Theorem xbits_below:
   forall n i j, n mod 2^j = 0 -> xbits n i j = 0.
 Proof.
