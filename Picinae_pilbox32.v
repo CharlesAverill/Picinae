@@ -16,12 +16,12 @@
    To compile this module, first load and compile:       MMMMMMMMMMMMMM7..$MNDM+
    * Picinae_core                                         MMDMMMMMMMMMZ7..$DM$77
    * Picinae_theory                                        MMMMMMM+MMMZ7..7ZM~++
-   * Picinae_finterp                                        MMMMMMMMMMM7..ZNOOMZ
-   * Picinae_statics                                         MMMMMMMMMM$.$MOMO=7
-                                                              MDMMMMMMMO.7MDM7M+
-   Then compile this module with menu option                   ZMMMMMMMM.$MM8$MN
-   Compile->Compile_buffer.                                    $ZMMMMMMZ..MMMOMZ
-                                                                ?MMMMMM7..MNN7$M
+   * Picinae_statics                                        MMMMMMMMMMM7..ZNOOMZ
+   * Picinae_finterp                                         MMMMMMMMMM$.$MOMO=7
+   * Picinae_simplifier_*                                     MDMMMMMMMO.7MDM7M+
+   * Picinae_ISA                                               ZMMMMMMMM.$MM8$MN
+   Then compile this module with menu option                   $ZMMMMMMZ..MMMOMZ
+   Compile->Compile_buffer.                                     ?MMMMMM7..MNN7$M
                                                                  ?MMMMMZ..MZM$ZZ
                                                                   ?$MMMZ7.ZZM7DZ
                                                                     7MMM$.7MDOD7
@@ -37,6 +37,7 @@ Require Export Picinae_theory.
 Require Export Picinae_statics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
+Require Export Picinae_ISA.
 Require Import NArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.
@@ -57,6 +58,15 @@ Inductive pil32var :=
   (* These meta-variables model page access permissions: *)
   | A_READ | A_WRITE | A_EXEC.
 
+(* Declare the types (i.e., bitwidths) of all the CPU registers: *)
+Definition pil32typctx (id:pil32var) : option N :=
+  match id with
+  | V_MEM32 => Some (8*2^32)
+  | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5 => Some 32
+  | R_SP | R_LR | R_PC => Some 32
+  | A_READ | A_WRITE | A_EXEC => Some (2^32)
+end.
+
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
    input to the Architecture module, so that it understands how the variable
    identifiers chosen above are syntactically written and how to decide whether
@@ -73,11 +83,12 @@ End MiniPIL32VarEq.
 Module PIL32Arch <: Architecture.
   Module Var := Make_UDT MiniPIL32VarEq.
   Definition var := Var.t.
-  Definition store := var -> value.
+  Definition store := var -> N.
+  Definition typctx := var -> option bitwidth.
+  Definition archtyps := pil32typctx.
 
-  Definition mem_bits := 8%positive.
-  Definition mem_readable s a := exists r, s A_READ = VaM r 32 /\ r a <> 0.
-  Definition mem_writable s a := exists w, s A_WRITE = VaM w 32 /\ w a <> 0.
+  Definition mem_readable s a := N.testbit (s A_READ) a = true.
+  Definition mem_writable s a := N.testbit (s A_WRITE) a = true.
 End PIL32Arch.
 
 (* Instantiate the Picinae modules with the arm identifiers above. *)
@@ -89,17 +100,20 @@ Module Statics_pil32 := PicinaeStatics IL_pil32 Theory_pil32.
 Export Statics_pil32.
 Module FInterp_pil32 := PicinaeFInterp IL_pil32 Theory_pil32 Statics_pil32.
 Export FInterp_pil32.
-
-Module PSimpl_pil32 := Picinae_Simplifier_Base.
+Module PSimpl_pil32 := Picinae_Simplifier_Base IL_pil32.
 Export PSimpl_pil32.
 Module PSimpl_pil32_v1_1 := Picinae_Simplifier_v1_1 IL_pil32 Theory_pil32 Statics_pil32 FInterp_pil32.
 Ltac PSimpl_pil32.PSimplifier ::= PSimpl_pil32_v1_1.PSimplifier.
 
+Module ISA_pil32 := Picinae_ISA IL_pil32 PSimpl_pil32 Theory_pil32 Statics_pil32 FInterp_pil32.
+Export ISA_pil32.
+
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
 Tactic Notation "pil32_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
 Tactic Notation "pil32_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
-Tactic Notation "pil32_psimpl" "in" hyp(H) := psimpl_all_hyp H.
-Tactic Notation "pil32_psimpl" := psimpl_all_goal.
+Tactic Notation "pil32_psimpl" "in" hyp(H) := psimpl_hyp H.
+Tactic Notation "pil32_psimpl" := psimpl_goal.
+Ltac pil32_step := ISA_step.
 
 (* To use a different simplifier version (e.g., v1_0) put the following atop
    your proof .v file:
@@ -107,15 +121,6 @@ Require Import Picinae_simplifier_v1_0.
 Module PSimpl_pil32_v1_0 := Picinae_Simplifier_v1_0 IL_pil32 Statics_pil32 FInterp_pil32.
 Ltac PSimpl_pil32.PSimplifier ::= PSimpl_pil32_v1_0.PSimplifier.
 *)
-
-(* Declare the types (i.e., bitwidths) of all the CPU registers: *)
-Definition pil32typctx (id:var) : option typ :=
-  match id with
-  | V_MEM32 => Some (MemT 32)
-  | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5 => Some (NumT 32)
-  | R_SP | R_LR | R_PC => Some (NumT 32)
-  | A_READ | A_WRITE | A_EXEC => Some (MemT 32)
-end.
 
 (* Declare which context values are used to define store equivalence *)
 Definition pil32equivctx (id:var) : bool :=
@@ -129,10 +134,6 @@ Definition pil32equiv (s1 s2:store) :=
   forall (v:pil32var), pil32equivctx v = true -> s1 v = s2 v.
 Definition pil32equiv_or (s1 s2:store) (or_exception : pil32var -> bool) :=
   forall (v:pil32var), pil32equivctx v = true -> or_exception v = true \/ s1 v = s2 v.
-Definition pil32_wtm {s v m w} := @models_wtm v pil32typctx s m w.
-Definition pil32_regsize {s v n w} := @models_regsize v pil32typctx s n w.
-
-
 
 (* TODO: how should we change the memory access machinery?
          How does it work anyhoo? *)
@@ -172,8 +173,7 @@ Proof.
   intros. unfold MemAcc, mem_writable. rewrite !update_updated. reflexivity.
 Qed.
 
-(* Simplify arm memory access assertions produced by step_stmt. *)
-Ltac simpl_memaccs H :=
+Ltac simpl_memaccs H ::=
   try lazymatch type of H with context [ MemAcc mem_writable ] =>
     rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
   end;
@@ -181,137 +181,25 @@ Ltac simpl_memaccs H :=
     rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
   end.
 
-(* The user can ignore all assigned values to specified variables by
-   redefining pil32_ignore.  Example:
-     Ltac pil32_ignore v ::= constr:(match v with R_EAX => true | _ => false end).
- *)
-Ltac pil32_ignore v := constr:(false).
-Ltac pil32_abstract_vars H :=
-  repeat match type of H with context [ update ?s ?v ?u ] =>
-    let b := ltac:(pil32_ignore v) in
-    lazymatch eval cbv in b with true =>
-      lazymatch u with
-      | VaN ?n ?w =>
-          tryif is_var n then fail else
-          let tmp := fresh "n" in
-          pose (tmp := n);
-          change (update s v (VaN n w)) with (update s v (VaN tmp w)) in H;
-          clearbody tmp
-      | VaM ?m ?w =>
-          tryif is_var m then fail else
-          let tmp := fresh "m" in
-          pose (tmp := m);
-          change (update s v (VaM m w)) with (update s v (VaM tmp w)) in H;
-          clearbody tmp
-      end
-    | _ => fail
-    end
-  end.
-
-(* Symbolically evaluate an arm machine instruction for one step, and simplify
-   the resulting Coq expressions. *)
-Ltac pil32_step_and_simplify XS :=
-  step_stmt XS;
-  pil32_abstract_vars XS;
-  psimpl_vals_hyp XS;
-  simpl_memaccs XS;
-  destruct_memaccs XS.
-
-(* Introduce automated machinery for verifying an pil32 machine code subroutine
-   (or collection of subroutines) by (1) defining a set of Floyd-Hoare
-   invariants (including pre- and post-conditions) and (2) proving that
-   symbolically executing the program starting at any invariant point in a
-   state that satisfies the program until the next invariant point always
-   yields a state that satisfies the reached invariant.  This proves partial
-   correctness of the subroutine.
-
-   In order for this methodology to prove that a post-condition holds at
-   subroutine exit, we must attach one of these invariants (the post-condition)
-   to the return address of the subroutine.  This is a somewhat delicate
-   process, since unlike most other code addresses, the exact value of the
-   return address is an unknown (defined by the caller).  We therefore adopt
-   the convention that subroutines "exit" whenever control flows to an address
-   for which no IL code is defined at that address.  This allows proving
-   correctness of a subroutine by lifting only the subroutine to IL code (or
-   using the pmono theorems from Picinae_theory to isolate only the subroutine
-   from a larger program), leaving the non-subroutine code undefined (None). *)
-
-(* Some versions of Coq check injection-heavy proofs very slowly (at Qed).
-   This slow-down can be avoided by sequestering prevalent injections into
-   lemmas, as we do here. *)
-Remark inj_prog_stmt: forall (sz1 sz2: N) (q1 q2: stmt),
-                      Some (sz1,q1) = Some (sz2,q2) -> sz1=sz2 /\ q1=q2.
-Proof. injection 1 as. split; assumption. Qed.
-
-(* Simplify (exitof a x) without expanding a. *)
-Remark exitof_none a: exitof a None = Addr a. Proof eq_refl.
-Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
-
-
-(* If asked to step the computation when we're already at an invariant point,
-   just make the proof goal be the invariant. *)
-Ltac pil32_invhere :=
-  eapply nextinv_here; [ reflexivity | hnf; psimpl_vals_goal ].
-
-(* Rewrite facts about the store's memory to enable dynamically interpreted
-   programs (programs in which instructions are decoded from the bytes stored
-   in memory.)  *)
-Ltac pil32_prog_simpl :=
-  unfold effinv, effinv';
-  repeat match goal with
-  | [ H: store |- context[?p ?H _]] => unfold p
-  | [ H: eq ?SM (VaM _ _) |- context[match ?SM with _ => _ end]] => rewrite H
-  | [ H2: eq ?SM2 (VaM _ _) ,
-      H1: eq ?SM1 ?SM2 |- context[match ?SM1 with _ => _ end]] => rewrite <-H1 in H2; rewrite H2
-  end.
-
-(* If we're not at an invariant, symbolically interpret the program for one
-   machine language instruction.  (The user can use "do" to step through many
-   instructions, but often it is wiser to pause and do some manual
-   simplification of the state at various points.) *)
-Ltac pil32_invseek :=
-  eapply NIStep; [pil32_prog_simpl; reflexivity|pil32_prog_simpl; reflexivity|];
-  let s := fresh "s" in let x := fresh "x" in let XS := fresh "XS" in
-  intros s x XS;
-  pil32_step_and_simplify XS;
-  repeat lazymatch type of XS with
-         | s=_ /\ x=_ => destruct XS; subst s x
-         | exec_stmt _ (if ?c then _ else _) _ _ =>
-             let BC := fresh "BC" in destruct c eqn:BC;
-             pil32_step_and_simplify XS
-         | exec_stmt _ (N.iter _ _ _) _ _ => fail
-         | _ => pil32_step_and_simplify XS
-         end;
-  try match goal with |- nextinv _ _ _ _ (_ :: ?xs :: ?t) =>
-    let t' := fresh t in generalize (xs::t); intro t'; clear t; rename t' into t
+(* Simplify arm memory access assertions produced by step_stmt. *)
+Ltac simpl_memaccs H ::=
+  try lazymatch type of H with context [ MemAcc mem_writable ] =>
+    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
   end;
-  repeat match goal with [ u:value |- _ ] => clear u
-                       | [ n:N |- _ ] => clear n
-                       | [ m:addr->N |- _ ] => clear m end;
-  try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
-  try first [ rewrite exitof_none | rewrite exitof_some ].
+  try lazymatch type of H with context [ MemAcc mem_readable ] =>
+    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
+  end.
 
-(* Clear any stale memory-access hypotheses (arising from previous computation
-   steps) and either step to the next machine instruction (if we're not at an
-   invariant) or produce an invariant as a proof goal. *)
-Ltac pil32_step :=
-  repeat match goal with [ H: MemAcc _ _ _ _ _ |- _ ] => clear H end;
-  first [ pil32_invseek; try pil32_invhere | pil32_invhere ].
-
+(* Define ISA-specific notations: *)
 
 Declare Scope pil32_scope.
 Delimit Scope pil32_scope with pil32.
-Bind Scope pil32_scope with stmt exp typ trace.
+Bind Scope pil32_scope with stmt exp trace.
 Open Scope pil32_scope.
 Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : pil32_scope.
 
 Module PIL32Notations.
 
-Notation "Ⓜ m" := (VaM m 32) (at level 20, format "'Ⓜ' m"). (* memory value *)
-Notation "ⓑ u" := (VaN u 1) (at level 20, format "'ⓑ' u"). (* bit value *)
-Notation "Ⓑ u" := (VaN u 8) (at level 20, format "'Ⓑ' u"). (* byte value *)
-Notation "Ⓦ u" := (VaN u 16) (at level 20, format "'Ⓦ' u"). (* word value *)
-Notation "Ⓓ u" := (VaN u 32) (at level 20, format "'Ⓓ' u"). (* dword value *)
 Notation "m Ⓑ[ a  ]" := (getmem 32 LittleE 1 m a) (at level 30) : pil32_scope. (* read byte from memory *)
 Notation "m Ⓦ[ a  ]" := (getmem 32 LittleE 2 m a) (at level 30) : pil32_scope. (* read word from memory *)
 Notation "m Ⓓ[ a  ]" := (getmem 32 LittleE 4 m a) (at level 30) : pil32_scope. (* read dword from memory *)

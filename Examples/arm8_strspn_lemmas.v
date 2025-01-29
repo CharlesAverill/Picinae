@@ -4,8 +4,10 @@ Require Import Picinae_armv8_pcode.
 Require Import Lia.
 Require Import Bool.
 Require Import Utf8.
+Import ARM8Notations.
 (* Require Import strspn_arm8. *)
-
+Require Import -(notations) SMTCoq.SMTCoq.
+Require Import FunctionalExtensionality.
 Import ARM8Notations.
 Open Scope N.
 
@@ -39,7 +41,6 @@ Proof.
   apply N.lt_le_trans with (p:= 2 ^ 8) in SHIFTBOUND.
     2:{ destruct i_set; try lia. repeat (lia || destruct p0).
      apply N.pow_le_mono_r; lia. }
-  assert (HMb: IL_arm8.Mb = 8) by reflexivity.
 
   destruct i.
   (* 0 *)
@@ -49,7 +50,6 @@ Proof.
     rewrite N.mod_small; try lia; simpl (1 + _);
     rewrite getmem_setmem; try lia;
     rewrite N.mod_small; try lia;
-    rewrite HMb in *; rewrite N.mul_1_r in *;
     try (apply lor_bound; lia);
 
     unfold xbits; psimpl; unfold N.shiftr;
@@ -62,9 +62,8 @@ Proof.
     rewrite N.mod_small; try lia; simpl (1 + _);
     rewrite getmem_setmem; try lia;
     rewrite N.mod_small; try lia;
-    rewrite HMb in *; rewrite N.mul_1_r in *;
     try (apply lor_bound; lia);
-    clear HMb X;
+    clear X;
 
     unfold xbits; destruct i_set; psimpl; unfold N.shiftr;
     destruct (m Ⓑ[ a ]); simpl (_ .| _); try ( reflexivity || discriminate);
@@ -614,41 +613,14 @@ Pos_N_succ_comm: ∀ p : positive, N.pos (Pos.succ p) = N.succ (N.pos p)
 
 Theorem setmem_split_swap:
   forall w e i j m a v (LEN: i+j < 2 ^ w), setmem w e (i+j) m a v =
-    match e with BigE => setmem w e i (setmem w e j m (a+i) v) a (N.shiftr v (Mb*j))
-               | LittleE => setmem w e i (setmem w e j m (a+i) (N.shiftr v (Mb*i))) a (v mod 2^(Mb*i))
+    match e with BigE => setmem w e i (setmem w e j m (a+i) v) a (N.shiftr v (8*j))
+               | LittleE => setmem w e i (setmem w e j m (a+i) (N.shiftr v (8*i))) a (v mod 2^(8*i))
     end.
 Proof.
   intros. rewrite setmem_split. rewrite setmem_swap. rewrite setmem_swap with (len2:=j).
+  rewrite! (N.mul_comm 8 ).
   reflexivity.
   all: apply noverlap_sum; rewrite msub_diag, N.add_0_r; now apply N.lt_le_incl.
-Qed.
-
-Theorem getmem_setmem:
-  forall w e len m a v (LE: len <= 2^w),
-  getmem w e len (setmem w e len m a v) a = v mod 2^(Mb*len).
-Proof.
-  intros until len. eenough (H:_). revert len w.
-  induction len using N.peano_ind; intros.
-    rewrite N.mul_0_r, N.mod_1_r. apply getmem_0.
-    rewrite setmem_succ, getmem_succ. destruct e;
-      rewrite IHlen by (etransitivity; [ apply N.le_succ_diag_r | exact LE ]);
-      rewrite setmem_frame, update_updated by (left; clear IHlen; revert len w a LE; exact H);
-      rewrite !mp2_mod_mod;
-      rewrite <- xbits_split_0; rewrite N.mul_succ_r.
-
-      apply xbits_0_i.
-
-      rewrite N.add_comm. apply xbits_0_i.
-
-  clear. intros.
-  rewrite <- N.add_1_r, msub_mod_l, msub_add_distr, msub_diag, msub_0_l by reflexivity.
-  apply N.succ_le_mono. etransitivity. apply LE.
-  destruct w as [|w]. reflexivity.
-  rewrite (N.mod_small 1) by (apply N.pow_gt_1; [ reflexivity | discriminate 1 ]).
-  rewrite N.mod_small.
-    rewrite N.sub_1_r, mp2_succ_pred. reflexivity.
-    apply N.sub_lt; [|reflexivity].
-      change 1 with (N.succ 0). apply N.le_succ_l, mp2_gt_0.
 Qed.
 
 Corollary msbits_indexed_section_contained:
@@ -700,25 +672,35 @@ Proof.
   apply sep_noverlap; try (left; lia || right; lia).
 Qed.
 
+Lemma getbyte_shiftr8__zero:
+  forall w m a, getbyte m a w >> 8 = 0.
+Proof.
+  intros. Search "bound" "getbyte".
+  assert (LT:=getbyte_bound m a w).
+  remember (getbyte m a w) as x. clear Heqx.
+  now apply shiftr_low_pow2.
+  (* vm_compute (_^_) in LT. *)
+  (* veriT. - doesn't work... *)
+  (*TODO: make this work as an example of using
+    verit: intros. unfold getbyte. unfold xbits. verit.*)
+Qed.
+
 Lemma getmem_shiftr8__getmem':
   forall w len m a,
-  (getmem w LittleE len m a) >> (N.pos mem_bits) =
+  (getmem w LittleE len m a) >> (8) =
   getmem w LittleE (N.pred len) m (N.succ a).
 Proof.
   intros. destruct len using N.peano_ind. reflexivity.
   rewrite getmem_succ.
   rewrite N.shiftr_lor.
-  assert (H: IL_arm8.Mb = N.pos mem_bits). reflexivity. rewrite <-H.
-  enough (m (a mod 2 ^ w) mod 2 ^ IL_arm8.Mb >> IL_arm8.Mb = 0).
-  rewrite H0, N.lor_0_l. rewrite N.shiftr_shiftl_r. simpl.
-  rewrite N.pred_succ. reflexivity.
-  lia.
-  apply shiftr_low_pow2. apply N.mod_lt. lia.
+  rewrite getbyte_shiftr8__zero, N.lor_0_l. psimpl.
+  rewrite N.pred_succ.
+  reflexivity.
 Qed.
 
 Lemma getmem_shiftr8:
   forall w len m a bytes,
-  (getmem w LittleE len m a) >> bytes * (N.pos mem_bits) =
+  (getmem w LittleE len m a) >> bytes * (8) =
   getmem w LittleE (N.iter bytes N.pred len) m (bytes + a).
 Proof.
   intros. generalize dependent a. generalize dependent len. generalize dependent bytes.
@@ -739,7 +721,7 @@ Lemma brute_bitmap_lookup_eq_bit:
 Proof.
   intros.
   unfold bit.
-  assert (BOUND:=getmem_bound 64 LittleE 1 m (str_ptr + L)); change (2 ^ (IL_arm8.Mb * 1)) with 256 in BOUND.
+  assert (BOUND:=getmem_bound 64 LittleE 1 m (str_ptr + L)); change (2 ^ (8 * 1)) with 256 in BOUND.
   remember (m Ⓑ[ str_ptr + L ]) as char. unfold xbits. psimpl.
   destruct char. psimpl; reflexivity.
   repeat (discriminate || destruct p); clear BOUND Heqchar.
@@ -847,11 +829,11 @@ Lemma quad_less_than:
 forall m x y
 , (64 < y)->
 (m Ⓠ[ x ] <  2 ^ y) .
-Proof.
+Proof with try nia.
 intros.
-rewrite getmem_bound. unfold IL_arm8.Mb.
-unfold ARM8Arch.mem_bits. psimpl (8*8).
-rewrite <- N.pow_lt_mono_r_iff. assumption. lia.
+rewrite getmem_bound...
+psimpl (8*8)...
+rewrite <- N.pow_lt_mono_r_iff...
 Qed.
 
 Lemma lor_der_1 : 
@@ -901,8 +883,8 @@ forall m x y
 Proof.
 intros.
 rewrite N.mod_small. reflexivity.
-rewrite getmem_bound. unfold IL_arm8.Mb.
-unfold ARM8Arch.mem_bits. psimpl (8*8).
+rewrite getmem_bound. 
+ psimpl (8*8).
 rewrite <- N.pow_lt_mono_r_iff. assumption. lia.
 Qed.
 
@@ -910,13 +892,13 @@ Lemma helper_3 :
 forall m a x k
 (EQ1: x = 1 \/ x = 2 \/ x =3)
 (EQ2: k = 8*x),
-(m Ⓠ[ (k) + a ] << IL_arm8.Mb * (k)) mod 2 ^ 256 = (m Ⓠ[ (k) + a ] << IL_arm8.Mb * (k)).
+(m Ⓠ[ (k) + a ] << 8 * (k)) mod 2 ^ 256 = (m Ⓠ[ (k) + a ] << 8 * (k)).
 Proof.
 intros.
 rewrite EQ2.
 rewrite N.mod_small. reflexivity.
-unfold IL_arm8.Mb.
-unfold ARM8Arch.mem_bits.
+
+
 rewrite N.mul_assoc. psimpl (8*8).
 rewrite N.shiftl_mul_pow2.
 
@@ -944,10 +926,10 @@ forall b k
 (HYP2: 64*k <= b)
 (HYP4: b < 256)
 ,
-2 ^ b mod 2 ^ (IL_arm8.Mb * 32) = 2 ^ (b mod 64) * 2 ^ (IL_arm8.Mb * 8*k).
+2 ^ b mod 2 ^ (8 * 32) = 2 ^ (b mod 64) * 2 ^ (8 * 8*k).
 Proof.
 intros.
-unfold IL_arm8.Mb. unfold ARM8Arch.mem_bits. 
+  
 psimpl. repeat rewrite N.shiftl_1_l. rewrite <- N.pow_add_r.
 
 assert (forall a b, 2^a = 2^b <-> a = b).
@@ -969,7 +951,7 @@ lia. assumption. psimpl (b + 64 * k - 64 * k). reflexivity.
 
 Qed.
 
-
+(* TODO: Prove this with veriT. *)
 Theorem getmem_eq:
   forall  m a b
   (H: b < 256),
@@ -1008,11 +990,26 @@ destruct H0.
 assert ((b >> 6 << 3) = 8*0). apply range_eq. lia. destruct H0. split; psimpl. assumption. assumption. psimpl (8*0) in H1. 
 rewrite H1. psimpl. 
 repeat rewrite N.shiftl_1_l.
-replace (2 ^ (IL_arm8.Mb * 32)) with (2 ^ 256).
+replace (2 ^ (8 * 32)) with (2 ^ 256).
 rewrite N.lor_comm.
 repeat rewrite N.lor_assoc.
 replace (2 ^ b .| (m Ⓠ[ a ])) with ((m Ⓠ[ a ]).|2^b).
-do 4 rewrite N_lor_mod_pow2.
+all: try lia.
+(* TODO: SMT Testing *)
+
+(* Ltac eqbits :=
+  repeat match goal with
+  | |- eq _ _ => apply N.bits_inj; unfold N.eqf; intro
+  | |- context[N.testbit (N.lor ?x ?y)] => rewrite (N.lor_spec x y)
+  | [ H: ?x < ?b |- context[?x mod ?b]] => rewrite (N.mod_small x b)
+  | [ H: _ <= ?x < ?b |- context[?x mod ?b]] => rewrite (N.mod_small x b)
+  | [ H: _ < ?x < ?b |- context[?x mod ?b]] => rewrite (N.mod_small x b)
+  | |- context[_ .| (2 ^ ?b)] => rewrite <-N.setbit_spec'
+  end; try (easy || lia).
+eqbits.
+now rewrite N.lor_comm. *)
+
+rewrite N_lor_mod_pow2.
 rewrite helper_2.
 rewrite helper_3 with (x:= 1).
 rewrite helper_3 with (x:= 2).
@@ -1023,7 +1020,7 @@ rewrite N.mod_small with (a:= b) (b:= 64).
 
 reflexivity. destruct H0. assumption. rewrite <- N.pow_lt_mono_r_iff. assumption. 
  
-all: try lia . apply N.lor_comm. unfold IL_arm8.Mb. unfold ARM8Arch.mem_bits. lia.
+all: try lia . apply N.lor_comm.   lia.
 
 destruct H0.
 
@@ -1044,7 +1041,7 @@ repeat rewrite N.shiftl_mul_pow2.
 rewrite b_eq with (k:= 1).
 psimpl. rewrite lor_der_1. reflexivity.
 all: try lia.
-unfold IL_arm8.Mb, ARM8Arch.mem_bits. lia. 
+unfold 8, ARM8Arch.mem_bits. lia. 
 
 destruct H0.
 assert ((b >> 6 << 3) = 8*2). apply range_eq. lia. destruct H0. split; psimpl. assumption. assumption. psimpl (8*2) in H1. 
@@ -1063,7 +1060,7 @@ rewrite helper_3 with (x:= 3).
 repeat rewrite N.shiftl_mul_pow2.
 rewrite b_eq with (k:= 2). reflexivity. psimpl. assumption.
 destruct H. psimpl. all: try lia.
-unfold IL_arm8.Mb, ARM8Arch.mem_bits. lia.
+unfold 8, ARM8Arch.mem_bits. lia.
 
 destruct H0.
 assert ((b >> 6 << 3) = 8*3). apply range_eq. lia. split. psimpl. assumption. lia. psimpl (8*3) in H2. 
@@ -1080,7 +1077,7 @@ rewrite helper_3 with (x:= 2).
 rewrite helper_3 with (x:= 3).
 repeat rewrite N.shiftl_mul_pow2.
 rewrite b_eq with (k:= 3). reflexivity. psimpl. assumption. 
-psimpl. all: try lia. unfold IL_arm8.Mb, ARM8Arch.mem_bits. lia. 
+psimpl. all: try lia. unfold 8, ARM8Arch.mem_bits. lia. 
 
 Qed.
 
@@ -1149,7 +1146,7 @@ Proof.
 
   rewrite <- N.setbit_spec'. rewrite <- getmem_eq.
   rewrite <- testbit_xbits, getmem_setmem.
-  unfold IL_arm8.Mb, ARM8Arch.mem_bits. psimpl (2 ^ (8 * 32)).
+  unfold 8, ARM8Arch.mem_bits. psimpl (2 ^ (8 * 32)).
   rewrite N.setbit_spec', N_lor_mod_pow2, getmem_mod_r, N.mod_small.
   rewrite <- N.setbit_spec'. rewrite N.setbit_iff.
 
@@ -1554,7 +1551,7 @@ Lemma prefix_no_wrap:
     (ACPT_LEN: strlen m0 acpt_ptr acpt_len)
     (ACPT_SAME: mem_region_unchanged m0 m' acpt_ptr (N.succ acpt_len))
     (NF: nilfree m' str_ptr L),
-    Ⓠ(L mod 2 ^ 64) = ⓆL.
+    (L mod 2 ^ 64) = L.
 Proof.
   intros.
   enough (H: L mod 2 ^ 64 = L); try now rewrite H.
@@ -1578,7 +1575,7 @@ Proof.
   unfold post_satis_i. intro H'. specialize (H' L). assert (HELP:L<L+1) by lia; apply H' in HELP; clear H'. (*; destruct HELP as [k [NF' CHAREQ']].*)
   clear - BITARRAY_STR HELP LOOKUP_FAIL.
   unfold bitarray_str in BITARRAY_STR. specialize (BITARRAY_STR (m' Ⓑ[ str_ptr + L ])). assert (HELP':= getmem_bound 64 LittleE 1 m' (str_ptr + L )).
-  change (2 ^ (IL_arm8.Mb * 1)) with 256 in HELP'.
+  change (2 ^ (8 * 1)) with 256 in HELP'.
   apply BITARRAY_STR in HELP'.
   rewrite getmem_mod_l in HELP.
   destruct HELP as [k [HNF HMEQ]]. rewrite N.add_comm in HNF.

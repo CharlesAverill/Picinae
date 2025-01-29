@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2024 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2025 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -168,9 +168,6 @@ Definition arm8equiv (s1 s2:store) :=
   forall (v:arm8var), arm8equivctx v = true -> s1 v = s2 v.
 Definition arm8equiv_or (s1 s2:store) (or_exception : arm8var -> bool) :=
   forall (v:arm8var), arm8equivctx v = true -> or_exception v = true \/ s1 v = s2 v.
-
-Definition arm8_wtm {s v m w} := @models_wtm v arm8typctx s m w.
-Definition arm8_regsize {s v n w} := @models_regsize v arm8typctx s n w.
 
 (* Simplify memory access propositions by observing that on arm, the only part
    of the store that affects memory accessibility are the page-access bits

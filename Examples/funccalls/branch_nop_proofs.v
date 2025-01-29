@@ -40,12 +40,9 @@ Proof.
   rename PRE into S0.
   
   repeat step; unfold arm8equiv in *; intros v SIG; specialize (S0 v SIG).
-  * rewrite N.eqb_eq in BC; subst; symmetry in Hsv.
+  * rewrite N.eqb_eq in BC; subst; symmetry in S0.
     destruct v;
       repeat (rewrite update_updated || rewrite update_frame); try easy.
-      rewrite S0 in Hsv. easy.
   * destruct v;
       repeat (rewrite update_updated || rewrite update_frame); try easy.
-      now rewrite <-S0.
- 
 Qed.

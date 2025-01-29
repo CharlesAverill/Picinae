@@ -813,6 +813,8 @@ Proof.
   intros. apply N.bits_inj. apply N.bits_inj_iff in H. intro n. specialize (H n).
   do 2 rewrite N.land_spec, N.lxor_spec. rewrite <- H, N.land_spec.
   repeat destruct (N.testbit _ n); reflexivity.
+Qed.
+
 Lemma succ_mod_swap:
   forall c b, N.succ c mod b = N.succ (c mod b) mod b.
 Proof.
@@ -938,6 +940,10 @@ Proof.
       apply N.mod_small, N.succ_lt_mono. rewrite N.ones_equiv, mp2_succ_pred.
       apply N.lt_succ_r, N.pow_le_mono_r. discriminate. assumption.
 Qed.
+
+Theorem xbits_split2: forall i a b j x n : N,
+i <= a -> a <= b -> b <= j -> xbits x i j = n -> xbits x a b = xbits n (a-i) (b-i).
+Proof. Admitted.
 
 Corollary xbits_split_0:
   forall n i j,
@@ -4577,7 +4583,8 @@ Tactic Notation "focus_addr" constr(n) :=
 
 
 Section MemTheory.
-
+Notation "x << y" := (N.shiftl x y) (at level 55, left associativity). (* logical shift-left *)
+Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logical shift-right *)
 (* The getmem/setmem memory accessors are defined as Peano recursions over N,
    rather than natural number recursions.  This is important for keeping proof
    terms small, but can make it more difficult to write inductive proofs.  To
@@ -4792,26 +4799,24 @@ Proof.
       erewrite <- setmem_1, <- IHi, N.add_succ_r, N.add_1_r, setmem_mod_r.
       rewrite N.shiftr_shiftr, N.mul_succ_l. reflexivity.
 Qed.
-
+Locate ">>".
 Lemma getmem_shiftr8__getmem':
   forall w len m a,
-  (getmem w LittleE len m a) >> (N.pos mem_bits) =
+  (getmem w LittleE len m a) >> 8 =
   getmem w LittleE (N.pred len) m (N.succ a).
 Proof.
   intros. destruct len using N.peano_ind. simpl (N.pred _). rewrite getmem_0, getmem_0, N.shiftr_0_l. reflexivity.
   rewrite getmem_succ.
   rewrite N.shiftr_lor.
-  assert (H: IL.Mb = N.pos mem_bits). reflexivity. rewrite <-H.
-  enough (m (a mod 2 ^ w) mod 2 ^ IL.Mb >> IL.Mb = 0).
-  rewrite H0, N.lor_0_l. rewrite N.shiftr_shiftl_r; try lia. simpl.
-  rewrite N.pred_succ. rewrite Pos.sub_mask_diag; reflexivity.
-  
-  apply shiftr_low_pow2. apply N.mod_lt. lia.
+  enough (getbyte m a w >> 8 = 0).
+  rewrite H, N.lor_0_l. rewrite N.shiftr_shiftl_r; try lia. simpl.
+  rewrite N.pred_succ. reflexivity.
+  apply shiftr_low_pow2. apply getbyte_bound.
 Qed.
 
 Lemma getmem_shiftr8:
   forall w len m a bytes,
-  (getmem w LittleE len m a) >> bytes * (N.pos mem_bits) =
+  (getmem w LittleE len m a) >> bytes * 8 =
   getmem w LittleE (N.iter bytes N.pred len) m (bytes + a).
 Proof.
   intros. generalize dependent a. generalize dependent len. generalize dependent bytes.
@@ -5186,6 +5191,22 @@ Proof.
 
     rewrite N.add_comm, N.mul_add_distr_r, <- xbits_equiv. unfold xbits.
     rewrite N.add_sub, mp2_mod_mod. reflexivity.
+Qed.
+
+Theorem getmem_xbits:
+  forall w len m a (LT: len+a < 2^w),
+  getmem w LittleE len m a = xbits m (8*a) (8*(len+a)).
+Proof.
+  induction len using N.peano_ind.
+  
+  intros; rewrite! N.add_0_l in *. rewrite getmem_0, xbits_none; lia.
+  
+  intros. rewrite getmem_succ.
+  rewrite (xbits_split (8*a) (8* N.succ a) (8*(N.succ len + a))); try lia.
+  unfold getbyte.   rewrite (IHlen). rewrite! (N.mod_small a), (N.mul_comm 8 a), (N.mul_comm 8 (N.succ a)), N.add_succ_comm.
+  assert (Help:N.succ a * 8 - a * 8 = 8) by lia; rewrite Help; reflexivity.
+  apply N.lt_trans with (N.succ len + a); lia.
+  rewrite <-N.add_succ_comm; assumption.
 Qed.
 
 Theorem setmem_merge:
@@ -5683,11 +5704,12 @@ Qed.
 
 Theorem setmem_split_swap:
   forall w e i j m a v (LEN: i+j < 2 ^ w), setmem w e (i+j) m a v =
-    match e with BigE => setmem w e i (setmem w e j m (a+i) v) a (N.shiftr v (Mb*j))
-               | LittleE => setmem w e i (setmem w e j m (a+i) (N.shiftr v (Mb*i))) a (v mod 2^(Mb*i))
+    match e with BigE => setmem w e i (setmem w e j m (a+i) v) a (N.shiftr v (8*j))
+               | LittleE => setmem w e i (setmem w e j m (a+i) (N.shiftr v (8*i))) a (v mod 2^(8*i))
     end.
 Proof.
   intros. rewrite setmem_split. rewrite setmem_swap. rewrite setmem_swap with (len2:=j).
+  rewrite! (N.mul_comm 8).
   reflexivity.
   all: apply noverlap_sum; rewrite msub_diag, N.add_0_r; now apply N.lt_le_incl.
 Qed.
@@ -5717,6 +5739,8 @@ Qed.
 End MemTheory.
 
 Section MemBitOps.
+Notation "x << y" := (N.shiftl x y) (at level 55, left associativity). (* logical shift-left *)
+Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logical shift-right *)
 (* This helps interface with testbit_xbits *)
 Theorem xbits_odd_gtz:
   forall n i, N.odd (xbits n i (N.succ i)) = true <->  0 < xbits n i (N.succ i).
@@ -7171,43 +7195,6 @@ Qed.
 *)
 
 End InvariantProofs.
-
-
-
-Section Monotonicity.
-
-(* exec_prog is monotonic with respect to programs.  Enlarging the space of known
-   instructions in memory preserves executions. *)
-
-Theorem can_step_pmono:
-  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
-         xs xs' (CS: can_step p1 (xs',xs)),
-  can_step p2 (xs',xs).
-Proof.
-  intros. inversion CS; subst. econstructor.
-    apply PS, LU.
-    apply XS.
-Qed.
-
-Theorem exec_prog_pmono:
-  forall p1 p2 (PS: forall s, p1 s ⊆ p2 s)
-         t (XP: exec_prog p1 t),
-  exec_prog p2 t.
-Proof.
-  intros. induction t.
-    apply exec_prog_nil.
-    apply exec_prog_step.
-      eapply IHt, exec_prog_tail, XP.
-      destruct t as [|xs t].
-        exact I.
-        eapply can_step_pmono.
-          exact PS.
-          eapply exec_prog_final, XP.
-Qed.
-
-End Monotonicity.
-
-
 
 Section FrameTheorems.
 

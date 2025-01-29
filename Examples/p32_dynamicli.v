@@ -11,32 +11,19 @@ Definition r1 := 1.
 Definition r5 := 5.
 
 
-Definition dynamic_li base_addr :=  [
+Definition dynamic_li_prog base_addr :=  [
   PIL_li r0 0;
   PIL_li r1 (assemble_insn (PIL_li r5 777));
   PIL_st r1 r0 (base_addr + 3 * 4)
   (* PIL_li r5 777;  <- dynamically written to memory section *)
   ].
 
-Compute print_code (p32_assemble 0x00 (dynamic_li 0x00)) "p32_dynamicli"%string.
+(* Compute this then copy-paste into the file below. *)
+Compute print_code_prop (dynamic_li_prog 0x00) 0x00 "dynamic_li".
 
-Definition p32_dynamicli : addr -> N :=
-fun a => match a with
-  | 0 => 1
-  | 1 => 0
-  | 2 => 0
-  | 3 => 0
-  | 4 => 179
-  | 5 => 9
-  | 6 => 3
-  | 7 => 0
-  | 8 => 162
-  | 9 => 128
-  | 10 => 1
-  | 11 => 0
-  | _ => 0
-end.
-
-(* A more scalable way of creating the memory. *)
-Definition p32_dynamicli' := p32_assemble'' 0x00 (dynamic_li 0x00).
-
+Definition dynamic_li (mem:N) : Prop :=
+ xbits mem 0 96 = 1816377102816974043348993.
+(* We set 16 bits of execution instead of the 12 to
+  enable the execution of the dynamically written instruction. *)
+Definition dynamic_li_aexec (mem:N) : Prop :=
+  xbits mem 0 16 = 65535.

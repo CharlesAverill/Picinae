@@ -5,11 +5,14 @@ Require Export Picinae_theory.
 Require Export Picinae_statics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
+
 Require Import NArith.
 Require Import ZArith.
+
 Require Import Program.Equality.
 Require Import Structures.Equalities.
-Require Import Lia.
+
+Require Export Lia.
 Require Import FunctionalExtensionality.
 Require Import String.
 Require Import List.
@@ -180,14 +183,9 @@ Definition p32_stmt m a :=
   p322il a match a mod 4 with 0 => p32_decode (getmem 32 LittleE 4 m a) | _ => PIL_InvalidI end.
 
 Definition p32_prog : program :=
-  fun s a => match s V_MEM32, s A_EXEC with
-             | VaM m _, VaM e _ => match e a with
-                                   | N0 => None
-                                   | _ => Some (4, p32_stmt m a)
-                                   end
-             | _, _ => None
-             end.
-
+  fun s a => if N.testbit (s A_EXEC) a then
+               Some (4, p32_stmt (s V_MEM32) a)
+             else None.
 
 Lemma hastyp_p32mov:
   forall c0 c n e (TS: hastyp_stmt c0 c (Move (p32_varid n) e) c),
@@ -197,7 +195,7 @@ Proof.
 Qed.
 
 Lemma hastyp_pthirtytwomov:
-  forall n e (TE: hastyp_exp pil32typctx e (NumT 32)),
+  forall n e (TE: hastyp_exp pil32typctx e (32)),
   hastyp_stmt pil32typctx pil32typctx (Move (p32_varid n) e) pil32typctx.
 Proof.
   intros. erewrite store_upd_eq at 3.
@@ -209,7 +207,7 @@ Proof.
 Qed.
 
 Lemma hastyp_p32store:
-  forall e (TE: hastyp_exp pil32typctx e (MemT 32)),
+  forall e (TE: hastyp_exp pil32typctx e (2^32*8)),
   hastyp_stmt pil32typctx pil32typctx (Move V_MEM32 e) pil32typctx.
 Proof.
   intros. erewrite store_upd_eq at 3.
@@ -221,7 +219,7 @@ Proof.
 Qed.
 
 Lemma p32varid_numt32:
-  forall n, pil32typctx (p32_varid n) = Some (NumT 32).
+  forall n, pil32typctx (p32_varid n) = Some ( 32).
 Proof.
   intro. unfold p32_varid.
   destruct n as [|n]; try reflexivity. unfold pil32typctx.
@@ -231,7 +229,7 @@ Proof.
 Qed.
 
 Lemma hastyp_p32var:
-  forall n, hastyp_exp pil32typctx (p32var n) (NumT 32).
+  forall n, hastyp_exp pil32typctx (p32var n) ( 32).
 Proof.
   intro. unfold p32var, p32_varid.
   apply TVar. destruct n as [|n]; try reflexivity. unfold pil32typctx.
@@ -242,7 +240,7 @@ Qed.
 
 
 Theorem varupdate_nop:
-  forall n, pil32typctx[p32_varid n := Some (NumT 32)] = pil32typctx.
+  forall n, pil32typctx[p32_varid n := Some ( 32)] = pil32typctx.
 Proof.
   unfold update, pil32typctx; intros. extensionality a.
   assert (H: forall v n, v = p32_varid n -> v <> V_MEM32 /\ v <> A_READ /\ v <> A_WRITE /\ v <> A_EXEC).
@@ -258,7 +256,7 @@ Qed.
 Theorem regupdate_nop:
   forall r, match r with 
   | V_MEM32 | A_READ | A_WRITE | A_EXEC => True
-  | _ => pil32typctx[r := Some (NumT 32)] = pil32typctx
+  | _ => pil32typctx[r := Some ( 32)] = pil32typctx
   end.
 Proof.
   intros; unfold update; destruct r; try apply I; extensionality a;
@@ -266,7 +264,7 @@ Proof.
 Qed.
 
 Theorem hastyp_varupdate:
-  forall n, pil32typctx ⊆ pil32typctx[p32_varid n := Some (NumT 32)].
+  forall n, pil32typctx ⊆ pil32typctx[p32_varid n := Some ( 32)].
 Proof.
   unfold pfsub, update. intros.
     destruct (x == p32_varid n); subst.
@@ -276,7 +274,7 @@ Qed.
 
 
 Theorem hastyp_word:
-  forall c n pl pr, pl <= pr -> hastyp_exp c (Word (n mod 2 ^ pl) pr) (NumT pr).
+  forall c n pl pr, pl <= pr -> hastyp_exp c (Word (n mod 2 ^ pl) pr) ( pr).
 Proof. 
   intros. econstructor. apply N.lt_le_trans with (m:=2^pl).
     apply mp2_mod_lt.
@@ -325,13 +323,16 @@ Proof.
     | apply hastyp_word
     | rewrite varupdate_nop
     |   match goal with
-        | [|-context[update _ ?R (Some (NumT 32))]] 
+        | [|-context[update _ ?R (Some ( 32))]] 
             => rewrite (regupdate_nop R) 
         end
     | lia
     | solve apply pfsub_refl
     | econs_duh]. 
   all: try rewrite varupdate_nop; try apply pfsub_refl; try lia.
+  1-2:eapply (hastyp_varupdate 7).
+  unfold widthof_binop; lia.
+  reflexivity.
   Unshelve. all:exact 0.
 Qed.
 
@@ -339,132 +340,13 @@ Theorem welltyped_p32prog:
   welltyped_prog pil32typctx p32_prog.
 Proof.
   intros s a. unfold p32_prog.
-  destruct (s V_MEM32), (s A_EXEC); try exact I.
-  destruct (m0 a).
-    exact I.
-    exists pil32typctx. unfold p32_stmt. destruct (a mod 4).
-      apply welltyped_p322il.
-      apply TExn. reflexivity.
+  destruct (N.testbit (s A_EXEC) a); try exact I.
+  eexists.
+  unfold p32_stmt; destruct (a mod 4);[
+    apply welltyped_p322il
+    | apply TExn; reflexivity
+  ].
 Qed.
-
-
-(* Create some automated machinery for simplifying symbolic expressions. *)
-
-Lemma memacc_read_frame:
-  forall s v u (NE: v <> A_READ),
-  MemAcc mem_readable (update s v u) = MemAcc mem_readable s.
-Proof.
-  intros. unfold MemAcc, mem_readable. rewrite update_frame. reflexivity.
-  apply not_eq_sym. exact NE.
-Qed.
-
-Lemma memacc_write_frame:
-  forall s v u (NE: v <> A_WRITE),
-  MemAcc mem_writable (update s v u) = MemAcc mem_writable s.
-Proof.
-  intros. unfold MemAcc, mem_writable. rewrite update_frame. reflexivity.
-  apply not_eq_sym. exact NE.
-Qed.
-
-Lemma memacc_read_updated:
-  forall s v u1 u2,
-  MemAcc mem_readable (update (update s v u2) A_READ u1) =
-  MemAcc mem_readable (update s A_READ u1).
-Proof.
-  intros. unfold MemAcc, mem_readable. rewrite !update_updated. reflexivity.
-Qed.
-
-Lemma memacc_write_updated:
-  forall s v u1 u2,
-  MemAcc mem_writable (update (update s v u2) A_WRITE u1) =
-  MemAcc mem_writable (update s A_WRITE u1).
-Proof.
-  intros. unfold MemAcc, mem_writable. rewrite !update_updated. reflexivity.
-Qed.
-
-(* Introduce automated machinery for verifying a RISC-V machine code subroutine
-   (or collection of subroutines) by (1) defining a set of Floyd-Hoare
-   invariants (including pre- and post-conditions) and (2) proving that
-   symbolically executing the program starting at any invariant point in a
-   state that satisfies the program until the next invariant point always
-   yields a state that satisfies the reached invariant.  This proves partial
-   correctness of the subroutine.
-
-   In order for this methodology to prove that a post-condition holds at
-   subroutine exit, we must attach one of these invariants (the post-condition)
-   to the return address of the subroutine.  This is a somewhat delicate
-   process, since unlike most other code addresses, the exact value of the
-   return address is an unknown (defined by the caller).  We therefore adopt
-   the convention that subroutines "exit" whenever control flows to an address
-   for which no IL code is defined at that address.  This allows proving
-   correctness of a subroutine by lifting only the subroutine to IL code (or
-   using the pmono theorems from Picinae_theory to isolate only the subroutine
-   from a larger program), leaving the non-subroutine code undefined (None). *)
-
-(* Simplify memory access assertions produced by step_stmt. *)
-Ltac simpl_memaccs H :=
-  try lazymatch type of H with context [ MemAcc mem_writable ] =>
-    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
-  end;
-  try lazymatch type of H with context [ MemAcc mem_readable ] =>
-    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
-  end.
-
-(* Symbolically evaluate a RISC-V machine instruction for one step. *)
-Ltac p32_step_and_simplify XS :=
-  step_stmt XS;
-  psimpl_vals_hyp XS;
-  simpl_memaccs XS;
-  destruct_memaccs XS.
-
-(* Some versions of Coq check injection-heavy proofs very slowly (at Qed).  This slow-down can
-   be avoided by sequestering prevalent injections into lemmas, as we do here. *)
-Remark inj_prog_stmt: forall (sz1 sz2: N) (q1 q2: stmt),
-                      Some (sz1,q1) = Some (sz2,q2) -> sz1=sz2 /\ q1=q2.
-Proof. injection 1 as. split; assumption. Qed.
-
-(* Simplify (exitof a x) without expanding a. *)
-Remark exitof_none a: exitof a None = Addr a. Proof eq_refl.
-Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
-
-(* If asked to step the computation when we're already at an invariant point,
-   just make the proof goal be the invariant. *)
-Ltac p32_invhere :=
-  eapply nextinv_here; [ reflexivity | red; psimpl_vals_goal ].
-
-(* If we're not at an invariant, symbolically interpret the program for one
-   machine language instruction.  (The user can use "do" to step through many
-   instructions, but often it is wiser to pause and do some manual
-   simplification of the state at various points.) *)
-Ltac p32_invseek :=
-  eapply NIStep; [reflexivity|reflexivity|];
-  let s := fresh "s" in let x := fresh "x" in let XS := fresh "XS" in
-  intros s x XS;
-  p32_step_and_simplify XS;
-  repeat lazymatch type of XS with
-         | s=_ /\ x=_ => destruct XS; subst s x
-         | exec_stmt _ (if ?c then _ else _) _ _ =>
-             let BC := fresh "BC" in destruct c eqn:BC;
-             p32_step_and_simplify XS
-         | exec_stmt _ (N.iter _ _ _) _ _ => fail
-         | _ => p32_step_and_simplify XS
-         end;
-  try match goal with |- nextinv _ _ _ _ (_ :: ?xs :: ?t) =>
-    let t' := fresh t in generalize (xs::t); intro t'; clear t; rename t' into t
-  end;
-  repeat match goal with [ u:value |- _ ] => clear u
-                       | [ n:N |- _ ] => clear n
-                       | [ m:addr->N |- _ ] => clear m end;
-  try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
-  try first [ rewrite exitof_none | rewrite exitof_some ].
-
-(* Clear any stale memory-access hypotheses (arising from previous computation
-   steps) and either step to the next machine instruction (if we're not at an
-   invariant) or produce an invariant as a proof goal. *)
-Ltac p32_step :=
-  repeat match goal with [ H: MemAcc _ _ _ _ _ |- _ ] => clear H end;
-  first [ p32_invseek; try p32_invhere | p32_invhere ].
-
 
 (* Assembler section *)
 Definition assemble_insn_op (insn:p32_asm) : N :=
@@ -686,54 +568,12 @@ Definition p32_assemble_insn_bytes (insn:p32_asm) : list N :=
   (xnbits (assemble_insn insn) 8  8) ::
   (xnbits (assemble_insn insn) 16 8) ::
   (xnbits (assemble_insn insn) 24 8) :: nil.
-  
-Fixpoint p32_assemble (base_addr:N) (code:list (p32_asm)) : list (addr * N) :=
-  match code with
-  | nil => nil
-  | insn :: t => match p32_assemble_insn_bytes insn with
-    | b0 :: b1 :: b2 :: b3 :: nil =>
-      (0 + base_addr, b0) :: (1 + base_addr, b1) :: 
-      (2 + base_addr, b2) :: (3 + base_addr, b3) :: 
-      (p32_assemble (4+base_addr) t)
-    | _ => nil
-    end
-  end.
-  
-(* Definition program' := [PIL_li 0 0; PIL_addi 1 1 1; PIL_subi 2 2 1; PIL_beq 0 2 (-12)%Z]. *)
-(* Compute p32_assemble 0x00100000 program'. *)
 
-Fixpoint p32_assemble' (base_addr:N) (mem:addr->N) (code:list (p32_asm)) : addr -> N :=
+Fixpoint p32_assemble' (base_addr:N) (mem:N) (code:list (p32_asm)) : N :=
   match code with
   | nil => mem
   | insn :: t => p32_assemble' (base_addr+4) (setmem 32 LittleE 4 mem base_addr (assemble_insn insn)) t
   end.
-
-(* Compute p32_assemble' 0x00100000 (fun _ => 0) program'. *)
-
-(* `assoc_list` turns a list pairing addresses and bytes into a function.
-   If the address is not set then the default byte value is 0.
-   
-   Example use:
-        
-        Definition program := [PIL_li 0 0; PIL_InvalidI].
-        assoc_list (p32_assemble 0x1000 program)
-   
-   Needing to have a default byte value is a limitation of needing to provide
-   a concrete, rather than existentially quantified, value. We can ameliorate
-   this in proofs by quantifying over memory values that exactly match the
-   behavior of the concrete memory for the addresses in which the program
-   is written.
-*)
-
-Fixpoint assoc_list (memlist:list (addr * N)) : addr -> N :=
-  match memlist with
-  | nil => fun _ => 0
-  | (addr, b) :: t => fun a => if a == addr then b else assoc_list t a
-  end.
-
-Definition p32_assemble'' (base_addr:N) (code:list p32_asm) : addr -> N :=
-  assoc_list (p32_assemble base_addr code).
-  
 
 Require Import String.
 Require Import Ascii.
@@ -745,13 +585,22 @@ Open Scope string.
 Open Scope nat.
 Definition newline :string := String "010" EmptyString.
 
-Program Fixpoint N2str (n:nat) {measure n}: string :=
+(* Serious performance issues converting 4+ digit numbers to a string.
+   at 6 digits Coqide crashes. *)
+Program Fixpoint nat2str (n:nat) (acc:string) {measure n}: string :=
   (match n with
-    | O => "0"
-    | _ => 
-       (if (N2str (n/10) =? "0")%string then EmptyString else N2str (n/10))
-         ++ 
-       (match n mod 10 with
+    | O => String "0" acc
+    | 1 => String "1" acc
+    | 2 => String "2" acc
+    | 3 => String "3" acc
+    | 4 => String "4" acc
+    | 5 => String "5" acc
+    | 6 => String "6" acc
+    | 7 => String "7" acc
+    | 8 => String "8" acc
+    | 9 => String "9" acc
+    | _ => nat2str (n/10) 
+       (String (match n mod 10 with
          | O => "0"
          | 1 => "1"
          | 2 => "2"
@@ -762,28 +611,61 @@ Program Fixpoint N2str (n:nat) {measure n}: string :=
          | 7 => "7"
          | 8 => "8"
          | 9 => "9"
-         | _ => "ERROR"
-       end)
+         | _ => "!"
+       end) acc)
   end)%nat .
-Obligation 1. 
-  enough (H: fst (Nat.divmod n 9 0 9) = (n / 10));[
-  rewrite H; apply Nat.div_lt; lia| now unfold Nat.divmod]. Defined.
+Obligation 1.
+  repeat split; intro; discriminate. Defined.
 Next Obligation.
-  enough (H: fst (Nat.divmod n 9 0 9) = (n / 10));[
-  rewrite H; apply Nat.div_lt; lia| now unfold Nat.divmod]. Defined.
+  enough (H': fst (Nat.divmod n 9 0 9) = (n / 10));[
+  rewrite H'; apply Nat.div_lt; lia| now unfold Nat.divmod]. Defined.
 Next Obligation.
-  repeat (split || lia). Defined.
+  repeat split; intro; discriminate. Defined.
 Close Scope nat.
 
-Fixpoint bytematches (l:list (addr * N)) : string :=
-  match l with
-  | nil => EmptyString
-  | (a,b)::t => "  | " ++ (N2str (N.to_nat a)) ++ " => " ++ (N2str (N.to_nat b)) ++ newline
-                 ++ (bytematches t)
+Definition N2str n := nat2str (N.to_nat n) EmptyString.
+
+Fixpoint p32_code_length (code:list p32_asm) : N:=
+  match code with
+  | nil => 0
+  | h::t => (insn_length h) + (p32_code_length t)
   end.
 
-Definition print_code (l:list (addr * N)) (name:string) :=
-  "Definition " ++ name ++ " : addr -> N :=" ++ newline ++
-  "fun a => match a with" ++ newline ++ (bytematches l)
-  ++ "  | _ => 0" ++ newline ++ "end."
-.
+Definition print_code_prop (code:list p32_asm) (base_addr:N) (name:string) :=
+  ("Definition " ++ name ++ " (mem:N) : Prop :=" ++ newline ++
+  " xbits mem " ++ (N2str (base_addr * 8)) ++ " " ++ 
+  (N2str ((base_addr + (p32_code_length code)) * 8)) ++ " = " ++ 
+  "XXXX" ++ "." ++ newline ++
+  "Definition " ++ name ++ "_aexec (mem:N) : Prop :=" ++ newline ++
+  "  xbits mem " ++ (N2str base_addr) ++ " " ++
+  (N2str (base_addr + (p32_code_length code))) ++ " = " ++
+  "XXXX" ++ "." ++ newline
+  , (p32_assemble' 0 0 code)
+  , N.ones (p32_code_length code) ).
+  
+(* Definition program' := [PIL_li 0 0; PIL_addi 1 1 1; PIL_subi 2 2 1; PIL_beq 0 2 (-12)%Z]. *)
+(* Compute p32_assemble 0x00100000 program'. *)
+(* Compute p32_code_length program'. *)
+(* Compute p32_assemble' 0 0 program'. *)
+(* Compute print_code_prop program' 0 "p". *)
+Ltac get_exec := 
+  repeat match goal with 
+  | [P: ?prop ?v |- _ ] => unfold prop in P
+  | [H: xbits (_ ?m) _ _ = _ |- context[N.testbit (update ?s _ _ ?m) _]] =>
+    rewrite (update_frame s _ _ m); try easy
+  | [H: xbits ?v ?l ?h = ?mem |- context[N.testbit ?v ?i]] =>
+    let HELP := fresh "H" in
+    assert (HELP: l <= i /\ i <= h) by (split; lia); clear HELP;
+    rewrite testbit_xbits, (xbits_split2 l i (N.succ i) h v mem);
+    try lia
+  end; vm_compute (N.odd _); psimpl.
+Ltac effinv_none_hook ::= unfold effinv, effinv', p32_prog; get_exec.
+Ltac psa_some_hook ::=   unfold p32_prog, p32_stmt; get_exec;
+  repeat match goal with
+  | [ |- context[p32_decode (getmem ?w LittleE ?len ?mem ?a)]] =>
+    rewrite (getmem_xbits w len mem a); try lia
+  | [H: xbits ?mem ?i ?j = ?v
+    |- context[xbits ?mem ?a ?b]] =>
+    rewrite (xbits_split2 i a b j mem v); try lia; vm_compute (p32_decode _)
+  | _ => reflexivity
+  end.
