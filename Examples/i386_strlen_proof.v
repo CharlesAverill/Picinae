@@ -388,7 +388,7 @@ Proof.
   rewrite N.add_0_l, N.odd_sub, H4 by apply YX.
   unfold N.lnot. rewrite 2!N.shiftr_lxor, (N.shiftr_shiftr (N.ones _)), (N.shiftr_div_pow2 (N.ones _)).
   rewrite N.ones_div_pow2 by (rewrite N.add_comm; apply N.lt_le_incl, H3).
-  rewrite Nxor_bit0, odd_ones by (rewrite N.add_comm; apply N.sub_gt, H3).
+  rewrite <- N.bit0_odd, N.lxor_spec, !N.bit0_odd, odd_ones by (rewrite N.add_comm; apply N.sub_gt, H3).
   destruct (_ mod _ + _) eqn:NZ.
     rewrite N.mul_sub_distr_r, N.add_sub_assoc in NZ by apply N.mul_le_mono_r, YX.
     rewrite <- N.shiftl_mul_pow2, <- lor_plus in NZ by (apply land_lohi_0, N.mod_lt, N.pow_nonzero; discriminate).

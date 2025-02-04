@@ -192,6 +192,7 @@ Ltac ISA_invseek :=
          | _ => ISA_step_and_simplify XS
          end;
   try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
+  repeat match goal with [ x:N |- _ ] => clear x end;
   try first [ rewrite exitof_none | rewrite exitof_some ].
 
 (* Clear any stale memory-access hypotheses (arising from previous computation
