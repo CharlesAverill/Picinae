@@ -5,8 +5,11 @@ Require Import Lia.
 Require Import Bool.
 Require Import Utf8.
 Import ARM8Notations.
+
 (* Require Import strspn_arm8. *)
+(*Why doesn't regular import without the notations work*)
 Require Import -(notations) SMTCoq.SMTCoq.
+
 Require Import FunctionalExtensionality.
 Import ARM8Notations.
 Open Scope N.
@@ -76,12 +79,6 @@ Qed.
 (* Define what it means for a nil-terminated string to not have internal nils. *)
 Definition nilfree mem p len :=
   ∀ i, i < len -> 0 <> mem Ⓑ[ p + i ].
-
-Lemma nilfree0:
-  forall m p, nilfree m p 0.
-Proof.
- unfold nilfree; intros m p i H; now apply N.nlt_0_r in H.
-Qed.
 
 Definition strlen mem p len :=
   nilfree mem p len /\ mem Ⓑ[ p + len ] = 0.
@@ -601,6 +598,7 @@ Proof.
   subst x; reflexivity.
 Qed.
 
+
 (* Useful:
 N.succ_inj: ∀ n1 n2 : N, N.succ n1 = N.succ n2 → n1 = n2
 N.pow_succ_r': ∀ a b : N, a ^ N.succ b = a * a ^ b
@@ -861,15 +859,15 @@ Qed.
 Lemma range_eq :
 forall k b
 (HYP0: k <= 4)
-(HYP1:  b < 64*(k + 1) /\ 64*k <= b)
+(HYP1: 64*k <= b < 64*(k + 1) )
 ,
 ((b >> 6 << 3) = 8*k).
 Proof. 
 intros.  rewrite N.shiftl_mul_pow2. psimpl (2^3). rewrite N.mul_comm.
 rewrite N.mul_cancel_l. destruct HYP1. rewrite N.shiftr_div_pow2.
 rewrite <- N.mul_cancel_l with (p:= 64). psimpl (2^6).
-apply N.div_le_lower_bound with (a:= b) (b:= 64) (q:= k) in H0.
-apply N.Div0.div_lt_upper_bound in H.
+apply N.div_le_lower_bound with (a:= b) (b:= 64) (q:= k) in H.
+apply N.Div0.div_lt_upper_bound in H0.
 assert (b / 64 = k).
 lia. rewrite H1. reflexivity.
 all:lia.
@@ -877,8 +875,7 @@ all:lia.
 Qed.
 
 Lemma helper_2 :
-forall m x y
-, (64 < y)->
+forall m x y, (64 < y)->
 (m Ⓠ[ x ] mod  2 ^ y) = m Ⓠ[ x ] .
 Proof.
 intros.
@@ -951,6 +948,31 @@ lia. assumption. psimpl (b + 64 * k - 64 * k). reflexivity.
 
 Qed.
 
+Lemma b_eq_2 : 
+forall b k
+(HYP1: b >> 6 << 3 = 8*k)
+(HYP2: 64*k <= b)
+(HYP4: b < 256)
+,
+2 ^ b = 2 ^ (b mod 64) * 2 ^ (8 * 8*k).
+Proof.
+intros.
+assert (forall a b, 2^a = 2^b <-> a = b).
+intuition. apply N.pow_inj_r with(a:=2) (b:=a)(c:=b0) in H. assumption. lia.
+rewrite H. reflexivity. repeat rewrite N.shiftl_1_l. rewrite <- N.pow_add_r.
+
+rewrite H. psimpl (8*8).
+replace (b = b mod 64 + 64*k) with (b + 64*k - 64*k = b mod 64 + 64*k).
+rewrite N.add_sub_swap with (p:= 64*k).
+rewrite N.add_cancel_r.
+rewrite N.Div0.mod_eq.
+rewrite N.shiftl_mul_pow2 in HYP1. psimpl (2^3) in HYP1. rewrite N.mul_comm in HYP1.
+rewrite N.mul_cancel_l in HYP1. rewrite N.shiftr_div_pow2 in HYP1.
+psimpl (2^6) in HYP1. rewrite HYP1. reflexivity.
+lia. assumption. psimpl (b + 64 * k - 64 * k). reflexivity.
+Qed.
+
+
 (* TODO: Prove this with veriT. *)
 Theorem getmem_eq:
   forall  m a b
@@ -982,21 +1004,21 @@ psimpl.
 
 repeat rewrite N.setbit_spec'.
 
-assert (b < 256 -> 0<= b /\ b < 64 \/ (64 <= b /\ b <128) \/ (128 <= b /\ b<192) \/ (192 <= b /\ b<256)). lia.
+assert (b < 256 -> 64*0<= b /\ b < 64*1 \/ (64*1 <= b /\ b <64*2) \/ (64*2 <= b /\ b<64*3) \/ (64*3 <= b /\ b<64*4)). lia.
 
 specialize (H0 H). 
-destruct H0.
 
-assert ((b >> 6 << 3) = 8*0). apply range_eq. lia. destruct H0. split; psimpl. assumption. assumption. psimpl (8*0) in H1. 
-rewrite H1. psimpl. 
-repeat rewrite N.shiftl_1_l.
-replace (2 ^ (8 * 32)) with (2 ^ 256).
+destruct H0. inversion H0. apply range_eq in H0.
+psimpl (8*0) in H0. rewrite H0. psimpl. 
+
 rewrite N.lor_comm.
 repeat rewrite N.lor_assoc.
-replace (2 ^ b .| (m Ⓠ[ a ])) with ((m Ⓠ[ a ]).|2^b).
+replace (1 << b .| (m Ⓠ[ a ])) with ((m Ⓠ[ a ]).|1 << b).
 all: try lia.
-(* TODO: SMT Testing *)
 
+repeat rewrite N.shiftl_1_l. rewrite N.mod_small. reflexivity.
+1-2: try assumption. apply N.lor_comm.
+(* TODO: SMT Testing *)
 (* Ltac eqbits :=
   repeat match goal with
   | |- eq _ _ => apply N.bits_inj; unfold N.eqf; intro
@@ -1009,76 +1031,31 @@ all: try lia.
 eqbits.
 now rewrite N.lor_comm. *)
 
-rewrite N_lor_mod_pow2.
-rewrite helper_2.
-rewrite helper_3 with (x:= 1).
-rewrite helper_3 with (x:= 2).
-rewrite helper_3 with (x:= 3).
-
-rewrite N.mod_small.
-rewrite N.mod_small with (a:= b) (b:= 64).
-
-reflexivity. destruct H0. assumption. rewrite <- N.pow_lt_mono_r_iff. assumption. 
- 
-all: try lia . apply N.lor_comm.   lia.
-
-destruct H0.
-
-assert ((b >> 6 << 3) = 8*1). apply range_eq. lia. destruct H0. split; psimpl. assumption. assumption. psimpl (8*1) in H1. 
-rewrite H1. replace (a + 8) with (8 + a). psimpl.
+destruct H0. inversion H0. apply range_eq in H0.
+psimpl (8*1) in H0. rewrite H0. psimpl. 
 repeat rewrite N.shiftl_1_l.
-
-rewrite N.shiftl_lor.
-rewrite N.lor_assoc.
+rewrite N.shiftl_lor. rewrite N.lor_assoc.
 rewrite N.lor_comm. repeat rewrite N.lor_assoc.
-rewrite lor_der_1.
-do 4 rewrite N_lor_mod_pow2. 
-rewrite helper_2.
-rewrite helper_3 with (x:= 1).
-rewrite helper_3 with (x:= 2).
-rewrite helper_3 with (x:= 3).
-repeat rewrite N.shiftl_mul_pow2.
-rewrite b_eq with (k:= 1).
-psimpl. rewrite lor_der_1. reflexivity.
-all: try lia.
-unfold 8, ARM8Arch.mem_bits. lia. 
+rewrite <- lor_der_1.
 
-destruct H0.
-assert ((b >> 6 << 3) = 8*2). apply range_eq. lia. destruct H0. split; psimpl. assumption. assumption. psimpl (8*2) in H1. 
-rewrite H1. replace (a + 16) with (16 + a). psimpl.
+rewrite b_eq_2 with (k:=1). psimpl (8*8*1).
+rewrite N.shiftl_mul_pow2 with (a:= (2^(b mod 64))) (n:=64). reflexivity. psimpl. assumption.
+1-2: assumption. lia.
+
+destruct H0. inversion H0. apply range_eq in H0.
+psimpl (8*2) in H0. rewrite H0. psimpl.
 repeat rewrite N.shiftl_1_l.
+rewrite N.shiftl_lor. rewrite N.lor_assoc. rewrite N.lor_comm. repeat rewrite N.lor_assoc.
+rewrite lor_der_2. change (2^7) with 128.
+rewrite b_eq_2 with (k:=2). change (8*8*2) with 128.
+rewrite N.shiftl_mul_pow2 with (a:= (2^(b mod 64))) (n:=128). reflexivity. 1-3: psimpl; assumption. lia.
 
-rewrite N.shiftl_lor.
-rewrite N.lor_assoc.
-rewrite N.lor_comm. repeat rewrite N.lor_assoc.
-rewrite lor_der_2.
-do 4 rewrite N_lor_mod_pow2. 
-rewrite helper_2.
-rewrite helper_3 with (x:= 1).
-rewrite helper_3 with (x:= 2).
-rewrite helper_3 with (x:= 3).
-repeat rewrite N.shiftl_mul_pow2.
-rewrite b_eq with (k:= 2). reflexivity. psimpl. assumption.
-destruct H. psimpl. all: try lia.
-unfold 8, ARM8Arch.mem_bits. lia.
-
-destruct H0.
-assert ((b >> 6 << 3) = 8*3). apply range_eq. lia. split. psimpl. assumption. lia. psimpl (8*3) in H2. 
-rewrite H2. replace (a + 24) with (24 + a). psimpl.
+pose proof H0. apply range_eq in H0. destruct H1.
+psimpl (8*3) in H0. rewrite H0. psimpl.
 repeat rewrite N.shiftl_1_l.
-
-rewrite N.shiftl_lor.
-rewrite N.lor_assoc.
-repeat rewrite N.lor_assoc.
-do 4 rewrite N_lor_mod_pow2. 
-rewrite helper_2.
-rewrite helper_3 with (x:= 1).
-rewrite helper_3 with (x:= 2).
-rewrite helper_3 with (x:= 3).
-repeat rewrite N.shiftl_mul_pow2.
-rewrite b_eq with (k:= 3). reflexivity. psimpl. assumption. 
-psimpl. all: try lia. unfold 8, ARM8Arch.mem_bits. lia. 
-
+rewrite N.shiftl_lor. rewrite N.lor_assoc. change (2^7) with 128.
+rewrite b_eq_2 with (k:=3). change (8*8*3) with 192. 
+rewrite N.shiftl_mul_pow2 with (a:= (2^(b mod 64))) (n:=192). reflexivity. psimpl (8*3). 1-3: try psimpl; assumption. lia.
 Qed.
 
 (*Made some small tweaks to the one we already have for greater ease of use*)
@@ -1146,48 +1123,37 @@ Proof.
 
   rewrite <- N.setbit_spec'. rewrite <- getmem_eq.
   rewrite <- testbit_xbits, getmem_setmem.
-  unfold 8, ARM8Arch.mem_bits. psimpl (2 ^ (8 * 32)).
-  rewrite N.setbit_spec', N_lor_mod_pow2, getmem_mod_r, N.mod_small.
+  psimpl (2 ^ (32 * 8)). rewrite N.setbit_spec', N_lor_mod_pow2, getmem_mod_r, N.mod_small.
   rewrite <- N.setbit_spec'. rewrite N.setbit_iff.
 
   split; intros.
+  destruct H0.
 
-  specialize (BITNSTR i H).
-  destruct H0. 
+  - specialize (BITNSTR i H). 
   exists L. split. lia. split. apply nilfree_grow.
   unfold strlen in ACPT_LEN. destruct ACPT_LEN as [NF ZERO].
   apply nilfree_shrink  with (y:= L) in NF.
   rewrite <- nilfree_change with (bmp:=bmp) (L:= L) in NF.
-  assumption. apply acpt_same_shrink in ACPT_SAME. assumption.
-  assumption. assumption.
+  assumption. apply acpt_same_shrink in ACPT_SAME. 1-3: assumption.
  
-  rewrite <- ACPT_SAME. assumption. assumption.
-  rewrite <- ACPT_SAME. assumption. assumption.
-
-  apply BITNSTR in H0. destruct H0 as [j [H0 [H1 H2]]]. 
-  exists j. split. lia. split.
-  unfold nilfree in H1. unfold nilfree.
-  intros. pose proof H3. apply H1 in H3.
-  unfold changed_mem.
+  rewrite <- ACPT_SAME. 1-2: assumption. 
+  rewrite <- ACPT_SAME. 1-2: assumption.
+  
+  - apply BITNSTR in H0. destruct H0 as [j [H0 [H1 H2]]]. 
+  exists j. split. lia. split. unfold nilfree in H1. unfold nilfree.
+  intros. pose proof H3. apply H1 in H3. unfold changed_mem.
   rewrite bit_update_noverlap_new with (bmp:= bmp)(acpt_len:=acpt_len) (acpt_i:= i0).
   assumption.
-
   assumption. assumption. lia.
+  rewrite <- ACPT_SAME. 1-3: try lia.
 
-  rewrite <- ACPT_SAME. assumption. lia.
-
-
-  destruct H0 as [j [H0 [H1 H2]]].
-  unfold changed_mem.
-
+  - destruct H0 as [j [H0 [H1 H2]]].
   specialize (BITNSTR i H).
-
-    unfold changed_mem in H2.
+  unfold changed_mem in H2.
   rewrite bit_update_noverlap_new with (bmp:= bmp)(acpt_len:=acpt_len) (acpt_i:= j) in H2.
 
-  assert (j < L + 1 -> j = L \/ j < L). lia.
+  assert (j < L + 1 -> j = L \/ j < L) by lia.
   specialize (H3 H0). destruct H3.
-
   left. rewrite H3 in H2. assumption. 
 
   right. apply BITNSTR. exists j. split. assumption.
@@ -1197,12 +1163,11 @@ Proof.
     assumption. assumption. assumption. lia.
   (*current indx is less than acpt_len*) 
 
-  all: try assumption. lia. 
-
-  rewrite <- N.pow_lt_mono_r_iff.
-  apply getmem_bound.
-  lia. lia. apply getmem_bound. 
-  
+  all: try assumption. lia.
+  - rewrite <- N.pow_lt_mono_r_iff.
+  apply getmem_bound. lia.
+  - lia.
+  - apply getmem_bound. 
 Qed.
 
 Lemma succ_sub_exact:
@@ -1237,15 +1202,13 @@ Proof.
 intros. 
 assert(forall k, k < 32-> (xbits(m Ⓨ[ p ]) (8*k) (8*k+8)) = m Ⓑ[ p + k ]).
 intros. unfold xbits. psimpl (8 * k + 8 - 8 * k).
-rewrite shiftr_getmem. 
-change (2 ^ 8) with (2 ^ (Mb*1)).
-rewrite getmem_mod.
-rewrite N.min_r. reflexivity. lia.
+replace (8*k) with (k*8). rewrite shiftr_getmem. 
+change (2 ^ 8) with (2 ^ (1*8)). rewrite getmem_mod.
+rewrite N.min_r. reflexivity. 1-2: lia.
 
 unfold xbits. psimpl. rewrite <- N.add_1_r.  psimpl.
 pose proof Lt. apply N.Div0.div_lt_upper_bound in H0.
-change 8 with (2^3) in H0.
-rewrite <- N.shiftr_div_pow2 in H0.
+change 8 with (2^3) in H0. rewrite <- N.shiftr_div_pow2 in H0.
 specialize (H (i >> 3) H0). rewrite <- H.
 unfold xbits. psimpl. replace (i >> 3) with (i / 8). 
 rewrite <- N.Div0.div_mod with (b:= 8) (a:=i).
@@ -1262,19 +1225,15 @@ Proof.
 intros. 
 assert(forall k, k <= 24-> (xbits(m Ⓨ[ p ]) (8*k) (8*k+64)) = m Ⓠ[ p + k ]).
 intros. unfold xbits. psimpl (8 * k + 64 - 8 * k).
-rewrite shiftr_getmem. 
-change (2 ^ 64) with (2 ^ (Mb*8)).
-rewrite getmem_mod.
-rewrite N.min_r. reflexivity. lia.
+replace (8*k) with (k*8). rewrite shiftr_getmem. 
+change (2 ^ 64) with (2 ^ (8*8)).
+rewrite getmem_mod. rewrite N.min_r. reflexivity. 1-2: lia.
 
 unfold xbits. psimpl. rewrite <- N.add_1_r.  psimpl.
 assert(INEQ: i <= 255). lia.
 
-assert ((i >> 6 << 3) <= 24).
-apply Nshiftr_mono with (shift:= 6) in INEQ.
-apply Nshiftl_mono with (shift:= 3) in INEQ.
-psimpl in INEQ.
-assumption.
+assert ((i >> 6 << 3) <= 24). apply Nshiftr_mono with (shift:= 6) in INEQ.
+apply Nshiftl_mono with (shift:= 3) in INEQ. psimpl in INEQ. assumption.
 
 specialize (H (i >> 6 << 3) H0). rewrite <- H.
 unfold xbits. psimpl. 
@@ -1469,7 +1428,7 @@ Qed.
 (* v v v v v v v v v v v v v v v v v v v v v v v *)
 (* acpt string contains all characters of str's i-length prefix.
  *)
- Definition post_satis_i (i:N) (m:addr -> N) (str_ptr:addr) (acpt_ptr:addr):=
+ Definition post_satis_i (i:N) (m:memory) (str_ptr:addr) (acpt_ptr:addr):=
   ∀j, j < i ->
   (∃ k : N, nilfree m acpt_ptr (k + 1)
     ∧ m Ⓑ[ acpt_ptr ⊕ k ] = m Ⓑ[ str_ptr ⊕ j ]).
