@@ -499,6 +499,21 @@ Proof using.
             try now eapply MEM4_PCT_NOL_STATIC;
             eauto using noverlap_symmetry.
         {
+            unfold mem4_mem4_noverlap_stackframe.
+            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
+            now eapply MEM4_PCT_NOL_STATIC.
+        } {
+            unfold mem4_mem4_noverlap_static. intros.
+            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
+            now eapply MEM4_PCT_NOL_STATIC.
+        } {
+            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
+        } {
+            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
+            now eapply MEM4_PCT_NOL_STATIC.
+        } {
+            noverlap_prepare gp sp; memsolve mem gp sp; auto.
+        } {
             noverlap_prepare gp sp.
             repeat rewrite <- getmem_mod_l with (a := _ + _).
             rewrite getmem_mod_l.

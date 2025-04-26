@@ -23,7 +23,7 @@ fi
 echo "Require Import Picinae_riscv."
 echo "Require Import NArith."
 echo
-echo "Definition $coq_definition_name (_ : store) (a : addr) : N :="
+echo "Definition $coq_definition_name (a : addr) : N :="
 echo "    match a with"
 
 first_addr=""
