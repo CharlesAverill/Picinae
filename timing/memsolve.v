@@ -213,38 +213,51 @@ Ltac clear_independent_hypotheses x y :=
         else fail
     end.
 
-Ltac _noverlap_prepare uxSchedulerSuspended pxCurrentTCB gp_sp_noverlap
-        __global_size vTaskSwitchContext_stack_frame_size gp sp := 
-    unfold uxSchedulerSuspended in *;
-    (* clear_independent_hypotheses gp sp; *)
-    unfold pxCurrentTCB in *;
-    unfold gp_sp_noverlap in *; unfold __global_size, vTaskSwitchContext_stack_frame_size in *;
+Ltac _noverlap_prepare 
+      unfold_tac
+      gp sp := 
+    unfold_tac;
+    intros;
     (* rewrite nasty large additions as their more human readable modular subtractions *)
     repeat match goal with
-    | [ |- context[?M [Ⓓ ?X + ?B := ?V]] ] =>
-        rewrite <-(setmem_mod_l _ _ _ M (X+B) V);
-        assert (Hhelp: (X ⊕ B) = (msub 32 B (2^32 - X))) by (rewrite N.add_comm; reflexivity);
-        psimpl in Hhelp; rewrite Hhelp; clear Hhelp
-    (* Grabs outermost getmem - not helpful *)
-    (* | [ |- context[?M Ⓓ[ ?X + ?Y ]] ] =>
-        rewrite <- (getmem_mod_l _ _ _ _ (X+Y));
-        assert (Hhelp: (X ⊕ Y) = (msub 32 Y (2^32 - X))) by (rewrite N.add_comm; reflexivity);
-        psimpl in Hhelp; rewrite Hhelp; clear Hhelp *)
-    end .
+    | [ |- context[?M [Ⓓ ?X + ?B + ?N := ?V]] ] =>
+      rewrite <-(setmem_mod_l _ _ _ M (X+B+N) V);
+      replace (M [ⒹX+B⊕N := V]) with
+        (M [Ⓓ(msub 32 B (2^32 - X)) ⊕ N := V]) by
+        (unfold msub; now psimpl);
+      simpl (2^32 - X)
+    | [ |- context[?M [Ⓓ?X + ?Y := ?V]]] =>
+      rewrite <- setmem_mod_l with (a := X + Y);
+      replace (X⊕Y) with (msub 32 Y (2^32 - X)) by (now rewrite N.add_comm);
+      simpl (2^32 - X)
+    | [ |- context[?M Ⓓ[ ?X + ?B + ?N]] ] =>
+      rewrite <-(getmem_mod_l _ _ _ M (X+B+N));
+      replace (M Ⓓ[X+B⊕N]) with
+        (M Ⓓ[(msub 32 B (2^32 - X)) ⊕ N]) by
+        (unfold msub; now psimpl);
+      simpl (2^32 - X)
+    | [ |- context[?M Ⓓ[?X + ?Y]]] =>
+      rewrite <- getmem_mod_l with (a := X + Y);
+      replace (X⊕Y) with (msub 32 Y (2^32 - X)) by (now rewrite N.add_comm);
+      simpl (2^32 - X)
+  end;
+  repeat match goal with
+    (* 48 is a special case *)
+    | [|- context[?N ⊖ 4294967248]] =>
+      replace (N ⊖ 4294967248) with (48 ⊕ N) by
+        (unfold msub; now psimpl);
+      (rewrite getmem_mod_l with (a := 48 + N) ||
+        rewrite setmem_mod_l with (a := 48 + N))
+  end.
 
 Ltac memsolve mem gp sp:=
+    idtac "Mem solving...";
     (* split up all the memory read-write dependencies with getmem_noverlap *)
-    repeat rewrite getmem_noverlap; try now (unfold msub; psimpl);
-    try (
+    (repeat rewrite getmem_noverlap; try now (unfold msub; psimpl));
+    (try (
       (* goals involving noverlap of gp and gp *)
-      apply noverlap_mod_idemp_l, sep_noverlap; left; psimpl; lia);
-    try solve [apply noverlap_shrink with (gp ⊖ 2048) 2048; [
-                psimpl; lia |
-                (apply noverlap_symmetry; apply noverlap_shrink with (sp ⊖ 16) 16;
-                    [psimpl; lia | now apply noverlap_symmetry])
-    ]];
-    try assumption;
-    match goal with
+      apply noverlap_mod_idemp_l, sep_noverlap; left; psimpl; lia));
+    (try match goal with
     | [ |- ~ overlap _ (?P ⊖ ?X1) ?N (?P ⊖ ?X2) ?N] =>
         solve [apply sep_noverlap; (left; now psimpl) || (right; now psimpl)]
     | [ H : ~ overlap _ (?A1 ⊖ ?A1B) ?A1S  (?A2 ⊖ ?A2B) ?A2S
@@ -261,4 +274,23 @@ Ltac memsolve mem gp sp:=
         apply (noverlap_index_index _ (mem Ⓓ[ gp ⊖ 1896 ]) 52 (sp ⊖ 16) 16 48 4 (16-SPI) 4);
         lia || assumption
     | _ => idtac
-    end.
+    end); 
+    (repeat match goal with
+    | [|- ~ overlap _ (sp ⊖ _) 4 _ _] =>
+      try solve [apply noverlap_shrink with (sp ⊖ 16) 16; [psimpl; lia|
+        eauto using noverlap_symmetry;
+        (apply noverlap_symmetry, noverlap_shrink with (gp ⊖ 2048) 2048; [psimpl;lia|
+            eauto using noverlap_symmetry])
+      ]]
+    | [|- ~ overlap _ (gp ⊖ _) 4 _ _] =>
+      try solve [apply noverlap_shrink with (gp ⊖ 2048) 2048; 
+        [psimpl; lia|
+            eauto using noverlap_symmetry;
+            (apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16; 
+              [psimpl; lia|eauto using noverlap_symmetry])
+        ]]
+    | [|- ~ overlap _ _ _ (sp ⊖ _) 4] =>
+        apply noverlap_symmetry
+    | [|- ~overlap _ _ _ (gp ⊖ _) 4] =>
+        apply noverlap_symmetry
+    end); eauto using noverlap_symmetry.
