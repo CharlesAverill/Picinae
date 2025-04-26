@@ -1,11 +1,12 @@
 Require Import Picinae_core.
-Require Export Picinae_timing.
 Require Export Picinae_riscv.
 Require Export NArith.
 Require Export ZArith.
-
+Require Import Lia.
 Require Import List.
 Import ListNotations.
+
+(* Hours spent trying to write dependent-typing automation for no reason: 4 *)
 
 Module riscvTiming.
     Definition store := store.
@@ -24,62 +25,6 @@ Notation "x #| y" := (N.lor x y) (at level 25, left associativity). (* logical o
 (* mask_bit_section 0bKJIHGFEDCBA 3 7 := 0bHGFED *)
 Definition mask_bit_section (n low high : N) : N :=
     (n #>> low) #& (N.pow 2 (1 + high - low) - 1).
-
-(* Hours spent trying to write dependent-typing automation for no reason: 4 *)
-(* Definition n_tuple (n : nat) (T : Type) : Type :=
-    let fix aux x := match x with O => T | S n' => (T * aux n')%type end in
-    aux n.
-
-Lemma pred_n_tuple : forall n T, (1 <= n)%nat -> (T * n_tuple (n - 1) T)%type = n_tuple n T.
-Proof.
-    induction n; intros; simpl.
-    - inversion H.
-    - rewrite Nat.sub_0_r. reflexivity.  
-Qed. 
-
-Fixpoint pred_tuple {X : Type} {n : nat} (tup : n_tuple n X) {struct n} : n_tuple (n - 1) X.
-    destruct n.
-    - exact tup.
-    - destruct n.
-        -- destruct tup. exact x.
-        -- destruct tup, n0. specialize (pred_tuple _ _ n0).
-            remember (x, (x0, pred_tuple)). rewrite <- pred_n_tuple.
-             simpl. rewrite <- pred_n_tuple. exact p.
-            
-
-Fixpoint decompose32 (instr low : N) (boundaries : list N) : n_tuple (length boundaries) N.
-    destruct boundaries eqn:E.
-    - exact (mask_bit_section instr low 31).
-    - simpl. exact (mask_bit_section instr low z, decompose32 instr (1 + z) l).
-Defined.
-
-Compute decompose32 2147483647 0 [6; 31].
-
-Fixpoint decompose_list (instr low : N) (boundaries : list N) : n_tuple (length boundaries) N :=
-    match boundaries with
-    | nil => mask_bit_section instr low 
-    | high :: tl => (mask_bit_section instr low high, decompose_list instr (1 + high) tl)
-    end.
-
-Lemma decompose_len_eq : forall b i l, length (decompose_list i l b) = length b.
-Proof.
-    induction b; intros.
-    - reflexivity.
-    - simpl (length (a :: b)). rewrite <- (IHb i l). remember (length (decompose_list i l b)) as x.
-      cbv [decompose_list]. fold decompose_list. destruct (_ :: _) eqn:E. inversion E. simpl.
-      subst. inversion E. now rewrite IHb, IHb.
-Qed.
-
-Fixpoint decompose (instr low : N) (boundaries : list N) : n_tuple (length boundaries) N.
-    destruct (decompose_list instr low boundaries) eqn:E.
-    - rewrite <- (decompose_len_eq boundaries instr low), E. exact instr.
-    - destruct l;
-        rewrite <- (decompose_len_eq boundaries instr low), E.
-        -- exact instr.
-        -- simpl. exact (z, (z0, decompose instr (low + 1)))  
-
-Compute mask_bit_section 63 3 4.
-Compute decompose 63 0 [2; 6]. *)
 
 Fixpoint contains (l:list N) (a:N) : bool :=
     match l with

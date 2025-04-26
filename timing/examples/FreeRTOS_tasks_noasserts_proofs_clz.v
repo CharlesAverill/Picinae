@@ -6,13 +6,9 @@ Require Import memsolve.
 (* Some machinery describing the CPU *)
 Variable ML : N.
 Variable ML_pos : 1 <= ML.
-Module riscv_toa.
-    Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound ML s (RTOSDemo_NoAsserts_Clz a) with
-        | Some x => x | _ => 999 end.
-End riscv_toa.
-Module riscvT := MakeTimingContents riscvTiming riscv_toa.
-Export riscvT.
+Definition time_of_addr (s : store) (a : addr) : N :=
+    match neorv32_cycles_upper_bound ML s (RTOSDemo_NoAsserts_Clz a) with
+    | Some x => x | _ => 999 end.
 Definition cycle_count_of_trace := cycle_count_of_trace time_of_addr.
 
 (* These expressions pop up a lot and I don't like seeing them, so just fold them up
@@ -499,21 +495,6 @@ Proof using.
             try now eapply MEM4_PCT_NOL_STATIC;
             eauto using noverlap_symmetry.
         {
-            unfold mem4_mem4_noverlap_stackframe.
-            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
-            now eapply MEM4_PCT_NOL_STATIC.
-        } {
-            unfold mem4_mem4_noverlap_static. intros.
-            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
-            now eapply MEM4_PCT_NOL_STATIC.
-        } {
-            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
-        } {
-            noverlap_prepare gp sp; memsolve mem gp sp; eauto using noverlap_symmetry.
-            now eapply MEM4_PCT_NOL_STATIC.
-        } {
-            noverlap_prepare gp sp; memsolve mem gp sp; auto.
-        } {
             noverlap_prepare gp sp.
             repeat rewrite <- getmem_mod_l with (a := _ + _).
             rewrite getmem_mod_l.

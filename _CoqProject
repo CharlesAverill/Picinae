@@ -10,13 +10,10 @@ Picinae_i386.v
 Picinae_armv7.v
 Picinae_riscv.v
 Picinae_amd64.v
-Picinae_timing.v
 Examples/i386_strcmp.v
 Examples/riscv_cfi.v
 timing/i386Timing.v
 timing/riscvTiming.v
 Examples/arm7_strlen.v
-timing/examples/lifted_RTOSDemo.v
-timing/examples/RTOSDemo_NoAsserts.v
 timing/examples/RTOSDemo_NoAsserts_Clz.v
 timing/memsolve.v
