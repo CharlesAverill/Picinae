@@ -1,5 +1,6 @@
 Require Import riscvTiming.
 Import RISCVNotations.
+Require Import Lia.
 
 Lemma noverlap_index:
   forall w a1 len1 a2 len2 index size

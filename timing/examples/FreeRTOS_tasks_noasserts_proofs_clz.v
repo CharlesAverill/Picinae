@@ -1,7 +1,8 @@
-Require Import RTOSDemo_NoAsserts_Clz.
+From Picinae.timing Require Import RTOSDemo_NoAsserts_Clz.
 Require Import riscvTiming.
 Import RISCVNotations.
 Require Import memsolve.
+Require Import Lia.
 
 (* Some machinery describing the CPU *)
 Variable ML : N.
