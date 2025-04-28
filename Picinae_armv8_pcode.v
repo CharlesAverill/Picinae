@@ -11,7 +11,7 @@
                                                      MMM8MMMMMMMMMMM77   +MMMMZZ
                                                      MMMMMMMMMMMZMDMD77$.ZMZMM78
                                                       MMMMMMMMMMMMMMMMMMMZOMMM+Z
-   Instantiation of Picinae for Intel x64 ISA.         MMMMMMMMMMMMMMMMM^NZMMN+Z
+   Instantiation of Picinae for Ghidra-lifted ARM8.    MMMMMMMMMMMMMMMMM^NZMMN+Z
                                                         MMMMMMMMMMMMMMM/.$MZM8O+
    To compile this module, first load and compile:       MMMMMMMMMMMMMM7..$MNDM+
    * Picinae_core                                         MMDMMMMMMMMMZ7..$DM$77
@@ -43,119 +43,116 @@ Require Import Program.Equality.
 Require Import Structures.Equalities.
 Open Scope N.
 
-(* Variables found in IL code lifted from x64 native code: *)
-Inductive x64var :=
-  (* Main memory: *)
-  | V_MEM64
-  (* Flags (1-bit registers): *)
-  | R_AF | R_CF | R_DF | R_OF | R_PF | R_SF | R_ZF
-  (* Segment selectors (16-bit registers): *)
-  | R_CS | R_DS | R_ES | R_FS | R_GS | R_SS
-  (* Floating point control register (16-bit): *)
-  | R_FPU_CONTROL
-  (* Floating point registers (80-bit): *)
-  | R_ST0 | R_ST1 | R_ST2 | R_ST3 | R_ST4 | R_ST5 | R_ST6 | R_ST7
-  (* General-purpose registers (64-bit): *)
-  | R_RAX | R_RBX | R_RCX | R_RDX | R_RDI | R_RSI
-  (* Stack pointer and base pointer (64-bit): *)
-  | R_RSP | R_RBP
-  | R_R8 | R_R9 | R_R10 | R_R11 | R_R12 | R_R13 | R_R14 | R_R15
-  (* Modifiable segment base registers (64-bit): *)
-  | R_FS_BASE | R_GS_BASE
-  (* Descriptor table registers (64-bit): *)
-  | R_LDTR | R_GDTR
-  (* SSE control register (64-bit): *)
-  | R_MXCSR
-  (* MMX and SSE registers (256-bit): *)
-  | R_YMM0 | R_YMM1 | R_YMM2  | R_YMM3  | R_YMM4  | R_YMM5  | R_YMM6  | R_YMM7
-  | R_YMM8 | R_YMM9 | R_YMM10 | R_YMM11 | R_YMM12 | R_YMM13 | R_YMM14 | R_YMM15
+(* Variables found in IL code lifted from ARM native code: *)
+Inductive arm8var :=
+  (* Main memory: support both 32 bit(ARMv1-v8) mode and 64 bit(ARMv8) *)
+  | V_MEM32 | V_MEM64
+  (* X0-30 = 64bit registers. No need to explicitly define W0-30 since lifted code addresses the lower 32 bits when using W registers *)
+  | R_X0 | R_X1 | R_X2 | R_X3 | R_X4 | R_X5 | R_X6 | R_X7 | R_X8 | R_X9 | R_X10
+  | R_X11 | R_X12 | R_X13 | R_X14 | R_X15 | R_X16 | R_X17 | R_X18 | R_X19 | R_X20
+  | R_X21 | R_X22 | R_X23 | R_X24 | R_X25 | R_X26 | R_X27 | R_X28 | R_X29 | R_X30
+  (* SP = stack pointer *)
+  | R_SP | R_LR | R_PC
+  (* ng = negative, zr = zero reg, cy = carry, ov = overflow *)
+  | R_NG | R_ZR | R_CY | R_OV
+  (* for modeling how the cpu handles flag updates *)
+  | R_TMPNG | R_TMPZR | R_TMPCY | R_TMPOV
+  (* zero reg *)
+  | R_XZR
+  (* FP/SIMD registers *)
+  | R_Z0 | R_Z1 | R_Z2 | R_Z3 | R_Z4 | R_Z5 | R_Z6 | R_Z7 | R_Z8 | R_Z9 | R_Z10
+  | R_Z11 | R_Z12 | R_Z13 | R_Z14 | R_Z15 | R_Z16 | R_Z17 | R_Z18 | R_Z19 | R_Z20
+  | R_Z21 | R_Z22 | R_Z23 | R_Z24 | R_Z25 | R_Z26 | R_Z27 | R_Z28 | R_Z29 | R_Z30 | R_Z31
+  (* explicit registers for SIMD semantics calculations *)
+  | R_TMPZ0 | R_TMPZ1 | R_TMPZ2 | R_TMPZ3 | R_TMPZ4 | R_TMPZ5 | R_TMPZ6
+  | R_TMP_LDXN
   (* These meta-variables model page access permissions: *)
   | A_READ | A_WRITE
-  (* Temporaries introduced by the lifter: *)
-  | V_TEMP (n:N).
+  | V_TEMP (n:N) (* Temporaries introduced by the lifter: *).
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
-Definition x64typctx v :=
+Definition arm8typctx v :=
   match v with
+  | V_MEM32 => Some (8*2^32)
   | V_MEM64 => Some (8*2^64)
-  | R_AF | R_CF | R_DF | R_OF | R_PF | R_SF | R_ZF => Some 1
-  | R_CS | R_DS | R_ES | R_FS | R_GS | R_SS => Some 16
-  | R_FPU_CONTROL => Some 16
-  | R_ST0 | R_ST1 | R_ST2 | R_ST3 | R_ST4 | R_ST5 | R_ST6 | R_ST7 => Some 80
-  | R_RAX | R_RBX | R_RCX | R_RDX | R_RDI | R_RSI => Some 64
-  | R_RSP | R_RBP => Some 64
-  | R_R8 | R_R9 | R_R10 | R_R11 | R_R12 | R_R13 | R_R14 | R_R15 => Some 64
-  | R_FS_BASE | R_GS_BASE => Some 64
-  | R_LDTR | R_GDTR => Some 64
-  | R_MXCSR => Some 64
-  | R_YMM0 | R_YMM1 | R_YMM2  | R_YMM3  | R_YMM4  | R_YMM5  | R_YMM6  | R_YMM7
-  | R_YMM8 | R_YMM9 | R_YMM10 | R_YMM11 | R_YMM12 | R_YMM13 | R_YMM14 | R_YMM15 => Some 256
+  | R_X0 | R_X1 | R_X2 | R_X3 | R_X4 | R_X5 | R_X6 | R_X7 | R_X8 | R_X9 | R_X10 => Some 64
+  | R_X11 | R_X12 | R_X13 | R_X14 | R_X15 | R_X16 | R_X17 | R_X18 | R_X19 | R_X20 => Some 64
+  | R_X21 | R_X22 | R_X23 | R_X24 | R_X25 | R_X26 | R_X27 | R_X28 | R_X29 | R_X30 => Some 64
+  | R_XZR => Some 64
+  | R_SP | R_LR | R_PC => Some 64
+  | R_NG | R_ZR | R_CY | R_OV => Some 8
+  | R_TMPNG | R_TMPZR | R_TMPCY | R_TMPOV => Some 8
   | A_READ | A_WRITE => Some (2^64)
   | V_TEMP _ => None
-  end.
+  | R_Z0 | R_Z1 | R_Z2 | R_Z3 | R_Z4 | R_Z5 | R_Z6 | R_Z7 | R_Z8 | R_Z9 | R_Z10 => Some 256
+  | R_Z11 | R_Z12 | R_Z13 | R_Z14 | R_Z15 | R_Z16 | R_Z17 | R_Z18 | R_Z19 | R_Z20 => Some 256
+  | R_Z21 | R_Z22 | R_Z23 | R_Z24 | R_Z25 | R_Z26 | R_Z27 | R_Z28 | R_Z29 | R_Z30 | R_Z31 => Some 256
+  | R_TMPZ0 | R_TMPZ1 | R_TMPZ2 | R_TMPZ3 | R_TMPZ4 | R_TMPZ5 | R_TMPZ6 => Some 256
+  | R_TMP_LDXN => Some 64
+end.
 
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
    input to the Architecture module, so that it understands how the variable
    identifiers chosen above are syntactically written and how to decide whether
    any two variable instances refer to the same variable. *)
 
-Module MiniX64VarEq <: MiniDecidableType.
-  Definition t := x64var.
-  Definition eq_dec (v1 v2:x64var) : {v1=v2}+{v1<>v2}.
+Module MiniARM8VarEq <: MiniDecidableType.
+  Definition t := arm8var.
+  Definition eq_dec (v1 v2:arm8var) : {v1=v2}+{v1<>v2}.
     decide equality; apply N.eq_dec.
   Defined.  (* <-- This must be Defined (not Qed!) for finterp to work! *)
   Arguments eq_dec v1 v2 : simpl never.
-End MiniX64VarEq.
+End MiniARM8VarEq.
 
-Module X64Arch <: Architecture.
-  Module Var := Make_UDT MiniX64VarEq.
+Module ARM8Arch <: Architecture.
+  Module Var := Make_UDT MiniARM8VarEq.
   Definition var := Var.t.
   Definition store := var -> N.
   Definition typctx := var -> option bitwidth.
-  Definition archtyps := x64typctx.
+  Definition archtyps := arm8typctx.
 
   Definition mem_readable s a := N.testbit (s A_READ) a = true.
   Definition mem_writable s a := N.testbit (s A_WRITE) a = true.
-End X64Arch.
+End ARM8Arch.
 
-(* Instantiate the Picinae modules with the x64 identifiers above. *)
-Module IL_amd64 := PicinaeIL X64Arch.
-Export IL_amd64.
-Module Theory_amd64 := PicinaeTheory IL_amd64.
-Export Theory_amd64.
-Module Statics_amd64 := PicinaeStatics IL_amd64 Theory_amd64.
-Export Statics_amd64.
-Module FInterp_amd64 := PicinaeFInterp IL_amd64 Theory_amd64 Statics_amd64.
-Export FInterp_amd64.
-Module PSimpl_amd64 := Picinae_Simplifier_Base IL_amd64.
-Export PSimpl_amd64.
-Module PSimpl_amd64_v1_1 := Picinae_Simplifier_v1_1 IL_amd64 Theory_amd64 Statics_amd64 FInterp_amd64.
-Ltac PSimplifier ::= PSimpl_amd64_v1_1.PSimplifier.
+(* Instantiate the Picinae modules with the arm identifiers above. *)
+Module IL_arm8 := PicinaeIL ARM8Arch.
+Export IL_arm8.
+Module Theory_arm8 := PicinaeTheory IL_arm8.
+Export Theory_arm8.
+Module Statics_arm8 := PicinaeStatics IL_arm8 Theory_arm8.
+Export Statics_arm8.
+Module FInterp_arm8 := PicinaeFInterp IL_arm8 Theory_arm8 Statics_arm8.
+Export FInterp_arm8.
+Module PSimpl_arm8 := Picinae_Simplifier_Base IL_arm8.
+Export PSimpl_arm8.
+Module PSimpl_arm8_v1_1 := Picinae_Simplifier_v1_1 IL_arm8 Theory_arm8 Statics_arm8 FInterp_arm8.
+Ltac PSimpl_arm8.PSimplifier ::= PSimpl_arm8_v1_1.PSimplifier.
 
 (* To use a different simplifier version (e.g., v1_0) put the following atop
    your proof .v file:
 Require Import Picinae_simplifier_v1_0.
-Module PSimpl_amd64_v1_0 := Picinae_Simplifier_v1_0 IL_amd64 Theory_amd64 Statics_amd64 FInterp_amd64.
-Ltac PSimplifier ::= PSimpl_amd64_v1_0.PSimplifier.
+Module PSimpl_arm8_v1_0 := Picinae_Simplifier_v1_0 IL_arm8 Theory_arm8 Statics_arm8 FInterp_arm8.
+Ltac PSimpl_arm8.PSimplifier ::= PSimpl_arm8_v1_0.PSimplifier.
 *)
 
-Module ISA_amd64 := Picinae_ISA IL_amd64 PSimpl_amd64 Theory_amd64 Statics_amd64 FInterp_amd64.
-Export ISA_amd64.
+Module ISA_arm8 := Picinae_ISA IL_arm8 PSimpl_arm8 Theory_arm8 Statics_arm8 FInterp_arm8.
+Export ISA_arm8.
 
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
-Tactic Notation "amd64_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
-Tactic Notation "amd64_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
-Tactic Notation "amd64_psimpl" "in" hyp(H) := psimpl_hyp H.
-Tactic Notation "amd64_psimpl" := psimpl_goal.
-Ltac x64_step := ISA_step.
+Tactic Notation "arm8_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
+Tactic Notation "arm8_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+Tactic Notation "arm8_psimpl" "in" hyp(H) := psimpl_hyp H.
+Tactic Notation "arm8_psimpl" := psimpl_goal.
+Ltac arm8_step := ISA_step.
 
 (* The following is needed when applying cframe theorems from Picinae_theory. *)
-Theorem memacc_respects_x64typctx: memacc_respects_typctx x64typctx.
+Theorem memacc_respects_arm8typctx: memacc_respects_typctx arm8typctx.
 Proof.
   intros s1 s2 RV. rewrite <- RV. split; reflexivity.
 Qed.
 
-(* Simplify memory access propositions by observing that on x64, the only part
+(* Simplify memory access propositions by observing that on arm, the only part
    of the store that affects memory accessibility are the page-access bits
    (A_READ and A_WRITE). *)
 
@@ -191,7 +188,7 @@ Proof.
   intros. unfold MemAcc, mem_writable. rewrite !update_updated. reflexivity.
 Qed.
 
-(* Simplify x64 memory access assertions produced by step_stmt. *)
+(* Simplify arm memory access assertions produced by step_stmt. *)
 Ltac simpl_memaccs H ::=
   try lazymatch type of H with context [ MemAcc mem_writable ] =>
     rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
@@ -200,29 +197,28 @@ Ltac simpl_memaccs H ::=
     rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
   end.
 
-
 (* Define ISA-specific notations: *)
 
-Declare Scope amd64_scope.
-Delimit Scope amd64_scope with amd64.
-Bind Scope amd64_scope with stmt exp trace.
-Open Scope amd64_scope.
-Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : amd64_scope.
+Declare Scope arm8_scope.
+Delimit Scope arm8_scope with arm8.
+Bind Scope arm8_scope with stmt exp trace.
+Open Scope arm8_scope.
+Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : arm8_scope.
 
-Module X64Notations.
+Module ARM8Notations.
 
-Notation "m Ⓑ[ a  ]" := (getmem 64 LittleE 1 m a) (at level 30) : amd64_scope. (* read byte from memory *)
-Notation "m Ⓦ[ a  ]" := (getmem 64 LittleE 2 m a) (at level 30) : amd64_scope. (* read word from memory *)
-Notation "m Ⓓ[ a  ]" := (getmem 64 LittleE 4 m a) (at level 30) : amd64_scope. (* read dword from memory *)
-Notation "m Ⓠ[ a  ]" := (getmem 64 LittleE 8 m a) (at level 30) : amd64_scope. (* read quad word from memory *)
-Notation "m Ⓧ[ a  ]" := (getmem 64 LittleE 16 m a) (at level 30) : amd64_scope. (* read xmm from memory *)
-Notation "m Ⓨ[ a  ]" := (getmem 64 LittleE 32 m a) (at level 30) : amd64_scope. (* read ymm from memory *)
-Notation "m [Ⓑ a := v  ]" := (setmem 64 LittleE 1 m a v) (at level 50, left associativity) : amd64_scope. (* write byte to memory *)
-Notation "m [Ⓦ a := v  ]" := (setmem 64 LittleE 2 m a v) (at level 50, left associativity) : amd64_scope. (* write word to memory *)
-Notation "m [Ⓓ a := v  ]" := (setmem 64 LittleE 4 m a v) (at level 50, left associativity) : amd64_scope. (* write dword to memory *)
-Notation "m [Ⓠ a := v  ]" := (setmem 64 LittleE 8 m a v) (at level 50, left associativity) : amd64_scope. (* write quad word to memory *)
-Notation "m [Ⓧ a := v  ]" := (setmem 64 LittleE 16 m a v) (at level 50, left associativity) : amd64_scope. (* write xmm to memory *)
-Notation "m [Ⓨ a := v  ]" := (setmem 64 LittleE 32 m a v) (at level 50, left associativity) : amd64_scope. (* write ymm to memory *)
+Notation "m Ⓑ[ a  ]" := (getmem 64 LittleE 1 m a) (at level 30) : arm8_scope. (* read byte from memory *)
+Notation "m Ⓦ[ a  ]" := (getmem 64 LittleE 2 m a) (at level 30) : arm8_scope. (* read word from memory *)
+Notation "m Ⓓ[ a  ]" := (getmem 64 LittleE 4 m a) (at level 30) : arm8_scope. (* read dword from memory *)
+Notation "m Ⓠ[ a  ]" := (getmem 64 LittleE 8 m a) (at level 30) : arm8_scope. (* read quad word from memory *)
+Notation "m Ⓧ[ a  ]" := (getmem 64 LittleE 16 m a) (at level 30) : arm8_scope. (* read xmm from memory *)
+Notation "m Ⓨ[ a  ]" := (getmem 64 LittleE 32 m a) (at level 30) : arm8_scope. (* read ymm from memory *)
+Notation "m [Ⓑ  a := v  ]" := (setmem 64 LittleE 1 m a v) (at level 50, left associativity) : arm8_scope. (* write byte to memory *)
+Notation "m [Ⓦ  a := v  ]" := (setmem 64 LittleE 2 m a v) (at level 50, left associativity) : arm8_scope. (* write word to memory *)
+Notation "m [Ⓓ  a := v  ]" := (setmem 64 LittleE 4 m a v) (at level 50, left associativity) : arm8_scope. (* write dword to memory *)
+Notation "m [Ⓠ  a := v  ]" := (setmem 64 LittleE 8 m a v) (at level 50, left associativity) : arm8_scope. (* write quad word to memory *)
+Notation "m [Ⓧ  a := v  ]" := (setmem 64 LittleE 16 m a v) (at level 50, left associativity) : arm8_scope. (* write xmm to memory *)
+Notation "m [Ⓨ  a := v  ]" := (setmem 64 LittleE 32 m a v) (at level 50, left associativity) : arm8_scope. (* write ymm to memory *)
 Notation "x ⊕ y" := ((x+y) mod 2^64) (at level 50, left associativity). (* modular addition *)
 Notation "x ⊖ y" := (msub 64 x y) (at level 50, left associativity). (* modular subtraction *)
 Notation "x ⊗ y" := ((x*y) mod 2^64) (at level 40, left associativity). (* modular multiplication *)
@@ -233,4 +229,4 @@ Notation "x .& y" := (N.land x y) (at level 56, left associativity). (* logical 
 Notation "x .^ y" := (N.lxor x y) (at level 57, left associativity). (* logical xor *)
 Notation "x .| y" := (N.lor x y) (at level 58, left associativity). (* logical or *)
 
-End X64Notations.
+End ARM8Notations.

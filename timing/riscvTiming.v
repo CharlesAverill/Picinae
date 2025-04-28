@@ -11,7 +11,7 @@ Import ListNotations.
 Module riscvTiming.
     Definition store := store.
     Definition stmt := stmt.
-    Definition empty_store : store := fun _ => VaN 0 32.
+    Definition empty_store : store := fun _ => 0.
 End riscvTiming.
 Export riscvTiming.
 
@@ -196,12 +196,6 @@ Definition max32 : N := N.pow 2 32 - 1.
 *)
 
 Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option N :=
-    let reg_or_max (reg : N) : N := 
-        match s (rv_varid reg) with
-        | VaN x _ => x
-        | VaM _ _ => max32
-        end
-    in
     (* This is if/else instead of match, because matching on an N will expand its binary repr,
        which clogs up the goal space a bunch *)
     (* Same with `contains` usage *)
@@ -216,7 +210,7 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
             (* sll srl sra : [ 3 + shamt/4 + shamt%4 ]*)
             (* shamt := rs2 *)
             (* Constant shift times are possible with FAST_SHIFT_EN or TINY_SHIFT_EN enabled *)
-            Some (3 + (reg_or_max rs2 / 4) + ((reg_or_max rs2) mod 4))%N
+            Some (3 + ((s (rv_varid rs2)) / 4) + ((s (rv_varid rs2)) mod 4))%N
     else if op =? 19 then (* 0010011 : I-type *)
         let '(imm, rs1, funct3, rd, opcode) := decompose_Itype instr in
         (* Could also be clz - R-type *)
@@ -236,11 +230,8 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
                 specific values that don't clash. Radical!
             *)
             if andb (funct3 =? 1) (funct7 =? 48) then
-                let rs1var := if rs1 =? 0 then VaN rs1 32 else s (rv_varid rs1) in
-                match rs1var with
-                | VaN r1 _ => Some (3 + clz r1 32)%N
-                | _ => None
-                end
+                let r1 := if rs1 =? 0 then 0 else s (rv_varid rs1) in
+                Some (3 + clz r1 32)%N
             else
                 (* slli srli srai : [ 3 + shamt/4 + shamt%4 ] *)
                 (* shamt := imm[0:4] *)
@@ -259,71 +250,47 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
         let '(imm_12_10_5, rs2, rs1, funct3, imm_4_1_11, opcode) := decompose_Btype instr in
         (* beq bne blt bge bltu bgeu : if taken then [ 5 + (ML - 1) ] else [ 3 ] *)
         if funct3 =? 0x0 then (* beq *)
-            let rs1var := if rs1 =? 0 then VaN rs1 32 else s (rv_varid rs1) in
-            let rs2var := if rs2 =? 0 then VaN rs2 32 else s (rv_varid rs2) in
-            match rs1var, rs2var with
-            | VaN r1 _, VaN r2 _ => Some
-                (if r1 =? r2 then
+            let r1 := if rs1 =? 0 then 0 else s (rv_varid rs1) in
+            let r2 := if rs2 =? 0 then 0 else s (rv_varid rs2) in
+                Some (if r1 =? r2 then
                     5 + (ML - 1)
                 else
                     3)
-            | _, _ => None
-            end
         else if funct3 =? 0x1 then (* bne *)
-            let rs1var := if rs1 =? 0 then VaN rs1 32 else s (rv_varid rs1) in
-            let rs2var := if rs2 =? 0 then VaN rs2 32 else s (rv_varid rs2) in
-            match rs1var, rs2var with
-            | VaN r1 _, VaN r2 _ => Some
-                (if negb (r1 =? r2) then
+            let r1 := if rs1 =? 0 then 0 else s (rv_varid rs1) in
+            let r2 := if rs2 =? 0 then 0 else s (rv_varid rs2) in
+                Some (if negb (r1 =? r2) then
                     5 + (ML - 1)
                 else
                     3)
-            | _, _ => None
-            end
         else if funct3 =? 0x4 then (* blt *)
-            let rs1var := if rs1 =? 0 then VaN rs1 32 else s (rv_varid rs1) in
-            let rs2var := if rs2 =? 0 then VaN rs2 32 else s (rv_varid rs2) in
-            match rs1var, rs2var with
-            | VaN r1 _, VaN r2 _ => Some
-                (if Z.ltb (toZ 32 r1) (toZ 32 r2) then
+            let r1 := if rs1 =? 0 then 0 else s (rv_varid rs1) in
+            let r2 := if rs2 =? 0 then 0 else s (rv_varid rs2) in
+                Some (if Z.ltb (toZ 32 r1) (toZ 32 r2) then
                     5 + (ML - 1)
                 else
                     3)
-            | _, _ => None
-            end
         else if funct3 =? 0x5 then (* bge *)
-            let rs1var := if rs1 =? 0 then VaN rs1 32 else s (rv_varid rs1) in
-            let rs2var := if rs2 =? 0 then VaN rs2 32 else s (rv_varid rs2) in
-            match rs1var, rs2var with
-            | VaN r1 _, VaN r2 _ => Some
-                (if Z.geb (toZ 32 r1) (toZ 32 r2) then
+            let r1 := if rs1 =? 0 then 0 else s (rv_varid rs1) in
+            let r2 := if rs2 =? 0 then 0 else s (rv_varid rs2) in
+                Some (if Z.geb (toZ 32 r1) (toZ 32 r2) then
                     5 + (ML - 1)
                 else
                     3)
-            | _, _ => None
-            end
         else if funct3 =? 0x6 then (* bltu *)
-            let rs1var := if rs1 =? 0 then VaN rs1 32 else s (rv_varid rs1) in
-            let rs2var := if rs2 =? 0 then VaN rs2 32 else s (rv_varid rs2) in
-            match rs1var, rs2var with
-            | VaN r1 _, VaN r2 _ => Some
-                (if r1 <? r2 then
+            let r1 := if rs1 =? 0 then 0 else s (rv_varid rs1) in
+            let r2 := if rs2 =? 0 then 0 else s (rv_varid rs2) in
+                Some (if r1 <? r2 then
                     5 + (ML - 1)
                 else
                     3)
-            | _, _ => None
-            end
         else if funct3 =? 0x7 then (* bgeu *)
-            let rs1var := if rs1 =? 0 then VaN rs1 32 else s (rv_varid rs1) in
-            let rs2var := if rs2 =? 0 then VaN rs2 32 else s (rv_varid rs2) in
-            match rs1var, rs2var with
-            | VaN r1 _, VaN r2 _ => Some
-                (if negb (r1 <? r2)%N then
+            let r1 := if rs1 =? 0 then 0 else s (rv_varid rs1) in
+            let r2 := if rs2 =? 0 then 0 else s (rv_varid rs2) in
+                Some (if negb (r1 <? r2)%N then
                     5 + (ML - 1)
                 else
                     3)
-            | _, _ => None
-            end
         else None
     else if op =? 111 then (* 1101111 : J-type *)
         let '(immJ, rd, opcode) := decompose_Jtype instr in
@@ -354,7 +321,7 @@ Definition rv_stmt' m a :=
     rv2il a match a mod 4 with 0 => rv_decode (m a) | _ => R5_InvalidI end.
 
 Definition il_list (prog : store -> addr -> N) (prog_start prog_end : N) :=
-    List.map (fun a => (a, Some (4, rv_stmt' (prog (fun _ => VaN 0 32)) a))) (range prog_start prog_end).
+    List.map (fun a => (a, Some (4, rv_stmt' (prog (fun _ => 0)) a))) (range prog_start prog_end).
 
 Definition update_prog old_prog (a : addr) newval : program :=
     fun s a' => if N.eqb a a' then newval else old_prog s a'.

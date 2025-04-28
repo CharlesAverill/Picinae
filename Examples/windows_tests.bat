@@ -31,6 +31,11 @@
 %coqc% arm7_memset_proof.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 
+%coqc% arm8_strcasecmp.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% arm8_strcasecmp_proof.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+
 @ECHO Picinae tests succeeded!
 @GOTO Done
 :ErrorExit
