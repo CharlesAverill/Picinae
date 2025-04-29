@@ -3,6 +3,7 @@ Require Import riscvTiming.
 Import RISCVNotations.
 Require Import NArith.
 Require Import List.
+Require Import Lia.
 
 Import ListNotations.
 Open Scope N_scope.
@@ -81,7 +82,7 @@ Definition add_loop_end   : N := 0x1c.
     in a 'mod 2^32', hence the circle plus).
 *)
 Definition postcondition (s : store) (x y : N) :=
-    s R_T1 = Ⓓ(x ⊕ y).
+    s R_T1 = x ⊕ y.
 
 (*
     We really only have one invariant here (because we only have one loop in the
@@ -107,9 +108,9 @@ Definition postcondition (s : store) (x y : N) :=
 *)
 Definition addloop_correctness_invs (_ : store) (p : addr) (x y : N) (t:trace) :=
     match t with (Addr a, s) :: _ => match a with
-        | 0x8  => Some (s R_T0 = Ⓓx /\ s R_T1 = Ⓓy)
+        | 0x8  => Some (s R_T0 = x /\ s R_T1 = y)
         | 0x10 => Some (exists t0 t1, 
-            s R_T0 = Ⓓt0 /\ s R_T1 = Ⓓt1 /\ s R_T2 = Ⓓ1 /\ s R_T3 = Ⓓ0 /\ 
+            s R_T0 = t0 /\ s R_T1 = t1 /\ s R_T2 = 1 /\ s R_T3 = 0 /\ 
                 t0 ⊕ t1 = x ⊕ y)
         | 0x20 => Some (postcondition s x y)
         | _ => None end
@@ -141,20 +142,23 @@ Compute lifted_addloop.
 Theorem addloop_welltyped: welltyped_prog rvtypctx lifted_addloop.
 Proof. Picinae_typecheck. Qed.
 
+(* Override some function call behavior - TODO : fix *)
+Ltac generalize_trace ::= idtac.
+
 (* Our partial correctness proof (partial because it assumes termination) *)
 Theorem addloop_partial_correctness:
   forall s p t s' x' a b
          (ENTRY: startof t (x',s') = (Addr 0x8,s)) (* Define the entry point of the function *)
          (MDL: models rvtypctx s)
-         (T0: s R_T0 = VaN a 32)                   (* Tie the contents of T0 to a *)
-         (T1: s R_T1 = VaN b 32),                  (* Tie the contents of T1 to b *)
+         (T0: s R_T0 = a)                   (* Tie the contents of T0 to a *)
+         (T1: s R_T1 = b),                  (* Tie the contents of T1 to b *)
   satisfies_all 
     lifted_addloop                                 (* Provide lifted code *)
     (addloop_correctness_invs s p a b)             (* Provide invariant set *)
     addloop_exit                                   (* Provide exit point *)
   ((x',s')::t).
 Proof.
-    Local Ltac step := time rv_step.
+    Local Ltac step := time r5_step.
 
     intros.
     apply prove_invs.
@@ -188,9 +192,8 @@ Proof.
     destruct PRE as [t0 [t1 [T0 [T1 [T2 [T3 Eq]]]]]].
     (* Termination case - time to prove the postcondition *)
     step.
-        rewrite N.eqb_eq in BC. subst. psimpl in Eq.
-        unfold postcondition. psimpl. rewrite T1.
-        rewrite Eq. reflexivity.
+        rewrite N.eqb_eq in BC. subst. rewrite BC in Eq.
+        psimpl in Eq. assumption.
     (* Loop case - prove the invariant again *)
     step. step. step.
         rewrite N.eqb_neq in BC. exists (t0 ⊖ 1), (1 ⊕ t1). repeat split.
@@ -201,23 +204,18 @@ Qed.
 Variable ML : N.
 Variable ML_pos : 1 <= ML.
 
-Module riscv_toa.
-    Definition time_of_addr (s : store) (a : addr) : N :=
+Definition time_of_addr (s : store) (a : addr) : N :=
         match neorv32_cycles_upper_bound ML s (add_loop_riscv s a) with
         | Some x => x | _ => 0 end.
-End riscv_toa.
-
-Module riscvT := MakeTimingContents riscvTiming riscv_toa.
-Export riscvT.
 
 Definition cycle_count_of_trace := cycle_count_of_trace time_of_addr.
 
 Arguments N.add _ _ : simpl nomatch.
 
-Definition addloop_timing_invs (_ : store) (p : addr) (x y : N) (t:trace) :=
+Definition addloop_timing_invs (p : addr) (x y : N) (t:trace) :=
 match t with (Addr a, s) :: t' => match a with
-    | 0xc  => Some (s R_T0 = Ⓓx /\ s R_T2 = Ⓓ1 /\ cycle_count_of_trace t = 2 + 2)
-    | 0x10 => Some (exists t0, s R_T0 = Ⓓt0 /\ s R_T2 = Ⓓ1 /\ s R_T3 = Ⓓ0 /\ t0 <= x /\
+    | 0xc  => Some (s R_T0 = x /\ s R_T2 = 1 /\ cycle_count_of_trace t = 2 + 2)
+    | 0x10 => Some (exists t0, s R_T0 = t0 /\ s R_T2 = 1 /\ s R_T3 = 0 /\ t0 <= x /\
         cycle_count_of_trace t' = 4 + (x - t0) * (12 + (ML - 1)))
         (* 2 + 2 + (x - t0) * (3 + 2 + 2 + (5 + (ML - 1)) *)
     | 0x20 => Some (cycle_count_of_trace t' = 9 + (ML - 1) + x * (12 + (ML - 1)))
@@ -245,11 +243,11 @@ Theorem addloop_timing:
   forall s p t s' x' a b
          (ENTRY: startof t (x',s') = (Addr 0x8,s)) (* Define the entry point of the function *)
          (MDL: models rvtypctx s)
-         (T0: s R_T0 = VaN a 32)                   (* Tie the contents of T0 to a *)
-         (T1: s R_T1 = VaN b 32),                  (* Tie the contents of T1 to b *)
+         (T0: s R_T0 = a)                   (* Tie the contents of T0 to a *)
+         (T1: s R_T1 = b),                  (* Tie the contents of T1 to b *)
   satisfies_all 
     lifted_addloop                                 (* Provide lifted code *)
-    (addloop_timing_invs s p a b)                  (* Provide invariant set *)
+    (addloop_timing_invs p a b)                  (* Provide invariant set *)
     addloop_exit                                   (* Provide exit point *)
   ((x',s')::t).
 Proof using.
@@ -268,7 +266,7 @@ Proof using.
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
     eapply preservation_exec_prog in MDL; try (eassumption || apply addloop_welltyped).
-    clear - PRE MDL. rename t1 into t. rename s1 into s'.
+    clear - PRE MDL. rename t1 into t. rename s1 into s.
 
     (* Meat of proof starts here *)
     destruct_inv 32 PRE.
@@ -282,8 +280,9 @@ Proof using.
     destruct PRE as [t0 [T0 [T2 [T3 [T0_A Cycles_t]]]]].
     step.
     - (* t0 = 0 -> postcondition *)
-        rewrite N.eqb_eq in BC; subst. unfold_cycle_count_list.
-        unfold_time_of_addr. rewrite T0, T3, Cycles_t. psimpl. reflexivity.
+        unfold_cycle_count_list. unfold_time_of_addr.
+        rewrite N.eqb_eq in BC. rewrite BC in *. subst.
+        rewrite T0, T3, Cycles_t. psimpl. reflexivity.
     - (* t0 <> 0 -> loop again *)
         step. step. step. exists (t0 ⊖ 1). assert (1 <= t0) by (apply N.eqb_neq in BC; lia).
         repeat split. rewrite msub_nowrap; psimpl; lia.

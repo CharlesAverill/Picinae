@@ -380,3 +380,34 @@ Proof.
     unfold cycle_count_of_trace at 1. rewrite map_cons, fold_left_cons. rewrite N.add_0_r. reflexivity.
     lia. lia.
 Qed.
+
+Lemma fold_left_add_extract_base : forall l x,
+    fold_left N.add l x = x + fold_left N.add l 0.
+Proof.
+    induction l; simpl; intros. lia.
+    rewrite IHl, IHl with (x := a). lia.
+Qed.
+
+Lemma fold_left_add_nest : forall l1 l2 x,
+    fold_left N.add l1 (fold_left N.add l2 x) = 
+        x + (fold_left N.add l1 0) + (fold_left N.add l2 0).
+Proof.
+    induction l1.
+    - induction l2; intros; simpl in *. lia.
+      rewrite IHl2, (fold_left_add_extract_base _ a). lia.
+    - induction l2; intros; simpl in *.
+      rewrite fold_left_add_extract_base, (fold_left_add_extract_base _ a). 
+        lia.
+      rewrite fold_left_add_extract_base, fold_left_add_extract_base,
+        (fold_left_add_extract_base _ a), (fold_left_add_extract_base _ a0).
+      lia.
+Qed.
+
+Lemma cycle_count_of_trace_app :
+    forall (t1 t2 : trace) (e : exit) (s : store) time_of_addr,
+    cycle_count_of_trace time_of_addr (t1 ++ t2) = cycle_count_of_trace time_of_addr t1 + cycle_count_of_trace time_of_addr t2.
+Proof.
+    intros. unfold cycle_count_of_trace at 1.
+    rewrite map_app, fold_left_app, fold_left_add_nest. simpl. 
+    unfold cycle_count_of_trace. rewrite N.add_comm. reflexivity.
+Qed.
