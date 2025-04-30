@@ -544,14 +544,6 @@ Admitted.
 
 Definition insn_length (insn:p32_asm) : N := 4.
 
-(* Each assembly code is represented as
-      
-      * a base address (e.g. 0x00100000)
-      * a list of labels (strings) and instructions (p32_asm)
-*)
-Inductive p32_assembly :=
-  P32_ASSEMBLY (base_addr:N) (code:list (sum string p32_asm)).
-  
 Fixpoint label_loc (label:string) (base_addr:N) (code:list (sum string p32_asm)) : option N :=
   match code with
   | nil => None
@@ -630,6 +622,8 @@ Fixpoint p32_code_length (code:list p32_asm) : N:=
   | nil => 0
   | h::t => (insn_length h) + (p32_code_length t)
   end.
+
+
 
 Definition print_code_prop (code:list p32_asm) (base_addr:N) (name:string) :=
   ("Definition " ++ name ++ " (mem:N) : Prop :=" ++ newline ++
