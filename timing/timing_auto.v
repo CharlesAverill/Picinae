@@ -44,6 +44,9 @@ Ltac handle_ex :=
     | [|- exists _, _] => eexists
     end); repeat split; try eassumption.
 
+Arguments N.add _ _ : simpl nomatch.
+Arguments N.mul _ _ : simpl nomatch.
+
 End TimingAutomation.
 
 (* Memory layout *)
