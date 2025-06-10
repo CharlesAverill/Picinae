@@ -188,12 +188,12 @@ Fixpoint make_jump_table_entry (addrs: list Z) (aabort o sl sr: Z) (n: Z) : Z :=
 (* create a jump table of size n *)
 Require Import Coq.Program.Wf.
 Require Import Lia.
-Program Fixpoint _make_jump_table (jt addrs: list Z) (aabort o sl sr: Z) {measure (length addrs - length jt)}: list Z :=
-  let i := Z.of_nat (Nat.sub (length addrs) (length jt)) in
+Program Fixpoint _make_jump_table (jt addrs: list Z) (aabort o sl sr n: Z) {measure (Z.to_nat n - length jt)}: list Z :=
+  let i := Z.of_nat (Nat.sub (Z.to_nat n) (length jt)) in
   match i with
   | Z0 => jt
   | _ => let jt' := make_jump_table_entry addrs aabort o sl sr (i - Z1)::jt in
-      _make_jump_table jt' addrs aabort o sl sr
+      _make_jump_table jt' addrs aabort o sl sr n
   end.
 Next Obligation. lia. Qed.
 Definition make_jump_table := _make_jump_table nil.
@@ -219,7 +219,7 @@ Notation "x & y" := (Z.land x y) (at level 40, left associativity).
    aabort - address of the abort handler
    table_cache - used to check if an id already has a table *)
 Definition rewrite_dyn (dyn_code: Z -> Z -> Z -> Z -> Z -> option (list Z)) (l: bool) (cond: Z) (n: Z) (oid: Z) (label: id -> list Z) (a a' adyn atable aabort: Z) (table_cache: id -> option Z) :=
-  let offset := adyn - a' + Z8 in
+  let offset := adyn - a' - Z8 in
   let n' := (if l then Z0xb000000 else Z0xa000000) .| (Z.shiftr offset Z2) .| (cond << Z28) in (* b(l)(cond) adyn *)
   if (Z15 <? cond) || (offset <? (Z_33554432)) || (offset >? Z33554428) || negb (Z.modulo offset Z4 =? Z0) then None else
   match find_hash (label oid) (a' - a) with
@@ -230,7 +230,7 @@ Definition rewrite_dyn (dyn_code: Z -> Z -> Z -> Z -> Z -> option (list Z)) (l: 
           match dyn_code n a atable sl sr with
           | None => None
           | Some dyn =>
-              let table := make_jump_table (label oid) aabort (a' - a) sl sr in
+              let table := make_jump_table (label oid) aabort (a' - a) sl sr (Z.shiftl Z1 (Z32 - sr)) in
               let table_cache' := fun x => if x =? oid then Some atable else table_cache x in
               Some (n', dyn, table, table_cache')
           end
