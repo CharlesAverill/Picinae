@@ -11,6 +11,7 @@ Definition time_mem : N :=
 Definition time_branch : N :=
     5 + (ML - 1).
 
+(* Common for all timing proofs - facilitates automation *)
 Module uxListRemoveTime <: TimingModule.
     Definition time_of_addr (s : store) (a : addr) : N :=
         match neorv32_cycles_upper_bound ML s (RTOSDemo_NoAsserts_Clz a) with
@@ -24,15 +25,16 @@ Module uxListRemoveTime <: TimingModule.
     | _ => false
   end | _ => false end.
 End uxListRemoveTime.
-
 Module uxListRemoveAuto := TimingAutomation uxListRemoveTime.
 Import uxListRemoveTime uxListRemoveAuto.
 
+(* Postcondition *)
 Definition time_of_uxListRemove (t : trace) (base_mem : addr -> N) (a0 : N) :=
     cycle_count_of_trace t = 6 * time_mem +
         (if base_mem Ⓓ[4 + base_mem Ⓓ[16 + a0]] =? a0 then 3 + time_mem else time_branch) + 
         3 * time_mem + 2 + time_branch.
 
+(* These values are used frequently, so we give them names for readability *)
 (* https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/main/include/list.h#L143 *)
 Definition xItemValue (mem : addr -> N) (list_item_addr : addr) : N :=
     mem Ⓓ[list_item_addr].
@@ -42,10 +44,13 @@ Definition pxPrevious (mem : addr -> N) (list_item_addr : addr) : addr :=
     mem Ⓓ[8 + list_item_addr].
 Definition pxContainer (mem : addr -> N) (list_item_addr : addr) : addr :=
     mem Ⓓ[16 + list_item_addr].
-
+(* https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/main/include/list.h#L176 *)
 Definition pxIndex (mem : addr -> N) (list_addr : addr) : N :=
     mem Ⓓ[4 + list_addr].
 
+(* Declare which regions of memory should not overlap. The `map` call just 
+   helps state that each address is for a buffer of length 4
+*)
 Definition noverlaps (mem : addr -> N) (a0 : N) :=
     let regions := map (fun x => (4, x)) 
         [4 + a0; 8 + a0; 16 + a0;
@@ -53,6 +58,7 @@ Definition noverlaps (mem : addr -> N) (a0 : N) :=
          4 + (pxContainer mem a0)] in
     create_noverlaps regions regions.
 
+(* Invariants *)
 Definition uxListRemove_timing_invs (base_mem : addr -> N) (a0 : N)
     (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
@@ -67,12 +73,9 @@ match t with (Addr a, s) :: t' => match a with
                         time_of_uxListRemove t base_mem a0)
 | _ => None end | _ => None end.
 
+(* Lift the program *)
 Definition lifted_uxListRemove : program :=
     lift_riscv RTOSDemo_NoAsserts_Clz.
-
-(* We use simpl in a few convenient places: make sure it doesn't go haywire *)
-Arguments N.add _ _ : simpl nomatch.
-Arguments N.mul _ _ : simpl nomatch.
 
 Theorem uxListRemove_timing:
   forall s t s' x' base_mem a0
@@ -87,34 +90,39 @@ Theorem uxListRemove_timing:
     exits
   ((x',s')::t).
 Proof using.
-    intros.
-    apply prove_invs.
+    (* Specialize some automation tactics for our purposes *)
     Local Ltac step := time rv_step.
     Local Ltac unfold_noverlap :=
         unfold pxNext, pxPrevious, pxContainer, pxIndex, noverlaps in *.
     Local Ltac preserve_noverlaps := 
         noverlaps_preserved unfold_noverlap.
 
-    simpl. rewrite ENTRY. unfold entry_addr. step.
-    auto.
-
+    (* Setup *)
     intros.
-    eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; 
-        try eassumption; [idtac|apply lift_riscv_welltyped].
-    clear - ENTRY PRE MDL. rename t1 into t. rename s1 into s'.
+    apply prove_invs.
+        simpl. rewrite ENTRY. unfold entry_addr. now step.
 
+        intros.
+        eapply startof_prefix in ENTRY; try eassumption.
+        eapply preservation_exec_prog in MDL; 
+            try eassumption; [idtac|apply lift_riscv_welltyped].
+        clear - ENTRY PRE MDL. rename t1 into t. rename s1 into s'.
+
+    (* Proof start *)
     destruct_inv 32 PRE.
 
+    (* Entrypoint *)
     destruct PRE as (cycles & A0 & NVL & MEM).
-    repeat step. {
+    repeat step. 
+    (* Invariant 0x80002460 when branch is taken *) {
         eexists. split. reflexivity. split.
             preserve_noverlaps.
         hammer. find_rewrites. unfold_create_noverlaps unfold_noverlap.
         rewrite getmem_noverlap, getmem_noverlap in BC by auto.
         apply Bool.negb_true_iff in BC. rewrite BC. unfold time_mem, time_branch.
         psimpl. lia.
-    } {
+    } 
+    (* Invariant 0x80002460 when branch isn't taken *) {
         eexists. split. reflexivity. split.
             preserve_noverlaps.
         hammer. find_rewrites. unfold_create_noverlaps unfold_noverlap.
@@ -123,6 +131,7 @@ Proof using.
         psimpl. lia.
     }
 
+    (* Postcondition - `repeat step` got us here (repeat is weird) *)
     destruct PRE as (mem & MEM & NVL & Cycles).
     repeat step. eexists. split. reflexivity.
     unfold time_of_uxListRemove. hammer. find_rewrites. psimpl.
