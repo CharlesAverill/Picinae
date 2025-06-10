@@ -221,7 +221,7 @@ Notation "x & y" := (Z.land x y) (at level 40, left associativity).
 Definition rewrite_dyn (dyn_code: Z -> Z -> Z -> Z -> Z -> option (list Z)) (l: bool) (cond: Z) (n: Z) (oid: Z) (label: id -> list Z) (a a' adyn atable aabort: Z) (table_cache: id -> option Z) :=
   let offset := adyn - a' - Z8 in
   let n' := (if l then Z0xb000000 else Z0xa000000) .| (Z.shiftr offset Z2) .| (cond << Z28) in (* b(l)(cond) adyn *)
-  if (Z15 <? cond) || (offset <? (Z_33554432)) || (offset >? Z33554428) || negb (Z.modulo offset Z4 =? Z0) then None else
+  if (Z15 <? cond) || (offset <? (Z_33554432)) || (offset >? Z33554428) || negb (offset mod Z4 =? Z0) then None else
   match find_hash (label oid) (a' - a) with
   | None => None
   | Some (sl, sr) =>
@@ -449,7 +449,7 @@ Extract Inlined Constant Z.add => "(+)".
 Extract Inlined Constant Z.sub => "(-)".
 Extract Inlined Constant Nat.sub => "(-)".
 Extract Inlined Constant Z.mul => "( * )".
-Extract Inlined Constant Z.modulo => "(mod)".
+Extract Inlined Constant Z.modulo => "(fun x y -> ((x mod y) + y) mod y)".
 Extract Inlined Constant Z.shiftl => "(lsl)".
 Extract Inlined Constant Z.shiftr => "(lsr)".
 Extract Inlined Constant Z.land => "(land)".
