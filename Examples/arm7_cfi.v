@@ -290,21 +290,22 @@ Definition rewrite_pop_pc (regs reg: Z) := rewrite_dyn (checked_pop_pc regs reg)
 
 (* replace the rm, rd and rn fields of a data instruction with reg if they are pc
    n - instruction encoding
-   reg - reg to replace pc with *)
-Definition replace_pc_data (n reg: Z) : Z :=
-  let rm := if Z_xbits n Z0 Z4 =? Z15 then (n & Z0xffff_fff0) .| reg else n in
+   reg - reg to replace pc with
+   rm - whether to replace rm or not *)
+Definition replace_pc_data (rm: bool) (n reg: Z) : Z :=
+  let rm := if (Z_xbits n Z0 Z4 =? Z15) && rm then (n & Z0xffff_fff0) .| reg else n in
   let rd := if Z_xbits rm Z12 Z16 =? Z15 then (rm & Z0xffff_0fff) .| (reg << Z12) else rm in
   if Z_xbits rd Z16 Z20 =? Z15 then (rd & Z0xfff0_ffff) .| (reg << Z16) else rd.
 
 (* check a pc data inst
    reg - register to use as a scratch register *)
-Definition checked_pc_data (reg n a atable sl sr: Z) : option (list Z) :=
+Definition checked_pc_data (rm: bool) (reg n a atable sl sr: Z) : option (list Z) :=
   Some ([
     Z0xe50d0004 .| (reg << Z12); (* str reg, [sp, #-4] *)
 
     Z0xe3000000 .| (reg << Z12) .| (((a >> Z12) & Z0xf) << Z16) .| (a & Z0xfff); (* movw reg[16:0], #atable[16:0] *)
     Z0xe3400000 .| (reg << Z12) .| (((a >> Z28) & Z0xf) << Z16) .| ((a >> Z16) & Z0xfff); (* movt reg[32:16], #atable[32:16] *)
-    replace_pc_data n reg; (* replace pc with reg *)
+    replace_pc_data rm n reg; (* replace pc with reg *)
 
     Z0xe1a00000 .| (reg << Z12) .| (sl << Z7) .| reg; (* lsl reg, reg, #sl *)
     Z0xe1a00020 .| (reg << Z12) .| (sr << Z7) .| reg; (* lsr reg, reg, #sr *)
@@ -315,7 +316,22 @@ Definition checked_pc_data (reg n a atable sl sr: Z) : option (list Z) :=
     Z0xe51d0004 .| (reg << Z12); (* ldr reg, [sp, #-4] *)
     Z0xe51df008 (* ldr pc, [sp, #-8] *)
   ]).
-Definition rewrite_pc_data (reg: Z) := rewrite_dyn (checked_pc_data reg) false.
+
+Definition rewrite_pc_data (rm: bool) (reg: Z) := rewrite_dyn (checked_pc_data rm reg) false.
+Definition rewrite_pc_data_no_jump (rm: bool) (reg: Z) (cond: Z) (n: Z) (a a' adyn atable aabort: Z) (table_cache: id -> option Z) : option (Z * list Z * list Z * (id -> option Z)) :=
+  let offset := adyn - a' - Z8 in
+  let n' := Z0xa000000 .| (Z.shiftr (offset mod (Z.shiftl Z1 Z26)) Z2) .| (cond << Z28) in (* b(cond) adyn *)
+  let jump_back := Z0xa000000 .| (Z.shiftr ((-offset-Z32) mod (Z.shiftl Z1 Z26)) Z2) .| (Z14 << Z28) in (* b(cond) adyn *)
+  if (Z15 <? cond) || (offset <? (Z_33554432)) || (offset >? Z33554428) || negb (offset mod Z4 =? Z0) then None else
+  let dyn := [
+    Z0xe50d0004 .| (reg << Z12); (* str reg, [sp, #-4] *)
+    Z0xe3000000 .| (reg << Z12) .| (((a >> Z12) & Z0xf) << Z16) .| (a & Z0xfff); (* movw reg[16:0], #atable[16:0] *)
+    Z0xe3400000 .| (reg << Z12) .| (((a >> Z28) & Z0xf) << Z16) .| ((a >> Z16) & Z0xfff); (* movt reg[32:16], #atable[32:16] *)
+    replace_pc_data rm n reg; (* replace pc with reg *)
+    Z0xe51d0004 .| (reg << Z12); (* ldr reg, [sp, #-4] *)
+    jump_back
+  ] in
+  Some (n', dyn, nil, table_cache).
 
 (* rewrite a single instruction, see rewrite_dyn for signature *)
 Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable aabort: Z) (table_cache: id -> option Z): option (Z * list Z * list Z * (id -> option Z)) :=
@@ -335,9 +351,18 @@ Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable
       unchanged
     else if (Z_bitn n Z25 =? Z1) || (Z_bitn n Z4 =? Z0) || (Z_bitn n Z7 =? Z0) then (* data processing *)
       if Z_xbits n Z12 Z16 =? Z15 then (* pc data *)
-        rewrite_pc_data Z5 cond n oid label a a' adyn atable aabort table_cache
+        rewrite_pc_data true Z5 cond n oid label a a' adyn atable aabort table_cache
+      else if (Z_xbits n Z0 Z4 =? Z15) || (Z_xbits n Z16 Z20 =? Z15) then
+        rewrite_pc_data_no_jump true Z5 cond n a a' adyn atable aabort table_cache
       else
         unchanged
+    else
+      unchanged
+  else if (Z_xbits n Z26 Z28 =? Z1) && ((Z_bitn n Z4 =? Z0) || (Z_bitn n Z25 =? Z0)) then
+    if (Z_bitn n Z20 =? Z1) && (Z_xbits n Z12 Z16 =? Z15) then
+      rewrite_pc_data false Z5 cond n oid label a a' adyn atable aabort table_cache
+    else if (Z_xbits n Z12 Z16 =? Z15) || (Z_xbits n Z16 Z20 =? Z15) then
+      rewrite_pc_data_no_jump false Z5 cond n a a' adyn atable aabort table_cache
     else
       unchanged
   else
