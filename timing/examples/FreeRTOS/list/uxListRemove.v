@@ -51,12 +51,14 @@ Definition pxIndex (mem : addr -> N) (list_addr : addr) : N :=
 (* Declare which regions of memory should not overlap. The `map` call just 
    helps state that each address is for a buffer of length 4
 *)
-Definition noverlaps (mem : addr -> N) (a0 : N) :=
-    let regions := map (fun x => (4, x)) 
+Definition memory_regions (mem : addr -> N) (a0 : N) := 
+    map (fun x => (4, x)) 
         [4 + a0; 8 + a0; 16 + a0;
-         4 + (pxPrevious mem a0); 8 + (pxNext mem a0);
-         4 + (pxContainer mem a0)] in
-    create_noverlaps regions.
+        4 + (pxPrevious mem a0); 8 + (pxNext mem a0);
+        4 + (pxContainer mem a0)].
+
+Definition noverlaps (mem : addr -> N) (a0 : N) :=
+    create_noverlaps (memory_regions mem a0).
 
 (* Invariants *)
 Definition uxListRemove_timing_invs (base_mem : addr -> N) (a0 : N)
@@ -81,7 +83,7 @@ Theorem uxListRemove_timing:
   forall s t s' x' base_mem a0
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
-         (NVL : noverlaps base_mem a0)
+         (NVL : create_noverlaps (memory_regions base_mem a0))
          (MEM: s V_MEM32 = Ⓜbase_mem)
          (A0: s R_A0 = Ⓓa0),
   satisfies_all 
@@ -93,7 +95,8 @@ Proof using.
     (* Specialize some automation tactics for our purposes *)
     Local Ltac step := time rv_step.
     Local Ltac unfold_noverlap :=
-        unfold pxNext, pxPrevious, pxContainer, pxIndex, noverlaps in *.
+        unfold pxNext, pxPrevious, pxContainer, pxIndex, 
+            memory_regions, noverlaps in *.
     Local Ltac preserve_noverlaps := 
         noverlaps_preserved unfold_noverlap.
 
@@ -118,15 +121,15 @@ Proof using.
         eexists. split. reflexivity. split.
             preserve_noverlaps.
         hammer. find_rewrites. unfold_create_noverlaps unfold_noverlap.
-        rewrite getmem_noverlap, getmem_noverlap in BC by auto.
+        rewrite getmem_noverlap, getmem_noverlap in BC by auto using noverlap_symmetry.
         apply Bool.negb_true_iff in BC. rewrite BC. unfold time_mem, time_branch.
         psimpl. lia.
-    } 
+    }
     (* Invariant 0x80002460 when branch isn't taken *) {
         eexists. split. reflexivity. split.
             preserve_noverlaps.
         hammer. find_rewrites. unfold_create_noverlaps unfold_noverlap.
-        rewrite getmem_noverlap, getmem_noverlap in BC by auto.
+        rewrite getmem_noverlap, getmem_noverlap in BC by auto using noverlap_symmetry.
         apply Bool.negb_false_iff in BC. rewrite BC. unfold time_mem, time_branch.
         psimpl. lia.
     }

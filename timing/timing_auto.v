@@ -50,9 +50,15 @@ Arguments N.mul _ _ : simpl nomatch.
 
 End TimingAutomation.
 
-(* Memory layout *)
-Fixpoint _create_noverlaps (l l' : list (N * addr)) (idx : nat) : Prop :=
-    match l' with
+(* Memory layout 
+
+   Basically, for each (size, addr) pair in a list l of buffers,
+   the pair does not overlap with any pair in the tail of l.
+   Warning: there should not be duplicates in the list of buffers!
+   If there are, you will introduce unsoundness.
+*)
+Fixpoint _create_noverlaps (l : list (N * addr)) (idx : nat) : Prop :=
+    match l with
     | [] => True
     | (size, addr) :: t => snd (fold_left 
         (fun acc item => 
@@ -61,23 +67,30 @@ Fixpoint _create_noverlaps (l l' : list (N * addr)) (idx : nat) : Prop :=
             (S idx',
                 if (idx =? idx')%nat then P else
                     P /\ ~overlap 32 addr size addr' size')
-        ) l (O, True)) /\ _create_noverlaps l t (S idx)
+        ) l (idx, True)) /\ _create_noverlaps t (S idx)
     end.
 Definition create_noverlaps (l : list (N * addr)) : Prop :=
-    _create_noverlaps l l 0.
+    _create_noverlaps l 0.
 
 Ltac unfold_create_noverlaps unfolds :=
     unfolds;
     match goal with
     | [H: create_noverlaps _ |- _] =>
         unfold create_noverlaps, _create_noverlaps in H; 
+        unfolds;
         cbn [map fold_left snd Nat.eqb] in H;
         psimpl in H;
         repeat (match goal with [H: _ /\ _ |- _] => destruct H end)
     end;
-    repeat match goal with [H: True |- _] => clear H end.
+    repeat match goal with [H: True |- _] => clear H end;
+    unfolds.
 
 Ltac noverlaps_preserved unfolds :=
-    solve [unfold_create_noverlaps unfolds; unfolds;
-           repeat split;
-           repeat rewrite getmem_noverlap; auto].
+    unfolds;
+    match goal with
+    | [H: create_noverlaps _ |- create_noverlaps _] => 
+        solve [unfold_create_noverlaps unfolds;
+                  repeat split;
+                  repeat rewrite getmem_noverlap; auto using noverlap_symmetry]
+    | _ => fail "Goal must be in form of create_noverlaps l -> create_noverlaps l'"
+    end.
