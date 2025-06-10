@@ -1,5 +1,6 @@
 Require Import riscvTiming.
 Require Export List.
+Require Export Bool.
 Export ListNotations.
 
 Module Type TimingModule.
@@ -50,24 +51,28 @@ Arguments N.mul _ _ : simpl nomatch.
 End TimingAutomation.
 
 (* Memory layout *)
-Fixpoint create_noverlaps (l l' : list (N * addr)) : Prop :=
+Fixpoint _create_noverlaps (l l' : list (N * addr)) (idx : nat) : Prop :=
     match l' with
     | [] => True
-    | (size, addr) :: t => (fold_left 
-        (fun P item => 
-            match item with (size', addr') =>
-            P /\ ~ overlap 32 addr size addr' size'
-            end) l True) /\ create_noverlaps l t
+    | (size, addr) :: t => snd (fold_left 
+        (fun acc item => 
+            let '(idx', P) := acc in 
+            let '(size', addr') := item in 
+            (S idx',
+                if (idx =? idx')%nat then P else
+                    P /\ ~overlap 32 addr size addr' size')
+        ) l (O, True)) /\ _create_noverlaps l t (S idx)
     end.
+Definition create_noverlaps (l : list (N * addr)) : Prop :=
+    _create_noverlaps l l 0.
 
 Ltac unfold_create_noverlaps unfolds :=
     unfolds;
     match goal with
-    | [H: create_noverlaps _ _ |- _] =>
-        unfold create_noverlaps in H; cbn [map fold_left] in H;
-        repeat (match goal with [H: _ /\ _ |- _] => destruct H end)
-    | [H: let _ := _ in create_noverlaps _ _ |- _] =>
-        unfold create_noverlaps in H; cbn [map fold_left] in H;
+    | [H: create_noverlaps _ |- _] =>
+        unfold create_noverlaps, _create_noverlaps in H; 
+        cbn [map fold_left snd Nat.eqb] in H;
+        psimpl in H;
         repeat (match goal with [H: _ /\ _ |- _] => destruct H end)
     end;
     repeat match goal with [H: True |- _] => clear H end.

@@ -56,7 +56,7 @@ Definition noverlaps (mem : addr -> N) (a0 : N) :=
         [4 + a0; 8 + a0; 16 + a0;
          4 + (pxPrevious mem a0); 8 + (pxNext mem a0);
          4 + (pxContainer mem a0)] in
-    create_noverlaps regions regions.
+    create_noverlaps regions.
 
 (* Invariants *)
 Definition uxListRemove_timing_invs (base_mem : addr -> N) (a0 : N)

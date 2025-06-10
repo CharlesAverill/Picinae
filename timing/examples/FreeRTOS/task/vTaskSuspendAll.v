@@ -2,7 +2,6 @@ Require Import RTOSDemo_NoAsserts_Clz.
 Require Import riscvTiming.
 Import RISCVNotations.
 Require Import timing_auto.
-Require Import memsolve.
 
 Variable ML : N.
 Variable ML_pos : 1 <= ML.
