@@ -1,8 +1,10 @@
 Require Import Picinae_riscv.
 Require Import riscvTiming.
+Require Import timing_auto.
 Import RISCVNotations.
 Require Import NArith.
 Require Import List.
+Require Import Lia.
 
 Import ListNotations.
 Open Scope N_scope.
@@ -201,16 +203,18 @@ Qed.
 Variable ML : N.
 Variable ML_pos : 1 <= ML.
 
-Module riscv_toa.
+Module AddloopTime <: TimingModule.
     Definition time_of_addr (s : store) (a : addr) : N :=
         match neorv32_cycles_upper_bound ML s (add_loop_riscv s a) with
-        | Some x => x | _ => 0 end.
-End riscv_toa.
+            | Some x => x | _ => 0 end.
 
-Module riscvT := MakeTimingContents riscvTiming riscv_toa.
-Export riscvT.
+    Definition entry_addr := 0.
 
-Definition cycle_count_of_trace := cycle_count_of_trace time_of_addr.
+    Definition exits := addloop_exit.
+End AddloopTime.
+
+Module AddloopAuto := TimingAutomation AddloopTime.
+Import AddloopAuto.
 
 Arguments N.add _ _ : simpl nomatch.
 
@@ -225,21 +229,6 @@ match t with (Addr a, s) :: t' => match a with
     | _ => None end
 | _ => None
 end.
-
-Ltac unfold_decompose :=
-    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype decompose_Stype decompose_Utype mask_bit_section];
-        simpl (_ .& _).
-Tactic Notation "unfold_decompose" "in" hyp(H) :=
-    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype decompose_Stype decompose_Utype mask_bit_section] in H;
-        simpl (_ .& _) in H.
-
-Ltac unfold_time_of_addr :=
-    cbv [time_of_addr neorv32_cycles_upper_bound]; simpl.
-Tactic Notation "unfold_time_of_addr" "in" hyp(H) :=
-    cbv [time_of_addr neorv32_cycles_upper_bound] in H; simpl in H.
-
-Ltac unfold_cycle_count_list :=
-    unfold cycle_count_of_trace; repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single; fold cycle_count_of_trace.
 
 Theorem addloop_timing:
   forall s p t s' x' a b
@@ -262,7 +251,7 @@ Proof using.
         assumption.
     split.
         reflexivity.
-    reflexivity.
+    hammer.
 
     (* Inductive step setup *)
     intros.
@@ -282,15 +271,13 @@ Proof using.
     destruct PRE as [t0 [T0 [T2 [T3 [T0_A Cycles_t]]]]].
     step.
     - (* t0 = 0 -> postcondition *)
-        rewrite N.eqb_eq in BC; subst. unfold_cycle_count_list.
-        unfold_time_of_addr. rewrite T0, T3, Cycles_t. psimpl. reflexivity.
+        apply N.eqb_eq in BC. subst.
+        hammer. find_rewrites. psimpl. lia.
     - (* t0 <> 0 -> loop again *)
         step. step. step. exists (t0 ⊖ 1). assert (1 <= t0) by (apply N.eqb_neq in BC; lia).
         repeat split. rewrite msub_nowrap; psimpl; lia.
-        unfold_cycle_count_list. unfold_time_of_addr.
-        rewrite T0, T3, BC, Cycles_t, N.add_sub_assoc, msub_nowrap, N_sub_distr.
-        psimpl. rewrite N.mul_add_distr_r. psimpl.
-        rewrite (N.add_sub_assoc 16).
-
+        hammer. find_rewrites. psimpl.
+        rewrite N.add_sub_assoc, msub_nowrap, N_sub_distr.
+        psimpl. rewrite N.mul_add_distr_r. psimpl. rewrite (N.add_sub_assoc 16).
         all: psimpl; (assumption || lia || apply ML_pos).
 Qed.

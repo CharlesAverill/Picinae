@@ -12,8 +12,4 @@ Picinae_riscv.v
 Picinae_amd64.v
 Examples/i386_strcmp.v
 Examples/riscv_cfi.v
-timing/i386Timing.v
-timing/riscvTiming.v
 Examples/arm7_strlen.v
-timing/examples/RTOSDemo_NoAsserts_Clz.v
-timing/memsolve.v

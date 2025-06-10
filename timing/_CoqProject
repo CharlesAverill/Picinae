@@ -1,0 +1,5 @@
+-R .. Picinae
+riscvTiming.v
+timing_auto.v
+memsolve.v
+examples/RTOSDemo_NoAsserts_Clz.v

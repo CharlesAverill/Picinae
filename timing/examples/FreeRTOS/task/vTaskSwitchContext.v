@@ -1,15 +1,30 @@
 Require Import RTOSDemo_NoAsserts_Clz.
 Require Import riscvTiming.
 Import RISCVNotations.
+Require Import timing_auto.
 Require Import memsolve.
 
 (* Some machinery describing the CPU *)
 Variable ML : N.
 Variable ML_pos : 1 <= ML.
+
+Module vTaskSwitchContextTime <: TimingModule.
 Definition time_of_addr (s : store) (a : addr) : N :=
     match neorv32_cycles_upper_bound ML s (RTOSDemo_NoAsserts_Clz a) with
     | Some x => x | _ => 999 end.
-Definition cycle_count_of_trace := cycle_count_of_trace time_of_addr.
+
+Definition entry_addr : N := 0x8000137c.
+
+(* The exit points for vTaskSwitchContext *)
+Definition exits (t:trace) : bool :=
+  match t with (Addr a,_)::_ => match a with
+  | 0x8000138c | 0x8000144c => true
+  | _ => false
+  end | _ => false end.
+End vTaskSwitchContextTime.
+
+Module vTaskSwitchContextAuto := TimingAutomation vTaskSwitchContextTime.
+Import vTaskSwitchContextTime vTaskSwitchContextAuto.
 
 (* These expressions pop up a lot and I don't like seeing them, so just fold them up
    - time_mem    = The time in clock cycles of a memory access
@@ -365,61 +380,17 @@ match t with (Addr a, s) :: t' => match a with
 | _ => None
 end.
 
-(* The exit points for vTaskSwitchContext *)
-Definition vTaskSwitchContext_exit (t:trace) : bool :=
-  match t with (Addr a,_)::_ => match a with
-  | 0x8000138c | 0x8000144c => true
-  | _ => false
-  end | _ => false end.
-
 (* Lift the code into Picinae IL *)
 Definition lifted_vTaskSwitchContext : program :=
     lift_riscv RTOSDemo_NoAsserts_Clz.
-
-(* Let's build some automation machinery to streamline the proof *)
-Ltac unfold_decompose :=
-    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype 
-        decompose_Stype decompose_Utype mask_bit_section]; cbn [N.land].
-Tactic Notation "unfold_decompose" "in" hyp(H) :=
-    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype 
-        decompose_Stype decompose_Utype mask_bit_section] in H; cbn [N.land] in H.
-Ltac unfold_time_of_addr :=
-    cbv [time_of_addr neorv32_cycles_upper_bound]; cbn - [setmem getmem].
-Tactic Notation "unfold_time_of_addr" "in" hyp(H) :=
-    cbv [time_of_addr neorv32_cycles_upper_bound] in H; cbn - [setmem getmem].
-Ltac unfold_cycle_count_list :=
-    unfold cycle_count_of_trace; repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single; fold cycle_count_of_trace.
-Ltac fold_times :=
-    fold time_mem; fold time_branch.
-Ltac hammer :=
-    unfold_cycle_count_list; unfold_time_of_addr; unfold_decompose; fold_times; psimpl; try lia.
-
-Ltac handle_ex := 
-    repeat (match goal with
-    | [|- exists _, _] => eexists
-    | _ => fail 
-    end); repeat split; try eassumption.
-
-Ltac find_rewrites :=
-    repeat (match goal with
-    | [H: ?x = _ |- context[match ?x with _ => _ end]] =>
-        rewrite H
-    | [H: ?x = _ |- context[if ?x then _ else _]] =>
-        rewrite H
-    | [H: cycle_count_of_trace ?t = _ |- context[cycle_count_of_trace ?t]] =>
-        rewrite H
-    end).
 
 (* We use simpl in a few convenient places: make sure it doesn't go haywire *)
 Arguments N.add _ _ : simpl nomatch.
 Arguments N.mul _ _ : simpl nomatch.
 
-(* The entrypoint to vTaskSwitchContext *)
-Definition start_vTaskSwitchContext : N := 0x8000137c.
-
 Theorem vTaskSwitchContext_timing:
   forall s p t s' x' gp sp mem
-         (ENTRY: startof t (x',s') = (Addr start_vTaskSwitchContext,s))
+         (ENTRY: startof t (x',s') = (Addr entry_addr,s))
          (MDL: models rvtypctx s)
          (GP : s R_GP = Ⓓgp)
          (SP : s R_SP = Ⓓsp)
@@ -438,7 +409,7 @@ Theorem vTaskSwitchContext_timing:
   satisfies_all 
     lifted_vTaskSwitchContext                                 (* Provide lifted code *)
     (vTaskSwitchContext_timing_invs s p sp gp mem)            (* Provide invariant set *)
-    vTaskSwitchContext_exit                                   (* Provide exit point *)
+    exits                                                     (* Provide exit point *)
   ((x',s')::t).
 Proof using.
     (* Set up our proof environment *)
@@ -515,10 +486,10 @@ Proof using.
             all: apply noverlap_shrink with (sp ⊖ 16) 16;
                 [psimpl; lia|auto].
         }
-        hammer. find_rewrites. lia.
+        hammer. find_rewrites. unfold time_mem, time_branch. lia.
     unfold time_of_vTaskSwitchContext.
         rewrite BC.
-        hammer. find_rewrites. lia.
+        hammer. find_rewrites. unfold time_mem, time_branch. lia.
 
     (* 0x800013c8 *)
     destruct PRE as (mem & MEM & GP & NOVERLAPS & MEM4_MEM4_NOL_SFRAME
@@ -528,7 +499,7 @@ Proof using.
         repeat step.
         exact I. (* Infinite loop, stack overflow detected *)
     step. handle_ex.
-        hammer. find_rewrites. lia.
+        hammer. find_rewrites. unfold time_mem, time_branch. lia.
 
     (* 0x800013d0 *)
     destruct PRE as (mem & MEM & GP & NOVERLAPS & MEM4_MEM4_NOL_SFRAME
@@ -538,7 +509,7 @@ Proof using.
         repeat step.
         exact I. (* Infinite loop, stack overflow detected *)
     step. handle_ex.
-        hammer. find_rewrites. lia.
+        hammer. find_rewrites. unfold time_mem, time_branch. lia.
 
     (* 0x800013d8 *)
     destruct PRE as (mem & MEM & GP & NOVERLAPS & MEM4_MEM4_NOL_SFRAME
@@ -548,7 +519,7 @@ Proof using.
         repeat step.
         exact I. (* Infinite loop, stack overflow detected *)
     step. handle_ex.
-        hammer. find_rewrites. lia.
+        hammer. find_rewrites. unfold time_mem, time_branch. lia.
 
     (* 0x800013e0 *)
     destruct PRE as (mem & MEM & GP & NOVERLAPS & MEM4_MEM4_NOL_SFRAME
@@ -597,7 +568,7 @@ Proof using.
                 (f_equal; rewrite getmem_noverlap; auto).
             psimpl. auto.
         }
-        hammer. find_rewrites. psimpl.
+        hammer. find_rewrites. unfold time_mem, time_branch. psimpl.
         noverlap_prepare gp sp.
         replace (clz ((mem [Ⓓ_ := _ ]) Ⓓ[ gp ⊖ 1920 ]) 32) 
                 with (clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) by
@@ -616,7 +587,7 @@ Proof using.
             ((gp ⊖ 920) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) in BC by
             (unfold msub; now psimpl).
         rewrite Bool.negb_true_iff, getmem_mod_l in BC.
-        find_rewrites. lia.
+        find_rewrites. unfold time_mem, time_branch. lia.
     unfold time_of_vTaskSwitchContext.
         find_rewrites. hammer. find_rewrites.
         rewrite <- Preserves920, <- PreservesPriority.
@@ -624,7 +595,7 @@ Proof using.
             in BC by (unfold msub; now psimpl).
         unfold uxTopReadyPriority in *.
         rewrite Bool.negb_false_iff, getmem_mod_l in BC.
-        find_rewrites. lia.
+        find_rewrites. unfold time_mem, time_branch. lia.
 
     now repeat step.
 Qed.
