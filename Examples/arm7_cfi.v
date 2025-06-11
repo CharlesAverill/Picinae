@@ -176,27 +176,25 @@ Fixpoint find_hash (a: list Z) (o: Z): option (Z * Z) :=
       None end end end end end end end end end end end end end end end end end end end end end end end end end end end end end end end end.
 
 
-(* returns the address that should be in index n of a jump table *)
-Fixpoint make_jump_table_entry (addrs: list Z) (aabort o sl sr: Z) (n: Z) : Z :=
+Fixpoint make_jump_table_map (addrs: list Z) (o sl sr: Z) (f: Z -> Z) : Z -> Z :=
   match addrs with
-  | nil => aabort
-  | a::t => if (apply_hash sl sr a =? n) || (apply_hash sl sr (a+o) =? n)
-      then a + o
-      else make_jump_table_entry t aabort o sl sr n
+  | nil => f
+  | a::t =>
+      let j := apply_hash sl sr a in
+      let k := apply_hash sl sr (a+o) in
+      make_jump_table_map t o sl sr (fun i => if (i =? j) || (i =? k) then a + o else f i)
   end.
-
-(* create a jump table of size n *)
 Require Import Coq.Program.Wf.
 Require Import Lia.
-Program Fixpoint _make_jump_table (jt addrs: list Z) (aabort o sl sr n: Z) {measure (Z.to_nat n - length jt)}: list Z :=
-  let i := Z.of_nat (Nat.sub (Z.to_nat n) (length jt)) in
-  match i with
-  | Z0 => jt
-  | _ => let jt' := make_jump_table_entry addrs aabort o sl sr (i - Z1)::jt in
-      _make_jump_table jt' addrs aabort o sl sr n
+Program Fixpoint _mjt (m: Z -> Z) (n i: Z) {measure (Z.to_nat (n - i))} :=
+  match Z.to_nat (n - i) with
+  | O => m i::nil
+  | _ => m i::_mjt m n (i+Z1)
   end.
-Next Obligation. lia. Qed.
-Definition make_jump_table := _make_jump_table nil.
+Next Obligation. unfold Z1. lia. Qed.
+Definition make_jump_table (addrs: list Z) (aabort o sl sr n: Z) : list Z :=
+  let m := make_jump_table_map addrs o sl sr (fun _ => aabort) in
+  _mjt m n 0.
 
 Definition id := Z.
 
@@ -218,27 +216,27 @@ Notation "x & y" := (Z.land x y) (at level 40, left associativity).
    atable - address of the next free spot in .table
    aabort - address of the abort handler
    table_cache - used to check if an id already has a table *)
-Definition rewrite_dyn (dyn_code: Z -> Z -> Z -> Z -> Z -> option (list Z)) (l: bool) (cond: Z) (n: Z) (oid: Z) (label: id -> list Z) (a a' adyn atable aabort: Z) (table_cache: id -> option Z) :=
+Definition rewrite_dyn (dyn_code: Z -> Z -> Z -> Z -> Z -> option (list Z)) (l: bool) (cond: Z) (n: Z) (oid: Z) (label: id -> list Z) (a a' adyn atable aabort: Z) (table_cache: id -> option (Z * Z * Z)) :=
   let offset := adyn - a' - Z8 in
   let n' := (if l then Z0xb000000 else Z0xa000000) .| (Z.shiftr offset Z2) .| (cond << Z28) in (* b(l)(cond) adyn *)
   if (Z15 <? cond) || (offset <? (Z_33554432)) || (offset >? Z33554428) || negb (offset mod Z4 =? Z0) then None else
-  match find_hash (label oid) (a' - a) with
-  | None => None
-  | Some (sl, sr) =>
-      match table_cache oid with
-      | None =>
+  match table_cache oid with
+  | None =>
+      match find_hash (label oid) (a' - a) with
+      | None => None
+      | Some (sl, sr) =>
           match dyn_code n a atable sl sr with
           | None => None
           | Some dyn =>
               let table := make_jump_table (label oid) aabort (a' - a) sl sr (Z.shiftl Z1 (Z32 - sr)) in
-              let table_cache' := fun x => if x =? oid then Some atable else table_cache x in
+              let table_cache' := fun x => if x =? oid then Some (atable, sl, sr) else table_cache x in
               Some (n', dyn, table, table_cache')
           end
-      | Some cached_table =>
-          match dyn_code n a cached_table sl sr with
-          | None => None
-          | Some dyn => Some (n', dyn, nil, table_cache)
-          end
+      end
+  | Some (cached_table, sl, sr) =>
+      match dyn_code n a cached_table sl sr with
+      | None => None
+      | Some dyn => Some (n', dyn, nil, table_cache)
       end
   end.
 
@@ -300,11 +298,12 @@ Definition replace_pc_data (rm: bool) (n reg: Z) : Z :=
 (* check a pc data inst
    reg - register to use as a scratch register *)
 Definition checked_pc_data (rm: bool) (reg n a atable sl sr: Z) : option (list Z) :=
+  let a := a + Z8 in
   Some ([
     Z0xe50d0004 .| (reg << Z12); (* str reg, [sp, #-4] *)
 
-    Z0xe3000000 .| (reg << Z12) .| (((a >> Z12) & Z0xf) << Z16) .| (a & Z0xfff); (* movw reg[16:0], #atable[16:0] *)
-    Z0xe3400000 .| (reg << Z12) .| (((a >> Z28) & Z0xf) << Z16) .| ((a >> Z16) & Z0xfff); (* movt reg[32:16], #atable[32:16] *)
+    Z0xe3000000 .| (reg << Z12) .| (((a >> Z12) & Z0xf) << Z16) .| (a & Z0xfff); (* movw reg[16:0], #a[16:0] *)
+    Z0xe3400000 .| (reg << Z12) .| (((a >> Z28) & Z0xf) << Z16) .| ((a >> Z16) & Z0xfff); (* movt reg[32:16], #a[32:16] *)
     replace_pc_data rm n reg; (* replace pc with reg *)
 
     Z0xe1a00000 .| (reg << Z12) .| (sl << Z7) .| reg; (* lsl reg, reg, #sl *)
@@ -318,15 +317,16 @@ Definition checked_pc_data (rm: bool) (reg n a atable sl sr: Z) : option (list Z
   ]).
 
 Definition rewrite_pc_data (rm: bool) (reg: Z) := rewrite_dyn (checked_pc_data rm reg) false.
-Definition rewrite_pc_data_no_jump (rm: bool) (reg: Z) (cond: Z) (n: Z) (a a' adyn atable aabort: Z) (table_cache: id -> option Z) : option (Z * list Z * list Z * (id -> option Z)) :=
+Definition rewrite_pc_data_no_jump (rm: bool) (reg: Z) (cond: Z) (n: Z) (a a' adyn atable aabort: Z) (table_cache: id -> option (Z * Z * Z)) : option (Z * list Z * list Z * (id -> option (Z * Z * Z))) :=
+  let a := a + Z8 in
   let offset := adyn - a' - Z8 in
   let n' := Z0xa000000 .| (Z.shiftr (offset mod (Z.shiftl Z1 Z26)) Z2) .| (cond << Z28) in (* b(cond) adyn *)
   let jump_back := Z0xa000000 .| (Z.shiftr ((-offset-Z32) mod (Z.shiftl Z1 Z26)) Z2) .| (Z14 << Z28) in (* b(cond) adyn *)
   if (Z15 <? cond) || (offset <? (Z_33554432)) || (offset >? Z33554428) || negb (offset mod Z4 =? Z0) then None else
   let dyn := [
     Z0xe50d0004 .| (reg << Z12); (* str reg, [sp, #-4] *)
-    Z0xe3000000 .| (reg << Z12) .| (((a >> Z12) & Z0xf) << Z16) .| (a & Z0xfff); (* movw reg[16:0], #atable[16:0] *)
-    Z0xe3400000 .| (reg << Z12) .| (((a >> Z28) & Z0xf) << Z16) .| ((a >> Z16) & Z0xfff); (* movt reg[32:16], #atable[32:16] *)
+    Z0xe3000000 .| (reg << Z12) .| (((a >> Z12) & Z0xf) << Z16) .| (a & Z0xfff); (* movw reg[16:0], #a[16:0] *)
+    Z0xe3400000 .| (reg << Z12) .| (((a >> Z28) & Z0xf) << Z16) .| ((a >> Z16) & Z0xfff); (* movt reg[32:16], #a[32:16] *)
     replace_pc_data rm n reg; (* replace pc with reg *)
     Z0xe51d0004 .| (reg << Z12); (* ldr reg, [sp, #-4] *)
     jump_back
@@ -334,7 +334,7 @@ Definition rewrite_pc_data_no_jump (rm: bool) (reg: Z) (cond: Z) (n: Z) (a a' ad
   Some (n', dyn, nil, table_cache).
 
 (* rewrite a single instruction, see rewrite_dyn for signature *)
-Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable aabort: Z) (table_cache: id -> option Z): option (Z * list Z * list Z * (id -> option Z)) :=
+Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable aabort: Z) (table_cache: id -> option (Z * Z * Z)): option (Z * list Z * list Z * (id -> option (Z * Z * Z))) :=
   let cond := Z_xbits n Z28 Z32 in
   let unchanged := Some (n, nil, nil, table_cache) in
   if Z_xbits n Z4 Z28 =? Z1245171 then (* BLX reg *)
@@ -378,7 +378,7 @@ Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable
    adyn - address to place the dynamic jump implementations
    atable - address to place the jump tables
    aabort - address where the abort handler is located *)
-Fixpoint _rewrite (table_cache: id -> option Z) (pol: Z -> id) (label: id -> list Z) (ns: list Z) (a a' adyn atable aabort: Z) : option (list Z * list (list Z) * list (list Z)) :=
+Fixpoint _rewrite (table_cache: id -> option (Z * Z * Z)) (pol: Z -> id) (label: id -> list Z) (ns: list Z) (a a' adyn atable aabort: Z) : option (list Z * list (list Z) * list (list Z)) :=
   match ns with
   | nil => Some (nil, nil, nil)
   | n::tail =>
@@ -394,6 +394,7 @@ Require Extraction.
 Extraction Language OCaml.
 Set Extraction Output Directory "extr".
 Extract Inductive Z => int [ "0" "" "(~-)" ].
+Extract Inductive nat => int [ "0" "" ].
 Extract Inductive bool => "bool" [ "true" "false" ].
 Extract Inductive option => "option" [ "Some" "None" ].
 Extract Inductive prod => "( * )"  [ "(,)" ].
