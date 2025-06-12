@@ -122,22 +122,20 @@ Proof using.
             preserve_noverlaps.
         hammer. find_rewrites. unfold_create_noverlaps unfold_noverlap.
         rewrite getmem_noverlap, getmem_noverlap in BC by auto using noverlap_symmetry.
-        apply Bool.negb_true_iff in BC. rewrite BC. unfold time_mem, time_branch.
-        psimpl. lia.
+        find_rewrites. unfold time_mem, time_branch. lia.
     }
     (* Invariant 0x80002460 when branch isn't taken *) {
         eexists. split. reflexivity. split.
             preserve_noverlaps.
         hammer. find_rewrites. unfold_create_noverlaps unfold_noverlap.
         rewrite getmem_noverlap, getmem_noverlap in BC by auto using noverlap_symmetry.
-        apply Bool.negb_false_iff in BC. rewrite BC. unfold time_mem, time_branch.
-        psimpl. lia.
+        find_rewrites. unfold time_mem, time_branch. lia.
     }
 
     (* Postcondition - `repeat step` got us here (repeat is weird) *)
     destruct PRE as (mem & MEM & NVL & Cycles).
     repeat step. eexists. split. reflexivity.
-    unfold time_of_uxListRemove. hammer. find_rewrites. psimpl.
-    unfold time_mem, time_branch. psimpl. destruct N.eqb; psimpl; lia.
+    unfold time_of_uxListRemove. hammer. find_rewrites.
+    unfold time_mem, time_branch. lia.
 Qed.
 

@@ -33,9 +33,13 @@ Ltac hammer :=
 Ltac find_rewrites :=
     repeat (match goal with
     | [H: ?x = _ |- context[match ?x with _ => _ end]] =>
-        rewrite H
-    | [H: ?x = _ |- context[if ?x then _ else _]] =>
-        rewrite H
+        rewrite H; cbn [negb]
+    | [H: negb ?x = ?y |- context[if ?x then _ else _]] =>
+        (match y with 
+        | true => apply Bool.negb_true_iff in H 
+        | false => apply Bool.negb_false_iff in H
+        end);
+        rewrite H; cbn [negb]
     | [H: cycle_count_of_trace ?t = _ |- context[cycle_count_of_trace ?t]] =>
         rewrite H
     end).
