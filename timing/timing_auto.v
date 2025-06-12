@@ -47,7 +47,7 @@ Ltac find_rewrites :=
 Ltac handle_ex := 
     repeat (match goal with
     | [|- exists _, _] => eexists
-    end); repeat split; try eassumption.
+    end); repeat (split; [solve [eauto]|]).
 
 Arguments N.add _ _ : simpl nomatch.
 Arguments N.mul _ _ : simpl nomatch.
@@ -76,6 +76,8 @@ Fixpoint _create_noverlaps (l : list (N * addr)) (idx : nat) : Prop :=
 Definition create_noverlaps (l : list (N * addr)) : Prop :=
     _create_noverlaps l 0.
 
+(* Split a create_noverlaps hypothesis into all of its ~ overlap _ _ _ _ 
+   constituents *)
 Ltac unfold_create_noverlaps unfolds :=
     unfolds;
     match goal with
@@ -84,17 +86,67 @@ Ltac unfold_create_noverlaps unfolds :=
         unfolds;
         cbn [map fold_left snd Nat.eqb] in H;
         psimpl in H;
-        repeat (match goal with [H: _ /\ _ |- _] => destruct H end)
+        repeat rewrite getmem_mod_l in H;
+        repeat rewrite getmem_mod_r in H;
+        repeat rewrite overlap_mod_l in H;
+        repeat rewrite overlap_mod_r in H;
+        repeat (
+            match goal with 
+            [H: _ /\ _ |- _] =>
+                destruct H
+            end
+        )
     end;
+    (* We'll end up with a ton of True hypotheses, so get rid of them *)
     repeat match goal with [H: True |- _] => clear H end;
     unfolds.
 
+Ltac solve_single_noverlap :=
+    cbn [map fold_left snd Nat.eqb];
+    
+    (* These all get in the way of auto *)
+    repeat rewrite getmem_noverlap; 
+    repeat rewrite getmem_mod_l;
+    repeat rewrite getmem_mod_r;
+    repeat rewrite overlap_mod_l;
+    repeat rewrite overlap_mod_r;
+
+    auto using noverlap_symmetry.
+
+Ltac _count_conj expr n :=
+    match expr with
+    | ?X /\ ?Y =>
+        let n' := eval compute in (n + 1) in 
+        let x := _count_conj X constr:(0) in 
+        let y := _count_conj Y constr:(0) in
+        eval compute in (n' + x + y)
+    | _ => n
+    end.
+Ltac count_conj :=
+    match goal with
+    | [|- ?X] =>
+        _count_conj X 0
+    end.
+
+Ltac solve_noverlaps n total :=
+    idtac "solved " n " / " total " noverlaps";
+    match goal with 
+    | [|- _ /\ _] =>
+        split; [
+            solve_single_noverlap 
+            | solve_noverlaps ltac:(eval compute in (n+1)) total ]
+    | [|- _] => solve_single_noverlap
+    end.
+
+(* Prove that noverlaps are preserved *)
 Ltac noverlaps_preserved unfolds :=
     unfolds;
     match goal with
     | [H: create_noverlaps _ |- create_noverlaps _] => 
-        solve [unfold_create_noverlaps unfolds;
-                  repeat split;
-                  repeat rewrite getmem_noverlap; auto using noverlap_symmetry]
-    | _ => fail "Goal must be in form of create_noverlaps l -> create_noverlaps l'"
-    end.
+        (idtac "Unfolding create_noverlaps";
+         unfold_create_noverlaps unfolds;
+         unfold create_noverlaps, _create_noverlaps;
+         idtac "Solving noverlaps";
+         repeat (solve_noverlaps 0 ltac:(count_conj)))
+        (* idtac "Unable to solve goal" *)
+    end || fail "Goal must be in form of create_noverlaps l -> create_noverlaps l'".
