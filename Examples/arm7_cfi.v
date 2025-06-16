@@ -17,8 +17,11 @@ Definition Z0xe2800800 := 0xe2800800.
 Definition Z0xe2800c00 := 0xe2800c00.
 Definition Z0xe3000000 := 0xe3000000.
 Definition Z0xe3400000 := 0xe3400000.
+Definition Z0xe50d0000 := 0xe50d0000.
 Definition Z0xe50d0004 := 0xe50d0004.
 Definition Z0xe50d0008 := 0xe50d0008.
+Definition Z0xe51d0000 := 0xe51d0000.
+Definition Z0xe51df000 := 0xe51df000.
 Definition Z0xe51d0004 := 0xe51d0004.
 Definition Z0xe51df008 := 0xe51df008.
 Definition Z0xe58d0000 := 0xe58d0000.
@@ -28,8 +31,10 @@ Definition Z0xf := 0xf.
 Definition Z0xff := 0xff.
 Definition Z0xfff := 0xfff.
 Definition Z0xfff0_ffff := 0xfff0_ffff.
+Definition Z0xffff_0000 := 0xfff0_0000.
 Definition Z0xffff_0fff := 0xffff_0fff.
 Definition Z0xffff_fff0 := 0xffff_fff0.
+Definition Z0xffff_ffff := 0xffff_ffff.
 Definition Z1 := 1.
 Definition Z2 := 2.
 Definition Z3 := 3.
@@ -101,100 +106,53 @@ Definition apply_hash (sl sr: Z) (z: Z) : Z :=
 Definition valid_hash (a: list Z) (o sl sr: Z) : bool :=
   unique_except_pairs (map (apply_hash sl sr) a) (map (apply_hash sl sr) (map (Z.add o) a)).
 
-Definition find_sr (a: list Z) (o sl: Z): option Z :=
-  (* jank *)
-  if valid_hash a o sl Z32 then Some Z32 else
-  if valid_hash a o sl Z31 then Some Z31 else
-  if valid_hash a o sl Z30 then Some Z30 else
-  if valid_hash a o sl Z29 then Some Z29 else
-  if valid_hash a o sl Z28 then Some Z28 else
-  if valid_hash a o sl Z27 then Some Z27 else
-  if valid_hash a o sl Z26 then Some Z26 else
-  if valid_hash a o sl Z25 then Some Z25 else
-  if valid_hash a o sl Z24 then Some Z24 else
-  if valid_hash a o sl Z23 then Some Z23 else
-  if valid_hash a o sl Z22 then Some Z22 else
-  if valid_hash a o sl Z21 then Some Z21 else
-  if valid_hash a o sl Z20 then Some Z20 else
-  if valid_hash a o sl Z19 then Some Z19 else
-  if valid_hash a o sl Z18 then Some Z18 else
-  if valid_hash a o sl Z17 then Some Z17 else
-  if valid_hash a o sl Z16 then Some Z16 else
-  if valid_hash a o sl Z15 then Some Z15 else
-  if valid_hash a o sl Z14 then Some Z14 else
-  if valid_hash a o sl Z13 then Some Z13 else
-  if valid_hash a o sl Z12 then Some Z12 else
-  if valid_hash a o sl Z11 then Some Z11 else
-  if valid_hash a o sl Z10 then Some Z10 else
-  if valid_hash a o sl Z9 then Some Z9 else
-  if valid_hash a o sl Z8 then Some Z8 else
-  if valid_hash a o sl Z7 then Some Z7 else
-  if valid_hash a o sl Z6 then Some Z6 else
-  if valid_hash a o sl Z5 then Some Z5 else
-  if valid_hash a o sl Z4 then Some Z4 else
-  if valid_hash a o sl Z3 then Some Z3 else
-  if valid_hash a o sl Z2 then Some Z2 else
-  if valid_hash a o sl Z1 then Some Z1 else
-  None.
+Require Import Coq.Program.Wf.
+Require Import Lia.
+
+Program Fixpoint find_sr (a: list Z) (o sl sr: Z) {measure (Z.to_nat sr)}: option Z :=
+  match Z.to_nat sr with
+  | O => None
+  | _ => if valid_hash a o sl sr then Some sr else find_sr a o sl (sr-Z1)
+  end.
+Next Obligation. unfold Z1 in *. lia. Qed.
 
 (* find hash parameters, returns (sl, sr)
    a - list of old addresses
    o - offset from new code to old code *)
-Fixpoint find_hash (a: list Z) (o: Z): option (Z * Z) :=
-  match find_sr a o Z32 with Some sr => Some (Z32, sr) | _ =>
-  match find_sr a o Z31 with Some sr => Some (Z31, sr) | _ =>
-  match find_sr a o Z30 with Some sr => Some (Z30, sr) | _ =>
-  match find_sr a o Z29 with Some sr => Some (Z29, sr) | _ =>
-  match find_sr a o Z28 with Some sr => Some (Z28, sr) | _ =>
-  match find_sr a o Z27 with Some sr => Some (Z27, sr) | _ =>
-  match find_sr a o Z26 with Some sr => Some (Z26, sr) | _ =>
-  match find_sr a o Z25 with Some sr => Some (Z25, sr) | _ =>
-  match find_sr a o Z24 with Some sr => Some (Z24, sr) | _ =>
-  match find_sr a o Z23 with Some sr => Some (Z23, sr) | _ =>
-  match find_sr a o Z22 with Some sr => Some (Z22, sr) | _ =>
-  match find_sr a o Z21 with Some sr => Some (Z21, sr) | _ =>
-  match find_sr a o Z20 with Some sr => Some (Z20, sr) | _ =>
-  match find_sr a o Z19 with Some sr => Some (Z19, sr) | _ =>
-  match find_sr a o Z18 with Some sr => Some (Z18, sr) | _ =>
-  match find_sr a o Z17 with Some sr => Some (Z17, sr) | _ =>
-  match find_sr a o Z16 with Some sr => Some (Z16, sr) | _ =>
-  match find_sr a o Z15 with Some sr => Some (Z15, sr) | _ =>
-  match find_sr a o Z14 with Some sr => Some (Z14, sr) | _ =>
-  match find_sr a o Z13 with Some sr => Some (Z13, sr) | _ =>
-  match find_sr a o Z12 with Some sr => Some (Z12, sr) | _ =>
-  match find_sr a o Z11 with Some sr => Some (Z11, sr) | _ =>
-  match find_sr a o Z10 with Some sr => Some (Z10, sr) | _ =>
-  match find_sr a o Z9 with Some sr => Some (Z9, sr) | _ =>
-  match find_sr a o Z8 with Some sr => Some (Z8, sr) | _ =>
-  match find_sr a o Z7 with Some sr => Some (Z7, sr) | _ =>
-  match find_sr a o Z6 with Some sr => Some (Z6, sr) | _ =>
-  match find_sr a o Z5 with Some sr => Some (Z5, sr) | _ =>
-  match find_sr a o Z4 with Some sr => Some (Z4, sr) | _ =>
-  match find_sr a o Z3 with Some sr => Some (Z3, sr) | _ =>
-  match find_sr a o Z2 with Some sr => Some (Z2, sr) | _ =>
-  match find_sr a o Z1 with Some sr => Some (Z1, sr) | _ =>
-      None end end end end end end end end end end end end end end end end end end end end end end end end end end end end end end end end.
+Program Fixpoint find_hash (a: list Z) (o sl: Z) {measure (Z.to_nat sl)}: option (Z * Z) :=
+  match Z.to_nat sl with
+  | O => None
+  | _ => match find_sr a o sl Z31 with
+         | Some sr => Some (sl, sr)
+         | None => find_hash a o (sl-Z1)
+         end
+  end.
+Next Obligation. unfold Z1 in *. lia. Qed.
 
-
+(* make a function that maps table index to the value in the table at that index
+   addrs - list of old addresses
+   o - offset from new code to old code
+   sl, sr - from find_hash
+   f - default value (fun _ -> aabort) *)
 Fixpoint make_jump_table_map (addrs: list Z) (o sl sr: Z) (f: Z -> Z) : Z -> Z :=
   match addrs with
   | nil => f
   | a::t =>
       let j := apply_hash sl sr a in
       let k := apply_hash sl sr (a+o) in
-      make_jump_table_map t o sl sr (fun i => if (i =? j) || (i =? k) then a + o else f i)
+      (* quick hack *)
+      if a >=? Z0xffff_0000 then make_jump_table_map t o sl sr (fun i => if (i =? j) then a else f i)
+      else make_jump_table_map t o sl sr (fun i => if (i =? j) || (i =? k) then a + o else f i)
   end.
-Require Import Coq.Program.Wf.
-Require Import Lia.
-Program Fixpoint _mjt (m: Z -> Z) (n i: Z) {measure (Z.to_nat (n - i))} :=
-  match Z.to_nat (n - i) with
+Program Fixpoint _make_jump_table (m: Z -> Z) (n i: Z) {measure (Z.to_nat (n - i))} :=
+  match Z.to_nat (n - i - Z1) with
   | O => m i::nil
-  | _ => m i::_mjt m n (i+Z1)
+  | _ => m i::_make_jump_table m n (i+Z1)
   end.
-Next Obligation. unfold Z1. lia. Qed.
+Next Obligation. unfold Z1 in *. lia. Qed.
 Definition make_jump_table (addrs: list Z) (aabort o sl sr n: Z) : list Z :=
   let m := make_jump_table_map addrs o sl sr (fun _ => aabort) in
-  _mjt m n 0.
+  _make_jump_table m n 0.
 
 Definition id := Z.
 
@@ -204,7 +162,7 @@ Notation "x >> y" := (Z.shiftr x y) (at level 40, left associativity).
 Notation "x & y" := (Z.land x y) (at level 40, left associativity).
 
 (* rewrite a dynamic jump, returns (new inst encoding, code to put in .dyn, table to put in .table, new table cache function)
-   dyn_code - function that takes (atable sl sr) and returns the code to be placed in .dyn
+   dyn_code - function that takes (n a atable sl sr) and returns the code to be placed in .dyn
    l - link when branching to .dyn
    cond - condition to use for the branch to .dyn
    oid - id of the valid destination addresses
@@ -222,7 +180,7 @@ Definition rewrite_dyn (dyn_code: Z -> Z -> Z -> Z -> Z -> option (list Z)) (l: 
   if (Z15 <? cond) || (offset <? (Z_33554432)) || (offset >? Z33554428) || negb (offset mod Z4 =? Z0) then None else
   match table_cache oid with
   | None =>
-      match find_hash (label oid) (a' - a) with
+      match find_hash (label oid) (a' - a) Z31 with
       | None => None
       | Some (sl, sr) =>
           match dyn_code n a atable sl sr with
@@ -286,49 +244,74 @@ Definition checked_pop_pc (regs reg _ _ atable sl sr: Z) : option (list Z) :=
   ]).
 Definition rewrite_pop_pc (regs reg: Z) := rewrite_dyn (checked_pop_pc regs reg) false.
 
-(* replace the rm, rd and rn fields of a data instruction with reg if they are pc
-   n - instruction encoding
-   reg - reg to replace pc with
-   rm - whether to replace rm or not *)
-Definition replace_pc_data (rm: bool) (n reg: Z) : Z :=
-  let rm := if (Z_xbits n Z0 Z4 =? Z15) && rm then (n & Z0xffff_fff0) .| reg else n in
-  let rd := if Z_xbits rm Z12 Z16 =? Z15 then (rm & Z0xffff_0fff) .| (reg << Z12) else rm in
-  if Z_xbits rd Z16 Z20 =? Z15 then (rd & Z0xfff0_ffff) .| (reg << Z16) else rd.
+Definition replace_pc_at_offset (o n reg: Z) : Z :=
+  let mask := Z0xffff_ffff - (Z0xf << o) in
+  if Z_xbits n o (o+Z4) =? Z15 then
+    (n & mask) .| (reg << o)
+  else
+    n.
+Definition replace_pc_rm := replace_pc_at_offset Z0.
+Definition replace_pc_rd := replace_pc_at_offset Z12.
+Definition replace_pc_rn := replace_pc_at_offset Z16.
+
+Definition replace_pc_data (n reg: Z) : Z :=
+  let rm := replace_pc_rm n reg in
+  let rd := replace_pc_rd rm reg in
+  replace_pc_rn rd reg.
+Definition replace_pc_data_imm (n reg: Z) : Z :=
+  let rd := replace_pc_rd n reg in
+  replace_pc_rn rd reg.
+
+Definition pick_good_reg (n: Z) : Z :=
+  let rm := Z_xbits n Z0 Z4 in
+  let rd := Z_xbits n Z12 Z16 in
+  let rn := Z_xbits n Z16 Z20 in
+  if (rm =? Z0) || (rd =? Z0) || (rn =? Z0) then
+    if (rm =? Z1) || (rd =? Z1) || (rn =? Z1) then
+      if (rm =? Z2) || (rd =? Z2) || (rn =? Z2) then
+        Z3
+      else
+        Z2
+    else
+      Z1
+  else
+    Z0.
 
 (* check a pc data inst
    reg - register to use as a scratch register *)
-Definition checked_pc_data (rm: bool) (reg n a atable sl sr: Z) : option (list Z) :=
+Definition checked_pc_data (replace: Z -> Z -> Z) (reg stack_offset n a atable sl sr: Z) : option (list Z) :=
   let a := a + Z8 in
   Some ([
     Z0xe50d0004 .| (reg << Z12); (* str reg, [sp, #-4] *)
 
     Z0xe3000000 .| (reg << Z12) .| (((a >> Z12) & Z0xf) << Z16) .| (a & Z0xfff); (* movw reg[16:0], #a[16:0] *)
     Z0xe3400000 .| (reg << Z12) .| (((a >> Z28) & Z0xf) << Z16) .| ((a >> Z16) & Z0xfff); (* movt reg[32:16], #a[32:16] *)
-    replace_pc_data rm n reg; (* replace pc with reg *)
+    replace n reg; (* replace pc with reg *)
 
     Z0xe1a00000 .| (reg << Z12) .| (sl << Z7) .| reg; (* lsl reg, reg, #sl *)
     Z0xe1a00020 .| (reg << Z12) .| (sr << Z7) .| reg; (* lsr reg, reg, #sr *)
     Z0xe1a00000 .| (reg << Z12) .| (Z2 << Z7) .| reg (* lsl reg, reg, #2 *)
   ]++arm_add reg atable++[  (* add reg, reg, #atable *)
     Z0xe5900000 .| (reg << Z12) .| (reg << Z16); (* ldr reg, [reg] *)
-    Z0xe50d0008 .| (reg << Z12); (* str reg, [sp, #-8] *)
-    Z0xe51d0004 .| (reg << Z12); (* ldr reg, [sp, #-4] *)
-    Z0xe51df008 (* ldr pc, [sp, #-8] *)
+    Z0xe50d0000 .| (reg << Z12) .| (stack_offset + Z8); (* str reg, [sp, #-8] *)
+    Z0xe51d0000 .| (reg << Z12) .| (stack_offset + Z4); (* ldr reg, [sp, #-4] *)
+    Z0xe51df000 .| (stack_offset + Z8) (* ldr pc, [sp, #-8] *)
   ]).
 
-Definition rewrite_pc_data (rm: bool) (reg: Z) := rewrite_dyn (checked_pc_data rm reg) false.
-Definition rewrite_pc_data_no_jump (rm: bool) (reg: Z) (cond: Z) (n: Z) (a a' adyn atable aabort: Z) (table_cache: id -> option (Z * Z * Z)) : option (Z * list Z * list Z * (id -> option (Z * Z * Z))) :=
+Definition rewrite_pc_data (replace: Z -> Z -> Z) (reg stack_offset: Z) := rewrite_dyn (checked_pc_data replace reg stack_offset) false.
+(* rewrite a pc data inst that does not affect control flow *)
+Definition rewrite_pc_data_no_jump (replace: Z -> Z -> Z) (reg stack_offset: Z) (cond: Z) (n: Z) (a a' adyn atable aabort: Z) (table_cache: id -> option (Z * Z * Z)) : option (Z * list Z * list Z * (id -> option (Z * Z * Z))) :=
   let a := a + Z8 in
   let offset := adyn - a' - Z8 in
   let n' := Z0xa000000 .| (Z.shiftr (offset mod (Z.shiftl Z1 Z26)) Z2) .| (cond << Z28) in (* b(cond) adyn *)
-  let jump_back := Z0xa000000 .| (Z.shiftr ((-offset-Z32) mod (Z.shiftl Z1 Z26)) Z2) .| (Z14 << Z28) in (* b(cond) adyn *)
+  let jump_back := Z0xa000000 .| (Z.shiftr ((-offset-Z32) mod (Z.shiftl Z1 Z26)) Z2) .| (Z14 << Z28) in (* b (a+4)  *)
   if (Z15 <? cond) || (offset <? (Z_33554432)) || (offset >? Z33554428) || negb (offset mod Z4 =? Z0) then None else
   let dyn := [
     Z0xe50d0004 .| (reg << Z12); (* str reg, [sp, #-4] *)
     Z0xe3000000 .| (reg << Z12) .| (((a >> Z12) & Z0xf) << Z16) .| (a & Z0xfff); (* movw reg[16:0], #a[16:0] *)
     Z0xe3400000 .| (reg << Z12) .| (((a >> Z28) & Z0xf) << Z16) .| ((a >> Z16) & Z0xfff); (* movt reg[32:16], #a[32:16] *)
-    replace_pc_data rm n reg; (* replace pc with reg *)
-    Z0xe51d0004 .| (reg << Z12); (* ldr reg, [sp, #-4] *)
+    replace n reg; (* replace pc with reg *)
+    Z0xe51d0000 .| (reg << Z12) .| (stack_offset + Z4); (* ldr reg, [sp, #-4] *)
     jump_back
   ] in
   Some (n', dyn, nil, table_cache).
@@ -345,24 +328,31 @@ Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable
     rewrite_b_reg false reg cond n oid label a a' adyn atable aabort table_cache
   else if Z_xbits n Z16 Z28 =? Z2237 then (* pop {regs} *)
     let regs := Z_xbits n Z0 Z16 in
-    if Z32767 <? regs then rewrite_pop_pc regs Z5 cond n oid label a a' adyn atable aabort table_cache else Some (n, nil, nil, table_cache)
+    if Z32767 <? regs then rewrite_pop_pc regs Z5 cond n oid label a a' adyn atable aabort table_cache else unchanged
+  else if Z_xbits n Z28 Z32 =? Z15 then
+    unchanged
   else if Z_xbits n Z26 Z28 =? Z0 then (* data processing / misc *)
-    if (Z_xbits n Z23 Z25 =? Z10) && (Z_bitn n Z20 =? Z0) then (* op1 == 10xx0 *)
+    if (Z_xbits n Z23 Z25 =? Z2) && (Z_bitn n Z20 =? Z0) then (* op1 == 10xx0 *)
       unchanged
     else if (Z_bitn n Z25 =? Z1) || (Z_bitn n Z4 =? Z0) || (Z_bitn n Z7 =? Z0) then (* data processing *)
+      let replace := if (Z_bitn n Z25 =? Z0) then replace_pc_data else replace_pc_data_imm in
+      let reg := pick_good_reg n in
       if Z_xbits n Z12 Z16 =? Z15 then (* pc data *)
-        rewrite_pc_data true Z5 cond n oid label a a' adyn atable aabort table_cache
-      else if (Z_xbits n Z0 Z4 =? Z15) || (Z_xbits n Z16 Z20 =? Z15) then
-        rewrite_pc_data_no_jump true Z5 cond n a a' adyn atable aabort table_cache
+        rewrite_pc_data replace reg Z0 cond n oid label a a' adyn atable aabort table_cache
+      else if (Z_bitn n Z25 =? Z0) && (Z_xbits n Z0 Z4 =? Z15) || (Z_xbits n Z16 Z20 =? Z15) then
+        rewrite_pc_data_no_jump replace reg Z0 cond n a a' adyn atable aabort table_cache
       else
         unchanged
     else
       unchanged
-  else if (Z_xbits n Z26 Z28 =? Z1) && ((Z_bitn n Z4 =? Z0) || (Z_bitn n Z25 =? Z0)) then
+  else if (Z_xbits n Z26 Z28 =? Z1) && ((Z_bitn n Z4 =? Z0) || (Z_bitn n Z25 =? Z0)) then (* load store *)
+    let replace := if (Z_bitn n Z25 =? Z0) then replace_pc_data else replace_pc_data_imm in
+    let reg := pick_good_reg n in
+    let stack_offset := if (Z_bitn n Z24 =? Z0) || (Z_bitn n Z21 =? Z1) then (Z_xbits n Z0 Z12) else Z0 in
     if (Z_bitn n Z20 =? Z1) && (Z_xbits n Z12 Z16 =? Z15) then
-      rewrite_pc_data false Z5 cond n oid label a a' adyn atable aabort table_cache
+      rewrite_pc_data replace reg stack_offset cond n oid label a a' adyn atable aabort table_cache
     else if (Z_xbits n Z12 Z16 =? Z15) || (Z_xbits n Z16 Z20 =? Z15) then
-      rewrite_pc_data_no_jump false Z5 cond n a a' adyn atable aabort table_cache
+      rewrite_pc_data_no_jump replace reg stack_offset cond n a a' adyn atable aabort table_cache
     else
       unchanged
   else
@@ -392,7 +382,7 @@ Definition rewrite := _rewrite (fun _ => None).
 
 Require Extraction.
 Extraction Language OCaml.
-Set Extraction Output Directory "extr".
+Set Extraction Output Directory "arm_cfi_extraction".
 Extract Inductive Z => int [ "0" "" "(~-)" ].
 Extract Inductive nat => int [ "0" "" ].
 Extract Inductive bool => "bool" [ "true" "false" ].
@@ -411,9 +401,12 @@ Extract Inlined Constant Z0xe2800800 => "0xe2800800".
 Extract Inlined Constant Z0xe2800c00 => "0xe2800c00".
 Extract Inlined Constant Z0xe3000000 => "0xe3000000".
 Extract Inlined Constant Z0xe3400000 => "0xe3400000".
+Extract Inlined Constant Z0xe50d0000 => "0xe50d0000".
 Extract Inlined Constant Z0xe50d0004 => "0xe50d0004".
 Extract Inlined Constant Z0xe50d0008 => "0xe50d0008".
+Extract Inlined Constant Z0xe51d0000 => "0xe51d0000".
 Extract Inlined Constant Z0xe51d0004 => "0xe51d0004".
+Extract Inlined Constant Z0xe51df000 => "0xe51df000".
 Extract Inlined Constant Z0xe51df008 => "0xe51df008".
 Extract Inlined Constant Z0xe58d0000 => "0xe58d0000".
 Extract Inlined Constant Z0xe5900000 => "0xe5900000".
@@ -422,8 +415,10 @@ Extract Inlined Constant Z0xf => "0xf".
 Extract Inlined Constant Z0xff => "0xff".
 Extract Inlined Constant Z0xfff => "0xfff".
 Extract Inlined Constant Z0xfff0_ffff => "0xfff0_ffff".
+Extract Inlined Constant Z0xffff_0000 => "0xffff_0000".
 Extract Inlined Constant Z0xffff_0fff => "0xffff_0fff".
 Extract Inlined Constant Z0xffff_fff0 => "0xffff_fff0".
+Extract Inlined Constant Z0xffff_ffff => "0xffff_ffff".
 Extract Inlined Constant Z1 => "1".
 Extract Inlined Constant Z2 => "2".
 Extract Inlined Constant Z3 => "3".
@@ -470,6 +465,7 @@ Extract Inlined Constant Z.ltb => "(<)".
 (* maybe use library that has popcount instrinsic? *)
 Extract Inlined Constant Z_popcount => "(fun z -> coq_Z_bitn z 0 + coq_Z_bitn z 1 + coq_Z_bitn z 2 + coq_Z_bitn z 3 + coq_Z_bitn z 4 + coq_Z_bitn z 5 + coq_Z_bitn z 6 + coq_Z_bitn z 7 + coq_Z_bitn z 8 + coq_Z_bitn z 9 + coq_Z_bitn z 10 + coq_Z_bitn z 11 + coq_Z_bitn z 12 + coq_Z_bitn z 13 + coq_Z_bitn z 14 + coq_Z_bitn z 15 + coq_Z_bitn z 16 + coq_Z_bitn z 17 + coq_Z_bitn z 18 + coq_Z_bitn z 19 + coq_Z_bitn z 20 + coq_Z_bitn z 21 + coq_Z_bitn z 22 + coq_Z_bitn z 23 + coq_Z_bitn z 24 + coq_Z_bitn z 25 + coq_Z_bitn z 26 + coq_Z_bitn z 27 + coq_Z_bitn z 28 + coq_Z_bitn z 29 + coq_Z_bitn z 30 + coq_Z_bitn z 31)".
 Extract Inlined Constant Z.gtb => "(>)".
+Extract Inlined Constant Z.geb => "(>=)".
 Extract Inlined Constant Z.leb => "(<=)".
 Extract Inlined Constant Z.add => "(+)".
 Extract Inlined Constant Z.sub => "(-)".
