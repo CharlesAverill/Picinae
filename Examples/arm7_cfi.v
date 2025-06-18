@@ -216,6 +216,7 @@ Definition arm_add (reg imm: Z) : list Z :=
    reg - register that holds the destination address *)
 Definition checked_b_reg (reg _ _ atable sl sr: Z) : option (list Z) :=
   Some ([
+    Z0xe50d0000 .| Z32 .| (Z15 << Z12); (* DEBUG: str pc, [sp, #-32] *)
     Z0xe1a00000 .| (reg << Z12) .| (sl << Z7) .| reg; (* lsl reg, reg, #sl *)
     Z0xe1a00020 .| (reg << Z12) .| (sr << Z7) .| reg; (* lsr reg, reg, #sr *)
     Z0xe1a00000 .| (reg << Z12) .| (Z2 << Z7) .| reg (* lsl reg, reg, #2 *)
@@ -231,6 +232,7 @@ Definition rewrite_b_reg (l: bool) (reg: Z) := rewrite_dyn (checked_b_reg reg) l
 Definition checked_pop_pc (regs reg _ _ atable sl sr: Z) : option (list Z) :=
   let pc_offset := Z4 * (Z_popcount regs - Z1) in
   Some ([
+    Z0xe50d0000 .| Z32 .| (Z15 << Z12); (* DEBUG: str pc, [sp, #-32] *)
     Z0xe50d0004 .| (reg << Z12); (* str reg, [sp, #-4] *)
     Z0xe5900000 .| (reg << Z12) .| (Z13 << Z16) .| pc_offset; (* ldr reg, [sp, #pc_offset] *)
     Z0xe1a00000 .| (reg << Z12) .| (sl << Z7) .| reg; (* lsl reg, reg, #sl *)
@@ -282,6 +284,7 @@ Definition pick_good_reg (n: Z) : Z :=
 Definition checked_pc_data (replace: Z -> Z -> Z) (reg stack_offset n a atable sl sr: Z) : option (list Z) :=
   let a := a + Z8 in
   Some ([
+    Z0xe50d0000 .| Z32 .| (Z15 << Z12); (* DEBUG: str pc, [sp, #-32] *)
     Z0xe50d0004 .| (reg << Z12); (* str reg, [sp, #-4] *)
 
     Z0xe3000000 .| (reg << Z12) .| (((a >> Z12) & Z0xf) << Z16) .| (a & Z0xfff); (* movw reg[16:0], #a[16:0] *)
