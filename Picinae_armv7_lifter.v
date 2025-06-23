@@ -121,8 +121,6 @@ Inductive arm7_asm :=
   (* synchronization store: A5.2.10, pg A5-203 *)
   | ARM_sync_s (size: arm_sync_size) (cond Rn Rd Rt: Z)
   (* miscellaneous instructions: A5.2.12, pg A5-205 *)
-  | ARM_MRS (cond Rd: Z)
-  | ARM_MSR (cond mask Rn: Z)
   | ARM_BX (cond Rm: Z)
   | ARM_BLX_r (cond Rm: Z)
   | ARM_BXJ (cond Rm: Z)
@@ -151,7 +149,11 @@ Inductive arm7_asm :=
 Definition zxbits z i j := Z.shiftr z i mod Z.shiftl Z1 (Z.max Z0 (j - i)).
 Definition zcbits z1 i z2 := Z.lor (Z.shiftl z1 i) z2.
 Definition bitb z b := zxbits z b (b + Z1).
-Notation "x !=? y" := (negb (Z.eqb x y)) (at level 25).
+Notation "x !=? y" := (negb (Z.eqb x y)) (at level 25, left associativity).
+Notation "x .| y" := (Z.lor x y) (at level 25, left associativity).
+Notation "x << y" := (Z.shiftl x y) (at level 40, left associativity).
+Notation "x >> y" := (Z.shiftr x y) (at level 40, left associativity).
+Notation "x & y" := (Z.land x y) (at level 40, left associativity).
 
 Definition armcond z := zxbits z Z28 Z32.
 
@@ -231,17 +233,6 @@ Definition arm_decode_mov_wt is_w z := (* A8.8.103, pg A8-485 (encoding A2) *) (
   let imm12 := zxbits z Z0 Z12 in
   if (Rd =? Z15) then ARM_UNPREDICTABLE
   else ARM_MOV_WT is_w cond imm4 Rd imm12.
-Definition arm_decode_mrs z := (* A8.8.110, pg A8-497 *)
-  let cond := armcond z in
-  let Rd := zxbits z Z12 Z16 in
-  if (zxbits z Z16 Z20 !=? Z15) || (zxbits z Z0 Z12 !=? Z0) || (Rd =? Z15) then ARM_UNPREDICTABLE
-  else ARM_MRS cond Rd.
-Definition arm_decode_msr_a z := (* A8.8.113, pg A8-501 *)
-  let cond := armcond z in
-  let mask := zxbits z Z18 Z20 in
-  let Rn := zxbits z Z0 Z4 in
-  if (zxbits z Z8 Z12 !=? Z0) || (zxbits z Z12 Z16 !=? Z15) || (Rn =? Z15) || (mask =? Z0) then ARM_UNPREDICTABLE
-  else ARM_MSR cond mask Rn.
 Definition arm_decode_bx z := (* A8.8.27, pg A8-350 *)
   let cond := armcond z in
   let Rm := zxbits z Z0 Z4 in
@@ -332,7 +323,7 @@ Definition arm_decode_mul op z :=
   (* another unpredictable case for version < 6 *)
   else ARM_mul op cond S Rd_RdHi Ra_RdLo Rm Rn.
 Definition arm_decode_multiply z := (* A5.2.5, pg A5-200 *)
-  let op := zxbits z Z24 Z28 in
+  let op := zxbits z Z20 Z24 in
   if (op =? Z0) || (op =? Z1) then arm_decode_mul ARM_MUL z
   else if (op =? Z2) || (op =? Z3) then arm_decode_mul ARM_MLA z
   else if (op =? Z4) then arm_decode_mul ARM_UMAAL z
@@ -357,7 +348,7 @@ Definition arm_decode_sync_s size z :=
 Definition arm_decode_sync_l size z :=
   let cond := armcond z in
   let Rn := zxbits z Z16 Z20 in
-  let Rt := zxbits z Z0 Z4 in
+  let Rt := zxbits z Z12 Z16 in
   if (Rt =? Z15) || (Rn =? Z15) then ARM_UNPREDICTABLE
   else if (zxbits z Z8 Z12 !=? Z15) || (zxbits z Z0 Z4 !=? Z15) then ARM_UNPREDICTABLE
   else if (match size with ARM_sync_doubleword => true | _ => false end) && ((bitb Rt Z0 =? Z1) || (Rt =? Z14)) then ARM_UNPREDICTABLE
@@ -472,9 +463,8 @@ Definition arm_decode_ls_r op z :=
   let type := zxbits z Z5 Z7 in
   let Rm := zxbits z Z0 Z4 in
   let wback := (P =? Z0) || (W =? Z1) in
-  let is_byte := bitb z Z22 =? Z1 in
   if (Rm =? Z15) || (wback && ((Rn =? Z15) || (Rn =? Rt))) then ARM_UNPREDICTABLE (* also "wback && m == n" if archversion < 6 but we are armv7 *)
-  else if (is_byte) && (Rt =? Z15) then ARM_UNPREDICTABLE
+  else if (match op with | ARM_STR => false | _ => true end) && (Rt =? Z15) then ARM_UNPREDICTABLE
   else ARM_ls_r op cond P U W Rn Rt imm5 type Rm.
 Definition arm_decode_ls_i op z :=
   let cond := armcond z in
@@ -487,7 +477,7 @@ Definition arm_decode_ls_i op z :=
   let wback := (P =? Z0) || (W =? Z1) in
   let is_byte := bitb z Z22 =? Z1 in
   if (wback && ((Rn =? Z15) || (Rn =? Rt))) then ARM_UNPREDICTABLE
-  else if (is_byte) && (Rt =? Z15) then ARM_UNPREDICTABLE
+  else if (match op with | ARM_LDR => (P =? Z0) && (W =? Z1) | ARM_LDRB | ARM_STRB => true | ARM_STR => false end) && (Rt =? Z15) then ARM_UNPREDICTABLE
   else ARM_ls_i op cond P U W Rn Rt imm12.
 Definition arm_decode_load_store z := (* A5.3, pg A5-206 *)
   let A := bitb z Z25 in (* 0 - immediate, 1 - register *)
@@ -602,6 +592,178 @@ Definition arm_decode z :=
     else if (op1 =? Z4) || (op1 =? Z5) then arm_decode_branch_block_transfer z
     else (*if (op1 =? Z6) || (op1 =? Z7) then*) arm_decode_coprocessor z.
 
+(* assembly *)
+
+Scheme Equality for arm7_asm.
+
+Definition arm_data_opcode op :=
+  match op with
+  | ARM_AND => Z0
+  | ARM_EOR => Z1
+  | ARM_SUB => Z2
+  | ARM_RSB => Z3
+  | ARM_ADD => Z4
+  | ARM_ADC => Z5
+  | ARM_SBC => Z6
+  | ARM_RSC => Z7
+  | ARM_TST => Z8
+  | ARM_TEQ => Z9
+  | ARM_CMP => Z10
+  | ARM_CMN => Z11
+  | ARM_ORR => Z12
+  | ARM_MOV => Z13
+  | ARM_BIC => Z14
+  | ARM_MVN => Z15
+  end.
+Definition arm_assemble_data_r op cond s Rn Rd imm5 type Rm :=
+  let op := arm_data_opcode op in
+  (cond << Z28) .| (op << Z21) .| (s << Z20) .| (Rn << Z16) .| (Rd << Z12) .| (imm5 << Z7) .| (type << Z5) .| Rm.
+Definition arm_assemble_data_rsr op cond s Rn Rd Rs type Rm :=
+  let op := arm_data_opcode op in
+  (cond << Z28) .| (op << Z21) .| (s << Z20) .| (Rn << Z16) .| (Rd << Z12) .| (Rs << Z8) .| (type << Z5) .| (Z1 << Z4) .| Rm.
+Definition arm_assemble_data_i op cond s Rn Rd imm12 :=
+  let op := arm_data_opcode op in
+  (cond << Z28) .| (Z1 << Z25) .| (op << Z21) .| (s << Z20) .| (Rn << Z16) .| (Rd << Z12) .| imm12.
+Definition arm_assemble_MOV_WT (is_w: bool) cond imm4 Rd imm12 :=
+  let op := if is_w then Z16 else Z20 in
+  (cond << Z28) .| (Z1 << Z25) .| (op << Z20) .| (imm4 << Z16) .| (Rd << Z12) .| imm12.
+Definition arm_mul_opcode op :=
+  match op with
+  | ARM_MUL => Z0
+  | ARM_MLA => Z1
+  | ARM_UMAAL => Z2
+  | ARM_MLS => Z3
+  | ARM_UMULL => Z4
+  | ARM_UMLAL => Z5
+  | ARM_SMULL => Z6
+  | ARM_SMLAL => Z7
+  end.
+Definition arm_assemble_mul op cond s Rd_RdHi Ra_RdLo Rm Rn :=
+  let op := arm_mul_opcode op in
+  (cond << Z28) .| (op << Z21) .| (s << Z20) .| (Rd_RdHi << Z16) .| (Ra_RdLo << Z12) .| (Rm << Z8) .| (Z9 << Z4) .| Rn.
+Definition arm_sync_size_opcode size :=
+  match size with
+  | ARM_sync_word => Z0
+  | ARM_sync_doubleword => Z1
+  | ARM_sync_byte => Z2
+  | ARM_sync_halfword => Z3
+  end.
+Definition arm_assemble_sync_l size cond Rn Rt :=
+  let size := arm_sync_size_opcode size in
+  (cond << Z28) .| (Z3 << Z23) .| (size << Z21) .| (Z1 << Z20) .| (Rn << Z16) .| (Rt << Z12) .| (Z15 << Z8) .| (Z9 << Z4) .| Z15.
+Definition arm_assemble_sync_s size cond Rn Rd Rt :=
+  let size := arm_sync_size_opcode size in
+  (cond << Z28) .| (Z3 << Z23) .| (size << Z21) .| (Rn << Z16) .| (Rd << Z12) .| (Z15 << Z8) .| (Z9 << Z4) .| Rt.
+Definition arm_assemble_BX cond Rm :=
+  (cond << Z28) .| (Z9 << Z21) .| (Z4095 << Z8) .| (Z1 << Z4) .| Rm.
+Definition arm_assemble_BLX_r cond Rm :=
+  (cond << Z28) .| (Z9 << Z21) .| (Z4095 << Z8) .| (Z3 << Z4) .| Rm.
+Definition arm_assemble_BXJ cond Rm :=
+  (cond << Z28) .| (Z9 << Z21) .| (Z4095 << Z8) .| (Z2 << Z4) .| Rm.
+Definition arm_assemble_CLZ cond Rd Rm :=
+  (cond << Z28) .| (Z11 << Z21) .| (Z15 << Z16) .| (Rd << Z12) .| (Z15 << Z8) .| (Z1 << Z4) .| Rm.
+Definition arm_assemble_BKPT cond imm12 imm4 :=
+  (cond << Z28) .| (Z9 << Z21) .| (imm12 << Z8) .| (Z7 << Z4) .| imm4.
+Definition arm_sat_opcode op :=
+  match op with
+  | ARM_QADD => Z0
+  | ARM_QSUB => Z1
+  | ARM_QDADD => Z2
+  | ARM_QDSUB => Z3
+  end.
+Definition arm_assemble_sat op cond Rn Rd Rm :=
+  let op := arm_sat_opcode op in
+  (cond << Z28) .| (Z1 << Z24) .| (op << Z21) .| (Rn << Z16) .| (Rd << Z12) .| (Z5 << Z4) .| Rm.
+Definition arm_assemble_hint cond op2 :=
+  (cond << Z28) .| (Z25 << Z21) .| (Z15 << Z12) .| op2.
+Definition arm_xmem_opcode op :=
+  match op with
+  | ARM_STRH => Z11
+  | ARM_LDRH => Z11 .| (Z1 << Z16)
+  | ARM_LDRD => Z13
+  | ARM_LDRSB => Z13 .| (Z1 << Z16)
+  | ARM_STRD => Z15
+  | ARM_LDRSH => Z15 .| (Z1 << Z16)
+  end.
+Definition arm_assemble_extra_ls_i op cond P U W Rn Rt imm4H imm4L :=
+  let op := arm_xmem_opcode op in
+  (cond << Z28) .| (P << Z24) .| (U << Z23) .| (Z1 << Z22) .| (W << Z21) .| (Rn << Z16) .| (Rt << Z12) .| (imm4H << Z8) .| (op << Z4) .| imm4L.
+Definition arm_assemble_extra_ls_r op cond P U W Rn Rt Rm :=
+  let op := arm_xmem_opcode op in
+  (cond << Z28) .| (P << Z24) .| (U << Z23) .| (W << Z21) .| (Rn << Z16) .| (Rt << Z12) .| (op << Z4) .| Rm.
+Definition arm_mem_opcode op :=
+  match op with
+  | ARM_STR => Z0
+  | ARM_LDR => Z1
+  | ARM_STRB => Z4
+  | ARM_LDRB => Z5
+  end.
+Definition arm_assemble_ls_i op cond P U W Rn Rt imm12 :=
+  let op := arm_mem_opcode op in
+  (cond << Z28) .| (Z1 << Z26) .| (P << Z24) .| (U << Z23) .| (W << Z21) .| (op << Z20) .| (Rn << Z16) .| (Rt << Z12) .| imm12.
+Definition arm_assemble_ls_r op cond P U W Rn Rt imm5 type Rm :=
+  let op := arm_mem_opcode op in
+  (cond << Z28) .| (Z3 << Z25) .| (P << Z24) .| (U << Z23) .| (W << Z21) .| (op << Z20) .| (Rn << Z16) .| (Rt << Z12) .| (imm5 << Z7) .| (type << Z5) .| Rm.
+Definition arm_memm_opcode op :=
+  match op with
+  | ARM_STMDA => Z0
+  | ARM_LDMDA => Z1
+  | ARM_STMIA => Z8
+  | ARM_LDMIA => Z9
+  | ARM_STMDB => Z16
+  | ARM_LDMDB => Z17
+  | ARM_STMIB => Z24
+  | ARM_LDMIB => Z25
+  end.
+Definition arm_assemble_lsm op cond W Rn register_list :=
+  let op := arm_memm_opcode op in
+  (cond << Z28) .| (Z1 << Z27) .| (W << Z21) .| (op << Z20) .| (Rn << Z16) .| register_list.
+Definition arm_assemble_B cond imm24 :=
+  (cond << Z28) .| (Z10 << Z24) .| imm24.
+Definition arm_assemble_BL cond imm24 :=
+  (cond << Z28) .| (Z11 << Z24) .| imm24.
+Definition arm_assemble_BLX_i H imm24 :=
+  (Z15 << Z28) .| (Z10 << Z24) .| (H << Z24) .| imm24.
+
+Definition arm_assemble i :=
+  let z := match i with
+           | ARM_data_r op cond s Rn Rd imm5 type Rm => arm_assemble_data_r op cond s Rn Rd imm5 type Rm
+           | ARM_data_rsr op cond s Rn Rd Rs type Rm => arm_assemble_data_rsr op cond s Rn Rd Rs type Rm
+           | ARM_data_i op cond s Rn Rd imm12 => arm_assemble_data_i op cond s Rn Rd imm12
+           | ARM_MOV_WT is_w cond imm4 Rd imm12 => arm_assemble_MOV_WT is_w cond imm4 Rd imm12
+           | ARM_mul op cond s Rd_RdHi Ra_RdLo Rm Rn => arm_assemble_mul op cond s Rd_RdHi Ra_RdLo Rm Rn
+           | ARM_sync_l size cond Rn Rt => arm_assemble_sync_l size cond Rn Rt
+           | ARM_sync_s size cond Rn Rd Rt => arm_assemble_sync_s size cond Rn Rd Rt
+           | ARM_BX cond Rm => arm_assemble_BX cond Rm
+           | ARM_BLX_r cond Rm => arm_assemble_BLX_r cond Rm
+           | ARM_BXJ cond Rm => arm_assemble_BXJ cond Rm
+           | ARM_CLZ cond Rd Rm => arm_assemble_CLZ cond Rd Rm
+           | ARM_BKPT cond imm12 imm4 => arm_assemble_BKPT cond imm12 imm4
+           | ARM_sat op cond Rn Rd Rm => arm_assemble_sat op cond Rn Rd Rm
+           | ARM_hint cond op2 => arm_assemble_hint cond op2
+           | ARM_extra_ls_i op cond P U W Rn Rt imm4H imm4L => arm_assemble_extra_ls_i op cond P U W Rn Rt imm4H imm4L
+           | ARM_extra_ls_r op cond P U W Rn Rt Rm => arm_assemble_extra_ls_r op cond P U W Rn Rt Rm
+           | ARM_ls_i op cond P U W Rn Rt imm12 => arm_assemble_ls_i op cond P U W Rn Rt imm12
+           | ARM_ls_r op cond P U W Rn Rt imm5 type Rm => arm_assemble_ls_r op cond P U W Rn Rt imm5 type Rm
+           | ARM_lsm op cond W Rn register_list => arm_assemble_lsm op cond W Rn register_list
+           | ARM_B cond imm24 => arm_assemble_B cond imm24
+           | ARM_BL cond imm24 => arm_assemble_BL cond imm24
+           | ARM_BLX_i H imm24 => arm_assemble_BLX_i H imm24
+           | _ => Z0
+           end in
+  if arm7_asm_beq (arm_decode z) i then Some z
+  else None.
+Fixpoint arm_assemble_all l :=
+  match l with
+  | a::t => match arm_assemble a with
+            | Some z => match arm_assemble_all t with
+                        | Some zs => Some (z::zs)
+                        | None => None
+                        end
+            | None => None
+            end
+  | nil => Some nil
+  end.
 (* todo: fix lifting for new decoder
 
 (* ----------------------------- Intermediate Language Translation -----------------------------*)
