@@ -40,6 +40,12 @@ Ltac find_rewrites :=
         | false => apply Bool.negb_false_iff in H
         end);
         rewrite H; cbn [negb]
+    | [H: ?x = ?y |- context[if negb ?x then _ else _]] =>
+        (match y with
+        | true => apply Bool.negb_false_iff in H
+        | false => apply Bool.negb_true_iff in H
+        end);
+        rewrite H; cbn [negb]
     | [H: cycle_count_of_trace ?t = _ |- context[cycle_count_of_trace ?t]] =>
         rewrite H
     end).
@@ -61,31 +67,23 @@ End TimingAutomation.
    Warning: there should not be duplicates in the list of buffers!
    If there are, you will introduce unsoundness.
 *)
-Fixpoint _create_noverlaps (l : list (N * addr)) (idx : nat) : Prop :=
+Fixpoint create_noverlaps (l : list (N * addr)) : Prop :=
     match l with
     | [] => True
-    | (size, addr) :: t => snd (fold_left 
-        (fun acc item => 
-            let '(idx', P) := acc in 
+    | (size, addr) :: t => fold_left 
+        (fun P item =>
             let '(size', addr') := item in 
-            (S idx',
-                if (idx =? idx')%nat then P else
-                    P /\ ~overlap 32 addr size addr' size')
-        ) l (idx, True)) /\ _create_noverlaps t (S idx)
+            P /\ ~overlap 32 addr size addr' size'
+        ) t True /\ create_noverlaps t
     end.
-Definition create_noverlaps (l : list (N * addr)) : Prop :=
-    _create_noverlaps l 0.
 
 (* Split a create_noverlaps hypothesis into all of its ~ overlap _ _ _ _ 
    constituents *)
-Ltac unfold_create_noverlaps unfolds :=
-    unfolds;
+Ltac unfold_create_noverlaps :=
     match goal with
     | [H: create_noverlaps _ |- _] =>
-        unfold create_noverlaps, _create_noverlaps in H; 
-        unfolds;
-        cbn [map fold_left snd Nat.eqb] in H;
-        psimpl in H;
+        unfold create_noverlaps in *; 
+        cbn [fold_left] in H;
         repeat rewrite getmem_mod_l in H;
         repeat rewrite getmem_mod_r in H;
         repeat rewrite overlap_mod_l in H;
@@ -98,8 +96,7 @@ Ltac unfold_create_noverlaps unfolds :=
         )
     end;
     (* We'll end up with a ton of True hypotheses, so get rid of them *)
-    repeat match goal with [H: True |- _] => clear H end;
-    unfolds.
+    repeat match goal with [H: True |- _] => clear H end.
 
 Ltac solve_single_noverlap :=
     cbn [map fold_left snd Nat.eqb];
@@ -144,9 +141,10 @@ Ltac noverlaps_preserved unfolds :=
     match goal with
     | [H: create_noverlaps _ |- create_noverlaps _] => 
         (idtac "Unfolding create_noverlaps";
-         unfold_create_noverlaps unfolds;
-         unfold create_noverlaps, _create_noverlaps;
+         unfold_create_noverlaps;
+         unfolds;
          idtac "Solving noverlaps";
-         repeat (solve_noverlaps 0 ltac:(count_conj)))
+         let conjs := ltac:(count_conj) in
+         repeat (solve_noverlaps 0 conjs))
         (* idtac "Unable to solve goal" *)
     end || fail "Goal must be in form of create_noverlaps l -> create_noverlaps l'".

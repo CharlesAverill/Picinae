@@ -52,10 +52,9 @@ Definition pxIndex (mem : addr -> N) (list_addr : addr) : N :=
    helps state that each address is for a buffer of length 4
 *)
 Definition memory_regions (mem : addr -> N) (a0 : N) := 
-    map (fun x => (4, x)) 
-        [4 + a0; 8 + a0; 16 + a0;
-        4 + (pxPrevious mem a0); 8 + (pxNext mem a0);
-        4 + (pxContainer mem a0)].
+    [(4, 4 + a0); (4, 8 + a0); (4, 16 + a0);
+     (4, 4 + (pxPrevious mem a0)); (4, 8 + (pxNext mem a0));
+     (4, 4 + (pxContainer mem a0))].
 
 Definition noverlaps (mem : addr -> N) (a0 : N) :=
     create_noverlaps (memory_regions mem a0).
@@ -96,7 +95,7 @@ Proof using.
     Local Ltac step := time rv_step.
     Local Ltac unfold_noverlap :=
         unfold pxNext, pxPrevious, pxContainer, pxIndex, 
-            memory_regions, noverlaps in *.
+            noverlaps, memory_regions in *.
     Local Ltac preserve_noverlaps := 
         noverlaps_preserved unfold_noverlap.
 
@@ -120,14 +119,16 @@ Proof using.
     (* Invariant 0x80002460 when branch is taken *) {
         eexists. split. reflexivity. split.
             preserve_noverlaps.
-        hammer. find_rewrites. unfold_create_noverlaps unfold_noverlap.
+        hammer. find_rewrites. unfold_noverlap.
+        unfold_create_noverlaps.
         rewrite getmem_noverlap, getmem_noverlap in BC by auto using noverlap_symmetry.
         find_rewrites. unfold time_mem, time_branch. lia.
     }
     (* Invariant 0x80002460 when branch isn't taken *) {
         eexists. split. reflexivity. split.
             preserve_noverlaps.
-        hammer. find_rewrites. unfold_create_noverlaps unfold_noverlap.
+        hammer. find_rewrites. 
+        unfold_noverlap. unfold_create_noverlaps.
         rewrite getmem_noverlap, getmem_noverlap in BC by auto using noverlap_symmetry.
         find_rewrites. unfold time_mem, time_branch. lia.
     }
