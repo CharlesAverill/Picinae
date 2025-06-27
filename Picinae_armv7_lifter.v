@@ -98,6 +98,35 @@ Inductive arm_sync_size :=
   | ARM_sync_doubleword
   | ARM_sync_byte
   | ARM_sync_halfword.
+Inductive arm_pas_op :=
+  | ARM_ADD16
+  | ARM_ASX
+  | ARM_SAX
+  | ARM_SUB16
+  | ARM_ADD8
+  | ARM_SUB8.
+Inductive arm_pas_type :=
+  | ARM_pas_normal
+  | ARM_pas_saturating
+  | ARM_pas_halving.
+Inductive arm_rev_op :=
+  | ARM_REV
+  | ARM_REV16
+  | ARM_RBIT
+  | ARM_REVSH.
+Inductive arm_extend_op := (* non-A variants have Rn=15 *)
+  | ARM_XTAB16
+  | ARM_XTAB
+  | ARM_XTAH.
+Inductive arm_vfp_op :=
+  | ARM_VMLA
+  | ARM_VNMLA
+  | ARM_VMUL
+  | ARM_VADD
+  | ARM_VSUB
+  | ARM_VDIV
+  | ARM_VFNMA
+  | ARM_VFMA.
 Inductive arm7_asm :=
   (* causes undefined instruction exception *)
   | ARM_UNDEFINED
@@ -138,12 +167,35 @@ Inductive arm7_asm :=
   (* load/store register: A5.3, pg A5-206 *)
   | ARM_ls_r (op: arm_mem_op) (cond P U W Rn Rt imm5 type Rm: Z)
 
+  (* parallel add/sub: A5.4.1/5.4.2, pg A5-208/209 *)
+  | ARM_pas (is_signed: bool) (type: arm_pas_type) (op: arm_pas_op) (cond Rn Rd Rm: Z)
+  (* reversal *)
+  | ARM_rev (op: arm_rev_op) (cond Rd Rm: Z)
+  | ARM_extend (is_signed: bool) (op: arm_extend_op) (cond Rn Rd rotate Rm: Z)
+
   (* load/store multiple: A5.5, pg A5-212 *)
   | ARM_lsm (op: arm_memm_op) (cond W Rn register_list: Z)
   (* branch: A5.5, pg A5-212 *)
   | ARM_B (cond imm24: Z)
   | ARM_BL (cond imm24: Z)
   | ARM_BLX_i (H imm24: Z)
+
+  | ARM_SVC (cond imm24: Z)
+
+  (* mcr, mcr2, mrc, mrc2 (cond=15 for ___2 insts) *)
+  | ARM_coproc_m (is_cr: bool) (cond opc1 CRn Rt coproc opc2 CRm: Z)
+  | ARM_vls (is_load is_single: bool) (cond U D Rn Vd imm8: Z)
+  | ARM_vlsm (is_load is_single: bool) (cond P U D W Rn Rd imm8: Z)
+
+  | ARM_VMOV_fp (is_reg: bool) (cond D imm4H Vd sz M imm4L_Vm: Z)
+  | ARM_VMOV_r2 (is_single: bool) (cond op Rt2 Rt M Vm: Z)
+  | ARM_VMOV_r1 (cond op Vn Rt N: Z)
+  | ARM_vfp (op: arm_vfp_op) (cond D Vn Vd sz N Op M Vm: Z)
+  | ARM_VCMP (cond D Vd sz E M Vm: Z)
+  | ARM_VMRS (cond Rt: Z)
+
+  | ARM_PLD_i (U R Rn imm12: Z)
+  | ARM_PLD_r (U R Rn imm5 type Rm: Z)
       .
 
 Definition zxbits z i j := Z.shiftr z i mod Z.shiftl Z1 (Z.max Z0 (j - i)).
@@ -464,7 +516,7 @@ Definition arm_decode_ls_r op z :=
   let Rm := zxbits z Z0 Z4 in
   let wback := (P =? Z0) || (W =? Z1) in
   if (Rm =? Z15) || (wback && ((Rn =? Z15) || (Rn =? Rt))) then ARM_UNPREDICTABLE (* also "wback && m == n" if archversion < 6 but we are armv7 *)
-  else if (match op with | ARM_STR => false | _ => true end) && (Rt =? Z15) then ARM_UNPREDICTABLE
+  else if (match op with | ARM_STR => false | ARM_LDR => (P =? Z0) && (W =? Z1) | _ => true end) && (Rt =? Z15) then ARM_UNPREDICTABLE
   else ARM_ls_r op cond P U W Rn Rt imm5 type Rm.
 Definition arm_decode_ls_i op z :=
   let cond := armcond z in
@@ -477,7 +529,7 @@ Definition arm_decode_ls_i op z :=
   let wback := (P =? Z0) || (W =? Z1) in
   let is_byte := bitb z Z22 =? Z1 in
   if (wback && ((Rn =? Z15) || (Rn =? Rt))) then ARM_UNPREDICTABLE
-  else if (match op with | ARM_LDR => (P =? Z0) && (W =? Z1) | ARM_LDRB | ARM_STRB => true | ARM_STR => false end) && (Rt =? Z15) then ARM_UNPREDICTABLE
+  else if (match op with | ARM_STR => false | ARM_LDR => (P =? Z0) && (W =? Z1) | _ => true end) && (Rt =? Z15) then ARM_UNPREDICTABLE
   else ARM_ls_i op cond P U W Rn Rt imm12.
 Definition arm_decode_load_store z := (* A5.3, pg A5-206 *)
   let A := bitb z Z25 in (* 0 - immediate, 1 - register *)
@@ -494,8 +546,111 @@ Definition arm_decode_load_store z := (* A5.3, pg A5-206 *)
                 if (is_byte) then ARM_STRB else ARM_STR in
     kind op z.
 
-Definition arm_decode_media (z: Z) :=
+Definition arm_decode_pas is_signed type op z :=
+  let cond := armcond z in
+  let Rn := zxbits z Z16 Z20 in
+  let Rd := zxbits z Z12 Z16 in
+  let Rm := zxbits z Z0 Z4 in
+  if (zxbits z Z8 Z12 !=? Z15) then ARM_UNPREDICTABLE
+  else if (Rd =? Z15) || (Rn =? Z15) || (Rm =? Z15) then ARM_UNPREDICTABLE
+  else ARM_pas is_signed type op cond Rn Rd Rm.
+Definition arm_decode_parallel_add_sub z :=
+  let is_signed := bitb z Z22 =? Z0 in
+  let op1 := zxbits z Z20 Z22 in
+  let op2 := zxbits z Z5 Z8 in
+  let type := if (op1 =? Z1) then Some ARM_pas_normal
+              else if (op1 =? Z2) then Some ARM_pas_saturating
+              else if (op1 =? Z3) then Some ARM_pas_halving
+              else None in
+  let op := if (op2 =? Z0) then Some ARM_ADD16
+            else if (op2 =? Z1) then Some ARM_ASX
+            else if (op2 =? Z2) then Some ARM_SAX
+            else if (op2 =? Z3) then Some ARM_SUB16
+            else if (op2 =? Z4) then Some ARM_ADD8
+            else if (op2 =? Z7) then Some ARM_SUB8
+            else None in
+  match type, op with
+  | Some type, Some op => arm_decode_pas is_signed type op z
+  | _, _ => ARM_UNDEFINED
+  end.
+Definition arm_decode_rev op z :=
+  let cond := armcond z in
+  let Rd := zxbits z Z12 Z16 in
+  let Rm := zxbits z Z0 Z4 in
+  if (Rd =? Z15) || (Rm =? Z15) then ARM_UNPREDICTABLE
+  else if (zxbits z Z16 Z20 !=? Z15) || (zxbits z Z8 Z12 !=? Z15) then ARM_UNPREDICTABLE
+  else ARM_rev op cond Rd Rm.
+Definition arm_decode_extend is_signed op z :=
+  let cond := armcond z in
+  let Rn := zxbits z Z16 Z20 in
+  let Rd := zxbits z Z12 Z16 in
+  let rotate := zxbits z Z10 Z12 in
+  let Rm := zxbits z Z0 Z4 in
+  if (Rd =? Z15) || (Rm =? Z15) then ARM_UNPREDICTABLE
+  else if (zxbits z Z8 Z10 !=? Z0) then ARM_UNPREDICTABLE
+  else ARM_extend is_signed op cond Rn Rd rotate Rm.
+Definition arm_decode_packing z :=
+  let op1 := zxbits z Z20 Z23 in
+  let op1'2 := zxbits op1 Z1 Z3 in
+  let op1_1 := bitb op1 Z0 in
+  let op2 := zxbits z Z5 Z8 in
+  let op2_1 := bitb op2 Z0 in
+  if (op1'2 =? Z0) then
+    if (op2_1 =? Z0) then x (*pkh*)
+    else if (op2 =? Z3) then arm_decode_extend true ARM_XTAB16 z
+    else if (op2 =? Z5) then x (*sel*)
+    else ARM_UNDEFINED
+  else if (op1'2 =? Z1) then
+    if (op2_1 =? Z0) then x (*ssat*)
+    else if (op1_1 =? Z0) then (* op1=010 *)
+      if (op2 =? Z1) then x (*ssat16*)
+      else if (op2 =? Z3) then arm_decode_extend true ARM_XTAB z
+      else ARM_UNDEFINED
+    else (* op1=011 *)
+      if (op2 =? Z1) then arm_decode_rev ARM_REV z
+      else if (op2 =? Z3) then arm_decode_extend true ARM_XTAH z
+      else if (op2 =? Z5) then arm_decode_rev ARM_REV16 z
+      else ARM_UNDEFINED
+  else if (op1'2 =? Z2) then
+    if (op1_1 =? Z0) && (op2 =? Z3) then arm_decode_extend false ARM_XTAB16 z
+    else ARM_UNDEFINED
+  else (*if (op1'2 =? Z3) then*)
+    if (op2_1 =? Z0) then x (*usat*)
+    else if (op1_1 =? Z0) then (* op1=110 *)
+      if (op2 =? Z1) then x (*usat16*)
+      else if (op2 =? Z3) then arm_decode_extend false ARM_XTAB z
+      else ARM_UNDEFINED
+    else (* op1=111 *)
+      if (op2 =? Z1) then arm_decode_rev ARM_RBIT z
+      else if (op2 =? Z3) then arm_decode_extend false ARM_XTAH z
+      else if (op2 =? Z5) then arm_decode_rev ARM_REVSH z
+      else ARM_UNDEFINED.
+
+Definition arm_decode_signed_multiply z :=
+  let op1 := zxbits z Z20 Z25 in
   x.
+Definition arm_decode_media z :=
+  let op1 := zxbits z Z20 Z25 in
+  let op1'2 := zxbits op1 Z3 Z5 in
+  let op1_3 := zxbits op1 Z0 Z3 in
+  let op2 := zxbits z Z5 Z8 in
+  if (op1'2 =? Z0) then arm_decode_parallel_add_sub z
+  else if (op1'2 =? Z1) then arm_decode_packing z
+  else if (op1'2 =? Z2) then arm_decode_signed_multiply z
+  else (* if (op1'2 =? Z3) then *)
+    if (op1_3 =? Z0) then
+      if (op2 =? Z0) then x (*usad8/usada8*)
+      else ARM_UNDEFINED
+    else if (op1_3 =? Z2) || (op1_3 =? Z3) then
+      if (op2 =? Z2) || (op2 =? Z6) then x (*sbfx*)
+      else ARM_UNDEFINED
+    else if (op1_3 =? Z4) || (op1_3 =? Z5) then
+      if (op2 =? Z0) || (op2 =? Z4) then x (*bfc/bfi*)
+      else ARM_UNDEFINED
+    else if (op1_3 =? Z6) || (op1_3 =? Z7) then
+      if (op2 =? Z2) || (op2 =? Z6) then x (*ubfx*)
+      else ARM_UNDEFINED
+    else ARM_UNDEFINED.
 
 Definition arm_decode_lsm op z :=
   let cond := armcond z in
@@ -534,35 +689,280 @@ Definition arm_decode_branch_block_transfer z := (* A5.5, pg A5-212 *)
     if (bitb op Z4 =? Z0) then arm_decode_b z
     else arm_decode_bl z. (* blx_i is unconditional inst *)
 
+Definition arm_decode_svc z :=
+  let cond := armcond z in
+  let imm24 := zxbits z Z0 Z24 in
+  ARM_SVC cond imm24.
+
+Definition arm_decode_coproc_m is_cr z :=
+  let cond := armcond z in
+  let opc1 := zxbits z Z21 Z23 in
+  let CRn := zxbits z Z16 Z20 in
+  let Rt := zxbits z Z12 Z16 in
+  let coproc := zxbits z Z8 Z12 in
+  let opc2 := zxbits z Z5 Z8 in
+  let CRm := zxbits z Z0 Z4 in
+  if (coproc =? Z10) || (coproc =? Z11) then ARM_UNDEFINED
+  else if (is_cr) && (Rt =? Z15) then ARM_UNPREDICTABLE
+  (* t=13 unpredictable in thumb mode *)
+  else ARM_coproc_m is_cr cond opc1 CRn Rt coproc opc2 CRm.
+Definition arm_decode_vls is_load z :=
+  let is_single := bitb z Z8 =? Z0 in
+  let cond := armcond z in
+  let U := bitb z Z23 in
+  let D := bitb z Z22 in
+  let Rn := zxbits z Z16 Z20 in
+  let Vd := zxbits z Z12 Z16 in
+  let imm8 := zxbits z Z0 Z8 in
+  (*unpredictable case in thumb for vstr*)
+  ARM_vls is_load is_single cond U D Rn Vd imm8.
+Definition arm_decode_vlsm is_load z :=
+  let is_single := bitb z Z8 =? Z0 in
+  let cond := armcond z in
+  let P := bitb z Z24 in
+  let U := bitb z Z23 in
+  let D := bitb z Z22 in
+  let W := bitb z Z21 in
+  let Rn := zxbits z Z16 Z20 in
+  let Vd := zxbits z Z12 Z16 in
+  let imm8 := zxbits z Z0 Z8 in
+  let ok := ARM_vlsm is_load is_single cond P U D W Rn Vd imm8 in
+  if (Rn =? Z15) && (W =? Z1) (*or not arm mode*) then ARM_UNPREDICTABLE
+  else if (is_single) then
+    if (imm8 =? Z0) || (imm8 + (Vd << Z1) + D >? Z32) then ARM_UNPREDICTABLE
+    else ok
+  else
+    if (bitb imm8 Z0 =? Z1) then x (* idk what's going on with FSTMX *)
+    else if (imm8 =? Z0) || (imm8 >? Z32) || ((D << Z4) + Vd + (imm8 >> Z1) >? Z32) then ARM_UNPREDICTABLE
+    (* TODO: vfpsmallregisterbank??? *)
+    else ok.
+
+Definition arm_decode_vreg_ls z :=
+  let Opcode := zxbits z Z20 Z25 in
+  let o'2 := zxbits Opcode Z3 Z5 in
+  let o_2 := zxbits Opcode Z0 Z2 in
+  if (o'2 =? Z0) then ARM_UNDEFINED (*64bit transfer*)
+  else if (o'2 =? Z1) then
+    if (o_2 =? Z0) || (o_2 =? Z2) then arm_decode_vlsm false z
+    else arm_decode_vlsm true z
+  else if (o'2 =? Z2) then
+    if (o_2 =? Z0) then arm_decode_vls false z
+    else if (o_2 =? Z1) then arm_decode_vls true z
+    else if (o_2 =? Z2) then arm_decode_vlsm false z
+    else (*if (o_2 =? Z3) then *) arm_decode_vlsm true z
+  else (*if (o'2 =? Z3) then*)
+    if (o_2 =? Z0) then arm_decode_vls false z
+    else if (o_2 =? Z1) then arm_decode_vls true z
+    else ARM_UNDEFINED.
+
+Definition arm_decode_vmov_fp is_reg z :=
+  let cond := armcond z in
+  let D := bitb z Z22 in
+  let imm4H := zxbits z Z16 Z20 in
+  let Vd := zxbits z Z12 Z16 in
+  let sz := bitb z Z8 in
+  let M := bitb z Z5 in
+  let imm4L_Vm := zxbits z Z0 Z4 in
+  if (negb is_reg) && ((M !=? Z0) || (bitb z Z7 !=? Z0)) then ARM_UNPREDICTABLE
+  else ARM_VMOV_fp is_reg cond D imm4H Vd sz M imm4L_Vm.
+
+Definition arm_decode_vmov_r2 is_single z :=
+  let cond := armcond z in
+  let op := bitb z Z20 in
+  let Rt2 := zxbits z Z16 Z20 in
+  let Rt := zxbits z Z12 Z16 in
+  let M := bitb z Z5 in
+  let Vm := zxbits z Z0 Z4 in
+  if (Rt =? Z15) || (Rt2 =? Z15) || (is_single && ((Vm << Z1) + M =? Z31)) then ARM_UNPREDICTABLE
+  (* sp reg unpredictable in thumb *)
+  else if (op =? Z1) && (Rt =? Rt2) then ARM_UNPREDICTABLE
+  else ARM_VMOV_r2 is_single cond op Rt2 Rt M Vm.
+
+Definition arm_decode_vmov_r1 z :=
+  let cond := armcond z in
+  let op := bitb z Z20 in
+  let Vn := zxbits z Z16 Z20 in
+  let Rt := zxbits z Z12 Z16 in
+  let N := bitb z Z7 in
+  if (Rt =? Z15) then ARM_UNPREDICTABLE
+  else if (zxbits z Z5 Z7 !=? Z0) || (zxbits z Z0 Z4 !=? Z0) then ARM_UNPREDICTABLE
+  else ARM_VMOV_r1 cond op Vn Rt N.
+
+Definition arm_decode_vcmp z :=
+  let cond := armcond z in
+  let D := bitb z Z22 in
+  let Vd := zxbits z Z12 Z16 in
+  let sz := bitb z Z8 in
+  let E := bitb z Z7 in
+  let M := bitb z Z5 in
+  let Vm := zxbits z Z0 Z4 in
+  if (bitb z Z16 =? Z1) && ((M !=? Z0) || (Vm !=? Z0)) then ARM_UNPREDICTABLE
+  else ARM_VCMP cond D Vd sz E M Vm.
+
+Definition arm_decode_vfp op z :=
+  let cond := armcond z in
+  let D := bitb z Z22 in
+  let Vn := zxbits z Z16 Z20 in
+  let Vd := zxbits z Z12 Z16 in
+  let sz := bitb z Z8 in
+  let N := bitb z Z7 in
+  let Op := bitb z Z6 in
+  let M := bitb z Z5 in
+  let Vm := zxbits z Z0 Z4 in
+  ARM_vfp op cond D Vn Vd sz N Op M Vm.
+
+Definition arm_decode_floating_data_processing z :=
+  let opc1 := zxbits z Z20 Z24 in
+  let opc2 := zxbits z Z16 Z20 in
+  let opc3 := zxbits z Z6 Z8 in
+  let opc1'1 := bitb opc1 Z3 in
+  let opc1_2 := zxbits opc1 Z0 Z2 in
+  if (opc1'1 =? Z0) then
+    if (opc1_2 =? Z0) then arm_decode_vfp ARM_VMLA z
+    else if (opc1_2 =? Z1) then arm_decode_vfp ARM_VNMLA z
+    else if (opc1_2 =? Z2) then
+      if (opc3 =? Z1) || (opc3 =? Z3) then arm_decode_vfp ARM_VNMLA z
+      else arm_decode_vfp ARM_VMUL z
+    else
+      if (opc3 =? Z0) || (opc3 =? Z2) then arm_decode_vfp ARM_VADD z
+      else arm_decode_vfp ARM_VSUB z
+  else
+    if (opc1_2 =? Z0) then arm_decode_vfp ARM_VDIV z
+    else if (opc1_2 =? Z1) then arm_decode_vfp ARM_VFNMA z
+    else if (opc1_2 =? Z2) then arm_decode_vfp ARM_VFMA z
+    else (*other fp*)
+      if (opc3 =? Z0) || (opc3 =? Z2) then arm_decode_vmov_fp false z
+      else
+        if (opc2 =? Z0) then
+          if (opc3 =? Z1) then arm_decode_vmov_fp true z
+          else x (*vabs*)
+        else if (opc2 =? Z1) then
+          if (opc3 =? Z1) then x (*vneg*)
+          else x (*vsqrt*)
+        else if (opc2 =? Z2) || (opc2 =? Z3) then x (*vcvtb*)
+        else if (opc2 =? Z4) || (opc2 =? Z5) then arm_decode_vcmp z
+        else if (opc2 =? Z7) && (opc3 =? Z3) then x (*vcvt*)
+        else if (opc2 =? Z8) then x (**)
+        else
+          x.
+
+Definition arm_decode_vmrs z :=
+  let cond := armcond z in
+  let Rt := zxbits z Z12 Z16 in
+  if (zxbits z Z5 Z8 !=? Z0) || (zxbits z Z0 Z4 !=? Z0) then ARM_UNPREDICTABLE
+  (*t=13 and thumb mode unpredictable*)
+  else ARM_VMRS cond Rt.
+
+Definition arm_decode_8_16_32bit_transfer z :=
+  let A := zxbits z Z21 Z24 in
+  let L := bitb z Z20 in
+  let C := bitb z Z8 in
+  if (L =? Z0) then
+    if (C =? Z0) then
+      if (A =? Z0) then arm_decode_vmov_r1 z
+      else x
+    else x
+  else
+    if (C =? Z0) then
+      if (A =? Z0) then arm_decode_vmov_r1 z
+      else if (A =? Z7) then arm_decode_vmrs z
+      else ARM_UNDEFINED
+    else x.
+Definition arm_decode_64bit_transfer z :=
+  let C := bitb z Z8 in
+  let op := zxbits z Z4 Z8 in
+  if (C =? Z0) then
+    if (op =? Z1) || (op =? Z3) then arm_decode_vmov_r2 true z
+    else ARM_UNDEFINED
+  else
+    if (op =? Z1) || (op =? Z3) then arm_decode_vmov_r2 false z
+    else ARM_UNDEFINED.
+
 Definition arm_decode_coprocessor z := (* A5.6, pg A5-213 *)
   let op1 := zxbits z Z20 Z26 in
   let op := bitb z Z4 in
   let coproc := zxbits z Z8 Z12 in
   if (zxbits op1 Z1 Z6 =? Z0) then ARM_UNDEFINED
-  else if (zxbits op1 Z4 Z6 =? Z3) then x (*svc*)
+  else if (zxbits op1 Z4 Z6 =? Z3) then arm_decode_svc z
   else
     if (coproc =? Z10) || (coproc =? Z11) then (* coproc = 101x *)
       if (zxbits op1 Z4 Z6 =? Z2) then
-        if (op =? Z0) then x (*floating point data*)
-        else x (*8,16,32bit transfer*)
-      else if (zxbits op1 Z1 Z6 =? Z2) then x (*64bit transfer*)
-      else x (*extension load/store*) (* op1 = 0xxxxx not 000x0x *)
+        if (op =? Z0) then arm_decode_floating_data_processing z
+        else arm_decode_8_16_32bit_transfer z
+      else if (zxbits op1 Z1 Z6 =? Z2) then arm_decode_64bit_transfer z
+      else arm_decode_vreg_ls z (*extension load/store*) (* op1 = 0xxxxx not 000x0x *)
     else (* coproc = not 101x *)
       if (op1 =? Z4) then x (*mcrr*)
       else if (op1 =? Z5) then x (*mcrc*)
       else if (zxbits op1 Z4 Z6 =? Z2) then
         if (op =? Z0) then x (*cdp*)
-        else if (bitb op1 Z0 =? Z0) then x (*mcr*)
-        else x (*mrc*)
+        else if (bitb op1 Z0 =? Z0) then arm_decode_coproc_m true z
+        else arm_decode_coproc_m false z
       else if (bitb op1 Z0 =? Z0) then x (*stc*)
       else x (*ldc*).
+
+Definition arm_decode_simd (z:Z) :=
+  x.
+
+Definition arm_decode_pld_r z :=
+  let U := bitb z Z23 in
+  let R := bitb z Z22 in
+  let Rn := zxbits z Z16 Z20 in
+  let imm5 := zxbits z Z7 Z12 in
+  let type := zxbits z Z5 Z7 in
+  let Rm := zxbits z Z0 Z4 in
+  if (Rm =? Z15) || ((Rn =? Z15) && (R =? 0)) then ARM_UNPREDICTABLE
+  else ARM_PLD_r U R Rn imm5 type Rm.
+
+Definition arm_decode_pld_i z :=
+  let U := bitb z Z23 in
+  let R := bitb z Z22 in
+  let Rn := zxbits z Z16 Z20 in
+  let imm12 := zxbits z Z0 Z12 in
+  if (zxbits z Z12 Z16 !=? Z15) then ARM_UNPREDICTABLE
+  else if (Rn =? Z15) && (R =? 0) then ARM_UNPREDICTABLE
+  else ARM_PLD_i U R Rn imm12.
+
+Definition arm_decode_mem_hint_simd z :=
+  let op1 := zxbits z Z20 Z27 in
+  let op2 := zxbits z Z4 Z8 in
+  let op1'3 := zxbits op1 Z4 Z7 in
+  let op1_3 := zxbits op1 Z0 Z3 in
+  if (op1'3 =? Z0) then ARM_UNDEFINED
+  else if (op1'3 =? Z1) then x
+  else if (op1'3 =? Z2) || (op1'3 =? Z3) then arm_decode_simd z
+  else if (op1'3 =? Z4) then x
+  else if (op1'3 =? Z5) then
+    if (op1_3 =? Z1) || (op1_3 =? Z5) then arm_decode_pld_i z (* op1=101x001,rn=15 is checked in here *)
+    else if (op1_3 =? Z3) then ARM_UNPREDICTABLE
+    else if (op1_3 =? Z7) then
+      if (bitb op1 Z3 =? Z1) then ARM_UNPREDICTABLE
+      else if (op2 =? Z0) || (op2 =? Z2) || (op2 =? Z3) || (op2 >=? Z7) then ARM_UNPREDICTABLE
+      else if (op2 =? Z1) then x (*clrex*)
+      else if (op2 =? Z4) then x (*dsb*)
+      else if (op2 =? Z5) then x (*dmb*)
+      else (*if (op2 =? Z6) then*) x (*isb*)
+    else ARM_UNDEFINED
+  else if (op1'3 =? Z6) then
+    if (bitb op2 Z0 =? Z0) then
+      if (op1_3 =? Z1) then x (* unallocated mem hint (nop) *)
+      else if (op1_3 =? Z3) || (op1_3 =? Z7) then ARM_UNPREDICTABLE
+      else if (op1_3 =? Z5) then x (* pli reg *)
+      else ARM_UNDEFINED
+    else ARM_UNDEFINED
+  else (* if (op1'3 =? Z7) then *)
+    if (bitb op2 Z0 =? Z0) then
+      if (op1_3 =? Z1) || (op1_3 =? Z5) then arm_decode_pld_r z (* pldw *)
+      else if (op1_3 =? Z3) || (op1_3 =? Z7) then ARM_UNPREDICTABLE
+      else ARM_UNDEFINED
+    else ARM_UNDEFINED.
 
 Definition arm_decode_unconditional z := (* A5.7, pg A5-214 *)
   let op1 := zxbits z Z20 Z28 in
   let op := bitb z Z4 in
   let op1_5 := zxbits op1 Z0 Z5 in
   let op1_3 := zxbits op1 Z5 Z8 in
-  if (op1_3 =? Z0) || (op1_3 =? Z1) || (op1_3 =? Z2) || (op1_3 =? Z3) then x (*mem hints*)
+  if (op1_3 =? Z0) || (op1_3 =? Z1) || (op1_3 =? Z2) || (op1_3 =? Z3) then arm_decode_mem_hint_simd z (*mem hints*)
   else if (op1_3 =? Z4) then
     if (bitb op1 Z0 =? Z0) && (bitb op1 Z2 =? Z1) then ARM_UNPREDICTABLE (*srs, unpredictable in user mode*)
     else if (bitb op1 Z0 =? Z1) && (bitb op1 Z2 =? Z0) then ARM_UNPREDICTABLE (*rfe, unpredictable in user mode*)
@@ -724,6 +1124,10 @@ Definition arm_assemble_BL cond imm24 :=
   (cond << Z28) .| (Z11 << Z24) .| imm24.
 Definition arm_assemble_BLX_i H imm24 :=
   (Z15 << Z28) .| (Z10 << Z24) .| (H << Z24) .| imm24.
+Definition arm_assemble_vls (is_load is_single: bool) cond U D Rn Vd imm8 :=
+  let is_load := if is_load then Z1 else Z0 in
+  let x := if is_single then Z10 else Z11 in
+  (cond << Z28) .| (Z13 << Z24) .| (U << Z23) .| (D << Z22) .| (is_load << Z20) .| (Rn << Z16) .| (Vd << Z12) .| (x << Z8) .| imm8.
 
 Definition arm_assemble i :=
   let z := match i with
@@ -749,6 +1153,7 @@ Definition arm_assemble i :=
            | ARM_B cond imm24 => arm_assemble_B cond imm24
            | ARM_BL cond imm24 => arm_assemble_BL cond imm24
            | ARM_BLX_i H imm24 => arm_assemble_BLX_i H imm24
+           | ARM_vls is_load is_single cond U D Rn Vd imm8 => arm_assemble_vls is_load is_single cond U D Rn Vd imm8
            | _ => Z0
            end in
   if arm7_asm_beq (arm_decode z) i then Some z
