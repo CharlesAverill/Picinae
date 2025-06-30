@@ -31,6 +31,29 @@ Import find_in_arrayTime find_in_arrayAuto.
 Definition key_in_array (mem : addr -> N) (arr : addr) (key : N) (len : N) : Prop :=
     exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key.
 
+Lemma lt_impl_lt_or_eq : forall x y,
+    x < 1 + y -> x = y \/ x < y.
+Proof. lia. Qed.
+
+Definition N_peano_ind_Set (P : N -> Set) := N.peano_rect P.
+
+Fixpoint key_in_array_dec (mem : addr -> N) (arr : addr) (key len : N)
+        : {key_in_array mem arr key len} + {~ key_in_array mem arr key len}.
+    induction len using N_peano_ind_Set.
+    - right. intro. destruct H as (idx & Contra & _). lia.
+    - destruct IHlen as [IN | NOT_IN].
+        -- left. destruct IN as (idx & Lt & Eq). exists idx.
+            split. lia. assumption.
+        -- destruct (N.eq_dec (mem Ⓓ[arr + (len << 2)]) key).
+            + left. exists len. split. lia. assumption.
+            + right. intro. destruct H as (idx & Lt & Eq).
+                assert (idx = len). {
+                destruct (lt_impl_lt_or_eq idx len). lia.
+                    subst. reflexivity.
+                exfalso. apply NOT_IN. exists idx. now split.
+                } subst. contradiction.
+Qed.
+
 Definition mem_layout (sp : N) (arr : addr) (len : N) :=
     create_noverlaps [(4, sp ⊖ 4); (4, sp ⊖ 8); 
                       (4, sp ⊖ 20); (4, sp ⊖ 36); 
@@ -47,9 +70,10 @@ Definition time_of_find_in_array (mem : addr -> N)
         (match found_idx with None => len | Some i => i end) *
         (* loop body duration *)
         (10 + (3 + (2/4) + (2 mod 4)) + time_mem + time_branch) +
-        (* partial loop iteration in found case *)
-        (match found_idx with None => time_branch (* loop condition fail *)
-         | _ => 3 + (3 + (2/4) + (2 mod 4)) + 2 + time_mem + time_branch
+        (* partial loop iteration before loop exit *)
+        (match found_idx with 
+         | None => time_branch (* loop condition fail *)
+         | Some _ => 3 + (3 + (2/4) + (2 mod 4)) + 2 + time_mem + time_branch
          end) +
         (* shutdown time *)
         2 * time_mem + 2 + 2 * time_mem + 2 + time_branch.
@@ -57,6 +81,7 @@ Definition time_of_find_in_array (mem : addr -> N)
 Definition timing_postcondition (mem : addr -> N) (arr : addr)
         (key : N) (len : N) (t : trace) : Prop :=
     (exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key /\
+        (* i is the first index where the key is found *)
         (forall j, j < i -> mem Ⓓ[arr + (j << 2)] <> key) /\
         time_of_find_in_array mem arr key len (Some i) t) \/
     ((~ exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key) /\
@@ -66,10 +91,8 @@ Definition find_in_array_timing_invs (s : store) (base_mem : addr -> N)
     (sp : N) (arr : addr) (key : N) (len : N) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
 | 0x101b0 => Some (mem_layout sp arr len /\ s V_MEM32 = Ⓜbase_mem /\
-            s R_SP = Ⓓsp /\
-            s R_A0 = Ⓓarr /\ s R_A1 = Ⓓkey /\ s R_A2 = Ⓓlen /\
-            (key_in_array base_mem arr key len \/ ~ key_in_array base_mem arr key len) /\
-            4 * len < 2^32 - 1 /\
+            s R_SP = Ⓓsp /\ s R_A0 = Ⓓarr /\ s R_A1 = Ⓓkey /\ s R_A2 = Ⓓlen /\
+            4 * len <= 2^32 - 1 /\
             cycle_count_of_trace t' = 0)
 | 0x101e0 => Some (mem_layout sp arr len /\ exists mem a5,
     (* bindings *)
@@ -81,7 +104,6 @@ match t with (Addr a, s) :: t' => match a with
     (* haven't found a match yet *)
     (forall i, i < a5 ->
         mem Ⓓ[arr + (i << 2)] <> key) /\
-    (key_in_array base_mem arr key len \/ ~ key_in_array base_mem arr key len) /\
     a5 <= len /\
     cycle_count_of_trace t' =
         (* pre-loop time *)
@@ -101,46 +123,21 @@ Definition lifted_find_in_array : program :=
 Arguments N.add _ _ : simpl nomatch.
 Arguments N.mul _ _ : simpl nomatch.
 
-Ltac fold_big_subs :=
-    repeat match goal with
-    | [ |- context[?M [Ⓓ ?X + ?B + ?N := ?V]] ] =>
-      rewrite <-(setmem_mod_l _ _ _ M (X+B+N) V);
-      replace (M [ⒹX+B⊕N := V]) with
-        (M [Ⓓ(msub 32 B (2^32 - X)) ⊕ N := V]) by
-        (unfold msub; now psimpl);
-      simpl (2^32 - X)
-    | [ |- context[?M [Ⓓ?X + ?Y := ?V]]] =>
-      rewrite <- setmem_mod_l with (a := X + Y);
-      replace (X⊕Y) with (msub 32 Y (2^32 - X)) by (now rewrite N.add_comm);
-      simpl (2^32 - X)
-    | [ |- context[?M Ⓓ[ ?X + ?B + ?N]] ] =>
-      rewrite <-(getmem_mod_l _ _ _ M (X+B+N));
-      replace (M Ⓓ[X+B⊕N]) with
-        (M Ⓓ[(msub 32 B (2^32 - X)) ⊕ N]) by
-        (unfold msub; now psimpl);
-      simpl (2^32 - X)
-    | [ |- context[?M Ⓓ[?X + ?Y]]] =>
-      rewrite <- getmem_mod_l with (a := X + Y);
-      replace (X⊕Y) with (msub 32 Y (2^32 - X)) by (now rewrite N.add_comm);
-      simpl (2^32 - X)
-    end.
-
-Lemma lt_impl_lt_or_eq : forall x y,
-    x < 1 + y -> x = y \/ x < y.
-Proof. lia. Qed.
-
 Theorem find_in_array_timing:
   forall s t s' x' base_mem sp arr key len
+         (* boilerplate *)
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
+         (* bindings *)
          (MEM: s V_MEM32 = Ⓜbase_mem)
          (SP: s R_SP = Ⓓsp)
          (A0: s R_A0 = Ⓓarr)
          (A1: s R_A1 = Ⓓkey)
          (A2: s R_A2 = Ⓓlen)
-         (IN: key_in_array base_mem arr key len \/ ~ key_in_array base_mem arr key len)
+         (* memory must be layed out correctly *)
          (MEMLAYOUT: mem_layout sp arr len)
-         (LEN_VALID: 4 * len < 2^32 - 1),
+         (* length must fit inside the address space, arr is 4-byte integers *)
+         (LEN_VALID: 4 * len <= 2^32 - 1),
   satisfies_all 
     lifted_find_in_array
     (find_in_array_timing_invs s base_mem sp arr key len)
@@ -163,16 +160,16 @@ Proof using.
 
     destruct_inv 32 PRE.
 
-    destruct PRE as (Layout & Mem & SP & A0 & A1 & A2 & IN & 
-        LEN_VALID & Cycles).
+    (* 0x101b0 -> 0x101e0 *)
+    destruct PRE as (Layout & Mem & SP & A0 & A1 & A2 & LEN_VALID & Cycles).
     repeat step.
         split. 
         (* noverlaps *)
         unfold mem_layout in *; noverlaps_preserved idtac. 
         repeat eexists.
-        (* preservation *)
+        (* memory preservation *)
         intros.
-            unfold mem_layout in *. unfold_create_noverlaps.
+            unfold mem_layout in *; unfold_create_noverlaps.
             fold_big_subs.
             repeat rewrite getmem_noverlap. reflexivity.
             1-6:
@@ -180,24 +177,25 @@ Proof using.
                 eapply noverlap_shrink with (a1 := arr) (len1 := 4 * len);
                     auto using noverlap_symmetry;
                     psimpl; rewrite N.mod_small; lia.
-        (* key not found yet *)
-        intros. lia.
-        (* key in or not in *) assumption. (* idx <= len *) psimpl; lia.
+        (* key not found yet *) intros; lia.
+        (* idx <= len *) psimpl; lia.
         (* cycles *)
         hammer. find_rewrites. unfold time_mem, time_branch. lia.
 
     destruct PRE as (Layout & mem & a5 & S0 & A2 & A3 & A4 & A5 & 
-        MEM & Preserved & NotFound & IN_OR_NOT & LEN & Cycles).
-    destruct IN_OR_NOT as [IN | NOT_IN].
+        MEM & Preserved & NotFound & LEN & Cycles).
+    destruct (key_in_array_dec mem arr key len) as [IN | NOT_IN].
     (* There is a matching element in the array *) {
         step.
         repeat step.
         (* postcondition after loop condition fail *)
-            left.
-            exists a5. split. now apply N.ltb_lt. split. 
-            rewrite <- Preserved. now apply N.eqb_eq in BC0.
-            now apply N.ltb_lt in BC. split.
-            intros. rewrite <- Preserved. now apply NotFound. lia.
+            left. exists a5. split.
+                now apply N.ltb_lt. 
+            split.
+                rewrite <- Preserved. now apply N.eqb_eq in BC0.
+                now apply N.ltb_lt in BC. 
+            split.
+                intros. rewrite <- Preserved by lia. now apply NotFound.
             unfold time_of_find_in_array.
             hammer. find_rewrites. change (2/4) with 0. 
             unfold time_mem, time_branch. psimpl. lia.
@@ -211,7 +209,7 @@ Proof using.
                 apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
             (* 1 + a5 <= len *)
             apply N.ltb_lt in BC. rewrite N.mod_small. lia.
-            apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
+                apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
             (* cycles *)
             hammer. find_rewrites.
             unfold time_mem, time_branch. psimpl.
@@ -223,7 +221,7 @@ Proof using.
         (* iterated len times - contradiction *)
         exfalso. destruct IN as (idx & IDX_LEN & IN).
             apply (NotFound idx). apply N.ltb_ge in BC. lia.
-            now rewrite Preserved.
+            assumption.
     }
 
     (* There is not a matching element in the array *) {
@@ -231,11 +229,11 @@ Proof using.
         do 4 step.
         (* contradiction - BC0 says a match has been found *)
             exfalso. apply NOT_IN. exists a5. split. now apply N.ltb_lt.
-            rewrite <- Preserved. apply N.eqb_eq in BC0.
-            assumption. now apply N.ltb_lt in BC.
+            apply N.eqb_eq in BC0.
+            assumption.
         (* a match has not been found, continue *)
         repeat step. split.
-            unfold mem_layout in *. noverlaps_preserved idtac.
+            unfold mem_layout in *; noverlaps_preserved idtac.
             repeat eexists; auto.
             (* key not found *)
             intros. apply N.ltb_lt in BC.
@@ -243,7 +241,7 @@ Proof using.
                 subst. now apply N.eqb_neq in BC0. now apply NotFound.
                 apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
             (* 1 + a5 <= len *)
-                apply N.ltb_lt in BC. rewrite N.mod_small. lia.
+            apply N.ltb_lt in BC. rewrite N.mod_small. lia.
                 apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
             (* cycles *)
             hammer. find_rewrites.
@@ -256,13 +254,12 @@ Proof using.
         (* a match has not been found, break and return *)
         repeat step.
             unfold timing_postcondition, time_of_find_in_array. right.
-            split. intro. apply NOT_IN. destruct H as (idx & IDX_LEN & H).
-            exists idx. auto.
-            hammer. find_rewrites. replace a5 with len in *.
-            (* 4 + 2 * time_branch + 4 * time_mem *)
+            split. intro. apply NOT_IN. destruct H as (idx & IDX_LEN & IN).
+            exists idx. split. assumption. now rewrite Preserved.
+            hammer. find_rewrites. replace a5 with len in * by
+                (rewrite Bool.negb_true_iff, N.ltb_ge in BC; lia).
             unfold time_mem, time_branch. change (2/4) with 0. 
-            psimpl. lia.
-            rewrite Bool.negb_true_iff, N.ltb_ge in BC. lia.
+                psimpl. lia.
     }
 Qed.
 

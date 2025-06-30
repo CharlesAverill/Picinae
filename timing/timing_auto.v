@@ -148,3 +148,30 @@ Ltac noverlaps_preserved unfolds :=
          repeat (solve_noverlaps 0 conjs))
         (* idtac "Unable to solve goal" *)
     end || fail "Goal must be in form of create_noverlaps l -> create_noverlaps l'".
+
+(* Take big numbers that should really be subtractions and turn them into modsubs *)
+Ltac fold_big_subs :=
+    repeat match goal with
+    | [ |- context[setmem ?BW ?END 4 ?M (?X + ?B + ?N) ?V] ] =>
+        rewrite <-(setmem_mod_l _ _ _ M (X+B+N) V);
+        replace (setmem BW END 4 M (X+B+N mod 2^BW) V) with
+            (setmem BW END 4 M ((msub BW B (2^32 - X)) + N mod 2^BW) V) by
+            (unfold msub; now psimpl);
+        simpl (2^BW - X)
+    | [ |- context[setmem ?BW ?END 4 ?M (?X + ?Y) ?V] ] =>
+        rewrite <- setmem_mod_l with (a := X + Y);
+        replace ((X + Y) mod 2^BW) with (msub BW Y (2^32 - X)) by 
+            (now rewrite N.add_comm);
+        simpl (2^BW - X)
+    | [ |- context[getmem ?BW ?END 4 ?M (?X + ?B + ?N)] ] =>
+        rewrite <-(getmem_mod_l _ _ _ M (X+B+N));
+        replace (getmem BW END 4 M (X + B + N mod 2^BW)) with
+            (getmem BW END 4 M ((msub BW B (2^BW - X)) + N mod 2^BW)) by
+            (unfold msub; now psimpl);
+        simpl (2^BW - X)
+    | [ |- context[getmem ?BW ?END 4 ?M (?X + ?Y)] ] =>
+        rewrite <- getmem_mod_l with (a := X + Y);
+        replace (X + Y mod 2^BW) with (msub BW Y (2^BW - X)) by 
+            (now rewrite N.add_comm);
+        simpl (2^BW - X)
+    end.
