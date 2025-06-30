@@ -54,6 +54,14 @@ Definition time_of_find_in_array (mem : addr -> N)
         (* shutdown time *)
         2 * time_mem + 2 + 2 * time_mem + 2 + time_branch.
 
+Definition timing_postcondition (mem : addr -> N) (arr : addr)
+        (key : N) (len : N) (t : trace) : Prop :=
+    (exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key /\
+        (forall j, j < i -> mem Ⓓ[arr + (j << 2)] <> key) /\
+        time_of_find_in_array mem arr key len (Some i) t) \/
+    ((~ exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key) /\
+        time_of_find_in_array mem arr key len None t).
+
 Definition find_in_array_timing_invs (s : store) (base_mem : addr -> N)
     (sp : N) (arr : addr) (key : N) (len : N) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
@@ -83,11 +91,7 @@ match t with (Addr a, s) :: t' => match a with
         (* full loop body length - can't have broken out by this address *)
         (10 + (3 + (2/4) + (2 mod 4)) + time_mem + time_branch)
     )
-| 0x10214 => Some
-    ((exists i, i < len /\ base_mem Ⓓ[arr + (i << 2)] = key /\
-        time_of_find_in_array base_mem arr key len (Some i) t) \/
-    ((~ exists i, i < len /\ base_mem Ⓓ[arr + (i << 2)] = key) /\
-        time_of_find_in_array base_mem arr key len None t))
+| 0x10214 => Some (timing_postcondition base_mem arr key len t)
 | _ => None end | _ => None end.
 
 Definition lifted_find_in_array : program :=
@@ -189,12 +193,14 @@ Proof using.
         step.
         repeat step.
         (* postcondition after loop condition fail *)
-            left. unfold time_of_find_in_array.
+            left.
             exists a5. split. now apply N.ltb_lt. split. 
-            rewrite <- Preserved. now apply N.eqb_eq in BC0. 
-            now apply N.ltb_lt in BC.
-            hammer. find_rewrites. unfold time_mem, time_branch.
-            change (2/4) with 0. psimpl. lia.
+            rewrite <- Preserved. now apply N.eqb_eq in BC0.
+            now apply N.ltb_lt in BC. split.
+            intros. rewrite <- Preserved. now apply NotFound. lia.
+            unfold time_of_find_in_array.
+            hammer. find_rewrites. change (2/4) with 0. 
+            unfold time_mem, time_branch. psimpl. lia.
         (* loop invariant after going around *)
             split. unfold mem_layout in *. noverlaps_preserved idtac.
             repeat eexists; auto.
@@ -249,7 +255,7 @@ Proof using.
                 apply (rv_regsize MDL A2).
         (* a match has not been found, break and return *)
         repeat step.
-            unfold time_of_find_in_array. right.
+            unfold timing_postcondition, time_of_find_in_array. right.
             split. intro. apply NOT_IN. destruct H as (idx & IDX_LEN & H).
             exists idx. auto.
             hammer. find_rewrites. replace a5 with len in *.
