@@ -4,4 +4,5 @@ timing_auto.v
 memsolve.v
 examples/FreeRTOS/RTOSDemo_NoAsserts_Clz.v
 examples/data_structures/array.v
+examples/data_structures/array_opt.v
 examples/data_structures/linked_list.v

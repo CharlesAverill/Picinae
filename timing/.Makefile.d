@@ -13,6 +13,9 @@ examples/FreeRTOS/RTOSDemo_NoAsserts_Clz.vos examples/FreeRTOS/RTOSDemo_NoAssert
 examples/data_structures/array.vo examples/data_structures/array.glob examples/data_structures/array.v.beautified examples/data_structures/array.required_vo: examples/data_structures/array.v ../Picinae_riscv.vo
 examples/data_structures/array.vio: examples/data_structures/array.v ../Picinae_riscv.vio
 examples/data_structures/array.vos examples/data_structures/array.vok examples/data_structures/array.required_vos: examples/data_structures/array.v ../Picinae_riscv.vos
+examples/data_structures/array_opt.vo examples/data_structures/array_opt.glob examples/data_structures/array_opt.v.beautified examples/data_structures/array_opt.required_vo: examples/data_structures/array_opt.v ../Picinae_riscv.vo
+examples/data_structures/array_opt.vio: examples/data_structures/array_opt.v ../Picinae_riscv.vio
+examples/data_structures/array_opt.vos examples/data_structures/array_opt.vok examples/data_structures/array_opt.required_vos: examples/data_structures/array_opt.v ../Picinae_riscv.vos
 examples/data_structures/linked_list.vo examples/data_structures/linked_list.glob examples/data_structures/linked_list.v.beautified examples/data_structures/linked_list.required_vo: examples/data_structures/linked_list.v ../Picinae_riscv.vo
 examples/data_structures/linked_list.vio: examples/data_structures/linked_list.v ../Picinae_riscv.vio
 examples/data_structures/linked_list.vos examples/data_structures/linked_list.vok examples/data_structures/linked_list.required_vos: examples/data_structures/linked_list.v ../Picinae_riscv.vos

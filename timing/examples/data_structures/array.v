@@ -1,6 +1,8 @@
 Require Import Picinae_riscv.
 Require Import NArith.
 
+(* riscv32-unknown-elf-gcc array.c -o array && ./riscv_lifter.sh array array_bin *)
+
 Definition array_bin (a : addr) : N :=
     match a with
     (* <exit> *)

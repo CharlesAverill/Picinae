@@ -4,8 +4,8 @@ uint32_t find_in_array(uint32_t* arr, uint32_t key, uint32_t size) {
     uint32_t i = 0;
 
     /*
-    GCC really liked turning this into a do-while loop, which
-    makes the iterator impossible to reason about
+    GCC really liked turning this into a do-while loop, 
+    which makes the iterator harder to reason about
     
     for (int i = 0; i < size; i++)
         if (arr[i] == key)
