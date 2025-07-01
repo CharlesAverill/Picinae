@@ -1,6 +1,8 @@
 Require Import Picinae_riscv.
 Require Import NArith.
 
+(* riscv32-unknown-elf-gcc linked_list.c -o linked_list && ./riscv_lifter.sh linked_list linked_list_bin *)
+
 Definition linked_list_bin (a : addr) : N :=
     match a with
     (* <exit> *)

@@ -21,12 +21,12 @@ void insert_after_pos_in_list(list_node* l, list_node* value, uint32_t position)
 
 list_node* find_in_list(list_node* l, uint32_t key) {
     if (l == NULL)
-	return NULL;
+	    return NULL;
 
     while (l != NULL) {
     	if (l->value == key)
-	    return l;
-	l = l->next;
+            return l;
+        l = l->next;
     }
 
     return NULL;
