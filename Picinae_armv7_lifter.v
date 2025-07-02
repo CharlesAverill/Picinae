@@ -4,6 +4,7 @@ Require Export Picinae_armv7.
 Require Import NArith.
 Require Import ZArith.
 Require Import Bool.
+Require Import List.
 Open Scope Z.
 
 Definition Z1 := 1.
@@ -207,8 +208,10 @@ Notation "x << y" := (Z.shiftl x y) (at level 40, left associativity).
 Notation "x >> y" := (Z.shiftr x y) (at level 40, left associativity).
 Notation "x & y" := (Z.land x y) (at level 40, left associativity).
 
-Definition armcond z := zxbits z Z28 Z32.
 
+(********** decoding **********)
+
+Definition armcond z := zxbits z Z28 Z32.
 
 Definition arm_decode_data_r op z :=
   let cond := armcond z in
@@ -992,7 +995,8 @@ Definition arm_decode z :=
     else if (op1 =? Z4) || (op1 =? Z5) then arm_decode_branch_block_transfer z
     else (*if (op1 =? Z6) || (op1 =? Z7) then*) arm_decode_coprocessor z.
 
-(* assembly *)
+
+(********** assembly **********)
 
 Scheme Equality for arm7_asm.
 
@@ -1169,6 +1173,434 @@ Fixpoint arm_assemble_all l :=
             end
   | nil => Some nil
   end.
+
+Lemma arm7_asm_beq_eq : forall a b, arm7_asm_beq a b = true <-> a = b.
+Proof.
+  split. apply internal_arm7_asm_dec_bl. apply internal_arm7_asm_dec_lb.
+Qed.
+Lemma arm_assemble_eq : forall i z, arm_assemble i = Some z -> arm_decode z = i.
+Proof.
+  intros. unfold arm_assemble in H.
+  remember (match i with | x | _ => _ end) as d.
+  destruct arm7_asm_beq eqn:e. apply arm7_asm_beq_eq. injection H. intro. rewrite <- H0. assumption.
+  discriminate.
+Qed.
+Lemma arm_assemble_all_eq : forall l z, arm_assemble_all l = Some z -> map arm_decode z = l.
+Proof.
+  induction l.
+    intros. inversion H. reflexivity.
+    intros. unfold arm_assemble_all in H. destruct arm_assemble eqn:e, arm_assemble_all.
+      inversion H. simpl. apply arm_assemble_eq in e. rewrite e. rewrite IHl; reflexivity.
+      all: discriminate.
+Qed.
+
+(********** lifting **********)
+
+Close Scope Z.
+
+Definition arm_cond_il n stmt :=
+  match n with
+  (* EQ, NE *)
+  | 0 => If (Var R_ZF) stmt Nop
+  | 1 => If (Var R_ZF) Nop stmt
+  (* CS, CC *)
+  | 2 => If (Var R_CF) stmt Nop
+  | 3 => If (Var R_CF) Nop stmt
+  (* MI, PL *)
+  | 4 => If (Var R_NF) stmt Nop
+  | 5 => If (Var R_NF) Nop stmt
+  (* VS, VC *)
+  | 6 => If (Var R_VF) stmt Nop
+  | 7 => If (Var R_VF) Nop stmt
+  (* HI, LS *)
+  | 8 => If (BinOp OP_AND (Var R_CF) (UnOp OP_NOT (Var R_CF))) stmt Nop
+  | 9 => If (BinOp OP_AND (Var R_CF) (UnOp OP_NOT (Var R_CF))) Nop stmt
+  (* GE, LT *)
+  | 10 => If (BinOp OP_EQ (Var R_NF) (Var R_VF)) stmt Nop
+  | 11 => If (BinOp OP_EQ (Var R_NF) (Var R_VF)) Nop stmt
+  (* GT, LE *)
+  | 12 => If (BinOp OP_AND (UnOp OP_NOT (Var R_ZF)) (BinOp OP_EQ (Var R_NF) (Var R_VF))) stmt Nop
+  | 13 => If (BinOp OP_AND (UnOp OP_NOT (Var R_ZF)) (BinOp OP_EQ (Var R_NF) (Var R_VF))) Nop stmt
+  (* AL *)
+  | _ => stmt
+  end.
+
+Definition arm_varid n :=
+  match n with
+  | 0 => R_R0
+  | 1 => R_R1
+  | 2 => R_R2
+  | 3 => R_R3
+  | 4 => R_R4
+  | 5 => R_R5
+  | 6 => R_R6
+  | 7 => R_R7
+  | 8 => R_R8
+  | 9 => R_R9
+  | 10 => R_R10
+  | 11 => R_R11
+  | 12 => R_R12
+  | 13 => R_SP
+  | 14 => R_LR
+  | _ => R_PC
+  end.
+Definition temp0 := V_TEMP 0.
+Definition vtemp0 := Var temp0.
+Definition arm_assign_R n val := Move (arm_varid n) val.
+Definition arm_R n := if (n =? 15) then BinOp OP_PLUS (Var R_PC) (Word 8 32) else Var (arm_varid n).
+Definition arm_assign_MemU addr size val :=
+  let s := fun e => (Move V_MEM32 (Store (Var V_MEM32) addr val e size)) in
+    If (Var R_E) (s BigE) (s LittleE).
+Definition arm_MemU addr size :=
+  let s := fun e => Load (Var V_MEM32) addr e size in
+    Ite (Var R_E) (s BigE) (s LittleE).
+
+Notation "R[ m ] := v" := (arm_assign_R m v) (at level 0).
+Notation "R[ m ]" := (arm_R m) (at level 0).
+Notation "MemU[ a , s ] := v" := (arm_assign_MemU a s v) (at level 0).
+Notation "MemU[ a , s ]" := (arm_MemU a s) (at level 0).
+
+Inductive arm_srtype :=
+  | ARM_LSL
+  | ARM_LSR
+  | ARM_ASR
+  | ARM_ROR
+  | ARM_RRX.
+
+Definition DecodeImmShift type imm5 :=
+  match type, imm5 with
+  | 0, _ => (ARM_LSL, Word imm5 32)
+  | 1, 0 => (ARM_LSR, Word 32 32)
+  | 1, _ => (ARM_LSR, Word imm5 32)
+  | 2, 0 => (ARM_ASR, Word 32 32)
+  | 2, _ => (ARM_ASR, Word imm5 32)
+  | _, 0 => (ARM_RRX, Word 1 32)
+  | _, _ => (ARM_ROR, Word imm5 32)
+  end.
+Definition DecodeRegShift type :=
+  match type with
+  | 0 => ARM_LSL
+  | 1 => ARM_LSR
+  | 2 => ARM_ASR
+  | _ => ARM_ROR
+  end.
+Definition Shift_C value type amount carry_in :=
+  let (result, carry_out) :=
+    match type with
+    | ARM_LSL =>
+        let r := BinOp OP_LSHIFT value amount in
+        let c := Cast CAST_HIGH 1 (BinOp OP_LSHIFT value (BinOp OP_MINUS amount (Word 1 32))) in
+        (r, c)
+    | ARM_LSR =>
+        let r := BinOp OP_RSHIFT value amount in
+        let c := Cast CAST_LOW 1 (BinOp OP_RSHIFT value (BinOp OP_MINUS amount (Word 1 32))) in
+        (r, c)
+    | ARM_ASR =>
+        let r := BinOp OP_ARSHIFT value amount in
+        let c := Cast CAST_LOW 1 (BinOp OP_ARSHIFT value (BinOp OP_MINUS amount (Word 1 32))) in
+        (r, c)
+    | ARM_ROR =>
+        let x := BinOp OP_RSHIFT value amount in
+        let y := BinOp OP_LSHIFT value (BinOp OP_MINUS (Word 32 32) amount) in
+        let r := BinOp OP_OR x y in
+        let c := Cast CAST_HIGH 1 r in
+        (r, c)
+    | ARM_RRX =>
+        let x := Concat carry_in value in
+        let y := BinOp OP_RSHIFT x (Word 1 33) in
+        let r := Cast CAST_LOW 32 y in
+        let c := Cast CAST_LOW 1 value in
+        (r, c)
+    end in
+  let result := Ite (BinOp OP_EQ amount (Word 0 32)) value result in
+  let carry_out := Ite (BinOp OP_EQ amount (Word 0 32)) carry_in carry_out in
+  (result, carry_out).
+Definition ARMExpandImm_C imm12 carry_in :=
+  let unrotated := Word (xbits imm12 0 8) 32 in
+  let shift_n := Word (2 * (xbits imm12 8 12)) 32 in
+  Shift_C unrotated ARM_ROR shift_n carry_in.
+Definition AddWithCarry x y carry_in :=
+  let result := BinOp OP_PLUS (BinOp OP_PLUS x y) (Cast CAST_UNSIGNED 32 carry_in) in
+  (* unsigned overflow *)
+  let carry_out := BinOp OP_OR
+    (BinOp OP_LT result x)
+    (BinOp OP_AND (BinOp OP_EQ result (Word 0xffff_ffff 32)) carry_in) in
+  (* signed overflow *)
+  let overflow := BinOp OP_OR
+    (BinOp OP_SLT
+      (BinOp OP_AND (BinOp OP_XOR x result) (BinOp OP_XOR y result))  (* msb=1 if x and result, y and result have diff sign *)
+      (Word 0 32))
+    (BinOp OP_AND (BinOp OP_EQ result (Word 0x7fff_ffff 32)) carry_in) in
+  (result, carry_out, overflow).
+
+Definition sizeof v :=
+  match arm7typctx v with
+  | Some s => s
+  | None => 0
+  end.
+Definition setunknown v :=
+  match sizeof v with
+  | 0 => Nop
+  | s => Move v (Unknown s)
+  end.
+
+Definition arm_havoc :=
+  Seq (fold_left Seq (
+    map setunknown (
+      V_MEM32::V_MEM64::
+      R_R0::R_R1::R_R2::R_R3::R_R4::R_R5::R_R6::
+      R_R7::R_R8::R_R9::R_R10::R_R11::R_R12::
+      R_SP::R_LR::R_PC::
+      R_M::R_T::R_F::R_I::R_A::R_E::R_IT::R_GE::
+      R_DNM::R_JF::R_QF::R_VF::R_CF::R_ZF::R_NF::
+      nil
+    )
+  ) Nop) (Jmp (Unknown 32)).
+Definition BXWritePC address :=
+  If (Extract 0 0 address) (
+    arm_havoc (* switch to thumb mode *)
+  ) (* else *) (
+    If (BinOp OP_EQ (Extract 1 1 address) (Word 0 1)) (
+      Jmp address
+    ) (* else *) (
+      arm_havoc
+    )
+  ).
+Definition BranchWritePC address := Jmp (BinOp OP_AND address (Word 0xffff_fffc 32)). (* different in thumb mode or before v6 *)
+Notation ALUWritePC := BXWritePC (only parsing). (* different in thumb mode or before v7 *)
+Notation LoadWritePC := BXWritePC (only parsing). (* different before v5 *)
+Definition arm_data_flag result carry overflow :=
+  Seq (Move R_NF (Cast CAST_HIGH 1 result))
+    (Seq (Move R_ZF (BinOp OP_EQ result (Word 0 32)))
+      (Seq (Move R_CF carry)
+        (Move R_VF overflow))).
+Definition arm_data_il (assign: bool) cond S Rd result carry overflow :=
+  arm_cond_il cond
+    (if (Rd =? 15) then
+      ALUWritePC result
+    else
+      let assign := if assign then R[Rd] := result else Nop in
+      if (S =? 1) then
+        (* the manual has the assign first, but that would mess up the value of result for the flag il *)
+        Seq (arm_data_flag result carry overflow) assign
+      else
+        assign).
+Definition arm_data_op_il op shiftc addwcarry : stmt :=
+  match op with
+  | ARM_AND => shiftc    true  (fun a b => BinOp OP_AND a b)
+  | ARM_EOR => shiftc    true  (fun a b => BinOp OP_XOR a b)
+  | ARM_SUB => addwcarry true  (fun a b => AddWithCarry a (UnOp OP_NOT b) (Word 1 1))
+  | ARM_RSB => addwcarry true  (fun a b => AddWithCarry (UnOp OP_NOT a) b (Word 1 1))
+  | ARM_ADD => addwcarry true  (fun a b => AddWithCarry a b (Word 0 1))
+  | ARM_ADC => addwcarry true  (fun a b => AddWithCarry a b (Var R_CF))
+  | ARM_SBC => addwcarry true  (fun a b => AddWithCarry a (UnOp OP_NOT b) (Var R_CF))
+  | ARM_RSC => addwcarry true  (fun a b => AddWithCarry (UnOp OP_NOT a) b (Var R_CF))
+  | ARM_TST => shiftc    false (fun a b => BinOp OP_AND a b)
+  | ARM_TEQ => shiftc    false (fun a b => BinOp OP_XOR a b)
+  | ARM_CMP => addwcarry false (fun a b => AddWithCarry a (UnOp OP_NOT b) (Word 1 1))
+  | ARM_CMN => addwcarry false (fun a b => AddWithCarry a b (Word 0 1))
+  | ARM_ORR => shiftc    true  (fun a b => BinOp OP_OR a b)
+  | ARM_MOV => shiftc    true  (fun a b => b)
+  | ARM_BIC => shiftc    true  (fun a b => BinOp OP_AND a (UnOp OP_NOT b))
+  | ARM_MVN => shiftc    true  (fun a b => UnOp OP_NOT b)
+  end.
+
+Definition arm_data_r_shiftc cond S Rn Rd imm5 type Rm assign op :=
+  let (shift_t, shift_n) := DecodeImmShift type imm5 in
+  let (shifted, carry) := Shift_C R[Rm] shift_t shift_n (Var R_CF) in
+  let result := op R[Rn] shifted in
+  arm_data_il assign cond S Rd result carry (Var R_VF).
+Definition arm_data_r_addwcarry cond S Rn Rd imm5 type Rm assign op :=
+  let (shift_t, shift_n) := DecodeImmShift type imm5 in
+  let (shifted, _) := Shift_C R[Rm] shift_t shift_n (Var R_CF) in
+  let '(result, carry, overflow) := op R[Rn] shifted in
+  arm_data_il assign cond S Rd result carry overflow.
+Definition arm_data_r_il op cond S Rn Rd imm5 type Rm :=
+  let shiftc := arm_data_r_shiftc cond S Rn Rd imm5 type Rm in
+  let addwcarry := arm_data_r_addwcarry cond S Rn Rd imm5 type Rm in
+  arm_data_op_il op shiftc addwcarry.
+
+Definition arm_data_rsr_shiftc cond S Rn Rd Rs type Rm assign op :=
+  let shift_t := DecodeRegShift type in
+  let shift_n := BinOp OP_AND R[Rs] (Word 255 32) in
+  let (shifted, carry) := Shift_C R[Rm] shift_t shift_n (Var R_CF) in
+  let result := op R[Rn] shifted in
+  arm_data_il assign cond S Rd result carry (Var R_VF).
+Definition arm_data_rsr_addwcarry cond S Rn Rd Rs type Rm assign op :=
+  let shift_t := DecodeRegShift type in
+  let shift_n := BinOp OP_AND R[Rs] (Word 255 32) in
+  let (shifted, _) := Shift_C R[Rm] shift_t shift_n (Var R_CF) in
+  let '(result, carry, overflow) := op R[Rn] shifted in
+  arm_data_il assign cond S Rd result carry overflow.
+Definition arm_data_rsr_il op cond S Rn Rd Rs type Rm :=
+  let shiftc := arm_data_rsr_shiftc cond S Rn Rd Rs type Rm in
+  let addwcarry := arm_data_rsr_addwcarry cond S Rn Rd Rs type Rm in
+  arm_data_op_il op shiftc addwcarry.
+
+Definition arm_data_i_shiftc cond S Rn Rd imm12 assign op :=
+  let (imm32, carry) := ARMExpandImm_C imm12 (Var R_CF) in
+  let result := op R[Rn] imm32 in
+  arm_data_il assign cond S Rd result carry (Var R_VF).
+Definition arm_data_i_addwcarry cond S Rn Rd imm12 assign op :=
+  let (imm32, _) := ARMExpandImm_C imm12 (Var R_CF) in
+  let '(result, carry, overflow) := op R[Rn] imm32 in
+  arm_data_il assign cond S Rd result carry overflow.
+Definition arm_data_i_il op cond S Rn Rd imm12 :=
+  let shiftc := arm_data_i_shiftc cond S Rn Rd imm12 in
+  let addwcarry := arm_data_i_addwcarry cond S Rn Rd imm12 in
+  arm_data_op_il op shiftc addwcarry.
+
+Definition arm_mov_wt_il (is_w: bool) cond imm4 Rd imm12 :=
+  let imm16 := cbits imm4 12 imm12 in
+  arm_cond_il cond (
+    if (is_w) then
+      R[Rd] := (Word imm16 32)
+    else
+      R[Rd] := (BinOp OP_OR (BinOp OP_AND R[Rd] (Word 0xffff 32)) (Word (N.shiftl imm16 16) 32))).
+
+Definition arm_ls_il op cond P U W Rn (Rt: N) offset :=
+  let add := U =? 1 in
+  let index := P =? 1 in
+  let wback := (P =? 0) || (W =? 1) in
+  let binop := if add then OP_PLUS else OP_MINUS in
+  (* ldr literal aligns R[15] by 4, but since we only support ARM mode, this is the same *)
+  let offset_addr := BinOp binop R[Rn] offset in
+  let addr := if index then offset_addr else R[Rn] in
+  let op := op addr Rt in
+  if wback then
+    (* the manual has the move occur first for some loads, but that would mess up the value of Rn in the load/store *)
+    (* ldr is unpredictable when Rn=Rt with wback, so this is still fine *)
+    arm_cond_il cond (Seq op (R[Rn] := offset_addr))
+  else
+    arm_cond_il cond op.
+Definition arm_ls_op_il op :=
+  let op := match op with
+            | ARM_STR => fun addr Rt => MemU[addr, 4] := R[Rt]
+            | ARM_STRB => fun addr Rt => MemU[addr, 1] := (Cast CAST_LOW 8 R[Rt])
+            | ARM_LDR => fun addr Rt =>
+                let data := MemU[addr, 4] in
+                if Rt =? 15 then
+                  If (BinOp OP_NEQ (BinOp OP_AND addr (Word 3 32)) (Word 0 32)) arm_havoc (LoadWritePC data)
+                else
+                  R[Rt] := data
+            | ARM_LDRB => fun addr Rt => R[Rt] := (Cast CAST_UNSIGNED 32 MemU[addr, 1])
+            end in
+  arm_ls_il op.
+Definition arm_ls_i_il op cond P U W Rn Rt imm12 :=
+  arm_ls_op_il op cond P U W Rn Rt (Word imm12 32).
+Definition arm_ls_r_il op cond P U W Rn Rt imm5 type Rm :=
+  let (shift_t, shift_n) := DecodeImmShift type imm5 in
+  let (offset, _) := Shift_C R[Rm] shift_t shift_n (Var R_CF) in
+  arm_ls_op_il op cond P U W Rn Rt offset.
+Definition arm_bx_il cond Rm :=
+  arm_cond_il cond (BXWritePC R[Rm]).
+Definition arm_blx_r_il cond Rm :=
+  arm_cond_il cond (Seq
+    (Move temp0 R[Rm]) (Seq
+    (R[13] := (BinOp OP_PLUS (Var R_PC) (Word 4 32)))
+    (BXWritePC vtemp0))
+  ).
+Definition arm_b_il cond imm24 :=
+  let imm32 := scast 26 32 (N.shiftl imm24 2) in
+  arm_cond_il cond (BranchWritePC (BinOp OP_PLUS R[15] (Word imm32 32))).
+Definition arm_bl_il cond imm24 :=
+  let imm32 := scast 26 32 (N.shiftl imm24 2) in
+  arm_cond_il cond (Seq
+    (R[13] := (BinOp OP_PLUS (Var R_PC) (Word 4 32)))
+    (BranchWritePC (BinOp OP_PLUS R[15] (Word imm32 32)))
+  ).
+
+Definition for_0_14 reg_list start f : stmt :=
+  let iter := fun i prev => Seq prev (if (xbits reg_list i (i+1) =? 1) then (f i) else Nop) in
+  let i0 := iter 0 start in
+  let i1 := iter 1 i0 in
+  let i2 := iter 2 i1 in
+  let i3 := iter 3 i2 in
+  let i4 := iter 4 i3 in
+  let i5 := iter 5 i4 in
+  let i6 := iter 6 i5 in
+  let i7 := iter 7 i6 in
+  let i8 := iter 8 i7 in
+  let i9 := iter 9 i8 in
+  let i10 := iter 10 i9 in
+  let i11 := iter 11 i10 in
+  let i12 := iter 12 i11 in
+  let i13 := iter 13 i12 in
+  let i14 := iter 14 i13 in
+  i14.
+Definition arm_lsm_il_ f pc start_val wback_val cond W Rn register_list :=
+  let addr := BinOp OP_PLUS R[Rn] (Word start_val 32) in
+  let wback_val := BinOp OP_PLUS R[Rn] (Word wback_val 32) in
+  let start := Move temp0 addr in
+  let start := if (W =? 1) then Seq start (R[Rn] := wback_val) else start in
+  let i14 := for_0_14 register_list start f in
+  let i15 := if (xbits register_list 15 16 =? 1) then Seq i14 pc else i14 in
+  (* all memory accesses should be aligned, but we only need to check that the value of Rn is aligned at the beginning *)
+  let align_check := If (BinOp OP_EQ (BinOp OP_AND R[Rn] (Word 3 32)) (Word 0 32)) i15 (Exn 0x10) in
+  arm_cond_il cond align_check.
+Definition arm_ldm_il :=
+  arm_lsm_il_
+    (fun i =>
+      Seq (R[i] := MemU[vtemp0, 4])
+        (Move temp0 (BinOp OP_PLUS vtemp0 (Word 4 32))))
+    (LoadWritePC MemU[vtemp0, 4]).
+
+Fixpoint LowestSetBitP (p:positive) :=
+  match p with
+  | xO p => 1 + LowestSetBitP p
+  | _ => 0
+  end.
+Definition LowestSetBit n size :=
+  match n with
+  | N0 => size
+  | Npos p => LowestSetBitP p
+  end.
+Definition arm_stm_il start_val wback_val cond W Rn register_list :=
+  let stored_val := fun i =>
+    if (i =? Rn) && (W =? 1) && (negb (i =? LowestSetBit register_list 32)) then
+      Unknown 32
+    else
+      R[i] in
+  arm_lsm_il_
+    (fun i =>
+      Seq (MemU[vtemp0, 4] := (stored_val i))
+        (Move temp0 (BinOp OP_PLUS vtemp0 (Word 4 32))))
+    (MemU[vtemp0, 4] := R[15])
+    start_val wback_val cond W Rn register_list.
+Definition arm_lsm_op_il op register_list :=
+  let bc := Z.of_N (4 * popcount register_list) in
+  match op with
+  | ARM_STMDA => arm_stm_il (ofZ 32 (-bc+4)) (ofZ 32 (-bc))
+  | ARM_LDMDA => arm_ldm_il (ofZ 32 (-bc+4)) (ofZ 32 (-bc))
+  | ARM_STMDB => arm_stm_il (ofZ 32 (-bc)) (ofZ 32 (-bc))
+  | ARM_LDMDB => arm_ldm_il (ofZ 32 (-bc)) (ofZ 32 (-bc))
+  | ARM_STMIA => arm_stm_il 0 (ofZ 32 bc)
+  | ARM_LDMIA => arm_ldm_il 0 (ofZ 32 bc)
+  | ARM_STMIB => arm_stm_il 4 (ofZ 32 bc)
+  | ARM_LDMIB => arm_ldm_il 4 (ofZ 32 bc)
+  end.
+Definition arm_lsm_il op cond W Rn register_list :=
+  arm_lsm_op_il op register_list cond W Rn register_list.
+
+
+Notation "$ x" := (Z.to_N x) (at level 0, only parsing).
+Definition arm2il (a:addr) inst :=
+  let il := match inst with
+            | ARM_data_r op cond s Rn Rd imm5 type Rm => arm_data_r_il op $cond $s $Rn $Rd $imm5 $type $Rm
+            | ARM_data_rsr op cond s Rn Rd Rs type Rm => arm_data_rsr_il op $cond $s $Rn $Rd $Rs $type $Rm
+            | ARM_data_i op cond s Rn Rd imm12 => arm_data_i_il op $cond $s $Rn $Rd $imm12
+            | ARM_MOV_WT is_w cond imm4 Rd imm12 => arm_mov_wt_il is_w $cond $imm4 $Rd $imm12
+            | ARM_ls_i op cond P U W Rn Rt imm12 => arm_ls_i_il op $cond $P $U $W $Rn $Rt $imm12
+            | ARM_ls_r op cond P U W Rn Rt imm5 type Rm => arm_ls_r_il op $cond $P $U $W $Rn $Rt $imm5 $type $Rm
+            | ARM_lsm op cond W Rn register_list => arm_lsm_il op $cond $W $Rn $register_list
+            | ARM_BX cond Rm => arm_bx_il $cond $Rm
+            | ARM_BLX_r cond Rm => arm_blx_r_il $cond $Rm
+            | ARM_B cond imm24 => arm_b_il $cond $imm24
+            | ARM_BL cond imm24 => arm_bl_il $cond $imm24
+            | ARM_UNDEFINED => Exn 4
+            | _ => arm_havoc
+            end in
+  Seq (Move R_PC (Word a 32)) il.
 (* todo: fix lifting for new decoder
 
 (* ----------------------------- Intermediate Language Translation -----------------------------*)
