@@ -1600,6 +1600,419 @@ Definition arm2il (a:addr) inst :=
             | _ => arm_havoc
             end in
   Seq (Move R_PC (Word a 32)) il.
+
+(********** well-typedness **********)
+
+Ltac destruct_match := repeat match goal with |- context [ match ?x with _ => _ end ] => destruct x end.
+
+Definition arm7typctx_temp := arm7typctx[V_TEMP 0 := Some 32].
+Notation armc := arm7typctx (only parsing).
+Notation armct := arm7typctx_temp (only parsing).
+
+Lemma armct_sub: armc ⊆ armct.
+Proof.
+  unfold pfsub. intros. unfold armct. unfold update. destruct iseq. subst. discriminate. assumption.
+Qed.
+Lemma update_some:
+  forall x y (c c': typctx),
+    c x = Some y ->
+    c ⊆ c' ->
+    c ⊆ c'[x := Some y].
+Proof.
+  intros. rewrite <- store_upd_eq. assumption. apply H0. assumption.
+Qed.
+
+Lemma hastyp_arm_varid:
+  forall c n,
+    armc ⊆ c ->
+    hastyp_exp c (Var (arm_varid n)) 32.
+Proof.
+  intros. apply hastyp_exp_weaken with (c1 := armc).
+    unfold arm_varid; destruct_match; now constructor.
+    assumption.
+Qed.
+Lemma sizeof_arm_varid:
+  forall n, sizeof (arm_varid n) = 32.
+Proof.
+  intros. unfold arm_varid. now destruct_match.
+Qed.
+Lemma typeof_arm_varid:
+  forall n, arm7typctx (arm_varid n) = Some 32.
+Proof.
+  intros. unfold arm_varid. now destruct_match.
+Qed.
+Ltac etyp :=
+  repeat match goal with
+         | H: hastyp_exp _ ?x ?s |- hastyp_exp _ (BinOp _ ?x _) _ => apply TBinOp with (w := s)
+         | H: hastyp_exp _ ?x ?s |- hastyp_exp _ (BinOp _ _ ?x) _ => apply TBinOp with (w := s)
+         | |- hastyp_exp _ (BinOp _ (Word _ ?s) _) _ => apply TBinOp with (w := s)
+         | |- hastyp_exp _ (BinOp _ _ (Word _ ?s)) _ => apply TBinOp with (w := s)
+         | |- hastyp_exp _ (BinOp _ (Var ?v) _) _ => apply TBinOp with (w := sizeof v)
+         | |- hastyp_exp _ (BinOp _ _ (Var ?v)) _ => apply TBinOp with (w := sizeof v)
+         | |- hastyp_exp _ (BinOp ?o ?x ?y) ?a => match eval compute in (widthof_binop o 0 =? 0) with true => apply TBinOp with (w := a) end
+         | |- hastyp_exp _ (Var (arm_varid _)) 32 => apply hastyp_arm_varid
+         | |- hastyp_exp _ (Var _) _ => apply TVar
+         | |- hastyp_exp _ (Ite _ _ _) ?a => apply TIte with (w := 1)
+         | |- hastyp_exp _ (UnOp _ _) _ => apply TUnOp
+         | |- hastyp_exp _ (Unknown _) _ => apply TUnknown
+         | |- hastyp_exp _ (Word _ _) _ => apply TWord
+         | |- hastyp_exp _ (Load _ _ _ _) _ => apply TLoad with (w := 32)
+         | |- hastyp_exp _ (Store _ _ _ _ _) _ => apply TStore with (w := 32)
+         | X: hastyp_exp _ ?x ?a, Y: hastyp_exp _ ?y ?b |- hastyp_exp _ (Concat ?x ?y) _ => apply TConcat with (w1 := a) (w2 := b)
+         | |- pfsub arm7typctx arm7typctx  => reflexivity
+         | |- context [R[_]] => unfold arm_R; destruct N.eqb
+         | |- context [vtemp0] => unfold vtemp0
+         | |- _ < _ => reflexivity
+         | |- _ _ = Some _ => reflexivity
+         end.
+Ltac etypn size :=
+  match goal with
+  | |- hastyp_exp _ (BinOp _ _ _) _ => apply TBinOp with (w := size)
+  | |- hastyp_exp _ (Cast _ _ _) _ => apply TCast with (w := size)
+  | |- hastyp_exp _ (Extract _ _ _) _ => apply TExtract with (w := size)
+  | |- _ <= _ => easy
+  | |- _ < _ => reflexivity
+  end.
+Ltac etyps size := repeat (etyp + etypn size).
+Ltac stypc c :=
+  cbn; repeat match goal with
+         | |- hastyp_stmt _ _ (Seq _ _) _ => apply TSeq with (c1 := c) (c2 := c)
+         | |- hastyp_stmt _ _ (If _ _ _) _ => apply TIf with (c2 := c)
+         | |- hastyp_stmt _ _ (Exn _) _ => apply TExn
+         | |- hastyp_stmt _ _ Nop _ => apply TNop
+         | |- hastyp_stmt _ _ (Jmp _) _ => apply TJmp with (w := 32)
+         | |- hastyp_stmt _ _ (Move temp0 _) _ => apply TMove with (w := 32)
+         | |- hastyp_stmt _ _ (Move ?v _) _ => apply TMove with (w := sizeof v); [> right | | apply update_some]; try reflexivity
+         | |- pfsub armc armc  => reflexivity
+         | |- pfsub armc armct  => apply armct_sub
+         | |- hastyp_exp _ _ _  => etyp
+  end.
+Ltac styp := stypc armc.
+Ltac unfold_rec a :=
+  match a with
+  | ?x ?y => unfold_rec x
+  | _ => unfold a
+  end.
+Ltac unfold_stmt := match goal with | |- hastyp_stmt _ _ ?a _ => unfold_rec a end.
+Ltac stypu :=
+  repeat match goal with
+         | [ |- hastyp_stmt _ _ ?a _ ] => unfold_rec a
+         | _ => styp
+         end.
+
+Lemma hastyp_setunknown:
+  forall v, hastyp_stmt armc armc (setunknown v) armc.
+Proof.
+  destruct v; styp.
+Qed.
+Lemma hastyp_havoc:
+  forall c,
+    armc ⊆ c ->
+    hastyp_stmt armc c arm_havoc c.
+Proof.
+  intros. unfold_stmt. stypc c; now try apply H.
+Qed.
+Lemma hastyp_arm_cond:
+  forall c s,
+    hastyp_stmt armc armc s armc ->
+    hastyp_stmt armc armc (arm_cond_il c s) armc.
+Proof.
+  intros. unfold arm_cond_il. destruct_match; now styp.
+Qed.
+Lemma hastyp_DecodeImmShift:
+  forall typ imm5 sr e,
+    DecodeImmShift typ imm5 = (sr, e) ->
+    imm5 < 2 ^ 32 ->
+    hastyp_exp armc e 32.
+Proof.
+  intros typ imm5 sr e. unfold DecodeImmShift.
+  destruct_match; intro; inversion H; now econstructor.
+Qed.
+
+Lemma hastyp_Shift_C:
+  forall v t a ci r co,
+    Shift_C v t a ci = (r, co) ->
+    hastyp_exp armc v 32 ->
+    hastyp_exp armc a 32 ->
+    hastyp_exp armc ci 1 ->
+    hastyp_exp armc r 32 /\ hastyp_exp armc co 1.
+Proof.
+  intros v t a ci r co. unfold Shift_C.
+  split; destruct t; intros; inversion H; styp; first [now etyps 32 | now etyps 33].
+Qed.
+
+Lemma hastyp_R:
+  forall c n,
+    armc ⊆ c ->
+    hastyp_exp c R[n] 32.
+Proof.
+  intros. unfold arm_R. destruct N.eqb; stypc c; now apply H.
+Qed.
+Lemma hastyp_assign_R:
+  forall c n e,
+    armc ⊆ c ->
+    hastyp_exp c e 32 ->
+    hastyp_stmt armc c (R[n] := e) c.
+Proof.
+  intros. unfold arm_assign_R. stypc c; rewrite sizeof_arm_varid; [
+    > apply typeof_arm_varid
+    | assumption
+    | apply H; apply typeof_arm_varid ].
+Qed.
+Lemma hastyp_bxwritepc:
+  forall c e,
+    armc ⊆ c ->
+      hastyp_exp c e 32 ->
+      hastyp_stmt armc c (BXWritePC e) c.
+Proof.
+  intros. unfold BXWritePC. stypc c; first [now etyps 32 | now apply hastyp_havoc].
+Qed.
+Lemma hastyp_memu : forall c a s,
+  armc ⊆ c ->
+  hastyp_exp c a 32 ->
+  s <= 8 ->
+  hastyp_exp c MemU[a, s] (s*8).
+Proof.
+  intros. unfold arm_MemU. etyp; try apply H; try easy; try lia.
+Qed.
+Lemma hastyp_assign_memu : forall c a s e,
+  armc ⊆ c ->
+  hastyp_exp c a 32 ->
+  hastyp_exp c e (s*8) ->
+  s <= 8 ->
+  hastyp_stmt armc c (MemU[a, s] := e) c.
+Proof.
+  intros. unfold arm_assign_MemU. stypc c; try apply H; try easy; try lia.
+Qed.
+Ltac dshiftc :=
+  let e := fresh "e" in
+  destruct Shift_C eqn:e; apply hastyp_Shift_C in e; destruct e.
+Ltac dimmshift :=
+  let e := fresh "e" in
+  let e1 := fresh "e1" in
+  destruct DecodeImmShift eqn:e; apply hastyp_DecodeImmShift in e;
+  [> dshiftc |].
+Ltac hammer :=
+  repeat match goal with
+         | |- hastyp_stmt _ _ arm_havoc _ => apply hastyp_havoc
+         | |- hastyp_stmt _ _ (arm_cond_il _ _) _ => apply hastyp_arm_cond
+         | |- hastyp_exp _ R[_] _ => apply hastyp_R
+         | |- hastyp_exp _ MemU[_, _] _ => apply hastyp_memu
+         | |- hastyp_stmt _ _ (MemU[_, _] := _) _ => apply hastyp_assign_memu
+         | |- hastyp_stmt _ _ (R[_] := _) _ => apply hastyp_assign_R
+         | [ |- hastyp_stmt _ _ (BXWritePC _) _ ] => apply hastyp_bxwritepc
+         | [ |- context [arm_data_flag] ] => unfold arm_data_flag
+         | |- xbits _ ?i ?j < _ => transitivity (2^(j-i)); [> apply xbits_bound | reflexivity]
+         | _ => styp
+         end.
+Lemma hastyp_arm_data:
+  forall assign cond s Rd result carry overflow,
+    hastyp_exp armc result 32 ->
+    hastyp_exp armc carry 1 ->
+    hastyp_exp armc overflow 1 ->
+    hastyp_stmt armc armc (arm_data_il assign cond s Rd result carry overflow) armc.
+Proof.
+  intros. unfold_stmt. destruct_match; hammer; now etyps 32.
+Qed.
+Lemma hastyp_arm_data_op:
+  forall op shiftc addwcarry,
+    (forall f b,
+      (forall x y,
+        hastyp_exp armc x 32 ->
+        hastyp_exp armc y 32 ->
+        hastyp_exp armc (f x y) 32) ->
+      hastyp_stmt armc armc (shiftc b f) armc) ->
+    (forall f b,
+      (forall x y,
+        hastyp_exp armc x 32 ->
+        hastyp_exp armc y 32 ->
+        hastyp_exp armc (fst (fst (f x y))) 32
+        /\ hastyp_exp armc (snd (fst (f x y))) 1
+        /\ hastyp_exp armc (snd (f x y)) 1) ->
+    hastyp_stmt armc armc (addwcarry b f) armc) ->
+    hastyp_stmt armc armc (arm_data_op_il op shiftc addwcarry) armc.
+Proof.
+  intros. unfold_stmt. destruct_match; first
+    [ apply H; intros; now etyp
+    | apply H0; intros; repeat split; simpl; etyp;
+        match goal with
+        | |- context[Cast] => solve [etyps 1]
+        | _ => assumption || etypn 32; now etyps 1
+        end ].
+Qed.
+Lemma hastyp_arm_data_r:
+  forall op cond s Rn Rd imm5 type Rm,
+    imm5 < 2 ^ 5 ->
+    hastyp_stmt armc armc (arm_data_r_il op cond s Rn Rd imm5 type Rm) armc.
+Proof.
+  intros. unfold_stmt. apply hastyp_arm_data_op; intros; unfold_stmt;
+    (dimmshift; [ | now apply hastyp_R | assumption | hammer | lia ]).
+      apply hastyp_arm_data; hammer; try apply H0; now hammer.
+      destruct f eqn:?, p.
+        specialize (H0 R[Rn] e1 (hastyp_R armc Rn ltac:(reflexivity)) H1).
+        rewrite Heqp in H0. simpl in H0. destruct H0, H3. now apply hastyp_arm_data.
+Qed.
+Lemma hastyp_arm_data_rsr:
+  forall op cond s Rn Rd Rs type Rm,
+    hastyp_stmt armc armc (arm_data_rsr_il op cond s Rn Rd Rs type Rm) armc.
+Proof.
+  intros. unfold_stmt. apply hastyp_arm_data_op; intros; unfold_stmt; dshiftc; hammer.
+    apply hastyp_arm_data; hammer; try apply H; now hammer.
+    destruct f eqn:?, p.
+      specialize (H R[Rn] e0 (hastyp_R armc Rn ltac:(reflexivity)) H0).
+      rewrite Heqp in H. simpl in H. destruct H, H2. now apply hastyp_arm_data.
+Qed.
+Lemma hastyp_arm_data_i:
+  forall op cond s Rn Rd imm12,
+    hastyp_stmt armc armc (arm_data_i_il op cond s Rn Rd imm12) armc.
+Proof.
+  intros. unfold_stmt. apply hastyp_arm_data_op; intros; unfold_stmt; unfold ARMExpandImm_C;
+    (dshiftc; hammer; [ | destruct xbits eqn:e; [ | specialize (xbits_bound imm12 8 12); rewrite e; simpl]; lia]).
+      apply hastyp_arm_data; hammer; try apply H; now hammer.
+      destruct f eqn:?, p.
+        specialize (H R[Rn] e0 (hastyp_R armc Rn ltac:(reflexivity)) H0).
+        rewrite Heqp in H. simpl in H. destruct H, H2. now apply hastyp_arm_data.
+Qed.
+Lemma hastyp_arm_mov_wt:
+  forall is_w cond imm4 Rd imm12,
+    imm4 < 2 ^ 4 ->
+    imm12 < 2 ^ 12 ->
+    hastyp_stmt armc armc (arm_mov_wt_il is_w cond imm4 Rd imm12) armc.
+Proof.
+  intros. unfold_stmt. destruct_match; hammer.
+    apply (lor_bound 32); [> apply (shiftl_bound 20) | ]; lia.
+    apply (shiftl_bound 16); apply (lor_bound 16); [> apply (shiftl_bound 4) | ]; lia.
+Qed.
+Lemma hastyp_arm_ls_i:
+  forall op cond P U W Rn Rt imm12,
+    imm12 < 2 ^ 12 ->
+    hastyp_stmt armc armc (arm_ls_i_il op cond P U W Rn Rt imm12) armc.
+Proof.
+  intros. repeat unfold_stmt. destruct_match; hammer;
+    match goal with
+    | |- context[CAST_UNSIGNED] => etyps 8; hammer
+    | |- context[CAST_LOW] => etyps 32
+    | _ => idtac
+    end; lia.
+Qed.
+Lemma hastyp_arm_ls_r:
+  forall op cond P U W Rn Rt imm5 type Rm,
+    imm5 < 2 ^ 5 ->
+    hastyp_stmt armc armc (arm_ls_r_il op cond P U W Rn Rt imm5 type Rm) armc.
+Proof.
+  intros. repeat unfold_stmt. dimmshift; hammer.
+    repeat unfold_stmt; destruct_match; hammer;
+      match goal with
+      | |- context[CAST_UNSIGNED] => etyps 8; hammer
+      | |- context[CAST_LOW] => etyps 32
+      | _ => idtac
+      end; assumption || lia.
+    assumption.
+    lia.
+Qed.
+Lemma hastyp_arm_lsm_:
+  forall f pc start_val wback_val cond W Rn register_list,
+    start_val < 2 ^ 32 ->
+    wback_val < 2 ^ 32 ->
+    (forall n, hastyp_stmt armc armct (f n) armct) ->
+    hastyp_stmt armc armct pc armct ->
+    hastyp_stmt armc armc (arm_lsm_il_ f pc start_val wback_val cond W Rn register_list) armc.
+Proof.
+  intros. unfold_stmt. destruct_match; apply hastyp_arm_cond; apply TIf with (c2 := armc); stypc armct; try assumption.
+  all: unfold for_0_14; stypc armct; [ now left | assumption | reflexivity | .. ].
+  all: match goal with
+       | |- context[pfsub] => reflexivity
+       | |- context[if _ then _ else _] => destruct N.eqb; [ apply H1 | now apply TNop ]
+       | _ => apply hastyp_assign_R; [ apply armct_sub | now styp ]
+       end.
+Qed.
+Lemma hastyp_arm_lsm:
+  forall op cond W Rn register_list,
+    hastyp_stmt armc armc (arm_lsm_il op cond W Rn register_list) armc.
+Proof.
+  intros. repeat unfold_stmt.
+  destruct_match; unfold_stmt; apply hastyp_arm_lsm_.
+  all: match goal with
+       | |- ofZ _ _ < _ => apply ofZ_bound
+       | |- hastyp_stmt _ _ _ _ => now hammer
+       | |- _ < _ => reflexivity
+       | _ => intro
+       end.
+  all: stypc armct; [ destruct_match; now hammer | now left | now apply update_some | reflexivity ].
+Qed.
+
+Lemma hastyp_arm_bx:
+  forall cond Rm,
+    hastyp_stmt armc armc (arm_bx_il cond Rm) armc.
+Proof.
+  intros. unfold_stmt. hammer.
+Qed.
+Lemma hastyp_arm_blx_r:
+  forall cond Rm,
+    hastyp_stmt armc armc (arm_blx_r_il cond Rm) armc.
+Proof.
+  intros. unfold_stmt. apply hastyp_arm_cond. stypc armct; [ now left | now hammer .. ].
+Qed.
+Lemma hastyp_arm_b:
+  forall cond imm24,
+    hastyp_stmt armc armc (arm_b_il cond imm24) armc.
+Proof.
+  intros. repeat (unfold_stmt; hammer). apply ofZ_bound.
+Qed.
+Lemma hastyp_arm_bl:
+  forall cond imm24,
+    hastyp_stmt armc armc (arm_bl_il cond imm24) armc.
+Proof.
+  intros. repeat (unfold_stmt; hammer). apply ofZ_bound.
+Qed.
+
+Theorem welltyped_arm2il:
+  forall a z,
+    a < 2 ^ 32 ->
+    hastyp_stmt armc armc (arm2il a (arm_decode z)) armc.
+Proof.
+  intros. unfold_stmt. styp.
+    assumption.
+    remember (arm_decode z) as i. unfold arm_decode in Heqi. revert Heqi.
+      repeat match goal with
+             | |- context[if ?a then _ else _] => destruct a eqn:?
+             | |- context[i = ?a] => unfold_rec a
+             end; intro; rewrite Heqi.
+  all: repeat match goal with
+              | |- context[arm_data_i_il] => apply hastyp_arm_data_i
+              | |- context[arm_data_rsr_il] => apply hastyp_arm_data_rsr
+              | |- context[arm_data_r_il] => apply hastyp_arm_data_r
+              | |- context[arm_mov_wt_il] => apply hastyp_arm_mov_wt
+              | |- context[arm_ls_i_il] => apply hastyp_arm_ls_i
+              | |- context[arm_ls_r_il] => apply hastyp_arm_ls_r
+              | |- context[arm_lsm_il] => apply hastyp_arm_lsm
+              | |- context[arm_bx_il] => apply hastyp_arm_bx
+              | |- context[arm_blx_r_il] => apply hastyp_arm_blx_r
+              | |- context[arm_b_il] => apply hastyp_arm_b
+              | |- context[arm_bl_il] => apply hastyp_arm_bl
+              | _ => hammer
+              end.
+  all: unfold Z7, Z12, Z16, Z20; rewrite <- ?N2Z.inj_pos, <- ?N2Z.inj_0, <- xbits_Z2N; [ apply xbits_bound | lia ].
+Qed.
+Definition arm_prog : program :=
+  fun s a => match s R_T, s R_JF, a mod 4, a <? 2 ^ 32 with
+             | 0, 0, 0, true =>
+                 let i := arm_decode (Z.of_N (getmem 32 LittleE 4 (s V_MEM32) a)) in
+                 match i with
+                 | x | ARM_UNPREDICTABLE => None
+                 | _ => Some (4, arm2il a i)
+                 end
+             | _, _, _, _ => None
+             end.
+Theorem welltyped_arm_prog:
+  welltyped_prog arm7typctx arm_prog.
+Proof.
+  intros s a. unfold arm_prog.
+    destruct (s R_T), (s R_JF), (a mod 4); destruct (a <? 2 ^ 32) eqn:l; try apply I.
+    rewrite N.ltb_lt in l.
+    destruct arm_decode eqn:e; try apply I; rewrite <- e; exists armc; now apply welltyped_arm2il.
+Qed.
+
 (* todo: fix lifting for new decoder
 
 (* ----------------------------- Intermediate Language Translation -----------------------------*)
