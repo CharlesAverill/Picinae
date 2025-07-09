@@ -5,6 +5,7 @@ Require Import NArith.
 Require Import ZArith.
 Require Import Bool.
 Require Import List.
+Require Import Lia.
 Open Scope Z.
 
 Definition Z1 := 1.
@@ -128,7 +129,7 @@ Inductive arm_vfp_op :=
   | ARM_VDIV
   | ARM_VFNMA
   | ARM_VFMA.
-Inductive arm7_asm :=
+Inductive arm_inst :=
   (* causes undefined instruction exception *)
   | ARM_UNDEFINED
   (* no behaviour guaranteed *)
@@ -199,7 +200,8 @@ Inductive arm7_asm :=
   | ARM_PLD_r (U R Rn imm5 type Rm: Z)
       .
 
-Definition zxbits z i j := Z.shiftr z i mod Z.shiftl Z1 (Z.max Z0 (j - i)).
+(*Definition zxbits z i j := Z.shiftr z i mod Z.shiftl Z1 (Z.max Z0 (j - i)).*)
+Notation zxbits := Z_xbits.
 Definition zcbits z1 i z2 := Z.lor (Z.shiftl z1 i) z2.
 Definition bitb z b := zxbits z b (b + Z1).
 Notation "x !=? y" := (negb (Z.eqb x y)) (at level 25, left associativity).
@@ -239,11 +241,11 @@ Definition arm_decode_data_i op z :=
   let Rd := zxbits z Z12 Z16 in
   let imm12 := zxbits z Z0 Z12 in
   ARM_data_i op cond S Rn Rd imm12.
-Definition arm_decode_data_rd0 (kind: arm_data_op -> Z -> arm7_asm) op z :=
+Definition arm_decode_data_rd0 (kind: arm_data_op -> Z -> arm_inst) op z :=
   let Rd := zxbits z Z12 Z16 in
   if (Rd !=? Z0) then ARM_UNPREDICTABLE
   else kind op z.
-Definition arm_decode_data_rn0 (kind: arm_data_op -> Z -> arm7_asm) op z :=
+Definition arm_decode_data_rn0 (kind: arm_data_op -> Z -> arm_inst) op z :=
   let Rn := zxbits z Z16 Z20 in
   if (Rn !=? Z0) then ARM_UNPREDICTABLE
   else kind op z.
@@ -987,7 +989,8 @@ Definition arm_decode z :=
   let cond := zxbits z Z28 Z32 in
   let op1 := zxbits z Z25 Z28 in
   let op := bitb z Z4 in
-  if (cond =? Z15) then arm_decode_unconditional z
+  if (z <=? Z0) then ARM_UNDEFINED
+  else if (cond =? Z15) then arm_decode_unconditional z
   else
     if (op1 =? Z0) || (op1 =? Z1) then arm_decode_data_misc z
     else if (op1 =? Z2) || (op1 =? Z3) && (op =? Z0) then arm_decode_load_store z
@@ -998,7 +1001,7 @@ Definition arm_decode z :=
 
 (********** assembly **********)
 
-Scheme Equality for arm7_asm.
+Scheme Equality for arm_inst.
 
 Definition arm_data_opcode op :=
   match op with
@@ -1160,7 +1163,7 @@ Definition arm_assemble i :=
            | ARM_vls is_load is_single cond U D Rn Vd imm8 => arm_assemble_vls is_load is_single cond U D Rn Vd imm8
            | _ => Z0
            end in
-  if arm7_asm_beq (arm_decode z) i then Some z
+  if arm_inst_beq (arm_decode z) i then Some z
   else None.
 Fixpoint arm_assemble_all l :=
   match l with
@@ -1174,15 +1177,11 @@ Fixpoint arm_assemble_all l :=
   | nil => Some nil
   end.
 
-Lemma arm7_asm_beq_eq : forall a b, arm7_asm_beq a b = true <-> a = b.
-Proof.
-  split. apply internal_arm7_asm_dec_bl. apply internal_arm7_asm_dec_lb.
-Qed.
 Lemma arm_assemble_eq : forall i z, arm_assemble i = Some z -> arm_decode z = i.
 Proof.
   intros. unfold arm_assemble in H.
   remember (match i with | x | _ => _ end) as d.
-  destruct arm7_asm_beq eqn:e. apply arm7_asm_beq_eq. injection H. intro. rewrite <- H0. assumption.
+  destruct arm_inst_beq eqn:e. apply internal_arm_inst_dec_bl. injection H. intro. rewrite <- H0. assumption.
   discriminate.
 Qed.
 Lemma arm_assemble_all_eq : forall l z, arm_assemble_all l = Some z -> map arm_decode z = l.
