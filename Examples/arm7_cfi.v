@@ -3,7 +3,7 @@ Require Import NArith.
 Require Import ZArith.
 Require Import Bool.
 Require Import Coq.Lists.List.
-Require Import Coq.Program.Wf.
+From Coq Require Recdef.
 Require Import Lia.
 Import ListNotations.
 Open Scope Z.
@@ -48,17 +48,17 @@ Definition apply_hash (sl sr: Z) (z: Z) : Z :=
 Definition valid_hash (a: list Z) (o sl sr: Z) : bool :=
   unique_except_pairs (map (apply_hash sl sr) a) (map (apply_hash sl sr) (map (Z.add o) a)).
 
-Program Fixpoint find_sr (a: list Z) (o sl sr: Z) {measure (Z.to_nat sr)}: option Z :=
+Function find_sr (a: list Z) (o sl sr: Z) {measure Z.to_nat sr}: option Z :=
   match Z.to_nat sr with
   | O => None
   | _ => if valid_hash a o sl sr then Some sr else find_sr a o sl (sr-Z1)
   end.
-Next Obligation. unfold Z1 in *. lia. Qed.
+Proof. unfold Z1 in *. lia. Qed.
 
 (* find hash parameters, returns (sl, sr)
    a - list of old addresses
    o - offset from new code to old code *)
-Program Fixpoint find_hash (a: list Z) (o sl: Z) {measure (Z.to_nat sl)}: option (Z * Z) :=
+Function find_hash (a: list Z) (o sl: Z) {measure Z.to_nat sl}: option (Z * Z) :=
   match Z.to_nat sl with
   | O => None
   | _ => match find_sr a o sl Z31 with
@@ -66,7 +66,7 @@ Program Fixpoint find_hash (a: list Z) (o sl: Z) {measure (Z.to_nat sl)}: option
          | None => find_hash a o (sl-Z1)
          end
   end.
-Next Obligation. unfold Z1 in *. lia. Qed.
+Proof. unfold Z1 in *. lia. Qed.
 
 (* make a function that maps table index to the value in the table at that index
    addrs - list of old addresses
@@ -83,16 +83,25 @@ Fixpoint make_jump_table_map (addrs: list Z) (o sl sr: Z) (f: Z -> Z) : Z -> Z :
       if a >=? Z0xffff_0000 then make_jump_table_map t o sl sr (fun i => if (i =? j) then a else f i)
       else make_jump_table_map t o sl sr (fun i => if (i =? j) || (i =? k) then a + o else f i)
   end.
-Program Fixpoint _make_jump_table (m: Z -> Z) (n i: Z) {measure (Z.to_nat (n - i))} :=
+
+
+Function _make_jump_table (m: Z -> Z) (n i: Z) {measure (fun i => Z.to_nat (n - i)) i} :=
   match Z.to_nat (n - i - Z1) with
   | O => m i::nil
   | _ => m i::_make_jump_table m n (i+Z1)
   end.
-Next Obligation. unfold Z1 in *. lia. Qed.
-Definition make_jump_table (addrs: list Z) (aabort o sl sr n: Z) : list Z :=
-  let m := make_jump_table_map addrs o sl sr (fun _ => aabort) in
-  _make_jump_table m n 0.
-
+Proof. intros. unfold Z1 in *. lia. Qed.
+Fixpoint all_div_4 l :=
+  match l with
+  | nil => true
+  | a::t => if a mod Z4 =? Z0 then all_div_4 t else false
+  end.
+Definition make_jump_table (addrs: list Z) (aabort o sl sr n: Z) : option (list Z) :=
+  if (all_div_4 (o::aabort::addrs)) then
+    let m := make_jump_table_map addrs o sl sr (fun _ => aabort) in
+    Some (_make_jump_table m n Z0)
+  else
+    None.
 Definition id := Z.
 
 Definition PC := Z15.
@@ -126,7 +135,7 @@ Definition GOTO (l: bool) (cond src dest: Z) :=
 
    arm's add instruction can only add an immediate that is single byte with a rotation applied to it,
    so adding an arbitrary constant can take up to 4 add instructions *)
-Definition arm_add (reg imm: Z) : list arm7_asm :=
+Definition arm_add (reg imm: Z) : list arm_inst :=
   let i := ARM_data_i ARM_ADD Z14 Z0 reg reg in
   let a := if (imm >> Z24) & Z0xff =? Z0 then nil else
     i ((Z4 << Z8) .| ((imm >> Z24) & Z0xff))::nil in
@@ -171,9 +180,12 @@ Definition rewrite_dyn (dyn_code: Z -> Z -> Z -> Z -> Z -> option (list Z)) (l: 
               match dyn_code n a atable sl sr with
               | None => None
               | Some dyn =>
-                  let table := make_jump_table (label oid) aabort (a' - a) sl sr (Z.shiftl Z1 (Z32 - sr)) in
-                  let table_cache' := fun x => if x =? oid then Some (atable, sl, sr) else table_cache x in
-                  Some (n', dyn, table, table_cache')
+                  match make_jump_table (label oid) aabort (a' - a) sl sr (Z.shiftl Z1 (Z32 - sr)) with
+                  | None => None
+                  | Some table =>
+                      let table_cache' := fun x => if x =? oid then Some (atable, sl, sr) else table_cache x in
+                      Some (n', dyn, table, table_cache')
+                  end
               end
           end
       | Some (cached_table, sl, sr) =>
@@ -388,6 +400,7 @@ Fixpoint _rewrite (table_cache: id -> option (Z * Z * Z)) (pol: Z -> id) (label:
           | Some (n_t, dyn_t, table_t) => Some (n'::n_t, dyn::dyn_t, table::table_t) end end end.
 Definition rewrite := _rewrite (fun _ => None).
 
+
 Require Extraction.
 Extraction Language OCaml.
 Set Extraction Output Directory "arm_cfi_extraction".
@@ -476,3 +489,52 @@ Extract Inductive sigT => "( * )"  [ "(,)" ].
 Extract Inlined Constant projT1 => "fst".
 Extract Inlined Constant projT2 => "snd".
 Separate Extraction rewrite.
+
+
+Definition div_4 x := x mod 4 = 0.
+Lemma Forall_all_div_4:
+  forall l,
+    Forall div_4 l <-> all_div_4 l = true.
+Proof.
+  intros. induction l.
+    split; intro.
+      reflexivity.
+      apply Forall_nil.
+    split; intro.
+      inversion H; subst. simpl. destruct Z.eqb eqn:e.
+        now rewrite <- IHl.
+        unfold div_4 in H2. rewrite <- Z.eqb_eq in H2. unfold Z4 in e. now rewrite e in H2.
+      unfold all_div_4 in H. destruct Z.eqb eqn:e.
+        apply Forall_cons.
+          unfold div_4. now rewrite <- Z.eqb_eq.
+          now apply IHl.
+        discriminate.
+Qed.
+Lemma make_jump_table_map_div_4:
+  forall addrs o sl sr f,
+    div_4 o ->
+    Forall div_4 addrs ->
+    (forall i, div_4 (f i)) ->
+    forall i, div_4 (make_jump_table_map addrs o sl sr f i).
+Proof.
+  induction addrs.
+    intros. now simpl.
+    intros. simpl. inversion H0. destruct Z.geb.
+      apply (IHaddrs _ _ _ _ H H5). intros. now destruct Z.eqb.
+      apply (IHaddrs _ _ _ _ H H5). intros. destruct orb.
+        unfold div_4. now rewrite <- Zplus_mod_idemp_r, H, Z.add_0_r.
+        apply H1.
+Qed.
+Lemma make_jump_table_div_4:
+  forall addrs aabort o sl sr n table,
+    make_jump_table addrs aabort o sl sr n = Some table ->
+    Forall div_4 table.
+Proof.
+  intros. unfold make_jump_table in H. destruct all_div_4 eqn:e in H.
+    assert (forall i, div_4 (make_jump_table_map addrs o sl sr (fun _ => aabort) i)).
+      apply Forall_all_div_4 in e. inversion e. apply make_jump_table_map_div_4; now inversion H3.
+    inversion H. apply _make_jump_table_ind.
+      intros. apply Forall_forall. intros. inversion H1; now subst.
+      intros. now apply Forall_cons.
+    discriminate.
+Qed.
