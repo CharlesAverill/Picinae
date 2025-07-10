@@ -15,21 +15,6 @@ Export Lia.
 
 Definition cycle_count_of_trace := cycle_count_of_trace tm.time_of_addr.
 
-Ltac unfold_decompose :=
-    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype 
-        decompose_Stype decompose_Utype mask_bit_section]; cbn [N.land].
-Tactic Notation "unfold_decompose" "in" hyp(H) :=
-    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype 
-        decompose_Stype decompose_Utype mask_bit_section] in H; cbn [N.land] in H.
-Ltac unfold_time_of_addr :=
-    cbv [tm.time_of_addr neorv32_cycles_upper_bound]; cbn - [setmem getmem].
-Tactic Notation "unfold_time_of_addr" "in" hyp(H) :=
-    cbv [tm.time_of_addr neorv32_cycles_upper_bound] in H; cbn - [setmem getmem].
-Ltac unfold_cycle_count_list :=
-    unfold cycle_count_of_trace; repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single; fold cycle_count_of_trace.
-Ltac hammer :=
-    unfold_cycle_count_list; unfold_time_of_addr; unfold_decompose; psimpl; try lia.
-
 Ltac find_rewrites :=
     repeat (match goal with
     | [H: ?x = _ |- context[match ?x with _ => _ end]] =>
@@ -49,6 +34,22 @@ Ltac find_rewrites :=
     | [H: cycle_count_of_trace ?t = _ |- context[cycle_count_of_trace ?t]] =>
         rewrite H
     end).
+
+Ltac unfold_decompose :=
+    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype 
+        decompose_Stype decompose_Utype mask_bit_section]; cbn [N.land].
+Tactic Notation "unfold_decompose" "in" hyp(H) :=
+    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype 
+        decompose_Stype decompose_Utype mask_bit_section] in H; cbn [N.land] in H.
+Ltac unfold_time_of_addr :=
+    cbv [tm.time_of_addr neorv32_cycles_upper_bound]; cbn - [setmem getmem].
+Tactic Notation "unfold_time_of_addr" "in" hyp(H) :=
+    cbv [tm.time_of_addr neorv32_cycles_upper_bound] in H; cbn - [setmem getmem].
+Ltac unfold_cycle_count_list :=
+    unfold cycle_count_of_trace; repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single; fold cycle_count_of_trace.
+Ltac hammer :=
+    unfold_cycle_count_list; unfold_time_of_addr; unfold_decompose; 
+        psimpl; find_rewrites; try lia.
 
 Ltac handle_ex := 
     repeat (match goal with

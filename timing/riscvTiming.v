@@ -195,7 +195,22 @@ Definition max32 : N := N.pow 2 32 - 1.
     - instr : instruction to decode and compute cycles for
 *)
 
-Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option N :=
+Definition CPU_FAST_SHIFT_EN : bool := false.
+Definition CPU_FAST_MUL_EN : bool := false.
+
+Definition T_shift_latency (shift_offset : N) : N :=
+    if CPU_FAST_SHIFT_EN then 1 else shift_offset.
+Parameter T_data_latency : N.
+Parameter T_data_latency_pos : 0 < T_data_latency.
+Parameter T_inst_latency : N.
+Parameter T_inst_latency_pos : 0 < T_inst_latency.
+Definition T_mul_latency : N :=
+    if CPU_FAST_MUL_EN then 1 else 32.
+
+Definition time_mem : N := 4 + T_data_latency.
+Definition time_branch : N := 5 + T_inst_latency.
+
+Definition neorv32_cycles_upper_bound (s : store) (instr : N) : option N :=
     let reg_or_max (reg : N) : N := 
         match s (rv_varid reg) with
         | VaN x _ => x
@@ -210,13 +225,15 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
     if op =? 51 then (* 0110011 : R-type *)
         let '(funct7, rs2, rs1, funct3, rd, opcode) := decompose_Rtype instr in
         if contains [0;2;3;4;6;7] funct3 then
-            (* add sub xor or and slt sltu *)
-            Some 2%N
+            if funct7 =? 1 then (* mul *)
+                Some (3 + T_mul_latency)%N
+            else
+                (* add sub xor or and slt sltu *)
+                Some 2%N
         else
             (* sll srl sra : [ 3 + shamt/4 + shamt%4 ]*)
             (* shamt := rs2 *)
-            (* Constant shift times are possible with FAST_SHIFT_EN or TINY_SHIFT_EN enabled *)
-            Some (3 + (reg_or_max rs2 / 4) + ((reg_or_max rs2) mod 4))%N
+            Some (3 + T_shift_latency rs2)%N
     else if op =? 19 then (* 0010011 : I-type *)
         let '(imm, rs1, funct3, rd, opcode) := decompose_Itype instr in
         (* Could also be clz - R-type *)
@@ -233,12 +250,12 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
                 funct7 of CLZ, causing a parsing collision? No! These shift
                 instructions can only take five bits for their shamts, 
                 and the highest bits (colliding with CLZ) are forced to be
-                specific values that don't clash. Radical!
+                specific values that don't clash. Cool!
             *)
             if andb (funct3 =? 1) (funct7 =? 48) then
                 let rs1var := if rs1 =? 0 then VaN rs1 32 else s (rv_varid rs1) in
                 match rs1var with
-                | VaN r1 _ => Some (3 + clz r1 32)%N
+                | VaN r1 _ => Some (4 + T_shift_latency r1)%N
                 | _ => None
                 end
             else
@@ -246,15 +263,15 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
                 (* shamt := imm[0:4] *)
                 (* Constant shift times are possible with FAST_SHIFT_EN or TINY_SHIFT_EN enabled *)
                 let shamt := shamt_Itype imm in
-                Some (3 + (shamt / 4) + (shamt mod 4))%N
+                Some (3 + T_shift_latency shamt)%N
     else if op =? 3 then (* 0000011 : I-type *)
         let '(imm, rs1, funct3, rd, opcode) := decompose_Itype instr in
-        (* lb lh lw lbu lhu : [ 5 + (ML - 2) ] *)
-        Some (5 + (ML - 2))%N
+        (* lb lh lw lbu lhu *)
+        Some (time_mem)%N
     else if op =? 35 then (* 0100011 : S-type *)
         let '(imm_11_5, rs2, rs1, funct3, imm_4_0, opcode) := decompose_Stype instr in
-        (* sb sh sw : [ 5 + (ML - 2) ] *)
-        Some (5 + (ML - 2))%N
+        (* sb sh sw *)
+        Some (time_mem)%N
     else if op =? 99 then (* 1100011 : B-type *)
         let '(imm_12_10_5, rs2, rs1, funct3, imm_4_1_11, opcode) := decompose_Btype instr in
         (* beq bne blt bge bltu bgeu : if taken then [ 5 + (ML - 1) ] else [ 3 ] *)
@@ -264,7 +281,7 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
             match rs1var, rs2var with
             | VaN r1 _, VaN r2 _ => Some
                 (if r1 =? r2 then
-                    5 + (ML - 1)
+                    time_branch
                 else
                     3)
             | _, _ => None
@@ -275,7 +292,7 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
             match rs1var, rs2var with
             | VaN r1 _, VaN r2 _ => Some
                 (if negb (r1 =? r2) then
-                    5 + (ML - 1)
+                    time_branch
                 else
                     3)
             | _, _ => None
@@ -286,7 +303,7 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
             match rs1var, rs2var with
             | VaN r1 _, VaN r2 _ => Some
                 (if Z.ltb (toZ 32 r1) (toZ 32 r2) then
-                    5 + (ML - 1)
+                    time_branch
                 else
                     3)
             | _, _ => None
@@ -297,7 +314,7 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
             match rs1var, rs2var with
             | VaN r1 _, VaN r2 _ => Some
                 (if Z.geb (toZ 32 r1) (toZ 32 r2) then
-                    5 + (ML - 1)
+                    time_branch
                 else
                     3)
             | _, _ => None
@@ -308,7 +325,7 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
             match rs1var, rs2var with
             | VaN r1 _, VaN r2 _ => Some
                 (if r1 <? r2 then
-                    5 + (ML - 1)
+                    time_branch
                 else
                     3)
             | _, _ => None
@@ -319,7 +336,7 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
             match rs1var, rs2var with
             | VaN r1 _, VaN r2 _ => Some
                 (if negb (r1 <? r2)%N then
-                    5 + (ML - 1)
+                    time_branch
                 else
                     3)
             | _, _ => None
@@ -328,16 +345,16 @@ Definition neorv32_cycles_upper_bound (ML : N) (s : store) (instr : N) : option 
     else if op =? 111 then (* 1101111 : J-type *)
         let '(immJ, rd, opcode) := decompose_Jtype instr in
         (* jal : [ 5 + (ML - 1) ] *)
-        Some (5 + (ML - 1))%N
+        Some (time_branch)%N
     else if op =? 103 then (* 1100111 : I-type *)
         let '(imm, rs1, funct3, rd, opcode) := decompose_Itype instr in
         (* jalr : [ 5 + (ML - 1) ] *)
-        Some (5 + (ML - 1))%N
-    else if orb (op =? 55) (op =? 23) then (* 0110111 : U-type *) (* 0010111 : U-type *) Some 2%N
-    else if op =? 115 then (* 1110011 : I-type *) Some 3%N
+        Some (time_branch)%N
+    else if orb (op =? 55) (op =? 23) then (* 0110111 : U-type *) 
+        (* 0010111 : U-type *) Some 2%N
+    else if op =? 115 then (* 1110011 : I-type *) 
+        Some 3%N
     (* TODO : Handle RISC-V Extensions *)
-    else if op =? 51 then (* 0110011 : R-type - RV32M Extension*)
-        Some 36%N
     else None.
 
 (* Machinery to automate lifting - TODO replace with existing stuff *)

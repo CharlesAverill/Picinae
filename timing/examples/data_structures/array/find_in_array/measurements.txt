@@ -1,0 +1,225 @@
+NEORV32 Bootloader                                                                                                                                                                                         
+                                                                                                                                                                                                           
+BLDV: Jun 21 2025                                                                                                                                                                                          
+HWV:  0x01110703                                                                                                                                                                                           
+CLK:  0x02faf080                                                                                                                                                                                           
+MISA: 0x40801104                                                                                                                                                                                           
+XISA: 0x00000083                                                                                                                                                                                           
+SOC:  0x0003800d                                                                                                                                                                                           
+IMEM: 0x00004000                                                                                                                                                                                           
+DMEM: 0x00002000                                                                                                                                                                                           
+                                                                                                                                                                                                           
+Auto-boot in 10s. Press any key to abort.                                                                                                                                                                  
+Aborted.                                                                                                                                                                                                   
+                                                                                                                                                                                                           
+Available CMDs:                                                                                                                                                                                            
+ h: Help                                                                                                                                                                                                   
+ r: Restart                                                                                                                                                                                                
+ u: Upload via UART                                                                                                                                                                                        
+ s: Store to SPI flash                                                                                                                                                                                     
+ l: Load from SPI flash                                                                                                                                                                                    
+ e: Start executable                                                                                                                                                                                       
+CMD:> u                                                                                                                                                                                                    
+Awaiting neorv32_exe.bin... e                                                                                                                                                                              
+Booting from 0x00000000...
+
+Cycle count read: 47
+Len: 1, key: 2013331137 found at index 0
+Cycle count read: 85
+Len: 2, key: 307161078 not found
+Cycle count read: 47
+Len: 3, key: 850811527 found at index 0
+Cycle count read: 137
+Len: 4, key: 1117075042 not found
+Cycle count read: 163
+Len: 5, key: 1084946248 not found
+Cycle count read: 177
+Len: 6, key: 1843946550 found at index 5
+Cycle count read: 215
+Len: 7, key: 2064531490 not found
+Cycle count read: 241
+Len: 8, key: 1904039418 not found
+Cycle count read: 99
+Len: 9, key: 1557073422 found at index 2
+Cycle count read: 293
+Len: 10, key: 775923815 not found
+Cycle count read: 319
+Len: 11, key: 1897848806 not found
+Cycle count read: 345
+Len: 12, key: 106770298 not found
+Cycle count read: 371
+Len: 13, key: 2108017713 not found
+Cycle count read: 397
+Len: 14, key: 1120388236 not found
+Cycle count read: 47
+Len: 15, key: 1113293960 found at index 0
+Cycle count read: 449
+Len: 16, key: 2111523118 not found
+Cycle count read: 281
+Len: 17, key: 1056278935 found at index 9
+Cycle count read: 359
+Len: 18, key: 226421586 found at index 12
+Cycle count read: 527
+Len: 19, key: 1485814998 not found
+Cycle count read: 553
+Len: 20, key: 389355375 not found
+Cycle count read: 579
+Len: 21, key: 77028945 not found
+Cycle count read: 281
+Len: 22, key: 1465501252 found at index 9
+Cycle count read: 631
+Len: 23, key: 1647978575 not found
+Cycle count read: 657
+Len: 24, key: 953102310 not found
+Cycle count read: 683
+Len: 25, key: 251189557 not found
+Cycle count read: 709
+Len: 26, key: 1750867224 not found
+Cycle count read: 437
+Len: 27, key: 798817751 found at index 15
+Cycle count read: 515
+Len: 28, key: 1386680265 found at index 18
+Cycle count read: 787
+Len: 29, key: 570309043 not found
+Cycle count read: 645
+Len: 30, key: 921611738 found at index 23
+Cycle count read: 281
+Len: 31, key: 493916501 found at index 9
+Cycle count read: 865
+Len: 32, key: 1573295056 not found
+Cycle count read: 281
+Len: 33, key: 507804242 found at index 9
+Cycle count read: 917
+Len: 34, key: 1230971992 not found
+Cycle count read: 943
+Len: 35, key: 1241578160 not found
+Cycle count read: 969
+Len: 36, key: 1373926930 not found
+Cycle count read: 995
+Len: 37, key: 235192062 not found
+Cycle count read: 125
+Len: 38, key: 1737243080 found at index 3
+Cycle count read: 827
+Len: 39, key: 27280524 found at index 30
+Cycle count read: 1035
+Len: 40, key: 38514238 found at index 38
+Cycle count read: 489
+Len: 41, key: 1469174686 found at index 17
+Cycle count read: 541
+Len: 42, key: 1009949705 found at index 19
+Cycle count read: 1151
+Len: 43, key: 1706617743 not found
+Cycle count read: 1177
+Len: 44, key: 169960855 not found
+Cycle count read: 1191
+Len: 45, key: 499976814 found at index 44
+Cycle count read: 827
+Len: 46, key: 2008538743 found at index 30
+Cycle count read: 1255
+Len: 47, key: 1228623761 not found
+Cycle count read: 1281
+Len: 48, key: 1412617380 not found
+Cycle count read: 1307
+Len: 49, key: 1973435927 not found
+Cycle count read: 1165
+Len: 50, key: 236094967 found at index 43
+Cycle count read: 1359
+Len: 51, key: 1630613278 not found
+Cycle count read: 1385
+Len: 52, key: 1962586042 not found
+Cycle count read: 593
+Len: 53, key: 574874597 found at index 21
+Cycle count read: 1437
+Len: 54, key: 1734094332 not found
+Cycle count read: 1463
+Len: 55, key: 887687417 not found
+Cycle count read: 463
+Len: 56, key: 411592455 found at index 16
+Cycle count read: 1373
+Len: 57, key: 3550493 found at index 51
+Cycle count read: 983
+Len: 58, key: 1392217301 found at index 36
+Cycle count read: 1399
+Len: 59, key: 896799649 found at index 52
+Cycle count read: 1139
+Len: 60, key: 71946715 found at index 42
+Cycle count read: 1035
+Len: 61, key: 1822839400 found at index 38
+Cycle count read: 1269
+Len: 62, key: 1461000248 found at index 47
+Cycle count read: 1671
+Len: 63, key: 841255740 not found
+Cycle count read: 1697
+Len: 64, key: 947609855 not found
+Cycle count read: 1723
+Len: 65, key: 1716464798 not found
+Cycle count read: 1749
+Len: 66, key: 1877487097 not found
+Cycle count read: 1775
+Len: 67, key: 1232910899 not found
+Cycle count read: 1165
+Len: 68, key: 1385153034 found at index 43
+Cycle count read: 1425
+Len: 69, key: 89588380 found at index 53
+Cycle count read: 1853
+Len: 70, key: 1945632003 not found
+Cycle count read: 1879
+Len: 71, key: 709711103 not found
+Cycle count read: 723
+Len: 72, key: 1147475840 found at index 26
+Cycle count read: 1931
+Len: 73, key: 102787002 not found
+Cycle count read: 1957
+Len: 74, key: 1741323088 not found
+Cycle count read: 1983
+Len: 75, key: 640329615 not found
+Cycle count read: 1087
+Len: 76, key: 74727529 found at index 40
+Cycle count read: 1191
+Len: 77, key: 489120031 found at index 44
+Cycle count read: 723
+Len: 78, key: 1259616987 found at index 26
+Cycle count read: 2087
+Len: 79, key: 1097687732 not found
+Cycle count read: 2113
+Len: 80, key: 529793623 not found
+Cycle count read: 2139
+Len: 81, key: 1523072801 not found
+Cycle count read: 1451
+Len: 82, key: 1562394534 found at index 54
+Cycle count read: 1607
+Len: 83, key: 599604107 found at index 60
+Cycle count read: 1997
+Len: 84, key: 966328916 found at index 75
+Cycle count read: 1035
+Len: 85, key: 1153194385 found at index 38
+Cycle count read: 2269
+Len: 86, key: 1794325390 not found
+Cycle count read: 2295
+Len: 87, key: 386668580 not found
+Cycle count read: 671
+Len: 88, key: 742238978 found at index 24
+Cycle count read: 2347
+Len: 89, key: 2073170821 not found
+Cycle count read: 359
+Len: 90, key: 1857609275 found at index 12
+Cycle count read: 541
+Len: 91, key: 890936381 found at index 19
+Cycle count read: 2361
+Len: 92, key: 34756470 found at index 89
+Cycle count read: 2283
+Len: 93, key: 543723778 found at index 86
+Cycle count read: 619
+Len: 94, key: 725908180 found at index 22
+Cycle count read: 1269
+Len: 95, key: 397859035 found at index 47
+Cycle count read: 2529
+Len: 96, key: 619328058 not found
+Cycle count read: 2555
+Len: 97, key: 110351174 not found
+Cycle count read: 2581
+Len: 98, key: 547041537 not found
+Cycle count read: 2205
+Len: 99, key: 386416255 found at index 83
+Cycle count read: 2633
+Len: 100, key: 1417551511 not found

@@ -1,0 +1,143 @@
+sw/example/performance_tests/I
+
+T_inst_latency: 2
+T_data_latency: 1
+
+----------------------------
+
+Available CMDs:                                                                                                                                                                                            
+ h: Help                                                                                                                                                                                                   
+ r: Restart                                                                                                                                                                                                
+ u: Upload via UART                                                                                                                                                                                        
+ s: Store to SPI flash                                                                                                                                                                                     
+ l: Load from SPI flash                                                                                                                                                                                    
+ e: Start executable                                                                                                                                                                                       
+CMD:> u                                                                                                                                                                                                    
+Awaiting neorv32_exe.bin... e                                                                                                                                                                              
+Booting from 0x00000000...
+
+Start
+<<< I performance test >>>
+SILENT_MODE enabled (only showing per instruction totals)
+
+perform: for (i=0;i<1,i++) {256 instructions}
+
+add rd,rs1,rs2 inst. 2 cyc
+
+addi rd,rs1,imm inst. 2 cyc
+
+sub rd,rs1,rs2 inst. 2 cyc
+
+lui rd,imm inst. 2 cyc
+
+auipc rd,imm inst. 2 cyc
+
+sll rd,rs1,rs2 inst. 34 cyc
+
+sli rd,rs1,shamt inst. 34 cyc
+
+srl rd,rs1,rs2 inst. 34 cyc
+
+srli rd,rs1,shamt inst. 34 cyc
+
+sra rd,rs1,rs2 inst. 34 cyc
+
+srai rd,rs1,shamt inst. 34 cyc
+
+xor rd,rs1,rs2 inst. 2 cyc
+
+xori rd,rs1,imm inst. 2 cyc
+
+and rd,rs1,rs2 inst. 2 cyc
+
+andi rd,rs1,imm inst. 2 cyc
+
+or rd,rs1,rs2 inst. 2 cyc
+
+ori rd,rs1,imm inst. 2 cyc
+
+slt rd,rs1,rs2 inst. 2 cyc
+
+slti rd,rs1,imm inst. 2 cyc
+
+sltu rd,rs1,rs2 inst. 2 cyc
+
+sltiu rd,rs1,imm inst. 2 cyc
+
+lb rd,rs1,imm inst. 5 cyc
+
+lh rd,rs1,imm inst. 5 cyc
+
+lbu rd,rs1,imm inst. 5 cyc
+
+lhu rd,rs1,imm inst. 5 cyc
+
+lw rd,rs1,imm inst. 5 cyc
+
+sb rd,rs1,imm inst. 5 cyc
+
+sh rd,rs1,imm inst. 5 cyc
+
+sw rd,rs1,imm inst 5 cyc
+
+csrrw rd,csr,rs1 inst 3 cyc
+
+csrrs rd,csr,rs1 inst 3 cyc
+
+csrrc rd,csr,rs1 inst 3 cyc
+
+csrrwi rd,csr,rs1 inst 3 cyc
+
+csrrsi rd,csr,rs1 inst 3 cyc
+
+csrrci rd,csr,rs1 inst 3 cyc
+
+fence inst 7 cyc
+
+fence.i inst 7 cyc
+
+jal rd,imm inst 7 cyc
+
+jalr rd,rs1,imm inst 7 cyc
+
+beq rs1,rs2,imm no branch inst 3 cyc
+
+beq rs1,rs2,imm branch forward inst 7 cyc
+
+beq rs1,rs2,imm branch backward inst 7 cyc
+
+bne rs1,rs2,imm no branch inst 3 cyc
+
+bne rs1,rs2,imm branch forward inst 7 cyc
+
+bne rs1,rs2,imm branch backward inst 7 cyc
+
+blt rs1,rs2,imm no branch inst 3 cyc
+
+blt rs1,rs2,imm branch forward inst 7 cyc
+
+blt rs1,rs2,imm branch backward inst 7 cyc
+
+bge rs1,rs2,imm no branch inst 3 cyc
+
+bge rs1,rs2,imm branch forward inst 7 cyc
+
+bge rs1,rs2,imm branch backward inst 7 cyc
+
+bltu rs1,rs2,imm no branch inst 3 cyc
+
+bltu rs1,rs2,imm branch forward inst 7 cyc
+
+bltu rs1,rs2,imm branch backward inst 7 cyc
+
+bgeu rs1,rs2,imm no branch inst 3 cyc
+
+bgeu rs1,rs2,imm branch forward inst 7 cyc
+
+bgeu rs1,rs2,imm branch backward inst 7 cyc
+
+instructions tested: 57
+
+total 108271 cycles
+
+avg. inst. execute cyles 7.419

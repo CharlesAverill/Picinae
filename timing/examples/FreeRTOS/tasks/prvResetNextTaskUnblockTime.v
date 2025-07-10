@@ -3,17 +3,9 @@ Require Import riscvTiming.
 Import RISCVNotations.
 Require Import timing_auto.
 
-Variable ML : N.
-Variable ML_pos : 1 <= ML.
-
-Definition time_mem : N :=
-    5 + (ML - 2).
-Definition time_branch : N :=
-    5 + (ML - 1).
-
 Module prvResetNextTaskUnblockTimeTime <: TimingModule.
     Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound ML s (RTOSDemo_NoAsserts_Clz a) with
+        match neorv32_cycles_upper_bound s (RTOSDemo_NoAsserts_Clz a) with
         | Some x => x | _ => 999 end.
 
     Definition entry_addr : N := 0x80000478.
@@ -67,7 +59,7 @@ Proof using.
     Local Ltac step := time rv_step.
 
     simpl. rewrite ENTRY. unfold entry_addr. step. auto.
-    
+
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
     eapply preservation_exec_prog in MDL; 
@@ -79,10 +71,8 @@ Proof using.
     destruct PRE as (MEM & GP & Cycles).
     repeat step.
     unfold time_of_prvResetNextTaskUnblockTime.
-        hammer. find_rewrites.
-        unfold time_mem, time_branch. lia.
+        hammer.
     unfold time_of_prvResetNextTaskUnblockTime.
-        hammer. find_rewrites.
-        unfold time_mem, time_branch. lia. 
+        hammer.
 Qed.
 

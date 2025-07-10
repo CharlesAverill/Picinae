@@ -4,34 +4,23 @@ Import RISCVNotations.
 Require Import timing_auto.
 Require Import memsolve.
 
-(* Some machinery describing the CPU *)
-Variable ML : N.
-Variable ML_pos : 1 <= ML.
-
 Module vTaskSwitchContextTime <: TimingModule.
     Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound ML s (RTOSDemo_NoAsserts_Clz a) with
+        match neorv32_cycles_upper_bound s (RTOSDemo_NoAsserts_Clz a) with
         | Some x => x | _ => 999 end.
 
     Definition entry_addr : N := 0x8000137c.
 
+    (* The exit points for vTaskSwitchContext *)
     Definition exits (t:trace) : bool :=
-        match t with (Addr a,_)::_ => match a with
-        | 0x8000138c | 0x8000144c => true
-        | _ => false
-        end | _ => false end.
+    match t with (Addr a,_)::_ => match a with
+    | 0x8000138c | 0x8000144c => true
+    | _ => false
+    end | _ => false end.
 End vTaskSwitchContextTime.
+
 Module vTaskSwitchContextAuto := TimingAutomation vTaskSwitchContextTime.
 Import vTaskSwitchContextTime vTaskSwitchContextAuto.
-
-(* These expressions pop up a lot and I don't like seeing them, so just fold them up
-   - time_mem    = The time in clock cycles of a memory access
-   - time_branch = The time in clock cycles of a successful/taken branch
-*)
-Definition time_mem : N :=
-    5 + (ML - 2).
-Definition time_branch : N :=
-    5 + (ML - 1).
 
 (* The doubleword in static memory (offset of gp) that determines if the scheduler
    is suspended. The scheduler should be suspended when any critical behavior
@@ -79,38 +68,154 @@ Definition vTaskSwitchContext_stack_frame_size : N := 16.
    static and stack memory. For example: static and stack memory should not overlap
    (this would be a stack overflow)
 *)
+Definition gp_sp_noverlap (gp sp : N) : Prop :=
+    ~overlap 32 (gp ⊖ __global_size) __global_size (sp ⊖ vTaskSwitchContext_stack_frame_size) vTaskSwitchContext_stack_frame_size.
 
-Definition smem_stack_regions (mem : addr -> N) (gp sp : N) : list (N * addr) := 
-    [(4, gp ⊖ 1952); (4, gp ⊖ 1932); (4, gp ⊖ 1896); (4, gp ⊖ 1920);
-     (4, 48 ⊕ pxCurrentTCB gp mem);
-     (4, gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20);
-     (4, mem Ⓓ[48 ⊕ pxCurrentTCB gp mem]);
-     (4, 8 ⊕ mem Ⓓ[48 ⊕ pxCurrentTCB gp mem]);
-     (4, 12 ⊕ mem Ⓓ[48 ⊕ pxCurrentTCB gp mem]);
-     (4, 4 ⊕ mem Ⓓ[gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20]);
-     (4, 4 ⊕ mem Ⓓ[4 ⊕ mem Ⓓ[gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20]]);
-     (vTaskSwitchContext_stack_frame_size, sp ⊖ vTaskSwitchContext_stack_frame_size)].
+(* These two definitions state that any two of the above buffers we're interested
+   in do not overlap
+*)
+Definition static_buffer_lengths_in_bytes (a : addr) : option N :=
+    match a with
+    (* uxSchedulerSuspended *)
+    | 1952
+    (* xYieldPendings*)
+    | 1932 
+    (* pxCurrentTCB *)
+    | 1896 
+    (* uxTopReadyPriority *)
+    | 1920 => Some 4
+    | _ => None
+    end.
 
-Definition noverlaps (mem : addr -> N) (gp sp : N) :=
-    create_noverlaps (smem_stack_regions mem gp sp).
+Definition smem_well_formed (gp : N) : Prop :=
+    forall x y len_x len_y,
+                x <> y ->
+                static_buffer_lengths_in_bytes x = Some len_x ->
+                static_buffer_lengths_in_bytes y = Some len_y ->
+            ~ overlap 32
+                (gp ⊖ x) len_x
+                (gp ⊖ y) len_y.
+
+(* I don't yet know the significance of the address
+      gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20
+   but it appears very frequently and it must not overlap with things like the
+   TCB or stack memory. Some of these assumptions can actually be proven due to 
+   the boundaries of clz (count leading zeroes) being 0..32
+*)
+Definition pxCurrentTCB_noverlap_clz_static (gp : N) (mem : addr -> N) : Prop :=
+    ~ overlap 32
+        (48 + pxCurrentTCB gp mem) 4
+        (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4.
+
+Definition clz_noverlap_smem (gp : N) mem : Prop :=
+    forall x len_x,
+        static_buffer_lengths_in_bytes x = Some len_x ->
+        ~ overlap 32
+            (gp ⊖ x) len_x
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4.
+
+(* The TCB doesn't overlap static memory or the stack frame *)
+Definition pxCurrentTCB_noverlap_static (gp : N) (mem : addr -> N) : Prop :=
+    forall x len_x,
+        static_buffer_lengths_in_bytes x = Some len_x ->
+        ~ overlap 32
+            (48 + pxCurrentTCB gp mem) 4
+            (gp ⊖ x) len_x.
+
+Definition pxCurrentTCB_noverlap_stackframe (gp base_sp : N) (mem : addr -> N) : Prop :=
+    ~ overlap 32
+        (48 + pxCurrentTCB gp mem) 4
+        (base_sp ⊖ 16) 16.
+
+(* The address contained in the current TCB doesn't overlap with static memory
+   or the stack frame *)
+Definition mem_pxCurrentTCB_noverlap_stackframe (gp base_sp : N) (mem : addr -> N) : Prop :=
+    ~ overlap 32
+        (mem Ⓓ[48 + pxCurrentTCB gp mem]) 4
+        (base_sp ⊖ 16) 16.
+
+Definition mem_pxCurrentTCB_noverlap_static (gp : N) (mem : addr -> N) : Prop :=
+    forall x len_x,
+        static_buffer_lengths_in_bytes x = Some len_x ->
+        ~ overlap 32
+            (mem Ⓓ[48 + pxCurrentTCB gp mem]) 4
+            (gp ⊖ x) len_x.
+
+(* Offsets into the address contained in the current TCB don't overlap with 
+   the clz address or stack memory *)
+Definition offset_mem_pxCurrentTCB_noverlap_clz (gp : N) (mem : addr -> N) : Prop :=
+    forall k, k = 8 \/ k = 12 ->
+        ~ overlap 32
+            (k + mem Ⓓ[48 + pxCurrentTCB gp mem]) 4
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4.
+
+Definition clz_noverlap_sframe (gp base_sp : N) (mem : addr -> N) : Prop :=
+    ~ overlap 32 
+        (base_sp ⊖ 16) 16
+        (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4.
+
+(* An offset into the buffer at the clz address doesn't overlap with static
+   memory or the stack frame *)
+Definition mem4_pxCurrentTCB_noverlap_stackframe (gp base_sp : N) (mem : addr -> N) : Prop :=
+        ~ overlap 32
+        (base_sp ⊖ 16) 16
+            (4 + mem Ⓓ[gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20]) 4.
+
+Definition mem4_pxCurrentTCB_noverlap_static (gp : N) (mem : addr -> N) : Prop :=
+    forall x len_x,
+        static_buffer_lengths_in_bytes x = Some len_x ->
+        ~ overlap 32
+            (gp ⊖ x) 4
+            (4 + mem Ⓓ[gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20]) 4.
+
+(* An offset into the buffer at an offset into the buffer at the clz address 
+   doesn't overlap with static memory or the stack frame *)
+Definition mem4_mem4_noverlap_stackframe (gp base_sp : N) (mem : addr -> N) :=
+    ~ overlap 32
+        (base_sp ⊖ 16) 16
+        (4 + mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ]) 4.
+
+Definition mem4_mem4_noverlap_static (gp : N) (mem : addr -> N) :=
+    forall x len_x,
+        static_buffer_lengths_in_bytes x = Some len_x ->
+        ~ overlap 32
+            (gp ⊖ x) 4
+            (4 + mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ]) 4.
+
+(* Stick them all together *)
+Definition common_noverlaps gp base_sp mem : Prop :=
+    gp_sp_noverlap gp base_sp /\
+    smem_well_formed gp /\
+    pxCurrentTCB_noverlap_static gp mem /\
+    pxCurrentTCB_noverlap_stackframe gp base_sp mem /\
+    pxCurrentTCB_noverlap_clz_static gp mem /\
+    clz_noverlap_smem gp mem /\
+    mem_pxCurrentTCB_noverlap_stackframe gp base_sp mem /\
+    mem_pxCurrentTCB_noverlap_static gp mem /\
+    offset_mem_pxCurrentTCB_noverlap_clz gp mem /\
+    clz_noverlap_sframe gp base_sp mem /\
+    mem4_pxCurrentTCB_noverlap_stackframe gp base_sp mem /\
+    mem4_pxCurrentTCB_noverlap_static gp mem.
 
 Definition time_of_vTaskSwitchContext (t : trace) (gp : N) (mem : addr -> N) : Prop :=
+  cycle_count_of_trace t = (* total number of cycles equals... *)
+    time_mem +
     (* is the scheduler suspended *)
     if (uxSchedulerSuspended gp mem) =? 0 then
-        cycle_count_of_trace t = (* total number of cycles equals... *)
-        25 + 3 * time_branch + 17 * time_mem
-            (* This branch condition isn't well-documented, need to dig into source *)
-          + (if (mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ])
-              =? ((gp ⊖ 916) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20)
-              then 
-                22 + (clz (uxTopReadyPriority gp mem) 32) + 5 * time_mem 
-              else
-                19 + time_branch + (clz (uxTopReadyPriority gp mem) 32) + 3 * time_mem
-              (* time_branch = 5 + (memory latency - 1), # of cycles for a successful/taken branch *)
-              (* time_mem = 5 + (memory latency - 2), # of cycles for a memory retreival *)
-          )
+        time_branch + 2 + 3 * time_mem + 2 + 2 * time_mem + 2 + 
+        time_mem + 3 + time_mem + 3 + time_mem + 3 + time_mem + time_branch + 
+        time_mem + 2 + (4 + T_shift_latency (uxTopReadyPriority gp mem)) +
+        2 + 2 + (3 + T_mul_latency) + 2 + 2 + 2 + time_mem + 2 + 2 + 2 * time_mem +
+        (* This branch condition isn't well-documented, need to dig into source *)
+        (if (mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ])
+            =? ((gp ⊖ 916) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20)
+            then 
+                3 + 2 * time_mem
+            else
+                time_branch
+        ) + 2 + (3 + T_mul_latency) + time_mem + 2 + 5 * time_mem + 2 + time_branch
     else
-        cycle_count_of_trace t = 5 + time_branch + 2 * time_mem.
+        3 + 2 + time_mem + time_branch.
 
 (* The invariant set for the proof. These are waypoints that guide us towards 
    the postcondition. We state properties here that we want to remember for later
@@ -130,14 +235,30 @@ match t with (Addr a, s) :: t' => match a with
     | 0x80001380 => Some (
         exists mem, s V_MEM32 = Ⓜmem /\ s R_GP = Ⓓgp /\ s R_SP = Ⓓbase_sp 
             /\ s R_A4 = Ⓓ(uxSchedulerSuspended gp base_mem) /\
-            noverlaps mem gp base_sp /\
+            common_noverlaps gp base_sp mem /\
+            mem4_mem4_noverlap_stackframe gp base_sp mem /\
+            mem4_mem4_noverlap_static gp mem /\
+            ~ overlap 32
+                (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+                (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ) 4 /\
+            ~ overlap 32
+                (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+                (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ]]) 4 /\
             uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
             mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
         cycle_count_of_trace t' = time_mem)
     | 0x800013b4 => Some (exists mem, s V_MEM32 = Ⓜmem /\ 
         s R_GP = Ⓓgp /\
-        noverlaps mem gp base_sp /\
+        common_noverlaps gp base_sp mem /\
+        mem4_mem4_noverlap_stackframe gp base_sp mem /\
+        mem4_mem4_noverlap_static gp mem /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+            (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ) 4 /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+            (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ]]) 4 /\
         uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
@@ -145,7 +266,15 @@ match t with (Addr a, s) :: t' => match a with
         cycle_count_of_trace t' = 6 + 7 * time_mem + time_branch)
     | 0x800013bc => Some (exists mem, s V_MEM32 = Ⓜmem /\ 
         s R_GP = Ⓓgp /\
-        noverlaps mem gp base_sp /\
+        common_noverlaps gp base_sp mem /\
+        mem4_mem4_noverlap_stackframe gp base_sp mem /\
+        mem4_mem4_noverlap_static gp mem /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+            (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ) 4 /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+            (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ]]) 4 /\
         uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
@@ -153,7 +282,15 @@ match t with (Addr a, s) :: t' => match a with
         cycle_count_of_trace t' = 9 + 8 * time_mem + time_branch)
     | 0x800013c4 => Some (exists mem, s V_MEM32 = Ⓜmem /\ 
         s R_GP = Ⓓgp /\
-        noverlaps mem gp base_sp /\
+        common_noverlaps gp base_sp mem /\
+        mem4_mem4_noverlap_stackframe gp base_sp mem /\
+        mem4_mem4_noverlap_static gp mem /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+            (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ) 4 /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+            (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ]]) 4 /\
         uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
@@ -162,7 +299,15 @@ match t with (Addr a, s) :: t' => match a with
     )
     | 0x800013cc => Some (exists mem, s V_MEM32 = Ⓜmem /\ 
         s R_GP = Ⓓgp /\
-        noverlaps mem gp base_sp /\
+        common_noverlaps gp base_sp mem /\
+        mem4_mem4_noverlap_stackframe gp base_sp mem /\
+        mem4_mem4_noverlap_static gp mem /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+            (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ) 4 /\
+        ~ overlap 32
+            (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+            (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ]]) 4 /\
         uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
@@ -174,12 +319,15 @@ match t with (Addr a, s) :: t' => match a with
         s R_A1 = Ⓓ(mem Ⓓ[4 + (gp ⊖ 924) ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)]) /\
         s R_A2 = Ⓓ(addr_pxReadyTasksLists gp ⊕ ((31 ⊖ (clz (uxTopReadyPriority gp mem) 32)) * 20)) /\
         s R_A5 = Ⓓ((gp ⊖ 916) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) /\
-        noverlaps mem gp base_sp /\
+        common_noverlaps gp base_sp mem /\
         uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
         mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
         (uxSchedulerSuspended gp base_mem =? 0) = true /\
-        cycle_count_of_trace t' = 36 + clz (uxTopReadyPriority gp mem) 32 + 2 * time_branch + 14 * time_mem)
+        cycle_count_of_trace t' =
+            time_branch + time_mem + 2 + (4 + T_shift_latency (uxTopReadyPriority gp mem)) + 2 + 2 +
+            (3 + T_mul_latency) + 2 + 2 + 2 + time_mem + 2 + 2 + 2 * time_mem +
+            15 + 10 * time_mem + time_branch)
     | 0x8000138c | 0x8000144c => Some (time_of_vTaskSwitchContext t gp base_mem)
     | _ => None
     end
@@ -201,7 +349,17 @@ Theorem vTaskSwitchContext_timing:
          (GP : s R_GP = Ⓓgp)
          (SP : s R_SP = Ⓓsp)
          (MEM : s V_MEM32 = Ⓜmem)
-         (NOVERLAPS : noverlaps mem gp sp),
+         (NOVERLAPS : common_noverlaps gp sp mem)
+         (MEM4_NOVERLAPS : 
+            mem4_mem4_noverlap_stackframe gp sp mem /\
+            mem4_mem4_noverlap_static gp mem /\
+            ~ overlap 32
+                (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+                (4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ) 4 /\
+            ~ overlap 32
+                (gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) 4
+                (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ]]) 4)
+         ,
   satisfies_all 
     lifted_vTaskSwitchContext                                 (* Provide lifted code *)
     (vTaskSwitchContext_timing_invs s p sp gp mem)            (* Provide invariant set *)
@@ -216,16 +374,31 @@ Proof using.
     Local Ltac unfold_vTaskSwitchContext :=
         unfold uxSchedulerSuspended, __global_size,
         vTaskSwitchContext_stack_frame_size, uxSchedulerSuspended,
-        pxCurrentTCB, uxTopReadyPriority,
-        addr_pxReadyTasksLists, noverlaps, smem_stack_regions,
-        msub in *; psimpl.
+        gp_sp_noverlap, smem_well_formed, pxCurrentTCB_noverlap_static,
+        pxCurrentTCB_noverlap_stackframe, pxCurrentTCB_noverlap_clz_static,
+        clz_noverlap_smem, mem_pxCurrentTCB_noverlap_stackframe,
+        mem_pxCurrentTCB_noverlap_static, offset_mem_pxCurrentTCB_noverlap_clz,
+        mem4_mem4_noverlap_static, mem4_mem4_noverlap_stackframe,
+        clz_noverlap_sframe, mem4_pxCurrentTCB_noverlap_stackframe,
+        mem4_pxCurrentTCB_noverlap_static, pxCurrentTCB, uxTopReadyPriority,
+        addr_pxReadyTasksLists in *.
     Local Ltac noverlap_prepare gp sp := 
         _noverlap_prepare unfold_vTaskSwitchContext gp sp.
+    Local Ltac destruct_noverlaps :=
+        match goal with
+        | [H: common_noverlaps _ _ _ |- _] =>
+            destruct H as [GP_SP_FAR [SMEM_WELL_FORMED [PCT_NOL_STATIC 
+            [PCT_NOL_SFRAME [PCT_NOL_CLZ [CLZ_NOL_STATIC 
+            [MEM_PCT_NOL_SFRAME [MEM_PCT_NOL_STATIC [OFF_MEM_PCT_NOL_CLZ
+            [CLZ_NOL_SFRAME [MEM4_PCT_NOL_SFRAME MEM4_PCT_NOL_STATIC]]]]]]]]]]]
+        end. 
+    Local Ltac handle_ex' := handle_ex; repeat split; eauto; try now psimpl.
+    destruct_noverlaps.
 
     (* Base case *)
-    simpl. rewrite ENTRY. unfold entry_addr. step.
-    eexists. repeat (split; auto).
-    unfold uxSchedulerSuspended, msub. now psimpl.
+    simpl. rewrite ENTRY. step.
+    destruct MEM4_NOVERLAPS, H0, H1. unfold uxSchedulerSuspended, msub.
+    handle_ex'.
 
     (* Inductive step setup *)
     intros.
@@ -239,20 +412,10 @@ Proof using.
     destruct_inv 32 PRE.
 
     (* 0x800015e4 *)
-    destruct PRE as (mem & MEM & GP & SP & A4 & NOVERLAPS
-        & PreservesPriority & Preserves920 & Cycles).
-    repeat step.
-    handle_ex. split. {
-        time noverlaps_preserved unfold_vTaskSwitchContext.
-    }
-        unfold_create_noverlaps unfold_vTaskSwitchContext.
-        split. {
-            repeat rewrite getmem_noverlap; auto using noverlap_symmetry.
-            
-        }
-        repeat split;
-            repeat rewrite getmem_noverlap; auto using noverlap_symmetry.
-        noverlaps_preserved unfold_vTaskSwitchContext.
+    destruct PRE as (mem & MEM & GP & SP & A4 & NOVERLAPS & MEM4_MEM4_NOL_SFRAME
+        & MEM4_MEM4_NOL_STATIC & MEM4_920 & MEM4_MEM4_920 & PreservesPriority
+        & Preserves920 & Cycles). destruct_noverlaps.
+    repeat step. handle_ex'.
         1-10: noverlap_prepare gp sp; memsolve mem gp sp.
         1-5: noverlap_prepare gp sp; memsolve mem gp sp;
             try now eapply MEM4_PCT_NOL_STATIC;
@@ -278,10 +441,9 @@ Proof using.
             all: apply noverlap_shrink with (sp ⊖ 16) 16;
                 [psimpl; lia|auto].
         }
-        hammer. find_rewrites. unfold time_mem, time_branch. lia.
+        hammer.
     unfold time_of_vTaskSwitchContext.
-        rewrite BC.
-        hammer. find_rewrites. unfold time_mem, time_branch. lia.
+        hammer.
 
     (* 0x800013c8 *)
     destruct PRE as (mem & MEM & GP & NOVERLAPS & MEM4_MEM4_NOL_SFRAME
@@ -290,8 +452,8 @@ Proof using.
     step.
         repeat step.
         exact I. (* Infinite loop, stack overflow detected *)
-    step. handle_ex.
-        hammer. find_rewrites. unfold time_mem, time_branch. lia.
+    step. handle_ex'.
+        hammer.
 
     (* 0x800013d0 *)
     destruct PRE as (mem & MEM & GP & NOVERLAPS & MEM4_MEM4_NOL_SFRAME
@@ -300,8 +462,8 @@ Proof using.
     step.
         repeat step.
         exact I. (* Infinite loop, stack overflow detected *)
-    step. handle_ex.
-        hammer. find_rewrites. unfold time_mem, time_branch. lia.
+    step. handle_ex'.
+        hammer.
 
     (* 0x800013d8 *)
     destruct PRE as (mem & MEM & GP & NOVERLAPS & MEM4_MEM4_NOL_SFRAME
@@ -310,15 +472,15 @@ Proof using.
     step.
         repeat step.
         exact I. (* Infinite loop, stack overflow detected *)
-    step. handle_ex.
-        hammer. find_rewrites. unfold time_mem, time_branch. lia.
+    step. handle_ex'.
+        hammer.
 
     (* 0x800013e0 *)
     destruct PRE as (mem & MEM & GP & NOVERLAPS & MEM4_MEM4_NOL_SFRAME
         & MEM4_MEM4_NOL_STATIC & MEM4_920 & MEM4_MEM4_920 & PreservesPriority
         & Preserves920 & NotSuspended & Cycles). destruct_noverlaps.
     repeat step.
-        handle_ex.
+        handle_ex'.
         par: try solve [noverlap_prepare gp sp; memsolve mem gp sp].
         {
             noverlap_prepare gp sp.
@@ -360,11 +522,9 @@ Proof using.
                 (f_equal; rewrite getmem_noverlap; auto).
             psimpl. auto.
         }
-        hammer. find_rewrites. unfold time_mem, time_branch. psimpl.
+        hammer.
         noverlap_prepare gp sp.
-        replace (clz ((mem [Ⓓ_ := _ ]) Ⓓ[ gp ⊖ 1920 ]) 32) 
-                with (clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) by
-                (f_equal; rewrite getmem_noverlap; auto).
+        rewrite getmem_noverlap by (memsolve mem gp sp).
         lia.
 
     destruct PRE as (mem & MEM & GP & A1 & A2 & A5 & NOVERLAPS
@@ -374,20 +534,21 @@ Proof using.
     unfold time_of_vTaskSwitchContext.
         find_rewrites.
         hammer. rewrite <- Preserves920, <- PreservesPriority.
-        find_rewrites.
-        replace (4 + (gp ⊖ 924) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) with
-            ((gp ⊖ 920) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20) in BC by
-            (unfold msub; now psimpl).
         rewrite Bool.negb_true_iff, getmem_mod_l in BC.
-        find_rewrites. unfold time_mem, time_branch. lia.
+        unfold msub in *. psimpl in BC. psimpl.
+        find_rewrites.
+        unfold T_shift_latency, CPU_FAST_SHIFT_EN.
+        unfold T_mul_latency, CPU_FAST_MUL_EN.
+        lia.
     unfold time_of_vTaskSwitchContext.
-        find_rewrites. hammer. find_rewrites.
+        hammer.
         rewrite <- Preserves920, <- PreservesPriority.
-        replace (4 + _ ⊕ _) with ((gp ⊖ 920) ⊕ (31 ⊖ clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) * 20)
-            in BC by (unfold msub; now psimpl).
-        unfold uxTopReadyPriority in *.
         rewrite Bool.negb_false_iff, getmem_mod_l in BC.
-        find_rewrites. unfold time_mem, time_branch. lia.
+        unfold msub in *. psimpl in BC. psimpl.
+        rewrite BC.
+        unfold T_shift_latency, CPU_FAST_SHIFT_EN.
+        unfold T_mul_latency, CPU_FAST_MUL_EN.
+        lia.
 
     now repeat step.
 Qed.

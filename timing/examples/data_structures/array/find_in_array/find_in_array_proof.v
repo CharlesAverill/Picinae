@@ -3,24 +3,16 @@ Require Import riscvTiming.
 Import RISCVNotations.
 Require Import timing_auto.
 
-Variable ML : N.
-Variable ML_pos : 1 <= ML.
-
-Definition time_mem : N :=
-    5 + (ML - 2).
-Definition time_branch : N :=
-    5 + (ML - 1).
-
 Module find_in_arrayTime <: TimingModule.
     Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound ML s (array_bin a) with
+        match neorv32_cycles_upper_bound s (array_bin a) with
         | Some x => x | _ => 999 end.
 
-    Definition entry_addr : N := 0x101b0.
+    Definition entry_addr : N := 0x1e4.
 
     Definition exits (t:trace) : bool :=
     match t with (Addr a,_)::_ => match a with
-    | 0x10214 => true
+    | 0x208 => true
     | _ => false
   end | _ => false end.
 End find_in_arrayTime.
@@ -54,29 +46,23 @@ Fixpoint key_in_array_dec (mem : addr -> N) (arr : addr) (key len : N)
                 } subst. contradiction.
 Qed.
 
-Definition mem_layout (sp : N) (arr : addr) (len : N) :=
-    create_noverlaps [(4, sp ⊖ 4); (4, sp ⊖ 8); 
-                      (4, sp ⊖ 20); (4, sp ⊖ 36); 
-                      (4, sp ⊖ 40); (4, sp ⊖ 44); 
-                      (4 * len, arr)].
-
 Definition time_of_find_in_array (mem : addr -> N) 
         (arr : addr) (key : N) (len : N) (found_idx : option N)
         (t : trace) :=
     cycle_count_of_trace t =
         (* setup time *)
-        4 + 10 * time_mem +
+        2 +
         (* loop iterations *)
         (match found_idx with None => len | Some i => i end) *
         (* loop body duration *)
-        (10 + (3 + (2/4) + (2 mod 4)) + time_mem + time_branch) +
+        (3 + (3 + T_shift_latency 2) + 2 + time_mem + 3 + 2 + time_branch) +
         (* partial loop iteration before loop exit *)
         (match found_idx with 
          | None => time_branch (* loop condition fail *)
-         | Some _ => 3 + (3 + (2/4) + (2 mod 4)) + 2 + time_mem + time_branch
+         | Some _ => 3 + (3 + T_shift_latency 2) + 2 + time_mem + time_branch
          end) +
         (* shutdown time *)
-        2 * time_mem + 2 + 2 * time_mem + 2 + time_branch.
+        2 + time_branch.
 
 Definition timing_postcondition (mem : addr -> N) (arr : addr)
         (key : N) (len : N) (t : trace) : Prop :=
@@ -90,14 +76,14 @@ Definition timing_postcondition (mem : addr -> N) (arr : addr)
 Definition find_in_array_timing_invs (s : store) (base_mem : addr -> N)
     (sp : N) (arr : addr) (key : N) (len : N) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
-| 0x101b0 => Some (mem_layout sp arr len /\ s V_MEM32 = Ⓜbase_mem /\
-            s R_SP = Ⓓsp /\ s R_A0 = Ⓓarr /\ s R_A1 = Ⓓkey /\ s R_A2 = Ⓓlen /\
-            4 * len <= 2^32 - 1 /\
+| 0x1e4 => Some (s V_MEM32 = Ⓜbase_mem /\ s R_A0 = Ⓓarr /\ s R_A1 = Ⓓkey /\ 
+            s R_A2 = Ⓓlen /\ 4 * len <= 2^32 - 1 /\
             cycle_count_of_trace t' = 0)
-| 0x101e0 => Some (mem_layout sp arr len /\ exists mem a5,
+| 0x1e8 => Some (exists mem a5,
     (* bindings *)
-    s R_S0 = Ⓓsp /\ s R_A2 = Ⓓlen /\ s R_A3 = Ⓓkey /\
-    s R_A4 = Ⓓarr /\ s R_A5 = Ⓓa5 /\ s V_MEM32 = Ⓜmem /\
+    s V_MEM32 = Ⓜmem /\
+    s R_A0 = Ⓓarr /\ s R_A1 = Ⓓkey /\ s R_A2 = Ⓓlen /\
+    s R_A5 = Ⓓa5 /\
     (* preservation *)
     (forall i, i < len ->
         mem Ⓓ[arr + (i << 2)] = base_mem Ⓓ[arr + (i << 2)]) /\
@@ -107,13 +93,13 @@ match t with (Addr a, s) :: t' => match a with
     a5 <= len /\
     cycle_count_of_trace t' =
         (* pre-loop time *)
-        4 + 10 * time_mem +
+        2 +
         (* loop counter stored in register a5 *)
         a5 *
         (* full loop body length - can't have broken out by this address *)
-        (10 + (3 + (2/4) + (2 mod 4)) + time_mem + time_branch)
+        (3 + (3 + T_shift_latency 2) + 2 + time_mem + 3 + 2 + time_branch)
     )
-| 0x10214 => Some (timing_postcondition base_mem arr key len t)
+| 0x208 => Some (timing_postcondition base_mem arr key len t)
 | _ => None end | _ => None end.
 
 Definition lifted_find_in_array : program :=
@@ -134,8 +120,6 @@ Theorem find_in_array_timing:
          (A0: s R_A0 = Ⓓarr)
          (A1: s R_A1 = Ⓓkey)
          (A2: s R_A2 = Ⓓlen)
-         (* memory must be layed out correctly *)
-         (MEMLAYOUT: mem_layout sp arr len)
          (* length must fit inside the address space, arr is 4-byte integers *)
          (LEN_VALID: 4 * len <= 2^32 - 1),
   satisfies_all 
@@ -149,7 +133,6 @@ Proof using.
     Local Ltac step := time rv_step.
 
     simpl. rewrite ENTRY. unfold entry_addr. step.
-    split. unfold mem_layout in *. noverlaps_preserved idtac.
     now repeat split.
 
     intros.
@@ -161,29 +144,16 @@ Proof using.
     destruct_inv 32 PRE.
 
     (* 0x101b0 -> 0x101e0 *)
-    destruct PRE as (Layout & Mem & SP & A0 & A1 & A2 & LEN_VALID & Cycles).
+    destruct PRE as (Mem & A0 & A1 & A2 & LEN_VALID & Cycles).
     repeat step.
-        split. 
-        (* noverlaps *)
-        unfold mem_layout in *; noverlaps_preserved idtac. 
-        repeat eexists.
-        (* memory preservation *)
-        intros.
-            unfold mem_layout in *; unfold_create_noverlaps.
-            fold_big_subs.
-            repeat rewrite getmem_noverlap. reflexivity.
-            1-6:
-                rewrite N.shiftl_mul_pow2;
-                eapply noverlap_shrink with (a1 := arr) (len1 := 4 * len);
-                    auto using noverlap_symmetry;
-                    psimpl; rewrite N.mod_small; lia.
+        repeat eexists; auto.
         (* key not found yet *) intros; lia.
         (* idx <= len *) psimpl; lia.
         (* cycles *)
-        hammer. find_rewrites. unfold time_mem, time_branch. lia.
+        hammer.
 
-    destruct PRE as (Layout & mem & a5 & S0 & A2 & A3 & A4 & A5 & 
-        MEM & Preserved & NotFound & LEN & Cycles).
+    destruct PRE as (mem & a5 & MEM & A0 & A1 & A2 & A5 & Preserved &
+        NotFound & A5_LEN & Cycles).
     destruct (key_in_array_dec mem arr key len) as [IN | NOT_IN].
     (* There is a matching element in the array *) {
         step.
@@ -197,10 +167,9 @@ Proof using.
             split.
                 intros. rewrite <- Preserved by lia. now apply NotFound.
             unfold time_of_find_in_array.
-            hammer. find_rewrites. change (2/4) with 0. 
-            unfold time_mem, time_branch. psimpl. lia.
+            hammer. unfold T_shift_latency, CPU_FAST_SHIFT_EN. 
+            psimpl. lia.
         (* loop invariant after going around *)
-            split. unfold mem_layout in *. noverlaps_preserved idtac.
             repeat eexists; auto.
             (* key not found *)
             intros. apply N.ltb_lt in BC.
@@ -211,9 +180,7 @@ Proof using.
             apply N.ltb_lt in BC. rewrite N.mod_small. lia.
                 apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
             (* cycles *)
-            hammer. find_rewrites.
-            unfold time_mem, time_branch. psimpl.
-            change (2/4) with 0.
+            hammer. unfold T_shift_latency, CPU_FAST_SHIFT_EN.
             rewrite N.mod_small. lia.
                 apply Bool.negb_false_iff, N.ltb_lt in BC.
                 apply N.le_lt_trans with len. lia.
@@ -232,8 +199,7 @@ Proof using.
             apply N.eqb_eq in BC0.
             assumption.
         (* a match has not been found, continue *)
-        repeat step. split.
-            unfold mem_layout in *; noverlaps_preserved idtac.
+        repeat step.
             repeat eexists; auto.
             (* key not found *)
             intros. apply N.ltb_lt in BC.
@@ -244,9 +210,8 @@ Proof using.
             apply N.ltb_lt in BC. rewrite N.mod_small. lia.
                 apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
             (* cycles *)
-            hammer. find_rewrites.
-            unfold time_mem, time_branch. psimpl.
-            change (2/4) with 0.
+            hammer.
+            unfold T_shift_latency, CPU_FAST_SHIFT_EN.
             rewrite N.mod_small. lia.
                 apply Bool.negb_false_iff, N.ltb_lt in BC.
                 apply N.le_lt_trans with len. lia.
@@ -258,8 +223,7 @@ Proof using.
             exists idx. split. assumption. now rewrite Preserved.
             hammer. find_rewrites. replace a5 with len in * by
                 (rewrite Bool.negb_true_iff, N.ltb_ge in BC; lia).
-            unfold time_mem, time_branch. change (2/4) with 0. 
-                psimpl. lia.
+            unfold T_shift_latency, CPU_FAST_SHIFT_EN. lia.
     }
 Qed.
 

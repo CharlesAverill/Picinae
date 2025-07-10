@@ -199,13 +199,9 @@ Proof.
         psimpl. assumption.
 Qed.
 
-(* Timing proof - lots of machinery here has yet to be modularized *)
-Variable ML : N.
-Variable ML_pos : 1 <= ML.
-
 Module AddloopTime <: TimingModule.
     Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound ML s (add_loop_riscv s a) with
+        match neorv32_cycles_upper_bound s (add_loop_riscv s a) with
             | Some x => x | _ => 0 end.
 
     Definition entry_addr := 0.
@@ -222,9 +218,9 @@ Definition addloop_timing_invs (_ : store) (p : addr) (x y : N) (t:trace) :=
 match t with (Addr a, s) :: t' => match a with
     | 0xc  => Some (s R_T0 = Ⓓx /\ s R_T2 = Ⓓ1 /\ cycle_count_of_trace t = 2 + 2)
     | 0x10 => Some (exists t0, s R_T0 = Ⓓt0 /\ s R_T2 = Ⓓ1 /\ s R_T3 = Ⓓ0 /\ t0 <= x /\
-        cycle_count_of_trace t' = 4 + (x - t0) * (12 + (ML - 1)))
+        cycle_count_of_trace t' = 4 + (x - t0) * (3 + 2 + 2 + time_branch))
         (* 2 + 2 + (x - t0) * (3 + 2 + 2 + (5 + (ML - 1)) *)
-    | 0x20 => Some (cycle_count_of_trace t' = 9 + (ML - 1) + x * (12 + (ML - 1)))
+    | 0x20 => Some (cycle_count_of_trace t' = 4 + time_branch + x * (3 + 2 + 2 + time_branch))
         (* 2 + 2 + (5 + (ML - 1)) + x * (3 + 2 + 2 + (5 + (ML - 1))) *)
     | _ => None end
 | _ => None
@@ -277,7 +273,7 @@ Proof using.
         step. step. step. exists (t0 ⊖ 1). assert (1 <= t0) by (apply N.eqb_neq in BC; lia).
         repeat split. rewrite msub_nowrap; psimpl; lia.
         hammer. find_rewrites. psimpl.
-        rewrite N.add_sub_assoc, msub_nowrap, N_sub_distr.
-        psimpl. rewrite N.mul_add_distr_r. psimpl. rewrite (N.add_sub_assoc 16).
-        all: psimpl; (assumption || lia || apply ML_pos).
+        rewrite msub_nowrap, N_sub_distr.
+        psimpl. lia.
+        all: psimpl; lia.
 Qed.

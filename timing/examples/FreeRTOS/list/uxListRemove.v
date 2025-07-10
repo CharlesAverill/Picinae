@@ -3,18 +3,10 @@ Require Import riscvTiming.
 Import RISCVNotations.
 Require Import timing_auto.
 
-Variable ML : N.
-Variable ML_pos : 1 <= ML.
-
-Definition time_mem : N :=
-    5 + (ML - 2).
-Definition time_branch : N :=
-    5 + (ML - 1).
-
 (* Common for all timing proofs - facilitates automation *)
 Module uxListRemoveTime <: TimingModule.
     Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound ML s (RTOSDemo_NoAsserts_Clz a) with
+        match neorv32_cycles_upper_bound s (RTOSDemo_NoAsserts_Clz a) with
         | Some x => x | _ => 999 end.
 
     Definition entry_addr : N := 0x80002440.
@@ -119,24 +111,25 @@ Proof using.
     (* Invariant 0x80002460 when branch is taken *) {
         eexists. split. reflexivity. split.
             preserve_noverlaps.
-        hammer. find_rewrites. unfold_noverlap.
-        unfold_create_noverlaps.
-        rewrite getmem_noverlap, getmem_noverlap in BC by auto using noverlap_symmetry.
-        find_rewrites. unfold time_mem, time_branch. lia.
+        hammer.
+        unfold_noverlap. unfold_create_noverlaps.
+        rewrite getmem_noverlap, getmem_noverlap in BC by 
+            (auto using noverlap_symmetry).
+        find_rewrites. lia.
     }
     (* Invariant 0x80002460 when branch isn't taken *) {
         eexists. split. reflexivity. split.
             preserve_noverlaps.
-        hammer. find_rewrites. 
+        hammer.
         unfold_noverlap. unfold_create_noverlaps.
-        rewrite getmem_noverlap, getmem_noverlap in BC by auto using noverlap_symmetry.
-        find_rewrites. unfold time_mem, time_branch. lia.
+        rewrite getmem_noverlap, getmem_noverlap in BC by 
+            (auto using noverlap_symmetry).
+        find_rewrites. lia.
     }
 
     (* Postcondition - `repeat step` got us here (repeat is weird) *)
     destruct PRE as (mem & MEM & NVL & Cycles).
     repeat step. eexists. split. reflexivity.
-    unfold time_of_uxListRemove. hammer. find_rewrites.
-    unfold time_mem, time_branch. lia.
+    unfold time_of_uxListRemove. hammer.
 Qed.
 

@@ -6,17 +6,9 @@ Require Import riscvTiming.
 Import RISCVNotations.
 Require Import timing_auto.
 
-Variable ML : N.
-Variable ML_pos : 1 <= ML.
-
-Definition time_mem : N :=
-    5 + (ML - 2).
-Definition time_branch : N :=
-    5 + (ML - 1).
-
 Module prvSearchForNameWithinSingleListTime <: TimingModule.
     Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound ML s (RTOSDemo_NoAsserts_Clz a) with
+        match neorv32_cycles_upper_bound s (RTOSDemo_NoAsserts_Clz a) with
         | Some x => x | _ => 999 end.
 
     Definition entry_addr : N := 0x80000114.

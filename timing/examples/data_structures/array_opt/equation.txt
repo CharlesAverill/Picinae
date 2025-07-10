@@ -1,0 +1,13 @@
+4 +
+Piecewise((time_branch + time_branch, Eq(len, 0)), (
+	3 + 2 + time_branch + time_mem + 2 +
+	Piecewise((3 + 2 + time_branch, Eq(i, 0)), (
+		time_branch +
+		Piecewise((len - 1, Eq(i, -1), (i, True)) *
+        (2 + 3 + time_mem + 2 + time_branch) +
+		Piecewise((2 + time_branch, Eq(i, -1)), (
+			2 + 3 + time_mem + 2 + 3 + 2
+		, True) +
+        time_branch
+	, True)
+, True)
