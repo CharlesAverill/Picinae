@@ -1,19 +1,11 @@
 Require Import linked_list.
 Require Import riscvTiming.
 Import RISCVNotations.
-Require Import timing_auto.
-
-Variable ML : N.
-Variable ML_pos : 1 <= ML.
-
-Definition time_mem : N :=
-    5 + (ML - 2).
-Definition time_branch : N :=
-    5 + (ML - 1).
+Require Import timing_auto. 
 
 Module find_in_linked_listTime <: TimingModule.
     Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound ML s (linked_list_bin a) with
+        match neorv32_cycles_upper_bound s (linked_list_bin a) with
         | Some x => x | _ => 999 end.
 
     Definition entry_addr : N := 0x10250.
@@ -55,13 +47,35 @@ Fixpoint key_in_linked_list_dec (mem : addr -> N) (node : addr) (key : N) (idx :
         + right. intros H. inversion H. subst. apply NOT_IN. assumption.
 Qed.
 
+Inductive well_formed_list : (addr -> N) -> addr -> list addr -> Prop :=
+| wf_nil : forall mem,
+    list_node_next mem NULL <> NULL ->
+    well_formed_list mem NULL []
+| wf_cons : forall mem n visited,
+    n <> NULL ->
+    list_node_next mem n <> n ->
+    (* next not in visited to avoid cycles *)
+    ~ In (list_node_next mem n) visited ->
+    well_formed_list mem (list_node_next mem n) (n :: visited) ->
+    well_formed_list mem n visited.
+
 Inductive node_distance : addr -> addr -> nat -> Prop :=
 | Dst0 node :
     node_distance node node 0
-| DstSn mem source target idx :
-    target <> NULL ->
-    node_distance source target idx ->
-    node_distance source (list_node_next mem target) (S idx).
+| DstSn mem src dst len :
+    well_formed_list mem src [] ->
+    src <> dst ->
+    node_distance (list_node_next mem src) dst len ->
+    node_distance src dst (S len).
+
+Lemma well_formed_impl_next_neq_curr : forall mem src,
+    well_formed_list mem src [] ->
+    list_node_next mem src <> src.
+Proof.
+    intros. induction H; subst.
+        assumption.
+    intro. rewrite H3 in *. contradiction.
+Qed.    
 
 Lemma node_distance_len_nonzero : forall head len,
     node_distance head NULL len ->
@@ -72,6 +86,20 @@ Proof.
         rewrite N.eqb_refl in H0; inversion H0.
     lia.
 Qed.
+
+Lemma node_distance_same : forall h n,
+    node_distance h h n -> n = O.
+Proof.
+    intros. inversion H; subst. reflexivity.
+    contradiction.
+Qed.
+
+Lemma node_distance_null_dupe : forall head tail n1 n2,
+    node_distance head tail n1 ->
+    node_distance head tail n2 ->
+    n1 = n2.
+Abort.
+    
 
 Definition time_of_find_in_linked_list (mem : addr -> N) 
         (head : addr) (key : N) (len : nat) (found_idx : option N)
@@ -161,12 +189,11 @@ Proof using.
     destruct PRE as (Mem & SP & A0 & A1 & Len & Cycles).
     repeat step.
     (* 0x10278 *) {
-        exists 0%nat. eexists. exists head. fold_big_subs.
-        repeat split. now psimpl.
-        constructor. assumption. eauto using node_distance_len_nonzero. 
+        exists 0%nat. eexists. exists head.
+        repeat split; auto. now psimpl.
+        constructor. eauto using node_distance_len_nonzero. 
         now apply Bool.negb_true_iff.
-        cbn [N.of_nat]. psimpl. hammer. find_rewrites.
-        unfold time_mem, time_branch. lia.
+        hammer.
     }
 
     (* head = NULL, contradiction because we checked at the start *)
@@ -177,7 +204,7 @@ Proof using.
     apply Bool.negb_false_iff, N.eqb_eq in BC. subst.
         constructor.
     unfold time_of_find_in_linked_list, NULL.
-    hammer. find_rewrites. unfold time_branch, time_mem. lia.
+    hammer.
 
     (* 0x10278 *)
     destruct PRE as (ctr & mem & curr & Mem & Curr & S0 & Dist & Len & 
@@ -187,10 +214,11 @@ Proof using.
     (* The key does exist in the linked list *) {
         repeat step.
         (* next iteration *)
-            exists (S ctr). eexists. eexists.
-            repeat split; auto. psimpl.
+            exists (S ctr). repeat eexists; auto.
+            psimpl.
                 fold (list_node_next mem (mem Ⓓ[ 4294967276 + sp ])).
-                constructor. fold_big_subs. now rewrite Curr.
+                constructor.
+            fold_big_subs. intro; rewrite H in *; rewrite <- Curr in *.
             revert BC BC0.
                 fold (list_node_next mem (mem Ⓓ[ 4294967276 + sp ])).
                 fold_big_subs. intros. rewrite Curr in *.

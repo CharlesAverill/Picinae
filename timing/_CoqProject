@@ -4,3 +4,4 @@ timing_auto.v
 memsolve.v
 examples/FreeRTOS/RTOSDemo_NoAsserts_Clz.v
 examples/data_structures/array/find_in_array/array.v
+examples/data_structures/linked_list/linked_list.v

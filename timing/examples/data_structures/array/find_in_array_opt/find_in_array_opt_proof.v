@@ -3,14 +3,6 @@ Require Import riscvTiming.
 Import RISCVNotations.
 Require Import timing_auto.
 
-Variable ML : N.
-Variable ML_pos : 1 <= ML.
-
-Definition time_mem : N :=
-    5 + (ML - 2).
-Definition time_branch : N :=
-    5 + (ML - 1).
-
 Module find_in_arrayTime <: TimingModule.
     Definition time_of_addr (s : store) (a : addr) : N :=
         match neorv32_cycles_upper_bound ML s (array_opt_bin a) with

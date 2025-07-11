@@ -151,28 +151,82 @@ Ltac noverlaps_preserved unfolds :=
     end || fail "Goal must be in form of create_noverlaps l -> create_noverlaps l'".
 
 (* Take big numbers that should really be subtractions and turn them into modsubs *)
+Ltac invert tac :=
+    first [(tac; fail 1) | idtac].
+
+Ltac is_get_set_mem x :=
+    lazymatch x with
+    | getmem _ _ _ _ _ => idtac
+    | setmem _ _ _ _ _ _ => idtac
+    | _ => fail 0
+    end.
+
+Ltac is_large_const x :=
+  invert ltac:(is_var x);
+  lazymatch x with
+    | getmem _ _ _ _ _ => fail
+    | setmem _ _ _ _ _ _ => fail
+    | _ => idtac
+  end;
+  match eval cbv in x with
+  | ?n =>
+    let n' := eval compute in (n <? 2^31)%N in
+    match n' with
+    | true => fail 1 "Not large enough"
+    | false => idtac
+    end
+  end. 
+
 Ltac fold_big_subs :=
     repeat match goal with
+    (* Goal *)
     | [ |- context[setmem ?BW ?END 4 ?M (?X + ?B + ?N) ?V] ] =>
         rewrite <-(setmem_mod_l _ _ _ M (X+B+N) V);
-        replace (setmem BW END 4 M (X+B+N mod 2^BW) V) with
+        replace (setmem BW END 4 M ((X+B+N) mod 2^BW) V) with
             (setmem BW END 4 M ((msub BW B (2^32 - X)) + N mod 2^BW) V) by
             (unfold msub; now psimpl);
         simpl (2^BW - X)
     | [ |- context[setmem ?BW ?END 4 ?M (?X + ?Y) ?V] ] =>
+        first [is_large_const X | is_large_const Y];
         rewrite <- setmem_mod_l with (a := X + Y);
         replace ((X + Y) mod 2^BW) with (msub BW Y (2^32 - X)) by 
             (now rewrite N.add_comm);
         simpl (2^BW - X)
     | [ |- context[getmem ?BW ?END 4 ?M (?X + ?B + ?N)] ] =>
         rewrite <-(getmem_mod_l _ _ _ M (X+B+N));
-        replace (getmem BW END 4 M (X + B + N mod 2^BW)) with
+        replace (getmem BW END 4 M ((X + B + N) mod 2^BW)) with
             (getmem BW END 4 M ((msub BW B (2^BW - X)) + N mod 2^BW)) by
-            (unfold msub; now psimpl);
-        simpl (2^BW - X)
-    | [ |- context[getmem ?BW ?END 4 ?M (?X + ?Y)] ] =>
-        rewrite <- getmem_mod_l with (a := X + Y);
-        replace (X + Y mod 2^BW) with (msub BW Y (2^BW - X)) by 
             (now rewrite N.add_comm);
         simpl (2^BW - X)
+    | [ |- context[getmem ?BW ?END 4 ?M (?X + ?Y)] ] =>
+        first [is_large_const X | is_large_const Y];
+        rewrite <- getmem_mod_l with (a := X + Y);
+        replace ((X + Y) mod 2^BW) with (msub BW Y (2^BW - X)) by 
+            (now rewrite N.add_comm);
+        simpl (2^BW - X)
+    (* Assumptions *)
+    | [ H: context[setmem ?BW ?END 4 ?M (?X + ?B + ?N) ?V] |- _ ] =>
+        rewrite <-(setmem_mod_l _ _ _ M (X+B+N) V) in H;
+        replace (setmem BW END 4 M ((X+B+N) mod 2^BW) V) with
+            (setmem BW END 4 M ((msub BW B (2^32 - X)) + N mod 2^BW) V) in H by
+            (unfold msub; now psimpl);
+        simpl (2^BW - X) in H
+    | [ H: context[setmem ?BW ?END 4 ?M (?X + ?Y) ?V] |- _ ] =>
+        first [is_large_const X | is_large_const Y];
+        rewrite <- setmem_mod_l with (a := X + Y) in H;
+        replace ((X + Y) mod 2^BW) with (msub BW Y (2^32 - X)) in H by 
+            (now rewrite N.add_comm);
+        simpl (2^BW - X) in H
+    | [ H: context[getmem ?BW ?END 4 ?M (?X + ?B + ?N)] |- _ ] =>
+        rewrite <-(getmem_mod_l _ _ _ M (X+B+N)) in H;
+        replace (getmem BW END 4 M ((X + B + N) mod 2^BW)) with
+            (getmem BW END 4 M ((msub BW B (2^BW - X)) + N mod 2^BW)) in H by
+            (now rewrite N.add_comm);
+        simpl (2^BW - X) in H
+    | [ H: context[getmem ?BW ?END 4 ?M (?X + ?Y)] |- _ ] =>
+        first [is_large_const X | is_large_const Y];
+        rewrite <- getmem_mod_l with (a := X + Y) in H;
+        replace ((X + Y) mod 2^BW) with (msub BW Y (2^BW - X)) in H by 
+            (now rewrite N.add_comm);
+        simpl (2^BW - X) in H
     end.
