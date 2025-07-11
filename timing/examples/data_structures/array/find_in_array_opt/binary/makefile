@@ -8,7 +8,7 @@ MARCH = rv32i_zicsr_zifencei_zicntr
 #RISCV_PREFIX ?= riscv-none-elf-
 
 # Override default optimization goal
-EFFORT = -Os
+EFFORT = -O3
 
 # Add extended debug symbols
 USER_FLAGS += -ggdb -gdwarf-3
@@ -34,5 +34,5 @@ USER_FLAGS += -Wl,--gc-sections
 NEORV32_HOME ?= /home/charles/Desktop/neorv32
 
 # Include the main NEORV32 makefile
-include ../../common.mk
+include ../../../common.mk
 
