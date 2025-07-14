@@ -42,7 +42,7 @@ Definition Z31 := 31.
 Definition Z32 := 32.
 Definition Z4095 := 0xfff.
 
-Inductive arm_data_op :=
+Variant arm_data_op :=
   | ARM_AND
   | ARM_EOR
   | ARM_SUB
@@ -59,7 +59,7 @@ Inductive arm_data_op :=
   | ARM_MOV (* also called LSL, LSR, ASR, RRX, ROR depending on shift, but functionally the same *)
   | ARM_BIC
   | ARM_MVN.
-Inductive arm_mul_op :=
+Variant arm_mul_op :=
   | ARM_MUL
   | ARM_MLA
   | ARM_UMAAL
@@ -68,25 +68,25 @@ Inductive arm_mul_op :=
   | ARM_UMLAL
   | ARM_SMULL
   | ARM_SMLAL.
-Inductive arm_sat_op :=
+Variant arm_sat_op :=
   | ARM_QADD
   | ARM_QSUB
   | ARM_QDADD
   | ARM_QDSUB.
-Inductive arm_mem_op :=
+Variant arm_mem_op :=
   (* unpriviledged load/stores have a different mnemonic but can be determined by P and W fields *)
   | ARM_LDR
   | ARM_STR
   | ARM_LDRB
   | ARM_STRB.
-Inductive arm_xmem_op :=
+Variant arm_xmem_op :=
   | ARM_STRH
   | ARM_LDRH
   | ARM_LDRD
   | ARM_LDRSB
   | ARM_STRD
   | ARM_LDRSH.
-Inductive arm_memm_op :=
+Variant arm_memm_op :=
   | ARM_STMDA
   | ARM_LDMDA
   | ARM_STMDB (* called PUSH when wback and rn=sp *)
@@ -95,32 +95,32 @@ Inductive arm_memm_op :=
   | ARM_LDMIA (* called POP when wback rn=sp *)
   | ARM_STMIB
   | ARM_LDMIB.
-Inductive arm_sync_size :=
+Variant arm_sync_size :=
   | ARM_sync_word
   | ARM_sync_doubleword
   | ARM_sync_byte
   | ARM_sync_halfword.
-Inductive arm_pas_op :=
+Variant arm_pas_op :=
   | ARM_ADD16
   | ARM_ASX
   | ARM_SAX
   | ARM_SUB16
   | ARM_ADD8
   | ARM_SUB8.
-Inductive arm_pas_type :=
+Variant arm_pas_type :=
   | ARM_pas_normal
   | ARM_pas_saturating
   | ARM_pas_halving.
-Inductive arm_rev_op :=
+Variant arm_rev_op :=
   | ARM_REV
   | ARM_REV16
   | ARM_RBIT
   | ARM_REVSH.
-Inductive arm_extend_op := (* non-A variants have Rn=15 *)
+Variant arm_extend_op := (* non-A variants have Rn=15 *)
   | ARM_XTAB16
   | ARM_XTAB
   | ARM_XTAH.
-Inductive arm_vfp_op :=
+Variant arm_vfp_op :=
   | ARM_VMLA
   | ARM_VNMLA
   | ARM_VMUL
@@ -129,13 +129,13 @@ Inductive arm_vfp_op :=
   | ARM_VDIV
   | ARM_VFNMA
   | ARM_VFMA.
-Inductive arm_inst :=
+Variant arm_inst :=
   (* causes undefined instruction exception *)
   | ARM_UNDEFINED
   (* no behaviour guaranteed *)
   | ARM_UNPREDICTABLE
   (* decoding not implemented yet, treat as unpredictable *)
-  | x
+  | idk
 
   (* data processing register: A5.2.1, pg A5-195 *)
   | ARM_data_r (op: arm_data_op) (cond S Rn Rd imm5 type Rm: Z)
@@ -199,10 +199,12 @@ Inductive arm_inst :=
   | ARM_PLD_i (U R Rn imm12: Z)
   | ARM_PLD_r (U R Rn imm5 type Rm: Z)
       .
-
-(*Definition zxbits z i j := Z.shiftr z i mod Z.shiftl Z1 (Z.max Z0 (j - i)).*)
-Notation zxbits := Z_xbits.
-Definition zcbits z1 i z2 := Z.lor (Z.shiftl z1 i) z2.
+Definition zxbits z i j := Z.shiftr z i mod Z.shiftl Z1 (Z.max Z0 (j - i)).
+Lemma zxbits_eq:
+  forall z i j, zxbits z i j = Z_xbits z i j.
+Proof.
+  intros. unfold zxbits, Z_xbits. rewrite Z.shiftl_1_l. reflexivity.
+Qed.
 Definition bitb z b := zxbits z b (b + Z1).
 Notation "x !=? y" := (negb (Z.eqb x y)) (at level 25, left associativity).
 Notation "x .| y" := (Z.lor x y) (at level 25, left associativity).
@@ -213,7 +215,7 @@ Notation "x & y" := (Z.land x y) (at level 40, left associativity).
 
 (********** decoding **********)
 
-Definition armcond z := zxbits z Z28 Z32.
+Notation armcond z := (zxbits z Z28 Z32) (only parsing).
 
 Definition arm_decode_data_r op z :=
   let cond := armcond z in
@@ -339,9 +341,9 @@ Definition arm_decode_misc z := (* A5.2.12, pg A5-205 *)
     if (bitb z Z21 =? Z0) then ARM_UNPREDICTABLE (*mrs banked, unpredictable in user mode*)
       else ARM_UNPREDICTABLE (*msr banked, unpredictable in user mode*)
     else
-      if (op =? Z0) || (op =? Z2) then x (*mrs*)
-      else if (op =? Z1) then x (*msr reg*)
-      else if (op =? Z3) then x (*msr reg*)
+      if (op =? Z0) || (op =? Z2) then idk (*mrs*)
+      else if (op =? Z1) then idk (*msr reg*)
+      else if (op =? Z3) then idk (*msr reg*)
       else ARM_UNDEFINED
   else if (op2 =? Z1) then
     if (op =? Z1) then arm_decode_bx z
@@ -361,12 +363,12 @@ Definition arm_decode_misc z := (* A5.2.12, pg A5-205 *)
 Definition arm_decode_halfword_multiply z := (* A5.2.7, pg A5-200,201 *)
   let op1 := zxbits z Z21 Z23 in
   let op := bitb z Z5 in
-  if (op1 =? Z0) then x (*smlabb*)
+  if (op1 =? Z0) then idk (*smlabb*)
   else if (op1 =? Z1) then
-    if (op =? Z0) then x (*smlawb*)
-    else x (*smulwb*)
-  else if (op1 =? Z2) then x (*smlalbb*)
-  else x (*smulbb*).
+    if (op =? Z0) then idk (*smlawb*)
+    else idk (*smulwb*)
+  else if (op1 =? Z2) then idk (*smlalbb*)
+  else idk (*smulbb*).
 
 Definition arm_decode_mul op z :=
   let cond := armcond z in
@@ -415,7 +417,7 @@ Definition arm_decode_sync_primitives z := (* A5.2.10, pg A5-203 *)
      3=0 - swp/swpb, 3=1 - load/store exclusive
      2:1 - size
      0=0 - store, 0=1 - load *)
-  if (bitb op Z3 =? Z0) then x (* swp/swpb *)
+  if (bitb op Z3 =? Z0) then idk (* swp/swpb *)
   else
     let size := if (bitb op Z2 =? Z0) then
                   if (bitb op Z1 =? Z0) then ARM_sync_word else ARM_sync_doubleword
@@ -483,8 +485,8 @@ Definition arm_decode_msr_hints z := (* A5.2.11, pg A5-204 *)
   let op2 := zxbits z Z0 Z8 in
   if (op =? Z0) then
     if (op1 =? Z0) then arm_decode_hint z
-    else x (*msr imm*)
-  else x (*msr imm*).
+    else idk (*msr imm*)
+  else idk (*msr imm*).
 
 Definition arm_decode_data_misc z :=
   let op := bitb z Z25 in
@@ -601,14 +603,14 @@ Definition arm_decode_packing z :=
   let op2 := zxbits z Z5 Z8 in
   let op2_1 := bitb op2 Z0 in
   if (op1'2 =? Z0) then
-    if (op2_1 =? Z0) then x (*pkh*)
+    if (op2_1 =? Z0) then idk (*pkh*)
     else if (op2 =? Z3) then arm_decode_extend true ARM_XTAB16 z
-    else if (op2 =? Z5) then x (*sel*)
+    else if (op2 =? Z5) then idk (*sel*)
     else ARM_UNDEFINED
   else if (op1'2 =? Z1) then
-    if (op2_1 =? Z0) then x (*ssat*)
+    if (op2_1 =? Z0) then idk (*ssat*)
     else if (op1_1 =? Z0) then (* op1=010 *)
-      if (op2 =? Z1) then x (*ssat16*)
+      if (op2 =? Z1) then idk (*ssat16*)
       else if (op2 =? Z3) then arm_decode_extend true ARM_XTAB z
       else ARM_UNDEFINED
     else (* op1=011 *)
@@ -620,9 +622,9 @@ Definition arm_decode_packing z :=
     if (op1_1 =? Z0) && (op2 =? Z3) then arm_decode_extend false ARM_XTAB16 z
     else ARM_UNDEFINED
   else (*if (op1'2 =? Z3) then*)
-    if (op2_1 =? Z0) then x (*usat*)
+    if (op2_1 =? Z0) then idk (*usat*)
     else if (op1_1 =? Z0) then (* op1=110 *)
-      if (op2 =? Z1) then x (*usat16*)
+      if (op2 =? Z1) then idk (*usat16*)
       else if (op2 =? Z3) then arm_decode_extend false ARM_XTAB z
       else ARM_UNDEFINED
     else (* op1=111 *)
@@ -633,7 +635,7 @@ Definition arm_decode_packing z :=
 
 Definition arm_decode_signed_multiply z :=
   let op1 := zxbits z Z20 Z25 in
-  x.
+  idk.
 Definition arm_decode_media z :=
   let op1 := zxbits z Z20 Z25 in
   let op1'2 := zxbits op1 Z3 Z5 in
@@ -644,16 +646,16 @@ Definition arm_decode_media z :=
   else if (op1'2 =? Z2) then arm_decode_signed_multiply z
   else (* if (op1'2 =? Z3) then *)
     if (op1_3 =? Z0) then
-      if (op2 =? Z0) then x (*usad8/usada8*)
+      if (op2 =? Z0) then idk (*usad8/usada8*)
       else ARM_UNDEFINED
     else if (op1_3 =? Z2) || (op1_3 =? Z3) then
-      if (op2 =? Z2) || (op2 =? Z6) then x (*sbfx*)
+      if (op2 =? Z2) || (op2 =? Z6) then idk (*sbfx*)
       else ARM_UNDEFINED
     else if (op1_3 =? Z4) || (op1_3 =? Z5) then
-      if (op2 =? Z0) || (op2 =? Z4) then x (*bfc/bfi*)
+      if (op2 =? Z0) || (op2 =? Z4) then idk (*bfc/bfi*)
       else ARM_UNDEFINED
     else if (op1_3 =? Z6) || (op1_3 =? Z7) then
-      if (op2 =? Z2) || (op2 =? Z6) then x (*ubfx*)
+      if (op2 =? Z2) || (op2 =? Z6) then idk (*ubfx*)
       else ARM_UNDEFINED
     else ARM_UNDEFINED.
 
@@ -737,7 +739,7 @@ Definition arm_decode_vlsm is_load z :=
     if (imm8 =? Z0) || (imm8 + (Vd << Z1) + D >? Z32) then ARM_UNPREDICTABLE
     else ok
   else
-    if (bitb imm8 Z0 =? Z1) then x (* idk what's going on with FSTMX *)
+    if (bitb imm8 Z0 =? Z1) then idk (* idk what's going on with FSTMX *)
     else if (imm8 =? Z0) || (imm8 >? Z32) || ((D << Z4) + Vd + (imm8 >> Z1) >? Z32) then ARM_UNPREDICTABLE
     (* TODO: vfpsmallregisterbank??? *)
     else ok.
@@ -840,16 +842,16 @@ Definition arm_decode_floating_data_processing z :=
       else
         if (opc2 =? Z0) then
           if (opc3 =? Z1) then arm_decode_vmov_fp true z
-          else x (*vabs*)
+          else idk (*vabs*)
         else if (opc2 =? Z1) then
-          if (opc3 =? Z1) then x (*vneg*)
-          else x (*vsqrt*)
-        else if (opc2 =? Z2) || (opc2 =? Z3) then x (*vcvtb*)
+          if (opc3 =? Z1) then idk (*vneg*)
+          else idk (*vsqrt*)
+        else if (opc2 =? Z2) || (opc2 =? Z3) then idk (*vcvtb*)
         else if (opc2 =? Z4) || (opc2 =? Z5) then arm_decode_vcmp z
-        else if (opc2 =? Z7) && (opc3 =? Z3) then x (*vcvt*)
-        else if (opc2 =? Z8) then x (**)
+        else if (opc2 =? Z7) && (opc3 =? Z3) then idk (*vcvt*)
+        else if (opc2 =? Z8) then idk (**)
         else
-          x.
+          idk.
 
 Definition arm_decode_vmrs z :=
   let cond := armcond z in
@@ -865,14 +867,14 @@ Definition arm_decode_8_16_32bit_transfer z :=
   if (L =? Z0) then
     if (C =? Z0) then
       if (A =? Z0) then arm_decode_vmov_r1 z
-      else x
-    else x
+      else idk
+    else idk
   else
     if (C =? Z0) then
       if (A =? Z0) then arm_decode_vmov_r1 z
       else if (A =? Z7) then arm_decode_vmrs z
       else ARM_UNDEFINED
-    else x.
+    else idk.
 Definition arm_decode_64bit_transfer z :=
   let C := bitb z Z8 in
   let op := zxbits z Z4 Z8 in
@@ -897,17 +899,17 @@ Definition arm_decode_coprocessor z := (* A5.6, pg A5-213 *)
       else if (zxbits op1 Z1 Z6 =? Z2) then arm_decode_64bit_transfer z
       else arm_decode_vreg_ls z (*extension load/store*) (* op1 = 0xxxxx not 000x0x *)
     else (* coproc = not 101x *)
-      if (op1 =? Z4) then x (*mcrr*)
-      else if (op1 =? Z5) then x (*mcrc*)
+      if (op1 =? Z4) then idk (*mcrr*)
+      else if (op1 =? Z5) then idk (*mcrc*)
       else if (zxbits op1 Z4 Z6 =? Z2) then
-        if (op =? Z0) then x (*cdp*)
+        if (op =? Z0) then idk (*cdp*)
         else if (bitb op1 Z0 =? Z0) then arm_decode_coproc_m true z
         else arm_decode_coproc_m false z
-      else if (bitb op1 Z0 =? Z0) then x (*stc*)
-      else x (*ldc*).
+      else if (bitb op1 Z0 =? Z0) then idk (*stc*)
+      else idk (*ldc*).
 
 Definition arm_decode_simd (z:Z) :=
-  x.
+  idk.
 
 Definition arm_decode_pld_r z :=
   let U := bitb z Z23 in
@@ -934,25 +936,25 @@ Definition arm_decode_mem_hint_simd z :=
   let op1'3 := zxbits op1 Z4 Z7 in
   let op1_3 := zxbits op1 Z0 Z3 in
   if (op1'3 =? Z0) then ARM_UNDEFINED
-  else if (op1'3 =? Z1) then x
+  else if (op1'3 =? Z1) then idk
   else if (op1'3 =? Z2) || (op1'3 =? Z3) then arm_decode_simd z
-  else if (op1'3 =? Z4) then x
+  else if (op1'3 =? Z4) then idk
   else if (op1'3 =? Z5) then
     if (op1_3 =? Z1) || (op1_3 =? Z5) then arm_decode_pld_i z (* op1=101x001,rn=15 is checked in here *)
     else if (op1_3 =? Z3) then ARM_UNPREDICTABLE
     else if (op1_3 =? Z7) then
       if (bitb op1 Z3 =? Z1) then ARM_UNPREDICTABLE
       else if (op2 =? Z0) || (op2 =? Z2) || (op2 =? Z3) || (op2 >=? Z7) then ARM_UNPREDICTABLE
-      else if (op2 =? Z1) then x (*clrex*)
-      else if (op2 =? Z4) then x (*dsb*)
-      else if (op2 =? Z5) then x (*dmb*)
-      else (*if (op2 =? Z6) then*) x (*isb*)
+      else if (op2 =? Z1) then idk (*clrex*)
+      else if (op2 =? Z4) then idk (*dsb*)
+      else if (op2 =? Z5) then idk (*dmb*)
+      else (*if (op2 =? Z6) then*) idk (*isb*)
     else ARM_UNDEFINED
   else if (op1'3 =? Z6) then
     if (bitb op2 Z0 =? Z0) then
-      if (op1_3 =? Z1) then x (* unallocated mem hint (nop) *)
+      if (op1_3 =? Z1) then idk (* unallocated mem hint (nop) *)
       else if (op1_3 =? Z3) || (op1_3 =? Z7) then ARM_UNPREDICTABLE
-      else if (op1_3 =? Z5) then x (* pli reg *)
+      else if (op1_3 =? Z5) then idk (* pli reg *)
       else ARM_UNDEFINED
     else ARM_UNDEFINED
   else (* if (op1'3 =? Z7) then *)
@@ -974,15 +976,15 @@ Definition arm_decode_unconditional z := (* A5.7, pg A5-214 *)
     else ARM_UNDEFINED
   else if (op1_3 =? Z5) then arm_decode_blx_i z
   else if (op1_3 =? Z6) then
-    if (op1_5 =? Z4) then x (*mcrr*)
-    else if (op1_5 =? Z5) then x (*mrrc*)
-    else if (bitb op1 Z0 =? Z0) && (op1_5 !=? Z0) && (op1_5 !=? Z4) then x (*stc*)
-    else if (bitb op1 Z0 =? Z1) && (op1_5 !=? Z1) && (op1_5 !=? Z5) then x (*ldc*)
+    if (op1_5 =? Z4) then idk (*mcrr*)
+    else if (op1_5 =? Z5) then idk (*mrrc*)
+    else if (bitb op1 Z0 =? Z0) && (op1_5 !=? Z0) && (op1_5 !=? Z4) then idk (*stc*)
+    else if (bitb op1 Z0 =? Z1) && (op1_5 !=? Z1) && (op1_5 !=? Z5) then idk (*ldc*)
     else ARM_UNDEFINED
   else if (op1_3 =? Z7) && (bitb op1 Z4 =? Z0) then
-    if (op =? Z0) then x (*cdp*)
-    else if (bitb op1 Z0 =? Z0) then x (*mcr*)
-    else x (*mrc*)
+    if (op =? Z0) then idk (*cdp*)
+    else if (bitb op1 Z0 =? Z0) then idk (*mcr*)
+    else idk (*mrc*)
   else ARM_UNDEFINED.
 
 Definition arm_decode z :=
@@ -1177,14 +1179,20 @@ Fixpoint arm_assemble_all l :=
   | nil => Some nil
   end.
 
-Lemma arm_assemble_eq : forall i z, arm_assemble i = Some z -> arm_decode z = i.
+Lemma arm_assemble_eq:
+  forall i z,
+    arm_assemble i = Some z ->
+    arm_decode z = i.
 Proof.
   intros. unfold arm_assemble in H.
-  remember (match i with | x | _ => _ end) as d.
+  remember (match i with | _ => _ end : Z) as d.
   destruct arm_inst_beq eqn:e. apply internal_arm_inst_dec_bl. injection H. intro. rewrite <- H0. assumption.
   discriminate.
 Qed.
-Lemma arm_assemble_all_eq : forall l z, arm_assemble_all l = Some z -> map arm_decode z = l.
+Lemma arm_assemble_all_eq:
+  forall l z,
+    arm_assemble_all l = Some z ->
+    map arm_decode z = l.
 Proof.
   induction l.
     intros. inversion H. reflexivity.
@@ -1243,8 +1251,8 @@ Definition arm_varid n :=
   | 14 => R_LR
   | _ => R_PC
   end.
-Definition temp0 := V_TEMP 0.
-Definition vtemp0 := Var temp0.
+Notation temp0 := (V_TEMP 0).
+Notation vtemp0 := (Var temp0).
 Definition arm_assign_R n val := Move (arm_varid n) val.
 Definition arm_R n := if (n =? 15) then BinOp OP_PLUS (Var R_PC) (Word 8 32) else Var (arm_varid n).
 Definition arm_assign_MemU addr size val :=
@@ -1259,7 +1267,7 @@ Notation "R[ m ]" := (arm_R m) (at level 0).
 Notation "MemU[ a , s ] := v" := (arm_assign_MemU a s v) (at level 0).
 Notation "MemU[ a , s ]" := (arm_MemU a s) (at level 0).
 
-Inductive arm_srtype :=
+Variant arm_srtype :=
   | ARM_LSL
   | ARM_LSR
   | ARM_ASR
@@ -1357,7 +1365,7 @@ Definition arm_havoc :=
   ) Nop) (Jmp (Unknown 32)).
 Definition BXWritePC address :=
   If (Extract 0 0 address) (
-    arm_havoc (* switch to thumb mode *)
+    Seq (Move R_T (Word 1 1)) (Seq (Move R_JF (Word 0 1)) (Jmp (BinOp OP_AND address (Word 0xffff_fffe 32))))
   ) (* else *) (
     If (BinOp OP_EQ (Extract 1 1 address) (Word 0 1)) (
       Jmp address
@@ -1581,6 +1589,30 @@ Definition arm_lsm_op_il op register_list :=
 Definition arm_lsm_il op cond W Rn register_list :=
   arm_lsm_op_il op register_list cond W Rn register_list.
 
+Definition arm_pas_il (is_signed: bool) (type: arm_pas_type) (op: arm_pas_op) (cond Rn Rd Rm: N) :=
+  arm_cond_il cond (
+    match type with
+    | ARM_pas_normal => Seq (R[Rd] := (Unknown 32)) (Move R_GE (Unknown 4))
+    | _ => R[Rd] := (Unknown 32)
+    end).
+Definition arm_mul_il op cond (s Rd_RdHi Ra_RdLo Rm Rn: N) :=
+  let assign := match op with
+                | ARM_MUL | ARM_MLA | ARM_MLS => R[Rd_RdHi] := (Unknown 32)
+                | _ => Seq (R[Rd_RdHi] := (Unknown 32)) (R[Ra_RdLo] := (Unknown 32))
+                end in
+  let flags := Seq (Move R_NF (Unknown 1)) (Move R_ZF (Unknown 1)) in
+  arm_cond_il cond (if s =? 1 then Seq assign flags else assign).
+Definition arm_sat_il (op: arm_sat_op) (cond Rn Rd Rm: N) :=
+  arm_cond_il cond (Seq (R[Rd] := (Unknown 32)) (Move R_QF (Unknown 1))).
+Definition arm_hint_il (cond op2: N) :=
+  Nop.
+Definition arm_svc_il cond (imm24: N) :=
+  arm_cond_il cond (Exn 8).
+Definition arm_rev_il (op: arm_rev_op) (cond Rd Rm: N) :=
+  arm_cond_il cond (R[Rd] := (Unknown 32)).
+Definition arm_extend_il (is_signed: bool) (op: arm_extend_op) (cond Rn Rd rotate Rm: N) :=
+  arm_cond_il cond (R[Rd] := (Unknown 32)).
+
 
 Notation "$ x" := (Z.to_N x) (at level 0, only parsing).
 Definition arm2il (a:addr) inst :=
@@ -1597,9 +1629,27 @@ Definition arm2il (a:addr) inst :=
             | ARM_B cond imm24 => arm_b_il $cond $imm24
             | ARM_BL cond imm24 => arm_bl_il $cond $imm24
             | ARM_UNDEFINED => Exn 4
+            | ARM_pas is_signed type op cond Rn Rd Rm => arm_pas_il is_signed type op $cond $Rn $Rd $Rm
+            | ARM_mul op cond s Rd_RdHi Ra_RdLo Rm Rn => arm_mul_il op $cond $s $Rd_RdHi $Ra_RdLo $Rm $Rn
+            | ARM_sat op cond Rn Rd Rm => arm_sat_il op $cond $Rn $Rd $Rm
+            | ARM_hint cond op2 => arm_hint_il $cond $op2
+            | ARM_SVC cond imm24 => arm_svc_il $cond $imm24
+            | ARM_rev op cond Rd Rm => arm_rev_il op $cond $Rd $Rm
+            | ARM_extend is_signed op cond Rn Rd rotate Rm => arm_extend_il is_signed op $cond $Rn $Rd $rotate $Rm
             | _ => arm_havoc
             end in
   Seq (Move R_PC (Word a 32)) il.
+
+Definition arm_prog: program :=
+  fun s a => match s R_T, s R_JF, a mod 4, a <? 2 ^ 32 with
+             | 0, 0, 0, true =>
+                 let i := arm_decode (Z.of_N (getmem 32 LittleE 4 (s V_MEM32) a)) in
+                 match i with
+                 | idk | ARM_UNPREDICTABLE => None
+                 | _ => Some (4, arm2il a i)
+                 end
+             | _, _, _, _ => None
+             end.
 
 (********** well-typedness **********)
 
@@ -1661,7 +1711,6 @@ Ltac etyp :=
          | X: hastyp_exp _ ?x ?a, Y: hastyp_exp _ ?y ?b |- hastyp_exp _ (Concat ?x ?y) _ => apply TConcat with (w1 := a) (w2 := b)
          | |- pfsub arm7typctx arm7typctx  => reflexivity
          | |- context [R[_]] => unfold arm_R; destruct N.eqb
-         | |- context [vtemp0] => unfold vtemp0
          | |- _ < _ => reflexivity
          | |- _ _ = Some _ => reflexivity
          end.
@@ -1765,22 +1814,24 @@ Lemma hastyp_bxwritepc:
       hastyp_exp c e 32 ->
       hastyp_stmt armc c (BXWritePC e) c.
 Proof.
-  intros. unfold BXWritePC. stypc c; first [now etyps 32 | now apply hastyp_havoc].
+  intros. unfold BXWritePC. stypc c; first [now etyps 32 | now apply hastyp_havoc | now apply H].
 Qed.
-Lemma hastyp_memu : forall c a s,
-  armc ⊆ c ->
-  hastyp_exp c a 32 ->
-  s <= 8 ->
-  hastyp_exp c MemU[a, s] (s*8).
+Lemma hastyp_memu:
+  forall c a s,
+    armc ⊆ c ->
+    hastyp_exp c a 32 ->
+    s <= 8 ->
+    hastyp_exp c MemU[a, s] (s*8).
 Proof.
   intros. unfold arm_MemU. etyp; try apply H; try easy; try lia.
 Qed.
-Lemma hastyp_assign_memu : forall c a s e,
-  armc ⊆ c ->
-  hastyp_exp c a 32 ->
-  hastyp_exp c e (s*8) ->
-  s <= 8 ->
-  hastyp_stmt armc c (MemU[a, s] := e) c.
+Lemma hastyp_assign_memu:
+  forall c a s e,
+    armc ⊆ c ->
+    hastyp_exp c a 32 ->
+    hastyp_exp c e (s*8) ->
+    s <= 8 ->
+    hastyp_stmt armc c (MemU[a, s] := e) c.
 Proof.
   intros. unfold arm_assign_MemU. stypc c; try apply H; try easy; try lia.
 Qed.
@@ -1829,7 +1880,7 @@ Lemma hastyp_arm_data_op:
         hastyp_exp armc (fst (fst (f x y))) 32
         /\ hastyp_exp armc (snd (fst (f x y))) 1
         /\ hastyp_exp armc (snd (f x y)) 1) ->
-    hastyp_stmt armc armc (addwcarry b f) armc) ->
+      hastyp_stmt armc armc (addwcarry b f) armc) ->
     hastyp_stmt armc armc (arm_data_op_il op shiftc addwcarry) armc.
 Proof.
   intros. unfold_stmt. destruct_match; first
@@ -1971,39 +2022,31 @@ Theorem welltyped_arm2il:
     a < 2 ^ 32 ->
     hastyp_stmt armc armc (arm2il a (arm_decode z)) armc.
 Proof.
-  intros. unfold_stmt. styp.
-    assumption.
-    remember (arm_decode z) as i. unfold arm_decode in Heqi. revert Heqi.
-      repeat match goal with
-             | |- context[if ?a then _ else _] => destruct a eqn:?
-             | |- context[i = ?a] => unfold_rec a
-             end; intro; rewrite Heqi.
-  all: repeat match goal with
-              | |- context[arm_data_i_il] => apply hastyp_arm_data_i
-              | |- context[arm_data_rsr_il] => apply hastyp_arm_data_rsr
-              | |- context[arm_data_r_il] => apply hastyp_arm_data_r
-              | |- context[arm_mov_wt_il] => apply hastyp_arm_mov_wt
-              | |- context[arm_ls_i_il] => apply hastyp_arm_ls_i
-              | |- context[arm_ls_r_il] => apply hastyp_arm_ls_r
-              | |- context[arm_lsm_il] => apply hastyp_arm_lsm
-              | |- context[arm_bx_il] => apply hastyp_arm_bx
-              | |- context[arm_blx_r_il] => apply hastyp_arm_blx_r
-              | |- context[arm_b_il] => apply hastyp_arm_b
-              | |- context[arm_bl_il] => apply hastyp_arm_bl
-              | _ => hammer
-              end.
-  all: unfold Z7, Z12, Z16, Z20; rewrite <- ?N2Z.inj_pos, <- ?N2Z.inj_0, <- xbits_Z2N; [ apply xbits_bound | lia ].
+  intros. unfold_stmt. styp. assumption.
+  remember (arm_decode z) as i. revert Heqi.
+  repeat match goal with
+         | |- context[if ?a then _ else _] => destruct a eqn:?
+         | |- context[i = ?a] => unfold_rec a
+         end; intro; rewrite Heqi.
+  all: match goal with
+       | |- context[arm_data_i_il] => apply hastyp_arm_data_i
+       | |- context[arm_data_rsr_il] => apply hastyp_arm_data_rsr
+       | |- context[arm_data_r_il] => apply hastyp_arm_data_r
+       | |- context[arm_mov_wt_il] => apply hastyp_arm_mov_wt
+       | |- context[arm_ls_i_il] => apply hastyp_arm_ls_i
+       | |- context[arm_ls_r_il] => apply hastyp_arm_ls_r
+       | |- context[arm_lsm_il] => apply hastyp_arm_lsm
+       | |- context[arm_bx_il] => apply hastyp_arm_bx
+       | |- context[arm_blx_r_il] => apply hastyp_arm_blx_r
+       | |- context[arm_b_il] => apply hastyp_arm_b
+       | |- context[arm_bl_il] => apply hastyp_arm_bl
+       | _ => hammer
+       end.
+  all: match goal with
+       | |- Z.to_N (_ _ ?a ?b) < _ => change a with (Z.of_N $a); change b with (Z.of_N $b); rewrite zxbits_eq, <- xbits_Z2N; [ apply xbits_bound | lia ]
+       | |- context[hastyp_stmt] => repeat (unfold_stmt; destruct_match; hammer)
+       end.
 Qed.
-Definition arm_prog : program :=
-  fun s a => match s R_T, s R_JF, a mod 4, a <? 2 ^ 32 with
-             | 0, 0, 0, true =>
-                 let i := arm_decode (Z.of_N (getmem 32 LittleE 4 (s V_MEM32) a)) in
-                 match i with
-                 | x | ARM_UNPREDICTABLE => None
-                 | _ => Some (4, arm2il a i)
-                 end
-             | _, _, _, _ => None
-             end.
 Theorem welltyped_arm_prog:
   welltyped_prog arm7typctx arm_prog.
 Proof.
