@@ -56,7 +56,7 @@ def main():
     pct_off = []
 
     for i, (measured, found_idx) in enumerate(zip(cycle_counts, found)):
-        measured -= 9999 # To account for calling convention cycles in the caller # TODO
+        measured -= 15 # To account for calling convention cycles in the caller # TODO
         len_value = i + 1
         expected = equation(len_value, found_idx)
         if expected is not None:
