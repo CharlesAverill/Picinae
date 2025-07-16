@@ -47,8 +47,11 @@ Tactic Notation "unfold_time_of_addr" "in" hyp(H) :=
     cbv [tm.time_of_addr neorv32_cycles_upper_bound] in H; cbn - [setmem getmem].
 Ltac unfold_cycle_count_list :=
     unfold cycle_count_of_trace; repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single; fold cycle_count_of_trace.
+Ltac unfold_latencies :=
+    unfold T_shift_latency, T_mul_latency, CPU_FAST_SHIFT_EN, CPU_FAST_MUL_EN in *.
 Ltac hammer :=
-    unfold_cycle_count_list; unfold_time_of_addr; unfold_decompose; 
+    unfold_cycle_count_list; unfold_time_of_addr; unfold_decompose;
+        unfold_latencies;
         psimpl; find_rewrites; try lia.
 
 Ltac handle_ex := 
