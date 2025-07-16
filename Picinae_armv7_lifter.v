@@ -129,6 +129,12 @@ Variant arm_vfp_op :=
   | ARM_VDIV
   | ARM_VFNMA
   | ARM_VFMA.
+Variant arm_vfp_other_op :=
+  | ARM_VMOV
+  | ARM_VABS
+  | ARM_VNEG
+  | ARM_VSQRT.
+
 Variant arm_inst :=
   (* causes undefined instruction exception *)
   | ARM_UNDEFINED
@@ -189,12 +195,16 @@ Variant arm_inst :=
   | ARM_vls (is_load is_single: bool) (cond U D Rn Vd imm8: Z)
   | ARM_vlsm (is_load is_single: bool) (cond P U D W Rn Rd imm8: Z)
 
-  | ARM_VMOV_fp (is_reg: bool) (cond D imm4H Vd sz M imm4L_Vm: Z)
+  | ARM_VMOV_i (cond D imm4H Vd sz imm4L: Z)
   | ARM_VMOV_r2 (is_single: bool) (cond op Rt2 Rt M Vm: Z)
   | ARM_VMOV_r1 (cond op Vn Rt N: Z)
   | ARM_vfp (op: arm_vfp_op) (cond D Vn Vd sz N Op M Vm: Z)
   | ARM_VCMP (cond D Vd sz E M Vm: Z)
   | ARM_VMRS (cond Rt: Z)
+  | ARM_VCVT_fpi (cond D opc2 Vd sz op M Vm: Z)
+  | ARM_VCVT_fpf (cond D op U Vd sf sx i imm4: Z)
+  | ARM_VCVT_ds (cond D Vd sz M Vm: Z)
+  | ARM_vfp_other (op: arm_vfp_other_op) (cond D Vd sz M Vm: Z)
 
   | ARM_PLD_i (U R Rn imm12: Z)
   | ARM_PLD_r (U R Rn imm5 type Rm: Z)
@@ -762,16 +772,15 @@ Definition arm_decode_vreg_ls z :=
     else if (o_2 =? Z1) then arm_decode_vls true z
     else ARM_UNDEFINED.
 
-Definition arm_decode_vmov_fp is_reg z :=
+Definition arm_decode_vmov_i z :=
   let cond := armcond z in
   let D := bitb z Z22 in
   let imm4H := zxbits z Z16 Z20 in
   let Vd := zxbits z Z12 Z16 in
   let sz := bitb z Z8 in
-  let M := bitb z Z5 in
-  let imm4L_Vm := zxbits z Z0 Z4 in
-  if (negb is_reg) && ((M !=? Z0) || (bitb z Z7 !=? Z0)) then ARM_UNPREDICTABLE
-  else ARM_VMOV_fp is_reg cond D imm4H Vd sz M imm4L_Vm.
+  let imm4L := zxbits z Z0 Z4 in
+  if (bitb z Z5 !=? Z0) || (bitb z Z7 !=? Z0) then ARM_UNPREDICTABLE
+  else ARM_VMOV_i cond D imm4H Vd sz imm4L.
 
 Definition arm_decode_vmov_r2 is_single z :=
   let cond := armcond z in
@@ -818,6 +827,50 @@ Definition arm_decode_vfp op z :=
   let Vm := zxbits z Z0 Z4 in
   ARM_vfp op cond D Vn Vd sz N Op M Vm.
 
+Definition arm_decode_vcvt_ds z :=
+  let cond := armcond z in
+  let D := bitb z Z22 in
+  let Vd := zxbits z Z12 Z16 in
+  let sz := bitb z Z8 in
+  let M := bitb z Z5 in
+  let Vm := zxbits z Z0 Z4 in
+  ARM_VCVT_ds cond D Vd sz M Vm.
+
+Definition arm_decode_vcvt_fpi z :=
+  let cond := armcond z in
+  let D := bitb z Z22 in
+  let opc2 := zxbits z Z16 Z19 in
+  let Vd := zxbits z Z12 Z16 in
+  let sz := bitb z Z8 in
+  let op := bitb z Z7 in
+  let M := bitb z Z5 in
+  let Vm := zxbits z Z0 Z4 in
+  ARM_VCVT_fpi cond D opc2 Vd sz op M Vm.
+
+Definition arm_decode_vcvt_fpf z :=
+  let cond := armcond z in
+  let D := bitb z Z22 in
+  let op := bitb z Z18 in
+  let U := bitb z Z16 in
+  let Vd := zxbits z Z12 Z16 in
+  let sf := bitb z Z8 in
+  let sx := bitb z Z7 in
+  let i := bitb z Z5 in
+  let imm4 := zxbits z Z0 Z4 in
+
+  let size := if sx =? Z0 then Z16 else Z32 in
+  if (size <? (imm4 << Z1) + i) then ARM_UNPREDICTABLE
+  else ARM_VCVT_fpf cond D op U Vd sf sx i imm4.
+
+Definition arm_decode_vfp_other op z :=
+  let cond := armcond z in
+  let D := bitb z Z22 in
+  let Vd := zxbits z Z12 Z16 in
+  let sz := bitb z Z8 in
+  let M := bitb z Z5 in
+  let Vm := zxbits z Z0 Z4 in
+  ARM_vfp_other op cond D Vd sz M Vm.
+
 Definition arm_decode_floating_data_processing z :=
   let opc1 := zxbits z Z20 Z24 in
   let opc2 := zxbits z Z16 Z20 in
@@ -838,20 +891,20 @@ Definition arm_decode_floating_data_processing z :=
     else if (opc1_2 =? Z1) then arm_decode_vfp ARM_VFNMA z
     else if (opc1_2 =? Z2) then arm_decode_vfp ARM_VFMA z
     else (*other fp*)
-      if (opc3 =? Z0) || (opc3 =? Z2) then arm_decode_vmov_fp false z
+      if (opc3 =? Z0) || (opc3 =? Z2) then arm_decode_vmov_i z
       else
         if (opc2 =? Z0) then
-          if (opc3 =? Z1) then arm_decode_vmov_fp true z
-          else idk (*vabs*)
+        if (opc3 =? Z1) then arm_decode_vfp_other ARM_VMOV z
+          else arm_decode_vfp_other ARM_VABS z
         else if (opc2 =? Z1) then
-          if (opc3 =? Z1) then idk (*vneg*)
-          else idk (*vsqrt*)
+          if (opc3 =? Z1) then arm_decode_vfp_other ARM_VNEG z
+          else arm_decode_vfp_other ARM_VSQRT z
         else if (opc2 =? Z2) || (opc2 =? Z3) then idk (*vcvtb*)
         else if (opc2 =? Z4) || (opc2 =? Z5) then arm_decode_vcmp z
-        else if (opc2 =? Z7) && (opc3 =? Z3) then idk (*vcvt*)
-        else if (opc2 =? Z8) then idk (**)
-        else
-          idk.
+        else if (opc2 =? Z7) && (opc3 =? Z3) then arm_decode_vcvt_ds z
+        else if (opc2 =? Z8) || (opc2 =? Z12) || (opc2 =? Z13) then arm_decode_vcvt_fpi z
+        else if (opc2 =? Z10) || (opc2 =? Z11) || (opc2 =? Z14) || (opc2 =? Z15) then arm_decode_vcvt_fpf z
+        else ARM_UNDEFINED.
 
 Definition arm_decode_vmrs z :=
   let cond := armcond z in
@@ -999,7 +1052,6 @@ Definition arm_decode z :=
     else if (op1 =? Z3) && (op =? Z1) then arm_decode_media z
     else if (op1 =? Z4) || (op1 =? Z5) then arm_decode_branch_block_transfer z
     else (*if (op1 =? Z6) || (op1 =? Z7) then*) arm_decode_coprocessor z.
-
 
 (********** assembly **********)
 
@@ -1574,18 +1626,31 @@ Definition arm_stm_il start_val wback_val cond W Rn register_list :=
         (Move temp0 (BinOp OP_PLUS vtemp0 (Word 4 32))))
     (MemU[vtemp0, 4] := R[15])
     start_val wback_val cond W Rn register_list.
+Definition arm_lsm_op_type op :=
+  match op with
+  | ARM_STMDA | ARM_STMDB
+  | ARM_STMIA | ARM_STMIB => arm_stm_il
+  | ARM_LDMDA | ARM_LDMDB
+  | ARM_LDMIA | ARM_LDMIB => arm_ldm_il
+  end.
+Definition arm_lsm_op_start op bc :=
+  match op with
+  | ARM_STMDA | ARM_LDMDA => (-bc+Z4)%Z
+  | ARM_STMDB | ARM_LDMDB => (-bc)%Z
+  | ARM_STMIA | ARM_LDMIA => Z0
+  | ARM_STMIB | ARM_LDMIB => Z4
+  end.
+Definition arm_lsm_op_wback op bc :=
+  match op with
+  | ARM_STMDA | ARM_LDMDA
+  | ARM_STMDB | ARM_LDMDB => (-bc)%Z
+  | ARM_STMIA | ARM_LDMIA
+  | ARM_STMIB | ARM_LDMIB => bc
+  end.
 Definition arm_lsm_op_il op register_list :=
   let bc := Z.of_N (4 * popcount register_list) in
-  match op with
-  | ARM_STMDA => arm_stm_il (ofZ 32 (-bc+4)) (ofZ 32 (-bc))
-  | ARM_LDMDA => arm_ldm_il (ofZ 32 (-bc+4)) (ofZ 32 (-bc))
-  | ARM_STMDB => arm_stm_il (ofZ 32 (-bc)) (ofZ 32 (-bc))
-  | ARM_LDMDB => arm_ldm_il (ofZ 32 (-bc)) (ofZ 32 (-bc))
-  | ARM_STMIA => arm_stm_il 0 (ofZ 32 bc)
-  | ARM_LDMIA => arm_ldm_il 0 (ofZ 32 bc)
-  | ARM_STMIB => arm_stm_il 4 (ofZ 32 bc)
-  | ARM_LDMIB => arm_ldm_il 4 (ofZ 32 bc)
-  end.
+  (arm_lsm_op_type op) (ofZ 32 (arm_lsm_op_start op bc)) (ofZ 32 (arm_lsm_op_wback op bc)).
+
 Definition arm_lsm_il op cond W Rn register_list :=
   arm_lsm_op_il op register_list cond W Rn register_list.
 
@@ -1981,7 +2046,7 @@ Lemma hastyp_arm_lsm:
   forall op cond W Rn register_list,
     hastyp_stmt armc armc (arm_lsm_il op cond W Rn register_list) armc.
 Proof.
-  intros. repeat unfold_stmt.
+  intros. repeat unfold_stmt. unfold arm_lsm_op_start, arm_lsm_op_wback.
   destruct_match; unfold_stmt; apply hastyp_arm_lsm_.
   all: match goal with
        | |- ofZ _ _ < _ => apply ofZ_bound
