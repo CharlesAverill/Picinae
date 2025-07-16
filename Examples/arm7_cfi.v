@@ -105,6 +105,7 @@ Definition make_jump_table (addrs: list Z) (aabort o sl sr n: Z) : option (list 
 Definition id := Z.
 
 Definition PC := Z15.
+Definition LR := Z14.
 Definition SP := Z13.
 Definition STR rt rn offset :=
   let U := if offset <? Z0 then Z0 else Z1 in
@@ -206,26 +207,19 @@ Definition checked_b_reg (reg _ _ atable sl sr: Z) : option (list Z) :=
   ).
 Definition rewrite_b_reg (l: bool) (reg: Z) := rewrite_dyn (checked_b_reg reg) l.
 
-(*TODO*)
-(* (* check a pop {..., pc} *)
-(*    regs - 16 bit value from the instrution encoding *)
-(*    reg - register to use as a scratch register *) *)
-(* Definition checked_pop_pc (regs reg _ _ atable sl sr: Z) : option (list Z) := *)
-(*   let pc_offset := Z4 * (Z_popcount regs - Z1) in *)
-(*   Some ([ *)
-(*     Z0xe50d0000 .| Z32 .| (Z15 << Z12); (* DEBUG: str pc, [sp, #-32] *) *)
-(*     Z0xe50d0004 .| (reg << Z12); (* str reg, [sp, #-4] *) *)
-(*     Z0xe5900000 .| (reg << Z12) .| (Z13 << Z16) .| pc_offset; (* ldr reg, [sp, #pc_offset] *) *)
-(*     Z0xe1a00000 .| (reg << Z12) .| (sl << Z7) .| reg; (* lsl reg, reg, #sl *) *)
-(*     Z0xe1a00020 .| (reg << Z12) .| (sr << Z7) .| reg; (* lsr reg, reg, #sr *) *)
-(*     Z0xe1a00000 .| (reg << Z12) .| (Z2 << Z7) .| reg (* lsl reg, reg, #2 *) *)
-(*   ]++arm_add reg atable++[  (* add reg, reg, #atable *) *)
-(*     Z0xe5900000 .| (reg << Z12) .| (reg << Z16); (* ldr reg, [reg] *) *)
-(*     Z0xe58d0000 .| (reg << Z12) .| (Z13 << Z16) .| pc_offset; (* str reg, [sp, #pc_offset] *) *)
-(*     Z0xe51d0004 .| (reg << Z12); (* ldr reg, [sp, #-4] *) *)
-(*     Z0xe8bd0000 .| regs (* pop {regs} *) *)
-(*   ]). *)
-(* Definition rewrite_pop_pc (regs reg: Z) := rewrite_dyn (checked_pop_pc regs reg) false. *)
+Definition checked_ldm_pc op (Rn register_list reg n _ atable sl sr: Z) :=
+  let bc := Z4 * Z_popcount register_list in
+  let offset := arm_lsm_op_start op bc + bc - Z4 in
+  arm_assemble_all ([
+    STR PC SP Z_32;                         (* DEBUG: str pc, [sp, #-32] *)
+    STR reg SP Z_4;                         (* str reg, [sp, #-4] *)
+    LDR reg Rn offset                       (* ldr reg, [Rn, #pc_offset] *)
+  ]++arm_table_lookup atable sl sr reg++[   (* reg = table[H(reg)] *)
+    STR reg Rn offset;                      (* str reg, [Rn, #pc_offset] *)
+    LDR reg SP Z_4;                         (* ldr reg, [sp, #-4] *)
+    arm_decode n                            (* original inst *)
+  ]).
+Definition rewrite_ldm_pc op Rn register_list reg := rewrite_dyn (checked_ldm_pc op Rn register_list reg) false.
 
 (* pick a register that is different than the given ones *)
 Definition pick_good_reg (r0 r1 r2: Z) :=
@@ -272,7 +266,7 @@ Definition rewrite_pc_data_no_jump sanitized_inst (reg stack_offset: Z) (cond: Z
   end.
 
 Definition goto_abort a' aabort table_cache : option (Z * list Z * list Z * (id -> option (Z * Z * Z))):=
-  match arm_assemble (GOTO true Z14 a' aabort) with
+  match arm_assemble (GOTO true Z14 a' (aabort+Z0xffff+Z1)) with (* DEBUG: use a separate abort handler for this case *)
   | None => None
   | Some n' => Some (n', nil, nil, table_cache)
   end.
@@ -296,10 +290,18 @@ Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable
       let Rd' := if (Rd =? PC) then reg else Rd in
       let Rm' := if (Rm =? PC) then reg else Rm in
       let sanitized_inst := ARM_data_r op Z14 s Rn' Rd' imm5 type Rm' in
-      if (Rd =? Z15) then
+      if (Rd =? PC) then
         rewrite_pc_data sanitized_inst reg Z0 cond n oid label a a' adyn atable aabort table_cache
-      else if (Rn =? Z15) || (Rm =? Z15) then
-        rewrite_pc_data_no_jump sanitized_inst reg Z0 cond n a a' adyn atable aabort table_cache
+      else if (Rn =? PC) || (Rm =? PC) then
+        if (match op with ARM_MOV => Rd =? LR | _ => false end) then
+          unchanged (* "mov lr, pc" should use new pc, not old pc *)
+          (* it's possible that the old pc should be used, if lr is later used as a data memory address,
+             but a compiler would most likely pick a general register instead of lr if that was the case
+
+             although any rewritten jump would be able to handle the old pc value correctly, this inst
+             is sometimes used when calling a kernel user helper function, which we cannot rewrite *)
+        else
+          rewrite_pc_data_no_jump sanitized_inst reg Z0 cond n a a' adyn atable aabort table_cache
       else unchanged
   | ARM_data_rsr _ _ _ _ _ _ _ _ => unchanged
   | ARM_data_i op cond s Rn Rd imm12 =>
@@ -307,9 +309,9 @@ Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable
       let Rn' := if (Rn =? PC) then reg else Rn in
       let Rd' := if (Rd =? PC) then reg else Rd in
       let sanitized_inst := ARM_data_i op Z14 s Rn' Rd' imm12 in
-      if (Rd =? Z15) then
+      if (Rd =? PC) then
         rewrite_pc_data sanitized_inst reg Z0 cond n oid label a a' adyn atable aabort table_cache
-      else if (Rn =? Z15) then
+      else if (Rn =? PC) then
         rewrite_pc_data_no_jump sanitized_inst reg Z0 cond n a a' adyn atable aabort table_cache
       else unchanged
   | ARM_ls_i ARM_LDR cond P U W Rn Rt imm12 =>
@@ -340,7 +342,9 @@ Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable
 
   | ARM_lsm op cond W Rn register_list =>
       if (register_list <=? Z32767) then unchanged (* pc is not in reg list *)
-      else unchanged (*TODO*)
+      else
+        let reg := if (Rn =? Z0) then Z1 else Z0 in
+        rewrite_ldm_pc op Rn register_list reg cond n oid label a a' adyn atable aabort table_cache
 
   | ARM_vls is_load is_single cond U D Rn Vd imm8 =>
       if (Rn =? PC) then
@@ -366,12 +370,16 @@ Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable
   | ARM_rev _ _ _ _
   | ARM_extend _ _ _ _ _ _ _
   | ARM_vlsm _ _ _ _ _ _ _ _ _ _
-  | ARM_VMOV_fp _ _ _ _ _ _ _ _
+  | ARM_VMOV_i _ _ _ _ _ _
   | ARM_VMOV_r2 _ _ _ _ _ _ _
   | ARM_VMOV_r1 _ _ _ _ _
   | ARM_VCMP _ _ _ _ _ _ _
   | ARM_VMRS _ _
   | ARM_vfp _ _ _ _ _ _ _ _ _ _
+  | ARM_VCVT_ds _ _ _ _ _ _
+  | ARM_VCVT_fpi _ _ _ _ _ _ _ _
+  | ARM_VCVT_fpf _ _ _ _ _ _ _ _ _
+  | ARM_vfp_other _ _ _ _ _ _ _
       => unchanged
 
   (* don't allow any other instructions *)
@@ -459,7 +467,7 @@ Extract Inlined Constant Z4294967296 => "4294967296".
 Extract Inlined Constant Z.opp => "(~-)".
 Extract Inlined Constant Z.ltb => "(<)".
 (* maybe use library that has popcount instrinsic? *)
-Extract Inlined Constant Z_popcount => "(fun z -> coq_bitb z 0 + coq_bitb z 1 + coq_bitb z 2 + coq_bitb z 3 + coq_bitb z 4 + coq_bitb z 5 + coq_bitb z 6 + coq_bitb z 7 + coq_bitb z 8 + coq_bitb z 9 + coq_bitb z 10 + coq_bitb z 11 + coq_bitb z 12 + coq_bitb z 13 + coq_bitb z 14 + coq_bitb z 15 + coq_bitb z 16 + coq_bitb z 17 + coq_bitb z 18 + coq_bitb z 19 + coq_bitb z 20 + coq_bitb z 21 + coq_bitb z 22 + coq_bitb z 23 + coq_bitb z 24 + coq_bitb z 25 + coq_bitb z 26 + coq_bitb z 27 + coq_bitb z 28 + coq_bitb z 29 + coq_bitb z 30 + coq_bitb z 31)".
+Extract Inlined Constant Z_popcount => "(fun z -> bitb z 0 + bitb z 1 + bitb z 2 + bitb z 3 + bitb z 4 + bitb z 5 + bitb z 6 + bitb z 7 + bitb z 8 + bitb z 9 + bitb z 10 + bitb z 11 + bitb z 12 + bitb z 13 + bitb z 14 + bitb z 15 + bitb z 16 + bitb z 17 + bitb z 18 + bitb z 19 + bitb z 20 + bitb z 21 + bitb z 22 + bitb z 23 + bitb z 24 + bitb z 25 + bitb z 26 + bitb z 27 + bitb z 28 + bitb z 29 + bitb z 30 + bitb z 31)".
 Extract Inlined Constant Z.abs => "(abs)".
 Extract Inlined Constant internal_Z_beq => "(=)".
 Extract Inlined Constant Z.gtb => "(>)".
