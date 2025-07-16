@@ -1,0 +1,200 @@
+Cycle count read: 56
+Len: 1
+Cycle count read: 137
+Len: 2
+Cycle count read: 256
+Len: 3
+Cycle count read: 453
+Len: 4
+Cycle count read: 707
+Len: 5
+Cycle count read: 976
+Len: 6
+Cycle count read: 1298
+Len: 7
+Cycle count read: 1787
+Len: 8
+Cycle count read: 2201
+Len: 9
+Cycle count read: 2673
+Len: 10
+Cycle count read: 3239
+Len: 11
+Cycle count read: 3905
+Len: 12
+Cycle count read: 4659
+Len: 13
+Cycle count read: 5399
+Len: 14
+Cycle count read: 6005
+Len: 15
+Cycle count read: 7059
+Len: 16
+Cycle count read: 7931
+Len: 17
+Cycle count read: 8843
+Len: 18
+Cycle count read: 9855
+Len: 19
+Cycle count read: 10991
+Len: 20
+Cycle count read: 11903
+Len: 21
+Cycle count read: 13137
+Len: 22
+Cycle count read: 14645
+Len: 23
+Cycle count read: 15737
+Len: 24
+Cycle count read: 17217
+Len: 25
+Cycle count read: 18419
+Len: 26
+Cycle count read: 19877
+Len: 27
+Cycle count read: 21428
+Len: 28
+Cycle count read: 22847
+Len: 29
+Cycle count read: 24646
+Len: 30
+Cycle count read: 26139
+Len: 31
+Cycle count read: 27845
+Len: 32
+Cycle count read: 29531
+Len: 33
+Cycle count read: 31226
+Len: 34
+Cycle count read: 33191
+Len: 35
+Cycle count read: 35537
+Len: 36
+Cycle count read: 37563
+Len: 37
+Cycle count read: 39401
+Len: 38
+Cycle count read: 41711
+Len: 39
+Cycle count read: 43449
+Len: 40
+Cycle count read: 45935
+Len: 41
+Cycle count read: 47951
+Len: 42
+Cycle count read: 50715
+Len: 43
+Cycle count read: 52829
+Len: 44
+Cycle count read: 55055
+Len: 45
+Cycle count read: 57483
+Len: 46
+Cycle count read: 60581
+Len: 47
+Cycle count read: 63245
+Len: 48
+Cycle count read: 65703
+Len: 49
+Cycle count read: 68483
+Len: 50
+Cycle count read: 71291
+Len: 51
+Cycle count read: 74277
+Len: 52
+Cycle count read: 77039
+Len: 53
+Cycle count read: 80735
+Len: 54
+Cycle count read: 83127
+Len: 55
+Cycle count read: 85511
+Len: 56
+Cycle count read: 88937
+Len: 57
+Cycle count read: 90879
+Len: 58
+Cycle count read: 95309
+Len: 59
+Cycle count read: 98009
+Len: 60
+Cycle count read: 102111
+Len: 61
+Cycle count read: 105323
+Len: 62
+Cycle count read: 108323
+Len: 63
+Cycle count read: 112443
+Len: 64
+Cycle count read: 116543
+Len: 65
+Cycle count read: 119891
+Len: 66
+Cycle count read: 123663
+Len: 67
+Cycle count read: 128063
+Len: 68
+Cycle count read: 130493
+Len: 69
+Cycle count read: 135255
+Len: 70
+Cycle count read: 138377
+Len: 71
+Cycle count read: 141119
+Len: 72
+Cycle count read: 146883
+Len: 73
+Cycle count read: 151607
+Len: 74
+Cycle count read: 154709
+Len: 75
+Cycle count read: 157611
+Len: 76
+Cycle count read: 162977
+Len: 77
+Cycle count read: 166919
+Len: 78
+Cycle count read: 171153
+Len: 79
+Cycle count read: 176351
+Len: 80
+Cycle count read: 180515
+Len: 81
+Cycle count read: 184143
+Len: 82
+Cycle count read: 188615
+Len: 83
+Cycle count read: 192371
+Len: 84
+Cycle count read: 198987
+Len: 85
+Cycle count read: 203495
+Len: 86
+Cycle count read: 206639
+Len: 87
+Cycle count read: 212379
+Len: 88
+Cycle count read: 217007
+Len: 89
+Cycle count read: 222749
+Len: 90
+Cycle count read: 227175
+Len: 91
+Cycle count read: 231443
+Len: 92
+Cycle count read: 239903
+Len: 93
+Cycle count read: 243093
+Len: 94
+Cycle count read: 249053
+Len: 95
+Cycle count read: 252773
+Len: 96
+Cycle count read: 257979
+Len: 97
+Cycle count read: 264431
+Len: 98
+Cycle count read: 269243
+Len: 99
+Cycle count read: 273243
+Len: 100

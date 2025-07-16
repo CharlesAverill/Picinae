@@ -1,35 +1,28 @@
 import argparse
 import re
-from sympy import symbols, sympify, Piecewise, Eq
+from sympy import symbols, sympify, Piecewise, Eq, Max
 
 def parse_cycle_counts(log_path):
     with open(log_path, 'r') as f:
         lines = f.readlines()
 
     cycle_counts = []
-    found = []
     for line in lines:
         match = re.match(r'Cycle count read: (\d+)', line.strip())
         if match:
             cycle_counts.append(int(match.group(1)))
-        match = re.search(r' found at index (\d+)', line.strip())
-        if match:
-            found.append(int(match.group(1)))
-        elif re.search(r'not found', line.strip()):
-            found.append(-1)
-    return cycle_counts, found
+    return cycle_counts
 
 def compile_equation(equation_path):
     with open(equation_path, 'r') as file:
         expr_str = file.read().strip()
     length_sym = symbols('length')
-    i_sym = symbols('i')
     try:
         parsed_expr = sympify(expr_str)
-        return lambda length_value, i_value: int(parsed_expr.subs(length_sym, length_value).subs(i_sym, i_value).evalf())
+        return lambda length_value: int(parsed_expr.subs(length_sym, length_value).evalf())
     except Exception as e:
         print(f"Failed to parse equation: {e}")
-        return lambda length_value, i_value: None
+        return lambda length_value: None
 
 def variance(data, sample=False):
     if not data:
@@ -43,31 +36,28 @@ def variance(data, sample=False):
 def main():
     parser = argparse.ArgumentParser(description='Compare experiment cycle counts with an expected equation.')
     parser.add_argument('log_file', help='Path to the experiment log file')
-    parser.add_argument('equation_file', help='Path to the file containing the verified timing equation')
+    parser.add_argument('min_equation_file', help='Path to the file containing the verified timing minimum equation')
+    parser.add_argument('max_equation_file', help='Path to the file containing the verified timing maximum equation')
 
     args = parser.parse_args()
 
-    cycle_counts, found = parse_cycle_counts(args.log_file)
-    equation = compile_equation(args.equation_file)
+    cycle_counts = parse_cycle_counts(args.log_file)
+    min_eq, max_eq = compile_equation(args.min_equation_file), compile_equation(args.max_equation_file)
 
-    print(f"{'Len':>5} | {'Found Index':>11} | {'Measured':>8} | {'Expected':>8} | {'Diff':>6} | {'Diff/Measured':>13}")
-    print("-" * 66)
+    print(f"{'Len':>5} | {'Measured':>8} | {'Expected Min':>12} | {'Expected Max':>12} | {'Within Bounds':13} | {'Diff Min':8} | {'Diff Max':8}")
+    print("-" * 68)
 
     pct_off = []
 
-    for i, (measured, found_idx) in enumerate(zip(cycle_counts, found)):
+    for i, measured in enumerate(cycle_counts):
         measured -= 13 # To account for calling convention cycles in the caller
         len_value = i + 1
-        expected = equation(len_value, found_idx)
-        if expected is not None:
-            diff = abs(measured - expected)
-            pct_off.append(diff / measured)
-            print(f"{len_value:5} | {str(found_idx):>11} | {measured:8} | {expected:8} | {diff:6} | {diff/measured:.4f}")
+        expected_min, expected_max = min_eq(len_value), max_eq(len_value)
+        if expected_min is not None and expected_max is not None:
+            print(f"{len_value:5} | {measured:8} | {expected_min:12} | {expected_max:12} | {'True' if expected_min < measured < expected_max else 'False':13} | \
+{abs(measured - expected_min):8} | {abs(measured - expected_max):8}")
         else:
-            print(f"{len_value:5} | {str(found_idx):>11} | {measured:8} | {'ERROR':>8} | {'--':>6} | {'--':13}")
-
-    print(f"Avg percent off: {100.0 * sum(pct_off) / len(found):.4}%")
-    print(f"Variance percent off: {variance(pct_off)}%")
+            print(f"Error for len={len_value}")
 
 if __name__ == '__main__':
     main()
