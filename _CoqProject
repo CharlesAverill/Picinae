@@ -8,6 +8,7 @@ Picinae_simplifier_v1_1.v
 Picinae_ISA.v
 Picinae_i386.v
 Picinae_armv7.v
+Picinae_armv7_lifter.v
 Picinae_riscv.v
 Picinae_amd64.v
 Picinae_armv8_pcode.v
