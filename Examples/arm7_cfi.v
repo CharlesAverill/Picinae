@@ -229,6 +229,7 @@ Definition pick_good_reg (r0 r1 r2: Z) :=
       else Z2
     else Z1
   else Z0.
+
 (* check a pc data inst
    reg - register to use as a scratch register *)
 Definition checked_pc_data sanitized_inst (reg stack_offset n a atable sl sr: Z) : option (list Z) :=
@@ -396,7 +397,9 @@ Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable
    adyn - address to place the dynamic jump implementations
    atable - address to place the jump tables
    aabort - address where the abort handler is located *)
-Fixpoint _rewrite (table_cache: id -> option (Z * Z * Z)) (pol: Z -> id) (label: id -> list Z) (ns: list Z) (a a' adyn atable aabort: Z) : option (list Z * list (list Z) * list (list Z)) :=
+Fixpoint _rewrite (table_cache: id -> option (Z * Z * Z)) 
+  (pol: Z -> id) (label: id -> list Z) (ns: list Z) (a a' adyn atable aabort: Z) 
+  : option (list Z * list (list Z) * list (list Z)) :=
   match ns with
   | nil => Some (nil, nil, nil)
   | n::tail =>
@@ -546,3 +549,144 @@ Proof.
       intros. now apply Forall_cons.
     discriminate.
 Qed.
+
+(** Notes on the safety property design *)
+
+Definition policy := Z -> id.
+
+Definition index := N.
+Definition addr := N.
+Definition ienc := Z. (* instruction encoding in binary *)
+(* Policy pol permits the original instruction at index i to transfer control to the
+   original instruction at index i' if:
+   (a) j' is labeled with the equivalence class of dynamic targets for j.  *)
+Definition policytarget (pol:policy) (label:id->list Z) (addrof:index->addr) (j j':index) :=
+      In (Z.of_N (addrof j')) (label (pol (Z.of_N j))).
+
+
+(** The riscv policy is a `list (option Z * (Z * list Z))`.  The list assigns to each instruction
+    an optional "input identifier", an "output identifier" for the class of valid indirect-jump targets, 
+    and a list of permissible "static destination" -- relative indexes of instructions the instruction may
+    statically jump or fall-through to.
+
+    The arm7 policy is a `Z->id` function giving an output identifier to each instruction.  The label is
+    the complementary `id -> list Z` function that maps an id to a list of addresses within that class.
+    There is no "static destination" list in the arm7 implementation.  We can compute static
+    destinations on an instruction-by-instruction basis if we want to, or we can use the same computation
+    to make a similar list.  We arbitrarily decide to do the former for our first attempt.
+
+    In riscv the indexmap maps indices in the new code (list (list Z)) to the index of the instruction
+    in the old code.  This is enabled by the new code having the dynamic jump checks inlined.  In this
+    cfi version the dynamic jump checks are in another block (.dyn), so we can't rely on the same
+    indexmap and blockboundary definitions.  For instance, a dynamic jump is rewritten to a static jump
+    in the new code to a block in the dynamic jump table .dyn.  This static branch instruction should be
+    considered the blockboundary of the block that includes itself and the block in .dyn.
+ *)
+
+(** Glossary
+    pol - the policy (Z->id)
+    r - the rewriter
+    im - indexmap, map from 
+    l - the list of instructions
+    jmptbl - 
+ *)
+Open Scope N.
+(** Tentative mapping from instruction indices to memory addresses.
+    We define indices as the offset of the instruction in l'
+    appended with the flattened dyn'.  If the index is out of bounds
+    we return the max index, copying the behavior of indexmap' in
+    riscv_cfi. 
+
+    We assume a 32-bit architecture. *)
+Definition addr_of_index bi' (l':list ienc) bdyn' (dyn':list (list ienc)) (j:index) :=
+  if j <? N.of_nat (length l') then 4 * (ofZ 32 bi' + j)
+  else if j - N.of_nat (length l') <? N.of_nat (length (concat dyn'))
+    then 4 * (ofZ 32 bdyn' + (j - (N.of_nat (length l'))))
+    else 4 * (ofZ 32 bdyn' + N.of_nat (length (concat dyn'))).
+
+(** Tentative mapping from indices to blocks. *)
+Fixpoint block_of_index_ (dyn':list (list ienc)) (j:index) :=
+  (match dyn' with nil => O | b::t =>
+     if N.to_nat j <? length b then O else S (block_of_index_ t (N.sub j  (N.of_nat (length b))))
+   end)%nat.
+
+  
+Definition block_of_index (l':list ienc) (dyn':list (list ienc)) j :=
+  if j <? N.of_nat (length l') then j
+  else N.of_nat (block_of_index_ dyn' (j - (N.of_nat (length l')))).
+
+(* Every instruction is the start of a block. The non-singleton blocks are those
+   that jump from l' to dyn'. *)
+Definition blockboundary (l':list ienc) i' :=
+  i' < (N.of_nat (length l')).
+
+Definition safety (pol:policy) r :=
+  forall (l: list ienc) l' s0 m0 (bi bi':Z) t s s' q (j0 j j':index) x c'
+    (* TODO: change label to index -> list addr *)
+    (* TODO: we haven't used the jump table, should we? *)
+    (label:id->list Z) (bdyn' btable' babort':Z) dyn' (jtable':list (list Z)) addrof
+
+    (* Bind addrof to a specialized addr_of_index function. *)
+    (AOF: addrof = addr_of_index bi' l' bdyn' dyn')
+
+    (* Let l', dyn', jtable' be the output of the rewriter. *)
+    (NC: r pol label l bi bi' bdyn' btable' babort' = Some (l',dyn', jtable'))
+
+    (* Let (4*j,s)::t be a trace that starts at index bi'+j0 in initial state s0. *)
+    (ENTRY: startof t (Addr (addrof j), s) = (Addr (addrof j0), s0))
+    (XP: exec_prog arm_prog ((Addr (addrof j),s)::t))
+
+    (* Let m0 be the starting memory contents. *)
+    (S0: s0 V_MEM32 = m0)
+
+    (* Assume m0 contains the rewritten code starting at instruction index i *)
+    (L': forall i n, nth_error l' i = Some n ->
+                     getmem 32 LittleE 4 m0 (addrof (N.of_nat i)) = Z.to_N n)
+
+    (* Assume m0 contains the rewritten dynamic jumps starting at instruction index i *)
+    (DYN': forall (d i:nat) n, (i = d + length l')%nat -> nth_error (concat dyn') i = Some n ->
+                     getmem 32 LittleE 4 m0 (addrof (N.of_nat i)) = Z.to_N n)
+
+    (* Assume the code section remains non-writable. *)
+    (NWC: forall t x s m i, exec_prog arm_prog ((x,s)::t) ->
+            s V_MEM32 = m -> (i < length l' + length (concat dyn'))%nat ->
+            getmem 32 LittleE 4 m (addrof (N.of_nat i)) = getmem 32 LittleE 4 m0 (addrof (N.of_nat i)))
+
+    (* Assume memory outside the code section remains non-executable.
+       For all addresses either that address is not executable OR there exists
+       an index into our new code (l' + dyn') with that address.
+    
+       We structure it this way because l' and dyn' are not necessarily adjacent,
+       a simple out of bounds check will not work, but a complex bounds check
+       may turn out to be simpler than this existence-based prop.
+
+       Arm7 does not have an A_EXEC element in our arch spec.  Is this intentional?
+       TODO: decide whether to add A_EXEC, omit this, or find an alternative. *)
+            (*(NXD: forall t x s e a, exec_prog arm_prog ((x,s)::t) ->
+                              s A_EXEC = e -> 
+                              (xbits e (a) (1+a) = 0)%N \/
+               exists i, addrof i = a)*)
+
+    (* Assume execution of the new code begins at index j0, which is a block boundary. *)
+    (BB: blockboundary l' j0)
+
+    (* Let q be the IL statement that encodes the instruction at index j. *)
+    (LU: (arm_prog s (addrof j) = Some (4,q))%N)
+
+    (* Let s' and x be the store and exit state after executing q. *)
+    (XS: exec_stmt arm7typctx s q c' s' x)
+
+    (* Let j' be the index of the instruction to which q transfers control next. *)
+    (EX: exitof (4 + addrof j) x = Addr (addrof j')),
+
+  (* Then either
+      (a) j and j' are within a common rewritten block (i.e., an IRM-added branch),
+      (b) edge (j,j') is explicitly permitted by the policy, or
+      (c) j' is the security abort handler appended to the rewritten code. *)
+   (block_of_index l' dyn' j = block_of_index l' dyn' j' \/
+   (blockboundary l' j' /\ policytarget pol label addrof j j' \/
+   (* TODO: replace this with the abort case *)
+   (* j' < bi' \/ bi' + length (concat l') <= j')%nat*) False )).
+
+Theorem safe : forall pol, safety pol rewrite.
+Admitted.
