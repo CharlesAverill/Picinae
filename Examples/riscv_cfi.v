@@ -476,8 +476,25 @@ Definition policytarget (pol:policy) i i' :=
   end.
 
 Open Scope N. 
+(** Glossary
+    pol - the policy (Z->id)
+    r - the rewriter
+    im - indexmap, map from instruction indices in l' to the index
+         of the originating instruction in l
+    l,l' - the lists of instructions, original and rewritten
+    jmptbl - returned by the rewriter `r`
+    bi,bi' - the base indices into memory of the old and new code
+    s0,m0 - initial store and memory
+    j0 - instruction index of the first instruction to execute in l'
+    q - the instruction being examined
+    s,s' - store before and after executing q
+    x - the exit (address or exception) after executing q; bound to Addr in EX
+    j,j' - instruction "addresses" of q and the next instruction, equal to
+           the address in memory divided by four.
+    c' - typctx after executing q, added after memory-is-just-a-number
+ *)
 Definition safety (pol:policy) r im :=
-  forall (l jmptbl: list Z) l' s0 m0 bi bi' j0 t s s' q j j' x
+  forall (l jmptbl: list Z) l' s0 m0 bi bi' j0 t s s' q j j' x c'
 
     (* Let l' be the rewritten code returned by rewriter r. *)
     (NC: r l (Z.of_nat bi) (Z.of_nat bi') = (jmptbl, Some l'))
@@ -487,21 +504,21 @@ Definition safety (pol:policy) r im :=
     (XP: exec_prog rv_prog ((Addr (4 * N.of_nat j),s)::t))
 
     (* Let m0 be the starting memory contents. *)
-    (S0: s0 V_MEM32 = VaM m0 32)
+    (S0: s0 V_MEM32 = m0)
 
     (* Assume m0 contains the rewritten code starting at instruction index i *)
     (CS: forall i n, nth_error (concat l') i = Some n ->
                      getmem 32 LittleE 4 m0 (4 * N.of_nat (bi'+i)) = Z.to_N n)
 
     (* Assume the code section remains non-writable. *)
-    (NWC: forall t x s m w i, exec_prog rv_prog ((x,s)::t) ->
-                              s V_MEM32 = VaM m w -> (i < length (concat l'))%nat ->
+    (NWC: forall t x s m i, exec_prog rv_prog ((x,s)::t) ->
+                              s V_MEM32 = m -> (i < length (concat l'))%nat ->
             getmem 32 LittleE 4 m (4 * N.of_nat i) = getmem 32 LittleE 4 m0 (4 * N.of_nat i))
 
     (* Assume memory outside the code section remains non-executable. *)
-    (NXD: forall t x s e w i, exec_prog rv_prog ((x,s)::t) ->
-                              s A_EXEC = VaM e w -> (i < bi' \/ bi' + length (concat l') <= i)%nat ->
-            (e (4 * N.of_nat i) = 0)%N)
+    (NXD: forall t x s e i, exec_prog rv_prog ((x,s)::t) ->
+                              s A_EXEC = e -> (i < bi' \/ bi' + length (concat l') <= i)%nat ->
+                              (xbits e (4 * N.of_nat i) (1+4 * N.of_nat i) = 0)%N)
 
     (* Assume execution of the new code begins at index j0, which is a block boundary. *)
     (BB: blockboundary l' j0)
@@ -510,7 +527,7 @@ Definition safety (pol:policy) r im :=
     (LU: (rv_prog s (4 * N.of_nat j) = Some (4,q))%N)
 
     (* Let s' and x be the store and exit state after executing q. *)
-    (XS: exec_stmt s q s' x)
+    (XS: exec_stmt RISCVArch.archtyps s q c' s' x)
 
     (* Let j' be the index of the instruction to which q transfers control next. *)
     (EX: exitof (4 * N.of_nat (S j)) x = Addr (4 * N.of_nat j')),
@@ -522,6 +539,8 @@ Definition safety (pol:policy) r im :=
   (im l bi bi' (j-bi') = im l bi bi' (j'-bi') \/
    (blockboundary l' (j'-bi') /\ policytarget pol (im l bi bi' (j-bi')) (im l bi bi' (j'-bi'))) \/
    j' < bi' \/ bi' + length (concat l') <= j')%nat.
+Print safety.
+  (im : list Z -> nat -> nat -> nat -> nat)
 Close Scope N.
 
 
