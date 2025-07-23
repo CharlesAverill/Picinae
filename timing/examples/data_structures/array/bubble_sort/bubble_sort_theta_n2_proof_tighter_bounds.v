@@ -40,15 +40,14 @@ Definition time_of_bubble_sort_theta_n2 (mem : addr -> N)
     len * (
         3 + 2 + time_branch +
         (* inner loop full iterations *)
-        len * (
+        (len - 1) * (
+            time_branch +
             time_mem + time_mem +
             N.min time_branch (3 + time_mem + time_mem) +
-            2 + time_branch
+            2
         ) +
         (* inner loop partial iteration *)
-        (time_mem + time_mem +
-         N.min time_branch (3 + time_mem + time_mem) +
-         2 + 3) +
+        3 +
         2 + time_branch
     ) +
     (* outer loop partial iteration *)
@@ -64,7 +63,8 @@ Definition time_of_bubble_sort_theta_n2 (mem : addr -> N)
     len * (
         3 + 2 + time_branch +
         (* inner loop full iterations *)
-        len * (
+        (len - 1) * (
+            time_branch +
             time_mem + time_mem +
             (* branch timing depends on instruction latency, 
                which is dependent on memory speed, so we can't know
@@ -73,12 +73,10 @@ Definition time_of_bubble_sort_theta_n2 (mem : addr -> N)
                falling through + the if-then body
             *)
             N.max time_branch (3 + time_mem + time_mem) +
-            2 + time_branch
+            2
         ) +
         (* inner loop partial iteration *)
-        (time_mem + time_mem +
-         N.max time_branch (3 + time_mem + time_mem) +
-         2 + 3) +
+        3 +
         2 + time_branch
     ) +
     (* outer loop partial iteration *)
@@ -103,18 +101,15 @@ match t with (Addr a, s) :: t' => match a with
                    arr + 4 * len < 2^32 /\
                    (3 + 2) + 2 + 2 +
                    a4 * (
-                        3 + 2 + time_branch +
-                        (* inner loop full iterations *)
-                        len * (
-                            time_mem + time_mem +
-                            N.min time_branch (3 + time_mem + time_mem) +
-                            2 + time_branch
-                        ) +
-                        (* inner loop partial iteration *)
-                        (time_mem + time_mem +
-                        N.min time_branch (3 + time_mem + time_mem) +
-                        2 + 3) +
-                        2 + time_branch
+                       3 + 2 + time_branch +
+                       (len - 1) * (
+                           time_branch + time_mem + time_mem +
+                           N.min time_branch (3 + time_mem + time_mem) +
+                           2
+                       ) +
+                       (* inner loop partial iteration *)
+                       3 +
+                       2 + time_branch
                    ) <=
                    (* ----------------------------------------- *)
                    cycle_count_of_trace t' <=
@@ -122,15 +117,13 @@ match t with (Addr a, s) :: t' => match a with
                    (3 + 2) + 2 + 2 +
                    a4 * (
                        3 + 2 + time_branch +
-                       len * (
+                       (len - 1) * (
                            time_branch + time_mem + time_mem +
                            N.max time_branch (3 + time_mem + time_mem) +
                            2
                        ) +
                        (* inner loop partial iteration *)
-                       (time_mem + time_mem +
-                        N.max time_branch (3 + time_mem + time_mem) +
-                        2 + 3) +
+                       3 +
                        2 + time_branch
                    )
             )
@@ -150,14 +143,13 @@ match t with (Addr a, s) :: t' => match a with
                    (3 + 2) + 2 + 2 +
                    a4 * (
                        3 + 2 + time_branch +
-                       len * (
+                       (len - 1) * (
+                           time_branch +
                            time_mem + time_mem +
                            N.min time_branch (3 + time_mem + time_mem) +
-                           2 + time_branch
+                           2
                        ) +
-                       (time_mem + time_mem +
-                        N.min time_branch (3 + time_mem + time_mem) +
-                        2 + 3) +
+                       3 +
                        2 + time_branch
                    ) +
                    3 + 2 + time_branch +
@@ -170,14 +162,13 @@ match t with (Addr a, s) :: t' => match a with
                    (3 + 2) + 2 + 2 +
                    a4 * (
                        3 + 2 + time_branch +
-                       len * (
+                       (len - 1) * (
+                           time_branch + 
                            time_mem + time_mem +
                            N.max time_branch (3 + time_mem + time_mem) +
-                           2 + time_branch
+                           2
                        ) +
-                       (time_mem + time_mem +
-                        N.max time_branch (3 + time_mem + time_mem) +
-                        2 + 3) +
+                       3 +
                        2 + time_branch
                    ) +
                    3 + 2 + time_branch +
@@ -299,16 +290,11 @@ Proof using.
         eexists. eexists. repeat split; eauto.
             rewrite N.mod_small.
         lia. lia.
-        Search (?x * _ + ?x * _).
-        hammer. rewrite BC, N.eqb_refl. cbn [negb].
-            rewrite N.mod_small by lia.
-            replace inner_loop_count with (len - 1) in * by lia.
-            destruct len using N.peano_ind. lia. clear IHlen.
-            replace (N.succ len) with (1 + len) in * by lia.
-            repeat rewrite N.mul_add_distr_r in *.
-            psimpl in Cycles_low. psimpl.
-        hammer. rewrite BC, N.eqb_refl. cbn [negb].
-            rewrite N.mod_small by lia. hammer.
+        hammer. rewrite N.mod_small, BC, N.eqb_refl by lia.
+            hammer.
+        replace len with (1 + inner_loop_count) in * by lia.
+        hammer. rewrite N.eqb_refl, N.mod_small by lia.
+            hammer.
 Qed.
             
 

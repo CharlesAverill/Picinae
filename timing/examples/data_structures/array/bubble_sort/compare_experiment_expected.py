@@ -44,18 +44,16 @@ def main():
     cycle_counts = parse_cycle_counts(args.log_file)
     min_eq, max_eq = compile_equation(args.min_equation_file), compile_equation(args.max_equation_file)
 
-    print(f"{'Len':>5} | {'Measured':>8} | {'Expected Min':>12} | {'Expected Max':>12} | {'Within Bounds':13} | {'Diff Min':8} | {'Diff Max':8}")
-    print("-" * 68)
-
-    pct_off = []
+    print(f"{'Len':>5} | {'Expected Min':>12} | {'Measured':>8} | {'Expected Max':>12} | {'Within Bounds':13} | {'Diff Min':8} | {'Diff Min %':10} | {'Diff Max':8} | {'Diff Max %':10}")
+    print("-" * 110)
 
     for i, measured in enumerate(cycle_counts):
         measured -= 13 # To account for calling convention cycles in the caller
         len_value = i + 1
         expected_min, expected_max = min_eq(len_value), max_eq(len_value)
         if expected_min is not None and expected_max is not None:
-            print(f"{len_value:5} | {measured:8} | {expected_min:12} | {expected_max:12} | {'True' if expected_min < measured < expected_max else 'False':13} | \
-{abs(measured - expected_min):8} | {abs(measured - expected_max):8}")
+            print(f"{len_value:5} | {expected_min:12} | {measured:8} | {expected_max:12} | {'True' if expected_min < measured < expected_max else 'False':13} | \
+{abs(measured - expected_min):8} | {100*abs(measured - expected_min)/measured:10.2f} | {abs(measured - expected_max):8} | {100*abs(measured - expected_max)/measured:10.2f}")
         else:
             print(f"Error for len={len_value}")
 

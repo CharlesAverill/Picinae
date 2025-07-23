@@ -45,7 +45,7 @@ Definition time_of_bubble_sort_theta_n2 (mem : addr -> N)
     len * (
         3 + 2 + time_branch +
         (* inner loop full iterations *)
-        len * (
+        (len - 1) * (
             time_mem + time_mem +
             (* branch timing depends on instruction latency, 
                which is dependent on memory speed, so we can't know
@@ -57,9 +57,7 @@ Definition time_of_bubble_sort_theta_n2 (mem : addr -> N)
             2 + time_branch
         ) +
         (* inner loop partial iteration *)
-        (time_mem + time_mem +
-         N.max time_branch (3 + time_mem + time_mem) +
-         2 + 3) +
+        3 +
         2 + time_branch
     ) +
     (* outer loop partial iteration *)
@@ -89,15 +87,13 @@ match t with (Addr a, s) :: t' => match a with
                    (3 + 2) + 2 + 2 +
                    a4 * (
                        3 + 2 + time_branch +
-                       len * (
+                       (len - 1) * (
                            time_branch + time_mem + time_mem +
                            N.max time_branch (3 + time_mem + time_mem) +
                            2
                        ) +
                        (* inner loop partial iteration *)
-                       (time_mem + time_mem +
-                        N.max time_branch (3 + time_mem + time_mem) +
-                        2 + 3) +
+                       3 +
                        2 + time_branch
                    )
             )
@@ -121,14 +117,12 @@ match t with (Addr a, s) :: t' => match a with
                    (3 + 2) + 2 + 2 +
                    a4 * (
                        3 + 2 + time_branch +
-                       len * (
+                       (len - 1) * (
                            time_mem + time_mem +
                            N.max time_branch (3 + time_mem + time_mem) +
                            2 + time_branch
                        ) +
-                       (time_mem + time_mem +
-                        N.max time_branch (3 + time_mem + time_mem) +
-                        2 + 3) +
+                       3 +
                        2 + time_branch
                    ) +
                    3 + 2 + time_branch +
@@ -251,7 +245,8 @@ Proof using.
             rewrite N.mod_small.
         lia. lia.
         hammer.
-        hammer. rewrite BC, N.eqb_refl. cbn [negb].
+        replace len with (1 + inner_loop_count) by lia.
+        hammer. rewrite BC, N.eqb_refl.
         rewrite N.mod_small by lia. hammer.
 Qed.
             
