@@ -361,6 +361,7 @@ Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable
   | ARM_hint _ _
   | ARM_sat _ _ _ _ _
   | ARM_mul _ _ _ _ _ _ _
+  | ARM_hmul _ _ _ _ _ _ _ _
   | ARM_MOV_WT _ _ _ _ _
   | ARM_CLZ _ _ _
   | ARM_SVC _ _

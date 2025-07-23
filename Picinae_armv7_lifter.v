@@ -68,6 +68,12 @@ Variant arm_mul_op :=
   | ARM_UMLAL
   | ARM_SMULL
   | ARM_SMLAL.
+Variant arm_hmul_op :=
+  | ARM_SMLABB
+  | ARM_SMLAWB
+  | ARM_SMULWB
+  | ARM_SMLALBB
+  | ARM_SMULBB.
 Variant arm_sat_op :=
   | ARM_QADD
   | ARM_QSUB
@@ -153,6 +159,7 @@ Variant arm_inst :=
   | ARM_MOV_WT (is_w: bool) (cond imm4 Rd imm12: Z)
   (* multiply/multiply accumulate: A5.2.5, pg A5-200 *)
   | ARM_mul (op: arm_mul_op) (cond S Rd_RdHi Ra_RdLo Rm Rn: Z)
+  | ARM_hmul (op: arm_hmul_op) (cond Rd Ra Rm M N Rn: Z)
   (* synchronization load: A5.2.10, pg A5-203 *)
   | ARM_sync_l (size: arm_sync_size) (cond Rn Rt: Z)
   (* synchronization store: A5.2.10, pg A5-203 *)
@@ -370,15 +377,27 @@ Definition arm_decode_misc z := (* A5.2.12, pg A5-205 *)
     else ARM_UNDEFINED
   else ARM_UNDEFINED.
 
+Definition arm_decode_hmul op z :=
+  let cond := armcond z in
+  let Rd := zxbits z Z16 Z20 in
+  let Ra := zxbits z Z12 Z16 in
+  let Rm := zxbits z Z8 Z12 in
+  let M := bitb z Z6 in
+  let N := bitb z Z5 in
+  let Rn := zxbits z Z0 Z4 in
+  if (Rd =? Z15) || (Rn =? Z15) || (Rm =? Z15) || (Ra =? Z15) then ARM_UNPREDICTABLE
+  else if (match op with | ARM_SMLALBB => Rd =? Ra | ARM_SMULWB | ARM_SMULBB => Ra !=? Z0 | _ => false end) then ARM_UNPREDICTABLE
+  else ARM_hmul op cond Rd Ra Rm M N Rn.
+
 Definition arm_decode_halfword_multiply z := (* A5.2.7, pg A5-200,201 *)
   let op1 := zxbits z Z21 Z23 in
   let op := bitb z Z5 in
-  if (op1 =? Z0) then idk (*smlabb*)
+  if (op1 =? Z0) then arm_decode_hmul ARM_SMLABB z
   else if (op1 =? Z1) then
-    if (op =? Z0) then idk (*smlawb*)
-    else idk (*smulwb*)
-  else if (op1 =? Z2) then idk (*smlalbb*)
-  else idk (*smulbb*).
+    if (op =? Z0) then arm_decode_hmul ARM_SMLAWB z
+    else arm_decode_hmul ARM_SMULWB z
+  else if (op1 =? Z2) then arm_decode_hmul ARM_SMLALBB z
+  else arm_decode_hmul ARM_SMULBB z.
 
 Definition arm_decode_mul op z :=
   let cond := armcond z in
