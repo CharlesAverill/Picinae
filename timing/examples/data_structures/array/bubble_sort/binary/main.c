@@ -1,6 +1,16 @@
 #include "../../../timing_experiments.h"
 #include "bubble_sort.h"
 
+void test_array(uint32_t[] array, uint32_t len){
+    START_TIMER;
+    bubble_sort_theta_n2(array, len);
+    PRINT_TIMER;
+
+    char str[128];
+    itoa(len, str, 10);
+    puts("Len: "); puts(str); puts("\n");
+}
+
 int main() {
     neorv32_rte_setup();
     neorv32_uart0_setup(BAUD_RATE, 0);
@@ -9,16 +19,21 @@ int main() {
 
     for (uint32_t len = 1; len <= 100; ++len) {
         uint32_t array[100];
+        // Test random arrangement
         for (uint32_t i = 0; i < len; i++) {
             array[i] = rand();
         }
-
-	    START_TIMER;
-        bubble_sort_theta_n2(array, len);
-        PRINT_TIMER;
-
-        char str[128];
-        puts("Len: "); itoa(len, str, 10); puts(str); puts("\n");
+        test_array(array, len);
+        // Test best-case performance
+        for (uint32_t i = 0; i < len; i++) {
+            array[i] = i;
+        }
+        test_array(array, len);
+        // Test worst-case performance
+        for (uint32_t i = 0; i < len; i++) {
+            array[i] = len - i - 1;
+        }
+        test_array(array, len);
     }
 
     return 0;
