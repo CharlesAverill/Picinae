@@ -1,14 +1,14 @@
 #include "../../../timing_experiments.h"
 #include "bubble_sort.h"
 
-void test_array(uint32_t[] array, uint32_t len){
+void test_array(char[] prefix, uint32_t[] array, uint32_t len){
     START_TIMER;
     bubble_sort_theta_n2(array, len);
     PRINT_TIMER;
 
     char str[128];
     itoa(len, str, 10);
-    puts("Len: "); puts(str); puts("\n");
+    puts(prefix); puts("Len: "); puts(str); puts("\n");
 }
 
 int main() {
@@ -23,17 +23,17 @@ int main() {
         for (uint32_t i = 0; i < len; i++) {
             array[i] = rand();
         }
-        test_array(array, len);
+        test_array("RAND ", array, len);
         // Test best-case performance
         for (uint32_t i = 0; i < len; i++) {
             array[i] = i;
         }
-        test_array(array, len);
+        test_array("BEST ", array, len);
         // Test worst-case performance
         for (uint32_t i = 0; i < len; i++) {
             array[i] = len - i - 1;
         }
-        test_array(array, len);
+        test_array("WORST ", array, len);
     }
 
     return 0;
