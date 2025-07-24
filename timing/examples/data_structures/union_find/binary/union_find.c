@@ -3,13 +3,15 @@
 struct set* make_set(uint32_t n) {
 	uint32_t *parent = malloc(sizeof(uint32_t) * n);
 	uint32_t *rank = malloc(sizeof(uint32_t) * n);
+	struct set *s = malloc(sizeof(struct set));
+	if (parent == NULL || rank == NULL || s == NULL)
+		return NULL;
 
 	for (uint32_t i = 0; i < n; i++) {
-		parent[i] = i;
+		parent[i] = i; // each node is its own parent
 		rank[i] = 0;
 	}
 
-	struct set *s = malloc(sizeof(struct set));
 	s->size = n;
 	s->parent = parent;
 	s->rank = rank;

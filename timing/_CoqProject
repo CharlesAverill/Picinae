@@ -7,3 +7,4 @@ examples/data_structures/array/find_in_array/array.v
 examples/data_structures/array/find_in_array_opt/array_opt.v
 examples/data_structures/array/bubble_sort/bubble_sort.v
 examples/data_structures/linked_list/linked_list.v
+examples/data_structures/union_find/union_find.v
