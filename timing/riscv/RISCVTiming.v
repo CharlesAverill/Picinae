@@ -8,6 +8,16 @@ Require Export Lia.
 Require Import List.
 Import ListNotations.
 
+Definition lift_riscv (f : addr -> N) (s : store) (a : addr) :=
+    Some (4, rv2il a (rv_decode (f a))).
+
+Theorem lift_riscv_welltyped:
+    forall p, welltyped_prog rvtypctx (lift_riscv p).
+Proof.
+    intros s a a0. unfold lift_riscv.
+    exists rvtypctx. apply welltyped_rv2il.
+Qed.
+
 Module Type ProgramInformation.
     Parameter entry_addr : addr.
     Parameter exits : trace -> bool.
@@ -20,15 +30,17 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
 
     Definition time_inf : N := 2^32.
 
-    Definition bop (s : store) (rs1 rs2 : N) (op : N -> N -> N) : N :=
-        let rs1var := if rs1 =? 0 then Ⓓ0 else s (rv_varid rs1) in
-        let rs2var := if rs2 =? 0 then Ⓓ0 else s (rv_varid rs2) in
-        match rs1var, rs2var with
-        | Ⓓr1, Ⓓr2 => op r1 r2
-        | _, _ => time_inf
-        end.
+    Definition lifted_prog := lift_riscv binary.
 
     Definition cycles_per_instruction_at_addr (s : store) (a : addr) : N :=
+        let regvalue r := if r =? 0 then Ⓓ0 else s (rv_varid r) in
+        let bop s rs1 rs2 op :=
+            let rs1var := regvalue rs1 in
+            let rs2var := regvalue rs2 in
+            match rs1var, rs2var with
+            | Ⓓr1, Ⓓr2 => op r1 r2
+            | _, _ => time_inf
+            end in
         match rv_decode (binary a) with
         (* ==== I ISA Extension ==== *)
         (* ALU *)
@@ -49,26 +61,41 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
         | R5_Auipc _ _      => tauipc
 
         (* ALU Shifts *)
-        | R5_Sll  _ _ shamt => tsll shamt
+        | R5_Sll  rd _ _ =>
+            let rd := regvalue rd in 
+            match rd with
+            | Ⓓrd => tsll rd
+            | _ => time_inf
+            end
         | R5_Slli _ _ shamt => tslli shamt
-        | R5_Srl  _ _ shamt => tsrl shamt
+        | R5_Srl  rd _ _ =>
+            let rd := regvalue rd in 
+            match rd with
+            | Ⓓrd => tsrl rd
+            | _ => time_inf
+            end
         | R5_Srli _ _ shamt => tsrli shamt
-        | R5_Sra  _ _ shamt => tsra shamt
+        | R5_Sra  rd _ _ =>
+            let rd := regvalue rd in 
+            match rd with
+            | Ⓓrd => tsra rd
+            | _ => time_inf
+            end
         | R5_Srai _ _ shamt => tsrai shamt
 
         (* Branches *)
         | R5_Beq rs1 rs2 off => bop s rs1 rs2
             (fun x y => if x =? y then ttbeq else tfbeq)
         | R5_Bne rs1 rs2 off => bop s rs1 rs2
-            (fun x y => if negb (x =? y) then ttbeq else tfbeq)
+            (fun x y => if negb (x =? y) then ttbne else tfbne)
         | R5_Blt rs1 rs2 off => bop s rs1 rs2
-            (fun x y => if Z.ltb (toZ 32 x) (toZ 32 y) then ttbeq else tfbeq)
+            (fun x y => if Z.ltb (toZ 32 x) (toZ 32 y) then ttblt else tfblt)
         | R5_Bge rs1 rs2 off => bop s rs1 rs2
-            (fun x y => if Z.geb (toZ 32 x) (toZ 32 y) then ttbeq else tfbeq)
+            (fun x y => if Z.geb (toZ 32 x) (toZ 32 y) then ttbge else tfbge)
         | R5_Bltu rs1 rs2 off => bop s rs1 rs2
-            (fun x y => if x <? y then ttbeq else tfbeq)
+            (fun x y => if x <? y then ttbltu else tfbltu)
         | R5_Bgeu rs1 rs2 off => bop s rs1 rs2
-            (fun x y => if negb (x <? y) then ttbeq else tfbeq)
+            (fun x y => if negb (x <? y) then ttbgeu else tfbgeu)
 
         (* Jump/call *)
         | R5_Jal  _ _       => tjal
@@ -104,21 +131,16 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
         | R5_Remu   _ _ _   => tremu
 
         (* ==== Zbb ISA Extension ==== *)
-        | R5_Clz r1 _       => tclz r1
+        | R5_Clz rd _       =>
+            let rd := regvalue rd in 
+            match rd with
+            | Ⓓrd => tclz rd
+            | _ => time_inf
+            end
 
         | _ => time_inf
         end.
 End RISCVTiming.
-
-Definition lift_riscv (f : addr -> N) (s : store) (a : addr) :=
-    Some (4, rv2il a (rv_decode (f a))).
-
-Theorem lift_riscv_welltyped:
-    forall p, welltyped_prog rvtypctx (lift_riscv p).
-Proof.
-    intros s a a0. unfold lift_riscv.
-    exists rvtypctx. apply welltyped_rv2il.
-Qed.
 
 (* Instantiate the Timing Automation module with RISC-V values *)
 (* Provide CPUTimingBehavior and ProgramInformation *)

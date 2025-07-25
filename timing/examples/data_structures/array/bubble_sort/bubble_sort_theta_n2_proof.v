@@ -10,94 +10,90 @@
 *)
 
 Require Import bubble_sort.
-Require Import riscvTiming.
+Require Import RISCVTiming.
 Import RISCVNotations.
-Require Import timing_auto.
 
-Module bubble_sort_theta_n2Time <: TimingModule.
-    Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound s (bubble_sort a) with
-        | Some x => x | _ => 999 end.
+Module TimingProof (cpu : CPUTimingBehavior).
 
-    Definition entry_addr : N := 0x1018c.
+Module Program_bubble_sort_theta_n2 <: ProgramInformation.
+    Definition entry_addr : N := 0x1e4.
 
     Definition exits (t:trace) : bool :=
-    match t with (Addr a,_)::_ => match a with
-    | 0x101c8 => true
-    | _ => false
-  end | _ => false end.
-End bubble_sort_theta_n2Time.
+        match t with (Addr a,_)::_ => match a with
+        | 0x220 => true
+        | _ => false
+    end | _ => false end.
 
-Module bubble_sort_theta_n2Auto := TimingAutomation bubble_sort_theta_n2Time.
-Import bubble_sort_theta_n2Time bubble_sort_theta_n2Auto.
+    Definition binary := bubble_sort.
+End Program_bubble_sort_theta_n2.
+
+Module RISCVTiming := RISCVTiming cpu Program_bubble_sort_theta_n2.
+Module bubble_sort_theta_n2Auto := RISCVTimingAutomation RISCVTiming.
+Import Program_bubble_sort_theta_n2 bubble_sort_theta_n2Auto.
 
 Definition time_of_bubble_sort_theta_n2 (mem : addr -> N) 
         (arr : addr) (len : N) (t : trace) :=
     (* ----------------------------------------- *)
     (* lower bound, return if len = 0 *)
-    (3 + 2) + 2 + 2 + time_branch + time_branch <=
+    tslli 2 + tadd + taddi + ttbeq + tjalr <=
     (* ----------------------------------------- *)
     cycle_count_of_trace t <=
     (* ----------------------------------------- *)
     (* upper bound *)
-    (3 + 2) + 2 + 2 +
+    tslli 2 + tadd + taddi +
     (* outer loop full iterations *)
     len * (
-        3 + 2 + time_branch +
+        tfbeq + taddi + tjal +
         (* inner loop full iterations *)
         (len - 1) * (
-            time_mem + time_mem +
-            (* branch timing depends on instruction latency, 
-               which is dependent on memory speed, so we can't know
-               whether the time of a successful branch to skip the
-               if-then body will be faster or slower than 
-               falling through + the if-then body
-            *)
-            N.max time_branch (3 + time_mem + time_mem) +
-            2 + time_branch
+            ttbne +
+            tlw + tlw +
+            N.max ttbgeu (tfbgeu + tsw + tsw) +
+            taddi
         ) +
         (* inner loop partial iteration *)
-        3 +
-        2 + time_branch
+        tfbne +
+        taddi + tjal
     ) +
     (* outer loop partial iteration *)
-    time_branch +
+    ttbeq +
     (* return *)
-    time_branch.
+    tjalr.
 
 Definition bubble_sort_theta_n2_timing_invs (s : store) (base_mem : addr -> N)
     (arr : addr) (len : N) (_a5 : N) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
-| 0x1018c => Some (s V_MEM32 = Ⓜbase_mem /\ 
+| 0x1e4 => Some (s V_MEM32 = Ⓜbase_mem /\ 
                     s R_A0 = Ⓓarr /\ s R_A1 = Ⓓlen /\
                     s R_A5 = Ⓓ_a5 /\
                     arr + 4 * len < 2^32 /\
                     cycle_count_of_trace t' = 0)
-| 0x10198 => Some (exists mem a4, s V_MEM32 = Ⓜmem /\
+| 0x1f0 => Some (exists mem a4, s V_MEM32 = Ⓜmem /\
                    s R_A0 = Ⓓarr /\ s R_A1 = Ⓓlen /\
                    s R_A3 = Ⓓ(arr + 4 * len) /\
                    (* a4 is outer loop counter *)
                    s R_A4 = Ⓓa4 /\
                    a4 <= len /\
                    arr + 4 * len < 2^32 /\
-                   (3 + 2) + 2 + 2 <=
+                   tslli 2 + tadd + taddi <=
                    (* ----------------------------------------- *)
                    cycle_count_of_trace t' <=
                    (* ----------------------------------------- *)
-                   (3 + 2) + 2 + 2 +
+                   tslli 2 + tadd + taddi +
                    a4 * (
-                       3 + 2 + time_branch +
+                       tfbeq + taddi + tjal +
                        (len - 1) * (
-                           time_branch + time_mem + time_mem +
-                           N.max time_branch (3 + time_mem + time_mem) +
-                           2
+                           ttbne +
+                            tlw + tlw +
+                            N.max ttbgeu (tfbgeu + tsw + tsw) +
+                            taddi
                        ) +
                        (* inner loop partial iteration *)
-                       3 +
-                       2 + time_branch
+                       tfbne +
+                       taddi + tjal
                    )
             )
-| 0x101bc => Some (exists mem a4 inner_loop_count, s V_MEM32 = Ⓜmem /\
+| 0x214 => Some (exists mem a4 inner_loop_count, s V_MEM32 = Ⓜmem /\
                    s R_A0 = Ⓓarr /\ s R_A1 = Ⓓlen /\
                    s R_A3 = Ⓓ(arr + 4 * len) /\
                    (* a4 is outer loop counter *)
@@ -110,51 +106,33 @@ match t with (Addr a, s) :: t' => match a with
                    0 < len /\
                    a4 < len /\
                    arr + 4 * len < 2^32 /\
-                   (3 + 2) + 2 + 2 <=
+                   tslli 2 + tadd + taddi <=
                    (* ----------------------------------------- *)
                    cycle_count_of_trace t' <=
                    (* ----------------------------------------- *)
-                   (3 + 2) + 2 + 2 +
+                   tslli 2 + tadd + taddi +
                    a4 * (
-                       3 + 2 + time_branch +
+                       tfbeq + taddi + tjal +
                        (len - 1) * (
-                           time_mem + time_mem +
-                           N.max time_branch (3 + time_mem + time_mem) +
-                           2 + time_branch
+                           ttbne +
+                            tlw + tlw +
+                            N.max ttbgeu (tfbgeu + tsw + tsw) +
+                            taddi
                        ) +
-                       3 +
-                       2 + time_branch
+                       (* inner loop partial iteration *)
+                       tfbne +
+                       taddi + tjal
                    ) +
-                   3 + 2 + time_branch +
+                   tfbeq + taddi + tjal +
                    (* number of inner loops so far *)
-                   inner_loop_count * (time_branch + time_mem + time_mem +
-                    N.max time_branch (3 + time_mem + time_mem) + 2)
+                   inner_loop_count * (
+                        ttbne + tlw + tlw +
+                        N.max ttbgeu (tfbgeu + tsw + tsw) +
+                        taddi
+                    )
             )
-| 0x101c8 => Some (time_of_bubble_sort_theta_n2 base_mem arr len t)
+| 0x220 => Some (time_of_bubble_sort_theta_n2 base_mem arr len t)
 | _ => None end | _ => None end.
-
-Definition lifted_bubble_sort_theta_n2 : program :=
-    lift_riscv bubble_sort.
-
-(* We use simpl in a few convenient places: make sure it doesn't go haywire *)
-Arguments N.add _ _ : simpl nomatch.
-Arguments N.mul _ _ : simpl nomatch.
-
-Lemma div_add_distr : forall x y z,
-    z <> 0 ->
-    (x * z + y * z) / z = x + y.
-Proof.
-    intros. rewrite N.div_add_l by assumption.
-    now rewrite N.div_mul by assumption.
-Qed.
-
-Lemma div_sub_distr : forall x y z,
-    z <> 0 ->
-    (x * z - y * z) / z = x - y.
-Proof.
-    intros.
-    rewrite <- N.mul_sub_distr_r. now apply N.div_mul.
-Qed.
 
 Theorem bubble_sort_theta_n2_timing:
   forall s t s' x' base_mem arr len a5
@@ -170,7 +148,7 @@ Theorem bubble_sort_theta_n2_timing:
          (* this shouldn't be necessary but makes the proof easy *)
          (ARR_VALID: arr + 4 * len < 2^32),
   satisfies_all 
-    lifted_bubble_sort_theta_n2
+    lifted_prog
     (bubble_sort_theta_n2_timing_invs s base_mem arr len a5)
     exits
   ((x',s')::t).
@@ -191,7 +169,7 @@ Proof using.
 
     destruct_inv 32 PRE.
 
-    (* 0x1018c -> 0x10198 *)
+    (* 0x1e4 -> 0x1f0 *)
     destruct PRE as (MEM & A0 & A1 & A5 & ARR_VALID & Cycles). {
         repeat step. eexists. eexists. repeat split; eauto.
         now rewrite N.mod_small by assumption. lia.
@@ -201,13 +179,13 @@ Proof using.
         hammer.
     }
 
-    (* 0x10198 -> *)
+    (* 0x1f0 -> *)
     destruct PRE as (mem & a4 & MEM & A0 & A1 & A3 & A4 & A4_VALID & ARR_VALID &
         Cycles_low & Cycles_high).
     repeat step.
         (* a4 = len *)
         unfold time_of_bubble_sort_theta_n2.
-            apply N.eqb_eq in BC; subst. split;
+            apply N.eqb_eq in BC; subst.
             hammer; rewrite N.eqb_refl; hammer.
         (* a4 <> len *)
         do 2 eexists; exists 0; repeat split; eauto.
@@ -242,12 +220,12 @@ Proof using.
         apply Bool.negb_false_iff, N.eqb_eq in BC; subst.
         repeat step.
         eexists. eexists. repeat split; eauto.
-            rewrite N.mod_small.
-        lia. lia.
+            rewrite N.mod_small by lia. lia.
         hammer.
         replace len with (1 + inner_loop_count) by lia.
         hammer. rewrite BC, N.eqb_refl.
         rewrite N.mod_small by lia. hammer.
 Qed.
-            
+
+End TimingProof.
 

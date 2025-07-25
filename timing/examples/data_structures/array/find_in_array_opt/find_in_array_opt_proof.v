@@ -1,24 +1,24 @@
 Require Import array_opt.
-Require Import riscvTiming.
+Require Import RISCVTiming.
 Import RISCVNotations.
-Require Import timing_auto.
 
-Module find_in_arrayTime <: TimingModule.
-    Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound s (array_opt_bin a) with
-        | Some x => x | _ => 999 end.
+Module TimingProof (cpu : CPUTimingBehavior).
 
+Module Program_find_in_array_opt <: ProgramInformation.
     Definition entry_addr : N := 0x1e4.
 
     Definition exits (t:trace) : bool :=
-    match t with (Addr a,_)::_ => match a with
-    | 0x20c => true
-    | _ => false
-  end | _ => false end.
-End find_in_arrayTime.
+        match t with (Addr a,_)::_ => match a with
+        | 0x20c => true
+        | _ => false
+    end | _ => false end.
 
-Module find_in_arrayAuto := TimingAutomation find_in_arrayTime.
-Import find_in_arrayTime find_in_arrayAuto.
+    Definition binary := array_bin.
+End Program_find_in_array_opt.
+
+Module RISCVTiming := RISCVTiming cpu Program_find_in_array_opt.
+Module find_in_array_optAuto := RISCVTimingAutomation RISCVTiming.
+Import Program_find_in_array_opt find_in_array_optAuto.
 
 Definition key_in_array (mem : addr -> N) (arr : addr) (key : N) (len : N) : Prop :=
     exists i, i < len /\ mem Ⓓ[arr + 4 * i] = key.
@@ -46,31 +46,29 @@ Fixpoint key_in_array_dec (mem : addr -> N) (arr : addr) (key len : N)
                 } subst. contradiction.
 Qed.
 
-Definition time_of_find_in_array_opt (mem : addr -> N) 
-        (arr : addr) (key : N) (len : N) (found_idx : option N)
-        (t : trace) :=
+Definition time_of_find_in_array_opt (len : N) (found_idx : option N) (t : trace) :=
     cycle_count_of_trace t =
         if len =? 0 then (
-            time_branch + 2 + time_branch
+            ttbeq + taddi + tjalr
         ) else (
             (* setup *)
-            3 + 2 + time_branch + time_mem + 2 +
+            tfbeq + taddi + tjal + tlw + taddi +
             (* arr[0] check *)
             if (match found_idx with Some 0 => true | _ => false end) then (
-                3 + 2 + 2 + time_branch
+                tfbne + taddi + taddi + tjalr
             ) else (
-                time_branch +
+                ttbne +
                 (* loop iterations *)
                 (match found_idx with None => len - 1 | Some i => i - 1 end) *
                 (* loop body duration *)
-                (2 + 3 + time_mem + 2 + time_branch) +
+                (taddi + tfbeq + tlw + taddi + ttbne) +
                 (* partial loop iteration before loop exit *)
                 (match found_idx with
-                 | None => 2 + time_branch
-                 | Some _ => 2 + 3 + time_mem + 2 + 3 + 2
+                 | None => taddi + ttbeq
+                 | Some _ => taddi + tfbeq + tlw + taddi + tfbne + taddi
                  end) +
                 (* return *)
-                2 + time_branch
+                taddi + tjalr
             )
         ).
 
@@ -79,9 +77,9 @@ Definition timing_postcondition (mem : addr -> N) (arr : addr)
     (exists i, i < len /\ mem Ⓓ[arr + 4 * i] = key /\
         (* i is the first index where the key is found *)
         (forall j, j < i -> mem Ⓓ[arr + 4 * j] <> key) /\
-        time_of_find_in_array_opt mem arr key len (Some i) t) \/
+        time_of_find_in_array_opt len (Some i) t) \/
     ((~ exists i, i < len /\ mem Ⓓ[arr + 4 * i] = key) /\
-        time_of_find_in_array_opt mem arr key len None t).
+        time_of_find_in_array_opt len None t).
 
 Definition find_in_array_opt_timing_invs (s : store) (base_mem : addr -> N)
     (sp : N) (arr : addr) (key : N) (len : N) (t:trace) : option Prop :=
@@ -109,21 +107,14 @@ match t with (Addr a, s) :: t' => match a with
         mem Ⓓ[arr + 4 * i] <> key) /\
     cycle_count_of_trace t' =
         (* pre-loop time *)
-        3 + 2 + time_branch + time_mem + 2 + time_branch +
+        tfbeq + taddi + tjal + tlw + taddi + ttbne +
         (* loop counter stored in register a4 *)
         a5 *
         (* full loop body length - can't have broken out by this address *)
-        (2 + 3 + time_mem + 2 + time_branch)
+        (taddi + tfbeq + tlw + taddi + ttbne)
     )
 | 0x20c => Some (timing_postcondition base_mem arr key len t)
 | _ => None end | _ => None end.
-
-Definition lifted_find_in_array_opt : program :=
-    lift_riscv array_opt_bin.
-
-(* We use simpl in a few convenient places: make sure it doesn't go haywire *)
-Arguments N.add _ _ : simpl nomatch.
-Arguments N.mul _ _ : simpl nomatch.
 
 Theorem find_in_array_opt_timing:
   forall s t s' x' base_mem sp arr key len
@@ -138,7 +129,7 @@ Theorem find_in_array_opt_timing:
          (* length must fit inside the address space, arr is 4-byte integers *)
          (LEN_VALID: 4 * len <= 2^32 - 1),
   satisfies_all 
-    lifted_find_in_array_opt
+    lifted_prog
     (find_in_array_opt_timing_invs s base_mem sp arr key len)
     exits
   ((x',s')::t).
@@ -223,3 +214,4 @@ Proof using.
         lia.
 Qed.
 
+End TimingProof.

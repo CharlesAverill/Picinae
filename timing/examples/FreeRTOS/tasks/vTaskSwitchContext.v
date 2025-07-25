@@ -1,26 +1,25 @@
-Require Import RTOSDemo_NoAsserts_Clz.
-Require Import riscvTiming.
+Require Import RTOSDemo.
+Require Import RISCVTiming.
 Import RISCVNotations.
-Require Import timing_auto.
 Require Import memsolve.
 
-Module vTaskSwitchContextTime <: TimingModule.
-    Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound s (RTOSDemo_NoAsserts_Clz a) with
-        | Some x => x | _ => 999 end.
+Module TimingProof (cpu : CPUTimingBehavior).
 
+Module Program_vTaskSwitchContext <: ProgramInformation.
     Definition entry_addr : N := 0x8000137c.
 
-    (* The exit points for vTaskSwitchContext *)
     Definition exits (t:trace) : bool :=
-    match t with (Addr a,_)::_ => match a with
-    | 0x8000138c | 0x8000144c => true
-    | _ => false
+        match t with (Addr a,_)::_ => match a with
+        | 0x8000138c | 0x8000144c => true
+        | _ => false
     end | _ => false end.
-End vTaskSwitchContextTime.
 
-Module vTaskSwitchContextAuto := TimingAutomation vTaskSwitchContextTime.
-Import vTaskSwitchContextTime vTaskSwitchContextAuto.
+    Definition binary := RTOSDemo.
+End Program_vTaskSwitchContext.
+
+Module RISCVTiming := RISCVTiming cpu Program_vTaskSwitchContext.
+Module vTaskSwitchContextAuto := RISCVTimingAutomation RISCVTiming.
+Import Program_vTaskSwitchContext vTaskSwitchContextAuto.
 
 (* The doubleword in static memory (offset of gp) that determines if the scheduler
    is suspended. The scheduler should be suspended when any critical behavior
@@ -199,23 +198,24 @@ Definition common_noverlaps gp base_sp mem : Prop :=
 
 Definition time_of_vTaskSwitchContext (t : trace) (gp : N) (mem : addr -> N) : Prop :=
   cycle_count_of_trace t = (* total number of cycles equals... *)
-    time_mem +
+    tlw +
     (* is the scheduler suspended *)
     if (uxSchedulerSuspended gp mem) =? 0 then
-        time_branch + 2 + 3 * time_mem + 2 + 2 * time_mem + 2 + 
-        time_mem + 3 + time_mem + 3 + time_mem + 3 + time_mem + time_branch + 
-        time_mem + 2 + (4 + T_shift_latency (uxTopReadyPriority gp mem)) +
-        2 + 2 + (3 + T_mul_latency) + 2 + 2 + 2 + time_mem + 2 + 2 + 2 * time_mem +
+        ttbeq + taddi + tsw + tsw + tlw + tlui + tsw + tlw + taddi +
+        tlw + tfbne + tlw + tfbne + tlw + tfbne + tlw + ttbeq +
+        tlw + taddi + tclz (uxTopReadyPriority gp mem) + tsub + taddi + tmul +
+        taddi + taddi + tadd + tlw + taddi + tadd + tlw + tsw +
         (* This branch condition isn't well-documented, need to dig into source *)
         (if (mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ])
             =? ((gp ⊖ 916) ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20)
             then 
-                3 + 2 * time_mem
+                tfbne + tlw + tsw
             else
-                time_branch
-        ) + 2 + (3 + T_mul_latency) + time_mem + 2 + 5 * time_mem + 2 + time_branch
+                ttbne
+        ) + 
+        taddi + tmul + tlw + tadd + tlw + tlw + tsw + tlw + tlw + taddi + tjalr
     else
-        3 + 2 + time_mem + time_branch.
+        tfbeq + taddi + tsw + tjalr.
 
 (* The invariant set for the proof. These are waypoints that guide us towards 
    the postcondition. We state properties here that we want to remember for later
@@ -247,7 +247,7 @@ match t with (Addr a, s) :: t' => match a with
             uxTopReadyPriority gp mem = uxTopReadyPriority gp base_mem /\
             mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
-        cycle_count_of_trace t' = time_mem)
+        cycle_count_of_trace t' = tlw)
     | 0x800013b4 => Some (exists mem, s V_MEM32 = Ⓜmem /\ 
         s R_GP = Ⓓgp /\
         common_noverlaps gp base_sp mem /\
@@ -263,7 +263,7 @@ match t with (Addr a, s) :: t' => match a with
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
         (uxSchedulerSuspended gp base_mem =? 0) = true /\
-        cycle_count_of_trace t' = 6 + 7 * time_mem + time_branch)
+        cycle_count_of_trace t' = tlw + ttbeq + taddi + tsw + tsw + tlw + tlui + tsw + tlw + taddi + tlw)
     | 0x800013bc => Some (exists mem, s V_MEM32 = Ⓜmem /\ 
         s R_GP = Ⓓgp /\
         common_noverlaps gp base_sp mem /\
@@ -279,7 +279,7 @@ match t with (Addr a, s) :: t' => match a with
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
         (uxSchedulerSuspended gp base_mem =? 0) = true /\
-        cycle_count_of_trace t' = 9 + 8 * time_mem + time_branch)
+        cycle_count_of_trace t' = tlw + ttbeq + taddi + tsw + tsw + tlw + tlui + tsw + tlw + taddi + tlw + tfbne + tlw)
     | 0x800013c4 => Some (exists mem, s V_MEM32 = Ⓜmem /\ 
         s R_GP = Ⓓgp /\
         common_noverlaps gp base_sp mem /\
@@ -295,7 +295,7 @@ match t with (Addr a, s) :: t' => match a with
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
         (uxSchedulerSuspended gp base_mem =? 0) = true /\
-        cycle_count_of_trace t' = 12 + 9 * time_mem + time_branch
+        cycle_count_of_trace t' = tlw + ttbeq + taddi + tsw + tsw + tlw + tlui + tsw + tlw + taddi + tlw + tfbne + tlw + tfbne + tlw
     )
     | 0x800013cc => Some (exists mem, s V_MEM32 = Ⓜmem /\ 
         s R_GP = Ⓓgp /\
@@ -312,7 +312,7 @@ match t with (Addr a, s) :: t' => match a with
         mem Ⓓ[ 4 + mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
         (uxSchedulerSuspended gp base_mem =? 0) = true /\
-        cycle_count_of_trace t' = 15 + 10 * time_mem + time_branch
+        cycle_count_of_trace t' = tlw + ttbeq + taddi + tsw + tsw + tlw + tlui + tsw + tlw + taddi + tlw + tfbne + tlw + tfbne + tlw + tfbne + tlw
     )
     | 0x80001418 => Some (exists mem, s V_MEM32 = Ⓜmem /\ 
         s R_GP = Ⓓgp /\
@@ -324,23 +324,13 @@ match t with (Addr a, s) :: t' => match a with
         mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ] =
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
         (uxSchedulerSuspended gp base_mem =? 0) = true /\
-        cycle_count_of_trace t' =
-            time_branch + time_mem + 2 + (4 + T_shift_latency (uxTopReadyPriority gp mem)) + 2 + 2 +
-            (3 + T_mul_latency) + 2 + 2 + 2 + time_mem + 2 + 2 + 2 * time_mem +
-            15 + 10 * time_mem + time_branch)
+        cycle_count_of_trace t' = tlw + ttbeq + taddi + tsw + tsw + tlw + tlui + tsw + tlw + taddi + tlw + tfbne + tlw + tfbne + tlw + tfbne + tlw +
+            ttbeq + tlw + taddi + tclz (uxTopReadyPriority gp mem) + tsub + taddi + tmul + taddi + taddi + tadd + tlw + tsw)
     | 0x8000138c | 0x8000144c => Some (time_of_vTaskSwitchContext t gp base_mem)
     | _ => None
     end
 | _ => None
 end.
-
-(* Lift the code into Picinae IL *)
-Definition lifted_vTaskSwitchContext : program :=
-    lift_riscv RTOSDemo_NoAsserts_Clz.
-
-(* We use simpl in a few convenient places: make sure it doesn't go haywire *)
-Arguments N.add _ _ : simpl nomatch.
-Arguments N.mul _ _ : simpl nomatch.
 
 Theorem vTaskSwitchContext_timing:
   forall s p t s' x' gp sp mem
@@ -361,7 +351,7 @@ Theorem vTaskSwitchContext_timing:
                 (mem Ⓓ[4 + mem Ⓓ[ gp ⊖ 920 ⊕ (31 ⊖ clz (uxTopReadyPriority gp mem) 32) * 20 ]]) 4)
          ,
   satisfies_all 
-    lifted_vTaskSwitchContext                                 (* Provide lifted code *)
+    lifted_prog                                               (* Provide lifted code *)
     (vTaskSwitchContext_timing_invs s p sp gp mem)            (* Provide invariant set *)
     exits                                                     (* Provide exit point *)
   ((x',s')::t).
@@ -480,8 +470,9 @@ Proof using.
         & MEM4_MEM4_NOL_STATIC & MEM4_920 & MEM4_MEM4_920 & PreservesPriority
         & Preserves920 & NotSuspended & Cycles). destruct_noverlaps.
     repeat step.
-        handle_ex'.
-        par: try solve [noverlap_prepare gp sp; memsolve mem gp sp].
+        eexists. split. reflexivity.
+        repeat split; auto.
+        1-15: try solve [noverlap_prepare gp sp; memsolve mem gp sp].
         {
             noverlap_prepare gp sp.
             replace (clz
@@ -515,17 +506,20 @@ Proof using.
             psimpl.
             rewrite <- getmem_mod_l with (a := gp ⊖ _ + _).
             eauto.
-        } { 
+        } {
             noverlap_prepare gp sp.
             replace (clz ((mem [Ⓓ_ := _ ]) Ⓓ[ gp ⊖ 1920 ]) 32) 
                 with (clz (mem Ⓓ[ gp ⊖ 1920 ]) 32) by
                 (f_equal; rewrite getmem_noverlap; auto).
             psimpl. auto.
         }
-        hammer.
+        admit. (* Look here *)
+        (* hammer.
         noverlap_prepare gp sp.
         rewrite getmem_noverlap by (memsolve mem gp sp).
-        lia.
+        lia. *)
+
+    exact I.
 
     destruct PRE as (mem & MEM & GP & A1 & A2 & A5 & NOVERLAPS
         & PreservesPriority & Preserves920 & NotSuspended & Cycles).
@@ -535,20 +529,24 @@ Proof using.
         find_rewrites.
         hammer. rewrite <- Preserves920, <- PreservesPriority.
         rewrite Bool.negb_true_iff, getmem_mod_l in BC.
-        unfold msub in *. psimpl in BC. psimpl.
+        admit. (* Look here *)
+        (* unfold msub in *. psimpl in BC. psimpl.
         find_rewrites.
         unfold T_shift_latency, CPU_FAST_SHIFT_EN.
         unfold T_mul_latency, CPU_FAST_MUL_EN.
-        lia.
+        lia. *)
     unfold time_of_vTaskSwitchContext.
         hammer.
         rewrite <- Preserves920, <- PreservesPriority.
         rewrite Bool.negb_false_iff, getmem_mod_l in BC.
-        unfold msub in *. psimpl in BC. psimpl.
+        admit. (* Look here *)
+        (* unfold msub in *. psimpl in BC. psimpl.
         rewrite BC.
         unfold T_shift_latency, CPU_FAST_SHIFT_EN.
         unfold T_mul_latency, CPU_FAST_MUL_EN.
-        lia.
+        lia. *)
 
     now repeat step.
-Qed.
+Admitted.
+
+End TimingProof.

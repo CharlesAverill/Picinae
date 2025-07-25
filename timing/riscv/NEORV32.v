@@ -65,6 +65,7 @@ Module NEORV32 (cfg : NEORV32Config) <: CPUTimingBehavior.
         3 + T_shift_latency offset.
     Definition tsrai (offset : N) := 
         3 + T_shift_latency offset.
+    Global Opaque tsll tslli tsrl tsrli tsra tsrai.
     (* Branches *)
     (* taken *)
     Definition ttbeq := 5 + T_inst_latency.
@@ -121,6 +122,7 @@ Module NEORV32 (cfg : NEORV32Config) <: CPUTimingBehavior.
     Definition tclz (val : N) := 4 + T_shift_latency (clz val 32).
     Definition tctz (val : N) := 4 + T_shift_latency (ctz val 32).
     Definition tcpop (val : N) := 4 + T_shift_latency 32.
+    Global Opaque tclz tctz tcpop.
     (* Integer max/min *)
     Definition tmin := 4.
     Definition tminu := 4.
@@ -134,6 +136,7 @@ Module NEORV32 (cfg : NEORV32Config) <: CPUTimingBehavior.
     Definition trol (rot_factor : N) := 4 + T_shift_latency rot_factor.
     Definition tror (rot_factor : N) := 4 + T_shift_latency rot_factor.
     Definition trori (rot_factor : N) := 4 + T_shift_latency rot_factor.
+    Global Opaque trol tror trori.
     (* OR-combine *)
     Definition torc_b := 4.
     (* Byte-reverse *)

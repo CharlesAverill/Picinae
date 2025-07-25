@@ -1,24 +1,24 @@
 Require Import array.
-Require Import riscvTiming.
+Require Import RISCVTiming.
 Import RISCVNotations.
-Require Import timing_auto.
 
-Module find_in_arrayTime <: TimingModule.
-    Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound s (array_bin a) with
-        | Some x => x | _ => 999 end.
+Module TimingProof (cpu : CPUTimingBehavior).
 
+Module Program_find_in_array <: ProgramInformation.
     Definition entry_addr : N := 0x1e4.
 
     Definition exits (t:trace) : bool :=
-    match t with (Addr a,_)::_ => match a with
-    | 0x208 => true
-    | _ => false
-  end | _ => false end.
-End find_in_arrayTime.
+        match t with (Addr a,_)::_ => match a with
+        | 0x208 => true
+        | _ => false
+    end | _ => false end.
 
-Module find_in_arrayAuto := TimingAutomation find_in_arrayTime.
-Import find_in_arrayTime find_in_arrayAuto.
+    Definition binary := array_bin.
+End Program_find_in_array.
+
+Module RISCVTiming := RISCVTiming cpu Program_find_in_array.
+Module find_in_arrayAuto := RISCVTimingAutomation RISCVTiming.
+Import Program_find_in_array find_in_arrayAuto.
 
 Definition key_in_array (mem : addr -> N) (arr : addr) (key : N) (len : N) : Prop :=
     exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key.
@@ -46,32 +46,30 @@ Fixpoint key_in_array_dec (mem : addr -> N) (arr : addr) (key len : N)
                 } subst. contradiction.
 Qed.
 
-Definition time_of_find_in_array (mem : addr -> N) 
-        (arr : addr) (key : N) (len : N) (found_idx : option N)
-        (t : trace) :=
+Definition time_of_find_in_array (len : N) (found_idx : option N) (t : trace) :=
     cycle_count_of_trace t =
         (* setup time *)
-        2 +
+        taddi +
         (* loop iterations *)
         (match found_idx with None => len | Some i => i end) *
         (* loop body duration *)
-        (3 + (3 + T_shift_latency 2) + 2 + time_mem + 3 + 2 + time_branch) +
+        (tfbgeu + tslli 2 + tadd + tlw + tfbeq + taddi + tjal) +
         (* partial loop iteration before loop exit *)
         (match found_idx with 
-         | None => time_branch (* loop condition fail *)
-         | Some _ => 3 + (3 + T_shift_latency 2) + 2 + time_mem + time_branch
+         | None => ttbgeu
+         | Some _ => tfbgeu + tslli 2 + tadd + tlw + ttbeq
          end) +
         (* shutdown time *)
-        2 + time_branch.
+        taddi + tjalr.
 
 Definition timing_postcondition (mem : addr -> N) (arr : addr)
         (key : N) (len : N) (t : trace) : Prop :=
     (exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key /\
         (* i is the first index where the key is found *)
         (forall j, j < i -> mem Ⓓ[arr + (j << 2)] <> key) /\
-        time_of_find_in_array mem arr key len (Some i) t) \/
+        time_of_find_in_array len (Some i) t) \/
     ((~ exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key) /\
-        time_of_find_in_array mem arr key len None t).
+        time_of_find_in_array len None t).
 
 Definition find_in_array_timing_invs (s : store) (base_mem : addr -> N)
     (sp : N) (arr : addr) (key : N) (len : N) (t:trace) : option Prop :=
@@ -93,21 +91,14 @@ match t with (Addr a, s) :: t' => match a with
     a5 <= len /\
     cycle_count_of_trace t' =
         (* pre-loop time *)
-        2 +
+        taddi +
         (* loop counter stored in register a5 *)
         a5 *
         (* full loop body length - can't have broken out by this address *)
-        (3 + (3 + T_shift_latency 2) + 2 + time_mem + 3 + 2 + time_branch)
+        (tfbgeu + tslli 2 + tadd + tlw + tfbeq + taddi + tjal)
     )
 | 0x208 => Some (timing_postcondition base_mem arr key len t)
 | _ => None end | _ => None end.
-
-Definition lifted_find_in_array : program :=
-    lift_riscv array_bin.
-
-(* We use simpl in a few convenient places: make sure it doesn't go haywire *)
-Arguments N.add _ _ : simpl nomatch.
-Arguments N.mul _ _ : simpl nomatch.
 
 Theorem find_in_array_timing:
   forall s t s' x' base_mem sp arr key len
@@ -123,7 +114,7 @@ Theorem find_in_array_timing:
          (* length must fit inside the address space, arr is 4-byte integers *)
          (LEN_VALID: 4 * len <= 2^32 - 1),
   satisfies_all 
-    lifted_find_in_array
+    lifted_prog
     (find_in_array_timing_invs s base_mem sp arr key len)
     exits
   ((x',s')::t).
@@ -158,7 +149,7 @@ Proof using.
     (* There is a matching element in the array *) {
         step.
         repeat step.
-        (* postcondition after loop condition fail *)
+        (* postcondition, match found *)
             left. exists a5. split.
                 now apply N.ltb_lt. 
             split.
@@ -167,8 +158,7 @@ Proof using.
             split.
                 intros. rewrite <- Preserved by lia. now apply NotFound.
             unfold time_of_find_in_array.
-            hammer. unfold T_shift_latency, CPU_FAST_SHIFT_EN. 
-            psimpl. lia.
+            hammer.
         (* loop invariant after going around *)
             repeat eexists; auto.
             (* key not found *)
@@ -180,9 +170,8 @@ Proof using.
             apply N.ltb_lt in BC. rewrite N.mod_small. lia.
                 apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
             (* cycles *)
-            hammer. unfold T_shift_latency, CPU_FAST_SHIFT_EN.
-            rewrite N.mod_small. lia.
-                apply Bool.negb_false_iff, N.ltb_lt in BC.
+            rewrite (N.mod_small (1 + a5)). hammer.
+                apply N.ltb_lt in BC.
                 apply N.le_lt_trans with len. lia.
                 apply (rv_regsize MDL A2).
         (* iterated len times - contradiction *)
@@ -210,10 +199,8 @@ Proof using.
             apply N.ltb_lt in BC. rewrite N.mod_small. lia.
                 apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
             (* cycles *)
-            hammer.
-            unfold T_shift_latency, CPU_FAST_SHIFT_EN.
-            rewrite N.mod_small. lia.
-                apply Bool.negb_false_iff, N.ltb_lt in BC.
+            rewrite (N.mod_small (1 + a5)). hammer.
+                apply N.ltb_lt in BC.
                 apply N.le_lt_trans with len. lia.
                 apply (rv_regsize MDL A2).
         (* a match has not been found, break and return *)
@@ -221,9 +208,10 @@ Proof using.
             unfold timing_postcondition, time_of_find_in_array. right.
             split. intro. apply NOT_IN. destruct H as (idx & IDX_LEN & IN).
             exists idx. split. assumption. now rewrite Preserved.
-            hammer. find_rewrites. replace a5 with len in * by
-                (rewrite Bool.negb_true_iff, N.ltb_ge in BC; lia).
-            unfold T_shift_latency, CPU_FAST_SHIFT_EN. lia.
+            replace a5 with len in * by
+                (rewrite N.ltb_ge in BC; lia).
+            hammer.
     }
 Qed.
 
+End TimingProof.
