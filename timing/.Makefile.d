@@ -7,9 +7,9 @@ riscv/CPUTimingBehavior.vos riscv/CPUTimingBehavior.vok riscv/CPUTimingBehavior.
 riscv/RISCVTiming.vo riscv/RISCVTiming.glob riscv/RISCVTiming.v.beautified riscv/RISCVTiming.required_vo: riscv/RISCVTiming.v ../Picinae_riscv.vo riscv/CPUTimingBehavior.vo TimingAutomation.vo
 riscv/RISCVTiming.vio: riscv/RISCVTiming.v ../Picinae_riscv.vio riscv/CPUTimingBehavior.vio TimingAutomation.vio
 riscv/RISCVTiming.vos riscv/RISCVTiming.vok riscv/RISCVTiming.required_vos: riscv/RISCVTiming.v ../Picinae_riscv.vos riscv/CPUTimingBehavior.vos TimingAutomation.vos
-riscv/NEORV32.vo riscv/NEORV32.glob riscv/NEORV32.v.beautified riscv/NEORV32.required_vo: riscv/NEORV32.v riscv/CPUTimingBehavior.vo
-riscv/NEORV32.vio: riscv/NEORV32.v riscv/CPUTimingBehavior.vio
-riscv/NEORV32.vos riscv/NEORV32.vok riscv/NEORV32.required_vos: riscv/NEORV32.v riscv/CPUTimingBehavior.vos
+riscv/NEORV32.vo riscv/NEORV32.glob riscv/NEORV32.v.beautified riscv/NEORV32.required_vo: riscv/NEORV32.v riscv/CPUTimingBehavior.vo ../Picinae_core.vo
+riscv/NEORV32.vio: riscv/NEORV32.v riscv/CPUTimingBehavior.vio ../Picinae_core.vio
+riscv/NEORV32.vos riscv/NEORV32.vok riscv/NEORV32.required_vos: riscv/NEORV32.v riscv/CPUTimingBehavior.vos ../Picinae_core.vos
 memsolve.vo memsolve.glob memsolve.v.beautified memsolve.required_vo: memsolve.v riscv/RISCVTiming.vo
 memsolve.vio: memsolve.v riscv/RISCVTiming.vio
 memsolve.vos memsolve.vok memsolve.required_vos: memsolve.v riscv/RISCVTiming.vos

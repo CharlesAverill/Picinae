@@ -1,5 +1,6 @@
 Require Import CPUTimingBehavior.
 Require Import NArith.
+Require Import Picinae_core.
 Open Scope N.
 
 (* https://stnolting.github.io/neorv32/#_processor_top_entity_generics *)
@@ -117,9 +118,9 @@ Module NEORV32 (cfg : NEORV32Config) <: CPUTimingBehavior.
     Definition torn := 4.
     Definition txnor := 4.
     (* Bit count *)
-    Definition tclz (val : N) := 4 + T_shift_latency val.
-    Definition tctz (val : N) := 4 + T_shift_latency val.
-    Definition tcpop (val : N) := 4 + T_shift_latency val.
+    Definition tclz (val : N) := 4 + T_shift_latency (clz val 32).
+    Definition tctz (val : N) := 4 + T_shift_latency (ctz val 32).
+    Definition tcpop (val : N) := 4 + T_shift_latency 32.
     (* Integer max/min *)
     Definition tmin := 4.
     Definition tminu := 4.

@@ -191,6 +191,17 @@ Fixpoint Pos_popcount p := match p with
 Definition popcount n := match n with N0 => N0 | N.pos p => N.pos (Pos_popcount p) end.
 
 Definition clz (n w : N) : N := w - N.log2 n - 1.
+Definition ctz (n w : N) : N :=
+  if N.eqb n 0 then
+    w
+  else
+    let fix aux n fuel acc := match fuel with
+    | O => N.of_nat acc
+    | S fuel' =>
+        if N.odd n then N.of_nat acc
+        else aux (N.shiftr n 1) fuel' (S acc)
+    end in 
+    aux n (N.to_nat w) 0%nat.
 
 (* Perform a unary operation. *)
 Definition eval_unop (uop:unop_typ) (n:N) (w:bitwidth) : value :=
