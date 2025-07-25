@@ -1,5 +1,5 @@
-Require Import riscvTiming.
-Import RISCVNotations.
+Require Import RISCVTiming.
+Require Import ZArith.
 Require Import Lia.
 
 Lemma noverlap_index:

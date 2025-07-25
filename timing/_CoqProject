@@ -1,6 +1,8 @@
 -R .. Picinae
-riscvTiming.v
-timing_auto.v
+TimingAutomation.v
+riscv/CPUTimingBehavior.v
+riscv/RISCVTiming.v
+riscv/NEORV32.v
 memsolve.v
 examples/FreeRTOS/RTOSDemo_NoAsserts_Clz.v
 examples/data_structures/array/find_in_array/array.v

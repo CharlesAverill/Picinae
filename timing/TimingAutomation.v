@@ -1,19 +1,66 @@
-Require Import riscvTiming.
+Require Import Picinae_core Picinae_statics Picinae_finterp
+    Picinae_theory Picinae_simplifier_base Picinae_simplifier_v1_1.
 Require Export List.
+Require Import NArith.
 Require Export Bool.
 Export ListNotations.
 
-Module Type TimingModule.
-    Parameter time_of_addr : store -> addr -> N.
-    Parameter entry_addr : N.
-    Parameter exits : trace -> bool.
+Module Type TimingModule (il : PICINAE_IL).
+    Export il.
+    Export Lia.
+
+    Parameter cycles_per_instruction_at_addr : store -> addr -> N.
+    Parameter time_inf : N.
 End TimingModule.
 
-Module TimingAutomation (tm : TimingModule).
+Module TimingAutomation (IL : PICINAE_IL) (TIL: PICINAE_STATICS IL) 
+    (FIL: PICINAE_FINTERP IL TIL) (SIMPL : PICINAE_SIMPLIFIER_V1_1 IL TIL FIL) 
+    (THEORY : PICINAE_THEORY IL) (tm : TimingModule IL).
 
-Export Lia.
+Include IL.
+Include THEORY.
 
-Definition cycle_count_of_trace := cycle_count_of_trace tm.time_of_addr.
+Import SIMPL.
+Import Picinae_Simplifier_Base.
+Export IL.
+Export tm.
+
+Ltac PSimplifier ::= SIMPL.PSimplifier.
+
+Definition cycle_count_of_trace (t : trace) : N :=
+    List.fold_left N.add (List.map 
+        (fun '(e, s) => match e with 
+            | Addr a => cycles_per_instruction_at_addr s a
+            | Raise n => time_inf
+            end) t) 0.
+
+Lemma fold_left_cons : forall {X : Type} (t : list X) (h : X) (f : X -> X -> X) (base : X) 
+    (Comm : forall a b, f a b = f b a) (Assoc : forall a b c, f a (f b c) = f (f a b) c),
+    List.fold_left f (h :: t) base = f h (List.fold_left f t base).
+Proof.
+    induction t; intros.
+    - simpl. now rewrite Comm.
+    - simpl in *. rewrite IHt, IHt, IHt,
+        Assoc, Assoc, (Comm a h); auto.
+Qed.
+
+Lemma cycle_count_of_trace_single :
+    forall (e : exit) (s : store),
+    cycle_count_of_trace [(e, s)] = 
+        match e with 
+        | Addr a => cycles_per_instruction_at_addr s a
+        | Raise n => time_inf
+        end.
+Proof. reflexivity. Qed.
+
+Lemma cycle_count_of_trace_cons :
+    forall (t : trace) (e : exit) (s : store),
+    cycle_count_of_trace ((e, s) :: t) = cycle_count_of_trace [(e, s)] + cycle_count_of_trace t.
+Proof.
+    intros. unfold cycle_count_of_trace at 2. rewrite map_cons, fold_left_cons; try lia. simpl.
+    unfold cycle_count_of_trace at 1. rewrite map_cons, fold_left_cons. rewrite N.add_0_r. reflexivity.
+    lia. lia.
+Qed.
 
 Ltac find_rewrites :=
     repeat (match goal with
@@ -35,24 +82,13 @@ Ltac find_rewrites :=
         rewrite H
     end).
 
-Ltac unfold_decompose :=
-    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype 
-        decompose_Stype decompose_Utype mask_bit_section]; cbn [N.land].
-Tactic Notation "unfold_decompose" "in" hyp(H) :=
-    cbv [decompose_Btype decompose_Itype decompose_Jtype decompose_Rtype 
-        decompose_Stype decompose_Utype mask_bit_section] in H; cbn [N.land] in H.
 Ltac unfold_time_of_addr :=
-    cbv [tm.time_of_addr neorv32_cycles_upper_bound]; cbn - [setmem getmem].
-Tactic Notation "unfold_time_of_addr" "in" hyp(H) :=
-    cbv [tm.time_of_addr neorv32_cycles_upper_bound] in H; cbn - [setmem getmem].
+    cbv [tm.cycles_per_instruction_at_addr]; cbn - [setmem getmem].
 Ltac unfold_cycle_count_list :=
-    unfold cycle_count_of_trace; repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single; fold cycle_count_of_trace.
-Ltac unfold_latencies :=
-    unfold T_shift_latency, T_mul_latency, CPU_FAST_SHIFT_EN, CPU_FAST_MUL_EN in *.
+    repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single.
 Ltac hammer :=
-    unfold_cycle_count_list; unfold_time_of_addr; unfold_decompose;
-        unfold_latencies;
-        psimpl; find_rewrites; try lia.
+    unfold_cycle_count_list; unfold_time_of_addr;
+        psimpl_all_goal; find_rewrites; try lia.
 
 Ltac handle_ex := 
     repeat (match goal with
@@ -61,8 +97,6 @@ Ltac handle_ex :=
 
 Arguments N.add _ _ : simpl nomatch.
 Arguments N.mul _ _ : simpl nomatch.
-
-End TimingAutomation.
 
 (* Memory layout 
 
@@ -77,7 +111,7 @@ Fixpoint create_noverlaps (l : list (N * addr)) : Prop :=
     | (size, addr) :: t => fold_left 
         (fun P item =>
             let '(size', addr') := item in 
-            P /\ ~overlap 32 addr size addr' size'
+            P /\ ~ overlap 32 addr size addr' size'
         ) t True /\ create_noverlaps t
     end.
 
@@ -233,3 +267,5 @@ Ltac fold_big_subs :=
             (now rewrite N.add_comm);
         simpl (2^BW - X) in H
     end.
+
+End TimingAutomation.

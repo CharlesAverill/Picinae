@@ -1,27 +1,27 @@
 Require Import RTOSDemo_NoAsserts_Clz.
-Require Import riscvTiming.
+Require Import RISCVTiming.
+Require Import NEORV32.
 Import RISCVNotations.
-Require Import timing_auto.
 
-Module vTaskSuspendAllTime <: TimingModule.
-    Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound s (RTOSDemo_NoAsserts_Clz a) with
-        | Some x => x | _ => 999 end.
-
+Module Program_vTaskSuspendAll <: ProgramInformation.
     Definition entry_addr : N := 0x80000d14.
 
     Definition exits (t:trace) : bool :=
-    match t with (Addr a,_)::_ => match a with
-    | 0x80000d20 => true
-    | _ => false
-  end | _ => false end.
-End vTaskSuspendAllTime.
+        match t with (Addr a,_)::_ => match a with
+        | 0x80000d20 => true
+        | _ => false
+    end | _ => false end.
 
-Module vTaskSuspendAllAuto := TimingAutomation vTaskSuspendAllTime.
-Import vTaskSuspendAllTime vTaskSuspendAllAuto.
+    Definition binary := RTOSDemo_NoAsserts_Clz.
+End Program_vTaskSuspendAll.
+
+Module RISCVTiming := RISCVTiming NEORV32Base Program_vTaskSuspendAll.
+Module vTaskSuspendAllAuto := RISCVTimingAutomation RISCVTiming.
+Import Program_vTaskSuspendAll vTaskSuspendAllAuto.
 
 Definition time_of_vTaskSuspendAll (t : trace) :=
-    cycle_count_of_trace t = 2 + time_branch + 2 * time_mem.
+    cycle_count_of_trace t = 
+        tlw + taddi + tsw + tjalr.
 
 Definition vTaskSuspendAll_timing_invs
     (t:trace) : option Prop :=
@@ -36,6 +36,14 @@ Definition lifted_vTaskSuspendAll : program :=
 (* We use simpl in a few convenient places: make sure it doesn't go haywire *)
 Arguments N.add _ _ : simpl nomatch.
 Arguments N.mul _ _ : simpl nomatch.
+
+Lemma fold_left_add_base_0 : forall l base,
+    List.fold_left N.add l base = base + List.fold_left N.add l 0.
+Proof.
+    induction l; intros; simpl.
+        lia.
+    now rewrite IHl, <- N.add_assoc, <- (IHl a).
+Qed. 
 
 Theorem vTaskSuspendAll_timing:
   forall s t s' x'
@@ -52,7 +60,7 @@ Proof using.
     Local Ltac step := time rv_step.
 
     simpl. rewrite ENTRY. unfold entry_addr. step. reflexivity.
-    
+
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
     eapply preservation_exec_prog in MDL; 
