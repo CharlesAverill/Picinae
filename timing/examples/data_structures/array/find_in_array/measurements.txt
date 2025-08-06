@@ -1,27 +1,3 @@
-NEORV32 Bootloader                                                                                                                                                                                         
-                                                                                                                                                                                                           
-BLDV: Jun 21 2025                                                                                                                                                                                          
-HWV:  0x01110703                                                                                                                                                                                           
-CLK:  0x02faf080                                                                                                                                                                                           
-MISA: 0x40801104                                                                                                                                                                                           
-XISA: 0x00000083                                                                                                                                                                                           
-SOC:  0x0003800d                                                                                                                                                                                           
-IMEM: 0x00004000                                                                                                                                                                                           
-DMEM: 0x00002000                                                                                                                                                                                           
-                                                                                                                                                                                                           
-Auto-boot in 10s. Press any key to abort.                                                                                                                                                                  
-Aborted.                                                                                                                                                                                                   
-                                                                                                                                                                                                           
-Available CMDs:                                                                                                                                                                                            
- h: Help                                                                                                                                                                                                   
- r: Restart                                                                                                                                                                                                
- u: Upload via UART                                                                                                                                                                                        
- s: Store to SPI flash                                                                                                                                                                                     
- l: Load from SPI flash                                                                                                                                                                                    
- e: Start executable                                                                                                                                                                                       
-CMD:> u                                                                                                                                                                                                    
-Awaiting neorv32_exe.bin... e                                                                                                                                                                              
-Booting from 0x00000000...
 
 Cycle count read: 47
 Len: 1, key: 2013331137 found at index 0
@@ -223,3 +199,1804 @@ Cycle count read: 2205
 Len: 99, key: 386416255 found at index 83
 Cycle count read: 2633
 Len: 100, key: 1417551511 not found
+Cycle count read: 2659
+Len: 101, key: 590711539 not found
+Cycle count read: 1165
+Len: 102, key: 1236876080 found at index 43
+Cycle count read: 1555
+Len: 103, key: 2116858180 found at index 58
+Cycle count read: 1451
+Len: 104, key: 659999660 found at index 54
+Cycle count read: 1009
+Len: 105, key: 128612713 found at index 37
+Cycle count read: 2789
+Len: 106, key: 941635106 not found
+Cycle count read: 2815
+Len: 107, key: 1474746382 not found
+Cycle count read: 2841
+Len: 108, key: 1729319672 not found
+Cycle count read: 2867
+Len: 109, key: 2019003701 not found
+Cycle count read: 2893
+Len: 110, key: 512545142 not found
+Cycle count read: 1503
+Len: 111, key: 20445460 found at index 56
+Cycle count read: 1061
+Len: 112, key: 782103144 found at index 39
+Cycle count read: 73
+Len: 113, key: 1920169489 found at index 1
+Cycle count read: 2997
+Len: 114, key: 2108052979 not found
+Cycle count read: 3023
+Len: 115, key: 765736916 not found
+Cycle count read: 2413
+Len: 116, key: 806965674 found at index 91
+Cycle count read: 645
+Len: 117, key: 834144753 found at index 23
+Cycle count read: 1165
+Len: 118, key: 2011719758 found at index 43
+Cycle count read: 3127
+Len: 119, key: 2104771929 not found
+Cycle count read: 2179
+Len: 120, key: 784934154 found at index 82
+Cycle count read: 2049
+Len: 121, key: 1855352686 found at index 77
+Cycle count read: 2361
+Len: 122, key: 906094723 found at index 89
+Cycle count read: 3231
+Len: 123, key: 1180627771 not found
+Cycle count read: 3257
+Len: 124, key: 1524999383 not found
+Cycle count read: 3283
+Len: 125, key: 671145883 not found
+Cycle count read: 3309
+Len: 126, key: 1754070866 not found
+Cycle count read: 3335
+Len: 127, key: 119764289 not found
+Cycle count read: 3361
+Len: 128, key: 1071780125 not found
+Cycle count read: 1659
+Len: 129, key: 1095112154 found at index 62
+Cycle count read: 3413
+Len: 130, key: 405031583 not found
+Cycle count read: 3439
+Len: 131, key: 1946671095 not found
+Cycle count read: 3465
+Len: 132, key: 1539417281 not found
+Cycle count read: 1399
+Len: 133, key: 1720461723 found at index 52
+Cycle count read: 3245
+Len: 134, key: 880128671 found at index 123
+Cycle count read: 151
+Len: 135, key: 1577237613 found at index 4
+Cycle count read: 2881
+Len: 136, key: 2127745040 found at index 109
+Cycle count read: 3595
+Len: 137, key: 1564687042 not found
+Cycle count read: 3621
+Len: 138, key: 337012042 not found
+Cycle count read: 2777
+Len: 139, key: 921355813 found at index 105
+Cycle count read: 593
+Len: 140, key: 167964515 found at index 21
+Cycle count read: 3699
+Len: 141, key: 1731738879 not found
+Cycle count read: 3725
+Len: 142, key: 1605575722 not found
+Cycle count read: 3751
+Len: 143, key: 538500134 not found
+Cycle count read: 3777
+Len: 144, key: 2102635530 not found
+Cycle count read: 2907
+Len: 145, key: 896039208 found at index 110
+Cycle count read: 3829
+Len: 146, key: 1099348500 not found
+Cycle count read: 3855
+Len: 147, key: 116912628 not found
+Cycle count read: 2153
+Len: 148, key: 644702749 found at index 81
+Cycle count read: 333
+Len: 149, key: 893669695 found at index 11
+Cycle count read: 3933
+Len: 150, key: 2052143715 not found
+Cycle count read: 2153
+Len: 151, key: 886284076 found at index 81
+Cycle count read: 3985
+Len: 152, key: 1698235571 not found
+Cycle count read: 3609
+Len: 153, key: 1075063861 found at index 137
+Cycle count read: 4037
+Len: 154, key: 627968090 not found
+Cycle count read: 4063
+Len: 155, key: 1371512535 not found
+Cycle count read: 4089
+Len: 156, key: 1505878821 not found
+Cycle count read: 4115
+Len: 157, key: 629189134 not found
+Cycle count read: 2465
+Len: 158, key: 1678064864 found at index 93
+Cycle count read: 4167
+Len: 159, key: 899215671 not found
+Cycle count read: 4193
+Len: 160, key: 2024538802 not found
+Cycle count read: 4219
+Len: 161, key: 1158793982 not found
+Cycle count read: 3609
+Len: 162, key: 2124149610 found at index 137
+Cycle count read: 4271
+Len: 163, key: 189991780 not found
+Cycle count read: 47
+Len: 164, key: 559440503 found at index 0
+Cycle count read: 1919
+Len: 165, key: 105789696 found at index 72
+Cycle count read: 4349
+Len: 166, key: 281992702 not found
+Cycle count read: 4375
+Len: 167, key: 330320837 not found
+Cycle count read: 4401
+Len: 168, key: 233557153 not found
+Cycle count read: 3505
+Len: 169, key: 1952924428 found at index 133
+Cycle count read: 4453
+Len: 170, key: 737681164 not found
+Cycle count read: 3609
+Len: 171, key: 125269426 found at index 137
+Cycle count read: 4025
+Len: 172, key: 862328665 found at index 153
+Cycle count read: 4531
+Len: 173, key: 1908358719 not found
+Cycle count read: 4557
+Len: 174, key: 400289302 not found
+Cycle count read: 4583
+Len: 175, key: 393291201 not found
+Cycle count read: 4609
+Len: 176, key: 321055574 not found
+Cycle count read: 4155
+Len: 177, key: 1506288264 found at index 158
+Cycle count read: 4661
+Len: 178, key: 596253088 not found
+Cycle count read: 4311
+Len: 179, key: 681528075 found at index 164
+Cycle count read: 4713
+Len: 180, key: 448822073 not found
+Cycle count read: 2517
+Len: 181, key: 6303197 found at index 95
+Cycle count read: 4765
+Len: 182, key: 592335078 not found
+Cycle count read: 3635
+Len: 183, key: 1197371866 found at index 138
+Cycle count read: 4817
+Len: 184, key: 899504732 not found
+Cycle count read: 4843
+Len: 185, key: 1285106972 not found
+Cycle count read: 4869
+Len: 186, key: 1428839605 not found
+Cycle count read: 4895
+Len: 187, key: 1282361766 not found
+Cycle count read: 4921
+Len: 188, key: 188815754 not found
+Cycle count read: 177
+Len: 189, key: 1109329429 found at index 5
+Cycle count read: 47
+Len: 190, key: 1709516274 found at index 0
+Cycle count read: 2231
+Len: 191, key: 1921316990 found at index 84
+Cycle count read: 3323
+Len: 192, key: 390819871 found at index 126
+Cycle count read: 1971
+Len: 193, key: 1228191895 found at index 74
+Cycle count read: 5077
+Len: 194, key: 353781149 not found
+Cycle count read: 2231
+Len: 195, key: 831107088 found at index 84
+Cycle count read: 5129
+Len: 196, key: 958835839 not found
+Cycle count read: 5155
+Len: 197, key: 89359380 not found
+Cycle count read: 3583
+Len: 198, key: 1173460763 found at index 136
+Cycle count read: 5207
+Len: 199, key: 1204133745 not found
+Cycle count read: 4337
+Len: 200, key: 1492319406 found at index 165
+Cycle count read: 541
+Len: 201, key: 736311226 found at index 19
+Cycle count read: 5285
+Len: 202, key: 1517605862 not found
+Cycle count read: 749
+Len: 203, key: 469341961 found at index 27
+Cycle count read: 1373
+Len: 204, key: 1929807178 found at index 51
+Cycle count read: 3765
+Len: 205, key: 950882045 found at index 143
+Cycle count read: 1191
+Len: 206, key: 1003413556 found at index 44
+Cycle count read: 281
+Len: 207, key: 742915791 found at index 9
+Cycle count read: 5441
+Len: 208, key: 404694883 not found
+Cycle count read: 1243
+Len: 209, key: 438455381 found at index 46
+Cycle count read: 5493
+Len: 210, key: 1212989272 not found
+Cycle count read: 1529
+Len: 211, key: 636380703 found at index 57
+Cycle count read: 5545
+Len: 212, key: 679299703 not found
+Cycle count read: 1529
+Len: 213, key: 806710705 found at index 57
+Cycle count read: 5597
+Len: 214, key: 1494756263 not found
+Cycle count read: 5611
+Len: 215, key: 1728576830 found at index 214
+Cycle count read: 1919
+Len: 216, key: 1664385622 found at index 72
+Cycle count read: 1711
+Len: 217, key: 172044528 found at index 64
+Cycle count read: 3687
+Len: 218, key: 743220776 found at index 140
+Cycle count read: 3817
+Len: 219, key: 934283433 found at index 145
+Cycle count read: 5753
+Len: 220, key: 43805798 not found
+Cycle count read: 5779
+Len: 221, key: 685500585 not found
+Cycle count read: 5805
+Len: 222, key: 1676066785 not found
+Cycle count read: 5831
+Len: 223, key: 1848821529 not found
+Cycle count read: 5857
+Len: 224, key: 1394270744 not found
+Cycle count read: 2803
+Len: 225, key: 617079051 found at index 106
+Cycle count read: 5143
+Len: 226, key: 1941957056 found at index 196
+Cycle count read: 5935
+Len: 227, key: 1529165530 not found
+Cycle count read: 3583
+Len: 228, key: 669323697 found at index 136
+Cycle count read: 5987
+Len: 229, key: 635589816 not found
+Cycle count read: 6013
+Len: 230, key: 637803682 not found
+Cycle count read: 6039
+Len: 231, key: 1550978608 not found
+Cycle count read: 6065
+Len: 232, key: 2124270135 not found
+Cycle count read: 6091
+Len: 233, key: 1823587401 not found
+Cycle count read: 6117
+Len: 234, key: 1134916221 not found
+Cycle count read: 1997
+Len: 235, key: 415388706 found at index 75
+Cycle count read: 3765
+Len: 236, key: 1472472950 found at index 143
+Cycle count read: 6195
+Len: 237, key: 413723145 not found
+Cycle count read: 4311
+Len: 238, key: 1819757284 found at index 164
+Cycle count read: 5429
+Len: 239, key: 831118224 found at index 207
+Cycle count read: 2179
+Len: 240, key: 1357652894 found at index 82
+Cycle count read: 6299
+Len: 241, key: 674465599 not found
+Cycle count read: 3609
+Len: 242, key: 593754082 found at index 137
+Cycle count read: 1399
+Len: 243, key: 640080108 found at index 52
+Cycle count read: 6377
+Len: 244, key: 1287040258 not found
+Cycle count read: 359
+Len: 245, key: 1567806635 found at index 12
+Cycle count read: 2049
+Len: 246, key: 82691637 found at index 77
+Cycle count read: 5091
+Len: 247, key: 128147544 found at index 194
+Cycle count read: 2933
+Len: 248, key: 234162102 found at index 111
+Cycle count read: 2985
+Len: 249, key: 1660362286 found at index 113
+Cycle count read: 1295
+Len: 250, key: 1015218036 found at index 48
+Cycle count read: 6287
+Len: 251, key: 929331981 found at index 240
+Cycle count read: 4909
+Len: 252, key: 1464158365 found at index 187
+Cycle count read: 5663
+Len: 253, key: 164694964 found at index 216
+Cycle count read: 5039
+Len: 254, key: 1172009487 found at index 192
+Cycle count read: 6663
+Len: 255, key: 265338479 not found
+Cycle count read: 6689
+Len: 256, key: 366296882 not found
+Cycle count read: 4961
+Len: 257, key: 163075813 found at index 189
+Cycle count read: 4025
+Len: 258, key: 1112223761 found at index 153
+Cycle count read: 6767
+Len: 259, key: 856511548 not found
+Cycle count read: 2439
+Len: 260, key: 96695458 found at index 92
+Cycle count read: 6819
+Len: 261, key: 681307104 not found
+Cycle count read: 5611
+Len: 262, key: 1184531829 found at index 214
+Cycle count read: 5741
+Len: 263, key: 1542490741 found at index 219
+Cycle count read: 4753
+Len: 264, key: 308029426 found at index 181
+Cycle count read: 6651
+Len: 265, key: 703413585 found at index 254
+Cycle count read: 4935
+Len: 266, key: 1855245335 found at index 188
+Cycle count read: 1711
+Len: 267, key: 271363534 found at index 64
+Cycle count read: 7001
+Len: 268, key: 961646624 not found
+Cycle count read: 5169
+Len: 269, key: 1480748402 found at index 197
+Cycle count read: 3219
+Len: 270, key: 886301411 found at index 122
+Cycle count read: 6755
+Len: 271, key: 1885586978 found at index 258
+Cycle count read: 3895
+Len: 272, key: 912748947 found at index 148
+Cycle count read: 7131
+Len: 273, key: 991064730 not found
+Cycle count read: 7157
+Len: 274, key: 1661759617 not found
+Cycle count read: 7183
+Len: 275, key: 1994244506 not found
+Cycle count read: 7209
+Len: 276, key: 46292613 not found
+Cycle count read: 7041
+Len: 277, key: 120350543 found at index 269
+Cycle count read: 7261
+Len: 278, key: 327034059 not found
+Cycle count read: 1503
+Len: 279, key: 1550464312 found at index 56
+Cycle count read: 6209
+Len: 280, key: 2083436243 found at index 237
+Cycle count read: 7339
+Len: 281, key: 1136903210 not found
+Cycle count read: 3323
+Len: 282, key: 901397189 found at index 126
+Cycle count read: 7391
+Len: 283, key: 2051011813 not found
+Cycle count read: 5351
+Len: 284, key: 2033745594 found at index 204
+Cycle count read: 7443
+Len: 285, key: 269051446 not found
+Cycle count read: 7469
+Len: 286, key: 1308550682 not found
+Cycle count read: 7495
+Len: 287, key: 813137315 not found
+Cycle count read: 7521
+Len: 288, key: 482159143 not found
+Cycle count read: 7547
+Len: 289, key: 385007127 not found
+Cycle count read: 7573
+Len: 290, key: 1083623523 not found
+Cycle count read: 7599
+Len: 291, key: 27153171 not found
+Cycle count read: 7625
+Len: 292, key: 2064232202 not found
+Cycle count read: 4987
+Len: 293, key: 1380169814 found at index 190
+Cycle count read: 4623
+Len: 294, key: 1857281411 found at index 176
+Cycle count read: 5481
+Len: 295, key: 1656701825 found at index 209
+Cycle count read: 7729
+Len: 296, key: 1736812579 not found
+Cycle count read: 7755
+Len: 297, key: 116821422 not found
+Cycle count read: 1503
+Len: 298, key: 1646189148 found at index 56
+Cycle count read: 4571
+Len: 299, key: 1075034992 found at index 174
+Cycle count read: 7833
+Len: 300, key: 2050590171 not found
+Cycle count read: 3401
+Len: 301, key: 592661384 found at index 129
+Cycle count read: 7885
+Len: 302, key: 1873086578 not found
+Cycle count read: 7911
+Len: 303, key: 132847294 not found
+Cycle count read: 5325
+Len: 304, key: 360106284 found at index 203
+Cycle count read: 697
+Len: 305, key: 679261893 found at index 25
+Cycle count read: 1477
+Len: 306, key: 2061576350 found at index 55
+Cycle count read: 8015
+Len: 307, key: 376587475 not found
+Cycle count read: 4571
+Len: 308, key: 454366282 found at index 174
+Cycle count read: 8067
+Len: 309, key: 1986379762 not found
+Cycle count read: 6105
+Len: 310, key: 737394708 found at index 233
+Cycle count read: 6781
+Len: 311, key: 2041777710 found at index 259
+Cycle count read: 8145
+Len: 312, key: 570316566 not found
+Cycle count read: 775
+Len: 313, key: 117964503 found at index 28
+Cycle count read: 5897
+Len: 314, key: 765715605 found at index 225
+Cycle count read: 8003
+Len: 315, key: 1298565388 found at index 306
+Cycle count read: 8249
+Len: 316, key: 319568522 not found
+Cycle count read: 8275
+Len: 317, key: 1595635571 not found
+Cycle count read: 4727
+Len: 318, key: 324679121 found at index 180
+Cycle count read: 879
+Len: 319, key: 1389713030 found at index 32
+Cycle count read: 8353
+Len: 320, key: 1304512213 not found
+Cycle count read: 8379
+Len: 321, key: 1339518032 not found
+Cycle count read: 8405
+Len: 322, key: 1803966100 not found
+Cycle count read: 8289
+Len: 323, key: 98994990 found at index 317
+Cycle count read: 6599
+Len: 324, key: 286858125 found at index 252
+Cycle count read: 8289
+Len: 325, key: 981714293 found at index 317
+Cycle count read: 8237
+Len: 326, key: 239071748 found at index 315
+Cycle count read: 8535
+Len: 327, key: 1186172299 not found
+Cycle count read: 8561
+Len: 328, key: 641393564 not found
+Cycle count read: 8587
+Len: 329, key: 1639568704 not found
+Cycle count read: 5143
+Len: 330, key: 224949333 found at index 196
+Cycle count read: 8639
+Len: 331, key: 1617611850 not found
+Cycle count read: 8497
+Len: 332, key: 293107516 found at index 325
+Cycle count read: 5351
+Len: 333, key: 712157251 found at index 204
+Cycle count read: 8717
+Len: 334, key: 482091958 not found
+Cycle count read: 8743
+Len: 335, key: 872648706 not found
+Cycle count read: 8769
+Len: 336, key: 416126139 not found
+Cycle count read: 8795
+Len: 337, key: 1664839789 not found
+Cycle count read: 5351
+Len: 338, key: 2072951290 found at index 204
+Cycle count read: 8847
+Len: 339, key: 1646244709 not found
+Cycle count read: 957
+Len: 340, key: 560713260 found at index 35
+Cycle count read: 8899
+Len: 341, key: 854102312 not found
+Cycle count read: 8925
+Len: 342, key: 571344860 not found
+Cycle count read: 3739
+Len: 343, key: 1428181188 found at index 142
+Cycle count read: 8977
+Len: 344, key: 1592242523 not found
+Cycle count read: 9003
+Len: 345, key: 2013904787 not found
+Cycle count read: 9029
+Len: 346, key: 1241458872 not found
+Cycle count read: 8731
+Len: 347, key: 286864535 found at index 334
+Cycle count read: 3895
+Len: 348, key: 1233415794 found at index 148
+Cycle count read: 8341
+Len: 349, key: 1190192006 found at index 319
+Cycle count read: 4129
+Len: 350, key: 754082713 found at index 157
+Cycle count read: 2569
+Len: 351, key: 391096544 found at index 97
+Cycle count read: 9185
+Len: 352, key: 1332195983 not found
+Cycle count read: 2621
+Len: 353, key: 1249626019 found at index 99
+Cycle count read: 2829
+Len: 354, key: 847985004 found at index 107
+Cycle count read: 9263
+Len: 355, key: 326148872 not found
+Cycle count read: 3687
+Len: 356, key: 1706649603 found at index 140
+Cycle count read: 1529
+Len: 357, key: 609511450 found at index 57
+Cycle count read: 1295
+Len: 358, key: 492781521 found at index 48
+Cycle count read: 593
+Len: 359, key: 1990382111 found at index 21
+Cycle count read: 827
+Len: 360, key: 885285589 found at index 30
+Cycle count read: 5455
+Len: 361, key: 1606859870 found at index 208
+Cycle count read: 9043
+Len: 362, key: 1784799167 found at index 346
+Cycle count read: 9471
+Len: 363, key: 896251579 not found
+Cycle count read: 9497
+Len: 364, key: 1982348776 not found
+Cycle count read: 1555
+Len: 365, key: 725770898 found at index 58
+Cycle count read: 4025
+Len: 366, key: 1527149766 found at index 153
+Cycle count read: 9575
+Len: 367, key: 537517902 not found
+Cycle count read: 9601
+Len: 368, key: 863080214 not found
+Cycle count read: 9627
+Len: 369, key: 1993254850 not found
+Cycle count read: 593
+Len: 370, key: 1830184862 found at index 21
+Cycle count read: 3635
+Len: 371, key: 1511002026 found at index 138
+Cycle count read: 9705
+Len: 372, key: 1768092046 not found
+Cycle count read: 255
+Len: 373, key: 2014242275 found at index 8
+Cycle count read: 4831
+Len: 374, key: 1998627821 found at index 184
+Cycle count read: 4051
+Len: 375, key: 9267970 found at index 154
+Cycle count read: 3193
+Len: 376, key: 1746422646 found at index 121
+Cycle count read: 9835
+Len: 377, key: 407282757 not found
+Cycle count read: 9861
+Len: 378, key: 1878573446 not found
+Cycle count read: 5923
+Len: 379, key: 653583841 found at index 226
+Cycle count read: 9913
+Len: 380, key: 263580813 not found
+Cycle count read: 3999
+Len: 381, key: 1549500367 found at index 152
+Cycle count read: 9965
+Len: 382, key: 1277441077 not found
+Cycle count read: 9991
+Len: 383, key: 442479012 not found
+Cycle count read: 10017
+Len: 384, key: 354302579 not found
+Cycle count read: 10043
+Len: 385, key: 1380730663 not found
+Cycle count read: 10069
+Len: 386, key: 473170086 not found
+Cycle count read: 3817
+Len: 387, key: 970191086 found at index 145
+Cycle count read: 10121
+Len: 388, key: 1419610365 not found
+Cycle count read: 10147
+Len: 389, key: 2036276738 not found
+Cycle count read: 10173
+Len: 390, key: 98810448 not found
+Cycle count read: 9849
+Len: 391, key: 1610235700 found at index 377
+Cycle count read: 73
+Len: 392, key: 557618394 found at index 1
+Cycle count read: 10251
+Len: 393, key: 1774099298 not found
+Cycle count read: 10277
+Len: 394, key: 1091629265 not found
+Cycle count read: 9979
+Len: 395, key: 277659776 found at index 382
+Cycle count read: 1737
+Len: 396, key: 1294620186 found at index 65
+Cycle count read: 10355
+Len: 397, key: 1859809249 not found
+Cycle count read: 5637
+Len: 398, key: 1177338148 found at index 215
+Cycle count read: 10407
+Len: 399, key: 151812994 not found
+Cycle count read: 9173
+Len: 400, key: 299999948 found at index 351
+Cycle count read: 359
+Len: 401, key: 1727804616 found at index 12
+Cycle count read: 4103
+Len: 402, key: 337749804 found at index 156
+Cycle count read: 9693
+Len: 403, key: 1612424629 found at index 371
+Cycle count read: 5065
+Len: 404, key: 1676699757 found at index 193
+Cycle count read: 10563
+Len: 405, key: 685942836 not found
+Cycle count read: 7899
+Len: 406, key: 819240511 found at index 302
+Cycle count read: 3531
+Len: 407, key: 1692634068 found at index 134
+Cycle count read: 7665
+Len: 408, key: 1998777012 found at index 293
+Cycle count read: 8705
+Len: 409, key: 564636898 found at index 333
+Cycle count read: 9433
+Len: 410, key: 1189279769 found at index 361
+Cycle count read: 10719
+Len: 411, key: 1657461426 not found
+Cycle count read: 9459
+Len: 412, key: 1180783797 found at index 362
+Cycle count read: 10771
+Len: 413, key: 433943506 not found
+Cycle count read: 10797
+Len: 414, key: 699930418 not found
+Cycle count read: 5221
+Len: 415, key: 1487604399 found at index 199
+Cycle count read: 8731
+Len: 416, key: 1647625792 found at index 334
+Cycle count read: 8835
+Len: 417, key: 712741510 found at index 338
+Cycle count read: 10901
+Len: 418, key: 533565571 not found
+Cycle count read: 1139
+Len: 419, key: 748958264 found at index 42
+Cycle count read: 10953
+Len: 420, key: 2064099700 not found
+Cycle count read: 10979
+Len: 421, key: 1773299276 not found
+Cycle count read: 11005
+Len: 422, key: 670075205 not found
+Cycle count read: 2075
+Len: 423, key: 2002646756 found at index 78
+Cycle count read: 11057
+Len: 424, key: 608166144 not found
+Cycle count read: 9225
+Len: 425, key: 372269852 found at index 353
+Cycle count read: 9355
+Len: 426, key: 1518535929 found at index 358
+Cycle count read: 11135
+Len: 427, key: 1539178845 not found
+Cycle count read: 7119
+Len: 428, key: 8407559 found at index 272
+Cycle count read: 11187
+Len: 429, key: 308582435 not found
+Cycle count read: 11213
+Len: 430, key: 616566685 not found
+Cycle count read: 9017
+Len: 431, key: 238698870 found at index 345
+Cycle count read: 3271
+Len: 432, key: 353399008 found at index 124
+Cycle count read: 1477
+Len: 433, key: 710146670 found at index 55
+Cycle count read: 8263
+Len: 434, key: 854907421 found at index 316
+Cycle count read: 6963
+Len: 435, key: 1385100778 found at index 266
+Cycle count read: 11369
+Len: 436, key: 975601630 not found
+Cycle count read: 2491
+Len: 437, key: 425833556 found at index 94
+Cycle count read: 1529
+Len: 438, key: 361576149 found at index 57
+Cycle count read: 11447
+Len: 439, key: 942859183 not found
+Cycle count read: 11473
+Len: 440, key: 974490808 not found
+Cycle count read: 11499
+Len: 441, key: 513679976 not found
+Cycle count read: 9043
+Len: 442, key: 963787627 found at index 346
+Cycle count read: 9875
+Len: 443, key: 704892091 found at index 378
+Cycle count read: 10551
+Len: 444, key: 1209335252 found at index 404
+Cycle count read: 6079
+Len: 445, key: 981667027 found at index 232
+Cycle count read: 5637
+Len: 446, key: 210419304 found at index 215
+Cycle count read: 9017
+Len: 447, key: 1769192354 found at index 345
+Cycle count read: 11681
+Len: 448, key: 90053181 not found
+Cycle count read: 11707
+Len: 449, key: 852991771 not found
+Cycle count read: 11733
+Len: 450, key: 875541441 not found
+Cycle count read: 11759
+Len: 451, key: 2100875731 not found
+Cycle count read: 749
+Len: 452, key: 1158963994 found at index 27
+Cycle count read: 151
+Len: 453, key: 1478996268 found at index 4
+Cycle count read: 2569
+Len: 454, key: 2134520128 found at index 97
+Cycle count read: 7587
+Len: 455, key: 2068875371 found at index 290
+Cycle count read: 11889
+Len: 456, key: 518951045 not found
+Cycle count read: 11357
+Len: 457, key: 1049041539 found at index 435
+Cycle count read: 1659
+Len: 458, key: 404077014 found at index 62
+Cycle count read: 5559
+Len: 459, key: 1224294705 found at index 212
+Cycle count read: 11993
+Len: 460, key: 2096553141 not found
+Cycle count read: 6001
+Len: 461, key: 1241815712 found at index 229
+Cycle count read: 2023
+Len: 462, key: 218747960 found at index 76
+Cycle count read: 12071
+Len: 463, key: 1518263844 not found
+Cycle count read: 12097
+Len: 464, key: 933392738 not found
+Cycle count read: 8263
+Len: 465, key: 1777327483 found at index 316
+Cycle count read: 12149
+Len: 466, key: 1225432171 not found
+Cycle count read: 3037
+Len: 467, key: 274400585 found at index 115
+Cycle count read: 12201
+Len: 468, key: 1543873611 not found
+Cycle count read: 12227
+Len: 469, key: 1179771180 not found
+Cycle count read: 12253
+Len: 470, key: 1068782615 not found
+Cycle count read: 12279
+Len: 471, key: 1464252867 not found
+Cycle count read: 10967
+Len: 472, key: 1180564497 found at index 420
+Cycle count read: 1061
+Len: 473, key: 670929953 found at index 39
+Cycle count read: 775
+Len: 474, key: 1706846102 found at index 28
+Cycle count read: 12383
+Len: 475, key: 962025792 not found
+Cycle count read: 7249
+Len: 476, key: 514247456 found at index 277
+Cycle count read: 12435
+Len: 477, key: 1257716494 not found
+Cycle count read: 12461
+Len: 478, key: 788655078 not found
+Cycle count read: 12487
+Len: 479, key: 1859385837 not found
+Cycle count read: 9641
+Len: 480, key: 2052006718 found at index 369
+Cycle count read: 9979
+Len: 481, key: 44951166 found at index 382
+Cycle count read: 9121
+Len: 482, key: 956465483 found at index 349
+Cycle count read: 10421
+Len: 483, key: 1835106555 found at index 399
+Cycle count read: 2647
+Len: 484, key: 873606489 found at index 100
+Cycle count read: 3921
+Len: 485, key: 810404180 found at index 149
+Cycle count read: 11409
+Len: 486, key: 650442738 found at index 437
+Cycle count read: 10759
+Len: 487, key: 438491938 found at index 412
+Cycle count read: 12721
+Len: 488, key: 347812951 not found
+Cycle count read: 12293
+Len: 489, key: 19320349 found at index 471
+Cycle count read: 73
+Len: 490, key: 566368464 found at index 1
+Cycle count read: 957
+Len: 491, key: 1394202250 found at index 35
+Cycle count read: 12825
+Len: 492, key: 1764297292 not found
+Cycle count read: 12851
+Len: 493, key: 2095611659 not found
+Cycle count read: 671
+Len: 494, key: 792259595 found at index 24
+Cycle count read: 12475
+Len: 495, key: 1389677303 found at index 478
+Cycle count read: 8991
+Len: 496, key: 340520595 found at index 344
+Cycle count read: 8367
+Len: 497, key: 1261886471 found at index 320
+Cycle count read: 12981
+Len: 498, key: 1769349991 not found
+Cycle count read: 2829
+Len: 499, key: 1552650163 found at index 107
+Cycle count read: 13033
+Len: 500, key: 538555255 not found
+Cycle count read: 13059
+Len: 501, key: 1906129627 not found
+Cycle count read: 2829
+Len: 502, key: 272672854 found at index 107
+Cycle count read: 13111
+Len: 503, key: 305403578 not found
+Cycle count read: 11357
+Len: 504, key: 2021540896 found at index 435
+Cycle count read: 7483
+Len: 505, key: 1827067410 found at index 286
+Cycle count read: 229
+Len: 506, key: 1452936224 found at index 7
+Cycle count read: 5819
+Len: 507, key: 602188867 found at index 222
+Cycle count read: 13241
+Len: 508, key: 1261801364 not found
+Cycle count read: 2075
+Len: 509, key: 2016332845 found at index 78
+Cycle count read: 13293
+Len: 510, key: 1441531523 not found
+Cycle count read: 5767
+Len: 511, key: 1656459245 found at index 220
+Cycle count read: 13345
+Len: 512, key: 1395430619 not found
+Cycle count read: 4519
+Len: 513, key: 984820631 found at index 172
+Cycle count read: 13397
+Len: 514, key: 1919160168 not found
+Cycle count read: 13423
+Len: 515, key: 1081779173 not found
+Cycle count read: 13449
+Len: 516, key: 1042967184 not found
+Cycle count read: 13475
+Len: 517, key: 1548354284 not found
+Cycle count read: 2803
+Len: 518, key: 1891567179 found at index 106
+Cycle count read: 5039
+Len: 519, key: 1697054341 found at index 192
+Cycle count read: 13553
+Len: 520, key: 237802406 not found
+Cycle count read: 13579
+Len: 521, key: 2009532352 not found
+Cycle count read: 1919
+Len: 522, key: 1578159697 found at index 72
+Cycle count read: 4883
+Len: 523, key: 40484574 found at index 186
+Cycle count read: 5793
+Len: 524, key: 1682541877 found at index 221
+Cycle count read: 13683
+Len: 525, key: 434094012 not found
+Cycle count read: 4467
+Len: 526, key: 452316175 found at index 170
+Cycle count read: 9303
+Len: 527, key: 938024503 found at index 356
+Cycle count read: 13761
+Len: 528, key: 462000757 not found
+Cycle count read: 5455
+Len: 529, key: 1249568795 found at index 208
+Cycle count read: 177
+Len: 530, key: 2017805439 found at index 5
+Cycle count read: 905
+Len: 531, key: 390778846 found at index 33
+Cycle count read: 13865
+Len: 532, key: 1317580156 not found
+Cycle count read: 13891
+Len: 533, key: 1357343888 not found
+Cycle count read: 12683
+Len: 534, key: 1535999388 found at index 486
+Cycle count read: 13943
+Len: 535, key: 836235929 not found
+Cycle count read: 6859
+Len: 536, key: 1471589830 found at index 262
+Cycle count read: 5325
+Len: 537, key: 1422002748 found at index 203
+Cycle count read: 14021
+Len: 538, key: 678514890 not found
+Cycle count read: 14047
+Len: 539, key: 1812476673 not found
+Cycle count read: 14073
+Len: 540, key: 1191683347 not found
+Cycle count read: 14099
+Len: 541, key: 1231610052 not found
+Cycle count read: 14125
+Len: 542, key: 1632330289 not found
+Cycle count read: 14151
+Len: 543, key: 2039968837 not found
+Cycle count read: 14177
+Len: 544, key: 1821503957 not found
+Cycle count read: 5819
+Len: 545, key: 1615862720 found at index 222
+Cycle count read: 957
+Len: 546, key: 1553277786 found at index 35
+Cycle count read: 13905
+Len: 547, key: 1521287696 found at index 533
+Cycle count read: 14281
+Len: 548, key: 970638572 not found
+Cycle count read: 10915
+Len: 549, key: 1127047270 found at index 418
+Cycle count read: 8107
+Len: 550, key: 96653258 found at index 310
+Cycle count read: 14359
+Len: 551, key: 1955948252 not found
+Cycle count read: 4285
+Len: 552, key: 1690908648 found at index 163
+Cycle count read: 14411
+Len: 553, key: 612386875 not found
+Cycle count read: 333
+Len: 554, key: 1850869947 found at index 11
+Cycle count read: 463
+Len: 555, key: 1880239918 found at index 16
+Cycle count read: 359
+Len: 556, key: 138032136 found at index 12
+Cycle count read: 8679
+Len: 557, key: 218487738 found at index 332
+Cycle count read: 4363
+Len: 558, key: 976665747 found at index 166
+Cycle count read: 5949
+Len: 559, key: 1969575500 found at index 227
+Cycle count read: 14425
+Len: 560, key: 52920377 found at index 553
+Cycle count read: 14619
+Len: 561, key: 1684848910 not found
+Cycle count read: 14645
+Len: 562, key: 444088365 not found
+Cycle count read: 8471
+Len: 563, key: 1679969885 found at index 324
+Cycle count read: 2439
+Len: 564, key: 1632166373 found at index 92
+Cycle count read: 14723
+Len: 565, key: 420506882 not found
+Cycle count read: 14749
+Len: 566, key: 1940335753 not found
+Cycle count read: 14775
+Len: 567, key: 1095668472 not found
+Cycle count read: 14801
+Len: 568, key: 790919238 not found
+Cycle count read: 14827
+Len: 569, key: 1718921825 not found
+Cycle count read: 14853
+Len: 570, key: 971406741 not found
+Cycle count read: 14879
+Len: 571, key: 2088859701 not found
+Cycle count read: 14905
+Len: 572, key: 1947338120 not found
+Cycle count read: 14931
+Len: 573, key: 1386382368 not found
+Cycle count read: 14957
+Len: 574, key: 1111907407 not found
+Cycle count read: 9303
+Len: 575, key: 385734030 found at index 356
+Cycle count read: 2673
+Len: 576, key: 1329979318 found at index 101
+Cycle count read: 13827
+Len: 577, key: 372825546 found at index 530
+Cycle count read: 15061
+Len: 578, key: 230494252 not found
+Cycle count read: 15087
+Len: 579, key: 673257470 not found
+Cycle count read: 15113
+Len: 580, key: 872865618 not found
+Cycle count read: 15139
+Len: 581, key: 1279017525 not found
+Cycle count read: 15165
+Len: 582, key: 974443415 not found
+Cycle count read: 15191
+Len: 583, key: 133869873 not found
+Cycle count read: 15217
+Len: 584, key: 1945152523 not found
+Cycle count read: 15243
+Len: 585, key: 1307692443 not found
+Cycle count read: 15269
+Len: 586, key: 2012198104 not found
+Cycle count read: 15295
+Len: 587, key: 1975337476 not found
+Cycle count read: 15321
+Len: 588, key: 43984984 not found
+Cycle count read: 5559
+Len: 589, key: 1656104138 found at index 212
+Cycle count read: 15373
+Len: 590, key: 1374280640 not found
+Cycle count read: 15399
+Len: 591, key: 1521990952 not found
+Cycle count read: 15425
+Len: 592, key: 1243882357 not found
+Cycle count read: 15451
+Len: 593, key: 1200358054 not found
+Cycle count read: 3739
+Len: 594, key: 1724900187 found at index 142
+Cycle count read: 15503
+Len: 595, key: 170630331 not found
+Cycle count read: 15529
+Len: 596, key: 1639196983 not found
+Cycle count read: 15555
+Len: 597, key: 2054172479 not found
+Cycle count read: 15581
+Len: 598, key: 400198142 not found
+Cycle count read: 1035
+Len: 599, key: 1266453940 found at index 38
+Cycle count read: 15633
+Len: 600, key: 820458726 not found
+Cycle count read: 4103
+Len: 601, key: 2111008776 found at index 156
+Cycle count read: 11617
+Len: 602, key: 684316240 found at index 445
+Cycle count read: 15711
+Len: 603, key: 1927683873 not found
+Cycle count read: 6521
+Len: 604, key: 243437280 found at index 249
+Cycle count read: 6573
+Len: 605, key: 2106736951 found at index 251
+Cycle count read: 14633
+Len: 606, key: 1480109635 found at index 561
+Cycle count read: 15815
+Len: 607, key: 2079422105 not found
+Cycle count read: 15841
+Len: 608, key: 1006727040 not found
+Cycle count read: 12449
+Len: 609, key: 1089332028 found at index 477
+Cycle count read: 15893
+Len: 610, key: 1551512141 not found
+Cycle count read: 15361
+Len: 611, key: 2062024256 found at index 589
+Cycle count read: 15945
+Len: 612, key: 646890460 not found
+Cycle count read: 4961
+Len: 613, key: 1867499720 found at index 189
+Cycle count read: 15997
+Len: 614, key: 703810715 not found
+Cycle count read: 229
+Len: 615, key: 1044359427 found at index 7
+Cycle count read: 16049
+Len: 616, key: 365206632 not found
+Cycle count read: 16075
+Len: 617, key: 165414011 not found
+Cycle count read: 8809
+Len: 618, key: 1963941666 found at index 337
+Cycle count read: 16127
+Len: 619, key: 429429424 not found
+Cycle count read: 16153
+Len: 620, key: 1125285383 not found
+Cycle count read: 16179
+Len: 621, key: 768561016 not found
+Cycle count read: 16205
+Len: 622, key: 722166320 not found
+Cycle count read: 2621
+Len: 623, key: 1714358701 found at index 99
+Cycle count read: 16257
+Len: 624, key: 128354572 not found
+Cycle count read: 16283
+Len: 625, key: 1753709881 not found
+Cycle count read: 16309
+Len: 626, key: 816192214 not found
+Cycle count read: 255
+Len: 627, key: 1914916962 found at index 8
+Cycle count read: 16361
+Len: 628, key: 106049463 not found
+Cycle count read: 16387
+Len: 629, key: 2040899080 not found
+Cycle count read: 16413
+Len: 630, key: 1277853980 not found
+Cycle count read: 13333
+Len: 631, key: 1220473601 found at index 511
+Cycle count read: 16465
+Len: 632, key: 1692075390 not found
+Cycle count read: 8003
+Len: 633, key: 1594138495 found at index 306
+Cycle count read: 16517
+Len: 634, key: 1658321751 not found
+Cycle count read: 13749
+Len: 635, key: 569736934 found at index 527
+Cycle count read: 16569
+Len: 636, key: 1399835548 not found
+Cycle count read: 16595
+Len: 637, key: 2108813392 not found
+Cycle count read: 3973
+Len: 638, key: 581769521 found at index 151
+Cycle count read: 9901
+Len: 639, key: 1691938394 found at index 379
+Cycle count read: 16673
+Len: 640, key: 1803286556 not found
+Cycle count read: 16699
+Len: 641, key: 1849068539 not found
+Cycle count read: 16725
+Len: 642, key: 897584139 not found
+Cycle count read: 16751
+Len: 643, key: 1498808821 not found
+Cycle count read: 4987
+Len: 644, key: 296161179 found at index 190
+Cycle count read: 16803
+Len: 645, key: 1797257158 not found
+Cycle count read: 16829
+Len: 646, key: 316740190 not found
+Cycle count read: 16855
+Len: 647, key: 158904351 not found
+Cycle count read: 11695
+Len: 648, key: 1656782555 found at index 448
+Cycle count read: 16907
+Len: 649, key: 931863783 not found
+Cycle count read: 10395
+Len: 650, key: 1332210855 found at index 398
+Cycle count read: 16959
+Len: 651, key: 1145092002 not found
+Cycle count read: 16985
+Len: 652, key: 780747378 not found
+Cycle count read: 7951
+Len: 653, key: 1375791734 found at index 304
+Cycle count read: 17037
+Len: 654, key: 525069978 not found
+Cycle count read: 17063
+Len: 655, key: 1752904227 not found
+Cycle count read: 17089
+Len: 656, key: 1129723831 not found
+Cycle count read: 6053
+Len: 657, key: 1780760131 found at index 231
+Cycle count read: 17141
+Len: 658, key: 625570807 not found
+Cycle count read: 9199
+Len: 659, key: 1294184837 found at index 352
+Cycle count read: 17193
+Len: 660, key: 949866721 not found
+Cycle count read: 13983
+Len: 661, key: 1131234518 found at index 536
+Cycle count read: 17245
+Len: 662, key: 1812725626 not found
+Cycle count read: 17271
+Len: 663, key: 1618625943 not found
+Cycle count read: 17297
+Len: 664, key: 1785658447 not found
+Cycle count read: 17323
+Len: 665, key: 1236617753 not found
+Cycle count read: 2959
+Len: 666, key: 1638936933 found at index 112
+Cycle count read: 17375
+Len: 667, key: 2074347532 not found
+Cycle count read: 3739
+Len: 668, key: 1021345342 found at index 142
+Cycle count read: 17427
+Len: 669, key: 1250123463 not found
+Cycle count read: 17453
+Len: 670, key: 1017312999 not found
+Cycle count read: 10291
+Len: 671, key: 1317670229 found at index 394
+Cycle count read: 2777
+Len: 672, key: 612665376 found at index 105
+Cycle count read: 17531
+Len: 673, key: 1574170474 not found
+Cycle count read: 7509
+Len: 674, key: 483026563 found at index 287
+Cycle count read: 6391
+Len: 675, key: 1004897080 found at index 244
+Cycle count read: 15725
+Len: 676, key: 782651724 found at index 603
+Cycle count read: 17635
+Len: 677, key: 526509373 not found
+Cycle count read: 17661
+Len: 678, key: 1168471465 not found
+Cycle count read: 13073
+Len: 679, key: 1885548528 found at index 501
+Cycle count read: 17493
+Len: 680, key: 1515655005 found at index 671
+Cycle count read: 3011
+Len: 681, key: 1723235526 found at index 114
+Cycle count read: 5611
+Len: 682, key: 953451844 found at index 214
+Cycle count read: 6703
+Len: 683, key: 2094885279 found at index 256
+Cycle count read: 3557
+Len: 684, key: 107762921 found at index 135
+Cycle count read: 6313
+Len: 685, key: 1801944970 found at index 241
+Cycle count read: 17869
+Len: 686, key: 2112875664 not found
+Cycle count read: 8185
+Len: 687, key: 1904531843 found at index 313
+Cycle count read: 5299
+Len: 688, key: 2124834768 found at index 202
+Cycle count read: 17947
+Len: 689, key: 584149288 not found
+Cycle count read: 3297
+Len: 690, key: 60215454 found at index 125
+Cycle count read: 17999
+Len: 691, key: 1354402637 not found
+Cycle count read: 6833
+Len: 692, key: 1505091743 found at index 261
+Cycle count read: 18051
+Len: 693, key: 1123294631 not found
+Cycle count read: 8419
+Len: 694, key: 1878203411 found at index 322
+Cycle count read: 16453
+Len: 695, key: 546080905 found at index 631
+Cycle count read: 18129
+Len: 696, key: 1939923536 not found
+Cycle count read: 18155
+Len: 697, key: 1328631497 not found
+Cycle count read: 7249
+Len: 698, key: 290210510 found at index 277
+Cycle count read: 16323
+Len: 699, key: 1167938684 found at index 626
+Cycle count read: 14555
+Len: 700, key: 1894850921 found at index 558
+Cycle count read: 15959
+Len: 701, key: 860444655 found at index 612
+Cycle count read: 2205
+Len: 702, key: 355267716 found at index 83
+Cycle count read: 18311
+Len: 703, key: 619564488 not found
+Cycle count read: 10161
+Len: 704, key: 2051842412 found at index 389
+Cycle count read: 14815
+Len: 705, key: 1318107689 found at index 568
+Cycle count read: 17571
+Len: 706, key: 1900025740 found at index 674
+Cycle count read: 12059
+Len: 707, key: 1185610283 found at index 462
+Cycle count read: 18441
+Len: 708, key: 1381434332 not found
+Cycle count read: 18467
+Len: 709, key: 899690076 not found
+Cycle count read: 6131
+Len: 710, key: 1468880535 found at index 234
+Cycle count read: 18519
+Len: 711, key: 882451134 not found
+Cycle count read: 18545
+Len: 712, key: 1109513989 not found
+Cycle count read: 18571
+Len: 713, key: 1882402435 not found
+Cycle count read: 10395
+Len: 714, key: 1602087010 found at index 398
+Cycle count read: 14451
+Len: 715, key: 106736317 found at index 554
+Cycle count read: 18649
+Len: 716, key: 1496836642 not found
+Cycle count read: 18675
+Len: 717, key: 1442616108 not found
+Cycle count read: 18701
+Len: 718, key: 438521622 not found
+Cycle count read: 7847
+Len: 719, key: 1350784869 found at index 300
+Cycle count read: 7015
+Len: 720, key: 1656509036 found at index 268
+Cycle count read: 18779
+Len: 721, key: 710568882 not found
+Cycle count read: 18805
+Len: 722, key: 742004028 not found
+Cycle count read: 18831
+Len: 723, key: 840245488 not found
+Cycle count read: 18857
+Len: 724, key: 1952027538 not found
+Cycle count read: 8809
+Len: 725, key: 787190528 found at index 337
+Cycle count read: 18909
+Len: 726, key: 169563520 not found
+Cycle count read: 15413
+Len: 727, key: 1641125484 found at index 591
+Cycle count read: 18961
+Len: 728, key: 1067180124 not found
+Cycle count read: 18987
+Len: 729, key: 879528235 not found
+Cycle count read: 17363
+Len: 730, key: 777072261 found at index 666
+Cycle count read: 19039
+Len: 731, key: 101413519 not found
+Cycle count read: 19065
+Len: 732, key: 602165977 not found
+Cycle count read: 411
+Len: 733, key: 582133988 found at index 14
+Cycle count read: 19117
+Len: 734, key: 810339517 not found
+Cycle count read: 12293
+Len: 735, key: 1725067518 found at index 471
+Cycle count read: 19169
+Len: 736, key: 687763337 not found
+Cycle count read: 16921
+Len: 737, key: 387335251 found at index 649
+Cycle count read: 11747
+Len: 738, key: 1438674755 found at index 450
+Cycle count read: 14373
+Len: 739, key: 2030887813 found at index 551
+Cycle count read: 4233
+Len: 740, key: 1594728173 found at index 161
+Cycle count read: 19299
+Len: 741, key: 1039316788 not found
+Cycle count read: 2075
+Len: 742, key: 300660151 found at index 78
+Cycle count read: 19351
+Len: 743, key: 952775104 not found
+Cycle count read: 1633
+Len: 744, key: 795264524 found at index 61
+Cycle count read: 6391
+Len: 745, key: 759487494 found at index 244
+Cycle count read: 12579
+Len: 746, key: 1145599255 found at index 482
+Cycle count read: 16271
+Len: 747, key: 1842549754 found at index 624
+Cycle count read: 19481
+Len: 748, key: 180116311 not found
+Cycle count read: 18871
+Len: 749, key: 1063499752 found at index 724
+Cycle count read: 19533
+Len: 750, key: 783726571 not found
+Cycle count read: 15933
+Len: 751, key: 438616033 found at index 611
+Cycle count read: 14503
+Len: 752, key: 1496912754 found at index 556
+Cycle count read: 19611
+Len: 753, key: 386373916 not found
+Cycle count read: 17025
+Len: 754, key: 446602512 found at index 653
+Cycle count read: 19663
+Len: 755, key: 1035181618 not found
+Cycle count read: 19689
+Len: 756, key: 436768404 not found
+Cycle count read: 18845
+Len: 757, key: 969396717 found at index 723
+Cycle count read: 6157
+Len: 758, key: 2017317436 found at index 235
+Cycle count read: 18949
+Len: 759, key: 850298382 found at index 727
+Cycle count read: 3219
+Len: 760, key: 147934894 found at index 122
+Cycle count read: 17233
+Len: 761, key: 1190927009 found at index 661
+Cycle count read: 19845
+Len: 762, key: 1702623445 not found
+Cycle count read: 19521
+Len: 763, key: 856643079 found at index 749
+Cycle count read: 983
+Len: 764, key: 175387595 found at index 36
+Cycle count read: 19923
+Len: 765, key: 605291248 not found
+Cycle count read: 19949
+Len: 766, key: 712810161 not found
+Cycle count read: 6885
+Len: 767, key: 296334917 found at index 263
+Cycle count read: 20001
+Len: 768, key: 1950383544 not found
+Cycle count read: 20027
+Len: 769, key: 974983176 not found
+Cycle count read: 151
+Len: 770, key: 2135654879 found at index 4
+Cycle count read: 16167
+Len: 771, key: 1783124009 found at index 620
+Cycle count read: 3063
+Len: 772, key: 902869997 found at index 116
+Cycle count read: 20131
+Len: 773, key: 1884620343 not found
+Cycle count read: 20157
+Len: 774, key: 1876796628 not found
+Cycle count read: 20183
+Len: 775, key: 801327028 not found
+Cycle count read: 20209
+Len: 776, key: 1574881163 not found
+Cycle count read: 18351
+Len: 777, key: 1675889047 found at index 704
+Cycle count read: 20261
+Len: 778, key: 549878147 not found
+Cycle count read: 7769
+Len: 779, key: 89721077 found at index 297
+Cycle count read: 2777
+Len: 780, key: 111643766 found at index 105
+Cycle count read: 8679
+Len: 781, key: 1200919109 found at index 332
+Cycle count read: 20365
+Len: 782, key: 2000671848 not found
+Cycle count read: 20391
+Len: 783, key: 199600111 not found
+Cycle count read: 20417
+Len: 784, key: 2066361504 not found
+Cycle count read: 2829
+Len: 785, key: 1689589628 found at index 107
+Cycle count read: 20469
+Len: 786, key: 1412318965 not found
+Cycle count read: 18065
+Len: 787, key: 248122807 found at index 693
+Cycle count read: 17805
+Len: 788, key: 865945999 found at index 683
+Cycle count read: 12527
+Len: 789, key: 425052897 found at index 480
+Cycle count read: 17831
+Len: 790, key: 755641535 found at index 684
+Cycle count read: 20599
+Len: 791, key: 1192951171 not found
+Cycle count read: 1035
+Len: 792, key: 292797660 found at index 38
+Cycle count read: 14841
+Len: 793, key: 1266789818 found at index 569
+Cycle count read: 20677
+Len: 794, key: 455102638 not found
+Cycle count read: 20703
+Len: 795, key: 1132776224 not found
+Cycle count read: 16011
+Len: 796, key: 1368114238 found at index 614
+Cycle count read: 12891
+Len: 797, key: 609980687 found at index 494
+Cycle count read: 3817
+Len: 798, key: 16354229 found at index 145
+Cycle count read: 17155
+Len: 799, key: 1507200306 found at index 658
+Cycle count read: 15673
+Len: 800, key: 1884213931 found at index 601
+Cycle count read: 13281
+Len: 801, key: 1757172521 found at index 509
+Cycle count read: 12969
+Len: 802, key: 1824077762 found at index 497
+Cycle count read: 15283
+Len: 803, key: 2015221206 found at index 586
+Cycle count read: 19937
+Len: 804, key: 1854214583 found at index 765
+Cycle count read: 20963
+Len: 805, key: 2022643565 not found
+Cycle count read: 853
+Len: 806, key: 1112491594 found at index 31
+Cycle count read: 9121
+Len: 807, key: 1714989549 found at index 349
+Cycle count read: 18325
+Len: 808, key: 1188403458 found at index 703
+Cycle count read: 1945
+Len: 809, key: 1681763779 found at index 73
+Cycle count read: 21093
+Len: 810, key: 161777963 not found
+Cycle count read: 2101
+Len: 811, key: 710609530 found at index 79
+Cycle count read: 21145
+Len: 812, key: 1840191858 not found
+Cycle count read: 21171
+Len: 813, key: 1075881012 not found
+Cycle count read: 21197
+Len: 814, key: 1369389691 not found
+Cycle count read: 21223
+Len: 815, key: 59441922 not found
+Cycle count read: 19729
+Len: 816, key: 742006447 found at index 757
+Cycle count read: 21185
+Len: 817, key: 1025546836 found at index 813
+Cycle count read: 10655
+Len: 818, key: 318953563 found at index 408
+Cycle count read: 15777
+Len: 819, key: 401964070 found at index 605
+Cycle count read: 21353
+Len: 820, key: 1653278210 not found
+Cycle count read: 21379
+Len: 821, key: 1366904364 not found
+Cycle count read: 21405
+Len: 822, key: 1705696913 not found
+Cycle count read: 7639
+Len: 823, key: 1259428572 found at index 292
+Cycle count read: 21457
+Len: 824, key: 93457258 not found
+Cycle count read: 21483
+Len: 825, key: 1858267489 not found
+Cycle count read: 17961
+Len: 826, key: 1560659714 found at index 689
+Cycle count read: 21535
+Len: 827, key: 1953996455 not found
+Cycle count read: 21561
+Len: 828, key: 1682930190 not found
+Cycle count read: 21587
+Len: 829, key: 113960032 not found
+Cycle count read: 567
+Len: 830, key: 1285633786 found at index 20
+Cycle count read: 203
+Len: 831, key: 1313910291 found at index 6
+Cycle count read: 10785
+Len: 832, key: 979406953 found at index 413
+Cycle count read: 21601
+Len: 833, key: 1659104425 found at index 829
+Cycle count read: 3479
+Len: 834, key: 589526569 found at index 132
+Cycle count read: 21743
+Len: 835, key: 324502223 not found
+Cycle count read: 21769
+Len: 836, key: 1129081907 not found
+Cycle count read: 10551
+Len: 837, key: 124748142 found at index 404
+Cycle count read: 21821
+Len: 838, key: 1959928651 not found
+Cycle count read: 20717
+Len: 839, key: 1847388816 found at index 795
+Cycle count read: 3193
+Len: 840, key: 654958063 found at index 121
+Cycle count read: 21899
+Len: 841, key: 165602451 not found
+Cycle count read: 17727
+Len: 842, key: 1078565242 found at index 680
+Cycle count read: 21951
+Len: 843, key: 286430447 not found
+Cycle count read: 20821
+Len: 844, key: 289605405 found at index 799
+Cycle count read: 20405
+Len: 845, key: 1281732530 found at index 783
+Cycle count read: 22029
+Len: 846, key: 1053168847 not found
+Cycle count read: 22055
+Len: 847, key: 212847174 not found
+Cycle count read: 15829
+Len: 848, key: 757257898 found at index 607
+Cycle count read: 22107
+Len: 849, key: 101078184 not found
+Cycle count read: 5871
+Len: 850, key: 284881252 found at index 224
+Cycle count read: 22159
+Len: 851, key: 1446471669 not found
+Cycle count read: 17935
+Len: 852, key: 1844179274 found at index 688
+Cycle count read: 21497
+Len: 853, key: 1221031309 found at index 825
+Cycle count read: 22237
+Len: 854, key: 1981477965 not found
+Cycle count read: 20327
+Len: 855, key: 1907090771 found at index 780
+Cycle count read: 22289
+Len: 856, key: 1996206140 not found
+Cycle count read: 22315
+Len: 857, key: 1616409604 not found
+Cycle count read: 20665
+Len: 858, key: 1446410760 found at index 793
+Cycle count read: 22069
+Len: 859, key: 1756572398 found at index 847
+Cycle count read: 10733
+Len: 860, key: 1525402854 found at index 411
+Cycle count read: 22419
+Len: 861, key: 2026096283 not found
+Cycle count read: 6573
+Len: 862, key: 612650991 found at index 251
+Cycle count read: 22471
+Len: 863, key: 1017084316 not found
+Cycle count read: 6183
+Len: 864, key: 1122464787 found at index 236
+Cycle count read: 15751
+Len: 865, key: 654589448 found at index 604
+Cycle count read: 22549
+Len: 866, key: 1140982919 not found
+Cycle count read: 22575
+Len: 867, key: 174884719 not found
+Cycle count read: 16739
+Len: 868, key: 1472392952 found at index 642
+Cycle count read: 22627
+Len: 869, key: 1120662140 not found
+Cycle count read: 22653
+Len: 870, key: 1577178647 not found
+Cycle count read: 22679
+Len: 871, key: 297761869 not found
+Cycle count read: 203
+Len: 872, key: 1173168411 found at index 6
+Cycle count read: 9797
+Len: 873, key: 613239304 found at index 375
+Cycle count read: 22757
+Len: 874, key: 2112192798 not found
+Cycle count read: 8523
+Len: 875, key: 606463732 found at index 326
+Cycle count read: 7093
+Len: 876, key: 1864563536 found at index 271
+Cycle count read: 22835
+Len: 877, key: 1133334479 not found
+Cycle count read: 7899
+Len: 878, key: 1729605663 found at index 302
+Cycle count read: 22887
+Len: 879, key: 517986730 not found
+Cycle count read: 22913
+Len: 880, key: 1743832706 not found
+Cycle count read: 22939
+Len: 881, key: 570895034 not found
+Cycle count read: 22965
+Len: 882, key: 1655358413 not found
+Cycle count read: 22991
+Len: 883, key: 1113799962 not found
+Cycle count read: 23017
+Len: 884, key: 1216596466 not found
+Cycle count read: 23043
+Len: 885, key: 922395895 not found
+Cycle count read: 17025
+Len: 886, key: 1462505495 found at index 653
+Cycle count read: 23095
+Len: 887, key: 475656750 not found
+Cycle count read: 18013
+Len: 888, key: 629324132 found at index 691
+Cycle count read: 17077
+Len: 889, key: 383398333 found at index 655
+Cycle count read: 15803
+Len: 890, key: 1728855263 found at index 606
+Cycle count read: 3063
+Len: 891, key: 910352033 found at index 116
+Cycle count read: 10863
+Len: 892, key: 91646057 found at index 416
+Cycle count read: 23135
+Len: 893, key: 2075747043 found at index 888
+Cycle count read: 23277
+Len: 894, key: 994660703 not found
+Cycle count read: 23303
+Len: 895, key: 1917842540 not found
+Cycle count read: 17441
+Len: 896, key: 1720984539 found at index 669
+Cycle count read: 6157
+Len: 897, key: 1704793643 found at index 235
+Cycle count read: 19911
+Len: 898, key: 964446793 found at index 764
+Cycle count read: 23407
+Len: 899, key: 346189439 not found
+Cycle count read: 23433
+Len: 900, key: 1681958341 not found
+Cycle count read: 23459
+Len: 901, key: 810589681 not found
+Cycle count read: 23485
+Len: 902, key: 1434955587 not found
+Cycle count read: 23511
+Len: 903, key: 1601174528 not found
+Cycle count read: 11383
+Len: 904, key: 1306765123 found at index 436
+Cycle count read: 13229
+Len: 905, key: 1012869653 found at index 507
+Cycle count read: 2777
+Len: 906, key: 1689768719 found at index 105
+Cycle count read: 1347
+Len: 907, key: 1888225519 found at index 50
+Cycle count read: 6989
+Len: 908, key: 1776041928 found at index 267
+Cycle count read: 23667
+Len: 909, key: 1462079497 not found
+Cycle count read: 8757
+Len: 910, key: 692937764 found at index 335
+Cycle count read: 21575
+Len: 911, key: 994094477 found at index 828
+Cycle count read: 19677
+Len: 912, key: 891702887 found at index 755
+Cycle count read: 19625
+Len: 913, key: 822519359 found at index 753
+Cycle count read: 23797
+Len: 914, key: 787874280 not found
+Cycle count read: 16843
+Len: 915, key: 1414112364 found at index 646
+Cycle count read: 23291
+Len: 916, key: 1488367221 found at index 894
+Cycle count read: 23875
+Len: 917, key: 1274503385 not found
+Cycle count read: 23901
+Len: 918, key: 1218338306 not found
+Cycle count read: 23927
+Len: 919, key: 482882487 not found
+Cycle count read: 23953
+Len: 920, key: 136541567 not found
+Cycle count read: 5975
+Len: 921, key: 562937301 found at index 228
+Cycle count read: 18897
+Len: 922, key: 1430325361 found at index 725
+Cycle count read: 12449
+Len: 923, key: 1078800278 found at index 477
+Cycle count read: 2829
+Len: 924, key: 1169533657 found at index 107
+Cycle count read: 24083
+Len: 925, key: 35098196 not found
+Cycle count read: 16063
+Len: 926, key: 1449308824 found at index 616
+Cycle count read: 3219
+Len: 927, key: 2072366505 found at index 122
+Cycle count read: 24161
+Len: 928, key: 114006821 not found
+Cycle count read: 385
+Len: 929, key: 1089091255 found at index 13
+Cycle count read: 16011
+Len: 930, key: 664680113 found at index 614
+Cycle count read: 24239
+Len: 931, key: 2082374638 not found
+Cycle count read: 24265
+Len: 932, key: 1878601563 not found
+Cycle count read: 24291
+Len: 933, key: 1978139019 not found
+Cycle count read: 16089
+Len: 934, key: 1887221066 found at index 617
+Cycle count read: 24343
+Len: 935, key: 454230276 not found
+Cycle count read: 24369
+Len: 936, key: 1691650598 not found
+Cycle count read: 24395
+Len: 937, key: 567601004 not found
+Cycle count read: 24421
+Len: 938, key: 642602948 not found
+Cycle count read: 24447
+Len: 939, key: 1699517389 not found
+Cycle count read: 24473
+Len: 940, key: 1626529273 not found
+Cycle count read: 24499
+Len: 941, key: 6516205 not found
+Cycle count read: 24525
+Len: 942, key: 1230352140 not found
+Cycle count read: 24551
+Len: 943, key: 1389253803 not found
+Cycle count read: 24577
+Len: 944, key: 418809383 not found
+Cycle count read: 24603
+Len: 945, key: 93143573 not found
+Cycle count read: 24629
+Len: 946, key: 1207913229 not found
+Cycle count read: 6989
+Len: 947, key: 1775141554 found at index 267
+Cycle count read: 333
+Len: 948, key: 912667542 found at index 11
+Cycle count read: 24707
+Len: 949, key: 26557030 not found
+Cycle count read: 24733
+Len: 950, key: 1902330895 not found
+Cycle count read: 24759
+Len: 951, key: 1938344500 not found
+Cycle count read: 24785
+Len: 952, key: 476742212 not found
+Cycle count read: 24811
+Len: 953, key: 1912771324 not found
+Cycle count read: 18689
+Len: 954, key: 1551156290 found at index 717
+Cycle count read: 24863
+Len: 955, key: 2110979058 not found
+Cycle count read: 931
+Len: 956, key: 2038736928 found at index 34
+Cycle count read: 4441
+Len: 957, key: 401520926 found at index 169
+Cycle count read: 1035
+Len: 958, key: 548806932 found at index 38
+Cycle count read: 16947
+Len: 959, key: 806459292 found at index 650
+Cycle count read: 24993
+Len: 960, key: 914579663 not found
+Cycle count read: 25019
+Len: 961, key: 853121769 not found
+Cycle count read: 4467
+Len: 962, key: 93123054 found at index 170
+Cycle count read: 1789
+Len: 963, key: 1403895750 found at index 67
+Cycle count read: 25097
+Len: 964, key: 423467184 not found
+Cycle count read: 21315
+Len: 965, key: 72887550 found at index 818
+Cycle count read: 25149
+Len: 966, key: 1038707214 not found
+Cycle count read: 25175
+Len: 967, key: 1550466696 not found
+Cycle count read: 25201
+Len: 968, key: 1675269824 not found
+Cycle count read: 18325
+Len: 969, key: 1740604639 found at index 703
+Cycle count read: 4337
+Len: 970, key: 792236804 found at index 165
+Cycle count read: 10187
+Len: 971, key: 693313119 found at index 390
+Cycle count read: 25305
+Len: 972, key: 797569947 not found
+Cycle count read: 23733
+Len: 973, key: 1931505898 found at index 911
+Cycle count read: 3713
+Len: 974, key: 2108393311 found at index 141
+Cycle count read: 20067
+Len: 975, key: 762913636 found at index 770
+Cycle count read: 25409
+Len: 976, key: 685097593 not found
+Cycle count read: 25435
+Len: 977, key: 865316087 not found
+Cycle count read: 25461
+Len: 978, key: 2091181438 not found
+Cycle count read: 25487
+Len: 979, key: 23871740 not found
+Cycle count read: 25513
+Len: 980, key: 148020834 not found
+Cycle count read: 25539
+Len: 981, key: 1340221668 not found
+Cycle count read: 11929
+Len: 982, key: 818297747 found at index 457
+Cycle count read: 25591
+Len: 983, key: 1896937784 not found
+Cycle count read: 25617
+Len: 984, key: 2104747010 not found
+Cycle count read: 13203
+Len: 985, key: 892799560 found at index 506
+Cycle count read: 25669
+Len: 986, key: 1615145547 not found
+Cycle count read: 7925
+Len: 987, key: 1201803887 found at index 303
+Cycle count read: 4207
+Len: 988, key: 1142080686 found at index 160
+Cycle count read: 25747
+Len: 989, key: 336872913 not found
+Cycle count read: 25773
+Len: 990, key: 518825225 not found
+Cycle count read: 22329
+Len: 991, key: 281181774 found at index 857
+Cycle count read: 3245
+Len: 992, key: 771385289 found at index 123
+Cycle count read: 25851
+Len: 993, key: 2037410560 not found
+Cycle count read: 1789
+Len: 994, key: 1020365949 found at index 67
+Cycle count read: 25903
+Len: 995, key: 1868348164 not found
+Cycle count read: 25929
+Len: 996, key: 1430515857 not found
+Cycle count read: 25955
+Len: 997, key: 124788491 not found
+Cycle count read: 4233
+Len: 998, key: 1195734513 found at index 161
+Cycle count read: 26007
+Len: 999, key: 1090731002 not found
+Cycle count read: 18689
+Len: 1000, key: 406476272 found at index 717
+Cycle count read: 26059
