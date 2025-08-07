@@ -31,34 +31,11 @@ Module RISCVTiming := RISCVTiming cpu Program_bubble_sort_theta_n2.
 Module bubble_sort_theta_n2Auto := RISCVTimingAutomation RISCVTiming.
 Import Program_bubble_sort_theta_n2 bubble_sort_theta_n2Auto.
 
-Definition time_of_bubble_sort_theta_n2 (len : N) (t : trace) :=
+Definition time_of_bubble_sort_theta_n2 (mem : addr -> N) 
+        (arr : addr) (len : N) (t : trace) :=
     (* ----------------------------------------- *)
-    (* lower bound *)
-    tslli 2 + tadd + taddi +
-    (* outer loop full iterations *)
-    len * (
-        tfbeq + taddi + tjal +
-        (* inner loop full iterations *)
-        (len - 1) * (
-            ttbne +
-            tlw + tlw +
-            (* branch timing depends on instruction latency, 
-               which is dependent on memory speed, so we can't know
-               whether the time of a successful branch to skip the
-               if-then body will be faster or slower than 
-               falling through + the if-then body
-            *)
-            N.min ttbgeu (tfbgeu + tsw + tsw) +
-            taddi
-        ) +
-        (* inner loop partial iteration *)
-        tfbne +
-        taddi + tjal
-    ) +
-    (* outer loop partial iteration *)
-    ttbeq +
-    (* return *)
-    tjalr <=
+    (* lower bound, return if len = 0 *)
+    tslli 2 + tadd + taddi + ttbeq + tjalr <=
     (* ----------------------------------------- *)
     cycle_count_of_trace t <=
     (* ----------------------------------------- *)
@@ -98,19 +75,7 @@ match t with (Addr a, s) :: t' => match a with
                    s R_A4 = Ⓓa4 /\
                    a4 <= len /\
                    arr + 4 * len < 2^32 /\
-                   tslli 2 + tadd + taddi +
-                   a4 * (
-                       tfbeq + taddi + tjal +
-                       (len - 1) * (
-                           ttbne +
-                            tlw + tlw +
-                            N.min ttbgeu (tfbgeu + tsw + tsw) +
-                            taddi
-                       ) +
-                       (* inner loop partial iteration *)
-                       tfbne +
-                       taddi + tjal
-                   ) <=
+                   tslli 2 + tadd + taddi <=
                    (* ----------------------------------------- *)
                    cycle_count_of_trace t' <=
                    (* ----------------------------------------- *)
@@ -141,26 +106,7 @@ match t with (Addr a, s) :: t' => match a with
                    0 < len /\
                    a4 < len /\
                    arr + 4 * len < 2^32 /\
-                   tslli 2 + tadd + taddi +
-                   a4 * (
-                       tfbeq + taddi + tjal +
-                       (len - 1) * (
-                           ttbne +
-                            tlw + tlw +
-                            N.min ttbgeu (tfbgeu + tsw + tsw) +
-                            taddi
-                       ) +
-                       (* inner loop partial iteration *)
-                       tfbne +
-                       taddi + tjal
-                   ) +
-                   tfbeq + taddi + tjal +
-                   (* number of inner loops so far *)
-                   inner_loop_count * (
-                        ttbne + tlw + tlw +
-                        N.min ttbgeu (tfbgeu + tsw + tsw) +
-                        taddi
-                    ) <=
+                   tslli 2 + tadd + taddi <=
                    (* ----------------------------------------- *)
                    cycle_count_of_trace t' <=
                    (* ----------------------------------------- *)
@@ -185,7 +131,7 @@ match t with (Addr a, s) :: t' => match a with
                         taddi
                     )
             )
-| 0x220 => Some (time_of_bubble_sort_theta_n2 len t)
+| 0x220 => Some (time_of_bubble_sort_theta_n2 base_mem arr len t)
 | _ => None end | _ => None end.
 
 Theorem bubble_sort_theta_n2_timing:
@@ -261,7 +207,7 @@ Proof using.
         (* arr[j-1] < arr[j] *)
         do 2 eexists; exists (1 + inner_loop_count); repeat split; eauto.
             repeat rewrite N.mul_add_distr_l. psimpl.
-                rewrite N.mod_small. reflexivity.
+            rewrite N.mod_small. reflexivity.
             1-3: apply Bool.negb_true_iff, N.eqb_neq in BC; lia.
         hammer. hammer.
         (* arr[j-1 >= arr[j] *)
@@ -274,13 +220,12 @@ Proof using.
         apply Bool.negb_false_iff, N.eqb_eq in BC; subst.
         repeat step.
         eexists. eexists. repeat split; eauto.
-            rewrite N.mod_small.
-        lia. lia.
-        hammer. rewrite N.mod_small, BC, N.eqb_refl by lia.
-            hammer.
-        replace len with (1 + inner_loop_count) in * by lia.
-        hammer. rewrite N.eqb_refl, N.mod_small by lia.
-            hammer.
+            rewrite N.mod_small by lia. lia.
+        hammer.
+        replace len with (1 + inner_loop_count) by lia.
+        hammer. rewrite BC, N.eqb_refl.
+        rewrite N.mod_small by lia. hammer.
 Qed.
 
 End TimingProof.
+

@@ -325,12 +325,16 @@ match t with (Addr a, s) :: t' => match a with
             base_mem Ⓓ[ 4 + base_mem Ⓓ[ gp ⊖ 920 + (31 ⊖ clz (uxTopReadyPriority gp base_mem) 32) * 20 ] ]  /\
         (uxSchedulerSuspended gp base_mem =? 0) = true /\
         cycle_count_of_trace t' = tlw + ttbeq + taddi + tsw + tsw + tlw + tlui + tsw + tlw + taddi + tlw + tfbne + tlw + tfbne + tlw + tfbne + tlw +
-            ttbeq + tlw + taddi + tclz (uxTopReadyPriority gp mem) + tsub + taddi + tmul + taddi + taddi + tadd + tlw + tsw)
+            ttbeq + tlw + taddi + tclz (uxTopReadyPriority gp mem) + tsub + taddi + tmul + taddi + taddi + tadd + tlw + taddi + tadd + tlw + tsw)
     | 0x8000138c | 0x8000144c => Some (time_of_vTaskSwitchContext t gp base_mem)
     | _ => None
     end
 | _ => None
 end.
+
+Goal forall gp mem, tlw + ttbeq + taddi + tsw + tsw + tlw + tlui + tsw + tlw + taddi + tlw + tfbne + tlw +
+tfbne + tlw + tfbne + tlw + ttbeq + tlw + taddi + tclz (uxTopReadyPriority gp mem) = 0.
+    intros. psimpl.
 
 Theorem vTaskSwitchContext_timing:
   forall s p t s' x' gp sp mem
@@ -513,11 +517,32 @@ Proof using.
                 (f_equal; rewrite getmem_noverlap; auto).
             psimpl. auto.
         }
-        admit. (* Look here *)
-        (* hammer.
-        noverlap_prepare gp sp.
-        rewrite getmem_noverlap by (memsolve mem gp sp).
-        lia. *)
+
+        find_rewrites.
+    (* unfolding timing definitions *)
+    unfold_cycle_count_list.
+    do 11 (match goal with
+    | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
+        let H := fresh "H" in
+        eassert(cycles_per_instruction_at_addr X Y = _) as H by
+          (now (cbv - [getmem setmem N.eqb]; find_rewrites;
+                simpl; find_rewrites));
+        rewrite H; clear H
+    end).
+    match goal with
+    | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
+        let H := fresh "H" in
+        eassert(cycles_per_instruction_at_addr X Y = tclz _ )
+    end. reflexivity. rewrite H. clear H.
+    do 3 (match goal with
+    | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
+        let H := fresh "H" in
+        eassert(cycles_per_instruction_at_addr X Y = _) as H by
+          (now (cbv - [getmem setmem N.eqb]; find_rewrites;
+                simpl; find_rewrites));
+        rewrite H; clear H
+    end).
+    admit.
 
     exact I.
 
@@ -529,12 +554,14 @@ Proof using.
         find_rewrites.
         hammer. rewrite <- Preserves920, <- PreservesPriority.
         rewrite Bool.negb_true_iff, getmem_mod_l in BC.
-        admit. (* Look here *)
-        (* unfold msub in *. psimpl in BC. psimpl.
+        unfold msub in *. psimpl in BC. 
+        replace (tlw + ttbeq + taddi + tsw + tsw + tlw + tlui + tsw + tlw + taddi + tlw + tfbne + tlw +
+        tfbne + tlw + tfbne + tlw + ttbeq + tlw + taddi + tclz (uxTopReadyPriority gp mem)) with 0.
+        psimpl.
         find_rewrites.
         unfold T_shift_latency, CPU_FAST_SHIFT_EN.
         unfold T_mul_latency, CPU_FAST_MUL_EN.
-        lia. *)
+        lia.
     unfold time_of_vTaskSwitchContext.
         hammer.
         rewrite <- Preserves920, <- PreservesPriority.

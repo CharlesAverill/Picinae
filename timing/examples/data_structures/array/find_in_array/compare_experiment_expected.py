@@ -1,6 +1,15 @@
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[4]))
+
 import argparse
 import re
-from sympy import symbols, sympify, Piecewise, Eq
+from sympy import Piecewise, Eq
+from examples.neorv32.NEORV32Config import NEORV32Config
+from examples import *
+
+PLOT_LEN = 100
+CALLING_CONVENTION_CYCLES = 13
 
 def parse_cycle_counts(log_path):
     with open(log_path, 'r') as f:
@@ -19,55 +28,57 @@ def parse_cycle_counts(log_path):
             found.append(-1)
     return cycle_counts, found
 
-def compile_equation(equation_path):
-    with open(equation_path, 'r') as file:
-        expr_str = file.read().strip()
-    length_sym = symbols('length')
-    i_sym = symbols('i')
-    try:
-        parsed_expr = sympify(expr_str)
-        return lambda length_value, i_value: int(parsed_expr.subs(length_sym, length_value).subs(i_sym, i_value).evalf())
-    except Exception as e:
-        print(f"Failed to parse equation: {e}")
-        return lambda length_value, i_value: None
-
-def variance(data, sample=False):
-    if not data:
-        return 0.0
-    mean = sum(data) / len(data)
-    squared_diffs = [(x - mean) ** 2 for x in data]
-    divisor = len(data) - 1 if sample and len(data) > 1 else len(data)
-    return sum(squared_diffs) / divisor
-
 
 def main():
     parser = argparse.ArgumentParser(description='Compare experiment cycle counts with an expected equation.')
     parser.add_argument('log_file', help='Path to the experiment log file')
     parser.add_argument('equation_file', help='Path to the file containing the verified timing equation')
+    parser.add_argument('--cpu_config_file', help='Path to JSON file containing CPU configuration', default=None, type=str)
 
     args = parser.parse_args()
 
-    cycle_counts, found = parse_cycle_counts(args.log_file)
-    equation = compile_equation(args.equation_file)
+    cpu = NEORV32Config(args.cpu_config_file)
 
-    print(f"{'Len':>5} | {'Found Index':>11} | {'Measured':>8} | {'Expected':>8} | {'Diff':>6} | {'Diff/Measured':>13}")
-    print("-" * 66)
+    cycle_counts, found = parse_cycle_counts(args.log_file)
+    equation = compile_equation(args.equation_file, cpu, ["length", "i"])
 
     pct_off = []
+    measured_vals = [m - 13 for m in cycle_counts]
+    min_expected_vals = []
+    max_expected_vals = []
+
+    print(f"{'In Bounds':>9} | {'Len':>5} | {'Found Index':>11} | {'Measured':>8} | {'Expected Bounds':>15} | {'Diffs':>9} | {'Diffs/Measured':>14}")
+    print("-" * 89)
 
     for i, (measured, found_idx) in enumerate(zip(cycle_counts, found)):
-        measured -= 13 # To account for calling convention cycles in the caller
+        measured -= CALLING_CONVENTION_CYCLES
         len_value = i + 1
-        expected = equation(len_value, found_idx)
-        if expected is not None:
-            diff = abs(measured - expected)
-            pct_off.append(diff / measured)
-            print(f"{len_value:5} | {str(found_idx):>11} | {measured:8} | {expected:8} | {diff:6} | {diff/measured:.4f}")
-        else:
-            print(f"{len_value:5} | {str(found_idx):>11} | {measured:8} | {'ERROR':>8} | {'--':>6} | {'--':13}")
 
-    print(f"Avg percent off: {100.0 * sum(pct_off) / len(found):.4}%")
+        min_expected, max_expected = \
+            equation([len_value, found_idx], "min"), \
+            equation([len_value, found_idx], "max")        
+        min_expected_vals.append(min_expected)
+        max_expected_vals.append(max_expected)
+
+        min_diff = abs(measured - min_expected)
+        max_diff = abs(measured - max_expected)
+        pct_off.append((min_diff / measured, max_diff / measured))
+        print(f"{str(min_expected <= measured <= max_expected):9} | {len_value:5} | \
+{str(found_idx):>11} | \
+{measured:8} | \
+{min_expected:7} {max_expected:7} | \
+{min_diff:4} {max_diff:4} | \
+{round(pct_off[-1][0], 4)} {round(pct_off[-1][1], 4)}")
+        
+
+    print(f"Avg min percent off: {100.0 * sum([i[0] for i in pct_off]) / len(found):.4}%")
+    print(f"Avg max percent off: {100.0 * sum([i[1] for i in pct_off]) / len(found):.4}%")
     print(f"Variance percent off: {variance(pct_off)}%")
+
+    plot_comparison("find (naïve)", "Array Length", "Cycle Count", 
+                    [('Expected Range (min-max)', 'lightgray', min_expected_vals[:PLOT_LEN], max_expected_vals[:PLOT_LEN])], 
+                    [('Measured', measured_vals[:PLOT_LEN])])
+    
 
 if __name__ == '__main__':
     main()
