@@ -26,25 +26,22 @@ Module bubble_sort_theta_n2Auto := RISCVTimingAutomation RISCVTiming.
 Import Program_bubble_sort_theta_n2 bubble_sort_theta_n2Auto.
 
 Definition sum (low high : N) (f : N -> N) : N :=
-    let range := List.map N.of_nat (List.seq (N.to_nat low) (N.to_nat high)) in
+    let range := List.map N.of_nat (List.seq (N.to_nat low) (N.to_nat (high - low))) in
     List.fold_left (fun acc i => acc + f i) range 0.
 
 Lemma sum_0_0 : forall f, sum 0 0 f = 0.
-Proof.
-    intros. unfold sum. reflexivity.
-Qed.
-
-Lemma sum_to_nat : forall x y,
-    (N.to_nat x + N.to_nat y)%nat = N.to_nat (x + y).
-Proof. lia. Qed.
+Proof. reflexivity. Qed.
 
 Lemma sum_Sn : forall low high f,
-    sum low (1 + high) f = sum low high f + f (low + high).
+    low <= high ->
+    sum low (1 + high) f = sum low high f + f high.
 Proof.
     intros. unfold sum at 1.
-    rewrite N.add_1_l, N2Nat.inj_succ.
+    rewrite <- N.add_sub_assoc, N.add_1_l, N2Nat.inj_succ.
     rewrite seq_S, map_app, fold_left_app. simpl.
-    rewrite sum_to_nat, N2Nat.id. reflexivity.
+    rewrite N2Nat.inj_sub at 2.
+    rewrite Arith_base.le_plus_minus_r_stt by lia.
+    rewrite N2Nat.id. reflexivity. assumption.
 Qed.
 
 Definition time_of_bubble_sort_theta_n2 (len : N) (swap : N -> N -> bool) (t : trace) :=
@@ -251,7 +248,7 @@ Proof using.
             rewrite H; clear H.
         cbv [N.eqb]. psimpl. rewrite BC0. compute. reflexivity.
         rewrite H. clear H.
-        rewrite sum_Sn.
+        rewrite sum_Sn by lia.
         hammer.
         rewrite <- getmem_mod_l with 
             (a := 4294967292 + arr + 4 * (1 + inner_loop_count)) in BC0.
@@ -260,7 +257,7 @@ Proof using.
         rewrite (N.add_comm 1 inner_loop_count), getmem_mod_l in BC0.
         unfold swap_correctness in Swap.
         rewrite <- Swap with (i := a4) in BC0.
-        rewrite N.add_0_l, BC0.
+        rewrite BC0.
         hammer.
         clear. rewrite N.mul_add_distr_l. now psimpl.
 
@@ -288,7 +285,7 @@ Proof using.
             rewrite H; clear H.
         cbv [N.eqb]. psimpl. rewrite BC0. compute. reflexivity.
         rewrite H. clear H.
-        rewrite sum_Sn.
+        rewrite sum_Sn by lia.
         hammer.
         rewrite <- getmem_mod_l with 
             (a := 4294967292 + arr + 4 * (1 + inner_loop_count)) in BC0.
@@ -297,7 +294,7 @@ Proof using.
         rewrite (N.add_comm 1 inner_loop_count), getmem_mod_l in BC0.
         unfold swap_correctness in Swap.
         rewrite <- Swap with (i := a4) in BC0.
-        rewrite N.add_0_l, BC0.
+        rewrite BC0.
         hammer.
         clear. rewrite N.mul_add_distr_l. now psimpl.
 
@@ -311,7 +308,7 @@ Proof using.
             hammer.
         replace len with (1 + inner_loop_count) in * by lia.
         assert (forall x, 1 + x - 1 = x) by lia. rewrite H in *. clear H.
-        rewrite sum_Sn, N.add_0_l. hammer.
+        rewrite sum_Sn by lia. hammer.
 Qed.
 
 End TimingProof.

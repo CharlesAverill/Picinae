@@ -75,7 +75,7 @@ def main():
     print(f"Avg max percent off: {100.0 * sum([i[1] for i in pct_off]) / len(found):.4}%")
     print(f"Variance percent off: {variance(pct_off)}%")
 
-    plot_comparison("find (naïve)", "Array Length", "Cycle Count", 
+    plot_comparison("find (optimized)", "Array Length", "Cycle Count", 
                     [('Expected Range (min-max)', 'lightgray', min_expected_vals[:PLOT_LEN], max_expected_vals[:PLOT_LEN])], 
                     [('Measured', measured_vals[:PLOT_LEN])])
     
