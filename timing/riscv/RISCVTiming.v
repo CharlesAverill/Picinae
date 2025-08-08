@@ -33,11 +33,9 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
     Definition lifted_prog := lift_riscv binary.
 
     Definition cycles_per_instruction_at_addr (s : store) (a : addr) : N :=
-        let regvalue r := if r =? 0 then Ⓓ0 else s (rv_varid r) in
-        let bop s rs1 rs2 op :=
-            let rs1var := regvalue rs1 in
-            let rs2var := regvalue rs2 in
-            match rs1var, rs2var with
+        let regvalue s r := if r =? 0 then Ⓓ0 else s (rv_varid r) in
+        let bop s time_inf rs1 rs2 op : N :=
+            match regvalue s rs1, regvalue s rs2 with
             | Ⓓr1, Ⓓr2 => op r1 r2
             | _, _ => time_inf
             end in
@@ -62,21 +60,21 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
 
         (* ALU Shifts *)
         | R5_Sll  rd _ _ =>
-            let rd := regvalue rd in 
+            let rd := regvalue s rd in 
             match rd with
             | Ⓓrd => tsll rd
             | _ => time_inf
             end
         | R5_Slli _ _ shamt => tslli shamt
         | R5_Srl  rd _ _ =>
-            let rd := regvalue rd in 
+            let rd := regvalue s rd in 
             match rd with
             | Ⓓrd => tsrl rd
             | _ => time_inf
             end
         | R5_Srli _ _ shamt => tsrli shamt
         | R5_Sra  rd _ _ =>
-            let rd := regvalue rd in 
+            let rd := regvalue s rd in 
             match rd with
             | Ⓓrd => tsra rd
             | _ => time_inf
@@ -84,17 +82,17 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
         | R5_Srai _ _ shamt => tsrai shamt
 
         (* Branches *)
-        | R5_Beq rs1 rs2 off => bop s rs1 rs2
+        | R5_Beq rs1 rs2 off => bop s time_inf rs1 rs2
             (fun x y => if x =? y then ttbeq else tfbeq)
-        | R5_Bne rs1 rs2 off => bop s rs1 rs2
+        | R5_Bne rs1 rs2 off => bop s time_inf rs1 rs2
             (fun x y => if negb (x =? y) then ttbne else tfbne)
-        | R5_Blt rs1 rs2 off => bop s rs1 rs2
+        | R5_Blt rs1 rs2 off => bop s time_inf rs1 rs2
             (fun x y => if Z.ltb (toZ 32 x) (toZ 32 y) then ttblt else tfblt)
-        | R5_Bge rs1 rs2 off => bop s rs1 rs2
+        | R5_Bge rs1 rs2 off => bop s time_inf rs1 rs2
             (fun x y => if Z.geb (toZ 32 x) (toZ 32 y) then ttbge else tfbge)
-        | R5_Bltu rs1 rs2 off => bop s rs1 rs2
+        | R5_Bltu rs1 rs2 off => bop s time_inf rs1 rs2
             (fun x y => if x <? y then ttbltu else tfbltu)
-        | R5_Bgeu rs1 rs2 off => bop s rs1 rs2
+        | R5_Bgeu rs1 rs2 off => bop s time_inf rs1 rs2
             (fun x y => if negb (x <? y) then ttbgeu else tfbgeu)
 
         (* Jump/call *)
@@ -132,7 +130,7 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
 
         (* ==== Zbb ISA Extension ==== *)
         | R5_Clz rd _       =>
-            let rd := regvalue rd in 
+            let rd := regvalue s rd in
             match rd with
             | Ⓓrd => tclz rd
             | _ => time_inf

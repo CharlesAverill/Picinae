@@ -8,7 +8,7 @@ SERIAL_PORT = '/dev/ttyUSB0'  # Update to your serial port
 BAUD_RATE = 19200
 N_TRIALS = 10
 DELAY_CYCLES = 2_000_000_000  # Must match the firmware constant
-UPLOAD_SCRIPT = "~/bin/minicom_bin_upload"
+UPLOAD_SCRIPT = "./bin_upload.sh"
 UPLOAD_SCRIPT = subprocess.check_output(['bash', '-c', f'echo {UPLOAD_SCRIPT}']).decode().strip()
 BINARY_FILE = "./neorv32_exe.bin"
 

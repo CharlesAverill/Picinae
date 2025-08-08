@@ -65,30 +65,43 @@ Qed.
 Ltac find_rewrites :=
     repeat (match goal with
     | [H: ?x = _ |- context[match ?x with _ => _ end]] =>
-        rewrite H; cbn [negb]
+        rewrite H
     | [H: negb ?x = ?y |- context[if ?x then _ else _]] =>
         (match y with 
         | true => apply Bool.negb_true_iff in H 
         | false => apply Bool.negb_false_iff in H
         end);
-        rewrite H; cbn [negb]
+        rewrite H
     | [H: ?x = ?y |- context[if negb ?x then _ else _]] =>
         (match y with
         | true => apply Bool.negb_false_iff in H
         | false => apply Bool.negb_true_iff in H
         end);
-        rewrite H; cbn [negb]
+        rewrite H
     | [H: cycle_count_of_trace ?t = _ |- context[cycle_count_of_trace ?t]] =>
         rewrite H
-    end).
+    end); cbn [negb].
 
+(* Grabbing each cpi_at_addr one-by-one seems to prevent explosions in cbv 
+   evaluation time *)
 Ltac unfold_time_of_addr :=
-    cbv [tm.cycles_per_instruction_at_addr]; cbn - [setmem getmem].
+    repeat (match goal with
+    | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
+        let H := fresh "H" in
+        eassert(cycles_per_instruction_at_addr X Y = _) as H by
+          (now (cbv - [getmem setmem N.eqb]; find_rewrites;
+                simpl; find_rewrites));
+        rewrite H; clear H
+    end).
 Ltac unfold_cycle_count_list :=
     repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single.
 Ltac hammer :=
+    (* easy rewrites *)
+    find_rewrites;
+    (* unfolding timing definitions *)
     unfold_cycle_count_list; unfold_time_of_addr;
-        psimpl_all_goal; find_rewrites; try lia.
+    (* simplify, harder rewrites, solve *)
+    psimpl_all_goal; find_rewrites; try lia.
 
 Ltac handle_ex := 
     repeat (match goal with

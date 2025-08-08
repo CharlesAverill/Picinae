@@ -1,0 +1,13 @@
+{
+    "T_inst_latency": {
+        "min": 0,
+        "max": 2,
+        "measured": 2
+    },
+    "T_data_latency": {
+        "min": 0,
+        "max": 2,
+        "measured": 1
+    },
+    "CLOCK_FREQUENCY": 5000000
+}

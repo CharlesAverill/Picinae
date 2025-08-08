@@ -14,6 +14,6 @@ For compiling neorv32 example programs:
 
 Uploading via minicom:
 1. Select 'u' option at bootloader menu
-2. Follow this procedure: https://www.dannysung.com/articles/linux/tips/sending-binary-files-via-minicom/
+2. Follow this procedure: https://www.dannysung.com/articles/linux/tips/sending-binary-files-via-minicom/ (copy available in clock_freq_measurement)
 3. Ctrl-A S, select neorv32_exe.bin, upload
 4. After upload, select 'e' option to execute
