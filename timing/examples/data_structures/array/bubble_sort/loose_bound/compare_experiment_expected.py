@@ -1,6 +1,15 @@
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[5]))
+
 import argparse
 import re
-from sympy import symbols, sympify, Piecewise, Eq, Max
+from sympy import symbols
+from examples.neorv32.NEORV32Config import NEORV32Config
+from examples import *
+
+PLOT_LEN = 100
+CALLING_CONVENTION_CYCLES = 13
 
 def parse_cycle_counts(log_path):
     with open(log_path, 'r') as f:
@@ -13,50 +22,60 @@ def parse_cycle_counts(log_path):
             cycle_counts.append(int(match.group(1)))
     return cycle_counts
 
-def compile_equation(equation_path):
-    with open(equation_path, 'r') as file:
-        expr_str = file.read().strip()
-    length_sym = symbols('length')
-    try:
-        parsed_expr = sympify(expr_str)
-        return lambda length_value: int(parsed_expr.subs(length_sym, length_value).evalf())
-    except Exception as e:
-        print(f"Failed to parse equation: {e}")
-        return lambda length_value: None
-
-def variance(data, sample=False):
-    if not data:
-        return 0.0
-    mean = sum(data) / len(data)
-    squared_diffs = [(x - mean) ** 2 for x in data]
-    divisor = len(data) - 1 if sample and len(data) > 1 else len(data)
-    return sum(squared_diffs) / divisor
-
 
 def main():
-    parser = argparse.ArgumentParser(description='Compare experiment cycle counts with an expected equation.')
+    parser = argparse.ArgumentParser(description='Compare experiment cycle counts with min/max expected bounds.')
     parser.add_argument('log_file', help='Path to the experiment log file')
     parser.add_argument('min_equation_file', help='Path to the file containing the verified timing minimum equation')
     parser.add_argument('max_equation_file', help='Path to the file containing the verified timing maximum equation')
+    parser.add_argument('--cpu_config_file', help='Path to JSON file containing CPU configuration', default=None, type=str)
 
     args = parser.parse_args()
 
+    cpu = NEORV32Config(args.cpu_config_file)
     cycle_counts = parse_cycle_counts(args.log_file)
-    min_eq, max_eq = compile_equation(args.min_equation_file), compile_equation(args.max_equation_file)
 
-    print(f"{'Len':>5} | {'Expected Min':>12} | {'Measured':>8} | {'Expected Max':>12} | {'Within Bounds':13} | {'Diff Min':8} | {'Diff Min %':10} | {'Diff Max':8} | {'Diff Max %':10}")
-    print("-" * 110)
+    min_eq = compile_equation(args.min_equation_file, cpu, ["length"])
+    max_eq = compile_equation(args.max_equation_file, cpu, ["length"])
 
-    for i, measured in enumerate(cycle_counts):
-        measured -= 13 # To account for calling convention cycles in the caller
+    pct_off_min = []
+    pct_off_max = []
+    measured_vals = [m - CALLING_CONVENTION_CYCLES for m in cycle_counts]
+    min_expected_vals = []
+    max_expected_vals = []
+
+    print(f"{'In Bounds':>9} | {'Len':>5} | {'Measured':>8} | {'Expected Bounds':>15} | {'Diffs':>9} | {'Diffs/Measured':>14}")
+    print("-" * 89)
+
+    for i, measured in enumerate(measured_vals):
         len_value = i + 1
-        expected_min, expected_max = min_eq(len_value), max_eq(len_value)
-        if expected_min is not None and expected_max is not None:
-            print(f"{len_value:5} | {expected_min:12} | {measured:8} | {expected_max:12} | {'True' if expected_min < measured < expected_max else 'False':13} | \
-{abs(measured - expected_min):8} | {100*abs(measured - expected_min)/measured:10.2f} | {abs(measured - expected_max):8} | {100*abs(measured - expected_max)/measured:10.2f}")
-        else:
-            print(f"Error for len={len_value}")
+
+        expected_min = min_eq([len_value], 'min')
+        expected_max = max_eq([len_value], 'max')
+
+        min_expected_vals.append(expected_min)
+        max_expected_vals.append(expected_max)
+
+        min_diff = abs(measured - expected_min)
+        max_diff = abs(measured - expected_max)
+        pct_off_min.append(min_diff / measured)
+        pct_off_max.append(max_diff / measured)
+
+        in_bounds = expected_min <= measured <= expected_max
+        print(f"{str(in_bounds):9} | {len_value:5} | \
+{measured:8} | \
+{expected_min:7} {expected_max:7} | \
+{min_diff:4} {max_diff:4} | \
+{round(pct_off_min[-1], 4)} {round(pct_off_max[-1], 4)}")
+
+    print(f"Avg min percent off: {100.0 * sum(pct_off_min) / len(pct_off_min):.4f}%")
+    print(f"Avg max percent off: {100.0 * sum(pct_off_max) / len(pct_off_max):.4f}%")
+    print(f"Variance percent off: {variance(list(zip(pct_off_min, pct_off_max)))[0]:.4f}% {variance(list(zip(pct_off_min, pct_off_max)))[1]:.4f}%")
+
+    plot_comparison("bubble_sort (loose low bound)", "Array Length", "Cycle Count", 
+                    [('Expected Range (min-max)', 'lightgray', min_expected_vals[:PLOT_LEN], max_expected_vals[:PLOT_LEN])], 
+                    [('Measured', measured_vals[:PLOT_LEN])])
+
 
 if __name__ == '__main__':
     main()
-
