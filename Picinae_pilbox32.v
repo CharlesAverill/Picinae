@@ -38,6 +38,7 @@ Require Export Picinae_statics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
+Require Export Picinae_auto.
 Require Import NArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.
@@ -98,6 +99,8 @@ Module Theory_pil32 := PicinaeTheory IL_pil32.
 Export Theory_pil32.
 Module Statics_pil32 := PicinaeStatics IL_pil32 Theory_pil32.
 Export Statics_pil32.
+Module Auto_pil32 := PicinaeAuto IL_pil32 Theory_pil32 Statics_pil32.
+Export Auto_pil32.
 Module FInterp_pil32 := PicinaeFInterp IL_pil32 Theory_pil32 Statics_pil32.
 Export FInterp_pil32.
 Module PSimpl_pil32 := Picinae_Simplifier_Base IL_pil32.

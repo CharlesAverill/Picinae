@@ -8,7 +8,7 @@ Import ARM8Notations.
 
 (* Require Import strspn_arm8. *)
 (*Why doesn't regular import without the notations work*)
-Require Import -(notations) SMTCoq.SMTCoq.
+(* Require Import -(notations) SMTCoq.SMTCoq. *)
 
 Require Import FunctionalExtensionality.
 Import ARM8Notations.
@@ -50,6 +50,7 @@ Definition nilfree mem p len :=
 Definition strlen mem p len :=
   nilfree mem p len /\ mem Ⓑ[ p + len ] = 0.
 
+Require Import ZifyN ZifyBool.
 Lemma nflen_lt:
   forall m p len z
   (NF: nilfree m p len)
@@ -57,12 +58,10 @@ Lemma nflen_lt:
   len < 2 ^ 64.
 Proof.
   intros. unfold nilfree in NF.
-  destruct (N.lt_trichotomy len (2 ^ 64)) as [Lt | [Eq | Gt]]; try lia.
-  - subst len. remember (msub 64 z p) as offset.
-    specialize (NF offset). destruct NF. rewrite Heqoffset; apply msub_lt.
-    subst offset; psimpl; congruence.
-  - remember (msub 64 z p) as offset.
-    specialize (NF offset). destruct NF. apply N.lt_trans with (m:= 2^64);[ rewrite Heqoffset; apply msub_lt | assumption].
+  destruct (N.lt_ge_cases len (2^64)); try lia; try exfalso.
+  remember (msub 64 z p) as offset.
+  specialize (NF offset). destruct NF.
+    unfold msub in *. lia.
     subst offset; psimpl; congruence.
 Qed.
 

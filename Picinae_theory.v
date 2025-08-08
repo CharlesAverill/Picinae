@@ -38,7 +38,7 @@ Require Import ZArith.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
 Require Import List.
-Require Import Lia.
+Require Import Lia ZifyN ZifyBool.
 Require Setoid.
 Open Scope list_scope.
 
@@ -3044,61 +3044,27 @@ Qed.
 (* This allow lia to work with N.modulo *)
 Ltac Zify.zify_post_hook ::= Z.div_mod_to_equations.
 
+Theorem msub_sub:
+  forall w x y, y <= x -> msub w x y = (x - y) mod 2^w.
+Proof.
+  intros. unfold msub.
+  rewrite N.add_sub_assoc by apply N.lt_le_incl, mp2_mod_lt.
+  rewrite N.add_comm, <- N.add_sub_assoc by (etransitivity; [ apply mp2_mod_le | apply H ]).
+  rewrite <- mp2_add_l, mp2_mod_same, N.add_0_l.
+  erewrite <- (N.add_sub x) at 1. rewrite <- N.sub_add_distr, <- mp2_div_mod.
+  rewrite N.add_comm, <- N.add_sub_assoc by assumption.
+  rewrite N.add_comm, N.mul_comm, mp2_mod_add. reflexivity.
+Qed.
+
 Lemma msub_pred_cancel:
   forall w a c, 0 < a -> 0 < c -> msub w a c = msub w (N.pred a) (N.pred c).
 Proof.
-  assert (sub_pred_succ: forall x y:N, 0 < y -> x - (N.pred y) = (N.succ x) - y) by lia.
-  assert (sub_pred: forall x:N, 0 < x -> x - (N.pred x) = 1) by lia.
-  intros. assert (Eqa: 2 ^ w <> 0) by lia. remember Eqa as Eqc; clear HeqEqc.
-  apply (N.div_mod a) in Eqa. apply (N.div_mod c) in Eqc.
-  remember (a / 2 ^ w) as qa; remember (a mod 2 ^ w) as ra.
-  remember (c / 2 ^ w) as qc; remember (c mod 2 ^ w) as rc.
-  rewrite Eqa, Eqc. destruct (N.lt_trichotomy 0 ra) as [Gt | [Eq | Lt]]; [ | | lia]; cycle 1.
-  (* 0 = ra *)
-    subst ra. rewrite <-Eq, N.add_0_r in *.
-    destruct (N.lt_trichotomy 0 rc) as [Gtrc | [Eqrc | Ltrc]]; [ | | lia]; cycle 1.
-    (* 0 = rc *)
-    subst rc; rewrite <-Eqrc, N.add_0_r in *. rewrite Eqa in H; rewrite Eqc in H0; clear - H H0 sub_pred sub_pred_succ.
-    unfold msub. rewrite (N.mul_comm _ qc) at 1. rewrite N.Div0.mod_mul, N.sub_0_r. rewrite <-(N.mul_1_r (2^w)) at 2.
-    rewrite <-N.mul_add_distr_l, N.mul_comm, N.Div0.mod_mul.
-    rewrite pred_mod, sub_pred_succ; try lia.
-    rewrite N.add_sub_assoc, <-N.add_succ_comm, N.succ_pred; try lia.
-    rewrite <-N.add_sub_assoc, N.sub_diag, N.add_0_r, N.mul_comm, N.Div0.mod_mul; try lia.
-    (* 0 < rc *)
-    rewrite (N.pred_sub (_ + rc)). rewrite <-N.add_sub_assoc; try lia.
-    unfold msub. rewrite <-(N.Div0.add_mod_idemp_l (N.pred (2 ^ w * qa))). rewrite pred_mod; try lia.
-    rewrite N.mul_comm. rewrite <-(N.Div0.add_mod_idemp_l (_ *qc)),<-(N.Div0.add_mod_idemp_l (_ *qc)). rewrite (N.mul_comm _ qc).
-    rewrite N.Div0.mod_mul, N.add_0_l, N.add_0_l.
-    rewrite (N.mod_small (rc - 1)); try lia. rewrite <-N.pred_sub, sub_pred_succ; try lia.
-    rewrite N.add_pred_l, <-N.add_pred_r; try lia.
-    rewrite N.sub_succ_l; try lia. rewrite N.pred_succ.
-    rewrite (N.mod_small rc); try lia. rewrite <-N.Div0.add_mod_idemp_l, <-(N.Div0.add_mod_idemp_l (2^w)).
-    rewrite N.Div0.mod_mul, N.Div0.mod_same, N.add_0_l; reflexivity.
-  (* 0 < ra *)
-    destruct (N.lt_trichotomy 0 rc) as [Gtrc | [Eqrc | Ltrc]]; [ | | lia]; cycle 1.
-    (* 0 = rc *)
-    subst rc; rewrite <-Eqrc, N.add_0_r. unfold msub. rewrite pred_mod; try lia.
-    rewrite <-N.add_pred_r; try lia. rewrite sub_pred; try lia.
-    rewrite (N.mul_comm _ qc) at 1. rewrite N.Div0.mod_mul, N.sub_0_r. rewrite N.add_comm, N.add_assoc.
-    rewrite <-(N.mul_1_r (2^w)) at 1.
-    rewrite <-N.mul_add_distr_l, N.mul_comm, <-(N.Div0.add_mod_idemp_l (_*2^w)), N.Div0.mod_mul, N.add_0_l.
-    rewrite N.mod_small; try lia.
-    rewrite <-N.add_assoc.
-    rewrite <-N.Div0.add_mod_idemp_l, N.mul_comm, N.Div0.mod_mul, N.add_0_l, N.add_1_r, N.succ_pred, N.mod_small; try lia.
-    (* 0 < rc *)
-    rewrite <-N.add_pred_r, <-N.add_pred_r; try lia.
-    unfold msub at 2.
-    (* TODO: Make this simplify automatically:
-             2 ^ w * qc + N.pred rc) mod 2 ^ w *)
-    rewrite <-(N.Div0.add_mod_idemp_l (2^w*qc)), (N.mul_comm (2^w) qc), N.Div0.mod_mul, N.add_0_l.
-    rewrite (N.mod_small (N.pred rc)); try lia.
-    rewrite N.add_sub_assoc, <-(N.add_assoc _ (N.pred ra)), (N.add_comm _ (2^w)),N.add_assoc ; try lia.
-    rewrite <-N.add_assoc, <-N.add_sub_assoc, <-N.Div0.add_mod_idemp_l; try lia.
-    rewrite N.mul_comm, N.Div0.mod_mul, N.add_0_l. unfold msub.
-    rewrite <-(N.Div0.add_mod_idemp_l (qc * _)), N.Div0.mod_mul, N.add_0_l.
-    rewrite <-N.add_assoc. rewrite <-(N.Div0.add_mod_idemp_l (qa * _)), N.Div0.mod_mul, N.add_0_l.
-    rewrite (N.mod_small rc), N.add_sub_assoc, N.add_comm; try lia.
-    rewrite sub_pred_succ; try assumption. rewrite <-N.add_succ_r, N.succ_pred; try lia.
+  intros.
+  rewrite N.pred_sub at 1.
+  rewrite <-(msub_mod_l w w (a-1)), <-msub_sub, <-msub_add_distr, N.add_1_l.
+  rewrite N.succ_pred_pos.
+  reflexivity.
+  all:lia.
 Qed.
 
 Lemma msub_pred_succ:
@@ -3220,18 +3186,6 @@ Corollary mul_msub_distr_r:
   forall w m n p, (msub w m n * p) mod 2^w = msub w (m*p) (n*p).
 Proof.
   intros. rewrite !(N.mul_comm _ p). apply mul_msub_distr_l.
-Qed.
-
-Theorem msub_sub:
-  forall w x y, y <= x -> msub w x y = (x - y) mod 2^w.
-Proof.
-  intros. unfold msub.
-  rewrite N.add_sub_assoc by apply N.lt_le_incl, mp2_mod_lt.
-  rewrite N.add_comm, <- N.add_sub_assoc by (etransitivity; [ apply mp2_mod_le | apply H ]).
-  rewrite <- mp2_add_l, mp2_mod_same, N.add_0_l.
-  erewrite <- (N.add_sub x) at 1. rewrite <- N.sub_add_distr, <- mp2_div_mod.
-  rewrite N.add_comm, <- N.add_sub_assoc by assumption.
-  rewrite N.add_comm, N.mul_comm, mp2_mod_add. reflexivity.
 Qed.
 
 Theorem msub_nowrap:
@@ -5253,14 +5207,6 @@ Proof.
   apply H.
 Qed.
 
-Definition mem_region_unchanged w e m m' p len :=
-  forall i, i < len ->  getmem w e 1 m (p+i) = getmem w e 1 m' (p+i).
-
-Lemma mem_eq_region_unchanged :
-  forall w e m p len, mem_region_unchanged w e m m p len.
-
-Proof. intros. unfold mem_region_unchanged. intros. reflexivity. Qed.
-
 Definition overlap w a1 len1 a2 len2 :=
   exists i j, i < len1 /\ j < len2 /\ (a1 + i) mod 2^w = (a2 + j) mod 2^w.
 
@@ -5518,7 +5464,7 @@ Proof.
   rewrite msub_add_distr, add_msub, msub_mod_pow2, N.min_id. reflexivity.
 Qed.
 
-Lemma noverlap_index:
+Lemma noverlap_index_l:
   forall w a1 len1 a2 len2 index size
   (NO : ~ overlap w a1 len1 a2 len2)
   (IN : index + size <= len1),
@@ -5532,6 +5478,17 @@ Proof.
   assumption.
 Qed.
 
+Lemma noverlap_index_r:
+  forall w a1 len1 a2 len2 index size
+  (NO : ~ overlap w a1 len1 a2 len2)
+  (IN : index + size <= len2),
+  ~ overlap w a1 len1 (a2+index) size.
+Proof.
+  intros. eapply noverlap_symmetry, noverlap_index_l;[
+    eapply noverlap_symmetry; eassumption
+  | eassumption ].
+Qed.
+
 Lemma noverlap_index_index:
   forall w a1 len1 a2 len2 index1 size1 index2 size2
   (NO  : ~ overlap w a1 len1 a2 len2)
@@ -5539,8 +5496,8 @@ Lemma noverlap_index_index:
   (IN2 : index2 + size2 <= len2),
   ~ overlap w (a1 + index1) size1 (a2 + index2) size2.
 Proof.
-  intros. apply noverlap_index with (len1:=len1).
-  apply noverlap_symmetry. apply noverlap_index with (len1:=len2).
+  intros. apply noverlap_index_l with (len1:=len1).
+  apply noverlap_symmetry. apply noverlap_index_l with (len1:=len2).
   apply noverlap_symmetry.
   all: assumption.
 Qed.
@@ -5627,7 +5584,7 @@ Proof.
   exists 0,0. repeat split; rewrite ?N.add_0_r; assumption.
 Qed.
 
-Theorem update_frame_noverlap_index:
+Theorem update_frame_noverlap_index_l:
   forall mem w a1 len1 a2 len2 i j (v:N)
     (NO: ~overlap w a1 len1 a2 len2) (LT1: i < len1) (LT2: j < len2),
   getbyte (setbyte mem (a1+i) v w) (a2+j) w = getbyte mem (a2+j) w.
@@ -5647,7 +5604,7 @@ Proof.
   apply getmem_frame; assumption.
 Qed.
 
-Theorem getmem_frame_noverlap_index:
+Theorem getmem_frame_noverlap_index_l:
   forall w e1 e2 mem a1 blen1 a2 blen2 i j len1 len2 v
     (NO: ~overlap w a1 blen1 a2 blen2) (LE1: i + len1 <= blen1) (LE2: j + len2 <= blen2),
   getmem w e2 len2 (setmem w e1 len1 mem (a1+i) v) (a2+j) = getmem w e2 len2 mem (a2+j).
@@ -5764,6 +5721,42 @@ Proof.
         rewrite (N.mod_small _ _ H). exact H'.
 Qed.
 
+Definition mem_region_unchanged w e m m' p len :=
+  forall i, i < len ->  getmem w e 1 m (p+i) = getmem w e 1 m' (p+i).
+
+Lemma mem_region_unchanged_byte :
+  forall w e m m' p len (MEM:mem_region_unchanged w e m m' p len),
+    forall i, i<len -> getbyte m (p+i) w = getbyte m' (p+i) w.
+Proof.
+  intros w e m m' p len MEM i LT; specialize (MEM i LT). now rewrite! getmem_1 in MEM.
+Qed.
+
+Lemma mem_region_unchanged_eq :
+  forall w e m p len, mem_region_unchanged w e m m p len.
+Proof. intros. unfold mem_region_unchanged. intros. reflexivity. Qed.
+
+(* "wraddr" and "wrlen" for "write address" and "write length". *)
+Lemma mem_region_unchanged_noverlap_same :
+  forall w e m p len wraddr wrlen v (NOV: ~overlap w p len wraddr wrlen),
+  mem_region_unchanged w e m (setmem w e wrlen m wraddr v) p len.
+Proof.
+  intros w e m p len wraddr wrlen v NOV i LT. rewrite getmem_noverlap.
+    reflexivity.
+    eapply noverlap_index_l; [eassumption|lia].
+Qed.
+
+(* "wraddr" and "wrlen" for "write address" and "write length". *)
+Lemma mem_region_unchanged_noverlap_iter :
+  forall w e m m' p len wraddr wrlen v
+    (NOV: ~overlap w p len wraddr wrlen)
+    (MEMSAME: mem_region_unchanged w e m m' p len),
+  mem_region_unchanged w e m (setmem w e wrlen m' wraddr v) p len.
+Proof.
+  intros w e m m' p len wraddr wrlen v NOV MEMSAME i LT. rewrite getmem_noverlap.
+    rewrite MEMSAME;[reflexivity|exact LT].
+    eapply noverlap_index_l; [eassumption|lia].
+Qed.
+
 End MemTheory.
 
 Section MemBitOps.
@@ -5837,14 +5830,26 @@ Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logica
 Definition nilfree w e mem p len :=
   forall i, i < len -> 0 <> getmem w e 1 mem (p + i).
 
+Definition wnilfree w e mem p len :=
+  forall i, i < len -> 0 <> getmem w e 4 mem (p + 4*i).
+
 Lemma nilfree0:
   forall w e m p, nilfree w e m p 0.
 Proof.
  unfold nilfree; intros w e m p i H; now apply N.nlt_0_r in H.
 Qed.
 
+Lemma wnilfree0:
+  forall w e m p, wnilfree w e m p 0.
+Proof.
+ unfold wnilfree; intros w e m p i H; now apply N.nlt_0_r in H.
+Qed.
+
 Definition strlen w e mem p len :=
   nilfree w e mem p len /\ getmem w e 1 mem (p + len) = 0.
+
+Definition wstrlen w e mem p len :=
+  wnilfree w e mem p len /\ getmem w e 4 mem (p + 4*len) = 0.
 
 Lemma nflen_lt:
   forall w e m p len z
@@ -5853,13 +5858,76 @@ Lemma nflen_lt:
   len < 2 ^ w.
 Proof.
   intros. unfold nilfree in NF.
+  destruct (N.lt_ge_cases len (2^w));[lia|exfalso].
+  remember (msub w z p) as offset.
+  specialize (NF offset). destruct NF.
+    unfold msub in *. lia.
+    subst offset; rewrite <-getmem_mod_l, add_msub, getmem_mod_l;
+      now symmetry.
+Qed.
+
+Lemma strlen_lt :
+  forall w e m p len (STR: strlen w e m p len),
+    len < 2 ^ w.
+Proof.
+  intros w e m p len (A & B).
+  now assert (C:=nflen_lt w e m p len (p+len) A B).
+Qed.
+
+Lemma wnflen_lt_weak:
+  forall w e m p len z
+  (NF: wnilfree w e m p len)
+  (Z:  getmem w e 4 m (p+4*z) = 0),
+  len < 2 ^ w.
+Proof.
+  intros.
   destruct (N.lt_trichotomy len (2 ^ w)) as [Lt | [Eq | Gt]]; try lia.
-  - subst len. remember (msub w z p) as offset.
-    specialize (NF offset). destruct NF. rewrite Heqoffset; apply msub_lt.
-    subst offset. rewrite N.add_comm, <-getmem_mod_l, msub_add, getmem_mod_l, Z; congruence.
-  - remember (msub w z p) as offset.
-    specialize (NF offset). destruct NF. apply N.lt_trans with (m:= 2^w);[ rewrite Heqoffset; apply msub_lt | assumption].
-    subst offset. rewrite N.add_comm, <-getmem_mod_l, msub_add, getmem_mod_l, Z; congruence.
+  - subst len. remember (z mod 2^w) as offset.
+    specialize (NF offset). destruct NF. rewrite Heqoffset; apply N.mod_lt; lia.
+    subst offset.
+    rewrite <-getmem_mod_l, mp2_add_mod, N.Div0.mul_mod_idemp_r, <-mp2_add_mod, getmem_mod_l.
+    symmetry; assumption.
+  - remember (z mod 2^w) as offset.
+    specialize (NF offset). destruct NF. apply N.lt_trans with (m:= 2^w);[rewrite Heqoffset; apply N.mod_lt; lia| assumption].
+    subst offset.
+    rewrite <-getmem_mod_l, mp2_add_mod, N.Div0.mul_mod_idemp_r, <-mp2_add_mod, getmem_mod_l.
+    now symmetry.
+Qed.
+
+Lemma shift_mod :
+  forall x shift w (LE:shift <= w),
+  (x << shift) mod 2^w = ((x mod 2^(w-shift)) << shift) mod 2^w.
+Proof.
+  intros.
+  apply N.bits_inj; unfold N.eqf; intro i; destruct (N.lt_ge_cases i (w)) as [LTi | GEi].
+  - rewrite N.mod_pow2_bits_low, N.mod_pow2_bits_low;[|assumption|assumption].
+    destruct (N.le_gt_cases shift i) as [LEshift | GTshift].
+    rewrite N.shiftl_spec_high, N.shiftl_spec_high; try lia.
+    rewrite N.mod_pow2_bits_low; (lia || reflexivity).
+    rewrite! N.shiftl_spec_low; (lia || reflexivity).
+  - rewrite! N.mod_pow2_bits_high; (reflexivity || assumption).
+Qed.
+
+Lemma wstrlen_lt:
+  forall w e m p len
+  (W : w > 2)
+  (STR : wstrlen w e m p len),
+  len < 2 ^ (w-2).
+Proof.
+  intros w e m p len W (NF & LEN).
+  destruct (N.lt_ge_cases len (2 ^ (w-2))) as [Lt | Ge]; try lia.
+  - specialize (NF (len mod 2 ^ (w-2))). destruct NF.
+    apply N.lt_le_trans with (m:=2^(w-2));[apply N.mod_lt; lia |assumption].
+    rewrite <-getmem_mod_l in *.
+    enough ((p+4*len) mod 2^w = (p + 4 * (len mod 2 ^ (w-2))) mod 2^w).
+      rewrite H in *; symmetry; assumption.
+    clear - Ge W.
+    rewrite N.Div0.add_mod, (N.Div0.add_mod p (4*(_ mod _))).
+    enough (H:(4*len) mod 2^w = (4 * (len mod 2 ^ (w-2)) mod 2^w)).
+      rewrite H in *; reflexivity.
+      change (4 * len) with (len << 2).
+      change (4 * ?x) with (x << 2).
+      rewrite shift_mod; try lia.
 Qed.
 
 Lemma nilfree_grow:
@@ -5874,6 +5942,20 @@ Proof.
   - specialize (NF i); apply NF; assumption.
   - subst i. congruence.
 Qed.
+
+Lemma wnilfree_grow:
+  forall w e m p len
+  (NF: wnilfree w e m p len)
+  (NZ: getmem w e 4 m (p + 4*len) <> 0),
+  wnilfree w e m p (1+len).
+Proof.
+  intros.
+  intro; intro. unfold wnilfree in NF.
+  destruct (N.lt_trichotomy i len) as [Lt | [Eq | Gt]]; try lia.
+  - specialize (NF i); apply NF; assumption.
+  - subst i. congruence.
+Qed.
+
 
 Lemma nilfree_le_len :
   forall w e mem p len k
@@ -5890,10 +5972,36 @@ Proof.
   now subst k.
 Qed.
 
+Lemma wnilfree_le_len :
+  forall w e mem p len k
+    (LEN : wstrlen w e mem p len)
+    (LE  : k <= len),
+    wnilfree w e mem p k.
+Proof.
+  intros.
+  unfold wstrlen in LEN; destruct LEN as [NF _].
+  apply N.lt_eq_cases in LE. destruct LE as [LT | EQ].
+  (* LT: k < len *)
+  unfold wnilfree in NF; unfold wnilfree. intros. apply NF. lia.
+  (* EQ: k = len *)
+  now subst k.
+Qed.
+
 Lemma nilfree_le_zero:
   forall w e mem p len j
     (NIL : getmem w e 1 mem (p + len) = 0)
     (NFj : nilfree w e mem p j),
+    j <= len.
+Proof.
+  unfold nilfree; intros.
+  destruct (N.le_gt_cases j len) as [Le | Gt]; [ assumption | exfalso].
+  specialize (NFj len Gt). apply NFj. now symmetry.
+Qed.
+
+Lemma wnilfree_le_zero:
+  forall w e mem p len j
+    (NIL : getmem w e 4 mem (p + 4*len) = 0)
+    (NFj : wnilfree w e mem p j),
     j <= len.
 Proof.
   unfold nilfree; intros.
@@ -5908,9 +6016,21 @@ Lemma nilfree_setmem :
   nilfree w e (setmem w e writelen mem a v) p nflen.
 Proof.
   intros. unfold nilfree. split; intros. rewrite getmem_noverlap.
-    now apply H in H0. eapply noverlap_index; (eassumption || lia). remember H0 as H1; clear HeqH1.
+    now apply H in H0. eapply noverlap_index_l; (eassumption || lia). remember H0 as H1; clear HeqH1.
     apply H in H0. rewrite getmem_noverlap in H0; try assumption.
-    eapply noverlap_index; (eassumption || lia).
+    eapply noverlap_index_l; (eassumption || lia).
+Qed.
+
+Lemma wnilfree_setmem :
+  forall w e mem p nflen a writelen v
+    (NO: ~overlap w p (4*nflen) a (4*writelen)),
+  wnilfree w e mem p nflen <->
+  wnilfree w e (setmem w e (4*writelen) mem a v) p nflen.
+Proof.
+  intros. unfold wnilfree. split; intros. rewrite getmem_noverlap.
+    now apply H in H0. eapply noverlap_index_l; (eassumption || lia). remember H0 as H1; clear HeqH1.
+    apply H in H0. rewrite getmem_noverlap in H0; try assumption.
+    eapply noverlap_index_l; (eassumption || lia).
 Qed.
 
 Lemma nilfree_lte :
@@ -5926,6 +6046,20 @@ Proof.
   specialize J with len. apply J in Gt. rewrite Len in Gt. now contradiction Gt.
 Qed.
 
+Lemma wnilfree_lte :
+  forall w e mem accept_ptr j len,
+  wnilfree w e mem accept_ptr j /\ getmem w e 4 mem (accept_ptr + 4*len) = 0
+  -> j <= len.
+Proof.
+  intros w e mem accept_ptr j len [J Len].
+  unfold wnilfree in J.
+  specialize (N.le_gt_cases j len); intro Disj.
+  destruct Disj as [Lte | Gt].
+  assumption.
+  specialize J with len. apply J in Gt. rewrite Len in Gt. now contradiction Gt.
+Qed.
+
+
 Lemma nilfree_shrink :
   forall w e mem p x y
     (NILFREE : nilfree w e mem p x)
@@ -5934,6 +6068,29 @@ Lemma nilfree_shrink :
 Proof.
   intros. unfold nilfree in NILFREE; unfold nilfree.
   intros. apply NILFREE. apply (N.lt_trans i y x); repeat assumption.
+Qed.
+
+Lemma wnilfree_shrink :
+  forall w e mem p x y
+    (NILFREE : wnilfree w e mem p x)
+    (LT : y < x),
+  wnilfree w e mem p y.
+Proof.
+  intros. unfold wnilfree in *.
+  intros. apply NILFREE. apply (N.lt_trans i y x); repeat assumption.
+Qed.
+
+Lemma wnilfree_sublen_eq_len:
+  forall w e mem p len sublen
+    (NF: wnilfree w e mem p sublen)
+    (LEN: wstrlen w e mem p len)
+    (BC: getmem w e 4 mem (p+4*sublen) = 0),
+  sublen = len.
+Proof.
+  intros. destruct LEN as (NFlen & NIL).
+  destruct (N.lt_trichotomy sublen len) as [LT | [EQ | GT]];[|assumption|]; exfalso.
+  specialize (NFlen _ LT); now rewrite BC in NFlen.
+  specialize (NF _ GT); now rewrite NIL in NF.
 Qed.
 
 Lemma strlen_incr :
@@ -5948,6 +6105,19 @@ Proof.
   destruct LEN as [NF NIL]. now subst k.
 Qed.
 
+Lemma wstrlen_incr :
+  forall w e mem p len k
+    (LEN : wstrlen w e mem p len)
+    (LE : k <= len)
+    (NNULL : getmem w e 4 mem (p + 4*k) <> 0),
+     k < len.
+Proof.
+  intros. unfold wstrlen in LEN.
+  apply N.lt_eq_cases in LE. destruct LE as [LT | EQ]. easy.
+  destruct LEN as [NF NIL]. now subst k.
+Qed.
+
+
 Theorem strlen_unchanged:
   forall w e m m' p len
     (MEM : mem_region_unchanged w e m m' p (N.succ len))
@@ -5958,6 +6128,45 @@ Proof.
   split. unfold nilfree in *.
   intros i Lt; specialize (MEM i (N.lt_lt_succ_r _ _ Lt)). rewrite <-MEM; now specialize (NF i Lt).
   specialize (MEM len (N.lt_succ_diag_r len)); now rewrite <-MEM.
+Qed.
+
+Theorem getmem_index_unchanged:
+  forall w e m m' p len index size
+    (MEM : mem_region_unchanged w e m m' p len)
+    (IN : index + size <= len),
+    getmem w e size m (p+index) = getmem w e size m' (p+index).
+Proof.
+  intros w e m m' p len index size.
+  generalize dependent index;
+  generalize dependent len;
+  generalize dependent w;
+  generalize dependent e;
+  generalize dependent m;
+  generalize dependent m';
+  generalize dependent p.
+  induction size using N.peano_ind.
+    intros. rewrite! getmem_0. reflexivity.
+  intros. specialize (IHsize p m' m e w len).
+  assert (IH':forall index, index+size <= len -> getmem w e size m (p+index) = getmem w e size m' (p+index)).
+  { intros i LT; exact (IHsize i MEM LT). }
+  clear IHsize.
+  assert (MEMB:=mem_region_unchanged_byte _ _ _ _ _ _ MEM).
+  destruct e;  rewrite! getmem_succ.
+  - rewrite (MEMB index); try lia. rewrite <-N.add_succ_r. rewrite (IH' (N.succ index)); try lia.
+  - rewrite (MEMB index); try lia. rewrite <-N.add_succ_r. rewrite (IH' (N.succ index)); try lia.
+Qed.
+
+Theorem wstrlen_unchanged:
+  forall w e m m' p len
+    (MEM : mem_region_unchanged w e m m' p (4*(N.succ len)))
+    (STR : wstrlen w e m p len),
+  wstrlen w e m' p len.
+Proof.
+  unfold wstrlen. intros. destruct STR as [NF NIL].
+  split.
+    unfold wnilfree in *; intros i LT; specialize (NF i LT);
+    rewrite getmem_index_unchanged with (m':=m') (len:=4*N.succ len) in NF; try (assumption || lia).
+    rewrite getmem_index_unchanged with (m':=m') (len:=4*N.succ len) in NIL; try (assumption || lia).
 Qed.
 
 (* Define a "correct" bit array.

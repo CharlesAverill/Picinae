@@ -16,6 +16,7 @@
       *  Model Checking is like simulation
       *  Formal Proofs are like total knowledge of all configurations of
          the universe.  You can safely drive with your eyes closed.
+         Sort of.
 
 
     The first part of this chapter covers the 3 steps required to
@@ -23,7 +24,7 @@
     This includes 1) Architecture Specification, 2) Picinae Module
     instantiation, and 3) LTac machinery definition. Afterwards we
     use all of it to show how to prove a property of a simple
-    program. *)
+    loop-free program. *)
 
 (* ################################################################# *)
 (** * Setting It Up *)
@@ -62,7 +63,8 @@ Open Scope N.
 
 Inductive a64var :=
   | V_MEM
-  | R_R0 | R_R1 | R_R2.
+  | R_R0 | R_R1 | R_R2
+  | F_ZR | F_CY.
 
 (** At this point there is no semantics associated with V_MEM, R_R0, etc.
     Each one may later be defined as a 1-bit register or a 42-bit register.
@@ -74,13 +76,14 @@ Inductive a64var :=
     of memery:
 
       NB. Memory is just a number represented by the concatenation of all bits.
-          Thus its bitwidth is 8 times the number of bytes.
+          Thus its bitwidth is 8 times the number of addressable bytes.
 *)
 
 Definition a64typctx (id:a64var) : option N :=
   match id with
   | V_MEM => Some (8*2^64)
   | R_R0 | R_R1 | R_R2 => Some (64)
+  | F_ZR | F_CY => Some (1)
   end.
 
 (* ================================================================= *)
@@ -141,11 +144,8 @@ Ltac step := ISA_step.
 (** ** Ltac Machinery*)
 
 (** Picinae uses a lot of machinery to smooth the process of writing proofs
-    about machine code. Setting up this machinery is just another short
-    copy-paste-modify task.
-
-    We set this up here stripped of its documentation to get to the good
-    part of the demo.  *)
+    about machine code.  Setting it up is just another short copy-paste-modify
+    task.  We explain the machinery in Chapter X. *)
 
 Ltac simpl_memaccs H ::=
   try reflexivity.
@@ -157,14 +157,14 @@ Ltac fail_seek ::= idtac.
 (** With the modules and machinery set up we can move on to showing how a simple
     program proof works.  Picinae programs can be represented in many ways, but each
     way amounts to a function mapping a store and an address to an IL statement
-   for the symbolic interpreter to execute, plus a number of bytes to step forward
-   if execution control falls through.
+    for the symbolic interpreter to execute, plus a number of bytes to step forward
+    if execution control falls through.
 
     The following program is a hand written example, it adds 1 to the value stored in
-    the value stored in register 2 (_R_R2_), shifts it left, and stores the result in
-   register 1. It maps the addresses 100, 104 and 108 to the made-up number of bytes
-   the instruction takes up in memory (4 in each case) and a single Picinae IL statement
-   that moves the result of an expression into a register.
+    the value stored in register 2 ([R_R2]), shifts it left, and stores the result in
+    register 1. It maps the addresses 100, 104 and 108 to the made-up number of bytes
+    the instruction takes up in memory (4 in each case) and a single Picinae IL statement
+    that moves the result of an expression into a register.
 
    The formal semantics of Picinae IL statements are covered in Chapter X.
 *)
@@ -269,7 +269,7 @@ End Invs.
 
     We set address 112 as our only exit point, this is the address following the last.  If we
     set it as the final instruction then that instruction will not execute. *)
-Definition exit (t:trace) : bool :=
+Definition exits (t:trace) : bool :=
   match t with (Addr a, _)::_ =>
     match a with
       112 => true
@@ -279,12 +279,12 @@ Definition exit (t:trace) : bool :=
   end.
 
 (** Now that we've defined 1) the initial conditions of traces we're reasoning about, 2) the
-    properties we will prove they satisfy and 3) the exit points that mark future execution
-    beyond the scope of our proofs we are finally ready to write the proof! *)
+    properties we will prove they satisfy and 3) the exit points, we are finally ready
+    to write the proof! *)
 
 Theorem prog_partial_correctness :
   forall s t xs' r2 (INIT: Init t s xs' r2),
-    satisfies_all demo_program (Invs r2) exit (xs'::t).
+    satisfies_all demo_program (Invs r2) exits (xs'::t).
 Proof.
   intros. destruct INIT as (ENTRY & MDL & R2).
   apply prove_invs.
@@ -308,8 +308,370 @@ Proof.
     apply mp2_even. all: easy.
 Qed.
 
-(** After some initial setup we see how Picinae uses Coq as an abstract execution engine.
-    Each _step_ call executes one machine instruction at the current address and replaces
+(** **** Exercise:1 stars, recommended, swap_register_addition
+
+    In this exercise you will specify and prove that this short program for our
+    hypothetical architecture swaps the values of its R0 and R1 registers. *)
+Module swap_register_addition.
+
+(** This is the (handwritten) program definition.  We continue with the pretense
+    that each instruction is 4 bytes long.  It implements the typical algorithm
+    to swap the values of two register/variables using addition.  Does it work
+    in our modular arithmetic setting?  You will prove that it does. *)
+Definition swap_regs (s:store) (a:addr) : option (N * stmt) :=
+  match a with
+  | 100 => Some(4, Move R_R0 (BinOp OP_PLUS  (Var R_R0) (Var R_R1)))
+  | 104 => Some(4, Move R_R1 (BinOp OP_MINUS (Var R_R0) (Var R_R1)))
+  | 108 => Some(4, Move R_R0 (BinOp OP_MINUS (Var R_R0) (Var R_R1)))
+  | 112 => Some(4, Nop)
+  | _ => None
+  end.
+
+(** The welltyped program theorem checks that the handwritten program has no
+    obvious flaws, e.g., storing 64-bit values in 32-bit registers, and is used
+    in the proof to enable sound automation.  *)
+Theorem swap_regs_welltyped : welltyped_prog a64typctx swap_regs.
+Proof. Picinae_typecheck. Qed.
+
+
+Section Invs.
+
+  (** These variables represent the initial value of the store, [R0] and [R1]
+      respectively. *)
+  Variable s:store.
+  Variable r0 r1:N.
+
+  (** In these tutorials we define the "entry" and "models" propositions
+      independently to highlight their ubiquity.  Above these are the
+      [startof t xs' = (Addr 100, s)] and [models a64typctx s] clauses of the
+      [Init] proposition. Conveniently, the same propositions fit here as well. *)
+  Definition Entry t xs' := startof t xs' = (Addr 100, s).
+  Definition Models := models a64typctx s.
+
+  (** Replace the [True] with two clauses binding [R0] and [R1] in the initial
+      store [s] to the two variables [r0] and [r1] we declared above. *)
+  Definition Init t xs' := Entry t xs' /\ Models /\ (* True *) s R_R0 = r0 /\ s R_R1 = r1.
+
+  (** Replace the [False] with a proposition stating that the values of registers
+      [R0] and [R1] in the final store have been swapped.  Note that the [s] here
+      is a parameter name that shadows the [s] variable in this section. *)
+  Definition postcondition (s:store) := (* False *) s R_R0 = r1 /\ s R_R1 = r0.
+
+  (** Note that the [s] in the match pattern below shadows the [s] variable in
+      this section.  We don't need it here because we've used it above.  If we
+      have a proof where we need to refer to the initial store in the invariants
+      then we would change one of two names. *)
+  Definition Invs (t:trace) := match t with (Addr a, s)::_ =>
+    match a with
+    (** This is the starting invariant.  Typically it is the same as the definition
+        of [Init] minus the [Entry] and [Models] clauses, so add the clauses
+        you added there here. *)
+      (* | 100 => Some (True) *)
+    | 100 => Some (s R_R0 = r0 /\ s R_R1 = r1)
+    (** This is the postcondition invariant.  We place it at the program's exit
+        address.  In this simple example this is 112, the [Nop] instruction.
+        We will need to prove this invariant holds _before_ executing the
+        instruction, [Nop] in this case. *)
+    | 112 => Some ( postcondition s)
+    (** No other addresses nor exit conditions (e.g., exceptions) have invariants
+        that we need to prove, so we mark them with [None]. *)
+    | _ => None end | _ => None end.
+
+  (** Finally, the program exits for any trace that reaches address 112, so replace
+     the constant [true] with the corresponding expression. *)
+  (* Definition exits (t:trace) := true. *)
+  Definition exits (t:trace) := match t with (Addr 112, _)::_ => true | _ => false end.
+
+End Invs.
+
+Theorem swap_regs_partial_correctness:
+  forall (s:store) t xs' (r0 r1:N) (INIT : Init s r0 r1 t xs'),
+  satisfies_all swap_regs (Invs r0 r1) exits (xs'::t).
+Proof.
+  intros. destruct INIT as (ENTRY & MDL & R0 & R1).
+  apply prove_invs.
+
+  (* Base Case *)
+  simpl. rewrite ENTRY. step.
+  (* FILL IN HERE (replace the admit.)*)
+  admit.
+
+  (* Inductive Case *)
+  intros.
+  eapply startof_prefix in ENTRY; try eassumption.
+  eapply preservation_exec_prog in MDL; try (eassumption || apply swap_regs_welltyped).
+  clear - PRE MDL. rename t1 into t; rename s1 into s.
+  destruct_inv 64 PRE.
+
+  (* FILL IN HERE *)
+Admitted.
+End swap_register_addition.
+
+
+(** **** Exercise:1 stars, optional, swap_register_xor
+
+    This exercise is a repeat of register swapping, this time using exclusive-or
+    and with less hand-holding. *)
+Module swap_register_xor.
+Definition swap_regs (s:store) (a:addr) : option (N * stmt) :=
+  match a with
+  | 300 => Some(4, Move R_R0 (BinOp OP_XOR (Var R_R0) (Var R_R1)))
+  | 304 => Some(4, Move R_R1 (BinOp OP_XOR (Var R_R0) (Var R_R1)))
+  | 308 => Some(4, Move R_R0 (BinOp OP_XOR (Var R_R0) (Var R_R1)))
+  | 312 => Some(4, Nop)
+  | _ => None
+  end.
+
+(** The welltyped program theorem checks that the handwritten program has no
+    obvious flaws, e.g., storing 64-bit values in 32-bit registers, and is used
+    in the proof to enable sound automation.  *)
+Theorem swap_regs_welltyped : welltyped_prog a64typctx swap_regs.
+Proof. Picinae_typecheck. Qed.
+
+
+Section Invs.
+
+  Variable s:store.
+  Variable r0 r1:N.
+
+  Definition Entry t xs' := startof t xs' = (Addr 300, s).
+  Definition Models := models a64typctx s.
+  Definition Init t xs' := Entry t xs' /\ Models /\ (* True *) s R_R0 = r0 /\ s R_R1 = r1.
+
+  Definition postcondition (s:store) := (* False *) s R_R0 = r1 /\ s R_R1 = r0.
+
+  Definition Invs (t:trace) := match t with (Addr a, s)::_ =>
+    match a with
+      (* | 100 => Some (True) *)
+    | 300 => Some (s R_R0 = r0 /\ s R_R1 = r1)
+    | 312 => Some ( postcondition s)
+    | _ => None end | _ => None end.
+
+  (* Definition exit (t:trace) := true. *)
+  Definition exits (t:trace) := match t with (Addr 312, _)::_ => true | _ => false end.
+
+End Invs.
+
+Theorem swap_regs_partial_correctness:
+  forall (s:store) t xs' (r0 r1:N) (INIT : Init s r0 r1 t xs'),
+  satisfies_all swap_regs (Invs r0 r1) exits (xs'::t).
+Proof.
+  intros. destruct INIT as (ENTRY & MDL & R0 & R1).
+  apply prove_invs.
+
+  (* Base Case *)
+  simpl. rewrite ENTRY. step.
+  (* FILL IN HERE (replace the admit.)*)
+  admit.
+
+  (* Inductive Case *)
+  intros.
+  eapply startof_prefix in ENTRY; try eassumption.
+  eapply preservation_exec_prog in MDL; try (eassumption || apply swap_regs_welltyped).
+  clear - PRE MDL. rename t1 into t; rename s1 into s.
+  destruct_inv 64 PRE.
+
+  (* FILL IN HERE *)
+  destruct PRE.
+  step. step. step.
+  Search N.lxor.
+  auto using N.lxor_0_r, N.lxor_0_l, N.lxor_assoc, N.lxor_nilpotent.
+  repeat match goal with
+  | |- context[N.lxor (N.lxor ?l ?r) ?r] => rewrite (N.lxor_assoc l r r), N.lxor_nilpotent, N.lxor_0_r
+  | |- context[N.lxor (N.lxor ?l ?r) ?l] => rewrite (N.lxor_comm l r), (N.lxor_assoc r l l), N.lxor_nilpotent, N.lxor_0_r
+  end.
+  now split.
+Admitted.
+End swap_register_xor.
+
+(* begin details *)
+Declare Scope pil_stmt_scope.
+Open Scope pil_stmt_scope.
+Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : pil_stmt_scope.
+(* end details *)
+
+(** **** Exercise:3 stars, optional, tolower
+
+    The following is a version of to_lower compiled for the Armv8 architecture,
+    minimmally modified for this chapter.  This gives a better perspective
+    of what real code looks like. *)
+
+Module tolower.
+Definition tolower (s:store) (a:addr) : option (N * stmt) :=
+  match a with
+  (* 0x00200000: sub w1,w0,#0x41 *)
+  | 2097152 => Some (4,
+    Move R_R1 (Cast CAST_UNSIGNED 64 (BinOp OP_MINUS (Extract 31 0 (Var R_R0)) (Word 65 32))))
+
+  (* 0x00200004: cmp w1,#0x19 *)
+  | 2097156 => Some (4,
+    Move F_CY (BinOp OP_LE (Word 25 32) (Extract 31 0 (Var R_R1))) $;
+    Move F_ZR (BinOp OP_EQ (BinOp OP_MINUS (Extract 31 0 (Var R_R1)) (Word 25 32)) (Word 0 32)))
+
+  (* 0x00200008: b.hi 0x00200010 *)
+  | 2097160 => Some (4,
+    If (Cast CAST_LOW 1 (BinOp OP_AND (Var F_CY) (UnOp OP_NOT (Var F_ZR)))) (
+      Jmp (Word 2097168 64)
+    ) (* else *) (
+      Nop
+    ))
+
+  (* 0x0020000c: orr w0,w0,#0x20 *)
+  | 2097164 => Some (4,
+    Move R_R0 (Cast CAST_UNSIGNED 64 (BinOp OP_OR (Extract 31 0 (Var R_R0)) (Word 32 32))))
+
+  (* 0x00200010: ret *)
+  | 2097168 => Some (4,
+    Nop)
+
+  | _ => None
+  end.
+
+Theorem tolower_welltyped : welltyped_prog a64typctx tolower.
+Proof. Picinae_typecheck. Qed.
+
+
+Section Invs.
+
+  Variable s:store.
+
+  Definition Entry (t:trace) (xs':exit*store) := startof t xs' = (Addr 0x00200000, s).
+  Definition Models := models a64typctx s.
+  Definition Init t xs' := Entry t xs' /\ Models /\ True.
+
+  Definition postcondition (s:store) := False.
+
+  Definition Invs (t:trace) := match t with (Addr a, s)::_ =>
+    match a with
+    | 0x00200000 => Some (True)
+    | 0x00200010 => Some (postcondition s)
+    | _ => None end | _ => None end.
+
+  Definition exit (t:trace) := match t with (Addr 0x00200010, _)::_ => true | _ => false end.
+
+End Invs.
+
+Theorem tolower_partial_correctness:
+  forall (s:store) t xs' (INIT : Init s t xs'),
+  satisfies_all tolower (Invs) exit (xs'::t).
+Proof.
+  intros. destruct INIT as (ENTRY & MDL & W0).
+  apply prove_invs.
+
+  (* Base Case *)
+  simpl. rewrite ENTRY. step.
+  (* FILL IN HERE (replace the admit.)*)
+  admit.
+
+  (* Inductive Case *)
+  intros.
+  eapply startof_prefix in ENTRY; try eassumption.
+  eapply preservation_exec_prog in MDL; try (eassumption || apply tolower_welltyped).
+  clear - PRE MDL. rename t1 into t; rename s1 into s.
+  destruct_inv 64 PRE.
+
+  repeat step.
+Admitted.
+End tolower.
+
+
+(** **** Exercise:4 stars, optional, toupper
+
+    The following is a version of toupper compiled for the Armv8 architecture,
+    minimmally modified for this chapter.  This gives a better perspective
+    of what real code looks like. *)
+
+
+Module toupper.
+Definition toupper (s:store) (a:addr) : option (N * stmt) :=
+  match a with
+  (* 0x00100000: sub w1,w0,#0x61 *)
+  | 1048576 => Some (4,
+    Move R_R1 (Cast CAST_UNSIGNED 64 (BinOp OP_MINUS (Extract 31 0 (Var R_R0)) (Word 97 32))))
+
+  (* 0x00100004: cmp w1,#0x19 *)
+  | 1048580 => Some (4,
+    Move F_ZR (BinOp OP_EQ (BinOp OP_MINUS (Extract 31 0 (Var R_R1)) (Word 25 32)) (Word 0 32)) $;
+    Move F_CY (BinOp OP_LE (Word 25 32) (Extract 31 0 (Var R_R1))))
+
+  (* 0x00100008: b.hi 0x00100014 *)
+  | 1048584 => Some (4,
+    If (Cast CAST_LOW 1 (BinOp OP_AND (Var F_CY) (UnOp OP_NOT (Var F_ZR)))) (
+      Jmp (Word 1048596 64)
+    ) (* else *) (
+      Nop
+    )
+  )
+
+  (* 0x0010000c: mov w1,#0x5f *)
+  | 1048588 => Some (4,
+    Move R_R1 (Word 95 64))
+
+  (* 0x00100010: and w0,w0,w1 *)
+  | 1048592 => Some (4,
+    Move R_R0 (Cast CAST_UNSIGNED 64 (BinOp OP_AND (Extract 31 0 (Var R_R0)) (Extract 31 0 (Var R_R1)))))
+
+  (* 0x00100014: ret *)
+  | 1048596 => Some (4,
+    Nop)
+  | _ => None
+  end.
+
+Theorem toupper_welltyped : welltyped_prog a64typctx toupper.
+Proof. Picinae_typecheck. Qed.
+
+
+Section Invs.
+
+  Variable s:store.
+  Variable w0:N.
+
+  Definition Entry (t:trace) (xs':exit*store) := (* True *) startof t xs' = (Addr 0x00100000, s).
+  Definition Models := models a64typctx s.
+  Definition Init t xs' := Entry t xs' /\ Models /\ (* True *) s R_R0 = w0.
+
+  Definition postcondition (s:store) := if andb (97 <=? w0) (w0 <=? 122) then s R_R0 = w0 - 32 else s R_R0 = w0.
+
+  Definition Invs (t:trace) := match t with (Addr a, s)::_ =>
+    match a with
+      (* | 100 => Some (True) *)
+    | 0x00100000 => Some (s R_R0 = w0)
+    | 0x00100014 => Some (postcondition s)
+    | _ => None end | _ => None end.
+
+  (* Definition exit (t:trace) := true. *)
+  Definition exit (t:trace) := match t with (Addr 0x00100014, _)::_ => true | _ => false end.
+
+End Invs.
+
+Theorem toupper_partial_correctness:
+  forall (s:store) t xs' (w0:N) (INIT : Init s w0 t xs'),
+  satisfies_all toupper (Invs w0) exit (xs'::t).
+Proof.
+  intros. destruct INIT as (ENTRY & MDL & W0).
+  apply prove_invs.
+
+  (* Base Case *)
+  simpl. rewrite ENTRY. step.
+  (* FILL IN HERE (replace the admit.)*)
+  admit.
+
+  (* Inductive Case *)
+  intros.
+  eapply startof_prefix in ENTRY; try eassumption.
+  eapply preservation_exec_prog in MDL; try (eassumption || apply toupper_welltyped).
+  clear - PRE MDL. rename t1 into t; rename s1 into s.
+  destruct_inv 64 PRE.
+
+  repeat step.
+Admitted.
+End toupper.
+
+(** To close off this chapter we hone in on Picinae's abstract execution with an example
+    that isolates it from proofs of program properties.
+
+    After some initial setup we see how Picinae uses Coq as an abstract execution engine.
+    Each [step\ call executes one machine instruction at the current address and replaces
     the goal with each possible result of the instruction call.
 
     We'll cover what's going on with the proof, including the mystery of xs', in the following chapter.

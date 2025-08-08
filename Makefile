@@ -15,6 +15,7 @@ clean: Makefile.coq
 
 Makefile.coq: _CoqProject Makefile
 	coq_makefile -f _CoqProject -o $@
+	#rocq makefile -f _CoqProject -o $@
 
 _CoqProject: ;
 

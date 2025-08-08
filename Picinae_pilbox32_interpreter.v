@@ -294,9 +294,13 @@ Proof.
   repeat match goal with |- context [ match ?x with _ => _ end ] =>
     let op := fresh "op" in
     generalize x; intro op;
-    first [ destruct op as [|op] | destruct op as [op|op|] ];
+    match type of op with
+    | bool => destruct op
+    | _ => first [ destruct op as [|op] | destruct op as [op|op|] ]
+    end;
     try apply TExn
   end.
+
 
   all: try solve [ do 2 repeat first
   [ reflexivity
@@ -460,33 +464,152 @@ Definition welltyped_p32_asm (insn:p32_asm) : Prop :=
   | PIL_InvalidI => True
   end.
 
-(* TODO: prove these helper lemmas and add them to Picinae_theory or the coq standard lib *)
+Create HintDb bitspec.
+
+(* Print HintDb bitspec.
+Set Debug Auto. *)
+Hint Resolve N.bits_inj_0 : bitspec.
+Hint Rewrite N.land_spec  : bitspec.
+Hint Rewrite N.shiftl_spec_low using lia: bitspec.
+Hint Rewrite N.ones_spec_high using lia: bitspec.
+Hint Immediate Bool.andb_false_r : bitspec.
+Hint Extern 1 =>
+  match goal with
+  | [H:?m <= ?n |- andb (N.testbit _ ?i) (N.testbit _ ?i)] => destruct (N.lt_ge_cases i m)
+  end : bitspec.
+Hint Extern 1 => match goal with | |- context[N.testbit (?a << ?n) _] => rewrite (N.shiftl_spec_low a n);[|lia] end : bitspec.
+Hint Extern 1 => match goal with | |- context[N.testbit (N.ones ?n) ?m] => idtac n m; rewrite (N.ones_spec_high n m);[|lia] end : bitspec.
+
+
+
+(* TODO: add to Picinae_theory or the coq standard lib *)
 Lemma Nshiftr_land_ones_high:
-  forall a n m, n > m -> (a << n) .& (N.ones m) = 0.
-Proof. Admitted.
+  forall a n m, m <= n -> (a << n) .& (N.ones m) = 0.
+Proof.
+  intros a n m H.
+  apply N.bits_inj_0; intro i; rewrite N.land_spec.
+  (* Destruct attempt failing here... *)
+  (* auto with bitspec. *)
+  destruct (N.lt_ge_cases i m) as [Lt|Ge].
+    (* i < m -> a << n has a 0 *)
+
+    rewrite N.shiftl_spec_low; easy || lia.
+    (* i >= m -> N.ones has a 0 *)
+    rewrite N.ones_spec_high; easy || lia.
+Qed.
 
 Lemma Nshiftr_land_high_nop:
   forall a b n m, n > m -> (a .| b << n) .& (N.ones m) = a .& (N.ones m).
-Proof. Admitted.
+Proof.
+  intros.
+  apply N.bits_inj.
+  unfold N.eqf. intro i.
+  rewrite! N.land_spec, N.lor_spec.
+  destruct (N.lt_ge_cases i m) as [Lt|Ge].
+    (* i < m -> can safely ignore (b << n) *)
+    rewrite N.shiftl_spec_low; try lia. rewrite Bool.orb_false_r; reflexivity.
+    (* m <= i -> N.ones m is 0 *)
+    rewrite N.ones_spec_high; try lia.
+Qed.
 
 Lemma Nland_low:
   forall a n, a < 2 ^ n -> a .& (N.ones n) = a.
-Proof. Admitted.
+Proof.
+  intros a n H.
+  rewrite N.land_ones, N.mod_small; easy.
+Qed.
 
-Lemma xbits_lor_low:
+Lemma xbits_lor_low_l:
   forall n m i j, i <= j -> n < 2 ^ i -> xbits (n .| m) i j = xbits m i j.
-Proof. Admitted.
+Proof.
+  intros n m i j H G.
+  unfold xbits.
+  rewrite N.shiftr_lor, shiftr_low_pow2; try lia.
+  rewrite N.lor_0_l; reflexivity.
+Qed.
+
+Lemma xbits_lor_low_r:
+  forall n m i j, i <= j -> n < 2 ^ i -> xbits (m .| n) i j = xbits m i j.
+Proof.
+  intros n m i j H G.
+  rewrite N.lor_comm, xbits_lor_low_l; lia.
+Qed.
+
+Lemma xbits_lshift_0:
+  forall n shift i j, i <= j -> j <= shift -> xbits (n << shift) i j = 0.
+Proof.
+  intros n shift i j IJ JShift.
+  unfold xbits.
+  rewrite  N.shiftr_shiftl_l; try lia.
+  (* Another good use of N.bits_inj *)
+  apply N.bits_inj_0; intro index.
+  destruct (N.lt_ge_cases index (j-i)) as [Lt|Ge].
+    rewrite N.mod_pow2_bits_low; try lia. rewrite N.shiftl_spec_low; lia.
+    rewrite N.mod_pow2_bits_high; try lia.
+Qed.
 
 Lemma xbits_lor_high:
-  forall n m i j, i <= j -> m = 0 \/ m >= 2 ^ j -> xbits (n .| m) i j = xbits n i j.
-Proof. Admitted.
+  forall n m shift i j, i <= j -> j <= shift -> xbits (n .| m << shift) i j = xbits n i j.
+Proof.
+  intros n m shift i j H G.
+  rewrite xbits_lor, xbits_lshift_0, N.lor_0_r; lia.
+Qed.
 
-Lemma shiftr_0_or_high:
+Lemma shiftl_0_or_high:
   forall x n m, m <= n -> x << n = 0 \/ x << n >= 2 ^ m.
 Proof.
   intros. destruct x;[left;psimpl;lia | right].
-  (* TODO: we need the N.shiftl monotonicity theorem *)
-Admitted.
+  rewrite N.ge_le_iff.
+  rewrite N.shiftl_mul_pow2.
+  apply N.le_trans with (m:= N.pos p * 2 ^ m); try lia.
+    rewrite <-(N.mul_1_l (2^m)) at 1. apply N.mul_le_mono_r; lia.
+    apply N.mul_le_mono_l, N.pow_le_mono_r; lia.
+Qed.
+
+Lemma xbits_small:
+  forall x w, x < 2 ^ w -> xbits x 0 w = x.
+Proof.
+  intros x w H.
+  (*destruct x; [vm_compute; reflexivity|].*)
+  unfold xbits; apply N.bits_inj. rewrite N.sub_0_r, N.shiftr_0_r.
+  unfold N.eqf. intro i.
+  destruct (N.lt_ge_cases i w) as [Lt|Ge].
+    rewrite N.mod_pow2_bits_low; lia || reflexivity.
+    rewrite N.mod_pow2_bits_high; try lia.
+    rewrite bound_hibits_zero with (w:=w); try lia.
+Qed.
+
+Lemma xbits_lshift_eq:
+  forall x n w, x < 2 ^ w -> xbits (x << n) n (w+n) = x.
+Proof.
+  intros x n w H.
+  rewrite! xbits_shiftl, N.sub_diag, N.add_sub, N.shiftl_0_r.
+  apply xbits_small; assumption.
+Qed.
+
+Lemma Nlor_rshift_low_l:
+  forall x y shift, x < 2 ^ shift -> (x .| y) >> shift = y >> shift.
+Proof.
+  intros x y shift H.
+  apply N.bits_inj; unfold N.eqf; intro i.
+  rewrite! N.shiftr_spec', N.lor_spec, bound_hibits_zero with(w:=shift); try lia.
+  rewrite Bool.orb_false_l; reflexivity.
+Qed.
+
+Lemma pow2_split_shift:
+  forall p shift q, q = p+shift -> 2 ^ q = 2 ^ p << shift.
+Proof.
+  intros p shift q Eq.
+  rewrite N.shiftl_mul_pow2, <-N.pow_add_r, Eq; reflexivity.
+Qed.
+
+Lemma Nshiftl_mono_pow2:
+  forall x shift p q, x < 2 ^ p -> q = shift + p -> x << shift < 2 ^ q.
+Proof.
+  intros x shift p q BOUND Eq.
+  rewrite pow2_split_shift with (shift:=shift) (p:=p); try lia.
+  apply Nshiftl_mono_lt_iff; assumption.
+Qed.
 
 Lemma xbits_0_low:
   forall n j, n < 2 ^ j -> xbits n 0 j = n.
@@ -499,8 +622,8 @@ Theorem decode_assemble_insn :
     (WT: welltyped_p32_asm insn),
   p32_decode (assemble_insn insn) = insn.
 Proof.
-  unfold welltyped_p32_asm, p32_decode, assemble_insn, p32_decode_op, assemble_insn_op
-    ; intros; destruct insn eqn:INSN;
+  unfold welltyped_p32_asm, p32_decode, assemble_insn, p32_decode_op, assemble_insn_op;
+    intros; destruct insn eqn:INSN;
   repeat match goal with
   | [H: _ /\ _ |- _] => destruct H
   end.
@@ -509,21 +632,35 @@ Proof.
        repeat rewrite Bool.orb_false_l; unfold N.testbit, Pos.testbit; try rewrite Bool.orb_true_l.
   all: repeat rewrite Nshiftr_land_high_nop; try lia; simpl (_ << _ .& _); psimpl.
   all: unfold p32_decode_binop_reg, p32_decode_binop_imm, p32_decode_cf_simm, p32_decode_imm,
-         p32_decode_reg, p32_decode_memacc, p32_decode_simm.
+         p32_decode_reg, p32_decode_memacc, p32_decode_simm, xnbits.
 
-  (* TODO: add this xbits simplification to psimpl *)
-  all: unfold xnbits; repeat match goal with
-  | [ |- context[xbits (?N .| ?M) ?i ?j] ] => rewrite (xbits_lor_high N M i j);[
-        | solve [lia] | solve [apply shiftr_0_or_high; lia] ]
-  | [ |- context[xbits (?N .| ?M) ?i ?j] ] => rewrite (xbits_lor_low N M i j); try solve [ psimpl; lia]
-  | [ |- _ .| _ .| ?M < 2 ^ ?w ] => rewrite (lor_bound w);[|solve [lia]]
-  | [ |- _ .| ?M < 2 ^ ?w ] => apply lor_bound; try solve [psimpl ; lia]
-  (* TODO: prove the following case using the shiftr monotonicity theorem, the
-    assert by lia ensures that this case is provable and the admit is reasonable *)
-  | [ |- _ << ?S < 2 ^ ?w ] => assert (S + 3 <= w) by lia; admit
-  end.
-  19: reflexivity.
-Admitted.
+  all: repeat
+     match goal with
+    (* Solvers *)
+     | H:?x |- ?x => assumption
+     | |- _ < _ => lia
+     | |- _ <= _ => lia
+     | |- _ = _ => lia
+     | |- ?t = ?t => reflexivity
+     | |- _ .| _ < _ => apply lor_bound
+     | |- ofZ ?w _ < 2 ^ ?w => apply ofZ_bound
+    (* Simple Simplifiers *)
+     | [H:context[_-_] |- _] => simpl (_-_) in H
+     | [|-context[_-_]] => simpl (_-_)
+    (* Reducers *)
+     | |- _ << ?S < 2 ^ ?p =>  apply (Nshiftl_mono_pow2 _ S (p-S));
+         simpl (_-_)
+     | [ |- context[xbits (?L .| ?R << ?i) ?i ?j]] =>
+         rewrite (xbits_lor_low_l L _ i j); [|lia|try lia]
+     | [ |- context[xbits (?L .| ?R << ?S) ?i ?j]] =>
+         rewrite (xbits_lor_high L R S _ j)
+     | |- context[xbits (?N << ?S) ?S (?w + ?S)] =>
+         rewrite (xbits_lshift_eq N S w)
+     | [H:context[_-_]|- context[xbits (?N << ?S) ?S (?S+?w)] ]=>
+         rewrite (xbits_lshift_eq N S w)
+     | |- context[toZ ?w (ofZ ?w _)] => rewrite toZ_ofZ
+     end.
+Qed.
 
 (* TODO:
       1) define an operational semantics for PIL32_asm
@@ -652,6 +789,10 @@ Ltac get_exec :=
     rewrite testbit_xbits, (xbits_split2 l i (N.succ i) h v mem);
     try lia
   end; vm_compute (N.odd _); psimpl.
+
+(* These hooks are used in ISA_invseek to simplify the memory program
+   instruction expression which, for an interpreted language like this
+   one, is read as bytes from memory then decoded. *)
 Ltac effinv_none_hook ::= unfold effinv, effinv', p32_prog; get_exec.
 Ltac psa_some_hook ::=   unfold p32_prog, p32_stmt; get_exec;
   repeat match goal with
