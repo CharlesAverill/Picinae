@@ -13,7 +13,6 @@ Definition Z_8 := -8.
 Definition Z_32 := -32.
 Definition Z0xff := 0xff.
 Definition Z0xffff := 0xffff.
-Definition Z0xffff_0000 := 0xfff0_0000.
 Definition Z32767 := 32767.
 Definition Z1245169 := 1245169.
 Definition Z1245171 := 1245171.
@@ -69,14 +68,14 @@ Proof. unfold Z1, Z2 in *. lia. Qed.
 (* make a function that maps table index to the value in the table at that index
    dis dis' - list of old/new destination indexes
    sl, sr - from find_hash
-   f - default value (fun _ -> iabort) *)
+   f - default value (fun _ -> abort address) *)
 Fixpoint make_jump_table_map dis dis' sl sr f :=
   match dis, dis' with
   | di::t, di'::t' =>
       let j := apply_hash sl sr di in
       let k := apply_hash sl sr di' in
-      let f' := fun x => if (x =? j) || (x =? k) then Z4 * di' else f x in
-      make_jump_table_map t t' sl sr f'
+      let f' := make_jump_table_map t t' sl sr f in
+      fun x => if (x =? j) || (x =? k) then Z4 * di' else f' x
   | _, _ => f
   end.
 
@@ -85,8 +84,8 @@ Function _make_jump_table (m: Z -> Z) n i
   if i <? n then m i::_make_jump_table m n (i+Z1)
   else nil.
 Proof. intros. unfold Z1 in *. lia. Qed.
-Definition make_jump_table dis dis' iabort sl sr n :=
-  let m := make_jump_table_map dis dis' sl sr (fun _ => Z4 * iabort) in
+Definition make_jump_table dis dis' ai sl sr n :=
+  let m := make_jump_table_map dis dis' sl sr (fun _ => Z4 * ai) in
   _make_jump_table m n Z0.
 
 
@@ -117,11 +116,13 @@ Definition STMDB3 rn r0 r1 r2 :=
   ARM_lsm ARM_STMDB Z14 Z0 rn ((Z1 << r0) .| (Z1 << r1) .| (Z1 << r2)).
 Definition LDMDB3 rn r0 r1 r2 :=
   ARM_lsm ARM_LDMDB Z14 Z0 rn ((Z1 << r0) .| (Z1 << r1) .| (Z1 << r2)).
+Definition UBFX rd rn sl sr :=
+  ARM_bfx false Z14 (Z31-sr) rd (sr-sl) rn.
 Definition GOTO (l: bool) (cond src dest: Z) :=
   let offset := Z4 * (dest - src) - Z8 in
+  let offset := if (offset >? Z1 << Z31) then offset - (Z1 << Z32) else offset in
   let imm := offset mod (Z1 << Z26) in
-  if (offset <? Z_33554432) || (offset >? Z33554428) || negb (offset mod Z4 =? Z0) then ARM_UNPREDICTABLE
-  else ((if l then ARM_BL else ARM_B) cond (imm >> Z2)).
+  (if l then ARM_BL else ARM_B) cond (imm >> Z2).
 
 Definition arm_add (reg imm: Z) : list arm_inst :=
   let a := ARM_data_i ARM_ADD Z14 Z0 reg reg in
@@ -131,12 +132,19 @@ Definition arm_add (reg imm: Z) : list arm_inst :=
     a (imm & Z0xff)::nil.
 (* reg = table[H(reg)] *)
 Definition arm_table_lookup ti sl sr reg :=
-  [ LSL reg reg (sl-Z2);    (* lsl reg, reg, #sl-2 *)
-    LSR reg reg sr;         (* lsr reg, reg, #sr *)
+  [ UBFX reg reg (sl-Z2) sr;
     LSL reg reg Z2          (* lsl reg, reg, #2 *)
   ]++arm_add reg (Z4*ti)++[ (* add reg, reg, #4*ti *)
     LDR reg reg Z0          (* ldr reg, [reg] *)
   ].
+Definition IRM := Z -> Z -> Z -> Z -> Z -> option (list Z).
+Definition TableCache := list Z -> option (Z * Z * Z).
+Definition NewInst := option (list Z * list Z * TableCache).
+Definition wo_table z' tc : NewInst :=
+  match z' with
+  | Some z' => Some (z', nil, tc)
+  | None => None
+  end.
 
 Definition invert_cond cond :=
   if (cond mod Z2 =? Z0) then cond + Z1
@@ -148,13 +156,19 @@ Definition arm_assemble_all_cond insts cond :=
   if (cond <? Z14) then arm_assemble_all (jump_after::insts)
   else arm_assemble_all insts.
 
+Fixpoint list_eqb l1 l2 :=
+  match l1, l2 with
+  | a::b, c::d => if a =? c then list_eqb b d else false
+  | nil, nil => true
+  | _, _ => false
+  end.
 Definition rewrite_w_table
-    (irm: Z -> Z -> Z -> Z -> Z -> option (list Z))
-    (table_cache: list Z -> option Z)
+    (irm: IRM)
+    (tc: TableCache)
     (dis dis': list Z)
     (cond z i ti ai: Z)
-    : option (list Z * list Z) :=
-  match table_cache dis with
+    : NewInst :=
+  match tc dis with
   | None =>
       match find_hash dis dis' Z31 with
       | None => None
@@ -163,99 +177,103 @@ Definition rewrite_w_table
           | None => None
           | Some irm =>
               let table := make_jump_table dis dis' ai sl sr (Z1 << (Z32 - sr)) in
-              Some (irm, table)
+              let tc' := fun x => if (list_eqb x dis) then Some (ti, sl, sr) else tc x in
+              Some (irm, table, tc')
           end
       end
-  | Some ti => None (*todo*)
+  | Some (ti, sl, sr) =>
+      match irm cond i ti sl sr with
+      | None => None
+      | Some irm => Some (irm, nil, tc)
+      end
   end.
 
-Definition bx_irm reg (cond i ti sl sr: Z) : option (list Z) :=
-  arm_assemble_all_cond (
-    arm_table_lookup ti sl sr reg++  (* reg = table[H(reg)] *)
-    ARM_BX Z14 reg::nil              (* bx reg *)
-  ) cond.
+Definition bx_irm reg : IRM :=
+  fun cond i ti sl sr =>
+    arm_assemble_all_cond (
+      arm_table_lookup ti sl sr reg++  (* reg = table[H(reg)] *)
+      ARM_BX Z14 reg::nil              (* bx reg *)
+    ) cond.
 Definition rewrite_bx reg := rewrite_w_table (bx_irm reg).
-Definition blx_irm reg (cond i ti sl sr: Z) : option (list Z) :=
-  arm_assemble_all_cond (
-    arm_table_lookup ti sl sr reg++  (* reg = table[H(reg)] *)
-    ARM_BLX_r Z14 reg::nil           (* blx reg *)
-  ) cond.
+Definition blx_irm reg : IRM :=
+  fun cond i ti sl sr =>
+    arm_assemble_all_cond (
+      arm_table_lookup ti sl sr reg++  (* reg = table[H(reg)] *)
+      ARM_BLX_r Z14 reg::nil           (* blx reg *)
+    ) cond.
 Definition rewrite_blx reg := rewrite_w_table (blx_irm reg).
-Definition ldm_pc_irm op Rn register_list reg z (cond i ti sl sr: Z) :=
-  let bc := Z4 * Z_popcount register_list in
-  let offset := arm_lsm_op_start op bc + bc - Z4 in
-  arm_assemble_all_cond ([
-    STR reg SP Z_4;                     (* str reg, [sp, #-4] *)
-    LDR reg Rn offset                   (* ldr reg, [Rn, #pc_offset] *)
-  ]++arm_table_lookup ti sl sr reg++[   (* reg = table[H(reg)] *)
-    STR reg Rn offset;                  (* str reg, [Rn, #pc_offset] *)
-    LDR reg SP Z_4;                     (* ldr reg, [sp, #-4] *)
-    arm_decode z                        (* original inst *)
-  ]) cond.
-Definition rewrite_ldm_pc op Rn register_list reg z := rewrite_w_table (ldm_pc_irm op Rn register_list reg z).
+Definition ldm_pc_irm op Rn register_list reg orig_inst : IRM :=
+  fun cond i ti sl sr =>
+    let bc := Z4 * Z_popcount register_list in
+    let offset := arm_lsm_op_start op bc + bc - Z4 in
+    arm_assemble_all_cond ([
+      STR reg SP Z_4;                     (* str reg, [sp, #-4] *)
+      LDR reg Rn offset                   (* ldr reg, [Rn, #pc_offset] *)
+    ]++arm_table_lookup ti sl sr reg++[   (* reg = table[H(reg)] *)
+      STR reg Rn offset;                  (* str reg, [Rn, #pc_offset] *)
+      LDR reg SP Z_4;                     (* ldr reg, [sp, #-4] *)
+      orig_inst                           (* original inst *)
+    ]) cond.
+Definition rewrite_ldm_pc op Rn register_list reg orig_inst := rewrite_w_table (ldm_pc_irm op Rn register_list reg orig_inst).
 
 (* irm for instructions that use pc as a destination register, but do not modify sp *)
-Definition pc_irm sanitized_inst reg (cond i ti sl sr: Z) : option (list Z) :=
-  let a := Z4 * i + Z8 in
-  arm_assemble_all_cond ([
-    STR   reg SP Z_4;                  (* str reg, [sp, #-4] *)
-    MOVW  reg (a & Z0xffff);           (* movw reg, #a[16:0] *)
-    MOVT  reg ((a >> Z16) & Z0xffff);  (* movt reg, #a[32:16] *)
-    sanitized_inst                     (* sanitized_inst *)
-  ]++arm_table_lookup ti sl sr reg++[  (* reg = table[H(reg)] *)
-  STR   reg SP Z_8;                    (* str reg, [sp, #-8] *)
-  LDR   reg SP Z_4;                    (* ldr reg, [sp, #-4] *)
-  LDR   PC  SP Z_8                     (* ldr pc, [sp, #-8] *)
-  ]) cond.
+Definition pc_irm sanitized_inst reg : IRM :=
+  fun cond i ti sl sr =>
+    let a := Z4 * i + Z8 in
+    arm_assemble_all_cond ([
+      STR   reg SP Z_4;                  (* str reg, [sp, #-4] *)
+      MOVW  reg (a & Z0xffff);           (* movw reg, #a[16:0] *)
+      MOVT  reg ((a >> Z16) & Z0xffff);  (* movt reg, #a[32:16] *)
+      sanitized_inst                     (* sanitized_inst *)
+    ]++arm_table_lookup ti sl sr reg++[  (* reg = table[H(reg)] *)
+      STR   reg SP Z_8;                  (* str reg, [sp, #-8] *)
+      LDR   reg SP Z_4;                  (* ldr reg, [sp, #-4] *)
+      LDR   PC  SP Z_8                   (* ldr pc, [sp, #-8] *)
+    ]) cond.
 (* irm for instructions that use pc as a destination register, and do modify sp *)
-Definition pc_sp_irm sanitized_inst reg reg2 (cond i ti sl sr: Z) : option (list Z) :=
-  let a := Z4 * i + Z8 in
-  arm_assemble_all_cond ([
-    STMDB3 SP reg reg2 PC;
-    MOV   reg2 SP;
-    MOVW  reg (a & Z0xffff);                (* movw reg, #a[16:0] *)
-    MOVT  reg ((a >> Z16) & Z0xffff);       (* movt reg, #a[32:16] *)
-    sanitized_inst                          (* sanitized_inst *)
-  ]++arm_table_lookup ti sl sr reg++[       (* reg = table[H(reg)] *)
-    STR   reg reg2 (Z_4);                   (* str reg, [sp, #-8 - stack offset] *)
-    LDMDB3 reg2 reg reg2 PC                 (* ldmdb reg2, {reg, reg2, pc} *)
-  ]) cond.
+Definition pc_sp_irm sanitized_inst reg reg2 : IRM :=
+  fun cond i ti sl sr =>
+    let a := Z4 * i + Z8 in
+    arm_assemble_all_cond ([
+      STMDB3 SP reg reg2 PC;
+      MOV   reg2 SP;
+      MOVW  reg (a & Z0xffff);                (* movw reg, #a[16:0] *)
+      MOVT  reg ((a >> Z16) & Z0xffff);       (* movt reg, #a[32:16] *)
+      sanitized_inst                          (* sanitized_inst *)
+    ]++arm_table_lookup ti sl sr reg++[       (* reg = table[H(reg)] *)
+      STR   reg reg2 (Z_4);                   (* str reg, [sp, #-8 - stack offset] *)
+      LDMDB3 reg2 reg reg2 PC                 (* ldmdb reg2, {reg, reg2, pc} *)
+    ]) cond.
 Definition rewrite_pc sanitized_inst reg := rewrite_w_table (pc_irm sanitized_inst reg).
 Definition rewrite_pc_sp sanitized_inst reg reg2 := rewrite_w_table (pc_sp_irm sanitized_inst reg reg2).
-Definition rewrite_pc_no_jump sanitized_inst cond i reg : option (list Z * list Z) :=
+Definition rewrite_pc_no_jump sanitized_inst cond i reg tc : NewInst :=
   let a := Z4 * i + Z8 in
-  match arm_assemble_all_cond ([
+  wo_table (arm_assemble_all_cond ([
     STR reg SP Z_4;                    (* str reg, [sp, #-4] *)
     MOVW reg (a & Z0xffff);            (* movw reg, #a[16:0] *)
     MOVT reg ((a >> Z16) & Z0xffff);   (* movt reg, #a[32:16] *)
     sanitized_inst;                    (* santitized_inst *)
     LDR reg SP Z_4                     (* ldr reg, [sp, #-4] *)
-  ]) cond with
-  | Some z' => Some (z', nil)
-  | None => None
-  end.
-Definition rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 : option (list Z * list Z) :=
+  ]) cond) tc.
+Definition rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc : NewInst :=
   let a := Z4 * i + Z8 in
-  match arm_assemble_all_cond ([
+  wo_table (arm_assemble_all_cond ([
     STMDB2 SP reg reg2;                (* stmdb sp, {reg, reg2} *)
     MOV reg2 SP;                       (* mov reg2, sp *)
     MOVW reg (a & Z0xffff);            (* movw reg, #a[16:0] *)
     MOVT reg ((a >> Z16) & Z0xffff);   (* movt reg, #a[32:16] *)
     sanitized_inst;                    (* santitized_inst *)
     LDMDB2 reg2 reg reg2               (* ldmdb reg2, {reg, reg2} *)
-  ]) cond with
-  | Some z' => Some (z', nil)
-  | None => None
-  end.
+  ]) cond) tc.
 
 Definition canonical_z w z := (z + (Z1 << (w-Z1))) mod (Z1 << w) - (Z1 << (w-Z1)).
-Definition rewrite_b_bl (l: bool) (cond imm24: Z) i dis i2i' iabort : option (list Z * list Z) :=
+Definition rewrite_b_bl (l: bool) (cond imm24: Z) i dis i2i' ai tc : NewInst :=
   let j := (i + Z2 + (canonical_z Z24 imm24)) mod (Z1 << Z30) in
-  let dst := if (contains j dis) || true then (i2i' j) else iabort in
+  let dst := if (contains j dis) || true then (i2i' j) else ai in
   match arm_assemble (GOTO l cond (i2i' i) dst) with
-  | Some z => Some ([z], nil)
-  | None => match arm_assemble (GOTO l cond (i2i' i) iabort) with
-            | Some z => Some ([z], nil)
+  | Some z => Some ([z], nil, tc)
+  | None => match arm_assemble (GOTO l cond (i2i' i) ai) with
+            | Some z => Some ([z], nil, tc)
             | None => None
             end
   end.
@@ -268,15 +286,12 @@ but a compiler would most likely pick a general register instead of lr if that w
 
 although any rewritten jump would be able to handle the old pc value correctly, this inst
 is sometimes used when calling a kernel user helper function, which we cannot rewrite *)
-Definition rewrite_mov_lr_pc i i2i' : option (list Z * list Z) :=
+Definition rewrite_mov_lr_pc i i2i' tc : NewInst :=
   let pc' := Z4 * i2i' (i+Z2) in
-  match arm_assemble_all ([
+  wo_table (arm_assemble_all ([
     MOVW  LR (pc' & Z0xffff);
     MOVT  LR ((pc' >> Z16) & Z0xffff)
-  ]) with
-  | Some z' => Some (z', nil)
-  | None => None
-  end.
+  ])) tc.
 
 Definition unused_reg (r0 r1 r2: Z) :=
   if (r0 =? Z0) || (r1 =? Z0) || (r2 =? Z0) then
@@ -292,17 +307,22 @@ Definition unused_reg_high (r0 r1 r2: Z) :=
       else Z6
     else Z5
   else Z4.
-
-Definition rewrite_inst (i2i': Z -> Z) (z: Z) (dis: list Z) (i ti ai bi: Z) (txt: list Z) : option (list Z * list Z) :=
-  let unchanged := Some ([z], nil) in
-  let c : list Z -> option Z := (fun _ => None) in (*todo: table cache*)
+Definition goto_abort i' ai tc : NewInst :=
+  match arm_assemble (GOTO true Z14 i' ai) with
+  | Some z => Some ([z], nil, tc)
+  | None => None
+  end.
+Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i ti ai bi: Z) (txt: list Z) : NewInst :=
+  let unchanged := Some ([z], nil, tc) in
+  let abort := goto_abort (i2i' i) ai tc in
   let dis' := map i2i' dis in
-  match arm_decode z with
+  let decoded := arm_decode z in
+  match decoded with
   (* branching *)
-  | ARM_BX cond reg => rewrite_bx reg c dis dis' cond z i ti ai
-  | ARM_BLX_r cond reg => rewrite_blx reg c dis dis' cond z i ti ai
-  | ARM_B cond imm24 => rewrite_b cond imm24 i dis i2i' ai
-  | ARM_BL cond imm24 => rewrite_bl cond imm24 i dis i2i' ai
+  | ARM_BX cond reg => rewrite_bx reg tc dis dis' cond z i ti ai
+  | ARM_BLX_r cond reg => rewrite_blx reg tc dis dis' cond z i ti ai
+  | ARM_B cond imm24 => rewrite_b cond imm24 i dis i2i' ai tc
+  | ARM_BL cond imm24 => rewrite_bl cond imm24 i dis i2i' ai tc
   (* data processing *)
   | ARM_data_r op cond s Rn Rd imm5 type Rm =>
       let reg := unused_reg Rn Rd Rm in
@@ -312,14 +332,14 @@ Definition rewrite_inst (i2i': Z -> Z) (z: Z) (dis: list Z) (i ti ai bi: Z) (txt
       let Rm' := if (Rm =? PC) then reg else Rm in
       let sanitized_inst := ARM_data_r op Z14 s Rn' Rd' imm5 type Rm' in
       if (Rd =? PC) then
-        rewrite_pc sanitized_inst reg c dis dis' cond z i ti ai
+        rewrite_pc sanitized_inst reg tc dis dis' cond z i ti ai
       else if (Rn =? PC) || (Rm =? PC) then
         if (match op with ARM_MOV => Rd =? LR | _ => false end) then
-          rewrite_mov_lr_pc i i2i'
+          rewrite_mov_lr_pc i i2i' tc
         else if (Rd =? SP) then
-          rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2
+          rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
         else
-          rewrite_pc_no_jump sanitized_inst cond i reg
+          rewrite_pc_no_jump sanitized_inst cond i reg tc
       else unchanged
   | ARM_data_i op cond s Rn Rd imm12 =>
       let reg := unused_reg Rn Rd Z0 in
@@ -328,12 +348,12 @@ Definition rewrite_inst (i2i': Z -> Z) (z: Z) (dis: list Z) (i ti ai bi: Z) (txt
       let Rd' := if (Rd =? PC) then reg else Rd in
       let sanitized_inst := ARM_data_i op Z14 s Rn' Rd' imm12 in
       if (Rd =? PC) then
-        rewrite_pc sanitized_inst reg c dis dis' cond z i ti ai
+        rewrite_pc sanitized_inst reg tc dis dis' cond z i ti ai
       else if (Rn =? PC) then
         if (Rd =? SP) then
-          rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2
+          rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
         else
-          rewrite_pc_no_jump sanitized_inst cond i reg
+          rewrite_pc_no_jump sanitized_inst cond i reg tc
       else unchanged
   (* load/store *)
   | ARM_ls_i ARM_LDR cond P U W Rn Rt imm12 =>
@@ -343,22 +363,19 @@ Definition rewrite_inst (i2i': Z -> Z) (z: Z) (dis: list Z) (i ti ai bi: Z) (txt
       let Rt' := if (Rt =? PC) then reg else Rt in
       let sanitized_inst := ARM_ls_i ARM_LDR cond P U W Rn' Rt' imm12 in
       if (Rt =? PC) then
-        if ((Rn =? SP) && ((P =? Z0) || (W =? Z1))) then rewrite_pc_sp sanitized_inst reg reg2 c dis dis' cond z i ti ai
-        else rewrite_pc sanitized_inst reg c dis dis' cond z i ti ai
+        if ((Rn =? SP) && ((P =? Z0) || (W =? Z1))) then rewrite_pc_sp sanitized_inst reg reg2 tc dis dis' cond z i ti ai
+        else rewrite_pc sanitized_inst reg tc dis dis' cond z i ti ai
       else if (Rn =? PC) then
         let li := bi-((if (U =? Z1) then i + Z2 + imm12 else i + Z2 - imm12) mod (Z1 << Z32)) in
         match li >? Z0, nth_error txt (Z.to_nat (bi-li)) with
         | true, Some lv =>
-             match arm_assemble_all_cond [
+             wo_table (arm_assemble_all_cond [
                MOVW  Rt (lv & Z0xffff);
                MOVT  Rt ((lv >> Z16) & Z0xffff)
-             ] cond with
-             | Some z => Some (z, nil)
-             | None => None
-             end
+             ] cond) tc
         | _, _ =>
-            if (Rt =? SP) then rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2
-            else rewrite_pc_no_jump sanitized_inst cond i reg
+            if (Rt =? SP) then rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
+            else rewrite_pc_no_jump sanitized_inst cond i reg tc
         end
       else unchanged
   | ARM_ls_r ARM_LDR cond P U W Rn Rt imm5 type Rm =>
@@ -369,21 +386,21 @@ Definition rewrite_inst (i2i': Z -> Z) (z: Z) (dis: list Z) (i ti ai bi: Z) (txt
       let Rm' := if (Rm =? PC) then reg else Rm in
       let sanitized_inst := ARM_ls_r ARM_LDR cond P U W Rn' Rt' imm5 type Rm' in
       if (Rt =? PC) then
-        if ((Rn =? SP) && ((P =? Z0) || (W =? Z1))) then rewrite_pc_sp sanitized_inst reg reg2 c dis dis' cond z i ti ai
-        else rewrite_pc sanitized_inst reg c dis dis' cond z i ti ai
+        if ((Rn =? SP) && ((P =? Z0) || (W =? Z1))) then rewrite_pc_sp sanitized_inst reg reg2 tc dis dis' cond z i ti ai
+        else rewrite_pc sanitized_inst reg tc dis dis' cond z i ti ai
       else if (Rn =? PC) || (Rm =? PC) then
-        if (Rt =? SP) then rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2
-        else rewrite_pc_no_jump sanitized_inst cond i reg
+        if (Rt =? SP) then rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
+        else rewrite_pc_no_jump sanitized_inst cond i reg tc
       else unchanged
   | ARM_lsm op cond W Rn register_list =>
       if (register_list <? (Z1 << Z15)) then unchanged (* pc is not in reg list *)
       else
         let reg := if (Rn =? Z0) then Z1 else Z0 in
-        rewrite_ldm_pc op Rn register_list reg z c dis dis' cond z i ti ai
+        rewrite_ldm_pc op Rn register_list reg decoded tc dis dis' cond z i ti ai
   | ARM_vls is_load is_single cond U D Rn Vd imm8 =>
       if (Rn =? PC) then
         let sanitized_inst := ARM_vls is_load is_single cond U D Z0 Vd imm8 in
-        rewrite_pc_no_jump sanitized_inst cond i Z0
+        rewrite_pc_no_jump sanitized_inst cond i Z0 tc
       else unchanged
   (* | ARM_sync_s ARM_sync_word cond Rn Rd Rt => *)
   (*    match arm_assemble_all_cond [ STR Rt Rn 0; MOVW Rd 0 ] cond with *)
@@ -391,10 +408,26 @@ Definition rewrite_inst (i2i': Z -> Z) (z: Z) (dis: list Z) (i ti ai bi: Z) (txt
   (*    | None => None *)
   (*    end *)
   (* unchanged *)
+  | ARM_extra_ls_i op cond P U W Rn Rt imm4H imm4L =>
+      let reg := if (Rt =? Z0) then Z1 else Z0 in
+      let reg2 := if (Rt =? Z2) then Z3 else Z2 in
+      let sanitized_inst := ARM_extra_ls_i op cond P U W reg Rt imm4H imm4L in
+      if (Rn =? PC) then
+        if (match op with ARM_STRH | ARM_STRD => false | _ => Rt =? SP end) then
+          rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
+        else rewrite_pc_no_jump sanitized_inst cond i reg tc
+      else unchanged
+  | ARM_extra_ls_r op cond P U W Rn Rt Rm =>
+      let reg := if (Rt =? Z0) then Z1 else Z0 in
+      let reg2 := if (Rt =? Z2) then Z3 else Z2 in
+      let sanitized_inst := ARM_extra_ls_r op cond P U W reg Rt Rm in
+      if (Rn =? PC) then
+        if (match op with ARM_STRH | ARM_STRD => false | _ => Rt =? SP end) then
+          rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
+        else rewrite_pc_no_jump sanitized_inst cond i reg tc
+      else unchanged
   | ARM_sync_l _ _ _ _
   | ARM_sync_s _ _ _ _ _
-  | ARM_extra_ls_i _ _ _ _ _ _ _ _ _
-  | ARM_extra_ls_r _ _ _ _ _ _ _ _
   | ARM_hint _ _
   | ARM_sat _ _ _ _ _
   | ARM_mul _ _ _ _ _ _ _
@@ -421,7 +454,7 @@ Definition rewrite_inst (i2i': Z -> Z) (z: Z) (dis: list Z) (i ti ai bi: Z) (txt
   | ARM_vfp_other _ _ _ _ _ _ _
       => unchanged
 
-  | _ => unchanged (* todo *)
+  | _ => abort
   end.
 
 (*
@@ -434,36 +467,38 @@ Definition rewrite_inst (i2i': Z -> Z) (z: Z) (dis: list Z) (i ti ai bi: Z) (txt
    bi - base index
    txt - same as zs but doesn't change when recursing
 *)
-Fixpoint _rewrite (pol: Z -> list Z) (i2i': Z -> Z) (zs: list Z) (i ti ai bi: Z) (txt: list Z) : option (list (list Z) * list (list Z)) :=
+Fixpoint _rewrite (tc: TableCache) (pol: Z -> list Z) (i2i': Z -> Z) (zs: list Z) (i ti ai bi: Z) (txt: list Z) : option (list (list Z) * list (list Z)) :=
   match zs with
   | z::zs =>
-      match rewrite_inst i2i' z (pol i) i ti ai bi txt with
+      match rewrite_inst tc i2i' z (pol i) i ti ai bi txt with
       | None => None
-      | Some (z', table) =>
+      | Some (z', table, tc') =>
           let ti' := ti + Z.of_nat (length table) in
-          match _rewrite pol i2i' zs (i+Z1) ti' ai bi txt with
+          match _rewrite tc' pol i2i' zs (i+Z1) ti' ai bi txt with
           | None => None
           | Some (z_t, table_t) => Some (z'::z_t, table::table_t)
           end
       end
   | nil => Some (nil, nil)
   end.
-Fixpoint make_i2i' (z's: list (list Z)) i i' :=
-  match z's with
-  | z'::t =>
-      let l := Z.of_nat (length z') in
-      let f := make_i2i' t (i+Z1) (i'+l) in
-      fun x => if (x =? i) then i' else f x
-  | nil => fun x => x
-  end.
+
+Definition make_i's (z's: list (list Z)) i' :=
+  let lens := map (fun x => Z.of_nat (length x)) z's in
+  rev (snd (fold_left (fun a b => let sum := fst a + b in (sum, i' + fst a :: snd a)) lens (0, nil))).
+Definition get l n := nth (Z.to_nat n) l 0.
+Definition of_list (x: list Z) := x.
+Definition make_i2i' i's i :=
+  let ie := i + Z.of_nat (length i's) in
+  let arr := of_list i's in
+  fun x => if (x <? i) || (x >=? ie) then x else get arr (x-i).
+
 Definition rewrite (pol: Z -> list Z) (zs: list Z) (i i' ti ai: Z) :=
-  match _rewrite pol (fun i => i) zs i ti ai i zs with
+  let tc := fun _ => None in
+  match _rewrite tc pol id zs i ti ai i zs with
   | Some (z's, _) =>
-      let i2i' := make_i2i' z's i i' in
-      match _rewrite pol i2i' zs i ti ai i zs with
-      | Some (z's, t) => Some (z's, t, i2i')
-      | None => None
-      end
+      let i's := make_i's z's i' in
+      let i2i' := make_i2i' i's i in
+      _rewrite tc pol i2i' zs i ti ai i zs
   | None => None
   end.
 
@@ -479,7 +514,6 @@ Extract Inductive list => "list" [ "[]" "(::)" ].
 Extract Inlined Constant id => "int".
 Extract Inlined Constant Z0xff => "0xff".
 Extract Inlined Constant Z4095 => "4095".
-Extract Inlined Constant Z0xffff_0000 => "0xffff_0000".
 Extract Inlined Constant Z1 => "1".
 Extract Inlined Constant Z2 => "2".
 Extract Inlined Constant Z3 => "3".
@@ -555,6 +589,13 @@ Extract Inlined Constant Z.of_nat => "".
 Extract Inductive sigT => "( * )"  [ "(,)" ].
 Extract Inlined Constant projT1 => "fst".
 Extract Inlined Constant projT2 => "snd".
+Extract Inlined Constant fst => "fst".
+Extract Inlined Constant snd => "snd".
+Extract Inlined Constant rev => "List.rev".
+Extract Inlined Constant fold_left => "(fun f l a -> List.fold_left f a l)".
+Extract Inlined Constant get => "Array.get".
+Extract Inlined Constant of_list => "Array.of_list".
+Extract Inlined Constant id => "Fun.id".
 Separate Extraction rewrite.
 
 (** Notes on the safety property design *)

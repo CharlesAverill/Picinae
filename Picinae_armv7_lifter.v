@@ -187,6 +187,7 @@ Variant arm_inst :=
   (* reversal *)
   | ARM_rev (op: arm_rev_op) (cond Rd Rm: Z)
   | ARM_extend (is_signed: bool) (op: arm_extend_op) (cond Rn Rd rotate Rm: Z)
+  | ARM_bfx (is_signed: bool) (cond widthm1 Rd lsb Rn: Z)
 
   (* load/store multiple: A5.5, pg A5-212 *)
   | ARM_lsm (op: arm_memm_op) (cond W Rn register_list: Z)
@@ -665,11 +666,22 @@ Definition arm_decode_packing z :=
 Definition arm_decode_signed_multiply z :=
   let op1 := zxbits z Z20 Z25 in
   idk.
+
+Definition arm_decode_bfx is_signed z :=
+  let cond := armcond z in
+  let widthm1 := zxbits z Z16 Z21 in
+  let Rd := zxbits z Z12 Z16 in
+  let lsb := zxbits z Z7 Z12 in
+  let Rn := zxbits z Z0 Z4 in
+  if (Rd =? Z15) || (Rn =? Z15) || (lsb + widthm1 >? Z31) then ARM_UNPREDICTABLE
+  else ARM_bfx is_signed cond widthm1 Rd lsb Rn.
+
 Definition arm_decode_media z :=
   let op1 := zxbits z Z20 Z25 in
   let op1'2 := zxbits op1 Z3 Z5 in
   let op1_3 := zxbits op1 Z0 Z3 in
   let op2 := zxbits z Z5 Z8 in
+  let Rn := zxbits z Z0 Z4 in
   if (op1'2 =? Z0) then arm_decode_parallel_add_sub z
   else if (op1'2 =? Z1) then arm_decode_packing z
   else if (op1'2 =? Z2) then arm_decode_signed_multiply z
@@ -678,13 +690,15 @@ Definition arm_decode_media z :=
       if (op2 =? Z0) then idk (*usad8/usada8*)
       else ARM_UNDEFINED
     else if (op1_3 =? Z2) || (op1_3 =? Z3) then
-      if (op2 =? Z2) || (op2 =? Z6) then idk (*sbfx*)
+      if (op2 =? Z2) || (op2 =? Z6) then arm_decode_bfx true z
       else ARM_UNDEFINED
     else if (op1_3 =? Z4) || (op1_3 =? Z5) then
-      if (op2 =? Z0) || (op2 =? Z4) then idk (*bfc/bfi*)
+      if (op2 =? Z0) || (op2 =? Z4) then
+        if (Rn =? Z15) then idk (*bfc*)
+        else idk (*bfi*)
       else ARM_UNDEFINED
     else if (op1_3 =? Z6) || (op1_3 =? Z7) then
-      if (op2 =? Z2) || (op2 =? Z6) then idk (*ubfx*)
+      if (op2 =? Z2) || (op2 =? Z6) then arm_decode_bfx false z
       else ARM_UNDEFINED
     else ARM_UNDEFINED.
 
@@ -1208,6 +1222,9 @@ Definition arm_assemble_vls (is_load is_single: bool) cond U D Rn Vd imm8 :=
   let is_load := if is_load then Z1 else Z0 in
   let x := if is_single then Z10 else Z11 in
   (cond << Z28) .| (Z13 << Z24) .| (U << Z23) .| (D << Z22) .| (is_load << Z20) .| (Rn << Z16) .| (Vd << Z12) .| (x << Z8) .| imm8.
+Definition arm_assemble_bfx (is_signed: bool) cond msb_widthm1 Rd lsb Rn :=
+  let op1 := if is_signed then Z13 else Z15 in
+  (cond << Z28) .| (Z3 << Z25) .| (op1 << Z21) .| (msb_widthm1 << Z16) .| (Rd << Z12) .| (lsb << Z7) .| (Z5 << Z4) .| Rn.
 
 Definition arm_assemble i :=
   let z := match i with
@@ -1234,6 +1251,7 @@ Definition arm_assemble i :=
            | ARM_BL cond imm24 => arm_assemble_BL cond imm24
            | ARM_BLX_i H imm24 => arm_assemble_BLX_i H imm24
            | ARM_vls is_load is_single cond U D Rn Vd imm8 => arm_assemble_vls is_load is_single cond U D Rn Vd imm8
+           | ARM_bfx is_signed cond msb_widthm1 Rd lsb Rn => arm_assemble_bfx is_signed cond msb_widthm1 Rd lsb Rn
            | _ => Z0
            end in
   if arm_inst_beq (arm_decode z) i then Some z
@@ -1697,6 +1715,11 @@ Definition arm_rev_il (op: arm_rev_op) (cond Rd Rm: N) :=
 Definition arm_extend_il (is_signed: bool) (op: arm_extend_op) (cond Rn Rd rotate Rm: N) :=
   arm_cond_il cond (R[Rd] := (Unknown 32)).
 
+Definition arm_bfx_il (is_signed: bool) cond widthm1 Rd lsb Rn :=
+  let msb := lsb + widthm1 in
+  let cast := if is_signed then CAST_SIGNED else CAST_UNSIGNED in
+  arm_cond_il cond (R[Rd] := (Cast cast 32 (Extract msb lsb R[Rn]))).
+
 
 Notation "$ x" := (Z.to_N x) (at level 0, only parsing).
 Definition arm2il (a:addr) inst :=
@@ -1720,6 +1743,7 @@ Definition arm2il (a:addr) inst :=
             | ARM_SVC cond imm24 => arm_svc_il $cond $imm24
             | ARM_rev op cond Rd Rm => arm_rev_il op $cond $Rd $Rm
             | ARM_extend is_signed op cond Rn Rd rotate Rm => arm_extend_il is_signed op $cond $Rn $Rd $rotate $Rm
+            | ARM_bfx is_signed cond msb_widthm1 Rd lsb Rn => arm_bfx_il is_signed $cond $msb_widthm1 $Rd $lsb $Rn
             | _ => arm_havoc
             end in
   Seq (Move R_PC (Word a 32)) il.
@@ -2100,7 +2124,19 @@ Lemma hastyp_arm_bl:
 Proof.
   intros. repeat (unfold_stmt; hammer). apply ofZ_bound.
 Qed.
-
+Lemma hastyp_arm_bfx:
+  forall is_signed cond widthm1 Rd lsb Rn,
+    lsb + widthm1 < 32 ->
+    hastyp_stmt armc armc (arm_bfx_il is_signed cond widthm1 Rd lsb Rn) armc.
+Proof.
+  intros. unfold_stmt; hammer; destruct is_signed.
+  all: etyps (N.succ widthm1); [rewrite <- (N.add_sub widthm1 lsb) at 2 |lia].
+  all: rewrite N.add_comm at 1; rewrite <- N.sub_succ_l; etyps 32; lia.
+Qed.
+Lemma Z2N_add_lt : forall a b c, (0 <= a)%Z -> (0 <= b)%Z -> (a + b < Z.of_N c)%Z -> Z.to_N a + Z.to_N b < c.
+Proof.
+  lia.
+Qed.
 Theorem welltyped_arm2il:
   forall a z,
     a < 2 ^ 32 ->
@@ -2124,9 +2160,10 @@ Proof.
        | |- context[arm_blx_r_il] => apply hastyp_arm_blx_r
        | |- context[arm_b_il] => apply hastyp_arm_b
        | |- context[arm_bl_il] => apply hastyp_arm_bl
+       | |- context[arm_bfx_il] => apply hastyp_arm_bfx, Z2N_add_lt; [..| unfold Z31 in *; lia]; rewrite zxbits_eq; apply Z_xbits_nonneg
        | _ => hammer
        end.
-  all: match goal with
+  all: repeat match goal with
        | |- Z.to_N (_ _ ?a ?b) < _ => change a with (Z.of_N $a); change b with (Z.of_N $b); rewrite zxbits_eq, <- xbits_Z2N; [ apply xbits_bound | lia ]
        | |- context[hastyp_stmt] => repeat (unfold_stmt; destruct_match; hammer)
        end.
