@@ -1,0 +1,14 @@
+(3 + 2) + 2 + 2 +
+Sum(
+    3 + 2 + (5 + T_inst_latency) +
+    Sum(
+        (5 + T_inst_latency) + (4 + T_data_latency) + (4 + T_data_latency) +
+        Piecewise(
+            ((3 + (4 + T_data_latency) + (4 + T_data_latency)), swap(i, j)),
+            ((5 + T_inst_latency), True)
+        ) + 2,
+        (j, 0, length - 2)
+    ) + 3 + 2 + (5 + T_inst_latency),
+    (i, 0, length - 1)
+) +
+(5 + T_inst_latency) + (5 + T_inst_latency)
