@@ -79,15 +79,35 @@ Fixpoint make_jump_table_map dis dis' sl sr f :=
   | _, _ => f
   end.
 
-Fixpoint _make_jump_table (m: Z -> Z) n :=
+Function map2list (m: Z -> Z) n
+    {measure Z.to_nat n} :=
+  if n >? Z0 then m (n-Z1)::map2list m (n-Z1)
+  else nil.
+Proof. intros. unfold Z1 in *. lia. Qed.
+
+Fixpoint _map2list (m: Z -> Z) n :=
   match n with
-  | S n' => m (Z.of_nat n')::_make_jump_table m n'
+  | S n' => m (Z.of_nat n')::_map2list m n'
   | O => nil
   end.
+Lemma map2list_func : forall m n, _map2list m n = map2list m (Z.of_nat n).
+Proof.
+  intros. induction n.
+    now rewrite map2list_equation.
+    simpl. rewrite IHn, map2list_equation with (n := Z.pos _).
+      now replace (_ - _) with (Z.of_nat n) by (unfold Z1; lia).
+Qed.
+Lemma map2list_fix : forall m n, map2list m n = _map2list m (Z.to_nat n).
+Proof.
+  intros. symmetry. destruct n.
+    rewrite <- Nat2Z.inj_0. apply map2list_func.
+    rewrite <- (Z2Nat.id _ (Zle_0_pos _)) at 2. apply map2list_func.
+    now rewrite map2list_equation.
+Qed.
 
 Definition make_jump_table dis dis' ai sl sr n :=
   let m := make_jump_table_map dis dis' sl sr (fun _ => Z4 * ai) in
-  List.rev (_make_jump_table m (Z.to_nat n)).
+  rev (map2list m n).
 
 
 Definition PC := Z15.
