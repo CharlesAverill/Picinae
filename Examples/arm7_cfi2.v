@@ -158,9 +158,22 @@ Definition arm_table_lookup ti sl sr reg :=
   ]++arm_add reg (Z4*ti)++[ (* add reg, reg, #4*ti *)
     LDR reg reg Z0          (* ldr reg, [reg] *)
   ].
+
+(*
+   cond - condition number of instruction to rewrite
+   i - old index of instruction to rewrite
+   ti - index of table to use
+   sl - shift left hash parameter
+   sr - shift right hash parameter
+
+   returns the list of new instruction encodings
+ *)
 Definition IRM := Z -> Z -> Z -> Z -> Z -> option (list Z).
+(* list of destination indices -> option (ti, sl, sr) *)
 Definition TableCache := list Z -> option (Z * Z * Z).
+(* option (list of new instruction encodings, list of table entries, updated table cache) *)
 Definition NewInst := option (list Z * list Z * TableCache).
+
 Definition wo_table z' tc : NewInst :=
   match z' with
   | Some z' => Some (z', nil, tc)
