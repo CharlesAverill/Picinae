@@ -305,7 +305,7 @@ Definition rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc : NewInst :=
 Definition canonical_z w z := (z + (Z1 << (w-Z1))) mod (Z1 << w) - (Z1 << (w-Z1)).
 Definition rewrite_b_bl (l: bool) (cond imm24: Z) i dis i2i' ai tc : NewInst :=
   let j := (i + Z2 + (canonical_z Z24 imm24)) mod (Z1 << Z30) in
-  let dst := if (contains j dis) || true then (i2i' j) else ai in
+  let dst := if (contains j dis) then (i2i' j) else ai in
   match arm_assemble (GOTO l cond (i2i' i) dst) with
   | Some z => Some ([z], nil, tc)
   | None => match arm_assemble (GOTO l cond (i2i' i) ai) with
@@ -352,6 +352,7 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
   let unchanged := Some ([z], nil, tc) in
   let abort := goto_abort (i2i' i) ai tc in
   let decoded := arm_decode z in
+  if (negb (contains (i+Z1) dis)) then None else
   match decoded with
   (* branching *)
   | ARM_BX cond reg => rewrite_bx reg tc dis i2i' cond z i ti ai
@@ -504,14 +505,14 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
    bi - base index
    txt - same as zs but doesn't change when recursing
 *)
-Fixpoint _rewrite (tc: TableCache) (pol: Z -> list Z) (i2i': Z -> Z) (zs: list Z) (i ti ai bi: Z) (txt: list Z) : option (list (list Z) * list (list Z)) :=
+Fixpoint _rewrite (zs: list Z) (tc: TableCache) (pol: Z -> list Z) (i2i': Z -> Z) (i ti ai bi: Z) (txt: list Z) : option (list (list Z) * list (list Z)) :=
   match zs with
   | z::zs =>
       match rewrite_inst tc i2i' z (pol i) i ti ai bi txt with
       | None => None
       | Some (z', table, tc') =>
           let ti' := ti + Z.of_nat (length table) in
-          match _rewrite tc' pol i2i' zs (i+Z1) ti' ai bi txt with
+          match _rewrite zs tc' pol i2i' (i+Z1) ti' ai bi txt with
           | None => None
           | Some (z_t, table_t) => Some (z'::z_t, table::table_t)
           end
@@ -531,11 +532,11 @@ Definition make_i2i' i's i :=
 
 Definition rewrite (pol: Z -> list Z) (zs: list Z) (i i' ti ai: Z) :=
   let tc := fun _ => None in
-  match _rewrite tc pol id zs i ti ai i zs with
+  match _rewrite zs tc pol id i ti ai i zs with
   | Some (z's, _) =>
       let i's := make_i's z's i' in
       let i2i' := make_i2i' i's i in
-      _rewrite tc pol i2i' zs i ti ai i zs
+      _rewrite zs tc pol i2i' i ti ai i zs
   | None => None
   end.
 
