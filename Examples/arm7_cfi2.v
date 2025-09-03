@@ -505,7 +505,7 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
    bi - base index
    txt - same as zs but doesn't change when recursing
 *)
-Fixpoint _rewrite (zs: list Z) (tc: TableCache) (pol: Z -> list Z) (i2i': Z -> Z) (i ti ai bi: Z) (txt: list Z) : option (list (list Z) * list (list Z)) :=
+Fixpoint _rewrite (zs: list Z) (tc: TableCache) (pol: Z -> list Z) (i2i': Z -> Z) (i ti ai bi: Z) (txt: list Z) : option (list (list Z) * list (list Z) * TableCache) :=
   match zs with
   | z::zs =>
       match rewrite_inst tc i2i' z (pol i) i ti ai bi txt with
@@ -514,10 +514,10 @@ Fixpoint _rewrite (zs: list Z) (tc: TableCache) (pol: Z -> list Z) (i2i': Z -> Z
           let ti' := ti + Z.of_nat (length table) in
           match _rewrite zs tc' pol i2i' (i+Z1) ti' ai bi txt with
           | None => None
-          | Some (z_t, table_t) => Some (z'::z_t, table::table_t)
+          | Some (z_t, table_t, tc_t) => Some (z'::z_t, table::table_t, tc_t)
           end
       end
-  | nil => Some (nil, nil)
+  | nil => Some (nil, nil, tc)
   end.
 
 Definition make_i's (z's: list (list Z)) i' :=
@@ -533,7 +533,7 @@ Definition make_i2i' i's i :=
 Definition rewrite (pol: Z -> list Z) (zs: list Z) (i i' ti ai: Z) :=
   let tc := fun _ => None in
   match _rewrite zs tc pol id i ti ai i zs with
-  | Some (z's, _) =>
+  | Some (z's, _, _) =>
       let i's := make_i's z's i' in
       let i2i' := make_i2i' i's i in
       _rewrite zs tc pol i2i' i ti ai i zs

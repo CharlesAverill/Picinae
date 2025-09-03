@@ -5,8 +5,9 @@ Require Import Picinae_armv7.
 Require Import Lia ZifyN ZifyNat.
 Import ARM7Notations.
 Import ListNotations.
-Open Scope N.
 Require Import Nat.
+
+Open Scope nat.
 
 Definition to_a := Z.mul 4.
 Definition i2a' i2i' (i: Z) := to_a (i2i' i).
@@ -16,13 +17,15 @@ Definition SafeEntry i2i' (pol: Z -> list Z) ai si a :=
   to_a ai = a \/ exists di (D: i2a' i2i' di = a), In di (pol si).
 Definition SafeTable i2i' pol ai si table :=
   Forall (SafeEntry i2i' pol ai si) table.
+Definition extract_table sr tbi ti (flattened_tables: list Z) :=
+  let si := compute_table_start_index tbi ti in
+  let ts := compute_table_size sr in
+  let table := firstn ts (skipn si flattened_tables) in
+  if (si + ts <=? length flattened_tables) && (tbi <=? ti)%Z then Some table else None.
 Definition SafeTableCache i2i' pol ai tbi (flattened_tables: list Z) (tc: TableCache) :=
-  forall si ti sl sr ts tsi table
-    (TC: tc (pol si) = Some (ti, sl, sr))
-    (TS: ts = compute_table_size sr)
-    (TSI: tsi = compute_table_start_index tbi ti)
-    (T: table = firstn ts (skipn tsi flattened_tables)),
-    SafeTable i2i' pol ai si table /\ length table = ts.
+  forall si ti sl sr
+    (TC: tc (pol si) = Some (ti, sl, sr)),
+    exists table, extract_table sr tbi ti flattened_tables = Some table /\ SafeTable i2i' pol ai si table.
 
 Ltac destruct_match_in H :=
   repeat match type of H with context[match ?x with _ => _ end] =>
@@ -30,16 +33,46 @@ Ltac destruct_match_in H :=
     destruct x eqn:e in H
   end.
 
-Lemma safetablecache_app:
+Lemma table_size_correctness:
+  forall sr tbi ti flattened_tables t
+    (T: extract_table sr tbi ti flattened_tables = Some t),
+    length t = compute_table_size sr.
+Proof.
+  intros. unfold extract_table in T. destruct_match_in T; try discriminate.
+  inversion T. rewrite length_firstn, length_skipn. lia.
+Qed.
+
+Lemma extracttable_app_r:
+  forall sr tbi ti flattened_tables table t
+    (T: extract_table sr tbi ti flattened_tables = Some table),
+    extract_table sr tbi ti (flattened_tables++t) = Some table.
+Proof.
+  intros. unfold extract_table in T. destruct andb eqn:e in T; try discriminate. apply andb_prop in e.
+    inversion T; clear T; subst.
+    unfold extract_table. destruct andb eqn:e1.
+      rewrite 2 firstn_skipn_comm, firstn_app.
+        remember (_ + _ - _) as n; assert (n = 0) by lia.
+        now rewrite H, firstn_O, app_nil_r.
+      rewrite length_app in e1. lia.
+Qed.
+
+Lemma extracttable_after:
+  forall sr tbi flattened_tables t
+    (T: length t = compute_table_size sr),
+    extract_table sr tbi (tbi + Z.of_nat (length flattened_tables)) (flattened_tables++t) = Some t.
+Proof.
+  intros. unfold extract_table, compute_table_start_index.
+  rewrite length_app, T, Z.add_simpl_l, Nat2Z.id, Nat.leb_refl.
+  remember (Z.leb _ _) as b; assert (b = true) by lia; rewrite H.
+  now rewrite skipn_app, skipn_all, Nat.sub_diag, skipn_O, <- T, firstn_all.
+Qed.
+
+Lemma safetablecache_app_r:
   forall t tc i2i' pol ai tbi flattened_tables,
     SafeTableCache i2i' pol ai tbi flattened_tables tc ->
     SafeTableCache i2i' pol ai tbi (flattened_tables++t) tc.
 Proof.
-  unfold SafeTableCache. intros. specialize (H si ti sl sr ts tsi). eapply H; auto.
-  assert (ts - length (skipn tsi flattened_tables) = 0)%nat.
-    destruct (H (firstn ts (skipn tsi flattened_tables)) TC TS TSI eq_refl).
-    rewrite <- H1, length_firstn. lia.
-  now rewrite T, skipn_app, firstn_app, H0, firstn_O, app_nil_r.
+  unfold SafeTableCache. intros. specialize (H si ti sl sr TC). inversion H. exists x. now erewrite extracttable_app_r.
 Qed.
 
 Lemma Forall_map2list:
@@ -105,18 +138,19 @@ Qed.
 Lemma rewrite_w_table_cache_safety:
   forall tbi flattened_tables irm tc pol i2i' cond z i ti ai z' table tc'
     (STC: SafeTableCache i2i' pol ai tbi flattened_tables tc)
-    (TI: compute_table_start_index tbi ti = length flattened_tables)
+    (TI: (ti = tbi + Z.of_nat (length flattened_tables))%Z)
     (RWT: rewrite_w_table irm tc (pol i) i2i' cond z i ti ai = Some (z', table, tc')),
     SafeTableCache i2i' pol ai tbi (flattened_tables ++ table) tc'.
 Proof.
   intros. eapply rewrite_w_table_safety in RWT as ST. unfold rewrite_w_table in RWT.
   destruct_match_in RWT; try discriminate.
     inversion RWT; subst; now rewrite app_nil_r.
-    remember (Z.shiftl _ _). inversion RWT; subst; intro; clear e e0 e2 RWT. destruct list_eqb eqn:E.
-      intros. inversion TC; subst. rewrite TI, skipn_app, skipn_all, app_nil_l, Nat.sub_diag, skipn_O, firstn_all2.
-        apply list_eqb_eq in E. unfold SafeTable, SafeEntry. rewrite E. split. assumption.
-      1-2: rewrite <- (Z2Nat.id (Z.shiftl _ _)), make_jump_table_size, Z.shiftl_1_l; auto; now apply Z.shiftl_nonneg.
-      eapply safetablecache_app in STC; apply STC.
+    remember (Z.shiftl _ _). inversion RWT; subst; clear RWT. unfold SafeTableCache. intros. destruct list_eqb eqn:E.
+      remember (make_jump_table _ _ _ _ _ _) as t. exists t. inversion TC; subst. split.
+        apply extracttable_after.
+          rewrite <- (Z2Nat.id (Z.shiftl _ _)), make_jump_table_size, Z.shiftl_1_l; now try apply Z.shiftl_nonneg.
+        apply list_eqb_eq in E. unfold SafeTable, SafeEntry. now rewrite E.
+      eapply STC in TC. inversion TC. exists x. split; now try apply extracttable_app_r.
 Qed.
 
 Lemma rewrite_inst_safety:
@@ -139,7 +173,7 @@ Qed.
 Lemma rewrite_inst_cache_safety:
   forall tc i2i' z pol i ti ai bi txt z' table tc' tbi flattened_tables
     (STC: SafeTableCache i2i' pol ai tbi flattened_tables tc)
-    (TI: compute_table_start_index tbi ti = length flattened_tables)
+    (TI: (tbi + Z.of_nat (length flattened_tables) = ti)%Z)
     (RI: rewrite_inst tc i2i' z (pol i) i ti ai bi txt = Some (z', table, tc')),
     SafeTableCache i2i' pol ai tbi (flattened_tables ++ table) tc'.
 Proof.
@@ -151,8 +185,32 @@ Proof.
     unfold rewrite_b_bl. intros. destruct_match_in H1; now inversion H1.
 
   intros. unfold rewrite_inst in RI. destruct_match_in RI;
-    try solve [first [apply H in RI|apply H0 in RI|apply H1 in RI|inversion RI]; subst; now apply safetablecache_app];
+    try solve [first [apply H in RI|apply H0 in RI|apply H1 in RI|inversion RI]; subst; now apply safetablecache_app_r];
     eapply rewrite_w_table_cache_safety in RI; now try apply RI.
+Qed.
+
+Lemma _rewrite_cache_safety:
+  forall zs tc pol i2i' i ti ai bi txt z's ts tc' t
+    (RR: _rewrite zs tc pol i2i' i (ti + Z.of_nat (length t)) ai bi txt = Some (z's, ts, tc')),
+    SafeTableCache i2i' pol ai ti t tc ->
+    SafeTableCache i2i' pol ai ti (t++concat ts) tc'.
+Proof.
+  induction zs.
+    intros. simpl in RR; inversion RR; subst. now rewrite concat_nil, app_nil_r.
+    intros. simpl in RR; destruct_match_in RR; try discriminate; inversion RR; subst.
+      simpl. rewrite app_assoc. eapply IHzs.
+        now rewrite length_app, Nat2Z.inj_add, Z.add_assoc, e2.
+        eapply rewrite_inst_cache_safety in e; now try apply e.
+Qed.
+
+Lemma _rewrite_cache_safety2:
+  forall zs pol i2i' i ti ai bi txt z's ts tc'
+    (RR: _rewrite zs (fun _ => None) pol i2i' i ti ai bi txt = Some (z's, ts, tc')),
+    SafeTableCache i2i' pol ai ti (concat ts) tc'.
+Proof.
+  intros. rewrite <- (app_nil_l (concat _)). eapply _rewrite_cache_safety.
+    rewrite Z.add_0_r. apply RR.
+    discriminate.
 Qed.
 
 (** Definitions for reasoning about the locations in memory and sizes of
