@@ -53,4 +53,8 @@ Module Type CPUTimingBehavior.
         (* Bitwise rotation *)
             trol tror trori
     : N -> N.
+
+    (* Type of a cache object *)
+    Parameter cache_type : Type.
+    Parameter cache_step : program -> cache_type ->  cache_type.
 End CPUTimingBehavior.

@@ -26,14 +26,47 @@ Module NEORV32 (cfg : NEORV32Config) <: CPUTimingBehavior.
         else
             offset.
 
-    Parameter T_data_latency : N.
-    Parameter T_inst_latency : N.
-
     Definition T_mul_latency : N :=
         if cfg.CPU_FAST_MUL_EN then
             1
         else
             32.
+
+    Record cache_line : Type := {
+        tag : N
+    }.
+
+    Inductive cache_type : Type :=
+        | Data | Instruction.
+
+    Record cache : Type := {
+        ct : cache_type;
+        line : N -> cache_line;
+    }.
+
+    (* Direct-mapped cache *)
+    Definition cache_read_time (addr : addr) (cache : cache) : N :=
+        (* Break address up *)
+        let '(offset, index, tag) :=
+            (addr mod LINE_SIZE, 
+             (addr / LINE_SIZE) mod CACHE_LINES,
+             addr / (LINE_SIZE * CACHE_LINES)) in
+        let line : cache_line := cache.line index in
+        (* Check if line is in cache block *)
+        if line.tag =? tag then (
+            match cache.ct with
+            | Data -> 4 + T_data_latency
+            | Instruction -> 
+        ) else (
+
+        )
+    
+    Parameter T_data_mem_latency : N.
+    Parameter T_inst_mem_latency : N.
+    Definition T_data_latency (addr : addr) (cache : cache) : N :=
+        if DCACHE_EN && cached cache addr then 1 else T_data_mem_latency.
+    Definition T_inst_latency (addr : addr) (cache : cache) : N :=
+        if ICACHE_EN && cached cache addr then 1 else T_data_mem_latency.
 
     (* ==== I ISA Extension ==== *)
     (* ALU *)
