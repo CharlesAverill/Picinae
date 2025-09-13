@@ -13,15 +13,17 @@ Module Type TimingModule (il : PICINAE_IL).
     Parameter time_inf : N.
 End TimingModule.
 
-Module TimingAutomation (IL : PICINAE_IL) (TIL: PICINAE_STATICS IL) 
-    (FIL: PICINAE_FINTERP IL TIL) (SIMPL : PICINAE_SIMPLIFIER_V1_1 IL TIL FIL) 
-    (THEORY : PICINAE_THEORY IL) (tm : TimingModule IL).
+Module TimingAutomation (IL : PICINAE_IL) (THEORY : PICINAE_THEORY IL)
+    (STATICS: PICINAE_STATICS IL THEORY)
+    (FIL: PICINAE_FINTERP IL THEORY STATICS) (SIMPL : PICINAE_SIMPLIFIER_V1_1 IL THEORY STATICS FIL)
+    (tm : TimingModule IL).
 
 Include IL.
 Include THEORY.
 
 Import SIMPL.
-Import Picinae_Simplifier_Base.
+Module PSB := Picinae_Simplifier_Base IL.
+Import PSB.
 Export IL.
 Export tm.
 
@@ -94,7 +96,7 @@ Ltac hammer :=
     (* unfolding timing definitions *)
     unfold_cycle_count_list; unfold_time_of_addr;
     (* simplify, harder rewrites, solve *)
-    psimpl_all_goal; find_rewrites; try lia.
+    psimpl; find_rewrites; try lia.
 
 Ltac handle_ex := 
     repeat (match goal with

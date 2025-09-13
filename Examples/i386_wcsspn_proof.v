@@ -45,8 +45,9 @@ Definition postcondition m p1 p2 r :=
 
 Section Invariants.
 
-  Variable mem : addr -> N. (* initial memory state *)
-  Variable esp : N.         (* initial stack pointer *)
+  Variable s0 : store.          (* initial cpu state *)
+  Definition mem := s0 V_MEM32. (* initial memory state *)
+  Definition esp := s0 R_ESP.   (* initial stack pointer *)
 
   Definition p1 := mem Ⓓ[4+esp]. (* first stack argument *)
   Definition p2 := mem Ⓓ[8+esp]. (* second stack argument *)
@@ -60,10 +61,10 @@ Section Invariants.
 
   (* outer loop invariant: *)
   Definition outer_inv s eax fb :=
-    s V_MEM32 = Ⓜ(mem' fb) /\
-    s R_EDI = Ⓓp1 /\ s R_EBP = Ⓓp2 /\ s R_ESI = Ⓓ(mem' fb Ⓓ[p2]) /\
-    s R_EAX = Ⓓeax /\
-    s R_EBX = Ⓓ(mem' fb Ⓓ[p1 + 4*eax]) /\ mem' fb Ⓓ[p1 + 4*eax] <> 0 /\
+    s V_MEM32 = mem' fb /\
+    s R_EDI = p1 /\ s R_EBP = p2 /\ s R_ESI = mem' fb Ⓓ[p2] /\
+    s R_EAX = eax /\
+    s R_EBX = mem' fb Ⓓ[p1 + 4*eax] /\ mem' fb Ⓓ[p1 + 4*eax] <> 0 /\
     ∀ i, i < eax -> contains (mem' fb) p2 (mem' fb Ⓓ[p1 + 4*i]).
 
   (* full invariant set: *)
@@ -71,19 +72,19 @@ Section Invariants.
     match t with (Addr a,s)::_ => match a with
 
     (* function entry point *)
-    | 0 => Some (s V_MEM32 = Ⓜmem /\ s R_ESP = Ⓓesp)
+    | 0 => Some (s V_MEM32 = mem /\ s R_ESP = esp)
 
     (* start of outer loop *)
     | 32 => Some (∃ eax fb, outer_inv s eax fb)
 
     (* start of inner loop *)
     | 52 => Some (∃ eax edx fb,
-        outer_inv s eax fb /\ s R_EDX = Ⓓ(p2 ⊕ 4*edx) /\
+        outer_inv s eax fb /\ s R_EDX = p2 ⊕ 4*edx /\
          ∀ i, i <= edx -> mem' fb Ⓓ[p2 + 4*i] <> mem' fb Ⓓ[p1 + 4*eax] /\ mem' fb Ⓓ[p2 + 4*i] <> 0
       )
 
     (* function exit points *)
-    | 65 | 86 => Some (∃ eax fb, s V_MEM32 = Ⓜ(mem' fb) /\ s R_EAX = Ⓓeax /\
+    | 65 | 86 => Some (∃ eax fb, s V_MEM32 = mem' fb /\ s R_EAX = eax /\
                                  postcondition (mem' fb) p1 p2 eax)
 
     (* last half of outer loop (where several control-flows meet) *)
@@ -99,21 +100,20 @@ End Invariants.
 (* Main correctness theorem & proof: *)
 
 Theorem wcsspn_correctness:
-  forall s esp mem t s' x'
+  forall s t s' x'
          (ENTRY: startof t (x',s') = (Addr 0, s))
-         (MDL: models x86typctx s)
-         (ESP: s R_ESP = Ⓓesp) (MEM: s V_MEM32 = Ⓜmem),
-  satisfies_all wcsspn_i386 (wcsspn_invs mem esp) wcsspn_exit ((x',s')::t).
+         (MDL: models x86typctx s),
+  satisfies_all wcsspn_i386 (wcsspn_invs s) wcsspn_exit ((x',s')::t).
 Proof.
     Local Ltac step := time x86_step.
 
     intros. eapply prove_invs.
-    simpl. rewrite ENTRY. step. split; assumption.
+    simpl. rewrite ENTRY. step. split; reflexivity.
 
     (* Optional: The following proof ignores all flag values except CF and ZF, so
       we can make evaluation faster and shorter by telling Picinae to ignore the
       other flags (i.e., abstract their values away). *)
-    Ltac x86_ignore v ::= constr:(match v with
+    Ltac ignore_vars v ::= constr:(match v with
       R_AF | R_DF | R_OF | R_PF | R_SF => true
     | _ => false end).
 
@@ -121,17 +121,14 @@ Proof.
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
     eapply preservation_exec_prog in MDL; try (eassumption || apply wcsspn_welltyped).
-    clear - PRE MDL. rename t1 into t. rename s1 into s.
+    clear - PRE MDL. rename t1 into t. rename s into s0. rename s1 into s.
 
     destruct_inv 32 PRE.
 
     (* Address 0 (function start) *)
     destruct PRE as [MEM ESP].
     step. step. step. step. step. step. step.
-      change 8 with (4+4) at 1. rewrite msub_add_distr, setmem_merge_rev by reflexivity. simpl (4+4). psimpl.
-      change 12 with (8+4). rewrite msub_add_distr, setmem_merge_rev by reflexivity. simpl (8+4). psimpl.
-      change 16 with (12+4). rewrite msub_add_distr, setmem_merge_rev by reflexivity. simpl (12+4). psimpl.
-      set (fb := cbits _ _ _). clearbody fb.
+    generalize_frame (mem s0) as fb.
     step. step. step.
 
       (* Jump 18 -> 61 (wcs1 end reached) *)

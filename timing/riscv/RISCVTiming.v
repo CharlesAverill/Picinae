@@ -33,12 +33,9 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
     Definition lifted_prog := lift_riscv binary.
 
     Definition cycles_per_instruction_at_addr (s : store) (a : addr) : N :=
-        let regvalue s r := if r =? 0 then Ⓓ0 else s (rv_varid r) in
+        let regvalue s r := if r =? 0 then 0 else s (rv_varid r) in
         let bop s time_inf rs1 rs2 op : N :=
-            match regvalue s rs1, regvalue s rs2 with
-            | Ⓓr1, Ⓓr2 => op r1 r2
-            | _, _ => time_inf
-            end in
+            op (regvalue s rs1) (regvalue s rs2) in
         match rv_decode (binary a) with
         (* ==== I ISA Extension ==== *)
         (* ALU *)
@@ -61,24 +58,15 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
         (* ALU Shifts *)
         | R5_Sll  rd _ _ =>
             let rd := regvalue s rd in 
-            match rd with
-            | Ⓓrd => tsll rd
-            | _ => time_inf
-            end
+            tsll rd
         | R5_Slli _ _ shamt => tslli shamt
         | R5_Srl  rd _ _ =>
             let rd := regvalue s rd in 
-            match rd with
-            | Ⓓrd => tsrl rd
-            | _ => time_inf
-            end
+            tsrl rd
         | R5_Srli _ _ shamt => tsrli shamt
         | R5_Sra  rd _ _ =>
             let rd := regvalue s rd in 
-            match rd with
-            | Ⓓrd => tsra rd
-            | _ => time_inf
-            end
+            tsra rd
         | R5_Srai _ _ shamt => tsrai shamt
 
         (* Branches *)
@@ -131,10 +119,7 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
         (* ==== Zbb ISA Extension ==== *)
         | R5_Clz rd _       =>
             let rd := regvalue s rd in
-            match rd with
-            | Ⓓrd => tclz rd
-            | _ => time_inf
-            end
+            tclz rd
 
         | _ => time_inf
         end.
@@ -143,5 +128,5 @@ End RISCVTiming.
 (* Instantiate the Timing Automation module with RISC-V values *)
 (* Provide CPUTimingBehavior and ProgramInformation *)
 Module RISCVTimingAutomation := 
-    TimingAutomation IL_RISCV Statics_RISCV FInterp_RISCV 
-    PSimpl_RISCV_v1_1 Theory_RISCV.
+    TimingAutomation IL_RISCV Theory_RISCV Statics_RISCV FInterp_RISCV 
+    PSimpl_RISCV_v1_1.
