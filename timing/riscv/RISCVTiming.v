@@ -32,7 +32,7 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
 
     Definition lifted_prog := lift_riscv binary.
 
-    Definition cycles_per_instruction_at_addr (s : store) (c : cache) (a : addr) : N :=
+    Definition cycles_per_instruction_at_addr (s : store) (a : addr) : N :=
         let regvalue s r := if r =? 0 then Ⓓ0 else s (rv_varid r) in
         let bop s time_inf rs1 rs2 op : N :=
             match regvalue s rs1, regvalue s rs2 with

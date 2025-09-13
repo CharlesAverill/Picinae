@@ -85,14 +85,7 @@ Ltac find_rewrites :=
 (* Grabbing each cpi_at_addr one-by-one seems to prevent explosions in cbv 
    evaluation time *)
 Ltac unfold_time_of_addr :=
-    repeat (match goal with
-    | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
-        let H := fresh "H" in
-        eassert(cycles_per_instruction_at_addr X Y = _) as H by
-          (now (cbv - [getmem setmem N.eqb]; find_rewrites;
-                simpl; find_rewrites));
-        rewrite H; clear H
-    end).
+    cbv [cycles_per_instruction_at_addr]; cbn - [setmem getmem].
 Ltac unfold_cycle_count_list :=
     repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single.
 Ltac hammer :=
