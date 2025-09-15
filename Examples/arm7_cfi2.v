@@ -140,10 +140,17 @@ Definition LDMDB3 rn r0 r1 r2 :=
 Definition UBFX rd rn sl sr :=
   ARM_bfx false Z14 (Z31-sr) rd (sr-sl) rn.
 Definition GOTO (l: bool) (cond src dest: Z) :=
-  let offset := Z4 * (dest - src) - Z8 in
-  let offset := if (offset >? Z1 << Z31) then offset - (Z1 << Z32) else offset in
-  let imm := offset mod (Z1 << Z26) in
-  (if l then ARM_BL else ARM_B) cond (imm >> Z2).
+  let offset := dest - src - Z2 in
+  if (offset <? -8388608) || (offset >? 8388607) then None
+  else
+    let imm := offset mod (Z.shiftl Z1 Z24) in
+    Some ((if l then ARM_BL else ARM_B) cond imm).
+Definition GOTOz l cond src dest :=
+  match GOTO l cond src dest with
+  | Some a => arm_assemble a
+  | None => None
+  end.
+
 
 Definition arm_add (reg imm: Z) : list arm_inst :=
   let a := ARM_data_i ARM_ADD Z14 Z0 reg reg in
@@ -306,9 +313,9 @@ Definition canonical_z w z := (z + (Z1 << (w-Z1))) mod (Z1 << w) - (Z1 << (w-Z1)
 Definition rewrite_b_bl (l: bool) (cond imm24: Z) i dis i2i' ai tc : NewInst :=
   let j := (i + Z2 + (canonical_z Z24 imm24)) mod (Z1 << Z30) in
   let dst := if (contains j dis) then (i2i' j) else ai in
-  match arm_assemble (GOTO l cond (i2i' i) dst) with
+  match GOTOz l cond (i2i' i) dst with
   | Some z => Some ([z], nil, tc)
-  | None => match arm_assemble (GOTO l cond (i2i' i) ai) with
+  | None => match GOTOz l cond (i2i' i) ai with
             | Some z => Some ([z], nil, tc)
             | None => None
             end
@@ -344,7 +351,7 @@ Definition unused_reg_high (r0 r1 r2: Z) :=
     else Z5
   else Z4.
 Definition goto_abort i' ai tc : NewInst :=
-  match arm_assemble (GOTO true Z14 i' ai) with
+  match GOTOz true Z14 i' ai with
   | Some z => Some ([z], nil, tc)
   | None => None
   end.

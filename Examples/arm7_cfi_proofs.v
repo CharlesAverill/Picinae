@@ -7,6 +7,47 @@ Import ARM7Notations.
 Import ListNotations.
 Require Import Nat.
 
+Open Scope N.
+
+Lemma GOTO_correct:
+  forall c s l src dest c' s' a i,
+    src < 2^30 ->
+    dest < 2^30 ->
+    GOTO l 14 (Z.of_N src) (Z.of_N dest) = Some i ->
+    exec_stmt c s (arm2il (src * 4) i) c' s' (Some (Addr a)) ->
+    a = dest * 4.
+Proof.
+  intros c s l src dest c' s' a i S D G. intros.
+  cbv [GOTO] in G. destruct orb eqn:e in G; try discriminate.
+  assert (src * 4 ⊕ 8 ⊕ scast 26 32 (Z.to_N ((Z.of_N dest - Z.of_N src - Z2) mod 16777216) << 2) .& 4294967292 = dest * 4).
+  {
+    unfold Z2 in *. remember (_ - _ - _)%Z as offset.
+    change 2 with (Z.to_N 2) at 2. rewrite <- Z2N_inj_shiftl, Z.shiftl_mul_pow2, <- Zmult_mod_distr_r by lia.
+    change (Z.to_N _) with (ofZ 26 (offset * 4)).
+    unfold scast. rewrite toZ_ofZ by (unfold signed_range; cbn; lia). unfold ofZ.
+    rewrite <- (N2Z.id ((_ + 8) mod _)), <- Z2N.inj_add, N2Z.inj_mod, <- (N2Z.id (_ ^ _)), <- Z2N.inj_mod, <- Zplus_mod by lia.
+    replace (_ + _ * 4)%Z with (Z.of_N (dest * 4)) by lia. rewrite Z2N.inj_mod, N2Z.id by lia.
+    change (Z.to_N _) with (2^32); rewrite N_land_mod_pow2_move; cbn.
+    change 4294967292 with (N.lnot (2 * (2 * 0 + 1) + 1) 32).
+    rewrite <- N.ldiff_land_low, 2 N.ldiff_odd_r, N.ldiff_0_r. lia.
+    destruct (dest * 4) eqn:E; now try solve [apply N.log2_lt_pow2; lia].
+  }
+  destruct l; inversion G; subst; cbv [arm2il arm_bl_il arm_b_il] in H;
+    remember (scast _ _ _) as dsta; remember (src * 4) as srca;
+    step_stmt H; destruct H as [[_ A] _]; now inversion A.
+Qed.
+Lemma GOTOz_correct:
+  forall c s l src dest c' s' a z,
+    src < 2^30 ->
+    dest < 2^30 ->
+    GOTOz l 14 (Z.of_N src) (Z.of_N dest) = Some z ->
+    exec_stmt c s (arm2il (src * 4) (arm_decode z)) c' s' (Some (Addr a)) ->
+    a = dest * 4.
+Proof.
+  intros. unfold GOTOz in H1. destruct GOTO eqn:e in H1; try discriminate. apply arm_assemble_eq in H1. rewrite H1 in H2.
+  now apply (GOTO_correct c s l src dest c' s' a a0).
+Qed.
+
 Open Scope nat.
 
 Definition to_a := Z.mul 4.
