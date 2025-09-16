@@ -36,6 +36,7 @@ Proof.
     remember (scast _ _ _) as dsta; remember (src * 4) as srca;
     step_stmt H; destruct H as [[_ A] _]; inversion A; now rewrite H0.
 Qed.
+
 Lemma GOTOz_correct:
   forall c s l src dest c' s' x z,
     src < 2^30 ->
@@ -56,6 +57,21 @@ Definition compute_table_size sr := Z.to_nat (2 ^ (32 - sr)).
 Definition compute_table_start_index tbi ti := Z.to_nat (ti - tbi).
 Definition SafeEntry i2i' (pol: Z -> list Z) ai si a :=
   to_a ai = a \/ exists di (D: i2a' i2i' di = a), In di (pol si).
+Definition InBlock i2i' i ilen da' :=
+  (i2a' i2i' i <= Z.of_N da' /\ Z.of_N da' < i2a' i2i' i + 4 * Z.of_nat ilen /\ N.divide 4 da')%Z.
+Definition SafeDest i2i' pol ai si ilen a :=
+  SafeEntry i2i' pol ai si (Z.of_N a) \/ InBlock i2i' si ilen a.
+Definition InBlockXs i2i' i ilen (xs: exit * ARM7Arch.store) :=
+  match xs with
+  | (Addr a, _) => InBlock i2i' i ilen a
+  | _ => False
+  end.
+Definition ContainsBlock i2i' i (p: program) s block :=
+  forall a, InBlock i2i' i (length block) a ->
+    match nth_error block (N.to_nat (N.shiftr a 2) - Z.to_nat (i2i' i)) with
+    | Some z => p s a = Some (4%N, arm2il a (arm_decode z))
+    | _ => False
+    end.
 Definition SafeTable i2i' pol ai si table :=
   Forall (SafeEntry i2i' pol ai si) table.
 Definition extract_table sr tbi ti (flattened_tables: list Z) :=
@@ -200,7 +216,7 @@ Lemma rewrite_inst_safety:
     SafeTable i2i' pol ai i table.
 Proof.
   assert (forall i' ai tc a b c, goto_abort i' ai tc = Some (a, b, c) -> b = nil).
-    unfold goto_abort. intros. destruct arm_assemble in H; now inversion H.
+    unfold goto_abort. intros. destruct GOTOz eqn:e in H; now inversion H.
   assert (forall x tc a b c, wo_table x tc = Some (a, b, c) -> b = nil).
     unfold wo_table. intros. destruct x in H0; now inversion H0.
   assert (forall l cond imm24 i dis i2i' ai tc a b c, rewrite_b_bl l cond imm24 i dis i2i' ai tc = Some (a, b, c) -> b = nil).
@@ -219,7 +235,7 @@ Lemma rewrite_inst_cache_safety:
     SafeTableCache i2i' pol ai tbi (flattened_tables ++ table) tc'.
 Proof.
   assert (forall i' ai tc a b c, goto_abort i' ai tc = Some (a, b, c) -> c = tc).
-    unfold goto_abort. intros. destruct arm_assemble in H; now inversion H.
+    unfold goto_abort. intros. destruct GOTOz eqn:e in H; now inversion H.
   assert (forall x tc a b c, wo_table x tc = Some (a, b, c) -> c = tc).
     unfold wo_table. intros. destruct x in H0; now inversion H0.
   assert (forall l cond imm24 i dis i2i' ai tc a b c, rewrite_b_bl l cond imm24 i dis i2i' ai tc = Some (a, b, c) -> c = tc).
@@ -253,6 +269,103 @@ Proof.
     rewrite Z.add_0_r. apply RR.
     discriminate.
 Qed.
+
+Lemma firstinst:
+  forall i2i' i p s z t
+    (CB: ContainsBlock i2i' i p s (z::t))
+    (Z: (i2i' i >= 0)%Z),
+    p s (Z.to_N (i2a' i2i' i)) = Some (4%N, arm2il (Z.to_N (i2a' i2i' i)) (arm_decode z)).
+Proof.
+  intros. remember (Z.to_N _) as a. specialize (CB a). cbn in CB. remember (_ - _). unfold i2a', to_a in *. assert (n = 0) by lia. rewrite H in CB. cbn in CB.
+  apply CB. unfold InBlock. unfold i2a', to_a. rewrite Heqa, Z2N.id. repeat split. lia. lia. exists (Z.to_N (i2i' i)). lia. lia.
+Qed.
+
+Fixpoint mylast {A:Type} (l:list A) d :=
+  match l with
+  | [] => d
+  | [a] => a
+  | a:: (_::_) as l0 => mylast l0 a
+  end.
+
+Theorem last_rm_h {A:Type}:
+  forall (l:list A) h h' d, last (h::h'::l) d = last (h'::l) d.
+Proof.
+  induction l; try reflexivity; intros.
+Qed.
+
+Theorem last_d_d' {A:Type}:
+  forall (l:list A) h d d', last (h::l) d = last (h::l) d'.
+Proof.
+  induction l. reflexivity.
+  intros.
+  rewrite! last_rm_h. apply IHl.
+Qed.
+
+Theorem mylast_last {A:Type} :
+  forall (l:list A) d, mylast l d = last l d.
+Proof.
+  induction l. reflexivity.
+  intros. destruct l. reflexivity.
+  simpl.  match goal with |- ?f = _ => assert (f = mylast (a0::l) a) by reflexivity end.
+  rewrite H. rewrite IHl. rewrite last_d_d' with (d':= d).
+  reflexivity.
+Qed.
+
+Theorem mylast_unfold {A:Type}:
+  forall (t:list A) a d, mylast (a::t) d = mylast t a.
+Proof.
+  destruct t; reflexivity.
+Qed.
+
+Theorem last_unfold {A:Type}:
+  forall (t:list A) a d, last (a::t) d = last t a.
+Proof.
+  intros. rewrite <-!mylast_last. apply mylast_unfold.
+Qed.
+
+Theorem last_in_list {A}:
+  forall (t:list A) h, In (last t h) (h::t).
+Proof.
+  induction t. simpl; now constructor.
+  intros. unfold In in *. right.
+  rewrite last_unfold. apply IHt.
+Qed.
+
+Lemma SafeDest_rewrite_inst:
+  forall tc i2i' z pol i ti ai bi txt irm' table tc' p a' s' s1 t1 t0
+    (TC: True) (* table cache is consistent with memory *)
+    (AI: (0 <= ai < 2^30)%Z)
+    (TI: (0 <= ti < 2^30)%Z)
+    (I:  (0 <=  i < 2^30)%Z)
+    (BI: (0 <= bi < 2^30)%Z)
+    (I2I': forall i, (0 <= i2i' i < 2^30)%Z)
+    (CB: ContainsBlock i2i' i p s1 irm')
+    (IB: Forall (InBlockXs i2i' i (length irm')) t1)
+    (XP: exec_prog p ((Addr a', s')::t1++(Addr (Z.to_N (i2a' i2i' i)), s1)::t0))
+    (RI: rewrite_inst tc i2i' z (pol i) i ti ai bi txt = Some (irm', table, tc')),
+  SafeDest i2i' pol ai i (length irm') a'.
+Proof.
+  intros.
+  unfold rewrite_inst in *. destruct_match_in RI; try discriminate; try rewrite Bool.negb_false_iff in *.
+  intros. unfold rewrite_inst in RI. destruct_match_in RI; try discriminate.
+  unfold goto_abort in RI. destruct_match_in RI; try discriminate.
+  - inversion RI; subst; clear RI. left. left. destruct t1.
+    (* unfold GOTO in e2. destruct orb eqn:e3 in e2; try discriminate. *)
+    * rewrite app_nil_l in XP. inversion XP. clear l H0 H2.
+      inversion H1. apply firstinst in CB; try (specialize (I2I' i); lia). rewrite CB in LU. inversion LU; clear LU. subst.
+      unfold i2a', to_a in XS. Search Z.to_N N.mul. rewrite Z.mul_comm, Z2N.inj_mul in XS by (specialize (I2I' i); lia). simpl (Z.to_N 4) in XS.
+      remember (Z.to_N (i2i' i)) as src.
+      Search Z.of_N Z.to_N.
+      rewrite <-(Z2N.id (i2i' i)) in e1 by (specialize (I2I' i); lia). rewrite <-Heqsrc in e1.
+      rewrite <-(Z2N.id ai) in e1; try lia.
+      epose proof (GOTOz_correct _ _ _ _ _ _ _ _ _ _ _ e1 XS).
+      Unshelve.
+      all: try lia.
+      2: { rewrite Heqsrc. specialize (I2I' i). lia. }
+      subst x0.
+      unfold exitof in H2. injection H2; intros; subst a'; clear H2.
+      unfold to_a. rewrite N2Z.inj_mul, Z2N.id; try lia.
+    * exfalso. (* TODO: derive a contradiction based on all the steps in p0::l being in the block. *)
 
 (** Definitions for reasoning about the locations in memory and sizes of
     jumptable entries. *)
