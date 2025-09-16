@@ -526,3 +526,13 @@ Notation "x .^ y" := (N.lxor x y) (at level 57, left associativity). (* logical 
 Notation "x .| y" := (N.lor x y) (at level 58, left associativity). (* logical or *)
 
 End RISCVNotations.
+
+Definition lift_riscv (f : addr -> N) (s : store) (a : addr) :=
+    Some (4, rv2il a (rv_decode (f a))).
+
+Theorem lift_riscv_welltyped:
+    forall p, welltyped_prog rvtypctx (lift_riscv p).
+Proof.
+    intros s a a0. unfold lift_riscv.
+    exists rvtypctx. apply welltyped_rv2il.
+Qed.
