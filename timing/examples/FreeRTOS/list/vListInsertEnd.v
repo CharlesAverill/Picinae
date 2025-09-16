@@ -64,4 +64,6 @@ Proof using.
     repeat step. hammer.
 Qed.
 
+Compute (lifted_prog (fun _ => 0) 0x80002970).
+
 End TimingProof.

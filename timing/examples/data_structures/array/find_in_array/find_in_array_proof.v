@@ -80,23 +80,21 @@ match t with (Addr a, s) :: t' => match a with
 | 0x1e4 => Some (s V_MEM32 = base_mem /\ s R_A0 = arr /\ s R_A1 = key /\ 
             s R_A2 = len /\ 4 * len <= 2^32 - 1 /\
             cycle_count_of_trace t' = 0)
-| 0x1e8 => Some (exists mem a5,
-    (* bindings *)
-    s V_MEM32 = mem /\
+| 0x1e8 => Some (
     s R_A0 = arr /\ s R_A1 = key /\ s R_A2 = len /\
-    s R_A5 = a5 /\
+    4 * len <= 2^32 - 1 /\
     (* preservation *)
     (forall i, i < len ->
-        mem Ⓓ[arr + (i << 2)] = base_mem Ⓓ[arr + (i << 2)]) /\
+        (s V_MEM32) Ⓓ[arr + (i << 2)] = base_mem Ⓓ[arr + (i << 2)]) /\
     (* haven't found a match yet *)
-    (forall i, i < a5 ->
-        mem Ⓓ[arr + (i << 2)] <> key) /\
-    a5 <= len /\
+    (forall i, i < (s R_A5) ->
+        (s V_MEM32) Ⓓ[arr + (i << 2)] <> key) /\
+    (s R_A5) <= len /\
     cycle_count_of_trace t' =
         (* pre-loop time *)
         taddi +
         (* loop counter stored in register a5 *)
-        a5 *
+        (s R_A5) *
         (* full loop body length - can't have broken out by this address *)
         (tfbgeu + tslli 2 + tadd + tlw + tfbeq + taddi + tjal)
     )
@@ -146,13 +144,13 @@ Proof using.
         (* idx <= len *) psimpl; lia.
         (* cycles *) hammer.
 
-    destruct PRE as (mem & a5 & MEM & A0 & A1 & A2 & A5 & Preserved &
+    destruct PRE as (A0 & A1 & A2 & LEN_VALID & Preserved &
         NotFound & A5_LEN & Cycles).
-    destruct (key_in_array_dec mem arr key len) as [IN | NOT_IN].
+    destruct (key_in_array_dec (s' V_MEM32) arr key len) as [IN | NOT_IN].
     (* There is a matching element in the array *) {
         step. repeat step.
         (* postcondition, match found *)
-            left. exists a5. split.
+            left. exists (s' R_A5). split.
                 now apply N.ltb_lt. 
             split.
                 rewrite <- Preserved. now apply N.eqb_eq in BC0.
@@ -160,22 +158,22 @@ Proof using.
             split.
                 intros. rewrite <- Preserved by lia. now apply NotFound.
             unfold time_of_find_in_array.
-            hammer.
+            hammer. rewrite A1, BC0, A2, BC. hammer.
         (* loop invariant after going around *)
-            repeat eexists; auto.
+            apply N.ltb_lt in BC. apply N.eqb_neq in BC0.
+            repeat split; auto.
             (* key not found *)
-            intros. apply N.ltb_lt in BC.
-                rewrite N.mod_small in H. destruct (lt_impl_lt_or_eq _ _ H).
-                subst. now apply N.eqb_neq in BC0. now apply NotFound.
-                apply N.le_lt_trans with len. lia.
-                rewrite <- A2; apply (models_var R_A2 MDL).
+            intros.
+                rewrite N.mod_small in H by lia.
+                apply lt_impl_lt_or_eq in H. destruct H.
+                    now subst.
+                    now apply NotFound.
             (* 1 + a5 <= len *)
-            apply N.ltb_lt in BC. rewrite N.mod_small. lia.
-                apply N.le_lt_trans with len. lia.
-                rewrite <- A2; apply (models_var R_A2 MDL).
+            rewrite N.mod_small by lia. lia.
             (* cycles *)
-            rewrite (N.mod_small (1 + a5)). hammer.
-                apply N.ltb_lt in BC.
+            rewrite (N.mod_small (1 + s' R_A5)). hammer.
+                apply N.eqb_neq in BC0. rewrite A1. hammer.
+                apply N.ltb_lt in BC. rewrite A2, BC. hammer.
                 apply N.le_lt_trans with len. lia.
                 rewrite <- A2; apply (models_var R_A2 MDL).
         (* iterated len times - contradiction *)
@@ -188,35 +186,37 @@ Proof using.
         step.
         do 4 step.
         (* contradiction - BC0 says a match has been found *)
-            exfalso. apply NOT_IN. exists a5. split. now apply N.ltb_lt.
+            exfalso. apply NOT_IN. exists (s' R_A5). 
+            split. now apply N.ltb_lt.
             apply N.eqb_eq in BC0.
             assumption.
         (* a match has not been found, continue *)
         repeat step.
-            repeat eexists; auto.
+        (* postcondition, match found *)
+            apply N.ltb_lt in BC. apply N.eqb_neq in BC0.
+            repeat split; auto.
             (* key not found *)
-            intros. apply N.ltb_lt in BC.
-                rewrite N.mod_small in H. destruct (lt_impl_lt_or_eq _ _ H).
-                subst. now apply N.eqb_neq in BC0. now apply NotFound.
-                apply N.le_lt_trans with len. lia.
-                rewrite <- A2; apply (models_var R_A2 MDL).
+            intros.
+                rewrite N.mod_small in H by lia.
+                apply lt_impl_lt_or_eq in H. destruct H.
+                    now subst.
+                    now apply NotFound.
             (* 1 + a5 <= len *)
-            apply N.ltb_lt in BC. rewrite N.mod_small. lia.
-                apply N.le_lt_trans with len. lia.
-                rewrite <- A2; apply (models_var R_A2 MDL).
+            rewrite N.mod_small by lia. lia.
             (* cycles *)
-            rewrite (N.mod_small (1 + a5)). hammer.
-                apply N.ltb_lt in BC.
+            rewrite (N.mod_small (1 + s' R_A5)). hammer.
+                apply N.eqb_neq in BC0. rewrite A1.
+                apply N.ltb_lt in BC. rewrite A2, BC. hammer.
                 apply N.le_lt_trans with len. lia.
                 rewrite <- A2; apply (models_var R_A2 MDL).
         (* a match has not been found, break and return *)
         repeat step.
-            unfold timing_postcondition, time_of_find_in_array. right.
+            unfold time_of_find_in_array. right.
             split. intro. apply NOT_IN. destruct H as (idx & IDX_LEN & IN).
             exists idx. split. assumption. now rewrite Preserved.
-            replace a5 with len in * by
+            replace (s' R_A5) with len in * by
                 (rewrite N.ltb_ge in BC; lia).
-            hammer.
+            hammer. rewrite A2, BC. hammer.
     }
 Qed.
 

@@ -1,7 +1,7 @@
-Require Import Picinae_riscv.
 Require Import NArith.
+Open Scope N_scope.
 
-Definition RTOSDemo (a : addr) : N :=
+Definition RTOSDemo (a : N) : N :=
     match a with
     (* <_start> *)
     | 0x80000000 => 0x00081197 (* auipc gp,0x81  *)

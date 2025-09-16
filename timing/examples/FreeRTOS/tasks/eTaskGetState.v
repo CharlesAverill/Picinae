@@ -1,3 +1,7 @@
+(* WIP
+   This is gonna be a big undertaking - need to track a ton of conditions
+   and the state gets very big very fast *)
+
 Require Import RTOSDemo.
 Require Import RISCVTiming.
 Import RISCVNotations.
@@ -23,7 +27,7 @@ Import Program_eTaskGetState eTaskGetStateAuto.
 Definition pxCurrentTCB (gp : N) (mem : memory) : N :=
     mem Ⓓ[gp ⊖ 1896].
 
-Definition time_of_eTaskGetState (mem : memory) (gp a3 : N) (xTask : addr) (t : trace) :=
+Definition time_of_eTaskGetState (mem : memory) (gp : N) (xTask : addr) (t : trace) :=
   cycle_count_of_trace t =
     tlw + taddi +
     if (pxCurrentTCB gp mem =? xTask) then (
@@ -84,32 +88,36 @@ Definition time_of_eTaskGetState (mem : memory) (gp a3 : N) (xTask : addr) (t : 
     ).
 
 Definition eTaskGetState_timing_invs (s : store) (base_mem : memory) (gp : N)
-    (a3 : N) (xTask : addr) (t:trace) : option Prop :=
+    (xTask : addr) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
 | 0x80000958 => Some (s V_MEM32 = base_mem /\ s R_GP = gp /\
                         s R_A0 = xTask /\
-                        s R_A3 = a3 /\
                         cycle_count_of_trace t' = 0)
-| 0x800009e8 | 0x800009f0 => Some (time_of_eTaskGetState base_mem gp a3 xTask t)
+| 0x80000980 => Some (s V_MEM32 = base_mem /\ s R_GP = gp /\
+                        s R_A0 = xTask /\
+                        base_mem Ⓓ[ gp ⊖ 1896 ] =? xTask = false /\
+                        cycle_count_of_trace t' =
+                          tlw + taddi + tfbeq + tcsrrci + tlw + tlw +
+                          tlui + tlw + tlw + tlw)
+| 0x800009e8 | 0x800009f0 => Some (time_of_eTaskGetState base_mem gp xTask t)
 | _ => None end | _ => None end.
 
 Theorem eTaskGetState_timing:
-  forall s t s' x' base_mem gp a3 xTask
+  forall s t s' x' base_mem gp xTask
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
          (MEM: s V_MEM32 = base_mem)
          (GP: s R_GP = gp)
-         (A0: s R_A0 = xTask)
-         (A3: s R_A3 = a3),
+         (A0: s R_A0 = xTask),
   satisfies_all 
     lifted_prog
-    (eTaskGetState_timing_invs s base_mem gp a3 xTask)
+    (eTaskGetState_timing_invs s base_mem gp xTask)
     exits
   ((x',s')::t).
 Proof using.
     intros.
     apply prove_invs.
-    Local Ltac step := time r5_step.
+    Local Ltac step := tstep r5_step.
 
     simpl. rewrite ENTRY. unfold entry_addr. step. auto.
 
@@ -120,10 +128,18 @@ Proof using.
     clear - ENTRY PRE MDL. rename t1 into t. rename s1 into s'.
 
     destruct_inv 32 PRE.
-    destruct PRE as (MEM & GP & A0 & A3 & Cycles).
-    do 4 step.
+
+    destruct PRE as (MEM & GP & A0 & Cycles).
+    step. step. step.
+      step.
       unfold pxCurrentTCB. hammer.
-      admit.
-    step. step. step. step. step. step.
+    do 7 step.
+      repeat split. assumption.
+      hammer.
+    
+    destruct PRE as (MEM & GP & A0 & Cond1 & Cycles).
+    step.
+      do 3 step.
+      unfold pxCurrentTCB. rewrite Cond1. hammer.
     (* The proof comes to a halt here (literally) due to step *)
 Abort.

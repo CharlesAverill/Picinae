@@ -91,25 +91,25 @@ match t with (Addr a, s) :: t' => match a with
     (* valid array length *)
     4 * len <= 2^32 - 1 /\
     cycle_count_of_trace t' = 0)
-| 0x1f0 => Some (exists mem a5,
+| 0x1f0 => Some (
     (* bindings *)
-    s V_MEM32 = base_mem /\ s R_A0 = (4 * (a5 + 1) ⊕ arr) 
-    /\ s R_A1 = key /\ s R_A2 = len /\ s R_A5 = a5 /\
+    s V_MEM32 = base_mem /\ s R_A0 = (4 * (s R_A5 + 1) ⊕ arr) 
+    /\ s R_A1 = key /\ s R_A2 = len /\
     (* passed the zero-length check *)
     0 < len /\
     4 * len <= 2^32 - 1 /\
-    a5 < len /\
+    s R_A5 < len /\
     (* preservation *)
     (forall i, i < len ->
-        mem Ⓓ[arr + 4 * i] = base_mem Ⓓ[arr + 4 * i]) /\
+        (s V_MEM32) Ⓓ[arr + 4 * i] = base_mem Ⓓ[arr + 4 * i]) /\
     (* haven't found a match yet *)
-    (forall i, i < 1 + a5 ->
-        mem Ⓓ[arr + 4 * i] <> key) /\
+    (forall i, i < 1 + s R_A5 ->
+        (s V_MEM32) Ⓓ[arr + 4 * i] <> key) /\
     cycle_count_of_trace t' =
         (* pre-loop time *)
         tfbeq + taddi + tjal + tlw + taddi + ttbne +
         (* loop counter stored in register a4 *)
-        a5 *
+        s R_A5 *
         (* full loop body length - can't have broken out by this address *)
         (taddi + tfbeq + tlw + taddi + ttbne)
     )
@@ -156,51 +156,55 @@ Proof using.
         repeat step. right. split. intro. destruct H as (idx & Contra & _).
             apply N.eqb_eq in BC. lia.
         unfold time_of_find_in_array_opt.
-        hammer.
+        hammer. rewrite LEN. hammer.
     (* len <> 0 *)
         do 5 step. (* 0x1e4 -> 0x200 *)
         (* arr[0] <> key *)
-            eexists. exists 0. repeat split; eauto.
+            repeat split; eauto.
             1-2: apply N.eqb_neq in BC; psimpl; lia.
             (* haven't found key yet *)
             intros. psimpl in H. replace i with 0 in * by lia. psimpl.
                 now rewrite Bool.negb_true_iff, N.eqb_neq in BC0.
             (* cycles *)
-            hammer.
+            hammer. rewrite KEY, LEN. hammer.
         (* arr[0] = key *)
             repeat step. left. exists 0.
             repeat split. apply N.eqb_neq in BC. lia.
                 psimpl. now apply Bool.negb_false_iff, N.eqb_eq in BC0.
                 intros; lia.
             unfold time_of_find_in_array_opt.
-            hammer.
+            hammer. rewrite KEY, LEN. hammer.
 
     (* 0x1f0 -> 0x200 *)
-    destruct PRE as (mem & a5 & MEM & A0 & A1 & A2 & A5 &
+    destruct PRE as (mem & A0 & A1 & A2 &
         LenPos & LenMax & IdxLen & Preserved & NotFound & Cycles).
     repeat step.
     (* idx = len *)
         apply N.eqb_eq in BC. rewrite N.mod_small in BC by lia. subst. 
         right. split. intro.
             destruct H as (FoundIdx & FoundIdxLen & Found). 
-            apply (NotFound FoundIdx). lia. now rewrite Preserved by lia.
+            apply (NotFound FoundIdx). lia. assumption.
         unfold time_of_find_in_array_opt. hammer.
+        apply N.eqb_eq in BC. rewrite N.mod_small, BC. hammer.
+        replace (s' R_A2 =? 0) with false by
+            (symmetry; apply N.eqb_neq; apply N.eqb_eq in BC; lia).
+        apply N.eqb_eq in BC. rewrite BC. hammer.
+        transitivity (1 + s' R_A2); lia.
     (* idx <> len, key not found *)
-        exists mem, (1 + a5).
-        replace (1 ⊕ a5) with (1 + a5) in * by 
+        replace (1 ⊕ s' R_A5) with (1 + s' R_A5) in * by 
             (now rewrite N.mod_small by lia).
         repeat split; auto.
         repeat rewrite N.mul_add_distr_l; now psimpl.
         apply N.eqb_neq in BC. lia.
         intros. destruct (lt_impl_lt_or_eq _ _ H). subst. 
-            apply Bool.negb_true_iff, N.eqb_neq in BC0. 
-            rewrite Preserved, N.add_comm. assumption.
-                apply N.eqb_neq in BC. lia.
-            now apply NotFound.
-        hammer.
+            apply Bool.negb_true_iff, N.eqb_neq in BC0.
+            now rewrite N.add_comm.
+            rewrite <- Preserved. now apply NotFound.
+            lia.
+        hammer. rewrite A1, BC0, A2, BC. hammer.
     (* idx <> len, key found *)
-        left. exists (1 + a5).
-        replace (1 ⊕ a5) with (1 + a5) in * by 
+        left. exists (1 + s' R_A5).
+        replace (1 ⊕ s' R_A5) with (1 + s' R_A5) in * by 
             (now rewrite N.mod_small by lia).
         repeat split.
             apply N.eqb_neq in BC; lia.
@@ -210,7 +214,7 @@ Proof using.
             intros. rewrite <- Preserved by lia. now apply NotFound.
         unfold time_of_find_in_array_opt. hammer.
         replace (len =? 0) with false by (symmetry; apply N.eqb_neq; lia).
-        lia.
+        rewrite A1, BC0, A2, BC. hammer.
 Qed.
 
 End TimingProof.
