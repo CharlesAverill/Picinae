@@ -13,21 +13,3 @@ riscv/NEORV32.vos riscv/NEORV32.vok riscv/NEORV32.required_vos: riscv/NEORV32.v 
 memsolve.vo memsolve.glob memsolve.v.beautified memsolve.required_vo: memsolve.v riscv/RISCVTiming.vo
 memsolve.vio: memsolve.v riscv/RISCVTiming.vio
 memsolve.vos memsolve.vok memsolve.required_vos: memsolve.v riscv/RISCVTiming.vos
-examples/FreeRTOS/RTOSDemo.vo examples/FreeRTOS/RTOSDemo.glob examples/FreeRTOS/RTOSDemo.v.beautified examples/FreeRTOS/RTOSDemo.required_vo: examples/FreeRTOS/RTOSDemo.v 
-examples/FreeRTOS/RTOSDemo.vio: examples/FreeRTOS/RTOSDemo.v 
-examples/FreeRTOS/RTOSDemo.vos examples/FreeRTOS/RTOSDemo.vok examples/FreeRTOS/RTOSDemo.required_vos: examples/FreeRTOS/RTOSDemo.v 
-examples/data_structures/array/find_in_array/array.vo examples/data_structures/array/find_in_array/array.glob examples/data_structures/array/find_in_array/array.v.beautified examples/data_structures/array/find_in_array/array.required_vo: examples/data_structures/array/find_in_array/array.v ../Picinae_riscv.vo
-examples/data_structures/array/find_in_array/array.vio: examples/data_structures/array/find_in_array/array.v ../Picinae_riscv.vio
-examples/data_structures/array/find_in_array/array.vos examples/data_structures/array/find_in_array/array.vok examples/data_structures/array/find_in_array/array.required_vos: examples/data_structures/array/find_in_array/array.v ../Picinae_riscv.vos
-examples/data_structures/array/find_in_array_opt/array_opt.vo examples/data_structures/array/find_in_array_opt/array_opt.glob examples/data_structures/array/find_in_array_opt/array_opt.v.beautified examples/data_structures/array/find_in_array_opt/array_opt.required_vo: examples/data_structures/array/find_in_array_opt/array_opt.v ../Picinae_riscv.vo
-examples/data_structures/array/find_in_array_opt/array_opt.vio: examples/data_structures/array/find_in_array_opt/array_opt.v ../Picinae_riscv.vio
-examples/data_structures/array/find_in_array_opt/array_opt.vos examples/data_structures/array/find_in_array_opt/array_opt.vok examples/data_structures/array/find_in_array_opt/array_opt.required_vos: examples/data_structures/array/find_in_array_opt/array_opt.v ../Picinae_riscv.vos
-examples/data_structures/array/bubble_sort/bubble_sort.vo examples/data_structures/array/bubble_sort/bubble_sort.glob examples/data_structures/array/bubble_sort/bubble_sort.v.beautified examples/data_structures/array/bubble_sort/bubble_sort.required_vo: examples/data_structures/array/bubble_sort/bubble_sort.v ../Picinae_riscv.vo
-examples/data_structures/array/bubble_sort/bubble_sort.vio: examples/data_structures/array/bubble_sort/bubble_sort.v ../Picinae_riscv.vio
-examples/data_structures/array/bubble_sort/bubble_sort.vos examples/data_structures/array/bubble_sort/bubble_sort.vok examples/data_structures/array/bubble_sort/bubble_sort.required_vos: examples/data_structures/array/bubble_sort/bubble_sort.v ../Picinae_riscv.vos
-examples/data_structures/linked_list/linked_list.vo examples/data_structures/linked_list/linked_list.glob examples/data_structures/linked_list/linked_list.v.beautified examples/data_structures/linked_list/linked_list.required_vo: examples/data_structures/linked_list/linked_list.v ../Picinae_riscv.vo
-examples/data_structures/linked_list/linked_list.vio: examples/data_structures/linked_list/linked_list.v ../Picinae_riscv.vio
-examples/data_structures/linked_list/linked_list.vos examples/data_structures/linked_list/linked_list.vok examples/data_structures/linked_list/linked_list.required_vos: examples/data_structures/linked_list/linked_list.v ../Picinae_riscv.vos
-examples/data_structures/union_find/union_find.vo examples/data_structures/union_find/union_find.glob examples/data_structures/union_find/union_find.v.beautified examples/data_structures/union_find/union_find.required_vo: examples/data_structures/union_find/union_find.v ../Picinae_riscv.vo
-examples/data_structures/union_find/union_find.vio: examples/data_structures/union_find/union_find.v ../Picinae_riscv.vio
-examples/data_structures/union_find/union_find.vos examples/data_structures/union_find/union_find.vok examples/data_structures/union_find/union_find.required_vos: examples/data_structures/union_find/union_find.v ../Picinae_riscv.vos

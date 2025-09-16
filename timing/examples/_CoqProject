@@ -6,15 +6,21 @@ data_structures/array/find_in_array/find_in_array_proof.v
 data_structures/array/find_in_array_opt/array_opt.v
 data_structures/array/find_in_array_opt/find_in_array_opt_proof.v
 
+# The following are broken due to updates in automatoin
+# =============
 # data_structures/array/bubble_sort/bubble_sort.v
 # data_structures/array/bubble_sort/loose_bound/bubble_sort_theta_n2_proof.v
 # data_structures/array/bubble_sort/tight_bound/bubble_sort_theta_n2_proof.v
 # data_structures/array/bubble_sort/exact_bound_oracle/bubble_sort_theta_n2_proof_exact.v
 # data_structures/array/bubble_sort/exact_bound_sum/bubble_sort_theta_n2_proof_exact.v
 
+# The following are unproven (except in Ilan's branch)
+# =============
 # data_structures/linked_list/linked_list.v
 # data_structures/linked_list/find_in_list.v
 
+# The following are unproven
+# =============
 # data_structures/union_find/union_find.v
 # data_structures/union_find/find_proof.v
 
@@ -23,17 +29,22 @@ FreeRTOS/RTOSDemo.v
 FreeRTOS/list/uxListRemove.v
 FreeRTOS/list/vListInitialise.v
 FreeRTOS/list/vListInitialiseItem.v
+# Unproven
 # FreeRTOS/list/vListInsert.v
 FreeRTOS/list/vListInsertEnd.v
 
-# FreeRTOS/queue/xQueueGetMutexHolder.v
 FreeRTOS/queue/xQueueGetMutexHolderFromISR.v
+# WIP due to r5_step hanging
+# FreeRTOS/queue/xQueueGetMutexHolder.v
 # FreeRTOS/queue/xQueueMessagesWaiting.v
 # FreeRTOS/queue/xQueueSpacesAvailable.v
 
+# WIP due to r5_step hanging
 # FreeRTOS/tasks/eTaskGetState.v
+# WIP due to it containing its own strcmp
+# FreeRTOS/tasks/prvSearchForNameWithinSingleList.v
+# WIP due to memsolve breaking upon trace update
+# FreeRTOS/tasks/vTaskSwitchContext.v
 FreeRTOS/tasks/xTaskGetCurrentTaskHandle.v
 FreeRTOS/tasks/prvResetNextTaskUnblockTime.v
-# FreeRTOS/tasks/prvSearchForNameWithinSingleList.v
 FreeRTOS/tasks/vTaskSuspendAll.v
-# FreeRTOS/tasks/vTaskSwitchContext.v
