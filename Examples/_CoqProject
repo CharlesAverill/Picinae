@@ -1,1 +1,3 @@
 -R .. Picinae
+arm8_strcasecmp.v
+arm7_memset.v

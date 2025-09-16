@@ -20,7 +20,7 @@ Module RISCVTiming := RISCVTiming cpu Program_find_in_array.
 Module find_in_arrayAuto := RISCVTimingAutomation RISCVTiming.
 Import Program_find_in_array find_in_arrayAuto.
 
-Definition key_in_array (mem : addr -> N) (arr : addr) (key : N) (len : N) : Prop :=
+Definition key_in_array (mem : memory) (arr : addr) (key : N) (len : N) : Prop :=
     exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key.
 
 Lemma lt_impl_lt_or_eq : forall x y,
@@ -29,7 +29,7 @@ Proof. lia. Qed.
 
 Definition N_peano_ind_Set (P : N -> Set) := N.peano_rect P.
 
-Fixpoint key_in_array_dec (mem : addr -> N) (arr : addr) (key len : N)
+Fixpoint key_in_array_dec (mem : memory) (arr : addr) (key len : N)
         : {key_in_array mem arr key len} + {~ key_in_array mem arr key len}.
     induction len using N_peano_ind_Set.
     - right. intro. destruct H as (idx & Contra & _). lia.
@@ -62,7 +62,7 @@ Definition time_of_find_in_array (len : N) (found_idx : option N) (t : trace) :=
         (* shutdown time *)
         taddi + tjalr.
 
-Definition timing_postcondition (mem : addr -> N) (arr : addr)
+Definition timing_postcondition (mem : memory) (arr : addr)
         (key : N) (len : N) (t : trace) : Prop :=
     (exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key /\
         (* i is the first index where the key is found *)
@@ -71,17 +71,20 @@ Definition timing_postcondition (mem : addr -> N) (arr : addr)
     ((~ exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key) /\
         time_of_find_in_array len None t).
 
-Definition find_in_array_timing_invs (s : store) (base_mem : addr -> N)
+Definition tbgeu (rs1 rs2 : N) : N :=
+    if negb (rs1 <? rs2) then ttbgeu else tfbgeu.
+
+Definition find_in_array_timing_invs (s : store) (base_mem : memory)
     (sp : N) (arr : addr) (key : N) (len : N) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
-| 0x1e4 => Some (s V_MEM32 = Ⓜbase_mem /\ s R_A0 = Ⓓarr /\ s R_A1 = Ⓓkey /\ 
-            s R_A2 = Ⓓlen /\ 4 * len <= 2^32 - 1 /\
+| 0x1e4 => Some (s V_MEM32 = base_mem /\ s R_A0 = arr /\ s R_A1 = key /\ 
+            s R_A2 = len /\ 4 * len <= 2^32 - 1 /\
             cycle_count_of_trace t' = 0)
 | 0x1e8 => Some (exists mem a5,
     (* bindings *)
-    s V_MEM32 = Ⓜmem /\
-    s R_A0 = Ⓓarr /\ s R_A1 = Ⓓkey /\ s R_A2 = Ⓓlen /\
-    s R_A5 = Ⓓa5 /\
+    s V_MEM32 = mem /\
+    s R_A0 = arr /\ s R_A1 = key /\ s R_A2 = len /\
+    s R_A5 = a5 /\
     (* preservation *)
     (forall i, i < len ->
         mem Ⓓ[arr + (i << 2)] = base_mem Ⓓ[arr + (i << 2)]) /\
@@ -106,11 +109,11 @@ Theorem find_in_array_timing:
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
          (* bindings *)
-         (MEM: s V_MEM32 = Ⓜbase_mem)
-         (SP: s R_SP = Ⓓsp)
-         (A0: s R_A0 = Ⓓarr)
-         (A1: s R_A1 = Ⓓkey)
-         (A2: s R_A2 = Ⓓlen)
+         (MEM: s V_MEM32 = base_mem)
+         (SP: s R_SP = sp)
+         (A0: s R_A0 = arr)
+         (A1: s R_A1 = key)
+         (A2: s R_A2 = len)
          (* length must fit inside the address space, arr is 4-byte integers *)
          (LEN_VALID: 4 * len <= 2^32 - 1),
   satisfies_all 
@@ -121,7 +124,34 @@ Theorem find_in_array_timing:
 Proof using.
     intros.
     apply prove_invs.
-    Local Ltac step := time rv_step.
+    Local Ltac generalize_timing_trace Heq TSI l a s t :=
+        let x := fresh "x" in
+        remember ((Addr a, _) :: t) as l eqn:Heq;
+        (* I promise this is necessary *)
+        (* if instead eassert is used, it likes to try and *)
+        (* fill in the hole on its own. *)
+        evar (x : N);
+        assert (cycle_count_of_trace l = x) as TSI by
+            (rewrite Heq; hammer; psimpl;
+            match goal with
+            | [|- ?v = x] => instantiate (x := v)
+            end; reflexivity);
+        subst x.
+    Local Ltac step := time r5_step;
+        match goal with
+        (* After a step has already been taken *)
+        | [t: list (exit * store), 
+           TSI: cycle_count_of_trace ?t = ?x
+            |- context[_ :: (Addr ?a, ?s) :: ?t]] =>
+            let Heq := fresh "Heq" in
+            let H0 := fresh "TSI" in
+            let l := fresh "t" in
+            generalize_timing_trace Heq H0 l a s t;
+            clear Heq TSI;
+            try clear t;
+            rename H0 into TSI
+        | _ => idtac
+        end.
 
     simpl. rewrite ENTRY. unfold entry_addr. step.
     now repeat split.
@@ -138,17 +168,16 @@ Proof using.
     destruct PRE as (Mem & A0 & A1 & A2 & LEN_VALID & Cycles).
     repeat step.
         repeat eexists; auto.
+        (* preservation *) intros; now rewrite Mem.
         (* key not found yet *) intros; lia.
         (* idx <= len *) psimpl; lia.
-        (* cycles *)
-        hammer.
+        (* cycles *) hammer.
 
     destruct PRE as (mem & a5 & MEM & A0 & A1 & A2 & A5 & Preserved &
         NotFound & A5_LEN & Cycles).
     destruct (key_in_array_dec mem arr key len) as [IN | NOT_IN].
     (* There is a matching element in the array *) {
-        step.
-        repeat step.
+        step. repeat step.
         (* postcondition, match found *)
             left. exists a5. split.
                 now apply N.ltb_lt. 
@@ -165,15 +194,17 @@ Proof using.
             intros. apply N.ltb_lt in BC.
                 rewrite N.mod_small in H. destruct (lt_impl_lt_or_eq _ _ H).
                 subst. now apply N.eqb_neq in BC0. now apply NotFound.
-                apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
+                apply N.le_lt_trans with len. lia.
+                rewrite <- A2; apply (models_var R_A2 MDL).
             (* 1 + a5 <= len *)
             apply N.ltb_lt in BC. rewrite N.mod_small. lia.
-                apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
+                apply N.le_lt_trans with len. lia.
+                rewrite <- A2; apply (models_var R_A2 MDL).
             (* cycles *)
             rewrite (N.mod_small (1 + a5)). hammer.
                 apply N.ltb_lt in BC.
                 apply N.le_lt_trans with len. lia.
-                apply (rv_regsize MDL A2).
+                rewrite <- A2; apply (models_var R_A2 MDL).
         (* iterated len times - contradiction *)
         exfalso. destruct IN as (idx & IDX_LEN & IN).
             apply (NotFound idx). apply N.ltb_ge in BC. lia.
@@ -194,15 +225,17 @@ Proof using.
             intros. apply N.ltb_lt in BC.
                 rewrite N.mod_small in H. destruct (lt_impl_lt_or_eq _ _ H).
                 subst. now apply N.eqb_neq in BC0. now apply NotFound.
-                apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
+                apply N.le_lt_trans with len. lia.
+                rewrite <- A2; apply (models_var R_A2 MDL).
             (* 1 + a5 <= len *)
             apply N.ltb_lt in BC. rewrite N.mod_small. lia.
-                apply N.le_lt_trans with len. lia. apply (rv_regsize MDL A2).
+                apply N.le_lt_trans with len. lia.
+                rewrite <- A2; apply (models_var R_A2 MDL).
             (* cycles *)
             rewrite (N.mod_small (1 + a5)). hammer.
                 apply N.ltb_lt in BC.
                 apply N.le_lt_trans with len. lia.
-                apply (rv_regsize MDL A2).
+                rewrite <- A2; apply (models_var R_A2 MDL).
         (* a match has not been found, break and return *)
         repeat step.
             unfold timing_postcondition, time_of_find_in_array. right.

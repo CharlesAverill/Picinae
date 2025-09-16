@@ -9,7 +9,7 @@ Module Type TimingModule (il : PICINAE_IL).
     Export il.
     Export Lia.
 
-    Parameter cycles_per_instruction_at_addr : store -> addr -> N.
+    Parameter time_of_addr : store -> addr -> N.
     Parameter time_inf : N.
 End TimingModule.
 
@@ -32,7 +32,7 @@ Ltac PSimplifier ::= SIMPL.PSimplifier.
 Definition cycle_count_of_trace (t : trace) : N :=
     List.fold_left N.add (List.map 
         (fun '(e, s) => match e with 
-            | Addr a => cycles_per_instruction_at_addr s a
+            | Addr a => time_of_addr s a
             | Raise n => time_inf
             end) t) 0.
 
@@ -50,7 +50,7 @@ Lemma cycle_count_of_trace_single :
     forall (e : exit) (s : store),
     cycle_count_of_trace [(e, s)] = 
         match e with 
-        | Addr a => cycles_per_instruction_at_addr s a
+        | Addr a => time_of_addr s a
         | Raise n => time_inf
         end.
 Proof. reflexivity. Qed.
@@ -64,8 +64,22 @@ Proof.
     lia. lia.
 Qed.
 
+Lemma cycle_count_of_trace_app :
+    forall (t1 t2 : trace) (e : exit) (s : store),
+    cycle_count_of_trace (t1 ++ t2) = cycle_count_of_trace t1 + cycle_count_of_trace t2.
+Proof.
+    intros; induction t1; simpl.
+        reflexivity.
+    destruct a.
+    rewrite cycle_count_of_trace_cons,
+        (cycle_count_of_trace_cons t1 e0 s0), IHt1.
+    lia.
+Qed.
+
 Ltac find_rewrites :=
     repeat (match goal with
+    | [s: store, H: ?s ?x = ?y |- context[?s ?x]] =>
+        rewrite H
     | [H: ?x = _ |- context[match ?x with _ => _ end]] =>
         rewrite H
     | [H: negb ?x = ?y |- context[if ?x then _ else _]] =>
@@ -87,8 +101,9 @@ Ltac find_rewrites :=
 (* Grabbing each cpi_at_addr one-by-one seems to prevent explosions in cbv 
    evaluation time *)
 Ltac unfold_time_of_addr :=
-    cbv [cycles_per_instruction_at_addr]; cbn - [setmem getmem].
+    cbv [time_of_addr]; cbn - [setmem getmem].
 Ltac unfold_cycle_count_list :=
+    repeat rewrite cycle_count_of_trace_app;
     repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single.
 Ltac hammer :=
     (* easy rewrites *)

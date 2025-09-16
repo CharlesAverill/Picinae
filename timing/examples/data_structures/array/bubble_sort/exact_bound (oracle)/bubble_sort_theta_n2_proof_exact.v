@@ -232,18 +232,18 @@ Proof using.
         (* TODO : replace with hammer when fixed *)
         unfold_cycle_count_list.
         do 3 (match goal with
-        | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
+        | [|- context[time_of_addr ?X ?Y]] =>
             let H := fresh "H" in
-            eassert(cycles_per_instruction_at_addr X Y = _) as H by
+            eassert(time_of_addr X Y = _) as H by
             (now (cbv - [getmem setmem N.eqb]; find_rewrites;
                     simpl; find_rewrites));
             rewrite H; clear H
         end).
         match goal with
-        | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
+        | [|- context[time_of_addr ?X ?Y]] =>
             let H := fresh "H" in
-            eassert(cycles_per_instruction_at_addr X Y = _) as H
-        end. cbv [cycles_per_instruction_at_addr].
+            eassert(time_of_addr X Y = _) as H
+        end. cbv [time_of_addr].
         eassert (rv_decode (binary 516) = _) by (now compute); 
             rewrite H; clear H.
         cbv [N.eqb]. psimpl. rewrite BC0. compute. reflexivity.
@@ -269,18 +269,18 @@ Proof using.
         (* TODO : replace with hammer when fixed *)
         unfold_cycle_count_list.
         do 1 (match goal with
-        | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
+        | [|- context[time_of_addr ?X ?Y]] =>
             let H := fresh "H" in
-            eassert(cycles_per_instruction_at_addr X Y = _) as H by
+            eassert(time_of_addr X Y = _) as H by
             (now (cbv - [getmem setmem N.eqb]; find_rewrites;
                     simpl; find_rewrites));
             rewrite H; clear H
         end).
         match goal with
-        | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
+        | [|- context[time_of_addr ?X ?Y]] =>
             let H := fresh "H" in
-            eassert(cycles_per_instruction_at_addr X Y = _) as H
-        end. cbv [cycles_per_instruction_at_addr].
+            eassert(time_of_addr X Y = _) as H
+        end. cbv [time_of_addr].
         eassert (rv_decode (binary 516) = _) by (now compute); 
             rewrite H; clear H.
         cbv [N.eqb]. psimpl. rewrite BC0. compute. reflexivity.

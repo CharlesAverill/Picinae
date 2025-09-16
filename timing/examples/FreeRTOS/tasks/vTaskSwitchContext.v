@@ -522,22 +522,22 @@ Proof using.
     (* unfolding timing definitions *)
     unfold_cycle_count_list.
     do 11 (match goal with
-    | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
+    | [|- context[time_of_addr ?X ?Y]] =>
         let H := fresh "H" in
-        eassert(cycles_per_instruction_at_addr X Y = _) as H by
+        eassert(time_of_addr X Y = _) as H by
           (now (cbv - [getmem setmem N.eqb]; find_rewrites;
                 simpl; find_rewrites));
         rewrite H; clear H
     end).
     match goal with
-    | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
+    | [|- context[time_of_addr ?X ?Y]] =>
         let H := fresh "H" in
-        eassert(cycles_per_instruction_at_addr X Y = tclz _ )
+        eassert(time_of_addr X Y = tclz _ )
     end. reflexivity. rewrite H. clear H.
     do 3 (match goal with
-    | [|- context[cycles_per_instruction_at_addr ?X ?Y]] =>
+    | [|- context[time_of_addr ?X ?Y]] =>
         let H := fresh "H" in
-        eassert(cycles_per_instruction_at_addr X Y = _) as H by
+        eassert(time_of_addr X Y = _) as H by
           (now (cbv - [getmem setmem N.eqb]; find_rewrites;
                 simpl; find_rewrites));
         rewrite H; clear H
