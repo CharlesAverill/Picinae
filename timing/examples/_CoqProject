@@ -26,7 +26,13 @@ FreeRTOS/list/vListInitialiseItem.v
 # FreeRTOS/list/vListInsert.v
 FreeRTOS/list/vListInsertEnd.v
 
+# FreeRTOS/queue/xQueueGetMutexHolder.v
+FreeRTOS/queue/xQueueGetMutexHolderFromISR.v
+# FreeRTOS/queue/xQueueMessagesWaiting.v
+# FreeRTOS/queue/xQueueSpacesAvailable.v
+
 # FreeRTOS/tasks/eTaskGetState.v
+FreeRTOS/tasks/xTaskGetCurrentTaskHandle.v
 FreeRTOS/tasks/prvResetNextTaskUnblockTime.v
 # FreeRTOS/tasks/prvSearchForNameWithinSingleList.v
 FreeRTOS/tasks/vTaskSuspendAll.v

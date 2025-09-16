@@ -81,8 +81,8 @@ Qed.
 
 Ltac find_rewrites :=
     repeat (match goal with
-    | [s: store, H: ?s ?x = ?y |- context[?s ?x]] =>
-        rewrite H
+    (* | [s: store, H: ?s ?x = ?y |- context[?s ?x]] =>
+        rewrite H *)
     | [H: ?x = _ |- context[match ?x with _ => _ end]] =>
         rewrite H
     | [H: negb ?x = ?y |- context[if ?x then _ else _]] =>

@@ -121,6 +121,21 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
             let rd := regvalue s rd in
             tclz rd
 
+        (* ==== Zicsr ISA Extension ==== *)
+        | R5_Csrrw _ _ _ =>
+            tcsrrw
+        | R5_Csrrwi _ _ _ =>
+            tcsrrwi
+        | R5_Csrrs _ _ _ =>
+            tcsrrs
+        | R5_Csrrsi _ _ _ =>
+            tcsrrsi
+        | R5_Csrrc _ _ _ =>
+            tcsrrc
+        | R5_Csrrci _ _ _ =>
+            tcsrrci
+
+
         | _ => time_inf
         end.
 End RISCVTiming.

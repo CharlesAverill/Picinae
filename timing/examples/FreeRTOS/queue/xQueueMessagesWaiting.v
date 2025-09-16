@@ -1,0 +1,76 @@
+(* WIP : r5_step hangs *)
+
+Require Import RTOSDemo.
+Require Import RISCVTiming.
+Import RISCVNotations.
+
+Module TimingProof (cpu : CPUTimingBehavior).
+
+Module Program_xQueueMessagesWaiting <: ProgramInformation.
+    Definition entry_addr : N := 0x80003574.
+
+    Definition exits (t:trace) : bool :=
+        match t with (Addr a,_)::_ => match a with
+        | 0x8000358c | 0x800029ac => true
+        | _ => false
+    end | _ => false end.
+
+    Definition binary := RTOSDemo.
+End Program_xQueueMessagesWaiting.
+
+Module RISCVTiming := RISCVTiming cpu Program_xQueueMessagesWaiting.
+Module xQueueMessagesWaitingAuto := RISCVTimingAutomation RISCVTiming.
+Import Program_xQueueMessagesWaiting xQueueMessagesWaitingAuto.
+
+(* Postcondition *)
+Definition time_of_xQueueMessagesWaiting (t : trace) (mem : memory) :=
+    cycle_count_of_trace t =
+        tcsrrci + tlui + tlw + tlw +
+        if (mem Ⓓ[0x80080005] =? 0) then (
+            tfbne + tcsrrsi
+        ) else (
+            ttbne
+        ) + tjalr.
+
+(* Invariants *)
+Definition xQueueMessagesWaiting_timing_invs (base_mem : memory)
+    (t:trace) : option Prop :=
+match t with (Addr a, s) :: t' => match a with
+| 0x80003574 => Some (s V_MEM32 = base_mem /\
+            cycle_count_of_trace t' = 0)
+| 0x8000358c | 0x800029ac => Some (time_of_xQueueMessagesWaiting t base_mem)
+| _ => None end | _ => None end.
+
+Theorem xQueueMessagesWaiting_timing:
+  forall s t s' x' base_mem
+         (ENTRY: startof t (x',s') = (Addr entry_addr, s))
+         (MDL: models rvtypctx s)
+         (MEM: s V_MEM32 = base_mem),
+  satisfies_all 
+    lifted_prog
+    (xQueueMessagesWaiting_timing_invs base_mem)
+    exits
+  ((x',s')::t).
+Proof using.
+    (* Specialize some automation tactics for our purposes *)
+    Local Ltac step := tstep r5_step.
+
+    (* Setup *)
+    intros.
+    apply prove_invs.
+    simpl. rewrite ENTRY. unfold entry_addr. now step.
+
+    intros.
+    eapply startof_prefix in ENTRY; try eassumption.
+    eapply preservation_exec_prog in MDL; 
+        try eassumption; [idtac|apply lift_riscv_welltyped].
+    clear - ENTRY PRE MDL. rename t1 into t. rename s1 into s'.
+
+    (* Proof start *)
+    destruct_inv 32 PRE.
+
+    destruct PRE as (MEM & Cycles).
+    do 4 step. (* r5_step hangs? *)
+Qed.
+
+End TimingProof.
