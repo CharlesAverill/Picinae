@@ -1,6 +1,6 @@
-TimingAutomation.vo TimingAutomation.glob TimingAutomation.v.beautified TimingAutomation.required_vo: TimingAutomation.v ../Picinae_core.vo ../Picinae_statics.vo ../Picinae_finterp.vo ../Picinae_theory.vo ../Picinae_simplifier_base.vo ../Picinae_simplifier_v1_1.vo
-TimingAutomation.vio: TimingAutomation.v ../Picinae_core.vio ../Picinae_statics.vio ../Picinae_finterp.vio ../Picinae_theory.vio ../Picinae_simplifier_base.vio ../Picinae_simplifier_v1_1.vio
-TimingAutomation.vos TimingAutomation.vok TimingAutomation.required_vos: TimingAutomation.v ../Picinae_core.vos ../Picinae_statics.vos ../Picinae_finterp.vos ../Picinae_theory.vos ../Picinae_simplifier_base.vos ../Picinae_simplifier_v1_1.vos
+TimingAutomation.vo TimingAutomation.glob TimingAutomation.v.beautified TimingAutomation.required_vo: TimingAutomation.v ../Picinae_core.vo ../Picinae_statics.vo ../Picinae_finterp.vo ../Picinae_theory.vo ../Picinae_simplifier_base.vo ../Picinae_simplifier_v1_1.vo ../Picinae_ISA.vo
+TimingAutomation.vio: TimingAutomation.v ../Picinae_core.vio ../Picinae_statics.vio ../Picinae_finterp.vio ../Picinae_theory.vio ../Picinae_simplifier_base.vio ../Picinae_simplifier_v1_1.vio ../Picinae_ISA.vio
+TimingAutomation.vos TimingAutomation.vok TimingAutomation.required_vos: TimingAutomation.v ../Picinae_core.vos ../Picinae_statics.vos ../Picinae_finterp.vos ../Picinae_theory.vos ../Picinae_simplifier_base.vos ../Picinae_simplifier_v1_1.vos ../Picinae_ISA.vos
 riscv/CPUTimingBehavior.vo riscv/CPUTimingBehavior.glob riscv/CPUTimingBehavior.v.beautified riscv/CPUTimingBehavior.required_vo: riscv/CPUTimingBehavior.v 
 riscv/CPUTimingBehavior.vio: riscv/CPUTimingBehavior.v 
 riscv/CPUTimingBehavior.vos riscv/CPUTimingBehavior.vok riscv/CPUTimingBehavior.required_vos: riscv/CPUTimingBehavior.v 

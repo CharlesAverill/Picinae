@@ -20,7 +20,7 @@ Module RISCVTiming := RISCVTiming cpu Program_find_in_array_opt.
 Module find_in_array_optAuto := RISCVTimingAutomation RISCVTiming.
 Import Program_find_in_array_opt find_in_array_optAuto.
 
-Definition key_in_array (mem : addr -> N) (arr : addr) (key : N) (len : N) : Prop :=
+Definition key_in_array (mem : memory) (arr : addr) (key : N) (len : N) : Prop :=
     exists i, i < len /\ mem Ⓓ[arr + 4 * i] = key.
 
 Lemma lt_impl_lt_or_eq : forall x y,
@@ -29,7 +29,7 @@ Proof. lia. Qed.
 
 Definition N_peano_ind_Set (P : N -> Set) := N.peano_rect P.
 
-Fixpoint key_in_array_dec (mem : addr -> N) (arr : addr) (key len : N)
+Fixpoint key_in_array_dec (mem : memory) (arr : addr) (key len : N)
         : {key_in_array mem arr key len} + {~ key_in_array mem arr key len}.
     induction len using N_peano_ind_Set.
     - right. intro. destruct H as (idx & Contra & _). lia.
@@ -72,7 +72,7 @@ Definition time_of_find_in_array_opt (len : N) (found_idx : option N) (t : trace
             )
         ).
 
-Definition timing_postcondition (mem : addr -> N) (arr : addr)
+Definition timing_postcondition (mem : memory) (arr : addr)
         (key : N) (len : N) (t : trace) : Prop :=
     (exists i, i < len /\ mem Ⓓ[arr + 4 * i] = key /\
         (* i is the first index where the key is found *)
@@ -81,20 +81,20 @@ Definition timing_postcondition (mem : addr -> N) (arr : addr)
     ((~ exists i, i < len /\ mem Ⓓ[arr + 4 * i] = key) /\
         time_of_find_in_array_opt len None t).
 
-Definition find_in_array_opt_timing_invs (s : store) (base_mem : addr -> N)
+Definition find_in_array_opt_timing_invs (s : store) (base_mem : memory)
     (sp : N) (arr : addr) (key : N) (len : N) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
 | 0x1e4 => Some (
     (* bindings *)
-    s V_MEM32 = Ⓜbase_mem /\ s R_A0 = Ⓓarr /\ s R_A1 = Ⓓkey /\
-    s R_A2 = Ⓓlen /\
+    s V_MEM32 = base_mem /\ s R_A0 = arr /\ s R_A1 = key /\
+    s R_A2 = len /\
     (* valid array length *)
     4 * len <= 2^32 - 1 /\
     cycle_count_of_trace t' = 0)
 | 0x1f0 => Some (exists mem a5,
     (* bindings *)
-    s V_MEM32 = Ⓜbase_mem /\ s R_A0 = Ⓓ(4 * (a5 + 1) ⊕ arr) 
-    /\ s R_A1 = Ⓓkey /\ s R_A2 = Ⓓlen /\ s R_A5 = Ⓓa5 /\
+    s V_MEM32 = base_mem /\ s R_A0 = (4 * (a5 + 1) ⊕ arr) 
+    /\ s R_A1 = key /\ s R_A2 = len /\ s R_A5 = a5 /\
     (* passed the zero-length check *)
     0 < len /\
     4 * len <= 2^32 - 1 /\
@@ -122,10 +122,10 @@ Theorem find_in_array_opt_timing:
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
          (* bindings *)
-         (MEM: s V_MEM32 = Ⓜbase_mem)
-         (A0: s R_A0 = Ⓓarr)
-         (A1: s R_A1 = Ⓓkey)
-         (A2: s R_A2 = Ⓓlen)
+         (MEM: s V_MEM32 = base_mem)
+         (A0: s R_A0 = arr)
+         (A1: s R_A1 = key)
+         (A2: s R_A2 = len)
          (* length must fit inside the address space, arr is 4-byte integers *)
          (LEN_VALID: 4 * len <= 2^32 - 1),
   satisfies_all 
@@ -136,7 +136,7 @@ Theorem find_in_array_opt_timing:
 Proof using.
     intros.
     apply prove_invs.
-    Local Ltac step := time rv_step.
+    Local Ltac step := tstep r5_step.
 
     simpl. rewrite ENTRY. unfold entry_addr. step.
     now repeat split.
@@ -168,7 +168,7 @@ Proof using.
             (* cycles *)
             hammer.
         (* arr[0] = key *)
-            repeat step. unfold timing_postcondition. left. exists 0.
+            repeat step. left. exists 0.
             repeat split. apply N.eqb_neq in BC. lia.
                 psimpl. now apply Bool.negb_false_iff, N.eqb_eq in BC0.
                 intros; lia.
@@ -185,7 +185,6 @@ Proof using.
             destruct H as (FoundIdx & FoundIdxLen & Found). 
             apply (NotFound FoundIdx). lia. now rewrite Preserved by lia.
         unfold time_of_find_in_array_opt. hammer.
-        rewrite N.mod_small, N.eqb_refl; lia.
     (* idx <> len, key not found *)
         exists mem, (1 + a5).
         replace (1 ⊕ a5) with (1 + a5) in * by 

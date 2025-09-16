@@ -43,7 +43,7 @@ Theorem vTaskSuspendAll_timing:
 Proof using.
     intros.
     apply prove_invs.
-    Local Ltac step := time rv_step.
+    Local Ltac step := tstep r5_step.
 
     simpl. rewrite ENTRY. unfold entry_addr. step. reflexivity.
 
@@ -55,8 +55,7 @@ Proof using.
 
     destruct_inv 32 PRE.
 
-    repeat step. unfold time_of_vTaskSuspendAll.
-    hammer.
+    repeat step. hammer.
 Qed.
 
 End TimingProof.

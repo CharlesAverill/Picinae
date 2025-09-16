@@ -1,5 +1,6 @@
 Require Import Picinae_core Picinae_statics Picinae_finterp
-    Picinae_theory Picinae_simplifier_base Picinae_simplifier_v1_1.
+    Picinae_theory Picinae_simplifier_base Picinae_simplifier_v1_1
+    Picinae_ISA.
 Require Export List.
 Require Import NArith.
 Require Export Bool.
@@ -15,16 +16,18 @@ End TimingModule.
 
 Module TimingAutomation (IL : PICINAE_IL) (THEORY : PICINAE_THEORY IL)
     (STATICS: PICINAE_STATICS IL THEORY)
-    (FIL: PICINAE_FINTERP IL THEORY STATICS) (SIMPL : PICINAE_SIMPLIFIER_V1_1 IL THEORY STATICS FIL)
+    (FINTERP: PICINAE_FINTERP IL THEORY STATICS) (SIMPL : PICINAE_SIMPLIFIER_V1_1 IL THEORY STATICS FINTERP)
     (tm : TimingModule IL).
 
-Include IL.
-Include THEORY.
-
-Import SIMPL.
-Module PSB := Picinae_Simplifier_Base IL.
-Import PSB.
 Export IL.
+Export SIMPL.
+Export THEORY.
+Export STATICS.
+Export FINTERP.
+Module PSB := Picinae_Simplifier_Base IL.
+Export PSB.
+Module ISA_RISCV := Picinae_ISA IL SIMPL THEORY STATICS FINTERP.
+Export ISA_RISCV.
 Export tm.
 
 Ltac PSimplifier ::= SIMPL.PSimplifier.
@@ -101,7 +104,8 @@ Ltac find_rewrites :=
 (* Grabbing each cpi_at_addr one-by-one seems to prevent explosions in cbv 
    evaluation time *)
 Ltac unfold_time_of_addr :=
-    cbv [time_of_addr]; cbn - [setmem getmem].
+    cbv [time_of_addr]; cbn - [setmem getmem];
+    repeat (rewrite update_updated || rewrite update_frame by discriminate).
 Ltac unfold_cycle_count_list :=
     repeat rewrite cycle_count_of_trace_app;
     repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single.
@@ -290,5 +294,34 @@ Ltac fold_big_subs :=
             (now rewrite N.add_comm);
         simpl (2^BW - X) in H
     end.
+
+Ltac generalize_timing_trace Heq TSI l a s t :=
+    let x := fresh "x" in
+    remember ((Addr a, _) :: t) as l eqn:Heq;
+    (* I promise this is necessary *)
+    (* if instead eassert is used, it likes to try and *)
+    (* fill in the hole on its own. *)
+    evar (x : N);
+    assert (cycle_count_of_trace l = x) as TSI by
+        (rewrite Heq; hammer; psimpl;
+        match goal with
+        | [|- ?v = x] => instantiate (x := v)
+        end; reflexivity);
+    subst x.
+Ltac do_generalize :=
+    match goal with
+    | [t: list (exit * store), 
+        TSI: cycle_count_of_trace ?t = ?x
+        |- context[_ :: (Addr ?a, ?s) :: ?t]] =>
+        let Heq := fresh "Heq" in
+        let H0 := fresh "TSI" in
+        let l := fresh "tail" in
+        generalize_timing_trace Heq H0 l a s t;
+        clear Heq TSI;
+        try (clear t; rename l into t);
+        rename H0 into TSI
+    | _ => idtac
+    end.
+Ltac tstep _step := time _step; do_generalize.
 
 End TimingAutomation.

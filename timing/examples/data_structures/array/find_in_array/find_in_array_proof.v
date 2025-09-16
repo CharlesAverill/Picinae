@@ -104,7 +104,7 @@ match t with (Addr a, s) :: t' => match a with
 | _ => None end | _ => None end.
 
 Theorem find_in_array_timing:
-  forall s t s' x' base_mem sp arr key len
+  forall s (t : trace) s' x' base_mem sp arr key len
          (* boilerplate *)
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
@@ -124,36 +124,9 @@ Theorem find_in_array_timing:
 Proof using.
     intros.
     apply prove_invs.
-    Local Ltac generalize_timing_trace Heq TSI l a s t :=
-        let x := fresh "x" in
-        remember ((Addr a, _) :: t) as l eqn:Heq;
-        (* I promise this is necessary *)
-        (* if instead eassert is used, it likes to try and *)
-        (* fill in the hole on its own. *)
-        evar (x : N);
-        assert (cycle_count_of_trace l = x) as TSI by
-            (rewrite Heq; hammer; psimpl;
-            match goal with
-            | [|- ?v = x] => instantiate (x := v)
-            end; reflexivity);
-        subst x.
-    Local Ltac step := time r5_step;
-        match goal with
-        (* After a step has already been taken *)
-        | [t: list (exit * store), 
-           TSI: cycle_count_of_trace ?t = ?x
-            |- context[_ :: (Addr ?a, ?s) :: ?t]] =>
-            let Heq := fresh "Heq" in
-            let H0 := fresh "TSI" in
-            let l := fresh "t" in
-            generalize_timing_trace Heq H0 l a s t;
-            clear Heq TSI;
-            try clear t;
-            rename H0 into TSI
-        | _ => idtac
-        end.
+    Local Ltac step := tstep r5_step.
 
-    simpl. rewrite ENTRY. unfold entry_addr. step.
+    simpl. rewrite ENTRY. unfold entry_addr. step. 
     now repeat split.
 
     intros.

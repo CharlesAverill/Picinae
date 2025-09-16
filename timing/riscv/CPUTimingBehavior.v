@@ -39,6 +39,12 @@ Module Type CPUTimingBehavior.
             torc_b
         (* Byte-reverse *)
             trev8
+
+        (* ==== Zicsr ISA Extension ==== *)
+        (* System *)
+            tcsrrw tcsrrwi
+            tcsrrs tcsrrsi
+            tcsrrc tcsrrci
     : N.
 
     (* These instr times need to be N->N because they could depend on state values *)

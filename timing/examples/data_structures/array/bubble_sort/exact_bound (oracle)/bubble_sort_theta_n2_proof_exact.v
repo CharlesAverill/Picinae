@@ -72,20 +72,20 @@ Definition time_of_bubble_sort_theta_n2 (len : N) (swap : N -> N -> bool) (t : t
 Definition swap_correctness (swap : N -> N -> bool) (arr : addr) : Prop :=
     forall mem i j, swap i j = (mem Ⓓ[arr + 4 * (j + 1)] <? mem Ⓓ[arr + 4 * j]).
 
-Definition bubble_sort_theta_n2_timing_invs (s : store) (base_mem : addr -> N)
+Definition bubble_sort_theta_n2_timing_invs (s : store) (base_mem : memory)
     (arr : addr) (len : N) (_a5 : N) (swap : N -> N -> bool) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
-| 0x1e4 => Some (s V_MEM32 = Ⓜbase_mem /\ 
-                    s R_A0 = Ⓓarr /\ s R_A1 = Ⓓlen /\
-                    s R_A5 = Ⓓ_a5 /\
+| 0x1e4 => Some (s V_MEM32 = base_mem /\ 
+                    s R_A0 = arr /\ s R_A1 = len /\
+                    s R_A5 = _a5 /\
                     arr + 4 * len < 2^32 /\
                     swap_correctness swap arr /\
                     cycle_count_of_trace t' = 0)
-| 0x1f0 => Some (exists mem a4, s V_MEM32 = Ⓜmem /\
-                   s R_A0 = Ⓓarr /\ s R_A1 = Ⓓlen /\
-                   s R_A3 = Ⓓ(arr + 4 * len) /\
+| 0x1f0 => Some (exists mem a4, s V_MEM32 = mem /\
+                   s R_A0 = arr /\ s R_A1 = len /\
+                   s R_A3 = (arr + 4 * len) /\
                    (* a4 is outer loop counter *)
-                   s R_A4 = Ⓓa4 /\
+                   s R_A4 = a4 /\
                    a4 <= len /\
                    arr + 4 * len < 2^32 /\
                    swap_correctness swap arr /\
@@ -108,18 +108,18 @@ match t with (Addr a, s) :: t' => match a with
                        taddi + tjal
                    )
             )
-| 0x214 => Some (exists mem a4 inner_loop_count, s V_MEM32 = Ⓜmem /\
-                   s R_A0 = Ⓓarr /\ s R_A1 = Ⓓlen /\
-                   s R_A3 = Ⓓ(arr + 4 * len) /\
+| 0x214 => Some (exists mem a4 inner_loop_count, s V_MEM32 = mem /\
+                   s R_A0 = arr /\ s R_A1 = len /\
+                   s R_A3 = (arr + 4 * len) /\
                    (* a4 is outer loop counter *)
-                   s R_A4 = Ⓓa4 /\
-                   s R_A5 = Ⓓ(arr + 4 * (1 + inner_loop_count)) /\
+                   s R_A4 = a4 /\
+                   a4 < len /\
+                   s R_A5 = (arr + 4 * (1 + inner_loop_count)) /\
                    1 + inner_loop_count <= len /\
                    (* this is here to handle the inductive case where 
                       inner_loop_count is incremented *)
                    ~ 1 + inner_loop_count > len /\
                    0 < len /\
-                   a4 < len /\
                    arr + 4 * len < 2^32 /\
                    swap_correctness swap arr /\
                  cycle_count_of_trace t' =
@@ -161,10 +161,10 @@ Theorem bubble_sort_theta_n2_timing:
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
          (* bindings *)
-         (MEM: s V_MEM32 = Ⓜbase_mem)
-         (A0: s R_A0 = Ⓓarr)
-         (A2: s R_A1 = Ⓓlen)
-         (A5: s R_A5 = Ⓓa5)
+         (MEM: s V_MEM32 = base_mem)
+         (A0: s R_A0 = arr)
+         (A2: s R_A1 = len)
+         (A5: s R_A5 = a5)
          (* array must fit inside the address space without wrapping *)
          (* this shouldn't be necessary but makes the proof easy *)
          (ARR_VALID: arr + 4 * len < 2^32)
@@ -179,7 +179,7 @@ Theorem bubble_sort_theta_n2_timing:
 Proof using.
     intros.
     apply prove_invs.
-    Local Ltac step := time rv_step.
+    Local Ltac step := tstep r5_step.
 
     simpl. rewrite ENTRY. unfold entry_addr. step.
     now repeat split.
@@ -202,112 +202,64 @@ Proof using.
     }
 
     (* 0x1f0 -> *)
-    destruct PRE as (mem & a4 & MEM & A0 & A1 & A3 & A4 & A4_VALID & ARR_VALID &
-        Swap & Cycles).
+    destruct PRE as (mem & a4 & MEM & A0 & A1 & A3 & A4 & ARR_VALID &
+        A4_VALID & Swap & Cycles).
     repeat step.
         (* a4 = len *)
-        unfold time_of_bubble_sort_theta_n2.
-            apply N.eqb_eq in BC; subst.
+            apply N.eqb_eq in BC. rewrite BC in *. clear BC.
             hammer; rewrite N.eqb_refl; hammer.
         (* a4 <> len *)
         do 2 eexists; exists 0; repeat split; eauto.
+            apply N.eqb_neq in BC. lia.
             rewrite N.mod_small by (apply N.eqb_neq in BC; lia);
                 now psimpl.
-            1-4: apply N.eqb_neq in BC; lia.
+            1-3: apply N.eqb_neq in BC; lia.
             rewrite sum_0_0. hammer.
 
     (* 0x101bc -> *)
     destruct PRE as (mem & a4 & inner_loop_count & MEM & A0 & A1 & A3 & A4
-                     & A5 & ILC_LEN & ILC_LEN' & LEN_POS & A4_LEN & ARR_VALID 
+                     & A4_LEN & A5 & ILC_LEN & ILC_LEN' & LEN_POS & ARR_VALID 
                      & Swap & Cycles).
     step.
         (* not at end of array, continue inner loop *)
         repeat step.
         (* arr[j-1] < arr[j] *)
         do 2 eexists; exists (1 + inner_loop_count); repeat split; eauto.
+            now rewrite A4.
             repeat rewrite N.mul_add_distr_l. psimpl.
                 rewrite N.mod_small. reflexivity.
             1-3: apply Bool.negb_true_iff, N.eqb_neq in BC; lia.
 
-        (* TODO : replace with hammer when fixed *)
-        unfold_cycle_count_list.
-        do 3 (match goal with
-        | [|- context[time_of_addr ?X ?Y]] =>
-            let H := fresh "H" in
-            eassert(time_of_addr X Y = _) as H by
-            (now (cbv - [getmem setmem N.eqb]; find_rewrites;
-                    simpl; find_rewrites));
-            rewrite H; clear H
-        end).
-        match goal with
-        | [|- context[time_of_addr ?X ?Y]] =>
-            let H := fresh "H" in
-            eassert(time_of_addr X Y = _) as H
-        end. cbv [time_of_addr].
-        eassert (rv_decode (binary 516) = _) by (now compute); 
-            rewrite H; clear H.
-        cbv [N.eqb]. psimpl. rewrite BC0. compute. reflexivity.
-        rewrite H. clear H.
         rewrite sum_Sn by lia.
-        hammer.
-        rewrite <- getmem_mod_l with 
-            (a := 4294967292 + arr + 4 * (1 + inner_loop_count)) in BC0.
-        replace (4294967292 + arr ⊕ 4 * (1 + inner_loop_count)) with
-            (arr ⊕ 4 * inner_loop_count) in BC0.
-        rewrite (N.add_comm 1 inner_loop_count), getmem_mod_l in BC0.
         unfold swap_correctness in Swap.
+        rewrite N.mul_add_distr_l in BC0 at 2. psimpl in BC0.
+        rewrite (N.add_comm 1) in BC0.
         rewrite <- Swap with (i := a4) in BC0.
-        rewrite BC0.
         hammer.
-        clear. rewrite N.mul_add_distr_l. now psimpl.
 
         (* arr[j-1 >= arr[j] *)
         do 2 eexists; exists (1 + inner_loop_count); repeat split; eauto.
+            now rewrite A4.
             repeat rewrite N.mul_add_distr_l. psimpl.
             rewrite N.mod_small. reflexivity.
             1-3: apply Bool.negb_true_iff, N.eqb_neq in BC; lia.
-        (* TODO : replace with hammer when fixed *)
-        unfold_cycle_count_list.
-        do 1 (match goal with
-        | [|- context[time_of_addr ?X ?Y]] =>
-            let H := fresh "H" in
-            eassert(time_of_addr X Y = _) as H by
-            (now (cbv - [getmem setmem N.eqb]; find_rewrites;
-                    simpl; find_rewrites));
-            rewrite H; clear H
-        end).
-        match goal with
-        | [|- context[time_of_addr ?X ?Y]] =>
-            let H := fresh "H" in
-            eassert(time_of_addr X Y = _) as H
-        end. cbv [time_of_addr].
-        eassert (rv_decode (binary 516) = _) by (now compute); 
-            rewrite H; clear H.
-        cbv [N.eqb]. psimpl. rewrite BC0. compute. reflexivity.
-        rewrite H. clear H.
+
         rewrite sum_Sn by lia.
-        hammer.
-        rewrite <- getmem_mod_l with 
-            (a := 4294967292 + arr + 4 * (1 + inner_loop_count)) in BC0.
-        replace (4294967292 + arr ⊕ 4 * (1 + inner_loop_count)) with
-            (arr ⊕ 4 * inner_loop_count) in BC0.
-        rewrite (N.add_comm 1 inner_loop_count), getmem_mod_l in BC0.
         unfold swap_correctness in Swap.
+        rewrite N.mul_add_distr_l in BC0 at 2. psimpl in BC0.
+        rewrite (N.add_comm 1) in BC0.
         rewrite <- Swap with (i := a4) in BC0.
-        rewrite BC0.
         hammer.
-        clear. rewrite N.mul_add_distr_l. now psimpl.
 
         (* at end of array, exit inner loop -> outer loop invariant *)
         apply Bool.negb_false_iff, N.eqb_eq in BC; subst.
         repeat step.
         eexists. eexists. repeat split; eauto.
-            rewrite N.mod_small.
-        lia. lia.
-        hammer. rewrite N.mod_small, BC, N.eqb_refl by lia.
-            hammer.
-        replace len with (1 + inner_loop_count) in * by lia.
-        assert (forall x, 1 + x - 1 = x) by lia. rewrite H in *. clear H.
+            rewrite N.mod_small; lia.
+        hammer.
+            rewrite N.mod_small by lia.
+            replace (s' R_A1) with (1 + inner_loop_count) in * by lia.
+        assert (forall x, 1 + x - 1 = x) by lia. rewrite H in *.
         rewrite sum_Sn by lia. hammer.
 Qed.
 

@@ -138,6 +138,15 @@ Module NEORV32 (cfg : NEORV32Config) <: CPUTimingBehavior.
     Definition torc_b := 4.
     (* Byte-reverse *)
     Definition trev8 := 4.
+
+    (* ==== Zicsr ISA Extension ==== *)
+    (* System *)
+    Definition tcsrrw := 3.
+    Definition tcsrrwi := 3.
+    Definition tcsrrs := 3.
+    Definition tcsrrsi := 3.
+    Definition tcsrrc := 3.
+    Definition tcsrrci := 3.
 End NEORV32.
 
 (* https://github.com/stnolting/neorv32/blob/main/rtl/test_setups/neorv32_test_setup_bootloader.vhd *)
