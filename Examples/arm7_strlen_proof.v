@@ -51,24 +51,33 @@ Proof.
 Qed.
 
 (* Correctness specification for strlen: *)
-Definition nilfree (m:addr->N) (p:addr) (k:N) :=
-  forall i, i < k -> m Ⓑ[p+i] <> 0.
+Section Invariants.
 
-Definition postcondition (m:addr->N) (p:addr) (s:store) :=
-  ∃ k, s R_R0 = Ⓓk /\ nilfree m p k /\ m Ⓑ[p+k] = 0.
+  Variable mem : memory.  (* initial memory state *)
+  Variable p : addr.      (* pointer argument *)
 
-(* Loop invariants for verifying the specification (not trusted). *)
-Definition strlen_invs (m:addr->N) (p:addr) (t:trace) :=
-  match t with (Addr a,s)::_ => match a with
-  | 0 => Some (s R_R0 = Ⓓp)
-  | 40 => Some (∃ k, s R_R0 = Ⓓ(4*k ⊖ p mod 4) /\
-                     s R_R1 = Ⓓ(p ⊖ p mod 4 ⊕ 4*N.succ k) /\
-                     s R_R2 = Ⓓ match k with N0 => m Ⓓ[ p ⊖ p mod 4 ] .| N.ones (p mod 4 * 8)
-                                           | _ => m Ⓓ[ p ⊖ p mod 4 ⊕ 4*k ] end /\
-                     nilfree m p (4*k - p mod 4))
-  | 92 => Some (postcondition m p s)
-  | _ => None
-  end | _ => None end.
+  (* The first k bytes are non-nil. *)
+  Definition nilfree (k:N) := ∀ i, i < k -> mem Ⓑ[p+i] <> 0.
+
+  (* strlen must return a number k such that the first k bytes of p are non-nil
+     and the k+1st byte is nil. *)
+  Definition postcondition (s:store) :=
+    ∃ k, s R_R0 = k /\ nilfree k /\ mem Ⓑ[p+k] = 0.
+
+  (* Loop invariants for verifying the specification (not trusted). *)
+  Definition strlen_invs (t:trace) :=
+    match t with (Addr a,s)::_ => match a with
+    | 0 => Some (s R_R0 = p)
+    | 40 => Some (∃ k, s R_R0 = 4*k ⊖ p mod 4 /\
+                       s R_R1 = p ⊖ p mod 4 ⊕ 4*N.succ k /\
+                       s R_R2 = match k with N0 => mem Ⓓ[ p ⊖ p mod 4 ] .| N.ones (p mod 4 * 8)
+                                           | _ => mem Ⓓ[ p ⊖ p mod 4 ⊕ 4*k ] end /\
+                       nilfree (4*k - p mod 4))
+    | 92 => Some (postcondition s)
+    | _ => None
+    end | _ => None end.
+
+End Invariants.
 
 
 (* Before proving correctness, prove some helper lemmas about binary arithmetic
@@ -81,24 +90,24 @@ Proof.
   apply N.Div0.mod_le.
 Qed.
 
-Lemma getbyte:
+Lemma getmem_byte:
   forall len m a,
   getmem 32 LittleE (N.succ len) m a .& (N.ones 8 << (8*len)) = m Ⓑ[a+len] << (8*len).
 Proof.
-  intros. rewrite <- N.add_1_r, getmem_split, N.land_lor_distr_l, <- N.shiftl_land.
+  intros. rewrite <- N.add_1_r, getmem_split, N.mul_comm, N.land_lor_distr_l, <- N.shiftl_land.
   rewrite N.land_ones, N.mod_small by apply getmem_bound. replace (_.&_) with 0. reflexivity.
   symmetry. apply N.bits_inj_0. intro b.
   rewrite N.land_spec. destruct (N.lt_ge_cases b (8*len)).
     rewrite N.shiftl_spec_low by assumption. apply Bool.andb_false_r.
-    erewrite bound_hibits_zero. reflexivity. apply getmem_bound. assumption.
+    erewrite bound_hibits_zero. reflexivity. apply getmem_bound. rewrite N.mul_comm. assumption.
 Qed.
 
-Lemma getbyte':
+Lemma getmem_byte':
   forall len m a, a mod 4 <= len ->
   (getmem 32 LittleE (N.succ len) m (a ⊖ a mod 4) .| N.ones (a mod 4 * 8)) .& (N.ones 8 << (8*len)) =
-  m Ⓑ[a ⊖ a mod 4+len] << (8*len).
+  m Ⓑ[a ⊖ a mod 4 + len] << (8*len).
 Proof.
-  intros. rewrite N.land_lor_distr_l. rewrite getbyte. replace (_.&_) with 0. apply N.lor_0_r.
+  intros. rewrite N.land_lor_distr_l. rewrite getmem_byte. replace (_.&_) with 0. apply N.lor_0_r.
   symmetry. apply N.bits_inj_0. intro b.
   rewrite N.land_spec. destruct (N.lt_ge_cases b (a mod 4 * 8)).
     rewrite N.shiftl_spec_low. apply Bool.andb_false_r. eapply N.lt_le_trans. eassumption.
@@ -129,7 +138,7 @@ Proof.
   psimpl. destruct k as [|k].
     rewrite N.add_0_r in LT. apply N.lt_add_lt_sub_l in LT. specialize (NN _ LT).
     apply N.eqb_neq in NN. intro H. apply NN.
-    rewrite getbyte'. psimpl. rewrite H. apply N.shiftl_0_l. apply N.le_add_r.
+    rewrite getmem_byte'. psimpl. rewrite H. apply N.shiftl_0_l. apply N.le_add_r.
   destruct (N.lt_ge_cases i (4*N.pos k - p mod 4)) as [H1|H1]. apply NF. assumption.
   assert (H2: p mod 4 <= 4 * N.pos k). transitivity 4.
     apply N.lt_le_incl, N.mod_lt. discriminate 1.
@@ -137,7 +146,7 @@ Proof.
   rewrite <- N.add_sub_assoc in LT by assumption.
   rewrite <- (N.sub_add _ _ H1) in LT. apply N.add_lt_mono_r in LT.
   specialize (NN _ LT). apply N.eqb_neq in NN. intro H'. apply NN.
-  rewrite <- add_msub_swap, <- add_msub_assoc, getmem_mod_l, getbyte.
+  rewrite <- add_msub_swap, <- add_msub_assoc, getmem_mod_l, getmem_byte.
   rewrite <- N.add_assoc, <- (getmem_mod_l _ _ 1), <- ofZ_toZ, !toZ_add, toZ_msub, !toZ_sub by assumption.
   rewrite <- !toZ_msub, <- !toZ_add, ofZ_toZ. psimpl. rewrite H'. apply N.shiftl_0_l.
 Qed.
@@ -172,9 +181,9 @@ Proof.
         apply nilfree_mod, nilfree_extend; try assumption. apply N.lt_le_incl, J4.
       rewrite <- N.add_assoc, <- add_msub_assoc, N.add_comm, getmem_mod_l,
               <- (N.shiftr_0_l (8*j)), <- NIL. destruct k as [|k].
-        rewrite getbyte', N.add_0_r by exact JP1.
+        rewrite getmem_byte', N.add_0_r by exact JP1.
           rewrite N.shiftr_shiftl_l, N.sub_diag, N.shiftl_0_r; reflexivity.
-        rewrite getbyte, (N.add_comm p), <- add_msub_assoc, (N.add_comm (4*_)).
+        rewrite getmem_byte, (N.add_comm p), <- add_msub_assoc, (N.add_comm (4*_)).
           rewrite N.shiftr_shiftl_l, N.sub_diag, N.shiftl_0_r; reflexivity.
 
     (* Weird special case:  Strlen never terminates after exceeding 2^32 bytes because
@@ -188,7 +197,7 @@ Proof.
         transitivity 4. assumption. reflexivity.
         etransitivity; [|eassumption]. apply N.le_add_r.
       apply N.le_add_le_sub_l, JP2.
-    rewrite getbyte, <- add_msub_swap, <- add_msub_assoc,
+    rewrite getmem_byte, <- add_msub_swap, <- add_msub_assoc,
             <- getmem_mod_l, mp2_add_l, <- N.add_assoc, <- mp2_add_r, getmem_mod_l in NIL.
     apply N.shiftl_eq_0_iff in NIL. rewrite <- NIL.
     rewrite <- getmem_mod_l. rewrite <- mp2_add_r, <- msub_sub by assumption.
@@ -201,7 +210,7 @@ Theorem strlen_partial_correctness:
   forall s p lr m t s' x'
          (ENTRY: startof t (x',s') = (Addr 0,s))
          (MDL: models arm7typctx s)
-         (MEM: s V_MEM32 = Ⓜm) (LR: s R_LR = Ⓓlr) (R0: s R_R0 = Ⓓp),
+         (MEM: s V_MEM32 = m) (LR: s R_LR = lr) (R0: s R_R0 = p),
   satisfies_all strlen_arm (strlen_invs m p) strlen_exit ((x',s')::t).
 Proof.
   Local Ltac step := time arm7_step.
@@ -215,18 +224,17 @@ Proof.
   (* Inductive cases *)
   intros.
   eapply startof_prefix in ENTRY; try eassumption.
-  apply (arm7_regsize MDL) in R0. simpl in R0. rename R0 into P32.
+  assert (P32 := models_var R_R0 MDL). rewrite R0 in P32. unfold arm7typctx in P32.
   eapply preservation_exec_prog in MDL; try (eassumption || apply strlen_welltyped).
   erewrite strlen_preserves_memory in MEM by eassumption.
   erewrite strlen_preserves_lr in LR by eassumption.
-  assert (WTM := arm7_wtm MDL MEM). simpl in WTM.
-  clear - PRE LR P32 MEM MDL WTM. rename t1 into t. rename s1 into s.
+  clear - PRE P32 LR MEM MDL. rename t1 into t. rename s1 into s.
 
   destruct_inv 32 PRE.
 
   (* Address 0 *)
-  step. step. step. step.
-    rewrite <- (N.ldiff_land_low _ 3 32) by (destruct p; [|apply N.log2_lt_pow2;[|apply (arm7_regsize MDL PRE)]]; reflexivity).
+  step. step. step. step. rewrite <- (N.ldiff_land_low _ 3 32) by
+    (destruct p; [|apply N.log2_lt_pow2;[|assumption]]; reflexivity).
     change 3 with (N.ones 2). rewrite ldiff_sub, N.land_ones.
   step. exists 0.
     apply Neqb_ok in BC. rewrite BC. simpl N.succ. change (N.ones _) with 0. psimpl. repeat split.
