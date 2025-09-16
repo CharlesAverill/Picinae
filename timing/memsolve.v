@@ -98,57 +98,13 @@ Qed.
 Lemma msub_pred_cancel:
   forall w a c, 0 < a -> 0 < c -> msub w a c = msub w (N.pred a) (N.pred c).
 Proof.
-  intros. assert (Eqa: 2 ^ w <> 0) by lia. remember Eqa as Eqc; clear HeqEqc.
-  apply (N.div_mod a) in Eqa. apply (N.div_mod c) in Eqc.
-  remember (a / 2 ^ w) as qa; remember (a mod 2 ^ w) as ra.
-  remember (c / 2 ^ w) as qc; remember (c mod 2 ^ w) as rc.
-  rewrite Eqa, Eqc. destruct (N.lt_trichotomy 0 ra) as [Gt | [Eq | Lt]]; [ | | lia]; cycle 1.
-  (* 0 = ra *)
-    subst ra. rewrite <-Eq, N.add_0_r in *. psimpl.
-    destruct (N.lt_trichotomy 0 rc) as [Gtrc | [Eqrc | Ltrc]]; [ | | lia]; cycle 1.
-    (* 0 = rc *)
-    subst rc; rewrite <-Eqrc, N.add_0_r in *. psimpl; rewrite Eqa in H; rewrite Eqc in H0; clear - H H0.
-    unfold msub. (**) rewrite (N.mul_comm _ qc) at 1. rewrite N.Div0.mod_mul, N.sub_0_r. (**)rewrite <-(N.mul_1_r (2^w)) at 2. 
-    rewrite <-N.mul_add_distr_l, N.mul_comm, N.Div0.mod_mul.
-    rewrite pred_mod, sub_pred_succ; try lia.
-    rewrite N.add_sub_assoc, <-N.add_succ_comm, N.succ_pred; try lia.
-    rewrite <-N.add_sub_assoc, N.sub_diag, N.add_0_r, N.mul_comm, N.Div0.mod_mul; try lia.
-    (* 0 < rc *)
-    rewrite (N.pred_sub (_ + rc)). rewrite <-N.add_sub_assoc; try lia.
-    unfold msub. rewrite <-(N.Div0.add_mod_idemp_l (N.pred (2 ^ w * qa))). rewrite pred_mod; try lia.
-    rewrite N.mul_comm. rewrite <-(N.Div0.add_mod_idemp_l (_ *qc)),<-(N.Div0.add_mod_idemp_l (_ *qc)). rewrite (N.mul_comm _ qc).
-    rewrite N.Div0.mod_mul, N.add_0_l, N.add_0_l.
-    rewrite (N.mod_small (rc - 1)); try lia. rewrite <-N.pred_sub, sub_pred_succ; try lia.
-    rewrite N.add_pred_l, <-N.add_pred_r; try lia.
-    rewrite N.sub_succ_l; try lia. rewrite N.pred_succ.
-    rewrite (N.mod_small rc); try lia. rewrite <-N.Div0.add_mod_idemp_l, <-(N.Div0.add_mod_idemp_l (2^w)).
-    rewrite N.Div0.mod_mul, N.Div0.mod_same, N.add_0_l; reflexivity.
-  (* 0 < ra *)
-    destruct (N.lt_trichotomy 0 rc) as [Gtrc | [Eqrc | Ltrc]]; [ | | lia]; cycle 1.
-    (* 0 = rc *)
-    subst rc; rewrite <-Eqrc, N.add_0_r. psimpl. unfold msub. rewrite pred_mod; try lia.
-    rewrite <-N.add_pred_r; try lia. rewrite sub_pred; try lia. 
-    rewrite (N.mul_comm _ qc) at 1. rewrite N.Div0.mod_mul, N.sub_0_r. rewrite N.add_comm, N.add_assoc.
-    rewrite <-(N.mul_1_r (2^w)) at 1.
-    rewrite <-N.mul_add_distr_l, N.mul_comm, <-(N.Div0.add_mod_idemp_l (_*2^w)), N.Div0.mod_mul, N.add_0_l.
-    rewrite N.mod_small; try lia.
-    rewrite <-N.add_assoc.
-    rewrite <-N.Div0.add_mod_idemp_l, N.mul_comm, N.Div0.mod_mul, N.add_0_l, N.add_1_r, N.succ_pred, N.mod_small; try lia.
-    (* 0 < rc *)
-    rewrite <-N.add_pred_r, <-N.add_pred_r; try lia.
-    unfold msub at 2. 
-    (* TODO: Make this simplify automatically: 
-             2 ^ w * qc + N.pred rc) mod 2 ^ w *) 
-    rewrite <-(N.Div0.add_mod_idemp_l (2^w*qc)), (N.mul_comm (2^w) qc), N.Div0.mod_mul, N.add_0_l.
-    rewrite (N.mod_small (N.pred rc)); try lia.
-    rewrite N.add_sub_assoc, <-(N.add_assoc _ (N.pred ra)), (N.add_comm _ (2^w)),N.add_assoc ; try lia.
-    rewrite <-N.add_assoc, <-N.add_sub_assoc, <-N.Div0.add_mod_idemp_l; try lia.
-    rewrite N.mul_comm, N.Div0.mod_mul, N.add_0_l. unfold msub.
-    rewrite <-(N.Div0.add_mod_idemp_l (qc * _)), N.Div0.mod_mul, N.add_0_l.
-    rewrite <-N.add_assoc. rewrite <-(N.Div0.add_mod_idemp_l (qa * _)), N.Div0.mod_mul, N.add_0_l.
-    rewrite (N.mod_small rc), N.add_sub_assoc, N.add_comm; try lia.
-    rewrite sub_pred_succ; try assumption. rewrite <-N.add_succ_r, N.succ_pred; try lia.
-Qed. 
+  intros.
+  rewrite N.pred_sub at 1.
+  rewrite <-msub_mod_l with (x:=a-1) (w':=w), <-msub_sub, <-msub_add_distr, N.add_1_l.
+  rewrite N.succ_pred_pos.
+  reflexivity.
+  all:lia.
+Qed.
 
 Lemma msub_pred_succ:
   forall w a b, 0 < b -> (msub w a (N.pred b)) mod 2 ^ w = (N.succ (msub w a b)) mod 2 ^ w.
