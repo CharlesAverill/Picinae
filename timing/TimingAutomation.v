@@ -307,11 +307,12 @@ Ltac generalize_timing_trace Heq TSI l a s t :=
     assert (cycle_count_of_trace l = x) as TSI by
         (rewrite Heq; hammer; psimpl;
         match goal with
-        | [|- ?v = x] => instantiate (x := v)
+        | [|- ?v = x] => try subst x; instantiate (1 := v)
         end; reflexivity);
     subst x.
+
 Ltac do_generalize :=
-    match goal with
+    lazymatch goal with
     | [t: list (exit * store), 
         TSI: cycle_count_of_trace ?t = ?x
         |- context[_ :: (Addr ?a, ?s) :: ?t]] =>
