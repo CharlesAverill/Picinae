@@ -273,7 +273,7 @@ Qed.
 Lemma firstinst:
   forall i2i' i p s z t
     (CB: ContainsBlock i2i' i p s (z::t))
-    (Z: (i2i' i >= 0)%Z),
+    (Z: (0 <= i2i' i)%Z),
     p s (Z.to_N (i2a' i2i' i)) = Some (4%N, arm2il (Z.to_N (i2a' i2i' i)) (arm_decode z)).
 Proof.
   intros. remember (Z.to_N _) as a. specialize (CB a). cbn in CB. remember (_ - _). unfold i2a', to_a in *. assert (n = 0) by lia. rewrite H in CB. cbn in CB.
@@ -331,6 +331,14 @@ Proof.
   rewrite last_unfold. apply IHt.
 Qed.
 
+Lemma single_element:
+  forall A (a: A) b c,
+    [a] = b ++ [c] ->
+    a = c.
+Proof.
+  intros. destruct b. simpl in H. now inversion H. simpl in H. inversion H. simpl in H2. now apply app_cons_not_nil in H2.
+Qed.
+
 Lemma SafeDest_rewrite_inst:
   forall tc i2i' z pol i ti ai bi txt irm' table tc' p a' s' s1 t1 t0
     (TC: True) (* table cache is consistent with memory *)
@@ -339,6 +347,7 @@ Lemma SafeDest_rewrite_inst:
     (I:  (0 <=  i < 2^30)%Z)
     (BI: (0 <= bi < 2^30)%Z)
     (I2I': forall i, (0 <= i2i' i < 2^30)%Z)
+    (AIB: ~InBlock i2i' i (length irm') (Z.to_N ai * 4))
     (CB: ContainsBlock i2i' i p s1 irm')
     (IB: Forall (InBlockXs i2i' i (length irm')) t1)
     (XP: exec_prog p ((Addr a', s')::t1++(Addr (Z.to_N (i2a' i2i' i)), s1)::t0))
@@ -346,26 +355,38 @@ Lemma SafeDest_rewrite_inst:
   SafeDest i2i' pol ai i (length irm') a'.
 Proof.
   intros.
-  unfold rewrite_inst in *. destruct_match_in RI; try discriminate; try rewrite Bool.negb_false_iff in *.
-  intros. unfold rewrite_inst in RI. destruct_match_in RI; try discriminate.
-  unfold goto_abort in RI. destruct_match_in RI; try discriminate.
-  - inversion RI; subst; clear RI. left. left. destruct t1.
-    (* unfold GOTO in e2. destruct orb eqn:e3 in e2; try discriminate. *)
-    * rewrite app_nil_l in XP. inversion XP. clear l H0 H2.
-      inversion H1. apply firstinst in CB; try (specialize (I2I' i); lia). rewrite CB in LU. inversion LU; clear LU. subst.
-      unfold i2a', to_a in XS. Search Z.to_N N.mul. rewrite Z.mul_comm, Z2N.inj_mul in XS by (specialize (I2I' i); lia). simpl (Z.to_N 4) in XS.
-      remember (Z.to_N (i2i' i)) as src.
-      Search Z.of_N Z.to_N.
-      rewrite <-(Z2N.id (i2i' i)) in e1 by (specialize (I2I' i); lia). rewrite <-Heqsrc in e1.
-      rewrite <-(Z2N.id ai) in e1; try lia.
-      epose proof (GOTOz_correct _ _ _ _ _ _ _ _ _ _ _ e1 XS).
-      Unshelve.
-      all: try lia.
-      2: { rewrite Heqsrc. specialize (I2I' i). lia. }
-      subst x0.
-      unfold exitof in H2. injection H2; intros; subst a'; clear H2.
-      unfold to_a. rewrite N2Z.inj_mul, Z2N.id; try lia.
-    * exfalso. (* TODO: derive a contradiction based on all the steps in p0::l being in the block. *)
+  assert (goto_abort (i2i' i) ai tc = Some (irm', table, tc') -> SafeDest i2i' pol ai i (length irm') a') as GA.
+  {
+    unfold goto_abort. intro GA; destruct_match_in GA; try discriminate.
+    inversion GA; subst; clear GA.
+
+    rewrite app_comm_cons in XP. remember (_ :: t1) as l. destruct (rev_destruct l). subst; discriminate.
+    inversion e0 as [t2 H]; clear e0; subst. inversion H as [(x, s) H0]; clear H; simpl in H0.
+    unfold exec_prog in XP.
+    rewrite H0, <- app_assoc, stepsof_app, 2 Forall_app in XP. destruct XP as [_ [_ XP]].
+    inversion XP; clear XP H1 H3; subst. inversion H2; clear H2.
+
+    apply firstinst in CB; try apply I2I'. rewrite CB in LU. inversion LU; clear LU. subst.
+    unfold i2a', to_a in XS. rewrite Z.mul_comm, Z2N.inj_mul in XS by (apply I2I' || lia).
+    remember (Z.to_N (i2i' i)) as src.
+    rewrite <-(Z2N.id (i2i' i)) in e by (apply I2I'; lia). rewrite <-Heqsrc in e.
+    rewrite <-(Z2N.id ai) in e by lia.
+    epose proof (GOTOz_correct _ _ _ _ _ _ _ _ _ _ _ e XS).
+    Unshelve.
+    all: try lia.
+    2: { rewrite Heqsrc. specialize (I2I' i). lia. }
+    subst.
+
+    simpl in H0. destruct t1.
+      apply single_element in H0. inversion H0. left. left. unfold to_a; lia.
+      destruct (exists_last (ltac:(discriminate):p0::t1<>[])) as [? [? ?]].
+        rewrite e0, app_comm_cons, app_inj_tail_iff in H0. destruct H0. subst.
+        rewrite e0, Forall_app in IB. destruct IB. now inversion H0.
+  }
+ unfold rewrite_inst in RI. destruct_match_in RI; try discriminate;
+  match type of RI with context[goto_abort] => now apply GA
+  | _ => clear GA
+  end.
 
 (** Definitions for reasoning about the locations in memory and sizes of
     jumptable entries. *)
