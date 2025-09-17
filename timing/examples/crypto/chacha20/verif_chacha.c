@@ -201,3 +201,5 @@ void chacha20_encrypt(const uint8_t* plaintext, uint8_t* ciphertext,
         offset += block_len;
     }
 }
+
+int main() {}
