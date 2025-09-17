@@ -38,6 +38,7 @@ Require Import ZArith.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
 Require Import List.
+Require Import Lia ZifyN ZifyBool.
 Require Setoid.
 Open Scope list_scope.
 
@@ -2842,6 +2843,17 @@ Proof.
   rewrite N.add_comm, N.mul_comm, mp2_mod_add. reflexivity.
 Qed.
 
+Lemma msub_pred_cancel:
+  forall w a c, 0 < a -> 0 < c -> msub w a c = msub w (N.pred a) (N.pred c).
+Proof.
+  intros.
+  rewrite N.pred_sub at 1.
+  rewrite <-(msub_mod_l w w (a-1)), <-msub_sub, <-msub_add_distr, N.add_1_l.
+  rewrite N.succ_pred_pos.
+  reflexivity.
+  all:lia.
+Qed.
+
 Theorem msub_nowrap:
   forall w x y, x mod 2^w <= y mod 2^w -> msub w y x = y mod 2^w - x mod 2^w.
 Proof.
@@ -5214,6 +5226,44 @@ Proof.
   rewrite EQ. reflexivity.
 Qed.
 
+Theorem noverlap_index_l:
+  forall w a1 len1 a2 len2 index size
+  (NO : ~ overlap w a1 len1 a2 len2)
+  (IN : index + size <= len1),
+  ~ overlap w (a1 + index) size a2 len2.
+Proof.
+  intros.
+  remember (a1 + index) as a1'. apply noverlap_shrink with (a1:=a1) (len1:=len1).
+  rewrite Heqa1'. rewrite add_msub_l.
+  apply N.le_trans with (m:=index+size). rewrite <-N.add_le_mono_r. apply N.Div0.mod_le.
+  assumption.
+  assumption.
+Qed.
+
+Theorem noverlap_index_r:
+  forall w a1 len1 a2 len2 index size
+  (NO : ~ overlap w a1 len1 a2 len2)
+  (IN : index + size <= len2),
+  ~ overlap w a1 len1 (a2+index) size.
+Proof.
+  intros. eapply noverlap_symmetry, noverlap_index_l;[
+    eapply noverlap_symmetry; eassumption
+  | eassumption ].
+Qed.
+
+Theorem noverlap_index_index:
+  forall w a1 len1 a2 len2 index1 size1 index2 size2
+  (NO  : ~ overlap w a1 len1 a2 len2)
+  (IN1 : index1 + size1 <= len1)
+  (IN2 : index2 + size2 <= len2),
+  ~ overlap w (a1 + index1) size1 (a2 + index2) size2.
+Proof.
+  intros. apply noverlap_index_l with (len1:=len1).
+  apply noverlap_symmetry. apply noverlap_index_l with (len1:=len2).
+  apply noverlap_symmetry.
+  all: assumption.
+Qed.
+
 Theorem setmem_swap:
   forall w e len1 len2 m a1 a2 v1 v2
     (NO: ~overlap w a1 len1 a2 len2),
@@ -6438,6 +6488,1229 @@ Ltac prove_noassign :=
   end;
   repeat lazymatch goal with [ |- _ <> _ ] => discriminate 1
                            | _ => constructor; let g:=numgoals in guard g<=2 end.
+
+(* Linked list nodes are modeled as structs comprised of a datum and a next pointer.
+   The datum is first, so a node at address a will have the datum located at a, and
+   the pointer at address a+dw, for dw being the byte-width of the datum.
+
+   To instantiate the LinkedLists theory module create a LinkedListParams module
+   using the `<:` module subtyping scope.  This renders the module transparent
+   wheras using `:` would make its definitions opaque and thus the theories
+   unusable. E.g., create a parameters module like so:
+
+      Module p <: LinkedListParams.
+        Definition w := 32.
+        Definition e := LittleE.
+        Definition dw := 4.
+        Definition pw := 4.
+        Global Transparent w e dw pw.
+      End p.
+ *)
+Module Type LinkedListParams.
+  Parameter w : bitwidth.
+  Parameter e : endianness.
+  Parameter dw pw : bitwidth.
+  Global Transparent w e dw pw.
+End LinkedListParams.
+
+Module LinkedLists (P:LinkedListParams).
+Import P.
+Global Transparent w e dw pw.
+Section ll_section.
+  (*
+  Context {w : bitwidth}.
+  Context {e : endianness}.
+  Context {dw pw : bitwidth}.
+   *)
+(* dw - data width, bytes of the data payload in each node *)
+(* pw - pointer width, bytes of the next-pointer size *)
+Declare Scope ll_scope.
+Open Scope ll_scope.
+Notation "m Ⓥ[ a  ]" := (getmem w e dw m a) (at level 30) : ll_scope. (* read dword from memory *)
+Notation "m Ⓟ[ a  ]" := (getmem w e pw m (dw+a)) (at level 30) : ll_scope. (* read dword from memory *)
+
+Definition NULL : N := 0.
+Definition list_node_value (mem : N) (node : addr) : option N :=
+    match node with 0 => None | _ => Some (mem Ⓥ[node]) end.
+Definition list_node_next (mem : N) (node : addr) : option N :=
+  (* Original definition: mem Ⓓ[4 + node]. *)
+  (* Allowing NULL to have itself as the next node: *)
+  match node with 0 => None | _ => Some (mem Ⓟ[node]) end.
+
+Inductive key_in_linked_list : N -> addr -> N -> nat -> Prop :=
+| KeyAtHead mem node key :
+    list_node_value mem node = Some key ->
+    key_in_linked_list mem node key 0
+| KeyAtNext mem node next key idx :
+    list_node_value mem node <> Some key ->
+    list_node_next mem node = Some next ->
+    key_in_linked_list mem next key idx ->
+    key_in_linked_list mem node key (S idx).
+
+Definition optNeq ox (y:N) : {ox = Some y}+{ox <> Some y}.
+destruct ox;[|right].
+  destruct (N.eq_dec n y);[left; now subst|right]. intro H; injection H; now subst.
+  intro; discriminate.
+Qed.
+
+Fixpoint key_in_linked_list_dec (mem : N) (node : addr) (key : N) (idx : nat)
+        : {key_in_linked_list mem node key idx} + {~ key_in_linked_list mem node key idx}.
+    rename key_in_linked_list_dec into IH. destruct idx as [| idx'].
+    - (* Base case: idx = 0 *)
+        destruct (optNeq (list_node_value mem node) key).
+        + left. constructor. exact e0.
+        + right. intros H. inversion H. subst. contradiction.
+    - (* Inductive case: idx = S idx' *)
+        destruct (list_node_next mem node) as [node'|] eqn:EqNode'.
+        specialize (IH mem node' key idx'). move node' before key; move node before node'.
+        destruct IH;
+        destruct (optNeq (list_node_value mem node) key).
+        (* key in wrong index -> contradiction*)
+        right; intro H; inversion H; subst; contradiction.
+        2: { right; intro H; inversion H; subst; contradiction. }
+        (* key in tail *)
+        left; apply KeyAtNext with (next:=node'); try easy.
+        (* key not in tail *)
+        right; intro H; inversion H; subst. rewrite EqNode' in H2; injection H2; intro; now subst.
+        (* list is empty *)
+        right; intro H; inversion H; subst. rewrite EqNode' in H2; discriminate.
+Defined.
+
+(* node_in_linked_list allows for the looked up node to be NULL. *)
+Inductive node_in_linked_list : (N) -> addr -> addr -> Prop :=
+  | NodeAtHead : forall mem node, node_in_linked_list mem node node
+  | NodeInTail : forall mem node head next
+    (NEQ: head <> node)
+    (NEXT: list_node_next mem head = Some next)
+    (IN: node_in_linked_list mem next node),
+    node_in_linked_list mem head node.
+
+(** A list is well formed if the head node points
+      1) NULL, or
+      2) the head of a well formed list. *)
+Inductive well_formed_list : (N) -> addr -> Prop :=
+| wf_nil : forall mem, well_formed_list mem NULL
+| wf_cons : forall mem head next
+    (NEXT: list_node_next mem head = Some next)
+    (NEXTWF: well_formed_list mem next),
+    well_formed_list mem head.
+
+Inductive node_distance : (N) -> addr -> addr -> nat -> Prop :=
+| Dst0 : forall mem node,
+    node_distance mem node node 0
+| DstSn : forall mem src dst len next
+    (NEXT: list_node_next mem src = Some next)
+    (NEQ: src <> dst)
+    (LEN: node_distance mem next dst len),
+    node_distance mem src dst (S len).
+
+Ltac align_next :=
+  match goal with
+  | [H1: list_node_next ?m ?h = Some ?n,
+     H2: list_node_next ?m ?h = Some ?n2 |- _] =>
+    rewrite H1 in H2; injection H2; intro temp; subst n2; clear H2
+  end.
+
+Theorem node_distance_uniq:
+  forall mem src dst len1 len2,
+    node_distance mem src dst len1 ->
+    node_distance mem src dst len2 ->
+    len1 = len2.
+Proof.
+  intros mem src dst len1 len2 H; revert len2.
+  induction H; intros len2 L2.
+  - inversion L2; subst.
+      reflexivity.
+      contradiction.
+  - inversion L2; subst.
+      contradiction.
+      align_next.
+      now rewrite (IHnode_distance len0).
+Qed.
+
+Theorem node_distance_uniq':
+  forall mem src dst1 len1 dst2 len2,
+    node_distance mem src dst1 len1 ->
+    node_distance mem src dst2 len2 ->
+    len1 = len2 -> dst1 = dst2.
+Proof.
+  intros mem src dst1 len1 dst2 len2 H; revert dst2 len2 .
+  induction H; intros dst2 len2 L2.
+  - inversion L2; subst.
+      reflexivity.
+      intro; discriminate.
+  - inversion L2; subst.
+      intro; discriminate.
+      intro EQ; injection EQ; clear EQ; intro EQ; subst len0.
+      eapply IHnode_distance; align_next; try eassumption. reflexivity.
+Qed.
+
+Theorem no_node_in_null:
+  forall mem node (NNUL: node <> NULL), ~node_in_linked_list mem NULL node.
+Proof.
+  intros; intro H; inversion H; subst;[contradiction|simpl in NEXT;discriminate].
+Qed.
+
+Theorem wf_has_null:
+  forall mem head (WF: well_formed_list mem head),
+  node_in_linked_list mem head NULL.
+Proof.
+  intros. induction WF.
+    constructor.
+    eapply NodeInTail; try eassumption.
+    intro; subst; simpl in NEXT; discriminate.
+Qed.
+
+Theorem has_null_wf:
+  forall mem head (NUL: node_in_linked_list mem head NULL),
+  well_formed_list mem head.
+Proof.
+  intros. dependent induction NUL.
+    constructor.
+    eapply wf_cons; try easy; try eassumption.
+    apply IHNUL; reflexivity.
+Qed.
+
+Theorem well_formed_imp_next_not_same:
+  forall mem src next
+    (WF: well_formed_list mem src)
+    (NEXT:list_node_next mem src = Some next),
+  src <> next.
+Proof.
+  intros. dependent induction WF; intros.
+    discriminate.
+    align_next. rename next0 into next. destruct (N.eq_dec head next);[subst|assumption].
+    now specialize (IHWF NEXT).
+Qed.
+
+Theorem only_null_in_null:
+  forall mem node,  node_in_linked_list mem NULL node -> node = NULL.
+Proof.
+  intros mem node H. inversion H; subst; try easy.
+Qed.
+
+Theorem in_imp_next_in:
+  forall mem n n' head
+    (NEXT: list_node_next mem n = Some n')
+    (IN: node_in_linked_list mem head n),
+  node_in_linked_list mem head n'.
+Proof.
+  intros. revert NEXT; revert n'.
+  dependent induction IN.
+  - intros. destruct (N.eq_dec node n');[subst node; constructor|].
+      econstructor; try easy; try eassumption. constructor.
+  - rename IHIN into IH. intros. move n' before next.
+    specialize (IH _ NEXT0).
+    destruct (N.eq_dec n' head) as [e'|e'];[rewrite e'; apply NodeAtHead|].
+    eapply NodeInTail; try easy; try eassumption.
+Qed.
+
+Theorem in_imp_in_next:
+  forall mem head h' n
+    (NEXT: list_node_next mem head = Some h')
+    (IN: node_in_linked_list mem head n)
+    (NEQ: head <> n),
+  node_in_linked_list mem h' n.
+Proof.
+  intros. revert NEXT; revert h'.
+  inversion IN; subst; intros; try contradiction.
+  clear NEQ0; move h' before next; move IN before IN0; move NEXT before NEXT0.
+  inversion IN; subst; align_next; try assumption.
+Qed.
+
+Ltac gdep x := generalize dependent x.
+
+Theorem node_in_linked_list_trans:
+  forall mem head m dst
+    (IN1: node_in_linked_list mem head m)
+    (IN2: node_in_linked_list mem m dst),
+  node_in_linked_list mem head dst.
+Proof.
+  intros mem head m dst IN1; gdep dst; dependent induction IN1;[now intros|].
+  intros. destruct (N.eq_dec dst head);[subst dst; constructor|].
+  econstructor; try eassumption; try easy.
+  now apply IHIN1.
+Qed.
+
+Theorem node_in_imp_node_dist:
+  forall mem head n (IN:node_in_linked_list mem head n),
+    exists i, node_distance mem head n i.
+Proof.
+  intros; dependent induction IN.
+  - exists 0%nat. constructor.
+  - destruct IHIN. exists (S x). econstructor; try eassumption.
+Qed.
+
+Theorem node_dist_imp_node_in:
+  forall mem head n dist (DIST:node_distance mem head n dist),
+    node_in_linked_list mem head n.
+Proof.
+  intros; dependent induction DIST.
+  constructor.
+  econstructor; try eassumption; try easy.
+Qed.
+
+Theorem no_dist_iff_not_in:
+  forall mem head n,
+  (forall i, ~node_distance mem head n i) <-> (~node_in_linked_list mem head n).
+Proof.
+  intros; split.
+  - intros NoDist In. apply node_in_imp_node_dist in In. destruct In as [dist Dist]. specialize (NoDist dist); contradiction.
+  - intros NotIn dist Dist. destruct NotIn. eapply node_dist_imp_node_in; eassumption.
+Qed.
+
+Theorem node_dist_split:
+  forall mem h m z hm mz
+    (HM: node_distance mem h m hm)
+    (HZ: node_distance mem h z (hm+mz)),
+  node_distance mem m z mz.
+Proof.
+  intros mem h m z hm mz HM; gdep z; gdep mz. dependent induction HM.
+  - simpl. now intros.
+  - intros. apply IHHM. inversion HZ; subst. now align_next.
+Qed.
+
+Theorem node_neq_imp_dist_gtz:
+  forall mem a b d (NEQ:a<>b) (DIST:node_distance mem a b d),
+    (0<d)%nat.
+Proof.
+  intros. inversion DIST; subst;[contradiction|lia].
+Qed.
+
+Theorem dist_node_le_dist_null:
+  forall mem h b hnull hb
+    (HNULL:node_distance mem h NULL hnull)
+    (HB:node_distance mem h b hb),
+  (hb <= hnull)%nat.
+Proof.
+  intros mem h b hnull hb HNULL; gdep b; gdep hb. dependent induction HNULL; intros.
+  inversion HB; subst. lia. discriminate.
+  inversion HB; subst. lia. align_next. specialize (IHHNULL (JMeq_refl NULL) _ _ LEN). lia.
+Qed.
+
+Theorem node_dist_null_split:
+  forall mem h b hnull hb
+    (HNULL:node_distance mem h NULL hnull)
+    (HB:node_distance mem h b hb),
+  node_distance mem b NULL (hnull-hb).
+Proof.
+  intros mem h b hnull hb HNULL; gdep b; gdep hb. dependent induction HNULL; intros.
+  inversion HB; subst; simpl. constructor. discriminate.
+  inversion HB; subst. econstructor; try eassumption.
+    align_next. specialize (IHHNULL (JMeq_refl NULL) _ _ LEN). simpl. assumption.
+Qed.
+
+Theorem cycle_imp_null_no_dist:
+  forall i mem a b
+    (NEQ: a <> b)
+    (AB: node_in_linked_list mem a b)
+    (BA: node_in_linked_list mem b a),
+  ~ node_distance mem a NULL i.
+Proof.
+  induction i using lt_wf_ind. intros. intros DistNull. pose proof AB as AB'; pose proof BA as BA'.
+  apply node_in_imp_node_dist in AB, BA. destruct AB as [ab AB], BA as [ba BA].
+  rename i into anull.
+  pose proof (node_dist_null_split _ _ _ _ _ DistNull AB) as BNull.
+  pose proof (node_dist_null_split _ _ _ _ _ BNull BA) as ANull.
+  revert ANull.
+  assert (Help:(anull - ab - ba < anull)%nat). {
+    inversion AB; subst;[contradiction|].
+    inversion DistNull; subst;[discriminate|lia].
+  }
+  specialize (H (anull - ab - ba)%nat Help _ _ _ NEQ AB' BA').
+  now intro.
+Qed.
+
+Theorem cycle_imp_null_not_in:
+  forall mem a b
+    (NEQ: a <> b)
+    (AB: node_in_linked_list mem a b)
+    (BA: node_in_linked_list mem b a),
+  ~ node_in_linked_list mem a NULL.
+Proof.
+  intros. rewrite <-no_dist_iff_not_in; intros i.
+  eapply cycle_imp_null_no_dist; eassumption.
+Qed.
+
+Theorem cycle_imp_not_wf:
+  forall mem a b
+    (NEQ: a <> b)
+    (AB: node_in_linked_list mem a b)
+    (BA: node_in_linked_list mem b a),
+  ~ well_formed_list mem a.
+Proof.
+  intros. intro. pose proof (cycle_imp_null_not_in _ _ _ NEQ AB BA).
+  pose proof (wf_has_null _ _ H).
+  contradiction.
+Qed.
+
+Theorem well_formed_imp_not_in_strong:
+  forall mem src next (NEXT: list_node_next mem src = Some next) (WF: well_formed_list mem src),
+  forall node node' (IN: node_in_linked_list mem src node) (NEXT': list_node_next mem node = Some node'),
+  ~node_in_linked_list mem next src.
+Proof.
+  intros mem src next NEXT WF; gdep NEXT; gdep next. dependent induction WF; intros.
+  - discriminate.
+  - align_next. intros. rename head into n; rename next into n'.
+    move n before n'; move node before n; move node' before n'.
+    (* n -> n' ... *)
+    destruct (N.eq_dec n' n).
+    subst; eapply IHWF; try eassumption; try easy.
+    destruct (list_node_next mem n') as [n''|] eqn:EqN''.
+    2: { (* n -> n' = NULL *)
+      destruct n' as [|pn'];[subst|discriminate].
+      intros H; inversion H; subst;[contradiction|discriminate].
+    }
+    specialize (IHWF _ (eq_refl _)).
+    inversion IN; subst.
+    (* n = node *)
+    rename node into n. align_next.
+    clear IN. specialize (IHWF _ _ (NodeAtHead _ _) EqN''). intros H; apply IHWF; clear IHWF.
+    move EqN'' before NEXT; move n'' before n'; move n0 before n''.
+    eapply in_imp_in_next in H; try eassumption.
+    epose proof (NodeInTail _ _ _ _ _ NEXT (NodeAtHead mem n')) as Help.
+    apply node_in_linked_list_trans with (m:=n); assumption.
+    (* n -> n' ~~> node *)
+    align_next.
+    move n'' before n'; move n0 before node'; move NEQ before n0; move WF before NEQ; move NEXT' before EqN''.
+    intros H; clear IHWF.
+    epose proof (NodeInTail _ _ _ _ _ NEXT (NodeAtHead mem n')) as Help.
+    pose proof (cycle_imp_null_not_in _ _ _ n0 H Help).
+    apply wf_has_null in WF.
+    contradiction.
+    Unshelve. all: now symmetry.
+Qed.
+
+Theorem well_formed_imp_not_in:
+  forall mem src next (NEXT: list_node_next mem src = Some next) (WF: well_formed_list mem src),
+  ~node_in_linked_list mem next src.
+Proof.
+  intros. eapply (well_formed_imp_not_in_strong _ _ _ _ _). Unshelve.
+  constructor.
+  all:eassumption.
+Qed.
+
+Lemma well_formed_imp_next_neq_curr :
+  forall mem src next
+    (NEXT: list_node_next mem src = Some next)
+    (WF: well_formed_list mem src),
+    src <> next.
+Proof.
+    intros; gdep next. induction WF; subst.
+        discriminate.
+    intros. intro; subst next0. align_next. specialize (IHWF _ NEXT). contradiction.
+Qed.
+
+Lemma node_distance_len_nonzero : forall m head len,
+    node_distance m head NULL len ->
+    negb (head =? NULL) = true ->
+    (0 < len)%nat.
+Proof.
+    intros. revert H0. induction H; intros.
+        rewrite N.eqb_refl in H0; inversion H0.
+    lia.
+Qed.
+
+Lemma node_distance_same : forall m h n,
+    node_distance m h h n -> n = O.
+Proof.
+    intros. inversion H; subst. reflexivity.
+    contradiction.
+Qed.
+
+Lemma node_distance_null_dupe :
+  forall m head tail n1 n2,
+    node_distance m head tail n1 ->
+    node_distance m head tail n2 ->
+    n1 = n2.
+Proof.
+  intros m head tail n1. gdep head; gdep tail.
+  induction n1 as [n1 IHn1] using lt_wf_ind.
+  intros tail head n2 N1 N2.
+  inversion N1; subst.
+    now inversion N2.
+    inversion N2; subst.
+      contradiction.
+      align_next.
+      specialize (IHn1 len (Nat.lt_succ_diag_r _) _ _ len0 LEN LEN0). now subst.
+Qed.
+
+(* Inductive type for properties holding for all nodes in a list.
+   The property P is a function from memory and address to a prop. *)
+CoInductive LLForall (P: (N)->N->Prop): (N) -> N -> Prop :=
+  | LLForall_nil : forall mem, LLForall P mem NULL
+  | LLForall_cons : forall mem addr next
+                      (NEXT: list_node_next mem addr = Some next)
+                      (HEAD: P mem addr)
+                      (TAIL: LLForall P mem next),
+                    LLForall P mem addr.
+
+(* Specify a loose bound on the minimum address of nodes in a linked list.
+   This doesn't guarantee any node actually has this address. *)
+Definition LLBounds mem addr min max := LLForall (fun _ a => min <= a <= max) mem addr.
+CoInductive LLSame : (N) -> (N) -> N -> Prop :=
+  | LLSame_nil : forall mem mem', LLSame mem mem' NULL
+  | LLSame_cons : forall mem mem' head next,
+                  (list_node_value mem head) = (list_node_value mem' head) ->
+                  (list_node_next mem head) = (list_node_next mem' head) ->
+                  list_node_next mem head = Some next ->
+                  LLSame mem mem' next ->
+                  LLSame mem mem' head.
+
+(*Theorem llsame_ind:
+  forall mem head (f:(N)->(N))
+    (PRES:LLForall (fun mem' a => list_node_value mem a = list_node_value mem' a /\ list_node_next mem a = list_node_next mem' a)
+      (f mem) head),
+  LLSame mem (f mem) head.
+Proof.
+  intros. dependent induction PRES;[constructor|].
+  destruct HEAD as [Val Next].
+  apply LLSame_cons; try easy; rename addr into a.
+  specialize (IHPRES mem f (eq_refl _) (eq_refl _)).
+  now rewrite Next.
+Qed.
+*)
+Theorem llsame_same:
+  forall mem addr, LLSame mem mem addr.
+Proof.
+  intro. cofix IH. intro.
+  destruct (list_node_next mem addr) eqn:E.
+  econstructor; try easy; eassumption.
+  destruct addr; try discriminate. constructor.
+Qed.
+
+Theorem noverlap_llsame_llbounds:
+  forall mem wraddr wrlen v head min max
+    (LLB: LLBounds mem head min max)
+    (NOV: ~overlap w wraddr wrlen min (max+dw+pw-min)),
+  LLSame mem (setmem w e wrlen mem wraddr v) head.
+Proof.
+  intros. revert head LLB. cofix IH; intros.
+  destruct head;[subst; constructor|].
+  destruct (list_node_next mem (N.pos p)) eqn:E; try discriminate.
+  econstructor; try eassumption.
+  1-2:unfold list_node_value, list_node_next; rewrite getmem_noverlap; try reflexivity.
+  3: apply IH; inversion LLB; subst; now align_next.
+    all:cycle 1; inversion LLB; remember (N.pos p) as a.
+    apply noverlap_symmetry.
+    pose (dw + a - min) as i. replace (dw+a) with (min+i) by lia.
+    eapply noverlap_index_r. exact NOV. lia.
+
+    apply noverlap_symmetry.
+    pose (a - min) as i. replace (a) with (min+i) by lia.
+    eapply noverlap_index_r. exact NOV. lia.
+Qed.
+
+Theorem llforall_next:
+  forall mem head p next
+    (NEXT: list_node_next mem head = Some next)
+    (ALL: LLForall p mem head),
+  LLForall p mem next.
+Proof.
+  intros. inversion ALL; subst; try easy; now align_next.
+Qed.
+
+Theorem llbounds_next:
+  forall mem head min max next
+    (NEXT: list_node_next mem head = Some next)
+    (LLB: LLBounds mem head min max),
+  LLBounds mem next min max.
+Proof.
+  intros. eapply llforall_next; try eassumption.
+Qed.
+
+Theorem noverlap_llsame_llbounds_trans:
+  forall mem mem' wraddr wrlen v head min max
+    (LLB: LLBounds mem head min max)
+    (LLS: LLSame mem mem' head)
+    (NOV: ~overlap w wraddr wrlen min (max+dw+pw-min)),
+    LLSame mem (setmem w e wrlen mem' wraddr v) head.
+Proof.
+  intros. revert head mem' LLS LLB. cofix IH; intros.
+  destruct head;[constructor|]. destruct (list_node_next mem (N.pos p)) eqn:E; try discriminate.
+  econstructor; try eassumption.
+  3: {
+    inversion LLS; inversion LLB; subst; repeat align_next; now apply IH.
+  }
+  1-2: inversion LLS; inversion LLB; subst; unfold list_node_value, list_node_next in *; rewrite getmem_noverlap; try assumption.
+  1-2: apply noverlap_symmetry; remember (N.pos p) as a.
+    pose (a - min) as i. replace (a) with (min+i) by lia.
+    eapply noverlap_index_r. exact NOV. lia.
+
+    pose (dw + a - min) as i. replace (dw+a) with (min+i) by lia.
+    eapply noverlap_index_r. exact NOV. lia.
+Qed.
+
+Theorem llsame_bounds:
+  forall mem mem' head min max
+    (SAME: LLSame mem mem' head)
+    (LLB: LLBounds mem head min max),
+  LLBounds mem' head min max.
+Proof.
+  cofix IH.
+  intros. destruct head.
+    constructor.
+    inversion LLB; inversion SAME; subst.
+    econstructor; try easy. unfold LLBounds in IH.
+    apply IH with (mem:=mem).
+      rewrite H2 in H3; unfold list_node_next in H3; injection H3; intro; now subst.
+      rewrite H2 in NEXT; unfold list_node_next in NEXT; injection NEXT; intro; now subst.
+Qed.
+
+Theorem llsame_distance:
+  forall mem mem' head node len
+    (SAME:LLSame mem mem' head)
+    (LEN: node_distance mem head node len),
+  node_distance mem' head node len.
+Proof.
+  intros. revert SAME. revert mem'.
+  dependent induction LEN;[constructor|intros].
+  inversion SAME; subst; try align_next.
+    discriminate.
+    rewrite H0 in NEXT; econstructor; try eassumption; try easy.
+    now apply IHLEN.
+Qed.
+
+Theorem llsame_symmetry:
+  forall ml mr h, LLSame ml mr h <-> LLSame mr ml h.
+Proof.
+  intros; split; revert h; cofix IH.
+
+  all:intros h LLS; inversion LLS; subst; econstructor; try eassumption; try easy.
+  1,3:rewrite <-H0; eassumption.
+  all:now apply IH.
+Qed.
+
+(* Conveniently saves us a book-keeping clause in the loop invariant stating
+   the current node is not null. *)
+Theorem dist_lt_null_not_null:
+  forall mem head node nodelen dst dstlen
+    (NODE: node_distance mem head node nodelen)
+    (DST: node_distance mem head dst dstlen)
+    (LT: (nodelen < dstlen)%nat),
+  node <> dst.
+Proof.
+  intros. gdep LT; gdep nodelen; gdep node. dependent induction DST;[lia|].
+  intros.
+  assert (H: N : Type) by constructor.
+  move node before len; move nodelen before len; move NODE before DST;  rename IHDST into IH.
+  inversion NODE; subst; try assumption. align_next.
+  eapply IH; try eassumption. lia.
+Qed.
+
+Theorem distance_imp_head_next_nnul:
+  forall mem head dst len'
+    (DST: dst <> NULL)
+    (LEN: node_distance mem head dst (S len')),
+  list_node_next mem head <> Some NULL.
+Proof.
+  intros. inversion LEN; subst; intro; align_next. inversion LEN0; subst; try easy.
+Qed.
+
+Theorem distance_imp_in:
+  forall mem head dst len,
+    node_distance mem head dst len -> node_in_linked_list mem head dst.
+Proof.
+  intros. dependent induction H;[constructor|rename IHnode_distance into IH].
+  econstructor; try eassumption; try easy.
+Qed.
+
+Theorem next_node_in_linked_list:
+  forall mem head n next 
+    (NEXT: list_node_next mem n = Some next)
+    (IN:node_in_linked_list mem head n),
+  node_in_linked_list mem head next.
+Proof.
+  intros. induction IN.
+    destruct (N.eq_dec next node) as [EQ|NEQ];[rewrite EQ in *|]; econstructor; try eassumption; try easy; constructor.
+    rename IHIN into IH. specialize (IH NEXT).
+    inversion IH; subst mem0 node0; try subst next0 ;try subst head0.
+      - destruct (N.eq_dec head next);[subst next; apply NodeAtHead| eapply NodeInTail]; try eassumption.
+      - rename head0 into head', next1 into head'', next into node'.
+        destruct (N.eq_dec head node');[subst; apply NodeAtHead| eapply NodeInTail; try eassumption].
+Qed.
+
+Theorem in_well_formed_imp_well_formed:
+  forall mem head node
+    (WF: well_formed_list mem head)
+    (IN: node_in_linked_list mem head node),
+  well_formed_list mem node.
+Proof.
+  intros. dependent induction IN;[assumption|].
+  apply IHIN. inversion WF; subst;[discriminate|align_next; assumption].
+Qed.
+
+Theorem next_node_in:
+  forall mem n n', list_node_next mem n = Some n' -> node_in_linked_list mem n n'.
+Proof.
+  intros. destruct (N.eq_dec n n'); subst;econstructor; try eassumption; constructor.
+Qed.
+
+Theorem one_cycle_imp_not_wf:
+  forall mem h, list_node_next mem h = Some h -> ~well_formed_list mem h.
+Proof.
+  intros mem h Eq WF; pose proof (well_formed_imp_next_not_same _ _ _ WF Eq); contradiction.
+Qed.
+(* This is not generally true for lists with cycles. Observe the difference between
+   the distances of X and Y, and X' and Y' below:
+
+            X -> X' -> Y' -> _ -> _ -> _ -> Y
+                        ^--------------------+
+*)
+Theorem node_distance_next_next_same:
+  forall mem head head' (dst dst':addr) len
+    (HEAD': list_node_next mem head = Some head')
+    (DST': list_node_next mem dst = Some dst')
+    (WF: well_formed_list mem head)
+    (LEN: node_distance mem head dst len),
+  node_distance mem head' dst' len.
+Proof.
+  intros mem head head' dst dst' len. gdep dst'; gdep dst; gdep head'; gdep head; gdep mem.
+  induction len.
+  {
+    intros. inversion LEN; subst. align_next. constructor.
+  }
+  {
+    intros. rename IHlen into IH.
+    destruct (N.eq_dec head NULL);[inversion LEN; now subst|].
+    destruct (list_node_next mem head') as [head''|] eqn:E;cycle 1.
+    { (* head' = NULL *)
+      destruct head';[|discriminate]. inversion LEN; subst; align_next.
+      inversion LEN0; subst; discriminate.
+    }
+    move head before dst; move head'' before head'; move E before HEAD'.
+    eapply DstSn; try eassumption; try easy.
+      intros H; subst dst'.
+      enough (~well_formed_list mem head').
+      inversion WF; subst; [discriminate|align_next; contradiction].
+      inversion LEN; subst; align_next.
+      pose proof (next_node_in _ _ _ DST') as Help.
+      apply node_dist_imp_node_in in LEN0.
+      destruct (N.eq_dec head' dst).
+        subst. now eapply one_cycle_imp_not_wf.
+        eapply cycle_imp_not_wf; try eassumption.
+      eapply IH; try eassumption.
+        inversion WF; subst;[contradiction|align_next;assumption].
+        inversion LEN; subst; align_next; assumption.
+  }
+Qed.
+
+Theorem wf_imp_next_diff:
+  forall mem node, node <> NULL -> well_formed_list mem node -> list_node_next mem node <> Some node.
+Proof.
+  intros mem node NNUL WF. intro. inversion WF; subst; try easy.
+  assert (Help:=well_formed_imp_not_in _ _ _ NEXT WF). align_next. apply Help; constructor.
+Qed.
+
+(* This is not generally true of lists with cycle, Consider the situation below:
+
+      head -> dst' -> _ -> _ -> dst
+               ^-----------------+
+*)
+Theorem node_distance_next_S_len:
+  forall mem head dst len dst'
+    (DST':list_node_next mem dst = Some dst')
+    (WF: well_formed_list mem head)
+    (LEN: node_distance mem head dst len),
+  node_distance mem head dst' (S len).
+Proof.
+  intros. destruct (N.eq_dec head NULL);[inversion LEN; subst; discriminate|].
+  {
+    destruct len. inversion LEN; subst. econstructor; try eassumption; try easy.
+    intro; subst dst'; eapply wf_imp_next_diff; eassumption.
+    constructor.
+    destruct (list_node_next mem head) as [head'|] eqn:E; cycle 1.
+      destruct head; (contradiction || discriminate).
+    econstructor; try eassumption; try easy.
+    (* Well-formedness contradiction subproof. *)
+    { intro.
+      assert (Help:=distance_imp_in _ _ _ _ LEN).
+      assert (WFDST:=in_well_formed_imp_well_formed _ _ _ WF Help).
+      move n after DST'; move WF before WFDST; move H after LEN; move head' before dst'.
+      assert (Help3:=well_formed_imp_not_in _ _ _ DST' WFDST).
+      now rewrite H in Help.
+    }
+    eapply node_distance_next_next_same; eassumption.
+  }
+Qed.
+
+Theorem distance_null_imp_well_formed:
+  forall mem head len
+    (LEN: node_distance mem head NULL len),
+  well_formed_list mem head.
+Proof.
+  intros. dependent induction LEN;[constructor|].
+  rename IHLEN into IH; specialize (IH (JMeq_refl _)); clear NEQ.
+  eapply wf_cons; eassumption.
+Qed.
+
+Theorem distance_imp_diff:
+  forall mem head n len
+    (LEN: node_distance mem head n (S len)),
+  head <> n.
+Proof.
+  intros. intro. inversion LEN; subst. contradiction.
+Qed.
+
+Theorem wf_by_parts:
+  forall mem head n len
+    (WFTail: well_formed_list mem n)
+    (LEN: node_distance mem head n len),
+  well_formed_list mem head.
+Proof.
+  intros. dependent induction LEN;[assumption|].
+  specialize (IHLEN WFTail). econstructor; eassumption.
+Qed.
+
+Theorem distance_last_node:
+  forall mem head n len
+    (NNUL: n <> NULL)
+    (LEN: node_distance mem head n len)
+    (NIL: list_node_next mem n = Some NULL),
+  node_distance mem head NULL (S len).
+Proof.
+  intros.
+  eapply node_distance_next_S_len; try eassumption.
+  eapply wf_by_parts; try eassumption.
+  econstructor; try eassumption.
+  constructor.
+Qed.
+
+Theorem node_distance_split:
+  forall mem head m dst pre post
+    (WF: well_formed_list mem head)
+    (PRE: node_distance mem head m (pre))
+    (POST: node_distance mem m dst post),
+  node_distance mem head dst (pre+post)%nat.
+Proof.
+  intros mem head m dst pre post WF PRE. gdep WF; gdep dst; gdep post. dependent induction PRE;[now simpl|].
+  rename len into pre'; rename src into head; rename dst into m.
+  intros post dst WF POST. move post before pre'; move dst before m.
+  rewrite Nat.add_succ_l. destruct (N.eq_dec head dst).
+  {
+    subst dst. exfalso.
+    eapply well_formed_imp_not_in; try eassumption.
+    assert (IN1:=distance_imp_in _ _ _ _ PRE);
+    assert (IN2:=distance_imp_in _ _ _ _ POST).
+    apply node_in_linked_list_trans with (m:=m); try easy.
+  }
+  {
+    eapply DstSn; try eassumption.
+    apply IHPRE; try easy.
+    inversion WF; subst; try align_next; easy.
+  }
+Qed.
+
+Theorem key_loc_split:
+  forall mem head node key pre post
+    (DIST: node_distance mem head node (pre))
+    (KEY: key_in_linked_list mem head key (pre+post)),
+  key_in_linked_list mem node key post.
+Proof.
+  intros mem head node key pre post DIST. dependent induction DIST;[now simpl|].
+  intros. inversion KEY; subst.
+  align_next; specialize (IHDIST H5). assumption.
+Qed.
+
+Theorem no_key_in_null:
+  forall mem key len, ~key_in_linked_list mem NULL key len.
+Proof.
+  intros. intro H. inversion H; subst; discriminate.
+Qed.
+
+Theorem key_loc_lt_length:
+  forall mem head len key loc
+    (LEN: node_distance mem head NULL len)
+    (LOC: key_in_linked_list mem head key loc),
+  (loc < len)%nat.
+Proof.
+  intros. move loc after len. destruct (Nat.lt_ge_cases loc len) as [Lt | Ge];[assumption|exfalso].
+  pose (loc-len)%nat as post.
+  replace loc with (len+post)%nat in LOC by lia.
+  apply (key_loc_split _ _ _ _ _ _ LEN) in LOC.
+  now apply no_key_in_null in LOC.
+Qed.
+
+Theorem key_loc_le_instance:
+  forall mem head key loc1 node loc2
+    (LEN: node_distance mem head node loc2)
+    (INST: list_node_value mem node = Some key)
+    (LOC: key_in_linked_list mem head key loc1),
+  (loc1 <= loc2)%nat.
+Proof.
+  intros. move loc2 before loc1; move node before head. destruct (Nat.le_gt_cases loc1 loc2) as [Le | Gt];[assumption|exfalso].
+  pose (loc1-loc2)%nat as post.
+  replace loc1 with (loc2+post)%nat in LOC by lia.
+  apply (key_loc_split _ _ _ _ _ _ LEN) in LOC.
+  inversion LOC;[lia|].
+  subst mem0 node0 key0.
+  contradiction.
+Qed.
+
+Theorem key_in_linked_list_value_equal:
+  forall mem head key loc node
+    (Key: key_in_linked_list mem head key loc)
+    (Dist: node_distance mem head node loc),
+  Some key = list_node_value mem node.
+Proof.
+  intros mem head key loc node Key; gdep node. dependent induction Key.
+  {
+    intros. inversion Dist; subst; now symmetry.
+  }
+  {
+    intros. rename node0 into kn. apply IHKey.
+    inversion Dist; subst; align_next; assumption.
+  }
+Qed.
+
+Theorem fuel_le_incr:
+  forall mem head key curr ctr
+    (Ctr:node_distance mem head curr ctr)
+    (Fuel:forall fuel, key_in_linked_list mem head key fuel -> (ctr <= fuel)%nat)
+    (BC: Some key <> list_node_value mem curr),
+  forall fuel, key_in_linked_list mem head key fuel -> (S ctr <= fuel)%nat.
+Proof.
+  intros. specialize (Fuel _ H). destruct (Nat.lt_ge_cases ctr fuel);[lia|exfalso].
+  assert (Help:fuel=ctr) by lia; rewrite Help in *; clear Fuel H0 Help.
+  assert (Contra:=key_in_linked_list_value_equal _ _ _ _ _ H Ctr).
+  contradiction.
+Qed.
+
+Theorem node_in_tail:
+  forall mem head h' n
+    (IN:node_in_linked_list mem head n)
+    (NEXT: list_node_next mem head = Some h')
+    (NEQ:head <> n),
+  node_in_linked_list mem h' n.
+Proof.
+  intros. dependent induction IN.
+  contradiction.
+  align_next; assumption.
+Qed.
+
+Theorem llsame_value:
+  forall mem mem' head node v
+    (IN: node_in_linked_list mem head node)
+    (LLS: LLSame mem mem' head)
+    (V: list_node_value mem node = v)
+    (NNUL: node <> NULL),
+  list_node_value mem' node = v.
+Proof.
+  intros. gdep V; gdep LLS; gdep NNUL. dependent induction IN; intros.
+  - inversion LLS; now subst.
+  - apply IHIN; try easy. inversion LLS; subst; (discriminate||now align_next).
+Qed.
+
+Theorem llsame_node_in:
+  forall mem mem' head node
+    (IN: node_in_linked_list mem head node)
+    (LLS: LLSame mem mem' head),
+  node_in_linked_list mem' head node.
+Proof.
+  intros. gdep LLS; gdep mem'. dependent induction IN; intros.
+  - constructor.
+  - inversion LLS; subst; try discriminate. align_next. rewrite H0 in NEXT. eapply NodeInTail; try eassumption; try easy.
+    apply IHIN. assumption.
+Qed.
+
+Theorem llsame_value_neq:
+  forall mem mem' head node v
+    (IN: node_in_linked_list mem head node)
+    (LLS: LLSame mem mem' head)
+    (V: list_node_value mem node <> v)
+    (NNUL: node <> NULL),
+  list_node_value mem' node <> v.
+Proof.
+  intros. intro.
+  apply llsame_node_in with (mem':=mem') in IN; try assumption.
+  rewrite llsame_symmetry in LLS.
+  assert(Help:=llsame_value _ _ _ _ _ IN LLS H NNUL).
+  contradiction.
+Qed.
+
+Theorem llsame_next_node:
+  forall mem mem' head node
+    (IN: node_in_linked_list mem head node)
+    (LLS: LLSame mem mem' head)
+    (NNUL: node <> NULL),
+  list_node_next mem node = list_node_next mem' node.
+Proof.
+  intros. gdep LLS; gdep NNUL; dependent induction IN; intros.
+  - inversion LLS; subst; try easy.
+  - apply IHIN; try easy.
+    inversion LLS; subst; try discriminate; now align_next.
+Qed.
+
+Theorem llsame_key_in:
+  forall mem mem' head key loc
+    (Key: key_in_linked_list mem head key loc)
+    (LLS: LLSame mem mem' head),
+  key_in_linked_list mem' head key loc.
+Proof.
+  intros mem mem' head key loc Key; gdep mem'; dependent induction Key.
+  { intros. constructor; try easy. inversion LLS; subst; try discriminate. now rewrite H0 in H. }
+  rename IHKey into IH.
+  intros. move mem' before mem.
+  inversion LLS; subst; try discriminate; align_next. rewrite H2 in H0; rewrite H1 in H.
+  eapply KeyAtNext; try eassumption.
+  now apply IH.
+Qed.
+
+Theorem noverlap_llbounds_shrink:
+  forall mem head min max node w a2 len2
+    (NNUL: node <> NULL)
+    (LLB: LLBounds mem head min max)
+    (IN: node_in_linked_list mem head node)
+    (NOV: ~overlap w min (8+max) a2 len2),
+  ~overlap w node 8 a2 len2.
+Proof.
+  intros. dependent induction IN; rename node into addr.
+  inversion LLB; subst;[contradiction|].
+  pose (addr-min) as i.
+  replace addr with (min+i) by lia.
+  eapply noverlap_index_l. eassumption. lia.
+
+  inversion LLB; subst;[discriminate|align_next]. apply IHIN; try easy.
+Qed.
+
+Theorem key_not_in_list:
+  forall mem head key n nloc
+    (NNUL: n <> NULL)
+    (LAST: list_node_next mem n = Some NULL)
+    (NLOC: node_distance mem head n nloc)
+    (KLOC: forall kloc, key_in_linked_list mem head key kloc -> (nloc <= kloc)%nat)
+    (NEQ: list_node_value mem n <> Some key),
+  forall kloc, ~key_in_linked_list mem head key kloc.
+Proof.
+  intros. intro H. specialize (KLOC _ H).
+  assert (H2:node_distance mem head NULL (S nloc)).
+  {
+    inversion H; subst.
+    - rewrite <-Nat.add_1_r. apply node_distance_split with (m:=n); try easy.
+      apply has_null_wf, node_in_linked_list_trans with (m:=n).
+      eapply distance_imp_in; eassumption.
+      1-2: econstructor; try eassumption;  constructor.
+    - rewrite <-Nat.add_1_r. apply node_distance_split with (m:=n); try easy.
+      apply has_null_wf, node_in_linked_list_trans with (m:=n).
+      eapply distance_imp_in; eassumption.
+      1-2: econstructor; try eassumption; constructor.
+  }
+  assert (H3:=key_loc_lt_length _ _ _ _ _ H2 H).
+  assert (H4:nloc = kloc) by lia; subst kloc; clear KLOC H3.
+  assert (H5:=key_in_linked_list_value_equal _ _ _ _ _ H NLOC); symmetry in H5.
+  contradiction.
+Qed.
+
+(* This is only true because the location of key is not unique,
+  will have to change our reasoning for the key-found in linked list
+  postcondition after changing the key_in_linked_list def. *)
+Theorem key_at_node:
+  forall mem head key node loc
+    (Dist: node_distance mem head node loc)
+    (NNul: node <> NULL)
+    (Key: list_node_value mem node = Some key)
+    (Min: forall i, key_in_linked_list mem head key i -> (loc <= i)%nat),
+  key_in_linked_list mem head key loc.
+Proof.
+  intros mem head key node loc Dist; dependent induction Dist; intros.
+  { constructor; try easy. }
+  assert (NEQk: list_node_value mem src <> Some key). {
+    intro.
+    destruct (key_in_linked_list_dec mem src key 0). specialize (Min _ k); lia.
+    apply n; constructor; try easy.
+  }
+  eapply KeyAtNext; try eassumption.
+  apply IHDist; try easy.
+  intros.
+  enough (H1:key_in_linked_list mem src key (S i)).
+  specialize (Min (S i) H1); lia.
+  eapply KeyAtNext; try eassumption.
+Qed.
+
+Theorem noverlap_llforall:
+  forall mem h p len v
+    (NOV: LLForall (fun _ n => ~overlap w n (dw+pw) p len) mem h),
+  LLForall (fun _ n => ~overlap w n (dw+pw) p len) (setmem w e len mem p v) h.
+Proof.
+  cofix IH. intros. inversion NOV; subst. constructor.
+  destruct h;[discriminate|]. eapply LLForall_cons. unfold list_node_next.
+  rewrite getmem_noverlap. reflexivity. 1-2:remember (N.pos _) as h.
+  rewrite N.add_comm; eapply noverlap_index_l. eassumption. lia. assumption.
+  apply IH. injection NEXT; intros H; now rewrite H.
+Qed.
+
+Theorem noverlap_llsame_llforall:
+  forall mem h p len v
+    (NOV: LLForall (fun _ n => ~overlap w n (dw+pw) p len) mem h),
+  LLSame mem (setmem w e len mem p v) h.
+Proof.
+  cofix IH. intros. inversion NOV; subst. constructor.
+  destruct h;[discriminate|]. injection NEXT; intros H. eapply LLSame_cons with (next:=next); try easy.
+  1-2:unfold list_node_value, list_node_next; rewrite getmem_noverlap; try easy.
+  apply noverlap_shrink with (a1:=N.pos p0) (len1:=dw+pw). rewrite msub_diag; lia. assumption.
+  rewrite N.add_comm; eapply noverlap_index_l. eassumption. lia.
+  now apply IH.
+Qed.
+
+Theorem noverlap_llsame_llforall_trans:
+  forall mem mem' h p len v
+    (NOV: LLForall (fun _ n => ~overlap w n (dw+pw) p len) mem h)
+    (LLS: LLSame mem mem' h),
+  LLSame mem (setmem w e len mem' p v) h.
+Proof.
+  cofix IH. intros. inversion NOV; subst. constructor.
+  destruct h;[discriminate|]. injection NEXT; intros H. eapply LLSame_cons with (next:=next); try easy.
+  1-2:unfold list_node_value, list_node_next; rewrite getmem_noverlap; try easy.
+  1,3: inversion LLS; assumption.
+  apply noverlap_shrink with (a1:=N.pos p0) (len1:=dw+pw). rewrite msub_diag; lia. assumption.
+  rewrite N.add_comm; eapply noverlap_index_l. eassumption. lia.
+  apply IH; try easy. inversion LLS; subst; align_next. assumption.
+Qed.
+
+Theorem noverlap_llforall_shrink:
+  forall mem h nlen pbig lenbig p len
+    (NOV: LLForall (fun _ n => ~overlap w n nlen pbig lenbig) mem h)
+    (BOUND:msub w p pbig + len <= lenbig),
+  LLForall (fun _ n => ~overlap w n nlen p len) mem h.
+Proof.
+  cofix IH; intros; inversion NOV; subst;[constructor|].
+  destruct h;[discriminate|]. injection NEXT; intros H. eapply LLForall_cons with (next:=next); try easy.
+  apply noverlap_symmetry. apply noverlap_shrink with (a1:=pbig) (len1:=lenbig). assumption. apply noverlap_symmetry; assumption.
+  eapply IH; try eassumption.
+Qed.
+
+Theorem noverlap_llforall_trans:
+  forall mem mem' h nlen p len
+    (NOV: LLForall (fun _ n => ~overlap w n nlen p len) mem h)
+    (LLS: LLSame mem mem' h),
+  LLForall (fun _ n => ~overlap w n nlen p len) mem' h.
+Proof.
+  cofix IH; intros; inversion NOV; subst;[constructor|].
+  destruct h;[discriminate|]. injection NEXT; intros H. eapply LLForall_cons with (next:=next); try easy.
+  inversion LLS; subst; align_next. now rewrite <-H1.
+  inversion LLS; subst; align_next. eapply IH; try eassumption.
+Qed.
+
+Theorem noverlap_llforall_trans_shrink:
+  forall mem mem' h nlen pbig lenbig p len
+    (NOV: LLForall (fun _ n => ~overlap w n nlen pbig lenbig) mem h)
+    (LLS: LLSame mem mem' h)
+    (BOUND:msub w p pbig + len <= lenbig),
+  LLForall (fun _ n => ~overlap w n nlen p len) mem' h.
+Proof.
+  cofix IH; intros; inversion NOV; subst;[constructor|].
+  destruct h;[discriminate|]. injection NEXT; intros H. eapply LLForall_cons with (next:=next); try easy.
+  inversion LLS; subst; align_next. now rewrite <-H1.
+  eapply noverlap_symmetry, noverlap_shrink; try eassumption. now apply noverlap_symmetry.
+  inversion LLS; subst; align_next. eapply IH; try eassumption.
+Qed.
+
+Theorem llforall_llsame:
+  forall mem mem' (P:N->Prop) h
+    (FP: LLForall (fun _ n => P n) mem h)
+    (LLS: LLSame mem mem' h),
+  LLForall (fun _ n => P n) mem' h.
+Proof.
+  cofix IH; intros; inversion FP; subst;[constructor|].
+  destruct h;[discriminate|]. injection NEXT; intros H. eapply LLForall_cons with (next:=next); try easy.
+  inversion LLS; subst; align_next. now rewrite <-H1.
+  eapply IH; try eassumption. inversion LLS; now align_next.
+Qed.
+
+Theorem LLForall_forall:
+  forall mem P h,
+  LLForall P mem h <-> (forall x, node_in_linked_list mem h x -> x <> NULL -> P mem x).
+Proof.
+  intros; split; intros.
+  - (* -> *) rename H0 into IN, H into F.
+    dependent induction IN. inversion F;[now subst|assumption].
+    inversion F; subst;[discriminate|align_next]. now apply IHIN.
+  - (* <- *)
+    gdep H; gdep h; gdep P; gdep mem. cofix IH. intros. destruct h;[constructor|].
+    destruct (list_node_next mem (N.pos p)) eqn:E; try discriminate. injection E; intros Next.
+    econstructor. reflexivity. apply H; try easy. constructor.
+    apply IH. intros x InNext NNUL; apply H; try easy.
+    destruct (N.eq_dec (N.pos p) x).
+      subst; constructor.
+      eapply NodeInTail; easy.
+Qed.
+
+End ll_section.
+(* Override psimpl_hook using `Ltac psimpl_hook ::= psimpl.` To enable
+   the psimplifier.  This is a workaround to keep the theory library independent
+   of the simplifier. *)
+Global Ltac psimpl_hook := idtac.
+Global Ltac llunfold := unfold P.w, P.e, P.dw, P.pw in *.
+Global Ltac llsame_solve :=
+    repeat (psimpl_hook
+            || llunfold
+            || assumption
+            || lia
+            || apply noverlap_sum
+            || apply llsame_same
+            || apply noverlap_llsame_llbounds
+            || apply noverlap_llsame_llforall_trans
+            || solve [eapply noverlap_llforall_shrink; try eassumption; lia]
+            || solve [eapply llsame_bounds; eassumption]
+            || lazymatch goal with
+                | [H: LLBounds _ _ ?lo ?hi |- _] => apply noverlap_llsame_llbounds_trans with (min:=lo) (max:=hi)
+                end
+            || match goal with [H:LLSame ?ml ?mr ?a |- LLSame ?mr ?ml ?a] => rewrite llsame_symmetry; apply H end).
+(*
+Global Ltac llsame_solve :=
+    repeat (psimpl_hook
+            || llunfold
+            || assumption
+            || lia
+            || apply noverlap_sum
+            || apply llsame_same
+            || apply noverlap_llsame_llbounds
+            || solve [eapply llsame_bounds; eassumption]
+            || lazymatch goal with
+                | [H: LLBounds _ _ ?lo ?hi |- _] => apply noverlap_llsame_llbounds_trans with (min:=lo) (max:=hi)
+                end
+                || match goal with [H:LLSame ?ml ?mr ?a |- LLSame ?mr ?ml ?a] => rewrite llsame_symmetry; apply H end).
+ *)
+
+Global Ltac inj_nodeval :=
+  match goal with 
+  | [H: Some ?x = list_node_value _ ?n |- _] => let p := fresh "p" in unfold list_node_value in H; destruct n as [|p]; idtac "destr"; [
+      try discriminate; try contradiction; idtac n "could be NULL"
+      | injection H; intro; remember (N.pos p) as n]
+  | [H: list_node_value _ ?n = Some ?x |- _] => let p := fresh "p" in unfold list_node_value in H; destruct n as [|p]; idtac "destr"; [
+      try discriminate; try contradiction; idtac n "could be NULL"
+      | injection H; intro; remember (N.pos p) as n]
+  | [H: Some ?x = list_node_next _ ?n |- _] => let p := fresh "p" in unfold list_node_next in H; destruct n as [|p]; idtac "destr"; [
+      try discriminate; try contradiction; idtac n "could be NULL"
+      | injection H; intro; remember (N.pos p) as n]
+  | [H: list_node_next _ (N.pos ?p) = Some ?x |- _] => unfold list_node_next in H; injection H; intro
+  | [H: list_node_next _ ?n = Some ?x |- _] => let p := fresh "p" in unfold list_node_next in H; destruct n as [|p]; idtac "destr"; [
+      try discriminate; try contradiction; idtac n "could be NULL"
+      | injection H; intro; remember (N.pos p) as n]
+  end.
+
+Global Ltac align_next :=
+  match goal with
+  | [H1: list_node_next ?m ?h = Some ?n,
+     H2: list_node_next ?m ?h = Some ?n2 |- _] =>
+    rewrite H1 in H2; injection H2; intro temp; subst n2; clear H2
+  end.
+
+Global Ltac llforall_solve :=
+  repeat (
+    (now apply llsame_symmetry) 
+  || match goal with 
+     | [H: LLForall (fun _ _ => ~ overlap _ _ ?nw ?pbig ?lenbig) ?base_mem ?h
+     |- LLForall (fun _ _ => ~ overlap _ _ ?nw ?pbig ?lenbig) (setmem _ _ ?len ?mem ?p _) ?h] =>
+         eapply (noverlap_llforall_trans_shrink _ _ _ _ _ _ _ _ H); try lia; try llsame_solve
+     | [H: LLSame ?meml ?memr _,
+         F: LLForall _ ?memr _ |- LLForall _ ?meml _] => eapply llforall_llsame with (mem:=memr)
+     | [H: LLSame ?meml ?memr _,
+         F: LLForall _ ?meml _ |- LLForall _ ?memr _] => eapply llforall_llsame with (mem:=meml)
+     end
+  || solve [eapply noverlap_llforall_shrink;[eassumption|lia]]).
+
+End LinkedLists.
 
 End PICINAE_THEORY.
 

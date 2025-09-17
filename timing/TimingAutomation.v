@@ -103,9 +103,11 @@ Ltac find_rewrites :=
 
 (* Grabbing each cpi_at_addr one-by-one seems to prevent explosions in cbv 
    evaluation time *)
+Global Opaque getmem setmem.
 Ltac unfold_time_of_addr :=
     cbv [time_of_addr]; cbn - [setmem getmem];
     repeat (rewrite update_updated || rewrite update_frame by discriminate).
+
 Ltac unfold_cycle_count_list :=
     repeat rewrite cycle_count_of_trace_app;
     repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single.
