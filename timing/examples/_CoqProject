@@ -48,3 +48,5 @@ FreeRTOS/queue/xQueueGetMutexHolderFromISR.v
 FreeRTOS/tasks/xTaskGetCurrentTaskHandle.v
 FreeRTOS/tasks/prvResetNextTaskUnblockTime.v
 FreeRTOS/tasks/vTaskSuspendAll.v
+
+crypto/chacha20/ChaCha20.v
