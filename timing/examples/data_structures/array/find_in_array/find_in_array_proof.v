@@ -158,7 +158,7 @@ Proof using.
             split.
                 intros. rewrite <- Preserved by lia. now apply NotFound.
             unfold time_of_find_in_array.
-            hammer. rewrite A1, BC0, A2, BC. hammer.
+            hammer.
         (* loop invariant after going around *)
             apply N.ltb_lt in BC. apply N.eqb_neq in BC0.
             repeat split; auto.
@@ -172,10 +172,7 @@ Proof using.
             rewrite N.mod_small by lia. lia.
             (* cycles *)
             rewrite (N.mod_small (1 + s' R_A5)). hammer.
-                apply N.eqb_neq in BC0. rewrite A1. hammer.
-                apply N.ltb_lt in BC. rewrite A2, BC. hammer.
-                apply N.le_lt_trans with len. lia.
-                rewrite <- A2; apply (models_var R_A2 MDL).
+                apply N.le_lt_trans with len; lia.
         (* iterated len times - contradiction *)
         exfalso. destruct IN as (idx & IDX_LEN & IN).
             apply (NotFound idx). apply N.ltb_ge in BC. lia.
@@ -205,10 +202,7 @@ Proof using.
             rewrite N.mod_small by lia. lia.
             (* cycles *)
             rewrite (N.mod_small (1 + s' R_A5)). hammer.
-                apply N.eqb_neq in BC0. rewrite A1.
-                apply N.ltb_lt in BC. rewrite A2, BC. hammer.
-                apply N.le_lt_trans with len. lia.
-                rewrite <- A2; apply (models_var R_A2 MDL).
+            apply N.le_lt_trans with len; lia.
         (* a match has not been found, break and return *)
         repeat step.
             unfold time_of_find_in_array. right.
@@ -216,7 +210,7 @@ Proof using.
             exists idx. split. assumption. now rewrite Preserved.
             replace (s' R_A5) with len in * by
                 (rewrite N.ltb_ge in BC; lia).
-            hammer. rewrite A2, BC. hammer.
+            hammer.
     }
 Qed.
 

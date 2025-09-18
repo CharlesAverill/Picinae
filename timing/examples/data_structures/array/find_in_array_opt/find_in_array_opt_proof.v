@@ -156,7 +156,7 @@ Proof using.
         repeat step. right. split. intro. destruct H as (idx & Contra & _).
             apply N.eqb_eq in BC. lia.
         unfold time_of_find_in_array_opt.
-        hammer. rewrite LEN. hammer.
+        hammer.
     (* len <> 0 *)
         do 5 step. (* 0x1e4 -> 0x200 *)
         (* arr[0] <> key *)
@@ -166,14 +166,14 @@ Proof using.
             intros. psimpl in H. replace i with 0 in * by lia. psimpl.
                 now rewrite Bool.negb_true_iff, N.eqb_neq in BC0.
             (* cycles *)
-            hammer. rewrite KEY, LEN. hammer.
+            hammer.
         (* arr[0] = key *)
             repeat step. left. exists 0.
             repeat split. apply N.eqb_neq in BC. lia.
                 psimpl. now apply Bool.negb_false_iff, N.eqb_eq in BC0.
                 intros; lia.
             unfold time_of_find_in_array_opt.
-            hammer. rewrite KEY, LEN. hammer.
+            hammer.
 
     (* 0x1f0 -> 0x200 *)
     destruct PRE as (mem & A0 & A1 & A2 &
@@ -185,11 +185,6 @@ Proof using.
             destruct H as (FoundIdx & FoundIdxLen & Found). 
             apply (NotFound FoundIdx). lia. assumption.
         unfold time_of_find_in_array_opt. hammer.
-        apply N.eqb_eq in BC. rewrite N.mod_small, BC. hammer.
-        replace (s' R_A2 =? 0) with false by
-            (symmetry; apply N.eqb_neq; apply N.eqb_eq in BC; lia).
-        apply N.eqb_eq in BC. rewrite BC. hammer.
-        transitivity (1 + s' R_A2); lia.
     (* idx <> len, key not found *)
         replace (1 ⊕ s' R_A5) with (1 + s' R_A5) in * by 
             (now rewrite N.mod_small by lia).
@@ -201,7 +196,7 @@ Proof using.
             now rewrite N.add_comm.
             rewrite <- Preserved. now apply NotFound.
             lia.
-        hammer. rewrite A1, BC0, A2, BC. hammer.
+        hammer.
     (* idx <> len, key found *)
         left. exists (1 + s' R_A5).
         replace (1 ⊕ s' R_A5) with (1 + s' R_A5) in * by 
@@ -214,7 +209,7 @@ Proof using.
             intros. rewrite <- Preserved by lia. now apply NotFound.
         unfold time_of_find_in_array_opt. hammer.
         replace (len =? 0) with false by (symmetry; apply N.eqb_neq; lia).
-        rewrite A1, BC0, A2, BC. hammer.
+        hammer.
 Qed.
 
 End TimingProof.

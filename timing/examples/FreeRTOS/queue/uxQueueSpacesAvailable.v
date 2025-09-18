@@ -41,6 +41,8 @@ match t with (Addr a, s) :: t' => match a with
 | 0x800035b0 | 0x800029ac => Some (time_of_xQueueMessagesWaiting t base_mem)
 | _ => None end | _ => None end.
 
+(*step through tactics in psimpl_in_hyp*)
+
 Theorem xQueueMessagesWaiting_timing:
   forall s t s' x' base_mem
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
@@ -70,7 +72,7 @@ Proof using.
     destruct_inv 32 PRE.
 
     destruct PRE as (MEM & Cycles).
-    do 6 step. (* r5_step hangs? *)
-Qed.
+    do 6 step. (* psimpl hangs here *)
+Abort.
 
 End TimingProof.

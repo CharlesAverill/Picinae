@@ -81,8 +81,8 @@ Qed.
 
 Ltac find_rewrites :=
     repeat (match goal with
-    (* | [s: store, H: ?s ?x = ?y |- context[?s ?x]] =>
-        rewrite H *)
+    | [s: store, H: ?s ?x = ?y |- context[?s ?x]] =>
+        rewrite -> H
     | [H: ?x = _ |- context[match ?x with _ => _ end]] =>
         rewrite H
     | [H: negb ?x = ?y |- context[if ?x then _ else _]] =>
@@ -309,10 +309,10 @@ Ltac generalize_timing_trace Heq TSI l a s t :=
         end; reflexivity);
     subst x.
 Ltac do_generalize :=
-    match goal with
+    lazymatch goal with
     | [t: list (exit * store), 
         TSI: cycle_count_of_trace ?t = ?x
-        |- context[_ :: (Addr ?a, ?s) :: ?t]] =>
+        |- nextinv _ _ _ _ (_ :: (Addr ?a, ?s) :: ?t)] =>
         let Heq := fresh "Heq" in
         let H0 := fresh "TSI" in
         let l := fresh "tail" in

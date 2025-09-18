@@ -1,0 +1,30 @@
+need to make invariants for each function
+
+want to be able to create sets of invariants that kind of overlap - each function has 
+at least a postcondition, and also probably internal invariants and preconditionwhen you prove something about caller, all of caller's invariants + postcondition of callee,
+when you get to call point, make call, now satisfy conditions of lemma about callee, applying lemma will say "here you are at postcondition and this is true", step from there and keep going
+
+because postcondition should be part of caller's invset, just specify once.
+needs to be a partial order so that caller says "because already proved something about callee, i can let you do this"
+
+write all of invariants for all functions together, snap fingers and say "give me inv set fo rthis caller, or this callee, or etc"
+
+
+define function invs
+"T (Inv Post: inv_type T) (NoInv:T)" is always same
+could possibly add (t : trace) to end of polymorphic invs, since it's never put into satisfies_all
+
+may_call should be general enough to be able to add traces, not sure
+"i believe that this is sufficient for one of the invariant sets you construct that works for caller,callee etc"
+don't want to rewrite exec_subroutine, evil
+
+will probably have to change simple_may_call
+"if you want to know whether may_call is true, as long as you build exits/invs with make_exits/make_invs, you will get something that satisifes may_call's requirements"
+add trace parameter to f and g
+
+perform_call will tell me if I have succeeded
+it's just like exec_subroutine
+"you must have had to achieved may_call"
+
+if possible to add traces, then I should be able to update invariant_set type to include trace as an argument,
+will have to change calls to the according functions so that there is a trace argument
