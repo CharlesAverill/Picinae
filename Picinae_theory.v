@@ -7656,21 +7656,6 @@ Global Ltac llsame_solve :=
                 | [H: LLBounds _ _ ?lo ?hi |- _] => apply noverlap_llsame_llbounds_trans with (min:=lo) (max:=hi)
                 end
             || match goal with [H:LLSame ?ml ?mr ?a |- LLSame ?mr ?ml ?a] => rewrite llsame_symmetry; apply H end).
-(*
-Global Ltac llsame_solve :=
-    repeat (psimpl_hook
-            || llunfold
-            || assumption
-            || lia
-            || apply noverlap_sum
-            || apply llsame_same
-            || apply noverlap_llsame_llbounds
-            || solve [eapply llsame_bounds; eassumption]
-            || lazymatch goal with
-                | [H: LLBounds _ _ ?lo ?hi |- _] => apply noverlap_llsame_llbounds_trans with (min:=lo) (max:=hi)
-                end
-                || match goal with [H:LLSame ?ml ?mr ?a |- LLSame ?mr ?ml ?a] => rewrite llsame_symmetry; apply H end).
- *)
 
 Global Ltac inj_nodeval :=
   match goal with 
