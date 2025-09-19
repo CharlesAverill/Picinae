@@ -1720,6 +1720,99 @@ Definition arm_bfx_il (is_signed: bool) cond widthm1 Rd lsb Rn :=
   let cast := if is_signed then CAST_SIGNED else CAST_UNSIGNED in
   arm_cond_il cond (R[Rd] := (Cast cast 32 (Extract msb lsb R[Rn]))).
 
+Definition arm_hmul_il (op: arm_hmul_op) (cond Rd Ra Rm M N Rn: N) :=
+  let assign := match op with
+                | ARM_SMLALBB => Seq (R[Rd] := (Unknown 32)) (R[Ra] := (Unknown 32))
+                | _ => R[Rd] := (Unknown 32)
+                end in
+  let flags := Move R_QF (Unknown 1) in
+  arm_cond_il cond (Seq assign flags).
+Definition arm_sync_l_il (size: arm_sync_size) (cond Rn Rt: N) :=
+  let assign := match size with
+                | ARM_sync_doubleword => Seq (R[Rt] := (Unknown 32)) (R[Rt + 1] := (Unknown 32))
+                | _ => R[Rt] := (Unknown 32)
+                end in
+  let align_check := If (Unknown 1) assign (Exn 0x10) in
+  arm_cond_il cond align_check.
+Definition arm_sync_s_il (size: arm_sync_size) (cond Rn Rd Rt: N) :=
+  let assign := R[Rd] := (Unknown 32) in
+  let memsize := match size with
+                 | ARM_sync_doubleword => 8
+                 | ARM_sync_word => 4
+                 | ARM_sync_halfword => 2
+                 | ARM_sync_byte => 1
+                 end in
+  let mem := If (Unknown 1) (MemU[R[Rn], memsize] := (Unknown (memsize * 8))) Nop in
+  let align_check := If (Unknown 1) (Seq assign mem) (Exn 0x10) in
+  arm_cond_il cond align_check.
+Definition arm_clz_il (cond Rd Rm: N) :=
+  arm_cond_il cond (R[Rd] := (Unknown 32)).
+
+(* memory hints -> nop *)
+Definition arm_pld_i_il (U R Rn imm12: N) :=
+  Nop.
+Definition arm_pld_r_il (U R Rn imm5 type Rm: N) :=
+  Nop.
+(* fp unmodeled -> nop *)
+Definition arm_vfp_other_il (op: arm_vfp_other_op) (cond D Vd sz M Vm: N) :=
+  Nop.
+Definition arm_vcvt_ds_il (cond D Vd sz M Vm: N) :=
+  Nop.
+Definition arm_vcvt_fpf_il (cond D op U Vd sf sx i imm4: N) :=
+  Nop.
+Definition arm_vcvt_fpi_il (cond D opc2 Vd sz op M Vm: N) :=
+  Nop.
+Definition arm_vmrs_il (cond Rt: N) :=
+  let assign := if (Rt =? 15) then
+    Seq (Move R_NF (Unknown 1))
+    (Seq (Move R_ZF (Unknown 1))
+    (Seq (Move R_CF (Unknown 1))
+    (Move R_VF (Unknown 1))))
+  else
+    R[Rt] := (Unknown 32) in
+  arm_cond_il cond assign.
+Definition arm_vcmp_il (cond D Vd sz E M Vm: N) :=
+  Nop.
+Definition arm_vfp_il (op: arm_vfp_op) (cond D Vn Vd sz N Op M Vm: N) :=
+  Nop.
+Definition arm_vmov_r1_il (cond op Vn Rt N: N) :=
+  let assign := if (op =? 1) then R[Rt] := (Unknown 32) else Nop in
+  arm_cond_il cond assign.
+Definition arm_vmov_r2_il (is_single: bool) (cond op Rt2 Rt M Vm: N) :=
+  let assign := if (op =? 1) then Seq (R[Rt] := (Unknown 32)) (R[Rt2] := (Unknown 32)) else Nop in
+  arm_cond_il cond assign.
+Definition arm_vmov_i_il (cond D imm4H Vd sz imm4L: N) :=
+  Nop.
+Definition arm_coproc_m_il (is_cr: bool) (cond opc1 CRn Rt coproc opc2 CRm: N) :=
+  let assign := if is_cr then Nop else
+    if (Rt =? 15) then
+      Seq (Move R_NF (Unknown 1))
+      (Seq (Move R_ZF (Unknown 1))
+      (Seq (Move R_CF (Unknown 1))
+      (Move R_VF (Unknown 1))))
+    else
+      R[Rt] := (Unknown 32) in
+  arm_cond_il cond (If (Unknown 1) (Exn 4) assign).
+Definition arm_vls_il (is_load is_single: bool) (cond U D Rn Vd imm8: N) :=
+  let assign := if is_load then Nop else setunknown V_MEM32 in
+  arm_cond_il cond assign.
+Definition arm_vlsm_il (is_load is_single: bool) (cond P U D W Rn Rd imm8: N) :=
+  let assign := if is_load then Nop else setunknown V_MEM32 in
+  arm_cond_il cond assign.
+Definition arm_extra_ls_i_il (op: arm_xmem_op) (cond P U W Rn Rt imm4H imm4L: N) :=
+  let assign := match op with
+                | ARM_STRH | ARM_STRD => setunknown V_MEM32
+                | ARM_LDRH | ARM_LDRSB | ARM_LDRSH => R[Rt] := (Unknown 32)
+                | ARM_LDRD => Seq (R[Rt] := (Unknown 32)) (R[Rt + 1] := (Unknown 32))
+                end in
+  arm_cond_il cond assign.
+Definition arm_extra_ls_r_il (op: arm_xmem_op) (cond P U W Rn Rt Rm: N) :=
+  let assign := match op with
+                | ARM_STRH | ARM_STRD => setunknown V_MEM32
+                | ARM_LDRH | ARM_LDRSB | ARM_LDRSH => R[Rt] := (Unknown 32)
+                | ARM_LDRD => Seq (R[Rt] := (Unknown 32)) (R[Rt + 1] := (Unknown 32))
+                end in
+  arm_cond_il cond assign.
 
 Notation "$ x" := (Z.to_N x) (at level 0, only parsing).
 Definition arm2il (a:addr) inst :=
@@ -1744,6 +1837,27 @@ Definition arm2il (a:addr) inst :=
             | ARM_rev op cond Rd Rm => arm_rev_il op $cond $Rd $Rm
             | ARM_extend is_signed op cond Rn Rd rotate Rm => arm_extend_il is_signed op $cond $Rn $Rd $rotate $Rm
             | ARM_bfx is_signed cond msb_widthm1 Rd lsb Rn => arm_bfx_il is_signed $cond $msb_widthm1 $Rd $lsb $Rn
+            | ARM_hmul op cond Rd Ra Rm M N Rn => arm_hmul_il op $cond $Rd $Ra $Rm $M $N $Rn
+            | ARM_sync_l size cond Rn Rt => arm_sync_l_il size $cond $Rn $Rt
+            | ARM_sync_s size cond Rn Rd Rt => arm_sync_s_il size $cond $Rn $Rd $Rt
+            | ARM_CLZ cond Rd Rm => arm_clz_il $cond $Rd $Rm
+            | ARM_PLD_i U R Rn imm12 => arm_pld_i_il $U $R $Rn $imm12
+            | ARM_PLD_r U R Rn imm5 type Rm => arm_pld_r_il $U $R $Rn $imm5 $type $Rm
+            | ARM_vfp_other op cond D Vd sz M Vm => arm_vfp_other_il op $cond $D $Vd $sz $M $Vm
+            | ARM_VCVT_ds cond D Vd sz M Vm => arm_vcvt_ds_il $cond $D $Vd $sz $M $Vm
+            | ARM_VCVT_fpf cond D op U Vd sf sz i imm4 => arm_vcvt_fpf_il $cond $D $op $U $Vd $sf $sz $i $imm4
+            | ARM_VCVT_fpi cond D opc2 Vd sz op M Vm => arm_vcvt_fpi_il $cond $D $opc2 $Vd $sz $op $M $Vm
+            | ARM_VMRS cond Rt => arm_vmrs_il $cond $Rt
+            | ARM_VCMP cond D Vd sz E M Vm => arm_vcmp_il $cond $D $Vd $sz $E $M $Vm
+            | ARM_vfp op cond D Vn Vd sz N Op M Vm => arm_vfp_il op $cond $D $Vn $Vd $sz $N $Op $M $Vm
+            | ARM_VMOV_r1 cond op Vn Rt N => arm_vmov_r1_il $cond $op $Vn $Rt $N
+            | ARM_VMOV_r2 is_single cond op Rt2 Rt M Vm => arm_vmov_r2_il is_single $cond $op $Rt2 $Rt $M $Vm
+            | ARM_VMOV_i cond D imm4H Vd sz imm4L => arm_vmov_i_il $cond $D $imm4H $Vd $sz $imm4L
+            | ARM_coproc_m is_cr cond opc1 CRn Rt coproc opc2 CRm => arm_coproc_m_il is_cr $cond $opc1 $CRn $Rt $coproc $opc2 $CRm
+            | ARM_vls is_load is_single cond U D Rn Vd imm8 => arm_vls_il is_load is_single $cond $U $D $Rn $Vd $imm8
+            | ARM_vlsm is_load is_single cond P U D W Rn Rd imm8 => arm_vlsm_il is_load is_single $cond $P $U $D $W $Rn $Rd $imm8
+            | ARM_extra_ls_i op cond P U W Rn Rt imm4H imm4L => arm_extra_ls_i_il op $cond $P $U $W $Rn $Rt $imm4H $imm4L
+            | ARM_extra_ls_r op cond P U W Rn Rt Rm => arm_extra_ls_r_il op $cond $P $U $W $Rn $Rt $Rm
             | _ => arm_havoc
             end in
   Seq (Move R_PC (Word a 32)) il.
@@ -2165,7 +2279,7 @@ Proof.
        end.
   all: repeat match goal with
        | |- Z.to_N (_ _ ?a ?b) < _ => change a with (Z.of_N $a); change b with (Z.of_N $b); rewrite zxbits_eq, <- xbits_Z2N; [ apply xbits_bound | lia ]
-       | |- context[hastyp_stmt] => repeat (unfold_stmt; destruct_match; hammer)
+       | |- context[hastyp_stmt] => repeat (unfold_stmt; destruct_match; hammer); lia
        end.
 Qed.
 Theorem welltyped_arm_prog:
