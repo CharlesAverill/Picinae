@@ -50,6 +50,7 @@ FreeRTOS/tasks/prvResetNextTaskUnblockTime.v
 FreeRTOS/tasks/vTaskSuspendAll.v
 
 crypto/chacha20/ChaCha20.v
+crypto/chacha20/chacha20_proof.v
 
 crypto/passwordCheck/passwordCheck_vuln.v
 crypto/passwordCheck/passwordCheck_vuln_proofs.v

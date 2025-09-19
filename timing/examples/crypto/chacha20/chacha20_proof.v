@@ -185,11 +185,10 @@ Proof using.
 
     destruct_inv 32 PRE.
     - (* 0x224 -> 4b8 *)
-      admit.
-      (* repeat gstep. 
+      repeat gstep. 
       split.
         lia.
-        hammer. *)
+        hammer.
     - (* 0x4b8 -> 0x5ec *)
       destruct PRE as (S3 & Cycles).
         do 206 gstep.
@@ -321,20 +320,7 @@ Proof using.
   psimpl in BC.
   replace (s' R_S3) with 1 in * by lia.
   hammer.
-  compare_sums.
-  
-
-
-
-          match goal with
-          | [|- ?x = _] => let x' := (flatten_plus x) in idtac x'
-          end.
-          
-
-      (* do 205 fstep_keep R_RA. step. *)
-      -- (* Loop around *)
-        hammer.
-      
+  psimpl. lia.
 Qed.
 
 End TimingProof.
