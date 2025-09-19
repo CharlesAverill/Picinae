@@ -7322,6 +7322,27 @@ Proof.
   apply forall_stmts_in_rep in NJ, NX. apply IHXS; apply forall_stmts_in_iter; try easy.
 Qed.
 
+Theorem stmt_xnotaddr:
+  forall c s q c' s' x a
+    (XS: exec_stmt c s q c' s' x)
+    (NJ: forall_stmts_in_stmt (fun q' => forall e, q' <> Jmp e) q),
+   x <> Some (Addr a).
+Proof.
+  intros c s q c' s' x a XS.
+  dependent induction XS; intros; try discriminate;
+  match goal with
+  | [H: forall_stmts_in_stmt _ (Jmp ?e) |- _] =>
+      cbv in H; specialize (H e); contradiction
+  | [H: forall_stmts_in_stmt _ (Exn ?i) |- _] =>
+      cbv in H; specialize (H i); contradiction
+  | _ => idtac
+  end.
+  apply forall_stmts_in_seq in NJ. destruct NJ as [NJ1 _]. now apply IHXS.
+  apply forall_stmts_in_seq in NJ. destruct NJ as [_ NJ2]. now apply IHXS2.
+  apply forall_stmts_in_ite in NJ. destruct NJ as [NJ1 NJ2]. destruct b; apply IHXS; assumption.
+  apply forall_stmts_in_rep in NJ. apply IHXS; apply forall_stmts_in_iter; try easy.
+Qed.
+
 Theorem step_fallthrough:
   forall p s a q s' sz exit' (LU: p s a = Some (sz, q))
     (STEP: can_step p (((exit',s'),(Addr a, s))))

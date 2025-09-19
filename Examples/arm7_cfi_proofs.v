@@ -344,6 +344,136 @@ Proof.
   intros. destruct b. simpl in H. now inversion H. simpl in H. inversion H. simpl in H2. now apply app_cons_not_nil in H2.
 Qed.
 
+
+Definition NoJ q := forall_stmts_in_stmt (fun q' : stmt => forall e : exp, q' <> Jmp e) q.
+Definition NoE q := forall_stmts_in_stmt (fun q' : stmt => forall i : N, q' <> Exn i) q.
+Definition NoJE q := NoJ q /\ NoE q.
+Lemma noj_cond: forall cond il, NoJ il -> NoJ (arm_cond_il cond il).
+Proof. intros. unfold arm_cond_il. now destruct_match. Qed.
+Lemma noj_seq: forall a b, NoJ a -> NoJ b -> NoJ (a $; b).
+Proof. easy. Qed.
+Lemma noje_cond: forall cond il, NoJE il -> NoJE (arm_cond_il cond il).
+Proof. intros. destruct H. unfold arm_cond_il. now destruct_match. Qed.
+Lemma noje_seq: forall a b, NoJE a -> NoJE b -> NoJE (a $; b).
+Proof. intros. now destruct H, H0. Qed.
+Lemma noj_ite: forall a b c, NoJ a -> NoJ b -> NoJ (If c b a).
+Proof. easy. Qed.
+
+Lemma arm_cond_fallthru:
+  forall cond il c s c' s' x
+    (XS: exec_stmt c s (arm_cond_il cond il) c' s' x),
+    (forall x', exec_stmt c s il c' s' x' -> x' = None) ->
+    x = None.
+Proof.
+  intros. cbv [arm_cond_il] in XS. destruct_match_in XS; first
+    [ now apply H in XS
+    | inversion XS; destruct b; first [now apply H in XS0 | now inversion XS0]].
+Qed.
+Ltac noje H :=
+  match type of H with
+  | exec_stmt _ _ (arm2il ?a ?i) _ _ ?x =>
+      let A := fresh "A" in
+      let B := fresh "B" in
+      assert (NoJE (arm2il a i)) as [A B]; [cbv [arm2il]; apply noje_seq; [easy|try apply noje_cond] | now apply stmt_xnone in H]
+  end.
+Ltac noj H :=
+  match type of H with
+  | exec_stmt _ _ (arm2il ?a ?i) _ _ ?x =>
+      let A := fresh "A" in
+      assert (NoJ (arm2il a i)) as A; [cbv [arm2il]; apply noj_seq; [try easy|try apply noj_cond] | eapply stmt_xnotaddr; now try apply H]
+  end.
+Ltac nje :=
+  repeat match goal with
+  | |- NoJE (arm_cond_il _ _) => apply noje_cond
+  | |- NoJE (Seq _ _) => apply noje_seq
+  | |- NoJE ?a => unfold_rec a
+  end.
+Ltac nj :=
+  repeat match goal with
+  | |- NoJ (arm_cond_il _ _) => apply noj_cond
+  | |- NoJ (Seq _ _) => apply noj_seq
+  | |- NoJ ?a => unfold_rec a
+  end.
+Lemma for_0_14_noj:
+  forall reg_list start f,
+    NoJ start -> (forall n, NoJ (f n)) -> NoJ (for_0_14 reg_list start f).
+Proof.
+  intros. repeat apply noj_seq; destruct_match; easy.
+Qed.
+Lemma arm_lsm_noj:
+  forall op cond W Rn register_list a c s c' s' x A
+    (XS: exec_stmt c s (arm2il a (ARM_lsm op cond W Rn register_list)) c' s' x),
+    (Z.to_N register_list < 2 ^ 15 -> x <> Some (Addr A))%N.
+Proof.
+  (* intros. noj XS. cbv[arm_lsm_il arm_lsm_op_il arm_lsm_op_type arm_stm_il arm_ldm_il arm_lsm_il_]. time (destruct_match_eqn; *)
+  (* nj; try solve [eapply xbits_above in H; rewrite H in e0; lia]; apply noj_ite; now try apply for_0_14_noj). *)
+Admitted. (*speed this up*)
+Lemma arm_data_r_fallthru:
+  forall op cond S Rn Rd imm5 type Rm a c s c' s' x
+    (XS: exec_stmt c s (arm2il a (ARM_data_r op cond S Rn Rd imm5 type Rm)) c' s' x),
+    Rd <> 15%Z -> x = None.
+Proof.
+  intros. noje XS.
+  cbv[arm_data_r_il arm_data_op_il arm_data_r_shiftc arm_data_r_addwcarry arm_data_il].
+  destruct DecodeImmShift, Shift_C. destruct_match_eqn; try lia; nje; easy.
+Qed.
+Lemma arm_data_i_fallthru:
+  forall op cond S Rn Rd imm12 a c s c' s' x
+    (XS: exec_stmt c s (arm2il a (ARM_data_i op cond S Rn Rd imm12)) c' s' x),
+    Rd <> 15%Z -> x = None.
+Proof.
+  intros. noje XS.
+  cbv[arm_data_i_il arm_data_op_il arm_data_i_shiftc arm_data_i_addwcarry arm_data_il].
+  destruct ARMExpandImm_C. destruct_match_eqn; try lia; nje; easy.
+Qed.
+Lemma arm_ls_i_fallthru:
+  forall op cond P U W Rn Rt imm12 a c s c' s' x
+    (XS: exec_stmt c s (arm2il a (ARM_ls_i op cond P U W Rn Rt imm12)) c' s' x),
+    Rt <> 15%Z \/ op <> ARM_LDR -> x = None.
+Proof.
+  intros. noje XS.
+  cbv [arm_ls_i_il arm_ls_op_il arm_ls_il]. destruct H; destruct_match_eqn; try lia; nje; easy.
+Qed.
+Lemma arm_ls_r_fallthru:
+  forall op cond P U W Rn Rt imm5 type Rm a c s c' s' x
+    (XS: exec_stmt c s (arm2il a (ARM_ls_r op cond P U W Rn Rt imm5 type Rm)) c' s' x),
+    Rt <> 15%Z \/ op <> ARM_LDR -> x = None.
+Proof.
+  intros. noje XS.
+  cbv [arm_ls_r_il arm_ls_op_il arm_ls_il]. destruct H; destruct_match_eqn; try lia; nje; easy.
+Qed.
+
+Lemma firststep:
+    forall p a' s' t1 a s0 t0
+    (XP: exec_prog p ((Addr a', s')::t1++(Addr a, s0)::t0)),
+    exists t2 x s,
+    (Addr a', s')::t1 = t2++[(x, s)] /\ can_step p (x, s, (Addr a, s0)).
+Proof.
+  intros. rewrite app_comm_cons in XP.
+  remember (_ :: t1) as l.
+  destruct (exists_last (ltac:(subst;discriminate):l<>[])) as [t2 [(x,s) L]].
+  unfold exec_prog in XP.
+  rewrite L, <- app_assoc, stepsof_app, 2 Forall_app in XP. destruct XP as [_ [_ XP]].
+  exists t2,x,s. now inversion XP.
+Qed.
+
+Lemma In_contains:
+  forall z l, contains z l = true -> In z l.
+Proof.
+  intros. unfold contains in H. destruct_match_in H; try discriminate. apply find_some in e. destruct e. apply Z.eqb_eq in H1. now subst.
+Qed.
+
+Lemma forall_last {A}:
+  forall (P: A -> Prop) y x1 t1 t2 x2,
+    y::x1::t1 = t2 ++ [x2] ->
+    Forall P (x1::t1) ->
+    P x2.
+Proof.
+  intros. destruct (exists_last (ltac:(discriminate):x1::t1<>[])) as [? [? ?]].
+  rewrite e, app_comm_cons, app_inj_tail_iff in H. destruct H. subst.
+  rewrite e, Forall_app in H0. destruct H0. now inversion H0.
+Qed.
+
 Lemma SafeDest_rewrite_inst:
   forall tc i2i' z pol i ti ai bi txt irm' table tc' p a' s' s1 t1 t0
     (TC: True) (* table cache is consistent with memory *)
@@ -352,6 +482,7 @@ Lemma SafeDest_rewrite_inst:
     (I:  (0 <=  i < 2^30)%Z)
     (BI: (0 <= bi < 2^30)%Z)
     (I2I': forall i, (0 <= i2i' i < 2^30)%Z)
+    (I2I'': (i2i' (i + 1) = i2i' i + Z.of_nat (length irm'))%Z)
     (AIB: ~InBlock i2i' i (length irm') (Z.to_N ai * 4))
     (CB: ContainsBlock i2i' i p s1 irm')
     (IB: Forall (InBlockXs i2i' i (length irm')) t1)
@@ -360,38 +491,61 @@ Lemma SafeDest_rewrite_inst:
   SafeDest i2i' pol ai i (length irm') a'.
 Proof.
   intros.
+  assert (
+    irm' = [z] ->
+    In (Z.add i 1) (pol i) ->
+    (forall c' s' x a, exec_stmt armc s1 (arm2il (Z.to_N (i2a' i2i' i)) (arm_decode z)) c' s' x -> x <> Some (Addr a)) ->
+    SafeDest i2i' pol ai i (length irm') a'
+  ) as FT. {
+    intros Z POL FT. subst.
+    apply firststep in XP as [t2 [x [s [H0 STEP]]]]. inversion STEP.
+    apply firstinst in CB; try apply I2I'. rewrite CB in LU. inversion LU; clear LU. subst.
+    destruct x0.
+      destruct e.
+        eapply FT in XS. now contradiction XS.
+        simpl in H0. destruct t1.
+          now apply single_element in H0.
+          eapply forall_last in IB; [|apply H0]. contradiction IB.
+    simpl in H0. destruct t1.
+      apply single_element in H0. inversion H0. simpl. left. right. exists (i + 1)%Z. unfold i2a', to_a. split.
+        rewrite I2I''; specialize (I2I' i); simpl Z.of_nat; lia. assumption.
+      eapply forall_last in IB; [|apply H0]. simpl in IB. inversion IB. lia.
+  }
   assert (goto_abort (i2i' i) ai tc = Some (irm', table, tc') -> SafeDest i2i' pol ai i (length irm') a') as GA.
   {
     unfold goto_abort. intro GA; destruct_match_in GA; try discriminate.
     inversion GA; subst; clear GA.
 
-    rewrite app_comm_cons in XP. remember (_ :: t1) as l. destruct (rev_destruct l). subst; discriminate.
-    inversion e0 as [t2 H]; clear e0; subst. inversion H as [(x, s) H0]; clear H; simpl in H0.
-    unfold exec_prog in XP.
-    rewrite H0, <- app_assoc, stepsof_app, 2 Forall_app in XP. destruct XP as [_ [_ XP]].
-    inversion XP; clear XP H1 H3; subst. inversion H2; clear H2.
+    apply firststep in XP as [t2 [x [s [H0 STEP]]]]. inversion STEP.
 
-    apply firstinst in CB; try apply I2I'. rewrite CB in LU. inversion LU; clear LU. subst.
+    apply firstinst in CB; try apply I2I'. rewrite CB in LU. inversion LU; clear LU; subst.
     unfold i2a', to_a in XS. rewrite Z.mul_comm, Z2N.inj_mul in XS by (apply I2I' || lia).
     remember (Z.to_N (i2i' i)) as src.
-    rewrite <-(Z2N.id (i2i' i)) in e by (apply I2I'; lia). rewrite <-Heqsrc in e.
-    rewrite <-(Z2N.id ai) in e by lia.
+    rewrite <- (Z2N.id (i2i' i)), <- Heqsrc, <- (Z2N.id ai) in e by (apply I2I' || lia).
     epose proof (GOTOz_correct _ _ _ _ _ _ _ _ _ _ _ e XS).
-    Unshelve.
-    all: try lia.
-    2: { rewrite Heqsrc. specialize (I2I' i). lia. }
-    subst.
+    Unshelve. all: subst; specialize (I2I' i); try lia.
 
     simpl in H0. destruct t1.
       apply single_element in H0. inversion H0. left. left. unfold to_a; lia.
-      destruct (exists_last (ltac:(discriminate):p0::t1<>[])) as [? [? ?]].
-        rewrite e0, app_comm_cons, app_inj_tail_iff in H0. destruct H0. subst.
-        rewrite e0, Forall_app in IB. destruct IB. now inversion H0.
+      eapply forall_last in IB; [inversion H0|apply H0]. contradiction IB.
   }
- unfold rewrite_inst in RI. destruct_match_in RI; try discriminate;
-  match type of RI with context[goto_abort] => now apply GA
-  | _ => clear GA
+ unfold rewrite_inst, PC, Z15 in RI. destruct_match_in RI; try discriminate;
+  match type of RI with
+  | context[goto_abort] => now apply GA
+  | context[Some ([z], _, _)] =>
+      apply FT; [now inversion RI| rewrite negb_false_iff in e; now apply In_contains in e|intros c s x a XS;
+        match type of XS with
+        | context[ARM_data_i] => eapply arm_data_i_fallthru in XS; [now subst | lia]
+        | context[ARM_data_r] => eapply arm_data_r_fallthru in XS; [now subst | lia]
+        | context[ARM_ls_i] => eapply arm_ls_i_fallthru in XS; [now subst | lia || now right]
+        | context[ARM_ls_r] => eapply arm_ls_r_fallthru in XS; [now subst | lia || now right]
+        | context[ARM_lsm] => eapply arm_lsm_noj in XS; lia
+        | _ => noj XS; destruct_match; easy
+        end
+      ]
+  | _ => clear GA FT
   end.
+
 
 (** Definitions for reasoning about the locations in memory and sizes of
     jumptable entries. *)
