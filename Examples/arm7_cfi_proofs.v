@@ -87,7 +87,12 @@ Definition SafeTableCache i2i' pol ai tbi (flattened_tables: list Z) (tc: TableC
 Ltac destruct_match_in H :=
   repeat match type of H with context[match ?x with _ => _ end] =>
     let e := fresh "e" in
-    destruct x eqn:e in H
+    destruct x eqn:e
+  end.
+Ltac destruct_match_eqn :=
+  repeat match goal with |- context[match ?x with _ => _ end] =>
+    let e := fresh "e" in
+    destruct x eqn:e
   end.
 
 Lemma table_size_correctness:
@@ -178,12 +183,12 @@ Proof.
     split; now destruct b.
     split; simpl; intro; destruct b; try easy.
       destruct Z.eqb eqn:e in H; try easy. rewrite IHa in H. apply Z.eqb_eq in e. now subst.
-      destruct Z.eqb eqn:e. rewrite IHa. now inversion H. inversion H. apply Z.eqb_neq in e. easy.
+      destruct Z.eqb eqn:e. rewrite IHa. now inversion H. inversion H. apply Z.eqb_neq in e. contradiction.
 Qed.
 
-Lemma rewrite_w_table_safety:
-  forall irm tc pol i2i' cond z i ti ai z' table tc'
-    (RWT: rewrite_w_table irm tc (pol i) i2i' cond z i ti ai = Some (z', table, tc')),
+Lemma SafeTable_rewrite_w_table:
+  forall irm tc pol i2i' cond i ti ai z' table tc'
+    (RWT: rewrite_w_table irm tc (pol i) i2i' cond i ti ai = Some (z', table, tc')),
     SafeTable i2i' pol ai i table.
 Proof.
   intros. unfold rewrite_w_table in RWT. destruct_match_in RWT; try discriminate.
@@ -192,14 +197,14 @@ Proof.
       intro. apply safeentry_in, make_jump_table_map_safety.
 Qed.
 
-Lemma rewrite_w_table_cache_safety:
-  forall tbi flattened_tables irm tc pol i2i' cond z i ti ai z' table tc'
+Lemma SafeCache_rewrite_w_table:
+  forall tbi flattened_tables irm tc pol i2i' cond i ti ai z' table tc'
     (STC: SafeTableCache i2i' pol ai tbi flattened_tables tc)
     (TI: (ti = tbi + Z.of_nat (length flattened_tables))%Z)
-    (RWT: rewrite_w_table irm tc (pol i) i2i' cond z i ti ai = Some (z', table, tc')),
+    (RWT: rewrite_w_table irm tc (pol i) i2i' cond i ti ai = Some (z', table, tc')),
     SafeTableCache i2i' pol ai tbi (flattened_tables ++ table) tc'.
 Proof.
-  intros. eapply rewrite_w_table_safety in RWT as ST. unfold rewrite_w_table in RWT.
+  intros. eapply SafeTable_rewrite_w_table in RWT as ST. unfold rewrite_w_table in RWT.
   destruct_match_in RWT; try discriminate.
     inversion RWT; subst; now rewrite app_nil_r.
     remember (Z.shiftl _ _). inversion RWT; subst; clear RWT. unfold SafeTableCache. intros. destruct list_eqb eqn:E.
@@ -210,13 +215,13 @@ Proof.
       eapply STC in TC. inversion TC. exists x. split; now try apply extracttable_app_r.
 Qed.
 
-Lemma rewrite_inst_safety:
+Lemma SafeTable_rewrite_inst:
   forall tc i2i' z pol i ti ai bi txt z' table tc'
     (RI: rewrite_inst tc i2i' z (pol i) i ti ai bi txt = Some (z', table, tc')),
     SafeTable i2i' pol ai i table.
 Proof.
   assert (forall i' ai tc a b c, goto_abort i' ai tc = Some (a, b, c) -> b = nil).
-    unfold goto_abort. intros. destruct GOTOz eqn:e in H; now inversion H.
+    unfold goto_abort. intros. destruct_match_in H; now inversion H.
   assert (forall x tc a b c, wo_table x tc = Some (a, b, c) -> b = nil).
     unfold wo_table. intros. destruct x in H0; now inversion H0.
   assert (forall l cond imm24 i dis i2i' ai tc a b c, rewrite_b_bl l cond imm24 i dis i2i' ai tc = Some (a, b, c) -> b = nil).
@@ -224,10 +229,10 @@ Proof.
 
   intros. unfold rewrite_inst in RI. destruct_match_in RI;
     try solve [first [apply H in RI|apply H0 in RI|apply H1 in RI|inversion RI]; subst; constructor];
-    now apply rewrite_w_table_safety in RI.
+    now apply SafeTable_rewrite_w_table in RI.
 Qed.
 
-Lemma rewrite_inst_cache_safety:
+Lemma SafeCache_rewrite_inst:
   forall tc i2i' z pol i ti ai bi txt z' table tc' tbi flattened_tables
     (STC: SafeTableCache i2i' pol ai tbi flattened_tables tc)
     (TI: (tbi + Z.of_nat (length flattened_tables) = ti)%Z)
@@ -235,7 +240,7 @@ Lemma rewrite_inst_cache_safety:
     SafeTableCache i2i' pol ai tbi (flattened_tables ++ table) tc'.
 Proof.
   assert (forall i' ai tc a b c, goto_abort i' ai tc = Some (a, b, c) -> c = tc).
-    unfold goto_abort. intros. destruct GOTOz eqn:e in H; now inversion H.
+    unfold goto_abort. intros. destruct_match_in H; now inversion H.
   assert (forall x tc a b c, wo_table x tc = Some (a, b, c) -> c = tc).
     unfold wo_table. intros. destruct x in H0; now inversion H0.
   assert (forall l cond imm24 i dis i2i' ai tc a b c, rewrite_b_bl l cond imm24 i dis i2i' ai tc = Some (a, b, c) -> c = tc).
@@ -243,10 +248,10 @@ Proof.
 
   intros. unfold rewrite_inst in RI. destruct_match_in RI;
     try solve [first [apply H in RI|apply H0 in RI|apply H1 in RI|inversion RI]; subst; now apply safetablecache_app_r];
-    eapply rewrite_w_table_cache_safety in RI; now try apply RI.
+    eapply SafeCache_rewrite_w_table in RI; now try apply RI.
 Qed.
 
-Lemma _rewrite_cache_safety:
+Lemma SafeCache__rewrite:
   forall zs tc pol i2i' i ti ai bi txt z's ts tc' t
     (RR: _rewrite zs tc pol i2i' i (ti + Z.of_nat (length t)) ai bi txt = Some (z's, ts, tc')),
     SafeTableCache i2i' pol ai ti t tc ->
@@ -257,15 +262,15 @@ Proof.
     intros. simpl in RR; destruct_match_in RR; try discriminate; inversion RR; subst.
       simpl. rewrite app_assoc. eapply IHzs.
         now rewrite length_app, Nat2Z.inj_add, Z.add_assoc, e2.
-        eapply rewrite_inst_cache_safety in e; now try apply e.
+        eapply SafeCache_rewrite_inst in e; now try apply e.
 Qed.
 
-Lemma _rewrite_cache_safety2:
+Lemma SafeCache__rewrite2:
   forall zs pol i2i' i ti ai bi txt z's ts tc'
     (RR: _rewrite zs (fun _ => None) pol i2i' i ti ai bi txt = Some (z's, ts, tc')),
     SafeTableCache i2i' pol ai ti (concat ts) tc'.
 Proof.
-  intros. rewrite <- (app_nil_l (concat _)). eapply _rewrite_cache_safety.
+  intros. rewrite <- (app_nil_l (concat _)). eapply SafeCache__rewrite.
     rewrite Z.add_0_r. apply RR.
     discriminate.
 Qed.

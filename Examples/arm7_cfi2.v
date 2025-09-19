@@ -208,7 +208,7 @@ Definition rewrite_w_table
     (tc: TableCache)
     (dis: list Z)
     (i2i': Z -> Z)
-    (cond z i ti ai: Z)
+    (cond i ti ai: Z)
     : NewInst :=
   match tc dis with
   | None =>
@@ -362,8 +362,8 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
   if (negb (contains (i+Z1) dis)) then None else
   match decoded with
   (* branching *)
-  | ARM_BX cond reg => rewrite_bx reg tc dis i2i' cond z i ti ai
-  | ARM_BLX_r cond reg => rewrite_blx reg tc dis i2i' cond z i ti ai
+  | ARM_BX cond reg => rewrite_bx reg tc dis i2i' cond i ti ai
+  | ARM_BLX_r cond reg => rewrite_blx reg tc dis i2i' cond i ti ai
   | ARM_B cond imm24 => rewrite_b cond imm24 i dis i2i' ai tc
   | ARM_BL cond imm24 => rewrite_bl cond imm24 i dis i2i' ai tc
   (* data processing *)
@@ -375,7 +375,7 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
       let Rm' := if (Rm =? PC) then reg else Rm in
       let sanitized_inst := ARM_data_r op Z14 s Rn' Rd' imm5 type Rm' in
       if (Rd =? PC) then
-        rewrite_pc sanitized_inst reg tc dis i2i' cond z i ti ai
+        rewrite_pc sanitized_inst reg tc dis i2i' cond i ti ai
       else if (Rn =? PC) || (Rm =? PC) then
         if (match op with ARM_MOV => Rd =? LR | _ => false end) then
           rewrite_mov_lr_pc i i2i' tc
@@ -391,7 +391,7 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
       let Rd' := if (Rd =? PC) then reg else Rd in
       let sanitized_inst := ARM_data_i op Z14 s Rn' Rd' imm12 in
       if (Rd =? PC) then
-        rewrite_pc sanitized_inst reg tc dis i2i' cond z i ti ai
+        rewrite_pc sanitized_inst reg tc dis i2i' cond i ti ai
       else if (Rn =? PC) then
         if (Rd =? SP) then
           rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
@@ -406,8 +406,8 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
       let Rt' := if (Rt =? PC) then reg else Rt in
       let sanitized_inst := ARM_ls_i ARM_LDR cond P U W Rn' Rt' imm12 in
       if (Rt =? PC) then
-        if ((Rn =? SP) && ((P =? Z0) || (W =? Z1))) then rewrite_pc_sp sanitized_inst reg reg2 tc dis i2i' cond z i ti ai
-        else rewrite_pc sanitized_inst reg tc dis i2i' cond z i ti ai
+        if ((Rn =? SP) && ((P =? Z0) || (W =? Z1))) then rewrite_pc_sp sanitized_inst reg reg2 tc dis i2i' cond i ti ai
+        else rewrite_pc sanitized_inst reg tc dis i2i' cond i ti ai
       else if (Rn =? PC) then
         let li := bi-((if (U =? Z1) then i + Z2 + imm12 else i + Z2 - imm12) mod (Z1 << Z32)) in
         match li >? Z0, nth_error txt (Z.to_nat (bi-li)) with
@@ -429,8 +429,8 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
       let Rm' := if (Rm =? PC) then reg else Rm in
       let sanitized_inst := ARM_ls_r ARM_LDR cond P U W Rn' Rt' imm5 type Rm' in
       if (Rt =? PC) then
-        if ((Rn =? SP) && ((P =? Z0) || (W =? Z1))) then rewrite_pc_sp sanitized_inst reg reg2 tc dis i2i' cond z i ti ai
-        else rewrite_pc sanitized_inst reg tc dis i2i' cond z i ti ai
+        if ((Rn =? SP) && ((P =? Z0) || (W =? Z1))) then rewrite_pc_sp sanitized_inst reg reg2 tc dis i2i' cond i ti ai
+        else rewrite_pc sanitized_inst reg tc dis i2i' cond i ti ai
       else if (Rn =? PC) || (Rm =? PC) then
         if (Rt =? SP) then rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
         else rewrite_pc_no_jump sanitized_inst cond i reg tc
@@ -439,7 +439,7 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
       if (register_list <? (Z1 << Z15)) then unchanged (* pc is not in reg list *)
       else
         let reg := if (Rn =? Z0) then Z1 else Z0 in
-        rewrite_ldm_pc op Rn register_list reg decoded tc dis i2i' cond z i ti ai
+        rewrite_ldm_pc op Rn register_list reg decoded tc dis i2i' cond i ti ai
   | ARM_vls is_load is_single cond U D Rn Vd imm8 =>
       if (Rn =? PC) then
         let sanitized_inst := ARM_vls is_load is_single cond U D Z0 Vd imm8 in
