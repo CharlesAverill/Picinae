@@ -202,4 +202,6 @@ void chacha20_encrypt(const uint8_t* plaintext, uint8_t* ciphertext,
     }
 }
 
-int main() {}
+int main() {
+  chacha20_encrypt(NULL, NULL, 0, 0, 0, 0);
+}

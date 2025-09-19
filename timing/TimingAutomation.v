@@ -33,11 +33,11 @@ Export tm.
 Ltac PSimplifier ::= SIMPL.PSimplifier.
 
 Definition cycle_count_of_trace (t : trace) : N :=
-    List.fold_left N.add (List.map 
+    List.fold_left N.add (List.rev (List.map 
         (fun '(e, s) => match e with 
             | Addr a => time_of_addr s a
             | Raise n => time_inf
-            end) t) 0.
+            end) t)) 0.
 
 Lemma fold_left_cons : forall {X : Type} (t : list X) (h : X) (f : X -> X -> X) (base : X) 
     (Comm : forall a b, f a b = f b a) (Assoc : forall a b c, f a (f b c) = f (f a b) c),
@@ -62,9 +62,9 @@ Lemma cycle_count_of_trace_cons :
     forall (t : trace) (e : exit) (s : store),
     cycle_count_of_trace ((e, s) :: t) = cycle_count_of_trace [(e, s)] + cycle_count_of_trace t.
 Proof.
-    intros. unfold cycle_count_of_trace at 2. rewrite map_cons, fold_left_cons; try lia. simpl.
-    unfold cycle_count_of_trace at 1. rewrite map_cons, fold_left_cons. rewrite N.add_0_r. reflexivity.
-    lia. lia.
+    intros. unfold cycle_count_of_trace.
+    repeat rewrite map_cons, rev_cons, fold_left_app.
+    simpl. lia.
 Qed.
 
 Lemma cycle_count_of_trace_app :
