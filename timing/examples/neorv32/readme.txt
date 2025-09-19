@@ -1,0 +1,19 @@
+Burning and serial setup:
+1. Put USB blaster into USB BLASTER serial port on board
+2. Set SW11 to RUN
+3. Compile CPU in quartus prime
+4. Open Programmer, select board, burn chip onto board
+5. Remove USB blaster from USB BLASTER serial port and place into UART TO USB port
+6. `sudo minicom -s -D /dev/ttyUSB0 -b 19200`
+7. Set Serial Port Setup > Hardware Flow Control to No
+8. Save to configuration "neorv32", can ignore -s flag for minicom now if you provide neorv32 after baudrate
+
+For compiling neorv32 example programs:
+1. Download gcc from https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases
+2. `make exe RISCV_PREFIX=<path-to-download/bin/riscv-none-elf-`
+
+Uploading via minicom:
+1. Select 'u' option at bootloader menu
+2. Follow this procedure: https://www.dannysung.com/articles/linux/tips/sending-binary-files-via-minicom/ (copy available in clock_freq_measurement)
+3. Ctrl-A S, select neorv32_exe.bin, upload
+4. After upload, select 'e' option to execute

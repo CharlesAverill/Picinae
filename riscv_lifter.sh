@@ -47,7 +47,7 @@ while read -r line; do
         label=$(echo "$line" | awk '{print $2}' | sed 's/://')
         echo "    (* $label *)"
     fi
-done < <($OBJDUMP -d "$input_file")
+done < <($OBJDUMP -d "$input_file" -M no-aliases)
 
 echo "    | _ => 0"
 echo "    end."

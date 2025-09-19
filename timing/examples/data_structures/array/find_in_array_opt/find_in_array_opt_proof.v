@@ -1,26 +1,26 @@
 Require Import array_opt.
-Require Import riscvTiming.
+Require Import RISCVTiming.
 Import RISCVNotations.
-Require Import timing_auto.
 
-Module find_in_arrayTime <: TimingModule.
-    Definition time_of_addr (s : store) (a : addr) : N :=
-        match neorv32_cycles_upper_bound s (array_opt_bin a) with
-        | Some x => x | _ => 999 end.
+Module TimingProof (cpu : CPUTimingBehavior).
 
+Module Program_find_in_array_opt <: ProgramInformation.
     Definition entry_addr : N := 0x1e4.
 
     Definition exits (t:trace) : bool :=
-    match t with (Addr a,_)::_ => match a with
-    | 0x20c => true
-    | _ => false
-  end | _ => false end.
-End find_in_arrayTime.
+        match t with (Addr a,_)::_ => match a with
+        | 0x20c => true
+        | _ => false
+    end | _ => false end.
 
-Module find_in_arrayAuto := TimingAutomation find_in_arrayTime.
-Import find_in_arrayTime find_in_arrayAuto.
+    Definition binary := array_bin.
+End Program_find_in_array_opt.
 
-Definition key_in_array (mem : addr -> N) (arr : addr) (key : N) (len : N) : Prop :=
+Module RISCVTiming := RISCVTiming cpu Program_find_in_array_opt.
+Module find_in_array_optAuto := RISCVTimingAutomation RISCVTiming.
+Import Program_find_in_array_opt find_in_array_optAuto.
+
+Definition key_in_array (mem : memory) (arr : addr) (key : N) (len : N) : Prop :=
     exists i, i < len /\ mem Ⓓ[arr + 4 * i] = key.
 
 Lemma lt_impl_lt_or_eq : forall x y,
@@ -29,7 +29,7 @@ Proof. lia. Qed.
 
 Definition N_peano_ind_Set (P : N -> Set) := N.peano_rect P.
 
-Fixpoint key_in_array_dec (mem : addr -> N) (arr : addr) (key len : N)
+Fixpoint key_in_array_dec (mem : memory) (arr : addr) (key len : N)
         : {key_in_array mem arr key len} + {~ key_in_array mem arr key len}.
     induction len using N_peano_ind_Set.
     - right. intro. destruct H as (idx & Contra & _). lia.
@@ -46,84 +46,75 @@ Fixpoint key_in_array_dec (mem : addr -> N) (arr : addr) (key len : N)
                 } subst. contradiction.
 Qed.
 
-Definition time_of_find_in_array_opt (mem : addr -> N) 
-        (arr : addr) (key : N) (len : N) (found_idx : option N)
-        (t : trace) :=
+Definition time_of_find_in_array_opt (len : N) (found_idx : option N) (t : trace) :=
     cycle_count_of_trace t =
         if len =? 0 then (
-            time_branch + 2 + time_branch
+            ttbeq + taddi + tjalr
         ) else (
             (* setup *)
-            3 + 2 + time_branch + time_mem + 2 +
+            tfbeq + taddi + tjal + tlw + taddi +
             (* arr[0] check *)
             if (match found_idx with Some 0 => true | _ => false end) then (
-                3 + 2 + 2 + time_branch
+                tfbne + taddi + taddi + tjalr
             ) else (
-                time_branch +
+                ttbne +
                 (* loop iterations *)
                 (match found_idx with None => len - 1 | Some i => i - 1 end) *
                 (* loop body duration *)
-                (2 + 3 + time_mem + 2 + time_branch) +
+                (taddi + tfbeq + tlw + taddi + ttbne) +
                 (* partial loop iteration before loop exit *)
                 (match found_idx with
-                 | None => 2 + time_branch
-                 | Some _ => 2 + 3 + time_mem + 2 + 3 + 2
+                 | None => taddi + ttbeq
+                 | Some _ => taddi + tfbeq + tlw + taddi + tfbne + taddi
                  end) +
                 (* return *)
-                2 + time_branch
+                taddi + tjalr
             )
         ).
 
-Definition timing_postcondition (mem : addr -> N) (arr : addr)
+Definition timing_postcondition (mem : memory) (arr : addr)
         (key : N) (len : N) (t : trace) : Prop :=
     (exists i, i < len /\ mem Ⓓ[arr + 4 * i] = key /\
         (* i is the first index where the key is found *)
         (forall j, j < i -> mem Ⓓ[arr + 4 * j] <> key) /\
-        time_of_find_in_array_opt mem arr key len (Some i) t) \/
+        time_of_find_in_array_opt len (Some i) t) \/
     ((~ exists i, i < len /\ mem Ⓓ[arr + 4 * i] = key) /\
-        time_of_find_in_array_opt mem arr key len None t).
+        time_of_find_in_array_opt len None t).
 
-Definition find_in_array_opt_timing_invs (s : store) (base_mem : addr -> N)
+Definition find_in_array_opt_timing_invs (s : store) (base_mem : memory)
     (sp : N) (arr : addr) (key : N) (len : N) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
 | 0x1e4 => Some (
     (* bindings *)
-    s V_MEM32 = Ⓜbase_mem /\ s R_A0 = Ⓓarr /\ s R_A1 = Ⓓkey /\
-    s R_A2 = Ⓓlen /\
+    s V_MEM32 = base_mem /\ s R_A0 = arr /\ s R_A1 = key /\
+    s R_A2 = len /\
     (* valid array length *)
     4 * len <= 2^32 - 1 /\
     cycle_count_of_trace t' = 0)
-| 0x1f0 => Some (exists mem a5,
+| 0x1f0 => Some (
     (* bindings *)
-    s V_MEM32 = Ⓜbase_mem /\ s R_A0 = Ⓓ(4 * (a5 + 1) ⊕ arr) 
-    /\ s R_A1 = Ⓓkey /\ s R_A2 = Ⓓlen /\ s R_A5 = Ⓓa5 /\
+    s V_MEM32 = base_mem /\ s R_A0 = (4 * (s R_A5 + 1) ⊕ arr) 
+    /\ s R_A1 = key /\ s R_A2 = len /\
     (* passed the zero-length check *)
     0 < len /\
     4 * len <= 2^32 - 1 /\
-    a5 < len /\
+    s R_A5 < len /\
     (* preservation *)
     (forall i, i < len ->
-        mem Ⓓ[arr + 4 * i] = base_mem Ⓓ[arr + 4 * i]) /\
+        (s V_MEM32) Ⓓ[arr + 4 * i] = base_mem Ⓓ[arr + 4 * i]) /\
     (* haven't found a match yet *)
-    (forall i, i < 1 + a5 ->
-        mem Ⓓ[arr + 4 * i] <> key) /\
+    (forall i, i < 1 + s R_A5 ->
+        (s V_MEM32) Ⓓ[arr + 4 * i] <> key) /\
     cycle_count_of_trace t' =
         (* pre-loop time *)
-        3 + 2 + time_branch + time_mem + 2 + time_branch +
+        tfbeq + taddi + tjal + tlw + taddi + ttbne +
         (* loop counter stored in register a4 *)
-        a5 *
+        s R_A5 *
         (* full loop body length - can't have broken out by this address *)
-        (2 + 3 + time_mem + 2 + time_branch)
+        (taddi + tfbeq + tlw + taddi + ttbne)
     )
 | 0x20c => Some (timing_postcondition base_mem arr key len t)
 | _ => None end | _ => None end.
-
-Definition lifted_find_in_array_opt : program :=
-    lift_riscv array_opt_bin.
-
-(* We use simpl in a few convenient places: make sure it doesn't go haywire *)
-Arguments N.add _ _ : simpl nomatch.
-Arguments N.mul _ _ : simpl nomatch.
 
 Theorem find_in_array_opt_timing:
   forall s t s' x' base_mem sp arr key len
@@ -131,21 +122,21 @@ Theorem find_in_array_opt_timing:
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
          (* bindings *)
-         (MEM: s V_MEM32 = Ⓜbase_mem)
-         (A0: s R_A0 = Ⓓarr)
-         (A1: s R_A1 = Ⓓkey)
-         (A2: s R_A2 = Ⓓlen)
+         (MEM: s V_MEM32 = base_mem)
+         (A0: s R_A0 = arr)
+         (A1: s R_A1 = key)
+         (A2: s R_A2 = len)
          (* length must fit inside the address space, arr is 4-byte integers *)
          (LEN_VALID: 4 * len <= 2^32 - 1),
   satisfies_all 
-    lifted_find_in_array_opt
+    lifted_prog
     (find_in_array_opt_timing_invs s base_mem sp arr key len)
     exits
   ((x',s')::t).
 Proof using.
     intros.
     apply prove_invs.
-    Local Ltac step := time rv_step.
+    Local Ltac step := tstep r5_step.
 
     simpl. rewrite ENTRY. unfold entry_addr. step.
     now repeat split.
@@ -165,52 +156,55 @@ Proof using.
         repeat step. right. split. intro. destruct H as (idx & Contra & _).
             apply N.eqb_eq in BC. lia.
         unfold time_of_find_in_array_opt.
-        hammer.
+        hammer. rewrite LEN. hammer.
     (* len <> 0 *)
         do 5 step. (* 0x1e4 -> 0x200 *)
         (* arr[0] <> key *)
-            eexists. exists 0. repeat split; eauto.
+            repeat split; eauto.
             1-2: apply N.eqb_neq in BC; psimpl; lia.
             (* haven't found key yet *)
             intros. psimpl in H. replace i with 0 in * by lia. psimpl.
                 now rewrite Bool.negb_true_iff, N.eqb_neq in BC0.
             (* cycles *)
-            hammer.
+            hammer. rewrite KEY, LEN. hammer.
         (* arr[0] = key *)
-            repeat step. unfold timing_postcondition. left. exists 0.
+            repeat step. left. exists 0.
             repeat split. apply N.eqb_neq in BC. lia.
                 psimpl. now apply Bool.negb_false_iff, N.eqb_eq in BC0.
                 intros; lia.
             unfold time_of_find_in_array_opt.
-            hammer.
+            hammer. rewrite KEY, LEN. hammer.
 
     (* 0x1f0 -> 0x200 *)
-    destruct PRE as (mem & a5 & MEM & A0 & A1 & A2 & A5 &
+    destruct PRE as (mem & A0 & A1 & A2 &
         LenPos & LenMax & IdxLen & Preserved & NotFound & Cycles).
     repeat step.
     (* idx = len *)
         apply N.eqb_eq in BC. rewrite N.mod_small in BC by lia. subst. 
         right. split. intro.
             destruct H as (FoundIdx & FoundIdxLen & Found). 
-            apply (NotFound FoundIdx). lia. now rewrite Preserved by lia.
+            apply (NotFound FoundIdx). lia. assumption.
         unfold time_of_find_in_array_opt. hammer.
-        rewrite N.mod_small, N.eqb_refl; lia.
+        apply N.eqb_eq in BC. rewrite N.mod_small, BC. hammer.
+        replace (s' R_A2 =? 0) with false by
+            (symmetry; apply N.eqb_neq; apply N.eqb_eq in BC; lia).
+        apply N.eqb_eq in BC. rewrite BC. hammer.
+        transitivity (1 + s' R_A2); lia.
     (* idx <> len, key not found *)
-        exists mem, (1 + a5).
-        replace (1 ⊕ a5) with (1 + a5) in * by 
+        replace (1 ⊕ s' R_A5) with (1 + s' R_A5) in * by 
             (now rewrite N.mod_small by lia).
         repeat split; auto.
         repeat rewrite N.mul_add_distr_l; now psimpl.
         apply N.eqb_neq in BC. lia.
         intros. destruct (lt_impl_lt_or_eq _ _ H). subst. 
-            apply Bool.negb_true_iff, N.eqb_neq in BC0. 
-            rewrite Preserved, N.add_comm. assumption.
-                apply N.eqb_neq in BC. lia.
-            now apply NotFound.
-        hammer.
+            apply Bool.negb_true_iff, N.eqb_neq in BC0.
+            now rewrite N.add_comm.
+            rewrite <- Preserved. now apply NotFound.
+            lia.
+        hammer. rewrite A1, BC0, A2, BC. hammer.
     (* idx <> len, key found *)
-        left. exists (1 + a5).
-        replace (1 ⊕ a5) with (1 + a5) in * by 
+        left. exists (1 + s' R_A5).
+        replace (1 ⊕ s' R_A5) with (1 + s' R_A5) in * by 
             (now rewrite N.mod_small by lia).
         repeat split.
             apply N.eqb_neq in BC; lia.
@@ -220,6 +214,7 @@ Proof using.
             intros. rewrite <- Preserved by lia. now apply NotFound.
         unfold time_of_find_in_array_opt. hammer.
         replace (len =? 0) with false by (symmetry; apply N.eqb_neq; lia).
-        lia.
+        rewrite A1, BC0, A2, BC. hammer.
 Qed.
 
+End TimingProof.

@@ -23,3 +23,4 @@ Makefile.coq.conf
 .Makefile.coq.d
 *.cache
 .vscode/
+timing/Makefile.conf

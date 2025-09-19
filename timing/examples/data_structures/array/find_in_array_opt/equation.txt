@@ -1,11 +1,11 @@
-Piecewise(((5 + 2) + 2 + (5 + 2), Eq(length, 0)), (
-	3 + 2 + (5 + 2) + (4 + 1) + 2 +
-	Piecewise((3 + 2 + 2 + (5 + 2), Eq(i, 0)), (
-		(5 + 2) +
+Piecewise(((5 + T_inst_latency) + 2 + (5 + T_inst_latency), Eq(length, 0)), (
+	3 + 2 + (5 + T_inst_latency) + (4 + T_data_latency) + 2 +
+	Piecewise((3 + 2 + 2 + (5 + T_inst_latency), Eq(i, 0)), (
+		(5 + T_inst_latency) +
 		Piecewise((length - 1, Eq(i, -1)), (i - 1, True)) *
-		(2 + 3 + (4 + 1) + 2 + (5 + 2)) +
-		Piecewise((2 + (5 + 2), Eq(i, -1)),
-				  (2 + 3 + (4 + 1) + 2 + 3 + 2, True)) +
-		2 + (5 + 2)
+		(2 + 3 + (4 + T_data_latency) + 2 + (5 + T_inst_latency)) +
+		Piecewise((2 + (5 + T_inst_latency), Eq(i, -1)),
+				  (2 + 3 + (4 + T_data_latency) + 2 + 3 + 2, True)) +
+		2 + (5 + T_inst_latency)
 	, True))
 , True))

@@ -12,14 +12,14 @@
 %coqc% Picinae_statics.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_finterp.v
-@REM @IF ERRORLEVEL 1 GOTO :ErrorExit
-@REM %coqc% Picinae_slogic.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_simplifier_base.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
-%coqc% Picinae_simplifier_v1_0.v
+%coqc% Picinae_simplifier_v0.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_simplifier_v1_1.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% Picinae_ISA.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_i386.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
@@ -28,6 +28,8 @@
 %coqc% Picinae_riscv.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_amd64.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% Picinae_armv8_pcode.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 @ECHO Picinae build succeeded!
 @GOTO Done

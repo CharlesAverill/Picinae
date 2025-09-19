@@ -1,0 +1,600 @@
+Cycle count read: 54                                                                                                                                                                                       
+RAND Len: 1                                                                                                                                                                                                
+Cycle count read: 54                                                                                                                                                                                       
+BEST Len: 1                                                                                                                                                                                                
+Cycle count read: 54                                                                                                                                                                                       
+WORST Len: 1                                                                                                                                                                                               
+Cycle count read: 135                                                                                                                                                                                      
+RAND Len: 2                                                                                                                                                                                                
+Cycle count read: 128                                                                                                                                                                                      
+BEST Len: 2                                                                                                                                                                                                
+Cycle count read: 135                                                                                                                                                                                      
+WORST Len: 2                                                                                                                                                                                               
+Cycle count read: 254                                                                                                                                                                                      
+RAND Len: 3                                                                                                                                                                                                
+Cycle count read: 254                                                                                                                                                                                      
+BEST Len: 3                                                                                                                                                                                                
+Cycle count read: 273                                                                                                                                                                                      
+WORST Len: 3                                                                                                                                                                                               
+Cycle count read: 451                                                                                                                                                                                      
+RAND Len: 4                                                                                                                                                                                                
+Cycle count read: 432                                                                                                                                                                                      
+BEST Len: 4                                                                                                                                                                                                
+Cycle count read: 469                                                                                                                                                                                      
+WORST Len: 4
+Cycle count read: 705
+RAND Len: 5
+Cycle count read: 662
+BEST Len: 5
+Cycle count read: 723
+WORST Len: 5
+Cycle count read: 974
+RAND Len: 6
+Cycle count read: 944
+BEST Len: 6
+Cycle count read: 1035
+WORST Len: 6
+Cycle count read: 1296
+RAND Len: 7
+Cycle count read: 1278
+BEST Len: 7
+Cycle count read: 1405
+WORST Len: 7
+Cycle count read: 1785
+RAND Len: 8
+Cycle count read: 1664
+BEST Len: 8
+Cycle count read: 1833
+WORST Len: 8
+Cycle count read: 2199
+RAND Len: 9
+Cycle count read: 2102
+BEST Len: 9
+Cycle count read: 2319
+WORST Len: 9
+Cycle count read: 2671
+RAND Len: 10
+Cycle count read: 2592
+BEST Len: 10
+Cycle count read: 2863
+WORST Len: 10
+Cycle count read: 3237
+RAND Len: 11
+Cycle count read: 3134
+BEST Len: 11
+Cycle count read: 3465
+WORST Len: 11
+Cycle count read: 3903
+RAND Len: 12
+Cycle count read: 3728
+BEST Len: 12
+Cycle count read: 4125
+WORST Len: 12
+Cycle count read: 4657
+RAND Len: 13
+Cycle count read: 4374
+BEST Len: 13
+Cycle count read: 4843
+WORST Len: 13
+Cycle count read: 5397
+RAND Len: 14
+Cycle count read: 5072
+BEST Len: 14
+Cycle count read: 5619
+WORST Len: 14
+Cycle count read: 6003
+RAND Len: 15
+Cycle count read: 5822
+BEST Len: 15
+Cycle count read: 6453
+WORST Len: 15
+Cycle count read: 7057
+RAND Len: 16
+Cycle count read: 6624
+BEST Len: 16
+Cycle count read: 7345
+WORST Len: 16
+Cycle count read: 7929
+RAND Len: 17
+Cycle count read: 7478
+BEST Len: 17
+Cycle count read: 8295
+WORST Len: 17
+Cycle count read: 8841
+RAND Len: 18
+Cycle count read: 8384
+BEST Len: 18
+Cycle count read: 9303
+WORST Len: 18
+Cycle count read: 9853
+RAND Len: 19
+Cycle count read: 9342
+BEST Len: 19
+Cycle count read: 10369
+WORST Len: 19
+Cycle count read: 10989
+RAND Len: 20
+Cycle count read: 10352
+BEST Len: 20
+Cycle count read: 11493
+WORST Len: 20
+Cycle count read: 11901
+RAND Len: 21
+Cycle count read: 11414
+BEST Len: 21
+Cycle count read: 12675
+WORST Len: 21
+Cycle count read: 13135
+RAND Len: 22
+Cycle count read: 12528
+BEST Len: 22
+Cycle count read: 13915
+WORST Len: 22
+Cycle count read: 14643
+RAND Len: 23
+Cycle count read: 13694
+BEST Len: 23
+Cycle count read: 15213
+WORST Len: 23
+Cycle count read: 15735
+RAND Len: 24
+Cycle count read: 14912
+BEST Len: 24
+Cycle count read: 16569
+WORST Len: 24
+Cycle count read: 17215
+RAND Len: 25
+Cycle count read: 16182
+BEST Len: 25
+Cycle count read: 17983
+WORST Len: 25
+Cycle count read: 18417
+RAND Len: 26
+Cycle count read: 17504
+BEST Len: 26
+Cycle count read: 19455
+WORST Len: 26
+Cycle count read: 19875
+RAND Len: 27
+Cycle count read: 18878
+BEST Len: 27
+Cycle count read: 20985
+WORST Len: 27
+Cycle count read: 21426
+RAND Len: 28
+Cycle count read: 20304
+BEST Len: 28
+Cycle count read: 22573
+WORST Len: 28
+Cycle count read: 22845
+RAND Len: 29
+Cycle count read: 21782
+BEST Len: 29
+Cycle count read: 24219
+WORST Len: 29
+Cycle count read: 24644
+RAND Len: 30
+Cycle count read: 23312
+BEST Len: 30
+Cycle count read: 25923
+WORST Len: 30
+Cycle count read: 26137
+RAND Len: 31
+Cycle count read: 24894
+BEST Len: 31
+Cycle count read: 27685
+WORST Len: 31
+Cycle count read: 27843
+RAND Len: 32
+Cycle count read: 26528
+BEST Len: 32
+Cycle count read: 29505
+WORST Len: 32
+Cycle count read: 29529
+RAND Len: 33
+Cycle count read: 28214
+BEST Len: 33
+Cycle count read: 31383
+WORST Len: 33
+Cycle count read: 31224
+RAND Len: 34
+Cycle count read: 29952
+BEST Len: 34
+Cycle count read: 33319
+WORST Len: 34
+Cycle count read: 33189
+RAND Len: 35
+Cycle count read: 31742
+BEST Len: 35
+Cycle count read: 35313
+WORST Len: 35
+Cycle count read: 35535
+RAND Len: 36
+Cycle count read: 33584
+BEST Len: 36
+Cycle count read: 37365
+WORST Len: 36
+Cycle count read: 37561
+RAND Len: 37
+Cycle count read: 35478
+BEST Len: 37
+Cycle count read: 39475
+WORST Len: 37
+Cycle count read: 39399
+RAND Len: 38
+Cycle count read: 37424
+BEST Len: 38
+Cycle count read: 41643
+WORST Len: 38
+Cycle count read: 41709
+RAND Len: 39
+Cycle count read: 39422
+BEST Len: 39
+Cycle count read: 43869
+WORST Len: 39
+Cycle count read: 43447
+RAND Len: 40
+Cycle count read: 41472
+BEST Len: 40
+Cycle count read: 46153
+WORST Len: 40
+Cycle count read: 45933
+RAND Len: 41
+Cycle count read: 43574
+BEST Len: 41
+Cycle count read: 48495
+WORST Len: 41
+Cycle count read: 47949
+RAND Len: 42
+Cycle count read: 45728
+BEST Len: 42
+Cycle count read: 50895
+WORST Len: 42
+Cycle count read: 50713
+RAND Len: 43
+Cycle count read: 47934
+BEST Len: 43
+Cycle count read: 53353
+WORST Len: 43
+Cycle count read: 52827
+RAND Len: 44
+Cycle count read: 50192
+BEST Len: 44
+Cycle count read: 55869
+WORST Len: 44
+Cycle count read: 55053
+RAND Len: 45
+Cycle count read: 52502
+BEST Len: 45
+Cycle count read: 58443
+WORST Len: 45
+Cycle count read: 57481
+RAND Len: 46
+Cycle count read: 54864
+BEST Len: 46
+Cycle count read: 61075
+WORST Len: 46
+Cycle count read: 60579
+RAND Len: 47
+Cycle count read: 57278
+BEST Len: 47
+Cycle count read: 63765
+WORST Len: 47
+Cycle count read: 63243
+RAND Len: 48
+Cycle count read: 59744
+BEST Len: 48
+Cycle count read: 66513
+WORST Len: 48
+Cycle count read: 65701
+RAND Len: 49
+Cycle count read: 62262
+BEST Len: 49
+Cycle count read: 69319
+WORST Len: 49
+Cycle count read: 68481
+RAND Len: 50
+Cycle count read: 64832
+BEST Len: 50
+Cycle count read: 72183
+WORST Len: 50
+Cycle count read: 71289
+RAND Len: 51
+Cycle count read: 67454
+BEST Len: 51
+Cycle count read: 75105
+WORST Len: 51
+Cycle count read: 74275
+RAND Len: 52
+Cycle count read: 70128
+BEST Len: 52
+Cycle count read: 78085
+WORST Len: 52
+Cycle count read: 77037
+RAND Len: 53
+Cycle count read: 72854
+BEST Len: 53
+Cycle count read: 81123
+WORST Len: 53
+Cycle count read: 80733
+RAND Len: 54
+Cycle count read: 75632
+BEST Len: 54
+Cycle count read: 84219
+WORST Len: 54
+Cycle count read: 83125
+RAND Len: 55
+Cycle count read: 78462
+BEST Len: 55
+Cycle count read: 87373
+WORST Len: 55
+Cycle count read: 85509
+RAND Len: 56
+Cycle count read: 81344
+BEST Len: 56
+Cycle count read: 90585
+WORST Len: 56
+Cycle count read: 88935
+RAND Len: 57
+Cycle count read: 84278
+BEST Len: 57
+Cycle count read: 93855
+WORST Len: 57
+Cycle count read: 90877
+RAND Len: 58
+Cycle count read: 87264
+BEST Len: 58
+Cycle count read: 97183
+WORST Len: 58
+Cycle count read: 95307
+RAND Len: 59
+Cycle count read: 90302
+BEST Len: 59
+Cycle count read: 100569
+WORST Len: 59
+Cycle count read: 98007
+RAND Len: 60
+Cycle count read: 93392
+BEST Len: 60
+Cycle count read: 104013
+WORST Len: 60
+Cycle count read: 102109
+RAND Len: 61
+Cycle count read: 96534
+BEST Len: 61
+Cycle count read: 107515
+WORST Len: 61
+Cycle count read: 105321
+RAND Len: 62
+Cycle count read: 99728
+BEST Len: 62
+Cycle count read: 111075
+WORST Len: 62
+Cycle count read: 108321
+RAND Len: 63
+Cycle count read: 102974
+BEST Len: 63
+Cycle count read: 114693
+WORST Len: 63
+Cycle count read: 112441
+RAND Len: 64
+Cycle count read: 106272
+BEST Len: 64
+Cycle count read: 118369
+WORST Len: 64
+Cycle count read: 116541
+RAND Len: 65
+Cycle count read: 109622
+BEST Len: 65
+Cycle count read: 122103
+WORST Len: 65
+Cycle count read: 119889
+RAND Len: 66
+Cycle count read: 113024
+BEST Len: 66
+Cycle count read: 125895
+WORST Len: 66
+Cycle count read: 123661
+RAND Len: 67
+Cycle count read: 116478
+BEST Len: 67
+Cycle count read: 129745
+WORST Len: 67
+Cycle count read: 128061
+RAND Len: 68
+Cycle count read: 119984
+BEST Len: 68
+Cycle count read: 133653
+WORST Len: 68
+Cycle count read: 130491
+RAND Len: 69
+Cycle count read: 123542
+BEST Len: 69
+Cycle count read: 137619
+WORST Len: 69
+Cycle count read: 135253
+RAND Len: 70
+Cycle count read: 127152
+BEST Len: 70
+Cycle count read: 141643
+WORST Len: 70
+Cycle count read: 138375
+RAND Len: 71
+Cycle count read: 130814
+BEST Len: 71
+Cycle count read: 145725
+WORST Len: 71
+Cycle count read: 141117
+RAND Len: 72
+Cycle count read: 134528
+BEST Len: 72
+Cycle count read: 149865
+WORST Len: 72
+Cycle count read: 146881
+RAND Len: 73
+Cycle count read: 138294
+BEST Len: 73
+Cycle count read: 154063
+WORST Len: 73
+Cycle count read: 151605
+RAND Len: 74
+Cycle count read: 142112
+BEST Len: 74
+Cycle count read: 158319
+WORST Len: 74
+Cycle count read: 154707
+RAND Len: 75
+Cycle count read: 145982
+BEST Len: 75
+Cycle count read: 162633
+WORST Len: 75
+Cycle count read: 157609
+RAND Len: 76
+Cycle count read: 149904
+BEST Len: 76
+Cycle count read: 167005
+WORST Len: 76
+Cycle count read: 162975
+RAND Len: 77
+Cycle count read: 153878
+BEST Len: 77
+Cycle count read: 171435
+WORST Len: 77
+Cycle count read: 166917
+RAND Len: 78
+Cycle count read: 157904
+BEST Len: 78
+Cycle count read: 175923
+WORST Len: 78
+Cycle count read: 171151
+RAND Len: 79
+Cycle count read: 161982
+BEST Len: 79
+Cycle count read: 180469
+WORST Len: 79
+Cycle count read: 176349
+RAND Len: 80
+Cycle count read: 166112
+BEST Len: 80
+Cycle count read: 185073
+WORST Len: 80
+Cycle count read: 180513
+RAND Len: 81
+Cycle count read: 170294
+BEST Len: 81
+Cycle count read: 189735
+WORST Len: 81
+Cycle count read: 184141
+RAND Len: 82
+Cycle count read: 174528
+BEST Len: 82
+Cycle count read: 194455
+WORST Len: 82
+Cycle count read: 188613
+RAND Len: 83
+Cycle count read: 178814
+BEST Len: 83
+Cycle count read: 199233
+WORST Len: 83
+Cycle count read: 192369
+RAND Len: 84
+Cycle count read: 183152
+BEST Len: 84
+Cycle count read: 204069
+WORST Len: 84
+Cycle count read: 198985
+RAND Len: 85
+Cycle count read: 187542
+BEST Len: 85
+Cycle count read: 208963
+WORST Len: 85
+Cycle count read: 203493
+RAND Len: 86
+Cycle count read: 191984
+BEST Len: 86
+Cycle count read: 213915
+WORST Len: 86
+Cycle count read: 206637
+RAND Len: 87
+Cycle count read: 196478
+BEST Len: 87
+Cycle count read: 218925
+WORST Len: 87
+Cycle count read: 212377
+RAND Len: 88
+Cycle count read: 201024
+BEST Len: 88
+Cycle count read: 223993
+WORST Len: 88
+Cycle count read: 217005
+RAND Len: 89
+Cycle count read: 205622
+BEST Len: 89
+Cycle count read: 229119
+WORST Len: 89
+Cycle count read: 222747
+RAND Len: 90
+Cycle count read: 210272
+BEST Len: 90
+Cycle count read: 234303
+WORST Len: 90
+Cycle count read: 227173
+RAND Len: 91
+Cycle count read: 214974
+BEST Len: 91
+Cycle count read: 239545
+WORST Len: 91
+Cycle count read: 231441
+RAND Len: 92
+Cycle count read: 219728
+BEST Len: 92
+Cycle count read: 244845
+WORST Len: 92
+Cycle count read: 239901
+RAND Len: 93
+Cycle count read: 224534
+BEST Len: 93
+Cycle count read: 250203
+WORST Len: 93
+Cycle count read: 243091
+RAND Len: 94
+Cycle count read: 229392
+BEST Len: 94
+Cycle count read: 255619
+WORST Len: 94
+Cycle count read: 249051
+RAND Len: 95
+Cycle count read: 234302
+BEST Len: 95
+Cycle count read: 261093
+WORST Len: 95
+Cycle count read: 252771
+RAND Len: 96
+Cycle count read: 239264
+BEST Len: 96
+Cycle count read: 266625
+WORST Len: 96
+Cycle count read: 257977
+RAND Len: 97
+Cycle count read: 244278
+BEST Len: 97
+Cycle count read: 272215
+WORST Len: 97
+Cycle count read: 264429
+RAND Len: 98
+Cycle count read: 249344
+BEST Len: 98
+Cycle count read: 277863
+WORST Len: 98
+Cycle count read: 269241
+RAND Len: 99
+Cycle count read: 254462
+BEST Len: 99
+Cycle count read: 283569
+WORST Len: 99
+Cycle count read: 273241
+RAND Len: 100
+Cycle count read: 259632
+BEST Len: 100
+Cycle count read: 289333
+WORST Len: 100

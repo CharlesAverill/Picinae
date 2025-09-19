@@ -7,7 +7,7 @@ int main() {
 
     srand(42);
 
-    for (uint32_t len = 1; len <= 100; ++len) {
+    for (uint32_t len = 1; len <= 1000; ++len) {
         uint32_t array[100];
         for (uint32_t i = 0; i < len; i++)
             array[i] = rand();

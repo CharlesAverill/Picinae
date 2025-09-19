@@ -4,6 +4,7 @@
 
 #define BAUD_RATE 19200
 #define puts neorv32_uart0_puts
+#define printf neorv32_uart0_printf
 
 #define START_TIMER \
 	{ neorv32_cpu_csr_write(CSR_MCYCLE, 0); }

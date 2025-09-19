@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2023 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+   Copyright (c) 2025 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -16,12 +16,12 @@
    To compile this module, first load and compile:       MMMMMMMMMMMMMM7..$MNDM+
    * Picinae_core                                         MMDMMMMMMMMMZ7..$DM$77
    * Picinae_theory                                        MMMMMMM+MMMZ7..7ZM~++
-   * Picinae_finterp                                        MMMMMMMMMMM7..ZNOOMZ
-   * Picinae_statics                                         MMMMMMMMMM$.$MOMO=7
-   * Picinae_slogic                                           MDMMMMMMMO.7MDM7M+
-   Then compile this module with menu option                   ZMMMMMMMM.$MM8$MN
-   Compile->Compile_buffer.                                    $ZMMMMMMZ..MMMOMZ
-                                                                ?MMMMMM7..MNN7$M
+   * Picinae_statics                                        MMMMMMMMMMM7..ZNOOMZ
+   * Picinae_finterp                                         MMMMMMMMMM$.$MOMO=7
+   * Picinae_simplifier_*                                     MDMMMMMMMO.7MDM7M+
+   * Picinae_ISA                                               ZMMMMMMMM.$MM8$MN
+   Then compile this module with menu option                   $ZMMMMMMZ..MMMOMZ
+   Compile->Compile_buffer.                                     ?MMMMMM7..MNN7$M
                                                                  ?MMMMMZ..MZM$ZZ
                                                                   ?$MMMZ7.ZZM7DZ
                                                                     7MMM$.7MDOD7
@@ -37,7 +37,7 @@ Require Export Picinae_theory.
 Require Export Picinae_statics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
-(* Require Export Picinae_slogic. *)
+Require Export Picinae_ISA.
 Require Import NArith.
 Require Import ZArith.
 Require Import Program.Equality.
@@ -46,7 +46,7 @@ Open Scope N.
 
 (* Variables found in IL code lifted from RISC-V native code: *)
 Inductive riscvvar :=
-  (* Main memory: MemT 32 *)
+  (* Main memory: *)
   | V_MEM32
   (* Return address, stack pointer, global poniter, thread pointer *)
   | R_RA | R_SP | R_GP | R_TP
@@ -61,6 +61,15 @@ Inductive riscvvar :=
   | A_READ | A_WRITE | A_EXEC
   (* Temporary variable *)
   | V_TMP.
+
+(* Declare the types (i.e., bitwidths) of all the CPU registers: *)
+Definition rvtypctx v :=
+  match v with
+  | V_MEM32 => Some (8*2^32)
+  | A_WRITE | A_READ | A_EXEC => Some (2^32)
+  | V_TMP => None
+  | _ => Some 32
+  end.
 
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
    input to the Architecture module, so that it understands how the variable
@@ -78,11 +87,12 @@ End MiniRISCVVarEq.
 Module RISCVArch <: Architecture.
   Module Var := Make_UDT MiniRISCVVarEq.
   Definition var := Var.t.
-  Definition store := var -> value.
+  Definition store := var -> N.
+  Definition typctx := var -> option bitwidth.
+  Definition archtyps := rvtypctx.
 
-  Definition mem_bits := 8%positive.
-  Definition mem_readable s a := exists r, s A_READ = VaM r 32 /\ r a <> 0.
-  Definition mem_writable s a := exists w, s A_WRITE = VaM w 32 /\ w a <> 0.
+  Definition mem_readable s a := N.testbit (s A_READ) a = true.
+  Definition mem_writable s a := N.testbit (s A_WRITE) a = true.
 End RISCVArch.
 
 (* Instantiate the Picinae modules with the RISC-V identifiers above. *)
@@ -90,41 +100,82 @@ Module IL_RISCV := PicinaeIL RISCVArch.
 Export IL_RISCV.
 Module Theory_RISCV := PicinaeTheory IL_RISCV.
 Export Theory_RISCV.
-Module Statics_RISCV := PicinaeStatics IL_RISCV.
+Module Statics_RISCV := PicinaeStatics IL_RISCV Theory_RISCV.
 Export Statics_RISCV.
-Module FInterp_RISCV := PicinaeFInterp IL_RISCV Statics_RISCV.
+Module FInterp_RISCV := PicinaeFInterp IL_RISCV Theory_RISCV Statics_RISCV.
 Export FInterp_RISCV.
-(* Module SLogic_RISCV := PicinaeSLogic IL_RISCV.
-Export SLogic_RISCV. *)
-
-Module PSimpl_RISCV := Picinae_Simplifier_Base.
+Module PSimpl_RISCV := Picinae_Simplifier_Base IL_RISCV.
 Export PSimpl_RISCV.
-Module PSimpl_RISCV_v1_1 := Picinae_Simplifier_v1_1 IL_RISCV Statics_RISCV FInterp_RISCV.
+Module PSimpl_RISCV_v1_1 := Picinae_Simplifier_v1_1 IL_RISCV Theory_RISCV Statics_RISCV FInterp_RISCV.
 Ltac PSimplifier ::= PSimpl_RISCV_v1_1.PSimplifier.
-
-(* Introduce unique aliases for tactics in case user loads multiple architectures. *)
-Tactic Notation "r5_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
-Tactic Notation "r5_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
-Tactic Notation "r5_psimpl" "in" hyp(H) := psimpl_all_hyp H.
-Tactic Notation "r5_psimpl" := psimpl_all_goal.
 
 (* To use a different simplifier version (e.g., v1_0) put the following atop
    your proof .v file:
 Require Import Picinae_simplifier_v1_0.
-Module PSimpl_RISCV_v1_0 := Picinae_Simplifier_v1_0 IL_RISCV Statics_RISCV FInterp_RISCV.
+Module PSimpl_RISCV_v1_0 := Picinae_Simplifier_v1_0 IL_RISCV Theory_RISCV Statics_RISCV FInterp_RISCV.
 Ltac PSimplifier ::= PSimpl_RISCV_v1_0.PSimplifier.
 *)
 
-(* Declare the types (i.e., bitwidths) of all the CPU registers: *)
-Definition rvtypctx (v:riscvvar) :=
-  match v with
-  | V_MEM32 | A_WRITE | A_READ | A_EXEC => Some (MemT 32)
-  | V_TMP => None
-  | _ => Some (NumT 32)
-  end.
+Module ISA_RISCV := Picinae_ISA IL_RISCV PSimpl_RISCV Theory_RISCV Statics_RISCV FInterp_RISCV.
+Export ISA_RISCV.
 
-Definition rv_wtm {s v m w} := @models_wtm v rvtypctx s m w.
-Definition rv_regsize {s v n w} := @models_regsize v rvtypctx s n w.
+(* Introduce unique aliases for tactics in case user loads multiple architectures. *)
+Tactic Notation "r5_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
+Tactic Notation "r5_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+Tactic Notation "r5_psimpl" "in" hyp(H) := psimpl_hyp H.
+Tactic Notation "r5_psimpl" := psimpl_goal.
+Ltac r5_step := ISA_step.
+
+(* The following is needed when applying cframe theorems from Picinae_theory. *)
+Theorem memacc_respects_rvtypctx: memacc_respects_typctx rvtypctx.
+Proof.
+  intros s1 s2 RV. rewrite <- RV. split; reflexivity.
+Qed.
+
+(* Simplify memory access propositions by observing that on RISC, the only part
+   of the store that affects memory accessibility are the page-access bits
+   (A_READ and A_WRITE). *)
+
+Lemma memacc_read_frame:
+  forall s v u (NE: v <> A_READ),
+  MemAcc mem_readable (update s v u) = MemAcc mem_readable s.
+Proof.
+  intros. unfold MemAcc, mem_readable. rewrite update_frame. reflexivity.
+  apply not_eq_sym. exact NE.
+Qed.
+
+Lemma memacc_write_frame:
+  forall s v u (NE: v <> A_WRITE),
+  MemAcc mem_writable (update s v u) = MemAcc mem_writable s.
+Proof.
+  intros. unfold MemAcc, mem_writable. rewrite update_frame. reflexivity.
+  apply not_eq_sym. exact NE.
+Qed.
+
+Lemma memacc_read_updated:
+  forall s v u1 u2,
+  MemAcc mem_readable (update (update s v u2) A_READ u1) =
+  MemAcc mem_readable (update s A_READ u1).
+Proof.
+  intros. unfold MemAcc, mem_readable. rewrite !update_updated. reflexivity.
+Qed.
+
+Lemma memacc_write_updated:
+  forall s v u1 u2,
+  MemAcc mem_writable (update (update s v u2) A_WRITE u1) =
+  MemAcc mem_writable (update s A_WRITE u1).
+Proof.
+  intros. unfold MemAcc, mem_writable. rewrite !update_updated. reflexivity.
+Qed.
+
+(* Simplify memory access assertions produced by step_stmt. *)
+Ltac simpl_memaccs H ::=
+  try lazymatch type of H with context [ MemAcc mem_writable ] =>
+    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
+  end;
+  try lazymatch type of H with context [ MemAcc mem_readable ] =>
+    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
+  end.
 
 
 (* Assembly-level RISC-V instruction syntax: *)
@@ -180,6 +231,13 @@ Inductive rv_asm :=
 | R5_Rem (r1 r2 r3 : N)
 | R5_Remu (r1 r2 r3 : N)
 | R5_Clz (r1 r2 : N)
+(** Zicsr Extension *)
+| R5_Csrrw (rd csr rs1 : N)
+| R5_Csrrs (rd csr rs1 : N)
+| R5_Csrrc (rd csr rs1 : N)
+| R5_Csrrwi (rd csr imm : N)
+| R5_Csrrsi (rd csr imm : N)
+| R5_Csrrci (rd csr imm : N)
 | R5_InvalidI.
 
 Definition rv_decode_load f :=
@@ -282,6 +340,16 @@ Definition rv_decode_op (op instr : N) :=
                                            (N.lor (N.shiftl (xbits instr 20 21) 11)
                                              (N.lor (N.shiftl (xbits instr 12 20) 12)
                                                (N.shiftl (xbits instr 31 32) 20)))))
+           | _ => R5_InvalidI
+           end
+  (* Zicsr - 0b1110011 *)
+  | 115 => match xbits instr 12 15 with
+           | 1 => R5_Csrrw (xbits instr 7 12) (xbits instr 20 32) (xbits instr 15 20)
+           | 2 => R5_Csrrs (xbits instr 7 12) (xbits instr 20 32) (xbits instr 15 20)
+           | 3 => R5_Csrrc (xbits instr 7 12) (xbits instr 20 32) (xbits instr 15 20)
+           | 5 => R5_Csrrwi (xbits instr 7 12) (xbits instr 20 32) (xbits instr 15 20)
+           | 6 => R5_Csrrsi (xbits instr 7 12) (xbits instr 20 32) (xbits instr 15 20)
+           | 7 => R5_Csrrci (xbits instr 7 12) (xbits instr 20 32) (xbits instr 15 20)
            | _ => R5_InvalidI
            end
   | _ => R5_InvalidI
@@ -389,6 +457,9 @@ Definition rv2il (a:addr) rvi :=
   (* TODO : Implement rest of M extension *)
   (* Bit-Manipulation ISA-extension *)
   | R5_Clz rd rs => r5mov rd (UnOp OP_CLZ (r5var rs))
+  (* Zicsr extension *)
+  | R5_Csrrw _ _ _ | R5_Csrrs _ _ _ | R5_Csrrc _ _ _ 
+  | R5_Csrrwi _ _ _ | R5_Csrrsi _ _ _ | R5_Csrrci _ _ _ => Nop
   | _ => Nop
   end.
 
@@ -396,13 +467,9 @@ Definition rv_stmt m a :=
   rv2il a match a mod 4 with 0 => rv_decode (getmem 32 LittleE 4 m a) | _ => R5_InvalidI end.
 
 Definition rv_prog : program :=
-  fun s a => match s V_MEM32, s A_EXEC with
-             | VaM m _, VaM e _ => match e a with
-                                   | N0 => None
-                                   | _ => Some (4, rv_stmt m a)
-                                   end
-             | _, _ => None
-             end.
+  fun s a => if N.testbit (s A_EXEC) a then
+               Some (4, rv_stmt (getmem 32 LittleE 1 (s V_MEM32) a) a)
+             else None.
 
 Lemma hastyp_r5mov:
   forall c0 c n e (TS: hastyp_stmt c0 c (Move (rv_varid n) e) c),
@@ -412,7 +479,7 @@ Proof.
 Qed.
 
 Lemma hastyp_rvmov:
-  forall n e (TE: hastyp_exp rvtypctx e (NumT 32)),
+  forall n e (TE: hastyp_exp rvtypctx e 32),
   hastyp_stmt rvtypctx rvtypctx (Move (rv_varid n) e) rvtypctx.
 Proof.
   intros. erewrite store_upd_eq at 3.
@@ -424,7 +491,7 @@ Proof.
 Qed.
 
 Lemma hastyp_r5store:
-  forall e (TE: hastyp_exp rvtypctx e (MemT 32)),
+  forall e (TE: hastyp_exp rvtypctx e (2^32*8)),
   hastyp_stmt rvtypctx rvtypctx (Move V_MEM32 e) rvtypctx.
 Proof.
   intros. erewrite store_upd_eq at 3.
@@ -436,7 +503,7 @@ Proof.
 Qed.
 
 Lemma hastyp_r5var:
-  forall n, hastyp_exp rvtypctx (r5var n) (NumT 32).
+  forall n, hastyp_exp rvtypctx (r5var n) 32.
 Proof.
   intro. destruct n as [|n].
     apply TWord. reflexivity.
@@ -501,164 +568,23 @@ Theorem welltyped_rvprog:
   welltyped_prog rvtypctx rv_prog.
 Proof.
   intros s a. unfold rv_prog.
-  destruct (s V_MEM32), (s A_EXEC); try exact I.
-  destruct (m0 a).
-    exact I.
-    exists rvtypctx. unfold rv_stmt. destruct (a mod 4).
-      apply welltyped_rv2il.
-      apply TExn. reflexivity.
+  destruct (N.testbit _ _); [|exact I].
+  exists rvtypctx. unfold rv_stmt. destruct (a mod 4).
+    apply welltyped_rv2il.
+    apply TExn. reflexivity.
 Qed.
 
 
-(* Create some automated machinery for simplifying symbolic expressions. *)
-
-Lemma memacc_read_frame:
-  forall s v u (NE: v <> A_READ),
-  MemAcc mem_readable (update s v u) = MemAcc mem_readable s.
-Proof.
-  intros. unfold MemAcc, mem_readable. rewrite update_frame. reflexivity.
-  apply not_eq_sym. exact NE.
-Qed.
-
-Lemma memacc_write_frame:
-  forall s v u (NE: v <> A_WRITE),
-  MemAcc mem_writable (update s v u) = MemAcc mem_writable s.
-Proof.
-  intros. unfold MemAcc, mem_writable. rewrite update_frame. reflexivity.
-  apply not_eq_sym. exact NE.
-Qed.
-
-Lemma memacc_read_updated:
-  forall s v u1 u2,
-  MemAcc mem_readable (update (update s v u2) A_READ u1) =
-  MemAcc mem_readable (update s A_READ u1).
-Proof.
-  intros. unfold MemAcc, mem_readable. rewrite !update_updated. reflexivity.
-Qed.
-
-Lemma memacc_write_updated:
-  forall s v u1 u2,
-  MemAcc mem_writable (update (update s v u2) A_WRITE u1) =
-  MemAcc mem_writable (update s A_WRITE u1).
-Proof.
-  intros. unfold MemAcc, mem_writable. rewrite !update_updated. reflexivity.
-Qed.
-
-
-(* Introduce automated machinery for verifying a RISC-V machine code subroutine
-   (or collection of subroutines) by (1) defining a set of Floyd-Hoare
-   invariants (including pre- and post-conditions) and (2) proving that
-   symbolically executing the program starting at any invariant point in a
-   state that satisfies the program until the next invariant point always
-   yields a state that satisfies the reached invariant.  This proves partial
-   correctness of the subroutine.
-
-   In order for this methodology to prove that a post-condition holds at
-   subroutine exit, we must attach one of these invariants (the post-condition)
-   to the return address of the subroutine.  This is a somewhat delicate
-   process, since unlike most other code addresses, the exact value of the
-   return address is an unknown (defined by the caller).  We therefore adopt
-   the convention that subroutines "exit" whenever control flows to an address
-   for which no IL code is defined at that address.  This allows proving
-   correctness of a subroutine by lifting only the subroutine to IL code (or
-   using the pmono theorems from Picinae_theory to isolate only the subroutine
-   from a larger program), leaving the non-subroutine code undefined (None). *)
-
-(* Simplify memory access assertions produced by step_stmt. *)
-Ltac simpl_memaccs H :=
-  try lazymatch type of H with context [ MemAcc mem_writable ] =>
-    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
-  end;
-  try lazymatch type of H with context [ MemAcc mem_readable ] =>
-    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
-  end.
-
-(* Values of IL temp variables are ignored by the x86 interpreter once the IL
-   block that generated them completes.  We can therefore generalize them
-   away at IL block boundaries to simplify the expression. *)
-Ltac generalize_temps H :=
-  repeat match type of H with context [ update ?s V_TMP ?u ] =>
-    tryif is_var u then fail else
-    lazymatch type of H with context [ Var V_TMP ] => fail | _ =>
-      let tmp := fresh "tmp" in
-      pose (tmp := u);
-      change (update s V_TMP u) with (update s V_TMP tmp) in H;
-      clearbody tmp;
-      try fold value in tmp
-    end
-  end.
-
-(* Symbolically evaluate a RISC-V machine instruction for one step. *)
-Ltac rv_step_and_simplify XS :=
-  step_stmt XS;
-  psimpl_vals_hyp XS;
-  simpl_memaccs XS;
-  destruct_memaccs XS;
-  generalize_temps XS.
-
-(* Some versions of Coq check injection-heavy proofs very slowly (at Qed).  This slow-down can
-   be avoided by sequestering prevalent injections into lemmas, as we do here. *)
-Remark inj_prog_stmt: forall (sz1 sz2: N) (q1 q2: stmt),
-                      Some (sz1,q1) = Some (sz2,q2) -> sz1=sz2 /\ q1=q2.
-Proof. injection 1 as. split; assumption. Qed.
-
-(* Simplify (exitof a x) without expanding a. *)
-Remark exitof_none a: exitof a None = Addr a. Proof eq_refl.
-Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
-
-(* If asked to step the computation when we're already at an invariant point,
-   just make the proof goal be the invariant. *)
-Ltac rv_invhere :=
-  eapply nextinv_here; [ reflexivity | red; psimpl_vals_goal ].
-
-(* If we're not at an invariant, symbolically interpret the program for one
-   machine language instruction.  (The user can use "do" to step through many
-   instructions, but often it is wiser to pause and do some manual
-   simplification of the state at various points.) *)
-Ltac rv_invseek :=
-  eapply NIStep; [reflexivity|reflexivity|];
-  let s := fresh "s" in let x := fresh "x" in let XS := fresh "XS" in
-  intros s x XS;
-  rv_step_and_simplify XS;
-  repeat lazymatch type of XS with
-         | s=_ /\ x=_ => destruct XS; subst s x
-         | exec_stmt _ (if ?c then _ else _) _ _ =>
-             let BC := fresh "BC" in destruct c eqn:BC;
-             rv_step_and_simplify XS
-         | exec_stmt _ (N.iter _ _ _) _ _ => fail
-         | _ => rv_step_and_simplify XS
-         end;
-  try match goal with |- nextinv _ _ _ _ (_ :: ?xs :: ?t) =>
-    let t' := fresh t in generalize (xs::t); intro t'; clear t; rename t' into t
-  end;
-  repeat match goal with [ u:value |- _ ] => clear u
-                       | [ n:N |- _ ] => clear n
-                       | [ m:addr->N |- _ ] => clear m end;
-  try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
-  try first [ rewrite exitof_none | rewrite exitof_some ].
-
-(* Clear any stale memory-access hypotheses (arising from previous computation
-   steps) and either step to the next machine instruction (if we're not at an
-   invariant) or produce an invariant as a proof goal. *)
-Ltac rv_step :=
-  repeat match goal with [ H: MemAcc _ _ _ _ _ |- _ ] => clear H end;
-  first [ rv_invseek; try rv_invhere | rv_invhere ].
-
-
+(* Define ISA-specific notations: *)
 
 Declare Scope r5_scope.
 Delimit Scope r5_scope with risc5.
-Bind Scope r5_scope with stmt exp typ.
+Bind Scope r5_scope with stmt exp trace.
 Open Scope r5_scope.
 Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : r5_scope.
 
 Module RISCVNotations.
 
-Notation "Ⓜ m" := (VaM m 32) (at level 20, format "'Ⓜ' m") : r5_scope. (* memory value *)
-Notation "ⓑ u" := (VaN u 1) (at level 20, format "'ⓑ' u"). (* bit value *)
-Notation "Ⓑ u" := (VaN u 8) (at level 20, format "'Ⓑ' u"). (* byte value *)
-Notation "Ⓦ u" := (VaN u 16) (at level 20, format "'Ⓦ' u"). (* word value *)
-Notation "Ⓓ u" := (VaN u 32) (at level 20, format "'Ⓓ' u"). (* dword value *)
 Notation "m Ⓑ[ a  ]" := (getmem 32 LittleE 1 m a) (at level 30) : r5_scope. (* read byte from memory *)
 Notation "m Ⓦ[ a  ]" := (getmem 32 LittleE 2 m a) (at level 30) : r5_scope. (* read word from memory *)
 Notation "m Ⓓ[ a  ]" := (getmem 32 LittleE 4 m a) (at level 30) : r5_scope. (* read dword from memory *)
