@@ -324,4 +324,88 @@ Ltac do_generalize :=
     end.
 Ltac tstep _step := time _step; do_generalize.
 
+(** Folowing are some tactics that help determine why a 
+    cycle_count_of_trace t = _ goal is unprovable by scanning the equality for
+    missing or extraneous terms *)
+Ltac append l1 l2 :=
+  lazymatch l1 with
+  | [] => l2
+  | ?x :: ?xs =>
+      let tail := append xs l2 in
+      constr:(x :: tail)
+  end.
+
+Ltac flatten_plus t :=
+  lazymatch t with
+  | ?a + ?b =>
+      let la := flatten_plus a in
+      let lb := flatten_plus b in
+      append la lb
+  | ?x => constr:([x])
+  end.
+
+Ltac remove_once x l :=
+  lazymatch l with
+  | [] => fail "no match for" x
+  | x :: ?xs => xs
+  | ?y :: ?ys =>
+      let ys' := remove_once x ys in
+      constr:(y :: ys')
+  end.
+
+Ltac multiset_match lhs rhs :=
+  lazymatch lhs with
+  | [] => 
+    match rhs with
+    | [] => idtac
+    | ?rhs' => 
+      idtac "Extras:" rhs' (* leftover RHS terms = extras *)
+    end
+  | ?x :: ?xs =>
+      tryif (let rhs' := remove_once x rhs in
+            multiset_match xs rhs')
+      then idtac
+      else (
+        idtac "could not find match for" x)
+  | _ => idtac lhs
+  end.
+
+(* Call compare_sums to get a report on which terms are mismatched *)
+Ltac compare_sums :=
+  match goal with
+  | [|- ?lhs = ?rhs] =>
+      let L := flatten_plus lhs in
+      let R := flatten_plus rhs in
+      (* idtac L;
+      idtac R; *)
+      multiset_match L R
+      (* tryif (multiset_match L R; idtac)
+      then idtac "all terms matched"
+      else fail "mismatch between" L "and" R *)
+  end.
+
+Ltac count_occurrences x t :=
+  lazymatch t with
+  | x => constr:(1)
+  | ?f ?a =>
+      let n1 := count_occurrences x f in
+      let n2 := count_occurrences x a in
+      let n := eval compute in (n1 + n2) in
+      constr:(n)
+  | ?a + ?b =>
+      let n1 := count_occurrences x a in
+      let n2 := count_occurrences x b in
+      let n := eval compute in (n1 + n2) in
+      constr:(n)
+  | _ => constr:(0)
+  end.
+
+(* Count the occurences of a term in a goal *)
+Ltac count_in_goal x :=
+  match goal with
+  | |- ?g =>
+      let n := count_occurrences x g in
+      idtac x "appears" n "time(s) in the goal"
+  end.
+
 End TimingAutomation.

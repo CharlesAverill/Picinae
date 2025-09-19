@@ -88,58 +88,8 @@ match t with (Addr a, s) :: t' => match a with
 | _ => None end | _ => None end.
 
 Local Ltac step := tstep r5_step.
-(* "Forget" step - throw away the store after each step
-    This is convenient for many segments of ChaCha in which functional
-    semantics do not affect timing or control flow at all
-*)
-Local Ltac fstep := step; 
-    match goal with
-    | [old_s : store |- context[(Addr _, update ?old_s _ _) :: _]] =>
-        let trash := fresh "s''" in
-        rename old_s into trash;
-        match goal with [|- context[update trash ?k ?v]] =>
-          set (old_s := update trash k v)
-        end;
-        try match goal with [ACC: MemAcc _ _ _ _ _ |-_] =>
-          clear ACC
-        end;
-        clearbody old_s;
-        try clear trash
-    end.
 
-Notation "f '[U' x := y ]" := (update f x y) (at level 50, left associativity, format "f '/'  [U  x  :=  y ]").
-
-(* fstep except keep one variable in the store *)
-Local Ltac fstep_keep val := step; 
-    lazymatch goal with
-    | [old_s:store |- context[(Addr _, update (update ?old_s val _) R_RA _) :: _]] =>
-        idtac (* don't want to get rid of RA *)
-    | [old_s:store |- context[(Addr _, update (update ?old_s val _) _ _) :: _]] =>
-        rewrite update_swap by discriminate;
-        let trash := fresh "s''" in
-        rename old_s into trash;
-        match goal with [|- context[update trash ?k ?v]] =>
-          set (old_s := update trash k v)
-        end;
-        try match goal with [ACC: MemAcc _ _ _ _ _ |-_] =>
-          clear ACC
-        end;
-        clearbody old_s;
-        try clear trash
-    | [|- context[(Addr _, update _ val _) :: _]] => idtac
-    | [old_s : store |- context[(Addr _, update ?old_s _ _) :: _]] =>
-        let trash := fresh "s''" in
-        rename old_s into trash;
-        match goal with [|- context[update trash ?k ?v]] =>
-          set (old_s := update trash k v)
-        end;
-        try match goal with [ACC: MemAcc _ _ _ _ _ |-_] =>
-          clear ACC
-        end;
-        clearbody old_s;
-        try clear trash
-    end.
-
+(* Find any N or memory variables that are unused in the goal and try to clear them *)
 Ltac clear_unused :=
   repeat match goal with
   | H : N |- _ =>
@@ -148,17 +98,26 @@ Ltac clear_unused :=
     tryif (clear dependent H) then idtac else fail
   end.
 
+Ltac important x :=
+  match x with
+  | R_S3 => true | R_RA => true
+  | _ => false
+  end.
+
+(* Attempt to generalize the contents of a register if they are not important to the
+   control flow of the program *)
 Ltac generalize_reg :=
   repeat multimatch goal with
-  | [|- context[_ [U ?r := ?f ?x]]] =>
-    match r with
-    | R_S3 => idtac | R_RA => idtac
-    | _ => generalize (f x); intros
+  | [|- context[update _ ?r (?f ?x)]] =>
+    match important r with
+    | true => idtac
+    | false => generalize (f x); intros
     end
   | _ => idtac
   end;
   clear_unused.
 
+(* Step and generalize *)
 Ltac gstep := step; generalize_reg.
 
 Theorem ChaCha20_timing:
@@ -191,136 +150,37 @@ Proof using.
         hammer.
     - (* 0x4b8 -> 0x5ec *)
       destruct PRE as (S3 & Cycles).
-        do 206 gstep.
-          replace (s' R_S3 ⊖ 1) with (s' R_S3 - 1) in * by
-            (rewrite msub_nowrap; psimpl; lia).
-          apply Bool.negb_true_iff in BC.
-          split.
-            apply N.eqb_neq in BC. lia.
-          replace (10 - (s' R_S3 - 1)) with 
-            (1 + (10 - s' R_S3)) by lia.
-          repeat rewrite (N.mul_add_distr_r 1).
-
-          match goal with
-          |[|-context[(10 - _) * ?x]] =>
-            remember x as loop_body_time
-          end.
-
-          (* Ltac recurse_add x :=
-            match x with
-            | N.add ?a ?b => recurse_add a; idtac " +" b
-            | _ => idtac x
-            end.
-          match goal with
-          | [|- context[?x + ?y]] => recurse_add (x + y)
-          end. *)
-
-          remember (10 - s' R_S3).
-          hammer. psimpl.
-
-          Ltac append l1 l2 :=
-            lazymatch l1 with
-            | [] => l2
-            | ?x :: ?xs =>
-                let tail := append xs l2 in
-                constr:(x :: tail)
-            end.
-
-          Ltac flatten_plus t :=
-            lazymatch t with
-            | ?a + ?b =>
-                let la := flatten_plus a in
-                let lb := flatten_plus b in
-                append la lb
-            | ?x => constr:([x])
-            end.
-
-
-          Ltac remove_once x l :=
-            lazymatch l with
-            | [] => fail "no match for" x
-            | x :: ?xs => xs
-            | ?y :: ?ys =>
-                let ys' := remove_once x ys in
-                constr:(y :: ys')
-            end.
-
-          Ltac multiset_match lhs rhs :=
-            lazymatch lhs with
-            | [] => 
-              match rhs with
-              | [] => idtac
-              | ?rhs' => 
-                idtac "Extras:" rhs' (* leftover RHS terms = extras *)
-              end
-            | ?x :: ?xs =>
-                tryif (let rhs' := remove_once x rhs in
-                      multiset_match xs rhs')
-                then idtac
-                else (
-                  idtac "could not find match for" x)
-            | _ => idtac lhs
-            end.
-
-          Ltac compare_sums :=
-            match goal with
-            | [|- ?lhs = ?rhs] =>
-                let L := flatten_plus lhs in
-                let R := flatten_plus rhs in
-                (* idtac L;
-                idtac R; *)
-                multiset_match L R
-                (* tryif (multiset_match L R; idtac)
-                then idtac "all terms matched"
-                else fail "mismatch between" L "and" R *)
-            end.
-
-          compare_sums.
-
-          Ltac count_occurrences x t :=
-  lazymatch t with
-  | x => constr:(1)                                (* exact match *)
-  | ?f ?a =>
-      let n1 := count_occurrences x f in
-      let n2 := count_occurrences x a in
-      let n := eval compute in (n1 + n2) in
-      constr:(n)
-  | ?a + ?b =>
-      let n1 := count_occurrences x a in
-      let n2 := count_occurrences x b in
-      let n := eval compute in (n1 + n2) in
-      constr:(n)
-  | _ => constr:(0)
-  end.
-
-  Ltac count_in_goal x :=
-  match goal with
-  | |- ?g =>
-      let n := count_occurrences x g in
-      idtac x "appears" n "time(s) in the goal"
-  end.
-
-  (* count_in_goal ttbne. *)
-  subst n6 loop_body_time.
-  unfold time_of_chacha20_quarter.
-  (* count_in_goal ttbne. *)
-  (* compare_sums. *)
-  (* count_in_goal tlw. *)
-  hammer.
-
-  (* postcondition *)
-  repeat gstep.
-
-  unfold time_of_chacha20_quarter.
-  hammer.
-  unfold time_of_chacha20_quarter.
-  apply Bool.negb_false_iff in BC.
-  apply N.eqb_eq in BC.
-  rewrite msub_nowrap in BC.
-  psimpl in BC.
-  replace (s' R_S3) with 1 in * by lia.
-  hammer.
-  psimpl. lia.
+      do 206 gstep.
+      -- (* Invariant 0x4b8 after looping *)
+        replace (s' R_S3 ⊖ 1) with (s' R_S3 - 1) in * by
+          (rewrite msub_nowrap; psimpl; lia).
+        apply Bool.negb_true_iff in BC.
+        split.
+          apply N.eqb_neq in BC; lia.
+        (* Some manual reformatting of the goal helps hammer out *)
+        replace (10 - (s' R_S3 - 1)) with 
+          (1 + (10 - s' R_S3)) by lia.
+        repeat rewrite (N.mul_add_distr_r 1).
+        (* We don't want N.sub to be unfolded in the RHS while hammer should be
+           focusing on cycle_count_of_trace *)
+        match goal with
+        |[|-context[(10 - _) * ?x]] =>
+          remember x as loop_body_time
+        end.
+        remember (10 - (s' R_S3)) as loop_iterations.
+        hammer.
+        (* Now we can put the subs back in *)
+        subst loop_iterations loop_body_time.
+        unfold time_of_chacha20_quarter.
+        hammer.
+      -- (* Postcondition after breaking out of the loop *)
+        repeat gstep. (* ~437 steps *)
+        hammer.
+        unfold time_of_chacha20_quarter.
+        apply Bool.negb_false_iff, N.eqb_eq in BC.
+          rewrite msub_nowrap in BC by (psimpl; lia). psimpl in BC.
+        replace (s' R_S3) with 1 in * by lia.
+        hammer.
 Qed.
 
 End TimingProof.
