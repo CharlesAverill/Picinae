@@ -64,21 +64,21 @@ Global Ltac elimstore :=
 
 Module TimingProof (cpu: CPUTimingBehavior).
 
-Module Program_find_in_ll <: ProgramInformation.
-    Definition entry_addr : N := 0x10250.
+Module Program_find_in_list <: ProgramInformation.
+    Definition entry_addr : N := 0x214.
 
     Definition exits (t:trace) : bool :=
         match t with (Addr a,_)::_ => match a with
-        | 0x102b8 => true
+        | 0x228 => true
         | _ => false
     end | _ => false end.
 
     Definition binary := linked_list_bin.
-End Program_find_in_ll.
+End Program_find_in_list.
 
-Module RISCVTiming := RISCVTiming cpu Program_find_in_ll.
-Module find_in_ll := RISCVTimingAutomation RISCVTiming.
-Import Program_find_in_ll find_in_ll.
+Module RISCVTiming := RISCVTiming cpu Program_find_in_list.
+Module find_in_list := RISCVTimingAutomation RISCVTiming.
+Import Program_find_in_list find_in_list.
 
 Module p <: LinkedListParams.
   Definition w := 32.
@@ -93,89 +93,108 @@ Ltac psimpl_hook ::= psimpl.
 Ltac gdep x := generalize dependent x.
 Global Ltac Zify.zify_pre_hook ::= elimstore; unfold msub in *; llunfold.
 
-Definition time_of_find_in_linked_list (mem : N)
-        (head : addr) (key : N) (len : nat) (found_idx : option nat)
-        (t : trace) :=
+Definition time_of_find_in_linked_list
+        (len : nat) (found_idx : option nat) (t : trace) :=
     cycle_count_of_trace t =
-        (* setup time *)
-        taddi + 2 * tsw + taddi + 2 * tsw + tlw +
-        if head =? NULL then
-            tfbne + taddi + tjal + taddi + 2 * tlw + taddi + tjalr
-        else (
-        (* added: *)
         match found_idx with
         | None =>
-            tjalr + taddi + tlw + tlw + taddi + tlw + tfbne + tlw + tlw + tlw + tlw + tlw + taddi + ttbne + tsw
-        | Some _ =>
-            tjalr + taddi + tlw + tlw + taddi + tjal + tlw + tfbne + tlw + tlw + tlw
-        end +
-        (* added^ *)
-            ttbne + tlw + ttbne +
-            (N.of_nat match found_idx with None => Nat.pred len | Some idx => idx end) *
-            (3 * tlw + ttbne + 3 * tlw + tsw + ttbne)
-        ).
+            N.of_nat len
+        | Some idx =>
+            N.of_nat idx
+        end * (
+          tfbeq + tlw + tfbeq + tlw + tjal
+        ) + (match found_idx with
+            | None =>
+              ttbeq
+            | Some _ =>
+              tfbeq + tlw + ttbeq
+            end) + tjalr.
 
-Definition find_in_linked_list_timing_invs (s : store) (base_mem : N)
+Definition timing_postcondition (mem : memory) 
+    (head : addr) (key : N) (len : nat) (t : trace) : Prop :=
+  (exists loc, 
+    key_in_linked_list mem head key loc /\ 
+    time_of_find_in_linked_list len (Some loc) t)
+  \/
+  ((~ exists loc, (loc < len)%nat /\
+    key_in_linked_list mem head key loc) /\ 
+    time_of_find_in_linked_list len None t).
+
+Definition find_in_linked_list_timing_invs (s : store)
     (sp : N) (head : addr) (key : N) (len : nat) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
-| 0x10250 => Some (s V_MEM32 = base_mem /\ s R_SP = sp /\
-    s R_A0 = head /\ s R_A1 = key /\
-    node_distance base_mem head NULL len /\
-    LLForall (fun m a => ~overlap 32  a 8 (sp ⊖ 24) 24) base_mem head /\
-    cycle_count_of_trace t' = 0)
-| 0x10278 => Some (exists ctr mem curr, s V_MEM32 = mem /\ mem Ⓓ[sp ⊖ 20] = curr /\
-    s R_S0 = sp /\ mem Ⓓ[ msub 32 sp 24 ] = key/\ curr <> NULL /\
+| 0x214 => Some (exists ctr mem curr, 
+    s V_MEM32 = mem /\ s R_A0 = curr /\
+    s R_A1 = key /\
     node_distance mem head curr ctr /\
     node_distance mem head NULL len /\
-    (ctr < len)%nat /\
-    (head =? NULL) = false /\
-    LLForall (fun m a => ~overlap 32 a 8 (sp ⊖ 24) 24) mem head /\
-    LLSame base_mem mem head /\
+    (ctr <= len)%nat /\
+    (forall i, (i < ctr)%nat -> ~ key_in_linked_list mem head key i) /\
     (forall fuel, key_in_linked_list mem head key fuel -> (ctr <= fuel)%nat) /\
     cycle_count_of_trace t' =
-        (* startup time *)
-        ttbne + tlw + ttbne + tlw + 2*tsw  + taddi + 2*tsw + taddi +
-        (* loop iterations *)
-        (N.of_nat ctr) *
-        (3 * tlw + ttbne + 3 * tlw + tsw + ttbne))
-| 0x102b8 => Some (
-    (exists loc, key_in_linked_list base_mem head key loc /\ time_of_find_in_linked_list base_mem head key len (Some loc) t)
-    \/
-    (forall loc, ~key_in_linked_list base_mem head key loc /\ time_of_find_in_linked_list base_mem head key len None t))
+      (N.of_nat ctr) * (
+        tfbeq + tlw + tfbeq + tlw + tjal
+      )
+  )
+| 0x228 => Some (timing_postcondition (s V_MEM32) head key len t)
 | _ => None end | _ => None end.
 
-Definition lifted_find_in_linked_list : program :=
-    lift_riscv linked_list_bin.
+Lemma node_distance_same_len : forall mem h p1 p2 len,
+  node_distance mem h p1 len ->
+  node_distance mem h p2 len ->
+  p1 = p2.
+Proof.
+  intros. induction H.
+  - now inversion H0.
+  - inversion H0; subst; clear H0.
+    rewrite NEXT0 in NEXT. inversion NEXT; subst; clear NEXT.
+    apply IHnode_distance, LEN.
+Qed.
 
-(* We use simpl in a few convenient places: make sure it doesn't go haywire *)
-Arguments N.add _ _ : simpl nomatch.
-Arguments N.mul _ _ : simpl nomatch.
+Lemma le_cases : forall n m,
+    (n <= m -> n < m \/ n = m)%nat.
+Proof. lia. Qed.
+
+Lemma curr_not_in : forall mem head curr ctr key,
+  node_distance mem head curr ctr ->
+  (curr =? 0) = false ->
+  (mem Ⓓ[curr] =? key) = false ->
+  ~ key_in_linked_list mem head key ctr.
+Proof.
+  intros. destruct (key_in_linked_list_dec mem head key ctr).
+    pose proof (key_in_linked_list_value_equal _ _ _ _ _
+                  k H).
+    unfold list_node_value in H2.
+    destruct curr. inversion H0.
+    inversion H2; subst.
+      rewrite N.eqb_refl in H1. inversion H1.
+    assumption.
+Qed.
 
 Theorem find_in_linked_list_timing:
-  forall s t s' x' base_mem sp head key len
+  forall s t s' x' sp head key len
          (* boilerplate *)
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
          (* bindings *)
-         (MEM: s V_MEM32 = base_mem)
-         (SP: s R_SP = sp)
          (A0: s R_A0 = head)
          (A1: s R_A1 = key)
-         (NOV: LLForall (fun m a => ~overlap 32 a 8 (sp ⊖ 24) 24) base_mem head)
          (* list length is finite *)
-         (LEN: node_distance base_mem head NULL len),
+         (LEN: node_distance (s V_MEM32) head NULL len),
   satisfies_all
-    lifted_find_in_linked_list
-    (find_in_linked_list_timing_invs s base_mem sp head key len)
+    lifted_prog
+    (find_in_linked_list_timing_invs s sp head key len)
     exits
   ((x',s')::t).
 Proof using.
     intros.
     apply prove_invs.
-    Ltac show_goal := match goal with |- ?G => idtac "goal: " G end.
 
     Local Ltac step := tstep r5_step.
-    simpl. rewrite ENTRY. unfold entry_addr. step. now repeat split.
+    simpl. rewrite ENTRY. unfold entry_addr. step.
+    exists 0%nat, (s V_MEM32), head.
+    repeat split; auto; try lia.
+    apply Dst0.
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
@@ -185,152 +204,53 @@ Proof using.
 
     destruct_inv 32 PRE.
 
-    (* 0x10250 -> 0x10278 *)
-    destruct PRE as (Mem & SP & A0 & A1 & Len & Bounds & Cycles).
-
-    repeat step.
-    (* 0x10278 *) {
-        exists 0%nat. eexists. exists head.
-        _noverlap_prepare.
-        elimstore.
-        repeat split; auto. now psimpl.
-        now psimpl.
-        now rewrite Bool.negb_true_iff, N.eqb_neq in BC0.
-        constructor.
-        apply llsame_distance with (mem:=base_mem); try easy; llsame_solve.
-        eauto using node_distance_len_nonzero.
-        now apply Bool.negb_true_iff.
-        llforall_solve.
-        llsame_solve.
-        lia.
-        hammer.
-    }
-
-    (* head = NULL, contradiction because we checked at the start *)
-    inversion BC.
-
-    (* head = null, postcondition *)
-    right. intros; split. apply Bool.negb_false_iff, N.eqb_eq in BC.
-    elimstore. subst. intro H; inversion H; subst; try discriminate.
-    unfold time_of_find_in_linked_list, NULL.
-    hammer.
-
-    (* 0x10278 (66168)*)
-    destruct PRE as (ctr & mem & curr & Mem & Curr & S0 & Key &  CurrNNull & Dist & Len &
-        CtrLen & HeadNonNull & LLB & LLS & Fuel & Cycles).
-    remember 0%nat as fuel; clear Heqfuel.
-    step. step. step.
+    destruct PRE as (ctr & mem & curr & MEM & A0 & A1 & DstCurr & Len &
+                      CtrLen & NotIn & In & Cycles).
     step.
-        { repeat step.
-        (* next iteration *)
-          exists (S ctr). _noverlap_prepare. rewrite Curr in *. remember (mem Ⓓ[ 4 + curr ]) as next.
-          (* rewrite negb_true_iff, N.eqb_neq in *. *)
-          assert (Heqnext': list_node_next mem curr = Some next).
-          { subst next; unfold list_node_next. destruct curr as [|p];[contradiction|reflexivity]. }
-          assert (WF:=distance_null_imp_well_formed _ _ _ Len).
-          assert (LenNext:node_distance mem head next (S ctr)). { eapply node_distance_next_S_len; try eassumption. }
-          repeat eexists; psimpl; auto.
-              { psimpl. rewrite N.mod_small by (subst; now apply getmem_bound).
-                now rewrite Bool.negb_true_iff, N.eqb_neq in BC0. }
-              { psimpl. rewrite N.mod_small by (subst; now apply getmem_bound).
-                apply llsame_distance with (mem:=mem); try llsame_solve. }
-              { apply llsame_distance with (mem:=mem). llsame_solve. assumption. }
-              {
-                destruct (Nat.lt_trichotomy (S ctr) len) as [Lt | [Eq | Gt]];[assumption | subst len; exfalso; clear CtrLen | lia ].
-                  assert (Help:=node_distance_uniq' _ _ _ _ _ _ LenNext Len (eq_refl (S ctr))); now rewrite Help in BC0.
-              }
-              llforall_solve.
-              llsame_solve.
-              llforall_solve.
-              {
-                rewrite Bool.negb_true_iff, N.eqb_neq in BC0, BC.
-                rewrite Key in *.
-                apply fuel_le_incr with (curr:=curr); try easy.
-                apply llsame_distance with (mem:=mem); try easy; llsame_solve.
-                intros fuel' KeyIn'. specialize (Fuel fuel').
-                apply llsame_key_in with (mem':=mem) in KeyIn'. now specialize (Fuel KeyIn').
-                apply llsame_symmetry; llsame_solve.
-                unfold list_node_value. rewrite getmem_noverlap; try easy.
-                destruct curr;[discriminate|intros H; injection H; intro; subst key; contradiction].
-                apply noverlap_shrink with (a1:=curr) (len1:=8); try lia.
-                rewrite LLForall_forall in LLB.
-                apply noverlap_symmetry, noverlap_shrink with (a1:=sp ⊖ 24) (len1:=24); try lia.
-                apply noverlap_symmetry, LLB; try easy.
-                eapply distance_imp_in; eassumption.
-              }
-              { (* timing condition *)
-                hammer.
-              }
-    destruct (key_in_linked_list_dec base_mem head key fuel) as [IN|NOT_IN].
-    (* The key does exist in the linked list *) {
-        (* postcondition - reached end of list without finding key ... but the IN hyp says the key is present? *)
-        {
-          exfalso. clear - IN BC BC0 LLB LLS Dist Len CurrNNull Curr HeadNonNull Key Fuel.
-          replace (mem Ⓓ[ 4294967272 + sp ]) with (mem Ⓓ[ msub 32 sp 24 ]) in BC.
-          replace (mem Ⓓ[ 4294967276 + sp ]) with (mem Ⓓ[ msub 32 sp 20 ]) in BC, BC0.
-          rewrite Curr in *; elimstore; rewrite Bool.negb_true_iff, Bool.negb_false_iff, N.eqb_neq, N.eqb_eq in *.
-          assert (Help:len = S ctr). {
-            assert (Help2:=distance_last_node _ _ _ _ CurrNNull Dist). unfold list_node_next in Help2.
-            destruct curr as [|p];[contradiction|remember (Npos p) as curr]. llunfold. rewrite BC0 in Help2; specialize (Help2 (eq_refl _)).
-            eapply node_distance_uniq; eassumption.
-          }
-          rewrite Help in *.
-          move fuel before ctr; move curr before key; move HeadNonNull before CurrNNull.
-          remember (mem Ⓓ[ 4 + curr ]) as next.
-          apply llsame_key_in with (mem':=mem) in IN; try assumption.
-          specialize (Fuel _ IN).
-          assert (Contra:=key_loc_lt_length _ _ _ _ _ Len IN).
-          assert (H:ctr = fuel) by lia; subst fuel.
-          assert (Help2:=key_in_linked_list_value_equal _ _ _ _ _ IN Dist).
-          inj_nodeval.
-          rewrite H in Key; contradiction.
-          all: unfold msub; psimpl; reflexivity.
-        }}
-    (* The key does NOT exist in the linked list, we've reached the end. *) {
-      elimstore; right; intro.
-          move curr before sp;  move ctr before len; move s' before s; move fuel before len.
-          move SBound before mem;
-          move BC at bottom; move LLS before LLB; move Cycles before t; move MDL after Cycles; move ENTRY before t.
-          move CurrNNull before CtrLen; move HeadNonNull before CurrNNull.
-          move loc before ctr.
-          assert (BC0':=BC0); assert (BC':=BC); move BC0 at bottom; move BC0' before MDL; move BC' before MDL.
-          rewrite Bool.negb_true_iff, N.eqb_neq in BC; rewrite Bool.negb_false_iff, N.eqb_eq in BC0.
-          replace (mem Ⓓ[ 4294967272 + sp ]) with (mem Ⓓ[ msub 32 sp 24 ]) in BC.
-          replace (mem Ⓓ[ 4294967276 + sp ]) with (mem Ⓓ[ msub 32 sp 20 ]) in BC, BC0.
-          all: try (unfold msub; psimpl; reflexivity).
-          rewrite Curr, Key in BC; rewrite Curr in BC0.
-          (* end of setup *)
-          split.
-          intro H; apply (llsame_key_in _ mem) in H; revert H.
-          gdep loc; eapply key_not_in_list; try eassumption.
-          destruct curr;[contradiction|]. unfold list_node_next; llunfold; now rewrite BC0.
-          intro; inj_nodeval. llunfold; rewrite H0 in BC; contradiction.
-          now intro.
-          enough (Help: len = S ctr). subst len.
-          unfold time_of_find_in_linked_list; hammer.
-          assert (Help2: list_node_next mem curr = Some NULL) by (destruct curr;[contradiction| unfold list_node_next; llunfold; now rewrite BC0]).
-          assert (Help:=distance_last_node _ _ _ _ CurrNNull Dist Help2).
-          (* why does `destruct Help` introduce the `len=0` goal? *)
-          eapply node_distance_uniq; try eassumption.
-        }
-    }
-
-      (* Found key at curr node *)
+    - (* curr = NULL *)
+      apply N.eqb_eq in BC; subst curr; rewrite BC in *; clear BC.
+      unfold NULL in Len.
+      replace ctr with len in * by (eapply node_distance_uniq; eauto).
+      elimstore; right. split. intros (loc & LocLen & Contra).
+        now apply (NotIn loc).
+      unfold time_of_find_in_linked_list.
+      rewrite N.eqb_refl in Cycles. hammer.
+    - (* curr <> NULL *)
+      rewrite A0 in *; clear A0; rewrite BC in Cycles.
       repeat step.
-      elimstore.
-          move curr before sp; move ctr before len; move s' before s; move fuel before len.
-          move SBound before mem; move BC at bottom; move LLS before LLB; move Cycles before t; move MDL after Cycles; move ENTRY before t.
-          move CurrNNull before CtrLen; move HeadNonNull before CurrNNull.
-          assert (BC':=BC); move BC' before MDL; rewrite Bool.negb_false_iff, N.eqb_eq in BC.
-          replace (mem Ⓓ[ 4294967272 + sp ]) with (mem Ⓓ[ msub 32 sp 24 ]) in BC.
-          replace (mem Ⓓ[ 4294967276 + sp ]) with (mem Ⓓ[ msub 32 sp 20 ]) in BC.
-          all: try (unfold msub; psimpl; reflexivity).
-          rewrite Curr, Key in BC.
-          rename ctr into loc.
-          (* End of setup *)
-          left; exists loc; split.
-          apply llsame_key_in with (mem:=mem).
-          eapply key_at_node; try eassumption. destruct curr;[contradiction|symmetry; unfold list_node_value; now rewrite BC].
-          now rewrite llsame_symmetry.
-          unfold time_of_find_in_linked_list; hammer.
+      -- (* mem[curr] = key *)
+        left. exists ctr. split.
+          eapply key_at_node; eauto.
+          apply N.eqb_neq in BC. assumption.
+          cbv [list_node_value].
+          destruct curr. inversion BC.
+          apply N.eqb_eq in BC0. now rewrite <- BC0.
+        unfold time_of_find_in_linked_list. hammer.
+          rewrite A1, BC0. hammer.
+      -- (* mem[curr] <> key *)
+        exists (S ctr), mem. eexists.
+        repeat split; eauto.
+        eapply node_distance_next_S_len; try eassumption.
+        destruct curr. inversion BC. reflexivity.
+        eapply distance_null_imp_well_formed, Len.
+        destruct (Nat.eq_dec ctr len).
+          subst ctr. replace curr with NULL in * by
+              (eapply node_distance_same_len; eassumption).
+            inversion BC.
+          lia.
+        intros. apply PeanoNat.lt_n_Sm_le in H.
+          apply le_cases in H.
+          destruct H.
+            now apply NotIn.
+            subst.
+            apply curr_not_in with (curr := curr); try assumption.
+          eapply fuel_le_incr; eauto.
+          unfold list_node_value.
+            destruct curr. inversion BC.
+            intro. inversion H. rewrite H1 in BC0.
+            rewrite N.eqb_refl in BC0. inversion BC0.
+          hammer. rewrite A1, BC0.
+          hammer.
 Qed.
+
+End TimingProof.
