@@ -1,51 +1,8 @@
 Require Import linked_list.
 Require Import RISCVTiming.
+Require Import Arith.
 Import RISCVNotations.
 Require Import TimingAutomation.
-Require Import Arith.
-Require Import Lia ZifyN ZifyBool.
-Require Import Picinae_memsolve.
-Require Import Coq.Program.Equality.
-
-Require Import Coq.Classes.RelationClasses.
-
-Ltac _noverlap_prepare :=
-  noverlap_prepare_unfold_hook; intros;
-   repeat
-   repeat
-    match goal with
-    | |- context [ ?M [Ⓓ?X + ?B + ?N := ?V ] ] =>
-          assert (TEMP:2^32-X < X) by lia; clear TEMP;
-          rewrite <- (setmem_mod_l _ _ _ M (X + B + N) V);
-          replace (M [ⒹX + B ⊕ N := V ]) with
-          (M [ⒹB ⊖ (2 ^ 32 - X) ⊕ N := V ]) in * by (unfold msub; now psimpl);
-          simpl (2 ^ 32 - X)
-    | |- context [ ?M [Ⓓ?X + ?Y := ?V ] ] =>
-          assert (TEMP:2^32-X < X) by lia; clear TEMP;
-          rewrite <- setmem_mod_l with (a := (X + Y)); replace
-          (X ⊕ Y) with (Y ⊖ (2 ^ 32 - X)) in * by now rewrite N.add_comm;
-          simpl (2 ^ 32 - X)
-    | |- context [ ?M Ⓓ[ ?X + ?B + ?N ] ] =>
-          assert (TEMP:2^32-X < X) by lia; clear TEMP;
-          rewrite <- (getmem_mod_l _ _ _ M (X + B + N)); replace
-          (M Ⓓ[ X + B ⊕ N ]) with (M Ⓓ[ B ⊖ (2 ^ 32 - X) ⊕ N ]) in *
-          by (unfold msub; now psimpl);
-          simpl (2 ^ 32 - X)
-    | |- context [ ?M Ⓓ[ ?X + ?Y ] ] =>
-          assert (TEMP:2^32-X < X) by lia; clear TEMP;
-          rewrite <-getmem_mod_l with (a := (X + Y)) in *; replace
-          (X ⊕ Y) with (Y ⊖ (2 ^ 32 - X)) in * by now rewrite N.add_comm;
-          simpl (2 ^ 32 - X)
-    end;
-    repeat match goal with [H:context[2^32-_]|-_] => simpl (2^32-_) in H end;
-   repeat
-    match goal with
-    | |- context [ ?N ⊖ 4294967248 ] =>
-          replace (N ⊖ 4294967248) with (48 ⊕ N)
-           by (unfold msub; now psimpl);
-           rewrite getmem_mod_l with (a := (48 + N)) ||
-             rewrite setmem_mod_l with (a := (48 + N))
-    end; (* the simpl calls aren't simplifying as intended... *) psimpl.
 
 (** Eliminate the store by rewriting the expressions stored in registers and
     inferring their bounds from the type context. *)

@@ -18,6 +18,7 @@ data_structures/linked_list/find_in_list_general/linked_list_general.v
 data_structures/linked_list/find_in_list_general/find_in_list.v
 data_structures/linked_list/linked_list.v
 data_structures/linked_list/find_in_list.v
+data_structures/linked_list/insert_after_pos_in_list.v
 
 # The following are unproven
 # =============

@@ -1,15 +1,17 @@
 Require Import linked_list.
 Require Import RISCVTiming.
 Import RISCVNotations.
+Require Import TimingAutomation.
+Require Import Arith.
 
-Module TimingProof (cpu : CPUTimingBehavior).
+Module TimingProof (cpu: CPUTimingBehavior).
 
 Module Program_insert_after_pos_in_list <: ProgramInformation.
-    Definition entry_addr : N := 0x101b0.
+    Definition entry_addr : N := 0x1e4.
 
     Definition exits (t:trace) : bool :=
         match t with (Addr a,_)::_ => match a with
-        | 0x1024c => true
+        | 0x1f0 | 0x210 => true
         | _ => false
     end | _ => false end.
 
@@ -17,182 +19,190 @@ Module Program_insert_after_pos_in_list <: ProgramInformation.
 End Program_insert_after_pos_in_list.
 
 Module RISCVTiming := RISCVTiming cpu Program_insert_after_pos_in_list.
-Module insert_after_pos_in_listAuto := RISCVTimingAutomation RISCVTiming.
-Import Program_insert_after_pos_in_list insert_after_pos_in_listAuto.
+Module insert_after_pos_in_list := RISCVTimingAutomation RISCVTiming.
+Import Program_insert_after_pos_in_list insert_after_pos_in_list.
+
+Module p <: LinkedListParams.
+  Definition w := 32.
+  Definition e := LittleE.
+  Definition dw := 4.
+  Definition pw := 4.
+  Global Transparent w e dw pw.
+End p.
+Module LL := Theory_RISCV.LinkedLists p.
+Import LL.
+Ltac psimpl_hook ::= psimpl.
+Ltac gdep x := generalize dependent x.
+Global Ltac Zify.zify_pre_hook ::= idtac.
 
 Definition time_of_insert_after_pos_in_list 
-        (l value : addr) (position len : N) (t : trace) :=
-    cycle_count_of_trace t =
-        if mem Ⓓ[l] =? NULL || mem Ⓓ[value] =? NULL then (
-
-        ) else if position <=? len then (
-            position * (
-
-            )
+    (l value : addr) (position len : N) (t : trace) :=
+  cycle_count_of_trace t =
+    if (l =? NULL) then (
+      ttbeq + tjalr
+    ) else (
+      tfbeq + taddi + 
+      if (value =? NULL) then (
+        tfbne + tjalr
+      ) else (
+        ttbne + tlw + if (position =? 0) then (
+          tfbne + tsw + tsw + tjalr
         ) else (
-            len * (
-
-            ) + (
-
-            )
+          ttbne + (if (position <? len) then (
+            (position - 1) * (
+                tfbeq + taddi + taddi + tlw + ttbne
+            ) + tfbeq + taddi + taddi + tlw + tfbne
+          ) else (
+            (len - 1) * (
+                tfbeq + taddi + taddi + tlw + ttbne
+            ) + ttbeq
+          )) + tsw + tsw + tjalr
         )
+      )
+    ).
 
-Definition timing_postcondition (mem : memory) (arr : addr)
-        (key : N) (len : N) (t : trace) : Prop :=
-    (exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key /\
-        (* i is the first index where the key is found *)
-        (forall j, j < i -> mem Ⓓ[arr + (j << 2)] <> key) /\
-        time_of_insert_after_pos_in_list len (Some i) t) \/
-    ((~ exists i, i < len /\ mem Ⓓ[arr + (i << 2)] = key) /\
-        time_of_insert_after_pos_in_list len None t).
-
-Definition tbgeu (rs1 rs2 : N) : N :=
-    if negb (rs1 <? rs2) then ttbgeu else tfbgeu.
-
-Definition insert_after_pos_in_list_timing_invs (s : store) (base_mem : memory)
-    (sp : N) (arr : addr) (key : N) (len : N) (t:trace) : option Prop :=
+Definition find_in_linked_list_timing_invs
+    (l value : addr) (position : N) (len : nat) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
-| 0x101b0 => Some (s V_MEM32 = base_mem /\ s R_A0 = arr /\ s R_A1 = key /\ 
-            s R_A2 = len /\ 4 * len <= 2^32 - 1 /\
-            cycle_count_of_trace t' = 0)
-| 0x1e8 => Some (
-    s R_A0 = arr /\ s R_A1 = key /\ s R_A2 = len /\
-    4 * len <= 2^32 - 1 /\
-    (* preservation *)
-    (forall i, i < len ->
-        (s V_MEM32) Ⓓ[arr + (i << 2)] = base_mem Ⓓ[arr + (i << 2)]) /\
-    (* haven't found a match yet *)
-    (forall i, i < (s R_A5) ->
-        (s V_MEM32) Ⓓ[arr + (i << 2)] <> key) /\
-    (s R_A5) <= len /\
+| 0x1e4 => Some (
+    s R_A0 = l /\ s R_A1 = value /\ s R_A2 = position /\
+    node_distance (s V_MEM32) l NULL len /\
+    cycle_count_of_trace t' = 0
+  )
+| 0x1f4 => Some (exists ctr, s R_A4 = N.of_nat ctr - 1 /\
+    s R_A2 = position /\
+    position < 2^32 /\
+    (1 <= ctr)%nat /\
+    node_distance (s V_MEM32) l (s R_A5) ctr /\
+    node_distance (s V_MEM32) l NULL len /\
+    (* (ctr <= len)%nat /\ *)
+    (ctr <= N.to_nat position)%nat /\
+    (l =? 0) = false /\
+    (value =? 0) = false /\
+    (position =? 0) = false /\
     cycle_count_of_trace t' =
-        (* pre-loop time *)
-        taddi +
-        (* loop counter stored in register a5 *)
-        (s R_A5) *
-        (* full loop body length - can't have broken out by this address *)
-        (tfbgeu + tslli 2 + tadd + tlw + tfbeq + taddi + tjal)
-    )
-| 0x1024c => Some (timing_postcondition base_mem arr key len t)
+      tlw + ttbne + taddi + tfbeq + ttbne +
+      (N.of_nat ctr - 1) * (
+        tfbeq + taddi + taddi + tlw + ttbne
+      )
+  )
+| 0x1f0 | 0x210 => Some (time_of_insert_after_pos_in_list 
+                    l value position (N.of_nat len) t)
 | _ => None end | _ => None end.
 
-Theorem insert_after_pos_in_list_timing:
-  forall s (t : trace) s' x' base_mem sp arr key len
+Lemma le_cases : forall n m,
+    (n <= m -> n < m \/ n = m)%nat.
+Proof. lia. Qed.
+
+Theorem find_in_linked_list_timing:
+  forall s t s' x' l value position len
          (* boilerplate *)
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
          (* bindings *)
-         (MEM: s V_MEM32 = base_mem)
-         (SP: s R_SP = sp)
-         (A0: s R_A0 = arr)
-         (A1: s R_A1 = key)
-         (A2: s R_A2 = len)
-         (* length must fit inside the address space, arr is 4-byte integers *)
-         (LEN_VALID: 4 * len <= 2^32 - 1),
-  satisfies_all 
+         (A0: s R_A0 = l)
+         (A1: s R_A1 = value)
+         (A2: s R_A2 = position)
+         (* list length is finite *)
+         (LEN: node_distance (s V_MEM32) l NULL len),
+  satisfies_all
     lifted_prog
-    (insert_after_pos_in_list_timing_invs s base_mem sp arr key len)
+    (find_in_linked_list_timing_invs l value position len)
     exits
   ((x',s')::t).
 Proof using.
     intros.
     apply prove_invs.
-    Local Ltac step := tstep r5_step.
 
-    simpl. rewrite ENTRY. unfold entry_addr. step. 
+    Local Ltac step := tstep r5_step.
+    simpl. rewrite ENTRY. unfold entry_addr. step.
     now repeat split.
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; 
+    eapply preservation_exec_prog in MDL;
         try eassumption; [idtac|apply lift_riscv_welltyped].
     clear - ENTRY PRE MDL. rename t1 into t. rename s1 into s'.
 
     destruct_inv 32 PRE.
 
-    (* 0x101b0 -> 0x101e0 *)
-    destruct PRE as (Mem & A0 & A1 & A2 & LEN_VALID & Cycles).
-    repeat step.
-        repeat eexists; auto.
-        (* preservation *) intros; now rewrite Mem.
-        (* key not found yet *) intros; lia.
-        (* idx <= len *) psimpl; lia.
-        (* cycles *) hammer.
-
-    destruct PRE as (A0 & A1 & A2 & LEN_VALID & Preserved &
-        NotFound & A5_LEN & Cycles).
-    destruct (key_in_array_dec (s' V_MEM32) arr key len) as [IN | NOT_IN].
-    (* There is a matching element in the array *) {
-        step. repeat step.
-        (* postcondition, match found *)
-            left. exists (s' R_A5). split.
-                now apply N.ltb_lt. 
-            split.
-                rewrite <- Preserved. now apply N.eqb_eq in BC0.
-                now apply N.ltb_lt in BC. 
-            split.
-                intros. rewrite <- Preserved by lia. now apply NotFound.
-            unfold time_of_insert_after_pos_in_list.
-            hammer. rewrite A1, BC0, A2, BC. hammer.
-        (* loop invariant after going around *)
-            apply N.ltb_lt in BC. apply N.eqb_neq in BC0.
-            repeat split; auto.
-            (* key not found *)
-            intros.
-                rewrite N.mod_small in H by lia.
-                apply lt_impl_lt_or_eq in H. destruct H.
-                    now subst.
-                    now apply NotFound.
-            (* 1 + a5 <= len *)
-            rewrite N.mod_small by lia. lia.
-            (* cycles *)
-            rewrite (N.mod_small (1 + s' R_A5)). hammer.
-                apply N.eqb_neq in BC0. rewrite A1. hammer.
-                apply N.ltb_lt in BC. rewrite A2, BC. hammer.
-                apply N.le_lt_trans with len. lia.
-                rewrite <- A2; apply (models_var R_A2 MDL).
-        (* iterated len times - contradiction *)
-        exfalso. destruct IN as (idx & IDX_LEN & IN).
-            apply (NotFound idx). apply N.ltb_ge in BC. lia.
-            assumption.
-    }
-
-    (* There is not a matching element in the array *) {
-        step.
-        do 4 step.
-        (* contradiction - BC0 says a match has been found *)
-            exfalso. apply NOT_IN. exists (s' R_A5). 
-            split. now apply N.ltb_lt.
-            apply N.eqb_eq in BC0.
-            assumption.
-        (* a match has not been found, continue *)
-        repeat step.
-        (* postcondition, match found *)
-            apply N.ltb_lt in BC. apply N.eqb_neq in BC0.
-            repeat split; auto.
-            (* key not found *)
-            intros.
-                rewrite N.mod_small in H by lia.
-                apply lt_impl_lt_or_eq in H. destruct H.
-                    now subst.
-                    now apply NotFound.
-            (* 1 + a5 <= len *)
-            rewrite N.mod_small by lia. lia.
-            (* cycles *)
-            rewrite (N.mod_small (1 + s' R_A5)). hammer.
-                apply N.eqb_neq in BC0. rewrite A1.
-                apply N.ltb_lt in BC. rewrite A2, BC. hammer.
-                apply N.le_lt_trans with len. lia.
-                rewrite <- A2; apply (models_var R_A2 MDL).
-        (* a match has not been found, break and return *)
-        repeat step.
-            unfold time_of_insert_after_pos_in_list. right.
-            split. intro. apply NOT_IN. destruct H as (idx & IDX_LEN & IN).
-            exists idx. split. assumption. now rewrite Preserved.
-            replace (s' R_A5) with len in * by
-                (rewrite N.ltb_ge in BC; lia).
-            hammer. rewrite A2, BC. hammer.
-    }
+    - destruct PRE as (A0 & A1 & A2 & Dist & Cycles).
+      repeat step.
+      -- (* 0x1f0 postcondition *)
+        unfold NULL. rewrite BC.
+        hammer.
+      -- (* 0x1f4 invariant *)
+        exists 1%nat. repeat split; auto.
+        pose proof (models_var R_A2 MDL). simpl in H.
+          rewrite A2 in H. lia.
+        apply node_distance_next_S_len with (dst := l).
+          unfold list_node_next. destruct l.
+            inversion BC.
+            reflexivity.
+          eapply distance_null_imp_well_formed; eassumption.
+          apply Dst0.
+          destruct len.
+            inversion Dist. rewrite H1 in BC. inversion BC.
+            lia.
+          lia. lia.
+          hammer.
+      -- (* 0x210 postcondition *)
+        unfold NULL. hammer.
+        apply Bool.negb_false_iff in BC1.
+        rewrite N.eqb_sym in BC1.
+        hammer.
+      -- (* 0x1f0 postcondition *)
+        unfold NULL. hammer.
+    - destruct PRE as (ctr & A4 & A2 & PosValid & CtrPos & 
+              DstCurr & Len & CtrP & LNz & Vnz & Pnz & Cycles).
+      repeat step.
+      -- (* 0x210 postcondition *)
+        unfold NULL. hammer.
+        replace ctr with len in *.
+        enough ((position <? N.of_nat len) = false).
+          hammer.
+        destruct (N.eq_dec position (N.of_nat len)).
+          lia. lia. 
+        apply N.eqb_eq in BC. rewrite BC in DstCurr.
+        eapply node_distance_uniq; eauto.
+      -- (* 0x1f4 invariant *) 
+        exists (S ctr). repeat split; auto.
+        rewrite N.mod_small, Nat2N.inj_succ, <- N.add_1_l.
+          rewrite N.add_sub_assoc. reflexivity.
+        lia.
+        assert (N.of_nat ctr - 1 < 2^32).
+          pose proof (models_var R_A4 MDL). simpl in H.
+          lia.
+        lia.
+        apply node_distance_next_S_len with (dst := s' R_A5).
+          destruct (s' R_A5). inversion BC. reflexivity.
+        eapply distance_null_imp_well_formed; eauto.
+        assumption. lia.
+        rewrite Nat2N.inj_succ, N.sub_succ_l by lia.
+        hammer. rewrite N.mod_small by lia. 
+        rewrite N.mod_small in BC0 by lia.
+        rewrite BC0. hammer.
+      -- (* 0x210 postcondition *)
+        unfold NULL. hammer.
+        pose proof (models_var R_A4 MDL). simpl in H.
+        enough ((position <? N.of_nat len) = true).
+          rewrite H0. rewrite N.mod_small in * by lia.
+          rewrite BC0. hammer.
+        destruct (N.eq_dec position (N.of_nat len)).
+          rewrite e in *; clear e.
+          rewrite N.mod_small in BC0 by lia.
+          apply Bool.negb_false_iff, N.eqb_eq in BC0.
+          rewrite N.add_sub_assoc in BC0 by lia.
+          psimpl in BC0. apply Nat2N.inj in BC0. subst ctr.
+          enough (s' R_A5 = NULL). rewrite H0 in BC. inversion BC.
+          eapply node_distance_uniq'; eauto.
+        apply Bool.negb_false_iff, N.eqb_eq in BC0.
+        rewrite N.mod_small, N.add_sub_assoc in BC0 by lia.
+        psimpl in BC0. rewrite <- BC0 in *; clear BC0.
+        pose proof (dist_node_le_dist_null _ _ _ _ _ Len DstCurr).
+        lia.
 Qed.
 
 End TimingProof.
+        
+
