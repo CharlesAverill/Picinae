@@ -1,6 +1,12 @@
-Require Import RISCVTiming.
-Require Import ZArith.
+Require Import Picinae_theory.
+Require Import NArith.
 Require Import Lia.
+Require Import ZArith.
+Ltac Zify.zify_post_hook ::= Z.div_mod_to_equations.
+
+(* Import any architecture file to expose psimpl. *)
+Require Import Picinae_riscv.
+Import RISCVNotations.
 
 Lemma noverlap_index:
   forall w a1 len1 a2 len2 index size
@@ -49,7 +55,6 @@ Proof.
   clear - H H0.
   apply sep_noverlap; try (left; lia || right; lia).
 Qed.
-Ltac Zify.zify_post_hook ::= Z.div_mod_to_equations.
 
 
 Lemma succ_msub_swap:
@@ -75,7 +80,7 @@ Qed.
 Lemma pred_mod:
   forall w q, 0 < w -> 0 < w * q -> N.pred (w * q) mod w = N.pred w.
 Proof.
-  intros. rewrite N.pred_sub. 
+  intros. rewrite N.pred_sub.
   enough (Hhelp: exists q', q = N.succ q'); try destruct Hhelp.
   rewrite H1, N.mul_succ_r, <-N.add_sub_assoc, <-N.Div0.add_mod_idemp_l.
   psimpl. rewrite N.mul_comm, N.Div0.mod_mul, N.add_0_l.
@@ -110,10 +115,9 @@ Lemma msub_pred_succ:
   forall w a b, 0 < b -> (msub w a (N.pred b)) mod 2 ^ w = (N.succ (msub w a b)) mod 2 ^ w.
 Proof.
     intros w a b H; clear - H. generalize dependent a. generalize dependent b. induction b using N.peano_ind.
-    lia. 
+    lia.
     intros. rewrite N.pred_succ.
     destruct (N.lt_trichotomy 0 a) as [Gt | [Eq | Lt]]; try lia.
-    About succ_msub_swap.
      rewrite <-(succ_msub_swap w).
       rewrite (msub_pred_cancel w (N.succ a)), N.pred_succ, N.pred_succ; try lia. now rewrite msub_mod_pow2, N.min_id.
       subst a.
@@ -130,7 +134,7 @@ Proof.
   - now rewrite N.sub_0_r, N.add_0_r.
   - rewrite N.add_succ_r.
     rewrite N.sub_succ_r.
-    rewrite (msub_pred_succ w); try lia. 
+    rewrite (msub_pred_succ w); try lia.
     rewrite (succ_mod_swap (msub w x (y - z))), succ_mod_swap. rewrite <-IHz. reflexivity. lia.
 Qed.
 
@@ -147,12 +151,12 @@ Proof.
 Qed.
 
 Theorem noverlap_reindex_msub:
-  forall w a1 len1 a2 len2 x y, y <= x -> 
+  forall w a1 len1 a2 len2 x y, y <= x ->
           ~ overlap w ( msub w a1 (x  - y)) len1 a2 len2 <->
           ~ overlap w ((msub w a1  x) + y ) len1 a2 len2.
 Proof.
   intros.
-  rewrite <-overlap_mod_l with (a1:=msub w a1 (x - y)). 
+  rewrite <-overlap_mod_l with (a1:=msub w a1 (x - y)).
   rewrite <-msub_le_distr; try assumption.
   rewrite  noverlap_mod_idemp_l. reflexivity.
 Qed.
@@ -170,30 +174,33 @@ Ltac clear_independent_hypotheses x y :=
         else fail
     end.
 
-Ltac _noverlap_prepare 
-      unfold_tac
-      gp sp := 
-    unfold_tac;
-    intros;
+(* Override this to unfold definitions specific to your proof efforts. *)
+Ltac noverlap_prepare_unfold_hook := idtac.
+
+Ltac _noverlap_prepare := noverlap_prepare_unfold_hook; intros;
     (* rewrite nasty large additions as their more human readable modular subtractions *)
     repeat match goal with
     | [ |- context[?M [Ⓓ ?X + ?B + ?N := ?V]] ] =>
+      assert (TEMP:2^32-X < X) by lia; clear TEMP;
       rewrite <-(setmem_mod_l _ _ _ M (X+B+N) V);
       replace (M [ⒹX+B⊕N := V]) with
         (M [Ⓓ(msub 32 B (2^32 - X)) ⊕ N := V]) by
         (unfold msub; now psimpl);
       simpl (2^32 - X)
     | [ |- context[?M [Ⓓ?X + ?Y := ?V]]] =>
+      assert (TEMP:2^32-X < X) by lia; clear TEMP;
       rewrite <- setmem_mod_l with (a := X + Y);
       replace (X⊕Y) with (msub 32 Y (2^32 - X)) by (now rewrite N.add_comm);
       simpl (2^32 - X)
     | [ |- context[?M Ⓓ[ ?X + ?B + ?N]] ] =>
+      assert (TEMP:2^32-X < X) by lia; clear TEMP;
       rewrite <-(getmem_mod_l _ _ _ M (X+B+N));
       replace (M Ⓓ[X+B⊕N]) with
         (M Ⓓ[(msub 32 B (2^32 - X)) ⊕ N]) by
         (unfold msub; now psimpl);
       simpl (2^32 - X)
     | [ |- context[?M Ⓓ[?X + ?Y]]] =>
+      assert (TEMP:2^32-X < X) by lia; clear TEMP;
       rewrite <- getmem_mod_l with (a := X + Y);
       replace (X⊕Y) with (msub 32 Y (2^32 - X)) by (now rewrite N.add_comm);
       simpl (2^32 - X)
@@ -205,7 +212,7 @@ Ltac _noverlap_prepare
         (unfold msub; now psimpl);
       (rewrite getmem_mod_l with (a := 48 + N) ||
         rewrite setmem_mod_l with (a := 48 + N))
-  end.
+  end; psimpl.
 
 Ltac memsolve mem gp sp:=
     idtac "Mem solving...";
@@ -231,8 +238,8 @@ Ltac memsolve mem gp sp:=
         apply (noverlap_index_index _ (mem Ⓓ[ gp ⊖ 1896 ]) 52 (sp ⊖ 16) 16 48 4 (16-SPI) 4);
         lia || assumption
     | _ => idtac
-    end); 
-    (repeat match goal with
+    end);
+    (try do 4 match goal with
     | [|- ~ overlap _ (sp ⊖ _) 4 _ _] =>
       try solve [apply noverlap_shrink with (sp ⊖ 16) 16; [psimpl; lia|
         eauto using noverlap_symmetry;
@@ -240,10 +247,10 @@ Ltac memsolve mem gp sp:=
             eauto using noverlap_symmetry])
       ]]
     | [|- ~ overlap _ (gp ⊖ _) 4 _ _] =>
-      try solve [apply noverlap_shrink with (gp ⊖ 2048) 2048; 
+      try solve [apply noverlap_shrink with (gp ⊖ 2048) 2048;
         [psimpl; lia|
             eauto using noverlap_symmetry;
-            (apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16; 
+            (apply noverlap_symmetry, noverlap_shrink with (sp ⊖ 16) 16;
               [psimpl; lia|eauto using noverlap_symmetry])
         ]]
     | [|- ~ overlap _ _ _ (sp ⊖ _) 4] =>

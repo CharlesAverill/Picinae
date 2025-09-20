@@ -43,7 +43,7 @@ MABI  ?= ilp32
 USER_FLAGS ?=
 
 # Relative or absolute path to the NEORV32 home folder
-NEORV32_HOME ?= ../../..
+NEORV32_HOME ?= /home/charles/Desktop/projects/rocq/neorv32
 
 # GDB arguments
 GDB_ARGS ?= -ex "target extended-remote localhost:3333"

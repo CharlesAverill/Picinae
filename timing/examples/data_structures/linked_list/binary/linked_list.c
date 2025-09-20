@@ -1,10 +1,5 @@
-#include <stdint.h>
-#include <stddef.h>
 
-typedef struct list_node {
-   uint32_t value;
-   struct list_node* next;
-} list_node;
+#include "linked_list.h"
 
 void insert_after_pos_in_list(list_node* l, list_node* value, uint32_t position) {
    if (l == NULL || value == NULL)
@@ -31,5 +26,3 @@ list_node* find_in_list(list_node* l, uint32_t key) {
 
     return NULL;
 }
-
-int main() {}
