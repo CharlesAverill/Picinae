@@ -6,7 +6,7 @@ data_structures/array/find_in_array/find_in_array_proof.v
 data_structures/array/find_in_array_opt/array_opt.v
 data_structures/array/find_in_array_opt/find_in_array_opt_proof.v
 
-# The following are broken due to updates in automatoin
+# The following are broken due to updates in automation
 # =============
 # data_structures/array/bubble_sort/bubble_sort.v
 # data_structures/array/bubble_sort/loose_bound/bubble_sort_theta_n2_proof.v
@@ -20,9 +20,8 @@ data_structures/linked_list/linked_list.v
 data_structures/linked_list/find_in_list.v
 data_structures/linked_list/insert_after_pos_in_list.v
 
-# The following are unproven
-# =============
-# data_structures/union_find/union_find.v
+data_structures/union_find/union_find.v
+# Unproven
 # data_structures/union_find/find_proof.v
 
 FreeRTOS/RTOSDemo.v
