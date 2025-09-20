@@ -254,6 +254,7 @@ Proof using.
               }
               { (* timing condition *)
                 hammer.
+                rewrite <- Key. hammer.
               }
     destruct (key_in_linked_list_dec base_mem head key fuel) as [IN|NOT_IN].
     (* The key does exist in the linked list *) {
@@ -302,10 +303,13 @@ Proof using.
           now intro.
           enough (Help: len = S ctr). subst len.
           unfold time_of_find_in_linked_list; hammer.
+            rewrite N.eqb_refl.
+            apply N.eqb_neq in BC.
+            rewrite BC. hammer.
           assert (Help2: list_node_next mem curr = Some NULL) by (destruct curr;[contradiction| unfold list_node_next; llunfold; now rewrite BC0]).
           assert (Help:=distance_last_node _ _ _ _ CurrNNull Dist Help2).
           (* why does `destruct Help` introduce the `len=0` goal? *)
-          eapply node_distance_uniq; try eassumption.
+          eapply node_distance_uniq; eauto.
         }
     }
 
@@ -327,5 +331,8 @@ Proof using.
           eapply key_at_node; try eassumption. destruct curr;[contradiction|symmetry; unfold list_node_value; now rewrite BC].
           now rewrite llsame_symmetry.
           unfold time_of_find_in_linked_list; hammer.
+          rewrite BC, N.eqb_refl. hammer.
   Unshelve. all: inversion BC.
 Qed.
+
+End TimingProof.

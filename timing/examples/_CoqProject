@@ -14,8 +14,6 @@ data_structures/array/find_in_array_opt/find_in_array_opt_proof.v
 # data_structures/array/bubble_sort/exact_bound_oracle/bubble_sort_theta_n2_proof_exact.v
 # data_structures/array/bubble_sort/exact_bound_sum/bubble_sort_theta_n2_proof_exact.v
 
-# The following are unproven (except in Ilan's branch)
-# =============
 data_structures/linked_list/find_in_list_general/linked_list_general.v
 data_structures/linked_list/find_in_list_general/find_in_list.v
 data_structures/linked_list/linked_list.v
@@ -52,7 +50,7 @@ FreeRTOS/tasks/prvResetNextTaskUnblockTime.v
 FreeRTOS/tasks/vTaskSuspendAll.v
 
 crypto/chacha20/ChaCha20.v
-crypto/chacha20/chacha20_proof.v
+# crypto/chacha20/chacha20_proof.v
 
 crypto/passwordCheck/passwordCheck_vuln.v
 crypto/passwordCheck/passwordCheck_vuln_proofs.v

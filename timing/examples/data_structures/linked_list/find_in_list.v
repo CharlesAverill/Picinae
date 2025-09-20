@@ -208,15 +208,14 @@ Proof using.
                       CtrLen & NotIn & In & Cycles).
     step.
     - (* curr = NULL *)
-      apply N.eqb_eq in BC; subst curr; rewrite BC in *; clear BC.
+      apply N.eqb_eq in BC; subst curr. rewrite BC in *.
       unfold NULL in Len.
       replace ctr with len in * by (eapply node_distance_uniq; eauto).
-      elimstore; right. split. intros (loc & LocLen & Contra).
-        now apply (NotIn loc).
+      right. split. intros (loc & LocLen & Contra).
+        elimstore. now apply (NotIn loc).
       unfold time_of_find_in_linked_list.
-      rewrite N.eqb_refl in Cycles. hammer.
+        hammer. rewrite N.eqb_refl. hammer.
     - (* curr <> NULL *)
-      rewrite A0 in *; clear A0; rewrite BC in Cycles.
       repeat step.
       -- (* mem[curr] = key *)
         left. exists ctr. split.
@@ -226,7 +225,6 @@ Proof using.
           destruct curr. inversion BC.
           apply N.eqb_eq in BC0. now rewrite <- BC0.
         unfold time_of_find_in_linked_list. hammer.
-          rewrite A1, BC0. hammer.
       -- (* mem[curr] <> key *)
         exists (S ctr), mem. eexists.
         repeat split; eauto.
@@ -243,13 +241,12 @@ Proof using.
           destruct H.
             now apply NotIn.
             subst.
-            apply curr_not_in with (curr := curr); try assumption.
+            apply curr_not_in with (curr := s' R_A0); try assumption.
           eapply fuel_le_incr; eauto.
           unfold list_node_value.
             destruct curr. inversion BC.
             intro. inversion H. rewrite H1 in BC0.
             rewrite N.eqb_refl in BC0. inversion BC0.
-          hammer. rewrite A1, BC0.
           hammer.
 Qed.
 

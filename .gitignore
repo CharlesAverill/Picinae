@@ -21,6 +21,7 @@ _build
 Makefile.coq
 Makefile.coq.conf
 .Makefile.coq.d
+.Makefile.d
 *.cache
 .vscode/
 timing/Makefile.conf
