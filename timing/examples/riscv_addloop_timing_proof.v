@@ -3,6 +3,7 @@
 Require Import array.
 Require Import RISCVTiming.
 Import RISCVNotations.
+Require Import ZifyBool.
 
 (* Each timing proof is a module that takes as input a description
    of a CPU's timing behavior. This makes it so that one timing proof
@@ -65,7 +66,7 @@ Import Program_addloop addloopAuto.
    the loop condition *must* have fallen through. But after the loop exits,
    we know that the loop condition must have taken the branch.
 *)
-Definition addloop_timing_invs (p : addr) (x y : N) (t:trace) :=
+Definition addloop_timing_invs (x y : N) (t:trace) :=
 match t with (Addr a, s) :: t' => match a with
     | 0x8  => Some (s R_T0 = x /\ s R_T1 = y /\
         cycle_count_of_trace t' = 0)
@@ -82,17 +83,17 @@ match t with (Addr a, s) :: t' => match a with
 end.
 
 Theorem addloop_timing:
-  forall s p t s' x' x y
+  forall s t s' x' x y
          (ENTRY: startof t (x',s') = (Addr entry_addr,s)) (* Define the entry point of the function *)
          (MDL: models rvtypctx s)
          (T0: s R_T0 = x)                   (* Tie the contents of T0 to x *)
          (T1: s R_T1 = y),                  (* Tie the contents of T1 to y *)
   satisfies_all 
     lifted_prog                                 (* Provide lifted code *)
-    (addloop_timing_invs p x y)                  (* Provide invariant set *)
+    (addloop_timing_invs x y)                  (* Provide invariant set *)
     exits                                   (* Provide exit point *)
   ((x',s')::t).
-Proof using.
+Proof.
     intros.
     apply prove_invs.
     Local Ltac step := tstep r5_step.
@@ -123,13 +124,13 @@ Proof using.
     destruct PRE as [T2 [T3 [T0 Cycles_t]]].
     step.
     - (* t0 = 0 -> postcondition *)
-        apply N.eqb_eq in BC.
-        hammer. psimpl. lia.
+        hammer.
     - (* t0 <> 0 -> loop again *)
         step. step. step.
-        assert (1 <= s' R_T0) by (apply N.eqb_neq in BC; lia).
-        repeat split. rewrite msub_nowrap; psimpl; lia.
-        hammer.
-        rewrite msub_nowrap, N_sub_distr.
-        all: psimpl; lia. 
+        rewrite msub_nowrap by (psimpl; lia).
+        repeat split.
+            lia.
+        hammer. rewrite N_sub_distr; lia.
 Qed.
+
+End TimingProof.
