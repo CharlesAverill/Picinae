@@ -31,10 +31,17 @@ int passwordCheck_safe(const unsigned char *stored, const unsigned char *user)
 
         equal &= (ecx == eax) | (ecx == 0);
 
-        p_expected++;
-        p_user++;
+        __asm__ volatile (
+            "addi %[expected], %[expected], 1\n\t"   // p_expected++
+            "snez t0, %[eax]\n\t"                    // t0 = (eax != 0)
+            "add  %[user], %[user], t0\n\t"          // p_user += (eax != 0)
+            : [expected] "+r" (p_expected),
+              [user]     "+r" (p_user)
+            : [eax]      "r"  (eax)
+            : "t0", "memory"
+        );
 
-        if (eax == 0 || ecx == 0) break;  // check user byte before next iteration
+        if (eax == 0) break;  // check user byte before next iteration
     }
 
     if (!equal && trace_level >= 1) {
