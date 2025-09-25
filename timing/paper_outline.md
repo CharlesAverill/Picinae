@@ -153,6 +153,7 @@ We'll prove this theorem by proving a few cases:
 4. The loop iteration case - given invariant `0x8` as an assumption, prove that the invariant at `0x8` holds after any one loop iteration
 
 For this proof, the majority of the work here is done by the `hammer` tactic, which seeks to prove goals of the form `cycle_count_of_trace t = ...`.
+The rest of the work is done by `lia`, Rocq's built-in `L`inear `I`nteger `A`rithmetic solver, and `psimpl`, the Picinae simplification tactic.
 
 Here's the proof in its entirety:
 
@@ -206,4 +207,500 @@ And that's it!
 
 ## System Implementation
 
-Now let's look at the module hierarchy.
+Now let's look at the module hierarchy:
+
+![module dependency graph](ptm_depgraph.png)
+
+The image above shows three clusters of nodes:
+1. ISA-agnostic components (top-left)
+2. ISA-specific components (top right except `RVCPUTimingBehavior`)
+3. Timing Proof
+
+We've already covered the TimingProof modules in our example, so let's trace our steps backwards through the RISC-V specific modules to the ISA-agnostic components
+
+### ISA-specific components
+
+The components we're interested in here are `RISCVTiming`, `RISCVCPUTimingBehavior`, and `RISCVTimingAutomation`.
+
+#### `RISCVTiming`
+
+`RISCVTiming` is the module that defines the `time_of_instr` function. Actually, it specifies a `time_of_addr` function, where the argument is a program address. The instruction binary at that address is fetched, disassembled, and then mapped to an instruction time:
+
+```coq
+Definition time_of_addr (s : store) (a : addr) : N :=
+        match rv_decode (binary a) with
+        (* ==== I ISA Extension ==== *)
+        (* ALU *)
+        | R5_Add  _ _ _     => tadd
+        | R5_Addi _ _ _     => taddi
+        | R5_Slt  _ _ _     => tslt
+        | R5_Slti _ _ _     => tslti
+        | R5_Sltu _ _ _     => tsltu
+        | R5_Sltiu _ _ _    => tsltiu
+        (* ... *)
+        (* Branches *)
+        | R5_Beq rs1 rs2 off => bop s time_inf rs1 rs2
+            (fun x y => if x =? y then ttbeq else tfbeq)
+        | R5_Bne rs1 rs2 off => bop s time_inf rs1 rs2
+            (fun x y => if negb (x =? y) then ttbne else tfbne)
+        | R5_Blt rs1 rs2 off => bop s time_inf rs1 rs2
+            (fun x y => if Z.ltb (toZ 32 x) (toZ 32 y) then ttblt else tfblt)
+        | R5_Bge rs1 rs2 off => bop s time_inf rs1 rs2
+            (fun x y => if Z.geb (toZ 32 x) (toZ 32 y) then ttbge else tfbge)
+        | R5_Bltu rs1 rs2 off => bop s time_inf rs1 rs2
+            (fun x y => if x <? y then ttbltu else tfbltu)
+        | R5_Bgeu rs1 rs2 off => bop s time_inf rs1 rs2
+            (fun x y => if negb (x <? y) then ttbgeu else tfbgeu)
+        (* ... *)
+```
+
+Additionally, this module lifts the binary defined in a `ProgramInformation` module passed in as input:
+
+```coq
+Definition lifted_prog := lift_riscv binary.
+```
+
+#### `RISCVCPUTimingBehavior`
+
+These definitions provided by `RISCVTiming` result in a clear separation between the ISA and specific CPUs that are implemented in `RVCPUTimingBehavior`. Let's look at what that module type provides:
+
+```coq
+Module Type RVCPUTimingBehavior.
+    (* === Instruction Timings === *)
+    Parameter
+        (* ==== I ISA Extension ==== *)
+        (* ALU *)
+            tadd taddi tslt tslti tsltu tsltiu
+            txor txori tor tori tand tandi tsub tlui
+            tauipc
+        (* Branches *)
+            (* taken *)
+                ttbeq ttbne ttblt ttbge ttbltu ttbgeu
+            (* not taken *)
+                tfbeq tfbne tfblt tfbge tfbltu tfbgeu
+        (* Jump/call *)
+            tjal tjalr
+        (* Load/store *)
+            tlb tlh tlw tlbu tlhu tsb tsh tsw
+        (* Data fence *)
+            tfence
+        (* System *)
+            tecall tebreak tmret twfi
+        (* ... *)
+```
+
+This module type defines identifiers that represent the times of each ISA instruction.
+Let's look at an implementation of this module for a specific CPU, NEORV32:
+
+```coq
+Module Type NEORV32Config.
+    (* The clock frequency of the processor’s clk_i input port in Hertz *)
+    Parameter CLOCK_FREQUENCY : N.
+    (* Implement fast but large full-parallel barrel shifters *)
+    Parameter CPU_FAST_SHIFT_EN : bool.
+    (* Implement fast but large full-parallel multipliers *)
+    Parameter CPU_FAST_MUL_EN : bool.
+    (* Implement the instruction cache *)
+    Parameter ICACHE_EN : bool.
+    (* Implement the data cache *)
+    Parameter DCACHE_EN : bool.
+End NEORV32Config.
+
+(* https://stnolting.github.io/neorv32/#_instruction_sets_and_extensions *)
+Module NEORV32 (cfg : NEORV32Config) <: RVCPUTimingBehavior.
+    (* Latency Definitions *)
+    Definition T_shift_latency (offset : N) : N :=
+        if cfg.CPU_FAST_SHIFT_EN then
+            1
+        else
+            offset.
+
+    Definition T_mul_latency : N :=
+        if cfg.CPU_FAST_MUL_EN then
+            1
+        else
+            32.
+
+    Parameter T_data_latency : N.
+    Parameter T_inst_latency : N.
+
+    (* ==== I ISA Extension ==== *)
+    (* ALU *)
+    Definition tadd := 2.
+    Definition taddi := 2.
+    Definition tslt := 2.
+    Definition tslti := 2.
+    Definition tsltu := 2.
+    Definition tsltiu := 2.
+    (* ... *)
+    Definition tsll (offset : N) := 
+        3 + T_shift_latency offset.
+    (* ... *)
+    Definition ttbeq := 5 + T_inst_latency.
+    (* ... *)
+```
+
+`NEORV32` gives concrete definitions to the identifiers required by `RVCPUTimingBehavior`. It can do so however it chooses, such as assuming values for memory latency which it can parametrize instruction timings by, or by requiring a CPU configuration module as input for highly-configurable CPUs.
+
+#### `RISCVTimingAutomation`
+
+With all of this, we can instantiate the `RISCVTimingAutomation` module. `RISCVTimingAutomation` implements the ISA-agnostic `TimingAutomation` module type, preventing custom proof tactics and definitions for RISC-V and a specific CPU such as NEORV32.
+
+We've seen one of these tactics already - the powerful `hammer`! It's using custom simplification and reduction rules automatically generated by the module hierarchy!
+
+### ISA-agnostic components
+
+Finally, let's look at the ISA-agnostic components. One of them is `ProgramInformation`, which we've already seen in the above example.
+
+#### `TimingModule`
+
+This is a very tiny module type:
+
+```coq
+Module Type TimingModule (il : PICINAE_IL).
+    Export il.
+    Export Lia.
+
+    Parameter time_of_addr : store -> addr -> N.
+    Parameter time_inf : N.
+End TimingModule.
+```
+
+Remember, `RISCVTiming` implements this module type.
+We can see that this module requires the definition of `time_of_addr`, but something that sticks out is `time_inf`.
+This is a sentry value that is placed in a goal whenever a problem occurs. We'll see how in the next section.
+
+#### `TimingAutomation`
+
+```coq
+Module TimingAutomation (IL : PICINAE_IL) (THEORY : PICINAE_THEORY IL)
+    (STATICS: PICINAE_STATICS IL THEORY)
+    (FINTERP: PICINAE_FINTERP IL THEORY STATICS) (SIMPL : PICINAE_SIMPLIFIER_V1_1 IL THEORY STATICS FINTERP)
+    (tm : TimingModule IL).
+
+Export IL.
+Export SIMPL.
+Export THEORY.
+Export STATICS.
+Export FINTERP.
+Module PSB := Picinae_Simplifier_Base IL.
+Export PSB.
+Module ISA_RISCV := Picinae_ISA IL SIMPL THEORY STATICS FINTERP.
+Export ISA_RISCV.
+Export tm.
+
+Ltac PSimplifier ::= SIMPL.PSimplifier.
+
+Definition cycle_count_of_trace (t : trace) : N :=
+    List.fold_left N.add (List.map 
+        (fun '(e, s) => match e with 
+            | Addr a => time_of_addr s a
+            | Raise n => time_inf
+            end) t) 0.
+
+Ltac hammer := ...
+Ltac compare_sums := ...
+```
+
+1. This module takes in Picinae ISA semantics modules and a `TimingModule`.
+2. It then instantiates and exports the Picinae simplifier and an all-together Picinae ISA module.
+3. It defines `cycle_count_of_trace` using values from the `TimingModule`
+4. It defines helpful tactics like `hammer` and `compare_sums`
+
+Remember, `RISCVTimingAutomation` is a special case of this module!
+
+### Hierarchy Summary
+
+And there you have it. Some components for operations that don't require any ISA/CPU information. Some components for operations specific to an ISA. And components specific to a certain CPU and program.
+For your convenience, here's the same diagram from above:
+
+![module dependency graph](ptm_depgraph.png)
+
+## Real-World Examples
+
+How well does the PTM fare against real-world code? We saw a naive, handwritten addition loop, but there is some monster binary code out there, hyper-optimized by compilers. Let's evaluate the PTM with some timing proofs that were written with it. We break the evaluation proofs into three sections:
+
+1. Generic Data Structures & Algorithms
+2. FreeRTOS
+3. Cryptography
+
+### DSA
+
+#### Arrays
+
+1. Linear Search
+
+```coq
+Definition time_of_find_in_array (len : N) (found_idx : option N) (t : trace) :=
+    cycle_count_of_trace t =
+        (* setup time *)
+        taddi +
+        (* loop iterations *)
+        (match found_idx with None => len | Some i => i end) *
+        (* loop body duration *)
+        (tfbgeu + tslli 2 + tadd + tlw + tfbeq + taddi + tjal) +
+        (* partial loop iteration before loop exit *)
+        (match found_idx with 
+         | None => ttbgeu
+         | Some _ => tfbgeu + tslli 2 + tadd + tlw + ttbeq
+         end) +
+        (* shutdown time *)
+        taddi + tjalr.
+```
+
+Timing is parametrized by array length if key not found, or `idx` if key found at position `idx`.
+Here's the postcondition for a heavily-optimized version:
+
+```coq
+Definition time_of_find_in_array_opt (len : N) (found_idx : option N) (t : trace) :=
+    cycle_count_of_trace t =
+        if len =? 0 then (
+            ttbeq + taddi + tjalr
+        ) else (
+            (* setup *)
+            tfbeq + taddi + tjal + tlw + taddi +
+            (* arr[0] check *)
+            if (match found_idx with Some 0 => true | _ => false end) then (
+                tfbne + taddi + taddi + tjalr
+            ) else (
+                ttbne +
+                (* loop iterations *)
+                (match found_idx with None => len - 1 | Some i => i - 1 end) *
+                (* loop body duration *)
+                (taddi + tfbeq + tlw + taddi + ttbne) +
+                (* partial loop iteration before loop exit *)
+                (match found_idx with
+                 | None => taddi + ttbeq
+                 | Some _ => taddi + tfbeq + tlw + taddi + tfbne + taddi
+                 end) +
+                (* return *)
+                taddi + tjalr
+            )
+        ).
+```
+
+2. Bubble Sort
+
+```coq
+Definition time_of_bubble_sort_theta_n2 (len : N) (t : trace) :=
+    (* ----------------------------------------- *)
+    (* lower bound *)
+    tslli 2 + tadd + taddi +
+    (* outer loop full iterations *)
+    len * (
+        tfbeq + taddi + tjal +
+        (* inner loop full iterations *)
+        (len - 1) * (
+            ttbne +
+            tlw + tlw +
+            (* branch timing depends on instruction latency, 
+               which is dependent on memory speed, so we can't know
+               whether the time of a successful branch to skip the
+               if-then body will be faster or slower than 
+               falling through + the if-then body
+            *)
+            N.min ttbgeu (tfbgeu + tsw + tsw) +
+            taddi
+        ) +
+        (* inner loop partial iteration *)
+        tfbne +
+        taddi + tjal
+    ) +
+    (* outer loop partial iteration *)
+    ttbeq +
+    (* return *)
+    tjalr <=
+    (* ----------------------------------------- *)
+    cycle_count_of_trace t <=
+    (* ----------------------------------------- *)
+    (* upper bound *)
+    tslli 2 + tadd + taddi +
+    (* outer loop full iterations *)
+    len * (
+        tfbeq + taddi + tjal +
+        (* inner loop full iterations *)
+        (len - 1) * (
+            ttbne +
+            tlw + tlw +
+            N.max ttbgeu (tfbgeu + tsw + tsw) +
+            taddi
+        ) +
+        (* inner loop partial iteration *)
+        tfbne +
+        taddi + tjal
+    ) +
+    (* outer loop partial iteration *)
+    ttbeq +
+    (* return *)
+    tjalr.
+```
+
+This is actually a proof of upper and lower bounds! We're working on an exact timing behavior proof but the conditional swap in the inner loop of bubble sort makes any proof of behavior for this function very difficult.
+
+#### Linked Lists
+
+The linked list proofs required the development of formalizations for linked lists that Picinae had not previously contained. Super useful.
+
+1. Linear Search
+
+```coq
+Definition time_of_find_in_linked_list
+        (len : nat) (found_idx : option nat) (t : trace) :=
+    cycle_count_of_trace t =
+        match found_idx with
+        | None =>
+            N.of_nat len
+        | Some idx =>
+            N.of_nat idx
+        end * (
+          tfbeq + tlw + tfbeq + tlw + tjal
+        ) + (match found_idx with
+            | None =>
+              ttbeq
+            | Some _ =>
+              tfbeq + tlw + ttbeq
+            end) + tjalr.
+```
+
+Similar to array search timing.
+
+2. Insert at Position
+
+```coq
+Definition time_of_insert_after_pos_in_list 
+    (l value : addr) (position len : N) (t : trace) :=
+  cycle_count_of_trace t =
+    if (l =? NULL) then (
+      ttbeq + tjalr
+    ) else (
+      tfbeq + taddi + 
+      if (value =? NULL) then (
+        tfbne + tjalr
+      ) else (
+        ttbne + tlw + if (position =? 0) then (
+          tfbne + tsw + tsw + tjalr
+        ) else (
+          ttbne + (if (position <? len) then (
+            (position - 1) * (
+                tfbeq + taddi + taddi + tlw + ttbne
+            ) + tfbeq + taddi + taddi + tlw + tfbne
+          ) else (
+            (len - 1) * (
+                tfbeq + taddi + taddi + tlw + ttbne
+            ) + ttbeq
+          )) + tsw + tsw + tjalr
+        )
+      )
+    ).
+```
+
+### FreeRTOS
+
+The following proofs are all responsiveness. As such, I won't go into detail. Just know their exact timing behaviors have been proven.
+
+#### `tasks.c`
+
+1. `vTaskSwitchContext`
+2. `prvResetNextTaskUnblockTime`
+3. `vTaskSuspendAll`
+4. `xTaskGetCurrentTaskHandle`
+
+#### `list.c`
+
+1. `uxListRemove`
+2. `vListInitialise`
+3. `vListInitialiseItem`
+4. `vListInsertEnd`
+
+#### `queue.c`
+
+1. `xQueueGetMutexHolderFromISR`
+2. `xQueueGetMutexHolder`
+3. `xQueueMessagesWaiting`
+4. `uxQueueSpacesAvailable`
+
+### Cryptography
+
+#### ChaCha20
+
+```coq
+Definition time_of_chacha20_block (t : trace) : Prop :=
+  cycle_count_of_trace t = taddi + 13 * tsw + 4 * taddi +
+      4 * (tsw + tlui + taddi) + 
+      8 * (tsw + taddi + 4 * tlbu + 4 * tsb + tlw) +
+      tsw + 4 * tlbu + 4 * tsb + tlw + 
+      2 * (taddi + 4 * tlbu + 4 * tsb + tlw) +
+      4 * taddi + 10 * tsw + taddi + tsw + tsw +
+      10 * (4 * taddi + 3 * tlw + tjal +
+        time_of_chacha20_quarter +
+        5 * taddi + 3 * tlw + tjal +
+        time_of_chacha20_quarter +
+        tsw + 6 * taddi + 3 * tlw + tjal +
+        time_of_chacha20_quarter +
+        8 * taddi + 3 * tlw + tjal +
+        time_of_chacha20_quarter +
+        4 * taddi + 3 * tlw + tjal +
+        time_of_chacha20_quarter +
+        5 * taddi + 3 * tlw + tjal +
+        time_of_chacha20_quarter +
+        4 * taddi + 4 * tlw + tjal +
+        time_of_chacha20_quarter +
+        5 * taddi + 3 * tlw + tjal +
+        time_of_chacha20_quarter + 
+        taddi + taddi) + 9 * ttbne + tfbne +
+    172 * tsb + 108 * tlbu + 65 * tlw +
+    16 * (tsrli 0x8 + tsrli 0x10 + tsrli 0x18) +
+    16 * tadd + 16 * txor + 7 * taddi + 
+    4 * tlui + tjalr.
+```
+
+We initially had a ChaCha20 proof that was written in 2 months by 4 first-year graduate students who had only ~8 hours of instruction on Picinae.
+The implementation they verified was hand-written.
+The above postcondition is from a proof for a [version of ChaCha20](https://github.com/mit-plv/bedrock2/blob/84cfff9b9d1ab923f0570833476047b3a040768b/bedrock2/src/bedrock2Examples/chacha20.v) that was [formally verified](https://github.com/mit-plv/fiat-crypto/blob/d24de1638e5b7659000cd1faf3875b6ea4597811/src/Bedrock/End2End/RupicolaCrypto/ChaCha20.v) by a team at MIT.
+
+#### [CVE-2014-0984](https://www.cvedetails.com/cve/CVE-2014-0984/)
+
+This CVE describes the vulnerability of a password checker routine to timing side-channel attacks.
+This is because it leaks the index of the first character in the user-provided password that is different from the correct password.
+
+We show that the initial version leaks this information, and we show that a patched version only leaks the length of the user-provided password (which an attacker would already know):
+
+```coq
+Definition time_of_passwordCheck (stored_len : N) (diff_idx : option N) (t : trace) :=
+    cycle_count_of_trace t =
+        (match diff_idx with None => stored_len | Some idx => idx end) *
+        (tlbu + tlbu + ttbeq + taddi + taddi + ttbne) +
+        match diff_idx with
+        | None => tlbu + tlbu + ttbeq +
+            taddi + taddi + tfbne +
+            taddi + tjalr
+        | Some _ => tlbu + tlbu + tfbeq + 
+                    tsltiu + tsub + tandi + taddi + tjalr
+        end.
+
+Definition time_of_passwordCheck_safe (len_user : N) (t : trace) :=
+    cycle_count_of_trace t =
+        taddi +
+        len_user * (
+            tlbu + tlbu + tsub + tsltiu + tsltiu +
+            tor + tand + taddi + tsltu + tadd + ttbne
+        ) + tlbu + tlbu + tsub + tsltiu + tsltiu +
+            tor + tand + taddi + tsltu + tadd + tfbne +
+        taddi + tandi + tjalr.
+```
+
+#### `ct-swap`
+
+This is a function that was proposed in a writeup on microarchitectural timing attacks for modern Apple CPUs: https://gofetch.fail/files/gofetch.pdf. We can see that it's only parametrized by the input array's length, considered not secret.
+
+```coq
+Definition time_of_ct_swap (len : N) (t : trace) :=
+    cycle_count_of_trace t = 
+    (* Function entry *)
+    tslli 2 + tsub + tadd + 
+    (* loop *)
+    len *
+    ((ttbne + tlw + tlw + taddi + taddi + txor + tand + txor + tsw + tlw + txor + tsw + tjal)) +
+    (* loop exit and function return *)
+    tfbne + tjalr.
+```
