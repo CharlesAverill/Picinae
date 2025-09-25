@@ -1,4 +1,5 @@
 Burning and serial setup:
+0. Set up USB BLASTER driver https://www.intel.com/content/www/us/en/support/programmable/support-resources/download/dri-usb-b-lnx.html
 1. Put USB blaster into USB BLASTER serial port on board
 2. Set SW11 to RUN
 3. Compile CPU in quartus prime

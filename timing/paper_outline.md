@@ -6,29 +6,50 @@
 **Goal**: be able to formally prove the timing behavior of a program, namely its responsiveness or immunity to timing attacks
 
 **Contributions**:
-- Picinae Timing Module - Generic extension to the Picinae binary verification system for trace-based timing verification of binary code
-    + RISC-V timing module
-    + NEORV32 instantiation of the RISC-V timing module
-- Automation
-    + `hammer` tactic for solving `cycle_count_of_trace` goals
-    + Tactics like `compare_sums` for debugging `cycle_count_of_trace` goals
-    + Timing Invariant Generator (TIG) for automatically generating invariant and proof scaffolding
-- Examples of timing proofs
-    + Data Structures and Algorithms
-        * Array: linear search, bubble sort
-        * Linked List: linear search, insert at position, WIP insert in sorted list
-    + FreeRTOS
-        * lists.c: all functions (WIP vInsertList)
-        * tasks.c: notably vTaskSwitchContext, some others
-        * queue.c: a few functions
-    + Cryptography
-        * ChaCha20 (handwritten version and MIT PLV version)
-        * passwordCheck CVE (vulnerable version and patched safe version)
-        * ct-swap (constant-time swap routine from paper)
-- Comparisons of proof predictions to real executions
-    + DSA proofs
 
-## System Overview
+- Picinae Timing Module - Generic extension to the Picinae binary verification system for trace-based timing verification of binary code
+  - RISC-V timing module
+  - NEORV32 instantiation of the RISC-V timing module
+- Automation
+  - `hammer` tactic for solving `cycle_count_of_trace` goals
+  - Tactics like `compare_sums` for debugging `cycle_count_of_trace` goals
+  - Timing Invariant Generator (TIG) for automatically generating invariant and proof scaffolding
+- Examples of timing proofs
+  - Data Structures and Algorithms
+    - Array: linear search, bubble sort
+    - Linked List: linear search, insert at position, WIP insert in sorted list
+  - FreeRTOS
+    - lists.c: all functions (WIP vInsertList)
+    - tasks.c: notably vTaskSwitchContext, some others
+    - queue.c: a few functions
+  - Cryptography
+    - ChaCha20 (handwritten version and MIT PLV version)
+    - passwordCheck CVE (vulnerable version and patched safe version)
+    - ct-swap (constant-time swap routine from paper)
+- Comparisons of proof predictions to real executions
+  - DSA proofs
+
+## Overview
+
+### Workflow
+
+### Limitations
+
+### Threat Model
+
+### Model Assumptions
+
+1. Memory Latency
+2. CPU Documentation
+3. Clock Frequency Variation
+4. Interrupts
+5. Distributed Execution
+6. Out-of-Order Execution
+7. Termination
+8. Caching
+
+## Technical Overview
+
 We utilize Linear Temporal Logic as the foundation for timing proofs.
 Given a function `toi : instruction -> arguments -> N` that defines the time of an instruction given its arguments, we map toi over a program trace to get a list of cycle counts for the instructions in the trace. Summing the list, we get the total number of clock cycles taken by a program from one point of execution to another. This operation is called `cycle_count_of_trace : trace -> N` or `ccot`.
 
@@ -36,6 +57,7 @@ The Picinae system allows users to specify correctness of programs with respect 
 This allows us to verify the timing of a program by reasoning about `ccot t`.
 As a result, the primary postcondition of a Picinae timing proof states `ccot t = f(x0 ... xn)` where `t` is any complete program trace for the targeted program, and `x{i}` is a numeric expression optionally parametrized by a CPU state value, typically the state of the program at entry.
 A timing postcondition can then be used to predict the exact timing behavior of a program without running it. This allows for:
+
 - the discovery of timing attack vulnerabilities (if x{i} is parametrized by a secret value v, then an attacker can reconstruct v by measuring the execution time of the program)
 - construction of tighter real-time systems: because postconditions typically provide equalities, and WCET analysis provides overapproximations of upper bounds, a real-time system with timing guarantees can allot less time between function calls as they don't have to account for an overapproximation
 
@@ -205,13 +227,14 @@ End TimingProof.
 
 And that's it!
 
-## System Implementation
+## System Design
 
 Now let's look at the module hierarchy:
 
 ![module dependency graph](ptm_depgraph.png)
 
 The image above shows three clusters of nodes:
+
 1. ISA-agnostic components (top-left)
 2. ISA-specific components (top right except `RVCPUTimingBehavior`)
 3. Timing Proof
