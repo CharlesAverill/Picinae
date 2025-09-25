@@ -10,14 +10,14 @@ Require Import Nat.
 Open Scope N.
 
 Lemma GOTO_correct:
-  forall c s l src dest c' s' x i,
+  forall s l src dest c' s' x i,
     src < 2^30 ->
     dest < 2^30 ->
     GOTO l 14 (Z.of_N src) (Z.of_N dest) = Some i ->
-    exec_stmt c s (arm2il (src * 4) i) c' s' x ->
+    exec_stmt armc s (arm2il (src * 4) i) c' s' x ->
     x = Some (Addr (dest * 4)).
 Proof.
-  intros c s l src dest c' s' x i S D G. intros.
+  intros s l src dest c' s' x i S D G. intros.
   cbv [GOTO] in G. destruct orb eqn:e in G; try discriminate.
   remember (_ - _ - _)%Z as offset. unfold Z2 in *.
   assert (src * 4 ⊕ 8 ⊕ scast 26 32 (Z.to_N (offset mod 16777216) << 2) .& 4294967292 = dest * 4).
@@ -34,19 +34,20 @@ Proof.
   }
   destruct l; inversion G; subst; cbv [arm2il arm_bl_il arm_b_il] in H;
     remember (scast _ _ _) as dsta; remember (src * 4) as srca;
-    step_stmt H; destruct H as [[_ A] _]; inversion A; now rewrite H0.
+    step_stmt H; destruct H as [H _];
+    step_stmt H; destruct H as [[_ ?] _]; now rewrite H, H0.
 Qed.
 
 Lemma GOTOz_correct:
-  forall c s l src dest c' s' x z,
+  forall s l src dest c' s' x z,
     src < 2^30 ->
     dest < 2^30 ->
     GOTOz l 14 (Z.of_N src) (Z.of_N dest) = Some z ->
-    exec_stmt c s (arm2il (src * 4) (arm_decode z)) c' s' x ->
+    exec_stmt armc s (arm2il (src * 4) (arm_decode z)) c' s' x ->
     x = Some (Addr (dest * 4)).
 Proof.
   intros. unfold GOTOz in H1. destruct GOTO eqn:e in H1; try discriminate. apply arm_assemble_eq in H1. rewrite H1 in H2.
-  now apply (GOTO_correct c s l src dest c' s' x a).
+  now apply (GOTO_correct s l src dest c' s' x a).
 Qed.
 
 Open Scope nat.
@@ -349,11 +350,11 @@ Definition NoJ q := forall_stmts_in_stmt (fun q' : stmt => forall e : exp, q' <>
 Definition NoE q := forall_stmts_in_stmt (fun q' : stmt => forall i : N, q' <> Exn i) q.
 Definition NoJE q := NoJ q /\ NoE q.
 Lemma noj_cond: forall cond il, NoJ il -> NoJ (arm_cond_il cond il).
-Proof. intros. unfold arm_cond_il. now destruct_match. Qed.
+Proof. easy. Qed.
 Lemma noj_seq: forall a b, NoJ a -> NoJ b -> NoJ (a $; b).
 Proof. easy. Qed.
 Lemma noje_cond: forall cond il, NoJE il -> NoJE (arm_cond_il cond il).
-Proof. intros. destruct H. unfold arm_cond_il. now destruct_match. Qed.
+Proof. intros. destruct H. easy. Qed.
 Lemma noje_seq: forall a b, NoJE a -> NoJE b -> NoJE (a $; b).
 Proof. intros. now destruct H, H0. Qed.
 Lemma noj_ite: forall a b c, NoJ a -> NoJ b -> NoJ (If c b a).
@@ -369,36 +370,34 @@ Proof.
     [ now apply H in XS
     | inversion XS; destruct b; first [now apply H in XS0 | now inversion XS0]].
 Qed.
-Ltac noje H :=
+Local Ltac noje H :=
   match type of H with
   | exec_stmt _ _ (arm2il ?a ?i) _ _ ?x =>
       let A := fresh "A" in
       let B := fresh "B" in
       assert (NoJE (arm2il a i)) as [A B]; [cbv [arm2il]; apply noje_seq; [easy|try apply noje_cond] | now apply stmt_xnone in H]
   end.
-Ltac noj H :=
+Local Ltac noj H :=
   match type of H with
   | exec_stmt _ _ (arm2il ?a ?i) _ _ ?x =>
       let A := fresh "A" in
       assert (NoJ (arm2il a i)) as A; [cbv [arm2il]; apply noj_seq; [try easy|try apply noj_cond] | eapply stmt_xnotaddr; now try apply H]
   end.
-Ltac nje :=
+Local Ltac nje :=
   repeat match goal with
   | |- NoJE (arm_cond_il _ _) => apply noje_cond
   | |- NoJE (Seq _ _) => apply noje_seq
-  | |- NoJE ?a => unfold_rec a
   end.
 Ltac nj :=
   repeat match goal with
   | |- NoJ (arm_cond_il _ _) => apply noj_cond
   | |- NoJ (Seq _ _) => apply noj_seq
-  | |- NoJ ?a => unfold_rec a
   end.
 Lemma for_0_14_noj:
   forall reg_list start f,
     NoJ start -> (forall n, NoJ (f n)) -> NoJ (for_0_14 reg_list start f).
 Proof.
-  intros. repeat apply noj_seq; destruct_match; easy.
+  intros. repeat apply noj_seq; destruct_match_eqn; easy.
 Qed.
 Lemma arm_lsm_noj:
   forall op cond W Rn register_list a c s c' s' x A
