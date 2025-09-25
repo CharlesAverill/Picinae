@@ -1294,32 +1294,21 @@ Qed.
 
 Close Scope Z.
 
+Definition arm_cond_exp n :=
+  let cond := match n with
+              | 0 | 1 => Var R_ZF
+              | 2 | 3 => Var R_CF
+              | 4 | 5 => Var R_NF
+              | 6 | 7 => Var R_VF
+              | 8 | 9 => BinOp OP_AND (Var R_CF) (UnOp OP_NOT (Var R_CF))
+              | 10 | 11 => BinOp OP_EQ (Var R_NF) (Var R_VF)
+              | 12 | 13 => BinOp OP_AND (UnOp OP_NOT (Var R_ZF)) (BinOp OP_EQ (Var R_NF) (Var R_VF))
+              | _ => Word 1 1
+              end in
+  if (n <? 14) && (N.odd n) then UnOp OP_NOT cond else cond.
+
 Definition arm_cond_il n stmt :=
-  match n with
-  (* EQ, NE *)
-  | 0 => If (Var R_ZF) stmt Nop
-  | 1 => If (Var R_ZF) Nop stmt
-  (* CS, CC *)
-  | 2 => If (Var R_CF) stmt Nop
-  | 3 => If (Var R_CF) Nop stmt
-  (* MI, PL *)
-  | 4 => If (Var R_NF) stmt Nop
-  | 5 => If (Var R_NF) Nop stmt
-  (* VS, VC *)
-  | 6 => If (Var R_VF) stmt Nop
-  | 7 => If (Var R_VF) Nop stmt
-  (* HI, LS *)
-  | 8 => If (BinOp OP_AND (Var R_CF) (UnOp OP_NOT (Var R_CF))) stmt Nop
-  | 9 => If (BinOp OP_AND (Var R_CF) (UnOp OP_NOT (Var R_CF))) Nop stmt
-  (* GE, LT *)
-  | 10 => If (BinOp OP_EQ (Var R_NF) (Var R_VF)) stmt Nop
-  | 11 => If (BinOp OP_EQ (Var R_NF) (Var R_VF)) Nop stmt
-  (* GT, LE *)
-  | 12 => If (BinOp OP_AND (UnOp OP_NOT (Var R_ZF)) (BinOp OP_EQ (Var R_NF) (Var R_VF))) stmt Nop
-  | 13 => If (BinOp OP_AND (UnOp OP_NOT (Var R_ZF)) (BinOp OP_EQ (Var R_NF) (Var R_VF))) Nop stmt
-  (* AL *)
-  | _ => stmt
-  end.
+  If (arm_cond_exp n) stmt Nop.
 
 Definition arm_varid n :=
   match n with
@@ -1913,7 +1902,7 @@ Lemma typeof_arm_varid:
 Proof.
   intros. unfold arm_varid. now destruct_match.
 Qed.
-Ltac etyp :=
+Local Ltac etyp :=
   repeat match goal with
          | H: hastyp_exp _ ?x ?s |- hastyp_exp _ (BinOp _ ?x _) _ => apply TBinOp with (w := s)
          | H: hastyp_exp _ ?x ?s |- hastyp_exp _ (BinOp _ _ ?x) _ => apply TBinOp with (w := s)
@@ -1936,7 +1925,7 @@ Ltac etyp :=
          | |- _ < _ => reflexivity
          | |- _ _ = Some _ => reflexivity
          end.
-Ltac etypn size :=
+Local Ltac etypn size :=
   match goal with
   | |- hastyp_exp _ (BinOp _ _ _) _ => apply TBinOp with (w := size)
   | |- hastyp_exp _ (Cast _ _ _) _ => apply TCast with (w := size)
@@ -1944,8 +1933,8 @@ Ltac etypn size :=
   | |- _ <= _ => easy
   | |- _ < _ => reflexivity
   end.
-Ltac etyps size := repeat (etyp + etypn size).
-Ltac stypc c :=
+Local Ltac etyps size := repeat (etyp + etypn size).
+Local Ltac stypc c :=
   cbn; repeat match goal with
          | |- hastyp_stmt _ _ (Seq _ _) _ => apply TSeq with (c1 := c) (c2 := c)
          | |- hastyp_stmt _ _ (If _ _ _) _ => apply TIf with (c2 := c)
@@ -1958,14 +1947,14 @@ Ltac stypc c :=
          | |- pfsub armc armct  => apply armct_sub
          | |- hastyp_exp _ _ _  => etyp
   end.
-Ltac styp := stypc armc.
-Ltac unfold_rec a :=
+Local Ltac styp := stypc armc.
+Local Ltac unfold_rec a :=
   match a with
   | ?x ?y => unfold_rec x
   | _ => unfold a
   end.
-Ltac unfold_stmt := match goal with | |- hastyp_stmt _ _ ?a _ => unfold_rec a end.
-Ltac stypu :=
+Local Ltac unfold_stmt := match goal with | |- hastyp_stmt _ _ ?a _ => unfold_rec a end.
+Local Ltac stypu :=
   repeat match goal with
          | [ |- hastyp_stmt _ _ ?a _ ] => unfold_rec a
          | _ => styp
@@ -1988,7 +1977,7 @@ Lemma hastyp_arm_cond:
     hastyp_stmt armc armc s armc ->
     hastyp_stmt armc armc (arm_cond_il c s) armc.
 Proof.
-  intros. unfold arm_cond_il. destruct_match; now styp.
+  intros. unfold arm_cond_il, arm_cond_exp. destruct_match; now styp.
 Qed.
 Lemma hastyp_DecodeImmShift:
   forall typ imm5 sr e,
@@ -2057,15 +2046,15 @@ Lemma hastyp_assign_memu:
 Proof.
   intros. unfold arm_assign_MemU. stypc c; try apply H; try easy; try lia.
 Qed.
-Ltac dshiftc :=
+Local Ltac dshiftc :=
   let e := fresh "e" in
   destruct Shift_C eqn:e; apply hastyp_Shift_C in e; destruct e.
-Ltac dimmshift :=
+Local Ltac dimmshift :=
   let e := fresh "e" in
   let e1 := fresh "e1" in
   destruct DecodeImmShift eqn:e; apply hastyp_DecodeImmShift in e;
   [> dshiftc |].
-Ltac hammer :=
+Local Ltac hammer :=
   repeat match goal with
          | |- hastyp_stmt _ _ arm_havoc _ => apply hastyp_havoc
          | |- hastyp_stmt _ _ (arm_cond_il _ _) _ => apply hastyp_arm_cond
