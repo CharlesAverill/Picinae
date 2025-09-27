@@ -57,3 +57,6 @@ crypto/passwordCheck/passwordCheck_vuln.v
 crypto/passwordCheck/passwordCheck_vuln_proofs.v
 crypto/passwordCheck/passwordCheck_safe.v
 crypto/passwordCheck/passwordCheck_safe_proofs.v
+
+crypto/ct-swap/mod_add_same_r.v
+crypto/ct-swap/ct_swap.v
