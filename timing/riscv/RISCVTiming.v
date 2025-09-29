@@ -1,6 +1,6 @@
 Require Export Picinae_riscv.
 Export RISCVNotations.
-Require Export CPUTimingBehavior.
+Require Export CPUTimingBehavior ProgramInformation.
 Require Export TimingAutomation.
 Require Export NArith.
 Require Import ZArith.
@@ -18,13 +18,6 @@ Proof.
     exists rvtypctx. apply welltyped_rv2il.
 Qed.
 
-Module Type ProgramInformation.
-    Parameter entry_addr : addr.
-    Parameter exits : trace -> bool.
-    (* Binary representation of the program to be decoded *)
-    Parameter binary : addr -> N.
-End ProgramInformation.
-
 Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: TimingModule IL_RISCV.
     Export cpu prog.
 
@@ -32,10 +25,12 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
 
     Definition lifted_prog := lift_riscv binary.
 
-    Definition time_of_addr (s : store) (a : addr) : N :=
-        let regvalue s r := if r =? 0 then 0 else s (rv_varid r) in
-        let bop s time_inf rs1 rs2 op : N :=
-            op (regvalue s rs1) (regvalue s rs2) in
+    Definition cache : Type := cpu.cache.
+    Definition cache_step := cpu.cache_step.
+
+    Definition time_of_addr (s : store) (c : cache) (a : addr) : N :=
+        let bop s time_inf rs1 rs2 op :=
+            op (reg s rs1) (reg s rs2) in
         match rv_decode (binary a) with
         (* ==== I ISA Extension ==== *)
         (* ALU *)
@@ -57,49 +52,55 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
 
         (* ALU Shifts *)
         | R5_Sll  rd _ _ =>
-            let rd := regvalue s rd in 
+            let rd := reg s rd in 
             tsll rd
         | R5_Slli _ _ shamt => tslli shamt
         | R5_Srl  rd _ _ =>
-            let rd := regvalue s rd in 
+            let rd := reg s rd in 
             tsrl rd
         | R5_Srli _ _ shamt => tsrli shamt
         | R5_Sra  rd _ _ =>
-            let rd := regvalue s rd in 
+            let rd := reg s rd in 
             tsra rd
         | R5_Srai _ _ shamt => tsrai shamt
 
         (* Branches *)
         | R5_Beq rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if x =? y then ttbeq else tfbeq)
+            (fun x y => if x =? y then ttbeq else tfbeq) c 
+            (add_signed_offset a off)
         | R5_Bne rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if negb (x =? y) then ttbne else tfbne)
+            (fun x y => if negb (x =? y) then ttbne else tfbne) c
+            (add_signed_offset a off)
         | R5_Blt rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if Z.ltb (toZ 32 x) (toZ 32 y) then ttblt else tfblt)
+            (fun x y => if Z.ltb (toZ 32 x) (toZ 32 y) then ttblt else tfblt) c
+            (add_signed_offset a off)
         | R5_Bge rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if Z.geb (toZ 32 x) (toZ 32 y) then ttbge else tfbge)
+            (fun x y => if Z.geb (toZ 32 x) (toZ 32 y) then ttbge else tfbge) c
+            (add_signed_offset a off)
         | R5_Bltu rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if x <? y then ttbltu else tfbltu)
+            (fun x y => if x <? y then ttbltu else tfbltu) c
+            (add_signed_offset a off)
         | R5_Bgeu rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if negb (x <? y) then ttbgeu else tfbgeu)
+            (fun x y => if negb (x <? y) then ttbgeu else tfbgeu) c
+            (add_signed_offset a off)
 
         (* Jump/call *)
-        | R5_Jal  _ _       => tjal
-        | R5_Jalr _ _ _     => tjalr
+        | R5_Jal  _ imm       => tjal c (add_signed_offset a imm)
+        | R5_Jalr _ rs1 imm     => tjalr c (resolve_jalr_addr imm rs1)
 
         (* Load/store *)
-        | R5_Lb  _ _ _      => tlb
-        | R5_Lh  _ _ _      => tlh
-        | R5_Lw  _ _ _      => tlw
-        | R5_Lbu _ _ _      => tlbu
-        | R5_Lhu _ _ _      => tlhu
-        | R5_Sb  _ _ _      => tsb
-        | R5_Sh  _ _ _      => tsh
-        | R5_Sw  _ _ _      => tsw
+        | R5_Lb  _ rs imm      => tlb c (add_signed_offset' rs imm)
+        | R5_Lh  _ rs imm      => tlh c (add_signed_offset' rs imm)
+        | R5_Lw  _ rs imm      => tlw c (add_signed_offset' rs imm)
+        | R5_Lbu _ rs imm      => tlbu c (add_signed_offset' rs imm)
+        | R5_Lhu _ rs imm      => tlhu c (add_signed_offset' rs imm)
+        | R5_Sb  _ rs imm      => tsb c (add_signed_offset rs imm)
+        | R5_Sh  _ rs imm      => tsh c (add_signed_offset rs imm)
+        | R5_Sw  _ rs imm      => tsw c (add_signed_offset rs imm)
 
         (* Data fence *)
-        | R5_Fence   _ _    => tfence
-        | R5_Fence_i        => tfence
+        | R5_Fence   _ _    => tfence c
+        | R5_Fence_i        => tfencei c
 
         (* M extension *)
 
@@ -118,7 +119,7 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
 
         (* ==== Zbb ISA Extension ==== *)
         | R5_Clz rd _       =>
-            let rd := regvalue s rd in
+            let rd := reg s rd in
             tclz rd
 
         (* ==== Zicsr ISA Extension ==== *)

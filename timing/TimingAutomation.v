@@ -10,7 +10,10 @@ Module Type TimingModule (il : PICINAE_IL).
     Export il.
     Export Lia.
 
-    Parameter time_of_addr : store -> addr -> N.
+    Parameter cache : Type.
+    Parameter cache_step : store -> cache -> addr -> cache.
+
+    Parameter time_of_addr : store -> cache -> addr -> N.
     Parameter time_inf : N.
 End TimingModule.
 
@@ -32,12 +35,13 @@ Export tm.
 
 Ltac PSimplifier ::= SIMPL.PSimplifier.
 
-Definition cycle_count_of_trace (t : trace) : N :=
-    List.fold_left N.add (List.rev (List.map 
-        (fun '(e, s) => match e with 
-            | Addr a => time_of_addr s a
-            | Raise n => time_inf
-            end) t)) 0.
+Definition cycle_count_of_trace (t : trace) (c : cache) : (N * cache) :=
+    List.fold_left (fun '(n, c) '(e, s) =>
+        match e with
+        | Addr a => (n + time_of_addr s c a, cache_step s c a)
+        | _ => (n + time_inf, c)
+        end
+    ) (List.rev t) (0, c).
 
 Lemma fold_left_cons : forall {X : Type} (t : list X) (h : X) (f : X -> X -> X) (base : X) 
     (Comm : forall a b, f a b = f b a) (Assoc : forall a b c, f a (f b c) = f (f a b) c),
@@ -50,33 +54,57 @@ Proof.
 Qed.
 
 Lemma cycle_count_of_trace_single :
-    forall (e : exit) (s : store),
-    cycle_count_of_trace [(e, s)] = 
+    forall (e : exit) (s : store) (c : cache),
+    cycle_count_of_trace [(e, s)] c = 
         match e with 
-        | Addr a => time_of_addr s a
-        | Raise n => time_inf
+        | Addr a => (time_of_addr s c a, cache_step s c a)
+        | Raise n => (time_inf, c)
         end.
 Proof. reflexivity. Qed.
 
 Lemma cycle_count_of_trace_cons :
-    forall (t : trace) (e : exit) (s : store),
-    cycle_count_of_trace ((e, s) :: t) = cycle_count_of_trace [(e, s)] + cycle_count_of_trace t.
+    forall (t : trace) (e : exit) (s : store) (c : cache),
+    cycle_count_of_trace ((e, s) :: t) c =
+        match cycle_count_of_trace t c with
+        | (cycles, c') =>
+            match cycle_count_of_trace [(e, s)] c' with
+            | (cycles', c'') => (cycles + cycles', c'')
+            end
+        end.
 Proof.
     intros. unfold cycle_count_of_trace.
-    repeat rewrite map_cons, rev_cons, fold_left_app.
-    simpl. lia.
+    rewrite rev_cons, fold_left_app.
+    simpl.
+    destruct (fold_left
+    (fun '(n, c0) '(e0, s0) =>
+     match e0 with
+     | Addr a => (n + time_of_addr s0 c0 a, cache_step s0 c0 a)
+     | Raise _ => (n + time_inf, c0)
+     end) (rev t) (0, c)) eqn:E0.
+    now destruct e.
 Qed.
 
 Lemma cycle_count_of_trace_app :
-    forall (t1 t2 : trace) (e : exit) (s : store),
-    cycle_count_of_trace (t1 ++ t2) = cycle_count_of_trace t1 + cycle_count_of_trace t2.
+    forall (t1 t2 : trace) (e : exit) (s : store) (c : cache),
+    cycle_count_of_trace (t1 ++ t2) c = 
+        match cycle_count_of_trace t2 c with
+        | (cycles, c') => match cycle_count_of_trace t1 c' with
+            | (cycles', c'') => (cycles + cycles', c'')
+            end
+        end.
 Proof.
     intros; induction t1; simpl.
-        reflexivity.
-    destruct a.
-    rewrite cycle_count_of_trace_cons,
-        (cycle_count_of_trace_cons t1 e0 s0), IHt1.
-    lia.
+    - destruct (cycle_count_of_trace t2 c).
+        now rewrite N.add_0_r.
+    - destruct a. rewrite cycle_count_of_trace_cons, IHt1.
+        destruct (cycle_count_of_trace t2 c) eqn:E0.
+        destruct (cycle_count_of_trace t1 c0) eqn:E1.
+        repeat rewrite cycle_count_of_trace_cons.
+        simpl.
+        destruct (cycle_count_of_trace t1 c0) eqn:E2.
+            inversion E1; subst; clear E1.
+        destruct (cycle_count_of_trace [(e0, s0)] c1) eqn:E3.
+        now rewrite N.add_assoc.
 Qed.
 
 Ltac find_rewrites :=
