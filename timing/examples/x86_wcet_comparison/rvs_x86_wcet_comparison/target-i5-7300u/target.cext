@@ -1,0 +1,12 @@
+
+# Target Information
+#  Architecture : native
+#  OS           : native
+#  C Standard   : Unknown
+#  C++ Standard : Unknown
+compiler_flags : append "-m64"
+compiler_flags : append "--int-size 32"
+compiler_flags : append "--long-size 64"
+compiler_flags : append "--long-long-size 64"
+compiler_flags : append "--pointer-size 64"
+compiler_flags : append "--size_t-type unsigned-long"

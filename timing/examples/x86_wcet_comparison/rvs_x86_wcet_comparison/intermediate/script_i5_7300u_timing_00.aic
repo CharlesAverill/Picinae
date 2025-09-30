@@ -1,0 +1,11 @@
+<root><injections><object ref='2433'>  <after range='all' chain='' layer='30' >
+  RVS_Output();
+}
+</after>  <after range='all' chain='' layer='30' >
+}
+</after></object><object ref='2433'>  <before range='body' chain='' layer='30' >
+{
+</before>  <before range='body' chain='' layer='30' >
+{
+  RVS_Init();
+</before></object></injections></root>

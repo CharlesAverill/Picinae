@@ -1,0 +1,81 @@
+{
+   "mapping": [
+      {
+         "dest": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.c",
+         "src": "",
+         "orig": "",
+         "new": 1,
+         "temp": 1,
+         "clone": 1,
+         "static": 0,
+         "todo": false,
+         "done": true
+      },
+      {
+         "dest": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_types.h",
+         "src": "",
+         "orig": "",
+         "new": 1,
+         "temp": 1,
+         "clone": 1,
+         "static": 0,
+         "todo": false,
+         "done": true
+      },
+      {
+         "dest": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.h",
+         "src": "",
+         "orig": "",
+         "new": 1,
+         "temp": 1,
+         "clone": 1,
+         "static": 0,
+         "todo": false,
+         "done": true
+      },
+      {
+         "dest": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_settings.h",
+         "src": "",
+         "orig": "",
+         "new": 1,
+         "temp": 1,
+         "clone": 1,
+         "static": 0,
+         "todo": false,
+         "done": true
+      },
+      {
+         "dest": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/sources/_47195164e_on_while_true_break/while_true_break.c",
+         "src": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/pproc/_1431436669_son_while_true_break/while_true_break.c",
+         "orig": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/while_true_break/while_true_break.c",
+         "new": 0,
+         "temp": 1,
+         "clone": 0,
+         "static": 0,
+         "todo": false,
+         "done": true
+      },
+      {
+         "dest": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_ipoint.h",
+         "src": "",
+         "orig": "",
+         "new": 1,
+         "temp": 1,
+         "clone": 1,
+         "static": 0,
+         "todo": false,
+         "done": true
+      },
+      {
+         "dest": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_ipoint.hpp",
+         "src": "",
+         "orig": "",
+         "new": 1,
+         "temp": 1,
+         "clone": 1,
+         "static": 0,
+         "todo": false,
+         "done": true
+      }
+   ]
+}

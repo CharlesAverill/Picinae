@@ -1,0 +1,8 @@
+#
+# This script is called twice by the integration
+# First time, no argument specified and the injection locations are 'bookmarked'
+# Second time the injection files are added at bookmark locations
+#
+
+import "default_inject_libraries.rci"
+

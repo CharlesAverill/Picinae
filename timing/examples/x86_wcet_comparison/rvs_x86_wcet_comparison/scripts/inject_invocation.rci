@@ -1,0 +1,8 @@
+#
+# This injection script adds the entry and exit points
+# For unmanaged integrations this typically means RVS_Init() and RVS_Output()
+# For managed integrations this typically means RVS_RTS_Execute()
+#
+
+import "default_inject_invocation.rci"
+

@@ -1,0 +1,73 @@
+= Introduction =
+
+  Column headings:
+    Min                   : Minimum observed execution time 
+    Max                   : Maximum observed execution time 
+    Avg                   : Average observed execution time 
+    HWM                   : High-Water Mark time observed during longest run of root 
+    HWMC                  : Contribution to the High-Water Mark time of the root function 
+    WCET                  : Worst-Case Execution Time computed from observed times 
+    WCC                   : Contribution to the Worst-Case time of the root function 
+    #Tests                : Number of times a function was observed to be executed 
+    Blocks                : Number of blocks 
+    T-Blocks, T-Blocks%   : Number of tested blocks 
+    #LOC                  : Number of lines of code 
+    #stmt                 : Number of statements 
+    #loops                : Number of loops 
+    #conditionals         : Number of conditional statements 
+    #calls                : Number of function calls 
+
+= Root_summary =
+
+                                         Min   Min       Min     Avg   Avg       Avg     Max   Max       Max     HWM   HWM       HWM    HWM   HWMC   HWMC      HWMC       WCET   WCET       WCET   WCET    WCC   WCC       WCC          
+               File   Lines   Context   self   sub   overall    self   sub   overall    self   sub   overall    self   sub   overall   freq   self    sub   overall       self    sub    overall   freq   self   sub   overall   Tests  
+      arraysearch.c    4-12   find-U     112     0       112   19026     0     19026   81071     0     81071   81071     0     81071      1   100%     0%      100%   65244002      0   65244002      1   100%    0%      100%     990  
+
+
+= Tested_blocks_summary =
+
+      File   Lines   Context   Blocks   T-Blocks   T-Blocks%  
+         *     0-0   *-*            5          5        100%  
+
+
+= Timing_data =
+
+                                         Min   Min       Min     Avg   Avg       Avg     Max   Max       Max     HWM   HWM       HWM    HWM   HWMC   HWMC      HWMC       WCET   WCET       WCET   WCET    WCC   WCC       WCC          
+               File   Lines   Context   self   sub   overall    self   sub   overall    self   sub   overall    self   sub   overall   freq   self    sub   overall       self    sub    overall   freq   self   sub   overall   Tests  
+      arraysearch.c    4-12   find-U     112     0       112   19026     0     19026   81071     0     81071   81071     0     81071      1   100%     0%      100%   65244002      0   65244002      1   100%    0%      100%     990  
+
+
+= Tested_blocks =
+
+               File   Lines   Context   Blocks   T-Blocks   T-Blocks%  
+      arraysearch.c    4-12   find-U         5          5        100%  
+
+
+= Structural_data =
+
+               File   Lines   Subprogram   #LOC   #stmt   #loops   #conditionals   #calls  
+      arraysearch.c    4-12   find            7       6        1               1        0  
+
+
+= Integration_Information =
+
+Project location: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/x86_wcet_comparison.rvsprj
+Integration name: i5-7300u-timing
+
+= RVD_Information =
+
+RVD filename: _comparison/results/x86_wcet_comparison-timing.rvd
+RVD full path: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing.rvd
+Tool version: 3.23 build 9200ba4ed16 (64-bit)
+Created: 2025-09-30 04:57:17
+Last modified: 2025-09-30 04:57:20
+By user: charles@anesidora
+Export date: 2025-09-30 05:03:15
+Export username: charles@anesidora
+Export arguments: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing.rvd --fmt txt -o /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing-unmanaged-timing-time.txt --precision 0
+
+= Exporter_Information =
+
+timexport Version: 3.23 build 9200ba4ed16 (64-bit)
+Host Platform: Linux
+

@@ -1,0 +1,25 @@
+ --prepare-db
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-prepare.rvd
+ -c
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/rvs_instr_auto.h
+ -c
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/annotations-timing/rvs_instr.h
+ -c
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/annotations-timing/rvs_analysis.c
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/rvs_analysis.xsc
+ --update
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-prepare.rvd
+ --overlay-mapping
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/overlaymap.rvsdata
+ --dedupl-func
+ --project
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/x86_wcet_comparison.rvsprj
+ --integration
+ i5-7300u-timing
+ --keep-deferred-instrumentation
+ --instrumentation-mode
+ xsc-only
+ --prepare-from-deferred-instrumentation
+ --report-elab
+ --no-save-option-hash
+

@@ -1,0 +1,12 @@
+ --db
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-prepare.rvd
+ --project
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/x86_wcet_comparison.rvsprj
+ -I
+ /usr/local/pkg/RVS/v3.23/integration_resources/injections/
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/scripts/inject_extended_ipoints.py
+ --output-aic
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/script_i5_7300u_timing_02.aic
+ --integration
+ i5-7300u-timing
+

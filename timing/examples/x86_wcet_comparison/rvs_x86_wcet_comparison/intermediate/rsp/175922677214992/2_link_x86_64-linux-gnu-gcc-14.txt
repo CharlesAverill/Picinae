@@ -1,0 +1,6 @@
+{
+   "output": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/while_true_break/while_true_break",
+   "inputs": [
+      "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/while_true_break/while_true_break.c"
+   ]
+}

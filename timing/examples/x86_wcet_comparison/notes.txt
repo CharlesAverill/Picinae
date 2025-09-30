@@ -1,0 +1,14 @@
+# common
+
+average execution time is usually 2-3 orders of magnitude smaller than predicted WCET
+
+results are wildly variable, up to 3 orders of magnitude difference between runs.
+Likely due to variability in hardware runtimes
+
+# collatz
+
+Rapitime completely locks up even with loop annotations, seemingly can't handle so many deep loops that iterate so many times
+
+# arraysearch
+
+

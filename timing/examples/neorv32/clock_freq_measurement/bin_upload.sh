@@ -1,6 +1,5 @@
-# https://www.dannysung.com/articles/linux/tips/sending-binary-files-via-minicom/
-
 #!/bin/sh
+# https://www.dannysung.com/articles/linux/tips/sending-binary-files-via-minicom/
 INFILE=/dev/null
 OUTFILE=/dev/null
 

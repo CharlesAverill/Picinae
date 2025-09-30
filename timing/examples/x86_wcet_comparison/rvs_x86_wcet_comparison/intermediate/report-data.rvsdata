@@ -1,0 +1,15 @@
+[
+   {
+      "metrics": [
+         "auto"
+      ],
+      "format": "auto",
+      "name": "./rvs_trace.txt",
+      "metadata": {
+         "tags": [],
+         "dataset_id": "0",
+         "dataset_name": "",
+         "cpu_cores": ""
+      }
+   }
+]

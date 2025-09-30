@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rvsconfig>
+  <version>25</version>
+  <project>
+    <installation>
+      <rvs-version>3.23 (Auto)</rvs-version>
+      <last-rvs-version>3.23 (Auto)</last-rvs-version>
+    </installation>
+    <project-name>x86_wcet_comparison</project-name>
+    <languages>c</languages>
+  </project>
+  <integrations>
+    <integration integration-name="i5-7300u-timing">
+      <testing-framework-mode>unmanaged</testing-framework-mode>
+      <integration-strategy>wrapper</integration-strategy>
+      <results-archive-mode>true</results-archive-mode>
+      <analysis-ref>timing</analysis-ref>
+      <target-ref>i5-7300u</target-ref>
+      <generate-rvd-method>managed</generate-rvd-method>
+      <collection-method>trace</collection-method>
+      <data-files>
+        <data-file>
+          <file-names>./rvs_trace.txt</file-names>
+        </data-file>
+      </data-files>
+      <export-ref>unmanaged-timing</export-ref>
+      <entry-points>"at function main(in argc as int, in argv as array[ ] pointer char) return int"</entry-points>
+      <exit-points>"at function main(in argc as int, in argv as array[ ] pointer char) return int"</exit-points>
+    </integration>
+  </integrations>
+  <analyses>
+    <analysis analysis-name="timing">
+      <analysis-tasks>timing</analysis-tasks>
+      <instr-profile>TIME_FULL</instr-profile>
+      <measurement-frequency>26000000000</measurement-frequency>
+      <measurement-units>cycles</measurement-units>
+      <calltree-roots>"at function while_true_break(in n as int) return int"</calltree-roots>
+    </analysis>
+  </analyses>
+  <targets>
+    <target target-name="i5-7300u">
+      <commandlines>
+        <clean-commandline>make clean</clean-commandline>
+        <build-commandline>make</build-commandline>
+        <run-commandline>make run</run-commandline>
+        <working-folder>${{config-folder}}/while_true_break</working-folder>
+      </commandlines>
+      <compiler-wrapper>
+        <wrapper wrapper-name="gcc">
+          <path-to-original>/usr/bin/gcc</path-to-original>
+          <rsp-enabled>true</rsp-enabled>
+        </wrapper>
+      </compiler-wrapper>
+    </target>
+  </targets>
+  <exports>
+    <export export-name="unmanaged-timing">
+      <export-section>
+        <metric>time</metric>
+        <export-format>txt</export-format>
+        <time-units>cycles</time-units>
+      </export-section>
+    </export>
+  </exports>
+  <testframework>
+    <test-file>collatz/collatz.c</test-file>
+    <test-file>arraysearch/arraysearch.c</test-file>
+    <test-file>while_true_break/while_true_break.c</test-file>
+  </testframework>
+</rvsconfig>
