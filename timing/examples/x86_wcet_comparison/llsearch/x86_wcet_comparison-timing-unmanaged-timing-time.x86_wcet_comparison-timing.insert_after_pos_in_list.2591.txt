@@ -1,0 +1,70 @@
+= Introduction =
+
+  Column headings:
+    Min                   : Minimum observed execution time 
+    Max                   : Maximum observed execution time 
+    Avg                   : Average observed execution time 
+    HWM                   : High-Water Mark time observed during longest run of root 
+    HWMC                  : Contribution to the High-Water Mark time of the root function 
+    WCET                  : Worst-Case Execution Time computed from observed times 
+    WCC                   : Contribution to the Worst-Case time of the root function 
+    #Tests                : Number of times a function was observed to be executed 
+    Blocks                : Number of blocks 
+    T-Blocks, T-Blocks%   : Number of tested blocks 
+    #LOC                  : Number of lines of code 
+    #stmt                 : Number of statements 
+    #loops                : Number of loops 
+    #conditionals         : Number of conditional statements 
+    #calls                : Number of function calls 
+
+= Root_summary =
+
+                                                            Min   Min       Min    Avg   Avg       Avg     Max   Max       Max     HWM   HWM       HWM    HWM   HWMC   HWMC      HWMC      WCET   WCET      WCET   WCET    WCC   WCC       WCC          
+               File   Lines   Context                      self   sub   overall   self   sub   overall    self   sub   overall    self   sub   overall   freq   self    sub   overall      self    sub   overall   freq   self   sub   overall   Tests  
+      linked_list.c   16-27   insert_after_pos_in_list-U    102     0       102   3898     0      3898   16478     0     16478   16478     0     16478      1   100%     0%      100%   1446238      0   1446238      1   100%    0%      100%    1000  
+
+
+= Tested_blocks_summary =
+
+      File   Lines   Context   Blocks   T-Blocks   T-Blocks%  
+         *     0-0   *-*            8          6         75%  
+
+
+= Timing_data =
+
+                                                            Min   Min       Min    Avg   Avg       Avg     Max   Max       Max     HWM   HWM       HWM    HWM   HWMC   HWMC      HWMC      WCET   WCET      WCET   WCET    WCC   WCC       WCC          
+               File   Lines   Context                      self   sub   overall   self   sub   overall    self   sub   overall    self   sub   overall   freq   self    sub   overall      self    sub   overall   freq   self   sub   overall   Tests  
+      linked_list.c   16-27   insert_after_pos_in_list-U    102     0       102   3898     0      3898   16478     0     16478   16478     0     16478      1   100%     0%      100%   1446238      0   1446238      1   100%    0%      100%    1000  
+
+
+= Tested_blocks =
+
+               File   Lines   Context                      Blocks   T-Blocks   T-Blocks%  
+      linked_list.c   16-27   insert_after_pos_in_list-U        8          6         75%  
+
+
+= Structural_data =
+
+      File   Lines   Subprogram   #LOC   #stmt   #loops   #conditionals   #calls  
+
+
+= Integration_Information =
+
+
+= RVD_Information =
+
+RVD filename: x86_wcet_comparison-timing.insert_after_pos_in_list.2591.rvd (from cet_comparison/results/x86_wcet_comparison-timing.rvd)
+RVD full path: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing.rvd
+Tool version: 3.23 build 9200ba4ed16 (64-bit)
+Created: 2025-09-30 20:39:46
+Last modified: 2025-09-30 20:39:55
+By user: charles@anesidora
+Export date: 2025-09-30 20:40:38
+Export username: charles@anesidora
+Export arguments: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing.rvd --fmt txt -o /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing-unmanaged-timing-time.txt --precision 0
+
+= Exporter_Information =
+
+timexport Version: 3.23 build 9200ba4ed16 (64-bit)
+Host Platform: Linux
+

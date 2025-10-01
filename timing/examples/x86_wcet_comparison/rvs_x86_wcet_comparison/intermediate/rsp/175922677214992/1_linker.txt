@@ -1,5 +1,0 @@
--Wall
--O2
-while_true_break.c
--o
-while_true_break

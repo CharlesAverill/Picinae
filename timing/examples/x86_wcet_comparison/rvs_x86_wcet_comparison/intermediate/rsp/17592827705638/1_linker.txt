@@ -1,0 +1,4 @@
+-O2
+linked_list.c
+-o
+linked_list

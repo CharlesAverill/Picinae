@@ -1,0 +1,5 @@
+-C
+-E
+-D__RVS
+linked_list.c
+-O2

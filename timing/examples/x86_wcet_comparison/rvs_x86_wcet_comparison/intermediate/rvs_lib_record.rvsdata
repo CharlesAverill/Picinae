@@ -1,6 +1,6 @@
 {
    "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.o": {
       "src": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.c",
-      "commands": "-c\n-D__RVS\n-I\n/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr\n-Wall\n-O2\n-x\nc\n/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.c\n-o\n/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.o\n"
+      "commands": "-c\n-D__RVS\n-I\n/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr\n-O2\n-x\nc\n/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.c\n-o\n/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.o\n"
    }
 }

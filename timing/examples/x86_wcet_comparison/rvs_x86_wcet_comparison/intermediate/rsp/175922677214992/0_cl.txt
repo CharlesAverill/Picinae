@@ -1,6 +1,0 @@
--C
--E
--D__RVS
-while_true_break.c
--Wall
--O2

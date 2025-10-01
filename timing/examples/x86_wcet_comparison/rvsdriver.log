@@ -1,117 +1,18 @@
 Version                = 3.23
-Invocation time        = 05:06:12 30/9/2025
+Invocation time        = 20:40:38 30/9/2025
 RVS_PROJECT            = /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/x86_wcet_comparison.rvsprj
 RVS_INTEGRATION        = i5-7300u-timing
-Stages being run       = Clean, Prepare, Build, Run, Report, Export
-Stages NOT being run   = Deploy
+Stages being run       = Export
+Stages NOT being run   = Deploy, Clean, Prepare, Build, Run, Report
 Entering rvsdriver stage init ( 1)
 Entering rvsdriver hook init
-Entering rvsdriver stage clean ( 2)
-Entering rvsdriver hook cleanrvs
-Deleting previous RVS object file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.o
-Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs.c
-Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs.h
-Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs_ipoint.h
-Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs_ipoint.hpp
-Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs_settings.h
-Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs_types.h
-Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.c
-Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_types.h
-Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.h
-Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_settings.h
-Touching file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/while_true_break/while_true_break.c
-Touching file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/pproc/_1431436669_son_while_true_break/while_true_break.c
-Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/sources/_47195164e_on_while_true_break/while_true_break.c
-Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_ipoint.h
-Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_ipoint.hpp
-
-Cleaning intermediates
-- Cleaning folder /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/
-Deleting result file: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-prepare.rvd
-Deleting result file: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing.rvd
-Deleting result file: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing.rvd
-- Rebuilding intermediate folders for i5-7300u-timing
-Entering rvsdriver hook clean
-rm -f while_true_break
-Entering rvsdriver stage prepare ( 5)
-Entering rvsdriver hook buildid
-Entering rvsdriver hook prepare
-
-Cleaning up injected sources folder /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/sources/
- - Delete file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/sources/source-map.rvsdata
-Running prepare commandline. Commandline arguments: make
-gcc -Wall -O2 -o while_true_break while_true_break.c
-
- ========== RVS GCC wrapper ==========
-Entering rvsdriver hook link
-Instrumenting [cins] batch mode (group 0)
-
-    0%  [                    ] Preprocessing                   25%  [*****                 100%  [********************]                                  0%  [                    ] Parsing                          3%  [   14%  [**                     14%  [**                  ] Finalizing                      21%  [****                  100%  [********************]                                                                                              0%  [                    ] Preprocessing                   50%  [**********          ]                                  0%  [                    ] Instrumenting                  100%  [********************   50%  [**********          ]                                 60%  [************                                                                      100%  [********************]                                  0%  [                    ] Create XSTs                     13%  [**                  ] Read XSCs                       22%  [****                ] Link XSCs                    Warning W63001: Errors were detected while processing annotations.
-rvs_analysis.c:2: The subprogram 'collatz' in the definition of ASL annotation '[collatz@L1] loop_max_iter (100);' could not be found.
-   72%  [**************      ] Finalize prepare                72%  [**************      ] Write RVD                       81%  [****************       90%  [******************  ] Close RVD                                                                                Entering rvsdriver hook sysconv
-Entering rvsdriver hook shrink
-Entering rvsdriver stage build ( 7)
-Entering rvsdriver hook purge
-Deleting /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/data_files/
-Entering rvsdriver hook instrument
-    0%  [                    ] Preprocessing                   50%  [**********          ]                                  0%  [                    ] Instrumenting                   33%  [******                 66%  [*************         100%  [********************   50%  [**********          ]                                 60%  [************                                                                      100%  [********************]                                  0%  [                    ] Create XSTs                      0%  [                    ] Read XSCs                        6%  [*                   ] Link XSCs                    Warning W63001: Errors were detected while processing annotations.
-rvs_analysis.c:2: The subprogram 'collatz' in the definition of ASL annotation '[collatz@L1] loop_max_iter (100);' could not be found.
-   46%  [*********              80%  [****************    ] Finalize prepare                80%  [****************    ] Write RVD                       86%  [*****************      93%  [******************  ] Close RVD                                                                                Entering rvsdriver hook mapgen
-Generating map for collection method: 'trace'
-Entering rvsdriver hook sync
-Entering rvsdriver hook inject
-Executing script: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/scripts/inject_invocation.rci
->> Injecting entry or exit points into main(in argc as int, in argv as array[ ] pointer char) return int
-Executing script: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/scripts/inject_libraries.rci
-Executing script: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/scripts/inject_extended_ipoints.py
-Preprocessing RVS libraries...
-Applying injections...
-Touching file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/while_true_break/while_true_break.c
-Touching file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/pproc/_1431436669_son_while_true_break/while_true_break.c
-
-Entering rvsdriver hook build
-Running build commandline. Commandline arguments: make
-gcc -Wall -O2 -o while_true_break while_true_break.c
-
- ========== RVS GCC wrapper ==========
-Warning W67003: No arguments specified for 'Compile RVS Libraries' stage so 'compiler' wrapper will provide default arguments
-Entering rvsdriver hook root
-Building annotations for root...
-Applying single root (for timing/task) at function while_true_break(in n as int) return int
-  100%  [********************]                                  0%  [                    ] Read XSCs                        6%  [*                   ] Link XSCs                    Warning W63001: Errors were detected while processing annotations.
-rvs_analysis.c:2: The subprogram 'collatz' in the definition of ASL annotation '[collatz@L1] loop_max_iter (100);' could not be found.
-   80%  [****************    ] Finalize prepare                80%  [****************    ] Write RVD                       86%  [*****************      93%  [******************  ] Close RVD                                                                                Entering rvsdriver stage run ( 3)
-Entering rvsdriver hook connect
-Entering rvsdriver hook run
-No name provided. Building and running all programs...
-make[1]: Entering directory '/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/while_true_break'
-make[1]: 'while_true_break' is up to date.
-make[1]: Leaving directory '/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/while_true_break'
-while_true_break
-RC: 0
-
-Entering rvsdriver hook download
-Entering rvsdriver stage report ( 4)
-Entering rvsdriver hook filter
-===== Processing result files
-===== Output files:
-  {"metrics":["auto"],"format":"auto","name":"./rvs_trace.txt","metadata":{"tags":[],"dataset_id":"0","dataset_name":"","cpu_cores":""}}
-========== END ==========
-Entering rvsdriver hook refine
-Entering rvsdriver hook report
-Processing metrics: ["time"]
-Applying timing for file ./rvs_trace.txt
-data = {"metrics":["auto"],"format":"auto","name":"./rvs_trace.txt","metadata":{"tags":[],"dataset_id":"0","dataset_name":"","cpu_cores":""},"toolCalled":{"covparser":false,"testparser":false,"timeparser":false,"taskparser":false,"sequenceanalyzer":false}}
-    0%  [                    ] Reading RVD                      0%  [                    ] Saving data to RVD                                                                           0%  [                    ] Reading RVD                                                                              Entering rvsdriver hook reflect
-Info: size of results archive is 29.08984375 Mb
-Results archived to x86_wcet_comparison-timing/2025-09-30~05-06-27.rvd
 Entering rvsdriver stage export ( 2)
 Entering rvsdriver hook export
 Exporting 'unmanaged-timing'
 Exporting metric: time in format: txt
-Entering rvsdriver hook sysgen
+    0%  [                    ] Unpacking reports                0%  [                    ] Unpacking x86_wcet_comparison   33%  [******                 66%  [*************          66%  [                                                            Entering rvsdriver hook sysgen
 Entering rvsdriver stage close ( 1)
 Entering rvsdriver hook close
-Finish time = 05:06:28 30/9/2025
-Duration    = 15.9 s
+Finish time = 20:40:39 30/9/2025
+Duration    = 1.0 s
 rvsdriver has completed successfully.

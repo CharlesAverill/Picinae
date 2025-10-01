@@ -1,0 +1,6 @@
+{
+   "output": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/llsearch/linked_list",
+   "inputs": [
+      "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/llsearch/linked_list.c"
+   ]
+}

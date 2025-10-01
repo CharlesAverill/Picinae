@@ -1,0 +1,4 @@
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-prepare.rvd
+ --remove-static-files-in-folder
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/additions/
+

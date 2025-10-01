@@ -1,6 +1,0 @@
- /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/annotations-timing/rvs_analysis.c
- --xsc
- /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/rvs_analysis.xsc
- --instrumentation-mode
- xsc-only
-

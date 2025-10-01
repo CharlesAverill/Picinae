@@ -1,0 +1,35 @@
+ --prepare-db
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-prepare.rvd
+ -c
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/rvs_instr_auto.h
+ -c
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/annotations-timing/rvs_instr.h
+ -c
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/annotations-timing/rvs_analysis.c
+ -c-c
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs_ipoint.h
+ -c-cpp
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs_ipoint.hpp
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/rvs_analysis.xsc
+ --xsc-dir
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/xscs/
+ --update
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing.rvd
+ --project
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/x86_wcet_comparison.rvsprj
+ --integration
+ i5-7300u-timing
+ --prepare-from-deferred-instrumentation
+ --mcdc-bitwise-ignore-c
+ --mcdc-bitwise-ignore-cpp
+ --instrumentation-mode
+ stored
+ --report-elab
+ --root
+"at function find_in_list(in l as pointer list_node, in key as uint32_t) return pointer list_node"
+ --root
+"at function insert_after_pos_in_list(in l as pointer list_node, in value as pointer list_node, in position as uint32_t)"
+ --root
+"at function insert_in_sorted_list(in l as pointer list_node, in value as pointer list_node)"
+ --dedupl-func
+

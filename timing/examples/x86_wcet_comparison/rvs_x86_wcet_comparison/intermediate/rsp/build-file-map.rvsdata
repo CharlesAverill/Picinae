@@ -1,10 +1,10 @@
 {
    "build-mappings": [
       {
-         "linker-output": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/while_true_break/while_true_break",
+         "linker-output": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/llsearch/linked_list",
          "linker-inputs": [
             {
-               "compiler-output": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/while_true_break/while_true_break.c",
+               "compiler-output": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/llsearch/linked_list.c",
                "compiler-inputs": []
             }
          ]

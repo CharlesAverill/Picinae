@@ -24,8 +24,8 @@
         </data-file>
       </data-files>
       <export-ref>unmanaged-timing</export-ref>
-      <entry-points>"at function main(in argc as int, in argv as array[ ] pointer char) return int"</entry-points>
-      <exit-points>"at function main(in argc as int, in argv as array[ ] pointer char) return int"</exit-points>
+      <entry-points>"at function main() return int"</entry-points>
+      <exit-points>"at function main() return int"</exit-points>
     </integration>
   </integrations>
   <analyses>
@@ -34,7 +34,7 @@
       <instr-profile>TIME_FULL</instr-profile>
       <measurement-frequency>26000000000</measurement-frequency>
       <measurement-units>cycles</measurement-units>
-      <calltree-roots>"at function while_true_break(in n as int) return int"</calltree-roots>
+      <calltree-roots>"at function find_in_list(in l as pointer list_node, in key as uint32_t) return pointer list_node" "at function insert_after_pos_in_list(in l as pointer list_node, in value as pointer list_node, in position as uint32_t)" "at function insert_in_sorted_list(in l as pointer list_node, in value as pointer list_node)"</calltree-roots>
     </analysis>
   </analyses>
   <targets>
@@ -43,7 +43,7 @@
         <clean-commandline>make clean</clean-commandline>
         <build-commandline>make</build-commandline>
         <run-commandline>make run</run-commandline>
-        <working-folder>${{config-folder}}/while_true_break</working-folder>
+        <working-folder>${{config-folder}}/llsearch</working-folder>
       </commandlines>
       <compiler-wrapper>
         <wrapper wrapper-name="gcc">
@@ -66,5 +66,7 @@
     <test-file>collatz/collatz.c</test-file>
     <test-file>arraysearch/arraysearch.c</test-file>
     <test-file>while_true_break/while_true_break.c</test-file>
+    <test-file>cache/cache.c</test-file>
+    <test-file>llsearch/linked_list.c</test-file>
   </testframework>
 </rvsconfig>

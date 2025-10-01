@@ -1,0 +1,38 @@
+{
+   "pos": 3,
+   "depth": 0,
+   "arg": "",
+   "sep": "",
+   "value": "linked_list.c",
+   "fileTypeInfo": {
+      "isSourceFile": true,
+      "instrumenter": "cins",
+      "preprocessedExtension": ".c",
+      "isExplicitlySet": false,
+      "compiledLanguage": "c",
+      "instrumentedLanguage": "c",
+      "validators": {
+         "pproc": true,
+         "instr": true,
+         "header": false
+      },
+      "fileTypeExt": ".c"
+   },
+   "Leaf": "linked_list.c",
+   "Dir": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/llsearch/",
+   "src": "linked_list.c",
+   "overlay": null,
+   "pproc": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/pproc/_883089073__comparison_llsearch/linked_list.c",
+   "instr": "linked_list.c",
+   "cwd": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/llsearch",
+   "postponed": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/_883089073__comparison_llsearch//linked_list.c.rvs.instr.postponed",
+   "completed": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/_883089073__comparison_llsearch//linked_list.c.rvs.instr.completed",
+   "xsc": "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/xscs/_883089073__comparison_llsearch__linked_list.xsc",
+   "obj": "linked_list.c",
+   "excluded": false,
+   "injected": false,
+   "instrArgsFormatted": [
+      "--cext",
+      "GCC"
+   ]
+}
