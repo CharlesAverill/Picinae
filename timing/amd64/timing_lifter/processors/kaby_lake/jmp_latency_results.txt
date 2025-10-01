@@ -1,0 +1,7 @@
+jmp forward:        20 cycles
+jmp backward:       21 cycles
+jmp indirect:       15 cycles
+cond jmp (taken):   10 cycles
+cond jmp (not-taken): 13 cycles
+ret simple:           13 cycles
+ret nested:           24 cycles
