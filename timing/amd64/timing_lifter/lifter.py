@@ -86,7 +86,7 @@ def parse_operand(op: str) -> X86Var:
 def get_disassembly(binary: str) -> str:
     """Run objdump and return full disassembly text."""
     result = subprocess.run(
-        ["objdump", "-d", "-M", "intel", binary],
+        ["objdump", "-d", "-M", "intel", binary, "-M", "no-aliases"],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
     result.check_returncode()
@@ -132,6 +132,8 @@ def generate_rocq(binary: str, functions: List[str]):
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Usage: python lifter.py BIN_PATH CPU_PATH FUNCTION...")
+        exit(1)
+
     path = Path(sys.argv[1])
     cpu = Path(sys.argv[2])
     functions = sys.argv[3:]

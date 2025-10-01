@@ -12,7 +12,7 @@ static inline uint64_t rdtsc(void) {
 #define BARRIER() __asm__ volatile("" ::: "memory")
 
 /* Number of iterations to average */
-#define ITERS 1000000
+#define ITERS 1000000000
 
 /* Test: unconditional forward jmp */
 uint64_t test_forward_jmp(void) {
@@ -106,6 +106,7 @@ uint64_t test_cond_not_taken(void) {
     return (end - start) / ITERS;
 }
 
+
 /* Test: ret instruction (balanced call/ret) */
 uint64_t test_ret(void) {
     uint64_t start, end;
@@ -124,7 +125,6 @@ uint64_t test_ret(void) {
 }
 
 
-/* Test: nested calls + ret (to stress return predictor stack) */
 uint64_t test_nested_ret(void) {
     uint64_t start, end;
     start = rdtsc();
@@ -143,6 +143,7 @@ uint64_t test_nested_ret(void) {
     end = rdtsc();
     return (end - start) / ITERS;
 }
+
 
 
 int main(void) {
