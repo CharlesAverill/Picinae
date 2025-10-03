@@ -53,6 +53,7 @@ Definition insertion_index mem l le_node le_dist le_val new_val len :=
     list_node_value mem le_node = Some le_val /\
     list_node_next mem le_node = Some gt_node /\
     list_node_value mem gt_node = Some gt_val /\
+    gt_node <> NULL /\
     le_val <= new_val < gt_val /\
     (le_dist < len)%nat /\
     (* all nodes below le_dist satisfy n.val <= new_val *)
@@ -203,7 +204,7 @@ Proof using.
             hammer.
             destruct (le_cases ctr le_dist CtrMax); try lia.
             clear - H CtrDist IDX Len Len_Nz BC A0.
-            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & Vals & Lens & Sorted).
+            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & _ & Vals & Lens & Sorted).
             exfalso.
             pose proof (not_at_end_next _ _ _ _ _ Len CtrDist ltac:(lia)).
             destruct H0 as (a0nxt & a0eq).
@@ -225,10 +226,22 @@ Proof using.
                 change 4 with p.dw. remember (p.dw + N.pos p0).
                 injection a0eq. now intro.
         -- exists (S ctr). split. assumption.
-            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & Vals & Lens & Sorted).
+            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & GtNN & Vals & Lens & Sorted).
             repeat split; auto; try lia.
             admit.
-            admit.
+            destruct (le_cases ctr le_dist CtrMax). lia.
+                subst ctr.
+                pose proof (node_distance_uniq' _ _ _ _ _ _ LeDist CtrDist eq_refl).
+                subst le_node.
+                apply N.ltb_ge in BC.
+                (* specialize (Sorted _ _ _ LeDist ltac:(lia) LeVal). *)
+                destruct (s' R_A0). contradiction.
+                replace gt_node with (base_mem Ⓓ[4 + N.pos p]) in *.
+                destruct (base_mem Ⓓ[ 4 + N.pos p ]). contradiction.
+                    inversion GtVal. subst gt_val. clear - Vals BC.
+                    replace (getmem p.w p.e p.dw base_mem (N.pos p0)) with (base_mem Ⓓ[N.pos p0]) in Vals by reflexivity.
+                    lia.
+                destruct (N.pos p). contradiction. now inversion LeNextGt.
             eapply node_distance_next_S_len with (dst := s' R_A0).
                 destruct (s' R_A0). contradiction. reflexivity.
             eapply distance_null_imp_well_formed. now eassumption.
