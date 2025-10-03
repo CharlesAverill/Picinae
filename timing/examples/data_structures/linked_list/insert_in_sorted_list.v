@@ -55,13 +55,13 @@ Definition insertion_index mem l le_node le_dist le_val new_val len :=
     list_node_value mem gt_node = Some gt_val /\
     gt_node <> NULL /\
     le_val <= new_val < gt_val /\
+    gt_val <= INT_MAX /\
     (le_dist < len)%nat /\
     (* all nodes below le_dist satisfy n.val <= new_val *)
     forall n d v,
         node_distance mem l n d ->
-        (d <= le_dist)%nat ->
         list_node_value mem n = Some v ->
-        v <= new_val.
+        ((d <= le_dist)%nat <-> v <= new_val).
 
 Definition time_of_insert_in_sorted_list 
     (mem : memory) (l value : addr) (max_dist : N) (t : trace) :=
@@ -76,10 +76,12 @@ Definition time_of_insert_in_sorted_list
     )) + tlw + tsw + tsw + tjalr.
 
 Definition insert_in_sorted_list_timing_invs (base_mem : memory)
-    (l value le_node : addr) (new_val le_val : N) (le_dist len : nat) (t:trace) : option Prop :=
+    (l value le_node sentry : addr) (new_val le_val : N) (le_dist len : nat) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
 | 0x22c => Some (
     insertion_index base_mem l le_node le_dist le_val new_val len /\
+    node_distance (s V_MEM32) l sentry (len - 1) /\
+    list_node_value (s V_MEM32) sentry = Some INT_MAX /\
     s R_A0 = l /\ s R_A1 = value /\ s V_MEM32 = base_mem /\
     s R_A0 <> NULL /\
     s V_MEM32 Ⓓ[value] = new_val /\
@@ -89,6 +91,8 @@ match t with (Addr a, s) :: t' => match a with
   )
 | 0x23c => Some (exists ctr,
     insertion_index base_mem l le_node le_dist le_val new_val len /\
+    node_distance (s V_MEM32) l sentry (len - 1) /\
+    list_node_value (s V_MEM32) sentry = Some INT_MAX /\
     (base_mem Ⓓ[value] =? INT_MAX) = false /\
     s R_A0 <> NULL /\
     s R_A1 = value /\ s R_A4 = new_val /\ s V_MEM32 = base_mem /\
@@ -144,8 +148,28 @@ Proof.
     - discriminate.
 Qed.
 
+Definition at_end_lens : forall mem head len a dst,
+    head <> NULL ->
+    node_distance mem head NULL len ->
+    node_distance mem head a dst ->
+    list_node_next mem a = Some NULL ->
+    S dst = len.
+Proof.
+    intros. destruct a.
+    - inversion H2.
+    - pose proof (node_distance_len_nonzero _ _ _ H0).
+        change NULL with LL.NULL in *.
+        apply N.eqb_neq in H. rewrite H in H3.
+        specialize (H3 ltac:(reflexivity)).
+        pose proof distance_last_node.
+        unfold LL.NULL in H4.
+        specialize (H4 mem head (N.pos p) dst ltac:(lia) H1 H2).
+        pose proof (node_distance_uniq _ _ _ _ _ H0 H4).
+        now symmetry.
+Qed.
+
 Theorem insert_in_sorted_list_timing:
-  forall s t s' x' base_mem l value le_node new_val le_val le_dist len
+  forall s t s' x' base_mem l value le_node new_val le_val le_dist len sentry
          (* boilerplate *)
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
@@ -159,11 +183,14 @@ Theorem insert_in_sorted_list_timing:
          (LEN: node_distance (s V_MEM32) l NULL len)
          (* l is non-null *)
          (L_NN: l <> NULL)
+         (* there is a sentry node *)
+         (SENTRY: node_distance (s V_MEM32) l sentry (len - 1))
+         (SENTRY_VAL: list_node_value (s V_MEM32) sentry = Some INT_MAX)
          (* there is an index to insert at *)
          (IDX: insertion_index base_mem l le_node le_dist le_val new_val len),
   satisfies_all
     lifted_prog
-    (insert_in_sorted_list_timing_invs base_mem l value le_node new_val le_val le_dist len)
+    (insert_in_sorted_list_timing_invs base_mem l value le_node sentry new_val le_val le_dist len)
     exits
   ((x',s')::t).
 Proof using.
@@ -185,32 +212,27 @@ Proof using.
 
     destruct_inv 32 PRE.
 
-    - destruct PRE as (IDX & A0 & A1 & MEM & NonNull & NewVal & L_NN & Len_Nz & Len & Cycles).
+    - destruct PRE as (IDX & SENTRY & SENTRY_VAL & A0 & A1 & MEM & NonNull & NewVal & L_NN & Len_Nz & Len & Cycles).
         repeat step.
         -- unfold INT_MAX. hammer.
         -- exists 0%nat. split. assumption.
-            repeat split; auto. now rewrite <- MEM. lia.
+            repeat split; auto; try now rewrite <- MEM. lia.
             rewrite A0. apply Dst0.
             hammer.
-            (* unfold list_node_next.
-                destruct (s' R_A0).
-                    subst l. contradiction.
-                reflexivity.
-            hammer. *)
-    - destruct PRE as (ctr & IDX & ValueValid & A0 & A1 & A4 & MEM & L_NN & Len_Nz & CtrMax &
+    - destruct PRE as (ctr & IDX & SENTRY & SENTRY_VAL & ValueValid & A0 & A1 & A4 & MEM & L_NN & Len_Nz & CtrMax &
                         Len & CtrDist & Cycles).
         repeat step.
         -- hammer. replace ctr with le_dist.
             hammer.
             destruct (le_cases ctr le_dist CtrMax); try lia.
             clear - H CtrDist IDX Len Len_Nz BC A0.
-            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & _ & Vals & Lens & Sorted).
+            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & _ & Vals & _ & Lens & Sorted).
             exfalso.
             pose proof (not_at_end_next _ _ _ _ _ Len CtrDist ltac:(lia)).
             destruct H0 as (a0nxt & a0eq).
             specialize (Sorted a0nxt (S ctr) (base_mem Ⓓ[base_mem Ⓓ[4 + s' R_A0]])).
             pose proof (node_distance_next_S_len _ _ _ _ _ a0eq (distance_null_imp_well_formed _ _ _ Len) CtrDist).
-            specialize (Sorted H0 ltac:(lia)).
+            specialize (Sorted H0).
             enough (list_node_value base_mem a0nxt = Some (base_mem Ⓓ[base_mem Ⓓ[ 4 + s' R_A0 ]])).
             destruct (s' R_A0).
                 contradiction.
@@ -226,9 +248,25 @@ Proof using.
                 change 4 with p.dw. remember (p.dw + N.pos p0).
                 injection a0eq. now intro.
         -- exists (S ctr). split. assumption.
-            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & GtNN & Vals & Lens & Sorted).
-            repeat split; auto; try lia.
-            admit.
+            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & GtNN & Vals & MaxVal & Lens & Sorted).
+            repeat split; auto; try lia; try now rewrite <- MEM.
+            intro Contra.
+                replace sentry with (s' R_A0) in *.
+                rewrite MEM in *.
+                specialize (Sorted _ _ _ SENTRY SENTRY_VAL).
+                destruct (Nat.le_gt_cases (len - 1) le_dist). lia.
+                assert (S ctr < len)%nat by lia.
+                pose proof (at_end_lens _ _ _ _ _ L_NN Len CtrDist).
+                destruct H1; try lia.
+                destruct (s' R_A0). contradiction. change 4 with p.dw in Contra.
+                unfold list_node_next. f_equal. apply Contra.
+                pose proof (distance_last_node base_mem l (s' R_A0) ctr A0 CtrDist).
+                destruct (s' R_A0). contradiction. unfold list_node_next in H.
+                unfold p.w, p.e, p.pw, p.dw in H. rewrite Contra in H.
+                specialize (H ltac:(reflexivity)).
+                assert (S ctr = len) by eauto using node_distance_uniq.
+                subst len. simpl in SENTRY. rewrite Nat.sub_0_r in SENTRY.
+                eapply node_distance_uniq'; eauto. now rewrite <- MEM.
             destruct (le_cases ctr le_dist CtrMax). lia.
                 subst ctr.
                 pose proof (node_distance_uniq' _ _ _ _ _ _ LeDist CtrDist eq_refl).
@@ -247,4 +285,6 @@ Proof using.
             eapply distance_null_imp_well_formed. now eassumption.
             assumption.
             hammer.
-Admitted.
+Qed.
+
+End TimingProof.
