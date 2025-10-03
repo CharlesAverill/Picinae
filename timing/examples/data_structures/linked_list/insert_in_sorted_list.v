@@ -47,21 +47,20 @@ Global Ltac Zify.zify_pre_hook ::= idtac.
 Definition INT_MAX := 0x7fffffff.
 Definition NULL := 0.
 
-Definition is_maximal (mem : memory)
-    (l max_node : addr) (new_val max_val : N) (max_dist len : nat) : Prop :=
-  node_distance mem l max_node max_dist /\
-  (max_dist <= len)%nat /\
-  list_node_value mem max_node = Some max_val/\
-  new_val < max_val /\
-  LLForall (fun m a =>
-    match list_node_value m a with
-    | None =>
-        (* Can't have a non-null element in the list *)
-        if a =? NULL then True else False
-    | Some val =>
-        val <= new_val
-    end
-  ) mem l.
+Definition insertion_index mem l le_node le_dist le_val new_val len :=
+    exists gt_node gt_val,
+    node_distance mem l le_node le_dist /\
+    list_node_value mem le_node = Some le_val /\
+    list_node_next mem le_node = Some gt_node /\
+    list_node_value mem gt_node = Some gt_val /\
+    le_val <= new_val < gt_val /\
+    (le_dist < len)%nat /\
+    (* all nodes below le_dist satisfy n.val <= new_val *)
+    forall n d v,
+        node_distance mem l n d ->
+        (d <= le_dist)%nat ->
+        list_node_value mem n = Some v ->
+        v <= new_val.
 
 Definition time_of_insert_in_sorted_list 
     (mem : memory) (l value : addr) (max_dist : N) (t : trace) :=
@@ -76,37 +75,52 @@ Definition time_of_insert_in_sorted_list
     )) + tlw + tsw + tsw + tjalr.
 
 Definition insert_in_sorted_list_timing_invs (base_mem : memory)
-    (l value max_node : addr) (new_val max_val : N) (max_dist len : nat) (t:trace) : option Prop :=
+    (l value le_node : addr) (new_val le_val : N) (le_dist len : nat) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
 | 0x22c => Some (
-    is_maximal base_mem l max_node new_val max_val max_dist len /\
+    insertion_index base_mem l le_node le_dist le_val new_val len /\
     s R_A0 = l /\ s R_A1 = value /\ s V_MEM32 = base_mem /\
+    s R_A0 <> NULL /\
+    s V_MEM32 Ⓓ[value] = new_val /\
     l <> NULL /\ len <> 0%nat /\
     node_distance base_mem l NULL len /\
     cycle_count_of_trace t' = 0
   )
 | 0x23c => Some (exists ctr,
-    is_maximal base_mem l max_node new_val max_val max_dist len /\
+    insertion_index base_mem l le_node le_dist le_val new_val len /\
     (base_mem Ⓓ[value] =? INT_MAX) = false /\
-    s R_A1 = value /\ s V_MEM32 = base_mem /\
+    s R_A0 <> NULL /\
+    s R_A1 = value /\ s R_A4 = new_val /\ s V_MEM32 = base_mem /\
     l <> NULL /\ len <> 0%nat /\
-    (ctr <= max_dist)%nat /\
+    (ctr <= le_dist)%nat /\
     node_distance base_mem l NULL len /\
     node_distance base_mem l (s R_A0) ctr /\
-    list_node_next base_mem (s R_A0) = Some (base_mem Ⓓ[4 + s R_A0]) /\
+    (* list_node_next base_mem (s R_A0) = Some (base_mem Ⓓ[4 + s R_A0]) /\ *)
     cycle_count_of_trace t' = tlw + tlui + taddi +
         tfbeq + (N.of_nat ctr) * (
             taddi + tlw + tlw + ttbgeu
         )
   )
-| 0x25c => Some (time_of_insert_in_sorted_list base_mem l value (N.of_nat max_dist) t)
+| 0x25c => Some (time_of_insert_in_sorted_list base_mem l value (N.of_nat le_dist) t)
 | _ => None end | _ => None end.
 
 Lemma le_cases : forall n m,
     (n <= m -> n < m \/ n = m)%nat.
 Proof. lia. Qed.
 
-Lemma not_at_end_next : forall mem head len a1 dist1 a2 dist2,
+Lemma not_at_end_next : forall mem head len a dist,
+    node_distance mem head NULL len ->
+    node_distance mem head a dist ->
+    (dist < len)%nat ->
+    exists val, list_node_next mem a = Some val.
+Proof.
+    intros. unfold list_node_next. destruct a.
+    - pose proof (node_distance_uniq _ _ _ _ _ H H0).
+        subst. lia.
+    - eexists. reflexivity.
+Qed.
+
+Lemma not_at_end_next' : forall mem head len a1 dist1 a2 dist2,
     node_distance mem head NULL len ->
     node_distance mem head a1 dist1 ->
     node_distance mem head a2 dist2 ->
@@ -127,10 +141,10 @@ Proof.
     intros. destruct len.
     - inversion H. contradiction.
     - discriminate.
-Qed. 
+Qed.
 
 Theorem insert_in_sorted_list_timing:
-  forall s t s' x' base_mem l value max_node new_val max_val max_dist len
+  forall s t s' x' base_mem l value le_node new_val le_val le_dist len
          (* boilerplate *)
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
@@ -138,15 +152,17 @@ Theorem insert_in_sorted_list_timing:
          (A0: s R_A0 = l)
          (A1: s R_A1 = value)
          (MEM: s V_MEM32 = base_mem)
+         (* contents of value *)
+         (VAL: s V_MEM32 Ⓓ[value] = new_val)
          (* list length is finite *)
          (LEN: node_distance (s V_MEM32) l NULL len)
          (* l is non-null *)
          (L_NN: l <> NULL)
-         (* there is a maximal node *)
-         (MAX: is_maximal base_mem l max_node new_val max_val max_dist len),
+         (* there is an index to insert at *)
+         (IDX: insertion_index base_mem l le_node le_dist le_val new_val len),
   satisfies_all
     lifted_prog
-    (insert_in_sorted_list_timing_invs base_mem l value max_node new_val max_val max_dist len)
+    (insert_in_sorted_list_timing_invs base_mem l value le_node new_val le_val le_dist len)
     exits
   ((x',s')::t).
 Proof using.
@@ -156,6 +172,7 @@ Proof using.
     Local Ltac step := tstep r5_step.
     simpl. rewrite ENTRY. unfold entry_addr. repeat step.
     split. assumption. repeat split; auto.
+    now rewrite A0.
     eapply head_nonnull_impl_len_nonzero; eassumption.
     now rewrite <- MEM.
 
@@ -167,40 +184,54 @@ Proof using.
 
     destruct_inv 32 PRE.
 
-    - destruct PRE as (MAX & A0 & A1 & MEM & L_NN & Len_Nz & Len & Cycles).
+    - destruct PRE as (IDX & A0 & A1 & MEM & NonNull & NewVal & L_NN & Len_Nz & Len & Cycles).
         repeat step.
         -- unfold INT_MAX. hammer.
         -- exists 0%nat. split. assumption.
-            repeat split; auto. lia.
+            repeat split; auto. now rewrite <- MEM. lia.
             rewrite A0. apply Dst0.
-            unfold list_node_next.
+            hammer.
+            (* unfold list_node_next.
                 destruct (s' R_A0).
                     subst l. contradiction.
                 reflexivity.
-            hammer.
-    - destruct PRE as (ctr & MAX & ValueValid & A1 & MEM & L_NN & Len_Nz & CtrMax &
-                        Len & CtrDist & Next & Cycles).
+            hammer. *)
+    - destruct PRE as (ctr & IDX & ValueValid & A0 & A1 & A4 & MEM & L_NN & Len_Nz & CtrMax &
+                        Len & CtrDist & Cycles).
         repeat step.
-        -- hammer. replace ctr with max_dist.
-            hammer. admit.
-        -- exists (S ctr). split. assumption. repeat split; auto.
+        -- hammer. replace ctr with le_dist.
+            hammer.
+            destruct (le_cases ctr le_dist CtrMax); try lia.
+            clear - H CtrDist IDX Len Len_Nz BC A0.
+            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & Vals & Lens & Sorted).
+            exfalso.
+            pose proof (not_at_end_next _ _ _ _ _ Len CtrDist ltac:(lia)).
+            destruct H0 as (a0nxt & a0eq).
+            specialize (Sorted a0nxt (S ctr) (base_mem Ⓓ[base_mem Ⓓ[4 + s' R_A0]])).
+            pose proof (node_distance_next_S_len _ _ _ _ _ a0eq (distance_null_imp_well_formed _ _ _ Len) CtrDist).
+            specialize (Sorted H0 ltac:(lia)).
+            enough (list_node_value base_mem a0nxt = Some (base_mem Ⓓ[base_mem Ⓓ[ 4 + s' R_A0 ]])).
+            destruct (s' R_A0).
+                contradiction.
+            specialize (Sorted H1).
+            apply N.ltb_lt in BC. lia.
+            pose proof (not_at_end_next _ _ _ _ _ Len H0 ltac:(lia)).
+            destruct H1 as (a0nxt2 & a0eq2).
+            destruct a0nxt eqn:E. inversion a0eq2.
+            unfold list_node_value. rewrite <- E in *; clear E.
+            replace a0nxt with (base_mem Ⓓ[ 4 + s' R_A0 ]). reflexivity.
+            destruct (s' R_A0). contradiction.
+                unfold list_node_next in a0eq.
+                change 4 with p.dw. remember (p.dw + N.pos p0).
+                injection a0eq. now intro.
+        -- exists (S ctr). split. assumption.
+            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & Vals & Lens & Sorted).
+            repeat split; auto; try lia.
             admit.
-            eapply node_distance_next_S_len. apply Next.
+            admit.
+            eapply node_distance_next_S_len with (dst := s' R_A0).
+                destruct (s' R_A0). contradiction. reflexivity.
             eapply distance_null_imp_well_formed. now eassumption.
             assumption.
-            destruct MAX, H0, H1, H2.
-            pose proof (not_at_end_next _ _ _ _ _ _ _ Len H CtrDist).
-            destruct (Nat.eq_dec ctr max_dist).
-                subst ctr.
-                pose proof (node_distance_uniq' _ _ _ _ _ _ CtrDist H eq_refl).
-                rewrite H5 in *; clear H5.
-                rewrite LLForall_forall in H3.
-                specialize (H3 (s' R_A4)).
-                
-            unfold list_node_next.
-                destruct (s' R_A0).
-                    pose proof (node_distance_uniq _ _ _ _ _ Len CtrDist).
-                        subst len.
-                    
-                reflexivity.
-
+            hammer.
+Admitted.
