@@ -7,6 +7,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+# From ./jle_ret.c
 custom = {
     "ret": 13,
     "jle": 5
