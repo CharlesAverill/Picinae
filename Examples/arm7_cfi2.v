@@ -329,27 +329,22 @@ but a compiler would most likely pick a general register instead of lr if that w
 
 although any rewritten jump would be able to handle the old pc value correctly, this inst
 is sometimes used when calling a kernel user helper function, which we cannot rewrite *)
-Definition rewrite_mov_lr_pc i i2i' tc : NewInst :=
+Definition rewrite_mov_lr_pc cond i i2i' tc : NewInst :=
   let pc' := Z4 * i2i' (i+Z2) in
-  wo_table (arm_assemble_all ([
+  wo_table (arm_assemble_all_cond ([
     MOVW  LR (pc' & Z0xffff);
     MOVT  LR ((pc' >> Z16) & Z0xffff)
-  ])) tc.
+  ]) cond) tc.
 
-Definition unused_reg (r0 r1 r2: Z) :=
-  if (r0 =? Z0) || (r1 =? Z0) || (r2 =? Z0) then
-    if (r0 =? Z1) || (r1 =? Z1) || (r2 =? Z1) then
-      if (r0 =? Z2) || (r1 =? Z2) || (r2 =? Z2) then Z3
-      else Z2
-    else Z1
-  else Z0.
-Definition unused_reg_high (r0 r1 r2: Z) :=
-  if (r0 =? Z4) || (r1 =? Z4) || (r2 =? Z4) then
-    if (r0 =? Z5) || (r1 =? Z5) || (r2 =? Z5) then
-      if (r0 =? Z6) || (r1 =? Z6) || (r2 =? Z6) then Z7
-      else Z6
-    else Z5
-  else Z4.
+Definition _unused_reg (base r0 r1 r2: Z) :=
+  if (r0 =? base) || (r1 =? base) || (r2 =? base) then
+    if (r0 =? base+Z1) || (r1 =? base+Z1) || (r2 =? base+Z1) then
+      if (r0 =? base+Z2) || (r1 =? base+Z2) || (r2 =? base+Z2) then base+Z3
+      else base+Z2
+    else base+Z1
+  else base.
+Definition unused_reg := _unused_reg Z0.
+Definition unused_reg_high := _unused_reg Z4.
 Definition goto_abort i' ai tc : NewInst :=
   match GOTOz true Z14 i' ai with
   | Some z => Some ([z], nil, tc)
@@ -378,7 +373,7 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
         rewrite_pc sanitized_inst reg tc dis i2i' cond i ti ai
       else if (Rn =? PC) || (Rm =? PC) then
         if (match op with ARM_MOV => Rd =? LR | _ => false end) then
-          rewrite_mov_lr_pc i i2i' tc
+          rewrite_mov_lr_pc cond i i2i' tc
         else if (Rd =? SP) then
           rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
         else
