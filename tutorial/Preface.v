@@ -1,3 +1,4 @@
+(** #<link rel="stylesheet" href="sf.css"># *)
 (** * Preface *)
 
 (* ################################################################# *)
@@ -34,7 +35,17 @@
     (2) the theory used to develop an interface that makes reasoning
     over many coding styles convenient (including recursion (TODO),
     self-modifying code (TODO), call-return pairs, tail-calls (TODO),
-    and of course, loops.)  *)
+    and of course, loops.)
+
+    The intended order of the chapters is:
+
+      0. Preface.v (this file)
+      1. Basics.v
+      2. BasicLoops.v
+      3. AbsAndPracs.v
+      4. Foundation.v
+      5. PicinaeAuto.v
+  *)
 
 (* ================================================================= *)
 (** ** User Interface *)

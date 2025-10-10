@@ -1,3 +1,4 @@
+(** #<link rel="stylesheet" href="sf.css"># *)
 (** * Foundation *)
 
 (* ################################################################# *)
@@ -472,16 +473,6 @@ Definition untyped_exp4 := BinOp OP_EQ
   (BinOp OP_PLUS (Word 1 64) (BinOp OP_LT (Var R_R0) (Word 120 64)))
   (BinOp OP_XOR (BinOp OP_AND (UnOp OP_NOT (Var F_R)) (Var F_W)) (Word 1 64)).
 
-(* Solution: *)
-(*
-Definition untyped_exp1 := Word 4 64.
-Definition untyped_exp2 := BinOp OP_AND (Var F_R) (Var F_W).
-Definition untyped_exp3 := BinOp OP_OR (UnOp OP_NOT (Word 127 64)) (Var R_R1).
-Definition untyped_exp4 := BinOp OP_EQ
-  (BinOp OP_PLUS (Word 1 1) (BinOp OP_LT (Var R_R0) (Word 120 64)))
-  (BinOp OP_XOR (BinOp OP_AND (UnOp OP_NOT (Var F_R)) (Var F_W)) (Word 1 1)).
- *)
-
 Require Import Lia.
 Ltac rewrite_widthof :=
   match goal with
@@ -668,7 +659,7 @@ Inductive eval_exp (c:typctx) (s:store): exp -> N -> bitwidth -> Prop :=
            eval_exp c s (Extract hi lo e) (xbits val lo (N.succ hi)) (N.succ hi - lo)]
 
     Extraction extracts bits from [val] starting at bit index [lo] and ending at
-    bit index [hi].  This extracts a total of [1+hi-lo] bits, seen in the rule as
+    bit index [hi].  This extracts a total of [hi-lo+1] bits, seen in the rule as
     [N.succ hi - lo].
 
     The example below shows how [xbits] (short for 'extract bits') computes the
@@ -738,7 +729,7 @@ Inductive eval_exp (c:typctx) (s:store): exp -> N -> bitwidth -> Prop :=
    --- End Example ---
   *)
 
-(** The typing of expressions. *)
+(** The new expressions' typing rules are... *)
 
 Inductive hastyp_exp (c:typctx): exp -> bitwidth -> Prop :=
 (* hide details: TVar, TWord, TBinOp, TUnOp, ... *)
@@ -761,18 +752,38 @@ Inductive hastyp_exp (c:typctx): exp -> bitwidth -> Prop :=
           (T1: hastyp_exp c e1 w1) (T2: hastyp_exp c e2 w2):
           hastyp_exp c (Concat e1 e2) (w1+w2).
 
+(** ... and let's break them down.  One by one.
 
+[| TCast ct w w' e (T1: hastyp_exp c e w)
+        (LE: match ct with CAST_UNSIGNED | CAST_SIGNED => w <= w'
+                         | CAST_HIGH | CAST_LOW => w' <= w end):
+        hastyp_exp c (Cast ct w' e) w']
 
+    [Cast ct w' e] has the bitwidth w' if w' is appropriately greater-than or less-than
+    the bitwidth w of the expression [e] for the cast type [ct].
 
+[| TExtract w n1 n2 e1
+           (T1: hastyp_exp c e1 w) (HI: n1 < w):
+           hastyp_exp c (Extract n1 n2 e1) (N.succ n1 - n2)]
+    
+   [Extract n1 n2 e1] is has as many bits as were extracted--exactly [n1-n2+1] bits.
+   But only if [n1], the low index to extract from is less than the bitwidth [w] of
+   the expression [e1].
 
+[| TConcat e1 e2 w1 w2
+          (T1: hastyp_exp c e1 w1) (T2: hastyp_exp c e2 w2)
+          hastyp_exp c (Concat e1 e2) (w1+w2)]
 
-
-
-
+    The bitwidth of [Concat e1 e2] is the sum of the bitwidths of [e1] and [e2].
+ *)
 End BitManipExp.
+
+(* TODO: Load, Store, Let, Ite, Unknown *)
+
 (* ================================================================= *)
 (** ** The Picinae Statement Language *)
 
 (** We now turn our attention to the expression language Picinae uses to represent computations.
     In Picinae_core this is encapsulated in a module parameterized by an architecture.
+*)
 

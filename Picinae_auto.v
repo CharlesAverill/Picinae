@@ -45,6 +45,7 @@ Import SIL.
     inferring their bounds from the type context. *)
 Global Ltac elimstore :=
   repeat lazymatch goal with
+  (* Eliminate registers we have an expression for. *)
   | [ H: ?s ?v = _, MDL: models ?typs ?s |- _] =>
       let Hyp := fresh "SBound" in
       pose proof (Hyp:=models_var v MDL); cbv -[N.lt N.pow] in Hyp;
@@ -53,7 +54,30 @@ Global Ltac elimstore :=
       | _ < 2 ^ ?w => assert (temp:(w <=? 256) = true) by reflexivity; clear temp
       | _ => clear Hyp
       end;
-      try rewrite H in *; clear H; try clear s MDL
+      try rewrite H in *; clear H; try clear s
+  (* Eliminate register we use in hypotheses but do not have an expression for. *)
+  | [ MDL: models ?typs ?s, H:context[?s ?v] |- _] =>
+      let Hyp := fresh "SBound" in
+      let vv := fresh "v" v in
+      pose proof (Hyp:=models_var v MDL); cbv -[N.lt N.pow] in Hyp;
+      remember (s v) as vv eqn:Heq;
+      match type of Hyp with
+      | _ < 2 ^ ?w => assert (temp:(w <=? 256) = true) by reflexivity; clear temp
+      | _ => clear Hyp
+      end; clear Heq; try clear s
+  (* Eliminate register we use in the goal but do not have an expression for. *)
+  | [ MDL: models ?typs ?s |- context[?s ?v]] =>
+      let Hyp := fresh "SBound" in
+      let vv := fresh "v" v in
+      pose proof (Hyp:=models_var v MDL); cbv -[N.lt N.pow] in Hyp;
+      remember (s v) as vv eqn:Heq;
+      match type of Hyp with
+      | _ < 2 ^ ?w => assert (temp:(w <=? 256) = true) by reflexivity; clear temp
+      | _ => clear Hyp
+      end; clear Heq; try clear s
+  end;
+  try match goal with
+  | MDL: models _ _ |- _ => clear MDL
   end.
 
 Global Ltac Zify.zify_pre_hook ::= elimstore; unfold msub in *.

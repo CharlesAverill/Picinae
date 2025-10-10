@@ -1,3 +1,4 @@
+(** #<link rel="stylesheet" href="sf.css"># *)
 (** * Basic Loops *)
 
 (* ################################################################# *)
@@ -7,14 +8,7 @@
     and covers examples of more complicated programs with loops. We'll
     also be using a more sophisticated toy architecture but we'll delay
     its exposition and covering the theoretical and implementation
-    underpinnings of Picinae to a later chapter.
-
-
-
-    The first half of this chapter introduces the most essential
-    elements of Coq's native functional programming language, called
-    _Gallina_.  The second half introduces some basic _tactics_ that
-    can be used to prove properties of Gallina programs. *)
+    underpinnings of Picinae to a later chapter. *)
 
 (* ################################################################# *)
 (** * Setting It Up *)
@@ -64,15 +58,14 @@ Definition addloop (s:store) (a:addr) : option (N * stmt) :=
   | 112 => Some(4, Move R_R2 (BinOp OP_PLUS (Var R_R2) (Word 1 32)))
     (* jmp :addloop *)
   | 116 => Some(4, Jmp (Word 104 32))
-    (* :loop *)
+    (* :done *)
     (* mov r2 r0 *)
   | 120 => Some(4, Move R_R0 (Var R_R2))
   | _ => None
   end.
 
-(** As before we define our Initial trace condition and our Invariants in dedicated
-    section so they can refer to common variables.  We define the exit condition
-    afterwards, though this is an arbitrary decision. *)
+(** As before we define our Initial trace condition, our Invariants, and exits
+    in a dedicated section so they can refer to common variables. *)
 
 Section Invs.
 
@@ -83,16 +76,23 @@ Section Invs.
   Definition TraceConditions s' := s' R_R1 = r1 /\ s' R_R2 = r2.
   Definition Init t xs' := Entry t xs' /\ Models /\ TraceConditions s.
 
-(** Our postcondition is where we start to see the first signs of intrinsic trickiness
+(** Our postcondition is where we start to see the first signs of the intrinsic trickiness
     in reasoning about behavior at the machine code level.  This program doesn't simply
     sum two numbers.  It sums them _modulo 32_.  This introduces difficulties both in
-    mentally reasoning about proofs as well as constructing proofs.  Later we'll show
-    off _psimpl_, our automated modular arithmetic simplifier that can handle a large
-    class of modular and bit arithmetic expressions. *)
+    mentally reasoning about proofs as well as constructing proofs.  At this level it is
+    a common phenomenon to find yourself looking at a simple equation and wondering "wait,
+    is this actually even true?" Later we'll show off _psimpl_, our automated modular
+    arithmetic simplifier that can handle a large class of modular and bit arithmetic
+    expressions. *)
   Definition postcondition n := n = (r1 + r2) mod 2 ^ 32.
 
-(** This is a CFG of the addloop program:
+(** This is a control flow graph (CFG) of the addloop program showing which instructions
+    execute after which other instructions.  It shows that the instruction at address 100
+    always falls through to the instruction at 104, the instruction at 104 may fall through to
+    108 or branch to 120, the instruction at 116 always jumps to 104, and all other instructions
+    fall through similarly to 100:
 
+<<
              100
               |
        +---> 104 ------+
@@ -106,6 +106,7 @@ Section Invs.
              120 <-----+
               |
              124
+>>
 
     The type of proofs we're exploring say "For all traces that match some starting criteria
     (Init) and a given set of invariants and exit points (Invs and exit) all executions of
@@ -117,12 +118,14 @@ Section Invs.
 
     Picinae accomplishes the "reaches an invariant or exit" guarantee by creating a proof obligation
     at every non-exit invariant and requiring abstract execution to continue until an exit or invariant
-    (possibly the same one) is encountered.
+    (possibly the same one) is encountered.  This is the function of the `destruct_invs XX.` tactic
+    in our proofs.
 
     Specifically, if we place invariants at addresses 100, 104, and 124, and an exit at 124 then
     Picinae will produce 2 subgoals we need to prove - one from address 100 and the other from 104.
     This decomposes the proof into 2 paths of execution:
 
+<<
               100
                |
               104              +---> 104 ------+
@@ -136,7 +139,7 @@ Section Invs.
                                       + <------+
                                       |
                                      124
-
+>>
 
     It accomplishes the "invariant is satisfied" guarantee by 1) populating the
     hypothesis space with the proposition of the invariant from which we're starting
@@ -156,8 +159,6 @@ Section Invs.
     | _ => None
     end.
 
-End Invs.
-
 Definition addloop_exit (t:trace) :=
   match t with (Addr a,_)::_ =>
     match a with
@@ -167,18 +168,10 @@ Definition addloop_exit (t:trace) :=
   | _ => false
   end.
 
+End Invs.
+
 Theorem addloop_welltyped : welltyped_prog pil32typctx addloop.
 Proof. Picinae_typecheck. Qed.
-
-(* TODO: I (ilan) made this tactic, Kevin says there is a better way. *)
-Ltac bound_of MDL V :=
-  let H := fresh "BOUND" in
-  let opt_w := eval vm_compute in (archtyps V) in
-  match opt_w with
-  | None => idtac "No such bound"
-  | Some ?w => assert (Help: archtyps V = Some w) by reflexivity;
-              assert (H:=MDL V w Help); clear Help
-   end.
 
 Theorem addloop_partial_correctness:
   forall s t xs' r1 r2
@@ -212,9 +205,9 @@ Proof.
   (* 104 -> 120 *)
   step.
 
-  rewrite N.eqb_eq in BC. rewrite BC in *.
+  rewrite N.eqb_eq in BC. rewrite BC in *. elimstore.
       rewrite N.add_0_l in INV. rewrite <-INV; clear INV.
-      bound_of MDL R_R2. symmetry; now apply N.mod_small.
+      rewrite N.mod_small; lia.
 
   (* 104 -> 104 *)
   step. step. step.
@@ -371,19 +364,18 @@ Theorem sumton_welltyped : welltyped_prog pil32typctx sumton.
 Proof. Picinae_typecheck. Qed.
 
 Section Invs.
-  (* CHANGE THESE *)
+  (* Change the Init, postcondition, and Invs functions as necessary. *)
   Variable s : store.
   Definition Entry t xs' := startof t xs' = (Addr 100, s).
   Definition Models := models pil32typctx s.
   Definition Init t xs' n := Entry t xs' /\ Models /\ s R_R1 = n.
 
-  Definition postcondition s' n := s' R_R0 = ((n * (n+1)) / 2) mod 2^32.
+  Definition postcondition (s':store) (n:N) := True.
 
   Definition Invs n (t:trace) := match t with (Addr a, s)::_ =>
     match a with
     | 100 => Some (s R_R1 = n)
-    | 116 => Some (exists r2 r3, s R_R1 = n /\ s R_R2 = r2 /\ s R_R3 = r3
-                  /\ r3 <= n /\ r2 = ((r3*(1+r3))/2) mod 2^32)
+    | 116 => Some (True)
     | 128 => Some (postcondition s n)
     | _ => None
     end | _ => None end.
@@ -392,82 +384,12 @@ Section Invs.
 
 End Invs.
 
-Lemma mod_smaller:
-  forall n a b, b <> 0 -> n < a mod b -> n < b.
-Proof.
-  intros n a b NZ H.
-  transitivity (a mod b);[assumption| now apply N.mod_lt].
-Qed.
-
-Lemma even_div2_mul2 :
-  forall x, N.even x = true -> 2*(x/2) = x.
-Proof.
-Admitted.
-
-Lemma eq_mod_eq:
-  forall a b c, a = c -> a mod b = c mod b.
-Proof.
-  intros; now subst.
-Qed.
-
 Theorem sumton_partial_correctness:
   forall (s:store) t xs' (n:N) (INIT : Init s t xs' n),
   satisfies_all sumton (Invs n) exit (xs'::t).
 Proof.
-  (* FILL IN HERE *)
   Local Ltac step := pil32_step.
-  intros s t xs' n (ENTRY & MDL & N).
-  apply prove_invs.
-
-  (* Base Case *)
-  simpl. rewrite ENTRY. step. assumption.
-
-  (* Inductive Case *)
-  intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply sumton_welltyped).
-  clear - PRE MDL. rename t1 into t; rename s1 into s.
-  destruct_inv 32 PRE.
-
-
-  (* 100 -> 128; 116 *)
-  step. step. step. step.
-    (* 128 *)
-    rewrite N.ltb_lt, N.lt_1_r in BC. rewrite BC; subst. now cbv.
-    (* 116 *)
-    step. rewrite N.ltb_ge in BC.
-    repeat (eexists || reflexivity || lia || split).
-
-  (* 116 -> 116; 128 *)
-  destruct PRE as (r2 & r3 & N & R2 & R3 & LE & IH).
-  step. step. step; step.
-    (* 128 *)
-    rewrite N.ltb_lt in BC. destruct (N.lt_ge_cases r3 (2^32-1)) as [Lt | Ge].
-      (* r3 < 2^32 - 1 *)
-      rewrite N.mod_small in BC by lia; assert (EQ:r3=n) by lia. rewrite EQ in *. rewrite IH.
-      clear N R2 R3 EQ MDL t0 t s IH r2 r3. now rewrite N.add_comm.
-      (* r3 >= 2^32 - 1 - contradiction on the exit condition because the loop would never terminate *)
-      (* TODO: this can be clearer... *)
-      exfalso.
-      assert (R3LT:=@models_var R_R3 archtyps s MDL). cbn in R3LT, Ge.
-      rewrite R3 in *.
-      Search N.modulo N.lt.
-      Search (_ < _ mod _)  -"msub".
-      assert (CONTRA:(1+r3) mod 2^32 < r3). {
-        destruct (N.lt_trichotomy r3 4294967295) as [Lt3 | [Eq3 | Gt3]].
-        (* rewrite Eq3 in *. now cbv. *)
-      }
-      lia.
-    (* 116 *)
-    rewrite N.ltb_ge in BC.
-    repeat (eexists || lia || split).
-    clear N R2 R3 MDL s t0 t.
-    rewrite IH; clear IH.
-    replace ((1 + (r3 * (1 + r3) / 2) mod 2 ^ 32 + r3) mod 2 ^ 32) with
-            ((2 + 2 * r3 + (r3 * (1+r3))) mod 2 ^ 32) by admit.
-    replace (((1 + r3) mod 2 ^ 32 * (1 + (1 + r3) mod 2 ^ 32) / 2) mod 2 ^ 32) with
-            ((1+r3) * (2 + r3) mod 2^32) by admit.
-    apply eq_mod_eq. lia.
+  (* FILL IN HERE *)
 Admitted.
 End SumToN.
 
@@ -476,8 +398,6 @@ End SumToN.
     Prove the following loop computes the lower 32 bits of the factorial
     of the value initially in R_R3.*)
 Module Factorial.
-Fixpoint natfactorial (n:nat) :=
-  match n with O => 1 | S n' => (N.of_nat n) * (natfactorial n') end.
 
 Definition factorial (s:store) (a:addr) : option (N * stmt) :=
   match a with
@@ -512,19 +432,20 @@ Theorem factorial_welltyped : welltyped_prog pil32typctx factorial.
 Proof. Picinae_typecheck. Qed.
 
 Section Invs.
-  (* CHANGE THESE *)
+  (* For this exercise you only need to change the loop invariant in Invs. *)
   Variable s : store.
   Definition Entry t xs' := startof t xs' = (Addr 100, s).
   Definition Models := models pil32typctx s.
   Definition Init t xs' r3 := Entry t xs' /\ Models /\ s R_R3 = r3.
 
+  Fixpoint natfactorial (n:nat) :=
+    match n with O => 1 | S n' => (N.of_nat n) * (natfactorial n') end.
   Definition postcondition s' r3 := s' R_R1 = natfactorial (N.to_nat r3) mod 2^32.
 
   Definition Invs r3 (t:trace) := match t with (Addr a, s)::_ =>
     match a with
     | 100 => Some (s R_R3 = r3)
-    | 124 => Some (s R_R1 = natfactorial (N.to_nat (s R_R2)) mod 2^32
-                  /\ s R_R2 < s R_R3 /\ s R_R3 = r3 /\ 0 < r3)
+    | 124 => Some (True)
     | 140 => Some (postcondition s r3)
     | _ => None
     end | _ => None end.
@@ -534,6 +455,7 @@ Section Invs.
 
 End Invs.
 
+(** You might find these lemmas helpful in your proofs. *)
 Lemma natfactorial_pred:
   forall n, natfactorial n * N.of_nat (S n) = natfactorial (S n).
 Proof.
@@ -543,7 +465,6 @@ Proof.
     rewrite <-IHn, N.mul_comm, N.mul_cancel_l; try lia.
     reflexivity.
 Qed.
-
 
 Lemma S_to_nat :
   forall n, N.to_nat (1+n) = S (N.to_nat n).
@@ -566,66 +487,14 @@ Proof.
   assumption.
 Qed.
 
+(** This is the theorem you need to prove. *)
 Theorem factorial_partial_correctness:
   forall (s:store) t xs' (r3:N) (INIT : Init s t xs' r3),
   satisfies_all factorial (Invs r3) exit (xs'::t).
 Proof.
   Local Ltac step := pil32_step.
-  intros s t xs' r3 (ENTRY & MDL & R3).
-
-  apply prove_invs.
-
-  (* Base Case *)
-  simpl. rewrite ENTRY. step.  assumption.
-
-  (* Inductive Case *)
-  (* Explain the current proof obligation *)
-  intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply factorial_welltyped).
-  clear - PRE MDL. rename t1 into t; rename s1 into s.
-  destruct_inv 32 PRE.
-
-
-  (* 100 -> 140 *)
-  step; step. apply Neqb_ok in BC. subst. rewrite BC. simpl. rewrite N.mod_small; lia.
-
-  (* 100 -> 140 ; 120 *)
-  step. step. step. step.
-    (* 140 *)
-    apply Neqb_ok in BC0; subst; rewrite <-BC0; simpl. rewrite N.mod_small; lia.
-    (* 124 *)
-    step. apply N.eqb_neq in BC; apply N.eqb_neq in BC0.
-    Search (_ [?x:=_] ?y) (?y<>?x).
-    rewrite update_frame, update_updated; try easy. simpl.
-    rewrite N.mod_small; split; lia.
-
-  (* 116 -> 140; 124*)
-  destruct PRE as (R1 & LT & R3 & R3B).
-  step. step. step. step.
-    (* 140 *)
-     rewrite N.eqb_eq in BC.
-    assert (R3LT:=@models_var R_R3 archtyps s MDL). cbn in R3LT.
-    rewrite N.mod_small in BC; try lia.
-    rewrite! R3 in *. rewrite BC.
-    assert (R2: s R_R2 = N.pred r3) by lia.
-    rewrite R2. Search (N.succ (N.pred _)). rewrite <-(N.succ_pred_pos r3 R3B) at 2 3.
-    remember (N.pred r3) as x; clear - x.
-    rewrite Nsucc_S. remember (N.to_nat x) as n.
-    rewrite natfactorial_pred, Nat2N.id. reflexivity.
-    (* 124 *)
-    step. rewrite N.eqb_neq in BC.
-    assert (R3LT:=@models_var R_R3 archtyps s MDL). cbn in R3LT.
-    rewrite N.mod_small in BC; try lia.
-    remember (s R_R2) as r2; remember (s R_R1) as r1; rewrite R3 in *. clear Heqr1 Heqr2 R3 MDL t0 t.
-    repeat (split || lia).
-    rewrite update_frame, update_updated; try easy.
-    rewrite (N.mod_small (1+r2)) by lia.
-    rewrite! S_to_nat. unfold natfactorial at 2. fold natfactorial. rewrite N.mul_comm.
-    rewrite <-Nsucc_S, <- N.add_1_l. reflexivity.
-    (* destruct (N.lt_trichotomy (1+r2) r3) as [Lt | [Eq | Gt]]; try lia.
-       apply mod_mono_r. assumption.*)
-Qed.
+  (* FILL IN HERE *)
+Admitted.
 End Factorial.
 
 
@@ -634,7 +503,7 @@ End Factorial.
     Specify and prove the partial correctness of this simplified wcscpy
     implementation.  This is the first usage of memory in this tutorial, and not
     only that, but of memory-writes.  We've placed the invariants at the locations
-    we used to prove this correct, and left some of the loop-invariant intact with
+    we used to prove this correct and left some of the loop-invariant intact with
     additional explanation below.
 
     You'll find many abstractions provided by Picinae are useful for this exercise.

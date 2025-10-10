@@ -25,3 +25,8 @@ Makefile.coq
 Makefile.coq.conf
 .Makefile.coq.d
 *.cache
+tutorial/*.html
+tutorial/coqdoc.css
+tutorial/.*
+tutorial/*.conf
+**.zip

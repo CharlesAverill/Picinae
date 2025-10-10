@@ -1,3 +1,4 @@
+(** #<link rel="stylesheet" href="sf.css"># *)
 (** * Motivation *)
 
 (* ################################################################# *)
@@ -73,7 +74,7 @@ Inductive a64var :=
     The function _a64typctx_ is what we use to establish the architectural
     meanings of the different _a64var_'s.  It takes as input an _a64var_
     and optionally returns its bitwidth. Please note the unusual representation
-    of memery:
+    of memory:
 
       NB. Memory is just a number represented by the concatenation of all bits.
           Thus its bitwidth is 8 times the number of addressable bytes.
@@ -161,10 +162,10 @@ Ltac fail_seek ::= idtac.
     if execution control falls through.
 
     The following program is a hand written example, it adds 1 to the value stored in
-    the value stored in register 2 ([R_R2]), shifts it left, and stores the result in
-    register 1. It maps the addresses 100, 104 and 108 to the made-up number of bytes
-    the instruction takes up in memory (4 in each case) and a single Picinae IL statement
-    that moves the result of an expression into a register.
+    register 2 ([R_R2]), shifts it left, and stores the result in register 1. The addresses
+    100, 104 and 108 are mapped to the made-up number of bytes the instruction takes up in
+    memory (4 in each case) and a single Picinae IL statement that moves the result of an
+    expression into a register.
 
    The formal semantics of Picinae IL statements are covered in Chapter X.
 *)
@@ -186,15 +187,15 @@ Qed.
 
 (** Next we'll define a function that maps an _execution trace_ to an _invariant_.
     Briefly, an execution trace is a list of states that a program has passed through
-    with the current state stored in the head; an invariant is a predicate over
-    traces that we wish to prove.
+    with the current state stored in the head; an invariant is a predicate (alternatively,
+    proposition, property) over traces that we wish to prove.
 
     Informally, the structure of our proof will look like this...
 
         For our program p:
         given a prefix trace t0 that satisfies condition Init, a partial function Invs from
         traces to predicates, and a function that defines when a trace has "exited"
-        we show that all traces t = t1 ++ t0 that continue t0 either exit or reach a trace_
+        we show that all traces t = t1 ++ t0 that continue t0 either exit or reach a trace
         for which Invs t is defined, and whenever Invs t is defined it is satisfied.
 
     The core components are:
@@ -205,7 +206,7 @@ Qed.
 
     We'll create them in order... *)
 
-Definition Init (t:trace) s xs' r2 :=
+Definition Init (t:trace) s xs' (r2:N) :=
   startof t xs' = (Addr 100, s)
   /\ models a64typctx s
   /\ s R_R2 = r2
@@ -214,7 +215,7 @@ Definition Init (t:trace) s xs' r2 :=
 (** This _Init_ function states that
 
       1. the trace starts at address 100 and in state s, and
-      2. the value in register 2 is r2.
+      2. the value in register R2 is the natural number r2 of type N (type annotated for clarity).
 
    Next we'll define the _Invs_ function that specifies the properties of traces that we want
    to prove.  Coming up with these properties, or _invariants_, is the second hardest part of
@@ -366,8 +367,7 @@ Section Invs.
     (** This is the starting invariant.  Typically it is the same as the definition
         of [Init] minus the [Entry] and [Models] clauses, so add the clauses
         you added there here. *)
-      (* | 100 => Some (True) *)
-    | 100 => Some (s R_R0 = r0 /\ s R_R1 = r1)
+    | 100 => Some (True)
     (** This is the postcondition invariant.  We place it at the program's exit
         address.  In this simple example this is 112, the [Nop] instruction.
         We will need to prove this invariant holds _before_ executing the
@@ -436,27 +436,26 @@ Section Invs.
 
   Definition Entry t xs' := startof t xs' = (Addr 300, s).
   Definition Models := models a64typctx s.
-  Definition Init t xs' := Entry t xs' /\ Models /\ (* True *) s R_R0 = r0 /\ s R_R1 = r1.
+  Definition Init t xs' := Entry t xs' /\ Models /\ True (* <- replace this True *).
 
-  Definition postcondition (s:store) := (* False *) s R_R0 = r1 /\ s R_R1 = r0.
+  Definition postcondition (s:store) := False (* <- replace this False *).
 
   Definition Invs (t:trace) := match t with (Addr a, s)::_ =>
     match a with
-      (* | 100 => Some (True) *)
-    | 300 => Some (s R_R0 = r0 /\ s R_R1 = r1)
-    | 312 => Some ( postcondition s)
+    | 300 => Some (True)
+    | 312 => Some (postcondition s)
     | _ => None end | _ => None end.
 
-  (* Definition exit (t:trace) := true. *)
-  Definition exits (t:trace) := match t with (Addr 312, _)::_ => true | _ => false end.
+  Definition exit (t:trace) := true.
 
 End Invs.
 
+(* Make whatever changes you need to the theorem specification to prove it. *)
 Theorem swap_regs_partial_correctness:
-  forall (s:store) t xs' (r0 r1:N) (INIT : Init s r0 r1 t xs'),
-  satisfies_all swap_regs (Invs r0 r1) exits (xs'::t).
+  forall (s:store) t xs' (INIT : Init s t xs'),
+  satisfies_all swap_regs (Invs) exits (xs'::t).
 Proof.
-  intros. destruct INIT as (ENTRY & MDL & R0 & R1).
+  intros. destruct INIT as (ENTRY & MDL & T).
   apply prove_invs.
 
   (* Base Case *)
@@ -472,15 +471,6 @@ Proof.
   destruct_inv 64 PRE.
 
   (* FILL IN HERE *)
-  destruct PRE.
-  step. step. step.
-  Search N.lxor.
-  auto using N.lxor_0_r, N.lxor_0_l, N.lxor_assoc, N.lxor_nilpotent.
-  repeat match goal with
-  | |- context[N.lxor (N.lxor ?l ?r) ?r] => rewrite (N.lxor_assoc l r r), N.lxor_nilpotent, N.lxor_0_r
-  | |- context[N.lxor (N.lxor ?l ?r) ?l] => rewrite (N.lxor_comm l r), (N.lxor_assoc r l l), N.lxor_nilpotent, N.lxor_0_r
-  end.
-  now split.
 Admitted.
 End swap_register_xor.
 
@@ -671,7 +661,7 @@ End toupper.
     that isolates it from proofs of program properties.
 
     After some initial setup we see how Picinae uses Coq as an abstract execution engine.
-    Each [step\ call executes one machine instruction at the current address and replaces
+    Each [step] call executes one machine instruction at the current address and replaces
     the goal with each possible result of the instruction call.
 
     We'll cover what's going on with the proof, including the mystery of xs', in the following chapter.
@@ -717,4 +707,7 @@ step.
     conditions that were necessary to hold for the control to fall through.
  *)
 all:cycle -1.
+
+(** Now that's exciting. *)
+
 Abort.

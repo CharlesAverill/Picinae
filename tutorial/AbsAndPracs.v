@@ -1,3 +1,4 @@
+(** #<link rel="stylesheet" href="sf.css"># *)
 (** * Abstractions and Practices *)
 
 (* ################################################################# *)
@@ -23,7 +24,7 @@
       * lia with ZifyN
       * psimpl
       * proofs by contradiction with N.lt_trichotomy and friends
-      * equality over N by bitwise inspection 
+      * equality over N by bitwise inspection
 
     (* TODO: add a Picinae themed Search tutorial section and link to this tutorial
        there instead. *)
@@ -485,7 +486,8 @@ End string_defs.
 
     [[
       Search overlap.
-    ]] *)
+    ]] 
+*)
 
 (** **** Exercise:1 star, standard, optional (getmem_setmem_eq)
 
