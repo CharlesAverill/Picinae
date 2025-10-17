@@ -99,10 +99,9 @@ Proof.
      ESP and MEM.  The value of ESP will be revealed by our pre-condition (PRE).  We can
      get the value of MEM using our previously proved strlen_preserves_memory theorem. *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply strlen_welltyped).
-  erewrite strlen_preserves_memory in MEM by eassumption.
-  clear - PRE. rename t1 into t. rename s1 into s.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply strlen_welltyped. intro MDL1.
+  clear - PRE. rename t1 into t.
 
   (* We are now ready to break the goal down into one case for each invariant-point.
      The destruct_inv tactic finds all the invariants defined by the invariant-set
@@ -835,11 +834,15 @@ Proof.
   (* Before splitting into cases, translate each hypothesis about the
      entry point store s to each instruction's starting store s1: *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply strlen_preserves_esp, satall_trueif_inv in ESP; try eassumption. simpl in ESP.
-  erewrite strlen_preserves_memory in MEM by eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply strlen_welltyped).
-  clear - PRE ESP MEM MDL. rename t1 into t. rename s1 into s.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply use_satall_lemma. assumption.
+    eapply strlen_preserves_esp; eassumption.
+    intro ESP1. simpl in ESP1.
+  eapply use_endstates_lemma. eassumption.
+    apply strlen_preserves_memory.
+    intro MEM1. simpl in MEM1. symmetry in MEM1. rewrite MEM in MEM1.
+  eapply models_at_invariant; try eassumption. apply strlen_welltyped. intro MDL1.
+  clear - PRE ESP1 MEM1 MDL1. rename t1 into t. rename s1 into s.
 
   (* Break the proof into cases, one for each invariant-point. *)
   destruct_inv 32 PRE.

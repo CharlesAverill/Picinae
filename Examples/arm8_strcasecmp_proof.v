@@ -17,12 +17,13 @@ Require Import arm8_strcasecmp.
 
 Import ARM8Notations.
 Open Scope N.
+Open Scope bool.
 
 (* The ARMv8 lifter models non-writable code. *)
 Theorem strcasecmp_nwc: 
 	forall s2 s1, strcasecmp s1 = strcasecmp s2.
-Proof. 
-	reflexivity. 
+Proof.
+	reflexivity.
 Qed.
 
 (* The ARMv8 lifter produces well-typed IL. *)
@@ -34,7 +35,7 @@ Qed.
 
 (* Define binary string case-insensitivity. *)
 Definition tolower (c:N) : N :=
-  if andb (65 <=? c mod 2^32) (c mod 2^32 <=? 90) then (c mod 2^32 .| 32) else c.
+  if (65 <=? c mod 2^32) && (c mod 2^32 <=? 90) then (c mod 2^32 .| 32) else c.
 
 (* Define binary length-bounded, case-insensitive string equality. *)
 Definition strcaseeq (m:memory) (p1 p2: addr) (k: N) :=
@@ -257,15 +258,15 @@ Proof.
      about initial cpu state s with equivalent hypotheses about the cpu state s1
      that appears at the invariant point at which we're starting this case. *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply strcasecmp_welltyped).
-  clear - PRE MDL. rename t1 into t.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply strcasecmp_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t.
 
   (* Break the proof into cases, one for each internal invariant-point. *)
   destruct_inv 64 PRE.
 
   (* Address 152 (tolower entry point) *)
-  destruct PRE as [X0 [X19 [X20 [X21 [X30 [SP MEM]]]]]].
+  destruct PRE as (X0 & X19 & X20 & X21 & X30 & SP & MEM).
   step. step. step.
 
     (* Address 1048164 *)
@@ -298,16 +299,16 @@ Proof.
 
   (* Change assumptions about s into assumptions about s1. *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply strcasecmp_welltyped).
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply strcasecmp_welltyped. intro MDL1.
   set (x20 := s R_X20) in *. set (x21 := s R_X21) in *. clearbody x20 x21.
-  clear - PRE MDL. rename t1 into t. rename s1 into s.
+  clear - PRE MDL1. rename t1 into t. rename s1 into s. rename MDL1 into MDL.
 
   (* Break the proof into cases, one for each internal invariant-point. *)
   destruct_inv 64 PRE.
 
   (* Address 1048576: strcasecmp entry point *)
-  destruct PRE as [MEM [SP [X0 X1]]].
+  destruct PRE as (MEM & SP & X0 & X1).
   step. step. step. step. step. step.
   generalize_frame mem as fb.
   exists fb, 0. psimpl. split.
@@ -315,7 +316,7 @@ Proof.
     repeat split.
 
   (* Address 1048600: strcasecmp main loop *)
-  destruct PRE as [fb [k [SEQ [SP [MEM [X19 X20]]]]]].
+  destruct PRE as (fb & k & SEQ & SP & MEM & X19 & X20).
   step. step.
 
     (* Address 1048648: reached null terminator in arg1 *)
@@ -367,7 +368,7 @@ Proof.
            (In the case of tolower, there's only one exit point. *)
         destruct_inv 64 PRE.
 
-        destruct PRE as [X0 [X19 [X20 [X21 [X30 [SP MEM]]]]]].
+        destruct PRE as (X0 & X19 & X20 & X21 & X30 & SP & MEM).
         clear X21 x21'. (* This particular call site ignores x21, so delete it. *)
         step. step. step. step.
 
@@ -390,7 +391,7 @@ Proof.
 
         destruct_inv 64 PRE.
 
-        destruct PRE as [X0 [X19 [X20 [X21 [X30 [SP MEM]]]]]].
+        destruct PRE as (X0 & X19 & X20 & X21 & X30 & SP & MEM).
         step. step. step.
 
           (* Address 1048688: found case-equal characters *)
@@ -406,7 +407,7 @@ Proof.
           left. apply N.eqb_neq, BC2.
 
         (* Address 1048648: case-unequal chars or null found *)
-        destruct PRE as [fb [k [SEQ [SP [MEM [X19 [X20 NEQ]]]]]]].
+        destruct PRE as (fb & k & SEQ & SP & MEM & X19 & X20 & NEQ).
         step. step.
 
         (* Another call to tolower, performed the same as above. *)
@@ -428,7 +429,7 @@ Proof.
 
         destruct_inv 64 PRE.
 
-        destruct PRE as [X0 [X19 [X20 [X21 [X30 [SP MEM]]]]]].
+        destruct PRE as (X0 & X19 & X20 & X21 & X30 & SP & MEM).
         clear X21 x21'.
         step. step. step. step.
 
@@ -451,7 +452,7 @@ Proof.
 
         destruct_inv 64 PRE.
 
-        destruct PRE as [X0 [X19 [X20 [X21 [X30 [SP MEM]]]]]].
+        destruct PRE as (X0 & X19 & X20 & X21 & X30 & SP & MEM).
         clear X21 x21'.
         step. step. step. step. step.
         eexists _, k, fb. repeat first [ reflexivity | assumption | split ].
@@ -461,7 +462,7 @@ Proof.
           apply diff_compare; apply tolower_small.
 
   (* Address 1048688: case-equal, non-nil chars found (loop back) *)
-  destruct PRE as [fb [k [SEQ [SP [MEM [X19 [X20 [EQ NN]]]]]]]].
+  destruct PRE as (fb & k & SEQ & SP & MEM & X19 & X20 & EQ & NN).
   step. step. step.
   exists fb, (k+1). split.
     rewrite N.add_1_r. intros i H. apply N.lt_succ_r, N.le_lteq in H. destruct H.

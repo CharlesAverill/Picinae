@@ -3805,10 +3805,10 @@ Proof.
 
     simpl length.
     rewrite Nat.sub_succ_l, ith_cons by apply Nat.le_succ_l, H.
-    simpl. rewrite ith_app1 by (rewrite ?rev_length; assumption).
+    simpl. rewrite ith_app1 by (rewrite ?length_rev; assumption).
     apply IHl, H.
 
-    rewrite H. simpl. rewrite ith_app, rev_length, Nat.ltb_irrefl, Nat.sub_diag. reflexivity.
+    rewrite H. simpl. rewrite ith_app, length_rev, Nat.ltb_irrefl, Nat.sub_diag. reflexivity.
 Qed.
 
 Theorem length_remove {A}:
@@ -3842,7 +3842,7 @@ Theorem length_concat {A}:
 Proof.
   intros. rewrite <- (Nat.add_0_l (length _)). generalize O.
   induction l; intro. apply Nat.add_0_r.
-  simpl. rewrite app_length. rewrite <- IHl. apply Nat.add_assoc.
+  simpl. rewrite length_app. rewrite <- IHl. apply Nat.add_assoc.
 Qed.
 
 Theorem ith_concat1 {A}:
@@ -4046,9 +4046,9 @@ Qed.
 
 Theorem startof_prefix {A}:
   forall (xs xs':A) t t1 t2 (SPL: xs'::t = t2++xs::t1),
-  startof t1 xs = startof t xs'.
+  startof t xs' = startof t1 xs.
 Proof.
-  symmetry. rewrite <- startof_cons with (d:=xs'). rewrite SPL.
+  intros. rewrite <- startof_cons with (d:=xs'). rewrite SPL.
   apply startof_app.
 Qed.
 
@@ -4116,6 +4116,15 @@ Proof.
   induction t1; intros.
     assumption.
     apply IHt1. inversion FA. assumption.
+Qed.
+
+Theorem forallprefixes_nil_inv {A}:
+  forall P (t: list A) (FA: ForallPrefixes P t),
+  P nil.
+Proof.
+  intros.
+  rewrite <- (app_nil_r t) in FA. apply forallprefixes_app in FA.
+  inversion FA. assumption.
 Qed.
 
 End Traces.
@@ -5687,7 +5696,7 @@ Proof.
     apply CS. assumption.
 
     contradict H. apply ith_Some.
-    erewrite length_stepsof, <- map_length, <- length_stepsof.
+    erewrite length_stepsof, <- length_map, <- length_stepsof.
     apply ith_Some. rewrite IN'. discriminate.
 Qed.
 
@@ -6143,7 +6152,6 @@ Definition may_call
    | (Raise _,_)::_ => if callee_Invs t then true else callee_xp t
    | (Addr a,s)::_ => if p s a then false else callee_xp t
    end = false) /\
-  (callee_xp nil = false) /\
   (forall xs t, callee_Invs (xs::t) = callee_Invs (xs::nil)) /\
   (forall xs t, callee_xp (xs::t) = callee_xp (xs::nil)).
 
@@ -6163,15 +6171,14 @@ Theorem exec_subroutine:
   nextinv' p Invs1 xp1 true ((Addr a1,s1)::t1).
 Proof.
   intros.
-  destruct MC as [H [UT0 [CI1 CI2]]].
+  destruct MC as [H [CI1 CI2]].
   eassert (IMP: forall (t:trace), _). intro. exact (proj1 (H t)).
   eassert (INVXP2: forall (t:trace), _). intro. exact (proj2 (H t)).
-  clear H.
   apply nextinv_impl_invs with (Invs1:=Invs2) (xp1:=xp2) (P:=unterminated xp2).
-    apply ForallPrefixes_nil, UT0.
+    apply ForallPrefixes_nil, (proj2 (H nil)).
     intros. destruct t2; simpl in H2 |- *; apply unterminated_cons;
       rewrite CI2 in H2; try rewrite CI2; assumption.
-  intros.
+  clear H. intros.
   change (t2++(Addr a1,s1)::t1) with (t2++(Addr a1,s1)::nil++t1).
   rewrite app_comm_cons, app_assoc. rename t2 into t2'.
   set (xs := hd (Addr a1,s1) t2'). set (t2 := tl (t2'++(Addr a1,s1)::nil)) in IH.
@@ -6225,7 +6232,7 @@ Qed.
    facilitates proving premises of subroutine calls (e.g., "models"). We therefore
    define exported versions of nextinv and its constructors that retain exec_prog. *)
 Definition nextinv p Invs xp b t : Prop :=
-  exec_prog p t -> nextinv' p Invs xp b t.
+  forall (XP: exec_prog p t), nextinv' p Invs xp b t.
 
 Theorem exec_prog_nextinv:
   forall p Invs xp b t,
@@ -6254,6 +6261,23 @@ Proof.
   apply exec_prog_step. assumption. eapply CanStep; eassumption.
 Qed.
 
+Theorem NIStep_unterminated:
+  forall p Invs xp b a s t sz q
+         (NOI: effinv b p Invs xp ((Addr a, s)::t) = None)
+         (IL: p s a = Some (sz,q))
+         (STEP: forall c1 s1 x1 (XS: exec_stmt archtyps s q c1 s1 x1)
+                  (UT: unterminated xp ((Addr a,s)::t)),
+                nextinv p Invs xp true ((exitof (a+sz) x1, reset_temps s s1)::(Addr a,s)::t)),
+  unterminated xp t -> nextinv p Invs xp b ((Addr a,s)::t).
+Proof.
+  intros. eapply NIStep; try eassumption.
+  intros. eapply STEP. eassumption.
+  apply ForallPrefixes_cons; [|apply H].
+  unfold effinv, effinv' in NOI.
+  destruct (xp _); [|reflexivity].
+  destruct (Invs _); [destruct b|]; discriminate.
+Qed.
+
 Lemma nextinv_here:
   forall p Invs (xp: trace -> bool) b t P
          (INV: effinv b p Invs xp t = Some P)
@@ -6267,16 +6291,49 @@ Theorem prove_invs:
   forall p Invs xp t
          (PRE: nextinv p Invs xp true match ostartof t with None => nil | Some xs0 => xs0::nil end)
          (INV: forall t1 a1 s1 t2
-                      (SPL: t = (t2++(Addr a1,s1)::t1))
-                      (XP: exec_prog p ((Addr a1,s1)::t1))
                       (UT: unterminated xp t1)
+                      (SPL: t = (t2++(Addr a1,s1)::t1))
                       (PRE: true_inv (get_precondition p Invs xp a1 s1 t1)),
                nextinv p Invs xp false ((Addr a1,s1)::t1)),
   satisfies_all p Invs xp t.
 Proof.
   unfold nextinv, satisfies_all. intros. apply prove_invs'; try assumption.
-    apply PRE. destruct (ostartof t); apply Forall_nil.
+    apply forallprefixes_nil_inv in H0. apply PRE; destruct (ostartof t); constructor; assumption.
     intros. eapply INV; eassumption.
+Qed.
+
+(* If your current goal is a nextinv, and you've already proved a lemma L with conclusion
+   satisfies_all, use "eapply use_satall_lemma" to get L's invariant as a hypothesis.
+   Typical usage:
+     eapply use_satall_lemma. eassumption.
+     apply L. (* prove any of L's hypotheses here *)
+     intro H. simpl in H. *)
+Theorem use_satall_lemma:
+  forall p Invs Invs' xp b t
+    (UT: unterminated xp (tl t))
+    (SA: satisfies_all p Invs xp t)
+    (H: forall (INV: trueif_inv (Invs t)), nextinv p Invs' xp b t),
+  nextinv p Invs' xp b t.
+Proof.
+  intros. intro XP. apply H; [|exact XP].
+  eapply satall_trueif_inv; eassumption.
+Qed.
+
+(* If your current goal is a nextinv, and you've already proved a lemma L with conclusion
+   forall_endstates, use "eapply use_endstates_lemma" to get L's conclusion as a hypothesis.
+   Typical usage:
+     eapply use_endstates_lemma. eassumption.
+     apply L. (* prove any of L's hypotheses here *)
+     intro H. simpl in H. *)
+Theorem use_endstates_lemma:
+  forall P p Invs xp b t x x' s s'
+    (ENTRY: startof t (x',s') = (x,s))
+    (FE: forall_endstates p P)
+    (H: forall (INV: P x s x' s'), nextinv p Invs xp b ((x',s')::t)),
+  nextinv p Invs xp b ((x',s')::t).
+Proof.
+  intros. intro XP. apply H; [|exact XP].
+  eapply FE; eassumption.
 Qed.
 
 (* Introduce a convenient logic for subroutine calls. *)
@@ -6352,9 +6409,10 @@ Theorem perform_call n m (H: n <? m = true) f g p a1 s1 t1:
                nextinv p (make_invs m p f) (make_exits m p f) true ((Addr a',s')::t2++t1)),
   nextinv p (make_invs m p f) (make_exits m p f) true ((Addr a1,s1)::t1).
 Proof.
-  unfold nextinv. intros. eapply exec_subroutine.
+  unfold nextinv. intros.
+  eapply exec_subroutine.
     intros. apply CALLEE. exact ENTRY.
-    apply simple_may_call. exact SF. exact H.
+    apply simple_may_call; assumption.
     intros. apply POST; try assumption. rewrite app_comm_cons. apply exec_prog_app.
       eapply exec_prog_tail. eassumption.
       destruct t1. exact I. simpl. rewrite ENTRY. eapply exec_prog_final. eassumption.
@@ -6366,17 +6424,6 @@ End InvariantProofs.
 
 
 Section FrameTheorems.
-
-Theorem startof_prefix:
-  forall {A} xs'' (t t2 t1: list A) xs' xs
-    (ENTRY: startof t xs'' = xs)
-    (SPL: xs''::t = t2 ++ xs' :: t1),
-  startof t1 xs' = xs.
-Proof.
-  intros.
-  erewrite <- (startof_app _ xs''), <- SPL, startof_cons.
-  exact ENTRY.
-Qed.
 
 (* Statements and programs that contain no assignments to some IL variable v
    leave that variable unchanged in the output store. *)

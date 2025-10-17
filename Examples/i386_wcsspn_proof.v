@@ -119,9 +119,9 @@ Proof.
 
     (* Address 0 *)
     intros.
-    eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; try (eassumption || apply wcsspn_welltyped).
-    clear - PRE MDL. rename t1 into t. rename s into s0. rename s1 into s.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption. apply wcsspn_welltyped. intro MDL1.
+    clear - PRE MDL1. rename t1 into t. rename s into s0. rename s1 into s.
 
     destruct_inv 32 PRE.
 

@@ -1,6 +1,6 @@
 (* Example proofs using Picinae for Intel x86 Architecture
 
-   Copyright (c) 2023 Kevin W. Hamlen
+   Copyright (c) 2025 Kevin W. Hamlen
    Computer Science Department
    The University of Texas at Dallas
 
@@ -118,9 +118,9 @@ Proof.
      ESP and MEM.  The value of ESP is already revealed by pre-condition (PRE), and we
      can get the value of MEM using our previously proved strlen_preserves_memory theorem. *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply strcmp_welltyped).
-  clear - PRE MDL. rename t1 into t. rename s into s0. rename s1 into s.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply strcmp_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t. rename s into s0. rename s1 into s.
 
   (* We are now ready to break the goal down into one case for each invariant-point.
      The destruct_inv tactic finds all the invariants defined by the invariant-set
@@ -163,17 +163,17 @@ Section Invariants.
   Definition mem := s0 V_MEM32.  (* mem = initial memory state *)
   Definition esp := s0 R_ESP.    (* esp = initial stack pointer *)
 
-  Definition p1 := mem Ⓓ[4+esp].  (* 1st pointer arg on the stack *)
-  Definition p2 := mem Ⓓ[8+esp].  (* 2nd pointer arg on the stack *)
+  Definition arg1 := mem Ⓓ[4+esp].  (* 1st pointer arg on the stack *)
+  Definition arg2 := mem Ⓓ[8+esp].  (* 2nd pointer arg on the stack *)
 
   (* The post-condition says that interpreting EAX as a signed integer yields
      a number n whose sign equals the comparison of the kth byte in the two input
      strings, where the two strings are identical before k, and n may only be
      zero if the kth bytes are both nil. *)
   Definition postcondition (s:store) :=
-    ∃ k, streq mem p1 p2 k /\
-         (s R_EAX = 0 -> mem Ⓑ[p1 + k] = 0) /\
-         (mem Ⓑ[p1 + k] ?= mem Ⓑ[p2 + k]) = (toZ 32%N (s R_EAX) ?= Z0)%Z.
+    ∃ k, streq mem arg1 arg2 k /\
+         (s R_EAX = 0 -> mem Ⓑ[arg1 + k] = 0) /\
+         (mem Ⓑ[arg1 + k] ?= mem Ⓑ[arg2 + k]) = (toZ 32%N (s R_EAX) ?= Z0)%Z.
 
   (* The invariant-set for this property makes no assumptions at program-start
      (address 0), and puts a loop-invariant at address 8.  Putting a (trivial)
@@ -183,12 +183,24 @@ Section Invariants.
     match t with (Addr a,s)::_ => match a with
     | 0 => Some True  (* no assumptions at entry point *)
     | 8 => Some  (* loop invariant *)
-       (∃ k, s R_ECX = (p1 ⊕ k) /\ s R_EDX = (p2 ⊕ k) /\ streq mem p1 p2 k)
+       (∃ k, s R_ECX = arg1 ⊕ k /\ s R_EDX = arg2 ⊕ k /\ streq mem arg1 arg2 k)
     | 22 | 36 => Some (postcondition s)
     | _ => None
     end | _ => None end.
 
 End Invariants.
+
+(* If you want some/all of your definitions above to expand by default,
+   add them to a "hint database" and use it in your "step" tactic (see below). *)
+Create HintDb myhints.
+Hint Unfold mem esp arg1 arg2 : myhints.
+
+(* Create a "step" tactic that combines Picinae's interpreter tactic (x86_step)
+   with anything else you might want to do on each step.  I also recommend
+   using the "time" tactical to print a progress message (to give visual cues
+   that something is happening). *)
+Local Ltac step := time x86_step; autounfold with myhints.
+
 
 (* Our partial correctness theorem makes the following assumptions:
    (ENTRY) Specify the start address and state of the subroutine.
@@ -210,27 +222,32 @@ Proof.
   simpl. rewrite ENTRY. x86_step. exact I.
 
   (* Change assumptions about s into assumptions about s1. *)
-  intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  assert (ESP:=ENTRY).
-    eapply strcmp_preserves_esp, satall_trueif_inv in ESP; try eassumption.
-    simpl in ESP.
-  assert (MEM:=ENTRY).
-    eapply strcmp_preserves_memory in MEM; try eassumption.
-    symmetry in MEM.
-  assert (MDL0:=MDL).
-  eapply preservation_exec_prog in MDL; try (eassumption || apply strcmp_welltyped).
-  clear - PRE ESP MEM MDL MDL0. rename t1 into t. rename s into s0. rename s1 into s.
+  intros. erewrite startof_prefix in ENTRY; try eassumption.
 
-  (* Time how long it takes for each symbolic interpretation step to complete
-     (for profiling and to give visual cues that something is happening...). *)
-  Local Ltac step := time x86_step.
+    (* Example of how to use a satisfies_all lemma: *)
+    eapply use_satall_lemma. 
+      assumption.
+      apply strcmp_preserves_esp; eassumption.
+    intro ESP. simpl in ESP.
+
+    (* Example of how to use a forall_endstates lemma: *)
+    eapply use_endstates_lemma.
+      eassumption.
+      apply strcmp_preserves_memory.
+    intro MEM1. simpl in MEM1. symmetry in MEM1.
+
+    (* Example of how to change a "models" assumption about s to s1: *)
+    eapply models_at_invariant; try eassumption. apply strcmp_welltyped. intro MDL1.
+
+    (* Now discard anything we no longer need (and rename some vars). *)
+    clear - PRE ESP MEM1 MDL1.
+    rename t1 into t. rename s into s0. rename s1 into s.
 
   (* Break the proof into cases, one for each invariant-point. *)
   destruct_inv 32 PRE.
 
   (* Address 0 *)
-  step. step. exists 0. unfold p1,p2. psimpl. split.
+  step. step. exists 0. psimpl. split.
     reflexivity. split. reflexivity.
     intros i LT. destruct i; discriminate.
 
@@ -242,7 +259,7 @@ Proof.
   | _ => false end).
 
   (* Address 8 *)
-  destruct PRE as [k [ECX [EDX SEQ]]].
+  destruct PRE as (k & ECX & EDX & SEQ).
   step. step. step.
 
     (* Address 14 *)

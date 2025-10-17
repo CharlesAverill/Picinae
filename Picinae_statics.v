@@ -519,6 +519,13 @@ Ltac Picinae_typecheck :=
   | _ => fail "goal is not of the form (welltyped_prog c p)"
   end.
 
+Parameter models_at_invariant:
+  forall p Invs xp b x x1 s s1 t
+    (MDL: models archtyps s) (WTP: welltyped_prog archtyps p)
+    (ENTRY: startof t (x1,s1) = (x,s))
+    (H: forall (MDL: models archtyps s1), nextinv p Invs xp b ((x1,s1)::t)),
+  nextinv p Invs xp b ((x1,s1)::t).
+
 Parameter models_after_steps:
   forall p Invs xp b x s t1 x0 s0 t2
     (MDL: models archtyps s0) (WTP: welltyped_prog archtyps p)
@@ -1328,6 +1335,20 @@ Proof.
   intros. destruct (typchk_stmt q c c) as [c'|] eqn:TS1.
     exists c'. apply typchk_stmt_sound. reflexivity. exact TS1.
     contradict TS.
+Qed.
+
+(* Use the exec_prog assumption within nextinv to prove that the "models"
+   relation has been preserved at the start of an invariant.  (This is
+   important for setting up the proof context after destruct_invs.) *)
+Theorem models_at_invariant:
+  forall p Invs xp b x x1 s s1 t
+    (MDL: models archtyps s) (WTP: welltyped_prog archtyps p)
+    (ENTRY: startof t (x1,s1) = (x,s))
+    (H: forall (MDL: models archtyps s1), nextinv p Invs xp b ((x1,s1)::t)),
+  nextinv p Invs xp b ((x1,s1)::t).
+Proof.
+  intros. apply exec_prog_nextinv. intro XP. apply H.
+  eapply preservation_exec_prog; eassumption.  
 Qed.
 
 (* Use the exec_prog assumption within nextinv to prove that the "models"
