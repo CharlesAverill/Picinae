@@ -26,6 +26,8 @@ void insert_after_pos_in_list(list_node* l, list_node* value, uint32_t position)
    l->next = value;
 }
 
+#pragma RVS [insert_after_pos_in_list@L1] loop_max_iter (130)
+
 list_node* find_in_list(list_node* l, uint32_t key) {
     if (l == NULL)
 	    return NULL;
@@ -38,6 +40,8 @@ list_node* find_in_list(list_node* l, uint32_t key) {
 
     return NULL;
 }
+
+#pragma RVS [find_in_list@L1] loop_max_iter (130)
 
 void insert_in_sorted_list(list_node* l, list_node* value) {
     list_node* iter = l;
@@ -57,6 +61,8 @@ void insert_in_sorted_list(list_node* l, list_node* value) {
     value->next = iter->next;
     iter->next = value;
 }
+
+#pragma RVS [find_in_list@L1] loop_max_iter (130)
 
 #define LIST_SIZE 128  // large enough to exercise loops
 

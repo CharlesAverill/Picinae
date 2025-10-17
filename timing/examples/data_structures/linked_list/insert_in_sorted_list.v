@@ -100,7 +100,6 @@ match t with (Addr a, s) :: t' => match a with
     (ctr <= le_dist)%nat /\
     node_distance base_mem l NULL len /\
     node_distance base_mem l (s R_A0) ctr /\
-    (* list_node_next base_mem (s R_A0) = Some (base_mem Ⓓ[4 + s R_A0]) /\ *)
     cycle_count_of_trace t' = tlw + tlui + taddi +
         tfbeq + (N.of_nat ctr) * (
             taddi + tlw + tlw + ttbgeu
@@ -138,7 +137,7 @@ Proof.
     - eexists. reflexivity.
 Qed.
 
-Definition head_nonnull_impl_len_nonzero : forall mem head len,
+Lemma head_nonnull_impl_len_nonzero : forall mem head len,
     node_distance mem head NULL len ->
     head <> NULL ->
     len <> 0%nat.
@@ -148,7 +147,7 @@ Proof.
     - discriminate.
 Qed.
 
-Definition at_end_lens : forall mem head len a dst,
+Lemma at_end_lens : forall mem head len a dst,
     head <> NULL ->
     node_distance mem head NULL len ->
     node_distance mem head a dst ->
@@ -279,7 +278,7 @@ Proof using.
                     inversion GtVal. subst gt_val. clear - Vals BC.
                     replace (getmem p.w p.e p.dw base_mem (N.pos p0)) with (base_mem Ⓓ[N.pos p0]) in Vals by reflexivity.
                     lia.
-                destruct (N.pos p). contradiction. now inversion LeNextGt.
+                now inversion LeNextGt.
             eapply node_distance_next_S_len with (dst := s' R_A0).
                 destruct (s' R_A0). contradiction. reflexivity.
             eapply distance_null_imp_well_formed. now eassumption.

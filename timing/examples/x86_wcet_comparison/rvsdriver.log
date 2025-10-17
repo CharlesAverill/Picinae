@@ -1,18 +1,138 @@
 Version                = 3.23
-Invocation time        = 20:40:38 30/9/2025
+Invocation time        = 15:53:44 1/10/2025
 RVS_PROJECT            = /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/x86_wcet_comparison.rvsprj
 RVS_INTEGRATION        = i5-7300u-timing
-Stages being run       = Export
-Stages NOT being run   = Deploy, Clean, Prepare, Build, Run, Report
+Stages being run       = Clean, Prepare, Build, Run, Report
+Stages NOT being run   = Deploy, Export
 Entering rvsdriver stage init ( 1)
 Entering rvsdriver hook init
-Entering rvsdriver stage export ( 2)
-Entering rvsdriver hook export
-Exporting 'unmanaged-timing'
-Exporting metric: time in format: txt
-    0%  [                    ] Unpacking reports                0%  [                    ] Unpacking x86_wcet_comparison   33%  [******                 66%  [*************          66%  [                                                            Entering rvsdriver hook sysgen
+Entering rvsdriver stage clean ( 2)
+Entering rvsdriver hook cleanrvs
+Deleting previous RVS object file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.o
+Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs.c
+Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs.h
+Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs_ipoint.h
+Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs_ipoint.hpp
+Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs_settings.h
+Touching new RVS lib file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/rvslib-i5-7300u-timing/rvs_types.h
+Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.c
+Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_types.h
+Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs.h
+Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_settings.h
+Touching file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/llsearch/linked_list.c
+Touching file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/pproc/_883089073__comparison_llsearch/linked_list.c
+Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/sources/_b6e598195_comparison_llsearch/linked_list.c
+Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_ipoint.h
+Deleting file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/instr/rvs_ipoint.hpp
+
+Cleaning intermediates
+- Cleaning folder /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/
+Deleting result file: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-prepare.rvd
+Deleting result file: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing.rvd
+Deleting result file: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing.rvd
+- Rebuilding intermediate folders for i5-7300u-timing
+Entering rvsdriver hook clean
+rm -f linked_list
+Entering rvsdriver stage prepare ( 5)
+Entering rvsdriver hook buildid
+Entering rvsdriver hook prepare
+
+Cleaning up injected sources folder /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/sources/
+ - Delete file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/sources/source-map.rvsdata
+Running prepare commandline. Commandline arguments: make
+gcc -O2 -o linked_list linked_list.c
+
+ ========== RVS GCC wrapper ==========
+Entering rvsdriver hook link
+Instrumenting [cins] batch mode (group 0)
+
+    0%  [                    ] Preprocessing                  100%  [********************  100%  [********************]                                  0%  [                    ] Parsing                          7%  [*                      14%  [**                     14%  [**                  ] Finalizing                     100%  [********************]                                                                                              0%  [                    ] Preprocessing                   50%  [**********          ]                                  0%  [                    ] Instrumenting                  100%  [********************   50%  [**********          ]                                 60%  [************                                                                      100%  [********************]                                  0%  [                    ] Create XSTs                     13%  [**                  ] Read XSCs                       22%  [****                ] Link XSCs                       50%  [**********             72%  [**************      ] Finalize prepare                72%  [**************      ] Write RVD                       81%  [****************       90%  [******************  ] Close RVD                                                                                Entering rvsdriver hook sysconv
+Entering rvsdriver hook shrink
+Entering rvsdriver stage build ( 7)
+Entering rvsdriver hook purge
+Deleting /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/data_files/
+Entering rvsdriver hook instrument
+    0%  [                    ] Preprocessing                   50%  [**********          ]                                  0%  [                    ] Instrumenting                  100%  [********************   50%  [**********          ]                                 60%  [************                                                                      100%  [********************]                                  0%  [                    ] Create XSTs                      0%  [                    ] Read XSCs                        6%  [*                   ] Link XSCs                       80%  [****************    ] Finalize prepare                80%  [****************    ] Write RVD                       86%  [*****************      93%  [******************  ] Close RVD                                                                                Entering rvsdriver hook mapgen
+Generating map for collection method: 'trace'
+Entering rvsdriver hook sync
+Entering rvsdriver hook inject
+Executing script: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/scripts/inject_invocation.rci
+>> Injecting entry or exit points into main() return int
+Executing script: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/scripts/inject_libraries.rci
+Executing script: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/scripts/inject_extended_ipoints.py
+Preprocessing RVS libraries...
+Applying injections...
+Touching file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/llsearch/linked_list.c
+Touching file /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/pproc/_883089073__comparison_llsearch/linked_list.c
+
+Entering rvsdriver hook build
+Running build commandline. Commandline arguments: make
+gcc -O2 -o linked_list linked_list.c
+
+ ========== RVS GCC wrapper ==========
+Warning W67003: No arguments specified for 'Compile RVS Libraries' stage so 'compiler' wrapper will provide default arguments
+Entering rvsdriver hook root
+Building annotations for root...
+  100%  [********************]                              
+    0%  [                    ] Read XSCs                    
+    6%  [*                   ] Link XSCs                    
+   20%  [****                
+   80%  [****************    ] Finalize prepare             
+   80%  [****************    ] Write RVD                    
+   86%  [*****************   
+   93%  [******************  ] Close RVD                    
+
+                                                            
+  100%  [********************]                              
+    0%  [                    ] Read XSCs                    
+    6%  [*                   ] Link XSCs                    
+   46%  [*********           
+   80%  [****************    ] Finalize prepare             
+   80%  [****************    ] Write RVD                    
+   86%  [*****************   
+   93%  [******************  ] Close RVD                    
+
+                                                            
+  100%  [********************]                              
+    0%  [                    ] Read XSCs                    
+    6%  [*                   ] Link XSCs                    
+   26%  [*****               
+   80%  [****************    ] Finalize prepare             
+   80%  [****************    ] Write RVD                    
+   86%  [*****************   
+   93%  [******************  ] Close RVD                    
+
+                                                            
+  100%  [********************]                                  0%  [                    ] Adding x86_wcet_comparison-ti   25%  [*****                  50%  [**********             75%  [***************     ] Adding manifest to collection  100%  [********************                                                            Entering rvsdriver stage run ( 3)
+Entering rvsdriver hook connect
+Entering rvsdriver hook run
+No name provided. Building and running all programs...
+make[1]: Entering directory '/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/llsearch'
+make[1]: 'linked_list' is up to date.
+make[1]: Leaving directory '/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/llsearch'
+linked_list
+RC: 0
+
+Entering rvsdriver hook download
+Entering rvsdriver stage report ( 4)
+Entering rvsdriver hook filter
+===== Processing result files
+===== Output files:
+  {"metrics":["auto"],"format":"auto","name":"./rvs_trace.txt","metadata":{"tags":[],"dataset_id":"0","dataset_name":"","cpu_cores":""}}
+========== END ==========
+Entering rvsdriver hook refine
+Entering rvsdriver hook report
+Processing metrics: ["time"]
+Applying timing for file ./rvs_trace.txt
+data = {"metrics":["auto"],"format":"auto","name":"./rvs_trace.txt","metadata":{"tags":[],"dataset_id":"0","dataset_name":"","cpu_cores":""},"toolCalled":{"covparser":false,"testparser":false,"timeparser":false,"taskparser":false,"sequenceanalyzer":false}}
+    0%  [                    ] Unpacking reports                0%  [                    ] Unpacking x86_wcet_comparison   33%  [******                 66%  [*************       Scanning...
+Scanned
+    0%  [                    ] Reading RVD                      0%  [                    ] Saving data to RVD                                                                           0%  [                    ] Reading RVD                      0%  [                    ] Saving data to RVD                                                                           0%  [                    ] Reading RVD                      0%  [                    ] Saving data to RVD                                                                           0%  [                    ] Reading RVD                                                                                  0%  [                    ] Reading RVD                                                                                  0%  [                    ] Reading RVD                  linked_list.c:35.5-39.5: Warning W63002: The worst-case number of iterations specified by annotation for the loop linked_list.c:35-39 ; linked_list.c:5198-5206 '128' is smaller than the observed number '130'.
+                                                                0%  [                    ] Packaging reports                                                                        Entering rvsdriver hook reflect
+Info: size of results archive is 94.7545337677002 Mb
+Results archived to x86_wcet_comparison-timing/2025-10-01~15-53-59.rvd
 Entering rvsdriver stage close ( 1)
 Entering rvsdriver hook close
-Finish time = 20:40:39 30/9/2025
-Duration    = 1.0 s
+Finish time = 15:54:00 1/10/2025
+Duration    = 16.3 s
 rvsdriver has completed successfully.

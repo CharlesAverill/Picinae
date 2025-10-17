@@ -5181,22 +5181,24 @@ void insert_after_pos_in_list(list_node* l, list_node* value, uint32_t position)
    l->next = value;
 }
 
+#pragma RVS [insert_after_pos_in_list@L1] loop_max_iter (128)
+
 list_node* find_in_list(list_node* l, uint32_t key) {
     if (l == 
-# 30 "linked_list.c" 3 4
+# 32 "linked_list.c" 3 4
             ((void *)0)
-# 30 "linked_list.c"
+# 32 "linked_list.c"
                 )
      return 
-# 31 "linked_list.c" 3 4
+# 33 "linked_list.c" 3 4
            ((void *)0)
-# 31 "linked_list.c"
+# 33 "linked_list.c"
                ;
 
     while (l != 
-# 33 "linked_list.c" 3 4
+# 35 "linked_list.c" 3 4
                ((void *)0)
-# 33 "linked_list.c"
+# 35 "linked_list.c"
                    ) {
      if (l->value == key)
             return l;
@@ -5204,17 +5206,19 @@ list_node* find_in_list(list_node* l, uint32_t key) {
     }
 
     return 
-# 39 "linked_list.c" 3 4
+# 41 "linked_list.c" 3 4
           ((void *)0)
-# 39 "linked_list.c"
+# 41 "linked_list.c"
               ;
 }
+
+#pragma RVS [find_in_list@L1] loop_max_iter (128)
 
 void insert_in_sorted_list(list_node* l, list_node* value) {
     list_node* iter = l;
 
     if (value->value == 0x7fffffff
-# 45 "linked_list.c"
+# 49 "linked_list.c"
                               ) {
         // Skip
     } else {
@@ -5231,6 +5235,8 @@ void insert_in_sorted_list(list_node* l, list_node* value) {
     iter->next = value;
 }
 
+#pragma RVS [find_in_list@L1] loop_max_iter (128)
+
 
 
 static list_node nodes[128 + 2]; // +2 for sentinel and extra inserts
@@ -5244,12 +5250,12 @@ int main(void) {
         }
         // Sentinel node at the end
         nodes[128].value = 0x7fffffff
-# 73 "linked_list.c"
+# 79 "linked_list.c"
                                        ;
         nodes[128].next = 
-# 74 "linked_list.c" 3 4
+# 80 "linked_list.c" 3 4
                                ((void *)0)
-# 74 "linked_list.c"
+# 80 "linked_list.c"
                                    ;
 
         list_node* head = &nodes[0];
@@ -5261,7 +5267,7 @@ int main(void) {
 
         /* Exercise find_in_list with worst-case key (not present, traverses full list) */
         volatile list_node* found = find_in_list(head, rand() % 2 == 0 ? 0x7fffffff 
-# 84 "linked_list.c"
+# 90 "linked_list.c"
                                                                                 : (rand() % 128));
         (void)found; // prevent optimization
 

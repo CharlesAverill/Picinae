@@ -1,8 +1,0 @@
- /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing.rvd
- --fmt
- txt
- -o
- /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-timing-unmanaged-timing-time.txt
- --precision
- 0
-

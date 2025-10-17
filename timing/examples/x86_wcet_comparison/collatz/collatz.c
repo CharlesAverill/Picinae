@@ -10,10 +10,10 @@
 // }
 
 // Return whether n ends up in a collatz cycle 
-void collatz(uint16_t n) {
+int collatz(uint16_t n) {
     // int start = rdtsc();
-    
-    for (int i = 0; i < 55000; i++) {
+    int i;
+    for (i = 0; i < 55000; i++) {
         if (n % 2 == 0)
             n /= 2;
         else
@@ -32,7 +32,7 @@ void collatz(uint16_t n) {
     } else {
         // int end = rdtsc();
         // printf("cycles: %d\n", end - start);
-        return;
+        return i;
     }
 }
 

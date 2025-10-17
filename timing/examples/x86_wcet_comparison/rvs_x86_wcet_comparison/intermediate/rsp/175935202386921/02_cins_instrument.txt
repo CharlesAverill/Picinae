@@ -1,0 +1,22 @@
+ --update
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-prepare.rvd
+ --cext
+ GCC
+ --cext
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/target-i5-7300u/target.cext
+ --instrumentation-mode
+ deferred
+ --config-key
+ project-config-folder=/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/
+ --config-key
+ working-folder=/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison//llsearch/
+ --config-key
+ source-root-folder=/home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/
+ --config-key
+ install-path=/usr/local/pkg/RVS/v3.23/
+ --xsc-dir
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/xscs/
+ --unique-xscs
+ -l
+ /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/rsp/175935202386921/00_cins_instrument.json
+

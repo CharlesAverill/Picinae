@@ -5364,22 +5364,24 @@ void insert_after_pos_in_list(list_node* l, list_node* value, uint32_t position)
    l->next = value;
 }RVS_I(65533);}
 
+
+
 list_node* find_in_list(list_node* l, uint32_t key) {RVS_I(65532);{
     {if (l == 
-# 30 "linked_list.c" 3 4
+# 32 "linked_list.c" 3 4
             ((void *)0)
-# 30 "linked_list.c"
+# 32 "linked_list.c"
                 )
      {{RVS_I(65531);return 
-# 31 "linked_list.c" 3 4
+# 33 "linked_list.c" 3 4
            ((void *)0)
-# 31 "linked_list.c"
+# 33 "linked_list.c"
                ;}}RVS_I(10);}
 
     while (l != 
-# 33 "linked_list.c" 3 4
+# 35 "linked_list.c" 3 4
                ((void *)0)
-# 33 "linked_list.c"
+# 35 "linked_list.c"
                    ) {RVS_I(11);{
      {if (l->value == key)
             {{RVS_I(65530);return l;}}RVS_I(12);}
@@ -5387,17 +5389,19 @@ list_node* find_in_list(list_node* l, uint32_t key) {RVS_I(65532);{
     }}
 
     {RVS_I(65529);return 
-# 39 "linked_list.c" 3 4
+# 41 "linked_list.c" 3 4
           ((void *)0)
-# 39 "linked_list.c"
+# 41 "linked_list.c"
               ;}
 }}
+
+
 
 void insert_in_sorted_list(list_node* l, list_node* value) {RVS_I(65528);{
     list_node* iter = l;
 
     {RVS_I(10);if (value->value == 0x7fffffff
-# 45 "linked_list.c"
+# 49 "linked_list.c"
                               ) {RVS_I(11);{
         // Skip
     }} else {RVS_I(12);{
@@ -5413,6 +5417,8 @@ void insert_in_sorted_list(list_node* l, list_node* value) {RVS_I(65528);{
     value->next = iter->next;
     iter->next = value;
 }RVS_I(65527);}
+
+
 
 
 
@@ -5433,12 +5439,12 @@ int main(void)
         }}RVS_I(12);
         // Sentinel node at the end
         nodes[128].value = 0x7fffffff
-# 73 "linked_list.c"
+# 79 "linked_list.c"
                                        ;
         nodes[128].next = 
-# 74 "linked_list.c" 3 4
+# 80 "linked_list.c" 3 4
                                ((void *)0)
-# 74 "linked_list.c"
+# 80 "linked_list.c"
                                    ;
 
         list_node* head = &nodes[0];
@@ -5450,7 +5456,7 @@ int main(void)
 
         /* Exercise find_in_list with worst-case key (not present, traverses full list) */
         volatile list_node* found = find_in_list(head, (((rand() % 2 == 0)&&RVS_T(13))||RVS_F(14)) ? 0x7fffffff 
-# 84 "linked_list.c"
+# 90 "linked_list.c"
                                                                                 : (rand() % 128));
         (void)found; // prevent optimization
 
@@ -5473,15 +5479,15 @@ int main(void)
 
 /*********************************
  * RVS Instrumentation completed
- * at   : 20:39:37 30/9/2025
+ * at   : 15:53:47 1/10/2025
  * using: RVS 3.23
  * by   : charles
  * from : /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/llsearch/
  * on   : anesidora
- * time : 0.535631000s
+ * time : 0.285885000s
  * arg 0: /usr/local/pkg/RVS/v3.23/bin/xstutils
  * arg 1: --cmd-file
- * arg 2: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/rsp/17592827685620/02_xstutils_instrument.txt
+ * arg 2: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/intermediate/rsp/175935202386921/02_xstutils_instrument.txt
  * |  --prepare-db
  * |  /home/charles/Desktop/projects/rocq/Picinae/timing/examples/x86_wcet_comparison/rvs_x86_wcet_comparison/results/x86_wcet_comparison-prepare.rvd
  * |  -c

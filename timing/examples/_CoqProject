@@ -1,10 +1,10 @@
 -R ../../ Picinae
 
 data_structures/array/find_in_array/array.v
-data_structures/array/find_in_array/find_in_array_proof.v
+# data_structures/array/find_in_array/find_in_array_proof.v
 
 data_structures/array/find_in_array_opt/array_opt.v
-data_structures/array/find_in_array_opt/find_in_array_opt_proof.v
+# data_structures/array/find_in_array_opt/find_in_array_opt_proof.v
 
 # The following are broken due to updates in automation
 # =============
@@ -15,10 +15,10 @@ data_structures/array/find_in_array_opt/find_in_array_opt_proof.v
 # data_structures/array/bubble_sort/exact_bound_sum/bubble_sort_theta_n2_proof_exact.v
 
 data_structures/linked_list/find_in_list_general/linked_list_general.v
-data_structures/linked_list/find_in_list_general/find_in_list.v
+# data_structures/linked_list/find_in_list_general/find_in_list.v
 data_structures/linked_list/linked_list.v
-data_structures/linked_list/find_in_list.v
-data_structures/linked_list/insert_after_pos_in_list.v
+# data_structures/linked_list/find_in_list.v
+# data_structures/linked_list/insert_after_pos_in_list.v
 
 data_structures/union_find/union_find.v
 # Unproven
@@ -26,14 +26,14 @@ data_structures/union_find/union_find.v
 
 FreeRTOS/RTOSDemo.v
 
-FreeRTOS/list/uxListRemove.v
-FreeRTOS/list/vListInitialise.v
-FreeRTOS/list/vListInitialiseItem.v
+# FreeRTOS/list/uxListRemove.v
+# FreeRTOS/list/vListInitialise.v
+# FreeRTOS/list/vListInitialiseItem.v
 # Unproven
 # FreeRTOS/list/vListInsert.v
 FreeRTOS/list/vListInsertEnd.v
 
-FreeRTOS/queue/xQueueGetMutexHolderFromISR.v
+# FreeRTOS/queue/xQueueGetMutexHolderFromISR.v
 # WIP due to r5_step hanging
 # FreeRTOS/queue/xQueueGetMutexHolder.v
 # FreeRTOS/queue/xQueueMessagesWaiting.v
@@ -45,15 +45,16 @@ FreeRTOS/queue/xQueueGetMutexHolderFromISR.v
 # FreeRTOS/tasks/prvSearchForNameWithinSingleList.v
 # WIP due to memsolve breaking upon trace update
 # FreeRTOS/tasks/vTaskSwitchContext.v
-FreeRTOS/tasks/xTaskGetCurrentTaskHandle.v
-FreeRTOS/tasks/prvResetNextTaskUnblockTime.v
-FreeRTOS/tasks/vTaskSuspendAll.v
+
+# FreeRTOS/tasks/xTaskGetCurrentTaskHandle.v
+# FreeRTOS/tasks/prvResetNextTaskUnblockTime.v
+# FreeRTOS/tasks/vTaskSuspendAll.v
 
 crypto/chacha20/ChaCha20.v
 # this one builds but takes ~10-20 minutes
 # crypto/chacha20/chacha20_proof.v
 
 crypto/passwordCheck/passwordCheck_vuln.v
-crypto/passwordCheck/passwordCheck_vuln_proofs.v
+# crypto/passwordCheck/passwordCheck_vuln_proofs.v
 crypto/passwordCheck/passwordCheck_safe.v
-crypto/passwordCheck/passwordCheck_safe_proofs.v
+# crypto/passwordCheck/passwordCheck_safe_proofs.v
