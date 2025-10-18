@@ -37,116 +37,122 @@ Module NEORV32 (cfg : NEORV32Config) <: CPUTimingBehavior.
 
     (* ==== I ISA Extension ==== *)
     (* ALU *)
-    Definition tadd := 2.
-    Definition taddi := 2.
-    Definition tslt := 2.
-    Definition tslti := 2.
-    Definition tsltu := 2.
-    Definition tsltiu := 2.
-    Definition txor := 2.
-    Definition txori := 2.
-    Definition tor := 2.
-    Definition tori := 2.
-    Definition tand := 2.
-    Definition tandi := 2.
-    Definition tsub := 2.
-    Definition tlui := 2.
-    Definition tauipc := 2.
+    Definition tadd    (_ _ : N) := 2.
+    Definition taddi   (_ _ : N) := 2.
+    Definition tslt    (_ _ : N) := 2.
+    Definition tslti   (_ _ : N) := 2.
+    Definition tsltu   (_ _ : N) := 2.
+    Definition tsltiu  (_ _ : N) := 2.
+    Definition txor    (_ _ : N) := 2.
+    Definition txori   (_ _ : N) := 2.
+    Definition tor     (_ _ : N) := 2.
+    Definition tori    (_ _ : N) := 2.
+    Definition tand    (_ _ : N) := 2.
+    Definition tandi   (_ _ : N) := 2.
+    Definition tsub    (_ _ : N) := 2.
+    Definition tlui    (_ : N) := 2.
+    Definition tauipc  (_ : N) := 2.
+
     (* ALU Shifts *)
-    Definition tsll (offset : N) := 
-        3 + T_shift_latency offset.
-    Definition tslli (offset : N) := 
-        3 + T_shift_latency offset.
-    Definition tsrl (offset : N) := 
-        3 + T_shift_latency offset.
-    Definition tsrli (offset : N) := 
-        3 + T_shift_latency offset.
-    Definition tsra (offset : N) := 
-        3 + T_shift_latency offset.
-    Definition tsrai (offset : N) := 
-        3 + T_shift_latency offset.
+    Definition tsll    (_ offset : N) := 3 + T_shift_latency offset.
+    Definition tslli   (_ offset : N) := 3 + T_shift_latency offset.
+    Definition tsrl    (_ offset : N) := 3 + T_shift_latency offset.
+    Definition tsrli   (_ offset : N) := 3 + T_shift_latency offset.
+    Definition tsra    (_ offset : N) := 3 + T_shift_latency offset.
+    Definition tsrai   (_ offset : N) := 3 + T_shift_latency offset.
+
     (* Branches *)
-    (* taken *)
-    Definition ttbeq := 5 + T_inst_latency.
-    Definition ttbne := 5 + T_inst_latency.
-    Definition ttblt := 5 + T_inst_latency.
-    Definition ttbge := 5 + T_inst_latency.
-    Definition ttbltu := 5 + T_inst_latency.
-    Definition ttbgeu := 5 + T_inst_latency.
-    (* not taken *)
-    Definition tfbeq := 3.
-    Definition tfbne := 3.
-    Definition tfblt := 3.
-    Definition tfbge := 3.
-    Definition tfbltu := 3.
-    Definition tfbgeu := 3.
+    Definition ttbeq   (_ _ : N) := 5 + T_inst_latency.
+    Definition ttbne   (_ _ : N) := 5 + T_inst_latency.
+    Definition ttblt   (_ _ : N) := 5 + T_inst_latency.
+    Definition ttbge   (_ _ : N) := 5 + T_inst_latency.
+    Definition ttbltu  (_ _ : N) := 5 + T_inst_latency.
+    Definition ttbgeu  (_ _ : N) := 5 + T_inst_latency.
+
+    Definition tfbeq   (_ _ : N) := 3.
+    Definition tfbne   (_ _ : N) := 3.
+    Definition tfblt   (_ _ : N) := 3.
+    Definition tfbge   (_ _ : N) := 3.
+    Definition tfbltu  (_ _ : N) := 3.
+    Definition tfbgeu  (_ _ : N) := 3.
+
     (* Jump/call *)
-    Definition tjal := 5 + T_inst_latency.
-    Definition tjalr := 5 + T_inst_latency.
+    Definition tjal    (_ : N) := 5 + T_inst_latency.
+    Definition tjalr   (_ _ : N) := 5 + T_inst_latency.
+
     (* Load/store *)
-    Definition tlb := 4 + T_data_latency.
-    Definition tlh := 4 + T_data_latency.
-    Definition tlw := 4 + T_data_latency.
-    Definition tlbu := 4 + T_data_latency.
-    Definition tlhu := 4 + T_data_latency.
-    Definition tsb := 4 + T_data_latency.
-    Definition tsh := 4 + T_data_latency.
-    Definition tsw := 4 + T_data_latency.
+    Definition tlb     (_ _ : N) := 4 + T_data_latency.
+    Definition tlh     (_ _ : N) := 4 + T_data_latency.
+    Definition tlw     (_ _ : N) := 4 + T_data_latency.
+    Definition tlbu    (_ _ : N) := 4 + T_data_latency.
+    Definition tlhu    (_ _ : N) := 4 + T_data_latency.
+    Definition tsb     (_ _ : N) := 4 + T_data_latency.
+    Definition tsh     (_ _ : N) := 4 + T_data_latency.
+    Definition tsw     (_ _ : N) := 4 + T_data_latency.
+
     (* Data fence *)
-    Definition tfence := 6 + T_data_latency.
+    Definition tfence  : N := 6 + T_data_latency.
+
     (* System *)
-    Definition tecall := 7 + T_inst_latency.
-    Definition tebreak := 7 + T_inst_latency.
-    Definition tmret := 7 + T_inst_latency.
-    Definition twfi := 7 + T_inst_latency.
+    Definition tecall  : N := 7 + T_inst_latency.
+    Definition tebreak : N := 7 + T_inst_latency.
+    Definition tmret   : N := 7 + T_inst_latency.
+    Definition twfi    : N := 7 + T_inst_latency.
 
     (* ==== M ISA Extension ==== *)
     (* Multiplication *)
-    Definition tmul := 3 + T_mul_latency.
-    Definition tmulh := 3 + T_mul_latency.
-    Definition tmulhsu := 3 + T_mul_latency.
-    Definition tmulhu := 3 + T_mul_latency.
+    Definition tmul    (_ _ : N) := 3 + T_mul_latency.
+    Definition tmulh   (_ _ : N) := 3 + T_mul_latency.
+    Definition tmulhsu (_ _ : N) := 3 + T_mul_latency.
+    Definition tmulhu  (_ _ : N) := 3 + T_mul_latency.
+
     (* Division *)
-    Definition tdiv := 3 + 32.
-    Definition tdivu := 3 + 32.
-    Definition trem := 3 + 32.
-    Definition tremu := 3 + 32.
+    Definition tdiv    (_ _ : N) := 3 + 32.
+    Definition tdivu   (_ _ : N) := 3 + 32.
+    Definition trem    (_ _ : N) := 3 + 32.
+    Definition tremu   (_ _ : N) := 3 + 32.
 
     (* ==== Zbb ISA Extension ==== *)
     (* Logic with negate *)
-    Definition tandn := 4.
-    Definition torn := 4.
-    Definition txnor := 4.
+    Definition tandn   (_ _ : N) := 4.
+    Definition torn    (_ _ : N) := 4.
+    Definition txnor   (_ _ : N) := 4.
+
     (* Bit count *)
-    Definition tclz (val : N) := 4 + T_shift_latency (clz val 32).
-    Definition tctz (val : N) := 4 + T_shift_latency (ctz val 32).
-    Definition tcpop (val : N) := 4 + T_shift_latency 32.
+    Definition tclz    (val : N) := 4 + T_shift_latency (clz val 32).
+    Definition tctz    (val : N) := 4 + T_shift_latency (ctz val 32).
+    Definition tcpop   (val : N) := 4 + T_shift_latency 32.
+
     (* Integer max/min *)
-    Definition tmin := 4.
-    Definition tminu := 4.
-    Definition tmax := 4.
-    Definition tmaxu := 4.
+    Definition tmin    (_ _ : N) := 4.
+    Definition tminu   (_ _ : N) := 4.
+    Definition tmax    (_ _ : N) := 4.
+    Definition tmaxu   (_ _ : N) := 4.
+
     (* Sign/zero extension *)
-    Definition tsext_b := 4.
-    Definition tsext_h := 4.
-    Definition tzext := 4.
+    Definition tsext_b (_ : N) := 4.
+    Definition tsext_h (_ : N) := 4.
+    Definition tzext   (_ : N) := 4.
+
     (* Bitwise rotation *)
-    Definition trol (rot_factor : N) := 4 + T_shift_latency rot_factor.
-    Definition tror (rot_factor : N) := 4 + T_shift_latency rot_factor.
-    Definition trori (rot_factor : N) := 4 + T_shift_latency rot_factor.
+    Definition trol    (_ rot_factor : N) := 4 + T_shift_latency rot_factor.
+    Definition tror    (_ rot_factor : N) := 4 + T_shift_latency rot_factor.
+    Definition trori   (rot_factor _ : N) := 4 + T_shift_latency rot_factor.
+
     (* OR-combine *)
-    Definition torc_b := 4.
+    Definition torc_b  (_ : N) := 4.
+
     (* Byte-reverse *)
-    Definition trev8 := 4.
+    Definition trev8   (_ : N) := 4.
 
     (* ==== Zicsr ISA Extension ==== *)
     (* System *)
-    Definition tcsrrw := 3.
-    Definition tcsrrwi := 3.
-    Definition tcsrrs := 3.
-    Definition tcsrrsi := 3.
-    Definition tcsrrc := 3.
-    Definition tcsrrci := 3.
+    Definition tcsrrw  (_ _ : N) := 3.
+    Definition tcsrrwi (_ _ : N) := 3.
+    Definition tcsrrs  (_ _ : N) := 3.
+    Definition tcsrrsi (_ _ : N) := 3.
+    Definition tcsrrc  (_ _ : N) := 3.
+    Definition tcsrrci (_ _ : N) := 3.
 End NEORV32.
 
 (* https://github.com/stnolting/neorv32/blob/main/rtl/test_setups/neorv32_test_setup_bootloader.vhd *)

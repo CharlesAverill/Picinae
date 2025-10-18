@@ -32,112 +32,94 @@ Module RISCVTiming (cpu : CPUTimingBehavior) (prog : ProgramInformation) <: Timi
 
     Definition lifted_prog := lift_riscv binary.
 
-    Definition time_of_addr (s : store) (a : addr) : N :=
-        let regvalue s r := if r =? 0 then 0 else s (rv_varid r) in
-        let bop s time_inf rs1 rs2 op : N :=
-            op (regvalue s rs1) (regvalue s rs2) in
-        match rv_decode (binary a) with
-        (* ==== I ISA Extension ==== *)
-        (* ALU *)
-        | R5_Add  _ _ _     => tadd
-        | R5_Addi _ _ _     => taddi
-        | R5_Slt  _ _ _     => tslt
-        | R5_Slti _ _ _     => tslti
-        | R5_Sltu _ _ _     => tsltu
-        | R5_Sltiu _ _ _    => tsltiu
-        | R5_Xor  _ _ _     => txor
-        | R5_Xori _ _ _     => txori
-        | R5_Or   _ _ _     => tor
-        | R5_Ori  _ _ _     => tori
-        | R5_And  _ _ _     => tand
-        | R5_Andi _ _ _     => tandi
-        | R5_Sub  _ _ _     => tsub
-        | R5_Lui  _ _       => tlui
-        | R5_Auipc _ _      => tauipc
+  Definition time_of_addr (s : store) (a : addr) : N :=
+  let reg s r := if r =? 0 then 0 else s (rv_varid r) in
+  let bop s time_inf rs1 rs2 op : N :=
+    op (reg s rs1) (reg s rs2) in
+  match rv_decode (binary a) with
+  (* ==== I ISA Extension ==== *)
+  (* ALU *)
+  | R5_Add  rd rs1 rs2     => tadd (reg s rs1) (reg s rs2)
+  | R5_Addi rd rs1 imm     => taddi (reg s rs1) imm
+  | R5_Slt  rd rs1 rs2     => tslt (reg s rs1) (reg s rs2)
+  | R5_Slti rd rs1 imm     => tslti (reg s rs1) imm
+  | R5_Sltu rd rs1 rs2     => tsltu (reg s rs1) (reg s rs2)
+  | R5_Sltiu rd rs1 imm    => tsltiu (reg s rs1) imm
+  | R5_Xor  rd rs1 rs2     => txor (reg s rs1) (reg s rs2)
+  | R5_Xori rd rs1 imm     => txori (reg s rs1) imm
+  | R5_Or   rd rs1 rs2     => tor (reg s rs1) (reg s rs2)
+  | R5_Ori  rd rs1 imm     => tori (reg s rs1) imm
+  | R5_And  rd rs1 rs2     => tand (reg s rs1) (reg s rs2)
+  | R5_Andi rd rs1 imm     => tandi (reg s rs1) imm
+  | R5_Sub  rd rs1 rs2     => tsub (reg s rs1) (reg s rs2)
+  | R5_Lui  rd imm         => tlui imm
+  | R5_Auipc rd imm        => tauipc imm
 
-        (* ALU Shifts *)
-        | R5_Sll  rd _ _ =>
-            let rd := regvalue s rd in 
-            tsll rd
-        | R5_Slli _ _ shamt => tslli shamt
-        | R5_Srl  rd _ _ =>
-            let rd := regvalue s rd in 
-            tsrl rd
-        | R5_Srli _ _ shamt => tsrli shamt
-        | R5_Sra  rd _ _ =>
-            let rd := regvalue s rd in 
-            tsra rd
-        | R5_Srai _ _ shamt => tsrai shamt
+  (* ALU Shifts *)
+  | R5_Sll  rd rs1 rs2     => tsll (reg s rs1) (reg s rs2)
+  | R5_Slli rd rs1 shamt   => tslli (reg s rs1) shamt
+  | R5_Srl  rd rs1 rs2     => tsrl (reg s rs1) (reg s rs2)
+  | R5_Srli rd rs1 shamt   => tsrli (reg s rs1) shamt
+  | R5_Sra  rd rs1 rs2     => tsra (reg s rs1) (reg s rs2)
+  | R5_Srai rd rs1 shamt   => tsrai (reg s rs1) shamt
 
-        (* Branches *)
-        | R5_Beq rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if x =? y then ttbeq else tfbeq)
-        | R5_Bne rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if negb (x =? y) then ttbne else tfbne)
-        | R5_Blt rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if Z.ltb (toZ 32 x) (toZ 32 y) then ttblt else tfblt)
-        | R5_Bge rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if Z.geb (toZ 32 x) (toZ 32 y) then ttbge else tfbge)
-        | R5_Bltu rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if x <? y then ttbltu else tfbltu)
-        | R5_Bgeu rs1 rs2 off => bop s time_inf rs1 rs2
-            (fun x y => if negb (x <? y) then ttbgeu else tfbgeu)
+  (* Branches *)
+  | R5_Beq  rs1 rs2 off => bop s time_inf rs1 rs2
+      (fun x y => if x =? y then ttbeq (reg s rs1) (reg s rs2) else tfbeq (reg s rs1) (reg s rs2))
+  | R5_Bne  rs1 rs2 off => bop s time_inf rs1 rs2
+      (fun x y => if negb (x =? y) then ttbne (reg s rs1) (reg s rs2) else tfbne (reg s rs1) (reg s rs2))
+  | R5_Blt  rs1 rs2 off => bop s time_inf rs1 rs2
+      (fun x y => if Z.ltb (toZ 32 x) (toZ 32 y) then ttblt (reg s rs1) (reg s rs2) else tfblt (reg s rs1) (reg s rs2))
+  | R5_Bge  rs1 rs2 off => bop s time_inf rs1 rs2
+      (fun x y => if Z.geb (toZ 32 x) (toZ 32 y) then ttbge (reg s rs1) (reg s rs2) else tfbge (reg s rs1) (reg s rs2))
+  | R5_Bltu rs1 rs2 off => bop s time_inf rs1 rs2
+      (fun x y => if x <? y then ttbltu (reg s rs1) (reg s rs2) else tfbltu (reg s rs1) (reg s rs2))
+  | R5_Bgeu rs1 rs2 off => bop s time_inf rs1 rs2
+      (fun x y => if negb (x <? y) then ttbgeu (reg s rs1) (reg s rs2) else tfbgeu (reg s rs1) (reg s rs2))
 
-        (* Jump/call *)
-        | R5_Jal  _ _       => tjal
-        | R5_Jalr _ _ _     => tjalr
+  (* Jump/call *)
+  | R5_Jal  rd off         => tjal (ofZ 32 off)
+  | R5_Jalr rd rs1 off     => tjalr (reg s rs1) (ofZ 32 off)
 
-        (* Load/store *)
-        | R5_Lb  _ _ _      => tlb
-        | R5_Lh  _ _ _      => tlh
-        | R5_Lw  _ _ _      => tlw
-        | R5_Lbu _ _ _      => tlbu
-        | R5_Lhu _ _ _      => tlhu
-        | R5_Sb  _ _ _      => tsb
-        | R5_Sh  _ _ _      => tsh
-        | R5_Sw  _ _ _      => tsw
+  (* Load/store *)
+  | R5_Lb  rd rs1 off      => tlb (reg s rs1) off
+  | R5_Lh  rd rs1 off      => tlh (reg s rs1) off
+  | R5_Lw  rd rs1 off      => tlw (reg s rs1) off
+  | R5_Lbu rd rs1 off      => tlbu (reg s rs1) off
+  | R5_Lhu rd rs1 off      => tlhu (reg s rs1) off
+  | R5_Sb  rs1 rs2 off     => tsb (reg s rs2) (ofZ 32 off)
+  | R5_Sh  rs1 rs2 off     => tsh (reg s rs2) (ofZ 32 off)
+  | R5_Sw  rs1 rs2 off     => tsw (reg s rs2) (ofZ 32 off)
 
-        (* Data fence *)
-        | R5_Fence   _ _    => tfence
-        | R5_Fence_i        => tfence
+  (* Data fence *)
+  | R5_Fence _ _           => tfence
+  | R5_Fence_i             => tfence
 
-        (* M extension *)
+  (* ==== M ISA Extension ==== *)
+  | R5_Mul    rd rs1 rs2   => tmul (reg s rs1) (reg s rs2)
+  | R5_Mulh   rd rs1 rs2   => tmulh (reg s rs1) (reg s rs2)
+  | R5_Mulsu  rd rs1 rs2   => tmulhsu (reg s rs1) (reg s rs2)
+  | R5_Mulu   rd rs1 rs2   => tmulhu (reg s rs1) (reg s rs2)
 
-        (* ==== M ISA Extension ==== *)
-        (* Multiplication *)
-        | R5_Mul    _ _ _   => tmul
-        | R5_Mulh   _ _ _   => tmulh
-        | R5_Mulsu  _ _ _   => tmulhsu
-        | R5_Mulu   _ _ _   => tmulhu
+  (* Division *)
+  | R5_Div    rd rs1 rs2   => tdiv (reg s rs1) (reg s rs2)
+  | R5_Divu   rd rs1 rs2   => tdivu (reg s rs1) (reg s rs2)
+  | R5_Rem    rd rs1 rs2   => trem (reg s rs1) (reg s rs2)
+  | R5_Remu   rd rs1 rs2   => tremu (reg s rs1) (reg s rs2)
 
-        (* Division *)
-        | R5_Div    _ _ _   => tdiv
-        | R5_Divu   _ _ _   => tdivu
-        | R5_Rem    _ _ _   => trem
-        | R5_Remu   _ _ _   => tremu
+  (* ==== Zbb ISA Extension ==== *)
+  | R5_Clz rd rs            => tclz (reg s rs)
 
-        (* ==== Zbb ISA Extension ==== *)
-        | R5_Clz rd _       =>
-            let rd := regvalue s rd in
-            tclz rd
+  (* ==== Zicsr ISA Extension ==== *)
+  | R5_Csrrw  rd rs1 csr   => tcsrrw (reg s rs1) csr
+  | R5_Csrrwi rd imm csr   => tcsrrwi imm csr
+  | R5_Csrrs  rd rs1 csr   => tcsrrs (reg s rs1) csr
+  | R5_Csrrsi rd imm csr   => tcsrrsi imm csr
+  | R5_Csrrc  rd rs1 csr   => tcsrrc (reg s rs1) csr
+  | R5_Csrrci rd imm csr   => tcsrrci imm csr
 
-        (* ==== Zicsr ISA Extension ==== *)
-        | R5_Csrrw _ _ _ =>
-            tcsrrw
-        | R5_Csrrwi _ _ _ =>
-            tcsrrwi
-        | R5_Csrrs _ _ _ =>
-            tcsrrs
-        | R5_Csrrsi _ _ _ =>
-            tcsrrsi
-        | R5_Csrrc _ _ _ =>
-            tcsrrc
-        | R5_Csrrci _ _ _ =>
-            tcsrrci
-
-
-        | _ => time_inf
-        end.
+  | _ => time_inf
+  end.
 End RISCVTiming.
 
 (* Instantiate the Timing Automation module with RISC-V values *)
