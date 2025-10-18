@@ -295,9 +295,9 @@ Proof.
 
   (* Inductive Case *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply demo_program_welltyped).
-  clear - PRE MDL. rename t1 into t; rename s1 into s.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply demo_program_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t; rename s1 into s.
   destruct_inv 64 PRE.
 
   step. step. step.
@@ -398,9 +398,9 @@ Proof.
 
   (* Inductive Case *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply swap_regs_welltyped).
-  clear - PRE MDL. rename t1 into t; rename s1 into s.
+  unfold Entry in *; erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply swap_regs_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t; rename s1 into s.
   destruct_inv 64 PRE.
 
   (* FILL IN HERE *)
@@ -465,9 +465,9 @@ Proof.
 
   (* Inductive Case *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply swap_regs_welltyped).
-  clear - PRE MDL. rename t1 into t; rename s1 into s.
+  unfold Entry in *; erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply swap_regs_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t; rename s1 into s.
   destruct_inv 64 PRE.
 
   (* FILL IN HERE *)
@@ -555,9 +555,9 @@ Proof.
 
   (* Inductive Case *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply tolower_welltyped).
-  clear - PRE MDL. rename t1 into t; rename s1 into s.
+  unfold Entry in *; erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply tolower_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t; rename s1 into s.
   destruct_inv 64 PRE.
 
   repeat step.
@@ -648,9 +648,9 @@ Proof.
 
   (* Inductive Case *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply toupper_welltyped).
-  clear - PRE MDL. rename t1 into t; rename s1 into s.
+  unfold Entry in *; erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply toupper_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t; rename s1 into s.
   destruct_inv 64 PRE.
 
   repeat step.

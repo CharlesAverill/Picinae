@@ -189,9 +189,9 @@ Proof.
   (* Inductive Case *)
   (* Explain the current proof obligation *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply addloop_welltyped).
-  clear - PRE MDL. rename t1 into t; rename s1 into s.
+  unfold Entry in *; erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply addloop_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t; rename s1 into s.
   destruct_inv 32 PRE.
 
   (* 100 -> 104 *)
@@ -604,9 +604,9 @@ Proof.
   (* Inductive Case *)
   (* Explain the current proof obligation *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply wcscpy_welltyped).
-  clear - PRE MDL. rename t1 into t; rename s1 into s.
+  unfold Entry in *; erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply wcscpy_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t; rename s1 into s.
   destruct_inv 32 PRE.
 Abort.
 End wcscpy.
