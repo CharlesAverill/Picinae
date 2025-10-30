@@ -154,10 +154,10 @@ Definition GOTOz l cond src dest :=
 
 Definition arm_add (reg imm: Z) : list arm_inst :=
   let a := ARM_data_i ARM_ADD Z14 Z0 reg reg in
-    a ((Z4 << Z8) .| ((imm >> Z24) & Z0xff))::
-    a ((Z8 << Z8) .| ((imm >> Z16) & Z0xff))::
-    a ((Z12 << Z8) .| ((imm >> Z8) & Z0xff))::
-    a (imm & Z0xff)::nil.
+    a ((Z4 << Z8) .| (zxbits imm Z24 Z32))::
+    a ((Z8 << Z8) .| (zxbits imm Z16 Z24))::
+    a ((Z12 << Z8) .| (zxbits imm Z8 Z16))::
+    a (zxbits imm Z0 Z8)::nil.
 (* reg = table[H(reg)] *)
 Definition arm_table_lookup ti sl sr reg :=
   [ UBFX reg reg (sl-Z2) sr;
@@ -221,6 +221,7 @@ Definition rewrite_w_table
           | Some irm =>
               let table := make_jump_table dis dis' ai sl sr (Z1 << (Z32 - sr)) in
               let tc' := fun x => if (list_eqb x dis) then Some (ti, sl, sr) else tc x in
+              if (ti + Z.of_nat (length table) >=? 2 ^ 30) then None else
               Some (irm, table, tc')
           end
       end
