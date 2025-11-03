@@ -113,6 +113,8 @@ Definition make_jump_table dis dis' ai sl sr n :=
 Definition PC := Z15.
 Definition LR := Z14.
 Definition SP := Z13.
+Definition ALIGN rt :=
+  ARM_data_i ARM_BIC Z14 Z0 rt rt Z3.
 Definition STR rt rn offset :=
   let U := if offset <? Z0 then Z0 else Z1 in
   ARM_ls_i ARM_STR Z14 Z1 U Z0 rn rt (Z.abs offset).
@@ -270,6 +272,7 @@ Definition pc_irm sanitized_inst reg : IRM :=
       MOVT  reg ((a >> Z16) & Z0xffff);  (* movt reg, #a[32:16] *)
       sanitized_inst                     (* sanitized_inst *)
     ]++arm_table_lookup ti sl sr reg++[  (* reg = table[H(reg)] *)
+      ALIGN SP;
       STR   reg SP Z_8;                  (* str reg, [sp, #-8] *)
       LDR   reg SP Z_4;                  (* ldr reg, [sp, #-4] *)
       LDR   PC  SP Z_8                   (* ldr pc, [sp, #-8] *)
