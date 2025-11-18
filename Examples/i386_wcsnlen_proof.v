@@ -178,8 +178,9 @@ Proof.
   (* step to address 1 *)
 
   intros.
-  eapply startof_prefix in ENTRY ; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply wcsnlen_welltyped).
+  erewrite startof_prefix in ENTRY ; try eassumption.
+  eapply models_at_invariant; try (eassumption || apply wcsnlen_welltyped).
+  clear MDL; intros MDL.
   clear - PRE MDL. rename t1 into t. rename s1 into s.
 
   destruct_inv 32 PRE.
