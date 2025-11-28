@@ -19,10 +19,11 @@ Definition dynamic_li_prog base_addr :=  [
   ].
 
 (* Compute this then copy-paste into the file below. *)
-Compute print_code_prop (dynamic_li_prog 0x00) 0x00 "dynamic_li".
+Compute print_code_prop 32 LittleE "V_MEM32" (dynamic_li_prog 0x00) 0x00 "dynamic_li".
+Compute print_exec_prop  (dynamic_li_prog 0x00) 0x00 "dynamic_li".
 
-Definition dynamic_li (mem:N) : Prop :=
- xbits mem 0 96 = 1816377102816974043348993.
+Definition dynamic_li (s:store) : Prop :=
+ getmem 32 LittleE 12 (s V_MEM32) 0 = 1816377102816974043348993.
 (* We set 16 bits of execution instead of the 12 to
   enable the execution of the dynamically written instruction. *)
 Definition dynamic_li_aexec (mem:N) : Prop :=

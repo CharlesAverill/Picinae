@@ -36,7 +36,7 @@ Theorem dynamicli_correctness:
   forall s t s' x'
          (ENTRY: startof t (x',s') = (Addr 0,s))
          (MDL: models pil32typctx s)
-         (MEM: dynamic_li (s V_MEM32))
+         (MEM: dynamic_li s)
          (EXEC: dynamic_li_aexec (s A_EXEC))
 ,
 (* We define our program as p32_prog, a function that looks into
@@ -47,7 +47,7 @@ Theorem dynamicli_correctness:
 *)
   satisfies_all p32_prog (invs s) dynamicli_exit ((x',s')::t).
 Proof.
-Local Ltac step := time pil32_step.
+Local Ltac step := time ISA_step.
 intros. unfold satisfies_all.
   apply prove_invs.
   (* Base case: *)
@@ -68,15 +68,16 @@ intros. unfold satisfies_all.
 
   destruct_inv 32 PRE.
   destruct PRE as [MEMSAME EXECSAME].
-  rewrite <-MEMSAME, <-EXECSAME in *.
+  unfold dynamic_li, dynamic_li_aexec in MEM, EXEC.
+  rewrite <-MEMSAME, <-EXECSAME in *. clear MEMSAME EXECSAME.
   step.
   step.
   step.
-  rewrite <-MEMSAME in *.
   (* Notice our address, 12, is exactly the location where we stored a
-     value, 12443, in memory. 12433 corresponds exactly to`PIL_li r5 777,`
+     value, 12443, in memory. 12433 decodes to`PIL_li r5 777,`
      the instruction for loading the immediate 777 into register 5.
   *)
   step.
   reflexivity.
-Qed.
+(* Qed fails for 460s *)
+Time Qed.

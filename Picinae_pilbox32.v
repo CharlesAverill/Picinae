@@ -108,41 +108,10 @@ Export PSimpl_pil32.
 Module PSimpl_pil32_v1_1 := Picinae_Simplifier_v1_1 IL_pil32 Theory_pil32 Statics_pil32 FInterp_pil32.
 Ltac PSimpl_pil32.PSimplifier ::= PSimpl_pil32_v1_1.PSimplifier.
 
+(* Unlike other architectures we do not export the ISA module, instead we leave it up
+   to the user to decide whether to use the ISA_pil32 module as is for static code, or
+   the self-modifying code module defined and exported in Picinae_pilbox32_interpreter.v. *)
 Module ISA_pil32 := Picinae_ISA IL_pil32 PSimpl_pil32 Theory_pil32 Statics_pil32 FInterp_pil32.
-Export ISA_pil32.
-
-(* Introduce unique aliases for tactics in case user loads multiple architectures. *)
-Tactic Notation "pil32_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
-Tactic Notation "pil32_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
-Tactic Notation "pil32_psimpl" "in" hyp(H) := psimpl_hyp H.
-Tactic Notation "pil32_psimpl" := psimpl_goal.
-Ltac pil32_step := ISA_step.
-
-(* To use a different simplifier version (e.g., v1_0) put the following atop
-   your proof .v file:
-Require Import Picinae_simplifier_v1_0.
-Module PSimpl_pil32_v1_0 := Picinae_Simplifier_v1_0 IL_pil32 Statics_pil32 FInterp_pil32.
-Ltac PSimpl_pil32.PSimplifier ::= PSimpl_pil32_v1_0.PSimplifier.
-*)
-
-(* Declare which context values are used to define store equivalence *)
-Definition pil32equivctx (id:var) : bool :=
-  match id with
-  | V_MEM32
-  | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5
-  | R_SP | R_LR => true
-  | _ => false
-  end.
-Definition pil32equiv (s1 s2:store) :=
-  forall (v:pil32var), pil32equivctx v = true -> s1 v = s2 v.
-Definition pil32equiv_or (s1 s2:store) (or_exception : pil32var -> bool) :=
-  forall (v:pil32var), pil32equivctx v = true -> or_exception v = true \/ s1 v = s2 v.
-
-(* TODO: how should we change the memory access machinery?
-         How does it work anyhoo? *)
-(* Simplify memory access propositions by observing that on arm, the only part
-   of the store that affects memory accessibility are the page-access bits
-   (A_READ and A_WRITE). *)
 
 Lemma memacc_read_frame:
   forall s v u (NE: v <> A_READ),
@@ -176,13 +145,8 @@ Proof.
   intros. unfold MemAcc, mem_writable. rewrite !update_updated. reflexivity.
 Qed.
 
-Ltac simpl_memaccs H ::=
-  try lazymatch type of H with context [ MemAcc mem_writable ] =>
-    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
-  end;
-  try lazymatch type of H with context [ MemAcc mem_readable ] =>
-    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
-  end.
+Module ISA_pil32_static.
+Export ISA_pil32.
 
 (* Simplify arm memory access assertions produced by step_stmt. *)
 Ltac simpl_memaccs H ::=
@@ -192,6 +156,40 @@ Ltac simpl_memaccs H ::=
   try lazymatch type of H with context [ MemAcc mem_readable ] =>
     rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
   end.
+
+(* Introduce unique aliases for tactics in case user loads multiple architectures. *)
+Tactic Notation "pil32_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
+Tactic Notation "pil32_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+Tactic Notation "pil32_psimpl" "in" hyp(H) := psimpl_hyp H.
+Tactic Notation "pil32_psimpl" := psimpl_goal.
+(* Ltac pil32_step := ISA_step. *)
+
+(* To use a different simplifier version (e.g., v1_0) put the following atop
+   your proof .v file:
+Require Import Picinae_simplifier_v1_0.
+Module PSimpl_pil32_v1_0 := Picinae_Simplifier_v1_0 IL_pil32 Statics_pil32 FInterp_pil32.
+Ltac PSimpl_pil32.PSimplifier ::= PSimpl_pil32_v1_0.PSimplifier.
+*)
+
+(* Declare which context values are used to define store equivalence *)
+Definition pil32equivctx (id:var) : bool :=
+  match id with
+  | V_MEM32
+  | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5
+  | R_SP | R_LR => true
+  | _ => false
+  end.
+Definition pil32equiv (s1 s2:store) :=
+  forall (v:pil32var), pil32equivctx v = true -> s1 v = s2 v.
+Definition pil32equiv_or (s1 s2:store) (or_exception : pil32var -> bool) :=
+  forall (v:pil32var), pil32equivctx v = true -> or_exception v = true \/ s1 v = s2 v.
+
+(* TODO: how should we change the memory access machinery?
+         How does it work anyhoo? *)
+(* Simplify memory access propositions by observing that on arm, the only part
+   of the store that affects memory accessibility are the page-access bits
+   (A_READ and A_WRITE). *)
+End ISA_pil32_static.
 
 (* Define ISA-specific notations: *)
 

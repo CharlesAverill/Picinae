@@ -672,112 +672,36 @@ Qed.
       5) prove it.
 *)
 
-Definition insn_length (insn:p32_asm) : N := 4.
+Require Import Picinae_SMC.
 
-(* Each assembly code is represented as
+Module SMC_Params_pil32 <: PICINAE_SMC.
+  Definition asm := p32_asm.
+  Definition insn_length (a:asm) := 4%N.
+  Definition assemble_insn := assemble_insn.
+End SMC_Params_pil32.
 
-      * a base address (e.g. 0x00100000)
-      * a list of labels (strings) and instructions (p32_asm)
-*)
-Inductive p32_assembly :=
-  P32_ASSEMBLY (base_addr:N) (code:list (sum string p32_asm)).
+Module SMC_pil32 := Picinae_SMC IL_pil32 PSimpl_pil32 Theory_pil32 Statics_pil32 FInterp_pil32 SMC_Params_pil32.
+Export SMC_pil32.
 
-Fixpoint label_loc (label:string) (base_addr:N) (code:list (sum string p32_asm)) : option N :=
-  match code with
-  | nil => None
-  | inl label' :: t => if (label =? label')%string then Some base_addr
-      else label_loc label base_addr t
-  | inr insn :: t => label_loc label (base_addr + (insn_length insn)) t
+(* Simplify arm memory access assertions produced by step_stmt. *)
+Ltac simpl_memaccs H ::=
+  try lazymatch type of H with context [ MemAcc mem_writable ] =>
+    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
+  end;
+  try lazymatch type of H with context [ MemAcc mem_readable ] =>
+    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
   end.
 
-Import ListNotations.
-Open Scope string.
 
-Definition p32_assemble_insn_bytes (insn:p32_asm) : list N :=
-  (xnbits (assemble_insn insn) 0  8) ::
-  (xnbits (assemble_insn insn) 8  8) ::
-  (xnbits (assemble_insn insn) 16 8) ::
-  (xnbits (assemble_insn insn) 24 8) :: nil.
+Ltac unfold_prog_hook ::= unfold p32_prog, p32_stmt.
 
-Fixpoint p32_assemble' (base_addr:N) (mem:N) (code:list (p32_asm)) : N :=
-  match code with
-  | nil => mem
-  | insn :: t => p32_assemble' (base_addr+4) (setmem 32 LittleE 4 mem base_addr (assemble_insn insn)) t
-  end.
-
-Require Import String.
-Require Import Ascii.
-Require Import Recdef.
-Require Import Program.
-Require Import Lia.
-
-Open Scope string.
-Open Scope nat.
-Definition newline :string := String "010" EmptyString.
-
-(* Serious performance issues converting 4+ digit numbers to a string.
-   at 6 digits Coqide crashes. *)
-Program Fixpoint nat2str (n:nat) (acc:string) {measure n}: string :=
-  (match n with
-    | O => String "0" acc
-    | 1 => String "1" acc
-    | 2 => String "2" acc
-    | 3 => String "3" acc
-    | 4 => String "4" acc
-    | 5 => String "5" acc
-    | 6 => String "6" acc
-    | 7 => String "7" acc
-    | 8 => String "8" acc
-    | 9 => String "9" acc
-    | _ => nat2str (n/10)
-       (String (match n mod 10 with
-         | O => "0"
-         | 1 => "1"
-         | 2 => "2"
-         | 3 => "3"
-         | 4 => "4"
-         | 5 => "5"
-         | 6 => "6"
-         | 7 => "7"
-         | 8 => "8"
-         | 9 => "9"
-         | _ => "!"
-       end) acc)
-  end)%nat .
-Obligation 1.
-  repeat split; intro; discriminate. Defined.
-Next Obligation.
-  enough (H': fst (Nat.divmod n 9 0 9) = (n / 10));[
-  rewrite H'; apply Nat.div_lt; lia| now unfold Nat.divmod]. Defined.
-Next Obligation.
-  repeat split; intro; discriminate. Defined.
-Close Scope nat.
-
-Definition N2str n := nat2str (N.to_nat n) EmptyString.
-
-Fixpoint p32_code_length (code:list p32_asm) : N:=
-  match code with
-  | nil => 0
-  | h::t => (insn_length h) + (p32_code_length t)
-  end.
-
-Definition print_code_prop (code:list p32_asm) (base_addr:N) (name:string) :=
-  ("Definition " ++ name ++ " (mem:N) : Prop :=" ++ newline ++
-  " xbits mem " ++ (N2str (base_addr * 8)) ++ " " ++
-  (N2str ((base_addr + (p32_code_length code)) * 8)) ++ " = " ++
-  "XXXX" ++ "." ++ newline ++
-  "Definition " ++ name ++ "_aexec (mem:N) : Prop :=" ++ newline ++
-  "  xbits mem " ++ (N2str base_addr) ++ " " ++
-  (N2str (base_addr + (p32_code_length code))) ++ " = " ++
-  "XXXX" ++ "." ++ newline
-  , (p32_assemble' 0 0 code)
-  , N.ones (p32_code_length code) ).
 
 (* Definition program' := [PIL_li 0 0; PIL_addi 1 1 1; PIL_subi 2 2 1; PIL_beq 0 2 (-12)%Z]. *)
 (* Compute p32_assemble 0x00100000 program'. *)
 (* Compute p32_code_length program'. *)
 (* Compute p32_assemble' 0 0 program'. *)
 (* Compute print_code_prop program' 0 "p". *)
+  (*
 Ltac get_exec :=
   repeat match goal with
   | [P: ?prop ?v |- _ ] => unfold prop in P
@@ -803,3 +727,4 @@ Ltac psa_some_hook ::=   unfold p32_prog, p32_stmt; get_exec;
     rewrite (xbits_split2 i a b j mem v); try lia; vm_compute (p32_decode _)
   | _ => reflexivity
   end.
+   *)

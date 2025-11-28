@@ -4632,6 +4632,18 @@ Proof.
   destruct e; reflexivity.
 Qed.
 
+Corollary getmem_1_xbits: forall w e m a,
+  getmem w e 1 m a = xbits m (a mod 2 ^ w * 8) (N.succ (a mod 2 ^ w) * 8).
+Proof.
+  intros; rewrite getmem_1; unfold getbyte; reflexivity.
+Qed.
+
+Corollary getbyte_xbits: forall w m a,
+  getbyte m a w = xbits m (a mod 2 ^ w * 8) (N.succ (a mod 2 ^ w) * 8).
+Proof.
+  intros; unfold getbyte; reflexivity.
+Qed.
+
 Corollary setmem_1: forall w e m a v, setmem w e 1 m a v = setbyte m a v w.
 Proof.
   intros.
@@ -4751,7 +4763,15 @@ Proof.
         rewrite N.mul_succ_l. apply N.le_add_l.
 Qed.
 
-(* Break an (i+j)-byte number read/stored to/from memory into two numbers of size i and j. *)
+(* Break an (i+j)-byte number read/stored to/from memory into two numbers of size i and j.
+   `j` is always the bytes in the higher memory addresses. For Big Endian, these are the least
+   significant bytes, for LittleE these are the most significant bytes.
+   getmem w e (i+j) m a:
+
+        |---     i        ---|     |---     j       ---|
+        [ ] [ ]  [ ]  ...  [ ]     [ ]    ...        [ ]
+        a   a+1  a+2       a+i-1   a+i               a+j-1
+*)
 Theorem getmem_split:
   forall w e i j m a, getmem w e (i+j) m a =
     match e with BigE => N.lor (getmem w e j m (a+i)) (N.shiftl (getmem w e i m a) (j*8))
@@ -4764,6 +4784,20 @@ Proof.
       rewrite N.shiftl_lor, N.shiftl_shiftl, N.lor_assoc, <- IHi, <- N.mul_add_distr_r. apply getmem_succ.
       rewrite (N.mul_succ_l i), <- N.shiftl_shiftl, <- N.lor_assoc, <- N.shiftl_lor, <- IHi. apply getmem_succ.
 Qed.
+
+(* Split off the first byte read from the rest.  Used in decoding self-modifying code. *)
+Corollary getmem_first:
+  forall w e i i' m a (H: i = 1 + i'), getmem w e i m a =
+    match e with BigE => N.lor (getbyte m (a+i') w) (N.shiftl (getmem w e i' m a) 8)
+               | LittleE => N.lor (getbyte m a w) (N.shiftl (getmem w e i' m (1+a)) 8)
+    end.
+Proof.
+  intros. rewrite H.
+  pose proof (getmem_split w e) as S. destruct e.
+  - specialize (S i' 1 m a). rewrite getmem_1 in S. rewrite N.add_comm at 1. assumption.
+  - specialize (S 1 i' m a). rewrite getmem_1 in S. rewrite S. simpl N.mul. rewrite N.add_comm. reflexivity.
+Qed.
+
 
 Theorem setmem_split:
   forall w e i j m a v, setmem w e (i+j) m a v =
@@ -5191,6 +5225,27 @@ Proof.
   rewrite <-N.add_succ_comm; assumption.
 Qed.
 
+Corollary getmem_byte {w e len m a v i}:
+  forall
+    (V: getmem w e len m a = v)
+    (LT: len+a < 2^w)
+    (LTi: a <= i < a+len),
+    getbyte m i w =
+    match e with
+    | LittleE => xbits v (8*(i-a)) (8*(1+i-a))
+    | BigE => xbits v (8*(a+len-i)) (8*(1+a+len-i))
+    end.
+Proof.
+  intros.
+  Search getbyte.
+  rewrite <-getmem_1 with (e:=e).
+  Check getmem_split.
+  replace len with ((i-a)+(a+len-i)) in V by lia.
+  rewrite getmem_split in V.
+  Check recompose_bytes.
+  destruct e.
+Admitted.
+
 Theorem setmem_merge:
   forall w e i j m a v1 v2,
   setmem w e j (setmem w e i m a v1) (a+i) v2 =
@@ -5601,6 +5656,18 @@ Proof.
   intros.
   assert (NO2 := noverlap_symmetry _ _ _ _ _ NO).
   apply noverlap_sep in NO,NO2.
+  apply getmem_frame; assumption.
+Qed.
+
+Theorem getbyte_noverlap:
+  forall w e2 len2 m a1 a2 v
+    (NO: ~overlap w a1 1 a2 len2),
+  getbyte (setmem w e2 len2 m a2 v) a1 w = getbyte m a1 w.
+Proof.
+  intros.
+  assert (NO2 := noverlap_symmetry _ _ _ _ _ NO).
+  apply noverlap_sep in NO,NO2.
+  rewrite <-!getmem_1 with (e:=BigE).
   apply getmem_frame; assumption.
 Qed.
 
