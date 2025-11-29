@@ -251,7 +251,7 @@ Ltac reduce_getmem x H :=
 Ltac reduce_testbitmem x H :=
   let htyp := type of H in
   lazymatch ltac:(constr:((htyp, x))) with
-  | (xbits ?b ?l ?h = ?mem, N.testbit ?v ?i) => 
+  | (xbits ?b ?l ?h = ?mem, N.testbit ?v ?i) =>
     let HELP := fresh "H" in
     assert (HELP: l <= i /\ i <= h) by (split; lia); clear HELP;
     rewrite testbit_xbits, (xbits_split2 l i (N.succ i) h v mem);
@@ -271,16 +271,16 @@ Global Ltac effinv_none_hook ::=
          | H: xbits ?v _ _ = _ |- context[N.testbit ?v ?m] => reduce_testbitmem (N.testbit v m) H
          end;
   repeat  match goal with
-          | MEM: getmem _ _ _ _ _ = _ |- context[getmem ?w ?e ?len ?m ?a] => idtac len m a;
+          | MEM: getmem _ _ _ _ _ = _ |- context[getmem ?w ?e ?len ?m ?a] =>
               reduce_getmem (getmem w e len m a) MEM
           end;
   first [timeout 2 vm_compute | idtac].
-
 (* Original version had a different ltac for decoding instructions, but the arm7 architecture
    shows that some architectures require decoding instructions to tell if the program effectively
    exited. So now effinv_none_hook includes the decoding machinery as well and `psa_some_hook`
    is redundant by default but available for fine tuning the machinery. *)
-Ltac psa_some_hook ::= 
-  effinv_none_hook.
+Ltac psa_some_hook ::=
+  effinv_none_hook;
+  show_goal.
 
 End Picinae_SMC.

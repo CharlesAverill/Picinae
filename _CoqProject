@@ -12,7 +12,7 @@ Picinae_SMC.v
 Picinae_armv7.v
 Picinae_armv7_lifter.v
 # Picinae_armv8.v
-# Picinae_riscv.v
+Picinae_riscv.v
 # Picinae_amd64.v
 Picinae_numbers.v
 Picinae_pilbox32.v
@@ -37,3 +37,4 @@ Picinae_pilbox32_interpreter.v
 # Examples/i386_wcsspn_proof.v
 Examples/p32_dynamicli.v
 Examples/arm7_collatz_smc.v
+Examples/riscv_collatz_smc.v

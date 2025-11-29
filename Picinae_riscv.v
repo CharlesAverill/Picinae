@@ -392,7 +392,7 @@ Definition rv_stmt m a :=
 
 Definition rv_prog : program :=
   fun s a => if N.testbit (s A_EXEC) a then
-               Some (4, rv_stmt (getmem 32 LittleE 1 (s V_MEM32) a) a)
+               Some (4, rv_stmt (s V_MEM32) a)
              else None.
 
 Lemma hastyp_r5mov:
@@ -526,3 +526,26 @@ Notation "x .^ y" := (N.lxor x y) (at level 57, left associativity). (* logical 
 Notation "x .| y" := (N.lor x y) (at level 58, left associativity). (* logical or *)
 
 End RISCVNotations.
+
+Require Import Picinae_SMC.
+
+Module SMC_Params_RISCV <: PICINAE_SMC.
+  Definition asm := rv_asm.
+  Definition insn_length (a:asm) := 4%N.
+  Definition assemble_insn (a:asm) := 0%N.
+End SMC_Params_RISCV.
+
+Module SMC_RISCV := Picinae_SMC IL_RISCV PSimpl_RISCV Theory_RISCV Statics_RISCV FInterp_RISCV SMC_Params_RISCV.
+Export SMC_RISCV.
+
+(* Simplify arm memory access assertions produced by step_stmt. *)
+Ltac simpl_memaccs H ::=
+  try lazymatch type of H with context [ MemAcc mem_writable ] =>
+    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
+  end;
+  try lazymatch type of H with context [ MemAcc mem_readable ] =>
+    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
+  end.
+
+
+Ltac unfold_prog_hook ::= unfold rv_prog, rv_stmt.
