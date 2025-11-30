@@ -710,7 +710,7 @@ Ltac step_stmt XS :=
       eapply reduce_stmt in XS;
       [ let unk := fresh "unknown" in (
           destruct XS as [unk XS];
-          compute in XS;
+          cbv -[N.add] in XS;
           repeat match type of XS with context [ unk ?i ] =>
             let n := fresh "n" in set (n:=unk i) in XS; clearbody n
           end;

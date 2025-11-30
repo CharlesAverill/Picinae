@@ -30,6 +30,15 @@ Definition collatz_exit (t:trace) :=
   | _ => false
   end | _ => false end.
 
+(* Overwrite the psa_some hook to use `cbv` rather than `cbv -[N.add]`.
+   The RISCV program definition needs to reduce addition, whereasthe `-[N.add]`
+   modifier was added to prevent aggressive reduction of `variable+offset`
+   addresses in variably-placed ARMv7 code. *)
+Ltac psa_some_hook ::=
+  effinv_none_hook;
+  cbv;
+  match goal with |- ?G => idtac G end.
+
 Theorem collatz_correctness:
   forall s t s' x' inp
          (ENTRY: startof t (x',s') = (Addr 0x100,s))
@@ -63,7 +72,6 @@ intros. unfold satisfies_all.
   destruct PRE as ((MEMSAME & EXECSAME) & INP).
   unfold collatz_riscv, collatz_riscv_aexec in *; rewrite MEMSAME, EXECSAME in *.
   clear MEMSAME EXECSAME.
-
   step.
   step.
   step.

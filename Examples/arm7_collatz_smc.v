@@ -20,7 +20,7 @@ Definition right := 2.
 (* Receive input inp in register 0, named rz and used to store 0 in the code.
    Move inp from rz to r, load 0 into rz.
    Evaluate tr to be the code for rz if inp is even, code for r if it is odd.
-   Update the final ADD instruction to add the register referred to by tr. 
+   Update the final ADD instruction to add the register referred to by tr.
 
    NB: The first PIL statement to execute in each instruction loads the PC
        into R_PC.
@@ -30,13 +30,13 @@ Definition right := 2.
     _start:
 256     mov r1, r0
 260     mov r0, #0
-264     eor r5, r1, #1
+264     and r5, r1, #1
 268     strb r5, [pc, #11] ---+ Overwrite the r8 operand byte.
                               | It becomes either r or rz.
 272     add r2, r1, #1        | The other bits in this byte
 276     lsr r2, r2, #1        | are conveniently all zeros.
 280     add r0, r2, r8   <----+
-284     bx lr 
+284     bx lr
 
   *)
 
@@ -66,8 +66,8 @@ Compute arm_assemble_all collatz_prog.
 Compute print_code_prop 32 LittleE "V_MEM32" collatz_prog 0x100 "collatz_arm7".
 Compute print_exec_prop collatz_prog 0x100 "collatz_arm7".
 
-Definition collatz_arm7 (s:store) : Prop :=
- getmem 32 LittleE 32 (s V_MEM32) 256 = 
+Definition collatz_arm7 (base:addr) (s:store) : Prop :=
+ getmem 32 LittleE 32 (s V_MEM32) base =
         101855193521039785343392224741083126283860177008767390847333957731433903558656.
-Definition collatz_arm7_aexec (mem:N) : Prop :=
-  xbits mem 256 288 = 4294967295.
+Definition collatz_arm7_aexec (base:addr) (mem:N) : Prop :=
+  xbits mem base base+32 = 4294967295.

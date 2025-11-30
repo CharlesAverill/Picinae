@@ -171,34 +171,46 @@ Ltac unfold_store_props :=
   | [P: ?prop (?s _) |- _ ] => match type of s with store => unfold prop in P end
   end.
 
-(* Does not yet support permission bit modification. No code we have modeled updates
-   permission bits, so we have not needed it. But we can extend it the same way we
-   can model updates to the code. *)
-Ltac get_exec :=
-  repeat match goal with
-  (* Frame out store updates from the exec permission read *)
-  | [H: xbits (_ ?m) _ _ = _ |- context[N.testbit (update ?s _ _ ?m) _]] =>
-    rewrite (update_frame s _ _ m);[|easy]
-  (* Finally, now that we are reading the bit from the same variable (e.g., `s A_EXEC`) that
-     we have a proposition about we can evaluate what the bit is.  The `assert HELP` ensures
-     we are using the right proposition by checking the bit we are reading is within the bounds.
-     We use an assert instead of failure because we want to use `try lia` to address the arithmetic
-     goals instead of the more syntactically cumbersome and fragile goal selectors. *)
-  | [H: xbits ?v ?l ?h = ?mem |- context[N.testbit ?v ?i]] =>
-    let HELP := fresh "H" in
-    assert (HELP: l <= i /\ i <= h) by (split; lia); clear HELP;
-    rewrite testbit_xbits, (xbits_split2 l i (N.succ i) h v mem);
-    try lia; vm_compute (N.odd _)
-  end.
-
 Ltac unfold_prog_hook := idtac "You need to override this Ltac with an ltac unfolding the definition(s) of your memory-decoding program function.";
   idtac "E.g., `Ltac unfold_prog_hook ::= unfold p32_prog, p32_stmt."; fail.
+
+(* This hook changes which simplifier reduces the effinv expression in
+   effinv_none_hook.  vm_compute may produce incomprehensible results (when?)
+   that prevent downstream machinery from terminating.  Psimpl may change the
+   context an evar is in resulting in the inability to unify it with the necessary
+   terms.  In either case, both tactics block execution so this hook is a workaround.
+   The ideal case is psimpl handles all the simplification we need without
+   preventing evar unification.
+
+   The compromise is to selectively psimpl the left-hand side if the goal is an equality,
+   otherwise just psimpl.
+
+   But psimpl is a specialty simplifier and will not simplify goals such as the following:
+
+      (if
+          match arm_decode (BinInt.Z.of_N 3800043520) with
+          | ARM_UNPREDICTABLE | idk => None
+          | _ => Some (4, arm2il base (arm_decode (BinInt.Z.of_N 3800043520)))
+          end
+          then None
+          else Some (mem_unchanged s0 s /\ inp = inp /\ 0 = 0 /\ 0 = 0 /\ 0 = 0)) =
+      None
+*)
+Ltac psimpl_lhs := match goal with
+                   | |- ?lhs = _ => psimpl lhs
+                   | |- _ => psimpl
+                   end.
+Ltac invs_simpl_hook := psimpl_lhs.
+
 
 Ltac reduce_frames :=
   repeat match goal with
          | |- context[update ?s _ _ ?m] => rewrite (update_frame s _ _ m);[|easy]
          end.
 
+(* TODO: this does more than rewrite variables read from the store. For example,
+   it will rewrite using the hypothesis `H: base mod 4 = 0`.  This is unexpected,
+   but useful where I saw it. *)
 Ltac rewrite_vars :=
   repeat match goal with
   | [S: store, H: ?S ?v = _ |- context[?S ?v]] => rewrite H in *
@@ -207,17 +219,16 @@ Ltac rewrite_vars :=
 Ltac reduce_getmem_hyp :=
   match goal with
   | MEM: getmem _ _ _ ?m _ = _ |- context[getbyte ?m _ _] =>
-      erewrite (getmem_byte MEM); try lia; first [timeout 1 vm_compute xbits | idtac]
+      erewrite (getmem_byte MEM); try lia; psimpl_lhs
   end.
 
 (* Solves simple existentially quantified sums. E.g., `4 = 1 + ?i`. *)
 Ltac solve_sum :=
   match goal with |- ?n = 1 + _ => replace n with (1+(n-1)) by lia; simpl N.sub; reflexivity end.
 
-Ltac reduce_getmem x H :=
-  let htyp := type of H in
-  lazymatch ltac:(constr:((htyp,x))) with
-  | (getmem _ _ _ _ _ = _, getmem _ _ _ _ _) =>
+Ltac reduce_getmem x :=
+  lazymatch x with
+  |  getmem _ _ _ _ _ =>
     let H := fresh "H" in
     eassert (H: x = _);[
         reduce_frames;
@@ -228,7 +239,7 @@ Ltac reduce_getmem x H :=
           repeat match goal with
                 | |- context[getbyte (setmem ?w _ ?len _ ?a ?v) ?b ?w] =>
                     first [
-                      rewrite getbyte_noverlap;[|apply noverlap_sum; timeout 1 vm_compute msub; lia]
+                      rewrite getbyte_noverlap;[|apply noverlap_sum; psimpl_lhs; lia]
                     | let i := constr:(b - a) in
                         replace b with (a + i) by lia;
                         rewrite setmem_byte;[|lia|lia]
@@ -240,8 +251,9 @@ Ltac reduce_getmem x H :=
       rewrite getmem_0;
       (*  At this point the goal is `byte_1 .| byte_2 .| ... .| 0 = ?Goal`
           We need to use psimpl on the left hand side only, otherwise it
-          instantiates the evar ?Goal to 0. *)
-      match goal with |- ?lhs = _ => psimpl lhs end; reflexivity
+          might instantiate the evar ?Goal to 0 or render some variable out
+          of the evar's scope. *)
+      psimpl_lhs; reflexivity
   |];
 (* Do not put the `rewrite H` inside of the [|] tactical to force evar instantiation before use. *)
   rewrite H in *; clear H
@@ -258,29 +270,123 @@ Ltac reduce_testbitmem x H :=
     try lia; vm_compute (N.odd _)
   end.
 
+Ltac unfold_h x :=
+    match x with
+    | ?h => unfold h
+    | ?h _ => unfold h
+    | ?h _ _ => unfold h
+    | ?h _ _ _ => unfold h
+    | ?h _ _ _ _ => unfold h
+    | ?h _ _ _ _ _ => unfold h
+    | ?h _ _ _ _ _ _ => unfold h
+    | ?h _ _ _ _ _ _ _ => unfold h
+    | ?h _ _ _ _ _ _ _ _ => unfold h
+    | ?h _ _ _ _ _ _ _ _ _ => unfold h
+    | ?h _ _ _ _ _ _ _ _ _ _ => unfold h
+    | _ => idtac "Failed to unfold, function has too many arguments!"; fail
+    end.
+
+Ltac unfold_h_in x H :=
+    match x with
+    | ?h => unfold h in H
+    | ?h _ => unfold h in H
+    | ?h _ _ => unfold h in H
+    | ?h _ _ _ => unfold h in H
+    | ?h _ _ _ _ => unfold h in H
+    | ?h _ _ _ _ _ => unfold h in H
+    | ?h _ _ _ _ _ _ => unfold h in H
+    | ?h _ _ _ _ _ _ _ => unfold h in H
+    | ?h _ _ _ _ _ _ _ _ => unfold h in H
+    | ?h _ _ _ _ _ _ _ _ _ => unfold h in H
+    | ?h _ _ _ _ _ _ _ _ _ _ => unfold h in H
+    | _ => idtac "Failed to unfold, function has too many arguments!"; fail
+    end.
+
+
+(* Expects goal to be `effinv ...` *)
+Ltac unfold_invs_exit :=
+  match goal with
+  |- effinv _ _ ?invs  ?exit _ = _ => unfold_h invs; unfold_h exit
+  end.
+
+(* Try to reduce `a mod n` to 0...n-1.  Called *)
+Ltac solve_mod_rec a n i :=
+  let H := fresh "H" in
+  let iN := eval cbv in (N.of_nat i) in
+  first [
+    assert (H: a mod n = iN) by lia; rewrite H in *; clear H
+  | assert (H: iN < n) by lia; clear H; solve_mod_rec a n (S i)
+  ].
+
+Ltac solve_mod a n :=
+  let H := fresh "H" in
+  assert (H: n < 256) by lia; clear H;
+  solve_mod_rec a n O%nat.
+
+Ltac reduce_comps :=
+  repeat match goal with
+  | |- context [?x =? ?y] =>
+      replace (x =? y) with true by lia
+  | |- context [?x =? ?y] =>
+      replace (x =? y) with false by lia
+  | |- context [?x <? ?y] =>
+      replace (x <? y) with true by lia
+  | |- context [?x <? ?y] =>
+      replace (x <? y) with false by lia
+  end.
+
+Ltac reduce_comps_in H :=
+  repeat match type of H with
+  | context [?x =? ?y] => idtac x y;
+      replace (x =? y) with true in H by lia
+  | context [?x =? ?y] => idtac x y;
+      replace (x =? y) with false in H by lia
+  | context [?x <? ?y] =>
+      replace (x <? y) with true in H by lia
+  | context [?x <? ?y] =>
+      replace (x <? y) with false in H by lia
+  end.
+
 (* These hooks are used in ISA_invseek to simplify the memory program
    instruction expression which, for an interpreted language like this
    one, is read as bytes from memory then decoded. *)
 Global Ltac effinv_none_hook ::=
+  try unfold_invs_exit;
   unfold effinv, effinv';
   unfold_prog_hook;
   unfold_store_props;
   reduce_frames;
+  repeat match goal with |- context[?a mod ?n] => solve_mod a n end;
   rewrite_vars;
+  (* Reduce the comparisons used in variable-location code. *)
+  reduce_comps;
+  (* Reduce permission bit tests. *)
   repeat match goal with
          | H: xbits ?v _ _ = _ |- context[N.testbit ?v ?m] => reduce_testbitmem (N.testbit v m) H
          end;
+  (* Reduce memory reads. *)
   repeat  match goal with
           | MEM: getmem _ _ _ _ _ = _ |- context[getmem ?w ?e ?len ?m ?a] =>
-              reduce_getmem (getmem w e len m a) MEM
+              reduce_getmem (getmem w e len m a)
           end;
-  first [timeout 2 vm_compute | idtac].
+  (* When do we want to reduce with vm_compute rather than psimpl? *)
+  first [invs_simpl_hook | idtac].
+
 (* Original version had a different ltac for decoding instructions, but the arm7 architecture
    shows that some architectures require decoding instructions to tell if the program effectively
    exited. So now effinv_none_hook includes the decoding machinery as well and `psa_some_hook`
    is redundant by default but available for fine tuning the machinery. *)
 Ltac psa_some_hook ::=
   effinv_none_hook;
+  cbv -[N.add]; (* This computes the term without expanding program counters expressed as
+                  offsets from a variable base address, e.g., `base + 8`. *)
   show_goal.
+
+Ltac prep_precondition PRE :=
+  match type of PRE with
+  | true_inv (get_precondition _ ?invs ?exits _ _ _) => unfold_h_in invs PRE; unfold_h_in exits PRE
+  end;
+  unfold true_inv, get_precondition in PRE;
+  reduce_comps_in PRE.
 
 End Picinae_SMC.

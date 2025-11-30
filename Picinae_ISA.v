@@ -177,11 +177,6 @@ Proof. injection 1 as. split; assumption. Qed.
 Remark exitof_none a: exitof a None = Addr a. Proof eq_refl.
 Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
 
-(* If asked to step the computation when we're already at an invariant point,
-   just make the proof goal be the invariant. *)
-Ltac ISA_invhere :=
-  eapply nextinv_here; [ reflexivity | hnf; psimpl_goal ].
-
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" or "repeat" tactics
    to step through many instructions, but often it is wiser to pause and do
@@ -214,6 +209,11 @@ Ltac ISA_invseek :=
   try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
   repeat match goal with [ x:N |- _ ] => clear x end;
   try first [ rewrite exitof_none | rewrite exitof_some ].
+
+(* If asked to step the computation when we're already at an invariant point,
+   just make the proof goal be the invariant. *)
+Ltac ISA_invhere :=
+  eapply nextinv_here; [ effinv_none_hook; reflexivity | hnf; psimpl_goal ].
 
 (* Clear any stale memory-access hypotheses (arising from previous computation
    steps) and either step to the next machine instruction (if we're not at an
