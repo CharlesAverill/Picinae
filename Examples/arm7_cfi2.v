@@ -250,7 +250,7 @@ Definition blx_irm reg : IRM :=
 Definition rewrite_blx reg := rewrite_w_table (blx_irm reg).
 Definition ldm_pc_irm op Rn register_list reg orig_inst : IRM :=
   fun cond i ti sl sr =>
-    let bc := Z4 * Z_popcount register_list in
+    let bc := Z4 * Z_popcount (register_list mod 2^16) in
     let offset := arm_lsm_op_start op bc + bc - Z4 in
     arm_assemble_all_cond ([
       STR reg SP Z_4;                     (* str reg, [sp, #-4] *)
@@ -319,7 +319,7 @@ Definition rewrite_b_bl (l: bool) (cond imm24: Z) i dis i2i' ai tc : NewInst :=
   let dst := if (contains j dis) then (i2i' j) else ai in
   match GOTOz l cond (i2i' i) dst with
   | Some z => Some ([z], nil, tc)
-  | None => match GOTOz l cond (i2i' i) ai with
+  | None => match GOTOz true cond (i2i' i) ai with
             | Some z => Some ([z], nil, tc)
             | None => None
             end
@@ -361,8 +361,12 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
   if (negb (contains (i+Z1) dis)) then None else
   match decoded with
   (* branching *)
-  | ARM_BX cond reg => rewrite_bx reg tc dis i2i' cond i ti ai
-  | ARM_BLX_r cond reg => rewrite_blx reg tc dis i2i' cond i ti ai
+  | ARM_BX cond reg =>
+      if (reg <? 0) || (reg >=? PC) then rewrite_b cond 0 i dis i2i' ai tc (* bx pc is just a static branch in arm mode *)
+      else rewrite_bx reg tc dis i2i' cond i ti ai
+  | ARM_BLX_r cond reg =>
+      if (reg <? 0) || (reg >=? PC) then abort (* this can't happen (unpredictable), but it's easier to just do this than write a proof about the decoder *)
+      else rewrite_blx reg tc dis i2i' cond i ti ai
   | ARM_B cond imm24 => rewrite_b cond imm24 i dis i2i' ai tc
   | ARM_BL cond imm24 => rewrite_bl cond imm24 i dis i2i' ai tc
   (* data processing *)
@@ -435,7 +439,9 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
         else rewrite_pc_no_jump sanitized_inst cond i reg tc
       else unchanged
   | ARM_lsm op cond W Rn register_list =>
-      if (register_list <? (Z1 << Z15)) then unchanged (* pc is not in reg list *)
+      if (register_list <? Z0) || (Rn <? Z0) || (Rn >=? Z15) then abort (* not possible *)
+      else if (bitb register_list Z15 =? Z0) (* pc is not in reg list *)
+      || (match op with | ARM_STMDA | ARM_STMDB | ARM_STMIA | ARM_STMIB => true | _ => false end) then unchanged
       else
         let reg := if (Rn =? Z0) then Z1 else Z0 in
         rewrite_ldm_pc op Rn register_list reg decoded tc dis i2i' cond i ti ai

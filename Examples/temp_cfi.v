@@ -146,15 +146,6 @@ Qed.
 Definition MaintainsBlock b bi ei s :=
   ContainsBlock b s bi /\ DuringBlock (fun xs => ContainsBlock b (snd xs) bi) s bi (length b) ei.
 
-(* Lemma containsblock_cons: *)
-(*   forall b b' s i, ContainsBlock (b::b') s i -> ContainsBlock b' s (i+1). *)
-(* Proof. *)
-(*   intros. unfold ContainsBlock, InBlock. intros. specialize (H i'). *)
-(*   rewrite <-(Z.add_simpl_r i 1) in H at 2. *)
-(*   rewrite Z.sub_sub_distr, Z2Nat.inj_add, Nat.add_1_r, nth_error_S in H by lia. apply H. *)
-(*   simpl. split. lia. easy. *)
-(* Qed. *)
-
 Lemma ostartof_some_cons{A}:
   forall a b (c:A), ostartof a = Some b -> ostartof (c::a) = Some b.
 Proof.
@@ -211,7 +202,7 @@ Lemma afterblock_step:
     (Z: nth_error b (N.to_nat (ei - bi)) = Some z),
     (forall c' s' x, exec_stmt armc s (arm2il (ei*4) (arm_decode z)) c' s' x ->
         (x = None /\
-        (MaintainsBlock b bi (ei+1) (reset_temps s s') -> 
+        (MaintainsBlock b bi (ei+1) (reset_temps s s') ->
           AfterBlock P (reset_temps s s') bi (length b) (ei+1)) /\
         P (Addr ((ei+1)*4), (reset_temps s s'))) \/
         (x = None /\
@@ -235,12 +226,12 @@ Proof.
     (destruct x; [ inversion e; now try rewrite N.mul_add_distr_r in H2|]).
   {
     inversion e; subst; simpl in XP'.
-    eapply H1. 
+    eapply H1.
       pose proof (exec_prog_step _ _ _ (exec_prog_none _ _) H3).
       rewrite Forall_app in IB. destruct IB.
       split. apply db_db' in MB. eapply MB. rewrite app_nil_l. apply H. easy.
       intros ??????. eapply MB. rewrite app_cons,app_comm_cons in XP0. apply exec_prog_split in XP0 as [_ [_ ?]].
-      eapply (xp_splice _ _ _ _ H H6). now rewrite app_comm_cons, ostartof_niltail, N.mul_add_distr_r. 
+      eapply (xp_splice _ _ _ _ H H6). now rewrite app_comm_cons, ostartof_niltail, N.mul_add_distr_r.
       apply Forall_app. split. easy. now rewrite N.mul_add_distr_r.
     rewrite N.mul_add_distr_r. apply XP'.
     now apply Forall_app in IB.
@@ -267,7 +258,7 @@ Proof.
       apply XS1.
       inversion XS0. destruct b; [apply XIf with (b:=0)|apply XIf with (b:=1)]; now try constructor.
 Qed.
-Local Ltac mystep H := match type of H with ?a => idtac a end; match type of H with 
+Local Ltac mystep H := match type of H with ?a => idtac a end; match type of H with
                        | context[N.mul ?a 4] => remember (N.mul a 4); mystep H
                        | context[scast ?a ?b ?c] =>
                            remember (scast a b c); mystep H
@@ -305,7 +296,7 @@ Proof.
   induction a. exists nil, z. easy.
   intros. simpl in H. destruct_match_in H; try discriminate.
   apply IHa in e0 as [? [? [? [? ?]]]]. exists (z0::x), x0. repeat split.
-  inversion H. now subst. 
+  inversion H. now subst.
   simpl. now rewrite e, H1. easy.
 Qed.
 Lemma arm_assemble_all_len:
@@ -333,7 +324,7 @@ Lemma aaa: forall a b c m, b mod m = c mod m -> (a + b) mod m = (a + c) mod m.
 Proof.
   intros. now rewrite N.Div0.add_mod, H, <-N.Div0.add_mod.
 Qed.
-Lemma add: forall i s s' c' x reg imm shift,
+Lemma exec_add: forall i s s' c' x reg imm shift,
   (reg < 15)%Z ->
   (imm < 2^8) ->
   (shift < 2^4) ->
@@ -383,7 +374,7 @@ Proof. now specialize (reset_vars_overwrite_r armc). Qed.
 Lemma reset_temps_update_l:
   forall s s' n v v', reset_temps (s[R_PC := v][arm_varid n := v']) s' = reset_temps s s'.
 Proof.
-  intros. unfold reset_temps, arm_varid. now rewrite reset_vars_fchoose, !fchoose_update_l by now destruct_match_eqn. 
+  intros. unfold reset_temps, arm_varid. now rewrite reset_vars_fchoose, !fchoose_update_l by now destruct_match_eqn.
 Qed.
 Lemma reset_temps_not_temp:
   forall v s s', armc v <> None -> reset_temps s s' v = s' v.
@@ -414,7 +405,6 @@ Lemma after_arm_add: forall P reg v s bi b pre post ei
   (IB: (forall x, InBlockX bi (length b) x -> P x))
   (PC: let s' := s[R_PC := (ei + 3) * 4][arm_varid (Z.to_N reg) := s (arm_varid (Z.to_N reg)) ⊕ v] in
     MaintainsBlock b bi (ei+4) s' ->
-    (* Reachable (ei+4) s' ei s bi (length b) -> *)
     models armc s' ->
     AfterBlock P s' bi (length b) (ei+4)),
   AfterBlock P s bi (length b) ei.
@@ -424,12 +414,12 @@ Proof.
   apply arm_assemble_all_split in B as [b_pre [b_tail [? [BPRE B]]]]; subst; rename b_tail into b.
   apply arm_assemble_all_len in BPRE.
   apply arm_assemble_all_first in B as [? [? [? [? ?]]]]; subst.
-  eapply afterblock_step. easy. lia. 
+  eapply afterblock_step. easy. lia.
   replace_nth (length pre). rewrite nth_error_app2 by lia. replace_nth O. reflexivity.
 
   intros.
   rewrite H1, <-(Z2N.id 4), <-(Z2N.id (Z_xbits _ _ _)) in H0 by (apply Z_xbits_nonneg||lia).
-  apply add in H0 as [? ?]; [|assumption|rewrite Z2N_xbits by lia; apply xbits_bound|lia]. 
+  apply exec_add in H0 as [? ?]; [|assumption|rewrite Z2N_xbits by lia; apply xbits_bound|lia].
   left; repeat split; [easy|intros ? RA|shelve].
 
   apply arm_assemble_all_first in H as [? [? [? [? ?]]]]; subst x1.
@@ -438,7 +428,7 @@ replace_nth (S(length pre)). rewrite nth_error_app2. replace_nth 1%nat. now subs
 
   intros.
   rewrite H5, <-(Z2N.id 8), <-(Z2N.id (Z_xbits _ _ _)) in H2 by (apply Z_xbits_nonneg||lia).
-  apply add in H2 as [? ?]; [|assumption|rewrite Z2N_xbits by lia; apply xbits_bound|lia]. 
+  apply exec_add in H2 as [? ?]; [|assumption|rewrite Z2N_xbits by lia; apply xbits_bound|lia].
   left; repeat split; [easy|intros|shelve].
 
   apply arm_assemble_all_first in H as [? [? [? [? ?]]]]; subst x3.
@@ -447,7 +437,7 @@ replace_nth (S(length pre)). rewrite nth_error_app2. replace_nth 1%nat. now subs
 
   intros.
   rewrite H9, <-(Z2N.id 12), <-(Z2N.id (Z_xbits _ _ _)) in H8 by (apply Z_xbits_nonneg||lia).
-  apply add in H8 as [? ?]; [|assumption|rewrite Z2N_xbits by lia; apply xbits_bound|lia]. 
+  apply exec_add in H8 as [? ?]; [|assumption|rewrite Z2N_xbits by lia; apply xbits_bound|lia].
   left; repeat split; [easy|intros|shelve].
 
   apply arm_assemble_all_first in H as [? [? [? [? ?]]]]; subst x5.
@@ -458,7 +448,7 @@ replace_nth (S(length pre)). rewrite nth_error_app2. replace_nth 1%nat. now subs
   rewrite H13 in H12.
   replace (Z_xbits (Z.of_N v) 0 8) with (Z.lor (Z.shiftl (Z.of_N 0) 8) (Z_xbits (Z.of_N v) 0 8)) in H12 by now rewrite Z.lor_0_l.
   rewrite <-(Z2N.id (Z_xbits _ _ _)) in H12 by (apply Z_xbits_nonneg||lia).
-  apply add in H12 as [? ?]; [|assumption|rewrite Z2N_xbits by lia; apply xbits_bound|lia]. 
+  apply exec_add in H12 as [? ?]; [|assumption|rewrite Z2N_xbits by lia; apply xbits_bound|lia].
   left; repeat split; [easy|..|shelve].
 
   rewrite <-3N.add_assoc. rewrite !reset_temps_overwrite_l in *.
@@ -471,18 +461,18 @@ replace_nth (S(length pre)). rewrite nth_error_app2. replace_nth 1%nat. now subs
   Unshelve.
   clear.
   rewrite ! N.Div0.add_mod_idemp_l, <-N.add_assoc, N.Div0.add_mod_idemp_l, <-!N.add_assoc.
-  apply aaa. rewrite !Z2N_xbits by (apply N2Z.is_nonneg || lia). rewrite !N2Z.id. cbv [Z.to_N N.mul Pos.mul]. simpl N.sub. 
+  apply aaa. rewrite !Z2N_xbits by (apply N2Z.is_nonneg || lia). rewrite !N2Z.id. cbv [Z.to_N N.mul Pos.mul]. simpl N.sub.
   rewrite (N.shiftl_mul_pow2 _ 32), N.Div0.mod_mul, N.lor_0_r.
   erewrite <-(N.mod_small (_>>8)), <-(N.mod_small (_>>16)), <-(N.mod_small (_>>24)), <-(N.mod_small (_>>0)), <-!N_lor_mod_pow2.
   rewrite !N.add_assoc. repeat rewrite !N.Div0.add_mod_idemp_r, N.add_comm, !N.add_assoc.
-  apply N.bits_inj. intro. 
+  apply N.bits_inj. intro.
   destruct (N.lt_ge_cases n (32)).
   rewrite !N.mod_pow2_bits_low by assumption.
   rewrite 3 shiftr_low_pow2, !N.lor_0_l. rewrite <-!lor_plus, !N.lor_spec.
   rewrite !xbits_equiv, <-!N.ldiff_ones_r, !N.ldiff_spec, !N.shiftr_0_r, !N_ones_spec_ltb.
   destruct (N.lt_ge_cases n 8).
     repeat replace (_ <? _) with true by lia.
-    now rewrite !andb_false_r, N.mod_pow2_bits_low. 
+    now rewrite !andb_false_r, N.mod_pow2_bits_low.
   destruct (N.lt_ge_cases n 16).
     repeat replace (_ <? _) with true by lia. replace (_ <? _) with false by lia.
     now rewrite !andb_false_r, N.mod_pow2_bits_low, N.mod_pow2_bits_high, andb_true_r, orb_false_r.
@@ -491,15 +481,15 @@ replace_nth (S(length pre)). rewrite nth_error_app2. replace_nth 1%nat. now subs
     now rewrite !andb_false_r, !andb_true_r, N.mod_pow2_bits_low, !N.mod_pow2_bits_high, !orb_false_r by easy.
     repeat replace (_ <? _) with false by lia.
     now rewrite N.mod_pow2_bits_low, !N.mod_pow2_bits_high, !andb_true_r, !orb_false_r by easy.
-  apply N.bits_inj_0. intro. rewrite N.land_spec. 
+  apply N.bits_inj_0. intro. rewrite N.land_spec.
   destruct (N.lt_ge_cases n0 24).
     now rewrite N.shiftl_spec_low, andb_false_l by lia.
     unfold xbits. now rewrite (N.shiftl_spec_high' _ 16), N.mod_pow2_bits_high, andb_false_r by lia.
-  apply N.bits_inj_0. intro. rewrite N.land_spec, andb_false_iff. 
+  apply N.bits_inj_0. intro. rewrite N.land_spec, andb_false_iff.
   destruct (N.lt_ge_cases n0 16).
     change 24 with (8+16). rewrite <- N.shiftl_shiftl, Nshiftl_add_distr, N.shiftl_spec_low by easy. now left.
     rewrite !xbits_equiv, N.shiftl_spec_high', N.shiftr_spec', N.mod_pow2_bits_high by lia. now right.
-  apply N.bits_inj_0. intro. rewrite N.land_spec, andb_false_iff. 
+  apply N.bits_inj_0. intro. rewrite N.land_spec, andb_false_iff.
   destruct (N.lt_ge_cases n0 8).
     change 16 with (8+8). change 24 with (16+8). rewrite <-!N.shiftl_shiftl, !Nshiftl_add_distr, N.shiftl_spec_low by easy. now left.
     unfold xbits. rewrite N.shiftr_0_r, N.mod_pow2_bits_high by lia. now right.
@@ -517,10 +507,10 @@ Lemma bfx_bound: forall i s s' c' x widthm1 rd lsb rn,
   exec_stmt armc s (arm2il i (ARM_bfx false 14 (Z.of_N widthm1) rd lsb rn)) c' s' x ->
   exists n, s' = s[R_PC := i][arm_varid (Z.to_N rd) := n] /\ n < 2 ^ (widthm1+1) /\ x = None.
 Proof.
-  (* intros. mystep H; unfold arm_varid in H; destruct_match_in H; simpl in H; cbv [arm_cond_exp arm_assign_R arm_varid] in H; simpl in H; destruct_match_in H; rewrite N2Z.id in H; remember (Z.to_N lsb); remember (n + _); step_stmt H; destruct H; inversion H; exists n1; repeat split; *)
-  (* inversion E; inversion E1; rewrite <-H6, <-H11; simpl; subst; replace (widthm1 + 1) with (N.succ (Z.to_N lsb + widthm1) - Z.to_N lsb) by lia; apply xbits_bound. *)
-Admitted.
-(**)
+  intros. mystep H; unfold arm_varid in H; destruct_match_in H; simpl in H; cbv [arm_cond_exp arm_assign_R arm_varid] in H; simpl in H; destruct_match_in H; rewrite N2Z.id in H; remember (Z.to_N lsb); remember (n + _); step_stmt H; destruct H; inversion H; exists n1; repeat split;
+  inversion E; inversion E1; rewrite <-H6, <-H11; simpl; subst; replace (widthm1 + 1) with (N.succ (Z.to_N lsb + widthm1) - Z.to_N lsb) by lia; apply xbits_bound.
+Qed.
+
 Lemma UBFX_bound: forall i s s' c' x reg sl sr,
   exec_stmt armc s (arm2il i (UBFX reg reg sl (Z.of_N sr))) c' s' x ->
   (reg <> 15)%Z ->
@@ -551,7 +541,7 @@ Lemma afterblock_cond:
 Proof.
   intros.
 
-  unfold arm_assemble_all_cond in B. 
+  unfold arm_assemble_all_cond in B.
    destruct Z.ltb.
 
     assert (B':=B).
@@ -581,48 +571,19 @@ Qed.
 
 
 Lemma afterblock_fallthru:
-  forall n P b s bi,
-  Forall (fun z => forall s c' s' x i a, exec_stmt armc s (arm2il i (arm_decode z)) c' s' x -> x <> Some (Addr a)) b ->
-  (forall a s, InBlock (Z.of_N bi) (length b) a -> P (Addr a, s)) ->
-  (0 < length b)%nat ->
-  (MaintainsBlock b bi (bi+(N.of_nat (length b) - 1 - n)) s) ->
-  (forall s, P (Addr ((bi + N.of_nat (length b))*4), s)) ->
-  AfterBlock P s bi (length b) (bi+(N.of_nat (length b) - 1 - n)).
+  forall P b' b s bi,
+  Forall (fun z => forall s c' s' x i a, exec_stmt armc s (arm2il i (arm_decode z)) c' s' x -> x <> Some (Addr a)) b' ->
+  (forall a s, InBlock (Z.of_N bi) (length (b++b')) a -> P (Addr a, s)) ->
+  (0 < length b')%nat ->
+  (MaintainsBlock (b++b') bi (bi+N.of_nat (length b)) s) ->
+  (forall s, P (Addr ((bi + N.of_nat (length (b++b')))*4), s)) ->
+  AfterBlock P s bi (length (b++b')) (bi+N.of_nat (length b)).
 Proof.
-  induction n using N.peano_ind. intros. eapply afterblock_step. easy. lia.
-  replace_nth (length b - 1)%nat. apply nth_error_nth'. lia.
-  intros. rewrite Forall_nth in H. 
-  destruct x. destruct e.
-  eapply H in H4. easy. lia.
-  right. right. right. now exists i.
-  right. left. repeat split. lia. rewrite N.sub_0_r, <-N.add_assoc, N.sub_add by lia. apply H3.
-  intros. revert H2.
-  destruct (N.le_gt_cases (N.of_nat (length b) - 1) n). apply N.sub_0_le in H2. rewrite (proj2 (N.sub_0_le _ _)), <-H2 by lia. intro. now apply IHn.
-  intro.
-  eapply afterblock_step. easy. lia.
-  replace_nth (length b - 1 - N.to_nat (n + 1))%nat. apply nth_error_nth'. lia.
-  intros. assert (C:=H). rewrite Forall_nth in H.
-  destruct x. destruct e.
-  eapply H in H5. easy. lia.
-  right. right. right. now exists i.
-  destruct (Nat.eq_dec (length b) 1).
-  right. left. repeat split. lia. rewrite e, N.sub_diag, N.sub_0_l, N.add_0_r. now replace 1 with (N.of_nat (length b)) by lia.
-  left. repeat split. 
-  rewrite <-N.add_1_r, N.sub_add_distr, <-N.add_assoc, N.sub_add by lia. intros. now apply IHn.
-  apply H0. unfold InBlock. split. lia. apply N.divide_factor_r.
-  Unshelve. apply Z0. apply Z0.
-Qed.
-Lemma afterblock_fallthru':
-  forall P b s bi,
-  Forall (fun z => forall s c' s' x i a, exec_stmt armc s (arm2il i (arm_decode z)) c' s' x -> x <> Some (Addr a)) b -> 
-  (forall a s, InBlock (Z.of_N bi) (length b) a -> P (Addr a, s)) ->
-  (0 < length b)%nat ->
-  (MaintainsBlock b bi bi s) ->
-  (forall s, P (Addr ((bi + N.of_nat (length b))*4), s)) -> AfterBlock P s bi (length b) bi.
-Proof.
-  intros. assert (bi = (bi+(N.of_nat (length b)-1-(N.of_nat (length b)-1)))) by lia.
-  rewrite H4 at 2. rewrite H4 in H2 at 2.
-  now apply afterblock_fallthru.
+  destruct b'. easy. revert z. induction b'. intros. eapply afterblock_step. easy. lia. rewrite nth_error_app2. now replace_nth O. lia.
+  intros. inversion H. destruct x. destruct e. now eapply H7 in H4. right. right. right. now exists i. right. left. repeat split. rewrite length_app. simpl. lia. rewrite length_app in H3. simpl in H3. rewrite <-N.add_assoc. replace (_ + 1) with (N.of_nat (length b + 1)) by lia. apply H3.
+  intros. eapply afterblock_step. easy. lia. rewrite nth_error_app2. replace_nth O. easy. lia.
+  rewrite Forall_forall in H. pose proof (H z ltac:(now constructor)) as A. intros. destruct x. destruct e. now eapply A in H4.
+  right. right. right. now exists i. left. repeat split. rewrite app_cons. intro. rewrite <-N.add_assoc. replace (_ + 1) with (N.of_nat (length (b++z::nil))) by (rewrite length_app;simpl;lia). eapply IHb'. apply Forall_forall in H. inversion H. apply H9. intros. apply H0. now rewrite app_cons. simpl. lia. rewrite length_app. rewrite Nat2N.inj_add, N.add_assoc. apply H5. intro. now rewrite <-app_cons. apply H0. rewrite length_app. simpl. unfold InBlock. split. lia. apply N.divide_factor_r.
 Qed.
 
 
@@ -639,7 +600,7 @@ Proof.
   remember (_ - _ - _)%Z as offset. unfold Z2 in *.
   assert (src * 4 ⊕ 8 ⊕ scast 26 32 (Z.to_N (offset mod 16777216) << 2) .& 4294967292 = dest * 4).
   {
-change 2 with (Z.to_N 2) at 2. rewrite <- Z2N_inj_shiftl, Z.shiftl_mul_pow2, <- Zmult_mod_distr_r by lia.
+    change 2 with (Z.to_N 2) at 2. rewrite <- Z2N_inj_shiftl, Z.shiftl_mul_pow2, <- Zmult_mod_distr_r by lia.
     change (Z.to_N _) with (ofZ 26 (offset * 4)).
     unfold scast. rewrite toZ_ofZ by (unfold signed_range; cbn; lia). unfold ofZ.
     rewrite <- (N2Z.id ((_ + 8) mod _)), <- Z2N.inj_add, N2Z.inj_mod, <- (N2Z.id (_ ^ _)), <- Z2N.inj_mod, <- Zplus_mod by lia.
@@ -654,6 +615,34 @@ change 2 with (Z.to_N 2) at 2. rewrite <- Z2N_inj_shiftl, Z.shiftl_mul_pow2, <- 
     step_stmt H; destruct H as [H _];
     step_stmt H; destruct H as [[_ ?] _]; now rewrite H, H0.
 Qed.
+Lemma exec_GOTO':
+  forall s l cond src dest c' s' x i,
+    src < 2^30 ->
+    dest < 2^30 ->
+    GOTO l cond (Z.of_N src) (Z.of_N dest) = Some i ->
+    exec_stmt armc s (arm2il (src * 4) i) c' s' x ->
+    x = Some (Addr (dest * 4)) \/ x = None.
+Proof.
+  intros s l cond src dest c' s' x i S D G. intros.
+  cbv [GOTO] in G. destruct orb eqn:e in G; try discriminate.
+  remember (_ - _ - _)%Z as offset. unfold Z2 in *.
+  assert (src * 4 ⊕ 8 ⊕ scast 26 32 (Z.to_N (offset mod 16777216) << 2) .& 4294967292 = dest * 4).
+  {
+    change 2 with (Z.to_N 2) at 2. rewrite <- Z2N_inj_shiftl, Z.shiftl_mul_pow2, <- Zmult_mod_distr_r by lia.
+    change (Z.to_N _) with (ofZ 26 (offset * 4)).
+    unfold scast. rewrite toZ_ofZ by (unfold signed_range; cbn; lia). unfold ofZ.
+    rewrite <- (N2Z.id ((_ + 8) mod _)), <- Z2N.inj_add, N2Z.inj_mod, <- (N2Z.id (_ ^ _)), <- Z2N.inj_mod, <- Zplus_mod by lia.
+    replace (_ + _ * 4)%Z with (Z.of_N (dest * 4)) by lia.
+    rewrite Z2N.inj_mod, 2 N2Z.id, N_land_mod_pow2_move by lia.
+    change (_ mod _) with (N.lnot (2 * (2 * 0 + 1) + 1) 32).
+    rewrite <- N.ldiff_land_low, 2 N.ldiff_odd_r, N.ldiff_0_r. lia.
+    destruct (dest * 4) eqn:E; now try solve [apply N.log2_lt_pow2; lia].
+  }
+  destruct l; inversion G; subst; cbv [arm2il arm_bl_il arm_b_il] in H;
+    remember (scast _ _ _) as dsta; remember (src * 4) as srca; apply forget_cond in H;
+    step_stmt H; destruct H as [H _]; destruct (_ mod _) in H;
+    step_stmt H; destruct H as [[_ H] _]; (now right) || left; now rewrite H, H0.
+Qed.
 
 Lemma GOTOz_correct:
   forall s l src dest c' s' x z,
@@ -665,6 +654,17 @@ Lemma GOTOz_correct:
 Proof.
   intros. unfold GOTOz in H1. destruct GOTO eqn:e in H1; try discriminate. apply arm_assemble_eq in H1. rewrite H1 in H2.
   now apply (GOTO_correct s l src dest c' s' x a).
+Qed.
+Lemma exec_GOTOz':
+  forall s l cond src dest c' s' x z,
+    src < 2^30 ->
+    dest < 2^30 ->
+    GOTOz l cond (Z.of_N src) (Z.of_N dest) = Some z ->
+    exec_stmt armc s (arm2il (src * 4) (arm_decode z)) c' s' x ->
+    x = Some (Addr (dest * 4)) \/ x = None.
+Proof.
+  intros. unfold GOTOz in H1. destruct GOTO eqn:e in H1; try discriminate. apply arm_assemble_eq in H1. rewrite H1 in H2.
+  now apply (exec_GOTO' s l cond src dest c' s' x a).
 Qed.
 
 Definition NoJ q := forall_stmts_in_stmt (fun q' : stmt => forall e : exp, q' <> Jmp e) q.
@@ -717,19 +717,37 @@ Ltac nj :=
   | |- NoJ ?a => unfold_rec a
   end.
 Lemma for_0_14_noj:
-  forall reg_list start f,
-    NoJ start -> (forall n, NoJ (f n)) -> NoJ (for_0_14 reg_list start f).
+  forall reg_list f,
+    (forall n m, NoJ (f n m)) -> NoJ (for_0_14 reg_list f).
 Proof.
-  intros. repeat apply noj_seq; destruct_match_eqn; apply H0 || discriminate || assumption.
+  intros. destruct reg_list. easy. simpl. generalize 0 at 1, 0 at 2. induction p. intros. simpl. apply noj_seq. easy. easy.
+  intro. simpl. easy. intro. simpl. easy.
+Qed.
+Lemma for_0_14_noje:
+  forall reg_list f,
+    (forall n m, NoJE (f n m)) -> NoJE (for_0_14 reg_list f).
+Proof.
+  intros. destruct reg_list. easy. simpl. generalize 0 at 1, 0 at 2. induction p. intros. simpl. apply noje_seq. easy. easy.
+  intro. simpl. easy. intro. simpl. easy.
 Qed.
 Lemma arm_lsm_noj:
   forall op cond W Rn register_list a c s c' s' x A
     (XS: exec_stmt c s (arm2il a (ARM_lsm op cond W Rn register_list)) c' s' x),
-    (Z.to_N register_list < 2 ^ 15 -> x <> Some (Addr A))%N.
+    (N.testbit (Z.to_N register_list) 15 = false -> x <> Some (Addr A))%N.
 Proof.
-  (* intros. noj XS; cbv[arm_lsm_il arm_lsm_op_il arm_lsm_op_type arm_stm_il arm_ldm_il arm_lsm_il_]. easy. time (destruct_match_eqn; *)
-  (* nj; try solve [eapply xbits_above in H; rewrite H in e0; lia]; apply noj_ite; now try apply for_0_14_noj). *)
-Admitted. (*speed this up*)
+  intros. noj XS; cbv[arm_lsm_il arm_lsm_op_il arm_lsm_op_type arm_stm_il arm_ldm_il arm_lsm_il_]. easy. destruct_match_eqn;
+  nj; try solve [now rewrite (bound_hibits_zero _ _ _ H ltac:(reflexivity)) in e0]; (apply noj_ite; [easy|try apply noj_seq; try apply for_0_14_noj]).
+  all: try discriminate; intros; destruct_match_eqn; try easy.
+Qed.
+Lemma arm_lsm_noj':
+  forall op cond W Rn register_list a c s c' s' x A
+    (XS: exec_stmt c s (arm2il a (ARM_lsm op cond W Rn register_list)) c' s' x)
+    (O: match op with | ARM_STMDA | ARM_STMDB | ARM_STMIA | ARM_STMIB => True | _ => False end),
+    x <> Some (Addr A).
+Proof.
+  intros. noj XS; cbv[arm_lsm_il arm_lsm_op_il arm_lsm_op_type arm_stm_il arm_ldm_il arm_lsm_il_]. easy. destruct_match_eqn; try easy;
+  repeat (destruct_match_eqn; try apply noj_ite; try apply noj_seq; try discriminate; try apply for_0_14_noj; try discriminate; try easy).
+Qed.
 Lemma arm_data_r_fallthru:
   forall op cond S Rn Rd imm5 type Rm a c s c' s' x
     (XS: exec_stmt c s (arm2il a (ARM_data_r op cond S Rn Rd imm5 type Rm)) c' s' x),
@@ -781,10 +799,9 @@ Lemma arm_lsm_reglist_bound:
   forall reg reg2,
     (0 <= reg < 15)%Z ->
     (0 <= reg2 < 15)%Z ->
-  Z.to_N (Z.lor (Z.shiftl 1 reg) (Z.shiftl 1 reg2)) < 2 ^ 15.
+  N.testbit (Z.to_N (Z.lor (Z.shiftl 1 reg) (Z.shiftl 1 reg2))) 15 = false.
 Proof.
-  intros. rewrite Z2N_inj_lor by now apply Z.shiftl_nonneg.
-  apply lor_bound; (rewrite Z2N_inj_shiftl, N.shiftl_mul_pow2, N.mul_1_l; [apply N.pow_lt_mono_r| |] ; lia).
+  intros. rewrite !Z.shiftl_mul_pow2, !Z.mul_1_l, Z2N_inj_lor, N.lor_spec, !Z2N.inj_pow, !N.pow2_bits_eqb by lia. lia.
 Qed.
 Lemma unused_reg_not_pc:
   forall base r0 r1 r2, (base < 12 -> _unused_reg base r0 r1 r2 <> 15)%Z.
@@ -843,18 +860,51 @@ Lemma exec_ldr':
   exec_stmt armc s (arm2il a (LDR (Z.of_N reg) (Z.of_N reg2) (- Z.of_N offset))) c' s' x ->
   reset_temps s s' = s[R_PC := a][arm_varid reg := getmem 32 (LorB (s R_E)) 4 (s V_MEM32) (s (arm_varid reg2) ⊖ offset)] /\ x = None.
 Proof.
-  (* intros. *)
-  (* cbv[LDR arm2il arm_ls_i_il arm_ls_op_il arm_ls_il arm_cond_il arm_cond_exp arm_assign_R arm_MemU] in H2. *)
-  (* simpl in H2. rewrite !N2Z.id in H2. destruct N.eqb eqn:e; try lia. *)
-  (* replace (Z.ltb _ _) with true in H2 by lia. simpl in H2. replace (Z.to_N _) with offset in H2 by lia. *)
-  (* unfold arm_varid. destruct_match_eqn; try lia; step_stmt H2; destruct H2; step_stmt H2; simpl in H2; destruct H2 as [[? ?] _]; *)
-  (* rewrite H2; destruct (s R_E); now subst. *)
-Admitted.
+  intros.
+  cbv[LDR arm2il arm_ls_i_il arm_ls_op_il arm_ls_il arm_cond_il arm_cond_exp arm_assign_R arm_MemU] in H2.
+  simpl in H2. rewrite !N2Z.id in H2. destruct N.eqb eqn:e; try lia.
+  replace (Z.ltb _ _) with true in H2 by lia. simpl in H2. replace (Z.to_N _) with offset in H2 by lia.
+  unfold arm_varid. destruct_match_eqn; try lia; step_stmt H2; destruct H2; step_stmt H2; simpl in H2; destruct H2 as [[? ?] _];
+  rewrite H2; destruct (s R_E); now subst.
+Qed.
+Lemma exec_ldr'':
+  forall reg reg2 offset s a c' s' x,
+  reg < 15 ->
+  reg2 < 15 ->
+  exec_stmt armc s (arm2il a (LDR (Z.of_N reg) (Z.of_N reg2) offset)) c' s' x ->
+  exists n, reset_temps s s' = s[R_PC := a][arm_varid reg := n] /\ x = None.
+Proof.
+  intros.
+  cbv[LDR arm2il arm_ls_i_il arm_ls_op_il arm_ls_il arm_cond_il arm_cond_exp arm_assign_R arm_MemU] in H1.
+  simpl in H1. rewrite !N2Z.id in H1. destruct N.eqb eqn:e; try lia.
+  destruct (_ =? 1);
+  unfold arm_varid; destruct_match_eqn; try lia;
+  remember (arm_varid reg2); unfold arm_varid in Heqa0; destruct_match_in Heqa0; try lia; remember (Z.to_N _);
+  step_stmt H1; destruct H1; step_stmt H1; simpl in H1; destruct H1 as [[? ?] _];
+  rewrite H1; now eexists.
+Qed.
+
 Lemma exec_bx:
   forall reg s a c' s' x,
   reg < 15 ->
   (4 | s (arm_varid reg)) ->
   exec_stmt armc s (arm2il a (ARM_BX 14 (Z.of_N reg))) c' s' x ->
+  x = Some (Addr (s (arm_varid reg))).
+Proof.
+  intros.
+  cbv[arm2il arm_bx_il arm_cond_il arm_cond_exp BXWritePC arm_R] in H1. simpl in H1.
+  rewrite N2Z.id in H1.
+  change 4 with (2^2) in H0. inversion H0.
+  unfold arm_varid. destruct_match_eqn; try lia; simpl arm_varid in *;
+  step_stmt H1; destruct H1; step_stmt H1;
+  rewrite N.shiftr_0_r, N.Div0.mul_mod, N.mul_0_r, N.Div0.mod_0_l in H1; destruct H1;
+  step_stmt H1; rewrite N.shiftr_div_pow2, <-N.testbit_spec', N.mul_pow2_bits_low in H1 by lia; destruct H1; step_stmt H1; destruct H1 as [[_ ?] _]; now rewrite H1, H2.
+Qed.
+Lemma exec_blx:
+  forall reg s a c' s' x,
+  reg < 15 ->
+  (4 | s (arm_varid reg)) ->
+  exec_stmt armc s (arm2il a (ARM_BLX_r 14 (Z.of_N reg))) c' s' x ->
   x = Some (Addr (s (arm_varid reg))).
 Proof.
   intros.
@@ -875,16 +925,57 @@ Lemma exec_str :
     (M: models armc s),
     reset_temps s s' = s[R_PC := a][V_MEM32 := setmem 32 (LorB (s R_E)) 4 (s V_MEM32) (s (arm_varid rn) ⊖ offset) (s (arm_varid rt))] /\ x = None.
 Proof.
-  (* intros. cbv[STR arm2il arm_ls_i_il arm_ls_op_il arm_ls_il Z1 Z14 arm_assign_MemU arm_cond_il arm_cond_exp ] in XS. *)
-  (* replace (- _ <? _)%Z with true in XS by lia. *)
-  (* simpl Z.to_N in XS. cbv[N.eqb orb Pos.eqb] in XS. simpl in XS. *)
-  (* cbv[arm_R] in XS. *)
-  (* rewrite !N2Z.id in XS. *)
-  (* replace (Z.to_N _) with (offset) in XS by lia. *)
-  (* replace (rn =? 15) with false in XS by lia. replace (rt0 =? 15) with false in XS by lia.  *)
-  (* specialize (M (arm_varid rt0) _ (typeof_arm_varid _)). unfold arm_varid in *. destruct_match_eqn; try lia; *)
-  (* step_stmt XS; destruct XS as [XS _]; step_stmt XS; destruct XS as [XS _]; destruct (s R_E); step_stmt XS; now destruct XS as [[? ?] [? _]]. *)
-Admitted.
+  intros. cbv[STR arm2il arm_ls_i_il arm_ls_op_il arm_ls_il Z1 Z14 arm_assign_MemU arm_cond_il arm_cond_exp ] in XS.
+  replace (- _ <? _)%Z with true in XS by lia.
+  simpl Z.to_N in XS. cbv[N.eqb orb Pos.eqb] in XS. simpl in XS.
+  cbv[arm_R] in XS.
+  rewrite !N2Z.id in XS.
+  replace (Z.to_N _) with (offset) in XS by lia.
+  replace (rn =? 15) with false in XS by lia. replace (rt0 =? 15) with false in XS by lia.
+  specialize (M (arm_varid rt0) _ (typeof_arm_varid _)). unfold arm_varid in *. destruct_match_eqn; try lia;
+  step_stmt XS; destruct XS as [XS _]; step_stmt XS; destruct XS as [XS _]; destruct (s R_E); step_stmt XS; now destruct XS as [[? ?] [? _]].
+Qed.
+Lemma exec_str':
+  forall rt rn s s' a c' x offset
+    (XS: exec_stmt armc s (arm2il a (STR (Z.of_N rt) (Z.of_N rn) offset)) c' s' x)
+    (RT: rt < 15)
+    (RN: rn < 15),
+    reset_temps s s' = s[R_PC := a][V_MEM32 := setmem 32 (LorB (s R_E)) 4 (s V_MEM32) (s (arm_varid rn) ⊕ (ofZ 32 offset)) (s (arm_varid rt))] /\ x = None.
+Proof.
+  intros.
+  cbv[STR arm2il arm_ls_i_il arm_ls_op_il arm_ls_il Z1 Z14 arm_assign_MemU arm_cond_il arm_cond_exp ] in XS.
+  destruct (Z_lt_le_dec offset 0);
+  [replace (_ <? _)%Z with true in XS by lia|
+  replace (_ <? _)%Z with false in XS by lia];
+  simpl Z.to_N in XS; cbv[N.eqb orb Pos.eqb] in XS; simpl in XS;
+  cbv[arm_R] in XS;
+  rewrite !N2Z.id in XS;
+  replace (rn =? 15) with false in XS by lia; replace (rt0 =? 15) with false in XS by lia. remember (Z.to_N _).
+  unfold arm_varid in *. destruct_match_eqn; try lia;
+  step_stmt XS;
+  destruct XS as [XS _]; step_stmt XS; destruct XS as [XS _]; destruct (s R_E); step_stmt XS; destruct XS as [[? ?] [? _]];
+  subst n; unfold msub in H; rewrite <-N.Div0.add_mod_idemp_r , <-msub_0_l, msub_0_l_neg in H;
+  unfold toZ in H; rewrite Z2N.id, Z.opp_eq_mul_m1, canonicalZ_mul_l in H by lia; now replace (_ * -1)%Z with offset in H by lia.
+  remember (Z.to_N _).
+  unfold arm_varid in *. destruct_match_eqn; try lia;
+  step_stmt XS; destruct XS as [XS _]; step_stmt XS; destruct (s R_E); destruct XS as [XS _]; step_stmt XS; destruct XS as [XS _];
+  subst n; replace (Z.abs _) with offset in XS by lia; unfold ofZ; now rewrite Z2N.inj_mod, N.Div0.add_mod_idemp_r by lia.
+Qed.
+
+Lemma exec_mov:
+  forall s s' a r0 c' x
+    (XS: exec_stmt armc s (arm2il a (MOV (Z.of_N r0) SP)) c' s' x)
+    (R: r0 < 15),
+    reset_temps s s' = s[R_PC := a][arm_varid r0 := s R_SP mod 2^32] /\ x = None.
+Proof.
+  intros.
+  cbv [MOV arm2il arm_data_r_il arm_data_op_il arm_data_r_shiftc arm_data_il arm_assign_R arm_cond_il arm_cond_exp arm_R] in XS.
+  rewrite N2Z.id in XS.
+  simpl in XS.
+  replace (_ =? _) with false in XS by lia. unfold arm_varid. destruct_match; try lia;
+  simpl in XS; step_stmt XS; destruct XS as [XS _]; step_stmt XS; now rewrite N.shiftl_0_r in XS.
+Qed.
+
 Lemma reset_temps_update_r:
   forall s s' n v v', reset_temps s (s'[R_PC := v][arm_varid n := v']) = (reset_temps s s')[R_PC := v][arm_varid n := v'].
 Proof.
@@ -929,7 +1020,7 @@ Proof.
   (* UBFX *)
   apply arm_assemble_all_first in B as [z_ubfx [b_tail [B [B_B' DECODE]]]]; subst; rename b_tail into b.
   eapply afterblock_step; [assumption|lia|..].
-  replace_nth (length prefix). now rewrite BPRE, nth_error_app2, Nat.sub_diag, nth_error_O by easy. 
+  replace_nth (length prefix). now rewrite BPRE, nth_error_app2, Nat.sub_diag, nth_error_O by easy.
 
   intros ??? XS. left. eapply (pres_frame_exec_stmt M M) in XS as M0; [|apply welltyped_arm2il; lia]. rewrite DECODE in XS; clear DECODE.
   apply UBFX_bound in XS as [reg_val [? [REGBOUND EXIT]]];[|lia ..]; subst; clear c'.
@@ -946,11 +1037,10 @@ Proof.
   rewrite N2Z.id, !update_cancel2, update_updated, reset_temps_update_l, N.shiftl_mul_pow2 in S' by assumption.
   repeat split; [|shelve].
   rewrite <-N.add_assoc, N2Z.id, reset_temps_update_l.
-  (* replace (z_lsl::b) with ((z_lsl::nil)++b) by easy. change (1+1) with (1+N.of_nat (length (z_lsl::nil))). *)
   rewrite N.add_assoc. simpl.
   clear MB; intros MB.
 
-  
+ 
   (* arm_add *)
   unfold Z4 in B. rewrite <-app_cons, <-(Z2N.id (_ * _)) in B by lia. simpl.
   eapply after_arm_add.
@@ -977,9 +1067,9 @@ Proof.
   rewrite N2Z.id, !update_cancel2, update_updated, !update_frame in * by (assumption || unfold arm_varid; destruct_match; discriminate).
    rewrite update_updated in S'''. rewrite S'''.
   left. repeat split; [|shelve].
-  rewrite <-3N.add_assoc. 
+  rewrite <-3N.add_assoc.
 
-  unfold Z4 in *. rewrite (N.mul_comm _ ti), N.Div0.add_mod_idemp_l, <-N.mul_add_distr_r, <-2(N.add_assoc _ 1). rewrite N.mod_small by lia. 
+  unfold Z4 in *. rewrite (N.mul_comm _ ti), N.Div0.add_mod_idemp_l, <-N.mul_add_distr_r, <-2(N.add_assoc _ 1). rewrite N.mod_small by lia.
   clear MB; intros MB .  apply PC. assumption. lia.
   Unshelve.
   3: rewrite length_app; simpl; lia.
@@ -1031,7 +1121,7 @@ Proof.
   intros. unfold extract_table in T. destruct_match_in T; try discriminate.
   inversion T. rewrite length_firstn, length_skipn. lia.
 Qed.
-  
+ 
 Lemma arm_assemble_all_app:
   forall a b c d,
     arm_assemble_all a = Some b ->
@@ -1072,8 +1162,8 @@ Proof.
   simpl Z.to_N in XS. cbv[N.eqb orb Pos.eqb arm_cond_exp BXWritePC arm_R arm_varid] in XS . simpl in XS.
   step_stmt XS. destruct XS as [XS _]. step_stmt XS. replace (_ =? _) with true in XS. simpl in XS. destruct XS as [XS _].
   step_stmt XS. replace (_ mod _) with 0 in XS. destruct XS as [XS _]. step_stmt XS. replace (_ =? 1) with false in XS. destruct XS as [XS _].
-  step_stmt XS. destruct XS as [[? ?] _]. destruct (s R_E). now subst. now subst. rewrite <-N.bit0_eqb, N.shiftr_spec'. 
-  destruct (s R_E);  destruct D; simpl in H; rewrite H; change 4 with (2^2); now rewrite N.mul_pow2_bits_low. 
+  step_stmt XS. destruct XS as [[? ?] _]. destruct (s R_E). now subst. now subst. rewrite <-N.bit0_eqb, N.shiftr_spec'.
+  destruct (s R_E);  destruct D; simpl in H; rewrite H; change 4 with (2^2); now rewrite N.mul_pow2_bits_low.
   destruct (s R_E);  destruct D; simpl in H; rewrite H; simpl; lia.
   destruct S. rewrite H. unfold msub. simpl N.sub. change 4294967288 with (1073741822*4). rewrite <-N.mul_add_distr_r.
   rewrite N_land_mod_pow2_move.
@@ -1087,16 +1177,236 @@ Lemma exec_align:
     reset_temps s s' = s[R_PC := a][R_SP := (s R_SP >> 2) * 4] /\ x = None.
 Proof.
   intros.
-  cbv [ALIGN arm2il arm_data_i_il arm_data_op_il arm_data_i_shiftc arm_data_il SP Z13 arm_cond_il arm_assign_R] in XS. simpl N.eqb in XS. cbn in XS. step_stmt XS. destruct XS as [XS _]. step_stmt XS. simpl in XS. 
+  cbv [ALIGN arm2il arm_data_i_il arm_data_op_il arm_data_i_shiftc arm_data_il SP Z13 arm_cond_il arm_assign_R] in XS. simpl N.eqb in XS. cbn in XS. step_stmt XS. destruct XS as [XS _]. step_stmt XS. simpl in XS.
     change (4294967292) with (N.lnot (2 * (2 * 0 + 1) + 1) 32) in XS.
     rewrite <- N.ldiff_land_low, 2 N.ldiff_odd_r, N.ldiff_0_r, N.mul_assoc, N.mul_comm in XS. simpl. easy.
     specialize (M R_SP _ eq_refl).
     destruct (s R_SP) eqn:E; now try solve [apply N.log2_lt_pow2; lia].
 Qed.
+Notation "m [ e | a  ]" := (getmem 32 (LorB e) 4 m a) (at level 50, left associativity) : arm7_scope. (* write dword to memory *)
+Notation "m [ e | a := v  ]" := (setmem 32 (LorB e) 4 m a v) (at level 50, left associativity) : arm7_scope. (* write dword to memory *)
+Check 0[2| 1 := 2].
+Check fun x => msub 32 x x.
+Lemma land_pow2_lt:
+  forall a n, a < 2 ^ n -> N.land a (2^n) = 0.
+Proof.
+  intros. apply N.bits_inj_0. intros. rewrite N.land_spec. destruct (N.eq_dec n0 n). subst.
+  now rewrite <-(N.mod_small _ _ H), N.mod_pow2_bits_high, andb_false_l.
+  now rewrite N.pow2_bits_false, andb_false_r.
+Qed.
+
+Lemma exec_stmdb3_e:
+  forall s s' a c' x r0 r1 r2 r3 r4 r5
+  (XS: exec_stmt armc s (arm2il a (STMDB3 SP (unused_reg r0 r1 r2) (unused_reg_high r3 r4 r5) PC)) c' s' x)
+  (SP: ~(4|s R_SP)),
+    x = Some (Raise 16).
+Proof.
+  intros.
+  cbv[STMDB3 arm2il arm_lsm_il arm_lsm_op_il arm_lsm_op_start arm_lsm_op_type arm_stm_il arm_lsm_il_ arm_cond_il] in XS.
+  rewrite !Z.shiftl_mul_pow2, !Z.mul_1_l in XS.
+  rewrite <-(N2Z.id 15), <-Z2N.inj_testbit, Z2N.id, !Z.lor_spec, Z.pow2_bits_true, orb_true_r in XS.
+  simpl (Z.to_N 0) in XS. simpl (Z.to_N Z14) in XS. cbv[ arm_cond_exp] in XS.
+  rewrite !Z2N_inj_lor, !Z2N.inj_pow, (N.mod_small _ (2^16)), !popcount_lor, !popcount_pow2 in XS.
+  rewrite !land_pow2_lt in XS. remember (fun i => _). simpl in XS.
+  simpl in Heqy. subst y.
+  remember (unused_reg _ _ _) as q. remember (unused_reg_high _ _ _) as w. remember (q+w)%Z as e.
+  all: unfold unused_reg, unused_reg_high, _unused_reg, Z4, Z3, Z2, Z1, PC, Z15 in *. 2-20: destruct_match; simpl; lia.
+  subst q w.
+  destruct_match_in Heqe; simpl in XS;
+  step_stmt XS; destruct XS as [XS _];
+  step_stmt XS; change 3 with (N.ones 2) in XS; rewrite N.land_ones in XS; rewrite <-N.Lcm0.mod_divide in SP; replace (_ =? 0) with false in XS by lia; destruct XS as [XS _];
+  now step_stmt XS.
+Qed.
+
+Lemma exec_ldmdb3:
+  forall r0 r1 r2 r3 r4 r5 s s' c' x a
+    (XS: exec_stmt armc s (arm2il a (LDMDB3 (unused_reg_high r3 r4 r5) (unused_reg r0 r1 r2) (unused_reg_high r3 r4 r5) PC)) c' s' x)
+    (M: (4|getmem 32 (LorB (s R_E)) 4 (s V_MEM32) (s (arm_varid (Z.to_N (unused_reg_high r3 r4 r5))) ⊖ 4 ))),
+    x = Some (Addr (getmem 32 (LorB (s R_E)) 4 (s V_MEM32) (s (arm_varid (Z.to_N (unused_reg_high r3 r4 r5))) ⊖ 4 ))) \/ x = Some (Raise 16).
+Proof.
+  intros.
+  cbv[LDMDB3 arm2il arm_lsm_il arm_lsm_op_il arm_lsm_op_start arm_lsm_op_type arm_ldm_il arm_lsm_il_ arm_cond_il] in XS.
+  rewrite !Z.shiftl_mul_pow2, !Z.mul_1_l in XS.
+  rewrite <-(N2Z.id 15), <-Z2N.inj_testbit, Z2N.id, !Z.lor_spec, Z.pow2_bits_true, orb_true_r in XS.
+  simpl (Z.to_N 0) in XS. simpl (Z.to_N Z14) in XS. cbv[ arm_cond_exp] in XS.
+  rewrite !Z2N_inj_lor, !Z2N.inj_pow, (N.mod_small _ (2^16)), !popcount_lor, !popcount_pow2 in XS.
+  rewrite !land_pow2_lt in XS. remember (fun i => _). unfold for_0_14 in XS.
+  simpl in XS.
+  simpl in Heqy. subst y.
+  remember (unused_reg _ _ _) as q. remember (unused_reg_high _ _ _) as w. remember (q+w)%Z as e.
+  all: unfold unused_reg, unused_reg_high, _unused_reg, Z4, Z3, Z2, Z1, PC, Z15 in *. 2-20: destruct_match; simpl; lia.
+
+  remember (s R_E);
+  destruct n eqn:E;
+  subst q w; destruct_match_in Heqe; simpl in XS; step_stmt XS; destruct XS as [XS _]; step_stmt XS; destruct XS as [XS _];
+  (destruct N.eqb; [left| step_stmt XS; now right]); step_stmt XS; destruct XS as [XS _]; rewrite <-Heqn, N.shiftr_0_r in XS;
+  rewrite !N.Div0.add_mod_idemp_l, <-2N.add_assoc in XS; simpl in XS; simpl in M; inversion M;
+  unfold msub in H; simpl in H; rewrite <-N.add_assoc in XS; simpl in XS; rewrite H in XS;  replace (_ mod 2) with 0 in XS by lia; step_stmt XS; destruct XS as [XS _];
+  rewrite <-Heqn, N.Div0.add_mod_idemp_l, <-N.add_assoc in XS; simpl in XS; rewrite H in XS; replace (_ =? 1) with false in XS by (simpl;lia);
+  step_stmt XS; destruct XS as [[_ XS] _]; rewrite <-Heqn, N.Div0.add_mod_idemp_l, <-N.add_assoc in XS; apply XS.
+Qed.
+
+Lemma exec_stmdb3:
+  forall s s' a c' x r0 r1 r2 r3 r4 r5
+  (XS: exec_stmt armc s (arm2il a (STMDB3 SP (unused_reg r0 r1 r2) (unused_reg_high r3 r4 r5) PC)) c' s' x)
+  (SP: (4|s R_SP)),
+  reset_temps s s' = s[R_PC := a][V_MEM32 :=
+    s V_MEM32 [s R_E|s R_SP ⊖ 12 := s (arm_varid (Z.to_N (unused_reg r0 r1 r2))) ]
+              [s R_E|s R_SP ⊖ 8 := s (arm_varid (Z.to_N (unused_reg_high r3 r4 r5))) ]
+              [s R_E|s R_SP ⊖ 4 := a ⊕ 8 ]] /\
+    x = None.
+Proof.
+  intros.
+  cbv[STMDB3 arm2il arm_lsm_il arm_lsm_op_il arm_lsm_op_start arm_lsm_op_type arm_stm_il arm_lsm_il_ arm_cond_il] in XS.
+  rewrite !Z.shiftl_mul_pow2, !Z.mul_1_l in XS.
+  rewrite <-(N2Z.id 15), <-Z2N.inj_testbit, Z2N.id, !Z.lor_spec, Z.pow2_bits_true, orb_true_r in XS.
+  simpl (Z.to_N 0) in XS. simpl (Z.to_N Z14) in XS. cbv[ arm_cond_exp] in XS.
+  rewrite !Z2N_inj_lor, !Z2N.inj_pow, (N.mod_small _ (2^16)), !popcount_lor, !popcount_pow2 in XS.
+  rewrite !land_pow2_lt in XS. remember (fun i => _). unfold for_0_14 in XS.
+  simpl in XS.
+  simpl in Heqy. subst y.
+
+
+  all: unfold unused_reg, unused_reg_high, _unused_reg, Z4, Z3, Z2, Z1, PC, Z15 in *. 2-20: destruct_match; simpl; lia.
+  destruct_match_eqn; simpl in XS;
+  remember (s R_E);
+  destruct n eqn:E;
+  step_stmt XS; destruct XS as [XS _];
+  step_stmt XS; destruct XS as [XS _];
+  change 3 with (N.ones 2) in XS; inversion SP; rewrite H, N.land_ones, N.Div0.mod_mul in XS; simpl in XS; clear H;
+  step_stmt XS; destruct XS as [XS _]; rewrite <-Heqn in XS;
+  step_stmt XS; destruct XS as [XS _]; rewrite <-Heqn in XS;
+  step_stmt XS; destruct XS as [XS _]; rewrite <-Heqn in XS;
+  step_stmt XS; destruct XS as [XS _];
+  rewrite !N.Div0.add_mod_idemp_l, <-!N.add_assoc in XS; apply XS.
+Qed.
+Lemma N2Z_inj_popcount: forall n, Z.of_N (popcount n) = Z_popcount (Z.of_N n).
+Proof.
+  intros. now destruct n.
+Qed.
+Lemma for_noassign:
+  forall reg_list f v, (forall n m, noassign v (f n m)) -> noassign v (for_0_14 reg_list f).
+Proof.
+  intros. destruct reg_list. simpl. constructor.
+    simpl. generalize 0 at 1, 0 at 2. induction p.
+      intros. simpl. constructor. apply H. apply IHp.
+      intros. simpl. apply IHp.
+      intros. simpl. apply H.
+Qed.
+Lemma for_context:
+forall reg_list f c, (forall n m s s' c' x, exec_stmt c s (f n m) c' s' x -> c' = c) ->
+  (forall s s' c' x, exec_stmt c s (for_0_14 reg_list f) c' s' x -> c' = c).
+Proof.
+  intros. destruct reg_list. simpl in H0. inversion H0. easy. simpl in H0. revert H0. generalize 0 at 1, 0 at 2, s. induction p.
+    intros. simpl in H0. inversion H0. subst. now apply H in XS. apply H in XS1. subst. now apply IHp in XS0.
+    intros. simpl in H0. now apply IHp in H0.
+    intros. simpl in H0. now apply H in H0.
+Qed.
+     
+Lemma exec_ldm:
+  forall op cond Rn register_list a s s' c' x W
+    (R: N.testbit register_list 15 = true)
+    (RN: Rn < 15)
+    (O: match op with | ARM_STMDA | ARM_STMDB | ARM_STMIA | ARM_STMIB => False | _ => True end)
+    (XS: exec_stmt armc s (arm2il a (ARM_lsm op cond W (Z.of_N Rn) (Z.of_N register_list))) c' s' x),
+    (let bc := (Z4 * Z_popcount (Z.of_N (register_list mod 2^16)))%Z in
+     let addr := s V_MEM32 [s R_E | s (arm_varid Rn) ⊕ ofZ 32 (arm_lsm_op_start op bc + bc - Z4) ] in
+     (4|addr) -> x = Some (Addr addr))
+    \/ x = None \/ x = Some (Raise 16).
+Proof.
+  intros. rewrite <-N2Z_inj_popcount.
+  cbv[arm2il arm_lsm_il arm_lsm_op_il arm_lsm_op_type] in XS.
+  replace (match op with _ => _ end) with arm_ldm_il in XS by now destruct op.
+  cbv[arm_ldm_il arm_lsm_il_] in XS.
+  apply forget_cond in XS. rewrite !N2Z.id, R in XS. remember (popcount _).
+  rewrite <-(cbits_xbits _ 15 16), <-fold_cbits, popcount_lor, xbits_0_i, popcount_shiftl in Heqn.
+  replace (_ .& _) with 0 in Heqn by now rewrite <-N_land_mod_pow2_move, N.shiftl_mul_pow2, N.Div0.mod_mul, N.land_0_l.
+  unfold xbits in Heqn. rewrite <-N.bit0_mod, N.shiftr_spec', N.add_0_l, R, N.sub_0_r in Heqn. simpl N.b2n in Heqn.
+  remember (ofZ _ _).
+  remember (ofZ _ (arm_lsm_op_wback _ _)).
+  remember (4 * n - 4).
+  cbv [arm_assign_R] in XS.
+
+  inversion XS.
+    easy.
+    subst q1 q2 c'0 s'0 x'. inversion XS1. inversion E. subst v e c2 s2 a w0 w n3. clear XS XS1. rewrite <-store_upd_eq in XS0 by easy. rename XS0 into XS.
+  inversion XS. destruct b.
+    step_stmt XS0. right. now left.
+    subst e q1 q2 c'0 s'0 x0. clear E0 p XS E. rename XS0 into XS.
+  inversion XS. destruct b.
+    step_stmt XS0. right. now right.
+    subst e q1 q2 c'0 s'0 x0. clear E p XS. rename XS0 into XS.
+  inversion XS.
+    exfalso. clear -XS0. inversion XS0.
+      destruct N.eqb; now inversion XS.
+      apply stmt_xnone in XS2. easy. 1,2: now apply for_0_14_noje.
+    subst q1 q2 c'0 s'0 x'.
+  assert (c2 = armct). {
+    clear - XS1. inversion XS1. subst. assert (c0 = armct). {
+      clear - XS0. destruct N.eqb.
+        inversion XS0. subst. inversion XS1. subst. inversion XS2. subst.
+        inversion E. inversion E2. subst. simpl. rewrite <-store_upd_eq. easy.
+        inversion E0. inversion E4. subst. simpl.
+        rewrite update_frame by (unfold arm_varid; destruct_match; discriminate). apply typeof_arm_varid.
+        inversion XS0. subst. inversion E. inversion E2. subst. easy.
+  }
+    subst c0. clear XS0 XS1. apply for_context in XS2. easy. intros. inversion H. subst. rewrite <-store_upd_eq. easy.
+    unfold armct. rewrite update_frame by (unfold arm_varid; destruct_match; discriminate).
+    inversion E. subst. inversion E2. subst. apply typeof_arm_varid.
+  }
+  subst c2.
+  assert (s2 temp0 = s (arm_varid Rn) ⊕ n0). {
+    clear - RN XS1. inversion XS1. subst. apply (noassign_stmt_same temp0) in XS2. inversion XS2.
+    clear - RN XS0. destruct N.eqb.
+      inversion XS0. subst. inversion XS1. subst. inversion E. subst. unfold arm_R in E1. replace (_ =? _) with false in E1 by lia. inversion E1. subst.
+      rewrite typeof_arm_varid in TYP. inversion TYP. subst. simpl in XS2. inversion E2. subst. apply (noassign_stmt_same temp0) in XS2. inversion XS2.
+      rewrite update_updated. rewrite update_frame by now apply arm_varid_not_pc. easy. constructor. unfold arm_varid; destruct_match; discriminate.
+      inversion XS0. subst. inversion E. subst. inversion E. subst. unfold arm_R in E1. replace (_ =? _) with false in E1 by lia. inversion E1. subst. inversion E2. subst.
+      rewrite typeof_arm_varid in TYP. inversion TYP. subst. simpl.
+      rewrite update_updated. rewrite update_frame by now apply arm_varid_not_pc. easy.
+      apply for_noassign. constructor. unfold arm_varid; destruct_match; discriminate.
+  }
+  assert (s2 V_MEM32 = s V_MEM32). {
+    apply (noassign_stmt_same V_MEM32) in XS1. inversion XS1. now rewrite update_frame. constructor. destruct N.eqb. constructor. now constructor.
+    constructor. unfold arm_varid; destruct_match; discriminate. constructor. easy. apply for_noassign. constructor. unfold arm_varid; destruct_match; discriminate.
+  }
+  assert (s2 R_E = s R_E). {
+    apply (noassign_stmt_same R_E) in XS1. inversion XS1. now rewrite update_frame. constructor. destruct N.eqb. constructor. now constructor.
+    constructor. unfold arm_varid; destruct_match; discriminate. constructor. easy. apply for_noassign. constructor. unfold arm_varid; destruct_match; discriminate.
+  }
+  clear XS1. rewrite (store_upd_eq _ _ _ H), (store_upd_eq _ _ _ H0), (store_upd_eq _ _ _ H1) in XS0.
+  cbv [BXWritePC] in XS0.
+  left. intros. enough (addr = s V_MEM32 [s R_E | s (arm_varid Rn) ⊕ n0 ⊕ n2]).
+  step_stmt XS0. replace (_ mod 2) with 0 in XS0. destruct XS0 as [XS0 _].
+  step_stmt XS0. replace (_ =? 1) with false in XS0. destruct XS0 as [XS0 _].
+  step_stmt XS0. destruct XS0 as [[_ X] _]. rewrite H3, X. now destruct (s R_E).
+  inversion H2. cbv[ N.shiftr Pos.iter]. destruct (s R_E); simpl LorB in H3; rewrite <-H3, H4; lia.
+  inversion H2. destruct (s R_E); simpl LorB in H3; rewrite <-H3, H4, N.shiftr_0_r; lia.
+  subst n0 n2 addr bc. clear -Heqn. unfold Z4. rewrite N2Z.inj_mul. simpl Z.of_N.
+  remember (arm_lsm_op_start _ _). unfold ofZ in *.
+  rewrite <-(N.Div0.add_mod_idemp_r _ (4*n-4)), <-(N2Z.id ((4*n-4) mod _)), N.Div0.add_mod_idemp_l, <-N.add_assoc, <-Z2N.inj_add by lia.
+  simpl popcount in Heqn.
+  rewrite N2Z.inj_mod, N2Z.inj_sub, N2Z.inj_mul by lia. simpl Z.of_N. rewrite <-Z.add_sub_assoc, Z.add_mod by lia.
+  symmetry. rewrite <-N.Div0.add_mod_idemp_r. change (2^32) with (Z.to_N (2^32)). rewrite <-Z2N.inj_mod.
+  subst. now destruct (s R_E). lia. lia.
+Qed.
+   
+Lemma arm_varid_different:
+  forall r0 r1 (R0: r0 < 15) (R1: r1 < 15) (R: r0 <> r1), arm_varid r0 <> arm_varid r1.
+Proof.
+  intros. unfold arm_varid. destruct_match_eqn; lia || discriminate.
+Qed.
+
+Lemma bitb_not0:
+  forall z b, (bitb z b =? 0 = false -> bitb z b =? 1 = true)%Z.
+Proof.
+  intros. unfold bitb in *. rewrite zxbits_eq in *. unfold Z_xbits, Z1 in *. replace (2 ^ _)%Z with (2)%Z in * by (replace (Z.max _ _) with 1%Z by lia; lia). lia.
+Qed.
+Lemma arm_varid_not_e: forall n, arm_varid n <> R_E. Proof. intro; unfold arm_varid; destruct_match; easy. Qed.
 Lemma SafeDest_rewrite_inst:
   forall tc i2i' z pol i ti ai bi txt irm' table tc' s1 tbi flattened_tables
     (RI: rewrite_inst tc i2i' z (pol i) i ti ai bi txt = Some (irm', table, tc'))
-    (TC: SafeTableCache i2i' pol ai tbi flattened_tables tc) 
+    (TC: SafeTableCache i2i' pol ai tbi flattened_tables tc)
     (AI: (0 <= ai < 2^30)%Z)
     (TI: (0 <= ti)%Z)
     (TI': (ti + Z.of_nat (length table) < 2^30)%Z)
@@ -1154,7 +1464,7 @@ Proof.
           (exists pre', arm_assemble_all pre' = Some pre) ->
           MaintainsBlock (pre ++ b') (Z.to_N (i2i' i))
             (Z.to_N (i2i' i) + N.of_nat (length pre)) (s1[R_PC := pc]) ->
-          AfterBlock (SafeDestX i2i' pol ai i (length irm')) 
+          AfterBlock (SafeDestX i2i' pol ai i (length irm'))
             (s1[R_PC := pc]) (Z.to_N (i2i' i)) (length (pre ++ b'))
             (Z.to_N (i2i' i) + N.of_nat (length pre))
       | None => True
@@ -1163,13 +1473,13 @@ Proof.
   ) as C. {
     intros. eapply afterblock_cond. apply H. lia. assumption. assumption. assumption.
       intros. unfold SafeDestX, SafeDest. simpl. left. right. exists (i+1)%Z. split. lia. assumption.
-      intros. unfold SafeDestX, SafeDest. simpl. 
+      intros. unfold SafeDestX, SafeDest. simpl.
       destruct (Nat.eq_dec (length irm') 1). left. right. exists(i+1)%Z. split. lia. assumption.
       right. unfold InBlock. split. split. lia.
       apply arm_assemble_all_cond_len in H.
       lia. apply N.divide_factor_r.
   }
-    Ltac mylia := unfold SafeDestX, SafeDest, InBlockX, InBlock in *; 
+    Ltac mylia := unfold SafeDestX, SafeDest, InBlockX, InBlock in *;
       repeat match goal with
              | H := _ |- _ => simpl in H; subst H
              end;
@@ -1178,8 +1488,21 @@ Proof.
              | H: arm_assemble_all_cond _ _ = Some _ |- _ => apply arm_assemble_all_cond_len in H; simpl in H
              | H: arm_assemble_all _ = Some _ |- _ => apply arm_assemble_all_len in H; simpl in H; try rewrite <-H in *
              | H: _ = Some (?irm, _, _), H1: _ = Some ?irm |- _ => try apply arm_assemble_all_cond_len in H1; simpl in H1
-             end; 
+             end;
              match goal with |- _ /\ (4 | _) => split; [try lia|try apply N.divide_factor_r] | |- _ => try lia end.
+  assert (forall l cond imm24
+    (I: In (Z.add i 1) (pol i))
+    (RB: rewrite_b_bl l cond imm24 i (pol i) i2i' ai tc = Some (irm', table, tc')),
+  SafeAfterBlock i2i' pol ai i (length irm') s1) as RBBL. {
+    intros. unfold rewrite_b_bl in RB. destruct_match_in RB; try discriminate; inversion RB; subst. destruct_match_in e.
+    eapply afterblock_step. easy. easy. now replace_nth O. intros ??? XS.
+    remember (_ mod _)%Z.
+    eapply exec_GOTOz' with (dest:=Z.to_N (i2i' z1)) in XS. destruct XS. right. right. left. eexists. repeat split. apply H. left. right. repeat eexists. rewrite N2Z.inj_mul, Z2N.id.  reflexivity. apply I2I. now apply In_contains in e0. rewrite Z2N.id by apply I2I. mylia. right. left. repeat split. easy. mylia. left. right. exists (i+1)%Z. split. rewrite N2Z.inj_mul, N2Z.inj_add, Z2N.id, I2I''. easy. apply I2I. easy. lia. specialize (I2I z1). lia. rewrite !Z2N.id by apply I2I. apply e.
+    eapply afterblock_step. easy. easy. now replace_nth O. intros ??? XS.
+    eapply exec_GOTOz' with (dest:=Z.to_N ai) in XS. destruct XS. right. right. left. eexists. repeat split. apply H. left. left. lia. rewrite Z2N.id. easy. lia. right. left. repeat split. easy. mylia. left. right. exists (i+1)%Z. split. rewrite N2Z.inj_mul, N2Z.inj_add, Z2N.id, I2I''. easy. lia. easy. lia. lia. rewrite !Z2N.id. apply e. lia. lia.
+    eapply afterblock_step. easy. easy. now replace_nth O. intros ??? XS.
+    eapply exec_GOTOz' with (dest:=Z.to_N ai) in XS. destruct XS. right. right. left. eexists. repeat split. apply H. left. left. lia. rewrite Z2N.id. easy. lia. right. left. repeat split. easy. mylia. left. right. exists (i+1)%Z. split. rewrite N2Z.inj_mul, N2Z.inj_add, Z2N.id, I2I''. easy. lia. easy. lia. lia. rewrite !Z2N.id. apply e0. lia. lia.
+  }
 
   assert (forall irm cond
   (RWT: rewrite_w_table irm tc (pol i) i2i' cond i ti ai = Some (irm', table, tc'))
@@ -1209,11 +1532,11 @@ Proof.
     intros. assert (ee:=e). apply TC in e as [table [XT ST']]. eapply NWTC. apply ee. apply XT. apply table_size_correctness in XT as TS. rewrite TS.
     unfold compute_table_size. rewrite Z_nat_N, Z2N.inj_pow, Z2N.inj_sub by lia. simpl Z.to_N. apply H. assumption.
     remember (make_jump_table _ _ _ _ _ _).
-    apply find_hash_bound in e0. 
+    apply find_hash_bound in e0.
     unfold Z32 in *. rewrite Z.shiftl_mul_pow2, Z.mul_1_l in Heql0 by lia.
-    inversion RWT. subst. apply SI in e2. easy. easy. apply N2Z.inj_lt. rewrite N2Z.inj_add, N2Z.inj_pow, N2Z.inj_sub, !Z2N.id by lia. 
+    inversion RWT. subst. apply SI in e2. easy. easy. apply N2Z.inj_lt. rewrite N2Z.inj_add, N2Z.inj_pow, N2Z.inj_sub, !Z2N.id by lia.
     rewrite make_jump_table_len, Z2Nat.id in TI' by lia. lia.
-    lia. intros. rewrite make_jump_table_len, Z_nat_N, Z2N.inj_pow, Z2N.inj_sub in TIM by lia. 
+    lia. intros. rewrite make_jump_table_len, Z_nat_N, Z2N.inj_pow, Z2N.inj_sub in TIM by lia.
     apply TIM in H as IN. unfold SafeTable in ST. rewrite Forall_forall in ST. apply ST in IN. apply IN. intros. eapply NWT.
     rewrite make_jump_table_len, Z_nat_N, Z2N.inj_pow, Z2N.inj_sub by lia. apply H. assumption.
   }
@@ -1247,14 +1570,14 @@ Proof.
     apply RB. intros. eapply C. apply IRM. simpl. lia. assumption.
     destruct arm_assemble_all eqn:B; auto. intros.
     destruct H1.
-    eapply after_arm_table_lookup with (prefix:=x). 
+    eapply after_arm_table_lookup with (prefix:=x).
     rewrite <-(Z2N.id ti0), <-(Z2N.id sr), <-(Z2N.id reg) in B by lia. apply arm_assemble_all_app. apply H1. apply B.
     apply arm_assemble_all_len in H1. now rewrite H1. lia. lia. mylia.
-    now apply H0. 
-    mylia. simpl. lia. lia. 
-    intros. destruct xs, e. right. mylia. simpl in H3. rewrite Z2N.id in H3 by lia. lia. simpl in H3. easy. easy. 
+    now apply H0.
+    mylia. simpl. lia. lia.
+    intros. destruct xs, e. right. mylia. simpl in H3. rewrite Z2N.id in H3 by lia. lia. simpl in H3. easy. easy.
 
-    intros. 
+    intros.
 
   apply arm_assemble_all_split in B as [b_add [b_tail [B_add_tail [BADD B]]]]; subst; rename b_tail into b.
   apply arm_assemble_all_len in BADD. simpl in BADD.
@@ -1263,15 +1586,139 @@ Proof.
     easy. lia.
     rewrite nth_error_app2. replace_nth 7%nat. rewrite nth_error_app2. now rewrite <-BADD. lia. lia.
     intros.
-  rewrite DECODE in H5. rewrite <-(Z2N.id reg) in H5 by lia. 
+  rewrite DECODE in H5. rewrite <-(Z2N.id reg) in H5 by lia.
   epose proof (N _ H4). subst s'.
   apply exec_bx in H5. rewrite update_updated, !update_frame in H5 by discriminate.
   right. right. left. eexists. repeat split. apply H5. left. easy.
   rewrite Z2N.id by lia. replace (length _) with (length irm') by (rewrite length_app; mylia). apply SENIB. easy. lia.
   rewrite update_updated, !update_frame by discriminate. apply SE4. easy.
   }
+  assert (forall reg cond
+    (RB: rewrite_blx reg tc (pol i) i2i' cond i ti ai = Some (irm', table, tc'))
+    (R: (0 <= reg < 15)%Z)
+    (PA: In (Z.add i 1) (pol i)),
+    SafeAfterBlock i2i' pol ai i (length irm') s1
+  ) as RBLX. {
+    intros. eapply RWT.
+    apply RB. intros. eapply C. apply IRM. simpl. lia. assumption.
+    destruct arm_assemble_all eqn:B; auto. intros.
+    destruct H1.
+    eapply after_arm_table_lookup with (prefix:=x).
+    rewrite <-(Z2N.id ti0), <-(Z2N.id sr), <-(Z2N.id reg) in B by lia. apply arm_assemble_all_app. apply H1. apply B.
+    apply arm_assemble_all_len in H1. now rewrite H1. lia. lia. mylia.
+    now apply H0.
+    mylia. simpl. lia. lia.
+    intros. destruct xs, e. right. mylia. simpl in H3. rewrite Z2N.id in H3 by lia. lia. simpl in H3. easy. easy.
 
+    intros.
 
+  apply arm_assemble_all_split in B as [b_add [b_tail [B_add_tail [BADD B]]]]; subst; rename b_tail into b.
+  apply arm_assemble_all_len in BADD. simpl in BADD.
+  apply arm_assemble_all_first in B as [z_bx [b_tail [B [B_B' DECODE]]]]; subst; rename b_tail into b.
+    apply afterblock_step with (z:=z_bx).
+    easy. lia.
+    rewrite nth_error_app2. replace_nth 7%nat. rewrite nth_error_app2. now rewrite <-BADD. lia. lia.
+    intros.
+  rewrite DECODE in H5. rewrite <-(Z2N.id reg) in H5 by lia.
+  epose proof (N _ H4). subst s'.
+  apply exec_blx in H5. rewrite update_updated, !update_frame in H5 by discriminate.
+  right. right. left. eexists. repeat split. apply H5. left. easy.
+  rewrite Z2N.id by lia. replace (length _) with (length irm') by (rewrite length_app; mylia). apply SENIB. easy. lia.
+  rewrite update_updated, !update_frame by discriminate. apply SE4. easy.
+  }
+
+  assert (forall sanitized_inst r0 r1 r2 r3 r4 r5 cond
+  (RPC: rewrite_pc_sp sanitized_inst (unused_reg r0 r1 r2) (unused_reg_high r3 r4 r5) tc (pol i) i2i' cond i ti ai = Some (irm', table, tc'))
+  (FT: forall s c' s' x i a, exec_stmt armc s (arm2il i sanitized_inst) c' s' x  -> x <> Some (Addr a) /\ s' R_E = s R_E)
+  (IN: In (Z.add i 1) (pol i)),
+  SafeAfterBlock i2i' pol ai i (length irm') s1) as RPS. {
+    intros. eapply RWT. apply RPC. intros. eapply C. apply IRM. simpl. lia. assumption.
+    clear RWT RPC C RBX NWTC NWT TCIM TIM AIB I2I''' TI TI' MB.
+    destruct arm_assemble_all eqn:B; auto. intros pre pc L MO P MB. apply MO in M. clear MO. simpl in L. assert (B':=B). move B' after IRM.
+
+    apply arm_assemble_all_first in B as [z_stmdb3 [b_tail [B [B_B' DECODE]]]]; subst; rename b_tail into b.
+    eapply afterblock_step. assumption. lia. rewrite nth_error_app2. now replace_nth O.
+    mylia. intros ??? XS. epose proof (pres_frame_exec_stmt M M (welltyped_arm2il _ _ _) XS) as M'. assert (XS'':=XS).
+    rewrite DECODE in XS; clear DECODE.
+    destruct (Ndivdec 4 (s1 R_SP)). shelve.
+    apply exec_stmdb3_e in XS. right. right. right. now exists 16. now rewrite update_frame by discriminate. Unshelve. mylia.
+    apply exec_stmdb3 in XS as [S' X]. rewrite !update_frame, update_cancel in S' by (unfold arm_varid;destruct_match;discriminate).
+    rewrite S' in *. remember (update (update _ _ _) _ _) as s_1. subst x.
+    left. repeat split. clear MB; intro MB.
+
+    apply arm_assemble_all_first in B as [z_mov [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
+    eapply afterblock_step. assumption. lia. rewrite nth_error_app2. now replace_nth 1%nat. lia. intros ??? XS.
+    eapply reset_temps_models in M'. rewrite S' in M'. epose proof (pres_frame_exec_stmt M' M' (welltyped_arm2il _ _ _) XS) as M''.
+    rewrite DECODE in XS; clear DECODE.
+    rewrite <-(Z2N.id (unused_reg_high _ _ _)) in XS by (apply unused_reg_bound; unfold Z4; lia).
+    apply exec_mov in XS as [S'' X]. subst x. remember (update (update s_1 _ _ ) _ _) as s_2. rewrite S'' in *.
+    left. repeat split. clear MB; intro MB.
+
+   
+    apply arm_assemble_all_first in B as [z_movw [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
+    eapply afterblock_step. assumption. lia. rewrite nth_error_app2. now replace_nth 2%nat. lia. intros ??? XS.
+    eapply reset_temps_models in M''. rewrite S'' in M''. epose proof (pres_frame_exec_stmt M'' M'' (welltyped_arm2il _ _ _) XS) as M'''.
+    rewrite DECODE in XS; clear DECODE.
+    rewrite <-(Z2N.id (unused_reg _ _ _ )) in XS. apply exec_movwt in XS as [regval [REGVAL [S''' X]]]. subst x. rewrite S''' in *.
+    remember (update (update s_2 _ _) _ _) as s_3.
+    left. repeat split. clear MB;intro MB.
+
+    apply arm_assemble_all_first in B as [z_movt [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
+    eapply afterblock_step. assumption. lia. rewrite nth_error_app2. now replace_nth 3%nat. lia. intros ??? XS.
+    eapply reset_temps_models in M'''. rewrite S''' in M'''. epose proof (pres_frame_exec_stmt M''' M''' (welltyped_arm2il _ _ _) XS) as M''''.
+    rewrite DECODE in XS; clear DECODE.
+    rewrite <-(Z2N.id (unused_reg _ _ _ )) in XS. apply exec_movwt in XS as [regval2 [REGVAL2 [S'''' X]]]. subst x. rewrite S'''' in *.
+    remember (update (update s_3 _ _) _ _) as s_4.
+    left. repeat split. clear MB;intro MB. shelve. right. mylia. easy. unfold unused_reg, _unused_reg. destruct_match; simpl; lia.
+    rewrite Z2N_inj_land. eapply N.le_lt_trans. apply N.land_le_r. simpl. lia. apply Z.shiftr_nonneg, Z.land_nonneg. right. unfold Z0xffff. lia.
+    unfold Z15; lia. rewrite Z2N_inj_land. eapply N.le_lt_trans. apply N.land_le_r. simpl. lia. apply Z.land_nonneg. right. unfold Z0xffff. lia.
+    unfold Z4095. lia. unfold unused_reg, _unused_reg. destruct_match; cbv; discriminate. right . mylia. easy. unfold unused_reg, _unused_reg. destruct_match; now cbv. rewrite Z2N_inj_land. eapply N.le_lt_trans. apply N.land_le_r. simpl. lia. apply Z.shiftr_nonneg. apply Z.land_nonneg. right. cbv; discriminate. cbv; discriminate. rewrite Z2N_inj_land. eapply N.le_lt_trans. apply N.land_le_r. simpl. lia. apply Z.land_nonneg. right. cbv; discriminate. cbv. discriminate. unfold unused_reg, _unused_reg. destruct_match; cbv; discriminate. right. mylia. unfold unused_reg_high, _unused_reg. now destruct_match. right. mylia.
+    Unshelve. now rewrite update_frame by discriminate. mylia. mylia. mylia.
+
+    apply arm_assemble_all_first in B as [z_sanitized [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
+    eapply afterblock_step. assumption. lia. rewrite nth_error_app2. now replace_nth 4%nat. mylia. intros ??? XS.
+    eapply reset_temps_models in M''''. rewrite S'''' in M''''. epose proof (pres_frame_exec_stmt M'''' M'''' (welltyped_arm2il _ _ _) XS) as M'''''.
+    rewrite DECODE in XS; clear DECODE.
+    destruct x. destruct e. eapply FT in XS as [? _]. contradiction. right. right. right. now eexists. left. repeat split. clear MB; intro MB.
+    2: right; mylia.
+    destruct P as [p P]. assert (XS':=XS).
+    eapply FT in XS as [_ E].
+    eapply after_arm_table_lookup with (prefix:=p++_). rewrite <-app_assoc. apply arm_assemble_all_app. easy.
+    rewrite <-(Z2N.id ti0), <-(Z2N.id sr) in B' by lia. rewrite <-(Z2N.id (unused_reg _ _ _)) in B' by (unfold unused_reg, _unused_reg; destruct_match;cbv;discriminate). apply B'. rewrite length_app. simpl length. replace (N.of_nat _) with (N.of_nat (length pre) + 1+1+1+1+1) by mylia. rewrite !N.add_assoc. easy.
+    unfold unused_reg,_unused_reg. now destruct_match. lia. mylia. now apply reset_temps_models. mylia. mylia. mylia.
+    intros. destruct xs, e. unfold InBlockX in H. simpl in H. right. mylia. easy. unfold InBlockX in H. now simpl in H.
+    clear MB; intros ?? MB NB. remember (length _) in s'4. rewrite length_app in Heqn0. simpl in Heqn0.
+    remember (getmem _ _ _ _ _) in s'4. rewrite !reset_temps_not_temp, E in Heqn1 by discriminate. erewrite <-(nonwritable_mem_arm2il _ _ _ _ _ _ _ _ _ _ _ XS') in Heqn1.
+    rewrite Heqs_4, !update_frame, Heqs_3, !update_frame, Heqs_2, !update_frame in Heqn1 by (unfold arm_varid; destruct_match;discriminate).
+    rewrite <-S', <-(nonwritable_mem_arm2il _ _ _ _ _ _ _ _ _ _ _ XS''), S', Heqs_1, !update_frame in Heqn1.
+    shelve. 1-3: discriminate.
+    intro. now apply NW.
+    rewrite Heqs_4, !update_frame, Heqs_3, !update_frame, Heqs_2, !update_frame, Heqs_1, !update_frame by (unfold arm_varid; destruct_match;discriminate).
+    intro. now apply NW. Unshelve. mylia. apply 0.
+
+  apply arm_assemble_all_split in B as [b_add [b_tail [B_add_tail [BADD B]]]]; subst b; rename b_tail into b.
+  apply arm_assemble_all_len in BADD. simpl in BADD.
+  apply arm_assemble_all_first in B as [z_str [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
+  eapply afterblock_step. easy. lia. rewrite nth_error_app2. replace_nth 12%nat. rewrite !nth_error_cons, nth_error_app2, <-BADD. easy. lia. lia.
+  intros ??? XS. rewrite DECODE in XS. rewrite <-(Z2N.id (unused_reg _ _ _)), <-(Z2N.id (unused_reg_high _ _ _)) in XS by (apply unused_reg_bound; unfold Z4; lia).
+  change Z_4 with (-Z.of_N 4) in XS. apply exec_str in XS as [S''''' X]. subst x.  remember (update (update s'4 _ _) _ _) as s_5. rewrite S''''' in *.
+  left. repeat split. clear MB; intro MB.
+
+  shelve. right. mylia. unfold unused_reg, _unused_reg; now destruct_match. unfold unused_reg_high, _unused_reg; now destruct_match. lia.
+  subst s'4. apply models_update. rewrite typeof_arm_varid. subst n1. apply typesafe_getmem. apply models_update. simpl. mylia. apply reset_temps_models. easy.
+  Unshelve.
+  clear DECODE.
+  apply arm_assemble_all_first in B as [z_ldmdb3 [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
+  remember (getmem 32 (LorB (s_5 R_E)) 4 (s_5 V_MEM32) (s_5 (arm_varid (Z.to_N (unused_reg_high r3 r4 r5))) ⊖ 4)) as dest.
+  enough (SafeEntry i2i' pol ai i (Z.of_N dest)).
+  eapply afterblock_step.  assumption. lia. rewrite nth_error_app2. replace_nth 13%nat. rewrite !nth_error_cons, nth_error_app2, <-BADD. easy. lia. lia.
+  intros ??? XS. rewrite DECODE in XS.
+  subst dest.
+  apply exec_ldmdb3 in XS. destruct XS.  right. right. left. eexists. repeat split. apply H0. now left. replace (length _) with (length irm') by mylia. rewrite Z2N.id by lia. now apply SENIB. right. right. right. now exists 16. now apply SE4. subst dest.
+  rewrite Heqs_5, update_updated, !update_frame. subst s'4. rewrite update_updated, !update_frame. rewrite !reset_temps_not_temp.
+    rewrite getmem_setmem by lia. subst n1. rewrite N.mod_small by apply typesafe_getmem. now apply N. all: try discriminate.
+    all: unfold unused_reg_high, unused_reg, _unused_reg; destruct_match; simpl; discriminate.
+  }
   assert (forall sanitized_inst reg cond
   (RPC: rewrite_pc sanitized_inst reg tc (pol i) i2i' cond i ti ai = Some (irm', table, tc'))
   (FT: forall s c' s' x i a, exec_stmt armc s (arm2il i sanitized_inst) c' s' x  -> x <> Some (Addr a) /\ s' R_E = s R_E)
@@ -1289,7 +1736,7 @@ Proof.
     left. repeat split. assumption. clear MB; intros MB. subst x.
 
     apply arm_assemble_all_first in B as [z_movw [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
-    eapply afterblock_step. assumption. lia. rewrite nth_error_app2. now replace_nth 1%nat. lia. intros ??? XS. 
+    eapply afterblock_step. assumption. lia. rewrite nth_error_app2. now replace_nth 1%nat. lia. intros ??? XS.
     epose proof (pres_frame_exec_stmt M' M' (welltyped_arm2il _ _ _) XS) as M''. rewrite DECODE in XS;clear DECODE.
     rewrite <-(Z2N.id reg) in XS by lia. apply exec_movwt in XS as [regval [REGVAL [S'' X]]];
     [| assumption| lia| rewrite Z2N_inj_land..]. shelve. eapply N.le_lt_trans. apply N.land_le_r. simpl. lia. apply Z.shiftr_nonneg, Z.land_nonneg. right. unfold Z0xffff. lia. unfold Z15. lia. eapply N.le_lt_trans. apply N.land_le_r.  simpl. lia. apply Z.land_nonneg. right. unfold Z0xffff. lia.   unfold Z4095. lia. right. mylia. Unshelve. mylia.
@@ -1309,7 +1756,7 @@ Proof.
 
     destruct P as [p P].
       eapply reset_temps_models in M'''. epose proof (pres_frame_exec_stmt M''' M''' (welltyped_arm2il _ _ _) XS) as M''''.
-    eapply after_arm_table_lookup with (prefix:=p++_). 
+    eapply after_arm_table_lookup with (prefix:=p++_).
     rewrite <-(Z2N.id ti0), <-(Z2N.id sr), <-(Z2N.id reg) in B' by lia. rewrite <-app_assoc. apply arm_assemble_all_app. apply P. apply B'. rewrite length_app. simpl length. replace (N.of_nat _) with (N.of_nat (length pre) + 1 + 1 +1 +1) by mylia. rewrite !N.add_assoc. apply MB. lia. lia.
       mylia.
       now apply reset_temps_models.
@@ -1334,14 +1781,14 @@ Proof.
   eapply afterblock_step. now rewrite <-!N.add_assoc in *. lia. rewrite nth_error_app2. replace_nth 12%nat. rewrite !nth_error_cons, nth_error_app2. now replace_nth 1%nat. lia. lia.
   intros ??? XS. rewrite DECODE in XS; clear DECODE.
   change SP with (Z.of_N 13) in XS. change Z_8 with (-Z.of_N 8) in XS.
-  rewrite <-(Z2N.id reg) in XS by lia. 
+  rewrite <-(Z2N.id reg) in XS by lia.
   apply exec_str in XS as [S''''' ?]; [|lia..|]. subst x. remember (update (update s_4 _ _) _ _) as s_5. rewrite S''''' in *.
   left. repeat split. clear MB; intros MB. shelve. right. mylia. rewrite Heqs_4. apply models_update. simpl. specialize (M3 R_SP _ eq_refl). lia. apply models_update. simpl. mylia. assumption. Unshelve.
 
   apply arm_assemble_all_first in B as [z_ldr [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
   eapply afterblock_step. assumption. lia. rewrite nth_error_app2. replace_nth 13%nat. rewrite !nth_error_cons, nth_error_app2. now replace_nth 2%nat. lia. lia.
   intros ??? XS. rewrite DECODE in XS; clear DECODE.
-  rewrite <-(Z2N.id reg), <-(Z2N.id SP) in XS. change Z_4 with (-Z.of_N 4) in XS. apply exec_ldr' in XS as [S'''''' ?]. subst x. 
+  rewrite <-(Z2N.id reg), <-(Z2N.id SP) in XS. change Z_4 with (-Z.of_N 4) in XS. apply exec_ldr' in XS as [S'''''' ?]. subst x.
   remember (update (update s_5 _ _) _ _) as s_6.
   rewrite S'''''' in *.
   left. repeat split. clear MB; intros MB.
@@ -1349,18 +1796,18 @@ Proof.
   apply arm_assemble_all_first in B as [z_ldr' [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
   remember (getmem 32 (LorB (s_6 R_E)) 4 (s_6 V_MEM32) (s_6 R_SP ⊖ 8)) as dest.
   enough (SafeEntry i2i' pol ai i (Z.of_N dest)).
-  eapply afterblock_step. assumption. lia. rewrite nth_error_app2 by lia. replace_nth 14%nat. rewrite !nth_error_cons, nth_error_app2. now replace_nth 3%nat. lia. 
+  eapply afterblock_step. assumption. lia. rewrite nth_error_app2 by lia. replace_nth 14%nat. rewrite !nth_error_cons, nth_error_app2. now replace_nth 3%nat. lia.
   intros ??? XS. rewrite DECODE in XS; clear DECODE.
   eapply exec_ldrpc in XS.
   right. right. left. eexists. repeat split. apply XS. left. now rewrite <-Heqdest. rewrite <-Heqdest, Z2N.id by lia. replace (length _) with (length irm') by mylia. now apply SENIB. rewrite <-Heqdest. now apply SE4. rewrite Heqs_6, !update_frame, Heqs_5, !update_frame, Heqs_4, update_updated by (unfold arm_varid;destruct_match_eqn;discriminate||lia).  apply N.divide_factor_r.
-  subst dest. 
+  subst dest.
   clear MB.
   { rewrite Heqs_6, !update_frame, Heqs_5, !update_frame, update_updated, !update_frame, getmem_setmem, Heqs_4, !update_frame by (unfold arm_varid;destruct_match_eqn;discriminate||lia).
     subst s'3. rewrite update_updated, N.mod_small by apply typesafe_getmem. now apply N.
   }
 
-  right. mylia. lia. unfold SP, Z13. lia. lia. unfold SP, Z13. lia. lia. 
-    } 
+  right. mylia. lia. unfold SP, Z13. lia. lia. unfold SP, Z13. lia. lia.
+    }
   assert (
     forall l cond, arm_assemble_all_cond l cond = Some irm' ->
       (Forall (fun q => forall s c' s' x i a, exec_stmt armc s (arm2il i q) c' s' x  -> x <> Some (Addr a)) l) ->
@@ -1370,13 +1817,94 @@ Proof.
   ) as FT. {
     intros. eapply C. apply H. assumption. assumption.
     destruct arm_assemble_all eqn:e; auto.
-    intros. apply afterblock_fallthru'.
+    intros. apply afterblock_fallthru.
       apply arm_assemble_all_eq in e. rewrite <-e, Forall_map in H0. assumption.
       intros. cbv[SafeDestX fst]. right.
-      apply arm_assemble_all_cond_len in H.  apply arm_assemble_all_len in e. unfold InBlock in *. split. lia. easy.
+      apply arm_assemble_all_cond_len in H.  apply arm_assemble_all_len in e. unfold InBlock in *. split. mylia. easy.
         apply arm_assemble_all_len in e. lia. assumption.
-        intros. cbv[SafeDestX fst SafeDest]. left. right. exists (i+1)%Z. split. rewrite I2I''. subst i'. apply arm_assemble_all_len in e. apply arm_assemble_all_cond_len in H. lia. assumption.
+        intros. cbv[SafeDestX fst SafeDest]. left. right. exists (i+1)%Z. split. rewrite I2I''. mylia. apply arm_assemble_all_len in e. apply arm_assemble_all_cond_len in H. assumption.
   }
+  assert (forall op Rn register_list reg W cond
+    (RL: rewrite_ldm_pc op Rn register_list reg (ARM_lsm op cond W Rn register_list) tc (pol i) i2i' cond i ti ai = Some (irm', table, tc'))
+    (R: (0 <= reg < 15)%Z)
+    (RN: (0 <= Rn < 15)%Z)
+    (RRN: (reg <> Rn))
+    (RGL: (0 <= register_list)%Z)
+    (OP: match op with | ARM_STMDA | ARM_STMDB | ARM_STMIA | ARM_STMIB => False | _ => True end)
+    (R15: (Z.testbit register_list 15 = true))
+    (IN: In (Z.add i 1) (pol i)),
+    SafeAfterBlock i2i' pol ai i (length irm') s1) as RL. {
+    intros. eapply RWT. apply RL. intros. eapply C. apply IRM. simpl. lia. assumption.
+    clear RWT RL C RBX NWTC NWT TCIM TIM  AIB I2I''' TI TI' MB RPS RP FT.
+    destruct arm_assemble_all eqn:B; auto. intros pre pc L MO P MB. apply MO in M. clear MO. simpl in L. assert (B':=B). move B' after IRM.
+
+    apply arm_assemble_all_first in B as [z_str [b_tail [B [B_B' DECODE]]]]; subst; rename b_tail into b.
+    eapply afterblock_step. assumption. lia. rewrite nth_error_app2. now replace_nth O. mylia. intros ??? XS. assert (XS':=XS). rewrite DECODE in XS; clear DECODE.
+    change Z_4 with (- Z.of_N 4) in XS. change SP with (Z.of_N 13) in XS.
+    rewrite <-(Z2N.id reg) in XS by lia. apply exec_str in XS as [S' X]; [|lia..|now apply M]. rewrite !update_cancel, !update_frame in S' by discriminate. epose proof (pres_frame_exec_stmt M M (welltyped_arm2il _ _ _) XS') as M'. eapply reset_temps_models in M'. rewrite S' in *. remember (update (update _ _ _) _ _) as s_1. Unshelve. 2: mylia.
+    left. repeat split. assumption. clear MB; intros MB. subst x. 2: right;mylia.
+
+    apply arm_assemble_all_first in B as [z_ldr [b_tail [B [B_B' DECODE]]]]; subst; rename b_tail into b.
+    eapply afterblock_step. assumption. lia. rewrite nth_error_app2. now replace_nth 1%nat. mylia. intros ??? XS.
+    epose proof (pres_frame_exec_stmt M' M' (welltyped_arm2il _ _ _) XS) as M''.
+    pose proof (fun j => nonwritable_mem_arm2il _ _ _ _ _ _ _ j 32 (LorB (s1 R_E)) 4 XS).
+    rewrite <-S' in H.
+    rewrite DECODE in XS; clear DECODE.
+    rewrite <-(Z2N.id reg), <-(Z2N.id Rn) in XS by lia.
+    apply exec_ldr'' in XS as [? [? X]]. left. repeat split. easy. 2: right; mylia. 2-3: lia.
+    clear MB; intro MB.
+
+
+
+    destruct P as [p P].
+    eapply after_arm_table_lookup with (prefix:=p++_).
+
+    rewrite <-(Z2N.id ti0), <-(Z2N.id sr), <-(Z2N.id reg) in B' by lia. rewrite <-app_assoc. apply arm_assemble_all_app. apply P. apply B'. rewrite length_app. simpl length. replace (N.of_nat _) with (N.of_nat (length pre) + 1 +1) by mylia. rewrite !N.add_assoc. apply MB. lia. lia. mylia. now apply reset_temps_models. mylia. mylia.
+    lia. replace (length _) with (length irm') by mylia. intros. destruct xs, e. right. mylia. simpl in H1. mylia. apply H1. easy.
+    intros. remember _ in s'1. rewrite length_app in Heqy. simpl in Heqy. rewrite !update_frame, !reset_temps_not_temp in Heqy.
+    all: try discriminate. 2: apply arm_varid_not_pc; lia.
+
+  apply arm_assemble_all_split in B as [b_add [b_tail [B_add_tail [BADD B]]]]; subst b; rename b_tail into b.
+  apply arm_assemble_all_len in BADD. simpl in BADD.
+  apply arm_assemble_all_first in B as [z_str' [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
+
+  eapply afterblock_step. easy. lia. rewrite nth_error_app2. replace_nth 9%nat. rewrite !nth_error_cons, nth_error_app2, <-BADD. easy. lia. lia.
+  intros ??? XS. rewrite DECODE in XS.
+  rewrite <-(Z2N.id reg), <-(Z2N.id Rn) in XS by lia. apply exec_str' in XS as [S'' ?]; [| lia..].
+  left. repeat split. easy. 2: right; mylia. rewrite S'' in *. remember (update (update s'1 _ _) _ _). clear MB; intro MB.
+
+  clear DECODE.
+  apply arm_assemble_all_first in B as [z_ldr' [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
+  eapply afterblock_step.  easy. lia. rewrite nth_error_app2. replace_nth 10%nat. rewrite !nth_error_cons, nth_error_app2, <-BADD. easy. lia. lia.
+  intros ??? XS. rewrite DECODE in XS.
+  rewrite <-(Z2N.id reg), <-(Z2N.id SP) in XS by (unfold SP, Z13;lia). change Z_4 with (-Z.of_N 4) in XS. subst x.
+  apply exec_ldr' in XS as [S''' X]. left. repeat split. easy. clear MB; intro MB.  rewrite S''' in *. remember (update (update n0 _ _) _ _).
+
+  clear DECODE.
+  apply arm_assemble_all_first in B as [z_orig [b_tail [B [B_B' DECODE]]]]; subst b; rename b_tail into b.
+  eapply afterblock_step.  easy. lia. rewrite nth_error_app2. replace_nth 11%nat. rewrite !nth_error_cons, nth_error_app2, <-BADD. easy. lia. lia.
+  intros ??? XS. rewrite DECODE in XS.
+  rewrite <-(Z2N.id Rn), <-(Z2N.id register_list) in XS by lia.
+  eapply exec_ldm in XS.
+  destruct XS. rewrite Heqn1, !update_frame in H4 by (try (apply arm_varid_different;lia); unfold arm_varid; destruct_match_eqn; lia || discriminate).
+  rewrite Heqn0, !update_updated, !update_frame in H4. cbn zeta in H4. rewrite N2Z.inj_mod, Z2N.id in H4 by lia. rewrite getmem_setmem in H4.
+  subst s'1. rewrite Heqy, update_updated in H4.
+  erewrite <-reset_temps_not_temp, !H0, !update_frame in H4 by (unfold arm_varid; destruct_match;discriminate).
+  rewrite <-H in H4.
+  rewrite <-(nonwritable_mem_arm2il _ _ _ _ _ _ _ _ _ _ _ XS') in H4. rewrite update_frame in H4 by discriminate.
+  rewrite N.mod_small in H4.
+  remember (getmem _ _ _ (s1 V_MEM32) _) as dest.
+  enough (SafeEntry i2i' pol ai i (Z.of_N dest)).
+  right. right. left. exists dest. specialize (SE4 dest H5). apply H4 in SE4. split. easy. split. now left.
+  replace (length _) with (length irm') by mylia. rewrite Z2N.id by lia. now apply SENIB.
+  subst dest. now apply N. apply typesafe_getmem.
+  intro. now eapply NW. intro. rewrite S', !update_frame by discriminate. now eapply NW.
+  lia. apply arm_varid_not_pc. lia. unfold arm_varid; destruct_match; discriminate. discriminate. discriminate.
+  destruct H4. right. left. repeat split. easy. mylia. left. right. exists (i+1)%Z. eexists. mylia. easy. right. right. right. now exists 16. Unshelve.
+  rewrite <-(Z2N.id register_list), <-(Z2N.id 15), Z.testbit_of_N in R15 by lia. simpl in R15. apply R15.
+  lia.
+  easy. right. mylia. lia. simpl. lia. lia. mylia.
+      }
 
   assert (
     forall sanitized_inst cond reg tc,
@@ -1405,7 +1933,7 @@ Proof.
   {
     intros. unfold goto_abort in H; destruct_match_in H; try discriminate. inversion H; subst.
     eapply afterblock_step. assumption. easy. now replace_nth O. intros. right. right. left. rewrite <-(Z2N.id (i2i' i)), <-(Z2N.id ai) in e by (apply I2I' || lia).
-    eapply GOTOz_correct in e. exists (Z.to_N ai * 4). repeat split. apply e. unfold SafeDestX. simpl. left. left. lia. left. now rewrite Z2N.id by apply I2I'. lia. lia. apply H0.
+    eapply GOTOz_correct in e. exists (Z.to_N ai * 4). repeat split. apply e. unfold SafeDestX. simpl. left. left. lia. mylia. lia.  lia. apply H0.
   }
   assert (
     irm' = z::nil ->
@@ -1430,7 +1958,40 @@ Proof.
   | context[rewrite_pc_no_jump] => eapply RPNJ; [apply RI|faft|try apply unused_reg_not_pc;easy ..|rewrite negb_false_iff in e;now apply In_contains in e]
   | context[rewrite_pc_sp_no_jump]=> eapply RPSNJ; [apply RI|faft|try apply unused_reg_bound;easy ..|rewrite negb_false_iff in e;now apply In_contains in e]
   | context[rewrite_bx] => eapply RBX; [apply RI|lia|assumption]
-  | _ => clear C GA FT FTS RPNJ RPSNJ
+  | _ => clear C FT FTS RPNJ RPSNJ
   end.
-Admitted.
+  eapply RP. apply RI. split. eapply arm_data_r_fallthru in H. intro. now subst x. apply unused_reg_not_pc. lia. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RP. apply RI. split. eapply arm_data_r_fallthru in H. intro. now subst x. apply unused_reg_not_pc. lia. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RP. apply RI. split. eapply arm_data_r_fallthru in H. intro. now subst x. apply unused_reg_not_pc. lia. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RP. apply RI. split. eapply arm_data_r_fallthru in H. intro. now subst x. apply unused_reg_not_pc. lia. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RP. apply RI. split. eapply arm_data_i_fallthru in H. intro. now subst x. apply unused_reg_not_pc. lia. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RP. apply RI. split. eapply arm_data_i_fallthru in H. intro. now subst x. apply unused_reg_not_pc. lia. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RBBL. rewrite negb_false_iff in e; now apply In_contains in e. apply RI.
+  eapply RBX. apply RI. shelve. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RBLX. apply RI. shelve. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RPS. apply RI. split. eapply arm_ls_i_fallthru in H. intro. now subst x. left. unfold unused_reg, _unused_reg. now destruct_match. shelve. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RPS. apply RI. split. eapply arm_ls_i_fallthru in H. intro. now subst x. left. unfold unused_reg, _unused_reg. now destruct_match. shelve. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RP. apply RI. split. eapply arm_ls_i_fallthru in H. intro. now subst x. left. apply unused_reg_not_pc. lia. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RP. apply RI. split. eapply arm_ls_i_fallthru in H. intro. now subst x. left. apply unused_reg_not_pc. lia. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RPS. apply RI. split. eapply arm_ls_r_fallthru in H. intro. now subst x. left. unfold unused_reg, _unused_reg. now destruct_match. shelve. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RPS. apply RI. split. eapply arm_ls_r_fallthru in H. intro. now subst x. left. unfold unused_reg, _unused_reg. now destruct_match. shelve. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RPS. apply RI. split. eapply arm_ls_r_fallthru in H. intro. now subst x. left. unfold unused_reg, _unused_reg. now destruct_match. shelve. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RPS. apply RI. split. eapply arm_ls_r_fallthru in H. intro. now subst x. left. unfold unused_reg, _unused_reg. now destruct_match. shelve. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RP. apply RI. split. eapply arm_ls_r_fallthru in H. intro. now subst x. left. unfold unused_reg, _unused_reg. now destruct_match. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RP. apply RI. split. eapply arm_ls_r_fallthru in H. intro. now subst x. left. unfold unused_reg, _unused_reg. now destruct_match. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RP. apply RI. split. eapply arm_ls_r_fallthru in H. intro. now subst x. left. unfold unused_reg, _unused_reg. now destruct_match. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RP. apply RI. split. eapply arm_ls_r_fallthru in H. intro. now subst x. left. unfold unused_reg, _unused_reg. now destruct_match. shelve. unfold unused_reg, _unused_reg. now destruct_match. rewrite negb_false_iff in e; now apply In_contains in e.
+  intros ?????? XS. rewrite orb_true_iff in e2. destruct e2. eapply arm_lsm_noj in XS. apply XS. rewrite N.testbit_false, <-N.shiftr_div_pow2, (shiftr_mod_xbits _ _ 1), xbits_Z2N. unfold bitb in H. rewrite zxbits_eq in H. simpl in *. lia. lia. eapply arm_lsm_noj' in XS. apply XS. now destruct op.
+  eapply RL. apply RI. lia. lia. lia. lia. shelve. rewrite Z.testbit_true, <-Z.shiftr_div_pow2 by lia. apply Z2N.inj. lia. lia. rewrite Z2N.inj_mod, Z2N_inj_shiftr, (shiftr_mod_xbits _ _ 1), xbits_Z2N by (try apply Z.shiftr_nonneg; lia). simpl. rewrite orb_false_iff in e2. destruct e2. apply bitb_not0 in H. unfold bitb in H. rewrite zxbits_eq in H. simpl in *. lia. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RL. apply RI. lia. lia. lia. lia. shelve. rewrite Z.testbit_true, <-Z.shiftr_div_pow2 by lia. apply Z2N.inj. lia. lia. rewrite Z2N.inj_mod, Z2N_inj_shiftr, (shiftr_mod_xbits _ _ 1), xbits_Z2N by (try apply Z.shiftr_nonneg; lia). simpl. rewrite orb_false_iff in e2. destruct e2. apply bitb_not0 in H. unfold bitb in H. rewrite zxbits_eq in H. simpl in *. lia. rewrite negb_false_iff in e; now apply In_contains in e.
+  eapply RBBL. rewrite negb_false_iff in e; now apply In_contains in e. inversion RI. reflexivity.
+  eapply RBBL. rewrite negb_false_iff in e; now apply In_contains in e. inversion RI. reflexivity.
+  Unshelve.
+  all: match goal with |- _ R_E = _ R_E =>
+  eapply noassign_stmt_same in H; [inversion H;symmetry; apply H1|];
+  unfold noassign; cbv[arm2il]; repeat (match goal with |- allassigns _ (_ $; ?a) => unfold_rec a end; destruct_match_eqn); repeat constructor; (discriminate || apply arm_varid_not_e || destruct_match; repeat constructor; discriminate ||
+  match goal with H: (Z.to_N (unused_reg ?a ?b ?c) =? 15) = true |- _ => unfold unused_reg in H; epose proof (unused_reg_bound 0 a b c); lia end) | _ => idtac end.
 
+  lia. lia. rewrite orb_false_iff in e2. now destruct op. rewrite orb_false_iff in e2. now destruct op.
+Qed.
+Print Assumptions SafeDest_rewrite_inst.
