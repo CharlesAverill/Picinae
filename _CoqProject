@@ -11,7 +11,7 @@ Picinae_SMC.v
 # Picinae_i386.v
 Picinae_armv7.v
 Picinae_armv7_lifter.v
-# Picinae_armv8.v
+Picinae_armv8.v
 Picinae_riscv.v
 # Picinae_amd64.v
 Picinae_numbers.v

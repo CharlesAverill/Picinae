@@ -4,6 +4,7 @@ Require Import Picinae_armv7.
 Require Import -(notations) Picinae_armv7_lifter.
 Require Import NArith.
 Require Import Lia ZifyN ZifyBool.
+Require Import Picinae_numbers.
 Open Scope N.
 
 Import ARM7Notations.
@@ -52,9 +53,8 @@ Theorem collatz_correctness:
 *)
   satisfies_all arm_prog (invs base inp s) (collatz_exit base) ((x',s')::t).
 Proof.
-Local Ltac step := time ISA_step.
-intros. unfold satisfies_all.
-  apply prove_invs.
+  Local Ltac step := time (ISA_step).
+intros. apply prove_invs.
   (* Base case: *)
   simpl. rewrite ENTRY.
   step. repeat (split; try assumption).
@@ -82,17 +82,17 @@ intros. unfold satisfies_all.
   destruct PRE as (MEMSAME & INP & RT & JF & RE).
   unfold collatz_arm7 in MEM.
   rewrite <-MEMSAME in *. clear MEMSAME.
-  step.
-  step.
-  step.
-  step. (* Takes 38s on my machine. Why? *)
-  step. (* Takes 50s on my machine. Why? *)
-  step. (* Takes 50s on my machine... *)
+  step. (* 2.6s *)
+  step. (* 2.4s *)
+  step. (* 3.4s *)
+  step. (* 20 s *)
+  step. (* 50 s *)
+  step. (* 50 s *)
 
   assert (inp mod 2 < 2) by lia.
   destruct (inp mod 2) as [|p] eqn:EQ; try destruct p; try lia.
 
-  step.
+  step. (* 7.6s *)
   assert (H0:N.even inp = true).
   rewrite <-testbit0_even, Bool.negb_true_iff, N.bit0_eqb, EQ. easy. rewrite H0.
   apply N.bits_inj; intro.
@@ -112,7 +112,7 @@ intros. unfold satisfies_all.
   rewrite H1.
   admit.
 
-  step.
+  step. (* 8.7s *)
   assert (H0: N.even inp = false).
   rewrite <-testbit0_even, Bool.negb_false_iff, N.bit0_eqb, EQ. easy. rewrite H0.
   lia.
