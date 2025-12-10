@@ -19,6 +19,8 @@ Definition Z1245171 := 1245171.
 Definition Z33554428 := 33554428.
 Definition Z_33554432 := -33554432.
 Definition Z4294967296 := 4294967296.
+Definition Z_8388608 := -8388608.
+Definition Z8388607 := 8388607.
 
 Definition Z_popcount z :=
   match z with Z0 => Z0
@@ -143,7 +145,7 @@ Definition UBFX rd rn sl sr :=
   ARM_bfx false Z14 (Z31-sr) rd (sr-sl) rn.
 Definition GOTO (l: bool) (cond src dest: Z) :=
   let offset := dest - src - Z2 in
-  if (offset <? -8388608) || (offset >? 8388607) then None
+  if (offset <? Z_8388608) || (offset >? Z8388607) then None
   else
     let imm := offset mod (Z.shiftl Z1 Z24) in
     Some ((if l then ARM_BL else ARM_B) cond imm).
@@ -223,7 +225,7 @@ Definition rewrite_w_table
           | Some irm =>
               let table := make_jump_table dis dis' ai sl sr (Z1 << (Z32 - sr)) in
               let tc' := fun x => if (list_eqb x dis) then Some (ti, sl, sr) else tc x in
-              if (ti + Z.of_nat (length table) >=? 2 ^ 30) then None else
+              if (ti + Z.of_nat (length table) >=? (Z1 << Z30)) then None else
               Some (irm, table, tc')
           end
       end
@@ -250,7 +252,7 @@ Definition blx_irm reg : IRM :=
 Definition rewrite_blx reg := rewrite_w_table (blx_irm reg).
 Definition ldm_pc_irm op Rn register_list reg orig_inst : IRM :=
   fun cond i ti sl sr =>
-    let bc := Z4 * Z_popcount (register_list mod 2^16) in
+    let bc := Z4 * Z_popcount (register_list mod (Z1 << Z16)) in
     let offset := arm_lsm_op_start op bc + bc - Z4 in
     arm_assemble_all_cond ([
       STR reg SP Z_4;                     (* str reg, [sp, #-4] *)
@@ -518,6 +520,7 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
    txt - same as zs but doesn't change when recursing
 *)
 Fixpoint _rewrite (zs: list Z) (tc: TableCache) (pol: Z -> list Z) (i2i': Z -> Z) (i ti ai bi: Z) (txt: list Z) : option (list (list Z) * list (list Z) * TableCache) :=
+  if (i >=? Z1 << Z30) then None else 
   match zs with
   | z::zs =>
       match rewrite_inst tc i2i' z (pol i) i ti ai bi txt with
@@ -606,6 +609,8 @@ Extract Inlined Constant Z1245171 => "1245171".
 Extract Inlined Constant Z33554428 => "33554428".
 Extract Inlined Constant Z_33554432 => "(-33554432)".
 Extract Inlined Constant Z4294967296 => "4294967296".
+Extract Inlined Constant Z_8388608 => "(-8388608)".
+Extract Inlined Constant Z8388607 => "8388607".
 Extract Inlined Constant Z.opp => "(~-)".
 Extract Inlined Constant Z.ltb => "(<)".
 (* maybe use library that has popcount instrinsic? *)
