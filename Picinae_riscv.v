@@ -60,7 +60,9 @@ Inductive riscvvar :=
   (* These meta-variables model page access permissions: *)
   | A_READ | A_WRITE | A_EXEC
   (* Temporary variable *)
-  | V_TMP.
+  | V_TMP
+  (* Fault counter *)
+  | V_FC.
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
 Definition rvtypctx v :=
