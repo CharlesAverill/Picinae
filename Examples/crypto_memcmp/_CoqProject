@@ -1,2 +1,3 @@
 -R ../../ Picinae
 memcmp_ft.v
+crypto_memcmp_proof.v

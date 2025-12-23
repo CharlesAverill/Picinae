@@ -1,5 +1,3 @@
-.PHONY: memcmp_ft.vc
-
 RISCV_PREFIX=riscv32-unknown-elf-
 GCC=$(RISCV_PREFIX)gcc
 FLAGS=  -O1 \

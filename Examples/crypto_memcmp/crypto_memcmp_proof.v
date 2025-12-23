@@ -88,7 +88,7 @@ Theorem crypto_memcmp_correctness:
          (LEN: s R_A2 = len),
   satisfies_all memcmp (invs0 mem in_a in_b len)
                        (exits0 mem in_a in_b len) (xs'::t).
-Proof.
+Proof using.
     Local Ltac step := time r5_step.
     intros. apply prove_invs.
 
@@ -221,8 +221,8 @@ Theorem crypto_memcmp_ft_correctness:
   satisfies_all fault_memcmp
                        (ft_invs0 mem in_a in_b len)
                        (ft_exits0 mem in_a in_b len) (xs'::t).
-Proof.
-    Local Ltac step := 
+Proof using.
+    Local Ltac step ::= 
         match goal with
         | [s' : store, FC : ?s' V_FC <= 1 |- _] =>
             let H := fresh "H" in
