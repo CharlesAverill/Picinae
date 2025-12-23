@@ -245,5 +245,4 @@ Proof.
     step; try solve_post.
     1,3: repeat step; solve_inv; solve_post.
     repeat (step; [| repeat step; solve_inv]); solve_inv.
-    Unshelve. exact (fun _ => 0).
-Admitted.
+Qed.

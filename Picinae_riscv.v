@@ -538,3 +538,34 @@ Proof.
     intros s a a0. unfold lift_riscv.
     exists rvtypctx. apply welltyped_rv2il.
 Qed.
+
+Definition inject_fault (p : program) (s : store) (a : addr) :=
+  match p s a with
+  | None => None
+  | Some (sz,q) => Some (sz,
+    If (BinOp OP_AND (BinOp OP_LT (Word 0x0 32) (Var V_FC)) (Unknown 1))
+      (Move V_FC (BinOp OP_MINUS (Var V_FC) (Word 0x1 32)))
+      q)
+  end.
+
+Require Import Lia.
+Lemma inject_fault_lift_riscv_welltyped : forall p,
+    welltyped_prog rvtypctx (inject_fault (lift_riscv p)).
+Proof.
+    intros p s a. unfold inject_fault, lift_riscv.
+    exists rvtypctx.
+    econstructor.
+    change 1 with (widthof_binop OP_AND 1). constructor.
+        change 1 with (widthof_binop OP_LT 32). constructor.
+        constructor. lia. constructor. reflexivity.
+        constructor.
+    econstructor. now right.
+        change 32 with (widthof_binop OP_MINUS 32). constructor.
+        now constructor.
+        constructor. lia.
+        eapply typchk_stmt_mono with (c := rvtypctx) (c0 := rvtypctx)
+            (q := Move V_FC (BinOp OP_MINUS (Var V_FC) (Word 1 32))).
+        reflexivity. reflexivity.
+    apply welltyped_rv2il.
+    reflexivity.
+Qed.
