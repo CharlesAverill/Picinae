@@ -149,6 +149,27 @@ Definition inject_fault (p : program) (s : store) (a : addr) :=
   end.
 Definition wrapped_addloop := inject_fault lifted_addloop.
 
+Lemma inject_fault_lift_riscv_welltyped : forall p,
+    welltyped_prog rvtypctx (inject_fault (lift_riscv p)).
+Proof.
+    intros p s a. unfold inject_fault, lift_riscv.
+    exists rvtypctx.
+    econstructor.
+    change 1 with (widthof_binop OP_AND 1). constructor.
+        change 1 with (widthof_binop OP_LT 32). constructor.
+        constructor. lia. constructor. reflexivity.
+        constructor.
+    econstructor. now right.
+        change 32 with (widthof_binop OP_MINUS 32). constructor.
+        now constructor.
+        constructor. lia.
+        eapply typchk_stmt_mono with (c := rvtypctx) (c0 := rvtypctx)
+            (q := Move V_FC (BinOp OP_MINUS (Var V_FC) (Word 1 32))).
+        reflexivity. reflexivity.
+    apply welltyped_rv2il.
+    reflexivity.
+Qed.
+
 (* And now for the proof!
 
    Our partial correctness proof (partial because it assumes termination) 
@@ -192,8 +213,7 @@ Proof.
     (* Inductive step setup *)
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; try (eassumption || apply lift_riscv_welltyped).
-        2: admit.
+    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_fault_lift_riscv_welltyped).
     clear - PRE MDL. rename t1 into t. rename s1 into s'.
 
     (* Meat of proof starts here *)
