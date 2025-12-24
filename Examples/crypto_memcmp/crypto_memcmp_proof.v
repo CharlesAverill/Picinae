@@ -149,6 +149,58 @@ Proof using.
     }
 Qed.
 
+Definition dual_modular_redundant_pair
+    (p : addr -> N) (a1 a2 : addr) :=
+  exists s s' s'' ex1 ex2,
+    exec_stmt rvtypctx s
+      (rv2il a1 (rv_decode (p a1))) rvtypctx s'' ex1 /\
+    exec_stmt rvtypctx s'
+      (rv2il a2 (rv_decode (p a2))) rvtypctx s'' ex2 /\
+    exec_stmt rvtypctx s
+      (rv2il a1 (rv_decode (p a1)) $;
+      rv2il a2 (rv_decode (p a2))) rvtypctx s'' ex2.
+
+Definition dual_modular_redundant_prog
+    (p : addr -> N) (len : N) :=
+  forall k,
+    2 * k < len ->
+      dual_modular_redundant_pair p
+        (2 * k * 32) (2 * k * 32 + 4).
+
+Ltac bounded_cases n :=
+        destruct n as [| n _] using N.peano_ind;
+        [| repeat rewrite <- N.add_1_l;
+           (lia || bounded_cases n)];
+        psimpl.
+
+Ltac simpl_rv2il :=
+    repeat (let H := fresh "H" in
+    match goal with
+    [|- context[rv2il ?x ?y]] => eassert (rv2il x y = _) by
+    (compute; reflexivity)
+    end; rewrite H; clear H).
+
+Ltac handle_exec_stmt :=
+    repeat match goal with
+    | [|- exec_stmt _ _ _ _ _ _] => econstructor
+    | [|- eval_exp _ _ (BinOp ?x _ _) _ 1] =>
+        change 1 with (widthof_binop x 32);
+        constructor
+    | [|- eval_exp _ _ (Var _) _ _] =>
+        now constructor
+    | [|- eval_exp _ _ (Word _ _) _ _] =>
+        constructor
+    end.
+
+Theorem crypt_memcmp_dmr :
+    dual_modular_redundant_prog memcmp_ft 38.
+Proof.
+    intros k Bound. eexists. eexists. eexists. eexists. eexists.
+    bounded_cases k; unfold dual_modular_redundant_pair; intros;
+        simpl_rv2il.
+    - split. handle_exec_stmt.
+Abort.
+
 Section FaultTolerantInvariants.
     Variable mem : memory.
     Variable in_a in_b : addr.

@@ -30,6 +30,8 @@ Definition inject_fault (p : program) (s : store) (a : addr) :=
         end
   end.
 
+(* Only useful for architectures with a Gallina-defined lifter
+   accompanied by a well-typedness theorem, eg welltyped_rv2il *)
 Lemma inject_fault_welltyped : forall p,
     (forall s a sz instr,
         p s a = Some (sz, instr) ->

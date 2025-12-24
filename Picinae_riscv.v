@@ -568,3 +568,35 @@ Proof.
   apply welltyped_rv2il.
 Qed.
 
+
+(*
+
+Defn pair_valid (a1 a2 : addr) (s s' : store) (p : addr -> N) :=
+    s =[ Seq (decode p a1) (decode p a2) ]=> s' /\
+    s =[ decode a1 ]=> s' /\
+    s =[ decode a2 ]=> s'.
+
+Defn prog_valid (p : addr -> N) (iw : N) (len : N) :=
+    forall k s s', 2 * k < len ->
+        pair_valid (2 * k * iw) (2 * k * iw + 1) s s' p.
+
+*)
+
+Definition dual_modular_redundant_pair
+    (p : addr -> N) (a1 a2 : addr) (s s' : store) :=
+  forall ex,
+    exec_stmt rvtypctx s
+      (rv2il a1 (rv_decode (p a1))) rvtypctx s' ex /\
+    exec_stmt rvtypctx s
+      (rv2il a2 (rv_decode (p a2))) rvtypctx s' ex /\
+    exec_stmt rvtypctx s
+      (rv2il a1 (rv_decode (p a1)) $;
+      rv2il a2 (rv_decode (p a2))) rvtypctx s' ex.
+
+Definition dual_modular_redundant_prog
+    (p : addr -> N) (len : N) :=
+  forall k s s',
+    2 * k < len ->
+      dual_modular_redundant_pair p
+        (2 * k * 32) (2 * k * 32 + 1)
+        s s'.
