@@ -5,6 +5,7 @@ Picinae_statics.v
 Picinae_finterp.v
 Picinae_simplifier_base.v
 Picinae_simplifier_v1_1.v
+Picinae_fault_tolerance.v
 Picinae_ISA.v
 Picinae_i386.v
 Picinae_armv7.v

@@ -1,5 +1,6 @@
 Require Import br_ccopy_ft.
 Require Import Picinae_riscv.
+Import RVFaultTolerance.
 Import RISCVNotations.
 Require Import NArith.
 Require Import List.
