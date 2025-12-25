@@ -13,16 +13,21 @@ Section Invariants.
     Variable ctl : N.
     Variable dst src : addr.
     Variable len : N.
-    Variable mem : memory.
+    Variable mem base_mem : memory.
 
     Definition k_equal (mem : memory) (p1 p2 : addr) (k : N) : Prop :=
         forall (i : N),
             i < k ->
             mem Ⓑ[p1 + i] = mem Ⓑ[p2 + i].
 
+    Definition mem_equal (mem1 mem2 : memory) : Prop :=
+        forall (i : N),
+            mem1 Ⓑ[i] = mem2 Ⓑ[i].
+
     Definition postcondition (s : store) : Prop :=
-        ctl = 1 ->
-        k_equal (s V_MEM32) dst src len.
+        (ctl = 0 -> mem_equal base_mem (s V_MEM32)) /\
+        (ctl = 1 ->
+            k_equal (s V_MEM32) dst src len).
 
     Definition neg (n : N) : N := 0 ⊖ n.
 
@@ -31,6 +36,7 @@ Section Invariants.
         | 0x0 => Inv 0 (
                 s R_A0 = ctl /\ s R_A1 = dst /\ s R_A2 = src /\ s R_A3 = len /\
                 s V_MEM32 = mem /\
+                s V_MEM32 = base_mem /\
                 ~ overlap 32 src len dst len
             )
         | 0x20 => Inv 0 (exists k mem',
@@ -41,6 +47,7 @@ Section Invariants.
                 s R_A6 = dst ⊕ len /\
                 k < len < 2^32 /\
                 ~ overlap 32 src len dst len /\
+                (ctl = 0 -> mem_equal base_mem (s V_MEM32)) /\
                 (ctl = 1 -> k_equal mem' src dst k)
             )
         | 0x90 | 0x94 => Post 0 (postcondition s)
@@ -72,15 +79,33 @@ Proof.
     now apply H.
 Qed.
 
+Lemma noverlap_single : forall a b w,
+    a <> b ->
+    a < 2^w ->
+    b < 2^w ->
+    ~ overlap w a 1 b 1.
+Proof.
+    intros a b w Neq ALt BLt (i & j & I1 & J1 & Contra).
+    replace i with 0 in * by lia.
+    replace j with 0 in * by lia. psimpl in Contra.
+    rewrite N.shiftl_1_l, N.mod_small, N.mod_small in Contra by lia.
+    contradiction.
+Qed.
+
 Lemma noverlap_single_lt : forall p a b,
     a < b < 2^32 ->
     ~ overlap 32 (p + a) 1 (p + b) 1.
 Proof.
-    intros. apply noverlap_sum. psimpl.
+    intros.
+    apply noverlap_sum. psimpl.
     repeat rewrite msub_nowrap; psimpl;
     repeat rewrite N.mod_small by lia.
     all: lia.
 Qed.
+
+Lemma setmem_shadow : forall m a w e len,
+    m = setmem w e len m a (getmem w e len m a).
+Admitted.
 
 (* Proof in fault-free context *)
 Theorem br_ccopy_correctness:
@@ -93,8 +118,8 @@ Theorem br_ccopy_correctness:
          (A2: s R_A2 = src)
          (LEN: s R_A3 = len)
          (NOV: ~ overlap 32 src len dst len),
-  satisfies_all br_ccopy (invs0 ctl dst src len mem)
-                         (exits0 ctl dst src len mem) (xs'::t).
+  satisfies_all br_ccopy (invs0 ctl dst src len mem mem)
+                         (exits0 ctl dst src len mem mem) (xs'::t).
 Proof using.
     Local Ltac step := time r5_step.
     intros. apply prove_invs.
@@ -109,22 +134,29 @@ Proof using.
     destruct_inv 32 PRE.
 
     (* Intro *)
-    destruct PRE as (A0 & A1 & A2 & A3 & Mem & Nov). {
+    destruct PRE as (A0 & A1 & A2 & A3 & Mem & BMem & Nov). {
     repeat step.
     (* len = 0, exit *)
-    1-2: intro; unfold k_equal; lia.
+    split.
+        intros. now rewrite Mem.
+        intros. unfold k_equal. lia.
+    discriminate.
     (* len <> 0, loop *)
     exists 0; eexists; psimpl; repeat split; unfold k_equal; try lia.
     apply (models_var R_A3) in MDL. rewrite <- A3. apply MDL.
     assumption.
+    intro. subst. unfold mem_equal. reflexivity.
     }
 
     (* Loop *)
-    destruct PRE as (k & mem' & Mem & A0 & A1 & A2 & A6 & Bound & Nov & Eq). {
+    destruct PRE as (k & mem' & Mem & A0 & A1 & A2 & A6 & Bound & Nov & Same & Eq). {
     repeat step.
     - (* dst + k + 1 <> dst + len, loop *)
         exists (k + 1). eexists. psimpl. repeat split; try lia.
         assumption.
+        intro. subst ctl.
+            unfold mem_equal. intros. cbv [neg]. psimpl. subst.
+            rewrite <- setmem_shadow. now apply Same.
         intro. subst ctl.
         cbv [neg]. psimpl.
         rewrite N.lxor_comm, <- N.lxor_assoc, N.lxor_nilpotent.
@@ -146,7 +178,10 @@ Proof using.
             now apply noverlap_symmetry.
     - discriminate.
     - (* dst + k + 1 = dst + len, return *)
-        replace len with (k + 1) in * by lia.
+        replace len with (k + 1) in * by lia. split.
+        intro. subst ctl.
+            unfold mem_equal. intros. cbv [neg]. psimpl. subst.
+            rewrite <- setmem_shadow. now apply Same.
         intro. subst ctl.
         cbv [neg]. psimpl.
         rewrite N.lxor_comm, <- N.lxor_assoc, N.lxor_nilpotent.
@@ -174,13 +209,14 @@ Section FaultTolerantInvariants.
     Variable ctl : N.
     Variable dst src : addr.
     Variable len : N.
-    Variable mem : memory.
+    Variable base_mem mem : memory.
 
     Definition ft_invs T (Inv Post: inv_type T) (NoInv:T) (s:store) (a:addr) : T :=
         match a with
         | 0x0 => Inv 0 (
                 s R_A0 = ctl /\ s R_A1 = dst /\ s R_A2 = src /\ s R_A3 = len /\
                 s V_MEM32 = mem /\
+                s V_MEM32 = base_mem /\
                 ~ overlap 32 src len dst len /\
                 s V_FC = 1
             )
@@ -192,10 +228,11 @@ Section FaultTolerantInvariants.
                 s R_A6 = dst ⊕ len /\
                 k < len < 2^32 /\
                 ~ overlap 32 src len dst len /\
+                (ctl = 0 -> mem_equal base_mem (s V_MEM32)) /\
                 (ctl = 1 -> k_equal mem' src dst k) /\
                 s V_FC <= 1
             )
-        | 0x90 | 0x94 => Post 0 (postcondition ctl dst src len s)
+        | 0x90 | 0x94 => Post 0 (postcondition ctl dst src len base_mem s)
         | _ => NoInv
         end.
 
@@ -217,8 +254,8 @@ Theorem br_ccopy_ft_correctness:
          (LEN: s R_A3 = len)
          (NOV: ~ overlap 32 src len dst len)
          (FC: s V_FC = 1),
-  satisfies_all br_ccopy_fault (ft_invs0 ctl dst src len mem)
-                               (ft_exits0 ctl dst src len mem) (xs'::t).
+  satisfies_all br_ccopy_fault (ft_invs0 ctl dst src len mem mem)
+                               (ft_exits0 ctl dst src len mem mem) (xs'::t).
 Proof using.
     Local Ltac step ::= 
         match goal with
@@ -248,22 +285,29 @@ Proof using.
     destruct_inv 32 PRE.
 
     (* Intro *)
-    destruct PRE as (A0 & A1 & A2 & A3 & Mem & Nov & FC). {
+    destruct PRE as (A0 & A1 & A2 & A3 & Mem & BMem & Nov & FC). {
     repeat step.
-    all: match goal with
-        | [|- _ -> _] => intro; unfold k_equal; lia
-        | _ => exists 0; eexists; psimpl; repeat split; unfold k_equal; try lia;
+    par: match goal with
+        | [|- exists _ _, _] => exists 0; eexists; psimpl; repeat split; unfold k_equal; try lia;
             [apply (models_var R_A3) in MDL; rewrite <- A3; apply MDL
-            |assumption]
+            |assumption
+            |intro; subst; now unfold mem_equal]
+        | [|- (_ -> _) /\ (_ -> _)] => 
+            split; 
+                [intro; subst; now unfold mem_equal
+                |intro; unfold k_equal; lia]
         end.
     }
 
     (* Loop *)
-    destruct PRE as (k & mem' & Mem & A0 & A1 & A2 & A6 & Bound & Nov & Eq & FC). {
-    Local Ltac solve_inv ctl dst src len k Eq :=
-        solve [exists (k + 1); eexists; psimpl; repeat split; try lia;
-        [assumption|];
-        intro; subst ctl; cbv [neg]; psimpl;
+    destruct PRE as (k & mem' & Mem & A0 & A1 & A2 & A6 & Bound & Nov & Same & Eq & FC). {
+    Local Ltac solve_inv ctl dst src len k Eq Same :=
+        exists (k + 1); eexists; psimpl; repeat split; try lia;
+        [assumption
+        |intro; subst ctl; unfold mem_equal; intros;
+            cbv [neg]; psimpl; subst;
+            rewrite <- setmem_shadow; now apply Same
+        |intro; subst ctl; cbv [neg]; psimpl;
         rewrite N.lxor_comm, <- N.lxor_assoc, N.lxor_nilpotent;
         apply k_equal_step; unfold k_equal; intros; psimpl;
         repeat rewrite getmem_noverlap;
@@ -277,11 +321,13 @@ Proof using.
                 [psimpl; lia|now apply noverlap_symmetry]])
         | _ => idtac
         end].
-    Local Ltac solve_post ctl dst src len k Eq :=
+    Local Ltac solve_post ctl dst src len k Eq Same :=
         solve [let i := fresh "i" in
         let ILen := fresh "ILen" in
-        replace len with (k + 1) in * by lia;
-        intros; subst ctl; cbv [neg]; psimpl;
+        replace len with (k + 1) in * by lia; split;
+        [intros; subst ctl; unfold mem_equal; intros; cbv [neg];
+         psimpl; subst; rewrite <- setmem_shadow; now apply Same
+        |intros; subst ctl; cbv [neg]; psimpl;
         rewrite N.lxor_comm, <- N.lxor_assoc, N.lxor_nilpotent;
         psimpl; apply k_equal_step;
         [unfold k_equal; intros;
@@ -296,20 +342,20 @@ Proof using.
         apply (noverlap_shrink _ src (k + 1));
         [psimpl; lia|
         apply noverlap_symmetry, (noverlap_shrink _ dst (k + 1));
-        [psimpl; lia|now apply noverlap_symmetry]]]].
+        [psimpl; lia|now apply noverlap_symmetry]]]]].
     repeat (step;
             (* Get to end of already-faulted branches *) 
             lazymatch goal with
             | [|- context[update _ V_FC 0]] => repeat step;
                 lazymatch goal with
-                | [|- exists _, _] => solve_inv ctl dst src len k Eq
-                | [|- _ -> _] => solve_post ctl dst src len k Eq
+                | [|- exists _, _] => solve_inv ctl dst src len k Eq Same
+                | [|- (_ -> _) /\ (_ -> _)] => solve_post ctl dst src len k Eq Same
                 end
             | [|- nextinv _ _ _ _ _] => idtac
             end).
-    step. solve_inv ctl dst src len k Eq.
-    step; solve_post ctl dst src len k Eq.
-    step. solve_inv ctl dst src len k Eq.
-    solve_post ctl dst src len k Eq.
+    step. solve_inv ctl dst src len k Eq Same.
+    step; solve_post ctl dst src len k Eq Same.
+    step. solve_inv ctl dst src len k Eq Same.
+    solve_post ctl dst src len k Eq Same.
     }
 Qed.
