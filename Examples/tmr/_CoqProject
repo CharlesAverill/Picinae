@@ -1,0 +1,3 @@
+-R ../../ Picinae
+tmr_ft.v
+tmr_ft_proof.v
