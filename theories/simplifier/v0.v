@@ -36,7 +36,7 @@ From Picinae Require Import core.
 From Picinae Require Import theory.
 From Picinae Require Import statics.
 From Picinae Require Import finterp.
-Require Export simplifier_base.
+From Picinae.simplifier Require Export base.
 Require Import BinNums.
 
 (* Version 0 of the simplifier does nothing.  Activating this version therefore

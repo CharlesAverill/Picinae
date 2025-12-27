@@ -32,12 +32,12 @@
                                                                          M 7N8ZD
  *)
 
-Require Export core.
-Require Export theory.
-Require Export statics.
-Require Export finterp.
-Require Export simplifier_v1_1.
-Require Export ISA.
+From Picinae Require Export core.
+From Picinae Require Export theory.
+From Picinae Require Export statics.
+From Picinae Require Export finterp.
+From Picinae.simplifier Require Export v1_1.
+From Picinae Require Export ISA.
 Require Import NArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.

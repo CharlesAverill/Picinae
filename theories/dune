@@ -8,9 +8,11 @@
    theory
    statics
    finterp
-   simplifier_base
-   simplifier_v0
-   simplifier_v1_1
+
+   simplifier.base
+   simplifier.v0
+   simplifier.v1_1
+
    ISA
    
    archs.amd64

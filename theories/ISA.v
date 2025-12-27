@@ -36,7 +36,7 @@ From Picinae Require Import core.
 From Picinae Require Import theory.
 From Picinae Require Import statics.
 From Picinae Require Import finterp.
-From Picinae Require Import simplifier_base.
+From Picinae.simplifier Require Import base.
 Require Import NArith.
 Require Import Program.Equality.
 Require Import Structures.Equalities.
