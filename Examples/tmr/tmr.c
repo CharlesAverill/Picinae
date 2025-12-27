@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-inline int CRYPTO_memcmp(const void *in_a, const void *in_b, size_t len)
+int CRYPTO_memcmp(const void *in_a, const void *in_b, size_t len)
 {
     size_t i;
     const volatile unsigned char *a = in_a;
@@ -14,10 +14,12 @@ inline int CRYPTO_memcmp(const void *in_a, const void *in_b, size_t len)
     return x;
 }
 
-bool check_password_tmr(const char* stored, const char* user, size_t len) {
-    int a = CRYPTO_memcmp(stored, user, len);
-    int b = CRYPTO_memcmp(stored, user, len);
-    int c = CRYPTO_memcmp(stored, user, len);
+bool passwords_match_tmr(const char* stored, const char* user, size_t len) {
+    unsigned int a = CRYPTO_memcmp(stored, user, len) ? 1 : 0;
+    unsigned int b = CRYPTO_memcmp(stored, user, len) ? 1 : 0;
+    unsigned int c = CRYPTO_memcmp(stored, user, len) ? 1 : 0;
 
-    return (a & b) | (a & c) | (b & c);
+    return (a + b + c) <= 1;
 }
+
+int main() {}
