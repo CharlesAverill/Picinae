@@ -32,10 +32,10 @@
                                                                          M 7N8ZD
  *)
 
-Require Import core.
-Require Import theory.
-Require Import statics.
-Require Import finterp.
+From Picinae Require Import core.
+From Picinae Require Import theory.
+From Picinae Require Import statics.
+From Picinae Require Import finterp.
 Require Export simplifier_base.
 Require Import BinNums.
 

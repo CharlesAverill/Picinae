@@ -33,8 +33,8 @@
  *)
 
 Require Import NArith.
-Require Import core.
-Require Import finterp.
+From Picinae Require Import core.
+From Picinae Require Import finterp.
 
 (* This file defines the central tactic notations that launch Picinae's auto-
    simplification process for symbolic expressions yielded by the IL interperter.

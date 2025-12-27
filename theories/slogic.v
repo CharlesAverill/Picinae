@@ -33,8 +33,8 @@
  *)
 
 
-Require Import core.
-Require Import theory.
+From Picinae Require Import core.
+From Picinae Require Import theory.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.
 Require Import NArith.

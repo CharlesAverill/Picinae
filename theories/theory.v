@@ -33,7 +33,7 @@
  *)
 
 Require Export core.
-Require Import NArith.
+From Picinae Require Import NArith.
 Require Import ZArith.
 Require Import Program.Equality.
 Require Import FunctionalExtensionality.

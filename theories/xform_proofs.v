@@ -23,7 +23,7 @@ Require Import FunctionalExtensionality.
 Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
-Require Import i386.
+From Picinae.archs Require Import i386.
 
 Import X86Notations.
 Open Scope N.

@@ -32,7 +32,7 @@
                                                                          M 7N8ZD
  *)
 
-Require Import theory.
+From Picinae Require Import theory.
 Require Import NArith.
 Require Import ZArith.
 Require Import Program.Equality.

@@ -32,8 +32,8 @@
                                                                          M 7N8ZD
  *)
 
-Require Import theory.
-Require Import statics.
+From Picinae Require Import theory.
+From Picinae Require Import statics.
 Require Import NArith.
 Require Import ZArith.
 Require Import List.
