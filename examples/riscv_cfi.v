@@ -2,7 +2,7 @@ Require Import FunctionalExtensionality.
 Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
-From Picinae Require Import riscv.
+From Picinae.archs Require Import riscv.
 Require Import List.
 
 Import RISCVNotations.
