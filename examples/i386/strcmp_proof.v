@@ -25,7 +25,7 @@ Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
 From Picinae Require Import i386.
-Require Import strcmp.
+From PicinaeExamples Require Import i386.strcmp.
 
 Import X86Notations.
 Open Scope N.

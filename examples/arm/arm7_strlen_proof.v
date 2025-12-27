@@ -4,7 +4,7 @@ Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
 From Picinae Require Import armv7.
-Require Import arm7_strlen.
+From PicinaeExamples.arm Import arm7_strlen.
 
 Import ARM7Notations.
 Open Scope N.

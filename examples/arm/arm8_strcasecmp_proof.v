@@ -13,7 +13,7 @@ Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
 From Picinae Require Import armv8_pcode.
-Require Import arm8_strcasecmp.
+From PicinaeExamples.arm Require Import arm8_strcasecmp.
 
 Import ARM8Notations.
 Open Scope N.

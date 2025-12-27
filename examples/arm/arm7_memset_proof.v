@@ -2,7 +2,7 @@ Require Import Utf8.
 Require Import FunctionalExtensionality.
 Require Import NArith.
 From Picinae Require Import armv7.
-Require Import arm7_memset.
+From PicinaeExamples.arm Require Import arm7_memset.
 Import ARM7Notations.
 Open Scope N.
 Open Scope bool.
