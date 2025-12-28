@@ -8,7 +8,7 @@ FLAGS=  -O1 \
 
 default: tmr.S
 
-tmr.S:
+tmr.S: tmr.c
 	$(GCC) $(FLAGS) tmr.c -o tmr.S
 
 tmr_ft: tmr_ft.S
