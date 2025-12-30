@@ -70,7 +70,7 @@ Section Invariants.
               s R_SP = sp /\
               s V_MEM32 = mem
             )
-        | 0x1019c | 0x101a4 => Post 0 
+        | 0x1019c | 0x101a8 => Post 0 
             (postcondition s None None /\ 
              s R_RA = raddr /\
              s R_S0 = s0 /\ s R_S1 = s1 /\ s R_S2 = s2 /\
@@ -79,31 +79,31 @@ Section Invariants.
              s V_MEM32 = mem)
 
         (* passwords_match_tmr *)
-        | 0x101a8 => Inv 1
+        | 0x101b0 => Inv 1
             (s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\
              s R_S0 = s0 /\ s R_S1 = s1 /\ s R_S2 = s2 /\
              s R_S3 = s3 /\ s R_S4 = s4 /\ s R_SP = sp /\
              s R_RA = raddr /\
               s V_MEM32 = mem /\ noverlaps (s R_SP))
-        | 0x10208 => Inv 1
+        | 0x1022c => Inv 1
             (s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\
              s R_S0 = in_a /\ s R_S1 = in_b /\ s R_S2 = len /\
              postcondition s (Some R_S3) (Some (s V_MEM32)) /\
              noverlaps (s R_SP ⊕ ssize) /\
              stack s)
-        | 0x1021c => Inv 1
+        | 0x10250 => Inv 1
             (s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\ 
              s R_S0 = in_a /\ s R_S1 = in_b /\ s R_S2 = len /\
              postcondition s (Some R_S4) (Some (s V_MEM32)) /\
              postcondition s (Some R_S3) (Some (s V_MEM32)) /\
              noverlaps (s R_SP ⊕ ssize) /\
              stack s)
-        | 0x10220 => Inv 1
+        | 0x10254 => Inv 1
             (postcondition s (Some R_S4) (Some (s V_MEM32)) /\
              postcondition s (Some R_S3) (Some (s V_MEM32)) /\
              postcondition s None (Some (s V_MEM32)) /\
              stack s)
-        | 0x102b0 | 0x102b4 => Post 1 (
+        | 0x102e4 | 0x102e8 => Post 1 (
             s R_A0 = 1 <-> k_equal in_a in_b len (s V_MEM32)
         )
         | _ => NoInv
@@ -225,9 +225,9 @@ Proof using.
 Qed.
 
 (* Proof in fault-free environment *)
-Theorem tmr_ft_correctness:
+Theorem tmr_correctness:
   forall s mem t xs' in_a in_b len raddr s0 s1 s2 s3 s4 sp
-         (ENTRY: startof t xs' = (Addr 0x101a8, s))
+         (ENTRY: startof t xs' = (Addr 0x101b0, s))
          (MDL: models rvtypctx s)
          (MEM: s V_MEM32 = mem)
          (A0: s R_A0 = in_a)
@@ -288,7 +288,7 @@ Proof.
 
     (* Intro *)
     destruct PRE as (A0 & A1 & A2 & S0 & S1 & S2 & S3 & S4 & SP & RA & Mem & NVL). {
-    do 20 step.
+    do 23 step.
 
     (* Dummy hyp to make it easier to use the above tactic *)
     eassert (ST: stack mem raddr s0 s1 s2 s3 s4 sp 
@@ -353,7 +353,7 @@ Proof.
     destruct PRE as (A0 & A1 & A2 & S0 & S1 & S2 & Answer1 & NVL & ST). {
     step.
 
-    (* Formal goal for riscv_call*)
+    (* Format goal for riscv_call*)
     match goal with
     | [|- context[?x :: ?y :: ?t]] =>
         change (x :: y :: t) with
@@ -516,7 +516,7 @@ Section FaultTolerantInvariants.
     Variable raddr : addr.
     Variable in_a in_b : addr.
     Variable len : N.
-    Variable s0 s1 s2 s3 s4 sp : N.
+    Variable s0 s1 s2 s3 s4 sp x : N.
 
     (* When running CRYPTO_memcmp, there are three distinct possibilities:
         1. s FC = 0, no fault occurs, s' FC = 0
@@ -536,6 +536,11 @@ Section FaultTolerantInvariants.
         s R_SP = sp /\
         s V_MEM32 = mem.
 
+    (* Preserved by passwords_match_tmr *)
+    Definition safe_regs' (s : store) :=
+        s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\
+        s R_S0 = in_a /\ s R_S1 = in_b /\ s R_S2 = len.
+
     Definition ft_invs T (Inv Post: inv_type T) (NoInv:T) (s:store) (a:addr) : T :=
         let postcondition := postcondition mem in_a in_b len in
         let noverlaps := noverlaps in_a in_b len in
@@ -543,13 +548,22 @@ Section FaultTolerantInvariants.
         match a with
         (* CRYPTO_memcmp *)
         | 0x10170 => Inv 0
-            (s V_FC <= 1 /\
+            (s V_FC <= 1 /\ s V_FC = x /\
              s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\
              safe_regs s)
         | 0x10180 => Inv 0
             (safe_regs s /\
-             (* Cases 1, 2 *)
-             ((s V_FC <= 1 /\ exists k,
+             ((* Case 1 *)
+              (x = 0 /\ s V_FC = 0 /\ exists k,
+              s V_MEM32 = mem /\
+              s R_A5 = in_a ⊕ k /\
+              s R_A1 = in_b ⊕ k /\
+              s R_A2 = in_a ⊕ len /\
+              k < len < 2^32 /\
+              ((s R_A0 = 0) <-> k_equal in_a in_b k mem) /\
+              safe_regs s) \/
+              (* Case 2 *)
+              (x = 1 /\ s V_FC <= 1 /\ exists k,
               s V_MEM32 = mem /\
               s R_A5 = in_a ⊕ k /\
               s R_A1 = in_b ⊕ k /\
@@ -558,47 +572,71 @@ Section FaultTolerantInvariants.
               ((s R_A0 = 0) <-> k_equal in_a in_b k mem) /\
               safe_regs s) \/
              (* Case 3 *)
-              s V_FC = 0)
+              x = 1 /\ s V_FC = 0)
             )
-        | 0x1019c | 0x101a4 => Post 0 
+        | 0x1019c | 0x101a8 => Post 0 
             (safe_regs s /\
-             (* Cases 1, 2 *)
-             ((s V_FC <= 1 /\ postcondition s None None) \/
+             (* Case 1 *)
+             ((x = 0 /\ s V_FC <= 1 /\ postcondition s None None) \/
+             (* Case 2 *)
+             (x = 1 /\ s V_FC <= 1 /\ postcondition s None None) \/
              (* Case 3 *)
-             s V_FC = 0))
+             (x = 1 /\ s V_FC = 0)))
+        (* If we're at the second return, a fault happened, but
+           everything went fine and now FC = 0 *)
+        | 0x101a0 | 0x101ac => Post 0 
+            (safe_regs s /\ postcondition s None None /\
+             s V_FC = 0)
 
         (* passwords_match_tmr *)
-        | 0x101a8 => Inv 1
+        | 0x101b0 => Inv 1
             (s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\
              safe_regs s /\ noverlaps (s R_SP) /\
              s V_FC = 1)
-        | 0x101f4 => Inv 1
-            (s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\
-             s R_S0 = in_a /\ s R_S1 = in_b /\ s R_S2 = len /\
-             noverlaps (s R_SP ⊕ ssize) /\ stack s /\
-             s V_FC <= 1)
         | 0x10208 => Inv 1
-            (safe_regs s /\ noverlaps (s R_SP ⊕ ssize) /\
+            (safe_regs' s /\ noverlaps (s R_SP ⊕ ssize) /\ stack s /\
+             s V_FC <= 1)
+        | 0x1022c => Inv 1
+            (safe_regs' s /\ noverlaps (s R_SP ⊕ ssize) /\ stack s /\
              (* Cases 1, 2 *)
              ((s V_FC <= 1 /\
-               s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\
-               s R_S0 = in_a /\ s R_S1 = in_b /\ s R_S2 = len /\
                postcondition s (Some R_S3) (Some (s V_MEM32))) \/
                (* Case 3 *)
                s V_FC = 0))
-        | 0x1021c => Inv 1
-            (s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\ 
-             s R_S0 = in_a /\ s R_S1 = in_b /\ s R_S2 = len /\
-             postcondition s (Some R_S4) (Some (s V_MEM32)) /\
-             postcondition s (Some R_S3) (Some (s V_MEM32)) /\
-             noverlaps (s R_SP ⊕ ssize) /\
-             stack s)
-        | 0x10220 => Inv 1
-            (postcondition s (Some R_S4) (Some (s V_MEM32)) /\
-             postcondition s (Some R_S3) (Some (s V_MEM32)) /\
-             postcondition s None (Some (s V_MEM32)) /\
-             stack s)
-        | 0x102b0 | 0x102b4 => Post 1 (
+        | 0x10250 => Inv 1
+            (safe_regs' s /\ noverlaps (s R_SP ⊕ ssize) /\ stack s /\
+             (* Case 1: No faults *)
+             ((s V_FC = 1 /\
+               postcondition s (Some R_S3) (Some (s V_MEM32)) /\
+               postcondition s (Some R_S4) (Some (s V_MEM32))) \/
+             (* Case 2: Answer1 faulted, Answer2 fine *)
+             (s V_FC = 0 /\
+               postcondition s (Some R_S4) (Some (s V_MEM32))) \/
+             (* Case 3: Answer1 fine, Answer2 faulted *)
+             (s V_FC = 0 /\
+               postcondition s (Some R_S3) (Some (s V_MEM32)))
+             )
+            )
+        | 0x10254 => Inv 1
+            (safe_regs' s /\ noverlaps (s R_SP ⊕ ssize) /\ stack s /\
+             (* Case 1: No faults *)
+             ((s V_FC = 1 /\
+               postcondition s (Some R_S3) (Some (s V_MEM32)) /\
+               postcondition s (Some R_S4) (Some (s V_MEM32))) \/
+             (* Case 2: Answer1 faulted, Answer2 fine, Answer3 fine *)
+             (s V_FC = 0 /\
+               postcondition s (Some R_S4) (Some (s V_MEM32)) /\
+               postcondition s None (Some (s V_MEM32)) \/
+             (* Case 3: Answer1 fine, Answer2 faulted, Answer3 fine *)
+             (s V_FC = 0 /\
+               postcondition s (Some R_S4) (Some (s V_MEM32)) /\
+               postcondition s None (Some (s V_MEM32))) \/
+             (* Case 3: Answer1 fine, Answer2 fine, Answer3 faulted *)
+             (s V_FC = 0 /\
+               postcondition s (Some R_S4) (Some (s V_MEM32)) /\
+               postcondition s (Some R_S3) (Some (s V_MEM32)))
+            )))
+        | 0x102e4 | 0x102e8 => Post 1 (
             s R_A0 = 1 <-> k_equal in_a in_b len (s V_MEM32)
         )
         | _ => NoInv
@@ -631,8 +669,8 @@ Theorem crypto_memcmp_correctness_ft:
          (SP: s R_SP = sp)
          (FC: s V_FC <= 1),
   satisfies_all tmr_fault 
-                       (ft_invs0 mem raddr in_a in_b len s0 s1 s2 s3 s4 sp)
-                       (ft_exits0 mem raddr in_a in_b len s0 s1 s2 s3 s4 sp)
+                       (ft_invs0 mem raddr in_a in_b len s0 s1 s2 s3 s4 sp (s V_FC))
+                       (ft_exits0 mem raddr in_a in_b len s0 s1 s2 s3 s4 sp (s V_FC))
                        (xs'::t).
 Proof using.
     Local Ltac step ::= 
@@ -658,60 +696,95 @@ Proof using.
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
     eapply preservation_exec_prog in MDL; try (eassumption || apply inject_fault_lift_riscv_welltyped).
-    clear - PRE MDL. rename t1 into t. rename s5 into s. rename a1 into a.
+    clear - PRE MDL. rename t1 into t. rename s5 into s'. rename a1 into a.
 
-    destruct_inv 32 PRE.
+    destruct (N.eq_dec (s V_FC) 0). {
+    destruct_inv 32 PRE; rewrite e in *; clear e.
 
     (* Intro *)
-    destruct PRE as (FC & A0 & A1 & A2 & Safe). {
+    destruct PRE as (FC & x & A0 & A1 & A2 & Mem & Saved). {
+    replace s' with (update s' V_FC 0) by
+        (now erewrite store_upd_eq).
+    repeat (destruct Saved as (? & Saved)).
+    repeat step; (split;
+    [unfold safe_regs in *; now psimpl|];
+    (now left) || (now right) || left); (split; [lia|]);
+        try solve [unfold postcondition; psimpl; unfold k_equal; 
+                   split; intro; lia];
+    (split; [lia|]);
+    (exists 0; psimpl; repeat split; auto; try lia;
+            solve [apply (models_var R_A2) in MDL; rewrite <- A2; apply MDL] ||
+            unfold k_equal; lia) ||
+    (unfold postcondition; psimpl; unfold k_equal;
+        split; intro; lia).
+    }
+
+    (* Loop *)
+    destruct PRE as (Safe & [PRE|Cases23]); [|lia].
+    destruct PRE as (_ & FC & k & Mem & A5 & A1 & A2 & Bound & Eq & Saved). {
+    replace s' with (update s' V_FC 0) by
+        (now erewrite store_upd_eq).
+    repeat step; (split; [unfold safe_regs in *; now psimpl|left];
+        split; [reflexivity|split; [lia|]]).
+    - (* in_a + k + 1 <> in_a + len, loop *)
+        exists (k ⊕ 1). psimpl.
+            repeat (split; [solve [auto]|]).
+            split. lia.
+            split.
+        -- unfold k_equal; split; intros.
+           apply or_xor_zero in H. destruct H.
+           assert (i < k \/ i = k) by lia. destruct H2.
+               now apply Eq.
+           now subst.
+           rewrite N.mod_small in H by lia.
+           pose proof (k_equal_inv _ _ _ _ H). apply Eq in H0.
+           specialize (H k ltac:(lia)).
+           now rewrite H, N.lxor_nilpotent, H0.
+        -- unfold safe_regs in *; now psimpl.
+    - (* in_a + k + 1 = in_a + len, break *)
+        assert (1 + k = len) by lia. subst len.
+        repeat split; auto; try solve [intuition]; intro.
+        -- apply or_xor_zero in H. destruct H. rewrite H in *.
+           apply k_equal_step.
+              now apply Eq.
+              now rewrite H0.
+        -- psimpl. pose proof H.
+           apply k_equal_inv, Eq in H.
+           rewrite H. psimpl. specialize (H0 k ltac:(lia)).
+           apply N.lxor_eq_0_iff. now symmetry.
+    }}
+
+    destruct_inv 32 PRE; replace (s V_FC) with 1 in * by lia;
+        clear n.
+
+    (* Intro *)
+    destruct PRE as (FC & x & A0 & A1 & A2 & Safe). {
     Local Ltac solve_inv MDL A2 :=
         exists 0; psimpl; repeat split; auto;
             [lia|
             apply (models_var R_A2) in MDL; rewrite <- A2; apply MDL
             |lia|unfold k_equal; lia].
-    step.
-    - (* len = 0, fault *)
-        repeat step; split;
-        [unfold safe_regs in *; now psimpl
-        |left; split; [lia|]];
-        unfold postcondition; psimpl;
-            unfold k_equal; split; lia.
-    - (* len <> 0, fault *)
-        repeat step; split;
-        [unfold safe_regs in *; now psimpl
-        |left; split; [lia|]];
-        exists 0; psimpl; unfold safe_regs in Safe;
-        repeat split; try solve [intuition];
-        unfold k_equal; try lia;
-        apply (models_var R_A2) in MDL; simpl in MDL; lia.
-    - (* no fault *) 
-        repeat step;
-            (split; 
-            [unfold safe_regs in *; now psimpl
-            |solve [now right]||left]);
-            split; [reflexivity|];
-            unfold postcondition; psimpl;
-            split; intro; unfold k_equal; lia.
-    - (* no fault *) 
-        repeat step;
-            (split; 
-            [unfold safe_regs in *; now psimpl
-            |solve [now right]||left]);
-            split; [reflexivity|];
-            exists 0; psimpl; unfold safe_regs in *;
-            repeat split; try solve [intuition];
-            unfold k_equal; try lia;
-            apply (models_var R_A2) in MDL; simpl in MDL; lia.
-    - (* no fault *) 
-        repeat step;
-            (split; 
-            [unfold safe_regs in *; now psimpl
-            |solve [now right]||left]).
+    replace s' with (update s' V_FC 1) by
+        now erewrite store_upd_eq.
+    repeat step; (split;
+    [unfold safe_regs in *; now psimpl|]; right;
+    (now right) || left);
+    (split; [reflexivity|];
+     split; [reflexivity|]);
+    (exists 0; psimpl; repeat split; auto; try lia;
+            solve [apply (models_var R_A2) in MDL; rewrite <- A2; apply MDL] ||
+            unfold k_equal; lia) || idtac.
+    1-2: unfold postcondition; psimpl; unfold k_equal;
+        split; intro; lia.
+    unfold safe_regs in Safe.
+    exists 0; psimpl; repeat split; psimpl; auto; try lia;
+        try solve [apply (models_var R_A2) in MDL; rewrite <- A2; apply MDL];
+        unfold k_equal; lia.
     }
 
     (* Loop *)
-    destruct PRE as (Safe & [PRE|PRE]).
-    destruct PRE as (FC & k & Mem & A5 & A1 & A2 & Bound & Eq). {
+    destruct PRE as (Safe & [PRE|[PRE|PRE]]); [lia| |].
+    destruct PRE as (_ & FC & k & Mem & A5 & A1 & A2 & Bound & Eq). {
     Local Ltac solve_inv' k Eq :=
         let X := fresh "X" in
         let Y := fresh "Y" in
@@ -744,23 +817,38 @@ Proof using.
               [apply N.lxor_eq_0_iff; symmetry; apply X; lia
               |apply k_equal_inv in X; symmetry; apply Eq, X]
             ].
-    repeat step;
-        (split; 
-         [unfold safe_regs in *; now psimpl
-         |(now right) || (left; split; [lia|])]).
+    repeat step.
+        all: split; [unfold safe_regs in *; now psimpl|right];
+            ((now right) || left);
+            (split; [reflexivity|];
+            split; [reflexivity|]).
         solve_inv' k Eq.
-        solve_post k len s Eq.
+        replace len with (1 + k) in * by lia.
+        destruct Eq. unfold postcondition. split; intro.
+            psimpl in H2.
+            apply or_xor_zero in H2; destruct H2.
+              apply k_equal_step.
+                now apply H0.
+                now symmetry.
+            psimpl.
+                replace (s' R_A0) with 0.
+                psimpl. apply N.lxor_eq_0_iff; symmetry; apply H2; lia.
+                symmetry; apply H0.
+                now apply k_equal_inv in H2.
     }
 
-    repeat step; (split;
-        [unfold safe_regs in *; now psimpl
-        |now right]).
+    destruct PRE.
+    replace s' with (update s' V_FC 0) by
+        (now erewrite store_upd_eq).
+    repeat step;
+        (split; [unfold safe_regs in *; now psimpl
+                |now right; right]).
 Qed.
 
-(* Proof in fault-free environment *)
+(* Proof in fault-aware context *)
 Theorem tmr_ft_correctness:
   forall s mem t xs' in_a in_b len raddr s0 s1 s2 s3 s4 sp
-         (ENTRY: startof t xs' = (Addr 0x101a8, s))
+         (ENTRY: startof t xs' = (Addr 0x101b0, s))
          (MDL: models rvtypctx s)
          (MEM: s V_MEM32 = mem)
          (A0: s R_A0 = in_a)
@@ -773,9 +861,11 @@ Theorem tmr_ft_correctness:
          (S3: s R_S3 = s3)
          (S4: s R_S4 = s4)
          (SP: s R_SP = sp)
+         (FC: s V_FC = 1)
          (NVL: noverlaps in_a in_b len sp),
-  satisfies_all tmr_ft (invs1 mem raddr in_a in_b len s0 s1 s2 s3 s4 sp)
-                       (exits1 mem raddr in_a in_b len s0 s1 s2 s3 s4 sp) (xs'::t).
+  satisfies_all tmr_fault 
+                       (ft_invs1 mem raddr in_a in_b len s0 s1 s2 s3 s4 sp 1)
+                       (ft_exits1 mem raddr in_a in_b len s0 s1 s2 s3 s4 sp 1) (xs'::t).
 Proof.
     intros. apply prove_invs.
 
@@ -784,21 +874,65 @@ Proof.
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; try (eassumption || apply lift_riscv_welltyped).
+    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_fault_lift_riscv_welltyped).
     clear - PRE MDL. rename t1 into t. rename s5 into s. rename a1 into a.
 
     destruct_inv 32 PRE.
 
-    Ltac riscv_call thm :=
+    (* Intro *)
+    destruct PRE as (A0 & A1 & A2 & Safe & NVL & FC). {
+    repeat (
+        match goal with
+        | [|- context[update _ V_FC 0]] => repeat step
+        | [|- context[nextinv]] => step
+        end);
+        try (unfold safe_regs'; unfold safe_regs in Safe;
+            repeat (split; [solve [auto; intuition]|]);
+            split;
+            [unfold ssize; now psimpl
+            |split; [|lia];
+                unfold stack in *; psimpl;
+                unfold safe_regs in Safe;
+                repeat (
+                let H := fresh "H" in
+                destruct Safe as (H & Safe);
+                rewrite H);
+                rewrite Safe; auto]).
+
+    now repeat rewrite setmem_swap with (v1 := s4) by
+         (apply sep_noverlap; psimpl; left; lia).
+    now repeat rewrite setmem_swap with (v1 := s3) by
+         (apply sep_noverlap; psimpl; left; lia).
+    now repeat rewrite setmem_swap with (v1 := s2) by
+         (apply sep_noverlap; psimpl; left; lia).
+    now repeat rewrite setmem_swap with (v1 := s1) by
+         (apply sep_noverlap; psimpl; left; lia).
+    now repeat rewrite setmem_swap with (v1 := s0) by
+         (apply sep_noverlap; psimpl; left; lia).
+    }
+
+    (* To first call *)
+    destruct PRE as (Safe & NVL & ST & FC). {
+    step;
+
+    (* Format goal for riscv_call*)
+    match goal with
+    | [|- context[?x :: ?y :: ?t]] =>
+        change (x :: y :: t) with
+            (x :: nil ++ y :: t)
+    end.
+
+    Ltac riscv_call thm ::=
         let MDL1 := fresh "MDL1" in
         let s1 := fresh "s1" in
         set (s1 := update _ _ _);
         eapply models_after_steps;
-        [assumption|apply lift_riscv_welltyped|];
+        [assumption|apply inject_fault_lift_riscv_welltyped|];
         intro MDL1; eapply (perform_call 0);
         [reflexivity|intros;
-                     eapply thm; 
-                     try reflexivity; eauto|reflexivity|];
+                     eapply crypto_memcmp_correctness_ft; 
+                     try reflexivity; eauto;
+                     unfold s1 in *; psimpl; lia|reflexivity|];
         let a := fresh "a" in
         let s' := fresh "s'" in
         let t2 := fresh "t2" in
@@ -808,7 +942,7 @@ Proof.
         let MDL' := fresh "MDL'" in
         assert (models rvtypctx s') as MDL' by
             (eapply preservation_exec_prog;
-             eauto using lift_riscv_welltyped);
+             eauto using inject_fault_lift_riscv_welltyped);
         unfold archtyps in *;
         match goal with
         | [|- context[?t2 ++ ?t0 ++ (Addr ?x, ?s) :: ?t]] =>
@@ -819,74 +953,189 @@ Proof.
             destruct_inv 32 PRE
         end.
 
-    (* Intro *)
-    destruct PRE as (A0 & A1 & A2 & S0 & S1 & S2 & S3 & S4 & SP & RA & Mem & NVL). {
-    do 20 step.
+    Ltac psubst :=
+        repeat match goal with
+        [s: store, H: ?s ?v = _ |- context[?s ?v]] =>
+            rewrite H
+        end.
 
-    (* Dummy hyp to make it easier to use the above tactic *)
-    eassert (ST: stack mem raddr s0 s1 s2 s3 s4 sp 
-        (update s V_MEM32 _)).
-        unfold stack; now psimpl.
+    (* call CRYPTO_memcmp faulted *)
+    3: repeat step; split;
+       unfold safe_regs' in *; psimpl; intuition.
 
     (* Call CRYPTO_memcmp *)
-    riscv_call crypto_memcmp_correctness;
-        (destruct PRE as (Answer1 & RA' & S0' & S1' & S2' & S3' & S4' & SP' & Mem');
-        unfold postcondition in Answer1; repeat step;
-        repeat (split; [reflexivity|]); split; [
-            unfold postcondition; split; intro; [
-                apply Answer1 in H; intros a ALen;
-                specialize (H a ALen);
-                repeat (rewrite getmem_noverlap in H; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL]);
-                rewrite Mem';
-                now repeat (rewrite getmem_noverlap; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL])
-            | psimpl; apply Answer1; intros a ALen;
-                specialize (H a ALen);
-                rewrite Mem' in H;
-                repeat (rewrite getmem_noverlap in H; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL
-                ]);
-                now repeat (rewrite getmem_noverlap; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL])]
-        |]; split; [unfold noverlaps in *; psimpl; 
-            now rewrite SP', <- SP
-        |unfold stack; psimpl; now rewrite Mem']).
+    all: riscv_call crypto_memcmp_correctness_ft;
+        destruct PRE as (Safe' & Result);
+        repeat (let H := fresh "H" in
+                destruct Safe' as (H & Safe'));
+        (match type of Result with
+        | _ \/ _  \/ _ =>
+            destruct Result as [(? & FC & Answer1)
+                               |[(? & FC & Answer1)
+                               |(? & FC)]]
+        | _ =>
+            destruct Result as (Answer1 & FC)
+        end); try lia;
+            try (replace s' with (update s' V_FC 0) by
+                    (now erewrite store_upd_eq));
+        repeat step.
+
+        all: (unfold safe_regs' in *;
+            repeat (destruct Safe as (? & Safe)); split;
+            [psimpl; intuition|]; psubst; split;
+                [assumption|]; split;
+                [unfold stack in *; psimpl; now psubst
+                |(now right) || left];
+             repeat (split; [easy|]);
+             unfold postcondition in *; psimpl;
+             intuition).
+
+        all: try rewrite <- H7, <- H9, <- H10 in *; auto.
+    }
+
+    (* To second call *)
+    { destruct PRE as (Safe & NVL & ST & [(FC & Answer1)|FC]). {
+        step;
+
+        (* Format goal for riscv_call*)
+        match goal with
+        | [|- context[?x :: ?y :: ?t]] =>
+            change (x :: y :: t) with
+                (x :: nil ++ y :: t)
+        | _ => idtac
+        end.
+
+        (* call CRYPTO_memcmp faulted *)
+        3: repeat step; split;
+           unfold safe_regs' in *; psimpl; intuition.
+
+        all: riscv_call crypto_memcmp_correctness_ft;
+            destruct PRE as (Safe' & Result);
+            repeat (let H := fresh "H" in
+                    destruct Safe' as (H & Safe'));
+            (match type of Result with
+            | _ \/ _  \/ _ =>
+                destruct Result as [(? & FC & Answer2)
+                                |[(? & FC & Answer2)
+                                |(? & FC)]]
+            | _ =>
+                destruct Result as (Answer2 & FC)
+            end); try lia;
+                try (replace s' with (update s' V_FC 0) by
+                        (now erewrite store_upd_eq));
+            repeat step.
+
+            all: split; [unfold safe_regs' in *; now psimpl|];
+                 psubst; split; [assumption|];
+                 split; [unfold stack in *; psimpl; now psubst|];
+                 match goal with
+                 | [|- ?X \/ ?Y \/ ?Z] =>
+                    match X with
+                    | context[?x = ?x] => left
+                    | _ => right
+                    end
+                end.
+
+            all: (solve [left;
+                split; [reflexivity|];
+                unfold postcondition in *; psimpl;
+                try solve [intuition];
+
+                unfold safe_regs' in Safe;
+                  repeat (let X := fresh "H" in
+                          destruct Safe as (X & Safe);
+                          try rewrite X in *); auto;
+                try solve [apply H7; lia]]) || idtac.
+            all: unfold safe_regs' in Safe;
+                repeat (let X := fresh "H" in
+                        destruct Safe as (X & Safe);
+                        try rewrite X in *);
+                try solve [split; [reflexivity|];
+                unfold postcondition in *; psimpl;
+                split; auto; now rewrite H4].
+            all: right;
+                split; [reflexivity|];
+                unfold postcondition in *; psimpl;
+                now rewrite H4.
+      }
+
+      (* Fault *)
+      { replace s with (update s V_FC 0) by
+            (now erewrite store_upd_eq).
+        step;
+
+        (* Format goal for riscv_call*)
+        match goal with
+        | [|- context[?x :: ?y :: ?t]] =>
+            change (x :: y :: t) with
+                (x :: nil ++ y :: t)
+        | _ => idtac
+        end.
+
+        assert (models archtyps (update s V_FC 0)) by
+            now rewrite <- store_upd_eq.
+        unfold safe_regs' in Safe;
+            repeat (let X := fresh "H" in
+                    destruct Safe as (X & Safe)).
+
+        riscv_call crypto_memcmp_correctness_ft;
+            destruct PRE as (Safe' & Result);
+            repeat (let H := fresh "H" in
+                    destruct Safe' as (H & Safe'));
+            (lazymatch type of Result with
+            | _ \/ _  \/ _ =>
+                destruct Result as [(? & FC' & Answer2)
+                                |[(? & FC' & Answer2)
+                                |(? & FC')]]
+            | _ =>
+                destruct Result as (Answer2 & FC')
+            end); try lia;
+                try (replace s' with (update s' V_FC 0) by
+                        (now erewrite store_upd_eq));
+            repeat step.
+
+            all: split; 
+                [unfold safe_regs' in *; psimpl; intuition|]; split;
+                [now rewrite H6|]; split;
+                [unfold stack in *; psimpl; now psubst|];
+                match goal with
+                | [|- ?X \/ ?Y \/ ?Z] =>
+                    match X with
+                    | context[1 = 1] => left
+                    | _ => right; try solve [intuition]
+                    end
+                end.
+
+            unfold safe_regs' in Safe.
+
+            all: try solve [left;
+                split; [reflexivity|];
+                unfold postcondition in *; psimpl;
+                try solve [intuition];
+
+                unfold safe_regs' in Safe;
+                  repeat (let X := fresh "H" in
+                          destruct Safe as (X & Safe);
+                          try rewrite X in *); auto;
+                try solve [apply H7; lia]].
+
+            all: unfold postcondition in *; psimpl;
+                unfold safe_regs' in *;
+                repeat (let H := fresh "H" in
+                        destruct Safe as (H & Safe);
+                        try rewrite H in *);
+                rewrite Safe' in *;
+                try (left; split; [reflexivity|]; auto).
+            split; [reflexivity|].
+                split; auto.
+      }
     }
 
     (* To second call *)
     destruct PRE as (A0 & A1 & A2 & S0 & S1 & S2 & Answer1 & NVL & ST). {
     step.
 
-    (* Formal goal for riscv_call*)
+    (* Format goal for riscv_call*)
     match goal with
     | [|- context[?x :: ?y :: ?t]] =>
         change (x :: y :: t) with

@@ -22,8 +22,10 @@ CRYPTO_memcmp:
 	addi	a1,a1,1
 	bne	a5,a2,.L3
 	ret
+	ret
 .L4:
 	li	a0,0
+	ret
 	ret
 	.size	CRYPTO_memcmp, .-CRYPTO_memcmp
 	.align	2
@@ -49,13 +51,24 @@ passwords_match_tmr:
 	mv	s0,a0
 	mv	s1,a1
 	mv	s2,a2
+	mv	s0,a0
+	mv	s1,a1
+	mv	s2,a2
 	jal ra,	CRYPTO_memcmp
 	mv	s3,a0
+	mv	s3,a0
+	mv	a2,s2
+	mv	a1,s1
+	mv	a0,s0
 	mv	a2,s2
 	mv	a1,s1
 	mv	a0,s0
 	jal ra,	CRYPTO_memcmp
 	mv	s4,a0
+	mv	s4,a0
+	mv	a2,s2
+	mv	a1,s1
+	mv	a0,s0
 	mv	a2,s2
 	mv	a1,s1
 	mv	a0,s0
