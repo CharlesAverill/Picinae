@@ -643,7 +643,7 @@ Section FaultTolerantInvariants.
         | _ => NoInv
         end.
 
-    Definition tmr_fault : program := inject_fault tmr_ft.
+    Definition tmr_fault : program := inject_skip tmr_ft.
 
     Definition ft_exits0 := make_exits 0 tmr_fault ft_invs.
     Definition ft_invs0 := make_invs 0 tmr_fault ft_invs.
@@ -696,7 +696,7 @@ Proof using.
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_fault_lift_riscv_welltyped).
+    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_skip_lift_riscv_welltyped).
     clear - PRE MDL. rename t1 into t. rename s5 into s'. rename a1 into a.
 
     destruct (N.eq_dec (s V_FC) 0). {
@@ -875,7 +875,7 @@ Proof.
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_fault_lift_riscv_welltyped).
+    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_skip_lift_riscv_welltyped).
     clear - PRE MDL. rename t1 into t. rename s5 into s. rename a1 into a.
 
     destruct_inv 32 PRE.
@@ -924,7 +924,7 @@ Proof.
         let s1 := fresh "s1" in
         set (s1 := update _ _ _);
         eapply models_after_steps;
-        [assumption|apply inject_fault_lift_riscv_welltyped|];
+        [assumption|apply inject_skip_lift_riscv_welltyped|];
         intro MDL1; eapply (perform_call 0);
         [reflexivity|intros;
                      eapply crypto_memcmp_correctness_ft; 
@@ -939,7 +939,7 @@ Proof.
         let MDL' := fresh "MDL'" in
         assert (models rvtypctx s') as MDL' by
             (eapply preservation_exec_prog;
-             eauto using inject_fault_lift_riscv_welltyped);
+             eauto using inject_skip_lift_riscv_welltyped);
         unfold archtyps in *;
         match goal with
         | [|- context[?t2 ++ ?t0 ++ (Addr ?x, ?s) :: ?t]] =>

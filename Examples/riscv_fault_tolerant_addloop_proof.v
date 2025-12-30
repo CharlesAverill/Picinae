@@ -139,7 +139,7 @@ Definition lifted_addloop := lift_riscv add_loop_riscv_ft.
 (* This function wraps our lifted program in a block of Picinae IL that
    simulates fault injection attacks. At each `step`, we will have to reason
    about the possibility that that step was the victim instruction, and did not occur *)
-Definition inject_fault (p : program) (s : store) (a : addr) :=
+Definition inject_skip (p : program) (s : store) (a : addr) :=
   match p s a with
   | None => None
   | Some (sz,q) => Some (sz,
@@ -147,12 +147,12 @@ Definition inject_fault (p : program) (s : store) (a : addr) :=
       (Move V_FC (BinOp OP_MINUS (Var V_FC) (Word 0x1 32)))
       q)
   end.
-Definition wrapped_addloop := inject_fault lifted_addloop.
+Definition wrapped_addloop := inject_skip lifted_addloop.
 
-Lemma inject_fault_lift_riscv_welltyped : forall p,
-    welltyped_prog rvtypctx (inject_fault (lift_riscv p)).
+Lemma inject_skip_lift_riscv_welltyped : forall p,
+    welltyped_prog rvtypctx (inject_skip (lift_riscv p)).
 Proof.
-    intros p s a. unfold inject_fault, lift_riscv.
+    intros p s a. unfold inject_skip, lift_riscv.
     exists rvtypctx.
     econstructor.
     change 1 with (widthof_binop OP_AND 1). constructor.
@@ -213,7 +213,7 @@ Proof.
     (* Inductive step setup *)
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_fault_lift_riscv_welltyped).
+    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_skip_lift_riscv_welltyped).
     clear - PRE MDL. rename t1 into t. rename s1 into s'.
 
     (* Meat of proof starts here *)

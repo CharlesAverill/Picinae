@@ -542,15 +542,20 @@ Qed.
 Require Import Picinae_fault_tolerance.
 
 Module FTC <: FaultToleranceConfig RISCVArch IL_RISCV.
+  Definition w := 32.
+  Theorem w_nontrivial :
+    1 < 2^w.
+  Proof. now compute. Qed.
+
   Definition fault_counter := V_FC.
   Theorem fault_counter_typed :
-        exists w,
-            1 < 2^w /\
-            archtyps fault_counter = Some w.
-  Proof.
-    exists 32. split. constructor.
-    reflexivity.
-  Qed.
+    archtyps fault_counter = Some w.
+  Proof. reflexivity. Qed.
+
+  Definition mem := V_MEM32.
+  Theorem mem_typed :
+    archtyps V_MEM32 = Some (8 * 2^w).
+  Proof. reflexivity. Qed.
 End FTC.
 
 Module RVFaultTolerance := FaultTolerance RISCVArch
@@ -560,43 +565,23 @@ Module RVFaultTolerance := FaultTolerance RISCVArch
                                           Statics_RISCV.
 Import FTC RVFaultTolerance.
 
-Lemma inject_fault_lift_riscv_welltyped : forall p,
-  welltyped_prog rvtypctx (inject_fault (lift_riscv p)).
+Lemma inject_skip_lift_riscv_welltyped : forall p,
+  welltyped_prog rvtypctx (inject_skip (lift_riscv p)).
 Proof.
-  intros. apply inject_fault_welltyped.
+  intros. apply inject_skip_welltyped.
   intros. unfold lift_riscv in H. inversion H; subst; clear H.
   apply welltyped_rv2il.
 Qed.
 
-
-(*
-
-Defn pair_valid (a1 a2 : addr) (s s' : store) (p : addr -> N) :=
-    s =[ Seq (decode p a1) (decode p a2) ]=> s' /\
-    s =[ decode a1 ]=> s' /\
-    s =[ decode a2 ]=> s'.
-
-Defn prog_valid (p : addr -> N) (iw : N) (len : N) :=
-    forall k s s', 2 * k < len ->
-        pair_valid (2 * k * iw) (2 * k * iw + 1) s s' p.
-
-*)
-
-Definition dual_modular_redundant_pair
-    (p : addr -> N) (a1 a2 : addr) (s s' : store) :=
-  forall ex,
-    exec_stmt rvtypctx s
-      (rv2il a1 (rv_decode (p a1))) rvtypctx s' ex /\
-    exec_stmt rvtypctx s
-      (rv2il a2 (rv_decode (p a2))) rvtypctx s' ex /\
-    exec_stmt rvtypctx s
-      (rv2il a1 (rv_decode (p a1)) $;
-      rv2il a2 (rv_decode (p a2))) rvtypctx s' ex.
-
-Definition dual_modular_redundant_prog
-    (p : addr -> N) (len : N) :=
-  forall k s s',
-    2 * k < len ->
-      dual_modular_redundant_pair p
-        (2 * k * 32) (2 * k * 32 + 1)
-        s s'.
+(* Lemma inject_memc_inject_skip_lift_riscv_welltyped : forall p,
+  welltyped_prog rvtypctx 
+    (inject_memory_corruption (inject_skip (lift_riscv p))).
+Proof.
+  intros. apply inject_memory_corruption_welltyped.
+  intros. pose proof (inject_skip_lift_riscv_welltyped p s a).
+  rewrite H in H0. destruct H0 as (c' & WT).
+  unfold inject_skip in H. destruct (lift_riscv p s a); try discriminate.
+  destruct p0. inversion H; subst; clear H.
+  inversion WT; subst; clear WT.
+  econstructor; eauto.
+Qed. *)

@@ -225,7 +225,7 @@ Section FaultTolerantInvariants.
         | _ => NoInv
         end.
 
-    Definition fault_memcmp := inject_fault memcmp.
+    Definition fault_memcmp := inject_skip memcmp.
 
     Definition ft_exits0 := make_exits 0 fault_memcmp ft_invs.
     Definition ft_invs0 := make_invs 0 fault_memcmp ft_invs.
@@ -267,7 +267,7 @@ Proof using.
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_fault_lift_riscv_welltyped).
+    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_skip_lift_riscv_welltyped).
     clear - PRE MDL. rename t1 into t. rename s1 into s. rename a1 into a.
 
     destruct_inv 32 PRE.
