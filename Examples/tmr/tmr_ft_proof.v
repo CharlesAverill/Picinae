@@ -577,9 +577,9 @@ Section FaultTolerantInvariants.
         | 0x1019c | 0x101a8 => Post 0 
             (safe_regs s /\
              (* Case 1 *)
-             ((x = 0 /\ s V_FC <= 1 /\ postcondition s None None) \/
+             ((x = 0 /\ s V_FC = 0 /\ postcondition s None None) \/
              (* Case 2 *)
-             (x = 1 /\ s V_FC <= 1 /\ postcondition s None None) \/
+             (x = 1 /\ s V_FC = 1 /\ postcondition s None None) \/
              (* Case 3 *)
              (x = 1 /\ s V_FC = 0)))
         (* If we're at the second return, a fault happened, but
@@ -618,18 +618,19 @@ Section FaultTolerantInvariants.
              )
             )
         | 0x10254 => Inv 1
-            (safe_regs' s /\ noverlaps (s R_SP ⊕ ssize) /\ stack s /\
+            (noverlaps (s R_SP ⊕ ssize) /\ stack s /\
              (* Case 1: No faults *)
              ((s V_FC = 1 /\
                postcondition s (Some R_S3) (Some (s V_MEM32)) /\
-               postcondition s (Some R_S4) (Some (s V_MEM32))) \/
+               postcondition s (Some R_S4) (Some (s V_MEM32)) /\
+               postcondition s None (Some (s V_MEM32))) \/
              (* Case 2: Answer1 faulted, Answer2 fine, Answer3 fine *)
              (s V_FC = 0 /\
                postcondition s (Some R_S4) (Some (s V_MEM32)) /\
                postcondition s None (Some (s V_MEM32)) \/
              (* Case 3: Answer1 fine, Answer2 faulted, Answer3 fine *)
              (s V_FC = 0 /\
-               postcondition s (Some R_S4) (Some (s V_MEM32)) /\
+               postcondition s (Some R_S3) (Some (s V_MEM32)) /\
                postcondition s None (Some (s V_MEM32))) \/
              (* Case 3: Answer1 fine, Answer2 fine, Answer3 faulted *)
              (s V_FC = 0 /\
@@ -881,11 +882,7 @@ Proof.
 
     (* Intro *)
     destruct PRE as (A0 & A1 & A2 & Safe & NVL & FC). {
-    repeat (
-        match goal with
-        | [|- context[update _ V_FC 0]] => repeat step
-        | [|- context[nextinv]] => step
-        end);
+    repeat step;
         try (unfold safe_regs'; unfold safe_regs in Safe;
             repeat (split; [solve [auto; intuition]|]);
             split;
@@ -990,7 +987,7 @@ Proof.
              unfold postcondition in *; psimpl;
              intuition).
 
-        all: try rewrite <- H7, <- H9, <- H10 in *; auto.
+        all: rewrite H7, H8, H9 in *; auto.
     }
 
     (* To second call *)
@@ -1021,22 +1018,15 @@ Proof.
             | _ =>
                 destruct Result as (Answer2 & FC)
             end); try lia;
-                try (replace s' with (update s' V_FC 0) by
-                        (now erewrite store_upd_eq));
-            repeat step.
+                try replace s' with (update s' V_FC 0) by
+                        (now erewrite store_upd_eq);
+            repeat step;
 
-            all: split; [unfold safe_regs' in *; now psimpl|];
-                 psubst; split; [assumption|];
-                 split; [unfold stack in *; psimpl; now psubst|];
-                 match goal with
-                 | [|- ?X \/ ?Y \/ ?Z] =>
-                    match X with
-                    | context[?x = ?x] => left
-                    | _ => right
-                    end
-                end.
+            (split; [unfold safe_regs' in *; now psimpl|];
+                psubst; split; [assumption|];
+                split; [unfold stack in *; psimpl; now psubst|]);
 
-            all: (solve [left;
+            try solve [right; left;
                 split; [reflexivity|];
                 unfold postcondition in *; psimpl;
                 try solve [intuition];
@@ -1045,18 +1035,18 @@ Proof.
                   repeat (let X := fresh "H" in
                           destruct Safe as (X & Safe);
                           try rewrite X in *); auto;
-                try solve [apply H7; lia]]) || idtac.
+                try solve [apply H7; lia]].
+
             all: unfold safe_regs' in Safe;
-                repeat (let X := fresh "H" in
-                        destruct Safe as (X & Safe);
-                        try rewrite X in *);
-                try solve [split; [reflexivity|];
+                 repeat (let X := fresh "H" in
+                          destruct Safe as (X & Safe)).
+
+            1,3: left;
                 unfold postcondition in *; psimpl;
-                split; auto; now rewrite H4].
-            all: right;
-                split; [reflexivity|];
-                unfold postcondition in *; psimpl;
-                now rewrite H4.
+                psubst; rewrite H7, H8, H9 in *; auto.
+            all: right; right; split; [reflexivity|];
+                 unfold postcondition in *; psimpl;
+                 now rewrite H4.
       }
 
       (* Fault *)
@@ -1094,201 +1084,168 @@ Proof.
                         (now erewrite store_upd_eq));
             repeat step.
 
-            all: split; 
+            all: split;
                 [unfold safe_regs' in *; psimpl; intuition|]; split;
-                [now rewrite H6|]; split;
+                [now rewrite H11|]; split;
                 [unfold stack in *; psimpl; now psubst|];
-                match goal with
-                | [|- ?X \/ ?Y \/ ?Z] =>
-                    match X with
-                    | context[1 = 1] => left
-                    | _ => right; try solve [intuition]
-                    end
-                end.
-
-            unfold safe_regs' in Safe.
-
-            all: try solve [left;
-                split; [reflexivity|];
-                unfold postcondition in *; psimpl;
-                try solve [intuition];
-
-                unfold safe_regs' in Safe;
-                  repeat (let X := fresh "H" in
-                          destruct Safe as (X & Safe);
-                          try rewrite X in *); auto;
-                try solve [apply H7; lia]].
-
-            all: unfold postcondition in *; psimpl;
-                unfold safe_regs' in *;
-                repeat (let H := fresh "H" in
-                        destruct Safe as (H & Safe);
-                        try rewrite H in *);
-                rewrite Safe' in *;
-                try (left; split; [reflexivity|]; auto).
-            split; [reflexivity|].
-                split; auto.
+                right; unfold postcondition in *; psimpl;
+                left; rewrite Safe', H0, H1, H2 in *; auto.
       }
-    }
+    } 
 
-    (* To second call *)
-    destruct PRE as (A0 & A1 & A2 & S0 & S1 & S2 & Answer1 & NVL & ST). {
-    step.
+    (* To third call *)
+    { destruct PRE as (Safe & NVL & ST &
+                     [(FC & Answer1 & Answer2)
+                     |[(FC & Answer2)
+                     |(FC & Answer1)]]). {
+    replace s with (update s V_FC 1) by
+        now erewrite store_upd_eq.
+    step;
 
     (* Format goal for riscv_call*)
     match goal with
     | [|- context[?x :: ?y :: ?t]] =>
         change (x :: y :: t) with
             (x :: nil ++ y :: t)
+    | _ => idtac
     end.
 
+    (* call CRYPTO_memcmp faulted *)
+    2: unfold safe_regs' in *;
+       split; [now psimpl|];
+       split; [assumption|];
+       right; right; right; split; [reflexivity|];
+       unfold postcondition in *; now psimpl.
+
+    assert (models archtyps (update s V_FC 1)) by
+            now rewrite <- store_upd_eq.
+
     (* Call CRYPTO_memcmp *)
-    riscv_call crypto_memcmp_correctness;
-        (destruct PRE as (Answer2 & RA & S0' & S1' & S2' & S3 & S4 & SP & MEM);
-        unfold postcondition in Answer2; repeat step;
-        repeat (split; [solve[reflexivity||auto]|]); split; [
-            unfold postcondition; split; intro; [
-                apply Answer2 in H; intros a ALen;
-                rewrite A2 in H;
-                specialize (H a ALen);
-                repeat (rewrite getmem_noverlap in H; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL]);
-                rewrite MEM;
-                rewrite A0, A1 in H;
-                now repeat (rewrite getmem_noverlap; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL])
-            | psimpl; apply Answer2; intros a ALen;
-                rewrite A2 in ALen;
-                specialize (H a ALen);
-                rewrite MEM in H;
-                repeat (rewrite getmem_noverlap in H; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL
-                ]);
-                rewrite A0, A1;
-                now repeat (rewrite getmem_noverlap; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL])]
-        |]; split; [
-          unfold postcondition;
-          psimpl; rewrite S3, MEM; apply Answer1
-        |]; split; [unfold noverlaps in *; psimpl; 
-          psimpl in NVL; now rewrite SP|];
-          unfold stack; psimpl; rewrite MEM; apply ST).
+    riscv_call crypto_memcmp_correctness_ft;
+    destruct PRE as (Safe' & Result);
+    repeat (let H := fresh "H" in
+            destruct Safe' as (H & Safe'));
+    (lazymatch type of Result with
+    | _ \/ _  \/ _ =>
+        destruct Result as [(? & FC' & Answer3)
+                        |[(? & FC' & Answer3)
+                        |(? & FC')]]
+    | ?X =>
+        destruct Result as (Answer3 & FC')
+    end); try lia;
+        try replace s' with (update s' V_FC 0) by
+                (now erewrite store_upd_eq);
+    repeat step.
+
+    all: split; [now psubst|];
+         split; [unfold stack in *; psimpl; now psubst|];
+         match goal with
+         | [|- ?X \/ ?Y] =>
+            lazymatch X with
+            | context[1 = 1] => left;
+                split; [reflexivity|];
+                unfold postcondition in *; psimpl; psubst; auto
+            | _ => right
+            end
+         end;
+         unfold safe_regs' in *;
+         repeat (let H := fresh "H" in
+                 destruct Safe as (H & Safe);
+                 rewrite H in *);
+         auto;
+
+        (right; right; split; [reflexivity|];
+            unfold postcondition in *; psimpl; now psubst).
     }
 
-    (* To third call *)
-    destruct PRE as (A0 & A1 & A2 & S0 & S1 & S2 & Answer1 & Answer2 & NVL & ST). {
-    step.
+    all: replace s with (update s V_FC 0) by
+            (now erewrite store_upd_eq); step;
+         assert (models archtyps (update s V_FC 0)) by
+            (now rewrite <- store_upd_eq);
+         lazymatch goal with
+          | [|- context[?x :: ?y :: ?t]] =>
+            change (x :: y :: t) with
+                (x :: nil ++ y :: t)
+          end;
+    riscv_call crypto_memcmp_correctness_ft;
+    destruct PRE as (Safe' & Result);
+    repeat (let H := fresh "H" in
+            destruct Safe' as (H & Safe'));
+    (lazymatch type of Result with
+    | _ \/ _  \/ _ =>
+        destruct Result as [(? & FC' & Answer3)
+                        |[(? & FC' & Answer3)
+                        |(? & FC')]]
+    | ?X =>
+        destruct Result as (Answer3 & FC')
+    end); try lia;
+        try replace s' with (update s' V_FC 0) by
+                (now erewrite store_upd_eq);
+    repeat step.
 
-    match goal with
-    | [|- context[?x :: ?y :: ?t]] =>
-        change (x :: y :: t) with
-            (x :: nil ++ y :: t)
-    end.
+    all: split; [now psubst|];
+         split; [unfold stack in *; psimpl; now psubst|];
+         match goal with
+         | [|- ?X \/ ?Y] =>
+            lazymatch X with
+            | context[1 = 1] => left;
+                split; [reflexivity|];
+                unfold postcondition in *; psimpl; psubst; auto
+            | _ => right
+            end
+         end.
 
-    (* Call CRYPTO_memcmp *)
-    riscv_call crypto_memcmp_correctness;
-        (destruct PRE as (Answer3 & RA & S0' & S1' & S2' & S3 & S4 & SP & MEM);
-        repeat step; unfold postcondition in *; psimpl; split;
-        [rewrite S4, MEM; apply Answer1|]; split;
-        [rewrite S3, MEM; apply Answer2|]; split; [
-            split; intro; [
-                apply Answer3 in H; intros a ALen;
-                rewrite A2 in H;
-                specialize (H a ALen);
-                repeat (rewrite getmem_noverlap in H; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL]);
-                rewrite MEM;
-                rewrite A0, A1 in H;
-                now repeat (rewrite getmem_noverlap; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL])
-            | psimpl; apply Answer3; intros a ALen;
-                rewrite A2 in ALen;
-                specialize (H a ALen);
-                rewrite MEM in H;
-                repeat (rewrite getmem_noverlap in H; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL
-                ]);
-                rewrite A0, A1;
-                now repeat (rewrite getmem_noverlap; [|
-                    ((apply (noverlap_shrink _ in_a len);
-                        [psimpl; lia|]) ||
-                    (apply (noverlap_shrink _ in_b len);
-                        [psimpl; lia|]));
-                    apply noverlap_symmetry,
-                        (noverlap_shrink _ (s5 R_SP ⊖ 32) 32);
-                        [psimpl; lia|];
-                    apply noverlap_symmetry; now destruct NVL])]
-        |]; unfold stack; psimpl; rewrite MEM; apply ST).
+        all: unfold postcondition in *; psimpl;
+             unfold safe_regs' in *;
+             repeat (let H := fresh "H" in
+                     destruct Safe as (H & Safe);
+                     rewrite H in *); psubst;
+             (solve [left; split; [reflexivity|]; auto]) ||
+             (solve [right; right; split; [reflexivity|]; auto]) ||
+             (solve [right; left; split; [reflexivity|]; auto]).
     }
 
     (* Postcondition *)
-    destruct PRE as (Answer1 & Answer2 & Answer3 & ST).
-    repeat step. unfold stack in ST. split; intro.
-    - unfold postcondition in *.
-      destruct (N.eq_dec (s R_S4) 0),
+    destruct PRE as (NVL & ST &
+                     [(FC & Answer1 & Answer2 & Answer3)|
+                     [(FC & Answer1 & Answer3)|
+                     [(FC & Answer2 & Answer3)
+                     |(FC & Answer1 & Answer2)]]]).
+    all: (replace s with (update s V_FC 1) by
+            now erewrite store_upd_eq) ||
+         (replace s with (update s V_FC 0) by
+            now erewrite store_upd_eq);
+         repeat step.
+
+    all: unfold stack in ST; split; intro;
+        unfold postcondition in *;
+        [try solve [destruct (N.eq_dec (s R_S4) 0),
                (N.eq_dec (s R_S3) 0),
                (N.eq_dec (s R_A0) 0);
-        ((now apply Answer1) || (now apply Answer2) || (now apply Answer3) || idtac).
-      repeat (let E := fresh "E" in
-              destruct (N.ltb 0 _) eqn:E in H; [|lia]).
-      psimpl in H. discriminate.
-    - unfold postcondition in *.
-      destruct (N.eq_dec (s R_S4) 0),
+        ((now apply Answer1) || (now apply Answer2) || (now apply Answer3) || idtac);
+        repeat (let E := fresh "E" in
+              destruct (N.ltb 0 _) eqn:E in H; [|lia]);
+        psimpl in H; discriminate]
+        |try solve [destruct (N.eq_dec (s R_S4) 0),
                (N.eq_dec (s R_S3) 0),
                (N.eq_dec (s R_A0) 0);
         try rewrite e; try rewrite e0; try rewrite e1; psimpl;
-        auto.
-      apply Answer2 in H. contradiction.
-      apply Answer1 in H. contradiction.
-      apply Answer2 in H. contradiction.
-      apply Answer1 in H. contradiction.
+        auto;
+        (apply Answer3 in H; contradiction) ||
+        (apply Answer2 in H; contradiction) ||
+        (apply Answer1 in H; contradiction)]
+      ].
+
+    - destruct (0 <? s R_A0) eqn:E0,
+               (0 <? s R_S4) eqn:E1,
+               (0 <? s R_S3) eqn:E2; psimpl in H;
+               try discriminate;
+      solve [apply Answer2; lia] ||
+      solve [apply Answer3; lia].
+    - destruct (0 <? s R_A0) eqn:E0,
+               (0 <? s R_S4) eqn:E1,
+               (0 <? s R_S3) eqn:E2; psimpl in H;
+               try discriminate;
+      solve [apply Answer2; lia] ||
+      solve [apply Answer1; lia].
 Qed.
