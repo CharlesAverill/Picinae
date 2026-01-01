@@ -103,9 +103,56 @@ Proof.
     all: lia.
 Qed.
 
-Lemma setmem_shadow : forall m a w e len,
-    m = setmem w e len m a (getmem w e len m a).
-Admitted.
+Theorem setmem_getmem:
+  forall m a w en len,
+  setmem w en len m a (getmem w en len m a) = m.
+Proof.
+  symmetry.
+  rewrite <- (recompose_bytes (2^w*8) m) at 1.
+  rewrite <- (recompose_bytes (2^w*8) (setmem _ _ _ _ _ _)).
+  apply f_equal2; [|rewrite setmem_highbits; reflexivity].
+  change (2^(2^w*8)) with (memsize w).
+  apply byte_equivalent. symmetry.
+  destruct (N.le_gt_cases len (msub w a0 a)) as [H|H].
+    apply setmem_frame, H.
+
+  assert (IN1: msub w (N.pred len) (msub w a0 a) < len).
+    destruct (N.le_gt_cases (2^w) len).
+      eapply N.lt_le_trans. apply msub_lt. assumption.
+      rewrite msub_nowrap.
+        eapply N.le_lt_trans. apply N.le_sub_l. eapply N.le_lt_trans. apply mp2_mod_le.
+          apply N.lt_pred_l. intro H'. subst len. eapply N.nlt_0_r, H.
+        rewrite msub_mod_pow2, N.min_id, N.mod_small.
+          apply N.lt_le_pred, H.
+          eapply N.le_lt_trans. apply N.le_pred_l. assumption.
+
+  rewrite <- getbyte_mod_l, <- (add_msub w a a0), getbyte_mod_l.
+  rewrite setmem_byte_anylen by assumption.
+  set (i := match en with BigE => _ | _ => _ end).
+  rewrite shiftr_getmem, (getmem_mod w en 1), <- (getmem_1 w en).
+  rewrite <- (getmem_mod_l w en 1 m a0), <- getmem_mod_l.
+  apply f_equal5; try reflexivity.
+
+    apply N.min_r, N.neq_0_le_1, N.sub_gt. subst i. destruct en. apply IN1.
+    rewrite <- N.shiftr_div_pow2, <- N.shiftl_mul_pow2, <- N.ldiff_ones_r.
+    eapply N.le_lt_trans. apply N.add_le_mono_l, N.ldiff_le_l.
+    rewrite <- N.sub_pred_l, N.add_sub_assoc.
+      rewrite N.add_comm, N.add_sub. apply N.lt_pred_l. intro H'. subst len. eapply N.nlt_0_r, H.
+      apply N.lt_le_pred, H.
+
+    subst i. destruct en.
+
+      rewrite <- N.sub_add_distr, <- mp2_add_r, <- msub_sub by
+        (rewrite N.add_1_r; apply N.le_succ_l, IN1).
+      rewrite <- (msub_mod_r w w len) by reflexivity.
+      rewrite <- add_msub_swap, N.add_1_r, N.succ_pred_pos by
+        (eapply N.le_lt_trans; [ apply N.le_0_l | apply H ]).
+      rewrite msub_msub_distr, msub_diag, N.add_0_l, msub_mod_pow2, N.min_id, add_msub.
+      reflexivity.
+
+      rewrite N.add_assoc, <- mp2_add_r, mp2_mod_mul, N.add_0_r.
+      apply add_msub.
+Qed.
 
 (* Proof in fault-free context *)
 Theorem br_ccopy_correctness:
@@ -236,7 +283,7 @@ Section FaultTolerantInvariants.
         | _ => NoInv
         end.
 
-    Definition br_ccopy_fault : program := inject_skip br_ccopy.
+    Definition br_ccopy_fault : program := inject_fault br_ccopy.
 
     Definition ft_exits0 := make_exits 0 br_ccopy_fault ft_invs.
     Definition ft_invs0 := make_invs 0 br_ccopy_fault ft_invs.
@@ -279,7 +326,7 @@ Proof using.
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_skip_lift_riscv_welltyped).
+    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_fault_lift_riscv_welltyped).
     clear - PRE MDL. rename t1 into t. rename s1 into s. rename a1 into a.
 
     destruct_inv 32 PRE.
