@@ -61,8 +61,8 @@ Inductive riscvvar :=
   | A_READ | A_WRITE | A_EXEC
   (* Temporary variable *)
   | V_TMP
-  (* Fault counter *)
-  | V_FC.
+  (* Fault counter and timer *)
+  | V_FC | V_FT.
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
 Definition rvtypctx v :=
@@ -539,7 +539,7 @@ Proof.
     exists rvtypctx. apply welltyped_rv2il.
 Qed.
 
-Require Import Picinae_fault_tolerance.
+Require Export Picinae_fault_tolerance.
 
 Module FTC <: FaultToleranceConfig RISCVArch IL_RISCV.
   Definition w := 32.
@@ -552,18 +552,28 @@ Module FTC <: FaultToleranceConfig RISCVArch IL_RISCV.
     archtyps fault_counter = Some w.
   Proof. reflexivity. Qed.
 
+  Definition fault_timer := V_FT.
+  Theorem fault_timer_typed :
+    archtyps fault_timer = Some w.
+  Proof. reflexivity. Qed.
+
   Definition mem := V_MEM32.
   Theorem mem_typed :
     archtyps V_MEM32 = Some (8 * 2^w).
   Proof. reflexivity. Qed.
 End FTC.
 
-Module RVFaultTolerance := FaultTolerance RISCVArch
-                                          IL_RISCV
-                                          FTC
-                                          Theory_RISCV
-                                          Statics_RISCV.
-Import FTC RVFaultTolerance.
+Module Type FaultModel := FaultModel RISCVArch IL_RISCV FTC.
+
+Module RVFaultTolerance (FM : FaultModel).
+Module FT := FaultTolerance RISCVArch
+              IL_RISCV
+              Theory_RISCV
+              Statics_RISCV
+              FTC
+              FM.
+Include FM.
+Include FT.
 
 Lemma inject_skip_lift_riscv_welltyped : forall p,
   welltyped_prog rvtypctx (inject_skip (lift_riscv p)).
@@ -572,6 +582,7 @@ Proof.
   intros. unfold lift_riscv in H. inversion H; subst; clear H.
   apply welltyped_rv2il.
 Qed.
+End RVFaultTolerance.
 
 (* Lemma inject_memc_inject_skip_lift_riscv_welltyped : forall p,
   welltyped_prog rvtypctx 

@@ -1,6 +1,5 @@
 Require Import br_ccopy_ft.
 Require Import Picinae_riscv.
-Import RVFaultTolerance.
 Import RISCVNotations.
 Require Import NArith.
 Require Import List.
@@ -203,7 +202,7 @@ Proof using.
         assumption.
         intro. subst ctl.
             unfold mem_equal. intros. cbv [neg]. psimpl. subst.
-            rewrite <- setmem_shadow. now apply Same.
+            rewrite setmem_getmem. now apply Same.
         intro. subst ctl.
         cbv [neg]. psimpl.
         rewrite N.lxor_comm, <- N.lxor_assoc, N.lxor_nilpotent.
@@ -228,7 +227,7 @@ Proof using.
         replace len with (k + 1) in * by lia. split.
         intro. subst ctl.
             unfold mem_equal. intros. cbv [neg]. psimpl. subst.
-            rewrite <- setmem_shadow. now apply Same.
+            rewrite setmem_getmem. now apply Same.
         intro. subst ctl.
         cbv [neg]. psimpl.
         rewrite N.lxor_comm, <- N.lxor_assoc, N.lxor_nilpotent.
@@ -252,6 +251,17 @@ Proof using.
     }
 Qed.
 
+Module FaultModel <: FaultModel RISCVArch IL_RISCV FTC.
+    Import FTC.
+    Definition fault_spacing := 0.
+    Theorem fault_spacing_small : fault_spacing < 2^w.
+    Proof. apply mp2_gt_0. Qed.
+
+    Definition max_faults := 1.
+End FaultModel.
+Module FT := RVFaultTolerance FaultModel.
+Import FT.
+
 Section FaultTolerantInvariants.
     Variable ctl : N.
     Variable dst src : addr.
@@ -265,7 +275,7 @@ Section FaultTolerantInvariants.
                 s V_MEM32 = mem /\
                 s V_MEM32 = base_mem /\
                 ~ overlap 32 src len dst len /\
-                s V_FC = 1
+                fault_assumptions s
             )
         | 0x20 => Inv 0 (exists k mem',
                 s V_MEM32 = mem' /\
@@ -277,17 +287,23 @@ Section FaultTolerantInvariants.
                 ~ overlap 32 src len dst len /\
                 (ctl = 0 -> mem_equal base_mem (s V_MEM32)) /\
                 (ctl = 1 -> k_equal mem' src dst k) /\
-                s V_FC <= 1
+                fault_invs s
             )
         | 0x90 | 0x94 => Post 0 (postcondition ctl dst src len base_mem s)
         | _ => NoInv
         end.
 
-    Definition br_ccopy_fault : program := inject_fault br_ccopy.
+    Definition br_ccopy_fault : program := inject_skip br_ccopy.
 
     Definition ft_exits0 := make_exits 0 br_ccopy_fault ft_invs.
     Definition ft_invs0 := make_invs 0 br_ccopy_fault ft_invs.
 End FaultTolerantInvariants.
+
+Lemma le_impl_eq_or_le :
+    forall x y,
+        x <= y ->
+        x = y \/ x <= y - 1.
+Proof. lia. Qed.
 
 (* Proof in single-fault context *)
 Theorem br_ccopy_ft_correctness:
@@ -300,33 +316,67 @@ Theorem br_ccopy_ft_correctness:
          (A2: s R_A2 = src)
          (LEN: s R_A3 = len)
          (NOV: ~ overlap 32 src len dst len)
-         (FC: s V_FC = 1),
+         (FAULT: fault_assumptions s),
   satisfies_all br_ccopy_fault (ft_invs0 ctl dst src len mem mem)
                                (ft_exits0 ctl dst src len mem mem) (xs'::t).
 Proof using.
-    Local Ltac step ::= 
-        match goal with
-        | [s' : store, FC : ?s' V_FC <= 1 |- _] =>
-            let H := fresh "H" in
-            assert (s' V_FC = 0 \/ s' V_FC = 1) as H by lia;
-            clear FC; destruct H
-        | _ => idtac
-        end;
-        time r5_step;
+
+    Ltac process_faults :=
+        lazymatch goal with
+        | [s : store, FAULT: fault_assumptions ?s |-
+                nextinv _ _ _ _ ((Addr 0, ?s) :: _)] =>
+            destruct FAULT as (FC & FT);
+            unfold FTC.fault_counter, FaultModel.max_faults in FC;
+            unfold FTC.fault_timer in FT;
+            match type of FC with
+            | s ?v = ?n =>
+                replace s with (update s v n) by
+                    now erewrite store_upd_eq
+            end;
+            match type of FT with
+            | s ?v = ?n =>
+                replace s with (update s v n) by
+                    now erewrite store_upd_eq
+            end
+        | [s : store, FAULT: fault_invs ?s |-
+                    nextinv _ _ _ _ _] =>
+                unfold fault_invs in FAULT;
+                unfold FTC.fault_counter, FaultModel.max_faults in FAULT;
+                repeat (lazymatch goal with
+                        | [H: ?x <= 0 |- _] => apply N.le_0_r in H
+                        | [H: ?x <= ?y |- _] =>
+                            let EQ := fresh "EQ" in
+                            let LE := fresh "LE" in
+                            destruct (le_impl_eq_or_le _ _ H) as [EQ|LE];
+                                clear H;
+                                [|psimpl in LE]
+                        end)
+        end.
+
+    Ltac clean_fault_goals :=
         repeat match goal with
-        | [n : N, BC : ?n mod 2 = _ |- _] => clear BC n
+        | [n : N, BC : ?n mod 2 = 0 |- _] => clear BC n
+        | [n : N, BC : ?n mod 2 = N.pos ?p |- _] => clear BC n p
         | [s' : store, n : N, 
             BC : (if 0 <? ?s' V_FC then ?n mod 2 else 0) = _ |- _] => clear BC n
         | [H: ?x = ?x |- _] => clear H
         end;
         try discriminate.
+
+    Ltac fault_step arch_step := 
+        (try process_faults);
+        time arch_step;
+        clean_fault_goals.
+
+    Ltac step ::= fault_step r5_step.
+
     intros. apply prove_invs.
 
-    simpl. rewrite ENTRY. step. repeat split; assumption.
+    simpl. rewrite ENTRY. step. now repeat (split; [assumption|]).
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_fault_lift_riscv_welltyped).
+    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_skip_lift_riscv_welltyped).
     clear - PRE MDL. rename t1 into t. rename s1 into s. rename a1 into a.
 
     destruct_inv 32 PRE.
@@ -335,10 +385,16 @@ Proof using.
     destruct PRE as (A0 & A1 & A2 & A3 & Mem & BMem & Nov & FC). {
     repeat step.
     par: match goal with
-        | [|- exists _ _, _] => exists 0; eexists; psimpl; repeat split; unfold k_equal; try lia;
-            [apply (models_var R_A3) in MDL; rewrite <- A3; apply MDL
-            |assumption
-            |intro; subst; now unfold mem_equal]
+        | [|- exists _ _, _] =>
+            exists 0; eexists; psimpl;
+            repeat (split; [easy|]);
+            split;
+                [apply (models_var R_A3) in MDL;
+                rewrite <- A3; simpl in MDL; lia|];
+            split; [assumption|];
+            split; [intro; subst; now unfold mem_equal|split];
+            [intro; subst; unfold k_equal; lia
+            |unfold fault_invs, FaultModel.max_faults; now psimpl]
         | [|- (_ -> _) /\ (_ -> _)] => 
             split; 
                 [intro; subst; now unfold mem_equal
@@ -347,13 +403,13 @@ Proof using.
     }
 
     (* Loop *)
-    destruct PRE as (k & mem' & Mem & A0 & A1 & A2 & A6 & Bound & Nov & Same & Eq & FC). {
+    destruct PRE as (k & mem' & Mem & A0 & A1 & A2 & A6 & Bound & Nov & Same & Eq & FAULT). {
     Local Ltac solve_inv ctl dst src len k Eq Same :=
         exists (k + 1); eexists; psimpl; repeat split; try lia;
-        [assumption
-        |intro; subst ctl; unfold mem_equal; intros;
+        try (unfold fault_invs, FaultModel.max_faults; now psimpl);
+        [intro; subst ctl; unfold mem_equal; intros;
             cbv [neg]; psimpl; subst;
-            rewrite <- setmem_shadow; now apply Same
+            rewrite setmem_getmem; now apply Same
         |intro; subst ctl; cbv [neg]; psimpl;
         rewrite N.lxor_comm, <- N.lxor_assoc, N.lxor_nilpotent;
         apply k_equal_step; unfold k_equal; intros; psimpl;
@@ -373,7 +429,7 @@ Proof using.
         let ILen := fresh "ILen" in
         replace len with (k + 1) in * by lia; split;
         [intros; subst ctl; unfold mem_equal; intros; cbv [neg];
-         psimpl; subst; rewrite <- setmem_shadow; now apply Same
+         psimpl; subst; rewrite setmem_getmem; now apply Same
         |intros; subst ctl; cbv [neg]; psimpl;
         rewrite N.lxor_comm, <- N.lxor_assoc, N.lxor_nilpotent;
         psimpl; apply k_equal_step;
