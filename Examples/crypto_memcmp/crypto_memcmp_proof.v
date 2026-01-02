@@ -332,3 +332,238 @@ Proof using.
         end.
     }
 Qed.
+
+Section ExtraFaultTolerantInvariants.
+    Variable mem : memory.
+    Variable in_a in_b : addr.
+    Variable len : N.
+
+    Definition consecutive_faults (t : trace) : bool :=
+        fst (fst (fold_left 
+            (fun '(found, prev_fc, prev_dec) '(_, s) =>
+                match found, prev_fc with
+                | true, _ => (true, prev_fc, prev_dec)
+                | _, None => (found, Some (s V_FC), false)
+                | _, Some fc_prev =>
+                    let dec := fc_prev <? s V_FC in
+                    (orb found (prev_dec && dec), Some (s V_FC), dec)
+                end)
+        t (false, None, false))).
+
+    (* read nth trace store *)
+    Definition rnts (n : nat) (t : trace) (v : var) : option N :=
+        match List.nth_error t n with
+        | None => None
+        | Some (_, s) => Some (s v)
+        end.
+
+    Lemma rnts_nil : forall n v, rnts n [] v = None.
+    Proof. intros. unfold rnts. now rewrite nth_error_nil. Qed.
+
+    Lemma rnts_suffix : forall i t1 t2 v val,
+        rnts i t1 v = Some val ->
+        rnts i (t1 ++ t2) v = Some val.
+    Proof.
+        intros.
+        unfold rnts in H.
+        destruct (nth_error t1 i) eqn:E; [|discriminate].
+        destruct p.
+        pose proof (nth_error_Some t1 i). rewrite E in H0.
+        unfold rnts. rewrite nth_error_app1 by (now apply H0).
+        now rewrite E.
+    Qed.
+
+    Lemma consecutive_faults_correctness :
+        forall t,
+            consecutive_faults t = true <->
+            (exists i vi j vj k vk,
+                (i < j < k)%nat /\
+                rnts i t V_FC = Some vi /\
+                rnts j t V_FC = Some vj /\
+                rnts k t V_FC = Some vk /\
+                vi < vj < vk).
+    Proof.
+    Abort.
+
+    (* Lemma consecutive_faults_suffix :
+        forall t1 t2,
+            consecutive_faults t1 = true ->
+            consecutive_faults (t1 ++ t2) = true.
+    Proof.
+        intros. apply consecutive_faults_correctness in H.
+        destruct H as (i & vi & j & vj & k & vk & Pos &
+                           Vi & Vj & Vk & Val).
+        apply consecutive_faults_correctness.
+        exists i, vi, j, vj, k, vk.
+        repeat split; auto; try lia;
+        now erewrite rnts_suffix by eauto.
+    Qed. *)
+
+    (* Lemma
+
+        (forall f a l, fold_left f l a = v) *)
+
+    Lemma consecutive_faults_3cons :
+        forall a b c t,
+            consecutive_faults (a :: b :: c :: nil) = true ->
+            consecutive_faults (a :: b :: c :: t) = true.
+    Proof.
+        intros. destruct a, b, c.
+        unfold consecutive_faults in H. simpl in H.
+        unfold consecutive_faults. simpl. rewrite H.
+        clear. induction t.
+            reflexivity.
+        simpl. destruct a. now rewrite IHt.
+    Qed.
+
+    (* Definition s : store := fun _ => 0.
+    Definition e : exit := Addr 0.
+    (* true *)
+    Compute consecutive_faults
+        [(e, update s V_FC 0); (e, update s V_FC 1); (e, update s V_FC 2)].
+    (* false *)
+    Compute consecutive_faults
+        [(e, update s V_FC 0); (e, update s V_FC 1); (e, update s V_FC 1)]. *)
+
+    Definition no_consecutive_faults : Prop :=
+        forall p Invs xp b t,
+            consecutive_faults t = true ->
+            nextinv p Invs xp b t.
+
+    Definition ft_invs' T (Inv Post: inv_type T) (NoInv:T) (s:store) (a:addr) : T :=
+        match a with
+        | 0x0 => Inv 0
+            (s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\
+              s V_MEM32 = mem /\
+              s V_FC = 19 /\
+              no_consecutive_faults)
+        | 0x28 => Inv 0
+            (exists k,
+              s V_MEM32 = mem /\
+              s R_A5 = in_a ⊕ k /\
+              s R_A1 = in_b ⊕ k /\
+              s R_A2 = in_a ⊕ len /\
+              k < len < 2^32 /\
+              s V_FC <= 19 /\
+              no_consecutive_faults /\
+              ((s R_A0 = 0) <-> k_equal mem in_a in_b k)
+            )
+        | 0x80 | 0x84 | 0x90 | 0x94 => Post 0 (postcondition mem in_a in_b len s)
+        | _ => NoInv
+        end.
+
+    Definition ft_exits0' := make_exits 0 fault_memcmp ft_invs'.
+    Definition ft_invs0' := make_invs 0 fault_memcmp ft_invs'.
+End ExtraFaultTolerantInvariants.
+
+(* Proof in fault-free context *)
+Theorem crypto_memcmp_ft_correctness':
+  forall s mem t xs' in_a in_b len
+         (ENTRY: startof t xs' = (Addr 0, s))
+         (MDL: models rvtypctx s)
+         (MEM: s V_MEM32 = mem)
+         (A0: s R_A0 = in_a)
+         (A1: s R_A1 = in_b)
+         (LEN: s R_A2 = len)
+         (FC: s V_FC = 19)
+         (NCF: no_consecutive_faults),
+  satisfies_all fault_memcmp
+                       (ft_invs0' mem in_a in_b len)
+                       (ft_exits0' mem in_a in_b len) (xs'::t).
+Proof using.
+    Ltac generalize_trace ::= idtac.
+    Local Ltac step ::= 
+        match goal with
+        | [s' : store, FC : ?s' V_FC <= 1 |- _] =>
+            let H := fresh "H" in
+            assert (s' V_FC = 0 \/ s' V_FC = 1) as H by lia;
+            clear FC; destruct H
+        | _ => idtac
+        end;
+        match goal with
+        | [NCF: no_consecutive_faults |- _] =>
+            try now (apply NCF; rewrite consecutive_faults_3cons)
+        end;
+        time r5_step;
+        match goal with
+        | [NCF: no_consecutive_faults |- _] =>
+            try now (apply NCF; rewrite consecutive_faults_3cons)
+        end;
+        repeat match goal with
+        | [n : N, BC : ?n mod 2 = _ |- _] => clear BC n
+        | [s' : store, n : N, 
+            BC : (if 0 <? ?s' V_FC then ?n mod 2 else 0) = _ |- _] => clear BC n
+        | [H: ?x = ?x |- _] => clear H
+        end;
+        try discriminate.
+    intros. apply prove_invs.
+
+    simpl. rewrite ENTRY. step. repeat split; assumption.
+
+    intros.
+    eapply startof_prefix in ENTRY; try eassumption.
+    eapply preservation_exec_prog in MDL; try (eassumption || apply inject_skip_lift_riscv_welltyped).
+    clear - PRE MDL. rename t1 into t. rename s1 into s. rename a1 into a.
+
+    destruct_inv 32 PRE.
+
+    (* Intro *)
+    destruct PRE as (A0 & A1 & A2 & Mem & FC & NCF). {
+    replace s with (update s V_FC 19) by now erewrite store_upd_eq.
+    step. step. step; admit. r5_step.
+    repeat step.
+    all:
+        (split; intro; unfold k_equal; lia) ||
+        (solve_inv MDL A2) || idtac.
+    - (* len = 0, no fault *)
+        repeat step; split; intro;
+            unfold k_equal; lia.
+    - (* len <> 0, no fault *)
+        repeat (step; [| repeat step; solve_inv MDL A2]); solve_inv MDL A2.
+    - (* fault *) 
+        repeat step.
+            split; intro; unfold k_equal; lia.
+        solve_inv MDL A2.
+    }
+
+    (* Loop *)
+    destruct PRE as (k & Mem & A5 & A1 & A2 & Bound & FC & Eq). {
+    Local Ltac solve_inv' k Eq :=
+        let X := fresh "X" in
+        let Y := fresh "Y" in
+        let Z := fresh "Z" in
+        let W := fresh "W" in
+        let Inv := fresh "Inv" in
+        let i := fresh "i" in
+        exists (k ⊕ 1); psimpl; repeat split;
+        [lia|lia|lia
+        | unfold k_equal; intros X i Z; apply or_xor_zero in X; destruct X;
+            assert (i < k \/ i = k) as Y by lia; destruct Y;
+            [now apply Eq|now subst]
+        | repeat split; intros W; rewrite N.mod_small in W by lia;
+            pose proof (k_equal_inv _ _ _ _ W) as Inv; apply Eq in Inv;
+            specialize (W k ltac:(lia));
+            now rewrite W, N.lxor_nilpotent, Inv].
+    Local Ltac solve_post k len s Eq :=
+        let X := fresh "H" in
+        let i := fresh "i" in
+        let ILen := fresh "ilen" in
+        let KLen := fresh "klen" in
+        assert (1 + k = len) as KLen by lia;
+        subst len;
+        split; intro X;
+            [apply k_equal_step;
+              apply or_xor_zero in X; destruct X;
+              [apply Eq; assumption|now symmetry]
+            |replace (s R_A0) with 0; psimpl;
+              [apply N.lxor_eq_0_iff; symmetry; apply X; lia
+              |apply k_equal_inv in X; symmetry; apply Eq, X]
+            ].
+    repeat step.
+    par: match goal with
+        | [ |- context[exists _, _] ] => solve_inv' k Eq
+        | [ |- context[_ /\ _]] => solve_post k len s Eq
+        | _ => idtac
+        end.
+    }
+Qed.
