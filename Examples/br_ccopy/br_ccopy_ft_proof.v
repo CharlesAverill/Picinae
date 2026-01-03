@@ -316,7 +316,7 @@ Theorem br_ccopy_ft_correctness:
 Proof using.
     Ltac step ::= fault_step r5_step.
     Tactic Notation "eager_step" tactic(T) :=
-        eager_fault_step r5_step by T.
+        eager_step r5_step by T.
 
     intros. apply prove_invs.
 

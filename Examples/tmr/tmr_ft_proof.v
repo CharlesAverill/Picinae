@@ -1,6 +1,5 @@
 Require Import tmr_ft.
 Require Import Picinae_riscv.
-Import RVFaultTolerance.
 Import RISCVNotations.
 Require Import NArith.
 Require Import List.
@@ -511,6 +510,17 @@ Proof.
       apply Answer1 in H. contradiction.
 Qed.
 
+Module FaultModel <: FaultModel.
+    Import FTC.
+    Definition fault_spacing := 0.
+    Theorem fault_spacing_small : fault_spacing < 2^w.
+    Proof. apply mp2_gt_0. Qed.
+
+    Definition max_faults := 1.
+End FaultModel.
+Module FT := RVFaultTolerance FaultModel.
+Import FT.
+
 Section FaultTolerantInvariants.
     Variable mem : memory.
     Variable raddr : addr.
@@ -592,10 +602,10 @@ Section FaultTolerantInvariants.
         | 0x101b0 => Inv 1
             (s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\
              safe_regs s /\ noverlaps (s R_SP) /\
-             s V_FC = 1)
+             fault_assumptions s)
         | 0x10208 => Inv 1
             (safe_regs' s /\ noverlaps (s R_SP ⊕ ssize) /\ stack s /\
-             s V_FC <= 1)
+             fault_invs s)
         | 0x1022c => Inv 1
             (safe_regs' s /\ noverlaps (s R_SP ⊕ ssize) /\ stack s /\
              (* Cases 1, 2 *)
@@ -674,25 +684,12 @@ Theorem crypto_memcmp_correctness_ft:
                        (ft_exits0 mem raddr in_a in_b len s0 s1 s2 s3 s4 sp (s V_FC))
                        (xs'::t).
 Proof using.
-    Local Ltac step ::= 
-        match goal with
-        | [s' : store, FC : ?s' V_FC <= 1 |- _] =>
-            let H := fresh "H" in
-            assert (s' V_FC = 0 \/ s' V_FC = 1) as H by lia;
-            clear FC; destruct H
-        | _ => idtac
-        end;
-        time r5_step;
-        repeat match goal with
-        | [n : N, BC : ?n mod 2 = _ |- _] => clear BC n
-        | [s' : store, n : N, 
-            BC : (if 0 <? ?s' V_FC then ?n mod 2 else 0) = _ |- _] => clear BC n
-        | [H: ?x = ?x |- _] => clear H
-        end;
-        try discriminate.
+    Ltac step ::= fault_step r5_step.
+    Tactic Notation "eager_step" tactic(T) :=
+        eager_step r5_step by T.
     intros. apply prove_invs.
 
-    simpl. rewrite ENTRY. step; repeat split; auto; lia. 
+    simpl. rewrite ENTRY. step; repeat split; auto; reflexivity.
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
@@ -703,11 +700,11 @@ Proof using.
     destruct_inv 32 PRE; rewrite e in *; clear e.
 
     (* Intro *)
-    destruct PRE as (FC & x & A0 & A1 & A2 & Mem & Saved). {
+    destruct PRE as (FC & x & A0 & A1 & A2 & Saved). {
     replace s' with (update s' V_FC 0) by
         (now erewrite store_upd_eq).
     repeat (destruct Saved as (? & Saved)).
-    repeat step; (split;
+    eager_step (split;
     [unfold safe_regs in *; now psimpl|];
     (now left) || (now right) || left); (split; [lia|]);
         try solve [unfold postcondition; psimpl; unfold k_equal; 
@@ -775,7 +772,7 @@ Proof using.
     (exists 0; psimpl; repeat split; auto; try lia;
             solve [apply (models_var R_A2) in MDL; rewrite <- A2; apply MDL] ||
             unfold k_equal; lia) || idtac.
-    1-2: unfold postcondition; psimpl; unfold k_equal;
+    unfold postcondition; psimpl; unfold k_equal;
         split; intro; lia.
     unfold safe_regs in Safe.
     exists 0; psimpl; repeat split; psimpl; auto; try lia;
@@ -818,11 +815,13 @@ Proof using.
               [apply N.lxor_eq_0_iff; symmetry; apply X; lia
               |apply k_equal_inv in X; symmetry; apply Eq, X]
             ].
-    repeat step.
-        all: split; [unfold safe_regs in *; now psimpl|right];
+    assert (s' V_FC = 0 \/ s' V_FC = 1) by lia.
+    destruct H; repeat step;
+        (split; [unfold safe_regs in *; now psimpl|right];
             ((now right) || left);
-            (split; [reflexivity|];
-            split; [reflexivity|]).
+            (split; [reflexivity|])).
+        all:
+            split; [reflexivity|].
         solve_inv' k Eq.
         replace len with (1 + k) in * by lia.
         destruct Eq. unfold postcondition. split; intro.
@@ -862,7 +861,7 @@ Theorem tmr_ft_correctness:
          (S3: s R_S3 = s3)
          (S4: s R_S4 = s4)
          (SP: s R_SP = sp)
-         (FC: s V_FC = 1)
+         (FC: fault_assumptions s)
          (NVL: noverlaps in_a in_b len sp),
   satisfies_all tmr_fault 
                        (ft_invs1 mem raddr in_a in_b len s0 s1 s2 s3 s4 sp 1)
@@ -870,8 +869,7 @@ Theorem tmr_ft_correctness:
 Proof.
     intros. apply prove_invs.
 
-    simpl. rewrite ENTRY. step. rewrite SP.
-    repeat (split; auto).
+    simpl. rewrite ENTRY. step. rewrite SP. repeat (split; auto).
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
@@ -882,12 +880,12 @@ Proof.
 
     (* Intro *)
     destruct PRE as (A0 & A1 & A2 & Safe & NVL & FC). {
-    repeat step;
-        try (unfold safe_regs'; unfold safe_regs in Safe;
+    eager_step
+        (unfold safe_regs'; unfold safe_regs in Safe;
             repeat (split; [solve [auto; intuition]|]);
             split;
             [unfold ssize; now psimpl
-            |split; [|lia];
+            |split; [|solve_fault_invs];
                 unfold stack in *; psimpl;
                 unfold safe_regs in Safe;
                 repeat (
@@ -896,15 +894,28 @@ Proof.
                 rewrite H);
                 rewrite Safe; auto]).
 
-    now repeat rewrite setmem_swap with (v1 := s4) by
-         (apply sep_noverlap; psimpl; left; lia).
-    now repeat rewrite setmem_swap with (v1 := s3) by
-         (apply sep_noverlap; psimpl; left; lia).
-    now repeat rewrite setmem_swap with (v1 := s2) by
+    all: (unfold safe_regs'; unfold safe_regs in Safe;
+            repeat (split; [solve [auto; intuition]|]);
+            split;
+            [unfold ssize; now psimpl
+            |split; [|solve_fault_invs];
+                unfold stack in *; psimpl;
+                unfold safe_regs in Safe;
+                repeat (
+                let H := fresh "H" in
+                destruct Safe as (H & Safe);
+                rewrite H);
+                rewrite Safe; auto]).
+
+    now repeat rewrite setmem_swap with (v1 := s0) by
          (apply sep_noverlap; psimpl; left; lia).
     now repeat rewrite setmem_swap with (v1 := s1) by
          (apply sep_noverlap; psimpl; left; lia).
-    now repeat rewrite setmem_swap with (v1 := s0) by
+    now repeat rewrite setmem_swap with (v1 := s2) by
+         (apply sep_noverlap; psimpl; left; lia).
+    now repeat rewrite setmem_swap with (v1 := s3) by
+         (apply sep_noverlap; psimpl; left; lia).
+    now repeat rewrite setmem_swap with (v1 := s4) by
          (apply sep_noverlap; psimpl; left; lia).
     }
 
@@ -918,6 +929,11 @@ Proof.
         change (x :: y :: t) with
             (x :: nil ++ y :: t)
     end.
+
+    eassert (models archtyps (update s V_FC 1)) by
+        (now rewrite <- store_upd_eq).
+    3: eassert (models archtyps (update s V_FC 0)) by
+        (now rewrite <- store_upd_eq).
 
     Ltac riscv_call thm ::=
         let MDL1 := fresh "MDL1" in
@@ -957,11 +973,11 @@ Proof.
         end.
 
     (* call CRYPTO_memcmp faulted *)
-    3: repeat step; split;
+    2: repeat step; split;
        unfold safe_regs' in *; psimpl; intuition.
 
     (* Call CRYPTO_memcmp *)
-    all: riscv_call crypto_memcmp_correctness_ft;
+    all:riscv_call crypto_memcmp_correctness_ft;
         destruct PRE as (Safe' & Result);
         repeat (let H := fresh "H" in
                 destruct Safe' as (H & Safe'));
@@ -985,13 +1001,14 @@ Proof.
                 |(now right) || left];
              repeat (split; [easy|]);
              unfold postcondition in *; psimpl;
-             intuition).
+             intuition);
 
-        all: rewrite H7, H8, H9 in *; auto.
+             rewrite H7, H8, H9 in *; auto.
     }
 
     (* To second call *)
     { destruct PRE as (Safe & NVL & ST & [(FC & Answer1)|FC]). {
+        assert (s V_FC = 0 \/ s V_FC = 1) by lia. destruct H;
         step;
 
         (* Format goal for riscv_call*)
@@ -1002,6 +1019,11 @@ Proof.
         | _ => idtac
         end.
 
+        eassert (models archtyps (update s V_FC 0)) by
+            (now rewrite <- store_upd_eq).
+        2: eassert (models archtyps (update s V_FC 1)) by
+            (now rewrite <- store_upd_eq).
+
         (* call CRYPTO_memcmp faulted *)
         3: repeat step; split;
            unfold safe_regs' in *; psimpl; intuition.
@@ -1010,23 +1032,24 @@ Proof.
             destruct PRE as (Safe' & Result);
             repeat (let H := fresh "H" in
                     destruct Safe' as (H & Safe'));
-            (match type of Result with
+            (lazymatch type of Result with
             | _ \/ _  \/ _ =>
-                destruct Result as [(? & FC & Answer2)
-                                |[(? & FC & Answer2)
-                                |(? & FC)]]
+                destruct Result as [(? & FC' & Answer2)
+                                |[(? & FC' & Answer2)
+                                |(? & FC')]]
             | _ =>
-                destruct Result as (Answer2 & FC)
+                destruct Result as (Answer2 & FC')
             end); try lia;
                 try replace s' with (update s' V_FC 0) by
-                        (now erewrite store_upd_eq);
-            repeat step;
+                        (now erewrite store_upd_eq).
+            all: repeat step.
 
+            all:
             (split; [unfold safe_regs' in *; now psimpl|];
                 psubst; split; [assumption|];
-                split; [unfold stack in *; psimpl; now psubst|]);
+                split; [unfold stack in *; psimpl; now psubst|]).
 
-            try solve [right; left;
+            all: try solve [idtac "Solving"; right; left;
                 split; [reflexivity|];
                 unfold postcondition in *; psimpl;
                 try solve [intuition];
@@ -1043,10 +1066,10 @@ Proof.
 
             1,3: left;
                 unfold postcondition in *; psimpl;
-                psubst; rewrite H7, H8, H9 in *; auto.
+                psubst; rewrite H8, H9, H10 in *; auto.
             all: right; right; split; [reflexivity|];
                  unfold postcondition in *; psimpl;
-                 now rewrite H4.
+                 now rewrite H5.
       }
 
       (* Fault *)
@@ -1181,9 +1204,8 @@ Proof.
     end); try lia;
         try replace s' with (update s' V_FC 0) by
                 (now erewrite store_upd_eq);
-    repeat step.
-
-    all: split; [now psubst|];
+    repeat step;
+         (split; [now psubst|];
          split; [unfold stack in *; psimpl; now psubst|];
          match goal with
          | [|- ?X \/ ?Y] =>
@@ -1193,16 +1215,15 @@ Proof.
                 unfold postcondition in *; psimpl; psubst; auto
             | _ => right
             end
-         end.
-
-        all: unfold postcondition in *; psimpl;
+         end;
+         unfold postcondition in *; psimpl;
              unfold safe_regs' in *;
              repeat (let H := fresh "H" in
                      destruct Safe as (H & Safe);
                      rewrite H in *); psubst;
              (solve [left; split; [reflexivity|]; auto]) ||
              (solve [right; right; split; [reflexivity|]; auto]) ||
-             (solve [right; left; split; [reflexivity|]; auto]).
+             (solve [right; left; split; [reflexivity|]; auto])).
     }
 
     (* Postcondition *)

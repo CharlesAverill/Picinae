@@ -149,9 +149,8 @@ Proof using.
 Qed.
 
 Module FaultModel <: FaultModel.
-    Import FTC.
     Definition fault_spacing := 0.
-    Theorem fault_spacing_small : fault_spacing < 2^w.
+    Theorem fault_spacing_small : fault_spacing < 2^32.
     Proof. apply mp2_gt_0. Qed.
 
     Definition max_faults := 1.
@@ -225,7 +224,7 @@ Proof using.
             [lia|
             apply (models_var R_A2) in MDL; rewrite <- A2; apply MDL
             |unfold k_equal; lia].
-    estep (solve_inv MDL A2 || split; intro; unfold k_equal; lia).
+    repeat step; (solve_inv MDL A2 || split; intro; unfold k_equal; lia).
     }
 
     (* Loop *)
@@ -261,7 +260,7 @@ Proof using.
               [apply N.lxor_eq_0_iff; symmetry; apply X; lia
               |apply k_equal_inv in X; symmetry; apply Eq, X]
             ].
-    estep (solve_inv' k Eq || solve_post k len s Eq).
+    repeat step; (solve_inv' k Eq || solve_post k len s Eq).
     }
 Qed.
 

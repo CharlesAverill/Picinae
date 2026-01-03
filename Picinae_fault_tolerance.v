@@ -175,6 +175,17 @@ Ltac process_faults :=
             nextinv _ _ _ _ ((Addr _, ?s) :: _)] =>
             replace s with (update s v x) by
                 now erewrite store_upd_eq
+    | [s : store, FAULT: ?s fault_counter <= ?x |-
+                nextinv _ _ _ _ _] =>
+            repeat (lazymatch goal with
+                    | [H: ?x <= 0 |- _] => apply N.le_0_r in H
+                    | [H: ?x <= ?y |- _] =>
+                        let EQ := fresh "EQ" in
+                        let LE := fresh "LE" in
+                        destruct (le_impl_eq_or_le _ _ H) as [EQ|LE];
+                            clear H;
+                            [|psimpl in LE]
+                    end)
     end.
 
 Ltac clean_fault_goals :=
