@@ -91,8 +91,8 @@ Lemma inject_skip_welltyped : forall p,
         p s a = Some (sz, instr) ->
         hastyp_stmt archtyps archtyps instr archtyps) ->
     welltyped_prog archtyps (inject_skip p).
-Proof. Admitted.
-    (* intros p WT s a. unfold inject_skip.
+Proof.
+    intros p WT s a. unfold inject_skip.
     destruct (p s a) eqn:E; [|exact I]. destruct p0 as (sz & instr).
     pose proof fault_counter_typed. pose proof mem_typed.
     pose proof fault_timer_typed. pose proof fault_spacing_small.
@@ -100,7 +100,7 @@ Proof. Admitted.
     exists archtyps.
     econstructor.
     change 1 with (widthof_binop OP_AND 1). constructor.
-        change 1 with (widthof_binop OP_LE w). econstructor.
+        change 1 with (widthof_binop OP_LT w). econstructor.
         now constructor. now constructor.
     change 1 with (widthof_binop OP_AND 1). econstructor.
         change 1 with (widthof_binop OP_LT w). econstructor.
@@ -122,7 +122,7 @@ Proof. Admitted.
     eapply WT, E.
     reflexivity.
     reflexivity.
-Qed. *)
+Qed.
 
 Definition fault_assumptions (s : store) : Prop :=
     s fault_counter = max_faults /\
