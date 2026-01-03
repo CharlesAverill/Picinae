@@ -251,7 +251,7 @@ Proof using.
     }
 Qed.
 
-Module FaultModel <: FaultModel RISCVArch IL_RISCV FTC.
+Module FaultModel <: FaultModel.
     Import FTC.
     Definition fault_spacing := 0.
     Theorem fault_spacing_small : fault_spacing < 2^w.
@@ -299,12 +299,6 @@ Section FaultTolerantInvariants.
     Definition ft_invs0 := make_invs 0 br_ccopy_fault ft_invs.
 End FaultTolerantInvariants.
 
-Lemma le_impl_eq_or_le :
-    forall x y,
-        x <= y ->
-        x = y \/ x <= y - 1.
-Proof. lia. Qed.
-
 (* Proof in single-fault context *)
 Theorem br_ccopy_ft_correctness:
   forall s mem t xs' ctl src dst len
@@ -320,55 +314,9 @@ Theorem br_ccopy_ft_correctness:
   satisfies_all br_ccopy_fault (ft_invs0 ctl dst src len mem mem)
                                (ft_exits0 ctl dst src len mem mem) (xs'::t).
 Proof using.
-
-    Ltac process_faults :=
-        lazymatch goal with
-        | [s : store, FAULT: fault_assumptions ?s |-
-                nextinv _ _ _ _ ((Addr 0, ?s) :: _)] =>
-            destruct FAULT as (FC & FT);
-            unfold FTC.fault_counter, FaultModel.max_faults in FC;
-            unfold FTC.fault_timer in FT;
-            match type of FC with
-            | s ?v = ?n =>
-                replace s with (update s v n) by
-                    now erewrite store_upd_eq
-            end;
-            match type of FT with
-            | s ?v = ?n =>
-                replace s with (update s v n) by
-                    now erewrite store_upd_eq
-            end
-        | [s : store, FAULT: fault_invs ?s |-
-                    nextinv _ _ _ _ _] =>
-                unfold fault_invs in FAULT;
-                unfold FTC.fault_counter, FaultModel.max_faults in FAULT;
-                repeat (lazymatch goal with
-                        | [H: ?x <= 0 |- _] => apply N.le_0_r in H
-                        | [H: ?x <= ?y |- _] =>
-                            let EQ := fresh "EQ" in
-                            let LE := fresh "LE" in
-                            destruct (le_impl_eq_or_le _ _ H) as [EQ|LE];
-                                clear H;
-                                [|psimpl in LE]
-                        end)
-        end.
-
-    Ltac clean_fault_goals :=
-        repeat match goal with
-        | [n : N, BC : ?n mod 2 = 0 |- _] => clear BC n
-        | [n : N, BC : ?n mod 2 = N.pos ?p |- _] => clear BC n p
-        | [s' : store, n : N, 
-            BC : (if 0 <? ?s' V_FC then ?n mod 2 else 0) = _ |- _] => clear BC n
-        | [H: ?x = ?x |- _] => clear H
-        end;
-        try discriminate.
-
-    Ltac fault_step arch_step := 
-        (try process_faults);
-        time arch_step;
-        clean_fault_goals.
-
     Ltac step ::= fault_step r5_step.
+    Tactic Notation "eager_step" tactic(T) :=
+        eager_fault_step r5_step by T.
 
     intros. apply prove_invs.
 
@@ -383,9 +331,10 @@ Proof using.
 
     (* Intro *)
     destruct PRE as (A0 & A1 & A2 & A3 & Mem & BMem & Nov & FC). {
-    repeat step.
-    par: match goal with
-        | [|- exists _ _, _] =>
+    Local Ltac solver :=
+        solve [lazymatch goal with
+        | [MDL: models archtyps ?s,
+           A3: ?s R_A3 = _ |- exists _ _, _] =>
             exists 0; eexists; psimpl;
             repeat (split; [easy|]);
             split;
@@ -394,19 +343,20 @@ Proof using.
             split; [assumption|];
             split; [intro; subst; now unfold mem_equal|split];
             [intro; subst; unfold k_equal; lia
-            |unfold fault_invs, FaultModel.max_faults; now psimpl]
+            |solve_fault_invs]
         | [|- (_ -> _) /\ (_ -> _)] => 
             split; 
                 [intro; subst; now unfold mem_equal
                 |intro; unfold k_equal; lia]
-        end.
+        end] || idtac "Unrecognized goal format".
+    eager_step solver.
     }
 
     (* Loop *)
     destruct PRE as (k & mem' & Mem & A0 & A1 & A2 & A6 & Bound & Nov & Same & Eq & FAULT). {
     Local Ltac solve_inv ctl dst src len k Eq Same :=
         exists (k + 1); eexists; psimpl; repeat split; try lia;
-        try (unfold fault_invs, FaultModel.max_faults; now psimpl);
+        try solve_fault_invs;
         [intro; subst ctl; unfold mem_equal; intros;
             cbv [neg]; psimpl; subst;
             rewrite setmem_getmem; now apply Same
@@ -446,19 +396,11 @@ Proof using.
         [psimpl; lia|
         apply noverlap_symmetry, (noverlap_shrink _ dst (k + 1));
         [psimpl; lia|now apply noverlap_symmetry]]]]].
-    repeat (step;
-            (* Get to end of already-faulted branches *) 
-            lazymatch goal with
-            | [|- context[update _ V_FC 0]] => repeat step;
-                lazymatch goal with
-                | [|- exists _, _] => solve_inv ctl dst src len k Eq Same
-                | [|- (_ -> _) /\ (_ -> _)] => solve_post ctl dst src len k Eq Same
-                end
-            | [|- nextinv _ _ _ _ _] => idtac
-            end).
-    step. solve_inv ctl dst src len k Eq Same.
-    step; solve_post ctl dst src len k Eq Same.
-    step. solve_inv ctl dst src len k Eq Same.
-    solve_post ctl dst src len k Eq Same.
+    Local Ltac solver2 ctl dst src len k Eq Same :=
+        solve [
+            solve_inv ctl dst src len k Eq Same ||
+            solve_post ctl dst src len k Eq Same
+        ] || idtac "Unrecognized goal format".
+    eager_step (solver2 ctl dst src len k Eq Same).
     }
 Qed.

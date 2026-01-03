@@ -570,6 +570,8 @@ Module FT := FaultTolerance RISCVArch
               IL_RISCV
               Theory_RISCV
               Statics_RISCV
+              FInterp_RISCV
+              PSimpl_RISCV_v1_1
               FTC
               FM.
 Include FM.

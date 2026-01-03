@@ -1,6 +1,5 @@
 Require Import memcmp_ft.
 Require Import Picinae_riscv.
-Import RVFaultTolerance.
 Import RISCVNotations.
 Require Import NArith.
 Require Import List.
@@ -149,57 +148,16 @@ Proof using.
     }
 Qed.
 
-Definition dual_modular_redundant_pair
-    (p : addr -> N) (a1 a2 : addr) :=
-  exists s s' s'' ex1 ex2,
-    exec_stmt rvtypctx s
-      (rv2il a1 (rv_decode (p a1))) rvtypctx s'' ex1 /\
-    exec_stmt rvtypctx s'
-      (rv2il a2 (rv_decode (p a2))) rvtypctx s'' ex2 /\
-    exec_stmt rvtypctx s
-      (rv2il a1 (rv_decode (p a1)) $;
-      rv2il a2 (rv_decode (p a2))) rvtypctx s'' ex2.
+Module FaultModel <: FaultModel.
+    Import FTC.
+    Definition fault_spacing := 0.
+    Theorem fault_spacing_small : fault_spacing < 2^w.
+    Proof. apply mp2_gt_0. Qed.
 
-Definition dual_modular_redundant_prog
-    (p : addr -> N) (len : N) :=
-  forall k,
-    2 * k < len ->
-      dual_modular_redundant_pair p
-        (2 * k * 32) (2 * k * 32 + 4).
-
-Ltac bounded_cases n :=
-        destruct n as [| n _] using N.peano_ind;
-        [| repeat rewrite <- N.add_1_l;
-           (lia || bounded_cases n)];
-        psimpl.
-
-Ltac simpl_rv2il :=
-    repeat (let H := fresh "H" in
-    match goal with
-    [|- context[rv2il ?x ?y]] => eassert (rv2il x y = _) by
-    (compute; reflexivity)
-    end; rewrite H; clear H).
-
-Ltac handle_exec_stmt :=
-    repeat match goal with
-    | [|- exec_stmt _ _ _ _ _ _] => econstructor
-    | [|- eval_exp _ _ (BinOp ?x _ _) _ 1] =>
-        change 1 with (widthof_binop x 32);
-        constructor
-    | [|- eval_exp _ _ (Var _) _ _] =>
-        now constructor
-    | [|- eval_exp _ _ (Word _ _) _ _] =>
-        constructor
-    end.
-
-Theorem crypt_memcmp_dmr :
-    dual_modular_redundant_prog memcmp_ft 38.
-Proof.
-    intros k Bound. eexists. eexists. eexists. eexists. eexists.
-    bounded_cases k; unfold dual_modular_redundant_pair; intros;
-        simpl_rv2il.
-    - split. handle_exec_stmt.
-Abort.
+    Definition max_faults := 1.
+End FaultModel.
+Module FT := RVFaultTolerance FaultModel.
+Import FT.
 
 Section FaultTolerantInvariants.
     Variable mem : memory.
@@ -210,7 +168,8 @@ Section FaultTolerantInvariants.
         match a with
         | 0x0 => Inv 0
             (s R_A0 = in_a /\ s R_A1 = in_b /\ s R_A2 = len /\
-              s V_MEM32 = mem /\ s V_FC = 1)
+              s V_MEM32 = mem /\
+              fault_assumptions s)
         | 0x28 => Inv 0
             (exists k,
               s V_MEM32 = mem /\
@@ -218,7 +177,7 @@ Section FaultTolerantInvariants.
               s R_A1 = in_b ⊕ k /\
               s R_A2 = in_a ⊕ len /\
               k < len < 2^32 /\
-              s V_FC <= 1 /\
+              fault_invs s /\
               ((s R_A0 = 0) <-> k_equal mem in_a in_b k)
             )
         | 0x80 | 0x84 | 0x90 | 0x94 => Post 0 (postcondition mem in_a in_b len s)
@@ -240,30 +199,17 @@ Theorem crypto_memcmp_ft_correctness:
          (A0: s R_A0 = in_a)
          (A1: s R_A1 = in_b)
          (LEN: s R_A2 = len)
-         (FC: s V_FC = 1),
+         (FAULT: fault_assumptions s),
   satisfies_all fault_memcmp
                        (ft_invs0 mem in_a in_b len)
                        (ft_exits0 mem in_a in_b len) (xs'::t).
 Proof using.
-    Local Ltac step ::= 
-        match goal with
-        | [s' : store, FC : ?s' V_FC <= 1 |- _] =>
-            let H := fresh "H" in
-            assert (s' V_FC = 0 \/ s' V_FC = 1) as H by lia;
-            clear FC; destruct H
-        | _ => idtac
-        end;
-        time r5_step;
-        repeat match goal with
-        | [n : N, BC : ?n mod 2 = _ |- _] => clear BC n
-        | [s' : store, n : N, 
-            BC : (if 0 <? ?s' V_FC then ?n mod 2 else 0) = _ |- _] => clear BC n
-        | [H: ?x = ?x |- _] => clear H
-        end;
-        try discriminate.
+    Ltac step ::= fault_step r5_step.
+    Tactic Notation "estep" tactic(T) :=
+        eager_step r5_step by T.
     intros. apply prove_invs.
 
-    simpl. rewrite ENTRY. step. repeat split; assumption.
+    simpl. rewrite ENTRY. step. now repeat (split; [assumption|]).
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
@@ -275,20 +221,11 @@ Proof using.
     (* Intro *)
     destruct PRE as (A0 & A1 & A2 & Mem & FC). {
     Local Ltac solve_inv MDL A2 :=
-        exists 0; psimpl; repeat split; auto;
+        exists 0; psimpl; repeat split; auto; try solve_fault_invs;
             [lia|
             apply (models_var R_A2) in MDL; rewrite <- A2; apply MDL
-            |lia|unfold k_equal; lia].
-    step.
-    - (* len = 0, no fault *)
-        repeat step; split; intro;
-            unfold k_equal; lia.
-    - (* len <> 0, no fault *)
-        repeat (step; [| repeat step; solve_inv MDL A2]); solve_inv MDL A2.
-    - (* fault *) 
-        repeat step.
-            split; intro; unfold k_equal; lia.
-        solve_inv MDL A2.
+            |unfold k_equal; lia].
+    estep (solve_inv MDL A2 || split; intro; unfold k_equal; lia).
     }
 
     (* Loop *)
@@ -301,7 +238,7 @@ Proof using.
         let Inv := fresh "Inv" in
         let i := fresh "i" in
         exists (k ⊕ 1); psimpl; repeat split;
-        [lia|lia|lia
+        [lia|lia|solve_fault_invs
         | unfold k_equal; intros X i Z; apply or_xor_zero in X; destruct X;
             assert (i < k \/ i = k) as Y by lia; destruct Y;
             [now apply Eq|now subst]
@@ -324,11 +261,7 @@ Proof using.
               [apply N.lxor_eq_0_iff; symmetry; apply X; lia
               |apply k_equal_inv in X; symmetry; apply Eq, X]
             ].
-    repeat step.
-    par: match goal with
-        | [ |- context[exists _, _] ] => solve_inv' k Eq
-        | [ |- context[_ /\ _]] => solve_post k len s Eq
-        | _ => idtac
-        end.
+    estep (solve_inv' k Eq || solve_post k len s Eq).
     }
 Qed.
+
