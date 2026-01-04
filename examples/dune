@@ -1,0 +1,20 @@
+(include_subdirs qualified)
+
+(coq.theory
+ (name PicinaeExamples)
+ (theories Picinae)
+ (modules
+   arm.arm7_memset
+   ; arm.arm7_memset_proof
+   arm.arm7_strlen
+   ; arm.arm7_strlen_proof
+   arm.arm8_strcasecmp
+   ; arm.arm8_strcasecmp_proof
+
+   i386.strcmp
+   ; i386.strcmp_proof
+   i386.strlen
+   ; i386.strlen_proof
+   i386.wcsspn
+   ; i386.wcsspn_proof
+   ))

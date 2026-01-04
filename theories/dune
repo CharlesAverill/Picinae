@@ -1,0 +1,22 @@
+(include_subdirs qualified)
+
+(coq.theory
+ (name Picinae)
+ (package rocq-picinae)
+ (modules   
+   core
+   theory
+   statics
+   finterp
+
+   simplifier.base
+   simplifier.v0
+   simplifier.v1_1
+
+   ISA
+   
+   archs.amd64
+   archs.armv7
+   archs.armv8_pcode
+   archs.i386
+   archs.riscv))
