@@ -1,6 +1,6 @@
 Require Import NArith ZArith Bool Coq.Lists.List.
 Require Import Lia ZifyBool ZifyN.
-Require Import -(notations) arm7_cfi2.
+Require Import -(notations) arm7_cfi.
 Require Import Picinae_armv7.
 Require Import Lia ZifyN ZifyNat.
 Require Import FunctionalExtensionality.
