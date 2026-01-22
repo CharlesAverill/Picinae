@@ -13,100 +13,110 @@ Definition Z_8 := -8.
 Definition Z_32 := -32.
 Definition Z0xff := 0xff.
 Definition Z0xffff := 0xffff.
-Definition Z0xffff_0000 := 0xfff0_0000.
 Definition Z32767 := 32767.
 Definition Z1245169 := 1245169.
 Definition Z1245171 := 1245171.
 Definition Z33554428 := 33554428.
 Definition Z_33554432 := -33554432.
 Definition Z4294967296 := 4294967296.
+Definition Z_8388608 := -8388608.
+Definition Z8388607 := 8388607.
 
-Definition Z_popcount z := match z with Z0 => Z0 | Z.pos p => Z.pos (Pos_popcount p) | _ => Z0 end.
+Definition Z_popcount z :=
+  match z with Z0 => Z0
+  | Z.pos p => Z.pos (Pos_popcount p)
+  | _ => Z0
+  end.
 
 (* checks if l contains z *)
-Definition contains (z: Z) (l: list Z) : bool :=
+Definition contains z l :=
   match find (Z.eqb z) l with
   | Some _ => true
   | None => false
   end.
 
-(* checks if all elements in the two lists are unique, but allows the two elements at the same index in l and l' to be the same *)
-Fixpoint unique_except_pairs (l l': list Z) : bool :=
+(* checks if all elements in the two lists are unique,
+   but allows the two elements at the same index in l and l' to be the same *)
+Fixpoint unique_except_pairs l l' :=
   match l, l' with
-  | a::t, a'::t'=> if contains a (t++t') || contains a' (t++t') then false else unique_except_pairs t t'
+  | a::t, a'::t' => if contains a (t++t') || contains a' (t++t') then false
+                   else unique_except_pairs t t'
   | _, _ => true
   end.
 
-(* H(x) = (x LSL sl) LSR sr *)
-Definition apply_hash (sl sr: Z) (z: Z) : Z :=
+(* H(x) = (x << sl) >> sr *)
+Definition apply_hash sl sr z :=
   Z.shiftr ((Z.shiftl z sl) mod (Z4294967296)) sr.
 
 (* checks if the hash produces no unacceptable collisions
-   a - list of old addresses
-   o - offset from new code to old code
+   dis dis' - list of old/new destination indexes
    sl sr - hash parameters *)
-Definition valid_hash (a: list Z) (o sl sr: Z) : bool :=
-  unique_except_pairs (map (apply_hash sl sr) a) (map (apply_hash sl sr) (map (Z.add o) a)).
+Definition valid_hash dis dis' sl sr :=
+  unique_except_pairs (map (apply_hash sl sr) dis) (map (apply_hash sl sr) dis').
 
-Function find_sr (a: list Z) (o sl sr: Z) {measure Z.to_nat sr}: option Z :=
-  match Z.to_nat sr with
-  | O => None
-  | _ => if valid_hash a o sl sr then Some sr else find_sr a o sl (sr-Z1)
-  end.
+Function find_sr dis dis' sl sr {measure Z.to_nat sr} :=
+  if sr <=? Z0 then None
+  else if valid_hash dis dis' sl sr then Some sr else find_sr dis dis' sl (sr-Z1).
 Proof. unfold Z1 in *. lia. Qed.
 
-(* find hash parameters, returns (sl, sr)
-   a - list of old addresses
-   o - offset from new code to old code *)
-Function find_hash (a: list Z) (o sl: Z) {measure Z.to_nat sl}: option (Z * Z) :=
-  match Z.to_nat sl with
-  | O => None
-  | _ => match find_sr a o sl Z31 with
-         | Some sr => Some (sl, sr)
-         | None => find_hash a o (sl-Z1)
-         end
-  end.
-Proof. unfold Z1 in *. lia. Qed.
+Function find_hash dis dis' sl {measure Z.to_nat sl} :=
+  if sl <=? Z2 then None
+  else match find_sr dis dis' sl Z31 with
+       | Some sr => Some (sl, sr)
+       | None => find_hash dis dis' (sl-Z1)
+       end.
+Proof. unfold Z1, Z2 in *. lia. Qed.
 
 (* make a function that maps table index to the value in the table at that index
-   addrs - list of old addresses
-   o - offset from new code to old code
+   dis dis' - list of old/new destination indexes
    sl, sr - from find_hash
-   f - default value (fun _ -> aabort) *)
-Fixpoint make_jump_table_map (addrs: list Z) (o sl sr: Z) (f: Z -> Z) : Z -> Z :=
-  match addrs with
-  | nil => f
-  | a::t =>
-      let j := apply_hash sl sr a in
-      let k := apply_hash sl sr (a+o) in
-      (* quick hack *)
-      if a >=? Z0xffff_0000 then make_jump_table_map t o sl sr (fun i => if (i =? j) then a else f i)
-      else make_jump_table_map t o sl sr (fun i => if (i =? j) || (i =? k) then a + o else f i)
+   f - default value (fun _ -> abort address) *)
+Fixpoint make_jump_table_map dis dis' sl sr f :=
+  match dis, dis' with
+  | di::t, di'::t' =>
+      let j := apply_hash sl sr di in
+      let k := apply_hash sl sr di' in
+      let f' := make_jump_table_map t t' sl sr f in
+      fun x => if (x =? j) || (x =? k) then di' * Z4 else f' x
+  | _, _ => f
   end.
 
-
-Function _make_jump_table (m: Z -> Z) (n i: Z) {measure (fun i => Z.to_nat (n - i)) i} :=
-  match Z.to_nat (n - i - Z1) with
-  | O => m i::nil
-  | _ => m i::_make_jump_table m n (i+Z1)
-  end.
+Function map2list (m: Z -> Z) n
+    {measure Z.to_nat n} :=
+  if n >? Z0 then m (n-Z1)::map2list m (n-Z1)
+  else nil.
 Proof. intros. unfold Z1 in *. lia. Qed.
-Fixpoint all_div_4 l :=
-  match l with
-  | nil => true
-  | a::t => if a mod Z4 =? Z0 then all_div_4 t else false
+
+Fixpoint _map2list (m: Z -> Z) n :=
+  match n with
+  | S n' => m (Z.of_nat n')::_map2list m n'
+  | O => nil
   end.
-Definition make_jump_table (addrs: list Z) (aabort o sl sr n: Z) : option (list Z) :=
-  if (all_div_4 (o::aabort::addrs)) then
-    let m := make_jump_table_map addrs o sl sr (fun _ => aabort) in
-    Some (_make_jump_table m n Z0)
-  else
-    None.
-Definition id := Z.
+Lemma map2list_func : forall m n, _map2list m n = map2list m (Z.of_nat n).
+Proof.
+  intros. induction n.
+    now rewrite map2list_equation.
+    simpl. rewrite IHn, map2list_equation with (n := Z.pos _).
+      now replace (_ - _) with (Z.of_nat n) by (unfold Z1; lia).
+Qed.
+Lemma map2list_fix : forall m n, map2list m n = _map2list m (Z.to_nat n).
+Proof.
+  intros. symmetry. destruct n.
+    rewrite <- Nat2Z.inj_0. apply map2list_func.
+    rewrite <- (Z2Nat.id _ (Zle_0_pos _)) at 2. apply map2list_func.
+    now rewrite map2list_equation.
+Qed.
+
+Definition make_jump_table dis dis' ai sl sr n :=
+  let m := make_jump_table_map dis dis' sl sr (fun _ => ai * Z4) in
+  rev (map2list m n).
+
 
 Definition PC := Z15.
 Definition LR := Z14.
 Definition SP := Z13.
+Definition ALIGN rt :=
+  ARM_data_i ARM_BIC Z14 Z0 rt rt Z3.
 Definition STR rt rn offset :=
   let U := if offset <? Z0 then Z0 else Z1 in
   ARM_ls_i ARM_STR Z14 Z1 U Z0 rn rt (Z.abs offset).
@@ -117,247 +127,354 @@ Definition MOVW rd imm :=
   ARM_MOV_WT true Z14 ((imm >> Z12) & Z15) rd (imm & Z4095).
 Definition MOVT rd imm :=
   ARM_MOV_WT false Z14 ((imm >> Z12) & Z15) rd (imm & Z4095).
+Definition MOV rd rm :=
+  ARM_data_r ARM_MOV Z14 Z0 Z0 rd 0 Z0 rm.
 Definition LSL rd rm imm :=
   ARM_data_r ARM_MOV Z14 Z0 Z0 rd imm Z0 rm.
 Definition LSR rd rm imm :=
   ARM_data_r ARM_MOV Z14 Z0 Z0 rd imm Z1 rm.
-(* branch to a specific address
-   l - link when branching
-   cond - branch condition
-   src - address where the branch will be placed
-   dest - destination address *)
+Definition STMDB2 rn r0 r1 :=
+  ARM_lsm ARM_STMDB Z14 Z0 rn ((Z1 << r0) .| (Z1 << r1)).
+Definition LDMDB2 rn r0 r1 :=
+  ARM_lsm ARM_LDMDB Z14 Z0 rn ((Z1 << r0) .| (Z1 << r1)).
+Definition STMDB3 rn r0 r1 r2 :=
+  ARM_lsm ARM_STMDB Z14 Z0 rn ((Z1 << r0) .| (Z1 << r1) .| (Z1 << r2)).
+Definition LDMDB3 rn r0 r1 r2 :=
+  ARM_lsm ARM_LDMDB Z14 Z0 rn ((Z1 << r0) .| (Z1 << r1) .| (Z1 << r2)).
+Definition UBFX rd rn sl sr :=
+  ARM_bfx false Z14 (Z31-sr) rd (sr-sl) rn.
 Definition GOTO (l: bool) (cond src dest: Z) :=
-  let offset := dest - src - Z8 in
-  let imm := offset mod (Z1 << Z26) in
-  if (offset <? Z_33554432) || (offset >? Z33554428) || negb (offset mod Z4 =? Z0) then ARM_UNPREDICTABLE
-  else ((if l then ARM_BL else ARM_B) cond (imm >> Z2)).
+  let offset := dest - src - Z2 in
+  if (offset <? Z_8388608) || (offset >? Z8388607) then None
+  else
+    let imm := offset mod (Z.shiftl Z1 Z24) in
+    Some ((if l then ARM_BL else ARM_B) cond imm).
+Definition GOTOz l cond src dest :=
+  match GOTO l cond src dest with
+  | Some a => arm_assemble a
+  | None => None
+  end.
 
-(* add an arbitrary immediate value to a register
 
-   arm's add instruction can only add an immediate that is single byte with a rotation applied to it,
-   so adding an arbitrary constant can take up to 4 add instructions *)
 Definition arm_add (reg imm: Z) : list arm_inst :=
-  let i := ARM_data_i ARM_ADD Z14 Z0 reg reg in
-  let a := if (imm >> Z24) & Z0xff =? Z0 then nil else
-    i ((Z4 << Z8) .| ((imm >> Z24) & Z0xff))::nil in
-  let b := if (imm >> Z16) & Z0xff =? Z0 then a else
-    i ((Z8 << Z8) .| ((imm >> Z16) & Z0xff))::a in
-  let c := if (imm >> Z8) & Z0xff =? Z0 then b else
-    i ((Z12 << Z8) .| ((imm >> Z8) & Z0xff))::b in
-  if imm & Z0xff =? Z0 then c else
-    i (imm & Z0xff)::c.
+  let a := ARM_data_i ARM_ADD Z14 Z0 reg reg in
+    a ((Z4 << Z8) .| (zxbits imm Z24 Z32))::
+    a ((Z8 << Z8) .| (zxbits imm Z16 Z24))::
+    a ((Z12 << Z8) .| (zxbits imm Z8 Z16))::
+    a (zxbits imm Z0 Z8)::nil.
 (* reg = table[H(reg)] *)
-Definition arm_table_lookup atable sl sr reg :=
-  [ LSL reg reg sl;        (* lsl reg, reg, #sl *)
-    LSR reg reg sr;        (* lsr reg, reg, #sr *)
-    LSL reg reg Z2         (* lsl reg, reg, #2 *)
-  ]++arm_add reg atable++[ (* add reg, reg, #atable *)
-    LDR reg reg Z0         (* ldr reg, [reg] *)
+Definition arm_table_lookup ti sl sr reg :=
+  [ UBFX reg reg (sl-Z2) sr;
+    LSL reg reg Z2          (* lsl reg, reg, #2 *)
+  ]++arm_add reg (Z4*ti)++[ (* add reg, reg, #4*ti *)
+    LDR reg reg Z0          (* ldr reg, [reg] *)
   ].
 
+(*
+   cond - condition number of instruction to rewrite
+   i - old index of instruction to rewrite
+   ti - index of table to use
+   sl - shift left hash parameter
+   sr - shift right hash parameter
 
-(* rewrite a dynamic jump, returns (new inst encoding, code to put in .dyn, table to put in .table, new table cache function)
-   dyn_code - function that takes (n a atable sl sr) and returns the code to be placed in .dyn
-   l - link when branching to .dyn
-   cond - condition to use for the branch to .dyn
-   oid - id of the valid destination addresses
-   label - maps ids to lists of addresses
-   n - instruction encoding
-   a - address of the instruction in the old code
-   a' - address of the instruction in the new code
-   adyn - address of the next free spot in .dyn
-   atable - address of the next free spot in .table
-   aabort - address of the abort handler
-   table_cache - used to check if an id already has a table *)
-Definition rewrite_dyn (dyn_code: Z -> Z -> Z -> Z -> Z -> option (list Z)) (l: bool) (cond: Z) (n: Z) (oid: Z) (label: id -> list Z) (a a' adyn atable aabort: Z) (table_cache: id -> option (Z * Z * Z)) :=
-  match arm_assemble (GOTO l cond a' adyn) with
+   returns the list of new instruction encodings
+ *)
+Definition IRM := Z -> Z -> Z -> Z -> Z -> option (list Z).
+(* list of destination indices -> option (ti, sl, sr) *)
+Definition TableCache := list Z -> option (Z * Z * Z).
+(* option (list of new instruction encodings, list of table entries, updated table cache) *)
+Definition NewInst := option (list Z * list Z * TableCache).
+
+Definition wo_table z' tc : NewInst :=
+  match z' with
+  | Some z' => Some (z', nil, tc)
   | None => None
-  | Some n' =>
-      match table_cache oid with
-      | None =>
-          match find_hash (label oid) (a' - a) Z31 with
-          | None => None
-          | Some (sl, sr) =>
-              match dyn_code n a atable sl sr with
-              | None => None
-              | Some dyn =>
-                  match make_jump_table (label oid) aabort (a' - a) sl sr (Z.shiftl Z1 (Z32 - sr)) with
-                  | None => None
-                  | Some table =>
-                      let table_cache' := fun x => if x =? oid then Some (atable, sl, sr) else table_cache x in
-                      Some (n', dyn, table, table_cache')
-                  end
-              end
-          end
-      | Some (cached_table, sl, sr) =>
-          match dyn_code n a cached_table sl sr with
-          | None => None
-          | Some dyn => Some (n', dyn, nil, table_cache)
-          end
-      end
   end.
 
-(* check a blx reg or a bx reg
-   reg - register that holds the destination address *)
-Definition checked_b_reg (reg _ _ atable sl sr: Z) : option (list Z) :=
-  arm_assemble_all (
-    STR PC SP Z_32::                  (* DEBUG: str pc, [sp, #-32] *)
-    arm_table_lookup atable sl sr reg++  (* reg = table[H(reg)] *)
-    ARM_BX Z14 reg::nil                  (* bx reg *)
-  ).
-Definition rewrite_b_reg (l: bool) (reg: Z) := rewrite_dyn (checked_b_reg reg) l.
+Definition invert_cond cond :=
+  if (cond mod Z2 =? Z0) then cond + Z1
+  else cond - Z1.
 
-Definition checked_ldm_pc op (Rn register_list reg n _ atable sl sr: Z) :=
-  let bc := Z4 * Z_popcount register_list in
-  let offset := arm_lsm_op_start op bc + bc - Z4 in
-  arm_assemble_all ([
-    STR PC SP Z_32;                         (* DEBUG: str pc, [sp, #-32] *)
-    STR reg SP Z_4;                         (* str reg, [sp, #-4] *)
-    LDR reg Rn offset                       (* ldr reg, [Rn, #pc_offset] *)
-  ]++arm_table_lookup atable sl sr reg++[   (* reg = table[H(reg)] *)
-    STR reg Rn offset;                      (* str reg, [Rn, #pc_offset] *)
-    LDR reg SP Z_4;                         (* ldr reg, [sp, #-4] *)
-    arm_decode n                            (* original inst *)
-  ]).
-Definition rewrite_ldm_pc op Rn register_list reg := rewrite_dyn (checked_ldm_pc op Rn register_list reg) false.
+(* assemble insts and add a branch to the start if conditional *)
+Definition arm_assemble_all_cond insts cond :=
+  let jump_after := ARM_B (invert_cond cond) (Z.of_nat (length insts) - Z1) in
+  if (cond <? Z14) then arm_assemble_all (jump_after::insts)
+  else arm_assemble_all insts.
 
-(* pick a register that is different than the given ones *)
-Definition pick_good_reg (r0 r1 r2: Z) :=
-  if (r0 =? Z0) || (r1 =? Z0) || (r2 =? Z0) then
-    if (r0 =? Z1) || (r1 =? Z1) || (r2 =? Z1) then
-      if (r0 =? Z2) || (r1 =? Z2) || (r2 =? Z2) then Z3
-      else Z2
-    else Z1
-  else Z0.
-
-(* check a pc data inst
-   reg - register to use as a scratch register *)
-Definition checked_pc_data sanitized_inst (reg stack_offset n a atable sl sr: Z) : option (list Z) :=
-  let a := a + Z8 in
-  arm_assemble_all ([
-    STR   PC  SP Z_32;                     (* DEBUG: str pc, [sp, #-32] *)
-    STR   reg SP Z_4;                      (* str reg, [sp, #-4] *)
-    MOVW  reg (a & Z0xffff);               (* movw reg, #a[16:0] *)
-    MOVT  reg ((a >> Z16) & Z0xffff);      (* movt reg, #a[32:16] *)
-    sanitized_inst                         (* sanitized_inst *)
-  ]++arm_table_lookup atable sl sr reg++[  (* reg = table[H(reg)] *)
-    STR   reg SP (Z_8-stack_offset);       (* str reg, [sp, #-8 - stack offset] *)
-    LDR   reg SP (Z_4-stack_offset);       (* ldr reg, [sp, #-4 - stack offset] *)
-    LDR   PC  SP (Z_8-stack_offset)        (* ldr pc, [sp, #-8 - stack offset] *)
-  ]).
-
-Definition rewrite_pc_data sanitized_inst (reg stack_offset: Z) := rewrite_dyn (checked_pc_data sanitized_inst reg stack_offset) false.
-(* rewrite a pc data inst that does not affect control flow *)
-Definition rewrite_pc_data_no_jump sanitized_inst (reg stack_offset: Z) (cond: Z) (n: Z) (a a' adyn atable aabort: Z) (table_cache: id -> option (Z * Z * Z)) : option (Z * list Z * list Z * (id -> option (Z * Z * Z))) :=
-  let a := a + Z8 in
-  match arm_assemble (GOTO false cond a' adyn) with
-  | Some n' =>
-      match arm_assemble_all ([
-        STR reg SP Z_4;                    (* str reg, [sp, #-4] *)
-        MOVW reg (a & Z0xffff);            (* movw reg, #a[16:0] *)
-        MOVT reg ((a >> Z16) & Z0xffff);   (* movt reg, #a[32:16] *)
-        sanitized_inst;                    (* santitized_inst *)
-        LDR reg SP (Z_4-stack_offset);     (* ldr reg, [sp, #-4 - stack offset] *)
-        GOTO false Z14 (adyn+Z20) (a'+Z4)  (* b a'+4 *)
-      ]) with
-      | Some dyn => Some (n', dyn, nil, table_cache)
+Fixpoint list_eqb l1 l2 :=
+  match l1, l2 with
+  | a::b, c::d => if a =? c then list_eqb b d else false
+  | nil, nil => true
+  | _, _ => false
+  end.
+Definition rewrite_w_table
+    (irm: IRM)
+    (tc: TableCache)
+    (dis: list Z)
+    (i2i': Z -> Z)
+    (cond i ti ai: Z)
+    : NewInst :=
+  match tc dis with
+  | None =>
+      let dis' := map i2i' dis in
+      match find_hash dis dis' Z31 with
       | None => None
+      | Some (sl, sr) =>
+          match irm cond i ti sl sr with
+          | None => None
+          | Some irm =>
+              let table := make_jump_table dis dis' ai sl sr (Z1 << (Z32 - sr)) in
+              let tc' := fun x => if (list_eqb x dis) then Some (ti, sl, sr) else tc x in
+              if (ti + Z.of_nat (length table) >=? (Z1 << Z30)) then None else
+              Some (irm, table, tc')
+          end
       end
-  | None => None
+  | Some (ti, sl, sr) =>
+      match irm cond i ti sl sr with
+      | None => None
+      | Some irm => Some (irm, nil, tc)
+      end
   end.
 
-Definition goto_abort a' aabort table_cache : option (Z * list Z * list Z * (id -> option (Z * Z * Z))):=
-  match arm_assemble (GOTO true Z14 a' (aabort+Z0xffff+Z1)) with (* DEBUG: use a separate abort handler for this case *)
-  | None => None
-  | Some n' => Some (n', nil, nil, table_cache)
+Definition bx_blx_irm (l: bool) reg : IRM :=
+  fun cond i ti sl sr =>
+    arm_assemble_all_cond (
+      arm_table_lookup ti sl sr reg++  (* reg = table[H(reg)] *)
+      (if l then ARM_BLX_r else ARM_BX) Z14 reg::nil              (* bx reg *)
+    ) cond.
+Definition rewrite_bx_blx l reg := rewrite_w_table (bx_blx_irm l reg).
+Definition rewrite_bx reg := rewrite_bx_blx false reg.
+Definition rewrite_blx reg := rewrite_bx_blx true reg.
+Definition ldm_pc_irm op Rn register_list reg orig_inst : IRM :=
+  fun cond i ti sl sr =>
+    let bc := Z4 * Z_popcount (register_list mod (Z1 << Z16)) in
+    let offset := arm_lsm_op_start op bc + bc - Z4 in
+    arm_assemble_all_cond ([
+      STR reg SP Z_4;                     (* str reg, [sp, #-4] *)
+      LDR reg Rn offset                   (* ldr reg, [Rn, #pc_offset] *)
+    ]++arm_table_lookup ti sl sr reg++[   (* reg = table[H(reg)] *)
+      STR reg Rn offset;                  (* str reg, [Rn, #pc_offset] *)
+      LDR reg SP Z_4;                     (* ldr reg, [sp, #-4] *)
+      orig_inst                           (* original inst *)
+    ]) cond.
+Definition rewrite_ldm_pc op Rn register_list reg orig_inst := rewrite_w_table (ldm_pc_irm op Rn register_list reg orig_inst).
+
+(* irm for instructions that use pc as a destination register, but do not modify sp *)
+Definition pc_irm sanitized_inst reg : IRM :=
+  fun cond i ti sl sr =>
+    let a := Z4 * i + Z8 in
+    arm_assemble_all_cond ([
+      STR   reg SP Z_4;                  (* str reg, [sp, #-4] *)
+      MOVW  reg (a & Z0xffff);           (* movw reg, #a[16:0] *)
+      MOVT  reg ((a >> Z16) & Z0xffff);  (* movt reg, #a[32:16] *)
+      sanitized_inst                     (* sanitized_inst *)
+    ]++arm_table_lookup ti sl sr reg++[  (* reg = table[H(reg)] *)
+      ALIGN SP;
+      STR   reg SP Z_8;                  (* str reg, [sp, #-8] *)
+      LDR   reg SP Z_4;                  (* ldr reg, [sp, #-4] *)
+      LDR   PC  SP Z_8                   (* ldr pc, [sp, #-8] *)
+    ]) cond.
+(* irm for instructions that use pc as a destination register, and do modify sp *)
+Definition pc_sp_irm sanitized_inst reg reg2 : IRM :=
+  fun cond i ti sl sr =>
+    let a := Z4 * i + Z8 in
+    arm_assemble_all_cond ([
+      STMDB3 SP reg reg2 PC;
+      MOV   reg2 SP;
+      MOVW  reg (a & Z0xffff);                (* movw reg, #a[16:0] *)
+      MOVT  reg ((a >> Z16) & Z0xffff);       (* movt reg, #a[32:16] *)
+      sanitized_inst                          (* sanitized_inst *)
+    ]++arm_table_lookup ti sl sr reg++[       (* reg = table[H(reg)] *)
+      STR   reg reg2 (Z_4);                   (* str reg, [sp, #-8 - stack offset] *)
+      LDMDB3 reg2 reg reg2 PC                 (* ldmdb reg2, {reg, reg2, pc} *)
+    ]) cond.
+Definition rewrite_pc sanitized_inst reg := rewrite_w_table (pc_irm sanitized_inst reg).
+Definition rewrite_pc_sp sanitized_inst reg reg2 := rewrite_w_table (pc_sp_irm sanitized_inst reg reg2).
+Definition rewrite_pc_no_jump sanitized_inst cond i reg tc : NewInst :=
+  let a := Z4 * i + Z8 in
+  wo_table (arm_assemble_all_cond ([
+    STR reg SP Z_4;                    (* str reg, [sp, #-4] *)
+    MOVW reg (a & Z0xffff);            (* movw reg, #a[16:0] *)
+    MOVT reg ((a >> Z16) & Z0xffff);   (* movt reg, #a[32:16] *)
+    sanitized_inst;                    (* santitized_inst *)
+    LDR reg SP Z_4                     (* ldr reg, [sp, #-4] *)
+  ]) cond) tc.
+Definition rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc : NewInst :=
+  let a := Z4 * i + Z8 in
+  wo_table (arm_assemble_all_cond ([
+    STMDB2 SP reg reg2;                (* stmdb sp, {reg, reg2} *)
+    MOV reg2 SP;                       (* mov reg2, sp *)
+    MOVW reg (a & Z0xffff);            (* movw reg, #a[16:0] *)
+    MOVT reg ((a >> Z16) & Z0xffff);   (* movt reg, #a[32:16] *)
+    sanitized_inst;                    (* santitized_inst *)
+    LDMDB2 reg2 reg reg2               (* ldmdb reg2, {reg, reg2} *)
+  ]) cond) tc.
+
+Definition canonical_z w z := (z + (Z1 << (w-Z1))) mod (Z1 << w) - (Z1 << (w-Z1)).
+Definition rewrite_b_bl (l: bool) (cond imm24: Z) i dis i2i' ai tc : NewInst :=
+  let j := (i + Z2 + (canonical_z Z24 imm24)) mod (Z1 << Z30) in
+  let dst := if (contains j dis) then (i2i' j) else ai in
+  match GOTOz l cond (i2i' i) dst with
+  | Some z => Some ([z], nil, tc)
+  | None => match GOTOz true cond (i2i' i) ai with
+            | Some z => Some ([z], nil, tc)
+            | None => None
+            end
   end.
+Definition rewrite_b := rewrite_b_bl false.
+Definition rewrite_bl := rewrite_b_bl true.
 
-(* rewrite a single instruction, see rewrite_dyn for signature *)
-Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable aabort: Z) (table_cache: id -> option (Z * Z * Z)): option (Z * list Z * list Z * (id -> option (Z * Z * Z))) :=
-  let unchanged := Some (n, nil, nil, table_cache) in
-  let abort := goto_abort a' aabort table_cache in
-  match arm_decode n with
-  | ARM_BLX_r cond reg => rewrite_b_reg true reg cond n oid label a a' adyn atable aabort table_cache
-  | ARM_BX cond reg => rewrite_b_reg false reg cond n oid label a a' adyn atable aabort table_cache
+(* "mov lr, pc" should use new pc, not old pc
+it's possible that the old pc should be used, if lr is later used as a data memory address,
+but a compiler would most likely pick a general register instead of lr if that was the case
 
-  | ARM_B cond imm24
-  | ARM_BL cond imm24 =>
-      unchanged
+although any rewritten jump would be able to handle the old pc value correctly, this inst
+is sometimes used when calling a kernel user helper function, which we cannot rewrite *)
+Definition rewrite_mov_lr_pc cond i i2i' tc : NewInst :=
+  let pc' := Z4 * i2i' (i+Z2) in
+  wo_table (arm_assemble_all_cond ([
+    MOVW  LR (pc' & Z0xffff);
+    MOVT  LR ((pc' >> Z16) & Z0xffff)
+  ]) cond) tc.
 
-  | ARM_BLX_i _ _ => abort (* thumb mode not supported *)
+Definition _unused_reg (base r0 r1 r2: Z) :=
+  if (r0 =? base) || (r1 =? base) || (r2 =? base) then
+    if (r0 =? base+Z1) || (r1 =? base+Z1) || (r2 =? base+Z1) then
+      if (r0 =? base+Z2) || (r1 =? base+Z2) || (r2 =? base+Z2) then base+Z3
+      else base+Z2
+    else base+Z1
+  else base.
+Definition unused_reg := _unused_reg Z0.
+Definition unused_reg_high := _unused_reg Z4.
+Definition goto_abort i' ai tc : NewInst :=
+  match GOTOz true Z14 i' ai with
+  | Some z => Some ([z], nil, tc)
+  | None => None
+  end.
+Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i ti ai bi: Z) (txt: list Z) : NewInst :=
+  let unchanged := Some ([z], nil, tc) in
+  let abort := goto_abort (i2i' i) ai tc in
+  let decoded := arm_decode z in
+  if (negb (contains (i+Z1) dis)) then None else
+  match decoded with
+  (* branching *)
+  | ARM_BX cond reg =>
+      if (reg <? 0) || (reg >=? PC) then rewrite_b cond 0 i dis i2i' ai tc (* bx pc is just a static branch in arm mode *)
+      else rewrite_bx reg tc dis i2i' cond i ti ai
+  | ARM_BLX_r cond reg =>
+      if (reg <? 0) || (reg >=? PC) then abort (* this can't happen (unpredictable), but it's easier to just do this than write a proof about the decoder *)
+      else rewrite_blx reg tc dis i2i' cond i ti ai
+  | ARM_B cond imm24 => rewrite_b cond imm24 i dis i2i' ai tc
+  | ARM_BL cond imm24 => rewrite_bl cond imm24 i dis i2i' ai tc
+  (* data processing *)
   | ARM_data_r op cond s Rn Rd imm5 type Rm =>
-      let reg := pick_good_reg Rn Rd Rm in
+      let reg := unused_reg Rn Rd Rm in
+      let reg2 := unused_reg_high Rn Rd Rm in
       let Rn' := if (Rn =? PC) then reg else Rn in
       let Rd' := if (Rd =? PC) then reg else Rd in
       let Rm' := if (Rm =? PC) then reg else Rm in
       let sanitized_inst := ARM_data_r op Z14 s Rn' Rd' imm5 type Rm' in
       if (Rd =? PC) then
-        rewrite_pc_data sanitized_inst reg Z0 cond n oid label a a' adyn atable aabort table_cache
+        rewrite_pc sanitized_inst reg tc dis i2i' cond i ti ai
       else if (Rn =? PC) || (Rm =? PC) then
         if (match op with ARM_MOV => Rd =? LR | _ => false end) then
-          unchanged (* "mov lr, pc" should use new pc, not old pc *)
-          (* it's possible that the old pc should be used, if lr is later used as a data memory address,
-             but a compiler would most likely pick a general register instead of lr if that was the case
-
-             although any rewritten jump would be able to handle the old pc value correctly, this inst
-             is sometimes used when calling a kernel user helper function, which we cannot rewrite *)
+          rewrite_mov_lr_pc cond i i2i' tc
+        else if (Rd =? SP) then
+          rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
         else
-          rewrite_pc_data_no_jump sanitized_inst reg Z0 cond n a a' adyn atable aabort table_cache
+          rewrite_pc_no_jump sanitized_inst cond i reg tc
       else unchanged
-  | ARM_data_rsr _ _ _ _ _ _ _ _ => unchanged
   | ARM_data_i op cond s Rn Rd imm12 =>
-      let reg := pick_good_reg Rn Rd Z0 in
+      let reg := unused_reg Rn Rd Z0 in
+      let reg2 := unused_reg_high Rn Rd Z0 in
       let Rn' := if (Rn =? PC) then reg else Rn in
       let Rd' := if (Rd =? PC) then reg else Rd in
       let sanitized_inst := ARM_data_i op Z14 s Rn' Rd' imm12 in
       if (Rd =? PC) then
-        rewrite_pc_data sanitized_inst reg Z0 cond n oid label a a' adyn atable aabort table_cache
+        rewrite_pc sanitized_inst reg tc dis i2i' cond i ti ai
       else if (Rn =? PC) then
-        rewrite_pc_data_no_jump sanitized_inst reg Z0 cond n a a' adyn atable aabort table_cache
+        if (Rd =? SP) then
+          rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
+        else
+          rewrite_pc_no_jump sanitized_inst cond i reg tc
       else unchanged
+  (* load/store *)
   | ARM_ls_i ARM_LDR cond P U W Rn Rt imm12 =>
-      let reg := pick_good_reg Rn Rt Z0 in
+      let reg := unused_reg Rn Rt Z0 in
+      let reg2 := unused_reg_high Rn Rt Z0 in
       let Rn' := if (Rn =? PC) then reg else Rn in
       let Rt' := if (Rt =? PC) then reg else Rt in
       let sanitized_inst := ARM_ls_i ARM_LDR cond P U W Rn' Rt' imm12 in
-      let stack_offset := if (Rn =? SP) && ((P =? Z0) || (W =? Z1)) then if (U =? Z1) then imm12 else -imm12 else Z0 in
       if (Rt =? PC) then
-        rewrite_pc_data sanitized_inst reg stack_offset cond n oid label a a' adyn atable aabort table_cache
+        if ((Rn =? SP) && ((P =? Z0) || (W =? Z1))) then rewrite_pc_sp sanitized_inst reg reg2 tc dis i2i' cond i ti ai
+        else rewrite_pc sanitized_inst reg tc dis i2i' cond i ti ai
       else if (Rn =? PC) then
-        rewrite_pc_data_no_jump sanitized_inst reg stack_offset cond n a a' adyn atable aabort table_cache
+        let li := bi-((if (U =? Z1) then i + Z2 + imm12 else i + Z2 - imm12) mod (Z1 << Z32)) in
+        match li >? Z0, nth_error txt (Z.to_nat (bi-li)) with
+        | true, Some lv =>
+             wo_table (arm_assemble_all_cond [
+               MOVW  Rt (lv & Z0xffff);
+               MOVT  Rt ((lv >> Z16) & Z0xffff)
+             ] cond) tc
+        | _, _ =>
+            if (Rt =? SP) then rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
+            else rewrite_pc_no_jump sanitized_inst cond i reg tc
+        end
       else unchanged
-  | ARM_ls_i _ _ _ _ _ _ _ _ => unchanged
   | ARM_ls_r ARM_LDR cond P U W Rn Rt imm5 type Rm =>
-      let reg := pick_good_reg Rn Rt Rm in
+      let reg := unused_reg Rn Rt Rm in
+      let reg2 := unused_reg_high Rn Rt Rm in
       let Rn' := if (Rn =? PC) then reg else Rn in
       let Rt' := if (Rt =? PC) then reg else Rt in
       let Rm' := if (Rm =? PC) then reg else Rm in
       let sanitized_inst := ARM_ls_r ARM_LDR cond P U W Rn' Rt' imm5 type Rm' in
-      let stack_offset := Z0 in (*?*)
       if (Rt =? PC) then
-        rewrite_pc_data sanitized_inst reg stack_offset cond n oid label a a' adyn atable aabort table_cache
+        if ((Rn =? SP) && ((P =? Z0) || (W =? Z1))) then rewrite_pc_sp sanitized_inst reg reg2 tc dis i2i' cond i ti ai
+        else rewrite_pc sanitized_inst reg tc dis i2i' cond i ti ai
       else if (Rn =? PC) || (Rm =? PC) then
-        rewrite_pc_data_no_jump sanitized_inst reg stack_offset cond n a a' adyn atable aabort table_cache
+        if (Rt =? SP) then rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
+        else rewrite_pc_no_jump sanitized_inst cond i reg tc
       else unchanged
-  | ARM_ls_r _ _ _ _ _ _ _ _ _ _ => unchanged
-
   | ARM_lsm op cond W Rn register_list =>
-      if (register_list <=? Z32767) then unchanged (* pc is not in reg list *)
+      if (register_list <? Z0) || (Rn <? Z0) || (Rn >=? Z15) then abort (* not possible *)
+      else if (bitb register_list Z15 =? Z0) (* pc is not in reg list *)
+      || (match op with | ARM_STMDA | ARM_STMDB | ARM_STMIA | ARM_STMIB => true | _ => false end) then unchanged
       else
         let reg := if (Rn =? Z0) then Z1 else Z0 in
-        rewrite_ldm_pc op Rn register_list reg cond n oid label a a' adyn atable aabort table_cache
-
+        rewrite_ldm_pc op Rn register_list reg decoded tc dis i2i' cond i ti ai
   | ARM_vls is_load is_single cond U D Rn Vd imm8 =>
       if (Rn =? PC) then
-        let reg := Z0 in
-        let sanitized_inst := ARM_vls is_load is_single cond U D reg Vd imm8 in
-        rewrite_pc_data_no_jump sanitized_inst reg Z0 cond n a a' adyn atable aabort table_cache
+        let sanitized_inst := ARM_vls is_load is_single cond U D Z0 Vd imm8 in
+        rewrite_pc_no_jump sanitized_inst cond i Z0 tc
       else unchanged
-
+  (* | ARM_sync_s ARM_sync_word cond Rn Rd Rt => *)
+  (*    match arm_assemble_all_cond [ STR Rt Rn 0; MOVW Rd 0 ] cond with *)
+  (*    | Some z => Some (z, nil) *)
+  (*    | None => None *)
+  (*    end *)
+  (* unchanged *)
+  | ARM_extra_ls_i op cond P U W Rn Rt imm4H imm4L =>
+      let reg := if (Rt =? Z0) then Z1 else Z0 in
+      let reg2 := if (Rt =? Z2) then Z3 else Z2 in
+      let sanitized_inst := ARM_extra_ls_i op cond P U W reg Rt imm4H imm4L in
+      if (Rn =? PC) then
+        if (match op with ARM_STRH | ARM_STRD => false | _ => Rt =? SP end) then
+          rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
+        else rewrite_pc_no_jump sanitized_inst cond i reg tc
+      else unchanged
+  | ARM_extra_ls_r op cond P U W Rn Rt Rm =>
+      let reg := if (Rt =? Z0) then Z1 else Z0 in
+      let reg2 := if (Rt =? Z2) then Z3 else Z2 in
+      let sanitized_inst := ARM_extra_ls_r op cond P U W reg Rt Rm in
+      if (Rn =? PC) then
+        if (match op with ARM_STRH | ARM_STRD => false | _ => Rt =? SP end) then
+          rewrite_pc_sp_no_jump sanitized_inst cond i reg reg2 tc
+        else rewrite_pc_no_jump sanitized_inst cond i reg tc
+      else unchanged
+  | ARM_ls_i _ _ _ _ _ _ _ _
+  | ARM_ls_r _ _ _ _ _ _ _ _ _ _
   | ARM_sync_l _ _ _ _
   | ARM_sync_s _ _ _ _ _
-  | ARM_extra_ls_i _ _ _ _ _ _ _ _ _
-  | ARM_extra_ls_r _ _ _ _ _ _ _ _
   | ARM_hint _ _
   | ARM_sat _ _ _ _ _
   | ARM_mul _ _ _ _ _ _ _
@@ -384,34 +501,64 @@ Definition rewrite_inst (n: Z) (oid: id) (label: id -> list Z) (a a' adyn atable
   | ARM_vfp_other _ _ _ _ _ _ _
       => unchanged
 
-  (* don't allow any other instructions *)
-  | _ => goto_abort a' aabort table_cache
+  | _ => abort
   end.
 
-(* rewrite a program, returns (.newtext, .dyn, .jtable) or None if rewrite failed
-   table_cache - maps ids to table addresses so tables can be shared across multiple jumps
-   pol - maps original addresses to the id of valid destination addresses
-   label - maps ids to lists of addresses
-   ns - list of instruction encodings of the program
-   a - address of the first instruction in ns
-   a' - address where the first rewritten instruction should be placed
-   adyn - address to place the dynamic jump implementations
-   atable - address to place the jump tables
-   aabort - address where the abort handler is located *)
-Fixpoint _rewrite (table_cache: id -> option (Z * Z * Z)) 
-  (pol: Z -> id) (label: id -> list Z) (ns: list Z) (a a' adyn atable aabort: Z) 
-  : option (list Z * list (list Z) * list (list Z)) :=
-  match ns with
-  | nil => Some (nil, nil, nil)
-  | n::tail =>
-      match rewrite_inst n (pol a) label a a' adyn atable aabort table_cache with
+(*
+   pol - maps indexes to lists of valid destination indexes
+   i2i' - maps old indexes to new indexes
+   zs - list of instruction encodings
+   i - current index
+   ti - table index
+   ai - abort index
+   bi - base index
+   txt - same as zs but doesn't change when recursing
+*)
+Fixpoint _rewrite (zs: list Z) (tc: TableCache) (pol: Z -> list Z) (i2i': Z -> Z) (i ti ai bi: Z) (txt: list Z) : option (list (list Z) * list (list Z)) :=
+  if (i >=? Z1 << Z30) || (i2i' i >=? Z1 << Z30 - Z1) || (ti >=? Z1 << Z30) then None else
+  match zs with
+  | z::zs =>
+      match rewrite_inst tc i2i' z (pol i) i ti ai bi txt with
       | None => None
-      | Some (n', dyn, table, table_cache') =>
-          match _rewrite table_cache' pol label tail (a+Z4) (a'+Z4) (adyn + Z4 * Z.of_nat (length dyn)) (atable + Z4 * Z.of_nat (length table)) aabort with
+      | Some (z', table, tc') =>
+          let ti' := ti + Z.of_nat (length table) in
+          match _rewrite zs tc' pol i2i' (i+Z1) ti' ai bi txt with
           | None => None
-          | Some (n_t, dyn_t, table_t) => Some (n'::n_t, dyn::dyn_t, table::table_t) end end end.
-Definition rewrite := _rewrite (fun _ => None).
+          | Some (z_t, table_t) => Some (z'::z_t, table::table_t)
+          end
+      end
+  | nil =>
+      match GOTOz true Z14 (i2i' i) ai with
+      | Some z => Some ([[z]], nil)
+      | None => None
+      end
+  end.
 
+Fixpoint _make_i's (z's: list (list Z)) i' :=
+  match z's with
+  | z'::tail => i'::_make_i's tail (i' + Z.of_nat (length z'))
+  | nil => nil
+  end.
+Definition make_i's (z's: list (list Z)) i' :=
+  let lens := map (fun x => Z.of_nat (length x)) z's in
+  rev (snd (fold_left (fun a b => let sum := fst a + b in (sum, i' + fst a :: snd a)) lens (0, nil))).
+Definition get l n := nth (Z.to_nat n) l 0.
+Definition of_list (x: list Z) := x.
+Definition make_i2i' bi bi' ai z's :=
+  let i's := make_i's z's bi' in
+  let ie := bi + Z.of_nat (length z's) in
+  let ie' := bi' + Z.of_nat (length (concat z's)) in
+  let arr := of_list i's in
+  fun x => if (x <? bi) || (x >=? ie) then if (x <? bi') || (x >=? ie') then x else ai else get arr (x-bi).
+
+Definition cfi_rw (pol: Z -> list Z) (code: list Z) (bi bi' ti ai: Z) :=
+  let tc := fun _ => None in
+  match _rewrite code tc pol id bi ti ai bi code with
+  | Some (z's, _) =>
+      let i2i' := make_i2i' bi bi' ai z's in
+      _rewrite code tc pol i2i' bi ti ai bi code
+  | None => None
+  end.
 
 Require Extraction.
 Extraction Language OCaml.
@@ -425,7 +572,6 @@ Extract Inductive list => "list" [ "[]" "(::)" ].
 Extract Inlined Constant id => "int".
 Extract Inlined Constant Z0xff => "0xff".
 Extract Inlined Constant Z4095 => "4095".
-Extract Inlined Constant Z0xffff_0000 => "0xffff_0000".
 Extract Inlined Constant Z1 => "1".
 Extract Inlined Constant Z2 => "2".
 Extract Inlined Constant Z3 => "3".
@@ -468,6 +614,8 @@ Extract Inlined Constant Z1245171 => "1245171".
 Extract Inlined Constant Z33554428 => "33554428".
 Extract Inlined Constant Z_33554432 => "(-33554432)".
 Extract Inlined Constant Z4294967296 => "4294967296".
+Extract Inlined Constant Z_8388608 => "(-8388608)".
+Extract Inlined Constant Z8388607 => "8388607".
 Extract Inlined Constant Z.opp => "(~-)".
 Extract Inlined Constant Z.ltb => "(<)".
 (* maybe use library that has popcount instrinsic? *)
@@ -490,8 +638,10 @@ Extract Inlined Constant Z.max => "(max)".
 Extract Inlined Constant Z.lxor => "(lxor)".
 Extract Inlined Constant Z.eqb => "(=)".
 Extract Inlined Constant length => "List.length".
+Extract Inlined Constant concat => "List.flatten".
 Extract Inlined Constant contains => "(List.mem)".
 Extract Inlined Constant negb => "(not)".
+Extract Inlined Constant nth_error => "(List.nth_opt)".
 Extract Inlined Constant app => "List.append".
 Extract Inlined Constant map => "List.map".
 Extract Inlined Constant combine => "List.combine".
@@ -500,194 +650,11 @@ Extract Inlined Constant Z.of_nat => "".
 Extract Inductive sigT => "( * )"  [ "(,)" ].
 Extract Inlined Constant projT1 => "fst".
 Extract Inlined Constant projT2 => "snd".
-Separate Extraction rewrite.
-
-
-Definition div_4 x := x mod 4 = 0.
-Lemma Forall_all_div_4:
-  forall l,
-    Forall div_4 l <-> all_div_4 l = true.
-Proof.
-  intros. induction l.
-    split; intro.
-      reflexivity.
-      apply Forall_nil.
-    split; intro.
-      inversion H; subst. simpl. destruct Z.eqb eqn:e.
-        now rewrite <- IHl.
-        unfold div_4 in H2. rewrite <- Z.eqb_eq in H2. unfold Z4 in e. now rewrite e in H2.
-      unfold all_div_4 in H. destruct Z.eqb eqn:e.
-        apply Forall_cons.
-          unfold div_4. now rewrite <- Z.eqb_eq.
-          now apply IHl.
-        discriminate.
-Qed.
-Lemma make_jump_table_map_div_4:
-  forall addrs o sl sr f,
-    div_4 o ->
-    Forall div_4 addrs ->
-    (forall i, div_4 (f i)) ->
-    forall i, div_4 (make_jump_table_map addrs o sl sr f i).
-Proof.
-  induction addrs.
-    intros. now simpl.
-    intros. simpl. inversion H0. destruct Z.geb.
-      apply (IHaddrs _ _ _ _ H H5). intros. now destruct Z.eqb.
-      apply (IHaddrs _ _ _ _ H H5). intros. destruct orb.
-        unfold div_4. now rewrite <- Zplus_mod_idemp_r, H, Z.add_0_r.
-        apply H1.
-Qed.
-Lemma make_jump_table_div_4:
-  forall addrs aabort o sl sr n table,
-    make_jump_table addrs aabort o sl sr n = Some table ->
-    Forall div_4 table.
-Proof.
-  intros. unfold make_jump_table in H. destruct all_div_4 eqn:e in H.
-    assert (forall i, div_4 (make_jump_table_map addrs o sl sr (fun _ => aabort) i)).
-      apply Forall_all_div_4 in e. inversion e. apply make_jump_table_map_div_4; now inversion H3.
-    inversion H. apply _make_jump_table_ind.
-      intros. apply Forall_forall. intros. inversion H1; now subst.
-      intros. now apply Forall_cons.
-    discriminate.
-Qed.
-
-(** Notes on the safety property design *)
-
-Definition policy := Z -> id.
-
-Definition index := N.
-Definition addr := N.
-Definition ienc := Z. (* instruction encoding in binary *)
-(* Policy pol permits the original instruction at index i to transfer control to the
-   original instruction at index i' if:
-   (a) j' is labeled with the equivalence class of dynamic targets for j.  *)
-Definition policytarget (pol:policy) (label:id->list Z) (addrof:index->addr) (j j':index) :=
-      In (Z.of_N (addrof j')) (label (pol (Z.of_N j))).
-
-
-(** The riscv policy is a `list (option Z * (Z * list Z))`.  The list assigns to each instruction
-    an optional "input identifier", an "output identifier" for the class of valid indirect-jump targets, 
-    and a list of permissible "static destination" -- relative indexes of instructions the instruction may
-    statically jump or fall-through to.
-
-    The arm7 policy is a `Z->id` function giving an output identifier to each instruction.  The label is
-    the complementary `id -> list Z` function that maps an id to a list of addresses within that class.
-    There is no "static destination" list in the arm7 implementation.  We can compute static
-    destinations on an instruction-by-instruction basis if we want to, or we can use the same computation
-    to make a similar list.  We arbitrarily decide to do the former for our first attempt.
-
-    In riscv the indexmap maps indices in the new code (list (list Z)) to the index of the instruction
-    in the old code.  This is enabled by the new code having the dynamic jump checks inlined.  In this
-    cfi version the dynamic jump checks are in another block (.dyn), so we can't rely on the same
-    indexmap and blockboundary definitions.  For instance, a dynamic jump is rewritten to a static jump
-    in the new code to a block in the dynamic jump table .dyn.  This static branch instruction should be
-    considered the blockboundary of the block that includes itself and the block in .dyn.
- *)
-
-(** Glossary
-    pol - the policy (Z->id)
-    r - the rewriter
-    im - indexmap, map from 
-    l - the list of instructions
-    jmptbl - 
- *)
-Open Scope N.
-(** Tentative mapping from instruction indices to memory addresses.
-    We define indices as the offset of the instruction in l'
-    appended with the flattened dyn'.  If the index is out of bounds
-    we return the max index, copying the behavior of indexmap' in
-    riscv_cfi. 
-
-    We assume a 32-bit architecture. *)
-Definition addr_of_index bi' (l':list ienc) bdyn' (dyn':list (list ienc)) (j:index) :=
-  if j <? N.of_nat (length l') then 4 * (ofZ 32 bi' + j)
-  else if j - N.of_nat (length l') <? N.of_nat (length (concat dyn'))
-    then 4 * (ofZ 32 bdyn' + (j - (N.of_nat (length l'))))
-    else 4 * (ofZ 32 bdyn' + N.of_nat (length (concat dyn'))).
-
-(** Tentative mapping from indices to blocks. *)
-Fixpoint block_of_index_ (dyn':list (list ienc)) (j:index) :=
-  (match dyn' with nil => O | b::t =>
-     if N.to_nat j <? length b then O else S (block_of_index_ t (N.sub j  (N.of_nat (length b))))
-   end)%nat.
-
-  
-Definition block_of_index (l':list ienc) (dyn':list (list ienc)) j :=
-  if j <? N.of_nat (length l') then j
-  else N.of_nat (block_of_index_ dyn' (j - (N.of_nat (length l')))).
-
-(* Every instruction is the start of a block. The non-singleton blocks are those
-   that jump from l' to dyn'. *)
-Definition blockboundary (l':list ienc) i' :=
-  i' < (N.of_nat (length l')).
-
-Definition safety (pol:policy) r :=
-  forall (l: list ienc) l' s0 m0 (bi bi':Z) t s s' q (j0 j j':index) x c'
-    (* TODO: change label to index -> list addr *)
-    (* TODO: we haven't used the jump table, should we? *)
-    (label:id->list Z) (bdyn' btable' babort':Z) dyn' (jtable':list (list Z)) addrof
-
-    (* Bind addrof to a specialized addr_of_index function. *)
-    (AOF: addrof = addr_of_index bi' l' bdyn' dyn')
-
-    (* Let l', dyn', jtable' be the output of the rewriter. *)
-    (NC: r pol label l bi bi' bdyn' btable' babort' = Some (l',dyn', jtable'))
-
-    (* Let (4*j,s)::t be a trace that starts at index bi'+j0 in initial state s0. *)
-    (ENTRY: startof t (Addr (addrof j), s) = (Addr (addrof j0), s0))
-    (XP: exec_prog arm_prog ((Addr (addrof j),s)::t))
-
-    (* Let m0 be the starting memory contents. *)
-    (S0: s0 V_MEM32 = m0)
-
-    (* Assume m0 contains the rewritten code starting at instruction index i *)
-    (L': forall i n, nth_error l' i = Some n ->
-                     getmem 32 LittleE 4 m0 (addrof (N.of_nat i)) = Z.to_N n)
-
-    (* Assume m0 contains the rewritten dynamic jumps starting at instruction index i *)
-    (DYN': forall (d i:nat) n, (i = d + length l')%nat -> nth_error (concat dyn') i = Some n ->
-                     getmem 32 LittleE 4 m0 (addrof (N.of_nat i)) = Z.to_N n)
-
-    (* Assume the code section remains non-writable. *)
-    (NWC: forall t x s m i, exec_prog arm_prog ((x,s)::t) ->
-            s V_MEM32 = m -> (i < length l' + length (concat dyn'))%nat ->
-            getmem 32 LittleE 4 m (addrof (N.of_nat i)) = getmem 32 LittleE 4 m0 (addrof (N.of_nat i)))
-
-    (* Assume memory outside the code section remains non-executable.
-       For all addresses either that address is not executable OR there exists
-       an index into our new code (l' + dyn') with that address.
-    
-       We structure it this way because l' and dyn' are not necessarily adjacent,
-       a simple out of bounds check will not work, but a complex bounds check
-       may turn out to be simpler than this existence-based prop.
-
-       Arm7 does not have an A_EXEC element in our arch spec.  Is this intentional?
-       TODO: decide whether to add A_EXEC, omit this, or find an alternative. *)
-            (*(NXD: forall t x s e a, exec_prog arm_prog ((x,s)::t) ->
-                              s A_EXEC = e -> 
-                              (xbits e (a) (1+a) = 0)%N \/
-               exists i, addrof i = a)*)
-
-    (* Assume execution of the new code begins at index j0, which is a block boundary. *)
-    (BB: blockboundary l' j0)
-
-    (* Let q be the IL statement that encodes the instruction at index j. *)
-    (LU: (arm_prog s (addrof j) = Some (4,q))%N)
-
-    (* Let s' and x be the store and exit state after executing q. *)
-    (XS: exec_stmt arm7typctx s q c' s' x)
-
-    (* Let j' be the index of the instruction to which q transfers control next. *)
-    (EX: exitof (4 + addrof j) x = Addr (addrof j')),
-
-  (* Then either
-      (a) j and j' are within a common rewritten block (i.e., an IRM-added branch),
-      (b) edge (j,j') is explicitly permitted by the policy, or
-      (c) j' is the security abort handler appended to the rewritten code. *)
-   (block_of_index l' dyn' j = block_of_index l' dyn' j' \/
-   (blockboundary l' j' /\ policytarget pol label addrof j j' \/
-   (* TODO: replace this with the abort case *)
-   (* j' < bi' \/ bi' + length (concat l') <= j')%nat*) False )).
-
-Theorem safe : forall pol, safety pol rewrite.
-Admitted.
+Extract Inlined Constant fst => "fst".
+Extract Inlined Constant snd => "snd".
+Extract Inlined Constant rev => "List.rev".
+Extract Inlined Constant fold_left => "(fun f l a -> List.fold_left f a l)".
+Extract Inlined Constant get => "Array.get".
+Extract Inlined Constant of_list => "Array.of_list".
+Extract Inlined Constant id => "Fun.id".
+Separate Extraction cfi_rw.

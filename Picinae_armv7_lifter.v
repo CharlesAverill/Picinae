@@ -1397,7 +1397,6 @@ Definition Shift_C value type amount carry_in :=
         let c := Cast CAST_LOW 1 value in
         (r, c)
     end in
-  let result := Ite (BinOp OP_EQ amount (Word 0 32)) value result in
   let carry_out := Ite (BinOp OP_EQ amount (Word 0 32)) carry_in carry_out in
   (result, carry_out).
 Definition ARMExpandImm_C imm12 carry_in :=
@@ -1424,9 +1423,13 @@ Definition sizeof v :=
   | None => 0
   end.
 Definition setunknown v :=
-  match sizeof v with
-  | 0 => Nop
-  | s => Move v (Unknown s)
+  match v with
+  | V_MEM32 => Rep (Unknown 32) (Move v (Store (Var V_MEM32) (Unknown 32) (Unknown 8) LittleE 1))
+  | _ => 
+      match sizeof v with
+      | 0 => Nop
+      | s => Move v (Unknown s)
+      end
   end.
 
 Definition arm_havoc :=
@@ -1445,10 +1448,10 @@ Definition BXWritePC address :=
   If (Extract 0 0 address) (
     Seq (Move R_T (Word 1 1)) (Seq (Move R_JF (Word 0 1)) (Jmp (BinOp OP_AND address (Word 0xffff_fffe 32))))
   ) (* else *) (
-    If (BinOp OP_EQ (Extract 1 1 address) (Word 0 1)) (
-      Jmp address
-    ) (* else *) (
+    If (BinOp OP_EQ (Extract 1 1 address) (Word 1 1)) (
       arm_havoc
+    ) (* else *) (
+      Jmp address
     )
   ).
 Definition BranchWritePC address := Jmp (BinOp OP_AND address (Word 0xffff_fffc 32)). (* different in thumb mode or before v6 *)
@@ -1595,40 +1598,32 @@ Definition arm_bl_il cond imm24 :=
     (BranchWritePC (BinOp OP_PLUS R[15] (Word imm32 32)))
   ).
 
-Definition for_0_14 reg_list start f : stmt :=
-  let iter := fun i prev => Seq prev (if (xbits reg_list i (i+1) =? 1) then (f i) else Nop) in
-  let i0 := iter 0 start in
-  let i1 := iter 1 i0 in
-  let i2 := iter 2 i1 in
-  let i3 := iter 3 i2 in
-  let i4 := iter 4 i3 in
-  let i5 := iter 5 i4 in
-  let i6 := iter 6 i5 in
-  let i7 := iter 7 i6 in
-  let i8 := iter 8 i7 in
-  let i9 := iter 9 i8 in
-  let i10 := iter 10 i9 in
-  let i11 := iter 11 i10 in
-  let i12 := iter 12 i11 in
-  let i13 := iter 13 i12 in
-  let i14 := iter 14 i13 in
-  i14.
+Fixpoint for_0_14p reg_list a a' f : stmt :=
+  match reg_list with
+  | xH => f a a'
+  | xO p => for_0_14p p (a + 1) a' f
+  | xI p => Seq (f a a') (for_0_14p p (a + 1) (a' + 1) f)
+  end.
+Definition for_0_14 reg_list f :=
+  match reg_list with
+  | N0 => Nop
+  | Npos p => for_0_14p p 0 0 f
+  end.
 Definition arm_lsm_il_ f pc start_val wback_val cond W Rn register_list :=
   let addr := BinOp OP_PLUS R[Rn] (Word start_val 32) in
   let wback_val := BinOp OP_PLUS R[Rn] (Word wback_val 32) in
   let start := Move temp0 addr in
   let start := if (W =? 1) then Seq start (R[Rn] := wback_val) else start in
-  let i14 := for_0_14 register_list start f in
-  let i15 := if (xbits register_list 15 16 =? 1) then Seq i14 pc else i14 in
+  let i14 := for_0_14 (register_list mod 2^15) f in
+  let i15 := if (N.testbit register_list 15) then Seq (Seq start i14) pc else Seq start i14 in
   (* all memory accesses should be aligned, but we only need to check that the value of Rn is aligned at the beginning *)
   let align_check := If (BinOp OP_EQ (BinOp OP_AND R[Rn] (Word 3 32)) (Word 0 32)) i15 (Exn 0x10) in
   arm_cond_il cond align_check.
-Definition arm_ldm_il :=
+Definition arm_ldm_il start_val wback_val cond W Rn register_list :=
   arm_lsm_il_
-    (fun i =>
-      Seq (R[i] := MemU[vtemp0, 4])
-        (Move temp0 (BinOp OP_PLUS vtemp0 (Word 4 32))))
-    (LoadWritePC MemU[vtemp0, 4]).
+    (fun i j => R[i] := MemU[BinOp OP_PLUS vtemp0 (Word (j*4 mod 64) 32), 4])
+    (LoadWritePC MemU[BinOp OP_PLUS vtemp0 (Word (4 * popcount (register_list mod 2^16) - 4) 32), 4])
+    start_val wback_val cond W Rn register_list.
 
 Fixpoint LowestSetBitP (p:positive) :=
   match p with
@@ -1647,10 +1642,8 @@ Definition arm_stm_il start_val wback_val cond W Rn register_list :=
     else
       R[i] in
   arm_lsm_il_
-    (fun i =>
-      Seq (MemU[vtemp0, 4] := (stored_val i))
-        (Move temp0 (BinOp OP_PLUS vtemp0 (Word 4 32))))
-    (MemU[vtemp0, 4] := R[15])
+    (fun i j => MemU[BinOp OP_PLUS vtemp0 (Word (j*4 mod 64) 32), 4] := (stored_val i))
+    (MemU[BinOp OP_PLUS vtemp0 (Word (4 * popcount (register_list mod 2^16) - 4) 32), 4] := R[15])
     start_val wback_val cond W Rn register_list.
 Definition arm_lsm_op_type op :=
   match op with
@@ -1674,7 +1667,7 @@ Definition arm_lsm_op_wback op bc :=
   | ARM_STMIB | ARM_LDMIB => bc
   end.
 Definition arm_lsm_op_il op register_list :=
-  let bc := Z.of_N (4 * popcount register_list) in
+  let bc := Z.of_N (4 * popcount (register_list mod 2^16)) in
   (arm_lsm_op_type op) (ofZ 32 (arm_lsm_op_start op bc)) (ofZ 32 (arm_lsm_op_wback op bc)).
 
 Definition arm_lsm_il op cond W Rn register_list :=
@@ -1849,32 +1842,32 @@ Definition arm2il (a:addr) inst :=
             | ARM_extra_ls_r op cond P U W Rn Rt Rm => arm_extra_ls_r_il op $cond $P $U $W $Rn $Rt $Rm
             | _ => arm_havoc
             end in
-  Seq (Move R_PC (Word a 32)) il.
+  Seq (Move R_PC (Word (a mod 2^32) 32)) il.
 
 Definition arm_prog: program :=
-  fun s a => match s R_T, s R_JF, a mod 4, a <? 2 ^ 32 with
-             | 0, 0, 0, true =>
-                 let i := arm_decode (Z.of_N (getmem 32 LittleE 4 (s V_MEM32) a)) in
-                 match i with
-                 | idk | ARM_UNPREDICTABLE => None
-                 | _ => Some (4, arm2il a i)
-                 end
-             | _, _, _, _ => None
-             end.
+  fun s a => let inst := match s R_T, s R_JF, a mod 4 with
+                         | 0, 0, 0 => arm_decode (Z.of_N (getmem 32 LittleE 4 (s V_MEM32) a))
+                         | _, _, _ => ARM_UNPREDICTABLE end in
+                         Some (4, arm2il a inst).
 
 (********** well-typedness **********)
 
 Ltac destruct_match := repeat match goal with |- context [ match ?x with _ => _ end ] => destruct x end.
+Ltac destruct_match_in H :=
+  repeat match type of H with context[match ?x with _ => _ end] =>
+    let e := fresh "e" in
+    destruct x eqn:e
+  end.
 
-Definition arm7typctx_temp := arm7typctx[V_TEMP 0 := Some 32].
+Local Definition arm7typctx_temp := arm7typctx[V_TEMP 0 := Some 32].
 Notation armc := arm7typctx (only parsing).
 Notation armct := arm7typctx_temp (only parsing).
 
-Lemma armct_sub: armc ⊆ armct.
+Local Lemma armct_sub: armc ⊆ armct.
 Proof.
   unfold pfsub. intros. unfold armct. unfold update. destruct iseq. subst. discriminate. assumption.
 Qed.
-Lemma update_some:
+Local Lemma update_some:
   forall x y (c c': typctx),
     c x = Some y ->
     c ⊆ c' ->
@@ -1883,7 +1876,7 @@ Proof.
   intros. rewrite <- store_upd_eq. assumption. apply H0. assumption.
 Qed.
 
-Lemma hastyp_arm_varid:
+Local Lemma hastyp_arm_varid:
   forall c n,
     armc ⊆ c ->
     hastyp_exp c (Var (arm_varid n)) 32.
@@ -1892,12 +1885,12 @@ Proof.
     unfold arm_varid; destruct_match; now constructor.
     assumption.
 Qed.
-Lemma sizeof_arm_varid:
+Local Lemma sizeof_arm_varid:
   forall n, sizeof (arm_varid n) = 32.
 Proof.
   intros. unfold arm_varid. now destruct_match.
 Qed.
-Lemma typeof_arm_varid:
+Local Lemma typeof_arm_varid:
   forall n, arm7typctx (arm_varid n) = Some 32.
 Proof.
   intros. unfold arm_varid. now destruct_match.
@@ -1939,6 +1932,7 @@ Local Ltac stypc c :=
          | |- hastyp_stmt _ _ (Seq _ _) _ => apply TSeq with (c1 := c) (c2 := c)
          | |- hastyp_stmt _ _ (If _ _ _) _ => apply TIf with (c2 := c)
          | |- hastyp_stmt _ _ (Exn _) _ => apply TExn
+         | |- hastyp_stmt _ _ (Rep _ _) _ => eapply TRep with (w:=32) (c':=c)
          | |- hastyp_stmt _ _ Nop _ => apply TNop
          | |- hastyp_stmt _ _ (Jmp _) _ => apply TJmp with (w := 32)
          | |- hastyp_stmt _ _ (Move temp0 _) _ => apply TMove with (w := 32)
@@ -1948,7 +1942,7 @@ Local Ltac stypc c :=
          | |- hastyp_exp _ _ _  => etyp
   end.
 Local Ltac styp := stypc armc.
-Local Ltac unfold_rec a :=
+Ltac unfold_rec a :=
   match a with
   | ?x ?y => unfold_rec x
   | _ => unfold a
@@ -1960,26 +1954,26 @@ Local Ltac stypu :=
          | _ => styp
          end.
 
-Lemma hastyp_setunknown:
+Local Lemma hastyp_setunknown:
   forall v, hastyp_stmt armc armc (setunknown v) armc.
 Proof.
-  destruct v; styp.
+  destruct v; styp; easy.
 Qed.
-Lemma hastyp_havoc:
+Local Lemma hastyp_havoc:
   forall c,
     armc ⊆ c ->
     hastyp_stmt armc c arm_havoc c.
 Proof.
   intros. unfold_stmt. stypc c; now try apply H.
 Qed.
-Lemma hastyp_arm_cond:
+Local Lemma hastyp_arm_cond:
   forall c s,
     hastyp_stmt armc armc s armc ->
     hastyp_stmt armc armc (arm_cond_il c s) armc.
 Proof.
   intros. unfold arm_cond_il, arm_cond_exp. destruct_match; now styp.
 Qed.
-Lemma hastyp_DecodeImmShift:
+Local Lemma hastyp_DecodeImmShift:
   forall typ imm5 sr e,
     DecodeImmShift typ imm5 = (sr, e) ->
     imm5 < 2 ^ 32 ->
@@ -1989,7 +1983,7 @@ Proof.
   destruct_match; intro; inversion H; now econstructor.
 Qed.
 
-Lemma hastyp_Shift_C:
+Local Lemma hastyp_Shift_C:
   forall v t a ci r co,
     Shift_C v t a ci = (r, co) ->
     hastyp_exp armc v 32 ->
@@ -2001,14 +1995,14 @@ Proof.
   split; destruct t; intros; inversion H; styp; first [now etyps 32 | now etyps 33].
 Qed.
 
-Lemma hastyp_R:
+Local Lemma hastyp_R:
   forall c n,
     armc ⊆ c ->
     hastyp_exp c R[n] 32.
 Proof.
   intros. unfold arm_R. destruct N.eqb; stypc c; now apply H.
 Qed.
-Lemma hastyp_assign_R:
+Local Lemma hastyp_assign_R:
   forall c n e,
     armc ⊆ c ->
     hastyp_exp c e 32 ->
@@ -2019,7 +2013,7 @@ Proof.
     | assumption
     | apply H; apply typeof_arm_varid ].
 Qed.
-Lemma hastyp_bxwritepc:
+Local Lemma hastyp_bxwritepc:
   forall c e,
     armc ⊆ c ->
       hastyp_exp c e 32 ->
@@ -2027,7 +2021,7 @@ Lemma hastyp_bxwritepc:
 Proof.
   intros. unfold BXWritePC. stypc c; first [now etyps 32 | now apply hastyp_havoc | now apply H].
 Qed.
-Lemma hastyp_memu:
+Local Lemma hastyp_memu:
   forall c a s,
     armc ⊆ c ->
     hastyp_exp c a 32 ->
@@ -2036,7 +2030,7 @@ Lemma hastyp_memu:
 Proof.
   intros. unfold arm_MemU. etyp; try apply H; try easy; try lia.
 Qed.
-Lemma hastyp_assign_memu:
+Local Lemma hastyp_assign_memu:
   forall c a s e,
     armc ⊆ c ->
     hastyp_exp c a 32 ->
@@ -2067,7 +2061,7 @@ Local Ltac hammer :=
          | |- xbits _ ?i ?j < _ => transitivity (2^(j-i)); [> apply xbits_bound | reflexivity]
          | _ => styp
          end.
-Lemma hastyp_arm_data:
+Local Lemma hastyp_arm_data:
   forall assign cond s Rd result carry overflow,
     hastyp_exp armc result 32 ->
     hastyp_exp armc carry 1 ->
@@ -2076,7 +2070,7 @@ Lemma hastyp_arm_data:
 Proof.
   intros. unfold_stmt. destruct_match; hammer; now etyps 32.
 Qed.
-Lemma hastyp_arm_data_op:
+Local Lemma hastyp_arm_data_op:
   forall op shiftc addwcarry,
     (forall f b,
       (forall x y,
@@ -2102,7 +2096,7 @@ Proof.
         | _ => assumption || etypn 32; now etyps 1
         end ].
 Qed.
-Lemma hastyp_arm_data_r:
+Local Lemma hastyp_arm_data_r:
   forall op cond s Rn Rd imm5 type Rm,
     imm5 < 2 ^ 5 ->
     hastyp_stmt armc armc (arm_data_r_il op cond s Rn Rd imm5 type Rm) armc.
@@ -2114,7 +2108,7 @@ Proof.
         specialize (H0 R[Rn] e1 (hastyp_R armc Rn ltac:(reflexivity)) H1).
         rewrite Heqp in H0. simpl in H0. destruct H0, H3. now apply hastyp_arm_data.
 Qed.
-Lemma hastyp_arm_data_rsr:
+Local Lemma hastyp_arm_data_rsr:
   forall op cond s Rn Rd Rs type Rm,
     hastyp_stmt armc armc (arm_data_rsr_il op cond s Rn Rd Rs type Rm) armc.
 Proof.
@@ -2124,7 +2118,7 @@ Proof.
       specialize (H R[Rn] e0 (hastyp_R armc Rn ltac:(reflexivity)) H0).
       rewrite Heqp in H. simpl in H. destruct H, H2. now apply hastyp_arm_data.
 Qed.
-Lemma hastyp_arm_data_i:
+Local Lemma hastyp_arm_data_i:
   forall op cond s Rn Rd imm12,
     hastyp_stmt armc armc (arm_data_i_il op cond s Rn Rd imm12) armc.
 Proof.
@@ -2135,7 +2129,7 @@ Proof.
         specialize (H R[Rn] e0 (hastyp_R armc Rn ltac:(reflexivity)) H0).
         rewrite Heqp in H. simpl in H. destruct H, H2. now apply hastyp_arm_data.
 Qed.
-Lemma hastyp_arm_mov_wt:
+Local Lemma hastyp_arm_mov_wt:
   forall is_w cond imm4 Rd imm12,
     imm4 < 2 ^ 4 ->
     imm12 < 2 ^ 12 ->
@@ -2145,7 +2139,7 @@ Proof.
     apply (lor_bound 32); [> apply (shiftl_bound 20) | ]; lia.
     apply (shiftl_bound 16); apply (lor_bound 16); [> apply (shiftl_bound 4) | ]; lia.
 Qed.
-Lemma hastyp_arm_ls_i:
+Local Lemma hastyp_arm_ls_i:
   forall op cond P U W Rn Rt imm12,
     imm12 < 2 ^ 12 ->
     hastyp_stmt armc armc (arm_ls_i_il op cond P U W Rn Rt imm12) armc.
@@ -2157,7 +2151,7 @@ Proof.
     | _ => idtac
     end; lia.
 Qed.
-Lemma hastyp_arm_ls_r:
+Local Lemma hastyp_arm_ls_r:
   forall op cond P U W Rn Rt imm5 type Rm,
     imm5 < 2 ^ 5 ->
     hastyp_stmt armc armc (arm_ls_r_il op cond P U W Rn Rt imm5 type Rm) armc.
@@ -2172,62 +2166,69 @@ Proof.
     assumption.
     lia.
 Qed.
-Lemma hastyp_arm_lsm_:
+Local Lemma hastyp_for:
+  forall reg_list f,
+    (forall n m,hastyp_stmt armc armct (f n m) armct) ->
+    hastyp_stmt armc armct (for_0_14 reg_list f) armct.
+Proof.
+  intros. destruct reg_list. now styp.
+  simpl. generalize 0 at 1, 0 at 2. induction p. intros. simpl. stypc armct. apply H. easy.
+      intro. simpl. easy. intros. simpl. apply IHp. apply H.
+Qed.
+Local Lemma hastyp_arm_lsm_:
   forall f pc start_val wback_val cond W Rn register_list,
     start_val < 2 ^ 32 ->
     wback_val < 2 ^ 32 ->
-    (forall n, hastyp_stmt armc armct (f n) armct) ->
+    (forall n m, hastyp_stmt armc armct (f n m) armct) ->
     hastyp_stmt armc armct pc armct ->
     hastyp_stmt armc armc (arm_lsm_il_ f pc start_val wback_val cond W Rn register_list) armc.
 Proof.
-  intros. unfold_stmt. destruct_match; apply hastyp_arm_cond; apply TIf with (c2 := armc); stypc armct; try assumption.
-  all: unfold for_0_14; stypc armct; [ now left | assumption | reflexivity | .. ].
-  all: match goal with
-       | |- context[pfsub] => reflexivity
-       | |- context[if _ then _ else _] => destruct N.eqb; [ apply H1 | now apply TNop ]
-       | _ => apply hastyp_assign_R; [ apply armct_sub | now styp ]
-       end.
+  intros. unfold_stmt. destruct_match; apply hastyp_arm_cond; apply TIf with (c2 := armc); stypc armct; now left || hammer || apply hastyp_for || idtac.
 Qed.
-Lemma hastyp_arm_lsm:
+Local Lemma hastyp_arm_lsm:
   forall op cond W Rn register_list,
     hastyp_stmt armc armc (arm_lsm_il op cond W Rn register_list) armc.
 Proof.
   intros. repeat unfold_stmt. unfold arm_lsm_op_start, arm_lsm_op_wback.
   destruct_match; unfold_stmt; apply hastyp_arm_lsm_.
-  all: match goal with
+  all: repeat match goal with
        | |- ofZ _ _ < _ => apply ofZ_bound
        | |- hastyp_stmt _ _ _ _ => now hammer
        | |- _ < _ => reflexivity
-       | _ => intro
+       | _ => intros; hammer; try lia
        end.
-  all: stypc armct; [ destruct_match; now hammer | now left | now apply update_some | reflexivity ].
+  all: match goal with
+       | |- match _ with _ => _ end - 4 < _ => destruct popcount eqn:e;
+       pose proof (popcount_bound (register_list mod 65536)); pose proof (size_le_diag (register_list mod 65536)); pose proof (N.mod_lt register_list 65536 ltac:(discriminate)); lia
+       | _ => destruct_match; hammer; pose proof (N.mod_lt (m*4) 64); lia
+       end.
 Qed.
 
-Lemma hastyp_arm_bx:
+Local Lemma hastyp_arm_bx:
   forall cond Rm,
     hastyp_stmt armc armc (arm_bx_il cond Rm) armc.
 Proof.
   intros. unfold_stmt. hammer.
 Qed.
-Lemma hastyp_arm_blx_r:
+Local Lemma hastyp_arm_blx_r:
   forall cond Rm,
     hastyp_stmt armc armc (arm_blx_r_il cond Rm) armc.
 Proof.
   intros. unfold_stmt. apply hastyp_arm_cond. stypc armct; [ now left | now hammer .. ].
 Qed.
-Lemma hastyp_arm_b:
+Local Lemma hastyp_arm_b:
   forall cond imm24,
     hastyp_stmt armc armc (arm_b_il cond imm24) armc.
 Proof.
   intros. repeat (unfold_stmt; hammer). apply ofZ_bound.
 Qed.
-Lemma hastyp_arm_bl:
+Local Lemma hastyp_arm_bl:
   forall cond imm24,
     hastyp_stmt armc armc (arm_bl_il cond imm24) armc.
 Proof.
   intros. repeat (unfold_stmt; hammer). apply ofZ_bound.
 Qed.
-Lemma hastyp_arm_bfx:
+Local Lemma hastyp_arm_bfx:
   forall is_signed cond widthm1 Rd lsb Rn,
     lsb + widthm1 < 32 ->
     hastyp_stmt armc armc (arm_bfx_il is_signed cond widthm1 Rd lsb Rn) armc.
@@ -2236,16 +2237,14 @@ Proof.
   all: etyps (N.succ widthm1); [rewrite <- (N.add_sub widthm1 lsb) at 2 |lia].
   all: rewrite N.add_comm at 1; rewrite <- N.sub_succ_l; etyps 32; lia.
 Qed.
-Lemma Z2N_add_lt : forall a b c, (0 <= a)%Z -> (0 <= b)%Z -> (a + b < Z.of_N c)%Z -> Z.to_N a + Z.to_N b < c.
+Local Lemma Z2N_add_lt : forall a b c, (0 <= a)%Z -> (0 <= b)%Z -> (a + b < Z.of_N c)%Z -> Z.to_N a + Z.to_N b < c.
 Proof.
   lia.
 Qed.
 Theorem welltyped_arm2il:
-  forall a z,
-    a < 2 ^ 32 ->
-    hastyp_stmt armc armc (arm2il a (arm_decode z)) armc.
+  forall a z, hastyp_stmt armc armc (arm2il a (arm_decode z)) armc.
 Proof.
-  intros. unfold_stmt. styp. assumption.
+  intros. unfold_stmt. styp. now apply N.mod_lt.
   remember (arm_decode z) as i. revert Heqi.
   repeat match goal with
          | |- context[if ?a then _ else _] => destruct a eqn:?
@@ -2275,7 +2274,123 @@ Theorem welltyped_arm_prog:
   welltyped_prog arm7typctx arm_prog.
 Proof.
   intros s a. unfold arm_prog.
-    destruct (s R_T), (s R_JF), (a mod 4); destruct (a <? 2 ^ 32) eqn:l; try apply I.
-    rewrite N.ltb_lt in l.
-    destruct arm_decode eqn:e; try apply I; rewrite <- e; exists armc; now apply welltyped_arm2il.
+    destruct (s R_T), (s R_JF), (a mod 4); exists armc.
+      now apply welltyped_arm2il.
+      all: unfold arm2il; styp; [now apply N.mod_upper_bound|now apply hastyp_havoc].
+Qed.
+
+(* other stuff *)
+
+Local Definition mus q := forall exp,
+  q = Move V_MEM32 exp ->
+  match exp with
+  | Store (Var V_MEM32) _ _ _ _ => True
+  | _ => False
+  end.
+Local Definition mem_uses_store q := forall_stmts_in_stmt mus q.
+
+Local Lemma armv: forall n, arm_varid n <> A_WRITE. intro; unfold arm_varid; destruct_match; easy. Qed.
+Local Lemma armvv: forall n, arm_varid n <> V_MEM32. intro; unfold arm_varid; destruct_match; easy. Qed.
+Local Lemma mus_assign:
+  forall n e, mem_uses_store (arm_assign_R n e).
+Proof.
+  intros. cbv. now destruct_match.
+Qed.
+Local Lemma mus_for:
+  forall r f, (forall n m, mem_uses_store (f n m)) -> mem_uses_store (for_0_14 r f).
+Proof.
+  intros. destruct r. easy. simpl. generalize 0 at 1, 0 at 2. induction p. intro. 
+  repeat split; try discriminate. apply H. apply IHp.
+  simpl. intros. apply IHp. apply H.
+Qed.
+Local Ltac mus :=
+  repeat match goal with
+         | |- mem_uses_store _ => unfold mem_uses_store, forall_stmts_in_stmt
+         | |- _ /\ _ => split
+         | |- stmts_in_stmt and _ _ => split || discriminate
+         | |- stmts_in_stmt and mus (arm_assign_R _ _) => apply mus_assign
+         | |- stmts_in_stmt and mus (for_0_14 _ _) => apply mus_for
+         | |- stmts_in_stmt and mus (Move V_MEM32 (Store (Var V_MEM32) _ _ _ _)) => let x := fresh "x" in intros ? x; inversion x; auto
+         | |- stmts_in_stmt and mus (let _ := _ in _) => cbv zeta
+         | |- stmts_in_stmt and mus ?a => unfold_rec a
+         | |- mus (arm_assign_R _ _) => apply mus_assign
+         | |- mus (for_0_14 _ _) => apply mus_for
+         | |- mus (Move V_MEM32 (Store (Var V_MEM32) _ _ _ _)) => let x := fresh "x" in intros ? x; inversion x; auto
+         | |- mus _ => discriminate || assumption
+         | |- context[match ?a with _ => _ end] => destruct a
+         | |- _ => idtac
+         end.
+
+Local Lemma mus_lsm:
+  forall f pc s w c W Rn r, (forall n m, mem_uses_store (f n m)) -> mem_uses_store pc ->  mem_uses_store (arm_lsm_il_ f pc s w c W Rn r).
+Proof.
+  intros. mus. all: apply H || easy.
+Qed.
+Lemma mus_arm2il:
+  forall a i, mem_uses_store (arm2il a i).
+Proof.
+  intros. destruct i; match goal with |- context[ARM_lsm] => shelve | _ => mus end.
+  Unshelve. cbv[arm2il arm_lsm_il arm_lsm_op_il arm_lsm_op_type arm_stm_il arm_ldm_il]. split. discriminate. split. discriminate.
+  destruct_match; apply mus_lsm; intros; mus.
+Qed.
+Lemma noassign_awrite_arm2il:
+  forall a i, noassign A_WRITE (arm2il a i).
+Proof.
+  intros. unfold noassign. destruct i eqn:e; 
+  cbv[arm2il]; repeat (match goal with |- allassigns _ (_ $; ?a) => unfold_rec a end; destruct_match); repeat constructor; (discriminate || apply armv || destruct_match; repeat constructor; discriminate || idtac).
+  all: destruct (_ mod _); try constructor; simpl.
+  all: generalize 0 at 1, 0 at 2; match goal with |- context[LowestSetBit] => generalize (LowestSetBit (Z.to_N register_list) 32) | _ => idtac end;
+  induction p;
+   [simpl; constructor; [destruct_match; repeat constructor; (discriminate||apply armv)|apply IHp] | simpl; intros; apply IHp| intros; repeat constructor; (discriminate||apply armv)].
+Qed.
+
+Lemma nonwritable_byte:
+  forall c s q c' s' x i w
+    (XS: exec_stmt c s q c' s' x)
+    (MUS: mem_uses_store q)
+    (NAW: noassign A_WRITE q)
+    (NW: N.testbit (s A_WRITE) i = false)
+    (I: i < 2^w),
+    getbyte (s V_MEM32) i w = getbyte (s' V_MEM32) i w.
+Proof.
+  intros. induction XS; auto.
+  - destruct v; try now rewrite update_frame by discriminate.
+    specialize (MUS e eq_refl). destruct_match_in MUS; try easy. subst. inversion E. inversion E1; subst.
+    rewrite update_updated. unfold getbyte. rewrite setmem_frame_byte.
+      reflexivity.
+      intro. cbv[mem_writable] in W. destruct (N.le_gt_cases w1 (msub w2 (i mod 2 ^ w) a)).
+        assumption.
+        specialize (W _ H0). rewrite (N.mod_small i) in W, H by assumption. unfold msub in W.
+        pose proof (N.mod_lt a (2^w2)).
+        rewrite <-N.Div0.add_mod_idemp_l, N.Div0.add_mod_idemp_r, N.add_assoc, N.add_sub_assoc, 2N.add_sub_swap, N.sub_diag, N.add_0_l in W by lia.
+        now rewrite <-N.Div0.add_mod_idemp_r, N.Div0.mod_same, N.add_0_r, N.mod_small, NW in W by assumption.
+  - apply forall_stmts_in_seq in MUS as [? _]. inversion NAW. now apply IHXS.
+  - apply forall_stmts_in_seq in MUS as [A B]. inversion NAW.
+    apply (noassign_stmt_same A_WRITE _ AA1) in XS1; inversion XS1.
+    specialize (IHXS1 A AA1 NW). rewrite H2 in NW. now rewrite (IHXS2 B AA2 NW) in IHXS1.
+  - apply forall_stmts_in_ite in MUS as [A B]. inversion NAW. apply IHXS; now destruct b.
+  - apply forall_stmts_in_rep in MUS. inversion NAW. apply IHXS.
+      now apply forall_stmts_in_iter.
+      unfold noassign. generalize n. apply N.peano_ind. constructor. intros. rewrite N.iter_succ. now constructor.
+      assumption.
+Qed.
+Lemma nonwritable_byte_arm2il:
+  forall c s a i c' s' x j w
+    (XS: exec_stmt c s (arm2il a i) c' s' x)
+    (NW: N.testbit (s A_WRITE) j = false)
+    (J: j < 2^w),
+    getbyte (s V_MEM32) j w = getbyte (s' V_MEM32) j w.
+Proof.
+  intros. eapply nonwritable_byte in XS. apply XS. apply mus_arm2il. apply noassign_awrite_arm2il. assumption. assumption.
+Qed.
+Lemma nonwritable_mem_arm2il:
+  forall c s a i c' s' x j w e len
+    (XS: exec_stmt c s (arm2il a i) c' s' x)
+    (NW: forall k, msub w k j < len -> N.testbit (s A_WRITE) k = false),
+    getmem w e len (s V_MEM32) j = getmem w e len (s' V_MEM32) j.
+Proof.
+  intros. apply getmem_frame_mem. intros.
+  rewrite <-getbyte_mod_l, <-(getbyte_mod_l (s' _)).
+  eapply nonwritable_byte_arm2il. apply XS. apply NW. now rewrite msub_mod_l by easy.
+  pose proof (N.mod_lt a' (2^w)). lia.
 Qed.
