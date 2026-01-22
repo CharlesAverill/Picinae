@@ -82,7 +82,7 @@ Definition arm8typctx v :=
   | R_SP | R_LR | R_PC => Some 64
   | R_NG | R_ZR | R_CY | R_OV => Some 8
   | R_TMPNG | R_TMPZR | R_TMPCY | R_TMPOV => Some 8
-  | A_READ | A_WRITE => Some 64
+  | A_READ | A_WRITE => Some (2^64)
   | V_TEMP _ => None
   | R_Z0 | R_Z1 | R_Z2 | R_Z3 | R_Z4 | R_Z5 | R_Z6 | R_Z7 | R_Z8 | R_Z9 | R_Z10 => Some 256
   | R_Z11 | R_Z12 | R_Z13 | R_Z14 | R_Z15 | R_Z16 | R_Z17 | R_Z18 | R_Z19 | R_Z20 => Some 256
@@ -168,6 +168,11 @@ Definition arm8equiv (s1 s2:store) :=
   forall (v:arm8var), arm8equivctx v = true -> s1 v = s2 v.
 Definition arm8equiv_or (s1 s2:store) (or_exception : arm8var -> bool) :=
   forall (v:arm8var), arm8equivctx v = true -> or_exception v = true \/ s1 v = s2 v.
+(* The following is needed when applying cframe theorems from Picinae_theory. *)
+Theorem memacc_respects_arm8typctx: memacc_respects_typctx arm8typctx.
+Proof.
+  intros s1 s2 RV. rewrite <- RV. split; reflexivity.
+Qed.
 
 (* Simplify memory access propositions by observing that on arm, the only part
    of the store that affects memory accessibility are the page-access bits

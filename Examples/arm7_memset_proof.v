@@ -243,10 +243,10 @@ Proof.
 
   (* Change assumptions about s into assumptions about s1. *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
+  erewrite startof_prefix in ENTRY; try eassumption.
   assert (LEN32 := models_var R_R2 MDL). rewrite R2 in LEN32. unfold arm7typctx in LEN32.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply memset_welltyped).
-  clear - PRE MDL LEN32. rename t1 into t. rename s1 into s.
+  eapply models_at_invariant; try eassumption. apply memset_welltyped. intro MDL1.
+  clear - PRE MDL1 LEN32. rename t1 into t. rename s1 into s. rename MDL1 into MDL.
 
   (* Break the proof into cases, one for each invariant-point. *)
   destruct_inv 32 PRE.

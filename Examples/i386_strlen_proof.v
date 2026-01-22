@@ -99,10 +99,9 @@ Proof.
      ESP and MEM.  The value of ESP will be revealed by our pre-condition (PRE).  We can
      get the value of MEM using our previously proved strlen_preserves_memory theorem. *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply strlen_welltyped).
-  erewrite strlen_preserves_memory in MEM by eassumption.
-  clear - PRE. rename t1 into t. rename s1 into s.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply strlen_welltyped. intro MDL1.
+  clear - PRE. rename t1 into t.
 
   (* We are now ready to break the goal down into one case for each invariant-point.
      The destruct_inv tactic finds all the invariants defined by the invariant-set
@@ -388,7 +387,7 @@ Proof.
   rewrite N.add_0_l, N.odd_sub, H4 by apply YX.
   unfold N.lnot. rewrite 2!N.shiftr_lxor, (N.shiftr_shiftr (N.ones _)), (N.shiftr_div_pow2 (N.ones _)).
   rewrite N.ones_div_pow2 by (rewrite N.add_comm; apply N.lt_le_incl, H3).
-  rewrite Nxor_bit0, odd_ones by (rewrite N.add_comm; apply N.sub_gt, H3).
+  rewrite <- N.bit0_odd, N.lxor_spec, !N.bit0_odd, odd_ones by (rewrite N.add_comm; apply N.sub_gt, H3).
   destruct (_ mod _ + _) eqn:NZ.
     rewrite N.mul_sub_distr_r, N.add_sub_assoc in NZ by apply N.mul_le_mono_r, YX.
     rewrite <- N.shiftl_mul_pow2, <- lor_plus in NZ by (apply land_lohi_0, N.mod_lt, N.pow_nonzero; discriminate).
@@ -835,11 +834,15 @@ Proof.
   (* Before splitting into cases, translate each hypothesis about the
      entry point store s to each instruction's starting store s1: *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
-  eapply strlen_preserves_esp, satall_trueif_inv in ESP; try eassumption. simpl in ESP.
-  erewrite strlen_preserves_memory in MEM by eassumption.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply strlen_welltyped).
-  clear - PRE ESP MEM MDL. rename t1 into t. rename s1 into s.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply use_satall_lemma. assumption.
+    eapply strlen_preserves_esp; eassumption.
+    intro ESP1. simpl in ESP1.
+  eapply use_endstates_lemma. eassumption.
+    apply strlen_preserves_memory.
+    intro MEM1. simpl in MEM1. symmetry in MEM1. rewrite MEM in MEM1.
+  eapply models_at_invariant; try eassumption. apply strlen_welltyped. intro MDL1.
+  clear - PRE ESP1 MEM1 MDL1. rename t1 into t. rename s1 into s.
 
   (* Break the proof into cases, one for each invariant-point. *)
   destruct_inv 32 PRE.

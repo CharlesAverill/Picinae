@@ -8,30 +8,26 @@
 
 %coqc% i386_strcmp.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
-%coqc% i386_strcmp_proof.v
+%coqc% i386_strlen.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% arm7_strlen.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% i386_wcsspn.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% arm7_memset.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% arm8_strcasecmp.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 
-%coqc% i386_strlen.v
+%coqc% i386_strcmp_proof.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% i386_strlen_proof.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
-
-%coqc% arm7_strlen.v
-@IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% arm7_strlen_proof.v
-@IF ERRORLEVEL 1 GOTO :ErrorExit
-
-%coqc% i386_wcsspn.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% i386_wcsspn_proof.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
-
-%coqc% arm7_memset.v
-@IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% arm7_memset_proof.v
-@IF ERRORLEVEL 1 GOTO :ErrorExit
-
-%coqc% arm8_strcasecmp.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% arm8_strcasecmp_proof.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit

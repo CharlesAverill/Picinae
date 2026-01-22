@@ -523,8 +523,8 @@ Proof.
   | [ |- _ << ?S < 2 ^ ?w ] => assert (S + 3 <= w) by lia; admit 
   end.
   19: reflexivity.
-  5: { rewrite xbits_shiftl, xbits_shiftl; simpl (_-_) in *; psimpl;
-       rewrite xbits_0_low, xbits_0_low; try lia; reflexivity. }
+  (* 5: { rewrite xbits_shiftl, xbits_shiftl; simpl (_-_) in *; psimpl;
+       rewrite xbits_0_low, xbits_0_low; try lia; reflexivity. } *)
   (* TODO: psimpl does not simplify the following goal as desired:
      PIL_li (xbits rd (1 - 1) (3 + 1 - 1)) (xbits i (4 - 4) (28 + 4 - 4)) = PIL_li rd i
   *)

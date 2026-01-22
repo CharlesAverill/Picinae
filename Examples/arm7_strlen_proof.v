@@ -223,12 +223,14 @@ Proof.
 
   (* Inductive cases *)
   intros.
-  eapply startof_prefix in ENTRY; try eassumption.
+  erewrite startof_prefix in ENTRY; try eassumption.
   assert (P32 := models_var R_R0 MDL). rewrite R0 in P32. unfold arm7typctx in P32.
-  eapply preservation_exec_prog in MDL; try (eassumption || apply strlen_welltyped).
-  erewrite strlen_preserves_memory in MEM by eassumption.
-  erewrite strlen_preserves_lr in LR by eassumption.
-  clear - PRE P32 LR MEM MDL. rename t1 into t. rename s1 into s.
+  eapply models_at_invariant; try eassumption. apply strlen_welltyped. intro MDL1.
+  eapply use_endstates_lemma. eassumption. apply strlen_preserves_memory.
+    intro MEM1. simpl in MEM1. rewrite MEM in MEM1. symmetry in MEM1. clear MEM.
+  eapply use_endstates_lemma. eassumption. apply strlen_preserves_lr.
+    intro LR1. simpl in LR1. rewrite LR in LR1. symmetry in LR1. clear LR.
+  clear - PRE P32 LR1 MEM1 MDL1. rename t1 into t. rename s1 into s.
 
   destruct_inv 32 PRE.
 

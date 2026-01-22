@@ -84,6 +84,18 @@ Ltac abstract_ignored_vars H :=
 
 Ltac generalize_trace :=
   lazymatch goal with
+  | [ UT: unterminated ?xp (?xs'::?xs1::?t1++?xs0::?t)
+      |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?t1++?xs0::?t) ] =>
+    revert UT;
+    change (unterminated xp (xs'::(xs1::t1)++(xs0::t)) ->
+            nextinv p Invs xp b (xs'::(xs1::t1)++(xs0::t)));
+    let t' := fresh t1 in generalize (xs1::t1); intros t' UT; clear t1; rename t' into t1
+  | [ UT: unterminated ?xp (?xs'::?xs1::?xs0::?t)
+      |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?xs0::?t) ] =>
+    revert UT;
+    change (unterminated xp (xs'::(xs1::nil)++(xs0::t)) ->
+            nextinv p Invs xp b (xs'::(xs1::nil)++(xs0::t)));
+    let t' := fresh "t" in generalize (xs1::nil); intros t' UT
   | [ |- nextinv ?p ?Invs ?xp ?b (?xs'::?xs1::?t1++?xs0::?t) ] =>
     change (nextinv p Invs xp b (xs'::(xs1::t1)++(xs0::t)));
     let t' := fresh t1 in generalize (xs1::t1); intro t'; clear t1; rename t' into t1
@@ -95,7 +107,7 @@ Ltac generalize_trace :=
 (* Syntax: generalize_frame m as x
    Result: Find any goal expressions of the form m[a1:=u1]...[an:=un] where
    a1..an are adjacent memory addresses, and compact them to expressions
-   of the form m[a:=x], where a=max(a1,...,an) and x is a user-specified name.
+   of the form m[a:=x], where a=min(a1,...,an) and x is a fresh proof variable.
    This is useful for abstracting a series of pushes that form a callee's
    local stack frame into a single write of the entire byte array. *)
 Ltac generalize_frame_forward bytes w en m len1 a1 u1 len2 a2 u2 :=
@@ -200,6 +212,7 @@ Ltac ISA_invseek :=
          | _ => ISA_step_and_simplify XS
          end;
   try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
+  repeat match goal with [ x:N |- _ ] => clear x end;
   try first [ rewrite exitof_none | rewrite exitof_some ].
 
 (* Clear any stale memory-access hypotheses (arising from previous computation
