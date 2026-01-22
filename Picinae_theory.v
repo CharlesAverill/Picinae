@@ -7252,6 +7252,111 @@ Qed.
 
 End FrameTheorems.
 
+Section IL.
+
+Theorem forall_stmts_in_seq:
+  forall q1 q2 P (FA: forall_stmts_in_stmt P (Seq q1 q2)),
+  forall_stmts_in_stmt P q1 /\ forall_stmts_in_stmt P q2.
+Proof.
+  intros. unfold forall_stmts_in_stmt, stmts_in_stmt in FA.
+  destruct FA as [_ [Pq1 Pq2]].
+  split; try assumption.
+Qed.
+
+Theorem forall_stmts_in_ite:
+  forall q1 q2 e P (FA: forall_stmts_in_stmt P (If e q1 q2)),
+  forall_stmts_in_stmt P q1 /\ forall_stmts_in_stmt P q2.
+Proof.
+  intros. unfold forall_stmts_in_stmt, stmts_in_stmt in FA.
+  destruct FA as [_ [Pq1 Pq2]].
+  split; try assumption.
+Qed.
+
+Theorem forall_stmts_in_rep:
+  forall q e P (FA: forall_stmts_in_stmt P (Rep e q)),
+  forall_stmts_in_stmt P q.
+Proof.
+  intros. unfold forall_stmts_in_stmt, stmts_in_stmt in FA.
+  destruct FA as [_ Pq].
+  try assumption.
+Qed.
+
+Theorem forall_stmts_head:
+  forall P q (FA: forall_stmts_in_stmt P q), P q.
+Proof.
+  intros; destruct q; cbv in FA; easy.
+Qed.
+
+Theorem forall_stmts_in_iter:
+  forall P q n (FA: forall_stmts_in_stmt P q) (NOP: P Nop)
+    (SEQSPLIT: forall q1 q2, P q1 -> P q2 -> P (Seq q1 q2)),
+  forall_stmts_in_stmt P (N.iter n (Seq q) Nop).
+Proof.
+  intros. dependent induction n using N.strong_induction_le.
+    assumption.
+    rewrite N.iter_succ. simpl. repeat split; try apply H; try easy.
+    apply SEQSPLIT; try easy.
+      now apply forall_stmts_head.
+      specialize (H n (N.le_refl _) FA NOP SEQSPLIT); now apply forall_stmts_head.
+Qed.
+
+Theorem stmt_xnone:
+  forall c s q c' s' x
+    (XS: exec_stmt c s q c' s' x)
+    (NJ: forall_stmts_in_stmt (fun q' => forall e, q' <> Jmp e) q)
+    (NX: forall_stmts_in_stmt (fun q' => forall i, q' <> Exn i) q),
+   x = None.
+Proof.
+  intros c s q c' s' x XS.
+  dependent induction XS; intros; try reflexivity;
+  match goal with
+  | [H: forall_stmts_in_stmt _ (Jmp ?e) |- _] =>
+      cbv in H; specialize (H e); contradiction
+  | [H: forall_stmts_in_stmt _ (Exn ?i) |- _] =>
+      cbv in H; specialize (H i); contradiction
+  | _ => idtac
+  end.
+  apply forall_stmts_in_seq in NJ, NX. destruct NJ as [NJ1 _]; destruct NX as [NX1 _]. now apply IHXS.
+  apply forall_stmts_in_seq in NJ, NX. destruct NJ as [_ NJ2]; destruct NX as [_ NX2]. now apply IHXS2.
+  apply forall_stmts_in_ite in NJ, NX. destruct NJ as [NJ1 NJ2]; destruct NX as [NX1 NX2]. destruct b; apply IHXS; assumption.
+  apply forall_stmts_in_rep in NJ, NX. apply IHXS; apply forall_stmts_in_iter; try easy.
+Qed.
+
+Theorem stmt_xnotaddr:
+  forall c s q c' s' x a
+    (XS: exec_stmt c s q c' s' x)
+    (NJ: forall_stmts_in_stmt (fun q' => forall e, q' <> Jmp e) q),
+   x <> Some (Addr a).
+Proof.
+  intros c s q c' s' x a XS.
+  dependent induction XS; intros; try discriminate;
+  match goal with
+  | [H: forall_stmts_in_stmt _ (Jmp ?e) |- _] =>
+      cbv in H; specialize (H e); contradiction
+  | [H: forall_stmts_in_stmt _ (Exn ?i) |- _] =>
+      cbv in H; specialize (H i); contradiction
+  | _ => idtac
+  end.
+  apply forall_stmts_in_seq in NJ. destruct NJ as [NJ1 _]. now apply IHXS.
+  apply forall_stmts_in_seq in NJ. destruct NJ as [_ NJ2]. now apply IHXS2.
+  apply forall_stmts_in_ite in NJ. destruct NJ as [NJ1 NJ2]. destruct b; apply IHXS; assumption.
+  apply forall_stmts_in_rep in NJ. apply IHXS; apply forall_stmts_in_iter; try easy.
+Qed.
+
+Theorem step_fallthrough:
+  forall p s a q s' sz exit' (LU: p s a = Some (sz, q))
+    (STEP: can_step p (((exit',s'),(Addr a, s))))
+    (NJ: forall_stmts_in_stmt (fun q' => forall e, q' <> Jmp e) q)
+    (NX: forall_stmts_in_stmt (fun q' => forall i, q' <> Exn i) q),
+  exit' = Addr (a+sz).
+Proof.
+  intros.
+  inversion STEP; subst. rewrite LU in LU0; injection LU0; intros; subst q0 sz0; clear LU0.
+  rewrite (stmt_xnone _ _ _ _ _ _ XS NJ NX) in *. reflexivity.
+Qed.
+
+End IL.
+
 (* Prove a goal of the form (prog_noassign v p) for a program p that contains no
    statements having assignments to v. *)
 Ltac prove_noassign :=

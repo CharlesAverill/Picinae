@@ -87,7 +87,7 @@ Definition arm7typctx v :=
   | R_GE => Some 4
   | R_DNM => Some 4
   | R_JF | R_QF | R_VF | R_CF | R_ZF | R_NF => Some 1
-  | A_READ | A_WRITE => Some (2^64)
+  | A_READ | A_WRITE => Some (2^32)
   | V_TEMP _ => None
 end.
 
