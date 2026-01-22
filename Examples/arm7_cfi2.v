@@ -77,7 +77,7 @@ Fixpoint make_jump_table_map dis dis' sl sr f :=
       let j := apply_hash sl sr di in
       let k := apply_hash sl sr di' in
       let f' := make_jump_table_map t t' sl sr f in
-      fun x => if (x =? j) || (x =? k) then Z4 * di' else f' x
+      fun x => if (x =? j) || (x =? k) then di' * Z4 else f' x
   | _, _ => f
   end.
 
@@ -108,7 +108,7 @@ Proof.
 Qed.
 
 Definition make_jump_table dis dis' ai sl sr n :=
-  let m := make_jump_table_map dis dis' sl sr (fun _ => Z4 * ai) in
+  let m := make_jump_table_map dis dis' sl sr (fun _ => ai * Z4) in
   rev (map2list m n).
 
 
@@ -236,20 +236,15 @@ Definition rewrite_w_table
       end
   end.
 
-Definition bx_irm reg : IRM :=
+Definition bx_blx_irm (l: bool) reg : IRM :=
   fun cond i ti sl sr =>
     arm_assemble_all_cond (
       arm_table_lookup ti sl sr reg++  (* reg = table[H(reg)] *)
-      ARM_BX Z14 reg::nil              (* bx reg *)
+      (if l then ARM_BLX_r else ARM_BX) Z14 reg::nil              (* bx reg *)
     ) cond.
-Definition rewrite_bx reg := rewrite_w_table (bx_irm reg).
-Definition blx_irm reg : IRM :=
-  fun cond i ti sl sr =>
-    arm_assemble_all_cond (
-      arm_table_lookup ti sl sr reg++  (* reg = table[H(reg)] *)
-      ARM_BLX_r Z14 reg::nil           (* blx reg *)
-    ) cond.
-Definition rewrite_blx reg := rewrite_w_table (blx_irm reg).
+Definition rewrite_bx_blx l reg := rewrite_w_table (bx_blx_irm l reg).
+Definition rewrite_bx reg := rewrite_bx_blx false reg.
+Definition rewrite_blx reg := rewrite_bx_blx true reg.
 Definition ldm_pc_irm op Rn register_list reg orig_inst : IRM :=
   fun cond i ti sl sr =>
     let bc := Z4 * Z_popcount (register_list mod (Z1 << Z16)) in
@@ -519,8 +514,8 @@ Definition rewrite_inst (tc: TableCache) (i2i': Z -> Z) (z: Z) (dis: list Z) (i 
    bi - base index
    txt - same as zs but doesn't change when recursing
 *)
-Fixpoint _rewrite (zs: list Z) (tc: TableCache) (pol: Z -> list Z) (i2i': Z -> Z) (i ti ai bi: Z) (txt: list Z) : option (list (list Z) * list (list Z) * TableCache) :=
-  if (i >=? Z1 << Z30) then None else 
+Fixpoint _rewrite (zs: list Z) (tc: TableCache) (pol: Z -> list Z) (i2i': Z -> Z) (i ti ai bi: Z) (txt: list Z) : option (list (list Z) * list (list Z)) :=
+  if (i >=? Z1 << Z30) || (i2i' i >=? Z1 << Z30 - Z1) || (ti >=? Z1 << Z30) then None else
   match zs with
   | z::zs =>
       match rewrite_inst tc i2i' z (pol i) i ti ai bi txt with
@@ -529,29 +524,39 @@ Fixpoint _rewrite (zs: list Z) (tc: TableCache) (pol: Z -> list Z) (i2i': Z -> Z
           let ti' := ti + Z.of_nat (length table) in
           match _rewrite zs tc' pol i2i' (i+Z1) ti' ai bi txt with
           | None => None
-          | Some (z_t, table_t, tc_t) => Some (z'::z_t, table::table_t, tc_t)
+          | Some (z_t, table_t) => Some (z'::z_t, table::table_t)
           end
       end
-  | nil => Some (nil, nil, tc)
+  | nil =>
+      match GOTOz true Z14 (i2i' i) ai with
+      | Some z => Some ([[z]], nil)
+      | None => None
+      end
   end.
 
+Fixpoint _make_i's (z's: list (list Z)) i' :=
+  match z's with
+  | z'::tail => i'::_make_i's tail (i' + Z.of_nat (length z'))
+  | nil => nil
+  end.
 Definition make_i's (z's: list (list Z)) i' :=
   let lens := map (fun x => Z.of_nat (length x)) z's in
   rev (snd (fold_left (fun a b => let sum := fst a + b in (sum, i' + fst a :: snd a)) lens (0, nil))).
 Definition get l n := nth (Z.to_nat n) l 0.
 Definition of_list (x: list Z) := x.
-Definition make_i2i' i's i :=
-  let ie := i + Z.of_nat (length i's) in
+Definition make_i2i' bi bi' ai z's :=
+  let i's := make_i's z's bi' in
+  let ie := bi + Z.of_nat (length z's) in
+  let ie' := bi' + Z.of_nat (length (concat z's)) in
   let arr := of_list i's in
-  fun x => if (x <? i) || (x >=? ie) then x else get arr (x-i).
+  fun x => if (x <? bi) || (x >=? ie) then if (x <? bi') || (x >=? ie') then x else ai else get arr (x-bi).
 
-Definition rewrite (pol: Z -> list Z) (zs: list Z) (i i' ti ai: Z) :=
+Definition cfi_rw (pol: Z -> list Z) (code: list Z) (bi bi' ti ai: Z) :=
   let tc := fun _ => None in
-  match _rewrite zs tc pol id i ti ai i zs with
-  | Some (z's, _, _) =>
-      let i's := make_i's z's i' in
-      let i2i' := make_i2i' i's i in
-      _rewrite zs tc pol i2i' i ti ai i zs
+  match _rewrite code tc pol id bi ti ai bi code with
+  | Some (z's, _) =>
+      let i2i' := make_i2i' bi bi' ai z's in
+      _rewrite code tc pol i2i' bi ti ai bi code
   | None => None
   end.
 
@@ -633,6 +638,7 @@ Extract Inlined Constant Z.max => "(max)".
 Extract Inlined Constant Z.lxor => "(lxor)".
 Extract Inlined Constant Z.eqb => "(=)".
 Extract Inlined Constant length => "List.length".
+Extract Inlined Constant concat => "List.flatten".
 Extract Inlined Constant contains => "(List.mem)".
 Extract Inlined Constant negb => "(not)".
 Extract Inlined Constant nth_error => "(List.nth_opt)".
@@ -651,4 +657,4 @@ Extract Inlined Constant fold_left => "(fun f l a -> List.fold_left f a l)".
 Extract Inlined Constant get => "Array.get".
 Extract Inlined Constant of_list => "Array.of_list".
 Extract Inlined Constant id => "Fun.id".
-Separate Extraction rewrite.
+Separate Extraction cfi_rw.

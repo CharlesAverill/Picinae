@@ -1672,7 +1672,6 @@ Definition arm_lsm_op_il op register_list :=
 
 Definition arm_lsm_il op cond W Rn register_list :=
   arm_lsm_op_il op register_list cond W Rn register_list.
-Compute arm_lsm_il ARM_STMDA 14 1 1 0xffff.
 
 Definition arm_pas_il (is_signed: bool) (type: arm_pas_type) (op: arm_pas_op) (cond Rn Rd Rm: N) :=
   arm_cond_il cond (
@@ -1843,15 +1842,13 @@ Definition arm2il (a:addr) inst :=
             | ARM_extra_ls_r op cond P U W Rn Rt Rm => arm_extra_ls_r_il op $cond $P $U $W $Rn $Rt $Rm
             | _ => arm_havoc
             end in
-  Seq (Move R_PC (Word a 32)) il.
+  Seq (Move R_PC (Word (a mod 2^32) 32)) il.
 
 Definition arm_prog: program :=
-  fun s a => match s R_T, s R_JF, a mod 4, a <? 2 ^ 32 with
-             | 0, 0, 0, true =>
-                 Some (4, arm2il a (arm_decode (Z.of_N (getmem 32 LittleE 4 (s V_MEM32) a))))
-             | _, _, _, _ =>
-                 Some (4, arm_havoc)
-             end.
+  fun s a => let inst := match s R_T, s R_JF, a mod 4 with
+                         | 0, 0, 0 => arm_decode (Z.of_N (getmem 32 LittleE 4 (s V_MEM32) a))
+                         | _, _, _ => ARM_UNPREDICTABLE end in
+                         Some (4, arm2il a inst).
 
 (********** well-typedness **********)
 
@@ -2245,11 +2242,9 @@ Proof.
   lia.
 Qed.
 Theorem welltyped_arm2il:
-  forall a z,
-    a < 2 ^ 32 ->
-    hastyp_stmt armc armc (arm2il a (arm_decode z)) armc.
+  forall a z, hastyp_stmt armc armc (arm2il a (arm_decode z)) armc.
 Proof.
-  intros. unfold_stmt. styp. assumption.
+  intros. unfold_stmt. styp. now apply N.mod_lt.
   remember (arm_decode z) as i. revert Heqi.
   repeat match goal with
          | |- context[if ?a then _ else _] => destruct a eqn:?
@@ -2279,9 +2274,9 @@ Theorem welltyped_arm_prog:
   welltyped_prog arm7typctx arm_prog.
 Proof.
   intros s a. unfold arm_prog.
-    destruct (s R_T), (s R_JF), (a mod 4); destruct (a <? 2 ^ 32) eqn:l; try (exists armc; now apply hastyp_havoc).
-    rewrite N.ltb_lt in l.
-    destruct arm_decode eqn:e; try apply I; rewrite <- e; exists armc; now apply welltyped_arm2il.
+    destruct (s R_T), (s R_JF), (a mod 4); exists armc.
+      now apply welltyped_arm2il.
+      all: unfold arm2il; styp; [now apply N.mod_upper_bound|now apply hastyp_havoc].
 Qed.
 
 (* other stuff *)
