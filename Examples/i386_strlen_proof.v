@@ -289,13 +289,13 @@ Lemma bytes_pos_lobound:
 Proof.
   induction i using N.peano_ind; intros.
     reflexivity.
-    rewrite Ones_succ, <- N.add_1_l, getmem_split, lor_plus.
-      rewrite N.add_comm. apply N.add_le_mono.
-        apply N.lt_pred_le, N.neq_0_lt_0. rewrite <- (N.add_0_r a). apply H. apply N.lt_0_succ.
+    rewrite Ones_succ, <- N.add_1_l, getmem_split, <- fold_cbits, lor_plus.
+      apply N.add_le_mono.
         rewrite N.shiftl_mul_pow2. apply N.mul_le_mono_nonneg_r.
           apply N.le_0_l.
           apply IHi. intros. rewrite <- N.add_assoc, N.add_1_l. apply H. apply -> N.succ_lt_mono. assumption.
-      apply land_lohi_0, getmem_bound.
+        apply N.lt_pred_le, N.neq_0_lt_0. rewrite <- (N.add_0_r a). apply H. apply N.lt_0_succ.
+      rewrite N.land_comm. apply land_lohi_0, getmem_bound.
 Qed.
 
 Lemma below_ones:
@@ -312,7 +312,7 @@ Proof.
         apply (N.mul_lt_mono_pos_r (2^8)). reflexivity.
         rewrite <- N.shiftl_mul_pow2.
         apply (N.le_lt_add_lt 1 (N.pos p)). destruct p; discriminate 1.
-        rewrite N.add_comm, <- lor_plus. exact GM.
+        rewrite N.add_comm, <- lor_plus, N.lor_comm. exact GM.
         apply N.bits_inj_0. intro n. rewrite N.land_spec. destruct (N.lt_ge_cases n 8) as [LO|HI].
           rewrite N.shiftl_spec_low. apply Bool.andb_false_r. exact LO.
           rewrite bound_hibits_zero with (w:=8). reflexivity. rewrite <- M0. apply getmem_bound. exact HI.
@@ -459,11 +459,12 @@ Proof.
   rewrite N.bits_0, N.land_spec in TST.
   rewrite <- extract_bit in TST.
   rewrite <- TST.
-  rewrite getmem_split, <- N.shiftr_div_pow2, N.shiftr_lor, (N.mul_comm 8).
+  rewrite getmem_split, <- N.shiftr_div_pow2, <- fold_cbits, N.lor_comm, N.shiftr_lor, (N.mul_comm 8).
   rewrite N.shiftr_shiftl_l by reflexivity.
   rewrite N.sub_diag, N.shiftl_0_r, N.shiftr_div_pow2.
   rewrite N.div_small by apply getmem_bound.
-  rewrite N.lor_0_l, <- N.add_1_l, getmem_split, <- N.land_ones, N.land_lor_distr_l, N.land_ones, N.land_ones, N.shiftl_mul_pow2.
+  rewrite N.lor_0_l, <- N.add_1_l, getmem_split. unfold cbits.
+  rewrite N.lor_comm, <- N.land_ones, N.land_lor_distr_l, N.land_ones, N.land_ones, N.shiftl_mul_pow2.
   rewrite N.Div0.mod_mul.
   rewrite N.lor_0_r.
   rewrite N.mod_small by apply getmem_bound.
@@ -473,7 +474,7 @@ Proof.
     rewrite N.add_1_l. apply N.succ_0_discr.
     rewrite N.add_comm, <- (N.add_0_r (_+_)), N.add_assoc. apply N.add_lt_mono_l. reflexivity.
 
-  rewrite Ones_split, getmem_split in GM.
+  rewrite Ones_split, getmem_split, <- fold_cbits, N.lor_comm in GM.
   rewrite lor_plus in GM by apply land_lohi_0, getmem_bound.
   rewrite N.shiftl_mul_pow2, (N.mul_comm 8) in GM.
   apply (N.Div0.div_le_mono _ _ (2^(i*8))) in GM.
@@ -481,13 +482,14 @@ Proof.
   rewrite N.mul_comm, N.div_small in GM by apply Ones_bound.
   rewrite N.mul_comm, N.div_small in GM by apply getmem_bound.
   apply N.le_succ_l. rewrite <- N.add_1_r, <- Ones_succ, getmem_split.
-  rewrite lor_plus by apply land_lohi_0, getmem_bound.
+  unfold cbits. rewrite N.lor_comm, lor_plus by apply land_lohi_0, getmem_bound.
   rewrite N.shiftl_mul_pow2.
   rewrite (N.mul_comm 8), N.div_add by (apply N.pow_nonzero; discriminate 1).
   rewrite N.div_small by apply getmem_bound.
   exact GM.
 
-  rewrite getmem_split, <- N.land_ones, N.land_lor_distr_l, N.land_ones, N.land_ones, N.shiftl_mul_pow2.
+  rewrite getmem_split, <- fold_cbits, N.lor_comm.
+  rewrite <- N.land_ones, N.land_lor_distr_l, N.land_ones, N.land_ones, N.shiftl_mul_pow2.
   rewrite N.mul_comm, N.Div0.mod_mul.
   rewrite N.mod_small by apply getmem_bound.
   rewrite N.lor_0_r. apply bytes_pos_lobound. exact IHi.
@@ -503,14 +505,14 @@ Proof.
   subst w. clear TST IHi. revert a GM. induction i using N.peano_ind; intros.
     apply N.neq_0_lt_0. eapply N.lt_le_trans. apply N.lt_0_1. rewrite N.add_0_r. etransitivity.
       exact GM.
-      rewrite <- N.add_1_l, getmem_split, getmem_0, N.lor_0_r. reflexivity.
+      rewrite <- N.add_1_l, getmem_split, <- fold_cbits, N.lor_comm, getmem_0, N.lor_0_r. reflexivity.
 
     rewrite <- N.add_succ_comm. apply IHi.
     rewrite <- N.add_1_l, getmem_split, N.add_1_l, Ones_succ in GM.
     apply (N.Div0.div_le_mono _ _ (2^8)) in GM.
     rewrite N.div_add_l in GM; [|apply N.pow_nonzero; discriminate 1].
     rewrite N.div_small, N.add_0_r in GM; [|reflexivity].
-    etransitivity. exact GM.
+    etransitivity. exact GM. rewrite <- fold_cbits, N.lor_comm.
     rewrite <- N.shiftr_div_pow2, N.shiftr_lor, N.shiftr_shiftl_l, N.sub_diag, N.shiftl_0_r, shiftr_low_pow2, N.lor_0_l.
       rewrite N.add_1_r. reflexivity. apply getmem_bound. reflexivity.
 Qed.
@@ -597,13 +599,13 @@ Proof.
     rewrite <- (N.sub_add (N.pred (N.pos j)) (N.succ (Pos.pred_N w))) in TST by (
       etransitivity; [ apply N.le_pred_l | etransitivity; [ exact JW | apply N.le_succ_diag_r ] ]).
     rewrite N.add_comm in TST.
-    rewrite getmem_split in TST.
+    rewrite getmem_split, <- fold_cbits, N.lor_comm in TST.
     rewrite <- N.shiftr_div_pow2, N.shiftr_lor in TST.
     rewrite N.mul_comm, shiftr_low_pow2 in TST by apply getmem_bound.
     rewrite N.shiftr_shiftl_l in TST by reflexivity.
     rewrite N.lor_0_l, N.sub_diag, N.shiftl_0_r in TST.
     rewrite N.sub_succ_l in TST by (etransitivity; [ apply N.le_pred_l | exact JW ]).
-    rewrite <- N.add_1_l, getmem_split in TST.
+    rewrite <- N.add_1_l, getmem_split, <- fold_cbits, N.lor_comm in TST.
     rewrite lor_plus in TST by apply land_lohi_0, getmem_bound.
     rewrite N.shiftl_mul_pow2, N.Div0.mod_add in TST.
     rewrite N.mod_small in TST by apply getmem_bound.
@@ -620,7 +622,8 @@ Proof.
   apply le_div. exact GM.
 
   rewrite <- (N.sub_add (N.pred (N.pos j)) (N.succ (Pos.pred_N w))) by apply N.le_le_pred, N.le_le_succ_r, JW.
-  rewrite N.add_comm, getmem_split, <- N.land_ones, N.land_lor_distr_l, N.land_ones.
+  rewrite N.add_comm, getmem_split, <- fold_cbits, N.lor_comm.
+  rewrite <- N.land_ones, N.land_lor_distr_l, N.land_ones.
   rewrite N.mul_comm, N.mod_small by apply getmem_bound.
   rewrite N.land_ones, N.shiftl_mul_pow2, N.Div0.mod_mul, N.lor_0_r. exact LOJ.
 
@@ -876,7 +879,7 @@ Proof.
     change 4 with (N.succ 3) in NF at 3. rewrite <- N.sub_succ_l, N.sub_succ in NF by assumption.
     apply N.eqb_neq in BC.
     rewrite (N.add_comm 257), (add_msub_swap 16), <- (msub_msub_distr 16), msub_0_r. rewrite <- xbits_equiv.
-    change 2 with (1+1). rewrite getmem_split. simpl (1+1). simpl (8*1).
+    change 2 with (1+1). rewrite getmem_split, <- fold_cbits, N.lor_comm. simpl (1+1). simpl (8*1).
     rewrite N.add_1_r, <- N.add_succ_l, succ_sub by assumption. simpl (N.pred 4).
     rewrite xbits_lor, xbits_shiftl, xbits_0_i, xbits_above, N.lor_0_l, getmem_mod_r, N.shiftl_0_r by apply getmem_bound.
   step. exists (k-3). repeat split.
@@ -889,7 +892,7 @@ Proof.
     rewrite succ_sub in NF by (etransitivity; [|eassumption]; discriminate).
     apply N.eqb_neq, not_eq_sym in BC0.
     rewrite (N.add_comm 65793), (add_msub_swap 24), <- (msub_msub_distr 24), msub_0_r, <- xbits_equiv.
-    change 3 with (1+1+1). rewrite !getmem_split. simpl (1+1). simpl (8*_).
+    change 3 with (1+1+1). rewrite !getmem_split, <- !fold_cbits, N.lor_comm. simpl (1+1). simpl (8*_).
     rewrite (N.add_comm _ 2), N.add_assoc, (N.add_comm 2), <- (Nsub_distr k 4 2) by (discriminate 1 || assumption). simpl (4-2).
     rewrite !xbits_lor, !xbits_shiftl, xbits_0_i, !xbits_above by (eapply N.lt_le_trans; [ apply getmem_bound | discriminate 1 ]).
     rewrite !N.shiftl_0_r, N.lor_0_l, getmem_mod_r.

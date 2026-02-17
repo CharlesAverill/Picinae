@@ -4121,7 +4121,7 @@ Proof.
   symmetry. unfold simpl_joinbytes. destruct en;
     rewrite simpl_lor_sound; cbn [eval_sastN];
     rewrite simpl_shiftl_sound; cbn [eval_sastN];
-    rewrite E1, E2, N.mul_comm;
+    rewrite E1, E2, N.mul_comm, N.lor_comm;
     apply getmem_split.
 Qed.
 

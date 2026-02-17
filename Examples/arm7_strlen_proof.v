@@ -94,7 +94,8 @@ Lemma getmem_byte:
   forall len m a,
   getmem 32 LittleE (N.succ len) m a .& (N.ones 8 << (8*len)) = m Ⓑ[a+len] << (8*len).
 Proof.
-  intros. rewrite <- N.add_1_r, getmem_split, N.mul_comm, N.land_lor_distr_l, <- N.shiftl_land.
+  intros. rewrite <- N.add_1_r, getmem_split, <- fold_cbits, N.lor_comm.
+  rewrite N.mul_comm, N.land_lor_distr_l, <- N.shiftl_land.
   rewrite N.land_ones, N.mod_small by apply getmem_bound. replace (_.&_) with 0. reflexivity.
   symmetry. apply N.bits_inj_0. intro b.
   rewrite N.land_spec. destruct (N.lt_ge_cases b (8*len)).
