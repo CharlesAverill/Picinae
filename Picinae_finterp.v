@@ -408,7 +408,7 @@ Fixpoint updctx noec c l upd : typctx :=
     if orb (existsb (fun vv => if vvvar vv == v then true else false) t)
            (typeqb (c v) y)
     then updctx noec c t upd
-    else updctx (upd noec v y) (upd c v y) t upd
+    else updctx (upd noec v y) (update c v y) t upd
   end.
 
 Definition vupdate := @update var N VarEqDec.
