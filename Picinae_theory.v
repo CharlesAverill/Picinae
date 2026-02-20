@@ -728,6 +728,74 @@ Proof.
     apply N.pow_le_mono_r. discriminate 1. rewrite N.add_comm. apply N.le_add_r.
 Qed.
 
+Lemma N_div_le:
+  forall a b, a / b <= a.
+Proof.
+  intros. destruct b as [|b].
+    destruct a; apply N.le_0_l.
+    apply N.Div0.div_le_upper_bound.
+      rewrite <- (N.mul_1_l a) at 1. apply N.mul_le_mono_r. destruct b; discriminate.
+Qed.
+
+Theorem N_sub_lt:
+  forall m n, m <> 0 -> n <> 0 -> m - n < m.
+Proof.
+  intros.
+  rewrite <- (N.succ_pred _ H), <- (N.succ_pred _ H0), N.sub_succ.
+  apply N.lt_succ_r. apply N.le_sub_l.
+Qed.
+
+Theorem N_sub_distr:
+  forall x y z, z <= y -> y <= x -> x - (y - z) = x - y + z.
+Proof.
+  intros.
+  apply (N.add_cancel_r _ _ (y-z)).
+  rewrite N.sub_add by (transitivity y; [ apply N.le_sub_l | assumption ]).
+  rewrite N.add_sub_assoc by assumption.
+  rewrite <- N.add_assoc, (N.add_comm z y), N.add_assoc, N.add_sub.
+  symmetry. apply N.sub_add. assumption.
+Qed.
+
+Theorem N_sub_mod:
+  forall a b n, n <> 0 -> b <= a ->
+  (a - b) mod n = a mod n + n * N.b2n (a mod n <? b mod n) - b mod n.
+Proof.
+  intros.
+  rewrite (N.div_mod a n), (N.div_mod b n) at 1 by assumption.
+  rewrite N.sub_add_distr.
+  rewrite N.add_sub_swap by (apply N.mul_le_mono_l, N.Div0.div_le_mono; assumption).
+  rewrite <- N.mul_sub_distr_l, N.add_comm.
+  destruct (N.eq_0_gt_0_cases (a/n - b/n)).
+
+    assert (H2: b mod n <= a mod n).
+      eapply N.add_le_mono_l. rewrite <- N.div_mod by assumption.
+      etransitivity. eassumption.
+      rewrite (N.div_mod a n) at 1 by assumption.
+      apply N.add_le_mono_r, N.mul_le_mono_l, N.sub_0_le, H1.
+    rewrite H1, (proj2 (N.ltb_ge _ _) H2), N.mod_small. reflexivity.
+    eapply N.le_lt_trans. apply N.le_sub_l.
+    rewrite N.mul_0_r, N.add_0_r.
+    eapply N.mod_lt. assumption.
+
+    rewrite N.mul_comm. destruct (N.le_gt_cases (b mod n) (a mod n)).
+
+      rewrite N.add_sub_swap, N.Div0.mod_add by assumption.
+      rewrite (proj2 (N.ltb_ge _ _) H2), N.mul_0_r, N.add_0_r.
+      eapply N.mod_small, N.le_lt_trans. apply N.le_sub_l. apply N.mod_lt, H.
+
+      rewrite (proj2 (N.ltb_lt _ _) H2), N.mul_1_r.
+      rewrite <- (N.succ_pred (a/n-_)) by apply N.neq_sym, N.lt_neq, H1.
+      rewrite N.mul_succ_l, N.add_comm, <- N.add_assoc, (N.add_comm n).
+      rewrite <- N.add_sub_assoc by (rewrite N.add_comm; etransitivity;
+        [apply N.lt_le_incl, N.mod_lt,H|apply N.le_add_r]).
+      rewrite N.add_comm, N.Div0.mod_add by assumption.
+      eapply N.mod_small, N.add_lt_mono_r. rewrite N.sub_add.
+        rewrite N.add_comm. apply N.add_lt_mono_l, H2.
+        rewrite <- (N.add_0_l (b mod _)). apply N.add_le_mono.
+          apply N.le_0_l.
+          apply N.lt_le_incl, N.mod_lt, H.
+Qed.
+
 End OpBounds.
 
 
@@ -1460,6 +1528,356 @@ Proof.
     symmetry. apply Bool.orb_false_r.
 Qed.
 
+(* Swap bytes i and j of n. *)
+Definition swapbytes n i j :=
+  rbits (rbits n (j*8) (xbits n (i*8) (N.succ i * 8)) 8)
+        (i*8) (xbits n (j*8) (N.succ j * 8)) 8.
+
+(* Reverse the order of the low len bytes of n. *)
+Definition revbytes n len :=
+  N.recursion n (fun i n => swapbytes n i (len - N.succ i)) (len/2).
+
+Theorem swapbytes_spec:
+  forall n i j b,
+  N.testbit (swapbytes n i j) b = N.testbit n
+    (if b/8 =? i then j*8 + b mod 8
+     else if b/8 =? j then i*8 + b mod 8
+     else b).
+Proof.
+  assert (M8: forall x, x/8*8 = N.ldiff x (N.ones 3)).
+    symmetry. rewrite <- (N.shiftl_mul_pow2 _ 3), <- (N.shiftr_div_pow2 _ 3).
+    apply N.ldiff_ones_r.
+
+  assert (D8: forall x y, x/8 < y -> x < y*8).
+    intros. rewrite (N.div_mod' x 8), N.mul_comm. eapply N.lt_le_trans.
+      apply N.add_lt_mono_l, (mp2_mod_lt x 3).
+      rewrite <- N.mul_succ_l. apply N.mul_le_mono_r, N.le_succ_l, H.
+
+  assert (BYT: forall x y, (x/8 =? y) = andb (y*8 <=? x) (x <? y*8+8)).
+    intros. destruct (y*8 <=? x) eqn:H1.
+      apply N.leb_le in H1. destruct (x <? y*8+8) eqn:H2.
+        rewrite <- (N.sub_add _ _ H1), (mp2_div_add _ _ 3), (N.div_small _ 8).
+          apply N.eqb_refl.
+          eapply N.add_lt_mono_r. rewrite (N.sub_add _ _ H1), N.add_comm. apply N.ltb_lt, H2.
+        apply N.eqb_neq. intro H. subst y. apply (proj1 (N.ltb_nlt _ _) H2).
+          rewrite (N.div_mod' x 8), N.mul_comm at 1. apply N.add_lt_mono_l, (mp2_mod_lt _ 3).
+      apply N.eqb_neq, N.lt_neq. apply (N.mul_lt_mono_pos_r 8). reflexivity. eapply N.le_lt_trans.
+        rewrite M8. apply N.ldiff_le_l.
+        apply N.leb_gt, H1.
+
+  assert (MS: forall x, x - x/8*8 = x mod 8). intros.
+    rewrite M8, ldiff_sub, N.sub_sub_distr.
+      rewrite N.sub_diag, N.land_ones. reflexivity.
+      apply N.land_le_l.
+      reflexivity.
+
+  intros. unfold swapbytes.
+  rewrite !rbits_spec, !xbits_spec, !N.mul_succ_l, !BYT.
+  revert i j b. eenough (G:_). intros.
+  destruct andb eqn:H1.
+    revert i j b H1. exact G.
+    clear H1. destruct andb eqn:H2.
+      apply G. assumption.
+      reflexivity.
+
+  intros. apply andb_prop in H1. destruct H1 as [H1 H2].
+  apply N.leb_le in H1. apply N.ltb_lt in H2.
+  replace (b - i*8) with (b mod 8).
+    rewrite N.add_comm, (proj2 (N.ltb_lt _ _)).
+      apply Bool.andb_true_r.
+      apply N.add_lt_mono_l, (mp2_mod_lt _ 3).
+    rewrite <- MS, !(N.mul_comm _ 8). apply f_equal, f_equal, N.le_antisymm.
+      apply N.lt_succ_r, N.Div0.div_lt_upper_bound. rewrite N.mul_succ_r, N.mul_comm. apply H2.
+      apply N.div_le_lower_bound. discriminate. rewrite N.mul_comm. apply H1.
+Qed.
+
+Theorem swapbytes_id:
+  forall n i, swapbytes n i i = n.
+Proof.
+  intros. apply N.bits_inj. intro b. rewrite swapbytes_spec.
+  destruct (b/8 =? i) eqn:H; [|reflexivity].
+  apply N.eqb_eq in H. subst. rewrite N.mul_comm, <- N.div_mod'. reflexivity.
+Qed.
+
+Theorem swapbytes_comm:
+  forall n i j, swapbytes n i j = swapbytes n j i.
+Proof.
+  intros. apply N.bits_inj. intro b. rewrite !swapbytes_spec.
+  destruct (N.eq_dec i j) as [IJ|IJ].
+    subst j. destruct (b/8 =? i); reflexivity.
+    destruct (b/8 =? i) eqn:H.
+      apply N.eqb_eq in H. subst. rewrite (proj2 (N.eqb_neq _ _) IJ). reflexivity.
+      reflexivity.
+Qed.
+
+Theorem swapbytes_swapped:
+  forall n i j,
+  xbits (swapbytes n i j) (i*8) (N.succ i * 8) =
+  xbits n (j*8) (N.succ j * 8).
+Proof.
+  intros. unfold swapbytes. rewrite !N.mul_succ_l, xbits_rbits, N.add_comm.
+  eapply N.mod_small, N.lt_le_trans. apply xbits_bound.
+  rewrite N.add_sub. reflexivity.
+Qed.
+
+Theorem swapbytes_frame:
+  forall n b1 b2 i j,
+    (j <= b1*8 \/ b1*8+8 <= i) -> (j <= b2*8 \/ b2*8+8 <= i) ->
+  xbits (swapbytes n b1 b2) i j = xbits n i j.
+Proof.
+  intros. unfold swapbytes. rewrite !xbits_rbits_frame by assumption.
+  reflexivity.
+Qed.
+
+Theorem revbytes_spec:
+  forall n len i,
+  N.testbit (revbytes n len) i =
+  N.testbit n (if i <? len*8 then (N.pred len - i/8)*8 + i mod 8 else i).
+Proof.
+  intros. unfold revbytes. remember (len/2) as r.
+  assert (LE: r <= len/2) by (subst r; reflexivity).
+
+  transitivity (N.testbit n (if orb (i <? r*8) (andb ((len-r)*8 <=? i) (i <? len*8))
+                             then (N.pred len - i/8)*8 + i mod 8 else i)); revgoals.
+    subst r. destruct (i <? len/2*8) eqn:H1.
+      rewrite (proj2 (N.ltb_lt i _)). reflexivity. eapply N.lt_le_trans.
+        apply N.ltb_lt, H1.
+        apply N.mul_le_mono_pos_r. reflexivity. apply N_div_le.
+    apply N.ltb_ge in H1. destruct (i <? len*8) eqn:H2; revgoals.
+      rewrite Bool.andb_false_r. reflexivity.
+    apply N.ltb_lt in H2. destruct (_*8 <=? i) eqn:H3. reflexivity.
+    apply N.leb_gt in H3. apply f_equal. simpl.
+    rewrite (N.div_mod' i 8) at 1. apply N.add_cancel_r.
+    rewrite (N.mul_comm _ 8). apply f_equal.
+    eapply N.add_cancel_r. rewrite N.sub_add; revgoals.
+      apply N.lt_le_pred, N.Div0.div_lt_upper_bound. rewrite N.mul_comm. apply H2.
+    rewrite add_itself, N.double_spec.
+    rewrite (N.div_mod' len 2) in H3 at 1.
+    rewrite <- N.double_spec, <- add_itself, <- N.add_assoc, N.add_comm, N.add_sub,
+            N.mul_add_distr_r in H3.
+    edestruct (proj1 (N.le_1_r (len mod 2))) as [H|H].
+      apply N.lt_succ_r, (mp2_mod_lt _ 1).
+      contradict H3. rewrite H, N.add_0_r. apply N.le_ngt, H1.
+    rewrite (N.div_mod' len 2), H, N.add_1_r, N.pred_succ. apply f_equal.
+    apply N.le_antisymm.
+      rewrite <- (N.pred_succ i). etransitivity.
+        apply N_le_div, N.pred_le_mono, N.le_succ_l, H3.
+        rewrite H, <- N.add_pred_r, (mp2_div_add_l _ _ 3), N.add_0_r. reflexivity. discriminate.
+      etransitivity; [|apply N_le_div, H1]. rewrite (mp2_div_mul _ 3). reflexivity.
+
+  clear Heqr. revert n i LE. induction r using N.peano_ind; intros.
+
+    simpl. rewrite N.sub_0_r, (proj2 (N.ltb_ge _ _)) by apply N.le_0_l.
+    rewrite N.leb_antisym. destruct (_<?_); reflexivity.
+
+    rewrite N.recursion_succ by (repeat (hnf;intros); subst; reflexivity).
+    rewrite swapbytes_spec. set (k := if i/8 =? r then _ else _).
+    rewrite IHr by (etransitivity; [ apply N.le_succ_diag_r | apply LE ]). clear IHr.
+    destruct (N.eq_dec (i/8) r) as [H1|H1].
+      subst r. revert k. rewrite N.eqb_refl. intro k.
+      rewrite (proj2 (N.ltb_ge k _)), (proj2 (N.leb_gt _ k)), (proj2 (N.ltb_lt i _)); subst k.
+        simpl. rewrite N.sub_succ_r, N.sub_pred_l. reflexivity.
+        rewrite (N.div_mod' i 8), N.mul_comm, N.mul_succ_l at 1.
+          apply N.add_lt_mono_l, (mp2_mod_lt i 3).
+        apply (N.add_lt_mono_r _ _ 8). rewrite <- N.add_assoc, (N.add_comm _ 8), N.add_assoc,
+          <- N.mul_succ_l, <- N.sub_succ_l, N.sub_succ. apply N.add_lt_mono_l, (mp2_mod_lt i 3).
+          etransitivity. apply LE. apply N_div_le.
+        rewrite <- (N.mul_1_l (N.succ _)), (N.div_mod' len 2). etransitivity; revgoals.
+          apply N.add_le_mono_r, N.mul_le_mono_r, N.sub_le_mono_r, N.add_le_mono_r, N.mul_le_mono_l, LE.
+          rewrite N.add_sub_swap by (apply N.mul_le_mono_r; discriminate).
+          rewrite <- N.mul_sub_distr_r, N.mul_1_l, N.mul_add_distr_r, N.mul_succ_l, <- !N.add_assoc.
+          apply N.le_add_r.
+    revert k. rewrite (proj2 (N.eqb_neq _ _) H1).
+    destruct (i/8 =? _) eqn:H2.
+      intro k. subst k. apply N.eqb_eq in H2.
+      rewrite (proj2 (N.ltb_ge _ _)), (proj2 (N.leb_gt _ _)), (proj2 (N.leb_le _ i)), (proj2 (N.ltb_lt i (len*8))).
+        rewrite Bool.orb_true_r. simpl. rewrite H2. rewrite N.sub_pred_l, N.sub_sub_distr.
+          rewrite N.sub_diag, N.add_0_l, N.pred_succ. reflexivity.
+          etransitivity. apply LE. apply N_div_le.
+          reflexivity.
+        rewrite (N.div_mod' i 8), H2, N.mul_sub_distr_l, N.mul_comm, <- N.sub_sub_distr. apply N_sub_lt.
+          intro H. contradict LE. apply N.nle_gt. rewrite <- (N.div_mul len 8), H by discriminate. apply N.lt_0_succ.
+          eapply N.sub_gt, N.lt_le_trans. apply (mp2_mod_lt i 3). rewrite N.mul_succ_r. apply N.le_add_l.
+          transitivity 8. apply N.lt_le_incl, (mp2_mod_lt i 3). rewrite N.mul_succ_r. apply N.le_add_l.
+          rewrite N.mul_comm. apply N.mul_le_mono_r. etransitivity. apply LE. apply N_div_le.
+        rewrite (N.div_mod' i 8), H2, N.mul_comm. apply N.le_add_r.
+        eapply N.lt_le_trans.
+          apply N.add_lt_mono_l, (mp2_mod_lt i 3).
+          rewrite <- N.mul_succ_l. apply N.mul_le_mono_r, N.le_succ_l, N.lt_add_lt_sub_l.
+          rewrite add_itself, N.double_spec, (N.div_mod' len 2).
+          apply N.lt_lt_add_r, N.mul_lt_mono_pos_l. reflexivity. apply N.le_succ_l, LE.
+        apply N.le_add_r.
+    apply N.eqb_neq in H2. intro k. subst k.
+    assert (forall i x, i/8 <> x -> (x*8 <=? i) = (N.succ x * 8 <=? i) ).
+      clear. intros. destruct (N.succ x * 8 <=? i) eqn:H'.
+        eapply N.leb_le, N.add_le_mono_r. rewrite <- N.mul_succ_l.
+        etransitivity. apply N.leb_le, H'. apply N.le_add_r.
+      apply N.leb_gt in H'. apply N.leb_nle. intro H''. apply H, N.le_antisymm.
+        apply N.lt_succ_r, (N.mul_lt_mono_pos_r 8). reflexivity. eapply N.le_lt_trans.
+          eapply N.add_le_mono_r. rewrite N.mul_comm, <- N.div_mod'. apply N.le_add_r.
+          apply H'.
+        apply N.div_le_lower_bound. discriminate. rewrite N.mul_comm. apply H''.
+    replace (i <? N.succ r * 8) with (i <? r*8).
+    replace ((len - N.succ r)*8 <=? i) with ((len-r)*8 <=? i).
+    destruct (_<?_); [|destruct (_<=?_); [destruct (_<?_)|]]; reflexivity.
+    rewrite <- (N.succ_pred (len-r)), <- N.sub_succ_r.
+      symmetry. apply H, H2.
+      apply N.sub_gt, N.le_succ_l. etransitivity. apply LE. apply N_div_le.
+    rewrite !N.ltb_antisym. apply f_equal. apply H, H1.
+Qed.
+
+Theorem xbits_revbytes:
+  forall n len i,
+  xbits (revbytes n len) (i*8) (N.succ i * 8) =
+  N.shiftr n ((if i <? len then len - N.succ i else i) * 8) mod 2^8.
+Proof.
+  intros. apply N.bits_inj. intro b.
+  rewrite xbits_spec. destruct (N.le_gt_cases 8 b) as [H1|H1].
+    rewrite N.mod_pow2_bits_high by assumption.
+    rewrite (proj2 (N.ltb_ge _ _)). apply Bool.andb_false_r.
+    rewrite N.mul_succ_l, N.add_comm. apply N.add_le_mono_r, H1.
+  rewrite N.mod_pow2_bits_low, N.shiftr_spec' by assumption.
+  rewrite (proj2 (N.ltb_lt _ _)), Bool.andb_true_r; revgoals.
+    rewrite N.mul_succ_l, N.add_comm. apply N.add_lt_mono_l, H1.
+  rewrite revbytes_spec. destruct (i <? len) eqn:H2.
+    rewrite (mp2_div_add _ _ 3), N.div_small, (mp2_mod_add _ _ 3), N.mod_small by apply H1.
+    rewrite N.add_0_l, N.sub_pred_l, N.sub_succ_r, (N.add_comm _ b).
+    rewrite (proj2 (N.ltb_lt _ _)). reflexivity.
+    apply N.lt_add_lt_sub_r. rewrite <- N.mul_sub_distr_r.
+    apply (N.lt_le_trans _ (1*8)). apply H1.
+    apply N.mul_le_mono_r, (N.le_succ_l 0), N.neq_0_lt_0, N.sub_gt, N.ltb_lt, H2.
+  rewrite (proj2 (N.ltb_ge _ _)). reflexivity.
+  etransitivity. apply N.mul_le_mono_r, N.ltb_ge, H2.
+  apply N.le_add_l.
+Qed.
+
+Theorem revbytes_bound:
+  forall n len, revbytes n len < N.succ(n / 2^(len*8)) * 2^(len*8).
+Proof.
+  intros. eapply N.le_lt_trans.
+    rewrite (N.div_mod' (revbytes n len) (2^(len*8))).
+    apply N.add_le_mono_l, N.lt_le_pred, mp2_mod_lt.
+  rewrite <- N.ones_equiv, N.mul_comm, <- cbits_add by apply ones_bound.
+  replace (cbits _ _ _) with (cbits (n/2^(len*8)) (len*8) (N.ones (len*8))).
+    rewrite cbits_add, N.mul_succ_l by apply ones_bound.
+    apply N.add_lt_mono_l, ones_bound.
+  apply N.bits_inj. intro b.
+  rewrite !cbits_spec, !N.div_pow2_bits, revbytes_spec.
+  destruct (len*8 <=? b) eqn:H; [|reflexivity].
+  rewrite N.sub_add, (proj2 (N.ltb_ge _ _)) by apply N.leb_le, H.
+  reflexivity.
+Qed.
+
+Theorem revbytes_involutive:
+  forall n len, revbytes (revbytes n len) len = n.
+Proof.
+  intros. apply bytes_inj. intro b.
+  do 2 rewrite xbits_revbytes, shiftr_mod_xbits, <- N.mul_succ_l.
+  destruct (b <? len) eqn:H; [|rewrite ?H; reflexivity].
+  apply N.ltb_lt in H.
+  rewrite N.sub_succ_r, N.succ_pred by apply N.sub_gt, H.
+  rewrite (proj2 (N.ltb_lt (N.pred _) len)).
+    rewrite N_sub_distr, N.sub_diag. reflexivity.
+    apply N.lt_le_incl, H. reflexivity.
+  rewrite <- N.sub_succ_r. apply N.sub_lt.
+    apply N.le_succ_l, H.
+    apply N.lt_0_succ.
+Qed.
+
+Theorem revbytes_succ:
+  forall n len, revbytes n (N.succ len) =
+  rbits n 0 (cbits (revbytes n len) 8 (N.shiftr n (len*8) mod 2^8)) (N.succ len * 8).
+Proof.
+  intros. apply N.bits_inj. intro b.
+  rewrite rbits_spec, cbits_spec, !revbytes_spec, N.pred_succ, N.add_0_l, N.sub_0_r.
+  rewrite (proj2 (N.leb_le _ _)) by apply N.le_0_l.
+  destruct (N.lt_ge_cases b 8) as [H1|H1].
+    rewrite N.div_small, N.sub_0_r, N.mod_small, (proj2 (N.leb_gt _ _)),
+            N.mod_pow2_bits_low, N.shiftr_spec', (N.add_comm b) by apply H1.
+    rewrite (proj2 (N.ltb_lt _ _)). reflexivity.
+    eapply N.lt_le_trans. apply H1. rewrite N.mul_succ_l. apply N.le_add_l.
+  rewrite (proj2 (N.leb_le _ _)), N.mod_pow2_bits_high by apply H1.
+  destruct (_ <? _) eqn:H2; [|reflexivity].
+  apply N.ltb_lt in H2. rewrite Bool.orb_false_r.
+  rewrite (proj2 (N.ltb_lt _ _)) by (eapply N.add_lt_mono_r;
+    rewrite N.sub_add, <- N.mul_succ_l; assumption).
+  rewrite N.sub_pred_l, <- N.sub_succ_r, <- N.add_1_r, <- N.div_add by discriminate.
+  rewrite N.sub_add by apply H1.
+  rewrite N_sub_mod by (discriminate || assumption).
+  rewrite (proj2 (N.ltb_ge _ _)), N.sub_0_r, N.add_0_r by apply N.le_0_l.
+  reflexivity.
+Qed.
+
+Theorem revbytes_mod:
+  forall m n len, len * 8 <= m ->
+  revbytes (n mod 2^m) len = revbytes n len mod 2^m.
+Proof.
+  intros. apply N.bits_inj. intro b.
+  rewrite <- !N.land_ones, N.land_spec, !revbytes_spec, N.land_spec, !N_ones_spec_ltb.
+  apply f_equal. destruct (b <? len*8) eqn:H'; [|reflexivity].
+  destruct (N.zero_or_succ len) as [H2|[x H2]]; subst. destruct b; discriminate.
+  rewrite (proj2 (N.ltb_lt b _)) by (eapply N.lt_le_trans; [apply N.ltb_lt|]; eassumption).
+  apply N.ltb_lt. eapply N.lt_le_trans; [|apply H].
+  rewrite N.pred_succ, N.mul_succ_l. apply N.add_le_lt_mono.
+    apply N.mul_le_mono_pos_r. reflexivity. apply N.le_sub_l.
+    apply (mp2_mod_lt b 3).
+Qed.
+
+(* Repeat (by concatenation) the low w bits of n r times. *)
+Definition repbits w n r := N.iter r (fun m => cbits m w (n mod 2^w)) 0.
+
+Theorem repbits_succ:
+  forall w n r, repbits w n (N.succ r) = cbits (repbits w n r) w (n mod 2^w).
+Proof. intros. unfold repbits. apply N.iter_succ. Qed.
+
+Theorem repbits_0_l:
+  forall n r, repbits 0 n r = 0.
+Proof.
+  intros. induction r using N.peano_ind.
+    reflexivity.
+    rewrite repbits_succ, IHr, N.mod_1_r. reflexivity.
+Qed.
+
+Theorem repbits_0_n:
+  forall w r, repbits w 0 r = 0.
+Proof.
+  intros. induction r using N.peano_ind.
+    reflexivity.
+    rewrite repbits_succ, IHr, mp2_mod_0_l. apply cbits_0_l.
+Qed.
+
+Theorem repbits_0_r:
+  forall w n, repbits w n 0 = 0.
+Proof. reflexivity. Qed.
+
+Theorem repbits_spec:
+  forall w n r i, i < w*r ->
+  N.testbit (repbits w n r) i = N.testbit (n mod 2^w) (i mod w).
+Proof.
+  intros. revert i H. induction r using N.peano_ind; intros. 
+    contradict H. rewrite N.mul_0_r. apply N.nlt_0_r.
+    rewrite repbits_succ, cbits_spec. destruct (w <=? i) eqn:H'.
+      rewrite IHr, <- (N.Div0.mod_add (i-w) 1 w), N.mul_1_l.
+
+        rewrite N.sub_add, (N.mod_pow2_bits_high _ _ i) by apply N.leb_le, H'.
+        apply Bool.orb_false_r.
+
+        eapply N.add_lt_mono_r.
+        rewrite N.sub_add by apply N.leb_le, H'.
+        rewrite <- N.mul_succ_r. apply H.
+
+      rewrite (N.mod_small i). reflexivity. apply N.leb_gt, H'.
+Qed.
+
+Theorem repbits_split:
+  forall w n r1 r2,
+  repbits w n (r1+r2) = cbits (repbits w n r1) (r2*w) (repbits w n r2).
+Proof.
+  intros. revert r1. induction r2 using N.peano_ind; intros.
+    rewrite N.add_0_r, repbits_0_r, cbits_0_r, N.shiftl_0_r. reflexivity.
+    rewrite N.add_succ_r, !repbits_succ, IHr2, cbits_assoc, N.mul_succ_l. reflexivity.
+Qed.
+
 Lemma N2Z_inj_ones:
   forall n, Z.of_N (N.ones n) = Z.ones (Z.of_N n).
 Proof.
@@ -1735,65 +2153,6 @@ Corollary Z_mod_mod_pow2:
   forall z w1 w2, (0 <= w1 -> 0 <= w2 -> z mod 2^w1 mod 2^w2 = z mod 2^Z.min w1 w2)%Z.
 Proof.
   intros. apply Z_mod_mod_pow. reflexivity. assumption. assumption.
-Qed.
-
-Theorem N_sub_lt:
-  forall m n, m <> 0 -> n <> 0 -> m - n < m.
-Proof.
-  intros.
-  rewrite <- (N.succ_pred _ H), <- (N.succ_pred _ H0), N.sub_succ.
-  apply N.lt_succ_r. apply N.le_sub_l.
-Qed.
-
-Theorem N_sub_distr:
-  forall x y z, z <= y -> y <= x -> x - (y - z) = x - y + z.
-Proof.
-  intros.
-  apply (N.add_cancel_r _ _ (y-z)).
-  rewrite N.sub_add by (transitivity y; [ apply N.le_sub_l | assumption ]).
-  rewrite N.add_sub_assoc by assumption.
-  rewrite <- N.add_assoc, (N.add_comm z y), N.add_assoc, N.add_sub.
-  symmetry. apply N.sub_add. assumption.
-Qed.
-
-Theorem N_sub_mod:
-  forall a b n, n <> 0 -> b <= a ->
-  (a - b) mod n = a mod n + n * N.b2n (a mod n <? b mod n) - b mod n.
-Proof.
-  intros.
-  rewrite (N.div_mod a n), (N.div_mod b n) at 1 by assumption.
-  rewrite N.sub_add_distr.
-  rewrite N.add_sub_swap by (apply N.mul_le_mono_l, N.Div0.div_le_mono; assumption).
-  rewrite <- N.mul_sub_distr_l, N.add_comm.
-  destruct (N.eq_0_gt_0_cases (a/n - b/n)).
-
-    assert (H2: b mod n <= a mod n).
-      eapply N.add_le_mono_l. rewrite <- N.div_mod by assumption.
-      etransitivity. eassumption.
-      rewrite (N.div_mod a n) at 1 by assumption.
-      apply N.add_le_mono_r, N.mul_le_mono_l, N.sub_0_le, H1.
-    rewrite H1, (proj2 (N.ltb_ge _ _) H2), N.mod_small. reflexivity.
-    eapply N.le_lt_trans. apply N.le_sub_l.
-    rewrite N.mul_0_r, N.add_0_r.
-    eapply N.mod_lt. assumption.
-
-    rewrite N.mul_comm. destruct (N.le_gt_cases (b mod n) (a mod n)).
-
-      rewrite N.add_sub_swap, N.Div0.mod_add by assumption.
-      rewrite (proj2 (N.ltb_ge _ _) H2), N.mul_0_r, N.add_0_r.
-      eapply N.mod_small, N.le_lt_trans. apply N.le_sub_l. apply N.mod_lt, H.
-
-      rewrite (proj2 (N.ltb_lt _ _) H2), N.mul_1_r.
-      rewrite <- (N.succ_pred (a/n-_)) by apply N.neq_sym, N.lt_neq, H1.
-      rewrite N.mul_succ_l, N.add_comm, <- N.add_assoc, (N.add_comm n).
-      rewrite <- N.add_sub_assoc by (rewrite N.add_comm; etransitivity;
-        [apply N.lt_le_incl, N.mod_lt,H|apply N.le_add_r]).
-      rewrite N.add_comm, N.Div0.mod_add by assumption.
-      eapply N.mod_small, N.add_lt_mono_r. rewrite N.sub_add.
-        rewrite N.add_comm. apply N.add_lt_mono_l, H2.
-        rewrite <- (N.add_0_l (b mod _)). apply N.add_le_mono.
-          apply N.le_0_l.
-          apply N.lt_le_incl, N.mod_lt, H.
 Qed.
 
 Theorem signed_range_0_l:
@@ -2727,15 +3086,6 @@ Proof.
   intros a b H1 H2. apply Z.le_lteq in H2. destruct H2 as [H2|H2].
     apply Z.div_pos; assumption.
     subst b. destruct a; reflexivity.
-Qed.
-
-Remark N_div_le:
-  forall a b, a / b <= a.
-Proof.
-  intros. destruct b as [|b].
-    destruct a; apply N.le_0_l.
-    apply N.Div0.div_le_upper_bound.
-      rewrite <- (N.mul_1_l a) at 1. apply N.mul_le_mono_r. destruct b; discriminate.
 Qed.
 
 Theorem div_sbop:
@@ -4828,6 +5178,22 @@ Proof.
           rewrite (N.div_mod' i 8) at 2. rewrite N.mul_comm. apply N.le_add_r.
 Qed.
 
+Theorem getbyte_0_w:
+  forall m a, getbyte m a 0 = m mod 2^8.
+Proof.
+  intros. unfold getbyte. rewrite N.mod_1_r. reflexivity.
+Qed.
+
+Theorem getmem_0_w:
+  forall en len m a, getmem 0 en len m a = repbits 8 m len.
+Proof.
+  intros. revert a. induction len using N.peano_ind; intros.
+    reflexivity.
+    rewrite getmem_succ. destruct en;
+      [ rewrite <- (N.add_1_l len) | rewrite <- (N.add_1_r len) ];
+      rewrite repbits_split, IHlen, getbyte_0_w; reflexivity.
+Qed.
+
 Theorem getbyte_bound:
   forall m a w, getbyte m a w < 2^8.
 Proof.
@@ -4935,115 +5301,14 @@ Proof.
     unfold memsize. rewrite !N.mod_pow2_bits_high by apply H. reflexivity.
 Qed.
 
-(* Swap bytes i and j of n. *)
-Definition swapbytes n i j :=
-  rbits (rbits n (j*8) (xbits n (i*8) (N.succ i * 8)) 8)
-        (i*8) (xbits n (j*8) (N.succ j * 8)) 8.
-
-(* Reverse the order of the low len bytes of n. *)
-Definition revbytes n len :=
-  N.recursion n (fun i n => swapbytes n i (len - N.succ i)) (len/2).
-
-Theorem swapbytes_spec:
-  forall n i j b,
-  N.testbit (swapbytes n i j) b = N.testbit n
-    (if b/8 =? i then j*8 + b mod 8
-     else if b/8 =? j then i*8 + b mod 8
-     else b).
-Proof.
-  assert (M8: forall x, x/8*8 = N.ldiff x (N.ones 3)).
-    symmetry. rewrite <- (N.shiftl_mul_pow2 _ 3), <- (N.shiftr_div_pow2 _ 3).
-    apply N.ldiff_ones_r.
-
-  assert (D8: forall x y, x/8 < y -> x < y*8).
-    intros. rewrite (N.div_mod' x 8), N.mul_comm. eapply N.lt_le_trans.
-      apply N.add_lt_mono_l, (mp2_mod_lt x 3).
-      rewrite <- N.mul_succ_l. apply N.mul_le_mono_r, N.le_succ_l, H.
-
-  assert (BYT: forall x y, (x/8 =? y) = andb (y*8 <=? x) (x <? y*8+8)).
-    intros. destruct (y*8 <=? x) eqn:H1.
-      apply N.leb_le in H1. destruct (x <? y*8+8) eqn:H2.
-        rewrite <- (N.sub_add _ _ H1), (mp2_div_add _ _ 3), (N.div_small _ 8).
-          apply N.eqb_refl.
-          eapply N.add_lt_mono_r. rewrite (N.sub_add _ _ H1), N.add_comm. apply N.ltb_lt, H2.
-        apply N.eqb_neq. intro H. subst y. apply (proj1 (N.ltb_nlt _ _) H2).
-          rewrite (N.div_mod' x 8), N.mul_comm at 1. apply N.add_lt_mono_l, (mp2_mod_lt _ 3).
-      apply N.eqb_neq, N.lt_neq. apply (N.mul_lt_mono_pos_r 8). reflexivity. eapply N.le_lt_trans.
-        rewrite M8. apply N.ldiff_le_l.
-        apply N.leb_gt, H1.
-
-  assert (MS: forall x, x - x/8*8 = x mod 8). intros.
-    rewrite M8, ldiff_sub, N.sub_sub_distr.
-      rewrite N.sub_diag, N.land_ones. reflexivity.
-      apply N.land_le_l.
-      reflexivity.
-
-  intros. unfold swapbytes.
-  rewrite !rbits_spec, !xbits_spec, !N.mul_succ_l, !BYT.
-  revert i j b. eenough (G:_). intros.
-  destruct andb eqn:H1.
-    revert i j b H1. exact G.
-    clear H1. destruct andb eqn:H2.
-      apply G. assumption.
-      reflexivity.
-
-  intros. apply andb_prop in H1. destruct H1 as [H1 H2].
-  apply N.leb_le in H1. apply N.ltb_lt in H2.
-  replace (b - i*8) with (b mod 8).
-    rewrite N.add_comm, (proj2 (N.ltb_lt _ _)).
-      apply Bool.andb_true_r.
-      apply N.add_lt_mono_l, (mp2_mod_lt _ 3).
-    rewrite <- MS, !(N.mul_comm _ 8). apply f_equal, f_equal, N.le_antisymm.
-      apply N.lt_succ_r, N.Div0.div_lt_upper_bound. rewrite N.mul_succ_r, N.mul_comm. apply H2.
-      apply N.div_le_lower_bound. discriminate. rewrite N.mul_comm. apply H1.
-Qed.
-
-Theorem swapbytes_id:
-  forall n i, swapbytes n i i = n.
-Proof.
-  intros. apply N.bits_inj. intro b. rewrite swapbytes_spec.
-  destruct (b/8 =? i) eqn:H; [|reflexivity].
-  apply N.eqb_eq in H. subst. rewrite N.mul_comm, <- N.div_mod'. reflexivity.
-Qed.
-
-Theorem swapbytes_comm:
-  forall n i j, swapbytes n i j = swapbytes n j i.
-Proof.
-  intros. apply N.bits_inj. intro b. rewrite !swapbytes_spec.
-  destruct (N.eq_dec i j) as [IJ|IJ].
-    subst j. destruct (b/8 =? i); reflexivity.
-    destruct (b/8 =? i) eqn:H.
-      apply N.eqb_eq in H. subst. rewrite (proj2 (N.eqb_neq _ _) IJ). reflexivity.
-      reflexivity.
-Qed.
-
-Theorem swapbytes_swapped:
-  forall n i j,
-  xbits (swapbytes n i j) (i*8) (N.succ i * 8) =
-  xbits n (j*8) (N.succ j * 8).
-Proof.
-  intros. unfold swapbytes. rewrite !N.mul_succ_l, xbits_rbits, N.add_comm.
-  eapply N.mod_small, N.lt_le_trans. apply xbits_bound.
-  rewrite N.add_sub. reflexivity.
-Qed.
-
-Corollary getbyte_swapbytes_swapped:
+Theorem getbyte_swapbytes_swapped:
   forall m i j w,
   getbyte (swapbytes m (i mod 2^w) (j mod 2^w)) i w = getbyte m j w.
 Proof.
   intros. apply swapbytes_swapped.
 Qed.
 
-Theorem swapbytes_frame:
-  forall n b1 b2 i j,
-    (j <= b1*8 \/ b1*8+8 <= i) -> (j <= b2*8 \/ b2*8+8 <= i) ->
-  xbits (swapbytes n b1 b2) i j = xbits n i j.
-Proof.
-  intros. unfold swapbytes. rewrite !xbits_rbits_frame by assumption.
-  reflexivity.
-Qed.
-
-Corollary getbyte_swapbytes_frame:
+Theorem getbyte_swapbytes_frame:
   forall m i j k w,
     k mod 2^w <> i -> k mod 2^w <> j ->
   getbyte (swapbytes m i j) k w = getbyte m k w.
@@ -5051,128 +5316,6 @@ Proof.
   intros. apply N.lt_gt_cases in H,H0.
   apply swapbytes_frame; rewrite <- N.mul_succ_l; [destruct H|destruct H0];
   ((left+right); apply N.mul_le_mono_pos_r; [reflexivity|apply N.le_succ_l; assumption]).
-Qed.
-
-Theorem revbytes_spec:
-  forall n len i,
-  N.testbit (revbytes n len) i =
-  N.testbit n (if i <? len*8 then (N.pred len - i/8)*8 + i mod 8 else i).
-Proof.
-  intros. unfold revbytes. remember (len/2) as r.
-  assert (LE: r <= len/2) by (subst r; reflexivity).
-
-  transitivity (N.testbit n (if orb (i <? r*8) (andb ((len-r)*8 <=? i) (i <? len*8))
-                             then (N.pred len - i/8)*8 + i mod 8 else i)); revgoals.
-    subst r. destruct (i <? len/2*8) eqn:H1.
-      rewrite (proj2 (N.ltb_lt i _)). reflexivity. eapply N.lt_le_trans.
-        apply N.ltb_lt, H1.
-        apply N.mul_le_mono_pos_r. reflexivity. apply N_div_le.
-    apply N.ltb_ge in H1. destruct (i <? len*8) eqn:H2; revgoals.
-      rewrite Bool.andb_false_r. reflexivity.
-    apply N.ltb_lt in H2. destruct (_*8 <=? i) eqn:H3. reflexivity.
-    apply N.leb_gt in H3. apply f_equal. simpl.
-    rewrite (N.div_mod' i 8) at 1. apply N.add_cancel_r.
-    rewrite (N.mul_comm _ 8). apply f_equal.
-    eapply N.add_cancel_r. rewrite N.sub_add; revgoals.
-      apply N.lt_le_pred, N.Div0.div_lt_upper_bound. rewrite N.mul_comm. apply H2.
-    rewrite add_itself, N.double_spec.
-    rewrite (N.div_mod' len 2) in H3 at 1.
-    rewrite <- N.double_spec, <- add_itself, <- N.add_assoc, N.add_comm, N.add_sub,
-            N.mul_add_distr_r in H3.
-    edestruct (proj1 (N.le_1_r (len mod 2))) as [H|H].
-      apply N.lt_succ_r, (mp2_mod_lt _ 1).
-      contradict H3. rewrite H, N.add_0_r. apply N.le_ngt, H1.
-    rewrite (N.div_mod' len 2), H, N.add_1_r, N.pred_succ. apply f_equal.
-    apply N.le_antisymm.
-      rewrite <- (N.pred_succ i). etransitivity.
-        apply N_le_div, N.pred_le_mono, N.le_succ_l, H3.
-        rewrite H, <- N.add_pred_r, (mp2_div_add_l _ _ 3), N.add_0_r. reflexivity. discriminate.
-      etransitivity; [|apply N_le_div, H1]. rewrite (mp2_div_mul _ 3). reflexivity.
-
-  clear Heqr. revert n i LE. induction r using N.peano_ind; intros.
-
-    simpl. rewrite N.sub_0_r, (proj2 (N.ltb_ge _ _)) by apply N.le_0_l.
-    rewrite N.leb_antisym. destruct (_<?_); reflexivity.
-
-    rewrite N.recursion_succ by (repeat (hnf;intros); subst; reflexivity).
-    rewrite swapbytes_spec. set (k := if i/8 =? r then _ else _).
-    rewrite IHr by (etransitivity; [ apply N.le_succ_diag_r | apply LE ]). clear IHr.
-    destruct (N.eq_dec (i/8) r) as [H1|H1].
-      subst r. revert k. rewrite N.eqb_refl. intro k.
-      rewrite (proj2 (N.ltb_ge k _)), (proj2 (N.leb_gt _ k)), (proj2 (N.ltb_lt i _)); subst k.
-        simpl. rewrite N.sub_succ_r, N.sub_pred_l. reflexivity.
-        rewrite (N.div_mod' i 8), N.mul_comm, N.mul_succ_l at 1.
-          apply N.add_lt_mono_l, (mp2_mod_lt i 3).
-        apply (N.add_lt_mono_r _ _ 8). rewrite <- N.add_assoc, (N.add_comm _ 8), N.add_assoc,
-          <- N.mul_succ_l, <- N.sub_succ_l, N.sub_succ. apply N.add_lt_mono_l, (mp2_mod_lt i 3).
-          etransitivity. apply LE. apply N_div_le.
-        rewrite <- (N.mul_1_l (N.succ _)), (N.div_mod' len 2). etransitivity; revgoals.
-          apply N.add_le_mono_r, N.mul_le_mono_r, N.sub_le_mono_r, N.add_le_mono_r, N.mul_le_mono_l, LE.
-          rewrite N.add_sub_swap by (apply N.mul_le_mono_r; discriminate).
-          rewrite <- N.mul_sub_distr_r, N.mul_1_l, N.mul_add_distr_r, N.mul_succ_l, <- !N.add_assoc.
-          apply N.le_add_r.
-    revert k. rewrite (proj2 (N.eqb_neq _ _) H1).
-    destruct (i/8 =? _) eqn:H2.
-      intro k. subst k. apply N.eqb_eq in H2.
-      rewrite (proj2 (N.ltb_ge _ _)), (proj2 (N.leb_gt _ _)), (proj2 (N.leb_le _ i)), (proj2 (N.ltb_lt i (len*8))).
-        rewrite Bool.orb_true_r. simpl. rewrite H2. rewrite N.sub_pred_l, N.sub_sub_distr.
-          rewrite N.sub_diag, N.add_0_l, N.pred_succ. reflexivity.
-          etransitivity. apply LE. apply N_div_le.
-          reflexivity.
-        rewrite (N.div_mod' i 8), H2, N.mul_sub_distr_l, N.mul_comm, <- N.sub_sub_distr. apply N_sub_lt.
-          intro H. contradict LE. apply N.nle_gt. rewrite <- (N.div_mul len 8), H by discriminate. apply N.lt_0_succ.
-          eapply N.sub_gt, N.lt_le_trans. apply (mp2_mod_lt i 3). rewrite N.mul_succ_r. apply N.le_add_l.
-          transitivity 8. apply N.lt_le_incl, (mp2_mod_lt i 3). rewrite N.mul_succ_r. apply N.le_add_l.
-          rewrite N.mul_comm. apply N.mul_le_mono_r. etransitivity. apply LE. apply N_div_le.
-        rewrite (N.div_mod' i 8), H2, N.mul_comm. apply N.le_add_r.
-        eapply N.lt_le_trans.
-          apply N.add_lt_mono_l, (mp2_mod_lt i 3).
-          rewrite <- N.mul_succ_l. apply N.mul_le_mono_r, N.le_succ_l, N.lt_add_lt_sub_l.
-          rewrite add_itself, N.double_spec, (N.div_mod' len 2).
-          apply N.lt_lt_add_r, N.mul_lt_mono_pos_l. reflexivity. apply N.le_succ_l, LE.
-        apply N.le_add_r.
-    apply N.eqb_neq in H2. intro k. subst k.
-    assert (forall i x, i/8 <> x -> (x*8 <=? i) = (N.succ x * 8 <=? i) ).
-      clear. intros. destruct (N.succ x * 8 <=? i) eqn:H'.
-        eapply N.leb_le, N.add_le_mono_r. rewrite <- N.mul_succ_l.
-        etransitivity. apply N.leb_le, H'. apply N.le_add_r.
-      apply N.leb_gt in H'. apply N.leb_nle. intro H''. apply H, N.le_antisymm.
-        apply N.lt_succ_r, (N.mul_lt_mono_pos_r 8). reflexivity. eapply N.le_lt_trans.
-          eapply N.add_le_mono_r. rewrite N.mul_comm, <- N.div_mod'. apply N.le_add_r.
-          apply H'.
-        apply N.div_le_lower_bound. discriminate. rewrite N.mul_comm. apply H''.
-    replace (i <? N.succ r * 8) with (i <? r*8).
-    replace ((len - N.succ r)*8 <=? i) with ((len-r)*8 <=? i).
-    destruct (_<?_); [|destruct (_<=?_); [destruct (_<?_)|]]; reflexivity.
-    rewrite <- (N.succ_pred (len-r)), <- N.sub_succ_r.
-      symmetry. apply H, H2.
-      apply N.sub_gt, N.le_succ_l. etransitivity. apply LE. apply N_div_le.
-    rewrite !N.ltb_antisym. apply f_equal. apply H, H1.
-Qed.
-
-Theorem xbits_revbytes:
-  forall n len i,
-  xbits (revbytes n len) (i*8) (N.succ i * 8) =
-  N.shiftr n ((if i <? len then len - N.succ i else i) * 8) mod 2^8.
-Proof.
-  intros. apply N.bits_inj. intro b.
-  rewrite xbits_spec. destruct (N.le_gt_cases 8 b) as [H1|H1].
-    rewrite N.mod_pow2_bits_high by assumption.
-    rewrite (proj2 (N.ltb_ge _ _)). apply Bool.andb_false_r.
-    rewrite N.mul_succ_l, N.add_comm. apply N.add_le_mono_r, H1.
-  rewrite N.mod_pow2_bits_low, N.shiftr_spec' by assumption.
-  rewrite (proj2 (N.ltb_lt _ _)), Bool.andb_true_r; revgoals.
-    rewrite N.mul_succ_l, N.add_comm. apply N.add_lt_mono_l, H1.
-  rewrite revbytes_spec. destruct (i <? len) eqn:H2.
-    rewrite (mp2_div_add _ _ 3), N.div_small, (mp2_mod_add _ _ 3), N.mod_small by apply H1.
-    rewrite N.add_0_l, N.sub_pred_l, N.sub_succ_r, (N.add_comm _ b).
-    rewrite (proj2 (N.ltb_lt _ _)). reflexivity.
-    apply N.lt_add_lt_sub_r. rewrite <- N.mul_sub_distr_r.
-    apply (N.lt_le_trans _ (1*8)). apply H1.
-    apply N.mul_le_mono_r, (N.le_succ_l 0), N.neq_0_lt_0, N.sub_gt, N.ltb_lt, H2.
-  rewrite (proj2 (N.ltb_ge _ _)). reflexivity.
-  etransitivity. apply N.mul_le_mono_r, N.ltb_ge, H2.
-  apply N.le_add_l.
 Qed.
 
 Theorem getbyte_revbytes:
@@ -5185,122 +5328,6 @@ Proof.
   destruct (_ <? _); [|reflexivity].
   rewrite (N.mod_small (_-_)). reflexivity.
   eapply N.le_lt_trans. apply N.le_sub_l. apply H.
-Qed.
-
-Theorem revbytes_bound:
-  forall n len, revbytes n len < N.succ(n / 2^(len*8)) * 2^(len*8).
-Proof.
-  intros. eapply N.le_lt_trans.
-    rewrite (N.div_mod' (revbytes n len) (2^(len*8))).
-    apply N.add_le_mono_l, N.lt_le_pred, mp2_mod_lt.
-  rewrite <- N.ones_equiv, N.mul_comm, <- cbits_add by apply ones_bound.
-  replace (cbits _ _ _) with (cbits (n/2^(len*8)) (len*8) (N.ones (len*8))).
-    rewrite cbits_add, N.mul_succ_l by apply ones_bound.
-    apply N.add_lt_mono_l, ones_bound.
-  apply N.bits_inj. intro b.
-  rewrite !cbits_spec, !N.div_pow2_bits, revbytes_spec.
-  destruct (len*8 <=? b) eqn:H; [|reflexivity].
-  rewrite N.sub_add, (proj2 (N.ltb_ge _ _)) by apply N.leb_le, H.
-  reflexivity.
-Qed.
-
-Theorem revbytes_involutive:
-  forall n len, revbytes (revbytes n len) len = n.
-Proof.
-  intros. apply bytes_inj. intro b.
-  do 2 rewrite xbits_revbytes, shiftr_mod_xbits, <- N.mul_succ_l.
-  destruct (b <? len) eqn:H; [|rewrite ?H; reflexivity].
-  apply N.ltb_lt in H.
-  rewrite N.sub_succ_r, N.succ_pred by apply N.sub_gt, H.
-  rewrite (proj2 (N.ltb_lt (N.pred _) len)).
-    rewrite N_sub_distr, N.sub_diag. reflexivity.
-    apply N.lt_le_incl, H. reflexivity.
-  rewrite <- N.sub_succ_r. apply N.sub_lt.
-    apply N.le_succ_l, H.
-    apply N.lt_0_succ.
-Qed.
-
-Theorem revbytes_succ:
-  forall n len, revbytes n (N.succ len) =
-  rbits n 0 (cbits (revbytes n len) 8 (N.shiftr n (len*8) mod 2^8)) (N.succ len * 8).
-Proof.
-  intros. apply N.bits_inj. intro b.
-  rewrite rbits_spec, cbits_spec, !revbytes_spec, N.pred_succ, N.add_0_l, N.sub_0_r.
-  rewrite (proj2 (N.leb_le _ _)) by apply N.le_0_l.
-  destruct (N.lt_ge_cases b 8) as [H1|H1].
-    rewrite N.div_small, N.sub_0_r, N.mod_small, (proj2 (N.leb_gt _ _)),
-            N.mod_pow2_bits_low, N.shiftr_spec', (N.add_comm b) by apply H1.
-    rewrite (proj2 (N.ltb_lt _ _)). reflexivity.
-    eapply N.lt_le_trans. apply H1. rewrite N.mul_succ_l. apply N.le_add_l.
-  rewrite (proj2 (N.leb_le _ _)), N.mod_pow2_bits_high by apply H1.
-  destruct (_ <? _) eqn:H2; [|reflexivity].
-  apply N.ltb_lt in H2. rewrite Bool.orb_false_r.
-  rewrite (proj2 (N.ltb_lt _ _)) by (eapply N.add_lt_mono_r;
-    rewrite N.sub_add, <- N.mul_succ_l; assumption).
-  rewrite N.sub_pred_l, <- N.sub_succ_r, <- N.add_1_r, <- N.div_add by discriminate.
-  rewrite N.sub_add, <- (msub_sub 3) by apply H1.
-  rewrite <- (msub_mod_r 3 3), msub_0_r; reflexivity.
-Qed.
-
-Theorem revbytes_mod:
-  forall m n len, len * 8 <= m ->
-  revbytes (n mod 2^m) len = revbytes n len mod 2^m.
-Proof.
-  intros. apply N.bits_inj. intro b.
-  rewrite <- !N.land_ones, N.land_spec, !revbytes_spec, N.land_spec, !N_ones_spec_ltb.
-  apply f_equal. destruct (b <? len*8) eqn:H'; [|reflexivity].
-  destruct (N.zero_or_succ len) as [H2|[x H2]]; subst. destruct b; discriminate.
-  rewrite (proj2 (N.ltb_lt b _)) by (eapply N.lt_le_trans; [apply N.ltb_lt|]; eassumption).
-  apply N.ltb_lt. eapply N.lt_le_trans; [|apply H].
-  rewrite N.pred_succ, N.mul_succ_l. apply N.add_le_lt_mono.
-    apply N.mul_le_mono_pos_r. reflexivity. apply N.le_sub_l.
-    apply (mp2_mod_lt b 3).
-Qed.
-
-(* Repeat (by concatenation) the low w bits of n r times. *)
-Definition repbits w n r := N.iter r (fun m => cbits m w (n mod 2^w)) 0.
-
-Theorem repbits_succ:
-  forall w n r, repbits w n (N.succ r) = cbits (repbits w n r) w (n mod 2^w).
-Proof. intros. unfold repbits. apply N.iter_succ. Qed.
-
-Theorem repbits_0_l:
-  forall n r, repbits 0 n r = 0.
-Proof.
-  intros. induction r using N.peano_ind.
-    reflexivity.
-    rewrite repbits_succ, IHr, N.mod_1_r. reflexivity.
-Qed.
-
-Theorem repbits_0_n:
-  forall w r, repbits w 0 r = 0.
-Proof.
-  intros. induction r using N.peano_ind.
-    reflexivity.
-    rewrite repbits_succ, IHr, mp2_mod_0_l. apply cbits_0_l.
-Qed.
-
-Theorem repbits_0_r:
-  forall w n, repbits w n 0 = 0.
-Proof. reflexivity. Qed.
-
-Theorem repbits_spec:
-  forall w n r i, i < w*r ->
-  N.testbit (repbits w n r) i = N.testbit (n mod 2^w) (i mod w).
-Proof.
-  intros. revert i H. induction r using N.peano_ind; intros. 
-    contradict H. rewrite N.mul_0_r. apply N.nlt_0_r.
-    rewrite repbits_succ, cbits_spec. destruct (w <=? i) eqn:H'.
-      rewrite IHr, <- (N.Div0.mod_add (i-w) 1 w), N.mul_1_l.
-
-        rewrite N.sub_add, (N.mod_pow2_bits_high _ _ i) by apply N.leb_le, H'.
-        apply Bool.orb_false_r.
-
-        eapply N.add_lt_mono_r.
-        rewrite N.sub_add by apply N.leb_le, H'.
-        rewrite <- N.mul_succ_r. apply H.
-
-      rewrite (N.mod_small i). reflexivity. apply N.leb_gt, H'.
 Qed.
 
 Theorem getbyte_repbits:
@@ -6026,11 +6053,11 @@ Proof.
     rewrite revbytes_getmem. reflexivity.
 Qed.
 
-Theorem xbits_getmem:
-  forall w en len m a i j, a mod 2^w + len <= 2^w ->
+Theorem xbits_getmem_anylen:
+  forall w en len m a i j,
   xbits (getmem w en len m a) i j =
-  xbits match en with BigE => revbytes (N.shiftr m (a mod 2^w * 8)) len
-                    | LittleE => N.shiftr m (a mod 2^w * 8) end
+  xbits ((fun m' => match en with BigE => revbytes m' len | LittleE => m' end)
+         (N.shiftr (repbits (2^w*8) m (len+1)) (a mod 2^w * 8)))
         i (N.min j (len*8)).
 Proof.
   intros.
@@ -6052,18 +6079,60 @@ Proof.
   rewrite (proj2 (N.ltb_lt _ _) BIJ), (proj2 (N.ltb_lt _ _)), !Bool.andb_true_r
     by (apply N.min_glb_lt; assumption).
   destruct en.
-    rewrite revbytes_spec, (proj2 (N.ltb_lt _ _) BIL), N.shiftr_spec'.
-      rewrite N.Div0.add_mul_mod_distr_r by apply (mp2_mod_lt _ 3).
-      rewrite <- N.add_sub_assoc, <- N.Div0.add_mod_idemp_l, N.mod_small.
-        rewrite N.mul_add_distr_r, <- N.add_assoc, N.add_comm. reflexivity.
-        destruct len as [|len]. rewrite N.sub_0_l, N.add_0_r. apply mp2_mod_lt.
-          eapply N.lt_le_trans; [|apply H]. apply N.add_lt_mono_l.
-          eapply N.le_lt_trans, N.lt_pred_l. apply N.le_sub_l. discriminate.
-        apply N.lt_le_pred, N.Div0.div_lt_upper_bound. rewrite N.mul_comm. apply BIL.
-    rewrite N.shiftr_spec', <- N.Div0.add_mod_idemp_l, N.Div0.mul_mod_distr_r,
-            N.mod_small, N.add_comm. reflexivity.
-      eapply N.lt_le_trans. apply N.add_lt_mono_l. apply BIL.
-      rewrite <- N.mul_add_distr_r. apply N.mul_le_mono_r, H.
+    rewrite revbytes_spec, (proj2 (N.ltb_lt _ _) BIL), N.shiftr_spec', repbits_spec,
+            N.mod_pow2_bits_low, <- N.add_sub_assoc, N.mul_add_distr_r, <- N.add_assoc,
+            <- N.Div0.add_mod_idemp_l, N.Div0.mul_mod_distr_r, N.add_comm. reflexivity.
+      apply N.lt_le_pred, N.Div0.div_lt_upper_bound. rewrite N.mul_comm. apply BIL.
+      apply N.mod_lt, N.neq_mul_0. split. apply pow2_nonzero. discriminate.
+      eapply N.lt_le_trans. apply N.add_lt_mono_l, N.mul_lt_mono_pos_r. reflexivity. apply mp2_mod_lt.
+        etransitivity. rewrite <- N.add_assoc. apply N.add_le_mono_r, N.mul_le_mono_r, N.le_sub_l.
+        rewrite (N.add_comm (_ mod _)), N.add_assoc, <- N.mul_add_distr_r.
+        etransitivity. apply N.add_le_mono_l, N.lt_le_pred, (mp2_mod_lt _ 3).
+        apply N.succ_le_mono. rewrite <- N.add_succ_r, <- (N.mul_succ_l _ 8), <- N.add_succ_l.
+        rewrite (N.mul_comm (_*_)), N.mul_assoc.
+        rewrite N.succ_pred by (intro; subst; contradict IL; apply N.nlt_0_r).
+        rewrite !N.mul_add_distr_r, N.mul_1_l. apply N.le_le_succ_r, N.add_le_mono_r, N.mul_le_mono_r.
+        rewrite <- (N.mul_1_r len) at 1. apply N.mul_le_mono_l. apply N.pow_lower_bound. discriminate.
+    rewrite N.shiftr_spec', repbits_spec, N.mod_pow2_bits_low, <- N.Div0.mul_mod_distr_r,
+            N.Div0.add_mod_idemp_r, N.add_comm. reflexivity.
+      apply N.mod_lt, N.neq_mul_0. split. apply pow2_nonzero. discriminate.
+      eapply N.lt_le_trans. apply N.add_lt_mono_r, BIL.
+        rewrite (N.mul_comm (_*_)), N.mul_assoc, <- N.mul_add_distr_r. apply N.mul_le_mono_r.
+        rewrite N.mul_add_distr_r. rewrite <- (N.mul_1_r len) at 1. apply N.add_le_mono.
+          apply N.mul_le_mono_l, N.pow_lower_bound. discriminate.
+          apply N.lt_le_incl. rewrite N.mul_1_l. apply mp2_mod_lt.
+Qed.
+
+Corollary xbits_getmem:
+  forall w en len m a i j, a mod 2^w + len <= 2^w ->
+  xbits (getmem w en len m a) i j =
+  xbits match en with BigE => revbytes (N.shiftr m (a mod 2^w * 8)) len
+                    | LittleE => N.shiftr m (a mod 2^w * 8) end
+        i (N.min j (len*8)).
+Proof.
+  intros. rewrite xbits_getmem_anylen.
+  apply N.bits_inj. intro b. rewrite !xbits_spec.
+  destruct (_ <? _) eqn:H1; [| rewrite !Bool.andb_false_r; reflexivity ].
+  assert (MLT: forall x, x mod (2^w*8) < 2^w*8).
+    intro. apply N.mod_lt, N.neq_mul_0. split. apply pow2_nonzero. discriminate.
+  apply N.ltb_lt in H1. rewrite !Bool.andb_true_r. destruct en; (eenough (G:_); [
+    rewrite ?revbytes_spec, !N.shiftr_spec', repbits_spec by (eapply N.lt_le_trans;
+    [ apply G | rewrite N.mul_add_distr_l, N.mul_1_r; apply N.le_add_l ] );
+    rewrite N.mod_pow2_bits_low by apply MLT;
+    apply f_equal, N.mod_small, G
+  |]).
+
+  rewrite (proj2 (N.ltb_lt _ _)) by (eapply N.lt_le_trans; [ apply H1 | apply N.le_min_r ]).
+  eapply N.lt_le_trans. apply N.add_lt_mono_r, N.add_le_lt_mono.
+    apply N.mul_le_mono_r, N.le_sub_l.
+    apply (mp2_mod_lt _ 3).
+  rewrite <- (N.mul_succ_l _ 8), N.add_comm, <- N.mul_add_distr_r.
+  rewrite N.succ_pred. apply N.mul_le_mono_r, H.
+  intro. subst. contradict H1. rewrite N.min_r by apply N.le_0_l. apply N.nlt_0_r.
+
+  eapply N.lt_le_trans. apply N.add_lt_mono_r. apply H1.
+  etransitivity. apply N.add_le_mono_r, N.le_min_r.
+  rewrite <- N.mul_add_distr_r, N.add_comm. apply N.mul_le_mono_r. apply H.
 Qed.
 
 Corollary getmem_xbits:
