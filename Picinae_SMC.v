@@ -351,6 +351,7 @@ Ltac reduce_comps_in H :=
    instruction expression which, for an interpreted language like this
    one, is read as bytes from memory then decoded. *)
 Global Ltac effinv_none_hook ::=
+  start ltac profiling;
   try unfold_invs_exit;
   unfold effinv, effinv';
   unfold_prog_hook;
@@ -370,7 +371,8 @@ Global Ltac effinv_none_hook ::=
               reduce_getmem (getmem w e len m a)
           end;
   (* When do we want to reduce with vm_compute rather than psimpl? *)
-  first [invs_simpl_hook | idtac].
+  first [invs_simpl_hook | idtac];
+  stop ltac profiling.
 
 (* Original version had a different ltac for decoding instructions, but the arm7 architecture
    shows that some architectures require decoding instructions to tell if the program effectively

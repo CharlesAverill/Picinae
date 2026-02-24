@@ -649,8 +649,35 @@ Proof. intros. apply N.Div0.mod_same. Qed.
 Theorem mp2_mod_mod: forall n w, n mod 2^w mod 2^w = n mod 2^w.
 Proof. intros. apply N.Div0.mod_mod. Qed.
 
-Theorem mp2_even: forall n w, w > 0 -> N.even n = true -> N.even (n mod 2^w) = true.
-Proof. intros. rewrite <-testbit0_even in *; rewrite N.mod_pow2_bits_low with (m:=0);[easy|lia]. Qed.
+Theorem mp2_even: forall n w, w > 0 -> N.even n = true <-> N.even (n mod 2^w) = true.
+Proof. split; intros; rewrite <-testbit0_even in *; rewrite ?N.mod_pow2_bits_low with (m:=0) in *; try easy; try lia. Qed.
+
+Theorem Nmod_pow2_bits: forall a n m, N.testbit (a mod 2 ^ n) m = andb (m <? n) (N.testbit a m).
+Proof.
+  intros. destruct (N.lt_ge_cases m n) as [LT | GE].
+    destruct (N.ltb_lt m n) as (_ & Help); specialize (Help LT); rewrite Help, Bool.andb_true_l. apply N.mod_pow2_bits_low. exact LT.
+    destruct (N.ltb_ge m n) as (_ & Help); specialize (Help GE); rewrite Help, Bool.andb_false_l. apply N.mod_pow2_bits_high. exact GE.
+Qed.
+
+Theorem mod2_0_even: forall n, n mod 2 = 0 <-> N.even n = true.
+Proof.
+  split; intros H.
+    rewrite mp2_even with (w:=1); replace (2^1) with 2 by lia; try lia. destruct (n mod 2);[reflexivity|lia].
+    apply N.bits_inj_0. intros. replace 2 with (2^1) by lia. rewrite Nmod_pow2_bits.
+    destruct n0. rewrite <- testbit0_even in H. destruct (N.testbit n 0); reflexivity || discriminate.
+    replace (_ <? _) with false by lia. reflexivity.
+Qed.
+
+Theorem mod2_1_neven: forall n, n mod 2 = 1 <-> N.even n = false.
+Proof.
+  split; intros H.
+  assert (~N.even n = true). { intros H0. rewrite <-mod2_0_even,H in H0. discriminate. }
+  destruct N.even;[contradiction|reflexivity].
+  assert (~n mod 2 = 0). { intros H0. rewrite mod2_0_even,H in H0. discriminate. }
+  epose proof (N.mod_upper_bound n 2 _).
+  destruct (n mod 2) eqn:EQ;[contradiction|destruct p; lia].
+  Unshelve. lia.
+Qed.
 
 Theorem N_mod_mod_pow:
   forall n a b c, a <> 0 -> n mod a^b mod a^c = n mod a^N.min b c.
@@ -5237,12 +5264,9 @@ Corollary getmem_byte {w e len m a v i}:
     end.
 Proof.
   intros.
-  Search getbyte.
   rewrite <-getmem_1 with (e:=e).
-  Check getmem_split.
   replace len with ((i-a)+(a+len-i)) in V by lia.
   rewrite getmem_split in V.
-  Check recompose_bytes.
   destruct e.
 Admitted.
 
