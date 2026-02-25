@@ -5,21 +5,21 @@ Open Scope N.
 Definition wcsspn_i386 : program := fun _ a => match a with
 
 (* 0xc0000040: pushl %ebp *)
-| 0 => Some (1, 
+| 0 => Some (1,
     Move (V_TEMP 0 (* v53 *)) (Cast CAST_LOW 32 (Var R_EBP)) $;
     Move R_ESP (BinOp OP_MINUS (Var R_ESP) (Word 4 32)) $;
     Move V_MEM32 (Store (Var V_MEM32) (Var R_ESP) (Var (V_TEMP 0 (* v53 *))) LittleE 4)
   )
 
 (* 0xc0000041: pushl %edi *)
-| 1 => Some (1, 
+| 1 => Some (1,
     Move (V_TEMP 1 (* v54 *)) (Cast CAST_LOW 32 (Var R_EDI)) $;
     Move R_ESP (BinOp OP_MINUS (Var R_ESP) (Word 4 32)) $;
     Move V_MEM32 (Store (Var V_MEM32) (Var R_ESP) (Var (V_TEMP 1 (* v54 *))) LittleE 4)
   )
 
 (* 0xc0000042: xorl %eax, %eax *)
-| 2 => Some (2, 
+| 2 => Some (2,
     Move R_EAX (Word 0 32) $;
     Move R_AF (Unknown 1) $;
     Move R_ZF (Word 1 1) $;
@@ -30,14 +30,14 @@ Definition wcsspn_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000044: pushl %esi *)
-| 4 => Some (1, 
+| 4 => Some (1,
     Move (V_TEMP 2 (* v55 *)) (Cast CAST_LOW 32 (Var R_ESI)) $;
     Move R_ESP (BinOp OP_MINUS (Var R_ESP) (Word 4 32)) $;
     Move V_MEM32 (Store (Var V_MEM32) (Var R_ESP) (Var (V_TEMP 2 (* v55 *))) LittleE 4)
   )
 
 (* 0xc0000045: pushl %ebx *)
-| 5 => Some (1, 
+| 5 => Some (1,
     Move (V_TEMP 3 (* v56 *)) (Cast CAST_LOW 32 (Var R_EBX)) $;
     Move R_ESP (BinOp OP_MINUS (Var R_ESP) (Word 4 32)) $;
     Move V_MEM32 (Store (Var V_MEM32) (Var R_ESP) (Var (V_TEMP 3 (* v56 *))) LittleE 4)
@@ -59,7 +59,7 @@ Definition wcsspn_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000050: testl %ebx, %ebx *)
-| 16 => Some (2, 
+| 16 => Some (2,
     Move (V_TEMP 4 (* v57 *)) (Cast CAST_LOW 32 (Var R_EBX)) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
@@ -84,7 +84,7 @@ Definition wcsspn_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000057: xorl %eax, %eax *)
-| 23 => Some (2, 
+| 23 => Some (2,
     Move R_EAX (Word 0 32) $;
     Move R_AF (Unknown 1) $;
     Move R_ZF (Word 1 1) $;
@@ -100,7 +100,7 @@ Definition wcsspn_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000060: testl %esi, %esi *)
-| 32 => Some (2, 
+| 32 => Some (2,
     Move (V_TEMP 6 (* v69 *)) (Cast CAST_LOW 32 (Var R_ESI)) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
@@ -120,7 +120,7 @@ Definition wcsspn_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000064: cmpl %ebx, %esi *)
-| 36 => Some (2, 
+| 36 => Some (2,
     Move (V_TEMP 8 (* v61 *)) (BinOp OP_MINUS (Cast CAST_LOW 32 (Var R_ESI)) (Cast CAST_LOW 32 (Var R_EBX))) $;
     Move R_CF (BinOp OP_LT (Cast CAST_LOW 32 (Var R_ESI)) (Cast CAST_LOW 32 (Var R_EBX))) $;
     Move R_OF (Cast CAST_HIGH 1 (BinOp OP_AND (BinOp OP_XOR (Cast CAST_LOW 32 (Var R_ESI)) (Cast CAST_LOW 32 (Var R_EBX))) (BinOp OP_XOR (Cast CAST_LOW 32 (Var R_ESI)) (Var (V_TEMP 8 (* v61 *)))))) $;
@@ -150,7 +150,7 @@ Definition wcsspn_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000070: cmpl %ebx, %ecx *)
-| 48 => Some (2, 
+| 48 => Some (2,
     Move (V_TEMP 10 (* v59 *)) (BinOp OP_MINUS (Cast CAST_LOW 32 (Var R_ECX)) (Cast CAST_LOW 32 (Var R_EBX))) $;
     Move R_CF (BinOp OP_LT (Cast CAST_LOW 32 (Var R_ECX)) (Cast CAST_LOW 32 (Var R_EBX))) $;
     Move R_OF (Cast CAST_HIGH 1 (BinOp OP_AND (BinOp OP_XOR (Cast CAST_LOW 32 (Var R_ECX)) (Cast CAST_LOW 32 (Var R_EBX))) (BinOp OP_XOR (Cast CAST_LOW 32 (Var R_ECX)) (Var (V_TEMP 10 (* v59 *)))))) $;
@@ -170,7 +170,7 @@ Definition wcsspn_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000074: addl $0x4, %edx *)
-| 52 => Some (3, 
+| 52 => Some (3,
     Move (V_TEMP 12 (* v63 *)) (Cast CAST_LOW 32 (Var R_EDX)) $;
     Move R_EDX (BinOp OP_PLUS (Cast CAST_LOW 32 (Var R_EDX)) (Word 4 32)) $;
     Move R_CF (BinOp OP_LT (Cast CAST_LOW 32 (Var R_EDX)) (Var (V_TEMP 12 (* v63 *)))) $;
@@ -187,7 +187,7 @@ Definition wcsspn_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000079: testl %ecx, %ecx *)
-| 57 => Some (2, 
+| 57 => Some (2,
     Move (V_TEMP 14 (* v66 *)) (Cast CAST_LOW 32 (Var R_ECX)) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
@@ -207,38 +207,38 @@ Definition wcsspn_i386 : program := fun _ a => match a with
   )
 
 (* 0xc000007d: popl %ebx *)
-| 61 => Some (1, 
+| 61 => Some (1,
     Move R_EBX (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32))
   )
 
 (* 0xc000007e: popl %esi *)
-| 62 => Some (1, 
+| 62 => Some (1,
     Move R_ESI (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32))
   )
 
 (* 0xc000007f: popl %edi *)
-| 63 => Some (1, 
+| 63 => Some (1,
     Move R_EDI (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32))
   )
 
 (* 0xc0000080: popl %ebp *)
-| 64 => Some (1, 
+| 64 => Some (1,
     Move R_EBP (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32))
   )
 
 (* 0xc0000081: retl *)
-| 65 => Some (1, 
+| 65 => Some (1,
     Move (V_TEMP 16 (* v68 *)) (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32)) $;
     Jmp (Var (V_TEMP 16 (* v68 *)))
   )
 
 (* 0xc0000088: addl $0x1, %eax *)
-| 72 => Some (3, 
+| 72 => Some (3,
     Move (V_TEMP 17 (* v48 *)) (Cast CAST_LOW 32 (Var R_EAX)) $;
     Move R_EAX (BinOp OP_PLUS (Cast CAST_LOW 32 (Var R_EAX)) (Word 1 32)) $;
     Move R_CF (BinOp OP_LT (Cast CAST_LOW 32 (Var R_EAX)) (Var (V_TEMP 17 (* v48 *)))) $;
@@ -255,7 +255,7 @@ Definition wcsspn_i386 : program := fun _ a => match a with
   )
 
 (* 0xc000008e: testl %ebx, %ebx *)
-| 78 => Some (2, 
+| 78 => Some (2,
     Move (V_TEMP 19 (* v51 *)) (Cast CAST_LOW 32 (Var R_EBX)) $;
     Move R_OF (Word 0 1) $;
     Move R_CF (Word 0 1) $;
@@ -275,31 +275,31 @@ Definition wcsspn_i386 : program := fun _ a => match a with
   )
 
 (* 0xc0000092: popl %ebx *)
-| 82 => Some (1, 
+| 82 => Some (1,
     Move R_EBX (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32))
   )
 
 (* 0xc0000093: popl %esi *)
-| 83 => Some (1, 
+| 83 => Some (1,
     Move R_ESI (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32))
   )
 
 (* 0xc0000094: popl %edi *)
-| 84 => Some (1, 
+| 84 => Some (1,
     Move R_EDI (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32))
   )
 
 (* 0xc0000095: popl %ebp *)
-| 85 => Some (1, 
+| 85 => Some (1,
     Move R_EBP (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32))
   )
 
 (* 0xc0000096: retl *)
-| 86 => Some (1, 
+| 86 => Some (1,
     Move (V_TEMP 21 (* v47 *)) (Load (Var V_MEM32) (Var R_ESP) LittleE 4) $;
     Move R_ESP (BinOp OP_PLUS (Var R_ESP) (Word 4 32)) $;
     Jmp (Var (V_TEMP 21 (* v47 *)))

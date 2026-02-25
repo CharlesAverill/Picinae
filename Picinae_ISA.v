@@ -185,9 +185,17 @@ Ltac ISA_invhere :=
 (* If we're not at an invariant, symbolically interpret the program for one
    machine language instruction.  (The user can use "do" or "repeat" tactics
    to step through many instructions, but often it is wiser to pause and do
-   some manual simplification of the state at various points.) *)
+   some manual simplification of the state at various points.)
+
+   The hook tactics allow users to hook in context simplification tactics
+   which are necessary for reasoning about dynamically interpreted programs. *)
+Ltac effinv_none_hook := idtac.
+Ltac psa_some_hook := idtac.
+Ltac fail_seek := idtac "Failed to solve basic NIStep goals. Are you trying to interpret the store with insufficient information?"; fail.
 Ltac ISA_invseek :=
-  eapply NIStep; [reflexivity|reflexivity|];
+  eapply NIStep;
+    [effinv_none_hook;(reflexivity || fail_seek)
+    |psa_some_hook;(reflexivity || fail_seek)|];
   let c := fresh "c" in let s := fresh "s" in let x := fresh "x" in let XS := fresh "XS" in
   intros c s x XS;
   ISA_step_and_simplify XS;
@@ -198,6 +206,9 @@ Ltac ISA_invseek :=
                   psimpl_hyp rt; subst rt;
                   rewrite XS; clear XS; try clear s)
          | exec_stmt _ _ (if ?c then _ else _) _ _ _ =>
+             let BC := fresh "BC" in destruct c eqn:BC;
+             ISA_step_and_simplify XS
+         | exec_stmt _ _ (Seq (if ?c then _ else _)  _) _ _ _ =>
              let BC := fresh "BC" in destruct c eqn:BC;
              ISA_step_and_simplify XS
          | exec_stmt _ _ (N.iter _ _ _) _ _ _ => fail
