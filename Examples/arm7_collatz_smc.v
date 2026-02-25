@@ -1,6 +1,7 @@
 Require Import NArith.
 Require Import ZArith.
 Require Import Picinae_armv7_lifter.
+Require Import Picinae_SMC.
 Require Import List.
 Require Import String.
 Import ListNotations.
@@ -63,6 +64,7 @@ Definition collatz_prog :=  [
 
 Open Scope N.
 Compute arm_assemble_all collatz_prog.
+
 Compute print_code_prop 32 LittleE "V_MEM32" collatz_prog 0x100 "collatz_arm7".
 Compute print_exec_prop collatz_prog 0x100 "collatz_arm7".
 

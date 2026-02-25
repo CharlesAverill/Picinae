@@ -380,7 +380,8 @@ Global Ltac effinv_none_hook ::=
    is redundant by default but available for fine tuning the machinery. *)
 Ltac psa_some_hook ::=
   effinv_none_hook;
-  cbv -[N.add]; (* This computes the term without expanding program counters expressed as
+  repeat (rewrite N.mod_small by lia);
+  cbn -[N.add]; (* This computes the term without expanding program counters expressed as
                   offsets from a variable base address, e.g., `base + 8`. *)
   show_goal.
 

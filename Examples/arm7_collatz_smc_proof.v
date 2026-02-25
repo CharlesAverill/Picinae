@@ -18,7 +18,7 @@ Section Invariants.
   Variable  s0 : store.
 
   Definition postcondition (s:store) :=
-    s R_R0 = if N.even inp then inp >> 1 else inp ⊕ (1 ⊕ inp >> 1).
+    s R_R0 = if N.even inp then inp >> 1 else (1 ⊕ inp >> 1) ⊕ inp  .
   Definition mem_unchanged (s:store) := s V_MEM32 = s0 V_MEM32.
   Definition invs (t:trace) : option Prop:=
     match t with (Addr a, s) :: _ =>
@@ -82,38 +82,72 @@ intros. apply prove_invs.
   destruct PRE as (MEMSAME & INP & RT & JF & RE).
   unfold collatz_arm7 in MEM.
   rewrite <-MEMSAME in *. clear MEMSAME.
-  step. (* 2.6s *)
-  step. (* 2.4s *)
-  step. (* 3.4s *)
-  step. (* 20 s *)
-  step. (* 50 s *)
-  step. (* 50 s *)
+  (*
+  eapply NIStep.
+    effinv_none_hook. reflexivity.
+    effinv_none_hook.
+    unfold arm2il. rewrite (N.mod_small base) by lia. cbn -[N.add]. reflexivity.
+    Print Ltac ISA_step.
+
+(* Simplify arm memory access assertions produced by step_stmt. *)
+Ltac simpl_memaccs H ::=
+  try lazymatch type of H with context [ MemAcc mem_writable ] =>
+    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
+  end;
+  try lazymatch type of H with context [ MemAcc mem_readable ] =>
+    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
+  end.
+
+
+   (let c := fresh "c" in
+    let s := fresh "s" in
+    let x := fresh "x" in
+    let XS := fresh "XS" in
+    intros c s x XS; ISA_step_and_simplify XS;
+     repeat
+      lazymatch type of XS with
+      | reset_temps _ s = _ /\ x = _ =>
+          try clear c; destruct XS as [XS ?]; subst x;
+           try
+            (let rt := fresh in
+             set (rt := reset_temps _ _)  at 1; psimpl_hyp rt; subst rt;
+              rewrite XS; clear XS; try clear s)
+      | exec_stmt _ _ (if ?c then _ else _) _ _ _ =>
+          let BC := fresh "BC" in
+          destruct c eqn:BC; ISA_step_and_simplify XS
+      | exec_stmt _ _ (N.iter _ _ _) _ _ _ => fail
+      | _ => ISA_step_and_simplify XS
+      end;
+     try
+      lazymatch goal with
+      | |- context [ exitof (?m + ?n) ] => simpl (m + n)
+      end;
+     repeat match goal with
+            | x:N |- _ => clear x
+            end;
+     try (first [ rewrite exitof_none | rewrite exitof_some ])).
+     *)
+
+  step. (*  3.0s; old: 2.6s *)
+  step. (*  2.5; old: 2.4s *)
+  step. (*  3.0; old: 3.4s *)
+  step. (*  4.0; old: 20 s *)
+  step. (* 16.3; old: 50 s *)
+  step. (* 14.7s; old: 50 s *)
 
   assert (inp mod 2 < 2) by lia.
   destruct (inp mod 2) as [|p] eqn:EQ; try destruct p; try lia.
 
-  step. (* 7.6s *)
-  assert (H0:N.even inp = true).
-  rewrite <-testbit0_even, Bool.negb_true_iff, N.bit0_eqb, EQ. easy. rewrite H0.
-  apply N.bits_inj; intro.
-  rewrite !N.shiftr_spec; try lia.
-  assert (forall w a b, a mod 2^w = 0 -> b < 2^w -> forall i, i >= w -> N.testbit a i = N.testbit (a+b) i).
-  clear - s0. induction w using N.peano_ind; clear s0; intros.
-    destruct b; try lia. rewrite N.add_0_r; reflexivity.
-    rewrite mp2_mod_divides in H. destruct H as [m EQ].
-    destruct (N.zero_or_succ i); try lia. destruct H as [i' Eq]; subst i.
-    assert (H2: i' >= w) by lia; clear H1.
-    Search (N.testbit _ (N.succ _)). rewrite <-!N.div2_bits.
-    assert (H:(a+b)/2 = a/2 + b/2) by admit. (* maybe use mp2_div_add here *)
-    rewrite H.
-    apply IHw; try lia. admit. admit.
-  specialize (H1 1 inp 1). psimpl in H1. assert (HELP: n+1>=1) by lia.
-  specialize (H1 EQ (eq_refl _) (n+1) HELP); clear HELP.
-  rewrite H1.
-  admit.
+  step.
+  Set Printing Parentheses.
+  (* The goal now is just a typical Rocq goal. It is true because inp is even,
+     so we must show (1+inp)>>1 = inp>>1, which is true because the increment
+     is forgotten after shifting right. *)
+  rewrite mod2_0_even in EQ; rewrite EQ.
+  destruct inp;[reflexivity|].
+  destruct p; reflexivity || discriminate || idtac. cbn. rewrite N.mod_small;[reflexivity|].
+  pose proof (models_var R_R0 MDL). cbn in H0. lia.
 
-  step. (* 8.7s *)
-  assert (H0: N.even inp = false).
-  rewrite <-testbit0_even, Bool.negb_false_iff, N.bit0_eqb, EQ. easy. rewrite H0.
-  lia.
+  step.
+  rewrite mod2_1_neven in EQ; rewrite EQ. reflexivity.
 Time Qed.
