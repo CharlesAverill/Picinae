@@ -187,6 +187,7 @@ Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
 Ltac effinv_none_hook := idtac.
 Ltac psa_some_hook := idtac.
 Ltac fail_seek := idtac "Failed to solve basic NIStep goals. Are you trying to interpret the store with insufficient information?"; fail.
+
 Ltac ISA_invseek :=
   eapply NIStep;
     [effinv_none_hook;(reflexivity || fail_seek)
@@ -213,7 +214,10 @@ Ltac ISA_invseek :=
 (* If asked to step the computation when we're already at an invariant point,
    just make the proof goal be the invariant. *)
 Ltac ISA_invhere :=
-  eapply nextinv_here; [ effinv_none_hook; reflexivity | hnf; psimpl_goal ].
+  match goal with
+  | |- nextinv _ _ _ _ ((?a, _)::_) =>
+    eapply nextinv_here; [ effinv_none_hook; reflexivity | hnf; psimpl_goal ]; idtac "Now proving invariant at " a
+  end.
 
 (* Clear any stale memory-access hypotheses (arising from previous computation
    steps) and either step to the next machine instruction (if we're not at an

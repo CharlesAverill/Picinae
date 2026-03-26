@@ -204,9 +204,7 @@ Ltac invs_simpl_hook := psimpl_lhs.
 
 
 Ltac reduce_frames :=
-  repeat match goal with
-         | |- context[update ?s _ _ ?m] => rewrite (update_frame s _ _ m);[|easy]
-         end.
+  repeat (rewrite update_updated || (rewrite update_frame;[|discriminate])).
 
 (* TODO: this does more than rewrite variables read from the store. For example,
    it will rewrite using the hypothesis `H: base mod 4 = 0`.  This is unexpected,
