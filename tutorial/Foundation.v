@@ -765,7 +765,7 @@ Inductive hastyp_exp (c:typctx): exp -> bitwidth -> Prop :=
 [| TExtract w n1 n2 e1
            (T1: hastyp_exp c e1 w) (HI: n1 < w):
            hastyp_exp c (Extract n1 n2 e1) (N.succ n1 - n2)]
-    
+
    [Extract n1 n2 e1] is has as many bits as were extracted--exactly [n1-n2+1] bits.
    But only if [n1], the low index to extract from is less than the bitwidth [w] of
    the expression [e1].

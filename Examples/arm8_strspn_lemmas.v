@@ -921,6 +921,7 @@ forall b k
 ,
 2 ^ b = 2 ^ (b mod 64) * 2 ^ (8 * 8*k).
 Proof.
+
 intros.
 assert (forall a b, 2^a = 2^b <-> a = b).
 intuition. apply N.pow_inj_r with(a:=2) (b:=a)(c:=b0) in H. assumption. lia.

@@ -340,3 +340,64 @@ end.
 
 Theorem welltyped: welltyped_prog arm8typctx strspn2.
 Proof. Picinae_typecheck. Qed.
+
+Load MetaRocqPrelude.
+Import MonadNotation.
+From MetaRocq.Utils Require Import bytestring.
+Import String.
+Open Scope bs.
+
+Definition printQualid (q : qualid): TemplateMonad unit :=
+  kn <- tmLocate1 q ;;
+  match kn with
+  | IndRef ind => tmPrint "Quoted inductive: ";; (*tmPrint ind;;*) mib <- (tmQuoteInductive ind.(inductive_mind));; (*tmPrint mib;;*)
+    match (ind_bodies mib) with
+    | h::nil => let casebody := ind_ctors h in tmPrint casebody
+    | _ => tmFail "Could not make identity for mutual inductive type."
+    end
+  | ConstRef kn => tmPrint "Quoted constant: ";; tmPrint kn;; (tmQuoteConstant kn false) >>= tmPrint
+  | _ => tmFail ("[" ++ q ++ "] is not an inductive")
+  end.
+
+
+
+Definition strspn_invs (t:trace) := match t with (Addr a,s)::_ => match a with
+(* 0x00100000: Entry Invariant *)
+|  0x00100000 => Some ( True )
+(* 0x0010001c: Old Entry invariant *)
+|  0x0010001c => Some ( True )
+(* 0x00100054: Degenerative Loop (len(acpt)==1) *)
+|  0x00100054 => Some( True )
+(* 0x0010002c: Map Maker Loop *)
+|  0x0010002c =>  Some(True)
+(* 0x00100094: Map Maker->Checker Transition
+              Just turn bitarray_nstr to bitarray_str to make
+              the map checker loop simpler. *)
+|  0x00100094 => Some(True)
+(* 0x00100078: Map Checker Loop *)
+|  0x00100078 => Some(True)
+(* 0x00100068: Return Invariant *)
+|  0x00100068 => Some(True)
+| _ => None
+end | _ => None end.
+
+Compute $quote strspn_invs.
+
+Notation "'_prod_'" := ({| inductive_mind := (MPfile ["Datatypes"; "Init"; "Corelib"], "prod"); inductive_ind := 0 |}).
+Notation "'_store_'" := ((MPdot (MPfile ["Picinae_armv8"; "Picinae"]) "ARM8Arch", "store")).
+Notation "'_option_'" := (tInd {| inductive_mind := (MPfile ["Datatypes"; "Init"; "Corelib"], "option"); inductive_ind := 0 |} []).
+Notation "'_list_'" := ({| inductive_mind := (MPfile ["Datatypes"; "Init"; "Corelib"], "list"); inductive_ind := 0 |}).
+Notation "'_trace_'" := ((tConst (MPdot (MPfile ["Picinae_armv8"; "Picinae"]) "IL_arm8", "trace") [])).
+Notation "'_sProp_'" := (tSort sProp).
+
+Compute $quote @None Prop.
+Notation "'_Some_'" := (tConstruct {| inductive_mind := (MPfile ["Datatypes"; "Init"; "Corelib"], "option"); inductive_ind := 0 |} 0 []).
+Notation "'_None_'" := (tConstruct {| inductive_mind := (MPfile ["Datatypes"; "Init"; "Corelib"], "option"); inductive_ind := 0 |} 1 []).
+Notation "'_exit_'" := (tInd {| inductive_mind := (MPfile ["Picinae_core"; "Picinae"], "exit"); inductive_ind := 0 |} []).
+Notation "'_bool_'" := (tInd {| inductive_mind := (MPfile ["Datatypes"; "Init"; "Corelib"], "bool"); inductive_ind := 0 |} []).
+Notation "'_Nmind_'" := (MPfile ["BinNums"; "Numbers"; "Corelib"], "N").
+Notation "'_N_'" := (tInd {| inductive_mind := _Nmind_; inductive_ind := 0 |} []).
+Notation "'_bound' x '_'" := ({| binder_name := nNamed x; binder_relevance := Relevant |}).
+Notation "'_positivemind_'" := (MPfile ["BinNums"; "Numbers"; "Corelib"], "positive").
+Notation "'_true_'" := (tConstruct {| inductive_mind := (MPfile ["Datatypes"; "Init"; "Corelib"], "bool"); inductive_ind := 0 |} 0 []).
+Notation "'_false_'" := (tConstruct {| inductive_mind := (MPfile ["Datatypes"; "Init"; "Corelib"], "bool"); inductive_ind := 0 |} 1 []).

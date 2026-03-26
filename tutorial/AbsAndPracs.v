@@ -486,7 +486,7 @@ End string_defs.
 
     [[
       Search overlap.
-    ]] 
+    ]]
 *)
 
 (** **** Exercise:1 star, standard, optional (getmem_setmem_eq)

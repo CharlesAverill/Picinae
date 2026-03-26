@@ -17,6 +17,8 @@ Picinae_riscv.v
 Picinae_numbers.v
 Picinae_pilbox32.v
 Picinae_pilbox32_interpreter.v
+MetaRocqPrelude.v
+Picinae_metarocq_prelude.v
 
 # Examples/arm7_memset.v
 # Examples/arm7_memset_proof.v
@@ -38,3 +40,4 @@ Picinae_pilbox32_interpreter.v
 Examples/p32_dynamicli.v
 Examples/riscv_collatz_smc.v
 Examples/arm7_collatz_smc.v
+Examples/arm7_hot_patcher.v
