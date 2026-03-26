@@ -819,6 +819,23 @@ Proof.
     apply N.ones_spec_high, N.ltb_ge, H.
 Qed.
 
+Theorem Nshiftl_spec:
+  forall a s i, N.testbit (N.shiftl a s) i = ((s <=? i) && N.testbit a (i-s))%bool.
+Proof.
+  intros.
+  destruct (N.le_gt_cases s i) as [LE|GT].
+  rewrite N.shiftl_spec_high'; try lia.
+  rewrite N.shiftl_spec_low; try lia.
+Qed.
+
+Theorem shiftl_mod_0:
+  forall w x, (N.shiftl x w) mod 2^w = 0.
+Proof.
+  intros. apply N.bits_inj_0; intro.
+  rewrite Nmod_pow2_bits. rewrite Nshiftl_spec.
+  lia.
+Qed.
+
 Theorem ldiff_sub:
   forall x y, N.ldiff x y = x - (N.land x y).
 Proof.
@@ -1401,6 +1418,16 @@ Proof.
     apply N2Z.is_nonneg.
     apply N2Z.is_nonneg.
 Qed.
+
+Lemma zxbits_xbits_comp:
+  forall (z1 z2 z3 z4:Z),
+  (0 <= z1)%Z -> (0 <= z2)%Z -> (0 <= z3)%Z -> (0 <= z4)%Z -> (Z_xbits z1 z2 z3 =? z4)%Z = (xbits (Z.to_N z1) (Z.to_N z2) (Z.to_N z3) =? (Z.to_N z4))%N.
+Proof.
+  intros.
+  rewrite <-Z2N_xbits; try assumption.
+  rewrite <-Z2N_inj_eqb;[reflexivity|apply Z_xbits_nonneg|assumption].
+Qed.
+
 
 End XBits.
 
@@ -3273,6 +3300,23 @@ Proof.
   symmetry. apply N.mod_small, msub_lt.
 Qed.
 
+Lemma madd_ones_msub_one:
+  forall w x, (x + (N.ones w)) mod 2^w = msub w x 1.
+Proof.
+  intros. unfold msub.
+  destruct (N.eq_0_gt_0_cases w).
+    subst w. simpl. rewrite !N.mod_1_r. reflexivity.
+    rewrite (N.mod_small 1), N.sub_1_r, N.ones_equiv. reflexivity.
+    apply N.lt_le_trans with (m:=2). lia. replace 2 with (2^1) at 1 by reflexivity.
+    apply N.pow_le_mono_r; lia.
+Qed.
+
+Lemma madd_ones_one_cancel:
+  forall w x, ((x + (N.ones w)) mod 2^w + 1) mod 2^w = x mod 2^w.
+Proof.
+  intros. rewrite madd_ones_msub_one, msub_add. reflexivity.
+Qed.
+
 Theorem msub_lt_mono_r:
   forall w m n p,
     (p mod 2^w <= N.min (m mod 2^w) (n mod 2^w) \/
@@ -4811,6 +4855,15 @@ Proof.
       rewrite N.shiftl_lor, N.shiftl_shiftl, N.lor_assoc, <- IHi, <- N.mul_add_distr_r. apply getmem_succ.
       rewrite (N.mul_succ_l i), <- N.shiftl_shiftl, <- N.lor_assoc, <- N.shiftl_lor, <- IHi. apply getmem_succ.
 Qed.
+
+(* If two regions in two memories are equal, their corresponding innards are equal. *)
+Theorem getmem_inner:
+  forall w e m1 m2 len a1 a2 s len',
+    getmem w e len m1 a1 = getmem w e len m2 a2 ->
+    s + len' <= len ->
+    getmem w e len' m1 (a1+s) = getmem w e len' m2 (a2+s).
+Proof.
+Admitted.
 
 (* Split off the first byte read from the rest.  Used in decoding self-modifying code. *)
 Corollary getmem_first:
@@ -7324,6 +7377,67 @@ Proof.
     apply CALLEE. reflexivity. apply Forall_nil. apply ForallPrefixes_nil. apply (INVXP2 nil).
     extensionality t. specialize (INVXP2 t). destruct t. reflexivity. simpl. rewrite (CI1 _ (_++_)). apply CI1.
 Qed.
+
+Print Forall.
+
+CoInductive CoForall {A : Type} (P : A -> Prop) : list A -> Prop :=
+    CoForall_nil : CoForall P nil
+  | CoForall_cons : forall (x : A) (l : list A),
+                  P x -> CoForall P l -> CoForall P (x :: l).
+
+Lemma forall_coforall {A:Type}:
+  forall (P : A->Prop) (l:list A),
+  CoForall P l <-> Forall P l.
+Proof.
+Admitted.
+
+Print eq_refl.
+
+CoInductive coeq {A : Type} (x : A) : A -> Prop :=  coeq_refl : coeq x x.
+
+Definition coexec_prog p t := CoForall (can_step p) (stepsof t).
+
+Theorem stepsof_tl {A:Type}:
+    forall a l (t2 t1:list A), a::l = stepsof (t2++t1) ->
+      match t2 with
+      | nil => l = stepsof (tl t1)
+      | _::t2' => l = stepsof ((tl t2)++t1)
+      end.
+Proof.
+  intros. destruct t2 as [|h t2'] eqn:T2; simpl in *.
+  destruct t1;[discriminate|]. unfold stepsof in *. simpl (tl _) in *. Search (combine) tl.
+  destruct t1;[discriminate|]. simpl in *. inversion H. reflexivity.
+
+  destruct t2'. destruct t1; simpl. all: rewrite ?app_nil_l in H; try discriminate.
+  inversion H. reflexivity.
+  rewrite <-app_comm_cons in H. inversion H. simpl. reflexivity.
+Qed.
+
+(* TODO: is this false? Without an unterminated condition I think it is.
+  I used it, or an even more lenient variant in the hot patcher verification proof-sketch. *)
+Theorem nextinv'advance:
+  forall p invs exits t' t
+    (NIL: invs nil = None)
+    (NI: nextinv' p invs exits false t')
+    (XP: exec_prog p (t++t')),
+  exists b, nextinv' p invs exits b (t++t').
+Proof.
+  Local Ltac gdep H := generalize dependent H.
+  intros. pose proof (remXP:=XP); unfold exec_prog in XP; dependent induction XP.
+    intros. destruct t'. inversion NI; subst. unfold effinv, effinv' in *.
+    rewrite NIL in TRU. destruct (exits nil); contradiction.
+    destruct t. rewrite app_nil_l in *. eexists; eapply NI.
+    exfalso. clear - x. destruct t; simpl in x; discriminate.
+
+    apply stepsof_tl in x. destruct t as [|h t_] eqn:EQt.
+      eexists; simpl; eassumption.
+      eexists. simpl in x. rewrite <-app_comm_cons in remXP. replace (h::t_++t') with ((h::nil)++(t_++t')) in * by reflexivity.
+      Set Printing Parentheses.
+      apply exec_prog_split in remXP. destruct remXP as (XPTail & XPStep & _).
+      specialize (IHXP _ t_ NIL NI x XPTail).
+      destruct IHXP as (b & NIT).
+      Print nextinv'. rewrite <-app_comm_cons.
+Abort.
 
 (* When proving nextinv in practice, it's convenient to retain a hidden exec_prog
    hypothesis that rememembers that the current trace is a valid execution.  This

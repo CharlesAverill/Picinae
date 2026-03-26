@@ -408,7 +408,7 @@ Fixpoint updctx noec c l upd : typctx :=
     if orb (existsb (fun vv => if vvvar vv == v then true else false) t)
            (typeqb (c v) y)
     then updctx noec c t upd
-    else updctx (upd noec v y) (upd c v y) t upd
+    else updctx (upd noec v y) (update c v y) t upd
   end.
 
 Definition vupdate := @update var N VarEqDec.
@@ -703,6 +703,8 @@ Ltac step_precheck XS :=
    context variables, and finally substituting any removed or opaque expressions
    back into the evaluated expression. *)
 
+Ltac step_stmt_reduction_hook XS := cbv -[N.add] in XS.
+
 Ltac step_stmt XS :=
   lazymatch type of XS with exec_stmt _ _ _ _ _ _ =>
     populate_varlist XS;
@@ -710,7 +712,8 @@ Ltac step_stmt XS :=
       eapply reduce_stmt in XS;
       [ let unk := fresh "unknown" in (
           destruct XS as [unk XS];
-          cbv -[N.add] in XS;
+          (* cbv -[N.add N.modulo] in XS; *)
+          step_stmt_reduction_hook XS;
           repeat match type of XS with context [ unk ?i ] =>
             let n := fresh "n" in set (n:=unk i) in XS; clearbody n
           end;

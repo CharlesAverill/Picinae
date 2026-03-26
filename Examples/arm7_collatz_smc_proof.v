@@ -9,9 +9,6 @@ Open Scope N.
 
 Import ARM7Notations.
 
-Definition collatz_start : N :=  0x100.
-Definition collatz_end   : N :=  0x100 + 4 * 7.
-
 Section Invariants.
   Variable  base: addr.
   Variable  inp : N.
@@ -51,7 +48,7 @@ Theorem collatz_correctness:
    Above we specified that the memory of the initial store is exactly
    our program, which is held in bytes 0-12 with all other bytes 0.
 *)
-  satisfies_all arm_prog (invs base inp s) (collatz_exit base) ((x',s')::t).
+satisfies_all arm_prog (invs base inp s) (collatz_exit base) ((x',s')::t).
 Proof.
   Local Ltac step := time (ISA_step).
 intros. apply prove_invs.
@@ -82,51 +79,7 @@ intros. apply prove_invs.
   destruct PRE as (MEMSAME & INP & RT & JF & RE).
   unfold collatz_arm7 in MEM.
   rewrite <-MEMSAME in *. clear MEMSAME.
-  (*
-  eapply NIStep.
-    effinv_none_hook. reflexivity.
-    effinv_none_hook.
-    unfold arm2il. rewrite (N.mod_small base) by lia. cbn -[N.add]. reflexivity.
-    Print Ltac ISA_step.
 
-(* Simplify arm memory access assertions produced by step_stmt. *)
-Ltac simpl_memaccs H ::=
-  try lazymatch type of H with context [ MemAcc mem_writable ] =>
-    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1
-  end;
-  try lazymatch type of H with context [ MemAcc mem_readable ] =>
-    rewrite ?memacc_read_frame, ?memacc_read_updated in H by discriminate 1
-  end.
-
-
-   (let c := fresh "c" in
-    let s := fresh "s" in
-    let x := fresh "x" in
-    let XS := fresh "XS" in
-    intros c s x XS; ISA_step_and_simplify XS;
-     repeat
-      lazymatch type of XS with
-      | reset_temps _ s = _ /\ x = _ =>
-          try clear c; destruct XS as [XS ?]; subst x;
-           try
-            (let rt := fresh in
-             set (rt := reset_temps _ _)  at 1; psimpl_hyp rt; subst rt;
-              rewrite XS; clear XS; try clear s)
-      | exec_stmt _ _ (if ?c then _ else _) _ _ _ =>
-          let BC := fresh "BC" in
-          destruct c eqn:BC; ISA_step_and_simplify XS
-      | exec_stmt _ _ (N.iter _ _ _) _ _ _ => fail
-      | _ => ISA_step_and_simplify XS
-      end;
-     try
-      lazymatch goal with
-      | |- context [ exitof (?m + ?n) ] => simpl (m + n)
-      end;
-     repeat match goal with
-            | x:N |- _ => clear x
-            end;
-     try (first [ rewrite exitof_none | rewrite exitof_some ])).
-     *)
 
   step. (*  3.0s; old: 2.6s *)
   step. (*  2.5; old: 2.4s *)
@@ -135,18 +88,17 @@ Ltac simpl_memaccs H ::=
   step. (* 16.3; old: 50 s *)
   step. (* 14.7s; old: 50 s *)
 
-  assert (inp mod 2 < 2) by lia.
-  destruct (inp mod 2) as [|p] eqn:EQ; try destruct p; try lia.
-
+  assert (Help: inp mod 2 < 2) by lia.
+  destruct (inp mod 2) as [ | p] eqn:EQ; try destruct p; try lia.
   step.
-  Set Printing Parentheses.
+
   (* The goal now is just a typical Rocq goal. It is true because inp is even,
      so we must show (1+inp)>>1 = inp>>1, which is true because the increment
      is forgotten after shifting right. *)
   rewrite mod2_0_even in EQ; rewrite EQ.
   destruct inp;[reflexivity|].
   destruct p; reflexivity || discriminate || idtac. cbn. rewrite N.mod_small;[reflexivity|].
-  pose proof (models_var R_R0 MDL). cbn in H0. lia.
+  pose proof (H0:=models_var R_R0 MDL). cbn in H0. lia.
 
   step.
   rewrite mod2_1_neven in EQ; rewrite EQ. reflexivity.

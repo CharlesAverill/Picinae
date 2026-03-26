@@ -33,7 +33,7 @@ Definition right := 2.
 260     mov r0, #0
 264     and r5, r1, #1
 268     strb r5, [pc, #11] ---+ Overwrite the r8 operand byte.
-                              | It becomes either r or rz.
+                              | It becomes either r1 or r0.
 272     add r2, r1, #1        | The other bits in this byte
 276     lsr r2, r2, #1        | are conveniently all zeros.
 280     add r0, r2, r8   <----+
