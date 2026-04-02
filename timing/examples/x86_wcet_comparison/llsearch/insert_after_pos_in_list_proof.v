@@ -111,7 +111,7 @@ Definition time_of_insert_in_sorted_list
                 ) else (
                     
                 ) *)
-                 (1 + N.max pos (N.of_nat len)) * (
+                 (1 + N.min pos (N.of_nat len)) * (
                         jnz_addr + add_r64_i + cmp_r64_r64 + jz_addr +
                         mov_r64_r64 + mov_r64_m64 + test_r64_r64
                     ) +
@@ -216,16 +216,15 @@ Proof using.
             hammer.
         hammer.
             etransitivity. apply N.add_le_mono_l. eassumption.
-            assert (s' R_RAX < N.max pos (N.of_nat len)) by lia.
-            etransitivity. apply N.add_le_mono_l, N.add_le_mono_l.
-            apply N.mul_le_mono_r, N.lt_le_incl, H0. lia.
-        hammer.
-            etransitivity. apply N.add_le_mono_l. eassumption.
-            assert (s' R_RAX < N.max pos (N.of_nat len)) by lia.
+            assert (s' R_RAX < N.min pos (N.of_nat len)) by lia.
             etransitivity. apply N.add_le_mono_l, N.add_le_mono_l.
             apply N.mul_le_mono_r, N.lt_le_incl, H. lia.
-        assert (pos < 2^64). rewrite <- RDX.
-            apply (models_var R_RDX MDL).
+        hammer.
+            assert (pos < 2^64). rewrite <- RDX.
+                apply (models_var R_RDX MDL).
+            assert (1 ⊕ s' R_RAX = 1 + s' R_RAX).
+              rewrite (N.mod_small (1 + s' R_RAX)) by lia. reflexivity.
+            repeat (reflexivity || assumption || lia || split).
         rewrite (N.mod_small (1 + s' R_RAX)) by lia.
         rewrite msub_nowrap in BC3 by lia.
         repeat rewrite N.mod_small in BC3 by lia.
@@ -233,14 +232,14 @@ Proof using.
         destruct (N.eq_dec (N.of_nat len) (1 + s' R_RAX)); [| lia].
             replace len with (N.to_nat (1 + s' R_RAX)) in Len by lia.
             pose proof (node_distance_uniq' DstCurr Len eq_refl).
-            rewrite H0 in BC. discriminate.
+            rewrite H1 in BC. discriminate.
+        rewrite H0 in *.
         psimpl.
             replace (N.to_nat (2 + s' R_RAX)) with (S (N.to_nat (1 + s' R_RAX))) by lia.
             eapply node_distance_next_S_len; cycle 2.
                 eassumption.
                 destruct (s' R_RDI). discriminate. reflexivity.
                 eapply distance_null_imp_well_formed. eassumption.
-        hammer.
 Qed.
 
 End TimingProof.
@@ -259,8 +258,8 @@ Goal forall (base_mem : memory) (l value : addr) (pos : N) (len : nat) (t : trac
             then 26
             else
             if pos =? 0
-            then 59
-            else 50 + (1 + N.max pos (N.of_nat len)) * 30)).
+            then 1052
+            else 1043 + (1 + N.min pos (N.of_nat len)) * 1023)).
     intros.
     unfold i5_7300u_insert_in_sorted_list.time_of_insert_in_sorted_list. simpl.
     unfold i5_7300u.ret, i5_7300u.mov_m64_r64.
