@@ -99,61 +99,40 @@ Proof using.
     destruct_inv 32 PRE.
 
     destruct PRE as (LEN_VALID & PTR_ALIGN & A3 & A2 & init).
-    repeat step.
-        split.
-            assumption.
-        split.
-            assumption.
-        split.
-            rewrite N.shiftl_mul_pow2.
-            psimpl.
-            rewrite N.mul_comm.
-            reflexivity.
+    repeat step. handle_ex.
         (* 0 loop iterations *)
-        exists 0.
-            split.
-                lia.
-        split.
-        (* Pointer to b has not changed *)
-            change (4 * 0) with 0.
-            rewrite N.mod_small.
-            rewrite N.add_0_r.
-            reflexivity.
-            pose proof (models_var R_A2 MDL).
-            simpl in H.
-            lia.
+        exists 0. split. lia.
+        split. now psimpl.
         hammer.
 
     destruct PRE as (LEN_VALID & PTR_ALIGN & FINAL_PTR & INDEX & INDEX_VALID & MOVING_PTR & CCOT).
-    repeat step.
-        split.
-            assumption.
-        split.
-            assumption.
-        split.
-            reflexivity.
+    repeat step. handle_ex.
         (* 1 + INDEX loop iterations *)
         exists (1 + INDEX).
-            split.
-                assert (forall n m, n <= m -> n=m \/ n < m).
-                lia.
-                apply H in INDEX_VALID.
-                destruct INDEX_VALID as [eq | lt].
-                    (* INDEX != len because of branch condition *)
-                    rewrite eq in BC.
-                    rewrite N.eqb_refl in BC.
-                    discriminate.
-                    lia.
-            split.
-                lia.
+        split.
+          assert (forall n m, n <= m -> n=m \/ n < m); lia.
+        split. lia.
         hammer.
 
     (* Postcondition *)
-    hammer.
-    (* INDEX = len *)
-    replace INDEX with len.
-        lia.
-        lia.
+    hammer. replace INDEX with len; lia.
 Qed.
 
 End TimingProof.
+
+
+Require Import NEORV32.
+Module NRV32 := NEORV32 NEORV32BaseConfig.
+Module NEORV32TimingProof := TimingProof NRV32.
+Import NEORV32TimingProof NRV32.
+
+Goal forall t len,
+    time_of_ct_swap len t = 
+    (ct_swapAuto.cycle_count_of_trace t = 
+      17 + len * (42 + 5 * T_data_latency + 2 * T_inst_latency) + T_inst_latency).
+Proof.
+    intros. unfold time_of_ct_swap. f_equal.
+    unfold tslli, tsub, tadd, ttbne, tlw, taddi, txor, tand, tsw, tlw,
+        tjal, tjalr, tfbne, T_shift_latency, NEORV32BaseConfig.CPU_FAST_SHIFT_EN.
+    lia.
+Qed.

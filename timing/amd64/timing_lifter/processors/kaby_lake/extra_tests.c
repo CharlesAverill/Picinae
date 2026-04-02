@@ -10,6 +10,16 @@
 //     return ((uint64_t)hi << 32) | lo;
 // }
 
+static inline uint64_t rdtsc_serialized(void) {
+    unsigned hi, lo;
+    asm volatile("cpuid\n\t"
+                 "rdtsc\n\t"
+                 : "=a"(lo), "=d"(hi)
+                 :
+                 : "%rbx", "%rcx");
+    return ((uint64_t)hi << 32) | lo;
+}
+
 /* Prevent compiler from reordering */
 #define BARRIER() __asm__ volatile("" ::: "memory")
 
@@ -24,11 +34,11 @@
     uint64_t worst_time = 0; \
     for (int trial = 0; trial < NUM_TRIALS; trial++) { \
         _mm_lfence(); \
-        uint64_t start = __rdtsc(); \
+        uint64_t start = rdtsc_serialized(); \
         for (uint64_t i = 0; i < ITERS; i++) { \
             code_block; \
         } \
-        uint64_t end = __rdtsc(); \
+        uint64_t end = rdtsc_serialized(); \
         _mm_lfence(); \
         uint64_t time = (end - start) / ITERS; \
         if (time > worst_time) worst_time = time; \
@@ -272,6 +282,33 @@ uint64_t test_jg_not_taken(void) {
     );
 }
 
+/* Test: mov r64, m64 (load from memory) */
+uint64_t test_mov_r64_m64(void) {
+    static uint64_t mem = 0x123456789ABCDEF0ULL;
+    return MEASURE_WORST_CASE(
+        __asm__ volatile(
+            "mov (%0), %%rax\n\t"
+            :
+            : "r"(&mem)
+            : "rax"
+        );
+    );
+}
+
+/* Test: cmp r64, m64 (compare register with memory) */
+uint64_t test_cmp_r64_m64(void) {
+    static uint64_t mem = 0x1111111111111111ULL;
+    return MEASURE_WORST_CASE(
+        __asm__ volatile(
+            "mov $0x1111111111111111, %%rax\n\t"
+            "cmp (%0), %%rax\n\t"
+            :
+            : "r"(&mem)
+            : "rax"
+        );
+    );
+}
+
 #define MAX(x, y) (x >= y ? x : y)
 
 /* --- MAIN --- */
@@ -288,5 +325,7 @@ int main(void) {
     printf("lea r32, addr:         %lu cycles\n", test_lea_r32_addr());
     printf("lea r64, addr:         %lu cycles\n", test_lea_r64_addr());
     printf("nop:                   %lu cycles\n", test_nop());
+    printf("mov r64, m64:          %lu cycles\n", test_mov_r64_m64());
+    printf("cmp r64, m64:          %lu cycles\n", test_cmp_r64_m64());
     return 0;
 }

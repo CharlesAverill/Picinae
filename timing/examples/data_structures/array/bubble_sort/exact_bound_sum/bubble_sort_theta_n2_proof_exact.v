@@ -94,19 +94,19 @@ Definition time_of_bubble_sort_theta_n2 (len : N) (N_swaps : N) (t : trace) :=
     (* return *)
     tjalr.
 
-Definition bubble_sort_theta_n2_timing_invs (s : store) (base_mem : addr -> N)
+Definition bubble_sort_theta_n2_timing_invs (s : store) (base_mem : memory)
     (arr : addr) (len : N) (_a5 : N) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
-| 0x1e4 => Some (s V_MEM32 = Ⓜbase_mem /\ 
-                    s R_A0 = Ⓓarr /\ s R_A1 = Ⓓlen /\
-                    s R_A5 = Ⓓ_a5 /\
+| 0x1e4 => Some (s V_MEM32 = base_mem /\ 
+                    s R_A0 = arr /\ s R_A1 = len /\
+                    s R_A5 = _a5 /\
                     arr + 4 * len < 2^32 /\
                     cycle_count_of_trace t' = 0)
-| 0x1f0 => Some (exists mem a4 N_swaps, s V_MEM32 = Ⓜmem /\
-                   s R_A0 = Ⓓarr /\ s R_A1 = Ⓓlen /\
-                   s R_A3 = Ⓓ(arr + 4 * len) /\
+| 0x1f0 => Some (exists mem a4 N_swaps, s V_MEM32 = mem /\
+                   s R_A0 = arr /\ s R_A1 = len /\
+                   s R_A3 = (arr + 4 * len) /\
                    (* a4 is outer loop counter *)
-                   s R_A4 = Ⓓa4 /\
+                   s R_A4 = a4 /\
                    a4 <= len /\
                    arr + 4 * len < 2^32 /\
                  cycle_count_of_trace t' =
@@ -133,12 +133,12 @@ match t with (Addr a, s) :: t' => match a with
                         taddi
                     )
             )
-| 0x214 => Some (exists mem a4 inner_loop_count N_swaps N_swaps_this_iter, s V_MEM32 = Ⓜmem /\
-                   s R_A0 = Ⓓarr /\ s R_A1 = Ⓓlen /\
-                   s R_A3 = Ⓓ(arr + 4 * len) /\
+| 0x214 => Some (exists mem a4 inner_loop_count N_swaps N_swaps_this_iter, s V_MEM32 = mem /\
+                   s R_A0 = arr /\ s R_A1 = len /\
+                   s R_A3 = (arr + 4 * len) /\
                    (* a4 is outer loop counter *)
-                   s R_A4 = Ⓓa4 /\
-                   s R_A5 = Ⓓ(arr + 4 * (1 + inner_loop_count)) /\
+                   s R_A4 = a4 /\
+                   s R_A5 = (arr + 4 * (1 + inner_loop_count)) /\
                    1 + inner_loop_count <= len /\
                    (* this is here to handle the inductive case where 
                       inner_loop_count is incremented *)
@@ -190,10 +190,10 @@ Theorem bubble_sort_theta_n2_timing:
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
          (MDL: models rvtypctx s)
          (* bindings *)
-         (MEM: s V_MEM32 = Ⓜbase_mem)
-         (A0: s R_A0 = Ⓓarr)
-         (A2: s R_A1 = Ⓓlen)
-         (A5: s R_A5 = Ⓓa5)
+         (MEM: s V_MEM32 = base_mem)
+         (A0: s R_A0 = arr)
+         (A2: s R_A1 = len)
+         (A5: s R_A5 = a5)
          (* array must fit inside the address space without wrapping *)
          (* this shouldn't be necessary but makes the proof easy *)
          (ARR_VALID: arr + 4 * len < 2^32),
@@ -205,7 +205,7 @@ Theorem bubble_sort_theta_n2_timing:
 Proof using.
     intros.
     apply prove_invs.
-    Local Ltac step := time rv_step.
+    Local Ltac step := tstep r5_step.
 
     simpl. rewrite ENTRY. unfold entry_addr. step.
     now repeat split.
@@ -221,7 +221,7 @@ Proof using.
 
     (* 0x1e4 -> 0x1f0 *)
     destruct PRE as (MEM & A0 & A1 & A5 & ARR_VALID & Cycles). {
-        repeat step. eexists. eexists. exists 0. repeat split; eauto.
+        repeat step. do 2 eexists. exists 0. repeat split; eauto.
         now rewrite N.mod_small by assumption. lia.
         hammer.
     }
@@ -239,8 +239,8 @@ Proof using.
         do 2 eexists; exists 0, N_swaps, 0; repeat split; eauto.
             rewrite N.mod_small by (apply N.eqb_neq in BC; lia);
                 now psimpl.
-            1-4: apply N.eqb_neq in BC; lia.
-            hammer.
+        1-4: apply N.eqb_neq in BC; lia.
+        hammer.
 
     (* 0x101bc -> *)
     destruct PRE as (mem & a4 & inner_loop_count & N_swaps & N_swaps_this_iter & 
@@ -254,27 +254,13 @@ Proof using.
                 repeat split; eauto.
             repeat rewrite N.mul_add_distr_l. psimpl.
                 rewrite N.mod_small. reflexivity.
-            1-3: apply Bool.negb_true_iff, N.eqb_neq in BC; lia.
+        1-4: apply Bool.negb_true_iff, N.eqb_neq in BC; lia.
 
         (* TODO : replace with hammer when fixed *)
-        unfold_cycle_count_list.
-        do 3 (match goal with
-        | [|- context[time_of_addr ?X ?Y]] =>
-            let H := fresh "H" in
-            eassert(time_of_addr X Y = _) as H by
-            (now (cbv - [getmem setmem N.eqb]; find_rewrites;
-                    simpl; find_rewrites));
-            rewrite H; clear H
-        end).
-        match goal with
-        | [|- context[time_of_addr ?X ?Y]] =>
-            let H := fresh "H" in
-            eassert(time_of_addr X Y = _) as H
-        end. cbv [time_of_addr].
-        eassert (rv_decode (binary 516) = _) by (now compute); 
-            rewrite H; clear H.
-        cbv [N.eqb]. psimpl. rewrite BC0. compute. reflexivity.
-        rewrite H. clear H.
+        hammer. repeat rewrite (N.mul_add_distr_r 1). psimpl.
+        replace (a4 * (len - 1) - N_swaps) with
+            (1 + (a4 * (len - 1) - 1 - N_swaps)).
+        rewrite N.mul_add_distr_r. psimpl. compare_sums.
         hammer.
         rewrite <- getmem_mod_l with 
             (a := 4294967292 + arr + 4 * (1 + inner_loop_count)) in BC0.

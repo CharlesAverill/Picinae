@@ -140,7 +140,5 @@ Goal forall (size : N) (t : trace),
     intros.
     unfold i5_7300u_sum.time_of_sum. simpl.
     unfold i5_7300u.ret.
-    psimpl.
-    replace size with 1000. psimpl. Compute 469356 / 18050.
-    reflexivity.
+    psimpl. reflexivity.
 Qed.

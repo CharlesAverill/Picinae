@@ -64,3 +64,19 @@ Proof using.
 Qed.
 
 End TimingProof.
+
+Require Import NEORV32.
+Module NRV32 := NEORV32 NEORV32BaseConfig.
+Module NEORV32TimingProof := TimingProof NRV32.
+Import NEORV32TimingProof NRV32.
+
+Goal forall t,
+    time_of_vListInitialise t = 
+    (vListInitialiseAuto.cycle_count_of_trace t =
+        29 + 5 * T_data_latency + T_inst_latency).
+Proof.
+    intros. unfold time_of_vListInitialise.
+    unfold taddi, tsw, tjalr. psimpl.
+    repeat rewrite <- N.add_assoc.
+    now replace (T_data_latency + _) with (5 * T_data_latency + T_inst_latency) by lia.
+Qed.

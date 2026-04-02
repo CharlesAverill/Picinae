@@ -1,0 +1,1 @@
+12375 + 982 * T_data_latency + 170 * T_inst_latency

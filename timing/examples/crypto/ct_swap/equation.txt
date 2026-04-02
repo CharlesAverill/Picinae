@@ -1,0 +1,4 @@
+17 + 
+length * (
+    42 + 5 * T_data_latency + 2 * T_inst_latency
+) + T_inst_latency

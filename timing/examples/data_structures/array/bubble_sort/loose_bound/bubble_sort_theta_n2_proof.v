@@ -184,18 +184,17 @@ Proof using.
         Cycles_low & Cycles_high).
     repeat step.
         (* a4 = len *)
-        unfold time_of_bubble_sort_theta_n2.
-            apply N.eqb_eq in BC; subst.
-            hammer; rewrite N.eqb_refl; hammer.
+        hammer.
         (* a4 <> len *)
         do 2 eexists; exists 0; repeat split; eauto.
+        psimpl.
             rewrite N.mod_small by (apply N.eqb_neq in BC; lia);
                 now psimpl.
-            1-4: apply N.eqb_neq in BC; lia.
-            (* lower bound *)
-            hammer. 
-            (* upper bound *)
-            hammer.
+        1-4: apply N.eqb_neq in BC; lia.
+        (* lower bound *)
+        hammer.
+        (* upper bound *)
+        hammer.
 
     (* 0x101bc -> *)
     destruct PRE as (mem & a4 & inner_loop_count & MEM & A0 & A1 & A3 & A4
@@ -208,7 +207,7 @@ Proof using.
         do 2 eexists; exists (1 + inner_loop_count); repeat split; eauto.
             repeat rewrite N.mul_add_distr_l. psimpl.
             rewrite N.mod_small. reflexivity.
-            1-3: apply Bool.negb_true_iff, N.eqb_neq in BC; lia.
+            1-4: apply Bool.negb_true_iff, N.eqb_neq in BC; lia.
         hammer. hammer.
         (* arr[j-1 >= arr[j] *)
         do 2 eexists; exists (1 + inner_loop_count); repeat split; eauto.
@@ -217,14 +216,13 @@ Proof using.
             1-3: apply Bool.negb_true_iff, N.eqb_neq in BC; lia.
         hammer. hammer.
         (* at end of array, exit inner loop -> outer loop invariant *)
-        apply Bool.negb_false_iff, N.eqb_eq in BC; subst.
+        hammer.
         repeat step.
-        eexists. eexists. repeat split; eauto.
-            rewrite N.mod_small by lia. lia.
+        do 2 eexists. repeat split; eauto.
+            rewrite N.mod_small; lia.
         hammer.
         replace len with (1 + inner_loop_count) by lia.
-        hammer. rewrite BC, N.eqb_refl.
-        rewrite N.mod_small by lia. hammer.
+            rewrite N.mod_small by lia. hammer.
 Qed.
 
 End TimingProof.

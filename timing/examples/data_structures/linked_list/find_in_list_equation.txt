@@ -1,0 +1,6 @@
+5 +
+Piecewise((length, Eq(found_idx, -1)), (found_idx, True)) *
+    (19 + T_data_latency + T_data_latency +
+    T_inst_latency) +
+Piecewise((5 + T_inst_latency, Eq(found_idx, -1)),
+    (12 + T_data_latency + T_inst_latency, True)) + T_inst_latency

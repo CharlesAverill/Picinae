@@ -1,0 +1,1 @@
+29 + 5 * T_data_latency + T_inst_latency

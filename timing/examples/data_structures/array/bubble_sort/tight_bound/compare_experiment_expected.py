@@ -72,9 +72,9 @@ def main():
     print(f"Avg max percent off: {100.0 * sum(pct_off_max) / len(pct_off_max):.4f}%")
     print(f"Variance percent off: {variance(list(zip(pct_off_min, pct_off_max)))[0]:.4f}% {variance(list(zip(pct_off_min, pct_off_max)))[1]:.4f}%")
 
-    plot_comparison("bubble_sort (tight low bound)", "Array Length", "Cycle Count", 
-                    [('Expected Range (min-max)', 'lightgray', min_expected_vals[:PLOT_LEN], max_expected_vals[:PLOT_LEN])], 
-                    [('Measured', measured_vals[:PLOT_LEN])])
+    plot_comparison("bubble_sort", "Array Length", "Cycle Count", 
+                    [('Expected Range', 'lightgray', min_expected_vals[:PLOT_LEN], max_expected_vals[:PLOT_LEN])], 
+                    [('Measured', [(x, y) for x, y in zip(range(PLOT_LEN), measured_vals[:PLOT_LEN])])], s=5)
 
 
 if __name__ == '__main__':

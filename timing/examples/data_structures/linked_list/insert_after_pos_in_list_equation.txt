@@ -1,0 +1,25 @@
+Piecewise(
+    (10 + T_inst_latency + T_inst_latency, Eq(l, 0)),
+    (5 + Piecewise(
+        (8 + T_inst_latency, Eq(value, 0)),
+        (Piecewise(
+            (25 + T_inst_latency + T_data_latency + T_data_latency + T_data_latency + T_inst_latency, Eq(position, 0)),
+            (22 + T_inst_latency + T_data_latency +
+             Piecewise(
+                (19 + T_inst_latency +
+                    (position - 1) *
+                    (16 + T_data_latency + T_inst_latency) +
+                    T_data_latency, Lt(position, length)),
+                (10 + T_inst_latency +
+                    (length - 1) *
+                    (16 + T_data_latency + T_inst_latency) +
+                    T_inst_latency
+                , True)   
+             ) + T_data_latency +
+                T_data_latency + T_inst_latency
+            , True)
+        )
+        , True)
+    )
+    , True)
+)

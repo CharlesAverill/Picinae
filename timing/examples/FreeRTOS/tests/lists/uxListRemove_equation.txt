@@ -1,0 +1,6 @@
+19 +
+Piecewise(
+    (31 + 7 * T_data_latency, False), 
+    (29 + 6 * T_data_latency + T_inst_latency, True)
+) +
+3 * T_data_latency + T_inst_latency

@@ -348,3 +348,31 @@ Proof using.
 Qed.
 
 End TimingProof.
+
+Require Import NEORV32.
+Module NRV32 := NEORV32 NEORV32BaseConfig.
+Module NEORV32TimingProof := TimingProof NRV32.
+Import NEORV32TimingProof NRV32.
+
+Goal forall mem t pxNewListItem le_addr,
+    time_of_vListInsert mem pxNewListItem le_addr t = 
+    (vListInsert.cycle_count_of_trace t =
+      23 +
+      (if mem Ⓓ[ pxNewListItem ] =? portMAX_DELAY
+        then 15 + T_data_latency + T_data_latency
+        else
+        31 + T_data_latency + T_inst_latency +
+        le_addr * (15 + 2 * T_data_latency + T_inst_latency) +
+        2 * T_data_latency + T_inst_latency) + T_data_latency +
+      4 * (4 + T_data_latency) + T_data_latency + 2 * T_data_latency +
+      T_inst_latency).
+Proof.
+    intros. unfold time_of_vListInsert.
+    unfold tlw, tsw, taddi, tfbne, ttbne, ttbgeu, tfbgeu, tjal, tjalr.
+    psimpl. repeat rewrite <- N.add_assoc.
+    replace (15 + (T_data_latency + (T_data_latency + T_inst_latency))) with
+      (15 + 2 * T_data_latency + T_inst_latency) by lia.
+    replace (T_data_latency + (T_data_latency + T_inst_latency)) with
+      (2 * T_data_latency + T_inst_latency) by lia.
+    psimpl. psimpl. reflexivity.
+Qed.

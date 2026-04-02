@@ -135,3 +135,27 @@ Proof using.
 Qed.
 
 End TimingProof.
+
+Require Import NEORV32.
+Module NRV32 := NEORV32 NEORV32BaseConfig.
+Module NEORV32TimingProof := TimingProof NRV32.
+Import NEORV32TimingProof NRV32.
+
+Goal forall t m item,
+    time_of_uxListRemove t m item = 
+    (uxListRemoveAuto.cycle_count_of_trace t =
+        19 +
+        (if pxIndex m (pxContainer m item) =? item
+        then 31 + 7 * T_data_latency
+        else 29 + 6 * T_data_latency + T_inst_latency) + 
+        3 * T_data_latency + T_inst_latency).
+Proof.
+    intros. unfold time_of_uxListRemove.
+    unfold tlw, tsw, tfbne, ttbne, taddi, tjalr, pxIndex, pxContainer.
+    psimpl. repeat rewrite <- N.add_assoc.
+    replace (T_data_latency + _) with (7 * T_data_latency) by lia.
+    replace (T_data_latency + _) with (6 * T_data_latency + T_inst_latency) by lia.
+    replace (T_data_latency + _) with (3 * T_data_latency + T_inst_latency) by lia.
+    destruct (m Ⓓ[ 4 + m Ⓓ[ 16 + item ] ]), item.
+    all: psimpl; now psimpl.
+Qed.

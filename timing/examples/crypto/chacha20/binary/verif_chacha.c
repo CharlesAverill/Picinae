@@ -182,6 +182,8 @@ static br_word_t chacha20_quarter(br_word_t a, br_word_t b, br_word_t c, br_word
   return d;
 }
 
+#include "../../../timing_experiments.h"
+
 void chacha20_encrypt(const uint8_t* plaintext, uint8_t* ciphertext,
                       size_t len, const br_word_t key,
                       const br_word_t nonce, br_word_t counter) {
@@ -190,7 +192,9 @@ void chacha20_encrypt(const uint8_t* plaintext, uint8_t* ciphertext,
 
     while (offset < len) {
         // Generate next 64-byte block
+        START_TIMER;
         chacha20_block((br_word_t)keystream, key, nonce, counter++);
+        PRINT_TIMER;
 
         // XOR plaintext with keystream
         size_t block_len = (len - offset) < 64 ? (len - offset) : 64;
@@ -203,5 +207,20 @@ void chacha20_encrypt(const uint8_t* plaintext, uint8_t* ciphertext,
 }
 
 int main() {
-  chacha20_encrypt(NULL, NULL, 0, 0, 0, 0);
+  neorv32_rte_setup();
+  neorv32_uart0_setup(BAUD_RATE, 0);
+
+  const char *msg = "Hello world!";
+  size_t len = strlen(msg);
+
+  for (int i = 0; i < 100; i++) {
+    uint8_t ciphertext[len];
+    uint8_t key[32] = {i};
+    uint8_t nonce[12] = {i + 1};
+    br_word_t counter = 1;
+
+    chacha20_encrypt((const uint8_t*)msg, ciphertext, len, (br_word_t)key, (br_word_t)nonce, counter);
+  }
+
+  return 0;
 }

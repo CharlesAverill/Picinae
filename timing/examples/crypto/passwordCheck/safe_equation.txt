@@ -1,0 +1,2 @@
+38 + ulen * (29 + 2 * T_data_latency + T_inst_latency) +
+2 * T_data_latency + T_inst_latency

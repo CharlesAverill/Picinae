@@ -360,11 +360,11 @@ Goal forall (mem : memory) (l value : addr) (max_dist : N) (t : trace),
             i5_7300u_insert_in_sorted_list.optN_eqb
                 (i5_7300u_insert_in_sorted_list.LL.list_node_value mem value)
                 (Some (2 ^ 31 - 1))
-            then 2040
-            else 1042 + (1 + max_dist) * 2009)).
+            then 54
+            else 49 + (1 + max_dist) * 23)).
     intros.
     unfold i5_7300u_insert_in_sorted_list.time_of_insert_in_sorted_list. simpl.
     unfold i5_7300u.ret, i5_7300u.mov_m64_r64, i5_7300u.nop,
         i5_7300u_insert_in_sorted_list.INT_MAX. psimpl.
     reflexivity.
-Qed.
+Qed. 

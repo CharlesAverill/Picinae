@@ -184,3 +184,19 @@ Proof using.
 Qed.
 
 End TimingProof.
+
+Require Import NEORV32.
+Module NRV32 := NEORV32 NEORV32BaseConfig.
+Module NEORV32TimingProof := TimingProof NRV32.
+Import NEORV32TimingProof NRV32.
+
+Goal forall t,
+    time_of_chacha20_block t = 
+    (ChaCha20Auto.cycle_count_of_trace t = 
+      12375 + 982 * T_data_latency + 170 * T_inst_latency).
+Proof.
+    intros. unfold time_of_chacha20_block. f_equal.
+    unfold time_of_chacha20_quarter, taddi, tsw, tlui,
+      tlbu, tlw, tadd, txor, tslli, ttbne, tfbne, tjalr, tjal,
+      tsb, tsrli, T_shift_latency, NEORV32BaseConfig.CPU_FAST_SHIFT_EN. lia.
+Qed.

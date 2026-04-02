@@ -1,0 +1,418 @@
+Aborted.
+
+Available CMDs:
+ h: Help
+ r: Restart
+ u: Upload via UART
+ s: Store to SPI flash
+ l: Load from SPI flash
+ e: Start executable
+CMD:> u
+Awaiting neorv32_exe.bin... e
+Booting from 0x00000000...
+
+
+=== find_in_list ===
+Cycle count read: 32
+Len: 1, found @ 0
+Cycle count read: 32
+Len: 2, found @ 0
+Cycle count read: 54
+Len: 3, found @ 1
+Cycle count read: 32
+Len: 4, found @ 0
+Cycle count read: 157
+Len: 5, not found
+Cycle count read: 179
+Len: 6, not found
+Cycle count read: 54
+Len: 7, found @ 1
+Cycle count read: 223
+Len: 8, not found
+Cycle count read: 245
+Len: 9, not found
+Cycle count read: 267
+Len: 10, not found
+Cycle count read: 252
+Len: 11, found @ 10
+Cycle count read: 311
+Len: 12, not found
+Cycle count read: 32
+Len: 13, found @ 0
+Cycle count read: 355
+Len: 14, not found
+Cycle count read: 230
+Len: 15, found @ 9
+Cycle count read: 252
+Len: 16, found @ 10
+Cycle count read: 421
+Len: 17, not found
+Cycle count read: 296
+Len: 18, found @ 12
+Cycle count read: 465
+Len: 19, not found
+Cycle count read: 428
+Len: 20, found @ 18
+Cycle count read: 509
+Len: 21, not found
+Cycle count read: 531
+Len: 22, not found
+Cycle count read: 553
+Len: 23, not found
+Cycle count read: 186
+Len: 24, found @ 7
+Cycle count read: 597
+Len: 25, not found
+Cycle count read: 340
+Len: 26, found @ 14
+Cycle count read: 582
+Len: 27, found @ 25
+Cycle count read: 663
+Len: 28, not found
+Cycle count read: 685
+Len: 29, not found
+Cycle count read: 707
+Len: 30, not found
+Cycle count read: 729
+Len: 31, not found
+Cycle count read: 751
+Len: 32, not found
+Cycle count read: 428
+Len: 33, found @ 18
+Cycle count read: 428
+Len: 34, found @ 18
+Cycle count read: 817
+Len: 35, not found
+Cycle count read: 839
+Len: 36, not found
+Cycle count read: 861
+Len: 37, not found
+Cycle count read: 883
+Len: 38, not found
+Cycle count read: 905
+Len: 39, not found
+Cycle count read: 868
+Len: 40, found @ 38
+Cycle count read: 949
+Len: 41, not found
+Cycle count read: 32
+Len: 42, found @ 0
+Cycle count read: 993
+Len: 43, not found
+Cycle count read: 1015
+Len: 44, not found
+Cycle count read: 692
+Len: 45, found @ 30
+Cycle count read: 978
+Len: 46, found @ 43
+Cycle count read: 1081
+Len: 47, not found
+Cycle count read: 1000
+Len: 48, found @ 44
+Cycle count read: 824
+Len: 49, found @ 36
+Cycle count read: 98
+Len: 50, found @ 3
+Cycle count read: 384
+Len: 51, found @ 16
+Cycle count read: 1191
+Len: 52, not found
+Cycle count read: 1213
+Len: 53, not found
+Cycle count read: 428
+Len: 54, found @ 18
+Cycle count read: 208
+Len: 55, found @ 8
+Cycle count read: 1279
+Len: 56, not found
+Cycle count read: 1022
+Len: 57, found @ 45
+Cycle count read: 1323
+Len: 58, not found
+Cycle count read: 32
+Len: 59, found @ 0
+Cycle count read: 1367
+Len: 60, not found
+Cycle count read: 1389
+Len: 61, not found
+Cycle count read: 582
+Len: 62, found @ 25
+Cycle count read: 1433
+Len: 63, not found
+Cycle count read: 1455
+Len: 64, not found
+Cycle count read: 604
+Len: 65, found @ 26
+Cycle count read: 252
+Len: 66, found @ 10
+Cycle count read: 1308
+Len: 67, found @ 58
+Cycle count read: 1543
+Len: 68, not found
+Cycle count read: 868
+Len: 69, found @ 38
+Cycle count read: 824
+Len: 70, found @ 36
+Cycle count read: 230
+Len: 71, found @ 9
+Cycle count read: 1631
+Len: 72, not found
+Cycle count read: 1653
+Len: 73, not found
+Cycle count read: 1418
+Len: 74, found @ 63
+Cycle count read: 1697
+Len: 75, not found
+Cycle count read: 54
+Len: 76, found @ 1
+Cycle count read: 1741
+Len: 77, not found
+Cycle count read: 1763
+Len: 78, not found
+Cycle count read: 1785
+Len: 79, not found
+Cycle count read: 1807
+Len: 80, not found
+Cycle count read: 868
+Len: 81, found @ 38
+Cycle count read: 1660
+Len: 82, found @ 74
+Cycle count read: 1814
+Len: 83, found @ 81
+Cycle count read: 846
+Len: 84, found @ 37
+Cycle count read: 1917
+Len: 85, not found
+Cycle count read: 1939
+Len: 86, not found
+Cycle count read: 32
+Len: 87, found @ 0
+Cycle count read: 1983
+Len: 88, not found
+Cycle count read: 2005
+Len: 89, not found
+Cycle count read: 2027
+Len: 90, not found
+Cycle count read: 2049
+Len: 91, not found
+Cycle count read: 2071
+Len: 92, not found
+Cycle count read: 736
+Len: 93, found @ 32
+Cycle count read: 1990
+Len: 94, found @ 89
+Cycle count read: 2137
+Len: 95, not found
+Cycle count read: 2159
+Len: 96, not found
+Cycle count read: 2181
+Len: 97, not found
+Cycle count read: 384
+Len: 98, found @ 16
+Cycle count read: 1176
+Len: 99, found @ 52
+Cycle count read: 54
+Len: 100, found @ 1
+
+=== insert_after_pos_in_list ===
+Cycle count read: 49
+Len: 1, Pos: 0, Inserted: 676
+Cycle count read: 49
+Len: 2, Pos: 0, Inserted: 43
+Cycle count read: 49
+Len: 3, Pos: 0, Inserted: 11
+Cycle count read: 85
+Len: 4, Pos: 2, Inserted: 254
+Cycle count read: 49
+Len: 5, Pos: 0, Inserted: 191
+Cycle count read: 85
+Len: 6, Pos: 2, Inserted: 371
+Cycle count read: 121
+Len: 7, Pos: 4, Inserted: 925
+Cycle count read: 103
+Len: 8, Pos: 3, Inserted: 913
+Cycle count read: 103
+Len: 9, Pos: 3, Inserted: 827
+Cycle count read: 211
+Len: 10, Pos: 9, Inserted: 605
+Cycle count read: 157
+Len: 11, Pos: 6, Inserted: 204
+Cycle count read: 211
+Len: 12, Pos: 9, Inserted: 888
+Cycle count read: 121
+Len: 13, Pos: 4, Inserted: 511
+Cycle count read: 175
+Len: 14, Pos: 7, Inserted: 949
+Cycle count read: 121
+Len: 15, Pos: 4, Inserted: 430
+Cycle count read: 103
+Len: 16, Pos: 3, Inserted: 226
+Cycle count read: 193
+Len: 17, Pos: 8, Inserted: 191
+Cycle count read: 121
+Len: 18, Pos: 4, Inserted: 187
+Cycle count read: 229
+Len: 19, Pos: 10, Inserted: 379
+Cycle count read: 391
+Len: 20, Pos: 19, Inserted: 884
+Cycle count read: 139
+Len: 21, Pos: 5, Inserted: 42
+Cycle count read: 85
+Len: 22, Pos: 2, Inserted: 925
+Cycle count read: 175
+Len: 23, Pos: 7, Inserted: 921
+Cycle count read: 319
+Len: 24, Pos: 15, Inserted: 273
+Cycle count read: 301
+Len: 25, Pos: 14, Inserted: 447
+Cycle count read: 463
+Len: 26, Pos: 23, Inserted: 198
+Cycle count read: 283
+Len: 27, Pos: 13, Inserted: 695
+Cycle count read: 499
+Len: 28, Pos: 25, Inserted: 288
+Cycle count read: 211
+Len: 29, Pos: 9, Inserted: 762
+Cycle count read: 175
+Len: 30, Pos: 7, Inserted: 405
+Cycle count read: 445
+Len: 31, Pos: 22, Inserted: 394
+Cycle count read: 247
+Len: 32, Pos: 11, Inserted: 954
+Cycle count read: 193
+Len: 33, Pos: 8, Inserted: 435
+Cycle count read: 481
+Len: 34, Pos: 24, Inserted: 438
+Cycle count read: 463
+Len: 35, Pos: 23, Inserted: 320
+Cycle count read: 175
+Len: 36, Pos: 7, Inserted: 169
+Cycle count read: 139
+Len: 37, Pos: 5, Inserted: 986
+Cycle count read: 301
+Len: 38, Pos: 14, Inserted: 911
+Cycle count read: 535
+Len: 39, Pos: 27, Inserted: 724
+Cycle count read: 355
+Len: 40, Pos: 17, Inserted: 297
+Cycle count read: 175
+Len: 41, Pos: 7, Inserted: 581
+Cycle count read: 463
+Len: 42, Pos: 23, Inserted: 987
+Cycle count read: 445
+Len: 43, Pos: 22, Inserted: 664
+Cycle count read: 355
+Len: 44, Pos: 17, Inserted: 585
+Cycle count read: 805
+Len: 45, Pos: 42, Inserted: 142
+Cycle count read: 679
+Len: 46, Pos: 35, Inserted: 485
+Cycle count read: 355
+Len: 47, Pos: 17, Inserted: 213
+Cycle count read: 337
+Len: 48, Pos: 16, Inserted: 561
+Cycle count read: 121
+Len: 49, Pos: 4, Inserted: 56
+Cycle count read: 409
+Len: 50, Pos: 20, Inserted: 405
+Cycle count read: 805
+Len: 51, Pos: 42, Inserted: 8
+Cycle count read: 139
+Len: 52, Pos: 5, Inserted: 973
+Cycle count read: 85
+Len: 53, Pos: 2, Inserted: 573
+Cycle count read: 913
+Len: 54, Pos: 48, Inserted: 855
+Cycle count read: 769
+Len: 55, Pos: 40, Inserted: 126
+Cycle count read: 319
+Len: 56, Pos: 15, Inserted: 315
+Cycle count read: 589
+Len: 57, Pos: 30, Inserted: 600
+Cycle count read: 697
+Len: 58, Pos: 36, Inserted: 193
+Cycle count read: 265
+Len: 59, Pos: 12, Inserted: 935
+Cycle count read: 553
+Len: 60, Pos: 28, Inserted: 261
+Cycle count read: 355
+Len: 61, Pos: 17, Inserted: 945
+Cycle count read: 265
+Len: 62, Pos: 12, Inserted: 63
+Cycle count read: 301
+Len: 63, Pos: 14, Inserted: 111
+Cycle count read: 283
+Len: 64, Pos: 13, Inserted: 100
+Cycle count read: 841
+Len: 65, Pos: 44, Inserted: 828
+Cycle count read: 157
+Len: 66, Pos: 6, Inserted: 696
+Cycle count read: 823
+Len: 67, Pos: 43, Inserted: 810
+Cycle count read: 157
+Len: 68, Pos: 6, Inserted: 181
+Cycle count read: 607
+Len: 69, Pos: 31, Inserted: 129
+Cycle count read: 193
+Len: 70, Pos: 8, Inserted: 405
+Cycle count read: 769
+Len: 71, Pos: 40, Inserted: 841
+Cycle count read: 373
+Len: 72, Pos: 18, Inserted: 616
+Cycle count read: 625
+Len: 73, Pos: 32, Inserted: 837
+Cycle count read: 301
+Len: 74, Pos: 14, Inserted: 269
+Cycle count read: 589
+Len: 75, Pos: 30, Inserted: 73
+Cycle count read: 931
+Len: 76, Pos: 49, Inserted: 350
+Cycle count read: 49
+Len: 77, Pos: 0, Inserted: 765
+Cycle count read: 1327
+Len: 78, Pos: 71, Inserted: 843
+Cycle count read: 85
+Len: 79, Pos: 2, Inserted: 550
+Cycle count read: 859
+Len: 80, Pos: 45, Inserted: 999
+Cycle count read: 1471
+Len: 81, Pos: 79, Inserted: 758
+Cycle count read: 175
+Len: 82, Pos: 7, Inserted: 773
+Cycle count read: 1111
+Len: 83, Pos: 59, Inserted: 679
+Cycle count read: 1021
+Len: 84, Pos: 54, Inserted: 70
+Cycle count read: 67
+Len: 85, Pos: 1, Inserted: 90
+Cycle count read: 625
+Len: 86, Pos: 32, Inserted: 467
+Cycle count read: 517
+Len: 87, Pos: 26, Inserted: 2
+Cycle count read: 1201
+Len: 88, Pos: 64, Inserted: 274
+Cycle count read: 1327
+Len: 89, Pos: 71, Inserted: 787
+Cycle count read: 283
+Len: 90, Pos: 13, Inserted: 758
+Cycle count read: 67
+Len: 91, Pos: 1, Inserted: 221
+Cycle count read: 1399
+Len: 92, Pos: 75, Inserted: 862
+Cycle count read: 1615
+Len: 93, Pos: 87, Inserted: 209
+Cycle count read: 1075
+Len: 94, Pos: 57, Inserted: 73
+Cycle count read: 625
+Len: 95, Pos: 32, Inserted: 595
+Cycle count read: 103
+Len: 96, Pos: 3, Inserted: 507
+Cycle count read: 787
+Len: 97, Pos: 41, Inserted: 916
+Cycle count read: 319
+Len: 98, Pos: 15, Inserted: 97
+Cycle count read: 1579
+Len: 99, Pos: 85, Inserted: 397
+Cycle count read: 535
+Len: 100, Pos: 27, Inserted: 801
+Done

@@ -8,7 +8,7 @@ MARCH = rv32i_zicsr_zifencei_zicntr
 #RISCV_PREFIX ?= riscv-none-elf-
 
 # Override default optimization goal
-EFFORT = -O3
+EFFORT = -O1
 USER_FLAGS += -fomit-frame-pointer -fno-unroll-loops
 
 # Add extended debug symbols

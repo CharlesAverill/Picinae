@@ -1,0 +1,125 @@
+NEORV32 Bootloader
+
+BLDV: Jun 21 2025
+HWV:  0x01110703
+CLK:  0x02faf080
+MISA: 0x40801104
+XISA: 0x00000083
+SOC:  0x0003800d
+IMEM: 0x00010000
+DMEM: 0x00004000
+
+Auto-boot in 10s. Press any key to abort.
+Aborted.
+
+Available CMDs:
+ h: Help
+ r: Restart
+ u: Upload via UART
+ s: Store to SPI flash
+ l: Load from SPI flash
+ e: Start executable
+CMD:> u
+Awaiting neorv32_exe.bin... e
+Booting from 0x00000000...
+
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641
+Cycle count read: 13641

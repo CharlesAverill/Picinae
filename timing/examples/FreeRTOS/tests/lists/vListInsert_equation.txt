@@ -1,0 +1,6 @@
+23 +
+31 + T_data_latency + T_inst_latency +
+le_addr * (15 + 2 * T_data_latency + T_inst_latency) +
+2 * T_data_latency + T_inst_latency + T_data_latency +
+4 * (4 + T_data_latency) + T_data_latency + 2 * T_data_latency +
+T_inst_latency

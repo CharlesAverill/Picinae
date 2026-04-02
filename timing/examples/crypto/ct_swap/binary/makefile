@@ -5,7 +5,7 @@
 MARCH = rv32i_zicsr_zifencei_zicntr
 
 # Override the default RISC-V GCC prefix
-#RISCV_PREFIX ?= riscv-none-elf-
+RISCV_PREFIX ?= /home/charles/Desktop/riscv-none-elf/bin/riscv-none-elf-
 
 # Override default optimization goal
 EFFORT = -Os
@@ -31,7 +31,7 @@ USER_FLAGS += -Wl,--gc-sections
 #APP_INC += -I .
 
 # Set path to NEORV32 root directory
-NEORV32_HOME ?= ~/education/utd/lab/neorv32
+NEORV32_HOME ?= /home/charles/Desktop/projects/rocq/neorv32
 
 # Include the main NEORV32 makefile
 

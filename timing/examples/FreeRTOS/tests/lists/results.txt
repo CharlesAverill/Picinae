@@ -1,0 +1,1871 @@
+ 
+Invalid CMD
+CMD:> u
+Awaiting neorv32_exe.bin... e
+Booting from 0x00000000...
+
+Starting FreeRTOS list operation timing tests (dynamic items)...
+
+=== Test: vListInsert ===
+Iteration 0: inserting new item (value=2104627054)
+Cycle count read: 98
+Iteration 1: inserting new item (value=2013331137)
+Cycle count read: 98
+Iteration 2: inserting new item (value=258660947)
+Cycle count read: 98
+Iteration 3: inserting new item (value=107061148)
+Cycle count read: 98
+Iteration 4: inserting new item (value=317460219)
+Cycle count read: 136
+Iteration 5: inserting new item (value=663931879)
+Cycle count read: 155
+Iteration 6: inserting new item (value=307161078)
+Cycle count read: 136
+Iteration 7: inserting new item (value=1718702872)
+Cycle count read: 193
+Iteration 8: inserting new item (value=1306951058)
+Cycle count read: 193
+Iteration 9: inserting new item (value=1066376876)
+Cycle count read: 193
+Iteration 10: inserting new item (value=624381721)
+Cycle count read: 174
+Iteration 11: inserting new item (value=850811527)
+Cycle count read: 212
+Iteration 12: inserting new item (value=329784053)
+Cycle count read: 174
+Iteration 13: inserting new item (value=726742932)
+Cycle count read: 231
+Iteration 14: inserting new item (value=182903521)
+Cycle count read: 117
+Iteration 15: inserting new item (value=787925035)
+Cycle count read: 269
+Iteration 16: inserting new item (value=1364123723)
+Cycle count read: 345
+Iteration 17: inserting new item (value=198878220)
+Cycle count read: 136
+Iteration 18: inserting new item (value=1117075042)
+Cycle count read: 345
+Iteration 19: inserting new item (value=1108236242)
+Cycle count read: 345
+Iteration 20: inserting new item (value=1775000610)
+Cycle count read: 440
+Iteration 21: inserting new item (value=500470195)
+Cycle count read: 231
+Iteration 22: inserting new item (value=896676389)
+Cycle count read: 345
+Iteration 23: inserting new item (value=6341838)
+Cycle count read: 98
+Iteration 24: inserting new item (value=785214762)
+Cycle count read: 326
+Iteration 25: inserting new item (value=1084946248)
+Cycle count read: 421
+Iteration 26: inserting new item (value=1601419914)
+Cycle count read: 516
+Iteration 27: inserting new item (value=2058135092)
+Cycle count read: 592
+Iteration 28: inserting new item (value=1671754873)
+Cycle count read: 535
+Iteration 29: inserting new item (value=1952290050)
+Cycle count read: 592
+Iteration 30: inserting new item (value=1572975837)
+Cycle count read: 516
+Iteration 31: inserting new item (value=1596343802)
+Cycle count read: 535
+Iteration 32: inserting new item (value=240941423)
+Cycle count read: 174
+Iteration 33: inserting new item (value=1843946550)
+Cycle count read: 649
+Iteration 34: inserting new item (value=793779187)
+Cycle count read: 383
+Iteration 35: inserting new item (value=441773333)
+Cycle count read: 269
+Iteration 36: inserting new item (value=884819086)
+Cycle count read: 440
+Iteration 37: inserting new item (value=590861527)
+Cycle count read: 307
+Iteration 38: inserting new item (value=1676358848)
+Cycle count read: 687
+Iteration 39: inserting new item (value=2132930493)
+Cycle count read: 839
+Iteration 40: inserting new item (value=969627641)
+Cycle count read: 497
+Iteration 41: inserting new item (value=930717537)
+Cycle count read: 497
+Iteration 42: inserting new item (value=195748182)
+Cycle count read: 155
+Iteration 43: inserting new item (value=2064531490)
+Cycle count read: 877
+Iteration 44: inserting new item (value=1195920216)
+Cycle count read: 630
+Iteration 45: inserting new item (value=347502525)
+Cycle count read: 288
+Iteration 46: inserting new item (value=584628940)
+Cycle count read: 345
+Iteration 47: inserting new item (value=1938341337)
+Cycle count read: 877
+Iteration 48: inserting new item (value=642503024)
+Cycle count read: 402
+Iteration 49: inserting new item (value=915004020)
+Cycle count read: 573
+Iteration 50: inserting new item (value=2034338438)
+Cycle count read: 972
+Iteration 51: inserting new item (value=1690522669)
+Cycle count read: 858
+Iteration 52: inserting new item (value=1805037441)
+Cycle count read: 915
+Iteration 53: inserting new item (value=1904039418)
+Cycle count read: 953
+Iteration 54: inserting new item (value=1491310300)
+Cycle count read: 763
+Iteration 55: inserting new item (value=227517325)
+Cycle count read: 193
+Iteration 56: inserting new item (value=17943876)
+Cycle count read: 117
+Iteration 57: inserting new item (value=570537582)
+Cycle count read: 383
+Iteration 58: inserting new item (value=1409581066)
+Cycle count read: 820
+Iteration 59: inserting new item (value=1819703730)
+Cycle count read: 1029
+Iteration 60: inserting new item (value=730240988)
+Cycle count read: 516
+Iteration 61: inserting new item (value=786466794)
+Cycle count read: 554
+Iteration 62: inserting new item (value=1411137128)
+Cycle count read: 877
+Iteration 63: inserting new item (value=1680096093)
+Cycle count read: 1010
+Iteration 64: inserting new item (value=1557073422)
+Cycle count read: 915
+Iteration 65: inserting new item (value=336261883)
+Cycle count read: 326
+Iteration 66: inserting new item (value=369011621)
+Cycle count read: 364
+Iteration 67: inserting new item (value=612778094)
+Cycle count read: 478
+Iteration 68: inserting new item (value=593428557)
+Cycle count read: 478
+Iteration 69: inserting new item (value=1874169071)
+Cycle count read: 1238
+Iteration 70: inserting new item (value=23426162)
+Cycle count read: 136
+Iteration 71: inserting new item (value=1373475466)
+Cycle count read: 953
+Iteration 72: inserting new item (value=2146658141)
+Cycle count read: 1466
+Iteration 73: inserting new item (value=1408213748)
+Cycle count read: 972
+Iteration 74: inserting new item (value=1920126896)
+Cycle count read: 1333
+Iteration 75: inserting new item (value=403291632)
+Cycle count read: 402
+Iteration 76: inserting new item (value=383219752)
+Cycle count read: 402
+Iteration 77: inserting new item (value=775923815)
+Cycle count read: 668
+Iteration 78: inserting new item (value=218034772)
+Cycle count read: 231
+Iteration 79: inserting new item (value=1943543451)
+Cycle count read: 1447
+Iteration 80: inserting new item (value=850235133)
+Cycle count read: 782
+Iteration 81: inserting new item (value=1392635638)
+Cycle count read: 1067
+Iteration 82: inserting new item (value=2106152164)
+Cycle count read: 1618
+Iteration 83: inserting new item (value=1094983679)
+Cycle count read: 953
+Iteration 84: inserting new item (value=171257564)
+Cycle count read: 174
+Iteration 85: inserting new item (value=814735066)
+Cycle count read: 801
+Iteration 86: inserting new item (value=120129271)
+Cycle count read: 174
+Iteration 87: inserting new item (value=753272343)
+Cycle count read: 725
+Iteration 88: inserting new item (value=212901709)
+Cycle count read: 269
+Iteration 89: inserting new item (value=709592971)
+Cycle count read: 706
+Iteration 90: inserting new item (value=1897848806)
+Cycle count read: 1561
+Iteration 91: inserting new item (value=1084324430)
+Cycle count read: 1048
+Iteration 92: inserting new item (value=1263919994)
+Cycle count read: 1162
+Iteration 93: inserting new item (value=1287856732)
+Cycle count read: 1181
+Iteration 94: inserting new item (value=448157608)
+Cycle count read: 535
+Iteration 95: inserting new item (value=1863719016)
+Cycle count read: 1618
+Iteration 96: inserting new item (value=1302170665)
+Cycle count read: 1219
+Iteration 97: inserting new item (value=12507472)
+Cycle count read: 117
+Iteration 98: inserting new item (value=1301254600)
+Cycle count read: 1238
+Iteration 99: inserting new item (value=252026318)
+Cycle count read: 364
+Iteration 100: inserting new item (value=889697122)
+Cycle count read: 1010
+Iteration 101: inserting new item (value=811710940)
+Cycle count read: 934
+Iteration 102: inserting new item (value=1947343758)
+Cycle count read: 1865
+Iteration 103: inserting new item (value=53156732)
+Cycle count read: 174
+Iteration 104: inserting new item (value=106770298)
+Cycle count read: 193
+Iteration 105: inserting new item (value=119201316)
+Cycle count read: 231
+Iteration 106: inserting new item (value=278093899)
+Cycle count read: 459
+Iteration 107: inserting new item (value=1211907733)
+Cycle count read: 1333
+Iteration 108: inserting new item (value=81323043)
+Cycle count read: 193
+Iteration 109: inserting new item (value=159695818)
+Cycle count read: 288
+Iteration 110: inserting new item (value=1941885063)
+Cycle count read: 1979
+Iteration 111: inserting new item (value=900561034)
+Cycle count read: 1181
+Iteration 112: inserting new item (value=1733701241)
+Cycle count read: 1808
+Iteration 113: inserting new item (value=1905788732)
+Cycle count read: 1979
+Iteration 114: inserting new item (value=287077510)
+Cycle count read: 516
+Iteration 115: inserting new item (value=2117778483)
+Cycle count read: 2245
+Iteration 116: inserting new item (value=371956832)
+Cycle count read: 649
+Iteration 117: inserting new item (value=1551163732)
+Cycle count read: 1675
+Iteration 118: inserting new item (value=1505920468)
+Cycle count read: 1675
+Iteration 119: inserting new item (value=2108017713)
+Cycle count read: 2302
+Iteration 120: inserting new item (value=532204606)
+Cycle count read: 763
+Iteration 121: inserting new item (value=1998337188)
+Cycle count read: 2207
+Iteration 122: inserting new item (value=2084567123)
+Cycle count read: 2302
+Iteration 123: inserting new item (value=891979506)
+Cycle count read: 1219
+Iteration 124: inserting new item (value=1061031745)
+Cycle count read: 1333
+Iteration 125: inserting new item (value=2075302960)
+Cycle count read: 2340
+Iteration 126: inserting new item (value=2044817127)
+Cycle count read: 2302
+Iteration 127: inserting new item (value=100823242)
+Cycle count read: 212
+Iteration 128: inserting new item (value=1752746508)
+Cycle count read: 1979
+Iteration 129: inserting new item (value=47185819)
+Cycle count read: 174
+Iteration 130: inserting new item (value=16460956)
+Cycle count read: 136
+Iteration 131: inserting new item (value=1825200954)
+Cycle count read: 2093
+Iteration 132: inserting new item (value=693036495)
+Cycle count read: 991
+Iteration 133: inserting new item (value=145290657)
+Cycle count read: 345
+Iteration 134: inserting new item (value=1624538698)
+Cycle count read: 1941
+Iteration 135: inserting new item (value=1120388236)
+Cycle count read: 1561
+Iteration 136: inserting new item (value=876198286)
+Cycle count read: 1276
+Iteration 137: inserting new item (value=1301530052)
+Cycle count read: 1694
+Iteration 138: inserting new item (value=1702431848)
+Cycle count read: 2093
+Iteration 139: inserting new item (value=1810326336)
+Cycle count read: 2207
+Iteration 140: inserting new item (value=1279177006)
+Cycle count read: 1656
+Iteration 141: inserting new item (value=1911538232)
+Cycle count read: 2397
+Iteration 142: inserting new item (value=245321309)
+Cycle count read: 535
+Iteration 143: inserting new item (value=1802350592)
+Cycle count read: 2226
+Iteration 144: inserting new item (value=1904976114)
+Cycle count read: 2416
+Iteration 145: inserting new item (value=678552606)
+Cycle count read: 1029
+Iteration 146: inserting new item (value=76489288)
+Cycle count read: 231
+Iteration 147: inserting new item (value=2099821979)
+Cycle count read: 2777
+Iteration 148: inserting new item (value=1897457817)
+Cycle count read: 2416
+Iteration 149: inserting new item (value=161546874)
+Cycle count read: 402
+Iteration 150: inserting new item (value=460168031)
+Cycle count read: 877
+Iteration 151: inserting new item (value=1200606166)
+Cycle count read: 1713
+Iteration 152: inserting new item (value=1113293960)
+Cycle count read: 1656
+Iteration 153: inserting new item (value=1553492287)
+Cycle count read: 2074
+Iteration 154: inserting new item (value=730959735)
+Cycle count read: 1181
+Iteration 155: inserting new item (value=607317618)
+Cycle count read: 1010
+Iteration 156: inserting new item (value=867722670)
+Cycle count read: 1409
+Iteration 157: inserting new item (value=1859997041)
+Cycle count read: 2530
+Iteration 158: inserting new item (value=1417414680)
+Cycle count read: 2074
+Iteration 159: inserting new item (value=1075017730)
+Cycle count read: 1637
+Iteration 160: inserting new item (value=827086177)
+Cycle count read: 1371
+Iteration 161: inserting new item (value=114439997)
+Cycle count read: 326
+Iteration 162: inserting new item (value=1532335582)
+Cycle count read: 2188
+Iteration 163: inserting new item (value=984637278)
+Cycle count read: 1637
+Iteration 164: inserting new item (value=152271168)
+Cycle count read: 402
+Iteration 165: inserting new item (value=1016241868)
+Cycle count read: 1675
+Iteration 166: inserting new item (value=183030795)
+Cycle count read: 497
+Iteration 167: inserting new item (value=1899708634)
+Cycle count read: 2796
+Iteration 168: inserting new item (value=1904732170)
+Cycle count read: 2834
+Iteration 169: inserting new item (value=125376078)
+Cycle count read: 383
+Iteration 170: inserting new item (value=1091977160)
+Cycle count read: 1827
+Iteration 171: inserting new item (value=2111523118)
+Cycle count read: 3290
+Iteration 172: inserting new item (value=558994142)
+Cycle count read: 1010
+Iteration 173: inserting new item (value=1538354964)
+Cycle count read: 2340
+Iteration 174: inserting new item (value=338071539)
+Cycle count read: 820
+Iteration 175: inserting new item (value=1346638207)
+Cycle count read: 2169
+Iteration 176: inserting new item (value=1831527)
+Cycle count read: 98
+Iteration 177: inserting new item (value=1231198713)
+Cycle count read: 2055
+Iteration 178: inserting new item (value=10945010)
+Cycle count read: 136
+Iteration 179: inserting new item (value=1457991982)
+Cycle count read: 2378
+Iteration 180: inserting new item (value=120523974)
+Cycle count read: 421
+Iteration 181: inserting new item (value=1717102884)
+Cycle count read: 2720
+Iteration 182: inserting new item (value=341031700)
+Cycle count read: 896
+Iteration 183: inserting new item (value=1039789523)
+Cycle count read: 1846
+Iteration 184: inserting new item (value=1856217922)
+Cycle count read: 2967
+Iteration 185: inserting new item (value=212595568)
+Cycle count read: 630
+Iteration 186: inserting new item (value=1586196037)
+Cycle count read: 2625
+Iteration 187: inserting new item (value=1336380053)
+Cycle count read: 2302
+Iteration 188: inserting new item (value=986840534)
+Cycle count read: 1846
+Iteration 189: inserting new item (value=1168594135)
+Cycle count read: 2112
+Iteration 190: inserting new item (value=1056278935)
+Cycle count read: 1903
+Iteration 191: inserting new item (value=1181368523)
+Cycle count read: 2150
+Iteration 192: inserting new item (value=1211249176)
+Cycle count read: 2207
+Iteration 193: inserting new item (value=1765268582)
+Cycle count read: 2986
+Iteration 194: inserting new item (value=1772109673)
+Cycle count read: 3005
+Iteration 195: inserting new item (value=502860625)
+Cycle count read: 1105
+Iteration 196: inserting new item (value=1868298965)
+Cycle count read: 3233
+Iteration 197: inserting new item (value=229272491)
+Cycle count read: 706
+Iteration 198: inserting new item (value=1063838180)
+Cycle count read: 1979
+Iteration 199: inserting new item (value=2048145103)
+Cycle count read: 3651
+Cleaning up inserted items...
+
+=== Test: vListInsertEnd ===
+Iteration 0: inserting new item at end (value=1684851001)
+Cycle count read: 65
+Iteration 1: inserting new item at end (value=1497411194)
+Cycle count read: 65
+Iteration 2: inserting new item at end (value=643313416)
+Cycle count read: 65
+Iteration 3: inserting new item at end (value=84859443)
+Cycle count read: 65
+Iteration 4: inserting new item at end (value=1600614413)
+Cycle count read: 65
+Iteration 5: inserting new item at end (value=916930761)
+Cycle count read: 65
+Iteration 6: inserting new item at end (value=210887886)
+Cycle count read: 65
+Iteration 7: inserting new item at end (value=112139922)
+Cycle count read: 65
+Iteration 8: inserting new item at end (value=1168205881)
+Cycle count read: 65
+Iteration 9: inserting new item at end (value=1895988231)
+Cycle count read: 65
+Iteration 10: inserting new item at end (value=207432281)
+Cycle count read: 65
+Iteration 11: inserting new item at end (value=226421586)
+Cycle count read: 65
+Iteration 12: inserting new item at end (value=1296741405)
+Cycle count read: 65
+Iteration 13: inserting new item at end (value=1413329574)
+Cycle count read: 65
+Iteration 14: inserting new item at end (value=730796543)
+Cycle count read: 65
+Iteration 15: inserting new item at end (value=321807734)
+Cycle count read: 65
+Iteration 16: inserting new item at end (value=1617678425)
+Cycle count read: 65
+Iteration 17: inserting new item at end (value=1292408824)
+Cycle count read: 65
+Iteration 18: inserting new item at end (value=2143523418)
+Cycle count read: 65
+Iteration 19: inserting new item at end (value=1238148636)
+Cycle count read: 65
+Iteration 20: inserting new item at end (value=1029579896)
+Cycle count read: 65
+Iteration 21: inserting new item at end (value=1087045948)
+Cycle count read: 65
+Iteration 22: inserting new item at end (value=1409306593)
+Cycle count read: 65
+Iteration 23: inserting new item at end (value=1959622523)
+Cycle count read: 65
+Iteration 24: inserting new item at end (value=469776479)
+Cycle count read: 65
+Iteration 25: inserting new item at end (value=1313499887)
+Cycle count read: 65
+Iteration 26: inserting new item at end (value=199247570)
+Cycle count read: 65
+Iteration 27: inserting new item at end (value=1806258009)
+Cycle count read: 65
+Iteration 28: inserting new item at end (value=1617724403)
+Cycle count read: 65
+Iteration 29: inserting new item at end (value=1682251910)
+Cycle count read: 65
+Iteration 30: inserting new item at end (value=1110625301)
+Cycle count read: 65
+Iteration 31: inserting new item at end (value=1354667333)
+Cycle count read: 65
+Iteration 32: inserting new item at end (value=238840051)
+Cycle count read: 65
+Iteration 33: inserting new item at end (value=1485814998)
+Cycle count read: 65
+Iteration 34: inserting new item at end (value=2081572094)
+Cycle count read: 65
+Iteration 35: inserting new item at end (value=150579258)
+Cycle count read: 65
+Iteration 36: inserting new item at end (value=496268131)
+Cycle count read: 65
+Iteration 37: inserting new item at end (value=861385660)
+Cycle count read: 65
+Iteration 38: inserting new item at end (value=478138137)
+Cycle count read: 65
+Iteration 39: inserting new item at end (value=823236021)
+Cycle count read: 65
+Iteration 40: inserting new item at end (value=499777176)
+Cycle count read: 65
+Iteration 41: inserting new item at end (value=880786100)
+Cycle count read: 65
+Iteration 42: inserting new item at end (value=1227138170)
+Cycle count read: 65
+Iteration 43: inserting new item at end (value=34783780)
+Cycle count read: 65
+Iteration 44: inserting new item at end (value=1623602212)
+Cycle count read: 65
+Iteration 45: inserting new item at end (value=1459047046)
+Cycle count read: 65
+Iteration 46: inserting new item at end (value=1905081268)
+Cycle count read: 65
+Iteration 47: inserting new item at end (value=56984366)
+Cycle count read: 65
+Iteration 48: inserting new item at end (value=1432805821)
+Cycle count read: 65
+Iteration 49: inserting new item at end (value=412809558)
+Cycle count read: 65
+Iteration 50: inserting new item at end (value=1827452638)
+Cycle count read: 65
+Iteration 51: inserting new item at end (value=337128898)
+Cycle count read: 65
+Iteration 52: inserting new item at end (value=1981871113)
+Cycle count read: 65
+Iteration 53: inserting new item at end (value=845839889)
+Cycle count read: 65
+Iteration 54: inserting new item at end (value=350849114)
+Cycle count read: 65
+Iteration 55: inserting new item at end (value=389355375)
+Cycle count read: 65
+Iteration 56: inserting new item at end (value=1731367300)
+Cycle count read: 65
+Iteration 57: inserting new item at end (value=1239582250)
+Cycle count read: 65
+Iteration 58: inserting new item at end (value=1407778824)
+Cycle count read: 65
+Iteration 59: inserting new item at end (value=1658743479)
+Cycle count read: 65
+Iteration 60: inserting new item at end (value=2081270289)
+Cycle count read: 65
+Iteration 61: inserting new item at end (value=299231440)
+Cycle count read: 65
+Iteration 62: inserting new item at end (value=1117359753)
+Cycle count read: 65
+Iteration 63: inserting new item at end (value=145048491)
+Cycle count read: 65
+Iteration 64: inserting new item at end (value=233218379)
+Cycle count read: 65
+Iteration 65: inserting new item at end (value=1378336855)
+Cycle count read: 65
+Iteration 66: inserting new item at end (value=1245685528)
+Cycle count read: 65
+Iteration 67: inserting new item at end (value=1232655316)
+Cycle count read: 65
+Iteration 68: inserting new item at end (value=71437029)
+Cycle count read: 65
+Iteration 69: inserting new item at end (value=485140553)
+Cycle count read: 65
+Iteration 70: inserting new item at end (value=1147376093)
+Cycle count read: 65
+Iteration 71: inserting new item at end (value=514405694)
+Cycle count read: 65
+Iteration 72: inserting new item at end (value=390448370)
+Cycle count read: 65
+Iteration 73: inserting new item at end (value=342177008)
+Cycle count read: 65
+Iteration 74: inserting new item at end (value=549773724)
+Cycle count read: 65
+Iteration 75: inserting new item at end (value=206910135)
+Cycle count read: 65
+Iteration 76: inserting new item at end (value=2112050168)
+Cycle count read: 65
+Iteration 77: inserting new item at end (value=118629683)
+Cycle count read: 65
+Iteration 78: inserting new item at end (value=77028945)
+Cycle count read: 65
+Iteration 79: inserting new item at end (value=963355188)
+Cycle count read: 65
+Iteration 80: inserting new item at end (value=684587916)
+Cycle count read: 65
+Iteration 81: inserting new item at end (value=1105400286)
+Cycle count read: 65
+Iteration 82: inserting new item at end (value=2076357726)
+Cycle count read: 65
+Iteration 83: inserting new item at end (value=1954786378)
+Cycle count read: 65
+Iteration 84: inserting new item at end (value=347970499)
+Cycle count read: 65
+Iteration 85: inserting new item at end (value=1515733718)
+Cycle count read: 65
+Iteration 86: inserting new item at end (value=2035176195)
+Cycle count read: 65
+Iteration 87: inserting new item at end (value=334797679)
+Cycle count read: 65
+Iteration 88: inserting new item at end (value=2058802159)
+Cycle count read: 65
+Iteration 89: inserting new item at end (value=830272447)
+Cycle count read: 65
+Iteration 90: inserting new item at end (value=1644836591)
+Cycle count read: 65
+Iteration 91: inserting new item at end (value=49469032)
+Cycle count read: 65
+Iteration 92: inserting new item at end (value=1606417798)
+Cycle count read: 65
+Iteration 93: inserting new item at end (value=365548384)
+Cycle count read: 65
+Iteration 94: inserting new item at end (value=738630739)
+Cycle count read: 65
+Iteration 95: inserting new item at end (value=1813032236)
+Cycle count read: 65
+Iteration 96: inserting new item at end (value=1362848314)
+Cycle count read: 65
+Iteration 97: inserting new item at end (value=1588976628)
+Cycle count read: 65
+Iteration 98: inserting new item at end (value=1798983868)
+Cycle count read: 65
+Iteration 99: inserting new item at end (value=298352052)
+Cycle count read: 65
+Iteration 100: inserting new item at end (value=2102875781)
+Cycle count read: 65
+Iteration 101: inserting new item at end (value=1606632368)
+Cycle count read: 65
+Iteration 102: inserting new item at end (value=1465501252)
+Cycle count read: 65
+Iteration 103: inserting new item at end (value=1779218753)
+Cycle count read: 65
+Iteration 104: inserting new item at end (value=1606392159)
+Cycle count read: 65
+Iteration 105: inserting new item at end (value=458554510)
+Cycle count read: 65
+Iteration 106: inserting new item at end (value=1104652392)
+Cycle count read: 65
+Iteration 107: inserting new item at end (value=1069740386)
+Cycle count read: 65
+Iteration 108: inserting new item at end (value=2036818588)
+Cycle count read: 65
+Iteration 109: inserting new item at end (value=82173370)
+Cycle count read: 65
+Iteration 110: inserting new item at end (value=2122788222)
+Cycle count read: 65
+Iteration 111: inserting new item at end (value=163885360)
+Cycle count read: 65
+Iteration 112: inserting new item at end (value=705163079)
+Cycle count read: 65
+Iteration 113: inserting new item at end (value=1146994894)
+Cycle count read: 65
+Iteration 114: inserting new item at end (value=1281636271)
+Cycle count read: 65
+Iteration 115: inserting new item at end (value=1212125565)
+Cycle count read: 65
+Iteration 116: inserting new item at end (value=1442043313)
+Cycle count read: 65
+Iteration 117: inserting new item at end (value=77317517)
+Cycle count read: 65
+Iteration 118: inserting new item at end (value=128297790)
+Cycle count read: 65
+Iteration 119: inserting new item at end (value=84224274)
+Cycle count read: 65
+Iteration 120: inserting new item at end (value=98254342)
+Cycle count read: 65
+Iteration 121: inserting new item at end (value=1678379389)
+Cycle count read: 65
+Iteration 122: inserting new item at end (value=1636935680)
+Cycle count read: 65
+Iteration 123: inserting new item at end (value=1158470380)
+Cycle count read: 65
+Iteration 124: inserting new item at end (value=1968674647)
+Cycle count read: 65
+Iteration 125: inserting new item at end (value=1260319144)
+Cycle count read: 65
+Iteration 126: inserting new item at end (value=1416898090)
+Cycle count read: 65
+Iteration 127: inserting new item at end (value=1072932568)
+Cycle count read: 65
+Iteration 128: inserting new item at end (value=1647978575)
+Cycle count read: 65
+Iteration 129: inserting new item at end (value=1158806842)
+Cycle count read: 65
+Iteration 130: inserting new item at end (value=575096227)
+Cycle count read: 65
+Iteration 131: inserting new item at end (value=1960526653)
+Cycle count read: 65
+Iteration 132: inserting new item at end (value=2019460525)
+Cycle count read: 65
+Iteration 133: inserting new item at end (value=690017300)
+Cycle count read: 65
+Iteration 134: inserting new item at end (value=297105368)
+Cycle count read: 65
+Iteration 135: inserting new item at end (value=1225954418)
+Cycle count read: 65
+Iteration 136: inserting new item at end (value=721666834)
+Cycle count read: 65
+Iteration 137: inserting new item at end (value=812912015)
+Cycle count read: 65
+Iteration 138: inserting new item at end (value=1236924685)
+Cycle count read: 65
+Iteration 139: inserting new item at end (value=2040259842)
+Cycle count read: 65
+Iteration 140: inserting new item at end (value=1103436875)
+Cycle count read: 65
+Iteration 141: inserting new item at end (value=337262204)
+Cycle count read: 65
+Iteration 142: inserting new item at end (value=946885734)
+Cycle count read: 65
+Iteration 143: inserting new item at end (value=2078201312)
+Cycle count read: 65
+Iteration 144: inserting new item at end (value=1633507832)
+Cycle count read: 65
+Iteration 145: inserting new item at end (value=1810688614)
+Cycle count read: 65
+Iteration 146: inserting new item at end (value=324620229)
+Cycle count read: 65
+Iteration 147: inserting new item at end (value=1097942071)
+Cycle count read: 65
+Iteration 148: inserting new item at end (value=1853361089)
+Cycle count read: 65
+Iteration 149: inserting new item at end (value=1157099571)
+Cycle count read: 65
+Iteration 150: inserting new item at end (value=1708562314)
+Cycle count read: 65
+Iteration 151: inserting new item at end (value=1437677350)
+Cycle count read: 65
+Iteration 152: inserting new item at end (value=375754785)
+Cycle count read: 65
+Iteration 153: inserting new item at end (value=596971056)
+Cycle count read: 65
+Iteration 154: inserting new item at end (value=953102310)
+Cycle count read: 65
+Iteration 155: inserting new item at end (value=1064325388)
+Cycle count read: 65
+Iteration 156: inserting new item at end (value=842741253)
+Cycle count read: 65
+Iteration 157: inserting new item at end (value=1101830629)
+Cycle count read: 65
+Iteration 158: inserting new item at end (value=409438190)
+Cycle count read: 65
+Iteration 159: inserting new item at end (value=228077763)
+Cycle count read: 65
+Iteration 160: inserting new item at end (value=1096776285)
+Cycle count read: 65
+Iteration 161: inserting new item at end (value=1362843106)
+Cycle count read: 65
+Iteration 162: inserting new item at end (value=1922521911)
+Cycle count read: 65
+Iteration 163: inserting new item at end (value=404309508)
+Cycle count read: 65
+Iteration 164: inserting new item at end (value=2077402063)
+Cycle count read: 65
+Iteration 165: inserting new item at end (value=1089222507)
+Cycle count read: 65
+Iteration 166: inserting new item at end (value=1029523387)
+Cycle count read: 65
+Iteration 167: inserting new item at end (value=281142290)
+Cycle count read: 65
+Iteration 168: inserting new item at end (value=708307908)
+Cycle count read: 65
+Iteration 169: inserting new item at end (value=637843586)
+Cycle count read: 65
+Iteration 170: inserting new item at end (value=1551853661)
+Cycle count read: 65
+Iteration 171: inserting new item at end (value=1096027454)
+Cycle count read: 65
+Iteration 172: inserting new item at end (value=602922687)
+Cycle count read: 65
+Iteration 173: inserting new item at end (value=354417894)
+Cycle count read: 65
+Iteration 174: inserting new item at end (value=784713399)
+Cycle count read: 65
+Iteration 175: inserting new item at end (value=1940237243)
+Cycle count read: 65
+Iteration 176: inserting new item at end (value=697106790)
+Cycle count read: 65
+Iteration 177: inserting new item at end (value=1374399229)
+Cycle count read: 65
+Iteration 178: inserting new item at end (value=1598444185)
+Cycle count read: 65
+Iteration 179: inserting new item at end (value=73760616)
+Cycle count read: 65
+Iteration 180: inserting new item at end (value=359771085)
+Cycle count read: 65
+Iteration 181: inserting new item at end (value=251189557)
+Cycle count read: 65
+Iteration 182: inserting new item at end (value=1188175936)
+Cycle count read: 65
+Iteration 183: inserting new item at end (value=1822633751)
+Cycle count read: 65
+Iteration 184: inserting new item at end (value=2006254967)
+Cycle count read: 65
+Iteration 185: inserting new item at end (value=1302400380)
+Cycle count read: 65
+Iteration 186: inserting new item at end (value=1376465438)
+Cycle count read: 65
+Iteration 187: inserting new item at end (value=1470959010)
+Cycle count read: 65
+Iteration 188: inserting new item at end (value=1933732186)
+Cycle count read: 65
+Iteration 189: inserting new item at end (value=1121078367)
+Cycle count read: 65
+Iteration 190: inserting new item at end (value=1641241885)
+Cycle count read: 65
+Iteration 191: inserting new item at end (value=1440584242)
+Cycle count read: 65
+Iteration 192: inserting new item at end (value=1638204969)
+Cycle count read: 65
+Iteration 193: inserting new item at end (value=1344252006)
+Cycle count read: 65
+Iteration 194: inserting new item at end (value=1536956660)
+Cycle count read: 65
+Iteration 195: inserting new item at end (value=1750089303)
+Cycle count read: 65
+Iteration 196: inserting new item at end (value=478237683)
+Cycle count read: 65
+Iteration 197: inserting new item at end (value=1402422644)
+Cycle count read: 65
+Iteration 198: inserting new item at end (value=936384237)
+Cycle count read: 65
+Iteration 199: inserting new item at end (value=313466578)
+Cycle count read: 65
+Cleaning up inserted items...
+
+=== Test: uxListRemove ===
+Iteration 0: removing item[133] (value=921611738) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 1: removing item[26] (value=1229991875) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 2: removing item[56] (value=1763789277) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 3: removing item[114] (value=99792128) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 4: removing item[61] (value=128397917) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 5: removing item[69] (value=1386680265) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 6: removing item[5] (value=2125680674) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 7: removing item[146] (value=535658197) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 8: removing item[44] (value=708785730) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 9: removing item[181] (value=943577847) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 10: removing item[50] (value=924630590) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 11: removing item[192] (value=1988130997) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 12: removing item[134] (value=24833363) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 13: removing item[55] (value=74220153) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 14: removing item[51] (value=387501445) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 15: removing item[71] (value=1785685150) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 17: removing item[144] (value=1076298974) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 18: removing item[189] (value=1408661121) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 19: removing item[11] (value=2137029149) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 20: removing item[13] (value=785268454) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 21: removing item[173] (value=1896559042) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 22: removing item[105] (value=1927863830) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 23: removing item[62] (value=859317482) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 24: removing item[24] (value=1587987480) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 25: removing item[15] (value=1025018194) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 26: removing item[147] (value=1845834962) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 27: removing item[30] (value=1936242563) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 28: removing item[145] (value=275102595) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 29: removing item[40] (value=666685770) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 30: removing item[97] (value=982925408) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 32: removing item[76] (value=441357960) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 33: removing item[63] (value=1078076926) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 34: removing item[137] (value=1191786476) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 35: removing item[115] (value=973113079) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 36: removing item[166] (value=1132347189) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 37: removing item[42] (value=248156559) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 38: removing item[41] (value=1683763837) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 39: removing item[14] (value=1877511506) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 40: removing item[48] (value=513104790) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 41: removing item[87] (value=1637808917) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 42: removing item[20] (value=686705978) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 43: removing item[140] (value=211617501) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 44: removing item[121] (value=980004351) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 45: removing item[33] (value=447227940) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 46: removing item[93] (value=950109530) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 47: removing item[8] (value=416542783) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 48: removing item[162] (value=1746645197) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 49: removing item[138] (value=1554534455) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 50: removing item[116] (value=1064656705) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 51: removing item[12] (value=1265314477) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 53: removing item[0] (value=63436835) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 54: removing item[194] (value=2083095341) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 55: removing item[39] (value=834591331) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 56: removing item[168] (value=264676351) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 58: removing item[124] (value=1508946344) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 59: removing item[120] (value=2111229766) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 60: removing item[34] (value=445923607) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 61: removing item[49] (value=661528209) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 63: removing item[90] (value=997648536) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 64: removing item[152] (value=1975688946) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 66: removing item[1] (value=1835876307) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 67: removing item[130] (value=88790094) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 68: removing item[129] (value=887906720) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 70: removing item[2] (value=758608358) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 71: removing item[92] (value=1071421211) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 72: removing item[91] (value=1928112500) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 73: removing item[191] (value=1810524326) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 75: removing item[148] (value=1360322608) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 77: removing item[65] (value=31177635) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 78: removing item[169] (value=756282240) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 79: removing item[127] (value=1993299795) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 80: removing item[175] (value=293044428) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 81: removing item[27] (value=727587010) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 83: removing item[54] (value=211753437) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 84: removing item[113] (value=165919018) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 85: removing item[184] (value=1605133534) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 87: removing item[196] (value=415165831) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 89: removing item[198] (value=1793689087) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 90: removing item[82] (value=87838398) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 91: removing item[66] (value=96629080) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 92: removing item[159] (value=181482785) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 93: removing item[99] (value=1574671553) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 94: removing item[78] (value=1797117381) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 96: removing item[53] (value=1449162615) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 97: removing item[157] (value=2028074500) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 98: removing item[86] (value=452612359) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 99: removing item[125] (value=884692018) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 100: removing item[19] (value=662927452) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 101: removing item[72] (value=1472858513) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 102: removing item[151] (value=2111492036) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 103: removing item[46] (value=1179740938) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 105: removing item[23] (value=2088325310) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 106: removing item[67] (value=327404015) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 110: removing item[25] (value=1224402841) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 111: removing item[160] (value=920871982) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 113: removing item[197] (value=384771140) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 116: removing item[35] (value=1638877394) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 117: removing item[101] (value=570309043) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 118: removing item[74] (value=1881451124) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 120: removing item[104] (value=1338904976) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 121: removing item[18] (value=345945748) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 128: removing item[84] (value=1978834031) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 129: removing item[158] (value=1638979919) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 131: removing item[106] (value=1133548119) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 134: removing item[199] (value=439025701) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 136: removing item[36] (value=1328381774) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 139: removing item[103] (value=1256963374) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 141: removing item[174] (value=760277894) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 143: removing item[38] (value=798817751) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 145: removing item[59] (value=1474272919) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 155: removing item[155] (value=2068056145) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 158: removing item[80] (value=985107328) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 161: removing item[190] (value=2042216282) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 162: removing item[3] (value=1408619474) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 164: removing item[165] (value=804835799) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 165: removing item[188] (value=1393272298) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 166: removing item[9] (value=1750867224) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 173: removing item[176] (value=1161040579) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 175: removing item[126] (value=1862608118) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 181: removing item[110] (value=1636601013) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 183: removing item[143] (value=1922224491) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 191: removing item[60] (value=1280563868) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 196: removing item[131] (value=1936376838) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 197: removing item[132] (value=918861197) (nxtctr=l := 0)
+Cycle count read: 70
+Iteration 198: removing item[52] (value=1870156653) (nxtctr=l := 0)
+Cycle count read: 70
+
+=== Test: vListInitialise (reinit) ===
+Iteration 0: reinitialising list
+Cycle count read: 45
+Iteration 1: reinitialising list
+Cycle count read: 45
+Iteration 2: reinitialising list
+Cycle count read: 45
+Iteration 3: reinitialising list
+Cycle count read: 45
+Iteration 4: reinitialising list
+Cycle count read: 45
+Iteration 5: reinitialising list
+Cycle count read: 45
+Iteration 6: reinitialising list
+Cycle count read: 45
+Iteration 7: reinitialising list
+Cycle count read: 45
+Iteration 8: reinitialising list
+Cycle count read: 45
+Iteration 9: reinitialising list
+Cycle count read: 45
+Iteration 10: reinitialising list
+Cycle count read: 45
+Iteration 11: reinitialising list
+Cycle count read: 45
+Iteration 12: reinitialising list
+Cycle count read: 45
+Iteration 13: reinitialising list
+Cycle count read: 45
+Iteration 14: reinitialising list
+Cycle count read: 45
+Iteration 15: reinitialising list
+Cycle count read: 45
+Iteration 16: reinitialising list
+Cycle count read: 45
+Iteration 17: reinitialising list
+Cycle count read: 45
+Iteration 18: reinitialising list
+Cycle count read: 45
+Iteration 19: reinitialising list
+Cycle count read: 45
+Iteration 20: reinitialising list
+Cycle count read: 45
+Iteration 21: reinitialising list
+Cycle count read: 45
+Iteration 22: reinitialising list
+Cycle count read: 45
+Iteration 23: reinitialising list
+Cycle count read: 45
+Iteration 24: reinitialising list
+Cycle count read: 45
+Iteration 25: reinitialising list
+Cycle count read: 45
+Iteration 26: reinitialising list
+Cycle count read: 45
+Iteration 27: reinitialising list
+Cycle count read: 45
+Iteration 28: reinitialising list
+Cycle count read: 45
+Iteration 29: reinitialising list
+Cycle count read: 45
+Iteration 30: reinitialising list
+Cycle count read: 45
+Iteration 31: reinitialising list
+Cycle count read: 45
+Iteration 32: reinitialising list
+Cycle count read: 45
+Iteration 33: reinitialising list
+Cycle count read: 45
+Iteration 34: reinitialising list
+Cycle count read: 45
+Iteration 35: reinitialising list
+Cycle count read: 45
+Iteration 36: reinitialising list
+Cycle count read: 45
+Iteration 37: reinitialising list
+Cycle count read: 45
+Iteration 38: reinitialising list
+Cycle count read: 45
+Iteration 39: reinitialising list
+Cycle count read: 45
+Iteration 40: reinitialising list
+Cycle count read: 45
+Iteration 41: reinitialising list
+Cycle count read: 45
+Iteration 42: reinitialising list
+Cycle count read: 45
+Iteration 43: reinitialising list
+Cycle count read: 45
+Iteration 44: reinitialising list
+Cycle count read: 45
+Iteration 45: reinitialising list
+Cycle count read: 45
+Iteration 46: reinitialising list
+Cycle count read: 45
+Iteration 47: reinitialising list
+Cycle count read: 45
+Iteration 48: reinitialising list
+Cycle count read: 45
+Iteration 49: reinitialising list
+Cycle count read: 45
+Iteration 50: reinitialising list
+Cycle count read: 45
+Iteration 51: reinitialising list
+Cycle count read: 45
+Iteration 52: reinitialising list
+Cycle count read: 45
+Iteration 53: reinitialising list
+Cycle count read: 45
+Iteration 54: reinitialising list
+Cycle count read: 45
+Iteration 55: reinitialising list
+Cycle count read: 45
+Iteration 56: reinitialising list
+Cycle count read: 45
+Iteration 57: reinitialising list
+Cycle count read: 45
+Iteration 58: reinitialising list
+Cycle count read: 45
+Iteration 59: reinitialising list
+Cycle count read: 45
+Iteration 60: reinitialising list
+Cycle count read: 45
+Iteration 61: reinitialising list
+Cycle count read: 45
+Iteration 62: reinitialising list
+Cycle count read: 45
+Iteration 63: reinitialising list
+Cycle count read: 45
+Iteration 64: reinitialising list
+Cycle count read: 45
+Iteration 65: reinitialising list
+Cycle count read: 45
+Iteration 66: reinitialising list
+Cycle count read: 45
+Iteration 67: reinitialising list
+Cycle count read: 45
+Iteration 68: reinitialising list
+Cycle count read: 45
+Iteration 69: reinitialising list
+Cycle count read: 45
+Iteration 70: reinitialising list
+Cycle count read: 45
+Iteration 71: reinitialising list
+Cycle count read: 45
+Iteration 72: reinitialising list
+Cycle count read: 45
+Iteration 73: reinitialising list
+Cycle count read: 45
+Iteration 74: reinitialising list
+Cycle count read: 45
+Iteration 75: reinitialising list
+Cycle count read: 45
+Iteration 76: reinitialising list
+Cycle count read: 45
+Iteration 77: reinitialising list
+Cycle count read: 45
+Iteration 78: reinitialising list
+Cycle count read: 45
+Iteration 79: reinitialising list
+Cycle count read: 45
+Iteration 80: reinitialising list
+Cycle count read: 45
+Iteration 81: reinitialising list
+Cycle count read: 45
+Iteration 82: reinitialising list
+Cycle count read: 45
+Iteration 83: reinitialising list
+Cycle count read: 45
+Iteration 84: reinitialising list
+Cycle count read: 45
+Iteration 85: reinitialising list
+Cycle count read: 45
+Iteration 86: reinitialising list
+Cycle count read: 45
+Iteration 87: reinitialising list
+Cycle count read: 45
+Iteration 88: reinitialising list
+Cycle count read: 45
+Iteration 89: reinitialising list
+Cycle count read: 45
+Iteration 90: reinitialising list
+Cycle count read: 45
+Iteration 91: reinitialising list
+Cycle count read: 45
+Iteration 92: reinitialising list
+Cycle count read: 45
+Iteration 93: reinitialising list
+Cycle count read: 45
+Iteration 94: reinitialising list
+Cycle count read: 45
+Iteration 95: reinitialising list
+Cycle count read: 45
+Iteration 96: reinitialising list
+Cycle count read: 45
+Iteration 97: reinitialising list
+Cycle count read: 45
+Iteration 98: reinitialising list
+Cycle count read: 45
+Iteration 99: reinitialising list
+Cycle count read: 45
+Iteration 100: reinitialising list
+Cycle count read: 45
+Iteration 101: reinitialising list
+Cycle count read: 45
+Iteration 102: reinitialising list
+Cycle count read: 45
+Iteration 103: reinitialising list
+Cycle count read: 45
+Iteration 104: reinitialising list
+Cycle count read: 45
+Iteration 105: reinitialising list
+Cycle count read: 45
+Iteration 106: reinitialising list
+Cycle count read: 45
+Iteration 107: reinitialising list
+Cycle count read: 45
+Iteration 108: reinitialising list
+Cycle count read: 45
+Iteration 109: reinitialising list
+Cycle count read: 45
+Iteration 110: reinitialising list
+Cycle count read: 45
+Iteration 111: reinitialising list
+Cycle count read: 45
+Iteration 112: reinitialising list
+Cycle count read: 45
+Iteration 113: reinitialising list
+Cycle count read: 45
+Iteration 114: reinitialising list
+Cycle count read: 45
+Iteration 115: reinitialising list
+Cycle count read: 45
+Iteration 116: reinitialising list
+Cycle count read: 45
+Iteration 117: reinitialising list
+Cycle count read: 45
+Iteration 118: reinitialising list
+Cycle count read: 45
+Iteration 119: reinitialising list
+Cycle count read: 45
+Iteration 120: reinitialising list
+Cycle count read: 45
+Iteration 121: reinitialising list
+Cycle count read: 45
+Iteration 122: reinitialising list
+Cycle count read: 45
+Iteration 123: reinitialising list
+Cycle count read: 45
+Iteration 124: reinitialising list
+Cycle count read: 45
+Iteration 125: reinitialising list
+Cycle count read: 45
+Iteration 126: reinitialising list
+Cycle count read: 45
+Iteration 127: reinitialising list
+Cycle count read: 45
+Iteration 128: reinitialising list
+Cycle count read: 45
+Iteration 129: reinitialising list
+Cycle count read: 45
+Iteration 130: reinitialising list
+Cycle count read: 45
+Iteration 131: reinitialising list
+Cycle count read: 45
+Iteration 132: reinitialising list
+Cycle count read: 45
+Iteration 133: reinitialising list
+Cycle count read: 45
+Iteration 134: reinitialising list
+Cycle count read: 45
+Iteration 135: reinitialising list
+Cycle count read: 45
+Iteration 136: reinitialising list
+Cycle count read: 45
+Iteration 137: reinitialising list
+Cycle count read: 45
+Iteration 138: reinitialising list
+Cycle count read: 45
+Iteration 139: reinitialising list
+Cycle count read: 45
+Iteration 140: reinitialising list
+Cycle count read: 45
+Iteration 141: reinitialising list
+Cycle count read: 45
+Iteration 142: reinitialising list
+Cycle count read: 45
+Iteration 143: reinitialising list
+Cycle count read: 45
+Iteration 144: reinitialising list
+Cycle count read: 45
+Iteration 145: reinitialising list
+Cycle count read: 45
+Iteration 146: reinitialising list
+Cycle count read: 45
+Iteration 147: reinitialising list
+Cycle count read: 45
+Iteration 148: reinitialising list
+Cycle count read: 45
+Iteration 149: reinitialising list
+Cycle count read: 45
+Iteration 150: reinitialising list
+Cycle count read: 45
+Iteration 151: reinitialising list
+Cycle count read: 45
+Iteration 152: reinitialising list
+Cycle count read: 45
+Iteration 153: reinitialising list
+Cycle count read: 45
+Iteration 154: reinitialising list
+Cycle count read: 45
+Iteration 155: reinitialising list
+Cycle count read: 45
+Iteration 156: reinitialising list
+Cycle count read: 45
+Iteration 157: reinitialising list
+Cycle count read: 45
+Iteration 158: reinitialising list
+Cycle count read: 45
+Iteration 159: reinitialising list
+Cycle count read: 45
+Iteration 160: reinitialising list
+Cycle count read: 45
+Iteration 161: reinitialising list
+Cycle count read: 45
+Iteration 162: reinitialising list
+Cycle count read: 45
+Iteration 163: reinitialising list
+Cycle count read: 45
+Iteration 164: reinitialising list
+Cycle count read: 45
+Iteration 165: reinitialising list
+Cycle count read: 45
+Iteration 166: reinitialising list
+Cycle count read: 45
+Iteration 167: reinitialising list
+Cycle count read: 45
+Iteration 168: reinitialising list
+Cycle count read: 45
+Iteration 169: reinitialising list
+Cycle count read: 45
+Iteration 170: reinitialising list
+Cycle count read: 45
+Iteration 171: reinitialising list
+Cycle count read: 45
+Iteration 172: reinitialising list
+Cycle count read: 45
+Iteration 173: reinitialising list
+Cycle count read: 45
+Iteration 174: reinitialising list
+Cycle count read: 45
+Iteration 175: reinitialising list
+Cycle count read: 45
+Iteration 176: reinitialising list
+Cycle count read: 45
+Iteration 177: reinitialising list
+Cycle count read: 45
+Iteration 178: reinitialising list
+Cycle count read: 45
+Iteration 179: reinitialising list
+Cycle count read: 45
+Iteration 180: reinitialising list
+Cycle count read: 45
+Iteration 181: reinitialising list
+Cycle count read: 45
+Iteration 182: reinitialising list
+Cycle count read: 45
+Iteration 183: reinitialising list
+Cycle count read: 45
+Iteration 184: reinitialising list
+Cycle count read: 45
+Iteration 185: reinitialising list
+Cycle count read: 45
+Iteration 186: reinitialising list
+Cycle count read: 45
+Iteration 187: reinitialising list
+Cycle count read: 45
+Iteration 188: reinitialising list
+Cycle count read: 45
+Iteration 189: reinitialising list
+Cycle count read: 45
+Iteration 190: reinitialising list
+Cycle count read: 45
+Iteration 191: reinitialising list
+Cycle count read: 45
+Iteration 192: reinitialising list
+Cycle count read: 45
+Iteration 193: reinitialising list
+Cycle count read: 45
+Iteration 194: reinitialising list
+Cycle count read: 45
+Iteration 195: reinitialising list
+Cycle count read: 45
+Iteration 196: reinitialising list
+Cycle count read: 45
+Iteration 197: reinitialising list
+Cycle count read: 45
+Iteration 198: reinitialising list
+Cycle count read: 45
+Iteration 199: reinitialising list
+Cycle count read: 45
+
+=== test: vListInitialiseItem ===
+Iteration 0: initialising item
+Cycle count read: 21
+Iteration 1: initialising item
+Cycle count read: 21
+Iteration 2: initialising item
+Cycle count read: 21
+Iteration 3: initialising item
+Cycle count read: 21
+Iteration 4: initialising item
+Cycle count read: 21
+Iteration 5: initialising item
+Cycle count read: 21
+Iteration 6: initialising item
+Cycle count read: 21
+Iteration 7: initialising item
+Cycle count read: 21
+Iteration 8: initialising item
+Cycle count read: 21
+Iteration 9: initialising item
+Cycle count read: 21
+Iteration 10: initialising item
+Cycle count read: 21
+Iteration 11: initialising item
+Cycle count read: 21
+Iteration 12: initialising item
+Cycle count read: 21
+Iteration 13: initialising item
+Cycle count read: 21
+Iteration 14: initialising item
+Cycle count read: 21
+Iteration 15: initialising item
+Cycle count read: 21
+Iteration 16: initialising item
+Cycle count read: 21
+Iteration 17: initialising item
+Cycle count read: 21
+Iteration 18: initialising item
+Cycle count read: 21
+Iteration 19: initialising item
+Cycle count read: 21
+Iteration 20: initialising item
+Cycle count read: 21
+Iteration 21: initialising item
+Cycle count read: 21
+Iteration 22: initialising item
+Cycle count read: 21
+Iteration 23: initialising item
+Cycle count read: 21
+Iteration 24: initialising item
+Cycle count read: 21
+Iteration 25: initialising item
+Cycle count read: 21
+Iteration 26: initialising item
+Cycle count read: 21
+Iteration 27: initialising item
+Cycle count read: 21
+Iteration 28: initialising item
+Cycle count read: 21
+Iteration 29: initialising item
+Cycle count read: 21
+Iteration 30: initialising item
+Cycle count read: 21
+Iteration 31: initialising item
+Cycle count read: 21
+Iteration 32: initialising item
+Cycle count read: 21
+Iteration 33: initialising item
+Cycle count read: 21
+Iteration 34: initialising item
+Cycle count read: 21
+Iteration 35: initialising item
+Cycle count read: 21
+Iteration 36: initialising item
+Cycle count read: 21
+Iteration 37: initialising item
+Cycle count read: 21
+Iteration 38: initialising item
+Cycle count read: 21
+Iteration 39: initialising item
+Cycle count read: 21
+Iteration 40: initialising item
+Cycle count read: 21
+Iteration 41: initialising item
+Cycle count read: 21
+Iteration 42: initialising item
+Cycle count read: 21
+Iteration 43: initialising item
+Cycle count read: 21
+Iteration 44: initialising item
+Cycle count read: 21
+Iteration 45: initialising item
+Cycle count read: 21
+Iteration 46: initialising item
+Cycle count read: 21
+Iteration 47: initialising item
+Cycle count read: 21
+Iteration 48: initialising item
+Cycle count read: 21
+Iteration 49: initialising item
+Cycle count read: 21
+Iteration 50: initialising item
+Cycle count read: 21
+Iteration 51: initialising item
+Cycle count read: 21
+Iteration 52: initialising item
+Cycle count read: 21
+Iteration 53: initialising item
+Cycle count read: 21
+Iteration 54: initialising item
+Cycle count read: 21
+Iteration 55: initialising item
+Cycle count read: 21
+Iteration 56: initialising item
+Cycle count read: 21
+Iteration 57: initialising item
+Cycle count read: 21
+Iteration 58: initialising item
+Cycle count read: 21
+Iteration 59: initialising item
+Cycle count read: 21
+Iteration 60: initialising item
+Cycle count read: 21
+Iteration 61: initialising item
+Cycle count read: 21
+Iteration 62: initialising item
+Cycle count read: 21
+Iteration 63: initialising item
+Cycle count read: 21
+Iteration 64: initialising item
+Cycle count read: 21
+Iteration 65: initialising item
+Cycle count read: 21
+Iteration 66: initialising item
+Cycle count read: 21
+Iteration 67: initialising item
+Cycle count read: 21
+Iteration 68: initialising item
+Cycle count read: 21
+Iteration 69: initialising item
+Cycle count read: 21
+Iteration 70: initialising item
+Cycle count read: 21
+Iteration 71: initialising item
+Cycle count read: 21
+Iteration 72: initialising item
+Cycle count read: 21
+Iteration 73: initialising item
+Cycle count read: 21
+Iteration 74: initialising item
+Cycle count read: 21
+Iteration 75: initialising item
+Cycle count read: 21
+Iteration 76: initialising item
+Cycle count read: 21
+Iteration 77: initialising item
+Cycle count read: 21
+Iteration 78: initialising item
+Cycle count read: 21
+Iteration 79: initialising item
+Cycle count read: 21
+Iteration 80: initialising item
+Cycle count read: 21
+Iteration 81: initialising item
+Cycle count read: 21
+Iteration 82: initialising item
+Cycle count read: 21
+Iteration 83: initialising item
+Cycle count read: 21
+Iteration 84: initialising item
+Cycle count read: 21
+Iteration 85: initialising item
+Cycle count read: 21
+Iteration 86: initialising item
+Cycle count read: 21
+Iteration 87: initialising item
+Cycle count read: 21
+Iteration 88: initialising item
+Cycle count read: 21
+Iteration 89: initialising item
+Cycle count read: 21
+Iteration 90: initialising item
+Cycle count read: 21
+Iteration 91: initialising item
+Cycle count read: 21
+Iteration 92: initialising item
+Cycle count read: 21
+Iteration 93: initialising item
+Cycle count read: 21
+Iteration 94: initialising item
+Cycle count read: 21
+Iteration 95: initialising item
+Cycle count read: 21
+Iteration 96: initialising item
+Cycle count read: 21
+Iteration 97: initialising item
+Cycle count read: 21
+Iteration 98: initialising item
+Cycle count read: 21
+Iteration 99: initialising item
+Cycle count read: 21
+Iteration 100: initialising item
+Cycle count read: 21
+Iteration 101: initialising item
+Cycle count read: 21
+Iteration 102: initialising item
+Cycle count read: 21
+Iteration 103: initialising item
+Cycle count read: 21
+Iteration 104: initialising item
+Cycle count read: 21
+Iteration 105: initialising item
+Cycle count read: 21
+Iteration 106: initialising item
+Cycle count read: 21
+Iteration 107: initialising item
+Cycle count read: 21
+Iteration 108: initialising item
+Cycle count read: 21
+Iteration 109: initialising item
+Cycle count read: 21
+Iteration 110: initialising item
+Cycle count read: 21
+Iteration 111: initialising item
+Cycle count read: 21
+Iteration 112: initialising item
+Cycle count read: 21
+Iteration 113: initialising item
+Cycle count read: 21
+Iteration 114: initialising item
+Cycle count read: 21
+Iteration 115: initialising item
+Cycle count read: 21
+Iteration 116: initialising item
+Cycle count read: 21
+Iteration 117: initialising item
+Cycle count read: 21
+Iteration 118: initialising item
+Cycle count read: 21
+Iteration 119: initialising item
+Cycle count read: 21
+Iteration 120: initialising item
+Cycle count read: 21
+Iteration 121: initialising item
+Cycle count read: 21
+Iteration 122: initialising item
+Cycle count read: 21
+Iteration 123: initialising item
+Cycle count read: 21
+Iteration 124: initialising item
+Cycle count read: 21
+Iteration 125: initialising item
+Cycle count read: 21
+Iteration 126: initialising item
+Cycle count read: 21
+Iteration 127: initialising item
+Cycle count read: 21
+Iteration 128: initialising item
+Cycle count read: 21
+Iteration 129: initialising item
+Cycle count read: 21
+Iteration 130: initialising item
+Cycle count read: 21
+Iteration 131: initialising item
+Cycle count read: 21
+Iteration 132: initialising item
+Cycle count read: 21
+Iteration 133: initialising item
+Cycle count read: 21
+Iteration 134: initialising item
+Cycle count read: 21
+Iteration 135: initialising item
+Cycle count read: 21
+Iteration 136: initialising item
+Cycle count read: 21
+Iteration 137: initialising item
+Cycle count read: 21
+Iteration 138: initialising item
+Cycle count read: 21
+Iteration 139: initialising item
+Cycle count read: 21
+Iteration 140: initialising item
+Cycle count read: 21
+Iteration 141: initialising item
+Cycle count read: 21
+Iteration 142: initialising item
+Cycle count read: 21
+Iteration 143: initialising item
+Cycle count read: 21
+Iteration 144: initialising item
+Cycle count read: 21
+Iteration 145: initialising item
+Cycle count read: 21
+Iteration 146: initialising item
+Cycle count read: 21
+Iteration 147: initialising item
+Cycle count read: 21
+Iteration 148: initialising item
+Cycle count read: 21
+Iteration 149: initialising item
+Cycle count read: 21
+Iteration 150: initialising item
+Cycle count read: 21
+Iteration 151: initialising item
+Cycle count read: 21
+Iteration 152: initialising item
+Cycle count read: 21
+Iteration 153: initialising item
+Cycle count read: 21
+Iteration 154: initialising item
+Cycle count read: 21
+Iteration 155: initialising item
+Cycle count read: 21
+Iteration 156: initialising item
+Cycle count read: 21
+Iteration 157: initialising item
+Cycle count read: 21
+Iteration 158: initialising item
+Cycle count read: 21
+Iteration 159: initialising item
+Cycle count read: 21
+Iteration 160: initialising item
+Cycle count read: 21
+Iteration 161: initialising item
+Cycle count read: 21
+Iteration 162: initialising item
+Cycle count read: 21
+Iteration 163: initialising item
+Cycle count read: 21
+Iteration 164: initialising item
+Cycle count read: 21
+Iteration 165: initialising item
+Cycle count read: 21
+Iteration 166: initialising item
+Cycle count read: 21
+Iteration 167: initialising item
+Cycle count read: 21
+Iteration 168: initialising item
+Cycle count read: 21
+Iteration 169: initialising item
+Cycle count read: 21
+Iteration 170: initialising item
+Cycle count read: 21
+Iteration 171: initialising item
+Cycle count read: 21
+Iteration 172: initialising item
+Cycle count read: 21
+Iteration 173: initialising item
+Cycle count read: 21
+Iteration 174: initialising item
+Cycle count read: 21
+Iteration 175: initialising item
+Cycle count read: 21
+Iteration 176: initialising item
+Cycle count read: 21
+Iteration 177: initialising item
+Cycle count read: 21
+Iteration 178: initialising item
+Cycle count read: 21
+Iteration 179: initialising item
+Cycle count read: 21
+Iteration 180: initialising item
+Cycle count read: 21
+Iteration 181: initialising item
+Cycle count read: 21
+Iteration 182: initialising item
+Cycle count read: 21
+Iteration 183: initialising item
+Cycle count read: 21
+Iteration 184: initialising item
+Cycle count read: 21
+Iteration 185: initialising item
+Cycle count read: 21
+Iteration 186: initialising item
+Cycle count read: 21
+Iteration 187: initialising item
+Cycle count read: 21
+Iteration 188: initialising item
+Cycle count read: 21
+Iteration 189: initialising item
+Cycle count read: 21
+Iteration 190: initialising item
+Cycle count read: 21
+Iteration 191: initialising item
+Cycle count read: 21
+Iteration 192: initialising item
+Cycle count read: 21
+Iteration 193: initialising item
+Cycle count read: 21
+Iteration 194: initialising item
+Cycle count read: 21
+Iteration 195: initialising item
+Cycle count read: 21
+Iteration 196: initialising item
+Cycle count read: 21
+Iteration 197: initialising item
+Cycle count read: 21
+Iteration 198: initialising item
+Cycle count read: 21
+Iteration 199: initialising item
+Cycle count read: 21
+
+Timing tests complete.

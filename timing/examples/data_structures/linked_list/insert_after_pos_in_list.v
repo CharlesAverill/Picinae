@@ -61,7 +61,7 @@ Definition time_of_insert_after_pos_in_list
       )
     ).
 
-Definition find_in_linked_list_timing_invs
+Definition insert_after_pos_in_list_timing_invs
     (l value : addr) (position : N) (len : nat) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
 | 0x1e4 => Some (
@@ -94,7 +94,7 @@ Lemma le_cases : forall n m,
     (n <= m -> n < m \/ n = m)%nat.
 Proof. lia. Qed.
 
-Theorem find_in_linked_list_timing:
+Theorem insert_after_pos_in_list_timing:
   forall s t s' x' l value position len
          (* boilerplate *)
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
@@ -107,7 +107,7 @@ Theorem find_in_linked_list_timing:
          (LEN: node_distance (s V_MEM32) l NULL len),
   satisfies_all
     lifted_prog
-    (find_in_linked_list_timing_invs l value position len)
+    (insert_after_pos_in_list_timing_invs l value position len)
     exits
   ((x',s')::t).
 Proof using.
@@ -204,5 +204,42 @@ Proof using.
 Qed.
 
 End TimingProof.
-        
 
+Require Import NEORV32.
+Module NRV32 := NEORV32 NEORV32BaseConfig.
+Module NEORV32TimingProof := TimingProof NRV32.
+Import NEORV32TimingProof NRV32.
+
+Goal forall l value position len t,
+    time_of_insert_after_pos_in_list l value position len t = 
+    (insert_after_pos_in_list.cycle_count_of_trace t =
+      (if l =? LL.NULL
+      then 10 + T_inst_latency + T_inst_latency
+      else
+        5 +
+        (if value =? LL.NULL
+        then 8 + T_inst_latency
+        else
+          if position =? 0
+          then
+          25 + T_inst_latency + T_data_latency +
+          T_data_latency + T_data_latency + T_inst_latency
+          else
+          22 + T_inst_latency + T_data_latency +
+          (if position <? len
+            then
+            19 + T_inst_latency +
+            (position - 1) *
+            (16 + T_data_latency + T_inst_latency) +
+            T_data_latency
+            else
+            10 + T_inst_latency +
+            (len - 1) *
+            (16 + T_data_latency + T_inst_latency) +
+            T_inst_latency) + T_data_latency +
+          T_data_latency + T_inst_latency))).
+Proof.
+    intros. unfold time_of_insert_after_pos_in_list. f_equal.
+    unfold ttbeq, tjalr, tfbeq, taddi, tfbne, ttbne, tlw, tsw.
+    psimpl. psimpl. reflexivity.
+Qed.

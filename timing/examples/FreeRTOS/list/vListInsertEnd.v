@@ -67,3 +67,19 @@ Qed.
 Compute (lifted_prog (fun _ => 0) 0x80002970).
 
 End TimingProof.
+
+Require Import NEORV32.
+Module NRV32 := NEORV32 NEORV32BaseConfig.
+Module NEORV32TimingProof := TimingProof NRV32.
+Import NEORV32TimingProof NRV32.
+
+Goal forall t,
+    time_of_vListInsertEnd t = 
+    (vListInsertEndAuto.cycle_count_of_trace t =
+        43 + 9 * T_data_latency + T_inst_latency).
+Proof.
+    intros. unfold time_of_vListInsertEnd.
+    unfold taddi, tlw, tsw, tjalr. psimpl.
+    repeat rewrite <- N.add_assoc.
+    now replace (T_data_latency + _) with (9 * T_data_latency + T_inst_latency) by lia.
+Qed.

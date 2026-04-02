@@ -132,3 +132,19 @@ Proof using.
 Qed.
 
 End TimingProof.
+
+Require Import NEORV32.
+Module NRV32 := NEORV32 NEORV32BaseConfig.
+Module NEORV32TimingProof := TimingProof NRV32.
+Import NEORV32TimingProof NRV32.
+
+Goal forall t ulen,
+    time_of_passwordCheck ulen t = 
+    (passwordCheckAuto.cycle_count_of_trace t = 
+      38 + ulen * (29 + 2 * T_data_latency + T_inst_latency) +
+        2 * T_data_latency + T_inst_latency).
+Proof.
+    intros. unfold time_of_passwordCheck. f_equal.
+    unfold taddi, tlbu, tsub, tsltiu, tor, tand, tsltu, ttbne, tadd,
+        tsub, tandi, tjalr, tfbne. lia.
+Qed.

@@ -1,7 +1,7 @@
 {
     "T_inst_latency": {
         "min": 0,
-        "max": 2,
+        "max": 3,
         "measured": 2
     },
     "T_data_latency": {

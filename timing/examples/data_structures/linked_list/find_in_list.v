@@ -208,3 +208,31 @@ Proof using.
 Qed.
 
 End TimingProof.
+
+Require Import NEORV32.
+Module NRV32 := NEORV32 NEORV32BaseConfig.
+Module NEORV32TimingProof := TimingProof NRV32.
+Import NEORV32TimingProof NRV32.
+
+Goal forall t len found_idx,
+    time_of_find_in_linked_list len found_idx t = 
+    (find_in_list.cycle_count_of_trace t =
+      5 +
+      match found_idx with
+      | Some idx => N.of_nat idx
+      | None => N.of_nat len
+      end *
+      (19 + T_data_latency + T_data_latency +
+      T_inst_latency) +
+      match found_idx with
+      | Some _ =>
+          12 + T_data_latency + T_inst_latency
+      | None => 5 + T_inst_latency
+      end + T_inst_latency).
+Proof.
+    intros. unfold time_of_find_in_linked_list. f_equal.
+    unfold tfbeq, tlw, tjal, ttbeq, tjalr.
+    psimpl. repeat rewrite N.add_assoc. f_equal. destruct found_idx;
+    psimpl; lia.
+Qed.
+
