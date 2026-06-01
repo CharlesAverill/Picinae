@@ -326,7 +326,10 @@ Theorem addloop_partial_correctness:
   forall (s:store) t xs' (r1 r2:N) (INIT : Init),
   satisfies_all addloop Invs exit (xs'::t).
 Proof.
-  (* FILL IN HERE *)
+  (* FILL IN HERE
+     Start by copy-pasting the boilerplate from the proof above and changing
+     it as needed.  The boiler plate is from the first [intros] to
+     [destruct_inv]. *)
 Admitted.
 End Addloop'.
 
@@ -334,8 +337,14 @@ End Addloop.
 
 (** Exercise:4 stars, standard, optional (sumton)
 
-    Prove the following iterative sum adds up to the closed form expression
-   [(n*(n+1))/2 mod 2^32] when n>1 is given as input to R_R1. *)
+   The following computes 1+2+3+...+n.  This exercise asks you to prove the
+   result of the computation is the closed form expression [(n*(n+1))/2 mod 2^32].
+   This proof introduces adding the a_proof metavariable_ [n] to describe the original value
+   of the input register [R1].  This is the idiomatic way to relate information about the
+   starting store with the final store.
+
+   Hint: you may assume that [n] is greater than 1 to ease the burden of proof.
+ *)
 Module SumToN.
 Definition sumton (s:store) (a:addr) : option (N * stmt) :=
   match a with
@@ -389,7 +398,10 @@ Theorem sumton_partial_correctness:
   satisfies_all sumton (Invs n) exit (xs'::t).
 Proof.
   Local Ltac step := pil32_step.
-  (* FILL IN HERE *)
+  (* FILL IN HERE
+     Start by copy-pasting the boilerplate from the proof above and changing
+     it as needed.  The boiler plate is from the first [intros] to
+     [destruct_inv]. *)
 Admitted.
 End SumToN.
 
@@ -493,7 +505,10 @@ Theorem factorial_partial_correctness:
   satisfies_all factorial (Invs r3) exit (xs'::t).
 Proof.
   Local Ltac step := pil32_step.
-  (* FILL IN HERE *)
+  (* FILL IN HERE
+     Start by copy-pasting the boilerplate from the proof above and changing
+     it as needed.  The boiler plate is from the first [intros] to
+     [destruct_inv]. *)
 Admitted.
 End Factorial.
 
