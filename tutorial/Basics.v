@@ -78,6 +78,12 @@ Inductive a64var :=
 
       NB. Memory is just a number represented by the concatenation of all bits.
           Thus its bitwidth is 8 times the number of addressable bytes.
+
+    NB. _a64typctx_ is actually a _partial_ function.  This is necessary for
+    representing temporary registers some lifters, e.g., Ghidra, use for representing
+    the assembly instruction effects. More on this in the chapter on PIL semantics,
+    but this allows for a simpler translation process without leaking temporary
+    information between instruction executions.
 *)
 
 Definition a64typctx (id:a64var) : option N :=
@@ -291,19 +297,43 @@ Proof.
   apply prove_invs.
 
   (* Base Case *)
-  simpl. rewrite ENTRY. step. assumption.
+  simpl. rewrite ENTRY.
+
+  (** The [step] tactic tells Picinae to symbolically execute the instruction at the head of
+      the trace or prove the invariant at the head of the trace.  Since we are at the entry
+      invariant, step turns the [nextinv] goal into the entry invariant, obtained by evaluating
+      the invariant set [Invs r2] with the current trace [(Addr 100, s)::nil]. *)
+  step.
+
+  (** This invariant is trivial to prove.  It is idiomatic to restate the trace conditions in the
+      entry invariant to make it easy to prove. *)
+  assumption.
 
   (* Inductive Case *)
+  (** The inductive case requires a lot of boilerplate that essentially amounts to proving
+      that every store we start from is a model of the architecture's typecontext ([a64typctx]).
+      This follows from the initial condition of starting in a store modeling the typecontext,
+      and only executing instructions from a welltyped program. *)
   intros.
   erewrite startof_prefix in ENTRY; try eassumption.
   eapply models_at_invariant; try eassumption. apply demo_program_welltyped. intro MDL1.
+  (** The other part of the boilerplate is cleaning up the hypotheses that are no longer relevant
+      and renaming variables. *)
   clear - PRE MDL1. rename t1 into t; rename s1 into s.
+  (** The [destruct_inv n HYP] tactic continues the inductive case by splitting the goal up into
+      one case for each internal invariant point.  It searches the n-bit memory space for invariant
+      points and translates PRE to the invariants at those locations. *)
   destruct_inv 64 PRE.
 
   step. step. step.
 
   (* Postcondition *)
+  (** Once the invariant is reached, the proof continues as a standard Rocq proof, but with some
+      of Picinae's abstractions.  Here we use the [update_updated] lemma from Picinae's theory of
+      stores to simplify the updated store expression [s[_:=_][_:=_]].  Afterwards we clear the rest
+      of the Picinae related hypotheses because they are no longer useful and continue with the proof.*)
   rewrite update_updated.
+  clear - r2.
   destruct (1 + r2) eqn:Eq.
     reflexivity.
     apply mp2_even. all: easy.
@@ -319,6 +349,7 @@ Module swap_register_addition.
     that each instruction is 4 bytes long.  It implements the typical algorithm
     to swap the values of two register/variables using addition.  Does it work
     in our modular arithmetic setting?  You will prove that it does. *)
+
 Definition swap_regs (s:store) (a:addr) : option (N * stmt) :=
   match a with
   | 100 => Some(4, Move R_R0 (BinOp OP_PLUS  (Var R_R0) (Var R_R1)))
@@ -349,14 +380,16 @@ Section Invs.
   Definition Entry t xs' := startof t xs' = (Addr 100, s).
   Definition Models := models a64typctx s.
 
-  (** Replace the [True] with two clauses binding [R0] and [R1] in the initial
+  (** FILL IN HERE:
+      Replace the [True] with two clauses binding [R0] and [R1] in the initial
       store [s] to the two variables [r0] and [r1] we declared above. *)
-  Definition Init t xs' := Entry t xs' /\ Models /\ (* True *) s R_R0 = r0 /\ s R_R1 = r1.
+  Definition Init t xs' := Entry t xs' /\ Models /\ True.
 
-  (** Replace the [False] with a proposition stating that the values of registers
+  (** FILL IN HERE:
+      Replace the [False] with a proposition stating that the values of registers
       [R0] and [R1] in the final store have been swapped.  Note that the [s] here
       is a parameter name that shadows the [s] variable in this section. *)
-  Definition postcondition (s:store) := (* False *) s R_R0 = r1 /\ s R_R1 = r0.
+  Definition postcondition (s:store) := False.
 
   (** Note that the [s] in the match pattern below shadows the [s] variable in
       this section.  We don't need it here because we've used it above.  If we
@@ -367,12 +400,12 @@ Section Invs.
     (** This is the starting invariant.  Typically it is the same as the definition
         of [Init] minus the [Entry] and [Models] clauses, so add the clauses
         you added there here. *)
-    | 100 => Some (True)
+    | 100 => Some (s R_R0 = r0 /\ s R_R1 = r1)
     (** This is the postcondition invariant.  We place it at the program's exit
         address.  In this simple example this is 112, the [Nop] instruction.
         We will need to prove this invariant holds _before_ executing the
         instruction, [Nop] in this case. *)
-    | 112 => Some ( postcondition s)
+    | 112 => Some (postcondition s)
     (** No other addresses nor exit conditions (e.g., exceptions) have invariants
         that we need to prove, so we mark them with [None]. *)
     | _ => None end | _ => None end.
@@ -385,15 +418,15 @@ Section Invs.
 End Invs.
 
 Theorem swap_regs_partial_correctness:
-  forall (s:store) t xs' (r0 r1:N) (INIT : Init s r0 r1 t xs'),
+  forall (s:store) t xs' (r0 r1:N) (INIT : Init s t xs'),
   satisfies_all swap_regs (Invs r0 r1) exits (xs'::t).
 Proof.
-  intros. destruct INIT as (ENTRY & MDL & R0 & R1).
+  intros. destruct INIT as (ENTRY & MDL & T).
   apply prove_invs.
 
   (* Base Case *)
   simpl. rewrite ENTRY. step.
-  (* FILL IN HERE (replace the admit.)*)
+  (* FILL IN HERE (replace the admit).*)
   admit.
 
   (* Inductive Case *)
@@ -402,8 +435,7 @@ Proof.
   eapply models_at_invariant; try eassumption. apply swap_regs_welltyped. intro MDL1.
   clear - PRE MDL1. rename t1 into t; rename s1 into s.
   destruct_inv 64 PRE.
-
-  (* FILL IN HERE *)
+  (* FILL IN HERE (complete the proof). *)
 Admitted.
 End swap_register_addition.
 
@@ -436,24 +468,26 @@ Section Invs.
 
   Definition Entry t xs' := startof t xs' = (Addr 300, s).
   Definition Models := models a64typctx s.
-  Definition Init t xs' := Entry t xs' /\ Models /\ True (* <- replace this True *).
+  Definition Init t xs' := Entry t xs' /\ Models /\ s R_R0 = r0 /\ s R_R1 = r1.
+  (*Definition Init t xs' := Entry t xs' /\ Models /\ True (* <- replace this True *).*)
 
-  Definition postcondition (s:store) := False (* <- replace this False *).
+  Definition postcondition (s:store) := s R_R0 = r1 /\ s R_R1 = r0.
 
   Definition Invs (t:trace) := match t with (Addr a, s)::_ =>
     match a with
-    | 300 => Some (True)
+    | 300 => Some (s R_R0 = r0 /\ s R_R1 = r1) (* Make it clear to update this *)
     | 312 => Some (postcondition s)
     | _ => None end | _ => None end.
 
-  Definition exit (t:trace) := true.
+  Definition exits (t:trace) := match t with (Addr 312, _)::_ => true |_=> false end.
+  (*Definition exit (t:trace) := true. (* Make it clear to update this *)*)
 
 End Invs.
 
 (* Make whatever changes you need to the theorem specification to prove it. *)
 Theorem swap_regs_partial_correctness:
-  forall (s:store) t xs' (INIT : Init s t xs'),
-  satisfies_all swap_regs (Invs) exits (xs'::t).
+  forall (s:store) t xs' r0 r1 (INIT : Init s r0 r1 t xs'),
+  satisfies_all swap_regs (Invs r0 r1) exits (xs'::t).
 Proof.
   intros. destruct INIT as (ENTRY & MDL & T).
   apply prove_invs.
@@ -469,8 +503,11 @@ Proof.
   eapply models_at_invariant; try eassumption. apply swap_regs_welltyped. intro MDL1.
   clear - PRE MDL1. rename t1 into t; rename s1 into s.
   destruct_inv 64 PRE.
-
+  destruct PRE.
   (* FILL IN HERE *)
+
+  (* TODO: Psimpl did not simplify the lxor as it did with plus/minus above.
+    Can we make it smarter? *)
 Admitted.
 End swap_register_xor.
 
@@ -484,7 +521,16 @@ Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : pil_st
 
     The following is a version of to_lower compiled for the Armv8 architecture,
     minimmally modified for this chapter.  This gives a better perspective
-    of what real code looks like. *)
+    of what real code looks like.
+
+    ASCII Reference:
+
+      Dec   Hex   Character
+      65    0x41  A
+      90    0x5A  Z
+      97    0x61  a
+      122   0x7A  z
+*)
 
 Module tolower.
 Definition tolower (s:store) (a:addr) : option (N * stmt) :=
@@ -520,6 +566,8 @@ Definition tolower (s:store) (a:addr) : option (N * stmt) :=
 Theorem tolower_welltyped : welltyped_prog a64typctx tolower.
 Proof. Picinae_typecheck. Qed.
 
+Check N.leb.
+
 
 Section Invs.
 
@@ -550,7 +598,7 @@ Proof.
 
   (* Base Case *)
   simpl. rewrite ENTRY. step.
-  (* FILL IN HERE (replace the admit.)*)
+  (* FILL IN HERE (replace the admit). *)
   admit.
 
   (* Inductive Case *)
@@ -559,8 +607,8 @@ Proof.
   eapply models_at_invariant; try eassumption. apply tolower_welltyped. intro MDL1.
   clear - PRE MDL1. rename t1 into t; rename s1 into s.
   destruct_inv 64 PRE.
+  (* FILL IN HERE (complete the proof). *)
 
-  repeat step.
 Admitted.
 End tolower.
 
