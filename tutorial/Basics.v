@@ -468,10 +468,9 @@ Section Invs.
 
   Definition Entry t xs' := startof t xs' = (Addr 300, s).
   Definition Models := models a64typctx s.
-  Definition Init t xs' := Entry t xs' /\ Models /\ s R_R0 = r0 /\ s R_R1 = r1.
-  (*Definition Init t xs' := Entry t xs' /\ Models /\ True (* <- replace this True *).*)
+  Definition Init t xs' := Entry t xs' /\ Models /\ True (* <- replace this True *).
 
-  Definition postcondition (s:store) := s R_R0 = r1 /\ s R_R1 = r0.
+  Definition postcondition (s:store) := False (* <- replace this False *).
 
   Definition Invs (t:trace) := match t with (Addr a, s)::_ =>
     match a with
@@ -479,8 +478,7 @@ Section Invs.
     | 312 => Some (postcondition s)
     | _ => None end | _ => None end.
 
-  Definition exits (t:trace) := match t with (Addr 312, _)::_ => true |_=> false end.
-  (*Definition exit (t:trace) := true. (* Make it clear to update this *)*)
+  Definition exits (t:trace) := true. (* Define the [exits] function. *)
 
 End Invs.
 
@@ -505,9 +503,6 @@ Proof.
   destruct_inv 64 PRE.
   destruct PRE.
   (* FILL IN HERE *)
-
-  (* TODO: Psimpl did not simplify the lxor as it did with plus/minus above.
-    Can we make it smarter? *)
 Admitted.
 End swap_register_xor.
 

@@ -931,7 +931,43 @@ Definition simpl_lor e1 e2 :=
 
 (** Xor simplification **)
 
-Definition simpl_xor e1 e2 :=
+
+(* Finds e1, a non-Xor term, in e2 and eliminates it if present. *)
+Fixpoint simpl_xor_cancel_inner (e2 e1:sastN) :=
+  match e2 with
+  | SIMP_Xor e2a e2b => match simpl_xor_cancel_inner e2a e1 with
+                        | Some (SIMP_Const 0) => Some e2b
+                        | Some e' => Some (SIMP_Xor e' e2b)
+                        | None => option_map (fun e' => SIMP_Xor e2a e') (simpl_xor_cancel_inner e2b e1)
+                        end
+  | _ => if sastN_eq e1 e2 then Some (SIMP_Const 0) else None end.
+
+Theorem simpl_xor_cancel_inner_bound:
+  forall e1 e2, match simpl_xor_cancel_inner e2 e1 with
+                | None | Some (SIMP_Const _) | Some (SIMP_Xor _ _) => True
+                | _ => False end.
+Proof.
+  intros e1 e2; generalize dependent e1; induction e2; intros; simpl; match goal with |- context[if ?c then _ else _] => destruct c | |- ?g => idtac g end;
+  try exact I.
+  specialize (IHe2_1 e1); destruct (simpl_xor_cancel_inner e2_1 e1) as [e'|].
+    destruct e'; try exact I. destruct n;[|exact I].
+Abort.
+
+
+(* Xor e1 and e2, eliminating identical xor subterms. *)
+Fixpoint simpl_xor_cancel e2 e1 {struct e1} :=
+  match e1 with
+  | SIMP_Xor e1a e1b => match simpl_xor_cancel e2 e1a with
+                        | Some (SIMP_Const 0) => Some e1b
+                        | Some e' => simpl_xor_cancel e' e1b
+                        | None => option_map (fun e' => SIMP_Xor e' e1a) (simpl_xor_cancel e2 e1b)
+                        end
+  | _ => simpl_xor_cancel_inner e2 e1
+  end.
+
+
+(* Simplify xor constants and top-level cancellations. *)
+Definition simpl_xor_const e1 e2 :=
   if sastN_eq e1 e2 then SIMP_Const 0 else
   match e1 with SIMP_Const n1 =>
     match n1 with 0 => e2 | _ =>
@@ -941,6 +977,15 @@ Definition simpl_xor e1 e2 :=
            match n2 with 0 => e1 | _ => SIMP_Xor e1 e2 end
          | _ => SIMP_Xor e1 e2
          end
+  end.
+
+Definition simpl_xor e1 e2 :=
+  match simpl_xor_const e1 e2 with
+  | SIMP_Xor e1' e2' => match simpl_xor_cancel e2' e1' with
+                        | Some e => e
+                        | None => SIMP_Xor e1' e2'
+                        end
+  | _ => simpl_xor_const e1 e2
   end.
 
 (** LNot simplification **)
@@ -3511,12 +3556,101 @@ Local Hint Resolve simpl_lor_sound : picinae_simpl.
 
 (* Logical-xor simplification soundness *)
 
+Theorem simpl_xor_const_sound:
+  forall mvt e1 e2, eval_sastN mvt (simpl_xor_const e1 e2) = eval_sastN mvt (SIMP_Xor e1 e2).
+Proof.
+  symmetry. unfold simpl_xor_const. destruct_matches_def SIMP_NVar; try reflexivity.
+    apply (sastN_eq_sound mvt) in Heqm. simpl. rewrite Heqm. apply N.lxor_nilpotent.
+    apply N.lxor_0_r.
+Qed.
+Local Hint Resolve simpl_xor_const_sound : picinae_simpl.
+
+Theorem simp_xor_assoc:
+  forall mvt e1 e2 e3, eval_sastN mvt (SIMP_Xor (SIMP_Xor e1 e2) e3) = eval_sastN mvt (SIMP_Xor e1 (SIMP_Xor e2 e3)).
+Proof.
+  intros; simpl. now rewrite N.lxor_assoc.
+Qed.
+
+Theorem simp_xor_comm:
+  forall mvt e1 e2, eval_sastN mvt (SIMP_Xor e1 e2) = eval_sastN mvt (SIMP_Xor e2 e1).
+Proof.
+  intros; simpl; now rewrite N.lxor_comm.
+Qed.
+
+(* TODO: rewrite the two theorems below to use the "destruct_matches" ltacs. *)
+Theorem simpl_xor_cancel_inner_sound:
+  forall mvt e1 e2, match simpl_xor_cancel_inner e2 e1 with
+                      | Some e => eval_sastN mvt e = eval_sastN mvt (SIMP_Xor e1 e2)
+                      | None => True end.
+Proof.
+  intros mvt e1 e2; generalize dependent e1. induction e2; intros; destruct (simpl_xor_cancel_inner _ _) as [e'|] eqn:EQ;(exact I || unfold simpl_xor_cancel_inner in EQ).
+  all: match goal with
+       | [H: context[sastN_eq ?a ?b] |- _] => destruct (sastN_eq a b) eqn:Heq;
+           match goal with
+           | [H: Some (SIMP_Const 0) = Some ?e |- eval_sastN ?mvt ?e = _] => inversion H; subst e; apply (sastN_eq_sound mvt) in Heq;
+               simpl; rewrite Heq; simpl; rewrite N.lxor_nilpotent; reflexivity
+           |  _ => try discriminate
+           end
+       | _ => idtac
+       end.
+  (* e2 := SIMP_Xor e2_1 e2_2 *)
+  fold simpl_xor_cancel_inner in *.
+  specialize (IHe2_1 e1).
+  destruct (simpl_xor_cancel_inner e2_1 e1) as [e''|] eqn:EQ2_1.
+  - rewrite <-(simp_xor_assoc _ e1). destruct e'' eqn:EQ''; inversion EQ; try subst e'.
+    all: try solve [simpl in *; rewrite <-IHe2_1; reflexivity].
+    simpl in *. rewrite <-IHe2_1.
+    destruct n; inversion EQ; subst e'; simpl; reflexivity.
+  - clear IHe2_1. specialize (IHe2_2 e1). destruct (simpl_xor_cancel_inner e2_2 e1) as [e''|] eqn: EQ2_2; simpl in *.
+    inversion EQ; subst e'. rewrite (N.lxor_comm (eval_sastN mvt e2_1)), <-N.lxor_assoc, <-IHe2_2, N.lxor_comm; reflexivity.
+    discriminate.
+Qed.
+
+
+Theorem simpl_xor_cancel_sound:
+  forall mvt e1 e2, match simpl_xor_cancel e2 e1 with
+                      | Some e => eval_sastN mvt e = eval_sastN mvt (SIMP_Xor e1 e2)
+                      | None => True end.
+Proof.
+  unfold simpl_xor_cancel.
+  intro; induction e1; intros; simpl.
+  (*        pose proof (simpl_xor_cancel_inner_sound mvt e2 (SIMP_NVar id n BND n' BND')).*)
+  all: match goal with
+       | |- match simpl_xor_cancel_inner _ (SIMP_Xor _ _) with | _  => _ end => idtac
+       | [mvt: metavar_tree |- match simpl_xor_cancel_inner ?e2 ?e1 with | _  => _ end] =>
+          pose proof (simpl_xor_cancel_inner_sound mvt e1 e2); destruct (simpl_xor_cancel_inner e2 e1) as [e|] eqn:EQ;
+          (exact I || rewrite H; reflexivity)
+       | |- ?g => idtac
+       end.
+  fold simpl_xor_cancel in *.
+  specialize (IHe1_1 e2).
+  destruct (simpl_xor_cancel e2 e1_1) as [e|].
+  - specialize (IHe1_2 e). destruct e eqn:EQe; lazymatch type of EQe with
+                        | e = SIMP_Const ?n => idtac
+                            (* destruct n; simpl in IHe1_1; rewrite N.lxor_assoc, (N.lxor_comm _ (_ _ e2)), <-N.lxor_assoc, <-IHe1_1
+*)
+                        | _ =>
+                            destruct (simpl_xor_cancel _ e1_2) as [e'|]; try exact I
+                        end.
+    all: try solve [rewrite IHe1_2; simpl in *; rewrite IHe1_1; simpl; rewrite (N.lxor_comm _ (eval_sastN _ e1_2)), N.lxor_assoc; reflexivity].
+
+    destruct n.
+      simpl in IHe1_1; rewrite N.lxor_assoc, (N.lxor_comm _ (_ _ e2)), <-N.lxor_assoc, <-IHe1_1, N.lxor_0_l; reflexivity.
+      destruct_matches;[|exact I]. rewrite IHe1_2; simpl in *; rewrite IHe1_1, (N.lxor_comm _ (_ _ e1_2)), N.lxor_assoc. reflexivity.
+  - specialize (IHe1_2 e2); destruct (simpl_xor_cancel e2 e1_2) as [e|]; simpl.
+      rewrite IHe1_2; simpl. rewrite N.lxor_assoc, (N.lxor_comm (eval_sastN mvt e2)), <-N.lxor_assoc, (N.lxor_comm (_ _ e1_2)). reflexivity.
+      exact I.
+Qed.
+
 Theorem simpl_xor_sound:
   forall mvt e1 e2, eval_sastN mvt (simpl_xor e1 e2) = eval_sastN mvt (SIMP_Xor e1 e2).
 Proof.
+  (* The `destruct_matches_def SIMP_NVar` approach results in the unprovable goal
+     ` eval_sastN mvt (SIMP_Xor e1 e2) = eval_sastN mvt (SIMP_Add e1 e1) `*)
   symmetry. unfold simpl_xor. destruct_matches_def SIMP_NVar; try reflexivity.
-    apply (sastN_eq_sound mvt) in Heqm. simpl. rewrite Heqm. apply N.lxor_nilpotent.
-    apply N.lxor_0_r.
+    pose proof (H:=simpl_xor_cancel_sound mvt s1 s2); rewrite Heqm0 in H; rewrite H; rewrite <-Heqm. symmetry; apply simpl_xor_const_sound.
+    rewrite <-Heqm; symmetry; apply simpl_xor_const_sound.
+    symmetry; apply simpl_xor_const_sound.
 Qed.
 Local Hint Resolve simpl_xor_sound : picinae_simpl.
 
