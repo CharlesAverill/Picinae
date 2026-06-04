@@ -105,6 +105,8 @@ Compute $quote (fun n => match n with
              |}])
    : term*)
 Compute $quote_rec nat_id.
+Compute $quote_rec xbits.
+Compute $quote xbits.
 
 Inductive color : Set :=
   | Red (c:color): color
@@ -121,7 +123,48 @@ Compute $quote (fun c => match c with
                          | Blue => Blue
                          end
 ).
+Compute $quote (xbits 0 1 2).
+Compute $quote (BinOp OP_MOD
+                  (BinOp OP_RSHIFT (Word 0 32) (Word 1 32))
+                  (BinOp OP_MINUS (Word 2 32) (Word 1 32))).
 
+Definition case1 n := match n with
+                      | 0 => 10
+                      | 1 => 20
+                      | _ => 256
+                      end.
+Compute $quote_rec case1.
+#[local] Parameter y : N.
+#[local] Parameter n : N.
+(* TODO: Continue here with translating match on N statements to exp/stmt *)
+Compute $quote (match n with 0 => 1 | _ => 32 end).
+Check tCase : case_info -> predicate term -> term -> list (branch term) -> term.
+Print predicate.
+
+Definition case2 n := match n with
+                      | 0 => 10
+                      | 1 => 20
+                      | 2 => 30
+                      | 3 => 32
+                      | 4 => 32
+                      | 5 => 32
+                      | _ => 256
+                      end.
+
+(* New experimental work - 5/29/26 *)
+Fixpoint lift (t:term) : term :=
+  match t with
+  | tApp _xbits_ (n::lo::hi::nil) =>
+      _BinOp{ _OP_MOD_;
+       _BinOp{ _OP_RSHIFT_; lift n; lift lo }_;
+       _BinOp{ _OP_MINUS_; lift hi; lift lo }_ }_
+  | _0%N_ => _Word{ t, _0%N_ }_
+  | tApp _Npos_ _ => _Word{ t, _0%N_ }_
+  | _ => t
+  end.
+
+Compute $unquote ($quote (xbits 0 1 2)).
+Compute $unquote (lift ($quote (xbits 0 1 2))).
 Print List.
 About map.
 Print map.
