@@ -4196,7 +4196,7 @@ Proof.
         destruct andb eqn:H1.
 
           apply andb_prop in H1. destruct H1 as [H1 H2]. apply (sastN_eq_sound mvt) in H2.
-          rewrite H1, H2, add_msub_r, N.Div0.mod_mod...
+          rewrite H1, H2, add_msub_r, N.Div0.mod_mod.
           inversion H. reflexivity.
 
           specialize (IH1 neg e2). destruct simpl_modpow2_cancel; [|discriminate H].

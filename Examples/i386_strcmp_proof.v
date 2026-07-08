@@ -1,5 +1,4 @@
 (* Example proofs using Picinae for Intel x86 Architecture
-
    Copyright (c) 2025 Kevin W. Hamlen
    Computer Science Department
    The University of Texas at Dallas
@@ -26,6 +25,7 @@ Require Import NArith.
 Require Import ZArith.
 Require Import Picinae_i386.
 Require Import i386_strcmp.
+Require Import Lia.
 
 Import X86Notations.
 Open Scope N.
@@ -253,9 +253,8 @@ Proof.
   destruct_inv 32 PRE; unfold trueif_inv in ESP.
 
   (* Address 0 *)
-  step. step. exists 0. psimpl. split.
-    reflexivity. split. reflexivity.
-    intros i LT. destruct i; discriminate.
+  step. step. exists 0. psimpl.
+    repeat (lia || split).
 
   (* Optional: The rest of the proof ignores all flag values except CF and ZF, so
      we can make evaluation faster and shorter by telling Picinae to ignore the
