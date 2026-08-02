@@ -44,17 +44,25 @@ Require Import Structures.Equalities.
 Open Scope N.
 
 (* Variables found in IL code lifted from TOY native code: *)
-Inductive toyvar :=
+Inductive ftoyvar :=
   | V_MEM32
   | R_0 | R_1 | R_2 | R_3 | R_4 | R_5 | R_SP | R_PC
-  | V_TEMP (n:N).
+  | V_TEMP (n:N)
+  (* ----------------------------------------------------- *)
+  | H_MEM32 (* Harvard memory *)
+  | S_MEM32 (* Shadow memory *)
+  | R_SSP (* Shadow stack pointer *)
+.
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
-Definition toytypctx v :=
+Definition ftoytypctx v :=
   match v with
   | V_MEM32 => Some (8*2^32)
   | R_0 | R_1 | R_2 | R_3 | R_4 | R_5 | R_SP | R_PC => Some 32
   | V_TEMP _ => None
+  | H_MEM32 => Some (8*2^32)
+  | S_MEM32 => Some (8*2^32)
+  | R_SSP => Some 32
 end.
 
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
@@ -62,63 +70,61 @@ end.
    identifiers chosen above are syntactically written and how to decide whether
    any two variable instances refer to the same variable. *)
 
-Module MiniTOYVarEq <: MiniDecidableType.
-  Definition t := toyvar.
-  Definition eq_dec (v1 v2:toyvar) : {v1=v2}+{v1<>v2}.
+Module MiniFTOYVarEq <: MiniDecidableType.
+  Definition t := ftoyvar.
+  Definition eq_dec (v1 v2:ftoyvar) : {v1=v2}+{v1<>v2}.
     decide equality; apply N.eq_dec.
   Defined.  (* <-- This must be Defined (not Qed!) for finterp to work! *)
   Arguments eq_dec v1 v2 : simpl never.
-End MiniTOYVarEq.
+End MiniFTOYVarEq.
 
-Module TOYArch <: Architecture.
-  Module Var := Make_UDT MiniTOYVarEq.
-  Definition var := Var.t.
-  Definition store := var -> N.
-  Definition typctx := var -> option bitwidth.
-  Definition archtyps := toytypctx.
+Module FTOYArch <: Architecture.
+  Module Var := Make_UDT MiniFTOYVarEq.
+  Definition var := Var.t. Definition store := var -> N. Definition typctx := var -> option bitwidth.
+  Definition archtyps := ftoytypctx.
 
   Definition mem_readable (s:store) (a:addr) := True.
   Definition mem_writable (s:store) (a:addr) := True.
-End TOYArch.
+End FTOYArch.
 
-(* Instantiate the Picinae modules with the toy identifiers above. *)
-Module IL_toy := PicinaeIL TOYArch.
-Export IL_toy.
-Module Theory_toy := PicinaeTheory IL_toy.
-Export Theory_toy.
-Module Statics_toy := PicinaeStatics IL_toy Theory_toy.
-Export Statics_toy.
-Module FInterp_toy := PicinaeFInterp IL_toy Theory_toy Statics_toy.
-Export FInterp_toy.
-Module PSimpl_toy := Picinae_Simplifier_Base IL_toy.
-Export PSimpl_toy.
-Module PSimpl_toy_v1_1 := Picinae_Simplifier_v1_1 IL_toy Theory_toy Statics_toy FInterp_toy.
-Ltac PSimpl_toy.PSimplifier ::= PSimpl_toy_v1_1.PSimplifier.
+(* Instantiate the Picinae modules with the ftoy identifiers above. *)
+Module IL_ftoy := PicinaeIL FTOYArch.
+Export IL_ftoy.
+Module Theory_ftoy := PicinaeTheory IL_ftoy.
+Export Theory_ftoy.
+Module Statics_ftoy := PicinaeStatics IL_ftoy Theory_ftoy.
+Export Statics_ftoy.
+Module FInterp_ftoy := PicinaeFInterp IL_ftoy Theory_ftoy Statics_ftoy.
+Export FInterp_ftoy.
+Module PSimpl_ftoy := Picinae_Simplifier_Base IL_ftoy.
+Export PSimpl_ftoy.
+Module PSimpl_ftoy_v1_1 := Picinae_Simplifier_v1_1 IL_ftoy Theory_ftoy Statics_ftoy FInterp_ftoy.
+Ltac PSimpl_ftoy.PSimplifier ::= PSimpl_ftoy_v1_1.PSimplifier.
 
 (* To use a different simplifier version (e.g., v1_0) put the following atop
    your proof .v file:
 Require Import Picinae_simplifier_v1_0.
-Module PSimpl_toy_v1_0 := Picinae_Simplifier_v1_0 IL_toy Theory_toy Statics_toy FInterp_toy.
-Ltac PSimpl_toy.PSimplifier ::= PSimpl_toy_v1_0.PSimplifier.
+Module PSimpl_ftoy_v1_0 := Picinae_Simplifier_v1_0 IL_ftoy Theory_ftoy Statics_ftoy FInterp_ftoy.
+Ltac PSimpl_ftoy.PSimplifier ::= PSimpl_ftoy_v1_0.PSimplifier.
 *)
 
-Module ISA_toy := Picinae_ISA IL_toy PSimpl_toy Theory_toy Statics_toy FInterp_toy.
-Export ISA_toy.
+Module ISA_ftoy := Picinae_ISA IL_ftoy PSimpl_ftoy Theory_ftoy Statics_ftoy FInterp_ftoy.
+Export ISA_ftoy.
 
 (* Introduce unique aliases for tactics in case user loads multiple architectures. *)
-Tactic Notation "toy_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
-Tactic Notation "toy_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
-Tactic Notation "toy_psimpl" "in" hyp(H) := psimpl_hyp H.
-Tactic Notation "toy_psimpl" := psimpl_goal.
-Ltac toy_step := ISA_step.
+Tactic Notation "ftoy_psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
+Tactic Notation "ftoy_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+Tactic Notation "ftoy_psimpl" "in" hyp(H) := psimpl_hyp H.
+Tactic Notation "ftoy_psimpl" := psimpl_goal.
+Ltac ftoy_step := ISA_step.
 
 (* The following is needed when applying cframe theorems from Picinae_theory. *)
-Theorem memacc_respects_toytypctx: memacc_respects_typctx toytypctx.
+Theorem memacc_respects_ftoytypctx: memacc_respects_typctx ftoytypctx.
 Proof.
   intros s1 s2 RV. rewrite <- RV. split; reflexivity.
 Qed.
 
-(* Simplify memory access propositions by observing that on toy, the only part
+(* Simplify memory access propositions by observing that on ftoy, the only part
    of the store that affects memory accessibility are the page-access bits
    (A_READ and A_WRITE). *)
 (**)
@@ -154,7 +160,7 @@ Qed.
 (*  intros. unfold MemAcc, mem_writable. rewrite !update_updated. reflexivity.*)
 (*Qed.*)
 (**)
-(* Simplify toy memory access assertions produced by step_stmt. *)
+(* Simplify ftoy memory access assertions produced by step_stmt. *)
 (*Ltac simpl_memaccs H ::=*)
 (*  try lazymatch type of H with context [ MemAcc mem_writable ] =>*)
 (*    rewrite ?memacc_write_frame, ?memacc_write_updated in H by discriminate 1*)
@@ -166,26 +172,26 @@ Ltac simpl_memaccs H ::= idtac.
 
 (* Define ISA-specific notations: *)
 
-Declare Scope toy_scope.
-Delimit Scope toy_scope with toy.
-Bind Scope toy_scope with stmt exp trace.
-Open Scope toy_scope.
-Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : toy_scope.
+Declare Scope ftoy_scope.
+Delimit Scope ftoy_scope with ftoy.
+Bind Scope ftoy_scope with stmt exp trace.
+Open Scope ftoy_scope.
+Notation " s1 $; s2 " := (Seq s1 s2) (at level 75, right associativity) : ftoy_scope.
 
-Module TOYNotations.
+Module FTOYNotations.
 
-Notation "m Ⓑ[ a  ]" := (getmem 32 LittleE 1 m a) (at level 30) : toy_scope. (* read byte from memory *)
-Notation "m Ⓦ[ a  ]" := (getmem 32 LittleE 2 m a) (at level 30) : toy_scope. (* read word from memory *)
-Notation "m Ⓓ[ a  ]" := (getmem 32 LittleE 4 m a) (at level 30) : toy_scope. (* read dword from memory *)
-Notation "m Ⓠ[ a  ]" := (getmem 32 LittleE 8 m a) (at level 30) : toy_scope. (* read quad word from memory *)
-Notation "m Ⓧ[ a  ]" := (getmem 32 LittleE 16 m a) (at level 30) : toy_scope. (* read xmm from memory *)
-Notation "m Ⓨ[ a  ]" := (getmem 32 LittleE 32 m a) (at level 30) : toy_scope. (* read ymm from memory *)
-Notation "m [Ⓑ  a := v  ]" := (setmem 32 LittleE 1 m a v) (at level 50, left associativity) : toy_scope. (* write byte to memory *)
-Notation "m [Ⓦ  a := v  ]" := (setmem 32 LittleE 2 m a v) (at level 50, left associativity) : toy_scope. (* write word to memory *)
-Notation "m [Ⓓ  a := v  ]" := (setmem 32 LittleE 4 m a v) (at level 50, left associativity) : toy_scope. (* write dword to memory *)
-Notation "m [Ⓠ  a := v  ]" := (setmem 32 LittleE 8 m a v) (at level 50, left associativity) : toy_scope. (* write quad word to memory *)
-Notation "m [Ⓧ  a := v  ]" := (setmem 32 LittleE 16 m a v) (at level 50, left associativity) : toy_scope. (* write xmm to memory *)
-Notation "m [Ⓨ  a := v  ]" := (setmem 32 LittleE 32 m a v) (at level 50, left associativity) : toy_scope. (* write ymm to memory *)
+Notation "m Ⓑ[ a  ]" := (getmem 32 LittleE 1 m a) (at level 30) : ftoy_scope. (* read byte from memory *)
+Notation "m Ⓦ[ a  ]" := (getmem 32 LittleE 2 m a) (at level 30) : ftoy_scope. (* read word from memory *)
+Notation "m Ⓓ[ a  ]" := (getmem 32 LittleE 4 m a) (at level 30) : ftoy_scope. (* read dword from memory *)
+Notation "m Ⓠ[ a  ]" := (getmem 32 LittleE 8 m a) (at level 30) : ftoy_scope. (* read quad word from memory *)
+Notation "m Ⓧ[ a  ]" := (getmem 32 LittleE 16 m a) (at level 30) : ftoy_scope. (* read xmm from memory *)
+Notation "m Ⓨ[ a  ]" := (getmem 32 LittleE 32 m a) (at level 30) : ftoy_scope. (* read ymm from memory *)
+Notation "m [Ⓑ  a := v  ]" := (setmem 32 LittleE 1 m a v) (at level 50, left associativity) : ftoy_scope. (* write byte to memory *)
+Notation "m [Ⓦ  a := v  ]" := (setmem 32 LittleE 2 m a v) (at level 50, left associativity) : ftoy_scope. (* write word to memory *)
+Notation "m [Ⓓ  a := v  ]" := (setmem 32 LittleE 4 m a v) (at level 50, left associativity) : ftoy_scope. (* write dword to memory *)
+Notation "m [Ⓠ  a := v  ]" := (setmem 32 LittleE 8 m a v) (at level 50, left associativity) : ftoy_scope. (* write quad word to memory *)
+Notation "m [Ⓧ  a := v  ]" := (setmem 32 LittleE 16 m a v) (at level 50, left associativity) : ftoy_scope. (* write xmm to memory *)
+Notation "m [Ⓨ  a := v  ]" := (setmem 32 LittleE 32 m a v) (at level 50, left associativity) : ftoy_scope. (* write ymm to memory *)
 Notation "x ⊕ y" := ((x+y) mod 2^32) (at level 50, left associativity). (* modular addition *)
 Notation "x ⊖ y" := (msub 32 x y) (at level 50, left associativity). (* modular subtraction *)
 Notation "x ⊗ y" := ((x*y) mod 2^32) (at level 40, left associativity). (* modular multiplication *)
@@ -199,10 +205,10 @@ Notation "x .| y" := (N.lor x y) (at level 58, left associativity). (* logical o
 Notation " x <- e1 ;; e2" := (match e1 with
                               | Some x => e2
                               | None => None
-                              end) (right associativity, at level 60) : toy_scope.
+                              end) (right associativity, at level 60) : ftoy_scope.
 
 Notation "'_' <- e1 ;; e2" := (match e1 with
                                | Some _ => e2
                                | None => None
-                               end) (right associativity, at level 60) : toy_scope.
-End TOYNotations.
+                               end) (right associativity, at level 60) : ftoy_scope.
+End FTOYNotations.

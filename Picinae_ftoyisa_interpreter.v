@@ -1,17 +1,17 @@
-Require Import Picinae_toyisa.
+Require Import Picinae_ftoyisa.
 Require Import NArith.
 Require Import Lia.
 Open Scope N.
-Import TOYNotations.
+Import FTOYNotations.
 
 Inductive asm : Set :=
-  | add (rd rs rt:toyvar)
-  | lsl (rd rs:toyvar) (imm:N)
-  | li (rd:toyvar) (imm:N)
-  | call (rs:toyvar)
+  | add (rd rs rt:ftoyvar)
+  | lsl (rd rs:ftoyvar) (imm:N)
+  | li (rd:ftoyvar) (imm:N)
+  | call (rs:ftoyvar)
   | ret
   | bi (simm:N)
-  | br (rs:toyvar).
+  | br (rs:ftoyvar).
 
 Scheme Equality for asm.
 
@@ -40,6 +40,7 @@ Definition encode_reg var : option N :=
   | R_PC => Some 7
   | _ => None
   end.
+
 
 Section Decode.
   Variable n:N.
@@ -149,14 +150,12 @@ Definition encode_lsl rd rs imm :=
   let op := encode_opcode (lsl R_0 R_0 0) in
   Rd <- encode_reg rd;;
   Rs <- encode_reg rs;;
-  if imm <? 2^6 then Some (op << 27 .| Rd << 24 .| Rs << 21 .| imm)
-  else None.
+  Some (op << 27 .| Rd << 24 .| Rs << 21 .| imm).
 
 Definition encode_li rd imm :=
   let op := encode_opcode (li R_0 0) in
   Rd <- encode_reg rd;;
-  if imm <? 2^24 then Some (op << 27 .| Rd << 24 .| imm)
-  else None.
+  Some (op << 27 .| Rd << 24 .| imm).
 
 Definition encode_call rs :=
   let op := encode_opcode (call R_0) in
@@ -168,8 +167,7 @@ Definition encode_ret :=
 
 Definition encode_bi simm :=
   let op := encode_opcode (bi simm) in
-  if simm <? 2^27 then Some (op << 27 .| simm)
-  else None.
+  Some (op << 27 .| simm).
 
 Definition encode_br rs :=
   let op := encode_opcode (br rs) in
@@ -189,6 +187,7 @@ Definition encode_insn i :=
   i' <- decode_insn n;;
   if asm_beq i' i then Some n else None.
 
+
 Definition lift_insn (v:asm) :=
   match v with
   | add rd rs rt => lift_add rd rs rt
@@ -206,13 +205,6 @@ Tactic Notation "mdestruct" "in" hyp(H) :=
   | context[_ <- ?x ;; _] =>
       let E := fresh "E" in destruct x eqn:E in H
   end.
-
-Tactic Notation "mdestruct" :=
-  lazymatch goal with
-  | |- context[_ <- ?x ;; _] =>
-      let E := fresh "E" in destruct x eqn:E
-  end.
-
 
 Ltac head t :=
   lazymatch t with
@@ -237,14 +229,14 @@ Tactic Notation "destruct" "if":=
 
 
 Lemma decode_reg_32bit :
-  forall n r, decode_reg n = Some r -> toytypctx r = Some 32.
+  forall n r, decode_reg n = Some r -> ftoytypctx r = Some 32.
 Proof.
   unfold decode_reg; intros n r DECODE.
   destruct n as [|n]; repeat (discriminate || (inversion DECODE; subst; reflexivity) || destruct n as [n|n|]).
 Qed.
 
 Definition sizeof v :=
-  match toytypctx v with Some w => w | _ => 0 end.
+  match ftoytypctx v with Some w => w | _ => 0 end.
 
 Lemma decode_reg_sizeof32 :
   forall n r, decode_reg n = Some r -> sizeof r = 32.
@@ -254,14 +246,14 @@ Proof.
 Qed.
 
 Lemma decode_reg_sizeof :
-  forall n r, decode_reg n = Some r -> toytypctx r = Some (sizeof r).
+  forall n r, decode_reg n = Some r -> ftoytypctx r = Some (sizeof r).
 Proof.
   unfold decode_reg; intros n r DECODE.
   destruct n as [|n]; repeat (discriminate || (inversion DECODE; subst; reflexivity) || destruct n as [n|n|]).
 Qed.
 
 Lemma decode_reg_sizeof2 :
-  forall n r n2 r2, decode_reg n = Some r -> decode_reg n2 = Some r2 -> toytypctx r = Some (sizeof r2).
+  forall n r n2 r2, decode_reg n = Some r -> decode_reg n2 = Some r2 -> ftoytypctx r = Some (sizeof r2).
 Proof.
   intros n r n2 r2 DECODE DECODE2.
   erewrite decode_reg_sizeof, !decode_reg_sizeof32; reflexivity || eassumption.
@@ -301,7 +293,7 @@ Local Ltac etyp :=
          | |- hastyp_exp _ (Load _ _ _ _) _ => apply TLoad with (w := 32)
          | |- hastyp_exp _ (Store _ _ _ _ _) _ => apply TStore with (w := 32)
          | X: hastyp_exp _ ?x ?a, Y: hastyp_exp _ ?y ?b |- hastyp_exp _ (Concat ?x ?y) _ => apply TConcat with (w1 := a) (w2 := b)
-         | |- pfsub toytypctx toytypctx  => reflexivity
+         | |- pfsub ftoytypctx ftoytypctx  => reflexivity
          | |- _ < _ => reflexivity
          | |- _ _ = Some _ => reflexivity
          | |- _ _ = Some 32 => eapply decode_reg_32bit; eassumption
@@ -332,10 +324,10 @@ Local Ltac stypc c :=
          (*| H: decode_reg _ = Some ?v |- hastyp_stmt _ _ (Move ?v _) _ => apply TMove with (w := 32);*)
          (*     [> right | | apply update_some]; try reflexivity*)
          | |- hastyp_stmt _ _ (Move ?v _) _ => apply TMove with (w := sizeof v); [> right | | apply update_some]; try reflexivity
-         | |- pfsub toytypctx toytypctx  => reflexivity
+         | |- pfsub ftoytypctx ftoytypctx  => reflexivity
          | |- hastyp_exp _ _ _  => etyp
   end.
-Local Ltac styp := stypc toytypctx.
+Local Ltac styp := stypc ftoytypctx.
 Local Ltac unfold_stmt := match goal with | |- hastyp_stmt _ _ ?a _ => unfold_rec a end.
 Local Ltac stypu :=
   repeat match goal with
@@ -344,7 +336,7 @@ Local Ltac stypu :=
          end.
 
 Theorem welltyped_lift_insn :
-  forall n i q, decode_insn n = Some i -> lift_insn i = Some q -> exists c'', hastyp_stmt toytypctx toytypctx q c''.
+  forall n i q, decode_insn n = Some i -> lift_insn i = Some q -> exists c'', hastyp_stmt ftoytypctx ftoytypctx q c''.
 Proof.
   unfold lift_insn, decode_insn; intros z i q DECODE LIFT; remember (opcode _) as n eqn:Heqn; clear Heqn.
   destruct n as [|n]; repeat (discriminate || destruct n as [n|n|]);
@@ -367,20 +359,20 @@ Proof.
     eexists. stypu; try (etyp || reflexivity).  erewrite decode_reg_sizeof32;[etyp; unfold immli; etransitivity;[apply xbits_bound|psimpl;lia]|eassumption].
 Qed.
 
-Definition toy_prog s a :=
+Definition ftoy_prog s a :=
   match a mod 4 with
-  | 0 => i <- decode_insn (getmem 32 LittleE 4 (s V_MEM32) a);;
+  | 0 => i <- decode_insn (getmem 32 LittleE 4 (s H_MEM32) a);;
          q <- lift_insn i ;;
         Some (4, q)
   | _ => None
   end.
 
-Theorem welltyped_toy_prog :
-  welltyped_prog toytypctx toy_prog.
+Theorem welltyped_ftoy_prog :
+  welltyped_prog ftoytypctx ftoy_prog.
 Proof.
   unfold welltyped_prog; intros;
-  destruct (toy_prog _ _) eqn:EQ;[|exact I];
-  destruct p. unfold toy_prog in EQ; destruct (a mod 4); try discriminate.
+  destruct (ftoy_prog _ _) eqn:EQ;[|exact I];
+  destruct p. unfold ftoy_prog in EQ; destruct (a mod 4); try discriminate.
   destruct (decode_insn _) eqn:EQ2 in EQ; try discriminate.
   inversion EQ; subst; clear EQ.
   eapply welltyped_lift_insn. eassumption.
