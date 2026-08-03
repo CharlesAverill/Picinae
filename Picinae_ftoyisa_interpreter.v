@@ -11,7 +11,10 @@ Inductive asm : Set :=
   | call (rs:ftoyvar)
   | ret
   | bi (simm:N)
-  | br (rs:ftoyvar).
+  | br (rs:ftoyvar)
+  | str (rd rs:ftoyvar) (simm:N)
+  | ldr (rd rs:ftoyvar) (simm:N)
+  | cbnz (rd:ftoyvar) (simm:N).
 
 Scheme Equality for asm.
 
@@ -41,19 +44,23 @@ Definition encode_reg var : option N :=
   | _ => None
   end.
 
-
 Section Decode.
   Variable n:N.
 (*  31  30  29  28  27  26  25  24  23  22  21  20  19  18  17  16  15  14  13  12  11  10   9   8   7   6   5   4   3   2   1   0
     |-  opcode      -|  |-  rd  -|  |-  rs  -|  |-  rt  -|
     |-  opcode      -|  |-  rd  -|  |-  rs  -|  |-  imm lsl         -|
-    |-  opcode      -|  |-  rd  -|  |-  imm li                                                                                      -| *)
+    |-  opcode      -|  |-  rd  -|  |-  rs  -|  |-  imm addi/str/ldr                                                             -|
+    |-  opcode      -|  |-  rd  -|  |-  imm li                                                                                   -| *)
   Definition opcode := xbits n 27 32.
   Definition rd := xbits n 24 27.
   Definition rs := xbits n 21 24.
   Definition rt := xbits n 18 21.
   Definition immlsl := xbits n 15 21.
+  (*Definition immaddi := xbits n  0 21.*)
+  Definition immstr := xbits n  0 21.
+  Definition immldr := xbits n  0 21.
   Definition immli := xbits n 0 24.
+  Definition immcbnz := xbits n 0 24.
   Definition simmbi := xbits n 0 27.
 
 Definition decode_add :=
@@ -114,6 +121,32 @@ Definition decode_br :=
 Definition lift_br Rs :=
   Some (Jmp (Var Rs)).
 
+Definition decode_str :=
+  Rd <- decode_reg rd;;
+  Rs <- decode_reg rs;;
+  Some (str Rd Rs immstr).
+
+Definition lift_str Rd Rs simm :=
+  Some (Move V_MEM32 (Store (Var V_MEM32) (BinOp OP_PLUS (Var Rd) (Cast CAST_SIGNED 32 (Word simm 21))) (Var Rs) LittleE 4)).
+
+Definition decode_ldr :=
+  Rd <- decode_reg rd;;
+  Rs <- decode_reg rs;;
+  Some (ldr Rd Rs immldr).
+
+Definition lift_ldr Rd Rs simm :=
+  let q := (Move Rd (Load (Var V_MEM32) (BinOp OP_PLUS (Var Rs) (Cast CAST_SIGNED 32 (Word simm 21))) LittleE 4)) in
+  Some (if Rd == R_PC then Seq q (Jmp (Var R_PC)) else q).
+
+Definition decode_cbnz :=
+  Rd <- decode_reg rd;;
+  Some (cbnz Rd immcbnz).
+
+Definition lift_cbnz Rd simm :=
+  Some (If (BinOp OP_EQ (Var Rd) (Word 0 32))
+        (Jmp (BinOp OP_PLUS (Var R_PC) (Cast CAST_SIGNED 32 (BinOp OP_LSHIFT (Word simm 26) (Word 2 26)))))
+        Nop).
+
 Definition decode_insn :=
   match opcode with
   | 0 => decode_add
@@ -123,6 +156,9 @@ Definition decode_insn :=
   | 4 => Some ret
   | 5 => decode_bi
   | 6 => decode_br
+  | 7 => decode_str
+  | 8 => decode_ldr
+  | 9 => decode_cbnz
   | _ => None
   end.
 
@@ -137,6 +173,9 @@ Definition encode_opcode i :=
   | ret => 4
   | bi _ => 5
   | br _ => 6
+  | str _ _ _ => 7
+  | ldr _ _ _ => 8
+  | cbnz _ _ => 9
   end.
 
 Definition encode_add rd rs rt :=
@@ -150,12 +189,14 @@ Definition encode_lsl rd rs imm :=
   let op := encode_opcode (lsl R_0 R_0 0) in
   Rd <- encode_reg rd;;
   Rs <- encode_reg rs;;
-  Some (op << 27 .| Rd << 24 .| Rs << 21 .| imm).
+  if imm <? 2^6 then Some (op << 27 .| Rd << 24 .| Rs << 21 .| imm)
+  else None.
 
 Definition encode_li rd imm :=
   let op := encode_opcode (li R_0 0) in
   Rd <- encode_reg rd;;
-  Some (op << 27 .| Rd << 24 .| imm).
+  if imm <? 2^24 then Some (op << 27 .| Rd << 24 .| imm)
+  else None.
 
 Definition encode_call rs :=
   let op := encode_opcode (call R_0) in
@@ -167,12 +208,30 @@ Definition encode_ret :=
 
 Definition encode_bi simm :=
   let op := encode_opcode (bi simm) in
-  Some (op << 27 .| simm).
+  if simm <? 2^27 then Some (op << 27 .| simm)
+  else None.
 
 Definition encode_br rs :=
   let op := encode_opcode (br rs) in
   Rs <- encode_reg rs;;
   Some (op << 27 .| Rs << 21).
+
+Definition encode_str rd rs simm :=
+  let op := encode_opcode (str rd rs simm) in
+  Rd <- encode_reg rd;;
+  Rs <- encode_reg rs;;
+  Some (op << 27 .| Rs << 21 .| simm).
+
+Definition encode_ldr rd rs simm :=
+  let op := encode_opcode (ldr rd rs simm) in
+  Rd <- encode_reg rd;;
+  Rs <- encode_reg rs;;
+  Some (op << 27 .| Rd << 24 .| Rs << 21 .| simm).
+
+Definition encode_cbnz rd simm:=
+  let op := encode_opcode (cbnz rd simm) in
+  Rd <- encode_reg rd;;
+  Some (op << 27 .| Rd << 24 .| simm).
 
 Definition encode_insn i :=
   n <- match i with
@@ -183,10 +242,12 @@ Definition encode_insn i :=
   | ret => encode_ret
   | bi simm => encode_bi simm
   | br rs => encode_br rs
+  | str rd rs simm => encode_str rd rs simm
+  | ldr rd rs simm => encode_ldr rd rs simm
+  | cbnz rd simm => encode_cbnz rd simm
   end;;
   i' <- decode_insn n;;
   if asm_beq i' i then Some n else None.
-
 
 Definition lift_insn (v:asm) :=
   match v with
@@ -197,6 +258,9 @@ Definition lift_insn (v:asm) :=
   | ret => lift_ret
   | bi simm => lift_bi simm
   | br rs => lift_br rs
+  | str rd rs simm => lift_str rd rs simm
+  | ldr rd rs simm => lift_ldr rd rs simm
+  | cbnz rd simm => lift_cbnz rd simm
   end
 .
 
@@ -215,6 +279,11 @@ Ltac head t :=
 Tactic Notation "unfold" "def" "in" hyp(H) :=
   match type of H with
   | ?def = _ => let d := head def in unfold d in H
+  end.
+
+Tactic Notation "unfold" "def" :=
+  match goal with
+  |- _ ?x _ => let d := head x in unfold d
   end.
 
 Tactic Notation "destruct" "if" "in" hyp(H) :=
@@ -348,9 +417,13 @@ Proof.
 
     eexists. stypu; try (etyp || reflexivity).
     eexists. stypu; try (etyp || reflexivity).
+    eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia).
+    eexists. stypu; try (etyp || reflexivity). etypn 26; etyp; try (lia || unfold def; etransitivity; try apply xbits_bound; psimpl; lia).
     eexists. stypu;[apply xbits_bound|reflexivity].
     eexists. stypu;[lia|reflexivity].
     eexists. stypu; reflexivity.
+    eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia).
+    eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia). erewrite (decode_reg_sizeof32 _);[|eassumption]; etyp;[lia|apply xbits_bound].
     eexists. stypu;[lia|reflexivity].
     eexists. stypu. unfold immli. etransitivity. apply xbits_bound. psimpl. lia. reflexivity.
 
