@@ -4,6 +4,7 @@ Require Import Lia.
 Open Scope N.
 Import FTOYNotations.
 
+(* SP points to the next available location on the stack and grows downward. *)
 Inductive asm : Set :=
   | add (rd rs rt:ftoyvar)
   | lsl (rd rs:ftoyvar) (imm:N)
@@ -14,7 +15,9 @@ Inductive asm : Set :=
   | br (rs:ftoyvar)
   | str (rd rs:ftoyvar) (simm:N)
   | ldr (rd rs:ftoyvar) (simm:N)
-  | cbnz (rd:ftoyvar) (simm:N).
+  | cbnz (rd:ftoyvar) (simm:N)
+  | cmp (rd:ftoyvar) (simm24:N).
+
 
 Scheme Equality for asm.
 
@@ -61,6 +64,7 @@ Section Decode.
   Definition immldr := xbits n  0 21.
   Definition immli := xbits n 0 24.
   Definition immcbnz := xbits n 0 24.
+  Definition immcmp := xbits n 0 24.
   Definition simmbi := xbits n 0 27.
 
 Definition decode_add :=
@@ -147,6 +151,15 @@ Definition lift_cbnz Rd simm :=
         (Jmp (BinOp OP_PLUS (Var R_PC) (Cast CAST_SIGNED 32 (BinOp OP_LSHIFT (Word simm 26) (Word 2 26)))))
         Nop).
 
+Definition decode_cmp :=
+  Rd <- decode_reg rd;;
+  Some (cmp Rd immcmp).
+
+Definition lift_cmp Rd imm24 :=
+  Some (Move F_LT (BinOp OP_LT (Var Rd) (Cast CAST_UNSIGNED 32 (Word imm24 24))) $;
+        Move F_EQ (BinOp OP_EQ (Var Rd) (Cast CAST_UNSIGNED 32 (Word imm24 24))) $;
+        Move F_GT (BinOp OP_LT (Cast CAST_UNSIGNED 32 (Word imm24 24)) (Var Rd))).
+
 Definition decode_insn :=
   match opcode with
   | 0 => decode_add
@@ -159,6 +172,7 @@ Definition decode_insn :=
   | 7 => decode_str
   | 8 => decode_ldr
   | 9 => decode_cbnz
+  | 10 => decode_cmp
   | _ => None
   end.
 
@@ -176,6 +190,7 @@ Definition encode_opcode i :=
   | str _ _ _ => 7
   | ldr _ _ _ => 8
   | cbnz _ _ => 9
+  | cmp _ _ => 10
   end.
 
 Definition encode_add rd rs rt :=
@@ -233,6 +248,11 @@ Definition encode_cbnz rd simm:=
   Rd <- encode_reg rd;;
   Some (op << 27 .| Rd << 24 .| simm).
 
+Definition encode_cmp rd imm24 :=
+  let op := encode_opcode (cmp rd imm24) in
+  Rd <- encode_reg rd;;
+  Some (op << 27 .| Rd << 24 .| imm24).
+
 Definition encode_insn i :=
   n <- match i with
   | add rd rs rt => encode_add rd rs rt
@@ -245,6 +265,7 @@ Definition encode_insn i :=
   | str rd rs simm => encode_str rd rs simm
   | ldr rd rs simm => encode_ldr rd rs simm
   | cbnz rd simm => encode_cbnz rd simm
+  | cmp rd imm => encode_cmp rd imm
   end;;
   i' <- decode_insn n;;
   if asm_beq i' i then Some n else None.
@@ -261,6 +282,7 @@ Definition lift_insn (v:asm) :=
   | str rd rs simm => lift_str rd rs simm
   | ldr rd rs simm => lift_ldr rd rs simm
   | cbnz rd simm => lift_cbnz rd simm
+  | cmp rd imm => lift_cmp rd imm
   end
 .
 
@@ -414,18 +436,19 @@ Proof.
     all: try destruct if in LIFT; inversion LIFT; try subst.
 
     (*all: try solve [apply typchk_stmt_compute; cbn; erewrite? decode_reg_32bit; try eassumption; timeout 2 vm_compute; exact I].*)
-
     eexists. stypu; try (etyp || reflexivity).
     eexists. stypu; try (etyp || reflexivity).
     eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia).
     eexists. stypu; try (etyp || reflexivity). etypn 26; etyp; try (lia || unfold def; etransitivity; try apply xbits_bound; psimpl; lia).
     eexists. stypu;[apply xbits_bound|reflexivity].
     eexists. stypu;[lia|reflexivity].
-    eexists. stypu; reflexivity.
+    eexists. stypu; (reflexivity || apply xbits_bound).
+    eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia).
     eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia).
     eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia). erewrite (decode_reg_sizeof32 _);[|eassumption]; etyp;[lia|apply xbits_bound].
     eexists. stypu;[lia|reflexivity].
     eexists. stypu. unfold immli. etransitivity. apply xbits_bound. psimpl. lia. reflexivity.
+
 
     eexists. stypu; try (etyp || reflexivity).  erewrite decode_reg_sizeof32;[etyp; unfold immli; etransitivity;[apply xbits_bound|psimpl;lia]|eassumption].
     eexists. stypu; try (etyp || reflexivity).  unfold immlsl; etransitivity. apply xbits_bound. psimpl; lia.

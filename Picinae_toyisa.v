@@ -47,6 +47,7 @@ Open Scope N.
 Inductive toyvar :=
   | V_MEM32
   | R_0 | R_1 | R_2 | R_3 | R_4 | R_5 | R_SP | R_PC
+  | F_GT | F_LT | F_EQ
   | V_TEMP (n:N).
 
 (* Declare the types (i.e., bitwidths) of all the CPU registers: *)
@@ -54,6 +55,7 @@ Definition toytypctx v :=
   match v with
   | V_MEM32 => Some (8*2^32)
   | R_0 | R_1 | R_2 | R_3 | R_4 | R_5 | R_SP | R_PC => Some 32
+  | F_GT | F_LT | F_EQ => Some 1
   | V_TEMP _ => None
 end.
 

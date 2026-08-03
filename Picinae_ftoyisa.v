@@ -47,6 +47,7 @@ Open Scope N.
 Inductive ftoyvar :=
   | V_MEM32
   | R_0 | R_1 | R_2 | R_3 | R_4 | R_5 | R_SP | R_PC
+  | F_GT | F_LT | F_EQ
   | V_TEMP (n:N)
   (* ----------------------------------------------------- *)
   | H_MEM32 (* Harvard memory *)
@@ -59,6 +60,7 @@ Definition ftoytypctx v :=
   match v with
   | V_MEM32 => Some (8*2^32)
   | R_0 | R_1 | R_2 | R_3 | R_4 | R_5 | R_SP | R_PC => Some 32
+  | F_GT | F_LT | F_EQ => Some 1
   | V_TEMP _ => None
   | H_MEM32 => Some (8*2^32)
   | S_MEM32 => Some (8*2^32)
