@@ -38,10 +38,10 @@ Require Export Picinae_statics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
-Require Import NArith.
-Require Import ZArith.
-Require Import Program.Equality.
-Require Import Structures.Equalities.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
+From Stdlib Require Import Program.Equality.
+From Stdlib Require Import Structures.Equalities.
 Open Scope N.
 
 (* Variables found in IL code lifted from RISC-V native code: *)
@@ -244,7 +244,7 @@ Definition rv_decode_binop f :=
   end.
 
 Definition rv_decode_branch f :=
-  match f with 
+  match f with
   | 0 => R5_Beq | 1 => R5_Bne | 4 => R5_Blt | 5 => R5_Bge | 6 => R5_Bltu | 7 => R5_Bgeu
   | _ => (fun _ _ _ => R5_InvalidI)
   end.

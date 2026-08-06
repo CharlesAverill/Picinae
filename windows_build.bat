@@ -29,7 +29,7 @@
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_amd64.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
-%coqc% Picinae_armv8_pcode.v
+%coqc% Picinae_armv8.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 @ECHO Picinae build succeeded!
 @GOTO Done
