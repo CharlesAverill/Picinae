@@ -8666,56 +8666,6 @@ Proof.
       assumption.
 Qed.
 
-(* (* This lemma is currently unused.  I proved it to help me understand and confirm
-   the necessary and sufficient conditions for nextinv proofs. *)
-Lemma nextinv_equiv:
-  forall p Invs xp b t, nextinv p Invs xp b t <->
-    if (xp t || (b && if Invs t then true else false))%bool then
-      match Invs t with Some P => P | None => True end
-    else match t with (Addr a,s)::t' =>
-      match p s a with None => False | Some (sz,q) =>
-        forall s1 x1 (XS: exec_stmt s q s1 x1),
-          nextinv p Invs xp true ((exitof (a+sz) x1, s1)::(Addr a,s)::t')
-      end | _ => False end.
-Proof.
-  intros. destruct (xp t) eqn:H2.
-    simpl. destruct (Invs t) eqn:H3; split; intro H1.
-      inversion H1; subst.
-        rewrite H3,H2 in TRU. assumption.
-        rewrite H2 in NOI. discriminate.
-      apply NIHere. rewrite H3,H2. assumption.
-      exact I.
-      apply NIHere. rewrite H3. assumption.
-    destruct b; simpl.
-      destruct (Invs t) eqn:H3.
-        split; intro H1.
-          inversion H1; subst.
-            rewrite H3,H2 in TRU. assumption.
-            rewrite H2,H3 in NOI. discriminate.
-          apply NIHere. rewrite H3,H2. assumption.
-        split; intro H1.
-          inversion H1; subst.
-            rewrite H3,H2 in TRU. discriminate.
-            rewrite IL. exact STEP.
-          destruct t as [|[[a|i] s] t]; try contradiction. destruct (p s a) eqn:IL.
-            destruct p0 as (sz,q). eapply NIStep.
-              rewrite H2,H3. reflexivity.
-              exact IL.
-              assumption.
-            contradiction.
-      split; intro H1.
-        inversion H1; subst.
-          rewrite H2 in TRU. destruct (Invs t). contradiction. discriminate.
-          rewrite IL. exact STEP.
-        destruct t as [|[[a|i] s] t]; try contradiction. destruct (p s a) eqn:IL.
-          destruct p0 as (sz,q). eapply NIStep.
-            rewrite H2. destruct (Invs _); reflexivity.
-            exact IL.
-            assumption.
-          contradiction.
-Qed.
-*)
-
 End InvariantProofs.
 
 Section FrameTheorems.
