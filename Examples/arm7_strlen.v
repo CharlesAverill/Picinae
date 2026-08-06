@@ -54,7 +54,7 @@ Definition strlen_arm : program := fun _ a => match a with
     Move R_NF (Cast CAST_HIGH 1 (Var R_R3)) $;
     Move R_ZF (BinOp OP_EQ (Var R_R3) (Word 0 32))
   )
-(* TODO: BUG: lifted 65280 as 3327 *)
+
 (* 0xc000005c: orrgt r2, r2, #65280 *)
 | 28 => Some (4,
     If (BinOp OP_AND (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (BinOp OP_EQ (Var R_NF) (Var R_VF))) (
@@ -75,7 +75,6 @@ Definition strlen_arm : program := fun _ a => match a with
     Move R_ZF (BinOp OP_EQ (Var R_R3) (Word 0 32))
   )
 
-(* TODO: BUG: lifted 16711680 as 2303 *)
 (* 0xc0000064: orrgt r2, r2, #16711680 *)
 | 36 => Some (4,
     If (BinOp OP_AND (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (BinOp OP_EQ (Var R_NF) (Var R_VF))) (

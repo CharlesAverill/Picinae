@@ -151,33 +151,6 @@ Proof.
 Qed.
 
 
-Lemma noverlap_index:
-  forall w a1 len1 a2 len2 index size
-  (NO : ~ overlap w a1 len1 a2 len2)
-  (IN : index + size <= len1),
-  ~ overlap w (a1 + index) size a2 len2.
-Proof.
-  intros.
-  remember (a1 + index) as a1'. apply noverlap_shrink with (a1:=a1) (len1:=len1).
-  rewrite Heqa1'. rewrite add_msub_l.
-  apply N.le_trans with (m:=index+size). rewrite <-N.add_le_mono_r. apply N.Div0.mod_le.
-  assumption.
-  assumption.
-Qed.
-
-Lemma noverlap_index_index:
-  forall w a1 len1 a2 len2 index1 size1 index2 size2
-  (NO  : ~ overlap w a1 len1 a2 len2)
-  (IN1 : index1 + size1 <= len1)
-  (IN2 : index2 + size2 <= len2),
-  ~ overlap w (a1 + index1) size1 (a2 + index2) size2.
-Proof.
-  intros. apply noverlap_index with (len1:=len1).
-  apply noverlap_symmetry. apply noverlap_index with (len1:=len2).
-  apply noverlap_symmetry.
-  all: assumption.
-Qed.
-
 Lemma bit_update_noverlap_simpl:
   forall m bmp acpt acpt_len bmp_i acpt_i char
   (NO : ~ overlap 64 acpt acpt_len bmp 32)
@@ -188,46 +161,7 @@ Lemma bit_update_noverlap_simpl:
   m [Ⓨ bmp := (m Ⓨ[ bmp ] .| (1 << (bmp_i mod 256)) )] Ⓑ[ acpt + acpt_i ] = char.
 Proof.
   intros. rewrite <-VAL. eapply getmem_noverlap.
-  apply noverlap_index with (len1:=acpt_len); try (assumption || lia).
-Qed.
-
-Lemma nilfree_noverlap :
-  forall mem p nflen a writelen e v
-    (NO: ~overlap 64 p nflen a writelen),
-  nilfree mem p nflen <->
-  nilfree (setmem 64 e writelen mem a v) p nflen.
-Proof.
-  intros. unfold nilfree. split; intros. rewrite getmem_noverlap.
-    now apply H in H0. eapply noverlap_index; (eassumption || lia). remember H0 as H1; clear HeqH1.
-    apply H in H0. rewrite getmem_noverlap in H0; try assumption.
-    eapply noverlap_index; (eassumption || lia).
-Qed.
-
-Lemma Ndiv2_mono_succ:
-  forall x1,
-  N.div2 x1 <= N.div2 (N.succ x1).
-Proof.
-  intro. destruct x1; try reflexivity.
-  simpl. destruct p; simpl; try (reflexivity || lia).
-Qed.
-
-Lemma Ndiv2_mono_friend:
-  forall x a,
-  N.div2 x <= N.div2 (a+x).
-Proof.
-  intros. induction a using N.peano_ind.
-    simpl; reflexivity.
-    rewrite N.add_succ_l.
-    apply N.le_trans with (m:=N.div2 (a+x)); try assumption.
-    apply Ndiv2_mono_succ.
-Qed.
-
-Lemma Ndiv2_mono:
-  forall x1 x2,
-  x1 <= x2 -> N.div2 x1 <= N.div2 x2.
-Proof.
-  intros. remember (x2-x1) as a. assert (Hx2: x2 = a + x1). subst a. lia.
-  rewrite Hx2. apply Ndiv2_mono_friend.
+  apply noverlap_index_l with (len1:=acpt_len); try (assumption || lia).
 Qed.
 
 Lemma Pos_N_succ_comm: forall p, N.pos (Pos.succ p) = N.succ (N.pos p).
@@ -241,10 +175,10 @@ Proof.
   induction shift using N.peano_ind; intros; try assumption.
   unfold N.shiftr. destruct (N.succ shift) eqn:Eqn. apply N.neq_succ_0 in Eqn; contradiction.
   destruct shift. simpl in Eqn. destruct p eqn:Eqnp; try simpl in Eqn; try discriminate.
-  simpl; apply Ndiv2_mono; assumption.
+  simpl; apply N.div2_le_mono; assumption.
   rewrite <-Pos_N_succ_comm in Eqn. injection Eqn; intro Eqnp. subst p.
   do 2 rewrite Pos.iter_succ_r.
-  unfold N.shiftr in IHshift. apply IHshift, Ndiv2_mono; assumption.
+  unfold N.shiftr in IHshift. apply IHshift, N.div2_le_mono; assumption.
 Qed.
 
 Lemma Nshiftl_mono:
@@ -431,139 +365,42 @@ Proof.
 Qed.
 (*  2 * (Pos.succ x * 2 ^ p)  *)
 
-Lemma Nshiftr_mono_lt_helper:
-  forall x p, N.pos (x * 2 ^ p)~0 < N.pos (x * 2 ^ p~0)~0.
-Proof.
-    assert (H1: forall p':positive, xO p' = (2*p')%positive) by reflexivity.
-    assert (H2: forall a b c : positive, N.pos (a * b ^ c)%positive =
-                                       (N.pos a) * (N.pos b) ^ (N.pos c))
-            by reflexivity.
-    induction x using Pos.peano_ind; intros; simpl.
-    - rewrite H1, (H1 (2 ^ p~0)%positive).
-      rewrite H2. rewrite H2.
-      rewrite <-(N.mul_lt_mono_pos_l 2); try lia.
-      apply N.pow_lt_mono_r; try lia.
-    - assert (H3: forall p', N.pos (2^p') = N.pos 2 ^ N.pos p') by reflexivity.
-      rewrite H1, (H1 (Pos.succ x * 2 ^ p~0)%positive).
-      rewrite Pos_succ_mul, Pos_succ_mul.
-      rewrite <-N.mul_lt_mono_pos_l; try lia.
-      apply N.add_lt_mono.
-      rewrite H3, H3.
-      rewrite <-N.pow_lt_mono_r_iff; try lia.
-      rewrite <-N.mul_lt_mono_pos_l; try lia.
-      rewrite H3, H3, <-N.pow_lt_mono_r_iff; try lia.
-Qed.
-
-Lemma Nshiftr_mono_lt:
+Lemma Nshiftr_mono_strong:
   forall x y shift,
     x < y * 2 ^ shift -> x >> shift < (y * 2 ^ shift) >> shift.
 Proof.
   intros. generalize dependent y. generalize dependent x.
-  induction shift using N.peano_ind; simpl; intros x y LT.
+  induction shift using N.strong_induction_le; simpl; intros x y LT.
   (* 0 *)
   assumption.
   (* N.succ shift *)
-  destruct shift as [|shiftp].
+  rewrite <-?N.shiftl_mul_pow2 in *.
+  replace (y << N.succ shift) with ((2*y) * 2^shift) in LT
+    by (rewrite N.shiftl_mul_pow2, <-N.add_1_l, N.pow_add_r; lia).
+  pose proof (H1:=H shift (N.le_refl _) _ _ LT).
+  rewrite <-?N.shiftl_mul_pow2 in *.
+  rewrite N.shiftr_shiftl_l, N.sub_diag, N.shiftl_0_r in *; try lia.
+  destruct (N.eq_0_gt_0_cases shift).
     (* shift = 0 *)
-    -
-    simpl in *. rewrite N.mul_comm in *. simpl in *. destruct y; try now apply N.nlt_0_r in LT .
-    simpl.
-    destruct x. simpl; try lia.
-    simpl; destruct p0; try reflexivity.
-    apply (N.lt_trans (N.pos p0~0) (N.pos p0~1)) in LT; try lia.
-    now unfold N.lt, N.compare, Pos.compare, Pos.compare_cont in LT |- *.
-    (* shift = N.pos p *)
-    - (*-2--*)
-    assert (IHspec:= IHshift x (2*y)).
-    assert (H1: forall p', y * 2 ^ N.succ (N.pos p') = y * 2 * 2 ^ N.pos p') by
-      (intros; rewrite N.pow_succ_r'; rewrite N.mul_assoc; reflexivity);
-    remember LT as LTog; clear HeqLTog;
-    rewrite H1 in LT; rewrite (N.mul_comm y 2) in LT.
-    apply IHspec in LT.
-    unfold N.shiftr. destruct (N.succ (N.pos shiftp)) as [|shiftp_id] eqn:Eqp; try assumption.
-
-    (* p0 = shift + 1 (shiftp_id) *)
-    (* p0' = shift  (shiftp_pred) *)
-    remember (Pos.pred shiftp_id) as shiftp_pred.
-
-        assert (H2: forall n, N.div2 (2 * n) = n). {
-          intro. clear - n. unfold N.div2. unfold N.mul. destruct n; reflexivity.
-        }
-
-    destruct shiftp_id; try lia; apply Possucc_inj in Heqshiftp_pred; rewrite Pos.succ_pred in Heqshiftp_pred; try lia;
-    inversion Heqshiftp_pred;
-
-    rewrite <-Heqshiftp_pred in Eqp; rewrite Pos_N_succ_comm in Eqp;
-    apply N.succ_inj in Eqp; inversion Eqp as [Eqpp']; subst shiftp_pred;
-    rewrite Pos_N_succ_comm;
-
-    rewrite H1; rewrite (N.mul_comm y 2);
-    rewrite Pos.iter_succ_r, Pos.iter_succ_r;
-    rewrite <-N.mul_assoc.
-
-    + rewrite <-(Pos.succ_pred (shiftp_id~1)%positive) in H0; try lia.
-        rewrite <-Possucc_inj in H0. simpl in H0. subst shiftp.
-        clear Heqshiftp_pred Eqp.
-        rewrite H2 with (n:=y*2^N.pos shiftp_id~0).
-        apply IHshift.
-        rewrite Nshiftl_mono_lt_iff with (shift:=1).
-        assert (H3: y * 2 ^ N.pos shiftp_id~0 << 1 = y * 2 ^ N.pos shiftp_id~1). {
-         assert (HDoubleSucc: forall p, (2 * 2 ^ p = 2 ^ Pos.succ p)%positive). {
-            intros. unfold Pos.pow. rewrite Pos.iter_succ. reflexivity.
-          }
-          unfold N.shiftl. destruct (y) eqn:EQ; try (simpl in LTog; now apply N.nlt_0_r in LTog).
-          simpl.
-        assert (Hmul2: forall p, (2*p = p~0)%positive) by reflexivity.
-          rewrite <-Hmul2; clear Hmul2.
-          rewrite Pos.mul_assoc, (Pos.mul_comm 2%positive p), <-Pos.mul_assoc, HDoubleSucc.
-          simpl (Pos.succ shiftp_id~0). reflexivity.
-        }
-        rewrite H3. remember x as xog; remember y as yog; rewrite Heqxog, Heqyog in *.
-
-        clear IHshift IHspec H1 H2 H3.
-
-        destruct x as [|xp]; destruct y as [|yp]; simpl in *; try (discriminate || constructor).
-          destruct xp as [xp | xp |]; destruct yp as [yp | yp |];
-          try (apply N.lt_le_trans with (m:= N.pos xp~1); simpl (_ << _); lia);
-          simpl (_ << 1); try (apply N.lt_le_trans with (m:=1); lia).
-      + rewrite H2 with (n:=y*2^N.pos shiftp).
-        apply IHshift.
-        rewrite Nshiftl_mono_lt_iff with (shift:=1).
-        rewrite Pospred_inj, Pos.pred_succ in H0; try lia; subst shiftp.
-        clear - LT LTog IHshift.
-
-        assert (Hmul2: forall p, (2*p = p~0)%positive) by reflexivity.
-        assert (H: forall x shift, N.pos (x * 2 ^ shift~0) = N.pos (x * 2 ^ Pos.pred_double shift)~0). {
-          clear - Hmul2. intros. assert (H1:forall p, N.pos (2*p) = N.pos (p~0)%positive) by reflexivity.
-          rewrite <-H1. rewrite Pos.mul_assoc, (Pos.mul_comm 2 x).
-          assert (H2: forall p, (2 * 2 ^ p = 2 ^ Pos.succ p)%positive). {
-            intros. unfold Pos.pow. rewrite Pos.iter_succ.
-            now rewrite Hmul2.
-          }
-          rewrite <-Pos.mul_assoc.
-          rewrite H2 with (p:=Pos.pred_double shift).
-          rewrite Pos.succ_pred_double. reflexivity.
-        }
-        destruct x as [|xp]; destruct y as [|yp]; simpl in LTog |- *; try (discriminate || constructor).
-          destruct xp as [xp | xp |]; destruct yp as [yp | yp |];
-          try (apply N.lt_le_trans with (m:= N.pos xp~1); simpl (_ << _); lia);
-          simpl (_ << 1); try (apply N.lt_le_trans with (m:=1); lia).
-        all: try (apply N.lt_le_trans with (m:=N.pos xp~1); try lia;
-        rewrite <-H; now apply N.lt_le_incl).
-        all: try (rewrite <-H; assumption).
+    {
+      subst. simpl. rewrite N.shiftl_0_r in *.
+      unfold N.lt in LT |- *. destruct x. destruct y; (discriminate || apply LT).
+      clear - LT.
+      destruct y as [|y];[discriminate|].
+      replace (2*N.pos y) with (N.pos (xO y)) in LT by lia.
+      destruct p; simpl; try reflexivity.
+      all: apply POrderedType.Positive_as_DT.compare_lt_iff.
+      all: unfold N.compare, Pos.compare in LT; cbn in LT.
+        apply Pos.compare_cont_Gt_Lt. assumption.
+        apply Pnat.nat_of_P_lt_Lt_compare_morphism in LT. lia.
+    }
+    (* 0 < shift *)
+    replace (2*y) with (y*2^1) in H1; try lia.
+    rewrite <-N.le_succ_l in H0; simpl in H0.
+    specialize (H _ H0 _ _ H1); clear - H.
+    rewrite N.shiftr_shiftr, N.add_1_r, <-N.shiftl_mul_pow2 in H.
+    rewrite N.shiftr_shiftl_l, N.sub_diag, N.shiftl_0_r in H; try lia.
 Qed.
-
-Lemma Nshiftr_mono_le:
-  forall x y shift,
-    x <= y * 2 ^ shift -> x >> shift <= (y * 2 ^ shift) >> shift.
-Proof.
-  intros. destruct (N.lt_trichotomy (x) (y * 2 ^ shift)) as [LT|[EQ|GT]];
-    [ | | apply N.lt_gt in GT; unfold N.gt, N.le in * |-; contradiction].
-  clear H; apply N.lt_le_incl, Nshiftr_mono_lt; assumption.
-  clear H.
-  subst x; reflexivity.
-Qed.
-
 
 (* Useful:
 N.succ_inj: ∀ n1 n2 : N, N.succ n1 = N.succ n2 → n1 = n2
@@ -596,7 +433,7 @@ Proof.
   apply Nshiftl_mono.
   change 3 with (N.pred ((4 * 2^6) >> 6)).
   apply N.lt_le_pred.
-  apply Nshiftr_mono_lt. change (4 * 2 ^ 6) with 256.
+  apply Nshiftr_mono_strong. change (4 * 2 ^ 6) with 256.
   apply getmem_bound.
 Qed.
 
@@ -648,35 +485,6 @@ Proof.
   (*TODO: make this work as an example of using
     verit: intros. unfold getbyte. unfold xbits. verit.*)
 Qed.
-
-Lemma getmem_shiftr8__getmem':
-  forall w len m a,
-  (getmem w LittleE len m a) >> (8) =
-  getmem w LittleE (N.pred len) m (N.succ a).
-Proof.
-  intros. destruct len using N.peano_ind. reflexivity.
-  rewrite getmem_succ.
-  rewrite N.shiftr_lor.
-  rewrite getbyte_shiftr8__zero, N.lor_0_l. psimpl.
-  rewrite N.pred_succ.
-  reflexivity.
-Qed.
-
-Lemma getmem_shiftr8:
-  forall w len m a bytes,
-  (getmem w LittleE len m a) >> bytes * (8) =
-  getmem w LittleE (N.iter bytes N.pred len) m (bytes + a).
-Proof.
-  intros. generalize dependent a. generalize dependent len. generalize dependent bytes.
-  induction bytes using N.peano_ind.
-  - intros. simpl. reflexivity.
-  - intros. rewrite N.mul_comm. rewrite N.mul_succ_r.
-    rewrite N.add_comm. rewrite <-N.shiftr_shiftr.
-    rewrite getmem_shiftr8__getmem'. rewrite N.mul_comm, (IHbytes (N.pred len) (N.succ a)).
-    rewrite N.add_succ_r, N.add_succ_l. rewrite N.iter_succ_r. reflexivity.
-Qed.
-
-
 
 Lemma brute_bitmap_lookup_eq_bit:
   forall  str_ptr sp m L,
@@ -795,9 +603,9 @@ forall m x y
 (m Ⓠ[ x ] <  2 ^ y) .
 Proof with try nia.
 intros.
-rewrite getmem_bound...
-psimpl (8*8)...
-rewrite <- N.pow_lt_mono_r_iff...
+rewrite getmem_bound; try nia.
+psimpl (8*8); try nia.
+rewrite <- N.pow_lt_mono_r_iff; try nia.
 Qed.
 
 Lemma lor_der_1 :
@@ -981,7 +789,8 @@ repeat rewrite N.lor_assoc.
 replace (1 << b .| (m Ⓠ[ a ])) with ((m Ⓠ[ a ]).|1 << b).
 all: try lia.
 
-repeat rewrite N.shiftl_1_l. rewrite N.mod_small. reflexivity.
+repeat rewrite N.shiftl_1_l. rewrite N.mod_small.
+(* broken: *) reflexivity.
 1-2: try assumption. apply N.lor_comm.
 (* TODO: SMT Testing *)
 (* Ltac eqbits :=
