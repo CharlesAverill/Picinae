@@ -12,7 +12,7 @@ Require Import FunctionalExtensionality.
 Require Import Arith.
 Require Import NArith.
 Require Import ZArith.
-Require Import Picinae_armv8_pcode.
+Require Import Picinae_armv8.
 Require Import arm8_strcasecmp.
 
 Import ARM8Notations.
@@ -20,14 +20,14 @@ Open Scope N.
 Open Scope bool.
 
 (* The ARMv8 lifter models non-writable code. *)
-Theorem strcasecmp_nwc: 
+Theorem strcasecmp_nwc:
 	forall s2 s1, strcasecmp s1 = strcasecmp s2.
 Proof.
 	reflexivity.
 Qed.
 
 (* The ARMv8 lifter produces well-typed IL. *)
-Theorem strcasecmp_welltyped: 
+Theorem strcasecmp_welltyped:
 	welltyped_prog arm8typctx strcasecmp.
 Proof.
   Picinae_typecheck.

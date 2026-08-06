@@ -2,11 +2,14 @@
 *.glob
 *.vo
 *.#*#
+\#*#
 *.sw?
 *.*~
 *.pyc
 *.vok
 *.vos
+*.vbak
+*.crashcoqide
 *.bin
 *.plugin
 _build
@@ -22,3 +25,10 @@ Makefile.coq
 Makefile.coq.conf
 .Makefile.coq.d
 *.cache
+tutorial/*.html
+tutorial/coqdoc.css
+tutorial/.*
+tutorial/*.conf
+**.zip
+musl_armv8_lift_list/**
+Examples/funccalls/**

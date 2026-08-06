@@ -10,13 +10,13 @@ Definition strlen_arm : program := fun _ a => match a with
   )
 
 (* 0xc0000044: ldr r2, [r1], #4 *)
-| 4 => Some (4, 
+| 4 => Some (4,
     Move R_R2 (Load (Var V_MEM32) (Var R_R1) LittleE 4) $;
     Move R_R1 (BinOp OP_PLUS (Var R_R1) (Word 4 32))
   )
 
 (* 0xc0000048: ands r3, r0, #3 *)
-| 8 => Some (4, 
+| 8 => Some (4,
     Move R_R3 (BinOp OP_AND (Var R_R0) (Word 3 32)) $;
     Move R_CF (Unknown 1) $;
     Move R_NF (Cast CAST_HIGH 1 (Var R_R3)) $;
@@ -24,7 +24,7 @@ Definition strlen_arm : program := fun _ a => match a with
   )
 
 (* 0xc000004c: rsb r0, r3, #0 *)
-| 12 => Some (4, 
+| 12 => Some (4,
     Move (V_TEMP 0 (* v134 *)) (Var R_R3) $;
     Move (V_TEMP 1 (* v135 *)) (Word 0 32) $;
     Move R_R0 (UnOp OP_NEG (Var R_R3))
@@ -45,7 +45,7 @@ Definition strlen_arm : program := fun _ a => match a with
   )
 
 (* 0xc0000058: subs r3, r3, #1 *)
-| 24 => Some (4, 
+| 24 => Some (4,
     Move (V_TEMP 2 (* v166 *)) (Var R_R3) $;
     Move (V_TEMP 3 (* v167 *)) (Word 1 32) $;
     Move R_R3 (BinOp OP_MINUS (Var R_R3) (Word 1 32)) $;
@@ -65,7 +65,7 @@ Definition strlen_arm : program := fun _ a => match a with
   )
 
 (* 0xc0000060: subs r3, r3, #1 *)
-| 32 => Some (4, 
+| 32 => Some (4,
     Move (V_TEMP 4 (* v174 *)) (Var R_R3) $;
     Move (V_TEMP 5 (* v175 *)) (Word 1 32) $;
     Move R_R3 (BinOp OP_MINUS (Var R_R3) (Word 1 32)) $;
@@ -86,7 +86,7 @@ Definition strlen_arm : program := fun _ a => match a with
   )
 
 (* 0xc0000068: tst r2, #255 *)
-| 40 => Some (4, 
+| 40 => Some (4,
     Move (V_TEMP 6 (* v139 *)) (BinOp OP_AND (Var R_R2) (Word 255 32)) $;
     Move R_CF (Unknown 1) $;
     Move R_NF (Cast CAST_HIGH 1 (Var (V_TEMP 6 (* v139 *)))) $;
@@ -95,7 +95,7 @@ Definition strlen_arm : program := fun _ a => match a with
 
 (* 0xc000006c: tstne r2, #65280 *)
 | 44 => Some (4,
-    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) ( 
+    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (
       Move (V_TEMP 7 (* v143 *)) (BinOp OP_AND (Var R_R2) (Word 65280 32)) $;
       Move R_CF (Word 0 1) $;
       Move R_NF (Cast CAST_HIGH 1 (Var (V_TEMP 7 (* v143 *)))) $;
@@ -107,7 +107,7 @@ Definition strlen_arm : program := fun _ a => match a with
 
 (* 0xc0000070: tstne r2, #16711680 *)
 | 48 => Some (4,
-    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) ( 
+    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (
       Move (V_TEMP 8 (* v147 *)) (BinOp OP_AND (Var R_R2) (Word 16711680 32)) $;
       Move R_CF (Word 0 1) $;
       Move R_NF (Cast CAST_HIGH 1 (Var (V_TEMP 8 (* v147 *)))) $;
@@ -119,7 +119,7 @@ Definition strlen_arm : program := fun _ a => match a with
 
 (* 0xc0000074: tstne r2, #-16777216 *)
 | 52 => Some (4,
-    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) ( 
+    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (
       Move (V_TEMP 9 (* v151 *)) (BinOp OP_AND (Var R_R2) (Word 4278190080 32)) $;
       Move R_CF (Word 0 1) $;
       Move R_NF (Cast CAST_HIGH 1 (Var (V_TEMP 9 (* v151 *)))) $;
@@ -131,7 +131,7 @@ Definition strlen_arm : program := fun _ a => match a with
 
 (* 0xc0000078: addne r0, r0, #4 *)
 | 56 => Some (4,
-    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) ( 
+    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (
       Move (V_TEMP 10 (* v156 *)) (Var R_R0) $;
       Move (V_TEMP 11 (* v157 *)) (Word 4 32) $;
       Move R_R0 (BinOp OP_PLUS (Var R_R0) (Word 4 32))
@@ -142,7 +142,7 @@ Definition strlen_arm : program := fun _ a => match a with
 
 (* 0xc000007c: ldrne r2, [r1], #4 *)
 | 60 => Some (4,
-    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) ( 
+    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (
       Move R_R2 (Load (Var V_MEM32) (Var R_R1) LittleE 4) $;
       Move R_R1 (BinOp OP_PLUS (Var R_R1) (Word 4 32))
     ) (* else *) (
@@ -160,7 +160,7 @@ Definition strlen_arm : program := fun _ a => match a with
   )
 
 (* 0xc0000084: tst r2, #255 *)
-| 68 => Some (4, 
+| 68 => Some (4,
     Move (V_TEMP 12 (* v181 *)) (BinOp OP_AND (Var R_R2) (Word 255 32)) $;
     Move R_CF (Unknown 1) $;
     Move R_NF (Cast CAST_HIGH 1 (Var (V_TEMP 12 (* v181 *)))) $;
@@ -169,7 +169,7 @@ Definition strlen_arm : program := fun _ a => match a with
 
 (* 0xc0000088: addne r0, r0, #1 *)
 | 72 => Some (4,
-    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) ( 
+    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (
       Move (V_TEMP 13 (* v186 *)) (Var R_R0) $;
       Move (V_TEMP 14 (* v187 *)) (Word 1 32) $;
       Move R_R0 (BinOp OP_PLUS (Var R_R0) (Word 1 32))
@@ -180,7 +180,7 @@ Definition strlen_arm : program := fun _ a => match a with
 
 (* 0xc000008c: tstne r2, #65280 *)
 | 76 => Some (4,
-    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) ( 
+    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (
       Move (V_TEMP 15 (* v191 *)) (BinOp OP_AND (Var R_R2) (Word 65280 32)) $;
       Move R_CF (Word 0 1) $;
       Move R_NF (Cast CAST_HIGH 1 (Var (V_TEMP 15 (* v191 *)))) $;
@@ -192,7 +192,7 @@ Definition strlen_arm : program := fun _ a => match a with
 
 (* 0xc0000090: addne r0, r0, #1 *)
 | 80 => Some (4,
-    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) ( 
+    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (
       Move (V_TEMP 16 (* v196 *)) (Var R_R0) $;
       Move (V_TEMP 17 (* v197 *)) (Word 1 32) $;
       Move R_R0 (BinOp OP_PLUS (Var R_R0) (Word 1 32))
@@ -203,7 +203,7 @@ Definition strlen_arm : program := fun _ a => match a with
 
 (* 0xc0000094: tstne r2, #16711680 *)
 | 84 => Some (4,
-    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) ( 
+    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (
       Move (V_TEMP 18 (* v201 *)) (BinOp OP_AND (Var R_R2) (Word 16711680 32)) $;
       Move R_CF (Word 0 1) $;
       Move R_NF (Cast CAST_HIGH 1 (Var (V_TEMP 18 (* v201 *)))) $;
@@ -215,7 +215,7 @@ Definition strlen_arm : program := fun _ a => match a with
 
 (* 0xc0000098: addne r0, r0, #1 *)
 | 88 => Some (4,
-    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) ( 
+    If (BinOp OP_EQ (Var R_ZF) (Word 0 1)) (
       Move (V_TEMP 19 (* v206 *)) (Var R_R0) $;
       Move (V_TEMP 20 (* v207 *)) (Word 1 32) $;
       Move R_R0 (BinOp OP_PLUS (Var R_R0) (Word 1 32))

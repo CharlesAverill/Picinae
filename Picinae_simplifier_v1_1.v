@@ -31,7 +31,7 @@
                                                                         MM7O$$+Z
                                                                          M 7N8ZD
  *)
- 
+
 Require Import Picinae_theory.
 Require Import Picinae_statics.
 Require Import Picinae_finterp.
@@ -461,7 +461,7 @@ Fixpoint sastN_eq (e1 e2: sastN) {struct e1} : bool
     case e1; revgoals;
     let ctrs := numgoals in do ctrs (
       let n := numgoals in only 1: (intros; case e2; cycle n; cycle -1;
-        (only 1: (clear e1 e2; 
+        (only 1: (clear e1 e2;
           lazymatch reverse goal with [ id:sastvar_id |- sastvar_id -> _ ] =>
               let id' := fresh id in intro id'; intros; exact (mvarid_eq id id')
           | _ => pairup_args; compare_pairs
@@ -582,7 +582,11 @@ Definition simpl_bounds_lor (b1 b2: N * option N) :=
 
 Definition simpl_bounds_lxor (b1 b2: N * option N) :=
   let (lo1,ohi1) := b1 in let (lo2,ohi2) := b2 in
-  (0,
+  ( match ohi1 with None => 0 | Some hi1 =>
+     match ohi2 with None => 0 | Some hi2 =>
+       N.ldiff (N.lxor hi1 hi2) (simpl_mask_varbits lo1 hi1 lo2 hi2)
+     end
+    end,
    match ohi1 with None => None | Some hi1 =>
      match ohi2 with None => None | Some hi2 =>
        Some (N.lor (N.lxor hi1 hi2) (simpl_mask_varbits lo1 hi1 lo2 hi2))
@@ -730,7 +734,7 @@ with var_multiple_of_pow2 mvt v e n {struct e} :=
 
 (*** MAIN SIMPLIFICATION LOGIC ***)
 
-(* Simplification is arranged a set of functions, one for each top-level SAST
+(* Simplification is arranged as a set of functions, one for each top-level SAST
    constructor.  For each constructor's simplification algorithm we must later prove
    (in the Module definition, not within this Module Type definition) that the
    denotation of the simplified SAST returned by the function equals the denotation
@@ -1181,7 +1185,7 @@ Definition simpl_modpow2_msub_atoms w e1 e2 :=
   end.
 
 (* Modularly add signed constant z to expression e, recursively descending into
-   e to find any constant term to to which z can be added. *) 
+   e to find any constant term to to which z can be added. *)
 Fixpoint simpl_modpow2_add_const' w z e :=
   match e with
   | SIMP_Const n1 => Some (SIMP_Const (ofZ w (Z.of_N n1 + z)))
@@ -2223,7 +2227,7 @@ Theorem vareqb_sound:
 Proof.
   unfold vareqb. intros. destruct (v1 == v2).
     subst. reflexivity.
-    discriminate. 
+    discriminate.
 Qed.
 
 Theorem endianness_eq_sound:
@@ -2587,7 +2591,7 @@ Theorem simpl_bounds_lxor_sound:
   forall mvt e1 e2 b1 b2 (B1: bounded mvt e1 b1) (B2: bounded mvt e2 b2),
   bounded mvt (SIMP_Xor e1 e2) (simpl_bounds_lxor b1 b2).
 Proof.
-  start_bounded_proof. split. apply N.le_0_l.
+  start_bounded_proof. split; cycle 1.
   destruct ohi1 as [hi1|]; [|exact I]. destruct ohi2 as [hi2|]; [|exact I].
   unfold simpl_mask_varbits. set (w := N.max _ _).
   rewrite <- (recompose_bytes w (eval_sastN mvt e1)),
@@ -2604,7 +2608,28 @@ Proof.
     rewrite N.ones_spec_high, Bool.orb_false_r, !N.mod_pow2_bits_high, !Bool.orb_false_l
       by assumption.
     destruct N.testbit; destruct N.testbit; reflexivity.
+
+  destruct ohi1 as [hi1|]; [|apply N.le_0_l]. destruct ohi2 as [hi2|]; [|apply N.le_0_l].
+  unfold simpl_mask_varbits. set (w := N.max _ _).
+  rewrite <- (recompose_bytes w (eval_sastN mvt e1)),
+          <- (recompose_bytes w (eval_sastN mvt e2)),
+          <- (recompose_bytes w hi1), <- (recompose_bytes w hi2).
+  apply N.ge_le.
+  unfold w; rewrite N.max_comm, lxor_topbits_max, N.max_comm by assumption; fold w.
+  unfold w; rewrite (lxor_topbits_max (eval_sastN mvt e2)) by assumption; fold w.
+  apply N.le_ge.
+  apply N.ldiff_le, N.bits_inj_0. intro b.
+  rewrite !N.ldiff_spec, !N.lxor_spec, !N.lor_spec.
+  destruct (N.lt_ge_cases b w).
+
+    rewrite N.ones_spec_low by assumption. simpl (negb true). rewrite Bool.andb_false_r, Bool.andb_false_l.
+    reflexivity.
+
+    rewrite N.ones_spec_high by assumption. simpl (negb false).
+    rewrite Bool.andb_true_r, !N.mod_pow2_bits_high, !Bool.orb_false_l by assumption.
+    destruct N.testbit; destruct N.testbit; reflexivity.
 Qed.
+
 
 Theorem simpl_bounds_lnot_sound:
   forall mvt e1 e2 b1 b2 (B1: bounded mvt e1 b1) (B2: bounded mvt e2 b2),
@@ -2726,7 +2751,7 @@ Proof.
   rewrite <- (recompose_bytes jmax n) at 2. rewrite lor_plus by apply disjoint_bits.
   apply N.add_le_mono.
     rewrite <- (N.min_r _ _ JHI), <- mp2_mod_mod_min. apply N_mod_le.
-    rewrite !N.shiftl_mul_pow2, !N.shiftr_div_pow2. apply N.mul_le_mono_r, mp2_div_le_mono, NHL. 
+    rewrite !N.shiftl_mul_pow2, !N.shiftr_div_pow2. apply N.mul_le_mono_r, mp2_div_le_mono, NHL.
 Qed.
 
 Theorem simpl_bounds_xbits_sound:
@@ -3080,7 +3105,7 @@ Definition mop2_sound mvt := proj1 (mop2_sound' mvt).
 
    If e1 matches Constructor1, or if e1 doesn't match Constructor1 but e2 matches
    Constructor2, then we can perform certain simplifications; but otherwise we
-   return an less simplified <default> SAST (which might incorporate e1 and/or e2
+   return a less simplified <default> SAST (which might incorporate e1 and/or e2
    unmodified).  Proofs about such code must typically destruct e1 and then e2 to
    reach the default case.  This yields an exponential number of proof goals that
    all have roughly identical proofs that the <default> case works.  While one can
@@ -4512,7 +4537,7 @@ Proof.
     cbn [eval_sastN]. destruct (eval_sastN _ e1). apply IHe3. apply IHe2.
 
   (* GetMem - IteNN *)
-  destruct len as [|len]. reflexivity. 
+  destruct len as [|len]. reflexivity.
   cbn [simpl_getmem' eval_sastN]. rewrite (proj2 (IHe2 _)), (proj2 (IHe3 _)).
   destruct (eval_sastN _ e1); reflexivity.
 
@@ -4524,7 +4549,7 @@ Proof.
     cbn [eval_sastN]. destruct (eval_sastB _ e1). apply IHe1. apply IHe2.
 
   (* GetMem - IteBN *)
-  destruct len as [|len]. reflexivity. 
+  destruct len as [|len]. reflexivity.
   cbn [simpl_getmem' eval_sastN]. rewrite (proj2 (IHe1 _)), (proj2 (IHe2 _)).
   destruct (eval_sastB _ e1); reflexivity.
 Qed.
