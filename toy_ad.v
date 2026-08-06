@@ -15,7 +15,7 @@ Definition load rd i :=
   ldr rd R_SP (ofZ 27 (-4*i)%Z).
 
 Definition oldpc_into reg oldpc :=
-  if 2^24 <=? oldpc then None else Some (li reg oldpc).
+  if 2^24 <=? oldpc then None else Some ([li reg oldpc]).
 
 Print List.
 Definition sbb {P Q:Prop} (sum:sumbool P Q) :=
@@ -57,6 +57,35 @@ Proof.
   intros; intro; destruct rd eqn:EQd; try contradiction; destruct rs eqn:EQs; try contradiction;
   destruct rt eqn:EQt; try contradiction; try discriminate.
 Qed.
+
+Definition chunk_cmp (rd:toyvar) (imm24:N) oldpc :=
+  if rd == R_PC then
+    loadpc <- oldpc_into R_5 oldpc;;
+    Some ([store R_5 0]++loadpc++[cmp R_5 imm24; load R_5 0])
+  else
+    Some ([cmp rd imm24]).
+
+Print nth.
+(* Calculate new jumping vector given the translated indices. *)
+(* TODO: continue here. Recalculate the new index to jump to. *)
+Definition chunk_cbx (op:N->asm) simm27 i newis maxi :=
+  let oldiz := (Z.of_N i + toZ 27%N simm27)%Z in
+  if (0 <=? oldiz)%Z && (oldiz <=? Z.of_N maxi)%Z then
+    let oldi := Z.to_N oldiz in
+    let newoffsetz := (Z.of_N i - Z.of_N (nth (N.to_nat oldi) newis 0%N))%Z in
+    if signed_rangeb 27 newoffsetz then
+      Some [op (ofZ 27 newoffsetz)]
+    (* New offset not representable in 27 bits. *)
+    else None
+  (* Index out of bounds. *)
+  else None.
+
+Definition chunk_cbeq := chunk_cbx cbeq.
+Definition chunk_cblt := chunk_cbx cblt.
+
+(* Every time we write to pc or jump, whether with call, add, or lsl, we need to translate
+   the address to the new address. *)
+Definition chunk_call :=
 
 Definition chunk_add (rd rs rt:toyvar) oldpc :=
   if rd == R_PC then

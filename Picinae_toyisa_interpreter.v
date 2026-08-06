@@ -1,6 +1,7 @@
 Require Import Picinae_toyisa.
 Require Import NArith.
 Require Import Lia.
+Require Import List.
 Open Scope N.
 Import TOYNotations.
 
@@ -12,10 +13,10 @@ Inductive asm : Set :=
   | call (rs:toyvar)
   | ret
   | bi (simm27:N)
-  | br (rs:toyvar)
   | str (rd rs:toyvar) (simm21:N)
   | ldr (rd rs:toyvar) (simm21:N)
-  | cbnz (rd:toyvar) (simm24:N)
+  | cbeq (simm27:N)
+  | cblt (simm27:N)
   | cmp (rd:toyvar) (simm24:N).
 
 Scheme Equality for asm.
@@ -62,7 +63,8 @@ Section Decode.
   Definition immstr := xbits n  0 21.
   Definition immldr := xbits n  0 21.
   Definition immli := xbits n 0 24.
-  Definition immcbnz := xbits n 0 24.
+  Definition immcbeq := xbits n 0 24.
+  Definition immcblt := xbits n 0 24.
   Definition immcmp := xbits n 0 24.
   Definition simmbi := xbits n 0 27.
 
@@ -117,13 +119,6 @@ Definition lift_bi simmbi :=
     (Seq (Move R_PC (BinOp OP_LSHIFT (Cast CAST_SIGNED 32 (Word simmbi 27)) (Word 2 32)))
          (Jmp (Var R_PC))).
 
-Definition decode_br :=
-  Rs <- decode_reg rs ;;
-  Some (br Rs).
-
-Definition lift_br Rs :=
-  Some (Jmp (Var Rs)).
-
 Definition decode_str :=
   Rd <- decode_reg rd;;
   Rs <- decode_reg rs;;
@@ -141,13 +136,20 @@ Definition lift_ldr Rd Rs simm :=
   let q := (Move Rd (Load (Var V_MEM32) (BinOp OP_PLUS (Var Rs) (Cast CAST_SIGNED 32 (Word simm 21))) LittleE 4)) in
   Some (if Rd == R_PC then Seq q (Jmp (Var R_PC)) else q).
 
-Definition decode_cbnz :=
-  Rd <- decode_reg rd;;
-  Some (cbnz Rd immcbnz).
+Definition decode_cbeq :=
+  Some (cbeq immcbeq).
 
-Definition lift_cbnz Rd simm :=
-  Some (If (BinOp OP_EQ (Var Rd) (Word 0 32))
-        (Jmp (BinOp OP_PLUS (Var R_PC) (Cast CAST_SIGNED 32 (BinOp OP_LSHIFT (Word simm 26) (Word 2 26)))))
+Definition lift_cbeq simm :=
+  Some (If (Var F_EQ)
+        (Jmp (BinOp OP_PLUS (Var R_PC) (Cast CAST_SIGNED 32 (BinOp OP_LSHIFT (Word simm 29) (Word 2 29)))))
+        Nop).
+
+Definition decode_cblt :=
+  Some (cblt immcblt).
+
+Definition lift_cblt simm :=
+  Some (If (Var F_LT)
+        (Jmp (BinOp OP_PLUS (Var R_PC) (Cast CAST_SIGNED 32 (BinOp OP_LSHIFT (Word simm 29) (Word 2 29)))))
         Nop).
 
 Definition decode_cmp :=
@@ -167,10 +169,10 @@ Definition decode_insn :=
   | 3 => decode_call
   | 4 => Some ret
   | 5 => decode_bi
-  | 6 => decode_br
-  | 7 => decode_str
-  | 8 => decode_ldr
-  | 9 => decode_cbnz
+  | 6 => decode_str
+  | 7 => decode_ldr
+  | 8 => decode_cbeq
+  | 9 => decode_cblt
   | 10 => decode_cmp
   | _ => None
   end.
@@ -185,10 +187,10 @@ Definition encode_opcode i :=
   | call _ => 3
   | ret => 4
   | bi _ => 5
-  | br _ => 6
-  | str _ _ _ => 7
-  | ldr _ _ _ => 8
-  | cbnz _ _ => 9
+  | str _ _ _ => 6
+  | ldr _ _ _ => 7
+  | cbeq _ => 8
+  | cblt _ => 9
   | cmp _ _ => 10
   end.
 
@@ -225,11 +227,6 @@ Definition encode_bi simm :=
   if simm <? 2^27 then Some (op << 27 .| simm)
   else None.
 
-Definition encode_br rs :=
-  let op := encode_opcode (br rs) in
-  Rs <- encode_reg rs;;
-  Some (op << 27 .| Rs << 21).
-
 Definition encode_str rd rs simm :=
   let op := encode_opcode (str rd rs simm) in
   Rd <- encode_reg rd;;
@@ -242,10 +239,13 @@ Definition encode_ldr rd rs simm :=
   Rs <- encode_reg rs;;
   Some (op << 27 .| Rd << 24 .| Rs << 21 .| simm).
 
-Definition encode_cbnz rd simm:=
-  let op := encode_opcode (cbnz rd simm) in
-  Rd <- encode_reg rd;;
-  Some (op << 27 .| Rd << 24 .| simm).
+Definition encode_cbeq simm:=
+  let op := encode_opcode (cbeq simm) in
+  Some (op << 27 .| simm).
+
+Definition encode_cblt simm:=
+  let op := encode_opcode (cblt simm) in
+  Some (op << 27 .| simm).
 
 Definition encode_cmp rd imm24 :=
   let op := encode_opcode (cmp rd imm24) in
@@ -260,10 +260,10 @@ Definition encode_insn i :=
   | call rs => encode_call rs
   | ret => encode_ret
   | bi simm => encode_bi simm
-  | br rs => encode_br rs
   | str rd rs simm => encode_str rd rs simm
   | ldr rd rs simm => encode_ldr rd rs simm
-  | cbnz rd simm => encode_cbnz rd simm
+  | cbeq simm => encode_cbeq simm
+  | cblt simm => encode_cblt simm
   | cmp rd imm => encode_cmp rd imm
   end;;
   i' <- decode_insn n;;
@@ -277,10 +277,10 @@ Definition lift_insn (v:asm) :=
   | call rs => lift_call rs
   | ret => lift_ret
   | bi simm => lift_bi simm
-  | br rs => lift_br rs
   | str rd rs simm => lift_str rd rs simm
   | ldr rd rs simm => lift_ldr rd rs simm
-  | cbnz rd simm => lift_cbnz rd simm
+  | cbeq simm => lift_cbeq simm
+  | cblt simm => lift_cblt simm
   | cmp rd imm => lift_cmp rd imm
   end
 .
@@ -447,19 +447,18 @@ Proof.
     eexists. stypu; try (etyp || reflexivity).
     eexists. stypu; try (etyp || reflexivity).
     eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia).
-    eexists. stypu; try (etyp || reflexivity). etypn 26; etyp; try (lia || unfold def; etransitivity; try apply xbits_bound; psimpl; lia).
+    eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia). erewrite (decode_reg_sizeof32 _);[|eassumption]; etyp;[lia|apply xbits_bound].
+    eexists. stypu; try (etyp || reflexivity). etypn 29; etyp; try (lia || unfold def; etransitivity; try apply xbits_bound; psimpl; lia).
     eexists. stypu;[apply xbits_bound|reflexivity].
     eexists. stypu;[lia|reflexivity].
     eexists. stypu; (reflexivity || apply xbits_bound).
     eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia).
+    eexists. stypu; try (etyp || reflexivity). etypn 29; etyp; try (lia || unfold def; etransitivity; try apply xbits_bound; psimpl; lia).
     eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia).
-    eexists. stypu; try (etyp || reflexivity); try (apply xbits_bound||lia). erewrite (decode_reg_sizeof32 _);[|eassumption]; etyp;[lia|apply xbits_bound].
-    eexists. stypu;[lia|reflexivity].
     eexists. stypu. unfold immli. etransitivity. apply xbits_bound. psimpl. lia. reflexivity.
-
     eexists. stypu; try (etyp || reflexivity).  erewrite decode_reg_sizeof32;[etyp; unfold immli; etransitivity;[apply xbits_bound|psimpl;lia]|eassumption].
     eexists. stypu; try (etyp || reflexivity).  unfold immlsl; etransitivity. apply xbits_bound. psimpl; lia.
-    eexists. stypu; try (etyp || reflexivity).  erewrite decode_reg_sizeof32;[etyp; unfold immli; etransitivity;[apply xbits_bound|psimpl;lia]|eassumption].
+    eexists. stypu; try (etyp || reflexivity).  erewrite decode_reg_sizeof32;[etyp; etransitivity;[apply xbits_bound|psimpl;lia]|eassumption].
 Qed.
 
 Definition toy_prog s a :=
@@ -490,3 +489,16 @@ Proof.
   rewrite E0. reflexivity.
   discriminate.
 Qed.
+
+
+Import ListNotations.
+Fixpoint unwrap {A:Type} (ls:list (option A)) : option (list A) :=
+  match ls with
+  | [] => Some []
+  | Some h :: ls' => t <- unwrap ls';; Some (h::t)
+  | None :: _ => None
+  end.
+
+Definition assemble (ns:list asm) :=
+  ns <- unwrap (map encode_insn ns);;
+  Some (fold_left (fun '(acc, w) n => (cbits n w acc, w+32)) ns (0, 0)).

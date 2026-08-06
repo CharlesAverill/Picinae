@@ -37,6 +37,7 @@ Require Import ZArith.
 Require Import List.
 Require Import Structures.Equalities.
 Open Scope N.
+Open Scope bool.
 
 
 (* Bitwidths, addresses, and the entire memory state are each expressed as
@@ -79,6 +80,8 @@ Definition ofZ (w:bitwidth) (z:Z) := Z.to_N (z mod (2^Z.of_N w)).
    yield a difference of zero bits holding a value of zero.) *)
 Definition signed_range w z :=
   (-(2^Z.pred (Z.of_N w)) <= z < 2^Z.of_N (N.pred w))%Z.
+Definition signed_rangeb w z :=
+  (-(2^Z.pred (Z.of_N w)) <=? z)%Z && (z <? 2^Z.of_N (N.pred w))%Z.
 
 (* Perform a signed operation by converting the unsigned operands to signed
    operands, applying the signed operation, and then converting the signed
