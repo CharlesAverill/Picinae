@@ -36,9 +36,9 @@ Require Import Picinae_theory.
 Require Import Picinae_statics.
 Require Import Picinae_finterp.
 Require Export Picinae_simplifier_base.
-Require Import FunctionalExtensionality.
-Require Import NArith.
-Require Import ZArith.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
 
 (* Introduction and Logical Organization:
 
@@ -942,18 +942,6 @@ Fixpoint simpl_xor_cancel_inner (e2 e1:sastN) :=
                         end
   | _ => if sastN_eq e1 e2 then Some (SIMP_Const 0) else None end.
 
-Theorem simpl_xor_cancel_inner_bound:
-  forall e1 e2, match simpl_xor_cancel_inner e2 e1 with
-                | None | Some (SIMP_Const _) | Some (SIMP_Xor _ _) => True
-                | _ => False end.
-Proof.
-  intros e1 e2; generalize dependent e1; induction e2; intros; simpl; match goal with |- context[if ?c then _ else _] => destruct c | |- ?g => idtac g end;
-  try exact I.
-  specialize (IHe2_1 e1); destruct (simpl_xor_cancel_inner e2_1 e1) as [e'|].
-    destruct e'; try exact I. destruct n;[|exact I].
-Abort.
-
-
 (* Xor e1 and e2, eliminating identical xor subterms. *)
 Fixpoint simpl_xor_cancel e2 e1 {struct e1} :=
   match e1 with
@@ -964,7 +952,6 @@ Fixpoint simpl_xor_cancel e2 e1 {struct e1} :=
                         end
   | _ => simpl_xor_cancel_inner e2 e1
   end.
-
 
 (* Simplify xor constants and top-level cancellations. *)
 Definition simpl_xor_const e1 e2 :=
@@ -5032,22 +5019,22 @@ Local Hint Extern 0 (_ _ (simpl_ite ?t ?t' _ _ _ _) = _) => apply (simpl_ite_sou
 Theorem simplN_dispatch_sound:
   forall mvt e,
   eval_sastN mvt (simplN_dispatch mvt e) = eval_sastN mvt e.
-Proof with (trivial with picinae_simpl).
-  intros. destruct e; unfold simplN_dispatch...
+Proof.
+  intros. destruct e; unfold simplN_dispatch; trivial with picinae_simpl.
 Qed.
 
 Theorem simplB_dispatch_sound:
   forall mvt e,
   eval_sastB mvt (simplB_dispatch mvt e) = eval_sastB mvt e.
-Proof with (trivial with picinae_simpl).
-  intros. destruct e; unfold simplB_dispatch...
+Proof.
+  intros. destruct e; unfold simplB_dispatch; trivial with picinae_simpl.
 Qed.
 
 Theorem simplS_dispatch_sound:
   forall mvt e,
   eval_sastS mvt (simplS_dispatch e) = eval_sastS mvt e.
-Proof with (trivial with picinae_simpl).
-  intros. destruct e; unfold simplS_dispatch...
+Proof.
+  intros. destruct e; unfold simplS_dispatch; trivial with picinae_simpl.
 Qed.
 
 Corollary simpl_dispatch_sound:

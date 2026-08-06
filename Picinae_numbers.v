@@ -32,8 +32,8 @@
                                                                          M 7N8ZD
  *)
 
-Require Import Coq.NArith.NArith.
-Require Import Coq.Init.Hexadecimal.
+From Stdlib Require Import NArith.
+From Stdlib Require Import Hexadecimal.
 
 Open Scope N_scope.
 

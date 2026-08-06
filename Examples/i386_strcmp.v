@@ -1,5 +1,5 @@
 Require Import Picinae_i386.
-Require Import NArith.
+From Stdlib Require Import NArith.
 Open Scope N.
 Open Scope i386_scope.
 

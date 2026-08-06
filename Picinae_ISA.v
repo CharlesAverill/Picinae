@@ -37,9 +37,9 @@ Require Import Picinae_theory.
 Require Import Picinae_statics.
 Require Import Picinae_finterp.
 Require Import Picinae_simplifier_base.
-Require Import NArith.
-Require Import Program.Equality.
-Require Import Structures.Equalities.
+From Stdlib Require Import NArith.
+From Stdlib Require Import Program.Equality.
+From Stdlib Require Import Structures.Equalities.
 Open Scope N.
 
 (* getmem and setmem can potentially explode out of control when Coq checks
@@ -174,8 +174,8 @@ Remark inj_prog_stmt: forall (sz1 sz2: N) (q1 q2: stmt),
 Proof. injection 1 as. split; assumption. Qed.
 
 (* Simplify (exitof a x) without expanding a. *)
-Remark exitof_none a: exitof a None = Addr a. Proof eq_refl.
-Remark exitof_some a x: exitof a (Some x) = x. Proof eq_refl.
+Remark exitof_none a: exitof a None = Addr a. Proof. exact eq_refl. Qed.
+Remark exitof_some a x: exitof a (Some x) = x. Proof. exact eq_refl. Qed.
 
 (* If asked to step the computation when we're already at an invariant point,
    just make the proof goal be the invariant. *)

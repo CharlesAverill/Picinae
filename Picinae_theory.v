@@ -33,13 +33,13 @@
  *)
 
 Require Export Picinae_core.
-Require Import NArith.
-Require Import ZArith.
-Require Import Program.Equality.
-Require Import FunctionalExtensionality.
-Require Import List.
-Require Import Lia ZifyN ZifyBool.
-Require Setoid.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
+From Stdlib Require Import Program.Equality.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import List.
+From Stdlib Require Import Lia ZifyN ZifyBool.
+From Stdlib Require Setoid.
 Open Scope list_scope.
 
 
@@ -2308,7 +2308,7 @@ Proof.
 Qed.
 
 Lemma Z2N_inj_eqb:
-  forall z1 z2, (0 <= z1 -> 0 <= z2 -> z1 =? z2 = (Z.to_N z1 =? Z.to_N z2)%N)%Z.
+  forall z1 z2, (0 <= z1 -> 0 <= z2 -> (z1 =? z2) = (Z.to_N z1 =? Z.to_N z2)%N)%Z.
 Proof.
   intros. rewrite N.eqb_compare, Z.eqb_compare, Z2N.inj_compare by assumption. reflexivity.
 Qed.
@@ -2698,7 +2698,7 @@ Theorem canonicalZ_neg_l:
   forall w z, (w < 0)%Z -> canonicalZ w z = z.
 Proof.
   intros. unfold canonicalZ.
-  rewrite (Z.pow_neg_r _ w), Zmod_0_r by assumption. apply Z.add_simpl_r.
+  rewrite (Z.pow_neg_r _ w), Z.mod_0_r by assumption. apply Z.add_simpl_r.
 Qed.
 
 Theorem canonicalZ_0_l:
@@ -3040,7 +3040,7 @@ Theorem canonicalZ_nonneg:
   forall w z, (z mod 2^w < 2^Z.pred w -> canonicalZ w z = z mod 2^w)%Z.
 Proof.
   intros. destruct (Z.lt_trichotomy w 0) as [H2|[H2|H2]].
-    rewrite Z.pow_neg_r, Zmod_0_r by exact H2. apply canonicalZ_neg_l. assumption.
+    rewrite Z.pow_neg_r, Z.mod_0_r by exact H2. apply canonicalZ_neg_l. assumption.
     subst w. rewrite Z.mod_1_r. apply canonicalZ_0_l.
     erewrite <- canonicalZ_mod_pow2; [|apply Z.lt_le_incl, H2 | reflexivity].
       unfold canonicalZ. rewrite Z.mod_small, Z.add_simpl_r. reflexivity. split.
@@ -3470,7 +3470,7 @@ Lemma Z_shiftl_eqm:
   forall w z1 z2, (0 <= z2)%Z -> eqm (2^w) (Z.shiftl z1 z2) (Z.shiftl (z1 mod 2^w) z2).
 Proof.
   intros. unfold eqm. destruct (Z.neg_nonneg_cases w) as [H1|H1].
-    rewrite Z.pow_neg_r, !Zmod_0_r by assumption. reflexivity.
+    rewrite Z.pow_neg_r, !Z.mod_0_r by assumption. reflexivity.
 
     apply Z.bits_inj'. intros i H2.
     rewrite <- !Z.land_ones, !Z.land_spec, !Z.shiftl_spec, Z.land_spec, !Z.testbit_ones, (proj2 (Z.leb_le 0 i) H2) by assumption.
@@ -8149,9 +8149,9 @@ Qed.
 Theorem effexit_false:
   forall p xp t (EX: effexit p xp t = false),
     exists s a t' insn, t = (Addr a,s)::t' /\ p s a = Some insn.
-Proof with (try discriminate).
+Proof.
   unfold effexit. intros.
-  destruct (xp t)... destruct t as [|[[a|i] s]]... destruct (p s a) as [insn|] eqn: PSA...
+  destruct (xp t); try discriminate. destruct t as [|[[a|i] s]]; try discriminate. destruct (p s a) as [insn|] eqn: PSA; try discriminate.
   exists s, a, t, insn; now split.
 Qed.
 
@@ -8187,15 +8187,15 @@ Theorem effinv_none:
 Proof with (try discriminate).
   unfold effinv, effinv'. intros.
   destruct (Inv t) eqn:INVt.
-    destruct b...
-      destruct (xp t)...
-        destruct t as [| [x s]]...
-          destruct x... destruct (p s a) as [insn|] eqn:PSA...
+    destruct b; try discriminate.
+      destruct (xp t); try discriminate.
+        destruct t as [| [x s]]; try discriminate.
+          destruct x; try discriminate. destruct (p s a) as [insn|] eqn:PSA; try discriminate.
             exists insn. trivial.
-    destruct (xp t)...
-      destruct t as [| [x s]]...
-        destruct x...
-          destruct (p s a) as [insn|] eqn:PSA...
+    destruct (xp t); try discriminate.
+      destruct t as [| [x s]]; try discriminate.
+        destruct x; try discriminate.
+          destruct (p s a) as [insn|] eqn:PSA; try discriminate.
             exists insn. trivial.
 Qed.
 
@@ -8741,7 +8741,7 @@ Definition make_invs (n:N) (p:program) (f:invariant_set) (t:trace) : option Prop
   end.
 
 Theorem simple_may_call:
-  forall p (f g:invariant_set) (n m:N) (SF: same_invset_family f g) (H: m <? n = true),
+  forall p (f g:invariant_set) (n m:N) (SF: same_invset_family f g) (H: (m <? n) = true),
   may_call p (make_invs n p f) (make_exits n p f)
              (make_invs m p g) (make_exits m p g).
 Proof.

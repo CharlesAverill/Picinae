@@ -1,5 +1,5 @@
 Require Import Picinae_armv7.
-Require Import NArith.
+From Stdlib Require Import NArith.
 Open Scope N.
 
 Definition memset_arm : program := fun _ a => match a with

@@ -32,10 +32,10 @@
                                                                          M 7N8ZD
  *)
 
-Require Import NArith.
+From Stdlib Require Import NArith.
 Require Import Picinae_theory.
 Require Import Picinae_statics.
-Require Export Lia ZifyN ZifyBool.
+From Stdlib Require Export Lia ZifyN ZifyBool.
 Open Scope N.
 
 Module PicinaeAuto (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL) (SIL: PICINAE_STATICS IL TIL).

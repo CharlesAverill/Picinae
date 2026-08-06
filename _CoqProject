@@ -1,3 +1,5 @@
+-arg "-w -level-tolerance"
+-arg "-w -postfix-notation-not-level-1"
 -R . Picinae
 Picinae_core.v
 Picinae_theory.v
