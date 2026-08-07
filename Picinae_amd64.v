@@ -35,6 +35,7 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_auto.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
@@ -131,6 +132,8 @@ Module Theory_amd64 := PicinaeTheory IL_amd64.
 Export Theory_amd64.
 Module Statics_amd64 := PicinaeStatics IL_amd64 Theory_amd64.
 Export Statics_amd64.
+Module Auto_amd64 := PicinaeAuto IL_amd64 Theory_amd64 Statics_amd64.
+Export Auto_amd64.
 Module FInterp_amd64 := PicinaeFInterp IL_amd64 Theory_amd64 Statics_amd64.
 Export FInterp_amd64.
 Module PSimpl_amd64 := Picinae_Simplifier_Base IL_amd64.

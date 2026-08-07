@@ -15,3 +15,18 @@ Picinae_armv8.v
 Picinae_riscv.v
 Picinae_amd64.v
 Picinae_numbers.v
+
+# Examples/arm7_memset_proof.v
+# Examples/arm7_memset.v
+# Examples/arm7_strlen_proof.v
+# Examples/arm7_strlen.v
+# Examples/arm8_strcasecmp_proof.v
+# Examples/arm8_strcasecmp.v
+# Examples/i386_strcmp_proof.v
+# Examples/i386_strcmp.v
+# Examples/i386_strlen_proof.v
+# Examples/i386_strlen.v
+# Examples/i386_wcsnlen_proof.v
+# Examples/i386_wcsnlen.v
+# Examples/i386_wcsspn_proof.v
+# Examples/i386_wcsspn.v

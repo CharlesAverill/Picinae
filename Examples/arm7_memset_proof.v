@@ -1,6 +1,6 @@
-Require Import Utf8.
-Require Import FunctionalExtensionality.
-Require Import NArith.
+From Stdlib Require Import Utf8.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import NArith.
 Require Import Picinae_armv7.
 Require Import arm7_memset.
 Import ARM7Notations.
@@ -89,7 +89,7 @@ Proof.
   intros. extensionality len. unfold filled. apply f_equal2.
     extensionality i. extensionality m'. change 8 with (8*1). apply setmem_mod_r.
     reflexivity.
-Qed. 
+Qed.
 
 (* Writing n more bytes with a bounds-check on each index safely extends the
    filled length by n. *)

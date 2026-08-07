@@ -35,6 +35,7 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_auto.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
@@ -123,6 +124,8 @@ Module Theory_i386 := PicinaeTheory IL_i386.
 Export Theory_i386.
 Module Statics_i386 := PicinaeStatics IL_i386 Theory_i386.
 Export Statics_i386.
+Module Auto_i386 := PicinaeAuto IL_i386 Theory_i386 Statics_i386.
+Export Auto_i386.
 Module FInterp_i386 := PicinaeFInterp IL_i386 Theory_i386 Statics_i386.
 Export FInterp_i386.
 Module PSimpl_i386 := Picinae_Simplifier_Base IL_i386.

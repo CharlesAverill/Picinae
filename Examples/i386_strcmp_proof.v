@@ -1,5 +1,4 @@
 (* Example proofs using Picinae for Intel x86 Architecture
-
    Copyright (c) 2025 Kevin W. Hamlen
    Computer Science Department
    The University of Texas at Dallas
@@ -19,13 +18,14 @@
    Compile->Compile buffer.
  *)
 
-Require Import Utf8.
-Require Import FunctionalExtensionality.
-Require Import Arith.
-Require Import NArith.
-Require Import ZArith.
+From Stdlib Require Import Utf8.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import Arith.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
 Require Import Picinae_i386.
 Require Import i386_strcmp.
+From Stdlib Require Import Lia.
 
 Import X86Notations.
 Open Scope N.
@@ -86,8 +86,14 @@ Definition strcmp_exit (t:trace) :=
 (* Next we define a set of invariants, one for each program point.  In this case,
    all program points have the same invariant, so we define the same for all. *)
 Definition esp_invs (s0:store) (t:trace) :=
-  match t with (Addr _,s)::_ =>
+  match t with (Addr a,s)::_ =>
+  match a with
+  | 0 | 4 | 8 | 10
+  | 12 | 14 | 15 | 16
+  | 18 | 20 | 22 | 23
+  | 28 | 33 | 36 =>
     Some (s R_ESP = s0 R_ESP)
+  | _ => None end
   | _ => None end.
 
 (* Now we pose a theorem that asserts that this invariant-set is satisfied at
@@ -225,7 +231,7 @@ Proof.
   intros. erewrite startof_prefix in ENTRY; try eassumption.
 
     (* Example of how to use a satisfies_all lemma: *)
-    eapply use_satall_lemma. 
+    eapply use_satall_lemma.
       assumption.
       apply strcmp_preserves_esp; eassumption.
     intro ESP. simpl in ESP.
@@ -244,12 +250,11 @@ Proof.
     rename t1 into t. rename s into s0. rename s1 into s.
 
   (* Break the proof into cases, one for each invariant-point. *)
-  destruct_inv 32 PRE.
+  destruct_inv 32 PRE; unfold trueif_inv in ESP.
 
   (* Address 0 *)
-  step. step. exists 0. psimpl. split.
-    reflexivity. split. reflexivity.
-    intros i LT. destruct i; discriminate.
+  step. step. exists 0. psimpl.
+    repeat (lia || split).
 
   (* Optional: The rest of the proof ignores all flag values except CF and ZF, so
      we can make evaluation faster and shorter by telling Picinae to ignore the

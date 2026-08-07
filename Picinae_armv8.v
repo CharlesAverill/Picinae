@@ -35,6 +35,7 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_auto.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
@@ -123,6 +124,8 @@ Export Theory_arm8.
 
 Module Statics_arm8 := PicinaeStatics IL_arm8 Theory_arm8.
 Export Statics_arm8.
+Module Auto_arm8 := PicinaeAuto IL_arm8 Theory_arm8 Statics_arm8.
+Export Auto_arm8.
 Module FInterp_arm8 := PicinaeFInterp IL_arm8 Theory_arm8 Statics_arm8.
 Export FInterp_arm8.
 Module PSimpl_arm8 := Picinae_Simplifier_Base IL_arm8.

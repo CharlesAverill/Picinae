@@ -35,6 +35,7 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_auto.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
@@ -102,6 +103,8 @@ Module Theory_RISCV := PicinaeTheory IL_RISCV.
 Export Theory_RISCV.
 Module Statics_RISCV := PicinaeStatics IL_RISCV Theory_RISCV.
 Export Statics_RISCV.
+Module Auto_RISCV := PicinaeAuto IL_RISCV Theory_RISCV Statics_RISCV.
+Export Auto_RISCV.
 Module FInterp_RISCV := PicinaeFInterp IL_RISCV Theory_RISCV Statics_RISCV.
 Export FInterp_RISCV.
 Module PSimpl_RISCV := Picinae_Simplifier_Base IL_RISCV.
