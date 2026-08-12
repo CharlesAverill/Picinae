@@ -12,7 +12,7 @@
                                                      MMMMMMMMMMMZMDMD77$.ZMZMM78
                                                       MMMMMMMMMMMMMMMMMMMZOMMM+Z
    Automation Extensions Module:                       MMMMMMMMMMMMMMMMM^NZMMN+Z
-   * rewriting store infoormation.                      MMMMMMMMMMMMMMM/.$MZM8O+
+   * rewriting store information.                       MMMMMMMMMMMMMMM/.$MZM8O+
    * lia pre-processing configuration                    MMMMMMMMMMMMMM7..$MNDM+
    * arithmetic and boolean simplifiers                   MMDMMMMMMMMMZ7..$DM$77
    * bit-injection solver/reducer                          MMMMMMM+MMMZ7..7ZM~++
