@@ -1,6 +1,6 @@
 (* Picinae: Platform In Coq for INstruction Analysis of Executables       ZZM7DZ
                                                                           $MNDM7
-   Copyright (c) 2025 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
+  Copyright (c) 2026 Kevin W. Hamlen            ,,A??=P                 OMMNMZ+
    The University of Texas at Dallas         =:$ZZ$+ZZI                  7MMZMZ7
    Computer Science Department             Z$$ZM++O++                    7MMZZN+
                                           ZZ$7Z.ZM~?                     7MZDNO$
@@ -69,6 +69,10 @@ Open Scope bool.
           `false` or `true`, or it destructs them and adds the equation to
           the context.
 
+          Variations:
+            `bsimpl in H.` runs bsimpl on hypothesis H.
+            `simple_bsimpl.` runs bsimpl without `lia`/`smt`.
+
       * csimpl---csimpl rewrites boolean-valued comparison equalities to their
           propositional form.  E.g., `H: x =? y = true` becomes `H: x = y`
           and `P: x <=? y = false` becomes `P: x > y`.
@@ -76,6 +80,8 @@ Open Scope bool.
       * specsimpl---specsimpl simplifies N.testbit expressions.  It exclusively
           uses rewrites that do not introduce hypotheses.  Instead its rewrites
           may introduce comparisons over N.
+
+          Variation: `simple_specsimpl` runs specsimpl without `lia`/`smt`.
 
       * bitify---bitify tries to turn all possible arithmetic expressions to bit
           operations.  Right now only supports turning multiplication by constants
@@ -101,7 +107,13 @@ Open Scope bool.
           starts, reduces, and attempts to solve an N equality goal using the
           bit-injection proof strategy.  That is, it uses specsimpl, asimpl,
           bsimpl, and an arithmetic solver to try to prove that each bit of the
-          two numbers must be equal.
+          two numbers must be equal.  If it gets hung up you can add a timeout
+          or manually use the sbi0* tactics that implement the simplification
+          loop.
+
+          Variation: `solve bits inj X.` runs the solver with a timeout of X
+            seconds for each call to `lia`/`smt`.  By default X is zero, meaning
+            no timeout.
 
           N.B.  Install `coq-itauto` and require the file `Cdcl.NOlia` to use
           the `smt` arithmetic solver.  This is a more powerful version of `lia`,
@@ -110,9 +122,9 @@ Open Scope bool.
           `coq-itauto` package, then add the line `Require Cdcl.NOlia.` or
           `Require Import Cdcl.NOlia.` in your .v file.
 
-          N.B.  You will also need to `Require Import ZifyN ZifyBool.` after
-          `Cdcl.NOlia` to further empower `smt` with boolean-, modulo-,
-          and exponentiation-reasoning.
+          N.B.  You will also need to `Require Import ZifyN ZifyBool.` in the same
+          file you require `Cdcl.NOlia` to empower `smt` with boolean-, modulo-,
+          and exponentiation-reasoning.  The exports from this file are not enough.
  *)
 
 Module PicinaeAuto (IL: PICINAE_IL) (TIL: PICINAE_THEORY IL) (SIL: PICINAE_STATICS IL TIL).
@@ -566,18 +578,17 @@ Ltac simple_specsimpl := specsimpl0 false ltac:(0).
 
 Ltac showgoal :=
   match goal with |- ?g => idtac g end.
-(* To enable the smt tactic, a more powerful solver, install the `coq-itauto` package
-   with `opam install coq-itauto` then run `Require Cdcl.NOlia`
-   or `Require Import Cdcl.NOlia`. *)
-(* sbi0 and sbi00 are mainly useful for debugging.  Helps to break the inner
-   loop into iterations to see where it is going infinite.  Note that sbi00
-   is not exactly an iteration of the inner loop because it prevents bsimpl and
-   asimpl from looping forever.  I.e., it interleaves specsimpl, asimpl0, and bsimpl0,
-   whereas the real inner loop may spin in asimpl or bsimpl. *)
-Ltac sbi00_lia    lia_time  := specsimpl0 true lia_time || asimpl || bsimpl0 true lia_time.
-Ltac sbi00_simple           := specsimpl0 false         || asimpl || bsimpl0 false ltac:(0).
-Ltac sbi0_lia     lia_time  := specsimpl0 true lia_time || asimpl || bsimpl0 true lia_time.
-Ltac sbi0_simple            := specsimpl0 false         || asimpl || (repeat bsimpl0 false ltac:(0)).
+
+(* sbi0 and sbi00 are useful for debugging and fine grained control if `solve bits inj`
+   hangs on `smt`, which happens when bsimpl tries to infer conditions are `true` or `false
+   with complex contexts. Note that sbi00 is not exactly an iteration of the inner loop 
+   because it prevents bsimpl and asimpl from looping forever.  
+   I.e., it interleaves specsimpl, asimpl0, and bsimpl0, whereas the real inner loop may
+   get stuck in asimpl or bsimpl. *)
+Ltac sbi00_lia    lia_time  := specsimpl0 true  lia_time  || asimpl || bsimpl0 true lia_time.
+Ltac sbi00_simple           := specsimpl0 false ltac:(0)  || asimpl || bsimpl0 false ltac:(0).
+Ltac sbi0_lia     lia_time  := specsimpl0 true  lia_time  || asimpl || bsimpl0 true lia_time.
+Ltac sbi0_simple            := specsimpl0 false ltac:(0)  || asimpl || (repeat bsimpl0 false ltac:(0)).
 Ltac solve_bits_inj use_lia lia_time :=
   (apply N.bits_inj_0 || apply N.bits_inj || idtac);
   let i := fresh "i" in try intro i;
@@ -598,10 +609,5 @@ Tactic Notation "solve" "bits" "inj" := solve_bits_inj (*use_lia=*)true ltac:(0)
 Tactic Notation "solve" "bits" "inj" integer(i) := solve_bits_inj (*use_lia=*)true i.
 Tactic Notation "simple" "solve" "bits" "inj" := solve_bits_inj (*use_lia=*)false.
 Ltac specsimpl_rec_solver ::= solve bits inj.
-
-
-Lemma Nshiftr_land_ones_high:
-  forall a n m, m <= n -> N.land (a << n) (N.ones m) = 0.
-Proof. intros. solve bits inj 3. Qed.
 
 End PicinaeAuto.
