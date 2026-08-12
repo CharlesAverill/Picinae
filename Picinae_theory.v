@@ -42,6 +42,8 @@ From Stdlib Require Import Lia ZifyN ZifyBool.
 From Stdlib Require Setoid.
 Open Scope list_scope.
 
+Notation "x << y" := (N.shiftl x y) (at level 55, left associativity). (* logical shift-left *)
+Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logical shift-right *)
 
 (* Define some tactics for reasoning about IL variable identifier equalities
    of the form "v1 == v2", which asserts that v1 and v2 are the same IL var. *)
@@ -551,8 +553,35 @@ Proof. intros. apply N.Div0.mod_same. Qed.
 Theorem mp2_mod_mod: forall n w, n mod 2^w mod 2^w = n mod 2^w.
 Proof. intros. apply N.Div0.mod_mod. Qed.
 
-Theorem mp2_even: forall n w, w > 0 -> N.even n = true -> N.even (n mod 2^w) = true.
-Proof. intros. rewrite <-testbit0_even in *; rewrite N.mod_pow2_bits_low with (m:=0);[easy|lia]. Qed.
+Theorem mp2_even: forall n w, w > 0 -> N.even n = true <-> N.even (n mod 2^w) = true.
+Proof. split; intros; rewrite <-testbit0_even in *; rewrite ?N.mod_pow2_bits_low with (m:=0) in *; try easy; try lia. Qed.
+
+Theorem Nmod_pow2_bits: forall a n m, N.testbit (a mod 2 ^ n) m = andb (m <? n) (N.testbit a m).
+Proof.
+  intros. destruct (N.lt_ge_cases m n) as [LT | GE].
+    destruct (N.ltb_lt m n) as (_ & Help); specialize (Help LT); rewrite Help, Bool.andb_true_l. apply N.mod_pow2_bits_low. exact LT.
+    destruct (N.ltb_ge m n) as (_ & Help); specialize (Help GE); rewrite Help, Bool.andb_false_l. apply N.mod_pow2_bits_high. exact GE.
+Qed.
+
+Theorem mod2_0_even: forall n, n mod 2 = 0 <-> N.even n = true.
+Proof.
+  split; intros H.
+    rewrite mp2_even with (w:=1); replace (2^1) with 2 by lia; try lia. destruct (n mod 2);[reflexivity|lia].
+    apply N.bits_inj_0. intros. replace 2 with (2^1) by lia. rewrite Nmod_pow2_bits.
+    destruct n0. rewrite <- testbit0_even in H. destruct (N.testbit n 0); reflexivity || discriminate.
+    replace (_ <? _) with false by lia. reflexivity.
+Qed.
+
+Theorem mod2_1_neven: forall n, n mod 2 = 1 <-> N.even n = false.
+Proof.
+  split; intros H.
+  assert (~N.even n = true). { intros H0. rewrite <-mod2_0_even,H in H0. discriminate. }
+  destruct N.even;[contradiction|reflexivity].
+  assert (~n mod 2 = 0). { intros H0. rewrite mod2_0_even,H in H0. discriminate. }
+  epose proof (N.mod_upper_bound n 2 _).
+  destruct (n mod 2) eqn:EQ;[contradiction|destruct p; lia].
+  Unshelve. lia.
+Qed.
 
 Theorem N_mod_mod_pow:
   forall n a b c, a <> 0 -> n mod a^b mod a^c = n mod a^N.min b c.
@@ -662,6 +691,17 @@ Qed.
 Theorem mp2_mod_mul_r: forall n w1 w2, n mod (2^(w1+w2)) = n mod 2^w1 + 2^w1 * ((n / 2^w1) mod 2^w2).
 Proof. intros. rewrite N.pow_add_r. apply N.Div0.mod_mul_r. Qed.
 
+Lemma mp2_shiftr:
+  forall n w shift, n mod 2^w >> shift = (n>>shift) mod (2^(w-shift)).
+Proof.
+  intros. apply N.bits_inj; intros i. rewrite N.shiftr_spec'.
+  destruct (N.le_gt_cases w (i+shift)).
+    rewrite (N.mod_pow2_bits_high _ _ _ H).
+    rewrite N.mod_pow2_bits_high; try lia.
+    rewrite (N.mod_pow2_bits_low _ _ _ H), N.mod_pow2_bits_low; try lia.
+    rewrite N.shiftr_spec'. reflexivity.
+Qed.
+
 Theorem add_mod_same_l:
   forall w n, (2^w + n) mod 2^w = n mod 2^w.
 Proof.
@@ -717,6 +757,23 @@ Proof.
     destruct (cmp x1 y1) eqn:H2.
       rewrite <- H1. symmetry. apply EQ1, EQ2, EQ1, H2.
       reflexivity.
+Qed.
+
+Theorem Nshiftl_spec:
+  forall a s i, N.testbit (N.shiftl a s) i = ((s <=? i) && N.testbit a (i-s))%bool.
+Proof.
+  intros.
+  destruct (N.le_gt_cases s i) as [LE|GT].
+  rewrite N.shiftl_spec_high'; try lia.
+  rewrite N.shiftl_spec_low; try lia.
+Qed.
+
+Theorem shiftl_mod_0:
+  forall w x, (N.shiftl x w) mod 2^w = 0.
+Proof.
+  intros. apply N.bits_inj_0; intro.
+  rewrite Nmod_pow2_bits. rewrite Nshiftl_spec.
+  lia.
 Qed.
 
 Theorem ldiff_sub:
@@ -1323,6 +1380,15 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma xbits_shiftr2:
+  forall n lo hi shift, xbits n lo hi >> shift = xbits n (lo+shift) hi.
+Proof.
+  intros. unfold xbits.
+  replace (hi-(lo+shift)) with (hi-lo-shift) by lia.
+  rewrite <-N.shiftr_shiftr, <-mp2_shiftr with (shift:=shift).
+  reflexivity.
+Qed.
+
 Theorem xbits_above:
   forall n i j, n < 2^i -> xbits n i j = 0.
 Proof.
@@ -1349,6 +1415,13 @@ Proof.
     eapply N.ltb_ge, N.add_le_mono_r.
       rewrite <- N.add_min_distr_r, N.min_comm, N.add_comm, (N.sub_add _ _ H).
       apply N.ltb_ge, H'.
+Qed.
+
+Lemma xbits_mod2:
+  forall n lo hi w, xbits n lo hi mod 2^w = xbits n lo (N.min hi (lo+w)).
+Proof.
+  intros. unfold xbits. rewrite mp2_mod_mod_min, <-N.sub_min_distr_r.
+  replace (lo+w-lo) with w by lia. reflexivity.
 Qed.
 
 Theorem xbits_below:
@@ -2319,6 +2392,15 @@ Proof.
     apply N2Z.is_nonneg.
 Qed.
 
+Lemma zxbits_xbits_comp:
+  forall (z1 z2 z3 z4:Z),
+  (0 <= z1)%Z -> (0 <= z2)%Z -> (0 <= z3)%Z -> (0 <= z4)%Z -> (Z_xbits z1 z2 z3 =? z4)%Z = (xbits (Z.to_N z1) (Z.to_N z2) (Z.to_N z3) =? (Z.to_N z4))%N.
+Proof.
+  intros.
+  rewrite <-Z2N_xbits; try assumption.
+  rewrite <-Z2N_inj_eqb;[reflexivity|apply Z_xbits_nonneg|assumption].
+Qed.
+
 End XBits.
 
 
@@ -2604,7 +2686,7 @@ Theorem canonicalZ_neg_l:
   forall w z, (w < 0)%Z -> canonicalZ w z = z.
 Proof.
   intros. unfold canonicalZ.
-  rewrite (Z.pow_neg_r _ w), Z.mod_0_r by assumption. apply Z.add_simpl_r.
+  rewrite (Z.pow_neg_r _ w), Zmod_0_r by assumption. apply Z.add_simpl_r.
 Qed.
 
 Theorem canonicalZ_0_l:
@@ -2946,7 +3028,7 @@ Theorem canonicalZ_nonneg:
   forall w z, (z mod 2^w < 2^Z.pred w -> canonicalZ w z = z mod 2^w)%Z.
 Proof.
   intros. destruct (Z.lt_trichotomy w 0) as [H2|[H2|H2]].
-    rewrite Z.pow_neg_r, Z.mod_0_r by exact H2. apply canonicalZ_neg_l. assumption.
+    rewrite Z.pow_neg_r, Zmod_0_r by exact H2. apply canonicalZ_neg_l. assumption.
     subst w. rewrite Z.mod_1_r. apply canonicalZ_0_l.
     erewrite <- canonicalZ_mod_pow2; [|apply Z.lt_le_incl, H2 | reflexivity].
       unfold canonicalZ. rewrite Z.mod_small, Z.add_simpl_r. reflexivity. split.
@@ -3376,7 +3458,7 @@ Lemma Z_shiftl_eqm:
   forall w z1 z2, (0 <= z2)%Z -> eqm (2^w) (Z.shiftl z1 z2) (Z.shiftl (z1 mod 2^w) z2).
 Proof.
   intros. unfold eqm. destruct (Z.neg_nonneg_cases w) as [H1|H1].
-    rewrite Z.pow_neg_r, !Z.mod_0_r by assumption. reflexivity.
+    rewrite Z.pow_neg_r, !Zmod_0_r by assumption. reflexivity.
 
     apply Z.bits_inj'. intros i H2.
     rewrite <- !Z.land_ones, !Z.land_spec, !Z.shiftl_spec, Z.land_spec, !Z.testbit_ones, (proj2 (Z.leb_le 0 i) H2) by assumption.
@@ -4156,6 +4238,23 @@ Proof.
   rewrite N.add_sub_assoc by apply N.lt_le_incl, msub_lt.
   rewrite N.add_comm, N.add_assoc, N.add_sub, <- mp2_add_l, mp2_mod_same.
   symmetry. apply N.mod_small, msub_lt.
+Qed.
+
+Lemma madd_ones_msub_one:
+  forall w x, (x + (N.ones w)) mod 2^w = msub w x 1.
+Proof.
+  intros. unfold msub.
+  destruct (N.eq_0_gt_0_cases w).
+    subst w. simpl. rewrite !N.mod_1_r. reflexivity.
+    rewrite (N.mod_small 1), N.sub_1_r, N.ones_equiv. reflexivity.
+    apply N.lt_le_trans with (m:=2). lia. replace 2 with (2^1) at 1 by reflexivity.
+    apply N.pow_le_mono_r; lia.
+Qed.
+
+Lemma madd_ones_one_cancel:
+  forall w x, ((x + (N.ones w)) mod 2^w + 1) mod 2^w = x mod 2^w.
+Proof.
+  intros. rewrite madd_ones_msub_one, msub_add. reflexivity.
 Qed.
 
 Theorem msub_lt_mono_r:
@@ -5313,8 +5412,6 @@ Tactic Notation "focus_addr" constr(n) :=
 
 
 Section MemTheory.
-Notation "x << y" := (N.shiftl x y) (at level 55, left associativity). (* logical shift-left *)
-Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logical shift-right *)
 (* The getmem/setmem memory accessors are defined as Peano recursions over N,
    rather than natural number recursions.  This is important for keeping proof
    terms small, but can make it more difficult to write inductive proofs.  To
@@ -5378,6 +5475,18 @@ Proof.
   intros. change 1 with (N.succ 0).
   rewrite getmem_succ, getmem_0, N.mul_0_l, cbits_0_l, cbits_0_i, N.lor_0_r.
   destruct e; reflexivity.
+Qed.
+
+Corollary getmem_1_xbits: forall w e m a,
+  getmem w e 1 m a = xbits m (a mod 2 ^ w * 8) (N.succ (a mod 2 ^ w) * 8).
+Proof.
+  intros; rewrite getmem_1; unfold getbyte; reflexivity.
+Qed.
+
+Corollary getbyte_xbits: forall w m a,
+  getbyte m a w = xbits m (a mod 2 ^ w * 8) (N.succ (a mod 2 ^ w) * 8).
+Proof.
+  intros; unfold getbyte; reflexivity.
 Qed.
 
 Corollary setmem_1: forall w e m a v, setmem w e 1 m a v = setbyte m a v w.
@@ -6022,7 +6131,15 @@ Proof.
         rewrite N.mul_succ_l. apply N.le_add_l.
 Qed.
 
-(* Break an (i+j)-byte number read/stored to/from memory into two numbers of size i and j. *)
+(* Break an (i+j)-byte number read/stored to/from memory into two numbers of size i and j.
+   `j` is always the bytes in the higher memory addresses. For Big Endian, these are the least
+   significant bytes, for LittleE these are the most significant bytes.
+   getmem w e (i+j) m a:
+
+        |---     i        ---|     |---     j       ---|
+        [ ] [ ]  [ ]  ...  [ ]     [ ]    ...        [ ]
+        a   a+1  a+2       a+i-1   a+i               a+j-1
+*)
 Theorem getmem_split:
   forall w e i j m a, getmem w e (i+j) m a =
     match e with BigE => cbits (getmem w e i m a) (j*8) (getmem w e j m (a+i))
@@ -6034,6 +6151,52 @@ Proof.
     rewrite <- N.add_succ_comm, getmem_succ, N.add_succ_l. destruct e.
       rewrite cbits_assoc, <- IHi, <- N.mul_add_distr_r. apply getmem_succ.
       rewrite (N.mul_succ_l i), <- cbits_assoc, <- IHi. apply getmem_succ.
+Qed.
+
+Theorem cbits_equals:
+  forall hi1 hi2 lo1 lo2 w (EQ: cbits hi1 w lo1 = cbits hi2 w lo2)
+    (Bound1: lo1 < 2^w) (Bound2: lo2 < 2^w),
+  hi1 = hi2 /\ lo1 = lo2.
+Proof.
+  unfold cbits; intros. Search N.lor N.add. rewrite !lor_plus, !N.shiftl_mul_pow2, !(N.mul_comm _ (2^w)) in EQ.
+  pose proof (Q1:=N.mod_unique (2^w*hi1+lo1) _ hi1 _ Bound1 (eq_refl _)).
+  rewrite EQ, N.add_comm, N.mul_comm, N.Div0.mod_add, (N.mod_small _ _ Bound2) in Q1. subst lo2.
+  rewrite !(N.add_comm _ lo1) in EQ. apply Nplus_reg_l in EQ.
+  apply N.mul_reg_l in EQ; try lia.
+  all: apply N.bits_inj_0; intro; rewrite N.land_spec,Nshiftl_spec;
+    rewrite <-(N.mod_small _ _ Bound1) || rewrite <-(N.mod_small _ _ Bound2);
+    rewrite Nmod_pow2_bits; lia.
+Qed.
+
+(* If two regions in two memories are equal, their corresponding innards are equal. *)
+Theorem getmem_inner:
+  forall w e m1 m2 len a1 a2 s len',
+    getmem w e len m1 a1 = getmem w e len m2 a2 ->
+    s + len' <= len ->
+    getmem w e len' m1 (a1+s) = getmem w e len' m2 (a2+s).
+Proof.
+  intros. Search getmem. destruct e; cycle 1.
+  - replace len with (s+(len-s)) in H by lia.
+    rewrite !getmem_split in H. apply cbits_equals in H; try apply getmem_bound.
+    destruct H as (H & _). replace (len - s) with (len'+(len - s - len')) in H by lia.
+    rewrite !getmem_split in H. apply cbits_equals in H; try apply getmem_bound. now destruct H.
+  - replace len with (s+(len-s)) in H by lia.
+    rewrite !getmem_split in H. apply cbits_equals in H; try apply getmem_bound.
+    destruct H as (_ & H). replace (len - s) with (len'+(len - s - len')) in H by lia.
+    rewrite !getmem_split in H. apply cbits_equals in H; try apply getmem_bound. now destruct H.
+Qed.
+
+(* Split off the first byte read from the rest.  Used in decoding self-modifying code. *)
+Corollary getmem_first:
+  forall w e i i' m a (H: i = 1 + i'), getmem w e i m a =
+    match e with BigE => N.lor (getbyte m (a+i') w) (N.shiftl (getmem w e i' m a) 8)
+               | LittleE => N.lor (getbyte m a w) (N.shiftl (getmem w e i' m (1+a)) 8)
+    end.
+Proof.
+  intros. rewrite H.
+  pose proof (getmem_split w e) as S. destruct e.
+  - specialize (S i' 1 m a). rewrite getmem_1 in S. rewrite N.add_comm at 1. rewrite S, N.lor_comm; unfold cbits; clear S; simpl (_*_). reflexivity.
+  - specialize (S 1 i' m a). rewrite getmem_1 in S. rewrite S, N.lor_comm, N.add_comm. unfold cbits; simpl N.mul. reflexivity.
 Qed.
 
 Theorem setmem_split:
@@ -6454,6 +6617,45 @@ Proof.
 
     rewrite N.add_comm, N.mul_add_distr_r, <- xbits_equiv. unfold xbits.
     rewrite N.add_sub, mp2_mod_mod. reflexivity.
+Qed.
+
+Corollary getmem_byte {w e len m a v i}:
+  forall
+    (V: getmem w e len m a = v)
+    (LT: len+a < 2^w)
+    (LTi: a <= i < a+len),
+    getbyte m i w =
+    match e with
+    | LittleE => xbits v ((i-a)*8) ((1+i-a)*8)
+    | BigE => xbits v ((a+len-i-1)*8) ((a+len-i)*8)
+    end.
+Proof.
+  intros. subst v.
+  rewrite <-getmem_1 with (e:=e), !getmem_xbits by (rewrite ?N.mod_small; lia).
+  destruct e.
+  { (* BigE *)
+    unfold revbytes at 1; match goal with |- ?l = _ => simpl l end.
+    replace (a+len-i) with (N.succ (a+len-i-1)) at 2 by lia.
+    rewrite xbits_revbytes.
+    destruct (N.lt_trichotomy a i) as [Lt | [Eq | Gt]]; try lia.
+      replace (a+len-i-1<?len) with true by lia.
+      rewrite ?N.mod_small by lia. rewrite (N.mod_small a (2^w)) by lia.
+      replace (N.succ (((a+len)-i)-1)) with (a+len-i) by lia.
+      rewrite xbits_shiftr2. replace (a*8+(len-(a+len-i))*8) with (i*8) by lia.
+      rewrite xbits_mod2. replace (N.min _ _) with ((i+1)*8) by lia.
+      reflexivity.
+
+      subst i; replace (_<?_) with true by lia; replace (len - N.succ _) with (0) by lia; rewrite N.shiftr_0_r.
+      rewrite xbits_mod2. replace (N.min _ _) with ((a mod 2^w + 1)*8) by lia.
+      reflexivity.
+  }
+  { (* LittleE *)
+    unfold xbits at 2. rewrite xbits_shiftr2, xbits_mod2.
+    rewrite ?N.mod_small by lia.
+    replace (a * 8 + (i - a) * 8) with (i * 8) by nia.
+    replace (N.min _ _) with ((i+1)*8) by lia.
+    reflexivity.
+  }
 Qed.
 
 Theorem setmem_merge:
@@ -6918,6 +7120,18 @@ Proof.
   intros.
   assert (NO2 := noverlap_symmetry _ _ _ _ _ NO).
   apply noverlap_sep in NO,NO2.
+  apply getmem_frame; assumption.
+Qed.
+
+Theorem getbyte_noverlap:
+  forall w e2 len2 m a1 a2 v
+    (NO: ~overlap w a1 1 a2 len2),
+  getbyte (setmem w e2 len2 m a2 v) a1 w = getbyte m a1 w.
+Proof.
+  intros.
+  assert (NO2 := noverlap_symmetry _ _ _ _ _ NO).
+  apply noverlap_sep in NO,NO2.
+  rewrite <-!getmem_1 with (e:=BigE).
   apply getmem_frame; assumption.
 Qed.
 
@@ -8473,6 +8687,37 @@ Proof.
     extensionality t. specialize (INVXP2 t). destruct t. reflexivity. simpl. rewrite (CI1 _ (_++_)). apply CI1.
 Qed.
 
+CoInductive CoForall {A : Type} (P : A -> Prop) : list A -> Prop :=
+    CoForall_nil : CoForall P nil
+  | CoForall_cons : forall (x : A) (l : list A),
+                  P x -> CoForall P l -> CoForall P (x :: l).
+
+Lemma forall_coforall {A:Type}:
+  forall (P : A->Prop) (l:list A),
+  CoForall P l <-> Forall P l.
+Proof.
+Admitted.
+
+CoInductive coeq {A : Type} (x : A) : A -> Prop :=  coeq_refl : coeq x x.
+
+Definition coexec_prog p t := CoForall (can_step p) (stepsof t).
+
+Theorem stepsof_tl {A:Type}:
+    forall a l (t2 t1:list A), a::l = stepsof (t2++t1) ->
+      match t2 with
+      | nil => l = stepsof (tl t1)
+      | _::t2' => l = stepsof ((tl t2)++t1)
+      end.
+Proof.
+  intros. destruct t2 as [|h t2'] eqn:T2; simpl in *.
+  destruct t1;[discriminate|]. unfold stepsof in *. simpl (tl _) in *. Search (combine) tl.
+  destruct t1;[discriminate|]. simpl in *. inversion H. reflexivity.
+
+  destruct t2'. destruct t1; simpl. all: rewrite ?app_nil_l in H; try discriminate.
+  inversion H. reflexivity.
+  rewrite <-app_comm_cons in H. inversion H. simpl. reflexivity.
+Qed.
+
 (* When proving nextinv in practice, it's convenient to retain a hidden exec_prog
    hypothesis that rememembers that the current trace is a valid execution.  This
    facilitates proving premises of subroutine calls (e.g., "models"). We therefore
@@ -8666,6 +8911,56 @@ Proof.
       assumption.
 Qed.
 
+(* (* This lemma is currently unused.  I proved it to help me understand and confirm
+   the necessary and sufficient conditions for nextinv proofs. *)
+Lemma nextinv_equiv:
+  forall p Invs xp b t, nextinv p Invs xp b t <->
+    if (xp t || (b && if Invs t then true else false))%bool then
+      match Invs t with Some P => P | None => True end
+    else match t with (Addr a,s)::t' =>
+      match p s a with None => False | Some (sz,q) =>
+        forall s1 x1 (XS: exec_stmt s q s1 x1),
+          nextinv p Invs xp true ((exitof (a+sz) x1, s1)::(Addr a,s)::t')
+      end | _ => False end.
+Proof.
+  intros. destruct (xp t) eqn:H2.
+    simpl. destruct (Invs t) eqn:H3; split; intro H1.
+      inversion H1; subst.
+        rewrite H3,H2 in TRU. assumption.
+        rewrite H2 in NOI. discriminate.
+      apply NIHere. rewrite H3,H2. assumption.
+      exact I.
+      apply NIHere. rewrite H3. assumption.
+    destruct b; simpl.
+      destruct (Invs t) eqn:H3.
+        split; intro H1.
+          inversion H1; subst.
+            rewrite H3,H2 in TRU. assumption.
+            rewrite H2,H3 in NOI. discriminate.
+          apply NIHere. rewrite H3,H2. assumption.
+        split; intro H1.
+          inversion H1; subst.
+            rewrite H3,H2 in TRU. discriminate.
+            rewrite IL. exact STEP.
+          destruct t as [|[[a|i] s] t]; try contradiction. destruct (p s a) eqn:IL.
+            destruct p0 as (sz,q). eapply NIStep.
+              rewrite H2,H3. reflexivity.
+              exact IL.
+              assumption.
+            contradiction.
+      split; intro H1.
+        inversion H1; subst.
+          rewrite H2 in TRU. destruct (Invs t). contradiction. discriminate.
+          rewrite IL. exact STEP.
+        destruct t as [|[[a|i] s] t]; try contradiction. destruct (p s a) eqn:IL.
+          destruct p0 as (sz,q). eapply NIStep.
+            rewrite H2. destruct (Invs _); reflexivity.
+            exact IL.
+            assumption.
+          contradiction.
+Qed.
+*)
+
 End InvariantProofs.
 
 Section FrameTheorems.
@@ -8712,6 +9007,111 @@ Proof.
 Qed.
 
 End FrameTheorems.
+
+Section IL.
+
+Theorem forall_stmts_in_seq:
+  forall q1 q2 P (FA: forall_stmts_in_stmt P (Seq q1 q2)),
+  forall_stmts_in_stmt P q1 /\ forall_stmts_in_stmt P q2.
+Proof.
+  intros. unfold forall_stmts_in_stmt, stmts_in_stmt in FA.
+  destruct FA as [_ [Pq1 Pq2]].
+  split; try assumption.
+Qed.
+
+Theorem forall_stmts_in_ite:
+  forall q1 q2 e P (FA: forall_stmts_in_stmt P (If e q1 q2)),
+  forall_stmts_in_stmt P q1 /\ forall_stmts_in_stmt P q2.
+Proof.
+  intros. unfold forall_stmts_in_stmt, stmts_in_stmt in FA.
+  destruct FA as [_ [Pq1 Pq2]].
+  split; try assumption.
+Qed.
+
+Theorem forall_stmts_in_rep:
+  forall q e P (FA: forall_stmts_in_stmt P (Rep e q)),
+  forall_stmts_in_stmt P q.
+Proof.
+  intros. unfold forall_stmts_in_stmt, stmts_in_stmt in FA.
+  destruct FA as [_ Pq].
+  try assumption.
+Qed.
+
+Theorem forall_stmts_head:
+  forall P q (FA: forall_stmts_in_stmt P q), P q.
+Proof.
+  intros; destruct q; cbv in FA; easy.
+Qed.
+
+Theorem forall_stmts_in_iter:
+  forall P q n (FA: forall_stmts_in_stmt P q) (NOP: P Nop)
+    (SEQSPLIT: forall q1 q2, P q1 -> P q2 -> P (Seq q1 q2)),
+  forall_stmts_in_stmt P (N.iter n (Seq q) Nop).
+Proof.
+  intros. dependent induction n using N.strong_induction_le.
+    assumption.
+    rewrite N.iter_succ. simpl. repeat split; try apply H; try easy.
+    apply SEQSPLIT; try easy.
+      now apply forall_stmts_head.
+      specialize (H n (N.le_refl _) FA NOP SEQSPLIT); now apply forall_stmts_head.
+Qed.
+
+Theorem stmt_xnone:
+  forall c s q c' s' x
+    (XS: exec_stmt c s q c' s' x)
+    (NJ: forall_stmts_in_stmt (fun q' => forall e, q' <> Jmp e) q)
+    (NX: forall_stmts_in_stmt (fun q' => forall i, q' <> Exn i) q),
+   x = None.
+Proof.
+  intros c s q c' s' x XS.
+  dependent induction XS; intros; try reflexivity;
+  match goal with
+  | [H: forall_stmts_in_stmt _ (Jmp ?e) |- _] =>
+      cbv in H; specialize (H e); contradiction
+  | [H: forall_stmts_in_stmt _ (Exn ?i) |- _] =>
+      cbv in H; specialize (H i); contradiction
+  | _ => idtac
+  end.
+  apply forall_stmts_in_seq in NJ, NX. destruct NJ as [NJ1 _]; destruct NX as [NX1 _]. now apply IHXS.
+  apply forall_stmts_in_seq in NJ, NX. destruct NJ as [_ NJ2]; destruct NX as [_ NX2]. now apply IHXS2.
+  apply forall_stmts_in_ite in NJ, NX. destruct NJ as [NJ1 NJ2]; destruct NX as [NX1 NX2]. destruct b; apply IHXS; assumption.
+  apply forall_stmts_in_rep in NJ, NX. apply IHXS; apply forall_stmts_in_iter; try easy.
+Qed.
+
+Theorem stmt_xnotaddr:
+  forall c s q c' s' x a
+    (XS: exec_stmt c s q c' s' x)
+    (NJ: forall_stmts_in_stmt (fun q' => forall e, q' <> Jmp e) q),
+   x <> Some (Addr a).
+Proof.
+  intros c s q c' s' x a XS.
+  dependent induction XS; intros; try discriminate;
+  match goal with
+  | [H: forall_stmts_in_stmt _ (Jmp ?e) |- _] =>
+      cbv in H; specialize (H e); contradiction
+  | [H: forall_stmts_in_stmt _ (Exn ?i) |- _] =>
+      cbv in H; specialize (H i); contradiction
+  | _ => idtac
+  end.
+  apply forall_stmts_in_seq in NJ. destruct NJ as [NJ1 _]. now apply IHXS.
+  apply forall_stmts_in_seq in NJ. destruct NJ as [_ NJ2]. now apply IHXS2.
+  apply forall_stmts_in_ite in NJ. destruct NJ as [NJ1 NJ2]. destruct b; apply IHXS; assumption.
+  apply forall_stmts_in_rep in NJ. apply IHXS; apply forall_stmts_in_iter; try easy.
+Qed.
+
+Theorem step_fallthrough:
+  forall p s a q s' sz exit' (LU: p s a = Some (sz, q))
+    (STEP: can_step p (((exit',s'),(Addr a, s))))
+    (NJ: forall_stmts_in_stmt (fun q' => forall e, q' <> Jmp e) q)
+    (NX: forall_stmts_in_stmt (fun q' => forall i, q' <> Exn i) q),
+  exit' = Addr (a+sz).
+Proof.
+  intros.
+  inversion STEP; subst. rewrite LU in LU0; injection LU0; intros; subst q0 sz0; clear LU0.
+  rewrite (stmt_xnone _ _ _ _ _ _ XS NJ NX) in *. reflexivity.
+Qed.
+
+End IL.
 
 (* Prove a goal of the form (prog_noassign v p) for a program p that contains no
    statements having assignments to v. *)
