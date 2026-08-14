@@ -218,111 +218,44 @@ Proof.
   solve simple bound.
 Qed.
 
-Corollary Nmod_pow2_bits_2:
-  forall a m, N.testbit (a mod 2) m = (m <? 1) && (N.testbit a m).
-Proof. intros. replace (a mod 2) with (a mod 2^1) by reflexivity. apply Nmod_pow2_bits. Qed.
-Corollary Nmod_pow2_bits_4:
-  forall a m, N.testbit (a mod 4) m = (m <? 2) && (N.testbit a m).
-Proof. intros. replace (a mod 4) with (a mod 2^2) by reflexivity. apply Nmod_pow2_bits. Qed.
-Corollary Nmod_pow2_bits_8:
-  forall a m, N.testbit (a mod 8) m = (m <? 3) && (N.testbit a m).
-Proof. intros. replace (a mod 8) with (a mod 2^3) by reflexivity. apply Nmod_pow2_bits. Qed.
-Corollary Nmod_pow2_bits_16:
-  forall a m, N.testbit (a mod 16) m = (m <? 4) && (N.testbit a m).
-Proof. intros. replace (a mod 16) with (a mod 2^4) by reflexivity. apply Nmod_pow2_bits. Qed.
-Corollary Nmod_pow2_bits_32:
-  forall a m, N.testbit (a mod 32) m = (m <? 5) && (N.testbit a m).
-Proof. intros. replace (a mod 32) with (a mod 2^5) by reflexivity. apply Nmod_pow2_bits. Qed.
-Corollary Nmod_pow2_bits_64:
-  forall a m, N.testbit (a mod 64) m = (m <? 6) && (N.testbit a m).
-Proof. intros. replace (a mod 64) with (a mod 2^6) by reflexivity. apply Nmod_pow2_bits. Qed.
-Corollary Nmod_pow2_bits_128:
-  forall a m, N.testbit (a mod 128) m = (m <? 7) && (N.testbit a m).
-Proof. intros. replace (a mod 128) with (a mod 2^7) by reflexivity. apply Nmod_pow2_bits. Qed.
-Corollary Nmod_pow2_bits_256:
-  forall a m, N.testbit (a mod 256) m = (m <? 8) && (N.testbit a m).
-Proof. intros. replace (a mod 256) with (a mod 2^8) by reflexivity. apply Nmod_pow2_bits. Qed.
+Local Corollary Nmod_pow2_bits_2:   forall a m, N.testbit (a mod   2) m = (m <? 1) && (N.testbit a m). Proof. intros. change (a mod   2) with (a mod 2^1). apply Nmod_pow2_bits. Qed.
+Local Corollary Nmod_pow2_bits_4:   forall a m, N.testbit (a mod   4) m = (m <? 2) && (N.testbit a m). Proof. intros. change (a mod   4) with (a mod 2^2). apply Nmod_pow2_bits. Qed.
+Local Corollary Nmod_pow2_bits_8:   forall a m, N.testbit (a mod   8) m = (m <? 3) && (N.testbit a m). Proof. intros. change (a mod   8) with (a mod 2^3). apply Nmod_pow2_bits. Qed.
+Local Corollary Nmod_pow2_bits_16:  forall a m, N.testbit (a mod  16) m = (m <? 4) && (N.testbit a m). Proof. intros. change (a mod  16) with (a mod 2^4). apply Nmod_pow2_bits. Qed.
+Local Corollary Nmod_pow2_bits_32:  forall a m, N.testbit (a mod  32) m = (m <? 5) && (N.testbit a m). Proof. intros. change (a mod  32) with (a mod 2^5). apply Nmod_pow2_bits. Qed.
+Local Corollary Nmod_pow2_bits_64:  forall a m, N.testbit (a mod  64) m = (m <? 6) && (N.testbit a m). Proof. intros. change (a mod  64) with (a mod 2^6). apply Nmod_pow2_bits. Qed.
+Local Corollary Nmod_pow2_bits_128: forall a m, N.testbit (a mod 128) m = (m <? 7) && (N.testbit a m). Proof. intros. change (a mod 128) with (a mod 2^7). apply Nmod_pow2_bits. Qed.
+Local Corollary Nmod_pow2_bits_256: forall a m, N.testbit (a mod 256) m = (m <? 8) && (N.testbit a m). Proof. intros. change (a mod 256) with (a mod 2^8). apply Nmod_pow2_bits. Qed.
 
-Corollary mp2_shiftl_2_r:
-  forall a, a*2 = a<<1.
-Proof. symmetry; replace 2 with (2^1);[apply N.shiftl_mul_pow2|];lia. Qed.
-Corollary mp2_shiftl_4_r:
-  forall a, a*4 = a<<2.
-Proof. symmetry; replace 4 with (2^2);[apply N.shiftl_mul_pow2|];lia. Qed.
-Corollary mp2_shiftl_8_r:
-  forall a, a*8 = a<<3.
-Proof. symmetry; replace 8 with (2^3);[apply N.shiftl_mul_pow2|];lia. Qed.
-Corollary mp2_shiftl_16_r:
-  forall a, a*16 = a<<4.
-Proof. symmetry; replace 16 with (2^4);[apply N.shiftl_mul_pow2|];lia. Qed.
-Corollary mp2_shiftl_32_r:
-  forall a, a*32 = a<<5.
-Proof. symmetry; replace 32 with (2^5);[apply N.shiftl_mul_pow2|];lia. Qed.
-Corollary mp2_shiftl_64_r:
-  forall a, a*64 = a<<6.
-Proof. symmetry; replace 64 with (2^6);[apply N.shiftl_mul_pow2|];lia. Qed.
-Corollary mp2_shiftl_2_l:
-  forall a, 2*a = a<<1.
-Proof. symmetry; rewrite N.mul_comm; replace 2 with (2^1);[apply N.shiftl_mul_pow2|];lia. Qed.
-Corollary mp2_shiftl_4_l:
-  forall a, 4*a = a<<2.
-Proof. symmetry; rewrite N.mul_comm; replace 4 with (2^2);[apply N.shiftl_mul_pow2|];lia. Qed.
-Corollary mp2_shiftl_8_l:
-  forall a, 8*a = a<<3.
-Proof. symmetry; rewrite N.mul_comm; replace 8 with (2^3);[apply N.shiftl_mul_pow2|];lia. Qed.
-Corollary mp2_shiftl_16_l:
-  forall a, 16*a = a<<4.
-Proof. symmetry; rewrite N.mul_comm; replace 16 with (2^4);[apply N.shiftl_mul_pow2|];lia. Qed.
-Corollary mp2_shiftl_32_l:
-  forall a, 32*a = a<<5.
-Proof. symmetry; rewrite N.mul_comm; replace 32 with (2^5);[apply N.shiftl_mul_pow2|];lia. Qed.
-Corollary mp2_shiftl_64_l:
-  forall a, 64*a = a<<6.
-Proof. symmetry; rewrite N.mul_comm; replace 64 with (2^6);[apply N.shiftl_mul_pow2|];lia. Qed.
+Local Corollary mp2_shiftl_2_r:  forall a, a* 2 = a<<1. Proof. symmetry; change  2 with (2^1); apply N.shiftl_mul_pow2. Qed.
+Local Corollary mp2_shiftl_4_r:  forall a, a* 4 = a<<2. Proof. symmetry; change  4 with (2^2); apply N.shiftl_mul_pow2. Qed.
+Local Corollary mp2_shiftl_8_r:  forall a, a* 8 = a<<3. Proof. symmetry; change  8 with (2^3); apply N.shiftl_mul_pow2. Qed.
+Local Corollary mp2_shiftl_16_r: forall a, a*16 = a<<4. Proof. symmetry; change 16 with (2^4); apply N.shiftl_mul_pow2. Qed.
+Local Corollary mp2_shiftl_32_r: forall a, a*32 = a<<5. Proof. symmetry; change 32 with (2^5); apply N.shiftl_mul_pow2. Qed.
+Local Corollary mp2_shiftl_64_r: forall a, a*64 = a<<6. Proof. symmetry; change 64 with (2^6); apply N.shiftl_mul_pow2. Qed.
 
-Corollary mp2_shiftr_2:
-  forall a, a/2 = a>>1.
-Proof. symmetry; replace 2 with (2^1);[apply N.shiftr_div_pow2|];lia. Qed.
-Corollary mp2_shiftr_4:
-  forall a, a/4 = a>>2.
-Proof. symmetry; replace 4 with (2^2);[apply N.shiftr_div_pow2|];lia. Qed.
-Corollary mp2_shiftr_8:
-  forall a, a/8 = a>>3.
-Proof. symmetry; replace 8 with (2^3);[apply N.shiftr_div_pow2|];lia. Qed.
-Corollary mp2_shiftr_16:
-  forall a, a/16 = a>>4.
-Proof. symmetry; replace 16 with (2^4);[apply N.shiftr_div_pow2|];lia. Qed.
-Corollary mp2_shiftr_32:
-  forall a, a/32 = a>>5.
-Proof. symmetry; replace 32 with (2^5);[apply N.shiftr_div_pow2|];lia. Qed.
-Corollary mp2_shiftr_64:
-  forall a, a/64 = a>>6.
-Proof. symmetry; replace 64 with (2^6);[apply N.shiftr_div_pow2|];lia. Qed.
+Local Corollary mp2_shiftl_2_l:  forall a,  2*a = a<<1. Proof. symmetry; rewrite N.mul_comm; change  2 with (2^1); apply N.shiftl_mul_pow2. Qed.
+Local Corollary mp2_shiftl_4_l:  forall a,  4*a = a<<2. Proof. symmetry; rewrite N.mul_comm; change  4 with (2^2); apply N.shiftl_mul_pow2. Qed.
+Local Corollary mp2_shiftl_8_l:  forall a,  8*a = a<<3. Proof. symmetry; rewrite N.mul_comm; change  8 with (2^3); apply N.shiftl_mul_pow2. Qed.
+Local Corollary mp2_shiftl_16_l: forall a, 16*a = a<<4. Proof. symmetry; rewrite N.mul_comm; change 16 with (2^4); apply N.shiftl_mul_pow2. Qed.
+Local Corollary mp2_shiftl_32_l: forall a, 32*a = a<<5. Proof. symmetry; rewrite N.mul_comm; change 32 with (2^5); apply N.shiftl_mul_pow2. Qed.
+Local Corollary mp2_shiftl_64_l: forall a, 64*a = a<<6. Proof. symmetry; rewrite N.mul_comm; change 64 with (2^6); apply N.shiftl_mul_pow2. Qed.
 
-Corollary mp2_mod_2:
-  forall a, a mod 2 = a mod 2^1.
-Proof. lia. Qed.
-Corollary mp2_mod_4:
-  forall a, a mod 4 = a mod 2^2.
-Proof. lia. Qed.
-Corollary mp2_mod_8:
-  forall a, a mod 8 = a mod 2^3.
-Proof. lia. Qed.
-Corollary mp2_mod_16:
-  forall a, a mod 16 = a mod 2^4.
-Proof. lia. Qed.
-Corollary mp2_mod_32:
-  forall a, a mod 32 = a mod 2^5.
-Proof. lia. Qed.
-Corollary mp2_mod_64:
-  forall a, a mod 64 = a mod 2^6.
-Proof. lia. Qed.
-Corollary mp2_mod_128:
-  forall a, a mod 128 = a mod 2^7.
-Proof. lia. Qed.
-Corollary mp2_mod_256:
-  forall a, a mod 256 = a mod 2^8.
-Proof. lia. Qed.
+Local Corollary mp2_shiftr_2:  forall a, a/ 2 = a>>1. Proof. symmetry; change  2 with (2^1); apply N.shiftr_div_pow2. Qed.
+Local Corollary mp2_shiftr_4:  forall a, a/ 4 = a>>2. Proof. symmetry; change  4 with (2^2); apply N.shiftr_div_pow2. Qed.
+Local Corollary mp2_shiftr_8:  forall a, a/ 8 = a>>3. Proof. symmetry; change  8 with (2^3); apply N.shiftr_div_pow2. Qed.
+Local Corollary mp2_shiftr_16: forall a, a/16 = a>>4. Proof. symmetry; change 16 with (2^4); apply N.shiftr_div_pow2. Qed.
+Local Corollary mp2_shiftr_32: forall a, a/32 = a>>5. Proof. symmetry; change 32 with (2^5); apply N.shiftr_div_pow2. Qed.
+Local Corollary mp2_shiftr_64: forall a, a/64 = a>>6. Proof. symmetry; change 64 with (2^6); apply N.shiftr_div_pow2. Qed.
+
+Local Corollary mp2_mod_2:   forall a, a mod   2 = a mod 2^1. Proof. lia. Qed.
+Local Corollary mp2_mod_4:   forall a, a mod   4 = a mod 2^2. Proof. lia. Qed.
+Local Corollary mp2_mod_8:   forall a, a mod   8 = a mod 2^3. Proof. lia. Qed.
+Local Corollary mp2_mod_16:  forall a, a mod  16 = a mod 2^4. Proof. lia. Qed.
+Local Corollary mp2_mod_32:  forall a, a mod  32 = a mod 2^5. Proof. lia. Qed.
+Local Corollary mp2_mod_64:  forall a, a mod  64 = a mod 2^6. Proof. lia. Qed.
+Local Corollary mp2_mod_128: forall a, a mod 128 = a mod 2^7. Proof. lia. Qed.
+Local Corollary mp2_mod_256: forall a, a mod 256 = a mod 2^8. Proof. lia. Qed.
 
 Ltac bitify :=
   rewrite ?mp2_shiftl_2_r, ?mp2_shiftl_4_r, ?mp2_shiftl_8_r,
@@ -335,38 +268,38 @@ Ltac bitify :=
           ?mp2_mod_32, ?mp2_mod_64, ?mp2_mod_128, ?mp2_mod_256
   in * |- *;
   repeat match goal with
-  | [H: _ < 2 |- _] => replace 2 with (2^1) in H by reflexivity
-  | [H: _ < 4 |- _] => replace 4 with (2^2) in H by reflexivity
-  | [H: _ < 8 |- _] => replace 8 with (2^3) in H by reflexivity
-  | [H: _ < 16 |- _] => replace 16 with (2^4) in H by reflexivity
-  | [H: _ < 32 |- _] => replace 32 with (2^5) in H by reflexivity
-  | [H: _ < 64 |- _] => replace 64 with (2^6) in H by reflexivity
-  | [H: _ < 128 |- _] => replace 128 with (2^7) in H by reflexivity
-  | [H: _ < 256 |- _] => replace 256 with (2^8) in H by reflexivity
-  | [H: _ <= 2 |- _] => replace 2 with (2^1) in H by reflexivity
-  | [H: _ <= 4 |- _] => replace 4 with (2^2) in H by reflexivity
-  | [H: _ <= 8 |- _] => replace 8 with (2^3) in H by reflexivity
-  | [H: _ <= 16 |- _] => replace 16 with (2^4) in H by reflexivity
-  | [H: _ <= 32 |- _] => replace 32 with (2^5) in H by reflexivity
-  | [H: _ <= 64 |- _] => replace 64 with (2^6) in H by reflexivity
-  | [H: _ <= 128 |- _] => replace 128 with (2^7) in H by reflexivity
-  | [H: _ <= 256 |- _] => replace 256 with (2^8) in H by reflexivity
-  | [H: _ > 2 |- _] => replace 2 with (2^1) in H by reflexivity
-  | [H: _ > 4 |- _] => replace 4 with (2^2) in H by reflexivity
-  | [H: _ > 8 |- _] => replace 8 with (2^3) in H by reflexivity
-  | [H: _ > 16 |- _] => replace 16 with (2^4) in H by reflexivity
-  | [H: _ > 32 |- _] => replace 32 with (2^5) in H by reflexivity
-  | [H: _ > 64 |- _] => replace 64 with (2^6) in H by reflexivity
-  | [H: _ > 128 |- _] => replace 128 with (2^7) in H by reflexivity
-  | [H: _ > 256 |- _] => replace 256 with (2^8) in H by reflexivity
-  | [H: _ >= 2 |- _] => replace 2 with (2^1) in H by reflexivity
-  | [H: _ >= 4 |- _] => replace 4 with (2^2) in H by reflexivity
-  | [H: _ >= 8 |- _] => replace 8 with (2^3) in H by reflexivity
-  | [H: _ >= 16 |- _] => replace 16 with (2^4) in H by reflexivity
-  | [H: _ >= 32 |- _] => replace 32 with (2^5) in H by reflexivity
-  | [H: _ >= 64 |- _] => replace 64 with (2^6) in H by reflexivity
-  | [H: _ >= 128 |- _] => replace 128 with (2^7) in H by reflexivity
-  | [H: _ >= 256 |- _] => replace 256 with (2^8) in H by reflexivity
+  | [H: ?x < 2 |- _] => change (x < 2) with (x < 2^1) in H
+  | [H: ?x < 4 |- _] => change (x < 4) with (x < 2^2) in H
+  | [H: ?x < 8 |- _] => change (x < 8) with (x < 2^3) in H
+  | [H: ?x < 16 |- _] => change (x < 16) with (x < 2^4) in H
+  | [H: ?x < 32 |- _] => change (x < 32) with (x < 2^5) in H
+  | [H: ?x < 64 |- _] => change (x < 64) with (x < 2^6) in H
+  | [H: ?x < 128 |- _] => change (x < 128) with (x < 2^7) in H
+  | [H: ?x < 256 |- _] => change (x < 256) with (x < 2^8) in H
+  | [H: ?x <= 2 |- _] => change (x <= 2) with (x <= 2^1) in H
+  | [H: ?x <= 4 |- _] => change (x <= 4) with (x <= 2^2) in H
+  | [H: ?x <= 8 |- _] => change (x <= 8) with (x <= 2^3) in H
+  | [H: ?x <= 16 |- _] => change (x <= 16) with (x <= 2^4) in H
+  | [H: ?x <= 32 |- _] => change (x <= 32) with (x <= 2^5) in H
+  | [H: ?x <= 64 |- _] => change (x <= 64) with (x <= 2^6) in H
+  | [H: ?x <= 128 |- _] => change (x <= 128) with (x <= 2^7) in H
+  | [H: ?x <= 256 |- _] => change (x <= 256) with (x <= 2^8) in H
+  | [H: ?x > 2 |- _] => change (x > 2) with (x > 2^1) in H
+  | [H: ?x > 4 |- _] => change (x > 4) with (x > 2^2) in H
+  | [H: ?x > 8 |- _] => change (x > 8) with (x > 2^3) in H
+  | [H: ?x > 16 |- _] => change (x > 16) with (x > 2^4) in H
+  | [H: ?x > 32 |- _] => change (x > 32) with (x > 2^5) in H
+  | [H: ?x > 64 |- _] => change (x > 64) with (x > 2^6) in H
+  | [H: ?x > 128 |- _] => change (x > 128) with (x > 2^7) in H
+  | [H: ?x > 256 |- _] => change (x > 256) with (x > 2^8) in H
+  | [H: ?x >= 2 |- _] => change (x >= 2) with (x >= 2^1) in H
+  | [H: ?x >= 4 |- _] => change (x >= 4) with (x >= 2^2) in H
+  | [H: ?x >= 8 |- _] => change (x >= 8) with (x >= 2^3) in H
+  | [H: ?x >= 16 |- _] => change (x >= 16) with (x >= 2^4) in H
+  | [H: ?x >= 32 |- _] => change (x >= 32) with (x >= 2^5) in H
+  | [H: ?x >= 64 |- _] => change (x >= 64) with (x >= 2^6) in H
+  | [H: ?x >= 128 |- _] => change (x >= 128) with (x >= 2^7) in H
+  | [H: ?x >= 256 |- _] => change (x >= 256) with (x >= 2^8) in H
   end.
 
 Ltac algify :=

@@ -376,8 +376,6 @@ End NInduction.
 
 
 Section NArithSupplement.
-Notation "x << y" := (N.shiftl x y) (at level 55, left associativity). (* logical shift-left *)
-Notation "x >> y" := (N.shiftr x y) (at level 55, left associativity). (* logical shift-right *)
 Theorem add_div_base:
   forall a b, b <> 0 -> (b + a) / b =  N.succ (a / b).
 Proof.
@@ -6158,7 +6156,7 @@ Theorem cbits_equals:
     (Bound1: lo1 < 2^w) (Bound2: lo2 < 2^w),
   hi1 = hi2 /\ lo1 = lo2.
 Proof.
-  unfold cbits; intros. Search N.lor N.add. rewrite !lor_plus, !N.shiftl_mul_pow2, !(N.mul_comm _ (2^w)) in EQ.
+  unfold cbits; intros. rewrite !lor_plus, !N.shiftl_mul_pow2, !(N.mul_comm _ (2^w)) in EQ.
   pose proof (Q1:=N.mod_unique (2^w*hi1+lo1) _ hi1 _ Bound1 (eq_refl _)).
   rewrite EQ, N.add_comm, N.mul_comm, N.Div0.mod_add, (N.mod_small _ _ Bound2) in Q1. subst lo2.
   rewrite !(N.add_comm _ lo1) in EQ. apply Nplus_reg_l in EQ.
@@ -6175,7 +6173,7 @@ Theorem getmem_inner:
     s + len' <= len ->
     getmem w e len' m1 (a1+s) = getmem w e len' m2 (a2+s).
 Proof.
-  intros. Search getmem. destruct e; cycle 1.
+  intros. destruct e; cycle 1.
   - replace len with (s+(len-s)) in H by lia.
     rewrite !getmem_split in H. apply cbits_equals in H; try apply getmem_bound.
     destruct H as (H & _). replace (len - s) with (len'+(len - s - len')) in H by lia.
@@ -8710,7 +8708,7 @@ Theorem stepsof_tl {A:Type}:
       end.
 Proof.
   intros. destruct t2 as [|h t2'] eqn:T2; simpl in *.
-  destruct t1;[discriminate|]. unfold stepsof in *. simpl (tl _) in *. Search (combine) tl.
+  destruct t1;[discriminate|]. unfold stepsof in *. simpl (tl _) in *.
   destruct t1;[discriminate|]. simpl in *. inversion H. reflexivity.
 
   destruct t2'. destruct t1; simpl. all: rewrite ?app_nil_l in H; try discriminate.
