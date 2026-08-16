@@ -8685,21 +8685,6 @@ Proof.
     extensionality t. specialize (INVXP2 t). destruct t. reflexivity. simpl. rewrite (CI1 _ (_++_)). apply CI1.
 Qed.
 
-CoInductive CoForall {A : Type} (P : A -> Prop) : list A -> Prop :=
-    CoForall_nil : CoForall P nil
-  | CoForall_cons : forall (x : A) (l : list A),
-                  P x -> CoForall P l -> CoForall P (x :: l).
-
-Lemma forall_coforall {A:Type}:
-  forall (P : A->Prop) (l:list A),
-  CoForall P l <-> Forall P l.
-Proof.
-Admitted.
-
-CoInductive coeq {A : Type} (x : A) : A -> Prop :=  coeq_refl : coeq x x.
-
-Definition coexec_prog p t := CoForall (can_step p) (stepsof t).
-
 Theorem stepsof_tl {A:Type}:
     forall a l (t2 t1:list A), a::l = stepsof (t2++t1) ->
       match t2 with
@@ -8723,7 +8708,6 @@ Qed.
 Definition nextinv p Invs xp b t : Prop :=
   forall (XP: exec_prog p t), nextinv' p Invs xp b t.
 
-(* Why do we want this? *)
 Theorem exec_prog_nextinv:
   forall p Invs xp b t,
     (forall (XP: exec_prog p t), nextinv p Invs xp b t) ->
