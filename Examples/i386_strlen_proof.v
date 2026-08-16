@@ -67,23 +67,7 @@ Definition strlen_exit (t:trace) :=
    case, all program points have the same invariant, so we return the same for all. *)
 Definition esp_invs (esp:N) (t:trace) :=
   match t with (Addr a,s)::_ =>
-    match a with
-    | 0 | 4 | 9 | 11 | 13
-    | 15 | 17 | 23 | 24 | 26
-    | 32 | 33 | 36 | 38 | 40
-    | 46 | 47 | 49 | 51 | 54
-    | 56 | 62 | 63 | 65 | 67
-    | 73 | 75 | 77 | 80 | 82
-    | 88 | 89 | 91 | 93 | 99
-    | 101 | 103 | 106 | 108 | 114
-    | 115 | 117 | 119 | 125 | 127
-    | 129 | 132 | 134 | 140 | 141
-    | 143 | 145 | 151 | 153 | 156
-    | 162 | 165 | 167 | 168 | 170
-    | 172 | 175 | 176 | 179 | 181
-    | 182 | 186 => Some (s R_ESP = esp)
-    | _ => None
-    end
+    Some (s R_ESP = esp)
   | _ => None end.
 
 (* Now we pose a theorem that asserts that this invariant-set is satisfied at

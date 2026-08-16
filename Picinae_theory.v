@@ -5324,9 +5324,9 @@ Definition true_inv i := match i with Some P => P | None => False end.
 Definition trueif_inv i := match i with Some P => P | None => True end.
 Definition get_precondition {S T} (p: S -> _ -> option T) Invs (xp: _ -> bool) a1 (s1:S) t1 : option Prop :=
   if xp ((Addr a1,s1)::t1) then None
-  else if (match p s1 a1 with _ => true end) then Invs ((Addr a1,s1)::t1) else None.
+  else if p s1 a1 then Invs ((Addr a1,s1)::t1) else None.
 Definition get_postcondition {S T} (p: S -> _ -> option T) Invs (xp: _ -> bool) a1 (s1:S) t1 : option Prop :=
-  if xp ((Addr a1,s1)::t1) then if (match p s1 a1 with _ => true end) then
+  if xp ((Addr a1,s1)::t1) then if p s1 a1 then
     Some match Invs ((Addr a1,s1)::t1) with Some P => P | None => True end
   else None else None.
 
@@ -8434,10 +8434,10 @@ Proof.
         rewrite <- app_comm_cons, <- app_removelast_last by discriminate. reflexivity.
       apply Forall_nil.
       apply UT.
-      rewrite NXP(* ,IL' *). assumption.
+      rewrite NXP,IL'. assumption.
 
     intros.
-    assert (INV' := INV _ _ _ _ SPL). (* rewrite IL in INV'. *)
+    assert (INV' := INV _ _ _ _ SPL). rewrite IL in INV'.
     simpl in UT. inversion UT; subst. clear UT.
     eenough (H:_); [ apply PRE0 with (b:=b) in H; [clear PRE0 | eexists;reflexivity]
                    | apply H2 ].
