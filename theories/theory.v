@@ -905,7 +905,7 @@ Lemma Z2N_inj_lxor:
   forall z1 z2, (0 <= z1 -> 0 <= z2 -> Z.to_N (Z.lxor z1 z2) = N.lxor (Z.to_N z1) (Z.to_N z2))%Z.
 Proof.
   intros. destruct z1, z2; try (reflexivity + contradiction).
-  apply N2Z.id. 
+  apply N2Z.id.
 Qed.
 
 Lemma N2Z_inj_ldiff:
@@ -919,7 +919,7 @@ Lemma Z2N_inj_ldiff:
   forall z1 z2, (0 <= z1 -> 0 <= z2 -> Z.to_N (Z.ldiff z1 z2) = N.ldiff (Z.to_N z1) (Z.to_N z2))%Z.
 Proof.
   intros. destruct z1, z2; try (reflexivity + contradiction).
-  apply N2Z.id. 
+  apply N2Z.id.
 Qed.
 
 Lemma N2Z_inj_shiftl:
@@ -1399,7 +1399,7 @@ Theorem canonicalZ_neg_l:
   forall w z, (w < 0)%Z -> canonicalZ w z = z.
 Proof.
   intros. unfold canonicalZ.
-  rewrite (Z.pow_neg_r _ w), Z.mod_0_r by assumption. apply Z.add_simpl_r.
+  rewrite (Z.pow_neg_r _ w), Zmod_0_r by assumption. apply Z.add_simpl_r.
 Qed.
 
 Theorem canonicalZ_0_l:
@@ -1741,7 +1741,7 @@ Theorem canonicalZ_nonneg:
   forall w z, (z mod 2^w < 2^Z.pred w -> canonicalZ w z = z mod 2^w)%Z.
 Proof.
   intros. destruct (Z.lt_trichotomy w 0) as [H2|[H2|H2]].
-    rewrite Z.pow_neg_r, Z.mod_0_r by exact H2. apply canonicalZ_neg_l. assumption.
+    rewrite Z.pow_neg_r, Zmod_0_r by exact H2. apply canonicalZ_neg_l. assumption.
     subst w. rewrite Z.mod_1_r. apply canonicalZ_0_l.
     erewrite <- canonicalZ_mod_pow2; [|apply Z.lt_le_incl, H2 | reflexivity].
       unfold canonicalZ. rewrite Z.mod_small, Z.add_simpl_r. reflexivity. split.
@@ -2180,7 +2180,7 @@ Lemma Z_shiftl_eqm:
   forall w z1 z2, (0 <= z2)%Z -> eqm (2^w) (Z.shiftl z1 z2) (Z.shiftl (z1 mod 2^w) z2).
 Proof.
   intros. unfold eqm. destruct (Z.neg_nonneg_cases w) as [H1|H1].
-    rewrite Z.pow_neg_r, !Z.mod_0_r by assumption. reflexivity.
+    rewrite Z.pow_neg_r, !Zmod_0_r by assumption. reflexivity.
 
     apply Z.bits_inj'. intros i H2.
     rewrite <- !Z.land_ones, !Z.land_spec, !Z.shiftl_spec, Z.land_spec, !Z.testbit_ones, (proj2 (Z.leb_le 0 i) H2) by assumption.
@@ -2214,7 +2214,7 @@ Qed.
 Theorem toZ_shiftl:
   forall w n1 n2, toZ w (N.shiftl n1 n2) = canonicalZ (Z.of_N w) (Z.shiftl (Z.of_N n1) (Z.of_N n2)).
 Proof.
-  intros. unfold toZ. rewrite N2Z_inj_shiftl. reflexivity. 
+  intros. unfold toZ. rewrite N2Z_inj_shiftl. reflexivity.
 Qed.
 
 Theorem shiftr_sbop:
@@ -2422,7 +2422,7 @@ Proof.
           split. exact H1. exact H2.
         rewrite Z.ones_spec_high.
           rewrite !Bool.andb_false_r. reflexivity.
-          split. apply N2Z.is_nonneg. exact H2.  
+          split. apply N2Z.is_nonneg. exact H2.
     rewrite N2Z.id. reflexivity.
     apply hibits_signed_range. intros. rewrite !Z.lxor_spec.
       repeat erewrite (signed_range_hibits i w _ (toZ_bounds w _) H). reflexivity.
@@ -3116,7 +3116,7 @@ Proof.
         revert H. apply N.nlt_ge, H2.
         revert H'. apply N.nle_gt, H2.
     split.
-      apply N.nle_gt. intro H'. revert H. apply N.nlt_ge. apply le_msub_iff. left. exact H'. 
+      apply N.nle_gt. intro H'. revert H. apply N.nlt_ge. apply le_msub_iff. left. exact H'.
       edestruct N.le_gt_cases.
         left. eassumption.
         right. apply N.nle_gt. intro H'. revert H. apply N.nlt_ge, le_msub_iff.
@@ -3238,7 +3238,7 @@ Proof.
   intros. destruct (N.le_gt_cases y w).
     rewrite N.shiftr_div_pow2. apply N.Div0.div_lt_upper_bound.
       rewrite <- N.pow_add_r, N.add_sub_assoc, N.add_comm, N.add_sub; assumption.
-    destruct x as [|x]. 
+    destruct x as [|x].
       rewrite N.shiftr_0_l. apply mp2_gt_0.
       rewrite N.shiftr_eq_0. apply mp2_gt_0. apply N.log2_lt_pow2.
         reflexivity.
@@ -5949,7 +5949,7 @@ Proof.
           apply nextinv_nocode; assumption.
       apply nextinv_noinv; assumption.
     apply nextinv_raise. inversion NI; subst.
-      simpl in TRU. destruct (Invs _). assumption. destruct (xp _); assumption. 
+      simpl in TRU. destruct (Invs _). assumption. destruct (xp _); assumption.
 Qed.
 
 Theorem prove_invs':
