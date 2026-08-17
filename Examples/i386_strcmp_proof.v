@@ -43,7 +43,16 @@ Proof.
   Picinae_typecheck.
 Qed.
 
-(* Example #2: Memory safety
+(* Example #2: Memory access safety
+   We also prove the program is well-typed w.r.t. memory accesses.
+   Memory-typedness is erased from values in the store, so unlike the type safety above,
+   this is not used in proofs below. *)
+Theorem strcmp_wellmtyped: wellmtyped_prog x86mtypctx strcmp_i386.
+Proof.
+  Picinae_mtypecheck.
+Qed.
+
+(* Example #3: Memory safety
    Strcmp contains no memory-writes, and is therefore trivially memory-safe. *)
 Theorem strcmp_preserves_memory:
   forall_endstates strcmp_i386 (fun _ s _ s' => s V_MEM32 = s' V_MEM32).
@@ -54,7 +63,7 @@ Qed.
 
 
 
-(* Example #3: Architectural calling convention compliance
+(* Example #4: Architectural calling convention compliance
    Strcmp does not write to callee-save registers (e.g., EBX)
    and it restores ESP on exit. *)
 
@@ -141,7 +150,7 @@ Qed.
 
 
 
-(* Example #4: Partial correctness
+(* Example #5: Partial correctness
    Finally, we can prove that strcmp returns the correct answer: EAX equals zero
    if the input strings are equal, EAX is negative if the first lexicographically
    precedes the second, and EAX is positive otherwise. *)
@@ -225,7 +234,7 @@ Proof.
   intros. erewrite startof_prefix in ENTRY; try eassumption.
 
     (* Example of how to use a satisfies_all lemma: *)
-    eapply use_satall_lemma. 
+    eapply use_satall_lemma.
       assumption.
       apply strcmp_preserves_esp; eassumption.
     intro ESP. simpl in ESP.

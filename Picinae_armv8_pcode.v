@@ -35,6 +35,7 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_mstatics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
@@ -91,6 +92,14 @@ Definition arm8typctx v :=
   | R_TMP_LDXN => Some 64
 end.
 
+(* Declare the types (i.e., bitwidths) of all the CPU registers: *)
+Definition arm8mtypctx v :=
+  match v with
+  | V_MEM32 | V_MEM64 => Some MemT
+  | V_TEMP _ => None
+  | _ => Some NumT
+end.
+
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
    input to the Architecture module, so that it understands how the variable
    identifiers chosen above are syntactically written and how to decide whether
@@ -109,7 +118,9 @@ Module ARM8Arch <: Architecture.
   Definition var := Var.t.
   Definition store := var -> N.
   Definition typctx := var -> option bitwidth.
+  Definition mtypctx := var -> option typ.
   Definition archtyps := arm8typctx.
+  Definition marchtyps := arm8mtypctx.
 
   Definition mem_readable s a := N.testbit (s A_READ) a = true.
   Definition mem_writable s a := N.testbit (s A_WRITE) a = true.
@@ -122,6 +133,8 @@ Module Theory_arm8 := PicinaeTheory IL_arm8.
 Export Theory_arm8.
 Module Statics_arm8 := PicinaeStatics IL_arm8 Theory_arm8.
 Export Statics_arm8.
+Module MStatics_arm8 := PicinaeMStatics IL_arm8 Theory_arm8.
+Export MStatics_arm8.
 Module FInterp_arm8 := PicinaeFInterp IL_arm8 Theory_arm8 Statics_arm8.
 Export FInterp_arm8.
 Module PSimpl_arm8 := Picinae_Simplifier_Base IL_arm8.

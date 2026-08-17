@@ -26,6 +26,13 @@ Proof.
   Picinae_typecheck.
 Qed.
 
+(* Verify that the lifted IL is type-safe. *)
+Theorem strlen_wellmtyped: wellmtyped_prog arm7mtypctx strlen_arm.
+Proof.
+  Picinae_mtypecheck.
+Qed.
+
+
 (* Strlen does not corrupt memory. *)
 Theorem strlen_preserves_memory:
   forall_endstates strlen_arm (fun _ s _ s' => s V_MEM32 = s' V_MEM32).

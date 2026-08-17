@@ -21,6 +21,15 @@ Proof.
   Picinae_typecheck.
 Qed.
 
+(* Memory access safety:
+   We also prove the program is well-typed w.r.t. memory accesses.
+   Memory-typedness is erased from values in the store, so unlike the type safety above,
+   this is not used in proofs below. *)
+Theorem wcsspn_wellmtyped: wellmtyped_prog x86mtypctx wcsspn_i386.
+Proof.
+  Picinae_mtypecheck.
+Qed.
+
 (* Define function exit points *)
 Definition wcsspn_exit (t:trace) :=
   match t with (Addr a,s)::_ => match a with

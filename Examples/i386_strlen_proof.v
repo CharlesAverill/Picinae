@@ -22,7 +22,16 @@ Proof.
   Picinae_typecheck.
 Qed.
 
-(* Example #2: Memory safety
+(* Example #2: Memory access safety
+   We also prove the program is well-typed w.r.t. memory accesses.
+   Memory-typedness is erased from values in the store, so unlike the type safety above,
+   this is not used in proofs below. *)
+Theorem strlen_wellmtyped: wellmtyped_prog x86mtypctx strlen_i386.
+Proof.
+  Picinae_mtypecheck.
+Qed.
+
+(* Example #3: Memory safety
    Strlen contains no memory-writes, and is therefore trivially memory-safe. *)
 Theorem strlen_preserves_memory:
   forall_endstates strlen_i386 (fun _ s _ s' => s V_MEM32 = s' V_MEM32).
@@ -33,7 +42,7 @@ Qed.
 
 
 
-(* Example #3: Architectural calling convention compliance
+(* Example #4: Architectural calling convention compliance
    Strlen does not write to callee-save registers (e.g., EBX)
    and it restores ESP on exit. *)
 
@@ -125,7 +134,7 @@ Proof.
 Qed.
 
 
-(* Example #4: Partial correctness
+(* Example #5: Partial correctness
    Proving full partial correctness of strlen is challenging because strlen's
    binary implementation relies on some obscure properties of bit arithmetic
    to more efficiently find zeros in groups of bytes instead of one at a time.

@@ -35,6 +35,7 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_mstatics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
@@ -91,6 +92,13 @@ Definition arm7typctx v :=
   | V_TEMP _ => None
 end.
 
+Definition arm7mtypctx v :=
+  match v with
+  | V_MEM32 | V_MEM64 => Some MemT
+  | V_TEMP _ => None
+  | _ => Some NumT
+end.
+
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
    input to the Architecture module, so that it understands how the variable
    identifiers chosen above are syntactically written and how to decide whether
@@ -109,7 +117,9 @@ Module ARM7Arch <: Architecture.
   Definition var := Var.t.
   Definition store := var -> N.
   Definition typctx := var -> option bitwidth.
+  Definition mtypctx := var -> option typ.
   Definition archtyps := arm7typctx.
+  Definition marchtyps := arm7mtypctx.
 
   Definition mem_readable s a := N.testbit (s A_READ) a = true.
   Definition mem_writable s a := N.testbit (s A_WRITE) a = true.
@@ -122,6 +132,8 @@ Module Theory_arm7 := PicinaeTheory IL_arm7.
 Export Theory_arm7.
 Module Statics_arm7 := PicinaeStatics IL_arm7 Theory_arm7.
 Export Statics_arm7.
+Module MStatics_arm7 := PicinaeMStatics IL_arm7 Theory_arm7.
+Export MStatics_arm7.
 Module FInterp_arm7 := PicinaeFInterp IL_arm7 Theory_arm7 Statics_arm7.
 Export FInterp_arm7.
 Module PSimpl_arm7 := Picinae_Simplifier_Base IL_arm7.

@@ -35,6 +35,7 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_mstatics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
@@ -92,6 +93,14 @@ Definition x86typctx v :=
   | V_TEMP _ => None
   end.
 
+(* Declare the types (i.e., bitwidths) of all the CPU registers: *)
+Definition x86mtypctx v :=
+  match v with
+  | V_MEM32 => Some MemT
+  | V_TEMP _ => None
+  | _ => Some NumT
+  end.
+
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
    input to the Architecture module, so that it understands how the variable
    identifiers chosen above are syntactically written and how to decide whether
@@ -110,7 +119,9 @@ Module X86Arch <: Architecture.
   Definition var := Var.t.
   Definition store := var -> N.
   Definition typctx := var -> option bitwidth.
+  Definition mtypctx := var -> option typ.
   Definition archtyps := x86typctx.
+  Definition marchtyps := x86mtypctx.
 
   Definition mem_readable s a := N.testbit (s A_READ) a = true.
   Definition mem_writable s a := N.testbit (s A_WRITE) a = true.
@@ -123,6 +134,8 @@ Module Theory_i386 := PicinaeTheory IL_i386.
 Export Theory_i386.
 Module Statics_i386 := PicinaeStatics IL_i386 Theory_i386.
 Export Statics_i386.
+Module MStatics_i386 := PicinaeMStatics IL_i386 Theory_i386.
+Export MStatics_i386.
 Module FInterp_i386 := PicinaeFInterp IL_i386 Theory_i386 Statics_i386.
 Export FInterp_i386.
 Module PSimpl_i386 := Picinae_Simplifier_Base IL_i386.

@@ -20,17 +20,24 @@ Open Scope N.
 Open Scope bool.
 
 (* The ARMv8 lifter models non-writable code. *)
-Theorem strcasecmp_nwc: 
+Theorem strcasecmp_nwc:
 	forall s2 s1, strcasecmp s1 = strcasecmp s2.
 Proof.
 	reflexivity.
 Qed.
 
 (* The ARMv8 lifter produces well-typed IL. *)
-Theorem strcasecmp_welltyped: 
+Theorem strcasecmp_welltyped:
 	welltyped_prog arm8typctx strcasecmp.
 Proof.
   Picinae_typecheck.
+Qed.
+
+(* The ARMv8 lifter produces well-typed IL. *)
+Theorem strcasecmp_wellmtyped:
+	wellmtyped_prog arm8mtypctx strcasecmp.
+Proof.
+  Picinae_mtypecheck.
 Qed.
 
 (* Define binary string case-insensitivity. *)

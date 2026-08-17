@@ -53,6 +53,10 @@ Arguments iseq {A EqDec} a b : simpl never.
 Notation "x == y" := (iseq x y) (at level 70, no associativity).
 #[export] Instance NEqDec : EqDec N := { iseq := N.eq_dec }.
 
+Inductive typ : Type := NumT | MemT.
+Definition typ_dec : forall (a b:typ), {a=b}+{a<>b}. Proof. decide equality. Defined.
+#[export] Instance TypEqDec : EqDec typ := { iseq := typ_dec }.
+
 (* When there is an equality decision procedure for a function f's domain,
    we can "update" f by remapping a domain element x to a new co-domain
    element y. *)
@@ -250,7 +254,6 @@ Definition startof {A} := @List.last A.
 Definition ostartof {A} (l:list A) := match l with nil => None | a::t => Some (startof t a) end.
 Definition start_state {A} t (xs: exit * A) := snd (startof t xs).
 
-
 (* Each Picinae instantiation takes a machine architecture as input, expressed as
    a module that defines a type "var" for IL variables, a typing context "typctx"
    that defines the type of each IL variable, the bitwidth mem_bits of memory reads
@@ -262,8 +265,10 @@ Module Type Architecture.
   Definition var := Var.t.
   Definition store := var -> N.
   Definition typctx := var -> option bitwidth.
+  Definition mtypctx := var -> option typ.
 
   Parameter archtyps : typctx.
+  Parameter marchtyps : mtypctx.
   Parameter mem_readable: store -> addr -> Prop.
   Parameter mem_writable: store -> addr -> Prop.
 End Architecture.

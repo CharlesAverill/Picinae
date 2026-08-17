@@ -35,6 +35,7 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_mstatics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
@@ -94,6 +95,14 @@ Definition x64typctx v :=
   | V_TEMP _ => None
   end.
 
+(* Declare the types (i.e., bitwidths) of all the CPU registers: *)
+Definition x64mtypctx v :=
+  match v with
+  | V_MEM64 => Some MemT
+  | V_TEMP _ => None
+  | _ => Some NumT
+  end.
+
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
    input to the Architecture module, so that it understands how the variable
    identifiers chosen above are syntactically written and how to decide whether
@@ -112,7 +121,9 @@ Module X64Arch <: Architecture.
   Definition var := Var.t.
   Definition store := var -> N.
   Definition typctx := var -> option bitwidth.
+  Definition mtypctx := var -> option typ.
   Definition archtyps := x64typctx.
+  Definition marchtyps := x64mtypctx.
 
   Definition mem_readable s a := N.testbit (s A_READ) a = true.
   Definition mem_writable s a := N.testbit (s A_WRITE) a = true.
@@ -125,6 +136,8 @@ Module Theory_amd64 := PicinaeTheory IL_amd64.
 Export Theory_amd64.
 Module Statics_amd64 := PicinaeStatics IL_amd64 Theory_amd64.
 Export Statics_amd64.
+Module MStatics_amd64 := PicinaeMStatics IL_amd64 Theory_amd64.
+Export MStatics_amd64.
 Module FInterp_amd64 := PicinaeFInterp IL_amd64 Theory_amd64 Statics_amd64.
 Export FInterp_amd64.
 Module PSimpl_amd64 := Picinae_Simplifier_Base IL_amd64.

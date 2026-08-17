@@ -17,6 +17,12 @@ Proof.
   Picinae_typecheck.
 Qed.
 
+(* Verify that the lifted IL is type-safe. *)
+Theorem memset_wellmtyped: wellmtyped_prog arm7mtypctx memset_arm.
+Proof.
+  Picinae_mtypecheck.
+Qed.
+
 Definition memset_exit (t:trace) :=
   match t with (Addr a,s)::_ => match a with
   | 120 => true
@@ -89,7 +95,7 @@ Proof.
   intros. extensionality len. unfold filled. apply f_equal2.
     extensionality i. extensionality m'. change 8 with (8*1). apply setmem_mod_r.
     reflexivity.
-Qed. 
+Qed.
 
 (* Writing n more bytes with a bounds-check on each index safely extends the
    filled length by n. *)

@@ -35,6 +35,7 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_mstatics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
@@ -71,6 +72,14 @@ Definition rvtypctx v :=
   | _ => Some 32
   end.
 
+(* Declare the types (i.e., bitwidths) of all the CPU registers: *)
+Definition rvmtypctx v :=
+  match v with
+  | V_MEM32 => Some MemT
+  | V_TMP => None
+  | _ => Some NumT
+  end.
+
 (* Create a UsualDecidableType module (which is an instance of Typ) to give as
    input to the Architecture module, so that it understands how the variable
    identifiers chosen above are syntactically written and how to decide whether
@@ -89,7 +98,9 @@ Module RISCVArch <: Architecture.
   Definition var := Var.t.
   Definition store := var -> N.
   Definition typctx := var -> option bitwidth.
+  Definition mtypctx := var -> option typ.
   Definition archtyps := rvtypctx.
+  Definition marchtyps := rvmtypctx.
 
   Definition mem_readable s a := N.testbit (s A_READ) a = true.
   Definition mem_writable s a := N.testbit (s A_WRITE) a = true.
@@ -102,6 +113,8 @@ Module Theory_RISCV := PicinaeTheory IL_RISCV.
 Export Theory_RISCV.
 Module Statics_RISCV := PicinaeStatics IL_RISCV Theory_RISCV.
 Export Statics_RISCV.
+Module MStatics_RISCV := PicinaeMStatics IL_RISCV Theory_RISCV.
+Export MStatics_RISCV.
 Module FInterp_RISCV := PicinaeFInterp IL_RISCV Theory_RISCV Statics_RISCV.
 Export FInterp_RISCV.
 Module PSimpl_RISCV := Picinae_Simplifier_Base IL_RISCV.
@@ -244,7 +257,7 @@ Definition rv_decode_binop f :=
   end.
 
 Definition rv_decode_branch f :=
-  match f with 
+  match f with
   | 0 => R5_Beq | 1 => R5_Bne | 4 => R5_Blt | 5 => R5_Bge | 6 => R5_Bltu | 7 => R5_Bgeu
   | _ => (fun _ _ _ => R5_InvalidI)
   end.
