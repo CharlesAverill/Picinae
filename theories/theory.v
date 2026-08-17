@@ -33,12 +33,12 @@
  *)
 
 From Picinae Require Export core.
-Require Import NArith.
-Require Import ZArith.
-Require Import Program.Equality.
-Require Import FunctionalExtensionality.
-Require Import List.
-Require Setoid.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
+From Stdlib Require Import Program.Equality.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import List.
+From Stdlib Require Setoid.
 Open Scope list_scope.
 
 
@@ -1399,7 +1399,7 @@ Theorem canonicalZ_neg_l:
   forall w z, (w < 0)%Z -> canonicalZ w z = z.
 Proof.
   intros. unfold canonicalZ.
-  rewrite (Z.pow_neg_r _ w), Zmod_0_r by assumption. apply Z.add_simpl_r.
+  rewrite (Z.pow_neg_r _ w), Z.mod_0_r by assumption. apply Z.add_simpl_r.
 Qed.
 
 Theorem canonicalZ_0_l:
@@ -1741,7 +1741,7 @@ Theorem canonicalZ_nonneg:
   forall w z, (z mod 2^w < 2^Z.pred w -> canonicalZ w z = z mod 2^w)%Z.
 Proof.
   intros. destruct (Z.lt_trichotomy w 0) as [H2|[H2|H2]].
-    rewrite Z.pow_neg_r, Zmod_0_r by exact H2. apply canonicalZ_neg_l. assumption.
+    rewrite Z.pow_neg_r, Z.mod_0_r by exact H2. apply canonicalZ_neg_l. assumption.
     subst w. rewrite Z.mod_1_r. apply canonicalZ_0_l.
     erewrite <- canonicalZ_mod_pow2; [|apply Z.lt_le_incl, H2 | reflexivity].
       unfold canonicalZ. rewrite Z.mod_small, Z.add_simpl_r. reflexivity. split.
@@ -2180,7 +2180,7 @@ Lemma Z_shiftl_eqm:
   forall w z1 z2, (0 <= z2)%Z -> eqm (2^w) (Z.shiftl z1 z2) (Z.shiftl (z1 mod 2^w) z2).
 Proof.
   intros. unfold eqm. destruct (Z.neg_nonneg_cases w) as [H1|H1].
-    rewrite Z.pow_neg_r, !Zmod_0_r by assumption. reflexivity.
+    rewrite Z.pow_neg_r, !Z.mod_0_r by assumption. reflexivity.
 
     apply Z.bits_inj'. intros i H2.
     rewrite <- !Z.land_ones, !Z.land_spec, !Z.shiftl_spec, Z.land_spec, !Z.testbit_ones, (proj2 (Z.leb_le 0 i) H2) by assumption.

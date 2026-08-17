@@ -15,17 +15,15 @@ See [examples](./examples/) for a showcase of Picinae's reasoning capabilities.
 
 ## Installation
 
-1. Install [opam](https://opam.ocaml.org/doc/Install.html)
-2. Create and activate a [switch](https://ocaml.org/docs/opam-switch-introduction) for Picinae
-2. Install [dune](https://dune.build/install)
-3. Clone the [Picinae](https://github.com/CharlesAverill/Picinae) repo
-    ```bash
-    git clone https://github.com/CharlesAverill/Picinae.git && cd Picinae
-    ```
-4. Install dependencies
-    ```bash
-    opam install . --deps-only
-    ```
+After installing [opam](https://opam.ocaml.org/doc/Install.html), clone and install dependencies:
+
+```bash
+git clone https://github.com/CharlesAverill/Picinae.git && cd Picinae
+
+opam switch create picinae 5.3.0
+opam repo add rocq-released https://rocq-prover.org/opam/released
+opam install rocq-prover rocq-core=9.1.0 rocq-stdlib=9.1.0 dune
+```
 
 ## Building
 

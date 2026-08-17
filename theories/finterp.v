@@ -34,10 +34,10 @@
 
 From Picinae Require Import theory.
 From Picinae Require Import statics.
-Require Import NArith.
-Require Import ZArith.
-Require Import List.
-Require Import FunctionalExtensionality.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
+From Stdlib Require Import List.
+From Stdlib Require Import FunctionalExtensionality.
 
 (* Functional Interpretation of Programs:
    This module defines an IL interpreter that is purely functional instead of

@@ -37,9 +37,9 @@ From Picinae Require Import theory.
 From Picinae Require Import statics.
 From Picinae Require Import finterp.
 From Picinae.simplifier Require Import base.
-Require Import NArith.
-Require Import Program.Equality.
-Require Import Structures.Equalities.
+From Stdlib Require Import NArith.
+From Stdlib Require Import Program.Equality.
+From Stdlib Require Import Structures.Equalities.
 Open Scope N.
 
 (* getmem and setmem can potentially explode out of control when Coq checks

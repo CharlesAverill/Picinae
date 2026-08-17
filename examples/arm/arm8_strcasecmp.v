@@ -4,8 +4,8 @@ file: strcasecmp.lo
 function: strcasecmp
 *)
 
-From Picinae Require Import armv8_pcode.
-Require Import NArith.
+From Picinae.archs Require Import armv8.
+From Stdlib Require Import NArith.
 Open Scope N.
 
 Definition strcasecmp : program := fun _ a => match a with

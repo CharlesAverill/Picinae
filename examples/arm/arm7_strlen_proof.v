@@ -1,10 +1,10 @@
-Require Import Utf8.
-Require Import FunctionalExtensionality.
-Require Import Arith.
-Require Import NArith.
-Require Import ZArith.
+From Stdlib Require Import Utf8.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import Arith.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
 From Picinae Require Import armv7.
-From PicinaeExamples.arm Import arm7_strlen.
+From PicinaeExamples.arm Require Import arm7_strlen.
 
 Import ARM7Notations.
 Open Scope N.

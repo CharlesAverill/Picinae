@@ -36,9 +36,9 @@ From Picinae Require Import theory.
 From Picinae Require Import statics.
 From Picinae Require Import finterp.
 From Picinae.simplifier Require Export base.
-Require Import FunctionalExtensionality.
-Require Import NArith.
-Require Import ZArith.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
 
 (* Introduction and Logical Organization:
 

@@ -32,7 +32,7 @@
                                                                          M 7N8ZD
  *)
 
-Require Import NArith.
+From Stdlib Require Import NArith.
 From Picinae Require Import core.
 From Picinae Require Import finterp.
 

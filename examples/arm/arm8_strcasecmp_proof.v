@@ -7,12 +7,12 @@
      students Nathaniel Simmons, Aaron Hill, Long Nguyen, Ariz Siddiqui.
  *)
 
-Require Import Utf8.
-Require Import FunctionalExtensionality.
-Require Import Arith.
-Require Import NArith.
-Require Import ZArith.
-From Picinae Require Import armv8_pcode.
+From Stdlib Require Import Utf8.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import Arith.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
+From Picinae Require Import armv8.
 From PicinaeExamples.arm Require Import arm8_strcasecmp.
 
 Import ARM8Notations.

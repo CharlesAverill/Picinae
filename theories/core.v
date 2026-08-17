@@ -32,10 +32,10 @@
                                                                          M 7N8ZD
  *)
 
-Require Import NArith.
-Require Import ZArith.
-Require Import List.
-Require Import Structures.Equalities.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
+From Stdlib Require Import List.
+From Stdlib Require Import Structures.Equalities.
 Open Scope N.
 
 

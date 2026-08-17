@@ -1,0 +1,49 @@
+lib: [
+  "_build/install/default/lib/picinae-rocq/META"
+  "_build/install/default/lib/picinae-rocq/dune-package"
+  "_build/install/default/lib/picinae-rocq/opam"
+]
+lib_root: [
+  "_build/install/default/lib/coq/user-contrib/Picinae/ISA.glob" {"coq/user-contrib/Picinae/ISA.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/ISA.v" {"coq/user-contrib/Picinae/ISA.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/ISA.vo" {"coq/user-contrib/Picinae/ISA.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/amd64.glob" {"coq/user-contrib/Picinae/archs/amd64.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/amd64.v" {"coq/user-contrib/Picinae/archs/amd64.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/amd64.vo" {"coq/user-contrib/Picinae/archs/amd64.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/armv7.glob" {"coq/user-contrib/Picinae/archs/armv7.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/armv7.v" {"coq/user-contrib/Picinae/archs/armv7.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/armv7.vo" {"coq/user-contrib/Picinae/archs/armv7.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/armv8.glob" {"coq/user-contrib/Picinae/archs/armv8.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/armv8.v" {"coq/user-contrib/Picinae/archs/armv8.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/armv8.vo" {"coq/user-contrib/Picinae/archs/armv8.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/i386.glob" {"coq/user-contrib/Picinae/archs/i386.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/i386.v" {"coq/user-contrib/Picinae/archs/i386.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/i386.vo" {"coq/user-contrib/Picinae/archs/i386.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/riscv.glob" {"coq/user-contrib/Picinae/archs/riscv.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/riscv.v" {"coq/user-contrib/Picinae/archs/riscv.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/archs/riscv.vo" {"coq/user-contrib/Picinae/archs/riscv.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/core.glob" {"coq/user-contrib/Picinae/core.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/core.v" {"coq/user-contrib/Picinae/core.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/core.vo" {"coq/user-contrib/Picinae/core.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/finterp.glob" {"coq/user-contrib/Picinae/finterp.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/finterp.v" {"coq/user-contrib/Picinae/finterp.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/finterp.vo" {"coq/user-contrib/Picinae/finterp.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/simplifier/base.glob" {"coq/user-contrib/Picinae/simplifier/base.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/simplifier/base.v" {"coq/user-contrib/Picinae/simplifier/base.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/simplifier/base.vo" {"coq/user-contrib/Picinae/simplifier/base.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/simplifier/v0.glob" {"coq/user-contrib/Picinae/simplifier/v0.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/simplifier/v0.v" {"coq/user-contrib/Picinae/simplifier/v0.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/simplifier/v0.vo" {"coq/user-contrib/Picinae/simplifier/v0.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/simplifier/v1_1.glob" {"coq/user-contrib/Picinae/simplifier/v1_1.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/simplifier/v1_1.v" {"coq/user-contrib/Picinae/simplifier/v1_1.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/simplifier/v1_1.vo" {"coq/user-contrib/Picinae/simplifier/v1_1.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/statics.glob" {"coq/user-contrib/Picinae/statics.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/statics.v" {"coq/user-contrib/Picinae/statics.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/statics.vo" {"coq/user-contrib/Picinae/statics.vo"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/theory.glob" {"coq/user-contrib/Picinae/theory.glob"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/theory.v" {"coq/user-contrib/Picinae/theory.v"}
+  "_build/install/default/lib/coq/user-contrib/Picinae/theory.vo" {"coq/user-contrib/Picinae/theory.vo"}
+]
+doc: [
+  "_build/install/default/doc/picinae-rocq/README.md"
+]

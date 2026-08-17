@@ -33,10 +33,10 @@
  *)
 
 From Picinae Require Import theory.
-Require Import NArith.
-Require Import ZArith.
-Require Import Program.Equality.
-Require Import FunctionalExtensionality.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
+From Stdlib Require Import Program.Equality.
+From Stdlib Require Import FunctionalExtensionality.
 
 
 

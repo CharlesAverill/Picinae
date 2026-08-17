@@ -1,5 +1,5 @@
-From Picinae Require Import armv7.
-Require Import NArith.
+From Picinae.archs Require Import armv7.
+From Stdlib Require Import NArith.
 Open Scope N.
 
 Definition strlen_arm : program := fun _ a => match a with

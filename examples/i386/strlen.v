@@ -1,5 +1,5 @@
-From Picinae Require Import i386.
-Require Import NArith.
+From Picinae.archs Require Import i386.
+From Stdlib Require Import NArith.
 Open Scope N.
 
 Definition strlen_i386 : program := fun _ a => match a with

@@ -38,9 +38,9 @@ From Picinae Require Export statics.
 From Picinae Require Export finterp.
 From Picinae.simplifier Require Export v1_1.
 From Picinae Require Export ISA.
-Require Import NArith.
-Require Import Program.Equality.
-Require Import Structures.Equalities.
+From Stdlib Require Import NArith.
+From Stdlib Require Import Program.Equality.
+From Stdlib Require Import Structures.Equalities.
 Open Scope N.
 
 (* Variables found in IL code lifted from x86 native code: *)

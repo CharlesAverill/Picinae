@@ -1,6 +1,6 @@
-Require Import Utf8.
-Require Import FunctionalExtensionality.
-Require Import NArith.
+From Stdlib Require Import Utf8.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import NArith.
 From Picinae Require Import armv7.
 From PicinaeExamples.arm Require Import arm7_memset.
 Import ARM7Notations.
