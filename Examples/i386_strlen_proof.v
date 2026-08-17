@@ -1,8 +1,8 @@
-Require Import Utf8.
-Require Import FunctionalExtensionality.
-Require Import Arith.
-Require Import NArith.
-Require Import ZArith.
+From Stdlib Require Import Utf8.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import Arith.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
 Require Import Picinae_i386.
 Require Import i386_strlen.
 
@@ -66,7 +66,7 @@ Definition strlen_exit (t:trace) :=
 (* We next define a set of invariants, one for each program point.  In this simple
    case, all program points have the same invariant, so we return the same for all. *)
 Definition esp_invs (esp:N) (t:trace) :=
-  match t with (Addr _,s)::_ =>
+  match t with (Addr a,s)::_ =>
     Some (s R_ESP = esp)
   | _ => None end.
 
@@ -848,7 +848,7 @@ Proof.
   clear - PRE ESP1 MEM1 MDL1. rename t1 into t. rename s1 into s.
 
   (* Break the proof into cases, one for each invariant-point. *)
-  destruct_inv 32 PRE.
+  destruct_inv 32 PRE; unfold trueif_inv in *.
 
   (* Optional: From this point onward, the proof also ignores PF. *)
   Ltac ignore_vars v ::= constr:(match v with

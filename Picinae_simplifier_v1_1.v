@@ -31,14 +31,14 @@
                                                                         MM7O$$+Z
                                                                          M 7N8ZD
  *)
- 
+
 Require Import Picinae_theory.
 Require Import Picinae_statics.
 Require Import Picinae_finterp.
 Require Export Picinae_simplifier_base.
-Require Import FunctionalExtensionality.
-Require Import NArith.
-Require Import ZArith.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import NArith.
+From Stdlib Require Import ZArith.
 
 (* Introduction and Logical Organization:
 
@@ -461,7 +461,7 @@ Fixpoint sastN_eq (e1 e2: sastN) {struct e1} : bool
     case e1; revgoals;
     let ctrs := numgoals in do ctrs (
       let n := numgoals in only 1: (intros; case e2; cycle n; cycle -1;
-        (only 1: (clear e1 e2; 
+        (only 1: (clear e1 e2;
           lazymatch reverse goal with [ id:sastvar_id |- sastvar_id -> _ ] =>
               let id' := fresh id in intro id'; intros; exact (mvarid_eq id id')
           | _ => pairup_args; compare_pairs
@@ -582,7 +582,11 @@ Definition simpl_bounds_lor (b1 b2: N * option N) :=
 
 Definition simpl_bounds_lxor (b1 b2: N * option N) :=
   let (lo1,ohi1) := b1 in let (lo2,ohi2) := b2 in
-  (0,
+  ( match ohi1 with None => 0 | Some hi1 =>
+     match ohi2 with None => 0 | Some hi2 =>
+       N.ldiff (N.lxor hi1 hi2) (simpl_mask_varbits lo1 hi1 lo2 hi2)
+     end
+    end,
    match ohi1 with None => None | Some hi1 =>
      match ohi2 with None => None | Some hi2 =>
        Some (N.lor (N.lxor hi1 hi2) (simpl_mask_varbits lo1 hi1 lo2 hi2))
@@ -730,7 +734,7 @@ with var_multiple_of_pow2 mvt v e n {struct e} :=
 
 (*** MAIN SIMPLIFICATION LOGIC ***)
 
-(* Simplification is arranged a set of functions, one for each top-level SAST
+(* Simplification is arranged as a set of functions, one for each top-level SAST
    constructor.  For each constructor's simplification algorithm we must later prove
    (in the Module definition, not within this Module Type definition) that the
    denotation of the simplified SAST returned by the function equals the denotation
@@ -927,7 +931,30 @@ Definition simpl_lor e1 e2 :=
 
 (** Xor simplification **)
 
-Definition simpl_xor e1 e2 :=
+
+(* Finds e1, a non-Xor term, in e2 and eliminates it if present. *)
+Fixpoint simpl_xor_cancel_inner (e2 e1:sastN) :=
+  match e2 with
+  | SIMP_Xor e2a e2b => match simpl_xor_cancel_inner e2a e1 with
+                        | Some (SIMP_Const 0) => Some e2b
+                        | Some e' => Some (SIMP_Xor e' e2b)
+                        | None => option_map (fun e' => SIMP_Xor e2a e') (simpl_xor_cancel_inner e2b e1)
+                        end
+  | _ => if sastN_eq e1 e2 then Some (SIMP_Const 0) else None end.
+
+(* Xor e1 and e2, eliminating identical xor subterms. *)
+Fixpoint simpl_xor_cancel e2 e1 {struct e1} :=
+  match e1 with
+  | SIMP_Xor e1a e1b => match simpl_xor_cancel e2 e1a with
+                        | Some (SIMP_Const 0) => Some e1b
+                        | Some e' => simpl_xor_cancel e' e1b
+                        | None => option_map (fun e' => SIMP_Xor e' e1a) (simpl_xor_cancel e2 e1b)
+                        end
+  | _ => simpl_xor_cancel_inner e2 e1
+  end.
+
+(* Simplify xor constants and top-level cancellations. *)
+Definition simpl_xor_const e1 e2 :=
   if sastN_eq e1 e2 then SIMP_Const 0 else
   match e1 with SIMP_Const n1 =>
     match n1 with 0 => e2 | _ =>
@@ -937,6 +964,15 @@ Definition simpl_xor e1 e2 :=
            match n2 with 0 => e1 | _ => SIMP_Xor e1 e2 end
          | _ => SIMP_Xor e1 e2
          end
+  end.
+
+Definition simpl_xor e1 e2 :=
+  match simpl_xor_const e1 e2 with
+  | SIMP_Xor e1' e2' => match simpl_xor_cancel e2' e1' with
+                        | Some e => e
+                        | None => SIMP_Xor e1' e2'
+                        end
+  | _ => simpl_xor_const e1 e2
   end.
 
 (** LNot simplification **)
@@ -1181,7 +1217,7 @@ Definition simpl_modpow2_msub_atoms w e1 e2 :=
   end.
 
 (* Modularly add signed constant z to expression e, recursively descending into
-   e to find any constant term to to which z can be added. *) 
+   e to find any constant term to to which z can be added. *)
 Fixpoint simpl_modpow2_add_const' w z e :=
   match e with
   | SIMP_Const n1 => Some (SIMP_Const (ofZ w (Z.of_N n1 + z)))
@@ -2223,7 +2259,7 @@ Theorem vareqb_sound:
 Proof.
   unfold vareqb. intros. destruct (v1 == v2).
     subst. reflexivity.
-    discriminate. 
+    discriminate.
 Qed.
 
 Theorem endianness_eq_sound:
@@ -2587,7 +2623,7 @@ Theorem simpl_bounds_lxor_sound:
   forall mvt e1 e2 b1 b2 (B1: bounded mvt e1 b1) (B2: bounded mvt e2 b2),
   bounded mvt (SIMP_Xor e1 e2) (simpl_bounds_lxor b1 b2).
 Proof.
-  start_bounded_proof. split. apply N.le_0_l.
+  start_bounded_proof. split; cycle 1.
   destruct ohi1 as [hi1|]; [|exact I]. destruct ohi2 as [hi2|]; [|exact I].
   unfold simpl_mask_varbits. set (w := N.max _ _).
   rewrite <- (recompose_bytes w (eval_sastN mvt e1)),
@@ -2604,7 +2640,28 @@ Proof.
     rewrite N.ones_spec_high, Bool.orb_false_r, !N.mod_pow2_bits_high, !Bool.orb_false_l
       by assumption.
     destruct N.testbit; destruct N.testbit; reflexivity.
+
+  destruct ohi1 as [hi1|]; [|apply N.le_0_l]. destruct ohi2 as [hi2|]; [|apply N.le_0_l].
+  unfold simpl_mask_varbits. set (w := N.max _ _).
+  rewrite <- (recompose_bytes w (eval_sastN mvt e1)),
+          <- (recompose_bytes w (eval_sastN mvt e2)),
+          <- (recompose_bytes w hi1), <- (recompose_bytes w hi2).
+  apply N.ge_le.
+  unfold w; rewrite N.max_comm, lxor_topbits_max, N.max_comm by assumption; fold w.
+  unfold w; rewrite (lxor_topbits_max (eval_sastN mvt e2)) by assumption; fold w.
+  apply N.le_ge.
+  apply N.ldiff_le, N.bits_inj_0. intro b.
+  rewrite !N.ldiff_spec, !N.lxor_spec, !N.lor_spec.
+  destruct (N.lt_ge_cases b w).
+
+    rewrite N.ones_spec_low by assumption. simpl (negb true). rewrite Bool.andb_false_r, Bool.andb_false_l.
+    reflexivity.
+
+    rewrite N.ones_spec_high by assumption. simpl (negb false).
+    rewrite Bool.andb_true_r, !N.mod_pow2_bits_high, !Bool.orb_false_l by assumption.
+    destruct N.testbit; destruct N.testbit; reflexivity.
 Qed.
+
 
 Theorem simpl_bounds_lnot_sound:
   forall mvt e1 e2 b1 b2 (B1: bounded mvt e1 b1) (B2: bounded mvt e2 b2),
@@ -2726,7 +2783,7 @@ Proof.
   rewrite <- (recompose_bytes jmax n) at 2. rewrite lor_plus by apply disjoint_bits.
   apply N.add_le_mono.
     rewrite <- (N.min_r _ _ JHI), <- mp2_mod_mod_min. apply N_mod_le.
-    rewrite !N.shiftl_mul_pow2, !N.shiftr_div_pow2. apply N.mul_le_mono_r, mp2_div_le_mono, NHL. 
+    rewrite !N.shiftl_mul_pow2, !N.shiftr_div_pow2. apply N.mul_le_mono_r, mp2_div_le_mono, NHL.
 Qed.
 
 Theorem simpl_bounds_xbits_sound:
@@ -3080,7 +3137,7 @@ Definition mop2_sound mvt := proj1 (mop2_sound' mvt).
 
    If e1 matches Constructor1, or if e1 doesn't match Constructor1 but e2 matches
    Constructor2, then we can perform certain simplifications; but otherwise we
-   return an less simplified <default> SAST (which might incorporate e1 and/or e2
+   return a less simplified <default> SAST (which might incorporate e1 and/or e2
    unmodified).  Proofs about such code must typically destruct e1 and then e2 to
    reach the default case.  This yields an exponential number of proof goals that
    all have roughly identical proofs that the <default> case works.  While one can
@@ -3486,12 +3543,101 @@ Local Hint Resolve simpl_lor_sound : picinae_simpl.
 
 (* Logical-xor simplification soundness *)
 
+Theorem simpl_xor_const_sound:
+  forall mvt e1 e2, eval_sastN mvt (simpl_xor_const e1 e2) = eval_sastN mvt (SIMP_Xor e1 e2).
+Proof.
+  symmetry. unfold simpl_xor_const. destruct_matches_def SIMP_NVar; try reflexivity.
+    apply (sastN_eq_sound mvt) in Heqm. simpl. rewrite Heqm. apply N.lxor_nilpotent.
+    apply N.lxor_0_r.
+Qed.
+Local Hint Resolve simpl_xor_const_sound : picinae_simpl.
+
+Theorem simp_xor_assoc:
+  forall mvt e1 e2 e3, eval_sastN mvt (SIMP_Xor (SIMP_Xor e1 e2) e3) = eval_sastN mvt (SIMP_Xor e1 (SIMP_Xor e2 e3)).
+Proof.
+  intros; simpl. now rewrite N.lxor_assoc.
+Qed.
+
+Theorem simp_xor_comm:
+  forall mvt e1 e2, eval_sastN mvt (SIMP_Xor e1 e2) = eval_sastN mvt (SIMP_Xor e2 e1).
+Proof.
+  intros; simpl; now rewrite N.lxor_comm.
+Qed.
+
+(* TODO: rewrite the two theorems below to use the "destruct_matches" ltacs. *)
+Theorem simpl_xor_cancel_inner_sound:
+  forall mvt e1 e2, match simpl_xor_cancel_inner e2 e1 with
+                      | Some e => eval_sastN mvt e = eval_sastN mvt (SIMP_Xor e1 e2)
+                      | None => True end.
+Proof.
+  intros mvt e1 e2; generalize dependent e1. induction e2; intros; destruct (simpl_xor_cancel_inner _ _) as [e'|] eqn:EQ;(exact I || unfold simpl_xor_cancel_inner in EQ).
+  all: match goal with
+       | [H: context[sastN_eq ?a ?b] |- _] => destruct (sastN_eq a b) eqn:Heq;
+           match goal with
+           | [H: Some (SIMP_Const 0) = Some ?e |- eval_sastN ?mvt ?e = _] => inversion H; subst e; apply (sastN_eq_sound mvt) in Heq;
+               simpl; rewrite Heq; simpl; rewrite N.lxor_nilpotent; reflexivity
+           |  _ => try discriminate
+           end
+       | _ => idtac
+       end.
+  (* e2 := SIMP_Xor e2_1 e2_2 *)
+  fold simpl_xor_cancel_inner in *.
+  specialize (IHe2_1 e1).
+  destruct (simpl_xor_cancel_inner e2_1 e1) as [e''|] eqn:EQ2_1.
+  - rewrite <-(simp_xor_assoc _ e1). destruct e'' eqn:EQ''; inversion EQ; try subst e'.
+    all: try solve [simpl in *; rewrite <-IHe2_1; reflexivity].
+    simpl in *. rewrite <-IHe2_1.
+    destruct n; inversion EQ; subst e'; simpl; reflexivity.
+  - clear IHe2_1. specialize (IHe2_2 e1). destruct (simpl_xor_cancel_inner e2_2 e1) as [e''|] eqn: EQ2_2; simpl in *.
+    inversion EQ; subst e'. rewrite (N.lxor_comm (eval_sastN mvt e2_1)), <-N.lxor_assoc, <-IHe2_2, N.lxor_comm; reflexivity.
+    discriminate.
+Qed.
+
+
+Theorem simpl_xor_cancel_sound:
+  forall mvt e1 e2, match simpl_xor_cancel e2 e1 with
+                      | Some e => eval_sastN mvt e = eval_sastN mvt (SIMP_Xor e1 e2)
+                      | None => True end.
+Proof.
+  unfold simpl_xor_cancel.
+  intro; induction e1; intros; simpl.
+  (*        pose proof (simpl_xor_cancel_inner_sound mvt e2 (SIMP_NVar id n BND n' BND')).*)
+  all: match goal with
+       | |- match simpl_xor_cancel_inner _ (SIMP_Xor _ _) with | _  => _ end => idtac
+       | [mvt: metavar_tree |- match simpl_xor_cancel_inner ?e2 ?e1 with | _  => _ end] =>
+          pose proof (simpl_xor_cancel_inner_sound mvt e1 e2); destruct (simpl_xor_cancel_inner e2 e1) as [e|] eqn:EQ;
+          (exact I || rewrite H; reflexivity)
+       | |- ?g => idtac
+       end.
+  fold simpl_xor_cancel in *.
+  specialize (IHe1_1 e2).
+  destruct (simpl_xor_cancel e2 e1_1) as [e|].
+  - specialize (IHe1_2 e). destruct e eqn:EQe; lazymatch type of EQe with
+                        | e = SIMP_Const ?n => idtac
+                            (* destruct n; simpl in IHe1_1; rewrite N.lxor_assoc, (N.lxor_comm _ (_ _ e2)), <-N.lxor_assoc, <-IHe1_1
+*)
+                        | _ =>
+                            destruct (simpl_xor_cancel _ e1_2) as [e'|]; try exact I
+                        end.
+    all: try solve [rewrite IHe1_2; simpl in *; rewrite IHe1_1; simpl; rewrite (N.lxor_comm _ (eval_sastN _ e1_2)), N.lxor_assoc; reflexivity].
+
+    destruct n.
+      simpl in IHe1_1; rewrite N.lxor_assoc, (N.lxor_comm _ (_ _ e2)), <-N.lxor_assoc, <-IHe1_1, N.lxor_0_l; reflexivity.
+      destruct_matches;[|exact I]. rewrite IHe1_2; simpl in *; rewrite IHe1_1, (N.lxor_comm _ (_ _ e1_2)), N.lxor_assoc. reflexivity.
+  - specialize (IHe1_2 e2); destruct (simpl_xor_cancel e2 e1_2) as [e|]; simpl.
+      rewrite IHe1_2; simpl. rewrite N.lxor_assoc, (N.lxor_comm (eval_sastN mvt e2)), <-N.lxor_assoc, (N.lxor_comm (_ _ e1_2)). reflexivity.
+      exact I.
+Qed.
+
 Theorem simpl_xor_sound:
   forall mvt e1 e2, eval_sastN mvt (simpl_xor e1 e2) = eval_sastN mvt (SIMP_Xor e1 e2).
 Proof.
+  (* The `destruct_matches_def SIMP_NVar` approach results in the unprovable goal
+     ` eval_sastN mvt (SIMP_Xor e1 e2) = eval_sastN mvt (SIMP_Add e1 e1) `*)
   symmetry. unfold simpl_xor. destruct_matches_def SIMP_NVar; try reflexivity.
-    apply (sastN_eq_sound mvt) in Heqm. simpl. rewrite Heqm. apply N.lxor_nilpotent.
-    apply N.lxor_0_r.
+    pose proof (H:=simpl_xor_cancel_sound mvt s1 s2); rewrite Heqm0 in H; rewrite H; rewrite <-Heqm. symmetry; apply simpl_xor_const_sound.
+    rewrite <-Heqm; symmetry; apply simpl_xor_const_sound.
+    symmetry; apply simpl_xor_const_sound.
 Qed.
 Local Hint Resolve simpl_xor_sound : picinae_simpl.
 
@@ -4037,7 +4183,7 @@ Proof.
         destruct andb eqn:H1.
 
           apply andb_prop in H1. destruct H1 as [H1 H2]. apply (sastN_eq_sound mvt) in H2.
-          rewrite H1, H2, add_msub_r, N.Div0.mod_mod...
+          rewrite H1, H2, add_msub_r, N.Div0.mod_mod.
           inversion H. reflexivity.
 
           specialize (IH1 neg e2). destruct simpl_modpow2_cancel; [|discriminate H].
@@ -4512,7 +4658,7 @@ Proof.
     cbn [eval_sastN]. destruct (eval_sastN _ e1). apply IHe3. apply IHe2.
 
   (* GetMem - IteNN *)
-  destruct len as [|len]. reflexivity. 
+  destruct len as [|len]. reflexivity.
   cbn [simpl_getmem' eval_sastN]. rewrite (proj2 (IHe2 _)), (proj2 (IHe3 _)).
   destruct (eval_sastN _ e1); reflexivity.
 
@@ -4524,7 +4670,7 @@ Proof.
     cbn [eval_sastN]. destruct (eval_sastB _ e1). apply IHe1. apply IHe2.
 
   (* GetMem - IteBN *)
-  destruct len as [|len]. reflexivity. 
+  destruct len as [|len]. reflexivity.
   cbn [simpl_getmem' eval_sastN]. rewrite (proj2 (IHe1 _)), (proj2 (IHe2 _)).
   destruct (eval_sastB _ e1); reflexivity.
 Qed.
@@ -4873,22 +5019,22 @@ Local Hint Extern 0 (_ _ (simpl_ite ?t ?t' _ _ _ _) = _) => apply (simpl_ite_sou
 Theorem simplN_dispatch_sound:
   forall mvt e,
   eval_sastN mvt (simplN_dispatch mvt e) = eval_sastN mvt e.
-Proof with (trivial with picinae_simpl).
-  intros. destruct e; unfold simplN_dispatch...
+Proof.
+  intros. destruct e; unfold simplN_dispatch; trivial with picinae_simpl.
 Qed.
 
 Theorem simplB_dispatch_sound:
   forall mvt e,
   eval_sastB mvt (simplB_dispatch mvt e) = eval_sastB mvt e.
-Proof with (trivial with picinae_simpl).
-  intros. destruct e; unfold simplB_dispatch...
+Proof.
+  intros. destruct e; unfold simplB_dispatch; trivial with picinae_simpl.
 Qed.
 
 Theorem simplS_dispatch_sound:
   forall mvt e,
   eval_sastS mvt (simplS_dispatch e) = eval_sastS mvt e.
-Proof with (trivial with picinae_simpl).
-  intros. destruct e; unfold simplS_dispatch...
+Proof.
+  intros. destruct e; unfold simplS_dispatch; trivial with picinae_simpl.
 Qed.
 
 Corollary simpl_dispatch_sound:

@@ -35,12 +35,13 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_auto.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
-Require Import NArith.
-Require Import Program.Equality.
-Require Import Structures.Equalities.
+From Stdlib Require Import NArith.
+From Stdlib Require Import Program.Equality.
+From Stdlib Require Import Structures.Equalities.
 Open Scope N.
 
 (* Variables found in IL code lifted from ARM native code: *)
@@ -122,6 +123,8 @@ Module Theory_arm7 := PicinaeTheory IL_arm7.
 Export Theory_arm7.
 Module Statics_arm7 := PicinaeStatics IL_arm7 Theory_arm7.
 Export Statics_arm7.
+Module Auto_arm7 := PicinaeAuto IL_arm7 Theory_arm7 Statics_arm7.
+Export Auto_arm7.
 Module FInterp_arm7 := PicinaeFInterp IL_arm7 Theory_arm7 Statics_arm7.
 Export FInterp_arm7.
 Module PSimpl_arm7 := Picinae_Simplifier_Base IL_arm7.

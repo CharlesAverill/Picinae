@@ -35,18 +35,24 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_auto.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
-Require Import NArith.
-Require Import Program.Equality.
-Require Import Structures.Equalities.
+From Stdlib Require Import NArith.
+From Stdlib Require Import Program.Equality.
+From Stdlib Require Import Structures.Equalities.
 Open Scope N.
 
 (* Variables found in IL code lifted from x64 native code: *)
 Inductive x64var :=
   (* Main memory: *)
   | V_MEM64
+  (* Instruction Pointer Register, read and written by Ghidra, but does not
+     represent the location of the current instruction.  We model it to
+     reduce our TCB in that we don't handle its translation specially in
+     the lifter. *)
+  | R_RIP
   (* Flags (1-bit registers): *)
   | R_AF | R_CF | R_DF | R_OF | R_PF | R_SF | R_ZF
   (* Segment selectors (16-bit registers): *)
@@ -78,6 +84,7 @@ Inductive x64var :=
 Definition x64typctx v :=
   match v with
   | V_MEM64 => Some (8*2^64)
+  | R_RIP => Some 64
   | R_AF | R_CF | R_DF | R_OF | R_PF | R_SF | R_ZF => Some 1
   | R_CS | R_DS | R_ES | R_FS | R_GS | R_SS => Some 16
   | R_FPU_CONTROL => Some 16
@@ -125,6 +132,8 @@ Module Theory_amd64 := PicinaeTheory IL_amd64.
 Export Theory_amd64.
 Module Statics_amd64 := PicinaeStatics IL_amd64 Theory_amd64.
 Export Statics_amd64.
+Module Auto_amd64 := PicinaeAuto IL_amd64 Theory_amd64 Statics_amd64.
+Export Auto_amd64.
 Module FInterp_amd64 := PicinaeFInterp IL_amd64 Theory_amd64 Statics_amd64.
 Export FInterp_amd64.
 Module PSimpl_amd64 := Picinae_Simplifier_Base IL_amd64.

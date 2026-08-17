@@ -192,7 +192,7 @@ Proof.
   intro v. unfold h1'. specialize (HD v).
   destruct (h1 v).
     destruct n.
-      
+
 
   eapply H in XP; try eassumption.
 Qed.

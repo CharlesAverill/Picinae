@@ -35,12 +35,13 @@
 Require Export Picinae_core.
 Require Export Picinae_theory.
 Require Export Picinae_statics.
+Require Export Picinae_auto.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
-Require Import NArith.
-Require Import Program.Equality.
-Require Import Structures.Equalities.
+From Stdlib Require Import NArith.
+From Stdlib Require Import Program.Equality.
+From Stdlib Require Import Structures.Equalities.
 Open Scope N.
 
 (* Variables found in IL code lifted from ARM native code: *)
@@ -120,13 +121,18 @@ Module IL_arm8 := PicinaeIL ARM8Arch.
 Export IL_arm8.
 Module Theory_arm8 := PicinaeTheory IL_arm8.
 Export Theory_arm8.
+
 Module Statics_arm8 := PicinaeStatics IL_arm8 Theory_arm8.
 Export Statics_arm8.
+Module Auto_arm8 := PicinaeAuto IL_arm8 Theory_arm8 Statics_arm8.
+Export Auto_arm8.
 Module FInterp_arm8 := PicinaeFInterp IL_arm8 Theory_arm8 Statics_arm8.
 Export FInterp_arm8.
 Module PSimpl_arm8 := Picinae_Simplifier_Base IL_arm8.
 Export PSimpl_arm8.
+
 Module PSimpl_arm8_v1_1 := Picinae_Simplifier_v1_1 IL_arm8 Theory_arm8 Statics_arm8 FInterp_arm8.
+
 Ltac PSimpl_arm8.PSimplifier ::= PSimpl_arm8_v1_1.PSimplifier.
 
 (* To use a different simplifier version (e.g., v1_0) put the following atop
