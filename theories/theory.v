@@ -92,7 +92,7 @@ Tactic Notation "vantisym" constr(v1) constr(v2) "by" tactic(T) :=
 Definition pfsub {A B:Type} (f g: A -> option B) : Prop :=
   forall x y, f x = Some y -> g x = Some y.
 
-Notation "f ⊆ g" := (pfsub f g) (at level 70, right associativity).
+Notation "f ⊆ g" := (pfsub f g) (at level 70).
 
 Theorem pfsub_refl {A B}: forall (f:A->option B), f ⊆ f.
 Proof. unfold pfsub. intros. assumption. Qed.
