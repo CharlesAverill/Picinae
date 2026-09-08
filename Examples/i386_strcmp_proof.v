@@ -271,24 +271,24 @@ Proof.
     step. step. step. step.
 
       (* Address 20 *)
-      step. apply Neqb_ok in BC.
-      exists k. repeat first [ exact SEQ | split ].
-        symmetry. apply Neqb_ok, BC0.
-        apply N.compare_eq_iff, BC.
+      step.
+      exists k. csimpl. repeat first [ exact SEQ | split ].
+        lia.
+        assumption.
 
       (* loop back to Address 8 *)
-      exists (k+1). psimpl. split. reflexivity. split. reflexivity.
+      exists (k+1). csimpl. psimpl. split. reflexivity. split. reflexivity.
       intros i IK. rewrite N.add_1_l in IK. apply N.lt_succ_r, N.le_lteq in IK. destruct IK as [IK|IK].
         apply SEQ, IK.
         subst. split.
-          apply Neqb_ok in BC. assumption.
-          apply N.neq_0_lt_0, N.neq_sym, N.eqb_neq. assumption.
+          assumption.
+          lia.
 
     (* Address 23 *)
     step. step. step.
-    exists k. split. exact SEQ. split.
+    exists k. csimpl. split. exact SEQ. split.
       intro. destruct (_ <? _); discriminate.
-      apply N.eqb_neq, N.lt_gt_cases in BC. destruct BC as [BC|BC].
+      apply N.lt_gt_cases in BC. destruct BC as [BC|BC].
         rewrite (proj2 (N.compare_lt_iff _ _)), (proj2 (N.ltb_lt _ _)) by exact BC. reflexivity.
         rewrite (proj2 (N.compare_gt_iff _ _)) by exact BC. rewrite (proj2 (N.ltb_ge _ _)) by apply N.lt_le_incl, BC. reflexivity.
 Qed.

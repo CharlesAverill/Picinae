@@ -106,14 +106,12 @@ Lemma filled_n_more:
 Proof.
   induction n; intros.
 
-    rewrite msub_0_r, msub_mod_pow2, N.min_id in BC'.
-    apply N.leb_gt, N.lt_1_r, msub_move_0_r in BC'.
-    rewrite !N.mod_small in BC'. rewrite BC'. reflexivity.
-      eapply N.le_lt_trans; eassumption.
-      assumption.
+    csimpl. repeat asimpl in BC'.
+    apply msub_move_0_r in BC'.
+    rewrite !N.mod_small in BC' by lia. rewrite BC'. reflexivity.
 
     rewrite Nat2N.inj_succ in BC,BC'.
-    rewrite <- msub_add_distr in BC'. apply N.leb_gt, N.lt_1_r, msub_move_0_r in BC'.
+    rewrite <- msub_add_distr in BC'. csimpl. asimpl in BC'. apply msub_move_0_r in BC'.
     rewrite (N.mod_small _ _ LEN32) in BC'. subst len. psimpl in BC.
     assert (KN: k + N.succ (N.of_nat n) < 2^32).
       destruct (N.le_gt_cases (2^32) (N.succ (N.of_nat n))) as [H1|H1].
@@ -150,16 +148,17 @@ Proof.
   )); unfold low8_pad.
 
   psimpl. reflexivity.
-  rewrite !N.shiftr_lor. psimpl. reflexivity.
-  rewrite !N.shiftr_lor. psimpl. reflexivity.
-  psimpl. rewrite !N.shiftr_lor, !N.shiftl_lor, <- (N.land_ones _ 32), N.shiftr_land.
-    simpl (N.ones _ >> _). rewrite N.shiftr_lor. psimpl. reflexivity.
+  asimpl. psimpl. reflexivity.
+  asimpl. psimpl. reflexivity.
+  asimpl. psimpl. rewrite <- (N.land_ones _ 32), N.shiftr_land. asimpl.
+    simpl (N.ones _ >> _). psimpl. reflexivity.
 
   rewrite (N.add_comm _ k), !N.add_assoc. reflexivity.
 Qed.
 
 (* Prove that using 3-bit binary arithmetic to compute absolute differences of
-   small signed numbers is a sound optimization. *)
+   small signed numbers is a sound optimization.  Note that lia can solve this,
+   but it takes a long time. *)
 Lemma abs_diff:
   ∀ i len k, (8 <=? len ⊖ k ⊖ 8*i) = false -> msub 3 len k = len ⊖ 8*i ⊖ k.
 Proof.
@@ -190,27 +189,7 @@ Lemma checked_add_lt:
   n + k <= len.
 Proof.
   intros. apply N.nlt_ge. intro H. contradict BC. apply N.nlt_ge.
-  etransitivity. apply NLO.
-  apply le_msub_iff. rewrite (N.mod_small _ _ LEN32).
-  destruct (N.lt_ge_cases (k+n) (2^32)) as [H1|H1].
-    right. rewrite (N.mod_small _ _ H1). split.
-      rewrite N.add_comm. exact H.
-      rewrite <- N.add_assoc. rewrite N.add_comm. apply N.add_le_mono.
-        change (2^32) with (2^31 + 2^31). apply N.add_le_mono_r, NLO.
-        exact KLEN.
-    left. replace (_ mod _) with (k+n-2^31-2^31).
-      rewrite N.sub_add.
-        apply N.le_sub_le_add_r, N.add_le_mono; assumption.
-        apply N.le_add_le_sub_l, H1.
-      rewrite <- N.sub_add_distr. eapply N.add_cancel_r. rewrite N.sub_add.
-        change (2^31+2^31) with (2^32). replace (2^32) with (2^32*((k+n)/2^32)) at 2.
-          rewrite (N.add_comm (_ mod _)). apply N.div_mod'.
-          change (2^32) with (2^32*1) at 3. apply f_equal, N.le_antisymm.
-            change 1 with ((2^32+2^31)/2^32). apply N.Div0.div_le_mono, N.add_le_mono.
-              etransitivity. exact KLEN. apply N.lt_le_incl, LEN32.
-              exact NLO.
-            change 1 with (2^32/2^32). apply N.Div0.div_le_mono, H1.
-        exact H1.
+  etransitivity. apply NLO. lia.
 Qed.
 
 Corollary checked_add_false:
@@ -253,14 +232,9 @@ Proof.
 
   (* Entry point (address 0) *)
   destruct PRE as [MEM [R0 [R1 R2]]].
-  step. step. step.
-  exists 0. repeat eexists; psimpl; try (eassumption || reflexivity).
-    apply N.le_0_l.
-    apply N.leb_le, BC.
-    apply N.lt_le_incl, (mp2_mod_lt p 2).
-  exists 0. repeat eexists; psimpl; try (eassumption || reflexivity).
-    apply N.le_0_l.
-    rewrite R1. reflexivity.
+  step. step. step. csimpl.
+  exists 0. repeat eexists; psimpl; try (eassumption || reflexivity || lia).
+  exists 0. repeat eexists; psimpl; try (eassumption || reflexivity || lia).
 
   (* Loop 1 (address 12) *)
   destruct PRE as [k [[[MEM [R0 [R1 R2]]] [R3 KLEN]] [LEN8 KP4]]].
@@ -271,20 +245,9 @@ Proof.
       unfold low8_pad. psimpl. reflexivity.
 
     (* iterate loop 1 *)
-    step. step. exists (k⊕1). repeat eexists; psimpl; try (eassumption || reflexivity).
+    step. step. exists (k⊕1). repeat eexists; psimpl; try (eassumption || reflexivity || lia).
       rewrite N.add_1_r, (N.mod_small (N.succ k)). apply filled_succ.
         eapply N.le_lt_trans. apply -> N.succ_le_mono. etransitivity. apply N.le_add_l. apply KP4. reflexivity.
-      rewrite msub_comm. reflexivity.
-      etransitivity. apply mp2_mod_le.
-        rewrite N.add_1_l. apply N.le_succ_l.
-        eapply N.add_lt_mono_l. eapply N.le_lt_trans. apply KP4.
-        eapply (N.lt_le_trans _ 8). reflexivity.
-        etransitivity. apply LEN8. apply N.le_add_l.
-      apply N.le_lteq in KP4. destruct KP4 as [KP4|KP4].
-        etransitivity.
-          apply N.add_le_mono_l. apply mp2_mod_le.
-          rewrite N.add_1_l, N.add_succ_r. apply N.le_succ_l, KP4.
-        rewrite <- N.Div0.add_mod_idemp_l in BC. rewrite KP4 in BC. discriminate BC.
 
   (* Loop 2 (address 44) *)
   destruct PRE as [k [[[MEM [R0 [R1 R2]]] [R3 KLEN]] R12]]. rewrite R1 in R12.
@@ -303,7 +266,7 @@ Proof.
         rewrite (N.mod_small (8+k)). reflexivity.
         eapply N.le_lt_trans; eassumption.
       rewrite (abs_diff 1). reflexivity. assumption.
-      etransitivity. apply mp2_mod_le. assumption.
+      lia.
       unfold low8_pad. psimpl. reflexivity.
 
     (* end loop 2 (3rd exit point) *)
@@ -324,6 +287,7 @@ Proof.
       repeat rewrite filled4, ?N.add_assoc, 1?(N.add_comm _ p), <- 1?(N.add_assoc p).
         rewrite (N.mod_small (24+k)). reflexivity.
         eapply N.le_lt_trans; eassumption.
+
       rewrite (abs_diff 3). reflexivity. assumption.
       etransitivity. apply mp2_mod_le. assumption.
       unfold low8_pad. psimpl. reflexivity.

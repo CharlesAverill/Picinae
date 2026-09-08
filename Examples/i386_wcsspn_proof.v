@@ -134,14 +134,14 @@ Proof.
       (* Jump 18 -> 61 (wcs1 end reached) *)
       step. step. step. step.
       exists 0,fb. do 3 split.
-        intros i H. contradict H. apply N.nlt_0_r.
-        intro H. rewrite N.add_0_r in H. apply H. symmetry. apply N.eqb_eq, BC.
+        intros i H. contradict H. lia.
+        intro H. asimpl in H. apply H. symmetry. apply N.eqb_eq, BC.
 
       (* Address 18 -> 20 fallthru (enter outer loop) *)
       step. step. step.
       exists 0,fb. repeat (split; psimpl; [reflexivity|]). split.
         apply not_eq_sym, N.eqb_neq, BC.
-        intros. contradict H. apply N.nlt_0_r.
+        intros. contradict H. lia.
 
     (* Address 32 (start outer loop body) *)
     destruct PRE as [eax [fb [MEM [EDI [EBP [ESI [EAX [EBX [NZ PRE]]]]]]]]].
@@ -151,8 +151,8 @@ Proof.
       step. step. step. step.
       exists eax,fb. split. reflexivity. split. assumption. split. assumption.
       apply N.eqb_eq in BC. symmetry in BC. intro H. destruct H as [NZ2 [k H]]. destruct k.
-        apply NZ. rewrite <- (proj2 H), N.add_0_r. apply BC.
-        apply (proj1 H 0). reflexivity. rewrite N.add_0_r. apply BC.
+        apply NZ. asimpl in H. rewrite <- (proj2 H). apply BC.
+        apply (proj1 H 0). lia. asimpl. apply BC.
 
       (* Address 34 -> 36 fallthru *)
       step. step.
@@ -160,14 +160,14 @@ Proof.
         (* Jump 38 -> 72 (wcs1[0] is in wcs2) *)
         exists eax,fb. split. repeat (split; psimpl; [assumption+reflexivity|]). apply PRE.
         split. assumption. exists 0. split.
-          intros j H'. contradict H'. apply N.nlt_0_r.
-          rewrite N.add_0_r. apply N.eqb_eq, BC0.
+          intros j H'. contradict H'. lia.
+          asimpl. apply N.eqb_eq, BC0.
 
         (* Address 38 -> 40 fallthru (enter inner loop) *)
         step. step.
         exists eax,0,fb. split. repeat (split; psimpl; [assumption+reflexivity|]). apply PRE. split.
           psimpl. reflexivity.
-          intros i H. apply N.le_0_r in H. subst i. psimpl. split.
+          intros i H. replace i with 0 in * by lia. psimpl. split.
             apply N.eqb_neq, BC0.
             apply not_eq_sym, N.eqb_neq, BC.
 
@@ -188,7 +188,7 @@ Proof.
 
         (* Jump 50 -> 72 (found wcs2 member in wcs1) *)
         exists eax,fb. split. repeat (split; psimpl; [assumption+reflexivity|]). apply PRE. split.
-          apply N.eqb_eq in BC0. rewrite <- BC0. apply not_eq_sym, N.eqb_neq, BC.
+          csimpl. rewrite <- BC0. symmetry. apply BC.
           exists (N.succ edx). split.
             intros i H. apply NU, N.lt_succ_r, H.
             rewrite N.mul_succ_r. psimpl. apply N.eqb_eq, BC0.
@@ -213,12 +213,12 @@ Proof.
           apply PRE1, H.
           subst i. assumption.
         psimpl. intro H.
-          apply N.eqb_eq in BC. rewrite N.shiftl_mul_pow2, N.mul_comm in BC. psimpl in BC. rewrite <- BC in H.
+          csimpl. algify. rewrite N.mul_comm in BC. psimpl in BC. rewrite <- BC in H.
           destruct H as [H1 H2]. apply H1. reflexivity.
 
       (* Jump 80 -> 32 (wcs1 not ended, so re-iterate outer loop) *)
-      exists (1 ⊕ eax),fb. rewrite N.shiftl_mul_pow2, N.mul_comm in BC. apply N.eqb_neq, not_eq_sym in BC.
-      rewrite N.shiftl_mul_pow2, N.mul_comm. repeat (split; psimpl; [assumption+reflexivity|]).
+      exists (1 ⊕ eax),fb. algify. rewrite N.mul_comm in BC. csimpl. apply not_eq_sym in BC.
+      rewrite N.mul_comm. repeat (split; psimpl; [assumption+reflexivity|]).
       rewrite N.add_1_l. intros i H. eapply N.lt_le_trans, N.lt_succ_r, N.le_lteq in H; [|apply mp2_mod_le]. destruct H.
         apply PRE1, H.
         subst i. apply PRE2.

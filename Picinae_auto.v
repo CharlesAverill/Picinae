@@ -75,7 +75,11 @@ Open Scope bool.
 
       * csimpl---csimpl rewrites boolean-valued comparison equalities to their
           propositional form.  E.g., `H: x =? y = true` becomes `H: x = y`
-          and `P: x <=? y = false` becomes `P: x > y`.
+          and `P: x <=? y = false` becomes `P: x > y`. csimplo provides additional
+          opinionated rewriting, replacing greater-thans with less-thans and
+          splitting less-than-or-equals into disjunctions of less-thans and equals.
+          You can only use it on single hypotheses at a time, through [csimplo in H],
+          because otherwise it is slow.
 
       * specsimpl---specsimpl simplifies N.testbit expressions.  It exclusively
           uses rewrites that do not introduce hypotheses.  Instead its rewrites
@@ -137,6 +141,25 @@ Ltac2 lia_or_smt0 () :=
     | None => Ltac1.run (Ltac1.ref [@Stdlib;@micromega;@Lia;@lia])
     end.
 Tactic Notation "lia_or_smt" := ltac2:(lia_or_smt0 ()).
+
+Local Corollary getmem_bound':
+  forall w e len m a x, x = getmem w e len m a -> x < 2^(len*8).
+Proof. intros; subst; apply getmem_bound. Qed.
+
+(* Create an upper bound for values and variables bound to getmem expressions. *)
+Global Ltac getmem_bounds :=
+  repeat match goal with
+        | H: ?x = getmem _ _ ?len _ _ |- _ =>
+            match goal with
+            | B: x < 2 ^ (len*8) |- _ => idtac
+            | |- _ => pose proof (getmem_bound' _ _ _ _ _ _ H)
+            end
+        | H: getmem _ _ ?len _ _ = ?x |- _ =>
+            match goal with
+            | B: x < 2 ^ (len*8) |- _ => idtac
+            | |- _ => pose proof (getmem_bound' _ _ _ _ _ _ (eq_sym _ _ H))
+            end
+        end.
 
 (** Eliminate the store by rewriting the expressions stored in registers and
     inferring their bounds from the type context. *)
@@ -356,10 +379,6 @@ Ltac2 asimpl_rw :=
     ?N.mul_0_l, (* forall n : N, 0 * n = 0 *)
     ?N.Div0.mod_0_l, (* forall a : N, 0 mod a = 0 *)
     ?N.add_0_l, (* forall n : N, 0 + n = n *)
-    ?msub_0, (* forall x y : N, msub 0 x y = 0 *)
-    ?xbits_0_j, (* forall n i : N, xbits n i 0 = 0 *)
-    ?xbits_0_l, (* forall i j : N, xbits 0 i j = 0 *)
-    ?msub_diag, (* forall w x : N, msub w x x = 0 *)
     ?N.div2_1, (* N.div2 1 = 0 *)
     ?N.lnot_ones, (* forall n : N, N.lnot (N.ones n) n = 0 *)
     ?N.lnot_0_l, (* forall n : N, N.lnot 0 n = N.ones n *)
@@ -367,12 +386,28 @@ Ltac2 asimpl_rw :=
     ?N.Div0.mod_mul, (* forall a b : N, (a * b) mod b = 0 *)
     ?N.lor_eq_0_l, (* forall a b : N, N.lor a b = 0 -> a = 0 *)
     ?N.land_ldiff, (* forall a b : N, N.land (N.ldiff a b) b = 0 *)
-    ?N.mod_1_r. (* forall a : N, a mod 1 = 0 *)
+    ?N.mod_1_r, (* forall a : N, a mod 1 = 0 *)
+    ?N.min_id,
+    ?getmem_bound, (* getmem w e len m a mod 2 ^ (len * 8) = getmem w e len m a *)
+    ?msub_0, (* forall x y : N, msub 0 x y = 0 *)
+    ?xbits_0_j, (* forall n i : N, xbits n i 0 = 0 *)
+    ?xbits_0_l, (* forall i j : N, xbits 0 i j = 0 *)
+    ?msub_diag, (* forall w x : N, msub w x x = 0 *)
+    ?msub_0_r,
+    ?xbits_lor,
+    ?xbits_shiftl,
+    ?msub_mod_pow2,
+    ?xbits_0_i,
+    ?N.lt_1_r,
+    ?N.shiftr_lor,
+    ?N.shiftl_lor,
+    ?N.shiftr_land,
+    ?N.shiftl_land.
 
 Ltac2 Notation "asimpl" := rewrite0 false (asimpl_rw ()) None None.
 Ltac2 asimpl_in cl := rewrite0 false (asimpl_rw ()) (Some cl) None.
 
-Tactic Notation "asimpl" := ltac2:(asimpl).
+Tactic Notation "asimpl" := ltac2:(asimpl); rewrite ?xbits_above in * by (assumption || apply getmem_bound).
 Tactic Notation "asimpl" "in" hyp(h) :=
   let f := ltac2:(h |-
     let i := Option.get (Ltac1.to_ident h) in
@@ -429,10 +464,44 @@ Ltac bsimpl := repeat bsimpl0 true ltac:(0).
 Ltac simple_bsimpl := repeat bsimpl0 false ltac:(0).
 
 
-Ltac csimpl:=
-  rewrite ?N.ltb_lt, ?N.ltb_ge,
+Ltac2 csimpl_rw :=
+  thunkrw ?N.ltb_lt, ?N.ltb_ge,
           ?N.leb_le, ?N.leb_gt,
-          ?N.eqb_eq, ?N.eqb_neq in *|-*.
+          ?N.eqb_eq, ?N.eqb_neq,
+          ?N.compare_eq_iff, ?N.compare_gt_iff, ?N.compare_lt_iff,
+          ?N.compare_ge_iff, ?N.compare_le_iff, ?N.compare_nle_iff,
+          ?N.compare_nge_iff, ?N.compare_ngt_iff, ?N.compare_nlt_iff.
+Ltac2 on_all := (Some { Std.on_hyps := None; Std.on_concl := Std.AllOccurrences }).
+Ltac2 Notation "csimpl" := rewrite0 false (csimpl_rw ()) on_all None.
+Ltac2 csimpl_in cl := rewrite0 false (csimpl_rw ()) (Some cl) None.
+
+Tactic Notation "csimpl" "in" hyp(h) :=
+  let f := ltac2:(h|-
+    let i := Option.get (Ltac1.to_ident h) in
+      csimpl_in {on_hyps:=Some [(i,AllOccurrences,InHypTypeOnly)];
+                 on_concl:=NoOccurrences}
+    ) in f h.
+
+Ltac csimpl := ltac2:(csimpl).
+
+(* [csimplo] adds some opinionated rewrites on top of csimpl.  It prefers less-thans
+   over greater-thans and disjuncting less-than-or-equal relationships over keeping
+   them as single relation. *)
+Local Corollary lt_add_1_r:
+  forall n m, n < m + 1 <-> n <= m.
+Proof. lia. Qed.
+Local Corollary lt_add_1_l:
+  forall n m, n < 1 + m <-> n <= m.
+Proof. lia. Qed.
+Local Corollary lt_sub_1_le:
+  forall n m, N.pred n < m -> n <= m.
+Proof. lia. Qed.
+
+Tactic Notation "csimplo" "in" hyp(h) := csimpl in h;
+  rewrite ->?N.gt_lt_iff, ->?N.ge_le_iff,
+          ->?lt_add_1_r, ->?lt_add_1_l, ->?N.lt_succ_r, ->?N.lt_succ_l,
+          ?N.lt_pred_le, ?lt_sub_1_le,
+          ->?N.le_lteq in h.
 
 (** [specsimpl] reduces [N.testbit] expressions used in bit specification proofs.
     Most rewriting rules do not introduce new goals, but some do.  With some
@@ -505,6 +574,10 @@ Ltac specsimpl0 use_lia lia_time :=
       rewrite <-(N.sub_nocarry_ldiff x y);[|specsimpl_rec_solver]
     | |- context[?x-?y+?y] => assert_true use_lia;
         rewrite N.sub_add;[|algify; timeout lia_time lia_or_smt]
+    | |- context[N.testbit ?x ?i] =>
+        erewrite (bound_hibits_zero _ x i);
+          [|eapply getmem_bound';first [reflexivity|eassumption|symmetry;eassumption]|];
+          [|lia]
     end.
 Ltac specsimpl := specsimpl0 true ltac:(0).
 Ltac simple_specsimpl := specsimpl0 false ltac:(0).
@@ -514,8 +587,8 @@ Ltac showgoal :=
 
 (* sbi0 and sbi00 are useful for debugging and fine grained control if `solve bits inj`
    hangs on `smt`, which happens when bsimpl tries to infer conditions are `true` or `false
-   with complex contexts. Note that sbi00 is not exactly an iteration of the inner loop 
-   because it prevents bsimpl and asimpl from looping forever.  
+   with complex contexts. Note that sbi00 is not exactly an iteration of the inner loop
+   because it prevents bsimpl and asimpl from looping forever.
    I.e., it interleaves specsimpl, asimpl0, and bsimpl0, whereas the real inner loop may
    get stuck in asimpl or bsimpl. *)
 Ltac sbi00_lia    lia_time  := specsimpl0 true  lia_time  || asimpl || bsimpl0 true lia_time.

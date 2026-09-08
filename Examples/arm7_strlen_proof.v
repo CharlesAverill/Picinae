@@ -108,12 +108,7 @@ Lemma getmem_byte':
   (getmem 32 LittleE (N.succ len) m (a ⊖ a mod 4) .| N.ones (a mod 4 * 8)) .& (N.ones 8 << (8*len)) =
   m Ⓑ[a ⊖ a mod 4 + len] << (8*len).
 Proof.
-  intros. rewrite N.land_lor_distr_l. rewrite getmem_byte. replace (_.&_) with 0. apply N.lor_0_r.
-  symmetry. apply N.bits_inj_0. intro b.
-  rewrite N.land_spec. destruct (N.lt_ge_cases b (a mod 4 * 8)).
-    rewrite N.shiftl_spec_low. apply Bool.andb_false_r. eapply N.lt_le_trans. eassumption.
-      rewrite N.mul_comm. apply N.mul_le_mono_l, H.
-    rewrite N.ones_spec_high. reflexivity. assumption.
+  intros. solve bits inj. apply f_equal. apply f_equal2; nia.
 Qed.
 
 Lemma nonbyte:
@@ -240,15 +235,15 @@ Proof.
     (destruct p; [|apply N.log2_lt_pow2;[|assumption]]; reflexivity).
     change 3 with (N.ones 2). rewrite ldiff_sub, N.land_ones.
   step. exists 0.
-    apply Neqb_ok in BC. rewrite BC. simpl N.succ. change (N.ones _) with 0. psimpl. repeat split.
+    csimpl. rewrite BC. simpl N.succ. change (N.ones _) with 0. psimpl. repeat split.
     intros i LT. destruct i; discriminate.
   step. step.
-    apply N.eqb_neq in BC.
+    csimpl.
     assert (LE1: 1 <= p mod 4). destruct (p mod _). contradict BC. reflexivity. destruct p0; discriminate.
     rewrite (proj2 (N.leb_le _ _) LE1).
     rewrite (msub_nowrap _ 1) at 2 by (psimpl; apply LE1). psimpl.
   step. step.
-    apply Neqb_ok in BC0. rewrite BC0.
+    csimpl. rewrite BC0.
     replace (p-1) with (p⊖1); cycle 1.
       rewrite msub_nowrap; psimpl. reflexivity.
       etransitivity. apply LE1. apply N.Div0.mod_le.
@@ -257,7 +252,7 @@ Proof.
     rewrite BC0. simpl N.succ. psimpl. repeat split.
     intros i LT. destruct i; discriminate.
   step.
-    apply N.eqb_neq in BC0.
+    csimpl.
     assert (LE2: 2 <= p mod 4).
       destruct (N.zero_one (p mod 4)) as [H|[H|H]]; [rewrite H in *; contradiction..|].
       change 2 with (N.succ 1). apply N.le_succ_l, H.
@@ -269,7 +264,7 @@ Proof.
     psimpl.
   step.
     exists 0.
-      apply Neqb_ok in BC1. rewrite BC1, <- N.lor_assoc. simpl N.succ. psimpl. repeat split.
+      csimpl.  rewrite BC1, <- N.lor_assoc. simpl N.succ. psimpl. repeat split.
       intros i LT. destruct i; discriminate.
     exists 0. replace (p mod 4) with 3.
       rewrite <- !N.lor_assoc. simpl N.succ. psimpl. repeat split. intros i LT. destruct i; discriminate.

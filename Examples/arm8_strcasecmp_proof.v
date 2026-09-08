@@ -157,7 +157,7 @@ End Invariants.
 Lemma tolower_small:
   forall w e m a, tolower (getmem w e 1 m a) < 2^8.
 Proof.
-  intros. unfold tolower. destruct (andb _ _).
+  intros. unfold tolower. destruct andb.
     apply lor_bound.
       rewrite <- getmem_mod_r, mp2_mod_mod_min. apply mp2_mod_lt.
       reflexivity.
@@ -167,7 +167,7 @@ Qed.
 Lemma tolower_mod:
   forall c, (tolower c) mod 2^32 = tolower (c mod 2^32).
 Proof.
-  intro. unfold tolower. rewrite mp2_mod_mod. destruct (andb _ _).
+  intro. unfold tolower. rewrite mp2_mod_mod. destruct andb.
     rewrite <- N.land_ones, N.land_lor_distr_l, N.land_ones, mp2_mod_mod. reflexivity.
     reflexivity.
 Qed.
@@ -321,27 +321,27 @@ Proof.
 
     (* Address 1048648: reached null terminator in arg1 *)
     exists fb, k. repeat (reflexivity || assumption || split).
-    right. apply N.eqb_eq, BC.
+    right. now csimpl.
 
     (* Address 1048608: character in arg1 is non-null. *)
-    apply N.eqb_neq in BC.
+    csimpl.
     step. step.
 
       (* Address 1048648: reached null terminator in arg2 *)
-      apply N.eqb_eq in BC0.
+      csimpl.
       exists fb, k. repeat (reflexivity || assumption || split).
       left. rewrite BC0. change (tolower 0) with 0. unfold tolower.
-      destruct (andb _ _).
+      destruct andb.
         intro H. apply N.lor_eq_0_iff, proj2 in H. discriminate.
         assumption.
 
       (* Address 1048616: Current char in both strings are non-null. *)
-      apply N.eqb_neq in BC0.
+      csimpl.
       step. step.
 
         (* Address 1048688: identical characters found *)
         eexists fb, k. repeat (assumption || reflexivity || split).
-        apply N.eqb_eq in BC1. rewrite BC1. reflexivity.
+        csimpl. rewrite BC1. reflexivity.
 
         (* Address 1048624: Unequal characters found. Call tolower(arg1). *)
         step.
@@ -398,13 +398,13 @@ Proof.
           exists fb, k.
           rewrite !tolower_byte in BC2.
           repeat first [ assumption | split ].
-          apply N.eqb_eq, BC2.
+          csimpl. assumption.
 
           (* Address 1048648: found case-unequal characters *)
           exists fb, k.
           rewrite !tolower_byte in BC2.
           repeat first [ assumption | split ].
-          left. apply N.eqb_neq, BC2.
+          left. csimpl. assumption.
 
         (* Address 1048648: case-unequal chars or null found *)
         destruct PRE as (fb & k & SEQ & SP & MEM & X19 & X20 & NEQ).
@@ -465,7 +465,8 @@ Proof.
   destruct PRE as (fb & k & SEQ & SP & MEM & X19 & X20 & EQ & NN).
   step. step. step.
   exists fb, (k+1). split.
-    rewrite N.add_1_r. intros i H. apply N.lt_succ_r, N.le_lteq in H. destruct H.
+
+    intros i H. csimplo in H. destruct H.
       revert i H. apply SEQ.
       subst i. split. assumption. apply N.neq_0_lt_0, NN.
     psimpl. repeat split; assumption.
