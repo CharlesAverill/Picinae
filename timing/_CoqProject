@@ -8,5 +8,5 @@ amd64/AMD64Timing.v
 amd64/i5_7300u.v
 armv6m/ARMv6MCPUTimingBehavior.v
 armv6m/ARMv6MTiming.v
-armv6m/CortexM0.v
+armv6m/CortexM0NoWait.v
 memsolve.v

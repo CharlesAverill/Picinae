@@ -1,7 +1,14 @@
-(* CortexM0.v - Concrete Timing Parameters for ARM Cortex-M0 *)
-(* Based on ARMv6-M Architecture Reference Manual Table 3-1 *)
-(* Assumes zero wait-state memory *)
-(* TODO: Validate against the Cortex-M0 TRM and the STM32F0DISCOVERY's flash wait states *)
+(* CortexM0NoWait.v - Concrete Timing Parameters for ARM Cortex-M0 with No Wait States *)
+(* Based on the Cortex-M0 Technical Reference Manual (ARM DDI 0432C) Table 3-1 *)
+(* ONLY valid for a Cortex-M0 whose instruction fetches and data accesses all have *)
+(* zero wait states, with the single-cycle multiplier *)
+(* Accurate for these chips, with SYSCLK <= 24 MHz, interrupts disabled, and no DMA: *)
+(*   STM32F072x8, STM32F072xB (e.g., the STM32F072B-DISCO's STM32F072RBT6) *)
+(*   Flash and SRAM have 0 wait states up to 24 MHz (ST DS9826 Rev 6, 3.2 and 6.3.5); *)
+(*   the STM32F0 series has the single-cycle multiplier (ST PM0215 Rev 2, 1.4.3) *)
+(* Expected, but not yet checked against their datasheets, for the rest of the STM32F0 *)
+(* series (STM32F030/031/038/042/048/051/058/070/071/078/091/098) *)
+(* Not for Cortex-M0+ chips, or other vendors' Cortex-M0 chips, whose timing differs *)
 
 Require Import NArith.
 Require Import ARMv6MCPUTimingBehavior.
@@ -12,8 +19,8 @@ Open Scope N.
    ARM Cortex-M0 Instruction Timing
    ================================
    
-   Source: ARMv6-M Architecture Reference Manual DDI 0419E
-           Section 3.3.1 "Instruction cycle counts"
+   Source: Cortex-M0 Technical Reference Manual (ARM DDI 0432C)
+           Section 3.3 "Instruction set summary", Table 3-1
    
    Key characteristics:
    - 3-stage pipeline (Fetch, Decode, Execute)
@@ -24,11 +31,11 @@ Open Scope N.
    
    This implementation assumes:
    - Zero wait-state memory
-   - Fast multiplier option
+   - Fast (single-cycle) multiplier option, as on all STM32F0 parts
    - No flash acceleration
 *)
 
-Module CortexM0 <: ARMv6MCPUTimingBehavior.
+Module CortexM0NoWait <: ARMv6MCPUTimingBehavior.
 
     (* Infinite time for exceptional conditions *)
     Definition time_inf : N := 2^32.
@@ -114,10 +121,10 @@ Module CortexM0 <: ARMv6MCPUTimingBehavior.
     (* ===== Push/Pop ===== *)
     (* PUSH: 1 + N cycles *)
     (* POP: 1 + N cycles (no PC) *)
-    (* POP with PC: 1 + N + 3 cycles (pipeline refill) *)
+    (* POP with PC: 4 + N cycles, where N also counts PC *)
     Definition tpush_base : N := 1.
     Definition tpop_base : N := 1.
-    Definition tpop_pc_base : N := 4.  (* 1 base + 3 pipeline refill *)
+    Definition tpop_pc_base : N := 4.  (* includes pipeline refill *)
     
     (* ===== Branch Operations ===== *)
     (* Pipeline refill takes extra cycles *)
@@ -159,23 +166,28 @@ Module CortexM0 <: ARMv6MCPUTimingBehavior.
     Definition tcpsid : N := 1.
     Definition tcpsie : N := 1.
     
-End CortexM0.
+End CortexM0NoWait.
 
 (* 
    USAGE NOTES
    ===========
    
    1. Memory Wait States:
-      If your system has memory wait states, add them to load/store times.
-      Example: With 1 wait state, tldr_imm would be 3 instead of 2.
+      These timings are ONLY valid with zero wait-state memory. With wait
+      states (e.g., STM32F0 flash above 24 MHz), instruction fetches stall as
+      well as loads and stores, and how long depends on code alignment and the
+      prefetch buffer, so no per-instruction table like this one is accurate.
+      Do not use this module for such systems.
    
    2. Flash Acceleration:
       Some Cortex-M0 implementations have flash accelerators that can
       reduce instruction fetch latency. This is not modeled here.
    
    3. Multiplier:
-      This assumes the fast (single-cycle) multiplier option.
-      If using the small multiplier, tmuls should be 32.
+      This assumes the fast (single-cycle) multiplier option, which the
+      STM32F0 series has ("Single-cycle 32-bit hardware multiplier", ST PM0215
+      Rev 2, Section 1.4.3). For a Cortex-M0 with the small multiplier, tmuls
+      should be 32.
    
    4. Branch Prediction:
       Cortex-M0 has no branch prediction, so all taken branches

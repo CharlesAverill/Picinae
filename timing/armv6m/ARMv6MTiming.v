@@ -55,7 +55,7 @@ Definition time_of_addr (s : store) (a : addr) : N :=
     | T_LDM _ rl => tldm_base + N.of_nat (length (armv6m_regs rl))
     | T_STM _ rl => tstm_base + N.of_nat (length (armv6m_regs rl))
     | T_PUSH rl lr => tpush_base + N.of_nat (length (armv6m_regs rl)) + (if lr then 1 else 0)
-    | T_POP rl pc => (if pc then tpop_pc_base else tpop_base) + N.of_nat (length (armv6m_regs rl))
+    | T_POP rl pc => (if pc then tpop_pc_base + 1 else tpop_base) + N.of_nat (length (armv6m_regs rl))   (* N counts PC *)
     | T_B_cond c _ => match armv6m_cond_val s c with N0 => tb_not_taken | _ => tb_taken end
     | T_B _ => tb | T_BL _ => tbl | T_BX _ => tbx | T_BLX _ => tblx
     | T_SXTH _ _ => tsxth | T_SXTB _ _ => tsxtb | T_UXTH _ _ => tuxth | T_UXTB _ _ => tuxtb

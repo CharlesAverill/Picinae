@@ -10,7 +10,8 @@ Open Scope N.
    Different implementations (Cortex-M0, Cortex-M0+, etc.) can provide
    concrete values for these parameters.
    
-   Timing values are based on ARMv6-M Architecture Reference Manual.
+   Timing values are based on the processor's Technical Reference Manual
+   (ARM DDI 0432C, Table 3-1, for the Cortex-M0).
    The actual cycle counts depend on:
    - Specific CPU implementation
    - Memory wait states
@@ -101,7 +102,7 @@ Module Type ARMv6MCPUTimingBehavior.
     (* Base cycles - actual time is base + N where N is register count *)
     Parameter tpush_base : N.   (* PUSH {reglist} base *)
     Parameter tpop_base : N.    (* POP {reglist} base (no PC) *)
-    Parameter tpop_pc_base : N. (* POP {reglist, PC} base (includes pipeline refill) *)
+    Parameter tpop_pc_base : N. (* POP {reglist, PC} base (includes pipeline refill); N counts PC *)
     
     (* ===== Branch Operations ===== *)
     Parameter tb_taken : N.     (* B.cond taken - includes pipeline refill *)
