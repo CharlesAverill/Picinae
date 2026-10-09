@@ -27,6 +27,8 @@
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_riscv.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
+%coqc% Picinae_armv6m.v
+@IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_amd64.v
 @IF ERRORLEVEL 1 GOTO :ErrorExit
 %coqc% Picinae_armv8_pcode.v

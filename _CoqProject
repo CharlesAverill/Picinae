@@ -9,6 +9,7 @@ Picinae_ISA.v
 Picinae_i386.v
 Picinae_armv7.v
 Picinae_riscv.v
+Picinae_armv6m.v
 Picinae_amd64.v
 Picinae_armv8_pcode.v
 Picinae_memsolve.v
