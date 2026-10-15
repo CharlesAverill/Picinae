@@ -30,3 +30,5 @@ Picinae_numbers.v
 # Examples/i386_wcsnlen.v
 # Examples/i386_wcsspn_proof.v
 # Examples/i386_wcsspn.v
+Examples/arm8_strspn.v
+Examples/arm8_strspn_lemmas.v

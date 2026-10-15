@@ -4,6 +4,7 @@ Require Import Picinae_armv8.
 From Stdlib Require Import Lia.
 From Stdlib Require Import Bool.
 From Stdlib Require Import Utf8.
+Require Import Cdcl.NOlia.
 Import ARM8Notations.
 
 (* Require Import strspn_arm8. *)
@@ -665,29 +666,7 @@ forall m a x k
 (EQ2: k = 8*x),
 (m Ⓠ[ (k) + a ] << 8 * (k)) mod 2 ^ 256 = (m Ⓠ[ (k) + a ] << 8 * (k)).
 Proof.
-intros.
-rewrite EQ2.
-rewrite N.mod_small. reflexivity.
-
-rewrite N.mul_assoc. psimpl (8*8).
-rewrite N.shiftl_mul_pow2.
-
-destruct EQ1.
-rewrite H. psimpl (8*1). psimpl (64*1).
-replace (2^256) with (2^192 * 2^64).
-rewrite <- N.mul_lt_mono_pos_r with (p:= 2^64).
-apply quad_less_than. lia. lia. lia.
-
-destruct H.
-rewrite H. psimpl (8*2). psimpl (2^(64*2)).
-replace (2^256) with (2^128 * 2^128).
-rewrite <- N.mul_lt_mono_pos_r with (p:= 2^128).
-apply quad_less_than. lia. lia. lia.
-
-rewrite H. psimpl (8*3). psimpl (2^(64*3)).
-replace (2^256) with (2^64 * 2^192).
-rewrite <- N.mul_lt_mono_pos_r with (p:= 2^192).
-apply getmem_bound. lia. lia.
+  intros. bitify. solve bits inj. csimpl. algify. smt.
 Qed.
 
 Lemma b_eq :
@@ -698,27 +677,12 @@ forall b k
 ,
 2 ^ b mod 2 ^ (8 * 32) = 2 ^ (b mod 64) * 2 ^ (8 * 8*k).
 Proof.
-intros.
-
-psimpl. repeat rewrite N.shiftl_1_l. rewrite <- N.pow_add_r.
-
-assert (forall a b, 2^a = 2^b <-> a = b).
-intuition. apply N.pow_inj_r with(a:=2) (b:=a)(c:=b0) in H. assumption. lia.
-rewrite H. reflexivity.
-
-assert(2^b < 2^256).
-rewrite <- N.pow_lt_mono_r_iff with (a:= 2). assumption. lia.
-
-rewrite H.
-replace (b = b mod 64 + 64*k) with (b + 64*k - 64*k = b mod 64 + 64*k).
-rewrite N.add_sub_swap with (p:= 64*k).
-rewrite N.add_cancel_r.
-rewrite N.Div0.mod_eq.
-rewrite N.shiftl_mul_pow2 in HYP1. psimpl (2^3) in HYP1. rewrite N.mul_comm in HYP1.
-rewrite N.mul_cancel_l in HYP1. rewrite N.shiftr_div_pow2 in HYP1.
-psimpl (2^6) in HYP1. rewrite HYP1. reflexivity.
-lia. assumption. psimpl (b + 64 * k - 64 * k). reflexivity.
-
+  intros. bitify. solve bits inj. csimpl.
+- subst i. algify. replace k with (b/64) in * by smt. clear - HYP4. bitify.
+  rewrite <-N.pow_add_r. rewrite <-lor_plus, recompose_bytes;solve bits inj.
+- csimpl; subst i. algify. smt.
+- csimpl. algify; replace k with (b/64) in * by smt; bitify.
+  rewrite <-N.pow_add_r, <-lor_plus, recompose_bytes;solve bits inj.
 Qed.
 
 Lemma b_eq_2 :
@@ -753,86 +717,46 @@ Theorem getmem_eq:
   getmem 64 LittleE 32 (setmem 64 LittleE 8 m (a + (b >> 6 << 3)) (N.setbit (getmem 64 LittleE 8 m (a + (b >> 6 << 3))) (b mod (8*8))))((a))
 .
 Proof.
-intros.
-rewrite N.setbit_spec' .
-rewrite getmem_setmem.
-
-replace 32 with (24 + 8).
-rewrite getmem_split.
-replace 24 with (16 + 8).
-rewrite getmem_split.
-replace 16 with (8 + 8).
-rewrite getmem_split.
-
-replace 32 with (24 + 8).
-rewrite getmem_split.
-replace 24 with (16 + 8).
-rewrite getmem_split.
-replace 16 with (8 + 8).
-rewrite getmem_split.
-psimpl.
-
-repeat rewrite N.setbit_spec'.
-
-unfold cbits.
-
-assert (b < 256 -> 64*0<= b /\ b < 64*1 \/ (64*1 <= b /\ b <64*2) \/ (64*2 <= b /\ b<64*3) \/ (64*3 <= b /\ b<64*4)). lia.
-
-specialize (H0 H).
-
-destruct H0. inversion H0. apply range_eq in H0.
-psimpl (8*0) in H0. rewrite H0. psimpl.
-
-rewrite N.lor_comm.
-repeat rewrite N.lor_assoc.
-replace (1 << b .| (m Ⓠ[ a ])) with ((m Ⓠ[ a ]).|1 << b).
-all: try lia.
-
-repeat rewrite N.shiftl_1_l. rewrite N.mod_small.
-repeat rewrite <- N.lor_assoc. rewrite (N.lor_comm (2^b)). repeat rewrite N.lor_assoc.
-reflexivity.
-1-2: try assumption. apply N.lor_comm.
-
-destruct H0. inversion H0. apply range_eq in H0.
-psimpl (8*1) in H0. rewrite H0. psimpl.
-repeat rewrite N.shiftl_1_l.
-rewrite N.shiftl_lor. rewrite N.lor_assoc.
-rewrite N.lor_comm. repeat rewrite N.lor_assoc.
-rewrite <- lor_der_1.
-
-change (2^7) with 128.
-rewrite b_eq_2 with (k:=1). psimpl (8*8*1).
-rewrite N.shiftl_mul_pow2 with (a:= (2^(b mod 64))) (n:=64).
-rewrite <- N.lor_assoc with (b:=2^(b mod 64)*2^64) (c:=m Ⓠ[8+a] << 64).
-rewrite (N.lor_comm (2^(b mod 64)*2^64) (m Ⓠ[8+a] << 64)). rewrite N.lor_assoc.
-reflexivity. psimpl. assumption.
-1-2: assumption. lia.
-
-destruct H0. inversion H0. apply range_eq in H0.
-psimpl (8*2) in H0. rewrite H0. psimpl.
-repeat rewrite N.shiftl_1_l.
-rewrite N.shiftl_lor. rewrite N.lor_assoc. rewrite N.lor_comm. repeat rewrite N.lor_assoc.
-rewrite lor_der_2. change (2^7) with 128.
-rewrite b_eq_2 with (k:=2). change (8*8*2) with 128.
-rewrite N.shiftl_mul_pow2 with (a:= (2^(b mod 64))) (n:=128).
-rewrite <- N.lor_assoc with (b:=m Ⓠ[8+a] << 64) (c:=2^(b mod 64)*2^128).
-rewrite (N.lor_comm (m Ⓠ[8+a] << 64) (2^(b mod 64)*2^128)). rewrite N.lor_assoc.
-reflexivity. 1-3: psimpl; assumption. lia.
-
-pose proof H0. apply range_eq in H0. destruct H1.
-psimpl (8*3) in H0. rewrite H0. psimpl.
-repeat rewrite N.shiftl_1_l.
-rewrite N.shiftl_lor. rewrite N.lor_assoc. change (2^7) with 128.
-rewrite b_eq_2 with (k:=3). change (8*8*3) with 192.
-rewrite N.shiftl_mul_pow2 with (a:= (2^(b mod 64))) (n:=192).
-repeat rewrite N.lor_assoc.
-rewrite <- N.lor_assoc with (b:=m Ⓠ[a]) (c:=2^(b mod 64)*2^192).
-rewrite (N.lor_comm (m Ⓠ[a]) (2^(b mod 64)*2^192)). rewrite N.lor_assoc.
-rewrite <- N.lor_assoc with (b:=m Ⓠ[8+a] << 64) (c:=2^(b mod 64)*2^192).
-rewrite (N.lor_comm (m Ⓠ[8+a] << 64) (2^(b mod 64)*2^192)). rewrite N.lor_assoc.
-rewrite <- N.lor_assoc with (b:=m Ⓠ[16+a] << 128) (c:=2^(b mod 64)*2^192).
-rewrite (N.lor_comm (m Ⓠ[16+a] << 128) (2^(b mod 64)*2^192)). rewrite N.lor_assoc.
-reflexivity. psimpl (8*3). 1-3: try psimpl; assumption. lia.
+    intros.
+  rewrite getmem_setmem;[|lia]. bitify. psimpl.
+  apply N.bits_inj; intros i.
+  sbi00_simple.
+  sbi00_simple.
+  time simple_bsimpl. (* 0.9s *)
+  all: time (try reflexivity; csimpl; try subst i; try timeout 1 lia). (* 5.5s *)
+  - algify. remember (msub _ _ _) as i eqn:Heq.
+    rewrite N.mul_add_distr_r in *; replace (b/64*8*8) with (b/64*64) in * by lia.
+    replace (2^64*8) with (2^67) in * by lia. rewrite msub_mod_l, madd_add_simpl_l_l in Heq by lia.
+    algify. rewrite msub_sub, N.mod_small in Heq by lia. smt.
+  - algify. psimpl in Eqn1; psimpl in Eqn0. remember (msub _ _ _) as i eqn:Heq.
+    rewrite N.mul_add_distr_r in *; replace (b/64*8*8) with (b/64*64) in * by lia.
+    replace (2^64*8) with (2^67) in * by lia. rewrite msub_mod_l, madd_add_simpl_l_l in Heq by lia.
+    algify. rewrite msub_sub, N.mod_small in Heq by lia. smt.
+  - algify.
+    rewrite N.mul_add_distr_r in *; replace (b/64*8*8) with (b/64*64) in * by lia.
+    replace (2^64*8) with (2^67) in * by lia. rewrite msub_mod_l, madd_add_simpl_l_l in Eqn0 by lia.
+    unfold msub in Eqn0. psimpl in Eqn0.
+    (* The following steps are needed to help `smt`. *)
+    change (64+3) with 67 in *. clear Eqn4. rewrite msub_mod_l, madd_add_simpl_l_l in Eqn3 by lia.
+    rewrite N.mod_small in Eqn0 by lia. rewrite N.mod_small in Eqn0 by (unfold msub in Eqn3; lia).
+    time smt.
+  - psimpl in Eqn2; psimpl in Eqn0. algify.
+    rewrite N.mul_add_distr_r in *; replace (b/64*8*8) with (b/64*64) in * by lia.
+    replace (2^64*8) with (2^67) in * by lia. rewrite msub_mod_l, madd_add_simpl_l_l in * by lia.
+    unfold msub in *. psimpl in Eqn2; psimpl in Eqn0.
+    (* Why does smt fail on this? It is true because if it was less then Eqn2 would be false.
+       And if it's equal... then...?  It figured that out below.
+       Fail assert (i>b/64*64) by smt. *)
+    destruct (N.lt_trichotomy i (b/64*64)) as [Lt | [Eq | Gt]].
+    + clear - Lt Eqn2 Eqn H; smt.
+    + subst i; clear - Eqn0. (* How the heck?? *) smt.
+    + rewrite (N.add_comm (2^67) i) in *. Search N.sub N.add (_+_-_). rewrite <-N.add_sub_assoc in * by lia.
+      replace ((i + (2 ^ 67 - (b / 64 * 64) mod 2 ^ 67)) mod 2 ^ 67 ) with (msub 67 i (b/64*64)) in * by reflexivity.
+      rewrite msub_sub in * by lia.
+      rewrite (N.mod_small (i-_)) in * by lia.
+      bitify. apply f_equal. psimpl. enough (Help:i mod 2^67 = ((b>>6<<6)+(2^67+i-(b>>6<<6))) mod 2^67).
+      Search ((_+_ mod _)mod _). rewrite <-mp2_add_r, Help,mp2_add_r, <-N.add_assoc. reflexivity.
+      lia.
 Qed.
 
 (*Made some small tweaks to the one we already have for greater ease of use*)
