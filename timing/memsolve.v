@@ -49,7 +49,8 @@ Proof.
   clear - H H0.
   apply sep_noverlap; try (left; lia || right; lia).
 Qed.
-Ltac Zify.zify_post_hook ::= Z.div_mod_to_equations.
+(* Local: this makes every lia slower, so it must not leak to importers. *)
+#[local] Ltac Zify.zify_post_hook ::= Z.div_mod_to_equations.
 
 
 Lemma succ_msub_swap:

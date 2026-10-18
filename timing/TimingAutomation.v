@@ -58,6 +58,12 @@ Lemma cycle_count_of_trace_single :
         end.
 Proof. reflexivity. Qed.
 
+Lemma cycle_count_of_trace_single_addr :
+    forall (a : addr) (s : store),
+    cycle_count_of_trace [(Addr a, s)] = time_of_addr s a.
+Proof. reflexivity. Qed.
+
+
 Lemma cycle_count_of_trace_cons :
     forall (t : trace) (e : exit) (s : store),
     cycle_count_of_trace ((e, s) :: t) = cycle_count_of_trace [(e, s)] + cycle_count_of_trace t.
@@ -65,6 +71,15 @@ Proof.
     intros. unfold cycle_count_of_trace.
     repeat rewrite map_cons, rev_cons, fold_left_app.
     simpl. lia.
+Qed.
+
+(* Application form of cycle_count_of_trace_cons *)
+Lemma cycle_count_step :
+    forall a s t x, cycle_count_of_trace t = x ->
+    cycle_count_of_trace ((Addr a, s) :: t) = time_of_addr s a + x.
+Proof.
+    intros. rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single, H.
+    reflexivity.
 Qed.
 
 Lemma cycle_count_of_trace_app :
@@ -79,38 +94,88 @@ Proof.
     lia.
 Qed.
 
+(* Compare two terms up to conversion *)
+Ltac same_term x y :=
+    first [ constr_eq x y
+          | lazymatch constr:((x, y)) with
+            | context[getmem] => fail
+            | context[setmem] => fail
+            | _ => unify x y
+            end ].
+
 Ltac find_rewrites :=
     repeat (match goal with
-    | [s: store, H: ?s ?x = ?y |- context[?s ?x]] =>
+    | [s: store, H: ?s ?x = ?y |- context[?s' ?x']] =>
+        constr_eq s s'; same_term x x';
         rewrite -> H
-    | [H: ?x = _ |- context[match ?x with _ => _ end]] =>
+    | [H: ?x = _ |- context[match ?x' with _ => _ end]] =>
+        same_term x x';
         rewrite H
-    | [H: negb ?x = ?y |- context[if ?x then _ else _]] =>
-        (match y with 
-        | true => apply Bool.negb_true_iff in H 
+    | [H: negb ?x = ?y |- context[if ?x' then _ else _]] =>
+        same_term x x';
+        (match y with
+        | true => apply Bool.negb_true_iff in H
         | false => apply Bool.negb_false_iff in H
         end);
         rewrite H
-    | [H: ?x = ?y |- context[if negb ?x then _ else _]] =>
+    | [H: ?x = ?y |- context[if negb ?x' then _ else _]] =>
+        same_term x x';
         (match y with
         | true => apply Bool.negb_false_iff in H
         | false => apply Bool.negb_true_iff in H
         end);
         rewrite H
-    | [H: cycle_count_of_trace ?t = _ |- context[cycle_count_of_trace ?t]] =>
+    | [H: cycle_count_of_trace ?t = _ |- context[cycle_count_of_trace ?t']] =>
+        same_term t t';
         rewrite H
     end); cbn [negb].
+
+Ltac find_rewrites_in H :=
+    repeat (match goal with
+    | [s: store, H0: ?s ?x = ?y |- _] =>
+        tryif constr_eq H0 H then fail else
+        match type of H with context[s x] => rewrite -> H0 in H end
+    | [H0: ?x = _ |- _] =>
+        tryif constr_eq H0 H then fail else
+        match type of H with context[match x with _ => _ end] => rewrite H0 in H end
+    | [H0: negb ?x = ?y |- _] =>
+        tryif constr_eq H0 H then fail else
+        match type of H with context[if x then _ else _] =>
+            (match y with
+            | true => apply Bool.negb_true_iff in H0
+            | false => apply Bool.negb_false_iff in H0
+            end);
+            rewrite H0 in H
+        end
+    | [H0: ?x = ?y |- _] =>
+        tryif constr_eq H0 H then fail else
+        match type of H with context[if negb x then _ else _] =>
+            (match y with
+            | true => apply Bool.negb_false_iff in H0
+            | false => apply Bool.negb_true_iff in H0
+            end);
+            rewrite H0 in H
+        end
+    end); cbn [negb] in H.
 
 (* Grabbing each cpi_at_addr one-by-one seems to prevent explosions in cbv 
    evaluation time *)
 Global Opaque getmem setmem.
 Ltac unfold_time_of_addr :=
-    cbv [time_of_addr]; cbn - [setmem getmem];
+    repeat match goal with
+    | [|- context[time_of_addr ?s ?a]] =>
+        let c := eval cbv [time_of_addr] in (time_of_addr s a) in
+        let c := eval cbn - [setmem getmem] in c in
+        change (time_of_addr s a) with c
+    end;
+    cbn [negb];
     repeat (rewrite update_updated || rewrite update_frame by discriminate).
 
 Ltac unfold_cycle_count_list :=
     repeat rewrite cycle_count_of_trace_app;
-    repeat rewrite cycle_count_of_trace_cons, cycle_count_of_trace_single.
+    repeat (rewrite cycle_count_of_trace_cons;
+            first [rewrite cycle_count_of_trace_single_addr
+                  | rewrite cycle_count_of_trace_single]).
 Ltac hammer :=
     (* easy rewrites *)
     find_rewrites;
@@ -298,30 +363,28 @@ Ltac fold_big_subs :=
         simpl (2^BW - X) in H
     end.
 
-Ltac generalize_timing_trace Heq TSI l a s t :=
-    let x := fresh "x" in
-    remember ((Addr a, _) :: t) as l eqn:Heq;
-    (* I promise this is necessary *)
-    (* if instead eassert is used, it likes to try and *)
-    (* fill in the hole on its own. *)
-    evar (x : N);
-    assert (cycle_count_of_trace l = x) as TSI by
-        (rewrite Heq; hammer; psimpl;
-        match goal with
-        | [|- ?v = x] => try subst x; instantiate (1 := v)
-        end; reflexivity);
-    subst x.
+Ltac generalize_timing_trace TSI TSI' l a s t x :=
+    pose proof (cycle_count_step a s t x TSI) as TSI';
+    pose (l := (Addr a, s) :: t);
+    change ((Addr a, s) :: t) with l in TSI' |- *;
+    clearbody l;
+    let c := eval cbv [time_of_addr] in (time_of_addr s a) in
+    let c := eval cbn - [setmem getmem] in c in
+    let E := fresh "E" in
+    assert (E : time_of_addr s a = c) by reflexivity;
+    rewrite E in TSI'; clear E;
+    repeat (rewrite update_updated in TSI' || rewrite update_frame in TSI' by discriminate);
+    psimpl in TSI'; find_rewrites_in TSI'; psimpl in TSI'.
 
 Ltac do_generalize :=
     lazymatch goal with
     | [t: list (exit * store), 
         TSI: cycle_count_of_trace ?t = ?x
         |- nextinv _ _ _ _ (_ :: (Addr ?a, ?s) :: ?t)] =>
-        let Heq := fresh "Heq" in
         let H0 := fresh "TSI" in
         let l := fresh "tail" in
-        generalize_timing_trace Heq H0 l a s t;
-        clear Heq TSI;
+        generalize_timing_trace TSI H0 l a s t x;
+        clear TSI;
         try (clear t; rename l into t);
         rename H0 into TSI
     | [t: list (exit * store), 
