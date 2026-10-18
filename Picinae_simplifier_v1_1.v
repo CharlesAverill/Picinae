@@ -2131,12 +2131,19 @@ Local Ltac psimp_verify_frontend :=
     reflexivity
   end.
 
+(* [t] is a chain of lambda redexes [(\x. ...) (SIMP_BVar id ?b v)], simplify
+   it before doing unification. This prevents blowup when simplifying loads from
+   large concrete addresses, e.g. [negb (mem Ⓓ[0x80080004] =? 0)] *)
+Local Ltac delta_unify t t2 :=
+  let t' := eval cbv beta delta [t] in t in
+  unify t' t2; reflexivity.
+
 Local Ltac psimpl_hyp_with _simpl_evars _make_mvt _simplify_sast_hyp t H :=
   let t2 := eval lazy [t simpl_evarsN simpl_evarsB simpl_evarsS] in (_simpl_evars t) in
   let mvt := eval compute in (_make_mvt t2) in
   eapply (_simplify_sast_hyp _ _ _ _ mvt t2) in H;
   [ compute in H
-  | unify t t2; reflexivity
+  | delta_unify t t2
   | reflexivity
   | psimp_verify_frontend ].
 
@@ -2149,7 +2156,7 @@ Local Ltac psimplU_hyp t H :=
   let mvt := eval compute in (make_mvtU t2) in
   eapply (simplify_sastU_hyp _ _ mvt t2) in H;
   [ compute in H
-  | unify t t2; reflexivity
+  | delta_unify t t2
   | reflexivity
   | psimp_verify_frontend ].
 Local Ltac psimplU_goal t :=
@@ -2157,7 +2164,7 @@ Local Ltac psimplU_goal t :=
   let mvt := eval compute in (make_mvtU t2) in
   eapply (simplify_sastU_goal _ _ mvt t2);
   [ compute
-  | unify t t2; reflexivity
+  | delta_unify t t2
   | reflexivity
   | psimp_verify_frontend ].
 
