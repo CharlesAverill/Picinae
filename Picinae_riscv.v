@@ -231,6 +231,7 @@ Inductive rv_asm :=
 | R5_Rem (r1 r2 r3 : N)
 | R5_Remu (r1 r2 r3 : N)
 | R5_Clz (r1 r2 : N)
+| R5_Andn (r1 r2 r3 : N)
 (** Zicsr Extension *)
 | R5_Csrrw (rd csr rs1 : N)
 | R5_Csrrs (rd csr rs1 : N)
@@ -263,6 +264,8 @@ Definition rv_decode_binop (funct7_funct3 : N) :=
   | 8  => R5_Mul | 9 => R5_Mulh | 10 => R5_Mulsu | 11 => R5_Mulu
   | 12 => R5_Div | 13 => R5_Divu
   | 14 => R5_Rem | 15 => R5_Remu
+  (** Zbb Bit-Manipulation Extension *)
+  | 263 => R5_Andn
   | _ => (fun _ _ _ => R5_InvalidI)
   end.
 
@@ -457,6 +460,7 @@ Definition rv2il (a:addr) rvi :=
   (* TODO : Implement rest of M extension *)
   (* Bit-Manipulation ISA-extension *)
   | R5_Clz rd rs => r5mov rd (UnOp OP_CLZ (r5var rs))
+  | R5_Andn rd rs1 rs2 => r5mov rd (BinOp OP_AND (r5var rs1) (UnOp OP_NOT (r5var rs2)))
   (* Zicsr extension *)
   | R5_Csrrw _ _ _ | R5_Csrrs _ _ _ | R5_Csrrc _ _ _ 
   | R5_Csrrwi _ _ _ | R5_Csrrsi _ _ _ | R5_Csrrci _ _ _ => Nop

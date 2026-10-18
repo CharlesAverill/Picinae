@@ -120,6 +120,7 @@ Module RISCVTiming (cpu : RVCPUTimingBehavior) (prog : ProgramInformation) <: Ti
         | R5_Clz rd _       =>
             let rd := regvalue s rd in
             tclz rd
+        | R5_Andn _ _ _     => tandn
 
         (* ==== Zicsr ISA Extension ==== *)
         | R5_Csrrw _ _ _ =>
