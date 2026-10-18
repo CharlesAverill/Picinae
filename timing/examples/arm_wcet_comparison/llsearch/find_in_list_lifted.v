@@ -1,64 +1,25 @@
-(* Automatically generated with pcode2coq
-arch: amd64
-file: linked_list
-function: find_in_list
-*)
+(* Auto-generated from llsearch/linked_list.elf *)
+From Stdlib Require Import NArith.
+Require Import Picinae_armv6m.
 
-Require Import Picinae_amd64.
-Require Import NArith.
-Require Import Lia.
 Open Scope N.
 
-Definition linked_list_find_in_list_amd64 : program := fun _ a => match a with
+Definition linked_list_find_in_list_armv6m (a : addr) : N :=
+    match a with
+    (* <find_in_list> *)
+    | 0x800002c => 0x2800 (* cmp r0, #0 *)
+    | 0x800002e => 0xd006 (* beq.n 800003e <find_in_list+0x12> *)
+    | 0x8000030 => 0x6803 (* ldr r3, [r0, #0] *)
+    | 0x8000032 => 0x428b (* cmp r3, r1 *)
+    | 0x8000034 => 0xd002 (* beq.n 800003c <find_in_list+0x10> *)
+    | 0x8000036 => 0x6840 (* ldr r0, [r0, #4] *)
+    | 0x8000038 => 0x2800 (* cmp r0, #0 *)
+    | 0x800003a => 0xd1f9 (* bne.n 8000030 <find_in_list+0x4> *)
+    | 0x800003c => 0x4770 (* bx lr *)
+    | 0x800003e => 0x2000 (* movs r0, #0 *)
+    | 0x8000040 => 0xe7fc (* b.n 800003c <find_in_list+0x10> *)
+    | _ => 0
+    end.
 
-(* 0x00101330: JMP 0x00101349 *)
-(*          0: JMP 0x00101349 *)
-| 0x0 => Some (2,
-	Jmp (Word 0x19 64)
-)
-
-(* 0x00101340: CMP RSI,qword ptr [RDI] *)
-(*         16: CMP RSI,qword ptr [RDI] *)
-| 0x10 => Some (3,
-	Move (V_TEMP 0x12000) (Load (Var V_MEM64) (Var R_RDI) LittleE 8) $;
-	Move (V_TEMP 0x3f880) (Var (V_TEMP 0x12000)) $;
-	Move R_CF (Cast CAST_LOW 1 (BinOp OP_LT (Var R_RSI) (Var (V_TEMP 0x3f880)))) $;
-	Move R_OF (Cast CAST_LOW 1 (Cast CAST_LOW 8 (BinOp OP_AND (BinOp OP_XOR (BinOp OP_AND (BinOp OP_RSHIFT (Var R_RSI) (Word 63 64)) (Word 1 64)) (BinOp OP_AND (BinOp OP_RSHIFT (BinOp OP_MINUS (Var R_RSI) (Var (V_TEMP 0x3f880))) (Word 63 64)) (Word 1 64))) (BinOp OP_XOR (BinOp OP_XOR (BinOp OP_AND (BinOp OP_RSHIFT (BinOp OP_MINUS (Var R_RSI) (Var (V_TEMP 0x3f880))) (Word 63 64)) (Word 1 64)) (BinOp OP_AND (BinOp OP_RSHIFT (Var (V_TEMP 0x3f880)) (Word 63 64)) (Word 1 64))) (Word 1 64))))) $;
-	Move (V_TEMP 0x3f980) (BinOp OP_MINUS (Var R_RSI) (Var (V_TEMP 0x3f880))) $;
-	Move R_SF (Cast CAST_LOW 1 (BinOp OP_SLT (Var (V_TEMP 0x3f980)) (Word 0x0 64))) $;
-	Move R_ZF (Cast CAST_LOW 1 (BinOp OP_EQ (Var (V_TEMP 0x3f980)) (Word 0x0 64))) $;
-	Move (V_TEMP 0x2c280) (BinOp OP_AND (Var (V_TEMP 0x3f980)) (Word 0xff 64)) $;
-	Move (V_TEMP 0x2c300) (Cast CAST_LOW 8 (UnOp OP_POPCOUNT (Var (V_TEMP 0x2c280)))) $;
-	Move (V_TEMP 0x2c380) (BinOp OP_AND (Var (V_TEMP 0x2c300)) (Word 0x1 8)) $;
-	Move R_PF (Cast CAST_LOW 1 (BinOp OP_EQ (Var (V_TEMP 0x2c380)) (Word 0x0 8)))
-)
-
-(* 0x00101343: JZ 0x00101358 *)
-(*         19: JZ 0x00101358 *)
-| 0x13 => Some (2,
-	If (Cast CAST_LOW 1 (Var R_ZF)) (
-		Jmp (Word 0x28 64)
-	) (* else *) (
-		Nop
-	)
-)
-
-(* 0x00101345: MOV RDI,qword ptr [RDI + 0x8] *)
-(*         21: MOV RDI,qword ptr [RDI + 0x8] *)
-| 0x15 => Some (4,
-	Move (V_TEMP 0x4780) (BinOp OP_PLUS (Var R_RDI) (Word 0x8 64)) $;
-	Move (V_TEMP 0x12000) (Load (Var V_MEM64) (Var (V_TEMP 0x4780)) LittleE 8) $;
-	Move R_RDI (Var (V_TEMP 0x12000))
-)
-
-| _ => None
-end.
-
-(* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *                                                         *
- *                  Well-typed Theorem                     *
- *                                                         *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *)
-
-Theorem welltyped: welltyped_prog x64typctx linked_list_find_in_list_amd64.
-Proof. Picinae_typecheck. Qed.
+Definition start_linked_list_find_in_list_armv6m : N := 0x800002c.
+Definition end_linked_list_find_in_list_armv6m : N := 0x8000040.

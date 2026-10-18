@@ -1,4 +1,4 @@
-Require Import insert_in_sorted_list_lifted.
+From Picinae.timing.examples.x86_wcet_comparison.llsearch Require Import insert_in_sorted_list_lifted.
 Require Import AMD64Timing.
 Import X64Notations.
 Require Import TimingAutomation.
@@ -151,7 +151,7 @@ match t with (Addr a, s) :: t' => match a with
         (ctr <= le_dist)%nat /\
         node_distance base_mem l NULL len /\
         node_distance base_mem l (s R_RDI) ctr /\
-        cycle_count_of_trace t' <=
+        cycle_count_of_trace t' =
             mov_r64_m64 + cmp_r64_i + jz_addr +
             nop + (N.of_nat ctr) * (
                 mov_r64_r64 + mov_r64_m64 + cmp_r64_m64 + jnc_addr
@@ -266,6 +266,11 @@ Proof using.
     destruct_inv 64 PRE.
     - destruct PRE as (IDX & RDI & RSI & MEM & SENTRY & SENTRY_VAL & NonNull & 
             NewVal & L_NN & Len_Nz & V_NN & Len & Cycles).
+        (* After the first CMP, JZ reads only ZF, and the loop's CMP sets CF
+           again before JNC reads it. Ignoring the other flags makes Qed much
+           faster. *)
+        Ltac ISA_amd64.ignore_vars v ::=
+            constr:(match v with R_CF | R_OF | R_SF | R_PF => true | _ => false end).
         repeat step.
         -- unfold NULL. destruct (list_node_value base_mem value) eqn:E.
             destruct value. inversion E.
@@ -273,7 +278,10 @@ Proof using.
                 apply N.eqb_eq in BC.
                 unfold p.w, p.e, p.dw in E. rewrite E in BC.
                 rewrite BC. rewrite optN_eqb_refl. hammer.
-                rewrite optN_eqb_None_Some. hammer.
+                (* value is not NULL, so it has a value *)
+                exfalso. unfold list_node_value in E. destruct value.
+                    apply V_NN. reflexivity.
+                    discriminate.
         -- exists 0%nat. split. assumption.
             rewrite <- MEM in *; repeat split; auto; try lia.
             destruct value. contradiction. simpl.
@@ -282,8 +290,11 @@ Proof using.
             hammer.
     - destruct PRE as (ctr & IDX & SENTRY & SENTRY_VAL & ValueValid & RDI & RSI & 
             RAX & MEM & L_NN & Len_Nz & CtrMax & Len & CtrDist & Cycles).
+        Ltac ISA_amd64.ignore_vars v ::= constr:(false).
         repeat step.
-        -- hammer. replace ctr with le_dist in Cycles. lia.
+        (* ValueValid states the sentinel check with INT_MAX evaluated; match it *)
+        all: try change INT_MAX with 2147483647.
+        -- hammer. replace ctr with le_dist. lia.
             destruct (le_cases ctr le_dist CtrMax); try lia.
             clear - H CtrDist IDX Len Len_Nz BC RDI.
             destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & _ & Vals & _ & Lens & Sorted).

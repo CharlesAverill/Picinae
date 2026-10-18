@@ -1,0 +1,320 @@
+***
+*** AbsInt Advanced Analyzer for ARM (GUI)
+*** Version: 26.04
+*** Build: 19471048
+*** Tag: auto/2026/04/17/2136
+***
+
+***
+*** Start of report file generated on 11 Oct 2026 21:50:30 -0500
+*** Current working directory: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch
+*** Current project file: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/llsearch_wcet.apx
+*** Current analysis ID: find_in_list_aiT
+*** Current analysis type: aiT
+*** Host: anesidora
+*** License: localhost@42426 (Charles Averill of Department of Engineering and Computer Science (University of Texas) - #ALF2572)
+*** Number of concurrent analyses: 1
+***
+
+***
+*** Files
+***
+
+  Executables:
+    - Executable: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/linked_list.elf
+  Ais: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/linked_list.ais
+
+
+***
+*** Effective configuration: Default Configuration
+***
+
+*** Arm Options
+
+  General:
+    - Target: Cortex-M0
+
+
+*** Analysis Settings for find_in_list_aiT
+
+  Analysis Start: find_in_list
+  Report: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/find_in_list_report.txt
+
+
+
+
+***
+*** Starting decoding round #1
+***
+
+  
+
+***
+*** Control-Flow & Value Analysis for find_in_list_aiT
+*** Started on 11 Oct 2026 21:50:31 -0500
+***
+
+isa-arm.ais: Info: Reading '/tmp/a3arm-ubwswo/analyses/1/a3-base.ais'...
+    # architecture
+    immutable attribute "architecture": "arm";
+    
+    # target type
+    immutable attribute "target_type": "Cortex-M0";
+    
+    # analysis id
+    immutable attribute "analysis_id": "find_in_list_aiT";
+    
+    # analysis type
+    immutable attribute "analysis_type": "wcet_analysis";
+    
+    # analysis configuration
+    immutable attribute "analysis_configuration": "";
+    
+    # analysis group
+    immutable attribute "analysis_group": "";
+
+isa-arm.ais: Info: Reading '/home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/linked_list.ais'...
+    # enter AIS annotations here or use 'Insert AIS annotation...' from the context menu
+    compiler: "GCC";
+    
+    # Pointers are 4 bytes, data is 4 bytes, so a linked list node is 8 bytes
+    # Maximum number of nodes in 16KB memory is 16384/8 = 2048
+    loop "find_in_list.L1" {
+        bound: 0 .. 2048;
+    }
+    
+    loop "insert_after_pos_in_list.L1" {
+        bound: 0 .. reg("r2");
+    }
+isa-arm: Info: Reading binary 'linked_list.elf'.
+    * Type: ELF
+    * Size: 65 KB (66660 bytes)
+    * MD5: cb0af223df48fc59968f18f133a4b454
+isa-arm: Info: Using decoder for 'ARM' and compiler 'GCC'.
+isa-arm: Info: Guessed user stackpointer: 0x80000
+isa-arm.ais: Warning #1031: In "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/linked_list.ais", line 10, column 6:
+    Unable to resolve program point 'insert_after_pos_in_list.L1' after loop transformation.
+isa-arm: Info: Decoding statistics:
+      * Code size: 22 bytes
+      * Routines: 1
+      * Loops: 1
+      * Blocks: 5
+      * Instructions: 11
+      * Memory reads: 2
+      * Memory writes: 0
+      * Computed branches: 0
+      * Computed calls: 0
+      * Computed returns: 0
+      * Unresolved computed branches: 0
+      * Unresolved computed calls: 0
+      * Unresolved computed returns: 0
+isa-arm: Info: Value analyzer statistics (max-length=2, default-unroll=2, normal mode):
+      * Created 202 states.
+      * Created 154 output carriers.
+      * Processed 29 nodes * contexts until fixed-point was reached.
+      * Processed 0 nodes * contexts directly in the fixed-point.
+      * Processed 19 nodes * contexts again in the fixed-point.
+      * Applied 4 times the widening operator.
+      * Applied 0 times the widening operator with an effect.
+      * At most 3 routines * contexts in the worklist.
+      * At most 7 blocks * contexts in the worklist.
+      * At most 9 data-flow values stored in the worklist.
+      * At most 9 data-flow values stored globally.
+      * Allocated 3k GC heap objects of total size 1 MB.
+isa-arm: Info: Value analyzer iteration statistics (percent of processed nodes * contexts / routine):
+     70% of iteration in 'find_in_list.L1'
+     29% of iteration in 'find_in_list'
+  Loop 'find_in_list.L1': using user annotation in all contexts with [0..2049] iterations
+isa-arm: Info: Loop analysis found 1 loop bound.
+isa-arm: Info: Memory Access Statistics:
+    Instructions:
+     -         2 total loads              :         0 exact (  0.0%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         2 unknown (100.0%)
+     - no stores
+    Accesses (instructions * access steps * contexts):
+     -         4 total reads              :         0 exact (  0.0%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         4 unknown (100.0%)
+     - no writes
+    (areas up to 1024 bytes are considered 'nearly exact').
+
+ * memory areas considered as mirrored:
+     <none>
+
+ * memory areas considered as volatile:
+     <none>
+
+ * memory areas considered as inaccessible:
+     <none>
+
+ * memory areas considered as read-only:
+      In "gui://hardware":
+      1: [0x08000000..0x0800ffff]
+
+ * memory areas considered as constant:
+     <none>
+
+ * memory accesses of function 'find_in_list':
+   no accesses at all
+
+ * memory accesses of function 'find_in_list.L1' (extracted from 'find_in_list'):
+   instruction thumb::0x8000030 reads from [?]:4 (modulo 2^2 = 0x0 imprecise in 2 of 2 contexts (100.0%))
+   instruction thumb::0x8000036 reads from [?]:4 (modulo 2^2 = 0x0 imprecise in 2 of 2 contexts (100.0%))
+
+ * found a total of 2 imprecise read instructions
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** Cache & Pipeline Analysis for find_in_list_aiT
+*** Started on 11 Oct 2026 21:50:31 -0500
+***
+
+cortexm0pipe: Info #5132: Using path analysis variant 'Auto'.
+cortexm0pipe: Info: Using wcet analysis mode 'global worst case'.
+cortexm0pipe: Info: Using instruction cache analysis mode 'normal'.
+cortexm0pipe: Info: Using data cache analysis mode 'normal'.
+cortexm0pipe: Info: Using branch target buffer analysis mode 'normal'.
+
+*
+* Memory Map
+*
+
+  * Region [0x8000000, 0x800ffff]
+      Common Attributes:
+        Memory Type: FLASH
+        Port Width: 32
+
+      Attributes for code fetch:
+        Transfer Timings: [0]
+      Attributes for data read:
+        Transfer Timings: [0]
+
+  * Region [0x20000000, 0x20001fff]
+      Common Attributes:
+        Memory Type: SRAM
+        Port Width: 32
+
+      Attributes for code fetch:
+        Transfer Timings: [0]
+      Attributes for data read:
+        Transfer Timings: [0]
+      Attributes for data write:
+        Transfer Timings: [0]
+
+cortexm0pipe: Info: Pipeline analyzer statistics (max-length=2, default-unroll=2):
+      * Processed 23 nodes * contexts until fixed-point was reached.
+      * At most 2 carrier storage points used.
+      * Inserted 4 states into the carrier storage.
+      * At most 4 states at once inside the carrier storage.
+      * At most 7 worklist entries used.
+      * Inserted 39 states into the worklist.
+      * At most 7 states at once inside the worklist.
+      * Allocated 1k GC heap objects of total size 1 MB.
+cortexm0pipe: Info: Calling statistics:
+    30 times called handle_one_instruction.
+    40 times called handle_one_cpu_state.
+    88 times called single_step.
+cortexm0pipe: Info: Calling statistics (percent of total single_step calls / routine):
+    54% find_in_list.L1
+        20% thumb::0x8000034 'beq 0x800003c <0x800003c>'
+        13% thumb::0x800003a 'bne 0x8000030 <0x8000030>'
+        10% thumb::0x8000030 'ldr r3, [r0]'
+        3% thumb::0x8000032 'cmp r3, r1'
+        3% thumb::0x8000036 'ldr r0, [r0, #4]'
+        3% thumb::0x8000038 'cmp r0, #0'
+    45% find_in_list
+        35% thumb::0x800003c 'bx lr'
+        3% thumb::0x800002c 'cmp r0, #0'
+        3% thumb::0x800003e 'movs r0, #0'
+        2% thumb::0x800002e 'beq 0x800003e <0x800003e>'
+        1% thumb::0x8000040 'b 0x800003c <0x800003c>'
+cortexm0pipe: Info: Split statistics (9 classified splits):
+    9 splits because of 'imprecise read access'.
+cortexm0pipe: Info: Prediction file chain-compression statistics:
+    73 pipeline states written.
+    48 pipeline states skipped.
+    39% of pipeline states skipped for writing.
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** ILP Solving for find_in_list_aiT
+*** Started on 11 Oct 2026 21:50:31 -0500
+***
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** Reporting for find_in_list_aiT
+*** Started on 11 Oct 2026 21:50:31 -0500
+***
+
+   Computed Worst Case Execution Time (WCET) is 20496 cycles
+
+Infeasibility Information:
+
+Functions                      infeasible  infeasible blocks  infeasible instructions  infeasible edges
+-------------------------------------------------------------------------------------------------------
+find_in_list                                          0 / 3                    0 / 5              0 / 4
+find_in_list.L1                                       0 / 2                    0 / 6              0 / 4
+-------------------------------------------------------------------------------------------------------
+Total:                             0 / 2              0 / 5                   0 / 11              0 / 8
+
+ * WCET contributions of function 'find_in_list':
+
+Predicted WCET Contribution: 9 cycles
+                 Cumulative: 20496 cycles
+
+Predicted WCET Contribution per Context (cumulative):
+    Context 'any-history' => 9 cycles (20496 cycles)
+
+ * WCET contributions of function 'find_in_list.L1':
+
+Predicted WCET Contribution: 20487 cycles
+                 Cumulative: 20487 cycles
+
+Predicted WCET Contribution per Context (cumulative):
+    Context '..., thumb::0x800002c->"find_in_list.L1"[1]'   => 7 cycles (20487 cycles)
+    Context '..., thumb::0x800002c->"find_in_list.L1"[2..]' => 20480 cycles (20480 cycles)
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** Creating HTML report for find_in_list_aiT
+*** Started on 11 Oct 2026 21:50:31 -0500
+***
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+
+***
+*** End of report file generated on 11 Oct 2026 21:50:31 -0500 (total runtime 0:00 minutes)
+*** Error count: 0
+*** Warning count: 1
+*** Number of decoding rounds: 1
+***
+
+
+

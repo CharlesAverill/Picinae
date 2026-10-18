@@ -1,0 +1,739 @@
+<?xml version="1.0" encoding="utf-8"?>
+<a3 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.absint.com/dtd/a3-report-26.04.xsd" xmlns="http://www.absint.com/a3report" version="26.04" build="19471048" tag="auto/2026/04/17/2136" id="insert_in_sorted_list_aiT" filtered="false">
+<start>16 Oct 2026 22:38:56 -0500</start>
+<project xmlns="http://www.absint.com/apx" version="26.04" build="19471048" target="arm">
+ <files>
+  <executables>
+   <executable>/tmp/claude-1000/-home-charles-Desktop-projects-latex-cloq/70e485a0-04bf-42d2-bb13-fda67690117b/scratchpad/ait/llsearch/linked_list.elf</executable>
+  </executables>
+  <ais>/tmp/claude-1000/-home-charles-Desktop-projects-latex-cloq/70e485a0-04bf-42d2-bb13-fda67690117b/scratchpad/ait/llsearch/linked_list.ais</ais>
+  <ais_pre_included></ais_pre_included>
+  <report></report>
+  <scade_xml></scade_xml>
+  <trace_format>Traval</trace_format>
+  <traces><trace></trace>
+  </traces>
+  <xml_results></xml_results>
+ </files>
+ <analyses>
+  <analysis enabled="false" type="wcet_analysis" id="find_in_list_aiT">
+   <analysis_start>find_in_list</analysis_start>
+   <report>/tmp/claude-1000/-home-charles-Desktop-projects-latex-cloq/70e485a0-04bf-42d2-bb13-fda67690117b/scratchpad/ait/llsearch/find_in_list_report.txt</report>
+   <ais></ais>
+   <allow_partial_trace>false</allow_partial_trace>
+   <allow_permutation_of_events>false</allow_permutation_of_events>
+   <analysis_start_mode>0</analysis_start_mode>
+   <clock_ratio>1</clock_ratio>
+   <comment></comment>
+   <core_id>-1</core_id>
+   <create_visualization_for_matching_snippets>false</create_visualization_for_matching_snippets>
+   <decode_mode>0</decode_mode>
+   <dependencies></dependencies>
+   <enable_valueanalyzer_features>false</enable_valueanalyzer_features>
+   <end_address></end_address>
+   <end_inclusive>false</end_inclusive>
+   <end_required>false</end_required>
+   <event_types>bus</event_types>
+   <expected_results>
+    <expected_result></expected_result>
+   </expected_results>
+   <expression></expression>
+   <extra_events>5</extra_events>
+   <frequency></frequency>
+   <gdl></gdl>
+   <graph_compression>Normal</graph_compression>
+   <host></host>
+   <html_report></html_report>
+   <maximum_global_overestimation>-1</maximum_global_overestimation>
+   <maximum_global_underestimation>-1</maximum_global_underestimation>
+   <maximum_local_overestimation>-1</maximum_local_overestimation>
+   <maximum_local_underestimation>-1</maximum_local_underestimation>
+   <maximum_permutation_count>-1</maximum_permutation_count>
+   <maximum_permutation_distance>8</maximum_permutation_distance>
+   <minimal_cumulative_frequency>0</minimal_cumulative_frequency>
+   <performance_counter_event_filter></performance_counter_event_filter>
+   <reset_device_first>false</reset_device_first>
+   <show_full_prediction_graph>false</show_full_prediction_graph>
+   <skip_visualization>false</skip_visualization>
+   <snippet></snippet>
+   <snippet_exclude></snippet_exclude>
+   <start_address></start_address>
+   <stop_after_first_valid_match>false</stop_after_first_valid_match>
+   <trace_dependency></trace_dependency>
+   <trace_file></trace_file>
+   <trace_repeat>0</trace_repeat>
+   <truncate>0</truncate>
+   <valid_address_range_end></valid_address_range_end>
+   <valid_address_range_start></valid_address_range_start>
+   <xml_report></xml_report>
+  </analysis>
+  <analysis enabled="false" type="wcet_analysis" id="insert_after_pos_in_list_aiT">
+   <analysis_start>insert_after_pos_in_list</analysis_start>
+   <report>/tmp/claude-1000/-home-charles-Desktop-projects-latex-cloq/70e485a0-04bf-42d2-bb13-fda67690117b/scratchpad/ait/llsearch/insert_after_pos_in_list_report.txt</report>
+  </analysis>
+  <analysis enabled="true" type="wcet_analysis" id="insert_in_sorted_list_aiT">
+   <analysis_start>insert_in_sorted_list</analysis_start>
+   <report>/tmp/claude-1000/-home-charles-Desktop-projects-latex-cloq/70e485a0-04bf-42d2-bb13-fda67690117b/scratchpad/ait/llsearch/insert_in_sorted_list_report.txt</report>
+   <xml_report>/tmp/claude-1000/-home-charles-Desktop-projects-latex-cloq/70e485a0-04bf-42d2-bb13-fda67690117b/scratchpad/ait/llsearch/sorted_report.xml</xml_report>
+  </analysis>
+ </analyses>
+ <options>
+  <analyses_options>
+   <xml_show_per_context_info>true</xml_show_per_context_info>
+   <xml_wcet_path>true</xml_wcet_path>
+   <xml_non_wcet_cycles>true</xml_non_wcet_cycles>
+   <ais_source_code_annotation_prefix></ais_source_code_annotation_prefix>
+   <always_read_program_headers>false</always_read_program_headers>
+   <assume_aligned_data_accesses>false</assume_aligned_data_accesses>
+   <check_for_contradictions>false</check_for_contradictions>
+   <data_cache_mode>Normal</data_cache_mode>
+   <default_incarnation_bound>1</default_incarnation_bound>
+   <default_loop_bound>4</default_loop_bound>
+   <default_recursion_bound>4</default_recursion_bound>
+   <detect_timing_anomalies>false</detect_timing_anomalies>
+   <dump_ais_files>true</dump_ais_files>
+   <dynamic_linking>false</dynamic_linking>
+   <enable_iterative_decoding>true</enable_iterative_decoding>
+   <enable_trace_iterative_decoding>true</enable_trace_iterative_decoding>
+   <extract_annotations_from_executables>true</extract_annotations_from_executables>
+   <extract_annotations_from_source_files>false</extract_annotations_from_source_files>
+   <generate_basic_block_statistics>false</generate_basic_block_statistics>
+   <ignore_return_from_interrupt_instructions>false</ignore_return_from_interrupt_instructions>
+   <ilp_solver>clpsolve</ilp_solver>
+   <include_output_from_intermediate_decoding_rounds>false</include_output_from_intermediate_decoding_rounds>
+   <instruction_cache_mode>Normal</instruction_cache_mode>
+   <interactive_pipeline_visualization>false</interactive_pipeline_visualization>
+   <path_analysis_variant>Auto</path_analysis_variant>
+   <pedantic_ignores></pedantic_ignores>
+   <pedantic_level>0</pedantic_level>
+   <process_complete_traces_only>false</process_complete_traces_only>
+   <read_constant_variable_information_from_debug_information>false</read_constant_variable_information_from_debug_information>
+   <read_debug_information>true</read_debug_information>
+   <read_volatile_variable_information_from_debug_information>false</read_volatile_variable_information_from_debug_information>
+   <report_file_verbosity_level>1</report_file_verbosity_level>
+   <restrict_loop_bounds_with_trace_results>false</restrict_loop_bounds_with_trace_results>
+   <restrict_xml_report_to_tags>false</restrict_xml_report_to_tags>
+   <size_limit_for_register_relative_information>128</size_limit_for_register_relative_information>
+   <size_limit_for_unsharp_reads>2048</size_limit_for_unsharp_reads>
+   <size_limit_for_unsharp_writes>256</size_limit_for_unsharp_writes>
+   <size_limit_for_value_sets>16</size_limit_for_value_sets>
+   <skip_wcet_analysis_for_main_entry_if_additional_starts_are_defined>false</skip_wcet_analysis_for_main_entry_if_additional_starts_are_defined>
+   <stack_analysis_mode>optimized_with_contexts</stack_analysis_mode>
+   <strip_compilation_path>false</strip_compilation_path>
+   <threshold_for_applying_default_memory_regions>1024</threshold_for_applying_default_memory_regions>
+   <threshold_for_timestamps>6000</threshold_for_timestamps>
+   <threshold_for_trace_segment_statistics>128</threshold_for_trace_segment_statistics>
+   <timeweaver_perform_value_analysis>true</timeweaver_perform_value_analysis>
+   <use_dwarf_to_restrict_memory_accesses>true</use_dwarf_to_restrict_memory_accesses>
+   <use_only_safe_patterns>false</use_only_safe_patterns>
+   <use_register_relative_address_information>true</use_register_relative_address_information>
+   <value_analysis_widening_delay>4</value_analysis_widening_delay>
+   <wcet_computation_mode>Global worst-case</wcet_computation_mode>
+   <xml_cache_statistics>false</xml_cache_statistics>
+   <xml_call_graph>false</xml_call_graph>
+   <xml_object_size_statistics>false</xml_object_size_statistics>
+   <xml_report_file_verbosity_level>1</xml_report_file_verbosity_level>
+   <xml_report_tags></xml_report_tags>
+   <xml_variable_usage_statistics>false</xml_variable_usage_statistics>
+  </analyses_options>
+  <arm_options>
+   <general>
+    <target>Cortex-M0</target>
+    <branch_prediction_policy></branch_prediction_policy>
+    <cpu_type>STM32F0DISCOVERY</cpu_type>
+    <data_cache_zero_id_register>0x4</data_cache_zero_id_register>
+    <hclk_to_gclk_divider></hclk_to_gclk_divider>
+    <revision></revision>
+    <vclk3_to_hclk_divider></vclk3_to_hclk_divider>
+   </general>
+   <flash>
+    <address_waitstates>0</address_waitstates>
+    <bypass_instruction_buffer>false</bypass_instruction_buffer>
+    <data_waitstates>0</data_waitstates>
+    <eeprom_data_waitstates>9</eeprom_data_waitstates>
+    <enable_eeprom_emulation>false</enable_eeprom_emulation>
+    <enable_pipelining>false</enable_pipelining>
+    <enable_prefetch_for_port_a>false</enable_prefetch_for_port_a>
+    <enable_prefetch_for_port_b>false</enable_prefetch_for_port_b>
+    <enable_static_prefetch>false</enable_static_prefetch>
+    <error_correction_waitstates>0</error_correction_waitstates>
+   </flash>
+   <instruction_set>THUMB</instruction_set>
+   <m4>
+    <data_cache_enable>true</data_cache_enable>
+    <instruction_cache_enable>true</instruction_cache_enable>
+    <nvm_ahb0_cache_enable>true</nvm_ahb0_cache_enable>
+    <nvm_ahb1_cache_enable>true</nvm_ahb1_cache_enable>
+    <tcm_size>0</tcm_size>
+   </m4>
+   <r4flcr>
+    <ahb_clock_divider>1:1</ahb_clock_divider>
+    <apb_clock_divider>1:1</apb_clock_divider>
+    <axi_clock_divider>1:1</axi_clock_divider>
+    <axi_request_slices>1</axi_request_slices>
+    <axi_response_slices>1</axi_response_slices>
+    <enable_b1tm_ecc>true</enable_b1tm_ecc>
+   </r4flcr>
+   <rcpc_remap_control>
+    <memory_type>External static memory</memory_type>
+   </rcpc_remap_control>
+   <stack_area></stack_area>
+   <stack_pointer></stack_pointer>
+  </arm_options>
+  <general_options>
+   <include_path></include_path>
+   <path_replacement></path_replacement>
+  </general_options>
+  <support_options>
+   <additional_gui_ais_annotations></additional_gui_ais_annotations>
+   <data_dictionary_converter></data_dictionary_converter>
+   <decode></decode>
+   <path_analysis></path_analysis>
+   <pipeline_analysis></pipeline_analysis>
+   <solver></solver>
+   <stack_analysis></stack_analysis>
+   <trace_conversion></trace_conversion>
+   <trace_timing_analysis></trace_timing_analysis>
+   <trace_validation_analysis></trace_validation_analysis>
+   <value_analysis></value_analysis>
+  </support_options>
+ </options>
+</project>
+<wcet_analysis_task>
+<cfg_value_analysis>
+
+<ais file="/tmp/a3arm-lpcwfm/analyses/3/a3-base.ais">
+<textline># architecture
+</textline>
+<textline>immutable attribute &#x22;architecture&#x22;: &#x22;arm&#x22;;
+</textline>
+<textline>
+</textline>
+<textline># target type
+</textline>
+<textline>immutable attribute &#x22;target_type&#x22;: &#x22;Cortex-M0&#x22;;
+</textline>
+<textline>
+</textline>
+<textline># analysis id
+</textline>
+<textline>immutable attribute &#x22;analysis_id&#x22;: &#x22;insert_in_sorted_list_aiT&#x22;;
+</textline>
+<textline>
+</textline>
+<textline># analysis type
+</textline>
+<textline>immutable attribute &#x22;analysis_type&#x22;: &#x22;wcet_analysis&#x22;;
+</textline>
+<textline>
+</textline>
+<textline># analysis configuration
+</textline>
+<textline>immutable attribute &#x22;analysis_configuration&#x22;: &#x22;&#x22;;
+</textline>
+<textline>
+</textline>
+<textline># analysis group
+</textline>
+<textline>immutable attribute &#x22;analysis_group&#x22;: &#x22;&#x22;;
+</textline>
+</ais>
+<ais file="/tmp/claude-1000/-home-charles-Desktop-projects-latex-cloq/70e485a0-04bf-42d2-bb13-fda67690117b/scratchpad/ait/llsearch/linked_list.ais">
+<textline># enter AIS annotations here or use &#x27;Insert AIS annotation...&#x27; from the context menu
+</textline>
+<textline>compiler: &#x22;GCC&#x22;;
+</textline>
+<textline>
+</textline>
+<textline># Pointers are 4 bytes, data is 4 bytes, so a linked list node is 8 bytes
+</textline>
+<textline># Maximum number of nodes in 16KB memory is 16384/8 = 2048
+</textline>
+<textline>loop &#x22;find_in_list.L1&#x22; {
+</textline>
+<textline>    bound: 0 .. 2048;
+</textline>
+<textline>}
+</textline>
+<textline>
+</textline>
+<textline>loop &#x22;insert_after_pos_in_list.L1&#x22; {
+</textline>
+<textline>    bound: 0 .. 2147483646; #reg(&#x22;r2&#x22;);
+</textline>
+<textline>}
+</textline>
+<textline>
+</textline>
+<textline># Pointers are 4 bytes, data is 4 bytes, so a linked list node is 8 bytes
+</textline>
+<textline># Maximum number of nodes in 16KB memory is 16384/8 = 2048
+</textline>
+<textline>loop &#x22;insert_in_sorted_list.L1&#x22; {
+</textline>
+<textline>    bound: 0 .. 2048;
+</textline>
+<textline>}
+</textline>
+<textline># Stack: a3 guesses sp = 0x80000, which lies outside the default memory map.
+</textline>
+<textline># Describe it as zero-wait-state SRAM, like the default SRAM area.
+</textline>
+<textline>area 0x00070000 to 0x0008ffff {
+</textline>
+<textline>    attribute &#x22;memory_type&#x22;: &#x22;SRAM&#x22;;
+</textline>
+<textline>    attribute &#x22;port_width&#x22;: 32;
+</textline>
+<textline>    access time: 0 cycles;
+</textline>
+<textline>}
+</textline>
+</ais>
+<routines>
+<routine id="d1_r2" address="thumb::0x8000044" name="insert_in_sorted_list" blocks="3" instructions="11" edges="4">
+<call routine="d1_r34" />
+<block id="d1_b3" type="start" address="thumb::0x8000044">
+<successor>d1_b5</successor>
+</block>
+<block id="d1_b4" type="end" />
+<block id="d1_b5" type="normal" address="thumb::0x8000044" instructions="5" edges="2">
+<first_instruction>thumb::0x8000044</first_instruction>
+<last_instruction>thumb::0x800004c</last_instruction>
+<successor>d1_b27</successor>
+<successor>d1_b44</successor>
+</block>
+<block id="d1_b22" type="normal" address="thumb::0x8000058" instructions="3" edges="1">
+<first_instruction>thumb::0x8000058</first_instruction>
+<last_instruction>thumb::0x800005c</last_instruction>
+<successor>d1_b4</successor>
+</block>
+<block id="d1_b27" type="normal" address="thumb::0x800005e" instructions="3" edges="1">
+<first_instruction>thumb::0x800005e</first_instruction>
+<last_instruction>thumb::0x8000062</last_instruction>
+<successor>d1_b22</successor>
+</block>
+<block id="d1_b44" type="call" address="thumb::0x8000044">
+<successor>d1_b45</successor>
+<successor>d1_b35</successor>
+</block>
+<block id="d1_b45" type="return" address="thumb::0x8000044">
+<successor>d1_b22</successor>
+</block>
+</routine>
+<routine id="d1_r34" address="thumb::0x800004e" name="insert_in_sorted_list.L1" blocks="1" instructions="5" edges="2" loop="1" extracted_from="insert_in_sorted_list" loop_type_user="unknown" loop_type_auto="end">
+<call routine="d1_r34" />
+<called_from routine="d1_r34" />
+<called_from routine="d1_r2" />
+<block id="d1_b35" type="start" address="thumb::0x800004e">
+<successor>d1_b14</successor>
+</block>
+<block id="d1_b36" type="end">
+<successor>d1_b38</successor>
+<successor>d1_b45</successor>
+</block>
+<block id="d1_b14" type="normal" address="thumb::0x800004e" instructions="5" edges="2">
+<first_instruction>thumb::0x800004e</first_instruction>
+<last_instruction>thumb::0x8000056</last_instruction>
+<loop_classification>head</loop_classification>
+<successor>d1_b37</successor>
+<successor>d1_b36</successor>
+</block>
+<block id="d1_b37" type="call" address="thumb::0x800004e">
+<successor>d1_b38</successor>
+<successor>d1_b35</successor>
+</block>
+<block id="d1_b38" type="return" address="thumb::0x800004e">
+<successor>d1_b36</successor>
+</block>
+</routine>
+</routines>
+<entry routine="d1_r2" />
+<additional_entries />
+<decode_statistics>
+<routines>1</routines>
+<blocks>4</blocks>
+<loops>1</loops>
+<instructions>16</instructions>
+<additional_duplicated_instructions>0</additional_duplicated_instructions>
+<code_size>32</code_size>
+<computed_branches>0</computed_branches>
+<computed_calls>0</computed_calls>
+<computed_returns>0</computed_returns>
+<unresolved_computed_branches>0</unresolved_computed_branches>
+<unresolved_computed_calls>0</unresolved_computed_calls>
+<unresolved_computed_returns>0</unresolved_computed_returns>
+<memory_reads>6</memory_reads>
+<memory_writes>3</memory_writes>
+<applied_decoder_patterns></applied_decoder_patterns>
+<applied_dynamic_relocations />
+</decode_statistics>
+<value_results>
+<value_block routine="insert_in_sorted_list" address="thumb::0x8000044" id="5" context_id="d1_r2_c0">
+<value_instruction routine="insert_in_sorted_list" address="thumb::0x8000044" id="9">
+<value_step type="read" mode="normal" width="4" index="+1">
+<value_area min="0" max="0xfffffffc" mod="2" rem="0" />
+</value_step>
+</value_instruction>
+<value_instruction routine="insert_in_sorted_list" address="thumb::0x8000046" id="10">
+<value_step type="read" mode="normal" width="4" index="+1" variables="part of &#x27;insert_in_sorted_list&#x27;">
+<value_area min="0x8000064" max="0x8000064" mod="32" rem="0x8000064" />
+<value_step_content index="+1">
+<value_interval min="0x7fffffff" max="0x7fffffff" mod="32" rem="0x7fffffff" />
+</value_step_content>
+</value_step>
+</value_instruction>
+<value_instruction routine="insert_in_sorted_list" address="thumb::0x8000048" id="11">
+<value_step type="write" mode="normal" width="8" index="+1">
+<value_area min="0x7fff8" max="0x7fff8" mod="32" rem="0x7fff8" />
+</value_step>
+</value_instruction>
+</value_block>
+<value_block routine="insert_in_sorted_list.L1" address="thumb::0x800004e" id="14" context_id="d1_r34_c0">
+<value_instruction routine="insert_in_sorted_list.L1" address="thumb::0x8000050" id="18">
+<value_step type="read" mode="normal" width="4" index="+1">
+<value_area min="0" max="0xfffffffc" mod="2" rem="0" />
+</value_step>
+</value_instruction>
+<value_instruction routine="insert_in_sorted_list.L1" address="thumb::0x8000052" id="19">
+<value_step type="read" mode="normal" width="4" index="+1">
+<value_area min="0" max="0xfffffffc" mod="2" rem="0" />
+</value_step>
+</value_instruction>
+</value_block>
+<value_block routine="insert_in_sorted_list.L1" address="thumb::0x800004e" id="14" context_id="d1_r34_c1">
+<value_instruction routine="insert_in_sorted_list.L1" address="thumb::0x8000050" id="18">
+<value_step type="read" mode="normal" width="4" index="+1">
+<value_area min="0" max="0xfffffffc" mod="2" rem="0" />
+</value_step>
+</value_instruction>
+<value_instruction routine="insert_in_sorted_list.L1" address="thumb::0x8000052" id="19">
+<value_step type="read" mode="normal" width="4" index="+1">
+<value_area min="0" max="0xfffffffc" mod="2" rem="0" />
+</value_step>
+</value_instruction>
+</value_block>
+<value_block routine="insert_in_sorted_list" address="thumb::0x800005e" id="27" context_id="d1_r2_c0">
+<value_instruction routine="insert_in_sorted_list" address="thumb::0x8000060" id="30">
+<value_step type="read" mode="normal" width="4" index="+1">
+<value_area min="0" max="0xfffffffc" mod="2" rem="0" />
+</value_step>
+</value_instruction>
+</value_block>
+<value_block routine="insert_in_sorted_list" address="thumb::0x8000058" id="22" context_id="d1_r2_c0">
+<value_instruction routine="insert_in_sorted_list" address="thumb::0x8000058" id="24">
+<value_step type="write" mode="normal" width="4" index="+1">
+<value_area min="0" max="0xfffffffc" mod="2" rem="0" />
+</value_step>
+</value_instruction>
+<value_instruction routine="insert_in_sorted_list" address="thumb::0x800005a" id="25">
+<value_step type="write" mode="normal" width="4" index="+1">
+<value_area min="0" max="0xfffffffc" mod="2" rem="0" />
+</value_step>
+</value_instruction>
+<value_instruction routine="insert_in_sorted_list" address="thumb::0x800005c" id="26">
+<value_step type="read" mode="normal" width="8" index="+1">
+<value_area min="0x7fff8" max="0x7fff8" mod="32" rem="0x7fff8" />
+</value_step>
+</value_instruction>
+</value_block>
+</value_results>
+<contexts>
+<context id="d1_r2_c0" routine="d1_r2" position="+0" infeasible="0">any-history</context>
+<context id="d1_r2_combined" routine="d1_r2" position="-1" infeasible="0" />
+<context id="d1_r34_c0" routine="d1_r34" position="+0" infeasible="0">..., thumb::0x8000044-&#x3e;&#x22;insert_in_sorted_list.L1&#x22;[1]</context>
+<context id="d1_r34_c1" routine="d1_r34" position="+1" infeasible="0">..., thumb::0x8000044-&#x3e;&#x22;insert_in_sorted_list.L1&#x22;[2..]</context>
+<context id="d1_r34_combined" routine="d1_r34" position="-1" infeasible="0" />
+</contexts>
+<loopbounds>
+<loopbound routine="d1_r34" context="d1_r2_c0" type="user annotation" min="0" max="0" />
+</loopbounds>
+<loopbound_statistics total="1" computed="0" annotated="1" heuristic="0" unknown="0" />
+<value_area_infos>
+<value_area_info type="mirrored" />
+<value_area_info type="volatile" />
+<value_area_info type="inaccessible" />
+<value_area_info type="read-only">
+<value_area min="0x8000000" max="0x800ffff">
+<location file="gui://hardware" />
+</value_area>
+</value_area_info>
+<value_area_info type="constant" />
+</value_area_infos>
+<value_instruction_read_statistics total="6" exact="2" nearly_exact="0" imprecise="0" unknown="4" />
+<value_instruction_speculative_read_statistics total="0" exact="0" nearly_exact="0" imprecise="0" unknown="0" />
+<value_instruction_write_statistics total="3" exact="1" nearly_exact="0" imprecise="0" unknown="2" />
+<value_instruction_speculative_write_statistics total="0" exact="0" nearly_exact="0" imprecise="0" unknown="0" />
+<value_read_statistics total="8" exact="2" nearly_exact="0" imprecise="0" unknown="6" />
+<value_speculative_read_statistics total="0" exact="0" nearly_exact="0" imprecise="0" unknown="0" />
+<value_write_statistics total="3" exact="1" nearly_exact="0" imprecise="0" unknown="2" />
+<value_speculative_write_statistics total="0" exact="0" nearly_exact="0" imprecise="0" unknown="0" />
+<messages>
+<message type="info">
+<textline>Reading binary &#x27;linked_list.elf&#x27;.</textline>
+<textline>* Type: ELF</textline>
+<textline>* Size: 65 KB (66660 bytes)</textline>
+<textline>* MD5: cb0af223df48fc59968f18f133a4b454</textline>
+</message>
+<message type="info">
+<textline>Using decoder for &#x27;ARM&#x27; and compiler &#x27;GCC&#x27;.</textline>
+</message>
+<message type="info">
+<textline>Guessed user stackpointer: 0x80000</textline>
+</message>
+<message type="warning" number="1031" group="ais">
+<location file="/tmp/claude-1000/-home-charles-Desktop-projects-latex-cloq/70e485a0-04bf-42d2-bb13-fda67690117b/scratchpad/ait/llsearch/linked_list.ais" line="6" column="6" />
+<textline>Unable to resolve program point &#x27;find_in_list.L1&#x27; after loop transformation.</textline>
+</message>
+<message type="warning" number="1031" group="ais">
+<location file="/tmp/claude-1000/-home-charles-Desktop-projects-latex-cloq/70e485a0-04bf-42d2-bb13-fda67690117b/scratchpad/ait/llsearch/linked_list.ais" line="10" column="6" />
+<textline>Unable to resolve program point &#x27;insert_after_pos_in_list.L1&#x27; after loop transformation.</textline>
+</message>
+<message type="info">
+<textline>Decoding statistics:</textline>
+<textline>  * Code size: 32 bytes</textline>
+<textline>  * Routines: 1</textline>
+<textline>  * Loops: 1</textline>
+<textline>  * Blocks: 4</textline>
+<textline>  * Instructions: 16</textline>
+<textline>  * Memory reads: 6</textline>
+<textline>  * Memory writes: 3</textline>
+<textline>  * Computed branches: 0</textline>
+<textline>  * Computed calls: 0</textline>
+<textline>  * Computed returns: 0</textline>
+<textline>  * Unresolved computed branches: 0</textline>
+<textline>  * Unresolved computed calls: 0</textline>
+<textline>  * Unresolved computed returns: 0</textline>
+</message>
+<message type="info">
+<textline>Value analyzer statistics (max-length=2, default-unroll=2, normal mode):</textline>
+<textline>  * Created 202 states.</textline>
+<textline>  * Created 148 output carriers.</textline>
+<textline>  * Processed 25 nodes * contexts until fixed-point was reached.</textline>
+<textline>  * Processed 0 nodes * contexts directly in the fixed-point.</textline>
+<textline>  * Processed 17 nodes * contexts again in the fixed-point.</textline>
+<textline>  * Applied 4 times the widening operator.</textline>
+<textline>  * Applied 0 times the widening operator with an effect.</textline>
+<textline>  * At most 3 routines * contexts in the worklist.</textline>
+<textline>  * At most 7 blocks * contexts in the worklist.</textline>
+<textline>  * At most 7 data-flow values stored in the worklist.</textline>
+<textline>  * At most 9 data-flow values stored globally.</textline>
+<textline>  * Allocated 3k GC heap objects of total size 1 MB.</textline>
+</message>
+<message type="info">
+<textline>Value analyzer iteration statistics (percent of processed nodes * contexts / routine):</textline>
+<textline> 66% of iteration in &#x27;insert_in_sorted_list.L1&#x27;</textline>
+<textline> 33% of iteration in &#x27;insert_in_sorted_list&#x27;</textline>
+</message>
+<message type="info">
+<textline>Loop analysis found 1 loop bound.</textline>
+</message>
+<message type="info">
+<textline>Memory Access Statistics:</textline>
+<textline>Instructions:</textline>
+<textline> -         6 total loads              :         2 exact ( 33.3%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         4 unknown ( 66.6%)</textline>
+<textline> -         3 total stores             :         1 exact ( 33.3%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         2 unknown ( 66.6%)</textline>
+<textline>Accesses (instructions * access steps * contexts):</textline>
+<textline> -         8 total reads              :         2 exact ( 25.0%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         6 unknown ( 75.0%)</textline>
+<textline> -         3 total writes             :         1 exact ( 33.3%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         2 unknown ( 66.6%)</textline>
+<textline>(areas up to 1024 bytes are considered &#x27;nearly exact&#x27;).</textline>
+</message>
+</messages>
+</cfg_value_analysis>
+<pipeline_analysis>
+
+<memory_map>
+<memory_region start="0x70000" end="0x8ffff" memory_type="SRAM" port_width="32" burst_inhibit="true" burst_length="0">
+<memory_region_access type="code_fetch" cached="false" guarded="false" locked="false" locked_l2="false" write_allocate="false">
+<transfer_timings>
+<transfer_timing min="0" max="0" />
+</transfer_timings>
+</memory_region_access>
+<memory_region_access type="data_read" cached="false" guarded="false" locked="false" locked_l2="false" write_allocate="false">
+<transfer_timings>
+<transfer_timing min="0" max="0" />
+</transfer_timings>
+</memory_region_access>
+<memory_region_access type="data_write" cached="false" guarded="false" locked="false" locked_l2="false" write_allocate="false">
+<transfer_timings>
+<transfer_timing min="0" max="0" />
+</transfer_timings>
+</memory_region_access>
+</memory_region>
+<memory_region start="0x8000000" end="0x800ffff" memory_type="FLASH" port_width="32" burst_inhibit="true" burst_length="0">
+<memory_region_access type="code_fetch" cached="false" guarded="false" locked="false" locked_l2="false" write_allocate="false">
+<transfer_timings>
+<transfer_timing min="0" max="0" />
+</transfer_timings>
+</memory_region_access>
+<memory_region_access type="data_read" cached="false" guarded="false" locked="false" locked_l2="false" write_allocate="false">
+<transfer_timings>
+<transfer_timing min="0" max="0" />
+</transfer_timings>
+</memory_region_access>
+</memory_region>
+<memory_region start="0x20000000" end="0x20001fff" memory_type="SRAM" port_width="32" burst_inhibit="true" burst_length="0">
+<memory_region_access type="code_fetch" cached="false" guarded="false" locked="false" locked_l2="false" write_allocate="false">
+<transfer_timings>
+<transfer_timing min="0" max="0" />
+</transfer_timings>
+</memory_region_access>
+<memory_region_access type="data_read" cached="false" guarded="false" locked="false" locked_l2="false" write_allocate="false">
+<transfer_timings>
+<transfer_timing min="0" max="0" />
+</transfer_timings>
+</memory_region_access>
+<memory_region_access type="data_write" cached="false" guarded="false" locked="false" locked_l2="false" write_allocate="false">
+<transfer_timings>
+<transfer_timing min="0" max="0" />
+</transfer_timings>
+</memory_region_access>
+</memory_region>
+</memory_map>
+<pipeline_statistics>
+<pipeline_statistic type="calls" name="handle_one_instruction" value="30" />
+<pipeline_statistic type="calls" name="handle_one_cpu_state" value="38" />
+<pipeline_statistic type="calls" name="single_step" value="75" />
+<pipeline_statistic type="splits" name="imprecise read access" value="11" />
+<pipeline_statistic type="prediction" name="states_written" value="65" />
+<pipeline_statistic type="prediction" name="states_skipped" value="37" />
+</pipeline_statistics>
+<messages>
+<message type="info" number="5132">
+<textline>Using path analysis variant &#x27;Auto&#x27;.</textline>
+</message>
+<message type="info">
+<textline>Using wcet analysis mode &#x27;global worst case&#x27;.</textline>
+</message>
+<message type="info">
+<textline>Using instruction cache analysis mode &#x27;normal&#x27;.</textline>
+</message>
+<message type="info">
+<textline>Using data cache analysis mode &#x27;normal&#x27;.</textline>
+</message>
+<message type="info">
+<textline>Using branch target buffer analysis mode &#x27;normal&#x27;.</textline>
+</message>
+<message type="info">
+<textline>Pipeline analyzer statistics (max-length=2, default-unroll=2):</textline>
+<textline>  * Processed 20 nodes * contexts until fixed-point was reached.</textline>
+<textline>  * At most 2 carrier storage points used.</textline>
+<textline>  * Inserted 3 states into the carrier storage.</textline>
+<textline>  * At most 3 states at once inside the carrier storage.</textline>
+<textline>  * At most 7 worklist entries used.</textline>
+<textline>  * Inserted 26 states into the worklist.</textline>
+<textline>  * At most 4 states at once inside the worklist.</textline>
+<textline>  * Allocated 1k GC heap objects of total size 1 MB.</textline>
+</message>
+<message type="info">
+<textline>Calling statistics:</textline>
+<textline>30 times called handle_one_instruction.</textline>
+<textline>38 times called handle_one_cpu_state.</textline>
+<textline>75 times called single_step.</textline>
+</message>
+<message type="info">
+<textline>Calling statistics (percent of total single_step calls / routine):</textline>
+<textline>52% insert_in_sorted_list</textline>
+<textline>    14% thumb::0x8000058 &#x27;str r0, [r1, #4]&#x27;</textline>
+<textline>    10% thumb::0x800004c &#x27;beq 0x800005e &#x3c;0x800005e&#x3e;&#x27;</textline>
+<textline>    6% thumb::0x800005c &#x27;pop {r4, pc}&#x27;</textline>
+<textline>    5% thumb::0x800005e &#x27;movs r4, r0&#x27;</textline>
+<textline>    4% thumb::0x8000044 &#x27;ldr r2, [r1]&#x27;</textline>
+<textline>    4% thumb::0x8000048 &#x27;push {r4, lr}&#x27;</textline>
+<textline>    1% thumb::0x8000046 &#x27;ldr r3, [0x8000064]&#x27;</textline>
+<textline>    1% thumb::0x800004a &#x27;cmp r2, r3&#x27;</textline>
+<textline>    1% thumb::0x800005a &#x27;str r1, [r4, #4]&#x27;</textline>
+<textline>    1% thumb::0x8000060 &#x27;ldr r0, [r0, #4]&#x27;</textline>
+<textline>    1% thumb::0x8000062 &#x27;b 0x8000058 &#x3c;0x8000058&#x3e;&#x27;</textline>
+<textline>48% insert_in_sorted_list.L1</textline>
+<textline>    16% thumb::0x8000056 &#x27;bcs 0x800004e &#x3c;0x800004e&#x3e;&#x27;</textline>
+<textline>    12% thumb::0x800004e &#x27;movs r4, r0&#x27;</textline>
+<textline>    12% thumb::0x8000054 &#x27;cmp r2, r3&#x27;</textline>
+<textline>    4% thumb::0x8000050 &#x27;ldr r0, [r0, #4]&#x27;</textline>
+<textline>    4% thumb::0x8000052 &#x27;ldr r3, [r0]&#x27;</textline>
+</message>
+<message type="info">
+<textline>Split statistics (11 classified splits):</textline>
+<textline>11 splits because of &#x27;imprecise read access&#x27;.</textline>
+</message>
+<message type="info">
+<textline>Prediction file chain-compression statistics:</textline>
+<textline>65 pipeline states written.</textline>
+<textline>37 pipeline states skipped.</textline>
+<textline>36% of pipeline states skipped for writing.</textline>
+</message>
+</messages>
+</pipeline_analysis>
+<solver>
+
+<messages>
+</messages>
+</solver>
+<wcet_analysis>
+
+<expectation>success</expectation>
+<infeasibility_results>
+<infeasibility_routine routine="d1_r2" infeasible="0" infeasible_blocks="0" blocks="3" infeasible_instructions="0" instructions="11" infeasible_edges="0" edges="4" />
+<infeasibility_routine routine="d1_r34" infeasible="0" infeasible_blocks="0" blocks="1" infeasible_instructions="0" instructions="5" infeasible_edges="0" edges="2" />
+</infeasibility_results>
+<wcet_results entry="d1_r2">
+<wcet_routine routine="d1_r2" count="1" cycles="19" cumulative_cycles="18448">
+<wcet_context count="1" context="d1_r2_c0" cycles="19" cumulative_cycles="18448" />
+</wcet_routine>
+<wcet_routine routine="d1_r34" count="2048" cycles="18429" cumulative_cycles="18429">
+<wcet_context count="1" context="d1_r34_c0" cycles="6" cumulative_cycles="18429" />
+<wcet_context count="2047" context="d1_r34_c1" cycles="18423" cumulative_cycles="18423" />
+</wcet_routine>
+</wcet_results>
+<wcet_path>
+<wcet_entry routine="d1_r2" />
+<wcet_routine routine="d1_r2" count="1" cycles="19" cumulative_cycles="18448">
+<wcet_context context="d1_r2_c0" count="1" cycles="19" cumulative_cycles="18448">
+<wcet_start block="d1_b3" context="d1_r2_c0" />
+<wcet_edge source_block="d1_b3" source_context="d1_r2_c0" count="1" target_block="d1_b5" target_context="d1_r2_c0" />
+<wcet_edge source_block="d1_b5" source_context="d1_r2_c0" count="0" edge_cycles="11" target_block="d1_b27" target_context="d1_r2_c0" />
+<wcet_edge source_block="d1_b5" source_context="d1_r2_c0" count="1" cycles="11" edge_cycles="11" target_block="d1_b44" target_context="d1_r2_c0" />
+<wcet_edge_call source_block="d1_b44" source_context="d1_r2_c0" count="1" target_routine="d1_r34" target_context="d1_r34_c0" />
+<wcet_edge_return source_routine="d1_r34" source_context="d1_r34_c0" count="1" target_block="d1_b45" target_context="d1_r2_c0" />
+<wcet_edge source_block="d1_b45" source_context="d1_r2_c0" count="1" target_block="d1_b22" target_context="d1_r2_c0" />
+<wcet_edge source_block="d1_b22" source_context="d1_r2_c0" count="1" cycles="8" edge_cycles="10" target_block="d1_b4" target_context="d1_r2_c0" />
+<wcet_edge source_block="d1_b27" source_context="d1_r2_c0" count="0" edge_cycles="6" target_block="d1_b22" target_context="d1_r2_c0" />
+<wcet_end block="d1_b4" context="d1_r2_c0" />
+</wcet_context>
+</wcet_routine>
+<wcet_routine routine="d1_r34" count="2048" cycles="18429" cumulative_cycles="18429">
+<wcet_context context="d1_r34_c0" count="1" cycles="6" cumulative_cycles="18429">
+<wcet_start block="d1_b35" context="d1_r34_c0" />
+<wcet_edge source_block="d1_b35" source_context="d1_r34_c0" count="1" target_block="d1_b14" target_context="d1_r34_c0" />
+<wcet_edge source_block="d1_b14" source_context="d1_r34_c0" count="1" cycles="6" edge_cycles="6" target_block="d1_b37" target_context="d1_r34_c0" />
+<wcet_edge source_block="d1_b14" source_context="d1_r34_c0" count="0" edge_cycles="6" target_block="d1_b36" target_context="d1_r34_c0" />
+<wcet_edge_call source_block="d1_b37" source_context="d1_r34_c0" count="1" target_routine="d1_r34" target_context="d1_r34_c1" />
+<wcet_edge_return source_routine="d1_r34" source_context="d1_r34_c1" count="1" target_block="d1_b38" target_context="d1_r34_c0" />
+<wcet_edge source_block="d1_b38" source_context="d1_r34_c0" count="1" target_block="d1_b36" target_context="d1_r34_c0" />
+<wcet_end block="d1_b36" context="d1_r34_c0" />
+</wcet_context>
+<wcet_context context="d1_r34_c1" count="2047" cycles="18423" cumulative_cycles="18423">
+<wcet_start block="d1_b35" context="d1_r34_c1" />
+<wcet_edge source_block="d1_b35" source_context="d1_r34_c1" count="2047" target_block="d1_b14" target_context="d1_r34_c1" />
+<wcet_edge source_block="d1_b14" source_context="d1_r34_c1" count="2046" cycles="18414" edge_cycles="9" target_block="d1_b37" target_context="d1_r34_c1" />
+<wcet_edge source_block="d1_b14" source_context="d1_r34_c1" count="1" cycles="9" edge_cycles="9" target_block="d1_b36" target_context="d1_r34_c1" />
+<wcet_edge_call source_block="d1_b37" source_context="d1_r34_c1" count="2046" target_routine="d1_r34" target_context="d1_r34_c1" />
+<wcet_edge_return source_routine="d1_r34" source_context="d1_r34_c1" count="2046" target_block="d1_b38" target_context="d1_r34_c1" />
+<wcet_edge source_block="d1_b38" source_context="d1_r34_c1" count="2046" target_block="d1_b36" target_context="d1_r34_c1" />
+<wcet_end block="d1_b36" context="d1_r34_c1" />
+</wcet_context>
+</wcet_routine>
+</wcet_path>
+<wcet>18448 cycles</wcet>
+<messages>
+</messages>
+</wcet_analysis>
+</wcet_analysis_task>
+
+
+<error_count>0</error_count>
+<warning_count>2</warning_count>
+<pedantic_level_violated>false</pedantic_level_violated><number_of_decoding_rounds>1</number_of_decoding_rounds>
+<exit_code>success</exit_code>
+<end>16 Oct 2026 22:38:56 -0500</end>
+</a3>

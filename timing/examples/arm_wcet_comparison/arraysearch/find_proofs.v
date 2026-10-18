@@ -1,264 +1,245 @@
-Require Import find.
-Require Import AMD64Timing.
-Import X64Notations.
+From Picinae.timing.examples.arm_wcet_comparison.arraysearch Require Import find.
+Require Import ARMv6MTiming.
+Import ARMv6MNotations.
 Require Import TimingAutomation.
 Require Import Arith.
 
-Module TimingProof (cpu : amd64CPUTimingBehavior).
+Module TimingProof (cpu : ARMv6MCPUTimingBehavior).
 Import cpu.
 
 Module Program_find <: ProgramInformation.
-    Definition entry_addr : N := 0.
+    Definition entry_addr : N := 0x8000000.
 
     Definition exits (t:trace) : bool :=
         match t with (Addr a,_)::_ => match a with
-        | 0x1e | 0x25 => true
+        | 0x8000024 => true
         | _ => false
     end | _ => false end.
 
-    Definition time_of_addr (s : store) (a : addr) :=
-        match a with
-        | 0x0  => movzx_r32_r16   (* movzx eax, si *)
-        | 0x3  => test_r16_r16    (* test si, si *)
-        | 0x6  => jz_addr         (* jz 0x1e *)
-        | 0x8  => xor_r32_r32     (* xor ecx, ecx *)
-        | 0xa  => jmp_addr        (* jmp 0x10 *)
-        | 0x10 => add_r64_i       (* add rcx, 1 *)
-        | 0x14 => cmp_r32_r32     (* cmp ecx, eax *)
-        | 0x16 => jnc_addr        (* jnc 0x1e *)
-        | 0x18 => cmp_r64_m64     (* cmp [rdi + rcx*8], rdx *)
-        | 0x1c => jnz_addr        (* jnz 0x10 *)
-        | 0x1e => ret
-        | 0x20 => mov_r32_i     (* mov eax, 0xffffffff *)
-        | 0x25 => ret             (* ret *)
-        | _    => time_inf
-        end.
-
-    Definition lifted_prog := arraysearch_find_amd64.
+    Definition binary := arraysearch_find_armv6m.
 End Program_find.
 
-Module AMD64Timing := AMD64Timing cpu Program_find.
-Module findAuto := AMD64TimingAutomation AMD64Timing.
+Module ARMv6MTiming := ARMv6MTiming cpu Program_find.
+Module findAuto := ARMv6MTimingAutomation ARMv6MTiming.
 Import Program_find findAuto.
 
-Definition key_in_array (mem : memory) (arr : addr) (key : N) (len : N) : Prop :=
-    exists i, i < len /\ mem Ⓠ[arr + (i << 3)] = key.
+(* Element i of the array (of 64-bit integers) equals the key, given as its low
+   and high words *)
+Definition elem_eq (mem : memory) (arr : addr) (klo khi : N) (i : N) : Prop :=
+    mem Ⓓ[arr + 8 * i] = klo /\ mem Ⓓ[arr + 8 * i + 4] = khi.
 
-Lemma lt_impl_lt_or_eq : forall x y,
-    x < 1 + y -> x = y \/ x < y.
-Proof. lia. Qed.
+Definition key_in_array (mem : memory) (arr : addr) (klo khi : N) (len : N) : Prop :=
+    exists i, i < len /\ elem_eq mem arr klo khi i.
 
-Definition N_peano_ind_Set (P : N -> Set) := N.peano_rect P.
+(* The number of the first n elements whose low word equals the key's.  The
+   loop compares an element's high word only when its low word matches. *)
+Fixpoint partial_matches (mem : memory) (arr : addr) (klo : N) (n : nat) : N :=
+    match n with
+    | O => 0
+    | S n' => partial_matches mem arr klo n' +
+              (if mem Ⓓ[arr + 8 * N.of_nat n'] =? klo then 1 else 0)
+    end.
 
-Fixpoint key_in_array_dec (mem : memory) (arr : addr) (key len : N)
-        : {key_in_array mem arr key len} + {~ key_in_array mem arr key len}.
-    induction len using N_peano_ind_Set.
-    - right. intro. destruct H as (idx & Contra & _). lia.
-    - destruct IHlen as [IN | NOT_IN].
-        -- left. destruct IN as (idx & Lt & Eq). exists idx.
-            split. lia. assumption.
-        -- destruct (N.eq_dec (mem Ⓠ[arr + (len << 3)]) key).
-            + left. exists len. split. lia. assumption.
-            + right. intro. destruct H as (idx & Lt & Eq).
-                assert (idx = len). {
-                destruct (lt_impl_lt_or_eq idx len). lia.
-                    subst. reflexivity.
-                exfalso. apply NOT_IN. exists idx. now split.
-                } subst. contradiction.
-Qed.
-
-Definition time_of_find (len : N) (found_idx : option N) (t : trace) :=
-    cycle_count_of_trace t <=
-        movzx_r32_r16 + test_r16_r16 + jz_addr +
+Definition time_of_find (mem : memory) (arr : addr) (klo : N) (len : N)
+        (found_idx : option N) (t : trace) :=
+    cycle_count_of_trace t =
+        (tpush_base + 2 + 1) + tcmp_imm +
         if len =? 0 then
-             mov_r32_i + ret
+            tb_taken + tldr_pc + (tpop_pc_base + 3)
         else
-            xor_r32_r32 + jmp_addr +
-            (match found_idx with None => 1 + len | Some idx => idx end) * (
-                cmp_r64_m64 + jnz_addr + add_r64_i + cmp_r32_r32 + jnc_addr
-            ) + cmp_r64_m64 + jnz_addr + jnc_addr + mov_r32_i + ret.
+            tb_not_taken + tmovs_imm + tb +
+            (* extra time for elements whose low word matches *)
+            partial_matches mem arr klo
+                (N.to_nat (match found_idx with None => len | Some idx => idx end)) *
+                (tb_not_taken + tldr_imm + tcmp_reg) +
+            match found_idx with
+            | Some idx =>
+                (* elements that don't match *)
+                idx * (
+                    tldr_imm + tcmp_reg + tb_taken +
+                    tadds_imm8 + tadds_imm8 + tcmp_reg + tb_not_taken
+                ) +
+                (* the matching element *)
+                tldr_imm + tcmp_reg + tb_not_taken + tldr_imm + tcmp_reg + tb_not_taken +
+                tuxth + tb + (tpop_pc_base + 3)
+            | None =>
+                (* elements that don't match, except the last *)
+                (len - 1) * (
+                    tldr_imm + tcmp_reg + tb_taken +
+                    tadds_imm8 + tadds_imm8 + tcmp_reg + tb_not_taken
+                ) +
+                (* the last element, after which the loop exits *)
+                tldr_imm + tcmp_reg + tb_taken +
+                tadds_imm8 + tadds_imm8 + tcmp_reg + tb_taken +
+                tldr_pc + (tpop_pc_base + 3)
+            end.
 
 Definition timing_postcondition (mem : memory) (arr : addr)
-        (key : N) (len : N) (t : trace) : Prop :=
-    (exists i, i < len /\ mem Ⓠ[arr + (i << 3)] = key /\
+        (klo khi : N) (len : N) (t : trace) : Prop :=
+    (exists i, i < len /\ elem_eq mem arr klo khi i /\
         (* i is the first index where the key is found *)
-        (forall j, j < i -> mem Ⓠ[arr + (j << 3)] <> key) /\
-        time_of_find len (Some i) t) \/
-    ((~ exists i, i < len /\ mem Ⓠ[arr + (i << 3)] = key) /\
-        time_of_find len None t).
+        (forall j, j < i -> ~ elem_eq mem arr klo khi j) /\
+        time_of_find mem arr klo len (Some i) t) \/
+    (~ key_in_array mem arr klo khi len /\
+        time_of_find mem arr klo len None t).
 
-Definition find_timing_invs (s : store) (base_mem : memory)
-    (sp : N) (arr : addr) (key : N) (len : N) (t:trace) : option Prop :=
+Definition find_timing_invs (base_mem : memory)
+    (arr : addr) (klo khi : N) (len : N) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
-| 0x0 => Some (s V_MEM64 = base_mem /\ 
-               s R_RDI = arr /\ s R_RSI = len /\ s R_RDX = key /\
+| 0x8000000 => Some (s V_MEM32 = base_mem /\
+               s R_R0 = arr /\ s R_R1 = len /\ s R_R2 = klo /\ s R_R3 = khi /\
                len < 2^16 /\
+               ~ overlap 32 (s R_SP ⊖ 12) 12 arr (8 * len) /\
                cycle_count_of_trace t' = 0)
-| 0x18 => Some (
-    s R_RDI = arr /\ s R_RSI = len /\ s R_RCX = len /\ s R_RDX = key /\
-    s R_RAX < 2^32 /\
+| 0x8000012 => Some (
+    s R_R0 = arr ⊕ 8 * s R_R4 /\ s R_R1 = len /\ s R_R2 = klo /\ s R_R3 = khi /\
     0 < len < 2^16 /\
     (* preservation *)
     (forall i, i < len ->
-        (s V_MEM64) Ⓠ[arr + (i << 3)] = base_mem Ⓠ[arr + (i << 3)]) /\
+        (s V_MEM32) Ⓓ[arr + 8 * i] = base_mem Ⓓ[arr + 8 * i] /\
+        (s V_MEM32) Ⓓ[arr + 8 * i + 4] = base_mem Ⓓ[arr + 8 * i + 4]) /\
     (* haven't found a match yet *)
-    (forall i, i < (s R_RAX) ->
-        (s V_MEM64) Ⓠ[arr + (i << 3)] <> key) /\
-    (s R_RAX) < len /\
-    cycle_count_of_trace t' <=
-        movzx_r32_r16 + test_r16_r16 + jz_addr + xor_r32_r32 +
-        jmp_addr +
-        s R_RAX * (
-            cmp_r64_m64 + jnz_addr + add_r64_i + cmp_r32_r32 + jnc_addr
+    (forall i, i < s R_R4 -> ~ elem_eq base_mem arr klo khi i) /\
+    s R_R4 < len /\
+    cycle_count_of_trace t' =
+        (tpush_base + 2 + 1) + tcmp_imm + tb_not_taken + tmovs_imm + tb +
+        partial_matches base_mem arr klo (N.to_nat (s R_R4)) *
+            (tb_not_taken + tldr_imm + tcmp_reg) +
+        s R_R4 * (
+            tldr_imm + tcmp_reg + tb_taken +
+            tadds_imm8 + tadds_imm8 + tcmp_reg + tb_not_taken
         )
     )
-| 0x1e | 0x25 => Some (timing_postcondition base_mem arr key len t)
+| 0x8000024 => Some (timing_postcondition base_mem arr klo khi len t)
 | _ => None end | _ => None end.
 
+(* The three words pushed on entry don't overwrite the array. *)
+Lemma push3_preserves :
+    forall m sp arr len i k v1 v2 v3
+        (NO: ~ overlap 32 (sp ⊖ 12) 12 arr (8 * len)) (I: i < len) (K: k + 4 <= 8),
+    m [Ⓓ sp ⊖ 12 := v1] [Ⓓ sp ⊖ 8 := v2] [Ⓓ sp ⊖ 4 := v3] Ⓓ[arr + 8 * i + k] =
+    m Ⓓ[arr + 8 * i + k].
+Proof.
+    intros.
+    assert (SP: forall c, c <= 12 -> sp ⊖ c = ((sp ⊖ 12) + (12 - c)) mod 2^32). {
+        intros. unfold msub. rewrite N.Div0.add_mod_idemp_l.
+        f_equal. rewrite (N.mod_small c) by lia. rewrite (N.mod_small 12) by lia. lia.
+    }
+    rewrite !getmem_noverlap; [ reflexivity | .. ];
+    match goal with |- ~ overlap _ _ _ (msub _ _ ?c) _ => rewrite (SP c) by lia end;
+    rewrite overlap_mod_r, <- N.add_assoc;
+    apply noverlap_index_index with (len1 := 8 * len) (len2 := 12); try lia;
+    apply noverlap_symmetry, NO.
+Qed.
+
+Lemma partial_matches_succ :
+    forall mem arr klo i,
+    partial_matches mem arr klo (N.to_nat (1 + i)) =
+    partial_matches mem arr klo (N.to_nat i) + (if mem Ⓓ[arr + 8 * i] =? klo then 1 else 0).
+Proof.
+    intros. rewrite N.add_1_l, N2Nat.inj_succ. simpl. rewrite N2Nat.id. reflexivity.
+Qed.
+
 Theorem find_timing:
-  forall s (t : trace) s' x' base_mem sp arr key len
+  forall s (t : trace) s' x' base_mem arr klo khi len
          (* boilerplate *)
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
-         (MDL: models x64typctx s)
+         (MDL: models armv6mtypctx s)
          (* bindings *)
-         (MEM: s V_MEM64 = base_mem)
-         (A0: s R_RDI = arr)
-         (A1: s R_RSI = len)
-         (A2: s R_RDX = key)
-         (LEN_RANGE: len < 2^16),
-  satisfies_all 
+         (MEM: s V_MEM32 = base_mem)
+         (A0: s R_R0 = arr)
+         (A1: s R_R1 = len)
+         (A2: s R_R2 = klo)
+         (A3: s R_R3 = khi)
+         (LEN_RANGE: len < 2^16)
+         (* the registers pushed on entry don't overwrite the array *)
+         (NO: ~ overlap 32 (s R_SP ⊖ 12) 12 arr (8 * len)),
+  satisfies_all
     lifted_prog
-    (find_timing_invs s base_mem sp arr key len)
+    (find_timing_invs base_mem arr klo khi len)
     exits
   ((x',s')::t).
 Proof using.
     intros.
     apply prove_invs.
-    Local Ltac step := tstep x64_step.
+    Local Ltac step := tstep armv6m_step.
 
     simpl. rewrite ENTRY. unfold entry_addr. step.
     now repeat split.
 
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; 
-        try eassumption; [idtac|apply welltyped].
+    eapply preservation_exec_prog in MDL;
+        try eassumption; [idtac|apply welltyped_lift_armv6m].
     clear - ENTRY PRE MDL. rename t1 into t. rename s1 into s'.
 
-    destruct_inv 64 PRE.
-
-    (* 0x101b0 -> 0x101e0 *)
-    destruct PRE as (Mem & A0 & A1 & A2 & LEN_VALID & Cycles).
-    repeat step.
-        replace len with 0 in * by lia. right.
-        psimpl. rewrite N.shiftr_0_r. split.
-        intro. destruct H, H. lia.
-        unfold time_of_find. hammer.
-
-    rewrite N.lxor_nilpotent. repeat rewrite N.shiftr_0_r.
-    change (scast _ _ 0) with 0.
-    repeat change (0 mod _) with 0. psimpl. rewrite N.eqb_refl.
-    repeat split; auto. lia.
-        (* preservation *) intros; now rewrite Mem.
-        (* key not found yet *) intros; lia.
-        (* idx <= len *) lia.
-        (* cycles *) hammer.
-
-    destruct PRE as (A0 & A1 & A2 & RDX & RAX & LEN_VALID & Preserved &
-        NotFound & A5_LEN & Cycles).
-    destruct (key_in_array_dec (s' V_MEM64) arr key len) as [IN | NOT_IN].
-    (* There is a matching element in the array *) {
-        step. repeat step.
-        (* postcondition, match found *)
-            left. exists (s' R_RAX). split.
-                assumption.
-            split.
-                rewrite <- Preserved, N.shiftl_mul_pow2.
-                apply N.eqb_eq in BC. apply BC.
-                assumption.
-            split.
-                intros. rewrite <- Preserved by lia. now apply NotFound.
-            unfold time_of_find.
-            hammer. replace (len =? 0) with false by lia. lia.
-        (* loop invariant after going around *)
-            apply N.ltb_lt in BC0. apply N.eqb_neq in BC.
-            repeat split; auto; try lia.
-            (* key not found *)
-            intros.
-                apply lt_impl_lt_or_eq in H. destruct H.
-                    subst. now rewrite N.shiftl_mul_pow2.
-                    now apply NotFound.
-            (* cycles *)
-            rewrite (N.mod_small (1 + s' R_RAX)) by lia. hammer.
-        (* iterated len times - contradiction *)
-        assert (len < 1 + s' R_RAX \/ len = 1 + s' R_RAX) by lia. destruct H.
-            lia. subst len. rewrite H in *; clear H.
-        exfalso. destruct IN as (idx & IDX_LEN & IN).
-        apply (NotFound idx).
-        destruct (lt_impl_lt_or_eq _ _ IDX_LEN). subst. 
-        rewrite N.shiftl_mul_pow2 in IN. change (2^3) with 8 in IN. lia. assumption.
-        assumption.
-    }
-
-    (* There is not a matching element in the array *) {
-        step.
+    destruct_inv 32 PRE.
+    - destruct PRE as (Mem & A0 & A1 & A2 & A3 & LEN_VALID & NO & Cycles).
         repeat step.
-        (* contradiction - BC0 says a match has been found *)
-            exfalso. apply NOT_IN. exists (s' R_RAX). 
-            split. lia.
-            apply N.eqb_eq in BC.
-            rewrite N.shiftl_mul_pow2. apply BC.
-        (* a match has not been found, continue *)
-        (* postcondition, match found *)
-            apply N.ltb_lt in BC0. apply N.eqb_neq in BC.
+        -- (* len = 0: return -1 *)
+            replace len with 0 in * by lia. right.
+            split. intros (i & Contra & _). lia.
+            unfold time_of_find. hammer.
+        -- (* loop entry *)
             repeat split; auto; try lia.
-            (* key not found *)
-            intros.
-                apply lt_impl_lt_or_eq in H. destruct H.
-                    subst. now rewrite N.shiftl_mul_pow2.
-                    now apply NotFound.
+            (* preservation *)
+            intros. rewrite ?Mem.
+                replace (arr + 8 * i) with (arr + 8 * i + 0) by lia.
+                apply push3_preserves with (len := len); auto; lia.
+            intros. rewrite ?Mem. apply push3_preserves with (len := len); auto; lia.
             (* cycles *)
-            hammer.
-        (* a match has not been found, break and return *)
-        right.
-            split. intro. apply NOT_IN. destruct H as (idx & IDX_LEN & IN).
-            exists idx. split. assumption. now rewrite Preserved.
-            unfold time_of_find.
-            hammer.
-            replace (len =? 0) with false by lia.
-            assert (s' R_RAX <= 1 + len) by lia.
-            transitivity (ret + mov_r32_i + jnc_addr + cmp_r32_r32 + add_r64_i + jnz_addr + cmp_r64_m64 + movzx_r32_r16 +
-                test_r16_r16 + jz_addr + xor_r32_r32 + jmp_addr +
-                s' R_RAX * (cmp_r64_m64 + jnz_addr + add_r64_i + cmp_r32_r32 + jnc_addr)). lia.
-            rewrite N.mul_add_distr_r. psimpl.
-            assert (s' R_RAX < 1 + len \/ s' R_RAX = 1 + len) by lia. destruct H0.
-                destruct (lt_impl_lt_or_eq _ _ H0). lia.
-            etransitivity.
-                apply N.add_le_mono_l.
-                apply N.mul_le_mono_r. instantiate (1 := len). lia. lia.
-            rewrite H0 in *; clear H0. lia.
-    }
+            hammer. simpl (partial_matches _ _ _ (N.to_nat 0)). lia.
+    - destruct PRE as (A0 & A1 & A2 & A3 & LEN_VALID & Preserved & NotFound & I_LEN & Cycles).
+        repeat step.
+        all: try rewrite (N.mod_small (1 + s' R_R4)) in * by lia.
+        all: try replace (4 + arr + 8 * s' R_R4) with (arr + 8 * s' R_R4 + 4) in * by lia.
+        all: destruct (Preserved (s' R_R4) I_LEN) as (PLo & PHi).
+        -- (* both words match: found *)
+            left. exists (s' R_R4). split. assumption.
+            split. split.
+                rewrite <- PLo. apply N.eqb_eq, BC.
+                rewrite <- PHi. apply N.eqb_eq, BC0.
+            split. assumption.
+            unfold time_of_find. hammer.
+            replace (len =? 0) with false by (symmetry; apply N.eqb_neq; lia). lia.
+        -- (* low word matches, last element: not found *)
+            right. split.
+                intros (j & Jlen & EQlo & EQhi).
+                assert (j = s' R_R4 \/ j < s' R_R4) as [J|J] by (apply N.leb_le in BC1; lia).
+                    subst j. rewrite <- PHi in EQhi. apply N.eqb_neq in BC0. contradiction.
+                    apply (NotFound j J). split; assumption.
+            unfold time_of_find. hammer.
+            assert (LEN: len = 1 + s' R_R4) by (apply N.leb_le in BC1; lia).
+            replace (len =? 0) with false by (symmetry; apply N.eqb_neq; lia).
+            rewrite LEN, partial_matches_succ, <- PLo, BC. lia.
+        -- (* low word matches: continue *)
+            apply N.leb_gt in BC1.
+            repeat split; auto; try lia.
+                1,2: match goal with H: ?j < _ |- _ => destruct (Preserved j H); assumption end.
+                intros j J (EQlo & EQhi).
+                assert (j = s' R_R4 \/ j < s' R_R4) as [J'|J'] by lia.
+                    subst j. rewrite <- PHi in EQhi. apply N.eqb_neq in BC0. contradiction.
+                    apply (NotFound j J'). split; assumption.
+                hammer. rewrite partial_matches_succ, <- PLo, BC. lia.
+        -- (* low word doesn't match, last element: not found *)
+            right. split.
+                intros (j & Jlen & EQlo & EQhi).
+                assert (j = s' R_R4 \/ j < s' R_R4) as [J|J] by (apply N.leb_le in BC0; lia).
+                    subst j. rewrite <- PLo in EQlo. apply N.eqb_neq in BC. contradiction.
+                    apply (NotFound j J). split; assumption.
+            unfold time_of_find. hammer.
+            assert (LEN: len = 1 + s' R_R4) by (apply N.leb_le in BC0; lia).
+            replace (len =? 0) with false by (symmetry; apply N.eqb_neq; lia).
+            rewrite LEN, partial_matches_succ, <- PLo, BC. lia.
+        -- (* low word doesn't match: continue *)
+            apply N.leb_gt in BC0.
+            repeat split; auto; try lia.
+                1,2: match goal with H: ?j < _ |- _ => destruct (Preserved j H); assumption end.
+                intros j J (EQlo & EQhi).
+                assert (j = s' R_R4 \/ j < s' R_R4) as [J'|J'] by lia.
+                    subst j. rewrite <- PLo in EQlo. apply N.eqb_neq in BC. contradiction.
+                    apply (NotFound j J'). split; assumption.
+                hammer. rewrite partial_matches_succ, <- PLo, BC. lia.
 Qed.
 
 End TimingProof.
-
-Require Import i5_7300u.
-Module i5_7300u_find := TimingProof i5_7300u.
-Import i5_7300u.
-
-Goal forall len found_idx t,
-    i5_7300u_find.time_of_find len found_idx t =
-    (i5_7300u_find.findAuto.cycle_count_of_trace t <=
-        (if len =? 0
-            then 39
-            else 76 + match found_idx with
-                        | Some idx => idx
-                        | None => 1 + len
-                        end * 28)).
-    intros.
-    unfold i5_7300u_find.time_of_find.
-    unfold cmp_r64_m64, jnz_addr, jnc_addr, mov_r32_i, ret.
-    simpl. psimpl.
-    reflexivity.
-Qed.
-

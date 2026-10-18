@@ -1,0 +1,330 @@
+***
+*** AbsInt Advanced Analyzer for ARM (GUI)
+*** Version: 26.04
+*** Build: 19471048
+*** Tag: auto/2026/04/17/2136
+***
+
+***
+*** Start of report file generated on 09 Oct 2026 12:53:07 -0500
+*** Current working directory: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison
+*** Current project file: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/ait_wcet_results.apx
+*** Current analysis ID: arraysearch_aiT
+*** Current analysis type: aiT
+*** Host: anesidora
+*** License: localhost@42426 (Charles Averill of Department of Engineering and Computer Science (University of Texas) - #ALF2572)
+*** Number of concurrent analyses: 1
+***
+
+***
+*** Files
+***
+
+  Executables:
+    - Executable: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/arraysearch/arraysearch.elf
+  Ais: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/arraysearch/arraysearch.ais
+
+
+***
+*** Effective configuration: Default Configuration
+***
+
+*** Arm Options
+
+  General:
+    - Target: Cortex-M0
+
+
+*** Analysis Settings for arraysearch_aiT
+
+  Analysis Start: find
+  Report: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/arraysearch/aiT.txt
+
+
+
+
+***
+*** Starting decoding round #1
+***
+
+  
+
+***
+*** Control-Flow & Value Analysis for arraysearch_aiT
+*** Started on 09 Oct 2026 12:53:07 -0500
+***
+
+isa-arm.ais: Info: Reading '/tmp/a3arm-iqlFXF/analyses/2/a3-base.ais'...
+    # architecture
+    immutable attribute "architecture": "arm";
+    
+    # target type
+    immutable attribute "target_type": "Cortex-M0";
+    
+    # analysis id
+    immutable attribute "analysis_id": "arraysearch_aiT";
+    
+    # analysis type
+    immutable attribute "analysis_type": "wcet_analysis";
+    
+    # analysis configuration
+    immutable attribute "analysis_configuration": "";
+    
+    # analysis group
+    immutable attribute "analysis_group": "";
+
+isa-arm.ais: Info: Reading '/home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/arraysearch/arraysearch.ais'...
+    # enter AIS annotations here or use 'Insert AIS annotation...' from the context menu
+    compiler: "GCC";
+    
+    loop "find.L1" {
+        bound: 0 .. 65536;
+    }
+isa-arm: Info: Reading binary 'arraysearch.elf'.
+    * Type: ELF
+    * Size: 64 KB (66512 bytes)
+    * MD5: 8791f1e2b511a80270d777437d41d7fb
+isa-arm: Info: Using decoder for 'ARM' and compiler 'GCC'.
+isa-arm: Info: Guessed user stackpointer: 0x80000
+isa-arm: Info: Decoding statistics:
+      * Code size: 38 bytes
+      * Routines: 1
+      * Loops: 1
+      * Blocks: 8
+      * Instructions: 19
+      * Memory reads: 4
+      * Memory writes: 1
+      * Computed branches: 0
+      * Computed calls: 0
+      * Computed returns: 0
+      * Unresolved computed branches: 0
+      * Unresolved computed calls: 0
+      * Unresolved computed returns: 0
+isa-arm: Info: Value analyzer statistics (max-length=2, default-unroll=2, normal mode):
+      * Created 920 states.
+      * Created 690 output carriers.
+      * Processed 110 nodes * contexts until fixed-point was reached.
+      * Processed 0 nodes * contexts directly in the fixed-point.
+      * Processed 23 nodes * contexts again in the fixed-point.
+      * Applied 19 times the widening operator.
+      * Applied 1 times the widening operator with an effect.
+      * At most 3 routines * contexts in the worklist.
+      * At most 8 blocks * contexts in the worklist.
+      * At most 10 data-flow values stored in the worklist.
+      * At most 9 data-flow values stored globally.
+      * Allocated 15k GC heap objects of total size 1 MB.
+isa-arm: Info: Value analyzer iteration statistics (percent of processed nodes * contexts / routine):
+     86% of iteration in 'find.L1'
+     13% of iteration in 'find'
+  Loop 'find.L1': using user annotation in all contexts with [0..65537] iterations
+isa-arm: Info: Loop analysis found 1 loop bound.
+isa-arm: Info: Memory Access Statistics:
+    Instructions:
+     -         4 total loads              :         2 exact ( 50.0%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         2 unknown ( 50.0%)
+     -         1 total stores             :         1 exact (100.0%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         0 unknown (  0.0%)
+    Accesses (instructions * access steps * contexts):
+     -         6 total reads              :         2 exact ( 33.3%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         4 unknown ( 66.6%)
+     -         1 total writes             :         1 exact (100.0%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         0 unknown (  0.0%)
+    (areas up to 1024 bytes are considered 'nearly exact').
+
+ * memory areas considered as mirrored:
+     <none>
+
+ * memory areas considered as volatile:
+     <none>
+
+ * memory areas considered as inaccessible:
+     <none>
+
+ * memory areas considered as read-only:
+      In "gui://hardware":
+      1: [0x08000000..0x0800ffff]
+
+ * memory areas considered as constant:
+     <none>
+
+ * memory accesses of function 'find':
+   instruction thumb::0x8000000 writes to [0x0007fff4]:12 (r13 + [0xfffffff4])
+   instruction thumb::0x8000022 reads from [0x08000028]:4 (part of 'find')
+                                value is [0x0000ffff]
+   instruction thumb::0x8000024 reads from [0x0007fff4]:12 (r13 + [0x00000000])
+
+ * memory accesses of function 'find.L1' (extracted from 'find'):
+   instruction thumb::0x8000012 reads from [?]:4 (modulo 2^2 = 0x0 imprecise in 2 of 2 contexts (100.0%))
+   instruction thumb::0x8000018 reads from [?]:4 (modulo 2^2 = 0x0 imprecise in 2 of 2 contexts (100.0%))
+
+ * found a total of 2 imprecise read instructions
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** Cache & Pipeline Analysis for arraysearch_aiT
+*** Started on 09 Oct 2026 12:53:08 -0500
+***
+
+cortexm0pipe: Info #5132: Using path analysis variant 'Auto'.
+cortexm0pipe: Info: Using wcet analysis mode 'global worst case'.
+cortexm0pipe: Info: Using instruction cache analysis mode 'normal'.
+cortexm0pipe: Info: Using data cache analysis mode 'normal'.
+cortexm0pipe: Info: Using branch target buffer analysis mode 'normal'.
+
+*
+* Memory Map
+*
+
+  * Region [0x8000000, 0x800ffff]
+      Common Attributes:
+        Memory Type: FLASH
+        Port Width: 32
+
+      Attributes for code fetch:
+        Transfer Timings: [0]
+      Attributes for data read:
+        Transfer Timings: [0]
+
+  * Region [0x20000000, 0x20001fff]
+      Common Attributes:
+        Memory Type: SRAM
+        Port Width: 32
+
+      Attributes for code fetch:
+        Transfer Timings: [0]
+      Attributes for data read:
+        Transfer Timings: [0]
+      Attributes for data write:
+        Transfer Timings: [0]
+
+cortexm0pipe: Warning #2049: In routine 'find', at address thumb::0x8000000:
+    In context 'any-history':
+    No memory access timing found for data write access of instruction thumb::0x8000000 to 0x7fff4.
+    Assuming default access timing.
+    Result may not be WCET.
+cortexm0pipe: Warning #2049: In routine 'find', at address thumb::0x8000024:
+    In context 'any-history':
+    No memory access timing found for data read access of instruction thumb::0x8000024 to 0x7fff4.
+    Assuming default access timing.
+    Result may not be WCET.
+cortexm0pipe: Info: Pipeline analyzer statistics (max-length=2, default-unroll=2):
+      * Processed 28 nodes * contexts until fixed-point was reached.
+      * At most 2 carrier storage points used.
+      * Inserted 4 states into the carrier storage.
+      * At most 4 states at once inside the carrier storage.
+      * At most 8 worklist entries used.
+      * Inserted 48 states into the worklist.
+      * At most 7 states at once inside the worklist.
+      * Allocated 1k GC heap objects of total size 1 MB.
+cortexm0pipe: Info: Calling statistics:
+    49 times called handle_one_instruction.
+    63 times called handle_one_cpu_state.
+    128 times called single_step.
+cortexm0pipe: Info: Calling statistics (percent of total single_step calls / routine):
+    65% find.L1
+        18% thumb::0x800000a 'adds r4, #1'
+        14% thumb::0x800001c 'bne 0x800000a <0x800000a>'
+        9% thumb::0x8000016 'bne 0x800000a <0x800000a>'
+        4% thumb::0x8000010 'bcs 0x8000022 <0x8000022>'
+        4% thumb::0x8000012 'ldr r5, [r0]'
+        4% thumb::0x8000018 'ldr r5, [r0, #4]'
+        2% thumb::0x800000c 'adds r0, #8'
+        2% thumb::0x800000e 'cmp r4, r1'
+        2% thumb::0x8000014 'cmp r5, r2'
+        2% thumb::0x800001a 'cmp r5, r3'
+    34% find
+        10% thumb::0x8000024 'pop {r4, r5, pc}'
+        9% thumb::0x8000022 'ldr r0, [0x8000028]'
+        6% thumb::0x8000004 'beq 0x8000022 <0x8000022>'
+        2% thumb::0x8000000 'push {r4, r5, lr}'
+        1% thumb::0x800001e 'uxth r0, r4'
+        1% thumb::0x8000020 'b 0x8000024 <0x8000024>'
+cortexm0pipe: Info: Split statistics (9 classified splits):
+    9 splits because of 'imprecise read access'.
+cortexm0pipe: Info: Prediction file chain-compression statistics:
+    100 pipeline states written.
+    65 pipeline states skipped.
+    39% of pipeline states skipped for writing.
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** ILP Solving for arraysearch_aiT
+*** Started on 09 Oct 2026 12:53:08 -0500
+***
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** Reporting for arraysearch_aiT
+*** Started on 09 Oct 2026 12:53:08 -0500
+***
+
+   Computed Worst Case Execution Time (WCET) is 983077 cycles
+
+Infeasibility Information:
+
+Functions                      infeasible  infeasible blocks  infeasible instructions  infeasible edges
+-------------------------------------------------------------------------------------------------------
+find                                                  0 / 5                    0 / 9              0 / 6
+find.L1                                               0 / 3                   0 / 10              0 / 6
+-------------------------------------------------------------------------------------------------------
+Total:                             0 / 2              0 / 8                   0 / 19             0 / 12
+
+ * WCET contributions of function 'find':
+
+Predicted WCET Contribution: 19 cycles
+                 Cumulative: 983077 cycles
+
+Predicted WCET Contribution per Context (cumulative):
+    Context 'any-history' => 19 cycles (983077 cycles)
+
+ * WCET contributions of function 'find.L1':
+
+Predicted WCET Contribution: 983058 cycles
+                 Cumulative: 983058 cycles
+
+Predicted WCET Contribution per Context (cumulative):
+    Context '..., thumb::0x8000006->"find.L1"[1]'   => 18 cycles (983058 cycles)
+    Context '..., thumb::0x8000006->"find.L1"[2..]' => 983040 cycles (983040 cycles)
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** Creating HTML report for arraysearch_aiT
+*** Started on 09 Oct 2026 12:53:08 -0500
+***
+
+
+***
+*** Last process took 0 s and used not more than 11 MiB of memory
+*** 
+***
+
+
+
+***
+*** End of report file generated on 09 Oct 2026 12:53:08 -0500 (total runtime 0:00 minutes)
+*** Error count: 0
+*** Warning count: 2
+*** Number of decoding rounds: 1
+***
+
+
+

@@ -1,0 +1,331 @@
+***
+*** AbsInt Advanced Analyzer for ARM (GUI)
+*** Version: 26.04
+*** Build: 19471048
+*** Tag: auto/2026/04/17/2136
+***
+
+***
+*** Start of report file generated on 11 Oct 2026 22:18:04 -0500
+*** Current working directory: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/collatz
+*** Current project file: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/collatz/collatz_wcet.apx
+*** Current analysis ID: aiT
+*** Current analysis type: aiT
+*** Host: anesidora
+*** License: localhost@42426 (Charles Averill of Department of Engineering and Computer Science (University of Texas) - #ALF2572)
+*** Number of concurrent analyses: 1
+***
+
+***
+*** Files
+***
+
+  Executables:
+    - Executable: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/collatz/collatz.elf
+  Ais: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/collatz/collatz.ais
+
+
+***
+*** Effective configuration: Default Configuration
+***
+
+*** Arm Options
+
+  General:
+    - Target: Cortex-M0
+
+
+*** Analysis Settings for aiT
+
+  Analysis Start: collatz
+  Report: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/collatz/collatz_report.txt
+
+
+
+
+***
+*** Starting decoding round #1
+***
+
+  
+
+***
+*** Control-Flow & Value Analysis for aiT
+*** Started on 11 Oct 2026 22:18:04 -0500
+***
+
+isa-arm.ais: Info: Reading '/tmp/a3arm-ubwswo/analyses/1/a3-base.ais'...
+    # architecture
+    immutable attribute "architecture": "arm";
+    
+    # target type
+    immutable attribute "target_type": "Cortex-M0";
+    
+    # analysis id
+    immutable attribute "analysis_id": "aiT";
+    
+    # analysis type
+    immutable attribute "analysis_type": "wcet_analysis";
+    
+    # analysis configuration
+    immutable attribute "analysis_configuration": "";
+    
+    # analysis group
+    immutable attribute "analysis_group": "";
+
+isa-arm.ais: Info: Reading '/home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/collatz/collatz.ais'...
+    # enter AIS annotations here or use 'Insert AIS annotation...' from the context menu
+    
+    compiler: "GCC";
+    
+    loop "collatz.L1" {
+        bound: 55000;
+    }
+
+isa-arm: Info: Reading binary 'collatz.elf'.
+    * Type: ELF
+    * Size: 64 KB (66520 bytes)
+    * MD5: 26fbe76a406560a061ebb18fef7f93b2
+isa-arm: Info: Using decoder for 'ARM' and compiler 'GCC'.
+isa-arm: Info: Guessed user stackpointer: 0x80000
+isa-arm: Info: Decoding statistics:
+      * Code size: 48 bytes
+      * Routines: 1
+      * Loops: 1
+      * Blocks: 7
+      * Instructions: 24
+      * Memory reads: 2
+      * Memory writes: 1
+      * Computed branches: 0
+      * Computed calls: 0
+      * Computed returns: 0
+      * Unresolved computed branches: 0
+      * Unresolved computed calls: 0
+      * Unresolved computed returns: 0
+isa-arm: Info: Value analyzer statistics (max-length=2, default-unroll=2, normal mode):
+      * Created 1214 states.
+      * Created 879 output carriers.
+      * Processed 127 nodes * contexts until fixed-point was reached.
+      * Processed 0 nodes * contexts directly in the fixed-point.
+      * Processed 23 nodes * contexts again in the fixed-point.
+      * Applied 19 times the widening operator.
+      * Applied 1 times the widening operator with an effect.
+      * At most 3 routines * contexts in the worklist.
+      * At most 7 blocks * contexts in the worklist.
+      * At most 7 data-flow values stored in the worklist.
+      * At most 9 data-flow values stored globally.
+      * Allocated 19k GC heap objects of total size 1 MB.
+isa-arm: Info: Value analyzer iteration statistics (percent of processed nodes * contexts / routine):
+     90% of iteration in 'collatz.L1'
+      9% of iteration in 'collatz'
+  Loop 'collatz.L1': using user annotation in all contexts with [55000..55001] iterations
+isa-arm: Info: Loop analysis found 1 loop bound.
+isa-arm: Info: Memory Access Statistics:
+    Instructions:
+     -         2 total loads              :         2 exact (100.0%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         0 unknown (  0.0%)
+     -         1 total stores             :         1 exact (100.0%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         0 unknown (  0.0%)
+    Accesses (instructions * access steps * contexts):
+     -         2 total reads              :         2 exact (100.0%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         0 unknown (  0.0%)
+     -         1 total writes             :         1 exact (100.0%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         0 unknown (  0.0%)
+    (areas up to 1024 bytes are considered 'nearly exact').
+
+ * memory areas considered as mirrored:
+     <none>
+
+ * memory areas considered as volatile:
+     <none>
+
+ * memory areas considered as inaccessible:
+     <none>
+
+ * memory areas considered as read-only:
+      In "gui://hardware":
+      1: [0x08000000..0x0800ffff]
+
+ * memory areas considered as constant:
+     <none>
+
+ * memory accesses of function 'collatz':
+   instruction thumb::0x8000002 writes to [0x0007fff8]:8 (r13 + [0xfffffff8])
+   instruction thumb::0x8000008 reads from [0x08000030]:4 (part of 'collatz')
+                                value is [0x0000d6d8]
+   instruction thumb::0x800002a reads from [0x0007fff8]:8 (r13 + [0x00000000])
+
+ * memory accesses of function 'collatz.L1' (extracted from 'collatz'):
+   no accesses at all
+
+
+***
+*** Last process took 0 s and used not more than 32 MiB of memory
+*** 
+***
+
+
+***
+*** Cache & Pipeline Analysis for aiT
+*** Started on 11 Oct 2026 22:18:04 -0500
+***
+
+cortexm0pipe: Info #5132: Using path analysis variant 'Auto'.
+cortexm0pipe: Info: Using wcet analysis mode 'global worst case'.
+cortexm0pipe: Info: Using instruction cache analysis mode 'normal'.
+cortexm0pipe: Info: Using data cache analysis mode 'normal'.
+cortexm0pipe: Info: Using branch target buffer analysis mode 'normal'.
+
+*
+* Memory Map
+*
+
+  * Region [0x8000000, 0x800ffff]
+      Common Attributes:
+        Memory Type: FLASH
+        Port Width: 32
+
+      Attributes for code fetch:
+        Transfer Timings: [0]
+      Attributes for data read:
+        Transfer Timings: [0]
+
+  * Region [0x20000000, 0x20001fff]
+      Common Attributes:
+        Memory Type: SRAM
+        Port Width: 32
+
+      Attributes for code fetch:
+        Transfer Timings: [0]
+      Attributes for data read:
+        Transfer Timings: [0]
+      Attributes for data write:
+        Transfer Timings: [0]
+
+cortexm0pipe: Warning #2049: In routine 'collatz', at address thumb::0x8000002:
+    In context 'any-history':
+    No memory access timing found for data write access of instruction thumb::0x8000002 to 0x7fff8.
+    Assuming default access timing.
+    Result may not be WCET.
+cortexm0pipe: Warning #2049: In routine 'collatz', at address thumb::0x800002a:
+    In context 'any-history':
+    No memory access timing found for data read access of instruction thumb::0x800002a to 0x7fff8.
+    Assuming default access timing.
+    Result may not be WCET.
+cortexm0pipe: Info: Pipeline analyzer statistics (max-length=2, default-unroll=2):
+      * Processed 29 nodes * contexts until fixed-point was reached.
+      * At most 2 carrier storage points used.
+      * Inserted 5 states into the carrier storage.
+      * At most 5 states at once inside the carrier storage.
+      * At most 6 worklist entries used.
+      * Inserted 48 states into the worklist.
+      * At most 6 states at once inside the worklist.
+      * Allocated 1k GC heap objects of total size 1 MB.
+cortexm0pipe: Info: Calling statistics:
+    63 times called handle_one_instruction.
+    71 times called handle_one_cpu_state.
+    109 times called single_step.
+cortexm0pipe: Info: Calling statistics (percent of total single_step calls / routine):
+    74% collatz.L1
+        13% thumb::0x8000024 'lsrs r3, r3, #1'
+        11% thumb::0x800000c 'adds r0, #1'
+        5% thumb::0x8000012 'tst r4, r3'
+        5% thumb::0x8000014 'beq 0x8000024 <0x8000024>'
+        5% thumb::0x8000026 'cmp r3, #1'
+        4% thumb::0x8000010 'beq 0x800002c <0x800002c>'
+        4% thumb::0x8000022 'beq 0x800002c <0x800002c>'
+        4% thumb::0x8000028 'bne 0x800000c <0x800000c>'
+        2% thumb::0x800000e 'cmp r0, r2'
+        2% thumb::0x8000016 'lsls r1, r3, #1'
+        2% thumb::0x8000018 'adds r3, r3, r1'
+        2% thumb::0x800001a 'adds r3, #1'
+        2% thumb::0x800001c 'adds r0, #1'
+        2% thumb::0x800001e 'uxth r3, r3'
+        2% thumb::0x8000020 'cmp r0, r2'
+    25% collatz
+        9% thumb::0x800002a 'pop {r4, pc}'
+        6% thumb::0x800002c 'movs r0, #0'
+        2% thumb::0x8000000 'movs r3, r0'
+        1% thumb::0x8000006 'movs r4, #1'
+        1% thumb::0x8000008 'ldr r2, [0x8000030]'
+cortexm0pipe: Info: Prediction file chain-compression statistics:
+    100 pipeline states written.
+    38 pipeline states skipped.
+    27% of pipeline states skipped for writing.
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** ILP Solving for aiT
+*** Started on 11 Oct 2026 22:18:04 -0500
+***
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** Reporting for aiT
+*** Started on 11 Oct 2026 22:18:04 -0500
+***
+
+   Computed Worst Case Execution Time (WCET) is 990042 cycles
+
+Infeasibility Information:
+
+Functions                      infeasible  infeasible blocks  infeasible instructions  infeasible edges
+-------------------------------------------------------------------------------------------------------
+collatz                                               0 / 3                    0 / 9              0 / 3
+collatz.L1                                            0 / 4                   0 / 15              0 / 8
+-------------------------------------------------------------------------------------------------------
+Total:                             0 / 2              0 / 7                   0 / 24             0 / 11
+
+ * WCET contributions of function 'collatz':
+
+Predicted WCET Contribution: 21 cycles
+                 Cumulative: 990042 cycles
+
+Predicted WCET Contribution per Context (cumulative):
+    Context 'any-history' => 21 cycles (990042 cycles)
+
+ * WCET contributions of function 'collatz.L1':
+
+Predicted WCET Contribution: 990021 cycles
+                 Cumulative: 990021 cycles
+
+Predicted WCET Contribution per Context (cumulative):
+    Context '..., thumb::0x8000000->"collatz.L1"[1]'   => 21 cycles (990021 cycles)
+    Context '..., thumb::0x8000000->"collatz.L1"[2..]' => 990000 cycles (990000 cycles)
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** Creating HTML report for aiT
+*** Started on 11 Oct 2026 22:18:04 -0500
+***
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+
+***
+*** End of report file generated on 11 Oct 2026 22:18:04 -0500 (total runtime 0:00 minutes)
+*** Error count: 0
+*** Warning count: 2
+*** Number of decoding rounds: 1
+***
+
+
+

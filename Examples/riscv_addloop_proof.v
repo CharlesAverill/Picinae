@@ -55,7 +55,7 @@ Open Scope N_scope.
     - Manually copied the addresses and hex-encoded instructions to the function below
       I ignored the <start-0x8> section because it's just a test case and not a part of the program logic
 *)
-Definition add_loop_riscv (_ : store) (a : addr) : N :=
+Definition add_loop_riscv (a : addr) : N :=
     match a with
     | 0x8  => 0x00106393 (* ori     t2,zero,1 *)
     | 0xc  => 0x000e7e13 (* andi	t3,t3,0 *)
@@ -77,7 +77,7 @@ Definition add_loop_riscv (_ : store) (a : addr) : N :=
     in a 'mod 2^32', hence the circle plus).
 *)
 Definition postcondition (s : store) (x y : N) :=
-    s R_T1 = Ⓓ(x ⊕ y).
+    s R_T1 = x ⊕ y.
 
 (*
     We really only have one invariant here (because we only have one loop in the
@@ -103,9 +103,9 @@ Definition postcondition (s : store) (x y : N) :=
 *)
 Definition addloop_correctness_invs (_ : store) (p : addr) (x y : N) (t:trace) :=
     match t with (Addr a, s) :: _ => match a with
-        | 0x8  => Some (s R_T0 = VaN x 32 /\ s R_T1 = VaN y 32)
-        | 0x10 => Some (exists t0 t1, 
-            s R_T0 = Ⓓt0 /\ s R_T1 = Ⓓt1 /\ s R_T2 = Ⓓ1 /\ s R_T3 = Ⓓ0 /\ 
+        | 0x8  => Some (s R_T0 = x /\ s R_T1 = y)
+        | 0x10 => Some (exists t0 t1,
+            s R_T0 = t0 /\ s R_T1 = t1 /\ s R_T2 = 1 /\ s R_T3 = 0 /\
                 t0 ⊕ t1 = x ⊕ y)
         | 0x20 => Some (postcondition s x y)
         | _ => None end
@@ -119,53 +119,10 @@ Definition addloop_exit (t:trace) :=
   | _ => false
   end | _ => false end.
 
-(*
-    TODO : FIX JANK
-    This is all machinery I use to lift code. I converted the above function into a list,
-    transformed it into Picinae IL. There should be a much easier way to just map IL onto
-    the function above instead of all of this. Or maybe not. Hamlen question.
-*)
-Module Jank.
-    Definition range (base : N) (m : nat) : list N :=
-        let fix aux max :=
-            match max with
-            | O => []
-            | S n' =>
-                let l := aux n' in
-                base + N.of_nat (4 * List.length l) :: l
-            end
-        in List.rev (aux m).
-
-    Definition rv_stmt' m a :=
-                                                (* removed getmem here. why was it giving nops? *)
-    rv2il a match a mod 4 with 0 => rv_decode (m a) | _ => R5_InvalidI end.
-
-    Definition add_loop_riscv_list : list N := [
-    0x00106393          	(* andi	t2,t2,1 *);
-        0x000e7e13          	(* andi	t3,t3,0 *);
-        0x01c28863         	    (* beq	t0,t3,20 <end> *);
-        0x00130313          	(* addi	t1,t1,1 *);
-        0x407282b3          	(* sub	t0,t0,t2 *);
-        0xffce0ae3          	(* beq	t3,t3,10 <add> *)
-    ]%N.
-
-    Definition il_list :=
-        List.map (fun a => (a, Some (4, rv_stmt' (add_loop_riscv (fun _ => Ⓓ0)) a))) (range 0x8 (List.length add_loop_riscv_list)).
-
-    Definition update_prog old_prog (a : addr) newval : program :=
-        fun s a' => if N.eqb a a' then newval else old_prog s a'.
-
-    Fixpoint program_of_list l :=
-            match l with 
-            | nil => fun _ _ => None    
-            | h :: t => update_prog (program_of_list t) (fst h) (snd h)
-            end.
-
-    (* This is actually what we'll be verifying *)
-    Definition lifted_addloop :=
-        program_of_list il_list.
-End Jank.
-Export Jank.
+(* Lift the program: decode the instruction word at each address and translate
+   it to Picinae IL.  Every instruction is 4 bytes long. *)
+Definition lifted_addloop : program :=
+    fun _ a => Some (4, rv2il a (rv_decode (add_loop_riscv a))).
 
 (*
     And now for the proofs:
@@ -173,22 +130,22 @@ Export Jank.
 
 (* Well-typedness of the lifted code, automatic *)
 Theorem addloop_welltyped: welltyped_prog rvtypctx lifted_addloop.
-Proof. Picinae_typecheck. Qed.
+Proof. intros s a. exists rvtypctx. apply welltyped_rv2il. Qed.
 
 (* Our partial correctness proof (partial because it assumes termination) *)
 Theorem addloop_partial_correctness:
   forall s p t s' x' a b
          (ENTRY: startof t (x',s') = (Addr 0x8,s)) (* Define the entry point of the function *)
          (MDL: models rvtypctx s)
-         (T0: s R_T0 = VaN a 32)                   (* Tie the contents of T0 to a *)
-         (T1: s R_T1 = VaN b 32),                  (* Tie the contents of T1 to b *)
+         (T0: s R_T0 = a)                          (* Tie the contents of T0 to a *)
+         (T1: s R_T1 = b),                         (* Tie the contents of T1 to b *)
   satisfies_all 
     lifted_addloop                                 (* Provide lifted code *)
     (addloop_correctness_invs s p a b)             (* Provide invariant set *)
     addloop_exit                                   (* Provide exit point *)
   ((x',s')::t).
 Proof.
-    Local Ltac step := time rv_step.
+    Local Ltac step := time r5_step.
 
     intros.
     apply prove_invs.
@@ -222,8 +179,8 @@ Proof.
     destruct PRE as [t0 [t1 [T0 [T1 [T2 [T3 Eq]]]]]].
     (* Termination case - time to prove the postcondition *)
     step.
-        rewrite N.eqb_eq in BC. subst. psimpl in Eq.
-        unfold postcondition. psimpl. rewrite <- Eq. assumption.
+        rewrite N.eqb_eq in BC. subst. rewrite BC in Eq. psimpl in Eq.
+        unfold postcondition. psimpl. assumption.
     (* Loop case - prove the invariant again *)
     step. step. step.
         rewrite N.eqb_neq in BC. exists (t0 ⊖ 1), (1 ⊕ t1). repeat split.

@@ -1,0 +1,6 @@
+# enter AIS annotations here or use 'Insert AIS annotation...' from the context menu
+compiler: "GCC";
+
+loop "find.L1" {
+    bound: 0 .. 65536;
+}

@@ -1,7 +1,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// Return the number of steps for n to reach 1 (slow path if it does not)
+// Return the number of steps for n to reach 1, or 0 if it does not within
+// 55000 steps. The slow path doesn't affect the result, so the compiler
+// removes it.
 uint32_t collatz(uint16_t n) {
     // int start = rdtsc();
     uint32_t i;
@@ -21,8 +23,6 @@ uint32_t collatz(uint16_t n) {
                 n = n * i + n % i;
             }
         }
-        // Emits no instructions; keeps the busy loop from being removed as dead code
-        __asm__ volatile ("" :: "r"(n));
         return 0;
     } else {
         // int end = rdtsc();

@@ -1,4 +1,4 @@
-Require Import sum_lifted.
+From Picinae.timing.examples.x86_wcet_comparison.cache Require Import sum_lifted.
 Require Import AMD64Timing.
 Import X64Notations.
 Require Import TimingAutomation.
@@ -74,7 +74,7 @@ match t with (Addr a, s) :: t' => match a with
     s R_RDI = arr ⊕ 4 * i /\ s R_RDX = arr ⊕ 4 * size /\
     size =? 0 = false /\
     i < size < 1000 /\
-    cycle_count_of_trace t' <=
+    cycle_count_of_trace t' =
         test_r64_r64 + jz_addr + lea_r64_addr + xor_r32_r32 + nop +
         i * (
             add_r32_m32 + add_r64_i + cmp_r64_r64 + jnz_addr

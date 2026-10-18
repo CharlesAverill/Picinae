@@ -1,4 +1,4 @@
-Require Import while_true_break_lifted.
+From Picinae.timing.examples.x86_wcet_comparison.while_true_break Require Import while_true_break_lifted.
 Require Import AMD64Timing.
 Import X64Notations.
 Require Import TimingAutomation.
@@ -81,7 +81,7 @@ match t with (Addr a, s) :: t' => match a with
     3 <= n < 1000 /\
     3 <= s R_RAX <= n /\
     n * n <=? n + n = false /\
-    cycle_count_of_trace t' <=
+    cycle_count_of_trace t' =
         mov_r64_r64 + lea_r64_addr + mov_r64_r64 + imul_r64_r64 + cmp_r64_r64 +
         jnc_addr + nop + nop +
         (* loop iters *)

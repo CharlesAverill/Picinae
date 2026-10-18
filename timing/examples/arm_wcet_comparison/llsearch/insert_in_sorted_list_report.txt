@@ -1,0 +1,350 @@
+***
+*** AbsInt Advanced Analyzer for ARM (GUI)
+*** Version: 26.04
+*** Build: 19471048
+*** Tag: auto/2026/04/17/2136
+***
+
+***
+*** Start of report file generated on 11 Oct 2026 21:54:04 -0500
+*** Current working directory: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch
+*** Current project file: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/llsearch_wcet.apx
+*** Current analysis ID: insert_in_sorted_list_aiT
+*** Current analysis type: aiT
+*** Host: anesidora
+*** License: localhost@42426 (Charles Averill of Department of Engineering and Computer Science (University of Texas) - #ALF2572)
+*** Number of concurrent analyses: 1
+***
+
+***
+*** Files
+***
+
+  Executables:
+    - Executable: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/linked_list.elf
+  Ais: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/linked_list.ais
+
+
+***
+*** Effective configuration: Default Configuration
+***
+
+*** Arm Options
+
+  General:
+    - Target: Cortex-M0
+
+
+*** Analysis Settings for insert_in_sorted_list_aiT
+
+  Analysis Start: insert_in_sorted_list
+  Report: /home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/insert_in_sorted_list_report.txt
+
+
+
+
+***
+*** Starting decoding round #1
+***
+
+  
+
+***
+*** Control-Flow & Value Analysis for insert_in_sorted_list_aiT
+*** Started on 11 Oct 2026 21:54:04 -0500
+***
+
+isa-arm.ais: Info: Reading '/tmp/a3arm-ubwswo/analyses/3/a3-base.ais'...
+    # architecture
+    immutable attribute "architecture": "arm";
+    
+    # target type
+    immutable attribute "target_type": "Cortex-M0";
+    
+    # analysis id
+    immutable attribute "analysis_id": "insert_in_sorted_list_aiT";
+    
+    # analysis type
+    immutable attribute "analysis_type": "wcet_analysis";
+    
+    # analysis configuration
+    immutable attribute "analysis_configuration": "";
+    
+    # analysis group
+    immutable attribute "analysis_group": "";
+
+isa-arm.ais: Info: Reading '/home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/linked_list.ais'...
+    # enter AIS annotations here or use 'Insert AIS annotation...' from the context menu
+    compiler: "GCC";
+    
+    # Pointers are 4 bytes, data is 4 bytes, so a linked list node is 8 bytes
+    # Maximum number of nodes in 16KB memory is 16384/8 = 2048
+    loop "find_in_list.L1" {
+        bound: 0 .. 2048;
+    }
+    
+    loop "insert_after_pos_in_list.L1" {
+        bound: 0 .. 2147483646; #reg("r2");
+    }
+    
+    # Pointers are 4 bytes, data is 4 bytes, so a linked list node is 8 bytes
+    # Maximum number of nodes in 16KB memory is 16384/8 = 2048
+    loop "insert_in_sorted_list.L1" {
+        bound: 0 .. 2048;
+    }
+isa-arm: Info: Reading binary 'linked_list.elf'.
+    * Type: ELF
+    * Size: 65 KB (66660 bytes)
+    * MD5: cb0af223df48fc59968f18f133a4b454
+isa-arm: Info: Using decoder for 'ARM' and compiler 'GCC'.
+isa-arm: Info: Guessed user stackpointer: 0x80000
+isa-arm.ais: Warning #1031: In "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/linked_list.ais", line 6, column 6:
+    Unable to resolve program point 'find_in_list.L1' after loop transformation.
+isa-arm.ais: Warning #1031: In "/home/charles/Desktop/projects/rocq/Picinae/timing/examples/arm_wcet_comparison/llsearch/linked_list.ais", line 10, column 6:
+    Unable to resolve program point 'insert_after_pos_in_list.L1' after loop transformation.
+isa-arm: Info: Decoding statistics:
+      * Code size: 32 bytes
+      * Routines: 1
+      * Loops: 1
+      * Blocks: 4
+      * Instructions: 16
+      * Memory reads: 6
+      * Memory writes: 3
+      * Computed branches: 0
+      * Computed calls: 0
+      * Computed returns: 0
+      * Unresolved computed branches: 0
+      * Unresolved computed calls: 0
+      * Unresolved computed returns: 0
+isa-arm: Info: Value analyzer statistics (max-length=2, default-unroll=2, normal mode):
+      * Created 202 states.
+      * Created 148 output carriers.
+      * Processed 25 nodes * contexts until fixed-point was reached.
+      * Processed 0 nodes * contexts directly in the fixed-point.
+      * Processed 17 nodes * contexts again in the fixed-point.
+      * Applied 4 times the widening operator.
+      * Applied 0 times the widening operator with an effect.
+      * At most 3 routines * contexts in the worklist.
+      * At most 7 blocks * contexts in the worklist.
+      * At most 7 data-flow values stored in the worklist.
+      * At most 9 data-flow values stored globally.
+      * Allocated 3k GC heap objects of total size 1 MB.
+isa-arm: Info: Value analyzer iteration statistics (percent of processed nodes * contexts / routine):
+     66% of iteration in 'insert_in_sorted_list.L1'
+     33% of iteration in 'insert_in_sorted_list'
+  Loop 'insert_in_sorted_list.L1': using user annotation in all contexts with [0..2048] iterations
+isa-arm: Info: Loop analysis found 1 loop bound.
+isa-arm: Info: Memory Access Statistics:
+    Instructions:
+     -         6 total loads              :         2 exact ( 33.3%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         4 unknown ( 66.6%)
+     -         3 total stores             :         1 exact ( 33.3%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         2 unknown ( 66.6%)
+    Accesses (instructions * access steps * contexts):
+     -         8 total reads              :         2 exact ( 25.0%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         6 unknown ( 75.0%)
+     -         3 total writes             :         1 exact ( 33.3%),         0 nearly exact (  0.0%),         0 imprecise (  0.0%),         2 unknown ( 66.6%)
+    (areas up to 1024 bytes are considered 'nearly exact').
+
+ * memory areas considered as mirrored:
+     <none>
+
+ * memory areas considered as volatile:
+     <none>
+
+ * memory areas considered as inaccessible:
+     <none>
+
+ * memory areas considered as read-only:
+      In "gui://hardware":
+      1: [0x08000000..0x0800ffff]
+
+ * memory areas considered as constant:
+     <none>
+
+ * memory accesses of function 'insert_in_sorted_list':
+   instruction thumb::0x8000044 reads from [?]:4 (modulo 2^2 = 0x0 imprecise in 1 of 1 context (100.0%))
+   instruction thumb::0x8000046 reads from [0x08000064]:4 (part of 'insert_in_sorted_list')
+                                value is [0x7fffffff]
+   instruction thumb::0x8000048 writes to [0x0007fff8]:8 (r13 + [0xfffffff8])
+   instruction thumb::0x8000058 writes to [?]:4 (modulo 2^2 = 0x0 imprecise in 1 of 1 context (100.0%))
+   instruction thumb::0x800005a writes to [?]:4 (modulo 2^2 = 0x0 imprecise in 1 of 1 context (100.0%))
+   instruction thumb::0x800005c reads from [0x0007fff8]:8 (r13 + [0x00000000])
+   instruction thumb::0x8000060 reads from [?]:4 (modulo 2^2 = 0x0 imprecise in 1 of 1 context (100.0%))
+
+ * memory accesses of function 'insert_in_sorted_list.L1' (extracted from 'insert_in_sorted_list'):
+   instruction thumb::0x8000050 reads from [?]:4 (modulo 2^2 = 0x0 imprecise in 2 of 2 contexts (100.0%))
+   instruction thumb::0x8000052 reads from [?]:4 (modulo 2^2 = 0x0 imprecise in 2 of 2 contexts (100.0%))
+
+ * found a total of 4 imprecise read instructions and 2 imprecise write instructions
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** Cache & Pipeline Analysis for insert_in_sorted_list_aiT
+*** Started on 11 Oct 2026 21:54:04 -0500
+***
+
+cortexm0pipe: Info #5132: Using path analysis variant 'Auto'.
+cortexm0pipe: Info: Using wcet analysis mode 'global worst case'.
+cortexm0pipe: Info: Using instruction cache analysis mode 'normal'.
+cortexm0pipe: Info: Using data cache analysis mode 'normal'.
+cortexm0pipe: Info: Using branch target buffer analysis mode 'normal'.
+
+*
+* Memory Map
+*
+
+  * Region [0x8000000, 0x800ffff]
+      Common Attributes:
+        Memory Type: FLASH
+        Port Width: 32
+
+      Attributes for code fetch:
+        Transfer Timings: [0]
+      Attributes for data read:
+        Transfer Timings: [0]
+
+  * Region [0x20000000, 0x20001fff]
+      Common Attributes:
+        Memory Type: SRAM
+        Port Width: 32
+
+      Attributes for code fetch:
+        Transfer Timings: [0]
+      Attributes for data read:
+        Transfer Timings: [0]
+      Attributes for data write:
+        Transfer Timings: [0]
+
+cortexm0pipe: Warning #2049: In routine 'insert_in_sorted_list', at address thumb::0x8000048:
+    In context 'any-history':
+    No memory access timing found for data write access of instruction thumb::0x8000048 to 0x7fff8.
+    Assuming default access timing.
+    Result may not be WCET.
+cortexm0pipe: Warning #2049: In routine 'insert_in_sorted_list', at address thumb::0x800005c:
+    In context 'any-history':
+    No memory access timing found for data read access of instruction thumb::0x800005c to 0x7fff8.
+    Assuming default access timing.
+    Result may not be WCET.
+cortexm0pipe: Info: Pipeline analyzer statistics (max-length=2, default-unroll=2):
+      * Processed 20 nodes * contexts until fixed-point was reached.
+      * At most 2 carrier storage points used.
+      * Inserted 3 states into the carrier storage.
+      * At most 3 states at once inside the carrier storage.
+      * At most 7 worklist entries used.
+      * Inserted 26 states into the worklist.
+      * At most 4 states at once inside the worklist.
+      * Allocated 1k GC heap objects of total size 1 MB.
+cortexm0pipe: Info: Calling statistics:
+    30 times called handle_one_instruction.
+    38 times called handle_one_cpu_state.
+    75 times called single_step.
+cortexm0pipe: Info: Calling statistics (percent of total single_step calls / routine):
+    52% insert_in_sorted_list
+        14% thumb::0x8000058 'str r0, [r1, #4]'
+        10% thumb::0x800004c 'beq 0x800005e <0x800005e>'
+        6% thumb::0x800005c 'pop {r4, pc}'
+        5% thumb::0x800005e 'movs r4, r0'
+        4% thumb::0x8000044 'ldr r2, [r1]'
+        4% thumb::0x8000048 'push {r4, lr}'
+        1% thumb::0x8000046 'ldr r3, [0x8000064]'
+        1% thumb::0x800004a 'cmp r2, r3'
+        1% thumb::0x800005a 'str r1, [r4, #4]'
+        1% thumb::0x8000060 'ldr r0, [r0, #4]'
+        1% thumb::0x8000062 'b 0x8000058 <0x8000058>'
+    48% insert_in_sorted_list.L1
+        16% thumb::0x8000056 'bcs 0x800004e <0x800004e>'
+        12% thumb::0x800004e 'movs r4, r0'
+        12% thumb::0x8000054 'cmp r2, r3'
+        4% thumb::0x8000050 'ldr r0, [r0, #4]'
+        4% thumb::0x8000052 'ldr r3, [r0]'
+cortexm0pipe: Info: Split statistics (11 classified splits):
+    11 splits because of 'imprecise read access'.
+cortexm0pipe: Info: Prediction file chain-compression statistics:
+    65 pipeline states written.
+    37 pipeline states skipped.
+    36% of pipeline states skipped for writing.
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** ILP Solving for insert_in_sorted_list_aiT
+*** Started on 11 Oct 2026 21:54:04 -0500
+***
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** Reporting for insert_in_sorted_list_aiT
+*** Started on 11 Oct 2026 21:54:04 -0500
+***
+
+   Computed Worst Case Execution Time (WCET) is 18448 cycles
+
+Infeasibility Information:
+
+Functions                      infeasible  infeasible blocks  infeasible instructions  infeasible edges
+-------------------------------------------------------------------------------------------------------
+insert_in_sorted_list                                 0 / 3                   0 / 11              0 / 4
+insert_in_sorted_list.L1                              0 / 1                    0 / 5              0 / 2
+-------------------------------------------------------------------------------------------------------
+Total:                             0 / 2              0 / 4                   0 / 16              0 / 6
+
+ * WCET contributions of function 'insert_in_sorted_list':
+
+Predicted WCET Contribution: 19 cycles
+                 Cumulative: 18448 cycles
+
+Predicted WCET Contribution per Context (cumulative):
+    Context 'any-history' => 19 cycles (18448 cycles)
+
+ * WCET contributions of function 'insert_in_sorted_list.L1':
+
+Predicted WCET Contribution: 18429 cycles
+                 Cumulative: 18429 cycles
+
+Predicted WCET Contribution per Context (cumulative):
+    Context '..., thumb::0x8000044->"insert_in_sorted_list.L1"[1]'   => 6 cycles (18429 cycles)
+    Context '..., thumb::0x8000044->"insert_in_sorted_list.L1"[2..]' => 18423 cycles (18423 cycles)
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+***
+*** Creating HTML report for insert_in_sorted_list_aiT
+*** Started on 11 Oct 2026 21:54:04 -0500
+***
+
+
+***
+*** Last process took 0 s and used not more than 0 MiB of memory
+*** 
+***
+
+
+
+***
+*** End of report file generated on 11 Oct 2026 21:54:04 -0500 (total runtime 0:00 minutes)
+*** Error count: 0
+*** Warning count: 4
+*** Number of decoding rounds: 1
+***
+
+
+

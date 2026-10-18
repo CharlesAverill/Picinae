@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.absint.com/dtd/a3-apx-26.04.xsd" xmlns="http://www.absint.com/apx" version="26.04" build="19471048" target="arm">
+ <files>
+  <executables>
+   <executable>linked_list.elf</executable>
+  </executables>
+  <ais>linked_list.ais</ais>
+ </files>
+ <analyses>
+  <analysis enabled="true" type="wcet_analysis" id="find_in_list_aiT">
+   <analysis_start>find_in_list</analysis_start>
+   <report>find_in_list_report.txt</report>
+  </analysis>
+  <analysis enabled="true" type="wcet_analysis" id="insert_after_pos_in_list_aiT">
+   <analysis_start>insert_after_pos_in_list</analysis_start>
+   <report>insert_after_pos_in_list_report.txt</report>
+  </analysis>
+  <analysis enabled="true" type="wcet_analysis" id="insert_in_sorted_list_aiT">
+   <analysis_start>insert_in_sorted_list</analysis_start>
+   <report>insert_in_sorted_list_report.txt</report>
+  </analysis>
+ </analyses>
+ <options>
+  <arm_options>
+   <general>
+    <target>Cortex-M0</target>
+   </general>
+  </arm_options>
+ </options>
+</project>

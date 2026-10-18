@@ -1,4 +1,4 @@
-Require Import find.
+From Picinae.timing.examples.x86_wcet_comparison.arraysearch Require Import find.
 Require Import AMD64Timing.
 Import X64Notations.
 Require Import TimingAutomation.
@@ -74,9 +74,20 @@ Definition time_of_find (len : N) (found_idx : option N) (t : trace) :=
              mov_r32_i + ret
         else
             xor_r32_r32 + jmp_addr +
-            (match found_idx with None => 1 + len | Some idx => idx end) * (
-                cmp_r64_m64 + jnz_addr + add_r64_i + cmp_r32_r32 + jnc_addr
-            ) + cmp_r64_m64 + jnz_addr + jnc_addr + mov_r32_i + ret.
+            match found_idx with
+            | Some idx =>
+                (* elements that don't match *)
+                idx * (
+                    cmp_r64_m64 + jnz_addr + add_r64_i + cmp_r32_r32 + jnc_addr
+                ) +
+                (* the matching element *)
+                cmp_r64_m64 + jnz_addr + ret
+            | None =>
+                (* every element *)
+                len * (
+                    cmp_r64_m64 + jnz_addr + add_r64_i + cmp_r32_r32 + jnc_addr
+                ) + mov_r32_i + ret
+            end.
 
 Definition timing_postcondition (mem : memory) (arr : addr)
         (key : N) (len : N) (t : trace) : Prop :=
@@ -105,7 +116,7 @@ match t with (Addr a, s) :: t' => match a with
     (forall i, i < (s R_RAX) ->
         (s V_MEM64) Ⓠ[arr + (i << 3)] <> key) /\
     (s R_RAX) < len /\
-    cycle_count_of_trace t' <=
+    cycle_count_of_trace t' =
         movzx_r32_r16 + test_r16_r16 + jz_addr + xor_r32_r32 +
         jmp_addr +
         s R_RAX * (
@@ -226,17 +237,9 @@ Proof using.
             unfold time_of_find.
             hammer.
             replace (len =? 0) with false by lia.
-            assert (s' R_RAX <= 1 + len) by lia.
-            transitivity (ret + mov_r32_i + jnc_addr + cmp_r32_r32 + add_r64_i + jnz_addr + cmp_r64_m64 + movzx_r32_r16 +
-                test_r16_r16 + jz_addr + xor_r32_r32 + jmp_addr +
-                s' R_RAX * (cmp_r64_m64 + jnz_addr + add_r64_i + cmp_r32_r32 + jnc_addr)). lia.
-            rewrite N.mul_add_distr_r. psimpl.
-            assert (s' R_RAX < 1 + len \/ s' R_RAX = 1 + len) by lia. destruct H0.
-                destruct (lt_impl_lt_or_eq _ _ H0). lia.
-            etransitivity.
-                apply N.add_le_mono_l.
-                apply N.mul_le_mono_r. instantiate (1 := len). lia. lia.
-            rewrite H0 in *; clear H0. lia.
+            assert (len = 1 + s' R_RAX) by lia. subst len.
+            match goal with H: s' R_RSI = _ |- _ => rewrite H end.
+            rewrite N.mul_add_distr_r. lia.
     }
 Qed.
 
@@ -251,14 +254,14 @@ Goal forall len found_idx t,
     (i5_7300u_find.findAuto.cycle_count_of_trace t <=
         (if len =? 0
             then 39
-            else 76 + match found_idx with
-                        | Some idx => idx
-                        | None => 1 + len
-                        end * 28)).
+            else match found_idx with
+                 | Some idx => 65 + idx * 28
+                 | None => 50 + len * 28
+                 end)).
     intros.
     unfold i5_7300u_find.time_of_find.
     unfold cmp_r64_m64, jnz_addr, jnc_addr, mov_r32_i, ret.
-    simpl. psimpl.
-    reflexivity.
+    simpl. destruct (len =? 0); [reflexivity|].
+    destruct found_idx; f_equal; lia.
 Qed.
 

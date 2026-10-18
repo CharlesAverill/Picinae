@@ -1,0 +1,25 @@
+# enter AIS annotations here or use 'Insert AIS annotation...' from the context menu
+compiler: "GCC";
+
+# Pointers are 4 bytes, data is 4 bytes, so a linked list node is 8 bytes
+# Maximum number of nodes in 16KB memory is 16384/8 = 2048
+loop "find_in_list.L1" {
+    bound: 0 .. 2048;
+}
+
+loop "insert_after_pos_in_list.L1" {
+    bound: 0 .. 2147483646; #reg("r2");
+}
+
+# Pointers are 4 bytes, data is 4 bytes, so a linked list node is 8 bytes
+# Maximum number of nodes in 16KB memory is 16384/8 = 2048
+loop "insert_in_sorted_list.L1" {
+    bound: 0 .. 2048;
+}
+# Stack: a3 guesses sp = 0x80000, which lies outside the default memory map.
+# Describe it as zero-wait-state SRAM, like the default SRAM area.
+area 0x00070000 to 0x0008ffff {
+    attribute "memory_type": "SRAM";
+    attribute "port_width": 32;
+    access time: 0 cycles;
+}

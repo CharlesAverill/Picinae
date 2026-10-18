@@ -1,0 +1,7 @@
+# enter AIS annotations here or use 'Insert AIS annotation...' from the context menu
+
+compiler: "GCC";
+
+loop "collatz.L1" {
+    bound: 55000;
+}

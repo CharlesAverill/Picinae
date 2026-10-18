@@ -1,78 +1,39 @@
-Require Import insert_in_sorted_list_lifted.
-Require Import AMD64Timing.
-Import X64Notations.
+From Picinae.timing.examples.arm_wcet_comparison.llsearch Require Import insert_in_sorted_list_lifted.
+Require Import ARMv6MTiming.
+Import ARMv6MNotations.
 Require Import TimingAutomation.
 Require Import Arith.
 
-Module TimingProof (cpu : amd64CPUTimingBehavior).
+Module TimingProof (cpu : ARMv6MCPUTimingBehavior).
 Import cpu.
 
 Module p <: LinkedListParams.
-  Definition w := 64.
+  Definition w := 32.
   Definition e := LittleE.
-  Definition dw := 8.
-  Definition pw := 8.
+  Definition dw := 4.
+  Definition pw := 4.
   Global Transparent w e dw pw.
 End p.
-Module LL := Theory_amd64.LinkedLists p.
+Module LL := Theory_ARMv6M.LinkedLists p.
 Import LL.
 Ltac psimpl_hook ::= psimpl.
 Ltac gdep x := generalize dependent x.
 Global Ltac Zify.zify_pre_hook ::= idtac.
 
 Module Program_insert_in_sorted_list <: ProgramInformation.
-    Definition entry_addr : N := 0x0.
+    Definition entry_addr : N := 0x8000044.
 
     Definition exits (t:trace) : bool :=
         match t with (Addr a,_)::_ => match a with
-        | 0x24 | 0x37 => true
+        | 0x800005c => true
         | _ => false
     end | _ => false end.
 
-    Definition time_of_addr (s : store) (a : addr) : N :=
-        match a with
-        (* 0x0: MOV RAX,[RSI] *)
-        | 0x0  => mov_r64_m64
-        (* 0x3: CMP RAX,0x7fffffff *)
-        | 0x3  => cmp_r64_i
-        (* 0x9: JZ 0x00101388 *)
-        | 0x9  => jz_addr
-        (* 0xb: NOP dword ptr [RAX + RAX*0x1] *)
-        | 0xb  => nop
-        (* 0x10: MOV RDX,RDI *)
-        | 0x10 => mov_r64_r64
-        (* 0x13: MOV RDI,[RDI + 0x8] *)
-        | 0x13 => mov_r64_m64
-        (* 0x17: CMP RAX,[RDI] *)
-        | 0x17 => cmp_r64_m64
-        (* 0x1a: JNC 0x00101370 *)
-        | 0x1a => jnc_addr
-        (* 0x1c: MOV [RSI + 0x8],RDI *)
-        | 0x1c => mov_m64_r64
-        (* 0x20: MOV [RDX + 0x8],RSI *)
-        | 0x20 => mov_m64_r64
-        (* 0x24: RET *)
-        | 0x24 => ret
-
-        (* 0x28: MOV RDX,RDI *)
-        | 0x28 => mov_r64_r64
-        (* 0x2b: MOV RDI,[RDI + 0x8] *)
-        | 0x2b => mov_r64_m64
-        (* 0x2f: MOV [RSI + 0x8],RDI *)
-        | 0x2f => mov_m64_r64
-        (* 0x33: MOV [RDX + 0x8],RSI *)
-        | 0x33 => mov_m64_r64
-        (* 0x37: RET *)
-        | 0x37 => ret
-
-        | _ => time_inf
-        end.
-
-    Definition lifted_prog := linked_list_insert_in_sorted_list_amd64.
+    Definition binary := linked_list_insert_in_sorted_list_armv6m.
 End Program_insert_in_sorted_list.
 
-Module AMD64Timing := AMD64Timing cpu Program_insert_in_sorted_list.
-Module insert_in_sorted_listAuto := AMD64TimingAutomation AMD64Timing.
+Module ARMv6MTiming := ARMv6MTiming cpu Program_insert_in_sorted_list.
+Module insert_in_sorted_listAuto := ARMv6MTimingAutomation ARMv6MTiming.
 Import Program_insert_in_sorted_list insert_in_sorted_listAuto.
 
 Definition optN_eqb (x y : option N) : bool :=
@@ -95,16 +56,22 @@ Proof. reflexivity. Qed.
 
 Definition INT_MAX : N := 2^31 - 1.
 
-Definition time_of_insert_in_sorted_list 
+Definition time_of_insert_in_sorted_list
     (mem : memory) (l value : addr) (max_dist : N) (t : trace) :=
-  cycle_count_of_trace t <=
-    mov_r64_m64 + cmp_r64_i + jz_addr +
+  cycle_count_of_trace t =
+    tldr_imm + tldr_pc + (tpush_base + 1 + 1) + tcmp_reg +
     if optN_eqb (list_node_value mem value) (Some INT_MAX) then (
-        mov_r64_r64 + mov_r64_m64 + mov_m64_r64 + mov_m64_r64 + ret
+        tb_taken + tmovs_reg + tldr_imm + tb +
+        tstr_imm + tstr_imm + (tpop_pc_base + 2)
     ) else (
-        nop + (1 + max_dist) * (
-            mov_r64_r64 + mov_r64_m64 + cmp_r64_m64 + jnc_addr
-        ) + mov_m64_r64 + mov_m64_r64 + ret
+        tb_not_taken +
+        (* nodes passed over *)
+        max_dist * (
+            tmovs_reg + tldr_imm + tldr_imm + tcmp_reg + tb_taken
+        ) +
+        (* the node after which value is inserted *)
+        tmovs_reg + tldr_imm + tldr_imm + tcmp_reg + tb_not_taken +
+        tstr_imm + tstr_imm + (tpop_pc_base + 2)
     ).
 
 Definition insertion_index mem l le_node le_dist le_val new_val len :=
@@ -123,44 +90,85 @@ Definition insertion_index mem l le_node le_dist le_val new_val len :=
         list_node_value mem n = Some v ->
         ((d <= le_dist)%nat <-> v <= new_val).
 
-Definition insert_in_sorted_list_timing_invs 
+Definition insert_in_sorted_list_timing_invs
     (l value sentry le_node : addr) (len le_dist : nat)
-    (new_val le_val : N) (base_mem : memory) (t:trace) : option Prop :=
+    (new_val le_val : N) (lmin lmax : N) (base_mem : memory) (t:trace) : option Prop :=
 match t with (Addr a, s) :: t' => match a with
-| 0x0 => Some (
+| 0x8000044 => Some (
         insertion_index base_mem l le_node le_dist le_val new_val len /\
-        s R_RDI = l /\ s R_RSI = value /\
-        s V_MEM64 = base_mem /\
-        node_distance (s V_MEM64) l sentry (len - 1) /\
-        list_node_value (s V_MEM64) sentry = Some INT_MAX /\
-        s R_RDI <> NULL /\
-        s V_MEM64 Ⓠ[value] = new_val /\
+        s R_R0 = l /\ s R_R1 = value /\
+        s V_MEM32 = base_mem /\
+        node_distance (s V_MEM32) l sentry (len - 1) /\
+        list_node_value (s V_MEM32) sentry = Some INT_MAX /\
+        s R_R0 <> NULL /\
+        s V_MEM32 Ⓓ[value] = new_val /\
         l <> NULL /\ len <> 0%nat /\
         value <> NULL /\
         node_distance base_mem l NULL len /\
+        LLBounds base_mem l lmin lmax /\
+        ~ overlap 32 (s R_SP ⊖ 8) 8 lmin (8 + lmax - lmin) /\
         cycle_count_of_trace t' = 0
     )
-| 0x10 => Some (exists ctr,
+| 0x800004e => Some (exists ctr,
         insertion_index base_mem l le_node le_dist le_val new_val len /\
-        node_distance (s V_MEM64) l sentry (len - 1) /\
-        list_node_value (s V_MEM64) sentry = Some INT_MAX /\
-        optN_eqb (list_node_value base_mem value) (Some 2147483647) = false /\
-        s R_RDI <> NULL /\
-        s R_RSI = value /\ s R_RAX = new_val /\ s V_MEM64 = base_mem /\
+        node_distance base_mem l sentry (len - 1) /\
+        list_node_value base_mem sentry = Some INT_MAX /\
+        optN_eqb (list_node_value base_mem value) (Some INT_MAX) = false /\
+        s R_R0 <> NULL /\
+        s R_R1 = value /\ s R_R2 = new_val /\
+        (* the list is unchanged by the registers pushed on entry *)
+        LLSame base_mem (s V_MEM32) l /\
         l <> NULL /\ len <> 0%nat /\
         (ctr <= le_dist)%nat /\
         node_distance base_mem l NULL len /\
-        node_distance base_mem l (s R_RDI) ctr /\
-        cycle_count_of_trace t' <=
-            mov_r64_m64 + cmp_r64_i + jz_addr +
-            nop + (N.of_nat ctr) * (
-                mov_r64_r64 + mov_r64_m64 + cmp_r64_m64 + jnc_addr
+        node_distance base_mem l (s R_R0) ctr /\
+        cycle_count_of_trace t' =
+            tldr_imm + tldr_pc + (tpush_base + 1 + 1) + tcmp_reg + tb_not_taken +
+            (N.of_nat ctr) * (
+                tmovs_reg + tldr_imm + tldr_imm + tcmp_reg + tb_taken
             )
     )
-| 0x24 | 0x37 => Some (
+| 0x800005c => Some (
     time_of_insert_in_sorted_list base_mem l value (N.of_nat le_dist) t
 )
 | _ => None end | _ => None end.
+
+(* The two words pushed on entry don't change the list. *)
+Lemma push2_llsame :
+    forall mem sp l lmin lmax v1 v2
+        (LLB: LLBounds mem l lmin lmax)
+        (NO: ~ overlap 32 (sp ⊖ 8) 8 lmin (8 + lmax - lmin)),
+    LLSame mem (mem [Ⓓ sp ⊖ 8 := v1] [Ⓓ sp ⊖ 4 := v2]) l.
+Proof.
+    intros.
+    assert (SP: sp ⊖ 4 = ((sp ⊖ 8) + 4) mod 2^32). {
+        unfold msub. rewrite N.Div0.add_mod_idemp_l. f_equal.
+        rewrite (N.mod_small 4), (N.mod_small 8) by lia. lia.
+    }
+    replace (8 + lmax - lmin) with (lmax + 4 + 4 - lmin) in NO by lia.
+    apply noverlap_llsame_llbounds_trans with (min := lmin) (max := lmax); try assumption.
+        apply noverlap_llsame_llbounds with (min := lmin) (max := lmax); try assumption.
+        eapply noverlap_index_l with (index := 0) (size := 4) in NO; [| lia].
+        rewrite N.add_0_r in NO. exact NO.
+    rewrite SP, overlap_mod_l.
+    apply noverlap_index_l with (len1 := 8); [ exact NO | lia ].
+Qed.
+
+(* Reads of the nodes of a list from a memory with the same list. *)
+Lemma llsame_reads :
+    forall m m' l n d
+        (SAME: LLSame m m' l) (DIST: node_distance m l n d) (NN: n <> NULL),
+    m' Ⓓ[n] = m Ⓓ[n] /\ m' Ⓓ[4 + n] = m Ⓓ[4 + n].
+Proof.
+    intros. revert m' SAME. induction DIST; intros.
+    - inversion SAME; subst. contradiction.
+        destruct node. contradiction.
+        unfold list_node_value, list_node_next in *.
+        injection H as H. injection H0 as H0. split; symmetry; assumption.
+    - inversion SAME; subst. discriminate.
+        rewrite NEXT in H1. injection H1 as H1. subst next0.
+        apply IHDIST; assumption.
+Qed.
 
 Lemma le_cases : forall n m,
     (n <= m -> n < m \/ n = m)%nat.
@@ -222,36 +230,39 @@ Proof.
 Qed.
 
 Theorem insert_in_sorted_list_timing:
-  forall s t s' x' l value len base_mem new_val sentry le_node le_dist le_val
+  forall s t s' x' l value len base_mem new_val sentry le_node le_dist le_val lmin lmax
          (* boilerplate *)
          (ENTRY: startof t (x',s') = (Addr entry_addr, s))
-         (MDL: models x64typctx s)
+         (MDL: models armv6mtypctx s)
          (* bindings *)
-         (RDI: s R_RDI = l)
-         (RSI: s R_RSI = value)
-         (MEM: s V_MEM64 = base_mem)
+         (R0: s R_R0 = l)
+         (R1: s R_R1 = value)
+         (MEM: s V_MEM32 = base_mem)
          (* contents of value *)
-         (VAL: s V_MEM64 Ⓠ[value] = new_val)
+         (VAL: s V_MEM32 Ⓓ[value] = new_val)
          (* list length is finite *)
-         (LEN: node_distance (s V_MEM64) l NULL len)
+         (LEN: node_distance (s V_MEM32) l NULL len)
          (* l is non-null *)
          (L_NN: l <> NULL)
          (V_NN: value <> NULL)
          (* there is a sentry node *)
-         (SENTRY: node_distance (s V_MEM64) l sentry (len - 1))
-         (SENTRY_VAL: list_node_value (s V_MEM64) sentry = Some INT_MAX)
+         (SENTRY: node_distance (s V_MEM32) l sentry (len - 1))
+         (SENTRY_VAL: list_node_value (s V_MEM32) sentry = Some INT_MAX)
          (* there is an index to insert at *)
-         (IDX: insertion_index base_mem l le_node le_dist le_val new_val len),
+         (IDX: insertion_index base_mem l le_node le_dist le_val new_val len)
+         (* the registers pushed on entry don't overwrite the list *)
+         (BOUNDS: LLBounds base_mem l lmin lmax)
+         (NO: ~ overlap 32 (s R_SP ⊖ 8) 8 lmin (8 + lmax - lmin)),
   satisfies_all
     lifted_prog
-    (insert_in_sorted_list_timing_invs l value sentry le_node len le_dist new_val le_val base_mem)
+    (insert_in_sorted_list_timing_invs l value sentry le_node len le_dist new_val le_val lmin lmax base_mem)
     exits
   ((x',s')::t).
 Proof using.
     intros.
     apply prove_invs.
 
-    Local Ltac step := tstep x64_step.
+    Local Ltac step := tstep armv6m_step.
     simpl. rewrite ENTRY. unfold entry_addr. step.
     repeat split; auto; try lia.
     eapply head_nonnull_impl_len_nonzero; eassumption.
@@ -260,111 +271,67 @@ Proof using.
     intros.
     eapply startof_prefix in ENTRY; try eassumption.
     eapply preservation_exec_prog in MDL;
-        try eassumption; [idtac|apply welltyped].
+        try eassumption; [idtac|apply welltyped_lift_armv6m].
     clear - ENTRY PRE MDL. rename t1 into t. rename s1 into s'.
 
-    destruct_inv 64 PRE.
-    - destruct PRE as (IDX & RDI & RSI & MEM & SENTRY & SENTRY_VAL & NonNull & 
-            NewVal & L_NN & Len_Nz & V_NN & Len & Cycles).
+    destruct_inv 32 PRE.
+    - destruct PRE as (IDX & R0 & R1 & MEM & SENTRY & SENTRY_VAL & NonNull &
+            NewVal & L_NN & Len_Nz & V_NN & Len & BOUNDS & NO & Cycles).
+        assert (LV: list_node_value base_mem value = Some (base_mem Ⓓ[value])).
+            destruct value. contradiction. reflexivity.
         repeat step.
-        -- unfold NULL. destruct (list_node_value base_mem value) eqn:E.
-            destruct value. inversion E.
-                simpl in E. apply Some_inv in E.
-                apply N.eqb_eq in BC.
-                unfold p.w, p.e, p.dw in E. rewrite E in BC.
-                rewrite BC. rewrite optN_eqb_refl. hammer.
-                rewrite optN_eqb_None_Some. hammer.
-        -- exists 0%nat. split. assumption.
-            rewrite <- MEM in *; repeat split; auto; try lia.
-            destruct value. contradiction. simpl.
-                now unfold p.w, p.e, p.dw.
-            rewrite RDI. apply Dst0.
+        -- (* value = INT_MAX: insert after the head *)
+            unfold time_of_insert_in_sorted_list. rewrite LV.
+            unfold optN_eqb, INT_MAX. change (2^31 - 1) with 2147483647.
             hammer.
-    - destruct PRE as (ctr & IDX & SENTRY & SENTRY_VAL & ValueValid & RDI & RSI & 
-            RAX & MEM & L_NN & Len_Nz & CtrMax & Len & CtrDist & Cycles).
+        -- (* loop entry *)
+            exists 0%nat. split. assumption.
+            rewrite MEM in *; repeat split; auto; try lia.
+            rewrite LV. unfold optN_eqb, INT_MAX. change (2^31 - 1) with 2147483647. assumption.
+            apply push2_llsame with (lmin := lmin) (lmax := lmax); assumption.
+            rewrite R0. apply Dst0.
+            hammer.
+            rewrite (N.mod_small new_val) by (rewrite <- NewVal; apply getmem_bound).
+            rewrite <- NewVal, BC. lia.
+    - destruct PRE as (ctr & IDX & SENTRY & SENTRY_VAL & ValueValid & NonNull & R1 &
+            R2 & SAME & L_NN & Len_Nz & CtrMax & Len & CtrDist & Cycles).
+        pose proof IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & GtNN &
+            Vals & MaxVal & Lens & Sorted).
+        pose proof (distance_null_imp_well_formed _ _ _ Len) as WF.
+        (* the next node is at distance ctr + 1, and is not NULL *)
+        assert (NEXTD: node_distance base_mem l (base_mem Ⓓ[4 + s' R_R0]) (S ctr)).
+            eapply node_distance_next_S_len; try eassumption.
+            destruct (s' R_R0). contradiction. reflexivity.
+        assert (LEDIST: (S le_dist < len)%nat). {
+            pose proof (node_distance_next_S_len _ _ _ _ _ LeNextGt WF LeDist) as GTD.
+            pose proof (dist_node_le_dist_null _ _ _ _ _ Len GTD).
+            destruct (Nat.eq_dec (S le_dist) len); [| lia].
+            exfalso. apply GtNN. apply (node_distance_uniq' GTD Len). assumption.
+        }
+        assert (NEXTNN: base_mem Ⓓ[4 + s' R_R0] <> NULL).
+            eapply dist_lt_null_not_null; try eassumption. lia.
+        (* the list's nodes read the same as in base_mem *)
+        destruct (llsame_reads _ _ _ _ _ SAME CtrDist NonNull) as (_ & READ1).
+        destruct (llsame_reads _ _ _ _ _ SAME NEXTD NEXTNN) as (READ2 & _).
+        assert (NV: list_node_value base_mem (base_mem Ⓓ[4 + s' R_R0]) =
+                    Some (base_mem Ⓓ[base_mem Ⓓ[4 + s' R_R0]])).
+            destruct (base_mem Ⓓ[4 + s' R_R0]). contradiction. reflexivity.
         repeat step.
-        -- hammer. replace ctr with le_dist in Cycles. lia.
-            destruct (le_cases ctr le_dist CtrMax); try lia.
-            clear - H CtrDist IDX Len Len_Nz BC RDI.
-            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & _ & Vals & _ & Lens & Sorted).
-            exfalso.
-            pose proof (not_at_end_next _ _ _ _ _ Len CtrDist ltac:(lia)).
-            destruct H0 as (a0nxt & a0eq).
-            specialize (Sorted a0nxt (S ctr) (base_mem Ⓠ[base_mem Ⓠ[8 + s' R_RDI]])).
-            pose proof (node_distance_next_S_len _ _ _ _ _ a0eq (distance_null_imp_well_formed _ _ _ Len) CtrDist).
-            specialize (Sorted H0).
-            enough (list_node_value base_mem a0nxt = Some (base_mem Ⓠ[base_mem Ⓠ[ 8 + s' R_RDI ]])).
-            destruct (s' R_RDI).
-                contradiction.
-            specialize (Sorted H1).
-            apply N.ltb_lt in BC. lia.
-            pose proof (not_at_end_next _ _ _ _ _ Len H0 ltac:(lia)).
-            destruct H1 as (a0nxt2 & a0eq2).
-            destruct a0nxt eqn:E. inversion a0eq2.
-            unfold list_node_value. rewrite <- E in *; clear E.
-            replace a0nxt with (base_mem Ⓠ[ 8 + s' R_RDI ]). reflexivity.
-            destruct (s' R_RDI). contradiction.
-                unfold list_node_next in a0eq. apply Some_inv in a0eq.
-            apply a0eq.
-        -- exists (S ctr). split. assumption.
-            destruct IDX as (gt_node & gt_val & LeDist & LeVal & LeNextGt & GtVal & GtNN & Vals & MaxVal & Lens & Sorted).
-            rewrite <- MEM in *; repeat split; auto; try lia.
-            intro Contra.
-                replace sentry with (s' R_RDI) in *.
-                rewrite MEM in *.
-                specialize (Sorted _ _ _ SENTRY SENTRY_VAL).
-                destruct (Nat.le_gt_cases (len - 1) le_dist). lia.
-                assert (S ctr < len)%nat by lia.
-                pose proof (at_end_lens _ _ _ _ _ L_NN Len CtrDist).
-                destruct H1; try lia.
-                destruct (s' R_RDI). contradiction.
-                unfold list_node_next. f_equal. apply Contra.
-                pose proof (distance_last_node base_mem l (s' R_RDI) ctr RDI).
-                rewrite <- MEM in H.
-                destruct (s' R_RDI). contradiction. unfold list_node_next in H.
-                unfold p.w, p.e, p.pw, p.dw in H. rewrite Contra in H.
-                specialize (H CtrDist eq_refl).
-                assert (S ctr = len) by eauto using node_distance_uniq.
-                subst len. simpl in SENTRY. rewrite Nat.sub_0_r in SENTRY.
-                eapply node_distance_uniq'; eauto.
-            destruct (le_cases ctr le_dist CtrMax). lia.
-                subst ctr.
-                pose proof (node_distance_uniq' LeDist CtrDist eq_refl).
-                subst le_node.
-                apply N.ltb_ge in BC.
-                (* specialize (Sorted _ _ _ LeDist ltac:(lia) LeVal). *)
-                destruct (s' R_RDI). contradiction.
-                replace gt_node with (base_mem Ⓠ[8 + N.pos p]) in *.
-                rewrite MEM in *.
-                destruct (base_mem Ⓠ[ 8 + N.pos p ]). contradiction.
-                    inversion GtVal. subst gt_val. clear - Vals BC.
-                    replace (getmem p.w p.e p.dw base_mem (N.pos p0)) with (base_mem Ⓠ[N.pos p0]) in Vals by reflexivity.
-                    lia.
-                rewrite MEM in *. now inversion LeNextGt.
-            eapply node_distance_next_S_len with (dst := s' R_RDI).
-                destruct (s' R_RDI). contradiction. reflexivity.
-            eapply distance_null_imp_well_formed. now eassumption.
-            assumption.
+        all: rewrite ?READ1 in *; rewrite ?READ2 in *.
+        -- (* the next node's value is <= new_val: move to it *)
+            apply N.leb_le in BC.
+            exists (S ctr). split. assumption.
+            repeat split; auto; try lia.
+            apply (Sorted _ _ _ NEXTD NV). assumption.
             hammer.
+        -- (* the next node's value is > new_val: insert here *)
+            apply N.leb_gt in BC.
+            assert (ctr = le_dist). {
+                destruct (le_cases ctr le_dist CtrMax); [| assumption].
+                exfalso. apply (Sorted _ _ _ NEXTD NV) in H. lia.
+            }
+            subst ctr.
+            unfold time_of_insert_in_sorted_list. hammer.
 Qed.
 
 End TimingProof.
-
-Require Import i5_7300u.
-Module i5_7300u_insert_in_sorted_list := TimingProof i5_7300u.
-
-Goal forall (mem : memory) (l value : addr) (max_dist : N) (t : trace),
-    i5_7300u_insert_in_sorted_list.time_of_insert_in_sorted_list mem l value max_dist t =
-    (i5_7300u_insert_in_sorted_list.insert_in_sorted_listAuto.cycle_count_of_trace t <= 
-        (if
-            i5_7300u_insert_in_sorted_list.optN_eqb
-                (i5_7300u_insert_in_sorted_list.LL.list_node_value mem value)
-                (Some (2 ^ 31 - 1))
-            then 54
-            else 49 + (1 + max_dist) * 23)).
-    intros.
-    unfold i5_7300u_insert_in_sorted_list.time_of_insert_in_sorted_list. simpl.
-    unfold i5_7300u.ret, i5_7300u.mov_m64_r64, i5_7300u.nop,
-        i5_7300u_insert_in_sorted_list.INT_MAX. psimpl.
-    reflexivity.
-Qed. 

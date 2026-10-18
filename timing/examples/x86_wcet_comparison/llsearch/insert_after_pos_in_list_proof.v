@@ -1,4 +1,4 @@
-Require Import insert_after_pos_in_list_lifted.
+From Picinae.timing.examples.x86_wcet_comparison.llsearch Require Import insert_after_pos_in_list_lifted.
 Require Import AMD64Timing.
 Import X64Notations.
 Require Import TimingAutomation.
@@ -106,16 +106,18 @@ Definition time_of_insert_in_sorted_list
                 mov_m64_r64 + ret
             ) else (
                 mov_r64_r64 + mov_r64_m64 + test_r64_r64 +
-                (* if (optN_eqb (list_node_next base_mem l) (Some NULL)) then (
-                    jnz_addr + mov_m64_r64 + mov_m64_r64 + ret
-                ) else (
-                    
-                ) *)
-                 (1 + N.min pos (N.of_nat len)) * (
-                        jnz_addr + add_r64_i + cmp_r64_r64 + jz_addr +
-                        mov_r64_r64 + mov_r64_m64 + test_r64_r64
-                    ) +
-                    mov_m64_r64 + mov_m64_r64 + ret
+                (* nodes passed over *)
+                (N.min pos (N.of_nat len) - 1) * (
+                    jnz_addr + add_r64_i + cmp_r64_r64 + jz_addr +
+                    mov_r64_r64 + mov_r64_m64 + test_r64_r64
+                ) +
+                (* the last node visited: either position pos was reached,
+                   or the end of the list was *)
+                jnz_addr +
+                (if pos <? N.of_nat len then
+                    add_r64_i + cmp_r64_r64 + jz_addr + mov_r64_r64 + mov_r64_m64
+                 else 0) +
+                mov_m64_r64 + mov_m64_r64 + ret
             )
         )
     ).
@@ -139,8 +141,7 @@ match t with (Addr a, s) :: t' => match a with
         (l =? NULL) = false /\
         (value =? NULL) = false /\
         (pos =? 0) = false /\
-        (* optN_eqb (list_node_next base_mem l) (Some NULL) = false /\ *)
-        cycle_count_of_trace t' <=
+        cycle_count_of_trace t' =
             test_r64_r64 + jz_addr +
             test_r64_r64 + jz_addr +
             xor_r32_r32 + test_r64_r64 + jnz_addr +
@@ -210,21 +211,38 @@ Proof using.
         hammer.
     - destruct PRE as (RDX & RAX & RAX_LEN & ZF &
             DstCurr & Len & BC0 & BC1 & BC2 & Cycles).
+        assert (pos < 2^64). rewrite <- RDX. apply (models_var R_RDX MDL).
         repeat step.
+        -- (* the current node is the last: insert after it *)
             apply N.eqb_eq in BC. rewrite BC in *.
             pose proof (node_distance_uniq DstCurr Len).
-            hammer.
+            unfold time_of_insert_in_sorted_list. hammer.
+            rewrite ?BC0, ?BC1, ?BC2.
+            replace (pos <? N.of_nat len) with false by (symmetry; apply N.ltb_ge; lia).
+            replace (N.min pos (N.of_nat len) - 1) with (s' R_RAX) by lia.
+            lia.
+        -- (* position pos reached: insert after the next node *)
+            assert (LT: 1 + s' R_RAX < N.of_nat len). {
+                destruct (N.eq_dec (N.of_nat len) (1 + s' R_RAX)); [| lia].
+                replace len with (N.to_nat (1 + s' R_RAX)) in Len by lia.
+                pose proof (node_distance_uniq' DstCurr Len eq_refl).
+                rewrite H0 in BC. discriminate.
+            }
+            assert (POS: pos = 1 + s' R_RAX). {
+                apply N.eqb_eq in BC3.
+                rewrite msub_nowrap in BC3 by lia.
+                rewrite N.mod_small in BC3 by lia. lia.
+            }
+            unfold time_of_insert_in_sorted_list. hammer.
+            rewrite ?BC0, ?BC1, ?BC2.
+            replace (pos <? N.of_nat len) with true by (symmetry; apply N.ltb_lt; lia).
+            replace (N.min pos (N.of_nat len) - 1) with (s' R_RAX) by lia.
+            lia.
+        -- (* move to the next node *)
         hammer.
-            etransitivity. apply N.add_le_mono_l. eassumption.
-            assert (s' R_RAX < N.min pos (N.of_nat len)) by lia.
-            etransitivity. apply N.add_le_mono_l, N.add_le_mono_l.
-            apply N.mul_le_mono_r, N.lt_le_incl, H. lia.
-        hammer.
-            assert (pos < 2^64). rewrite <- RDX.
-                apply (models_var R_RDX MDL).
-            assert (1 ⊕ s' R_RAX = 1 + s' R_RAX).
-              rewrite (N.mod_small (1 + s' R_RAX)) by lia. reflexivity.
-            repeat (reflexivity || assumption || lia || split).
+        assert (1 ⊕ s' R_RAX = 1 + s' R_RAX).
+          rewrite (N.mod_small (1 + s' R_RAX)) by lia. reflexivity.
+        repeat (reflexivity || assumption || lia || split).
         rewrite (N.mod_small (1 + s' R_RAX)) by lia.
         rewrite msub_nowrap in BC3 by lia.
         repeat rewrite N.mod_small in BC3 by lia.
@@ -258,10 +276,13 @@ Goal forall (base_mem : memory) (l value : addr) (pos : N) (len : nat) (t : trac
             then 26
             else
             if pos =? 0
-            then 1052
-            else 1043 + (1 + N.min pos (N.of_nat len)) * 1023)).
+            then 59
+            else if pos <? N.of_nat len
+            then 79 + (N.min pos (N.of_nat len) - 1) * 30
+            else 60 + (N.min pos (N.of_nat len) - 1) * 30)).
     intros.
     unfold i5_7300u_insert_in_sorted_list.time_of_insert_in_sorted_list. simpl.
-    unfold i5_7300u.ret, i5_7300u.mov_m64_r64.
-    psimpl. reflexivity.
+    unfold i5_7300u.ret, i5_7300u.mov_m64_r64, i5_7300u.jnz_addr, i5_7300u_insert_in_sorted_list.LL.NULL.
+    destruct (l =? 0), (value =? 0), (pos =? 0), (pos <? N.of_nat len);
+        f_equal; lia.
 Qed.

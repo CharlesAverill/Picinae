@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.absint.com/dtd/a3-apx-26.04.xsd" xmlns="http://www.absint.com/apx" version="26.04" build="19471048" target="arm">
+ <files>
+  <executables>
+   <executable>collatz.elf</executable>
+  </executables>
+  <ais>collatz.ais</ais>
+ </files>
+ <analyses>
+  <analysis enabled="true" type="wcet_analysis" id="aiT">
+   <report>collatz_report.txt</report>
+   <analysis_start>collatz</analysis_start>
+  </analysis>
+ </analyses>
+ <options>
+  <arm_options>
+   <general>
+    <target>Cortex-M0</target>
+   </general>
+  </arm_options>
+ </options>
+</project>

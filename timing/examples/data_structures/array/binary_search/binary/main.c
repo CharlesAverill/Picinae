@@ -1,5 +1,16 @@
+#include <stdlib.h>
 #include "../../../../timing_experiments.h"
 #include "binary_search.h"
+
+#define MAX_LEN 1000
+
+// Static so that len up to MAX_LEN fits (the stack is too small for it)
+static uint32_t array[MAX_LEN];
+
+static int cmp_u32(const void *a, const void *b) {
+    uint32_t x = *(const uint32_t *)a, y = *(const uint32_t *)b;
+    return (x > y) - (x < y);
+}
 
 int main() {
     neorv32_rte_setup();
@@ -7,17 +18,13 @@ int main() {
 
     srand(42);
 
-    for (uint32_t len = 1; len <= 1000; ++len) {
-        uint32_t array[100];
+    for (uint32_t len = 1; len <= MAX_LEN; ++len) {
         for (uint32_t i = 0; i < len; i++)
             array[i] = rand();
+        qsort(array, len, sizeof(uint32_t), cmp_u32);
 
-        int insert_index = -1;
-        uint32_t key = rand();
-        if (rand() % 2) {
-            insert_index = rand() % len;
-            array[insert_index] = key;
-        }
+        // Half the time search for an element of the array, otherwise a random key
+        uint32_t key = (rand() % 2) ? array[rand() % len] : (uint32_t)rand();
 
 	START_TIMER;
         uint32_t result = binary_search(array, len, key);
@@ -34,4 +41,3 @@ int main() {
 
     return 0;
 }
-

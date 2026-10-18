@@ -1,0 +1,9 @@
+# enter AIS annotations here or use 'Insert AIS annotation...' from the context menu
+compiler: "GCC";
+
+# Matches Picinae proof precondition of 0 <= n < 1000. The loop body
+# runs n - 2 times when n >= 3 (n - 3 back-edges plus the final
+# fall-through iteration) and 0 times otherwise, so at most 999 - 2 = 997.
+loop "while_true_break.L1" {
+    bound: 0 .. 997;
+}
