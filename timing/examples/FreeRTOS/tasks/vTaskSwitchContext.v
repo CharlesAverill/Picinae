@@ -1,3 +1,9 @@
+(* vTaskSwitchContext, with invariants only near the entry and the exits.
+   Both this file and vTaskSwitchContext_perinst.v pass the tactic-level
+   checks, but Qed hangs for an unknown reason. Placing an invariant at each
+   instruction is the only way we have found to resolve the hang, so
+   vTaskSwitchContext_perinst.v is the version that is built. *)
+
 Require Import RTOSDemo.
 Require Import RISCVTiming.
 Import RISCVNotations.

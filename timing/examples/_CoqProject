@@ -46,7 +46,9 @@ FreeRTOS/queue/xQueueGetMutexHolderFromISR.v
 # FreeRTOS/tasks/eTaskGetState.v
 # WIP due to it containing its own strcmp
 # FreeRTOS/tasks/prvSearchForNameWithinSingleList.v
-FreeRTOS/tasks/vTaskSwitchContext.v
+# Qed hangs; vTaskSwitchContext_perinst.v is built instead
+# FreeRTOS/tasks/vTaskSwitchContext.v
+FreeRTOS/tasks/vTaskSwitchContext_perinst.v
 
 FreeRTOS/tasks/xTaskGetCurrentTaskHandle.v
 FreeRTOS/tasks/prvResetNextTaskUnblockTime.v
