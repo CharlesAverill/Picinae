@@ -1,0 +1,3 @@
+-R ../.. Picinae
+-arg "-w -deprecated-missing-stdlib"
+-arg "-w -deprecated-syntactic-definition"
