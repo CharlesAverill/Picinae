@@ -223,6 +223,164 @@ Proof.
 Qed.
 
 
+Section VCs.
+
+  Variable s : store.
+  Variable t : trace.
+  Variable mem : N.
+  Variables p c len : N.
+  Hypothesis MDL : models arm7typctx s.
+  Hypothesis LEN32 : len < 2^32.
+  Definition invs := memset_invset mem p c len.
+
+  Lemma vc0:
+    forall (PRE: true_inv (invs ((Addr 0, s)::t))), nextinv memset_arm invs memset_exit false ((Addr 0, s)::t).
+  Proof.
+    intros. simpl in PRE. unfold regs in PRE.
+    unconjunct PRE.
+    memset_arm_bigstep.
+    - exists 0. unfold common_inv, regs. csimpl.  elimstore.
+      repeat eexists; psimpl; try (eassumption || reflexivity).
+      apply N.le_0_l.
+      apply N.lt_le_incl, (mp2_mod_lt p 2).
+    - exists 0. unfold common_inv, regs. csimpl. elimstore.
+      repeat eexists; psimpl; try (eassumption || reflexivity).
+      lia.
+  Qed.
+
+  Lemma vc12:
+    forall (PRE: true_inv (invs ((Addr 12, s)::t))), nextinv memset_arm invs memset_exit false ((Addr 12, s)::t).
+  Proof.
+    intros. simpl in PRE. unfold regs in PRE.
+    unfold common_inv, regs in PRE. unconjunct PRE.
+    memset_arm_bigstep.
+    - exists ev. unfold low8_pad. repeat eexists; psimpl; try eassumption. elimstore; reflexivity.
+    - rename ev into k.
+     exists (k⊕1). unfold common_inv,regs. psimpl. elimstore. repeat eexists; psimpl; try (eassumption || reflexivity).
+      rewrite N.add_1_r, (N.mod_small (N.succ k)). apply filled_succ.
+        eapply N.le_lt_trans. apply -> N.succ_le_mono. etransitivity. apply N.le_add_l. apply PRE. reflexivity.
+      rewrite msub_comm. reflexivity.
+      etransitivity. apply mp2_mod_le.
+        rewrite N.add_1_l. apply N.le_succ_l.
+        eapply N.add_lt_mono_l. eapply N.le_lt_trans. apply PRE.
+        eapply (N.lt_le_trans _ 8). reflexivity.
+        etransitivity. apply H5. apply N.le_add_l.
+      lia.
+  Qed.
+
+  Lemma vc44:
+    forall (PRE: true_inv (invs ((Addr 44, s)::t))), nextinv memset_arm invs memset_exit false ((Addr 44, s)::t).
+  Proof.
+    intros PRE. simpl in PRE.
+    destruct PRE as [k [[[MEM [R0 [R1 R2]]] [R3 KLEN]] R12]]. rewrite R1 in R12.
+    memset_arm_bigstep; unfold common_inv, regs; psimpl; elimstore;
+      change (N.pos (2^8)) with (2^8) in *.
+
+    (* iterate loop 2 *)
+    - assert (F: 32 + k <= len).
+        rewrite <- msub_add_distr in H0,H1,H2. rewrite N.add_comm. change 32 with (8+8+8+8).
+        repeat (rewrite 1?N.add_assoc; apply checked_add_true; try assumption).
+      exists (32⊕k). repeat eexists; psimpl; try (assumption || reflexivity).
+        memsimp.
+        repeat rewrite filled4, ?N.add_assoc, 1?(N.add_comm _ p), <- 1?(N.add_assoc p).
+          rewrite (N.mod_small (32+k)). reflexivity.
+          eapply N.le_lt_trans; eassumption.
+        rewrite msub_comm. reflexivity.
+        etransitivity. apply mp2_mod_le. assumption.
+
+    (* end loop 2 (4th exit point) *)
+    - eassert (F:_). apply (checked_add_false 24); (discriminate 1 || eassumption).
+      exists (24⊕k). repeat eexists; psimpl; try (assumption || reflexivity).
+        memsimp.
+        repeat rewrite filled4, ?N.add_assoc, 1?(N.add_comm _ p), <- 1?(N.add_assoc p).
+          rewrite (N.mod_small (24+k)). reflexivity.
+          eapply N.le_lt_trans; eassumption.
+        rewrite (abs_diff 3). reflexivity. assumption.
+        etransitivity. apply mp2_mod_le. assumption.
+        unfold low8_pad. psimpl. reflexivity.
+
+    (* end loop 2 (3rd exit point) *)
+    - eassert (F:_). apply (checked_add_false 16); (discriminate 1 || eassumption).
+      exists (16⊕k). repeat eexists; psimpl; try (assumption || reflexivity).
+        memsimp.
+        repeat rewrite filled4, ?N.add_assoc, 1?(N.add_comm _ p), <- 1?(N.add_assoc p).
+          rewrite (N.mod_small (16+k)). reflexivity.
+          eapply N.le_lt_trans; eassumption.
+        rewrite (abs_diff 2). reflexivity. assumption.
+        etransitivity. apply mp2_mod_le. assumption.
+        unfold low8_pad. psimpl. reflexivity.
+
+    (* end loop 2 (2nd exit point) *)
+    - eassert (F:_). apply (checked_add_false 8); (discriminate 1 || eassumption).
+      exists (8⊕k). repeat eexists; psimpl; try (assumption || reflexivity).
+        memsimp.
+        repeat rewrite filled4, ?N.add_assoc, 1?(N.add_comm _ p), <- 1?(N.add_assoc p).
+          rewrite (N.mod_small (8+k)). reflexivity.
+          eapply N.le_lt_trans; eassumption.
+        rewrite (abs_diff 1). reflexivity. assumption.
+        etransitivity. apply mp2_mod_le. assumption.
+        unfold low8_pad. psimpl. reflexivity.
+
+    (* end loop 2 (1st exit point) *)
+    - exists k. repeat eexists; psimpl; try assumption.
+        rewrite (abs_diff 0); psimpl. reflexivity. assumption.
+        unfold low8_pad. psimpl. reflexivity.
+  Qed.
+
+  Lemma vc84:
+    forall (PRE: true_inv (invs ((Addr 84, s)::t))), nextinv memset_arm invs memset_exit false ((Addr 84, s)::t).
+  Proof.
+    intros PRE. simpl in PRE.
+    destruct PRE as [k [r1 [[[MEM [R0 [R1 R2]]] [R3 KLEN]] R1C]]].
+    memset_arm_bigstep; unfold common_inv, regs, postcondition; psimpl; elimstore;
+      change (N.pos (2^8)) with (2^8) in *.
+
+    (* iterate loop 3 *)
+    - assert (K4LEN: 4+k <= len).
+        rewrite <- msub_add_distr in H0,H1,H2. rewrite N.add_comm. change 4 with (1+1+1+1).
+        repeat (rewrite 1?N.add_assoc; apply checked_add_true; try assumption).
+      exists (4⊕k). repeat eexists; psimpl; try (assumption || reflexivity).
+        memsimp.
+        rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*_) with 8. rewrite R1C, !setmem_mod_r.
+          change (2+p) with (1+1+p). change (3+p) with (1+1+1+p).
+          rewrite <- !(N.add_assoc 1), !N.add_1_l, <- !N.add_succ_r.
+          rewrite !filled_succ by apply mp2_mod_lt.
+          rewrite <- !N.add_1_l, !N.add_assoc. rewrite (N.mod_small (4+k)). reflexivity.
+          eapply N.le_lt_trans. apply K4LEN. apply LEN32.
+        rewrite msub_comm. reflexivity.
+        etransitivity. apply mp2_mod_le. apply K4LEN.
+
+    (* end loop 3 (4th exit point) *)
+    - split. reflexivity. psimpl. memsimp.
+      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*_) with 8. rewrite R1C, !setmem_mod_r.
+      rewrite <- !(N.add_assoc _ p k). apply (filled_n_more 3%nat len); try assumption.
+        intros i Hi. apply (N.lt_succ_r _ 2), N.le_lteq in Hi. destruct Hi as [Hi|Hi].
+          apply (N.lt_succ_r _ 1), N.le_1_r in Hi. destruct Hi as [Hi|Hi]; subst i.
+            rewrite msub_0_r, msub_mod_pow2. assumption.
+            assumption.
+          subst i. assumption.
+
+    (* end loop 3 (3rd exit point) *)
+    - split. reflexivity. psimpl. memsimp.
+      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*_) with 8. rewrite R1C, !setmem_mod_r.
+      rewrite <- (N.add_assoc 1). apply (filled_n_more 2%nat len); try assumption.
+        intros i Hi. apply (N.lt_succ_r _ 1), N.le_1_r in Hi. destruct Hi as [Hi|Hi]; subst i.
+          rewrite msub_0_r, msub_mod_pow2. assumption.
+          assumption.
+
+    (* end loop 3 (2nd exit point) *)
+    - split. reflexivity. psimpl. memsimp.
+      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*8) with 8. rewrite R1C, !setmem_mod_r.
+      apply (filled_n_more 1%nat len); try assumption.
+        intros i Hi. apply N.lt_1_r in Hi. rewrite Hi, msub_0_r, msub_mod_pow2. assumption.
+
+    (* end loop 3 (1st exit point) *)
+    - split. reflexivity. psimpl.
+      apply (filled_n_more 0%nat len); try assumption.
+        intros i Hi. contradict Hi. apply N.nlt_0_r.
+        rewrite msub_0_r, msub_mod_pow2. assumption.
+  Qed.
+End VCs.
 (* Main functional correctness proof: *)
 
 Theorem memset_functional_correctness:
@@ -250,145 +408,14 @@ Proof.
 
   (* Break the proof into cases, one for each invariant-point. *)
   destruct_inv 32 PRE.
-
-  (* Entry point (address 0) *)
-  destruct PRE as [MEM [R0 [R1 R2]]].
-  step. step. step.
-  exists 0. repeat eexists; psimpl; try (eassumption || reflexivity).
-    apply N.le_0_l.
-    apply N.leb_le, BC.
-    apply N.lt_le_incl, (mp2_mod_lt p 2).
-  exists 0. repeat eexists; psimpl; try (eassumption || reflexivity).
-    apply N.le_0_l.
-    rewrite R1. reflexivity.
+  apply vc0; assumption.
 
   (* Loop 1 (address 12) *)
-  destruct PRE as [k [[[MEM [R0 [R1 R2]]] [R3 KLEN]] [LEN8 KP4]]].
-  step. step. step. step.
-
-    (* end loop 1 *)
-    repeat step. repeat eexists; psimpl; try eassumption.
-      unfold low8_pad. psimpl. reflexivity.
-
-    (* iterate loop 1 *)
-    step. step. exists (k⊕1). repeat eexists; psimpl; try (eassumption || reflexivity).
-      rewrite N.add_1_r, (N.mod_small (N.succ k)). apply filled_succ.
-        eapply N.le_lt_trans. apply -> N.succ_le_mono. etransitivity. apply N.le_add_l. apply KP4. reflexivity.
-      rewrite msub_comm. reflexivity.
-      etransitivity. apply mp2_mod_le.
-        rewrite N.add_1_l. apply N.le_succ_l.
-        eapply N.add_lt_mono_l. eapply N.le_lt_trans. apply KP4.
-        eapply (N.lt_le_trans _ 8). reflexivity.
-        etransitivity. apply LEN8. apply N.le_add_l.
-      apply N.le_lteq in KP4. destruct KP4 as [KP4|KP4].
-        etransitivity.
-          apply N.add_le_mono_l. apply mp2_mod_le.
-          rewrite N.add_1_l, N.add_succ_r. apply N.le_succ_l, KP4.
-        rewrite <- N.Div0.add_mod_idemp_l in BC. rewrite KP4 in BC. discriminate BC.
+  apply vc12; assumption.
 
   (* Loop 2 (address 44) *)
-  destruct PRE as [k [[[MEM [R0 [R1 R2]]] [R3 KLEN]] R12]]. rewrite R1 in R12.
-  step. step; cycle 1.
-
-    (* end loop 2 (1st exit point) *)
-    repeat step. exists k. repeat eexists; psimpl; try assumption.
-      rewrite (abs_diff 0); psimpl. reflexivity. assumption.
-      unfold low8_pad. psimpl. reflexivity.
-
-    (* end loop 2 (2nd exit point) *)
-    step. step; cycle 1. repeat step.
-    eassert (H:_). apply (checked_add_false 8); (discriminate 1 || eassumption).
-    exists (8⊕k). repeat eexists; psimpl; try (assumption || reflexivity).
-      repeat rewrite filled4, ?N.add_assoc, 1?(N.add_comm _ p), <- 1?(N.add_assoc p).
-        rewrite (N.mod_small (8+k)). reflexivity.
-        eapply N.le_lt_trans; eassumption.
-      rewrite (abs_diff 1). reflexivity. assumption.
-      etransitivity. apply mp2_mod_le. assumption.
-      unfold low8_pad. psimpl. reflexivity.
-
-    (* end loop 2 (3rd exit point) *)
-    step. step; cycle 1. repeat step.
-    eassert (H:_). apply (checked_add_false 16); (discriminate 1 || eassumption).
-    exists (16⊕k). repeat eexists; psimpl; try (assumption || reflexivity).
-      repeat rewrite filled4, ?N.add_assoc, 1?(N.add_comm _ p), <- 1?(N.add_assoc p).
-        rewrite (N.mod_small (16+k)). reflexivity.
-        eapply N.le_lt_trans; eassumption.
-      rewrite (abs_diff 2). reflexivity. assumption.
-      etransitivity. apply mp2_mod_le. assumption.
-      unfold low8_pad. psimpl. reflexivity.
-
-    (* end loop 2 (4th exit point) *)
-    step. step; cycle 1. repeat step.
-    eassert (H:_). apply (checked_add_false 24); (discriminate 1 || eassumption).
-    exists (24⊕k). repeat eexists; psimpl; try (assumption || reflexivity).
-      repeat rewrite filled4, ?N.add_assoc, 1?(N.add_comm _ p), <- 1?(N.add_assoc p).
-        rewrite (N.mod_small (24+k)). reflexivity.
-        eapply N.le_lt_trans; eassumption.
-      rewrite (abs_diff 3). reflexivity. assumption.
-      etransitivity. apply mp2_mod_le. assumption.
-      unfold low8_pad. psimpl. reflexivity.
-
-    (* iterate loop 2 *)
-    step.
-    assert (H: 32 + k <= len).
-      rewrite <- msub_add_distr in BC0,BC1,BC2. rewrite N.add_comm. change 32 with (8+8+8+8).
-      repeat (rewrite 1?N.add_assoc; apply checked_add_true; try assumption).
-    exists (32⊕k). repeat eexists; psimpl; try (assumption || reflexivity).
-      repeat rewrite filled4, ?N.add_assoc, 1?(N.add_comm _ p), <- 1?(N.add_assoc p).
-        rewrite (N.mod_small (32+k)). reflexivity.
-        eapply N.le_lt_trans; eassumption.
-      rewrite msub_comm. reflexivity.
-      etransitivity. apply mp2_mod_le. assumption.
+  apply vc44; assumption.
 
   (* Loop 3 (address 84) *)
-  destruct PRE as [k [r1 [[[MEM [R0 [R1 R2]]] [R3 KLEN]] R1C]]].
-
-    (* end loop 3 (1st exit point) *)
-    step. step; cycle 1.
-    repeat step. split. assumption. psimpl.
-      apply (filled_n_more 0%nat len); try assumption.
-        intros i H. contradict H. apply N.nlt_0_r.
-        rewrite msub_0_r, msub_mod_pow2. assumption.
-
-    (* end loop 3 (2nd exit point) *)
-    step. step; cycle 1.
-    repeat step. split. assumption. psimpl.
-      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*8) with 8. rewrite R1C, !setmem_mod_r.
-      apply (filled_n_more 1%nat len); try assumption.
-        intros i H. apply N.lt_1_r in H. rewrite H, msub_0_r, msub_mod_pow2. assumption.
-
-    (* end loop 3 (3rd exit point) *)
-    step. step; cycle 1.
-    repeat step. split. assumption. psimpl.
-      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*_) with 8. rewrite R1C, !setmem_mod_r.
-      rewrite <- (N.add_assoc 1). apply (filled_n_more 2%nat len); try assumption.
-        intros i H. apply (N.lt_succ_r _ 1), N.le_1_r in H. destruct H; subst i.
-          rewrite msub_0_r, msub_mod_pow2. assumption.
-          assumption.
-
-    (* end loop 3 (4th exit point) *)
-    step. step; cycle 1.
-    repeat step. split. assumption. psimpl.
-      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*_) with 8. rewrite R1C, !setmem_mod_r.
-      rewrite <- !(N.add_assoc _ p k). apply (filled_n_more 3%nat len); try assumption.
-        intros i H. apply (N.lt_succ_r _ 2), N.le_lteq in H. destruct H.
-          apply (N.lt_succ_r _ 1), N.le_1_r in H. destruct H; subst i.
-            rewrite msub_0_r, msub_mod_pow2. assumption.
-            assumption.
-          subst i. assumption.
-
-    (* iterate loop 3 *)
-    step. exists (4⊕k).
-    assert (K4LEN: 4+k <= len).
-      rewrite <- msub_add_distr in BC0,BC1,BC2. rewrite N.add_comm. change 4 with (1+1+1+1).
-      repeat (rewrite 1?N.add_assoc; apply checked_add_true; try assumption).
-    repeat eexists; psimpl; try (assumption || reflexivity).
-      rewrite <- !(setmem_mod_r _ _ _ _ _ r1). change (1*_) with 8. rewrite R1C, !setmem_mod_r.
-        change (2+p) with (1+1+p). change (3+p) with (1+1+1+p).
-        rewrite <- !(N.add_assoc 1), !N.add_1_l, <- !N.add_succ_r.
-        rewrite !filled_succ by apply mp2_mod_lt.
-        rewrite <- !N.add_1_l, !N.add_assoc. rewrite (N.mod_small (4+k)). reflexivity.
-        eapply N.le_lt_trans. apply K4LEN. apply LEN32.
-      rewrite msub_comm. reflexivity.
-      etransitivity. apply mp2_mod_le. apply K4LEN.
+  apply vc84; assumption.
 Qed.

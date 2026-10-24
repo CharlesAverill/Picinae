@@ -59,7 +59,7 @@ Inductive x86var :=
   (* General-purpose registers (32-bit): *)
   | R_EAX | R_EBX | R_ECX | R_EDX | R_EDI | R_ESI
   (* Stack pointer and base pointer (32-bit): *)
-  | R_ESP | R_EBP
+  | R_EIP | R_ESP | R_EBP
   (* Modifiable segment base registers (32-bit): *)
   | R_FS_BASE | R_GS_BASE
   (* Descriptor table registers (32-bit): *)
@@ -83,7 +83,7 @@ Definition x86typctx v :=
   | R_FPU_CONTROL => Some 16
   | R_ST0 | R_ST1 | R_ST2 | R_ST3 | R_ST4 | R_ST5 | R_ST6 | R_ST7 => Some 80
   | R_EAX | R_EBX | R_ECX | R_EDX | R_EDI | R_ESI => Some 32
-  | R_ESP | R_EBP => Some 32
+  | R_EIP | R_ESP | R_EBP => Some 32
   | R_FS_BASE | R_GS_BASE => Some 32
   | R_LDTR | R_GDTR => Some 32
   | R_MXCSR => Some 32

@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""Generate Picinae stepfrom lemmas using Coqpyt and coq-lsp.
+
+Run from any directory; the nearest _CoqProject supplies the load path.
+The target must contain exactly one Definition of type program. Dependencies
+must already be compiled. Only the delimited generated block is replaced.
+
+Example usage:
+
+  ./bigsteps Examples/i386_strcmp.v --invariants 0 8 22 36 --exits 22 36
+
+  ./bigsteps Examples/arm7_memset.v --invariants 0 12 44 84 120 --exits 120
+"""
+import argparse
+import os
+from pathlib import Path
+import re
+import shlex
+import sys
+import tempfile
+
+BEGIN = '(* BEGIN BIGSTEPS GENERATED LEMMAS *)'
+END = '(* END BIGSTEPS GENERATED LEMMAS *)'
+ARCHITECTURES = {
+    'Picinae_i386': 'X86Notations', 'Picinae_amd64': 'X64Notations',
+    'Picinae_armv7': 'ARM7Notations', 'Picinae_armv8': 'ARM8Notations',
+    'Picinae_riscv': 'RISCVNotations',
+}
+GENERALIZE = '''all: lazymatch goal with
+| |- context [effinv ?b ?p ?i ?e (?st :: ?tail)] => generalize tail
+| |- nextinv ?p ?i ?e true (?st :: ?tail) => generalize tail
+end.'''
+
+
+def uncomment(text):
+    """Remove nested Rocq comments and strings for declaration discovery."""
+    parts, depth, i = [], 0, 0
+    while i < len(text):
+        if text.startswith('(*', i):
+            depth += 1
+            parts.append(' ')
+            i += 2
+        elif depth and text.startswith('*)', i):
+            depth -= 1
+            i += 2
+        elif not depth and text[i] == '"':
+            # Ignore strings, including escaped quotes, during discovery.
+            i += 1
+            while i < len(text):
+                if text.startswith('""', i):
+                    i += 2
+                elif text[i] == '"':
+                    i += 1
+                    break
+                else:
+                    i += 1
+            parts.append(' ')
+        else:
+            if not depth:
+                parts.append(text[i])
+            i += 1
+    return ''.join(parts)
+
+
+def split_generated(text):
+    if not text.count(BEGIN) and not text.count(END):
+        return text, '', False
+    if text.count(BEGIN) != 1 or text.count(END) != 1:
+        raise ValueError('expected exactly one matching pair of bigsteps delimiters')
+    start, end = text.index(BEGIN), text.index(END)
+    if end < start:
+        raise ValueError('bigsteps delimiters are reversed')
+    return text[:start], text[end + len(END):], True
+
+
+def identifiers(text):
+    return set(re.findall(r"[A-Za-z_][A-Za-z_0-9']*", text))
+
+
+def close_goal(goal):
+    """Bind free locals, including dependencies, in their original context order."""
+    # generalize produces one typed trace-tail binder. Its type is inferred
+    # from effinv/nextinv in the generated statement.
+    result = re.sub(r"^forall ([\w']+) : .*?, ", r"forall \1, ", goal.ty, count=1)
+    if re.search(r'\bnextinv\b', goal.ty):
+        conditions = [hyp.ty for hyp in goal.hyps
+                      if any(re.fullmatch(r'BC[0-9]*', name) for name in hyp.names)]
+        # Keep the trace binder before the branch premises so apply can
+        # instantiate it from the nextinv conclusion.
+        binder, body = result.split(', ', 1)
+        for condition in reversed(conditions):
+            body = f'({condition}) -> {body}'
+        result = f'{binder}, {body}'
+    needed = identifiers(result)
+    selected = []
+    for hyp in reversed(goal.hyps):
+        names = [name for name in hyp.names if name not in {'invs', 'exits', 's', 't'}]
+        if needed.intersection(names):
+            selected.append((hyp, names))
+            needed.update(identifiers(hyp.ty))
+            if hyp.definition is not None:
+                needed.update(identifiers(hyp.definition))
+    for hyp, names in selected:
+        if hyp.definition is None:
+            result = f"forall {' '.join(names)}, {result}"
+        else:
+            for name in reversed(names):
+                result = f'let {name} : {hyp.ty} := {hyp.definition} in {result}'
+    return result
+
+
+def generate(path, invariants, exits, command, timeout=120):
+    from coqpyt.coq.base_file import CoqFile
+    from coqpyt.lsp.structs import TextDocumentIdentifier
+
+    original = path.read_bytes()
+    text = original.decode('utf-8')
+    prefix, suffix, replacing = split_generated(text)
+    source = uncomment(prefix + suffix)
+    programs = re.findall(r'\bDefinition\s+([\w\']+)\s*:\s*(?:[\w]+\.)*program\s*:=', source)
+    if len(programs) != 1:
+        raise ValueError('expected exactly one Definition <name> : program := ...')
+    program = programs[0]
+    architectures = [notations for module, notations in ARCHITECTURES.items()
+                     if re.search(r'\b' + module + r'\b', source)]
+    if len(architectures) != 1:
+        raise ValueError('cannot uniquely identify the Picinae architecture import')
+    workspace = next((p for p in (path.parent, *path.parent.parents)
+                      if (p / '_CoqProject').exists()), path.parent)
+    fd, temporary = tempfile.mkstemp(prefix='Bigsteps_', suffix='.v', dir=path.parent)
+    os.close(fd)
+    scratch = Path(temporary)
+
+    def check(code, goals=False):
+        scratch.write_text(code, encoding='utf-8')
+        with CoqFile(str(scratch), workspace=str(workspace), timeout=timeout) as rocq:
+            if not rocq.is_valid:
+                raise ValueError('Rocq rejected generated code:\n' + '\n'.join(
+                    str(error.message) for error in rocq.errors))
+            if goals:
+                answer = rocq.coq_lsp_client.proof_goals(
+                    TextDocumentIdentifier('file://' + str(scratch)),
+                    rocq.steps[-1].ast.range.end)
+                if answer is None or answer.error or answer.goals is None:
+                    raise ValueError('Rocq did not return verification conditions')
+                config = answer.goals
+                if config.shelf or config.given_up or any(a or b for a, b in config.stack):
+                    raise ValueError('unexpected hidden verification conditions')
+                return config.goals
+
+    try:
+        header = f'Import {architectures[0]}.\n'
+        setup = header + 'Set Printing Depth 1000000.\nSet Printing Width 1000000.\n'
+        vcs = '(' + '::'.join(map(str, invariants)) + '::nil)'
+        lemmas = []
+        lemma_names = []
+        tactic_name = f'{program}_bigstep'
+        if re.search(r'\bLtac\s+' + re.escape(tactic_name) + r'\b', source):
+            raise ValueError(f'tactic name already exists outside generated block: {tactic_name}')
+        for address in invariants:
+            if address in exits:
+                continue
+            name = f'{program}_stepfrom_{address}'
+            if re.search(r'\b' + re.escape(name) + r'\b', source):
+                raise ValueError(f'lemma name already exists outside generated block: {name}')
+            print(f'Generating {name}...', file=sys.stderr)
+            conclusion = f'nextinv {program} invs exits false ((Addr {address}, s)::t)'
+            probe = (prefix + '\n' + setup + f'Goal forall invs exits s t, {conclusion}.\n'
+                     + f'intros; find_vcs {vcs}.\nUnshelve.\n' + GENERALIZE + '\n')
+            goals = check(probe, goals=True)
+            hypotheses = '\n'.join(f'    (VC{i}: {close_goal(g)})'
+                                   for i, g in enumerate(goals, 1))
+            lemma = (f'Lemma {name}:\n  forall invs exits s t\n{hypotheses}\n  ,\n'
+                     + f'  {conclusion}.\nProof.\n  intros; find_vcs {vcs}.\n'
+                     + '  Unshelve.\n  all: match goal with H: _ |- _ =>\n'
+                     + '      solve [eapply H; first [eassumption | reflexivity]]\n  end.\nQed.\n')
+            check(prefix + '\n' + header + lemma)
+            lemmas.append(lemma)
+            lemma_names.append(name)
+        if lemma_names:
+            alternatives = ' | '.join(f'apply {name}' for name in lemma_names)
+            tactic = (f'Ltac {tactic_name} := first [ {alternatives} ]; intros; '
+                      + '(reflexivity || ISA_invhere).\n')
+        else:
+            tactic = f'Ltac {tactic_name} := fail "No internal invariant points".\n'
+        # Escape comment tokens even if they occur in a quoted command argument.
+        safe_command = command.replace('(*', '( *').replace('*)', '* )')
+        block = (BEGIN + '\n(* Generated by: ' + safe_command + ' *)\n'
+                 + header + '\n' + '\n'.join(lemmas) + '\n' + tactic + END)
+        candidate = prefix + ('' if replacing else '\n\n') + block + suffix
+        check(candidate)
+        if path.read_bytes() != original:
+            raise ValueError('target changed during generation; refusing to overwrite it')
+        scratch.write_bytes(candidate.encode('utf-8'))
+        scratch.chmod(path.stat().st_mode & 0o777)
+        os.replace(scratch, path)
+    finally:
+        scratch.unlink(missing_ok=True)
+
+
+def address(value):
+    try:
+        number = int(value, 16 if value.lower().startswith('0x') else 10)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f'invalid address: {value}') from None
+    if number < 0:
+        raise argparse.ArgumentTypeError('addresses must be nonnegative')
+    return number
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('filepath', type=Path)
+    parser.add_argument('--invariants', type=address, nargs='+', required=True)
+    parser.add_argument('--exits', type=address, nargs='*', required=True)
+    args = parser.parse_args()
+    invariants = list(dict.fromkeys(args.invariants))
+    exits = set(args.exits)
+    if not exits.issubset(invariants):
+        parser.error('--exits must be a subset of --invariants')
+    path = args.filepath.resolve()
+    if path.suffix != '.v':
+        parser.error('filepath must be a Rocq .v file')
+    try:
+        generate(path, invariants, exits, shlex.join(['bigsteps', *sys.argv[1:]]))
+    except Exception as error:
+        print(f'bigsteps: {error}', file=sys.stderr)
+        return 1
+    print(f'Updated {args.filepath} ({len(invariants) - len(exits)} lemmas).')
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

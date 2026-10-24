@@ -477,7 +477,7 @@ Qed.
 Lemma getbyte_shiftr8__zero:
   forall w m a, getbyte m a w >> 8 = 0.
 Proof.
-  intros. Search "bound" "getbyte".
+  intros.
   assert (LT:=getbyte_bound m a w).
   remember (getbyte m a w) as x. clear Heqx.
   now apply shiftr_low_pow2.
@@ -750,12 +750,12 @@ Proof.
     destruct (N.lt_trichotomy i (b/64*64)) as [Lt | [Eq | Gt]].
     + clear - Lt Eqn2 Eqn H; smt.
     + subst i; clear - Eqn0. (* How the heck?? *) smt.
-    + rewrite (N.add_comm (2^67) i) in *. Search N.sub N.add (_+_-_). rewrite <-N.add_sub_assoc in * by lia.
+    + rewrite (N.add_comm (2^67) i) in *. rewrite <-N.add_sub_assoc in * by lia.
       replace ((i + (2 ^ 67 - (b / 64 * 64) mod 2 ^ 67)) mod 2 ^ 67 ) with (msub 67 i (b/64*64)) in * by reflexivity.
       rewrite msub_sub in * by lia.
       rewrite (N.mod_small (i-_)) in * by lia.
       bitify. apply f_equal. psimpl. enough (Help:i mod 2^67 = ((b>>6<<6)+(2^67+i-(b>>6<<6))) mod 2^67).
-      Search ((_+_ mod _)mod _). rewrite <-mp2_add_r, Help,mp2_add_r, <-N.add_assoc. reflexivity.
+      rewrite <-mp2_add_r, Help,mp2_add_r, <-N.add_assoc. reflexivity.
       lia.
 Qed.
 

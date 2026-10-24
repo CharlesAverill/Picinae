@@ -196,17 +196,58 @@ Section Invariants.
 
 End Invariants.
 
-(* If you want some/all of your definitions above to expand by default,
-   add them to a "hint database" and use it in your "step" tactic (see below). *)
+(* Unfold the initial memory, stack pointer, and arguments before eliminating
+   store variables in the verification conditions. *)
 Create HintDb myhints.
 Hint Unfold mem esp arg1 arg2 : myhints.
 
-(* Create a "step" tactic that combines Picinae's interpreter tactic (x86_step)
-   with anything else you might want to do on each step.  I also recommend
-   using the "time" tactical to print a progress message (to give visual cues
-   that something is happening). *)
-Local Ltac step := time x86_step; autounfold with myhints.
+Section VCs.
 
+  Variables s0 s : store.
+  Variable t : trace.
+  Hypothesis MDL : models x86typctx s.
+  Hypothesis ESP : s R_ESP = s0 R_ESP.
+  Hypothesis MEM1 : s V_MEM32 = s0 V_MEM32.
+  Definition invs := strcmp_invs s0.
+
+  Lemma vc0:
+    forall (PRE: true_inv (invs ((Addr 0, s)::t))), nextinv strcmp_i386 invs strcmp_exit false ((Addr 0, s)::t).
+  Proof.
+    intros PRE. strcmp_i386_bigstep.
+    exists 0. psimpl. autounfold with myhints in *. elimstore. psimpl.
+      repeat (lia || split).
+  Qed.
+
+  Lemma vc8:
+    forall (PRE: true_inv (invs ((Addr 8, s)::t))), nextinv strcmp_i386 invs strcmp_exit false ((Addr 8, s)::t).
+  Proof.
+    intros PRE. simpl in PRE. destruct PRE as (k & ECX & EDX & SEQ).
+    strcmp_i386_bigstep; unfold postcondition; autounfold with myhints in *;
+      psimpl; elimstore; change (N.pos (2^32)) with (2^32) in *; memsimp in *; psimpl.
+
+    (* Equal strings (address 22) *)
+    - apply Neqb_ok in H.
+      exists k. repeat first [ exact SEQ | split ].
+        symmetry. apply Neqb_ok, H0.
+        apply N.compare_eq_iff, H.
+
+    (* Loop back to address 8 *)
+    - exists (k+1). psimpl. split. reflexivity. split. reflexivity.
+      intros i IK. rewrite N.add_1_l in IK. apply N.lt_succ_r, N.le_lteq in IK. destruct IK as [IK|IK].
+        apply SEQ, IK.
+        subst. split.
+          apply Neqb_ok in H. assumption.
+          apply N.neq_0_lt_0, N.neq_sym, N.eqb_neq. assumption.
+
+    (* Unequal strings (address 36) *)
+    - exists k. split. exact SEQ. split.
+        intro. destruct (_ <? _); discriminate.
+        apply N.eqb_neq, N.lt_gt_cases in H. destruct H as [H|H].
+          rewrite (proj2 (N.compare_lt_iff _ _)), (proj2 (N.ltb_lt _ _)) by exact H. reflexivity.
+          rewrite (proj2 (N.compare_gt_iff _ _)) by exact H. rewrite (proj2 (N.ltb_ge _ _)) by apply N.lt_le_incl, H. reflexivity.
+  Qed.
+
+End VCs.
 
 (* Our partial correctness theorem makes the following assumptions:
    (ENTRY) Specify the start address and state of the subroutine.
@@ -253,42 +294,8 @@ Proof.
   destruct_inv 32 PRE; unfold trueif_inv in ESP.
 
   (* Address 0 *)
-  step. step. exists 0. psimpl.
-    repeat (lia || split).
-
-  (* Optional: The rest of the proof ignores all flag values except CF and ZF, so
-     we can make evaluation faster and shorter by telling Picinae to ignore the
-     other flags (i.e., abstract their values away). *)
-  Ltac ignore_vars v ::= constr:(match v with
-    R_AF | R_DF | R_OF | R_PF | R_SF => true
-  | _ => false end).
+  apply vc0; assumption.
 
   (* Address 8 *)
-  destruct PRE as (k & ECX & EDX & SEQ).
-  step. step. step.
-
-    (* Address 14 *)
-    step. step. step. step.
-
-      (* Address 20 *)
-      step. apply Neqb_ok in BC.
-      exists k. repeat first [ exact SEQ | split ].
-        symmetry. apply Neqb_ok, BC0.
-        apply N.compare_eq_iff, BC.
-
-      (* loop back to Address 8 *)
-      exists (k+1). psimpl. split. reflexivity. split. reflexivity.
-      intros i IK. rewrite N.add_1_l in IK. apply N.lt_succ_r, N.le_lteq in IK. destruct IK as [IK|IK].
-        apply SEQ, IK.
-        subst. split.
-          apply Neqb_ok in BC. assumption.
-          apply N.neq_0_lt_0, N.neq_sym, N.eqb_neq. assumption.
-
-    (* Address 23 *)
-    step. step. step.
-    exists k. split. exact SEQ. split.
-      intro. destruct (_ <? _); discriminate.
-      apply N.eqb_neq, N.lt_gt_cases in BC. destruct BC as [BC|BC].
-        rewrite (proj2 (N.compare_lt_iff _ _)), (proj2 (N.ltb_lt _ _)) by exact BC. reflexivity.
-        rewrite (proj2 (N.compare_gt_iff _ _)) by exact BC. rewrite (proj2 (N.ltb_ge _ _)) by apply N.lt_le_incl, BC. reflexivity.
+  apply vc8; assumption.
 Qed.
