@@ -181,3 +181,65 @@ Proof.
     | apply copy_w_b; lia
     | apply copy_th; lia | apply copy_ht; lia | apply copy_4x16; lia ].
 Time Qed.
+
+(* n = 65..128: eight 16-byte loads, then eight stores (RET at 0x1c4a6f).
+   Every load precedes every store, so overlap is again allowed. *)
+Definition memcpy_exit_mid (t:trace) :=
+  match t with (Addr a,_)::_ => match a with
+  | 1853595 | 1853903 | 1853916 | 1853936 | 1853964 | 1854063 => true
+  | _ => false
+  end | _ => false end.
+
+Definition memcpy_invs_mid (m d s n rsp:N) (t:trace) :=
+  match t with (Addr a,st)::_ => match a with
+  | 1853552 => Some (st V_MEM64 = m /\ st R_RDI = d /\ st R_RSI = s /\ st R_RDX = n /\
+                     st R_RSP = rsp)
+  | 1853595 | 1853903 | 1853916 | 1853936 | 1853964 | 1854063 => Some (postcondition m d s n rsp st)
+  (* entry of the n > 128 paths: unreachable under n <= 128 *)
+  | 1854064 => Some False
+  | _ => None
+  end | _ => None end.
+
+Theorem memcpy_correct_mid:
+  forall st t s' x' m d s n rsp
+         (ENTRY: startof t (x',s') = (Addr 1853552, st))
+         (MDL: models x64typctx st)
+         (MEM: st V_MEM64 = m) (D: st R_RDI = d) (S: st R_RSI = s) (Nn: st R_RDX = n)
+         (RSP: st R_RSP = rsp) (MID: 64 < n <= 128),
+  satisfies_all memcpy_amd64 (memcpy_invs_mid m d s n rsp) memcpy_exit_mid ((x',s')::t).
+Proof.
+  intros. apply prove_invs.
+  simpl. rewrite ENTRY. x64_step. repeat split; assumption.
+
+  intros.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply memcpy_welltyped. intro MDL1.
+  clear - PRE MDL1 MID. rename t1 into t.
+  destruct_inv 64 PRE.
+
+  destruct PRE as [MEM [D [S [Nn RSP]]]].
+  repeat x64_step.
+  all: repeat match goal with
+       | H: (_ <? _) = true |- _ => apply N.ltb_lt in H
+       | H: (_ <? _) = false |- _ => apply N.ltb_ge in H
+       | H: (_ =? _) = true |- _ => apply N.eqb_eq in H
+       | H: (_ =? _) = false |- _ => apply N.eqb_neq in H
+       | H: (_ <=? _) = true |- _ => apply N.leb_le in H
+       | H: (_ <=? _) = false |- _ => apply N.leb_gt in H
+       end.
+  all: rewrite ?(N.mod_small n (2^32)) in * by (change (2^32) with 4294967296; lia).
+  all: try (exfalso; lia).
+  all: try (match goal with |- False =>
+         repeat match goal with H: context [if ?a <? ?b then _ else _] |- _ => destruct (N.ltb_spec a b)
+                              | H: context [if ?a =? ?b then _ else _] |- _ => destruct (N.eqb_spec a b) end;
+         cbn in *; first [discriminate | lia] end).
+  all: repeat match goal with H: context [if ?a <? ?b then _ else _] |- _ => destruct (N.ltb_spec a b)
+                            | H: context [if ?a =? ?b then _ else _] |- _ => destruct (N.eqb_spec a b) end.
+  all: repeat match goal with H: context [N.lor] |- _ => progress cbn [N.lor N.lxor] in H
+                            | H: context [N.lxor] |- _ => progress cbn [N.lor N.lxor] in H end.
+  all: try discriminate; try (exfalso; lia).
+  all: split; [reflexivity|]; split; [assumption|].
+  all: try rewrite MEM.
+  all: pack_xmm.
+  all: apply copy_8x16; lia.
+Time Qed.

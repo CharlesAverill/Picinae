@@ -2,12 +2,12 @@ INFO  Using log config file: jar:file:/app/lib/ghidra/Ghidra/Framework/Generic/l
 INFO  Using log file: /home/charlesaverill/.var/app/org.ghidra_sre.Ghidra/config/ghidra/ghidra_11.4.2_FLATPAK/application.log (LoggingInitialization)  
 INFO  Loading user preferences: /home/charlesaverill/.var/app/org.ghidra_sre.Ghidra/config/ghidra/ghidra_11.4.2_FLATPAK/preferences (Preferences)  
 INFO  Searching for classes... (ClassSearcher)  
-INFO  Class search complete (1093 ms) (ClassSearcher)  
+INFO  Class search complete (1120 ms) (ClassSearcher)  
 INFO  Initializing SSL Context (SSLContextInitializer)  
 INFO  Initializing Random Number Generator... (SecureRandomFactory)  
 INFO  Random Number Generator initialization complete: NativePRNGNonBlocking (SecureRandomFactory)  
 INFO  Trust manager disabled, cacerts have not been set (ApplicationTrustManagerFactory)  
-INFO  Headless startup complete (2579 ms) (AnalyzeHeadless)  
+INFO  Headless startup complete (2695 ms) (AnalyzeHeadless)  
 INFO  Class searcher loaded 58 extension points (18 false positives) (ClassSearcher)  
 INFO  HEADLESS Script Paths:
     /app/lib/ghidra/Ghidra/Features/Decompiler/ghidra_scripts
@@ -40,7 +40,15 @@ INFO  Opening existing project: /home/charlesaverill/.cache/picinae_lift/proj/li
 INFO  Opening project: /home/charlesaverill/.cache/picinae_lift/proj/libc (HeadlessProject)  
 INFO  REPORT: Processing read-only project file: /libc.so.6 (HeadlessAnalyzer)  
 INFO  SCRIPT: /home/charlesaverill/Desktop/Picinae/Examples/claude/lifter/pcode2coq_headless.py (HeadlessAnalyzer)  
-pcode2coq_headless: wrote /home/charlesaverill/Desktop/Picinae/Examples/claude/lifter/../strdup_amd64.v
+pcode2coq_headless: wrote /home/charlesaverill/Desktop/Picinae/Examples/claude/lifter/../isnanl_amd64.v
+pcode2coq_headless: wrote /home/charlesaverill/Desktop/Picinae/Examples/claude/lifter/../isinfl_amd64.v
+pcode2coq_headless: wrote /home/charlesaverill/Desktop/Picinae/Examples/claude/lifter/../finitel_amd64.v
+pcode2coq_headless: FAILED 0x1410b0+: Unmodeled Regs: R_FPUINSTRUCTIONPOINTER
+pcode2coq_headless: wrote /home/charlesaverill/Desktop/Picinae/Examples/claude/lifter/../cfmakeraw_amd64.v
+pcode2coq_headless: wrote /home/charlesaverill/Desktop/Picinae/Examples/claude/lifter/../cfsetospeed_amd64.v
+pcode2coq_headless: wrote /home/charlesaverill/Desktop/Picinae/Examples/claude/lifter/../cfsetispeed_amd64.v
+libc.so.6 - .ProgramDB
+libc.so.6 - .ProgramDB
 Last used Python executable: ['/home/charlesaverill/.var/app/org.ghidra_sre.Ghidra/config/ghidra/ghidra_11.4.2_FLATPAK/venv/bin/python3']
 Using Python command: "/home/charlesaverill/.var/app/org.ghidra_sre.Ghidra/config/ghidra/ghidra_11.4.2_FLATPAK/venv/bin/python3"
 Switching to Ghidra virtual environment: /home/charlesaverill/.var/app/org.ghidra_sre.Ghidra/config/ghidra/ghidra_11.4.2_FLATPAK/venv

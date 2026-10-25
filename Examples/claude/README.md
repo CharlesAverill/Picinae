@@ -18,10 +18,15 @@ English.
 | `amd64_<fn>_proof.v` | Specification and proof for `<fn>` |
 | `amd64_common.v` | Shared lemmas and tactics (bit-blasting, bounded-loop reasoning, byte scanning, ...) |
 | `amd64_cstring.v` | C-string predicates (`strspn`/`strcspn` as relations) and frame-agreement lemmas |
+| `amd64_ieee.v` | IEEE-754 field decomposition (`exp64`, `man64`, ...), the borrow lemmas `shr_msub64`/`shr_msub32`, and the x87 80-bit lemmas (`exp80`, `isnanl_spec`, `isinfl_spec`) |
+| `amd64_termios.v` | `struct termios` speed checks shared by `cfsetospeed`/`cfsetispeed` (`speed_ok`, the lifted range test) |
+| `amd64_memcpy_sets.v` | `cpy`: the set of destination offsets a copy has written so far; one lemma per 16-byte store (`cpy_store`) and per non-overlapping load (`cpy_load`) |
+| `amd64_memcpy_lemmas.v` | the head/tail store patterns of small memcpy sizes, each proved by a chain of `cpy_store` |
 | `lifter/` | Headless lifting driver (`lift.sh`, `pcode2coq_headless.py`) and p-code dump helpers |
 
-Build with `make` (needs `../..` built first, Rocq ≥ 9). A clean `make -j4`
-takes about 5 minutes.
+Build with `make` (needs `../..` built first, Rocq ≥ 9). Several proofs need
+4–10 GB at `Qed` (`lfind`, `bsearch`, `strspn_sse2`, `strcspn_sse2`, the
+memcpy proofs), so on a 16 GB machine build with `make -j1` or `-j2`.
 
 ## Proved functions
 
@@ -57,12 +62,34 @@ write memory).
 | `__strpbrk_c2` | `strpbrk_c2` | strpbrk with a 2-character set (loop) |
 | `__sigismember` | `sigismember_internal` | bit (sig-1) mod 64 of word (sig-1)/64 |
 | `seed48` → `seed48_r` | `seed48` | **non-leaf**: callee proved first, caller uses it via `perform_call` |
-| `memcpy` (SSE2, `memcpy@GLIBC_2.2.5` entry) | `memcpy` | for n ≤ 64: dest[0,n) = src[0,n), everything else unchanged, even when the buffers overlap |
+| `memcpy` (SSE2, `memcpy@GLIBC_2.2.5` entry) | `memcpy` | for n ≤ 128: dest[0,n) = src[0,n), everything else unchanged, even when the buffers overlap (`memcpy_correct_small`, `memcpy_correct_mid`); the loop paths for n > 128 are in progress |
+| `isnan`, `isnanf` | `isnan`, `isnanf` | RAX = 1 iff the bit pattern is a NaN (exponent all ones, mantissa ≠ 0; `is_nan64`/`is_nan32` in `amd64_ieee.v`) |
+| `isinf`, `isinff` | `isinf`, `isinff` | RAX = 1 for +inf, 0xffffffff (−1) for −inf, else 0 (branch-free sign trick, proved bit by bit) |
+| `finite`, `finitef` | `finite`, `finitef` | RAX = 1 iff the exponent is not all ones; the red-zone spill below RSP is part of the spec |
+| `finitel` | `finitel` | RAX = 1 iff the 15-bit exponent of the x87 long double (at RSP+16) is not all ones |
+| `isnanl` | `isnanl` | RAX = `isnanl_spec`: 0xffff for a NaN or pseudo-NaN, \| 1 for an *unnormal* (exponent ≠ 0, integer bit clear); glibc counts unnormals as NaNs |
+| `isinfl` | `isinfl` | RAX = `isinfl_spec`: 1 / 0xffffffff for ±inf (exponent 0x7fff, significand 0x8000000000000000), else 0; main theorem **Admitted (QED-SLOW)**: tactics take ~10 s, the kernel check > 5 min (power-of-two literal 2^31) |
+| `cfmakeraw` | `cfmakeraw` | the man page's flag masks on c_iflag/c_oflag/c_cflag/c_lflag, plus c_cc[VTIME] = 0, c_cc[VMIN] = 1; the single 16-byte store is split into four dword stores (`setmem16_split`) |
+| `cfsetospeed`, `cfsetispeed` | `cfsetospeed`, `cfsetispeed` | valid speed (`speed_ok`: inside CBAUD, or B57600..B4000000) → c_[io]speed := speed, CBAUD bits of c_cflag := speed (cfsetispeed: speed 0 sets glibc's private IBAUD0 bit instead); else EINVAL.  The binary also accepts 0x1000 (BOTHER) |
+| `copysign`, `copysignf` | `copysign`, `copysignf` | low 64 (32) bits of YMM0 = magnitude bits of x, sign bit of y; the `.rodata` masks are a precondition |
+| `inet_makeaddr` | `inet_makeaddr` | RAX = byte-swapped classful net/host combination (`makeaddr`), the converse of `inet_netof`/`inet_lnaof` |
+| `sigfillset` | `sigfillset` | first word := 0xfffffffe7fffffff: every signal 1..64 **except 32 and 33** (`sigfillset_members`); NULL → EINVAL |
+| `sigaddset`, `sigdelset` | `sigaddset`, `sigdelset` | `N.setbit`/`N.clearbit` of bit n−1; EINVAL for n ∉ 1..64, NULL set, **and n = 32 or 33** (reserved by NPTL; not in the man page) |
+| `sigismember` | `sigismember` | RAX = bit n−1 of the first word; EINVAL for n ∉ 1..64 or NULL (32 and 33 are accepted) |
+| `sigandset`, `sigorset` | `sigandset`, `sigorset` | first word of dest := AND / OR of the operands' first words; any NULL → EINVAL |
+| `a64l` | `a64l` | RAX = value of the leading ≤ 6 base-64 digits mod 2^32; **does not meet its spec**, see below |
+| `__strspn_sse2` (`strspn` without SSE4.2) | `strspn_sse2` | RAX = strspn(s, accept) (`spn`); memory unchanged outside the 256-byte table below RSP (three loops: REP STOSQ, table fill, scan) |
+| `__strcspn_sse2` (`strcspn` without SSE4.2) | `strcspn_sse2` | RAX = strcspn(s, reject) (`cspn`); same frame |
 | `bsearch` | `bsearch` | **non-leaf, function-pointer callee**: under a comparator contract and a sorted (partitioned) array, returns a matching element or NULL only if none matches |
 | `lfind` | `lfind` | **non-leaf, function-pointer callee**: returns the *first* matching element, or NULL only if none matches |
 | `strsep` | `strsep` | **non-leaf, PLT callee** (`strcspn`): returns the token; NUL-terminates it and advances `*stringp`, or sets it to NULL |
 | `strtok_r` | `strtok_r` | **non-leaf, two PLT callees** (`strspn`, `strcspn`): skips delimiters, returns the next token or NULL, and updates `*saveptr` exactly |
 | `strdup` | `strdup` | **non-leaf, three PLT callees** (`strlen`, `malloc`, tail-call `memcpy`): NULL if malloc fails, else jumps to `memcpy(d, s, strlen(s)+1)` with `d` a fresh heap block; memory outside the heap is unchanged |
+| `strndup` | `strndup` | **non-leaf** (`strnlen`, `malloc`, tail-call `memcpy`): NULL if malloc fails; else stores the NUL at d[n] and jumps to `memcpy(d, s, n)` with n = strnlen(s, maxlen) and [d, d+n+1) in the heap |
+| `memccpy` | `memccpy` | **non-leaf** (`memchr`, then tail-call `mempcpy` or call `memcpy`): if c occurs first at offset k < n, jumps to `mempcpy(dest, src, k+1)`; otherwise copies n bytes via memcpy and returns NULL |
+| `sigabbrev_np`, `sigdescr_np` | `sigabbrev_np`, `sigdescr_np` | RAX = table[sig] (8-byte load) for 0 ≤ sig ≤ 64, else NULL |
+| `srand48_r` | `srand48_r` | the four stores into `drand48_data`; afterwards Xi = seed·2^16 + 0x330E, a = 0x5DEECE66D, c = 0xB, init = 1 (`srand48_r_fields`) |
+| `lcong48_r` | `lcong48_r` | Xi := param[0..2], a := param[3] + param[4]·2^16 + param[5]·2^32, c := param[6], init := 1, assuming param and the buffer don't overlap |
 | `rand_r` | `rand_r` | equals glibc's C reference (`rand_r_ref`) and stays ≤ RAND_MAX; main theorem **Admitted (QED-SLOW)**: tactics take ~10 s, the kernel check takes > 10 min |
 
 `bsearch` and `lfind` call their comparator through a function pointer, and
@@ -114,6 +141,22 @@ set contains no signals"). `amd64_sigisemptyset_proof.v` proves:
 The behavior was confirmed by running the system libc. A C program that calls
 `sigaddset(&s, SIGRTMIN)` on an empty set then gets `sigisemptyset(&s) == 1`.
 
+## Finding: `a64l` does not sign-extend
+
+The man page says that when `long` is wider than 32 bits, "a64l()
+sign-extends its 32-bit result".  glibc 2.35 builds the result in a 32-bit
+register and returns it with `mov rax, r8`, so bits 32–63 are always zero.
+`amd64_a64l_proof.v` proves:
+
+* `a64l_correct`: RAX = (Σ val(s[i])·64^i over the leading digits) mod 2^32;
+* `a64l_zero_extends`: the result is always < 2^32;
+* `a64l_no_sign_extension`: for `".....0"` the result is 2^31, not the
+  sign-extended −2^31.
+
+Running the system libc agrees: `a64l(".....0")` returns 2147483648.  The
+proof also checks, byte by byte, that glibc's 77-entry digit table matches the
+man page's alphabet.
+
 ## Lifting pipeline
 
 1. `~/.cache/picinae_lift/proj` holds a Ghidra 11.4.2 project with libc
@@ -156,6 +199,11 @@ The behavior was confirmed by running the system libc. A C program that calls
 * For a zero source, Ghidra's BSF writes 0 to the destination, whereas the
   hardware leaves it undefined. glibc's `ffs`/`ffsl` overwrite the
   destination with CMOVZ in that case, so their results don't depend on this.
+* `copysignl` cannot be lifted: it uses x87 instructions (`FLD`/`FSTP` on
+  `long double`), and pcode2coq rejects their p-code ("Unmodeled Regs:
+  R_FPUINSTRUCTIONPOINTER").  `finitel`, `isnanl` and `isinfl` lift because
+  glibc implements them with integer instructions on the stack copy of the
+  argument.
 
 ## Proof-engineering notes
 
@@ -168,13 +216,37 @@ The behavior was confirmed by running the system libc. A C program that calls
 * Functions containing `CALL` must be lifted with global addresses (`fn+=name`):
   pcode2coq's relative mode rebases jump targets but not the return address
   that `CALL` pushes.  `lift.sh` refuses such functions in relative mode.
-* Proofs that need a large OCaml stack (`amd64_memcpy_lemmas.v`) are built with
-  `ulimit -s unlimited` (see the Makefile).
+* Byte-by-byte case analysis does not scale to copies.  The first
+  `amd64_memcpy_lemmas.v` peeled each byte read through each store; it took
+  15 minutes and 9.6 GB.  Tracking the set of written offsets
+  (`amd64_memcpy_sets.v`) proves the same lemmas in 3 seconds.
+* When a loop body reads memory it has just written (the strspn table fill,
+  four stores per iteration), symbolic execution nests every read inside every
+  earlier store and slows to a crawl (65 s for one iteration).  A cut point
+  before each unrolled byte keeps one store per segment (12 s).
+* `x64_step` cannot split an `If` nested inside a `Seq` (the lifted
+  `REP STOSQ`).  Step it by hand: `ISA_step_and_simplify`, `destruct` the
+  condition, then repeat `ISA_step_and_simplify`.
+* A cut placed exactly on a `CALL` instruction gives a trace without the
+  `++` shape that `models_after_steps` expects; put the cut one instruction
+  earlier.
 * `lia` looks at every arithmetic hypothesis in context, and after a call
   the context is large.  A side condition that took 0.1 s in a small context
   took 139 s (or overflowed the stack) after a `perform_call`.  Run `clear`
   (or `clear - H1 H2`) before `lia` in such side conditions; see `slot_nov` in
   `amd64_strtok_r_proof.v`.
+* The same holds inside one big symbolic-execution goal: after five
+  `cpy_store`s the memcpy loop exit had ~20 side goals like `k + 16 <= n`,
+  and `lia` timed out on each (400 s in total) because the context still held
+  the symbolic memory.  Clearing hypotheses by a blacklist missed some;
+  `clear - K EX BIG NW NB A0` (a whitelist of the arithmetic facts) made all
+  of them take 0.3 s together.  Likewise, `lia` runs out of memory when a
+  hypothesis mentions a memory read at a literal address (`n <= m Ⓠ[0x3215a8]`);
+  clear it first.
+* Avoid `all: first [...]` / `all: try ...` over many goals: a failing
+  alternative is retried on every goal, and real failures are hidden.  Use
+  explicit bullets and a side tactic that dispatches on the goal's shape
+  (`lazymatch goal with |- nov _ _ _ => ... | |- _ + 16 <= _ => ...`).
 * Use `sreflexivity` (syntactic `reflexivity`) when the two sides might
   differ syntactically. Plain `reflexivity` on bit expressions over opaque
   values can start an exponential conversion check.

@@ -38,6 +38,18 @@ From Stdlib Require Import List.
 From Stdlib Require Import Structures.Equalities.
 Open Scope N.
 
+(* Tell the kernel to unfold binary comparisons last during conversion.
+   Pos.compare_cont recurses on its second argument, so when a proof term
+   has (if x <? C then ...) with x symbolic and C a literal (e.g., the carry
+   flag of a SUB/CMP against a constant), unfolding it early expands a tree
+   whose size is proportional to C's magnitude.  Symbolic interpretation and
+   psimpl leave such conversions for the kernel to check at Qed, which then
+   hangs or runs out of memory even though every tactic was fast.  Deferring
+   these constants lets the kernel match the two N.ltb terms and compare
+   their arguments instead.  This only changes the kernel's unfolding order,
+   so it cannot make an ill-typed proof check. *)
+Strategy 1000 [N.ltb N.leb N.compare Pos.compare Pos.compare_cont].
+
 
 (* Bitwidths, addresses, and the entire memory state are each expressed as
    Coq unsigned binary numbers. *)
