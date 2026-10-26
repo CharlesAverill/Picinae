@@ -75,70 +75,70 @@ theorems for well-typedness, non-writable code, and preservation of the
 callee-saved registers (plus memory preservation for functions that don't
 write memory).
 
-| Function(s) covered | Proof file | Main property |
-|---|---|---|
-| `toascii` | `toascii` | RAX = c & 0x7f |
-| `isascii` | `isascii` | RAX = 1 iff 0 ≤ c ≤ 127 (signed) |
-| `htonl`, `ntohl` | `htonl` | RAX = bswap32; storing it little-endian gives the big-endian encoding |
-| `htons`, `ntohs` | `htons` | AX = bswap16, plus the exact full-register effect |
-| `abs` | `abs` | RAX = \|j\| mod 2^32; exact \|j\| for j ≠ INT_MIN |
-| `labs`, `llabs`, `imaxabs` | `labs` | 64-bit version of the above |
-| `div` | `div` | quot/rem in EAX/upper half, rounded toward zero, quot·d + rem = n |
-| `ldiv`, `lldiv`, `imaxdiv` | `ldiv` | quot in RAX, rem in RDX |
-| `ffs` | `ffs` | 1-based index of lowest set bit (BSF loop) |
-| `ffsl`, `ffsll` | `ffsl` | 64-bit version |
-| `insque`, `remque` | `insque`, `remque` | exact final memory, plus link-level corollaries under non-aliasing |
-| `swab` | `swab` | pairwise byte swap of `n & ~1` bytes, frame elsewhere (loop) |
-| `pthread_equal` | `pthread_equal` | 1 iff equal |
-| `mbsinit` | `mbsinit` | 1 iff NULL or `__count == 0` |
-| `gnu_dev_major/minor/makedev` | `gnu_dev_*` | glibc dev_t encoding; major/minor invert makedev; makedev injective |
-| `inet_netof`, `inet_lnaof` | `inet_netof`, `inet_lnaof` | classful split; the network and host parts recombine to the address |
-| `cfgetospeed`, `cfgetispeed` | `cfgetospeed`, `cfgetispeed` | `c_cflag & (CBAUD\|CBAUDEX)`, with glibc's IBAUD0 case |
-| `sigemptyset` | `sigemptyset` | clears signals 1..64; NULL → errno = EINVAL |
-| `sigisemptyset` | `sigisemptyset` | **does not meet its spec**; see below |
-| `wcschrnul` | `wcschrnul` | first wc or the terminator (loop) |
-| `__strspn_c1`, `__strspn_c2` | `strspn_c1`, `strspn_c2` | strspn with a 1- or 2-character accept set (loops) |
-| `__strcspn_c1`, `__strcspn_c2` | `strcspn_c1`, `strcspn_c2` | strcspn with a 1- or 2-character reject set (loops) |
-| `__strpbrk_c2` | `strpbrk_c2` | strpbrk with a 2-character set (loop) |
-| `__sigismember` | `sigismember_internal` | bit (sig-1) mod 64 of word (sig-1)/64 |
-| `seed48` → `seed48_r` | `seed48` | **non-leaf**: callee proved first, caller uses it via `perform_call` |
-| `memcpy` (SSE2, `memcpy@GLIBC_2.2.5` entry) | `memcpy` | for n ≤ 128: dest[0,n) = src[0,n), everything else unchanged, even when the buffers overlap (`memcpy_correct_small`, `memcpy_correct_mid`); for 128 < n ≤ the non-temporal threshold, the same for non-overlapping buffers with d ≥ 64 (`memcpy_correct_loops` in `amd64_memcpy_loops_proof.v`: forward and 4 KiB-aliasing backward 64-byte loops; Qed 125 s).  The non-temporal path above the threshold is not covered |
-| `__memmove_avx_unaligned_erms` (what `memmove` and `memcpy` resolve to on AVX2 machines) | `memmove_avx` | for n ≤ 256: dest[0,n) = src[0,n), everything else unchanged, **even when the buffers overlap** (memmove semantics; `memmove_avx_correct_small`; Qed 70 s). Precondition n ≤ `__x86_rep_movsb_threshold`, which glibc never sets below 256 for AVX.  For 256 < n ≤ both thresholds, the same for non-overlapping buffers with d ≥ 128 (`memmove_avx_correct_loops` in `amd64_memmove_avx_loops_proof.v`: the forward 128-byte loop and the 4 KiB-aliasing backward loop; Qed 148 s).  Above `__x86_rep_movsb_threshold` and below `__x86_rep_movsb_stop_threshold`, the same (`memmove_avx_correct_rep` in `amd64_memmove_avx_rep_proof.v`: REP MOVSB with the source or the destination aligned to 64 bytes, and the short-distance fallback to the forward loop; needs DF = 0; Qed 145 s).  At or above the stop threshold the non-temporal path (`amd64_memmove_avx_nt_proof.v`) is proven by factoring every per-address obligation into a standalone lemma whose conclusion is a `nextinv` (`nt_seg_1117` … `nt_seg_1706`), so each has its own bounded Qed and the theorem just applies them.  The two-page interleaved 8-vector store loop uses `nt_adv2` (post-store memory abstraction); the two-page tail (`nt_seg_1117`/`1125`/`1210`) and four-page tail (`nt_seg_1613`/`1621`/`1706`) are proven, the key being cut points 1210/1706 at the final overlapping-copy entries so the tail loops stop there instead of stepping the final copy into their branch tests (which peaked at ~9 GB); the 128-byte tail-loop body advances by `cpy_store4w`, the final copy by `cpy_store4w` + `cpy_copied` via the `fcaddr` address lemma.  The four-page inner loop (`nt_seg_1285`) advances `done4` by `cpy_store16` (16 stores), mirroring the two-page inner loop's `cpy_store8`.  Build this file with `ulimit -v 13000000`.  Not yet covered: overlapping buffers above 256 bytes |
-| `__strlen_avx2` (what `strlen` resolves to on AVX2 machines) | `strlen_avx2` | RAX = strlen(s) (`slen`), for every path: the first unaligned 32-byte block, the page-cross block (VPCMPEQB on the aligned block, SARX by s mod 32), four aligned blocks, and the 128-byte loop (VPMINUB of four vectors; exit located with two 32-bit masks and a 64-bit TZCNT).  Memory unchanged.  The SIMD instructions are stepped with the lemmas of `amd64_avx2.v`; Qed 56 s |
-| `__strchr_avx2` (what `strchr` resolves to on AVX2 machines) | `strchr_avx2` | with K the first index whose byte is c or NUL (`fhit`; `fhit_of_slen` shows every terminated string has one): RAX = s + K if that byte is c, else NULL; so c = 0 returns the terminator.  Every path: the first block (VPCMPEQB against the broadcast c and against zero, VPOR), the page-cross block (SARX), four aligned blocks, and the 128-byte loop (a hit is a zero byte of VPMINUB(x, x XOR c)).  Memory unchanged |
-| `__strcmp_avx2` (what `strcmp` resolves to on AVX2 machines) | `strcmp_avx2` | short-string case: with K the first index where the strings differ or `p` terminates (`scmp`), and K < 32 with both pointers ≥128 bytes from a page end, EAX = `(m[p+K] - m[q+K]) mod 2^32`.  The stop mask comes from VPCMPEQB(p,q); VPMINUB(_,p); VPCMPEQB(_,0).  The four-block path, the 128-byte loop and the page-straddle path are refuted by the preconditions; proving them for K ≥ 32 is future work |
-| `isnan`, `isnanf` | `isnan`, `isnanf` | RAX = 1 iff the bit pattern is a NaN (exponent all ones, mantissa ≠ 0; `is_nan64`/`is_nan32` in `amd64_ieee.v`) |
-| `isinf`, `isinff` | `isinf`, `isinff` | RAX = 1 for +inf, 0xffffffff (−1) for −inf, else 0 (branch-free sign trick, proved bit by bit) |
-| `finite`, `finitef` | `finite`, `finitef` | RAX = 1 iff the exponent is not all ones; the red-zone spill below RSP is part of the spec |
-| `finitel` | `finitel` | RAX = 1 iff the 15-bit exponent of the x87 long double (at RSP+16) is not all ones |
-| `isnanl` | `isnanl` | RAX = `isnanl_spec`: 0xffff for a NaN or pseudo-NaN, \| 1 for an *unnormal* (exponent ≠ 0, integer bit clear); glibc counts unnormals as NaNs |
-| `isinfl` | `isinfl` | RAX = `isinfl_spec`: 1 / 0xffffffff for ±inf (exponent 0x7fff, significand 0x8000000000000000), else 0; main theorem **Admitted (QED-SLOW)**: tactics take ~10 s, the kernel check > 5 min (power-of-two literal 2^31) |
-| `cfmakeraw` | `cfmakeraw` | the man page's flag masks on c_iflag/c_oflag/c_cflag/c_lflag, plus c_cc[VTIME] = 0, c_cc[VMIN] = 1; the single 16-byte store is split into four dword stores (`setmem16_split`) |
-| `cfsetospeed`, `cfsetispeed` | `cfsetospeed`, `cfsetispeed` | valid speed (`speed_ok`: inside CBAUD, or B57600..B4000000) → c_[io]speed := speed, CBAUD bits of c_cflag := speed (cfsetispeed: speed 0 sets glibc's private IBAUD0 bit instead); else EINVAL.  The binary also accepts 0x1000 (BOTHER) |
-| `copysign`, `copysignf` | `copysign`, `copysignf` | low 64 (32) bits of YMM0 = magnitude bits of x, sign bit of y; the `.rodata` masks are a precondition |
-| `inet_makeaddr` | `inet_makeaddr` | RAX = byte-swapped classful net/host combination (`makeaddr`), the converse of `inet_netof`/`inet_lnaof` |
-| `sigfillset` | `sigfillset` | first word := 0xfffffffe7fffffff: every signal 1..64 **except 32 and 33** (`sigfillset_members`); NULL → EINVAL |
-| `sigaddset`, `sigdelset` | `sigaddset`, `sigdelset` | `N.setbit`/`N.clearbit` of bit n−1; EINVAL for n ∉ 1..64, NULL set, **and n = 32 or 33** (reserved by NPTL; not in the man page) |
-| `sigismember` | `sigismember` | RAX = bit n−1 of the first word; EINVAL for n ∉ 1..64 or NULL (32 and 33 are accepted) |
-| `sigandset`, `sigorset` | `sigandset`, `sigorset` | first word of dest := AND / OR of the operands' first words; any NULL → EINVAL |
-| `a64l` | `a64l` | RAX = value of the leading ≤ 6 base-64 digits mod 2^32; **does not meet its spec**, see below |
-| `__strspn_sse2` (`strspn` without SSE4.2) | `strspn_sse2` | RAX = strspn(s, accept) (`spn`); memory unchanged outside the 256-byte table below RSP (three loops: REP STOSQ, table fill, scan) |
-| `__strcspn_sse2` (`strcspn` without SSE4.2) | `strcspn_sse2` | RAX = strcspn(s, reject) (`cspn`); same frame |
-| `bsearch` | `bsearch` | **non-leaf, function-pointer callee**: under a comparator contract and a sorted (partitioned) array, returns a matching element or NULL only if none matches |
-| `lfind` | `lfind` | **non-leaf, function-pointer callee**: returns the *first* matching element, or NULL only if none matches |
-| `lsearch` | `lsearch` | **non-leaf, two callees** (comparator through R14, memcpy through the PLT): the first match, or else key appended at base + N·size, *nmemb := N + 1, return the new element.  glibc treats a match at address 0 as "not found"; the precondition NZ excludes that |
-| `pthread_mutex_lock` | `pthread_mutex_lock` | **non-leaf** (`__lll_lock_wait` at three call sites, contract satisfiable): every kind: normal / error-check-not-owner (lock := 1 or 2, owner := TID, ++nusers), recursive (++count, EAGAIN at 2^32-1, or first lock with count := 1), adaptive (bounded spin, `__spins` updated), error-check owned (EDEADLK); robust/PI/PP and elision tail-call out; `__assert_fail` otherwise.  Needs `__pthread_force_elision = 0` (the default) and the mutex/TID/global outside the 32-byte frame.  Main theorem **Admitted (QED-SLOW)**: tactics take ~3 min, the kernel check > 30 min.  #1 libc function in the Firefox profile |
-| `pthread_mutex_unlock` | `pthread_mutex_unlock` | **non-leaf** (futex wake through `__lll_lock_wake`): every mutex kind: normal/adaptive release (--nusers, owner := 0, lock := 0, return 0); recursive (EPERM unless owner = TID, else --count, release at 0); error-check (EPERM unless owner = TID and locked); robust/PI/PP and elision kinds tail-call out; other kinds hit `__assert_fail`.  Chosen first because it is the #3 libc function in a Firefox profile (`lifter/firefox_libc_profile.txt`) |
-| `__memset_avx2_unaligned_erms` | `memset_avx2` | every size class: n < 32 (overlapping 1-16-byte stores), 32..256 (2, 4 or 8 YMM stores), the 128-byte aligned loop, and REP STOSB above `__x86_rep_stosb_threshold`: dest[0,n) = c, all other bytes unchanged, RAX = d.  Main theorem **Admitted (QED-SLOW)**: tactics take about a minute, the kernel check > 30 min (power-of-two literals in the size tests).  The memset IFUNC chooses on AVX2 machines |
-| `strsep` | `strsep` | **non-leaf, PLT callee** (`strcspn`): returns the token; NUL-terminates it and advances `*stringp`, or sets it to NULL |
-| `strtok_r` | `strtok_r` | **non-leaf, two PLT callees** (`strspn`, `strcspn`): skips delimiters, returns the next token or NULL, and updates `*saveptr` exactly |
-| `strdup` | `strdup` | **non-leaf, three PLT callees** (`strlen`, `malloc`, tail-call `memcpy`): NULL if malloc fails, else jumps to `memcpy(d, s, strlen(s)+1)` with `d` a fresh heap block; memory outside the heap is unchanged |
-| `strndup` | `strndup` | **non-leaf** (`strnlen`, `malloc`, tail-call `memcpy`): NULL if malloc fails; else stores the NUL at d[n] and jumps to `memcpy(d, s, n)` with n = strnlen(s, maxlen) and [d, d+n+1) in the heap |
-| `memccpy` | `memccpy` | **non-leaf** (`memchr`, then tail-call `mempcpy` or call `memcpy`): if c occurs first at offset k < n, jumps to `mempcpy(dest, src, k+1)`; otherwise copies n bytes via memcpy and returns NULL |
-| `sigabbrev_np`, `sigdescr_np` | `sigabbrev_np`, `sigdescr_np` | RAX = table[sig] (8-byte load) for 0 ≤ sig ≤ 64, else NULL |
-| `srand48_r` | `srand48_r` | the four stores into `drand48_data`; afterwards Xi = seed·2^16 + 0x330E, a = 0x5DEECE66D, c = 0xB, init = 1 (`srand48_r_fields`) |
-| `lcong48_r` | `lcong48_r` | Xi := param[0..2], a := param[3] + param[4]·2^16 + param[5]·2^32, c := param[6], init := 1, assuming param and the buffer don't overlap |
-| `rand_r` | `rand_r` | equals glibc's C reference (`rand_r_ref`) and stays ≤ RAND_MAX; main theorem **Admitted (QED-SLOW)**: tactics take ~10 s, the kernel check takes > 10 min |
+| Function(s) covered | Proof file | Main property | Human-Approved Theorem Statement |
+|---|---|---|---|
+| `toascii` | `toascii` | RAX = c & 0x7f | |
+| `isascii` | `isascii` | RAX = 1 iff 0 ≤ c ≤ 127 (signed) | |
+| `htonl`, `ntohl` | `htonl` | RAX = bswap32; storing it little-endian gives the big-endian encoding | |
+| `htons`, `ntohs` | `htons` | AX = bswap16, plus the exact full-register effect | |
+| `abs` | `abs` | RAX = \|j\| mod 2^32; exact \|j\| for j ≠ INT_MIN | |
+| `labs`, `llabs`, `imaxabs` | `labs` | 64-bit version of the above | |
+| `div` | `div` | quot/rem in EAX/upper half, rounded toward zero, quot·d + rem = n | |
+| `ldiv`, `lldiv`, `imaxdiv` | `ldiv` | quot in RAX, rem in RDX | |
+| `ffs` | `ffs` | 1-based index of lowest set bit (BSF loop) | |
+| `ffsl`, `ffsll` | `ffsl` | 64-bit version | |
+| `insque`, `remque` | `insque`, `remque` | exact final memory, plus link-level corollaries under non-aliasing | |
+| `swab` | `swab` | pairwise byte swap of `n & ~1` bytes, frame elsewhere (loop) | |
+| `pthread_equal` | `pthread_equal` | 1 iff equal | |
+| `mbsinit` | `mbsinit` | 1 iff NULL or `__count == 0` | |
+| `gnu_dev_major/minor/makedev` | `gnu_dev_*` | glibc dev_t encoding; major/minor invert makedev; makedev injective | |
+| `inet_netof`, `inet_lnaof` | `inet_netof`, `inet_lnaof` | classful split; the network and host parts recombine to the address | |
+| `cfgetospeed`, `cfgetispeed` | `cfgetospeed`, `cfgetispeed` | `c_cflag & (CBAUD\|CBAUDEX)`, with glibc's IBAUD0 case | |
+| `sigemptyset` | `sigemptyset` | clears signals 1..64; NULL → errno = EINVAL | |
+| `sigisemptyset` | `sigisemptyset` | **does not meet its spec**; see below | |
+| `wcschrnul` | `wcschrnul` | first wc or the terminator (loop) | |
+| `__strspn_c1`, `__strspn_c2` | `strspn_c1`, `strspn_c2` | strspn with a 1- or 2-character accept set (loops) | |
+| `__strcspn_c1`, `__strcspn_c2` | `strcspn_c1`, `strcspn_c2` | strcspn with a 1- or 2-character reject set (loops) | |
+| `__strpbrk_c2` | `strpbrk_c2` | strpbrk with a 2-character set (loop) | |
+| `__sigismember` | `sigismember_internal` | bit (sig-1) mod 64 of word (sig-1)/64 | |
+| `seed48` → `seed48_r` | `seed48` | **non-leaf**: callee proved first, caller uses it via `perform_call` | |
+| `memcpy` (SSE2, `memcpy@GLIBC_2.2.5` entry) | `memcpy` | for n ≤ 128: dest[0,n) = src[0,n), everything else unchanged, even when the buffers overlap (`memcpy_correct_small`, `memcpy_correct_mid`); for 128 < n ≤ the non-temporal threshold, the same for non-overlapping buffers with d ≥ 64 (`memcpy_correct_loops` in `amd64_memcpy_loops_proof.v`: forward and 4 KiB-aliasing backward 64-byte loops; Qed 125 s).  The non-temporal path above the threshold is not covered | |
+| `__memmove_avx_unaligned_erms` (what `memmove` and `memcpy` resolve to on AVX2 machines) | `memmove_avx` | for n ≤ 256: dest[0,n) = src[0,n), everything else unchanged, **even when the buffers overlap** (memmove semantics; `memmove_avx_correct_small`; Qed 70 s). Precondition n ≤ `__x86_rep_movsb_threshold`, which glibc never sets below 256 for AVX.  For 256 < n ≤ both thresholds, the same for non-overlapping buffers with d ≥ 128 (`memmove_avx_correct_loops` in `amd64_memmove_avx_loops_proof.v`: the forward 128-byte loop and the 4 KiB-aliasing backward loop; Qed 148 s).  Above `__x86_rep_movsb_threshold` and below `__x86_rep_movsb_stop_threshold`, the same (`memmove_avx_correct_rep` in `amd64_memmove_avx_rep_proof.v`: REP MOVSB with the source or the destination aligned to 64 bytes, and the short-distance fallback to the forward loop; needs DF = 0; Qed 145 s).  At or above the stop threshold the non-temporal path (`amd64_memmove_avx_nt_proof.v`) is proven by factoring every per-address obligation into a standalone lemma whose conclusion is a `nextinv` (`nt_seg_1117` … `nt_seg_1706`), so each has its own bounded Qed and the theorem just applies them.  The two-page interleaved 8-vector store loop uses `nt_adv2` (post-store memory abstraction); the two-page tail (`nt_seg_1117`/`1125`/`1210`) and four-page tail (`nt_seg_1613`/`1621`/`1706`) are proven, the key being cut points 1210/1706 at the final overlapping-copy entries so the tail loops stop there instead of stepping the final copy into their branch tests (which peaked at ~9 GB); the 128-byte tail-loop body advances by `cpy_store4w`, the final copy by `cpy_store4w` + `cpy_copied` via the `fcaddr` address lemma.  The four-page inner loop (`nt_seg_1285`) advances `done4` by `cpy_store16` (16 stores), mirroring the two-page inner loop's `cpy_store8`.  Build this file with `ulimit -v 13000000`.  Not yet covered: overlapping buffers above 256 bytes | |
+| `__strlen_avx2` (what `strlen` resolves to on AVX2 machines) | `strlen_avx2` | RAX = strlen(s) (`slen`), for every path: the first unaligned 32-byte block, the page-cross block (VPCMPEQB on the aligned block, SARX by s mod 32), four aligned blocks, and the 128-byte loop (VPMINUB of four vectors; exit located with two 32-bit masks and a 64-bit TZCNT).  Memory unchanged.  The SIMD instructions are stepped with the lemmas of `amd64_avx2.v`; Qed 56 s | |
+| `__strchr_avx2` (what `strchr` resolves to on AVX2 machines) | `strchr_avx2` | with K the first index whose byte is c or NUL (`fhit`; `fhit_of_slen` shows every terminated string has one): RAX = s + K if that byte is c, else NULL; so c = 0 returns the terminator.  Every path: the first block (VPCMPEQB against the broadcast c and against zero, VPOR), the page-cross block (SARX), four aligned blocks, and the 128-byte loop (a hit is a zero byte of VPMINUB(x, x XOR c)).  Memory unchanged | |
+| `__strcmp_avx2` (what `strcmp` resolves to on AVX2 machines) | `strcmp_avx2` | short-string case: with K the first index where the strings differ or `p` terminates (`scmp`), and K < 32 with both pointers ≥128 bytes from a page end, EAX = `(m[p+K] - m[q+K]) mod 2^32`.  The stop mask comes from VPCMPEQB(p,q); VPMINUB(_,p); VPCMPEQB(_,0).  The four-block path, the 128-byte loop and the page-straddle path are refuted by the preconditions; proving them for K ≥ 32 is future work | |
+| `isnan`, `isnanf` | `isnan`, `isnanf` | RAX = 1 iff the bit pattern is a NaN (exponent all ones, mantissa ≠ 0; `is_nan64`/`is_nan32` in `amd64_ieee.v`) | |
+| `isinf`, `isinff` | `isinf`, `isinff` | RAX = 1 for +inf, 0xffffffff (−1) for −inf, else 0 (branch-free sign trick, proved bit by bit) | |
+| `finite`, `finitef` | `finite`, `finitef` | RAX = 1 iff the exponent is not all ones; the red-zone spill below RSP is part of the spec | |
+| `finitel` | `finitel` | RAX = 1 iff the 15-bit exponent of the x87 long double (at RSP+16) is not all ones | |
+| `isnanl` | `isnanl` | RAX = `isnanl_spec`: 0xffff for a NaN or pseudo-NaN, \| 1 for an *unnormal* (exponent ≠ 0, integer bit clear); glibc counts unnormals as NaNs | |
+| `isinfl` | `isinfl` | RAX = `isinfl_spec`: 1 / 0xffffffff for ±inf (exponent 0x7fff, significand 0x8000000000000000), else 0; main theorem **Admitted (QED-SLOW)**: tactics take ~10 s, the kernel check > 5 min (power-of-two literal 2^31) | |
+| `cfmakeraw` | `cfmakeraw` | the man page's flag masks on c_iflag/c_oflag/c_cflag/c_lflag, plus c_cc[VTIME] = 0, c_cc[VMIN] = 1; the single 16-byte store is split into four dword stores (`setmem16_split`) | |
+| `cfsetospeed`, `cfsetispeed` | `cfsetospeed`, `cfsetispeed` | valid speed (`speed_ok`: inside CBAUD, or B57600..B4000000) → c_[io]speed := speed, CBAUD bits of c_cflag := speed (cfsetispeed: speed 0 sets glibc's private IBAUD0 bit instead); else EINVAL.  The binary also accepts 0x1000 (BOTHER) | |
+| `copysign`, `copysignf` | `copysign`, `copysignf` | low 64 (32) bits of YMM0 = magnitude bits of x, sign bit of y; the `.rodata` masks are a precondition | |
+| `inet_makeaddr` | `inet_makeaddr` | RAX = byte-swapped classful net/host combination (`makeaddr`), the converse of `inet_netof`/`inet_lnaof` | |
+| `sigfillset` | `sigfillset` | first word := 0xfffffffe7fffffff: every signal 1..64 **except 32 and 33** (`sigfillset_members`); NULL → EINVAL | |
+| `sigaddset`, `sigdelset` | `sigaddset`, `sigdelset` | `N.setbit`/`N.clearbit` of bit n−1; EINVAL for n ∉ 1..64, NULL set, **and n = 32 or 33** (reserved by NPTL; not in the man page) | |
+| `sigismember` | `sigismember` | RAX = bit n−1 of the first word; EINVAL for n ∉ 1..64 or NULL (32 and 33 are accepted) | |
+| `sigandset`, `sigorset` | `sigandset`, `sigorset` | first word of dest := AND / OR of the operands' first words; any NULL → EINVAL | |
+| `a64l` | `a64l` | RAX = value of the leading ≤ 6 base-64 digits mod 2^32; **does not meet its spec**, see below | |
+| `__strspn_sse2` (`strspn` without SSE4.2) | `strspn_sse2` | RAX = strspn(s, accept) (`spn`); memory unchanged outside the 256-byte table below RSP (three loops: REP STOSQ, table fill, scan) | |
+| `__strcspn_sse2` (`strcspn` without SSE4.2) | `strcspn_sse2` | RAX = strcspn(s, reject) (`cspn`); same frame | |
+| `bsearch` | `bsearch` | **non-leaf, function-pointer callee**: under a comparator contract and a sorted (partitioned) array, returns a matching element or NULL only if none matches | |
+| `lfind` | `lfind` | **non-leaf, function-pointer callee**: returns the *first* matching element, or NULL only if none matches | |
+| `lsearch` | `lsearch` | **non-leaf, two callees** (comparator through R14, memcpy through the PLT): the first match, or else key appended at base + N·size, *nmemb := N + 1, return the new element.  glibc treats a match at address 0 as "not found"; the precondition NZ excludes that | |
+| `pthread_mutex_lock` | `pthread_mutex_lock` | **non-leaf** (`__lll_lock_wait` at three call sites, contract satisfiable): every kind: normal / error-check-not-owner (lock := 1 or 2, owner := TID, ++nusers), recursive (++count, EAGAIN at 2^32-1, or first lock with count := 1), adaptive (bounded spin, `__spins` updated), error-check owned (EDEADLK); robust/PI/PP and elision tail-call out; `__assert_fail` otherwise.  Needs `__pthread_force_elision = 0` (the default) and the mutex/TID/global outside the 32-byte frame.  Main theorem **Admitted (QED-SLOW)**: tactics take ~3 min, the kernel check > 30 min.  #1 libc function in the Firefox profile | |
+| `pthread_mutex_unlock` | `pthread_mutex_unlock` | **non-leaf** (futex wake through `__lll_lock_wake`): every mutex kind: normal/adaptive release (--nusers, owner := 0, lock := 0, return 0); recursive (EPERM unless owner = TID, else --count, release at 0); error-check (EPERM unless owner = TID and locked); robust/PI/PP and elision kinds tail-call out; other kinds hit `__assert_fail`.  Chosen first because it is the #3 libc function in a Firefox profile (`lifter/firefox_libc_profile.txt`) | |
+| `__memset_avx2_unaligned_erms` | `memset_avx2` | every size class: n < 32 (overlapping 1-16-byte stores), 32..256 (2, 4 or 8 YMM stores), the 128-byte aligned loop, and REP STOSB above `__x86_rep_stosb_threshold`: dest[0,n) = c, all other bytes unchanged, RAX = d.  Main theorem **Admitted (QED-SLOW)**: tactics take about a minute, the kernel check > 30 min (power-of-two literals in the size tests).  The memset IFUNC chooses on AVX2 machines | |
+| `strsep` | `strsep` | **non-leaf, PLT callee** (`strcspn`): returns the token; NUL-terminates it and advances `*stringp`, or sets it to NULL | |
+| `strtok_r` | `strtok_r` | **non-leaf, two PLT callees** (`strspn`, `strcspn`): skips delimiters, returns the next token or NULL, and updates `*saveptr` exactly | |
+| `strdup` | `strdup` | **non-leaf, three PLT callees** (`strlen`, `malloc`, tail-call `memcpy`): NULL if malloc fails, else jumps to `memcpy(d, s, strlen(s)+1)` with `d` a fresh heap block; memory outside the heap is unchanged | |
+| `strndup` | `strndup` | **non-leaf** (`strnlen`, `malloc`, tail-call `memcpy`): NULL if malloc fails; else stores the NUL at d[n] and jumps to `memcpy(d, s, n)` with n = strnlen(s, maxlen) and [d, d+n+1) in the heap | |
+| `memccpy` | `memccpy` | **non-leaf** (`memchr`, then tail-call `mempcpy` or call `memcpy`): if c occurs first at offset k < n, jumps to `mempcpy(dest, src, k+1)`; otherwise copies n bytes via memcpy and returns NULL | |
+| `sigabbrev_np`, `sigdescr_np` | `sigabbrev_np`, `sigdescr_np` | RAX = table[sig] (8-byte load) for 0 ≤ sig ≤ 64, else NULL | |
+| `srand48_r` | `srand48_r` | the four stores into `drand48_data`; afterwards Xi = seed·2^16 + 0x330E, a = 0x5DEECE66D, c = 0xB, init = 1 (`srand48_r_fields`) | |
+| `lcong48_r` | `lcong48_r` | Xi := param[0..2], a := param[3] + param[4]·2^16 + param[5]·2^32, c := param[6], init := 1, assuming param and the buffer don't overlap | |
+| `rand_r` | `rand_r` | equals glibc's C reference (`rand_r_ref`) and stays ≤ RAND_MAX; main theorem **Admitted (QED-SLOW)**: tactics take ~10 s, the kernel check takes > 10 min | |
 
 `bsearch` and `lfind` call their comparator through a function pointer, and
 `strsep`/`strtok_r` call `strspn`/`strcspn` through the PLT, whose
