@@ -16,6 +16,10 @@
    * d + n <= 2^64: the destination does not wrap around the address space
      (the loops compare raw pointers).
    * n <= m[0x3215a8] (the threshold global, read before any store).
+   * 64 <= d: the backward loop (taken when d and s alias modulo 4 KiB)
+     steps its store pointer c down by 64 and exits on c - 64 <= d; for
+     d < 64 the subtraction can wrap around zero.  No real buffer starts in
+     the first 64 bytes of the address space (page 0 is never mapped).
 
    OUTPUT: at the RET, RAX = d, RSP is unchanged, and copied m m' d s n
    (dest[0,n) = src[0,n), all other bytes unchanged).
@@ -208,6 +212,33 @@ Ltac xmm_tac :=
 Lemma c0_bounds: forall d n, 80 <= d + n -> d + n - 80 <= c0 d n <= d + n - 65.
 Proof. intros d n H. unfold c0. pose proof (N.mod_lt (d + n - 65) 16 ltac:(discriminate)). lia. Qed.
 
+(* RCX on entry to the backward loop: (d + n - 65) rounded down to 16. *)
+Lemma rcx_c0: forall d n, 64 <= d -> 128 < n -> d + n <= 2^64 ->
+  (d ⊖ 65 + n) .& 18446744073709551600 = c0 d n.
+Proof.
+  intros d n D N W. rewrite <- (land_mod_pow2 (d ⊖ 65 + n) 64) by reflexivity.
+  replace ((d ⊖ 65 + n) mod 2^64) with (d + n - 65).
+  - rewrite land_align16 by (change (2^64) with 18446744073709551616 in *; lia). reflexivity.
+  - unfold msub. rewrite N.add_mod_idemp_l by discriminate.
+    change (2^64) with 18446744073709551616 in *. change (65 mod 18446744073709551616) with 65.
+    replace (d + (18446744073709551616 - 65) + n) with (d + n - 65 + 1 * 18446744073709551616) by lia.
+    rewrite N.mod_add by discriminate. rewrite N.mod_small by lia. reflexivity.
+Qed.
+
+Lemma rsi_c: forall s d c, d <= c -> d < 2^64 -> s ⊖ d ⊕ c = s ⊕ (c - d).
+Proof.
+  intros s d c DC DB. unfold msub. rewrite N.add_mod_idemp_l by discriminate.
+  rewrite (N.mod_small d) by exact DB. change (2^64) with 18446744073709551616 in *.
+  replace (s + (18446744073709551616 - d) + c) with (s + (c - d) + 1 * 18446744073709551616) by lia.
+  apply N.mod_add. discriminate.
+Qed.
+
+(* An XMM register loaded from s - k + n, as the invariants state it. *)
+Ltac xmm_tail s n k BIG :=
+  pack_xmm; rewrite <- getmem_mod_l;
+  rewrite (rsi_c s k n) by (clear - BIG; change (2^64) with 18446744073709551616; lia);
+  rewrite ?getmem_mod_l; reflexivity.
+
 Lemma bwd_rsi: forall s x, 64 <= x -> s ⊖ 64 ⊕ x = s ⊕ (x - 64).
 Proof.
   intros s x X. unfold msub. rewrite N.add_mod_idemp_l by discriminate.
@@ -274,16 +305,54 @@ Proof.
     destruct PRE as [MEM [D [S [Nn [RSP [RAX X0]]]]]].
     clear NOV.
     Time repeat x64_step.
-    all: idtac "DISPG"; lazymatch goal with
-         | |- exists k, a0 _ <= k < _ /\ _ => idtac "FWD"
-         | |- exists c, _ < c /\ _ => idtac "BWD"
-         | |- False => idtac "FALSE"
-         | |- _ => idtac "POST"
-         end;
-         try (match goal with H: ?T |- _ => lazymatch T with
-              | context [N.ltb] => idtac H ":" T | context [N.eqb] => idtac H ":" T
-              | context [N.lxor] => idtac H ":" T end; fail end).
-    all: admit.
+    all: set (T := m Ⓠ[0x3215a8]) in *; clearbody T.
+    + (* d - s < n and d = s: impossible without overlap *)
+      exfalso. apply N.ltb_lt in BC. clear - BC DSN. lia.
+    + (* d - s < n: impossible without overlap *)
+      exfalso. apply N.ltb_lt in BC. clear - BC DSN. lia.
+    + (* 4K aliasing between d and s: the backward loop *)
+      clear THR BC0 T BC BC1 DSN SDN.
+      assert (DB: d < 2^64) by (clear - NW BIG; change (2^64) with 18446744073709551616 in *; lia).
+      exists (c0 d n).
+      rewrite (rcx_c0 d n DLO BIG NW).
+      pose proof (c0_bounds d n ltac:(clear - BIG; lia)) as CB.
+      split. clear - CB BIG; lia.
+      split. clear - CB BIG; lia.
+      split. reflexivity.
+      split. { eapply cpy_equiv; [|apply cpy_empty]. intro i. clear. split; [intros []|intro H; lia]. }
+      split. reflexivity.
+      split. { apply rsi_c; [clear - CB BIG; lia | exact DB]. }
+      do 3 (split; [reflexivity|]).
+      split. assumption.
+      split. exact X0.
+      split. unfold xmm_ok. psimpl. pack_xmm. reflexivity.
+      split. unfold xmm_ok. psimpl. pack_xmm. reflexivity.
+      split. unfold xmm_ok. psimpl. pack_xmm. reflexivity.
+      unfold xmm_ok. psimpl. xmm_tail s n 16 BIG.
+    + (* the forward loop: k = a0 d, the first 16-aligned store offset *)
+      clear THR BC0 T BC BC1 DSN SDN.
+      assert (DB: d + 16 < 2^64) by (clear - NW BIG; change (2^64) with 18446744073709551616 in *; lia).
+      pose proof (a0_bounds d) as A0.
+      assert (L15: d .| 15 = d + a0 d - 1).
+      { rewrite lor15. unfold a0. pose proof (N.mod_lt d 16 ltac:(discriminate)). lia. }
+      exists (a0 d).
+      split. clear - A0 BIG; lia.
+      split. { eapply cpy_equiv; [|apply cpy_empty]. intro i. clear. split; [intros []|intro H; lia]. }
+      split. { rewrite L15, N.mod_small; [lia|]. clear - DB A0. change (2^64) with 18446744073709551616 in *. lia. }
+      split. { rewrite rsi_c by (try rewrite L15; clear - DB A0; change (2^64) with 18446744073709551616 in *; lia).
+               rewrite L15. f_equal. clear - A0; lia. }
+      split. { rewrite rsi_c by (clear - BIG NW; change (2^64) with 18446744073709551616 in *; lia).
+               rewrite N.mod_small; [clear - BIG; lia|]. clear - BIG NW. change (2^64) with 18446744073709551616 in *. lia. }
+      split. reflexivity.
+      split. assumption. split. assumption.
+      split. exact X0.
+      split. unfold xmm_ok. psimpl. xmm_tail s n 16 BIG.
+      split. unfold xmm_ok. psimpl. xmm_tail s n 32 BIG.
+      split. unfold xmm_ok. psimpl. xmm_tail s n 48 BIG.
+      unfold xmm_ok. psimpl. xmm_tail s n 64 BIG.
+    + (* above the non-temporal threshold: excluded by THR *)
+      exfalso. clear - BC0 THR.
+      destruct (N.ltb_spec n T), (N.eqb_spec n T); cbn in BC0; try discriminate; lia.
   - (* forward loop body *)
     destruct PRE as [k [K [C [RDI [RSI [RDX [RCX [RAX [RSP [X0 [X5 [X6 [X7 X8]]]]]]]]]]]]].
     clear THR.
@@ -312,7 +381,7 @@ Proof.
            [eapply (cpy_store _ _ _ _ _ (n - 16)); [eapply (cpy_store4 _ _ _ _ n _ k (k+16) (k+32) (k+48)); [exact C|..]|..]|..]|..]|..]|..].
         all: lazymatch goal with
              | |- cpy _ _ _ _ _ => assumption | |- nov _ _ _ => assumption
-             | |- _ => clear - K EX BIG NW NB A0; first [timeout 20 aside | (idtac "SLOW1"; match goal with |- ?G => idtac G end; admit)]
+             | |- _ => clear - K EX BIG NW NB A0; aside
              end. }
       intro i. clear - A0 K EX BIG. split; intro H; [repeat destruct H as [H|H]; lia | lia].
     + (* next iteration (JA taken) *)
@@ -323,7 +392,7 @@ Proof.
         intro i. clear - A0 K CT. split; intro H; [repeat destruct H as [H|H]; lia | lia].
         all: lazymatch goal with
              | |- cpy _ _ _ _ _ => assumption | |- nov _ _ _ => assumption
-             | |- _ => clear - K CT BIG NW NB A0; first [timeout 20 aside | (idtac "SLOW2"; match goal with |- ?G => idtac G end; admit)]
+             | |- _ => clear - K CT BIG NW NB A0; aside
              end. }
       split. rewrite E1. clear; lia. split. f_equal. clear; lia. split. reflexivity.
       do 3 (split; [assumption|]).
@@ -356,7 +425,7 @@ Proof.
         all: lazymatch goal with
              | |- cpy _ _ _ _ _ => assumption | |- nov _ _ _ => assumption
              | |- _ => clear - BC C1 C2 CC CB BIG NW NB DLO;
-                       first [timeout 20 aside | (idtac "SLOWB1"; match goal with |- ?G => idtac G end; admit)]
+                       aside
              end. }
       split. reflexivity.
       split. { rewrite bwd_rsi by (clear - BC; lia). f_equal. clear; lia. }
@@ -378,7 +447,7 @@ Proof.
         all: lazymatch goal with
              | |- cpy _ _ _ _ _ => assumption | |- nov _ _ _ => assumption
              | |- _ => clear - BC C1 C2 CC CB BIG NW NB DLO;
-                       first [timeout 20 aside | (idtac "SLOWB2"; match goal with |- ?G => idtac G end; admit)]
+                       aside
              end. }
       intro i. clear - BC C1 C2 CC CB BIG. split; intro H; [repeat destruct H as [H|H]; lia | lia].
-Admitted.
+Time Qed.

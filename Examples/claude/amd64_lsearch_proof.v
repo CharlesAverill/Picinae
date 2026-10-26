@@ -291,13 +291,15 @@ Theorem lsearch_correct:
          (NZ: forall i, i < nmemb mem nmembp -> elt base size i <> 0)
          (KEYF: forall j, j < size -> ~ inwin (fr sp) 80 (key ⊕ j))
          (DSTF: forall j, j < size -> ~ inwin (fr sp) 80 (elt base size (nmemb mem nmembp) ⊕ j))
-         (DNM: forall j, j < 8 -> ~ msub 64 (nmembp ⊕ j) (elt base size (nmemb mem nmembp)) < size),
+         (DNM: ~ overlap 64 nmembp 8 (elt base size (nmemb mem nmembp)) size),
   satisfies_all (lsearch_with cp)
     (invs2 cmp sp mem key base nmembp size (s R_RBX) (s R_RBP) (s R_R12) (s R_R13) (s R_R14) (s R_R15) cp)
     (exits2 cmp sp mem key base nmembp size (s R_RBX) (s R_RBP) (s R_R12) (s R_R13) (s R_R14) (s R_R15) cp)
     (xs'::t).
 Proof.
-  intros. apply prove_invs.
+  intros.
+  assert (SZB: size < 2^64) by (rewrite <- RCX; apply (MDL R_RCX 64), eq_refl).
+  apply prove_invs.
   simpl. rewrite ENTRY. x64_step. repeat split; assumption.
   intros.
   erewrite startof_prefix in ENTRY; try eassumption.
@@ -305,7 +307,7 @@ Proof.
   set (rbx0 := s R_RBX) in *. set (rbp0 := s R_RBP) in *. set (r120 := s R_R12) in *.
   set (r130 := s R_R13) in *. set (r140 := s R_R14) in *. set (r150 := s R_R15) in *.
   clearbody rbx0 rbp0 r120 r130 r140 r150.
-  clear - PRE MDL1 WT CMP MEMCPY SPB NNB NOV NZ KEYF DSTF DNM. rename t1 into t. rename s1 into s. rename MDL1 into MDL.
+  clear - PRE MDL1 WT CMP MEMCPY SPB NNB NOV NZ KEYF DSTF DNM SZB. rename t1 into t. rename s1 into s. rename MDL1 into MDL.
   destruct_inv 64 PRE.
   - (* entry *)
     destruct PRE as (KEY & BASE & NM & SZ & R8 & SP & MEM & RBX & RBP & R12 & R13 & R14 & R15).
@@ -421,7 +423,7 @@ Proof.
       intros x X. eapply copied_out8. exact CP. intros a' A. eapply slot_not_dst; eassumption.
     assert (FN': s' V_MEM64 Ⓠ[nmembp] = nmemb mem nmembp).
     { rewrite (copied_out8 _ _ _ _ _ _ CP). apply (nm_agree _ _ _ _ AG1 NOV).
-      intros a' A. specialize (DNM _ A). rewrite add_msub_mod, msub_mod_l in DNM by reflexivity. exact DNM. }
+      intros a' A. exact (nov_byte _ _ _ _ _ DNM A). }
     assert (G1: s' V_MEM64 Ⓠ[sp ⊖ 8] = r150) by (rewrite GS by lia; unfold M1; rewrite getmem_noverlap by slot_nov; exact F1).
     assert (G2: s' V_MEM64 Ⓠ[sp ⊖ 16] = r140) by (rewrite GS by lia; unfold M1; rewrite getmem_noverlap by slot_nov; exact F2).
     assert (G3: s' V_MEM64 Ⓠ[sp ⊖ 24] = r130) by (rewrite GS by lia; unfold M1; rewrite getmem_noverlap by slot_nov; exact F3).
@@ -429,15 +431,75 @@ Proof.
     assert (G5: s' V_MEM64 Ⓠ[sp ⊖ 40] = rbp0) by (rewrite GS by lia; unfold M1; rewrite getmem_noverlap by slot_nov; exact F5).
     assert (G6: s' V_MEM64 Ⓠ[sp ⊖ 48] = rbx0) by (rewrite GS by lia; unfold M1; rewrite getmem_noverlap by slot_nov; exact F6).
     assert (KEYB: forall j, j < size -> s' V_MEM64 Ⓑ[elt base size (nmemb mem nmembp) ⊕ j] = mem Ⓑ[key ⊕ j]).
-    { intros j J. destruct CP as [CPin _]. rewrite (CPin j J). apply AG1, KEYF, J. }
+    { intros j J. destruct CP as [CPin _]. unfold elt. rewrite (CPin j J). apply AG1, KEYF, J. }
     assert (OUT: forall b, ~ inwin (fr sp) 80 b -> ~ msub 64 b (elt base size (nmemb mem nmembp)) < size ->
                  s' V_MEM64 Ⓑ[b] = mem Ⓑ[b]).
     { intros b W B. destruct CP as [_ CPout]. rewrite (CPout b B). apply AG1, W. }
     rewrite RBP in RBPc.
     clearbody M1.
-    clear - RAXc RSPc RBPc MDL' FN' G1 G2 G3 G4 G5 G6 KEYB OUT NOF SPB NNB NOV DNM t'.
+    clear - RAXc RSPc RBPc MDL' FN' G1 G2 G3 G4 G5 G6 KEYB OUT NOF SPB NNB NOV DNM SZB t'.
     rename s' into s. rename MDL' into MDL. rename t' into t.
     repeat x64_step.
-    idtac "CPYG"; match goal with |- ?G => idtac G end.
-    admit.
-Admitted.
+    rewrite FN' in *.
+    assert (RD: forall x, 8 <= x <= 80 ->
+                (s V_MEM64 [Ⓠ nmembp := 1 + nmemb mem nmembp]) Ⓠ[sp ⊖ x] = s V_MEM64 Ⓠ[sp ⊖ x])
+      by (intros x X; apply getmem_noverlap, slot_nm; assumption).
+    unfold saved, result_ok. psimpl.
+    repeat (rewrite RD by lia). rewrite G1, G2, G3, G4, G5, G6.
+    split. reflexivity.
+    split. repeat split; reflexivity.
+    right.
+    split. exact NOF. split. reflexivity.
+    split. intros j J. rewrite getmem_noverlap. apply KEYB, J.
+      apply byte_nov. apply (nov_byte _ _ _ _ _ (noverlap_sym _ _ _ _ _ DNM)).
+      unfold elt. rewrite msub_mod_l, N.add_comm, add_msub_r, N.mod_small by (reflexivity || lia). exact J.
+    split. try rewrite getmem_setmem by discriminate. change (2^(8*8)) with (2^64).
+      unfold nmemb in *. rewrite ?N.mod_small by lia. lia.
+    intros b W B NM. rewrite getmem_noverlap by (apply byte_nov; exact NM). apply OUT; assumption.
+Time Qed.
+
+(* Non-vacuity of the callee contracts.  At C the witness is a comparator that
+   returns 0 at once (cmp = fun _ _ => 0), as in amd64_lfind_proof.v.  At
+   P_MEMCPY it jumps to itself forever: that shows the memcpy contract is not
+   contradictory (no single-state trace refutes it), which is all a witness
+   needs here, but it is weaker than exhibiting a terminating memcpy.  The
+   real memcpy is verified separately (amd64_memcpy_proof.v and
+   amd64_memcpy_loops_proof.v). *)
+Definition ret0 : stmt :=
+  Move R_RAX (Word 0 64) $;
+  Move R_RIP (Load (Var V_MEM64) (Var R_RSP) LittleE 8) $;
+  Move R_RSP (BinOp OP_PLUS (Var R_RSP) (Word 8 64)) $;
+  Jmp (Var R_RIP).
+Definition cp0 (_:store) (a:addr) : N * stmt :=
+  if a =? C then (1, ret0) else (1, Jmp (Word P_MEMCPY 64)).
+
+Lemma cp0_welltyped: welltyped_code cp0.
+Proof. intros s a. unfold cp0. destruct (a =? C); apply typchk_stmt_compute; vm_compute; exact I. Qed.
+
+Theorem lsearch_contracts_satisfiable:
+  exists cp cmp, welltyped_code cp /\ lsearch_cmp_contract cp cmp /\ lsearch_memcpy_contract cp cmp.
+Proof.
+  exists cp0, (fun _ _ => 0%Z). split. exact cp0_welltyped. split.
+  - intros s t xs' sp mem key elt rbx rbp r12 r13 r14 r15
+      ENTRY MDL RDI RSI RSP MEM [RBX [RBP [R12 [R13 [R14 R15]]]]] RET. apply prove_invs.
+    simpl. rewrite ENTRY. x64_step. repeat split; assumption.
+    intros.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption. apply lsearch_with_welltyped, cp0_welltyped.
+    intro MDL1. clear - PRE MDL1. rename t1 into t.
+    destruct_inv 64 PRE.
+    destruct PRE as (RDI & RSI & RSP & MEM & RET & RBX & RBP & R12 & R13 & R14 & R15).
+    x64_step. rewrite RET. unfold RET_CMP. x64_step.
+    split. reflexivity. split. reflexivity. split. reflexivity.
+    repeat split; assumption.
+  - intros s t xs' sp mem d p n rbx rbp r12 r13 r14 r15
+      ENTRY MDL RDI RSI RDX RSP MEM [RBX [RBP [R12 [R13 [R14 R15]]]]] RET. apply prove_invs.
+    simpl. rewrite ENTRY. x64_step. repeat split; assumption.
+    intros.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption. apply lsearch_with_welltyped, cp0_welltyped.
+    intro MDL1. clear - PRE MDL1. rename t1 into t.
+    destruct_inv 64 PRE.
+    destruct PRE as (RDI & RSI & RDX & RSP & MEM & RET & RBX & RBP & R12 & R13 & R14 & R15).
+    x64_step. repeat split; assumption.
+Qed.

@@ -10,6 +10,43 @@ proof file starts with a header that gives the function's semantics, quotes
 the man page, names the model, and states the input/output specification in
 English.
 
+## How this relates to Anthropic's OSS-Verify proofs
+
+Anthropic and Theorem's [OSS-Verify](https://github.com/theorem-labs/oss-verify-proofs)
+proves crash-freedom of hundreds of whole RISC-V programs: no fault and no
+sanitizer report on any input, and the same behavior as the plain build.
+These proofs are fewer and smaller, but they prove more about each function,
+and about harder code.  `doc/comparison.tex` has the full comparison; in short:
+
+* **Correct results, byte by byte.**  A crash-freedom statement accepts a
+  `memcpy` that copies the wrong bytes.  Ours require `dest[0,n) = src[0,n)`
+  with every other byte unchanged.  glibc's overlapping head/tail stores,
+  aligned loops and REP MOVSB therefore each need an argument that their
+  stores cover exactly `[0,n)`, and for `memmove` that they never overwrite
+  source bytes that have not yet been read.
+* **Hand-written AVX2 assembly, chosen at run time.**  What `memcpy`,
+  `memmove`, `strlen` and `strchr` resolve to on this machine is glibc's
+  vectorized assembly.  `__memmove_avx_unaligned_erms` alone has 351
+  instructions and at least seven strategies, chosen by size, overlap,
+  4 KiB aliasing, CPU-feature flags and tunable thresholds kept in memory.
+  OSS-Verify runs vector-capable binaries with the vector unit disabled, so
+  its proofs cover scalar code.
+* **SIMD and bit-index reasoning.**  VPCMPEQB/VPMINUB/VPMOVMSKB/TZCNT turn
+  "first zero byte" into "lowest set bit of a mask".  The proofs relate bit
+  positions to byte offsets, including an arithmetic shift (SARX) on the
+  page-cross path and a 64-bit TZCNT over two 32-bit masks.  Stepping these
+  instructions symbolically was too slow, so `amd64_avx2.v` proves one lemma
+  per lifted instruction, by induction over the lanes.
+* **x86 and lifting.**  Partial registers, flags, REP prefixes, LOCK, and AVX
+  operations Ghidra leaves opaque all needed lifter work, several of them
+  soundness fixes.
+* **The proof engine at its limit** (see Proof-engineering notes below).
+
+The comparison cuts both ways.  OSS-Verify handles whole programs, a
+nondeterministic OS, and proofs that every access stays inside mapped
+memory.  These theorems are partial correctness about single functions, in a
+memory model where faults are not errors.
+
 ## Layout
 
 | File | Contents |
@@ -21,6 +58,9 @@ English.
 | `amd64_ieee.v` | IEEE-754 field decomposition (`exp64`, `man64`, ...), the borrow lemmas `shr_msub64`/`shr_msub32`, and the x87 80-bit lemmas (`exp80`, `isnanl_spec`, `isinfl_spec`) |
 | `amd64_termios.v` | `struct termios` speed checks shared by `cfsetospeed`/`cfsetispeed` (`speed_ok`, the lifted range test) |
 | `amd64_memcpy_sets.v` | `cpy`: the set of destination offsets a copy has written so far; one lemma per 16-byte store (`cpy_store`) and per non-overlapping load (`cpy_load`) |
+| `amd64_fill_sets.v` | `fil`: the set of destination offsets memset has filled so far; `fil_store` for one store of a value whose bytes are all c (`bytes_are`), and `rep_bytes` for the lifted broadcast values |
+| `amd64_simd.v` | byte-lane specs (`byte`, `zbyte`, `cmpz_spec`, `msk_spec`) and the TZCNT scan loop (`tz_step W`, `tz_result`: W+1 iterations give the index of the lowest set bit, or W) |
+| `amd64_avx2.v` | instruction-level lemmas for VPCMPEQB (`vpcmpeqb_tail_exec`), VPMINUB (`vpminub_tail_exec`), VPMOVMSKB (`vpmovmskb_exec`) and TZCNT (`tzcnt32_exec`, `tzcnt64_exec`, `tzcnt32_dc_exec`; register-vs-memory `vpcmpeqb_rld_exec`; `vpbroadcastb0_exec`). Each one describes a whole lifted instruction through a Coq generator convertible to the lifter's output, and is proved once by induction over the lanes. A proof steps such an instruction by hand (`eapply NIStep`, then the lemma), so the 32-lane terms are never built. |
 | `amd64_memcpy_lemmas.v` | the head/tail store patterns of small memcpy sizes, each proved by a chain of `cpy_store` |
 | `lifter/` | Headless lifting driver (`lift.sh`, `pcode2coq_headless.py`) and p-code dump helpers |
 
@@ -62,7 +102,11 @@ write memory).
 | `__strpbrk_c2` | `strpbrk_c2` | strpbrk with a 2-character set (loop) |
 | `__sigismember` | `sigismember_internal` | bit (sig-1) mod 64 of word (sig-1)/64 |
 | `seed48` → `seed48_r` | `seed48` | **non-leaf**: callee proved first, caller uses it via `perform_call` |
-| `memcpy` (SSE2, `memcpy@GLIBC_2.2.5` entry) | `memcpy` | for n ≤ 128: dest[0,n) = src[0,n), everything else unchanged, even when the buffers overlap (`memcpy_correct_small`, `memcpy_correct_mid`); the loop paths for n > 128 are in progress |
+| `memcpy` (SSE2, `memcpy@GLIBC_2.2.5` entry) | `memcpy` | for n ≤ 128: dest[0,n) = src[0,n), everything else unchanged, even when the buffers overlap (`memcpy_correct_small`, `memcpy_correct_mid`); for 128 < n ≤ the non-temporal threshold, the same for non-overlapping buffers with d ≥ 64 (`memcpy_correct_loops` in `amd64_memcpy_loops_proof.v`: forward and 4 KiB-aliasing backward 64-byte loops; Qed 125 s).  The non-temporal path above the threshold is not covered |
+| `__memmove_avx_unaligned_erms` (what `memmove` and `memcpy` resolve to on AVX2 machines) | `memmove_avx` | for n ≤ 256: dest[0,n) = src[0,n), everything else unchanged, **even when the buffers overlap** (memmove semantics; `memmove_avx_correct_small`; Qed 70 s). Precondition n ≤ `__x86_rep_movsb_threshold`, which glibc never sets below 256 for AVX.  For 256 < n ≤ both thresholds, the same for non-overlapping buffers with d ≥ 128 (`memmove_avx_correct_loops` in `amd64_memmove_avx_loops_proof.v`: the forward 128-byte loop and the 4 KiB-aliasing backward loop; Qed 148 s).  Above `__x86_rep_movsb_threshold` and below `__x86_rep_movsb_stop_threshold`, the same (`memmove_avx_correct_rep` in `amd64_memmove_avx_rep_proof.v`: REP MOVSB with the source or the destination aligned to 64 bytes, and the short-distance fallback to the forward loop; needs DF = 0; Qed 145 s).  At or above the stop threshold the non-temporal path (`amd64_memmove_avx_nt_proof.v`) is proven by factoring every per-address obligation into a standalone lemma whose conclusion is a `nextinv` (`nt_seg_1117` … `nt_seg_1706`), so each has its own bounded Qed and the theorem just applies them.  The two-page interleaved 8-vector store loop uses `nt_adv2` (post-store memory abstraction); the two-page tail (`nt_seg_1117`/`1125`/`1210`) and four-page tail (`nt_seg_1613`/`1621`/`1706`) are proven, the key being cut points 1210/1706 at the final overlapping-copy entries so the tail loops stop there instead of stepping the final copy into their branch tests (which peaked at ~9 GB); the 128-byte tail-loop body advances by `cpy_store4w`, the final copy by `cpy_store4w` + `cpy_copied` via the `fcaddr` address lemma.  The four-page inner loop (`nt_seg_1285`) advances `done4` by `cpy_store16` (16 stores), mirroring the two-page inner loop's `cpy_store8`.  Build this file with `ulimit -v 13000000`.  Not yet covered: overlapping buffers above 256 bytes |
+| `__strlen_avx2` (what `strlen` resolves to on AVX2 machines) | `strlen_avx2` | RAX = strlen(s) (`slen`), for every path: the first unaligned 32-byte block, the page-cross block (VPCMPEQB on the aligned block, SARX by s mod 32), four aligned blocks, and the 128-byte loop (VPMINUB of four vectors; exit located with two 32-bit masks and a 64-bit TZCNT).  Memory unchanged.  The SIMD instructions are stepped with the lemmas of `amd64_avx2.v`; Qed 56 s |
+| `__strchr_avx2` (what `strchr` resolves to on AVX2 machines) | `strchr_avx2` | with K the first index whose byte is c or NUL (`fhit`; `fhit_of_slen` shows every terminated string has one): RAX = s + K if that byte is c, else NULL; so c = 0 returns the terminator.  Every path: the first block (VPCMPEQB against the broadcast c and against zero, VPOR), the page-cross block (SARX), four aligned blocks, and the 128-byte loop (a hit is a zero byte of VPMINUB(x, x XOR c)).  Memory unchanged |
+| `__strcmp_avx2` (what `strcmp` resolves to on AVX2 machines) | `strcmp_avx2` | short-string case: with K the first index where the strings differ or `p` terminates (`scmp`), and K < 32 with both pointers ≥128 bytes from a page end, EAX = `(m[p+K] - m[q+K]) mod 2^32`.  The stop mask comes from VPCMPEQB(p,q); VPMINUB(_,p); VPCMPEQB(_,0).  The four-block path, the 128-byte loop and the page-straddle path are refuted by the preconditions; proving them for K ≥ 32 is future work |
 | `isnan`, `isnanf` | `isnan`, `isnanf` | RAX = 1 iff the bit pattern is a NaN (exponent all ones, mantissa ≠ 0; `is_nan64`/`is_nan32` in `amd64_ieee.v`) |
 | `isinf`, `isinff` | `isinf`, `isinff` | RAX = 1 for +inf, 0xffffffff (−1) for −inf, else 0 (branch-free sign trick, proved bit by bit) |
 | `finite`, `finitef` | `finite`, `finitef` | RAX = 1 iff the exponent is not all ones; the red-zone spill below RSP is part of the spec |
@@ -82,6 +126,10 @@ write memory).
 | `__strcspn_sse2` (`strcspn` without SSE4.2) | `strcspn_sse2` | RAX = strcspn(s, reject) (`cspn`); same frame |
 | `bsearch` | `bsearch` | **non-leaf, function-pointer callee**: under a comparator contract and a sorted (partitioned) array, returns a matching element or NULL only if none matches |
 | `lfind` | `lfind` | **non-leaf, function-pointer callee**: returns the *first* matching element, or NULL only if none matches |
+| `lsearch` | `lsearch` | **non-leaf, two callees** (comparator through R14, memcpy through the PLT): the first match, or else key appended at base + N·size, *nmemb := N + 1, return the new element.  glibc treats a match at address 0 as "not found"; the precondition NZ excludes that |
+| `pthread_mutex_lock` | `pthread_mutex_lock` | **non-leaf** (`__lll_lock_wait` at three call sites, contract satisfiable): every kind: normal / error-check-not-owner (lock := 1 or 2, owner := TID, ++nusers), recursive (++count, EAGAIN at 2^32-1, or first lock with count := 1), adaptive (bounded spin, `__spins` updated), error-check owned (EDEADLK); robust/PI/PP and elision tail-call out; `__assert_fail` otherwise.  Needs `__pthread_force_elision = 0` (the default) and the mutex/TID/global outside the 32-byte frame.  Main theorem **Admitted (QED-SLOW)**: tactics take ~3 min, the kernel check > 30 min.  #1 libc function in the Firefox profile |
+| `pthread_mutex_unlock` | `pthread_mutex_unlock` | **non-leaf** (futex wake through `__lll_lock_wake`): every mutex kind: normal/adaptive release (--nusers, owner := 0, lock := 0, return 0); recursive (EPERM unless owner = TID, else --count, release at 0); error-check (EPERM unless owner = TID and locked); robust/PI/PP and elision kinds tail-call out; other kinds hit `__assert_fail`.  Chosen first because it is the #3 libc function in a Firefox profile (`lifter/firefox_libc_profile.txt`) |
+| `__memset_avx2_unaligned_erms` | `memset_avx2` | every size class: n < 32 (overlapping 1-16-byte stores), 32..256 (2, 4 or 8 YMM stores), the 128-byte aligned loop, and REP STOSB above `__x86_rep_stosb_threshold`: dest[0,n) = c, all other bytes unchanged, RAX = d.  Main theorem **Admitted (QED-SLOW)**: tactics take about a minute, the kernel check > 30 min (power-of-two literals in the size tests).  The memset IFUNC chooses on AVX2 machines |
 | `strsep` | `strsep` | **non-leaf, PLT callee** (`strcspn`): returns the token; NUL-terminates it and advances `*stringp`, or sets it to NULL |
 | `strtok_r` | `strtok_r` | **non-leaf, two PLT callees** (`strspn`, `strcspn`): skips delimiters, returns the next token or NULL, and updates `*saveptr` exactly |
 | `strdup` | `strdup` | **non-leaf, three PLT callees** (`strlen`, `malloc`, tail-call `memcpy`): NULL if malloc fails, else jumps to `memcpy(d, s, strlen(s)+1)` with `d` a fresh heap block; memory outside the heap is unchanged |
@@ -188,6 +236,28 @@ man page's alphabet.
      become a bounded `Rep (w+1)` of one `Move v (Ite c (Var v) e)` per
      loop-carried temporary. Loops in any other instruction are rejected. The
      soundness argument is in the comment on `find_scan_loop`.
+   * **AVX/AVX2** (added for the glibc variants Firefox actually runs):
+     the user-defined ops Ghidra leaves opaque (`vpcmpeqb_avx[2]`,
+     `vpminub_avx[2]`, `vpor_avx2`, `vpand_avx2`, `swap_bytes` for `MOVBE`,
+     `vmovntdq_avx`) are spelled out byte by byte, the same way SLEIGH spells
+     their SSE2 counterparts.  Whole-ZMM varnodes and unnamed sub-pieces of
+     a vector register (e.g. byte 17 of YMM0) are handled.
+     `lifter/list_userops.py` lists the user ops a function needs.
+   * **Lane writes are merged.** SLEIGH writes some vector results one lane
+     at a time (VPBROADCASTB: 32 byte writes into YMM0).  Lifted naively,
+     each write re-reads the register to merge its lane, so the symbolic
+     value doubles with every lane; `memset_avx2` ran out of memory in the
+     type checker (11 GB).  Consecutive writes to disjoint parts of one
+     register that don't read it now become one `Move` of the assembled
+     `Concat` (`merge_lane_writes`).
+   * The `LOCK`/`UNLOCK` user ops of `LOCK`-prefixed instructions lift as
+     no-ops (see the caveat below).
+   * The generated "Static Memory Hypotheses" section is switched off
+     (`staticMemory=False` in the headless driver): its `SMCorrect` proof
+     can take gigabytes to check, and the proofs here state such facts as
+     preconditions instead.  Uninitialized (`.bss`) data is skipped.
+
+Canonical temporaries: the headless lifter now passes `canonicalTemps=True`, so each instruction's unique-space temporaries are numbered `V_TEMP 0, 1, ...` in order of first appearance.  Ghidra's unique varnodes never live across instructions, so this preserves semantics, and every occurrence of an instruction (for example `VPMOVMSKB EAX,YMM1`) lifts to the same statement.  The five AVX files (strlen, strchr, memcmp, strcmp, memmove) were re-lifted this way; earlier lifts keep Ghidra's offsets.
 
 ## Model caveats
 
@@ -199,6 +269,14 @@ man page's alphabet.
 * For a zero source, Ghidra's BSF writes 0 to the destination, whereas the
   hardware leaves it undefined. glibc's `ffs`/`ffsl` overwrite the
   destination with CMOVZ in that case, so their results don't depend on this.
+* Ghidra marks `LOCK`-prefixed (and implicitly locked `XCHG`) instructions
+  with `LOCK`/`UNLOCK` user ops.  pcode2coq lifts them as no-ops: Picinae's
+  semantics is single-threaded, so the atomicity they add is not modeled.
+  The mutex proofs are therefore sequential-correctness results.
+* Picinae models the low 256 bits of the vector registers.  When Ghidra's
+  p-code touches a whole ZMM register (VEX-encoded AVX/AVX2 instructions
+  and `VZEROUPPER` zero bits 256-511), pcode2coq drops the write to the
+  upper half and reads it as zero.
 * `copysignl` cannot be lifted: it uses x87 instructions (`FLD`/`FSTP` on
   `long double`), and pcode2coq rejects their p-code ("Unmodeled Regs:
   R_FPUINSTRUCTIONPOINTER").  `finitel`, `isnanl` and `isinfl` lift because
@@ -243,6 +321,25 @@ man page's alphabet.
   of them take 0.3 s together.  Likewise, `lia` runs out of memory when a
   hypothesis mentions a memory read at a literal address (`n <= m Ⓠ[0x3215a8]`);
   clear it first.
+* Symbolic execution of a function with many paths that rejoin (lock's
+  dispatch, two acquire variants, three wait calls) needs a cut at every
+  join point; without them the live paths and their states grew past 8 GB.
+* Conversion checks on goals that mention symbolic memory can expand
+  `getmem`/`setmem` and exhaust memory: `reflexivity`, `assumption`,
+  `contradiction`, non-linear `match goal` patterns, and `rewrite` with a
+  lemma whose memory argument is a unification variable all did this in the
+  mutex_lock proof.  Use syntactic versions (`constr_eq` before `exact` /
+  `reflexivity`), explicit lemma arguments, and let `psimpl` normalize both
+  goals and hypotheses the same way.
+* From the memmove proofs: `discriminate` with memory equations in the
+  context (`s R_YMM0 = m Ⓨ[s]`) can hang head-normalizing the loads;
+  `eapply cpy_store` / `rewrite cpy_load` with the memory or the offset left
+  as unification variables ran out of memory, while `refine` of the instance
+  with every argument explicit is instant.  Refuting an infeasible path
+  works best from one branch hypothesis plus one bound (`refute` in
+  `amd64_memmove_avx_loops_proof.v`) after excluding hypotheses that mention
+  `getmem`.  Pruning paths after every step (`step_prune`) turned a 23 s
+  stepping phase into more than 10 minutes; step everything, then prune once.
 * Avoid `all: first [...]` / `all: try ...` over many goals: a failing
   alternative is retried on every goal, and real failures are hidden.  Use
   explicit bullets and a side tactic that dispatches on the goal's shape

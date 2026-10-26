@@ -1,0 +1,665 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{url}
+\usepackage{hyperref}
+
+\newcommand{\todo}[1]{\textbf{[TODO: #1]}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{LLM-Generated Binary Proofs: \\
+       OSS-Verify on LPS and glibc on Picinae}
+\author{Charles Averill \and Ilan Buzzetti \and Shreya Soman \and Kevin Hamlen \\[1ex]
+        The University of Texas at Dallas}
+\date{Draft, \today}
+
+\begin{document}
+\sloppy
+\maketitle
+
+\begin{abstract}
+In October 2026, Anthropic and Theorem reported that language-model agents
+had written Rocq proofs about compiled RISC-V binaries of OSS-Fuzz targets.
+The proofs show that sanitizer builds of those targets never fault and behave
+like their plain builds~\cite{anthropic-post,oss-verify}.  This note compares
+that work with our own experiment, in which Claude Opus~5.5, running in
+Claude Code, wrote Picinae proofs about functions lifted from the x86-64
+glibc~2.35 shared library.  The two efforts share a proof assistant and a
+binary-level starting point.  They differ in almost everything else: the
+semantic model and how the program enters it, the kind of property proved,
+how specifications are obtained, the scale, and what has to be trusted.  We
+also discuss the lifting workflow that a collaborator has written up as an
+agent skill, and how it relates to the lifter changes made in our
+experiment.
+\end{abstract}
+
+\section{Introduction}
+
+The Anthropic post~\cite{anthropic-post} argues that language models make
+formal verification of real software feasible at a much larger scale than
+before.  Its headline result is 239 fuzz-test entry points in 123 open-source
+libraries, for which Claude proved that ``there are no crashes on any input
+(up to 64\,MB)''.  The proofs are stated over compiled RISC-V instructions
+under a formal model of a Linux process.  The public repository from Theorem,
+\code{theorem-labs/oss-verify-proofs}~\cite{oss-verify}, holds a checked
+release of part of that work.
+
+Our project started from that post.  We wanted to know how well the same kind
+of agent does on a different binary-verification platform, Picinae, with a
+different kind of specification: per-function functional correctness taken
+from the man pages, not crash-freedom of whole programs.  The work so far is
+in \code{Examples/claude} of the Picinae repository, on the branch
+\code{llm\_generated\_proofs}.
+
+Section~\ref{sec:glance} summarizes the two efforts.
+Section~\ref{sec:models} compares the semantic models,
+Section~\ref{sec:what} what the theorems say,
+Section~\ref{sec:hard} what makes our proofs hard, and
+Section~\ref{sec:method} the methodology.
+Section~\ref{sec:lifting} discusses lifting, including the collaborator's
+skill.  Section~\ref{sec:discussion} draws lessons.
+
+\section{The two efforts at a glance}\label{sec:glance}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lXX@{}}
+\toprule
+ & OSS-Verify (Anthropic / Theorem) & This project (Picinae) \\
+\midrule
+Proof assistant & Rocq 9.2.0 & Rocq 9.1 \\
+Target code & whole static RISC-V (RV64GC) executables: OSS-Fuzz harness, library, musl, sanitizer runtime; vector code paths avoided & individual functions of the x86-64 glibc 2.35 shared object, including the hand-written AVX2 assembly the machine actually runs, plus direct callees where needed \\
+Program representation & ELF bytes loaded into a memory image, decoded by the Rocq ISA semantics & Picinae IL produced by the Ghidra p-code lifter \texttt{pcode2coq} \\
+Semantics & LPS: RISC-V instructions plus Linux process semantics (system calls, start-up, budgets) & Picinae amd64 IL semantics; no OS model \\
+Property & sanitizer build never errs and agrees with the plain build (also halting, bound and decidability shapes) & functional correctness against the man page, plus frame and register preservation \\
+Correctness kind & safety over finite traces (agreement); total for the halts shape & partial correctness (holds if the function returns) \\
+Specifications & generated mechanically from fuzz harnesses, from a fixed set of statement shapes & written by the model per function, from the man page and glibc behavior \\
+Scale & post: 239 entry points, 123 libraries, about $1.8\times10^8$ lines of Rocq; repository release: 138 statements proved for 60 entry points in 25 libraries & 78 proof files covering about 80 glibc entry points (among them the AVX2 \code{memmove}/\code{memcpy}, \code{strlen}, \code{strchr} and the short-string case of \code{strcmp}), about $1.9\times10^4$ lines of proofs and libraries \\
+Agents & many autonomous agents with a shared workspace, over a few weeks & a single Claude Code session, with occasional human direction, over about three days \\
+Unfinished proofs & not allowed: \code{Admitted} refused, axioms audited & four main theorems left \code{Admitted} because \code{Qed} is too slow, each with a note \\
+\bottomrule
+\end{tabularx}
+\caption{Summary.  The OSS-Verify figures come from the post~\cite{anthropic-post} and the repository README~\cite{oss-verify}; the two do not cover the same set of proofs (Section~\ref{sec:scale}).}
+\end{table}
+
+\section{Semantic models}\label{sec:models}
+
+\subsection{How the program enters the logic}
+
+In OSS-Verify the program is its bytes.  The tool \code{elf-snapshot} turns
+an ELF file into a memory image (loadable segments, entry point, program
+headers).  An OCaml plugin, \code{rocq-read-file}, reads the image into Rocq
+at compile time, and the RISC-V semantics in LPS decodes and executes
+instructions from that image.  No disassembler or lifter is involved.  The
+trusted path from binary to logic is the ELF loader and the image reader,
+and \code{Images.v} checks by computation that each image is well formed.
+
+In Picinae the program is a Rocq function from addresses to IL statements.
+It is produced outside the logic by Ghidra (disassembly plus the SLEIGH
+specification of each instruction as p-code) and by \code{pcode2coq}, which
+translates p-code to Picinae IL.  So the disassembler, the SLEIGH
+specifications and the translator are in the trusted base.  The experiment
+underlined this risk: several translator bugs gave unsound lifts until we
+fixed them.  For example, partial-register writes clobbered the rest of the
+register, \code{LZCOUNT} was lifted as width minus popcount, and flag
+booleans had the wrong width (Section~\ref{sec:lifting}).  A Picinae proof
+is a proof about the lifted IL; it is about the binary only to the extent
+that the lift is right.
+
+Lifting does have advantages.  The IL is architecture-neutral, so one
+symbolic interpreter and one simplifier (\code{psimpl}) serve every ISA
+Picinae supports.  Proofs read in terms of IL variables and expressions, not
+instruction encodings.  And because lifting works one function at a time,
+small proofs stay small.
+
+\subsection{Instruction semantics}
+
+LPS implements RV64GC from the RISC-V specification, as an executable
+semantics inside Rocq.  The post adds that for the zlib case study Claude
+also wrote a formal x86 ISA semantics.  \todo{Check whether that x86
+semantics is published, and how its fidelity was checked.}  Picinae's amd64
+semantics is SLEIGH's, as translated.  Some instructions are modeled only
+approximately:
+\begin{itemize}[nosep]
+\item the \code{LOCK} prefix lifts as a no-op, so atomicity is assumed, not
+      modeled;
+\item bits 256--511 of the ZMM registers are not modeled; AVX/AVX2 code
+      only ever zeroes them;
+\item SLEIGH user-defined operations that Ghidra leaves opaque (for example
+      \code{vpcmpeqb\_avx2} and \code{vpminub\_avx2}) had to be spelled out
+      byte by byte in the lifter.
+\end{itemize}
+
+\subsection{Memory, faults and the environment}
+
+This is the most important semantic difference.
+
+LPS models a Linux process.  Memory is mapped by the loader and by
+\code{mmap}/\code{brk}, and an access outside it is an \emph{error}.  An
+instruction or system call that LPS does not interpret is also an error
+(\code{unmodeled}), and so are \code{abort()} (failed \code{assert}s and
+sanitizer reports) and illegal instructions (failed UBSan checks).  The
+statements forbid every error, so a proof rules them all out.  The
+environment is nondeterministic, in the way a sound model of Linux must be:
+\code{read} may return any nonempty prefix, \code{mmap} any free aligned
+address, and some system calls may fail spuriously.  Proofs must cover every
+such choice.  The model is single-threaded, runs no signal handlers, and has
+a simplified file system.
+
+Picinae's memory is a total function from addresses to bytes.  A load or
+store has a premise that the address is readable or writable (bits of the
+pseudo-variables \code{A\_READ}/\code{A\_WRITE}).  When the premise fails,
+the access has no successor state; it is not an error.  Picinae theorems are
+partial-correctness statements over the traces that exist, so a run that
+would fault simply has no continuation, and the theorem says nothing about
+it.  As a result, our theorems do \emph{not} establish memory safety.  They
+say that \emph{if} the function runs to its return, the result and the final
+memory are as specified.  Picinae has no OS model; our functions make no
+system calls (the mutex functions reach the futex system call only inside a
+callee, which they assume through a contract).
+
+Picinae's memory model also lets the vectorized string functions read past
+the end of a string without any special argument.  For example,
+\code{\_\_strlen\_avx2} reads whole 32-byte and 128-byte blocks.  In LPS the
+same reads must be shown to stay inside mapped pages, which is exactly the
+page-cross reasoning the glibc code does.  Picinae proofs can skip that
+reasoning, but they do not get its benefit either.
+
+\subsection{Concurrency}
+
+Both models are single-threaded.  For us this matters most for
+\code{pthread\_mutex\_lock} and \code{pthread\_mutex\_unlock}, which rank
+first and third among libc functions in our Firefox profile.  We prove their
+sequential behavior for every mutex kind, assuming \code{LOCK}-prefixed
+instructions are atomic and no other thread runs during the call.  That is
+a real limitation for functions whose whole purpose is concurrency.
+
+\section{What gets proved}\label{sec:what}
+
+\subsection{OSS-Verify statement shapes}
+
+Every OSS-Verify statement applies one of a few \emph{shapes} (in
+\code{theories/Shapes.v}) to the memory images of a harness's builds.  Each
+shape is proved, by \code{reflexivity}, equal to an LPS definition:
+\begin{itemize}[nosep]
+\item \textbf{halts:} every execution of a build exits with an allowed
+      status, under a memory-budget premise;
+\item \textbf{agrees:} on every input where the plain build stays within its
+      budget, neither the plain build nor the sanitizer build errs, and the
+      two have the same set of finite traces (stream bytes, exit status,
+      final file contents);
+\item \textbf{disagrees at most $b$:} under a stated input distribution, the
+      builds disagree with probability at most $b$;
+\item \textbf{agreement decidable:} some RISC-V program classifies exactly
+      the agreeing inputs.
+\end{itemize}
+The published proofs are agreement statements.  According to the README, no
+halts statement is proved in this release, so the proofs do not rule out
+non-termination.  An agreement proof for an ASan build rules out every error
+the sanitizer detects on every covered input, which is what ``no crashes''
+means in the post.  It says nothing about functional correctness: a parser
+that returns a wrong result without faulting satisfies its statement.
+
+\subsection{Picinae glibc theorems}
+
+Our theorems are functional specifications of individual functions.  Every
+file starts with a header that states the function's semantics, quotes the
+man page, names the model, and gives an English input/output specification.
+Typical main properties:
+\begin{itemize}[nosep]
+\item exact results, for example \code{ffs} returns the 1-based index of the
+      lowest set bit, and \code{rand\_r} equals glibc's C reference;
+\item exact memory effects with a frame condition, for example memset sets
+      \code{dest[0,n)} to \code{c} in every size class (including the
+      \code{REP STOSB} path) and leaves every other byte unchanged;
+\item for non-leaf functions, correctness relative to a contract for each
+      callee: \code{bsearch}, \code{lfind} and \code{lsearch} through a
+      function-pointer comparator, \code{strtok\_r}/\code{strsep} through
+      PLT calls, \code{strdup} through an abstract heap for \code{malloc},
+      and the mutex functions through \code{\_\_lll\_lock\_wait} and
+      \code{\_\_lll\_lock\_wake}.
+\end{itemize}
+Each function also gets generic theorems: the lifted program is well typed,
+code is not writable, callee-saved registers are preserved, and memory is
+preserved where the function does not write it.
+
+Two theorems record places where glibc does not meet its man page.
+\code{sigisemptyset} tests only the low 32 bits of the set, so a set
+containing only real-time signals is reported empty.  \code{a64l} does not
+sign-extend its 32-bit result, although the man page says it does.  For each
+we proved the binary's behavior and a concrete counterexample to the man
+page, and confirmed the counterexample by running the system libc.
+\todo{Decide whether to report these upstream; check whether they are
+already known or documented.}
+
+\subsection{Vacuity}
+
+A theorem can be true for an unintended reason.  OSS-Verify guards against
+this in a few ways.  Statements are generated from facts and rendered by a
+tool anyone can rerun.  Each shape is shown equal to the LPS definition it
+stands for.  \code{Images.v} checks that the images are well formed.
+Statements are fingerprinted, so a proof is always of the published
+statement.
+
+Our main vacuity risk is in callee contracts.  A contract that no code can
+satisfy makes any theorem that assumes it trivially true.  This happened:
+an early \code{bsearch}/\code{lfind} contract omitted a conjunct of the
+callee's entry invariant (the return address on the stack), and a
+single-state trace refuted it.  Every contract now has a \code{*\_satisfiable}
+theorem that exhibits code meeting it.  For some contracts the only witness
+we found is code that never returns, which is weak evidence.
+
+\section{What makes these proofs hard}\label{sec:hard}
+
+OSS-Verify's achievement is breadth: hundreds of entry points, each a whole
+program, checked mechanically.  Our proofs are few and small by comparison,
+but each one has to get through difficulties that the OSS-Verify statements
+do not ask for, or that its setup avoids.  This section lists them, with
+the function where each one showed up.  We also note where OSS-Verify's
+obligations are harder than ours.
+
+\subsection{Correct results, byte by byte}
+
+An agreement statement is satisfied by any program that neither faults nor
+behaves differently under a sanitizer.  A \code{memcpy} that copies the wrong
+bytes satisfies it.  Our \code{memcpy} theorem quantifies over every byte of
+memory: \code{dest[0,n)} must equal \code{src[0,n)} afterwards and every
+other byte must be unchanged.  glibc meets this with stores that overlap on
+purpose:
+\begin{itemize}[nosep]
+\item two possibly overlapping head and tail moves for small sizes;
+\item a 64-byte head, aligned 128-byte iterations and a saved tail for large
+      sizes;
+\item REP MOVSB starting at a 64-byte boundary, followed by stores of a saved
+      head.
+\end{itemize}
+Every path needs a coverage argument that the union of the stored offset
+ranges is exactly $[0,n)$.  For \code{memmove}, the stores must also be
+shown not to clobber source bytes that have not yet been read.  The
+OSS-Verify proofs do contain functional lemmas of this kind, for example a
+specification of musl's \code{memcpy}, because whole-program reasoning needs
+them.  But they are internal lemmas about compiled C, not theorems about the
+code a production x86 system runs.
+
+\subsection{Hand-optimized code with many strategies}
+
+The functions Firefox calls most are glibc's hand-written AVX2 assembly,
+selected at load time by IFUNC.  \code{\_\_memmove\_avx\_unaligned\_erms},
+which serves both \code{memmove} and \code{memcpy}, has 351 instructions and
+chooses among at least seven strategies by size, overlap, 4\,KiB aliasing
+and CPU-feature flags.  One theorem over all of them was beyond what the
+proof engine could hold, so we split it into three theorems by size range:
+up to 256 bytes, the 128-byte loops, and REP MOVSB.  Each theorem refutes
+the other paths' entries with \code{False} invariants.  The non-temporal path's dispatch and entry are proven, but its
+interleaved multi-page store loops are admitted with a note; the
+overlapping path above 256 bytes is still open.
+
+\subsection{SIMD}
+
+The string functions compare 32 bytes at a time (VPCMPEQB), combine vectors
+with VPMINUB, collapse a comparison into a bit mask (VPMOVMSKB), and find the
+first set bit (TZCNT, which the lifter turns into a 33-iteration loop).
+\begin{itemize}
+\item \textbf{Lifting.}  Ghidra leaves several AVX2 operations opaque.  The
+      lifter had to spell them out lane by lane, and to merge per-lane
+      register writes whose naive translation doubled the term size with every
+      lane.
+\item \textbf{Term size.}  Stepping one VPMOVMSKB symbolically executes
+      about 200 IL moves and produces a 32-way disjunction over the bytes of
+      memory.  The brute-force proof of a single mask fact took 106\,s.
+      We instead wrote instruction-level lemmas: a Coq function generates
+      each lifted instruction, the lemma about it is proved once by induction
+      over the lanes, and a proof steps the instruction with a single lemma
+      application.
+\item \textbf{OSS-Verify avoids vector code.}  Its statements include a
+      variant for binaries that take vector code paths when the processor
+      advertises the RISC-V vector extension: the process is told the
+      machine has no vector unit, so the scalar paths are what gets verified.
+\end{itemize}
+
+\subsection{Bit-level reasoning about positions}
+
+The correctness of the string functions rests on index arithmetic over
+masks.  For \code{strlen}:
+\begin{itemize}[nosep]
+\item bit $j$ of the mask is set iff byte $j$ of the block is zero;
+\item TZCNT gives the first such $j$, and with the bytes already known to be
+      nonzero that determines the length;
+\item near a page end the mask of the aligned block is shifted right by
+      $s \bmod 32$ with an \emph{arithmetic} shift (SARX), and a separate
+      argument shows that the sign-replicated high bits never produce the
+      first set bit;
+\item the loop exit combines two 32-bit masks into one 64-bit value and uses
+      a 64-bit TZCNT, which has to be split back into the two cases.
+\end{itemize}
+For \code{strchr}, a ``hit'' is a byte equal to 0 or to $c$; the loop
+detects it as a zero byte of $\min(x, x \oplus c)$.  For \code{strcmp}, a
+stop is a byte that differs between the two strings or terminates the first,
+which the code computes as a zero lane of $\min(\mathrm{eq}(a,b), a)$.
+
+\subsection{Configuration in memory}
+
+The memcpy strategy depends on tunables that glibc sets at startup:
+\begin{itemize}[nosep]
+\item the REP MOVSB threshold and its stop threshold;
+\item the non-temporal threshold;
+\item a CPU-feature word that disables REP MOVSB for short distances.
+\end{itemize}
+The proof reads them as symbolic memory, so they become preconditions and
+case splits.  Some preconditions encode facts glibc guarantees elsewhere,
+for example that the REP MOVSB threshold is never below 256 bytes on AVX.
+
+\subsection{x86 semantics}
+
+Partial-register writes, the flags and their many encodings, REP prefixes
+(lifted as instructions that jump to themselves, so REP STOSB and REP MOVSB
+need their own invariants and the direction flag), and the LOCK prefix all
+had to be handled.  Several needed lifter fixes for soundness
+(Section~\ref{sec:lifting}).  Branches on signed comparisons force the flags
+into the proof: \code{strcmp}'s page-safety test is a \code{JG} after a
+\code{CMP}, so the proof must recover the signed relation from the lifted
+\code{OF}, \code{SF} and \code{ZF} bit-expressions (the \code{OF} term turns
+out to be identically zero), and it cannot abstract those flags away the way
+the loop-only functions do.
+
+\subsection{The proof engine at the limit}
+
+A single glibc function can produce symbolic states larger than an
+OSS-Verify proof ever needs in one goal, because its paths rejoin and its
+values are wide.  The resulting failures were mostly engineering, not
+mathematics:
+\begin{itemize}[nosep]
+\item tactics that compare memory terms (\code{assumption}, \code{rewrite}
+      with unification variables, \code{discriminate}) unfold them and run
+      out of memory;
+\item \code{lia} runs out of memory on any hypothesis that mentions a load,
+      and becomes very slow with several equations modulo $2^{64}$;
+\item the kernel check at \code{Qed} can take far longer than the tactics.
+\end{itemize}
+Each needed a work-around, recorded in the README: syntactic tactics,
+cleared contexts, explicit lemma instances, and extra cut points.
+
+\subsection{Where OSS-Verify's obligations are harder}
+
+The comparison cuts both ways.  OSS-Verify proofs must:
+\begin{itemize}[nosep]
+\item reason about whole programs, including start-up code, the C library
+      and the sanitizer runtime;
+\item handle a nondeterministic operating system: short reads, arbitrary
+      \code{mmap} addresses, spurious failures;
+\item show that every memory access stays inside mapped memory.
+\end{itemize}
+Our theorems are partial-correctness statements about single functions, and
+Picinae's memory model lets them ignore faults.  The vectorized string
+functions read past the end of the string, and in Picinae that needs no
+argument.  The same reads in LPS would need the page-boundary reasoning the
+glibc code is designed around.
+
+\section{Methodology}\label{sec:method}
+
+\subsection{Where specifications come from}
+
+OSS-Verify turns testing infrastructure into theorems.  An OSS-Fuzz harness
+already defines an entry point and an input format.  The statement says that
+the harness behaves on all inputs the way fuzzing hopes it behaves on the
+inputs it tried.  Producing a statement takes no understanding of the
+library; this is what makes 20{,}164 statements over 2{,}148 harnesses
+possible.  It also limits what can be said, because there is no notion of
+the right output.
+
+Our specifications are written by the model, function by function, from the
+man page and from reading the binary.  They say much more, but they are a
+second artifact that must be reviewed against the documentation.  For
+example, the headers note where glibc departs from the man page
+(\code{sigfillset} leaves out signals 32 and 33, which NPTL reserves), and
+where a specification needed a precondition the man page does not mention
+(\code{memcpy}'s loop theorem assumes \code{64 <= d}).  We have not yet
+reviewed every specification against the C sources.
+\todo{Add a specification-review pass, ideally by someone other than the
+generating model.}
+
+\subsection{Proof style}\label{sec:proofstyle}
+
+The OSS-Verify proofs work at whole-program scale.  A typical proof file
+tree includes interaction-tree models of the program, simulation arguments
+between builds, and per-function lemmas for the C library.  For example,
+the zstd \code{huf\_decompress} proof contains a specification of musl's
+\code{memcpy} at its RISC-V entry address, with a non-overlap precondition
+much like ours.  The proof scripts in the release are stored in a compressed
+replay encoding (\code{KReplay}) with comments removed, so they are checkable
+but not meant to be read.  The post reports a typical proof of about
+600{,}000 lines for binaries with a median of 18{,}000 instructions.  The
+repository's \code{proofs/} directory holds about $3.9\times10^7$ lines of
+Rocq.
+
+Picinae proofs follow the platform's Floyd--Hoare style.  The prover places
+invariants at cut points (loop heads, joins, call sites).  The symbolic
+interpreter (\code{x64\_step}) and the simplifier (\code{psimpl}) step
+between them, and the remaining arithmetic and bit-vector goals are closed
+by hand.  Proofs are written to be read, and the README records what we
+learned about keeping them fast.  Much of the experiment's effort went into
+three performance problems:
+\begin{itemize}[nosep]
+\item \textbf{Memory.}  Conversion near symbolic memory terms made plain
+      \code{reflexivity}, \code{assumption} and \code{rewrite} blow up past
+      8\,GB.  We replaced them with syntactic (\code{constr\_eq}-guarded)
+      versions and added cut points at every join.
+\item \textbf{Kernel time at \code{Qed}.}  Several tactic proofs finish in
+      seconds or minutes, but their \code{Qed} runs for more than 30
+      minutes.  The cause we found is the kernel unfolding \code{N.ltb}
+      against power-of-two literals.  A \code{Strategy} declaration fixed some
+      cases.  Four theorems remain \code{Admitted} with a note
+      (\code{pthread\_mutex\_lock}, \code{\_\_memset\_avx2\_unaligned\_erms},
+      \code{isinfl}, \code{rand\_r}).
+\item \textbf{SIMD.}  Stepping an AVX2 lane instruction symbolically builds
+      a 32-lane term; \code{VPMOVMSKB} alone executes about 200 IL moves.
+      Our response was a library of instruction-level lemmas
+      (\code{amd64\_avx2.v}).  Each lemma describes a whole lifted
+      instruction through a Coq generator convertible to the lifter's
+      output, and is proved once by induction over the lanes.
+\end{itemize}
+The OSS-Verify release does not allow unfinished work: \code{Admitted} and
+new axioms are refused, and \code{Print Assumptions} is audited against an
+allowlist.  We have no such audit yet; our libraries use
+\code{FunctionalExtensionality}, an axiom that is also on their allowlist.
+\todo{Add a \code{Print Assumptions} audit to the Makefile.}
+
+\subsection{Agents and human involvement}
+
+The post describes many autonomous agents with little human involvement,
+sharing a workspace of finished proofs.  In a 36-task benchmark, agents that
+shared proofs used 17\% fewer tokens, and some succeeded after failing on
+their own.  When an agent found a bug, it patched the code, regenerated the
+statement, and reproved it.  Patches were logged and audited, and the reward
+was shaped to discourage changing the program to make a proof go through.
+Proofs reportedly cost up to hundreds of millions of tokens.
+
+Our experiment used one agent session (Claude Code with Claude Opus~5.5)
+over about three days, with a human giving occasional direction.  Examples:
+order the work from easiest to hardest; commit only when asked; leave a
+proof \code{Admitted} with a note when its tactics are fast but its
+\code{Qed} is slow; prioritize the functions that a profile of Firefox
+visiting a website shows libc spending the most time in.  We did not patch
+glibc.  Where the binary disagrees with its documentation, we prove what
+the binary does.  \todo{Report token usage and wall-clock time per
+function.}
+
+\subsection{Scale}\label{sec:scale}
+
+The two OSS-Verify sources give different numbers.  The post reports 239
+entry points in 123 libraries.  The repository release reports 138 proved
+statements, for 60 entry points in 25 libraries, out of 20{,}164 statements.
+It also explains that proofs were ported to the release's binaries and LPS
+version, which suggests the release is the subset ported so far.
+\todo{Confirm with the OSS-Verify authors.}  Either way, the gap with us is
+two to four orders of magnitude in proof volume.  A single OSS-Verify proof
+is far larger than our whole project, mainly because each one reasons about
+a whole static executable, including the C library and the sanitizer
+runtime.
+
+\section{Lifting}\label{sec:lifting}
+
+\subsection{Our pipeline}
+
+We lift from a Ghidra~11.4.2 project in which \code{libc.so.6} has been
+imported and analyzed.  A headless driver,
+\code{lifter/pcode2coq\_headless.py}, calls \code{pcode2coq}'s library entry
+point with these settings:
+\begin{itemize}[nosep]
+\item relative addressing (entry point at 0) for single functions;
+\item global addressing for a group of functions lifted into one program
+      (\code{f1+f2=name}), so that direct calls between them resolve;
+\item \code{strictFailure}, so unmodeled registers and operations abort the
+      lift instead of becoming \code{Nop};
+\item \code{typeCheck}, which appends a well-typedness theorem;
+\item static-memory hypotheses switched off;
+\item \code{canonicalTemps}, which numbers temporaries per instruction so
+      that identical instructions lift to identical statements.
+\end{itemize}
+The AVX2 variants that the system actually runs are lifted by address.  The
+lifter itself needed a series of soundness and capability fixes, kept on a
+branch of \code{pcode2coq}:
+\begin{itemize}[nosep]
+\item partial-register writes merged into the base register;
+\item exact varnode widths and correct flag widths;
+\item \code{BOOL\_NEGATE} as \code{xor 1};
+\item \code{LZCOUNT} lifted correctly;
+\item intra-instruction branches, with the bit-scan loops of
+      \code{BSF}/\code{TZCNT} bounded by \code{Rep};
+\item AVX/AVX2 user operations spelled out;
+\item per-lane vector writes merged into one move;
+\item \code{LOCK} as a no-op.
+\end{itemize}
+\todo{Merge these fixes upstream; several are soundness bugs that affect
+any amd64 lift.}
+
+\subsection{The collaborator's lifting skill}
+
+A collaborator working in parallel has written the lifting workflow as an
+agent skill (\code{SKILL.md}).  It tells an agent to:
+\begin{itemize}[nosep]
+\item run \code{pcode2coq\_headless.py} from
+      \code{Picinae/tools/ghidra-lifter} through Ghidra's \code{pyghidraRun}
+      in headless mode, against a pre-existing Ghidra project;
+\item select functions with a Python regular expression
+      (\code{--functionRegex});
+\item always pass \code{--globalAddressing}, ``so they can compose and be
+      used together to reason about caller-callee relationships'';
+\item pass \code{--typeCheck};
+\item write the output to a subdirectory of \code{Examples} named after the
+      binary, with one file per lifted function named after the function;
+\item use \code{-noanalysis} only when the binary has already been analyzed;
+\item leave \code{--prependProgName} and \code{--interleave} unset unless
+      asked.
+\end{itemize}
+
+Compared with our pipeline:
+\begin{itemize}
+\item \textbf{The idea is the same.}  Both drive \code{pcode2coq}
+      headlessly through PyGhidra, against a pre-analyzed project, with type
+      checking on.  Writing the procedure down as a skill makes lifting
+      something any agent can do reliably.  Our session had to rediscover
+      the procedure (Ghidra and JDK versions, PyGhidra installation) before
+      lifting anything.
+\item \textbf{Addressing.}  The skill always uses global addressing.  We use
+      relative addressing for leaf functions and global addressing only for
+      groups that call each other.  Global addressing composes better:
+      caller and callee proofs can share addresses, which is what
+      \code{perform\_call}-style reasoning needs, and a function lifted
+      alone can later join a group without being re-lifted.  Relative
+      addressing keeps leaf proofs independent of where the library is
+      loaded.  Given the skill's goal, global addressing everywhere seems
+      the better default, and we should adopt it.
+\item \textbf{Selection and layout.}  \code{--functionRegex} lifts many
+      functions in one Ghidra start-up; our driver takes explicit names or
+      addresses.  The skill's layout
+      (\code{Examples/<binary>/<function>.v}) differs from ours
+      (\code{Examples/claude/<function>\_amd64.v}).  We should agree on one
+      before merging.
+\item \textbf{Soundness options.}  The skill does not mention
+      \code{strictFailure}.  Without it, the lifter emits \code{Nop} for
+      unmodeled registers and operations, which silently changes the
+      program; we recommend making it the default.  The skill also predates
+      the static-memory, canonical-temporaries and AVX changes; whether its
+      script includes them depends on which \code{pcode2coq} it uses.
+      \todo{Check the collaborator's \code{tools/ghidra-lifter} version
+      against our \code{pcode2coq} branch.}
+\item \textbf{Variant selection.}  glibc picks string and memory routines
+      at load time through IFUNC.  A regular expression over symbol names
+      can match the generic C version, which the system may never run.  Our
+      pipeline lifts the variant the machine selects (for example
+      \code{\_\_strlen\_avx2}), found by address.  The skill could say how
+      to choose.
+\end{itemize}
+
+\section{Discussion}\label{sec:discussion}
+
+\paragraph{Complementary properties.}
+OSS-Verify proves a weak property (no detectable error, agreement with the
+plain build) about entire programs, mechanically, at large scale.  We prove
+strong properties (functional correctness) about small units, with
+specifications that need judgment.  The two connect naturally.  Inside
+OSS-Verify proofs, agents already prove functional specifications of C
+library routines such as musl's \code{memcpy}, because whole-program
+reasoning needs them.  A verified, reusable library of such specifications
+is what our project produces.
+
+\paragraph{What Picinae could adopt.}
+\begin{itemize}[nosep]
+\item A checked release discipline: no \code{Admitted}, an axiom allowlist,
+      and fingerprinted statements.
+\item Statements generated from existing artifacts.  Test suites and fuzz
+      harnesses could seed specifications that the model then strengthens.
+\item An explicit fault semantics, so that a theorem can also rule out
+      faults instead of being silent about them.
+\end{itemize}
+
+\paragraph{What the Picinae approach offers.}
+\begin{itemize}[nosep]
+\item Functional specifications, readable against the documentation.
+\item An architecture-neutral IL: the same infrastructure already serves
+      ARM, RISC-V and i386 in other Picinae examples.
+\item Proofs small enough for a human to read and maintain.
+\item Specification bugs found in a production C library (\code{sigisemptyset},
+      \code{a64l}) by comparing the binary with its man page.  Crash-freedom
+      statements cannot express such bugs.
+\end{itemize}
+
+\paragraph{Open questions.}
+\begin{itemize}[nosep]
+\item Can a model scale functional-correctness proofs the way OSS-Verify
+      scaled agreement proofs, given that each specification needs review?
+\item How much of the lifter belongs in the trusted base?  Validating
+      lifted IL against an independent ISA semantics would close the gap
+      with LPS's in-logic decoding.
+\item Our slowest proofs are limited by kernel checking time, not by the
+      agent.  What proof engineering would bring them to \code{Qed}?
+\end{itemize}
+
+\begin{thebibliography}{9}
+\bibitem{anthropic-post}
+Anthropic.
+\newblock LLMs are making formal software verification feasible at a much
+  larger scale.
+\newblock \url{https://www.anthropic.com/research/formal-verification},
+  October 2026.
+
+\bibitem{oss-verify}
+Theorem.
+\newblock OSS Verify: theorem statements about OSS-Fuzz fuzz targets as
+  compiled RISC-V binaries, and machine-checked Rocq proofs of them.
+\newblock \url{https://github.com/theorem-labs/oss-verify-proofs}, 2026.
+
+\bibitem{lps}
+Theorem.
+\newblock rocq-linux-process-semantics (LPS).
+\newblock
+  \url{https://github.com/theorem-labs/rocq-linux-process-semantics}.
+\end{thebibliography}
+
+\end{document}

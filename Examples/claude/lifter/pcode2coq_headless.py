@@ -25,7 +25,8 @@ sys.path.insert(0, p2c_dir)
 from pcode2coq_lib import LiftInfo, liftFunc, proc_insn
 
 opts = argparse.Namespace(globalAddressing=False, interleave=False,
-                          typeCheck=True, debugOps=False, strictFailure=True)
+                          typeCheck=True, debugOps=False, strictFailure=True,
+                          staticMemory=False, canonicalTemps=True)
 
 def find_func(fname):
     if fname.startswith('0x'):
