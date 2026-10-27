@@ -81,22 +81,22 @@ write memory).
 | `isascii` | `isascii` | RAX = 1 iff 0 ≤ c ≤ 127 (signed) | :) |
 | `htonl`, `ntohl` | `htonl` | RAX = bswap32; storing it little-endian gives the big-endian encoding | :) ideally would use `revbytes` |
 | `htons`, `ntohs` | `htons` | AX = bswap16, plus the exact full-register effect | :) ideally would use `revbytes`; proves a stronger implementation dependent condition than the man page and ABI require---preserver impl. dependent information about other bits of the return value.  |
-| `abs` | `abs` | RAX = \|j\| mod 2^32; exact \|j\| for j ≠ INT_MIN | |
-| `labs`, `llabs`, `imaxabs` | `labs` | 64-bit version of the above | |
-| `div` | `div` | quot/rem in EAX/upper half, rounded toward zero, quot·d + rem = n | |
-| `ldiv`, `lldiv`, `imaxdiv` | `ldiv` | quot in RAX, rem in RDX | |
-| `ffs` | `ffs` | 1-based index of lowest set bit (BSF loop) | |
-| `ffsl`, `ffsll` | `ffsl` | 64-bit version | |
-| `insque`, `remque` | `insque`, `remque` | exact final memory, plus link-level corollaries under non-aliasing | |
-| `swab` | `swab` | pairwise byte swap of `n & ~1` bytes, frame elsewhere (loop) | |
-| `pthread_equal` | `pthread_equal` | 1 iff equal | |
-| `mbsinit` | `mbsinit` | 1 iff NULL or `__count == 0` | |
-| `gnu_dev_major/minor/makedev` | `gnu_dev_*` | glibc dev_t encoding; major/minor invert makedev; makedev injective | |
-| `inet_netof`, `inet_lnaof` | `inet_netof`, `inet_lnaof` | classful split; the network and host parts recombine to the address | |
-| `cfgetospeed`, `cfgetispeed` | `cfgetospeed`, `cfgetispeed` | `c_cflag & (CBAUD\|CBAUDEX)`, with glibc's IBAUD0 case | |
-| `sigemptyset` | `sigemptyset` | clears signals 1..64; NULL → errno = EINVAL | |
-| `sigisemptyset` | `sigisemptyset` | **does not meet its spec**; see below | |
-| `wcschrnul` | `wcschrnul` | first wc or the terminator (loop) | |
+| `abs` | `abs` | RAX = \|j\| mod 2^32; exact \|j\| for j ≠ INT_MIN | :) |
+| `labs`, `llabs`, `imaxabs` | `labs` | 64-bit version of the above | :)  abs_math and labs_math could be generalized over bitwidth to save lemma+tokens in new contexts/work |
+| `div` | `div` | quot/rem in EAX/upper half, rounded toward zero, quot·d + rem = n | :) |
+| `ldiv`, `lldiv`, `imaxdiv` | `ldiv` | quot in RAX, rem in RDX | :) |
+| `ffs` | `ffs` | 1-based index of lowest set bit (BSF loop) | :) did not understand the comment about glibc using BSF and how that ought to change the theorem. |
+| `ffsl`, `ffsll` | `ffsl` | 64-bit version | :) |
+| `insque`, `remque` | `insque`, `remque` | exact final memory, plus link-level corollaries under non-aliasing | insque :); remque :) |
+| `swab` | `swab` | pairwise byte swap of `n & ~1` bytes, frame elsewhere (loop) | :) |
+| `pthread_equal` | `pthread_equal` | 1 iff equal | :) |
+| `mbsinit` | `mbsinit` | 1 iff NULL or `__count == 0` | :) |
+| `gnu_dev_major/minor/makedev` | `gnu_dev_*` | glibc dev_t encoding; major/minor invert makedev; makedev injective | :) |
+| `inet_netof`, `inet_lnaof` | `inet_netof`, `inet_lnaof` | classful split; the network and host parts recombine to the address | ? |
+| `cfgetospeed`, `cfgetispeed` | `cfgetospeed`, `cfgetispeed` | `c_cflag & (CBAUD\|CBAUDEX)`, with glibc's IBAUD0 case | :) |
+| `sigemptyset` | `sigemptyset` | clears signals 1..64; NULL → errno = EINVAL | :) |
+| `sigisemptyset` | `sigisemptyset` | **does not meet its spec**; see below | :)? |
+| `wcschrnul` | `wcschrnul` | first wc or the terminator (loop) | :) |
 | `__strspn_c1`, `__strspn_c2` | `strspn_c1`, `strspn_c2` | strspn with a 1- or 2-character accept set (loops) | |
 | `__strcspn_c1`, `__strcspn_c2` | `strcspn_c1`, `strcspn_c2` | strcspn with a 1- or 2-character reject set (loops) | |
 | `__strpbrk_c2` | `strpbrk_c2` | strpbrk with a 2-character set (loop) | |
