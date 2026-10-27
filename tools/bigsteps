@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Picinae stepfrom lemmas using Coqpyt and coq-lsp.
+"""Generate Picinae stepfrom lemmas using coq-lsp or the Rocq compiler.
 
 Run from any directory; the nearest _CoqProject supplies the load path.
 The target must contain exactly one Definition of type program. Dependencies
@@ -10,12 +10,16 @@ Example usage:
   ./bigsteps Examples/i386_strcmp.v --invariants 0 8 22 36 --exits 22 36
 
   ./bigsteps Examples/arm7_memset.v --invariants 0 12 44 84 120 --exits 120
+
+  ./bigsteps Examples/arm7_memset.v --backend compiler --invariants 0 12 44 84 120 --exits 120
 """
 import argparse
 import os
 from pathlib import Path
 import re
 import shlex
+import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -109,9 +113,10 @@ def close_goal(goal):
     return result
 
 
-def generate(path, invariants, exits, command, timeout=120):
-    from coqpyt.coq.base_file import CoqFile
-    from coqpyt.lsp.structs import TextDocumentIdentifier
+def generate(path, invariants, exits, command, timeout=120, backend='lsp', ignore=()):
+    if backend == 'lsp':
+        from coqpyt.coq.base_file import CoqFile
+        from coqpyt.lsp.structs import TextDocumentIdentifier
 
     original = path.read_bytes()
     text = original.decode('utf-8')
@@ -130,8 +135,80 @@ def generate(path, invariants, exits, command, timeout=120):
     fd, temporary = tempfile.mkstemp(prefix='Bigsteps_', suffix='.v', dir=path.parent)
     os.close(fd)
     scratch = Path(temporary)
+    base = scratch.with_name(scratch.stem + '_Base.v')
+    base_ready = False
 
-    def check(code, goals=False):
+    def check(code, goals=False, complete=False):
+        nonlocal base_ready
+        if backend == 'compiler':
+            if goals:
+                # Introduce the trace binders produced by find_vcs before
+                # abstracting history; otherwise generalize can select a
+                # bound variable and introduce a spurious unused premise.
+                code = code.removesuffix(GENERALIZE + '\n')
+                code += '''all: intros.
+''' + GENERALIZE + '''
+all: repeat match goal with H : list (exit * _) |- _ => clear H end.
+all: repeat multimatch goal with H : _ |- _ =>
+  tryif first [constr_eq H invs | constr_eq H exits | constr_eq H s]
+  then fail else revert H
+end.
+all: match goal with |- ?G => idtac "BIGSTEPS_VC_BEGIN" G "BIGSTEPS_VC_END" end.
+Abort.
+'''
+            scratch.write_text(code, encoding='utf-8')
+            # Read load paths and compiler arguments from the same project
+            # used by coq-lsp. Run in its root so relative paths agree.
+            project = workspace / '_CoqProject'
+            tokens = shlex.split(project.read_text(), comments=True) if project.exists() else []
+            flags, i = [], 0
+            while i < len(tokens):
+                token = tokens[i]
+                count = {'-R': 2, '-Q': 2, '-I': 1, '-arg': 1}.get(token, 0)
+                if count:
+                    flags.extend(shlex.split(tokens[i+1]) if token == '-arg'
+                                 else tokens[i:i+count+1])
+                i += count + 1
+            compiler = ['rocq', 'compile'] if shutil.which('rocq') else ['coqc']
+            if not complete:
+                # Cache the unchanged source for probes and individual lemma
+                # checks. Large lifts may contain costly typechecking proofs.
+                # -vos skips those existing proofs only in this temporary
+                # dependency; the final complete check verifies every proof.
+                if not base_ready:
+                    exported = re.sub(r'\bRequire\s+Import\b', 'Require Export', prefix)
+                    base.write_text(exported, encoding='utf-8')
+                    result = subprocess.run(compiler + flags + ['-vos', str(base)],
+                                            cwd=workspace, capture_output=True,
+                                            text=True, timeout=timeout)
+                    if result.returncode:
+                        raise ValueError('Rocq rejected source declarations:\n'
+                                         + result.stdout + result.stderr)
+                    base_ready = True
+                module = None
+                for i, flag in enumerate(flags):
+                    if flag in ('-R', '-Q'):
+                        root = (workspace / flags[i+1]).resolve()
+                        if base.is_relative_to(root):
+                            parts = base.relative_to(root).with_suffix('').parts
+                            module = '.'.join(filter(None, (flags[i+2], *parts)))
+                if module is None:
+                    raise ValueError('compiler backend needs a -R or -Q load path for the target')
+                scopes = '\n'.join(re.findall(r'\bOpen\s+Scope\s+[\w]+\s*\.', uncomment(prefix)))
+                code = 'Require Import ' + module + '.\n' + scopes + '\n' + code[len(prefix):]
+                scratch.write_text(code, encoding='utf-8')
+            mode = [] if complete else ['-vok']
+            result = subprocess.run(compiler + flags + mode + [str(scratch)], cwd=workspace,
+                                    capture_output=True, text=True, timeout=timeout)
+            if result.returncode:
+                raise ValueError('Rocq rejected generated code:\n' + result.stdout + result.stderr)
+            if goals:
+                statements = re.findall(r'BIGSTEPS_VC_BEGIN\s+(.*?)\s+BIGSTEPS_VC_END',
+                                        result.stdout, re.DOTALL)
+                if not statements:
+                    raise ValueError('Rocq did not print verification conditions')
+                return statements
+            return
         scratch.write_text(code, encoding='utf-8')
         with CoqFile(str(scratch), workspace=str(workspace), timeout=timeout) as rocq:
             if not rocq.is_valid:
@@ -150,6 +227,11 @@ def generate(path, invariants, exits, command, timeout=120):
 
     try:
         header = f'Import {architectures[0]}.\n'
+        if ignore:
+            if any(not re.fullmatch(r'[A-Za-z_][A-Za-z_0-9]*', v) for v in ignore):
+                raise ValueError('ignored variables must be Rocq identifiers')
+            header += ('Local Ltac ignore_vars v ::= constr:(match v with '
+                       + ' | '.join(ignore) + ' => true | _ => false end).\n')
         setup = header + 'Set Printing Depth 1000000.\nSet Printing Width 1000000.\n'
         vcs = '(' + '::'.join(map(str, invariants)) + '::nil)'
         lemmas = []
@@ -168,12 +250,14 @@ def generate(path, invariants, exits, command, timeout=120):
             probe = (prefix + '\n' + setup + f'Goal forall invs exits s t, {conclusion}.\n'
                      + f'intros; find_vcs {vcs}.\nUnshelve.\n' + GENERALIZE + '\n')
             goals = check(probe, goals=True)
-            hypotheses = '\n'.join(f'    (VC{i}: {close_goal(g)})'
+            hypotheses = '\n'.join(f'    (VC{i}: {g if backend == "compiler" else close_goal(g)})'
                                    for i, g in enumerate(goals, 1))
+            discharge = '\n'.join(
+                f'  1: solve [eapply VC{i}; first [eassumption | reflexivity]].'
+                for i in range(1, len(goals) + 1))
             lemma = (f'Lemma {name}:\n  forall invs exits s t\n{hypotheses}\n  ,\n'
                      + f'  {conclusion}.\nProof.\n  intros; find_vcs {vcs}.\n'
-                     + '  Unshelve.\n  all: match goal with H: _ |- _ =>\n'
-                     + '      solve [eapply H; first [eassumption | reflexivity]]\n  end.\nQed.\n')
+                     + '  Unshelve.\n' + discharge + '\nQed.\n')
             check(prefix + '\n' + header + lemma)
             lemmas.append(lemma)
             lemma_names.append(name)
@@ -188,7 +272,7 @@ def generate(path, invariants, exits, command, timeout=120):
         block = (BEGIN + '\n(* Generated by: ' + safe_command + ' *)\n'
                  + header + '\n' + '\n'.join(lemmas) + '\n' + tactic + END)
         candidate = prefix + ('' if replacing else '\n\n') + block + suffix
-        check(candidate)
+        check(candidate, complete=True)
         if path.read_bytes() != original:
             raise ValueError('target changed during generation; refusing to overwrite it')
         scratch.write_bytes(candidate.encode('utf-8'))
@@ -196,6 +280,13 @@ def generate(path, invariants, exits, command, timeout=120):
         os.replace(scratch, path)
     finally:
         scratch.unlink(missing_ok=True)
+        for suffix in ('.vo', '.vos', '.vok', '.glob'):
+            scratch.with_suffix(suffix).unlink(missing_ok=True)
+        scratch.with_name('.' + scratch.stem + '.aux').unlink(missing_ok=True)
+        base.unlink(missing_ok=True)
+        for suffix in ('.vo', '.vos', '.vok', '.glob'):
+            base.with_suffix(suffix).unlink(missing_ok=True)
+        base.with_name('.' + base.stem + '.aux').unlink(missing_ok=True)
 
 
 def address(value):
@@ -213,6 +304,12 @@ def main():
     parser.add_argument('filepath', type=Path)
     parser.add_argument('--invariants', type=address, nargs='+', required=True)
     parser.add_argument('--exits', type=address, nargs='*', required=True)
+    parser.add_argument('--backend', choices=('lsp', 'compiler'), default='lsp',
+                        help='compiler needs only rocq/coqc; lsp uses CoqPyT and coq-lsp')
+    parser.add_argument('--ignore', nargs='*', default=[], metavar='REGISTER',
+                        help='abstract assigned values of registers absent from the invariants')
+    parser.add_argument('--timeout', type=int, default=120,
+                        help='timeout per Rocq invocation in seconds (default: 120)')
     args = parser.parse_args()
     invariants = list(dict.fromkeys(args.invariants))
     exits = set(args.exits)
@@ -222,7 +319,8 @@ def main():
     if path.suffix != '.v':
         parser.error('filepath must be a Rocq .v file')
     try:
-        generate(path, invariants, exits, shlex.join(['bigsteps', *sys.argv[1:]]))
+        generate(path, invariants, exits, shlex.join(['bigsteps', *sys.argv[1:]]),
+                 timeout=args.timeout, backend=args.backend, ignore=args.ignore)
     except Exception as error:
         print(f'bigsteps: {error}', file=sys.stderr)
         return 1
