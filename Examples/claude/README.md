@@ -79,8 +79,8 @@ write memory).
 |---|---|---|---|
 | `toascii` | `toascii` | RAX = c & 0x7f | :) |
 | `isascii` | `isascii` | RAX = 1 iff 0 ≤ c ≤ 127 (signed) | :) |
-| `htonl`, `ntohl` | `htonl` | RAX = bswap32; storing it little-endian gives the big-endian encoding | |
-| `htons`, `ntohs` | `htons` | AX = bswap16, plus the exact full-register effect | |
+| `htonl`, `ntohl` | `htonl` | RAX = bswap32; storing it little-endian gives the big-endian encoding | :) ideally would use `revbytes` |
+| `htons`, `ntohs` | `htons` | AX = bswap16, plus the exact full-register effect | :) ideally would use `revbytes`; proves a stronger implementation dependent condition than the man page and ABI require---preserver impl. dependent information about other bits of the return value.  |
 | `abs` | `abs` | RAX = \|j\| mod 2^32; exact \|j\| for j ≠ INT_MIN | |
 | `labs`, `llabs`, `imaxabs` | `labs` | 64-bit version of the above | |
 | `div` | `div` | quot/rem in EAX/upper half, rounded toward zero, quot·d + rem = n | |
