@@ -30,8 +30,13 @@ Picinae_numbers.v
 # Examples/i386_wcsnlen.v
 # Examples/i386_wcsspn_proof.v
 # Examples/i386_wcsspn.v
-Examples/arm8_strspn.v
-Examples/arm8_strspn_lemmas.v
+# Examples/arm8_strspn.v
+# Examples/arm8_strspn_lemmas.v
+
+# Examples/claude/memmove_avx_amd64.v
+# Examples/claude/amd64_common.v
+# Examples/claude/amd64_memcpy_sets.v
+# Examples/claude/amd64_memcpy_lemmas.v
 
 # GMP lifts, specifications, and checked proofs
 # Examples/libgmp_so_10_5_0/gmpn_copyi_amd64.v
