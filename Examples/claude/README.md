@@ -115,12 +115,12 @@ write memory).
 | `isinfl` | `isinfl` | RAX = `isinfl_spec`: 1 / 0xffffffff for ±inf (exponent 0x7fff, significand 0x8000000000000000), else 0; main theorem **Admitted (QED-SLOW)**: tactics take ~10 s, the kernel check > 5 min (power-of-two literal 2^31) | :); Admitted due to QED-SLOW |
 | `cfmakeraw` | `cfmakeraw` | the man page's flag masks on c_iflag/c_oflag/c_cflag/c_lflag, plus c_cc[VTIME] = 0, c_cc[VMIN] = 1; the single 16-byte store is split into four dword stores (`setmem16_split`) | :) |
 | `cfsetospeed`, `cfsetispeed` | `cfsetospeed`, `cfsetispeed` | valid speed (`speed_ok`: inside CBAUD, or B57600..B4000000) → c_[io]speed := speed, CBAUD bits of c_cflag := speed (cfsetispeed: speed 0 sets glibc's private IBAUD0 bit instead); else EINVAL.  The binary also accepts 0x1000 (BOTHER) | :); `speed_ok` can be simplified---the RHS is redundant. |
-| `copysign`, `copysignf` | `copysign`, `copysignf` | low 64 (32) bits of YMM0 = magnitude bits of x, sign bit of y; the `.rodata` masks are a precondition | |
-| `inet_makeaddr` | `inet_makeaddr` | RAX = byte-swapped classful net/host combination (`makeaddr`), the converse of `inet_netof`/`inet_lnaof` | |
-| `sigfillset` | `sigfillset` | first word := 0xfffffffe7fffffff: every signal 1..64 **except 32 and 33** (`sigfillset_members`); NULL → EINVAL | |
-| `sigaddset`, `sigdelset` | `sigaddset`, `sigdelset` | `N.setbit`/`N.clearbit` of bit n−1; EINVAL for n ∉ 1..64, NULL set, **and n = 32 or 33** (reserved by NPTL; not in the man page) | |
-| `sigismember` | `sigismember` | RAX = bit n−1 of the first word; EINVAL for n ∉ 1..64 or NULL (32 and 33 are accepted) | Ok if signal set is 1024 bits|
-| `sigandset`, `sigorset` | `sigandset`, `sigorset` | first word of dest := AND / OR of the operands' first words; any NULL → EINVAL | |
+| `copysign`, `copysignf` | `copysign`, `copysignf` | low 64 (32) bits of YMM0 = magnitude bits of x, sign bit of y; the `.rodata` masks are a precondition | :) |
+| `inet_makeaddr` | `inet_makeaddr` | RAX = byte-swapped classful net/host combination (`makeaddr`), the converse of `inet_netof`/`inet_lnaof` | :) |
+| `sigfillset` | `sigfillset` | first word := 0xfffffffe7fffffff: every signal 1..64 **except 32 and 33** (`sigfillset_members`); NULL → EINVAL | :) |
+| `sigaddset`, `sigdelset` | `sigaddset`, `sigdelset` | `N.setbit`/`N.clearbit` of bit n−1; EINVAL for n ∉ 1..64, NULL set, **and n = 32 or 33** (reserved by NPTL; not in the man page) | :) |
+| `sigismember` | `sigismember` | RAX = bit n−1 of the first word; EINVAL for n ∉ 1..64 or NULL (32 and 33 are accepted) | :) |
+| `sigandset`, `sigorset` | `sigandset`, `sigorset` | first word of dest := AND / OR of the operands' first words; any NULL → EINVAL | :) |
 | `a64l` | `a64l` | RAX = value of the leading ≤ 6 base-64 digits mod 2^32; **does not meet its spec**, see below | |
 | `__strspn_sse2` (`strspn` without SSE4.2) | `strspn_sse2` | RAX = strspn(s, accept) (`spn`); memory unchanged outside the 256-byte table below RSP (three loops: REP STOSQ, table fill, scan) | |
 | `__strcspn_sse2` (`strcspn` without SSE4.2) | `strcspn_sse2` | RAX = strcspn(s, reject) (`cspn`); same frame | |
