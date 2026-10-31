@@ -180,14 +180,12 @@ Remark exitof_some a x: exitof a (Some x) = x. Proof. exact eq_refl. Qed.
 (* If asked to step the computation when we're already at an invariant point,
    just make the proof goal be the invariant. *)
 Ltac ISA_invhere :=
-  eapply nextinv_here; [ reflexivity | hnf; psimpl_goal ].
+  match goal with |- context[Addr ?a] =>
+    eapply nextinv_here; [ reflexivity | hnf; psimpl_goal ];
+    idtac "Goal at <" a ">"
+  end.
 
-(* If we're not at an invariant, symbolically interpret the program for one
-   machine language instruction.  (The user can use "do" or "repeat" tactics
-   to step through many instructions, but often it is wiser to pause and do
-   some manual simplification of the state at various points.) *)
-Ltac ISA_invseek :=
-  eapply NIStep; [reflexivity|reflexivity|];
+Ltac ISA_symbolic_interp :=
   let c := fresh "c" in let s := fresh "s" in let x := fresh "x" in let XS := fresh "XS" in
   intros c s x XS;
   ISA_step_and_simplify XS;
@@ -210,11 +208,47 @@ Ltac ISA_invseek :=
   repeat match goal with [ x:N |- _ ] => clear x end;
   try first [ rewrite exitof_none | rewrite exitof_some ].
 
+(* If we're not at an invariant, symbolically interpret the program for one
+   machine language instruction.  (The user can use "do" or "repeat" tactics
+   to step through many instructions, but often it is wiser to pause and do
+   some manual simplification of the state at various points.) *)
+Ltac ISA_invseek :=
+  eapply NIStep; [reflexivity|reflexivity|]; ISA_symbolic_interp.
+
 (* Clear any stale memory-access hypotheses (arising from previous computation
    steps) and either step to the next machine instruction (if we're not at an
    invariant) or produce an invariant as a proof goal. *)
 Ltac ISA_step :=
   repeat match goal with [ H: MemAcc _ _ _ _ _ |- _ ] => clear H end;
   first [ ISA_invseek; try ISA_invhere | ISA_invhere ].
+
+(* The following tactics are for big-step automation.  Big steps simplify symbolic
+   interpretation during interactive proving and can be used to break down partial
+   correctness proofs into smaller verification conditions.  This improves interactive
+   theorem proving and parallelizes the proof checking. *)
+
+Ltac apply_any_H := match goal with | H: _ |- _ => apply H end.
+Ltac vc_step := eapply NIStep;[shelve|reflexivity|]; ISA_symbolic_interp.
+
+Ltac in_list a l :=
+  lazymatch l with
+  | nil => fail
+  | a :: _ => idtac
+  | _ :: ?t => in_list a t
+  end.
+
+Ltac find_vcs vcs :=
+  repeat match goal with
+         | |- nextinv _ _ _ true ((Addr ?a, _)::_) =>
+             first [ in_list a vcs; shelve | vc_step ]
+         | |- nextinv _ _ _ false ((Addr ?a, _)::_) =>
+             vc_step
+         end.
+
+Ltac unconjunct PRE :=
+  repeat lazymatch type of PRE with
+         | _ /\ _ => let H := fresh "H" in destruct PRE as (H & PRE); unconjunct H
+         | exists _, _ => let ev := fresh "ev" in destruct PRE as (ev & PRE)
+         end.
 
 End Picinae_ISA.

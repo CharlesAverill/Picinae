@@ -77,6 +77,17 @@ Open Scope bool.
           propositional form.  E.g., `H: x =? y = true` becomes `H: x = y`
           and `P: x <=? y = false` becomes `P: x > y`.
 
+      * memsimp---memsimp removes reductions modulo the memory address space
+          from getmem and setmem addresses, including reductions nested inside
+          additions and multiplications.  It also handles N.succ.  Other moduli,
+          stored values, and operations that do not preserve modular equality
+          (such as N.sub and N.div) are left alone.
+
+          Variations: `memsimp in H.` and `memsimp in *.`
+
+          This tactic was added by Codex, if it does not behave as documented please
+          file an issue with an example..
+
       * specsimpl---specsimpl simplifies N.testbit expressions.  It exclusively
           uses rewrites that do not introduce hypotheses.  Instead its rewrites
           may introduce comparisons over N.
@@ -139,8 +150,14 @@ Ltac2 lia_or_smt0 () :=
 Tactic Notation "lia_or_smt" := ltac2:(lia_or_smt0 ()).
 
 (** Eliminate the store by rewriting the expressions stored in registers and
-    inferring their bounds from the type context. *)
+    inferring their bounds from the type context.  This can make the goal unprovable
+    if there are propositions about the state of memory hidden inside definitions.  Elimstore
+    will eliminate the hypotheses but not apply the substitutions.  To get past this you need
+    to unfold the definitions before applying elimstore.  The first tactic, `rewrite ?update_frame`,
+    should simplify the store propositions so that the following tactics correctly apply the
+    substitutions. *)
 Global Ltac elimstore :=
+  rewrite ?update_frame by discriminate;
   repeat lazymatch goal with
   (* Eliminate registers we have an expression for. *)
   | [ H: ?s ?v = _, MDL: models ?typs ?s |- _] =>
@@ -178,6 +195,77 @@ Global Ltac elimstore :=
   end.
 
 Global Ltac Zify.zify_pre_hook ::= elimstore; unfold msub in *.
+
+(* Strip address-space reductions only through operations that preserve modular
+   equality.  In particular, truncated subtraction over N is not such an
+   operation.  Test moduli by conversion, so evaluated powers work as well. *)
+Ltac memsimp_addr modulus a :=
+  lazymatch a with
+  | ?x mod ?m =>
+      match goal with
+      | _ => let EQ := constr:(eq_refl : m = modulus) in memsimp_addr modulus x
+      | _ => constr:(a)
+      end
+  | ?x + ?y =>
+      let x' := memsimp_addr modulus x in
+      let y' := memsimp_addr modulus y in constr:(x' + y')
+  | ?x * ?y =>
+      let x' := memsimp_addr modulus x in
+      let y' := memsimp_addr modulus y in constr:(x' * y')
+  | N.succ ?x =>
+      let x' := memsimp_addr modulus x in constr:(N.succ x')
+  | _ => constr:(a)
+  end.
+
+(* Prove the modular equality between an address and its stripped form. *)
+Ltac memsimp_addr_eq :=
+  first [ reflexivity
+  | lazymatch goal with
+    | |- (?x mod ?n) mod ?m = _ =>
+        unify n m; transitivity (x mod m);
+        [ apply N.Div0.mod_mod | memsimp_addr_eq ]
+    | |- (?x + ?y) mod ?m = (?x' + ?y') mod ?m =>
+        rewrite (N.Div0.add_mod x y m), (N.Div0.add_mod x' y' m);
+        f_equal; f_equal; memsimp_addr_eq
+    | |- (?x * ?y) mod ?m = (?x' * ?y') mod ?m =>
+        rewrite (N.Div0.mul_mod x y m), (N.Div0.mul_mod x' y' m);
+        f_equal; f_equal; memsimp_addr_eq
+    | |- N.succ ?x mod ?m = N.succ ?x' mod ?m =>
+        rewrite <- (N.add_1_r x), <- (N.add_1_r x'); memsimp_addr_eq
+    end ].
+
+(* The continuation rewrites only the selected memory operation, so address
+   simplification cannot accidentally rewrite a stored value or another width. *)
+Ltac memsimp_step t k :=
+  multimatch t with
+  | context[getmem ?w ?e ?len ?m ?a] =>
+      let a' := memsimp_addr constr:(2^w) a in
+      tryif constr_eq a a' then fail else
+      let EQ := fresh "MemAddr" in
+      assert (EQ: getmem w e len m a = getmem w e len m a') by
+        (rewrite <- (getmem_mod_l w e len m a),
+                 <- (getmem_mod_l w e len m a');
+         f_equal; memsimp_addr_eq);
+      k EQ; clear EQ
+  | context[setmem ?w ?e ?len ?m ?a ?v] =>
+      let a' := memsimp_addr constr:(2^w) a in
+      tryif constr_eq a a' then fail else
+      let EQ := fresh "MemAddr" in
+      assert (EQ: setmem w e len m a v = setmem w e len m a' v) by
+        (rewrite <- (setmem_mod_l w e len m a v),
+                 <- (setmem_mod_l w e len m a' v);
+         f_equal; memsimp_addr_eq);
+      k EQ; clear EQ
+  end.
+
+Ltac memsimp :=
+  repeat match goal with |- ?G => memsimp_step G ltac:(fun EQ => rewrite EQ) end.
+Tactic Notation "memsimp" "in" hyp(H) :=
+  repeat (let T := type of H in memsimp_step T ltac:(fun EQ => rewrite EQ in H)).
+Tactic Notation "memsimp" "in" "*" :=
+  memsimp; repeat match goal with H: ?T |- _ =>
+    memsimp_step T ltac:(fun EQ => rewrite EQ in H)
+  end.
 
 (* Brief section with specialized simple lemmas and the `solve simple bound` solver. *)
 Corollary mp2_bound_trans_lt:
@@ -514,8 +602,8 @@ Ltac showgoal :=
 
 (* sbi0 and sbi00 are useful for debugging and fine grained control if `solve bits inj`
    hangs on `smt`, which happens when bsimpl tries to infer conditions are `true` or `false
-   with complex contexts. Note that sbi00 is not exactly an iteration of the inner loop 
-   because it prevents bsimpl and asimpl from looping forever.  
+   with complex contexts. Note that sbi00 is not exactly an iteration of the inner loop
+   because it prevents bsimpl and asimpl from looping forever.
    I.e., it interleaves specsimpl, asimpl0, and bsimpl0, whereas the real inner loop may
    get stuck in asimpl or bsimpl. *)
 Ltac sbi00_lia    lia_time  := specsimpl0 true  lia_time  || asimpl || bsimpl0 true lia_time.
