@@ -10,6 +10,47 @@ proof file starts with a header that gives the function's semantics, quotes
 the man page, names the model, and states the input/output specification in
 English.
 
+## What chunk of glibc this covers
+
+Around 90 exported entry points, chosen to be the *leaf-ish, self-contained*
+corner of the C library — the functions whose behaviour is a pure computation
+over their arguments and memory, so a full functional spec (not just
+crash-freedom) is both meaningful and provable from the lifted machine code.
+By area:
+
+* **Bit / byte / integer** — `toascii`, `isascii`, `abs`/`labs`/`llabs`/`imaxabs`,
+  `div`/`ldiv`/`lldiv`/`imaxdiv`, `ffs`/`ffsl`/`ffsll`, `htonl`/`htons` (+ `ntoh*`),
+  `swab`.
+* **Signal sets** (`<signal.h>` bitset ops) — `sigemptyset`, `sigfillset`,
+  `sigaddset`, `sigdelset`, `sigismember`, `sigandset`, `sigorset`,
+  `__sigismember`, `sigabbrev_np`/`sigdescr_np`.  These exposed two real glibc
+  quirks (NPTL reserves signals 32/33; `sigisemptyset` int-truncation bug).
+* **Floating-point classification** (`<math.h>`) — `isnan`/`isinf`/`finite`
+  and their `f`/`l` variants, plus the x87 `isnanl`/`isinfl` and
+  `copysign`/`copysignf` (80-bit long-double layout, pseudo-/unnormal cases).
+* **String & memory primitives** — both the generic helpers (`__strspn_c*`,
+  `__strcspn_c*`, `__strpbrk_c2`, `wcschrnul`, `__strspn_sse2`, `__strcspn_sse2`)
+  and the IFUNC-selected SIMD hot paths the dynamic linker actually resolves to
+  on an AVX2 machine: `memcpy` (SSE2), `__memmove_avx_unaligned_erms`,
+  `__memset_avx2_unaligned_erms`, `__strlen_avx2`, `__strchr_avx2`,
+  `__strcmp_avx2`; and the non-leaf wrappers `strsep`, `strtok_r`, `strdup`,
+  `strndup`, `memccpy`.
+* **Search & sort** — `bsearch`, `lfind`, `lsearch` (comparator / `memcpy`
+  called through a function pointer or the PLT, discharged against a contract).
+* **PRNG** — `seed48`/`srand48_r`/`lcong48_r`/`rand_r`, `a64l`.
+* **termios / networking / misc** — `cfget*speed`, `cfset*speed`, `cfmakeraw`;
+  `inet_netof`/`inet_lnaof`/`inet_makeaddr`; `insque`/`remque`, `gnu_dev_*`,
+  `mbsinit`, `pthread_equal`, and the two heavyweight non-leaf mutex ops
+  `pthread_mutex_lock`/`pthread_mutex_unlock` (every mutex kind).
+
+Deliberately *out of scope* so far: anything whose correctness is about a data
+structure the callee owns across calls (`malloc`/`free` internals, stdio
+buffering, the locale and `iconv` machinery), long double transcendentals, and
+most functions that are thin wrappers around syscalls (where the spec is the
+kernel's, not glibc's).  The hard, SIMD-heavy `mem*`/`str*` IFUNC targets were
+prioritized because they dominate real workloads (see
+`lifter/firefox_libc_profile.txt`).
+
 ## How this relates to Anthropic's OSS-Verify proofs
 
 Anthropic and Theorem's [OSS-Verify](https://github.com/theorem-labs/oss-verify-proofs)
@@ -119,6 +160,7 @@ write memory).
 | `inet_makeaddr` | `inet_makeaddr` | RAX = byte-swapped classful net/host combination (`makeaddr`), the converse of `inet_netof`/`inet_lnaof` |
 | `sigfillset` | `sigfillset` | first word := 0xfffffffe7fffffff: every signal 1..64 **except 32 and 33** (`sigfillset_members`); NULL → EINVAL |
 | `sigaddset`, `sigdelset` | `sigaddset`, `sigdelset` | `N.setbit`/`N.clearbit` of bit n−1; EINVAL for n ∉ 1..64, NULL set, **and n = 32 or 33** (reserved by NPTL; not in the man page) |
+| `__sigaddset` | `sigaddset_internal` | the internal (inline, unvalidated) helper: for 1 ≤ sig ≤ 64, `set->__val[0] |= 1 << (sig-1)`, RAX = 0; the lifted sign-trick word index (CMOVNS/SAR, `(sig-1)/64`) is 0 for this range.  Main theorem **Admitted (QED-SLOW)**: tactics finish in ~15 s but the kernel `Qed` does not complete in 300 s — the `slt`/SAR tests against power-of-two literals (2^31, 2^32), the same trigger as the four below; the `Strategy` workaround does not cover power-of-two constants |
 | `sigismember` | `sigismember` | RAX = bit n−1 of the first word; EINVAL for n ∉ 1..64 or NULL (32 and 33 are accepted) |
 | `sigandset`, `sigorset` | `sigandset`, `sigorset` | first word of dest := AND / OR of the operands' first words; any NULL → EINVAL |
 | `a64l` | `a64l` | RAX = value of the leading ≤ 6 base-64 digits mod 2^32; **does not meet its spec**, see below |
@@ -165,8 +207,9 @@ spins forever (weaker evidence, but it rules out the contradiction).
 
 Non-leaf functions are lifted into one program with global addresses
 (`lifter/lift.sh seed48+seed48_r=seed48_amd64`), following
-`../arm8_strcasecmp_proof.v`.  `wip/` holds unfinished work (`__sigaddset`,
-a field-level corollary for `seed48`).
+`../arm8_strcasecmp_proof.v`.  `wip/` holds unfinished work (a field-level
+corollary for `seed48`); `__sigaddset` is now proved modulo the QED-SLOW
+kernel check (`amd64_sigaddset_internal_proof.v`).
 
 The loop proofs are partial correctness: the property holds whenever the
 function returns.
@@ -347,3 +390,179 @@ Canonical temporaries: the headless lifter now passes `canonicalTemps=True`, so 
 * Use `sreflexivity` (syntactic `reflexivity`) when the two sides might
   differ syntactically. Plain `reflexivity` on bit expressions over opaque
   values can start an exponential conversion check.
+
+## Generation time (how long I took to write each proof)
+
+These are *authoring* times, not proof-check times: the figure is the
+wall-clock gap between finishing the previous proof file and finishing this
+one (from file modification times), so it folds in my own iterating and
+waiting on intermediate compiles. It is only a proxy — rows marked *(incl.
+break)* span an idle/overnight gap and overstate; a file I later revised
+carries the revision time; the first file has no predecessor. Ordered as
+written. Active total (break gaps excluded): ~25 h across 81 proof files.
+
+| # | Proof (function) | ~Author time |
+|---|---|---|
+| 1 | `toascii` | — (first) |
+| 2 | `isascii` | ~2 min |
+| 3 | `htonl` | ~3 min |
+| 4 | `htons` | ~2 min |
+| 5 | `abs` | ~3 min |
+| 6 | `labs` | ~0 min |
+| 7 | `ldiv` | ~5 min |
+| 8 | `div` | ~1 min |
+| 9 | `insque` | ~8 min |
+| 10 | `remque` | ~4 min |
+| 11 | `swab` | ~11 min |
+| 12 | `ffs` | ~31 min |
+| 13 | `ffsl` | ~5 min |
+| 14 | `pthread_equal` | ~2 min |
+| 15 | `mbsinit` | ~0 min |
+| 16 | `gnu_dev_major` | ~2 min |
+| 17 | `gnu_dev_minor` | ~0 min |
+| 18 | `gnu_dev_makedev` | ~3 min |
+| 19 | `sigisemptyset` | ~19 min |
+| 20 | `cfgetospeed` | ~1 min |
+| 21 | `cfgetispeed` | ~0 min |
+| 22 | `sigemptyset` | ~0 min |
+| 23 | `wcschrnul` | ~2 min |
+| 24 | `strspn_c2` | ~29 min |
+| 25 | `strcspn_c2` | ~38 min |
+| 26 | `strpbrk_c2` | ~49 min |
+| 27 | `inet_netof` | ~1 min |
+| 28 | `inet_lnaof` | ~0 min |
+| 29 | `strcspn_c1` | ~5 min |
+| 30 | `strspn_c1` | ~0 min |
+| 31 | `sigismember_internal` | ~12 min |
+| 32 | `seed48` | ~37 min |
+| 33 | `rand_r` | ~74 min |
+| 34 | `bsearch` | ~367 min *(incl. break)* |
+| 35 | `lfind` | ~0 min |
+| 36 | `strsep` | ~39 min |
+| 37 | `strtok_r` | ~51 min |
+| 38 | `strdup` | ~12 min |
+| 39 | `a64l` | ~294 min *(incl. break)* |
+| 40 | `strspn_sse2` | ~28 min |
+| 41 | `strcspn_sse2` | ~14 min |
+| 42 | `memcpy` | ~20 min |
+| 43 | `isnanf` | ~83 min |
+| 44 | `isnan` | ~0 min |
+| 45 | `finitef` | ~2 min |
+| 46 | `sigaddset` | ~31 min |
+| 47 | `sigdelset` | ~2 min |
+| 48 | `sigandset` | ~2 min |
+| 49 | `sigfillset` | ~0 min |
+| 50 | `sigismember` | ~0 min |
+| 51 | `sigorset` | ~0 min |
+| 52 | `isinf` | ~2 min |
+| 53 | `copysign` | ~1 min |
+| 54 | `copysignf` | ~0 min |
+| 55 | `memccpy` | ~11 min |
+| 56 | `isinff` | ~5 min |
+| 57 | `sigabbrev_np` | ~2 min |
+| 58 | `sigdescr_np` | ~0 min |
+| 59 | `srand48_r` | ~4 min |
+| 60 | `lcong48_r` | ~20 min |
+| 61 | `inet_makeaddr` | ~15 min |
+| 62 | `finite` | ~232 min *(incl. break)* |
+| 63 | `strndup` | ~2 min |
+| 64 | `cfsetospeed` | ~73 min |
+| 65 | `cfsetispeed` | ~2 min |
+| 66 | `finitel` | ~17 min |
+| 67 | `isnanl` | ~0 min |
+| 68 | `cfmakeraw` | ~10 min |
+| 69 | `isinfl` | ~2 min |
+| 70 | `memcpy_loops` | ~178 min |
+| 71 | `pthread_mutex_unlock` | ~17 min |
+| 72 | `lsearch` | ~5 min |
+| 73 | `memset_avx2` | ~91 min |
+| 74 | `pthread_mutex_lock` | ~351 min *(incl. break)* |
+| 75 | `memmove_avx` | ~151 min |
+| 76 | `memmove_avx_loops` | ~100 min |
+| 77 | `memmove_avx_rep` | ~27 min |
+| 78 | `strlen_avx2` | ~47 min |
+| 79 | `strchr_avx2` | ~64 min |
+| 80 | `strcmp_avx2` | ~387 min *(incl. break)* |
+| 81 | `memmove_avx_nt` | ~950 min *(incl. break)* |
+
+## AArch64 (ARMv8) port
+
+A port of these proofs to the **aarch64** build of glibc is underway, exercising
+Picinae's `armv8` back end.  The thesis is that the *specifications* and the
+mathematics are architecture independent: only the lifted body, the register
+conventions, and the step tactic change.
+
+**Pipeline.**  Lifted from the aarch64 system libc
+(`/lib/aarch64-linux-gnu/libc.so.6`, glibc 2.35-0ubuntu3.15, Ubuntu 22.04
+ports, sha256 `79fd4eca…dff06`) with the same Ghidra 11.4.2 + `pcode2coq`
+toolchain, which auto-detects the ISA and emits `Require Import Picinae_armv8`.
+The lifter is driven against a separate aarch64 Ghidra project:
+
+```
+PROJ=~/.cache/picinae_lift_arm64/proj ./lifter/lift.sh toascii=toascii_arm8
+```
+
+**What changes vs. amd64.**  The AAPCS64 calling convention (arguments in
+`X0`–`X7`, result in `X0`, link register `X30`; leaf functions return via `X30`
+with no stack frame), the register names (`W0` = low 32 bits of `X0`, modeled
+as `Extract 31 0` / `Cast CAST_UNSIGNED 64`), and the step tactic (`arm8_step`
+in place of `x64_step`).  Everything else is reused: the specification is
+copied verbatim from the amd64 proof, and pure-arithmetic helper lemmas
+(e.g. `land_mask7`, `toZ32_ascii`, the `labs` sign lemma) are
+architecture-neutral and shared.
+
+**Proved (`Qed`).**
+
+| Function | Proof file | Property (same spec as amd64) |
+|---|---|---|
+| `toascii` | `arm8_toascii_proof.v` | `X0 = c & 0x7f` (`and w0,w0,#0x7f`) |
+| `isascii` | `arm8_isascii_proof.v` | `X0 = 1` iff `0 ≤ c ≤ 127` (`tst`/`cset`); reuses `land_mask7`, `toZ32_ascii` |
+| `pthread_equal` | `arm8_pthread_equal_proof.v` | `X0 = 1` iff `t1 = t2` (`cmp`/`cset`) |
+| `labs` | `arm8_labs_proof.v` | `X0 = \|j\| mod 2^64` (`cmp`/`cneg`); handles LONG_MIN |
+| `mbsinit` | `arm8_mbsinit_proof.v` | `X0 = 1` iff `ps = NULL` or `*ps = 0` (`cbz`/`ldr`/`cmp`/`cset`); a memory load, closes identically to amd64 (`rewrite BC`) |
+| `cfgetospeed` | `arm8_cfgetospeed_proof.v` | `X0 = c_cflag & (CBAUD\|CBAUDEX)` = `m[p+8] & 0x100f` (`ldr`/`and`); `psimpl` narrows the 4-byte load to 2 bytes since the mask `< 2^16` |
+| `cfgetispeed` | `arm8_cfgetispeed_proof.v` | input baud: 0 if IBAUD0 (`c_iflag` bit 31) set, else `c_cflag & 0x100f` (`ldr`/`tbnz`/`ldr`/`and`); branch + two loads, closes via `rewrite BC` |
+| `abs` | `arm8_abs_proof.v` | `X0 = \|j\| mod 2^32` (`cmp`/`cneg`, 32-bit); uses the shared `cneg_abs`, `msub_0_r`, `slt_mod` (see 32-bit lesson) |
+| `isnan` | `arm8_isnan_proof.v` | `X0 = 1` iff the double is NaN (`fmov`/`and`/`sub`/`lsr`); reuses `shr_msub64`, `nan64_iff` |
+| `isnanf` | `arm8_isnanf_proof.v` | `X0 = 1` iff the float is NaN; reuses `shr_msub32`, `nan32_iff` |
+| `finite` | `arm8_finite_proof.v` | `X0 = 1` iff the double is finite (`fmov`/`and`/`add`/`lsr`); reuses `shr_msub64`, `finite64_iff` |
+| `finitef` | `arm8_finitef_proof.v` | `X0 = 1` iff the float is finite; reuses `shr_msub32`, `finite32_iff` |
+| `gnu_dev_major` | `arm8_gnu_dev_major_proof.v` | `X0 = dev_major(d)` (shift/mask); shared `dev_major` def |
+| `gnu_dev_minor` | `arm8_gnu_dev_minor_proof.v` | `X0 = dev_minor(d)` (shift/mask); shared `dev_minor` def |
+| `gnu_dev_makedev` | `arm8_gnu_dev_makedev_proof.v` | `X0 = dev_make(maj,min)` (`ubfiz`/`lsl`/`and`/`orr`); shared `dev_make` def.  The `ubfiz` lift *rotates* (`lsl`\|`lsr`), so the inputs must be wrapped in `mod 2^64` (from `models`) before `bitblast_upto 64` to kill the rotate's high-bit leaves --- the one wrinkle versus the amd64 `shld`-based proof |
+| `htons`, `ntohs` | `arm8_htons_proof.v` | low 16 bits of `X0 = bswap16`, plus the exact full-register `rev16_32` effect (`rev16 w0,w0`); needs the `shr_land_shl` byte-field lemma |
+| `htonl`, `ntohl` | `arm8_htonl_proof.v` | `X0 = bswap32` (`rev w0,w0`, realized as `rev16` + halfword rotate); `bitblast_upto 32` |
+| `copysign` | `arm8_copysign_proof.v` | `X0 low 64 = \|x\| magnitude \| sign of y` (NEON `bit` insert, immediate mask --- no `.rodata` unlike amd64); via `copysign_insert` |
+| `copysignf` | `arm8_copysignf_proof.v` | 32-bit analogue; via `copysign_insert` |
+| `isinf` | `arm8_isinf_proof.v` | `X0 = 1` (+inf), `0xffffffff` (−1) for −inf, else 0 (branch-free `asr`/`bic` sign trick); proved via the function-specific `isinf_arm_bits` bit identity (ported `neg_or_sign`, `ashiftr_mod`); same `isinf_spec` as amd64 |
+| `isinff` | `arm8_isinff_proof.v` | 32-bit analogue (`asr #30`/`#31`, `INF32 = 0x7f800000`); `isinff_arm_bits`, `neg_or_sign32` |
+| `inet_netof` | `arm8_inet_netof_proof.v` | `X0 = inet_net (ntohl32 W0)`: classful network part (`rev`/`tbz`/`cmp`/`csel`, two rets).  Shared `is_classA/B`, `inet_net`; the `rev` is reduced to `ntohl32` with `rev_ntohl`, and the tbz/cmp branch conditions are matched to the class predicates via `shr31_mod2`, `land_bit31`, `ifb31_eqb0`, `land_mod32` |
+| `inet_lnaof` | `arm8_inet_lnaof_proof.v` | `X0 = inet_lna (ntohl32 W0)`: classful host part; same control flow, but `arm8_step` distributes each host mask through `rev`, so the selected branch is closed with `bitblast_upto 32` |
+
+Shared infrastructure ported alongside: **`arm8_common.v`** (the arch-neutral
+normalization and helper lemmas --- `msub_0_r`, `slt_mod`, `cneg_abs`,
+`msub_eqb_0`, `land_mask7`, `toZ32_ascii`, `shr_msub32/64`, `copysign_insert`, `dev_major/minor/make`, `shr_land_shl`, the IPv4 classful helpers (`ntohl32`, `is_classA/B`, `inet_net/lna`, `land_bit31`, `ifb31_eqb0`, `shr31_mod2`), and the `bitblast_upto` bit-blasting tactics shared with `amd64_common`) and **`arm8_ieee.v`**
+(the IEEE-754 classification definitions and `nan32/64_iff`, `finite32/64_iff`),
+both obtained by stripping the amd64 files to their architecture-neutral content.
+
+Each also has the generic theorems (well-typed, non-writable code,
+memory preservation).
+
+**Lifted, proof queued.**  `div`/`ldiv` (sdiv + msub), `swab` (a loop),
+`ffsl`/`ffsll` (`rbit`/`clz` with a `b.hi` branch).
+
+**Lifter gap.**  Several signal-set helpers (`sigaddset`, `sigdelset`,
+`sigismember`) fail to lift: they read `errno`/the TLS base via `TPIDR_EL0`,
+which the ARMv8 back end does not yet model.
+
+**Observations.**  `arm8_psimpl` is strong: for the branch-free functions the
+final obligation reduces to `reflexivity` with no manual bit reasoning (e.g.
+`pthread_equal`'s `cmp` collapses straight to `t1 =? t2`).  The leaf,
+SIMD-free functions port in minutes.  The AArch64 vector routines (NEON) will
+require an instruction-lemma kit analogous to `amd64_avx2.v`; that is the
+substantial remaining work, mirrored in structure from the amd64 proofs.
+
+**Build note.**  The `Makefile` `VFILES` now also globs `*_arm8.v` and
+`arm8_*_proof.v`.  The shared arithmetic helper lemmas are currently copied
+into each proof; factoring them into an architecture-neutral module is future
+cleanup.

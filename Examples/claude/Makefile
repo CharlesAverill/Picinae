@@ -1,6 +1,6 @@
 # Build the lifted programs and proofs in this directory.
 # Requires Picinae (../..) to be built first.
-VFILES := amd64_common.v amd64_cstring.v amd64_ieee.v amd64_termios.v amd64_memcpy_sets.v amd64_fill_sets.v amd64_memcpy_lemmas.v amd64_simd.v amd64_avx2.v $(sort $(wildcard *_amd64.v)) $(sort $(wildcard amd64_*_proof.v))
+VFILES := amd64_common.v amd64_cstring.v amd64_ieee.v amd64_termios.v amd64_memcpy_sets.v amd64_fill_sets.v amd64_memcpy_lemmas.v amd64_simd.v amd64_avx2.v $(sort $(wildcard *_amd64.v)) $(sort $(wildcard amd64_*_proof.v)) arm8_common.v arm8_ieee.v $(sort $(wildcard *_arm8.v)) $(sort $(wildcard arm8_*_proof.v))
 
 all: Makefile.coq
 	ulimit -s unlimited; $(MAKE) -f Makefile.coq all
