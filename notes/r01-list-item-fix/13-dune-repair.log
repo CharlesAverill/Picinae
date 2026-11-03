@@ -1,0 +1,75 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-856859c4
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_vListInitialiseItem_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2705:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_vListInitialiseItem_proof.{glob,vo} (exit 1)
+Goal at < 86 >
+Goal at < 90 >
+File "./Examples/FreeRTOS/armv6m_vListInitialiseItem_proof.v", line 258, characters 2-21:
+Error: setoid rewrite failed: UNDEFINED EVARS:
+ ?X288==[s BOUND ODD RST |- Relation_Definitions.relation N]
+          (internal placeholder) {?r}
+ ?X290==[s BOUND ODD RST |-
+          RelationClasses.subrelation eq
+            (Morphisms.pointwise_relation armv6mvar ?r)]
+          (internal placeholder) {?s}
+ ?X300==[s BOUND ODD RST |- Relation_Definitions.relation N]
+          (internal placeholder) {?r0}
+ ?X301==[s BOUND ODD RST |- Relation_Definitions.relation N]
+          (internal placeholder) {?r1}
+ ?X302==[s BOUND ODD RST (do_subrelation:=Morphisms.do_subrelation) |-
+          Morphisms.Proper
+            (Morphisms.respectful ?r (Morphisms.respectful ?r1 ?r0)) N.land]
+          (internal placeholder) {?p}
+ ?X303==[s BOUND ODD RST |- Morphisms.ProperProxy ?r1 (N.ones 32 - 1)]
+          (internal placeholder) {?p0}
+ ?X304==[s BOUND ODD RST |- Relation_Definitions.relation exit]
+          (internal placeholder) {?r2}
+ ?X305==[s BOUND ODD RST (do_subrelation:=Morphisms.do_subrelation) |-
+          Morphisms.Proper (Morphisms.respectful ?r0 ?r2) Addr]
+          (internal placeholder) {?p1}
+ ?X307==[s BOUND ODD RST |-
+          Relation_Definitions.relation (exit * (armv6mvar -> N))]
+          (internal placeholder) {?r3}
+ ?X308==[s BOUND ODD RST |- Relation_Definitions.relation (armv6mvar -> N)]
+          (internal placeholder) {?r4}
+ ?X309==[s BOUND ODD RST (do_subrelation:=Morphisms.do_subrelation) |-
+          Morphisms.Proper
+            (Morphisms.respectful ?r2 (Morphisms.respectful ?r4 ?r3)) pair]
+          (internal placeholder) {?p2}
+ ?X310==[s BOUND ODD RST |- Morphisms.ProperProxy ?r4 s]
+          (internal placeholder) {?p3}
+ ?X322==[s BOUND ODD RST |-
+          Relation_Definitions.relation
+            (exit * (armv6mvar -> N) * (exit * (armv6mvar -> N)))]
+          (internal placeholder) {?r5}
+ ?X323==[s BOUND ODD RST |-
+          Relation_Definitions.relation (exit * (armv6mvar -> N))]
+          (internal placeholder) {?r6}
+ ?X324==[s BOUND ODD RST (do_subrelation:=Morphisms.do_subrelation) |-
+          Morphisms.Proper
+            (Morphisms.respectful ?r3 (Morphisms.respectful ?r6 ?r5)) pair]
+          (internal placeholder) {?p4}
+ ?X325==[s BOUND ODD RST |- Morphisms.ProperProxy ?r6 (Addr 90, s)]
+          (internal placeholder) {?p5}
+ ?X326==[s BOUND ODD RST (do_subrelation:=Morphisms.do_subrelation) |-
+          Morphisms.Proper
+            (Morphisms.respectful ?r5 (Basics.flip Basics.impl))
+            (can_step vListInitialiseItem_armv6m_prog)]
+          (internal placeholder) {?p6}
+TYPECLASSES:?X288 ?X290 ?X300 ?X301 ?X302 ?X303 ?X304 ?X305 ?X307 ?X308 ?X309
+?X310 ?X322 ?X323 ?X324 ?X325 ?X326
+SHELF:||
+FUTURE GOALS STACK:?X326 ?X325 ?X324 ?X323 ?X322 ?X310 ?X309 ?X308 ?X307
+?X305 ?X304 ?X303 ?X302 ?X301 ?X300 ?X290 ?X288||
+
+
+
+EXIT_CODE=1

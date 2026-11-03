@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+base=49956416928e5b6bb3928b54ae33e3b81091f006
+prereq=36b196e6bcf526b568e1b1b6990f2aa11640e546
+test "$(git rev-parse origin/llm_generated_proofs)" = "$base"
+test "$(git branch --show-current)" = llm-proofs/r01-list-item-fix
+test "$(git merge-base origin/llm_generated_proofs HEAD)" = "$base"
+expected=$(mktemp)
+actual=$(mktemp)
+trap 'rm -f "$expected" "$actual"' EXIT
+{
+  printf '%s\n' \
+    71470bffba65392adf1873a3df9f0cf0ca4f1ac9 \
+    59f696d32a5623cdfbceb9a1e0f91e2cc7c054c1 \
+    dac36c0a03088a90bb6e6385f82cb355d27cc204 \
+    5677a5d1d995745cc1cefbd33bcda1a3a4b49d8b \
+    abe7eda601a63d47eb70e765f4ae2c4ca235cca4 \
+    8c01958e73ec7fe959c60b29444505afbb599d13 \
+    075f59aca328e60e6376e2af01fa49925ab10e9d \
+    95da7ab7cee78f09a528aed86c1dfaf29520a9a8 \
+    7de9edcc1e5094133d66bbeae129ef48078b9265 \
+    4369208b4edce53f84113bcfd3b859f3f58be334 \
+    4ff26413448da4d8f064b0273ac5472cc9de7e5a \
+    d801d95555645a538f53d409217044b8bc4ce3aa \
+    36b196e6bcf526b568e1b1b6990f2aa11640e546
+  for own in "$@"; do git rev-parse "$own^{commit}"; done
+} | sort -u > "$expected"
+git rev-list "$base"..HEAD | sort -u > "$actual"
+diff -u "$expected" "$actual"
+while IFS= read -r path; do
+  case "$path" in
+    Examples/FreeRTOS/armv6m_vListInitialiseItem_proof.v|notes/r01-list-item-fix/*) ;;
+    *) printf 'Unexpected unit change: %s\n' "$path" >&2; exit 1 ;;
+  esac
+done < <(git diff --name-only "$prereq" --)
+git diff --exit-code "$prereq" -- Picinae_armv6m.v Examples/FreeRTOS/vListInitialiseItem_armv6m.v Examples/FreeRTOS/armv6m_list_model.v dune notes/r01-list-item notes/r00-list-model notes/r00-list-model-fix
+git merge-base origin/llm_generated_proofs HEAD
+git log --format='%H %s' origin/llm_generated_proofs..HEAD
+git diff --stat origin/llm_generated_proofs...HEAD
+git diff --stat
+git status --short --branch
+printf 'PASS: exact prerequisite plus supplied own commits; generated lift and shared model unchanged\n'
