@@ -59,6 +59,7 @@
   Examples.FreeRTOS.xTimerGenericCommandFromTask_armv6m
   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
 ; END e05 generated modules
+  Examples.FreeRTOS.armv6m_uxTaskGetNumberOfTasks_proof
  ))
 
 (alias
