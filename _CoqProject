@@ -35,3 +35,4 @@ Examples/i386_wcsspn.v
 Examples/i386_wcsspn_proof.v
 Examples/i386_wcsspn_total.v
 Examples/riscv_addloop_proof.v
+Examples/total_assumptions.v

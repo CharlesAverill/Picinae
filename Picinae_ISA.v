@@ -232,20 +232,24 @@ Ltac total_eval := first [apply EVar; reflexivity | apply EWord |
   (eapply ELoad; [|total_eval|total_memory]; total_eval) |
   (eapply EStore; [|total_eval|total_eval|total_memory]; total_eval) |
   eapply EUnknown with (n:=0); apply N.neq_0_lt_0, pow2_nonzero].
+(* Clients with specialized expression normalization may override Move
+   witness construction without duplicating the statement dispatcher. *)
+Ltac total_move_witness c s v e k :=
+  let E := constr:(ltac:(total_eval) : eval_exp c s e _ _) in
+  let EE := fresh "EE" in pose proof E as EE;
+  lazymatch type of EE with eval_exp _ _ _ ?n ?w =>
+    let nv := fresh "nv" in pose (nv:=n);
+    let cv := fresh "cv" in pose (cv:=update c v (Some w));
+    let sv := fresh "sv" in pose (sv:=update s v nv);
+    k cv sv constr:(@None exit) constr:(XMove c s v e nv w EE)
+  end.
+
 Ltac total_exec c s q k :=
   let q' := eval hnf in q in
   lazymatch q' with
   | Nop => k c s constr:(@None exit) constr:(XNop c s)
   | Exn ?i => k c s constr:(Some (Raise i)) constr:(XExn c s i)
-  | Move ?v ?e =>
-    (* Share values and stores to keep flag-heavy instruction witnesses small. *)
-    let E := constr:(ltac:(total_eval) : eval_exp c s e _ _) in
-    let EE := fresh "EE" in pose proof E as EE;
-    lazymatch type of EE with eval_exp _ _ _ ?n ?w =>
-      let nv := fresh "nv" in pose (nv:=n);
-      let cv := fresh "cv" in pose (cv:=update c v (Some w));
-      let sv := fresh "sv" in pose (sv:=update s v nv);
-      k cv sv constr:(@None exit) constr:(XMove c s v e nv w EE) end
+  | Move ?v ?e => total_move_witness c s v e k
   | Jmp ?e =>
     let E := constr:(ltac:(total_eval) : eval_exp c s e _ _) in
     lazymatch type of E with eval_exp _ _ _ ?n ?w =>

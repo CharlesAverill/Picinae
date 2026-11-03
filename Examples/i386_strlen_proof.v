@@ -1043,6 +1043,15 @@ Local Ltac total_eval ::= first [
   eapply EIte; [total_eval | total_eval | total_eval] |
   eapply EUnknown with (n:=0); apply N.neq_0_lt_0, pow2_nonzero].
 
+(* Keep this example's normalized variable reads visible in the witness
+   store; the per-instruction abstract block below bounds proof-term growth. *)
+Local Ltac total_move_witness c st v e k ::=
+  let E := constr:(ltac:(total_eval) : eval_exp c st e _ _) in
+  lazymatch type of E with eval_exp _ _ _ ?n ?w =>
+    k constr:(update c v (Some w)) constr:(update st v n)
+      constr:(@None exit) constr:(XMove c st v e n w E)
+  end.
+
 (* Build both branch witnesses before selecting a branch.  This keeps a
    computed guard from rewriting the store in a captured Ltac proof term. *)
 Local Lemma strlen_enabled_if:
@@ -1200,4 +1209,34 @@ Proof.
     eapply strlen_preserves_esp; eassumption.
   exists prefix. split; [exact XP|]. split; [exact EX|]. split;
     eapply satall_exit_inv; eassumption.
+Qed.
+
+(* The other unconditional preservation lemmas now share the terminating run. *)
+Definition strlen_frame_invs (s0:store) (t:trace) : option Prop :=
+  match t with (_,s)::_ => Some
+    (s0 V_MEM32 = s V_MEM32 /\ s0 R_EBX = s R_EBX /\ s0 A_READ = s A_READ)
+  | _ => None end.
+
+Corollary strlen_total_preserves_frame:
+  forall s esp m n
+    (MDL: models x86typctx s)
+    (ESP: s R_ESP = esp) (MEM: s V_MEM32 = m)
+    (NIL: m Ⓑ[n + m Ⓓ[4+esp]] = 0)
+    (BOUND: n + m Ⓓ[4+esp] + 4 < 2^32)
+    (READ: forall a, a < 2^32 -> mem_readable s a),
+  satisfies_total strlen_i386 (strlen_frame_invs s) strlen_exit ((Addr 0,s)::nil).
+Proof.
+  intros. unfold satisfies_total. eapply eventually_bind.
+    eapply eventually_execution.
+      exact (strlen_total_correctness s esp m n MDL ESP MEM NIL BOUND READ).
+      apply exec_prog_none.
+    intros [|[x st] hist] [[EX INV] [XP ORIGIN]]; try discriminate.
+    change (Some (startof hist (x,st)) = Some (Addr 0,s)) in ORIGIN.
+    injection ORIGIN as ENTRY.
+    total_here. split. exact EX.
+    cbn [strlen_frame_invs true_inv]. split.
+      eapply strlen_preserves_memory; eassumption.
+    split.
+      eapply strlen_preserves_ebx; eassumption.
+      eapply strlen_preserves_readable; eassumption.
 Qed.
