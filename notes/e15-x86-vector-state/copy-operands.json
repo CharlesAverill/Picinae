@@ -1,0 +1,975 @@
+{
+  "boundary": "exact symbol extents only; not a closed reachable CFG or instruction lowering",
+  "e01_commit": "131ad4b86cf4abcbd392048297038f3f219423bb",
+  "e01_files": {
+    "disassembly.txt": "23134f9be4d4acb07fb77888e7c5d29412b116cb4cf8a63675144b20bdc0ba0e",
+    "inventory.json": "95c024247e40ff85c01a39476e53eac0590aadca49aff7ef58545b96c8143a1d"
+  },
+  "extents": [
+    {
+      "elf_address": "0x1a3cc0",
+      "mask_sites": [],
+      "names": [
+        "__mempcpy_chk_avx512_no_vzeroupper"
+      ],
+      "registers": [],
+      "sha256": "6f27ad7530a55b260de9749ea78a02cd3007cb2d37a6467c164f0046209a8071",
+      "size": 13,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1a3cd0",
+      "mask_sites": [],
+      "names": [
+        "__mempcpy_avx512_no_vzeroupper"
+      ],
+      "registers": [],
+      "sha256": "b0bc28643d898e817c4ab89cfb241e74d0e6dd537f00836195cf379b381022bf",
+      "size": 12,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1a3ce0",
+      "mask_sites": [],
+      "names": [
+        "__memcpy_chk_avx512_no_vzeroupper",
+        "__memmove_chk_avx512_no_vzeroupper"
+      ],
+      "registers": [],
+      "sha256": "6cd27c72e3e2a5e244fdfef6e4b597639cd3d9005c561de50446241dde2e3f68",
+      "size": 13,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1a3cf0",
+      "mask_sites": [],
+      "names": [
+        "__memcpy_avx512_no_vzeroupper",
+        "__memmove_avx512_no_vzeroupper"
+      ],
+      "registers": [
+        "xmm0",
+        "xmm1",
+        "ymm0",
+        "ymm1",
+        "ymm2",
+        "ymm3",
+        "zmm0",
+        "zmm1",
+        "zmm10",
+        "zmm11",
+        "zmm12",
+        "zmm13",
+        "zmm14",
+        "zmm15",
+        "zmm2",
+        "zmm3",
+        "zmm4",
+        "zmm5",
+        "zmm6",
+        "zmm7",
+        "zmm8",
+        "zmm9"
+      ],
+      "sha256": "c796ba416ec38a550d2c0278faff14d8cfc4ae2282eda5eec46e6f844f9bd4fa",
+      "size": 1855,
+      "vector_shapes": {
+        "evex:vmovdqu64:zmm0": {
+          "assembly": "vmovdqu64 zmm0,ZMMWORD PTR [rsi]",
+          "bytes": "62f1fe486f06",
+          "count": 2,
+          "first_elf_address": "0x001a42f9"
+        },
+        "evex:vmovdqu64:zmm1": {
+          "assembly": "vmovdqu64 zmm1,ZMMWORD PTR [rsi+0x40]",
+          "bytes": "62f1fe486f4e01",
+          "count": 2,
+          "first_elf_address": "0x001a42ff"
+        },
+        "evex:vmovdqu64:zmm2": {
+          "assembly": "vmovdqu64 zmm2,ZMMWORD PTR [rsi+0x80]",
+          "bytes": "62f1fe486f5602",
+          "count": 2,
+          "first_elf_address": "0x001a4306"
+        },
+        "evex:vmovdqu64:zmm3": {
+          "assembly": "vmovdqu64 zmm3,ZMMWORD PTR [rsi+0xc0]",
+          "bytes": "62f1fe486f5e03",
+          "count": 2,
+          "first_elf_address": "0x001a430d"
+        },
+        "evex:vmovntdq:zmm0": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi],zmm0",
+          "bytes": "62f17d48e707",
+          "count": 2,
+          "first_elf_address": "0x001a4314"
+        },
+        "evex:vmovntdq:zmm1": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi+0x40],zmm1",
+          "bytes": "62f17d48e74f01",
+          "count": 2,
+          "first_elf_address": "0x001a431a"
+        },
+        "evex:vmovntdq:zmm2": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi+0x80],zmm2",
+          "bytes": "62f17d48e75702",
+          "count": 2,
+          "first_elf_address": "0x001a4321"
+        },
+        "evex:vmovntdq:zmm3": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi+0xc0],zmm3",
+          "bytes": "62f17d48e75f03",
+          "count": 2,
+          "first_elf_address": "0x001a4328"
+        },
+        "evex:vmovups:zmm0": {
+          "assembly": "vmovups zmm0,ZMMWORD PTR [rsi]",
+          "bytes": "62f17c481006",
+          "count": 10,
+          "first_elf_address": "0x001a3d1f"
+        },
+        "evex:vmovups:zmm1": {
+          "assembly": "vmovups zmm1,ZMMWORD PTR [rsi+0x40]",
+          "bytes": "62f17c48104e01",
+          "count": 10,
+          "first_elf_address": "0x001a3d25"
+        },
+        "evex:vmovups:zmm10": {
+          "assembly": "vmovups zmm10,ZMMWORD PTR [rcx-0x180]",
+          "bytes": "62717c481051fa",
+          "count": 6,
+          "first_elf_address": "0x001a3f2e"
+        },
+        "evex:vmovups:zmm11": {
+          "assembly": "vmovups zmm11,ZMMWORD PTR [rcx-0x140]",
+          "bytes": "62717c481059fb",
+          "count": 6,
+          "first_elf_address": "0x001a3f35"
+        },
+        "evex:vmovups:zmm12": {
+          "assembly": "vmovups zmm12,ZMMWORD PTR [rcx-0x100]",
+          "bytes": "62717c481061fc",
+          "count": 6,
+          "first_elf_address": "0x001a3f3c"
+        },
+        "evex:vmovups:zmm13": {
+          "assembly": "vmovups zmm13,ZMMWORD PTR [rcx-0xc0]",
+          "bytes": "62717c481069fd",
+          "count": 6,
+          "first_elf_address": "0x001a3f43"
+        },
+        "evex:vmovups:zmm14": {
+          "assembly": "vmovups zmm14,ZMMWORD PTR [rcx-0x80]",
+          "bytes": "62717c481071fe",
+          "count": 6,
+          "first_elf_address": "0x001a3f4a"
+        },
+        "evex:vmovups:zmm15": {
+          "assembly": "vmovups zmm15,ZMMWORD PTR [rcx-0x40]",
+          "bytes": "62717c481079ff",
+          "count": 6,
+          "first_elf_address": "0x001a3f51"
+        },
+        "evex:vmovups:zmm2": {
+          "assembly": "vmovups zmm2,ZMMWORD PTR [rsi+0x80]",
+          "bytes": "62f17c48105602",
+          "count": 10,
+          "first_elf_address": "0x001a3d2c"
+        },
+        "evex:vmovups:zmm3": {
+          "assembly": "vmovups zmm3,ZMMWORD PTR [rsi+0xc0]",
+          "bytes": "62f17c48105e03",
+          "count": 10,
+          "first_elf_address": "0x001a3d33"
+        },
+        "evex:vmovups:zmm4": {
+          "assembly": "vmovups zmm4,ZMMWORD PTR [rcx-0x100]",
+          "bytes": "62f17c481061fc",
+          "count": 12,
+          "first_elf_address": "0x001a3d3a"
+        },
+        "evex:vmovups:zmm5": {
+          "assembly": "vmovups zmm5,ZMMWORD PTR [rcx-0xc0]",
+          "bytes": "62f17c481069fd",
+          "count": 12,
+          "first_elf_address": "0x001a3d41"
+        },
+        "evex:vmovups:zmm6": {
+          "assembly": "vmovups zmm6,ZMMWORD PTR [rcx-0x80]",
+          "bytes": "62f17c481071fe",
+          "count": 8,
+          "first_elf_address": "0x001a3d48"
+        },
+        "evex:vmovups:zmm7": {
+          "assembly": "vmovups zmm7,ZMMWORD PTR [rcx-0x40]",
+          "bytes": "62f17c481079ff",
+          "count": 8,
+          "first_elf_address": "0x001a3d4f"
+        },
+        "evex:vmovups:zmm8": {
+          "assembly": "vmovups zmm8,ZMMWORD PTR [rcx-0x200]",
+          "bytes": "62717c481041f8",
+          "count": 6,
+          "first_elf_address": "0x001a3f20"
+        },
+        "evex:vmovups:zmm9": {
+          "assembly": "vmovups zmm9,ZMMWORD PTR [rcx-0x1c0]",
+          "bytes": "62717c481049f9",
+          "count": 6,
+          "first_elf_address": "0x001a3f27"
+        },
+        "vex:vmovdqu:xmm0": {
+          "assembly": "vmovdqu xmm0,XMMWORD PTR [rsi]",
+          "bytes": "c5fa6f06",
+          "count": 2,
+          "first_elf_address": "0x001a3e11"
+        },
+        "vex:vmovdqu:xmm1": {
+          "assembly": "vmovdqu xmm1,XMMWORD PTR [rcx-0x10]",
+          "bytes": "c5fa6f49f0",
+          "count": 2,
+          "first_elf_address": "0x001a3e15"
+        },
+        "vex:vmovdqu:ymm0": {
+          "assembly": "vmovdqu ymm0,YMMWORD PTR [rsi]",
+          "bytes": "c5fe6f06",
+          "count": 4,
+          "first_elf_address": "0x001a3dcf"
+        },
+        "vex:vmovdqu:ymm1": {
+          "assembly": "vmovdqu ymm1,YMMWORD PTR [rsi+0x20]",
+          "bytes": "c5fe6f4e20",
+          "count": 4,
+          "first_elf_address": "0x001a3dd3"
+        },
+        "vex:vmovdqu:ymm2": {
+          "assembly": "vmovdqu ymm2,YMMWORD PTR [rcx-0x40]",
+          "bytes": "c5fe6f51c0",
+          "count": 2,
+          "first_elf_address": "0x001a3dd8"
+        },
+        "vex:vmovdqu:ymm3": {
+          "assembly": "vmovdqu ymm3,YMMWORD PTR [rcx-0x20]",
+          "bytes": "c5fe6f59e0",
+          "count": 2,
+          "first_elf_address": "0x001a3ddd"
+        }
+      }
+    },
+    {
+      "elf_address": "0x1a6780",
+      "mask_sites": [],
+      "names": [
+        "__mempcpy_chk_avx512_unaligned"
+      ],
+      "registers": [],
+      "sha256": "b36aaa9bb3c7a110c04aa19485852c5ef7d61678249b125adbdbe5d8ff9bd50c",
+      "size": 13,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1a6790",
+      "mask_sites": [],
+      "names": [
+        "__mempcpy_avx512_unaligned"
+      ],
+      "registers": [],
+      "sha256": "b0bc28643d898e817c4ab89cfb241e74d0e6dd537f00836195cf379b381022bf",
+      "size": 12,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1a67a0",
+      "mask_sites": [],
+      "names": [
+        "__memcpy_chk_avx512_unaligned",
+        "__memmove_chk_avx512_unaligned"
+      ],
+      "registers": [],
+      "sha256": "42a7f35742f7e044500452d95c3416cf2baf369ee67cc32b9bfedc2a3b8dfcbc",
+      "size": 13,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1a67b0",
+      "mask_sites": [],
+      "names": [
+        "__memcpy_avx512_unaligned",
+        "__memmove_avx512_unaligned"
+      ],
+      "registers": [
+        "zmm16",
+        "zmm17"
+      ],
+      "sha256": "022149e6fe35812b5fa68b3f9004fdd0518507c7cb307b17c2f645ec7bf060de",
+      "size": 59,
+      "vector_shapes": {
+        "evex:vmovdqu64:zmm16": {
+          "assembly": "vmovdqu64 zmm16,ZMMWORD PTR [rsi]",
+          "bytes": "62e1fe486f06",
+          "count": 2,
+          "first_elf_address": "0x001a67c1"
+        },
+        "evex:vmovdqu64:zmm17": {
+          "assembly": "vmovdqu64 zmm17,ZMMWORD PTR [rsi+rdx*1-0x40]",
+          "bytes": "62e1fe486f4c16ff",
+          "count": 2,
+          "first_elf_address": "0x001a67d4"
+        }
+      }
+    },
+    {
+      "elf_address": "0x1a67f0",
+      "mask_sites": [],
+      "names": [
+        "__mempcpy_chk_avx512_unaligned_erms"
+      ],
+      "registers": [],
+      "sha256": "d7c03f8a04da7324461c2f7db6a8bcb53aa566bc7632c0523110be306ab5e29c",
+      "size": 13,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1a6800",
+      "mask_sites": [],
+      "names": [
+        "__mempcpy_avx512_unaligned_erms"
+      ],
+      "registers": [],
+      "sha256": "721d7d22681c613d651cc267909c00f664ca315e80fe279a2cfa013c676ff27b",
+      "size": 12,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1a6810",
+      "mask_sites": [],
+      "names": [
+        "__memcpy_chk_avx512_unaligned_erms",
+        "__memmove_chk_avx512_unaligned_erms"
+      ],
+      "registers": [],
+      "sha256": "685aa384ebba7b031cd47693ee96d430001aad4fe48a879b916b744cf8e6c64a",
+      "size": 13,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1a6840",
+      "mask_sites": [],
+      "names": [
+        "__memcpy_avx512_unaligned_erms",
+        "__memmove_avx512_unaligned_erms"
+      ],
+      "registers": [
+        "xmm0",
+        "xmm1",
+        "ymm16",
+        "ymm17",
+        "zmm16",
+        "zmm17",
+        "zmm18",
+        "zmm19",
+        "zmm20",
+        "zmm21",
+        "zmm22",
+        "zmm23",
+        "zmm24",
+        "zmm25",
+        "zmm28",
+        "zmm29"
+      ],
+      "sha256": "d4ec2e7cfa58efff929d2c10efe2b1c914275b6eb4e94f7bcb07cda01f0909bf",
+      "size": 1984,
+      "vector_shapes": {
+        "evex:vmovdqa64:zmm16": {
+          "assembly": "vmovdqa64 ZMMWORD PTR [rdi],zmm16",
+          "bytes": "62e1fd487f07",
+          "count": 2,
+          "first_elf_address": "0x001a6d81"
+        },
+        "evex:vmovdqa64:zmm17": {
+          "assembly": "vmovdqa64 ZMMWORD PTR [rdi],zmm17",
+          "bytes": "62e1fd487f0f",
+          "count": 4,
+          "first_elf_address": "0x001a6a62"
+        },
+        "evex:vmovdqa64:zmm18": {
+          "assembly": "vmovdqa64 ZMMWORD PTR [rdi+0x40],zmm18",
+          "bytes": "62e1fd487f5701",
+          "count": 4,
+          "first_elf_address": "0x001a6a68"
+        },
+        "evex:vmovdqa64:zmm19": {
+          "assembly": "vmovdqa64 ZMMWORD PTR [rdi+0x80],zmm19",
+          "bytes": "62e1fd487f5f02",
+          "count": 4,
+          "first_elf_address": "0x001a6a6f"
+        },
+        "evex:vmovdqa64:zmm20": {
+          "assembly": "vmovdqa64 ZMMWORD PTR [rdi+0xc0],zmm20",
+          "bytes": "62e1fd487f6703",
+          "count": 2,
+          "first_elf_address": "0x001a6a76"
+        },
+        "evex:vmovdqu64:ymm16": {
+          "assembly": "vmovdqu64 ymm16,YMMWORD PTR [rsi]",
+          "bytes": "62e1fe286f06",
+          "count": 2,
+          "first_elf_address": "0x001a68d5"
+        },
+        "evex:vmovdqu64:ymm17": {
+          "assembly": "vmovdqu64 ymm17,YMMWORD PTR [rsi+rdx*1-0x20]",
+          "bytes": "62e1fe286f4c16ff",
+          "count": 2,
+          "first_elf_address": "0x001a68db"
+        },
+        "evex:vmovdqu64:zmm16": {
+          "assembly": "vmovdqu64 zmm16,ZMMWORD PTR [rsi]",
+          "bytes": "62e1fe486f06",
+          "count": 17,
+          "first_elf_address": "0x001a684d"
+        },
+        "evex:vmovdqu64:zmm17": {
+          "assembly": "vmovdqu64 zmm17,ZMMWORD PTR [rsi+rdx*1-0x40]",
+          "bytes": "62e1fe486f4c16ff",
+          "count": 15,
+          "first_elf_address": "0x001a6860"
+        },
+        "evex:vmovdqu64:zmm18": {
+          "assembly": "vmovdqu64 zmm18,ZMMWORD PTR [rsi+rdx*1-0x40]",
+          "bytes": "62e1fe486f5416ff",
+          "count": 12,
+          "first_elf_address": "0x001a6903"
+        },
+        "evex:vmovdqu64:zmm19": {
+          "assembly": "vmovdqu64 zmm19,ZMMWORD PTR [rsi+rdx*1-0x80]",
+          "bytes": "62e1fe486f5c16fe",
+          "count": 12,
+          "first_elf_address": "0x001a690b"
+        },
+        "evex:vmovdqu64:zmm20": {
+          "assembly": "vmovdqu64 zmm20,ZMMWORD PTR [rsi+rdx*1-0x40]",
+          "bytes": "62e1fe486f6416ff",
+          "count": 6,
+          "first_elf_address": "0x001a6974"
+        },
+        "evex:vmovdqu64:zmm21": {
+          "assembly": "vmovdqu64 zmm21,ZMMWORD PTR [rsi+rdx*1-0x80]",
+          "bytes": "62e1fe486f6c16fe",
+          "count": 8,
+          "first_elf_address": "0x001a697c"
+        },
+        "evex:vmovdqu64:zmm22": {
+          "assembly": "vmovdqu64 zmm22,ZMMWORD PTR [rsi+rdx*1-0xc0]",
+          "bytes": "62e1fe486f7416fd",
+          "count": 6,
+          "first_elf_address": "0x001a6984"
+        },
+        "evex:vmovdqu64:zmm23": {
+          "assembly": "vmovdqu64 zmm23,ZMMWORD PTR [rsi+rdx*1-0x100]",
+          "bytes": "62e1fe486f7c16fc",
+          "count": 6,
+          "first_elf_address": "0x001a698c"
+        },
+        "evex:vmovdqu64:zmm24": {
+          "assembly": "vmovdqu64 zmm24,ZMMWORD PTR [rsi+rdx*1-0x100]",
+          "bytes": "6261fe486f4416fc",
+          "count": 5,
+          "first_elf_address": "0x001a6a25"
+        },
+        "evex:vmovdqu64:zmm25": {
+          "assembly": "vmovdqu64 zmm25,ZMMWORD PTR [rsi+0x2040]",
+          "bytes": "6261fe486f8e40200000",
+          "count": 1,
+          "first_elf_address": "0x001a6e9a"
+        },
+        "evex:vmovdqu64:zmm28": {
+          "assembly": "vmovdqu64 zmm28,ZMMWORD PTR [rsi+0x3000]",
+          "bytes": "6261fe486fa600300000",
+          "count": 1,
+          "first_elf_address": "0x001a6ea4"
+        },
+        "evex:vmovdqu64:zmm29": {
+          "assembly": "vmovdqu64 zmm29,ZMMWORD PTR [rsi+0x3040]",
+          "bytes": "6261fe486fae40300000",
+          "count": 1,
+          "first_elf_address": "0x001a6eae"
+        },
+        "evex:vmovntdq:zmm16": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi],zmm16",
+          "bytes": "62e17d48e707",
+          "count": 2,
+          "first_elf_address": "0x001a6cd4"
+        },
+        "evex:vmovntdq:zmm17": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi+0x40],zmm17",
+          "bytes": "62e17d48e74f01",
+          "count": 2,
+          "first_elf_address": "0x001a6cda"
+        },
+        "evex:vmovntdq:zmm20": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi+0x1000],zmm20",
+          "bytes": "62e17d48e76740",
+          "count": 2,
+          "first_elf_address": "0x001a6ce1"
+        },
+        "evex:vmovntdq:zmm21": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi+0x1040],zmm21",
+          "bytes": "62e17d48e76f41",
+          "count": 2,
+          "first_elf_address": "0x001a6ce8"
+        },
+        "evex:vmovntdq:zmm24": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi+0x2000],zmm24",
+          "bytes": "62617d48e78700200000",
+          "count": 1,
+          "first_elf_address": "0x001a6ed7"
+        },
+        "evex:vmovntdq:zmm25": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi+0x2040],zmm25",
+          "bytes": "62617d48e78f40200000",
+          "count": 1,
+          "first_elf_address": "0x001a6ee1"
+        },
+        "evex:vmovntdq:zmm28": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi+0x3000],zmm28",
+          "bytes": "62617d48e7a700300000",
+          "count": 1,
+          "first_elf_address": "0x001a6eeb"
+        },
+        "evex:vmovntdq:zmm29": {
+          "assembly": "vmovntdq ZMMWORD PTR [rdi+0x3040],zmm29",
+          "bytes": "62617d48e7af40300000",
+          "count": 1,
+          "first_elf_address": "0x001a6ef5"
+        },
+        "vex:vmovdqu:xmm0": {
+          "assembly": "vmovdqu xmm0,XMMWORD PTR [rsi]",
+          "bytes": "c5fa6f06",
+          "count": 2,
+          "first_elf_address": "0x001a68c0"
+        },
+        "vex:vmovdqu:xmm1": {
+          "assembly": "vmovdqu xmm1,XMMWORD PTR [rsi+rdx*1-0x10]",
+          "bytes": "c5fa6f4c16f0",
+          "count": 2,
+          "first_elf_address": "0x001a68c4"
+        }
+      }
+    },
+    {
+      "elf_address": "0x1aed80",
+      "mask_sites": [],
+      "names": [
+        "__mempcpy_chk_evex_unaligned"
+      ],
+      "registers": [],
+      "sha256": "647d13ef25f40963ada8b464d8486ef3c09ec7605ec2603bb3532547783ff969",
+      "size": 13,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1aed90",
+      "mask_sites": [],
+      "names": [
+        "__mempcpy_evex_unaligned"
+      ],
+      "registers": [],
+      "sha256": "b0bc28643d898e817c4ab89cfb241e74d0e6dd537f00836195cf379b381022bf",
+      "size": 12,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1aeda0",
+      "mask_sites": [],
+      "names": [
+        "__memcpy_chk_evex_unaligned",
+        "__memmove_chk_evex_unaligned"
+      ],
+      "registers": [],
+      "sha256": "9d01cc53039b030ff0d210cc6681bd2e44a42a6e88465057d9f2a9e96016bcc8",
+      "size": 13,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1aedb0",
+      "mask_sites": [],
+      "names": [
+        "__memcpy_evex_unaligned",
+        "__memmove_evex_unaligned"
+      ],
+      "registers": [
+        "ymm16",
+        "ymm17"
+      ],
+      "sha256": "60fc88f6ad2cf63fa49ec0fbdfa00cac796e4d97b0eb520296c75fea1be2fd90",
+      "size": 56,
+      "vector_shapes": {
+        "evex:vmovdqu64:ymm16": {
+          "assembly": "vmovdqu64 ymm16,YMMWORD PTR [rsi]",
+          "bytes": "62e1fe286f06",
+          "count": 2,
+          "first_elf_address": "0x001aedc1"
+        },
+        "evex:vmovdqu64:ymm17": {
+          "assembly": "vmovdqu64 ymm17,YMMWORD PTR [rsi+rdx*1-0x20]",
+          "bytes": "62e1fe286f4c16ff",
+          "count": 2,
+          "first_elf_address": "0x001aedd1"
+        }
+      }
+    },
+    {
+      "elf_address": "0x1aedf0",
+      "mask_sites": [],
+      "names": [
+        "__mempcpy_chk_evex_unaligned_erms"
+      ],
+      "registers": [],
+      "sha256": "2be02ef379afc296628efc0ff3c2647da5b9272b9bbe560a9654492cc34ad394",
+      "size": 13,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1aee00",
+      "mask_sites": [],
+      "names": [
+        "__mempcpy_evex_unaligned_erms"
+      ],
+      "registers": [],
+      "sha256": "721d7d22681c613d651cc267909c00f664ca315e80fe279a2cfa013c676ff27b",
+      "size": 12,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1aee10",
+      "mask_sites": [],
+      "names": [
+        "__memcpy_chk_evex_unaligned_erms",
+        "__memmove_chk_evex_unaligned_erms"
+      ],
+      "registers": [],
+      "sha256": "96766add233c29983cf300571a4f7eff78e7f56aac8281c5618a0e19684d75ce",
+      "size": 13,
+      "vector_shapes": {}
+    },
+    {
+      "elf_address": "0x1aee40",
+      "mask_sites": [],
+      "names": [
+        "__memcpy_evex_unaligned_erms",
+        "__memmove_evex_unaligned_erms"
+      ],
+      "registers": [
+        "xmm0",
+        "xmm1",
+        "ymm16",
+        "ymm17",
+        "ymm18",
+        "ymm19",
+        "ymm20",
+        "ymm21",
+        "ymm22",
+        "ymm23",
+        "ymm24",
+        "ymm25",
+        "ymm26",
+        "ymm27",
+        "ymm28",
+        "ymm29",
+        "ymm30",
+        "ymm31"
+      ],
+      "sha256": "092eab2df8f928a1a6cdfc31fffad9cd2d3a78bf136044399d850979d3760aa3",
+      "size": 1979,
+      "vector_shapes": {
+        "evex:vmovdqa64:ymm16": {
+          "assembly": "vmovdqa64 YMMWORD PTR [rdi],ymm16",
+          "bytes": "62e1fd287f07",
+          "count": 2,
+          "first_elf_address": "0x001af343"
+        },
+        "evex:vmovdqa64:ymm17": {
+          "assembly": "vmovdqa64 YMMWORD PTR [rdi],ymm17",
+          "bytes": "62e1fd287f0f",
+          "count": 4,
+          "first_elf_address": "0x001af01f"
+        },
+        "evex:vmovdqa64:ymm18": {
+          "assembly": "vmovdqa64 YMMWORD PTR [rdi+0x20],ymm18",
+          "bytes": "62e1fd287f5701",
+          "count": 4,
+          "first_elf_address": "0x001af025"
+        },
+        "evex:vmovdqa64:ymm19": {
+          "assembly": "vmovdqa64 YMMWORD PTR [rdi+0x40],ymm19",
+          "bytes": "62e1fd287f5f02",
+          "count": 4,
+          "first_elf_address": "0x001af02c"
+        },
+        "evex:vmovdqa64:ymm20": {
+          "assembly": "vmovdqa64 YMMWORD PTR [rdi+0x60],ymm20",
+          "bytes": "62e1fd287f6703",
+          "count": 2,
+          "first_elf_address": "0x001af033"
+        },
+        "evex:vmovdqu64:ymm16": {
+          "assembly": "vmovdqu64 ymm16,YMMWORD PTR [rsi]",
+          "bytes": "62e1fe286f06",
+          "count": 17,
+          "first_elf_address": "0x001aee4d"
+        },
+        "evex:vmovdqu64:ymm17": {
+          "assembly": "vmovdqu64 ymm17,YMMWORD PTR [rsi+rdx*1-0x20]",
+          "bytes": "62e1fe286f4c16ff",
+          "count": 21,
+          "first_elf_address": "0x001aee5d"
+        },
+        "evex:vmovdqu64:ymm18": {
+          "assembly": "vmovdqu64 ymm18,YMMWORD PTR [rsi+rdx*1-0x20]",
+          "bytes": "62e1fe286f5416ff",
+          "count": 14,
+          "first_elf_address": "0x001aeed1"
+        },
+        "evex:vmovdqu64:ymm19": {
+          "assembly": "vmovdqu64 ymm19,YMMWORD PTR [rsi+rdx*1-0x40]",
+          "bytes": "62e1fe286f5c16fe",
+          "count": 14,
+          "first_elf_address": "0x001aeed9"
+        },
+        "evex:vmovdqu64:ymm20": {
+          "assembly": "vmovdqu64 ymm20,YMMWORD PTR [rsi+rdx*1-0x20]",
+          "bytes": "62e1fe286f6416ff",
+          "count": 6,
+          "first_elf_address": "0x001aef34"
+        },
+        "evex:vmovdqu64:ymm21": {
+          "assembly": "vmovdqu64 ymm21,YMMWORD PTR [rsi+rdx*1-0x40]",
+          "bytes": "62e1fe286f6c16fe",
+          "count": 8,
+          "first_elf_address": "0x001aef3c"
+        },
+        "evex:vmovdqu64:ymm22": {
+          "assembly": "vmovdqu64 ymm22,YMMWORD PTR [rsi+rdx*1-0x60]",
+          "bytes": "62e1fe286f7416fd",
+          "count": 8,
+          "first_elf_address": "0x001aef44"
+        },
+        "evex:vmovdqu64:ymm23": {
+          "assembly": "vmovdqu64 ymm23,YMMWORD PTR [rsi+rdx*1-0x80]",
+          "bytes": "62e1fe286f7c16fc",
+          "count": 8,
+          "first_elf_address": "0x001aef4c"
+        },
+        "evex:vmovdqu64:ymm24": {
+          "assembly": "vmovdqu64 ymm24,YMMWORD PTR [rsi+rdx*1-0x80]",
+          "bytes": "6261fe286f4416fc",
+          "count": 5,
+          "first_elf_address": "0x001aefe5"
+        },
+        "evex:vmovdqu64:ymm25": {
+          "assembly": "vmovdqu64 ymm25,YMMWORD PTR [rsi+0x2020]",
+          "bytes": "6261fe286f8e20200000",
+          "count": 1,
+          "first_elf_address": "0x001af44a"
+        },
+        "evex:vmovdqu64:ymm26": {
+          "assembly": "vmovdqu64 ymm26,YMMWORD PTR [rsi+0x2040]",
+          "bytes": "6261fe286f9640200000",
+          "count": 1,
+          "first_elf_address": "0x001af454"
+        },
+        "evex:vmovdqu64:ymm27": {
+          "assembly": "vmovdqu64 ymm27,YMMWORD PTR [rsi+0x2060]",
+          "bytes": "6261fe286f9e60200000",
+          "count": 1,
+          "first_elf_address": "0x001af45e"
+        },
+        "evex:vmovdqu64:ymm28": {
+          "assembly": "vmovdqu64 ymm28,YMMWORD PTR [rsi+0x3000]",
+          "bytes": "6261fe286fa600300000",
+          "count": 1,
+          "first_elf_address": "0x001af468"
+        },
+        "evex:vmovdqu64:ymm29": {
+          "assembly": "vmovdqu64 ymm29,YMMWORD PTR [rsi+0x3020]",
+          "bytes": "6261fe286fae20300000",
+          "count": 1,
+          "first_elf_address": "0x001af472"
+        },
+        "evex:vmovdqu64:ymm30": {
+          "assembly": "vmovdqu64 ymm30,YMMWORD PTR [rsi+0x3040]",
+          "bytes": "6261fe286fb640300000",
+          "count": 1,
+          "first_elf_address": "0x001af47c"
+        },
+        "evex:vmovdqu64:ymm31": {
+          "assembly": "vmovdqu64 ymm31,YMMWORD PTR [rsi+0x3060]",
+          "bytes": "6261fe286fbe60300000",
+          "count": 1,
+          "first_elf_address": "0x001af486"
+        },
+        "evex:vmovntdq:ymm16": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi],ymm16",
+          "bytes": "62e17d28e707",
+          "count": 2,
+          "first_elf_address": "0x001af294"
+        },
+        "evex:vmovntdq:ymm17": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x20],ymm17",
+          "bytes": "62e17d28e74f01",
+          "count": 2,
+          "first_elf_address": "0x001af29a"
+        },
+        "evex:vmovntdq:ymm18": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x40],ymm18",
+          "bytes": "62e17d28e75702",
+          "count": 2,
+          "first_elf_address": "0x001af2a1"
+        },
+        "evex:vmovntdq:ymm19": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x60],ymm19",
+          "bytes": "62e17d28e75f03",
+          "count": 2,
+          "first_elf_address": "0x001af2a8"
+        },
+        "evex:vmovntdq:ymm20": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x1000],ymm20",
+          "bytes": "62e17d28e7a700100000",
+          "count": 2,
+          "first_elf_address": "0x001af2af"
+        },
+        "evex:vmovntdq:ymm21": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x1020],ymm21",
+          "bytes": "62e17d28e7af20100000",
+          "count": 2,
+          "first_elf_address": "0x001af2b9"
+        },
+        "evex:vmovntdq:ymm22": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x1040],ymm22",
+          "bytes": "62e17d28e7b740100000",
+          "count": 2,
+          "first_elf_address": "0x001af2c3"
+        },
+        "evex:vmovntdq:ymm23": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x1060],ymm23",
+          "bytes": "62e17d28e7bf60100000",
+          "count": 2,
+          "first_elf_address": "0x001af2cd"
+        },
+        "evex:vmovntdq:ymm24": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x2000],ymm24",
+          "bytes": "62617d28e78700200000",
+          "count": 1,
+          "first_elf_address": "0x001af4d7"
+        },
+        "evex:vmovntdq:ymm25": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x2020],ymm25",
+          "bytes": "62617d28e78f20200000",
+          "count": 1,
+          "first_elf_address": "0x001af4e1"
+        },
+        "evex:vmovntdq:ymm26": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x2040],ymm26",
+          "bytes": "62617d28e79740200000",
+          "count": 1,
+          "first_elf_address": "0x001af4eb"
+        },
+        "evex:vmovntdq:ymm27": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x2060],ymm27",
+          "bytes": "62617d28e79f60200000",
+          "count": 1,
+          "first_elf_address": "0x001af4f5"
+        },
+        "evex:vmovntdq:ymm28": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x3000],ymm28",
+          "bytes": "62617d28e7a700300000",
+          "count": 1,
+          "first_elf_address": "0x001af4ff"
+        },
+        "evex:vmovntdq:ymm29": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x3020],ymm29",
+          "bytes": "62617d28e7af20300000",
+          "count": 1,
+          "first_elf_address": "0x001af509"
+        },
+        "evex:vmovntdq:ymm30": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x3040],ymm30",
+          "bytes": "62617d28e7b740300000",
+          "count": 1,
+          "first_elf_address": "0x001af513"
+        },
+        "evex:vmovntdq:ymm31": {
+          "assembly": "vmovntdq YMMWORD PTR [rdi+0x3060],ymm31",
+          "bytes": "62617d28e7bf60300000",
+          "count": 1,
+          "first_elf_address": "0x001af51d"
+        },
+        "vex:vmovdqu:xmm0": {
+          "assembly": "vmovdqu xmm0,XMMWORD PTR [rsi]",
+          "bytes": "c5fa6f06",
+          "count": 2,
+          "first_elf_address": "0x001aeea6"
+        },
+        "vex:vmovdqu:xmm1": {
+          "assembly": "vmovdqu xmm1,XMMWORD PTR [rsi+rdx*1-0x10]",
+          "bytes": "c5fa6f4c16f0",
+          "count": 2,
+          "first_elf_address": "0x001aeeaa"
+        }
+      }
+    }
+  ],
+  "libc_sha256": "9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9",
+  "registers": [
+    "xmm0",
+    "xmm1",
+    "ymm0",
+    "ymm1",
+    "ymm16",
+    "ymm17",
+    "ymm18",
+    "ymm19",
+    "ymm2",
+    "ymm20",
+    "ymm21",
+    "ymm22",
+    "ymm23",
+    "ymm24",
+    "ymm25",
+    "ymm26",
+    "ymm27",
+    "ymm28",
+    "ymm29",
+    "ymm3",
+    "ymm30",
+    "ymm31",
+    "zmm0",
+    "zmm1",
+    "zmm10",
+    "zmm11",
+    "zmm12",
+    "zmm13",
+    "zmm14",
+    "zmm15",
+    "zmm16",
+    "zmm17",
+    "zmm18",
+    "zmm19",
+    "zmm2",
+    "zmm20",
+    "zmm21",
+    "zmm22",
+    "zmm23",
+    "zmm24",
+    "zmm25",
+    "zmm28",
+    "zmm29",
+    "zmm3",
+    "zmm4",
+    "zmm5",
+    "zmm6",
+    "zmm7",
+    "zmm8",
+    "zmm9"
+  ]
+}

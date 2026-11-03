@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/e15-x86-vector-state
+
+EXIT_CODE=0

@@ -21,10 +21,9 @@ env_runner=/home/charles/code/friends/.toolchains/arm-validation/picinae-env
 Run commands from the repository root. `@core` builds the fourteen active core
 modules listed in `_CoqProject`. `@smoke-x86` builds the existing AMD64 `abs`
 lift/proof and its helpers; `@smoke-arm8` does the same for ARM8 `abs`.
-`@smoke` combines all three. The explicit module list contains only these
-twenty files, so even `dune build` does not select the other examples or their
-preexisting admissions. Requesting a single `.vo` builds only its dependency
-closure, for example:
+`@smoke` combines all three. The explicit module list contains these baseline
+files plus the extensions below. `dune build` selects only those modules.
+Requesting a single `.vo` builds only its dependency closure, for example:
 
 ```bash
 "$env_runner" bash --noprofile --norc -e -c '
@@ -33,6 +32,23 @@ closure, for example:
   dune build --cache=disabled -j1 Examples/claude/arm8_abs_proof.vo
 '
 ```
+
+The e15 companion is selected by `@e15-vector-state`. It checks finite state
+fixtures, including coexistence with the old ISA. `@smoke-ymm` selects the
+existing `strlen_avx2_amd64` lift and its typing theorem; it does not select a
+functional correctness proof. The combined e15 validation is:
+
+```bash
+"$env_runner" bash --noprofile --norc -e -c '
+  ulimit -v 2000000
+  ulimit -s 65536
+  dune build --cache=disabled -j1 --display short @e15-vector-state @smoke-x86 @smoke-ymm
+'
+```
+
+The standalone register-layout checks and exact e01 operand inventory replay
+are documented in `notes/e15-x86-vector-state/README.md`; they use only Python's
+standard library and are separate from Rocq compilation.
 
 For a clean check, run `dune clean` before the capped build command. Disabling
 Dune's shared cache avoids importing build results or writing an external
