@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1290b26e
+COMMAND=python3 notes/a-ffsl/check-statement-preservation.py
+All theorem statements and definitions match the initial attempt.
+11 failed/unreached proof bodies are archived and aborted; no repair build.
+
+EXIT_CODE=0

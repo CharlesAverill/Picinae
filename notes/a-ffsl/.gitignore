@@ -1,0 +1,3 @@
+# Post-commit evidence cannot include its own final commit hash in that commit.
+/commit.log
+/ancestry-after.log

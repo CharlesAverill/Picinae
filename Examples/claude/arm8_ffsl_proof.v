@@ -1,0 +1,205 @@
+(* PARTIAL one-shot Astra handoff: the full target build failed.
+   Only proofs before ffsl_entry_satisfiable reached Qed in that run.
+   Every later attempted theorem is aborted, with its statement unchanged. *)
+
+(* ffsl / ffsll (AArch64) -- first set bit of a 64-bit long.
+
+   PROVENANCE
+   Target: /lib/aarch64-linux-gnu/libc.so.6, Ubuntu glibc 2.35-0ubuntu3.15,
+   SHA256 79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06.
+   ELF entry 0x94b10; Ghidra entry 0x194b10; 18 instructions / 72 bytes.
+   Existing Ghidra 11.4.2 + pcode2coq lift, rebased to offset zero, unchanged.
+   e02's external inventory checks instruction text and shared ELF entry;
+   that is provenance evidence, not a proof of the lifter's soundness.
+   The ffsll adapter below checks the actual two generated IL programs.
+   Initial author: OpenAI gpt-6-astra, xhigh. Validation status is recorded
+   in notes/a-ffsl/README.md; this header is not a completion certificate.
+
+   ENGLISH SPECIFICATION / AAPCS64
+   int ffsl(long i); int ffsll(long long i).
+   Input X0 is any 64-bit bit pattern x (signed value toZ 64 x). This includes
+   zero, negative longs and LONG_MIN: no nonzero, sign or path restriction.
+   At either RET, X0 is zero iff x is zero; otherwise X0 is 1 plus the index
+   of the least significant set bit, in [1,64]. Hence the int result W0 is
+   positive and X0 has zero upper 32 bits. Memory, SP, X19-X29, X30 (the
+   actual return register), the model's separate R_LR and Z8-Z15 are unchanged.
+   No pointer, buffer, alignment, overlap, CPU extension or tunable hypothesis
+   is needed. Preconditions are only the ordinary typed ARM8 entry state and
+   entry at rebased offset zero. The model is sequential, with the generated
+   IL as trusted input. satisfies_all is partial correctness at RET, not a
+   termination theorem or a hardware/lifter soundness theorem.
+
+   ALGORITHM
+   Isolate x & -x modulo 2^64. If it exceeds 0xffffffff, use the upper word
+   after ASR X1,#32 and add 32 to its first-bit position. Otherwise use the
+   low word. Both paths reverse 32 bits, CLZ, then CSINC, including zero.
+ *)
+
+Require Import Picinae_armv8 ffsl_arm8 ffsll_arm8 arm8_common.
+Import ARM8Notations.
+From Stdlib Require Import NArith ZArith Lia List.
+Import ListNotations.
+Open Scope N.
+
+Definition ffsl_spec (x r:N) :=
+  (r = 0 <-> x = 0) /\
+  (x <> 0 -> 1 <= r <= 64 /\ N.testbit x (r-1) = true /\
+     forall j, j < r-1 -> N.testbit x j = false).
+
+Definition ffsl_exit (t:trace) :=
+  match t with (Addr 40,_)::_ | (Addr 68,_)::_ => true | _ => false end.
+
+Definition postcondition (x sp lr:N) (s:store) :=
+  ffsl_spec x (s R_X0) /\ s R_SP = sp /\ s R_X30 = lr.
+
+Definition ffsl_invs (x sp lr:N) (t:trace) :=
+  match t with (Addr a,s)::_ => match a with
+  | 0 => Some (s R_X0 = x /\ s R_SP = sp /\ s R_X30 = lr)
+  | 40 | 68 => Some (postcondition x sp lr s)
+  | _ => None
+  end | _ => None end.
+
+Theorem ffsl_nwc: forall s2 s1, ffsl_arm8 s1 = ffsl_arm8 s2.
+Proof. reflexivity. Qed.
+
+Theorem ffsl_welltyped: welltyped_prog arm8typctx ffsl_arm8.
+Proof. exact ffsl_arm8.welltyped. Qed.
+
+Theorem ffsl_ffsll_program_identity: ffsl_arm8 = ffsll_arm8.
+Proof. reflexivity. Qed.
+
+Theorem ffsl_preserves_memory:
+  forall_endstates ffsl_arm8 (fun _ s _ s' => s V_MEM64 = s' V_MEM64).
+Proof. apply noassign_prog_same. prove_noassign. Qed.
+
+Theorem ffsl_preserves_callee_saved:
+  forall v, In v [R_X19; R_X20; R_X21; R_X22; R_X23; R_X24; R_X25;
+                 R_X26; R_X27; R_X28; R_X29; R_X30; R_SP; R_LR;
+                 R_Z8; R_Z9; R_Z10; R_Z11; R_Z12; R_Z13; R_Z14; R_Z15] ->
+  forall_endstates ffsl_arm8 (fun _ s _ s' => s v = s' v).
+Proof.
+  intros v IN. apply noassign_prog_same.
+  repeat destruct IN as [<-|IN]; [prove_noassign..|destruct IN].
+Qed.
+
+(* Entry is inhabited for EVERY possible long; no result is assumed. *)
+Theorem ffsl_entry_satisfiable: forall x, x < 2^64 ->
+  exists s P, models arm8typctx s /\ s R_X0 = x /\
+    ffsl_invs x 0 0 [(Addr 0,s)] = Some P /\ P.
+Proof.
+  (* PARTIAL: initial proof and diagnostics are preserved verbatim in
+     notes/a-ffsl/initial-attempt.v.txt and first-build.log.
+     No Astra repair or second build was attempted. *)
+Abort.
+
+(* Architecture-neutral least-set-bit existence, copied from the mathematical
+   argument in amd64_common, without importing that ISA or its modules. *)
+Lemma ffsl_lowest_set_bit:
+  forall n x, x < 2^n -> x <> 0 ->
+  exists k, k < n /\ N.testbit x k = true /\
+    forall j, j < k -> N.testbit x j = false.
+Proof.
+  (* PARTIAL: initial proof and diagnostics are preserved verbatim in
+     notes/a-ffsl/initial-attempt.v.txt and first-build.log.
+     No Astra repair or second build was attempted. *)
+Abort.
+
+Theorem ffsl_spec_satisfiable: forall x, x < 2^64 -> exists r, ffsl_spec x r.
+Proof.
+  (* PARTIAL: initial proof and diagnostics are preserved verbatim in
+     notes/a-ffsl/initial-attempt.v.txt and first-build.log.
+     No Astra repair or second build was attempted. *)
+Abort.
+
+(* A mathematical rendering of the five SWAR stages of the existing RBIT
+   instruction, used only as an arithmetic helper, never as replacement code. *)
+Definition rbit32 (x:N) :=
+  let a := ((x .& 0xaaaaaaaa) >> 1) .| ((x .& 0x55555555) << 1) in
+  let b := ((a .& 0xcccccccc) >> 2) .| ((a .& 0x33333333) << 2) in
+  let c := ((b .& 0xf0f0f0f0) >> 4) .| ((b .& 0x0f0f0f0f) << 4) in
+  let d := ((c .& 0xff00ff00) >> 8) .| ((c .& 0x00ff00ff) << 8) in
+  ((d >> 16) .| (d << 16)) mod 2^32.
+
+Lemma rbit32_bound: forall x, rbit32 x < 2^32.
+Proof.
+  (* PARTIAL: initial proof and diagnostics are preserved verbatim in
+     notes/a-ffsl/initial-attempt.v.txt and first-build.log.
+     No Astra repair or second build was attempted. *)
+Abort.
+
+Lemma rbit32_bits: forall x i, i < 32 ->
+  N.testbit (rbit32 x) i = N.testbit x (31-i).
+Proof.
+  (* PARTIAL: initial proof and diagnostics are preserved verbatim in
+     notes/a-ffsl/initial-attempt.v.txt and first-build.log.
+     No Astra repair or second build was attempted. *)
+Abort.
+
+Lemma ffsl_clz_rbit: forall x k,
+  k < 32 -> N.testbit x k = true ->
+  (forall j, j < k -> N.testbit x j = false) ->
+  1 + (32 - N.size (rbit32 x)) = k+1.
+Proof.
+  (* PARTIAL: initial proof and diagnostics are preserved verbatim in
+     notes/a-ffsl/initial-attempt.v.txt and first-build.log.
+     No Astra repair or second build was attempted. *)
+Abort.
+
+Lemma ffsl_asr_upper: forall x,
+  (ashiftr 64 x 32) mod 2^32 = (x >> 32) mod 2^32.
+Proof.
+  (* PARTIAL: initial proof and diagnostics are preserved verbatim in
+     notes/a-ffsl/initial-attempt.v.txt and first-build.log.
+     No Astra repair or second build was attempted. *)
+Abort.
+
+(* Isolating the low bit is the branch-selection obligation: no arbitrary
+   low-word/nonzero precondition is attached to the public theorem. *)
+Lemma ffsl_isolate: forall x k,
+  x < 2^64 -> k < 64 -> N.testbit x k = true ->
+  (forall j, j < k -> N.testbit x j = false) ->
+  (msub 64 0 x) .& x = 2^k.
+Proof.
+  (* PARTIAL: initial proof and diagnostics are preserved verbatim in
+     notes/a-ffsl/initial-attempt.v.txt and first-build.log.
+     No Astra repair or second build was attempted. *)
+Abort.
+
+Definition ffsl_half (x:N) :=
+  if x mod 2^32 =? 0 then 0 else 1 + (32-N.size (rbit32 x)).
+
+Definition ffsl_value (x:N) :=
+  if 0xffffffff <? (msub 64 0 x) .& x
+  then 32 + ffsl_half (ashiftr 64 x 32)
+  else ffsl_half x.
+
+Lemma ffsl_value_spec: forall x, x < 2^64 -> ffsl_spec x (ffsl_value x).
+Proof.
+  (* PARTIAL: initial proof and diagnostics are preserved verbatim in
+     notes/a-ffsl/initial-attempt.v.txt and first-build.log.
+     No Astra repair or second build was attempted. *)
+Abort.
+
+Theorem ffsl_correct:
+  forall s t s' x' x sp lr
+    (ENTRY: startof t (x',s') = (Addr 0,s))
+    (MDL: models arm8typctx s)
+    (X: s R_X0 = x) (SP: s R_SP = sp) (LR: s R_X30 = lr),
+  satisfies_all ffsl_arm8 (ffsl_invs x sp lr) ffsl_exit ((x',s')::t).
+Proof.
+  (* PARTIAL: initial proof and diagnostics are preserved verbatim in
+     notes/a-ffsl/initial-attempt.v.txt and first-build.log.
+     No Astra repair or second build was attempted. *)
+Abort.
+
+Theorem ffsll_correct:
+  forall s t s' x' x sp lr
+    (ENTRY: startof t (x',s') = (Addr 0,s))
+    (MDL: models arm8typctx s)
+    (X: s R_X0 = x) (SP: s R_SP = sp) (LR: s R_X30 = lr),
+  satisfies_all ffsll_arm8 (ffsl_invs x sp lr) ffsl_exit ((x',s')::t).
+Proof.
+  (* PARTIAL: initial proof and diagnostics are preserved verbatim in
+     notes/a-ffsl/initial-attempt.v.txt and first-build.log.
+     No Astra repair or second build was attempted. *)
+Abort.
