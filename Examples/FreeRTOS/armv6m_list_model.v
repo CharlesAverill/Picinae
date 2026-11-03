@@ -9,7 +9,9 @@
    95da7ab7cee78f09a528aed86c1dfaf29520a9a8. The five list .json manifests
    have no unsupported instructions or call-closure prerequisites.
    Initial theorem/proof author: OpenAI gpt-6-astra, xhigh (one-shot).
-   Validation and final proof producer are recorded in notes/r00-list-model/.
+   Final proof repair: OpenAI gpt-6.1-sol, xhigh.
+   Initial attempt/failure: notes/r00-list-model/.
+   Full validation/final proof producer: notes/r00-list-model-fix/.
 
    ENGLISH SPECIFICATION / ABI BOUNDARY
    AAPCS32 uses r0 for the list/item pointer, r1 for an inserted item, and
@@ -169,59 +171,85 @@ Theorem image20_fields:
   v12 < 2^32 -> v16 < 2^32 ->
   item_contents (image20 m p v0 v4 v8 v12 v16) p v0 v4 v8 v12 v16.
 Proof.
-  (* PARTIAL: initial Astra attempt/diagnostics preserved in notes/r00-list-model.
-     No repair or second build performed. Statement retained for the Sol fixer. *)
-Abort.
+  intros m p v0 v4 v8 v12 v16 B B0 B4 B8 B12 B16.
+  unfold item_contents, item_value_offset, item_next_offset,
+    item_previous_offset, item_owner_offset, item_container_offset, image20.
+  (* Give each rewrite its exact memory and offsets; tauto also reaches the
+     fifth member of fields20, beyond the original auto search depth. *)
+  repeat split;
+    repeat lazymatch goal with
+    | |- field32 (write_field32 ?M ?P ?O ?V) ?P ?O = _ =>
+        rewrite (field32_read_write M P O V) by assumption
+    | |- field32 (write_field32 ?M ?P ?O ?V) ?P ?I = _ =>
+        rewrite (field32_frame M P O P I V)
+          by (apply (fields20_separate P I O B);
+              [simpl; tauto | simpl; tauto | discriminate])
+    end;
+    reflexivity.
+Qed.
 
 Theorem image20_frame:
   forall m p v0 v4 v8 v12 v16,
   outside_frame32 m (image20 m p v0 v4 v8 v12 v16) p 20.
 Proof.
-  (* PARTIAL: initial Astra attempt/diagnostics preserved in notes/r00-list-model.
-     No repair or second build performed. Statement retained for the Sol fixer. *)
-Abort.
+  intros. unfold image20.
+  repeat (apply outside_frame32_write; [|discriminate]).
+  apply outside_frame32_refl.
+Qed.
 
 Theorem image20_welltyped:
   forall m p v0 v4 v8 v12 v16, m < memsize 32 ->
   image20 m p v0 v4 v8 v12 v16 < memsize 32.
 Proof.
-  (* PARTIAL: initial Astra attempt/diagnostics preserved in notes/r00-list-model.
-     No repair or second build performed. Statement retained for the Sol fixer. *)
-Abort.
+  intros. unfold image20, write_field32.
+  repeat apply setmem_welltyped. exact H.
+Qed.
 
 Definition empty_image (m p:N) := image20 m p 0 (p+8) list_max_value (p+8) (p+8).
 
 Theorem empty_image_spec:
   forall m p, object32 p list_size -> empty_list (empty_image m p) p.
 Proof.
-  (* PARTIAL: initial Astra attempt/diagnostics preserved in notes/r00-list-model.
-     No repair or second build performed. Statement retained for the Sol fixer. *)
-Abort.
+  intros m p OBJ.
+  assert (B: p+20 <= 2^32) by exact (proj2 (proj2 (proj2 OBJ))).
+  assert (BP: p+8 < 2^32) by (clear - B; lia).
+  pose proof (image20_fields m p 0 (p+8) list_max_value (p+8) (p+8)
+    B (mp2_gt_0 32) BP ltac:(unfold list_max_value; reflexivity) BP BP) as F.
+  destruct F as [F0 [F4 [F8 [F12 F16]]]].
+  split; [exact OBJ|]. split; [repeat split|split]; assumption.
+Qed.
 
 Theorem empty_image_frame:
   forall m p, outside_frame32 m (empty_image m p) p list_size.
-Proof.
-  (* PARTIAL: initial Astra attempt/diagnostics preserved in notes/r00-list-model.
-     No repair or second build performed. Statement retained for the Sol fixer. *)
-Abort.
+Proof. intros. apply image20_frame. Qed.
 
 Definition memory_store32 (m:N) : store := update (fun _ => 0) V_MEM32 m.
 
 Theorem memory_store32_welltyped:
   forall m, m < memsize 32 -> models armv6mtypctx (memory_store32 m).
 Proof.
-  (* PARTIAL: initial Astra attempt/diagnostics preserved in notes/r00-list-model.
-     No repair or second build performed. Statement retained for the Sol fixer. *)
-Abort.
+  intros m B. unfold memory_store32. apply models_update.
+  - change (m < 2^(8*2^32)). rewrite N.mul_comm. exact B.
+  - intros v w CV. apply mp2_gt_0.
+Qed.
 
 Theorem empty_list_witness:
   forall p, object32 p list_size ->
   exists s:store, models armv6mtypctx s /\ empty_list (s V_MEM32) p /\
     outside_frame32 0 (s V_MEM32) p list_size.
 Proof.
-  (* PARTIAL: initial Astra attempt/diagnostics preserved in notes/r00-list-model.
-     No repair or second build performed. Statement retained for the Sol fixer. *)
-Abort.
+  intros p OBJ. exists (memory_store32 (empty_image 0 p)).
+  split.
+  - apply memory_store32_welltyped. unfold empty_image.
+    apply image20_welltyped.
+    (* Keep the width abstract so conversion never evaluates memsize 32. *)
+    assert (Z: forall w, 0 < memsize w).
+    { intro w. change (0 < 2^(2^w*8)). apply mp2_gt_0. }
+    exact (Z 32).
+  - unfold memory_store32. rewrite update_updated. split.
+    + apply empty_image_spec. exact OBJ.
+    + apply empty_image_frame.
+Qed.
 
 (* Nonempty, aligned, disjoint example regions, including an item and a list.
    No computation below ever inspects a memory value or memsize 32. *)
@@ -229,14 +257,18 @@ Theorem list_regions_witness:
   object32 4096 list_size /\ object32 8192 list_item_size /\
   separate32 4096 list_size 8192 list_item_size.
 Proof.
-  (* PARTIAL: initial Astra attempt/diagnostics preserved in notes/r00-list-model.
-     No repair or second build performed. Statement retained for the Sol fixer. *)
-Abort.
+  assert (L: object32 4096 list_size).
+  { unfold object32, range32, list_size. vm_compute. repeat split; congruence. }
+  assert (I: object32 8192 list_item_size).
+  { unfold object32, range32, list_item_size. vm_compute. repeat split; congruence. }
+  split; [exact L|]. split; [exact I|].
+  apply ranges32_separate.
+  - exact (proj2 (proj2 L)).
+  - exact (proj2 (proj2 I)).
+  - left. discriminate.
+Qed.
 
 Theorem concrete_empty_list_witness:
   exists s:store, models armv6mtypctx s /\ empty_list (s V_MEM32) 4096 /\
     outside_frame32 0 (s V_MEM32) 4096 list_size.
-Proof.
-  (* PARTIAL: initial Astra attempt/diagnostics preserved in notes/r00-list-model.
-     No repair or second build performed. Statement retained for the Sol fixer. *)
-Abort.
+Proof. apply empty_list_witness. exact (proj1 list_regions_witness). Qed.
