@@ -211,7 +211,7 @@ Ltac ISA_invseek_ltac1 :=
          end;
   try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
   repeat match goal with [ x:N |- _ ] => clear x end;
-  try (first [ rewrite exitof_none | rewrite exitof_some ]).
+  try first [ rewrite exitof_none | rewrite exitof_some ].
 
 (* Clear any stale memory-access hypotheses (arising from previous computation
    steps) and either step to the next machine instruction (if we're not at an
@@ -220,16 +220,84 @@ Ltac ISA_step_ltac1 :=
   repeat match goal with [ H: MemAcc _ _ _ _ _ |- _ ] => clear H end;
   first [ ISA_invseek_ltac1; try ISA_invhere_ltac1 | ISA_invhere_ltac1 ].
 
-(* Ltac2 owns sequencing, branching, and backtracking.  The functional
-   interpreter and ISA/user hooks remain explicit Ltac1 boundaries. *)
+(* Ltac2 owns sequencing, branching, and backtracking.  Reflective
+   computations and ISA/user hooks remain explicit Ltac1 boundaries. *)
+Ltac2 isa_step_stmt (xs : ident) :=
+  let h := Ltac1.of_ident xs in
+  lazy_match! Constr.type (Control.hyp xs) with
+  | exec_stmt _ _ _ _ _ _ =>
+      ltac1:(h |- populate_varlist h) h;
+      Control.dispatch
+      [ (fun () =>
+          ltac1:(h |- step_precheck h; eapply reduce_stmt in h) h;
+          Control.dispatch
+          [ (fun () =>
+              let unknown := Fresh.in_goal @unknown in
+              let u1 := Ltac1.of_ident unknown in
+              ltac1:(h u |- destruct h as [u h]; compute in h) h u1;
+              let u := Control.hyp unknown in
+              repeat (match! Constr.type (Control.hyp xs) with
+              | context [?f ?index] =>
+                  if Constr.equal f u then () else fail;
+                  let n := Fresh.in_goal @n in
+                  ltac1:(h u i n |- set (n:=u i) in h)
+                    h u1 (Ltac1.of_constr index) (Ltac1.of_ident n);
+                  Std.clearbody [n]
+              end);
+              try (Std.clear [unknown]))
+          ; (fun () => reflexivity) ];
+          ltac1:(h |- cbv beta match delta [noe_setop noe_typop] in h) h)
+      ; (fun () => reflexivity) ]
+  | _ => Control.zero (Tactic_failure (Some
+      (Message.of_string "Hypothesis is not of the form (exec_stmt ...)")))
+  end.
+
+Ltac2 isa_abstract_ignored_vars (xs : ident) :=
+  let h := Ltac1.of_ident xs in
+  repeat (match! Constr.type (Control.hyp xs) with
+  | context [update ?s ?v ?n] =>
+      ltac1:(v n |- let b := ltac:(ignore_vars v) in
+        lazymatch eval cbv in b with
+        | true => tryif is_var n then fail else idtac
+        | _ => fail
+        end) (Ltac1.of_constr v) (Ltac1.of_constr n);
+      let tmp := Fresh.in_goal @n in
+      ltac1:(h s v n tmp |- pose (tmp:=n);
+        change (update s v n) with (update s v tmp) in h)
+        h (Ltac1.of_constr s) (Ltac1.of_constr v)
+        (Ltac1.of_constr n) (Ltac1.of_ident tmp);
+      Std.clearbody [tmp]
+  end).
+
+Ltac2 rec isa_split_memaccs (accs : ident) :=
+  let h := Ltac1.of_ident accs in
+  lazy_match! Constr.type (Control.hyp accs) with
+  | ?p /\ _ =>
+      first
+      [ ltac1:(p |- lazymatch goal with [ _ : p |- _ ] => idtac end)
+          (Ltac1.of_constr p);
+        ltac1:(h |- apply proj2 in h) h
+      | let acc := Fresh.in_goal @ACC in
+        ltac1:(h acc |- destruct h as [acc h]) h (Ltac1.of_ident acc) ];
+      isa_split_memaccs accs
+  | True => Std.clear [accs]
+  | _ => let acc := Fresh.in_goal @ACC in Std.rename [(accs, acc)]
+  end.
+
+Ltac2 isa_destruct_memaccs (xs : ident) :=
+  let accs := Fresh.in_goal @ACCs in
+  ltac1:(xs accs |- destruct xs as [xs accs])
+    (Ltac1.of_ident xs) (Ltac1.of_ident accs);
+  isa_split_memaccs accs.
+
 Ltac2 isa_step_and_simplify (xs : ident) :=
   let h := Ltac1.of_ident xs in
-  ltac1:(h |- step_stmt h) h;
+  isa_step_stmt xs;
   Control.enter (fun () =>
-    ltac1:(h |- abstract_ignored_vars h) h;
+    isa_abstract_ignored_vars xs;
     ltac1:(h |- psimpl_hyp h) h;
     ltac1:(h |- simpl_memaccs h) h;
-    ltac1:(h |- destruct_memaccs h) h;
+    isa_destruct_memaccs xs;
     Control.enter (fun () => try ltac1:(generalize_trace))).
 
 Ltac2 isa_invhere () :=
@@ -271,7 +339,7 @@ Ltac2 isa_step () :=
         | isa_invhere () ].
 
 Ltac ISA_step_and_simplify xs :=
-  let f := ltac2:(xs |- isa_step_and_simplify (Option.get (Ltac1.to_ident xs))) in f xs.
+  let f := ltac2:(xs |- isa_step_and_simplify (picinae_hyp_ident xs)) in f xs.
 Ltac ISA_invhere := ltac2:(isa_invhere ()).
 Ltac ISA_invseek := ltac2:(isa_invseek ()).
 Ltac ISA_step := ltac2:(isa_step ()).

@@ -38,6 +38,24 @@ Set Default Proof Mode "Classic".
 Require Import Picinae_core.
 Require Import Picinae_finterp.
 
+(* Ltac1 callers may pass a hypothesis as an identifier (hyp notation) or
+   as a variable term (a direct call from another tactic). Accept both. *)
+Ltac2 picinae_hyp_ident (h : Ltac1.t) :=
+  match Ltac1.to_ident h with
+  | Some id => id
+  | None =>
+      match Ltac1.to_constr h with
+      | Some term =>
+          match Constr.Unsafe.kind term with
+          | Constr.Unsafe.Var id => id
+          | _ => Control.zero (Tactic_failure (Some
+              (Message.of_string "Expected a hypothesis")))
+          end
+      | None => Control.zero (Tactic_failure (Some
+          (Message.of_string "Expected a hypothesis")))
+      end
+  end.
+
 (* This file defines the central tactic notations that launch Picinae's auto-
    simplification process for symbolic expressions yielded by the IL interperter.
    Since different proofs (and even different steps within a single proof) often
@@ -148,8 +166,6 @@ Ltac psimpl_hyp_ltac1 H :=
   unfold _psimpl_ in H.
 
 
-
-
 (* Syntax 2: psimpl.
    (Simplify all exps of type N, bool, and store in the goal.) *)
 
@@ -169,8 +185,6 @@ Ltac psimpl_goal_ltac1 :=
   psimpl_mark_all_in P;
   psimpl_vals_goal;
   unfold _psimpl_.
-
-
 
 
 (* Syntax 3: psimpl e in H.
@@ -217,8 +231,6 @@ Ltac psimpl_exp_goal_ltac1 e :=
   _psimpl_exp_hyp x H';
   rewrite H';
   clear x H'.
-
-
 
 
 (* Explicit Ltac1 entry points for comparisons and compatibility. *)
@@ -316,10 +328,10 @@ Ltac2 psimpl_exp_goal (e : Ltac1.t) :=
 (* Classic-mode adapters preserve existing scripts and architecture aliases. *)
 Ltac psimpl_goal ::= ltac2:(psimpl_goal ()).
 Ltac psimpl_hyp h ::=
-  let f := ltac2:(h |- psimpl_hyp (Option.get (Ltac1.to_ident h))) in f h.
+  let f := ltac2:(h |- psimpl_hyp (picinae_hyp_ident h)) in f h.
 Ltac psimpl_exp_goal e ::= let f := ltac2:(e |- psimpl_exp_goal e) in f e.
 Ltac psimpl_exp_hyp e h ::=
-  let f := ltac2:(e h |- psimpl_exp_hyp e (Option.get (Ltac1.to_ident h))) in f e h.
+  let f := ltac2:(e h |- psimpl_exp_hyp e (picinae_hyp_ident h)) in f e h.
 Tactic Notation "psimpl" := psimpl_goal.
 Tactic Notation "psimpl" "in" hyp(h) := psimpl_hyp h.
 Tactic Notation "psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
