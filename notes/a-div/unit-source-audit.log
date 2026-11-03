@@ -1,0 +1,10 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-bca255ed
+COMMAND=python3 tools/audit-proof-source.py --base 49956416928e5b6bb3928b54ae33e3b81091f006 Examples/claude/arm8_div_proof.v Examples/claude/div_arith.v Examples/claude/div_arm8.v
+Base: 49956416928e5b6bb3928b54ae33e3b81091f006
+Scope: 3 Rocq source files
+BASELINE totals: {}
+CURRENT totals: {}
+NEW totals: {}
+Source check only: inspect transitive Print Assumptions separately.
+
+EXIT_CODE=0

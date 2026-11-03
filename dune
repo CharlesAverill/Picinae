@@ -15,7 +15,9 @@
   Examples.claude.amd64_common Examples.claude.abs_amd64
   Examples.claude.amd64_abs_proof
   Examples.claude.arm8_common Examples.claude.abs_arm8
-  Examples.claude.arm8_abs_proof))
+  Examples.claude.arm8_abs_proof
+  Examples.claude.div_arith Examples.claude.div_arm8
+  Examples.claude.arm8_div_proof))
 
 (alias
  (name core)

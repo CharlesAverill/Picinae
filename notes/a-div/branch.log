@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-bca255ed
+COMMAND=bash -e -c result=\$\(git\ ls-remote\ --heads\ fork\ refs/heads/llm-proofs/a-div\)\;\ test\ -z\ \"\$result\"\;\ git\ branch\ -m\ llm-proofs/a-div\;\ git\ branch\ --show-current
+llm-proofs/a-div
+
+EXIT_CODE=0
