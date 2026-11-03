@@ -6,7 +6,9 @@
    memcpy@GLIBC_2.2.5 at 0x1c4870, image base 0x100000.
    Ghidra 11.4.2 + pcode2coq, as documented in amd64_memcpy_proof.v.
    The generated IL is unchanged; its binary provenance is not revalidated.
-   Author/model: OpenAI GPT-6 Astra, November 2026.
+   Original author/model: OpenAI GPT-6 Astra, November 2026.
+   Proof-script repairs and additional support/witnesses: OpenAI GPT-6.1
+   Sol, November 2026. The assigned full-entry strategy remains partial.
 
    English spec: copy original source bytes to the destination, with all
    bytes outside the destination unchanged. System V AMD64 input is
@@ -49,8 +51,28 @@ Proof.
   intros m M d s n W o C WN NOV NB O. unfold nt_row.
   eapply cpy_equiv; [|eapply (cpy_store4 m M d s n W o (o+16) (o+32) (o+48));
     [exact C|exact WN|exact NOV|exact NB|..]].
-  - intro x. clear. lia.
+  { intro x. clear. cbv beta. intuition lia. }
   all: clear - O; first [lia | f_equal; lia].
+Qed.
+
+(* A chunk counter must be positive before entering a bottom-tested bulk
+   loop. This exact criterion imposes no artificial upper bound on n. It
+   is arithmetic support only: entry dispatch is not yet proved here. *)
+Lemma nt_chunk_positive: forall pages d n, 0 < pages ->
+  (0 < (n - nt_align d) / (4096 * pages) <->
+   nt_align d + 4096 * pages <= n).
+Proof.
+  intros pages d n P. pose proof (nt_align_bounds d) as A.
+  rewrite N.div_str_pos_iff by (clear - P; nia). lia.
+Qed.
+
+Lemma nt_chunk_positive_from_threshold: forall pages d n threshold,
+  (pages = 2 \/ pages = 4) -> 16448 <= threshold -> threshold < n ->
+  0 < (n - nt_align d) / (4096 * pages).
+Proof.
+  intros pages d n threshold P T N.
+  pose proof (nt_align_bounds d) as A.
+  destruct P as [-> | ->]; apply nt_chunk_positive; lia.
 Qed.
 
 (* Offset-set invariant shared by the two/four-page bulk loops. At each
@@ -63,7 +85,10 @@ Definition nt_done (pages a j i x:N) :=
 
 Lemma nt_done_initial: forall pages a x,
   nt_done pages a 0 0 x <-> x < 64.
-Proof. intros. unfold nt_done. split; [intros [H|[H|[p [P H]]]]|intro H]; try lia. left; exact H. Qed.
+Proof. intros. unfold nt_done. split.
+  - intros [H|[H|[p [P H]]]]; lia.
+  - intro H; left; exact H.
+Qed.
 
 Lemma nt_done_chunk: forall pages a j x, 0 < pages ->
   (nt_done pages a j 64 x <-> x < 64 \/ a <= x < a + 4096 * pages * (j+1)).
@@ -83,7 +108,7 @@ Qed.
 Lemma nt_done_next_chunk: forall pages a j x, 0 < pages ->
   (nt_done pages a j 64 x <-> nt_done pages a (j+1) 0 x).
 Proof.
-  intros. rewrite nt_done_chunk by assumption. unfold nt_done.
+  intros pages a j x POS. rewrite nt_done_chunk by exact POS. unfold nt_done.
   split; [tauto|]. intros [H|[H|[p [P H]]]]; try tauto; lia.
 Qed.
 
@@ -104,9 +129,11 @@ Lemma nt_staged_finish: forall pages a j i x,
   nt_staged pages a j i pages x <-> nt_done pages a j (i+1) x.
 Proof.
   intros. unfold nt_staged, nt_done. split.
-  - intros [[H|[H|[p [P H]]]]|[p [P H]]];
-      try (left; exact H); try (right; left; exact H);
-      right; right; exists p; split; [exact P|nia].
+  - intros [[H|[H|[p [P H]]]]|[p [P H]]].
+    + left; exact H.
+    + right; left; exact H.
+    + right; right; exists p; split; [exact P|nia].
+    + right; right; exists p; split; [exact P|nia].
   - intros [H|[H|[p [P H]]]]; try tauto.
     destruct (N.lt_ge_cases x (a + 4096 * pages * j + 4096 * p + 64 * i)).
     + left; right; right; exists p; split; [exact P|nia].
@@ -229,8 +256,9 @@ Proof.
       clear - B1 B2 CL; lia).
   all: unfold nt_tail_state; split; [clear - CL; lia|];
     split; [clear - REM; lia|]; split; [exact ADV|].
-  all: split; [rewrite N.mod_small by (clear - NW CL; lia); clear; lia|].
-  all: split; [f_equal; clear; lia|].
+  all: split; [change (64 + d ⊕ c = d + (c+64));
+    rewrite N.mod_small by (clear - NW CL; lia); clear; lia|].
+  all: split; [change (64 + s ⊕ c = s ⊕ (c+64)); f_equal; clear; lia|].
   all: split; [exact RE|]; split; [exact RAX|exact RSP].
 Qed.
 
@@ -272,11 +300,11 @@ Proof.
       cbv [nt_tail_witness]; first [apply N.neq_0_lt_0; apply N.pow_nonzero; discriminate
             | reflexivity]. }
   split.
-  { intros i j I J. unfold madd. rewrite !N.mod_small by (clear - I J; lia).
+  { intros i j I J. rewrite !N.mod_small by (clear - I J; lia).
     clear - I J. lia. }
   split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
-  unfold nt_tail_state. split; [reflexivity|]. split; [reflexivity|]. split.
-  { eapply cpy_equiv; [|apply cpy_empty]. intro x; lia. }
+  unfold nt_tail_state. split; [lia|]. split; [reflexivity|]. split.
+  { eapply cpy_equiv; [|apply cpy_empty]. intro x; cbv beta; lia. }
   repeat split; reflexivity.
 Qed.
 
@@ -310,10 +338,62 @@ Proof.
     [eapply (cpy_store _ _ _ _ _ (o+32));
       [eapply (cpy_store _ _ _ _ _ (o+16));
         [eapply (cpy_store _ _ _ _ _ o); [exact C|..]|..]|..]|..]].
-  all: try (intro x; clear; lia).
-  all: try (intros x H; clear - H WN NB O;
+  all: try (intro x; clear; cbv beta; intuition lia).
+  all: try (intros x H; cbv beta in H; clear - H WN NB O;
       repeat destruct H as [H|H]; try apply WN in H;
       change (2^64) with 18446744073709551616 in *; lia).
   all: clear - O NB; change (2^64) with 18446744073709551616 in *;
     first [lia | f_equal; lia].
+Qed.
+
+(* A head constructed by the four actual source-sized stores supplies the
+   initial staging relation, for arbitrary source contents. No whole-buffer
+   copy is assumed. The genuine nonoverlap and size hypotheses are explicit. *)
+Lemma nt_staged_initial_witness: forall m d s n pages a,
+  64 <= n -> nov d s n -> n < 2^64 ->
+  cpy m (nt_row m d s 0) d s (nt_staged pages a 0 0 0).
+Proof.
+  intros m d s n pages a BIG NOV NB.
+  eapply cpy_equiv; [|apply (nt_row_advance m m d s n (fun _ => False) 0);
+    [apply cpy_empty|intros x []|exact NOV|exact NB|exact BIG]].
+  intro x. rewrite nt_staged_zero, nt_done_initial. cbv beta. lia.
+Qed.
+
+(* All premises of the staged-row advance are simultaneously inhabited for
+   both page counts. Construct the copied head, then advance its first row.
+   In particular, the invariant does not require an already copied buffer. *)
+Theorem nt_staged_advance_nonvacuous: forall pages, (pages = 2 \/ pages = 4) ->
+  exists m M d s n a,
+    1 <= a <= 64 /\ 0 < 64 /\ 0 < pages /\
+    a + 4096 * pages * (0+1) <= n /\ nov d s n /\ n < 2^64 /\
+    cpy m M d s (nt_staged pages a 0 0 0).
+Proof.
+  intros pages P.
+  assert (NOV: nov 65536 131072 16448).
+  { intros i j I J. rewrite !N.mod_small by (clear - I J; lia).
+    clear - I J; lia. }
+  exists 0, (nt_row 0 65536 131072 0), 65536, 131072, 16448, 64.
+  split; [lia|]. split; [reflexivity|].
+  split; [destruct P as [-> | ->]; reflexivity|].
+  split; [destruct P as [-> | ->]; lia|].
+  split; [exact NOV|]. split; [reflexivity|].
+  apply (nt_staged_initial_witness 0 65536 131072 16448 pages 64);
+    first [exact NOV|reflexivity|lia].
+Qed.
+
+(* Concrete values satisfy every first-page-store premise, with an empty
+   written set. The four low lanes contain actual loads from zero memory. *)
+Theorem memcpy_nt_first_page_stores_nonvacuous:
+  models archtyps nt_tail_witness /\
+  cpy 0 (nt_tail_witness V_MEM64) 4096 8192 (fun _ => False) /\
+  (forall x:N, False -> x < 128) /\ 128 < 2^64 /\ 0+64 <= 128 /\
+  nt_tail_witness R_RDI = 4096+0 /\
+  nt_tail_witness R_YMM0 mod 2^128 = 0 Ⓧ[8192+0] /\
+  nt_tail_witness R_YMM1 mod 2^128 = 0 Ⓧ[8192+0+16] /\
+  nt_tail_witness R_YMM2 mod 2^128 = 0 Ⓧ[8192+0+32] /\
+  nt_tail_witness R_YMM3 mod 2^128 = 0 Ⓧ[8192+0+48].
+Proof.
+  split; [exact (proj1 memcpy_nt_tail_nonvacuous)|].
+  split; [apply cpy_empty|]. split; [intros x []|].
+  split; [reflexivity|]. split; [lia|]. repeat split; reflexivity.
 Qed.

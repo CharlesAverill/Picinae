@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-010907e3
+COMMAND=bash -c for\ procdir\ in\ /proc/\[0-9\]\*\;\ do\ test\ -r\ \"\$procdir/comm\"\ \|\|\ continue\;\ read\ -r\ procname\ \<\ \"\$procdir/comm\"\;\ case\ \"\$procname\"\ in\ rocqworker\|rocq\)\ proccwd=\$\(readlink\ \"\$procdir/cwd\"\ 2\>/dev/null\)\ \|\|\ continue\;\ case\ \"\$proccwd\"\ in\ /home/charles/.t3/worktrees/Picinae/t3-010907e3/\*\)\ ps\ -p\ \"\$\{procdir##\*/\}\"\ -o\ pid\,etime\,time\,rss\,vsz\,args\;\;\ esac\;\;\ esac\;\ done
+
+EXIT_CODE=0

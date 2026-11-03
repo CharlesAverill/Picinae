@@ -1,0 +1,40 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-010907e3
+COMMAND=git merge --ff-only c63095989bf5d49153046d2285b3e27580346fde
+Updating 71470bf..c630959
+Fast-forward
+ Examples/claude/amd64_memcpy_nt_proof.v            | 319 ++++++++++++++
+ dune                                               |   4 +
+ notes/x01-sse2-nt/01-dependencies.log              | 417 +++++++++++++++++++
+ notes/x01-sse2-nt/02-nt-instructions.log           | 184 +++++++++
+ notes/x01-sse2-nt/03-resource-sample.log           |  24 ++
+ notes/x01-sse2-nt/04-source-audit.log              | 204 +++++++++
+ notes/x01-sse2-nt/05-resource-sample.log           |   7 +
+ notes/x01-sse2-nt/06-attempt-checkpoint.log        |  45 ++
+ notes/x01-sse2-nt/07-initial-nt-build.log          |  33 ++
+ notes/x01-sse2-nt/08-handoff-diagnostic.log        |  24 ++
+ .../x01-sse2-nt/09-inherited-loop-assumptions.log  | 456 +++++++++++++++++++++
+ notes/x01-sse2-nt/10-inherited-abi-assumptions.log |  28 ++
+ notes/x01-sse2-nt/11-precommit-audit.log           |  36 ++
+ notes/x01-sse2-nt/README.md                        | 164 ++++++++
+ notes/x01-sse2-nt/branch-rename.log                |   4 +
+ notes/x01-sse2-nt/x01-before.log                   |  32 ++
+ notes/x01-sse2-nt/x01-collision.log                |   4 +
+ 17 files changed, 1985 insertions(+)
+ create mode 100644 Examples/claude/amd64_memcpy_nt_proof.v
+ create mode 100644 notes/x01-sse2-nt/01-dependencies.log
+ create mode 100644 notes/x01-sse2-nt/02-nt-instructions.log
+ create mode 100644 notes/x01-sse2-nt/03-resource-sample.log
+ create mode 100644 notes/x01-sse2-nt/04-source-audit.log
+ create mode 100644 notes/x01-sse2-nt/05-resource-sample.log
+ create mode 100644 notes/x01-sse2-nt/06-attempt-checkpoint.log
+ create mode 100644 notes/x01-sse2-nt/07-initial-nt-build.log
+ create mode 100644 notes/x01-sse2-nt/08-handoff-diagnostic.log
+ create mode 100644 notes/x01-sse2-nt/09-inherited-loop-assumptions.log
+ create mode 100644 notes/x01-sse2-nt/10-inherited-abi-assumptions.log
+ create mode 100644 notes/x01-sse2-nt/11-precommit-audit.log
+ create mode 100644 notes/x01-sse2-nt/README.md
+ create mode 100644 notes/x01-sse2-nt/branch-rename.log
+ create mode 100644 notes/x01-sse2-nt/x01-before.log
+ create mode 100644 notes/x01-sse2-nt/x01-collision.log
+
+EXIT_CODE=0

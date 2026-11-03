@@ -16,6 +16,7 @@
   Examples.claude.amd64_abs_proof
   Examples.claude.memcpy_amd64 Examples.claude.amd64_memcpy_sets
   Examples.claude.amd64_memcpy_lemmas Examples.claude.amd64_memcpy_proof
+  Examples.claude.amd64_memcpy_nt_dispatch_proof
   Examples.claude.amd64_memcpy_nt_proof
   Examples.claude.amd64_memcpy_loops_proof
   Examples.claude.arm8_common Examples.claude.abs_arm8

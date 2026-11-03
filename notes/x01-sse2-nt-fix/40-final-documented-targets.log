@@ -1,0 +1,34 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-010907e3
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 8000000\;\ ulimit\ -s\ 65536\;\ /usr/bin/time\ -v\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/claude/amd64_memcpy_nt_proof.vo\ Examples/claude/amd64_memcpy_nt_dispatch_proof.vo
+        rocq .Picinae.theory.d
+        rocq Examples/claude/amd64_memcpy_nt_dispatch_proof.{glob,vo}
+Goal at < 1853552 >
+Goal at < 1854064 >
+Goal at < 1854224 >
+Goal at < 1854092 >
+Goal at < 1854381 >
+	Command being timed: "dune build --cache=disabled -j1 --display short Examples/claude/amd64_memcpy_nt_proof.vo Examples/claude/amd64_memcpy_nt_dispatch_proof.vo"
+	User time (seconds): 28.35
+	System time (seconds): 0.31
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:28.73
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1495588
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 38095
+	Voluntary context switches: 583
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8024
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+EXIT_CODE=0
