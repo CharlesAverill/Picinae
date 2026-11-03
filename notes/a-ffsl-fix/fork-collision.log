@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/a-ffsl-fix
+Initial sandbox run: EXIT_CODE=128, Could not resolve host: github.com.
+Retried with approved network escalation; stdout/stderr empty.
+EXIT_CODE=0
+No remote branch collision. No remote write.

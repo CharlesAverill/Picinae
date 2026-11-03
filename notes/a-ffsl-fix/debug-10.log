@@ -1,0 +1,80 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=bash notes/a-ffsl-fix/debug.sh
+Chars 0 - 83 [Require~Import~Picinae_armv8~f...] 0.382 secs (0.236u,0.154s)
+Chars 84 - 134 [From~Stdlib~Require~Import~NAr...] 0.026 secs (0.027u,0.s)
+Chars 135 - 170 [Import~ARM8Notations~ListNotat...] 0. secs (0.u,0.s)
+Chars 171 - 184 [Open~Scope~N.] 0. secs (0.u,0.s)
+Chars 185 - 267 [Lemma~ffsl_asr_upper~:~~~foral...] 0.001 secs (0.001u,0.s)
+Chars 268 - 274 [Proof.] 0. secs (0.u,0.s)
+Chars 277 - 285 [intro~x.] 0. secs (0.u,0.s)
+Chars 286 - 303 [apply~N.bits_inj.] 0. secs (0.u,0.s)
+Chars 304 - 312 [intro~i.] 0. secs (0.u,0.s)
+Chars 315 - 369 [rewrite~!Nmod_pow2_bits,~ashif...] 0.001 secs (0.001u,0.s)
+Chars 372 - 408 [destruct~(N.ltb_spec~i~32)~as~...] 0.001 secs (0.u,0.s)
+Chars 411 - 412 [-] 0. secs (0.u,0.s)
+Chars 413 - 479 [rewrite~(proj2~(N.ltb_lt~i~64)...] 0.005 secs (0.006u,0.s)
+Chars 480 - 492 [reflexivity.] 0. secs (0.u,0.s)
+Chars 495 - 496 [-] 0. secs (0.u,0.s)
+Chars 497 - 509 [reflexivity.] 0. secs (0.u,0.s)
+Chars 510 - 514 [Qed.] 0.002 secs (0.002u,0.s)
+Chars 661 - 816 [Lemma~ffsl_isolate~:~~~forall~...] 0.001 secs (0.001u,0.s)
+Chars 817 - 823 [Proof.] 0. secs (0.u,0.s)
+Chars 826 - 846 [intros~x~k~XL~K~B~L.] 0. secs (0.u,0.s)
+Chars 849 - 922 [assert~(NZ~:~x~<>~0)~by~(intro...] 0. secs (0.u,0.s)
+Chars 925 - 999 [assert~(PK~:~0~<~2~^~k)~by~(ap...] 0. secs (0.u,0.s)
+Chars 1002 - 1040 [assert~(XM~:~x~mod~2~^~N.succ~...] 0. secs (0.u,0.s)
+Chars 1043 - 1044 [{] 0. secs (0.u,0.s)
+Chars 1045 - 1062 [apply~N.bits_inj.] 0. secs (0.u,0.s)
+Chars 1063 - 1071 [intro~j.] 0. secs (0.u,0.s)
+Chars 1072 - 1112 [rewrite~Nmod_pow2_bits,~N.pow2...] 0. secs (0.u,0.s)
+Chars 1117 - 1161 [destruct~(N.ltb_spec~j~(N.succ...] 0. secs (0.u,0.s)
+Chars 1166 - 1167 [-] 0. secs (0.u,0.s)
+Chars 1168 - 1203 [destruct~(N.eq_dec~j~k)~as~[->...] 0. secs (0.u,0.s)
+Chars 1210 - 1211 [+] 0. secs (0.u,0.s)
+Chars 1212 - 1234 [rewrite~B,~N.eqb_refl.] 0. secs (0.u,0.s)
+Chars 1235 - 1247 [reflexivity.] 0. secs (0.u,0.s)
+Chars 1254 - 1255 [+] 0. secs (0.u,0.s)
+Chars 1256 - 1273 [rewrite~L~by~lia.] 0.036 secs (0.u,0.037s)
+Chars 1274 - 1317 [rewrite~(proj2~(N.eqb_neq~k~j)...] 0.086 secs (0.065u,0.023s)
+Chars 1318 - 1330 [reflexivity.] 0. secs (0.u,0.s)
+Chars 1335 - 1336 [-] 0. secs (0.u,0.s)
+Chars 1337 - 1380 [rewrite~(proj2~(N.eqb_neq~k~j)...] 0.01 secs (0.01u,0.s)
+Chars 1381 - 1393 [reflexivity.] 0. secs (0.u,0.s)
+Chars 1394 - 1395 [}] 0. secs (0.u,0.s)
+Chars 1398 - 1454 [assert~(D~:~x~=~2~^~k~+~x~/~2~...] 0. secs (0.u,0.s)
+Chars 1457 - 1458 [{] 0. secs (0.u,0.s)
+Chars 1459 - 1551 [pose~proof~~(N.div_mod~x~(2~^~...] 0. secs (0.u,0.s)
+Chars 1556 - 1572 [rewrite~XM~in~D.] 0. secs (0.u,0.s)
+Chars 1573 - 1577 [nia.] 0.561 secs (0.567u,0.008s)
+Chars 1578 - 1579 [}] 0. secs (0.u,0.s)
+Chars 1582 - 1652 [assert~(DP~:~x~-~1~=~2~^~k~-~1...] 2.412 secs (1.679u,0.s)
+Chars 1655 - 1721 [assert~(PL~:~2~^~k~-~1~<~2~^~N...] 2.686 secs (2.736u,0.011s)
+Chars 1724 - 1768 [assert~(PM~:~(x~-~1)~mod~2~^~N...] 0.001 secs (0.001u,0.s)
+Chars 1771 - 1772 [{] 0. secs (0.u,0.s)
+File "./notes/a-ffsl-fix/Debug.v", line 39, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./notes/a-ffsl-fix/Debug.v", line 39, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./notes/a-ffsl-fix/Debug.v", line 39, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+Chars 1773 - 1834 [rewrite~DP,~N.mod_add~by~(appl...] 0.003 secs (0.003u,0.s)
+Chars 1839 - 1857 [apply~N.mod_small.] 0. secs (0.u,0.s)
+Chars 1858 - 1867 [exact~PL.] 0. secs (0.u,0.s)
+Chars 1868 - 1869 [}] 0. secs (0.u,0.s)
+Chars 1872 - 1925 [assert~(DQ~:~(x~-~1)~/~2~^~N.s...] 0. secs (0.u,0.s)
+Chars 1928 - 1929 [{] 0. secs (0.u,0.s)
+Chars 1930 - 1991 [rewrite~DP,~N.div_add~by~(appl...] 0.001 secs (0.001u,0.s)
+Chars 1996 - 2028 [rewrite~N.div_small~by~exact~PL.] 0. secs (0.u,0.s)
+Chars 2029 - 2041 [reflexivity.] 0. secs (0.u,0.s)
+Chars 2042 - 2043 [}] 0. secs (0.u,0.s)
+Chars 2046 - 2090 [assert~(NEG~:~msub~64~0~x~=~N....] 0. secs (0.u,0.s)
+Chars 2093 - 2094 [{] 0. secs (0.u,0.s)
+Chars 2095 - 2141 [rewrite~msub_0_l,~(N.mod_small...] 0. secs (0.u,0.s)
+
+Interrupted explicitly in isolation NEG arithmetic side goal; wrapper exit=130.

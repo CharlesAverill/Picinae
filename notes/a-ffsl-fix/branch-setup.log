@@ -1,0 +1,8 @@
+Initial HEAD=71470bffba65392adf1873a3df9f0cf0ca4f1ac9; clean prepared worktree.
+Environment renamed prepared t3/28e4e74e to t3/ffsl-proof-repair before our mutation.
+COMMAND=git branch -m llm-proofs/a-ffsl-fix
+Sandbox EXIT_CODE=128: Git metadata read-only.
+Retried with approved filesystem escalation: EXIT_CODE=0.
+COMMAND=git merge --ff-only 95fec3532babe28cc92926f2a23d6253ce55c69a
+EXIT_CODE=0; Updating 71470bf..95fec35; Fast-forward.
+Original llm-proofs/a-ffsl branch and worktree left unchanged.

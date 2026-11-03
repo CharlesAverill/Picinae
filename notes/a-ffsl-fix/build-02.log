@@ -1,0 +1,10 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=bash notes/a-ffsl-fix/build.sh
+        rocq .Picinae.theory.d
+        rocq Examples/claude/arm8_ffsl_proof.{glob,vo} (exit 1)
+File "./Examples/claude/arm8_ffsl_proof.v", line 127, characters 57-58:
+Error:
+Syntax error: [ltac_use_default] expected after [tactic] (in [tactic_command]).
+
+
+EXIT_CODE=1

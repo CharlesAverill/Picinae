@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=bash notes/a-ffsl-fix/debug.sh
+Chars 0 - 36 [Require~Import~FixDebug.DebugP...] 0.157 secs (0.142u,0.018s)
+Chars 37 - 72 [Import~ARM8Notations~ListNotat...] 0. secs (0.u,0.s)
+File "./notes/a-ffsl-fix/Debug.v", line 2, characters 7-20:
+Error: Cannot find module ARM8Notations
+
+
+EXIT_CODE=1
