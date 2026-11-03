@@ -21,7 +21,9 @@
   Examples.claude.amd64_memmove_avx_proof
   Examples.claude.amd64_memmove_avx_loops_proof
   Examples.claude.amd64_memmove_avx_rep_proof
-  Examples.claude.amd64_memmove_avx_nt_proof))
+  Examples.claude.amd64_memmove_avx_nt_stores
+  Examples.claude.amd64_memmove_avx_nt_proof
+  Examples.claude.amd64_memmove_avx_nt_witness))
 
 (alias
  (name core)
