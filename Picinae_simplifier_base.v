@@ -38,8 +38,9 @@ Set Default Proof Mode "Classic".
 Require Import Picinae_core.
 Require Import Picinae_finterp.
 
-(* Ltac1 callers may pass a hypothesis as an identifier (hyp notation) or
-   as a variable term (a direct call from another tactic). Accept both. *)
+(* Ltac1 callers may pass a hypothesis as an identifier (hyp notation), a
+   variable term, or a named introduction pattern (e.g. a name used by set).
+   Accept all three without interpreting other introduction patterns as names. *)
 Ltac2 picinae_hyp_ident (h : Ltac1.t) :=
   match Ltac1.to_ident h with
   | Some id => id
@@ -51,8 +52,12 @@ Ltac2 picinae_hyp_ident (h : Ltac1.t) :=
           | _ => Control.zero (Tactic_failure (Some
               (Message.of_string "Expected a hypothesis")))
           end
-      | None => Control.zero (Tactic_failure (Some
-          (Message.of_string "Expected a hypothesis")))
+      | None =>
+          match Ltac1.to_intro_pattern h with
+          | Some (Std.IntroNaming (Std.IntroIdentifier id)) => id
+          | _ => Control.zero (Tactic_failure (Some
+              (Message.of_string "Expected a hypothesis")))
+          end
       end
   end.
 
@@ -252,8 +257,10 @@ Tactic Notation "psimpl" uconstr(e) "in" hyp(h) := psimpl_exp_hyp uconstr:(e) h.
 End PSIMPL_BASE.
 
 
-(* Keep Ltac2 bodies in the implementation, where Rocq checks their types. *)
-Module Picinae_Simplifier_Base (IL: PICINAE_IL) : PSIMPL_BASE IL.
+(* Keep Ltac2 bodies in the implementation, where Rocq checks their types.
+   Check the signature without sealing: [: PSIMPL_BASE IL] would export the
+   signature's Ltac1 defaults instead of the adapters defined below. *)
+Module Picinae_Simplifier_Base (IL: PICINAE_IL) <: PSIMPL_BASE IL.
 Include PSIMPL_BASE IL.
 
 
@@ -284,46 +291,84 @@ Ltac2 psimpl_vals_hyp2 (h : ident) :=
   Std.clear [ast];
   ltac1:(h |- PSimplifier PSIMPL_EXHYP_U h) h1.
 
+(* Classic sequencing may supply several goals or none. Focus before reading
+   the local context or allocating fresh identifiers. *)
 Ltac2 psimpl_goal () :=
-  ltac1:(let p := fresh in set (p:=_); psimpl_mark_all_in p);
-  psimpl_vals_goal2 ();
-  unfold _psimpl_.
+  Control.enter (fun () =>
+    ltac1:(let p := fresh in set (p:=_); psimpl_mark_all_in p);
+    psimpl_vals_goal2 ();
+    unfold _psimpl_).
 
 Ltac2 psimpl_hyp (h : ident) :=
-  let h1 := Ltac1.of_ident h in
-  ltac1:(h |- let p := fresh in set (p:=_) in h; psimpl_mark_all_in p) h1;
-  first
-  [ psimpl_vals_hyp2 h
-  | ltac1:(h |- let y := fresh in let heq := fresh in
-      remember h as y eqn:heq in *; subst h; psimpl_vals_hyp heq;
-      lazymatch type of heq with _ = ?e => set (h:=e) in heq end;
-      try rewrite heq in *; clear y heq) h1 ];
-  unfold _psimpl_ in $h.
+  Control.enter (fun () =>
+    let h1 := Ltac1.of_ident h in
+    ltac1:(h |- let p := fresh in set (p:=_) in h; psimpl_mark_all_in p) h1;
+    first
+    [ psimpl_vals_hyp2 h
+    | let y := Fresh.in_goal @y in
+      let eqn := Fresh.in_goal @Heq in
+      let y1 := Ltac1.of_ident y in let eq1 := Ltac1.of_ident eqn in
+      ltac1:(h y heq |- remember h as y eqn:heq in *; subst h) h1 y1 eq1;
+      psimpl_vals_hyp2 eqn;
+      ltac1:(h heq |-
+        lazymatch type of heq with _ = ?e => set (h:=e) in heq end;
+        try rewrite heq in *) h1 eq1;
+      Std.clear [y; eqn] ];
+    unfold _psimpl_ in $h).
+
+Ltac2 psimpl_exp_eq2 (gen : constr) (hyp : constr) (exhyp : constr)
+    (x : ident) (eqn : ident) :=
+  let ast := Fresh.in_goal @sast in
+  let ast1 := Ltac1.of_ident ast in
+  let x1 := Ltac1.of_ident x in let eq1 := Ltac1.of_ident eqn in
+  let gen1 := Ltac1.of_constr gen in
+  ltac1:(gen x heq ast |- match type of heq with x = ?e =>
+    let p := (let t := (let u := PSimplifier gen e in type_term u) in
+      PSimplifier PSIMPL_POPULATE_VAR_IDS N0 t) in epose (ast:=p)
+    end) gen1 x1 eq1 ast1;
+  let hyp1 := Ltac1.of_constr hyp in
+  ltac1:(hyp ast heq |- PSimplifier hyp ast heq) hyp1 ast1 eq1;
+  Std.clear [ast];
+  let exhyp1 := Ltac1.of_constr exhyp in
+  ltac1:(exhyp heq |- PSimplifier exhyp heq) exhyp1 eq1.
+
+Ltac2 psimpl_exp_dispatch2 (x : ident) (eqn : ident) :=
+  lazy_match! Constr.type (Control.hyp x) with
+  | N => psimpl_exp_eq2 constr:(PSIMPL_GENN) constr:(PSIMPL_N_HYP) constr:(PSIMPL_EXHYP_N) x eqn
+  | addr => psimpl_exp_eq2 constr:(PSIMPL_GENN) constr:(PSIMPL_N_HYP) constr:(PSIMPL_EXHYP_N) x eqn
+  | memory => psimpl_exp_eq2 constr:(PSIMPL_GENN) constr:(PSIMPL_N_HYP) constr:(PSIMPL_EXHYP_N) x eqn
+  | bool => psimpl_exp_eq2 constr:(PSIMPL_GENB) constr:(PSIMPL_B_HYP) constr:(PSIMPL_EXHYP_B) x eqn
+  | IL.store => psimpl_exp_eq2 constr:(PSIMPL_GENS) constr:(PSIMPL_S_HYP) constr:(PSIMPL_EXHYP_S) x eqn
+  | IL.var -> N => psimpl_exp_eq2 constr:(PSIMPL_GENS) constr:(PSIMPL_S_HYP) constr:(PSIMPL_EXHYP_S) x eqn
+  | _ => psimpl_vals_hyp2 eqn
+  end.
 
 (* Expression patterns use Ltac1 remember, which accepts uconstr wildcards
    without elaborating them before the occurrence has been selected. *)
 Ltac2 psimpl_exp_hyp (e : Ltac1.t) (h : ident) :=
-  let x := Fresh.in_goal @x in
-  let eqn := Fresh.in_goal @Heq in
-  let x1 := Ltac1.of_ident x in let eq1 := Ltac1.of_ident eqn in
-  let h1 := Ltac1.of_ident h in
-  ltac1:(e h x heq |- remember e as x eqn:heq in h) e h1 x1 eq1;
-  ltac1:(x heq |- _psimpl_exp_hyp x heq) x1 eq1;
-  first
-  [ ltac1:(heq h |- rewrite heq in h) eq1 h1
-  | ltac1:(heq h |- subst h;
-      lazymatch type of heq with _ = ?e => set (h:=e) in heq end;
-      try rewrite heq in *) eq1 h1 ];
-  Std.clear [x; eqn].
+  Control.enter (fun () =>
+    let x := Fresh.in_goal @x in
+    let eqn := Fresh.in_goal @Heq in
+    let x1 := Ltac1.of_ident x in let eq1 := Ltac1.of_ident eqn in
+    let h1 := Ltac1.of_ident h in
+    ltac1:(e h x heq |- remember e as x eqn:heq in h) e h1 x1 eq1;
+    psimpl_exp_dispatch2 x eqn;
+    first
+    [ ltac1:(heq h |- rewrite heq in h) eq1 h1
+    | ltac1:(heq h |- subst h;
+        lazymatch type of heq with _ = ?e => set (h:=e) in heq end;
+        try rewrite heq in *) eq1 h1 ];
+    Std.clear [x; eqn]).
 
 Ltac2 psimpl_exp_goal (e : Ltac1.t) :=
-  let x := Fresh.in_goal @x in
-  let eqn := Fresh.in_goal @Heq in
-  let x1 := Ltac1.of_ident x in let eq1 := Ltac1.of_ident eqn in
-  ltac1:(e x heq |- remember e as x eqn:heq in |- *) e x1 eq1;
-  ltac1:(x heq |- _psimpl_exp_hyp x heq) x1 eq1;
-  ltac1:(heq |- rewrite heq) eq1;
-  Std.clear [x; eqn].
+  Control.enter (fun () =>
+    let x := Fresh.in_goal @x in
+    let eqn := Fresh.in_goal @Heq in
+    let x1 := Ltac1.of_ident x in let eq1 := Ltac1.of_ident eqn in
+    ltac1:(e x heq |- remember e as x eqn:heq in |- *) e x1 eq1;
+    psimpl_exp_dispatch2 x eqn;
+    ltac1:(heq |- rewrite heq) eq1;
+    Std.clear [x; eqn]).
 
 (* Classic-mode adapters preserve existing scripts and architecture aliases. *)
 Ltac psimpl_goal ::= ltac2:(psimpl_goal ()).
