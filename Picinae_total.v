@@ -45,6 +45,29 @@ Proof.
     exists (prefix++xs'::nil). rewrite <- app_assoc. simpl. split; assumption.
 Qed.
 
+(* Every continuation path reaches Q after finitely many steps. Together with
+   eventually_reaches, this exposes both universal termination and an actual
+   execution witness; enabledness prevents vacuous success at stuck states. *)
+Theorem eventually_all_paths:
+  forall p Q t (EV:eventually p Q t) (run:nat -> trace)
+    (START: run 0%nat = t)
+    (STEP: forall n, match run n with
+      | nil => False
+      | xs::hist => exists xs', run (S n) = xs'::xs::hist /\ can_step p (xs',xs)
+      end),
+  exists n, Q (run n).
+Proof.
+  intros p Q t EV. induction EV as [t POST|xs hist ENABLED STEP IH];
+    intros run START PATH.
+    exists 0%nat. rewrite START. exact POST.
+    pose proof (PATH 0%nat) as NEXT. rewrite START in NEXT.
+    destruct NEXT as [xs' [AT CS]].
+    destruct (IH xs' CS (fun n => run (S n))) as [n DONE].
+      exact AT.
+      intro n. apply PATH.
+    exists (S n). exact DONE.
+Qed.
+
 Definition exit_post Invs xp (t:trace) := xp t = true /\ true_inv (Invs t).
 Definition satisfies_total p Invs xp t := eventually p (exit_post Invs xp) t.
 
