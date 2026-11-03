@@ -1,0 +1,34 @@
+Title: Migrate simplifier and ISA orchestration to Ltac2
+
+Body:
+Existing psimpl forms and all five architecture step aliases now enter Ltac2
+controllers while preserving Classic proof syntax, wildcard occurrence
+selection, dynamic simplifier/ISA hooks, and explicit independent Ltac1 paths.
+The controllers handle AST lifetime, dispatch, fallback/cleanup, interpreter
+stages, branches, unknowns, and memory facts. A transparent <: signature check
+preserves the new adapters through functor parameters; sealing exported the
+signature's legacy defaults and silently bypassed the native backend.
+
+Gallina reflection, its soundness proofs, and existing compute/lazy reductions
+are unchanged. Untyped AST generation/scoped evars, occurrence marking,
+interpreter setup/checks, dependent context edits, and replaceable hooks retain
+Ltac1 boundaries. No new axioms or admissions are introduced. The known failure
+when a later local definition depends on the simplification target is preserved
+with context rollback. See Benchmarks/ltac2/README.txt for the exact boundaries.
+
+Validation uses the local picinae-env opam wrapper (Rocq 9.1.1, OCaml 4.14.2,
+rocq-stdlib 9.1.0). Committed logs record a clean root build including all three
+regression modules and 11 passing harness bookkeeping tests. All six lifted
+ARM/i386 modules and six proof files build on original master a87fc67; unchanged
+Examples are the comparison inputs. riscv_addloop_proof.v:148 (startof_prefix)
+and riscv_cfi.v:490 (missing VaM) fail on that baseline and are excluded.
+
+Performance: PENDING final measurement job and parent review. Fill from
+Benchmarks/ltac2/measurements/{medians.csv,runs.json,metadata.json,RESULTS.txt}
+after all six eligible proofs complete on both backends. The harness compares
+retained Ltac1 and Ltac2 in the same migrated libraries, verifies explicit and
+default backend routing on all five architectures, runs >=3 sequential samples
+per backend/file with alternating order and recorded load/outliers, and profiles
+separately with both profiling flags. Preserve final logs/fingerprints and
+report compiler-wall medians, percent changes, and wrapper-overhead limits.
+Earlier /tmp/pre-merge/interrupted results are discarded, not PR evidence.
