@@ -186,35 +186,6 @@ Definition addloop_rank (t:trace) : N :=
     if a =? 0x8 then N.succ (s R_T0) else s R_T0
   | _ => 0 end.
 
-(* These instructions contain no memory operations. Constructing their execution
-   witnesses discharges enabledness without assuming any page permissions. *)
-Local Ltac addloop_eval :=
-  first [apply EVar; reflexivity | apply EWord |
-    lazymatch goal with |- eval_exp _ _ (BinOp ?op _ _) _ _ =>
-      eapply EBinOp with (bop:=op); addloop_eval end | eapply EUnOp; addloop_eval |
-    eapply ECast; addloop_eval].
-Local Ltac addloop_exec :=
-  first [apply XNop | eapply XMove; addloop_eval |
-    eapply XJmp; addloop_eval |
-    eapply XSeq2; addloop_exec |
-    eapply XIf; [addloop_eval | cbn [eval_binop N.b2n];
-      repeat match goal with |- context [if ?b then _ else _] => destruct b end;
-      addloop_exec]].
-Local Lemma addloop_if_enabled:
-  forall c s e q1 q2 (E: exists n, eval_exp c s e n 1)
-    (Q1: exists c' s' x, exec_stmt c s q1 c' s' x)
-    (Q2: exists c' s' x, exec_stmt c s q2 c' s' x),
-  exists c' s' x, exec_stmt c s (If e q1 q2) c' s' x.
-Proof.
-  intros c s e q1 q2 [n E] Q1 Q2. destruct n;
-    [destruct Q2 as [c' [s' [x XS]]] | destruct Q1 as [c' [s' [x XS]]]];
-    do 3 eexists; eapply XIf; eassumption.
-Qed.
-Ltac total_enabled ::= first [
-  eapply addloop_if_enabled;
-    [eexists; addloop_eval | do 3 eexists; addloop_exec | do 3 eexists; addloop_exec]
-  | do 3 eexists; addloop_exec].
-
 Lemma addloop_decreases:
   forall n, n <> 0 -> n ⊖ 1 < n.
 Proof.
@@ -252,8 +223,6 @@ Proof.
         cbn [addloop_rank]; psimpl. apply addloop_decreases. apply N.eqb_neq, BC.
       total_here; cbn [addloop_total_invs true_inv]; psimpl. left. split. reflexivity. right. right. split; [reflexivity|assumption].
 Qed.
-
-
 
 (* The public result uses precisely the invariant set of the partial proof. *)
 Theorem addloop_total_correctness:

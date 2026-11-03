@@ -75,6 +75,73 @@ Proof.
   intros t' TRU. apply (FIN (rank t')); [reflexivity|assumption].
 Qed.
 
+(* Carry just the facts needed to reuse a partial-correctness theorem. The
+   invariant at a checkpoint need not duplicate its functional specification. *)
+Definition execution_context p xp (entry:exit*store) (t:trace) :=
+  exec_prog p t /\ ostartof t = Some entry /\ unterminated xp (tl t).
+
+Definition execution_invs p xp entry (checkpoint:trace -> bool) t : option Prop :=
+  if checkpoint t then Some (execution_context p xp entry t) else None.
+
+Theorem execution_invs_checkpoint:
+  forall p xp entry checkpoint t,
+  true_inv (execution_invs p xp entry checkpoint t) -> checkpoint t = true.
+Proof.
+  intros. unfold execution_invs in H. destruct (checkpoint t).
+    reflexivity.
+    contradiction.
+Qed.
+
+Theorem execution_invs_context:
+  forall p xp entry checkpoint t,
+  true_inv (execution_invs p xp entry checkpoint t) ->
+  execution_context p xp entry t.
+Proof.
+  intros. unfold execution_invs in H. destruct (checkpoint t); [assumption|contradiction].
+Qed.
+
+Lemma ostartof_step:
+  forall xs' xs (t:trace), ostartof (xs'::xs::t) = ostartof (xs::t).
+Proof. intros. rewrite !ostartof_cons, startof_cons. reflexivity. Qed.
+
+Theorem satall_exit_inv:
+  forall p Invs xp t (SA: satisfies_all p Invs xp t)
+    (XP: exec_prog p t) (UT: unterminated xp (tl t)) (EX: xp t = true),
+  true_inv (Invs t).
+Proof.
+  intros. specialize (SA XP UT true). inversion SA; subst.
+    unfold effinv, effinv' in TRU. rewrite EX in TRU.
+    destruct (Invs t); assumption.
+    unfold effinv, effinv' in NOI. rewrite EX in NOI.
+    destruct (Invs _); discriminate.
+Qed.
+
+(* Termination and functional correctness can be established separately, using
+   the existing satisfies_all proof verbatim for the latter. *)
+Theorem total_of_partial:
+  forall p Invs xp entry t
+    (PARTIAL: forall t', ostartof t' = Some entry -> satisfies_all p Invs xp t')
+    (TERM: eventually p (fun t' => xp t' = true /\
+      execution_context p xp entry t') t),
+  satisfies_total p Invs xp t.
+Proof.
+  intros. unfold satisfies_total. eapply eventually_bind. exact TERM.
+  intros t' [EX [XP [ORIGIN UT]]]. apply EventuallyHere. split. exact EX.
+  eapply satall_exit_inv; [apply PARTIAL| | |]; eassumption.
+Qed.
+
+Theorem total_execution_invs:
+  forall p Invs xp entry checkpoint t
+    (PARTIAL: forall t', ostartof t' = Some entry -> satisfies_all p Invs xp t')
+    (TERM: satisfies_total p (execution_invs p xp entry checkpoint) xp t),
+  satisfies_total p Invs xp t.
+Proof.
+  intros. eapply total_of_partial. exact PARTIAL.
+  eapply eventually_bind. exact TERM.
+  intros t' [EX INV]. apply EventuallyHere. split. exact EX.
+  apply execution_invs_context in INV. exact INV.
+Qed.
+
 (* Symbolic execution rule, with the same STEP premise as NIStep. *)
 Theorem total_step:
   forall p Q a s t sz q
@@ -91,8 +158,28 @@ Proof.
     rewrite IL in LU. injection LU as SZ EQ. subst. eapply STEP; eassumption.
 Qed.
 
+(* Retain execution and first-exit history while symbolically stepping. This
+   lets termination proofs reuse satisfies_all for the functional invariant. *)
+Theorem total_live_step:
+  forall p Q xp a s t sz q
+    (IL: p s a = Some (sz,q))
+    (LIVE: xp ((Addr a,s)::t) = false)
+    (ENABLED: exists c' s' x, exec_stmt archtyps s q c' s' x)
+    (STEP: forall c' s' x (XS: exec_stmt archtyps s q c' s' x),
+      exec_prog p ((exitof (a+sz) x,reset_temps s s')::(Addr a,s)::t) ->
+      unterminated xp ((Addr a,s)::t) ->
+      eventually p Q ((exitof (a+sz) x,reset_temps s s')::(Addr a,s)::t))
+    (XP: exec_prog p ((Addr a,s)::t)) (UT: unterminated xp t),
+  eventually p Q ((Addr a,s)::t).
+Proof.
+  intros. eapply total_step; [exact IL|exact ENABLED|].
+  intros. eapply STEP; [eassumption| |].
+    apply exec_prog_step. exact XP. eapply CanStep; eassumption.
+    apply unterminated_cons; assumption.
+Qed.
+
 Ltac total_here := apply EventuallyHere; cbn [exit_post].
-Ltac prove_total rank WF := eapply prove_total_invs with (rank:=rank); [exact WF| |].
+Ltac prove_total measure WF := eapply prove_total_invs with (rank:=measure); [exact WF| |].
 
 Print Assumptions prove_total_invs.
 

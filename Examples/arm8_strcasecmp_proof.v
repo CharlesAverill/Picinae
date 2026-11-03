@@ -470,3 +470,31 @@ Proof.
       subst i. split. assumption. apply N.neq_0_lt_0, NN.
     psimpl. repeat split; assumption.
 Qed. (* <-- This Qed might take a few minutes depending on your machine. *)
+(* The callee contains no loops or memory accesses. The exit is its return
+   instruction, as in tolower_correctness; execution of the caller follows. *)
+Theorem tolower_total_correctness:
+  forall s sp mem arg1 arg2 a'
+    (MDL: models arm8typctx s)
+    (SP: s R_SP = sp) (MEM: s V_MEM64 = mem)
+    (X0: s R_X0 = arg1) (X19: s R_X19 = arg2)
+    (X30: s R_X30 = a'),
+  satisfies_total strcasecmp
+    (invs0 sp mem a' arg1 arg2 (s R_X20) (s R_X21))
+    (exits0 sp mem a' arg1 arg2 (s R_X20) (s R_X21))
+    ((Addr 2097152,s)::nil).
+Proof.
+  intros. unfold satisfies_total.
+  do 3 ISA_total_step.
+    ISA_total_step. total_here.
+    cbn [invs0 exits0 make_exits make_invs invs strcasecmp true_inv].
+    psimpl. repeat split; try assumption.
+    rewrite tolower_test in BC. unfold tolower.
+    destruct (andb _ _). reflexivity. discriminate.
+    total_here.
+    cbn [invs0 exits0 make_exits make_invs invs strcasecmp true_inv].
+    psimpl. repeat split; try assumption.
+    rewrite tolower_test in BC. unfold tolower.
+    destruct (andb _ _). discriminate. reflexivity.
+Qed.
+
+Print Assumptions tolower_total_correctness.

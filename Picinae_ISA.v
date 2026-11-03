@@ -217,19 +217,75 @@ Ltac ISA_invseek :=
 
 (* Enabledness is a separate obligation. Architectures or clients may override
    this hook with a memory-safety proof or an instruction execution witness. *)
-Ltac total_enabled := fail "Supply a proof that this instruction can execute".
+(* Memory permissions must be supplied by the client; this hook is invoked at
+   each Load or Store in the constructed execution witness. *)
+Ltac total_memory := fail "Supply a proof of the memory permission for this access".
 
-Ltac ISA_total_step :=
-  eapply total_step; [reflexivity|total_enabled|];
+Ltac total_eval := first [apply EVar; reflexivity | apply EWord |
+  lazymatch goal with |- eval_exp _ _ (BinOp ?op _ _) _ _ =>
+    eapply EBinOp with (bop:=op); total_eval end |
+  eapply EUnOp; total_eval | eapply ECast; total_eval |
+  eapply EExtract; total_eval | eapply EConcat; total_eval |
+  eapply ELet; [total_eval | total_eval] |
+  eapply EIte; [total_eval | total_eval | total_eval] |
+  eapply ELoad; [total_eval | total_eval | total_memory] |
+  eapply EStore; [total_eval | total_eval | total_eval | total_memory] |
+  eapply EUnknown with (n:=0); apply N.neq_0_lt_0, pow2_nonzero].
+Ltac total_exec c s q k :=
+  let q' := eval hnf in q in
+  lazymatch q' with
+  | Nop => k c s constr:(@None exit) constr:(XNop c s)
+  | Exn ?i => k c s constr:(Some (Raise i)) constr:(XExn c s i)
+  | Move ?v ?e =>
+    let E := constr:(ltac:(total_eval) : eval_exp c s e _ _) in
+    lazymatch type of E with eval_exp _ _ _ ?n ?w =>
+      k constr:(update c v (Some w)) constr:(update s v n) constr:(@None exit)
+        constr:(XMove c s v e n w E) end
+  | Jmp ?e =>
+    let E := constr:(ltac:(total_eval) : eval_exp c s e _ _) in
+    lazymatch type of E with eval_exp _ _ _ ?n ?w =>
+      k c s constr:(Some (Addr n)) constr:(XJmp c s e n w E) end
+  | Seq ?q1 ?q2 =>
+    total_exec c s q1 ltac:(fun c2 s2 x2 XS1 =>
+      lazymatch x2 with
+      | None => total_exec c2 s2 q2 ltac:(fun c3 s3 x3 XS2 =>
+          k c3 s3 x3 constr:(XSeq2 c s q1 q2 c2 s2 c3 s3 x3 XS1 XS2))
+      | Some ?x => k c2 s2 x2 constr:(XSeq1 c s q1 q2 c2 s2 x XS1)
+      end)
+  | If ?e ?q1 ?q2 =>
+    let EE := constr:(ltac:(total_eval) : eval_exp c s e _ 1) in
+    let E := fresh "E" in pose proof EE as E;
+    lazymatch type of E with eval_exp _ _ _ ?n _ =>
+      let BC := fresh "BC" in destruct n eqn:BC;
+      [ total_exec c s q2 ltac:(fun c' s' x XS =>
+          k c' s' x constr:(XIf c s e q1 q2 0 c' s' x E XS))
+      | match type of E with eval_exp _ _ _ ?b _ =>
+          total_exec c s q1 ltac:(fun c' s' x XS =>
+            k c' s' x constr:(XIf c s e q1 q2 b c' s' x E XS)) end ] end
+  end.
+Ltac total_enabled_auto :=
+  lazymatch goal with |- exists c' s' x, exec_stmt ?c ?s ?q c' s' x =>
+    total_exec c s q ltac:(fun c' s' x XS =>
+      exists c', s', x; exact XS)
+  end.
+
+Ltac total_enabled := total_enabled_auto.
+
+Ltac ISA_total_continue intro_extra :=
   let c := fresh "c" in let s := fresh "s" in let x := fresh "x" in let XS := fresh "XS" in
   intros c s x XS;
+  intro_extra;
   ISA_step_and_simplify XS;
   repeat lazymatch type of XS with
          | reset_temps _ s = _ /\ x = _ =>
              try clear c; destruct XS as [XS ?]; subst x;
+             (* The execution hypothesis must use the same normalized reset as
+                the symbolic interpreter's equality before that equality is used. *)
+             try match goal with H: exec_prog _ _ |- _ => psimpl_hyp H end;
+             try rewrite XS in *;
              try (let rt := fresh in set (rt := reset_temps _ _) at 1;
                   psimpl_hyp rt; subst rt;
-                  rewrite XS; clear XS; try clear s)
+                  rewrite XS in *; clear XS; try clear s)
          | exec_stmt _ _ (if ?c then _ else _) _ _ _ =>
              let BC := fresh "BC" in destruct c eqn:BC;
              ISA_step_and_simplify XS
@@ -242,6 +298,18 @@ Ltac ISA_total_step :=
   try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
   repeat match goal with [ x:N |- _ ] => clear x end;
   try first [ rewrite exitof_none | rewrite exitof_some ].
+
+Ltac ISA_total_step :=
+  eapply total_step; [reflexivity|total_enabled|]; ISA_total_continue ltac:(idtac).
+
+Ltac ISA_total_live_step :=
+  lazymatch goal with
+  | UT: unterminated ?exit_test ?history |- eventually _ _ ((Addr _,_)::?history) =>
+      eapply total_live_step with (xp:=exit_test);
+        [reflexivity|reflexivity|total_enabled| |eassumption|exact UT];
+      let XP := fresh "XP" in let UT' := fresh "UT" in
+      ISA_total_continue ltac:(intros XP UT')
+  end.
 
 (* Clear any stale memory-access hypotheses (arising from previous computation
    steps) and either step to the next machine instruction (if we're not at an
