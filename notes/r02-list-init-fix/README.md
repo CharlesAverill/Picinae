@@ -8,6 +8,7 @@ gpt-6.1-sol, xhigh/priority**. No subagents or subdelegation.
 Branch: `llm-proofs/r02-list-init-fix`.
 Worktree: `/home/charles/.t3/worktrees/Picinae/t3-4bc3a1d0`.
 Imported EXACT author checkpoint: `4fc9de554cb6db7f0b7e3c541f4e81a1bea044f1`.
+Implementation commit: `215ae494f4ba75e310bd3836f813f80423ea882a`.
 The local implementation commit and subsequent clean audit are recorded in
 `16-implementation-commit.log` and `17-after-implementation.log`.
 The final handback supplies the full final evidence-commit SHA.
