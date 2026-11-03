@@ -1,0 +1,181 @@
+Final sequential Ltac2 measurements
+
+Measured source: 602efc73811c4944c00d1c44b6a63029fe064742.
+Original-master eligibility baseline:
+  a87fc67dd1bafd4eccb35812f6459f51e4d79e3b
+  /tmp/picinae-ltac2/baseline-9.1.1
+Scratch output: /tmp/picinae-ltac-final-602efc7-20261103
+UTC interval: 2026-11-03 18:51:58 through 19:39:13 (includes preparation/profiles).
+This is a fresh final run. No prior experiment contributes a sample. There was
+no resume, harness modification, source change, concurrent compilation, or
+library fingerprint change during this run.
+
+Compiler wall medians in seconds
+
+Example                   Ltac1   Ltac2   Change     Ltac1 range    Ltac2 range
+arm7_memset_proof          47.51   47.06    -0.95%    46.95-52.06    46.66-48.71
+arm7_strlen_proof          27.73   30.32    +9.34%    27.49-28.24    29.16-34.09
+arm8_strcasecmp_proof      81.99   77.54    -5.43%    73.11-82.52    72.05-78.07
+i386_strcmp_proof          14.61   14.68    +0.48%    12.89-14.77    14.27-15.22
+i386_strlen_proof          95.49   96.13    +0.67%    93.15-99.07   95.70-100.27
+i386_wcsspn_proof          45.81   45.13    -1.48%    44.60-46.35    41.27-45.93
+
+Every cell has three successful samples per backend (36 total, all exit 0).
+Change = 100 * (Ltac2 median / Ltac1 median - 1); negative means less measured
+wall time. Backend order is Ltac1/Ltac2, Ltac2/Ltac1, Ltac1/Ltac2 per proof.
+No initial or final sample exceeds 15% from its backend median, so the required
+outlier rule triggered zero reruns. All original samples remain in the medians.
+Absence of threshold outliers does not imply stability: ARMv8 Ltac1 spans
+73.11-82.52 seconds, ARMv7 strlen Ltac2 spans 29.16-34.09, and i386 strcmp Ltac1
+spans 12.89-14.77. These are descriptive observations from three runs on a
+shared host, without confidence intervals or CPU isolation. There is no general
+speedup claim. ARMv7 strlen is slower in this sample set; the smaller differences
+and ARMv8's mixed per-round direction need particular caution.
+
+The comparison is retained Ltac1 orchestration versus default Ltac2 orchestration
+in the SAME migrated libraries. Original master establishes eligibility only;
+its compiler timings are excluded from the comparison. Whole proof modules are
+compiled, including imports, proof construction/checking and any additional
+theorems (memset includes functional correctness). These are not measurements
+of an isolated tactic call or the complete original library versus the new one.
+Ltac2 example copies are byte-identical to the originals. Ltac1 copies add only
+the hardened harness's resolved module-constant backend selectors. All selection
+and semantic probes ran separately before any sample; none entered timed inputs.
+
+Validation and return codes
+
+The fresh sequential wrapper build passed, including Tests/automation.v,
+Tests/isa_steps.v and Tests/psimpl_boundaries.v (native/opposite-backend guards,
+functor substitution and simplifier boundaries). All 11 harness tests passed.
+The 96 harness compiler commands comprise:
+  14 original-master checks: six lifted modules + six proofs exit 0; two exit 1.
+   5 retained-Ltac1 sentinel probes: all exit 0, all expected tokens verified.
+   5 default-Ltac2 semantic probes: all exit 0 with retained controllers poisoned.
+  12 migrated nonproof checks: all six lifted modules on each backend, exit 0.
+  36 uninstrumented samples: all exit 0.
+  12 separate profiling dependency compiles: all exit 0.
+  12 instrumented proof compiles: all exit 0.
+The overall harness exits 0. There are no failed comparison/profiling commands.
+The two eligibility exclusions are riscv_addloop_proof.v:148 (startof_prefix
+application) and riscv_cfi.v:490 (missing VaM). Separate sequential checks against
+current libraries reproduce exactly those locations/errors, both exit 1.
+They were not repaired or counted as proof-comparison targets. Raw per-step
+logs contain normal failed tactic attempts from backtracking; those are not
+compiler failures. No proof, tactic, test, project, or harness source was edited
+by this measurement job, and no new admit, Admitted, or Axiom was introduced.
+
+Machine, load and timing caveat
+
+TheAlien; Intel Core Ultra 9 285K; x86_64; 24 logical CPUs, affinity 0-23;
+Linux 5.15.167.4-microsoft-standard-WSL2, glibc 2.39. No affinity pinning or
+exclusive machine reservation was applied. Full lscpu/uname/clock/environment
+details are in validation/environment.json.
+Pinned local opam wrapper (not a container):
+  /home/charles/code/friends/.toolchains/picinae-env
+  OPAMROOT=/home/charles/code/friends/.toolchains/opam
+  opam exec --switch=picinae --set-switch -- ...
+Rocq 9.1.1; OCaml 4.14.2; rocq-stdlib 9.1.0. Complete package/config outputs,
+executable and wrapper hashes, source hashes and library .vo hashes are in
+metadata.json. The wrapper's exact text, switch and prefix are recorded in
+validation/environment.json. No toolchain installation was performed.
+
+Load averages (1 / 5 / 15 minutes):
+  Full harness before: 12.140 / 11.818 / 10.330
+  Full harness after:   9.385 /  8.881 /  8.709
+  First sample before:  7.226 /  9.197 /  9.660
+  Last sample after:   11.119 /  9.587 /  8.733
+Sample before-load component ranges: 4.309-11.468 / 5.858-9.376 / 7.500-9.660.
+Every command's before/after load is retained in the JSON/CSV evidence.
+
+Outer wall medians and signed outer-minus-inner medians, in seconds:
+Example                   Outer L1  Outer L2    Difference L1  Difference L2
+arm7_memset_proof           47.290    47.013         -0.220         -0.205
+arm7_strlen_proof           27.652    30.203         -0.094         -0.098
+arm8_strcasecmp_proof       81.652    77.195         -0.338         -0.214
+i386_strcmp_proof           14.517    14.699         +0.054         -0.070
+i386_strlen_proof           95.114    95.621         -0.390         -0.395
+i386_wcsspn_proof           45.725    45.031         -0.210         -0.099
+
+Outer_seconds uses Python's monotonic clock around wrapper/opam/time/compiler;
+compile_seconds is GNU time's inner elapsed wall time, with 0.01-second printed
+resolution. The difference includes wrapper, launcher and measurement cost and
+is NOT opam alone. On this host 32/36 sample differences are negative: overall
+median -0.159835 s, range -0.897473 to +0.078370 s. This exceeds rounding error
+and is not physical negative overhead. A sequential post-run clock calibration
+reproduced the discrepancy on a 30-second sleep: GNU time 30.14 s, outer
+monotonic 30.021112 s, outer realtime 30.161491 s, monotonic-raw 30.162438 s.
+Realtime and monotonic therefore diverged during that invocation. See the
+exact observations, clocks and commands in validation/clock-check.{py,json,log}.
+All three calibration commands exit 0. The raw signed estimates are preserved
+without clamping or correction; wrapper cost cannot be reliably estimated from
+these clocks. Compiler wall comparisons also inherit host clock/load variation,
+especially relevant to sub-percent differences. No adjusted samples or claims
+of precise overhead are substituted for the recorded data.
+
+Profile findings
+
+All six eligible proofs were profiled separately on both backends, after all
+uninstrumented samples, with Set Ltac Profiling AND Set Ltac2 In Ltac1 Profiling.
+Profiler compiles never overwrite timed inputs or artifacts and never enter
+medians.csv/runs.json. profile-summary.csv lists every profiler return code,
+compiler wall, accumulated tactic total and selected inclusive percentages.
+profile-rows.csv preserves the final flat table's displayed rows (some labels
+are truncated by Rocq). Empty summary cells mean below the displayed cutoff,
+not zero time. The raw logs preserve the full displayed tables and call trees.
+
+For memset, Ltac1/Ltac2 accumulated tactic totals are 22.401/25.395 s. Symbolic
+stepping accounts for 87.3/88.6% inclusively. Hypothesis simplification is
+70.5/62.7%; psimpl_mark_all_in is 22.5/20.6%; to_ast is 12.6/10.7%; compute in H
+is 18.5/15.8%, and goal compute is 7.2/6.9%. This places substantial cost in
+occurrence marking, reflective AST production and the preserved Gallina
+reductions, rather than just ISA dispatch. Reflective compute and the retained
+AST/PSimplifier boundary remain visible beneath Ltac2's native controller.
+For i386 strlen, tactic totals are 35.460/48.777 s; stepping is 91.1/93.8%,
+marking 24.8/16.5%, and to_ast 10.7/5.2%. Functional interpretation/context edits
+are visible beneath step_stmt/isa_step_stmt, alongside reflective simplification.
+Existing per-instruction Time output is retained for every sample and summarized
+in step-time-summary.csv; it covers the other proofs' key symbolic steps too.
+
+These percentages are nested, overlapping attribution, NOT an additive budget.
+Ltac2 Control.enter/case/progress/ifcatch, native functions, Ltac1 callbacks and
+reflective reductions often describe the same elapsed work. In particular,
+large Ltac2 "local" rows with callbacks/continuations must not be summed as
+independent overhead. Do not add ISA, psimpl and compute totals, compare their
+percentages as exclusive costs, or subtract tactic totals from uninstrumented
+compiler walls. The additional Ltac2 profiler instrumentation changes cost:
+i386 strlen's profiled tactic totals differ much more than its uninstrumented
+0.67% wall difference. This pass identifies work locations, not a causal
+explanation or an independent speed comparison. Rocq prints the accumulated
+profile twice (explicit Show and final reporting); the summary reads one final
+flat table and does not double-count it.
+
+Reproduction and evidence
+
+From the measured migrated checkout (all commands use the wrapper):
+  /home/charles/code/friends/.toolchains/picinae-env make -j1
+  /home/charles/code/friends/.toolchains/picinae-env python3 tools/test_benchmark_ltac.py
+  /home/charles/code/friends/.toolchains/picinae-env python3 tools/benchmark_ltac.py --baseline /tmp/picinae-ltac2/baseline-9.1.1 --output /tmp/picinae-ltac-final-602efc7-20261103 --runs 3
+For a new experiment use a fresh external --output directory and the same pinned,
+already wrapper-built baseline. Do not reuse this run with changed fingerprints.
+The actual build/test/harness launch pipelines and their exits are recorded in
+validation/launches.json; the pipelines only tee stdout/stderr and retain exits.
+Every compiler invocation, cwd, source hash and command is in metadata.json and
+command-results.csv. The compiler command shape is:
+  picinae-env /usr/bin/time -o TIMER -f '{"wall":%e,"user":%U,"sys":%S,"rss_kb":%M,"exit_code":%x}' rocq compile -R TREE Picinae -Q SOURCE_DIR '' SOURCE
+Supplementary current-exclusions.py and clock-check.py have exact standalone
+commands and outputs under validation/; run them only when no compiler/profile
+job is active. The original baseline library was already built before this job;
+the harness verifies its original source revision and fingerprints both libraries.
+
+metadata.json and runs.json are unchanged harness outputs. medians.csv retains
+full precision, with line endings normalized to the repository's LF convention;
+medians.csv.raw.gz preserves the byte-identical original CSV as well.
+command-results.csv is a convenient return-code/command index;
+its log paths are relative to this evidence directory. Original absolute log
+paths in metadata/runs map via archive-manifest.json to logs/<basename>.log.gz.
+The manifest records original and archived SHA-256 hashes; decompress a .gz to
+recover the byte-identical log. Raw GNU-time .time.json files are also retained,
+including nonzero-exit diagnostics. validation/build.log, harness-tests.log,
+harness.log and .exit files retain the build/test/driver evidence. These files
+remain inspectable without this worktree or its scratch directories. No generated
+.vo, .glob, compiled artifacts or example source snapshots are committed.

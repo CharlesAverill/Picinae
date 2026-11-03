@@ -1,0 +1,672 @@
+example,backend,name,local_percent,total_percent,calls,max_seconds
+arm7_memset_proof,ltac1,step,0.0,87.3,77,1.185
+arm7_memset_proof,ltac1,ISA_step_ltac1,0.0,87.3,77,1.185
+arm7_memset_proof,ltac1,ISA_invseek_ltac1,0.2,80.7,77,1.184
+arm7_memset_proof,ltac1,psimpl_hyp_ltac1,0.1,70.5,211,0.548
+arm7_memset_proof,ltac1,ISA_step_and_simplify_ltac1,0.1,63.1,209,0.795
+arm7_memset_proof,ltac1,psimpl_vals_hyp,0.5,48.9,288,0.313
+arm7_memset_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,1.9,26.2,288,0.191
+arm7_memset_proof,ltac1,psimpl_mark_all_in,3.2,22.5,302,0.276
+arm7_memset_proof,ltac1,compute in H,18.5,18.5,211,0.174
+arm7_memset_proof,ltac1,psimpl_goal_ltac1,0.0,17.2,91,0.385
+arm7_memset_proof,ltac1,psimpl_vals_goal,0.1,15.1,91,0.329
+arm7_memset_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,0.0,12.8,0,0.057
+arm7_memset_proof,ltac1,to_ast,10.1,12.6,0,0.057
+arm7_memset_proof,ltac1,find_containing_term,1.2,10.1,3360,0.012
+arm7_memset_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,0.5,9.3,91,0.248
+arm7_memset_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.popu,8.9,8.9,0,0.035
+arm7_memset_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,6.4,8.6,0,0.052
+arm7_memset_proof,ltac1,compute,7.2,7.2,91,0.232
+arm7_memset_proof,ltac1,set (v' := _ : A) in (value of H) at 1,6.8,6.8,5459,0.01
+arm7_memset_proof,ltac1,ISA_invhere_ltac1,0.0,6.6,87,0.387
+arm7_memset_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,5.4,5.6,0,0.048
+arm7_memset_proof,ltac1,step_stmt,1.3,5.0,262,0.025
+arm7_memset_proof,ltac1,eapply (PSimpl_arm7_v1_1.simplify_sastU_hyp,3.6,3.6,288,0.014
+arm7_memset_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,0.0,3.5,211,0.027
+arm7_memset_proof,ltac1,populate_varlist,0.9,3.5,131,0.014
+arm7_memset_proof,ltac1,"rewrite 1?PSimpl_arm7_v1_1.simpl_if_if, 1?PS",3.4,3.4,211,0.026
+arm7_memset_proof,ltac1,pattern e in (value of P),2.8,2.8,1908,0.007
+arm7_memset_proof,ltac1,set (e := _ : N) in (value of P) at 1,2.5,2.5,2210,0.01
+arm7_memset_proof,ltac1,eapply fexec_stmt_updn in XS,2.2,2.2,1034,0.006
+arm7_memset_proof,ltac1,simpl_memaccs,0.1,2.0,121,0.099
+arm7_memset_proof,ltac2,<rocq-runtime.plugins.ltac2:enter>,0.0,98.3,15396,1.412
+arm7_memset_proof,ltac2,<rocq-runtime.plugins.ltac2:case>,0.0,88.7,1902,1.412
+arm7_memset_proof,ltac2,<fun match tacs with      | [] => Control.ze,0.1,88.6,465,1.412
+arm7_memset_proof,ltac2,step,0.0,88.6,77,1.413
+arm7_memset_proof,ltac2,<fun orelse tac (fun _ => first0 tacs)>,0.0,88.6,456,1.412
+arm7_memset_proof,ltac2,orelse,0.0,88.6,949,1.412
+arm7_memset_proof,ltac2,arm7_step,0.0,88.6,0,1.413
+arm7_memset_proof,ltac2,ISA_step,0.0,88.6,68,1.413
+arm7_memset_proof,ltac2,isa_step,0.0,88.6,77,1.413
+arm7_memset_proof,ltac2,<fun let _ := isa_invseek () in      Control,6.6,88.4,77,1.412
+arm7_memset_proof,ltac2,isa_invseek,52.9,81.8,77,1.411
+arm7_memset_proof,ltac2,isa_step_and_simplify,53.6,64.7,131,0.81
+arm7_memset_proof,ltac2,f,0.0,62.7,211,0.649
+arm7_memset_proof,ltac2,psimpl_hyp,62.5,62.7,211,0.649
+arm7_memset_proof,ltac2,<fun psimpl_hyp (picinae_hyp_ident h)>,0.0,62.7,211,0.649
+arm7_memset_proof,ltac2,<fun let h1 := Ltac1.of_ident h in      let,43.2,62.5,211,0.649
+arm7_memset_proof,ltac2,Pattern.lazy_match0,0.0,58.3,406,1.034
+arm7_memset_proof,ltac2,<fun f context bind>,0.1,58.2,406,1.033
+arm7_memset_proof,ltac2,<fun Control.enter        (fun _ =>,56.8,56.9,902,1.238
+arm7_memset_proof,ltac2,<fun ifcatch (fun _ => Control.progress t),0.0,56.9,922,1.238
+arm7_memset_proof,ltac2,ifcatch,43.0,56.9,935,1.238
+arm7_memset_proof,ltac2,<fun Control.progress t>,0.0,56.7,913,1.034
+arm7_memset_proof,ltac2,<rocq-runtime.plugins.ltac2:progress>,0.4,56.7,913,1.034
+arm7_memset_proof,ltac2,<fun let _ := isa_abstract_ignored_vars xs i,3.1,53.0,131,0.768
+arm7_memset_proof,ltac2,<fun let _ :=        repeat0          (fun _,0.5,52.7,67,1.241
+arm7_memset_proof,ltac2,"<fun let m :=        [(Pattern.MatchPattern,",0.0,52.0,208,1.034
+arm7_memset_proof,ltac2,psimpl_vals_hyp2,0.5,42.3,288,0.317
+arm7_memset_proof,ltac2,<fun isa_step_and_simplify xs>,0.0,36.4,64,0.81
+arm7_memset_proof,ltac2,<fun psimpl_vals_hyp2 h>,0.0,30.8,211,0.317
+arm7_memset_proof,ltac2,<rocq-runtime.plugins.ltac2:plus>,0.1,21.9,1968,0.204
+arm7_memset_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,1.4,21.8,288,0.183
+arm7_memset_proof,ltac2,psimpl_mark_all_in,2.9,20.6,302,0.326
+arm7_memset_proof,ltac2,<fun let b := Array.get b 0 in      let bc :,17.3,17.4,10,1.033
+arm7_memset_proof,ltac2,psimpl_goal,16.0,16.0,88,0.548
+arm7_memset_proof,ltac2,<fun let _ := ltac1:(let p := fresh in,1.2,16.0,91,0.466
+arm7_memset_proof,ltac2,compute in H,15.8,15.8,211,0.162
+arm7_memset_proof,ltac2,<fun ltac1:(c s x h |-      try clear c; des,0.1,15.3,77,0.146
+arm7_memset_proof,ltac2,<rocq-runtime.plugins.ltac2:dispatch>,0.1,14.7,408,0.467
+arm7_memset_proof,ltac2,psimpl_vals_goal2,0.4,14.1,91,0.401
+arm7_memset_proof,ltac2,<fun s x>,0.0,13.9,225,0.204
+arm7_memset_proof,ltac2,<fun let _ := Control.check_interrupt () in,13.9,13.9,225,0.204
+arm7_memset_proof,ltac2,<fun first0 tacs>,12.5,12.5,100,0.131
+arm7_memset_proof,ltac2,<fun let y := Fresh.in_goal ident:(y) in,0.0,12.4,77,0.131
+arm7_memset_proof,ltac2,<fun let _ := ltac1:(h |- populate_varlist h,0.0,11.5,131,0.082
+arm7_memset_proof,ltac2,isa_step_stmt,4.7,11.1,121,0.082
+arm7_memset_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,0.0,10.9,0,0.055
+arm7_memset_proof,ltac2,to_ast,8.5,10.7,0,0.054
+arm7_memset_proof,ltac2,find_containing_term,1.0,9.5,3360,0.018
+arm7_memset_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,0.4,8.7,91,0.308
+arm7_memset_proof,ltac2,<rocq-runtime.plugins.ltac2:once>,0.0,8.2,836,0.047
+arm7_memset_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.popu,8.0,8.0,0,0.093
+arm7_memset_proof,ltac2,<extn:ltac1>,0.0,7.8,5384,0.466
+arm7_memset_proof,ltac2,Pattern.one_match0,0.0,7.8,263,0.047
+arm7_memset_proof,ltac2,<fun Pattern.multi_match0 t m>,0.0,7.8,263,0.047
+arm7_memset_proof,ltac2,Pattern.multi_match0,0.0,7.8,263,0.047
+arm7_memset_proof,ltac2,<fun match m with      | [] => Control.zero,0.0,7.7,525,0.047
+arm7_memset_proof,ltac2,<fun let _ := ltac1:(h |- step_precheck h; e,7.5,7.7,131,0.052
+arm7_memset_proof,ltac2,<fun let p1 := Pattern.matches_subterm_vect,5.4,7.7,263,0.046
+arm7_memset_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,5.8,7.3,0,0.017
+arm7_memset_proof,ltac2,try0,7.3,7.3,483,0.468
+arm7_memset_proof,ltac2,<fun orelse t (fun _ => ())>,7.3,7.3,493,0.468
+arm7_memset_proof,ltac2,<fun let unknown := Fresh.in_goal ident:(unk,2.9,7.3,131,0.05
+arm7_memset_proof,ltac2,compute,6.9,6.9,91,0.29
+arm7_memset_proof,ltac2,dispatch0,6.9,6.9,164,0.468
+arm7_memset_proof,ltac2,<fun let _ := t () in      Control.dispatch,0.0,6.9,164,0.468
+arm7_memset_proof,ltac2,<fun isa_invhere ()>,0.0,6.6,87,0.468
+arm7_memset_proof,ltac2,isa_invhere,0.0,6.6,87,0.468
+arm7_memset_proof,ltac2,<fun try0 (fun _ => isa_invhere ())>,0.0,6.6,77,0.468
+arm7_memset_proof,ltac2,<fun let _ := let cl := None in,0.0,6.5,15,0.466
+arm7_memset_proof,ltac2,set (v' := _ : A) in (value of H) at 1,6.4,6.4,5459,0.015
+arm7_memset_proof,ltac2,"<fun let m :=        [(Pattern.MatchContext,",0.0,6.4,132,0.047
+arm7_memset_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,4.7,4.9,0,0.017
+arm7_memset_proof,ltac2,populate_varlist,0.8,3.4,131,0.031
+arm7_memset_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,0.0,3.2,211,0.063
+arm7_memset_proof,ltac2,"rewrite 1?PSimpl_arm7_v1_1.simpl_if_if, 1?PS",3.1,3.1,211,0.063
+arm7_memset_proof,ltac2,<fun let _ := ltac1:(h |- simpl_memaccs h) h,1.3,3.0,131,0.112
+arm7_memset_proof,ltac2,eapply (PSimpl_arm7_v1_1.simplify_sastU_hyp,3.0,3.0,288,0.019
+arm7_memset_proof,ltac2,pattern e in (value of P),2.6,2.6,1908,0.011
+arm7_memset_proof,ltac2,set (e := _ : N) in (value of P) at 1,2.2,2.2,2210,0.008
+arm7_memset_proof,ltac2,eapply fexec_stmt_updn in XS,2.0,2.0,1034,0.011
+arm7_strlen_proof,ltac1,ISA_step_ltac1,0.0,86.2,63,0.501
+arm7_strlen_proof,ltac1,step,0.0,86.1,62,0.501
+arm7_strlen_proof,ltac1,ISA_invseek_ltac1,0.3,79.1,63,0.307
+arm7_strlen_proof,ltac1,psimpl_hyp_ltac1,0.2,67.6,190,0.189
+arm7_strlen_proof,ltac1,ISA_step_and_simplify_ltac1,0.1,60.9,157,0.199
+arm7_strlen_proof,ltac1,psimpl_vals_hyp,0.6,46.9,263,0.095
+arm7_strlen_proof,ltac1,psimpl_mark_all_in,3.9,23.9,280,0.093
+arm7_strlen_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,2.5,19.1,263,0.065
+arm7_strlen_proof,ltac1,psimpl_goal_ltac1,0.0,15.8,90,0.175
+arm7_strlen_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,0.1,15.1,0,0.045
+arm7_strlen_proof,ltac1,to_ast,11.7,14.9,0,0.045
+arm7_strlen_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.popu,10.9,10.9,0,0.021
+arm7_strlen_proof,ltac1,psimpl_vals_goal,0.2,10.8,90,0.105
+arm7_strlen_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,8.6,10.5,0,0.031
+arm7_strlen_proof,ltac1,find_containing_term,1.4,10.2,2593,0.048
+arm7_strlen_proof,ltac1,compute in H,9.1,9.1,190,0.061
+arm7_strlen_proof,ltac1,ISA_invhere_ltac1,0.0,7.0,79,0.176
+arm7_strlen_proof,ltac1,set (v' := _ : A) in (value of H) at 1,6.6,6.6,3662,0.048
+arm7_strlen_proof,ltac1,step_stmt,1.8,6.1,234,0.026
+arm7_strlen_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,5.0,5.5,0,0.032
+arm7_strlen_proof,ltac1,eapply (PSimpl_arm7_v1_1.simplify_sastU_hyp,4.7,4.7,263,0.012
+arm7_strlen_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,0.1,4.1,190,0.017
+arm7_strlen_proof,ltac1,populate_varlist,0.9,4.0,117,0.017
+arm7_strlen_proof,ltac1,"rewrite 1?PSimpl_arm7_v1_1.simpl_if_if, 1?PS",4.0,4.0,190,0.017
+arm7_strlen_proof,ltac1,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,0.5,4.0,90,0.037
+arm7_strlen_proof,ltac1,set (e := _ : N) in (value of P) at 1,2.5,2.5,1784,0.008
+arm7_strlen_proof,ltac1,eapply fexec_stmt_updn in XS,2.5,2.5,746,0.008
+arm7_strlen_proof,ltac1,pattern e in (value of P),2.3,2.3,1530,0.008
+arm7_strlen_proof,ltac1,mvar_or_const,2.0,2.0,0,0.019
+arm7_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:enter>,0.0,95.6,11440,0.535
+arm7_strlen_proof,ltac2,arm7_step,0.0,87.8,0,0.535
+arm7_strlen_proof,ltac2,ISA_step,0.0,87.8,58,0.535
+arm7_strlen_proof,ltac2,isa_step,0.0,87.8,63,0.535
+arm7_strlen_proof,ltac2,step,0.0,87.7,62,0.535
+arm7_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:case>,0.0,87.7,1687,0.535
+arm7_strlen_proof,ltac2,<fun match tacs with      | [] => Control.ze,0.0,87.7,412,0.535
+arm7_strlen_proof,ltac2,<fun orelse tac (fun _ => first0 tacs)>,0.0,87.7,407,0.535
+arm7_strlen_proof,ltac2,orelse,0.0,87.7,860,0.535
+arm7_strlen_proof,ltac2,<fun let _ := isa_invseek () in      Control,6.4,87.6,63,0.535
+arm7_strlen_proof,ltac2,isa_invseek,47.8,81.2,63,0.367
+arm7_strlen_proof,ltac2,isa_step_and_simplify,49.7,61.7,117,0.218
+arm7_strlen_proof,ltac2,f,0.0,58.8,190,0.159
+arm7_strlen_proof,ltac2,<fun psimpl_hyp (picinae_hyp_ident h)>,0.0,58.7,190,0.159
+arm7_strlen_proof,ltac2,psimpl_hyp,58.7,58.7,190,0.159
+arm7_strlen_proof,ltac2,<fun let h1 := Ltac1.of_ident h in      let,42.6,58.5,190,0.159
+arm7_strlen_proof,ltac2,Pattern.lazy_match0,0.0,54.2,353,0.218
+arm7_strlen_proof,ltac2,<fun f context bind>,0.2,54.0,353,0.218
+arm7_strlen_proof,ltac2,<fun ifcatch (fun _ => Control.progress t),0.0,52.9,815,0.256
+arm7_strlen_proof,ltac2,ifcatch,38.3,52.9,817,0.256
+arm7_strlen_proof,ltac2,<fun Control.enter        (fun _ =>,52.8,52.9,782,0.256
+arm7_strlen_proof,ltac2,<fun Control.progress t>,0.0,52.7,810,0.218
+arm7_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:progress>,0.5,52.7,810,0.218
+arm7_strlen_proof,ltac2,<fun let _ := isa_abstract_ignored_vars xs i,2.1,47.8,117,0.194
+arm7_strlen_proof,ltac2,<fun let _ :=        repeat0          (fun _,0.9,47.6,57,0.257
+arm7_strlen_proof,ltac2,"<fun let m :=        [(Pattern.MatchPattern,",0.0,46.3,190,0.218
+arm7_strlen_proof,ltac2,psimpl_vals_hyp2,0.6,40.7,263,0.083
+arm7_strlen_proof,ltac2,<fun psimpl_vals_hyp2 h>,0.0,29.9,190,0.083
+arm7_strlen_proof,ltac2,<fun isa_step_and_simplify xs>,0.0,29.1,60,0.218
+arm7_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:plus>,0.1,23.7,1702,0.098
+arm7_strlen_proof,ltac2,psimpl_mark_all_in,3.4,19.9,280,0.079
+arm7_strlen_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,2.2,16.9,263,0.046
+arm7_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:dispatch>,0.1,16.6,366,0.175
+arm7_strlen_proof,ltac2,<fun ltac1:(c s x h |-      try clear c; des,0.1,16.4,73,0.058
+arm7_strlen_proof,ltac2,<fun let b := Array.get b 0 in      let bc :,14.8,15.3,16,0.172
+arm7_strlen_proof,ltac2,<fun s x>,0.0,14.6,190,0.098
+arm7_strlen_proof,ltac2,<fun let _ := Control.check_interrupt () in,14.6,14.6,190,0.098
+arm7_strlen_proof,ltac2,psimpl_goal,14.0,14.0,152,0.174
+arm7_strlen_proof,ltac2,<fun let _ := ltac1:(let p := fresh in,2.3,14.0,90,0.173
+arm7_strlen_proof,ltac2,<fun let _ := ltac1:(h |- populate_varlist h,0.0,13.6,117,0.035
+arm7_strlen_proof,ltac2,<fun first0 tacs>,12.5,12.5,86,0.05
+arm7_strlen_proof,ltac2,<fun let y := Fresh.in_goal ident:(y) in,0.1,12.4,73,0.049
+arm7_strlen_proof,ltac2,isa_step_stmt,4.1,12.1,101,0.036
+arm7_strlen_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,0.1,11.8,0,0.04
+arm7_strlen_proof,ltac2,to_ast,9.3,11.6,0,0.04
+arm7_strlen_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.popu,9.7,9.8,0,0.052
+arm7_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:once>,0.0,9.7,737,0.026
+arm7_strlen_proof,ltac2,<extn:ltac1>,0.1,9.7,4303,0.174
+arm7_strlen_proof,ltac2,<fun let _ := ltac1:(h |- step_precheck h; e,9.2,9.6,117,0.03
+arm7_strlen_proof,ltac2,psimpl_vals_goal2,0.4,9.5,90,0.102
+arm7_strlen_proof,ltac2,Pattern.one_match0,0.0,9.2,240,0.026
+arm7_strlen_proof,ltac2,<fun Pattern.multi_match0 t m>,0.0,9.2,240,0.026
+arm7_strlen_proof,ltac2,Pattern.multi_match0,0.1,9.2,240,0.026
+arm7_strlen_proof,ltac2,<fun match m with      | [] => Control.zero,0.4,9.2,474,0.026
+arm7_strlen_proof,ltac2,<fun let p1 := Pattern.matches_subterm_vect,6.1,9.1,240,0.026
+arm7_strlen_proof,ltac2,<fun let unknown := Fresh.in_goal ident:(unk,3.0,8.9,117,0.028
+arm7_strlen_proof,ltac2,find_containing_term,1.1,8.6,2593,0.049
+arm7_strlen_proof,ltac2,"<fun let m :=        [(Pattern.MatchContext,",0.0,7.7,123,0.026
+arm7_strlen_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,6.2,7.5,0,0.012
+arm7_strlen_proof,ltac2,try0,7.5,7.5,437,0.175
+arm7_strlen_proof,ltac2,<fun orelse t (fun _ => ())>,7.5,7.5,453,0.175
+arm7_strlen_proof,ltac2,compute in H,7.3,7.3,190,0.018
+arm7_strlen_proof,ltac2,dispatch0,6.8,6.8,142,0.175
+arm7_strlen_proof,ltac2,<fun let _ := t () in      Control.dispatch,0.0,6.8,142,0.175
+arm7_strlen_proof,ltac2,<fun isa_invhere ()>,0.0,6.4,79,0.175
+arm7_strlen_proof,ltac2,isa_invhere,0.0,6.4,79,0.175
+arm7_strlen_proof,ltac2,<fun try0 (fun _ => isa_invhere ())>,0.0,6.4,73,0.175
+arm7_strlen_proof,ltac2,<fun let _ := let cl := None in,0.0,6.2,12,0.174
+arm7_strlen_proof,ltac2,set (v' := _ : A) in (value of H) at 1,5.6,5.6,3662,0.049
+arm7_strlen_proof,ltac2,eapply (PSimpl_arm7_v1_1.simplify_sastU_hyp,4.8,4.8,263,0.045
+arm7_strlen_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.sast,3.7,4.0,0,0.016
+arm7_strlen_proof,ltac2,populate_varlist,0.7,3.6,117,0.015
+arm7_strlen_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,0.1,3.5,190,0.022
+arm7_strlen_proof,ltac2,"rewrite 1?PSimpl_arm7_v1_1.simpl_if_if, 1?PS",3.4,3.4,190,0.022
+arm7_strlen_proof,ltac2,<Picinae.Picinae_armv7.PSimpl_arm7_v1_1.psim,0.4,3.4,90,0.039
+arm7_strlen_proof,ltac2,eapply fexec_stmt_updn in XS,2.2,2.2,746,0.008
+arm7_strlen_proof,ltac2,<fun let index := Array.get f 1      with f,1.2,2.2,8724,0.013
+arm7_strlen_proof,ltac2,Fresh.in_goal,0.1,2.2,1058,0.008
+arm7_strlen_proof,ltac2,Fresh.Free.of_goal,0.1,2.1,1058,0.008
+arm7_strlen_proof,ltac2,set (e := _ : N) in (value of P) at 1,2.1,2.1,1784,0.007
+arm7_strlen_proof,ltac2,<fun let _ := ltac1:(h |- simpl_memaccs h) h,1.7,2.0,117,0.031
+arm8_strcasecmp_proof,ltac1,step,0.0,56.3,40,1.474
+arm8_strcasecmp_proof,ltac1,ISA_step_ltac1,0.0,56.3,40,1.474
+arm8_strcasecmp_proof,ltac1,psimpl_hyp_ltac1,0.1,38.5,95,0.636
+arm8_strcasecmp_proof,ltac1,ISA_invseek_ltac1,0.1,37.9,40,0.841
+arm8_strcasecmp_proof,ltac1,destruct_inv (int_or_var) (hyp),0.0,31.7,6,1.221
+arm8_strcasecmp_proof,ltac1,unshelve (tactic1),0.0,31.7,2838,1.221
+arm8_strcasecmp_proof,ltac1,shelve_cases (int_or_var) (hyp),0.0,31.7,12,1.221
+arm8_strcasecmp_proof,ltac1,shelve_cases_loop,19.5,31.6,384,0.138
+arm8_strcasecmp_proof,ltac1,ISA_step_and_simplify_ltac1,0.0,28.9,43,0.511
+arm8_strcasecmp_proof,ltac1,psimpl_vals_hyp,0.2,23.8,138,0.379
+arm8_strcasecmp_proof,ltac1,psimpl_goal_ltac1,0.0,19.7,38,0.774
+arm8_strcasecmp_proof,ltac1,psimpl_mark_all_in,2.0,19.3,133,0.289
+arm8_strcasecmp_proof,ltac1,ISA_invhere_ltac1,0.0,18.5,45,0.776
+arm8_strcasecmp_proof,ltac1,psimpl_vals_goal,0.1,14.3,38,0.68
+arm8_strcasecmp_proof,ltac1,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.psim,0.8,13.0,138,0.198
+arm8_strcasecmp_proof,ltac1,compute in H,8.9,8.9,95,0.188
+arm8_strcasecmp_proof,ltac1,find_containing_term,0.6,8.6,1812,0.076
+arm8_strcasecmp_proof,ltac1,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.sast,0.0,8.6,0,0.178
+arm8_strcasecmp_proof,ltac1,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.psim,0.3,8.5,38,0.48
+arm8_strcasecmp_proof,ltac1,to_ast,7.5,8.5,0,0.177
+arm8_strcasecmp_proof,ltac1,simple apply trueinv_None in H,8.1,8.1,5670,0.025
+arm8_strcasecmp_proof,ltac1,compute,7.3,7.3,38,0.467
+arm8_strcasecmp_proof,ltac1,set (v' := _ : A) in (value of H) at 1,5.7,5.7,2731,0.01
+arm8_strcasecmp_proof,ltac1,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.sast,2.1,4.8,0,0.048
+arm8_strcasecmp_proof,ltac1,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.popu,4.5,4.5,0,0.086
+arm8_strcasecmp_proof,ltac1,Picinae_typecheck,4.0,4.0,2,0.82
+arm8_strcasecmp_proof,ltac1,pattern e in (value of P),3.9,3.9,1045,0.024
+arm8_strcasecmp_proof,ltac1,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.sast,3.3,3.3,0,0.043
+arm8_strcasecmp_proof,ltac1,apply trueinv_Some in H,3.2,3.2,5652,0.094
+arm8_strcasecmp_proof,ltac1,exact (uconstr),2.2,2.2,1480,0.012
+arm8_strcasecmp_proof,ltac1,step_stmt,0.7,2.1,96,0.031
+arm8_strcasecmp_proof,ltac1,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.psim,0.0,2.1,95,0.074
+arm8_strcasecmp_proof,ltac1,eapply (PSimpl_arm8_v1_1.simplify_sastU_hyp,2.1,2.1,138,0.06
+arm8_strcasecmp_proof,ltac1,"rewrite 1?PSimpl_arm8_v1_1.simpl_if_if, 1?PS",2.0,2.0,95,0.074
+arm8_strcasecmp_proof,ltac2,<rocq-runtime.plugins.ltac2:enter>,0.0,67.4,9777,1.492
+arm8_strcasecmp_proof,ltac2,<rocq-runtime.plugins.ltac2:case>,0.0,62.8,870,1.492
+arm8_strcasecmp_proof,ltac2,<fun match tacs with      | [] => Control.ze,3.4,62.8,237,1.492
+arm8_strcasecmp_proof,ltac2,<fun orelse tac (fun _ => first0 tacs)>,0.0,62.8,237,1.492
+arm8_strcasecmp_proof,ltac2,orelse,0.0,62.8,462,1.492
+arm8_strcasecmp_proof,ltac2,step,0.0,59.4,40,1.493
+arm8_strcasecmp_proof,ltac2,arm8_step,0.0,59.4,0,1.493
+arm8_strcasecmp_proof,ltac2,ISA_step,0.0,59.4,40,1.493
+arm8_strcasecmp_proof,ltac2,isa_step,0.0,59.4,40,1.493
+arm8_strcasecmp_proof,ltac2,<fun let _ := isa_invseek () in      Control,17.2,59.1,40,1.492
+arm8_strcasecmp_proof,ltac2,isa_invseek,14.5,41.9,40,0.804
+arm8_strcasecmp_proof,ltac2,f,0.0,36.1,95,0.798
+arm8_strcasecmp_proof,ltac2,<fun psimpl_hyp (picinae_hyp_ident h)>,0.0,36.1,95,0.798
+arm8_strcasecmp_proof,ltac2,psimpl_hyp,29.4,36.1,95,0.798
+arm8_strcasecmp_proof,ltac2,<fun let h1 := Ltac1.of_ident h in      let,18.8,36.0,95,0.798
+arm8_strcasecmp_proof,ltac2,isa_step_and_simplify,25.4,32.4,48,0.598
+arm8_strcasecmp_proof,ltac2,destruct_inv (int_or_var) (hyp),0.0,28.1,6,1.346
+arm8_strcasecmp_proof,ltac2,unshelve (tactic1),0.0,28.1,2838,1.346
+arm8_strcasecmp_proof,ltac2,shelve_cases (int_or_var) (hyp),0.0,28.1,12,1.346
+arm8_strcasecmp_proof,ltac2,shelve_cases_loop,18.1,28.0,384,0.113
+arm8_strcasecmp_proof,ltac2,<fun let _ := isa_abstract_ignored_vars xs i,1.8,24.9,48,0.504
+arm8_strcasecmp_proof,ltac2,<rocq-runtime.plugins.ltac2:dispatch>,0.0,23.7,181,0.75
+arm8_strcasecmp_proof,ltac2,psimpl_vals_hyp2,0.2,21.4,138,0.459
+arm8_strcasecmp_proof,ltac2,Pattern.lazy_match0,0.0,20.4,159,0.413
+arm8_strcasecmp_proof,ltac2,<fun f context bind>,0.1,20.4,159,0.413
+arm8_strcasecmp_proof,ltac2,<fun Control.enter        (fun _ =>,19.8,19.8,383,0.598
+arm8_strcasecmp_proof,ltac2,<fun ifcatch (fun _ => Control.progress t),0.0,19.8,393,0.598
+arm8_strcasecmp_proof,ltac2,ifcatch,17.0,19.8,408,0.598
+arm8_strcasecmp_proof,ltac2,<fun Control.progress t>,0.0,19.7,393,0.413
+arm8_strcasecmp_proof,ltac2,<rocq-runtime.plugins.ltac2:progress>,0.2,19.7,393,0.413
+arm8_strcasecmp_proof,ltac2,psimpl_mark_all_in,2.1,19.2,133,0.335
+arm8_strcasecmp_proof,ltac2,psimpl_goal,18.7,18.7,76,0.748
+arm8_strcasecmp_proof,ltac2,<fun let _ := ltac1:(let p := fresh in,5.4,18.7,38,0.748
+arm8_strcasecmp_proof,ltac2,<extn:ltac1>,0.0,17.9,2208,0.748
+arm8_strcasecmp_proof,ltac2,try0,17.8,17.8,220,0.75
+arm8_strcasecmp_proof,ltac2,<fun orelse t (fun _ => ())>,17.8,17.8,225,0.75
+arm8_strcasecmp_proof,ltac2,dispatch0,17.7,17.7,85,0.75
+arm8_strcasecmp_proof,ltac2,<fun let _ := t () in      Control.dispatch,0.0,17.7,85,0.75
+arm8_strcasecmp_proof,ltac2,<fun isa_invhere ()>,0.0,17.5,45,0.75
+arm8_strcasecmp_proof,ltac2,isa_invhere,0.0,17.5,45,0.75
+arm8_strcasecmp_proof,ltac2,<fun let _ := let cl := None in,0.0,17.3,12,0.749
+arm8_strcasecmp_proof,ltac2,<fun try0 (fun _ => isa_invhere ())>,0.0,17.2,43,0.75
+arm8_strcasecmp_proof,ltac2,<fun psimpl_vals_hyp2 h>,0.0,16.0,95,0.459
+arm8_strcasecmp_proof,ltac2,<fun let _ :=        repeat0          (fun _,0.5,14.4,38,0.605
+arm8_strcasecmp_proof,ltac2,"<fun let m :=        [(Pattern.MatchPattern,",0.0,13.8,91,0.413
+arm8_strcasecmp_proof,ltac2,psimpl_vals_goal2,0.2,13.0,38,0.627
+arm8_strcasecmp_proof,ltac2,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.psim,0.8,11.9,138,0.209
+arm8_strcasecmp_proof,ltac2,<rocq-runtime.plugins.ltac2:plus>,0.0,8.8,847,0.206
+arm8_strcasecmp_proof,ltac2,find_containing_term,0.6,8.7,1812,0.03
+arm8_strcasecmp_proof,ltac2,compute in H,8.2,8.2,95,0.195
+arm8_strcasecmp_proof,ltac2,<fun ltac1:(c s x h |-      try clear c; des,0.0,8.1,43,0.158
+arm8_strcasecmp_proof,ltac2,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.psim,0.3,8.0,38,0.455
+arm8_strcasecmp_proof,ltac2,<fun let _ := ltac1:(h |- populate_varlist h,0.0,7.5,48,0.189
+arm8_strcasecmp_proof,ltac2,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.sast,0.0,7.4,0,0.149
+arm8_strcasecmp_proof,ltac2,to_ast,6.4,7.3,0,0.147
+arm8_strcasecmp_proof,ltac2,isa_step_stmt,0.4,7.0,43,0.189
+arm8_strcasecmp_proof,ltac2,simple apply trueinv_None in H,6.9,6.9,5670,0.067
+arm8_strcasecmp_proof,ltac2,compute,6.8,6.8,38,0.442
+arm8_strcasecmp_proof,ltac2,<fun first0 tacs>,6.4,6.4,59,0.14
+arm8_strcasecmp_proof,ltac2,<rocq-runtime.plugins.ltac2:once>,0.0,6.1,350,0.181
+arm8_strcasecmp_proof,ltac2,<fun let y := Fresh.in_goal ident:(y) in,0.0,6.1,43,0.14
+arm8_strcasecmp_proof,ltac2,<fun let _ := ltac1:(h |- step_precheck h; e,5.9,6.0,48,0.185
+arm8_strcasecmp_proof,ltac2,Pattern.one_match0,0.0,5.9,96,0.181
+arm8_strcasecmp_proof,ltac2,<fun Pattern.multi_match0 t m>,0.0,5.9,96,0.181
+arm8_strcasecmp_proof,ltac2,Pattern.multi_match0,0.0,5.9,96,0.181
+arm8_strcasecmp_proof,ltac2,<fun match m with      | [] => Control.zero,0.0,5.9,192,0.181
+arm8_strcasecmp_proof,ltac2,<fun let p1 := Pattern.matches_subterm_vect,4.0,5.8,96,0.181
+arm8_strcasecmp_proof,ltac2,set (v' := _ : A) in (value of H) at 1,5.8,5.8,2731,0.03
+arm8_strcasecmp_proof,ltac2,<fun let unknown := Fresh.in_goal ident:(unk,0.4,5.8,48,0.184
+arm8_strcasecmp_proof,ltac2,<fun let b := Array.get b 0 in      let bc :,5.5,5.7,5,0.413
+arm8_strcasecmp_proof,ltac2,<fun isa_step_and_simplify xs>,0.0,5.5,10,0.239
+arm8_strcasecmp_proof,ltac2,"<fun let m :=        [(Pattern.MatchContext,",0.0,5.3,48,0.181
+arm8_strcasecmp_proof,ltac2,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.sast,1.8,4.0,0,0.019
+arm8_strcasecmp_proof,ltac2,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.popu,3.9,3.9,0,0.135
+arm8_strcasecmp_proof,ltac2,pattern e in (value of P),3.7,3.7,1045,0.019
+arm8_strcasecmp_proof,ltac2,Picinae_typecheck,3.5,3.5,2,0.809
+arm8_strcasecmp_proof,ltac2,<fun s x>,0.0,2.8,113,0.206
+arm8_strcasecmp_proof,ltac2,<fun let _ := Control.check_interrupt () in,2.8,2.8,113,0.206
+arm8_strcasecmp_proof,ltac2,<Picinae.Picinae_armv8.PSimpl_arm8_v1_1.sast,2.7,2.8,0,0.023
+arm8_strcasecmp_proof,ltac2,exact (uconstr),2.4,2.4,1480,0.092
+arm8_strcasecmp_proof,ltac2,apply trueinv_Some in H,2.3,2.3,5652,0.019
+i386_strcmp_proof,ltac1,ISA_step_ltac1,0.0,91.3,16,1.061
+i386_strcmp_proof,ltac1,ISA_invseek_ltac1,0.3,79.8,28,0.697
+i386_strcmp_proof,ltac1,step,0.0,65.2,13,0.698
+i386_strcmp_proof,ltac1,psimpl_hyp_ltac1,0.2,64.6,64,0.532
+i386_strcmp_proof,ltac1,ISA_step_and_simplify_ltac1,0.1,64.2,30,0.67
+i386_strcmp_proof,ltac1,psimpl_mark_all_in,4.1,34.1,87,0.408
+i386_strcmp_proof,ltac1,psimpl_vals_hyp,0.6,33.5,94,0.123
+i386_strcmp_proof,ltac1,find_containing_term,1.5,16.1,782,0.071
+i386_strcmp_proof,ltac1,psimpl_goal_ltac1,0.0,12.5,23,0.107
+i386_strcmp_proof,ltac1,set (v' := _ : A) in (value of H) at 1,11.6,11.6,1291,0.071
+i386_strcmp_proof,ltac1,ISA_invhere_ltac1,0.0,11.4,32,0.107
+i386_strcmp_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastU,0.1,11.4,0,0.047
+i386_strcmp_proof,ltac1,to_ast,8.3,11.2,0,0.047
+i386_strcmp_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,1.8,10.9,94,0.044
+i386_strcmp_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.popul,10.1,10.2,0,0.053
+i386_strcmp_proof,ltac1,psimpl_vals_goal,0.1,7.7,23,0.057
+i386_strcmp_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastN,4.9,7.0,0,0.009
+i386_strcmp_proof,ltac1,pattern e in (value of P),5.2,5.2,488,0.011
+i386_strcmp_proof,ltac1,step_stmt,1.8,5.1,68,0.032
+i386_strcmp_proof,ltac1,eapply (PSimpl_i386_v1_1.simplify_sastU_hyp,4.1,4.1,94,0.027
+i386_strcmp_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastS,3.6,3.7,0,0.018
+i386_strcmp_proof,ltac1,set (e := _ : N) in (value of P) at 1,3.6,3.6,575,0.013
+i386_strcmp_proof,ltac1,abstract_ignored_vars,0.6,3.6,30,0.049
+i386_strcmp_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,0.1,3.2,64,0.02
+i386_strcmp_proof,ltac1,"rewrite 1?PSimpl_i386_v1_1.simpl_if_if, 1?PS",3.1,3.1,64,0.02
+i386_strcmp_proof,ltac1,populate_varlist,0.7,3.1,34,0.017
+i386_strcmp_proof,ltac1,compute in H,2.9,2.9,64,0.013
+i386_strcmp_proof,ltac1,simpl_memaccs,0.1,2.8,30,0.079
+i386_strcmp_proof,ltac1,"rewrite ?memacc_read_frame, ?memacc_read_upd",2.5,2.7,8,0.079
+i386_strcmp_proof,ltac1,Picinae_typecheck,2.7,2.7,2,0.111
+i386_strcmp_proof,ltac1,vm_compute,2.4,2.4,15,0.096
+i386_strcmp_proof,ltac1,prove_noassign,0.4,2.2,3,0.047
+i386_strcmp_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,0.3,2.2,23,0.02
+i386_strcmp_proof,ltac2,<rocq-runtime.plugins.ltac2:enter>,0.0,93.4,10414,2.387
+i386_strcmp_proof,ltac2,x86_step,0.0,92.6,0,2.389
+i386_strcmp_proof,ltac2,ISA_step,0.0,92.6,16,2.389
+i386_strcmp_proof,ltac2,isa_step,0.0,92.6,16,2.389
+i386_strcmp_proof,ltac2,<rocq-runtime.plugins.ltac2:case>,0.0,92.5,393,0.98
+i386_strcmp_proof,ltac2,<fun match tacs with      | [] => Control.ze,0.0,92.5,146,2.387
+i386_strcmp_proof,ltac2,<fun orelse tac (fun _ => first0 tacs)>,0.0,92.5,98,0.98
+i386_strcmp_proof,ltac2,orelse,0.0,92.5,182,0.98
+i386_strcmp_proof,ltac2,<fun let _ := isa_invseek () in      Control,40.8,92.4,28,0.98
+i386_strcmp_proof,ltac2,step,0.0,54.5,13,0.981
+i386_strcmp_proof,ltac2,isa_invseek,13.4,51.6,16,0.98
+i386_strcmp_proof,ltac2,<fun ifcatch (fun _ => Control.progress t),0.0,48.0,319,0.454
+i386_strcmp_proof,ltac2,ifcatch,38.8,48.0,333,0.454
+i386_strcmp_proof,ltac2,isa_step_and_simplify,29.9,43.8,22,0.959
+i386_strcmp_proof,ltac2,<fun let h1 := Ltac1.of_ident h in      let,23.4,41.7,64,0.514
+i386_strcmp_proof,ltac2,<fun let _ := isa_abstract_ignored_vars xs i,2.9,40.1,34,0.66
+i386_strcmp_proof,ltac2,f,0.0,39.8,50,0.514
+i386_strcmp_proof,ltac2,<fun psimpl_hyp (picinae_hyp_ident h)>,0.0,39.8,50,0.514
+i386_strcmp_proof,ltac2,psimpl_hyp,39.8,39.8,50,0.514
+i386_strcmp_proof,ltac2,<fun Control.enter        (fun _ =>,31.9,32.0,285,0.292
+i386_strcmp_proof,ltac2,<fun Control.progress t>,0.0,27.4,203,0.284
+i386_strcmp_proof,ltac2,<rocq-runtime.plugins.ltac2:progress>,0.3,27.4,203,0.284
+i386_strcmp_proof,ltac2,Pattern.lazy_match0,0.0,25.9,62,0.299
+i386_strcmp_proof,ltac2,<fun f context bind>,0.1,25.8,62,0.299
+i386_strcmp_proof,ltac2,psimpl_mark_all_in,2.7,21.2,87,0.399
+i386_strcmp_proof,ltac2,<rocq-runtime.plugins.ltac2:dispatch>,0.1,21.2,96,0.29
+i386_strcmp_proof,ltac2,<rocq-runtime.plugins.ltac2:plus>,0.0,20.7,481,0.284
+i386_strcmp_proof,ltac2,<fun let _ :=        repeat0          (fun _,0.9,17.5,26,0.295
+i386_strcmp_proof,ltac2,<fun let p1 := Pattern.matches_subterm_vect,10.3,16.7,61,0.284
+i386_strcmp_proof,ltac2,psimpl_vals_hyp2,0.3,15.8,50,0.115
+i386_strcmp_proof,ltac2,<rocq-runtime.plugins.ltac2:once>,0.0,15.0,187,0.284
+i386_strcmp_proof,ltac2,Pattern.one_match0,0.0,14.7,59,0.284
+i386_strcmp_proof,ltac2,<fun Pattern.multi_match0 t m>,0.0,14.7,59,0.284
+i386_strcmp_proof,ltac2,Pattern.multi_match0,0.0,14.7,59,0.284
+i386_strcmp_proof,ltac2,<fun match m with      | [] => Control.zero,3.2,14.6,95,0.284
+i386_strcmp_proof,ltac2,<fun let _ := ltac1:(h |- populate_varlist h,0.0,14.0,18,0.298
+i386_strcmp_proof,ltac2,isa_step_stmt,0.7,13.8,18,0.299
+i386_strcmp_proof,ltac2,"<fun let m :=        [(Pattern.MatchPattern,",0.0,12.7,34,0.186
+i386_strcmp_proof,ltac2,<fun let _ := ltac1:(h |- step_precheck h; e,12.0,12.1,18,0.289
+i386_strcmp_proof,ltac2,<fun let unknown := Fresh.in_goal ident:(unk,0.4,11.9,18,0.287
+i386_strcmp_proof,ltac2,"<fun let m :=        [(Pattern.MatchContext,",0.0,11.2,20,0.284
+i386_strcmp_proof,ltac2,<fun psimpl_vals_hyp2 h>,0.0,11.0,34,0.115
+i386_strcmp_proof,ltac2,find_containing_term,0.9,9.5,782,0.015
+i386_strcmp_proof,ltac2,<fun let _ := t () in      Control.dispatch,0.0,9.3,60,0.106
+i386_strcmp_proof,ltac2,psimpl_goal,9.2,9.2,46,0.105
+i386_strcmp_proof,ltac2,<fun orelse t (fun _ => ())>,9.2,9.2,158,0.106
+i386_strcmp_proof,ltac2,<fun let _ := ltac1:(let p := fresh in,2.9,9.2,23,0.105
+i386_strcmp_proof,ltac2,try0,9.2,9.2,138,0.106
+i386_strcmp_proof,ltac2,<fun s x>,0.0,9.1,127,0.126
+i386_strcmp_proof,ltac2,<fun let _ := Control.check_interrupt () in,9.1,9.1,121,0.126
+i386_strcmp_proof,ltac2,<extn:ltac1>,0.0,9.0,1202,0.105
+i386_strcmp_proof,ltac2,<fun try0 (fun _ => isa_invhere ())>,0.0,8.5,30,0.106
+i386_strcmp_proof,ltac2,<fun let _ := let cl := None in,0.0,8.4,21,0.105
+i386_strcmp_proof,ltac2,<fun ltac1:(c s x h |-      try clear c; des,0.0,7.2,16,0.059
+i386_strcmp_proof,ltac2,set (v' := _ : A) in (value of H) at 1,6.6,6.6,1291,0.014
+i386_strcmp_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastU,0.2,6.4,0,0.043
+i386_strcmp_proof,ltac2,<fun isa_step_and_simplify xs>,0.0,6.2,8,0.093
+i386_strcmp_proof,ltac2,to_ast,4.5,6.2,0,0.042
+i386_strcmp_proof,ltac2,psimpl_vals_goal2,0.4,5.9,23,0.096
+i386_strcmp_proof,ltac2,<fun first0 tacs>,5.4,5.4,20,0.05
+i386_strcmp_proof,ltac2,<fun let b := Array.get b 0 in      let bc :,5.1,5.4,2,0.186
+i386_strcmp_proof,ltac2,<fun let y := Fresh.in_goal ident:(y) in,0.0,5.3,16,0.049
+i386_strcmp_proof,ltac2,dispatch0,5.1,5.1,34,0.106
+i386_strcmp_proof,ltac2,<fun isa_invhere ()>,0.0,4.7,18,0.106
+i386_strcmp_proof,ltac2,isa_invhere,0.0,4.7,18,0.106
+i386_strcmp_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.popul,4.6,4.6,0,0.023
+i386_strcmp_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,0.7,4.4,50,0.027
+i386_strcmp_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastN,2.6,3.9,0,0.014
+i386_strcmp_proof,ltac2,isa_abstract_ignored_vars,0.4,3.9,34,0.072
+i386_strcmp_proof,ltac2,"<fun let m :=        [(Pattern.MatchContext,",0.0,3.5,39,0.017
+i386_strcmp_proof,ltac2,pattern e in (value of P),3.2,3.2,488,0.011
+i386_strcmp_proof,ltac2,<fun let index := Array.get f 1      with f,1.6,2.9,5497,0.005
+i386_strcmp_proof,ltac2,<fun let _ := ltac1:(h |- simpl_memaccs h) h,1.0,2.8,34,0.073
+i386_strcmp_proof,ltac2,Picinae_typecheck,2.7,2.7,2,0.167
+i386_strcmp_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,0.3,2.6,23,0.081
+i386_strcmp_proof,ltac2,<fun let v := Array.get n 2      with s := A,0.4,2.5,279,0.015
+i386_strcmp_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastS,2.3,2.5,0,0.015
+i386_strcmp_proof,ltac2,vm_compute,2.3,2.3,15,0.143
+i386_strcmp_proof,ltac2,prove_noassign,0.3,2.2,3,0.065
+i386_strcmp_proof,ltac2,set (e := _ : N) in (value of P) at 1,2.0,2.0,575,0.002
+i386_strlen_proof,ltac1,ISA_step_ltac1,0.0,91.1,80,6.914
+i386_strlen_proof,ltac1,ISA_invseek_ltac1,0.2,78.5,145,2.435
+i386_strlen_proof,ltac1,step,0.0,71.6,78,2.841
+i386_strlen_proof,ltac1,psimpl_hyp_ltac1,0.2,64.8,366,1.007
+i386_strlen_proof,ltac1,ISA_step_and_simplify_ltac1,0.1,60.4,166,1.199
+i386_strlen_proof,ltac1,psimpl_vals_hyp,0.5,42.7,532,0.577
+i386_strlen_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,2.1,24.9,532,0.497
+i386_strlen_proof,ltac1,psimpl_mark_all_in,2.8,24.8,483,0.855
+i386_strlen_proof,ltac1,eapply (PSimpl_i386_v1_1.simplify_sastU_hyp,15.5,15.5,532,0.49
+i386_strlen_proof,ltac1,psimpl_goal_ltac1,0.0,12.9,117,0.405
+i386_strlen_proof,ltac1,ISA_invhere_ltac1,0.0,12.6,179,0.405
+i386_strlen_proof,ltac1,find_containing_term,0.9,11.2,4459,0.029
+i386_strlen_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastU,0.0,10.8,0,0.099
+i386_strlen_proof,ltac1,to_ast,8.7,10.7,0,0.097
+i386_strlen_proof,ltac1,psimpl_vals_goal,0.1,9.0,117,0.394
+i386_strlen_proof,ltac1,set (v' := _ : A) in (value of H) at 1,7.7,7.7,7137,0.029
+i386_strlen_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastN,4.0,6.7,0,0.04
+i386_strlen_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.popul,6.6,6.6,0,0.065
+i386_strlen_proof,ltac1,step_stmt,2.7,5.9,400,0.075
+i386_strlen_proof,ltac1,compute in H,5.2,5.2,366,0.088
+i386_strlen_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,0.5,4.4,117,0.357
+i386_strlen_proof,ltac1,pattern e in (value of P),4.0,4.0,2752,0.014
+i386_strlen_proof,ltac1,prove_noassign,0.3,3.6,3,0.444
+i386_strlen_proof,ltac1,abstract_ignored_vars,0.6,3.4,166,0.098
+i386_strlen_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastS,3.1,3.2,0,0.04
+i386_strlen_proof,ltac1,populate_varlist,1.0,3.0,200,0.048
+i386_strlen_proof,ltac1,set (e := _ : N) in (value of P) at 1,2.5,2.5,3235,0.016
+i386_strlen_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,0.0,2.5,366,0.033
+i386_strlen_proof,ltac1,"rewrite 1?PSimpl_i386_v1_1.simpl_if_if, 1?PS",2.4,2.4,366,0.032
+i386_strlen_proof,ltac1,eapply (PSimpl_i386_v1_1.simplify_sastU_goal,2.1,2.1,117,0.341
+i386_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:enter>,0.0,94.1,101654,13.622
+i386_strlen_proof,ltac2,x86_step,0.0,93.8,0,13.667
+i386_strlen_proof,ltac2,ISA_step,0.0,93.8,68,13.667
+i386_strlen_proof,ltac2,isa_step,0.0,93.8,80,13.667
+i386_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:case>,0.0,93.8,2231,2.458
+i386_strlen_proof,ltac2,<fun match tacs with      | [] => Control.ze,0.0,93.7,837,13.622
+i386_strlen_proof,ltac2,<fun orelse tac (fun _ => first0 tacs)>,0.0,93.7,528,2.458
+i386_strlen_proof,ltac2,orelse,0.0,93.7,982,2.458
+i386_strlen_proof,ltac2,<fun let _ := isa_invseek () in      Control,33.9,93.6,145,2.458
+i386_strlen_proof,ltac2,step,0.0,65.8,78,2.459
+i386_strlen_proof,ltac2,isa_invseek,19.2,59.7,80,2.096
+i386_strlen_proof,ltac2,<fun ifcatch (fun _ => Control.progress t),0.0,53.6,1896,1.684
+i386_strlen_proof,ltac2,ifcatch,40.5,53.6,1944,1.684
+i386_strlen_proof,ltac2,isa_step_and_simplify,31.0,48.7,135,1.726
+i386_strlen_proof,ltac2,<fun let h1 := Ltac1.of_ident h in      let,29.6,43.9,366,1.016
+i386_strlen_proof,ltac2,f,0.0,43.0,284,1.016
+i386_strlen_proof,ltac2,<fun psimpl_hyp (picinae_hyp_ident h)>,0.0,43.0,284,1.016
+i386_strlen_proof,ltac2,psimpl_hyp,43.0,43.0,284,1.016
+i386_strlen_proof,ltac2,<fun Control.enter        (fun _ =>,39.4,39.5,1684,1.684
+i386_strlen_proof,ltac2,<fun let _ := isa_abstract_ignored_vars xs i,1.8,38.4,200,1.259
+i386_strlen_proof,ltac2,<fun Control.progress t>,0.1,36.7,1188,0.898
+i386_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:progress>,0.3,36.6,1188,0.898
+i386_strlen_proof,ltac2,Pattern.lazy_match0,0.0,35.4,328,0.898
+i386_strlen_proof,ltac2,<fun f context bind>,0.1,35.4,328,0.898
+i386_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:plus>,0.0,26.7,2723,0.786
+i386_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:dispatch>,0.1,24.7,502,0.46
+i386_strlen_proof,ltac2,psimpl_vals_hyp2,0.2,23.8,269,0.554
+i386_strlen_proof,ltac2,<fun let _ :=        repeat0          (fun _,0.7,21.7,132,1.688
+i386_strlen_proof,ltac2,<fun let p1 := Pattern.matches_subterm_vect,12.8,21.1,400,0.451
+i386_strlen_proof,ltac2,<rocq-runtime.plugins.ltac2:once>,0.0,18.8,1104,0.451
+i386_strlen_proof,ltac2,Pattern.one_match0,0.0,18.5,386,0.451
+i386_strlen_proof,ltac2,<fun Pattern.multi_match0 t m>,0.0,18.4,386,0.451
+i386_strlen_proof,ltac2,Pattern.multi_match0,0.0,18.4,386,0.451
+i386_strlen_proof,ltac2,"<fun let m :=        [(Pattern.MatchPattern,",0.0,18.4,185,0.898
+i386_strlen_proof,ltac2,<fun match m with      | [] => Control.zero,4.8,18.4,588,0.451
+i386_strlen_proof,ltac2,<fun let _ := ltac1:(h |- populate_varlist h,0.0,18.1,101,0.47
+i386_strlen_proof,ltac2,isa_step_stmt,0.7,17.7,101,0.47
+i386_strlen_proof,ltac2,psimpl_mark_all_in,2.0,16.5,483,0.786
+i386_strlen_proof,ltac2,<fun let _ := ltac1:(h |- step_precheck h; e,16.2,16.3,101,0.459
+i386_strlen_proof,ltac2,<fun let unknown := Fresh.in_goal ident:(unk,0.5,16.1,101,0.458
+i386_strlen_proof,ltac2,<fun psimpl_vals_hyp2 h>,0.0,15.4,185,0.497
+i386_strlen_proof,ltac2,"<fun let m :=        [(Pattern.MatchContext,",0.0,15.3,115,0.451
+i386_strlen_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,1.4,14.2,269,0.513
+i386_strlen_proof,ltac2,<fun s x>,0.0,13.0,769,0.786
+i386_strlen_proof,ltac2,<fun let _ := Control.check_interrupt () in,13.0,13.0,739,0.786
+i386_strlen_proof,ltac2,<fun ltac1:(c s x h |-      try clear c; des,0.0,10.6,84,0.559
+i386_strlen_proof,ltac2,eapply (PSimpl_i386_v1_1.simplify_sastU_hyp,9.2,9.2,269,0.503
+i386_strlen_proof,ltac2,<fun first0 tacs>,9.0,9.0,126,0.556
+i386_strlen_proof,ltac2,<fun let y := Fresh.in_goal ident:(y) in,0.0,9.0,84,0.556
+i386_strlen_proof,ltac2,<fun orelse t (fun _ => ())>,8.6,8.6,898,0.393
+i386_strlen_proof,ltac2,try0,8.6,8.6,765,0.393
+i386_strlen_proof,ltac2,<fun isa_step_and_simplify xs>,0.0,8.6,68,0.484
+i386_strlen_proof,ltac2,<fun let _ := t () in      Control.dispatch,0.0,8.4,324,0.393
+i386_strlen_proof,ltac2,<extn:ltac1>,0.0,8.3,7077,0.393
+i386_strlen_proof,ltac2,psimpl_goal,8.2,8.2,234,0.393
+i386_strlen_proof,ltac2,<fun let _ := ltac1:(let p := fresh in,2.3,8.2,117,0.393
+i386_strlen_proof,ltac2,<fun try0 (fun _ => isa_invhere ())>,0.0,8.1,166,0.393
+i386_strlen_proof,ltac2,<fun let _ := let cl := None in,0.0,7.9,109,0.393
+i386_strlen_proof,ltac2,<fun let b := Array.get b 0 in      let bc :,7.6,7.8,17,0.898
+i386_strlen_proof,ltac2,find_containing_term,0.7,7.4,4459,0.021
+i386_strlen_proof,ltac2,dispatch0,6.4,6.4,177,0.393
+i386_strlen_proof,ltac2,<fun isa_invhere ()>,0.0,6.2,97,0.393
+i386_strlen_proof,ltac2,isa_invhere,0.0,6.2,97,0.393
+i386_strlen_proof,ltac2,psimpl_vals_goal2,0.3,5.7,117,0.378
+i386_strlen_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastU,0.0,5.3,0,0.111
+i386_strlen_proof,ltac2,to_ast,4.2,5.2,0,0.11
+i386_strlen_proof,ltac2,set (v' := _ : A) in (value of H) at 1,5.0,5.0,7137,0.011
+i386_strlen_proof,ltac2,<fun let index := Array.get f 1      with f,2.4,4.3,59149,0.011
+i386_strlen_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.popul,4.2,4.3,0,0.034
+i386_strlen_proof,ltac2,isa_abstract_ignored_vars,0.5,3.5,200,0.107
+i386_strlen_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastN,2.0,3.4,0,0.031
+i386_strlen_proof,ltac2,"<fun let m :=        [(Pattern.MatchContext,",0.0,3.2,271,0.04
+i386_strlen_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,0.3,2.9,117,0.315
+i386_strlen_proof,ltac2,pattern e in (value of P),2.7,2.7,2752,0.014
+i386_strlen_proof,ltac2,prove_noassign,0.2,2.6,3,0.466
+i386_strlen_proof,ltac2,compute in H,2.5,2.5,185,0.04
+i386_strlen_proof,ltac2,<fun let v := Array.get n 2      with s := A,0.3,2.4,1810,0.039
+i386_strlen_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastS,2.0,2.1,0,0.061
+i386_wcsspn_proof,ltac1,step,0.0,76.2,46,0.529
+i386_wcsspn_proof,ltac1,ISA_step_ltac1,0.0,76.1,46,0.529
+i386_wcsspn_proof,ltac1,ISA_invseek_ltac1,0.2,69.8,46,0.373
+i386_wcsspn_proof,ltac1,ISA_step_and_simplify_ltac1,0.1,56.4,51,0.3
+i386_wcsspn_proof,ltac1,psimpl_hyp_ltac1,0.2,55.6,109,0.264
+i386_wcsspn_proof,ltac1,psimpl_mark_all_in,5.3,35.1,222,0.131
+i386_wcsspn_proof,ltac1,psimpl_vals_hyp,0.4,30.3,160,0.133
+i386_wcsspn_proof,ltac1,psimpl_goal_ltac1,0.1,27.6,113,0.254
+i386_wcsspn_proof,ltac1,psimpl_vals_goal,0.3,16.4,113,0.184
+i386_wcsspn_proof,ltac1,find_containing_term,1.9,14.4,3482,0.011
+i386_wcsspn_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastU,0.1,12.2,0,0.059
+i386_wcsspn_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,1.1,12.2,160,0.088
+i386_wcsspn_proof,ltac1,to_ast,10.0,12.0,0,0.059
+i386_wcsspn_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.popul,10.7,10.7,0,0.043
+i386_wcsspn_proof,ltac1,set (v' := _ : A) in (value of H) at 1,10.2,10.2,5208,0.009
+i386_wcsspn_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastN,4.2,6.4,0,0.016
+i386_wcsspn_proof,ltac1,ISA_invhere_ltac1,0.0,6.3,52,0.153
+i386_wcsspn_proof,ltac1,compute in H,6.0,6.0,109,0.082
+i386_wcsspn_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,0.7,5.5,113,0.081
+i386_wcsspn_proof,ltac1,pattern e in (value of P),4.7,4.7,1977,0.012
+i386_wcsspn_proof,ltac1,set (e := _ : N) in (value of P) at 1,4.6,4.6,2189,0.009
+i386_wcsspn_proof,ltac1,step_stmt,1.2,4.1,114,0.018
+i386_wcsspn_proof,ltac1,simpl_memaccs,0.1,4.1,51,0.031
+i386_wcsspn_proof,ltac1,"rewrite ?memacc_read_frame, ?memacc_read_upd",3.4,3.7,22,0.031
+i386_wcsspn_proof,ltac1,eapply (PSimpl_i386_v1_1.simplify_sastU_hyp,3.4,3.4,160,0.062
+i386_wcsspn_proof,ltac1,abstract_ignored_vars,0.5,3.3,51,0.017
+i386_wcsspn_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastS,3.1,3.2,0,0.015
+i386_wcsspn_proof,ltac1,populate_varlist,0.6,2.7,57,0.011
+i386_wcsspn_proof,ltac1,ignore_vars,2.4,2.4,0,0.008
+i386_wcsspn_proof,ltac1,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,0.0,2.2,109,0.012
+i386_wcsspn_proof,ltac1,"rewrite 1?PSimpl_i386_v1_1.simpl_if_if, 1?PS",2.2,2.2,109,0.012
+i386_wcsspn_proof,ltac1,set (P' := f) in (value of P),2.1,2.1,1977,0.043
+i386_wcsspn_proof,ltac2,<rocq-runtime.plugins.ltac2:enter>,0.0,97.9,12134,0.651
+i386_wcsspn_proof,ltac2,<rocq-runtime.plugins.ltac2:case>,0.0,79.4,1115,0.651
+i386_wcsspn_proof,ltac2,step,0.0,79.4,46,0.651
+i386_wcsspn_proof,ltac2,x86_step,0.0,79.3,0,0.651
+i386_wcsspn_proof,ltac2,ISA_step,0.0,79.3,46,0.651
+i386_wcsspn_proof,ltac2,isa_step,0.0,79.3,46,0.651
+i386_wcsspn_proof,ltac2,<fun match tacs with      | [] => Control.ze,0.1,79.3,265,0.651
+i386_wcsspn_proof,ltac2,<fun orelse tac (fun _ => first0 tacs)>,0.0,79.3,265,0.651
+i386_wcsspn_proof,ltac2,orelse,0.0,79.3,532,0.651
+i386_wcsspn_proof,ltac2,<fun let _ := isa_invseek () in      Control,5.3,79.2,46,0.651
+i386_wcsspn_proof,ltac2,isa_invseek,18.8,73.9,46,0.503
+i386_wcsspn_proof,ltac2,isa_step_and_simplify,48.7,60.9,57,0.421
+i386_wcsspn_proof,ltac2,f,0.0,48.5,109,0.339
+i386_wcsspn_proof,ltac2,<fun psimpl_hyp (picinae_hyp_ident h)>,0.0,48.5,109,0.339
+i386_wcsspn_proof,ltac2,psimpl_hyp,48.4,48.5,109,0.339
+i386_wcsspn_proof,ltac2,<fun let h1 := Ltac1.of_ident h in      let,27.8,48.4,109,0.339
+i386_wcsspn_proof,ltac2,<fun let _ := isa_abstract_ignored_vars xs i,4.7,47.8,57,0.388
+i386_wcsspn_proof,ltac2,<fun Control.enter        (fun _ =>,31.1,31.2,545,0.326
+i386_wcsspn_proof,ltac2,<fun ifcatch (fun _ => Control.progress t),0.0,31.2,557,0.326
+i386_wcsspn_proof,ltac2,ifcatch,25.8,31.2,583,0.326
+i386_wcsspn_proof,ltac2,<fun Control.progress t>,0.0,31.1,557,0.23
+i386_wcsspn_proof,ltac2,<rocq-runtime.plugins.ltac2:progress>,0.4,31.0,557,0.23
+i386_wcsspn_proof,ltac2,psimpl_mark_all_in,4.2,30.0,222,0.142
+i386_wcsspn_proof,ltac2,Pattern.lazy_match0,0.0,29.4,197,0.23
+i386_wcsspn_proof,ltac2,<fun f context bind>,0.1,29.3,197,0.23
+i386_wcsspn_proof,ltac2,psimpl_vals_hyp2,0.4,26.8,160,0.223
+i386_wcsspn_proof,ltac2,psimpl_goal,23.7,23.7,138,0.353
+i386_wcsspn_proof,ltac2,<fun let _ := ltac1:(let p := fresh in,2.3,23.6,113,0.315
+i386_wcsspn_proof,ltac2,<fun psimpl_vals_hyp2 h>,0.0,19.5,109,0.223
+i386_wcsspn_proof,ltac2,<fun let _ :=        repeat0          (fun _,0.6,18.7,45,0.33
+i386_wcsspn_proof,ltac2,"<fun let m :=        [(Pattern.MatchPattern,",0.1,17.8,108,0.23
+i386_wcsspn_proof,ltac2,<rocq-runtime.plugins.ltac2:plus>,0.0,17.0,1187,0.144
+i386_wcsspn_proof,ltac2,<rocq-runtime.plugins.ltac2:dispatch>,0.1,16.0,212,0.164
+i386_wcsspn_proof,ltac2,<rocq-runtime.plugins.ltac2:once>,0.0,14.1,506,0.144
+i386_wcsspn_proof,ltac2,<extn:ltac1>,0.1,14.0,3858,0.163
+i386_wcsspn_proof,ltac2,psimpl_vals_goal2,0.4,13.8,113,0.217
+i386_wcsspn_proof,ltac2,Pattern.one_match0,0.0,13.7,160,0.144
+i386_wcsspn_proof,ltac2,<fun Pattern.multi_match0 t m>,0.0,13.7,160,0.144
+i386_wcsspn_proof,ltac2,Pattern.multi_match0,0.0,13.7,160,0.144
+i386_wcsspn_proof,ltac2,<fun match m with      | [] => Control.zero,2.1,13.7,274,0.144
+i386_wcsspn_proof,ltac2,<fun let p1 := Pattern.matches_subterm_vect,7.7,13.6,160,0.144
+i386_wcsspn_proof,ltac2,<fun let _ := ltac1:(h |- populate_varlist h,0.0,12.9,57,0.152
+i386_wcsspn_proof,ltac2,find_containing_term,1.6,12.8,3482,0.037
+i386_wcsspn_proof,ltac2,isa_step_stmt,0.7,12.2,51,0.152
+i386_wcsspn_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastU,0.0,11.1,0,0.102
+i386_wcsspn_proof,ltac2,<fun ltac1:(c s x h |-      try clear c; des,0.1,11.1,51,0.095
+i386_wcsspn_proof,ltac2,to_ast,9.5,11.0,0,0.102
+i386_wcsspn_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,1.1,10.5,160,0.094
+i386_wcsspn_proof,ltac2,<fun let _ := ltac1:(h |- step_precheck h; e,10.2,10.4,57,0.148
+i386_wcsspn_proof,ltac2,<fun let unknown := Fresh.in_goal ident:(unk,0.9,10.1,57,0.147
+i386_wcsspn_proof,ltac2,"<fun let m :=        [(Pattern.MatchContext,",0.0,9.3,63,0.144
+i386_wcsspn_proof,ltac2,set (v' := _ : A) in (value of H) at 1,9.0,9.0,5208,0.023
+i386_wcsspn_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.popul,8.4,8.4,0,0.036
+i386_wcsspn_proof,ltac2,<fun first0 tacs>,8.4,8.4,59,0.068
+i386_wcsspn_proof,ltac2,<fun let y := Fresh.in_goal ident:(y) in,0.0,8.2,51,0.068
+i386_wcsspn_proof,ltac2,<fun let b := Array.get b 0 in      let bc :,6.4,6.6,6,0.23
+i386_wcsspn_proof,ltac2,<fun isa_step_and_simplify xs>,0.0,6.4,12,0.117
+i386_wcsspn_proof,ltac2,try0,5.9,5.9,261,0.164
+i386_wcsspn_proof,ltac2,<fun orelse t (fun _ => ())>,5.9,5.9,267,0.164
+i386_wcsspn_proof,ltac2,dispatch0,5.6,5.6,98,0.164
+i386_wcsspn_proof,ltac2,<fun let _ := t () in      Control.dispatch,0.0,5.6,98,0.164
+i386_wcsspn_proof,ltac2,compute in H,5.4,5.4,109,0.087
+i386_wcsspn_proof,ltac2,<fun isa_invhere ()>,0.0,5.3,52,0.164
+i386_wcsspn_proof,ltac2,isa_invhere,0.0,5.3,52,0.164
+i386_wcsspn_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastN,3.4,5.3,0,0.018
+i386_wcsspn_proof,ltac2,<fun s x>,0.0,5.3,226,0.104
+i386_wcsspn_proof,ltac2,<fun let _ := Control.check_interrupt () in,5.3,5.3,226,0.104
+i386_wcsspn_proof,ltac2,<fun try0 (fun _ => isa_invhere ())>,0.0,5.3,51,0.164
+i386_wcsspn_proof,ltac2,<fun let _ := let cl := None in,0.0,5.2,11,0.163
+i386_wcsspn_proof,ltac2,<fun let _ := ltac1:(h |- simpl_memaccs h) h,0.9,4.7,57,0.057
+i386_wcsspn_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.psimp,0.7,4.6,113,0.083
+i386_wcsspn_proof,ltac2,isa_abstract_ignored_vars,0.5,4.6,57,0.032
+i386_wcsspn_proof,ltac2,"<fun let m :=        [(Pattern.MatchContext,",0.0,4.4,97,0.03
+i386_wcsspn_proof,ltac2,pattern e in (value of P),4.3,4.3,1977,0.025
+i386_wcsspn_proof,ltac2,set (e := _ : N) in (value of P) at 1,3.7,3.7,2189,0.01
+i386_wcsspn_proof,ltac2,simpl_memaccs,0.1,3.7,57,0.054
+i386_wcsspn_proof,ltac2,"rewrite ?memacc_read_frame, ?memacc_read_upd",3.1,3.4,22,0.053
+i386_wcsspn_proof,ltac2,<fun let v := Array.get n 2      with s := A,0.6,3.1,980,0.01
+i386_wcsspn_proof,ltac2,eapply (PSimpl_i386_v1_1.simplify_sastU_hyp,2.6,2.6,160,0.013
+i386_wcsspn_proof,ltac2,<Picinae.Picinae_i386.PSimpl_i386_v1_1.sastS,2.4,2.5,0,0.015
+i386_wcsspn_proof,ltac2,<fun let index := Array.get f 1      with f,1.4,2.3,10412,0.005
+i386_wcsspn_proof,ltac2,populate_varlist,0.5,2.3,57,0.013
+i386_wcsspn_proof,ltac2,ignore_vars,2.1,2.1,0,0.01
