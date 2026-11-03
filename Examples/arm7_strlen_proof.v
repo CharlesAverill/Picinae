@@ -379,18 +379,6 @@ Local Ltac strlen_total_seek :=
     end
   end.
 
-(* Evaluate the address first to infer its 32-bit width before the memory type. *)
-Local Ltac total_eval ::= first [apply EVar; reflexivity | apply EWord |
-  lazymatch goal with |- eval_exp _ _ (BinOp ?op _ _) _ _ =>
-    eapply EBinOp with (bop:=op); total_eval end |
-  eapply EUnOp; total_eval | eapply ECast; total_eval |
-  eapply EExtract; total_eval | eapply EConcat; total_eval |
-  eapply ELet; [total_eval | total_eval] |
-  eapply EIte; [total_eval | total_eval | total_eval] |
-  eapply ELoad; [idtac | total_eval | total_memory]; total_eval |
-  eapply EStore; [idtac | total_eval | total_eval | total_memory]; total_eval |
-  eapply EUnknown with (n:=0); apply N.neq_0_lt_0, pow2_nonzero].
-
 Theorem strlen_total_correctness:
   forall s p lr m n
     (MDL: models arm7typctx s)
@@ -429,7 +417,9 @@ Proof.
       eapply satall_trueif_inv; [|exact XP|exact UT].
       eapply strlen_partial_correctness; eassumption.
     Local Ltac total_memory ::= intros; unfold mem_readable;
-      repeat (rewrite update_updated || rewrite update_frame by discriminate);
+      repeat first [rewrite update_updated | rewrite update_frame by discriminate |
+        match goal with d := _ : _ |- _ =>
+          lazymatch goal with |- context [d A_READ] => progress unfold d end end];
       match goal with
       | R: forall a, a < 2^32 -> mem_readable ?st a
         |- N.testbit (?st A_READ) _ = true =>
@@ -459,3 +449,49 @@ Proof.
 Qed.
 
 Print Assumptions strlen_total_correctness.
+
+(* Termination also preserves the memory, LR and page-permission properties
+   proved above for arbitrary finite executions. *)
+Definition strlen_frame_invs (s0:store) (t:trace) : option Prop :=
+  match t with (_,s)::_ => Some
+    (s0 V_MEM32 = s V_MEM32 /\ s0 R_LR = s R_LR /\ s0 A_READ = s A_READ)
+  | _ => None end.
+
+Corollary strlen_total_preserves_frame:
+  forall s p lr m n
+    (MDL: models arm7typctx s)
+    (MEM: s V_MEM32 = m) (LR: s R_LR = lr) (R0: s R_R0 = p)
+    (NIL: m Ⓑ[p+n] = 0)
+    (BOUND: n + p mod 4 + 4 < 2^32)
+    (READ: forall a, a < 2^32 -> mem_readable s a),
+  satisfies_total strlen_arm (strlen_frame_invs s) strlen_exit ((Addr 0,s)::nil).
+Proof.
+  intros. unfold satisfies_total. eapply eventually_bind.
+    eapply eventually_execution.
+      exact (strlen_total_correctness s p lr m n MDL MEM LR R0 NIL BOUND READ).
+      apply exec_prog_none.
+    intros [|[x st] hist] [[EX INV] [XP ORIGIN]]; try discriminate.
+    change (Some (startof hist (x,st)) = Some (Addr 0,s)) in ORIGIN.
+    injection ORIGIN as ENTRY.
+    total_here. split. exact EX.
+    cbn [strlen_frame_invs true_inv]. split.
+      eapply strlen_preserves_memory; eassumption.
+    split.
+      eapply strlen_preserves_lr; eassumption.
+      eapply strlen_preserves_readable; eassumption.
+Qed.
+
+Corollary strlen_finite_execution:
+  forall s p lr m n
+    (MDL: models arm7typctx s)
+    (MEM: s V_MEM32 = m) (LR: s R_LR = lr) (R0: s R_R0 = p)
+    (NIL: m Ⓑ[p+n] = 0)
+    (BOUND: n + p mod 4 + 4 < 2^32)
+    (READ: forall a, a < 2^32 -> mem_readable s a),
+  exists prefix, exec_prog strlen_arm (prefix++(Addr 0,s)::nil) /\
+    exit_post (strlen_invs m p) strlen_exit (prefix++(Addr 0,s)::nil).
+Proof.
+  intros. apply eventually_reaches.
+    exact (strlen_total_correctness s p lr m n MDL MEM LR R0 NIL BOUND READ).
+    apply exec_prog_none.
+Qed.

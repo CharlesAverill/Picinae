@@ -9,3 +9,9 @@ Check memset_total_correctness.
 Print Assumptions memset_total_correctness.
 Check strlen_total_correctness.
 Print Assumptions strlen_total_correctness.
+Check memset_finite_execution.
+Print Assumptions memset_finite_execution.
+Check strlen_total_preserves_frame.
+Print Assumptions strlen_total_preserves_frame.
+Check strlen_finite_execution.
+Print Assumptions strlen_finite_execution.

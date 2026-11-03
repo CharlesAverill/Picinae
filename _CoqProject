@@ -22,6 +22,7 @@ Examples/arm7_memset.v
 Examples/arm7_memset_proof.v
 Examples/arm7_strlen.v
 Examples/arm7_strlen_proof.v
+Examples/arm7_total_audit.v
 Examples/arm8_strcasecmp.v
 Examples/arm8_strcasecmp_proof.v
 Examples/i386_total_helpers.v

@@ -127,6 +127,23 @@ Lemma ostartof_step:
   forall xs' xs (t:trace), ostartof (xs'::xs::t) = ostartof (xs::t).
 Proof. intros. rewrite !ostartof_cons, startof_cons. reflexivity. Qed.
 
+(* Preserve actual execution facts when adding total versions of frame lemmas.
+   No first-exit assumption is needed for unconditional preservation properties. *)
+Theorem eventually_execution:
+  forall p Q t (EV: eventually p Q t) (XP: exec_prog p t),
+  eventually p (fun t' => Q t' /\ exec_prog p t' /\
+    ostartof t' = ostartof t) t.
+Proof.
+  intros p Q t EV. induction EV; intro XP.
+    apply EventuallyHere. repeat split; assumption || reflexivity.
+    eapply EventuallyStep. exact ENABLED. intros xs' CS.
+    eapply eventually_bind.
+      apply H. exact CS. apply exec_prog_step; assumption.
+      intros t' [POST [XP' ORIGIN]]. apply EventuallyHere.
+      split. exact POST. split. exact XP'.
+      rewrite ORIGIN, ostartof_step. reflexivity.
+Qed.
+
 Theorem satall_exit_inv:
   forall p Invs xp t (SA: satisfies_all p Invs xp t)
     (XP: exec_prog p t) (UT: unterminated xp (tl t)) (EX: xp t = true),

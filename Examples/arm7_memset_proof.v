@@ -469,18 +469,6 @@ Local Ltac memset_total_seek :=
     end
   end.
 
-(* Evaluate the address first to infer its 32-bit width before the memory type. *)
-Local Ltac total_eval ::= first [apply EVar; reflexivity | apply EWord |
-  lazymatch goal with |- eval_exp _ _ (BinOp ?op _ _) _ _ =>
-    eapply EBinOp with (bop:=op); total_eval end |
-  eapply EUnOp; total_eval | eapply ECast; total_eval |
-  eapply EExtract; total_eval | eapply EConcat; total_eval |
-  eapply ELet; [total_eval | total_eval] |
-  eapply EIte; [total_eval | total_eval | total_eval] |
-  eapply ELoad; [idtac | total_eval | total_memory]; total_eval |
-  eapply EStore; [idtac | total_eval | total_eval | total_memory]; total_eval |
-  eapply EUnknown with (n:=0); apply N.neq_0_lt_0, pow2_nonzero].
-
 Theorem memset_total_correctness:
   ∀ s p c len mem (MDL: models arm7typctx s)
     (MEM: s V_MEM32 = mem) (R0: s R_R0 = p)
@@ -518,7 +506,9 @@ Proof.
       eapply satall_trueif_inv; [|exact XP|exact UT].
       eapply memset_functional_correctness; eassumption.
     Local Ltac total_memory ::= intros; unfold mem_writable;
-      repeat (rewrite update_updated || rewrite update_frame by discriminate);
+      repeat first [rewrite update_updated | rewrite update_frame by discriminate |
+        match goal with d := _ : _ |- _ =>
+          lazymatch goal with |- context [d A_WRITE] => progress unfold d end end];
       match goal with
       | W: ∀ a, a < 2^32 -> mem_writable ?st a
         |- N.testbit (?st A_WRITE) _ = true =>
@@ -556,3 +546,16 @@ Proof.
 Qed.
 
 Print Assumptions memset_total_correctness.
+
+Corollary memset_finite_execution:
+  forall s p c len mem (MDL: models arm7typctx s)
+    (MEM: s V_MEM32 = mem) (R0: s R_R0 = p)
+    (R1: s R_R1 = c) (R2: s R_R2 = len)
+    (WRITE: forall a, a < 2^32 -> mem_writable s a),
+  exists prefix, exec_prog memset_arm (prefix++(Addr 0,s)::nil) /\
+    exit_post (memset_invset mem p c len) memset_exit (prefix++(Addr 0,s)::nil).
+Proof.
+  intros. apply eventually_reaches.
+    exact (memset_total_correctness s p c len mem MDL MEM R0 R1 R2 WRITE).
+    apply exec_prog_none.
+Qed.
