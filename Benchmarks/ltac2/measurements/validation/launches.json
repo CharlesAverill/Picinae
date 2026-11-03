@@ -1,0 +1,53 @@
+[
+  {
+    "kind": "build",
+    "command": [
+      "/home/charles/code/friends/.toolchains/picinae-env",
+      "bash",
+      "-c",
+      "set -o pipefail; make -j1 2>&1 | tee /tmp/picinae-ltac-final-602efc7-20261103-validation/build.log; result=${PIPESTATUS[0]}; printf \"%s\\n\" \"$result\" > /tmp/picinae-ltac-final-602efc7-20261103-validation/build.exit; exit \"$result\""
+    ],
+    "cwd": "/home/charles/.t3/worktrees/Picinae/t3-68d408bf",
+    "exit_code": 0
+  },
+  {
+    "kind": "harness-tests",
+    "command": [
+      "/home/charles/code/friends/.toolchains/picinae-env",
+      "bash",
+      "-c",
+      "set -o pipefail; python3 tools/test_benchmark_ltac.py 2>&1 | tee /tmp/picinae-ltac-final-602efc7-20261103-validation/harness-tests.log; result=${PIPESTATUS[0]}; printf \"%s\\n\" \"$result\" > /tmp/picinae-ltac-final-602efc7-20261103-validation/harness-tests.exit; exit \"$result\""
+    ],
+    "cwd": "/home/charles/.t3/worktrees/Picinae/t3-68d408bf",
+    "exit_code": 0
+  },
+  {
+    "kind": "harness",
+    "command": [
+      "/home/charles/code/friends/.toolchains/picinae-env",
+      "bash",
+      "-c",
+      "set -o pipefail; python3 tools/benchmark_ltac.py --baseline /tmp/picinae-ltac2/baseline-9.1.1 --output /tmp/picinae-ltac-final-602efc7-20261103 --runs 3 2>&1 | tee /tmp/picinae-ltac-final-602efc7-20261103-validation/harness.log; result=${PIPESTATUS[0]}; printf \"%s\\n\" \"$result\" > /tmp/picinae-ltac-final-602efc7-20261103-validation/harness.exit; exit \"$result\""
+    ],
+    "cwd": "/home/charles/.t3/worktrees/Picinae/t3-68d408bf",
+    "exit_code": 0
+  },
+  {
+    "kind": "clock-check",
+    "command": [
+      "/home/charles/code/friends/.toolchains/picinae-env",
+      "python3",
+      "/tmp/picinae-ltac-final-602efc7-20261103-validation/clock-check.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "kind": "current-exclusions",
+    "command": [
+      "/home/charles/code/friends/.toolchains/picinae-env",
+      "python3",
+      "/tmp/picinae-ltac-final-602efc7-20261103-validation/current-exclusions.py"
+    ],
+    "exit_code": 0
+  }
+]
