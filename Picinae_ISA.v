@@ -269,20 +269,21 @@ Ltac2 isa_abstract_ignored_vars (xs : ident) :=
       Std.clearbody [tmp]
   end).
 
-Ltac2 rec isa_split_memaccs (accs : ident) :=
+Ltac2 isa_split_memaccs (accs : ident) :=
   let h := Ltac1.of_ident accs in
-  lazy_match! Constr.type (Control.hyp accs) with
+  (* As in destruct_memaccs, stop successfully if a dependent goal prevents
+     projecting or clearing the remaining conjunction. *)
+  repeat (lazy_match! Constr.type (Control.hyp accs) with
   | ?p /\ _ =>
-      first
-      [ ltac1:(p |- lazymatch goal with [ _ : p |- _ ] => idtac end)
-          (Ltac1.of_constr p);
-        ltac1:(h |- apply proj2 in h) h
-      | let acc := Fresh.in_goal @ACC in
-        ltac1:(h acc |- destruct h as [acc h]) h (Ltac1.of_ident acc) ];
-      isa_split_memaccs accs
+      ifcatch
+        (fun () => ltac1:(p |- lazymatch goal with [ _ : p |- _ ] => idtac end)
+          (Ltac1.of_constr p))
+        (fun () => ltac1:(h |- apply proj2 in h) h)
+        (fun _ => let acc := Fresh.in_goal @ACC in
+          ltac1:(h acc |- destruct h as [acc h]) h (Ltac1.of_ident acc))
   | True => Std.clear [accs]
   | _ => let acc := Fresh.in_goal @ACC in Std.rename [(accs, acc)]
-  end.
+  end).
 
 Ltac2 isa_destruct_memaccs (xs : ident) :=
   let accs := Fresh.in_goal @ACCs in
@@ -296,9 +297,13 @@ Ltac2 isa_step_and_simplify (xs : ident) :=
   Control.enter (fun () =>
     isa_abstract_ignored_vars xs;
     ltac1:(h |- psimpl_hyp h) h;
-    ltac1:(h |- simpl_memaccs h) h;
-    isa_destruct_memaccs xs;
-    Control.enter (fun () => try ltac1:(generalize_trace))).
+    Control.enter (fun () =>
+      ltac1:(h |- simpl_memaccs h) h;
+      (* Hooks can create several goals.  Preserve the per-goal continuation
+         of the original Ltac1 semicolon chain across each hook boundary. *)
+      Control.enter (fun () =>
+        isa_destruct_memaccs xs;
+        Control.enter (fun () => try ltac1:(generalize_trace))))).
 
 Ltac2 isa_invhere () :=
   eapply nextinv_here > [ reflexivity | hnf; ltac1:(psimpl_goal) ].
