@@ -498,3 +498,244 @@ Proof.
 Qed.
 
 Print Assumptions tolower_total_correctness.
+
+(* Total correctness of the main routine.  The partial proofs above are reused
+   unchanged for the functional invariant at the original exit. *)
+From Stdlib Require Import List Lia.
+
+(* Full permissions are a simple sufficient memory-safety condition.  The
+   bound matters: ARM8 permission maps have exactly 2^64 bits. *)
+Definition strcasecmp_readable (s:store) :=
+  forall a, a < 2^64 -> mem_readable s a.
+Definition strcasecmp_writable (s:store) :=
+  forall a, a < 2^64 -> mem_writable s a.
+
+Ltac total_memory ::=
+  intros; unfold mem_readable, mem_writable;
+  psimpl; first
+    [match goal with H: strcasecmp_readable _ |- _ => apply H end
+    |match goal with H: strcasecmp_writable _ |- _ => apply H end];
+  apply mp2_mod_lt.
+
+(* Infer memory address widths from the address operand first.  This local
+   override avoids an unresolved width in ELoad/EStore witness construction. *)
+Ltac total_eval ::= first [apply EVar; reflexivity | apply EWord |
+  lazymatch goal with |- eval_exp _ _ (BinOp ?op _ _) _ _ =>
+    eapply EBinOp with (bop:=op); total_eval end |
+  eapply EUnOp; total_eval | eapply ECast; total_eval |
+  eapply EExtract; total_eval | eapply EConcat; total_eval |
+  eapply ELet; [total_eval | total_eval] |
+  eapply EIte; [total_eval | total_eval | total_eval] |
+  (eapply ELoad; [|total_eval|total_memory]; total_eval) |
+  (eapply EStore; [|total_eval|total_eval|total_memory]; total_eval) |
+  eapply EUnknown with (n:=0); apply N.neq_0_lt_0, pow2_nonzero].
+
+(* Inline finite callee execution, including the return instruction.  Unlike
+   the callee's public theorem, this helper retains an arbitrary caller history
+   and resumes at its saved return address. *)
+Lemma strcasecmp_tolower_returns:
+  forall (Q:trace -> Prop) s t ret (RET: s R_X30 = ret)
+    (CONT: forall s' t',
+      s' R_X20 = s R_X20 -> s' V_MEM64 = s V_MEM64 ->
+      s' A_READ = s A_READ ->
+      eventually strcasecmp Q ((Addr ret,s')::t')),
+  eventually strcasecmp Q ((Addr 2097152,s)::t).
+Proof.
+  intros. do 3 ISA_total_step.
+    do 2 ISA_total_step. apply CONT; reflexivity.
+    ISA_total_step. apply CONT; reflexivity.
+Qed.
+
+(* Restrict an eventual exit to the first exit, retaining the execution facts
+   required by the original partial-correctness theorem. *)
+Lemma strcasecmp_first_exit:
+  forall p xp entry t,
+  eventually p (fun t' => xp t' = true) t ->
+  execution_context p xp entry t ->
+  eventually p (fun t' => xp t' = true /\
+    execution_context p xp entry t') t.
+Proof.
+  intros p xp entry t EV. induction EV; intro CTX.
+  - total_here. split; assumption.
+  - destruct (xp (xs::t)) eqn:EX.
+    + total_here. split; assumption.
+    + destruct CTX as (XP & ORIGIN & UT).
+      eapply EventuallyStep. exact ENABLED.
+      intros xs' CS. apply H; [exact CS|].
+      split. apply exec_prog_step; assumption.
+      split. rewrite ostartof_step. exact ORIGIN.
+      simpl. apply unterminated_cons; assumption.
+Qed.
+
+Definition strcasecmp_at_return (t:trace) :=
+  match t with (Addr a,_)::_ => a = 1048684 | _ => False end.
+
+(* The exit path has two finite calls and then restores the saved registers. *)
+Lemma strcasecmp_finish:
+  forall s t (READ: strcasecmp_readable s),
+  eventually strcasecmp strcasecmp_at_return ((Addr 1048648,s)::t).
+Proof.
+  intros. do 2 ISA_total_step.
+  eapply strcasecmp_tolower_returns; [reflexivity|].
+  intros scallee1 t1 X20 MEM RP.
+  assert (READ1: strcasecmp_readable scallee1).
+    unfold strcasecmp_readable, mem_readable in *. rewrite RP. exact READ.
+  clear READ. rename READ1 into READ.
+  do 3 ISA_total_step.
+  eapply strcasecmp_tolower_returns; [reflexivity|].
+  intros scallee2 t2 X20' MEM' RP'.
+  assert (READ2: strcasecmp_readable scallee2).
+    unfold strcasecmp_readable, mem_readable in *. rewrite RP'. exact READ.
+  clear READ. rename READ2 into READ.
+  do 4 ISA_total_step.
+  total_here. reflexivity.
+Qed.
+
+(* The loop-back block performs two modular pointer increments. *)
+Lemma strcasecmp_advance:
+  forall (Q:trace -> Prop) s t
+    (CONT: forall s' t',
+      s' R_X20 = s R_X20 ⊕ 1 -> s' V_MEM64 = s V_MEM64 ->
+      s' A_READ = s A_READ ->
+      eventually strcasecmp Q ((Addr 1048600,s')::t')),
+  eventually strcasecmp Q ((Addr 1048688,s)::t).
+Proof.
+ intros. do 3 ISA_total_step. apply CONT; psimpl; reflexivity.
+Qed.
+
+(* The remaining distance to a null byte decreases on every loop iteration.
+   Addresses and the distance are modular, so this also admits wrapping strings.
+   A mismatch or an earlier null in either input takes the finite exit path. *)
+Lemma strcasecmp_loop_terminates:
+  forall n s t (READ: strcasecmp_readable s)
+    (NULL: (s V_MEM64) Ⓑ[s R_X20 + n] = 0),
+  eventually strcasecmp strcasecmp_at_return ((Addr 1048600,s)::t).
+Proof.
+  induction n using N.peano_ind; intros.
+  - rewrite N.add_0_r in NULL.
+    do 2 ISA_total_step.
+      apply strcasecmp_finish. unfold strcasecmp_readable, mem_readable in *.
+      psimpl. exact READ.
+      rewrite NULL in BC. discriminate.
+  - do 2 ISA_total_step.
+      apply strcasecmp_finish. unfold strcasecmp_readable, mem_readable in *.
+      psimpl. exact READ.
+    do 2 ISA_total_step.
+      apply strcasecmp_finish. unfold strcasecmp_readable, mem_readable in *.
+      psimpl. exact READ.
+    do 2 ISA_total_step.
+    + eapply strcasecmp_advance. intros sadv hist XADV MADV RADV.
+      apply IHn.
+        unfold strcasecmp_readable, mem_readable in *. rewrite RADV. exact READ.
+        rewrite XADV, MADV. psimpl. psimpl in NULL.
+        rewrite N.add_1_l, N.add_succ_l, <- N.add_succ_r.
+        exact NULL.
+    + ISA_total_step.
+      eapply strcasecmp_tolower_returns; [reflexivity|].
+      intros scallee1 t1 X20 MEM RP.
+      assert (READ1: strcasecmp_readable scallee1).
+        unfold strcasecmp_readable, mem_readable in *. rewrite RP. exact READ.
+      assert (NULL1: (scallee1 V_MEM64) Ⓑ[scallee1 R_X20 + N.succ n] = 0).
+        rewrite X20, MEM. psimpl. psimpl in NULL. exact NULL.
+      clear - IHn READ1 NULL1. rename READ1 into READ. rename NULL1 into NULL.
+      do 3 ISA_total_step.
+      eapply strcasecmp_tolower_returns; [reflexivity|].
+      intros scallee2 t2 X20' MEM' RP'.
+      assert (READ2: strcasecmp_readable scallee2).
+        unfold strcasecmp_readable, mem_readable in *. rewrite RP'. exact READ.
+      assert (NULL2: (scallee2 V_MEM64) Ⓑ[scallee2 R_X20 + N.succ n] = 0).
+        rewrite X20', MEM'. psimpl. psimpl in NULL. exact NULL.
+      clear - IHn READ2 NULL2. rename READ2 into READ. rename NULL2 into NULL.
+      do 2 ISA_total_step.
+      * eapply strcasecmp_advance. intros sadv hist XADV MADV RADV. apply IHn.
+          unfold strcasecmp_readable, mem_readable in *. rewrite RADV. exact READ.
+          rewrite XADV, MADV. psimpl. psimpl in NULL.
+          rewrite N.add_1_l, N.add_succ_l, <- N.add_succ_r.
+          exact NULL.
+      * apply strcasecmp_finish. unfold strcasecmp_readable, mem_readable in *.
+        psimpl. exact READ.
+Qed.
+
+(* A null byte outside the saved-register area survives every possible frame
+   value.  Only this byte needs separation for termination; earlier input bytes
+   may alias the frame, as in the original partial specification. *)
+Lemma strcasecmp_null_survives:
+  forall sp mem arg1 n fb
+    (NULL: mem Ⓑ[arg1+n] = 0)
+    (FRAME: 40 <= msub 64 (arg1+n) (sp ⊖ 48)),
+  (setmem 64 LittleE 40 mem (sp ⊖ 48) fb) Ⓑ[arg1+n] = 0.
+Proof.
+  intros. rewrite getmem_1, setmem_frame by exact FRAME.
+  rewrite <- (getmem_1 64 LittleE). exact NULL.
+Qed.
+
+Lemma strcasecmp_terminates:
+  forall s sp mem arg1 n t
+    (SP: s R_SP = sp) (MEM: s V_MEM64 = mem) (X0: s R_X0 = arg1)
+    (READ: strcasecmp_readable s) (WRITE: strcasecmp_writable s)
+    (NULL: mem Ⓑ[arg1+n] = 0)
+    (FRAME: 40 <= msub 64 (arg1+n) (sp ⊖ 48)),
+  eventually strcasecmp strcasecmp_at_return ((Addr 1048576,s)::t).
+Proof.
+  intros. do 6 ISA_total_step.
+  (* Earlier stores remain in the trace, so give each merged frame a
+     fresh name instead of attempting to clear the preceding frame value. *)
+  generalize_frame mem as fb0.
+  try (generalize_frame mem as fb1).
+  try (generalize_frame mem as fb2).
+  try (generalize_frame mem as fb3).
+  eapply strcasecmp_loop_terminates with (n:=n).
+    unfold strcasecmp_readable, mem_readable in *. psimpl. exact READ.
+    psimpl. apply strcasecmp_null_survives; assumption.
+Qed.
+
+(* This public theorem reuses the original invariant set and exit predicate.
+   The extra assumptions are input data and memory permissions, not an
+   operational success certificate. *)
+Theorem strcmp_total_correctness:
+  forall s sp mem arg1 arg2 a' n
+    (MDL: models arm8typctx s)
+    (SP: s R_SP = sp) (MEM: s V_MEM64 = mem) (X30: s R_X30 = a')
+    (RX0: s R_X0 = arg1) (RX1: s R_X1 = arg2)
+    (READ: strcasecmp_readable s) (WRITE: strcasecmp_writable s)
+    (NULL: mem Ⓑ[arg1+n] = 0)
+    (FRAME: 40 <= msub 64 (arg1+n) (sp ⊖ 48)),
+  satisfies_total strcasecmp
+    (invs1 sp mem a' arg1 arg2 (s R_X20) (s R_X21))
+    (exits1 sp mem a' arg1 arg2 (s R_X20) (s R_X21))
+    ((Addr 1048576,s)::nil).
+Proof.
+  intros. eapply total_of_partial with (entry:=(Addr 1048576,s)).
+  - intros t' ORIGIN. destruct t' as [|[x' s'] hist].
+      discriminate.
+    rewrite ostartof_cons in ORIGIN. injection ORIGIN as ENTRY.
+    eapply strcmp_partial_correctness; eassumption.
+  - apply strcasecmp_first_exit.
+    + eapply eventually_bind.
+        eapply strcasecmp_terminates; eassumption.
+      intros t' EX. apply EventuallyHere.
+      destruct t' as [|[[a|i] s'] hist]; try contradiction.
+      cbn [strcasecmp_at_return] in EX. subst a. reflexivity.
+    + repeat split; try reflexivity; constructor; reflexivity.
+Qed.
+
+(* Expose a finite execution extension as well as demonic total correctness. *)
+Corollary strcmp_finite_execution:
+  forall s sp mem arg1 arg2 a' n
+    (MDL: models arm8typctx s)
+    (SP: s R_SP = sp) (MEM: s V_MEM64 = mem) (X30: s R_X30 = a')
+    (RX0: s R_X0 = arg1) (RX1: s R_X1 = arg2)
+    (READ: strcasecmp_readable s) (WRITE: strcasecmp_writable s)
+    (NULL: mem Ⓑ[arg1+n] = 0)
+    (FRAME: 40 <= msub 64 (arg1+n) (sp ⊖ 48)),
+  exists prefix,
+    exec_prog strcasecmp (prefix++(Addr 1048576,s)::nil) /\
+    exit_post
+      (invs1 sp mem a' arg1 arg2 (s R_X20) (s R_X21))
+      (exits1 sp mem a' arg1 arg2 (s R_X20) (s R_X21))
+      (prefix++(Addr 1048576,s)::nil).
+Proof.
+  intros. eapply eventually_reaches.
+    eapply strcmp_total_correctness; eassumption.
+    constructor.
+Qed.
