@@ -240,3 +240,12 @@ list of own commits above it. The after-implementation audit is recorded in
 a subsequent evidence commit; final full SHA and clean-tree audit are returned
 in the handoff. Partial status refers to the documented semantic/closure gaps,
 not to a failed or pending build of the engineering subset.
+
+Implementation commit: `9716d4dfbab5ae65bdf2e736a01bf295d1df9f03`.
+The tree was clean immediately after this commit. The recorded
+`logs/after-implementation-ancestry.log` audit exited 0, requiring exactly that
+one own commit above accepted e19, merge-base equal to pinned origin, and no
+unrelated history. It includes full origin-to-HEAD history, base diff stat and
+the unit diff stat. The following evidence-only commit records that result.
+Its final SHA and a fresh exact two-own-commit/clean-tree audit are returned in
+the handoff; no source/build changes follow the verified implementation.
