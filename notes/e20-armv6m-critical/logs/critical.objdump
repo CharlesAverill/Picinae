@@ -1,0 +1,38 @@
+
+/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+00003e68 <vPortEnterCritical>:
+    3e68:	b672      	cpsid	i
+    3e6a:	4a04      	ldr	r2, [pc, #16]	@ (3e7c <vPortEnterCritical+0x14>)
+    3e6c:	6813      	ldr	r3, [r2, #0]
+    3e6e:	3301      	adds	r3, #1
+    3e70:	6013      	str	r3, [r2, #0]
+    3e72:	f3bf 8f4f 	dsb	sy
+    3e76:	f3bf 8f6f 	isb	sy
+    3e7a:	4770      	bx	lr
+    3e7c:	20000000 	.word	0x20000000
+
+00003e80 <vPortExitCritical>:
+    3e80:	b510      	push	{r4, lr}
+    3e82:	4b08      	ldr	r3, [pc, #32]	@ (3ea4 <vPortExitCritical+0x24>)
+    3e84:	681b      	ldr	r3, [r3, #0]
+    3e86:	2b00      	cmp	r3, #0
+    3e88:	d008      	beq.n	3e9c <vPortExitCritical+0x1c>
+    3e8a:	4b06      	ldr	r3, [pc, #24]	@ (3ea4 <vPortExitCritical+0x24>)
+    3e8c:	681a      	ldr	r2, [r3, #0]
+    3e8e:	3a01      	subs	r2, #1
+    3e90:	601a      	str	r2, [r3, #0]
+    3e92:	681b      	ldr	r3, [r3, #0]
+    3e94:	2b00      	cmp	r3, #0
+    3e96:	d100      	bne.n	3e9a <vPortExitCritical+0x1a>
+    3e98:	b662      	cpsie	i
+    3e9a:	bd10      	pop	{r4, pc}
+    3e9c:	4802      	ldr	r0, [pc, #8]	@ (3ea8 <vPortExitCritical+0x28>)
+    3e9e:	4903      	ldr	r1, [pc, #12]	@ (3eac <vPortExitCritical+0x2c>)
+    3ea0:	f000 f97c 	bl	419c <fixture_assert_fail>
+    3ea4:	20000000 	.word	0x20000000
+    3ea8:	0000456c 	.word	0x0000456c
+    3eac:	00000323 	.word	0x00000323

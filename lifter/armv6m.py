@@ -85,7 +85,7 @@ class ELF:
         return mapping[at][1]
 
 
-PROFILES = ("legacy-e03", "primask-v1-base", "primask-v1-up")
+PROFILES = ("legacy-e03", "primask-v1-base", "primask-v1-up", "critical-seq-v1-base")
 
 
 def accepted16(hw, profile="legacy-e03"):
@@ -134,6 +134,8 @@ def accepted32(hw1, hw2, profile="legacy-e03"):
         return True  # unchanged BL
     if profile == "legacy-e03":
         return False
+    if profile == "critical-seq-v1-base" and hw1 == 0xf3bf:
+        return hw2 in (0x8f4f, 0x8f5f, 0x8f6f)  # exact DSB/DMB/ISB SY
     # Only PRIMASK (SYSm=16), exact fixed bits, Rd/Rn in r0-r12 or LR.
     return ((hw1 == 0xf3ef and hw2 & 0xf0ff == 0x8010
              and (hw2 >> 8) & 15 not in (13, 15))
@@ -211,6 +213,13 @@ def extract(path, name, function, objdump, profile="legacy-e03"):
             if hw & 0xf800 == 0x4800:  # LDR literal: include the entire word, even past STT_FUNC size
                 literal = ((a + 4) & ~3) + (hw & 255) * 4
                 include(literal, 4, immutable=True)
+                if profile == "critical-seq-v1-base":
+                    # Conservative rejection of literal peripheral/SCS addresses.
+                    # Variable data pointers still need normal-memory contracts;
+                    # this filter is not a memory safety or MMIO correctness proof.
+                    value = int.from_bytes(elf.read(literal, 4, True), 'little')
+                    require(value < 0x40000000,
+                            f'out-of-profile high/MMIO literal at 0x{literal:x}')
             a += width
     require(starts, 'no supported instructions')
     digest = hashlib.sha256(elf.data).hexdigest()
@@ -244,13 +253,28 @@ def extract(path, name, function, objdump, profile="legacy-e03"):
         lines = [line.replace('lift_armv6m ', 'lift_armv6m_mask ').replace('apply welltyped_lift_armv6m.', 'apply welltyped_lift_armv6m_mask.') for line in lines]
         lines = [line.replace('| T_Invalid => false | _ => true end)', '| i => armv6m_mask_instruction_supported i end)') for line in lines]
         lines.insert(0, f'(* Strict frontend {profile}; sequential PRIMASK register fragment only. *)')
-    if profile == "primask-v1-base":
+    if profile in ("primask-v1-base", "critical-seq-v1-base"):
         # Enforce the absence of the optional U/P extension in the actual map.
         pos = lines.index(f'Definition {name}_prog : program := fun s a =>')
         lines[pos + 1] = ('  if armv6m_base_profile s then\n' + '    ' + lines[pos + 1][2:-1] +
                           ' else None.')
         pos = lines.index(f'  intros s a. unfold {name}_prog. destruct (existsb (N.eqb a) {name}_entries).')
         lines[pos] = (f'  intros s a. unfold {name}_prog. destruct (armv6m_base_profile s); [|exact I].\n'
+                      f'  destruct (existsb (N.eqb a) {name}_entries).')
+    if profile == "critical-seq-v1-base":
+        # Keep the barrier observation map explicit and export a named projection.
+        lines[0] = '(* critical-seq-v1-base: barrier occurrence view + SEQUENTIAL PROJECTION; no hardware ordering/IRQ guarantee. *)'
+        lines = [line.replace('Require Import Picinae_armv6m.', 'Require Import Picinae_armv6m_sync.')
+                 .replace('thumb32_decode ', 'armv6m_sync_decode32 ')
+                 .replace('armv6m_mask_instruction_supported', 'armv6m_sync_instruction_supported')
+                 .replace('apply welltyped_lift_armv6m_mask.', 'apply welltyped_lift_armv6m_sync_projection.') for line in lines]
+        pos = lines.index(f'Definition {name}_prog : program := fun s a =>')
+        lines[pos] = f'Definition {name}_sync_view : armv6m_sync_program := fun s a =>'
+        lines[pos+1] = lines[pos+1].replace('lift_armv6m_mask ', 'lift_armv6m_sync_view ')
+        lines.insert(pos+2, f'Definition {name}_prog : program := armv6m_sync_project {name}_sync_view.')
+        pos = next(i for i, line in enumerate(lines) if line.startswith(f'  intros s a. unfold {name}_prog.'))
+        lines[pos] = (f'  intros s a. unfold {name}_prog, {name}_sync_view, armv6m_sync_project.\n'
+                      '  destruct (armv6m_base_profile s); [|exact I].\n'
                       f'  destruct (existsb (N.eqb a) {name}_entries).')
     return '\n'.join(lines) + '\n'
 

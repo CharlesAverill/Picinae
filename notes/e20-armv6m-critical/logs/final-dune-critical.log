@@ -1,0 +1,13 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env dune build --cache=disabled -j1 --display short @armv6m-critical @Examples/FreeRTOSCritical/freertos-critical-projections
+        rocq .Picinae.theory.d
+        rocq Picinae_armv6m_sync.{glob,vo}
+        rocq Examples/FreeRTOSCritical/vPortEnterCritical_armv6m.{glob,vo}
+        rocq Examples/FreeRTOSCritical/vPortExitCritical_armv6m.{glob,vo}
+        rocq tests/armv6m_critical/fixture.{glob,vo}
+        rocq tests/armv6m_critical/Checks.{glob,vo}
+File "./tests/armv6m_critical/Checks.v", line 29, characters 0-337:
+Warning: To avoid stack overflow, large numbers in nat are interpreted as
+applications of Nat.of_num_uint. [abstract-large-number,numbers,default]
+
+EXIT_CODE=0

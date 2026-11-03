@@ -20,6 +20,11 @@
   Examples.FreeRTOSMask.vClearInterruptMask_armv6m
   tests.armv6m_primask.fixture
   tests.armv6m_primask.Checks
+  Picinae_armv6m_sync
+  Examples.FreeRTOSCritical.vPortEnterCritical_armv6m
+  Examples.FreeRTOSCritical.vPortExitCritical_armv6m
+  tests.armv6m_critical.fixture
+  tests.armv6m_critical.Checks
   Examples.claude.arm8_abs_proof
 ; BEGIN e05 generated modules
   Examples.FreeRTOS.vListInitialiseItem_armv6m
@@ -95,3 +100,9 @@
  (deps tests/armv6m_primask/Checks.vo
   Examples/FreeRTOSMask/ulSetInterruptMask_armv6m.vo
   Examples/FreeRTOSMask/vClearInterruptMask_armv6m.vo))
+
+(alias
+ (name armv6m-critical)
+ (deps Picinae_armv6m_sync.vo tests/armv6m_critical/Checks.vo
+  Examples/FreeRTOSCritical/vPortEnterCritical_armv6m.vo
+  Examples/FreeRTOSCritical/vPortExitCritical_armv6m.vo))

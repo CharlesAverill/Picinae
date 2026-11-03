@@ -1,0 +1,49 @@
+Require Import Picinae_armv6m_sync.
+Require Import Picinae.tests.armv6m_critical.fixture.
+Check Picinae.tests.armv6m_critical.fixture.sync_fixture_decode_check.
+Print Assumptions Picinae.tests.armv6m_critical.fixture.sync_fixture_decode_check.
+Check Picinae.tests.armv6m_critical.fixture.sync_fixture_welltyped.
+Print Assumptions Picinae.tests.armv6m_critical.fixture.sync_fixture_welltyped.
+Require Import Picinae.tests.armv6m_critical.Checks.
+Check Picinae.tests.armv6m_critical.Checks.assembled_sync_shapes.
+Print Assumptions Picinae.tests.armv6m_critical.Checks.assembled_sync_shapes.
+Check Picinae.tests.armv6m_critical.Checks.all_barrier_options.
+Print Assumptions Picinae.tests.armv6m_critical.Checks.all_barrier_options.
+Check Picinae.tests.armv6m_critical.Checks.barrier_fixed_bits.
+Print Assumptions Picinae.tests.armv6m_critical.Checks.barrier_fixed_bits.
+Check Picinae.tests.armv6m_critical.Checks.separate_barrier_observations.
+Print Assumptions Picinae.tests.armv6m_critical.Checks.separate_barrier_observations.
+Check Picinae.tests.armv6m_critical.Checks.projected_barriers_preserve_sample_state.
+Print Assumptions Picinae.tests.armv6m_critical.Checks.projected_barriers_preserve_sample_state.
+Check Picinae.tests.armv6m_critical.Checks.exact_critical_literals_and_views.
+Print Assumptions Picinae.tests.armv6m_critical.Checks.exact_critical_literals_and_views.
+Check Picinae.tests.armv6m_critical.Checks.critical_finite_and_profile_guards.
+Print Assumptions Picinae.tests.armv6m_critical.Checks.critical_finite_and_profile_guards.
+Check Picinae.tests.armv6m_critical.Checks.conditional_cpsie_and_assert_edges.
+Print Assumptions Picinae.tests.armv6m_critical.Checks.conditional_cpsie_and_assert_edges.
+Check Picinae.tests.armv6m_critical.Checks.memory_opcode_fixtures.
+Print Assumptions Picinae.tests.armv6m_critical.Checks.memory_opcode_fixtures.
+Check Picinae.tests.armv6m_critical.Checks.actual_nesting_arithmetic_samples.
+Print Assumptions Picinae.tests.armv6m_critical.Checks.actual_nesting_arithmetic_samples.
+Check Picinae.tests.armv6m_critical.Checks.remaining_systems_rejected.
+Print Assumptions Picinae.tests.armv6m_critical.Checks.remaining_systems_rejected.
+Require Import Picinae.Examples.FreeRTOSCritical.vPortEnterCritical_armv6m.
+Check Picinae.Examples.FreeRTOSCritical.vPortEnterCritical_armv6m.vPortEnterCritical_decode_check.
+Print Assumptions Picinae.Examples.FreeRTOSCritical.vPortEnterCritical_armv6m.vPortEnterCritical_decode_check.
+Check Picinae.Examples.FreeRTOSCritical.vPortEnterCritical_armv6m.vPortEnterCritical_welltyped.
+Print Assumptions Picinae.Examples.FreeRTOSCritical.vPortEnterCritical_armv6m.vPortEnterCritical_welltyped.
+Require Import Picinae.Examples.FreeRTOSCritical.vPortExitCritical_armv6m.
+Check Picinae.Examples.FreeRTOSCritical.vPortExitCritical_armv6m.vPortExitCritical_decode_check.
+Print Assumptions Picinae.Examples.FreeRTOSCritical.vPortExitCritical_armv6m.vPortExitCritical_decode_check.
+Check Picinae.Examples.FreeRTOSCritical.vPortExitCritical_armv6m.vPortExitCritical_welltyped.
+Print Assumptions Picinae.Examples.FreeRTOSCritical.vPortExitCritical_armv6m.vPortExitCritical_welltyped.
+Check welltyped_arm2il.
+Print Assumptions welltyped_arm2il.
+Check welltyped_lift_armv6m.
+Print Assumptions welltyped_lift_armv6m.
+Check welltyped_armv6mprog.
+Print Assumptions welltyped_armv6mprog.
+Check welltyped_lift_armv6m_mask.
+Print Assumptions welltyped_lift_armv6m_mask.
+Check welltyped_lift_armv6m_sync_projection.
+Print Assumptions welltyped_lift_armv6m_sync_projection.

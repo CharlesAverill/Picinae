@@ -1,0 +1,309 @@
+{
+  "base": "49956416928e5b6bb3928b54ae33e3b81091f006",
+  "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 13.2.1 20231009",
+  "elf_path": "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "freertos_source": "dbf70559b27d39c1fdb68dfb9a32140b6a6777a0",
+  "functions": [
+    {
+      "barriers": [
+        {
+          "kind": "dsb\tsy",
+          "site": "0x3e72"
+        },
+        {
+          "kind": "isb\tsy",
+          "site": "0x3e76"
+        }
+      ],
+      "bytes": "72b6044a136801331360bff34f8fbff36f8f704700000020",
+      "call_closure": "closed body, sequential projection only",
+      "calls": [],
+      "entry": "0x3e68",
+      "instructions": [
+        {
+          "address": "0x3e68",
+          "disassembly": "cpsid\ti",
+          "halfwords": [
+            "0xb672"
+          ]
+        },
+        {
+          "address": "0x3e6a",
+          "disassembly": "ldr\tr2, [pc, #16]\t@ (3e7c <vPortEnterCritical+0x14>)",
+          "halfwords": [
+            "0x4a04"
+          ]
+        },
+        {
+          "address": "0x3e6c",
+          "disassembly": "ldr\tr3, [r2, #0]",
+          "halfwords": [
+            "0x6813"
+          ]
+        },
+        {
+          "address": "0x3e6e",
+          "disassembly": "adds\tr3, #1",
+          "halfwords": [
+            "0x3301"
+          ]
+        },
+        {
+          "address": "0x3e70",
+          "disassembly": "str\tr3, [r2, #0]",
+          "halfwords": [
+            "0x6013"
+          ]
+        },
+        {
+          "address": "0x3e72",
+          "disassembly": "dsb\tsy",
+          "halfwords": [
+            "0xf3bf",
+            "0x8f4f"
+          ]
+        },
+        {
+          "address": "0x3e76",
+          "disassembly": "isb\tsy",
+          "halfwords": [
+            "0xf3bf",
+            "0x8f6f"
+          ]
+        },
+        {
+          "address": "0x3e7a",
+          "disassembly": "bx\tlr",
+          "halfwords": [
+            "0x4770"
+          ]
+        }
+      ],
+      "literals": [
+        {
+          "pool": "0x3e7c",
+          "site": "0x3e6a",
+          "value": "0x20000000"
+        }
+      ],
+      "size": 24,
+      "symbol": "vPortEnterCritical",
+      "thumb_symbol": "0x3e69"
+    },
+    {
+      "barriers": [],
+      "bytes": "10b5084b1b68002b08d0064b1a68013a1a601b68002b00d162b610bd0248034900f07cf9000000206c45000023030000",
+      "call_closure": "BLOCKED: fixture_assert_fail at 0x419c rejects WFI (e23); no nonreturn contract",
+      "calls": [
+        {
+          "site": "0x3ea0",
+          "symbol": [
+            "fixture_assert_fail"
+          ],
+          "target": "0x419c"
+        }
+      ],
+      "entry": "0x3e80",
+      "instructions": [
+        {
+          "address": "0x3e80",
+          "disassembly": "push\t{r4, lr}",
+          "halfwords": [
+            "0xb510"
+          ]
+        },
+        {
+          "address": "0x3e82",
+          "disassembly": "ldr\tr3, [pc, #32]\t@ (3ea4 <vPortExitCritical+0x24>)",
+          "halfwords": [
+            "0x4b08"
+          ]
+        },
+        {
+          "address": "0x3e84",
+          "disassembly": "ldr\tr3, [r3, #0]",
+          "halfwords": [
+            "0x681b"
+          ]
+        },
+        {
+          "address": "0x3e86",
+          "disassembly": "cmp\tr3, #0",
+          "halfwords": [
+            "0x2b00"
+          ]
+        },
+        {
+          "address": "0x3e88",
+          "disassembly": "beq.n\t3e9c <vPortExitCritical+0x1c>",
+          "halfwords": [
+            "0xd008"
+          ]
+        },
+        {
+          "address": "0x3e8a",
+          "disassembly": "ldr\tr3, [pc, #24]\t@ (3ea4 <vPortExitCritical+0x24>)",
+          "halfwords": [
+            "0x4b06"
+          ]
+        },
+        {
+          "address": "0x3e8c",
+          "disassembly": "ldr\tr2, [r3, #0]",
+          "halfwords": [
+            "0x681a"
+          ]
+        },
+        {
+          "address": "0x3e8e",
+          "disassembly": "subs\tr2, #1",
+          "halfwords": [
+            "0x3a01"
+          ]
+        },
+        {
+          "address": "0x3e90",
+          "disassembly": "str\tr2, [r3, #0]",
+          "halfwords": [
+            "0x601a"
+          ]
+        },
+        {
+          "address": "0x3e92",
+          "disassembly": "ldr\tr3, [r3, #0]",
+          "halfwords": [
+            "0x681b"
+          ]
+        },
+        {
+          "address": "0x3e94",
+          "disassembly": "cmp\tr3, #0",
+          "halfwords": [
+            "0x2b00"
+          ]
+        },
+        {
+          "address": "0x3e96",
+          "disassembly": "bne.n\t3e9a <vPortExitCritical+0x1a>",
+          "halfwords": [
+            "0xd100"
+          ]
+        },
+        {
+          "address": "0x3e98",
+          "disassembly": "cpsie\ti",
+          "halfwords": [
+            "0xb662"
+          ]
+        },
+        {
+          "address": "0x3e9a",
+          "disassembly": "pop\t{r4, pc}",
+          "halfwords": [
+            "0xbd10"
+          ]
+        },
+        {
+          "address": "0x3e9c",
+          "disassembly": "ldr\tr0, [pc, #8]\t@ (3ea8 <vPortExitCritical+0x28>)",
+          "halfwords": [
+            "0x4802"
+          ]
+        },
+        {
+          "address": "0x3e9e",
+          "disassembly": "ldr\tr1, [pc, #12]\t@ (3eac <vPortExitCritical+0x2c>)",
+          "halfwords": [
+            "0x4903"
+          ]
+        },
+        {
+          "address": "0x3ea0",
+          "disassembly": "bl\t419c <fixture_assert_fail>",
+          "halfwords": [
+            "0xf000",
+            "0xf97c"
+          ]
+        }
+      ],
+      "literals": [
+        {
+          "pool": "0x3ea4",
+          "site": "0x3e82",
+          "value": "0x20000000"
+        },
+        {
+          "pool": "0x3ea4",
+          "site": "0x3e8a",
+          "value": "0x20000000"
+        },
+        {
+          "pool": "0x3ea8",
+          "site": "0x3e9c",
+          "value": "0x456c"
+        },
+        {
+          "pool": "0x3eac",
+          "site": "0x3e9e",
+          "value": "0x323"
+        }
+      ],
+      "size": 48,
+      "symbol": "vPortExitCritical",
+      "thumb_symbol": "0x3e81"
+    }
+  ],
+  "manuals": [
+    {
+      "document": "Arm DDI 0419E ID070218",
+      "sections": [
+        "A3.7.3",
+        "A6.7.21",
+        "A6.7.22",
+        "A6.7.24",
+        "B1.4.6",
+        "B2.5",
+        "B4.2.1"
+      ],
+      "sha256": "7a61a708b40748219991145090ad7dd8ee41474ff89f4e45219a32f5ea93632f",
+      "url": "https://documentation-service.arm.com/static/5f8ff05ef86e16515cdbf826"
+    },
+    {
+      "document": "Arm DDI 0432C ID113009",
+      "sections": [
+        "3.2"
+      ],
+      "sha256": "b4af6066093567dfb40fe641c55a2bd066fb487743d35bf22ced25da56e4383e",
+      "url": "https://documentation-service.arm.com/static/5e8e294afd977155116a6a5b"
+    }
+  ],
+  "prerequisite": "0bc7fec4dbbfddbe8c5c130b9bd15d1b7af10ba6",
+  "profile": "critical-seq-v1-base",
+  "sources_sha256": {
+    "Examples/FreeRTOSCritical/vPortEnterCritical_armv6m.v": "59811c79cdd743e61b3f0ec3016d0e4d68b67b7a9e32391d23d830183ff6f3c0",
+    "Examples/FreeRTOSCritical/vPortExitCritical_armv6m.v": "332dbc9c2442e330255a02abe74a16ca5d90d3bea954bf34df9151db74dc3400",
+    "Picinae_armv6m.v": "e51e2a08ea3aade520181d3bf53e49fa7ffa5788b79b9f31a7bd2d91d25a15e3",
+    "Picinae_armv6m_sync.v": "98fd5fa5dd324d0b6e06421da259448371af4252b931ec6945669770d4f791b8",
+    "dune": "f1408899a9db657585d5bfa9924db1af19ced1f2512d1fb77a5dd015c2eb5ef2",
+    "lifter/armv6m.py": "f6039b54c0f75d07c91d4d31e3f14f12caaec6f0f52c26427c8523c9972a81b5",
+    "notes/e20-armv6m-critical/check-assumptions.py": "90647fed50ce6eabd6e04dea221af5b2253fb154873851c70d3d29f796ebf323",
+    "notes/e20-armv6m-critical/compatibility.py": "bccdea88038dc23533ae7d1d86cca53cd9a3e81b554d19982148c58352f9198c",
+    "notes/e20-armv6m-critical/frontend-tests.py": "24bfa5cee69f553a417b47eee68ed49dea6094038d278f6d54fbbccc8bebcfb9",
+    "notes/e20-armv6m-critical/generate.py": "156b22533d6a36591b168e44a113c8f5962a3b742b40f3c0c0cc5296c9ed93f4",
+    "notes/e20-armv6m-critical/provenance.py": "521e6635d0bee8fb8b9a840a7206619a7cb185c2844874b74a4eeb9dcc9c140e",
+    "notes/e20-armv6m-critical/validate.sh": "fb4c6da77b4fd81fc25c1fc44936ecfb8f80806904fc6cdbe70126bbc2b99ade",
+    "tests/armv6m_critical/Checks.v": "3e956699ad82cb5acd10307e8adace15e0031fce357b44e2c06780df36924b85",
+    "tests/armv6m_critical/fixture.v": "6185dbb76895b0c6236d4c324b3a8667a63bbc385d877c39db93dc7248e406e9",
+    "tests/armv6m_critical/snippets.s": "f29416f58d48e769d5621f9ecf1c41d97d9eb72722d9f7f7a0d74c7afb6d78b5"
+  },
+  "status": "PARTIAL: sequential projection only; hardware barriers and exit assertion closure unavailable",
+  "timing_source": "4f1772040b6fc9d12af3f84f2ca089bb65cd4bd6",
+  "tools_sha256": {
+    "arm-none-eabi-as": "76553f475da23cfe45cf2f886ff1b359573b4d744b929aee41a95b1a500bd110",
+    "arm-none-eabi-ld": "77b68ab871434abaa4846f7e9e1f4a608dbba55f89d1db9eccb3b3dcd635d0de",
+    "arm-none-eabi-objdump": "f9ee89b63472d108effac2b31432fabc49ac3294768cb886db91437f6bd59e04"
+  },
+  "ulCriticalNesting": "0x20000000",
+  "unit": "e20-armv6m-critical"
+}

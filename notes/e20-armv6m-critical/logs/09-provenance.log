@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e20-armv6m-critical/provenance.py
+PASS exact ELF, global, code/data, call closure, barrier, tool and manual provenance
+
+EXIT_CODE=0

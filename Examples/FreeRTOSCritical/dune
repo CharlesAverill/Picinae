@@ -1,0 +1,3 @@
+(alias
+ (name freertos-critical-projections)
+ (deps vPortEnterCritical_armv6m.vo vPortExitCritical_armv6m.vo))
