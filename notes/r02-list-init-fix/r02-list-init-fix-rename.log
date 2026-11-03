@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4bc3a1d0
+COMMAND=git branch -m llm-proofs/r02-list-init-fix
+
+EXIT_CODE=0

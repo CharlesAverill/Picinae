@@ -1,6 +1,4 @@
-(* PARTIAL vListInitialise: proposed finite ARMv6-M IL functional correctness.
-   The first full build failed; main and unchecked proofs below are Aborted.
-   No complete function-correctness result is exported by this checkpoint.
+(* vListInitialise: finite ARMv6-M IL functional correctness.
 
    PROVENANCE / AUTHOR
    Official FreeRTOS V11.1.0 dbf70559b27d39c1fdb68dfb9a32140b6a6777a0.
@@ -9,7 +7,9 @@
    Accepted e05 finite map vListInitialise_armv6m_prog, unchanged; accepted
    r00 model at 4ff26413448da4d8f064b0273ac5472cc9de7e5a.
    Initial author: OpenAI gpt-6-astra, xhigh/priority, one-shot attempt.
-   Validation status and final producer: notes/r02-list-init/README.md.
+   Initial attempt and failure: notes/r02-list-init/README.md.
+   Final proof repair: OpenAI gpt-6.1-sol, xhigh/priority.
+   Full validation and final producer: notes/r02-list-init-fix/README.md.
 
    ENGLISH SPEC / ABI / PATH
    At 0x40, R0=p is a nonnull, four-byte-aligned, nonwrapping 20-byte List_t.
@@ -173,8 +173,26 @@ Theorem list_init_correct:
   satisfies_all vListInitialise_armv6m_prog (list_init_invs s0 p)
     list_init_exit ((x',s')::t).
 Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are archived in notes/r02-list-init/. *)
-Abort.
+  intros. destruct INPUT as [OBJ [R0 WR]]. apply prove_invs.
+  - simpl. rewrite ENTRY. armv6m_step. reflexivity.
+  - intros.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption.
+    apply list_init_welltyped. intro MDL1.
+    clear - PRE MDL1 OBJ R0. rename t1 into t.
+    destruct_inv 32 PRE. subst s1.
+    repeat armv6m_step.
+    unfold list_init_post. psimpl.
+    split; [|repeat split; reflexivity].
+    (* Symbolic execution has already substituted R0 and removed address
+       moduli. Expose only the store-order expression, keeping the image
+       opaque; p+0 needs propositional rewriting before comparing memories. *)
+    rewrite <- (list_init_stores_image (s0 V_MEM32) p OBJ).
+    unfold list_init_stores, write_field32.
+    rewrite N.add_0_r, (N.add_comm p 4), (N.add_comm p 8),
+      (N.add_comm p 12), (N.add_comm p 16).
+    reflexivity.
+Qed.
 
 (* Specialize the actual execution invariant at BX; the post contains the
    exact image, while this theorem exposes its fields and original-byte frame. *)
@@ -188,8 +206,15 @@ Theorem list_init_at_bx:
   outside_frame32 (s0 V_MEM32) (s V_MEM32) p list_size /\
   (forall v, list_init_preserved v -> s v = s0 v).
 Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are archived in notes/r02-list-init/. *)
-Abort.
+  intros s0 t s p ENTRY MDL INPUT XP UT.
+  pose proof (list_init_correct s0 t s (Addr 0x54) p ENTRY MDL INPUT) as SA.
+  pose proof (satall_trueif_inv _ _ _ _ SA XP UT) as POST.
+  change (list_init_post s0 p s) in POST.
+  pose proof (list_init_post_layout_frame s0 p s (proj1 INPUT) POST) as [LAY FR].
+  split; [exact POST|]. split; [exact LAY|]. split; [exact FR|].
+  intros v KEEP. symmetry.
+  exact (list_init_register_frame v KEEP t (Addr 0x40) s0 (Addr 0x54) s XP ENTRY).
+Qed.
 
 Definition list_init_ordinary_lr (lr:N) := lr mod 2 = 1 /\ lr < 0xfffffff0.
 
@@ -198,13 +223,37 @@ Theorem list_init_return_step:
   can_step vListInitialise_armv6m_prog
     ((Addr (N.land (s R_LR) 0xfffffffe),s),(Addr 0x54,s)).
 Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are archived in notes/r02-list-init/. *)
-Abort.
+  intros s MDL [ODD ORDINARY].
+  assert (RT: reset_temps s s = s).
+  { apply functional_extensionality. intro v.
+    unfold reset_temps, reset_vars. destruct (archtyps v); reflexivity. }
+  replace (Addr (N.land (s R_LR) 0xfffffffe),s) with
+    (exitof (0x54+2) (Some (Addr (N.land (s R_LR) 0xfffffffe))),reset_temps s s)
+    by (rewrite RT; reflexivity).
+  eapply CanStep with (sz:=2) (q:=armv6m_bxwritepc (Var R_LR))
+    (c':=armv6mtypctx) (s':=s) (x:=Some (Addr (N.land (s R_LR) 0xfffffffe))).
+  - reflexivity.
+  - unfold armv6m_bxwritepc. eapply XIf with (b:=1).
+    + assert (E: eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+                   (s R_LR mod 2) 1).
+      { change (eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+          (cast CAST_LOW 32 1 (s R_LR)) 1).
+        apply ECast. apply EVar. reflexivity. }
+      rewrite ODD in E. exact E.
+    + apply XJmp with (w:=32).
+      change (eval_exp armv6mtypctx s
+        (BinOp OP_AND (Var R_LR) (Word (N.ones 32 - 1) 32))
+        (eval_binop OP_AND 32 (s R_LR) (N.ones 32 - 1)) 32).
+      apply EBinOp; [apply EVar; reflexivity|apply EWord].
+Qed.
 
 Theorem list_init_return_witness:
   forall m, m < memsize 32 ->
   exists s:store, models armv6mtypctx s /\ list_init_pre 4096 s /\
     s V_MEM32 = m /\ list_init_ordinary_lr (s R_LR).
 Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are archived in notes/r02-list-init/. *)
-Abort.
+  intros m B. destruct (list_init_concrete_entry_witness m B)
+    as [s [MDL [PRE [MEM LR]]]].
+  exists s. split; [exact MDL|]. split; [exact PRE|]. split; [exact MEM|].
+  rewrite LR. split; reflexivity.
+Qed.

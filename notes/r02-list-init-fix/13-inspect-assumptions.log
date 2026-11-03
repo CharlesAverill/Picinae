@@ -1,0 +1,23 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4bc3a1d0
+COMMAND=python3 notes/r02-list-init-fix/check-assumptions.py
+list_init_nwc: Closed under the global context
+list_init_welltyped: Closed under the global context
+list_init_register_frame: Closed under the global context
+list_init_swap_zero: Closed under the global context
+list_init_stores_image: Closed under the global context
+list_init_post_layout_frame: Closed under the global context
+list_init_entry_witness: Closed under the global context
+list_init_concrete_entry_witness: Closed under the global context
+list_init_correct: inherited functional_extensionality_dep only
+list_init_at_bx: inherited functional_extensionality_dep only
+list_init_return_step: inherited functional_extensionality_dep only
+list_init_return_witness: Closed under the global context
+PASS: 12 transitive queries; nine closed, three inherited-FE-only; no imported admission
+
+Verbatim common assumptions block for the three named results:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0
