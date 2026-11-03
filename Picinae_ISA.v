@@ -238,10 +238,14 @@ Ltac total_exec c s q k :=
   | Nop => k c s constr:(@None exit) constr:(XNop c s)
   | Exn ?i => k c s constr:(Some (Raise i)) constr:(XExn c s i)
   | Move ?v ?e =>
+    (* Share values and stores to keep flag-heavy instruction witnesses small. *)
     let E := constr:(ltac:(total_eval) : eval_exp c s e _ _) in
-    lazymatch type of E with eval_exp _ _ _ ?n ?w =>
-      k constr:(update c v (Some w)) constr:(update s v n) constr:(@None exit)
-        constr:(XMove c s v e n w E) end
+    let EE := fresh "EE" in pose proof E as EE;
+    lazymatch type of EE with eval_exp _ _ _ ?n ?w =>
+      let nv := fresh "nv" in pose (nv:=n);
+      let cv := fresh "cv" in pose (cv:=update c v (Some w));
+      let sv := fresh "sv" in pose (sv:=update s v nv);
+      k cv sv constr:(@None exit) constr:(XMove c s v e nv w EE) end
   | Jmp ?e =>
     let E := constr:(ltac:(total_eval) : eval_exp c s e _ _) in
     lazymatch type of E with eval_exp _ _ _ ?n ?w =>
