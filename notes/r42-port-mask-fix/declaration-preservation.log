@@ -1,0 +1,55 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5f10d9a4
+COMMAND=python3 notes/r42-port-mask-fix/check-declarations.py
+RETAINED mask_entry
+RETAINED mask_return
+RETAINED mask_set_mrs
+RETAINED mask_set_result
+RETAINED mask_clear_result
+RETAINED mask_set_frame
+RETAINED mask_clear_frame
+RETAINED mask_set_postcondition
+RETAINED mask_clear_postcondition
+RETAINED mask_set_exit
+RETAINED mask_clear_exit
+RETAINED mask_set_invs
+RETAINED mask_clear_invs
+RETAINED port_set_welltyped
+RETAINED port_clear_welltyped
+RETAINED mask_set_result_frame
+RETAINED mask_clear_result_frame
+RETAINED mask_set_result_post
+RETAINED mask_clear_result_post
+RETAINED mask_input_store
+RETAINED mask_input_store_typed
+RETAINED mask_entry_store
+RETAINED mask_entry_witness
+RETAINED mask_both_bits_inhabited
+RETAINED mask_reset_same
+RETAINED mask_reset_update
+RETAINED mask_mrs_stmt
+RETAINED mask_cps_stmt
+RETAINED mask_msr_stmt
+RETAINED mask_bx_stmt
+RETAINED mask_set_lookup_mrs
+RETAINED mask_set_lookup_cps
+RETAINED mask_clear_lookup_msr
+RETAINED mask_set_lookup_bx
+RETAINED mask_clear_lookup_bx
+RETAINED mask_set_code_stable
+RETAINED mask_clear_code_stable
+RETAINED mask_privileged_eval
+RETAINED mask_mrs_exec
+RETAINED mask_write_exec
+RETAINED mask_bx_exec
+RETAINED mask_move_step
+RETAINED mask_return_step
+RETAINED mask_step_unique
+RETAINED mask_set_execution
+RETAINED mask_clear_execution
+RETAINED ulSetInterruptMask_correct
+RETAINED vClearInterruptMask_correct
+RETAINED ulSetInterruptMask_satisfies_all
+RETAINED vClearInterruptMask_satisfies_all
+PASS: all 50 original declarations retained; no unfinished declarations.
+
+EXIT_CODE=0

@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5f10d9a4
+COMMAND=bash -e -c git\ diff\ --exit-code\ 528ce6ea33010569580804878da662aec03a47e6\ --\ .\ \":\(exclude\)Examples/FreeRTOSMask/armv6m_port_mask_proof.v\"\ \":\(exclude\)notes/r42-port-mask-fix/\"\;\ sha256sum\ notes/r42-port-mask/initial-attempt.v.txt\;\ git\ diff\ --check\;\ git\ diff\ --numstat\ 528ce6ea33010569580804878da662aec03a47e6\;\ test\ \"\$\(git\ diff\ --name-only\ 528ce6ea33010569580804878da662aec03a47e6\)\"\ =\ Examples/FreeRTOSMask/armv6m_port_mask_proof.v
+09737e2e7a0bab906ffe702b70fbc551538de98605d062d2973bb3d00edc0bd0  notes/r42-port-mask/initial-attempt.v.txt
+278	54	Examples/FreeRTOSMask/armv6m_port_mask_proof.v
+
+EXIT_CODE=0
