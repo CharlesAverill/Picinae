@@ -1,0 +1,68 @@
+#coq_makefile -f _CoqProject -o Makefile.coq
+rocq makefile -f _CoqProject -o Makefile.coq
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+ROCQ DEP VFILES
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+make -f Makefile.coq all
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+ROCQ compile Picinae_core.v
+ROCQ compile Picinae_numbers.v
+ROCQ compile Picinae_theory.v
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+ROCQ compile Picinae_statics.v
+ROCQ compile Picinae_auto.v
+ROCQ compile Picinae_finterp.v
+ROCQ compile Picinae_simplifier_base.v
+ROCQ compile Picinae_simplifier_v0.v
+ROCQ compile Picinae_simplifier_v1_1.v
+ROCQ compile Picinae_ISA.v
+ROCQ compile Picinae_i386.v
+ROCQ compile Picinae_armv7.v
+ROCQ compile Picinae_armv8.v
+ROCQ compile Picinae_riscv.v
+ROCQ compile Picinae_amd64.v
+ROCQ compile Tests/isa_steps.v
+ROCQ compile Tests/automation.v
+ROCQ compile Tests/psimpl_boundaries.v
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'

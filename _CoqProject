@@ -7,6 +7,7 @@ Picinae_statics.v
 Picinae_auto.v
 Picinae_finterp.v
 Picinae_simplifier_base.v
+Picinae_simplifier_v0.v
 Picinae_simplifier_v1_1.v
 Picinae_ISA.v
 Picinae_i386.v
@@ -34,3 +35,5 @@ Picinae_numbers.v
 Tests/automation.v
 
 Tests/isa_steps.v
+
+Tests/psimpl_boundaries.v
