@@ -148,6 +148,7 @@ Tactic Notation "i386_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
 Tactic Notation "i386_psimpl" "in" hyp(H) := psimpl_hyp H.
 Tactic Notation "i386_psimpl" := psimpl_goal.
 Ltac x86_step := ISA_step.
+Ltac x86_step_ltac1 := ISA_step_ltac1.
 
 (* The following is needed when applying cframe theorems from Picinae_theory. *)
 Theorem memacc_respects_x86typctx: memacc_respects_typctx x86typctx.

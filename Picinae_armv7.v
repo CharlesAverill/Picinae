@@ -148,6 +148,7 @@ Tactic Notation "arm7_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
 Tactic Notation "arm7_psimpl" "in" hyp(H) := psimpl_hyp H.
 Tactic Notation "arm7_psimpl" := psimpl_goal.
 Ltac arm7_step := ISA_step.
+Ltac arm7_step_ltac1 := ISA_step_ltac1.
 
 (* The following is needed when applying cframe theorems from Picinae_theory. *)
 Theorem memacc_respects_arm7typctx: memacc_respects_typctx arm7typctx.

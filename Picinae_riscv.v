@@ -128,6 +128,7 @@ Tactic Notation "r5_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
 Tactic Notation "r5_psimpl" "in" hyp(H) := psimpl_hyp H.
 Tactic Notation "r5_psimpl" := psimpl_goal.
 Ltac r5_step := ISA_step.
+Ltac r5_step_ltac1 := ISA_step_ltac1.
 
 (* The following is needed when applying cframe theorems from Picinae_theory. *)
 Theorem memacc_respects_rvtypctx: memacc_respects_typctx rvtypctx.

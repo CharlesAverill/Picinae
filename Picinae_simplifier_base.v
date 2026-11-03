@@ -33,6 +33,8 @@
  *)
 
 From Stdlib Require Import NArith.
+From Ltac2 Require Import Ltac2.
+Set Default Proof Mode "Classic".
 Require Import Picinae_core.
 Require Import Picinae_finterp.
 
@@ -130,7 +132,7 @@ Ltac psimpl_vals_hyp H :=
   clear t1;
   PSimplifier PSIMPL_EXHYP_U H.
 
-Ltac psimpl_hyp H :=
+Ltac psimpl_hyp_ltac1 H :=
   let P := fresh in
   set (P:=_) in H;
   psimpl_mark_all_in P;
@@ -145,7 +147,7 @@ Ltac psimpl_hyp H :=
       clear y Heq ];
   unfold _psimpl_ in H.
 
-Tactic Notation "psimpl" "in" hyp(H) := psimpl_hyp H.
+
 
 
 (* Syntax 2: psimpl.
@@ -161,14 +163,14 @@ Ltac psimpl_vals_goal :=
   clear t1;
   PSimplifier PSIMPL_EXGOAL_U.
 
-Ltac psimpl_goal :=
+Ltac psimpl_goal_ltac1 :=
   let P := fresh in
   set (P:=_);
   psimpl_mark_all_in P;
   psimpl_vals_goal;
   unfold _psimpl_.
 
-Tactic Notation "psimpl" := psimpl_goal.
+
 
 
 (* Syntax 3: psimpl e in H.
@@ -198,7 +200,7 @@ Ltac _psimpl_exp_hyp x H' :=
   | _ => psimpl_vals_hyp H'
   end.
 
-Ltac psimpl_exp_hyp e H :=
+Ltac psimpl_exp_hyp_ltac1 e H :=
   let x := fresh in let H' := fresh in
   remember e as x eqn:H' in H;
   _psimpl_exp_hyp x H';
@@ -209,19 +211,118 @@ Ltac psimpl_exp_hyp e H :=
     try rewrite H' in * ];
   clear x H'.
 
-Ltac psimpl_exp_goal e :=
+Ltac psimpl_exp_goal_ltac1 e :=
   let x := fresh in let H' := fresh in
   remember e as x eqn:H' in |- *;
   _psimpl_exp_hyp x H';
   rewrite H';
   clear x H'.
 
-Tactic Notation "psimpl" uconstr(e) "in" hyp(H) := psimpl_exp_hyp uconstr:(e) H.
+
+
+
+(* Explicit Ltac1 entry points for comparisons and compatibility. *)
+Tactic Notation "psimpl_ltac1" := psimpl_goal_ltac1.
+Tactic Notation "psimpl_ltac1" "in" hyp(h) := psimpl_hyp_ltac1 h.
+Tactic Notation "psimpl_ltac1" uconstr(e) := psimpl_exp_goal_ltac1 uconstr:(e).
+Tactic Notation "psimpl_ltac1" uconstr(e) "in" hyp(h) := psimpl_exp_hyp_ltac1 uconstr:(e) h.
+
+(* Default implementations for third-party modules implementing this interface. *)
+Ltac psimpl_goal := psimpl_goal_ltac1.
+Ltac psimpl_hyp h := psimpl_hyp_ltac1 h.
+Ltac psimpl_exp_goal e := psimpl_exp_goal_ltac1 e.
+Ltac psimpl_exp_hyp e h := psimpl_exp_hyp_ltac1 e h.
+Tactic Notation "psimpl" := psimpl_goal.
+Tactic Notation "psimpl" "in" hyp(h) := psimpl_hyp h.
 Tactic Notation "psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+Tactic Notation "psimpl" uconstr(e) "in" hyp(h) := psimpl_exp_hyp uconstr:(e) h.
 
 End PSIMPL_BASE.
 
 
+(* Keep Ltac2 bodies in the implementation, where Rocq checks their types. *)
 Module Picinae_Simplifier_Base (IL: PICINAE_IL) : PSIMPL_BASE IL.
-  Include PSIMPL_BASE IL.
+Include PSIMPL_BASE IL.
+
+
+(* Ltac2 orchestration.  The reflective AST producer and replaceable
+   PSimplifier dispatcher still exchange untyped Ltac1 terms; keep that
+   boundary in Ltac1 so scoped existential variables are not elaborated early. *)
+Ltac2 psimpl_vals_goal2 () :=
+  let ast := Fresh.in_goal @sast in
+  let ast1 := Ltac1.of_ident ast in
+  ltac1:(ast |- let t0 := fresh "sast" in
+    (let t := (lazymatch goal with |- ?g => PSimplifier PSIMPL_GENU g end) in epose (t0:=t));
+    let def := (eval cbv delta [t0] in t0) in
+    let t := PSimplifier PSIMPL_POPULATE_VAR_IDS N0 def in
+    clear t0; epose (ast:=t)) ast1;
+  ltac1:(ast |- PSimplifier PSIMPL_U_GOAL ast) ast1;
+  Std.clear [ast];
+  ltac1:(PSimplifier PSIMPL_EXGOAL_U).
+
+Ltac2 psimpl_vals_hyp2 (h : ident) :=
+  let ast := Fresh.in_goal @sast in
+  let ast1 := Ltac1.of_ident ast in let h1 := Ltac1.of_ident h in
+  ltac1:(ast h |- let t0 := fresh "sast" in
+    (let t := (let typ := type of h in PSimplifier PSIMPL_GENU typ) in epose (t0:=t));
+    let def := (eval cbv delta [t0] in t0) in
+    let t := PSimplifier PSIMPL_POPULATE_VAR_IDS N0 def in
+    clear t0; epose (ast:=t)) ast1 h1;
+  ltac1:(ast h |- PSimplifier PSIMPL_U_HYP ast h) ast1 h1;
+  Std.clear [ast];
+  ltac1:(h |- PSimplifier PSIMPL_EXHYP_U h) h1.
+
+Ltac2 psimpl_goal () :=
+  ltac1:(let p := fresh in set (p:=_); psimpl_mark_all_in p);
+  psimpl_vals_goal2 ();
+  unfold _psimpl_.
+
+Ltac2 psimpl_hyp (h : ident) :=
+  let h1 := Ltac1.of_ident h in
+  ltac1:(h |- let p := fresh in set (p:=_) in h; psimpl_mark_all_in p) h1;
+  first
+  [ psimpl_vals_hyp2 h
+  | ltac1:(h |- let y := fresh in let heq := fresh in
+      remember h as y eqn:heq in *; subst h; psimpl_vals_hyp heq;
+      lazymatch type of heq with _ = ?e => set (h:=e) in heq end;
+      try rewrite heq in *; clear y heq) h1 ];
+  unfold _psimpl_ in $h.
+
+(* Expression patterns use Ltac1 remember, which accepts uconstr wildcards
+   without elaborating them before the occurrence has been selected. *)
+Ltac2 psimpl_exp_hyp (e : Ltac1.t) (h : ident) :=
+  let x := Fresh.in_goal @x in
+  let eqn := Fresh.in_goal @Heq in
+  let x1 := Ltac1.of_ident x in let eq1 := Ltac1.of_ident eqn in
+  let h1 := Ltac1.of_ident h in
+  ltac1:(e h x heq |- remember e as x eqn:heq in h) e h1 x1 eq1;
+  ltac1:(x heq |- _psimpl_exp_hyp x heq) x1 eq1;
+  first
+  [ ltac1:(heq h |- rewrite heq in h) eq1 h1
+  | ltac1:(heq h |- subst h;
+      lazymatch type of heq with _ = ?e => set (h:=e) in heq end;
+      try rewrite heq in *) eq1 h1 ];
+  Std.clear [x; eqn].
+
+Ltac2 psimpl_exp_goal (e : Ltac1.t) :=
+  let x := Fresh.in_goal @x in
+  let eqn := Fresh.in_goal @Heq in
+  let x1 := Ltac1.of_ident x in let eq1 := Ltac1.of_ident eqn in
+  ltac1:(e x heq |- remember e as x eqn:heq in |- *) e x1 eq1;
+  ltac1:(x heq |- _psimpl_exp_hyp x heq) x1 eq1;
+  ltac1:(heq |- rewrite heq) eq1;
+  Std.clear [x; eqn].
+
+(* Classic-mode adapters preserve existing scripts and architecture aliases. *)
+Ltac psimpl_goal ::= ltac2:(psimpl_goal ()).
+Ltac psimpl_hyp h ::=
+  let f := ltac2:(h |- psimpl_hyp (Option.get (Ltac1.to_ident h))) in f h.
+Ltac psimpl_exp_goal e ::= let f := ltac2:(e |- psimpl_exp_goal e) in f e.
+Ltac psimpl_exp_hyp e h ::=
+  let f := ltac2:(e h |- psimpl_exp_hyp e (Option.get (Ltac1.to_ident h))) in f e h.
+Tactic Notation "psimpl" := psimpl_goal.
+Tactic Notation "psimpl" "in" hyp(h) := psimpl_hyp h.
+Tactic Notation "psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
+Tactic Notation "psimpl" uconstr(e) "in" hyp(h) := psimpl_exp_hyp uconstr:(e) h.
+
 End Picinae_Simplifier_Base.
