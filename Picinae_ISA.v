@@ -228,8 +228,9 @@ Ltac total_eval := first [apply EVar; reflexivity | apply EWord |
   eapply EExtract; total_eval | eapply EConcat; total_eval |
   eapply ELet; [total_eval | total_eval] |
   eapply EIte; [total_eval | total_eval | total_eval] |
-  eapply ELoad; [total_eval | total_eval | total_memory] |
-  eapply EStore; [total_eval | total_eval | total_eval | total_memory] |
+  (* The address fixes w before checking a memory operand of width 2^w*8. *)
+  (eapply ELoad; [|total_eval|total_memory]; total_eval) |
+  (eapply EStore; [|total_eval|total_eval|total_memory]; total_eval) |
   eapply EUnknown with (n:=0); apply N.neq_0_lt_0, pow2_nonzero].
 Ltac total_exec c s q k :=
   let q' := eval hnf in q in

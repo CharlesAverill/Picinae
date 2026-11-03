@@ -517,19 +517,6 @@ Ltac total_memory ::=
     |match goal with H: strcasecmp_writable _ |- _ => apply H end];
   apply mp2_mod_lt.
 
-(* Infer memory address widths from the address operand first.  This local
-   override avoids an unresolved width in ELoad/EStore witness construction. *)
-Ltac total_eval ::= first [apply EVar; reflexivity | apply EWord |
-  lazymatch goal with |- eval_exp _ _ (BinOp ?op _ _) _ _ =>
-    eapply EBinOp with (bop:=op); total_eval end |
-  eapply EUnOp; total_eval | eapply ECast; total_eval |
-  eapply EExtract; total_eval | eapply EConcat; total_eval |
-  eapply ELet; [total_eval | total_eval] |
-  eapply EIte; [total_eval | total_eval | total_eval] |
-  (eapply ELoad; [|total_eval|total_memory]; total_eval) |
-  (eapply EStore; [|total_eval|total_eval|total_memory]; total_eval) |
-  eapply EUnknown with (n:=0); apply N.neq_0_lt_0, pow2_nonzero].
-
 (* Inline finite callee execution, including the return instruction.  Unlike
    the callee's public theorem, this helper retains an arbitrary caller history
    and resumes at its saved return address. *)
