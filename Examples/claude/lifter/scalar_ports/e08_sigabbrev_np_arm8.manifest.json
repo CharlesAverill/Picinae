@@ -1,0 +1,415 @@
+{
+  "addressing": "global",
+  "aliases_same_entry_extent": [
+    "sigabbrev_np"
+  ],
+  "build_id": "977c021c364ee3c495c0e5f2375bf6ba2124a6da",
+  "closure": {
+    "closed": true,
+    "direct_and_fallthrough_edges": [
+      {
+        "kind": "fallthrough",
+        "source": "0x19aaf0",
+        "target": "0x19aaf4"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x19aaf4",
+        "target": "0x19ab08"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19aaf4",
+        "target": "0x19aaf8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19aaf8",
+        "target": "0x19aafc"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19aafc",
+        "target": "0x19ab00"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19ab00",
+        "target": "0x19ab04"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19ab08",
+        "target": "0x19ab0c"
+      }
+    ],
+    "indirect_nonreturn_edges": [],
+    "meaning": "finite selected machine map closes all direct edges and fallthroughs; RETURN remains caller ABI boundary",
+    "returns": [
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x19ab04"
+      },
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x19ab0c"
+      }
+    ]
+  },
+  "data": {
+    "analysis": "ADR(P)+ADD object references plus complete raw memory instruction list; manual target review required, no invented constants",
+    "contract": "Map ELF virtual data addresses to model addresses by +0x100000. Runtime memory must supply these bytes/state and any relocated pointer targets; generated program does not initialize memory.",
+    "materialized_objects": [
+      {
+        "elf_address": "0x1a0060",
+        "elf_bytes_hex": "0000000000000000a844150000000000b044150000000000b844150000000000c044150000000000c844150000000000d044150000000000d844150000000000e044150000000000e844150000000000f044150000000000f84415000000000000451500000000000845150000000000104515000000000018451500000000002045150000000000284515000000000030451500000000003845150000000000404515000000000048451500000000005045150000000000584515000000000060451500000000006845150000000000704515000000000078451500000000008045150000000000884515000000000090451500000000009845150000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "elf_bytes_sha256": "1a116317f4d2b0213b4a544f155f56acf616dcfe966b4c7e73cd9e39dda0da07",
+        "file_backed": true,
+        "materialization_sites": [
+          "0x19aafc"
+        ],
+        "materialized_at": "0x19aafc",
+        "model_address": "0x2a0060",
+        "referenced_model_address": "0x2a0060",
+        "relocations": [
+          {
+            "addend": "0x1544a8",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0068",
+            "model_location": "0x2a0068",
+            "pointed_bytes_through_first_nul_hex": "48555000",
+            "required_model_pointer": "0x2544a8",
+            "type": 1027
+          },
+          {
+            "addend": "0x1544b0",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0070",
+            "model_location": "0x2a0070",
+            "pointed_bytes_through_first_nul_hex": "494e5400",
+            "required_model_pointer": "0x2544b0",
+            "type": 1027
+          },
+          {
+            "addend": "0x1544b8",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0078",
+            "model_location": "0x2a0078",
+            "pointed_bytes_through_first_nul_hex": "5155495400",
+            "required_model_pointer": "0x2544b8",
+            "type": 1027
+          },
+          {
+            "addend": "0x1544c0",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0080",
+            "model_location": "0x2a0080",
+            "pointed_bytes_through_first_nul_hex": "494c4c00",
+            "required_model_pointer": "0x2544c0",
+            "type": 1027
+          },
+          {
+            "addend": "0x1544c8",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0088",
+            "model_location": "0x2a0088",
+            "pointed_bytes_through_first_nul_hex": "5452415000",
+            "required_model_pointer": "0x2544c8",
+            "type": 1027
+          },
+          {
+            "addend": "0x1544d0",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0090",
+            "model_location": "0x2a0090",
+            "pointed_bytes_through_first_nul_hex": "4142525400",
+            "required_model_pointer": "0x2544d0",
+            "type": 1027
+          },
+          {
+            "addend": "0x1544d8",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0098",
+            "model_location": "0x2a0098",
+            "pointed_bytes_through_first_nul_hex": "42555300",
+            "required_model_pointer": "0x2544d8",
+            "type": 1027
+          },
+          {
+            "addend": "0x1544e0",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00a0",
+            "model_location": "0x2a00a0",
+            "pointed_bytes_through_first_nul_hex": "46504500",
+            "required_model_pointer": "0x2544e0",
+            "type": 1027
+          },
+          {
+            "addend": "0x1544e8",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00a8",
+            "model_location": "0x2a00a8",
+            "pointed_bytes_through_first_nul_hex": "4b494c4c00",
+            "required_model_pointer": "0x2544e8",
+            "type": 1027
+          },
+          {
+            "addend": "0x1544f0",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00b0",
+            "model_location": "0x2a00b0",
+            "pointed_bytes_through_first_nul_hex": "5553523100",
+            "required_model_pointer": "0x2544f0",
+            "type": 1027
+          },
+          {
+            "addend": "0x1544f8",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00b8",
+            "model_location": "0x2a00b8",
+            "pointed_bytes_through_first_nul_hex": "5345475600",
+            "required_model_pointer": "0x2544f8",
+            "type": 1027
+          },
+          {
+            "addend": "0x154500",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00c0",
+            "model_location": "0x2a00c0",
+            "pointed_bytes_through_first_nul_hex": "5553523200",
+            "required_model_pointer": "0x254500",
+            "type": 1027
+          },
+          {
+            "addend": "0x154508",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00c8",
+            "model_location": "0x2a00c8",
+            "pointed_bytes_through_first_nul_hex": "5049504500",
+            "required_model_pointer": "0x254508",
+            "type": 1027
+          },
+          {
+            "addend": "0x154510",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00d0",
+            "model_location": "0x2a00d0",
+            "pointed_bytes_through_first_nul_hex": "414c524d00",
+            "required_model_pointer": "0x254510",
+            "type": 1027
+          },
+          {
+            "addend": "0x154518",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00d8",
+            "model_location": "0x2a00d8",
+            "pointed_bytes_through_first_nul_hex": "5445524d00",
+            "required_model_pointer": "0x254518",
+            "type": 1027
+          },
+          {
+            "addend": "0x154520",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00e0",
+            "model_location": "0x2a00e0",
+            "pointed_bytes_through_first_nul_hex": "53544b464c5400",
+            "required_model_pointer": "0x254520",
+            "type": 1027
+          },
+          {
+            "addend": "0x154528",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00e8",
+            "model_location": "0x2a00e8",
+            "pointed_bytes_through_first_nul_hex": "43484c4400",
+            "required_model_pointer": "0x254528",
+            "type": 1027
+          },
+          {
+            "addend": "0x154530",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00f0",
+            "model_location": "0x2a00f0",
+            "pointed_bytes_through_first_nul_hex": "434f4e5400",
+            "required_model_pointer": "0x254530",
+            "type": 1027
+          },
+          {
+            "addend": "0x154538",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a00f8",
+            "model_location": "0x2a00f8",
+            "pointed_bytes_through_first_nul_hex": "53544f5000",
+            "required_model_pointer": "0x254538",
+            "type": 1027
+          },
+          {
+            "addend": "0x154540",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0100",
+            "model_location": "0x2a0100",
+            "pointed_bytes_through_first_nul_hex": "5453545000",
+            "required_model_pointer": "0x254540",
+            "type": 1027
+          },
+          {
+            "addend": "0x154548",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0108",
+            "model_location": "0x2a0108",
+            "pointed_bytes_through_first_nul_hex": "5454494e00",
+            "required_model_pointer": "0x254548",
+            "type": 1027
+          },
+          {
+            "addend": "0x154550",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0110",
+            "model_location": "0x2a0110",
+            "pointed_bytes_through_first_nul_hex": "54544f5500",
+            "required_model_pointer": "0x254550",
+            "type": 1027
+          },
+          {
+            "addend": "0x154558",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0118",
+            "model_location": "0x2a0118",
+            "pointed_bytes_through_first_nul_hex": "55524700",
+            "required_model_pointer": "0x254558",
+            "type": 1027
+          },
+          {
+            "addend": "0x154560",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0120",
+            "model_location": "0x2a0120",
+            "pointed_bytes_through_first_nul_hex": "5843505500",
+            "required_model_pointer": "0x254560",
+            "type": 1027
+          },
+          {
+            "addend": "0x154568",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0128",
+            "model_location": "0x2a0128",
+            "pointed_bytes_through_first_nul_hex": "5846535a00",
+            "required_model_pointer": "0x254568",
+            "type": 1027
+          },
+          {
+            "addend": "0x154570",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0130",
+            "model_location": "0x2a0130",
+            "pointed_bytes_through_first_nul_hex": "5654414c524d00",
+            "required_model_pointer": "0x254570",
+            "type": 1027
+          },
+          {
+            "addend": "0x154578",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0138",
+            "model_location": "0x2a0138",
+            "pointed_bytes_through_first_nul_hex": "50524f4600",
+            "required_model_pointer": "0x254578",
+            "type": 1027
+          },
+          {
+            "addend": "0x154580",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0140",
+            "model_location": "0x2a0140",
+            "pointed_bytes_through_first_nul_hex": "57494e434800",
+            "required_model_pointer": "0x254580",
+            "type": 1027
+          },
+          {
+            "addend": "0x154588",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0148",
+            "model_location": "0x2a0148",
+            "pointed_bytes_through_first_nul_hex": "504f4c4c00",
+            "required_model_pointer": "0x254588",
+            "type": 1027
+          },
+          {
+            "addend": "0x154590",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0150",
+            "model_location": "0x2a0150",
+            "pointed_bytes_through_first_nul_hex": "50575200",
+            "required_model_pointer": "0x254590",
+            "type": 1027
+          },
+          {
+            "addend": "0x154598",
+            "dynamic_symbol_index": 0,
+            "elf_location": "0x1a0158",
+            "model_location": "0x2a0158",
+            "pointed_bytes_through_first_nul_hex": "53595300",
+            "required_model_pointer": "0x254598",
+            "type": 1027
+          }
+        ],
+        "size": 520,
+        "symbol": "__GI___sys_sigabbrev",
+        "symbol_aliases": [
+          "__GI___sys_sigabbrev",
+          "__GLIBC_2_3_3_sys_sigabbrev",
+          "__sys_sigabbrev",
+          "sys_sigabbrev@GLIBC_2.17"
+        ]
+      }
+    ],
+    "memory_accesses": [
+      {
+        "assembly": "ldr x0,[x1, w0, SXTW #0x3]",
+        "instruction": "0x19ab00",
+        "pcode": [
+          "(register, 0x4000, 8) LOAD (const, 0x1b1, 8) , (unique, 0x7580, 8)"
+        ]
+      }
+    ],
+    "staticMemory": false
+  },
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "elf_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "generated_program": "e08_sigabbrev_np_arm8",
+  "generated_program_sha256": "4c5a472ac01e753f36e751f326163b7ceac34bd9c09156151e26caaa7f3e890f",
+  "image_base": "0x100000",
+  "implementation_sha256": {
+    "lift-scalar.py": "1bdf6ec35946c220dc07fc4963efc37b7cb3f150e0f77ccfbcfecd2e74828909",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "scalar_headless.py": "4aab6945ece18c558f2b1dc397a31a8333a8e380dcaf29630168472e1fe7bcd3"
+  },
+  "instruction_count": 8,
+  "limits": "Generated scalar IL and typing only; no functional correctness, termination, equivalence to historical lifts, or lifter soundness claim.",
+  "naming_adapter": {
+    "new": "e08_sigabbrev_np_arm8",
+    "occurrence_count": 2,
+    "old": "e11_sigabbrev_np_arm8",
+    "operation": "identifier substitution only"
+  },
+  "naming_closure_harness_sha256": "fdfce3192d5670367686ff78a4606197c83df74f817945cf653819f2f83165a5",
+  "original_program_sha256": "fe7ed68d13795f039ca8d9816b0c0ba35c7b06d04fe8286708058fd57ecf8a3b",
+  "pcode_sha256": "3deb7dc3f567d4f848469ef6f025ffe2d2f3e4d6bfccc632add1225993c53a96",
+  "record": {
+    "bytes_sha256": "7d587f3a86199733f63c2c0dec48c3503dfb1f225e2fdb89f6c8c32f25d2bdf7",
+    "elf_entry": "0x9aaf0",
+    "entry": "0x19aaf0",
+    "instructions": 8,
+    "output": "e11_sigabbrev_np_arm8.v",
+    "output_sha256": "fe7ed68d13795f039ca8d9816b0c0ba35c7b06d04fe8286708058fd57ecf8a3b",
+    "selected_symbols": [
+      "sigabbrev_np"
+    ],
+    "size": 32,
+    "symbol": "sigabbrev_np"
+  },
+  "schema": 1,
+  "selected_symbols": [
+    "sigabbrev_np"
+  ],
+  "symbol": "sigabbrev_np"
+}

@@ -23,7 +23,22 @@
   Examples.claude.lifter.scalar_smoke.e11_ffs_arm8
   Examples.claude.lifter.scalar_smoke.e11_ffsl_arm8
   Examples.claude.lifter.scalar_global.e11_mempcpy_arm8
-  Examples.claude.lifter.scalar_global.e11___memcpy_generic_arm8))
+  Examples.claude.lifter.scalar_global.e11___memcpy_generic_arm8
+  Examples.claude.lifter.scalar_ports.e08___drand48_iterate_arm8
+  Examples.claude.lifter.scalar_ports.e08___memcpy_generic_arm8
+  Examples.claude.lifter.scalar_ports.e08___memmove_generic_arm8
+  Examples.claude.lifter.scalar_ports.e08___memset_emag_arm8
+  Examples.claude.lifter.scalar_ports.e08_a64l_arm8
+  Examples.claude.lifter.scalar_ports.e08_cfmakeraw_arm8
+  Examples.claude.lifter.scalar_ports.e08_insque_arm8
+  Examples.claude.lifter.scalar_ports.e08_lcong48_r_arm8
+  Examples.claude.lifter.scalar_ports.e08_mempcpy_arm8
+  Examples.claude.lifter.scalar_ports.e08_remque_arm8
+  Examples.claude.lifter.scalar_ports.e08_seed48_arm8
+  Examples.claude.lifter.scalar_ports.e08_seed48_r_arm8
+  Examples.claude.lifter.scalar_ports.e08_sigabbrev_np_arm8
+  Examples.claude.lifter.scalar_ports.e08_sigdescr_np_arm8
+  Examples.claude.lifter.scalar_ports.e08_srand48_r_arm8))
 
 (alias
  (name core)
@@ -56,3 +71,22 @@
   Examples/claude/lifter/scalar_smoke/e11_ffsl_arm8.vo
   Examples/claude/lifter/scalar_global/e11_mempcpy_arm8.vo
   Examples/claude/lifter/scalar_global/e11___memcpy_generic_arm8.vo))
+
+(alias
+ (name e08-arm-lifts)
+ (deps
+  Examples/claude/lifter/scalar_ports/e08___drand48_iterate_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08___memmove_generic_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08___memset_emag_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_a64l_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_cfmakeraw_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_insque_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_lcong48_r_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_mempcpy_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_remque_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_seed48_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_seed48_r_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_sigabbrev_np_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_sigdescr_np_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_srand48_r_arm8.vo))

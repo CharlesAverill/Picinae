@@ -1,0 +1,74 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-746dec47
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e08-arm-lifts/replay.py --run replay01
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/notes/e08-arm-lifts/extract.py", "--run", "replay01", "--selection", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01-selection.json", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01-published"]
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/__drand48_iterate", "__drand48_iterate"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/__drand48_iterate
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/741828d1addf46d9a8acaff973c098ce.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/__memset_emag", "__memset_emag"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/__memset_emag
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/676b33e8ce124e9ca77616b49c6f3bdf.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/a64l", "a64l"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/a64l
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/506f7afaa8ad4f7680a4f9f8cf227e94.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/cfmakeraw", "cfmakeraw"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/cfmakeraw
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/055bc7bdc4c145be9d1168b16e433de2.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/insque", "insque"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/insque
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/3408923239924593bc4131bc4b57e147.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/lcong48_r", "lcong48_r"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/lcong48_r
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/ea2947199bc34f8faa995c26a795e0fa.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/mempcpy", "mempcpy", "__memcpy_generic"]
+PASS 2 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/mempcpy
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/f74d7ba779ee4972b7704e73b8dc5dbf.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/remque", "remque"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/remque
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/99c6344b7bfc40d08a05dca5717cba52.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/seed48", "seed48", "seed48_r"]
+PASS 2 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/seed48
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/ef37c900fa8142ac9bedef72e7796ea4.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/sigabbrev_np", "sigabbrev_np"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/sigabbrev_np
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/642868b3fd594b9280094a69bf6e4dea.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/sigdescr_np", "sigdescr_np"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/sigdescr_np
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/823a064a909d49f89df246f76820a745.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/srand48_r", "srand48_r"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/srand48_r
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/70d925b02d4d42ba950f1d005d3f7bb3.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/__memmove_generic", "__memmove_generic", "__memcpy_generic"]
+PASS 2 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/__memmove_generic
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/84be7ba52055476c840bddb83c491076.log
+EXIT_CODE=0
+PASS e08 batch: 15 artifacts, 0 strict rejections; /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01-published
+DETERMINISTIC_PASS e08___drand48_iterate_arm8 094d6a3f89887dc39e3ec02be9183e65391be017a960558669231ec2dc7cef1f
+DETERMINISTIC_PASS e08___memset_emag_arm8 d88c12780e15542ee4a78674e9621deab12a58e415382ee50914b116b8cec8a8
+DETERMINISTIC_PASS e08_a64l_arm8 678a484c6cdc408462f11871b74238e28319214745a75f4e7feeadd23e311f1d
+DETERMINISTIC_PASS e08_cfmakeraw_arm8 72c1a378415908dcd3105fc98c90491cb646bbebf3a6b1b2548738f509cb9e54
+DETERMINISTIC_PASS e08_insque_arm8 0d6d574a200f0674353fc00c68f9affb99de3eb33944637d454c7bcbe3056879
+DETERMINISTIC_PASS e08_lcong48_r_arm8 1baf6b04ba3fcf1995c4c3c73b4fabbe83846c69d615170072253e319a8efeb9
+DETERMINISTIC_PASS e08_mempcpy_arm8 46f6a555dd3d96be5ebe5989f5406f1030f15e2c7db4312fc9720b2e7e67da5c
+DETERMINISTIC_PASS e08___memcpy_generic_arm8 1c760b6f7c36f17eb4918b57949528060895f526c512c06b21787e946da44dc4
+DETERMINISTIC_PASS e08_remque_arm8 f5e9a68f3f18417286f28d58b38014aa62646bf6ed237a8113c47bdc1a01c13a
+DETERMINISTIC_PASS e08_seed48_arm8 abd027a10dd76fd59b2cff3c9a201d2108f024a22ac3d9b048092f0bc58fdf2b
+DETERMINISTIC_PASS e08_seed48_r_arm8 488122baae5e4963620758bb29bc2ba36f4685b15f019a917fc9e04a4862360e
+DETERMINISTIC_PASS e08_sigabbrev_np_arm8 4c5a472ac01e753f36e751f326163b7ceac34bd9c09156151e26caaa7f3e890f
+DETERMINISTIC_PASS e08_sigdescr_np_arm8 560b51712138858ce4e475c69edd95a233a6750ed13b2143f403c0fa65dd90ae
+DETERMINISTIC_PASS e08_srand48_r_arm8 81fdb5b5dbc47d6469f002aa9ce630fa02189d09b1a4244c04087c24842c5132
+DETERMINISTIC_PASS e08___memmove_generic_arm8 70565fb341a5fc2e8fe74b8c1775a3976dc4501f3b561a848c1c2c404823ccec
+PASS fresh deterministic replay for all accepted artifacts and unchanged e11 global fixture/receipt
+
+EXIT_CODE=0

@@ -1,0 +1,4 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/baseline01/strspn", "strspn"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strspn 0x193c88 movi v0.4S,#0x0: unmodeled instruction movi v0.4S,#0x0; raw pcode: (register, 0x5000, 4) COPY (const, 0x0, 4); (register, 0x5004, 4) COPY (const, 0x0, 4); (register, 0x5008, 4) COPY (const, 0x0, 4); (register, 0x500c, 4) COPY (const, 0x0, 4); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/1e308c9112f64ecf8ea61f861b09ee5a.log
+
+EXIT_CODE=1
