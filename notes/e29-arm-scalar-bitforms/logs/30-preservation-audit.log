@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ea3464df
+COMMAND=python3 notes/e29-arm-scalar-bitforms/audit.py
+PASS pinned merge-base; exact five prerequisite commits; only e29 scope above accepted e08
+PASS 647 protected historical/proof/e08/e11 source and evidence hashes
+
+EXIT_CODE=0

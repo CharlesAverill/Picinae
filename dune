@@ -38,7 +38,10 @@
   Examples.claude.lifter.scalar_ports.e08_seed48_r_arm8
   Examples.claude.lifter.scalar_ports.e08_sigabbrev_np_arm8
   Examples.claude.lifter.scalar_ports.e08_sigdescr_np_arm8
-  Examples.claude.lifter.scalar_ports.e08_srand48_r_arm8))
+  Examples.claude.lifter.scalar_ports.e08_srand48_r_arm8
+  Examples.claude.lifter.scalar_bitforms.e29_bitforms
+  Examples.claude.lifter.scalar_bitforms.e29_inet_makeaddr_arm8
+  Examples.claude.lifter.scalar_bitforms.e29_rand_r_arm8))
 
 (alias
  (name core)
@@ -90,3 +93,10 @@
   Examples/claude/lifter/scalar_ports/e08_sigabbrev_np_arm8.vo
   Examples/claude/lifter/scalar_ports/e08_sigdescr_np_arm8.vo
   Examples/claude/lifter/scalar_ports/e08_srand48_r_arm8.vo))
+
+(alias
+ (name e29-arm-scalar-bitforms)
+ (deps
+  Examples/claude/lifter/scalar_bitforms/e29_bitforms.vo
+  Examples/claude/lifter/scalar_bitforms/e29_inet_makeaddr_arm8.vo
+  Examples/claude/lifter/scalar_bitforms/e29_rand_r_arm8.vo))

@@ -46,6 +46,7 @@ MNEMONICS = set('mov movk movz movn neg negs and ands orr eor bic cmp cmn tst '
                  'bfxil bfm ubfm sbfm ubfx sbfx uxtb uxth sxtb sxth sxtw '
                  'ldr ldrb ldrh ldrsw str strb strh ldur ldurb ldurh stur sturb sturh '
                  'ldp stp ret br bl nop clz rbit'.split())
+BITFORMS = {'rev', 'ubfiz', 'orn', 'bics'}
 
 
 class ScalarLifter:
@@ -234,13 +235,119 @@ class ScalarLifter:
         exp = self.expression(op)
         return self.write(op.getOutput(), exp, int(op.getOutput().getSize()) * 8)
 
+    def check_bitform(self, insn, mnemonic, ops):
+        """Accept only reviewed scalar encodings AND their exact SLEIGH DAG.
+
+        e29: REV W/X, UBFIZ W/X (wrapping UBFM alias), unshifted ORN/BICS
+        W/X, ordinary X0..X30 operands. Zero-register and shifted logical
+        forms remain unsupported here. Lower the verified raw pcode through
+        the existing operations below, preserving explicit ZEXT and NZCV.
+        Unique offsets are irrelevant; opcode/order/width/constants/dataflow
+        and all architectural reads/writes must match Ghidra 11.4.2.
+        """
+        raw = bytes(int(b) & 255 for b in insn.getBytes())
+        if len(raw) != 4:
+            raise Unsupported('bitform encoding length')
+        bits = int.from_bytes(raw, 'little')
+        sf = bits >> 31
+        width, size = 32 << sf, 4 << sf
+        rd, rn, rm = bits & 31, (bits >> 5) & 31, (bits >> 16) & 31
+        if rd == 31 or rn == 31 or (mnemonic in {'orn', 'bics'} and rm == 31):
+            raise Unsupported('bitform zero-register form is not covered')
+        expected = []
+        t = lambda i: ('t', i, size)
+        r = lambda i, n=size: ('r', f'R_X{i}', 64, 0, n)
+        c = lambda n, s=size: ('c', n, s)
+        flag = lambda name: ('r', 'R_' + name, 8, 0, 1)
+        def emit(code, out, *args):
+            expected.append((code, out, tuple(args)))
+        def result(code, *args):
+            # The W form must end with an explicit full-X zero extension.
+            emit(code, t(6) if not sf else r(rd), *args)
+            if not sf:
+                emit('INT_ZEXT', r(rd, 8), t(6))
+        if mnemonic == 'rev':
+            if bits & 0xfffffc00 != (0xdac00c00 if sf else 0x5ac00800):
+                raise Unsupported('unhandled REV encoding')
+            emit('COPY', t(0), r(rn))
+            emit('INT_AND', t(1), t(0), c(0xff00ff00ff00ff00 if sf else 0xff00ff00))
+            emit('INT_RIGHT', t(2), t(1), c(8, 4))
+            emit('INT_AND', t(3), t(0), c(0x00ff00ff00ff00ff if sf else 0x00ff00ff))
+            emit('INT_LEFT', t(4), t(3), c(8, 4))
+            emit('INT_OR', t(0), t(2), t(4))
+            if sf:
+                emit('INT_AND', t(5), t(0), c(0xffff0000ffff0000))
+                emit('INT_RIGHT', t(6), t(5), c(16, 4))
+                emit('INT_AND', t(7), t(0), c(0x0000ffff0000ffff))
+                emit('INT_LEFT', t(8), t(7), c(16, 4))
+                emit('INT_OR', t(0), t(6), t(8))
+                emit('INT_RIGHT', t(9), t(0), c(32, 4))
+                emit('INT_LEFT', t(10), t(0), c(32, 4))
+                emit('INT_OR', r(rd), t(9), t(10))
+            else:
+                emit('INT_RIGHT', t(5), t(0), c(16, 4))
+                emit('INT_LEFT', t(6), t(0), c(16, 4))
+                emit('INT_OR', t(0), t(5), t(6))
+                emit('INT_ZEXT', r(rd, 8), t(0))
+        elif mnemonic == 'ubfiz':
+            immr, imms = (bits >> 16) & 63, (bits >> 10) & 63
+            if (bits & 0xffc00000 != (0xd3400000 if sf else 0x53000000)
+                    or not 0 <= imms < immr < width):
+                raise Unsupported('unhandled UBFIZ encoding')
+            lsb, field = width - immr, imms + 1
+            emit('COPY', t(0), r(rn))
+            emit('INT_RIGHT', t(1), t(0), c(immr))
+            emit('INT_SUB', t(2), c(width), c(immr))
+            emit('INT_LEFT', t(3), t(0), t(2))
+            emit('INT_OR', t(4), t(1), t(3))
+            emit('INT_AND', t(5), t(4), c(((1 << field) - 1) << lsb))
+            result('INT_AND', t(5), c((1 << (lsb + field)) - 1))
+        else:
+            opcode = 0x2a200000 if mnemonic == 'orn' else 0x6a200000
+            if bits & 0xffe0fc00 != opcode | (sf << 31):
+                raise Unsupported('only unshifted scalar ORN/BICS is covered')
+            emit('INT_2COMP', t(0), c(1))
+            emit('INT_XOR', t(1), r(rm), t(0))
+            if mnemonic == 'orn' and sf:
+                emit('INT_OR', r(rd), r(rn), t(1))
+            else:
+                emit('INT_OR' if mnemonic == 'orn' else 'INT_AND', t(2), r(rn), t(1))
+                if mnemonic == 'bics':
+                    emit('INT_SLESS', flag('TMPNG'), t(2), c(0))
+                    emit('INT_EQUAL', flag('TMPZR'), t(2), c(0))
+                emit('COPY' if sf else 'INT_ZEXT', r(rd, 8), t(2))
+                if mnemonic == 'bics':
+                    emit('COPY', flag('NG'), flag('TMPNG'))
+                    emit('COPY', flag('ZR'), flag('TMPZR'))
+                    emit('COPY', flag('CY'), c(0, 1))
+                    emit('COPY', flag('OV'), c(0, 1))
+
+        temps = {}
+        def node(v):
+            if v is None:
+                return None
+            n = int(v.getSize())
+            if v.isUnique():
+                key = (int(v.getOffset()), n)
+                return ('t', temps.setdefault(key, len(temps)), n)
+            if v.isRegister():
+                return ('r', *self.register(v), n)
+            if v.isConstant():
+                return ('c', int(v.getOffset()) % (1 << (8 * n)), n)
+            raise Unsupported('non-scalar bitform varnode')
+        actual = [(str(op.getMnemonic()), node(op.getOutput()), tuple(node(v) for v in op.getInputs())) for op in ops]
+        if actual != expected:
+            raise Unsupported('unhandled bitform raw-pcode shape')
+
     def instruction(self, insn):
         mnemonic = str(insn.getMnemonicString()).lower()
-        if mnemonic not in MNEMONICS and not re.fullmatch(r'b\.(eq|ne|cs|hs|cc|lo|mi|pl|vs|vc|hi|ls|ge|lt|gt|le)', mnemonic):
+        if mnemonic not in MNEMONICS | BITFORMS and not re.fullmatch(r'b\.(eq|ne|cs|hs|cc|lo|mi|pl|vs|vc|hi|ls|ge|lt|gt|le)', mnemonic):
             raise Unsupported(f'unmodeled instruction {insn}')
         if int(insn.getLength()) != 4:
             raise Unsupported('non-A64 instruction length')
         ops = list(insn.getPcode())
+        if mnemonic in BITFORMS:
+            self.check_bitform(insn, mnemonic, ops)
         self.temps, self.ranges, self.initialized = {}, [], set()
         # Assign in deterministic first-use order, including branch operands.
         supported = set(BINARY) | set(COMPARE) | set(SHIFTS) | {
