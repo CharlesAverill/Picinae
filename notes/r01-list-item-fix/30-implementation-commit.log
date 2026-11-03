@@ -1,2 +1,41 @@
 CWD=/home/charles/.t3/worktrees/Picinae/t3-856859c4
 COMMAND=bash -e -c git\ add\ --\ Examples/FreeRTOS/armv6m_vListInitialiseItem_proof.v\ notes/r01-list-item-fix\;\ git\ commit\ -m\ \"Complete\ ARMv6-M\ list\ item\ proofs\"
+[llm-proofs/r01-list-item-fix 0cc77a5] Complete ARMv6-M list item proofs
+ 36 files changed, 2835 insertions(+), 21 deletions(-)
+ create mode 100644 notes/r01-list-item-fix/01-checkpoint-ancestry.log
+ create mode 100644 notes/r01-list-item-fix/02-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/03-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/04-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/05-frame-diagnostic.log
+ create mode 100644 notes/r01-list-item-fix/06-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/07-exact-diagnostic.log
+ create mode 100644 notes/r01-list-item-fix/08-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/09-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/10-mov-diagnostic.log
+ create mode 100644 notes/r01-list-item-fix/11-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/12-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/13-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/14-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/15-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/16-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/17-dune-repair.log
+ create mode 100644 notes/r01-list-item-fix/18-assumptions.log
+ create mode 100644 notes/r01-list-item-fix/19-preservation.log
+ create mode 100644 notes/r01-list-item-fix/20-source-audit.log
+ create mode 100644 notes/r01-list-item-fix/21-unit-source-audit.log
+ create mode 100644 notes/r01-list-item-fix/22-ancestry.log
+ create mode 100644 notes/r01-list-item-fix/23-final-clean-build.log
+ create mode 100644 notes/r01-list-item-fix/24-final-assumptions.log
+ create mode 100644 notes/r01-list-item-fix/25-preparation-recheck.log
+ create mode 100644 notes/r01-list-item-fix/26-local-preparation-recheck.log
+ create mode 100644 notes/r01-list-item-fix/27-final-preservation.log
+ create mode 100644 notes/r01-list-item-fix/28-assumptions-review.log
+ create mode 100644 notes/r01-list-item-fix/29-before-commit.log
+ create mode 100644 notes/r01-list-item-fix/30-implementation-commit.log
+ create mode 100644 notes/r01-list-item-fix/README.md
+ create mode 100644 notes/r01-list-item-fix/audit-ancestry.sh
+ create mode 100644 notes/r01-list-item-fix/check-assumptions.py
+ create mode 100644 notes/r01-list-item-fix/check-preservation.py
+ create mode 100644 notes/r01-list-item-fix/preparation.txt
+
+EXIT_CODE=0
