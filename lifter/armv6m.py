@@ -5,6 +5,7 @@ Deliberately conservative: only linked ELF32 little-endian ARM with mapping
 symbols. No relocations, stripped inputs, ARM state or system approximations.
 This parser and the assembler/disassembler remain part of the trusted base.
 """
+import argparse
 import bisect
 import hashlib
 import os
@@ -84,12 +85,17 @@ class ELF:
         return mapping[at][1]
 
 
-def accepted16(hw):
+PROFILES = ("legacy-e03", "primask-v1-base", "primask-v1-up")
+
+
+def accepted16(hw, profile="legacy-e03"):
     """Conservative encoding checks in addition to objdump recognition.
 
     Exclude invalid/system encodings and architecturally unpredictable operand
     cases that the inherited total decoder deliberately does not distinguish.
     """
+    if profile != "legacy-e03" and hw in (0xb662, 0xb672):
+        return True
     top = hw >> 12
     if top <= 3 or top in (5, 6, 7, 8, 9, 10):
         return True
@@ -123,7 +129,20 @@ def accepted16(hw):
     return top == 14 and hw & 0x800 == 0
 
 
-def extract(path, name, function, objdump):
+def accepted32(hw1, hw2, profile="legacy-e03"):
+    if hw1 & 0xf800 == 0xf000 and hw2 & 0xd000 == 0xd000:
+        return True  # unchanged BL
+    if profile == "legacy-e03":
+        return False
+    # Only PRIMASK (SYSm=16), exact fixed bits, Rd/Rn in r0-r12 or LR.
+    return ((hw1 == 0xf3ef and hw2 & 0xf0ff == 0x8010
+             and (hw2 >> 8) & 15 not in (13, 15))
+            or (hw1 & 0xfff0 == 0xf380 and hw2 == 0x8810
+                and hw1 & 15 not in (13, 15)))
+
+
+def extract(path, name, function, objdump, profile="legacy-e03"):
+    require(profile in PROFILES, 'unknown strict profile')
     require(re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*', name), 'invalid Coq definition name')
     elf = ELF(path)
     ranges = []
@@ -184,9 +203,9 @@ def extract(path, name, function, objdump):
             require(halves == expected and not text.startswith('.') and 'undefined' not in text,
                     f'unknown instruction at 0x{a:x}: {text}')
             if width == 4:
-                supported = hw & 0xf800 == 0xf000 and halves[1] & 0xd000 == 0xd000
+                supported = accepted32(hw, halves[1], profile)
             else:
-                supported = accepted16(hw)
+                supported = accepted16(hw, profile)
             require(supported, f'unsupported instruction at 0x{a:x}: {text}')
             starts.append(a)
             if hw & 0xf800 == 0x4800:  # LDR literal: include the entire word, even past STT_FUNC size
@@ -221,16 +240,32 @@ def extract(path, name, function, objdump):
               f'  intros s a. unfold {name}_prog. destruct (existsb (N.eqb a) {name}_entries).',
               '  apply welltyped_lift_armv6m. exact I.',
               'Qed.']
+    if profile != "legacy-e03":
+        lines = [line.replace('lift_armv6m ', 'lift_armv6m_mask ').replace('apply welltyped_lift_armv6m.', 'apply welltyped_lift_armv6m_mask.') for line in lines]
+        lines = [line.replace('| T_Invalid => false | _ => true end)', '| i => armv6m_mask_instruction_supported i end)') for line in lines]
+        lines.insert(0, f'(* Strict frontend {profile}; sequential PRIMASK register fragment only. *)')
+    if profile == "primask-v1-base":
+        # Enforce the absence of the optional U/P extension in the actual map.
+        pos = lines.index(f'Definition {name}_prog : program := fun s a =>')
+        lines[pos + 1] = ('  if armv6m_base_profile s then\n' + '    ' + lines[pos + 1][2:-1] +
+                          ' else None.')
+        pos = lines.index(f'  intros s a. unfold {name}_prog. destruct (existsb (N.eqb a) {name}_entries).')
+        lines[pos] = (f'  intros s a. unfold {name}_prog. destruct (armv6m_base_profile s); [|exact I].\n'
+                      f'  destruct (existsb (N.eqb a) {name}_entries).')
     return '\n'.join(lines) + '\n'
 
 
 def main():
     try:
-        require(len(sys.argv) in (3, 4),
-                'usage: armv6m_lifter.sh <linked-elf> <coq_definition> [function]')
+        parser = argparse.ArgumentParser(description=__doc__)
+        parser.add_argument('--profile', choices=PROFILES, default='legacy-e03')
+        parser.add_argument('elf')
+        parser.add_argument('name')
+        parser.add_argument('function', nargs='?')
+        args = parser.parse_args()
         objdump = os.environ.get('OBJDUMP')
         require(objdump, 'set OBJDUMP to an ARM objdump executable')
-        result = extract(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else None, objdump)
+        result = extract(args.elf, args.name, args.function, objdump, args.profile)
     except (Rejected, OSError, UnicodeError, struct.error, subprocess.CalledProcessError) as err:
         print(f'armv6m lifter: {err}', file=sys.stderr)
         return 1

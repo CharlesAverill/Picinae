@@ -1,0 +1,32 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96390313
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e19-armv6m-primask/generate.py --check
+COMMAND: ['/home/charles/code/friends/.toolchains/e04-freertos-build/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-as', '-mcpu=cortex-m0', '-mthumb', '-o', '/home/charles/.t3/worktrees/Picinae/t3-96390313/tests/armv6m_primask/snippets.o', '/home/charles/.t3/worktrees/Picinae/t3-96390313/tests/armv6m_primask/snippets.s']
+EXIT_CODE: 0
+COMMAND: ['/home/charles/code/friends/.toolchains/e04-freertos-build/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ld', '-Ttext=0x1000', '--entry=mask_fixture', '-o', '/home/charles/.t3/worktrees/Picinae/t3-96390313/tests/armv6m_primask/snippets.elf', '/home/charles/.t3/worktrees/Picinae/t3-96390313/tests/armv6m_primask/snippets.o']
+EXIT_CODE: 0
+COMMAND: ['/home/charles/code/friends/.toolchains/e04-freertos-build/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-objdump', '-d', '-s', '/home/charles/.t3/worktrees/Picinae/t3-96390313/tests/armv6m_primask/snippets.elf']
+
+/home/charles/.t3/worktrees/Picinae/t3-96390313/tests/armv6m_primask/snippets.elf:     file format elf32-littlearm
+
+Contents of section .text:
+ 1000 eff31080 72b680f3 108862b6 eff3108e  ....r.....b.....
+ 1010 8ef31088 7047                        ....pG          
+Contents of section .ARM.attributes:
+ 0000 41200000 00616561 62690001 16000000  A ...aeabi......
+ 0010 05436f72 7465782d 4d300006 0c074d09  .Cortex-M0....M.
+ 0020 01                                   .               
+
+Disassembly of section .text:
+
+00001000 <mask_fixture>:
+    1000:	f3ef 8010 	mrs	r0, PRIMASK
+    1004:	b672      	cpsid	i
+    1006:	f380 8810 	msr	PRIMASK, r0
+    100a:	b662      	cpsie	i
+    100c:	f3ef 8e10 	mrs	lr, PRIMASK
+    1010:	f38e 8810 	msr	PRIMASK, lr
+    1014:	4770      	bx	lr
+EXIT_CODE: 0
+PASS: real mask lifts and independently assembled fixture reproduce
+
+EXIT_CODE=0

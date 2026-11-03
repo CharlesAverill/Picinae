@@ -10,6 +10,7 @@ Require Export Picinae_statics.
 Require Export Picinae_finterp.
 Require Export Picinae_simplifier_v1_1.
 Require Export Picinae_ISA.
+From Stdlib Require Import Bool.
 From Stdlib Require Import NArith.
 From Stdlib Require Import ZArith.
 From Stdlib Require Import List.
@@ -28,13 +29,14 @@ Inductive armv6mvar :=
   | R_R8 | R_R9 | R_R10 | R_R11 | R_R12
   | R_SP | R_LR               (* PC reads are lifted to constants *)
   | F_N | F_Z | F_C | F_V    (* Flags: Negative, Zero, Carry, oVerflow *)
+  | S_PRIMASK | S_HANDLER | S_CONTROL_NPRIV (* one-bit mask, mode, CONTROL bit 0 *)
   | A_READ | A_WRITE | A_EXEC
   | V_TEMP (n:N).
 
 Definition armv6mtypctx v :=
   match v with
   | V_MEM32 => Some (8*2^32)
-  | F_N | F_Z | F_C | F_V => Some 1
+  | F_N | F_Z | F_C | F_V | S_PRIMASK | S_HANDLER | S_CONTROL_NPRIV => Some 1
   | A_READ | A_WRITE | A_EXEC => Some (2^32)
   | V_TEMP _ => None
   | _ => Some 32
@@ -163,6 +165,22 @@ Definition armv6m_mov (n : regid) e :=
 (* Immediates are reduced modulo 2^32, so every lifted constant is well-typed *)
 Definition armv6m_word n :=
   Word (n mod 2^32) 32.
+
+(* Sequential mask fragment, DDI 0419E B1.3.1/B1.4.3/B4.2.1-3.
+   S_HANDLER is CurrentMode == Mode_Handler, not an independent privilege bit.
+   S_CONTROL_NPRIV is CONTROL.nPRIV; Handler remains privileged even when it is
+   1 (e.g. an interrupted unprivileged Thread). No instruction in this fragment
+   changes mode or CONTROL. The optional U/P extension is represented here;
+   base implementations require nPRIV=0, enforced by the base frontend map.
+   PRIMASK is architectural register state, not interrupt delivery/priority
+   visibility, exception entry, scheduling, or a memory-ordering guarantee. *)
+Definition armv6m_privileged : exp :=
+  BinOp OP_OR (Var S_HANDLER) (UnOp OP_NOT (Var S_CONTROL_NPRIV)).
+Definition armv6m_write_primask (e : exp) : stmt :=
+  If armv6m_privileged (Move S_PRIMASK e) Nop.
+Definition armv6m_read_primask : exp :=
+  Cast CAST_UNSIGNED 32 (Ite armv6m_privileged (Var S_PRIMASK) (Word 0 1)).
+Definition armv6m_base_profile (s : store) : bool := s S_CONTROL_NPRIV =? 0.
 
 (* ========================================================================== *)
 (*                         CONDITION CODES                                    *)
@@ -459,7 +477,9 @@ Definition thumb_decode_misc n :=
          | 2 => T_UXTH (xbits n 0 3) (xbits n 3 6) | _ => T_UXTB (xbits n 0 3) (xbits n 3 6) end
   | 4 => match xbits n 0 8 with 0 => T_Invalid | rl => T_PUSH rl false end
   | 5 => T_PUSH (xbits n 0 8) true
-  | 6 => match xbits n 5 8, xbits n 4 5 with 3, 0 => T_CPSIE | 3, _ => T_CPSID | _, _ => T_Invalid end
+  | 6 => if xbits n 0 4 =? 2 then
+           match xbits n 5 8, xbits n 4 5 with 3, 0 => T_CPSIE | 3, _ => T_CPSID | _, _ => T_Invalid end
+         else T_Invalid
   | 10 => match xbits n 6 8 with
           | 0 => T_REV (xbits n 0 3) (xbits n 3 6) | 1 => T_REV16 (xbits n 0 3) (xbits n 3 6)
           | 3 => T_REVSH (xbits n 0 3) (xbits n 3 6) | _ => T_Invalid end
@@ -516,12 +536,23 @@ Definition thumb32_decode hw1 hw2 :=
                              (N.lor (N.shiftl (xbits hw1 0 10) 12)
                                     (N.shiftl (xbits hw2 0 11) 1))))))
       | 0, 0 =>
-          match xbits hw1 4 11 with
-          | 56 | 57 => T_MSR (xbits hw2 0 8) (xbits hw1 0 4)
-          | 59 => match xbits hw2 4 8 with 4 => T_DSB | 5 => T_DMB | 6 => T_ISB | _ => T_Invalid end
-          | 62 | 63 => T_MRS (xbits hw2 8 12) (xbits hw2 0 8)
-          | _ => T_Invalid
-          end
+          (* Exact fixed bits and operands, DDI 0419E B4.2.2/B4.2.3.
+             Parenthesized encoding bits are not wildcards. SP/PC operands and
+             reserved SYSm values are UNPREDICTABLE and rejected here. *)
+          let sysm := xbits hw2 0 8 in
+          let valid_sysm := (sysm <=? 3) || ((5 <=? sysm) && (sysm <=? 9)) ||
+                            (sysm =? 16) || (sysm =? 20) in
+          if (hw1 =? 0xf3ef) && (xbits hw2 12 16 =? 8) then
+            let rd := xbits hw2 8 12 in
+            if valid_sysm && negb ((rd =? 13) || (rd =? 15))
+            then T_MRS rd sysm else T_Invalid
+          else if (xbits hw1 4 16 =? 0xf38) && (xbits hw2 8 16 =? 0x88) then
+            let rn := xbits hw1 0 4 in
+            if valid_sysm && negb ((rn =? 13) || (rn =? 15))
+            then T_MSR sysm rn else T_Invalid
+          else if hw1 =? 0xf3bf then
+            match xbits hw2 4 8 with 4 => T_DSB | 5 => T_DMB | 6 => T_ISB | _ => T_Invalid end
+          else T_Invalid
       | _, _ => T_Invalid
       end
   | _, _ => T_Invalid
@@ -607,10 +638,12 @@ Definition arm2il (a : addr) (insn : thumb_instr) : stmt :=
   | T_DMB | T_DSB | T_ISB => Nop
   | T_BKPT _ => Exn 3
   | T_SVC _ => Exn 11
-  | T_CPSID | T_CPSIE => Nop   (* PRIMASK is not modeled *)
-  (* Only MSP (the current SP, as CONTROL.SPSEL = 0) and the APSR are modeled *)
-  | T_MRS rd sysm => if sysm <? 4 then armv6m_mov rd armv6m_apsr else if sysm <? 8 then armv6m_mov rd (Word 0 32) else if sysm =? 8 then armv6m_mov rd (Var R_SP) else armv6m_mov rd (Unknown 32)
-  | T_MSR sysm rn => let x := armv6m_var a rn in if sysm <? 4 then Seq (Move F_N (Cast CAST_LOW 1 (BinOp OP_RSHIFT x (Word 31 32)))) (Seq (Move F_Z (Cast CAST_LOW 1 (BinOp OP_RSHIFT x (Word 30 32)))) (Seq (Move F_C (Cast CAST_LOW 1 (BinOp OP_RSHIFT x (Word 29 32)))) (Move F_V (Cast CAST_LOW 1 (BinOp OP_RSHIFT x (Word 28 32)))))) else if sysm <? 8 then Nop else if sysm =? 8 then Move R_SP (BinOp OP_AND x (Word (N.ones 32 - 3) 32)) else Nop
+  | T_CPSID => armv6m_write_primask (Word 1 1)
+  | T_CPSIE => armv6m_write_primask (Word 0 1)
+  (* Legacy non-PRIMASK system approximations below remain inaccessible through
+     both strict profiles; they are not certified by this mask extension. *)
+  | T_MRS rd sysm => if sysm =? 16 then armv6m_mov rd armv6m_read_primask else if sysm <? 4 then armv6m_mov rd armv6m_apsr else if sysm <? 8 then armv6m_mov rd (Word 0 32) else if sysm =? 8 then armv6m_mov rd (Var R_SP) else armv6m_mov rd (Unknown 32)
+  | T_MSR sysm rn => let x := armv6m_var a rn in if sysm =? 16 then armv6m_write_primask (Cast CAST_LOW 1 x) else if sysm <? 4 then Seq (Move F_N (Cast CAST_LOW 1 (BinOp OP_RSHIFT x (Word 31 32)))) (Seq (Move F_Z (Cast CAST_LOW 1 (BinOp OP_RSHIFT x (Word 30 32)))) (Seq (Move F_C (Cast CAST_LOW 1 (BinOp OP_RSHIFT x (Word 29 32)))) (Move F_V (Cast CAST_LOW 1 (BinOp OP_RSHIFT x (Word 28 32)))))) else if sysm <? 8 then Nop else if sysm =? 8 then Move R_SP (BinOp OP_AND x (Word (N.ones 32 - 3) 32)) else Nop
   end.
 
 (* The size and IL of the instruction at a, given the halfword at each address *)
@@ -641,6 +674,34 @@ Definition lift_armv6m (binary : addr -> N) (s : store) (a : addr) :=
              | T_LDR_pc rt imm8 => (2, armv6m_mov rt (armv6m_word (armv6m_literal binary a imm8)))
              | _ => armv6m_decode_at binary a
              end).
+
+(* Formal boundary of the opt-in sequential mask frontend. No unsupported
+   system fallback can be reached through this wrapper. In particular a BX or
+   POP target in the EXC_RETURN range is outside the profile, rather than an
+   ordinary jump or an invented exception transition. Reject conservatively in
+   both modes, including reserved EXC_RETURN values. The old lift is unchanged. *)
+Definition armv6m_mask_instruction_supported (i : thumb_instr) : bool :=
+  match i with
+  | T_MRS rd sysm => (sysm =? 16) && negb ((rd =? 13) || (rd =? 15))
+  | T_MSR sysm rn => (sysm =? 16) && negb ((rn =? 13) || (rn =? 15))
+  | T_DMB | T_DSB | T_ISB | T_WFI | T_WFE | T_SEV | T_YIELD
+  | T_BKPT _ | T_SVC _ | T_Invalid => false
+  | _ => true
+  end.
+Definition armv6m_mask_target_supported (i : thumb_instr) (s : store) : bool :=
+  match i with
+  | T_BX rm | T_BLX rm => s (armv6m_varid rm) <? 0xfffffff0
+  | T_POP rl true =>
+      getmem 32 LittleE 4 (s V_MEM32)
+        ((s R_SP + 4 * N.of_nat (length (armv6m_regs rl))) mod 2^32) <? 0xfffffff0
+  | _ => true
+  end.
+Definition lift_armv6m_mask (binary : addr -> N) (s : store) (a : addr) :=
+  let i := if is_32bit_insn (binary a)
+           then thumb32_decode (binary a) (binary ((a+2) mod 2^32))
+           else thumb16_decode (binary a) in
+  if armv6m_mask_instruction_supported i && armv6m_mask_target_supported i s
+  then lift_armv6m binary s a else None.
 
 (* ========================================================================== *)
 (*                         TYPE SAFETY                                        *)
@@ -793,7 +854,8 @@ Proof.
   intros. assert (SS: armv6mtypctx ⊆ armv6mtypctx) by reflexivity.
   destruct i; eexists; cbv beta iota zeta delta [arm2il];
   unfold armv6m_logic, armv6m_adds, armv6m_subs, armv6m_addflags, armv6m_subflags,
-         armv6m_setnz, armv6m_bxwritepc, armv6m_ror, armv6m_apsr, armv6m_target;
+         armv6m_setnz, armv6m_bxwritepc, armv6m_ror, armv6m_apsr, armv6m_target,
+         armv6m_write_primask, armv6m_read_primask, armv6m_privileged;
   repeat match goal with |- context [ if ?b then _ else _ ] => destruct b end;
   first [ apply hastyp_armv6m_ldm, SS
         | apply hastyp_armv6m_stm, SS
@@ -818,4 +880,11 @@ Proof.
   destruct is_32bit_insn. apply welltyped_arm2il.
   destruct (thumb16_decode (binary a)); try apply welltyped_arm2il.
   eexists. apply hastyp_armv6m_mov. reflexivity. apply hastyp_armv6m_word.
+Qed.
+
+Theorem welltyped_lift_armv6m_mask:
+  forall binary, welltyped_prog armv6mtypctx (lift_armv6m_mask binary).
+Proof.
+  intros binary s a. unfold lift_armv6m_mask.
+  destruct (_ && _)%bool. apply welltyped_lift_armv6m. exact I.
 Qed.
