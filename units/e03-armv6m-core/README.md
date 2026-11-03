@@ -1,7 +1,7 @@
 # e03-armv6m-core
 
-Engineering import and regression validation; final Dune verification is pending
-integration with e00-build. No function correctness proof or binary-to-IL
+Engineering import and regression validation; coordinator completed Dune
+integration with reviewed e00-build on 2026-11-03. No function correctness proof or binary-to-IL
 refinement theorem is claimed.
 
 ## Isolation rule from Charles (unchanged)
@@ -192,3 +192,11 @@ Typing does not establish decoder correctness or architectural fidelity.
   model; exception entry/EXC_RETURN and interrupt boundaries; barriers/MMIO.
   Critical-section and context-switch proofs require these before correctness
   claims about FreeRTOS port handlers.
+
+## Coordinator Dune integration acceptance
+
+Merged only reviewed e00-build commit `71470bffba65392adf1873a3df9f0cf0ca4f1ac9` into this unit branch. Added Picinae_armv6m to the explicit Dune module list and `@armv6m` alias. The first attempts failed on generated Make `.glob` conflicts; the initial Make clean lacked the isolated Rocq PATH. Cleaning through the shared read-only wrapper resolved this without any source/model changes. Attempts are preserved in logs.
+
+`dune build --cache=disabled -j1 --display short @armv6m` then passed under `ulimit -v 3000000; ulimit -s 65536`, exit 0. `tools/print-assumptions.sh Picinae.Picinae_armv6m welltyped_lift_armv6m welltyped_armv6mprog welltyped_arm2il` passed with PROOF_MEMORY_KB=3000000; all three are closed under the global context. The unit source audit passed with no new suspicious tokens. Exact commands/output/exits are in `logs/dune-integration-clean-toolchain.log`, `logs/dune-assumptions.log`, and `logs/dune-source-audit.log`.
+
+This closes the pending Dune build requirement for the ISA/lifter engineering import. All original architectural/interrupt/lifting trust limitations remain. Only origin base, this unit, e00 prerequisite, and this unit’s merge/integration commit are in the branch ancestry. No fork history, remote writes, dependency installs, function proofs or new assumptions were introduced.
