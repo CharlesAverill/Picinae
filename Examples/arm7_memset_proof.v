@@ -1,6 +1,6 @@
 From Stdlib Require Import Utf8.
 From Stdlib Require Import FunctionalExtensionality.
-From Stdlib Require Import NArith.
+From Stdlib Require Import NArith Lia List.
 Require Import Picinae_armv7.
 Require Import arm7_memset.
 Import ARM7Notations.
@@ -392,3 +392,167 @@ Proof.
       rewrite msub_comm. reflexivity.
       etransitivity. apply mp2_mod_le. apply K4LEN.
 Qed.
+
+(* Total correctness additionally requires writable destination memory.  We use
+   full 32-bit writable memory here; the partial theorem has no such hypothesis
+   because a memory fault can prevent an execution from reaching the exit. *)
+Definition memset_checkpoint (t:trace) : bool :=
+  match t with (Addr a,_)::_ => match a with
+  | 0 | 12 | 44 | 84 | 120 => true
+  | _ => false end | _ => false end.
+
+Definition memset_rank (t:trace) : N :=
+  match t with (Addr a,s)::_ => 3 * s R_R2 +
+    match a with 0 => 3 | 12 => 2 | 44 => 1 | _ => 0 end
+  | _ => 0 end.
+
+Theorem memset_preserves_writable:
+  forall_endstates memset_arm (fun _ s _ s' => s A_WRITE = s' A_WRITE).
+Proof. apply noassign_prog_same. prove_noassign. Qed.
+
+Lemma memset_checkpoint_cases:
+  forall a s t, memset_checkpoint ((Addr a,s)::t) = true ->
+    a = 0 \/ a = 12 \/ a = 44 \/ a = 84 \/ a = 120.
+Proof.
+  intros a s t CHECK. cbn [memset_checkpoint] in CHECK.
+  destruct a as [|a]. left. reflexivity.
+  repeat match type of CHECK with
+  | context [match ?p with xI _ => _ | xO _ => _ | xH => _ end] =>
+      destruct p; cbn in CHECK; try discriminate
+  end; intuition congruence.
+Qed.
+
+Lemma memset_low3_le:
+  forall n k, msub 3 n k <= n ⊖ k.
+Proof.
+  intros. change 3 with (N.min 32 3) at 1.
+  rewrite <- msub_mod_pow2. apply N.Div0.mod_le.
+Qed.
+
+Local Ltac memset_total_context :=
+  cbn [execution_invs memset_checkpoint true_inv];
+  unfold execution_context; psimpl;
+  try match goal with H: unterminated _ _ |- _ => psimpl_hyp H end;
+  split; [eassumption|];
+  split; [rewrite ostartof_cons; repeat rewrite startof_cons; f_equal; eassumption
+         |cbn [tl]; eassumption].
+
+Local Ltac memset_total_stop :=
+  lazymatch goal with
+  | |- eventually _ _ ((Addr ?a,_)::_) =>
+    let endpt := eval compute in (memset_checkpoint ((Addr a,fun _ => 0)::nil)) in
+    lazymatch endpt with true =>
+      total_here;
+      lazymatch a with
+      | 120 => left; split; [reflexivity|memset_total_context]
+      | _ => right; split; [memset_total_context|cbn [memset_rank]; psimpl]
+      end
+    end
+  end.
+
+Local Ltac memset_live_step :=
+  psimpl;
+  try match goal with H: exec_prog _ _ |- _ => psimpl_hyp H end;
+  try match goal with H: unterminated _ _ |- _ => psimpl_hyp H end;
+  lazymatch goal with XP: exec_prog _ _, UT: unterminated _ _ |- _ =>
+    ISA_total_live_step; clear XP UT;
+    repeat match goal with H: reset_temps _ _ = _ |- _ => clear H end;
+    repeat match goal with H: MemAcc _ _ _ _ _ |- _ => clear H end
+  end.
+
+Local Ltac memset_total_seek :=
+  lazymatch goal with |- eventually _ _ ((Addr ?a,_)::_) =>
+    let stop := eval compute in (memset_checkpoint ((Addr a,fun _ => 0)::nil)) in
+    lazymatch stop with
+    | true => memset_total_stop
+    | false => memset_live_step; memset_total_seek
+    end
+  end.
+
+(* Evaluate the address first to infer its 32-bit width before the memory type. *)
+Local Ltac total_eval ::= first [apply EVar; reflexivity | apply EWord |
+  lazymatch goal with |- eval_exp _ _ (BinOp ?op _ _) _ _ =>
+    eapply EBinOp with (bop:=op); total_eval end |
+  eapply EUnOp; total_eval | eapply ECast; total_eval |
+  eapply EExtract; total_eval | eapply EConcat; total_eval |
+  eapply ELet; [total_eval | total_eval] |
+  eapply EIte; [total_eval | total_eval | total_eval] |
+  eapply ELoad; [idtac | total_eval | total_memory]; total_eval |
+  eapply EStore; [idtac | total_eval | total_eval | total_memory]; total_eval |
+  eapply EUnknown with (n:=0); apply N.neq_0_lt_0, pow2_nonzero].
+
+Theorem memset_total_correctness:
+  ∀ s p c len mem (MDL: models arm7typctx s)
+    (MEM: s V_MEM32 = mem) (R0: s R_R0 = p)
+    (R1: s R_R1 = c) (R2: s R_R2 = len)
+    (WRITE: ∀ a, a < 2^32 -> mem_writable s a),
+  satisfies_total memset_arm (memset_invset mem p c len) memset_exit
+    ((Addr 0,s)::nil).
+Proof.
+  intros.
+  assert (LEN32: len < 2^32).
+    rewrite <- R2. apply (models_var R_R2 MDL).
+  eapply total_execution_invs with
+    (entry:=(Addr 0,s)) (checkpoint:=memset_checkpoint).
+    intros tr ORIGIN. destruct tr as [|[x' s'] hist]; [discriminate|].
+    cbn [ostartof] in ORIGIN. injection ORIGIN as ENTRY.
+    eapply memset_functional_correctness; eassumption.
+  eapply prove_total_invs with (rank:=memset_rank) (R:=N.lt).
+    exact N.lt_wf_0.
+    total_here. cbn [execution_invs memset_checkpoint true_inv execution_context].
+    split. apply exec_prog_none. split. reflexivity. constructor. reflexivity.
+    intros tr INV.
+    pose proof (execution_invs_checkpoint _ _ _ _ _ INV) as CHECK.
+    apply execution_invs_context in INV.
+    destruct INV as [XP [ORIGIN UT]].
+    destruct tr as [|[[a|i] st] hist]; try discriminate CHECK.
+    cbn [ostartof] in ORIGIN. injection ORIGIN as ENTRY.
+    assert (MDL0: models arm7typctx st).
+      eapply preservation_exec_prog; [apply memset_welltyped|exact XP|exact ENTRY|exact MDL].
+    assert (COUNT32: st R_R2 < 2^32). apply (models_var R_R2 MDL0).
+    assert (WRITE0: ∀ a, a < 2^32 -> mem_writable st a).
+      intros a0 LT. unfold mem_writable.
+      erewrite <- (memset_preserves_writable _ _ _ _ _ XP ENTRY).
+      apply WRITE, LT.
+    assert (PRE: trueif_inv (memset_invset mem p c len ((Addr a,st)::hist))).
+      eapply satall_trueif_inv; [|exact XP|exact UT].
+      eapply memset_functional_correctness; eassumption.
+    Local Ltac total_memory ::= intros; unfold mem_writable;
+      repeat (rewrite update_updated || rewrite update_frame by discriminate);
+      match goal with
+      | W: ∀ a, a < 2^32 -> mem_writable ?st a
+        |- N.testbit (?st A_WRITE) _ = true =>
+          apply W; apply N.mod_lt; discriminate
+      end.
+    destruct (memset_checkpoint_cases _ _ _ CHECK) as [A|[A|[A|[A|A]]]];
+      subst a; cbn [memset_invset trueif_inv] in PRE.
+    { (* Entry sequence: either start byte alignment or skip to the tail. *)
+    memset_live_step; memset_total_seek.
+    all: lia. }
+    { (* Alignment loop: a back edge consumes a byte, or its phase ends. *)
+    destruct PRE as [k [[[MEM0 [R00 [R10 R20]]] [R30 KLEN]] [LEN8 KP4]]].
+    assert (POSCOUNT: 0 < st R_R2).
+      rewrite R20, msub_nowrap; rewrite !N.mod_small by lia; lia.
+    clear MEM0 R00 R10 R30.
+    memset_live_step; memset_total_seek.
+    all: rewrite <- R20; lia.
+    }
+    { (* Word loop: back edges consume 32 bytes. Tail edges preserve low bits. *)
+    destruct PRE as [k [[[MEM0 [R00 [R10 R20]]] [R30 KLEN]] R12]].
+    clear MEM0 R00 R10 R30 R12.
+    memset_live_step; memset_total_seek.
+    all: rewrite R20; pose proof (memset_low3_le len k); lia.
+    }
+    { (* Tail loop: back edges consume four bytes. All other paths exit. *)
+    destruct PRE as [k [r1 [[[MEM0 [R00 [R10 R20]]] [R30 KLEN]] R1C]]].
+    clear MEM0 R00 R10 R30 R1C.
+    memset_live_step; memset_total_seek.
+    all: rewrite <- R20 in *;
+      repeat match goal with H: (_ <=? _) = true |- _ => apply N.leb_le in H end;
+      lia.
+    }
+    { (* At the designated return instruction, the context already suffices. *)
+    memset_total_stop. }
+Qed.
+
+Print Assumptions memset_total_correctness.
