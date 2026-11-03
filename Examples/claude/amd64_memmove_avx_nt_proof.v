@@ -32,7 +32,25 @@
    OUTPUT: at the RET, RAX = d, RSP is unchanged, and copied m m' d s n.
 
    Model:   This specification and proof were written by Claude Opus 5.5
-            (claude-opus-5-5), an AI model by Anthropic, and machine-checked by Rocq.
+            (claude-opus-5-5), an AI model by Anthropic.
+   Repair:  OpenAI GPT-6 Astra, x02-avx-nt, 2026-11-03.
+            PARTIAL: the missing segment and main theorem below are Aborted.
+            The failed first repair and verbatim validation evidence are in
+            notes/x02-avx-nt/. No NT functional theorem is exported here.
+   Provenance (inherited, not independently validated here):
+            /lib/x86_64-linux-gnu/libc.so.6, Ubuntu 2.35-0ubuntu3.12,
+            sha256 9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9.
+            __memmove_avx_unaligned_erms, Ghidra address 0x2a0840,
+            image base 0x100000; Ghidra 11.4.2 / pcode2coq.
+   ABI:     System V AMD64, 64-bit RDI=dest, RSI=src, RDX=n, RSP=rsp.
+            copied includes the byte-memory frame outside dest[0,n).
+            memmove_avx_preserves_callee_saved, memmove_avx_nwc and
+            memmove_avx_welltyped are inherited from amd64_memmove_avx_proof.
+            The exit is immediately before RET, with unchanged RSP; no
+            return-address separation or caller-return theorem is claimed.
+   Scope:   Sequential lifted IL partial correctness; AVX availability and
+            binary/lifter fidelity are trusted, not checked by this theorem.
+            No termination, overlapping-buffer, or cache-ordering claim.
  *)
 
 Require Import Picinae_amd64.
@@ -399,7 +417,10 @@ Lemma nt_seg_1285: forall m d s n rsp s1 t,
    s1 R_RCX = 32 - i /\ s1 R_R10 = nk 14 d n - j /\ s1 R_RDX = nr 14 d n /\
    s1 R_RAX = d /\ s1 R_RSP = rsp) ->
   nextinv memmove_avx_amd64 (nt_invs m d s n rsp) nt_exit false ((Addr 1285, s1) :: t).
-Proof. Admitted.
+Proof.
+  (* Unfinished four-page segment; unchanged statement. See the initial repair
+     attempt in notes/x02-avx-nt/initial-repair.v.txt. *)
+Abort.
 
 Lemma nt_seg_1613: forall m d s n rsp s1 t,
   nov d s n -> d + n < 2^64 -> s + n <= 2^64 -> 16448 <= n ->
@@ -552,142 +573,7 @@ Theorem memmove_avx_correct_nt:
          (BIG: 16448 <= n) (THR1: m Ⓠ[0x31a3f8] < n) (THR3: m Ⓠ[0x3215a0] <= n),
   satisfies_all memmove_avx_amd64 (nt_invs m d s n rsp) nt_exit ((x',s')::t).
 Proof.
-  intros.
-  assert (NB: n < 2^64) by (rewrite <- Nn; apply (MDL R_RDX 64); reflexivity).
-  apply prove_invs.
-  simpl. rewrite ENTRY. x64_step. repeat split; assumption.
-  intros.
-  erewrite startof_prefix in ENTRY; try eassumption.
-  eapply models_at_invariant; try eassumption. apply memmove_avx_welltyped. intro MDL1.
-  clear - PRE MDL1 NOV NW SW BIG THR1 THR3 NB. rename t1 into t.
-  destruct_inv 64 PRE.
-  - (* entry *)
-    destruct PRE as [MEM [D [S [Nn RSP]]]].
-    clear NOV NW SW.
-    repeat x64_step.
-    all: try (set (T := m Ⓠ[0x31a3f8]) in *; clearbody T).
-    all: assert (BG: 256 < n) by (clear - BIG; lia).
-    all: try (match goal with |- False => idtac | |- nextinv _ _ _ _ _ => idtac end; bc_norm; refute BG).
-    all: try (match goal with |- False => idtac end;
-              bc_norm; first [refute THR1 | exfalso; nlia]).
-    all: repeat split; reflexivity || assumption.
-  - (* dispatch *)
-    destruct PRE as [MEM [D [S [Nn [RSP [RAX Y0]]]]]].
-    assert (N0: 0 < n) by (clear - BIG; lia).
-    assert (DSN: n <= msub 64 d s) by (apply nov_ds; assumption).
-    assert (SDN: n <= msub 64 s d) by (apply nov_sd; assumption).
-    clear NOV.
-    repeat x64_step.
-    all: set (T1 := m Ⓠ[0x31a3f8]) in *; clearbody T1.
-    all: set (T3 := m Ⓠ[0x3215a0]) in *; clearbody T3.
-    all: try (match goal with |- False => idtac end;
-              bc_norm; first [refute DSN | refute THR3 | refute THR1 | refute SDN | exfalso; nlia]).
-    all: change (2^13) with 8192; change (2^14) with 16384; change (2^7) with 128.
-    all: pose proof (N.mod_lt d 64 ltac:(discriminate)) as DM; pose proof (N.mod_le d 64 ltac:(discriminate)) as DL.
-    all: pose proof (aA_bounds d) as AA.
-    all: try (match goal with |- False => idtac end;
-              match goal with H: (_ .| _) .^ 1 = N.pos _ |- _ =>
-                eapply nt_no_overlap; [exact SDN | clear - SW N0; lia | exact H] end).
-    all: exists 0, 0.
-    all: split; [unfold nk; apply N.div_str_pos; change (2^13) with 8192; change (2^14) with 16384; clear - BIG AA; lia|].
-    all: split; [clear; lia|].
-    all: split;
-      [ eapply cpy_equiv; [| eapply (cpy_store _ _ _ _ _ 32); [eapply (cpy_store _ _ _ _ _ 0); [apply cpy_empty|..]|..]];
-        [ intro x; unfold done2, done4; clear; split; intro H; repeat destruct H as [H|H]; lia
-        | .. ];
-        lazymatch goal with
-        | |- forall i, _ -> _ => let i := fresh in let H := fresh in intros i H; repeat destruct H as [H|H]; clear - H NB; lia
-        | |- _ => clear - NB NW BIG; aside
-        end
-      |].
-    all: unfold aA in *.
-    all: split; [unfold msub; clear - NW BIG DM DL; fin_mod|].
-    all: split; [unfold msub; clear - NW SW BIG DM DL NB; fin_mod|].
-    all: split; [clear; lia|].
-    all: split; [rewrite N.shiftr_div_pow2; unfold nk, aA; rewrite msub_sub by (clear - BIG DM; lia);
-                 rewrite (N.mod_small (n + d mod 64 - 64)) by (clear - NB DM DL; lia);
-                 rewrite N.sub_0_r; f_equal; clear - BIG DM DL; lia|].
-    all: split; [rewrite msub_sub by (clear - BIG DM; lia); unfold nr, aA; f_equal; clear - BIG DM DL; lia|].
-    all: split; [assumption || reflexivity | assumption].
-  (* STATUS: build this file with `ulimit -v 13000000'.  Each per-segment
-     obligation is a standalone lemma whose conclusion is a `nextinv'
-     (nt_seg_1117 .. nt_seg_1706 below), so each has its own bounded Qed and the
-     theorem just `apply's them.  Peak RAM was the whole difficulty here: a
-     single destruct_inv branch that stepped a tail loop *through* its final
-     overlapping copy carried the eight-store memory into the branch tests and
-     peaked near the machine's RAM ceiling (~9 GB).  The fix was two extra
-     loop-head cut points -- 1210 (two-page) and 1706 (four-page), the entries
-     of the final 128-byte overlapping copy -- so the heavy final-copy stepping
-     becomes its own bounded obligation (nt_seg_1210 / nt_seg_1706) and the tail
-     dispatch stops there instead of stepping on.  With those cuts the two-page
-     tail (nt_seg_1117 / nt_seg_1125 / nt_seg_1210) and the four-page tail
-     (nt_seg_1613 / nt_seg_1621 / nt_seg_1706) are all PROVEN under ~1 GB each.
-     The 128-byte tail-loop body is advanced one row at a time by cpy_store4w
-     (four 32-byte stores); the final overlapping copy is discharged by
-     cpy_store4w + cpy_copied via the fcaddr address lemma.  The four-page inner
-     loop (nt_seg_1285) advances done4 one 128-byte-x-4-page iteration via
-     cpy_store16 (sixteen 32-byte stores, loads taken from the pre-store memory),
-     mirroring how the two-page inner loop (the 917 segment, inline below) uses
-     nt_adv2 / cpy_store8. *)
-  - (* two-page inner iteration (single loop-head cut) *)
-    destruct PRE as [j [i [J [I [C [RDI [RSI [RCX [R10 [RDX [RAX RSP]]]]]]]]]]].
-    assert (CKB: 8192 * nk 13 d n <= n - aA d).
-    { unfold nk. change 8192 with (2^13). apply N.mul_div_le. discriminate. }
-    pose proof (aA_bounds d) as AAB.
-    assert (LE: aA d + 2 ^ 13 * j + 2 ^ 7 * i + 4224 <= n)
-      by (change (2^13) with 8192 in *; change (2^7) with 128 in *; clear - J I CKB AAB NB; nia).
-    pose proof (nt_adv2 m (s1 V_MEM64) d s n j i C NOV NB LE) as ADV.
-    repeat x64_step.
-    all: change (2^13) with 8192 in *; change (2^12) with 4096 in *; change (2^7) with 128 in *.
-    + (* done: i=31, j=nk-1 -> full set, tail loop entry 1117 *)
-      apply N.eqb_eq in BC. apply N.eqb_eq in BC0.
-      rewrite N.mod_small in BC0 by (clear - J NB CKB; change (2^64) with 18446744073709551616 in *; nia).
-      assert (IE: i = 31) by (clear - BC; lia). assert (JE: j = nk 13 d n - 1) by (clear - BC0 J; lia).
-      assert (K1: 1 <= nk 13 d n) by (clear - J; lia).
-      assert (Ej: 8192 * j = 8192 * nk 13 d n - 8192) by (clear - JE K1; nia).
-      assert (Ei: 128 * i = 3968) by (clear - IE; nia).
-      assert (Es: 128 * N.succ i = 4096) by (clear - IE; nia).
-      split.
-      { eapply cpy_equiv'; [exact ADV|]. intro x. unfold done2. rewrite Ej, Es.
-        clear - K1. split; intro Hx; repeat destruct Hx as [Hx|Hx]; lia. }
-      split. { rewrite Ej, Ei. rewrite N.mod_small by (clear - NW CKB AAB K1; change (2^64) with 18446744073709551616 in *; nia).
-               clear - K1; lia. }
-      split. { rewrite Ej, Ei. f_equal. clear - K1; lia. }
-      split. exact RDX. split. exact RAX. exact RSP.
-    + (* j+1 chunk *)
-      apply N.eqb_eq in BC. apply N.eqb_neq in BC0.
-      rewrite N.mod_small in BC0 by (clear - J NB CKB; change (2^64) with 18446744073709551616 in *; nia).
-      assert (IE: i = 31) by (clear - BC; lia).
-      assert (K1: 1 <= nk 13 d n) by (clear - J; lia).
-      assert (Ei: 128 * i = 3968) by (clear - IE; nia).
-      assert (Es: 128 * N.succ i = 4096) by (clear - IE; nia).
-      assert (Ej1: 8192 * (j + 1) = 8192 * j + 8192) by (clear; nia).
-      exists (j + 1), 0. split. clear - BC0 J; lia. split. clear; lia.
-      split.
-      { eapply cpy_equiv'; [exact ADV|]. intro x. unfold done2. rewrite Es, Ej1.
-        clear. split; intro Hx; repeat destruct Hx as [Hx|Hx]; lia. }
-      split. { rewrite Ei, Ej1. rewrite N.mod_small by (clear - NW CKB AAB J K1; change (2^64) with 18446744073709551616 in *; nia).
-               clear; lia. }
-      split. { rewrite Ei, Ej1. rewrite N.mul_0_r, N.add_0_r. f_equal. clear; lia. }
-      split. clear; lia.
-      split. { rewrite msub_sub by (clear - BC0 J; lia).
-               rewrite N.mod_small by (clear - J NB CKB; change (2^64) with 18446744073709551616 in *; nia).
-               clear - BC0 J; lia. }
-      split. exact RDX. split. exact RAX. exact RSP.
-    + (* i+1 inner *)
-      apply N.eqb_neq in BC.
-      assert (Es: 128 * N.succ i = 128 * i + 128) by (clear; nia).
-      exists j, (N.succ i). split. exact J. split. clear - I BC; lia. split. exact ADV.
-      split. { rewrite Es. rewrite N.mod_small by (clear - NW LE AAB J I CKB NB BC; change (2^64) with 18446744073709551616 in *; nia).
-               clear; lia. }
-      split. { rewrite Es. f_equal. clear; lia. }
-      split. { rewrite msub_sub by (clear - I; lia). rewrite N.mod_small by (clear - I; lia). clear - I; lia. }
-      split. exact R10. split. exact RDX. split. exact RAX. exact RSP.
-  - (* 1117 *) apply nt_seg_1117; assumption.
-  - (* 1125 *) apply nt_seg_1125; assumption.
-  - (* 1210 *) apply nt_seg_1210; assumption.
-  - (* 1285 *) apply nt_seg_1285; assumption.
-  - (* 1613 *) apply nt_seg_1613; assumption.
-  - (* 1621 *) apply nt_seg_1621; assumption.
-  - (* 1706 *) apply nt_seg_1706; assumption.
-Admitted.
+  (* Unfinished functional theorem; unchanged statement. The original main
+     script and proposed sixteen-store repair are preserved together in
+     notes/x02-avx-nt/initial-repair.v.txt. No admission is exported. *)
+Abort.

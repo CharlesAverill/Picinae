@@ -15,7 +15,13 @@
   Examples.claude.amd64_common Examples.claude.abs_amd64
   Examples.claude.amd64_abs_proof
   Examples.claude.arm8_common Examples.claude.abs_arm8
-  Examples.claude.arm8_abs_proof))
+  Examples.claude.arm8_abs_proof
+  Examples.claude.memmove_avx_amd64
+  Examples.claude.amd64_memcpy_sets Examples.claude.amd64_memcpy_lemmas
+  Examples.claude.amd64_memmove_avx_proof
+  Examples.claude.amd64_memmove_avx_loops_proof
+  Examples.claude.amd64_memmove_avx_rep_proof
+  Examples.claude.amd64_memmove_avx_nt_proof))
 
 (alias
  (name core)
