@@ -1,0 +1,25 @@
+Warning: /tmp/picinae-ltac2/baseline-9.1.1/Examples was previously bound to
+Picinae.Examples; it is remapped to <>
+[overriding-logical-loadpath,filesystem,default]
+File "/tmp/picinae-ltac2/baseline-9.1.1/Examples/riscv_addloop_proof.v", line 3, characters 15-21:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "/tmp/picinae-ltac2/baseline-9.1.1/Examples/riscv_addloop_proof.v", line 4, characters 15-19:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require List" or the deprecated "From Coq Require List"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "/tmp/picinae-ltac2/baseline-9.1.1/Examples/riscv_addloop_proof.v", line 5, characters 15-18:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require Lia" or the deprecated "From Coq Require Lia"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Tactic call ran for 0.019 secs (0.u,0.018s) (success)
+File "/tmp/picinae-ltac2/baseline-9.1.1/Examples/riscv_addloop_proof.v", line 148, characters 11-25:
+Error: Unable to apply lemma of type
+ "forall (xs xs' : ?A) (t0 t3 t4 : list ?A),
+  xs' :: t0 = t4 ++ xs :: t3 -> startof t0 xs' = startof t3 xs"
+on hypothesis of type "startof t (x', s') = (Addr 8, s)".
+

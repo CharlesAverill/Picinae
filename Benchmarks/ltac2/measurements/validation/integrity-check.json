@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "archived_files_verified": 216,
+  "harness_commands": 96,
+  "successful_comparison_samples": 36,
+  "successful_profiles": 12,
+  "median_rows_verified": 6,
+  "source_and_library_fingerprints_unchanged": true,
+  "generated_artifacts_or_example_source_copies": false,
+  "overhead_estimates": "unreliable: host clock divergence reproduced; raw signed differences retained"
+}

@@ -1,0 +1,8 @@
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+make -f Makefile.coq all
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+make[2]: Nothing to be done for 'real-all'.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'

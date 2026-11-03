@@ -157,6 +157,7 @@ Tactic Notation "amd64_psimpl" uconstr(e) := psimpl_exp_goal uconstr:(e).
 Tactic Notation "amd64_psimpl" "in" hyp(H) := psimpl_hyp H.
 Tactic Notation "amd64_psimpl" := psimpl_goal.
 Ltac x64_step := ISA_step.
+Ltac x64_step_ltac1 := ISA_step_ltac1.
 
 (* The following is needed when applying cframe theorems from Picinae_theory. *)
 Theorem memacc_respects_x64typctx: memacc_respects_typctx x64typctx.

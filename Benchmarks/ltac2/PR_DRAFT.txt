@@ -1,0 +1,45 @@
+Title: Migrate simplifier and ISA orchestration to Ltac2
+
+Body:
+Existing psimpl forms and all five architecture step aliases now enter Ltac2
+controllers while preserving Classic proof syntax, wildcard occurrence
+selection, dynamic simplifier/ISA hooks, and explicit independent Ltac1 paths.
+The controllers handle AST lifetime, dispatch, fallback/cleanup, interpreter
+stages, branches, unknowns, and memory facts. A transparent <: signature check
+preserves the new adapters through functor parameters; sealing exported the
+signature's legacy defaults and silently bypassed the native backend.
+
+Gallina reflection, its soundness proofs, and existing compute/lazy reductions
+are unchanged. Untyped AST generation/scoped evars, occurrence marking,
+interpreter setup/checks, dependent context edits, and replaceable hooks retain
+Ltac1 boundaries. No new axioms or admissions are introduced. The known failure
+when a later local definition depends on the simplification target is preserved
+with context rollback. See Benchmarks/ltac2/README.txt for the exact boundaries.
+
+Validation uses the local picinae-env opam wrapper (Rocq 9.1.1, OCaml 4.14.2,
+rocq-stdlib 9.1.0). Committed logs record a clean root build including all three
+regression modules and 11 passing harness bookkeeping tests. All six lifted
+ARM/i386 modules and six proof files build on original master a87fc67; unchanged
+Examples are the comparison inputs. riscv_addloop_proof.v:148 (startof_prefix)
+and riscv_cfi.v:490 (missing VaM) fail on that baseline and are excluded.
+
+Performance (three sequential runs/backend/file, seconds):
+Example                   Ltac1 median  Ltac2 median  Change
+arm7_memset_proof          47.51 s       47.06 s     -0.95%
+arm7_strlen_proof          27.73 s       30.32 s     +9.34%
+arm8_strcasecmp_proof      81.99 s       77.54 s     -5.43%
+i386_strcmp_proof          14.61 s       14.68 s     +0.48%
+i386_strlen_proof          95.49 s       96.13 s     +0.67%
+i386_wcsspn_proof          45.81 s       45.13 s     -1.48%
+
+All 36 samples and 12 separate profiles passed; all six eligible proofs and
+lifted modules pass on both backends. No >15% outliers required reruns. Results
+are mixed and do not establish a general speedup. Profiles locate substantial
+work in symbolic stepping, occurrence marking, AST conversion and preserved
+reflective reductions; nested profile percentages are not additive overhead.
+
+The shared WSL2 host had changing load, and GNU time/Python clocks diverged.
+Wrapper overhead could not be estimated reliably; sub-percent differences need
+caution. Full commands, raw samples, profiles, clock checks, fingerprints and
+limitations are committed under Benchmarks/ltac2/measurements/. No earlier
+interrupted/pre-merge measurements are included.

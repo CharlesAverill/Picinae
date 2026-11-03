@@ -1,0 +1,120 @@
+{
+  "commands": [
+    {
+      "command": [
+        "lscpu"
+      ],
+      "exit_code": 0,
+      "stdout": "Architecture:                         x86_64\nCPU op-mode(s):                       32-bit, 64-bit\nAddress sizes:                        46 bits physical, 48 bits virtual\nByte Order:                           Little Endian\nCPU(s):                               24\nOn-line CPU(s) list:                  0-23\nVendor ID:                            GenuineIntel\nModel name:                           Intel(R) Core(TM) Ultra 9 285K\nCPU family:                           6\nModel:                                198\nThread(s) per core:                   1\nCore(s) per socket:                   24\nSocket(s):                            1\nStepping:                             2\nBogoMIPS:                             7372.80\nFlags:                                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nVirtualization:                       VT-x\nHypervisor vendor:                    Microsoft\nVirtualization type:                  full\nL1d cache:                            1.1 MiB (24 instances)\nL1i cache:                            1.5 MiB (24 instances)\nL2 cache:                             72 MiB (24 instances)\nL3 cache:                             36 MiB (1 instance)\nVulnerability Gather data sampling:   Not affected\nVulnerability Itlb multihit:          Not affected\nVulnerability L1tf:                   Not affected\nVulnerability Mds:                    Not affected\nVulnerability Meltdown:               Not affected\nVulnerability Mmio stale data:        Not affected\nVulnerability Reg file data sampling: Not affected\nVulnerability Retbleed:               Mitigation; Enhanced IBRS\nVulnerability Spec rstack overflow:   Not affected\nVulnerability Spec store bypass:      Mitigation; Speculative Store Bypass disabled via prctl and seccomp\nVulnerability Spectre v1:             Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:             Mitigation; Enhanced / Automatic IBRS; IBPB conditional; RSB filling; PBRSB-eIBRS SW sequence; BHI Not affected\nVulnerability Srbds:                  Not affected\nVulnerability Tsx async abort:        Not affected\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "uname",
+        "-a"
+      ],
+      "exit_code": 0,
+      "stdout": "Linux TheAlien 5.15.167.4-microsoft-standard-WSL2 #1 SMP Tue Nov 5 00:21:55 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/usr/bin/time",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "opam",
+        "switch",
+        "show"
+      ],
+      "exit_code": 0,
+      "stdout": "picinae\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "opam",
+        "var",
+        "prefix"
+      ],
+      "exit_code": 0,
+      "stdout": "/home/charles/code/friends/.toolchains/opam/picinae\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "opam",
+        "var",
+        "root"
+      ],
+      "exit_code": 0,
+      "stdout": "/home/charles/code/friends/.toolchains/opam\n",
+      "stderr": ""
+    }
+  ],
+  "python": "3.12.9 | packaged by Anaconda, Inc. | (main, Feb  6 2025, 18:56:27) [GCC 11.2.0]",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+  ],
+  "cpu_count": 24,
+  "load": [
+    7.82080078125,
+    8.48876953125,
+    8.58251953125
+  ],
+  "wrapper": "#!/bin/bash\nset -euo pipefail\nTC=/home/charles/code/friends/.toolchains\nexport OPAMROOT=\"$TC/opam\"\nunset OPAMSWITCH OPAM_SWITCH_PREFIX OCAMLPATH OCAMLLIB CAML_LD_LIBRARY_PATH COQPATH ROCQPATH\nexport PATH=\"$TC/bin:$TC/native/bin:$PATH\"\nexport PKG_CONFIG_PATH=\"$TC/native/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}\"\nexport C_INCLUDE_PATH=\"$TC/native/include${C_INCLUDE_PATH:+:$C_INCLUDE_PATH}\"\nexport LIBRARY_PATH=\"$TC/native/lib${LIBRARY_PATH:+:$LIBRARY_PATH}\"\nexport LD_LIBRARY_PATH=\"$TC/native/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\"\nif (( $# == 0 )); then set -- /bin/bash --noprofile --norc; fi\nexec \"$TC/bin/opam\" exec --switch=picinae --set-switch -- \"$@\"\n",
+  "clocks": {
+    "time": {
+      "implementation": "clock_gettime(CLOCK_REALTIME)",
+      "monotonic": false,
+      "adjustable": true,
+      "resolution": 1e-09
+    },
+    "monotonic": {
+      "implementation": "clock_gettime(CLOCK_MONOTONIC)",
+      "monotonic": true,
+      "adjustable": false,
+      "resolution": 1e-09
+    },
+    "perf_counter": {
+      "implementation": "clock_gettime(CLOCK_MONOTONIC)",
+      "monotonic": true,
+      "adjustable": false,
+      "resolution": 1e-09
+    },
+    "process_time": {
+      "implementation": "clock_gettime(CLOCK_PROCESS_CPUTIME_ID)",
+      "monotonic": true,
+      "adjustable": false,
+      "resolution": 1e-09
+    }
+  }
+}

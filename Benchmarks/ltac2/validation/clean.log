@@ -1,0 +1,16 @@
+#coq_makefile -f _CoqProject -o Makefile.coq
+rocq makefile -f _CoqProject -o Makefile.coq
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+ROCQ DEP VFILES
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+make -f Makefile.coq clean
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+CLEAN
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/ixb-ltac_migration'
+rm -f Makefile.coq Makefile.coq.conf
