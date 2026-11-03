@@ -1,0 +1,134 @@
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 03 00 00 00 00 00 00 00 00
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - GNU
+  ABI Version:                       0
+  Type:                              DYN (Shared object file)
+  Machine:                           Advanced Micro Devices X86-64
+  Version:                           0x1
+  Entry point address:               0x29f50
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          2216176 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         14
+  Size of section headers:           64 (bytes)
+  Number of section headers:         66
+  Section header string table index: 65
+
+Elf file type is DYN (Shared object file)
+Entry point 0x29f50
+There are 14 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  PHDR           0x000040 0x0000000000000040 0x0000000000000040 0x000310 0x000310 R   0x8
+  INTERP         0x1e3e30 0x00000000001e3e30 0x00000000001e3e30 0x00001c 0x00001c R   0x10
+      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]
+  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x027fe0 0x027fe0 R   0x1000
+  LOAD           0x028000 0x0000000000028000 0x0000000000028000 0x1943c1 0x1943c1 R E 0x1000
+  LOAD           0x1bd000 0x00000000001bd000 0x00000000001bd000 0x057924 0x057924 R   0x1000
+  LOAD           0x2158f0 0x00000000002168f0 0x00000000002168f0 0x004f98 0x012560 RW  0x1000
+  DYNAMIC        0x218bc0 0x0000000000219bc0 0x0000000000219bc0 0x0001d0 0x0001d0 RW  0x8
+  NOTE           0x000350 0x0000000000000350 0x0000000000000350 0x000030 0x000030 R   0x8
+  NOTE           0x000380 0x0000000000000380 0x0000000000000380 0x000044 0x000044 R   0x4
+  TLS            0x2158f0 0x00000000002168f0 0x00000000002168f0 0x000010 0x000090 R   0x8
+  GNU_PROPERTY   0x000350 0x0000000000000350 0x0000000000000350 0x000030 0x000030 R   0x8
+  GNU_EH_FRAME   0x1e3e4c 0x00000000001e3e4c 0x00000000001e3e4c 0x0070d4 0x0070d4 R   0x4
+  GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x10
+  GNU_RELRO      0x2158f0 0x00000000002168f0 0x00000000002168f0 0x003710 0x003710 R   0x1
+
+ Section to Segment mapping:
+  Segment Sections...
+   00
+   01     .interp
+   02     .note.gnu.property .note.gnu.build-id .note.ABI-tag .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt
+   03     .plt .plt.got .plt.sec .text __libc_freeres_fn
+   04     .rodata .stapsdt.base .interp .eh_frame_hdr .eh_frame .gcc_except_table .hash
+   05     .tdata .init_array __libc_subfreeres __libc_atexit __libc_IO_vtables .data.rel.ro .dynamic .got .got.plt .data .bss
+   06     .dynamic
+   07     .note.gnu.property
+   08     .note.gnu.build-id .note.ABI-tag
+   09     .tdata .tbss
+   10     .note.gnu.property
+   11     .eh_frame_hdr
+   12
+   13     .tdata .init_array __libc_subfreeres __libc_atexit __libc_IO_vtables .data.rel.ro .dynamic .got
+There are 66 section headers, starting at offset 0x21d0f0:
+
+Section Headers:
+  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0
+  [ 1] .note.gnu.property NOTE            0000000000000350 000350 000030 00   A  0   0  8
+  [ 2] .note.gnu.build-id NOTE            0000000000000380 000380 000024 00   A  0   0  4
+  [ 3] .note.ABI-tag     NOTE            00000000000003a4 0003a4 000020 00   A  0   0  4
+  [ 4] .gnu.hash         GNU_HASH        00000000000003c8 0003c8 004704 00   A  5   0  8
+  [ 5] .dynsym           DYNSYM          0000000000004ad0 004ad0 011b80 18   A  6   1  8
+  [ 6] .dynstr           STRTAB          0000000000016650 016650 007f15 00   A  0   0  1
+  [ 7] .gnu.version      VERSYM          000000000001e566 01e566 0017a0 02   A  5   0  2
+  [ 8] .gnu.version_d    VERDEF          000000000001fd08 01fd08 000524 00   A  6  37  8
+  [ 9] .gnu.version_r    VERNEED         0000000000020230 020230 000040 00   A  6   1  8
+  [10] .rela.dyn         RELA            0000000000020270 020270 007860 18   A  5   0  8
+  [11] .rela.plt         RELA            0000000000027ad0 027ad0 000510 18  AI  5  33  8
+  [12] .plt              PROGBITS        0000000000028000 028000 000370 10  AX  0   0 16
+  [13] .plt.got          PROGBITS        0000000000028370 028370 000020 10  AX  0   0 16
+  [14] .plt.sec          PROGBITS        0000000000028390 028390 000360 10  AX  0   0 16
+  [15] .text             PROGBITS        0000000000028700 028700 1922bd 00  AX  0   0 64
+  [16] __libc_freeres_fn PROGBITS        00000000001ba9c0 1ba9c0 001a01 00  AX  0   0 16
+  [17] .rodata           PROGBITS        00000000001bd000 1bd000 026e28 00   A  0   0 32
+  [18] .stapsdt.base     PROGBITS        00000000001e3e28 1e3e28 000001 00   A  0   0  1
+  [19] .interp           PROGBITS        00000000001e3e30 1e3e30 00001c 00   A  0   0 16
+  [20] .eh_frame_hdr     PROGBITS        00000000001e3e4c 1e3e4c 0070d4 00   A  0   0  4
+  [21] .eh_frame         PROGBITS        00000000001eaf20 1eaf20 0254c8 00   A  0   0  8
+  [22] .gcc_except_table PROGBITS        00000000002103e8 2103e8 00060a 00   A  0   0  1
+  [23] .hash             HASH            00000000002109f8 2109f8 003f2c 04   A  5   0  8
+  [24] .tdata            PROGBITS        00000000002168f0 2158f0 000010 00 WAT  0   0  8
+  [25] .tbss             NOBITS          0000000000216900 215900 000080 00 WAT  0   0  8
+  [26] .init_array       INIT_ARRAY      0000000000216900 215900 000010 08  WA  0   0  8
+  [27] __libc_subfreeres PROGBITS        0000000000216910 215910 0000e8 00 WAR  0   0  8
+  [28] __libc_atexit     PROGBITS        00000000002169f8 2159f8 000008 00 WAR  0   0  8
+  [29] __libc_IO_vtables PROGBITS        0000000000216a00 215a00 000d68 00  WA  0   0 32
+  [30] .data.rel.ro      PROGBITS        0000000000217780 216780 002440 00  WA  0   0 32
+  [31] .dynamic          DYNAMIC         0000000000219bc0 218bc0 0001d0 10  WA  6   0  8
+  [32] .got              PROGBITS        0000000000219d90 218d90 000270 08  WA  0   0  8
+  [33] .got.plt          PROGBITS        000000000021a000 219000 0001c8 08  WA  0   0  8
+  [34] .data             PROGBITS        000000000021a1e0 2191e0 0016a8 00  WA  0   0 32
+  [35] .bss              NOBITS          000000000021b8a0 21a888 00d5b0 00  WA  0   0 32
+  [36] .note.stapsdt     NOTE            0000000000000000 21a888 001c6c 00      0   0  4
+  [37] .gnu.warning.sigstack PROGBITS        0000000000000000 21c500 00004d 00      0   0 32
+  [38] .gnu.warning.sigreturn PROGBITS        0000000000000000 21c560 000032 00      0   0 32
+  [39] .gnu.warning.siggetmask PROGBITS        0000000000000000 21c5a0 000039 00      0   0 32
+  [40] .gnu.warning.tmpnam PROGBITS        0000000000000000 21c5e0 000037 00      0   0 32
+  [41] .gnu.warning.tmpnam_r PROGBITS        0000000000000000 21c620 000039 00      0   0 32
+  [42] .gnu.warning.tempnam PROGBITS        0000000000000000 21c660 000038 00      0   0 32
+  [43] .gnu.warning.gets PROGBITS        0000000000000000 21c6a0 000039 00      0   0 32
+  [44] .gnu.warning.pthread_attr_getstackaddr PROGBITS        0000000000000000 21c6e0 000052 00      0   0 32
+  [45] .gnu.warning.pthread_attr_setstackaddr PROGBITS        0000000000000000 21c740 000052 00      0   0 32
+  [46] .gnu.warning.getpw PROGBITS        0000000000000000 21c7a0 00003a 00      0   0 32
+  [47] .gnu.warning.re_max_failures PROGBITS        0000000000000000 21c7e0 00003d 00      0   0 32
+  [48] .gnu.warning.getwd PROGBITS        0000000000000000 21c820 00007a 00      0   0 32
+  [49] .gnu.warning.revoke PROGBITS        0000000000000000 21c8a0 00002f 00      0   0 32
+  [50] .gnu.warning.mktemp PROGBITS        0000000000000000 21c8e0 000044 00      0   0 32
+  [51] .gnu.warning.gtty PROGBITS        0000000000000000 21c940 00002d 00      0   0 32
+  [52] .gnu.warning.stty PROGBITS        0000000000000000 21c980 00002d 00      0   0 32
+  [53] .gnu.warning.chflags PROGBITS        0000000000000000 21c9c0 000030 00      0   0 32
+  [54] .gnu.warning.fchflags PROGBITS        0000000000000000 21ca00 000031 00      0   0 32
+  [55] .gnu.warning.__compat_bdflush PROGBITS        0000000000000000 21ca40 000039 00      0   0 32
+  [56] .gnu.warning.__gets_chk PROGBITS        0000000000000000 21ca80 000039 00      0   0 32
+  [57] .gnu.warning.inet6_option_space PROGBITS        0000000000000000 21cac0 00003c 00      0   0 32
+  [58] .gnu.warning.inet6_option_init PROGBITS        0000000000000000 21cb00 00003b 00      0   0 32
+  [59] .gnu.warning.inet6_option_append PROGBITS        0000000000000000 21cb40 00003d 00      0   0 32
+  [60] .gnu.warning.inet6_option_alloc PROGBITS        0000000000000000 21cb80 00003c 00      0   0 32
+  [61] .gnu.warning.inet6_option_next PROGBITS        0000000000000000 21cbc0 00003b 00      0   0 32
+  [62] .gnu.warning.inet6_option_find PROGBITS        0000000000000000 21cc00 00003b 00      0   0 32
+  [63] .gnu.warning.setlogin PROGBITS        0000000000000000 21cc40 000031 00      0   0 32
+  [64] .gnu_debuglink    PROGBITS        0000000000000000 21cc74 000034 00      0   0  4
+  [65] .shstrtab         STRTAB          0000000000000000 21cca8 000444 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  R (retain), D (mbind), l (large), p (processor specific)
