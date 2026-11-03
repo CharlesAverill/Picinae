@@ -23,12 +23,23 @@ ARM/i386 modules and six proof files build on original master a87fc67; unchanged
 Examples are the comparison inputs. riscv_addloop_proof.v:148 (startof_prefix)
 and riscv_cfi.v:490 (missing VaM) fail on that baseline and are excluded.
 
-Performance: PENDING final measurement job and parent review. Fill from
-Benchmarks/ltac2/measurements/{medians.csv,runs.json,metadata.json,RESULTS.txt}
-after all six eligible proofs complete on both backends. The harness compares
-retained Ltac1 and Ltac2 in the same migrated libraries, verifies explicit and
-default backend routing on all five architectures, runs >=3 sequential samples
-per backend/file with alternating order and recorded load/outliers, and profiles
-separately with both profiling flags. Preserve final logs/fingerprints and
-report compiler-wall medians, percent changes, and wrapper-overhead limits.
-Earlier /tmp/pre-merge/interrupted results are discarded, not PR evidence.
+Performance (three sequential runs/backend/file, seconds):
+Example                   Ltac1 median  Ltac2 median  Change
+arm7_memset_proof          47.51 s       47.06 s     -0.95%
+arm7_strlen_proof          27.73 s       30.32 s     +9.34%
+arm8_strcasecmp_proof      81.99 s       77.54 s     -5.43%
+i386_strcmp_proof          14.61 s       14.68 s     +0.48%
+i386_strlen_proof          95.49 s       96.13 s     +0.67%
+i386_wcsspn_proof          45.81 s       45.13 s     -1.48%
+
+All 36 samples and 12 separate profiles passed; all six eligible proofs and
+lifted modules pass on both backends. No >15% outliers required reruns. Results
+are mixed and do not establish a general speedup. Profiles locate substantial
+work in symbolic stepping, occurrence marking, AST conversion and preserved
+reflective reductions; nested profile percentages are not additive overhead.
+
+The shared WSL2 host had changing load, and GNU time/Python clocks diverged.
+Wrapper overhead could not be estimated reliably; sub-percent differences need
+caution. Full commands, raw samples, profiles, clock checks, fingerprints and
+limitations are committed under Benchmarks/ltac2/measurements/. No earlier
+interrupted/pre-merge measurements are included.

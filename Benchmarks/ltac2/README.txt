@@ -212,14 +212,58 @@ previous compiler groups block resume. Changed revisions, source/.vo files,
 harness, wrapper/toolchain, paths, or measurement options reject resume and need
 a fresh output directory. --phase may advance baseline -> prepare -> all.
 
-Final performance results: PENDING parent completion. The authoritative final
-artifacts will be measurements/medians.csv, measurements/runs.json,
-measurements/metadata.json, and measurements/RESULTS.txt, relative to this file.
-The measurement job retains raw logs/profiles and their provenance. Fill this
-paragraph only after the backend guards pass and all six eligible proofs
-complete the required samples/profiles on both backends; report medians,
-percent changes, load/outliers, and profile-supported interpretation.
-No preliminary timings or performance claim are included here.
+Final performance results
+
+The final fresh run measures source 602efc7 through the pinned wrapper. All six
+eligible proofs completed three samples per backend, all exit 0 (36 samples),
+and all 12 separate profiles passed. The six lifted modules passed on both
+backends; backend-selection probes passed on all five architectures. Both
+baseline-failing RISC-V examples reproduce the same failures against current
+libraries. No example sources changed. The parent confirmed the merged branch
+contains the exact measured tactic/project/harness sources, verified 224 stored
+file checksums and 216 archived-original digests, and recomputed every median
+from the 36 raw records. Post-merge make also passes.
+
+Example                   Ltac1 median  Ltac2 median  Change
+arm7_memset_proof          47.51 s       47.06 s     -0.95%
+arm7_strlen_proof          27.73 s       30.32 s     +9.34%
+arm8_strcasecmp_proof      81.99 s       77.54 s     -5.43%
+i386_strcmp_proof          14.61 s       14.68 s     +0.48%
+i386_strlen_proof          95.49 s       96.13 s     +0.67%
+i386_wcsspn_proof          45.81 s       45.13 s     -1.48%
+
+Change = 100 * (Ltac2 median / Ltac1 median - 1); negative means faster. No sample
+exceeded the predeclared 15% outlier threshold, so no reruns were triggered.
+Raw ranges remain material: ARMv8 Ltac1 spans 73.11-82.52 s and ARMv7 strlen
+Ltac2 spans 29.16-34.09 s. Three runs on a shared host support descriptive
+comparisons, not a general speedup claim. ARMv7 strlen is slower in this set;
+small differences and ARMv8's mixed per-round direction need caution.
+
+Full-run load averages (1/5/15 minutes) were 12.140/11.818/10.330 before and
+9.385/8.881/8.709 afterward; each sample has its own before/after load record.
+No comparison/profile compilations ran in parallel.
+
+Wrapper overhead could not be estimated reliably. GNU time's inner wall clock
+and Python's outer monotonic clock diverged: outer-minus-inner had median
+-0.159835 s, range -0.897473 to +0.078370 s. A separate post-run 30-second
+clock calibration reproduced the realtime/monotonic discrepancy. These are
+clock artifacts, not negative wrapper cost. Both clocks and raw signed values
+are preserved without adjustment; compiler wall comparisons also inherit host
+clock/load variation, especially relevant to sub-percent changes.
+
+Profiles place substantial work in stepping, occurrence marking, AST conversion
+and reflective reductions. For memset, compute in H is 18.5%/15.8% of the
+Ltac1/Ltac2 profile total and to_ast is 12.6%/10.7%; stepping inclusively covers
+87.3%/88.6%. These are nested, overlapping attributions, not additive costs.
+Instrumentation affects the two backends differently: i386 strlen's profiled
+tactic totals are 35.460/48.777 s despite only +0.67% uninstrumented wall change.
+Profiles locate work; they do not independently establish speed or causality.
+
+See measurements/RESULTS.txt for full analysis, commands, ranges, overhead and
+clock calibration; medians.csv/runs.json/metadata.json for raw data and hashes;
+profile-summary.csv and compressed logs for all profiles. comparison.html is a
+standalone visual of the six measured percent changes. Earlier interrupted,
+pre-merge or incorrectly routed passes contribute no final sample.
 
 Changed files and merged history
 
@@ -248,6 +292,15 @@ Implementation and audit commits merged through 602efc7:
 
 No .github PR template exists in HEAD or the original-master snapshot; no other
 PR template was found in the worktree. PR_DRAFT.txt supplies a sentence-case
-title/body with performance explicitly pending. No push or PR was performed.
-This documentation job read sources and committed evidence only; it ran no
-builds, tests, package tools, profiles, or measurements during collection.
+title/body with the final performance summary. No push or PR was performed.
+The documentation child did only source/evidence reading during collection.
+The parent merged its text without running competing builds.
+
+Documentation and final evidence commits:
+  0680035 Document merged Ltac2 migration and benchmark protocol
+  9012fa7 Merge migration report and PR draft
+  c940a2a Record final sequential Ltac2 benchmark evidence
+  10a8aaa Merge final Ltac proof performance measurements
+The final report-completion commit follows these; use
+  git log --oneline --reverse a87fc67..HEAD
+to obtain the full list including that commit.
