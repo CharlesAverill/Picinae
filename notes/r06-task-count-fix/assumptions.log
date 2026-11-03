@@ -1,0 +1,307 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96052210
+COMMAND=env PROOF_MEMORY_KB=2000000 PROOF_STACK_KB=65536 /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash tools/print-assumptions.sh Picinae.Examples.FreeRTOS.armv6m_uxTaskGetNumberOfTasks_proof task_count_nwc task_count_welltyped task_count_preserves_memory task_count_zero_bound task_count_witness_models task_count_entry_satisfiable task_count_correct task_count_post_at_bx task_count_preserves_callee_saved task_count_return_step task_count_caller_result
+task_count_nwc
+     : forall s2 s1 : Picinae_armv6m.ARMv6MArch.store,
+       uxTaskGetNumberOfTasks_armv6m.uxTaskGetNumberOfTasks_armv6m_prog s1 =
+       uxTaskGetNumberOfTasks_armv6m.uxTaskGetNumberOfTasks_armv6m_prog s2
+Closed under the global context
+task_count_welltyped
+     : Picinae_armv6m.Statics_ARMv6M.welltyped_prog
+         Picinae_armv6m.armv6mtypctx
+         uxTaskGetNumberOfTasks_armv6m.uxTaskGetNumberOfTasks_armv6m_prog
+Closed under the global context
+task_count_preserves_memory
+     : Picinae_armv6m.IL_ARMv6M.forall_endstates
+         uxTaskGetNumberOfTasks_armv6m.uxTaskGetNumberOfTasks_armv6m_prog
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv6m.ARMv6MArch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv6m.ARMv6MArch.store) =>
+          s Picinae_armv6m.V_MEM32 = s' Picinae_armv6m.V_MEM32)
+Closed under the global context
+task_count_zero_bound
+     : forall w : BinNums.N,
+       BinNat.N.lt BinNums.N0
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH)) w)
+Closed under the global context
+task_count_witness_models
+     : forall m : BinNums.N,
+       BinNat.N.lt m
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNat.N.mul
+               (BinNums.Npos
+                  (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx
+         (task_count_entry_witness m)
+Closed under the global context
+task_count_entry_satisfiable
+     : forall m : BinNums.N,
+       BinNat.N.lt m
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNat.N.mul
+               (BinNums.Npos
+                  (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       exists s : Picinae_armv6m.IL_ARMv6M.store,
+         Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s /\
+         s Picinae_armv6m.V_MEM32 = m /\
+         task_count_readable s /\ BinNat.N.odd (s Picinae_armv6m.R_LR) = true
+Closed under the global context
+task_count_correct
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store) (x' : Picinae_core.exit),
+       Picinae_core.startof t (x', s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.Theory_ARMv6M.satisfies_all
+         uxTaskGetNumberOfTasks_armv6m.uxTaskGetNumberOfTasks_armv6m_prog
+         (task_count_invariants s) task_count_exit 
+         ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+task_count_post_at_bx
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+          s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         uxTaskGetNumberOfTasks_armv6m.uxTaskGetNumberOfTasks_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+           s')
+          :: t)%list ->
+       Picinae_theory.unterminated task_count_exit t ->
+       task_count_postcondition s s'
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+task_count_preserves_callee_saved
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+          s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         uxTaskGetNumberOfTasks_armv6m.uxTaskGetNumberOfTasks_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+           s')
+          :: t)%list ->
+       Picinae_theory.unterminated task_count_exit t ->
+       forall v : Picinae_armv6m.armv6mvar,
+       List.In v
+         (Picinae_armv6m.R_R4
+          :: Picinae_armv6m.R_R5
+             :: Picinae_armv6m.R_R6
+                :: Picinae_armv6m.R_R7
+                   :: Picinae_armv6m.R_R8
+                      :: Picinae_armv6m.R_R9
+                         :: Picinae_armv6m.R_R10
+                            :: Picinae_armv6m.R_R11
+                               :: Picinae_armv6m.R_SP
+                                  :: Picinae_armv6m.R_LR :: nil) ->
+       s' v = s v
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+task_count_return_step
+     : forall s : Picinae_armv6m.armv6mvar -> BinNums.N,
+       BinNat.N.odd (s Picinae_armv6m.R_LR) = true ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         uxTaskGetNumberOfTasks_armv6m.uxTaskGetNumberOfTasks_armv6m_prog
+         (Picinae_core.Addr
+            (BinNat.N.land (s Picinae_armv6m.R_LR)
+               (BinNat.N.sub
+                  (BinNat.N.ones
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  (BinNums.Npos BinNums.xH))),
+          s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+           s))
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+task_count_caller_result
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+          s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         uxTaskGetNumberOfTasks_armv6m.uxTaskGetNumberOfTasks_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+           s')
+          :: t)%list ->
+       Picinae_theory.unterminated task_count_exit t ->
+       BinNat.N.odd (s Picinae_armv6m.R_LR) = true ->
+       task_count_postcondition s s' /\
+       Picinae_armv6m.IL_ARMv6M.can_step
+         uxTaskGetNumberOfTasks_armv6m.uxTaskGetNumberOfTasks_armv6m_prog
+         (Picinae_core.Addr
+            (BinNat.N.land (s Picinae_armv6m.R_LR)
+               (BinNat.N.sub
+                  (BinNat.N.ones
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  (BinNums.Npos BinNums.xH))),
+          s',
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+           s'))
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0
