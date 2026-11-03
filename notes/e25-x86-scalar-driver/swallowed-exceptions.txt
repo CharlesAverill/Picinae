@@ -1,0 +1,17 @@
+Actual launcher exits 0 with failing script; supervisor rejects missing receipt:
+notes/e25-x86-scalar-driver/logs/ghidra/01b966b572c54ee7b440eb4da66cf85b.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/16b61b45fea641acbb7e0e3de9d2c933.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/214b249db92d4e7197886a41d7ac8f56.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/22e10b8008ed441aab9ea34ead676998.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/5cfae494d59e4378ab8f2e6614349b9e.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/60764bb6bc94446299ebac042dc55c3c.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/69069f5b576f434d959e911e043ed21c.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/69d7060c15ff424e8aed706cd4677026.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/6c88fef1f587412fbabc7874f19602fa.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/8efe58236ef04a3da7f4c786e7117cfa.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/a86f870ec79c448781698b3fc471cecc.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/aacc88cb94f74e5ea9a9bf4039179e07.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/affeb340248441a1bad6f9f1bb09789d.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/e4b2eae1205e461da5c0e1cef4314daa.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/e8214570eb5d4fbc93dba13db61a02ef.log.gz
+notes/e25-x86-scalar-driver/logs/ghidra/fc0fb65253d143fe861fea9de477e207.log.gz
