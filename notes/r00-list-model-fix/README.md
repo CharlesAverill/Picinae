@@ -8,7 +8,9 @@ correctness, termination, or full binary-soundness result.
 
 Branch: `llm-proofs/r00-list-model-fix`.
 Worktree: `/home/charles/.t3/worktrees/Picinae/t3-db745613`.
-The local commit SHA and final clean status are returned with the handoff.
+Implementation commit: `4369208b4edce53f84113bcfd3b859f3f58be334`.
+A subsequent local evidence-only commit records the clean post-implementation
+audit. Its final HEAD and final clean status are returned with the handoff.
 No installation, remote write, subdelegation, or shared toolchain modification.
 
 ## Exact preservation and repairs
@@ -120,8 +122,16 @@ by `tools/record-command.sh` in this directory.
   is **absent from every one of these 19 theorem dependencies**.
 - 15: exact definition/statement preservation, exit 0.
 - 16: exact approved prerequisite+author ancestry whitelist, exit 0.
-- Final rerun and post-implementation ancestry/clean-status evidence accompany
-  this README. No new admission, Axiom, Parameter, or Abort is present in the kit.
+- 17: final source full-target rebuild, exit 0, after explanatory comments.
+- 18–19: final declaration preservation and unit source audit, exit 0.
+- 20: final raw all-19 assumptions output, exit 0; all 19 remain closed.
+- 21: strengthened ancestry/source-scope audit before commit, exit 0.
+- 22: local implementation commit and clean status, exit 0.
+- 23: post-implementation ancestry whitelist, both diff stats, and clean
+  worktree assertion, exit 0. Only the implementation and this evidence are
+  added above the author checkpoint.
+
+No new admission, Axiom, Parameter, or Abort is present in the kit.
 
 ## Ancestry and remaining boundaries
 
