@@ -214,3 +214,10 @@ Follow on with r42 for actual mask callee correctness and frames; e20 for
 critical nesting/barrier effects; e21 for NVIC/MSP/PSP/exception transitions;
 e23 for assertion WFI; e24 for map composition. None is certified implicitly by
 these decoder/typing facts.
+
+Implementation commit: `53d10faad31da182de6d1d2b084c9ef51f5d1cce`.
+`logs/23-ancestry-after-implementation.log` (exit 0) records the merge base,
+full origin-to-HEAD log and diff stat after that commit, admitting exactly that
+one own commit above the reviewed e05 checkpoint. `logs/24-pinned-artifacts-unchanged.log`
+(exit 0) confirms pinned e03/e04/e05 artifacts/notes are unchanged. A following
+local evidence-only commit records this audit; its full SHA is the final handoff.
