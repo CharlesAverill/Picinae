@@ -188,6 +188,11 @@ set and unchanged e03 model/frontend and e04 fixture, then prints the requested
 merge base, origin-to-HEAD log and diff stat. Before/after evidence is retained
 in `logs/01-before.log`, `logs/14-ancestry-before-commit.log` and the committed
 after-implementation audit. The final handoff supplies the full final SHA.
+The implementation commit is
+`075f59aca328e60e6376e2af01fa49925ab10e9d`; the following evidence-only commit
+records `logs/15-ancestry-after-implementation.log` (exit 0). To recheck final
+ancestry, pass that implementation SHA and the final evidence commit SHA as the
+two arguments to `audit-ancestry.sh`.
 
 ## Concrete blockers and proposed follow-on units
 
