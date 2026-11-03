@@ -215,7 +215,12 @@ Initial HEAD: reviewed e00 `71470bffba65392adf1873a3df9f0cf0ca4f1ac9`.
 The only imported prerequisite is exact e01
 `131ad4b86cf4abcbd392048297038f3f219423bb`, joined by own merge
 `1b6a4814fd989f250e771c5fa4639100b560dfe8`. All later commits are this unit's
-engineering/evidence commits. See logs 01–03 and the final ancestry audit.
+engineering/evidence commits. Engineering tip:
+`19194721ac1ca5f1a55e3838c395eea4794f611c`. Log 17 records the after-implementation
+merge base, full parent DAG, oneline history and both diff stats; its four
+commits are exactly e00, e01, the own merge and the engineering commit. The
+following evidence-only commit adds that audit, this pointer and refreshes the
+local-source excerpt selection. See logs 01–03 for the initial audit/import.
 The first sandboxed network/local Git writes failed on access restrictions;
 the read-only remote collision check, local rename and assigned local merge
 then succeeded with sandbox permission. No branch collision existed. No

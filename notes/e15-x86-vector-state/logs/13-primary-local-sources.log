@@ -1,5 +1,5 @@
 CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
-COMMAND=bash -e -c g=/home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC\;\ cat\ \"\$g/Ghidra/application.properties\"\;\ sha256sum\ \"\$g/Ghidra/Processors/x86/data/languages/ia.sinc\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx_manual.sinc\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx512.sinc\"\;\ sed\ -n\ \"261\,279p\;328\,373p\"\ \"\$g/Ghidra/Processors/x86/data/languages/ia.sinc\"\;\ sed\ -n\ \"147\,174p\;269\,292p\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx_manual.sinc\"\;\ sed\ -n\ \"1331\,1350p\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx512.sinc\"\;\ sha256sum\ /home/charles/code/friends/.toolchains/e01-x86-inventory/runtime/lib/x86_64-linux-gnu/libc.so.6
+COMMAND=bash -e -c g=/home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC\;\ cat\ \"\$g/Ghidra/application.properties\"\;\ sha256sum\ \"\$g/Ghidra/Processors/x86/data/languages/ia.sinc\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx_manual.sinc\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx512.sinc\"\;\ sed\ -n\ \"156\,173p\;328\,373p\"\ \"\$g/Ghidra/Processors/x86/data/languages/ia.sinc\"\;\ sed\ -n\ \"147\,154p\;162\,174p\;269\,292p\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx_manual.sinc\"\;\ sed\ -n\ \"1331\,1350p\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx512.sinc\"\;\ sha256sum\ /home/charles/code/friends/.toolchains/e01-x86-inventory/runtime/lib/x86_64-linux-gnu/libc.so.6
 #Tue Aug 26 13:51:23 EDT 2025
 application.build.date=2025-Aug-26 1351 EDT
 application.build.date.short=20250826
@@ -20,25 +20,24 @@ application.version=11.4.2
 8fbb244f7fc88be621b95f435b6e958c6a55819dd5b935242377bb2a7e2b9b76  /home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/ia.sinc
 b21b9c8426bcb65ff68b372473e88f84b5e60406da70b1a04e4a0173f1d5a27d  /home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/avx_manual.sinc
 4a3b679f76efbd32751167e366c83fdd729ac62f888d88c07648de42b92f38c1  /home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/avx512.sinc
-	XMM0_Wa  XMM0_Wb  XMM0_Wc  XMM0_Wd  XMM0_We  XMM0_Wf  XMM0_Wg  XMM0_Wh  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM1_Wa  XMM1_Wb  XMM1_Wc  XMM1_Wd  XMM1_We  XMM1_Wf  XMM1_Wg  XMM1_Wh  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM2_Wa  XMM2_Wb  XMM2_Wc  XMM2_Wd  XMM2_We  XMM2_Wf  XMM2_Wg  XMM2_Wh  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM3_Wa  XMM3_Wb  XMM3_Wc  XMM3_Wd  XMM3_We  XMM3_Wf  XMM3_Wg  XMM3_Wh  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM4_Wa  XMM4_Wb  XMM4_Wc  XMM4_Wd  XMM4_We  XMM4_Wf  XMM4_Wg  XMM4_Wh  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM5_Wa  XMM5_Wb  XMM5_Wc  XMM5_Wd  XMM5_We  XMM5_Wf  XMM5_Wg  XMM5_Wh  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM6_Wa  XMM6_Wb  XMM6_Wc  XMM6_Wd  XMM6_We  XMM6_Wf  XMM6_Wg  XMM6_Wh  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM7_Wa  XMM7_Wb  XMM7_Wc  XMM7_Wd  XMM7_We  XMM7_Wf  XMM7_Wg  XMM7_Wh  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM8_Wa  XMM8_Wb  XMM8_Wc  XMM8_Wd  XMM8_We  XMM8_Wf  XMM8_Wg  XMM8_Wh  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM9_Wa  XMM9_Wb  XMM9_Wc  XMM9_Wd  XMM9_We  XMM9_Wf  XMM9_Wg  XMM9_Wh  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM10_Wa XMM10_Wb XMM10_Wc XMM10_Wd XMM10_We XMM10_Wf XMM10_Wg XMM10_Wh _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM11_Wa XMM11_Wb XMM11_Wc XMM11_Wd XMM11_We XMM11_Wf XMM11_Wg XMM11_Wh _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM12_Wa XMM12_Wb XMM12_Wc XMM12_Wd XMM12_We XMM12_Wf XMM12_Wg XMM12_Wh _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM13_Wa XMM13_Wb XMM13_Wc XMM13_Wd XMM13_We XMM13_Wf XMM13_Wg XMM13_Wh _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM14_Wa XMM14_Wb XMM14_Wc XMM14_Wd XMM14_We XMM14_Wf XMM14_Wg XMM14_Wh _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM15_Wa XMM15_Wb XMM15_Wc XMM15_Wd XMM15_We XMM15_Wf XMM15_Wg XMM15_Wh _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM16_Wa XMM16_Wb XMM16_Wc XMM16_Wd XMM16_We XMM16_Wf XMM16_Wg XMM16_Wh _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM17_Wa XMM17_Wb XMM17_Wc XMM17_Wd XMM17_We XMM17_Wf XMM17_Wg XMM17_Wh _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-	XMM18_Wa XMM18_Wb XMM18_Wc XMM18_Wd XMM18_We XMM18_Wf XMM18_Wg XMM18_Wh _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+define register offset=0x1200 size=16  [
+	XMM0 YMM0_H	_	_
+	XMM1 YMM1_H	_	_
+	XMM2 YMM2_H	_	_
+	XMM3 YMM3_H	_	_
+	XMM4 YMM4_H	_	_
+	XMM5 YMM5_H	_	_
+	XMM6 YMM6_H	_	_
+	XMM7 YMM7_H	_	_
+	XMM8 YMM8_H	_	_
+	XMM9 YMM9_H	_	_
+	XMM10 YMM10_H	_	_
+	XMM11 YMM11_H	_	_
+	XMM12 YMM12_H	_	_
+	XMM13 YMM13_H	_	_
+	XMM14 YMM14_H	_	_
+	XMM15 YMM15_H	_	_
+	XMM16 YMM16_H	_	_
 
 define register offset=0x1200 size=32  [
 	YMM0	_	YMM1	_
@@ -93,13 +92,6 @@ define register offset=2100 size=8  [
 }
 
 # MOVUPS 4-130 PAGE 1250 LINE 64874
-# break this into two constructors to handle the zext for the register destination case
-:VMOVUPS XmmReg2, XmmReg1 is $(VEX_NONE) & $(VEX_L128) & $(VEX_PRE_NONE) & $(VEX_0F) & $(VEX_WIG); byte=0x11; XmmReg1 & (mod = 3 & XmmReg2 & ZmmReg2) 
-{
-	XmmReg2 = XmmReg1;
-	ZmmReg2 = zext(XmmReg2);
-}
-
 # MOVUPS 4-130 PAGE 1250 LINE 64874
 :VMOVUPS m128, XmmReg1 is $(VEX_NONE) & $(VEX_L128) & $(VEX_PRE_NONE) & $(VEX_0F) & $(VEX_WIG); byte=0x11; XmmReg1 ... & m128
 {
