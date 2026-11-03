@@ -1,0 +1,98 @@
+(* Import completed proof modules to audit their actual global assumptions.
+   This file is part of the normal build, after all functional examples. *)
+From Picinae Require Picinae_riscv Picinae_total_measures.
+From Picinae.Examples Require
+  riscv_addloop_proof
+  arm7_memset_proof
+  arm7_strlen_proof
+  arm8_strcasecmp_proof
+  i386_strcmp_total
+  i386_wcsspn_total
+  i386_strlen_proof .
+
+Check Picinae_riscv.ISA_RISCV.Total.prove_total_invs.
+Print Assumptions Picinae_riscv.ISA_RISCV.Total.prove_total_invs.
+Check Picinae_riscv.ISA_RISCV.Total.eventually_reaches.
+Print Assumptions Picinae_riscv.ISA_RISCV.Total.eventually_reaches.
+Check Picinae_riscv.ISA_RISCV.Total.eventually_all_paths.
+Print Assumptions Picinae_riscv.ISA_RISCV.Total.eventually_all_paths.
+Check Picinae_riscv.ISA_RISCV.Total.eventually_execution.
+Print Assumptions Picinae_riscv.ISA_RISCV.Total.eventually_execution.
+Check Picinae_riscv.ISA_RISCV.Total.total_of_partial.
+Print Assumptions Picinae_riscv.ISA_RISCV.Total.total_of_partial.
+Check Picinae_riscv.ISA_RISCV.Total.total_execution_invs.
+Print Assumptions Picinae_riscv.ISA_RISCV.Total.total_execution_invs.
+
+Check Picinae_total_measures.Nlex_wf.
+Print Assumptions Picinae_total_measures.Nlex_wf.
+Check Picinae_total_measures.Nlex3_wf.
+Print Assumptions Picinae_total_measures.Nlex3_wf.
+Check Picinae_total_measures.Nremaining_decrease.
+Print Assumptions Picinae_total_measures.Nremaining_decrease.
+Check Picinae_total_measures.Nlex_remaining_decrease.
+Print Assumptions Picinae_total_measures.Nlex_remaining_decrease.
+Check Picinae_total_measures.Nphase_decrease.
+Print Assumptions Picinae_total_measures.Nphase_decrease.
+Check Picinae_total_measures.Nphase_remaining_decrease.
+Print Assumptions Picinae_total_measures.Nphase_remaining_decrease.
+Check Picinae_total_measures.msub_advance_exact.
+Print Assumptions Picinae_total_measures.msub_advance_exact.
+Check Picinae_total_measures.msub_advance_decrease.
+Print Assumptions Picinae_total_measures.msub_advance_decrease.
+Check Picinae_total_measures.prefix_terminator_bound.
+Print Assumptions Picinae_total_measures.prefix_terminator_bound.
+Check Picinae_total_measures.prefix_terminator_progress.
+Print Assumptions Picinae_total_measures.prefix_terminator_progress.
+Check Picinae_total_measures.prefix_terminator_remaining_decrease.
+Print Assumptions Picinae_total_measures.prefix_terminator_remaining_decrease.
+
+Check riscv_addloop_proof.addloop_total_invariants.
+Print Assumptions riscv_addloop_proof.addloop_total_invariants.
+Check riscv_addloop_proof.addloop_total_correctness.
+Print Assumptions riscv_addloop_proof.addloop_total_correctness.
+Check riscv_addloop_proof.addloop_terminates.
+Print Assumptions riscv_addloop_proof.addloop_terminates.
+
+Check arm7_memset_proof.memset_total_correctness.
+Print Assumptions arm7_memset_proof.memset_total_correctness.
+Check arm7_memset_proof.memset_finite_execution.
+Print Assumptions arm7_memset_proof.memset_finite_execution.
+
+Check arm7_strlen_proof.strlen_total_correctness.
+Print Assumptions arm7_strlen_proof.strlen_total_correctness.
+Check arm7_strlen_proof.strlen_total_preserves_frame.
+Print Assumptions arm7_strlen_proof.strlen_total_preserves_frame.
+Check arm7_strlen_proof.strlen_finite_execution.
+Print Assumptions arm7_strlen_proof.strlen_finite_execution.
+
+Check arm8_strcasecmp_proof.tolower_total_correctness.
+Print Assumptions arm8_strcasecmp_proof.tolower_total_correctness.
+Check arm8_strcasecmp_proof.strcmp_total_correctness.
+Print Assumptions arm8_strcasecmp_proof.strcmp_total_correctness.
+Check arm8_strcasecmp_proof.strcmp_finite_execution.
+Print Assumptions arm8_strcasecmp_proof.strcmp_finite_execution.
+
+Check i386_strcmp_total.strcmp_total_correctness.
+Print Assumptions i386_strcmp_total.strcmp_total_correctness.
+Check i386_strcmp_total.strcmp_total_preserves_esp.
+Print Assumptions i386_strcmp_total.strcmp_total_preserves_esp.
+Check i386_strcmp_total.strcmp_total_preserves_frame.
+Print Assumptions i386_strcmp_total.strcmp_total_preserves_frame.
+Check i386_strcmp_total.strcmp_terminates.
+Print Assumptions i386_strcmp_total.strcmp_terminates.
+
+Check i386_wcsspn_total.wcsspn_total_correctness.
+Print Assumptions i386_wcsspn_total.wcsspn_total_correctness.
+Check i386_wcsspn_total.wcsspn_terminates.
+Print Assumptions i386_wcsspn_total.wcsspn_terminates.
+
+Check i386_strlen_proof.strlen_termination.
+Print Assumptions i386_strlen_proof.strlen_termination.
+Check i386_strlen_proof.strlen_total_correctness.
+Print Assumptions i386_strlen_proof.strlen_total_correctness.
+Check i386_strlen_proof.strlen_total_preserves_esp.
+Print Assumptions i386_strlen_proof.strlen_total_preserves_esp.
+Check i386_strlen_proof.strlen_total_preserves_frame.
+Print Assumptions i386_strlen_proof.strlen_total_preserves_frame.
+Check i386_strlen_proof.strlen_terminates.
+Print Assumptions i386_strlen_proof.strlen_terminates.

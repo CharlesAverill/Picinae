@@ -3,6 +3,7 @@ From Stdlib Require Import FunctionalExtensionality.
 From Stdlib Require Import Arith.
 From Stdlib Require Import NArith.
 From Stdlib Require Import ZArith.
+From Stdlib Require Import Lia List.
 Require Import Picinae_i386.
 Require Import i386_strlen.
 
@@ -924,4 +925,318 @@ Proof.
   step. exists (k mod 2^32). psimpl. repeat split.
     intros i H. apply NF. eapply N.lt_le_trans. exact H. apply mp2_mod_le.
     assumption.
+Qed.
+
+(* Example #5: Total correctness.
+   A nil byte bounds every nil-free prefix, hence bounds the progress of EAX.
+   Full initial readability includes the stack argument and the word reads past
+   the nil byte.  The extra four bytes in BOUND prevent address wraparound. *)
+Definition strlen_checkpoint (t:trace) : bool :=
+  match t with (Addr a,_)::_ => match a with
+  | 0 | 38 | 49 | 75 | 101 | 127 | 153 | 182 | 186 => true
+  | _ => false end | _ => false end.
+
+Definition strlen_rank (limit:N) (t:trace) : N :=
+  match t with (Addr a,s)::_ => match a with
+  | 0 => limit + 8
+  | 38 => limit + 7
+  | 49 | 75 | 101 | 127 => limit + 4 - s R_EAX + 2
+  | 153 => 1
+  | _ => 0 end | _ => 0 end.
+
+Local Lemma strlen_exit_checkpoint:
+  forall tr, strlen_exit tr = true -> strlen_checkpoint tr = true.
+Proof.
+  intros tr EX. destruct tr as [|[[a|i] st] hist]; try discriminate.
+  cbn [strlen_exit] in EX. destruct a as [|a]; try discriminate.
+  repeat match type of EX with
+  | context [match ?p with xI _ => _ | xO _ => _ | xH => _ end] =>
+      destruct p; cbn in EX; try discriminate
+  end; reflexivity.
+Qed.
+
+(* Transport the execution context once per finite segment.  This avoids
+   expanding its history throughout every symbolic instruction proof. *)
+Local Lemma strlen_total_segment:
+  forall p xp entry checkpoint (rank:trace -> N) bound t
+    (EXIT: forall tr, xp tr = true -> checkpoint tr = true)
+    (CTX: execution_context p xp entry t)
+    (SEG: eventually p (fun tr => xp tr = true \/
+      (checkpoint tr = true /\ rank tr < bound)) t),
+  eventually p (fun tr =>
+    exit_post (execution_invs p xp entry checkpoint) xp tr \/
+    (true_inv (execution_invs p xp entry checkpoint tr) /\ rank tr < bound)) t.
+Proof.
+  intros p xp entry checkpoint rank bound t EXIT CTX SEG.
+  revert CTX. induction SEG; intro CTX.
+  - total_here. destruct POST as [EX|[CP DEC]].
+    + left. split; [exact EX|]. unfold execution_invs. rewrite EXIT by exact EX. exact CTX.
+    + right. split; [|exact DEC]. unfold execution_invs. rewrite CP. exact CTX.
+  - destruct (xp (xs::t)) eqn:EX.
+    + total_here. left. split; [exact EX|].
+      unfold execution_invs. rewrite EXIT by exact EX. exact CTX.
+    + destruct CTX as [XP [ORIGIN UT]].
+      eapply EventuallyStep; [exact ENABLED|]. intros xs' CS. apply H; [exact CS|].
+      split; [apply exec_prog_step; assumption|].
+      split; [rewrite ostartof_step; exact ORIGIN|].
+      simpl. apply unterminated_cons; assumption.
+Qed.
+
+Lemma strlen_checkpoint_cases:
+  forall a s t, strlen_checkpoint ((Addr a,s)::t) = true ->
+    a = 0 \/ a = 38 \/ a = 49 \/ a = 75 \/ a = 101 \/
+    a = 127 \/ a = 153 \/ a = 182 \/ a = 186.
+Proof.
+  intros a s t CHECK. cbn [strlen_checkpoint] in CHECK.
+  destruct a as [|a]. left. reflexivity.
+  repeat match type of CHECK with
+  | context [match ?p with xI _ => _ | xO _ => _ | xH => _ end] =>
+      destruct p; cbn in CHECK; try discriminate
+  end; intuition congruence.
+Qed.
+
+Lemma nilfree_before_nil:
+  forall m p n k, m Ⓑ[n+p] = 0 -> nilfree m p k -> k <= n.
+Proof.
+  intros m p n k NIL NF.
+  eapply nilfree_le_zero with (w:=32) (e:=LittleE) (mem:=m) (p:=p).
+    rewrite N.add_comm. exact NIL.
+    intros i LT. apply N.neq_sym, NF, LT.
+Qed.
+
+Local Ltac strlen_total_stop :=
+  lazymatch goal with
+  | |- eventually _ _ ((Addr ?a,_)::_) =>
+    let stop := eval compute in (strlen_checkpoint ((Addr a,fun _ => 0)::nil)) in
+    lazymatch stop with true =>
+      total_here;
+      lazymatch a with
+      | 186 => left; reflexivity
+      | _ => right; split; [reflexivity|cbn [strlen_rank]; psimpl]
+      end
+    end
+  end.
+
+Local Ltac strlen_total_seek :=
+  lazymatch goal with |- eventually _ _ ((Addr ?a,_)::_) =>
+    let stop := eval compute in (strlen_checkpoint ((Addr a,fun _ => 0)::nil)) in
+    lazymatch stop with
+    | true => strlen_total_stop
+    | false => ISA_total_step; strlen_total_seek
+    end
+  end.
+
+(* Fix the address width before elaborating a memory operand, and normalize
+   variable reads without expanding irrelevant updates to other registers. *)
+Local Ltac total_eval ::= first [
+  eapply ELoad with (w:=32); [total_eval | total_eval | total_memory] |
+  lazymatch goal with |- eval_exp ?c ?st (Var ?v) ?n ?w =>
+    let value := eval lazy [update iseq VarEqDec vareq Var.eq_dec
+      MiniX86VarEq.eq_dec x86var_rec x86var_rect sumbool_rec sumbool_rect]
+      in (st v) in
+    unify n value; exact (EVar c st v w ltac:(reflexivity)) end | apply EWord |
+  lazymatch goal with |- eval_exp _ _ (BinOp ?op _ _) _ _ =>
+    eapply EBinOp with (bop:=op); total_eval end |
+  eapply EUnOp; total_eval | eapply ECast; total_eval |
+  eapply EExtract; total_eval | eapply EConcat; total_eval |
+  eapply ELet; [total_eval | total_eval] |
+  eapply EIte; [total_eval | total_eval | total_eval] |
+  eapply EUnknown with (n:=0); apply N.neq_0_lt_0, pow2_nonzero].
+
+(* Keep this example's normalized variable reads visible in the witness
+   store; the per-instruction abstract block below bounds proof-term growth. *)
+Local Ltac total_move_witness c st v e k ::=
+  let E := constr:(ltac:(total_eval) : eval_exp c st e _ _) in
+  lazymatch type of E with eval_exp _ _ _ ?n ?w =>
+    k constr:(update c v (Some w)) constr:(update st v n)
+      constr:(@None exit) constr:(XMove c st v e n w E)
+  end.
+
+(* Build both branch witnesses before selecting a branch.  This keeps a
+   computed guard from rewriting the store in a captured Ltac proof term. *)
+Local Lemma strlen_enabled_if:
+  forall c st e q1 q2 b,
+  eval_exp c st e b 1 ->
+  (exists c' st' x, exec_stmt c st q1 c' st' x) ->
+  (exists c' st' x, exec_stmt c st q2 c' st' x) ->
+  exists c' st' x, exec_stmt c st (If e q1 q2) c' st' x.
+Proof.
+  intros c st e q1 q2 b E YES NO. destruct b.
+    destruct NO as [c' [st' [x XS]]]. exists c', st', x.
+    eapply XIf; eassumption.
+    destruct YES as [c' [st' [x XS]]]. exists c', st', x.
+    eapply XIf; eassumption.
+Qed.
+
+Local Ltac total_enabled ::= abstract (
+  lazymatch goal with
+  | |- exists c' st' x, exec_stmt ?c ?st (If ?e ?q1 ?q2) c' st' x =>
+    let E := constr:(ltac:(total_eval) : eval_exp c st e _ 1) in
+    eapply strlen_enabled_if; [exact E | total_enabled_auto | total_enabled_auto]
+  | _ => total_enabled_auto end).
+
+Theorem strlen_termination:
+  forall s esp m n
+    (MDL: models x86typctx s)
+    (ESP: s R_ESP = esp) (MEM: s V_MEM32 = m)
+    (NIL: m Ⓑ[n + m Ⓓ[4+esp]] = 0)
+    (BOUND: n + m Ⓓ[4+esp] + 4 < 2^32)
+    (READ: forall a, a < 2^32 -> mem_readable s a),
+  satisfies_total strlen_i386
+    (execution_invs strlen_i386 strlen_exit (Addr 0,s) strlen_checkpoint)
+    strlen_exit ((Addr 0,s)::nil).
+Proof.
+  intros.
+  eapply prove_total_invs with
+    (rank:=strlen_rank (n + m Ⓓ[4+esp])) (R:=N.lt).
+    exact N.lt_wf_0.
+    total_here. cbn [execution_invs strlen_checkpoint true_inv execution_context].
+    split. apply exec_prog_none. split. reflexivity. constructor. reflexivity.
+  intros tr INV.
+  pose proof (execution_invs_checkpoint _ _ _ _ _ INV) as CHECK.
+  apply execution_invs_context in INV.
+  eapply strlen_total_segment; [apply strlen_exit_checkpoint|exact INV|].
+  destruct INV as [XP [ORIGIN UT]].
+  destruct tr as [|[[a|i] st] hist]; try discriminate CHECK.
+  rewrite ostartof_cons in ORIGIN. injection ORIGIN as ENTRY.
+  assert (MDL0: models x86typctx st).
+    eapply preservation_exec_prog; [apply strlen_welltyped|exact XP|exact ENTRY|exact MDL].
+  assert (READ0: forall a, a < 2^32 -> mem_readable st a).
+    intros a0 LT. unfold mem_readable.
+    erewrite <- (strlen_preserves_readable _ _ _ _ _ XP ENTRY).
+    apply READ, LT.
+  assert (MEM0: st V_MEM32 = m).
+    rewrite <- MEM. symmetry. eapply strlen_preserves_memory; eassumption.
+  cbn [tl] in UT.
+  assert (ESP0: st R_ESP = esp).
+    change (trueif_inv (esp_invs esp ((Addr a,st)::hist))).
+    eapply satall_trueif_inv; [|exact XP|exact UT].
+    eapply strlen_preserves_esp; eassumption.
+  assert (PRE: trueif_inv (strlen_invs m esp ((Addr a,st)::hist))).
+    eapply satall_trueif_inv; [|exact XP|exact UT].
+    eapply strlen_partial_correctness; eassumption.
+  Local Ltac total_memory ::= intros; unfold mem_readable;
+    repeat rewrite update_frame by discriminate; psimpl;
+    match goal with
+    | R: forall a, a < 2^32 -> mem_readable ?st a
+      |- N.testbit (?st A_READ) _ = true =>
+        apply R; apply N.mod_lt; discriminate
+    end.
+  destruct (strlen_checkpoint_cases _ _ _ CHECK)
+    as [A|[A|[A|[A|[A|[A|[A|[A|A]]]]]]]];
+    subst a; cbn [strlen_invs trueif_inv] in PRE.
+  (* The entry and alignment phases are finite acyclic segments. *)
+  time (ISA_total_step; strlen_total_seek).
+  all: try solve [lazymatch goal with |- (_ < _)%N => clear - BOUND; lia end].
+  time (ISA_total_step; strlen_total_seek).
+  all: try solve [lazymatch goal with |- (_ < _)%N => clear - BOUND; lia end].
+  (* Each copy of the word loop advances EAX by four.  The original
+     partial invariant bounds its unwrapped value by the explicit nil byte. *)
+  1-4: destruct PRE as [k [EAX [NF [EDX MOD4]]]];
+    assert (KN: k <= n) by (eapply nilfree_before_nil; eassumption);
+    assert (EA: st R_EAX = k + m Ⓓ[4+esp]) by
+      (rewrite EAX; apply N.mod_small; lia);
+    time (ISA_total_step; strlen_total_seek).
+  all: try solve [lazymatch goal with |- (_ < _)%N =>
+    clear - EA KN BOUND; try rewrite EA; repeat rewrite N.mod_small by lia; lia end].
+  (* The suffix tests at most four bytes; all paths reach the subtraction. *)
+  time (ISA_total_step; strlen_total_seek).
+  all: try solve [lazymatch goal with |- (_ < _)%N => clear - BOUND; lia end].
+  time (ISA_total_step; strlen_total_seek).
+  total_here. left. reflexivity.
+Time Qed.
+
+Theorem strlen_total_correctness:
+  forall s esp m n
+    (MDL: models x86typctx s)
+    (ESP: s R_ESP = esp) (MEM: s V_MEM32 = m)
+    (NIL: m Ⓑ[n + m Ⓓ[4+esp]] = 0)
+    (BOUND: n + m Ⓓ[4+esp] + 4 < 2^32)
+    (READ: forall a, a < 2^32 -> mem_readable s a),
+  satisfies_total strlen_i386 (strlen_invs m esp) strlen_exit ((Addr 0,s)::nil).
+Proof.
+  intros. eapply total_execution_invs.
+    intros tr ORIGIN. destruct tr as [|[x' st] hist]; [discriminate|].
+    rewrite ostartof_cons in ORIGIN. injection ORIGIN as ENTRY.
+    eapply strlen_partial_correctness; eassumption.
+    eapply strlen_termination; eassumption.
+Qed.
+
+Corollary strlen_total_preserves_esp:
+  forall s esp m n
+    (MDL: models x86typctx s)
+    (ESP: s R_ESP = esp) (MEM: s V_MEM32 = m)
+    (NIL: m Ⓑ[n + m Ⓓ[4+esp]] = 0)
+    (BOUND: n + m Ⓓ[4+esp] + 4 < 2^32)
+    (READ: forall a, a < 2^32 -> mem_readable s a),
+  satisfies_total strlen_i386 (esp_invs esp) strlen_exit ((Addr 0,s)::nil).
+Proof.
+  intros. eapply total_execution_invs.
+    intros tr ORIGIN. destruct tr as [|[x' st] hist]; [discriminate|].
+    rewrite ostartof_cons in ORIGIN. injection ORIGIN as ENTRY.
+    eapply strlen_preserves_esp; eassumption.
+    eapply strlen_termination; eassumption.
+Qed.
+
+(* A finite execution witness with both original exit postconditions. *)
+Corollary strlen_terminates:
+  forall s esp m n
+    (MDL: models x86typctx s)
+    (ESP: s R_ESP = esp) (MEM: s V_MEM32 = m)
+    (NIL: m Ⓑ[n + m Ⓓ[4+esp]] = 0)
+    (BOUND: n + m Ⓓ[4+esp] + 4 < 2^32)
+    (READ: forall a, a < 2^32 -> mem_readable s a),
+  exists prefix,
+    exec_prog strlen_i386 (prefix ++ (Addr 0,s)::nil) /\
+    strlen_exit (prefix ++ (Addr 0,s)::nil) = true /\
+    true_inv (strlen_invs m esp (prefix ++ (Addr 0,s)::nil)) /\
+    true_inv (esp_invs esp (prefix ++ (Addr 0,s)::nil)).
+Proof.
+  intros.
+  destruct (eventually_reaches _ _ _
+    (strlen_termination s esp m n MDL ESP MEM NIL BOUND READ)
+    (exec_prog_none _ _)) as [prefix [XP [EX INV]]].
+  apply execution_invs_context in INV. destruct INV as [_ [ORIGIN UT]].
+  assert (PARTIAL: satisfies_all strlen_i386 (strlen_invs m esp) strlen_exit
+    (prefix ++ (Addr 0,s)::nil)).
+    destruct (prefix ++ (Addr 0,s)::nil) as [|[x' st] hist]; [discriminate|].
+    rewrite ostartof_cons in ORIGIN. injection ORIGIN as ENTRY.
+    eapply strlen_partial_correctness; eassumption.
+  assert (STACK: satisfies_all strlen_i386 (esp_invs esp) strlen_exit
+    (prefix ++ (Addr 0,s)::nil)).
+    destruct (prefix ++ (Addr 0,s)::nil) as [|[x' st] hist]; [discriminate|].
+    rewrite ostartof_cons in ORIGIN. injection ORIGIN as ENTRY.
+    eapply strlen_preserves_esp; eassumption.
+  exists prefix. split; [exact XP|]. split; [exact EX|]. split;
+    eapply satall_exit_inv; eassumption.
+Qed.
+
+(* The other unconditional preservation lemmas now share the terminating run. *)
+Definition strlen_frame_invs (s0:store) (t:trace) : option Prop :=
+  match t with (_,s)::_ => Some
+    (s0 V_MEM32 = s V_MEM32 /\ s0 R_EBX = s R_EBX /\ s0 A_READ = s A_READ)
+  | _ => None end.
+
+Corollary strlen_total_preserves_frame:
+  forall s esp m n
+    (MDL: models x86typctx s)
+    (ESP: s R_ESP = esp) (MEM: s V_MEM32 = m)
+    (NIL: m Ⓑ[n + m Ⓓ[4+esp]] = 0)
+    (BOUND: n + m Ⓓ[4+esp] + 4 < 2^32)
+    (READ: forall a, a < 2^32 -> mem_readable s a),
+  satisfies_total strlen_i386 (strlen_frame_invs s) strlen_exit ((Addr 0,s)::nil).
+Proof.
+  intros. unfold satisfies_total. eapply eventually_bind.
+    eapply eventually_execution.
+      exact (strlen_total_correctness s esp m n MDL ESP MEM NIL BOUND READ).
+      apply exec_prog_none.
+    intros [|[x st] hist] [[EX INV] [XP ORIGIN]]; try discriminate.
+    change (Some (startof hist (x,st)) = Some (Addr 0,s)) in ORIGIN.
+    injection ORIGIN as ENTRY.
+    total_here. split. exact EX.
+    cbn [strlen_frame_invs true_inv]. split.
+      eapply strlen_preserves_memory; eassumption.
+    split.
+      eapply strlen_preserves_ebx; eassumption.
+      eapply strlen_preserves_readable; eassumption.
 Qed.

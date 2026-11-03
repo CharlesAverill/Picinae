@@ -144,8 +144,8 @@ Proof.
         assumption.
 
     (* Inductive step setup *)
-    intros.
-    eapply startof_prefix in ENTRY; try eassumption.
+    intros. apply exec_prog_nextinv. intro XP.
+    erewrite startof_prefix in ENTRY; try eassumption.
     eapply preservation_exec_prog in MDL; try (eassumption || apply lift_riscv_welltyped).
     clear - PRE MDL. rename t1 into t. rename s1 into s'.
 
@@ -170,3 +170,86 @@ Proof.
     step. step. step.
         repeat split. assumption.
 Qed.
+
+(* Total correctness uses a phase for the entry sequence and the remaining
+   unsigned counter for the loop. No additional input restriction is needed. *)
+Definition addloop_total_invs x y (t:trace) : option Prop :=
+  match t with (Addr a,s)::_ => Some
+    ((a = 0x8 /\ s R_T0 = x /\ s R_T1 = y /\ s R_T1 < 2^32) \/
+     (a = 0x10 /\ s R_T2 = 1 /\ s R_T3 = 0 /\
+       s R_T0 ⊕ s R_T1 = x ⊕ y /\ s R_T1 < 2^32) \/
+     (a = 0x20 /\ postcondition s x y))
+  | _ => None end.
+
+Definition addloop_rank (t:trace) : N :=
+  match t with (Addr a,s)::_ =>
+    if a =? 0x8 then N.succ (s R_T0) else s R_T0
+  | _ => 0 end.
+
+Lemma addloop_decreases:
+  forall n, n <> 0 -> n ⊖ 1 < n.
+Proof.
+  intros n NZ. destruct (N.lt_ge_cases n (2^32)) as [LT|GE].
+    rewrite msub_nowrap.
+      rewrite (N.mod_small n _ LT). cbn. lia.
+      rewrite (N.mod_small n _ LT). cbn. lia.
+    eapply N.lt_le_trans. apply msub_lt. exact GE.
+Qed.
+
+Theorem addloop_total_invariants:
+  forall s x y (MDL: models rvtypctx s)
+    (T0: s R_T0 = x) (T1: s R_T1 = y),
+  satisfies_total lifted_addloop (addloop_total_invs x y) addloop_exit
+    ((Addr 0x8,s)::nil).
+Proof.
+  intros. pose proof (models_var R_T1 MDL) as T1B.
+  change (s R_T1 < 2^32) in T1B.
+  eapply prove_total_invs with (rank:=addloop_rank) (R:=N.lt).
+    exact N.lt_wf_0.
+    total_here; cbn [addloop_total_invs true_inv]; psimpl. left. repeat split; assumption.
+    intros t0 PRE. destruct t0 as [|[[a|i] s0] hist]; try contradiction.
+    cbn [addloop_total_invs true_inv] in PRE.
+    destruct PRE as [[A [T0' [T1' BOUND]]] | [[A [T2 [T3 [EQ BOUND]]]] | [A POST]]]; subst a.
+      do 2 ISA_total_step. total_here; cbn [addloop_total_invs true_inv]; psimpl. right. split.
+        right. left. repeat split; try reflexivity; try assumption; congruence.
+        cbn [addloop_rank]; psimpl. apply N.lt_succ_diag_r.
+      ISA_total_step.
+        total_here; cbn [addloop_total_invs true_inv]; psimpl. left. split. reflexivity.
+        right. right. split. reflexivity.
+        unfold postcondition. rewrite N.eqb_eq in BC. rewrite BC in EQ.
+        psimpl in EQ. psimpl. rewrite N.mod_small in EQ by exact BOUND. exact EQ.
+      do 3 ISA_total_step. total_here; cbn [addloop_total_invs true_inv]; psimpl. right. split.
+        right. left. repeat split; try assumption. apply mp2_mod_lt.
+        cbn [addloop_rank]; psimpl. apply addloop_decreases. apply N.eqb_neq, BC.
+      total_here; cbn [addloop_total_invs true_inv]; psimpl. left. split. reflexivity. right. right. split; [reflexivity|assumption].
+Qed.
+
+(* The public result uses precisely the invariant set of the partial proof. *)
+Theorem addloop_total_correctness:
+  forall s p x y (MDL: models rvtypctx s)
+    (T0: s R_T0 = x) (T1: s R_T1 = y),
+  satisfies_total lifted_addloop (addloop_correctness_invs p x y) addloop_exit
+    ((Addr 0x8,s)::nil).
+Proof.
+  intros. unfold satisfies_total. eapply eventually_bind.
+    exact (addloop_total_invariants s x y MDL T0 T1).
+    intros t' [EX INV]. destruct t' as [|[[a|i] s0] hist]; try discriminate.
+    cbn [addloop_total_invs true_inv] in INV.
+    destruct INV as [[A _] | [[A _] | [A POST]]]; subst a; try discriminate.
+    total_here. split; assumption.
+Qed.
+
+Corollary addloop_terminates:
+  forall s p x y (MDL: models rvtypctx s)
+    (T0: s R_T0 = x) (T1: s R_T1 = y),
+  exists prefix, exec_prog lifted_addloop (prefix++(Addr 0x8,s)::nil) /\
+    exit_post (addloop_correctness_invs p x y) addloop_exit
+      (prefix++(Addr 0x8,s)::nil).
+Proof.
+  intros. apply eventually_reaches.
+    apply addloop_total_correctness; assumption.
+    apply exec_prog_none.
+Qed.
+
+Print Assumptions addloop_total_correctness.
+Print Assumptions addloop_terminates.

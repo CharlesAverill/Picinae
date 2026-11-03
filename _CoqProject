@@ -3,6 +3,8 @@
 -R . Picinae
 Picinae_core.v
 Picinae_theory.v
+Picinae_total.v
+Picinae_total_measures.v
 Picinae_statics.v
 Picinae_auto.v
 Picinae_finterp.v
@@ -16,17 +18,21 @@ Picinae_riscv.v
 Picinae_amd64.v
 Picinae_numbers.v
 
-# Examples/arm7_memset_proof.v
-# Examples/arm7_memset.v
-# Examples/arm7_strlen_proof.v
-# Examples/arm7_strlen.v
-# Examples/arm8_strcasecmp_proof.v
-# Examples/arm8_strcasecmp.v
-# Examples/i386_strcmp_proof.v
-# Examples/i386_strcmp.v
-# Examples/i386_strlen_proof.v
-# Examples/i386_strlen.v
-# Examples/i386_wcsnlen_proof.v
-# Examples/i386_wcsnlen.v
-# Examples/i386_wcsspn_proof.v
-# Examples/i386_wcsspn.v
+Examples/arm7_memset.v
+Examples/arm7_memset_proof.v
+Examples/arm7_strlen.v
+Examples/arm7_strlen_proof.v
+Examples/arm7_total_audit.v
+Examples/arm8_strcasecmp.v
+Examples/arm8_strcasecmp_proof.v
+Examples/i386_total_helpers.v
+Examples/i386_strcmp.v
+Examples/i386_strcmp_proof.v
+Examples/i386_strcmp_total.v
+Examples/i386_strlen.v
+Examples/i386_strlen_proof.v
+Examples/i386_wcsspn.v
+Examples/i386_wcsspn_proof.v
+Examples/i386_wcsspn_total.v
+Examples/riscv_addloop_proof.v
+Examples/total_assumptions.v
