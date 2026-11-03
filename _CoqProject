@@ -4,6 +4,7 @@
 Picinae_core.v
 Picinae_theory.v
 Picinae_total.v
+Picinae_total_measures.v
 Picinae_statics.v
 Picinae_auto.v
 Picinae_finterp.v
