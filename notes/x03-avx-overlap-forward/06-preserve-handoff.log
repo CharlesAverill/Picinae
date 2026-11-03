@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5046f507
+COMMAND=python3 notes/x03-avx-overlap-forward/preserve-handoff.py
+Preserved all statements exactly; retained earlier Qed blocks; aborted 7 unchecked declarations.
+
+EXIT_CODE=0
