@@ -49,6 +49,8 @@ Global Opaque memsize.
 Global Opaque getmem.
 Global Opaque setmem.
 
+Require Export Picinae_total.
+
 Module Picinae_ISA
   (IL: PICINAE_IL)
   (PSIMPL: PSIMPL_BASE IL)
@@ -61,6 +63,9 @@ Import PSIMPL.
 Import TIL.
 Import SIL.
 Import FIL.
+
+Module Total := PicinaeTotal IL TIL.
+Export Total.
 
 Ltac simpl_memaccs H := fail "ISA definition failed to supply a simpl_memaccs tactic".
 
@@ -188,6 +193,34 @@ Ltac ISA_invhere :=
    some manual simplification of the state at various points.) *)
 Ltac ISA_invseek :=
   eapply NIStep; [reflexivity|reflexivity|];
+  let c := fresh "c" in let s := fresh "s" in let x := fresh "x" in let XS := fresh "XS" in
+  intros c s x XS;
+  ISA_step_and_simplify XS;
+  repeat lazymatch type of XS with
+         | reset_temps _ s = _ /\ x = _ =>
+             try clear c; destruct XS as [XS ?]; subst x;
+             try (let rt := fresh in set (rt := reset_temps _ _) at 1;
+                  psimpl_hyp rt; subst rt;
+                  rewrite XS; clear XS; try clear s)
+         | exec_stmt _ _ (if ?c then _ else _) _ _ _ =>
+             let BC := fresh "BC" in destruct c eqn:BC;
+             ISA_step_and_simplify XS
+         | exec_stmt _ _ (Seq (if ?c then _ else _) _) _ _ _ =>
+             let BC := fresh "BC" in destruct c eqn:BC;
+             ISA_step_and_simplify XS
+         | exec_stmt _ _ (N.iter _ _ _) _ _ _ => fail
+         | _ => ISA_step_and_simplify XS
+         end;
+  try lazymatch goal with |- context [ exitof (N.add ?m ?n) ] => simpl (N.add m n) end;
+  repeat match goal with [ x:N |- _ ] => clear x end;
+  try first [ rewrite exitof_none | rewrite exitof_some ].
+
+(* Enabledness is a separate obligation. Architectures or clients may override
+   this hook with a memory-safety proof or an instruction execution witness. *)
+Ltac total_enabled := fail "Supply a proof that this instruction can execute".
+
+Ltac ISA_total_step :=
+  eapply total_step; [reflexivity|total_enabled|];
   let c := fresh "c" in let s := fresh "s" in let x := fresh "x" in let XS := fresh "XS" in
   intros c s x XS;
   ISA_step_and_simplify XS;
