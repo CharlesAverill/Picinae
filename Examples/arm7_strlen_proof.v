@@ -1,9 +1,10 @@
 From Stdlib Require Import Utf8.
 From Stdlib Require Import FunctionalExtensionality.
 From Stdlib Require Import Arith.
-From Stdlib Require Import NArith.
+From Stdlib Require Import NArith Lia List.
 From Stdlib Require Import ZArith.
 Require Import Picinae_armv7.
+Require Import Picinae_total_measures.
 Require Import arm7_strlen.
 
 Import ARM7Notations.
@@ -309,3 +310,152 @@ Proof.
     eapply nilfree_extend; try assumption. reflexivity.
     intros i LT. destruct i as [|i]; repeat (discriminate LT || (simpl N.succ; psimpl; assumption) || destruct i as [i|i|]).
 Qed.
+
+(* A known nil byte bounds the non-nil prefix obtained from the partial proof.
+   Full 32-bit readability also covers the leading bytes of an unaligned word
+   and the bytes loaded after the terminator. The input bound keeps the decoded
+   block counter from wrapping; it does not restrict pointer alignment or prevent
+   the pointer itself from wrapping. *)
+Definition strlen_checkpoint (t:trace) : bool :=
+  match t with (Addr a,_)::_ => match a with
+  | 0 | 40 | 92 => true | _ => false end | _ => false end.
+
+(* At address 40, R0 plus the initial alignment offset decodes to 4*k. *)
+Definition strlen_rank p n (t:trace) : N :=
+  match t with (Addr a,s)::_ => match a with
+  | 0 => n + p mod 4 + 5
+  | 40 => n + p mod 4 + 4 - (s R_R0 ⊕ p mod 4)
+  | _ => 0 end | _ => 0 end.
+
+Lemma strlen_checkpoint_cases:
+  forall a s t, strlen_checkpoint ((Addr a,s)::t) = true ->
+    a = 0 \/ a = 40 \/ a = 92.
+Proof.
+  intros a s t CHECK. cbn [strlen_checkpoint] in CHECK.
+  destruct a as [|a]. left. reflexivity.
+  repeat match type of CHECK with
+  | context [match ?p with xI _ => _ | xO _ => _ | xH => _ end] =>
+      destruct p; cbn in CHECK; try discriminate
+  end; intuition congruence.
+Qed.
+
+Local Ltac strlen_total_context :=
+  cbn [execution_invs strlen_checkpoint true_inv];
+  unfold execution_context; psimpl;
+  try match goal with H: unterminated _ _ |- _ => psimpl_hyp H end;
+  split; [eassumption|];
+  split; [rewrite ostartof_cons; repeat rewrite startof_cons; f_equal; eassumption
+         |cbn [tl]; eassumption].
+
+Local Ltac strlen_total_stop :=
+  lazymatch goal with
+  | |- eventually _ _ ((Addr ?a,_)::_) =>
+    let endpt := eval compute in (strlen_checkpoint ((Addr a,fun _ => 0)::nil)) in
+    lazymatch endpt with true =>
+      total_here;
+      lazymatch a with
+      | 92 => left; split; [reflexivity|strlen_total_context]
+      | _ => right; split; [strlen_total_context|cbn [strlen_rank]; psimpl]
+      end
+    end
+  end.
+
+Local Ltac strlen_live_step :=
+  psimpl;
+  try match goal with H: exec_prog _ _ |- _ => psimpl_hyp H end;
+  try match goal with H: unterminated _ _ |- _ => psimpl_hyp H end;
+  lazymatch goal with XP: exec_prog _ _, UT: unterminated _ _ |- _ =>
+    ISA_total_live_step; clear XP UT;
+    repeat match goal with H: reset_temps _ _ = _ |- _ => clear H end;
+    repeat match goal with H: MemAcc _ _ _ _ _ |- _ => clear H end
+  end.
+
+Local Ltac strlen_total_seek :=
+  lazymatch goal with |- eventually _ _ ((Addr ?a,_)::_) =>
+    let stop := eval compute in (strlen_checkpoint ((Addr a,fun _ => 0)::nil)) in
+    lazymatch stop with
+    | true => strlen_total_stop
+    | false => strlen_live_step; strlen_total_seek
+    end
+  end.
+
+(* Evaluate the address first to infer its 32-bit width before the memory type. *)
+Local Ltac total_eval ::= first [apply EVar; reflexivity | apply EWord |
+  lazymatch goal with |- eval_exp _ _ (BinOp ?op _ _) _ _ =>
+    eapply EBinOp with (bop:=op); total_eval end |
+  eapply EUnOp; total_eval | eapply ECast; total_eval |
+  eapply EExtract; total_eval | eapply EConcat; total_eval |
+  eapply ELet; [total_eval | total_eval] |
+  eapply EIte; [total_eval | total_eval | total_eval] |
+  eapply ELoad; [idtac | total_eval | total_memory]; total_eval |
+  eapply EStore; [idtac | total_eval | total_eval | total_memory]; total_eval |
+  eapply EUnknown with (n:=0); apply N.neq_0_lt_0, pow2_nonzero].
+
+Theorem strlen_total_correctness:
+  forall s p lr m n
+    (MDL: models arm7typctx s)
+    (MEM: s V_MEM32 = m) (LR: s R_LR = lr) (R0: s R_R0 = p)
+    (NIL: m Ⓑ[p+n] = 0)
+    (BOUND: n + p mod 4 + 4 < 2^32)
+    (READ: forall a, a < 2^32 -> mem_readable s a),
+  satisfies_total strlen_arm (strlen_invs m p) strlen_exit ((Addr 0,s)::nil).
+Proof.
+  intros.
+  assert (P32: p < 2^32). rewrite <- R0. apply (models_var R_R0 MDL).
+  eapply total_execution_invs with
+    (entry:=(Addr 0,s)) (checkpoint:=strlen_checkpoint).
+    intros tr ORIGIN. destruct tr as [|[x' s'] hist]; [discriminate|].
+    cbn [ostartof] in ORIGIN. injection ORIGIN as ENTRY.
+    eapply strlen_partial_correctness; eassumption.
+  eapply prove_total_invs with (rank:=strlen_rank p n) (R:=N.lt).
+    exact N.lt_wf_0.
+    total_here. cbn [execution_invs strlen_checkpoint true_inv execution_context].
+    split. apply exec_prog_none. split. reflexivity. constructor. reflexivity.
+    intros tr INV.
+    pose proof (execution_invs_checkpoint _ _ _ _ _ INV) as CHECK.
+    apply execution_invs_context in INV.
+    destruct INV as [XP [ORIGIN UT]].
+    destruct tr as [|[[a|i] st] hist]; try discriminate CHECK.
+    cbn [ostartof] in ORIGIN. injection ORIGIN as ENTRY.
+    assert (MDL0: models arm7typctx st).
+      eapply preservation_exec_prog; [apply strlen_welltyped|exact XP|exact ENTRY|exact MDL].
+    assert (MEM0: st V_MEM32 = m).
+      rewrite <- (strlen_preserves_memory _ _ _ _ _ XP ENTRY). exact MEM.
+    assert (READ0: forall a, a < 2^32 -> mem_readable st a).
+      intros a0 LT. unfold mem_readable.
+      erewrite <- (strlen_preserves_readable _ _ _ _ _ XP ENTRY).
+      apply READ, LT.
+    assert (PRE: trueif_inv (strlen_invs m p ((Addr a,st)::hist))).
+      eapply satall_trueif_inv; [|exact XP|exact UT].
+      eapply strlen_partial_correctness; eassumption.
+    Local Ltac total_memory ::= intros; unfold mem_readable;
+      repeat (rewrite update_updated || rewrite update_frame by discriminate);
+      match goal with
+      | R: forall a, a < 2^32 -> mem_readable ?st a
+        |- N.testbit (?st A_READ) _ = true =>
+          apply R; apply N.mod_lt; discriminate
+      end.
+    destruct (strlen_checkpoint_cases _ _ _ CHECK) as [A|[A|A]];
+      subst a; cbn [strlen_invs trueif_inv] in PRE.
+    { (* Align and mask the first word, for every initial pointer alignment. *)
+    strlen_live_step; strlen_total_seek.
+    all: pose proof (N.le_sub_l (n + p mod 4 + 4)); lia. }
+    { (* A known terminator bounds the current block, without assuming it is first. *)
+    destruct PRE as [k [R00 [R10 [R20 NF]]]].
+    assert (KB: 4*k - p mod 4 <= n).
+      eapply (prefix_terminator_bound (fun i => m Ⓑ[p+i]) 0 n); eassumption.
+    assert (K32: 4*k < 2^32) by lia.
+    assert (PLUS32: 4*k+4 < 2^32) by lia.
+    assert (DECODE: st R_R0 ⊕ p mod 4 = 4*k).
+      rewrite R00, msub_add. apply N.mod_small, K32.
+    assert (ADVANCE: (4 ⊕ st R_R0) ⊕ p mod 4 = 4+4*k).
+      rewrite mp2_add_l, <- N.add_assoc, <- mp2_add_r, DECODE.
+      rewrite N.mod_small by lia. reflexivity.
+    clear R00 R10 R20 NF.
+    strlen_live_step; strlen_total_seek.
+    all: try rewrite ADVANCE; try rewrite DECODE; lia.
+    }
+    { strlen_total_stop. }
+Qed.
+
+Print Assumptions strlen_total_correctness.
