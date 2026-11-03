@@ -32,3 +32,5 @@ Picinae_numbers.v
 # Examples/i386_wcsspn.v
 
 Tests/automation.v
+
+Tests/isa_steps.v
