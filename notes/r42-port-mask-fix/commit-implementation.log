@@ -1,0 +1,41 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5f10d9a4
+COMMAND=git commit -m Prove\ ARMv6-M\ port\ mask\ correctness
+[llm-proofs/r42-port-mask-fix 95e00d9] Prove ARMv6-M port mask correctness
+ 36 files changed, 13292 insertions(+), 54 deletions(-)
+ create mode 100644 notes/r42-port-mask-fix/.gitattributes
+ create mode 100644 notes/r42-port-mask-fix/README.md
+ create mode 100644 notes/r42-port-mask-fix/ancestry-before-commit.log
+ create mode 100644 notes/r42-port-mask-fix/ancestry-imported.log
+ create mode 100644 notes/r42-port-mask-fix/ancestry-prepared.log
+ create mode 100644 notes/r42-port-mask-fix/assumptions-inspection.log
+ create mode 100644 notes/r42-port-mask-fix/assumptions.log
+ create mode 100644 notes/r42-port-mask-fix/audit-ancestry.sh
+ create mode 100644 notes/r42-port-mask-fix/build-01.log
+ create mode 100644 notes/r42-port-mask-fix/build-02-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-03-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-04-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-05-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-06-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-07-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-08-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-09-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-10-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-11-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-12-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-13-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-14-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-15-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-16-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-17-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-18-time.log
+ create mode 100644 notes/r42-port-mask-fix/build-clean.log
+ create mode 100644 notes/r42-port-mask-fix/check-assumptions-output.py
+ create mode 100644 notes/r42-port-mask-fix/check-assumptions.sh
+ create mode 100644 notes/r42-port-mask-fix/check-declarations.py
+ create mode 100644 notes/r42-port-mask-fix/declaration-preservation.log
+ create mode 100644 notes/r42-port-mask-fix/fork-name-check.log
+ create mode 100644 notes/r42-port-mask-fix/protected-sources.log
+ create mode 100644 notes/r42-port-mask-fix/restored-statements.log
+ create mode 100644 notes/r42-port-mask-fix/source-audit.log
+
+EXIT_CODE=0

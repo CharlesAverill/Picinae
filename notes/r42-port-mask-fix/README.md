@@ -134,7 +134,9 @@ Sol fixer commits follow that checkpoint. `audit-ancestry.sh` checks this,
 records full log/diff-stat/status, and rejects out-of-scope fixer paths.
 `ancestry-prepared.log`, `ancestry-imported.log`, and subsequent ancestry logs
 retain before/after evidence. A final clean status is also checked after the
-evidence commit.
+evidence commit. The final audit is recorded at
+`/home/charles/code/friends/.refs/picinae-llm-proofs/units/r42-port-mask-fix/final-ancestry.log`
+so recording it does not dirty this committed worktree.
 
 No fork branch was used as a base, no new worktree or other branch was changed,
 no original author's branch/worktree/notes or shared campaign was edited, and
