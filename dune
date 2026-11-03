@@ -15,7 +15,51 @@
   Examples.claude.amd64_common Examples.claude.abs_amd64
   Examples.claude.amd64_abs_proof
   Examples.claude.arm8_common Examples.claude.abs_arm8
-  Examples.claude.arm8_abs_proof))
+  Examples.claude.arm8_abs_proof
+; BEGIN e05 generated modules
+  Examples.FreeRTOS.vListInitialiseItem_armv6m
+  Examples.FreeRTOS.vListInitialise_armv6m
+  Examples.FreeRTOS.vListInsertEnd_armv6m
+  Examples.FreeRTOS.uxListRemove_armv6m
+  Examples.FreeRTOS.vListInsert_armv6m
+  Examples.FreeRTOS.uxTaskGetNumberOfTasks_armv6m
+  Examples.FreeRTOS.xTaskGetCurrentTaskHandle_armv6m
+  Examples.FreeRTOS.xTaskGetTickCount_armv6m
+  Examples.FreeRTOS.xTaskGetTickCountFromISR_armv6m
+  Examples.FreeRTOS.vTaskSuspendAll_armv6m
+  Examples.FreeRTOS.vTaskMissedYield_armv6m
+  Examples.FreeRTOS.uxTaskPriorityGet_armv6m
+  Examples.FreeRTOS.uxTaskResetEventItemValue_armv6m
+  Examples.FreeRTOS.vTaskInternalSetTimeOutState_armv6m
+  Examples.FreeRTOS.vTaskSetTimeOutState_armv6m
+  Examples.FreeRTOS.xTaskGenericNotifyStateClear_armv6m
+  Examples.FreeRTOS.ulTaskGenericNotifyValueClear_armv6m
+  Examples.FreeRTOS.pvTaskIncrementMutexHeldCount_armv6m
+  Examples.FreeRTOS.xTaskGetSchedulerState_armv6m
+  Examples.FreeRTOS.uxQueueMessagesWaiting_armv6m
+  Examples.FreeRTOS.uxQueueSpacesAvailable_armv6m
+  Examples.FreeRTOS.xQueueGetMutexHolder_armv6m
+  Examples.FreeRTOS.xQueueGetMutexHolderFromISR_armv6m
+  Examples.FreeRTOS.eTaskGetState_armv6m
+  Examples.FreeRTOS.prvTaskIsTaskSuspended_armv6m
+  Examples.FreeRTOS.prvResetNextTaskUnblockTime_armv6m
+  Examples.FreeRTOS.prvSearchForNameWithinSingleList_armv6m
+  Examples.FreeRTOS.vTaskSwitchContext_armv6m
+  Examples.FreeRTOS.xQueueGenericSend_armv6m
+  Examples.FreeRTOS.xQueueReceive_armv6m
+  Examples.FreeRTOS.xQueueGenericSendFromISR_armv6m
+  Examples.FreeRTOS.xQueueReceiveFromISR_armv6m
+  Examples.FreeRTOS.vTaskDelay_armv6m
+  Examples.FreeRTOS.xTaskIncrementTick_armv6m
+  Examples.FreeRTOS.xTaskCreateStatic_armv6m
+  Examples.FreeRTOS.xEventGroupSetBits_armv6m
+  Examples.FreeRTOS.xEventGroupClearBits_armv6m
+  Examples.FreeRTOS.xStreamBufferSend_armv6m
+  Examples.FreeRTOS.xStreamBufferReceive_armv6m
+  Examples.FreeRTOS.xTimerGenericCommandFromTask_armv6m
+  Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+; END e05 generated modules
+ ))
 
 (alias
  (name core)
