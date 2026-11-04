@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-013cef89
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 4000000\;\ ulimit\ -s\ 65536\;\ export\ PROOF_MEMORY_KB=4000000\ PROOF_STACK_KB=65536\;\ bash\ tools/print-assumptions.sh\ Picinae.Examples.claude.arm8_strcmp_proof\ strcmp_correct
+File "/home/charles/.t3/worktrees/Picinae/t3-013cef89/_build/proof-audit.EsQg6xHY/Assumptions.v", line 2, characters 6-62:
+Error: The reference Picinae.Examples.claude.arm8_strcmp_proof.strcmp_correct
+was not found in the current environment.
+
+
+EXIT_CODE=1

@@ -1,0 +1,978 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-013cef89
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 4000000\;\ ulimit\ -s\ 65536\;\ export\ PROOF_MEMORY_KB=4000000\ PROOF_STACK_KB=65536\;\ mapfile\ -t\ strcmp_fix_names\ \<\ notes/a-strcmp-fix/completed-theorems.txt\;\ bash\ tools/print-assumptions.sh\ Picinae.Examples.claude.arm8_strcmp_proof\ \"\$\{strcmp_fix_names\[@\]\}\"
+strcmp_nwc
+     : forall s2 s1 : Picinae_armv8.ARM8Arch.store,
+       e30_strcmp_arm8.e30_strcmp_arm8 s1 =
+       e30_strcmp_arm8.e30_strcmp_arm8 s2
+Closed under the global context
+strcmp_welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e30_strcmp_arm8.e30_strcmp_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+strcmp_preserves_memory
+     : Picinae_armv8.IL_arm8.forall_endstates e30_strcmp_arm8.e30_strcmp_arm8
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv8.ARM8Arch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv8.ARM8Arch.store) =>
+          s Picinae_armv8.V_MEM64 = s' Picinae_armv8.V_MEM64)
+Closed under the global context
+strcmp_preserves_callee_saved
+     : forall v : Picinae_armv8.arm8var,
+       List.In v strcmp_saved ->
+       Picinae_armv8.IL_arm8.forall_endstates e30_strcmp_arm8.e30_strcmp_arm8
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv8.ARM8Arch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv8.ARM8Arch.store) =>
+          s v = s' v)
+Closed under the global context
+strcmp_preserves_frame
+     : Picinae_armv8.IL_arm8.forall_endstates e30_strcmp_arm8.e30_strcmp_arm8
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv8.ARM8Arch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv8.ARM8Arch.store) =>
+          strcmp_frame s s')
+Closed under the global context
+strcmp_byte_bound
+     : forall x j : BinNums.N,
+       BinNat.N.lt (strcmp_byte x j)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))))
+Closed under the global context
+strcmp_stop_unique
+     : forall (m : Picinae_core.memory) (p q K L : BinNums.N),
+       strcmp_stop m p q K -> strcmp_stop m p q L -> K = L
+Closed under the global context
+strcmp_domain_ones
+     : forall p q K cap : BinNums.N,
+       BinNat.N.lt
+         (BinNat.N.add (strcmp_down8 (BinNat.N.add p K))
+            (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       BinNat.N.lt
+         (BinNat.N.add (strcmp_down8 (BinNat.N.add q K))
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       BinNat.N.le
+         (BinNat.N.add (strcmp_down8 (BinNat.N.add p K))
+            (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+         cap ->
+       BinNat.N.le
+         (BinNat.N.add (strcmp_down8 (BinNat.N.add q K))
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         cap ->
+       strcmp_domain (BinNat.N.ones cap) p q K
+Closed under the global context
+strcmp_samples_stop
+     : forall (m : Picinae_core.memory) (p q K : BinNums.N),
+       List.In (m, p, q, K) strcmp_samples -> strcmp_stop m p q K
+Closed under the global context
+strcmp_samples_readable
+     : forall (m : Picinae_core.memory) (p q K : BinNums.N),
+       List.In (m, p, q, K) strcmp_samples ->
+       strcmp_domain
+         (BinNat.N.ones
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+         p q K
+Closed under the global context
+strcmp_fix_down8_bounds
+     : forall a : BinNums.N,
+       BinNat.N.le (strcmp_down8 a) a /\
+       BinNat.N.lt a
+         (BinNat.N.add (strcmp_down8 a)
+            (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+Closed under the global context
+strcmp_fix_down8_mono
+     : forall a b : BinNums.N,
+       BinNat.N.le a b -> BinNat.N.le (strcmp_down8 a) (strcmp_down8 b)
+Closed under the global context
+strcmp_fix_domain_nonwrap
+     : forall readable p q K : BinNums.N,
+       strcmp_domain readable p q K ->
+       BinNat.N.lt (BinNat.N.add p K)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) /\
+       BinNat.N.lt (BinNat.N.add q K)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))
+Closed under the global context
+strcmp_fix_p_load
+     : forall readable p q K i j : BinNums.N,
+       strcmp_domain readable p q K ->
+       BinNat.N.le i K ->
+       BinNat.N.modulo (BinNat.N.add p i)
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))) =
+       BinNums.N0 ->
+       BinNat.N.lt j
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))) ->
+       BinNat.N.lt (BinNat.N.add (BinNat.N.add p i) j)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) /\
+       BinNat.N.testbit readable (BinNat.N.add (BinNat.N.add p i) j) = true
+Closed under the global context
+strcmp_fix_q_load
+     : forall readable p q K i j : BinNums.N,
+       strcmp_domain readable p q K ->
+       BinNat.N.le i K ->
+       BinNat.N.lt j
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))) ->
+       BinNat.N.lt (BinNat.N.add (BinNat.N.add q i) j)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) /\
+       BinNat.N.testbit readable (BinNat.N.add (BinNat.N.add q i) j) = true
+Closed under the global context
+strcmp_fix_q_lookahead_load
+     : forall readable p q K i j : BinNums.N,
+       strcmp_domain readable p q K ->
+       BinNat.N.le i K ->
+       BinNat.N.lt j
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))) ->
+       BinNat.N.lt
+         (BinNat.N.add
+            (BinNat.N.add (strcmp_down8 (BinNat.N.add q i))
+               (BinNums.Npos
+                  (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+            j)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) /\
+       BinNat.N.testbit readable
+         (BinNat.N.add
+            (BinNat.N.add (strcmp_down8 (BinNat.N.add q i))
+               (BinNums.Npos
+                  (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+            j) =
+       true
+Closed under the global context
+strcmp_fix_prefix_loads
+     : forall readable p q K j : BinNums.N,
+       strcmp_domain readable p q K ->
+       BinNat.N.lt j
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))) ->
+       (BinNat.N.lt (BinNat.N.add (strcmp_down8 p) j)
+          (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) /\
+        BinNat.N.testbit readable (BinNat.N.add (strcmp_down8 p) j) = true) /\
+       BinNat.N.lt (BinNat.N.add (strcmp_down8 q) j)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) /\
+       BinNat.N.testbit readable (BinNat.N.add (strcmp_down8 q) j) = true
+Closed under the global context
+strcmp_fix_byte_loads
+     : forall readable p q K i : BinNums.N,
+       strcmp_domain readable p q K ->
+       BinNat.N.le i K ->
+       (BinNat.N.lt (BinNat.N.add p i)
+          (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) /\
+        BinNat.N.testbit readable (BinNat.N.add p i) = true) /\
+       BinNat.N.lt (BinNat.N.add q i)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) /\
+       BinNat.N.testbit readable (BinNat.N.add q i) = true
+Closed under the global context
+strcmp_fix_displacement
+     : forall p q i : BinNums.N,
+       BinNat.N.lt (BinNat.N.add q i)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       BinNat.N.modulo
+         (BinNat.N.add (BinNat.N.add p i)
+            (Picinae_core.msub
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               q p))
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) =
+       BinNat.N.add q i
+Closed under the global context
+strcmp_fix_p_memacc
+     : forall (s : Picinae_armv8.arm8var -> BinNums.N) (p q K i : BinNums.N),
+       strcmp_domain (s Picinae_armv8.A_READ) p q K ->
+       BinNat.N.le i K ->
+       BinNat.N.modulo (BinNat.N.add p i)
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))) =
+       BinNums.N0 ->
+       Picinae_armv8.FInterp_arm8.MemAcc Picinae_armv8.IL_arm8.mem_readable s
+         (BinNat.N.add p i)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+Closed under the global context
+strcmp_fix_q_memacc
+     : forall (s : Picinae_armv8.arm8var -> BinNums.N) (p q K i : BinNums.N),
+       strcmp_domain (s Picinae_armv8.A_READ) p q K ->
+       BinNat.N.le i K ->
+       Picinae_armv8.FInterp_arm8.MemAcc Picinae_armv8.IL_arm8.mem_readable s
+         (BinNat.N.add q i)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+Closed under the global context
+strcmp_fix_q_lookahead_memacc
+     : forall (s : Picinae_armv8.arm8var -> BinNums.N) (p q K i : BinNums.N),
+       strcmp_domain (s Picinae_armv8.A_READ) p q K ->
+       BinNat.N.le i K ->
+       Picinae_armv8.FInterp_arm8.MemAcc Picinae_armv8.IL_arm8.mem_readable s
+         (BinNat.N.add (strcmp_down8 (BinNat.N.add q i))
+            (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+Closed under the global context
+strcmp_fix_entry_models
+     : forall m p q : BinNums.N,
+       BinNat.N.lt m
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))))) ->
+       BinNat.N.lt p
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       BinNat.N.lt q
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx
+         (strcmp_fix_entry_store m p q)
+Closed under the global context
+strcmp_fix_samples_typed_entry
+     : forall (m : Picinae_core.memory) (p q K : BinNums.N),
+       List.In (m, p, q, K) strcmp_samples ->
+       exists s0 : Picinae_armv8.IL_arm8.store,
+         Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx s0 /\
+         s0 Picinae_armv8.V_MEM64 = m /\
+         s0 Picinae_armv8.R_X0 = p /\
+         s0 Picinae_armv8.R_X1 = q /\
+         strcmp_stop m p q K /\ strcmp_domain (s0 Picinae_armv8.A_READ) p q K
+Closed under the global context
+strcmp_fix_word_byte
+     : forall (m : Picinae_core.memory) (a : Picinae_core.addr)
+         (j : BinNums.N),
+       BinNat.N.lt j
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))) ->
+       strcmp_byte
+         (Picinae_core.getmem
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+            Picinae_core.LittleE
+            (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+            m a)
+         j =
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH) m 
+         (BinNat.N.add a j)
+Closed under the global context
+strcmp_fix_stop_at_byte
+     : forall (m : Picinae_core.memory) (p q K i : BinNums.N),
+       strcmp_stop m p q K ->
+       BinNat.N.le i K ->
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH) m
+         (BinNat.N.modulo (BinNat.N.add p i)
+            (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) =
+       BinNums.N0 \/
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH) m
+         (BinNat.N.modulo (BinNat.N.add p i)
+            (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) <>
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH) m
+         (BinNat.N.modulo (BinNat.N.add q i)
+            (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       i = K
+Closed under the global context
+strcmp_fix_continue_byte
+     : forall (m : Picinae_core.memory) (p q K i : BinNums.N),
+       strcmp_stop m p q K ->
+       BinNat.N.le i K ->
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH) m
+         (BinNat.N.modulo (BinNat.N.add p i)
+            (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) =
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH) m
+         (BinNat.N.modulo (BinNat.N.add q i)
+            (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH) m
+         (BinNat.N.modulo (BinNat.N.add p i)
+            (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) <>
+       BinNums.N0 -> BinNat.N.lt i K
+Closed under the global context
+strcmp_fix_byte_sub_sign
+     : forall a b : BinNums.N,
+       BinNat.N.lt a
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       BinNat.N.lt b
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       BinInt.Z.compare
+         (Picinae_core.toZ
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+            (Picinae_core.msub
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               a b))
+         BinNums.Z0 =
+       BinNat.N.compare a b
+Closed under the global context
+strcmp_fix_frame_update
+     : forall (s0 s : Picinae_armv8.IL_arm8.store)
+         (v : Picinae_armv8.arm8var) (x : BinNums.N),
+       v <> Picinae_armv8.V_MEM64 ->
+       ~ List.In v strcmp_saved ->
+       strcmp_frame s0 s -> strcmp_frame s0 (Picinae_core.update s v x)
+Closed under the global context
+strcmp_fix_frame_x0
+     : forall (s0 s : Picinae_armv8.IL_arm8.store) (x : BinNums.N),
+       strcmp_frame s0 s ->
+       strcmp_frame s0 (Picinae_core.update s Picinae_armv8.R_X0 x)
+Closed under the global context
+strcmp_fix_byte_exit
+     : forall (s0 s : Picinae_armv8.IL_arm8.store)
+         (t : list (Picinae_core.exit * Picinae_armv8.IL_arm8.store))
+         (s' : Picinae_armv8.IL_arm8.store) (x' : Picinae_core.exit)
+         (m : Picinae_core.memory) (p q K : BinNums.N),
+       Picinae_core.startof t (x', s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))))))))),
+        s) ->
+       strcmp_frame s0 s ->
+       s Picinae_armv8.R_X2 =
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH) m
+         (BinNat.N.modulo (BinNat.N.add p K)
+            (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       s Picinae_armv8.R_X3 =
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH) m
+         (BinNat.N.modulo (BinNat.N.add q K)
+            (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       Picinae_armv8.Theory_arm8.satisfies_all
+         e30_strcmp_arm8.e30_strcmp_arm8
+         (strcmp_fix_byte_exit_invs s0 m p q K) strcmp_exit
+         ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+strcmp_fix_byte_exit_witness
+     : exists s : Picinae_armv8.IL_arm8.store,
+         Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx s /\
+         strcmp_frame s s /\
+         s Picinae_armv8.R_X2 =
+         Picinae_core.getmem
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+           Picinae_core.LittleE (BinNums.Npos BinNums.xH) BinNums.N0
+           BinNums.N0 /\
+         s Picinae_armv8.R_X3 =
+         Picinae_core.getmem
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+           Picinae_core.LittleE (BinNums.Npos BinNums.xH) BinNums.N0
+           (BinNums.Npos BinNums.xH) /\
+         strcmp_stop BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH)
+           BinNums.N0 /\
+         strcmp_domain (s Picinae_armv8.A_READ) BinNums.N0
+           (BinNums.Npos BinNums.xH) BinNums.N0
+Closed under the global context
+strcmp_fix_byte_msub32_eqb
+     : forall a b : BinNums.N,
+       BinNat.N.lt a
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       BinNat.N.lt b
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       BinNat.N.eqb
+         (Picinae_core.msub
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+            a b)
+         BinNums.N0 =
+       BinNat.N.eqb a b
+Closed under the global context
+strcmp_fix_byte_ccmp
+     : forall (s0 : Picinae_armv8.IL_arm8.store)
+         (t : list (Picinae_core.exit * Picinae_armv8.IL_arm8.store))
+         (s' : Picinae_armv8.IL_arm8.store) (x' : Picinae_core.exit)
+         (a b : BinNums.N),
+       Picinae_core.startof t (x', s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))))))))),
+        s0) ->
+       Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx s0 ->
+       BinNat.N.lt a
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       BinNat.N.lt b
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       s0 Picinae_armv8.R_X2 = a ->
+       s0 Picinae_armv8.R_X3 = b ->
+       Picinae_armv8.Theory_arm8.satisfies_all
+         e30_strcmp_arm8.e30_strcmp_arm8 (strcmp_fix_ccmp_invs a b)
+         strcmp_fix_ccmp_exit ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+strcmp_fix_byte_ccmp_witness
+     : forall a b : BinNums.N,
+       BinNat.N.lt a
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       BinNat.N.lt b
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       exists s : Picinae_armv8.IL_arm8.store,
+         Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx s /\
+         s Picinae_armv8.R_X2 = a /\ s Picinae_armv8.R_X3 = b
+Closed under the global context
+strcmp_fix_shifted_byte_sign
+     : forall a b l ta tb : BinNums.N,
+       BinNat.N.lt a
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       BinNat.N.lt b
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       BinNat.N.lt l
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))) ->
+       BinNat.N.div a
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNat.N.sub
+               (BinNums.Npos
+                  (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+               l)) =
+       BinNat.N.div b
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNat.N.sub
+               (BinNums.Npos
+                  (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+               l)) ->
+       a <> b ->
+       BinNat.N.lt ta (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH)) l) ->
+       BinNat.N.lt tb (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH)) l) ->
+       BinNat.N.compare
+         (BinNat.N.add
+            (BinNat.N.modulo
+               (BinNat.N.mul a
+                  (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH)) l))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH))))))))))
+            ta)
+         (BinNat.N.add
+            (BinNat.N.modulo
+               (BinNat.N.mul b
+                  (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH)) l))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH))))))))))
+            tb) =
+       BinNat.N.compare a b
+Closed under the global context
+strcmp_fix_decode_project
+     : forall (s0 : Picinae_armv8.IL_arm8.store) (m : Picinae_core.memory)
+         (p q K : BinNums.N) (s : Picinae_armv8.IL_arm8.store),
+       strcmp_fix_decode s0 m p q K s -> strcmp_decode s0 m p q K s
+Closed under the global context
+strcmp_fix_decoder_store_models
+     : forall r : BinNums.N,
+       BinNat.N.lt r
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx
+         (strcmp_fix_decoder_store r)
+Closed under the global context
+strcmp_fix_strong_decode_witness
+     : strcmp_fix_decode
+         (strcmp_fix_decoder_store
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xO (BinNums.xI BinNums.xH))))))))))))
+         BinNums.N0 BinNums.N0 BinNums.N0 BinNums.N0
+         (strcmp_fix_decoder_store
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xO (BinNums.xI BinNums.xH))))))))))))
+Closed under the global context
+strcmp_fix_weak_decode_witness
+     : strcmp_decode
+         (strcmp_fix_decoder_store
+            (BinNums.Npos
+               (BinNums.xI
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xI BinNums.xH))))))))))))
+         BinNums.N0 BinNums.N0 BinNums.N0 BinNums.N0
+         (strcmp_fix_decoder_store
+            (BinNums.Npos
+               (BinNums.xI
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xI BinNums.xH)))))))))))) /\
+       ~
+       strcmp_fix_decode
+         (strcmp_fix_decoder_store
+            (BinNums.Npos
+               (BinNums.xI
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xI BinNums.xH))))))))))))
+         BinNums.N0 BinNums.N0 BinNums.N0 BinNums.N0
+         (strcmp_fix_decoder_store
+            (BinNums.Npos
+               (BinNums.xI
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xI BinNums.xH))))))))))))
+Closed under the global context
+strcmp_fix_weak_decoder_result
+     : forall (t : list (Picinae_core.exit * Picinae_armv8.IL_arm8.store))
+         (s' : Picinae_armv8.IL_arm8.store) (x' : Picinae_core.exit),
+       Picinae_core.startof t (x', s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))))))))),
+        strcmp_fix_decoder_store
+          (BinNums.Npos
+             (BinNums.xI
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO (BinNums.xI BinNums.xH)))))))))))) ->
+       Picinae_armv8.Theory_arm8.satisfies_all
+         e30_strcmp_arm8.e30_strcmp_arm8
+         (strcmp_fix_decoder_invs
+            (strcmp_fix_decoder_store
+               (BinNums.Npos
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xI BinNums.xH)))))))))))))
+         strcmp_exit ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+strcmp_fix_weak_decoder_sign
+     : BinInt.Z.compare
+         (Picinae_core.toZ
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+            (BinNums.Npos
+               (BinNums.xI
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (BinNums.xI ...))))))))))))))))))))))
+         BinNums.Z0 =
+       Lt /\
+       BinNat.N.compare
+         (Picinae_core.getmem
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+            Picinae_core.LittleE (BinNums.Npos BinNums.xH) BinNums.N0
+            BinNums.N0)
+         (Picinae_core.getmem
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+            Picinae_core.LittleE (BinNums.Npos BinNums.xH) BinNums.N0
+            BinNums.N0) =
+       Eq
+Closed under the global context
+
+EXIT_CODE=0

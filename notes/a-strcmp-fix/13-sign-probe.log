@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-013cef89
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 4000000\;\ ulimit\ -s\ 65536\;\ rocq\ compile\ -q\ -R\ _build/default\ Picinae\ /home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/SignProbe.v
+SIGN GOAL: ((canonicalZ (Z.of_N 32) (Z.of_N a - Z.of_N b) ?= 0)%Z = (a ?= b))
+
+EXIT_CODE=0
