@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d99c9594
+COMMAND=git diff --check -- Examples/FreeRTOS/armv6m_vTaskSuspendAll_proof.v notes/r10-suspend-all-fix/README.md notes/r10-suspend-all-fix/audit-results.py notes/r10-suspend-all-fix/audit-ancestry.py
+
+EXIT_CODE=0
