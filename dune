@@ -46,7 +46,8 @@
   Examples.claude.lifter.scalar_ccmp.e30___memchr_nosimd_arm8
   Examples.claude.lifter.scalar_ccmp.e30_strcmp_arm8
   Examples.claude.lifter.scalar_ccmp.e30_wcschrnul_arm8
-  Examples.claude.lifter.scalar_cneg.e36_cneg))
+  Examples.claude.lifter.scalar_cneg.e36_cneg
+  Examples.claude.lifter.neon_loads.e10_neon_loads))
 
 (alias
  (name core)
@@ -117,3 +118,7 @@
 (alias
  (name e36-arm-cneg)
  (deps Examples/claude/lifter/scalar_cneg/e36_cneg.vo))
+
+(alias
+ (name e10-arm-neon-lifts)
+ (deps Examples/claude/lifter/neon_loads/e10_neon_loads.vo))

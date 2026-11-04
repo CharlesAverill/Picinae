@@ -1,0 +1,10 @@
+COMMAND=["bash", "--noprofile", "--norc", "-e", "-c", "python3 notes/e10-arm-neon-lifts/check-history.py; python3 notes/e36-arm-cneg/check-reference-fixtures.py; python3 notes/e36-arm-cneg/check-artifacts.py; python3 notes/e10-arm-neon-lifts/check-artifacts.py"]
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0fa60739
+PASS 5 inherited old-receipt differences explicitly retained; scalar helper unchanged from assigned base
+PASS e29_bitforms 25 unchanged raw-pcode/IL/Rocq fixture statements
+PASS e30_ccmp 339 unchanged raw-pcode/IL/Rocq fixture statements
+PASS exact memcmp diagnostics: 97 instruction acceptances, 17 vector rejections; no function map
+PASS all hashes, exact ELF raw bytes and 168 raw-pcode/IL fixtures; no new function map published
+PASS fresh raw and actual-Ghidra IL replay; pinned old target bytes/pcode; protected baseline hashes; exact assigned ancestry and own scope
+
+EXIT_CODE=0

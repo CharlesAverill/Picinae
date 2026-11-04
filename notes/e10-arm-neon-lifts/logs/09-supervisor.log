@@ -1,0 +1,60 @@
+COMMAND=["python3", "notes/e10-arm-neon-lifts/validate.py", "--run", "validate01"]
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0fa60739
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/lift-neon-loads.py", "--state", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/toascii-state", "--out", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/toascii", "toascii"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/toascii
+Ghidra log: /home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/toascii-state/logs/f3eb3176c87d4f9cb9a4a0b09fbb0ae5.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/lift-neon-loads.py", "--state", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/memcmp-state", "--out", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/memcmp", "memcmp"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: memcmp 0x194794 eor v0.16B,v0.16B,v1.16B: unmodeled register b0 (base z0); raw pcode: (register, 0x5000, 1) INT_XOR (register, 0x5000, 1) , (register, 0x5020, 1); (register, 0x5001, 1) INT_XOR (register, 0x5001, 1) , (register, 0x5021, 1); (register, 0x5002, 1) INT_XOR (register, 0x5002, 1) , (register, 0x5022, 1); (register, 0x5003, 1) INT_XOR (register, 0x5003, 1) , (register, 0x5023, 1); (register, 0x5004, 1) INT_XOR (register, 0x5004, 1) , (register, 0x5024, 1);; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/memcmp-state/logs/93cde73f30b84542a8ff31d14738f241.log
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/lift-neon-loads.py", "--state", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/__strlen_asimd-state", "--out", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/__strlen_asimd", "__strlen_asimd"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __strlen_asimd 0x19c9e4 uminp v0.16B,v1.16B,v2.16B: unmodeled instruction uminp v0.16B,v1.16B,v2.16B; raw pcode: (register, 0x5000, 16) CALLOTHER (const, 0x112, 4) , (register, 0x5020, 16) , (register, 0x5040, 16) , (const, 0x1, 1); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/__strlen_asimd-state/logs/3c505f2ad4c048958bcc2e53fb530867.log
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/lift-neon-loads.py", "--state", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/toascii-memcmp-state", "--out", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/toascii-memcmp", "toascii", "memcmp"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: memcmp 0x194794 eor v0.16B,v0.16B,v1.16B: unmodeled register b0 (base z0); raw pcode: (register, 0x5000, 1) INT_XOR (register, 0x5000, 1) , (register, 0x5020, 1); (register, 0x5001, 1) INT_XOR (register, 0x5001, 1) , (register, 0x5021, 1); (register, 0x5002, 1) INT_XOR (register, 0x5002, 1) , (register, 0x5022, 1); (register, 0x5003, 1) INT_XOR (register, 0x5003, 1) , (register, 0x5023, 1); (register, 0x5004, 1) INT_XOR (register, 0x5004, 1) , (register, 0x5024, 1);; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/toascii-memcmp-state/logs/b08d5dd0d3504b0a8611dd750ca2dda2.log
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/lift-neon-loads.py", "--state", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/memcmp-toascii-state", "--out", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/memcmp-toascii", "memcmp", "toascii"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: memcmp 0x194794 eor v0.16B,v0.16B,v1.16B: unmodeled register b0 (base z0); raw pcode: (register, 0x5000, 1) INT_XOR (register, 0x5000, 1) , (register, 0x5020, 1); (register, 0x5001, 1) INT_XOR (register, 0x5001, 1) , (register, 0x5021, 1); (register, 0x5002, 1) INT_XOR (register, 0x5002, 1) , (register, 0x5022, 1); (register, 0x5003, 1) INT_XOR (register, 0x5003, 1) , (register, 0x5023, 1); (register, 0x5004, 1) INT_XOR (register, 0x5004, 1) , (register, 0x5024, 1);; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e10-arm-neon-lifts/validate01/memcmp-toascii-state/logs/9a14c355a3af42a69f7607881ee29db2.log
+EXIT_CODE=1
+[
+  {
+    "symbols": [
+      "toascii"
+    ],
+    "exit": 0,
+    "published": true
+  },
+  {
+    "symbols": [
+      "memcmp"
+    ],
+    "exit": 1,
+    "published": false
+  },
+  {
+    "symbols": [
+      "__strlen_asimd"
+    ],
+    "exit": 1,
+    "published": false
+  },
+  {
+    "symbols": [
+      "toascii",
+      "memcmp"
+    ],
+    "exit": 1,
+    "published": false
+  },
+  {
+    "symbols": [
+      "memcmp",
+      "toascii"
+    ],
+    "exit": 1,
+    "published": false
+  }
+]
+PASS full extraction frontiers, mixed-batch atomic failure, scalar trace identity and transitive helper receipt
+
+EXIT_CODE=0

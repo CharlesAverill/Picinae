@@ -1,0 +1,118 @@
+COMMAND=["python3", "notes/e10-arm-neon-lifts/check-atomic.py"]
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0fa60739
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_neon_loads import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/0.json", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/0.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 39, in lower
+    return NeonLoadLifter(Language(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 132, in instruction
+    raise Unsupported('Q load encoding/raw DAG mismatch')
+pcode2coq_scalar.Unsupported: Q load encoding/raw DAG mismatch
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_neon_loads import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/1.json", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/1.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 39, in lower
+    return NeonLoadLifter(Language(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 132, in instruction
+    raise Unsupported('Q load encoding/raw DAG mismatch')
+pcode2coq_scalar.Unsupported: Q load encoding/raw DAG mismatch
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_neon_loads import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/2.json", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/2.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 39, in lower
+    return NeonLoadLifter(Language(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 132, in instruction
+    raise Unsupported('Q load encoding/raw DAG mismatch')
+pcode2coq_scalar.Unsupported: Q load encoding/raw DAG mismatch
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_neon_loads import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/3.json", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/3.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 39, in lower
+    return NeonLoadLifter(Language(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 130, in instruction
+    actual = [(str(o.getMnemonic()), node(o.getOutput()), tuple(node(v) for v in o.getInputs())) for o in ops]
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 130, in <genexpr>
+    actual = [(str(o.getMnemonic()), node(o.getOutput()), tuple(node(v) for v in o.getInputs())) for o in ops]
+                                                                ^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 119, in node
+    name, width, offset = self.register(v)
+                          ^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 37, in register
+    return super().register(vn)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_scalar.py", line 75, in register
+    raise Unsupported(f'unsupported register slice {reg}')
+pcode2coq_scalar.Unsupported: unsupported register slice <test_scalar.Reg object at 0x7f5b7262a7e0>
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_neon_loads import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/4.json", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/4.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 39, in lower
+    return NeonLoadLifter(Language(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 130, in instruction
+    actual = [(str(o.getMnemonic()), node(o.getOutput()), tuple(node(v) for v in o.getInputs())) for o in ops]
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 130, in <genexpr>
+    actual = [(str(o.getMnemonic()), node(o.getOutput()), tuple(node(v) for v in o.getInputs())) for o in ops]
+                                                                ^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 119, in node
+    name, width, offset = self.register(v)
+                          ^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 37, in register
+    return super().register(vn)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_scalar.py", line 75, in register
+    raise Unsupported(f'unsupported register slice {reg}')
+pcode2coq_scalar.Unsupported: unsupported register slice <test_scalar.Reg object at 0x7f0a9077a7b0>
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_neon_loads import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/5.json", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/5.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 39, in lower
+    return NeonLoadLifter(Language(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 132, in instruction
+    raise Unsupported('Q load encoding/raw DAG mismatch')
+pcode2coq_scalar.Unsupported: Q load encoding/raw DAG mismatch
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_neon_loads import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/6.json", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/6.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 39, in lower
+    return NeonLoadLifter(Language(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 130, in instruction
+    actual = [(str(o.getMnemonic()), node(o.getOutput()), tuple(node(v) for v in o.getInputs())) for o in ops]
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 130, in <genexpr>
+    actual = [(str(o.getMnemonic()), node(o.getOutput()), tuple(node(v) for v in o.getInputs())) for o in ops]
+                                                                ^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 115, in node
+    self.temp(v)  # Reject overlapping ranges even before matching.
+    ^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_scalar.py", line 83, in temp
+    raise Unsupported('overlapping unique varnodes with distinct sizes')
+pcode2coq_scalar.Unsupported: overlapping unique varnodes with distinct sizes
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_neon_loads import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/7.json", "/home/charles/code/friends/.toolchains/e10-arm-neon-lifts/atomic01/7.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 39, in lower
+    return NeonLoadLifter(Language(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 132, in instruction
+    raise Unsupported('Q load encoding/raw DAG mismatch')
+pcode2coq_scalar.Unsupported: Q load encoding/raw DAG mismatch
+EXIT_CODE=1
+PASS eight malformed subprocess failures, no IL output
+
+EXIT_CODE=0
