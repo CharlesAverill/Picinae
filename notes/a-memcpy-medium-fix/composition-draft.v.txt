@@ -1,0 +1,1226 @@
+(* Concrete medium size 33; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_33:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 33 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 33)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_33.
+
+(* Concrete medium size 34; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_34:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 34 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 34)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_34.
+
+(* Concrete medium size 35; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_35:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 35 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 35)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_35.
+
+(* Concrete medium size 36; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_36:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 36 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 36)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_36.
+
+(* Concrete medium size 37; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_37:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 37 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 37)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_37.
+
+(* Concrete medium size 38; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_38:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 38 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 38)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_38.
+
+(* Concrete medium size 39; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_39:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 39 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 39)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_39.
+
+(* Concrete medium size 40; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_40:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 40 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 40)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_40.
+
+(* Concrete medium size 41; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_41:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 41 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 41)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_41.
+
+(* Concrete medium size 42; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_42:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 42 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 42)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_42.
+
+(* Concrete medium size 43; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_43:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 43 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 43)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_43.
+
+(* Concrete medium size 44; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_44:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 44 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 44)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_44.
+
+(* Concrete medium size 45; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_45:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 45 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 45)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_45.
+
+(* Concrete medium size 46; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_46:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 46 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 46)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_46.
+
+(* Concrete medium size 47; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_47:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 47 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 47)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_47.
+
+(* Concrete medium size 48; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_48:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 48 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 48)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_48.
+
+(* Concrete medium size 49; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_49:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 49 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 49)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_49.
+
+(* Concrete medium size 50; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_50:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 50 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 50)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_50.
+
+(* Concrete medium size 51; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_51:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 51 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 51)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_51.
+
+(* Concrete medium size 52; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_52:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 52 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 52)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_52.
+
+(* Concrete medium size 53; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_53:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 53 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 53)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_53.
+
+(* Concrete medium size 54; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_54:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 54 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 54)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_54.
+
+(* Concrete medium size 55; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_55:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 55 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 55)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_55.
+
+(* Concrete medium size 56; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_56:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 56 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 56)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_56.
+
+(* Concrete medium size 57; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_57:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 57 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 57)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_57.
+
+(* Concrete medium size 58; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_58:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 58 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 58)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_58.
+
+(* Concrete medium size 59; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_59:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 59 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 59)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_59.
+
+(* Concrete medium size 60; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_60:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 60 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 60)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_60.
+
+(* Concrete medium size 61; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_61:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 61 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 61)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_61.
+
+(* Concrete medium size 62; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_62:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 62 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 62)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_62.
+
+(* Concrete medium size 63; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_63:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 63 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 63)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_63.
+
+(* Concrete medium size 64; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_64:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 64 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 64)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_33_64; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_64.
+
+(* Concrete medium size 65; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_65:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 65 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 65)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_65.
+
+(* Concrete medium size 66; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_66:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 66 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 66)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_66.
+
+(* Concrete medium size 67; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_67:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 67 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 67)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_67.
+
+(* Concrete medium size 68; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_68:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 68 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 68)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_68.
+
+(* Concrete medium size 69; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_69:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 69 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 69)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_69.
+
+(* Concrete medium size 70; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_70:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 70 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 70)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_70.
+
+(* Concrete medium size 71; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_71:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 71 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 71)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_71.
+
+(* Concrete medium size 72; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_72:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 72 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 72)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_72.
+
+(* Concrete medium size 73; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_73:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 73 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 73)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_73.
+
+(* Concrete medium size 74; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_74:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 74 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 74)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_74.
+
+(* Concrete medium size 75; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_75:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 75 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 75)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_75.
+
+(* Concrete medium size 76; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_76:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 76 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 76)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_76.
+
+(* Concrete medium size 77; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_77:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 77 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 77)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_77.
+
+(* Concrete medium size 78; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_78:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 78 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 78)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_78.
+
+(* Concrete medium size 79; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_79:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 79 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 79)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_79.
+
+(* Concrete medium size 80; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_80:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 80 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 80)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_80.
+
+(* Concrete medium size 81; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_81:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 81 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 81)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_81.
+
+(* Concrete medium size 82; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_82:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 82 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 82)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_82.
+
+(* Concrete medium size 83; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_83:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 83 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 83)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_83.
+
+(* Concrete medium size 84; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_84:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 84 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 84)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_84.
+
+(* Concrete medium size 85; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_85:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 85 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 85)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_85.
+
+(* Concrete medium size 86; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_86:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 86 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 86)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_86.
+
+(* Concrete medium size 87; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_87:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 87 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 87)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_87.
+
+(* Concrete medium size 88; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_88:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 88 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 88)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_88.
+
+(* Concrete medium size 89; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_89:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 89 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 89)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_89.
+
+(* Concrete medium size 90; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_90:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 90 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 90)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_90.
+
+(* Concrete medium size 91; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_91:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 91 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 91)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_91.
+
+(* Concrete medium size 92; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_92:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 92 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 92)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_92.
+
+(* Concrete medium size 93; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_93:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 93 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 93)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_93.
+
+(* Concrete medium size 94; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_94:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 94 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 94)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_94.
+
+(* Concrete medium size 95; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_95:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 95 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 95)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_95.
+
+(* Concrete medium size 96; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_96:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 96 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 96)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_65_96; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_96.
+
+(* Concrete medium size 97; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_97:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 97 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 97)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_97.
+
+(* Concrete medium size 98; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_98:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 98 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 98)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_98.
+
+(* Concrete medium size 99; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_99:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 99 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 99)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_99.
+
+(* Concrete medium size 100; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_100:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 100 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 100)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_100.
+
+(* Concrete medium size 101; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_101:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 101 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 101)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_101.
+
+(* Concrete medium size 102; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_102:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 102 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 102)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_102.
+
+(* Concrete medium size 103; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_103:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 103 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 103)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_103.
+
+(* Concrete medium size 104; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_104:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 104 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 104)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_104.
+
+(* Concrete medium size 105; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_105:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 105 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 105)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_105.
+
+(* Concrete medium size 106; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_106:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 106 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 106)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_106.
+
+(* Concrete medium size 107; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_107:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 107 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 107)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_107.
+
+(* Concrete medium size 108; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_108:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 108 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 108)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_108.
+
+(* Concrete medium size 109; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_109:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 109 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 109)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_109.
+
+(* Concrete medium size 110; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_110:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 110 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 110)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_110.
+
+(* Concrete medium size 111; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_111:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 111 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 111)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_111.
+
+(* Concrete medium size 112; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_112:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 112 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 112)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_112.
+
+(* Concrete medium size 113; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_113:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 113 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 113)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_113.
+
+(* Concrete medium size 114; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_114:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 114 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 114)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_114.
+
+(* Concrete medium size 115; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_115:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 115 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 115)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_115.
+
+(* Concrete medium size 116; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_116:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 116 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 116)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_116.
+
+(* Concrete medium size 117; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_117:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 117 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 117)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_117.
+
+(* Concrete medium size 118; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_118:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 118 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 118)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_118.
+
+(* Concrete medium size 119; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_119:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 119 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 119)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_119.
+
+(* Concrete medium size 120; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_120:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 120 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 120)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_120.
+
+(* Concrete medium size 121; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_121:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 121 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 121)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_121.
+
+(* Concrete medium size 122; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_122:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 122 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 122)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_122.
+
+(* Concrete medium size 123; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_123:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 123 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 123)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_123.
+
+(* Concrete medium size 124; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_124:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 124 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 124)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_124.
+
+(* Concrete medium size 125; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_125:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 125 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 125)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_125.
+
+(* Concrete medium size 126; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_126:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 126 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 126)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_126.
+
+(* Concrete medium size 127; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_127:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 127 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 127)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_127.
+
+(* Concrete medium size 128; opaque closure keeps symbolic states local. *)
+Lemma memcpy_medium_case_128:
+  forall st m d s t s1,
+  models arm8typctx s1 -> memcpy_medium_input st m d s 128 s1 ->
+  nextinv e08___memcpy_generic_arm8 (memcpy_medium_invs st m d s 128)
+    memcpy_medium_exit false ((Addr 0x19ab40,s1)::t).
+Proof.
+  intros st m d s t s1 MDL INPUT.
+  eapply medium_path_97_128; [now compute|exact MDL|exact INPUT].
+Qed.
+Print Assumptions memcpy_medium_case_128.
+
+Theorem memcpy_medium_correct:
+  forall st t st' x' m d s n
+    (ENTRY: startof t (x',st') = (Addr 0x19ab40,st))
+    (MDL: models arm8typctx st)
+    (MEM: st V_MEM64 = m) (DEST: st R_X0 = d)
+    (SRC: st R_X1 = s) (COUNT: st R_X2 = n)
+    (DOMAIN: memcpy_medium_domain st d s n),
+  satisfies_all e08___memcpy_generic_arm8
+    (memcpy_medium_invs st m d s n) memcpy_medium_exit ((x',st')::t).
+Proof.
+  intros. destruct DOMAIN as [MEDIUM [DN [SN [NOV [READ WRITE]]]]].
+  apply prove_invs.
+  - simpl. rewrite ENTRY. arm8_step.
+    unfold memcpy_medium_input. repeat split; try assumption.
+  - intros.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption.
+    apply memcpy_medium_welltyped. intro MDL1.
+    clear - PRE MDL1 MEDIUM. rename t1 into t.
+    destruct_inv 64 PRE.
+    unfold memcpy_medium_input in PRE.
+    destruct PRE as [MEM [DEST [SRC [COUNT FRAME]]]].
+    destruct (N.leb_spec n 64) as [LO|HI].
+    + eapply medium_path_33_64; [clear - MEDIUM LO; lia|exact MDL1|].
+      exact (conj MEM (conj DEST (conj SRC (conj COUNT FRAME)))).
+    + destruct (N.leb_spec n 96) as [LO|TOP].
+      * eapply medium_path_65_96; [clear - MEDIUM HI LO; lia|exact MDL1|].
+        exact (conj MEM (conj DEST (conj SRC (conj COUNT FRAME)))).
+      * eapply medium_path_97_128; [clear - MEDIUM TOP; lia|exact MDL1|].
+        exact (conj MEM (conj DEST (conj SRC (conj COUNT FRAME)))).
+
+Qed.
+Print Assumptions memcpy_medium_correct.
+
+(* A trace-scoped exported frame, derived only from the actual generic entry
+   theorem. A global noassign assertion would be false for this union map. *)
+Theorem memcpy_medium_preserves_callee_saved:
+  forall st t st' a m d s n,
+    startof t (Addr a,st') = (Addr 0x19ab40,st) ->
+    models arm8typctx st -> st V_MEM64 = m -> st R_X0 = d ->
+    st R_X1 = s -> st R_X2 = n -> memcpy_medium_domain st d s n ->
+    exec_prog e08___memcpy_generic_arm8 ((Addr a,st')::t) ->
+    unterminated memcpy_medium_exit t ->
+    In a [0x19abf8; 0x19ac38] ->
+    memcpy_medium_frame st st'.
+Proof.
+  intros st t st' a m d s n ENTRY MDL MEM D S NN DOMAIN XP UT RET.
+  pose proof (memcpy_medium_correct st t st' (Addr a) m d s n
+    ENTRY MDL MEM D S NN DOMAIN) as SA.
+  pose proof (satall_trueif_inv _ _ _ _ SA XP UT) as POST.
+  repeat destruct RET as [<-|RET]; try contradiction;
+    cbn [memcpy_medium_invs trueif_inv] in POST;
+    exact (proj2 (proj2 POST)).
+Qed.
+Print Assumptions memcpy_medium_preserves_callee_saved.
+
+Theorem memcpy_medium_at_ret:
+  forall st t st' a m d s n,
+    startof t (Addr a,st') = (Addr 0x19ab40,st) ->
+    models arm8typctx st -> st V_MEM64 = m -> st R_X0 = d ->
+    st R_X1 = s -> st R_X2 = n -> memcpy_medium_domain st d s n ->
+    exec_prog e08___memcpy_generic_arm8 ((Addr a,st')::t) ->
+    unterminated memcpy_medium_exit t ->
+    In a [0x19abf8; 0x19ac38] ->
+    memcpy_medium_post st m d s n st'.
+Proof.
+  intros st t st' a m d s n ENTRY MDL MEM D S NN DOMAIN XP UT RET.
+  pose proof (memcpy_medium_correct st t st' (Addr a) m d s n
+    ENTRY MDL MEM D S NN DOMAIN) as SA.
+  pose proof (satall_trueif_inv _ _ _ _ SA XP UT) as POST.
+  repeat destruct RET as [<-|RET]; try contradiction;
+    cbn [memcpy_medium_invs trueif_inv] in POST; exact POST.
+Qed.
+Print Assumptions memcpy_medium_at_ret.

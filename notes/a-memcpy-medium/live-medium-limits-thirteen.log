@@ -1,0 +1,16 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d3a7e613
+COMMAND=python3 notes/a-memcpy-medium/inspect-resources.py
+PID 704472 COMMAND dune build --cache=disabled -j1 --display short Examples/claude/arm8_memcpy_medium_proof.vo 
+VmPeak:	  292232 kB
+VmSize:	  232336 kB
+VmRSS:	   29728 kB
+Max stack size            67108864             67108864             bytes     
+Max address space         2048000000           2048000000           bytes     
+PID 706717 COMMAND /home/charles/code/friends/.toolchains/opam/picinae/lib/rocq-runtime/rocqworker --kind=compile -q -w -level-tolerance -w -postfix-notation-not-level-1 -w -deprecated-native-compiler-option -w -native-compiler-disabled -native-compiler ondemand -boot -R /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/theories Corelib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Stdlib Stdlib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Ltac2 Ltac2 -R . Picinae Examples/claude/arm8_memcpy_medium_proof.v 
+VmPeak:	 1854436 kB
+VmSize:	 1854436 kB
+VmRSS:	 1525964 kB
+Max stack size            67108864             67108864             bytes     
+Max address space         2048000000           2048000000           bytes     
+
+EXIT_CODE=0

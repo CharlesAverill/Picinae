@@ -1,0 +1,50 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d3a7e613
+COMMAND=python3 notes/a-memcpy-medium/inspect-resources.py
+PID 1 COMMAND codex-linux-sandbox --sandbox-policy-cwd /home/charles/.t3/worktrees/Picinae/t3-d3a7e613 --command-cwd /home/charles/.t3/worktrees/Picinae/t3-d3a7e613 --permission-profile {"type":"managed","file_system":{"type":"restricted","entries":[{"path":{"type":"special","value":{"kind":"root"}},"access":"read"},{"path":{"type":"path","path":"/home/charles/.t3/worktrees/Picinae/t3-d3a7e613"},"access":"write"},{"path":{"type":"special","value":{"kind":"slash_tmp"}},"access":"write"},{"path":{"type":"special","value":{"kind":"tmpdir"}},"access":"write"},{"path":{"type":"path","path":"/home/charles/.t3/worktrees/Picinae/t3-d3a7e613/.git"},"access":"read","missing_path_behavior":"skip"},{"path":{"type":"path","path":"/home/charles/.t3/worktrees/Picinae/t3-d3a7e613/.agents"},"access":"read","missing_path_behavior":"skip"},{"path":{"type":"path","path":"/home/charles/.t3/worktrees/Picinae/t3-d3a7e613/.codex"},"access":"read","missing_path_behavior":"skip"},{"path":{"type":"path","path":"/home/charles/.t3/worktrees/Picinae/t3-d3a7e613/.aws"},"access":"read","missing_path_behavior":"skip"},{"path":{"type":"path","path":"/home/charles/code/friends/CharlesAverill/Picinae/.git/worktrees/t3-d3a7e613"},"access":"read","missing_path_behavior":"skip"},{"path":{"type":"path","path":"/home/charles/.t3/worktrees/Picinae/t3-d3a7e613/.git"},"access":"read","missing_path_behavior":"skip"},{"path":{"type":"path","path":"/home/charles/.t3/worktrees/Picinae/t3-d3a7e613/.codex"},"access":"read","missing_path_behavior":"skip"}]},"network":"restricted"} --apply-seccomp-then-exec -- /bin/bash -lc cat > notes/a-memcpy-medium/inspect-resources.py <<'PY'
+from pathlib import Path
+root=Path.cwd()
+for p in Path('/proc').iterdir():
+    if not p.name.isdigit(): continue
+    try:
+        if not (p/'cwd').resolve().is_relative_to(root): continue
+        cmd=(p/'cmdline').read_bytes().replace(b'\0',b' ').decode()
+        if 'rocq' not in cmd and 'dune build' not in cmd: continue
+        print('PID',p.name,'COMMAND',cmd)
+        for row in (p/'status').read_text().splitlines():
+            if row.startswith(('VmPeak:', 'VmSize:', 'VmRSS:')): print(row)
+        for row in (p/'limits').read_text().splitlines():
+            if row.startswith(('Max stack size','Max address space')): print(row)
+    except (FileNotFoundError, PermissionError, ProcessLookupError): pass
+PY
+bash tools/record-command.sh notes/a-memcpy-medium/live-resource-limits.log python3 notes/a-memcpy-medium/inspect-resources.py
+tail -n 16 notes/a-memcpy-medium/initial-build.log 
+VmPeak:	  316492 kB
+VmSize:	  316492 kB
+VmRSS:	   22508 kB
+Max stack size            8388608              unlimited            bytes     
+Max address space         unlimited            unlimited            bytes     
+PID 2 COMMAND /bin/bash -lc cat > notes/a-memcpy-medium/inspect-resources.py <<'PY'
+from pathlib import Path
+root=Path.cwd()
+for p in Path('/proc').iterdir():
+    if not p.name.isdigit(): continue
+    try:
+        if not (p/'cwd').resolve().is_relative_to(root): continue
+        cmd=(p/'cmdline').read_bytes().replace(b'\0',b' ').decode()
+        if 'rocq' not in cmd and 'dune build' not in cmd: continue
+        print('PID',p.name,'COMMAND',cmd)
+        for row in (p/'status').read_text().splitlines():
+            if row.startswith(('VmPeak:', 'VmSize:', 'VmRSS:')): print(row)
+        for row in (p/'limits').read_text().splitlines():
+            if row.startswith(('Max stack size','Max address space')): print(row)
+    except (FileNotFoundError, PermissionError, ProcessLookupError): pass
+PY
+bash tools/record-command.sh notes/a-memcpy-medium/live-resource-limits.log python3 notes/a-memcpy-medium/inspect-resources.py
+tail -n 16 notes/a-memcpy-medium/initial-build.log 
+VmPeak:	    4888 kB
+VmSize:	    4888 kB
+VmRSS:	    3540 kB
+Max stack size            8388608              unlimited            bytes     
+Max address space         unlimited            unlimited            bytes     
+
+EXIT_CODE=0

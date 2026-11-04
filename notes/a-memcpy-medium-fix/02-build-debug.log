@@ -1,0 +1,33 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-cb24ee86
+COMMAND=python3 /home/charles/code/friends/.refs/picinae-llm-proofs/resources/resource-run.py --unit a-memcpy-medium-fix --memory-kib 3000000 -- /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c bash\ notes/a-memcpy-medium-fix/build.sh
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix paging activity
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+ADMISSION WAIT a-memcpy-medium-fix available RAM reserve
+Terminated
+
+EXIT_CODE=143

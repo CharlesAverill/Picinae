@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d3a7e613
+COMMAND=python3 notes/a-memcpy-medium/audit-retention.py
+All 104 initial theorem/lemma statements retained verbatim.
+All 7 initial definitions retained verbatim.
+
+EXIT_CODE=0
