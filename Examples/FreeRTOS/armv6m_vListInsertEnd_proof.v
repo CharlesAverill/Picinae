@@ -4,7 +4,9 @@
    5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca.
    Accepted e05 closed-leaf map, unchanged; r00 prerequisite 4ff26413448da4d8f064b0273ac5472cc9de7e5a.
    Initial author: OpenAI gpt-6-astra, xhigh/priority, one-shot.
-   Validation/final producer: see notes/r03-list-insert-end/README.md.
+   Final proof producer: OpenAI gpt-6.1-sol, xhigh/default.
+   Validation: notes/r03-list-insert-end-fix/README.md.
+   Original author evidence: notes/r03-list-insert-end/README.md.
 
    AAPCS32: R0=L, R1=P. Entry 0x5c; BX LR at 0x70. Eleven instructions,
    no calls or stack access. List_t is 20 bytes; embedded MiniItem at L+8
@@ -159,16 +161,34 @@ Qed.
 Theorem insert_end_memory_frame : forall m L P I B,
   insert_end_byte_frame m (insert_end_memory m L P I B) L P I B.
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  intros m L P I B a OUT.
+  unfold insert_end_memory, insert_end_prefix, write_field32.
+  repeat lazymatch goal with
+  | |- getmem 32 LittleE 1 (setmem 32 LittleE 4 ?M ?W ?V) a = _ =>
+    rewrite (getmem_noverlap 32 LittleE LittleE 1 4 M a W V)
+      by (apply OUT; cbn [insert_end_writes In]; rewrite ?N.add_0_r; tauto)
+  end.
+  reflexivity.
+Qed.
 Theorem insert_end_original_loads : forall m L P I B,
   insert_end_layout L P I B -> insert_end_links m L I B ->
   insert_end_observed_B m L P = B /\
   insert_end_observed_count m L P = field32 m L 0 /\
   insert_end_observed_memory m L P = insert_end_memory m L P I B.
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  intros m L P I B LAYOUT [INDEX [PREV BACK]].
+  assert (RB: insert_end_observed_B m L P = B).
+  { unfold insert_end_observed_B. rewrite INDEX.
+    rewrite (field32_frame m P 4 I 8 I) by (insert_unpack_layout LAYOUT; insert_sep).
+    exact PREV. }
+  assert (RC: insert_end_observed_count m L P = field32 m L 0).
+  { unfold insert_end_observed_count, insert_end_observed_prefix.
+    rewrite INDEX, RB. unfold insert_end_prefix.
+    insert_unpack_layout LAYOUT. insert_read. }
+  split; [exact RB|]. split; [exact RC|].
+  unfold insert_end_observed_memory, insert_end_memory.
+  rewrite RC. unfold insert_end_observed_prefix. rewrite INDEX, RB. reflexivity.
+Qed.
 
 Theorem insert_end_exact : forall s0 t s' x' L P,
   startof t (x',s') = (Addr 0x5c,s0) -> models armv6mtypctx s0 ->
@@ -176,8 +196,22 @@ Theorem insert_end_exact : forall s0 t s' x' L P,
   satisfies_all vListInsertEnd_armv6m_prog (insert_end_invs s0 L P)
     insert_end_exit ((x',s')::t).
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  intros s0 t s' x' L P ENTRY MDL R0 R1. apply prove_invs.
+  - simpl. rewrite ENTRY. armv6m_step. reflexivity.
+  - intros. erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption. apply insert_end_welltyped. intro MDL1.
+    clear - PRE MDL1 R0 R1. destruct_inv 32 PRE. subst s1.
+    repeat armv6m_step.
+    unfold insert_end_exact_post, insert_end_observed_memory,
+      insert_end_observed_count, insert_end_observed_prefix,
+      insert_end_observed_B, insert_end_prefix, insert_end_flags,
+      field32, write_field32.
+    rewrite ?R0, ?R1, ?N.add_0_r, ?getmem_mod_l, ?setmem_mod_l.
+    repeat split; cbn [cast eval_binop]; unfold N.b2n;
+      rewrite ?(N.add_comm _ 4), ?(N.add_comm _ 8),
+        ?(N.add_comm _ 16), ?(N.add_comm _ 1);
+      psimpl; reflexivity.
+Qed.
 
 Theorem insert_end_at_bx : forall s0 t s L P I B,
   startof t (Addr 0x70,s) = (Addr 0x5c,s0) ->
@@ -185,15 +219,31 @@ Theorem insert_end_at_bx : forall s0 t s L P I B,
   exec_prog vListInsertEnd_armv6m_prog ((Addr 0x70,s)::t) ->
   unterminated insert_end_exit t -> insert_end_post s0 L P I B s.
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  intros s0 t s L P I B ENTRY MDL [LAY [R0 [R1 [LINKS [PERM LR]]]]] XP UT.
+  pose proof (satall_trueif_inv _ _ _ _
+    (insert_end_exact s0 t s (Addr 0x70) L P ENTRY MDL R0 R1) XP UT) as POST.
+  change (insert_end_exact_post s0 L P s) in POST.
+  destruct (insert_end_original_loads (s0 V_MEM32) L P I B LAY LINKS) as [RB [RC RM]].
+  unfold insert_end_exact_post in POST. rewrite RB, RC, RM in POST.
+  destruct POST as [MEM [R2 [R3 FLAGS]]]. unfold insert_end_post.
+  split; [exact MEM|]. split.
+  - rewrite MEM. apply insert_end_memory_fields. exact LAY.
+  - split.
+    + rewrite MEM. apply insert_end_memory_frame.
+    + split; [exact R2|]. split; [exact R3|]. split; [exact FLAGS|].
+      intros v KEEP. symmetry.
+      exact (insert_end_register_frame v KEEP t (Addr 0x5c) s0 (Addr 0x70) s XP ENTRY).
+Qed.
 
 Corollary insert_end_count_no_overflow : forall s0 s L P I B,
   insert_end_post s0 L P I B s -> field32 (s0 V_MEM32) L 0 < 2^32-1 ->
   field32 (s V_MEM32) L 0 = field32 (s0 V_MEM32) L 0+1.
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  intros s0 s L P I B [_ [FIELDS _]] BOUND.
+  destruct FIELDS as [_ [_ [_ [_ [_ [COUNT _]]]]]]. rewrite COUNT.
+  set (c:=field32 (s0 V_MEM32) L 0) in *. clearbody c. clear - BOUND.
+  apply N.mod_small. lia.
+Qed.
 
 (* Finite memory images for entry satisfiability; these are not kernel code. *)
 Definition insert_end_fixture m L I B c :=
@@ -204,13 +254,24 @@ Theorem insert_end_fixture_links : forall m L P I B c,
   insert_end_links (insert_end_fixture m L I B c) L I B /\
   field32 (insert_end_fixture m L I B c) L 0 = c mod 2^32.
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  intros m L P I B c LAY. insert_unpack_layout LAY.
+  unfold insert_end_links, insert_end_fixture. repeat split.
+  all: repeat lazymatch goal with
+    | |- field32 (write_field32 ?M ?P ?O ?V) ?P ?O = _ =>
+      unfold field32, write_field32; rewrite getmem_setmem by discriminate
+    | |- field32 (write_field32 ?M ?P ?O ?V) ?Q ?J = _ =>
+      rewrite (field32_frame M P O Q J V) by insert_sep
+    end.
+  all: try reflexivity.
+  all: apply N.mod_small.
+  all: lazymatch goal with |- ?v < _ => change (v < 2^32) end.
+  all: insert_bound.
+Qed.
 Theorem insert_end_fixture_typed : forall m L I B c, m < memsize 32 ->
   insert_end_fixture m L I B c < memsize 32.
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  intros. unfold insert_end_fixture, write_field32. repeat apply setmem_welltyped. assumption.
+Qed.
 Definition insert_end_entry_store m L P : store :=
   update (update (update (update (update (memory_store32 m)
     A_READ (N.ones (2^32))) A_WRITE (N.ones (2^32))) R_R0 L) R_R1 P) R_LR 257.
@@ -218,8 +279,24 @@ Theorem insert_end_entry_witness : forall m L P I B,
   m < memsize 32 -> insert_end_layout L P I B -> insert_end_links m L I B ->
   exists s:store, models armv6mtypctx s /\ insert_end_pre s L P I B /\ s V_MEM32 = m.
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  intros m L P I B MT LAY LINKS. exists (insert_end_entry_store m L P).
+  assert (LB: L<2^32) by exact (proj1 (proj2 (proj2 (proj1 LAY)))).
+  assert (PB: P<2^32) by exact (proj1 (proj2 (proj2 (proj1 (proj2 LAY))))).
+  split.
+  - unfold insert_end_entry_store. apply models_update; [reflexivity|].
+    apply models_update; [exact PB|]. apply models_update; [exact LB|].
+    apply models_update; [apply ones_bound|]. apply models_update; [apply ones_bound|].
+    apply memory_store32_welltyped. exact MT.
+  - split; [unfold insert_end_pre|reflexivity].
+    split; [exact LAY|]. split; [reflexivity|]. split; [reflexivity|].
+    split; [exact LINKS|]. split.
+    + unfold insert_end_permissions. repeat split.
+      all: intros; unfold MemAcc; intros;
+        unfold mem_readable, mem_writable, insert_end_entry_store;
+        rewrite ?update_frame by discriminate; rewrite update_updated;
+        apply N.ones_spec_low; apply mp2_mod_lt.
+    + split; reflexivity.
+Qed.
 
 Ltac insert_concrete_layout :=
   unfold insert_end_layout, insert_end_words;
@@ -227,34 +304,68 @@ Ltac insert_concrete_layout :=
   first [solve [unfold object32, range32; vm_compute; repeat split; congruence] |
     solve [apply ranges32_separate; unfold range32; lia] | exact I].
 Theorem insert_end_empty_layout : insert_end_layout 4096 8192 4104 4104.
-Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+Proof. insert_concrete_layout. Qed.
 Theorem insert_end_nonempty_layout : insert_end_layout 4096 8192 12288 4104.
-Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+Proof. insert_concrete_layout. Qed.
 
 Theorem insert_end_local_empty_witness : exists s:store,
   models armv6mtypctx s /\ insert_end_pre s 4096 8192 4104 4104 /\
   field32 (s V_MEM32) 4096 0 = 0.
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  set (m:=insert_end_fixture 0 4096 4104 4104 0).
+  assert (MT:m<memsize 32).
+  { apply insert_end_fixture_typed.
+    assert (Z:forall w, 0<memsize w).
+    { intro w. change (0<2^(2^w*8)). apply mp2_gt_0. } exact (Z 32). }
+  destruct (insert_end_fixture_links 0 4096 8192 4104 4104 0 insert_end_empty_layout)
+    as [LINKS COUNT].
+  destruct (insert_end_entry_witness m 4096 8192 4104 4104 MT insert_end_empty_layout LINKS)
+    as [s [MDL [PRE MEM]]]. exists s. split; [exact MDL|]. split; [exact PRE|].
+  rewrite MEM. exact COUNT.
+Qed.
 Theorem insert_end_local_nonempty_witness : exists s:store,
   models armv6mtypctx s /\ insert_end_pre s 4096 8192 12288 4104 /\
   field32 (s V_MEM32) 4096 0 = 1.
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  set (m:=insert_end_fixture 0 4096 12288 4104 1).
+  assert (MT:m<memsize 32).
+  { apply insert_end_fixture_typed.
+    assert (Z:forall w, 0<memsize w).
+    { intro w. change (0<2^(2^w*8)). apply mp2_gt_0. } exact (Z 32). }
+  destruct (insert_end_fixture_links 0 4096 8192 12288 4104 1 insert_end_nonempty_layout)
+    as [LINKS COUNT].
+  destruct (insert_end_entry_witness m 4096 8192 12288 4104 MT insert_end_nonempty_layout LINKS)
+    as [s [MDL [PRE MEM]]]. exists s. split; [exact MDL|]. split; [exact PRE|].
+  rewrite MEM. exact COUNT.
+Qed.
 
 Theorem insert_end_return_step : forall s,
   insert_end_ordinary_lr (s R_LR) ->
   can_step vListInsertEnd_armv6m_prog
     ((Addr (N.land (s R_LR) 0xfffffffe),s),(Addr 0x70,s)).
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  intros s [ODD BOUND].
+  assert (RT: reset_temps s s = s).
+  { apply functional_extensionality. intro v.
+    unfold reset_temps, reset_vars. destruct (archtyps v); reflexivity. }
+  replace (Addr (N.land (s R_LR) 0xfffffffe),s) with
+    (exitof (0x70+2) (Some (Addr (N.land (s R_LR) 0xfffffffe))),reset_temps s s)
+    by (rewrite RT; reflexivity).
+  eapply CanStep with (sz:=2) (q:=armv6m_bxwritepc (Var R_LR))
+    (c':=armv6mtypctx) (s':=s) (x:=Some (Addr (N.land (s R_LR) 0xfffffffe))).
+  - reflexivity.
+  - unfold armv6m_bxwritepc. eapply XIf with (b:=1).
+    + assert (E: eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+        (s R_LR mod 2) 1).
+      { change (eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+          (cast CAST_LOW 32 1 (s R_LR)) 1). apply ECast, EVar. reflexivity. }
+      rewrite ODD in E. exact E.
+    + apply XJmp with (w:=32).
+      change (eval_exp armv6mtypctx s
+        (BinOp OP_AND (Var R_LR) (Word (N.ones 32-1) 32))
+        (eval_binop OP_AND 32 (s R_LR) (N.ones 32-1)) 32).
+      apply EBinOp; [apply EVar; reflexivity|apply EWord].
+Qed.
 
 Corollary insert_end_trace_returns : forall s0 t s L P I B,
   startof t (Addr 0x70,s) = (Addr 0x5c,s0) ->
@@ -265,13 +376,21 @@ Corollary insert_end_trace_returns : forall s0 t s L P I B,
   exec_prog vListInsertEnd_armv6m_prog
     ((Addr (N.land (s0 R_LR) 0xfffffffe),s)::(Addr 0x70,s)::t).
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  intros s0 t s L P I B ENTRY MDL PRE XP UT.
+  pose proof (insert_end_at_bx s0 t s L P I B ENTRY MDL PRE XP UT) as POST.
+  split; [exact POST|].
+  assert (LR:s R_LR=s0 R_LR).
+  { symmetry. exact (insert_end_register_frame R_LR ltac:(exact Logic.I) t (Addr 0x5c) s0 (Addr 0x70) s XP ENTRY). }
+  apply exec_prog_step; [exact XP|]. rewrite <- LR. apply insert_end_return_step.
+  rewrite LR. exact (proj2 (proj2 (proj2 (proj2 (proj2 PRE))))).
+Qed.
 
 Theorem insert_end_ordinary_return_nonvacuity : exists s:store,
   models armv6mtypctx s /\ insert_end_pre s 4096 8192 4104 4104 /\
   can_step vListInsertEnd_armv6m_prog
     ((Addr (N.land (s R_LR) 0xfffffffe),s),(Addr 0x70,s)).
 Proof.
-  (* Unchecked after the first build failure; original attempt archived. *)
-Abort.
+  destruct insert_end_local_empty_witness as [s [MDL [PRE COUNT]]].
+  exists s. split; [exact MDL|]. split; [exact PRE|].
+  apply insert_end_return_step. exact (proj2 (proj2 (proj2 (proj2 (proj2 PRE))))).
+Qed.
