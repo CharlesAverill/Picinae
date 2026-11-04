@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2fcee8ec
+COMMAND=python3 notes/a-memset-emag-fix/check-blocker.py
+Gate wait messages: 33
+No compiler admitted; recorder exit 130 verified.
+Substring count also includes the traceback source line; count messages by line prefix.
+
+EXIT_CODE=0

@@ -1,3 +1,9 @@
+(* SOL FIXER STATUS: BLOCKED before compiler admission. No new proof is
+   certified by a-memset-emag-fix. The restored author candidate and proposed
+   script repairs are in notes/a-memset-emag-fix/restored-repair-candidate.v.txt.
+   All 22 author statements and original four Qed bodies below are retained;
+   remaining statements stay Abort. See the fixer README and gate log. *)
+
 (* PARTIAL HANDOFF: the single full build exited 1 at original line 147,
    unavailable N.pow_pos_nonneg in the inhabited-input witness. No Astra
    repair cycle was run. All declarations from that witness onward are

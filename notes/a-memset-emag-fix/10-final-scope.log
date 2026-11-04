@@ -1,0 +1,10 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2fcee8ec
+COMMAND=bash -eu -c git\ diff\ --stat\ 4b2f5bc78d3f544645dae5fb9f3714faf2db68dc\;\ git\ diff\ --check\ --\ Examples/claude/arm8_memset_emag_proof.v\;\ git\ diff\ --exit-code\ 4b2f5bc78d3f544645dae5fb9f3714faf2db68dc\ --\ dune\ notes/a-memset-emag\ Examples/claude/lifter/scalar_ports/e08___memset_emag_arm8.v\;\ python3\ -c\ \"from\ pathlib\ import\ Path\;\ s=Path\(\\\"notes/a-memset-emag-fix/02-restored-build.log\\\"\).read_text\(\)\;\ print\(\\\"Gate\ waits:\\\"\,s.count\(\\\"ADMISSION\ WAIT\\\"\)\)\;\ assert\ s.count\(\\\"ADMISSION\ WAIT\\\"\)==33\;\ assert\ chr\(10\)+\\\"ADMITTED\ \\\"\ not\ in\ s\;\ assert\ s.endswith\(\\\"EXIT_CODE=130\\\"+chr\(10\)\)\;\ print\(\\\"No\ compiler\ admitted\;\ recorder\ exit\ 130\ verified.\\\"\)\"
+ Examples/claude/arm8_memset_emag_proof.v | 6 ++++++
+ 1 file changed, 6 insertions(+)
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+AssertionError
+Gate waits: 34
+
+EXIT_CODE=1
