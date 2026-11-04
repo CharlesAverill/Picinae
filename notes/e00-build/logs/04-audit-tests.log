@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-6b751a59
+COMMAND=python3 tools/test-proof-audit.py
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.166s
+
+OK
+
+EXIT_CODE=0
