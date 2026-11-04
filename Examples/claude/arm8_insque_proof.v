@@ -1,6 +1,3 @@
-(* PARTIAL handoff: the sole full build failed at insque_empty_links.
-   Prefix proofs were processed, but no full proof .vo or assumptions certificate
-   exists. All declarations from the failure onward are intentionally aborted. *)
 (* insque: AArch64 LP64 insertion, exact ordered memory effects.
 
    Provenance: Ubuntu glibc 2.35-0ubuntu3.15, aarch64 libc.so.6,
@@ -13,7 +10,8 @@
    no hardware refinement, fault freedom, concurrency or termination claim.
 
    Initial specification/proof author: OpenAI gpt-6-astra, xhigh/default.
-   Final proof producer is recorded in notes/a-insque after kernel checking.
+   Final proof producer: OpenAI gpt-6.1-sol, xhigh/default.
+   Full kernel build and assumptions evidence: notes/a-insque-fix/.
    Template: amd64_insque_proof.v (Claude Opus 5.5); no AMD64 imports.
 
    C interface: void insque(void *elem, void *prev).
@@ -157,8 +155,9 @@ Theorem insque_empty_links : forall m elem,
   (insque_mem m elem 0) Ⓠ[elem] = 0 /\
   (insque_mem m elem 0) Ⓠ[elem ⊕ 8] = 0.
 Proof.
-  (* PARTIAL: initial attempt retained verbatim in notes/a-insque/initial-attempt.v.txt. *)
-Abort.
+  intros m elem B. pose proof (insque_halves elem B) as NO.
+  unfold insque_mem. rewrite N.eqb_refl. split; insque_loads; reflexivity.
+Qed.
 
 (* The neighbor fields need not be disjoint when they are the same field.
    prev=next is also allowed: their two distinct embedded fields do not overlap. *)
@@ -172,8 +171,25 @@ Theorem insque_links : forall m elem prev,
   m' Ⓠ[elem] = next /\ m' Ⓠ[elem ⊕ 8] = prev /\
   m' Ⓠ[prev] = elem /\ (next <> 0 -> m' Ⓠ[next ⊕ 8] = elem).
 Proof.
-  (* PARTIAL: initial attempt retained verbatim in notes/a-insque/initial-attempt.v.txt. *)
-Abort.
+  intros m elem prev EB PB PN next NO1 NO2 m'.
+  assert (EL : elem < 2^64) by (clear - EB; lia).
+  assert (NL : next < 2^64) by apply getmem_bound.
+  pose proof (insque_halves elem EB) as E8.
+  pose proof (insque_lo _ _ _ NO1) as F1.
+  pose proof (insque_hi _ _ _ NO1) as F2.
+  subst m'. unfold insque_mem. rewrite (proj2 (N.eqb_neq _ _) PN).
+  fold next. destruct (N.eqb_spec next 0) as [NZ|NZ].
+  - repeat split; try (insque_loads; apply N.mod_small; assumption).
+    intros H. contradiction.
+  - destruct (NO2 NZ) as [NO3 [AL|NO4]];
+      pose proof (insque_lo _ _ _ NO3) as F3;
+      pose proof (insque_hi _ _ _ NO3) as F4.
+    + repeat split; [..|intros _];
+        try (insque_loads; apply N.mod_small; assumption).
+      rewrite AL. insque_loads. apply N.mod_small. exact EL.
+    + repeat split; [..|intros _]; insque_loads;
+        apply N.mod_small; assumption.
+Qed.
 
 (* Byte frame refers to original m and only to writes taken on this path. *)
 Theorem insque_byte_frame : forall m elem prev a,
@@ -183,8 +199,14 @@ Theorem insque_byte_frame : forall m elem prev a,
   (prev <> 0 -> m Ⓠ[prev] <> 0 -> ~ overlap 64 a 1 ((m Ⓠ[prev]) ⊕ 8) 8) ->
   (insque_mem m elem prev) Ⓑ[a] = m Ⓑ[a].
 Proof.
-  (* PARTIAL: initial attempt retained verbatim in notes/a-insque/initial-attempt.v.txt. *)
-Abort.
+  intros m elem prev a E0 E8 P NXT. unfold insque_mem.
+  destruct (N.eqb_spec prev 0) as [Z|NZ].
+  - repeat rewrite getmem_noverlap by assumption. reflexivity.
+  - specialize (P NZ). destruct (N.eqb_spec (m Ⓠ[prev]) 0) as [Z|NN].
+    + repeat rewrite getmem_noverlap by assumption. reflexivity.
+    + specialize (NXT NZ NN).
+      repeat rewrite getmem_noverlap by assumption. reflexivity.
+Qed.
 
 Definition insque_access (s : store) (m elem prev : N) :=
   elem <> 0 /\ elem + 16 <= 2^64 /\
@@ -201,32 +223,63 @@ Definition insque_witness_store (m prev : N) : store := fun v =>
   | _ => 0 end.
 Lemma insque_mask_bound : N.ones 1024 < 2^(2^64).
 Proof.
-  (* PARTIAL: initial attempt retained verbatim in notes/a-insque/initial-attempt.v.txt. *)
-Abort.
+  eapply N.lt_le_trans with (m:=2^1024).
+  - rewrite N.ones_equiv. apply N.lt_pred_l. apply N.pow_nonzero. discriminate.
+  - apply N.pow_le_mono_r; [discriminate|vm_compute; discriminate].
+Qed.
 Lemma insque_witness_typed : forall m prev,
   m < 2^(8*2^64) -> prev < 2^64 ->
   models arm8typctx (insque_witness_store m prev).
 Proof.
-  (* PARTIAL: initial attempt retained verbatim in notes/a-insque/initial-attempt.v.txt. *)
-Abort.
+  intros m prev MB PB v w T. destruct v;
+    inversion T; subst; cbn [insque_witness_store].
+  (* Guard by the stored value before unifying bounds: a failed exact on
+     a different register can otherwise expand the huge memory exponent. *)
+  all: lazymatch goal with |- ?n < _ =>
+    first [constr_eq n m; exact MB
+          |constr_eq n prev; exact PB
+          |constr_eq n (N.ones 1024); exact insque_mask_bound
+          |constr_eq n 0; apply N.neq_0_lt_0;
+             apply N.pow_nonzero; discriminate
+          |vm_compute; reflexivity]
+  end.
+Qed.
 Lemma insque_witness_access : forall m prev,
   prev < 1000 -> m Ⓠ[prev] < 1000 ->
   insque_access (insque_witness_store m prev) m 512 prev.
 Proof.
-  (* PARTIAL: initial attempt retained verbatim in notes/a-insque/initial-attempt.v.txt. *)
-Abort.
+  intros m prev P NXT. unfold insque_access.
+  split; [discriminate|]. split; [vm_compute; discriminate|]. split.
+  - intros i I. unfold mem_writable, ARM8Arch.mem_writable.
+    cbn [insque_witness_store]. apply N.ones_spec_low. clear - I; lia.
+  - intro PN. split; [clear - P; lia|]. split.
+    + intros i I. unfold mem_readable, mem_writable,
+        ARM8Arch.mem_readable, ARM8Arch.mem_writable.
+      cbn [insque_witness_store]. split; apply N.ones_spec_low; clear - P I; lia.
+    + intro NN. split; [clear - NXT; lia|]. intros i I.
+      unfold mem_writable, ARM8Arch.mem_writable.
+      cbn [insque_witness_store]. apply N.ones_spec_low. clear - NXT I; lia.
+Qed.
 Theorem insque_empty_witness : exists s,
   models arm8typctx s /\ s V_MEM64 = 0 /\ s R_X0 = 512 /\ s R_X1 = 0 /\
   insque_access s 0 512 0.
 Proof.
-  (* PARTIAL: initial attempt retained verbatim in notes/a-insque/initial-attempt.v.txt. *)
-Abort.
+  exists (insque_witness_store 0 0). split.
+  - apply insque_witness_typed; apply N.neq_0_lt_0; apply N.pow_nonzero; discriminate.
+  - split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
+    apply insque_witness_access; vm_compute; reflexivity.
+Qed.
 Theorem insque_tail_witness : exists s,
   models arm8typctx s /\ s V_MEM64 = 0 /\ s R_X0 = 512 /\ s R_X1 = 256 /\
   (s V_MEM64) Ⓠ[256] = 0 /\ insque_access s 0 512 256.
 Proof.
-  (* PARTIAL: initial attempt retained verbatim in notes/a-insque/initial-attempt.v.txt. *)
-Abort.
+  exists (insque_witness_store 0 256). split.
+  - apply insque_witness_typed.
+    + apply N.neq_0_lt_0; apply N.pow_nonzero; discriminate.
+    + vm_compute; reflexivity.
+  - split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
+    split; [reflexivity|]. apply insque_witness_access; vm_compute; reflexivity.
+Qed.
 Definition insque_circular_memory := (0 [Ⓠ 256 := 256]) [Ⓠ 264 := 256].
 Theorem insque_circular_witness : exists s m,
   models arm8typctx s /\ s V_MEM64 = m /\ s R_X0 = 512 /\ s R_X1 = 256 /\
@@ -234,5 +287,15 @@ Theorem insque_circular_witness : exists s m,
   ~ overlap 64 512 16 256 8 /\ ~ overlap 64 512 16 264 8 /\
   ~ overlap 64 256 8 264 8.
 Proof.
-  (* PARTIAL: initial attempt retained verbatim in notes/a-insque/initial-attempt.v.txt. *)
-Abort.
+  exists (insque_witness_store insque_circular_memory 256), insque_circular_memory.
+  assert (MB : insque_circular_memory < 2^(8*2^64)).
+  { change (insque_circular_memory < memsize 64).
+    unfold insque_circular_memory. apply setmem_welltyped, setmem_welltyped.
+    change (0 < 2^(8*2^64)). apply N.neq_0_lt_0; apply N.pow_nonzero; discriminate. }
+  split; [apply insque_witness_typed; [exact MB|vm_compute; reflexivity]|].
+  split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
+  split; [reflexivity|]. split; [reflexivity|].
+  split; [apply insque_witness_access; vm_compute; reflexivity|].
+  repeat split. all: intros [i [j [I [J E]]]];
+    rewrite !N.mod_small in E by (clear - I J; lia); clear - I J E; lia.
+Qed.
