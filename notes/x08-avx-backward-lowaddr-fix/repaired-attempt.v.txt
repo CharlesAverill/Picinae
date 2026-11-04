@@ -1,0 +1,398 @@
+(* AVX memmove backward overlap, the missing low-destination domain.
+
+   Inherited provenance, not independently validated:
+   Ubuntu amd64 glibc 2.35-0ubuntu3.12 /lib/x86_64-linux-gnu/libc.so.6,
+   SHA256 9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9,
+   __memmove_avx_unaligned_erms; Ghidra 0x2a0840, image base 0x100000,
+   normalized entry 0; Ghidra 11.4.2 + pcode2coq amd64-fixes.
+   The generated map and accepted x04 source remain unchanged.
+
+   Initial author: OpenAI gpt-6-astra, xhigh/default, one-shot attempt.
+   Final proof producer: not certified; see notes/x08-avx-backward-lowaddr.
+   Based on the accepted x04 Astra statements / Sol proofs and the baseline
+   Claude Opus 5.5 symbolic-execution and byte-copy helpers.
+
+   English spec: for 256<n, 0<d<128, s<d<s+n, d+n<=2^64,
+   s+n<=2^64, copy original source[0,n) to destination[0,n), with every
+   byte outside destination unchanged. SysV AMD64 entry RDI=d, RSI=s,
+   RDX=n, RSP=rsp; at RET 623 RAX=d and RSP=rsp. After executing RET,
+   RSP=rsp+8 modulo 2^64, and the target is the final memory's stack
+   quadword. No stack-disjointness premise: if destination overlaps the
+   saved return address, it is the copied memory's value that is loaded.
+   RBX/RBP/R12-R15 are preserved across the whole real execution.
+   No alignment, high-address, minimum-gap, CPU, DF or tunable restriction.
+   All geometrically possible gaps 1<=d-s<=d<128 are included.
+
+   The modular cursor has two cases. A live suffix/unread-source case
+   retains original memory and saved head/tail vectors. If c<128 and d<c,
+   decrementing c wraps and preserves a residue c mod 128>d. This residue
+   excludes the unsigned exit forever; the second invariant therefore
+   permits arbitrary memory. It does NOT assert destination framing on
+   such nonreturning prefixes. No termination, fault freedom, physical
+   accessibility, ISA availability, or binary/lifter refinement is claimed.
+   Permission witnesses are nonzero and include source, destination,
+   threshold and return-stack bytes; no assumed callee contracts occur.
+ *)
+
+Require Import Picinae_amd64 memmove_avx_amd64.
+Require Import amd64_common amd64_memcpy_lemmas amd64_memmove_avx_proof.
+Require Import amd64_memmove_avx_overlap_backward_proof.
+From Stdlib Require Import NArith ZArith Lia List.
+Import X64Notations ListNotations.
+Open Scope N.
+
+Definition low_domain d s n :=
+  256<n /\ s<d<s+n /\ 0<d<128 /\ d+n<=2^64 /\ s+n<=2^64.
+
+Theorem memmove_avx_backward_lowaddr_nwc:
+  forall s2 s1, memmove_avx_amd64 s1 = memmove_avx_amd64 s2.
+Proof. exact memmove_avx_nwc. Qed.
+Theorem memmove_avx_backward_lowaddr_welltyped:
+  welltyped_prog x64typctx memmove_avx_amd64.
+Proof. exact memmove_avx_welltyped. Qed.
+Theorem memmove_avx_backward_lowaddr_preserves_callee_saved:
+  forall v, In v [R_RBX; R_RBP; R_R12; R_R13; R_R14; R_R15] ->
+  forall_endstates memmove_avx_amd64 (fun _ st _ st' => st v=st' v).
+Proof. exact memmove_avx_preserves_callee_saved. Qed.
+
+Lemma low_domain_all_gaps:
+  forall d gap n, 0<d<128 -> 0<gap<=d -> 256<n -> d+n<=2^64 ->
+    low_domain d (d-gap) n.
+Proof. intros. unfold low_domain. lia. Qed.
+
+Lemma low_initial_memory:
+  forall m d s n, cpy m m d s (fun _ => False) /\ bw_unread m m s n.
+Proof. exact bw_initial_memory_satisfiable. Qed.
+
+(* Unlike x04's rcx_c0, no lower bound on d is needed for initialization. *)
+Lemma low_rcx_c0:
+  forall d n, 256<n -> d+n<=2^64 ->
+  (d ⊖ 129 + n) .& 18446744073709551584 = c0 d n.
+Proof.
+  intros d n BIG NW.
+  rewrite <- (land_mod_pow2 (d ⊖ 129 + n) 64) by reflexivity.
+  rewrite (addr_tail_w d 129 n) by (clear - BIG; lia).
+  rewrite N.mod_small by (clear - BIG NW; lia).
+  rewrite land_align32 by (clear - BIG NW; lia).
+  unfold c0. replace (d+(n-129)) with (d+n-129) by (clear - BIG; lia).
+  reflexivity.
+Qed.
+
+Lemma low_cursor_nowrap:
+  forall c, 128<=c -> c<2^64 -> c ⊖ 128 = c-128.
+Proof.
+  intros c LO HI. rewrite msub_sub by lia.
+  apply N.mod_small. lia.
+Qed.
+
+Lemma low_cursor_wrap:
+  forall c, c<128 -> c ⊖ 128 = c+(2^64-128).
+Proof.
+  intros c LO. unfold msub. change (128 mod 2^64) with 128.
+  apply N.mod_small. change (2^64) with 18446744073709551616. lia.
+Qed.
+
+Lemma low_cursor_residue:
+  forall c, c<2^64 -> (c ⊖ 128) mod 128 = c mod 128.
+Proof.
+  intros c HI. destruct (N.le_gt_cases 128 c) as [LO|LO].
+  - rewrite low_cursor_nowrap by assumption.
+    replace c with ((c-128)+1*128) at 2 by lia.
+    rewrite N.mod_add by discriminate. reflexivity.
+  - rewrite low_cursor_wrap by assumption.
+    replace (2^64-128) with (144115188075855871*128) by reflexivity.
+    rewrite N.mod_add by discriminate. reflexivity.
+Qed.
+
+Lemma low_wrapped_no_exit:
+  forall d c, c<2^64 -> d<c mod 128 -> d<c ⊖ 128.
+Proof.
+  intros d c HI R.
+  pose proof (N.mod_le (c ⊖ 128) 128 ltac:(discriminate)) as LE.
+  rewrite low_cursor_residue in LE by exact HI. lia.
+Qed.
+
+Definition low_postcondition := bw_postcondition.
+Definition low_exit := bw_exit.
+Definition low_live m d s n rsp (st:store) :=
+  exists c, d<c /\ c+128<=d+n /\ c<=c0 d n /\
+    cpy m (st V_MEM64) d s (fun i => c-d+128<=i<c0 d n-d+128) /\
+    st R_RCX=c /\ st R_RSI=s ⊕ (c-d) /\ st R_RDI=d /\ st R_RDX=n /\
+    st R_RAX=d /\ st R_RSP=rsp /\
+    st R_YMM0=m Ⓨ[s] /\ st R_YMM5=m Ⓨ[s ⊕ 32] /\
+    st R_YMM6=m Ⓨ[s ⊕ 64] /\ st R_YMM7=m Ⓨ[s ⊕ 96] /\
+    st R_YMM8=m Ⓨ[s ⊕ (n-32)].
+Definition low_wrapped d (st:store) :=
+  exists c, c<2^64 /\ d<c mod 128 /\ st R_RCX=c /\ st R_RDI=d.
+Definition low_invs (m d s n rsp:N) (t:trace) :=
+  match t with (Addr a,st)::_ => match a with
+  | 0 => Some (st V_MEM64=m /\ st R_RDI=d /\ st R_RSI=s /\
+               st R_RDX=n /\ st R_RSP=rsp)
+  | 309 | 704 => Some (bw_dispatch m d s n rsp st)
+  | 496 => Some (bw_dispatch m d s n rsp st /\ st R_RCX=d-s)
+  | 544 => Some (low_live m d s n rsp st \/ low_wrapped d st)
+  | 623 => Some (low_postcondition m d s n rsp st)
+  | 27 | 48 | 214 | 324 | 490 | 719 => Some False
+  | _ => None end | _ => None end.
+
+Lemma low_live_unread:
+  forall m d s n rsp st,
+  low_domain d s n -> low_live m d s n rsp st ->
+  exists c, st R_RCX=c /\ bw_unread m (st V_MEM64) s (c-d+128).
+Proof.
+  intros m d s n rsp st [BIG [OV [DLO [NW SW]]]]
+    [c [C1 [C2 [C3 [C [RCX REST]]]]]].
+  exists c. split; [exact RCX|].
+  pose proof (c0_bounds d n ltac:(clear - BIG; lia)) as CB.
+  eapply (bw_suffix_unread m (st V_MEM64) d s n (c-d+128)); [exact C|..].
+  - intros i I. clear - I CB BIG. lia.
+  - clear - OV. lia.
+  - exact NW.
+  - clear - C1 C2. lia.
+Qed.
+
+Ltac ignore_vars v ::= constr:(match v with
+  R_AF | R_OF | R_PF | R_SF => true | _ => false end).
+
+Theorem memmove_avx_correct_backward_lowaddr:
+  forall st t st' x' m d s n rsp
+    (ENTRY: startof t (x',st') = (Addr 0,st))
+    (MDL: models x64typctx st)
+    (MEM: st V_MEM64=m) (D: st R_RDI=d) (S: st R_RSI=s)
+    (Nn: st R_RDX=n) (RSP: st R_RSP=rsp)
+    (DOM: low_domain d s n),
+  satisfies_all memmove_avx_amd64 (low_invs m d s n rsp) low_exit ((x',st')::t).
+Proof.
+  intros.
+  destruct DOM as [BIG [OV [DLO [NW SW]]]].
+  assert (NB: n<2^64) by (rewrite <- Nn; apply (MDL R_RDX 64); reflexivity).
+  assert (GAP: d ⊖ s = d-s).
+  { rewrite msub_sub by (clear - OV NW; lia).
+    apply N.mod_small. clear - OV NW; lia. }
+  assert (GB: 0<d-s<n) by (clear - OV; lia).
+  destruct GB as [G0 GN].
+  apply prove_invs.
+  simpl. rewrite ENTRY. x64_step. repeat split; assumption.
+  intros.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply memmove_avx_welltyped. intro MDL1.
+  clear - PRE MDL1 BIG OV DLO NW SW NB GAP G0 GN. rename t1 into t.
+  destruct_inv 64 PRE.
+  - destruct PRE as [MEM [D [S [Nn RSP]]]].
+    repeat x64_step.
+    all: try (set (T := m Ⓠ[0x31a3f8]) in *; clearbody T).
+    all: try (match goal with |- False => idtac end; bc_norm;
+              first [discriminate | refute BIG | exfalso; nlia]).
+    all: repeat split; reflexivity || assumption.
+  - bw_dispatch_proof PRE GAP.
+  - destruct PRE as [[MEM [D [S [Nn [RSP [RAX Y0]]]]]] RCX].
+    repeat x64_step.
+    all: try (match goal with |- False => idtac end; bc_norm; exfalso; nlia).
+    left. exists (c0 d n).
+    rewrite (low_rcx_c0 d n BIG NW).
+    pose proof (c0_bounds d n ltac:(clear - BIG; lia)) as CB.
+    split. clear - CB BIG; lia.
+    split. clear - CB BIG; lia.
+    split. apply N.le_refl.
+    split. { eapply cpy_equiv; [|apply cpy_empty]. intro i.
+             clear. split; [intros []|intro H; lia]. }
+    split. reflexivity.
+    split. { apply rsi_c; [clear - CB BIG; lia | clear - NW BIG; lia]. }
+    do 2 (split; [reflexivity|]).
+    do 3 (split; [assumption|]).
+    (* Nonwrapping small source offsets normalize the concrete load addresses. *)
+    assert (S32: s ⊕ 32 = 32+s).
+    { rewrite N.mod_small by (clear - SW BIG; lia). lia. }
+    assert (S64: s ⊕ 64 = 64+s).
+    { rewrite N.mod_small by (clear - SW BIG; lia). lia. }
+    assert (S96: s ⊕ 96 = 96+s).
+    { rewrite N.mod_small by (clear - SW BIG; lia). lia. }
+    rewrite S32, S64, S96.
+    do 3 (split; [reflexivity|]).
+    apply getmem_addr. rewrite N.mod_mod by discriminate.
+    apply addr_tail_w; clear - BIG; lia.
+  - (* backward loop body *)
+    destruct PRE as [PRE|PRE].
+    + destruct PRE as [c [C1 [C2 [C3 [C [RCX [RSI [RDI [RDX [RAX [RSP [Y0 [Y5 [Y6 [Y7 Y8]]]]]]]]]]]]]]].
+
+      destruct (N.le_gt_cases 128 c) as [CLO|CLO].
+      * repeat x64_step.
+    all: change (2^7) with 128 in *.
+    all: assert (E: c ⊖ 128 = c - 128) by
+           (clear - C1 C2 NW CLO; rewrite msub_sub by lia; apply N.mod_small;
+            change (2^64) with 18446744073709551616 in *; lia).
+    all: rewrite E in BC.
+    all: pose proof (c0_bounds d n ltac:(clear - BIG; lia)) as CB.
+        -- (* next iteration (JC taken) *)
+      apply N.ltb_lt in BC.
+      left. exists (c - 128).
+      split. clear - BC; lia. split. clear - C2 BC; lia. split. clear - C3 BC; lia.
+      split.
+      { eapply cpy_equiv; [|eapply (bw_store4 _ _ _ _ n (c-d+128) _ (c-d+96) (c-d+64) (c-d+32) (c-d)); [exact C|..]].
+        intro i. clear - BC C1 C2 C3 CB. split; intro H; [repeat destruct H as [H|H]; lia | lia].
+        all: lazymatch goal with
+             | |- cpy _ _ _ _ _ => assumption
+             | |- _ => clear - BC C1 C2 C3 CB BIG NW NB CLO OV; aside
+             end. }
+      split. exact E.
+      split. { rewrite bwd_rsi by (clear - BC; lia). f_equal. clear - BC; lia. }
+      repeat split; try assumption.
+      all: match goal with H: ?r = _ |- ?r = _ =>
+             rewrite H; apply getmem_addr; rewrite ?N.mod_mod by discriminate; f_equal; clear; lia end.
+        -- (* loop exit (JC not taken): store the saved head and tail, then return *)
+      apply N.ltb_ge in BC.
+      split; [assumption|]. split; [assumption|].
+      eapply cpy_copied; cycle 1.
+      { eapply (cpy_store _ _ _ _ _ (n - 32)); [eapply (cpy_store _ _ _ _ _ 96);
+          [eapply (cpy_store _ _ _ _ _ 64); [eapply (cpy_store _ _ _ _ _ 32);
+           [eapply (cpy_store _ _ _ _ _ 0); [eapply (bw_store4 _ _ _ _ n (c-d+128) _ (c-d+96) (c-d+64) (c-d+32) (c-d)); [exact C|..]|..]|..]|..]|..]|..].
+        all: lazymatch goal with
+             | |- cpy _ _ _ _ _ => assumption
+             | |- _ => clear - BC C1 C2 C3 CB BIG NW NB CLO OV; aside
+             end. }
+      intro i. clear - BC C1 C2 C3 CB BIG. split; intro H; [repeat destruct H as [H|H]; lia | lia].
+      * (* The first subtraction below zero enters the no-exit residue class. *)
+        repeat x64_step.
+        all: change (2^7) with 128 in *.
+        all: assert (CW: c ⊖ 128 = c+(2^64-128)) by
+          (apply low_cursor_wrap; exact CLO).
+        all: rewrite CW in BC.
+        -- right. exists (c ⊖ 128).
+           split; [apply mp2_mod_lt|].
+           split.
+           { rewrite low_cursor_residue by (clear - C2 NW; lia).
+             rewrite N.mod_small by exact CLO. exact C1. }
+           split; [reflexivity|exact RDI].
+        -- apply N.ltb_ge in BC. exfalso.
+           clear - BC CLO DLO. change (2^64) with 18446744073709551616 in *. lia.
+    + (* Once wrapped, no amount of memory modification can enable the exit. *)
+      destruct PRE as [c [CB [RES [RCX RDI]]]].
+      repeat x64_step.
+      all: change (2^7) with 128 in *.
+      * right. exists (c ⊖ 128).
+        split; [apply mp2_mod_lt|].
+        split; [rewrite low_cursor_residue by exact CB; exact RES|].
+        split; [reflexivity|exact RDI].
+      * apply N.ltb_ge in BC.
+        pose proof (low_wrapped_no_exit d c CB RES) as NOEXIT.
+        exfalso. clear - BC NOEXIT. lia.
+  - bw_dispatch_proof PRE GAP.
+Qed.
+
+(* A concrete exec_prog trace ending at the actual RET instruction. *)
+Corollary memmove_avx_backward_lowaddr_at_ret:
+  forall st t st' m d s n rsp,
+  startof t (Addr 623,st')=(Addr 0,st) -> models x64typctx st ->
+  st V_MEM64=m -> st R_RDI=d -> st R_RSI=s -> st R_RDX=n ->
+  st R_RSP=rsp -> low_domain d s n ->
+  exec_prog memmove_avx_amd64 ((Addr 623,st')::t) ->
+  unterminated low_exit t ->
+  low_postcondition m d s n rsp st' /\
+  (forall v, In v [R_RBX;R_RBP;R_R12;R_R13;R_R14;R_R15] -> st v=st' v).
+Proof.
+  intros st t st' m d s n rsp ENTRY MDL MEM D S NN SP DOM XP UT.
+  split.
+  - pose proof (memmove_avx_correct_backward_lowaddr st t st' (Addr 623)
+      m d s n rsp ENTRY MDL MEM D S NN SP DOM) as SA.
+    exact (satall_trueif_inv _ _ _ _ SA XP UT).
+  - intros v IN. exact (memmove_avx_preserves_callee_saved v IN
+      t (Addr 0) st (Addr 623) st' XP ENTRY).
+Qed.
+
+(* RET is actually executed; its stack load observes the final copy memory. *)
+Lemma low_ret_step:
+  forall st st' x,
+  can_step memmove_avx_amd64 ((x,st'),(Addr 623,st)) ->
+  x=Addr (st V_MEM64 Ⓠ[st R_RSP]) /\
+  st' R_RSP=st R_RSP ⊕ 8 /\ st' V_MEM64=st V_MEM64 /\
+  st' R_RAX=st R_RAX.
+Proof.
+  intros st st' x STEP. inversion STEP; subst.
+  cbn [memmove_avx_amd64] in LU. inversion LU; subst.
+  repeat match goal with
+  | H: exec_stmt _ _ _ _ _ _ |- _ => inversion H; subst; clear H
+  | H: eval_exp _ _ _ _ _ |- _ => inversion H; subst; clear H
+  end.
+  repeat split; reflexivity.
+Qed.
+
+Theorem memmove_avx_backward_lowaddr_after_ret:
+  forall st t retst out x m d s n rsp,
+  startof t (Addr 623,retst)=(Addr 0,st) -> models x64typctx st ->
+  st V_MEM64=m -> st R_RDI=d -> st R_RSI=s -> st R_RDX=n ->
+  st R_RSP=rsp -> low_domain d s n ->
+  exec_prog memmove_avx_amd64 ((x,out)::(Addr 623,retst)::t) ->
+  unterminated low_exit t ->
+  out R_RAX=d /\ out R_RSP=rsp ⊕ 8 /\ copied m (out V_MEM64) d s n /\
+  x=Addr (out V_MEM64 Ⓠ[rsp]) /\
+  (forall v, In v [R_RBX;R_RBP;R_R12;R_R13;R_R14;R_R15] -> st v=out v).
+Proof.
+  intros st t retst out x m d s n rsp ENTRY MDL MEM D S NN SP DOM XP UT.
+  pose proof (exec_prog_tail _ _ _ XP) as PREFIX.
+  pose proof (memmove_avx_backward_lowaddr_at_ret st t retst m d s n rsp
+    ENTRY MDL MEM D S NN SP DOM PREFIX UT) as [[RA [RS CP]] FRAME].
+  pose proof (low_ret_step retst out x (exec_prog_final _ _ _ _ XP))
+    as [X [RSP [M RAX]]].
+  rewrite RAX, RSP, M, RA, RS.
+  repeat split; try assumption; try reflexivity.
+  intros v IN. eapply (memmove_avx_preserves_callee_saved v IN); [exact XP|].
+  exact ENTRY.
+Qed.
+
+(* Finite permissions, not the zero-permission witness used by x04. *)
+Definition low_witness_store (d s:N) : store := fun v => match v with
+  | R_RDI => d | R_RSI => s | R_RDX => 257 | R_RSP => 4096
+  | A_READ | A_WRITE => N.ones 4194304 | _ => 0 end.
+
+Lemma low_witness_typed:
+  forall d s, s<d -> 0<d<128 -> models x64typctx (low_witness_store d s).
+Proof.
+  intros d s SD DLO v w T. destruct v; cbn [x64typctx] in T;
+    inversion T; subst; cbn [low_witness_store]; try apply mp2_gt_0.
+  all: try (clear - SD DLO; change (2^64) with 18446744073709551616; lia).
+  all: eapply N.lt_le_trans; [apply ones_bound|];
+    apply N.pow_le_mono_r; [reflexivity|];
+    change (2^64) with 18446744073709551616; lia.
+Qed.
+
+Lemma low_witness_permissions:
+  forall d s a L, a+L<=4194304 ->
+    MemAcc mem_readable (low_witness_store d s) a 64 L /\
+    MemAcc mem_writable (low_witness_store d s) a 64 L.
+Proof.
+  intros d s a L AL. split; intros i IL;
+    unfold mem_readable, mem_writable; cbn [low_witness_store];
+    apply N.ones_spec_low;
+    rewrite N.mod_small by (clear - AL IL; change (2^64) with 18446744073709551616; lia);
+    clear - AL IL; lia.
+Qed.
+
+Theorem low_accessible_entry_witness:
+  forall d gap, 0<d<128 -> 0<gap<=d -> exists st,
+  models x64typctx st /\ st V_MEM64=0 /\ st R_RDI=d /\
+  st R_RSI=d-gap /\ st R_RDX=257 /\ st R_RSP=4096 /\
+  low_domain d (d-gap) 257 /\
+  MemAcc mem_readable st (d-gap) 64 257 /\
+  MemAcc mem_writable st d 64 257 /\
+  MemAcc mem_readable st 0x31a3f8 64 8 /\
+  MemAcc mem_readable st 4096 64 8 /\
+  exists st1, can_step memmove_avx_amd64 ((Addr 4,st1),(Addr 0,st)).
+Proof.
+  intros d gap DLO GAP. exists (low_witness_store d (d-gap)).
+  split; [apply low_witness_typed; lia|].
+  do 5 (split; [reflexivity|]).
+  split; [apply low_domain_all_gaps; try assumption; clear - DLO; change (2^64) with 18446744073709551616; lia|].
+  split; [apply (proj1 (low_witness_permissions _ _ _ _ ltac:(clear - DLO GAP; lia)))|].
+  split; [apply (proj2 (low_witness_permissions _ _ _ _ ltac:(clear - DLO; lia)))|].
+  split; [apply (proj1 (low_witness_permissions _ _ _ _ ltac:(reflexivity)))|].
+  split; [apply (proj1 (low_witness_permissions _ _ _ _ ltac:(reflexivity)))|].
+  eexists. eapply CanStep; [reflexivity|constructor].
+Qed.
+
+(* Both live and wrap-prone cursor classes have actual typed permitted stores.
+   This is entry/permission nonvacuity, not a promise of a complete execution. *)
+Lemma low_cursor_examples:
+  low_domain 1 0 257 /\ c0 1 257=128 /\
+  low_domain 1 0 289 /\ c0 1 289=160 /\
+  (32 ⊖ 128) mod 128=32.
+Proof. unfold low_domain, c0, msub; repeat split; reflexivity. Qed.

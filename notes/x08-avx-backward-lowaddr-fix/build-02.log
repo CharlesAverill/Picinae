@@ -1,0 +1,94 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-48b8f09f
+COMMAND=python3 /home/charles/code/friends/.refs/picinae-llm-proofs/resources/resource-run.py --unit x08-avx-backward-lowaddr-fix --memory-kib 4000000 -- /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.vo
+ADMISSION WAIT x08-avx-backward-lowaddr-fix available RAM reserve
+ADMISSION WAIT x08-avx-backward-lowaddr-fix available RAM reserve
+ADMISSION WAIT x08-avx-backward-lowaddr-fix available RAM reserve
+ADMISSION WAIT x08-avx-backward-lowaddr-fix available RAM reserve
+ADMITTED x08-avx-backward-lowaddr-fix memory_kib=4000000
+        rocq .Picinae.theory.d
+File "dune", lines 6-24, characters 0-821:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+22 |   Examples.claude.amd64_memmove_avx_proof
+23 |   Examples.claude.amd64_memmove_avx_overlap_backward_proof
+24 |   Examples.claude.amd64_memmove_avx_backward_lowaddr_proof))
+        rocq Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.{glob,vo} (exit 1)
+Goal at < 0 >
+Goal at < 48 >
+Goal at < 27 >
+Goal at < 704 >
+Goal at < 214 >
+Goal at < 309 >
+Goal at < 496 >
+Goal at < 324 >
+Goal at < 490 >
+Goal at < 544 >
+File "./Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.v", line 101, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.v", line 101, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.v", line 101, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.v", line 104, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.v", line 104, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.v", line 104, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.v", line 111, characters 14-22:
+Warning: Notation N.mod_le is deprecated since 8.17. Use Div0.mod_le instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.v", line 111, characters 14-22:
+Warning: Notation N.mod_le is deprecated since 8.17. Use Div0.mod_le instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.v", line 212, characters 29-40:
+Error:
+In environment
+m, d, s, n, rsp : N
+BIG : 256 < n
+OV : s < d < s + n
+DLO : 0 < d < 128
+NW : d + n <= 2 ^ 64
+SW : s + n <= 2 ^ 64
+NB : n < 2 ^ 64
+GAP : d ⊖ s = d - s
+G0 : 0 < d - s
+GN : d - s < n
+t : list (exit * store)
+s1 : store
+MEM : s1 V_MEM64 = m
+D : s1 R_RDI = d
+S : s1 R_RSI = s
+Nn : s1 R_RDX = n
+RSP : s1 R_RSP = rsp
+RAX : s1 R_RAX = d
+Y0 : s1 R_YMM0 = m Ⓨ[ s ]
+RCX : s1 R_RCX = d - s
+MDL1 : models archtyps s1
+BC : (d - s =? 0) = false
+n3, n4, n5 : N
+t0 : list (exit * store)
+CB : d + n - 160 <= c0 d n <= d + n - 129
+S32 : s ⊕ 32 = 32 + s
+S64 : s ⊕ 64 = 64 + s
+S96 : s ⊕ 96 = 96 + s
+Unable to unify "?M32170 ⊖ ?M32171 ⊕ ?M32172 = ?M32170 ⊕ (?M32172 - ?M32171)"
+with "s ⊖ 32 ⊕ n = (s ⊕ (n - 32)) mod 2 ^ 64".
+
+RELEASED x08-avx-backward-lowaddr-fix exit=1
+
+EXIT_CODE=1
