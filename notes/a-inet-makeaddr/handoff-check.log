@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-f64bb1b4
+COMMAND=python3 notes/a-inet-makeaddr/check-handoff.py
+PASS: exact allowed prerequisite set and base, assigned branch, 18 unchanged statements, nine unchanged Qed bodies, nine Abort bodies, generated map unchanged, failed target has no .vo.
+
+EXIT_CODE=0

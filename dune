@@ -41,7 +41,8 @@
   Examples.claude.lifter.scalar_ports.e08_srand48_r_arm8
   Examples.claude.lifter.scalar_bitforms.e29_bitforms
   Examples.claude.lifter.scalar_bitforms.e29_inet_makeaddr_arm8
-  Examples.claude.lifter.scalar_bitforms.e29_rand_r_arm8))
+  Examples.claude.lifter.scalar_bitforms.e29_rand_r_arm8
+  Examples.claude.arm8_inet_makeaddr_proof))
 
 (alias
  (name core)
