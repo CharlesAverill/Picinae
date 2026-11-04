@@ -20,6 +20,7 @@
   Examples.claude.amd64_memcpy_sets Examples.claude.amd64_memcpy_lemmas
   Examples.claude.amd64_memmove_avx_proof
   Examples.claude.amd64_memmove_avx_overlap_forward_proof
+  Examples.claude.amd64_memmove_avx_forward_nt_policy_proof
   Examples.claude.amd64_memmove_avx_loops_proof
   Examples.claude.amd64_memmove_avx_rep_proof
   Examples.claude.amd64_memmove_avx_nt_stores
