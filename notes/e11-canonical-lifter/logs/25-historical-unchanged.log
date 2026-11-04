@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=git diff --exit-code origin/llm_generated_proofs -- tools/ghidra-lifter/pcode2coq_lib.py tools/ghidra-lifter/translationConstants.py Examples/claude/lifter/pcode2coq_headless.py Examples/claude/toascii_arm8.v Examples/claude/div_arm8.v Examples/claude/ldiv_arm8.v Examples/claude/swab_arm8.v Examples/claude/ffs_arm8.v Examples/claude/ffsl_arm8.v
+
+EXIT_CODE=0
