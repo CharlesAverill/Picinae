@@ -1,0 +1,68 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ba9de42a
+COMMAND=python3 notes/a-memchr-nosimd/inspect-artifact.py
+e30___memchr_nosimd_arm8.v 24e6b63447d0a232041046209646bb9b830b1f89c3a02324c3e7af9a40b9f075
+e30___memchr_nosimd_arm8.pcode.json 7c7bdaa39d4bb0c45331fac1cc54b09c15a31a3f1680ad43ea33cac87e37e7ad
+56 instructions / 224 bytes: f7cf0af3105e36c28d27de9445f45afabd68e952ece7dbeb9729a9fef8aa63fb
+0x19c7c0 1f2003d5 nop
+0x19c7c4 a20600b4 cbz x2,0x0019c898
+0x19c7c8 1f0c40f2 tst x0,#0xf
+0x19c7cc 06ec7c92 and x6,x0,#-0x10
+0x19c7d0 eac300b2 orr x10,xzr,#0x101010101010101
+0x19c7d4 211c4092 and x1,x1,#0xff
+0x19c7d8 217c0a9b mul x1,x1,x10
+0x19c7dc 0700028b add x7,x0,x2
+0x19c7e0 e83c0091 add x8,x7,#0xf
+0x19c7e4 08ed7c92 and x8,x8,#-0x10
+0x19c7e8 40020054 b.eq 0x0019c830
+0x19c7ec cb30c1a8 ldp x11,x12,[x6], #0x10
+0x19c7f0 02f07dd3 lsl x2,x0,#0x3
+0x19c7f4 03008092 mov x3,#-0x1
+0x19c7f8 6420c29a lsl x4,x3,x2
+0x19c7fc 1f007df2 tst x0,#0x8
+0x19c800 6b0101ca eor x11,x11,x1
+0x19c804 8c0101ca eor x12,x12,x1
+0x19c808 620124aa orn x2,x11,x4
+0x19c80c 830124aa orn x3,x12,x4
+0x19c810 4b009fda csinv x11,x2,xzr,eq
+0x19c814 8c01839a csel x12,x12,x3,eq
+0x19c818 1f0007eb cmp x0,x7
+0x19c81c c04048fa ccmp x6,x8,#0x0,mi
+0x19c820 e9039fda csetm x9,ne
+0x19c824 07000014 b 0x0019c840
+0x19c828 1f2003d5 nop
+0x19c82c 1f2003d5 nop
+0x19c830 cb30c1a8 ldp x11,x12,[x6], #0x10
+0x19c834 c90008eb subs x9,x6,x8
+0x19c838 6b0101ca eor x11,x11,x1
+0x19c83c 8c0101ca eor x12,x12,x1
+0x19c840 62010acb sub x2,x11,x10
+0x19c844 83010acb sub x3,x12,x10
+0x19c848 64d900b2 orr x4,x11,#0x7f7f7f7f7f7f7f7f
+0x19c84c 85d900b2 orr x5,x12,#0x7f7f7f7f7f7f7f7f
+0x19c850 4d00248a bic x13,x2,x4
+0x19c854 6e00258a bic x14,x3,x5
+0x19c858 a2010eaa orr x2,x13,x14
+0x19c85c 401840fa ccmp x2,#0x0,#0x0,ne
+0x19c860 80feff54 b.eq 0x0019c830
+0x19c864 8d0000b4 cbz x13,0x0019c874
+0x19c868 c04000d1 sub x0,x6,#0x10
+0x19c86c ad0dc0da rev x13,x13
+0x19c870 04000014 b 0x0019c880
+0x19c874 2e0100b4 cbz x14,0x0019c898
+0x19c878 c02000d1 sub x0,x6,#0x8
+0x19c87c cd0dc0da rev x13,x14
+0x19c880 3f0100f1 cmp x9,#0x0
+0x19c884 a211c0da clz x2,x13
+0x19c888 000c428b add x0,x0,x2, LSR #0x3
+0x19c88c 080047fa ccmp x0,x7,#0x8,eq
+0x19c890 00409f9a csel x0,x0,xzr,mi
+0x19c894 c0035fd6 ret
+0x19c898 000080d2 mov x0,#0x0
+0x19c89c c0035fd6 ret
+Memory sites: [{'assembly': 'ldp x11,x12,[x6], #0x10', 'instruction': '0x19c7ec', 'pcode': ['(unique, 0x24680, 8) LOAD (const, 0x1b1, 8) , (unique, 0x7c80, 8)', '(unique, 0x24800, 8) LOAD (const, 0x1b1, 8) , (unique, 0x24700, 8)']}, {'assembly': 'ldp x11,x12,[x6], #0x10', 'instruction': '0x19c830', 'pcode': ['(unique, 0x24680, 8) LOAD (const, 0x1b1, 8) , (unique, 0x7c80, 8)', '(unique, 0x24800, 8) LOAD (const, 0x1b1, 8) , (unique, 0x24700, 8)']}]
+Closed map: True
+Limitations: Scalar IL/finite map closure/typing only; no function correctness, termination, or verified binary-lifter refinement.
+Read-only ELF byte comparison: 56/56 match /home/charles/code/friends/.toolchains/e02-arm-inventory/root/lib/aarch64-linux-gnu/libc.so.6
+ELF SHA256: 79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06
+
+EXIT_CODE=0
