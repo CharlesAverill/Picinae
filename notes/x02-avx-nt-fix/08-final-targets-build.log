@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-78795c90
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash notes/x02-avx-nt-fix/build.sh
+        rocq .Picinae.theory.d
+        rocq Examples/claude/amd64_memmove_avx_nt_witness.{glob,vo} (exit 1)
+File "./Examples/claude/amd64_memmove_avx_nt_witness.v", line 35, characters 18-215:
+Error: User interrupt.
+
+
+EXIT_CODE=1

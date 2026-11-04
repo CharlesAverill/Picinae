@@ -1,0 +1,86 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-78795c90
+COMMAND=python3 notes/x02-avx-nt-fix/check-assumptions.py
+memmove_avx_correct_nt:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+nt_seg_1285:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+nt_adv4:
+Closed under the global context
+
+nt_adv2:
+Closed under the global context
+
+cpy_store8:
+Closed under the global context
+
+nt_seg_1117:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+nt_seg_1125:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+nt_seg_1210:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+nt_seg_1613:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+nt_seg_1621:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+nt_seg_1706:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+nt_entry_inputs_satisfiable:
+Closed under the global context
+
+nt_zero_memory_load:
+Closed under the global context
+
+cpy_store16:
+Closed under the global context
+
+cpy_store16_inputs_satisfiable:
+Closed under the global context
+
+memmove_avx_welltyped:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+memmove_avx_nwc:
+Closed under the global context
+
+memmove_avx_preserves_callee_saved:
+Closed under the global context
+
+All 18 exact transitive assumption sets match; no admitted dependency.
+
+EXIT_CODE=0
