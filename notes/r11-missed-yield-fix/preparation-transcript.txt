@@ -1,0 +1,28 @@
+Initial read-only tool invocation, before any branch rename, merge or file edit.
+The following selected stdout is copied from that invocation; exit code 0.
+Commands: pwd; git status --short; git branch --show-current; git rev-parse HEAD;
+git log -3 --format='%H %P %s'; git remote -v.
+
+pwd:
+/home/charles/.t3/worktrees/Picinae/t3-7fbb9e39
+
+git status --short:
+(no output: clean)
+
+git branch --show-current:
+t3/7fbb9e39
+
+git rev-parse HEAD:
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+
+HEAD and sole parent from git log:
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 49956416928e5b6bb3928b54ae33e3b81091f006 Add selective Dune builds and proof audit harness
+
+The pre-import diff stat was only the 24 e00 files, 1409 insertions.
+The merge-base was 49956416928e5b6bb3928b54ae33e3b81091f006.
+The next git ls-remote failed with exit 128 (sandbox DNS). An escalated retry
+returned exit 0 and no stdout. A later recorded repeat is fork-check.log.
+The first git branch -m failed with exit 128 on read-only git metadata.
+The escalated rename plus exact ff-only merge succeeded with exit 0.
+All subsequent unit validation uses tools/record-command.sh; checkpoint and
+final ancestry logs contain full commands, actual output and exit codes.

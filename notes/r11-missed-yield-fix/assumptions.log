@@ -1,0 +1,836 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-7fbb9e39
+COMMAND=bash tools/print-assumptions.sh Picinae.Examples.FreeRTOS.armv6m_vTaskMissedYield_proof missed_yield_welltyped missed_yield_nwc missed_yield_memory_word missed_yield_memory_bytes missed_yield_memory_outside missed_yield_preserves_registers missed_yield_correct missed_yield_post_at_bx missed_yield_functional missed_yield_preserves_callee_saved missed_yield_zero_bound missed_yield_entry_satisfiable missed_yield_ldr_step missed_yield_mov_step missed_yield_store_step missed_yield_execution_witness missed_yield_return_step missed_yield_execution_returns
+missed_yield_welltyped
+     : Picinae_armv6m.Statics_ARMv6M.welltyped_prog
+         Picinae_armv6m.armv6mtypctx
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+Closed under the global context
+missed_yield_nwc
+     : forall s1 s2 : Picinae_armv6m.ARMv6MArch.store,
+       vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog s1 =
+       vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog s2
+Closed under the global context
+missed_yield_memory_word
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)))
+         (missed_yield_memory s)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))))))))))))))))))) =
+       BinNums.Npos BinNums.xH
+Closed under the global context
+missed_yield_memory_bytes
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+         (missed_yield_memory s)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...)))))))))))))))))))))) =
+       BinNums.Npos BinNums.xH /\
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+         (missed_yield_memory s)
+         (BinNums.Npos
+            (BinNums.xI
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))))))))))))))))) =
+       BinNums.N0 /\
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+         (missed_yield_memory s)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xI
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...))))))))))))))))))))) =
+       BinNums.N0 /\
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+         (missed_yield_memory s)
+         (BinNums.Npos
+            (BinNums.xI
+               (BinNums.xI
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...))))))))))))))))))))) =
+       BinNums.N0
+Closed under the global context
+missed_yield_memory_outside
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store) (a : BinNums.N),
+       ~
+       Picinae_theory.overlap
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         a (BinNums.Npos BinNums.xH)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...))))))))))))))))))))))
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))) ->
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+         (missed_yield_memory s) a =
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+         (s Picinae_armv6m.V_MEM32) a
+Closed under the global context
+missed_yield_preserves_registers
+     : forall v : Picinae_armv6m.armv6mvar,
+       v <> Picinae_armv6m.V_MEM32 ->
+       v <> Picinae_armv6m.R_R2 ->
+       v <> Picinae_armv6m.R_R3 ->
+       v <> Picinae_armv6m.F_N ->
+       v <> Picinae_armv6m.F_Z ->
+       Picinae_armv6m.IL_ARMv6M.forall_endstates
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv6m.ARMv6MArch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv6m.ARMv6MArch.store) =>
+          s v = s' v)
+Closed under the global context
+missed_yield_correct
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store) (x' : Picinae_core.exit),
+       Picinae_core.startof t (x', s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xO (BinNums.xO BinNums.xH)))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.Theory_ARMv6M.satisfies_all
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+         (missed_yield_invariants s) missed_yield_exit 
+         ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+missed_yield_post_at_bx
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))),
+          s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xO (BinNums.xO BinNums.xH)))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO BinNums.xH)))))))))))),
+           s')
+          :: t)%list ->
+       Picinae_theory.unterminated missed_yield_exit t ->
+       missed_yield_postcondition s s'
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+missed_yield_functional
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))),
+          s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xO (BinNums.xO BinNums.xH)))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO BinNums.xH)))))))))))),
+           s')
+          :: t)%list ->
+       Picinae_theory.unterminated missed_yield_exit t ->
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)))
+         (s' Picinae_armv6m.V_MEM32)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...)))))))))))))))))))) =
+       BinNums.Npos BinNums.xH /\
+       (Picinae_core.getmem
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+          Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+          (s' Picinae_armv6m.V_MEM32)
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))))))))))))))) =
+        BinNums.Npos BinNums.xH /\
+        Picinae_core.getmem
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+          Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+          (s' Picinae_armv6m.V_MEM32)
+          (BinNums.Npos
+             (BinNums.xI
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...)))))))))))))))))) =
+        BinNums.N0 /\
+        Picinae_core.getmem
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+          Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+          (s' Picinae_armv6m.V_MEM32)
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xI
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))))))))))))) =
+        BinNums.N0 /\
+        Picinae_core.getmem
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+          Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+          (s' Picinae_armv6m.V_MEM32)
+          (BinNums.Npos
+             (BinNums.xI
+                (BinNums.xI
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))))))))))))) =
+        BinNums.N0) /\
+       missed_yield_byte_frame s s'
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+missed_yield_preserves_callee_saved
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))),
+          s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xO (BinNums.xO BinNums.xH)))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO BinNums.xH)))))))))))),
+           s')
+          :: t)%list ->
+       Picinae_theory.unterminated missed_yield_exit t ->
+       forall v : Picinae_armv6m.armv6mvar,
+       List.In v
+         (Picinae_armv6m.R_R4
+          :: Picinae_armv6m.R_R5
+             :: Picinae_armv6m.R_R6
+                :: Picinae_armv6m.R_R7
+                   :: Picinae_armv6m.R_R8
+                      :: Picinae_armv6m.R_R9
+                         :: Picinae_armv6m.R_R10
+                            :: Picinae_armv6m.R_R11
+                               :: Picinae_armv6m.R_SP
+                                  :: Picinae_armv6m.R_LR :: nil) ->
+       s' v = s v
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+missed_yield_zero_bound
+     : forall w : BinNums.N,
+       BinNat.N.lt BinNums.N0
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH)) w)
+Closed under the global context
+missed_yield_entry_satisfiable
+     : forall m lr : BinNums.N,
+       BinNat.N.lt m
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNat.N.mul
+               (BinNums.Npos
+                  (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       missed_yield_ordinary_lr lr ->
+       exists s : Picinae_armv6m.IL_ARMv6M.store,
+         missed_yield_entry s /\
+         s Picinae_armv6m.V_MEM32 = m /\ s Picinae_armv6m.R_LR = lr
+Closed under the global context
+missed_yield_ldr_step
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       Picinae_armv6m.IL_ARMv6M.can_step
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))),
+          missed_yield_after_ldr s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO BinNums.xH)))))))))))),
+           s))
+Closed under the global context
+missed_yield_mov_step
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       Picinae_armv6m.IL_ARMv6M.can_step
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))),
+          missed_yield_after_mov s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO BinNums.xH)))))))))))),
+           missed_yield_after_ldr s))
+Closed under the global context
+missed_yield_store_step
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       missed_yield_writable s ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))),
+          missed_yield_after_store s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO BinNums.xH)))))))))))),
+           missed_yield_after_mov s))
+Closed under the global context
+missed_yield_execution_witness
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       missed_yield_entry s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO BinNums.xH)))))))))))),
+           missed_yield_after_store s)
+          :: (Picinae_core.Addr
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))),
+              missed_yield_after_mov s)
+             :: (Picinae_core.Addr
+                   (BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))),
+                 missed_yield_after_ldr s)
+                :: (Picinae_core.Addr
+                      (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))),
+                    s)
+                   :: nil)%list /\
+       missed_yield_postcondition s (missed_yield_after_store s)
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+missed_yield_return_step
+     : forall s : Picinae_armv6m.armv6mvar -> BinNums.N,
+       missed_yield_ordinary_lr (s Picinae_armv6m.R_LR) ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+         (Picinae_core.Addr
+            (BinNat.N.land (s Picinae_armv6m.R_LR)
+               (BinNat.N.sub
+                  (BinNat.N.ones
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  (BinNums.Npos BinNums.xH))),
+          s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO BinNums.xH)))))))))))),
+           s))
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+missed_yield_execution_returns
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       missed_yield_entry s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         vTaskMissedYield_armv6m.vTaskMissedYield_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNat.N.land (s Picinae_armv6m.R_LR)
+                (BinNat.N.sub
+                   (BinNat.N.ones
+                      (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                   (BinNums.Npos BinNums.xH))),
+           missed_yield_after_store s)
+          :: (Picinae_core.Addr
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))),
+              missed_yield_after_store s)
+             :: (Picinae_core.Addr
+                   (BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))),
+                 missed_yield_after_mov s)
+                :: (Picinae_core.Addr
+                      (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))),
+                    missed_yield_after_ldr s)
+                   :: (Picinae_core.Addr
+                         (BinNums.Npos
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))),
+                       s)
+                      :: nil)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0

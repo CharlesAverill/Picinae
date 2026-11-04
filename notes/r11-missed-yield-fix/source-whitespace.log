@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-7fbb9e39
+COMMAND=git diff --cached --check -- Examples/FreeRTOS/armv6m_vTaskMissedYield_proof.v notes/r11-missed-yield-fix/README.md notes/r11-missed-yield-fix/audit-assumptions.py notes/r11-missed-yield-fix/audit-statements.py notes/r11-missed-yield-fix/check-ancestry.py notes/r11-missed-yield-fix/validate.sh
+
+EXIT_CODE=0

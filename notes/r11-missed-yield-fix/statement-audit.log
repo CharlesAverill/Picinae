@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-7fbb9e39
+COMMAND=python3 notes/r11-missed-yield-fix/audit-statements.py
+PASS: all 18 original statements retained verbatim: missed_yield_welltyped, missed_yield_nwc, missed_yield_memory_word, missed_yield_memory_bytes, missed_yield_memory_outside, missed_yield_preserves_registers, missed_yield_correct, missed_yield_post_at_bx, missed_yield_functional, missed_yield_preserves_callee_saved, missed_yield_zero_bound, missed_yield_entry_satisfiable, missed_yield_ldr_step, missed_yield_mov_step, missed_yield_store_step, missed_yield_execution_witness, missed_yield_return_step, missed_yield_execution_returns
+PASS: all 13 original definitions retained verbatim: missed_yield_memory, missed_yield_register_frame, missed_yield_postcondition, missed_yield_byte_frame, missed_yield_exit, missed_yield_invariants, missed_yield_writable, missed_yield_ordinary_lr, missed_yield_entry, missed_yield_entry_store, missed_yield_after_ldr, missed_yield_after_mov, missed_yield_after_store
+PASS: original evidence and generated map unchanged
+PASS: no aborted/admitted declarations or new axioms/parameters in active proof
+
+EXIT_CODE=0

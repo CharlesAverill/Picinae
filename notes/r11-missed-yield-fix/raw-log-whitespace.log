@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-7fbb9e39
+COMMAND=git diff --cached --check
+notes/r11-missed-yield-fix/assumptions.log:234: trailing whitespace.
++         (missed_yield_invariants s) missed_yield_exit 
+notes/r11-missed-yield-fix/validate.log:350: trailing whitespace.
++         (missed_yield_invariants s) missed_yield_exit 
+
+EXIT_CODE=2
