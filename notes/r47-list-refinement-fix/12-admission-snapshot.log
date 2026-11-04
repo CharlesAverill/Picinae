@@ -1,0 +1,11 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2c979cb3
+COMMAND=python3 -
+UTC 2026-11-04T02:14:02.142835+00:00
+MemAvailable KiB 40265812
+Active reserved KiB 14500000
+Assigned request KiB 3000000
+Configured floor KiB 20971520
+Current wait reasons ['\tExit status: 1', 'RELEASED r47-list-refinement-fix exit=1', '', 'EXIT_CODE=1']
+Read-only snapshot; no changes to shared files or other processes.
+
+EXIT_CODE=0

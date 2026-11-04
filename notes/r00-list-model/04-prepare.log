@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-bcf6e4e7
+COMMAND=bash -e -c test\ \"\$\(git\ rev-parse\ HEAD\)\"\ =\ 71470bffba65392adf1873a3df9f0cf0ca4f1ac9\;\ git\ branch\ -m\ llm-proofs/r00-list-model\;\ git\ merge\ --ff-only\ 95da7ab7cee78f09a528aed86c1dfaf29520a9a8\;\ git\ merge-base\ origin/llm_generated_proofs\ HEAD\;\ git\ log\ --format=\"%H\ %s\"\ origin/llm_generated_proofs..HEAD\;\ git\ diff\ --stat\ origin/llm_generated_proofs...HEAD\;\ git\ status\ --short
+error: unable to move logfile logs/refs/heads/t3/armv6m-list-model to logs/refs/.tmp-renamed-log: Read-only file system
+fatal: branch rename failed
+
+EXIT_CODE=128

@@ -1,0 +1,8 @@
+Full r47 .vo target FAILED; no main refinement theorem certified.
+Verbatim inline Check/Print Assumptions for the successful prefix are in dune-initial.log.
+tools/print-assumptions.sh was NOT run: it would retry the failed full target,
+contrary to the one-shot handoff rule. A new Sol fixer must run it on ALL
+retained results after a successful full build.
+Inherited r03/r04 raw certificates disclose exactly
+FunctionalExtensionality.functional_extensionality_dep for the IL theorems.
+Those certificates were read; they are not fresh r47 assumption checks.

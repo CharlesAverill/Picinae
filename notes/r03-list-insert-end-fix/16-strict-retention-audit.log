@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-75bde600
+COMMAND=python3 notes/r03-list-insert-end/check-statements.py
+PASS: all statements, definitions and non-proof text unchanged
+Completed Qed blocks: 19
+Aborted unchecked proof blocks: 0
+
+EXIT_CODE=0
