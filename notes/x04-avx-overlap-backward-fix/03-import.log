@@ -1,0 +1,40 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9b461e
+COMMAND=git merge --ff-only 5a6fc185901b5016d19a67c5ab9009183b756131
+Updating 71470bf..5a6fc18
+Fast-forward
+ .../amd64_memmove_avx_overlap_backward_proof.v     | 347 ++++++++++++++
+ dune                                               |   7 +-
+ .../00-ancestry-before.log                         |  36 ++
+ .../01-branch-name-check.log                       |   5 +
+ .../x04-avx-overlap-backward/02-branch-rename.log  |   4 +
+ .../03-source-audit-initial.log                    |  10 +
+ .../x04-avx-overlap-backward/04-lift-unchanged.log |   4 +
+ .../05-initial-full-build.log                      | 366 ++++++++++++++
+ .../06-source-audit-full.log                       | 204 ++++++++
+ .../07-dependency-source.log                       |  21 +
+ .../08-final-source-audit.log                      | 204 ++++++++
+ .../09-statements-preserved.log                    |   6 +
+ notes/x04-avx-overlap-backward/10-diff-check.log   |   4 +
+ .../11-ancestry-precommit.log                      |  38 ++
+ .../x04-avx-overlap-backward/12-ancestry-after.log |  49 ++
+ notes/x04-avx-overlap-backward/README.md           | 130 +++++
+ .../x04-avx-overlap-backward/initial-attempt.v.txt | 524 +++++++++++++++++++++
+ 17 files changed, 1958 insertions(+), 1 deletion(-)
+ create mode 100644 Examples/claude/amd64_memmove_avx_overlap_backward_proof.v
+ create mode 100644 notes/x04-avx-overlap-backward/00-ancestry-before.log
+ create mode 100644 notes/x04-avx-overlap-backward/01-branch-name-check.log
+ create mode 100644 notes/x04-avx-overlap-backward/02-branch-rename.log
+ create mode 100644 notes/x04-avx-overlap-backward/03-source-audit-initial.log
+ create mode 100644 notes/x04-avx-overlap-backward/04-lift-unchanged.log
+ create mode 100644 notes/x04-avx-overlap-backward/05-initial-full-build.log
+ create mode 100644 notes/x04-avx-overlap-backward/06-source-audit-full.log
+ create mode 100644 notes/x04-avx-overlap-backward/07-dependency-source.log
+ create mode 100644 notes/x04-avx-overlap-backward/08-final-source-audit.log
+ create mode 100644 notes/x04-avx-overlap-backward/09-statements-preserved.log
+ create mode 100644 notes/x04-avx-overlap-backward/10-diff-check.log
+ create mode 100644 notes/x04-avx-overlap-backward/11-ancestry-precommit.log
+ create mode 100644 notes/x04-avx-overlap-backward/12-ancestry-after.log
+ create mode 100644 notes/x04-avx-overlap-backward/README.md
+ create mode 100644 notes/x04-avx-overlap-backward/initial-attempt.v.txt
+
+EXIT_CODE=0
