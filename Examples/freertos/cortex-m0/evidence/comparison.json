@@ -1,0 +1,42 @@
+{
+  "FreeRTOS-Cortex-M0.elf": {
+    "identical": true,
+    "sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca"
+  },
+  "data.raw": {
+    "identical": true,
+    "sha256": "824d5539cfad095ba33d7553aff77d991feeb6b62104588afae10fba545c8a01"
+  },
+  "firmware.bin": {
+    "identical": true,
+    "sha256": "1c468664b641d0e4d63d73b186fbaf23e0536dc581a9db461e7755c4d64389c6"
+  },
+  "gated-availability.json": {
+    "identical": true,
+    "sha256": "c01cd6a8e84fcdd1bfdcccff69ad8875d9e80985865f5b0c34a873507c8b6b29"
+  },
+  "isa-audit.json": {
+    "identical": true,
+    "sha256": "38422fadd061c4210911769d1e6d3c2bf0afebba3450ecc0cd48322afe28e972"
+  },
+  "isr_vector.raw": {
+    "identical": true,
+    "sha256": "8b7ae3c7ec409ca9eb06ab92cbab376b19f571fb24d02c2584aac39263406079"
+  },
+  "layout.json": {
+    "identical": true,
+    "sha256": "b501f440105154a99c41fa8fe764a116b98198356e3af4d297f3739d39a57cef"
+  },
+  "planned-availability.json": {
+    "identical": true,
+    "sha256": "cbe5c9833032f2deba537a01cfb2bf961ac492061bc89a842f09b6a7534dde04"
+  },
+  "symbols.json": {
+    "identical": true,
+    "sha256": "ee5fb3cecf5b946187ae303d7126633c5ab36495e80b28364fedd5bc7c4118c9"
+  },
+  "text.raw": {
+    "identical": true,
+    "sha256": "047d482ecfce1814f0e563a77da8f8349e9995dda8598ee2b6cee5dacc440db3"
+  }
+}

@@ -1,0 +1,23 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-fe0e672b
+COMMAND=bash -e -c git\ diff\ --check\;\ git\ diff\ --stat\;\ git\ status\ --short\;\ python3\ notes/r13-reset-event/check-ancestry.py
+ dune | 5 +++++
+ 1 file changed, 5 insertions(+)
+ M dune
+?? Examples/FreeRTOS/armv6m_uxTaskResetEventItemValue_proof.v
+?? notes/r13-reset-event/
+Base: 49956416928e5b6bb3928b54ae33e3b81091f006 
+Allowed prerequisite: 5fec2fc24d0c739bafc08add426f02a3085e15cd
+Accepted prerequisite commits: 10
+5fec2fc24d0c739bafc08add426f02a3085e15cd Prove ARMv6-M task count getter correctness
+7042ff1b6abdf79e2b07a348c7ef9ed014126ded Add partial ARMv6-M task count proof handoff
+95da7ab7cee78f09a528aed86c1dfaf29520a9a8 Record FreeRTOS lift ancestry and validation evidence
+075f59aca328e60e6376e2af01fa49925ab10e9d Add reproducible FreeRTOS ARMv6-M function lifts
+8c01958e73ec7fe959c60b29444505afbb599d13 Merge reviewed FreeRTOS fixture into e05 lifts
+5677a5d1d995745cc1cefbd33bcda1a3a4b49d8b Validate ARMv6-M import with selective Dune target
+dac36c0a03088a90bb6e6385f82cb355d27cc204 Merge selective Dune prerequisite into ARMv6-M import
+abe7eda601a63d47eb70e765f4ae2c4ca235cca4 Add reproducible Cortex-M0 FreeRTOS build fixture
+59f696d32a5623cdfbceb9a1e0f91e2cc7c054c1 Add ARMv6-M ISA and strict ELF lifter
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+ANCESTRY PASS
+
+EXIT_CODE=0

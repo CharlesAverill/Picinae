@@ -1,0 +1,600 @@
+{
+  "blocked_call_closures": 24,
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "extracted": 41,
+  "extraction_driver_sha256": "bf0a1ec2ce8dd9f27e4f3e7feb5026d35a53f9f631bd4e5b0c1c257263891a61",
+  "frontend_sha256": "80d1a05683c6f4b15290926c6f1ec7e176f276b8f2d509d5f6cc18bf4798fb61",
+  "kernel_commit": "dbf70559b27d39c1fdb68dfb9a32140b6a6777a0",
+  "planned": 41,
+  "rejected": 0,
+  "rows": [
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x00000056",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 3,
+      "literal_count": 0,
+      "row": "r01",
+      "symbol": "vListInitialiseItem",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x00000040",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 11,
+      "literal_count": 0,
+      "row": "r02",
+      "symbol": "vListInitialise",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x0000005c",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 11,
+      "literal_count": 0,
+      "row": "r03",
+      "symbol": "vListInsertEnd",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x000000a0",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 18,
+      "literal_count": 0,
+      "row": "r04",
+      "symbol": "uxListRemove",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x00000072",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 23,
+      "literal_count": 0,
+      "row": "r05",
+      "symbol": "vListInsert",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x0000059c",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 4,
+      "literal_count": 1,
+      "row": "r06",
+      "symbol": "uxTaskGetNumberOfTasks",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x000012dc",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 4,
+      "literal_count": 1,
+      "row": "r07",
+      "symbol": "xTaskGetCurrentTaskHandle",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x00000584",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 4,
+      "literal_count": 1,
+      "row": "r08",
+      "symbol": "xTaskGetTickCount",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x00000590",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 4,
+      "literal_count": 1,
+      "row": "r09",
+      "symbol": "xTaskGetTickCountFromISR",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x00000574",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 6,
+      "literal_count": 1,
+      "row": "r10",
+      "symbol": "vTaskSuspendAll",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x000009c0",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 4,
+      "literal_count": 1,
+      "row": "r11",
+      "symbol": "vTaskMissedYield",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical"
+      ],
+      "closure_prerequisites": 3,
+      "entry": "0x00000284",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 12,
+      "literal_count": 1,
+      "row": "r12",
+      "symbol": "uxTaskPriorityGet",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x00001524",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 10,
+      "literal_count": 1,
+      "row": "r13",
+      "symbol": "uxTaskResetEventItemValue",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x00000908",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 8,
+      "literal_count": 2,
+      "row": "r14",
+      "symbol": "vTaskInternalSetTimeOutState",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical"
+      ],
+      "closure_prerequisites": 3,
+      "entry": "0x000008d4",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 15,
+      "literal_count": 4,
+      "row": "r15",
+      "symbol": "vTaskSetTimeOutState",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical"
+      ],
+      "closure_prerequisites": 3,
+      "entry": "0x000018ec",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 27,
+      "literal_count": 3,
+      "row": "r16",
+      "symbol": "xTaskGenericNotifyStateClear",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical"
+      ],
+      "closure_prerequisites": 3,
+      "entry": "0x00001934",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 21,
+      "literal_count": 3,
+      "row": "r17",
+      "symbol": "ulTaskGenericNotifyValueClear",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x0000153c",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 8,
+      "literal_count": 1,
+      "row": "r18",
+      "symbol": "pvTaskIncrementMutexHeldCount",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x000012fc",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 12,
+      "literal_count": 2,
+      "row": "r19",
+      "symbol": "xTaskGetSchedulerState",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical"
+      ],
+      "closure_prerequisites": 3,
+      "entry": "0x00002040",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 11,
+      "literal_count": 2,
+      "row": "r20",
+      "symbol": "uxQueueMessagesWaiting",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical"
+      ],
+      "closure_prerequisites": 3,
+      "entry": "0x00002064",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 15,
+      "literal_count": 1,
+      "row": "r21",
+      "symbol": "uxQueueSpacesAvailable",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical"
+      ],
+      "closure_prerequisites": 3,
+      "entry": "0x00001f0c",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 17,
+      "literal_count": 1,
+      "row": "r22",
+      "symbol": "xQueueGetMutexHolder",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail"
+      ],
+      "closure_prerequisites": 1,
+      "entry": "0x00001f38",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 13,
+      "literal_count": 1,
+      "row": "r23",
+      "symbol": "xQueueGetMutexHolderFromISR",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical"
+      ],
+      "closure_prerequisites": 3,
+      "entry": "0x000001e0",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 65,
+      "literal_count": 7,
+      "row": "r24",
+      "symbol": "eTaskGetState",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail"
+      ],
+      "closure_prerequisites": 1,
+      "entry": "0x000003e4",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 27,
+      "literal_count": 4,
+      "row": "r25",
+      "symbol": "prvTaskIsTaskSuspended",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x00000c6c",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 18,
+      "literal_count": 4,
+      "row": "r26",
+      "symbol": "prvResetNextTaskUnblockTime",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [],
+      "closure_prerequisites": 0,
+      "entry": "0x000005d0",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 34,
+      "literal_count": 0,
+      "row": "r27",
+      "symbol": "prvSearchForNameWithinSingleList",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail"
+      ],
+      "closure_prerequisites": 1,
+      "entry": "0x00000654",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 73,
+      "literal_count": 12,
+      "row": "r28",
+      "symbol": "vTaskSwitchContext",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical",
+        "vPortYield"
+      ],
+      "closure_prerequisites": 22,
+      "entry": "0x0000287c",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 137,
+      "literal_count": 7,
+      "row": "r29",
+      "symbol": "xQueueGenericSend",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical",
+        "vPortYield"
+      ],
+      "closure_prerequisites": 21,
+      "entry": "0x00002410",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 126,
+      "literal_count": 6,
+      "row": "r30",
+      "symbol": "xQueueReceive",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "ulSetInterruptMask",
+        "vClearInterruptMask"
+      ],
+      "closure_prerequisites": 9,
+      "entry": "0x0000214c",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 94,
+      "literal_count": 7,
+      "row": "r31",
+      "symbol": "xQueueGenericSendFromISR",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "ulSetInterruptMask",
+        "vClearInterruptMask"
+      ],
+      "closure_prerequisites": 7,
+      "entry": "0x00002250",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 80,
+      "literal_count": 6,
+      "row": "r32",
+      "symbol": "xQueueReceiveFromISR",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical",
+        "vPortYield"
+      ],
+      "closure_prerequisites": 11,
+      "entry": "0x00001ac8",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 19,
+      "literal_count": 3,
+      "row": "r33",
+      "symbol": "vTaskDelay",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail"
+      ],
+      "closure_prerequisites": 2,
+      "entry": "0x00000e30",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 186,
+      "literal_count": 20,
+      "row": "r34",
+      "symbol": "xTaskIncrementTick",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical",
+        "vPortYield"
+      ],
+      "closure_prerequisites": 12,
+      "entry": "0x00000aec",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 19,
+      "literal_count": 0,
+      "row": "r35",
+      "symbol": "xTaskCreateStatic",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical",
+        "vPortYield"
+      ],
+      "closure_prerequisites": 9,
+      "entry": "0x00002b48",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 81,
+      "literal_count": 4,
+      "row": "r36",
+      "symbol": "xEventGroupSetBits",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical"
+      ],
+      "closure_prerequisites": 3,
+      "entry": "0x00002af4",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 26,
+      "literal_count": 2,
+      "row": "r37",
+      "symbol": "xEventGroupClearBits",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical",
+        "vPortYield"
+      ],
+      "closure_prerequisites": 24,
+      "entry": "0x000031ec",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 115,
+      "literal_count": 8,
+      "row": "r38",
+      "symbol": "xStreamBufferSend",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical",
+        "vPortYield"
+      ],
+      "closure_prerequisites": 20,
+      "entry": "0x0000339c",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 92,
+      "literal_count": 5,
+      "row": "r39",
+      "symbol": "xStreamBufferReceive",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "vPortEnterCritical",
+        "vPortExitCritical",
+        "vPortYield"
+      ],
+      "closure_prerequisites": 23,
+      "entry": "0x00003748",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 41,
+      "literal_count": 5,
+      "row": "r40",
+      "symbol": "xTimerGenericCommandFromTask",
+      "unsupported_count": 0
+    },
+    {
+      "blocked_helpers": [
+        "fixture_assert_fail",
+        "ulSetInterruptMask",
+        "vClearInterruptMask"
+      ],
+      "closure_prerequisites": 10,
+      "entry": "0x000037ac",
+      "exit_code": 0,
+      "extraction": "extracted",
+      "instruction_count": 31,
+      "literal_count": 4,
+      "row": "r41",
+      "symbol": "xTimerGenericCommandFromISR",
+      "unsupported_count": 0
+    }
+  ]
+}

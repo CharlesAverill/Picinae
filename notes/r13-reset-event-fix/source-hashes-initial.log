@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5a06644e
+COMMAND=sha256sum notes/r13-reset-event/initial-attempt.v.txt Examples/FreeRTOS/uxTaskResetEventItemValue_armv6m.v notes/r13-reset-event-fix/attempt-01.v.txt
+de4418962255140e5efa7d30f3147c972481b8f14922a9a6c1c04ffce5574dda  notes/r13-reset-event/initial-attempt.v.txt
+69b7a31b5f52c043a896f0f4a4393aeebbe74bbfde178b95b53b508135c0949c  Examples/FreeRTOS/uxTaskResetEventItemValue_armv6m.v
+f9cf86c61eac1d4c104cd8559890a87c775794875bba2a6a56b8d198a81ac268  notes/r13-reset-event-fix/attempt-01.v.txt
+
+EXIT_CODE=0
