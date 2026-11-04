@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96052210
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/r06-task-count-fix
+
+EXIT_CODE=0

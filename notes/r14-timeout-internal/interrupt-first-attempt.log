@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-8df74c71
+COMMAND=python3 -
+UTC 2026-11-04T01:59:08.709524+00:00
+    PID    PPID     ELAPSED     TIME   RSS    VSZ COMMAND
+ 719383  718582       09:54 00:10:12 927552 1180380 /home/charles/code/friends/.toolchains/opam/picinae/lib/rocq-runtime/rocqworker --kind=compile -q -w -level-tolerance -w -postfix-notation-not-level-1 -w -deprecated-native-compiler-option -w -native-compiler-disabled -native-compiler ondemand -boot -R /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/theories Corelib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Stdlib Stdlib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Ltac2 Ltac2 -R . Picinae Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.v
+Verified unit compiler cwd: /home/charles/.t3/worktrees/Picinae/t3-8df74c71/_build/default
+Sending SIGINT to this compiler only after slow one-shot attempt; no retry.
+
+EXIT_CODE=0

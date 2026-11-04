@@ -1,0 +1,45 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-508b2fbc
+COMMAND=python3 notes/r14-timeout-internal/check-provenance.py
+/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/tasks.c: SHA256 6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149 MATCH
+5522: void vTaskInternalSetTimeOutState( TimeOut_t * const pxTimeOut )
+5523: {
+5524:     traceENTER_vTaskInternalSetTimeOutState( pxTimeOut );
+5525: 
+5526:     /* For internal use only as it does not use a critical section. */
+5527:     pxTimeOut->xOverflowCount = xNumOfOverflows;
+5528:     pxTimeOut->xTimeOnEntering = xTickCount;
+5529: 
+5530:     traceRETURN_vTaskInternalSetTimeOutState();
+5531: }
+/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/include/task.h: SHA256 f3a76f99198a537ffce4b7876566502e7156a4fbd5b57b56f213bb7884b772c9 MATCH
+125: typedef struct xTIME_OUT
+126: {
+127:     BaseType_t xOverflowCount;
+128:     TickType_t xTimeOnEntering;
+129: } TimeOut_t;
+FreeRTOSConfig.h: SHA256 6c63fc719991c8324546c700f95586dfdf1c11b35c69abbb008d06d0e256711c MATCH
+layout-probe.c: SHA256 b7cdce00c68d3f144df557ba3c1bd829ebd7adb7dabe81f06bab3d2bc82607d9 MATCH
+BaseType_t.alignof 4
+BaseType_t.sizeof 4
+TickType_t.alignof 4
+TickType_t.sizeof 4
+TimeOut_t.alignof 4
+TimeOut_t.sizeof 8
+TimeOut_t.xOverflowCount 0
+TimeOut_t.xTimeOnEntering 4
+void *.alignof 4
+void *.sizeof 4
+Generated lift hash MATCH; no call closure or unsupported instruction.
+ELF SHA256 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca
+Literal globals: [{'address': '0x20000018', 'name': 'xNumOfOverflows', 'offset': 0, 'size': 4}]
+Literal globals: [{'address': '0x2000002c', 'name': 'xTickCount', 'offset': 0, 'size': 4}]
+0x00000908 4b03 ldr	r3, [pc, #12]	@ (918 <vTaskInternalSetTimeOutState+0x10>)
+0x0000090a 681b ldr	r3, [r3, #0]
+0x0000090c 6003 str	r3, [r0, #0]
+0x0000090e 4b03 ldr	r3, [pc, #12]	@ (91c <vTaskInternalSetTimeOutState+0x14>)
+0x00000910 681b ldr	r3, [r3, #0]
+0x00000912 6043 str	r3, [r0, #4]
+0x00000914 4770 bx	lr
+0x00000916 46c0 nop			@ (mov r8, r8)
+
+EXIT_CODE=0

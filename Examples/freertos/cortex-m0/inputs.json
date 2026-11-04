@@ -1,0 +1,21 @@
+{
+  "kernel": {
+    "release": "V11.1.0",
+    "repository": "https://github.com/FreeRTOS/FreeRTOS-Kernel",
+    "tag_object": "f388a5c8078e152913e4eb3c5d75bf89561392df",
+    "commit": "dbf70559b27d39c1fdb68dfb9a32140b6a6777a0",
+    "archive": "FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0.tar.gz",
+    "url": "https://codeload.github.com/FreeRTOS/FreeRTOS-Kernel/tar.gz/dbf70559b27d39c1fdb68dfb9a32140b6a6777a0",
+    "sha256": "31e570365bc3feb7fbbfa36b93cbc4e2da22f4d02801a1b1513b0f25594f1cea",
+    "directory": "FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0",
+    "license": "MIT (LICENSE.md in source archive)"
+  },
+  "toolchain": {
+    "release": "Arm GNU Toolchain 13.2.Rel1 (x86_64 Linux, arm-none-eabi)",
+    "archive": "arm-gnu-toolchain-13.2.rel1-x86_64-arm-none-eabi.tar.xz",
+    "url": "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-arm-none-eabi.tar.xz",
+    "sha256_url": "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-arm-none-eabi.tar.xz.sha256asc",
+    "sha256": "6cd1bbc1d9ae57312bcd169ae283153a9572bd6a8e4eeae2fedfbc33b115fdbb",
+    "directory": "arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi"
+  }
+}
