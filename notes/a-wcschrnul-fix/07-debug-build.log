@@ -1,0 +1,115 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-dd8b174b
+COMMAND=python3 /home/charles/code/friends/.refs/picinae-llm-proofs/resources/resource-run.py --unit a-wcschrnul-fix --memory-kib 1750000 -- /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/claude/arm8_wcschrnul_proof.vo
+ADMISSION WAIT a-wcschrnul-fix available RAM reserve
+ADMISSION WAIT a-wcschrnul-fix available RAM reserve
+ADMISSION WAIT a-wcschrnul-fix available RAM reserve
+ADMITTED a-wcschrnul-fix memory_kib=1750000
+        rocq .Picinae.theory.d
+File "dune", lines 6-49, characters 0-2286:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+47 |   Examples.claude.lifter.scalar_ccmp.e30_strcmp_arm8
+48 |   Examples.claude.lifter.scalar_ccmp.e30_wcschrnul_arm8
+49 |   Examples.claude.arm8_wcschrnul_proof))
+        rocq Examples/claude/arm8_wcschrnul_proof.{glob,vo} (exit 1)
+Goal at < 1696960 >
+Goal at < 1696964 >
+Goal at < 1696992 >
+Goal at < 1696992 >
+Goal at < 1696976 >
+FINISH GOAL:
+(wcschrnul_state m c sp lr
+   (s1[R_X2 := w][R_TMPCY := 1][R_TMPOV := 0]
+    [R_TMPNG := if slt 32 (msub 32 ((w >> 0) mod 2 ^ 32) 0) 0 then 1 else 0]
+    [R_TMPZR := 1][R_NG := 0][R_ZR := 1][R_CY := 0][R_OV := 0]) /\
+ s1 R_X0 = p + 4 * k)
+t0 : (list (exit * store))
+BC : (w = 0)
+MISS : (w <> 0 -> w <> c -> i < k)
+HIT : (w = 0 \/ w = c -> i = k)
+CB : (c < 2 ^ 32)
+WB : (w < 2 ^ 32)
+MDL1 : (models archtyps s1)
+X2 : (s1 R_X2 = w)
+w : N
+P : (s1 R_X0 = p + 4 * i)
+LE : (i <= k)
+i : N
+LR : (s1 R_X30 = lr)
+SP : (s1 R_SP = sp)
+C : (s1 R_X1 mod 2 ^ 32 = c)
+MEM : (s1 V_MEM64 = m)
+s1 : store
+t : (list (exit * store))
+lr : N
+sp : N
+k : N
+c : N
+p : N
+m : memory
+FINISH GOAL:
+(wcschrnul_state m c sp lr
+   (s1[R_X2 := w][R_TMPCY := if w <=? c then 1 else 0]
+    [R_TMPOV := ((s1 R_X1 >> 31) mod 2 .^ w >> 31)
+                .& ((s1 R_X1 >> 31) mod 2 .^ msub 32 (s1 R_X1) w >> 31)]
+    [R_TMPNG := if
+                 slt 32
+                   (msub 32 ((s1 R_X1 >> 0) mod 2 ^ 32) ((w >> 0) mod 2 ^ 32))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 1]
+    [R_NG := if
+              slt 32
+                (msub 32 ((s1 R_X1 >> 0) mod 2 ^ 32) ((w >> 0) mod 2 ^ 32)) 0
+             then 1
+             else 0]
+    [R_ZR := 1][R_CY := if w <=? c then 1 else 0]
+    [R_OV := ((s1 R_X1 >> 31) mod 2 .^ w >> 31)
+             .& ((s1 R_X1 >> 31) mod 2 .^ msub 32 (s1 R_X1) w >> 31)]) /\
+ s1 R_X0 = p + 4 * k)
+t0 : (list (exit * store))
+BC0 : (c = w)
+BC : (w <> 0)
+MISS : (w <> 0 -> w <> c -> i < k)
+HIT : (w = 0 \/ w = c -> i = k)
+CB : (c < 2 ^ 32)
+WB : (w < 2 ^ 32)
+MDL1 : (models archtyps s1)
+X2 : (s1 R_X2 = w)
+w : N
+P : (s1 R_X0 = p + 4 * i)
+LE : (i <= k)
+i : N
+LR : (s1 R_X30 = lr)
+SP : (s1 R_SP = sp)
+C : (s1 R_X1 mod 2 ^ 32 = c)
+MEM : (s1 V_MEM64 = m)
+s1 : store
+t : (list (exit * store))
+lr : N
+sp : N
+k : N
+c : N
+p : N
+m : memory
+File "./Examples/claude/arm8_wcschrnul_proof.v", line 148, characters 12-21:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_wcschrnul_proof.v", line 148, characters 12-21:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_wcschrnul_proof.v", line 148, characters 12-21:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_wcschrnul_proof.v", line 211, characters 24-60:
+Error: No applicable tactic.
+
+RELEASED a-wcschrnul-fix exit=1
+
+EXIT_CODE=1

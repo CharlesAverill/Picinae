@@ -1,0 +1,16 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=python3 notes/e11-canonical-lifter/check-failures.py
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-symbol', 'toascii', 'e11_symbol_does_not_exist']
+FAIL [Errno 2] No such file or directory: '/home/charles/code/friends/.toolchains/e11-canonical-lifter/.e11-stage-8on0e22s/SUCCESS.json'; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/9363b84e8a834d3183a7a3a0938f28df.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-neon', 'toascii', '__memcpy_generic']
+PASS 2 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-neon
+Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/2c04745cab6c4b95a81ce3ec288d20f9.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=0
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-4aebc652/notes/e11-canonical-lifter/check-failures.py", line 20, in <module>
+    assert result.returncode == 1
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+EXIT_CODE=1

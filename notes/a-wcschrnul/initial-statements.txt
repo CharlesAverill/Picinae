@@ -1,0 +1,47 @@
+Theorem wcschrnul_nwc: forall s2 s1,
+  e30_wcschrnul_arm8 s1 = e30_wcschrnul_arm8 s2.
+
+Theorem wcschrnul_welltyped: welltyped_prog arm8typctx e30_wcschrnul_arm8.
+
+Theorem wcschrnul_preserves_memory:
+  forall_endstates e30_wcschrnul_arm8 (fun _ s _ s' => s V_MEM64 = s' V_MEM64).
+
+Theorem wcschrnul_preserves_callee_saved:
+  forall v, In v [R_X19; R_X20; R_X21; R_X22; R_X23; R_X24; R_X25;
+                  R_X26; R_X27; R_X28; R_X29; R_X30; R_SP;
+                  R_Z8; R_Z9; R_Z10; R_Z11; R_Z12; R_Z13; R_Z14; R_Z15;
+                  A_READ; A_WRITE; R_X1] ->
+  forall_endstates e30_wcschrnul_arm8 (fun _ s _ s' => s v = s' v).
+
+Lemma wcschrnul_stop_hit: forall m p c k i,
+  wcschrnul_stop m p c k -> i <= k ->
+  (m Ⓓ[p+4*i] = 0 \/ m Ⓓ[p+4*i] = c) -> i = k.
+
+Lemma wcschrnul_stop_miss: forall m p c k i,
+  wcschrnul_stop m p c k -> i <= k ->
+  m Ⓓ[p+4*i] <> 0 -> m Ⓓ[p+4*i] <> c -> i < k.
+
+Lemma wcschrnul_addr_bound: forall p k i,
+  p+4*(k+1) <= 2^64 -> i <= k -> p+4*i < 2^64.
+
+Lemma wcschrnul_eq32: forall a b,
+  a < 2^32 -> b < 2^32 -> (msub 32 a b =? 0) = (a =? b).
+
+Theorem wcschrnul_input_satisfiable: forall c,
+  models arm8typctx (wcschrnul_witness c) /\
+  wcschrnul_input (wcschrnul_witness c) 0 1 (c mod 2^32) 0 0 0.
+
+Theorem wcschrnul_correct:
+  forall s t s' x' m p c k sp lr
+    (ENTRY: startof t (x',s') = (Addr 0x19e4c0,s))
+    (MDL: models arm8typctx s)
+    (INPUT: wcschrnul_input s m p c k sp lr),
+  satisfies_all e30_wcschrnul_arm8 (wcschrnul_invs m p c k sp lr)
+    wcschrnul_exit ((x',s')::t).
+
+Theorem wcschrnul_return:
+  forall s q ct s' x m p c k sp lr,
+  e30_wcschrnul_arm8 s 0x19e4e0 = Some (4,q) ->
+  models arm8typctx s -> postcondition m p c k sp lr s ->
+  exec_stmt arm8typctx s q ct s' x ->
+  x = Some (Addr lr) /\ postcondition m p c k sp lr (reset_temps s s').

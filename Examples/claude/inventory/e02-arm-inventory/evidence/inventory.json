@@ -1,0 +1,6470 @@
+{
+  "libc_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "build_id": "977c021c364ee3c495c0e5f2375bf6ba2124a6da",
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "image_base": "0x100000",
+  "elf_type": "ELF64 little-endian AArch64 ET_DYN",
+  "packages": [
+    {
+      "file": "libc6-dbg_2.35-0ubuntu3.15_arm64.deb",
+      "sha256": "2044236bcf9efd6a19b62099d349b5680eb3f55cd303c6ffac15f4b45e97d745"
+    },
+    {
+      "file": "libc6_2.35-0ubuntu3.15_arm64.deb",
+      "sha256": "dd88cc85dcfbac19c0c9b606676b7b1b87f851d75afa5c830fc5ba1293a30833"
+    }
+  ],
+  "memory_string_symbols": [
+    {
+      "name": "wcstombs",
+      "address": 252496,
+      "size": 96,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13da50",
+      "elf_address": "0x3da50",
+      "sha256_bytes": "f94de6596baefc7e94e250a23a2ed711e517443bb883043d8ee2ef9f178fe436",
+      "same_entry_symbols": [
+        "wcstombs"
+      ]
+    },
+    {
+      "name": "strfromf",
+      "address": 256416,
+      "size": 544,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13e9a0",
+      "elf_address": "0x3e9a0",
+      "sha256_bytes": "3eebc00ef9bd90cad7f04b9b2d8799355b0947a92347981ec935b149df16dd8b",
+      "same_entry_symbols": [
+        "strfromf",
+        "strfromf32"
+      ]
+    },
+    {
+      "name": "strfromf32",
+      "address": 256416,
+      "size": 544,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13e9a0",
+      "elf_address": "0x3e9a0",
+      "sha256_bytes": "3eebc00ef9bd90cad7f04b9b2d8799355b0947a92347981ec935b149df16dd8b",
+      "same_entry_symbols": [
+        "strfromf",
+        "strfromf32"
+      ]
+    },
+    {
+      "name": "strfromd",
+      "address": 256960,
+      "size": 540,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13ebc0",
+      "elf_address": "0x3ebc0",
+      "sha256_bytes": "71720040d3ac7d9750e7268a0b282f292c8b6c346fbe92d730ef8f8a9adba7be",
+      "same_entry_symbols": [
+        "strfromd",
+        "strfromf32x",
+        "strfromf64"
+      ]
+    },
+    {
+      "name": "strfromf32x",
+      "address": 256960,
+      "size": 540,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13ebc0",
+      "elf_address": "0x3ebc0",
+      "sha256_bytes": "71720040d3ac7d9750e7268a0b282f292c8b6c346fbe92d730ef8f8a9adba7be",
+      "same_entry_symbols": [
+        "strfromd",
+        "strfromf32x",
+        "strfromf64"
+      ]
+    },
+    {
+      "name": "strfromf64",
+      "address": 256960,
+      "size": 540,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13ebc0",
+      "elf_address": "0x3ebc0",
+      "sha256_bytes": "71720040d3ac7d9750e7268a0b282f292c8b6c346fbe92d730ef8f8a9adba7be",
+      "same_entry_symbols": [
+        "strfromd",
+        "strfromf32x",
+        "strfromf64"
+      ]
+    },
+    {
+      "name": "strfromf128",
+      "address": 257504,
+      "size": 548,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13ede0",
+      "elf_address": "0x3ede0",
+      "sha256_bytes": "ebd048348b772f3c1a36966c335e19d3503c6d5db5eb62a1ce1b079d93cfff4e",
+      "same_entry_symbols": [
+        "strfromf128",
+        "strfromf64x",
+        "strfroml"
+      ]
+    },
+    {
+      "name": "strfromf64x",
+      "address": 257504,
+      "size": 548,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13ede0",
+      "elf_address": "0x3ede0",
+      "sha256_bytes": "ebd048348b772f3c1a36966c335e19d3503c6d5db5eb62a1ce1b079d93cfff4e",
+      "same_entry_symbols": [
+        "strfromf128",
+        "strfromf64x",
+        "strfroml"
+      ]
+    },
+    {
+      "name": "strfroml",
+      "address": 257504,
+      "size": 548,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13ede0",
+      "elf_address": "0x3ede0",
+      "sha256_bytes": "ebd048348b772f3c1a36966c335e19d3503c6d5db5eb62a1ce1b079d93cfff4e",
+      "same_entry_symbols": [
+        "strfromf128",
+        "strfromf64x",
+        "strfroml"
+      ]
+    },
+    {
+      "name": "__strtol_internal",
+      "address": 258064,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f010",
+      "elf_address": "0x3f010",
+      "sha256_bytes": "673329c4c29f1248523fc3757bde67ec3717b187cd3933c247ad8c7e58f89ca6",
+      "same_entry_symbols": [
+        "__GI___strtol_internal",
+        "__GI___strtoll_internal",
+        "__strtol_internal",
+        "__strtoll_internal"
+      ]
+    },
+    {
+      "name": "__strtoll_internal",
+      "address": 258064,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f010",
+      "elf_address": "0x3f010",
+      "sha256_bytes": "673329c4c29f1248523fc3757bde67ec3717b187cd3933c247ad8c7e58f89ca6",
+      "same_entry_symbols": [
+        "__GI___strtol_internal",
+        "__GI___strtoll_internal",
+        "__strtol_internal",
+        "__strtoll_internal"
+      ]
+    },
+    {
+      "name": "__strtol",
+      "address": 258084,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x13f024",
+      "elf_address": "0x3f024",
+      "sha256_bytes": "ac1f1ee69c7b743c1ca1f04ececdf274af25852e3158e77227f2fc5e126664c5",
+      "same_entry_symbols": [
+        "__GI_strtol",
+        "__GI_strtoll",
+        "__GI_strtoq",
+        "__strtol",
+        "strtoimax",
+        "strtol",
+        "strtoll",
+        "strtoq"
+      ]
+    },
+    {
+      "name": "strtoimax",
+      "address": 258084,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f024",
+      "elf_address": "0x3f024",
+      "sha256_bytes": "ac1f1ee69c7b743c1ca1f04ececdf274af25852e3158e77227f2fc5e126664c5",
+      "same_entry_symbols": [
+        "__GI_strtol",
+        "__GI_strtoll",
+        "__GI_strtoq",
+        "__strtol",
+        "strtoimax",
+        "strtol",
+        "strtoll",
+        "strtoq"
+      ]
+    },
+    {
+      "name": "strtol",
+      "address": 258084,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f024",
+      "elf_address": "0x3f024",
+      "sha256_bytes": "ac1f1ee69c7b743c1ca1f04ececdf274af25852e3158e77227f2fc5e126664c5",
+      "same_entry_symbols": [
+        "__GI_strtol",
+        "__GI_strtoll",
+        "__GI_strtoq",
+        "__strtol",
+        "strtoimax",
+        "strtol",
+        "strtoll",
+        "strtoq"
+      ]
+    },
+    {
+      "name": "strtoll",
+      "address": 258084,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f024",
+      "elf_address": "0x3f024",
+      "sha256_bytes": "ac1f1ee69c7b743c1ca1f04ececdf274af25852e3158e77227f2fc5e126664c5",
+      "same_entry_symbols": [
+        "__GI_strtol",
+        "__GI_strtoll",
+        "__GI_strtoq",
+        "__strtol",
+        "strtoimax",
+        "strtol",
+        "strtoll",
+        "strtoq"
+      ]
+    },
+    {
+      "name": "strtoq",
+      "address": 258084,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f024",
+      "elf_address": "0x3f024",
+      "sha256_bytes": "ac1f1ee69c7b743c1ca1f04ececdf274af25852e3158e77227f2fc5e126664c5",
+      "same_entry_symbols": [
+        "__GI_strtol",
+        "__GI_strtoll",
+        "__GI_strtoq",
+        "__strtol",
+        "strtoimax",
+        "strtol",
+        "strtoll",
+        "strtoq"
+      ]
+    },
+    {
+      "name": "__strtoul_internal",
+      "address": 258112,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f040",
+      "elf_address": "0x3f040",
+      "sha256_bytes": "08c787c5b5b03a0b66563a1c9292ce2cc58ab3cde4ccaae9a4ca61e8ebf92733",
+      "same_entry_symbols": [
+        "__GI___strtoul_internal",
+        "__GI___strtoull_internal",
+        "__strtoul_internal",
+        "__strtoull_internal"
+      ]
+    },
+    {
+      "name": "__strtoull_internal",
+      "address": 258112,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f040",
+      "elf_address": "0x3f040",
+      "sha256_bytes": "08c787c5b5b03a0b66563a1c9292ce2cc58ab3cde4ccaae9a4ca61e8ebf92733",
+      "same_entry_symbols": [
+        "__GI___strtoul_internal",
+        "__GI___strtoull_internal",
+        "__strtoul_internal",
+        "__strtoull_internal"
+      ]
+    },
+    {
+      "name": "__strtoul",
+      "address": 258132,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x13f054",
+      "elf_address": "0x3f054",
+      "sha256_bytes": "a4674a425f649ce3dcae6c3f504567cd6b0bcdea59061cc53ec4e91406a6e57a",
+      "same_entry_symbols": [
+        "__GI_strtoul",
+        "__strtoul",
+        "strtoul",
+        "strtoull",
+        "strtoumax",
+        "strtouq"
+      ]
+    },
+    {
+      "name": "strtoul",
+      "address": 258132,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f054",
+      "elf_address": "0x3f054",
+      "sha256_bytes": "a4674a425f649ce3dcae6c3f504567cd6b0bcdea59061cc53ec4e91406a6e57a",
+      "same_entry_symbols": [
+        "__GI_strtoul",
+        "__strtoul",
+        "strtoul",
+        "strtoull",
+        "strtoumax",
+        "strtouq"
+      ]
+    },
+    {
+      "name": "strtoull",
+      "address": 258132,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f054",
+      "elf_address": "0x3f054",
+      "sha256_bytes": "a4674a425f649ce3dcae6c3f504567cd6b0bcdea59061cc53ec4e91406a6e57a",
+      "same_entry_symbols": [
+        "__GI_strtoul",
+        "__strtoul",
+        "strtoul",
+        "strtoull",
+        "strtoumax",
+        "strtouq"
+      ]
+    },
+    {
+      "name": "strtoumax",
+      "address": 258132,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f054",
+      "elf_address": "0x3f054",
+      "sha256_bytes": "a4674a425f649ce3dcae6c3f504567cd6b0bcdea59061cc53ec4e91406a6e57a",
+      "same_entry_symbols": [
+        "__GI_strtoul",
+        "__strtoul",
+        "strtoul",
+        "strtoull",
+        "strtoumax",
+        "strtouq"
+      ]
+    },
+    {
+      "name": "strtouq",
+      "address": 258132,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f054",
+      "elf_address": "0x3f054",
+      "sha256_bytes": "a4674a425f649ce3dcae6c3f504567cd6b0bcdea59061cc53ec4e91406a6e57a",
+      "same_entry_symbols": [
+        "__GI_strtoul",
+        "__strtoul",
+        "strtoul",
+        "strtoull",
+        "strtoumax",
+        "strtouq"
+      ]
+    },
+    {
+      "name": "____strtol_l_internal",
+      "address": 258160,
+      "size": 1116,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x13f070",
+      "elf_address": "0x3f070",
+      "sha256_bytes": "a4348fa07e396060f9731a0e00cad4ae2782f849486fd179554a68bada7115f4",
+      "same_entry_symbols": [
+        "__GI_____strtol_l_internal",
+        "__GI_____strtoll_l_internal",
+        "____strtol_l_internal",
+        "____strtoll_l_internal"
+      ]
+    },
+    {
+      "name": "____strtoll_l_internal",
+      "address": 258160,
+      "size": 1116,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x13f070",
+      "elf_address": "0x3f070",
+      "sha256_bytes": "a4348fa07e396060f9731a0e00cad4ae2782f849486fd179554a68bada7115f4",
+      "same_entry_symbols": [
+        "__GI_____strtol_l_internal",
+        "__GI_____strtoll_l_internal",
+        "____strtol_l_internal",
+        "____strtoll_l_internal"
+      ]
+    },
+    {
+      "name": "__strtol_l",
+      "address": 259280,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f4d0",
+      "elf_address": "0x3f4d0",
+      "sha256_bytes": "987cba59f291509ee787125ad1460d2b6739f3ea4502696c9421ceea010c5e11",
+      "same_entry_symbols": [
+        "__GI___strtol_l",
+        "__strtol_l",
+        "__strtoll_l",
+        "strtol_l",
+        "strtoll_l"
+      ]
+    },
+    {
+      "name": "__strtoll_l",
+      "address": 259280,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f4d0",
+      "elf_address": "0x3f4d0",
+      "sha256_bytes": "987cba59f291509ee787125ad1460d2b6739f3ea4502696c9421ceea010c5e11",
+      "same_entry_symbols": [
+        "__GI___strtol_l",
+        "__strtol_l",
+        "__strtoll_l",
+        "strtol_l",
+        "strtoll_l"
+      ]
+    },
+    {
+      "name": "strtol_l",
+      "address": 259280,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f4d0",
+      "elf_address": "0x3f4d0",
+      "sha256_bytes": "987cba59f291509ee787125ad1460d2b6739f3ea4502696c9421ceea010c5e11",
+      "same_entry_symbols": [
+        "__GI___strtol_l",
+        "__strtol_l",
+        "__strtoll_l",
+        "strtol_l",
+        "strtoll_l"
+      ]
+    },
+    {
+      "name": "strtoll_l",
+      "address": 259280,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f4d0",
+      "elf_address": "0x3f4d0",
+      "sha256_bytes": "987cba59f291509ee787125ad1460d2b6739f3ea4502696c9421ceea010c5e11",
+      "same_entry_symbols": [
+        "__GI___strtol_l",
+        "__strtol_l",
+        "__strtoll_l",
+        "strtol_l",
+        "strtoll_l"
+      ]
+    },
+    {
+      "name": "____strtoul_l_internal",
+      "address": 259296,
+      "size": 1088,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x13f4e0",
+      "elf_address": "0x3f4e0",
+      "sha256_bytes": "6b27e39a458a17144d945b3d23a65b06fb2ca68fa782b4519bc35ada2150d432",
+      "same_entry_symbols": [
+        "__GI_____strtoul_l_internal",
+        "__GI_____strtoull_l_internal",
+        "____strtoul_l_internal",
+        "____strtoull_l_internal"
+      ]
+    },
+    {
+      "name": "____strtoull_l_internal",
+      "address": 259296,
+      "size": 1088,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x13f4e0",
+      "elf_address": "0x3f4e0",
+      "sha256_bytes": "6b27e39a458a17144d945b3d23a65b06fb2ca68fa782b4519bc35ada2150d432",
+      "same_entry_symbols": [
+        "__GI_____strtoul_l_internal",
+        "__GI_____strtoull_l_internal",
+        "____strtoul_l_internal",
+        "____strtoull_l_internal"
+      ]
+    },
+    {
+      "name": "__strtoul_l",
+      "address": 260384,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f920",
+      "elf_address": "0x3f920",
+      "sha256_bytes": "e9597ab6b6e451a2b5c1046db6fed0a0c7a167109a6e0e358aeca5912b58fd1c",
+      "same_entry_symbols": [
+        "__GI___strtoul_l",
+        "__strtoul_l",
+        "__strtoull_l",
+        "strtoul_l",
+        "strtoull_l"
+      ]
+    },
+    {
+      "name": "__strtoull_l",
+      "address": 260384,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f920",
+      "elf_address": "0x3f920",
+      "sha256_bytes": "e9597ab6b6e451a2b5c1046db6fed0a0c7a167109a6e0e358aeca5912b58fd1c",
+      "same_entry_symbols": [
+        "__GI___strtoul_l",
+        "__strtoul_l",
+        "__strtoull_l",
+        "strtoul_l",
+        "strtoull_l"
+      ]
+    },
+    {
+      "name": "strtoul_l",
+      "address": 260384,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f920",
+      "elf_address": "0x3f920",
+      "sha256_bytes": "e9597ab6b6e451a2b5c1046db6fed0a0c7a167109a6e0e358aeca5912b58fd1c",
+      "same_entry_symbols": [
+        "__GI___strtoul_l",
+        "__strtoul_l",
+        "__strtoull_l",
+        "strtoul_l",
+        "strtoull_l"
+      ]
+    },
+    {
+      "name": "strtoull_l",
+      "address": 260384,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f920",
+      "elf_address": "0x3f920",
+      "sha256_bytes": "e9597ab6b6e451a2b5c1046db6fed0a0c7a167109a6e0e358aeca5912b58fd1c",
+      "same_entry_symbols": [
+        "__GI___strtoul_l",
+        "__strtoul_l",
+        "__strtoull_l",
+        "strtoul_l",
+        "strtoull_l"
+      ]
+    },
+    {
+      "name": "__strtof_internal",
+      "address": 260400,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f930",
+      "elf_address": "0x3f930",
+      "sha256_bytes": "e081d86623fdd786ded3e16a61a88528f115aa3ecaf5ea130b6ea012a6c5525e",
+      "same_entry_symbols": [
+        "__GI___strtof_internal",
+        "__strtof_internal"
+      ]
+    },
+    {
+      "name": "strtof",
+      "address": 260420,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f944",
+      "elf_address": "0x3f944",
+      "sha256_bytes": "680218df1d7192117a694f37f81f60b354e3a539ab546fb1e09998132ffcaa3d",
+      "same_entry_symbols": [
+        "__GI_strtof",
+        "strtof",
+        "strtof32"
+      ]
+    },
+    {
+      "name": "strtof32",
+      "address": 260420,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f944",
+      "elf_address": "0x3f944",
+      "sha256_bytes": "680218df1d7192117a694f37f81f60b354e3a539ab546fb1e09998132ffcaa3d",
+      "same_entry_symbols": [
+        "__GI_strtof",
+        "strtof",
+        "strtof32"
+      ]
+    },
+    {
+      "name": "__strtod_internal",
+      "address": 260448,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f960",
+      "elf_address": "0x3f960",
+      "sha256_bytes": "6ef8634e4c97f818ec24a905a22bf029169eff60f03c4b50f1f5aa2dd971cdde",
+      "same_entry_symbols": [
+        "__GI___strtod_internal",
+        "__strtod_internal"
+      ]
+    },
+    {
+      "name": "strtod",
+      "address": 260468,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f974",
+      "elf_address": "0x3f974",
+      "sha256_bytes": "2cfcbcadc55c24899bf04049bf9c809183d7e5c5e8f6061d5e096a27e26006c8",
+      "same_entry_symbols": [
+        "__GI_strtod",
+        "strtod",
+        "strtof32x",
+        "strtof64"
+      ]
+    },
+    {
+      "name": "strtof32x",
+      "address": 260468,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f974",
+      "elf_address": "0x3f974",
+      "sha256_bytes": "2cfcbcadc55c24899bf04049bf9c809183d7e5c5e8f6061d5e096a27e26006c8",
+      "same_entry_symbols": [
+        "__GI_strtod",
+        "strtod",
+        "strtof32x",
+        "strtof64"
+      ]
+    },
+    {
+      "name": "strtof64",
+      "address": 260468,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f974",
+      "elf_address": "0x3f974",
+      "sha256_bytes": "2cfcbcadc55c24899bf04049bf9c809183d7e5c5e8f6061d5e096a27e26006c8",
+      "same_entry_symbols": [
+        "__GI_strtod",
+        "strtod",
+        "strtof32x",
+        "strtof64"
+      ]
+    },
+    {
+      "name": "__strtold_internal",
+      "address": 260496,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f990",
+      "elf_address": "0x3f990",
+      "sha256_bytes": "0f5f214ea7fa84291af6b64e59ec38ec920056fee156fc434d88517122a13812",
+      "same_entry_symbols": [
+        "__GI___strtold_internal",
+        "__strtold_internal"
+      ]
+    },
+    {
+      "name": "strtof128",
+      "address": 260516,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f9a4",
+      "elf_address": "0x3f9a4",
+      "sha256_bytes": "d3281df4c637edc018a446628ec1f8419da3930bf54d149e5204e888c6f6872a",
+      "same_entry_symbols": [
+        "__GI_strtold",
+        "strtof128",
+        "strtof64x",
+        "strtold"
+      ]
+    },
+    {
+      "name": "strtof64x",
+      "address": 260516,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x13f9a4",
+      "elf_address": "0x3f9a4",
+      "sha256_bytes": "d3281df4c637edc018a446628ec1f8419da3930bf54d149e5204e888c6f6872a",
+      "same_entry_symbols": [
+        "__GI_strtold",
+        "strtof128",
+        "strtof64x",
+        "strtold"
+      ]
+    },
+    {
+      "name": "strtold",
+      "address": 260516,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x13f9a4",
+      "elf_address": "0x3f9a4",
+      "sha256_bytes": "d3281df4c637edc018a446628ec1f8419da3930bf54d149e5204e888c6f6872a",
+      "same_entry_symbols": [
+        "__GI_strtold",
+        "strtof128",
+        "strtof64x",
+        "strtold"
+      ]
+    },
+    {
+      "name": "str_to_mpn.part.0.constprop.0",
+      "address": 261216,
+      "size": 752,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x13fc60",
+      "elf_address": "0x3fc60",
+      "sha256_bytes": "fff6ccda17c68e71f2fa94a8a61a123128ee12d756c77e6fa78040d01082c29d",
+      "same_entry_symbols": [
+        "str_to_mpn.part.0.constprop.0"
+      ]
+    },
+    {
+      "name": "____strtof_l_internal",
+      "address": 261968,
+      "size": 7736,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x13ff50",
+      "elf_address": "0x3ff50",
+      "sha256_bytes": "929ce376d903ade4f446fc9f60b41fbec635a0ebe607aa7a65de2456c88825f8",
+      "same_entry_symbols": [
+        "__GI_____strtof_l_internal",
+        "____strtof_l_internal"
+      ]
+    },
+    {
+      "name": "__strtof_l",
+      "address": 269712,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x141d90",
+      "elf_address": "0x41d90",
+      "sha256_bytes": "da5ca5ef87bdaf6af5813aa03eea73ca44908368ad8a359d5446435ee1bdc610",
+      "same_entry_symbols": [
+        "__GI___strtof_l",
+        "__GI_strtof_l",
+        "__strtof_l",
+        "strtof32_l",
+        "strtof_l"
+      ]
+    },
+    {
+      "name": "strtof32_l",
+      "address": 269712,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x141d90",
+      "elf_address": "0x41d90",
+      "sha256_bytes": "da5ca5ef87bdaf6af5813aa03eea73ca44908368ad8a359d5446435ee1bdc610",
+      "same_entry_symbols": [
+        "__GI___strtof_l",
+        "__GI_strtof_l",
+        "__strtof_l",
+        "strtof32_l",
+        "strtof_l"
+      ]
+    },
+    {
+      "name": "strtof_l",
+      "address": 269712,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x141d90",
+      "elf_address": "0x41d90",
+      "sha256_bytes": "da5ca5ef87bdaf6af5813aa03eea73ca44908368ad8a359d5446435ee1bdc610",
+      "same_entry_symbols": [
+        "__GI___strtof_l",
+        "__GI_strtof_l",
+        "__strtof_l",
+        "strtof32_l",
+        "strtof_l"
+      ]
+    },
+    {
+      "name": "str_to_mpn.part.0.constprop.0",
+      "address": 270416,
+      "size": 752,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x142050",
+      "elf_address": "0x42050",
+      "sha256_bytes": "e01942b85164fce584f524580602d6d6487d77b7d60099e883a1c358c29d98bd",
+      "same_entry_symbols": [
+        "str_to_mpn.part.0.constprop.0"
+      ]
+    },
+    {
+      "name": "____strtod_l_internal",
+      "address": 271168,
+      "size": 7752,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x142340",
+      "elf_address": "0x42340",
+      "sha256_bytes": "0a58279a98f0d1cdcbca90e07a1cf5e40720b4128a049ae26d80d4eba5a6abca",
+      "same_entry_symbols": [
+        "__GI_____strtod_l_internal",
+        "____strtod_l_internal"
+      ]
+    },
+    {
+      "name": "__strtod_l",
+      "address": 278928,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x144190",
+      "elf_address": "0x44190",
+      "sha256_bytes": "be827333005607c25034d38a9800ea0e22f9a46495203133b14c4f499bec7e23",
+      "same_entry_symbols": [
+        "__GI___strtod_l",
+        "__GI_strtod_l",
+        "__strtod_l",
+        "strtod_l",
+        "strtof32x_l",
+        "strtof64_l"
+      ]
+    },
+    {
+      "name": "strtod_l",
+      "address": 278928,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x144190",
+      "elf_address": "0x44190",
+      "sha256_bytes": "be827333005607c25034d38a9800ea0e22f9a46495203133b14c4f499bec7e23",
+      "same_entry_symbols": [
+        "__GI___strtod_l",
+        "__GI_strtod_l",
+        "__strtod_l",
+        "strtod_l",
+        "strtof32x_l",
+        "strtof64_l"
+      ]
+    },
+    {
+      "name": "strtof32x_l",
+      "address": 278928,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x144190",
+      "elf_address": "0x44190",
+      "sha256_bytes": "be827333005607c25034d38a9800ea0e22f9a46495203133b14c4f499bec7e23",
+      "same_entry_symbols": [
+        "__GI___strtod_l",
+        "__GI_strtod_l",
+        "__strtod_l",
+        "strtod_l",
+        "strtof32x_l",
+        "strtof64_l"
+      ]
+    },
+    {
+      "name": "strtof64_l",
+      "address": 278928,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x144190",
+      "elf_address": "0x44190",
+      "sha256_bytes": "be827333005607c25034d38a9800ea0e22f9a46495203133b14c4f499bec7e23",
+      "same_entry_symbols": [
+        "__GI___strtod_l",
+        "__GI_strtod_l",
+        "__strtod_l",
+        "strtod_l",
+        "strtof32x_l",
+        "strtof64_l"
+      ]
+    },
+    {
+      "name": "str_to_mpn.part.0.constprop.0",
+      "address": 279892,
+      "size": 748,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x144554",
+      "elf_address": "0x44554",
+      "sha256_bytes": "311c110305c20e221db2b7cfcef57af074a4b43bfbfcb8cf3ef1570a011a0107",
+      "same_entry_symbols": [
+        "str_to_mpn.part.0.constprop.0"
+      ]
+    },
+    {
+      "name": "____strtold_l_internal",
+      "address": 280640,
+      "size": 8400,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x144840",
+      "elf_address": "0x44840",
+      "sha256_bytes": "eb7b75b2c5ce5846a3bd178a35ef2cd76af3f1967940f96f2a30f64d000a7008",
+      "same_entry_symbols": [
+        "__GI_____strtold_l_internal",
+        "____strtold_l_internal"
+      ]
+    },
+    {
+      "name": "__strtold_l",
+      "address": 289040,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x146910",
+      "elf_address": "0x46910",
+      "sha256_bytes": "3f54b230e454145525693bf4c73dbf65aaf3021f593a6a246233af7378d70af3",
+      "same_entry_symbols": [
+        "__GI___strtold_l",
+        "__GI_strtold_l",
+        "__strtold_l",
+        "strtof128_l",
+        "strtof64x_l",
+        "strtold_l"
+      ]
+    },
+    {
+      "name": "strtof128_l",
+      "address": 289040,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x146910",
+      "elf_address": "0x46910",
+      "sha256_bytes": "3f54b230e454145525693bf4c73dbf65aaf3021f593a6a246233af7378d70af3",
+      "same_entry_symbols": [
+        "__GI___strtold_l",
+        "__GI_strtold_l",
+        "__strtold_l",
+        "strtof128_l",
+        "strtof64x_l",
+        "strtold_l"
+      ]
+    },
+    {
+      "name": "strtof64x_l",
+      "address": 289040,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x146910",
+      "elf_address": "0x46910",
+      "sha256_bytes": "3f54b230e454145525693bf4c73dbf65aaf3021f593a6a246233af7378d70af3",
+      "same_entry_symbols": [
+        "__GI___strtold_l",
+        "__GI_strtold_l",
+        "__strtold_l",
+        "strtof128_l",
+        "strtof64x_l",
+        "strtold_l"
+      ]
+    },
+    {
+      "name": "strtold_l",
+      "address": 289040,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x146910",
+      "elf_address": "0x46910",
+      "sha256_bytes": "3f54b230e454145525693bf4c73dbf65aaf3021f593a6a246233af7378d70af3",
+      "same_entry_symbols": [
+        "__GI___strtold_l",
+        "__GI_strtold_l",
+        "__strtold_l",
+        "strtof128_l",
+        "strtof64x_l",
+        "strtold_l"
+      ]
+    },
+    {
+      "name": "__strtof_nan",
+      "address": 289056,
+      "size": 240,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x146920",
+      "elf_address": "0x46920",
+      "sha256_bytes": "c611e018e4b8c1c57e82a1cbd850bdb46df3a8ee5de01394afef4e9fef9c7c85",
+      "same_entry_symbols": [
+        "__GI___strtof_nan",
+        "__strtof_nan"
+      ]
+    },
+    {
+      "name": "__strtod_nan",
+      "address": 289296,
+      "size": 252,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x146a10",
+      "elf_address": "0x46a10",
+      "sha256_bytes": "b724b33db465b6cdd50e5a0ff37ef5fb855d04a37dcdee2fd7791bb114a3db21",
+      "same_entry_symbols": [
+        "__GI___strtod_nan",
+        "__strtod_nan"
+      ]
+    },
+    {
+      "name": "__strtold_nan",
+      "address": 289552,
+      "size": 228,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x146b10",
+      "elf_address": "0x46b10",
+      "sha256_bytes": "bbcaf5d6aee3309f28f376abb2d7b2cc886ac587b2b049fa37ff278c125c96c3",
+      "same_entry_symbols": [
+        "__GI___strtold_nan",
+        "__strtold_nan"
+      ]
+    },
+    {
+      "name": "__strfmon",
+      "address": 293296,
+      "size": 196,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1479b0",
+      "elf_address": "0x479b0",
+      "sha256_bytes": "5a1bcbf2f4a980b661567bfda2e1e8d4693aff62ad90fb3e56b48f4235daad24",
+      "same_entry_symbols": [
+        "__strfmon",
+        "strfmon"
+      ]
+    },
+    {
+      "name": "strfmon",
+      "address": 293296,
+      "size": 196,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1479b0",
+      "elf_address": "0x479b0",
+      "sha256_bytes": "5a1bcbf2f4a980b661567bfda2e1e8d4693aff62ad90fb3e56b48f4235daad24",
+      "same_entry_symbols": [
+        "__strfmon",
+        "strfmon"
+      ]
+    },
+    {
+      "name": "___strfmon_l",
+      "address": 297920,
+      "size": 172,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x148bc0",
+      "elf_address": "0x48bc0",
+      "sha256_bytes": "dd9f4d23e6917389067928f447b551b837bc51f95a4208adf18a155676ba5c05",
+      "same_entry_symbols": [
+        "___strfmon_l",
+        "__strfmon_l",
+        "strfmon_l"
+      ]
+    },
+    {
+      "name": "__strfmon_l",
+      "address": 297920,
+      "size": 172,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x148bc0",
+      "elf_address": "0x48bc0",
+      "sha256_bytes": "dd9f4d23e6917389067928f447b551b837bc51f95a4208adf18a155676ba5c05",
+      "same_entry_symbols": [
+        "___strfmon_l",
+        "__strfmon_l",
+        "strfmon_l"
+      ]
+    },
+    {
+      "name": "strfmon_l",
+      "address": 297920,
+      "size": 172,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x148bc0",
+      "elf_address": "0x48bc0",
+      "sha256_bytes": "dd9f4d23e6917389067928f447b551b837bc51f95a4208adf18a155676ba5c05",
+      "same_entry_symbols": [
+        "___strfmon_l",
+        "__strfmon_l",
+        "strfmon_l"
+      ]
+    },
+    {
+      "name": "__memalign",
+      "address": 594576,
+      "size": 72,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x191290",
+      "elf_address": "0x91290",
+      "sha256_bytes": "8f0eb47a7f31e13c9fce5b741abffed90ce2fb64e52363b1d35f043611a8054a",
+      "same_entry_symbols": [
+        "__GI___libc_memalign",
+        "__libc_memalign",
+        "__memalign",
+        "aligned_alloc",
+        "memalign"
+      ]
+    },
+    {
+      "name": "memalign",
+      "address": 594576,
+      "size": 72,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x191290",
+      "elf_address": "0x91290",
+      "sha256_bytes": "8f0eb47a7f31e13c9fce5b741abffed90ce2fb64e52363b1d35f043611a8054a",
+      "same_entry_symbols": [
+        "__GI___libc_memalign",
+        "__libc_memalign",
+        "__memalign",
+        "aligned_alloc",
+        "memalign"
+      ]
+    },
+    {
+      "name": "strcat",
+      "address": 601696,
+      "size": 52,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x192e60",
+      "elf_address": "0x92e60",
+      "sha256_bytes": "0cbe7d4c08a140b81e53e62847091a47bf565ae1b9433f61a796d878dababbd7",
+      "same_entry_symbols": [
+        "__GI_strcat",
+        "strcat"
+      ]
+    },
+    {
+      "name": "index",
+      "address": 601792,
+      "size": 160,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x192ec0",
+      "elf_address": "0x92ec0",
+      "sha256_bytes": "0bd7ffe6775f6fd02a360ea70e5ec6659a05be8378a1cd4e4f417c1b3b49b39d",
+      "same_entry_symbols": [
+        "__GI_strchr",
+        "index",
+        "strchr"
+      ]
+    },
+    {
+      "name": "strchr",
+      "address": 601792,
+      "size": 160,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x192ec0",
+      "elf_address": "0x92ec0",
+      "sha256_bytes": "0bd7ffe6775f6fd02a360ea70e5ec6659a05be8378a1cd4e4f417c1b3b49b39d",
+      "same_entry_symbols": [
+        "__GI_strchr",
+        "index",
+        "strchr"
+      ]
+    },
+    {
+      "name": "strcmp",
+      "address": 601984,
+      "size": 308,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x192f80",
+      "elf_address": "0x92f80",
+      "sha256_bytes": "1acd5a133177641bee3996fddb656a53512529342ae42bf42f0c4bd1a3326171",
+      "same_entry_symbols": [
+        "__GI_strcmp",
+        "strcmp"
+      ]
+    },
+    {
+      "name": "strcoll",
+      "address": 602304,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1930c0",
+      "elf_address": "0x930c0",
+      "sha256_bytes": "e4fd3c66deee277ae2dd3a7bbcfa9f59a4605a1f94df314a4aca5fdefedb776d",
+      "same_entry_symbols": [
+        "__GI_strcoll",
+        "strcoll"
+      ]
+    },
+    {
+      "name": "strcpy",
+      "address": 602368,
+      "size": 288,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193100",
+      "elf_address": "0x93100",
+      "sha256_bytes": "86e20ffdb5981db1f6f6465c3cd2ad1aff1c0cef6c045fc70289e311f0cce2d1",
+      "same_entry_symbols": [
+        "__GI_strcpy",
+        "strcpy"
+      ]
+    },
+    {
+      "name": "strcspn",
+      "address": 602656,
+      "size": 356,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193220",
+      "elf_address": "0x93220",
+      "sha256_bytes": "8f5dd404e6b398f75c360d1bb307b87c4de809a0b3f2306f5eaabc18304c1466",
+      "same_entry_symbols": [
+        "__GI_strcspn",
+        "strcspn"
+      ]
+    },
+    {
+      "name": "__strverscmp",
+      "address": 603024,
+      "size": 248,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193390",
+      "elf_address": "0x93390",
+      "sha256_bytes": "481926e54effc9d1bada8a313c5dd4fe033bf2017e15fb50a924330039c29f80",
+      "same_entry_symbols": [
+        "__GI___strverscmp",
+        "__strverscmp",
+        "strverscmp"
+      ]
+    },
+    {
+      "name": "strverscmp",
+      "address": 603024,
+      "size": 248,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x193390",
+      "elf_address": "0x93390",
+      "sha256_bytes": "481926e54effc9d1bada8a313c5dd4fe033bf2017e15fb50a924330039c29f80",
+      "same_entry_symbols": [
+        "__GI___strverscmp",
+        "__strverscmp",
+        "strverscmp"
+      ]
+    },
+    {
+      "name": "__strdup",
+      "address": 603280,
+      "size": 68,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193490",
+      "elf_address": "0x93490",
+      "sha256_bytes": "029df9d7c00b696cb525b7cb81804601492523ea7f177f15c6a9622a7debda9a",
+      "same_entry_symbols": [
+        "__GI___strdup",
+        "__strdup",
+        "strdup"
+      ]
+    },
+    {
+      "name": "strdup",
+      "address": 603280,
+      "size": 68,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x193490",
+      "elf_address": "0x93490",
+      "sha256_bytes": "029df9d7c00b696cb525b7cb81804601492523ea7f177f15c6a9622a7debda9a",
+      "same_entry_symbols": [
+        "__GI___strdup",
+        "__strdup",
+        "strdup"
+      ]
+    },
+    {
+      "name": "__strndup",
+      "address": 603360,
+      "size": 72,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1934e0",
+      "elf_address": "0x934e0",
+      "sha256_bytes": "3ba2fc1895ab2994e713e72fa0d54add3cb721416e7fd349dde4fcd4543166a4",
+      "same_entry_symbols": [
+        "__GI___strndup",
+        "__strndup",
+        "strndup"
+      ]
+    },
+    {
+      "name": "strndup",
+      "address": 603360,
+      "size": 72,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1934e0",
+      "elf_address": "0x934e0",
+      "sha256_bytes": "3ba2fc1895ab2994e713e72fa0d54add3cb721416e7fd349dde4fcd4543166a4",
+      "same_entry_symbols": [
+        "__GI___strndup",
+        "__strndup",
+        "strndup"
+      ]
+    },
+    {
+      "name": "strerror",
+      "address": 603440,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193530",
+      "elf_address": "0x93530",
+      "sha256_bytes": "31a12bd8dd06e785b4edc7d51294d317f07ba67b83acc4260c44db5987bec269",
+      "same_entry_symbols": [
+        "strerror"
+      ]
+    },
+    {
+      "name": "__strerror_r",
+      "address": 603472,
+      "size": 140,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193550",
+      "elf_address": "0x93550",
+      "sha256_bytes": "0384d6df09468803a969444ba48696e129ddc68edc4639ffea5a0d39612907d1",
+      "same_entry_symbols": [
+        "__GI___strerror_r",
+        "__strerror_r",
+        "strerror_r"
+      ]
+    },
+    {
+      "name": "strerror_r",
+      "address": 603472,
+      "size": 140,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x193550",
+      "elf_address": "0x93550",
+      "sha256_bytes": "0384d6df09468803a969444ba48696e129ddc68edc4639ffea5a0d39612907d1",
+      "same_entry_symbols": [
+        "__GI___strerror_r",
+        "__strerror_r",
+        "strerror_r"
+      ]
+    },
+    {
+      "name": "__strlen",
+      "address": 603616,
+      "size": 40,
+      "type": "IFUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1935e0",
+      "elf_address": "0x935e0",
+      "sha256_bytes": "a5f302faaf4859f611b68c167cb67000a4c2ee130b900cc0384d58658d21081a",
+      "same_entry_symbols": [
+        "__strlen",
+        "__strlen_ifunc",
+        "strlen"
+      ]
+    },
+    {
+      "name": "__strlen_ifunc",
+      "address": 603616,
+      "size": 40,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1935e0",
+      "elf_address": "0x935e0",
+      "sha256_bytes": "a5f302faaf4859f611b68c167cb67000a4c2ee130b900cc0384d58658d21081a",
+      "same_entry_symbols": [
+        "__strlen",
+        "__strlen_ifunc",
+        "strlen"
+      ]
+    },
+    {
+      "name": "strlen",
+      "address": 603616,
+      "size": 40,
+      "type": "IFUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1935e0",
+      "elf_address": "0x935e0",
+      "sha256_bytes": "a5f302faaf4859f611b68c167cb67000a4c2ee130b900cc0384d58658d21081a",
+      "same_entry_symbols": [
+        "__strlen",
+        "__strlen_ifunc",
+        "strlen"
+      ]
+    },
+    {
+      "name": "__strnlen",
+      "address": 603712,
+      "size": 196,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x193640",
+      "elf_address": "0x93640",
+      "sha256_bytes": "5c43c18e637f7db8575c0d65753b071066f641bd3d18331959f7e657bde43f46",
+      "same_entry_symbols": [
+        "__GI___strnlen",
+        "__GI_strnlen",
+        "__strnlen",
+        "strnlen"
+      ]
+    },
+    {
+      "name": "strnlen",
+      "address": 603712,
+      "size": 196,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x193640",
+      "elf_address": "0x93640",
+      "sha256_bytes": "5c43c18e637f7db8575c0d65753b071066f641bd3d18331959f7e657bde43f46",
+      "same_entry_symbols": [
+        "__GI___strnlen",
+        "__GI_strnlen",
+        "__strnlen",
+        "strnlen"
+      ]
+    },
+    {
+      "name": "__strncat",
+      "address": 603920,
+      "size": 88,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x193710",
+      "elf_address": "0x93710",
+      "sha256_bytes": "449f6a29b4fe14e556325f45a8e6a18ff26551af1bce4a09b954245ef486ab47",
+      "same_entry_symbols": [
+        "__GI___strncat",
+        "__strncat",
+        "strncat"
+      ]
+    },
+    {
+      "name": "strncat",
+      "address": 603920,
+      "size": 88,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193710",
+      "elf_address": "0x93710",
+      "sha256_bytes": "449f6a29b4fe14e556325f45a8e6a18ff26551af1bce4a09b954245ef486ab47",
+      "same_entry_symbols": [
+        "__GI___strncat",
+        "__strncat",
+        "strncat"
+      ]
+    },
+    {
+      "name": "strncmp",
+      "address": 604068,
+      "size": 480,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1937a4",
+      "elf_address": "0x937a4",
+      "sha256_bytes": "5dddc0cf259f841c13f205950772e35c957c34466450375e742eb7c8ead1774c",
+      "same_entry_symbols": [
+        "__GI_strncmp",
+        "strncmp"
+      ]
+    },
+    {
+      "name": "strncpy",
+      "address": 604560,
+      "size": 96,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193990",
+      "elf_address": "0x93990",
+      "sha256_bytes": "9776056a0941e57bfc856313a4101ac8629a3684e0ff94dd2821a90d9578f811",
+      "same_entry_symbols": [
+        "__GI_strncpy",
+        "strncpy"
+      ]
+    },
+    {
+      "name": "rindex",
+      "address": 604672,
+      "size": 288,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x193a00",
+      "elf_address": "0x93a00",
+      "sha256_bytes": "2179d4323d015a935b466524948ae451fa1e7f72b2a7076e0c7c7e21cc10a345",
+      "same_entry_symbols": [
+        "__GI_strrchr",
+        "rindex",
+        "strrchr"
+      ]
+    },
+    {
+      "name": "strrchr",
+      "address": 604672,
+      "size": 288,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193a00",
+      "elf_address": "0x93a00",
+      "sha256_bytes": "2179d4323d015a935b466524948ae451fa1e7f72b2a7076e0c7c7e21cc10a345",
+      "same_entry_symbols": [
+        "__GI_strrchr",
+        "rindex",
+        "strrchr"
+      ]
+    },
+    {
+      "name": "strpbrk",
+      "address": 604960,
+      "size": 48,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193b20",
+      "elf_address": "0x93b20",
+      "sha256_bytes": "c44a4cbd165cb52ce2920086eab54e8961274b624ea181d0326327eaffca31e3",
+      "same_entry_symbols": [
+        "__GI_strpbrk",
+        "strpbrk"
+      ]
+    },
+    {
+      "name": "strsignal",
+      "address": 605008,
+      "size": 256,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193b50",
+      "elf_address": "0x93b50",
+      "sha256_bytes": "b8d9c5c984eb5c3b2ae5f4d67cbe8cf73730f7a1116f58a8b490feebaf96c428",
+      "same_entry_symbols": [
+        "strsignal"
+      ]
+    },
+    {
+      "name": "strspn",
+      "address": 605264,
+      "size": 360,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x193c50",
+      "elf_address": "0x93c50",
+      "sha256_bytes": "a19086e59a541d7d2b7ac2cc0787cf2926af4c761da7cd4e7a7e2866cb178412",
+      "same_entry_symbols": [
+        "__GI_strspn",
+        "strspn"
+      ]
+    },
+    {
+      "name": "strstr",
+      "address": 606736,
+      "size": 784,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194210",
+      "elf_address": "0x94210",
+      "sha256_bytes": "e98652d33b94e14d991dbe3ad1590fd13f44dbc284664176b56312d39e5bbaa8",
+      "same_entry_symbols": [
+        "__GI_strstr",
+        "strstr"
+      ]
+    },
+    {
+      "name": "strtok",
+      "address": 607520,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194520",
+      "elf_address": "0x94520",
+      "sha256_bytes": "136c18280f5cf356c83fb317059fb5130022b412f38c030cbdf4cc55606a71f1",
+      "same_entry_symbols": [
+        "strtok"
+      ]
+    },
+    {
+      "name": "__strtok_r",
+      "address": 607536,
+      "size": 160,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194530",
+      "elf_address": "0x94530",
+      "sha256_bytes": "1a9994db057180ea449711ea1c40eb44d9f18ee3eb2a39bcf710c14cded16db1",
+      "same_entry_symbols": [
+        "__GI___strtok_r",
+        "__strtok_r",
+        "strtok_r"
+      ]
+    },
+    {
+      "name": "strtok_r",
+      "address": 607536,
+      "size": 160,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x194530",
+      "elf_address": "0x94530",
+      "sha256_bytes": "1a9994db057180ea449711ea1c40eb44d9f18ee3eb2a39bcf710c14cded16db1",
+      "same_entry_symbols": [
+        "__GI___strtok_r",
+        "__strtok_r",
+        "strtok_r"
+      ]
+    },
+    {
+      "name": "strxfrm",
+      "address": 607696,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1945d0",
+      "elf_address": "0x945d0",
+      "sha256_bytes": "ff66ecb3c805387d9f69d08b32e98769f0e60fb2a9b84f948732bdfe24a35813",
+      "same_entry_symbols": [
+        "strxfrm"
+      ]
+    },
+    {
+      "name": "__memchr",
+      "address": 607728,
+      "size": 56,
+      "type": "IFUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1945f0",
+      "elf_address": "0x945f0",
+      "sha256_bytes": "a7d3eb72dfbb8d285155b8c0016fbdd3a70208774124d22b8c8d623bdf22e54f",
+      "same_entry_symbols": [
+        "__memchr",
+        "__memchr_ifunc",
+        "memchr"
+      ]
+    },
+    {
+      "name": "__memchr_ifunc",
+      "address": 607728,
+      "size": 56,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1945f0",
+      "elf_address": "0x945f0",
+      "sha256_bytes": "a7d3eb72dfbb8d285155b8c0016fbdd3a70208774124d22b8c8d623bdf22e54f",
+      "same_entry_symbols": [
+        "__memchr",
+        "__memchr_ifunc",
+        "memchr"
+      ]
+    },
+    {
+      "name": "memchr",
+      "address": 607728,
+      "size": 56,
+      "type": "IFUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1945f0",
+      "elf_address": "0x945f0",
+      "sha256_bytes": "a7d3eb72dfbb8d285155b8c0016fbdd3a70208774124d22b8c8d623bdf22e54f",
+      "same_entry_symbols": [
+        "__memchr",
+        "__memchr_ifunc",
+        "memchr"
+      ]
+    },
+    {
+      "name": "__memcmpeq",
+      "address": 607808,
+      "size": 456,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194640",
+      "elf_address": "0x94640",
+      "sha256_bytes": "aedd988e03163d9b148821683155901084f5c82ff3b4d8fc15a2f59f1a5c77cc",
+      "same_entry_symbols": [
+        "__GI___memcmpeq",
+        "__GI_memcmp",
+        "__memcmpeq",
+        "bcmp",
+        "memcmp"
+      ]
+    },
+    {
+      "name": "bcmp",
+      "address": 607808,
+      "size": 456,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x194640",
+      "elf_address": "0x94640",
+      "sha256_bytes": "aedd988e03163d9b148821683155901084f5c82ff3b4d8fc15a2f59f1a5c77cc",
+      "same_entry_symbols": [
+        "__GI___memcmpeq",
+        "__GI_memcmp",
+        "__memcmpeq",
+        "bcmp",
+        "memcmp"
+      ]
+    },
+    {
+      "name": "memcmp",
+      "address": 607808,
+      "size": 456,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194640",
+      "elf_address": "0x94640",
+      "sha256_bytes": "aedd988e03163d9b148821683155901084f5c82ff3b4d8fc15a2f59f1a5c77cc",
+      "same_entry_symbols": [
+        "__GI___memcmpeq",
+        "__GI_memcmp",
+        "__memcmpeq",
+        "bcmp",
+        "memcmp"
+      ]
+    },
+    {
+      "name": "memmove",
+      "address": 608272,
+      "size": 320,
+      "type": "IFUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194810",
+      "elf_address": "0x94810",
+      "sha256_bytes": "45977bdf88b31a90c3b61f6ffde2af2403aae1617cff42d631a63cb823702d5e",
+      "same_entry_symbols": [
+        "__libc_memmove",
+        "__libc_memmove_ifunc",
+        "memmove"
+      ]
+    },
+    {
+      "name": "memset",
+      "address": 608592,
+      "size": 252,
+      "type": "IFUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194950",
+      "elf_address": "0x94950",
+      "sha256_bytes": "90345eefed4cc084716c8574b42f1083ff0f1303bddb11e3374a09bc5425d84f",
+      "same_entry_symbols": [
+        "__libc_memset",
+        "__libc_memset_ifunc",
+        "memset"
+      ]
+    },
+    {
+      "name": "__mempcpy",
+      "address": 608848,
+      "size": 36,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194a50",
+      "elf_address": "0x94a50",
+      "sha256_bytes": "996b3c5f35b03c496750402feeae7400082a917e3fe5e2b40300ea6b8fdeb7a8",
+      "same_entry_symbols": [
+        "__GI___mempcpy",
+        "__GI_mempcpy",
+        "__mempcpy",
+        "mempcpy"
+      ]
+    },
+    {
+      "name": "mempcpy",
+      "address": 608848,
+      "size": 36,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194a50",
+      "elf_address": "0x94a50",
+      "sha256_bytes": "996b3c5f35b03c496750402feeae7400082a917e3fe5e2b40300ea6b8fdeb7a8",
+      "same_entry_symbols": [
+        "__GI___mempcpy",
+        "__GI_mempcpy",
+        "__mempcpy",
+        "mempcpy"
+      ]
+    },
+    {
+      "name": "__bzero",
+      "address": 608912,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194a90",
+      "elf_address": "0x94a90",
+      "sha256_bytes": "89e544e2c59e38d12f0198d65b0734ab420858c75146b9d5ce6d565c4e998498",
+      "same_entry_symbols": [
+        "__bzero",
+        "bzero"
+      ]
+    },
+    {
+      "name": "bzero",
+      "address": 608912,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x194a90",
+      "elf_address": "0x94a90",
+      "sha256_bytes": "89e544e2c59e38d12f0198d65b0734ab420858c75146b9d5ce6d565c4e998498",
+      "same_entry_symbols": [
+        "__bzero",
+        "bzero"
+      ]
+    },
+    {
+      "name": "__stpcpy",
+      "address": 609152,
+      "size": 324,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194b80",
+      "elf_address": "0x94b80",
+      "sha256_bytes": "3d82b83c09e694ba163e0992b0cf1b5c648a07a78c7bb51f8e876e00a646840d",
+      "same_entry_symbols": [
+        "__GI___stpcpy",
+        "__GI_stpcpy",
+        "__stpcpy",
+        "stpcpy"
+      ]
+    },
+    {
+      "name": "stpcpy",
+      "address": 609152,
+      "size": 324,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x194b80",
+      "elf_address": "0x94b80",
+      "sha256_bytes": "3d82b83c09e694ba163e0992b0cf1b5c648a07a78c7bb51f8e876e00a646840d",
+      "same_entry_symbols": [
+        "__GI___stpcpy",
+        "__GI_stpcpy",
+        "__stpcpy",
+        "stpcpy"
+      ]
+    },
+    {
+      "name": "__stpncpy",
+      "address": 609488,
+      "size": 112,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194cd0",
+      "elf_address": "0x94cd0",
+      "sha256_bytes": "719f5f0fdade3bfd20ec9a5b2d07fbac269043b2ff333c9461004ceb5ac7af74",
+      "same_entry_symbols": [
+        "__GI___stpncpy",
+        "__stpncpy",
+        "stpncpy"
+      ]
+    },
+    {
+      "name": "stpncpy",
+      "address": 609488,
+      "size": 112,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x194cd0",
+      "elf_address": "0x94cd0",
+      "sha256_bytes": "719f5f0fdade3bfd20ec9a5b2d07fbac269043b2ff333c9461004ceb5ac7af74",
+      "same_entry_symbols": [
+        "__GI___stpncpy",
+        "__stpncpy",
+        "stpncpy"
+      ]
+    },
+    {
+      "name": "__strcasecmp",
+      "address": 609600,
+      "size": 88,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194d40",
+      "elf_address": "0x94d40",
+      "sha256_bytes": "082f1dd371e3c2bb1bd495884cf4f56361213aa02039da0e3593cef77d023f21",
+      "same_entry_symbols": [
+        "__GI___strcasecmp",
+        "__strcasecmp",
+        "strcasecmp"
+      ]
+    },
+    {
+      "name": "strcasecmp",
+      "address": 609600,
+      "size": 88,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x194d40",
+      "elf_address": "0x94d40",
+      "sha256_bytes": "082f1dd371e3c2bb1bd495884cf4f56361213aa02039da0e3593cef77d023f21",
+      "same_entry_symbols": [
+        "__GI___strcasecmp",
+        "__strcasecmp",
+        "strcasecmp"
+      ]
+    },
+    {
+      "name": "__strncasecmp",
+      "address": 609696,
+      "size": 96,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x194da0",
+      "elf_address": "0x94da0",
+      "sha256_bytes": "ee18f46abf6be7cc891909bbc247ca531842e207b87cbb79c5986b806e93aebb",
+      "same_entry_symbols": [
+        "__strncasecmp",
+        "strncasecmp"
+      ]
+    },
+    {
+      "name": "strncasecmp",
+      "address": 609696,
+      "size": 96,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x194da0",
+      "elf_address": "0x94da0",
+      "sha256_bytes": "ee18f46abf6be7cc891909bbc247ca531842e207b87cbb79c5986b806e93aebb",
+      "same_entry_symbols": [
+        "__strncasecmp",
+        "strncasecmp"
+      ]
+    },
+    {
+      "name": "__strcasecmp_l",
+      "address": 609792,
+      "size": 72,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194e00",
+      "elf_address": "0x94e00",
+      "sha256_bytes": "b4cfa49b54e2c9f95a05dc8ef08f5790a62bf11549ad6648eb37bb7cbd4cb391",
+      "same_entry_symbols": [
+        "__GI___strcasecmp_l",
+        "__strcasecmp_l",
+        "strcasecmp_l"
+      ]
+    },
+    {
+      "name": "strcasecmp_l",
+      "address": 609792,
+      "size": 72,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x194e00",
+      "elf_address": "0x94e00",
+      "sha256_bytes": "b4cfa49b54e2c9f95a05dc8ef08f5790a62bf11549ad6648eb37bb7cbd4cb391",
+      "same_entry_symbols": [
+        "__GI___strcasecmp_l",
+        "__strcasecmp_l",
+        "strcasecmp_l"
+      ]
+    },
+    {
+      "name": "__strncasecmp_l",
+      "address": 609872,
+      "size": 80,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194e50",
+      "elf_address": "0x94e50",
+      "sha256_bytes": "5ec5c79b924f7d3c6660681a362cb4c8429e339d446d42e011214301db87cb92",
+      "same_entry_symbols": [
+        "__GI___strncasecmp_l",
+        "__strncasecmp_l",
+        "strncasecmp_l"
+      ]
+    },
+    {
+      "name": "strncasecmp_l",
+      "address": 609872,
+      "size": 80,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x194e50",
+      "elf_address": "0x94e50",
+      "sha256_bytes": "5ec5c79b924f7d3c6660681a362cb4c8429e339d446d42e011214301db87cb92",
+      "same_entry_symbols": [
+        "__GI___strncasecmp_l",
+        "__strncasecmp_l",
+        "strncasecmp_l"
+      ]
+    },
+    {
+      "name": "__memccpy",
+      "address": 609952,
+      "size": 136,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x194ea0",
+      "elf_address": "0x94ea0",
+      "sha256_bytes": "bc9b2a06cb0253692650cfd9720854bb0802e63cf2a6699433871c34fe887106",
+      "same_entry_symbols": [
+        "__memccpy",
+        "memccpy"
+      ]
+    },
+    {
+      "name": "memccpy",
+      "address": 609952,
+      "size": 136,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x194ea0",
+      "elf_address": "0x94ea0",
+      "sha256_bytes": "bc9b2a06cb0253692650cfd9720854bb0802e63cf2a6699433871c34fe887106",
+      "same_entry_symbols": [
+        "__memccpy",
+        "memccpy"
+      ]
+    },
+    {
+      "name": "memcpy",
+      "address": 610096,
+      "size": 320,
+      "type": "IFUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x194f30",
+      "elf_address": "0x94f30",
+      "sha256_bytes": "5726d92467f957b0888ac98d229774ecc3fd6b2526e414efa4292f94d99358d4",
+      "same_entry_symbols": [
+        "__libc_memcpy",
+        "__libc_memcpy_ifunc",
+        "memcpy"
+      ]
+    },
+    {
+      "name": "__strsep",
+      "address": 611696,
+      "size": 92,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x195570",
+      "elf_address": "0x95570",
+      "sha256_bytes": "c55f69a7b34b303f1061462835f66bea2f4bf3dd5b43d1017439c5c54329c5cf",
+      "same_entry_symbols": [
+        "__GI___strsep",
+        "__GI___strsep_g",
+        "__strsep",
+        "__strsep_g",
+        "strsep"
+      ]
+    },
+    {
+      "name": "__strsep_g",
+      "address": 611696,
+      "size": 92,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x195570",
+      "elf_address": "0x95570",
+      "sha256_bytes": "c55f69a7b34b303f1061462835f66bea2f4bf3dd5b43d1017439c5c54329c5cf",
+      "same_entry_symbols": [
+        "__GI___strsep",
+        "__GI___strsep_g",
+        "__strsep",
+        "__strsep_g",
+        "strsep"
+      ]
+    },
+    {
+      "name": "strsep",
+      "address": 611696,
+      "size": 92,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x195570",
+      "elf_address": "0x95570",
+      "sha256_bytes": "c55f69a7b34b303f1061462835f66bea2f4bf3dd5b43d1017439c5c54329c5cf",
+      "same_entry_symbols": [
+        "__GI___strsep",
+        "__GI___strsep_g",
+        "__strsep",
+        "__strsep_g",
+        "strsep"
+      ]
+    },
+    {
+      "name": "__strcasestr",
+      "address": 613060,
+      "size": 996,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x195ac4",
+      "elf_address": "0x95ac4",
+      "sha256_bytes": "a1425bfdac0bf068caf19139e414e0d46b7824b33fd1f7862d7d127d4ba30c6f",
+      "same_entry_symbols": [
+        "__strcasestr",
+        "strcasestr"
+      ]
+    },
+    {
+      "name": "strcasestr",
+      "address": 613060,
+      "size": 996,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x195ac4",
+      "elf_address": "0x95ac4",
+      "sha256_bytes": "a1425bfdac0bf068caf19139e414e0d46b7824b33fd1f7862d7d127d4ba30c6f",
+      "same_entry_symbols": [
+        "__strcasestr",
+        "strcasestr"
+      ]
+    },
+    {
+      "name": "strfry",
+      "address": 614128,
+      "size": 292,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x195ef0",
+      "elf_address": "0x95ef0",
+      "sha256_bytes": "0e4b82cbf338144e855a485fb0a361e154424b27630282f6387b2dff13f5d82f",
+      "same_entry_symbols": [
+        "strfry"
+      ]
+    },
+    {
+      "name": "memfrob",
+      "address": 614432,
+      "size": 40,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x196020",
+      "elf_address": "0x96020",
+      "sha256_bytes": "e31a91ca8ab44cfb8090a8180a1c311f051a5c0f6521899c2f8377c00a3cfdf6",
+      "same_entry_symbols": [
+        "memfrob"
+      ]
+    },
+    {
+      "name": "__memmem",
+      "address": 615440,
+      "size": 648,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x196410",
+      "elf_address": "0x96410",
+      "sha256_bytes": "3b3e64295de5ad8c369f316a32097fead94687946c5cad705c82783e66da945c",
+      "same_entry_symbols": [
+        "__GI___memmem",
+        "__GI_memmem",
+        "__memmem",
+        "memmem"
+      ]
+    },
+    {
+      "name": "memmem",
+      "address": 615440,
+      "size": 648,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x196410",
+      "elf_address": "0x96410",
+      "sha256_bytes": "3b3e64295de5ad8c369f316a32097fead94687946c5cad705c82783e66da945c",
+      "same_entry_symbols": [
+        "__GI___memmem",
+        "__GI_memmem",
+        "__memmem",
+        "memmem"
+      ]
+    },
+    {
+      "name": "__rawmemchr",
+      "address": 616128,
+      "size": 36,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1966c0",
+      "elf_address": "0x966c0",
+      "sha256_bytes": "9519bf5a6c095c1bc4f249ff875b7a697c61cdfa929e072436bd60f5fc62dd89",
+      "same_entry_symbols": [
+        "__GI___rawmemchr",
+        "__rawmemchr",
+        "rawmemchr"
+      ]
+    },
+    {
+      "name": "rawmemchr",
+      "address": 616128,
+      "size": 36,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1966c0",
+      "elf_address": "0x966c0",
+      "sha256_bytes": "9519bf5a6c095c1bc4f249ff875b7a697c61cdfa929e072436bd60f5fc62dd89",
+      "same_entry_symbols": [
+        "__GI___rawmemchr",
+        "__rawmemchr",
+        "rawmemchr"
+      ]
+    },
+    {
+      "name": "__strchrnul",
+      "address": 616192,
+      "size": 132,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x196700",
+      "elf_address": "0x96700",
+      "sha256_bytes": "0460ceb123b5ebde638317797635449f16f7a1703c72eb501078db455da50918",
+      "same_entry_symbols": [
+        "__strchrnul",
+        "strchrnul"
+      ]
+    },
+    {
+      "name": "strchrnul",
+      "address": 616192,
+      "size": 132,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x196700",
+      "elf_address": "0x96700",
+      "sha256_bytes": "0460ceb123b5ebde638317797635449f16f7a1703c72eb501078db455da50918",
+      "same_entry_symbols": [
+        "__strchrnul",
+        "strchrnul"
+      ]
+    },
+    {
+      "name": "str_append",
+      "address": 618128,
+      "size": 132,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x196e90",
+      "elf_address": "0x96e90",
+      "sha256_bytes": "48fcf621694db2b308e22474703403c40511fcf0a35534a2230fe61e2f95716a",
+      "same_entry_symbols": [
+        "str_append"
+      ]
+    },
+    {
+      "name": "__strcoll_l",
+      "address": 620048,
+      "size": 3232,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x197610",
+      "elf_address": "0x97610",
+      "sha256_bytes": "996fbf7d6e4bf0624b2186cc8225310927c1650c24d86f561cc1cde3ed730ef6",
+      "same_entry_symbols": [
+        "__GI___strcoll_l",
+        "__strcoll_l",
+        "strcoll_l"
+      ]
+    },
+    {
+      "name": "strcoll_l",
+      "address": 620048,
+      "size": 3232,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x197610",
+      "elf_address": "0x97610",
+      "sha256_bytes": "996fbf7d6e4bf0624b2186cc8225310927c1650c24d86f561cc1cde3ed730ef6",
+      "same_entry_symbols": [
+        "__GI___strcoll_l",
+        "__strcoll_l",
+        "strcoll_l"
+      ]
+    },
+    {
+      "name": "__strxfrm_l",
+      "address": 623440,
+      "size": 7824,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x198350",
+      "elf_address": "0x98350",
+      "sha256_bytes": "0bd54166e1884e3efc30608fafc10b99cff81fc0b1482e60017b756ddb6c2a46",
+      "same_entry_symbols": [
+        "__GI___strxfrm_l",
+        "__strxfrm_l",
+        "strxfrm_l"
+      ]
+    },
+    {
+      "name": "strxfrm_l",
+      "address": 623440,
+      "size": 7824,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x198350",
+      "elf_address": "0x98350",
+      "sha256_bytes": "0bd54166e1884e3efc30608fafc10b99cff81fc0b1482e60017b756ddb6c2a46",
+      "same_entry_symbols": [
+        "__GI___strxfrm_l",
+        "__strxfrm_l",
+        "strxfrm_l"
+      ]
+    },
+    {
+      "name": "__strtok_r_1c@GLIBC_2.17",
+      "address": 631264,
+      "size": 112,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a1e0",
+      "elf_address": "0x9a1e0",
+      "sha256_bytes": "ee60ff33e3f98b6aa235ffc7e5e90c52812a9e61f25c03be186688763c9e36bd",
+      "same_entry_symbols": [
+        "__old_strtok_r_1c",
+        "__strtok_r_1c@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__strsep_1c@GLIBC_2.17",
+      "address": 631376,
+      "size": 88,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a250",
+      "elf_address": "0x9a250",
+      "sha256_bytes": "46ed79375d702d31d91924bb684b70b978cdcdf56af4b14767c9b403349aa2a7",
+      "same_entry_symbols": [
+        "__old_strsep_1c",
+        "__strsep_1c@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__strsep_2c@GLIBC_2.17",
+      "address": 631472,
+      "size": 88,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a2b0",
+      "elf_address": "0x9a2b0",
+      "sha256_bytes": "e3f37d2143982f456e11b8f05dc3447679b642b5a326a2f9a2fb6ac542202534",
+      "same_entry_symbols": [
+        "__old_strsep_2c",
+        "__strsep_2c@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__strsep_3c@GLIBC_2.17",
+      "address": 631568,
+      "size": 96,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a310",
+      "elf_address": "0x9a310",
+      "sha256_bytes": "11f956fef16529043c7b1dfb974723beeff072389f6feadf40314b07665cd2c7",
+      "same_entry_symbols": [
+        "__old_strsep_3c",
+        "__strsep_3c@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__strcspn_c1@GLIBC_2.17",
+      "address": 631664,
+      "size": 44,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a370",
+      "elf_address": "0x9a370",
+      "sha256_bytes": "2fce5ebbc772e90431bce037a9451edd6565d6c93ca955eed178578de940be63",
+      "same_entry_symbols": [
+        "__old_strcspn_c1",
+        "__strcspn_c1@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__strcspn_c2@GLIBC_2.17",
+      "address": 631712,
+      "size": 48,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a3a0",
+      "elf_address": "0x9a3a0",
+      "sha256_bytes": "f8dc0f76c128fd21f911a4c924477e4aef44dc1dfbff108c957b7927e11374cc",
+      "same_entry_symbols": [
+        "__old_strcspn_c2",
+        "__strcspn_c2@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__strcspn_c3@GLIBC_2.17",
+      "address": 631760,
+      "size": 52,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a3d0",
+      "elf_address": "0x9a3d0",
+      "sha256_bytes": "829c4f06d5e38ffcc579b3b34ea00906b69ff33b59745d1733c20d13bd891c0b",
+      "same_entry_symbols": [
+        "__old_strcspn_c3",
+        "__strcspn_c3@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__strspn_c1@GLIBC_2.17",
+      "address": 631812,
+      "size": 40,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a404",
+      "elf_address": "0x9a404",
+      "sha256_bytes": "bc5ab8ca78c1064b638bed231cbcb880b8251ca54d06c9e5cc1c4fa5279d32de",
+      "same_entry_symbols": [
+        "__old_strspn_c1",
+        "__strspn_c1@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__strspn_c2@GLIBC_2.17",
+      "address": 631856,
+      "size": 48,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a430",
+      "elf_address": "0x9a430",
+      "sha256_bytes": "b55702b3c320f12dcd8be39e29f8ebd02026423d4b3a0bd5c1402bb7ed3d1550",
+      "same_entry_symbols": [
+        "__old_strspn_c2",
+        "__strspn_c2@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__strspn_c3@GLIBC_2.17",
+      "address": 631904,
+      "size": 60,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a460",
+      "elf_address": "0x9a460",
+      "sha256_bytes": "ef6d705e02c874c87807d4615bd5b9d89154b2216f26e2001a7419526ca7cd37",
+      "same_entry_symbols": [
+        "__old_strspn_c3",
+        "__strspn_c3@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__strpbrk_c2@GLIBC_2.17",
+      "address": 631968,
+      "size": 44,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a4a0",
+      "elf_address": "0x9a4a0",
+      "sha256_bytes": "7f98b15054a1e96721dc8e6f6c33a4e48758e1a2ee045283ac2321a352b19b2c",
+      "same_entry_symbols": [
+        "__old_strpbrk_c2",
+        "__strpbrk_c2@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__strpbrk_c3@GLIBC_2.17",
+      "address": 632016,
+      "size": 48,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a4d0",
+      "elf_address": "0x9a4d0",
+      "sha256_bytes": "4a33e4fcf732a0c7f28805eec8428ffa56cdf1d62fe853cd9d7dd6be60714af0",
+      "same_entry_symbols": [
+        "__old_strpbrk_c3",
+        "__strpbrk_c3@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__mempcpy_small@GLIBC_2.17",
+      "address": 632064,
+      "size": 268,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a500",
+      "elf_address": "0x9a500",
+      "sha256_bytes": "ca129d67b7aca6f282fd3e6565197826f1da2811ef8a8a72fadfd255e981701b",
+      "same_entry_symbols": [
+        "__mempcpy_small@GLIBC_2.17",
+        "__old_mempcpy_small"
+      ]
+    },
+    {
+      "name": "__strcpy_small@GLIBC_2.17",
+      "address": 632336,
+      "size": 228,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a610",
+      "elf_address": "0x9a610",
+      "sha256_bytes": "b5b7fa16d34761387f24d212a8e6524e892b787a731d70ce9826bd7688ee6e02",
+      "same_entry_symbols": [
+        "__old_strcpy_small",
+        "__strcpy_small@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__stpcpy_small@GLIBC_2.17",
+      "address": 632564,
+      "size": 292,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19a6f4",
+      "elf_address": "0x9a6f4",
+      "sha256_bytes": "11764dd06601fc70868962efd6f8ce22c5d6431889e86e51d8e1081bbcbab460",
+      "same_entry_symbols": [
+        "__old_stpcpy_small",
+        "__stpcpy_small@GLIBC_2.17"
+      ]
+    },
+    {
+      "name": "__memrchr",
+      "address": 632896,
+      "size": 204,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19a840",
+      "elf_address": "0x9a840",
+      "sha256_bytes": "e52e6c8b21f1021564f8e2d91d0df83c5fbc6316747679ed2289373d07b6e905",
+      "same_entry_symbols": [
+        "__GI_memrchr",
+        "__memrchr",
+        "memrchr"
+      ]
+    },
+    {
+      "name": "memrchr",
+      "address": 632896,
+      "size": 204,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19a840",
+      "elf_address": "0x9a840",
+      "sha256_bytes": "e52e6c8b21f1021564f8e2d91d0df83c5fbc6316747679ed2289373d07b6e905",
+      "same_entry_symbols": [
+        "__GI_memrchr",
+        "__memrchr",
+        "memrchr"
+      ]
+    },
+    {
+      "name": "__strerror_l",
+      "address": 633264,
+      "size": 248,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19a9b0",
+      "elf_address": "0x9a9b0",
+      "sha256_bytes": "4ec6e267c585724733ff456775aa6705a58f8af3850e5517de924fa4b1eb2c54",
+      "same_entry_symbols": [
+        "__GI___strerror_l",
+        "__strerror_l",
+        "strerror_l"
+      ]
+    },
+    {
+      "name": "strerror_l",
+      "address": 633264,
+      "size": 248,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19a9b0",
+      "elf_address": "0x9a9b0",
+      "sha256_bytes": "4ec6e267c585724733ff456775aa6705a58f8af3850e5517de924fa4b1eb2c54",
+      "same_entry_symbols": [
+        "__GI___strerror_l",
+        "__strerror_l",
+        "strerror_l"
+      ]
+    },
+    {
+      "name": "strerrorname_np",
+      "address": 633616,
+      "size": 4,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19ab10",
+      "elf_address": "0x9ab10",
+      "sha256_bytes": "70bf9b8659863bdf0d892a5589f3a5b2877d486f499a3d2543ff3d56b4456727",
+      "same_entry_symbols": [
+        "strerrorname_np"
+      ]
+    },
+    {
+      "name": "__strerrordesc_np",
+      "address": 633632,
+      "size": 4,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19ab20",
+      "elf_address": "0x9ab20",
+      "sha256_bytes": "6483864c706d2ce21126b12c2b0d4f10e795574d216d4312ff53a46f4d94c8da",
+      "same_entry_symbols": [
+        "__strerrordesc_np",
+        "strerrordesc_np"
+      ]
+    },
+    {
+      "name": "strerrordesc_np",
+      "address": 633632,
+      "size": 4,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19ab20",
+      "elf_address": "0x9ab20",
+      "sha256_bytes": "6483864c706d2ce21126b12c2b0d4f10e795574d216d4312ff53a46f4d94c8da",
+      "same_entry_symbols": [
+        "__strerrordesc_np",
+        "strerrordesc_np"
+      ]
+    },
+    {
+      "name": "__memcpy_generic",
+      "address": 633664,
+      "size": 396,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19ab40",
+      "elf_address": "0x9ab40",
+      "sha256_bytes": "36c3b5d18e4200898196a8bcd0e7ee8431b6e15420cfbc68879c7834eb257f51",
+      "same_entry_symbols": [
+        "__GI_memcpy",
+        "__memcpy_generic"
+      ]
+    },
+    {
+      "name": "__memmove_generic",
+      "address": 634064,
+      "size": 220,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19acd0",
+      "elf_address": "0x9acd0",
+      "sha256_bytes": "40f2ae855966a94d0022e2278e862c17c5f454a6bb1e3f503279b6875d880443",
+      "same_entry_symbols": [
+        "__GI_memmove",
+        "__memmove_generic"
+      ]
+    },
+    {
+      "name": "__memcpy_simd",
+      "address": 634304,
+      "size": 316,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19adc0",
+      "elf_address": "0x9adc0",
+      "sha256_bytes": "d53db6732487d09270dcd3f3095c410f4d2719ee5237ce4122cc9e69d9c6032b",
+      "same_entry_symbols": [
+        "__GI___memcpy_simd",
+        "__memcpy_simd"
+      ]
+    },
+    {
+      "name": "__memmove_simd",
+      "address": 634624,
+      "size": 176,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19af00",
+      "elf_address": "0x9af00",
+      "sha256_bytes": "6bcca4e9ec4e249b267f150ee3db86810a335aeb9990316f3cad4e077fd3dd2a",
+      "same_entry_symbols": [
+        "__GI___memmove_simd",
+        "__memmove_simd"
+      ]
+    },
+    {
+      "name": "__memmove_thunderx",
+      "address": 634816,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19afc0",
+      "elf_address": "0x9afc0",
+      "sha256_bytes": "75e8a02d9fb9c8f7882691ed351bbc61700247bba917c5aedafb3361e975d361",
+      "same_entry_symbols": [
+        "__GI___memmove_thunderx",
+        "__memmove_thunderx"
+      ]
+    },
+    {
+      "name": "__memcpy_thunderx",
+      "address": 634880,
+      "size": 636,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19b000",
+      "elf_address": "0x9b000",
+      "sha256_bytes": "d80ae28a3291a98ecd52a5ec1077b0e6b45f1e05ed293d3aaeb4228b34c996a0",
+      "same_entry_symbols": [
+        "__GI___memcpy_thunderx",
+        "__memcpy_thunderx"
+      ]
+    },
+    {
+      "name": "__memmove_thunderx2",
+      "address": 635520,
+      "size": 32,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19b280",
+      "elf_address": "0x9b280",
+      "sha256_bytes": "3aca3ede057bead6b43619ac475b4f68e5d75ca549a776ae4227ced11d952007",
+      "same_entry_symbols": [
+        "__GI___memmove_thunderx2",
+        "__memmove_thunderx2"
+      ]
+    },
+    {
+      "name": "__memcpy_thunderx2",
+      "address": 635584,
+      "size": 1748,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19b2c0",
+      "elf_address": "0x9b2c0",
+      "sha256_bytes": "8bea364c746daadaeca5593556345d45761b0e96ab211d69d33fd4462967a0e9",
+      "same_entry_symbols": [
+        "__GI___memcpy_thunderx2",
+        "__memcpy_thunderx2"
+      ]
+    },
+    {
+      "name": "__memcpy_falkor",
+      "address": 637376,
+      "size": 364,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19b9c0",
+      "elf_address": "0x9b9c0",
+      "sha256_bytes": "2e3d86536944864edf8df7e7a3b93ed9e40accb56cc30f444bc03cff6b8c6f51",
+      "same_entry_symbols": [
+        "__GI___memcpy_falkor",
+        "__memcpy_falkor"
+      ]
+    },
+    {
+      "name": "__memmove_falkor",
+      "address": 637760,
+      "size": 244,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19bb40",
+      "elf_address": "0x9bb40",
+      "sha256_bytes": "d86eff9d1fb75a6786f392336eee3508c9f71067649786e182f4e00bc3b3dc95",
+      "same_entry_symbols": [
+        "__GI___memmove_falkor",
+        "__memmove_falkor"
+      ]
+    },
+    {
+      "name": "__memcpy_a64fx",
+      "address": 638016,
+      "size": 552,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19bc40",
+      "elf_address": "0x9bc40",
+      "sha256_bytes": "2ca3bb2eccf020759fb94c62645680f6c106f6e8de8092d61cefff08c1cddfa0",
+      "same_entry_symbols": [
+        "__GI___memcpy_a64fx",
+        "__memcpy_a64fx"
+      ]
+    },
+    {
+      "name": "__memmove_a64fx",
+      "address": 638576,
+      "size": 308,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19be70",
+      "elf_address": "0x9be70",
+      "sha256_bytes": "0677ca15d5ba4defa174620061d8875dea086ad23f78de857537c8ea1589f123",
+      "same_entry_symbols": [
+        "__GI___memmove_a64fx",
+        "__memmove_a64fx"
+      ]
+    },
+    {
+      "name": "__memset_generic",
+      "address": 638912,
+      "size": 492,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19bfc0",
+      "elf_address": "0x9bfc0",
+      "sha256_bytes": "a13ac4e3722e95e8f1e5eb41cfba51043ebbf2391f3904247002c2326e9c2fff",
+      "same_entry_symbols": [
+        "__GI___memset_generic",
+        "__GI_memset",
+        "__memset_generic"
+      ]
+    },
+    {
+      "name": "__memset_falkor",
+      "address": 639424,
+      "size": 292,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19c1c0",
+      "elf_address": "0x9c1c0",
+      "sha256_bytes": "3b7e82fdf5399e8cefe694fb2421e17dc590f8143a6dbc093f9c4b99ef17b385",
+      "same_entry_symbols": [
+        "__GI___memset_falkor",
+        "__memset_falkor"
+      ]
+    },
+    {
+      "name": "__memset_emag",
+      "address": 639744,
+      "size": 224,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19c300",
+      "elf_address": "0x9c300",
+      "sha256_bytes": "26c1fd27577ac3a2ab9e44a418f0119d42f2e47f6d606c071c614f99d1ed8fd2",
+      "same_entry_symbols": [
+        "__GI___memset_emag",
+        "__memset_emag"
+      ]
+    },
+    {
+      "name": "__memset_kunpeng",
+      "address": 640000,
+      "size": 256,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19c400",
+      "elf_address": "0x9c400",
+      "sha256_bytes": "88780a89ccd97149b6c5bdb2c3484bcc6ff3970dd1cb4e745c56d11d8de754f0",
+      "same_entry_symbols": [
+        "__GI___memset_kunpeng",
+        "__memset_kunpeng"
+      ]
+    },
+    {
+      "name": "__memset_a64fx",
+      "address": 640256,
+      "size": 392,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19c500",
+      "elf_address": "0x9c500",
+      "sha256_bytes": "13a7626a4b56670d88bd1d7a9e4ac6091da29392bf40ba08a3b4175c6bc9b752",
+      "same_entry_symbols": [
+        "__GI___memset_a64fx",
+        "__memset_a64fx"
+      ]
+    },
+    {
+      "name": "__memchr_generic",
+      "address": 640704,
+      "size": 212,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19c6c0",
+      "elf_address": "0x9c6c0",
+      "sha256_bytes": "897d08de6c00969b7ff611b0f9c0756f01f52e812ac369ca44510522fd42d441",
+      "same_entry_symbols": [
+        "__GI_memchr",
+        "__memchr_generic"
+      ]
+    },
+    {
+      "name": "__memchr_nosimd",
+      "address": 640960,
+      "size": 224,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19c7c0",
+      "elf_address": "0x9c7c0",
+      "sha256_bytes": "f7cf0af3105e36c28d27de9445f45afabd68e952ece7dbeb9729a9fef8aa63fb",
+      "same_entry_symbols": [
+        "__GI___memchr_nosimd",
+        "__memchr_nosimd"
+      ]
+    },
+    {
+      "name": "__strlen_mte",
+      "address": 641216,
+      "size": 116,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19c8c0",
+      "elf_address": "0x9c8c0",
+      "sha256_bytes": "1e873e396cfd7df88c9937ead447f1686c80be0be3e0ffd9fceeff9a969282c7",
+      "same_entry_symbols": [
+        "__GI_strlen",
+        "__strlen_mte"
+      ]
+    },
+    {
+      "name": "__strlen_asimd",
+      "address": 641344,
+      "size": 316,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19c940",
+      "elf_address": "0x9c940",
+      "sha256_bytes": "ee52581e680e214ad4a2809ef2f474a30a9e9bc2ef02b5c125ff4a9689ef2b18",
+      "same_entry_symbols": [
+        "__GI___strlen_asimd",
+        "__strlen_asimd"
+      ]
+    },
+    {
+      "name": "__wcscat",
+      "address": 641664,
+      "size": 52,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19ca80",
+      "elf_address": "0x9ca80",
+      "sha256_bytes": "c29b10654479c094bbc1e75211bf2e21f7b05627dbaacea810ee0f6bd7f51436",
+      "same_entry_symbols": [
+        "__wcscat",
+        "wcscat"
+      ]
+    },
+    {
+      "name": "wcscat",
+      "address": 641664,
+      "size": 52,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19ca80",
+      "elf_address": "0x9ca80",
+      "sha256_bytes": "c29b10654479c094bbc1e75211bf2e21f7b05627dbaacea810ee0f6bd7f51436",
+      "same_entry_symbols": [
+        "__wcscat",
+        "wcscat"
+      ]
+    },
+    {
+      "name": "__wcschr",
+      "address": 641728,
+      "size": 28,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19cac0",
+      "elf_address": "0x9cac0",
+      "sha256_bytes": "12dd9165660d8b4fe18c3d500efc2fb099aeee7905f317b477cc59f00576f33b",
+      "same_entry_symbols": [
+        "__GI___wcschr",
+        "__GI_wcschr",
+        "__wcschr",
+        "wcschr"
+      ]
+    },
+    {
+      "name": "wcschr",
+      "address": 641728,
+      "size": 28,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19cac0",
+      "elf_address": "0x9cac0",
+      "sha256_bytes": "12dd9165660d8b4fe18c3d500efc2fb099aeee7905f317b477cc59f00576f33b",
+      "same_entry_symbols": [
+        "__GI___wcschr",
+        "__GI_wcschr",
+        "__wcschr",
+        "wcschr"
+      ]
+    },
+    {
+      "name": "__wcscmp",
+      "address": 641760,
+      "size": 52,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19cae0",
+      "elf_address": "0x9cae0",
+      "sha256_bytes": "5232165702847eca643ac61cb22f85148ec0967c893b1f8cf07a2d6b546176fb",
+      "same_entry_symbols": [
+        "__GI___wcscmp",
+        "__wcscmp",
+        "wcscmp"
+      ]
+    },
+    {
+      "name": "wcscmp",
+      "address": 641760,
+      "size": 52,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19cae0",
+      "elf_address": "0x9cae0",
+      "sha256_bytes": "5232165702847eca643ac61cb22f85148ec0967c893b1f8cf07a2d6b546176fb",
+      "same_entry_symbols": [
+        "__GI___wcscmp",
+        "__wcscmp",
+        "wcscmp"
+      ]
+    },
+    {
+      "name": "__wcscpy",
+      "address": 641824,
+      "size": 56,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19cb20",
+      "elf_address": "0x9cb20",
+      "sha256_bytes": "f27ed62723aae6cb08e19f2a4ca45382bfe0fede226c7ea076bdd5174efb5333",
+      "same_entry_symbols": [
+        "__GI___wcscpy",
+        "__wcscpy",
+        "wcscpy"
+      ]
+    },
+    {
+      "name": "wcscpy",
+      "address": 641824,
+      "size": 56,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19cb20",
+      "elf_address": "0x9cb20",
+      "sha256_bytes": "f27ed62723aae6cb08e19f2a4ca45382bfe0fede226c7ea076bdd5174efb5333",
+      "same_entry_symbols": [
+        "__GI___wcscpy",
+        "__wcscpy",
+        "wcscpy"
+      ]
+    },
+    {
+      "name": "wcscspn",
+      "address": 641888,
+      "size": 92,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19cb60",
+      "elf_address": "0x9cb60",
+      "sha256_bytes": "d97ea1b3643fc2659591b80427ce54757089c980dfdd90c0c57712695dfcf6ba",
+      "same_entry_symbols": [
+        "wcscspn"
+      ]
+    },
+    {
+      "name": "wcsdup",
+      "address": 641984,
+      "size": 72,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19cbc0",
+      "elf_address": "0x9cbc0",
+      "sha256_bytes": "3a55ac2e134d8662c966a5e367f54c3cc3e644249d44ffeda7edfa42691eddcc",
+      "same_entry_symbols": [
+        "wcsdup"
+      ]
+    },
+    {
+      "name": "__wcslen",
+      "address": 642064,
+      "size": 100,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19cc10",
+      "elf_address": "0x9cc10",
+      "sha256_bytes": "5b240460309b3d0e25a585f5d552818f1dd85e60681a0fada4e562fd986137b1",
+      "same_entry_symbols": [
+        "__wcslen",
+        "wcslen"
+      ]
+    },
+    {
+      "name": "wcslen",
+      "address": 642064,
+      "size": 100,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19cc10",
+      "elf_address": "0x9cc10",
+      "sha256_bytes": "5b240460309b3d0e25a585f5d552818f1dd85e60681a0fada4e562fd986137b1",
+      "same_entry_symbols": [
+        "__wcslen",
+        "wcslen"
+      ]
+    },
+    {
+      "name": "wcsncat",
+      "address": 642176,
+      "size": 92,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19cc80",
+      "elf_address": "0x9cc80",
+      "sha256_bytes": "a9c1dbe9d837522f70b6d0d8cdf222ec463fcdea56ea8241715d5e58123d175e",
+      "same_entry_symbols": [
+        "wcsncat"
+      ]
+    },
+    {
+      "name": "wcsncmp",
+      "address": 642272,
+      "size": 204,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19cce0",
+      "elf_address": "0x9cce0",
+      "sha256_bytes": "9e3f96a202408011a4fa68cb50d2ac6ba36d5e666f401447cc768e42a5c6c1a2",
+      "same_entry_symbols": [
+        "wcsncmp"
+      ]
+    },
+    {
+      "name": "__wcsncpy",
+      "address": 642480,
+      "size": 96,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19cdb0",
+      "elf_address": "0x9cdb0",
+      "sha256_bytes": "b03311dbcecad7d51893afb594c64b0d6453130bbe7827f11f042447c13f14a7",
+      "same_entry_symbols": [
+        "__wcsncpy",
+        "wcsncpy"
+      ]
+    },
+    {
+      "name": "wcsncpy",
+      "address": 642480,
+      "size": 96,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19cdb0",
+      "elf_address": "0x9cdb0",
+      "sha256_bytes": "b03311dbcecad7d51893afb594c64b0d6453130bbe7827f11f042447c13f14a7",
+      "same_entry_symbols": [
+        "__wcsncpy",
+        "wcsncpy"
+      ]
+    },
+    {
+      "name": "wcspbrk",
+      "address": 642576,
+      "size": 76,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19ce10",
+      "elf_address": "0x9ce10",
+      "sha256_bytes": "6e8e41c7704da99051fdb792fff5a0cfc136ef99906c0fe5af7d60835e803bf5",
+      "same_entry_symbols": [
+        "__GI_wcspbrk",
+        "wcspbrk"
+      ]
+    },
+    {
+      "name": "wcsrchr",
+      "address": 642656,
+      "size": 32,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19ce60",
+      "elf_address": "0x9ce60",
+      "sha256_bytes": "accec65224d9809a3be78c6a650ac768f4fb27693dae47231ae2ae0f023b8ec9",
+      "same_entry_symbols": [
+        "wcsrchr"
+      ]
+    },
+    {
+      "name": "wcsspn",
+      "address": 642688,
+      "size": 72,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19ce80",
+      "elf_address": "0x9ce80",
+      "sha256_bytes": "80939bd1a3e805f25ddcb9a019ae88d1970f1bd9bac18537912b8eebaeaa0ba9",
+      "same_entry_symbols": [
+        "__GI_wcsspn",
+        "wcsspn"
+      ]
+    },
+    {
+      "name": "wcstok",
+      "address": 642768,
+      "size": 188,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19ced0",
+      "elf_address": "0x9ced0",
+      "sha256_bytes": "c6d7dcd81d4bc28ae6e7004b2dedf3ec97c03f3c699cf0a2026a991cf0e8a731",
+      "same_entry_symbols": [
+        "wcstok"
+      ]
+    },
+    {
+      "name": "wcsstr",
+      "address": 642960,
+      "size": 224,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19cf90",
+      "elf_address": "0x9cf90",
+      "sha256_bytes": "ba62d63f2da63d17e7ec9ad1c4b848d1b4e0f47c23c3e9da13443cf600f9dcc7",
+      "same_entry_symbols": [
+        "wcsstr",
+        "wcswcs"
+      ]
+    },
+    {
+      "name": "wcswcs",
+      "address": 642960,
+      "size": 224,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19cf90",
+      "elf_address": "0x9cf90",
+      "sha256_bytes": "ba62d63f2da63d17e7ec9ad1c4b848d1b4e0f47c23c3e9da13443cf600f9dcc7",
+      "same_entry_symbols": [
+        "wcsstr",
+        "wcswcs"
+      ]
+    },
+    {
+      "name": "__wmemchr",
+      "address": 643184,
+      "size": 196,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19d070",
+      "elf_address": "0x9d070",
+      "sha256_bytes": "cccd0b318ed2d6b8b6702183e4b75ec0b07329a96bc683a7261f399b2ebd5bfd",
+      "same_entry_symbols": [
+        "__GI___wmemchr",
+        "__GI_wmemchr",
+        "__wmemchr",
+        "wmemchr"
+      ]
+    },
+    {
+      "name": "wmemchr",
+      "address": 643184,
+      "size": 196,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19d070",
+      "elf_address": "0x9d070",
+      "sha256_bytes": "cccd0b318ed2d6b8b6702183e4b75ec0b07329a96bc683a7261f399b2ebd5bfd",
+      "same_entry_symbols": [
+        "__GI___wmemchr",
+        "__GI_wmemchr",
+        "__wmemchr",
+        "wmemchr"
+      ]
+    },
+    {
+      "name": "__wmemcmp",
+      "address": 643392,
+      "size": 188,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19d140",
+      "elf_address": "0x9d140",
+      "sha256_bytes": "82b9ad861d03136a52acea6b978b53e08ca9aa629c83f2c51bb4b16ebd2ba164",
+      "same_entry_symbols": [
+        "__wmemcmp",
+        "wmemcmp"
+      ]
+    },
+    {
+      "name": "wmemcmp",
+      "address": 643392,
+      "size": 188,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19d140",
+      "elf_address": "0x9d140",
+      "sha256_bytes": "82b9ad861d03136a52acea6b978b53e08ca9aa629c83f2c51bb4b16ebd2ba164",
+      "same_entry_symbols": [
+        "__wmemcmp",
+        "wmemcmp"
+      ]
+    },
+    {
+      "name": "__wmemcpy",
+      "address": 643584,
+      "size": 8,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19d200",
+      "elf_address": "0x9d200",
+      "sha256_bytes": "818a7fb9923af0d6119dda33fd800cae1e3552d2eba53b47cf28c8e996336e6c",
+      "same_entry_symbols": [
+        "__wmemcpy",
+        "wmemcpy"
+      ]
+    },
+    {
+      "name": "wmemcpy",
+      "address": 643584,
+      "size": 8,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19d200",
+      "elf_address": "0x9d200",
+      "sha256_bytes": "818a7fb9923af0d6119dda33fd800cae1e3552d2eba53b47cf28c8e996336e6c",
+      "same_entry_symbols": [
+        "__wmemcpy",
+        "wmemcpy"
+      ]
+    },
+    {
+      "name": "__wmemmove",
+      "address": 643600,
+      "size": 8,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19d210",
+      "elf_address": "0x9d210",
+      "sha256_bytes": "5ccec36953a33afdc14063d1d266d2429e2c7154f08479112353936d897f58d8",
+      "same_entry_symbols": [
+        "__wmemmove",
+        "wmemmove"
+      ]
+    },
+    {
+      "name": "wmemmove",
+      "address": 643600,
+      "size": 8,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19d210",
+      "elf_address": "0x9d210",
+      "sha256_bytes": "5ccec36953a33afdc14063d1d266d2429e2c7154f08479112353936d897f58d8",
+      "same_entry_symbols": [
+        "__wmemmove",
+        "wmemmove"
+      ]
+    },
+    {
+      "name": "__wmemset",
+      "address": 643616,
+      "size": 100,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19d220",
+      "elf_address": "0x9d220",
+      "sha256_bytes": "040ffdebc8c0a0df511e6c6635ddd8da6779f617f12a063eea6f14f1cef206ce",
+      "same_entry_symbols": [
+        "__GI___wmemset",
+        "__GI_wmemset",
+        "__wmemset",
+        "wmemset"
+      ]
+    },
+    {
+      "name": "wmemset",
+      "address": 643616,
+      "size": 100,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19d220",
+      "elf_address": "0x9d220",
+      "sha256_bytes": "040ffdebc8c0a0df511e6c6635ddd8da6779f617f12a063eea6f14f1cef206ce",
+      "same_entry_symbols": [
+        "__GI___wmemset",
+        "__GI_wmemset",
+        "__wmemset",
+        "wmemset"
+      ]
+    },
+    {
+      "name": "__wmempcpy",
+      "address": 643904,
+      "size": 40,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19d340",
+      "elf_address": "0x9d340",
+      "sha256_bytes": "bf3164fa191a89a4b4789138afbed1d990b61c832ee0a5dcd940b284bf0ff973",
+      "same_entry_symbols": [
+        "__wmempcpy",
+        "wmempcpy"
+      ]
+    },
+    {
+      "name": "wmempcpy",
+      "address": 643904,
+      "size": 40,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19d340",
+      "elf_address": "0x9d340",
+      "sha256_bytes": "bf3164fa191a89a4b4789138afbed1d990b61c832ee0a5dcd940b284bf0ff973",
+      "same_entry_symbols": [
+        "__wmempcpy",
+        "wmempcpy"
+      ]
+    },
+    {
+      "name": "__wcsrtombs",
+      "address": 646032,
+      "size": 752,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19db90",
+      "elf_address": "0x9db90",
+      "sha256_bytes": "c2026154c86d729d75f737bc9ef266720f4b417940e02d04215bfa1d777d056d",
+      "same_entry_symbols": [
+        "__wcsrtombs",
+        "wcsrtombs"
+      ]
+    },
+    {
+      "name": "wcsrtombs",
+      "address": 646032,
+      "size": 752,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19db90",
+      "elf_address": "0x9db90",
+      "sha256_bytes": "c2026154c86d729d75f737bc9ef266720f4b417940e02d04215bfa1d777d056d",
+      "same_entry_symbols": [
+        "__wcsrtombs",
+        "wcsrtombs"
+      ]
+    },
+    {
+      "name": "__wcsnrtombs",
+      "address": 647536,
+      "size": 776,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19e170",
+      "elf_address": "0x9e170",
+      "sha256_bytes": "874e5569c09255f333999e945562e045b9b527974d346a911d703354fe65abea",
+      "same_entry_symbols": [
+        "__wcsnrtombs",
+        "wcsnrtombs"
+      ]
+    },
+    {
+      "name": "wcsnrtombs",
+      "address": 647536,
+      "size": 776,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e170",
+      "elf_address": "0x9e170",
+      "sha256_bytes": "874e5569c09255f333999e945562e045b9b527974d346a911d703354fe65abea",
+      "same_entry_symbols": [
+        "__wcsnrtombs",
+        "wcsnrtombs"
+      ]
+    },
+    {
+      "name": "__wcsnlen",
+      "address": 648320,
+      "size": 60,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19e480",
+      "elf_address": "0x9e480",
+      "sha256_bytes": "ad11334bde4b4b172a7e07b63779d6412a74e82b8e5952eadc206d0eafc23744",
+      "same_entry_symbols": [
+        "__wcsnlen",
+        "wcsnlen"
+      ]
+    },
+    {
+      "name": "wcsnlen",
+      "address": 648320,
+      "size": 60,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e480",
+      "elf_address": "0x9e480",
+      "sha256_bytes": "ad11334bde4b4b172a7e07b63779d6412a74e82b8e5952eadc206d0eafc23744",
+      "same_entry_symbols": [
+        "__wcsnlen",
+        "wcsnlen"
+      ]
+    },
+    {
+      "name": "__wcschrnul",
+      "address": 648384,
+      "size": 36,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19e4c0",
+      "elf_address": "0x9e4c0",
+      "sha256_bytes": "602b130324df271900a07d3f793ce331e5376d14625782823c75cf7ed1f7d861",
+      "same_entry_symbols": [
+        "__wcschrnul",
+        "wcschrnul"
+      ]
+    },
+    {
+      "name": "wcschrnul",
+      "address": 648384,
+      "size": 36,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e4c0",
+      "elf_address": "0x9e4c0",
+      "sha256_bytes": "602b130324df271900a07d3f793ce331e5376d14625782823c75cf7ed1f7d861",
+      "same_entry_symbols": [
+        "__wcschrnul",
+        "wcschrnul"
+      ]
+    },
+    {
+      "name": "__wcstol_internal",
+      "address": 648432,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19e4f0",
+      "elf_address": "0x9e4f0",
+      "sha256_bytes": "25f9e416c49e36393d08de697529076c2503a77f0e358c8e0eec11028cbf43d4",
+      "same_entry_symbols": [
+        "__GI___wcstol_internal",
+        "__GI___wcstoll_internal",
+        "__wcstol_internal",
+        "__wcstoll_internal"
+      ]
+    },
+    {
+      "name": "__wcstoll_internal",
+      "address": 648432,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19e4f0",
+      "elf_address": "0x9e4f0",
+      "sha256_bytes": "25f9e416c49e36393d08de697529076c2503a77f0e358c8e0eec11028cbf43d4",
+      "same_entry_symbols": [
+        "__GI___wcstol_internal",
+        "__GI___wcstoll_internal",
+        "__wcstol_internal",
+        "__wcstoll_internal"
+      ]
+    },
+    {
+      "name": "__wcstol",
+      "address": 648452,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19e504",
+      "elf_address": "0x9e504",
+      "sha256_bytes": "f15c93d5ec5ecf29691fd69ef0a59cf6fe36f11d4c25b9c11462203fbb963940",
+      "same_entry_symbols": [
+        "__GI_wcstol",
+        "__wcstol",
+        "wcstoimax",
+        "wcstol",
+        "wcstoll",
+        "wcstoq"
+      ]
+    },
+    {
+      "name": "wcstoimax",
+      "address": 648452,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e504",
+      "elf_address": "0x9e504",
+      "sha256_bytes": "f15c93d5ec5ecf29691fd69ef0a59cf6fe36f11d4c25b9c11462203fbb963940",
+      "same_entry_symbols": [
+        "__GI_wcstol",
+        "__wcstol",
+        "wcstoimax",
+        "wcstol",
+        "wcstoll",
+        "wcstoq"
+      ]
+    },
+    {
+      "name": "wcstol",
+      "address": 648452,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e504",
+      "elf_address": "0x9e504",
+      "sha256_bytes": "f15c93d5ec5ecf29691fd69ef0a59cf6fe36f11d4c25b9c11462203fbb963940",
+      "same_entry_symbols": [
+        "__GI_wcstol",
+        "__wcstol",
+        "wcstoimax",
+        "wcstol",
+        "wcstoll",
+        "wcstoq"
+      ]
+    },
+    {
+      "name": "wcstoll",
+      "address": 648452,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e504",
+      "elf_address": "0x9e504",
+      "sha256_bytes": "f15c93d5ec5ecf29691fd69ef0a59cf6fe36f11d4c25b9c11462203fbb963940",
+      "same_entry_symbols": [
+        "__GI_wcstol",
+        "__wcstol",
+        "wcstoimax",
+        "wcstol",
+        "wcstoll",
+        "wcstoq"
+      ]
+    },
+    {
+      "name": "wcstoq",
+      "address": 648452,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e504",
+      "elf_address": "0x9e504",
+      "sha256_bytes": "f15c93d5ec5ecf29691fd69ef0a59cf6fe36f11d4c25b9c11462203fbb963940",
+      "same_entry_symbols": [
+        "__GI_wcstol",
+        "__wcstol",
+        "wcstoimax",
+        "wcstol",
+        "wcstoll",
+        "wcstoq"
+      ]
+    },
+    {
+      "name": "__wcstoul_internal",
+      "address": 648480,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19e520",
+      "elf_address": "0x9e520",
+      "sha256_bytes": "82a9380981d420fcdab24d772fa99234759d72a90b7dcc577a1a56f11c80570e",
+      "same_entry_symbols": [
+        "__GI___wcstoul_internal",
+        "__GI___wcstoull_internal",
+        "__wcstoul_internal",
+        "__wcstoull_internal"
+      ]
+    },
+    {
+      "name": "__wcstoull_internal",
+      "address": 648480,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19e520",
+      "elf_address": "0x9e520",
+      "sha256_bytes": "82a9380981d420fcdab24d772fa99234759d72a90b7dcc577a1a56f11c80570e",
+      "same_entry_symbols": [
+        "__GI___wcstoul_internal",
+        "__GI___wcstoull_internal",
+        "__wcstoul_internal",
+        "__wcstoull_internal"
+      ]
+    },
+    {
+      "name": "__wcstoul",
+      "address": 648500,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19e534",
+      "elf_address": "0x9e534",
+      "sha256_bytes": "89809d0cf65f54f651facb205d45b3132a02a58aa1233b426a5d5e446ed69881",
+      "same_entry_symbols": [
+        "__GI_wcstoul",
+        "__wcstoul",
+        "wcstoul",
+        "wcstoull",
+        "wcstoumax",
+        "wcstouq"
+      ]
+    },
+    {
+      "name": "wcstoul",
+      "address": 648500,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e534",
+      "elf_address": "0x9e534",
+      "sha256_bytes": "89809d0cf65f54f651facb205d45b3132a02a58aa1233b426a5d5e446ed69881",
+      "same_entry_symbols": [
+        "__GI_wcstoul",
+        "__wcstoul",
+        "wcstoul",
+        "wcstoull",
+        "wcstoumax",
+        "wcstouq"
+      ]
+    },
+    {
+      "name": "wcstoull",
+      "address": 648500,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e534",
+      "elf_address": "0x9e534",
+      "sha256_bytes": "89809d0cf65f54f651facb205d45b3132a02a58aa1233b426a5d5e446ed69881",
+      "same_entry_symbols": [
+        "__GI_wcstoul",
+        "__wcstoul",
+        "wcstoul",
+        "wcstoull",
+        "wcstoumax",
+        "wcstouq"
+      ]
+    },
+    {
+      "name": "wcstoumax",
+      "address": 648500,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e534",
+      "elf_address": "0x9e534",
+      "sha256_bytes": "89809d0cf65f54f651facb205d45b3132a02a58aa1233b426a5d5e446ed69881",
+      "same_entry_symbols": [
+        "__GI_wcstoul",
+        "__wcstoul",
+        "wcstoul",
+        "wcstoull",
+        "wcstoumax",
+        "wcstouq"
+      ]
+    },
+    {
+      "name": "wcstouq",
+      "address": 648500,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e534",
+      "elf_address": "0x9e534",
+      "sha256_bytes": "89809d0cf65f54f651facb205d45b3132a02a58aa1233b426a5d5e446ed69881",
+      "same_entry_symbols": [
+        "__GI_wcstoul",
+        "__wcstoul",
+        "wcstoul",
+        "wcstoull",
+        "wcstoumax",
+        "wcstouq"
+      ]
+    },
+    {
+      "name": "__wcstod_internal",
+      "address": 648528,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19e550",
+      "elf_address": "0x9e550",
+      "sha256_bytes": "2668f51b5e5e36213646969d7cfe834d8388f1bdc49ec161f30241ae8d6c7bec",
+      "same_entry_symbols": [
+        "__GI___wcstod_internal",
+        "__wcstod_internal"
+      ]
+    },
+    {
+      "name": "wcstod",
+      "address": 648548,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19e564",
+      "elf_address": "0x9e564",
+      "sha256_bytes": "e70b19366c5f3a67b88e7a4e9931b5aa9c225c603d1c32cffe1e0d264b1dad4d",
+      "same_entry_symbols": [
+        "__GI_wcstod",
+        "wcstod",
+        "wcstof32x",
+        "wcstof64"
+      ]
+    },
+    {
+      "name": "wcstof32x",
+      "address": 648548,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e564",
+      "elf_address": "0x9e564",
+      "sha256_bytes": "e70b19366c5f3a67b88e7a4e9931b5aa9c225c603d1c32cffe1e0d264b1dad4d",
+      "same_entry_symbols": [
+        "__GI_wcstod",
+        "wcstod",
+        "wcstof32x",
+        "wcstof64"
+      ]
+    },
+    {
+      "name": "wcstof64",
+      "address": 648548,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e564",
+      "elf_address": "0x9e564",
+      "sha256_bytes": "e70b19366c5f3a67b88e7a4e9931b5aa9c225c603d1c32cffe1e0d264b1dad4d",
+      "same_entry_symbols": [
+        "__GI_wcstod",
+        "wcstod",
+        "wcstof32x",
+        "wcstof64"
+      ]
+    },
+    {
+      "name": "__wcstold_internal",
+      "address": 648576,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19e580",
+      "elf_address": "0x9e580",
+      "sha256_bytes": "7625c48d2b9463f8d89115ab7b5b6fa88878436a68f15f74136dd807469ebc47",
+      "same_entry_symbols": [
+        "__GI___wcstold_internal",
+        "__wcstold_internal"
+      ]
+    },
+    {
+      "name": "wcstof128",
+      "address": 648596,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e594",
+      "elf_address": "0x9e594",
+      "sha256_bytes": "47172a511274492bad94b80ff626ed6d3b24f847d073bf389db197454da9d36e",
+      "same_entry_symbols": [
+        "__GI_wcstold",
+        "wcstof128",
+        "wcstof64x",
+        "wcstold"
+      ]
+    },
+    {
+      "name": "wcstof64x",
+      "address": 648596,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e594",
+      "elf_address": "0x9e594",
+      "sha256_bytes": "47172a511274492bad94b80ff626ed6d3b24f847d073bf389db197454da9d36e",
+      "same_entry_symbols": [
+        "__GI_wcstold",
+        "wcstof128",
+        "wcstof64x",
+        "wcstold"
+      ]
+    },
+    {
+      "name": "wcstold",
+      "address": 648596,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19e594",
+      "elf_address": "0x9e594",
+      "sha256_bytes": "47172a511274492bad94b80ff626ed6d3b24f847d073bf389db197454da9d36e",
+      "same_entry_symbols": [
+        "__GI_wcstold",
+        "wcstof128",
+        "wcstof64x",
+        "wcstold"
+      ]
+    },
+    {
+      "name": "__wcstof_internal",
+      "address": 648624,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19e5b0",
+      "elf_address": "0x9e5b0",
+      "sha256_bytes": "a0644389675b3b3f5e506d656fc87b6538888f8a8bc2de570b9d4aba507aa0df",
+      "same_entry_symbols": [
+        "__GI___wcstof_internal",
+        "__wcstof_internal"
+      ]
+    },
+    {
+      "name": "wcstof",
+      "address": 648644,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19e5c4",
+      "elf_address": "0x9e5c4",
+      "sha256_bytes": "087d10fe7961829a6fb5abe422462c815d11969bf1c1d132ce89235ad125e46b",
+      "same_entry_symbols": [
+        "__GI_wcstof",
+        "wcstof",
+        "wcstof32"
+      ]
+    },
+    {
+      "name": "wcstof32",
+      "address": 648644,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19e5c4",
+      "elf_address": "0x9e5c4",
+      "sha256_bytes": "087d10fe7961829a6fb5abe422462c815d11969bf1c1d132ce89235ad125e46b",
+      "same_entry_symbols": [
+        "__GI_wcstof",
+        "wcstof",
+        "wcstof32"
+      ]
+    },
+    {
+      "name": "____wcstol_l_internal",
+      "address": 648672,
+      "size": 1060,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19e5e0",
+      "elf_address": "0x9e5e0",
+      "sha256_bytes": "32cc0ffabb84dd841ed5e6af1dee144182fcc68e0030e310143b6abe49d7eb35",
+      "same_entry_symbols": [
+        "____wcstol_l_internal",
+        "____wcstoll_l_internal"
+      ]
+    },
+    {
+      "name": "____wcstoll_l_internal",
+      "address": 648672,
+      "size": 1060,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19e5e0",
+      "elf_address": "0x9e5e0",
+      "sha256_bytes": "32cc0ffabb84dd841ed5e6af1dee144182fcc68e0030e310143b6abe49d7eb35",
+      "same_entry_symbols": [
+        "____wcstol_l_internal",
+        "____wcstoll_l_internal"
+      ]
+    },
+    {
+      "name": "__wcstol_l",
+      "address": 649732,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19ea04",
+      "elf_address": "0x9ea04",
+      "sha256_bytes": "44f2a1cc94a58487bbc618f5b020f18528444ea9497707cc7f408ff488ff268f",
+      "same_entry_symbols": [
+        "__GI___wcstol_l",
+        "__wcstol_l",
+        "__wcstoll_l",
+        "wcstol_l",
+        "wcstoll_l"
+      ]
+    },
+    {
+      "name": "__wcstoll_l",
+      "address": 649732,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19ea04",
+      "elf_address": "0x9ea04",
+      "sha256_bytes": "44f2a1cc94a58487bbc618f5b020f18528444ea9497707cc7f408ff488ff268f",
+      "same_entry_symbols": [
+        "__GI___wcstol_l",
+        "__wcstol_l",
+        "__wcstoll_l",
+        "wcstol_l",
+        "wcstoll_l"
+      ]
+    },
+    {
+      "name": "wcstol_l",
+      "address": 649732,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19ea04",
+      "elf_address": "0x9ea04",
+      "sha256_bytes": "44f2a1cc94a58487bbc618f5b020f18528444ea9497707cc7f408ff488ff268f",
+      "same_entry_symbols": [
+        "__GI___wcstol_l",
+        "__wcstol_l",
+        "__wcstoll_l",
+        "wcstol_l",
+        "wcstoll_l"
+      ]
+    },
+    {
+      "name": "wcstoll_l",
+      "address": 649732,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19ea04",
+      "elf_address": "0x9ea04",
+      "sha256_bytes": "44f2a1cc94a58487bbc618f5b020f18528444ea9497707cc7f408ff488ff268f",
+      "same_entry_symbols": [
+        "__GI___wcstol_l",
+        "__wcstol_l",
+        "__wcstoll_l",
+        "wcstol_l",
+        "wcstoll_l"
+      ]
+    },
+    {
+      "name": "____wcstoul_l_internal",
+      "address": 649744,
+      "size": 1024,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19ea10",
+      "elf_address": "0x9ea10",
+      "sha256_bytes": "c18407334212158dfd6a29fd8f1fa495f7b4aaf0a0bfdb222f921eb74973b2e8",
+      "same_entry_symbols": [
+        "____wcstoul_l_internal",
+        "____wcstoull_l_internal"
+      ]
+    },
+    {
+      "name": "____wcstoull_l_internal",
+      "address": 649744,
+      "size": 1024,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19ea10",
+      "elf_address": "0x9ea10",
+      "sha256_bytes": "c18407334212158dfd6a29fd8f1fa495f7b4aaf0a0bfdb222f921eb74973b2e8",
+      "same_entry_symbols": [
+        "____wcstoul_l_internal",
+        "____wcstoull_l_internal"
+      ]
+    },
+    {
+      "name": "__wcstoul_l",
+      "address": 650768,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x19ee10",
+      "elf_address": "0x9ee10",
+      "sha256_bytes": "49032917d76386b868e3e54532e269b3bb929c8a2372a6af88102deb99254b93",
+      "same_entry_symbols": [
+        "__GI___wcstoul_l",
+        "__wcstoul_l",
+        "__wcstoull_l",
+        "wcstoul_l",
+        "wcstoull_l"
+      ]
+    },
+    {
+      "name": "__wcstoull_l",
+      "address": 650768,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19ee10",
+      "elf_address": "0x9ee10",
+      "sha256_bytes": "49032917d76386b868e3e54532e269b3bb929c8a2372a6af88102deb99254b93",
+      "same_entry_symbols": [
+        "__GI___wcstoul_l",
+        "__wcstoul_l",
+        "__wcstoull_l",
+        "wcstoul_l",
+        "wcstoull_l"
+      ]
+    },
+    {
+      "name": "wcstoul_l",
+      "address": 650768,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19ee10",
+      "elf_address": "0x9ee10",
+      "sha256_bytes": "49032917d76386b868e3e54532e269b3bb929c8a2372a6af88102deb99254b93",
+      "same_entry_symbols": [
+        "__GI___wcstoul_l",
+        "__wcstoul_l",
+        "__wcstoull_l",
+        "wcstoul_l",
+        "wcstoull_l"
+      ]
+    },
+    {
+      "name": "wcstoull_l",
+      "address": 650768,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x19ee10",
+      "elf_address": "0x9ee10",
+      "sha256_bytes": "49032917d76386b868e3e54532e269b3bb929c8a2372a6af88102deb99254b93",
+      "same_entry_symbols": [
+        "__GI___wcstoul_l",
+        "__wcstoul_l",
+        "__wcstoull_l",
+        "wcstoul_l",
+        "wcstoull_l"
+      ]
+    },
+    {
+      "name": "str_to_mpn.part.0.constprop.0",
+      "address": 651472,
+      "size": 640,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19f0d0",
+      "elf_address": "0x9f0d0",
+      "sha256_bytes": "2072756bd15d617753698f01861284281e621fbc3606ef9f6c35b1dfde67598e",
+      "same_entry_symbols": [
+        "str_to_mpn.part.0.constprop.0"
+      ]
+    },
+    {
+      "name": "____wcstod_l_internal",
+      "address": 652112,
+      "size": 7280,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x19f350",
+      "elf_address": "0x9f350",
+      "sha256_bytes": "b2f602edd92be2ef604f3f1b574d201534c940453234d6d538d8ef4703a5a7b4",
+      "same_entry_symbols": [
+        "____wcstod_l_internal"
+      ]
+    },
+    {
+      "name": "__wcstod_l",
+      "address": 659392,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1a0fc0",
+      "elf_address": "0xa0fc0",
+      "sha256_bytes": "a6394bdade50dae3c1cb65e4621152f1e53cf3925a43721d9f125f9d17e5ac5f",
+      "same_entry_symbols": [
+        "__GI___wcstod_l",
+        "__GI_wcstod_l",
+        "__wcstod_l",
+        "wcstod_l",
+        "wcstof32x_l",
+        "wcstof64_l"
+      ]
+    },
+    {
+      "name": "wcstod_l",
+      "address": 659392,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a0fc0",
+      "elf_address": "0xa0fc0",
+      "sha256_bytes": "a6394bdade50dae3c1cb65e4621152f1e53cf3925a43721d9f125f9d17e5ac5f",
+      "same_entry_symbols": [
+        "__GI___wcstod_l",
+        "__GI_wcstod_l",
+        "__wcstod_l",
+        "wcstod_l",
+        "wcstof32x_l",
+        "wcstof64_l"
+      ]
+    },
+    {
+      "name": "wcstof32x_l",
+      "address": 659392,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a0fc0",
+      "elf_address": "0xa0fc0",
+      "sha256_bytes": "a6394bdade50dae3c1cb65e4621152f1e53cf3925a43721d9f125f9d17e5ac5f",
+      "same_entry_symbols": [
+        "__GI___wcstod_l",
+        "__GI_wcstod_l",
+        "__wcstod_l",
+        "wcstod_l",
+        "wcstof32x_l",
+        "wcstof64_l"
+      ]
+    },
+    {
+      "name": "wcstof64_l",
+      "address": 659392,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a0fc0",
+      "elf_address": "0xa0fc0",
+      "sha256_bytes": "a6394bdade50dae3c1cb65e4621152f1e53cf3925a43721d9f125f9d17e5ac5f",
+      "same_entry_symbols": [
+        "__GI___wcstod_l",
+        "__GI_wcstod_l",
+        "__wcstod_l",
+        "wcstod_l",
+        "wcstof32x_l",
+        "wcstof64_l"
+      ]
+    },
+    {
+      "name": "str_to_mpn.part.0.constprop.0",
+      "address": 660356,
+      "size": 636,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a1384",
+      "elf_address": "0xa1384",
+      "sha256_bytes": "0c41cf21b627b67e1a47bdc50d0380510be21f7ae142d7df8f762b6980032692",
+      "same_entry_symbols": [
+        "str_to_mpn.part.0.constprop.0"
+      ]
+    },
+    {
+      "name": "____wcstold_l_internal",
+      "address": 660992,
+      "size": 7996,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a1600",
+      "elf_address": "0xa1600",
+      "sha256_bytes": "558b78d1753998a25a50e51aa20101e795c9ea19dd8654a26a5717e965d1d74c",
+      "same_entry_symbols": [
+        "____wcstold_l_internal"
+      ]
+    },
+    {
+      "name": "__wcstold_l",
+      "address": 668992,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1a3540",
+      "elf_address": "0xa3540",
+      "sha256_bytes": "99de2bdc7730e874f1a862b2bb7d3aa34f4c2d05d0be8907f92c9114a03d1abb",
+      "same_entry_symbols": [
+        "__GI___wcstold_l",
+        "__GI_wcstold_l",
+        "__wcstold_l",
+        "wcstof128_l",
+        "wcstof64x_l",
+        "wcstold_l"
+      ]
+    },
+    {
+      "name": "wcstof128_l",
+      "address": 668992,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a3540",
+      "elf_address": "0xa3540",
+      "sha256_bytes": "99de2bdc7730e874f1a862b2bb7d3aa34f4c2d05d0be8907f92c9114a03d1abb",
+      "same_entry_symbols": [
+        "__GI___wcstold_l",
+        "__GI_wcstold_l",
+        "__wcstold_l",
+        "wcstof128_l",
+        "wcstof64x_l",
+        "wcstold_l"
+      ]
+    },
+    {
+      "name": "wcstof64x_l",
+      "address": 668992,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a3540",
+      "elf_address": "0xa3540",
+      "sha256_bytes": "99de2bdc7730e874f1a862b2bb7d3aa34f4c2d05d0be8907f92c9114a03d1abb",
+      "same_entry_symbols": [
+        "__GI___wcstold_l",
+        "__GI_wcstold_l",
+        "__wcstold_l",
+        "wcstof128_l",
+        "wcstof64x_l",
+        "wcstold_l"
+      ]
+    },
+    {
+      "name": "wcstold_l",
+      "address": 668992,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a3540",
+      "elf_address": "0xa3540",
+      "sha256_bytes": "99de2bdc7730e874f1a862b2bb7d3aa34f4c2d05d0be8907f92c9114a03d1abb",
+      "same_entry_symbols": [
+        "__GI___wcstold_l",
+        "__GI_wcstold_l",
+        "__wcstold_l",
+        "wcstof128_l",
+        "wcstof64x_l",
+        "wcstold_l"
+      ]
+    },
+    {
+      "name": "str_to_mpn.part.0.constprop.0",
+      "address": 669680,
+      "size": 640,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a37f0",
+      "elf_address": "0xa37f0",
+      "sha256_bytes": "f7cc9c23d2a830287ab2640138227a04ca5d20297736f63edad76ec9f8ca8681",
+      "same_entry_symbols": [
+        "str_to_mpn.part.0.constprop.0"
+      ]
+    },
+    {
+      "name": "____wcstof_l_internal",
+      "address": 670320,
+      "size": 7272,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a3a70",
+      "elf_address": "0xa3a70",
+      "sha256_bytes": "6d7fe91078df78eafd7f74688e23476630477cdad914f97c6e2ec97bdd3641e1",
+      "same_entry_symbols": [
+        "____wcstof_l_internal"
+      ]
+    },
+    {
+      "name": "__wcstof_l",
+      "address": 677600,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1a56e0",
+      "elf_address": "0xa56e0",
+      "sha256_bytes": "a6394bdade50dae3c1cb65e4621152f1e53cf3925a43721d9f125f9d17e5ac5f",
+      "same_entry_symbols": [
+        "__GI___wcstof_l",
+        "__GI_wcstof_l",
+        "__wcstof_l",
+        "wcstof32_l",
+        "wcstof_l"
+      ]
+    },
+    {
+      "name": "wcstof32_l",
+      "address": 677600,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a56e0",
+      "elf_address": "0xa56e0",
+      "sha256_bytes": "a6394bdade50dae3c1cb65e4621152f1e53cf3925a43721d9f125f9d17e5ac5f",
+      "same_entry_symbols": [
+        "__GI___wcstof_l",
+        "__GI_wcstof_l",
+        "__wcstof_l",
+        "wcstof32_l",
+        "wcstof_l"
+      ]
+    },
+    {
+      "name": "wcstof_l",
+      "address": 677600,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a56e0",
+      "elf_address": "0xa56e0",
+      "sha256_bytes": "a6394bdade50dae3c1cb65e4621152f1e53cf3925a43721d9f125f9d17e5ac5f",
+      "same_entry_symbols": [
+        "__GI___wcstof_l",
+        "__GI_wcstof_l",
+        "__wcstof_l",
+        "wcstof32_l",
+        "wcstof_l"
+      ]
+    },
+    {
+      "name": "__wcstod_nan",
+      "address": 677616,
+      "size": 244,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a56f0",
+      "elf_address": "0xa56f0",
+      "sha256_bytes": "96cdadf2bb9d4fde3bb6d107a3a7511b3b368f2e8d05dca52f3e4d716e08fb05",
+      "same_entry_symbols": [
+        "__GI___wcstod_nan",
+        "__wcstod_nan"
+      ]
+    },
+    {
+      "name": "__wcstold_nan",
+      "address": 677872,
+      "size": 220,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a57f0",
+      "elf_address": "0xa57f0",
+      "sha256_bytes": "25e7a229648d8cb84758f2d4228ef4df2d33211690d7f65b78d046a4c822d8f0",
+      "same_entry_symbols": [
+        "__GI___wcstold_nan",
+        "__wcstold_nan"
+      ]
+    },
+    {
+      "name": "__wcstof_nan",
+      "address": 678096,
+      "size": 232,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a58d0",
+      "elf_address": "0xa58d0",
+      "sha256_bytes": "5dc773d188eea55245c52d3e3e9f8d888563bccf1512884ae0fda4d86cb4c028",
+      "same_entry_symbols": [
+        "__GI___wcstof_nan",
+        "__wcstof_nan"
+      ]
+    },
+    {
+      "name": "__wcscoll",
+      "address": 678336,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a59c0",
+      "elf_address": "0xa59c0",
+      "sha256_bytes": "ea6143ea419949fc2974efc494e5070a323bbea84da825209ab8204bfcee1f69",
+      "same_entry_symbols": [
+        "__GI___wcscoll",
+        "__wcscoll",
+        "wcscoll"
+      ]
+    },
+    {
+      "name": "wcscoll",
+      "address": 678336,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a59c0",
+      "elf_address": "0xa59c0",
+      "sha256_bytes": "ea6143ea419949fc2974efc494e5070a323bbea84da825209ab8204bfcee1f69",
+      "same_entry_symbols": [
+        "__GI___wcscoll",
+        "__wcscoll",
+        "wcscoll"
+      ]
+    },
+    {
+      "name": "wcsxfrm",
+      "address": 678368,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1a59e0",
+      "elf_address": "0xa59e0",
+      "sha256_bytes": "095bdf846ac6e91bda2da3ba0bf9e58cf9b14e53f0b4fe2359a92aa7870e6c33",
+      "same_entry_symbols": [
+        "wcsxfrm"
+      ]
+    },
+    {
+      "name": "wcswidth",
+      "address": 678528,
+      "size": 164,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1a5a80",
+      "elf_address": "0xa5a80",
+      "sha256_bytes": "bb94b67df36fcd2a691deab9b7e7e11f51e2ec3b1613d2048177f57d185861a1",
+      "same_entry_symbols": [
+        "wcswidth"
+      ]
+    },
+    {
+      "name": "__wcscoll_l",
+      "address": 678704,
+      "size": 3024,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1a5b30",
+      "elf_address": "0xa5b30",
+      "sha256_bytes": "7870166ce09c3654df5900b149448883e454a7fbda805ee4744c69ac0abe9c8d",
+      "same_entry_symbols": [
+        "__GI___wcscoll_l",
+        "__wcscoll_l",
+        "wcscoll_l"
+      ]
+    },
+    {
+      "name": "wcscoll_l",
+      "address": 678704,
+      "size": 3024,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a5b30",
+      "elf_address": "0xa5b30",
+      "sha256_bytes": "7870166ce09c3654df5900b149448883e454a7fbda805ee4744c69ac0abe9c8d",
+      "same_entry_symbols": [
+        "__GI___wcscoll_l",
+        "__wcscoll_l",
+        "wcscoll_l"
+      ]
+    },
+    {
+      "name": "__wcsxfrm_l",
+      "address": 681728,
+      "size": 6180,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1a6700",
+      "elf_address": "0xa6700",
+      "sha256_bytes": "2c6b951715efa43b12d8bf85f4b16a3727107757bf9511e454bacedca612d62a",
+      "same_entry_symbols": [
+        "__GI___wcsxfrm_l",
+        "__wcsxfrm_l",
+        "wcsxfrm_l"
+      ]
+    },
+    {
+      "name": "wcsxfrm_l",
+      "address": 681728,
+      "size": 6180,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a6700",
+      "elf_address": "0xa6700",
+      "sha256_bytes": "2c6b951715efa43b12d8bf85f4b16a3727107757bf9511e454bacedca612d62a",
+      "same_entry_symbols": [
+        "__GI___wcsxfrm_l",
+        "__wcsxfrm_l",
+        "wcsxfrm_l"
+      ]
+    },
+    {
+      "name": "__wcscasecmp",
+      "address": 687920,
+      "size": 104,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a7f30",
+      "elf_address": "0xa7f30",
+      "sha256_bytes": "dd3be780aa456901f5b1cb8b2e1e5f6ae991cb7c62a8b05fa0efd2c28fdbd97d",
+      "same_entry_symbols": [
+        "__wcscasecmp",
+        "wcscasecmp"
+      ]
+    },
+    {
+      "name": "wcscasecmp",
+      "address": 687920,
+      "size": 104,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a7f30",
+      "elf_address": "0xa7f30",
+      "sha256_bytes": "dd3be780aa456901f5b1cb8b2e1e5f6ae991cb7c62a8b05fa0efd2c28fdbd97d",
+      "same_entry_symbols": [
+        "__wcscasecmp",
+        "wcscasecmp"
+      ]
+    },
+    {
+      "name": "__wcsncasecmp",
+      "address": 688032,
+      "size": 152,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a7fa0",
+      "elf_address": "0xa7fa0",
+      "sha256_bytes": "e993a283d1a2e566f5a096272dadf9b2aa121499314cb49d324d5b36be2ef396",
+      "same_entry_symbols": [
+        "__wcsncasecmp",
+        "wcsncasecmp"
+      ]
+    },
+    {
+      "name": "wcsncasecmp",
+      "address": 688032,
+      "size": 152,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a7fa0",
+      "elf_address": "0xa7fa0",
+      "sha256_bytes": "e993a283d1a2e566f5a096272dadf9b2aa121499314cb49d324d5b36be2ef396",
+      "same_entry_symbols": [
+        "__wcsncasecmp",
+        "wcsncasecmp"
+      ]
+    },
+    {
+      "name": "__wcscasecmp_l",
+      "address": 688192,
+      "size": 124,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1a8040",
+      "elf_address": "0xa8040",
+      "sha256_bytes": "ffa8cec0236fa227bf54d7a78432ffcfb19d228b82bb4d2954a1109ab10a4a24",
+      "same_entry_symbols": [
+        "__GI___wcscasecmp_l",
+        "__wcscasecmp_l",
+        "wcscasecmp_l"
+      ]
+    },
+    {
+      "name": "wcscasecmp_l",
+      "address": 688192,
+      "size": 124,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a8040",
+      "elf_address": "0xa8040",
+      "sha256_bytes": "ffa8cec0236fa227bf54d7a78432ffcfb19d228b82bb4d2954a1109ab10a4a24",
+      "same_entry_symbols": [
+        "__GI___wcscasecmp_l",
+        "__wcscasecmp_l",
+        "wcscasecmp_l"
+      ]
+    },
+    {
+      "name": "__wcsncasecmp_l",
+      "address": 688320,
+      "size": 164,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1a80c0",
+      "elf_address": "0xa80c0",
+      "sha256_bytes": "bcafa26a5260b94507dbe6d8fcbd681b70261816750c08ad10b059c258a8b53f",
+      "same_entry_symbols": [
+        "__GI___wcsncasecmp_l",
+        "__wcsncasecmp_l",
+        "wcsncasecmp_l"
+      ]
+    },
+    {
+      "name": "wcsncasecmp_l",
+      "address": 688320,
+      "size": 164,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1a80c0",
+      "elf_address": "0xa80c0",
+      "sha256_bytes": "bcafa26a5260b94507dbe6d8fcbd681b70261816750c08ad10b059c258a8b53f",
+      "same_entry_symbols": [
+        "__GI___wcsncasecmp_l",
+        "__wcsncasecmp_l",
+        "wcsncasecmp_l"
+      ]
+    },
+    {
+      "name": "__wcsmbs_getfct",
+      "address": 688576,
+      "size": 144,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a81c0",
+      "elf_address": "0xa81c0",
+      "sha256_bytes": "8c1a890f718e93df4594409ecd65a2b3b6a5d7537e6b717656ebcde0fcb5b36b",
+      "same_entry_symbols": [
+        "__wcsmbs_getfct"
+      ]
+    },
+    {
+      "name": "__wcsmbs_load_conv",
+      "address": 688720,
+      "size": 668,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a8250",
+      "elf_address": "0xa8250",
+      "sha256_bytes": "6be32ce8d261922163c0c0d854fd70817e3348a2b1b89250498f93e05c20f912",
+      "same_entry_symbols": [
+        "__wcsmbs_load_conv"
+      ]
+    },
+    {
+      "name": "__wcsmbs_clone_conv",
+      "address": 689392,
+      "size": 272,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a84f0",
+      "elf_address": "0xa84f0",
+      "sha256_bytes": "79e7eef78772ce5036d77b2b3df646fcfd106d0df52cbb2e0cbc770b76c8f55e",
+      "same_entry_symbols": [
+        "__wcsmbs_clone_conv"
+      ]
+    },
+    {
+      "name": "__wcsmbs_named_conv",
+      "address": 689664,
+      "size": 268,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1a8600",
+      "elf_address": "0xa8600",
+      "sha256_bytes": "c47ee267286603b2d2843040a2f2c2a26be002f00ee1f97fdd1871f12f7f07c0",
+      "same_entry_symbols": [
+        "__wcsmbs_named_conv"
+      ]
+    },
+    {
+      "name": "strptime",
+      "address": 709248,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1ad280",
+      "elf_address": "0xad280",
+      "sha256_bytes": "1cf34f699d694f458ae502a9029b5110668d3b736e7529f9e96e8e41d6c9e46f",
+      "same_entry_symbols": [
+        "__GI_strptime",
+        "strptime"
+      ]
+    },
+    {
+      "name": "__strptime_internal",
+      "address": 709504,
+      "size": 12532,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1ad380",
+      "elf_address": "0xad380",
+      "sha256_bytes": "c2d05452d1ee2ab53cf025365df9348de50342cd1bc1cb5c6bec05930ca7376c",
+      "same_entry_symbols": [
+        "__strptime_internal"
+      ]
+    },
+    {
+      "name": "__strptime_l",
+      "address": 722036,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1b0474",
+      "elf_address": "0xb0474",
+      "sha256_bytes": "90b92f20fe9c2c29ab30074ea791811e0e1c4fbcb1066d076d73c1a0ef7b6bbf",
+      "same_entry_symbols": [
+        "__strptime_l",
+        "strptime_l"
+      ]
+    },
+    {
+      "name": "strptime_l",
+      "address": 722036,
+      "size": 12,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1b0474",
+      "elf_address": "0xb0474",
+      "sha256_bytes": "90b92f20fe9c2c29ab30074ea791811e0e1c4fbcb1066d076d73c1a0ef7b6bbf",
+      "same_entry_symbols": [
+        "__strptime_l",
+        "strptime_l"
+      ]
+    },
+    {
+      "name": "strftime",
+      "address": 722048,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1b0480",
+      "elf_address": "0xb0480",
+      "sha256_bytes": "62d087ae3def32585395f01d8bc823d3ab260bbbf34f103091b265149636ddcc",
+      "same_entry_symbols": [
+        "__GI_strftime",
+        "strftime"
+      ]
+    },
+    {
+      "name": "wcsftime",
+      "address": 722080,
+      "size": 20,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1b04a0",
+      "elf_address": "0xb04a0",
+      "sha256_bytes": "7b3ffeca07b4ed7758240c85037bf212b435cf4c2300550b078ec55cfcd31fcb",
+      "same_entry_symbols": [
+        "__GI_wcsftime",
+        "wcsftime"
+      ]
+    },
+    {
+      "name": "__strftime_internal",
+      "address": 722112,
+      "size": 8268,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1b04c0",
+      "elf_address": "0xb04c0",
+      "sha256_bytes": "66c2d17c5864cd5a4131db92349a17400a0a341fad296e1d62eb19fcda73bbb4",
+      "same_entry_symbols": [
+        "__strftime_internal"
+      ]
+    },
+    {
+      "name": "__strftime_l",
+      "address": 730384,
+      "size": 96,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1b2510",
+      "elf_address": "0xb2510",
+      "sha256_bytes": "df35f9c334087927a4fa68b8bbbbde9ef69fd9323b6a918881be3816e974576e",
+      "same_entry_symbols": [
+        "__GI___strftime_l",
+        "__strftime_l",
+        "strftime_l"
+      ]
+    },
+    {
+      "name": "strftime_l",
+      "address": 730384,
+      "size": 96,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1b2510",
+      "elf_address": "0xb2510",
+      "sha256_bytes": "df35f9c334087927a4fa68b8bbbbde9ef69fd9323b6a918881be3816e974576e",
+      "same_entry_symbols": [
+        "__GI___strftime_l",
+        "__strftime_l",
+        "strftime_l"
+      ]
+    },
+    {
+      "name": "__strftime_internal",
+      "address": 730480,
+      "size": 8560,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1b2570",
+      "elf_address": "0xb2570",
+      "sha256_bytes": "090a229b57119d571e162d03fc09ca2c81081e5c595553613c1889640d4cd6f6",
+      "same_entry_symbols": [
+        "__strftime_internal"
+      ]
+    },
+    {
+      "name": "__wcsftime_l",
+      "address": 739040,
+      "size": 96,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1b46e0",
+      "elf_address": "0xb46e0",
+      "sha256_bytes": "09602ca6f6ac642ce32386e6822e027b9a7afb9b124b2905a869ae2f3fafd746",
+      "same_entry_symbols": [
+        "__GI___wcsftime_l",
+        "__wcsftime_l",
+        "wcsftime_l"
+      ]
+    },
+    {
+      "name": "wcsftime_l",
+      "address": 739040,
+      "size": 96,
+      "type": "FUNC",
+      "binding": "WEAK",
+      "ghidra_address": "0x1b46e0",
+      "elf_address": "0xb46e0",
+      "sha256_bytes": "09602ca6f6ac642ce32386e6822e027b9a7afb9b124b2905a869ae2f3fafd746",
+      "same_entry_symbols": [
+        "__GI___wcsftime_l",
+        "__wcsftime_l",
+        "wcsftime_l"
+      ]
+    },
+    {
+      "name": "strlist_add__",
+      "address": 876224,
+      "size": 112,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x1d5ec0",
+      "elf_address": "0xd5ec0",
+      "sha256_bytes": "e8c1a3b0a1cd89624916c5589f1e3dd37b92cb1fbcc4624d3e00791be8c7c254",
+      "same_entry_symbols": [
+        "strlist_add__"
+      ]
+    },
+    {
+      "name": "memfd_create",
+      "address": 963840,
+      "size": 28,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1eb500",
+      "elf_address": "0xeb500",
+      "sha256_bytes": "dc7fda7a7b189f3fe40969b3cb6568b3096812e6216acf34c33ed48270404a75",
+      "same_entry_symbols": [
+        "__GI_memfd_create",
+        "memfd_create"
+      ]
+    },
+    {
+      "name": "__memcpy_chk",
+      "address": 1014576,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f7b30",
+      "elf_address": "0xf7b30",
+      "sha256_bytes": "f4f7f6ec6050ba584f177c06ba87a546ae110110c58866eea6719f78b7c8127f",
+      "same_entry_symbols": [
+        "__memcpy_chk"
+      ]
+    },
+    {
+      "name": "__memmove_chk",
+      "address": 1014608,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f7b50",
+      "elf_address": "0xf7b50",
+      "sha256_bytes": "0bc760ab214a6f4ee5d37cb14e8ed3616e45903581089c0ecb1a234a50b7da4c",
+      "same_entry_symbols": [
+        "__memmove_chk"
+      ]
+    },
+    {
+      "name": "__mempcpy_chk",
+      "address": 1014640,
+      "size": 48,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f7b70",
+      "elf_address": "0xf7b70",
+      "sha256_bytes": "4c3e3704905f34ea0b64e50476031b21a39628a350751dee84c0f8a16ca846d3",
+      "same_entry_symbols": [
+        "__mempcpy_chk"
+      ]
+    },
+    {
+      "name": "__memset_chk",
+      "address": 1014688,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f7ba0",
+      "elf_address": "0xf7ba0",
+      "sha256_bytes": "63298388084869ae78c44ccb90cd8fb4ed93ecc0fcd177c5c0e29709c7f67150",
+      "same_entry_symbols": [
+        "__memset_chk"
+      ]
+    },
+    {
+      "name": "__stpcpy_chk",
+      "address": 1014720,
+      "size": 88,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f7bc0",
+      "elf_address": "0xf7bc0",
+      "sha256_bytes": "9fe2cd6b3d5ab445e851e60f5d4ea1442ce25e75400db86c99efa44f2c929f67",
+      "same_entry_symbols": [
+        "__stpcpy_chk"
+      ]
+    },
+    {
+      "name": "__strcat_chk",
+      "address": 1014816,
+      "size": 112,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f7c20",
+      "elf_address": "0xf7c20",
+      "sha256_bytes": "0b80951ef577b1bc47ec33e4ab021ccf0ee91e5eda1d5a235fa6f1263dcfdfe2",
+      "same_entry_symbols": [
+        "__strcat_chk"
+      ]
+    },
+    {
+      "name": "__strcpy_chk",
+      "address": 1014928,
+      "size": 76,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f7c90",
+      "elf_address": "0xf7c90",
+      "sha256_bytes": "e346f43d55dc82f28f9a4a37f27adc3c762f72b02b3272e30131effec2f56ff5",
+      "same_entry_symbols": [
+        "__strcpy_chk"
+      ]
+    },
+    {
+      "name": "__strncat_chk",
+      "address": 1015008,
+      "size": 272,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f7ce0",
+      "elf_address": "0xf7ce0",
+      "sha256_bytes": "b3fdc8e18d55a77018dbd03c44f9b3397102b3400686a401c59c74c5876d1a48",
+      "same_entry_symbols": [
+        "__strncat_chk"
+      ]
+    },
+    {
+      "name": "__strncpy_chk",
+      "address": 1015280,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f7df0",
+      "elf_address": "0xf7df0",
+      "sha256_bytes": "24a630a93747e411bb8790cf248bc98b08f1c1e718bde3d08eeecd3a2366b8e3",
+      "same_entry_symbols": [
+        "__strncpy_chk"
+      ]
+    },
+    {
+      "name": "__stpncpy_chk",
+      "address": 1015312,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f7e10",
+      "elf_address": "0xf7e10",
+      "sha256_bytes": "c5ce6611fdd9c73d39a5add0de6dd10b6195eb9d3182c2fbbaf3ad8145021acc",
+      "same_entry_symbols": [
+        "__stpncpy_chk"
+      ]
+    },
+    {
+      "name": "__wcscpy_chk",
+      "address": 1019184,
+      "size": 48,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f8d30",
+      "elf_address": "0xf8d30",
+      "sha256_bytes": "b837dba26b9355a0ea6119945c9a2d6ea2841748ef402b37ff555adfd8e79446",
+      "same_entry_symbols": [
+        "__wcscpy_chk"
+      ]
+    },
+    {
+      "name": "__wmemcpy_chk",
+      "address": 1019232,
+      "size": 28,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f8d60",
+      "elf_address": "0xf8d60",
+      "sha256_bytes": "194f0cb5e0f563e6da038310c95444ec7ebd02a15560075c39753471f907fd1c",
+      "same_entry_symbols": [
+        "__wmemcpy_chk"
+      ]
+    },
+    {
+      "name": "__wmemmove_chk",
+      "address": 1019264,
+      "size": 28,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f8d80",
+      "elf_address": "0xf8d80",
+      "sha256_bytes": "88a4d9171330451028466a2ecd5b834126ecf343901f517fee394ffac9f2b8bd",
+      "same_entry_symbols": [
+        "__wmemmove_chk"
+      ]
+    },
+    {
+      "name": "__wmempcpy_chk",
+      "address": 1019296,
+      "size": 52,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f8da0",
+      "elf_address": "0xf8da0",
+      "sha256_bytes": "f617257c07917e76b62b3a242423d5b955a5f9b609f73ea5d6ec46b04aa91b3c",
+      "same_entry_symbols": [
+        "__wmempcpy_chk"
+      ]
+    },
+    {
+      "name": "__wcsncpy_chk",
+      "address": 1019408,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f8e10",
+      "elf_address": "0xf8e10",
+      "sha256_bytes": "6f54f921f81ca9a8aa16446e8bba8105db2dc027c3d6f832649e8731cda1c0f2",
+      "same_entry_symbols": [
+        "__wcsncpy_chk"
+      ]
+    },
+    {
+      "name": "__wcscat_chk",
+      "address": 1019440,
+      "size": 108,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f8e30",
+      "elf_address": "0xf8e30",
+      "sha256_bytes": "56bb3d942b7ae41df72280e491acf3cfa02084777fd43e314e6b4b5998b09105",
+      "same_entry_symbols": [
+        "__wcscat_chk"
+      ]
+    },
+    {
+      "name": "__wcsncat_chk",
+      "address": 1019552,
+      "size": 264,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f8ea0",
+      "elf_address": "0xf8ea0",
+      "sha256_bytes": "c8d2b416858d12774649ea27d2f0eb474a64785982b5b3e13534af801377130f",
+      "same_entry_symbols": [
+        "__wcsncat_chk"
+      ]
+    },
+    {
+      "name": "__wmemset_chk",
+      "address": 1019824,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f8fb0",
+      "elf_address": "0xf8fb0",
+      "sha256_bytes": "93b7b3c2cc08177381008a5b354b3dd5e14ccf31fd186845c1f62e99620e8459",
+      "same_entry_symbols": [
+        "__wmemset_chk"
+      ]
+    },
+    {
+      "name": "__wcsnrtombs_chk",
+      "address": 1021664,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f96e0",
+      "elf_address": "0xf96e0",
+      "sha256_bytes": "69ff8b844cbb73e8e8b12c4cd3cdf9916411ee0e3c294654661d3f3a93684a89",
+      "same_entry_symbols": [
+        "__wcsnrtombs_chk"
+      ]
+    },
+    {
+      "name": "__wcsrtombs_chk",
+      "address": 1021728,
+      "size": 24,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f9720",
+      "elf_address": "0xf9720",
+      "sha256_bytes": "ae44b33a84b38dd139762436e5c98a116a4d6436054b7a260c55a7918fa9b177",
+      "same_entry_symbols": [
+        "__wcsrtombs_chk"
+      ]
+    },
+    {
+      "name": "__wcstombs_chk",
+      "address": 1021872,
+      "size": 108,
+      "type": "FUNC",
+      "binding": "GLOBAL",
+      "ghidra_address": "0x1f97b0",
+      "elf_address": "0xf97b0",
+      "sha256_bytes": "690a9f78e18224beee73b8346bbf7df9f27545d5b2da2cc42d473897ede202c4",
+      "same_entry_symbols": [
+        "__wcstombs_chk"
+      ]
+    },
+    {
+      "name": "strip_whitespace",
+      "address": 1158416,
+      "size": 108,
+      "type": "FUNC",
+      "binding": "LOCAL",
+      "ghidra_address": "0x21ad10",
+      "elf_address": "0x11ad10",
+      "sha256_bytes": "e2c952a032f890f61eb250e9f114798abae1f10f30fd60933c5f5d2eb1e37416",
+      "same_entry_symbols": [
+        "strip_whitespace"
+      ]
+    }
+  ],
+  "ports": [
+    {
+      "target": "__memcpy_chk",
+      "symbol": {
+        "name": "__memcpy_chk",
+        "address": 1014576,
+        "size": 24,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "__memmove_chk",
+      "symbol": {
+        "name": "__memmove_chk",
+        "address": 1014608,
+        "size": 24,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "__mempcpy_chk",
+      "symbol": {
+        "name": "__mempcpy_chk",
+        "address": 1014640,
+        "size": 48,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "a64l",
+      "symbol": {
+        "name": "a64l",
+        "address": 292848,
+        "size": 76,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "abs",
+      "symbol": {
+        "name": "abs",
+        "address": 251920,
+        "size": 12,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "bsearch",
+      "symbol": {
+        "name": "bsearch",
+        "address": 244528,
+        "size": 176,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "cfgetispeed",
+      "symbol": {
+        "name": "cfgetispeed",
+        "address": 921312,
+        "size": 32,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "cfgetospeed",
+      "symbol": {
+        "name": "cfgetospeed",
+        "address": 921296,
+        "size": 16,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "cfmakeraw",
+      "symbol": {
+        "name": "cfmakeraw",
+        "address": 922880,
+        "size": 60,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "cfsetispeed",
+      "symbol": {
+        "name": "cfsetispeed",
+        "address": 921440,
+        "size": 132,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "cfsetospeed",
+      "symbol": {
+        "name": "cfsetospeed",
+        "address": 921344,
+        "size": 92,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "copysign",
+      "symbol": {
+        "name": "copysign",
+        "address": 237376,
+        "size": 16,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "copysignf",
+      "symbol": {
+        "name": "copysignf",
+        "address": 238160,
+        "size": 12,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "div",
+      "symbol": {
+        "name": "div",
+        "address": 251968,
+        "size": 28,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": false,
+      "status": "existing lift; no proof file"
+    },
+    {
+      "target": "ffs",
+      "symbol": {
+        "name": "ffs",
+        "address": 608928,
+        "size": 100,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": false,
+      "status": "existing lift; no proof file"
+    },
+    {
+      "target": "ffsl",
+      "symbol": {
+        "name": "ffsl",
+        "address": 609040,
+        "size": 72,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": false,
+      "status": "existing lift; no proof file"
+    },
+    {
+      "target": "ffsll",
+      "symbol": {
+        "name": "ffsll",
+        "address": 609040,
+        "size": 72,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": false,
+      "status": "existing lift; no proof file"
+    },
+    {
+      "target": "finite",
+      "symbol": {
+        "name": "finite",
+        "address": 237344,
+        "size": 24,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "finitef",
+      "symbol": {
+        "name": "finitef",
+        "address": 238128,
+        "size": 24,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "finitel",
+      "symbol": {
+        "name": "finitel",
+        "address": 235808,
+        "size": 36,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "gnu_dev_major",
+      "symbol": {
+        "name": "gnu_dev_major",
+        "address": 956928,
+        "size": 16,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "gnu_dev_makedev",
+      "symbol": {
+        "name": "gnu_dev_makedev",
+        "address": 956960,
+        "size": 40,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "gnu_dev_minor",
+      "symbol": {
+        "name": "gnu_dev_minor",
+        "address": 956944,
+        "size": 16,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "htonl",
+      "symbol": {
+        "name": "htonl",
+        "address": 1023216,
+        "size": 8,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "htons",
+      "symbol": {
+        "name": "htons",
+        "address": 1023232,
+        "size": 8,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "inet_lnaof",
+      "symbol": {
+        "name": "inet_lnaof",
+        "address": 1023248,
+        "size": 44,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "inet_makeaddr",
+      "symbol": {
+        "name": "inet_makeaddr",
+        "address": 1023296,
+        "size": 76,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "inet_netof",
+      "symbol": {
+        "name": "inet_netof",
+        "address": 1023376,
+        "size": 44,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "insque",
+      "symbol": {
+        "name": "insque",
+        "address": 935392,
+        "size": 32,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "isascii",
+      "symbol": {
+        "name": "isascii",
+        "address": 214128,
+        "size": 12,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "isinf",
+      "symbol": {
+        "name": "isinf",
+        "address": 237264,
+        "size": 36,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "isinff",
+      "symbol": {
+        "name": "isinff",
+        "address": 238048,
+        "size": 36,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "isinfl",
+      "symbol": {
+        "name": "isinfl",
+        "address": 235696,
+        "size": 52,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "isnan",
+      "symbol": {
+        "name": "isnan",
+        "address": 237312,
+        "size": 24,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "isnanf",
+      "symbol": {
+        "name": "isnanf",
+        "address": 238096,
+        "size": 24,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "isnanl",
+      "symbol": {
+        "name": "isnanl",
+        "address": 235760,
+        "size": 48,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "labs",
+      "symbol": {
+        "name": "labs",
+        "address": 251936,
+        "size": 12,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "lcong48_r",
+      "symbol": {
+        "name": "lcong48_r",
+        "address": 255856,
+        "size": 72,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "ldiv",
+      "symbol": {
+        "name": "ldiv",
+        "address": 252000,
+        "size": 16,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": false,
+      "status": "existing lift; no proof file"
+    },
+    {
+      "target": "lfind",
+      "symbol": {
+        "name": "lfind",
+        "address": 949968,
+        "size": 156,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "lsearch",
+      "symbol": {
+        "name": "lsearch",
+        "address": 949760,
+        "size": 204,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "mbsinit",
+      "symbol": {
+        "name": "mbsinit",
+        "address": 644816,
+        "size": 28,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "memccpy",
+      "symbol": {
+        "name": "memccpy",
+        "address": 609952,
+        "size": 136,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "memchr_sse2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "memcmp",
+      "symbol": {
+        "name": "memcmp",
+        "address": 607808,
+        "size": 456,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "memcmp_avx2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "memcpy",
+      "symbol": {
+        "name": "memcpy",
+        "address": 610096,
+        "size": 320,
+        "type": "IFUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "memmove",
+      "symbol": {
+        "name": "memmove",
+        "address": 608272,
+        "size": 320,
+        "type": "IFUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "memmove_avx",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "mempcpy",
+      "symbol": {
+        "name": "mempcpy",
+        "address": 608848,
+        "size": 36,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "memset",
+      "symbol": {
+        "name": "memset",
+        "address": 608592,
+        "size": 252,
+        "type": "IFUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "memset_avx2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "pthread_equal",
+      "symbol": {
+        "name": "pthread_equal",
+        "address": 529120,
+        "size": 12,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "pthread_mutex_lock",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "pthread_mutex_unlock",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "rand_r",
+      "symbol": {
+        "name": "rand_r",
+        "address": 254592,
+        "size": 60,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "remque",
+      "symbol": {
+        "name": "remque",
+        "address": 935424,
+        "size": 24,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "seed48",
+      "symbol": {
+        "name": "seed48",
+        "address": 255296,
+        "size": 36,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "sigabbrev_np",
+      "symbol": {
+        "name": "sigabbrev_np",
+        "address": 633584,
+        "size": 32,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "sigaddset",
+      "symbol": {
+        "name": "sigaddset",
+        "address": 242352,
+        "size": 88,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "sigaddset_internal",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "sigandset",
+      "symbol": {
+        "name": "sigandset",
+        "address": 242896,
+        "size": 72,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "sigdelset",
+      "symbol": {
+        "name": "sigdelset",
+        "address": 242448,
+        "size": 88,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "sigdescr_np",
+      "symbol": {
+        "name": "sigdescr_np",
+        "address": 633552,
+        "size": 32,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "sigemptyset",
+      "symbol": {
+        "name": "sigemptyset",
+        "address": 242240,
+        "size": 48,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "sigfillset",
+      "symbol": {
+        "name": "sigfillset",
+        "address": 242288,
+        "size": 52,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "sigisemptyset",
+      "symbol": {
+        "name": "sigisemptyset",
+        "address": 242848,
+        "size": 48,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "sigismember",
+      "symbol": {
+        "name": "sigismember",
+        "address": 242544,
+        "size": 68,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "sigismember_internal",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "sigorset",
+      "symbol": {
+        "name": "sigorset",
+        "address": 242976,
+        "size": 72,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "srand48_r",
+      "symbol": {
+        "name": "srand48_r",
+        "address": 255696,
+        "size": 52,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "strchr",
+      "symbol": {
+        "name": "strchr",
+        "address": 601792,
+        "size": 160,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "strchr_avx2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strcmp",
+      "symbol": {
+        "name": "strcmp",
+        "address": 601984,
+        "size": 308,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "strcmp_avx2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strcpy",
+      "symbol": {
+        "name": "strcpy",
+        "address": 602368,
+        "size": 288,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "strcspn",
+      "symbol": {
+        "name": "strcspn",
+        "address": 602656,
+        "size": 356,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "strcspn_c1",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strcspn_c2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strcspn_sse2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strdup",
+      "symbol": {
+        "name": "strdup",
+        "address": 603280,
+        "size": 68,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "strlen",
+      "symbol": {
+        "name": "strlen",
+        "address": 603616,
+        "size": 40,
+        "type": "IFUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "strlen_avx2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strlen_sse2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strndup",
+      "symbol": {
+        "name": "strndup",
+        "address": 603360,
+        "size": 72,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "strnlen_sse2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strpbrk_c2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strsep",
+      "symbol": {
+        "name": "strsep",
+        "address": 611696,
+        "size": 92,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "strspn",
+      "symbol": {
+        "name": "strspn",
+        "address": 605264,
+        "size": 360,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "strspn_c1",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strspn_c2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strspn_sse2",
+      "symbol": null,
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "no exact symbol; resolve variant/name before assigning"
+    },
+    {
+      "target": "strtok_r",
+      "symbol": {
+        "name": "strtok_r",
+        "address": 607536,
+        "size": 160,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    },
+    {
+      "target": "swab",
+      "symbol": {
+        "name": "swab",
+        "address": 614064,
+        "size": 52,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": false,
+      "status": "existing lift; no proof file"
+    },
+    {
+      "target": "toascii",
+      "symbol": {
+        "name": "toascii",
+        "address": 214112,
+        "size": 8,
+        "type": "FUNC",
+        "binding": "GLOBAL"
+      },
+      "lift_present": true,
+      "proof_file_present": true,
+      "status": "existing lift; proof file present (not audited)"
+    },
+    {
+      "target": "wcschrnul",
+      "symbol": {
+        "name": "wcschrnul",
+        "address": 648384,
+        "size": 36,
+        "type": "FUNC",
+        "binding": "WEAK"
+      },
+      "lift_present": false,
+      "proof_file_present": false,
+      "status": "missing ARM lift"
+    }
+  ],
+  "existing_lift_extents": [
+    {
+      "function": "div",
+      "elf_entry": "0x3d840",
+      "ghidra_entry": "0x13d840",
+      "size": 28,
+      "instructions": 7,
+      "sha256_bytes": "695a55fdf2ae550fd83a9cde071853359051ee12fa48410f7d24b068b0365a38",
+      "lift_sha256": "e0d0a889b613ec2c24bfb0c1644ff27f7b4416a69fa932328edfad5a6ea62a29",
+      "extent_check": "PASS",
+      "instruction_comments": "see ghidra-audit.json for exact Ghidra decoder comparison"
+    },
+    {
+      "function": "ldiv",
+      "elf_entry": "0x3d860",
+      "ghidra_entry": "0x13d860",
+      "size": 16,
+      "instructions": 4,
+      "sha256_bytes": "57949ec917386dcb38c72ea26043b8aa776aff978686cf6b3f9387aeb7aeb35a",
+      "lift_sha256": "ce1367a5eec50b7abb32ed1db75c497776cf377de3aae52f280e6a4715ffca85",
+      "extent_check": "PASS",
+      "instruction_comments": "see ghidra-audit.json for exact Ghidra decoder comparison"
+    },
+    {
+      "function": "ffs",
+      "elf_entry": "0x94aa0",
+      "ghidra_entry": "0x194aa0",
+      "size": 100,
+      "instructions": 25,
+      "sha256_bytes": "3bd652a62416f71b2bb0e59ced098fe24f356bc62b7f005a0d5930f14d9ab8c0",
+      "lift_sha256": "0dc6c25c48e0a6e898788fca7ca14635ea4e8d21ce80daedd8b098e8f767b784",
+      "extent_check": "PASS",
+      "instruction_comments": "see ghidra-audit.json for exact Ghidra decoder comparison"
+    },
+    {
+      "function": "ffsl",
+      "elf_entry": "0x94b10",
+      "ghidra_entry": "0x194b10",
+      "size": 72,
+      "instructions": 18,
+      "sha256_bytes": "f7efeb9e4b261f79fb163a821480c0ba2fd383fd7a70b25f9f2432e710b25f26",
+      "lift_sha256": "484b9668fe0874948f52e768bceb4e2d6a52aaab93d67cd4e5249e9cab36c15b",
+      "extent_check": "PASS",
+      "instruction_comments": "see ghidra-audit.json for exact Ghidra decoder comparison"
+    },
+    {
+      "function": "ffsll",
+      "elf_entry": "0x94b10",
+      "ghidra_entry": "0x194b10",
+      "size": 72,
+      "instructions": 18,
+      "sha256_bytes": "f7efeb9e4b261f79fb163a821480c0ba2fd383fd7a70b25f9f2432e710b25f26",
+      "lift_sha256": "0d2d98caed639bd62c35c41987f5ec469d627cb71ba9f411c81e4a27f8b7d9a9",
+      "extent_check": "PASS",
+      "instruction_comments": "see ghidra-audit.json for exact Ghidra decoder comparison"
+    },
+    {
+      "function": "swab",
+      "elf_entry": "0x95eb0",
+      "ghidra_entry": "0x195eb0",
+      "size": 52,
+      "instructions": 13,
+      "sha256_bytes": "828c99af1e55fcceed85fa25ed8969290cb106e498cf1fa202010d929f008072",
+      "lift_sha256": "25c2607529fb140257acf41484e7a014d4a0f937ff3b9004f972514c10afb86e",
+      "extent_check": "PASS",
+      "instruction_comments": "see ghidra-audit.json for exact Ghidra decoder comparison"
+    }
+  ]
+}

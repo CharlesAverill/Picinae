@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=bash notes/e11-canonical-lifter/reproduce.sh verified
+PASS 6 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e11-canonical-lifter/verified-scalar
+Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/a07187f0d57b41e0858975e1920d8b60.log
+PASS 2 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e11-canonical-lifter/verified-global
+Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/b52403326453477e9b5d5c30430cee54.log
+
+EXIT_CODE=0

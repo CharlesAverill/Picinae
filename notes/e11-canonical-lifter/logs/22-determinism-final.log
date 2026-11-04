@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=python3 -
+PASS replay vs verified-scalar: 12 byte-identical .v/pcode artifacts
+PASS global-replay vs verified-global: 4 byte-identical .v/pcode artifacts
+
+EXIT_CODE=0

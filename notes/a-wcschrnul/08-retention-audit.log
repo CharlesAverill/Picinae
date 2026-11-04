@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-62dac67c
+COMMAND=python3 -c import\ re\,pathlib\;\ p=pathlib.Path\;\ a=p\(\"notes/a-wcschrnul/initial-attempt.v.txt\"\).read_text\(\)\;\ b=p\(\"Examples/claude/arm8_wcschrnul_proof.v\"\).read_text\(\)\;\ pattern=r\"\^\(\?:Theorem\|Lemma\)\ .\*\?\(\?=\\nProof\\.\|\\n\\\(\\\*\ PARTIAL:\)\"\;\ x=re.findall\(pattern\,a\,re.M\|re.S\)\;\ y=re.findall\(pattern\,b\,re.M\|re.S\)\;\ assert\ x==y\;\ print\(\"All\"\,len\(x\)\,\"theorem/lemma\ statements\ are\ unchanged.\"\)\;\ print\(\"Retained\ Qed:\"\,len\(re.findall\(r\"\\bQed\\.\"\,b\)\)\,\"\;\ unchecked\ Abort:\"\,len\(re.findall\(r\"\\bAbort\\.\"\,b\)\)\)\;\ assert\ not\ p\(\"_build/default/Examples/claude/arm8_wcschrnul_proof.vo\"\).exists\(\)\;\ print\(\"No\ new\ proof\ .vo\ exists.\"\)
+All 11 theorem/lemma statements are unchanged.
+Retained Qed: 8 ; unchecked Abort: 3
+No new proof .vo exists.
+
+EXIT_CODE=0
