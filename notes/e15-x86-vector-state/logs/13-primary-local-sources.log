@@ -1,0 +1,152 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
+COMMAND=bash -e -c g=/home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC\;\ cat\ \"\$g/Ghidra/application.properties\"\;\ sha256sum\ \"\$g/Ghidra/Processors/x86/data/languages/ia.sinc\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx_manual.sinc\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx512.sinc\"\;\ sed\ -n\ \"156\,173p\;328\,373p\"\ \"\$g/Ghidra/Processors/x86/data/languages/ia.sinc\"\;\ sed\ -n\ \"147\,154p\;162\,174p\;269\,292p\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx_manual.sinc\"\;\ sed\ -n\ \"1331\,1350p\"\ \"\$g/Ghidra/Processors/x86/data/languages/avx512.sinc\"\;\ sha256sum\ /home/charles/code/friends/.toolchains/e01-x86-inventory/runtime/lib/x86_64-linux-gnu/libc.so.6
+#Tue Aug 26 13:51:23 EDT 2025
+application.build.date=2025-Aug-26 1351 EDT
+application.build.date.short=20250826
+application.gradle.max=
+application.gradle.min=8.5
+application.java.compiler=21
+application.java.max=
+application.java.min=21
+application.layout.version=3
+application.name=Ghidra
+application.python.supported=3.13, 3.12, 3.11, 3.10, 3.9
+application.release.marking=
+application.release.name=PUBLIC
+application.revision.ghidra=0b61b34bb9c98108eefd9404f45446dae6a1c5eb
+application.revision.ghidra.bin=aa75c61913b662e2c8fe24c12db327a8cced6ac0
+application.revision.ghidra.ext-u=fdb8081c640b9075932ff627b08f54bd0da8be34
+application.version=11.4.2
+8fbb244f7fc88be621b95f435b6e958c6a55819dd5b935242377bb2a7e2b9b76  /home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/ia.sinc
+b21b9c8426bcb65ff68b372473e88f84b5e60406da70b1a04e4a0173f1d5a27d  /home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/avx_manual.sinc
+4a3b679f76efbd32751167e366c83fdd729ac62f888d88c07648de42b92f38c1  /home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/avx512.sinc
+define register offset=0x1200 size=16  [
+	XMM0 YMM0_H	_	_
+	XMM1 YMM1_H	_	_
+	XMM2 YMM2_H	_	_
+	XMM3 YMM3_H	_	_
+	XMM4 YMM4_H	_	_
+	XMM5 YMM5_H	_	_
+	XMM6 YMM6_H	_	_
+	XMM7 YMM7_H	_	_
+	XMM8 YMM8_H	_	_
+	XMM9 YMM9_H	_	_
+	XMM10 YMM10_H	_	_
+	XMM11 YMM11_H	_	_
+	XMM12 YMM12_H	_	_
+	XMM13 YMM13_H	_	_
+	XMM14 YMM14_H	_	_
+	XMM15 YMM15_H	_	_
+	XMM16 YMM16_H	_	_
+
+define register offset=0x1200 size=32  [
+	YMM0	_	YMM1	_
+	YMM2	_	YMM3	_
+	YMM4	_	YMM5	_
+	YMM6	_	YMM7	_
+	YMM8	_	YMM9	_
+	YMM10	_	YMM11	_
+	YMM12	_	YMM13	_
+	YMM14	_	YMM15	_
+	YMM16	_	YMM17	_
+	YMM18	_	YMM19	_
+	YMM20	_	YMM21	_
+	YMM22	_	YMM23	_
+	YMM24	_	YMM25	_
+	YMM26	_	YMM27	_
+	YMM28	_	YMM29	_
+	YMM30	_	YMM31	_
+];
+
+define register offset=0x1200 size=64  [
+	ZMM0	ZMM1
+	ZMM2	ZMM3
+	ZMM4	ZMM5
+	ZMM6	ZMM7
+	ZMM8	ZMM9
+	ZMM10	ZMM11
+	ZMM12	ZMM13
+	ZMM14	ZMM15
+	ZMM16	ZMM17
+	ZMM18	ZMM19
+	ZMM20	ZMM21
+	ZMM22	ZMM23
+	ZMM24	ZMM25
+	ZMM26	ZMM27
+	ZMM28	ZMM29
+	ZMM30	ZMM31
+];
+
+# Define context bits
+define register offset=0x2000 size=8   contextreg;
+
+# AVX-512 opmask registers
+define register offset=2100 size=8  [
+	K0  K1  K2  K3  K4  K5  K6  K7
+];
+# MOVUPS 4-130 PAGE 1250 LINE 64872
+:VMOVUPS XmmReg1, XmmReg2_m128 is $(VEX_NONE) & $(VEX_L128) & $(VEX_PRE_NONE) & $(VEX_0F) & $(VEX_WIG); byte=0x10; (XmmReg1 & ZmmReg1) ... & XmmReg2_m128
+{
+	XmmReg1 = XmmReg2_m128;
+	ZmmReg1 = zext(XmmReg1);
+}
+
+# MOVUPS 4-130 PAGE 1250 LINE 64874
+# MOVUPS 4-130 PAGE 1250 LINE 64874
+:VMOVUPS m128, XmmReg1 is $(VEX_NONE) & $(VEX_L128) & $(VEX_PRE_NONE) & $(VEX_0F) & $(VEX_WIG); byte=0x11; XmmReg1 ... & m128
+{
+	m128 = XmmReg1;
+}
+
+# MOVUPS 4-130 PAGE 1250 LINE 64876
+:VMOVUPS YmmReg1, YmmReg2_m256 is $(VEX_NONE) & $(VEX_L256) & $(VEX_PRE_NONE) & $(VEX_0F) & $(VEX_WIG); byte=0x10; (YmmReg1 & ZmmReg1) ... & YmmReg2_m256
+{
+	YmmReg1 = YmmReg2_m256;
+	ZmmReg1 = zext(YmmReg1);
+}
+
+:VZEROUPPER  is $(LONGMODE_ON) & $(VEX_NONE) & $(VEX_L128) & $(VEX_PRE_NONE) & $(VEX_0F) & $(VEX_WIG); byte=0x77
+{
+	ZMM0[128,64] = 0:8; ZMM0[192,64] = 0:8; ZMM0[256,64] = 0:8; ZMM0[320,64] = 0:8; ZMM0[384,64] = 0:8; ZMM0[448,64] = 0:8;
+	ZMM1[128,64] = 0:8; ZMM1[192,64] = 0:8; ZMM1[256,64] = 0:8; ZMM1[320,64] = 0:8; ZMM1[384,64] = 0:8; ZMM1[448,64] = 0:8;
+	ZMM2[128,64] = 0:8; ZMM2[192,64] = 0:8; ZMM2[256,64] = 0:8; ZMM2[320,64] = 0:8; ZMM2[384,64] = 0:8; ZMM2[448,64] = 0:8;
+	ZMM3[128,64] = 0:8; ZMM3[192,64] = 0:8; ZMM3[256,64] = 0:8; ZMM3[320,64] = 0:8; ZMM3[384,64] = 0:8; ZMM3[448,64] = 0:8;
+	ZMM4[128,64] = 0:8; ZMM4[192,64] = 0:8; ZMM4[256,64] = 0:8; ZMM4[320,64] = 0:8; ZMM4[384,64] = 0:8; ZMM4[448,64] = 0:8;
+	ZMM5[128,64] = 0:8; ZMM5[192,64] = 0:8; ZMM5[256,64] = 0:8; ZMM5[320,64] = 0:8; ZMM5[384,64] = 0:8; ZMM5[448,64] = 0:8;
+	ZMM6[128,64] = 0:8; ZMM6[192,64] = 0:8; ZMM6[256,64] = 0:8; ZMM6[320,64] = 0:8; ZMM6[384,64] = 0:8; ZMM6[448,64] = 0:8;
+	ZMM7[128,64] = 0:8; ZMM7[192,64] = 0:8; ZMM7[256,64] = 0:8; ZMM7[320,64] = 0:8; ZMM7[384,64] = 0:8; ZMM7[448,64] = 0:8;
+	ZMM8[128,64] = 0:8; ZMM8[192,64] = 0:8; ZMM8[256,64] = 0:8; ZMM8[320,64] = 0:8; ZMM8[384,64] = 0:8; ZMM8[448,64] = 0:8;
+	ZMM9[128,64] = 0:8; ZMM9[192,64] = 0:8; ZMM9[256,64] = 0:8; ZMM9[320,64] = 0:8; ZMM9[384,64] = 0:8; ZMM9[448,64] = 0:8;
+	ZMM10[128,64] = 0:8; ZMM10[192,64] = 0:8; ZMM10[256,64] = 0:8; ZMM10[320,64] = 0:8; ZMM10[384,64] = 0:8; ZMM10[448,64] = 0:8;
+	ZMM11[128,64] = 0:8; ZMM11[192,64] = 0:8; ZMM11[256,64] = 0:8; ZMM11[320,64] = 0:8; ZMM11[384,64] = 0:8; ZMM11[448,64] = 0:8;
+	ZMM12[128,64] = 0:8; ZMM12[192,64] = 0:8; ZMM12[256,64] = 0:8; ZMM12[320,64] = 0:8; ZMM12[384,64] = 0:8; ZMM12[448,64] = 0:8;
+	ZMM13[128,64] = 0:8; ZMM13[192,64] = 0:8; ZMM13[256,64] = 0:8; ZMM13[320,64] = 0:8; ZMM13[384,64] = 0:8; ZMM13[448,64] = 0:8;
+	ZMM14[128,64] = 0:8; ZMM14[192,64] = 0:8; ZMM14[256,64] = 0:8; ZMM14[320,64] = 0:8; ZMM14[384,64] = 0:8; ZMM14[448,64] = 0:8;
+	ZMM15[128,64] = 0:8; ZMM15[192,64] = 0:8; ZMM15[256,64] = 0:8; ZMM15[320,64] = 0:8; ZMM15[384,64] = 0:8; ZMM15[448,64] = 0:8;
+
+}
+@endif
+
+define pcodeop vmovdqu8_avx512vl ;
+:VMOVDQU8 XmmReg1^XmmOpMask8, XmmReg2_m128  is $(EVEX_NONE) & $(VEX_L128) & $(VEX_PRE_F2) & $(VEX_0F) & $(VEX_W0); byte=0x6F; (XmmReg1 & ZmmReg1 & XmmOpMask8) ... & XmmReg2_m128
+[ evexD8Type = 1; evexTType = 0; ] # (TupleType FVM-RM)
+{
+	XmmResult = vmovdqu8_avx512vl( XmmReg2_m128 );
+	XmmMask = XmmReg1;
+	build XmmOpMask8;
+	ZmmReg1 = zext(XmmResult);
+}
+
+# MOVDQU,VMOVDQU8/16/32/64 4-67 PAGE 1187 LINE 61941
+:VMOVDQU8 YmmReg1^YmmOpMask8, YmmReg2_m256  is $(EVEX_NONE) & $(VEX_L256) & $(VEX_PRE_F2) & $(VEX_0F) & $(VEX_W0); byte=0x6F; (YmmReg1 & ZmmReg1 & YmmOpMask8) ... & YmmReg2_m256
+[ evexD8Type = 1; evexTType = 0; ] # (TupleType FVM-RM)
+{
+	YmmResult = vmovdqu8_avx512vl( YmmReg2_m256 );
+	YmmMask = YmmReg1;
+	build YmmOpMask8;
+	ZmmReg1 = zext(YmmResult);
+}
+
+9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9  /home/charles/code/friends/.toolchains/e01-x86-inventory/runtime/lib/x86_64-linux-gnu/libc.so.6
+
+EXIT_CODE=0

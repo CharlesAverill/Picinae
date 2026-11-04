@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ export\ PROOF_MEMORY_KB=2000000\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ @e15-vector-state\ @smoke-x86\ @smoke-ymm
+        rocq .Picinae.theory.d
+        rocq Examples/claude/amd64_avx512_state_fixtures.{glob,vo}
+
+EXIT_CODE=0

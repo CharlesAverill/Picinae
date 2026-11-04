@@ -1,0 +1,481 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env env PROOF_MEMORY_KB=2000000 PROOF_STACK_KB=65536 bash tools/print-assumptions.sh Picinae.Examples.claude.amd64_avx512_state_fixtures physical_widths old_context_unchanged finite_write_widths state_fixture_welltyped reject_short_physical_write reject_bad_view_write reject_out_of_bounds_read aliased_reads legacy_preserves_upper narrow_writes_clear_upper full_write_keeps_top_bit mask_top_bit_is_data unmasked_is_not_k0 mask_merge_and_zero other_slot_is_unchanged
+        rocq .Picinae.theory.d
+        rocq Examples/claude/amd64_avx512_state_fixtures.{glob,vo}
+physical_widths
+     : ListDef.map
+         (fun r : Picinae_amd64_avx512.AMD64_AVX512.vector_slot =>
+          Picinae_amd64_avx512.AMD64_AVX512.avx512typctx
+            (Picinae_amd64_avx512.AMD64_AVX512.R_ZMM r))
+         all_vectors =
+       ListDef.repeat
+         (Some
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))))))))
+         32 /\
+       ListDef.map
+         (fun r : Picinae_amd64_avx512.AMD64_AVX512.mask_slot =>
+          Picinae_amd64_avx512.AMD64_AVX512.avx512typctx
+            (Picinae_amd64_avx512.AMD64_AVX512.R_K r))
+         all_masks =
+       ListDef.repeat
+         (Some
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))
+         8
+Closed under the global context
+old_context_unchanged
+     : Picinae_amd64.x64typctx Picinae_amd64.R_YMM0 =
+       Some
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) /\
+       Picinae_amd64.x64typctx Picinae_amd64.R_YMM15 =
+       Some
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) /\
+       Picinae_amd64.x64typctx Picinae_amd64.R_RAX =
+       Picinae_amd64_avx512.AMD64_AVX512.avx512typctx
+         Picinae_amd64_avx512.AMD64_AVX512.R_RAX
+Closed under the global context
+finite_write_widths
+     : List.forallb
+         (fun r : Picinae_amd64_avx512.AMD64_AVX512.vector_slot =>
+          List.forallb
+            (fun w : Picinae_amd64_avx512.AMD64_AVX512.vector_width =>
+             match
+               Picinae_amd64_avx512.AMD64_AVX512.Statics_amd64_avx512.typchk_stmt
+                 (Picinae_amd64_avx512.AMD64_AVX512.vector_write_zero_upper w
+                    r
+                    (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Word
+                       BinNums.N0
+                       (Picinae_amd64_avx512.AMD64_AVX512.vector_bits w)))
+                 Picinae_amd64_avx512.AMD64_AVX512.avx512typctx
+                 Picinae_amd64_avx512.AMD64_AVX512.avx512typctx
+             with
+             | Some _ => true
+             | None => false
+             end)
+            (Picinae_amd64_avx512.AMD64_AVX512.W128
+             :: Picinae_amd64_avx512.AMD64_AVX512.W256
+                :: Picinae_amd64_avx512.AMD64_AVX512.W512 :: nil))
+         all_vectors =
+       true /\
+       List.forallb
+         (fun r : Picinae_amd64_avx512.AMD64_AVX512.mask_slot =>
+          List.forallb
+            (fun w : Picinae_amd64_avx512.AMD64_AVX512.mask_width =>
+             match
+               Picinae_amd64_avx512.AMD64_AVX512.Statics_amd64_avx512.typchk_stmt
+                 (Picinae_amd64_avx512.AMD64_AVX512.mask_write_zero_upper w r
+                    (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Word
+                       BinNums.N0
+                       (Picinae_amd64_avx512.AMD64_AVX512.mask_bits w)))
+                 Picinae_amd64_avx512.AMD64_AVX512.avx512typctx
+                 Picinae_amd64_avx512.AMD64_AVX512.avx512typctx
+             with
+             | Some _ => true
+             | None => false
+             end)
+            (Picinae_amd64_avx512.AMD64_AVX512.M8
+             :: Picinae_amd64_avx512.AMD64_AVX512.M16
+                :: Picinae_amd64_avx512.AMD64_AVX512.M32
+                   :: Picinae_amd64_avx512.AMD64_AVX512.M64 :: nil))
+         all_masks =
+       true
+Closed under the global context
+state_fixture_welltyped
+     : Picinae_amd64_avx512.AMD64_AVX512.Statics_amd64_avx512.welltyped_prog
+         Picinae_amd64_avx512.AMD64_AVX512.avx512typctx state_fixture
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+reject_short_physical_write
+     : Picinae_amd64_avx512.AMD64_AVX512.Statics_amd64_avx512.typchk_stmt
+         (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Move
+            (Picinae_amd64_avx512.AMD64_AVX512.R_ZMM
+               Picinae_amd64_avx512.AMD64_AVX512.Z16)
+            (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Word
+               BinNums.N0
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))))))))
+         Picinae_amd64_avx512.AMD64_AVX512.avx512typctx
+         Picinae_amd64_avx512.AMD64_AVX512.avx512typctx =
+       None
+Closed under the global context
+reject_bad_view_write
+     : Picinae_amd64_avx512.AMD64_AVX512.Statics_amd64_avx512.typchk_stmt
+         (Picinae_amd64_avx512.AMD64_AVX512.vector_write_zero_upper
+            Picinae_amd64_avx512.AMD64_AVX512.W128
+            Picinae_amd64_avx512.AMD64_AVX512.Z16
+            (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Word
+               BinNums.N0
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))))))))
+         Picinae_amd64_avx512.AMD64_AVX512.avx512typctx
+         Picinae_amd64_avx512.AMD64_AVX512.avx512typctx =
+       None
+Closed under the global context
+reject_out_of_bounds_read
+     : Picinae_amd64_avx512.AMD64_AVX512.Statics_amd64_avx512.typchk_exp
+         (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Extract
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH))))))))))
+            BinNums.N0
+            (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Var
+               (Picinae_amd64_avx512.AMD64_AVX512.R_ZMM
+                  Picinae_amd64_avx512.AMD64_AVX512.Z31)))
+         Picinae_amd64_avx512.AMD64_AVX512.avx512typctx =
+       None
+Closed under the global context
+aliased_reads
+     : (value seed
+          (Picinae_amd64_avx512.AMD64_AVX512.vector_read
+             Picinae_amd64_avx512.AMD64_AVX512.W128
+             Picinae_amd64_avx512.AMD64_AVX512.Z16),
+        value seed
+          (Picinae_amd64_avx512.AMD64_AVX512.vector_read
+             Picinae_amd64_avx512.AMD64_AVX512.W256
+             Picinae_amd64_avx512.AMD64_AVX512.Z16),
+        value seed
+          (Picinae_amd64_avx512.AMD64_AVX512.vector_read
+             Picinae_amd64_avx512.AMD64_AVX512.W512
+             Picinae_amd64_avx512.AMD64_AVX512.Z16)) =
+       (BinNums.Npos (BinNums.xI (BinNums.xO BinNums.xH)),
+        BinNat.N.add
+          (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO (BinNums.xO (BinNums.xI BinNums.xH)))))))))
+          (BinNums.Npos (BinNums.xI (BinNums.xO BinNums.xH))),
+        BinNat.N.add
+          (BinNat.N.add
+             (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                (BinNums.Npos
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI (BinNums.xI BinNums.xH))))))))))
+             (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO (BinNums.xI BinNums.xH))))))))))
+          (BinNums.Npos (BinNums.xI (BinNums.xO BinNums.xH))))
+Closed under the global context
+legacy_preserves_upper
+     : after
+         (Picinae_amd64_avx512.AMD64_AVX512.xmm_write_preserve
+            Picinae_amd64_avx512.AMD64_AVX512.Z0
+            (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Word
+               (BinNums.Npos
+                  (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH))))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH))))))))))
+         seed
+         (Picinae_amd64_avx512.AMD64_AVX512.R_ZMM
+            Picinae_amd64_avx512.AMD64_AVX512.Z0) =
+       Some
+         (BinNat.N.add
+            (BinNat.N.add
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI (BinNums.xI BinNums.xH))))))))))
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xI BinNums.xH))))))))))
+            (BinNums.Npos (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH)))))
+Closed under the global context
+narrow_writes_clear_upper
+     : (after
+          (Picinae_amd64_avx512.AMD64_AVX512.vector_write_zero_upper
+             Picinae_amd64_avx512.AMD64_AVX512.W128
+             Picinae_amd64_avx512.AMD64_AVX512.Z16
+             (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Word
+                (BinNums.Npos
+                   (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH))))
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO (BinNums.xO BinNums.xH))))))))))
+          seed
+          (Picinae_amd64_avx512.AMD64_AVX512.R_ZMM
+             Picinae_amd64_avx512.AMD64_AVX512.Z16),
+        after
+          (Picinae_amd64_avx512.AMD64_AVX512.vector_write_zero_upper
+             Picinae_amd64_avx512.AMD64_AVX512.W256
+             Picinae_amd64_avx512.AMD64_AVX512.Z16
+             (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Word
+                (BinNat.N.add
+                   (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                      (BinNums.Npos
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xI BinNums.xH)))))))))
+                   (BinNums.Npos
+                      (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH)))))
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO (BinNums.xO BinNums.xH)))))))))))
+          seed
+          (Picinae_amd64_avx512.AMD64_AVX512.R_ZMM
+             Picinae_amd64_avx512.AMD64_AVX512.Z16)) =
+       (Some (BinNums.Npos (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH)))),
+        Some
+          (BinNat.N.add
+             (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                (BinNums.Npos
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xI (BinNums.xI BinNums.xH)))))))))
+             (BinNums.Npos (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH))))))
+Closed under the global context
+full_write_keeps_top_bit
+     : after
+         (Picinae_amd64_avx512.AMD64_AVX512.vector_write_zero_upper
+            Picinae_amd64_avx512.AMD64_AVX512.W512
+            Picinae_amd64_avx512.AMD64_AVX512.Z31
+            (Picinae_amd64_avx512.AMD64_AVX512.vector_read
+               Picinae_amd64_avx512.AMD64_AVX512.W512
+               Picinae_amd64_avx512.AMD64_AVX512.Z16))
+         seed
+         (Picinae_amd64_avx512.AMD64_AVX512.R_ZMM
+            Picinae_amd64_avx512.AMD64_AVX512.Z31) =
+       Some
+         (BinNat.N.add
+            (BinNat.N.add
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI (BinNums.xI BinNums.xH))))))))))
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xI BinNums.xH))))))))))
+            (BinNums.Npos (BinNums.xI (BinNums.xO BinNums.xH))))
+Closed under the global context
+mask_top_bit_is_data
+     : value seed
+         (Picinae_amd64_avx512.AMD64_AVX512.mask_read
+            Picinae_amd64_avx512.AMD64_AVX512.M64
+            Picinae_amd64_avx512.AMD64_AVX512.K1) =
+       BinNat.N.add
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xI
+                  (BinNums.xI
+                     (BinNums.xI (BinNums.xI (BinNums.xI BinNums.xH)))))))
+         (BinNums.Npos BinNums.xH) /\
+       after
+         (Picinae_amd64_avx512.AMD64_AVX512.mask_write_zero_upper
+            Picinae_amd64_avx512.AMD64_AVX512.M16
+            Picinae_amd64_avx512.AMD64_AVX512.K7
+            (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Word
+               (BinNums.Npos
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xO
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         seed
+         (Picinae_amd64_avx512.AMD64_AVX512.R_K
+            Picinae_amd64_avx512.AMD64_AVX512.K7) =
+       Some
+         (BinNums.Npos
+            (BinNums.xI
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH))))))))))))))
+Closed under the global context
+unmasked_is_not_k0
+     : (Picinae_amd64_avx512.AMD64_AVX512.evex_writemask
+          Picinae_amd64_avx512.AMD64_AVX512.K0,
+        Picinae_amd64_avx512.AMD64_AVX512.evex_writemask
+          Picinae_amd64_avx512.AMD64_AVX512.K1,
+        value seed
+          (Picinae_amd64_avx512.AMD64_AVX512.mask_read
+             Picinae_amd64_avx512.AMD64_AVX512.M64
+             Picinae_amd64_avx512.AMD64_AVX512.K0)) =
+       (None, Some Picinae_amd64_avx512.AMD64_AVX512.K1, BinNums.N0)
+Closed under the global context
+mask_merge_and_zero
+     : let disabled :=
+         Picinae_amd64_avx512.AMD64_AVX512.FInterp_amd64_avx512.vupdate seed
+           (Picinae_amd64_avx512.AMD64_AVX512.R_K
+              Picinae_amd64_avx512.AMD64_AVX512.K1)
+           (BinNums.Npos BinNums.xH)
+         in
+       (value seed (masked_lane63 false),
+        value disabled (masked_lane63 false),
+        value disabled (masked_lane63 true)) =
+       (BinNat.N.add
+          (BinNat.N.mul
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO (BinNums.xI (BinNums.xO BinNums.xH))))))))
+             (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI (BinNums.xI BinNums.xH)))))))))))
+          (BinNums.Npos (BinNums.xI (BinNums.xI BinNums.xH))),
+        BinNat.N.add
+          (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+             (BinNums.Npos
+                (BinNums.xI
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xI (BinNums.xI BinNums.xH))))))))))
+          (BinNums.Npos (BinNums.xI (BinNums.xI BinNums.xH))),
+        BinNums.Npos (BinNums.xI (BinNums.xI BinNums.xH)))
+Closed under the global context
+other_slot_is_unchanged
+     : after
+         (Picinae_amd64_avx512.AMD64_AVX512.vector_write_zero_upper
+            Picinae_amd64_avx512.AMD64_AVX512.W128
+            Picinae_amd64_avx512.AMD64_AVX512.Z16
+            (Picinae_amd64_avx512.AMD64_AVX512.IL_amd64_avx512.Word
+               (BinNums.Npos
+                  (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH))))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH))))))))))
+         seed
+         (Picinae_amd64_avx512.AMD64_AVX512.R_ZMM
+            Picinae_amd64_avx512.AMD64_AVX512.Z31) =
+       Some
+         (BinNat.N.add
+            (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+               (BinNums.Npos
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI (BinNums.xI BinNums.xH))))))))))
+            (BinNums.Npos (BinNums.xI (BinNums.xI BinNums.xH))))
+Closed under the global context
+
+EXIT_CODE=0

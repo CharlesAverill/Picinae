@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env env PROOF_MEMORY_KB=2000000 PROOF_STACK_KB=65536 bash tools/print-assumptions.sh Picinae.Picinae_amd64_avx512 AMD64_AVX512.MiniAVX512VarEq.eq_dec
+AMD64_AVX512.MiniAVX512VarEq.eq_dec
+     : forall v1 v2 : AMD64_AVX512.avx512var, {v1 = v2} + {v1 <> v2}
+Closed under the global context
+
+EXIT_CODE=0

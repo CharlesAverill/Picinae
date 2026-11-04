@@ -1,0 +1,78 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
+COMMAND=git merge --no-edit 131ad4b86cf4abcbd392048297038f3f219423bb
+Merge made by the 'ort' strategy.
+ .../claude/inventory/e01-x86-inventory/README.md   |   258 +
+ .../e01-x86-inventory/downloads.lock.json          |    56 +
+ .../e01-x86-inventory/evidence/ancestry-before.txt |    27 +
+ .../e01-x86-inventory/evidence/commands.md         |   124 +
+ .../evidence/fresh-extraction.log                  |   139 +
+ .../e01-x86-inventory/evidence/inventory.log       |     3 +
+ .../evidence/lifter-assessment.log                 |    16 +
+ .../evidence/network-retrieval.log                 |    23 +
+ .../e01-x86-inventory/evidence/replay-diff.log     |     0
+ .../evidence/replay-inventory.log                  |     3 +
+ .../evidence/repository-checks.log                 |    23 +
+ .../inventory/e01-x86-inventory/evidence/run.log   |    17 +
+ .../e01-x86-inventory/evidence/tool-versions.txt   |    21 +
+ .../e01-x86-inventory/evidence/verify.log          |     8 +
+ .../e01-x86-inventory/generated/SHA256SUMS         |    17 +
+ .../e01-x86-inventory/generated/disassembly.txt    | 62041 +++++++++++++++++++
+ .../e01-x86-inventory/generated/dispatch-data.json |   132 +
+ .../e01-x86-inventory/generated/elf-header.txt     |   134 +
+ .../generated/existing-lifts.json                  |  7863 +++
+ .../generated/ifunc-implementations.json           |  1472 +
+ .../e01-x86-inventory/generated/inventory.json     | 16747 +++++
+ .../e01-x86-inventory/generated/notes.txt          |   439 +
+ .../generated/package-provenance.json              |    94 +
+ .../e01-x86-inventory/generated/relocations.txt    |  1344 +
+ .../e01-x86-inventory/generated/resolvers.json     |  2090 +
+ .../generated/source-files.sha256                  |   239 +
+ .../generated/source-selectors.json                |    57 +
+ .../e01-x86-inventory/generated/symbols.tsv        |   399 +
+ .../generated/target-manifest.json                 |    13 +
+ .../generated/unit-suggestions.json                |  4628 ++
+ .../generated/unit-suggestions.tsv                 |   243 +
+ .../e01-x86-inventory/generated/variants.md        |    56 +
+ .../inventory/e01-x86-inventory/inventory.py       |   370 +
+ .../claude/inventory/e01-x86-inventory/retrieve.py |   110 +
+ Examples/claude/inventory/e01-x86-inventory/run.sh |    18 +
+ .../claude/inventory/e01-x86-inventory/verify.py   |    75 +
+ 36 files changed, 99299 insertions(+)
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/README.md
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/downloads.lock.json
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/ancestry-before.txt
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/commands.md
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/fresh-extraction.log
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/inventory.log
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/lifter-assessment.log
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/network-retrieval.log
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/replay-diff.log
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/replay-inventory.log
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/repository-checks.log
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/run.log
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/tool-versions.txt
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/evidence/verify.log
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/SHA256SUMS
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/disassembly.txt
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/dispatch-data.json
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/elf-header.txt
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/existing-lifts.json
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/ifunc-implementations.json
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/inventory.json
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/notes.txt
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/package-provenance.json
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/relocations.txt
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/resolvers.json
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/source-files.sha256
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/source-selectors.json
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/symbols.tsv
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/target-manifest.json
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/unit-suggestions.json
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/unit-suggestions.tsv
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/generated/variants.md
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/inventory.py
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/retrieve.py
+ create mode 100755 Examples/claude/inventory/e01-x86-inventory/run.sh
+ create mode 100644 Examples/claude/inventory/e01-x86-inventory/verify.py
+
+EXIT_CODE=0
