@@ -1,5 +1,3 @@
-(* PARTIAL Astra handoff: first full build failed; no repair cycle or rebuild.
-   Unchecked declarations are aborted, not exported proof constants. *)
 (* 64-bit byte/frame helpers for the ARM8 memcpy proof.
    Initial author: OpenAI gpt-6-astra, xhigh/priority, 2026-11-03.
    The byte and written-offset arguments below are adapted from the baseline
@@ -102,18 +100,63 @@ Proof.
     rewrite addmsub. reflexivity.
 Qed.
 
+(* Pure modular arithmetic, ported from the baseline AMD64 helper without
+   importing its architecture or register conventions. *)
+Lemma msub_add_l: forall a b x, x < 2^64 ->
+  a mod 2^64 = (b + x) mod 2^64 -> msub 64 a b = x.
+Proof.
+  intros a b x LT EQ. unfold msub.
+  change (2^64) with 18446744073709551616 in *. lia.
+Qed.
+Print Assumptions msub_add_l.
+
 (* Offset of d+i from a store address a = d+o. *)
 Lemma msub_off:
   forall d i o a, i < 2^64 -> o < 2^64 -> a mod 2^64 = (d + o) mod 2^64 ->
   msub 64 (d ⊕ i) a = if o <=? i then i - o else 2^64 + i - o.
-Abort. (* PARTIAL: exact initial attempt archived under notes/a-memcpy-small/. *)
+Proof.
+  intros d i o a I O A. destruct (N.leb_spec o i); apply msub_add_l; [lia| |lia|].
+  all: rewrite N.mod_mod by discriminate; rewrite <- (N.add_mod_idemp_l a), A, N.add_mod_idemp_l by discriminate.
+  replace (d + o + (i - o)) with (d + i) by lia. reflexivity.
+  replace (d + o + (2^64 + i - o)) with ((d + i) + 1 * 2^64) by lia. symmetry. apply N.mod_add. discriminate.
+Qed.
 
 Lemma cpy_store:
   forall m m' d s (W:N->Prop) o L a sa,
   cpy m m' d s W -> (forall i, W i -> i < 2^64) -> 0 < L -> o + L <= 2^64 ->
   a mod 2^64 = (d + o) mod 2^64 -> sa mod 2^64 = (s + o) mod 2^64 ->
   cpy m (setmem 64 LittleE L m' a (getmem 64 LittleE L m sa)) d s (fun i => W i \/ o <= i < o + L).
-Abort. (* PARTIAL: exact initial attempt archived under notes/a-memcpy-small/. *)
+Proof.
+  intros m m' d s W o L a sa [C F] WB L0 OL A SA.
+  assert (O: o < 2^64) by lia.
+  assert (OFF: forall i, i < 2^64 -> (msub 64 (d ⊕ i) a <? L) = (o <=? i) && (i <? o + L)).
+    intros i I. rewrite (msub_off d i o a) by assumption.
+    change (2^64) with 18446744073709551616 in *.
+    destruct (N.leb_spec o i), (N.ltb_spec i (o + L)); cbn [andb];
+      [apply N.ltb_lt | apply N.ltb_ge | apply N.ltb_ge | apply N.ltb_ge]; lia.
+  split.
+  - intros i Wi.
+    assert (Ib: i < 2^64) by (destruct Wi as [Wi|Wi]; [apply WB, Wi | lia]).
+    rewrite byte_setmem_cases, OFF by lia.
+    destruct (N.leb_spec o i), (N.ltb_spec i (o + L)); cbn [andb].
+    + rewrite (msub_off d i o a) by assumption. destruct (N.leb_spec o i); [|lia].
+      rewrite byte_of_getmem by lia.
+      rewrite <- getmem_mod_l, <- N.add_mod_idemp_l, SA, N.add_mod_idemp_l by discriminate.
+      rewrite getmem_mod_l. f_equal. f_equal. lia.
+    + destruct Wi as [Wi|Wi]. apply C, Wi. lia.
+    + destruct Wi as [Wi|Wi]. apply C, Wi. lia.
+    + destruct Wi as [Wi|Wi]. apply C, Wi. lia.
+  - intros b B. set (j := msub 64 b d) in B.
+    assert (Bj: b mod 2^64 = d ⊕ j) by (subst j; rewrite add_msub; reflexivity).
+    assert (J: j < 2^64) by apply msub_lt.
+    rewrite byte_setmem_cases by lia.
+    rewrite <- (msub_mod_l 64 64 b) by reflexivity. rewrite Bj, OFF by exact J.
+    destruct (N.leb_spec o j), (N.ltb_spec j (o + L)); cbn [andb].
+    + exfalso. apply B. right. lia.
+    + apply F. intro Wb. apply B. left. exact Wb.
+    + apply F. intro Wb. apply B. left. exact Wb.
+    + apply F. intro Wb. apply B. left. exact Wb.
+Qed.
 
 
 Print Assumptions byte_of_getmem.
@@ -123,3 +166,5 @@ Print Assumptions cpy_equiv.
 Print Assumptions cpy_copied.
 Print Assumptions addmsub.
 Print Assumptions cpy_load.
+Print Assumptions msub_off.
+Print Assumptions cpy_store.
