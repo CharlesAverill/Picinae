@@ -1,0 +1,28 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-f5cd5d9c
+COMMAND=git commit -m Prove\ ARMv6-M\ tick\ count\ getter\ correctness
+[llm-proofs/r08-tick-count b0d4aff] Prove ARMv6-M tick count getter correctness
+ 23 files changed, 2647 insertions(+)
+ create mode 100644 Examples/FreeRTOS/armv6m_xTaskGetTickCount_proof.v
+ create mode 100644 notes/r08-tick-count/README.md
+ create mode 100644 notes/r08-tick-count/ancestry-imported.log
+ create mode 100644 notes/r08-tick-count/ancestry-precommit.log
+ create mode 100644 notes/r08-tick-count/assumptions-review.log
+ create mode 100644 notes/r08-tick-count/assumptions.log
+ create mode 100644 notes/r08-tick-count/audit-ancestry.py
+ create mode 100644 notes/r08-tick-count/check-assumptions.py
+ create mode 100644 notes/r08-tick-count/check-evidence.py
+ create mode 100644 notes/r08-tick-count/evidence.log
+ create mode 100644 notes/r08-tick-count/final-files.log
+ create mode 100644 notes/r08-tick-count/import-success.log
+ create mode 100644 notes/r08-tick-count/initial-attempt.v.txt
+ create mode 100644 notes/r08-tick-count/initial-build.log
+ create mode 100644 notes/r08-tick-count/initial-source-hashes.log
+ create mode 100644 notes/r08-tick-count/r08-fork-collision.log
+ create mode 100644 notes/r08-tick-count/r08-import.log
+ create mode 100644 notes/r08-tick-count/r08-initial-ancestry.log
+ create mode 100644 notes/r08-tick-count/r08-rename.log
+ create mode 100644 notes/r08-tick-count/rename-success.log
+ create mode 100644 notes/r08-tick-count/source-audit.log
+ create mode 100644 notes/r08-tick-count/unit-source-audit.log
+
+EXIT_CODE=0
