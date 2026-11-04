@@ -1,0 +1,31 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-db745613
+COMMAND=bash -e -c test\ \"\$\(git\ branch\ --show-current\)\"\ =\ llm-proofs/r00-list-model-fix\;\ test\ \"\$\(git\ rev-parse\ HEAD\)\"\ =\ 7de9edcc1e5094133d66bbeae129ef48078b9265\;\ git\ add\ --\ Examples/FreeRTOS/armv6m_list_model.v\ notes/r00-list-model-fix\;\ git\ diff\ --cached\ --check\;\ git\ commit\ -m\ \"Complete\ ARMv6-M\ list\ model\ proofs\"\;\ git\ rev-parse\ HEAD\;\ git\ status\ --short
+[llm-proofs/r00-list-model-fix 4369208] Complete ARMv6-M list model proofs
+ 25 files changed, 2533 insertions(+), 30 deletions(-)
+ create mode 100644 notes/r00-list-model-fix/01-before.log
+ create mode 100644 notes/r00-list-model-fix/02-fork-name.log
+ create mode 100644 notes/r00-list-model-fix/03-fork-name-network.log
+ create mode 100644 notes/r00-list-model-fix/04-prepare.log
+ create mode 100644 notes/r00-list-model-fix/05-prepare.log
+ create mode 100644 notes/r00-list-model-fix/06-dune-repair.log
+ create mode 100644 notes/r00-list-model-fix/07-preservation.log
+ create mode 100644 notes/r00-list-model-fix/08-dune-rewrite-diagnostic.log
+ create mode 100644 notes/r00-list-model-fix/09-dune-separation-diagnostic.log
+ create mode 100644 notes/r00-list-model-fix/10-dune-fields-repair.log
+ create mode 100644 notes/r00-list-model-fix/11-dune-witness-repair.log
+ create mode 100644 notes/r00-list-model-fix/12-assumptions.log
+ create mode 100644 notes/r00-list-model-fix/13-source-audit.log
+ create mode 100644 notes/r00-list-model-fix/14-unit-source-audit.log
+ create mode 100644 notes/r00-list-model-fix/15-preservation.log
+ create mode 100644 notes/r00-list-model-fix/16-ancestry-before-commit.log
+ create mode 100644 notes/r00-list-model-fix/17-final-dune.log
+ create mode 100644 notes/r00-list-model-fix/18-final-preservation.log
+ create mode 100644 notes/r00-list-model-fix/19-final-source-audit.log
+ create mode 100644 notes/r00-list-model-fix/20-final-assumptions.log
+ create mode 100644 notes/r00-list-model-fix/21-final-ancestry-before-commit.log
+ create mode 100644 notes/r00-list-model-fix/README.md
+ create mode 100644 notes/r00-list-model-fix/audit-ancestry.sh
+ create mode 100644 notes/r00-list-model-fix/check-preservation.py
+4369208b4edce53f84113bcfd3b859f3f58be334
+
+EXIT_CODE=0
