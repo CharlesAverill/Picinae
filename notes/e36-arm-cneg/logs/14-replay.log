@@ -1,0 +1,47 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ff05d511
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e36-arm-cneg/replay.py --run replay01
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/__memchr_nosimd", "--global-addressing", "__memchr_nosimd"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/__memchr_nosimd
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra/logs/30619d31f7434f3482cc6723c7fb3a9a.log
+EXIT_CODE=0
+PASS unchanged complete e30 reference map __memchr_nosimd
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/strcmp", "--global-addressing", "strcmp"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/strcmp
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra/logs/8185979587bd426fa8ada93f5cc378df.log
+EXIT_CODE=0
+PASS unchanged complete e30 reference map strcmp
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/__strlen_asimd", "--global-addressing", "__strlen_asimd"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __strlen_asimd 0x19c9e0 ldp q1,q2,[x1, #0x20]!: unmodeled register q1 (base z1); raw pcode: (register, 0x4008, 8) INT_ADD (register, 0x4008, 8) , (const, 0x20, 8); (register, 0x5020, 16) LOAD (const, 0x1b1, 8) , (register, 0x4008, 8); (register, 0x5030, 8) COPY (const, 0x0, 8); (register, 0x5038, 8) COPY (const, 0x0, 8); (unique, 0xca600, 8) INT_ADD (register, 0x4008, 8) , (const, 0x10, 8); (register, 0x5040, 16) LOAD (const, 0x1b1, 8) , (unique, 0xca600, 8); (regis; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra/logs/a2f3ad94ef934c23bc289be030c77158.log
+EXIT_CODE=1
+PASS exact frontier and no-output failure __strlen_asimd
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/wcschrnul", "--global-addressing", "wcschrnul"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/wcschrnul
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra/logs/c9b252bd73af4e6581fe1af9cae52f2e.log
+EXIT_CODE=0
+PASS unchanged complete e30 reference map wcschrnul
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/memcmp", "--global-addressing", "memcmp"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: memcmp 0x194780 ldr q0,[x0, #0x10]: unmodeled register q0 (base z0); raw pcode: (unique, 0x6600, 8) INT_ADD (register, 0x4000, 8) , (const, 0x10, 8); (register, 0x5000, 16) LOAD (const, 0x1b1, 8) , (unique, 0x6600, 8); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra/logs/605a31751e6345e091e7c047b89636ed.log
+EXIT_CODE=1
+PASS exact frontier and no-output failure memcmp
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/sigandset", "--global-addressing", "sigandset"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigandset 0x13b504 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra/logs/e80e63500d0b4c91b63d309cd7dc8742.log
+EXIT_CODE=1
+PASS exact frontier and no-output failure sigandset
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/sigorset", "--global-addressing", "sigorset"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigorset 0x13b554 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra/logs/3e83712b52fe435fb12be4b479c28a44.log
+EXIT_CODE=1
+PASS exact frontier and no-output failure sigorset
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/sigaddset", "--global-addressing", "sigaddset"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigaddset 0x13b2f4 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra/logs/79a4497c03e54fcc9c0d027e33b65178.log
+EXIT_CODE=1
+PASS exact frontier and no-output failure sigaddset
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/sigdelset", "--global-addressing", "sigdelset"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigdelset 0x13b354 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra/logs/5314197c119241398d61ddaf75800dc4.log
+EXIT_CODE=1
+PASS exact frontier and no-output failure sigdelset
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/sigismember", "--global-addressing", "sigismember"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigismember 0x13b388 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/replay01/ghidra/logs/9367da876e9647a3b15b568507d65958.log
+EXIT_CODE=1
+PASS exact frontier and no-output failure sigismember
+
+EXIT_CODE=0

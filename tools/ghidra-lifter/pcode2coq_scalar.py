@@ -445,15 +445,89 @@ class ScalarLifter:
         suffix = seq([self.statement(op) for op in ops[branch + 1:]])
         return seq(prefix + [f'If ({cast(skip, width, 1)}) (Nop) ({suffix})'])
 
+    def check_cneg(self, insn, ops):
+        """Guard only CNEG W/X, nonzero GPRs, fourteen alias conditions.
+
+        The encoded CSNEG condition is inverted by the alias. SLEIGH forms
+        the alias condition from OLD NZCV, negates into an instruction-local
+        temporary, then skips the original-value COPY if that condition holds.
+        Match every encoding bit and raw DAG edge before the existing bounded
+        forward-branch translator handles it; no general CFG rule is changed.
+        """
+        raw = bytes(int(b) & 255 for b in insn.getBytes())
+        if len(raw) != 4:
+            raise Unsupported('CNEG encoding length')
+        bits = int.from_bytes(raw, 'little')
+        if bits & 0x7fe00c00 != 0x5a800400:
+            raise Unsupported('unhandled CNEG encoding')
+        size = 4 << (bits >> 31)
+        rd, rn, rm = bits & 31, (bits >> 5) & 31, (bits >> 16) & 31
+        encoded_cond = (bits >> 12) & 15
+        if rn != rm or rn == 31 or rd == 31 or encoded_cond >= 14:
+            raise Unsupported('CNEG requires equal nonzero sources, nonzero destination and non-AL/NV condition')
+        cond = encoded_cond ^ 1  # CNEG negates on invert(CSNEG condition).
+        expected, names = [], {}
+        def t(name, n=1): return ('t', names.setdefault(name, len(names)), n)
+        def c(value, n=1): return ('c', value, n)
+        def r(index, n): return ('r', f'R_X{index}', 64, 0, n)
+        def f(name): return ('r', 'R_' + name, 8, 0, 1)
+        def emit(code, out, *args): expected.append((code, out, tuple(args)))
+        if cond < 8:
+            value = f(('ZR', 'CY', 'NG', 'OV')[cond // 2])
+            if cond & 1:
+                emit('BOOL_NEGATE', t('condition'), value)
+                value = t('condition')
+        elif cond == 8:
+            emit('BOOL_NEGATE', t('c0'), f('ZR'))
+            emit('BOOL_AND', t('condition'), f('CY'), t('c0'))
+            value = t('condition')
+        elif cond == 9:
+            emit('BOOL_NEGATE', t('c0'), f('CY'))
+            emit('BOOL_OR', t('condition'), t('c0'), f('ZR'))
+            value = t('condition')
+        elif cond in (10, 11):
+            emit('INT_EQUAL' if cond == 10 else 'INT_NOTEQUAL', t('condition'), f('NG'), f('OV'))
+            value = t('condition')
+        elif cond == 12:
+            emit('BOOL_NEGATE', t('c0'), f('ZR'))
+            emit('INT_EQUAL', t('c1'), f('NG'), f('OV'))
+            emit('BOOL_AND', t('condition'), t('c0'), t('c1'))
+            value = t('condition')
+        elif cond == 13:
+            emit('INT_NOTEQUAL', t('c0'), f('NG'), f('OV'))
+            emit('BOOL_OR', t('condition'), f('ZR'), t('c0'))
+            value = t('condition')
+        else:
+            value = c(1)  # Both AL and NV are always true in A64.
+        emit('INT_2COMP', t('result', size), r(rn, size))
+        emit('CBRANCH', None, c(2, 4), value)
+        emit('COPY', t('result', size), r(rn, size))
+        emit('COPY' if size == 8 else 'INT_ZEXT', r(rd, 8), t('result', size))
+        temps = {}
+        def node(v):
+            if v is None: return None
+            n = int(v.getSize())
+            if v.isUnique():
+                key = (int(v.getOffset()), n)
+                return ('t', temps.setdefault(key, len(temps)), n)
+            if v.isRegister(): return ('r', *self.register(v), n)
+            if v.isConstant(): return ('c', int(v.getOffset()) % (1 << (8 * n)), n)
+            raise Unsupported('non-scalar CNEG varnode')
+        actual = [(str(op.getMnemonic()), node(op.getOutput()), tuple(node(v) for v in op.getInputs())) for op in ops]
+        if actual != expected:
+            raise Unsupported('unhandled CNEG raw-pcode shape')
+
     def instruction(self, insn):
         mnemonic = str(insn.getMnemonicString()).lower()
-        if mnemonic not in MNEMONICS | BITFORMS | {'ccmp'} and not re.fullmatch(r'b\.(eq|ne|cs|hs|cc|lo|mi|pl|vs|vc|hi|ls|ge|lt|gt|le)', mnemonic):
+        if mnemonic not in MNEMONICS | BITFORMS | {'ccmp', 'cneg'} and not re.fullmatch(r'b\.(eq|ne|cs|hs|cc|lo|mi|pl|vs|vc|hi|ls|ge|lt|gt|le)', mnemonic):
             raise Unsupported(f'unmodeled instruction {insn}')
         if int(insn.getLength()) != 4:
             raise Unsupported('non-A64 instruction length')
         ops = list(insn.getPcode())
         if mnemonic == 'ccmp':
             return self.conditional_compare(insn, ops)
+        if mnemonic == 'cneg':
+            self.check_cneg(insn, ops)
         if mnemonic in BITFORMS:
             self.check_bitform(insn, mnemonic, ops)
         self.temps, self.ranges, self.initialized = {}, [], set()

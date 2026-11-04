@@ -1,0 +1,15 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ff05d511
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 tools/ghidra-lifter/test_cneg.py
+test_actual_forms (__main__.Tests.test_actual_forms) ... ok
+test_malformed (__main__.Tests.test_malformed) ... ok
+test_temporaries (__main__.Tests.test_temporaries) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 2.286s
+
+OK
+PASS 168 assembled/ELF encoding shapes; 40320 independent whole-register/flag snapshots
+PASS 13716 malformed encoding/raw-control/dataflow/arity/width/output cases rejected
+PASS deterministic instruction-local temporaries and overlapping-unique rejection
+
+EXIT_CODE=0
