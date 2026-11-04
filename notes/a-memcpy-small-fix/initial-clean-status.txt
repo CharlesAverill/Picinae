@@ -1,0 +1,17 @@
+Verbatim initial read-only tool output, before creating the evidence directory:
+/home/charles/.t3/worktrees/Picinae/t3-d5c9940f
+## t3/arm8-memcpy-small-proof-repair
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 49956416928e5b6bb3928b54ae33e3b81091f006 Add selective Dune builds and proof audit harness
+49956416928e5b6bb3928b54ae33e3b81091f006 f33d65b3266e050e610c9a50783133efbe305cc5 52fa66409a3b07de220badc363d2bdc85a094ce5 Merge origin/llm_generated_proofs into llm_generated_proofs
+f33d65b3266e050e610c9a50783133efbe305cc5 60c2f09be2fc8fe6c9cb729488591dde9113606a Add arm8 proofs
+
+The status command was git status --short --branch; its sole output line was
+## t3/arm8-memcpy-small-proof-repair
+No tracked or untracked worktree changes existed at that point. 00-prepared.log
+was captured after creating notes/a-memcpy-small-fix and consequently lists
+that evidence directory. The initial sandboxed read-only fork query failed
+DNS resolution; the successful elevated retry is captured in 01-fork-check.log.
+The first branch rename attempt failed with read-only Git metadata; the
+subsequent elevated rename and exact ff-only import succeeded (02-import.log).
+No automatic approval rejection occurred.

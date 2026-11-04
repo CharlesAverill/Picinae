@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d3a7e613
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/a-memcpy-medium
+fatal: unable to access 'https://github.com/CharlesDardaman/Picinae.git/': Could not resolve host: github.com
+
+EXIT_CODE=128
