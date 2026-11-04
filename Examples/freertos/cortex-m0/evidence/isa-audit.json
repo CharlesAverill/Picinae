@@ -1,0 +1,20 @@
+{
+  "all_function_entries_have_thumb_bit": true,
+  "arm_state_mapping_symbols": 0,
+  "cpu_arch": "v6S-M",
+  "cpu_profile": "Microcontroller",
+  "decoded_instructions": 7006,
+  "elf_class": "ELF32",
+  "elf_machine": "ARM",
+  "endian": "little",
+  "evidence": "readelf attributes + mapping symbols + objdump; no execution or correctness proof",
+  "thumb_isa": "Thumb-1",
+  "unknown_instructions": 0,
+  "wide_instruction_counts": {
+    "bl": 692,
+    "dsb": 3,
+    "isb": 4,
+    "mrs": 8,
+    "msr": 6
+  }
+}
