@@ -1,0 +1,35 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-9191917d
+COMMAND=bash -c test\ \!\ -f\ _build/default/Examples/claude/arm8_strcmp_proof.vo\;\ tail\ -6\ notes/a-strcmp/05-one-shot-full-build.log\;\ git\ diff\ --check\;\ sha256sum\ Examples/claude/lifter/scalar_ccmp/e30_strcmp_arm8.v\;\ diff\ -u\ notes/a-strcmp/arm8_strcmp_proof.initial.v.txt\ Examples/claude/arm8_strcmp_proof.v\;\ test\ \"\$\?\"\ -eq\ 1
+File "./Examples/claude/arm8_strcmp_proof.v", line 265, characters 0-4:
+Error:  (in proof strcmp_correct): Attempt to save an incomplete proof
+(there are remaining open goals).
+
+
+EXIT_CODE=1
+2b7b58a310afd013b2dae9e2953786404640796734fc6ae39cf309f0a6568dc3  Examples/claude/lifter/scalar_ccmp/e30_strcmp_arm8.v
+--- notes/a-strcmp/arm8_strcmp_proof.initial.v.txt	2026-11-03 18:52:20.388359017 -0600
++++ Examples/claude/arm8_strcmp_proof.v	2026-11-03 18:55:11.310660413 -0600
+@@ -8,7 +8,10 @@
+    manifest are unchanged. No verified binary/lifter refinement is assumed.
+ 
+    AUTHOR: OpenAI gpt-6-astra, xhigh/default; one-shot initial attempt.
+-   Final proof producer: pending successful full kernel check.
++   STATUS: PARTIAL. First full build failed at strcmp_correct (open goals).
++   Final proof producer: none. Initial source and raw diagnostics are under
++   notes/a-strcmp/. The final Abort only packages the failed attempt safely;
++   no second build or proof repair was performed by Astra.
+ 
+    SPEC: int strcmp(const char *p, const char *q).
+    X0=p, X1=q, original memory=m. K is the first unsigned-byte difference
+@@ -262,5 +265,7 @@
+                     repeat split; intros; reflexivity].
+     all: try solve [assumption].
+     all: match goal with |- ?G => idtac "UNRESOLVED STRCMP INVARIANT:" G end.
+-Qed.
+-Print Assumptions strcmp_correct.
++Abort.
++(* strcmp_correct has no declaration: its initial Qed failed. The exact
++   original statement, attempt and Print command are preserved verbatim in
++   notes/a-strcmp/arm8_strcmp_proof.initial.v.txt. *)
+
+EXIT_CODE=0
