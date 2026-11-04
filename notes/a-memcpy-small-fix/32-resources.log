@@ -1,0 +1,12 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d5c9940f
+COMMAND=python3 notes/a-memcpy-small-fix/inspect-compiler.py
+Unit compiler PID: 602229
+Max stack size            67108864             67108864             bytes     
+Max address space         2048000000           2048000000           bytes     
+VmPeak:	 1395420 kB
+VmSize:	 1395420 kB
+VmHWM:	 1135804 kB
+VmRSS:	 1135804 kB
+PASS: exactly one unit compiler, assigned hard/soft memory and stack caps.
+
+EXIT_CODE=0

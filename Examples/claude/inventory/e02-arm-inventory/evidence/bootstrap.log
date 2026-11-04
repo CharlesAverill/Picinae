@@ -1,0 +1,19 @@
+VERIFIED libc6_2.35-0ubuntu3.15_arm64.deb
+VERIFIED libc6-dbg_2.35-0ubuntu3.15_arm64.deb
+VERIFIED glibc_2.35.orig.tar.xz
+VERIFIED glibc_2.35-0ubuntu3.15.debian.tar.xz
+VERIFIED glibc_2.35-0ubuntu3.15.dsc
+VERIFIED ghidra_11.4.2_PUBLIC_20250826.zip
+VERIFIED OpenJDK21U-jdk_x64_linux_hotspot_21.0.8_9.tar.gz
+VERIFIED jpype1-1.6.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+VERIFIED packaging-25.0-py3-none-any.whl
++ dpkg-deb -x /home/charles/code/friends/.toolchains/e02-arm-inventory/downloads/libc6_2.35-0ubuntu3.15_arm64.deb /home/charles/code/friends/.toolchains/e02-arm-inventory/root
++ dpkg-deb -x /home/charles/code/friends/.toolchains/e02-arm-inventory/downloads/libc6-dbg_2.35-0ubuntu3.15_arm64.deb /home/charles/code/friends/.toolchains/e02-arm-inventory/root
++ /home/charles/code/friends/.toolchains/e02-arm-inventory/venv/bin/pip --disable-pip-version-check --no-cache-dir install --no-index --no-deps /home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/Ghidra/Features/PyGhidra/pypkg/dist/pyghidra-2.2.1-py3-none-any.whl /home/charles/code/friends/.toolchains/e02-arm-inventory/downloads/jpype1-1.6.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl /home/charles/code/friends/.toolchains/e02-arm-inventory/downloads/packaging-25.0-py3-none-any.whl
+Processing /home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/Ghidra/Features/PyGhidra/pypkg/dist/pyghidra-2.2.1-py3-none-any.whl
+Processing /home/charles/code/friends/.toolchains/e02-arm-inventory/downloads/jpype1-1.6.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+Processing /home/charles/code/friends/.toolchains/e02-arm-inventory/downloads/packaging-25.0-py3-none-any.whl
+pyghidra is already installed with the same version as the provided wheel. Use --force-reinstall to force an installation of the wheel.
+jpype1 is already installed with the same version as the provided wheel. Use --force-reinstall to force an installation of the wheel.
+packaging is already installed with the same version as the provided wheel. Use --force-reinstall to force an installation of the wheel.
+PASS pinned isolated e02 toolchain provisioned
