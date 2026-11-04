@@ -1,0 +1,87 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-b39074c1
+COMMAND=bash notes/x08-avx-backward-lowaddr/audit-ancestry.sh
+Allowed prerequisite commits: 5
+Scoped unit commits: 0
+No unexpected ancestry or paths
+49956416928e5b6bb3928b54ae33e3b81091f006
+48d4aa84b986150a8f4b4b12d50d92c67f2545ee Record AVX backward overlap clean commit audit
+20798a73d69d49382619ebbeb68f4640240d3ee2 Complete AVX backward overlap and self-alias proofs
+5a6fc185901b5016d19a67c5ab9009183b756131 Record AVX backward overlap partial audit
+ac78e7a2530d77401c2fc9445c60adc48e47cb6a Add partial AVX backward overlap proof handoff
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+ BUILDING.md                                        |  120 ++
+ .../amd64_memmove_avx_overlap_backward_proof.v     |  529 ++++++++
+ dune                                               |   43 +
+ dune-project                                       |    3 +
+ notes/e00-build/README.md                          |  168 +++
+ notes/e00-build/check-selection.py                 |   16 +
+ notes/e00-build/logs/01-dune-smoke.log             |    8 +
+ notes/e00-build/logs/02-dune-smoke.log             |  148 +++
+ notes/e00-build/logs/03-dune-smoke.log             |   89 ++
+ notes/e00-build/logs/04-audit-tests.log            |    9 +
+ notes/e00-build/logs/05-baseline-source-audit.log  |  204 ++++
+ notes/e00-build/logs/06-toolchain.log              |   12 +
+ notes/e00-build/logs/07-base-audit.log             |   15 +
+ notes/e00-build/logs/08-fork-collision-check.log   |    4 +
+ notes/e00-build/logs/09-clean-build.log            |  195 +++
+ notes/e00-build/logs/10-harness-tests.log          |    9 +
+ notes/e00-build/logs/11-x86-assumptions.log        |   43 +
+ notes/e00-build/logs/12-selected-objects.log       |   27 +
+ notes/e00-build/logs/13-arm8-assumptions.log       |   29 +
+ .../e00-build/logs/14-missing-theorem-negative.log |    9 +
+ .../logs/15-extensionality-provenance.log          |   13 +
+ notes/x04-avx-overlap-backward-fix/00-before.log   |   34 +
+ .../01-collision-check.log                         |    4 +
+ notes/x04-avx-overlap-backward-fix/02-rename.log   |    4 +
+ notes/x04-avx-overlap-backward-fix/03-import.log   |   40 +
+ notes/x04-avx-overlap-backward-fix/04-build.log    |  434 +++++++
+ .../05-declarations.log                            |    8 +
+ notes/x04-avx-overlap-backward-fix/06-build.log    |  115 ++
+ notes/x04-avx-overlap-backward-fix/07-build.log    |  117 ++
+ notes/x04-avx-overlap-backward-fix/08-build.log    |  143 +++
+ notes/x04-avx-overlap-backward-fix/09-build.log    |  183 +++
+ notes/x04-avx-overlap-backward-fix/10-build.log    |  175 +++
+ .../11-source-audit.log                            |   10 +
+ .../12-protected-source.log                        |    4 +
+ .../13-final-build.log                             |  175 +++
+ .../14-assumptions.log                             | 1259 ++++++++++++++++++++
+ .../15-final-declarations.log                      |    8 +
+ .../16-full-source-audit.log                       |  204 ++++
+ .../17-precommit-ancestry.log                      |   56 +
+ .../18-final-diff-check.log                        |    4 +
+ .../19-inherited-evidence.log                      |    4 +
+ notes/x04-avx-overlap-backward-fix/20-ancestry.log |   53 +
+ .../21-assumptions-review.log                      |   48 +
+ .../22-final-declarations.log                      |    8 +
+ .../23-final-source-audit.log                      |   10 +
+ .../24-after-proof-commit.log                      |   81 ++
+ .../25-proof-commit.log                            |   34 +
+ notes/x04-avx-overlap-backward-fix/README.md       |  153 +++
+ .../x04-avx-overlap-backward-fix/audit-ancestry.sh |   30 +
+ .../audit-declarations.py                          |   24 +
+ .../summarize-assumptions.py                       |   26 +
+ .../00-ancestry-before.log                         |   36 +
+ .../01-branch-name-check.log                       |    5 +
+ .../x04-avx-overlap-backward/02-branch-rename.log  |    4 +
+ .../03-source-audit-initial.log                    |   10 +
+ .../x04-avx-overlap-backward/04-lift-unchanged.log |    4 +
+ .../05-initial-full-build.log                      |  366 ++++++
+ .../06-source-audit-full.log                       |  204 ++++
+ .../07-dependency-source.log                       |   21 +
+ .../08-final-source-audit.log                      |  204 ++++
+ .../09-statements-preserved.log                    |    6 +
+ notes/x04-avx-overlap-backward/10-diff-check.log   |    4 +
+ .../11-ancestry-precommit.log                      |   38 +
+ .../x04-avx-overlap-backward/12-ancestry-after.log |   49 +
+ notes/x04-avx-overlap-backward/README.md           |  130 ++
+ .../x04-avx-overlap-backward/initial-attempt.v.txt |  524 ++++++++
+ tools/audit-proof-source.py                        |  108 ++
+ tools/print-assumptions.sh                         |   36 +
+ tools/record-command.sh                            |   24 +
+ tools/test-proof-audit.py                          |   82 ++
+ 70 files changed, 6996 insertions(+)
+ M dune
+?? Examples/claude/amd64_memmove_avx_backward_lowaddr_proof.v
+?? notes/x08-avx-backward-lowaddr/
+
+EXIT_CODE=0

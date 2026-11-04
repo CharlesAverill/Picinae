@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9b461e
+COMMAND=python3 notes/x04-avx-overlap-backward-fix/audit-declarations.py
+Retained declarations: 34
+Retained lemma/theorem/corollary statements: 23
+Added declarations: (none)
+PASS: all original definitions and theorem statements retained
+
+EXIT_CODE=0
