@@ -1,0 +1,13 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-95c58422
+COMMAND=python3 notes/e39-x86-backend-integration/replay-old.py
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/old-replay.4bdr2a87/x64_scalar_smoke', '--cet-disabled', 'toascii', 'isascii', 'abs', 'labs', 'pthread_equal']
+PASS 5 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/old-replay.4bdr2a87/x64_scalar_smoke
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/c324dc171ab74abca8124ca64ddcd592.log
+EXIT 0
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/replay-old.py", line 22, in <module>
+    assert {k for k in a.keys()|b.keys() if a.get(k)!=b.get(k)}=={'pcode2coq_x64.py'},delta
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'implementation_sha256': {'historical': {'pcode2coq_x64.py': '87750d6653110df94a22c8645891502aedcd5347bb252b2a19a3d5afdb00f90a', 'pcode2coq_scalar.py': 'd683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc', 'x64_headless.py': 'ea957d6ce1d04b168e3e595501c3bef56674065e36d661d14f403144155a2b83', 'lift-x64.py': 'ba87a57b00c9f5b88cf47a0c8f0b9e6586e0cc2e9022f249085d1f561d12844a'}, 'replay': {'pcode2coq_bitscan.py': '85bfc4060e3019b54125c7bd47cc3743645d0b61691837c36efad409282c825e', 'pcode2coq_x64.py': 'c885c6a572288f766bd4d3506763cdbea2308ec0130c6d93907ab08653edb276', 'pcode2coq_scalar.py': 'd683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc', 'x64_headless.py': 'ea957d6ce1d04b168e3e595501c3bef56674065e36d661d14f403144155a2b83', 'lift-x64.py': 'c12d1130cd76817659b1be9ea93f4e42b1e70c595c33ed097ebb2ade2bdbe2ff'}}}
+
+EXIT_CODE=1

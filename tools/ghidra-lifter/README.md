@@ -48,3 +48,38 @@ Disable "Perform Symbol Relocations" in the Import Options
 ![alt text](screenshots/running1.png "Prompt 1")
 ![alt text](screenshots/running2.png "Prompt 2")
 ![alt text](screenshots/consoleresult.png "Result")
+
+## Reviewed AMD64 profile composition (e39)
+
+`lift-x64-integrated.py` composes the accepted scalar/guarded-scan backend with
+copy moves through 256 bits and bounded REP MOVS/STOS. It dispatches once to the
+original strict family validators; a failed gate cannot fall back to another
+family. Existing standalone drivers and accepted artifacts remain available.
+
+```
+python3 tools/ghidra-lifter/lift-x64-integrated.py \
+  --fixture --cet-disabled --bmi1 present --abm present \
+  --out /home/charles/code/friends/.toolchains/e39-x86-backend-integration/example mixed
+```
+
+Omit `--fixture` to select exact pinned Ubuntu x86 glibc/debug FUNC extents by
+name. Every selected direct edge and fallthrough must land on a selected
+instruction boundary. RET targets remain an ABI boundary. Unsupported batches
+publish no output. The output directory must be new and under the private e39
+state root; no dependencies are installed. Shared e01/e02 dependencies stay
+read-only, JVM heap is capped at 1 GiB.
+
+`--bmi1` and `--abm` independently select `present`/`absent`; unspecified F3
+scan aliases reject. Absent features use the accepted BSF/BSR projections.
+Undefined destinations/flags remain `Unknown`. The profile explicitly projects
+low256 vector state, successful sequential REP execution and sequential NT byte
+stores, with enabled CPU/OS vector state and nonfaulting/aligned memory where
+required. It provides no hardware/refinement, exception, ordering, cache, timing,
+CET-enabled or glibc functional-correctness result.
+
+New receipts bind the complete repository dependency closure, including imports
+inside functions (the scalar backend's guarded scan helper), supervisor/headless,
+ELF parser/retrieval helper, source/feature/pin metadata, exact output/raw hashes,
+and verified archive/SLEIGH pins. Historical receipts are preserved as historical
+evidence; they are not current combined receipts. See
+`notes/e39-x86-backend-integration/README.md` for exact checks and metadata deltas.
