@@ -7,6 +7,9 @@ push, PR, remote comment, remote write, or shared campaign/status edit.
 
 Branch: `llm-proofs/r03-list-insert-end-fix`.
 Worktree: `/home/charles/.t3/worktrees/Picinae/t3-75bde600`.
+Implementation commit: `a8a1d379ef944da1fb30524394eeaad204bc8ad8`.
+Final evidence-only commit follows it; the handoff gives the final HEAD.
+
 Reviewed source checkpoint: `0a0c7ee9ee6ae72177090bfc65404c572c46455b`.
 Origin base: `49956416928e5b6bb3928b54ae33e3b81091f006`.
 
