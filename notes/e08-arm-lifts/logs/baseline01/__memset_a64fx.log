@@ -1,0 +1,4 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/baseline01/__memset_a64fx", "__memset_a64fx"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memset_a64fx 0x19c500 cntb x9: unmodeled instruction cntb x9; raw pcode: (register, 0x4048, 8) CALLOTHER (const, 0x150, 4) , (register, 0x4048, 8) , (const, 0x1f, 1) , (const, 0x1, 1); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/7524c1d735a84faaa11a0ea60232a33e.log
+
+EXIT_CODE=1

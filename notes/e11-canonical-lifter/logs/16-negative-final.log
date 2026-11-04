@@ -1,0 +1,33 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e11-canonical-lifter/check-failures.py
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-symbol', 'toascii', 'e11_symbol_does_not_exist']
+FAIL Ghidra script failed: ValueError: e11_symbol_does_not_exist: expected one nonempty FUNC extent, found set(); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/9d1492b3ab814ac5a71c6b563102d6b7.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-relative-call', 'mempcpy']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: mempcpy: direct edge outside selected extent(s): 0x19ab40; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/d7011e52ac1948afa6cfcd5485ab3920.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-asimd', 'toascii', '__memcpy_simd']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_simd 0x19ade4 ldr q0,[x1]: unmodeled register q0 (base z0); raw pcode: (unique, 0x6880, 8) COPY (register, 0x4008, 8); (register, 0x5000, 16) LOAD (const, 0x1b1, 8) , (unique, 0x6880, 8); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/f19c75303ec943dc89458b43e14df02a.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-tls', 'toascii', 'sigaddset']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigaddset 0x13b2bc ccmp x2,#0x0,#0x4,ls: unmodeled instruction ccmp x2,#0x0,#0x4,ls; raw pcode: (unique, 0x1b80, 1) BOOL_NEGATE (register, 0x102, 1); (unique, 0x1c80, 1) BOOL_OR (unique, 0x1b80, 1) , (register, 0x101, 1); (unique, 0x19f00, 1) COPY (unique, 0x1c80, 1); (unique, 0x19f80, 1) COPY (const, 0x4, 1); (unique, 0xe780, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) ; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/34300b6b3990418b834c46f3039bffa7.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-zva', 'toascii', '__memset_generic']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memset_generic 0x19bfc4 dup v0.16B,w1: unmodeled instruction dup v0.16B,w1; raw pcode: (unique, 0x86d00, 1) COPY (register, 0x4008, 1); (register, 0x5000, 1) COPY (unique, 0x86d00, 1); (register, 0x5001, 1) COPY (unique, 0x86d00, 1); (register, 0x5002, 1) COPY (unique, 0x86d00, 1); (register, 0x5003, 1) COPY (unique, 0x86d00, 1); (register, 0x5004, 1) COPY (unique, 0x86d00, 1); (register, 0x5005, 1) COPY (unique, 0x86d00, 1); (register, 0x5006, 1) COPY (unique, 0x; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/320f052c5c234c03a0a9582a1bc29595.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-sve', 'toascii', '__memcpy_a64fx']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_a64fx 0x19bc40 cntb x7: unmodeled instruction cntb x7; raw pcode: (register, 0x4038, 8) CALLOTHER (const, 0x150, 4) , (register, 0x4038, 8) , (const, 0x1f, 1) , (const, 0x1, 1); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/a9cf2dfc89f04dc0bfbdb5bac09aac2a.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-mte', 'toascii', '__strlen_mte']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __strlen_mte 0x19c8cc ld1 {v0.16B},[x1]: unmodeled instruction ld1 {v0.16B},[x1]; raw pcode: (register, 0x3104, 8) COPY (register, 0x4008, 8); (register, 0x5000, 1) LOAD (const, 0x1b1, 8) , (register, 0x3104, 8); (register, 0x3104, 8) INT_ADD (register, 0x3104, 8) , (const, 0x1, 8); (register, 0x5001, 1) LOAD (const, 0x1b1, 8) , (register, 0x3104, 8); (register, 0x3104, 8) INT_ADD (register, 0x3104, 8) , (const, 0x1, 8); (register, 0x5002, 1) LOAD (const, 0x1b1, 8) ; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/6cfd74e23f944af7937318025af6fe7c.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '-c', 'import sys; sys.path.insert(0, \'/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter\'); from test_scalar import *; ScalarLifter(Language()).instruction(Insn("mov",Op("CALLOTHER",None,VN("constant",0,4))))']
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/pcode2coq_scalar.py", line 252, in instruction
+    raise Unsupported(f'unmodeled op {op.getMnemonic()}')
+pcode2coq_scalar.Unsupported: unmodeled op CALLOTHER
+EXPECTED_OPCODE_EXIT=1 ACTUAL_EXIT=1
+PASS seven failing batches and unsupported-op subprocess: nonzero, no accepted or partial output
+
+EXIT_CODE=0
