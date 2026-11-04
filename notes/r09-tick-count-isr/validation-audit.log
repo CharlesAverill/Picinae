@@ -1,0 +1,17 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-584f983b
+COMMAND=python3 notes/r09-tick-count-isr/audit-validation.py
+tick_count_isr_nwc: closed
+tick_count_isr_welltyped: closed
+tick_count_isr_preserves_memory: closed
+tick_count_isr_zero_bound: closed
+tick_count_isr_witness_models: closed
+tick_count_isr_entry_satisfiable: closed
+tick_count_isr_correct: inherited FunctionalExtensionality.functional_extensionality_dep only
+tick_count_isr_post_at_bx: inherited FunctionalExtensionality.functional_extensionality_dep only
+tick_count_isr_preserves_callee_saved: inherited FunctionalExtensionality.functional_extensionality_dep only
+tick_count_isr_original_bytes: inherited FunctionalExtensionality.functional_extensionality_dep only
+tick_count_isr_return_step: inherited FunctionalExtensionality.functional_extensionality_dep only
+tick_count_isr_caller_result: inherited FunctionalExtensionality.functional_extensionality_dep only
+PASS: 12 initial statements/proofs unchanged; 6 closed, 6 inherited-FE-only.
+
+EXIT_CODE=0
