@@ -1,0 +1,86 @@
+{
+  "blocked_helpers": [],
+  "bytes_sha256": "d35180bb239b20cdde92126f76c87b2fd95a05eaab348302c9f45700a740b3fc",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "vListInitialiseItem_armv6m",
+    "vListInitialiseItem"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "assembly": "bx\tlr",
+      "kind": "return-candidate",
+      "site": "0x0000005a",
+      "target": "runtime register/stack; Thumb bit required"
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x0000005c",
+  "entry": "0x00000056",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "0d9097620d7a581fc66a5c8d7edddd339db85d7957991632f9acd62391bb7878",
+  "instructions": [
+    {
+      "address": "0x00000056",
+      "assembly": "movs\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2300",
+      "width": 2
+    },
+    {
+      "address": "0x00000058",
+      "assembly": "str\tr3, [r0, #16]",
+      "frontend_encoding_supported": true,
+      "opcode": "6103",
+      "width": 2
+    },
+    {
+      "address": "0x0000005a",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "literals": [],
+  "mapped_data": [],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x0000005a",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "row": "r01",
+  "size": 6,
+  "source": [
+    {
+      "path": "list.c",
+      "sha256": "e0a4d7a061e86ccb8ee4e08b0c1229c51d8c0a7a6f1c51c45083314f2e42b297"
+    }
+  ],
+  "stderr": "",
+  "symbol": "vListInitialiseItem",
+  "symbol_record": {
+    "address": "0x00000056",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vListInitialiseItem",
+    "section": "2",
+    "size": 6,
+    "source": [
+      "list.c"
+    ],
+    "value": "0x00000057"
+  },
+  "thumb_symbol": "0x00000057",
+  "unsupported_instructions": []
+}
