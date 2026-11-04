@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c
+COMMAND=bash notes/e27-x86-rep-lowering/fixture/build.sh
+d7a43cba073f6aced58af05e8d31498a0a31cdcaafcda8316f1507fee0d59234  /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/fixture-build/rep.so
+
+EXIT_CODE=0

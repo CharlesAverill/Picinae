@@ -1,0 +1,39 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e27-x86-rep-lowering/check-artifacts.py
+pinned 0x1a909e f348ab STOSQ.REP RDI
+pinned 0x1aad40 f348ab STOSQ.REP RDI
+pinned 0x1c463c f348ab STOSQ.REP RDI
+pinned 0x1c46ec f348ab STOSQ.REP RDI
+pinned 0x1c479c f348ab STOSQ.REP RDI
+pinned 0x1c48ff f3a4 MOVSB.REP RDI,RSI
+pinned 0x1c490d f3a4 MOVSB.REP RDI,RSI
+pinned 0x1c4b98 f3a4 MOVSB.REP RDI,RSI
+pinned 0x1c4fc7 f3aa STOSB.REP RDI
+pinned 0x1c50ba f3aa STOSB.REP RDI
+pinned 0x2a0ae4 f3a4 MOVSB.REP RDI,RSI
+pinned 0x2a0b4a f3a4 MOVSB.REP RDI,RSI
+pinned 0x2a0fce f3aa STOSB.REP RDI
+pinned 0x2a10ca f3aa STOSB.REP RDI
+pinned 0x2a6b7f f3a4 MOVSB.REP RDI,RSI
+pinned 0x2a6bd5 f3a4 MOVSB.REP RDI,RSI
+pinned 0x2a708e f3aa STOSB.REP RDI
+pinned 0x2a713a f3aa STOSB.REP RDI
+pinned 0x2a7f65 f3a4 MOVSB.REP RDI,RSI
+pinned 0x2a7fca f3a4 MOVSB.REP RDI,RSI
+pinned 0x2a87ce f3aa STOSB.REP RDI
+pinned 0x2a88ca f3aa STOSB.REP RDI
+pinned 0x2af12d f3a4 MOVSB.REP RDI,RSI
+pinned 0x2af18c f3a4 MOVSB.REP RDI,RSI
+pinned 0x2af9fe f3aa STOSB.REP RDI
+pinned 0x2afaba f3aa STOSB.REP RDI
+synthetic 0x101000 f3a4 MOVSB.REP RDI,RSI
+synthetic 0x101003 f366a5 MOVSW.REP RDI,RSI
+synthetic 0x101007 f3a5 MOVSD.REP RDI,RSI
+synthetic 0x10100a f348a5 MOVSQ.REP RDI,RSI
+synthetic 0x10100e f3aa STOSB.REP RDI
+synthetic 0x101011 f366ab STOSW.REP RDI
+synthetic 0x101015 f3ab STOSD.REP RDI
+synthetic 0x101018 f348ab STOSQ.REP RDI
+PASS runtime/inventory/decoder/implementation pins, ELF instruction bytes, 34 exact fragments, explicit fallthrough frontiers
+
+EXIT_CODE=0

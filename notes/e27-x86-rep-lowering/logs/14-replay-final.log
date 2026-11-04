@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c
+COMMAND=bash notes/e27-x86-rep-lowering/reproduce.sh --check
+PASS 26 hash-validated REP instruction fragments: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/replay.tK7BOIki/pinned
+Ghidra log: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/logs/1e8b56ef41044d37bc9f47e7ac21998d.log
+PASS 8 hash-validated REP instruction fragments: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/replay.tK7BOIki/synthetic
+Ghidra log: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/logs/11fd75159a1c41e4ba72f47d4fe42bd9.log
+PASS complete deterministic REP artifact sets --check
+
+EXIT_CODE=0
