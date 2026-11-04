@@ -1,0 +1,259 @@
+(* High-size forward overlap in the unchanged AVX memmove IL.
+   Initial author: OpenAI gpt-6-astra, xhigh/default. One-shot initial proof.
+   Final proof producer: pending kernel check; see notes/x09-avx-forward-high-size.
+   Binary provenance inherited from x03: Ubuntu amd64 glibc 2.35-0ubuntu3.12,
+   /lib/x86_64-linux-gnu/libc.so.6, SHA256
+   9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9,
+   Ghidra 0x2a0840, image base 0x100000, normalized entry 0;
+   Ghidra 11.4.2 + pcode2coq. No new binary/lifter validation.
+
+   English spec: copy ORIGINAL source bytes to destination, frame all bytes
+   outside destination, RAX=d and RSP=rsp at the cut BEFORE RET 493, and
+   preserve RBX/RBP/R12-R15. ABI: 64-bit System V RDI=d, RSI=s, RDX=n.
+   Domain: 2^63<=n, d<s<d+n, s+n<=2^64, n no larger than both INITIAL
+   threshold quadwords 0x31a3f8 and 0x3215a8. The ordinary-loop result is
+   conditioned on the EXACT NONZERO DISPATCH EXPRESSION at 357, not n<2^63.
+   This is an actual branch-domain predicate, not a copy-result assumption.
+   No DF/CPU-bit premise is used in this selected sequential IL path.
+   No new callee contracts; use x03's original-memory unread-source invariant,
+   row helper, saved head/tails, and memory frame, unchanged.
+
+   The omitted high-size region is NOT automatically forward-loop code:
+   d=4096,s=8192,n=2^63+4096 gives dispatch expression zero and selects 501.
+   The numerical and encoded-branch facts below do NOT alone establish a
+   final-output counterexample: a backward-path corruption/return argument
+   is still required for that stronger claim. REP and NT remain x07/x10.
+   Partial correctness only; no termination, executed RET, accessibility,
+   hardware canonical-address, cache, fault, concurrency, or all-size claim.
+ *)
+Require Import Picinae_amd64 memmove_avx_amd64.
+Import X64Notations.
+From Stdlib Require Import NArith ZArith Lia List.
+Require Import amd64_common amd64_memcpy_lemmas amd64_memmove_avx_proof.
+Require Import amd64_memmove_avx_overlap_forward_proof.
+Import ListNotations.
+Open Scope N.
+
+Definition high_dispatch (d s n:N) :=
+  (((d ⊖ s) .& 3840) + (((d ⊖ s ⊕ n) .^ (d ⊖ s)) >> 63)) mod 2^32.
+Definition high_path (m d s n:N) :=
+  2^63 <= n /\ d < s /\ s < d+n /\ s+n <= 2^64 /\
+  n <= m Ⓠ[0x31a3f8] /\ n <= m Ⓠ[0x3215a8] /\ high_dispatch d s n <> 0.
+Definition high_postcondition := ofw_postcondition.
+Definition high_exit := ofw_exit.
+Definition high_invs := ofw_invs.
+Definition high_frame := ofw_frame.
+
+Theorem high_welltyped: welltyped_prog x64typctx memmove_avx_amd64.
+Proof. exact ofw_welltyped. Qed.
+Theorem high_nwc: forall s2 s1, memmove_avx_amd64 s1 = memmove_avx_amd64 s2.
+Proof. reflexivity. Qed.
+Theorem high_preserves_callee_saved:
+  forall_endstates memmove_avx_amd64 (fun _ st _ st' => high_frame st st').
+Proof. exact ofw_preserves_callee_saved. Qed.
+
+Lemma high_no_unsigned_backward:
+  forall d s n, d<s -> s<d+n -> s+n<=2^64 -> n <= d ⊖ s.
+Proof.
+  intros d s n DS OV SN.
+  assert (DB:d<2^64) by lia.
+  assert (SB:s<2^64) by lia.
+  unfold msub. rewrite (N.mod_small s) by exact SB.
+  rewrite N.mod_small by (clear - DS SN; lia).
+  clear - DS OV SN. lia.
+Qed.
+
+(* Exact sign classification, not an arbitrary signed-size restriction. *)
+Lemma high_sign_classification:
+  forall d s n, 2^63<=n -> d<s -> s<d+n -> s+n<=2^64 ->
+  (((d ⊖ s ⊕ n) .^ (d ⊖ s)) >>63) =
+    if d+n-s <? 2^63 then 1 else 0.
+Proof.
+  intros d s n HI DS OV SN.
+  assert (SB:s<2^64) by lia.
+  assert (SUB:d ⊖ s = 2^64+d-s).
+  { unfold msub. rewrite (N.mod_small s) by exact SB.
+    rewrite N.mod_small by (clear - DS SN; lia). lia. }
+  assert (ADD:d ⊖ s ⊕ n = d+n-s).
+  { rewrite SUB. replace (2^64+d-s+n) with (d+n-s+1*2^64) by lia.
+    rewrite N.mod_add by discriminate. apply N.mod_small. lia. }
+  rewrite ADD, SUB, N.shiftr_lxor.
+  rewrite !shiftr63 by lia.
+  assert (B: (2^64+d-s <? 2^63)=false).
+  { apply N.ltb_ge. change (2^64) with 18446744073709551616 in *.
+    change (2^63) with 9223372036854775808 in *. lia. }
+  rewrite B. destruct (d+n-s <? 2^63); reflexivity.
+Qed.
+
+(* Satisfiable arithmetic domain refutes automatic sign-flip at high sizes. *)
+Theorem high_zero_dispatch_example:
+  let n := 9223372036854779904 in
+  2^63 <= n /\ 4096 < 8192 /\ 8192 < 4096+n /\ 8192+n <= 2^64 /\
+  n <= 4096 ⊖ 8192 /\ high_dispatch 4096 8192 n = 0 /\
+  (((4096 ⊖ 8192 ⊕ n) .^ (4096 ⊖ 8192)) >>63) = 0.
+Proof. vm_compute. repeat split; discriminate. Qed.
+
+(* The actual encoded JZ destination, not a handwritten substitute program. *)
+Theorem high_encoded_zero_branch:
+  forall st, memmove_avx_amd64 st 357 =
+    Some (6, If (Var R_ZF) (Jmp (Word 501 64)) Nop).
+Proof. reflexivity. Qed.
+
+Theorem memmove_avx_correct_forward_high_size:
+  forall st t s' x' m d s n rsp
+         (ENTRY: startof t (x',s') = (Addr 0, st))
+         (MDL: models x64typctx st)
+         (MEM: st V_MEM64 = m) (D: st R_RDI = d) (S: st R_RSI = s) (Nn: st R_RDX = n)
+         (RSP: st R_RSP = rsp) (BIG: 256 < n) (DS: d < s) (OV: s < d+n) (SN: s+n <= 2^64) (HI: 2^63 <= n) (DISPATCH: high_dispatch d s n <> 0)
+         (THR1: n <= m Ⓠ[0x31a3f8]) (THR2: n <= m Ⓠ[0x3215a8]),
+  satisfies_all memmove_avx_amd64 (high_invs m d s n rsp) high_exit ((x',s')::t).
+Proof.
+  intros. unfold high_invs, high_exit.
+  assert (NB: n < 2^64) by (rewrite <- Nn; apply (MDL R_RDX 64); reflexivity).
+  assert (N0: 0 < n) by (eapply N.lt_trans; [|exact BIG]; reflexivity).
+  assert (NW: d+n <= 2^64) by (clear - DS SN; lia).
+  pose proof (high_no_unsigned_backward d s n DS OV SN) as DSN.
+  unfold high_dispatch in DISPATCH.
+  apply prove_invs.
+  simpl. rewrite ENTRY. x64_step. repeat split; assumption.
+  intros.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply memmove_avx_welltyped. intro MDL1.
+  clear - PRE MDL1 BIG DS OV SN HI NW THR1 THR2 DSN DISPATCH NB. rename t1 into t.
+  destruct_inv 64 PRE.
+  - (* entry *)
+    destruct PRE as [MEM [D [S [Nn RSP]]]].
+    clear DS OV SN HI NW DSN DISPATCH.
+    repeat x64_step.
+    all: try (set (T := m Ⓠ[0x31a3f8]) in *; clearbody T).
+    all: try (match goal with |- False => idtac | |- nextinv _ _ _ _ _ => idtac end; bc_norm; refute BIG).
+    all: try (match goal with |- False => idtac end;
+              bc_norm; first [discriminate | refute THR1 | exfalso; nlia]).
+    all: repeat split; reflexivity || assumption.
+  - (* dispatch *)
+    destruct PRE as [MEM [D [S [Nn [RSP [RAX Y0]]]]]].
+
+    repeat x64_step.
+    all: set (T := m Ⓠ[0x3215a8]) in *; clearbody T.
+    all: try (exfalso; apply DISPATCH; assumption).
+    all: try (match goal with |- False => idtac end; bc_norm; first [discriminate | exfalso; nlia]).
+    all: change (2^7) with 128.
+    all: assert (DB: d + 32 < 2^64) by (clear - NW BIG; change (2^64) with 18446744073709551616 in *; lia).
+    all: pose proof (N.mod_lt d 32 ltac:(discriminate)) as DM; pose proof (N.mod_le d 32 ltac:(discriminate)) as DL.
+    (* the forward loop: k = a0 d, the first 32-aligned store offset *)
+      clear THR2 THR1 DSN DISPATCH.
+      pose proof (a0_bounds d) as A0.
+      exists (a0 d).
+      split. clear - A0 BIG; lia.
+      split. { eapply cpy_equiv; [|apply cpy_empty]. intro i. clear. split; [intros []|intro H; lia]. }
+      split. { rewrite lor31, N.mod_small; [unfold a0; clear - DM DL; lia|].
+               clear - DB DM DL. change (2^64) with 18446744073709551616 in *. lia. }
+      split. { unfold msub. rewrite lor31. rewrite ?N.add_mod_idemp_l, ?N.add_mod_idemp_r by discriminate.
+               rewrite (N.mod_small d) by (clear - DB; lia).
+               match goal with |- ?a mod _ = ?b mod _ =>
+                 replace a with (b + 1 * 2^64) by (unfold a0; clear - DB DM DL; change (2^64) with 18446744073709551616 in *; lia) end.
+               apply N.mod_add. discriminate. }
+      split. { unfold msub. rewrite N.add_mod_idemp_l by discriminate.
+               change (128 mod 2^64) with 128.
+               replace (d + (2^64 - 128) + n) with (d + n - 128 + 1 * 2^64)
+                 by (clear - NW BIG; change (2^64) with 18446744073709551616 in *; lia).
+               rewrite N.mod_add by discriminate. apply N.mod_small. clear - NW BIG; change (2^64) with 18446744073709551616 in *; lia. }
+      do 2 (split; [reflexivity|]).
+      do 2 (split; [assumption|]).
+      repeat split; apply getmem_addr; apply addr_tail_w; clear - BIG; lia.
+  - (* forward loop body *)
+    destruct PRE as [k [K [C [RDI [RSI [RDX [RCX [RAX [RSP [Y0 [Y5 [Y6 [Y7 Y8]]]]]]]]]]]]].
+    clear THR1 THR2.
+    repeat x64_step.
+    all: change (2^7) with 128 in *.
+    all: assert (E1: 128 + d ⊕ k = d + k + 128) by (clear - K NW BIG; rewrite N.mod_small by lia; lia).
+    all: assert (E2: d + n - 128 ⊖ 128 ⊖ d = n - 256) by
+           (clear - BIG NW; rewrite (msub_sub 64 (d + n - 128) 128) by lia;
+            rewrite (N.mod_small (d + n - 128 - 128)) by lia;
+            rewrite (msub_sub 64 (d + n - 128 - 128) d) by lia; rewrite N.mod_small by lia; lia).
+    all: rewrite E1, E2, (N.mod_small k) in BC by (clear - K NW BIG; lia).
+    all: pose proof (a0_bounds d) as A0.
+    + (* loop exit (JA not taken): store the saved tail and head, then return *)
+      apply ja_not_taken in BC.
+      assert (EX: n <= k + 256).
+      { clear - BC K BIG NW. destruct BC as [B|B]; [apply N.ltb_lt in B | apply N.eqb_eq in B]; lia. }
+      split; [assumption|]. split; [assumption|].
+      eapply cpy_copied; cycle 1.
+      { eapply (cpy_store _ _ _ _ _ 0); [eapply (cpy_store _ _ _ _ _ (n - 128));
+          [eapply (cpy_store _ _ _ _ _ (n - 96)); [eapply (cpy_store _ _ _ _ _ (n - 64));
+           [eapply (cpy_store _ _ _ _ _ (n - 32)); [eapply (ofw_store4 _ _ _ _ n k _ k (k+32) (k+64) (k+96)); [exact C|..]|..]|..]|..]|..]|..].
+        all: first [exact DS | exact SN | assumption | clear - K EX BIG NW NB A0; aside]. }
+      intro i. clear - A0 K EX BIG. split; intro H; [repeat destruct H as [H|H]; lia | lia].
+    + (* next iteration (JA taken) *)
+      apply ja_taken in BC. destruct BC as [B1 B2]. apply N.ltb_ge in B1. apply N.eqb_neq in B2.
+      assert (CT: k + 256 < n) by (clear - B1 B2 K BIG NW; lia).
+      exists (k + 128). split. clear - K CT A0; lia. split.
+      { eapply cpy_equiv; [|eapply (ofw_store4 _ _ _ _ n k _ k (k+32) (k+64) (k+96)); [exact C|..]].
+        intro i. clear - A0 K CT. split; intro H; [repeat destruct H as [H|H]; lia | lia].
+        all: first [exact DS | exact SN | assumption | clear - K CT BIG NW NB A0; aside]. }
+      split. rewrite E1. clear; lia. split. f_equal. clear; lia. split. reflexivity.
+      repeat split; try assumption.
+      all: match goal with H: ?r = _ |- ?r = _ => rewrite H; apply getmem_mod_l end.
+Time Qed.
+
+Theorem memmove_avx_forward_high_size_at_ret:
+  forall st t st' m d s n rsp,
+  startof t (Addr 493,st') = (Addr 0,st) -> models x64typctx st ->
+  st V_MEM64=m -> st R_RDI=d -> st R_RSI=s -> st R_RDX=n -> st R_RSP=rsp ->
+  high_path m d s n -> exec_prog memmove_avx_amd64 ((Addr 493,st')::t) ->
+  unterminated high_exit t ->
+  high_postcondition m d s n rsp st' /\ high_frame st st'.
+Proof.
+  intros st t st' m d s n rsp ENTRY MDL MEM D S NN SP
+    [HI [DS [OV [SN [T1 [T2 DISPATCH]]]]]] XP UT.
+  assert (BIG:256<n) by (clear - HI; change (2^63) with 9223372036854775808 in HI; lia).
+  split.
+  - pose proof (memmove_avx_correct_forward_high_size st t st' (Addr 493)
+      m d s n rsp ENTRY MDL MEM D S NN SP BIG DS OV SN HI DISPATCH T1 T2) as SAT.
+    exact (satall_trueif_inv _ _ _ _ SAT XP UT).
+  - exact (ofw_preserves_callee_saved t (Addr 0) st (Addr 493) st' XP ENTRY).
+Qed.
+
+Definition high_witness_memory :=
+  setmem 64 LittleE 8 (setmem 64 LittleE 8 0 0x31a3f8 9223372036854775808) 0x3215a8 9223372036854775808.
+Definition high_witness_store : store := fun v =>
+  match v with
+  | V_MEM64 => high_witness_memory
+  | R_RDI => 4096 | R_RSI => 4097 | R_RDX => 9223372036854775808 | R_RSP => 8192
+  | _ => 0 end.
+
+Lemma high_witness_thresholds:
+  high_witness_memory Ⓠ[0x31a3f8] = 9223372036854775808 /\
+  high_witness_memory Ⓠ[0x3215a8] = 9223372036854775808.
+Proof.
+  unfold high_witness_memory. split.
+  - rewrite getmem_frame; [|left; vm_compute; discriminate|left; vm_compute; discriminate].
+    rewrite getmem_setmem by discriminate. reflexivity.
+  - rewrite getmem_setmem by discriminate. reflexivity.
+Qed.
+
+Theorem high_entry_satisfiable:
+  exists st m,
+    models x64typctx st /\ high_path m 4096 4097 9223372036854775808 /\
+    st V_MEM64=m /\ st R_RDI=4096 /\ st R_RSI=4097 /\
+    st R_RDX=9223372036854775808 /\ st R_RSP=8192.
+Proof.
+  exists high_witness_store, high_witness_memory.
+  split.
+  - intros v w CV. destruct v; cbn [x64typctx] in CV;
+      inversion CV; subst; cbn [high_witness_store].
+    all: lazymatch goal with
+      | |- high_witness_memory < _ =>
+          unfold high_witness_memory; change (2^(8*2^64)) with (memsize 64);
+          apply typesafe_setmem, typesafe_setmem;
+          change (0 < 2^(2^64*8)); apply mp2_gt_0
+      | |- _ => first [apply mp2_gt_0 |
+          clear; change (2^64) with 18446744073709551616; lia]
+      end.
+  - split.
+    + unfold high_path. destruct high_witness_thresholds as [T1 T2].
+      rewrite T1,T2. clear. change (2^64) with 18446744073709551616;
+      change (2^63) with 9223372036854775808; repeat split; try lia. unfold high_dispatch. vm_compute. discriminate.
+    + repeat split; reflexivity.
+Qed.
+
