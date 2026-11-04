@@ -1,0 +1,31 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-be68d06e
+COMMAND=bash -c set\ -eu\;\ python3\ notes/x03-avx-overlap-forward-fix/audit-declarations.py\;\ git\ diff\ --check\;\ git\ diff\ --exit-code\ 49956416928e5b6bb3928b54ae33e3b81091f006\ --\ Examples/claude/memmove_avx_amd64.v\;\ git\ diff\ --exit-code\ 14bdeb6a8e93bddb2014b9b907e432dbf2b1516d\ --\ dune\ notes/x03-avx-overlap-forward\;\ if\ rg\ -n\ \"\\b\(Admitted\|admit\|Abort\|Axiom\|Axioms\|Parameter\|Parameters\)\\b\"\ Examples/claude/amd64_memmove_avx_overlap_forward_proof.v\;\ then\ exit\ 1\;\ fi
+UNCHANGED ofw_path
+UNCHANGED ofw_postcondition
+UNCHANGED ofw_frame
+UNCHANGED a0
+UNCHANGED ofw_exit
+UNCHANGED ofw_invs
+UNCHANGED ofw_witness_memory
+UNCHANGED ofw_witness_store
+UNCHANGED ofw_welltyped
+UNCHANGED ofw_nwc
+UNCHANGED ofw_preserves_callee_saved
+UNCHANGED ofw_load
+UNCHANGED ofw_store4
+UNCHANGED lor31
+UNCHANGED a0_bounds
+UNCHANGED getmem_addr
+UNCHANGED ja_not_taken
+UNCHANGED ja_taken
+UNCHANGED msub_add_mod
+UNCHANGED ofw_dispatch
+UNCHANGED ofw_heuristic_nonzero
+UNCHANGED memmove_avx_correct_overlap_forward
+UNCHANGED memmove_avx_overlap_forward_at_ret
+UNCHANGED ofw_witness_thresholds
+UNCHANGED ofw_entry_satisfiable
+UNCHANGED ofw_critical_distances
+Preserved all 26 original declarations verbatim.
+
+EXIT_CODE=0
