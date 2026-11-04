@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-9fd9a36c
+COMMAND=sha256sum Examples/claude/arm8_memcpy_large_proof.v notes/a-memcpy-large/initial-arm8_memcpy_large_proof.v.txt Examples/claude/arm8_memcpy_common.v Examples/claude/arm8_memcpy_small_proof.v Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.v
+657429d99f8fdd60566fecac77ba534985a05f51941bd5e582dc0efc0b6453dc  Examples/claude/arm8_memcpy_large_proof.v
+657429d99f8fdd60566fecac77ba534985a05f51941bd5e582dc0efc0b6453dc  notes/a-memcpy-large/initial-arm8_memcpy_large_proof.v.txt
+1e34dd8456099d46720fd1df88a70d89ac289f28087b5938812be917cdd5ebad  Examples/claude/arm8_memcpy_common.v
+35b366b0fbc32bdb45d279c63e6151573ef906cbc36b682ee8e5d3248117410a  Examples/claude/arm8_memcpy_small_proof.v
+1c760b6f7c36f17eb4918b57949528060895f526c512c06b21787e946da44dc4  Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.v
+
+EXIT_CODE=0

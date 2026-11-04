@@ -17,6 +17,7 @@
   Examples.claude.arm8_common Examples.claude.abs_arm8
   Examples.claude.arm8_abs_proof
   Examples.claude.arm8_memcpy_common Examples.claude.arm8_memcpy_small_proof
+  Examples.claude.arm8_memcpy_large_proof
   Examples.claude.lifter.scalar_smoke.e11_toascii_arm8
   Examples.claude.lifter.scalar_smoke.e11_div_arm8
   Examples.claude.lifter.scalar_smoke.e11_ldiv_arm8
