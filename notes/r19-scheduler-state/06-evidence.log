@@ -1,0 +1,291 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-43c5d429
+COMMAND=python3 notes/r19-scheduler-state/inspect-evidence.py
+Pinned input: {"archive": "FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0.tar.gz", "commit": "dbf70559b27d39c1fdb68dfb9a32140b6a6777a0", "directory": "FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0", "license": "MIT (LICENSE.md in source archive)", "release": "V11.1.0", "repository": "https://github.com/FreeRTOS/FreeRTOS-Kernel", "sha256": "31e570365bc3feb7fbbfa36b93cbc4e2da22f4d02801a1b1513b0f25594f1cea", "tag_object": "f388a5c8078e152913e4eb3c5d75bf89561392df", "url": "https://codeload.github.com/FreeRTOS/FreeRTOS-Kernel/tar.gz/dbf70559b27d39c1fdb68dfb9a32140b6a6777a0"}
+tasks.c sha256 6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149
+6537: 
+6538: #if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) )
+6539: 
+6540:     BaseType_t xTaskGetSchedulerState( void )
+6541:     {
+6542:         BaseType_t xReturn;
+6543: 
+6544:         traceENTER_xTaskGetSchedulerState();
+6545: 
+6546:         if( xSchedulerRunning == pdFALSE )
+6547:         {
+6548:             xReturn = taskSCHEDULER_NOT_STARTED;
+6549:         }
+6550:         else
+6551:         {
+6552:             #if ( configNUMBER_OF_CORES > 1 )
+6553:                 taskENTER_CRITICAL();
+6554:             #endif
+6555:             {
+6556:                 if( uxSchedulerSuspended == ( UBaseType_t ) 0U )
+6557:                 {
+6558:                     xReturn = taskSCHEDULER_RUNNING;
+6559:                 }
+6560:                 else
+6561:                 {
+6562:                     xReturn = taskSCHEDULER_SUSPENDED;
+6563:                 }
+6564:             }
+6565:             #if ( configNUMBER_OF_CORES > 1 )
+6566:                 taskEXIT_CRITICAL();
+6567:             #endif
+6568:         }
+6569: 
+6570:         traceRETURN_xTaskGetSchedulerState( xReturn );
+6571: 
+6572:         return xReturn;
+6573:     }
+6574: 
+6575: #endif /* ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) ) */
+include/task.h sha256 f3a76f99198a537ffce4b7876566502e7156a4fbd5b57b56f213bb7884b772c9
+273: /* Definitions returned by xTaskGetSchedulerState().  taskSCHEDULER_SUSPENDED is
+274:  * 0 to generate more optimal code when configASSERT() is defined as the constant
+275:  * is used in assert() statements. */
+276: #define taskSCHEDULER_SUSPENDED      ( ( BaseType_t ) 0 )
+277: #define taskSCHEDULER_NOT_STARTED    ( ( BaseType_t ) 1 )
+278: #define taskSCHEDULER_RUNNING        ( ( BaseType_t ) 2 )
+include/projdefs.h sha256 05308062697b6093618d4b7110dbf125c5b4839072680d3b7239bc2644082347
+50: #endif
+51: 
+52: #define pdFALSE                                  ( ( BaseType_t ) 0 )
+53: #define pdTRUE                                   ( ( BaseType_t ) 1 )
+54: #define pdFALSE_SIGNED                           ( ( BaseType_t ) 0 )
+55: #define pdTRUE_SIGNED                            ( ( BaseType_t ) 1 )
+56: #define pdFALSE_UNSIGNED                         ( ( UBaseType_t ) 0 )
+57: #define pdTRUE_UNSIGNED                          ( ( UBaseType_t ) 1 )
+58: 
+59: #define pdPASS                                   ( pdTRUE )
+60: #define pdFAIL                                   ( pdFALSE )
+FreeRTOSConfig.h sha256 6c63fc719991c8324546c700f95586dfdf1c11b35c69abbb008d06d0e256711c
+#define configNUMBER_OF_CORES                    1
+#define configUSE_TIMERS                         1
+#define INCLUDE_xTaskGetSchedulerState           1
+evidence/layout.json sha256 b501f440105154a99c41fa8fe764a116b98198356e3af4d297f3739d39a57cef
+  "BaseType_t.alignof": 4,
+  "BaseType_t.sizeof": 4,
+  "UBaseType_t.alignof": 4,
+  "UBaseType_t.sizeof": 4,
+  "void *.alignof": 4,
+  "void *.sizeof": 4
+evidence/nm.txt sha256 d62076b03c95baf0d2cacad8d4b6f5244208b74e294981995a0fe847cec6f262
+000012fc 00000020 T xTaskGetSchedulerState
+20000008 00000004 b uxSchedulerSuspended
+20000024 00000004 b xSchedulerRunning
+Manifest: {
+  "blocked_helpers": [],
+  "bytes_sha256": "f48e89db0f24b5c5589d04c9bdee106b1f2c60d9663db645b1181838b151840f",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "xTaskGetSchedulerState_armv6m",
+    "xTaskGetSchedulerState"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "fallthrough": "0x00001306",
+      "kind": "branch",
+      "owners": [
+        "xTaskGetSchedulerState"
+      ],
+      "site": "0x00001304",
+      "target": "0x00001310",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "assembly": "bx\tlr",
+      "kind": "return-candidate",
+      "site": "0x00001310",
+      "target": "runtime register/stack; Thumb bit required"
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x0000131c",
+  "entry": "0x000012fc",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "079c2ba35ac01da4db0ec699cdda334fc68bf870f396a448e2410b38cd4c04c8",
+  "instructions": [
+    {
+      "address": "0x000012fc",
+      "assembly": "ldr\tr3, [pc, #20]\t@ (1314 <xTaskGetSchedulerState+0x18>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4b05",
+      "width": 2
+    },
+    {
+      "address": "0x000012fe",
+      "assembly": "ldr\tr3, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "681b",
+      "width": 2
+    },
+    {
+      "address": "0x00001300",
+      "assembly": "movs\tr0, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "2001",
+      "width": 2
+    },
+    {
+      "address": "0x00001302",
+      "assembly": "cmp\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2b00",
+      "width": 2
+    },
+    {
+      "address": "0x00001304",
+      "assembly": "beq.n\t1310 <xTaskGetSchedulerState+0x14>",
+      "frontend_encoding_supported": true,
+      "opcode": "d004",
+      "width": 2
+    },
+    {
+      "address": "0x00001306",
+      "assembly": "ldr\tr3, [pc, #16]\t@ (1318 <xTaskGetSchedulerState+0x1c>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4b04",
+      "width": 2
+    },
+    {
+      "address": "0x00001308",
+      "assembly": "ldr\tr0, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6818",
+      "width": 2
+    },
+    {
+      "address": "0x0000130a",
+      "assembly": "negs\tr3, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "4243",
+      "width": 2
+    },
+    {
+      "address": "0x0000130c",
+      "assembly": "adcs\tr0, r3",
+      "frontend_encoding_supported": true,
+      "opcode": "4158",
+      "width": 2
+    },
+    {
+      "address": "0x0000130e",
+      "assembly": "lsls\tr0, r0, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "0040",
+      "width": 2
+    },
+    {
+      "address": "0x00001310",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    },
+    {
+      "address": "0x00001312",
+      "assembly": "nop\t\t\t@ (mov r8, r8)",
+      "frontend_encoding_supported": true,
+      "opcode": "46c0",
+      "width": 2
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x00001314",
+      "bytes": "24000020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x20000024",
+          "name": "xSchedulerRunning",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 5,
+      "instruction": "0x000012fc",
+      "thumb_function_pointer": [],
+      "value": "0x20000024"
+    },
+    {
+      "address": "0x00001318",
+      "bytes": "08000020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x20000008",
+          "name": "uxSchedulerSuspended",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 4,
+      "instruction": "0x00001306",
+      "thumb_function_pointer": [],
+      "value": "0x20000008"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x00001314",
+      "halfword": "2400"
+    },
+    {
+      "address": "0x00001316",
+      "halfword": "0020"
+    },
+    {
+      "address": "0x00001318",
+      "halfword": "0800"
+    },
+    {
+      "address": "0x0000131a",
+      "halfword": "0020"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x00001310",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "row": "r19",
+  "size": 32,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "xTaskGetSchedulerState",
+  "symbol_record": {
+    "address": "0x000012fc",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGetSchedulerState",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000012fd"
+  },
+  "thumb_symbol": "0x000012fd",
+  "unsupported_instructions": []
+}
+
+EXIT_CODE=0

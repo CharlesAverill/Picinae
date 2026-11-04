@@ -1,0 +1,162 @@
+{
+  "blocked_helpers": [],
+  "bytes_sha256": "61f57a88db154b1e70da5b13dbe62c9e7a52a9cb80707255262d63758c88c8fc",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "uxTaskResetEventItemValue_armv6m",
+    "uxTaskResetEventItemValue"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "assembly": "bx\tlr",
+      "kind": "return-candidate",
+      "site": "0x00001536",
+      "target": "runtime register/stack; Thumb bit required"
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x0000153c",
+  "entry": "0x00001524",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "69b7a31b5f52c043a896f0f4a4393aeebbe74bbfde178b95b53b508135c0949c",
+  "instructions": [
+    {
+      "address": "0x00001524",
+      "assembly": "ldr\tr3, [pc, #16]\t@ (1538 <uxTaskResetEventItemValue+0x14>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4b04",
+      "width": 2
+    },
+    {
+      "address": "0x00001526",
+      "assembly": "ldr\tr2, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "681a",
+      "width": 2
+    },
+    {
+      "address": "0x00001528",
+      "assembly": "ldr\tr0, [r2, #24]",
+      "frontend_encoding_supported": true,
+      "opcode": "6990",
+      "width": 2
+    },
+    {
+      "address": "0x0000152a",
+      "assembly": "ldr\tr1, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6819",
+      "width": 2
+    },
+    {
+      "address": "0x0000152c",
+      "assembly": "ldr\tr2, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "681a",
+      "width": 2
+    },
+    {
+      "address": "0x0000152e",
+      "assembly": "ldr\tr1, [r1, #44]\t@ 0x2c",
+      "frontend_encoding_supported": true,
+      "opcode": "6ac9",
+      "width": 2
+    },
+    {
+      "address": "0x00001530",
+      "assembly": "movs\tr3, #5",
+      "frontend_encoding_supported": true,
+      "opcode": "2305",
+      "width": 2
+    },
+    {
+      "address": "0x00001532",
+      "assembly": "subs\tr3, r3, r1",
+      "frontend_encoding_supported": true,
+      "opcode": "1a5b",
+      "width": 2
+    },
+    {
+      "address": "0x00001534",
+      "assembly": "str\tr3, [r2, #24]",
+      "frontend_encoding_supported": true,
+      "opcode": "6193",
+      "width": 2
+    },
+    {
+      "address": "0x00001536",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x00001538",
+      "bytes": "08010020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x20000108",
+          "name": "pxCurrentTCB",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 4,
+      "instruction": "0x00001524",
+      "thumb_function_pointer": [],
+      "value": "0x20000108"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x00001538",
+      "halfword": "0801"
+    },
+    {
+      "address": "0x0000153a",
+      "halfword": "0020"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x00001536",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "row": "r13",
+  "size": 24,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "uxTaskResetEventItemValue",
+  "symbol_record": {
+    "address": "0x00001524",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxTaskResetEventItemValue",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001525"
+  },
+  "thumb_symbol": "0x00001525",
+  "unsupported_instructions": []
+}

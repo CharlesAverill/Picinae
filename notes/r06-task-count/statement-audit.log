@@ -1,0 +1,51 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-9eb1e5fb
+COMMAND=python3 -
+PASS: all 11 theorem/lemma/corollary statements preserved verbatim.
+Initial attempt SHA256: 1e53620c5784c7a203b34298032bcb926246b27b07a97de513318d9c8b1bb197
+Unchecked proofs replaced only by Abort; no second compiler run.
+Theorem task_count_nwc : forall s2 s1,
+  uxTaskGetNumberOfTasks_armv6m_prog s1 = uxTaskGetNumberOfTasks_armv6m_prog s2.
+Theorem task_count_welltyped :
+  welltyped_prog armv6mtypctx uxTaskGetNumberOfTasks_armv6m_prog.
+Theorem task_count_preserves_memory :
+  forall_endstates uxTaskGetNumberOfTasks_armv6m_prog
+    (fun _ s _ s' => s V_MEM32 = s' V_MEM32).
+Lemma task_count_zero_bound : forall w, 0 < 2^w.
+Lemma task_count_witness_models : forall m,
+  m < 2^(8*2^32) -> models armv6mtypctx (task_count_entry_witness m).
+Theorem task_count_entry_satisfiable : forall m,
+  m < 2^(8*2^32) ->
+  exists s, models armv6mtypctx s /\ s V_MEM32 = m /\
+    task_count_readable s /\ N.odd (s R_LR) = true.
+Theorem task_count_correct : forall s t s' x'
+  (ENTRY: startof t (x',s') = (Addr 0x59c,s))
+  (MDL: models armv6mtypctx s),
+  satisfies_all uxTaskGetNumberOfTasks_armv6m_prog
+    (task_count_invariants s) task_count_exit ((x',s')::t).
+Corollary task_count_post_at_bx : forall s t s'
+  (ENTRY: startof t (Addr 0x5a0,s') = (Addr 0x59c,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog uxTaskGetNumberOfTasks_armv6m_prog ((Addr 0x5a0,s')::t))
+  (UT: unterminated task_count_exit t),
+  task_count_postcondition s s'.
+Corollary task_count_preserves_callee_saved : forall s t s'
+  (ENTRY: startof t (Addr 0x5a0,s') = (Addr 0x59c,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog uxTaskGetNumberOfTasks_armv6m_prog ((Addr 0x5a0,s')::t))
+  (UT: unterminated task_count_exit t),
+  forall v, In v [R_R4; R_R5; R_R6; R_R7; R_R8; R_R9; R_R10; R_R11; R_SP; R_LR] ->
+    s' v = s v.
+Theorem task_count_return_step : forall s (ODD: N.odd (s R_LR) = true),
+  can_step uxTaskGetNumberOfTasks_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s),(Addr 0x5a0,s)).
+Corollary task_count_caller_result : forall s t s'
+  (ENTRY: startof t (Addr 0x5a0,s') = (Addr 0x59c,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog uxTaskGetNumberOfTasks_armv6m_prog ((Addr 0x5a0,s')::t))
+  (UT: unterminated task_count_exit t)
+  (ODD: N.odd (s R_LR) = true),
+  task_count_postcondition s s' /\
+  can_step uxTaskGetNumberOfTasks_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s'),(Addr 0x5a0,s')).
+
+EXIT_CODE=0

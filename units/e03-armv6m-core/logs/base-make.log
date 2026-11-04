@@ -1,0 +1,113 @@
+#coq_makefile -f _CoqProject -o Makefile.coq
+rocq makefile -f _CoqProject -o Makefile.coq
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+ROCQ DEP VFILES
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+make -f Makefile.coq Picinae_ISA.vo
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+ROCQ compile Picinae_core.v
+ROCQ compile Picinae_theory.v
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 9152, characters 47-67:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9152, characters 47-67:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+ROCQ compile Picinae_statics.v
+ROCQ compile Picinae_finterp.v
+ROCQ compile Picinae_simplifier_base.v
+ROCQ compile Picinae_ISA.v
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+EXIT=0
