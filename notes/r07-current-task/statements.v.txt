@@ -1,0 +1,67 @@
+Theorem current_task_nwc : forall s2 s1,
+  xTaskGetCurrentTaskHandle_armv6m_prog s1 = xTaskGetCurrentTaskHandle_armv6m_prog s2.
+
+Theorem current_task_welltyped :
+  welltyped_prog armv6mtypctx xTaskGetCurrentTaskHandle_armv6m_prog.
+
+Theorem current_task_preserves_memory :
+  forall_endstates xTaskGetCurrentTaskHandle_armv6m_prog
+    (fun _ s _ s' => s V_MEM32 = s' V_MEM32).
+
+Lemma current_task_zero_bound : forall w, 0 < 2^w.
+
+Lemma current_task_witness_models : forall m lr,
+  m < 2^(8*2^32) -> lr < 2^32 ->
+  models armv6mtypctx (current_task_entry_witness m lr).
+
+Theorem current_task_entry_satisfiable : forall m lr,
+  m < 2^(8*2^32) -> current_task_ordinary_return lr ->
+  exists s, models armv6mtypctx s /\ s V_MEM32 = m /\
+    current_task_readable s /\ s R_LR = lr /\
+    current_task_ordinary_return (s R_LR).
+
+Corollary current_task_entry_nonempty :
+  exists s, models armv6mtypctx s /\ s V_MEM32 = 0 /\
+    current_task_readable s /\ s R_LR = 1 /\
+    current_task_ordinary_return (s R_LR).
+
+Theorem current_task_correct : forall s t s' x'
+  (ENTRY: startof t (x',s') = (Addr 0x12dc,s))
+  (MDL: models armv6mtypctx s),
+  satisfies_all xTaskGetCurrentTaskHandle_armv6m_prog
+    (current_task_invariants s) current_task_exit ((x',s')::t).
+
+Corollary current_task_post_at_bx : forall s t s'
+  (ENTRY: startof t (Addr 0x12e0,s') = (Addr 0x12dc,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog xTaskGetCurrentTaskHandle_armv6m_prog ((Addr 0x12e0,s')::t))
+  (UT: unterminated current_task_exit t),
+  current_task_postcondition s s'.
+
+Corollary current_task_preserves_callee_saved : forall s t s'
+  (ENTRY: startof t (Addr 0x12e0,s') = (Addr 0x12dc,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog xTaskGetCurrentTaskHandle_armv6m_prog ((Addr 0x12e0,s')::t))
+  (UT: unterminated current_task_exit t),
+  forall v, In v [R_R4; R_R5; R_R6; R_R7; R_R8; R_R9; R_R10; R_R11; R_SP; R_LR] ->
+    s' v = s v.
+
+Theorem current_task_return_step : forall s
+  (ORDINARY: current_task_ordinary_return (s R_LR)),
+  can_step xTaskGetCurrentTaskHandle_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s),(Addr 0x12e0,s)).
+
+Corollary current_task_caller_result : forall s t s'
+  (ENTRY: startof t (Addr 0x12e0,s') = (Addr 0x12dc,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog xTaskGetCurrentTaskHandle_armv6m_prog ((Addr 0x12e0,s')::t))
+  (UT: unterminated current_task_exit t)
+  (ORDINARY: current_task_ordinary_return (s R_LR)),
+  current_task_postcondition s s' /\
+  can_step xTaskGetCurrentTaskHandle_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s'),(Addr 0x12e0,s')).
+
+Theorem current_task_original_bytes : forall initial final,
+  current_task_postcondition initial final ->
+  final V_MEM32 = initial V_MEM32 /\
+  forall a, (final V_MEM32) Ⓑ[a] = (initial V_MEM32) Ⓑ[a].
