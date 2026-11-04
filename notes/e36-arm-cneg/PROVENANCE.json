@@ -1,0 +1,18 @@
+{
+  "assembled_sha256": "ec5afe7395465827b8dd8a0067ca695a842d6c84c1293ab95c20a2249141184c",
+  "assembler": "GNU aarch64-linux-gnu-as 2.42 (isolated arm-validation)",
+  "assembly_sha256": "e3af3063e96dd00a15b6719bef8c7c35785bf25b7213df9cbcb6ff71cf3fa6db",
+  "elf_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "finite_reference_test_sha256": "3d2605b4d2cb2662d50f357660c15c7b6b6492c5ee460190d4392604ce8e3bf8",
+  "fixture_source_sha256": "f407a83b126a1daeb0074a459f1237bfabaf2c88de5153ce75e4f5f39cea4722",
+  "fixture_vo_sha256": "0f9ce2f099e7e1ee3829346b29f9ca1db8cef3c1553f20f147f923d3ba1d7713",
+  "ghidra": "11.4.2",
+  "image_base": "0x100000",
+  "implementation_sha256": {
+    "lift-scalar.py": "1bdf6ec35946c220dc07fc4963efc37b7cb3f150e0f77ccfbcfecd2e74828909",
+    "pcode2coq_scalar.py": "ad08a91cf417ed4f43d00bdadc42bb80a84d457472b0bcdc793fe293041f1a58",
+    "scalar_headless.py": "4aab6945ece18c558f2b1dc397a31a8333a8e380dcaf29630168472e1fe7bcd3"
+  },
+  "language": "AARCH64:LE:64:v8A",
+  "raw_sha256": "d5d6128684bcd6a1959d8f2d53c6d8aa506cc0073a62534d0ba7e487559f5c6a"
+}

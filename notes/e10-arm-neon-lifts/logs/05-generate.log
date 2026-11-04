@@ -1,0 +1,5 @@
+COMMAND=["python3", "tools/ghidra-lifter/test_neon_loads.py", "--generate"]
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0fa60739
+Generated 126 fragments, 1134 finite executions
+
+EXIT_CODE=0

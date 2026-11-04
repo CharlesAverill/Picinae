@@ -1,0 +1,56 @@
+EEE
+======================================================================
+ERROR: test_finite (__main__.Tests.test_finite)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 155, in test_finite
+    tree=parse(lower(r))
+               ^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 36, in lower
+    return NeonLoadLifter(Language(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 136, in instruction
+    return seq([self.statement(o) for o in ops])
+                ^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_scalar.py", line 219, in statement
+    raise Unsupported('nondefault memory space')
+pcode2coq_scalar.Unsupported: nondefault memory space
+
+======================================================================
+ERROR: test_strict (__main__.Tests.test_strict)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 176, in test_strict
+    self.assertEqual(lower(r),lower(bad)); continue
+                     ^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 36, in lower
+    return NeonLoadLifter(Language(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 136, in instruction
+    return seq([self.statement(o) for o in ops])
+                ^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_scalar.py", line 219, in statement
+    raise Unsupported('nondefault memory space')
+pcode2coq_scalar.Unsupported: nondefault memory space
+
+======================================================================
+ERROR: test_temporaries_and_metadata (__main__.Tests.test_temporaries_and_metadata)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 189, in test_temporaries_and_metadata
+    self.assertEqual(lower(r),lower(bad))
+                     ^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/test_neon_loads.py", line 36, in lower
+    return NeonLoadLifter(Language(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_neon_loads.py", line 136, in instruction
+    return seq([self.statement(o) for o in ops])
+                ^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-0fa60739/tools/ghidra-lifter/pcode2coq_scalar.py", line 219, in statement
+    raise Unsupported('nondefault memory space')
+pcode2coq_scalar.Unsupported: nondefault memory space
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.259s
+
+FAILED (errors=3)

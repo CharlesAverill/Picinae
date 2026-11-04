@@ -1,0 +1,6 @@
+{
+  "baseline": "a3a80d011dc91d51b163b9d68c33ef92ea40635b",
+  "old_helper_deltas": {},
+  "protected": "All old translators, ISA/core, proofs, programs, raw traces, manifests, receipts and notes remain byte-identical. Only root Dune registers the opt-in fixture target.",
+  "new_profile": "Separate entry point and transitive four-helper hashes in new receipts; no old receipt regeneration."
+}

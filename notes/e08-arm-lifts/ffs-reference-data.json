@@ -1,0 +1,42 @@
+{
+  "staticMemory": false,
+  "materialized_objects": [
+    {
+      "symbol": "table.0",
+      "elf_address": "0x14e738",
+      "model_address": "0x24e738",
+      "size": 256,
+      "referenced_model_address": "0x24e738",
+      "materialized_at": "0x194ac0",
+      "file_backed": true,
+      "elf_bytes_hex": "00010202030303030404040404040404050505050505050505050505050505050606060606060606060606060606060606060606060606060606060606060606070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070707070808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808",
+      "elf_bytes_sha256": "14a5d850c255623f9472e3c650abce0c78d32f0276b315b3a276a0462d97a1ac",
+      "relocations": [],
+      "symbol_aliases": [
+        "table.0"
+      ],
+      "materialization_sites": [
+        "0x194ac0",
+        "0x194af0"
+      ]
+    }
+  ],
+  "memory_accesses": [
+    {
+      "instruction": "0x194acc",
+      "assembly": "ldrb w1,[x2, w1, UXTW ]",
+      "pcode": [
+        "(unique, 0x25600, 1) LOAD (const, 0x1b1, 8) , (unique, 0x7580, 8)"
+      ]
+    },
+    {
+      "instruction": "0x194af8",
+      "assembly": "ldrb w1,[x2, w1, UXTW ]",
+      "pcode": [
+        "(unique, 0x25600, 1) LOAD (const, 0x1b1, 8) , (unique, 0x7580, 8)"
+      ]
+    }
+  ],
+  "contract": "Map ELF virtual data addresses to model addresses by +0x100000. Runtime memory must supply these bytes/state and any relocated pointer targets; generated program does not initialize memory.",
+  "analysis": "ADR(P)+ADD object references plus complete raw memory instruction list; manual target review required, no invented constants"
+}

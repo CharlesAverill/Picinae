@@ -1,0 +1,38 @@
+{
+  "base": "49956416928e5b6bb3928b54ae33e3b81091f006",
+  "timing": "4f1772040b6fc9d12af3f84f2ca089bb65cd4bd6",
+  "ghidra_tag": "Ghidra_11.4.2_build",
+  "ghidra_commit": "0b61b34bb9c98108eefd9404f45446dae6a1c5eb",
+  "pcode2coq_reference": "b7f0122 (abbreviated only; modified uncommitted checkout unavailable)",
+  "repo_lifter_introduction": "8f83c87501dbd6f183ecefe991abc8639e0671a4",
+  "source_package": "glibc 2.35-0ubuntu3.15; dpkg-source --no-check -x; archive hashes pinned; signing key not verified",
+  "patched_source_files": {
+    "sysdeps/aarch64/multiarch/memcpy.c": "8129efb2acd3cde43a7552a249710d5cdd75ad4fa1d7413ca6ec6c55dc99e8b3",
+    "sysdeps/aarch64/multiarch/memmove.c": "0b53df276f5cbcd6a45e81721ed0846b463b8e1edcc6386681d02583ee508609",
+    "sysdeps/aarch64/multiarch/memset.c": "00cc1630d54e2af2ec9b686e0a03ddd192d49c26e45ae2c8351047cd3ae026a6",
+    "sysdeps/aarch64/multiarch/memchr.c": "aea166698214ef29c3bfd298e6523b8e5f3ba56cf504326e92d1d31d7ac8f558",
+    "sysdeps/aarch64/multiarch/strlen.c": "9d32225bbcb5d72f73a6da2857a87221bbce743a2ed361e397b09b60e6b98653",
+    "sysdeps/aarch64/multiarch/ifunc-impl-list.c": "00ff279c1bf73a0008a35b82b1e44c921f90cecca046078b2dceac677b47114a",
+    "sysdeps/aarch64/multiarch/init-arch.h": "06bf4a6fe10967093c4d692ec6f3e825f816e05a36d244591018b864c14295e9",
+    "sysdeps/aarch64/Implies": "de7d84dd155034929c7973bc986444cfccd7f3869ea0b0e57da3298ce4acca54",
+    "sysdeps/aarch64/bits/wordsize.h": "95f0df4c13247028ebfa720f34bb60c4132628afcd1a0c652d93c00c93936893",
+    "sysdeps/ieee754/ldbl-128/bits/floatn.h": "5b16ae4e9c286a2e7bc658853a04f2f269c5fc4a3355ae4a87f90336eaf66165",
+    "stdlib/div.c": "8bebdf3aab050959ad6e0040537d54b4b66473fdd20fcb3d47850ffe7d97cbec",
+    "stdlib/ldiv.c": "ec0ad370f9d5cca95b7f45180f873e0ec94c65c10e2e410633c5fbc9a4bfa08b",
+    "sysdeps/wordsize-64/ldiv.c": "a2f9247cff7c81a2be2923532155b1f8c3fa293f005c905c5124058a2717da72"
+  },
+  "repo_lifter_files": {
+    "tools/ghidra-lifter/pcode2coq_lib.py": {
+      "sha256": "c8222d7d4f5574af96fa33e7ec15de9aa8de5f64f5db127341cddcfa4ff742c5",
+      "git_blob": "e9d654d74714e62b2e42b76e39e469e26a821d2e"
+    },
+    "tools/ghidra-lifter/translationConstants.py": {
+      "sha256": "da9fb47098746dca7efa227c1d7f1962a4fea43fad19c67944a24c031683d624",
+      "git_blob": "407213beb3a2d16bf58e01f2ab35028c81fe3bd4"
+    },
+    "Examples/claude/lifter/pcode2coq_headless.py": {
+      "sha256": "64da432e4daefbf7272774ec47349b0974d364b9e32eb7090f5d01e19c9c6487",
+      "git_blob": "f773449ec1b0874db477b3f8df1fc84374758ae3"
+    }
+  }
+}

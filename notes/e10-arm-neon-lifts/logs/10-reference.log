@@ -1,0 +1,156 @@
+COMMAND=["bash", "--noprofile", "--norc", "-e", "-c", "sha256sum /tmp/e29-arm-isa.pdf; sed -n 86935,86982p /tmp/e29-arm-isa.txt; sed -n 87231,87290p /tmp/e29-arm-isa.txt; sed -n 87598,87640p /tmp/e29-arm-isa.txt"]
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0fa60739
+89973c3d41fe5f45cc8581ff41db7c8736d3f2b6d7bb6568112a3c3ac81cb845  /tmp/e29-arm-isa.pdf
+Operation
+
+CheckFPAdvSIMDEnabled64();
+
+bits(64) address;
+bits(datasize) data1;
+bits(datasize) data2;
+constant integer dbytes = datasize DIV 8;
+
+if HaveMTE2Ext() then
+
+SetTagCheckedInstruction(tag_checked);
+
+if n == 31 then
+
+CheckSPAlignment();
+address = SP[];
+
+else
+
+address = X[n];
+
+if !postindex then
+
+address = address + offset;
+
+data1 = Mem[address, dbytes, AccType_VEC];
+data2 = Mem[address+dbytes, dbytes, AccType_VEC];
+if rt_unknown then
+
+data1 = bits(datasize) UNKNOWN;
+data2 = bits(datasize) UNKNOWN;
+
+V[t] = data1;
+V[t2] = data2;
+
+if wback then
+
+if postindex then
+
+address = address + offset;
+
+if n == 31 then
+
+SP[] = address;
+
+else
+
+Page 1010
+
+Operation
+
+if HaveMTE2Ext() then
+
+SetTagCheckedInstruction(tag_checked);
+
+CheckFPAdvSIMDEnabled64();
+bits(64) address;
+bits(datasize) data;
+
+if n == 31 then
+
+CheckSPAlignment();
+address = SP[];
+
+else
+
+address = X[n];
+
+if !postindex then
+
+address = address + offset;
+
+case memop of
+
+when MemOp_STORE
+
+data = V[t];
+Mem[address, datasize DIV 8, AccType_VEC] = data;
+
+when MemOp_LOAD
+
+data = Mem[address, datasize DIV 8, AccType_VEC];
+V[t] = data;
+
+if wback then
+
+if postindex then
+
+address = address + offset;
+
+if n == 31 then
+
+SP[] = address;
+
+else
+
+X[n] = address;
+
+Operational information
+
+If PSTATE.DIT is 1, the timing of this instruction is insensitive to the value of the data being loaded or stored.
+
+Internal version only: isa v32.13, AdvSIMD v29.05, pseudocode v2020-12, sve v2020-12 ; Build timestamp: 2020-12-16T16:53
+
+Copyright © 2010-2020 Arm Limited or its affiliates. All rights reserved. This document is Non-Confidential.
+
+LDR (immediate, SIMD&FP)
+
+Operation
+
+bits(64) offset = ExtendReg(m, extend_type, shift);
+if HaveMTE2Ext() then
+
+SetTagCheckedInstruction(tag_checked);
+
+CheckFPAdvSIMDEnabled64();
+bits(64) address;
+bits(datasize) data;
+
+if n == 31 then
+
+CheckSPAlignment();
+address = SP[];
+
+else
+
+address = X[n];
+
+address = address + offset;
+
+case memop of
+
+when MemOp_STORE
+
+data = V[t];
+Mem[address, datasize DIV 8, AccType_VEC] = data;
+
+when MemOp_LOAD
+
+data = Mem[address, datasize DIV 8, AccType_VEC];
+V[t] = data;
+
+Operational information
+
+If PSTATE.DIT is 1, the timing of this instruction is insensitive to the value of the data being loaded or stored.
+
+Internal version only: isa v32.13, AdvSIMD v29.05, pseudocode v2020-12, sve v2020-12 ; Build timestamp: 2020-12-16T16:53
+
+Copyright © 2010-2020 Arm Limited or its affiliates. All rights reserved. This document is Non-Confidential.
+
+
+EXIT_CODE=0

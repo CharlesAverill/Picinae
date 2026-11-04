@@ -1,0 +1,65 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ff05d511
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e36-arm-cneg/check-atomic.py
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_cneg import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e36-arm-cneg/malformed/0.json", "/home/charles/code/friends/.toolchains/e36-arm-cneg/malformed/0.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/test_cneg.py", line 21, in lower
+    return ScalarLifter(RawLanguage(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/pcode2coq_scalar.py", line 530, in instruction
+    self.check_cneg(insn, ops)
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/pcode2coq_scalar.py", line 518, in check_cneg
+    raise Unsupported('unhandled CNEG raw-pcode shape')
+pcode2coq_scalar.Unsupported: unhandled CNEG raw-pcode shape
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_cneg import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e36-arm-cneg/malformed/1.json", "/home/charles/code/friends/.toolchains/e36-arm-cneg/malformed/1.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/test_cneg.py", line 21, in lower
+    return ScalarLifter(RawLanguage(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/pcode2coq_scalar.py", line 530, in instruction
+    self.check_cneg(insn, ops)
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/pcode2coq_scalar.py", line 518, in check_cneg
+    raise Unsupported('unhandled CNEG raw-pcode shape')
+pcode2coq_scalar.Unsupported: unhandled CNEG raw-pcode shape
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_cneg import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e36-arm-cneg/malformed/2.json", "/home/charles/code/friends/.toolchains/e36-arm-cneg/malformed/2.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/test_cneg.py", line 21, in lower
+    return ScalarLifter(RawLanguage(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/pcode2coq_scalar.py", line 530, in instruction
+    self.check_cneg(insn, ops)
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/pcode2coq_scalar.py", line 518, in check_cneg
+    raise Unsupported('unhandled CNEG raw-pcode shape')
+pcode2coq_scalar.Unsupported: unhandled CNEG raw-pcode shape
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_cneg import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e36-arm-cneg/malformed/3.json", "/home/charles/code/friends/.toolchains/e36-arm-cneg/malformed/3.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/test_cneg.py", line 21, in lower
+    return ScalarLifter(RawLanguage(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/pcode2coq_scalar.py", line 530, in instruction
+    self.check_cneg(insn, ops)
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/pcode2coq_scalar.py", line 462, in check_cneg
+    raise Unsupported('unhandled CNEG encoding')
+pcode2coq_scalar.Unsupported: unhandled CNEG encoding
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "-c", "import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from test_cneg import lower; result=lower(json.loads(Path(sys.argv[2]).read_text())); Path(sys.argv[3]).write_text(result)", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter", "/home/charles/code/friends/.toolchains/e36-arm-cneg/malformed/4.json", "/home/charles/code/friends/.toolchains/e36-arm-cneg/malformed/4.il"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/test_cneg.py", line 21, in lower
+    return ScalarLifter(RawLanguage(row), base).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/pcode2coq_scalar.py", line 530, in instruction
+    self.check_cneg(insn, ops)
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/pcode2coq_scalar.py", line 518, in check_cneg
+    raise Unsupported('unhandled CNEG raw-pcode shape')
+pcode2coq_scalar.Unsupported: unhandled CNEG raw-pcode shape
+EXIT_CODE=1
+PASS five malformed subprocess failures/no output, unique-renumber determinism and overlapping-unique rejection
+
+EXIT_CODE=0
