@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-473b43ee
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/e26-x86-sse-avx-lowering
+
+EXIT_CODE=0
