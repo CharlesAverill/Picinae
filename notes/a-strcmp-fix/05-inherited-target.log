@@ -1,0 +1,1435 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-013cef89
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 4000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/claude/arm8_strcmp_proof.vo
+        rocq .Picinae.theory.d
+        rocq Picinae_core.{glob,vo}
+        rocq Picinae_theory.{glob,vo}
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 9152, characters 47-67:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9152, characters 47-67:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq Picinae_statics.{glob,vo}
+        rocq Picinae_auto.{glob,vo}
+        rocq Picinae_finterp.{glob,vo}
+        rocq Picinae_simplifier_base.{glob,vo}
+        rocq Picinae_ISA.{glob,vo}
+        rocq Picinae_simplifier_v1_1.{glob,vo}
+        rocq Picinae_armv8.{glob,vo}
+        rocq Examples/claude/arm8_common.{glob,vo}
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq Examples/claude/lifter/scalar_ccmp/e30_strcmp_arm8.{glob,vo}
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/scalar_ccmp/e30_strcmp_arm8.v", line 6, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+        rocq Examples/claude/arm8_strcmp_proof.{glob,vo}
+Closed under the global context
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Goal at < 1650560 >
+Goal at < 1650592 >
+Goal at < 1650628 >
+Goal at < 1650628 >
+Goal at < 1650592 >
+Goal at < 1650712 >
+Goal at < 1650784 >
+Goal at < 1650628 >
+Goal at < 1650592 >
+Goal at < 1650628 >
+Goal at < 1650628 >
+Goal at < 1650660 >
+Goal at < 1650864 >
+Goal at < 1650712 >
+Goal at < 1650784 >
+Goal at < 1650628 >
+Goal at < 1650864 >
+Goal at < 1650784 >
+Goal at < 1650628 >
+Goal at < 1650628 >
+Goal at < 1650628 >
+Goal at < 1650628 >
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_live s0
+   (s0[V_MEM64 := m][R_X1 := q][R_X10 := q ⊖ p][R_X8 := 72340172838076673]
+    [R_X0 := 8 ⊕ (p .& 18446744073709551608)][R_X9 := 
+    0 ⊖ (q << 3)]
+    [R_X2 := m Ⓠ[ p .& 18446744073709551608 ]
+             .| 18446744073709551615 >> msub 6 0 (q << 3)]
+    [R_X3 := m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+             .| 18446744073709551615 >> msub 6 0 (q << 3)]
+    [R_X6 := m Ⓠ[ p .& 18446744073709551608 ]
+             .| 18446744073709551615 >> msub 6 0 (q << 3)
+             .| 9187201950435737471]
+    [R_X4 := (m Ⓠ[ p .& 18446744073709551608 ]
+              .| 18446744073709551615 >> msub 6 0 (q << 3))
+             ⊖ 72340172838076673
+             .& ((m Ⓠ[ p .& 18446744073709551608 ]
+                  .| 18446744073709551615 >> msub 6 0 (q << 3)
+                  .| 9187201950435737471)
+                 .^ 18446744073709551615)]
+    [R_TMPCY := if
+                 m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                 .| 18446744073709551615 >> msub 6 0 (q << 3) <=?
+                 m Ⓠ[ p .& 18446744073709551608 ]
+                 .| 18446744073709551615 >> msub 6 0 (q << 3)
+                then 1
+                else 0]
+    [R_TMPOV := ((m Ⓠ[ p .& 18446744073709551608 ]
+                  .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                 63
+                 .^ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                     .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                    63)
+                .& ((m Ⓠ[ p .& 18446744073709551608 ]
+                     .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                    63
+                    .^ (m Ⓠ[ p .& 18446744073709551608 ]
+                        .| 18446744073709551615 >> msub 6 0 (q << 3))
+                       ⊖ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                          .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                       63)]
+    [R_TMPNG := if
+                 slt 64
+                   ((m Ⓠ[ p .& 18446744073709551608 ]
+                     .| 18446744073709551615 >> msub 6 0 (q << 3))
+                    ⊖ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                       .| 18446744073709551615 >> msub 6 0 (q << 3)))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 1]
+    [R_NG := if
+              slt 64
+                ((m Ⓠ[ p .& 18446744073709551608 ]
+                  .| 18446744073709551615 >> msub 6 0 (q << 3))
+                 ⊖ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                    .| 18446744073709551615 >> msub 6 0 (q << 3)))
+                0
+             then 1
+             else 0]
+    [R_ZR := 1]
+    [R_CY := if
+              m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+              .| 18446744073709551615 >> msub 6 0 (q << 3) <=?
+              m Ⓠ[ p .& 18446744073709551608 ]
+              .| 18446744073709551615 >> msub 6 0 (q << 3)
+             then 1
+             else 0]
+    [R_OV := ((m Ⓠ[ p .& 18446744073709551608 ]
+               .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+              63
+              .^ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                  .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                 63)
+             .& ((m Ⓠ[ p .& 18446744073709551608 ]
+                  .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                 63
+                 .^ (m Ⓠ[ p .& 18446744073709551608 ]
+                     .| 18446744073709551615 >> msub 6 0 (q << 3))
+                    ⊖ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                       .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                    63)]) /\
+ p mod 8 = q mod 8 /\
+ q ⊖ p = q ⊖ p /\
+ (exists i : N,
+    i <= K /\ 8 ⊕ (p .& 18446744073709551608) = p + i /\ (p + i) mod 8 = 0))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_frame s0
+   (s0[V_MEM64 := m][R_X1 := q][R_X10 := q ⊖ p][R_X8 := 72340172838076673]
+    [R_X0 := 8 ⊕ (p .& 18446744073709551608)][R_X9 := 
+    0 ⊖ (q << 3)]
+    [R_X2 := m Ⓠ[ p .& 18446744073709551608 ]
+             .| 18446744073709551615 >> msub 6 0 (q << 3)]
+    [R_X3 := m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+             .| 18446744073709551615 >> msub 6 0 (q << 3)]
+    [R_X4 := (m Ⓠ[ p .& 18446744073709551608 ]
+              .| 18446744073709551615 >> msub 6 0 (q << 3))
+             ⊖ 72340172838076673
+             .& ((m Ⓠ[ p .& 18446744073709551608 ]
+                  .| 18446744073709551615 >> msub 6 0 (q << 3)
+                  .| 9187201950435737471)
+                 .^ 18446744073709551615)]
+    [R_TMPCY := if
+                 m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                 .| 18446744073709551615 >> msub 6 0 (q << 3) <=?
+                 m Ⓠ[ p .& 18446744073709551608 ]
+                 .| 18446744073709551615 >> msub 6 0 (q << 3)
+                then 1
+                else 0]
+    [R_TMPOV := ((m Ⓠ[ p .& 18446744073709551608 ]
+                  .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                 63
+                 .^ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                     .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                    63)
+                .& ((m Ⓠ[ p .& 18446744073709551608 ]
+                     .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                    63
+                    .^ (m Ⓠ[ p .& 18446744073709551608 ]
+                        .| 18446744073709551615 >> msub 6 0 (q << 3))
+                       ⊖ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                          .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                       63)]
+    [R_TMPNG := if
+                 slt 64
+                   ((m Ⓠ[ p .& 18446744073709551608 ]
+                     .| 18446744073709551615 >> msub 6 0 (q << 3))
+                    ⊖ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                       .| 18446744073709551615 >> msub 6 0 (q << 3)))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 0]
+    [R_NG := if
+              slt 64
+                ((m Ⓠ[ p .& 18446744073709551608 ]
+                  .| 18446744073709551615 >> msub 6 0 (q << 3))
+                 ⊖ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                    .| 18446744073709551615 >> msub 6 0 (q << 3)))
+                0
+             then 1
+             else 0]
+    [R_ZR := 0]
+    [R_CY := if
+              m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+              .| 18446744073709551615 >> msub 6 0 (q << 3) <=?
+              m Ⓠ[ p .& 18446744073709551608 ]
+              .| 18446744073709551615 >> msub 6 0 (q << 3)
+             then 1
+             else 0]
+    [R_OV := ((m Ⓠ[ p .& 18446744073709551608 ]
+               .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+              63
+              .^ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                  .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                 63)
+             .& ((m Ⓠ[ p .& 18446744073709551608 ]
+                  .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                 63
+                 .^ (m Ⓠ[ p .& 18446744073709551608 ]
+                     .| 18446744073709551615 >> msub 6 0 (q << 3))
+                    ⊖ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                       .| 18446744073709551615 >> msub 6 0 (q << 3)) >>
+                    63)]
+    [R_X5 := (m Ⓠ[ p .& 18446744073709551608 ]
+              .| 18446744073709551615 >> msub 6 0 (q << 3))
+             .^ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                 .| 18446744073709551615 >> msub 6 0 (q << 3))]
+    [R_X6 := (m Ⓠ[ p .& 18446744073709551608 ]
+              .| 18446744073709551615 >> msub 6 0 (q << 3))
+             .^ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                 .| 18446744073709551615 >> msub 6 0 (q << 3))
+             .| (m Ⓠ[ p .& 18446744073709551608 ]
+                 .| 18446744073709551615 >> msub 6 0 (q << 3))
+                ⊖ 72340172838076673
+                .& ((m Ⓠ[ p .& 18446744073709551608 ]
+                     .| 18446744073709551615 >> msub 6 0 (q << 3)
+                     .| 9187201950435737471)
+                    .^ 18446744073709551615)]) /\
+ (exists j : N,
+    j < 8 /\
+    strcmp_pair m p q K
+      (m Ⓠ[ p .& 18446744073709551608 ]
+       .| 18446744073709551615 >> msub 6 0 (q << 3))
+      (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+       .| 18446744073709551615 >> msub 6 0 (q << 3))
+      j /\
+    strcmp_syndrome
+      (m Ⓠ[ p .& 18446744073709551608 ]
+       .| 18446744073709551615 >> msub 6 0 (q << 3))
+      (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+       .| 18446744073709551615 >> msub 6 0 (q << 3))
+      ((m Ⓠ[ p .& 18446744073709551608 ]
+        .| 18446744073709551615 >> msub 6 0 (q << 3))
+       .^ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+           .| 18446744073709551615 >> msub 6 0 (q << 3))
+       .| (m Ⓠ[ p .& 18446744073709551608 ]
+           .| 18446744073709551615 >> msub 6 0 (q << 3))
+          ⊖ 72340172838076673
+          .& ((m Ⓠ[ p .& 18446744073709551608 ]
+               .| 18446744073709551615 >> msub 6 0 (q << 3)
+               .| 9187201950435737471)
+              .^ 18446744073709551615))
+      j))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_frame s0
+   (s0[V_MEM64 := m][R_X1 := q][R_X10 := q ⊖ p][R_X8 := 72340172838076673]
+    [R_X0 := 8 ⊕ (p .& 18446744073709551608)][R_X9 := 
+    0 ⊖ (q << 3)]
+    [R_X2 := m Ⓠ[ p .& 18446744073709551608 ]
+             .| 18446744073709551615 >> msub 6 0 (q << 3)]
+    [R_X3 := m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+             .| 18446744073709551615 >> msub 6 0 (q << 3)]
+    [R_TMPNG := if
+                 slt 64
+                   ((m Ⓠ[ p .& 18446744073709551608 ]
+                     .| 18446744073709551615 >> msub 6 0 (q << 3))
+                    ⊖ 72340172838076673
+                    .& ((m Ⓠ[ p .& 18446744073709551608 ]
+                         .| 18446744073709551615 >> msub 6 0 (q << 3)
+                         .| 9187201950435737471)
+                        .^ 0 ⊖ 1))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 0]
+    [R_X4 := (m Ⓠ[ p .& 18446744073709551608 ]
+              .| 18446744073709551615 >> msub 6 0 (q << 3))
+             ⊖ 72340172838076673
+             .& ((m Ⓠ[ p .& 18446744073709551608 ]
+                  .| 18446744073709551615 >> msub 6 0 (q << 3)
+                  .| 9187201950435737471)
+                 .^ 18446744073709551615)]
+    [R_NG := 0][R_ZR := 0][R_CY := 0][R_OV := 0]
+    [R_X5 := (m Ⓠ[ p .& 18446744073709551608 ]
+              .| 18446744073709551615 >> msub 6 0 (q << 3))
+             .^ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                 .| 18446744073709551615 >> msub 6 0 (q << 3))]
+    [R_X6 := (m Ⓠ[ p .& 18446744073709551608 ]
+              .| 18446744073709551615 >> msub 6 0 (q << 3))
+             .^ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+                 .| 18446744073709551615 >> msub 6 0 (q << 3))
+             .| (m Ⓠ[ p .& 18446744073709551608 ]
+                 .| 18446744073709551615 >> msub 6 0 (q << 3))
+                ⊖ 72340172838076673
+                .& ((m Ⓠ[ p .& 18446744073709551608 ]
+                     .| 18446744073709551615 >> msub 6 0 (q << 3)
+                     .| 9187201950435737471)
+                    .^ 18446744073709551615)]) /\
+ (exists j : N,
+    j < 8 /\
+    strcmp_pair m p q K
+      (m Ⓠ[ p .& 18446744073709551608 ]
+       .| 18446744073709551615 >> msub 6 0 (q << 3))
+      (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+       .| 18446744073709551615 >> msub 6 0 (q << 3))
+      j /\
+    strcmp_syndrome
+      (m Ⓠ[ p .& 18446744073709551608 ]
+       .| 18446744073709551615 >> msub 6 0 (q << 3))
+      (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+       .| 18446744073709551615 >> msub 6 0 (q << 3))
+      ((m Ⓠ[ p .& 18446744073709551608 ]
+        .| 18446744073709551615 >> msub 6 0 (q << 3))
+       .^ (m Ⓠ[ (p .& 18446744073709551608) + q ⊖ p ]
+           .| 18446744073709551615 >> msub 6 0 (q << 3))
+       .| (m Ⓠ[ p .& 18446744073709551608 ]
+           .| 18446744073709551615 >> msub 6 0 (q << 3))
+          ⊖ 72340172838076673
+          .& ((m Ⓠ[ p .& 18446744073709551608 ]
+               .| 18446744073709551615 >> msub 6 0 (q << 3)
+               .| 9187201950435737471)
+              .^ 18446744073709551615))
+      j))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_live s0
+   (s0[R_X0 := p][R_X1 := q][R_X10 := q ⊖ p][R_X8 := 72340172838076673]
+    [R_X6 := p mod 8][R_TMPNG := if slt 64 (q ⊖ p .& 7) 0 then 1 else 0]
+    [R_TMPZR := 1][R_NG := if slt 64 (q ⊖ p .& 7) 0 then 1 else 0][R_ZR := 1]
+    [R_CY := 0][R_OV := 0]) /\
+ p mod 8 = q mod 8 /\
+ q ⊖ p = q ⊖ p /\ (exists i : N, i <= K /\ p = p + i /\ (p + i) mod 8 = 0))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_live s0
+   (s0[V_MEM64 := m][R_X0 := p][R_X10 := q ⊖ p][R_X8 := 72340172838076673]
+    [R_X9 := 0 ⊖ (q << 3)][R_X1 := 8 ⊕ (q .& 18446744073709551608)]
+    [R_X7 := m Ⓠ[ q .& 18446744073709551608 ]
+             .| 72340172838076673 >> msub 6 0 (q << 3)]
+    [R_X6 := m Ⓠ[ q .& 18446744073709551608 ]
+             .| 72340172838076673 >> msub 6 0 (q << 3) .| 9187201950435737471]
+    [R_TMPNG := if
+                 slt 64
+                   ((m Ⓠ[ q .& 18446744073709551608 ]
+                     .| 72340172838076673 >> msub 6 0 (q << 3))
+                    ⊖ 72340172838076673
+                    .& ((m Ⓠ[ q .& 18446744073709551608 ]
+                         .| 72340172838076673 >> msub 6 0 (q << 3)
+                         .| 9187201950435737471)
+                        .^ 0 ⊖ 1))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 1]
+    [R_X4 := (m Ⓠ[ q .& 18446744073709551608 ]
+              .| 72340172838076673 >> msub 6 0 (q << 3))
+             ⊖ 72340172838076673
+             .& ((m Ⓠ[ q .& 18446744073709551608 ]
+                  .| 72340172838076673 >> msub 6 0 (q << 3)
+                  .| 9187201950435737471)
+                 .^ 18446744073709551615)]
+    [R_NG := if
+              slt 64
+                ((m Ⓠ[ q .& 18446744073709551608 ]
+                  .| 72340172838076673 >> msub 6 0 (q << 3))
+                 ⊖ 72340172838076673
+                 .& ((m Ⓠ[ q .& 18446744073709551608 ]
+                      .| 72340172838076673 >> msub 6 0 (q << 3)
+                      .| 9187201950435737471)
+                     .^ 0 ⊖ 1))
+                0
+             then 1
+             else 0]
+    [R_ZR := 1][R_CY := 0][R_OV := 0]
+    [R_X5 := 8 + (q .& 18446744073709551608) ⊖ p]) /\
+ q ⊖ p = q ⊖ p /\
+ (exists i : N,
+    i <= K /\
+    p = p + i /\
+    (p + i) mod 8 = 0 /\
+    (q + i) mod 8 <> 0 /\
+    8 + (q .& 18446744073709551608) ⊖ p = strcmp_down8 (q + i) + 8 ⊖ (p + i) /\
+    msub 6 0 (q << 3) = (64 - 8 * ((q + i) mod 8)) mod 64 /\
+    (forall j : N, j < 8 - (q + i) mod 8 -> m Ⓑ[ q + i ⊕ j ] <> 0)))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_frame s0
+   (s0[V_MEM64 := m][R_X0 := p][R_X10 := q ⊖ p][R_X8 := 72340172838076673]
+    [R_X1 := 8 ⊕ (q .& 18446744073709551608)]
+    [R_X7 := m Ⓠ[ q .& 18446744073709551608 ]
+             .| 72340172838076673 >> msub 6 0 (q << 3)]
+    [R_TMPNG := if
+                 slt 64
+                   ((m Ⓠ[ q .& 18446744073709551608 ]
+                     .| 72340172838076673 >> msub 6 0 (q << 3))
+                    ⊖ 72340172838076673
+                    .& ((m Ⓠ[ q .& 18446744073709551608 ]
+                         .| 72340172838076673 >> msub 6 0 (q << 3)
+                         .| 9187201950435737471)
+                        .^ 0 ⊖ 1))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 0]
+    [R_NG := if
+              slt 64
+                ((m Ⓠ[ q .& 18446744073709551608 ]
+                  .| 72340172838076673 >> msub 6 0 (q << 3))
+                 ⊖ 72340172838076673
+                 .& ((m Ⓠ[ q .& 18446744073709551608 ]
+                      .| 72340172838076673 >> msub 6 0 (q << 3)
+                      .| 9187201950435737471)
+                     .^ 0 ⊖ 1))
+                0
+             then 1
+             else 0]
+    [R_ZR := 0][R_CY := 0][R_OV := 0][R_X2 := m Ⓠ[ p ]]
+    [R_X9 := (q << 3) mod 2 ^ 64]
+    [R_X3 := (m Ⓠ[ q .& 18446744073709551608 ]
+              .| 72340172838076673 >> msub 6 0 (q << 3)) >>
+             (q << 3) mod 64]
+    [R_X4 := ((m Ⓠ[ q .& 18446744073709551608 ]
+               .| 72340172838076673 >> msub 6 0 (q << 3))
+              ⊖ 72340172838076673
+              .& ((m Ⓠ[ q .& 18446744073709551608 ]
+                   .| 72340172838076673 >> msub 6 0 (q << 3)
+                   .| 9187201950435737471)
+                  .^ 18446744073709551615)) >>
+             (q << 3) mod 64]
+    [R_X5 := m Ⓠ[ p ]
+             .^ (m Ⓠ[ q .& 18446744073709551608 ]
+                 .| 72340172838076673 >> msub 6 0 (q << 3)) >>
+                (q << 3) mod 64]
+    [R_X6 := m Ⓠ[ p ]
+             .^ (m Ⓠ[ q .& 18446744073709551608 ]
+                 .| 72340172838076673 >> msub 6 0 (q << 3)) >>
+                (q << 3) mod 64
+             .| ((m Ⓠ[ q .& 18446744073709551608 ]
+                  .| 72340172838076673 >> msub 6 0 (q << 3))
+                 ⊖ 72340172838076673
+                 .& ((m Ⓠ[ q .& 18446744073709551608 ]
+                      .| 72340172838076673 >> msub 6 0 (q << 3)
+                      .| 9187201950435737471)
+                     .^ 18446744073709551615)) >>
+                (q << 3) mod 64]) /\
+ (exists j : N,
+    j < 8 /\
+    strcmp_pair m p q K (m Ⓠ[ p ])
+      ((m Ⓠ[ q .& 18446744073709551608 ]
+        .| 72340172838076673 >> msub 6 0 (q << 3)) >>
+       (q << 3) mod 64)
+      j /\
+    strcmp_syndrome (m Ⓠ[ p ])
+      ((m Ⓠ[ q .& 18446744073709551608 ]
+        .| 72340172838076673 >> msub 6 0 (q << 3)) >>
+       (q << 3) mod 64)
+      (m Ⓠ[ p ]
+       .^ (m Ⓠ[ q .& 18446744073709551608 ]
+           .| 72340172838076673 >> msub 6 0 (q << 3)) >>
+          (q << 3) mod 64
+       .| ((m Ⓠ[ q .& 18446744073709551608 ]
+            .| 72340172838076673 >> msub 6 0 (q << 3))
+           ⊖ 72340172838076673
+           .& ((m Ⓠ[ q .& 18446744073709551608 ]
+                .| 72340172838076673 >> msub 6 0 (q << 3)
+                .| 9187201950435737471)
+               .^ 18446744073709551615)) >>
+          (q << 3) mod 64)
+      j))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_live s0
+   (s0[R_X0 := p][R_X1 := q][R_X10 := q ⊖ p][R_X8 := 72340172838076673]
+    [R_X6 := p mod 8][R_TMPNG := if slt 64 (q ⊖ p .& 7) 0 then 1 else 0]
+    [R_TMPZR := 0][R_NG := if slt 64 (q ⊖ p .& 7) 0 then 1 else 0][R_ZR := 0]
+    [R_CY := 0][R_OV := 0]) /\
+ p mod 8 <> q mod 8 /\
+ q ⊖ p = q ⊖ p /\ (exists i : N, i <= K /\ p = p + i /\ q = q + i))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_live s0
+   (s1[R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]][R_X0 := 
+    8 ⊕ s1 R_X0][R_X2 := s1 V_MEM64 Ⓠ[ s1 R_X0 ]]
+    [R_X6 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] .| 9187201950435737471]
+    [R_X4 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 R_X8
+             .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 ] .| 9187201950435737471)
+                 .^ 18446744073709551615)]
+    [R_TMPCY := if
+                 s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] <=?
+                 s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                then 1
+                else 0]
+    [R_TMPOV := (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                 .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)
+                .& (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                    .^ s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                       ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)]
+    [R_TMPNG := if
+                 slt 64
+                   (s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                    ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 1]
+    [R_NG := if
+              slt 64
+                (s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+                0
+             then 1
+             else 0]
+    [R_ZR := 1]
+    [R_CY := if
+              s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] <=? s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+             then 1
+             else 0]
+    [R_OV := (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+              .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)
+             .& (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                 .^ s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                    ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)]) /\
+ p mod 8 = q mod 8 /\
+ s1 R_X10 = q ⊖ p /\
+ (exists i : N, i <= K /\ 8 ⊕ s1 R_X0 = p + i /\ (p + i) mod 8 = 0))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_frame s0
+   (s1[R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]][R_X0 := 
+    8 ⊕ s1 R_X0][R_X2 := s1 V_MEM64 Ⓠ[ s1 R_X0 ]]
+    [R_X4 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 R_X8
+             .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 ] .| 9187201950435737471)
+                 .^ 18446744073709551615)]
+    [R_TMPCY := if
+                 s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] <=?
+                 s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                then 1
+                else 0]
+    [R_TMPOV := (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                 .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)
+                .& (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                    .^ s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                       ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)]
+    [R_TMPNG := if
+                 slt 64
+                   (s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                    ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 0]
+    [R_NG := if
+              slt 64
+                (s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+                0
+             then 1
+             else 0]
+    [R_ZR := 0]
+    [R_CY := if
+              s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] <=? s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+             then 1
+             else 0]
+    [R_OV := (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+              .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)
+             .& (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                 .^ s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                    ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)]
+    [R_X5 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]]
+    [R_X6 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]
+             .| s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 R_X8
+                .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 ] .| 9187201950435737471)
+                    .^ 18446744073709551615)]) /\
+ (exists j : N,
+    j < 8 /\
+    strcmp_pair m p q K (s1 V_MEM64 Ⓠ[ s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]) j /\
+    strcmp_syndrome (s1 V_MEM64 Ⓠ[ s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]
+       .| s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 R_X8
+          .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 ] .| 9187201950435737471)
+              .^ 18446744073709551615))
+      j))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_frame s0
+   (s1[R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]][R_X0 := 
+    8 ⊕ s1 R_X0][R_X2 := s1 V_MEM64 Ⓠ[ s1 R_X0 ]]
+    [R_TMPNG := if
+                 slt 64
+                   (s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 R_X8
+                    .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 ] .| 9187201950435737471)
+                        .^ 0 ⊖ 1))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 0]
+    [R_X4 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 R_X8
+             .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 ] .| 9187201950435737471)
+                 .^ 18446744073709551615)]
+    [R_NG := 0][R_ZR := 0][R_CY := 0][R_OV := 0]
+    [R_X5 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]]
+    [R_X6 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]
+             .| s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 R_X8
+                .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 ] .| 9187201950435737471)
+                    .^ 18446744073709551615)]) /\
+ (exists j : N,
+    j < 8 /\
+    strcmp_pair m p q K (s1 V_MEM64 Ⓠ[ s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]) j /\
+    strcmp_syndrome (s1 V_MEM64 Ⓠ[ s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]
+       .| s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 R_X8
+          .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 ] .| 9187201950435737471)
+              .^ 18446744073709551615))
+      j))
+UNRESOLVED STRCMP INVARIANT:
+((toZ 32%N
+    ((((((((s1 R_X2 .& 18374966859414961920) >> 8
+           .| (s1 R_X2 .& 71777214294589695) << 8)
+          .& 18446462603027742720) >>
+         16
+         .| (((s1 R_X2 .& 280379743338240) >> 8
+              .| (s1 R_X2 .& 1095233372415) << 8)
+             .& 281470681808895) <<
+            16) >>
+        32
+        .| ((((s1 R_X2 .& 4278255360) >> 8 .| (s1 R_X2 .& 16711935) << 8)
+             .& 4294901760) >>
+            16 .| ((s1 R_X2 .& 65280) >> 8 .| s1 R_X2 << 8) << 16) <<
+           32) <<
+       msub 6 0
+         (N.size
+            (((((s1 R_X6 .& 18374966859414961920) >> 8
+                .| (s1 R_X6 .& 71777214294589695) << 8)
+               .& 18446462603027742720) >>
+              16
+              .| (((s1 R_X6 .& 280379743338240) >> 8
+                   .| (s1 R_X6 .& 1095233372415) << 8)
+                  .& 281470681808895) <<
+                 16) >>
+             32
+             .| ((((s1 R_X6 .& 4278255360) >> 8 .| (s1 R_X6 .& 16711935) << 8)
+                  .& 4294901760) >>
+                 16
+                 .| ((s1 R_X6 .& 65280) >> 8 .| s1 R_X6 << 8) mod 2 ^ 16 <<
+                    16) <<
+                32)))
+      mod 2 ^ 64 >> 56)
+     ⊖ (((((((s1 R_X3 .& 18374966859414961920) >> 8
+             .| (s1 R_X3 .& 71777214294589695) << 8)
+            .& 18446462603027742720) >>
+           16
+           .| (((s1 R_X3 .& 280379743338240) >> 8
+                .| (s1 R_X3 .& 1095233372415) << 8)
+               .& 281470681808895) <<
+              16) >>
+          32
+          .| ((((s1 R_X3 .& 4278255360) >> 8 .| (s1 R_X3 .& 16711935) << 8)
+               .& 4294901760) >>
+              16 .| ((s1 R_X3 .& 65280) >> 8 .| s1 R_X3 << 8) << 16) <<
+             32) <<
+         msub 6 0
+           (N.size
+              (((((s1 R_X6 .& 18374966859414961920) >> 8
+                  .| (s1 R_X6 .& 71777214294589695) << 8)
+                 .& 18446462603027742720) >>
+                16
+                .| (((s1 R_X6 .& 280379743338240) >> 8
+                     .| (s1 R_X6 .& 1095233372415) << 8)
+                    .& 281470681808895) <<
+                   16) >>
+               32
+               .| ((((s1 R_X6 .& 4278255360) >> 8
+                     .| (s1 R_X6 .& 16711935) << 8)
+                    .& 4294901760) >>
+                   16
+                   .| ((s1 R_X6 .& 65280) >> 8 .| s1 R_X6 << 8) mod 2 ^ 16 <<
+                      16) <<
+                  32)))
+        mod 2 ^ 64 >> 56))
+  ?= 0)%Z =
+ (m Ⓑ[ p + K ] ?= m Ⓑ[ q + K ]) /\
+ strcmp_frame s0
+   (s1
+    [R_X6 := ((((s1 R_X6 .& 18374966859414961920) >> 8
+                .| (s1 R_X6 .& 71777214294589695) << 8)
+               .& 18446462603027742720) >>
+              16
+              .| (((s1 R_X6 .& 280379743338240) >> 8
+                   .| (s1 R_X6 .& 1095233372415) << 8)
+                  .& 281470681808895) <<
+                 16) >>
+             32
+             .| ((((s1 R_X6 .& 4278255360) >> 8 .| (s1 R_X6 .& 16711935) << 8)
+                  .& 4294901760) >>
+                 16
+                 .| ((s1 R_X6 .& 65280) >> 8 .| s1 R_X6 << 8) mod 2 ^ 16 <<
+                    16) <<
+                32]
+    [R_X9 := 64
+             ⊖ N.size
+                 (((((s1 R_X6 .& 18374966859414961920) >> 8
+                     .| (s1 R_X6 .& 71777214294589695) << 8)
+                    .& 18446462603027742720) >>
+                   16
+                   .| (((s1 R_X6 .& 280379743338240) >> 8
+                        .| (s1 R_X6 .& 1095233372415) << 8)
+                       .& 281470681808895) <<
+                      16) >>
+                  32
+                  .| ((((s1 R_X6 .& 4278255360) >> 8
+                        .| (s1 R_X6 .& 16711935) << 8)
+                       .& 4294901760) >>
+                      16
+                      .| ((s1 R_X6 .& 65280) >> 8 .| s1 R_X6 << 8) mod 2 ^ 16 <<
+                         16) <<
+                     32)]
+    [R_X3 := ((((((s1 R_X3 .& 18374966859414961920) >> 8
+                  .| (s1 R_X3 .& 71777214294589695) << 8)
+                 .& 18446462603027742720) >>
+                16
+                .| (((s1 R_X3 .& 280379743338240) >> 8
+                     .| (s1 R_X3 .& 1095233372415) << 8)
+                    .& 281470681808895) <<
+                   16) >>
+               32
+               .| ((((s1 R_X3 .& 4278255360) >> 8
+                     .| (s1 R_X3 .& 16711935) << 8)
+                    .& 4294901760) >>
+                   16 .| ((s1 R_X3 .& 65280) >> 8 .| s1 R_X3 << 8) << 16) <<
+                  32) <<
+              msub 6 0
+                (N.size
+                   (((((s1 R_X6 .& 18374966859414961920) >> 8
+                       .| (s1 R_X6 .& 71777214294589695) << 8)
+                      .& 18446462603027742720) >>
+                     16
+                     .| (((s1 R_X6 .& 280379743338240) >> 8
+                          .| (s1 R_X6 .& 1095233372415) << 8)
+                         .& 281470681808895) <<
+                        16) >>
+                    32
+                    .| ((((s1 R_X6 .& 4278255360) >> 8
+                          .| (s1 R_X6 .& 16711935) << 8)
+                         .& 4294901760) >>
+                        16
+                        .| ((s1 R_X6 .& 65280) >> 8 .| s1 R_X6 << 8)
+                           mod 2 ^ 16 << 16) <<
+                       32)))
+             mod 2 ^ 64]
+    [R_X2 := ((((((s1 R_X2 .& 18374966859414961920) >> 8
+                  .| (s1 R_X2 .& 71777214294589695) << 8)
+                 .& 18446462603027742720) >>
+                16
+                .| (((s1 R_X2 .& 280379743338240) >> 8
+                     .| (s1 R_X2 .& 1095233372415) << 8)
+                    .& 281470681808895) <<
+                   16) >>
+               32
+               .| ((((s1 R_X2 .& 4278255360) >> 8
+                     .| (s1 R_X2 .& 16711935) << 8)
+                    .& 4294901760) >>
+                   16 .| ((s1 R_X2 .& 65280) >> 8 .| s1 R_X2 << 8) << 16) <<
+                  32) <<
+              msub 6 0
+                (N.size
+                   (((((s1 R_X6 .& 18374966859414961920) >> 8
+                       .| (s1 R_X6 .& 71777214294589695) << 8)
+                      .& 18446462603027742720) >>
+                     16
+                     .| (((s1 R_X6 .& 280379743338240) >> 8
+                          .| (s1 R_X6 .& 1095233372415) << 8)
+                         .& 281470681808895) <<
+                        16) >>
+                    32
+                    .| ((((s1 R_X6 .& 4278255360) >> 8
+                          .| (s1 R_X6 .& 16711935) << 8)
+                         .& 4294901760) >>
+                        16
+                        .| ((s1 R_X6 .& 65280) >> 8 .| s1 R_X6 << 8)
+                           mod 2 ^ 16 << 16) <<
+                       32)))
+             mod 2 ^ 64 >> 56]
+    [R_X0 := (((((((s1 R_X2 .& 18374966859414961920) >> 8
+                   .| (s1 R_X2 .& 71777214294589695) << 8)
+                  .& 18446462603027742720) >>
+                 16
+                 .| (((s1 R_X2 .& 280379743338240) >> 8
+                      .| (s1 R_X2 .& 1095233372415) << 8)
+                     .& 281470681808895) <<
+                    16) >>
+                32
+                .| ((((s1 R_X2 .& 4278255360) >> 8
+                      .| (s1 R_X2 .& 16711935) << 8)
+                     .& 4294901760) >>
+                    16 .| ((s1 R_X2 .& 65280) >> 8 .| s1 R_X2 << 8) << 16) <<
+                   32) <<
+               msub 6 0
+                 (N.size
+                    (((((s1 R_X6 .& 18374966859414961920) >> 8
+                        .| (s1 R_X6 .& 71777214294589695) << 8)
+                       .& 18446462603027742720) >>
+                      16
+                      .| (((s1 R_X6 .& 280379743338240) >> 8
+                           .| (s1 R_X6 .& 1095233372415) << 8)
+                          .& 281470681808895) <<
+                         16) >>
+                     32
+                     .| ((((s1 R_X6 .& 4278255360) >> 8
+                           .| (s1 R_X6 .& 16711935) << 8)
+                          .& 4294901760) >>
+                         16
+                         .| ((s1 R_X6 .& 65280) >> 8 .| s1 R_X6 << 8)
+                            mod 2 ^ 16 << 16) <<
+                        32)))
+              mod 2 ^ 64 >> 56)
+             ⊖ (((((((s1 R_X3 .& 18374966859414961920) >> 8
+                     .| (s1 R_X3 .& 71777214294589695) << 8)
+                    .& 18446462603027742720) >>
+                   16
+                   .| (((s1 R_X3 .& 280379743338240) >> 8
+                        .| (s1 R_X3 .& 1095233372415) << 8)
+                       .& 281470681808895) <<
+                      16) >>
+                  32
+                  .| ((((s1 R_X3 .& 4278255360) >> 8
+                        .| (s1 R_X3 .& 16711935) << 8)
+                       .& 4294901760) >>
+                      16 .| ((s1 R_X3 .& 65280) >> 8 .| s1 R_X3 << 8) << 16) <<
+                     32) <<
+                 msub 6 0
+                   (N.size
+                      (((((s1 R_X6 .& 18374966859414961920) >> 8
+                          .| (s1 R_X6 .& 71777214294589695) << 8)
+                         .& 18446462603027742720) >>
+                        16
+                        .| (((s1 R_X6 .& 280379743338240) >> 8
+                             .| (s1 R_X6 .& 1095233372415) << 8)
+                            .& 281470681808895) <<
+                           16) >>
+                       32
+                       .| ((((s1 R_X6 .& 4278255360) >> 8
+                             .| (s1 R_X6 .& 16711935) << 8)
+                            .& 4294901760) >>
+                           16
+                           .| ((s1 R_X6 .& 65280) >> 8 .| s1 R_X6 << 8)
+                              mod 2 ^ 16 << 16) <<
+                          32)))
+                mod 2 ^ 64 >> 56)]))
+UNRESOLVED STRCMP INVARIANT:
+((toZ 32%N (s1 V_MEM64 Ⓑ[ s1 R_X0 ] ⊖ s1 V_MEM64 Ⓑ[ s1 R_X1 ]) ?= 0)%Z =
+ (m Ⓑ[ p + K ] ?= m Ⓑ[ q + K ]) /\
+ strcmp_frame s0
+   (s1[R_X2 := s1 V_MEM64 Ⓑ[ s1 R_X0 ]][R_X1 := 1 ⊕ s1 R_X1]
+    [R_X3 := s1 V_MEM64 Ⓑ[ s1 R_X1 ]][R_TMPCY := 1][R_TMPOV := 0]
+    [R_TMPNG := if
+                 slt 32
+                   (msub 32 ((s1 V_MEM64 Ⓑ[ s1 R_X0 ] >> 0) mod 2 ^ 32) 0) 0
+                then 1
+                else 0]
+    [R_TMPZR := 1][R_NG := 0][R_ZR := 0][R_CY := 0][R_OV := 0]
+    [R_X0 := s1 V_MEM64 Ⓑ[ s1 R_X0 ] ⊖ s1 V_MEM64 Ⓑ[ s1 R_X1 ]]))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_live s0
+   (s1[R_X0 := 1 ⊕ s1 R_X0][R_X2 := s1 V_MEM64 Ⓑ[ s1 R_X0 ]]
+    [R_X3 := s1 V_MEM64 Ⓑ[ s1 R_X1 ]]
+    [R_TMPCY := if s1 V_MEM64 Ⓑ[ s1 R_X1 ] <=? s1 V_MEM64 Ⓑ[ s1 R_X0 ]
+                then 1
+                else 0]
+    [R_TMPOV := 0][R_X9 := 0 ⊖ (1 + s1 R_X1 << 3)]
+    [R_X1 := 8 ⊕ (1 + s1 R_X1 .& 18446744073709551608)]
+    [R_X7 := s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+             .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)]
+    [R_X6 := s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+             .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3) .| 9187201950435737471]
+    [R_TMPNG := if
+                 slt 64
+                   ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                     .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3))
+                    ⊖ s1 R_X8
+                    .& ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                         .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)
+                         .| 9187201950435737471)
+                        .^ 0 ⊖ 1))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 1]
+    [R_X4 := (s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+              .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3))
+             ⊖ s1 R_X8
+             .& ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                  .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)
+                  .| 9187201950435737471)
+                 .^ 18446744073709551615)]
+    [R_NG := if
+              slt 64
+                ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                  .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3))
+                 ⊖ s1 R_X8
+                 .& ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                      .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)
+                      .| 9187201950435737471)
+                     .^ 0 ⊖ 1))
+                0
+             then 1
+             else 0]
+    [R_ZR := 1][R_CY := 0][R_OV := 0]
+    [R_X5 := 7 + (1 + s1 R_X1 .& 18446744073709551608) ⊖ s1 R_X0]) /\
+ s1 R_X10 = q ⊖ p /\
+ (exists i : N,
+    i <= K /\
+    1 ⊕ s1 R_X0 = p + i /\
+    (p + i) mod 8 = 0 /\
+    (q + i) mod 8 <> 0 /\
+    7 + (1 + s1 R_X1 .& 18446744073709551608) ⊖ s1 R_X0 =
+    strcmp_down8 (q + i) + 8 ⊖ (p + i) /\
+    msub 6 0 (1 + s1 R_X1 << 3) = (64 - 8 * ((q + i) mod 8)) mod 64 /\
+    (forall j : N, j < 8 - (q + i) mod 8 -> m Ⓑ[ q + i ⊕ j ] <> 0)))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_frame s0
+   (s1[R_X0 := 1 ⊕ s1 R_X0]
+    [R_TMPCY := if s1 V_MEM64 Ⓑ[ s1 R_X1 ] <=? s1 V_MEM64 Ⓑ[ s1 R_X0 ]
+                then 1
+                else 0]
+    [R_TMPOV := 0][R_X1 := 8 ⊕ (1 + s1 R_X1 .& 18446744073709551608)]
+    [R_X7 := s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+             .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)]
+    [R_TMPNG := if
+                 slt 64
+                   ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                     .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3))
+                    ⊖ s1 R_X8
+                    .& ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                         .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)
+                         .| 9187201950435737471)
+                        .^ 0 ⊖ 1))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 0]
+    [R_NG := if
+              slt 64
+                ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                  .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3))
+                 ⊖ s1 R_X8
+                 .& ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                      .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)
+                      .| 9187201950435737471)
+                     .^ 0 ⊖ 1))
+                0
+             then 1
+             else 0]
+    [R_ZR := 0][R_CY := 0][R_OV := 0][R_X2 := s1 V_MEM64 Ⓠ[ 1 + s1 R_X0 ]]
+    [R_X9 := (1 + s1 R_X1 << 3) mod 2 ^ 64]
+    [R_X3 := (s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+              .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)) >>
+             (1 + s1 R_X1 << 3) mod 64]
+    [R_X4 := ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+               .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3))
+              ⊖ s1 R_X8
+              .& ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                   .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)
+                   .| 9187201950435737471)
+                  .^ 18446744073709551615)) >>
+             (1 + s1 R_X1 << 3) mod 64]
+    [R_X5 := s1 V_MEM64 Ⓠ[ 1 + s1 R_X0 ]
+             .^ (s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                 .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)) >>
+                (1 + s1 R_X1 << 3) mod 64]
+    [R_X6 := s1 V_MEM64 Ⓠ[ 1 + s1 R_X0 ]
+             .^ (s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                 .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)) >>
+                (1 + s1 R_X1 << 3) mod 64
+             .| ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                  .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3))
+                 ⊖ s1 R_X8
+                 .& ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                      .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)
+                      .| 9187201950435737471)
+                     .^ 18446744073709551615)) >>
+                (1 + s1 R_X1 << 3) mod 64]) /\
+ (exists j : N,
+    j < 8 /\
+    strcmp_pair m p q K (s1 V_MEM64 Ⓠ[ 1 + s1 R_X0 ])
+      ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+        .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)) >>
+       (1 + s1 R_X1 << 3) mod 64)
+      j /\
+    strcmp_syndrome (s1 V_MEM64 Ⓠ[ 1 + s1 R_X0 ])
+      ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+        .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)) >>
+       (1 + s1 R_X1 << 3) mod 64)
+      (s1 V_MEM64 Ⓠ[ 1 + s1 R_X0 ]
+       .^ (s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+           .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)) >>
+          (1 + s1 R_X1 << 3) mod 64
+       .| ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+            .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3))
+           ⊖ s1 R_X8
+           .& ((s1 V_MEM64 Ⓠ[ 1 + s1 R_X1 .& 18446744073709551608 ]
+                .| s1 R_X8 >> msub 6 0 (1 + s1 R_X1 << 3)
+                .| 9187201950435737471)
+               .^ 18446744073709551615)) >>
+          (1 + s1 R_X1 << 3) mod 64)
+      j))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_live s0
+   (s1[R_X0 := 1 ⊕ s1 R_X0][R_X2 := s1 V_MEM64 Ⓑ[ s1 R_X0 ]]
+    [R_X1 := 1 ⊕ s1 R_X1][R_X3 := s1 V_MEM64 Ⓑ[ s1 R_X1 ]]
+    [R_TMPCY := if s1 V_MEM64 Ⓑ[ s1 R_X1 ] <=? s1 V_MEM64 Ⓑ[ s1 R_X0 ]
+                then 1
+                else 0]
+    [R_TMPOV := 0][R_TMPNG := if slt 64 (1 ⊕ s1 R_X0 .& 7) 0 then 1 else 0]
+    [R_TMPZR := 0][R_NG := if slt 64 (1 ⊕ s1 R_X0 .& 7) 0 then 1 else 0]
+    [R_ZR := 0][R_CY := 0][R_OV := 0]) /\
+ p mod 8 <> q mod 8 /\
+ s1 R_X10 = q ⊖ p /\
+ (exists i : N, i <= K /\ 1 ⊕ s1 R_X0 = p + i /\ 1 ⊕ s1 R_X1 = q + i))
+UNRESOLVED STRCMP INVARIANT:
+((toZ 32%N (s1 V_MEM64 Ⓑ[ s1 R_X0 ] ⊖ s1 V_MEM64 Ⓑ[ s1 R_X1 ]) ?= 0)%Z =
+ (m Ⓑ[ p + K ] ?= m Ⓑ[ q + K ]) /\
+ strcmp_frame s0
+   (s1[R_X2 := s1 V_MEM64 Ⓑ[ s1 R_X0 ]][R_X1 := 1 ⊕ s1 R_X1]
+    [R_X3 := s1 V_MEM64 Ⓑ[ s1 R_X1 ]]
+    [R_TMPCY := if s1 V_MEM64 Ⓑ[ s1 R_X1 ] <=? s1 V_MEM64 Ⓑ[ s1 R_X0 ]
+                then 1
+                else 0]
+    [R_TMPOV := 0]
+    [R_TMPNG := if
+                 slt 32
+                   (msub 32 ((s1 V_MEM64 Ⓑ[ s1 R_X0 ] >> 0) mod 2 ^ 32)
+                      ((s1 V_MEM64 Ⓑ[ s1 R_X1 ] >> 0) mod 2 ^ 32))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 0]
+    [R_NG := if
+              slt 32
+                (msub 32 ((s1 V_MEM64 Ⓑ[ s1 R_X0 ] >> 0) mod 2 ^ 32)
+                   ((s1 V_MEM64 Ⓑ[ s1 R_X1 ] >> 0) mod 2 ^ 32))
+                0
+             then 1
+             else 0]
+    [R_ZR := 0]
+    [R_CY := if s1 V_MEM64 Ⓑ[ s1 R_X1 ] <=? s1 V_MEM64 Ⓑ[ s1 R_X0 ]
+             then 1
+             else 0]
+    [R_OV := 0][R_X0 := s1 V_MEM64 Ⓑ[ s1 R_X0 ] ⊖ s1 V_MEM64 Ⓑ[ s1 R_X1 ]]))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_live s0
+   (s1[R_X7 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]]
+    [R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]]
+    [R_X6 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] .| 9187201950435737471]
+    [R_X0 := 8 ⊕ s1 R_X0][R_X2 := s1 V_MEM64 Ⓠ[ s1 R_X0 ]]
+    [R_X4 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+             .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] .| 9187201950435737471)
+                 .^ 18446744073709551615)]
+    [R_TMPCY := if
+                 s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] <=?
+                 s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                then 1
+                else 0]
+    [R_TMPOV := (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                 .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)
+                .& (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                    .^ s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                       ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)]
+    [R_TMPNG := if
+                 slt 64
+                   (s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                    ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 1]
+    [R_NG := if
+              slt 64
+                (s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+                0
+             then 1
+             else 0]
+    [R_ZR := 1]
+    [R_CY := if
+              s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] <=? s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+             then 1
+             else 0]
+    [R_OV := (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+              .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)
+             .& (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                 .^ s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                    ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)]) /\
+ s1 R_X10 = q ⊖ p /\
+ (exists i : N,
+    i <= K /\
+    8 ⊕ s1 R_X0 = p + i /\
+    (p + i) mod 8 = 0 /\
+    (q + i) mod 8 <> 0 /\
+    s1 R_X5 = strcmp_down8 (q + i) + 8 ⊖ (p + i) /\
+    s1 R_X9 mod 64 = (64 - 8 * ((q + i) mod 8)) mod 64 /\
+    (forall j : N, j < 8 - (q + i) mod 8 -> m Ⓑ[ q + i ⊕ j ] <> 0)))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_frame s0
+   (s1[R_X7 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]]
+    [R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]][R_X0 := 
+    8 ⊕ s1 R_X0][R_X2 := s1 V_MEM64 Ⓠ[ s1 R_X0 ]]
+    [R_X4 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+             .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] .| 9187201950435737471)
+                 .^ 18446744073709551615)]
+    [R_TMPCY := if
+                 s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] <=?
+                 s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                then 1
+                else 0]
+    [R_TMPOV := (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                 .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)
+                .& (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                    .^ s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                       ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)]
+    [R_TMPNG := if
+                 slt 64
+                   (s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                    ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 0]
+    [R_NG := if
+              slt 64
+                (s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+                0
+             then 1
+             else 0]
+    [R_ZR := 0]
+    [R_CY := if
+              s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] <=? s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+             then 1
+             else 0]
+    [R_OV := (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+              .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)
+             .& (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                 .^ s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                    ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)]
+    [R_X5 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]]
+    [R_X6 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]
+             .| ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+                  .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]
+                       .| 9187201950435737471)
+                      .^ 18446744073709551615)) <<
+                 s1 R_X9 mod 64)
+                mod 2 ^ 64]) /\
+ (exists j : N,
+    j < 8 /\
+    strcmp_pair m p q K (s1 V_MEM64 Ⓠ[ s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]) j /\
+    strcmp_syndrome (s1 V_MEM64 Ⓠ[ s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]
+       .| ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+            .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] .| 9187201950435737471)
+                .^ 18446744073709551615)) <<
+           s1 R_X9 mod 64)
+          mod 2 ^ 64)
+      j))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_frame s0
+   (s1[R_X7 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]][R_X0 := 
+    8 ⊕ s1 R_X0]
+    [R_TMPCY := if
+                 s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] <=?
+                 s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                then 1
+                else 0]
+    [R_TMPOV := (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                 .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)
+                .& (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                    .^ s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                       ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)]
+    [R_TMPNG := if
+                 slt 64
+                   (s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                    ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 0]
+    [R_NG := if
+              slt 64
+                (s1 V_MEM64 Ⓠ[ s1 R_X0 ] ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+                0
+             then 1
+             else 0]
+    [R_ZR := 0]
+    [R_CY := if
+              s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] <=? s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+             then 1
+             else 0]
+    [R_OV := (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+              .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)
+             .& (s1 V_MEM64 Ⓠ[ s1 R_X0 ] >> 63
+                 .^ s1 V_MEM64 Ⓠ[ s1 R_X0 ]
+                    ⊖ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ] >> 63)]
+    [R_X2 := s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ]][R_X9 := 
+    0 ⊖ s1 R_X9]
+    [R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9)]
+    [R_X4 := (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+              .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] .| 9187201950435737471)
+                  .^ 18446744073709551615)) >>
+             msub 6 0 (s1 R_X9)]
+    [R_X5 := s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ]
+             .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9)]
+    [R_X6 := s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ]
+             .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9)
+             .| (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+                 .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]
+                      .| 9187201950435737471)
+                     .^ 18446744073709551615)) >>
+                msub 6 0 (s1 R_X9)]) /\
+ (exists j : N,
+    j < 8 /\
+    strcmp_pair m p q K (s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9)) j /\
+    strcmp_syndrome (s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9))
+      (s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ]
+       .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9)
+       .| (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+           .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] .| 9187201950435737471)
+               .^ 18446744073709551615)) >>
+          msub 6 0 (s1 R_X9))
+      j))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_frame s0
+   (s1[R_X7 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]]
+    [R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]][R_X0 := 
+    8 ⊕ s1 R_X0][R_X2 := s1 V_MEM64 Ⓠ[ s1 R_X0 ]]
+    [R_TMPNG := if
+                 slt 64
+                   (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+                    .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]
+                         .| 9187201950435737471)
+                        .^ 0 ⊖ 1))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 0]
+    [R_X4 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+             .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] .| 9187201950435737471)
+                 .^ 18446744073709551615)]
+    [R_NG := 0][R_ZR := 0][R_CY := 0][R_OV := 0]
+    [R_X5 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]]
+    [R_X6 := s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]
+             .| ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+                  .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]
+                       .| 9187201950435737471)
+                      .^ 18446744073709551615)) <<
+                 s1 R_X9 mod 64)
+                mod 2 ^ 64]) /\
+ (exists j : N,
+    j < 8 /\
+    strcmp_pair m p q K (s1 V_MEM64 Ⓠ[ s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]) j /\
+    strcmp_syndrome (s1 V_MEM64 Ⓠ[ s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 ] .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]
+       .| ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+            .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] .| 9187201950435737471)
+                .^ 18446744073709551615)) <<
+           s1 R_X9 mod 64)
+          mod 2 ^ 64)
+      j))
+UNRESOLVED STRCMP INVARIANT:
+(strcmp_frame s0
+   (s1[R_X7 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]][R_X0 := 
+    8 ⊕ s1 R_X0]
+    [R_TMPNG := if
+                 slt 64
+                   (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+                    .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]
+                         .| 9187201950435737471)
+                        .^ 0 ⊖ 1))
+                   0
+                then 1
+                else 0]
+    [R_TMPZR := 0][R_NG := 0][R_ZR := 0][R_CY := 0][R_OV := 0]
+    [R_X2 := s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ]][R_X9 := 
+    0 ⊖ s1 R_X9]
+    [R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9)]
+    [R_X4 := (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+              .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] .| 9187201950435737471)
+                  .^ 18446744073709551615)) >>
+             msub 6 0 (s1 R_X9)]
+    [R_X5 := s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ]
+             .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9)]
+    [R_X6 := s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ]
+             .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9)
+             .| (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+                 .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]
+                      .| 9187201950435737471)
+                     .^ 18446744073709551615)) >>
+                msub 6 0 (s1 R_X9)]) /\
+ (exists j : N,
+    j < 8 /\
+    strcmp_pair m p q K (s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9)) j /\
+    strcmp_syndrome (s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ])
+      (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9))
+      (s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ]
+       .^ s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] >> msub 6 0 (s1 R_X9)
+       .| (s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] ⊖ s1 R_X8
+           .& ((s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ] .| 9187201950435737471)
+               .^ 18446744073709551615)) >>
+          msub 6 0 (s1 R_X9))
+      j))
+
+EXIT_CODE=0

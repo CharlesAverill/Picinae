@@ -12,6 +12,8 @@
    Final proof producer: none. Initial source and raw diagnostics are under
    notes/a-strcmp/. The final Abort only packages the failed attempt safely;
    no second build or proof repair was performed by Astra.
+   REPAIR: OpenAI gpt-6.1-sol, xhigh; checked partial helpers and two IL
+   segments. The full theorem remains open; see notes/a-strcmp-fix/.
 
    SPEC: int strcmp(const char *p, const char *q).
    X0=p, X1=q, original memory=m. K is the first unsigned-byte difference
@@ -244,28 +246,502 @@ Proof.
 Qed.
 Print Assumptions strcmp_samples_readable.
 
-(* One-shot full-function attempt. Invariant preservation must derive the
-   local word-pair/syndrome facts from real instruction execution. Neither
-   those facts nor a previous function-correctness theorem is assumed. *)
-Theorem strcmp_correct: strcmp_full_contract.
+(* Sol repair helpers. These facts use the retained domain, with no new
+   alignment, length or disjointness premise on the public entry contract. *)
+Lemma strcmp_fix_down8_bounds: forall a,
+  strcmp_down8 a <= a < strcmp_down8 a + 8.
 Proof.
-  unfold strcmp_full_contract. intros.
-  apply prove_invs.
-  - simpl. rewrite ENTRY. arm8_step. reflexivity.
+  intro a. unfold strcmp_down8.
+  pose proof (N.div_mod a 8 ltac:(discriminate)).
+  pose proof (N.mod_lt a 8 ltac:(discriminate)). lia.
+Qed.
+Print Assumptions strcmp_fix_down8_bounds.
+
+Lemma strcmp_fix_down8_mono: forall a b,
+  a <= b -> strcmp_down8 a <= strcmp_down8 b.
+Proof.
+  intros a b LE. unfold strcmp_down8.
+  apply N.mul_le_mono_l. apply N.div_le_mono; assumption || discriminate.
+Qed.
+Print Assumptions strcmp_fix_down8_mono.
+
+Lemma strcmp_fix_domain_nonwrap: forall readable p q K,
+  strcmp_domain readable p q K -> p+K < 2^64 /\ q+K < 2^64.
+Proof.
+  intros readable p q K [HP [HQ _]].
+  pose proof (strcmp_fix_down8_bounds (p+K)).
+  pose proof (strcmp_fix_down8_bounds (q+K)). lia.
+Qed.
+Print Assumptions strcmp_fix_domain_nonwrap.
+
+Lemma strcmp_fix_p_load: forall readable p q K i j,
+  strcmp_domain readable p q K -> i <= K -> (p+i) mod 8 = 0 ->
+  j < 8 -> p+i+j < 2^64 /\ N.testbit readable (p+i+j) = true.
+Proof.
+  intros readable p q K i j [HP [HQ [RP RQ]]] I AL J.
+  assert (A: strcmp_down8 (p+i) = p+i).
+  { unfold strcmp_down8. pose proof (N.div_mod (p+i) 8 ltac:(discriminate)). lia. }
+  pose proof (strcmp_fix_down8_mono p (p+i) ltac:(lia)) as LO.
+  pose proof (strcmp_fix_down8_mono (p+i) (p+K) ltac:(lia)) as HI.
+  rewrite A in LO, HI. split; [lia|]. apply RP. lia.
+Qed.
+Print Assumptions strcmp_fix_p_load.
+
+Lemma strcmp_fix_q_load: forall readable p q K i j,
+  strcmp_domain readable p q K -> i <= K -> j < 8 ->
+  q+i+j < 2^64 /\ N.testbit readable (q+i+j) = true.
+Proof.
+  intros readable p q K i j [HP [HQ [RP RQ]]] I J.
+  pose proof (strcmp_fix_down8_bounds q) as LO.
+  pose proof (strcmp_fix_down8_bounds (q+K)) as HI.
+  split; [lia|]. apply RQ. lia.
+Qed.
+Print Assumptions strcmp_fix_q_load.
+
+Lemma strcmp_fix_q_lookahead_load: forall readable p q K i j,
+  strcmp_domain readable p q K -> i <= K -> j < 8 ->
+  strcmp_down8 (q+i)+8+j < 2^64 /\
+  N.testbit readable (strcmp_down8 (q+i)+8+j) = true.
+Proof.
+  intros readable p q K i j [HP [HQ [RP RQ]]] I J.
+  pose proof (strcmp_fix_down8_mono q (q+i) ltac:(lia)) as LO.
+  pose proof (strcmp_fix_down8_mono (q+i) (q+K) ltac:(lia)) as HI.
+  split; [lia|]. apply RQ. lia.
+Qed.
+Print Assumptions strcmp_fix_q_lookahead_load.
+
+Lemma strcmp_fix_prefix_loads: forall readable p q K j,
+  strcmp_domain readable p q K -> j < 8 ->
+  (strcmp_down8 p+j < 2^64 /\
+   N.testbit readable (strcmp_down8 p+j) = true) /\
+  (strcmp_down8 q+j < 2^64 /\
+   N.testbit readable (strcmp_down8 q+j) = true).
+Proof.
+  intros readable p q K j [HP [HQ [RP RQ]]] J.
+  pose proof (strcmp_fix_down8_mono p (p+K) ltac:(lia)) as P.
+  pose proof (strcmp_fix_down8_mono q (q+K) ltac:(lia)) as Q.
+  repeat split; try lia; [apply RP|apply RQ]; lia.
+Qed.
+Print Assumptions strcmp_fix_prefix_loads.
+
+Lemma strcmp_fix_byte_loads: forall readable p q K i,
+  strcmp_domain readable p q K -> i <= K ->
+  (p+i < 2^64 /\ N.testbit readable (p+i) = true) /\
+  (q+i < 2^64 /\ N.testbit readable (q+i) = true).
+Proof.
+  intros readable p q K i [HP [HQ [RP RQ]]] I.
+  pose proof (strcmp_fix_down8_bounds p) as P.
+  pose proof (strcmp_fix_down8_bounds (p+K)) as PK.
+  pose proof (strcmp_fix_down8_bounds q) as Q.
+  pose proof (strcmp_fix_down8_bounds (q+K)) as QK.
+  repeat split; try lia; [apply RP|apply RQ]; lia.
+Qed.
+Print Assumptions strcmp_fix_byte_loads.
+
+Lemma strcmp_fix_displacement: forall p q i,
+  q+i < 2^64 -> (p+i+msub 64 q p) mod 2^64 = q+i.
+Proof.
+  intros p q i Q.
+  replace (p+i+msub 64 q p) with (i+(p+msub 64 q p)) by lia.
+  rewrite <- (N.Div0.add_mod_idemp_r i (p+msub 64 q p) (2^64)).
+  rewrite add_msub, N.Div0.add_mod_idemp_r, N.add_comm.
+  apply N.mod_small. exact Q.
+Qed.
+Print Assumptions strcmp_fix_displacement.
+
+Lemma strcmp_fix_p_memacc: forall s p q K i,
+  strcmp_domain (s A_READ) p q K -> i<=K -> (p+i) mod 8=0 ->
+  MemAcc mem_readable s (p+i) 64 8.
+Proof.
+  intros s p q K i D I A n N. unfold mem_readable.
+  destruct (strcmp_fix_p_load (s A_READ) p q K i n D I A N) as [B R].
+  rewrite N.mod_small by exact B. exact R.
+Qed.
+Print Assumptions strcmp_fix_p_memacc.
+
+Lemma strcmp_fix_q_memacc: forall s p q K i,
+  strcmp_domain (s A_READ) p q K -> i<=K ->
+  MemAcc mem_readable s (q+i) 64 8.
+Proof.
+  intros s p q K i D I n N. unfold mem_readable.
+  destruct (strcmp_fix_q_load (s A_READ) p q K i n D I N) as [B R].
+  rewrite N.mod_small by exact B. exact R.
+Qed.
+Print Assumptions strcmp_fix_q_memacc.
+
+Lemma strcmp_fix_q_lookahead_memacc: forall s p q K i,
+  strcmp_domain (s A_READ) p q K -> i<=K ->
+  MemAcc mem_readable s (strcmp_down8 (q+i)+8) 64 8.
+Proof.
+  intros s p q K i D I n N. unfold mem_readable.
+  destruct (strcmp_fix_q_lookahead_load (s A_READ) p q K i n D I N) as [B R].
+  rewrite N.mod_small by exact B. exact R.
+Qed.
+Print Assumptions strcmp_fix_q_lookahead_memacc.
+
+Definition strcmp_fix_entry_store (m:memory) (p q:N) : store :=
+  fun v => match v with
+  | V_MEM64 => m | R_X0 => p | R_X1 => q
+  | A_READ => N.ones 16384 | _ => 0 end.
+
+Lemma strcmp_fix_entry_models: forall m p q,
+  m < 2^256 -> p < 2^64 -> q < 2^64 ->
+  models arm8typctx (strcmp_fix_entry_store m p q).
+Proof.
+  intros m p q M P Q v w CV. destruct v;
+    cbn [arm8typctx strcmp_fix_entry_store] in *;
+    inversion CV; subst; try (apply mp2_gt_0).
+  - eapply N.lt_trans; [exact M|]. apply N.pow_lt_mono_r; discriminate || lia.
+  - exact P.
+  - exact Q.
+  - rewrite N.ones_equiv. apply N.lt_le_trans with (2^16384).
+    + pose proof (mp2_gt_0 16384). lia.
+    + apply N.pow_le_mono_r; discriminate || lia.
+Qed.
+Print Assumptions strcmp_fix_entry_models.
+
+Lemma strcmp_fix_samples_typed_entry: forall m p q K,
+  In (m,p,q,K) strcmp_samples ->
+  exists s0, models arm8typctx s0 /\ s0 V_MEM64 = m /\
+    s0 R_X0 = p /\ s0 R_X1 = q /\ strcmp_stop m p q K /\
+    strcmp_domain (s0 A_READ) p q K.
+Proof.
+  intros m p q K IN. exists (strcmp_fix_entry_store m p q).
+  split.
+  - apply strcmp_fix_entry_models; unfold strcmp_samples in IN;
+      repeat destruct IN as [E|IN]; try contradiction;
+      inversion E; subst; vm_compute; reflexivity.
+  - split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
+    split.
+    + exact (strcmp_samples_stop m p q K IN).
+    + exact (strcmp_samples_readable m p q K IN).
+Qed.
+Print Assumptions strcmp_fix_samples_typed_entry.
+
+Lemma strcmp_fix_word_byte: forall m a j,
+  j < 8 -> strcmp_byte (m Ⓠ[a]) j = m Ⓑ[a+j].
+Proof.
+  intros m a j J. unfold strcmp_byte.
+  rewrite N.mul_comm, shiftr_getmem.
+  change (getmem 64 LittleE (8-j) m (a+j) mod 2^(1*8) = m Ⓑ[a+j]).
+  rewrite getmem_mod. rewrite N.min_r by lia. reflexivity.
+Qed.
+Print Assumptions strcmp_fix_word_byte.
+
+Lemma strcmp_fix_stop_at_byte: forall m p q K i,
+  strcmp_stop m p q K -> i <= K ->
+  (m Ⓑ[p ⊕ i] = 0 \/ m Ⓑ[p ⊕ i] <> m Ⓑ[q ⊕ i]) -> i=K.
+Proof.
+  intros m p q K i [PREFIX LAST] I STOP.
+  destruct (N.eq_dec i K); [assumption|].
+  destruct (PREFIX i ltac:(lia)) as [E NZ]. tauto.
+Qed.
+Print Assumptions strcmp_fix_stop_at_byte.
+
+Lemma strcmp_fix_continue_byte: forall m p q K i,
+  strcmp_stop m p q K -> i <= K ->
+  m Ⓑ[p ⊕ i] = m Ⓑ[q ⊕ i] -> m Ⓑ[p ⊕ i] <> 0 -> i<K.
+Proof.
+  intros m p q K i [PREFIX LAST] I E NZ.
+  destruct (N.eq_dec i K); [subst; tauto|lia].
+Qed.
+Print Assumptions strcmp_fix_continue_byte.
+
+Lemma strcmp_fix_byte_sub_sign: forall a b,
+  a < 256 -> b < 256 ->
+  Z.compare (toZ 32 (msub 64 a b)) 0 = N.compare a b.
+Proof.
+  intros a b A B.
+  assert (AZ: toZ 32 a = Z.of_N a).
+  { unfold toZ. apply canonicalZ_id with (w':=32); [reflexivity|].
+    unfold signed_range. cbn. lia. }
+  assert (BZ: toZ 32 b = Z.of_N b).
+  { unfold toZ. apply canonicalZ_id with (w':=32); [reflexivity|].
+    unfold signed_range. cbn. lia. }
+  rewrite <- (toZ_mod_pow2 32 32 (msub 64 a b) ltac:(reflexivity)).
+  rewrite msub_mod_pow2. change (Z.compare (toZ 32 (msub 32 a b)) 0 = N.compare a b).
+  rewrite toZ_msub, AZ, BZ.
+  change (Z.compare (canonicalZ 32 (Z.of_N a-Z.of_N b)) 0 = N.compare a b).
+  rewrite (canonicalZ_id 32 32 (Z.of_N a-Z.of_N b))
+    by (unfold signed_range; cbn; lia).
+  destruct (N.compare_spec a b) as [E|LT|GT].
+  - apply Z.compare_eq_iff. lia.
+  - apply Z.compare_lt_iff. lia.
+  - apply Z.compare_gt_iff. lia.
+Qed.
+Print Assumptions strcmp_fix_byte_sub_sign.
+
+Lemma strcmp_fix_frame_update: forall s0 s v x,
+  v <> V_MEM64 -> ~ In v strcmp_saved ->
+  strcmp_frame s0 s -> strcmp_frame s0 (update s v x).
+Proof.
+  intros s0 s v x M V [FM F]. split.
+  - rewrite update_frame by congruence. exact FM.
+  - intros u IN. rewrite update_frame; [exact (F u IN)|].
+    intro E. subst u. contradiction.
+Qed.
+Print Assumptions strcmp_fix_frame_update.
+
+Lemma strcmp_fix_frame_x0: forall s0 s x,
+  strcmp_frame s0 s -> strcmp_frame s0 (update s R_X0 x).
+Proof.
+  intros s0 s x [M F]. split.
+  - rewrite update_frame by discriminate. exact M.
+  - intros v IN. rewrite update_frame.
+    + exact (F v IN).
+    + unfold strcmp_saved in IN. repeat destruct IN as [<-|IN];
+        discriminate || contradiction.
+Qed.
+Print Assumptions strcmp_fix_frame_x0.
+
+Definition strcmp_fix_byte_exit_invs (s0:store) (m:memory) p q K (t:trace) :=
+  match t with (Addr pc,s)::_ => match pc with
+  | 0x1930ac => Some (strcmp_frame s0 s /\
+      s R_X2 = m Ⓑ[p ⊕ K] /\ s R_X3 = m Ⓑ[q ⊕ K])
+  | 0x1930b0 => Some (strcmp_post s0 m p q K s)
+  | _ => None end | _ => None end.
+
+Theorem strcmp_fix_byte_exit:
+  forall s0 s t s' x' m p q K
+    (ENTRY: startof t (x',s') = (Addr 0x1930ac,s))
+    (FRAME: strcmp_frame s0 s)
+    (X2: s R_X2 = m Ⓑ[p ⊕ K]) (X3: s R_X3 = m Ⓑ[q ⊕ K]),
+  satisfies_all e30_strcmp_arm8 (strcmp_fix_byte_exit_invs s0 m p q K)
+    strcmp_exit ((x',s')::t).
+Proof.
+  intros. apply prove_invs.
+  - simpl. rewrite ENTRY. arm8_step. rewrite ?getmem_mod_l in X2, X3.
+    exact (conj FRAME (conj X2 X3)).
+  - intros. clear - PRE. destruct_inv 64 PRE.
+    destruct PRE as [F [X2 X3]]. repeat arm8_step.
+    unfold strcmp_post. rewrite ?getmem_mod_l. split.
+    + apply strcmp_fix_byte_sub_sign;
+        exact (getmem_bound 64 LittleE 1 m _).
+    + apply strcmp_fix_frame_x0.
+      apply strcmp_fix_frame_update; [discriminate|cbn; intuition discriminate|].
+      apply strcmp_fix_frame_update; [discriminate|cbn; intuition discriminate|].
+      exact F.
+Qed.
+Print Assumptions strcmp_fix_byte_exit.
+
+Lemma strcmp_fix_byte_exit_witness:
+  exists s, models arm8typctx s /\ strcmp_frame s s /\
+    s R_X2 = 0 Ⓑ[0] /\ s R_X3 = 0 Ⓑ[1] /\
+    strcmp_stop 0 0 1 0 /\ strcmp_domain (s A_READ) 0 1 0.
+Proof.
+  exists (strcmp_fix_entry_store 0 0 1). split.
+  - apply strcmp_fix_entry_models; vm_compute; reflexivity.
+  - split; [split; intros; reflexivity|].
+    split; [reflexivity|]. split; [reflexivity|]. split.
+    + unfold strcmp_stop. split; [intros; exfalso; lia|]. right. reflexivity.
+    + apply strcmp_domain_ones; vm_compute; intuition discriminate.
+Qed.
+Print Assumptions strcmp_fix_byte_exit_witness.
+
+Lemma strcmp_fix_byte_msub32_eqb: forall a b,
+  a < 256 -> b < 256 -> (msub 32 a b =? 0) = (a =? b).
+Proof.
+  intros a b A B. destruct (N.eqb_spec a b) as [E|NE].
+  - subst. rewrite msub_diag. reflexivity.
+  - apply N.eqb_neq. intro Z. apply NE.
+    pose proof (add_msub 32 b a) as EQ.
+    rewrite Z, N.add_0_r, !N.mod_small in EQ by lia. symmetry. exact EQ.
+Qed.
+Print Assumptions strcmp_fix_byte_msub32_eqb.
+
+Definition strcmp_fix_ccmp_invs a b (t:trace) :=
+  match t with (Addr pc,s)::_ => match pc with
+  | 0x193020 => Some (s R_X2 = a /\ s R_X3 = b)
+  | 0x193028 => Some (s R_ZR = if a =? 0 then 0 else if a =? b then 1 else 0)
+  | _ => None end | _ => None end.
+
+Definition strcmp_fix_ccmp_exit (t:trace) :=
+  match t with (Addr 0x193028,_)::_ => true | _ => false end.
+
+Theorem strcmp_fix_byte_ccmp:
+  forall s0 t s' x' a b
+    (ENTRY: startof t (x',s') = (Addr 0x193020,s0))
+    (MDL: models arm8typctx s0)
+    (A: a < 256) (B: b < 256)
+    (X2: s0 R_X2 = a) (X3: s0 R_X3 = b),
+  satisfies_all e30_strcmp_arm8 (strcmp_fix_ccmp_invs a b)
+    strcmp_fix_ccmp_exit ((x',s')::t).
+Proof.
+  intros. apply prove_invs.
+  - simpl. rewrite ENTRY. arm8_step. exact (conj X2 X3).
   - intros.
     erewrite startof_prefix in ENTRY; try eassumption.
     eapply models_at_invariant; try eassumption.
     apply strcmp_welltyped. intro MDL1.
-    clear - PRE MDL1 MDL MEM P Q STOP READ.
-    rename t1 into t.
-    destruct_inv 64 PRE.
-    all: try match type of PRE with ?s = ?s0 => subst s end.
-    all: repeat arm8_step.
-    all: try solve [unfold strcmp_live, strcmp_frame;
-                    repeat split; intros; reflexivity].
-    all: try solve [assumption].
-    all: match goal with |- ?G => idtac "UNRESOLVED STRCMP INVARIANT:" G end.
+    clear - PRE MDL1 A B. destruct_inv 64 PRE.
+    destruct PRE as [X2 X3]. repeat arm8_step.
+    all: rewrite ?X2, ?X3 in *.
+    all: rewrite ?N.shiftr_0_r, ?msub_0_r, ?mp2_mod_mod in *.
+    all: repeat rewrite N.mod_small in * by (clear - A B; lia).
+    all: rewrite ?strcmp_fix_byte_msub32_eqb in * by assumption.
+    all: destruct (a =? 0) eqn:AZ; cbn in *; try discriminate; try reflexivity.
+Qed.
+Print Assumptions strcmp_fix_byte_ccmp.
+
+Lemma strcmp_fix_byte_ccmp_witness: forall a b,
+  a < 256 -> b < 256 ->
+  exists s, models arm8typctx s /\ s R_X2=a /\ s R_X3=b.
+Proof.
+  intros a b A B.
+  exists (update (update (strcmp_fix_entry_store 0 0 0) R_X2 a) R_X3 b).
+  split.
+  - apply models_update; [cbn; lia|].
+    apply models_update; [cbn; lia|].
+    apply strcmp_fix_entry_models; vm_compute; reflexivity.
+  - split; [rewrite update_frame by discriminate|]; apply update_updated.
+Qed.
+Print Assumptions strcmp_fix_byte_ccmp_witness.
+
+(* A bit-granular left shift may discard an equal high prefix of the stop
+   bytes and admit arbitrary lower bits from the following byte. Strict
+   comparison is preserved; exact byte-difference equality is unnecessary. *)
+Lemma strcmp_fix_shifted_byte_sign: forall a b l ta tb,
+  a < 256 -> b < 256 -> l < 8 ->
+  a / 2^(8-l) = b / 2^(8-l) -> a <> b ->
+  ta < 2^l -> tb < 2^l ->
+  N.compare ((a*2^l) mod 256 + ta) ((b*2^l) mod 256 + tb) =
+  N.compare a b.
+Proof.
+  intros a b l ta tb A B L HI NE TA TB.
+  assert (S: 0 < 2^l) by apply mp2_gt_0.
+  assert (BASE: 0 < 2^(8-l)) by apply mp2_gt_0.
+  assert (PRODUCT: 2^(8-l)*2^l = 256).
+  { rewrite <- N.pow_add_r. replace (8-l+l) with 8 by lia. reflexivity. }
+  assert (AM: (a*2^l) mod 256 = (a mod 2^(8-l))*2^l).
+  { pose proof (N.div_mod a (2^(8-l)) ltac:(lia)) as D.
+    pose proof (N.mod_lt a (2^(8-l)) ltac:(lia)) as M.
+    replace (a*2^l) with ((a mod 2^(8-l))*2^l + (a/2^(8-l))*256) by nia.
+    rewrite N.mod_add by discriminate. apply N.mod_small. nia. }
+  assert (BM: (b*2^l) mod 256 = (b mod 2^(8-l))*2^l).
+  { pose proof (N.div_mod b (2^(8-l)) ltac:(lia)) as D.
+    pose proof (N.mod_lt b (2^(8-l)) ltac:(lia)) as M.
+    replace (b*2^l) with ((b mod 2^(8-l))*2^l + (b/2^(8-l))*256) by nia.
+    rewrite N.mod_add by discriminate. apply N.mod_small. nia. }
+  rewrite AM, BM.
+  pose proof (N.div_mod a (2^(8-l)) ltac:(lia)) as DA.
+  pose proof (N.div_mod b (2^(8-l)) ltac:(lia)) as DB.
+  rewrite <- HI in DB.
+  destruct (N.compare_spec a b) as [E|LT|GT].
+  - contradiction.
+  - apply N.compare_lt_iff.
+    assert (ORDER: a mod 2^(8-l) < b mod 2^(8-l)) by lia.
+    clear - ORDER TA TB S. nia.
+  - apply N.compare_gt_iff.
+    assert (ORDER: b mod 2^(8-l) < a mod 2^(8-l)) by lia.
+    clear - ORDER TA TB S. nia.
+Qed.
+Print Assumptions strcmp_fix_shifted_byte_sign.
+
+(* The public syndrome is retained. On a common NUL its first nonzero
+   byte must have bit 7 set: otherwise CLZ shifts subsequent bytes into the
+   result. This additional property belongs at an auxiliary decoder cut. *)
+Definition strcmp_fix_syndrome x y r j :=
+  strcmp_syndrome x y r j /\
+  (strcmp_byte x j = 0 -> strcmp_byte y j = 0 ->
+   N.testbit r (8*j+7) = true).
+
+Definition strcmp_fix_decode (s0:store) (m:memory) p q K (s:store) :=
+  strcmp_frame s0 s /\ exists j, j < 8 /\
+    strcmp_pair m p q K (s R_X2) (s R_X3) j /\
+    strcmp_fix_syndrome (s R_X2) (s R_X3) (s R_X6) j.
+
+Lemma strcmp_fix_decode_project: forall s0 m p q K s,
+  strcmp_fix_decode s0 m p q K s -> strcmp_decode s0 m p q K s.
+Proof.
+  intros s0 m p q K s [F [j [J [PAIR [SYN ZERO]]]]].
+  split; [exact F|]. exists j. auto.
+Qed.
+Print Assumptions strcmp_fix_decode_project.
+
+(* An inhabited strong cut, and a counterexample to using the weak cut
+   alone. The latter is NOT claimed reachable from a strcmp entry. *)
+Definition strcmp_fix_decoder_store (r:N) : store := fun v =>
+  match v with R_X2 => 0x200 | R_X3 => 0x400 | R_X6 => r | _ => 0 end.
+
+Lemma strcmp_fix_decoder_store_models: forall r,
+  r < 2^64 -> models arm8typctx (strcmp_fix_decoder_store r).
+Proof.
+  intros r R v w CV. destruct v;
+    cbn [arm8typctx strcmp_fix_decoder_store] in *;
+    inversion CV; subst; try assumption; try apply mp2_gt_0;
+    vm_compute; reflexivity.
+Qed.
+Print Assumptions strcmp_fix_decoder_store_models.
+
+Lemma strcmp_fix_strong_decode_witness:
+  strcmp_fix_decode (strcmp_fix_decoder_store 0x680)
+    0 0 0 0 (strcmp_fix_decoder_store 0x680).
+Proof.
+  split.
+  - split; [reflexivity|]. intros; reflexivity.
+  - exists 0. split; [reflexivity|]. split.
+    + split; [intros i I; exfalso; lia|]. vm_compute. auto.
+    + split.
+      * repeat split; try (vm_compute; discriminate || reflexivity).
+        intros i I; exfalso; lia.
+      * vm_compute. auto.
+Qed.
+Print Assumptions strcmp_fix_strong_decode_witness.
+
+Lemma strcmp_fix_weak_decode_witness:
+  strcmp_decode (strcmp_fix_decoder_store 0x601)
+    0 0 0 0 (strcmp_fix_decoder_store 0x601) /\
+  ~ strcmp_fix_decode (strcmp_fix_decoder_store 0x601)
+    0 0 0 0 (strcmp_fix_decoder_store 0x601).
+Proof.
+  split.
+  - split.
+    + split; [reflexivity|]. intros; reflexivity.
+    + exists 0. split; [reflexivity|]. split.
+      * split; [intros i I; exfalso; lia|]. vm_compute. auto.
+      * repeat split; try (vm_compute; discriminate || reflexivity).
+        intros i I; exfalso; lia.
+  - intros [_ [j [J [[PREFIX [X Y]] [SYN ZERO]]]]].
+    assert (j=0).
+    { destruct (N.eq_dec j 0); [assumption|].
+      specialize (PREFIX 0 ltac:(lia)). vm_compute in PREFIX. tauto. }
+    subst j. specialize (ZERO eq_refl eq_refl). discriminate ZERO.
+Qed.
+Print Assumptions strcmp_fix_weak_decode_witness.
+
+Definition strcmp_fix_decoder_invs (s0:store) (t:trace) :=
+  match t with (Addr a,s)::_ => match a with
+  | 0x192fc4 => Some (s=s0)
+  | 0x192fe4 => Some (s R_X0 = 0xffffffffffffffff)
+  | _ => None end | _ => None end.
+
+(* Check the actual unchanged REV/CLZ/LSL/LSR/SUB IL on that weak-cut
+   witness. It yields -1 although both first-stop bytes are zero. *)
+Theorem strcmp_fix_weak_decoder_result:
+  forall t s' x'
+    (ENTRY: startof t (x',s') =
+      (Addr 0x192fc4,strcmp_fix_decoder_store 0x601)),
+  satisfies_all e30_strcmp_arm8
+    (strcmp_fix_decoder_invs (strcmp_fix_decoder_store 0x601))
+    strcmp_exit ((x',s')::t).
+Proof.
+  intros. apply prove_invs.
+  - simpl. rewrite ENTRY. arm8_step. reflexivity.
+  - intros. clear - PRE. destruct_inv 64 PRE. subst s1.
+    repeat arm8_step. vm_compute. reflexivity.
+Qed.
+Print Assumptions strcmp_fix_weak_decoder_result.
+
+Lemma strcmp_fix_weak_decoder_sign:
+  Z.compare (toZ 32 0xffffffffffffffff) 0 = Lt /\
+  N.compare (0 Ⓑ[0]) (0 Ⓑ[0]) = Eq.
+Proof. vm_compute. auto. Qed.
+Print Assumptions strcmp_fix_weak_decoder_sign.
+
+(* The retained full statement is still open. The original 21-obligation
+   attempt is preserved verbatim in notes/a-strcmp/arm8_strcmp_proof.initial.v.txt;
+   its replay is notes/a-strcmp-fix/05-inherited-target.log. The weak decoder
+   cut needs the auxiliary NUL high-bit fact above before that proof can close. *)
+Theorem strcmp_correct: strcmp_full_contract.
+Proof.
 Abort.
-(* strcmp_correct has no declaration: its initial Qed failed. The exact
-   original statement, attempt and Print command are preserved verbatim in
-   notes/a-strcmp/arm8_strcmp_proof.initial.v.txt. *)
