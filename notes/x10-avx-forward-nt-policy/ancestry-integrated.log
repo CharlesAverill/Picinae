@@ -1,0 +1,150 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-df03b650
+COMMAND=python3 notes/x10-avx-forward-nt-policy/audit-ancestry.py
+BRANCH llm-proofs/x10-avx-forward-nt-policy
+HEAD c6db0703be2cdcc9966cfa96bcf1cdd5d96f07b7
+MERGE_BASE 49956416928e5b6bb3928b54ae33e3b81091f006
+ALLOWED_PREREQUISITES
+14bdeb6a8e93bddb2014b9b907e432dbf2b1516d
+14ea393f2227bc8bde692b1e70badc61dce80304
+2d201cd4983ab0649f8d8a813158f40a7b1dbf55
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+cfb65c6f988088e4d1912544a03279d7cb29a681
+UNIT_COMMIT c6db0703be2cdcc9966cfa96bcf1cdd5d96f07b7 14ea393f2227bc8bde692b1e70badc61dce80304 cfb65c6f988088e4d1912544a03279d7cb29a681 Merge assigned AVX forward overlap and NT prerequisites
+c6db0703be2cdcc9966cfa96bcf1cdd5d96f07b7 Merge assigned AVX forward overlap and NT prerequisites
+14ea393f2227bc8bde692b1e70badc61dce80304 Complete AVX forward overlap proof
+14bdeb6a8e93bddb2014b9b907e432dbf2b1516d Add partial AVX forward overlap proof handoff
+cfb65c6f988088e4d1912544a03279d7cb29a681 Complete AVX non-temporal copy proofs
+2d201cd4983ab0649f8d8a813158f40a7b1dbf55 Record partial AVX NT proof repair and handoff
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+BUILDING.md                                        |  120 +
+ Examples/claude/amd64_memmove_avx_nt_proof.v       |  136 +-
+ Examples/claude/amd64_memmove_avx_nt_stores.v      |  150 +
+ Examples/claude/amd64_memmove_avx_nt_witness.v     |   58 +
+ .../amd64_memmove_avx_overlap_forward_proof.v      |  452 +++
+ dune                                               |   47 +
+ dune-project                                       |    3 +
+ notes/e00-build/README.md                          |  168 +
+ notes/e00-build/check-selection.py                 |   16 +
+ notes/e00-build/logs/01-dune-smoke.log             |    8 +
+ notes/e00-build/logs/02-dune-smoke.log             |  148 +
+ notes/e00-build/logs/03-dune-smoke.log             |   89 +
+ notes/e00-build/logs/04-audit-tests.log            |    9 +
+ notes/e00-build/logs/05-baseline-source-audit.log  |  204 +
+ notes/e00-build/logs/06-toolchain.log              |   12 +
+ notes/e00-build/logs/07-base-audit.log             |   15 +
+ notes/e00-build/logs/08-fork-collision-check.log   |    4 +
+ notes/e00-build/logs/09-clean-build.log            |  195 +
+ notes/e00-build/logs/10-harness-tests.log          |    9 +
+ notes/e00-build/logs/11-x86-assumptions.log        |   43 +
+ notes/e00-build/logs/12-selected-objects.log       |   27 +
+ notes/e00-build/logs/13-arm8-assumptions.log       |   29 +
+ .../e00-build/logs/14-missing-theorem-negative.log |    9 +
+ .../logs/15-extensionality-provenance.log          |   13 +
+ notes/x02-avx-nt-fix/00-before.log                 |   34 +
+ notes/x02-avx-nt-fix/01-fork-name.log              |    4 +
+ notes/x02-avx-nt-fix/02-repair-build.log           |  820 ++++
+ notes/x02-avx-nt-fix/03-statements.log             |   13 +
+ notes/x02-avx-nt-fix/04-source-audit.log           |  202 +
+ notes/x02-avx-nt-fix/05-e01-scope.log              |  352 ++
+ notes/x02-avx-nt-fix/06-resource-cap.log           |   18 +
+ notes/x02-avx-nt-fix/07-resource-cap.log           |   18 +
+ notes/x02-avx-nt-fix/08-final-targets-build.log    |    9 +
+ notes/x02-avx-nt-fix/09-witness-resource.log       |   18 +
+ notes/x02-avx-nt-fix/10-interrupt-witness.log      |    5 +
+ notes/x02-avx-nt-fix/11-final-targets-build.log    |    9 +
+ notes/x02-avx-nt-fix/12-interrupt-witness.log      |    5 +
+ notes/x02-avx-nt-fix/13-final-targets-build.log    |    9 +
+ notes/x02-avx-nt-fix/14-interrupt-witness.log      |    5 +
+ notes/x02-avx-nt-fix/15-final-targets-build.log    |    6 +
+ notes/x02-avx-nt-fix/16-assumptions.log            | 4009 ++++++++++++++++++++
+ notes/x02-avx-nt-fix/17-statements.log             |   13 +
+ notes/x02-avx-nt-fix/18-source-audit.log           |  202 +
+ notes/x02-avx-nt-fix/19-assumptions-check.log      |   86 +
+ notes/x02-avx-nt-fix/20-unit-source-audit.log      |   12 +
+ notes/x02-avx-nt-fix/21-final-statements.log       |   21 +
+ notes/x02-avx-nt-fix/22-validated-objects.log      |   10 +
+ notes/x02-avx-nt-fix/23-before-commit.log          |   60 +
+ notes/x02-avx-nt-fix/README.md                     |  162 +
+ notes/x02-avx-nt-fix/assumptions.sh                |   15 +
+ notes/x02-avx-nt-fix/audit-history.sh              |   25 +
+ notes/x02-avx-nt-fix/build.sh                      |    7 +
+ notes/x02-avx-nt-fix/check-assumptions.py          |   29 +
+ notes/x02-avx-nt-fix/check-statements.py           |   28 +
+ notes/x02-avx-nt-fix/initial-witness.v.txt         |   48 +
+ notes/x02-avx-nt-fix/interrupt-witness.py          |   17 +
+ notes/x02-avx-nt-fix/resources.py                  |   14 +
+ notes/x02-avx-nt-fix/result.json                   |   17 +
+ notes/x02-avx-nt-fix/second-witness.v.txt          |   48 +
+ notes/x02-avx-nt-fix/third-witness.v.txt           |   49 +
+ notes/x02-avx-nt/01-baseline-build.log             |  808 ++++
+ notes/x02-avx-nt/02-baseline-assumptions.log       | 2582 +++++++++++++
+ notes/x02-avx-nt/03-initial-repair-build.log       |    9 +
+ notes/x02-avx-nt/04-source-audit.log               |  202 +
+ notes/x02-avx-nt/05-final-source-check.log         |   13 +
+ notes/x02-avx-nt/06-statement-check.log            |    7 +
+ notes/x02-avx-nt/07-unit-source-audit.log          |   12 +
+ notes/x02-avx-nt/README.md                         |  131 +
+ notes/x02-avx-nt/ancestry-before.log               |   34 +
+ notes/x02-avx-nt/check-statements.py               |   13 +
+ notes/x02-avx-nt/fork-name-check.log               |    4 +
+ notes/x02-avx-nt/generate-store-helper.py          |   46 +
+ notes/x02-avx-nt/initial-repair.v.txt              |  823 ++++
+ notes/x02-avx-nt/nt-adv4-attempt.v.txt             |   41 +
+ notes/x02-avx-nt/nt-seg-1285-attempt.v.txt         |   71 +
+ notes/x02-avx-nt/nt-stores-attempt.v.txt           |  150 +
+ notes/x02-avx-nt/prepare-four-page-attempt.py      |   52 +
+ notes/x02-avx-nt/rename.log                        |    4 +
+ notes/x02-avx-nt/resource-cap.log                  |   40 +
+ notes/x02-avx-nt/source-audit-before.log           |   14 +
+ notes/x03-avx-overlap-forward-fix/00-setup.md      |   30 +
+ notes/x03-avx-overlap-forward-fix/00-start.log     |   49 +
+ notes/x03-avx-overlap-forward-fix/01-full-vo.log   |  465 +++
+ .../02-restored-declarations.log                   |   31 +
+ .../x03-avx-overlap-forward-fix/03-row-repair.log  |  133 +
+ .../04-witness-repair.log                          |  133 +
+ .../05-witness-check.log                           |    8 +
+ .../06-witness-check.log                           |    7 +
+ .../07-witness-check.log                           |    4 +
+ notes/x03-avx-overlap-forward-fix/08-full-vo.log   |  122 +
+ .../09-declarations.log                            |   31 +
+ .../10-source-audit.log                            |  204 +
+ .../11-precommit-ancestry.log                      |   52 +
+ .../x03-avx-overlap-forward-fix/12-assumptions.log | 1011 +++++
+ .../13-original-diff.log                           |   78 +
+ .../14-final-source-check.log                      |   31 +
+ .../15-assumptions-summary.log                     |   23 +
+ .../16-final-source-audit.log                      |  204 +
+ .../17-final-artifacts.log                         |   38 +
+ notes/x03-avx-overlap-forward-fix/README.md        |  157 +
+ .../x03-avx-overlap-forward-fix/audit-ancestry.sh  |   31 +
+ .../audit-declarations.py                          |   15 +
+ notes/x03-avx-overlap-forward-fix/build.sh         |    6 +
+ .../check-assumptions.sh                           |   11 +
+ .../x03-avx-overlap-forward-fix/check-witnesses.sh |   15 +
+ .../summarize-assumptions.py                       |   23 +
+ notes/x03-avx-overlap-forward/00-before.log        |   36 +
+ notes/x03-avx-overlap-forward/01-branch.log        |    5 +
+ .../02-source-audit-initial.log                    |   10 +
+ .../x03-avx-overlap-forward/03-lift-unchanged.log  |    4 +
+ notes/x03-avx-overlap-forward/04-full-vo-build.log |  370 ++
+ .../05-source-audit-all.log                        |  204 +
+ .../06-preserve-handoff.log                        |    5 +
+ .../07-source-audit-final.log                      |   10 +
+ .../x03-avx-overlap-forward/08-precommit-audit.log |   34 +
+ notes/x03-avx-overlap-forward/README.md            |  158 +
+ .../x03-avx-overlap-forward/audit-after-commit.sh  |   17 +
+ .../x03-avx-overlap-forward/initial-attempt.v.txt  |  454 +++
+ notes/x03-avx-overlap-forward/preserve-handoff.py  |   20 +
+ tools/audit-proof-source.py                        |  108 +
+ tools/print-assumptions.sh                         |   36 +
+ tools/record-command.sh                            |   24 +
+ tools/test-proof-audit.py                          |   82 +
+ 123 files changed, 17905 insertions(+), 3 deletions(-)
+STATUS
+## llm-proofs/x10-avx-forward-nt-policy
+ M dune
+?? Examples/claude/amd64_memmove_avx_forward_nt_policy_proof.v
+?? notes/x10-avx-forward-nt-policy/
+PASS: only the assigned forests and scoped unit/import commits
+
+EXIT_CODE=0

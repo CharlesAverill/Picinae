@@ -1,0 +1,352 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-78795c90
+COMMAND=python3 -
+Read-only evidence: /home/charles/.t3/worktrees/Picinae/t3-82f6e4d5/Examples/claude/inventory/e01-x86-inventory/generated
+{
+  "direct_targets_outside_lift": [],
+  "file": "Examples/claude/memmove_avx_amd64.v",
+  "il_address_mapping_verified": true,
+  "instructions": 351,
+  "issues": [
+    {
+      "annotation": "NOP dword ptr [RSI + 0x80]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e80000000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x80]",
+      "elf_address": "0x1a0bd5",
+      "ghidra_address": "0x2a0bd5",
+      "il_address": "0x395",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0xc0]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188ec0000000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0xc0]",
+      "elf_address": "0x1a0bdc",
+      "ghidra_address": "0x2a0bdc",
+      "il_address": "0x39c",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x100]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e00010000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x100]",
+      "elf_address": "0x1a0be3",
+      "ghidra_address": "0x2a0be3",
+      "il_address": "0x3a3",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x140]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e40010000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x140]",
+      "elf_address": "0x1a0bea",
+      "ghidra_address": "0x2a0bea",
+      "il_address": "0x3aa",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x1080]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e80100000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x1080]",
+      "elf_address": "0x1a0bf1",
+      "ghidra_address": "0x2a0bf1",
+      "il_address": "0x3b1",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x10c0]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188ec0100000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x10c0]",
+      "elf_address": "0x1a0bf8",
+      "ghidra_address": "0x2a0bf8",
+      "il_address": "0x3b8",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x1100]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e00110000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x1100]",
+      "elf_address": "0x1a0bff",
+      "ghidra_address": "0x2a0bff",
+      "il_address": "0x3bf",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x1140]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e40110000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x1140]",
+      "elf_address": "0x1a0c06",
+      "ghidra_address": "0x2a0c06",
+      "il_address": "0x3c6",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x80]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e80000000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x80]",
+      "elf_address": "0x1a0ca5",
+      "ghidra_address": "0x2a0ca5",
+      "il_address": "0x465",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0xc0]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188ec0000000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0xc0]",
+      "elf_address": "0x1a0cac",
+      "ghidra_address": "0x2a0cac",
+      "il_address": "0x46c",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RDI + 0x80]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188f80000000",
+      "disassembly": "prefetcht0 BYTE PTR [rdi+0x80]",
+      "elf_address": "0x1a0cb3",
+      "ghidra_address": "0x2a0cb3",
+      "il_address": "0x473",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RDI + 0xc0]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188fc0000000",
+      "disassembly": "prefetcht0 BYTE PTR [rdi+0xc0]",
+      "elf_address": "0x1a0cba",
+      "ghidra_address": "0x2a0cba",
+      "il_address": "0x47a",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x80]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e80000000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x80]",
+      "elf_address": "0x1a0d45",
+      "ghidra_address": "0x2a0d45",
+      "il_address": "0x505",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0xc0]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188ec0000000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0xc0]",
+      "elf_address": "0x1a0d4c",
+      "ghidra_address": "0x2a0d4c",
+      "il_address": "0x50c",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x1080]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e80100000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x1080]",
+      "elf_address": "0x1a0d53",
+      "ghidra_address": "0x2a0d53",
+      "il_address": "0x513",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x10c0]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188ec0100000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x10c0]",
+      "elf_address": "0x1a0d5a",
+      "ghidra_address": "0x2a0d5a",
+      "il_address": "0x51a",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x2080]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e80200000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x2080]",
+      "elf_address": "0x1a0d61",
+      "ghidra_address": "0x2a0d61",
+      "il_address": "0x521",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x20c0]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188ec0200000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x20c0]",
+      "elf_address": "0x1a0d68",
+      "ghidra_address": "0x2a0d68",
+      "il_address": "0x528",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x3080]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e80300000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x3080]",
+      "elf_address": "0x1a0d6f",
+      "ghidra_address": "0x2a0d6f",
+      "il_address": "0x52f",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x30c0]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188ec0300000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x30c0]",
+      "elf_address": "0x1a0d76",
+      "ghidra_address": "0x2a0d76",
+      "il_address": "0x536",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0x80]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188e80000000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0x80]",
+      "elf_address": "0x1a0e95",
+      "ghidra_address": "0x2a0e95",
+      "il_address": "0x655",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RSI + 0xc0]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188ec0000000",
+      "disassembly": "prefetcht0 BYTE PTR [rsi+0xc0]",
+      "elf_address": "0x1a0e9c",
+      "ghidra_address": "0x2a0e9c",
+      "il_address": "0x65c",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RDI + 0x80]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188f80000000",
+      "disassembly": "prefetcht0 BYTE PTR [rdi+0x80]",
+      "elf_address": "0x1a0ea3",
+      "ghidra_address": "0x2a0ea3",
+      "il_address": "0x663",
+      "il_length": 7,
+      "mnemonic_match": false
+    },
+    {
+      "annotation": "NOP dword ptr [RDI + 0xc0]",
+      "boundary_and_length_match": true,
+      "bytes": "0f188fc0000000",
+      "disassembly": "prefetcht0 BYTE PTR [rdi+0xc0]",
+      "elf_address": "0x1a0eaa",
+      "ghidra_address": "0x2a0eaa",
+      "il_address": "0x66a",
+      "il_length": 7,
+      "mnemonic_match": false
+    }
+  ],
+  "limitation": "Instruction boundaries/lengths, IL code address mapping and normalized mnemonics are checked against exact bytes; IL semantics and original lifter reproducibility are not certified.",
+  "matched_boundaries": 351,
+  "matched_mnemonics": 327,
+  "ranges": [
+    {
+      "end_exclusive": "0x1a086f",
+      "sha256": "ed9c23ec9697484a5f123761cc81f949879dd097d1ac06e72505128893b280af",
+      "size": 47,
+      "start": "0x1a0840",
+      "symbols_at_start": [
+        "__memcpy_avx_unaligned_erms",
+        "__memmove_avx_unaligned_erms"
+      ]
+    },
+    {
+      "end_exclusive": "0x1a08b7",
+      "sha256": "458089c0629e8ed8880de2471e816eaed13aac598d00c2e825f75a59a684e120",
+      "size": 71,
+      "start": "0x1a0870",
+      "symbols_at_start": []
+    },
+    {
+      "end_exclusive": "0x1a08f6",
+      "sha256": "d0c9f40c7115030b2d3a863c2671d5a476d5a3f0b15aff7c0d8819f618a17a87",
+      "size": 54,
+      "start": "0x1a08c0",
+      "symbols_at_start": []
+    },
+    {
+      "end_exclusive": "0x1a0a2e",
+      "sha256": "f2e689e7e81bc1ea82c13bee8cf4fae45689b5d112facebb94b18fe64f73a610",
+      "size": 302,
+      "start": "0x1a0900",
+      "symbols_at_start": []
+    },
+    {
+      "end_exclusive": "0x1a0ab0",
+      "sha256": "381b64d08c3933bac467dc465d7ea9576cc744484e7cecdc9db8f5f5f82e8f4a",
+      "size": 128,
+      "start": "0x1a0a30",
+      "symbols_at_start": []
+    },
+    {
+      "end_exclusive": "0x1a0af5",
+      "sha256": "c946870758d8ef8cf1bd663982444660bbb5347d5c586c65d8dd34ca544737d3",
+      "size": 53,
+      "start": "0x1a0ac0",
+      "symbols_at_start": []
+    },
+    {
+      "end_exclusive": "0x1a0b5b",
+      "sha256": "64823c52c766b3acf842419f3c8f630ef93b69b8da6c73209daf4ce9a386b334",
+      "size": 91,
+      "start": "0x1a0b00",
+      "symbols_at_start": []
+    },
+    {
+      "end_exclusive": "0x1a0d2e",
+      "sha256": "2a0f2afea6f667db67ed12b32ff5640cba5770071a4184aa171f45d13a944d9a",
+      "size": 462,
+      "start": "0x1a0b60",
+      "symbols_at_start": []
+    },
+    {
+      "end_exclusive": "0x1a0f1e",
+      "sha256": "7b86f4d326256bfe7f767b85c6a2568bf48debbb602a4375dfb54965b1c8c9dc",
+      "size": 494,
+      "start": "0x1a0d30",
+      "symbols_at_start": []
+    }
+  ],
+  "sha256": "a5db2b6d0ff69ffefb6b1a710748ba82d08b7986ec62b82e14170d9b228fbb7c"
+}
+instructions: 351
+all lengths match: True
+prefetch entries: 24
+
+EXIT_CODE=0

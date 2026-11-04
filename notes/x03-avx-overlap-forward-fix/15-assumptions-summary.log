@@ -1,0 +1,23 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-be68d06e
+COMMAND=python3 notes/x03-avx-overlap-forward-fix/summarize-assumptions.py
+ofw_welltyped: inherited Stdlib.Logic.FunctionalExtensionality.functional_extensionality_dep only
+ofw_nwc: Closed under the global context
+ofw_preserves_callee_saved: Closed under the global context
+ofw_load: Closed under the global context
+ofw_store4: Closed under the global context
+lor31: Closed under the global context
+a0_bounds: Closed under the global context
+getmem_addr: Closed under the global context
+ja_not_taken: Closed under the global context
+ja_taken: Closed under the global context
+msub_add_mod: Closed under the global context
+ofw_dispatch: Closed under the global context
+ofw_heuristic_nonzero: Closed under the global context
+memmove_avx_correct_overlap_forward: inherited Stdlib.Logic.FunctionalExtensionality.functional_extensionality_dep only
+memmove_avx_overlap_forward_at_ret: inherited Stdlib.Logic.FunctionalExtensionality.functional_extensionality_dep only
+ofw_witness_thresholds: Closed under the global context
+ofw_entry_satisfiable: Closed under the global context
+ofw_critical_distances: Closed under the global context
+All 18 results inspected: 15 closed, 3 inherited-FE-only; no imported admission.
+
+EXIT_CODE=0
