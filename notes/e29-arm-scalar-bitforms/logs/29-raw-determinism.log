@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ea3464df
+COMMAND=cmp Examples/claude/lifter/scalar_bitforms/RAW.json /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/raw07/raw.json
+
+EXIT_CODE=0
