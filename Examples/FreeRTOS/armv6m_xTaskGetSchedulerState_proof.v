@@ -1,10 +1,9 @@
 (* xTaskGetSchedulerState -- ARMv6-M Cortex-M0 sequential IL correctness.
 
    Initial author: OpenAI gpt-6-astra, xhigh/default, r19-scheduler-state.
-   PARTIAL: first build failed before checking any unit theorem.
-   All proof attempts are archived; statements below are explicitly aborted.
-   The initial header typo is sanitized only for this unvalidated scaffold.
-   Validation/model outcome: notes/r19-scheduler-state.
+   Repair: OpenAI gpt-6.1-sol, xhigh/default, r19-scheduler-state-fix.
+   PARTIAL: seven helpers checked in diagnostic compilation; main proof unfinished.
+   Original evidence: notes/r19-scheduler-state; repairs: notes/r19-scheduler-state-fix.
    FreeRTOS V11.1.0, commit dbf70559b27d39c1fdb68dfb9a32140b6a6777a0.
    ELF SHA256 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca.
    Lift: unchanged xTaskGetSchedulerState_armv6m.v, armv6m_lifter.sh;
@@ -69,30 +68,38 @@ Definition scheduler_state_invariants (initial:store) (t:trace) : option Prop :=
 
 Theorem scheduler_state_nwc : forall s2 s1,
   xTaskGetSchedulerState_armv6m_prog s1 = xTaskGetSchedulerState_armv6m_prog s2.
-Proof.
-Abort.
+Proof. reflexivity. Qed.
 
 Theorem scheduler_state_welltyped :
   welltyped_prog armv6mtypctx xTaskGetSchedulerState_armv6m_prog.
-Proof.
-Abort.
+Proof. exact xTaskGetSchedulerState_armv6m_welltyped. Qed.
 
 Theorem scheduler_state_preserves_memory :
   forall_endstates xTaskGetSchedulerState_armv6m_prog
     (fun _ s _ s' => s V_MEM32 = s' V_MEM32).
 Proof.
-Abort.
+  apply noassign_prog_same.
+  unfold prog_noassign, xTaskGetSchedulerState_armv6m_prog.
+  intros s a.
+  destruct (existsb (N.eqb a) xTaskGetSchedulerState_armv6m_entries) eqn:IN;
+    [|exact I].
+  apply existsb_exists in IN. destruct IN as [b [IN EQ]].
+  apply N.eqb_eq in EQ. subst a.
+  cbn [xTaskGetSchedulerState_armv6m_entries] in IN.
+  repeat destruct IN as [<-|IN]; try contradiction; prove_noassign.
+Qed.
 
 (* NEG then ADC cancels the value modulo 2^32 and retains the zero carry. *)
 Lemma scheduler_state_adc_result : forall u,
   N.shiftl (((u + msub 32 0 u) mod 2^32 + N.b2n (u <=? 0)) mod 2^32) 1
     mod 2^32 = if u =? 0 then 2 else 0.
 Proof.
-Abort.
+  intro u. rewrite add_msub, mp2_mod_0_l, N.add_0_l.
+  destruct u; reflexivity.
+Qed.
 
 Lemma scheduler_state_zero_bound : forall w, 0 < 2^w.
-Proof.
-Abort.
+Proof. intro w. apply N.neq_0_lt_0, pow2_nonzero. Qed.
 
 Definition scheduler_state_entry_witness (m:memory) (lr:N) : store := fun v =>
   match v with
@@ -110,7 +117,15 @@ Lemma scheduler_state_witness_models : forall m lr,
   m < 2^(8*2^32) -> lr < 2^32 ->
   models armv6mtypctx (scheduler_state_entry_witness m lr).
 Proof.
-Abort.
+  intros m lr B L v w T. destruct v; cbn [armv6mtypctx] in T;
+    try discriminate; injection T as <-.
+  all: lazymatch goal with
+  | |- scheduler_state_entry_witness _ _ V_MEM32 < _ => exact B
+  | |- scheduler_state_entry_witness _ _ A_READ < _ => exact (ones_bound (2^32))
+  | |- scheduler_state_entry_witness _ _ R_LR < _ => exact L
+  | |- _ < 2^?width => exact (scheduler_state_zero_bound width)
+  end.
+Qed.
 
 Theorem scheduler_state_entry_satisfiable : forall m lr,
   m < 2^(8*2^32) -> N.odd lr = true -> lr < 0xfffffff0 ->
@@ -118,7 +133,17 @@ Theorem scheduler_state_entry_satisfiable : forall m lr,
     scheduler_state_readable s /\ s R_LR = lr /\
     N.odd (s R_LR) = true /\ s R_LR < 0xfffffff0.
 Proof.
-Abort.
+  intros m lr B O L. exists (scheduler_state_entry_witness m lr).
+  split.
+  - apply scheduler_state_witness_models; [exact B|]. change (lr < 2^32).
+    eapply N.lt_trans; [exact L|reflexivity].
+  - split; [reflexivity|]. split.
+    + intros a RANGE. unfold mem_readable.
+      change (N.testbit (N.ones (2^32)) a = true).
+      apply N.ones_spec_low. clear - RANGE. destruct RANGE as [[LO HI]|[LO HI]];
+        (eapply N.lt_trans; [exact HI|reflexivity]).
+    + split; [reflexivity|]. split; assumption.
+Qed.
 
 Theorem scheduler_state_correct : forall s t s' x'
   (ENTRY: startof t (x',s') = (Addr 0x12fc,s))
@@ -126,6 +151,7 @@ Theorem scheduler_state_correct : forall s t s' x'
   satisfies_all xTaskGetSchedulerState_armv6m_prog
     (scheduler_state_invariants s) scheduler_state_exit ((x',s')::t).
 Proof.
+  (* Unfinished attempt preserved in notes/r19-scheduler-state-fix. *)
 Abort.
 
 Corollary scheduler_state_post_at_bx : forall s t s'
@@ -135,6 +161,7 @@ Corollary scheduler_state_post_at_bx : forall s t s'
   (UT: unterminated scheduler_state_exit t),
   scheduler_state_postcondition s s'.
 Proof.
+  (* Unfinished attempt preserved in notes/r19-scheduler-state-fix. *)
 Abort.
 
 Corollary scheduler_state_preserves_callee_saved : forall s t s'
@@ -145,6 +172,7 @@ Corollary scheduler_state_preserves_callee_saved : forall s t s'
   forall v, In v [R_R4; R_R5; R_R6; R_R7; R_R8; R_R9; R_R10; R_R11; R_SP; R_LR] ->
     s' v = s v.
 Proof.
+  (* Unfinished attempt preserved in notes/r19-scheduler-state-fix. *)
 Abort.
 
 Corollary scheduler_state_original_memory : forall s t s'
@@ -155,6 +183,7 @@ Corollary scheduler_state_original_memory : forall s t s'
   s' V_MEM32 = s V_MEM32 /\
   forall a, (s' V_MEM32) Ⓑ[a] = (s V_MEM32) Ⓑ[a].
 Proof.
+  (* Unfinished attempt preserved in notes/r19-scheduler-state-fix. *)
 Abort.
 
 Theorem scheduler_state_return_step : forall s
@@ -162,6 +191,7 @@ Theorem scheduler_state_return_step : forall s
   can_step xTaskGetSchedulerState_armv6m_prog
     ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s),(Addr 0x1310,s)).
 Proof.
+  (* Unfinished attempt preserved in notes/r19-scheduler-state-fix. *)
 Abort.
 
 Corollary scheduler_state_caller_result : forall s t s'
@@ -174,4 +204,5 @@ Corollary scheduler_state_caller_result : forall s t s'
   can_step xTaskGetSchedulerState_armv6m_prog
     ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s'),(Addr 0x1310,s')).
 Proof.
+  (* Unfinished attempt preserved in notes/r19-scheduler-state-fix. *)
 Abort.
