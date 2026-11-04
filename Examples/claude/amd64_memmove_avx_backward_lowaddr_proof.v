@@ -163,7 +163,7 @@ Theorem memmove_avx_correct_backward_lowaddr:
     (DOM: low_domain d s n),
   satisfies_all memmove_avx_amd64 (low_invs m d s n rsp) low_exit ((x',st')::t).
 Proof.
-  (* Uncertified initial script is preserved in notes/x08-avx-backward-lowaddr/initial-attempt.v.txt. *)
+  (* Unchecked repair preserved in notes/x08-avx-backward-lowaddr-fix/repaired-attempt.v.txt. *)
 Abort.
 
 (* A concrete exec_prog trace ending at the actual RET instruction. *)
@@ -177,7 +177,7 @@ Corollary memmove_avx_backward_lowaddr_at_ret:
   low_postcondition m d s n rsp st' /\
   (forall v, In v [R_RBX;R_RBP;R_R12;R_R13;R_R14;R_R15] -> st v=st' v).
 Proof.
-  (* Uncertified initial script is preserved in notes/x08-avx-backward-lowaddr/initial-attempt.v.txt. *)
+  (* Unchecked repair preserved in notes/x08-avx-backward-lowaddr-fix/repaired-attempt.v.txt. *)
 Abort.
 
 (* RET is actually executed; its stack load observes the final copy memory. *)
@@ -188,7 +188,7 @@ Lemma low_ret_step:
   st' R_RSP=st R_RSP ⊕ 8 /\ st' V_MEM64=st V_MEM64 /\
   st' R_RAX=st R_RAX.
 Proof.
-  (* Uncertified initial script is preserved in notes/x08-avx-backward-lowaddr/initial-attempt.v.txt. *)
+  (* Unchecked repair preserved in notes/x08-avx-backward-lowaddr-fix/repaired-attempt.v.txt. *)
 Abort.
 
 Theorem memmove_avx_backward_lowaddr_after_ret:
@@ -202,7 +202,7 @@ Theorem memmove_avx_backward_lowaddr_after_ret:
   x=Addr (out V_MEM64 Ⓠ[rsp]) /\
   (forall v, In v [R_RBX;R_RBP;R_R12;R_R13;R_R14;R_R15] -> st v=out v).
 Proof.
-  (* Uncertified initial script is preserved in notes/x08-avx-backward-lowaddr/initial-attempt.v.txt. *)
+  (* Unchecked repair preserved in notes/x08-avx-backward-lowaddr-fix/repaired-attempt.v.txt. *)
 Abort.
 
 (* Finite permissions, not the zero-permission witness used by x04. *)
@@ -213,7 +213,7 @@ Definition low_witness_store (d s:N) : store := fun v => match v with
 Lemma low_witness_typed:
   forall d s, s<d -> 0<d<128 -> models x64typctx (low_witness_store d s).
 Proof.
-  (* Uncertified initial script is preserved in notes/x08-avx-backward-lowaddr/initial-attempt.v.txt. *)
+  (* Unchecked repair preserved in notes/x08-avx-backward-lowaddr-fix/repaired-attempt.v.txt. *)
 Abort.
 
 Lemma low_witness_permissions:
@@ -221,7 +221,7 @@ Lemma low_witness_permissions:
     MemAcc mem_readable (low_witness_store d s) a 64 L /\
     MemAcc mem_writable (low_witness_store d s) a 64 L.
 Proof.
-  (* Uncertified initial script is preserved in notes/x08-avx-backward-lowaddr/initial-attempt.v.txt. *)
+  (* Unchecked repair preserved in notes/x08-avx-backward-lowaddr-fix/repaired-attempt.v.txt. *)
 Abort.
 
 Theorem low_accessible_entry_witness:
@@ -235,7 +235,7 @@ Theorem low_accessible_entry_witness:
   MemAcc mem_readable st 4096 64 8 /\
   exists st1, can_step memmove_avx_amd64 ((Addr 4,st1),(Addr 0,st)).
 Proof.
-  (* Uncertified initial script is preserved in notes/x08-avx-backward-lowaddr/initial-attempt.v.txt. *)
+  (* Unchecked repair preserved in notes/x08-avx-backward-lowaddr-fix/repaired-attempt.v.txt. *)
 Abort.
 
 (* Both live and wrap-prone cursor classes have actual typed permitted stores.
@@ -245,5 +245,5 @@ Lemma low_cursor_examples:
   low_domain 1 0 289 /\ c0 1 289=160 /\
   (32 ⊖ 128) mod 128=32.
 Proof.
-  (* Uncertified initial script is preserved in notes/x08-avx-backward-lowaddr/initial-attempt.v.txt. *)
+  (* Unchecked repair preserved in notes/x08-avx-backward-lowaddr-fix/repaired-attempt.v.txt. *)
 Abort.

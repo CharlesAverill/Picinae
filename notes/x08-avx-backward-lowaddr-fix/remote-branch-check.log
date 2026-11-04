@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-48b8f09f
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/x08-avx-backward-lowaddr-fix
+
+EXIT_CODE=0
