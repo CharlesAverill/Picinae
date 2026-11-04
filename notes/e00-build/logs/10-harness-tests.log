@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-6b751a59
+COMMAND=bash --noprofile --norc -e -c bash\ -n\ tools/record-command.sh\ tools/print-assumptions.sh\;\ python3\ tools/test-proof-audit.py
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.180s
+
+OK
+
+EXIT_CODE=0
