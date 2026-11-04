@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9d096d
+COMMAND=sha256sum /tmp/e29-arm-isa.pdf
+89973c3d41fe5f45cc8581ff41db7c8736d3f2b6d7bb6568112a3c3ac81cb845  /tmp/e29-arm-isa.pdf
+
+EXIT_CODE=0
