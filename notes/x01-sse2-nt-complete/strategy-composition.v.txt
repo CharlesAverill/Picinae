@@ -1,0 +1,170 @@
+Lemma nt_strategy_entry_step: forall m d s n rsp st t,
+  models archtyps st -> 128<n -> nt_dispatch_state m d s n rsp st ->
+  nextinv memcpy_amd64 (nt_strategy_invs m d s n rsp) nt_tail_exit false
+    ((Addr 1853552,st)::t).
+Proof.
+  intros m d s n rsp st t MDL BIG [MEM [D [S [NN RSP]]]].
+  repeat step_prune.
+  split; [change (m=m /\ d=d /\ s=s /\ n=n /\ st R_RSP=rsp);
+    repeat split; try reflexivity; exact RSP|].
+  split; [reflexivity|]. unfold xmm_ok. psimpl. pack_xmm. reflexivity.
+Qed.
+
+Lemma nt_strategy_dispatch_step: forall m d s n rsp st t,
+  models archtyps st -> 128<n -> nov d s n -> m Ⓠ[0x3215a8]<n ->
+  nt_dispatch_state m d s n rsp st /\ st R_RAX=d /\ xmm_ok st R_YMM0 m s ->
+  nextinv memcpy_amd64 (nt_strategy_invs m d s n rsp) nt_tail_exit false
+    ((Addr 1854064,st)::t).
+Proof.
+  intros m d s n rsp st t MDL BIG NOV THR
+    [[MEM [D [S [NN RSP]]]] [RAX X0]].
+  assert (DSN: n<=d ⊖ s) by (apply nov_ds; [exact NOV|clear - BIG; lia]).
+  repeat x64_step.
+  all: set (T:=m Ⓠ[0x3215a8]) in *; clearbody T.
+  all: try (exfalso; apply N.ltb_lt in BC; clear - BC DSN; lia).
+  all: try (exfalso; apply ja_not_taken in BC0; destruct BC0 as [B|B];
+    [apply N.ltb_lt in B|apply N.eqb_eq in B]; clear - B THR; lia).
+  split; [change (m=m /\ d=d /\ s=s /\ n=n /\ st R_RSP=rsp);
+    repeat split; try reflexivity; exact RSP|].
+  split; [change (st R_RAX=d); exact RAX|].
+  split; [change (xmm_ok st R_YMM0 m s); exact X0|]. reflexivity.
+Qed.
+
+Lemma nt_strategy_setup2: forall m d s n rsp st t,
+  models archtyps st -> nov d s n -> n<2^64 -> 64<=n ->
+  nt_strategy_domain m d s n ->
+  nt_head_aligned m d s n rsp st /\ ~nt_four_selected m d s n /\
+    st R_R10=(n-nt_align d)>>4 ->
+  nextinv memcpy_amd64 (nt_strategy_invs m d s n rsp) nt_tail_exit false
+    ((Addr 1854474,st)::t).
+Proof.
+  intros m d s n rsp st t MDL NOV NB BIG DOMAIN
+    [[MEM [D [S [NN [AX SP]]]]] [SEL R10]].
+  pose proof (nt_selected_counter_positive m d s n false DOMAIN SEL) as POS.
+  change (0<nt_count false d n) in POS.
+  pose proof (nt_head_copy m d s n BIG NOV NB) as COPY.
+  repeat x64_step.
+  exists 0, 0. unfold nt_bulk_state, nt_offset, nt_chunk, nt_pages.
+  nt_scalar_projections.
+  split; [exact POS|]. split; [reflexivity|]. split.
+  - rewrite ?MEM. eapply cpy_equiv; [|exact COPY]. intro x. symmetry. apply nt_done_initial.
+  - split; [exact D|]. split; [exact S|]. split; [reflexivity|].
+    split.
+    + unfold nt_count, nt_chunk, nt_pages.
+      rewrite N.shiftr_div_pow2. reflexivity.
+    + split; [unfold nt_rest, nt_chunk, nt_pages; reflexivity|]. split; assumption.
+Qed.
+
+Lemma nt_strategy_setup4: forall m d s n rsp st t,
+  models archtyps st -> nov d s n -> n<2^64 -> 64<=n ->
+  nt_strategy_domain m d s n ->
+  nt_head_aligned m d s n rsp st /\ nt_four_selected m d s n ->
+  nextinv memcpy_amd64 (nt_strategy_invs m d s n rsp) nt_tail_exit false
+    ((Addr 1854768,st)::t).
+Proof.
+  intros m d s n rsp st t MDL NOV NB BIG DOMAIN
+    [[MEM [D [S [NN [AX SP]]]]] SEL].
+  pose proof (nt_selected_counter_positive m d s n true DOMAIN SEL) as POS.
+  change (0<nt_count true d n) in POS.
+  pose proof (nt_head_copy m d s n BIG NOV NB) as COPY.
+  repeat x64_step.
+  exists 0, 0. unfold nt_bulk_state, nt_offset, nt_chunk, nt_pages.
+  nt_scalar_projections.
+  split; [exact POS|]. split; [reflexivity|]. split.
+  - rewrite ?MEM. eapply cpy_equiv; [|exact COPY]. intro x. symmetry. apply nt_done_initial.
+  - split; [exact D|]. split; [exact S|]. split; [reflexivity|].
+    split.
+    + unfold nt_count, nt_chunk, nt_pages.
+      rewrite N.shiftr_div_pow2. reflexivity.
+    + split; [unfold nt_rest, nt_chunk, nt_pages; reflexivity|]. split; assumption.
+Qed.
+
+Lemma nt_strategy_jbe_not: forall a b:bool,
+  ((if a then 1 else 0) .| (if b then 1 else 0))=0 -> a=false /\ b=false.
+Proof. intros [|] [|]; cbn; intro H; first [discriminate|tauto]. Qed.
+Lemma nt_strategy_jbe_taken: forall a b:bool, forall p,
+  ((if a then 1 else 0) .| (if b then 1 else 0))=N.pos p -> a=true \/ b=true.
+Proof. intros [|] [|] p; cbn; intro H; first [discriminate|tauto]. Qed.
+
+Lemma nt_strategy_tail_join: forall (four:bool) m d s n rsp c st t,
+  models archtyps st -> nt_tail_state m d s n rsp c st ->
+  nextinv memcpy_amd64 (nt_strategy_invs m d s n rsp) nt_tail_exit false
+    ((Addr (if four then 1855083 else 1854659),st)::t).
+Proof.
+  intros four m d s n rsp c st t MDL
+    [CU [REM [C [D [S [DX [AX SP]]]]]]].
+  destruct four; repeat x64_step.
+  all: exists c; split.
+  all: try (lazymatch goal with |- _+64 < _ => idtac end;
+    apply nt_strategy_jbe_not in BC; destruct BC as [B1 B2];
+    apply N.ltb_ge in B1; apply N.eqb_neq in B2;
+    rewrite N.mod_small in B1, B2 by exact REM; clear - B1 B2; lia).
+  all: try (lazymatch goal with |- _ <= _ => idtac end;
+    apply nt_strategy_jbe_taken in BC; destruct BC as [B|B];
+    [apply N.ltb_lt in B|apply N.eqb_eq in B];
+    rewrite N.mod_small in B by exact REM; clear - B; lia).
+  all: unfold nt_tail_state; nt_scalar_projections;
+    split; [exact CU|]; split; [exact REM|]; split; [exact C|];
+    split; [first [reflexivity|exact D]|];
+    split; [first [reflexivity|exact S]|];
+    split; [first [reflexivity|exact DX]|]; split; assumption.
+Qed.
+
+Theorem memcpy_correct_nt_strategy:
+  forall st t st' x' m d s n rsp
+    (ENTRY: startof t (x',st')=(Addr 1853552,st))
+    (MDL: models x64typctx st) (PRE: nt_dispatch_state m d s n rsp st)
+    (BIG: 128<n) (NOV: nov d s n) (NW: d+n<2^64)
+    (THR: m Ⓠ[0x3215a8]<n) (DOMAIN: nt_strategy_domain m d s n),
+  satisfies_all memcpy_amd64 (nt_strategy_invs m d s n rsp) nt_tail_exit ((x',st')::t).
+Proof.
+  intros.
+  assert (NB: n<2^64) by (destruct PRE as [_ [_ [_ [NN _]]]];
+    rewrite <-NN; exact (MDL R_RDX 64 eq_refl)).
+  assert (BIG64: 64<=n) by (clear - BIG; lia).
+  apply prove_invs.
+  - simpl. rewrite ENTRY. x64_step. exact PRE.
+  - intros. erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption. apply memcpy_welltyped. intro MDL1.
+    clear - PRE0 MDL1 BIG BIG64 NOV NW NB THR DOMAIN. rename t1 into t.
+    destruct_inv 64 PRE0.
+    all: first
+      [apply nt_strategy_entry_step; assumption
+      |apply nt_strategy_dispatch_step; assumption
+      |apply nt_head_store_segment_strategy; assumption
+      |apply nt_head_align_segment_strategy; assumption
+      |apply nt_head_threshold_segment_strategy; assumption
+      |apply nt_strategy_setup2; assumption
+      |apply nt_strategy_setup4; assumption
+      |apply nt_bulk_iteration2_strategy; assumption
+      |apply nt_bulk_iteration4_strategy; assumption
+      |apply (nt_strategy_tail_join false m d s n rsp
+        (nt_align d+nt_chunk false*nt_count false d n)); assumption
+      |apply (nt_strategy_tail_join true m d s n rsp
+        (nt_align d+nt_chunk true*nt_count true d n)); assumption
+      |apply (nt_tail_loop_strategy false); assumption
+      |apply (nt_tail_loop_strategy true); assumption
+      |apply (nt_tail_final_strategy false); assumption
+      |apply (nt_tail_final_strategy true); assumption].
+Qed.
+
+Theorem memcpy_nt_strategy_nonvacuous: forall (four:bool),
+  exists st m d s n rsp,
+    models x64typctx st /\ nt_dispatch_state m d s n rsp st /\
+    128<n /\ nov d s n /\ d+n<2^64 /\ m Ⓠ[0x3215a8]<n /\
+    nt_strategy_domain m d s n /\
+    (if four then nt_four_selected m d s n else ~nt_four_selected m d s n).
+Proof.
+  intro four. set (threshold:=if four then 0 else 4096).
+  exists (nt_head_witness threshold), (0 [Ⓠ0x3215a8:=threshold]),
+    65536, 131072, 16448, 0.
+  destruct (memcpy_nt_head_nonvacuous threshold) as [MDL [INPUT [NOV [NW [BIG NB]]]]].
+  split; [exact MDL|]. split; [exact (proj1 INPUT)|].
+  split; [reflexivity|]. split; [exact NOV|]. split; [exact NW|].
+  split; [rewrite getmem_setmem by discriminate; destruct four; reflexivity|].
+  split; [split; intros; vm_compute; congruence|].
+  destruct four.
+  - right. rewrite nt_head_threshold_at_witness. discriminate.
+  - intros [H|H]; [unfold nt_alias in H; discriminate H|].
+    rewrite nt_head_threshold_at_witness in H. exact (H eq_refl).
+Qed.

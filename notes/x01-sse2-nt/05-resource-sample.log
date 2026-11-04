@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d1776e8c
+COMMAND=bash -e -c readlink\ /proc/400459/cwd\;\ ps\ -p\ 400459\ -o\ pid\,etime\,time\,rss\,vsz\,comm
+/home/charles/.t3/worktrees/Picinae/t3-d1776e8c/_build/default
+    PID     ELAPSED     TIME   RSS    VSZ COMMAND
+ 400459       08:46 00:08:59 2456680 2812288 rocqworker
+
+EXIT_CODE=0

@@ -1,0 +1,339 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0da1e0be
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env env PROOF_MEMORY_KB=8000000 PROOF_STACK_KB=65536 bash tools/print-assumptions.sh Picinae.Examples.claude.amd64_memcpy_nt_head_proof nt_neg_distance nt_neg_add nt_head_copy nt_head_store_segment nt_align_source nt_head_align_segment nt_head_threshold_segment memcpy_nt_head_correct nt_selected_counter_positive
+nt_neg_distance
+     : forall d s : BinNums.N,
+       Picinae_core.msub
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         BinNums.N0
+         (Picinae_core.msub
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+            d s) =
+       Picinae_core.msub
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         s d
+Closed under the global context
+nt_neg_add
+     : forall d s : BinNums.N,
+       BinNat.N.modulo
+         (BinNat.N.add
+            (Picinae_core.msub
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               BinNums.N0 d)
+            s)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) =
+       Picinae_core.msub
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         s d
+Closed under the global context
+nt_head_copy
+     : forall (m : Picinae_core.memory) (d s n : BinNums.N),
+       BinNat.N.le
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         n ->
+       amd64_memcpy_sets.nov d s n ->
+       BinNat.N.lt n
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       amd64_memcpy_sets.cpy m (nt_head_memory m d s) d s
+         (fun x : BinNums.N =>
+          BinNat.N.lt x
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))
+Closed under the global context
+nt_head_store_segment
+     : forall (m d s n rsp : BinNums.N) (st : Picinae_amd64.IL_amd64.store)
+         (t : list (Picinae_core.exit * Picinae_amd64.IL_amd64.store)),
+       Picinae_amd64.Statics_amd64.models Picinae_amd64.IL_amd64.archtyps st ->
+       amd64_memcpy_sets.nov d s n ->
+       BinNat.N.le
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         n ->
+       nt_head_input m d s n rsp st ->
+       Picinae_amd64.Theory_amd64.nextinv memcpy_amd64.memcpy_amd64
+         (nt_head_invs m d s n rsp) nt_head_exit false
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xI
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...))))))))))))))))))),
+           st)
+          :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+nt_align_source
+     : forall x d : BinNums.N,
+       Picinae_core.msub
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         x
+         (Picinae_core.msub
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+            (BinNat.N.modulo d
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) =
+       BinNat.N.modulo (BinNat.N.add x (amd64_memcpy_nt_proof.nt_align d))
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))
+Closed under the global context
+nt_head_align_segment
+     : forall (m : Picinae_core.memory) (d s n : BinNums.N)
+         (rsp : Picinae_core.memory) (st : Picinae_amd64.IL_amd64.store)
+         (t : list (Picinae_core.exit * Picinae_amd64.IL_amd64.store)),
+       Picinae_amd64.Statics_amd64.models Picinae_amd64.IL_amd64.archtyps st ->
+       BinNat.N.lt (BinNat.N.add d n)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       BinNat.N.le
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         n ->
+       BinNat.N.lt n
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       nt_head_stored m d s n rsp st ->
+       Picinae_amd64.Theory_amd64.nextinv memcpy_amd64.memcpy_amd64
+         (nt_head_invs m d s n rsp) nt_head_exit false
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO (BinNums.xO ...)))))))))))))))))),
+           st)
+          :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+nt_head_threshold_segment
+     : forall (m : Picinae_core.memory) (d s n : BinNums.N)
+         (rsp : Picinae_core.memory) (st : Picinae_amd64.IL_amd64.store)
+         (t : list (Picinae_core.exit * Picinae_amd64.IL_amd64.store)),
+       Picinae_amd64.Statics_amd64.models Picinae_amd64.IL_amd64.archtyps st ->
+       nt_head_aligned m d s n rsp st /\ ~ nt_alias d s ->
+       Picinae_amd64.Theory_amd64.nextinv memcpy_amd64.memcpy_amd64
+         (nt_head_invs m d s n rsp) nt_head_exit false
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...)))))))))))))))))))),
+           st)
+          :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+memcpy_nt_head_correct
+     : forall (st : Picinae_amd64.IL_amd64.store)
+         (t : list (Picinae_core.exit * Picinae_amd64.IL_amd64.store))
+         (st' : Picinae_amd64.IL_amd64.store) (x' : Picinae_core.exit)
+         (m d s n rsp : BinNums.N),
+       Picinae_core.startof t (x', st') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xI
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))))))),
+        st) ->
+       Picinae_amd64.Statics_amd64.models Picinae_amd64.x64typctx st ->
+       amd64_memcpy_sets.nov d s n ->
+       BinNat.N.lt (BinNat.N.add d n)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       BinNat.N.le
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         n ->
+       BinNat.N.lt n
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       nt_head_input m d s n rsp st ->
+       Picinae_amd64.Theory_amd64.satisfies_all memcpy_amd64.memcpy_amd64
+         (nt_head_invs m d s n rsp) nt_head_exit ((x', st') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+nt_selected_counter_positive
+     : forall (m : Picinae_core.memory) (d s n : BinNums.N) (four : bool),
+       nt_strategy_domain m d s n ->
+       (if four then nt_four_selected m d s n else ~ nt_four_selected m d s n) ->
+       BinNat.N.lt BinNums.N0
+         (BinNat.N.div (BinNat.N.sub n (amd64_memcpy_nt_proof.nt_align d))
+            (if four
+             then
+              BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))
+             else
+              BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))))
+Closed under the global context
+
+EXIT_CODE=0

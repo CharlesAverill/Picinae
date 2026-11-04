@@ -1,0 +1,24 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d1776e8c
+COMMAND=bash -e -c sha256sum\ Examples/claude/amd64_memcpy_nt_proof.v\;\ nl\ -ba\ Examples/claude/amd64_memcpy_nt_proof.v\ \|\ sed\ -n\ \"38\,56p\"\;\ test\ \!\ -e\ _build/default/Examples/claude/amd64_memcpy_nt_proof.vo\;\ git\ diff\ --check
+370d8cc31a381399cad0994852fa4bcc6083baa7c982b8521f6400e5179ddbb5  Examples/claude/amd64_memcpy_nt_proof.v
+    38	Definition nt_row (M:memory) d s o :=
+    39	  M [Ⓧ d + o := M Ⓧ[s + o]]
+    40	    [Ⓧ d + o + 16 := M Ⓧ[s + o + 16]]
+    41	    [Ⓧ d + o + 32 := M Ⓧ[s + o + 32]]
+    42	    [Ⓧ d + o + 48 := M Ⓧ[s + o + 48]].
+    43	
+    44	Lemma nt_row_advance: forall m M d s n W o,
+    45	  cpy m M d s W -> (forall x, W x -> x < n) -> nov d s n ->
+    46	  n < 2^64 -> o + 64 <= n ->
+    47	  cpy m (nt_row M d s o) d s (fun x => W x \/ o <= x < o + 64).
+    48	Proof.
+    49	  intros m M d s n W o C WN NOV NB O. unfold nt_row.
+    50	  eapply cpy_equiv; [|eapply (cpy_store4 m M d s n W o (o+16) (o+32) (o+48));
+    51	    [exact C|exact WN|exact NOV|exact NB|..]].
+    52	  - intro x. clear. lia.
+    53	  all: clear - O; first [lia | f_equal; lia].
+    54	Qed.
+    55	
+    56	(* Offset-set invariant shared by the two/four-page bulk loops. At each
+
+EXIT_CODE=0

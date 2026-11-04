@@ -1,0 +1,61 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0da1e0be
+COMMAND=bash notes/x01-sse2-nt-complete/build-head.sh
+        rocq .Picinae.theory.d
+File "dune", lines 6-25, characters 0-911:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+23 |   Examples.claude.amd64_memcpy_loops_proof
+24 |   Examples.claude.arm8_common Examples.claude.abs_arm8
+25 |   Examples.claude.arm8_abs_proof))
+        rocq Examples/claude/amd64_memcpy_nt_head_proof.{glob,vo} (exit 1)
+Goal at < 1854114 >
+Goal at < 1854420 >
+Goal at < 1854768 >
+Goal at < 1854454 >
+Goal at < 1854474 >
+Goal at < 1854768 >
+File "./Examples/claude/amd64_memcpy_nt_head_proof.v", line 107, characters 10-19:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_nt_head_proof.v", line 107, characters 10-19:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_nt_head_proof.v", line 107, characters 10-19:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_nt_head_proof.v", line 155, characters 12-21:
+Error: Unable to apply lemma of type
+ "forall x y : N, (x =? y) = false <-> x <> y"
+on hypothesis of type "(n - nt_align d >> 4 <? T) = true".
+
+Command exited with non-zero status 1
+	Command being timed: "dune build --cache=disabled -j1 --display short Examples/claude/amd64_memcpy_nt_head_proof.vo"
+	User time (seconds): 34.38
+	System time (seconds): 0.12
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:34.42
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 866504
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 32659
+	Voluntary context switches: 693
+	Involuntary context switches: 36
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 15824
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+
+EXIT_CODE=1

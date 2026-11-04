@@ -1,0 +1,445 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-010907e3
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 8000000\;\ ulimit\ -s\ 65536\;\ /usr/bin/time\ -v\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/claude/amd64_memcpy_nt_proof.vo
+        rocq .Picinae.theory.d
+        rocq Picinae_core.{glob,vo}
+        rocq Picinae_theory.{glob,vo}
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 9152, characters 47-67:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9152, characters 47-67:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq Picinae_statics.{glob,vo}
+        rocq Picinae_auto.{glob,vo}
+        rocq Picinae_finterp.{glob,vo}
+        rocq Picinae_simplifier_base.{glob,vo}
+        rocq Picinae_ISA.{glob,vo}
+        rocq Picinae_simplifier_v1_1.{glob,vo}
+        rocq Picinae_amd64.{glob,vo}
+        rocq Examples/claude/amd64_common.{glob,vo}
+File "./Examples/claude/amd64_common.v", line 205, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 205, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 438, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 438, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq Examples/claude/memcpy_amd64.{glob,vo}
+File "./Examples/claude/memcpy_amd64.v", line 9, characters 15-21:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+        rocq Examples/claude/amd64_memcpy_sets.{glob,vo}
+File "./Examples/claude/amd64_memcpy_sets.v", line 54, characters 35-52:
+Warning: Notation N.add_mod_idemp_r is deprecated since 8.17.
+Use Div0.add_mod_idemp_r instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 54, characters 35-52:
+Warning: Notation N.add_mod_idemp_r is deprecated since 8.17.
+Use Div0.add_mod_idemp_r instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 54, characters 35-52:
+Warning: Notation N.add_mod_idemp_r is deprecated since 8.17.
+Use Div0.add_mod_idemp_r instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 59, characters 8-17:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 59, characters 8-17:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 74, characters 45-62:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 74, characters 70-87:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 74, characters 45-62:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 74, characters 45-62:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 74, characters 70-87:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 74, characters 70-87:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 15-24:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 54-71:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 79-96:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 15-24:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 15-24:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 15-24:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 15-24:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 54-71:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 54-71:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 79-96:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 79-96:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 54-71:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 54-71:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 79-96:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 84, characters 79-96:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 86, characters 85-94:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 86, characters 85-94:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 109, characters 34-51:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 109, characters 57-74:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 109, characters 34-51:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 109, characters 34-51:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 109, characters 57-74:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_sets.v", line 109, characters 57-74:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq Examples/claude/amd64_memcpy_lemmas.{glob,vo}
+File "./Examples/claude/amd64_memcpy_lemmas.v", line 20, characters 44-61:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_lemmas.v", line 20, characters 44-61:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_lemmas.v", line 20, characters 44-61:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_lemmas.v", line 24, characters 8-17:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_lemmas.v", line 24, characters 8-17:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq Examples/claude/amd64_memcpy_proof.{glob,vo}
+Goal at < 1853552 >
+Goal at < 1853903 >
+Goal at < 1853903 >
+Goal at < 1853903 >
+Goal at < 1853916 >
+Goal at < 1853936 >
+Goal at < 1853595 >
+Goal at < 1854064 >
+Goal at < 1854000 >
+Goal at < 1853964 >
+Finished transaction in 62.216 secs (62.177u,0.041s) (successful)
+Goal at < 1853552 >
+Goal at < 1853903 >
+Goal at < 1853903 >
+Goal at < 1853903 >
+Goal at < 1853916 >
+Goal at < 1853936 >
+Goal at < 1853595 >
+Goal at < 1854064 >
+Goal at < 1854063 >
+Goal at < 1853964 >
+Finished transaction in 105.337 secs (105.581u,0.092s) (successful)
+        rocq Examples/claude/amd64_memcpy_loops_proof.{glob,vo}
+Goal at < 1853552 >
+Goal at < 1854064 >
+Goal at < 1854222 >
+Goal at < 1854272 >
+Goal at < 1854381 >
+Goal at < 1854272 >
+Goal at < 1854160 >
+Finished transaction in 49.026 secs (49.245u,0.267s) (successful)
+Goal at < 1854160 >
+Goal at < 1854222 >
+Goal at < 1854272 >
+Goal at < 1854336 >
+Finished transaction in 31.458 secs (31.364u,0.123s) (successful)
+Finished transaction in 128.739 secs (128.502u,0.4s) (successful)
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 200, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 222, characters 25-42:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 222, characters 25-42:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 222, characters 25-42:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 225, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 225, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 225, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 230, characters 43-60:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 230, characters 43-60:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 230, characters 43-60:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 233, characters 8-17:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 233, characters 8-17:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 244, characters 37-54:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 244, characters 37-54:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 244, characters 37-54:
+Warning: Notation N.add_mod_idemp_l is deprecated since 8.17.
+Use Div0.add_mod_idemp_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 247, characters 8-17:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 247, characters 8-17:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 261, characters 49-58:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 274, characters 20-29:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_memcpy_loops_proof.v", line 275, characters 20-29:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq Examples/claude/amd64_memcpy_nt_proof.{glob,vo} (exit 1)
+File "./Examples/claude/amd64_memcpy_nt_proof.v", line 52, characters 20-23:
+Error: Tactic failure:  Cannot find witness.
+
+Command exited with non-zero status 1
+	Command being timed: "dune build --cache=disabled -j1 --display short Examples/claude/amd64_memcpy_nt_proof.vo"
+	User time (seconds): 1075.29
+	System time (seconds): 5.32
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 18:00.24
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3541916
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1648189
+	Voluntary context switches: 21117
+	Involuntary context switches: 743
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 216168
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+
+EXIT_CODE=1

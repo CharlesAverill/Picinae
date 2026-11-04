@@ -1,0 +1,197 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0da1e0be
+COMMAND=bash notes/x01-sse2-nt-complete/build-bulk.sh
+        rocq .Picinae.theory.d
+Goal at < 1854501 >
+Goal at < 1854659 >
+Goal at < 1854501 >
+NEXT_CHUNK_POINTER
+((st
+  [R_YMM0 := (((st R_YMM0 >> 32 << 32
+                .| st V_MEM64 Ⓓ[ s + nt_align d + 2 ^ 13 * j + 64 * i ]) >>
+               64 << 64
+               .| (st V_MEM64 Ⓠ[ s + nt_align d + 2 ^ 13 * j + 64 * i ] >> 32 <<
+                   32 .| st V_MEM64 Ⓓ[ s + nt_align d + 2 ^ 13 * j + 64 * i ])) >>
+              96 << 96
+              .| (getmem 64 LittleE 12 (st V_MEM64)
+                    (s + nt_align d + 2 ^ 13 * j + 64 * i) >>
+                  64 << 64
+                  .| (st V_MEM64 Ⓠ[ s + nt_align d + 2 ^ 13 * j + 64 * i ] >>
+                      32 << 32
+                      .| st V_MEM64 Ⓓ[ s + nt_align d + 2 ^ 13 * j + 64 * i ]))) >>
+             2 ^ 7 << 2 ^ 7
+             .| st V_MEM64 Ⓧ[ s + nt_align d + 2 ^ 13 * j + 64 * i ]]
+  [R_YMM1 := (((st R_YMM1 >> 32 << 32
+                .| st V_MEM64 Ⓓ[ 16 + s + nt_align d + 2 ^ 13 * j + 64 * i ]) >>
+               64 << 64
+               .| (st V_MEM64 Ⓠ[ 16 + s + nt_align d + 2 ^ 13 * j + 64 * i ] >>
+                   32 << 32
+                   .| st V_MEM64 Ⓓ[ 16 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                      ])) >>
+              96 << 96
+              .| (getmem 64 LittleE 12 (st V_MEM64)
+                    (16 + s + nt_align d + 2 ^ 13 * j + 64 * i) >>
+                  64 << 64
+                  .| (st V_MEM64 Ⓠ[ 16 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                      ] >> 32 << 32
+                      .| st V_MEM64
+                         Ⓓ[ 16 + s + nt_align d + 2 ^ 13 * j + 64 * i ]))) >>
+             2 ^ 7 << 2 ^ 7
+             .| st V_MEM64 Ⓧ[ 16 + s + nt_align d + 2 ^ 13 * j + 64 * i ]]
+  [R_YMM2 := (((st R_YMM2 >> 32 << 32
+                .| st V_MEM64 Ⓓ[ 32 + s + nt_align d + 2 ^ 13 * j + 64 * i ]) >>
+               64 << 64
+               .| (st V_MEM64 Ⓠ[ 32 + s + nt_align d + 2 ^ 13 * j + 64 * i ] >>
+                   32 << 32
+                   .| st V_MEM64 Ⓓ[ 32 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                      ])) >>
+              96 << 96
+              .| (getmem 64 LittleE 12 (st V_MEM64)
+                    (32 + s + nt_align d + 2 ^ 13 * j + 64 * i) >>
+                  64 << 64
+                  .| (st V_MEM64 Ⓠ[ 32 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                      ] >> 32 << 32
+                      .| st V_MEM64
+                         Ⓓ[ 32 + s + nt_align d + 2 ^ 13 * j + 64 * i ]))) >>
+             2 ^ 7 << 2 ^ 7
+             .| st V_MEM64 Ⓧ[ 32 + s + nt_align d + 2 ^ 13 * j + 64 * i ]]
+  [R_YMM3 := (((st R_YMM3 >> 32 << 32
+                .| st V_MEM64 Ⓓ[ 48 + s + nt_align d + 2 ^ 13 * j + 64 * i ]) >>
+               64 << 64
+               .| (st V_MEM64 Ⓠ[ 48 + s + nt_align d + 2 ^ 13 * j + 64 * i ] >>
+                   32 << 32
+                   .| st V_MEM64 Ⓓ[ 48 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                      ])) >>
+              96 << 96
+              .| (getmem 64 LittleE 12 (st V_MEM64)
+                    (48 + s + nt_align d + 2 ^ 13 * j + 64 * i) >>
+                  64 << 64
+                  .| (st V_MEM64 Ⓠ[ 48 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                      ] >> 32 << 32
+                      .| st V_MEM64
+                         Ⓓ[ 48 + s + nt_align d + 2 ^ 13 * j + 64 * i ]))) >>
+             2 ^ 7 << 2 ^ 7
+             .| st V_MEM64 Ⓧ[ 48 + s + nt_align d + 2 ^ 13 * j + 64 * i ]]
+  [R_YMM4 := (((st R_YMM4 >> 32 << 32
+                .| st V_MEM64 Ⓓ[ 4096 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                   ]) >>
+               64 << 64
+               .| (st V_MEM64 Ⓠ[ 4096 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                   ] >> 32 << 32
+                   .| st V_MEM64
+                      Ⓓ[ 4096 + s + nt_align d + 2 ^ 13 * j + 64 * i ])) >>
+              96 << 96
+              .| (getmem 64 LittleE 12 (st V_MEM64)
+                    (4096 + s + nt_align d + 2 ^ 13 * j + 64 * i) >>
+                  64 << 64
+                  .| (st V_MEM64
+                      Ⓠ[ 4096 + s + nt_align d + 2 ^ 13 * j + 64 * i ] >> 32 <<
+                      32
+                      .| st V_MEM64
+                         Ⓓ[ 4096 + s + nt_align d + 2 ^ 13 * j + 64 * i ]))) >>
+             2 ^ 7 << 2 ^ 7
+             .| st V_MEM64 Ⓧ[ 4096 + s + nt_align d + 2 ^ 13 * j + 64 * i ]]
+  [R_YMM5 := (((st R_YMM5 >> 32 << 32
+                .| st V_MEM64 Ⓓ[ 4112 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                   ]) >>
+               64 << 64
+               .| (st V_MEM64 Ⓠ[ 4112 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                   ] >> 32 << 32
+                   .| st V_MEM64
+                      Ⓓ[ 4112 + s + nt_align d + 2 ^ 13 * j + 64 * i ])) >>
+              96 << 96
+              .| (getmem 64 LittleE 12 (st V_MEM64)
+                    (4112 + s + nt_align d + 2 ^ 13 * j + 64 * i) >>
+                  64 << 64
+                  .| (st V_MEM64
+                      Ⓠ[ 4112 + s + nt_align d + 2 ^ 13 * j + 64 * i ] >> 32 <<
+                      32
+                      .| st V_MEM64
+                         Ⓓ[ 4112 + s + nt_align d + 2 ^ 13 * j + 64 * i ]))) >>
+             2 ^ 7 << 2 ^ 7
+             .| st V_MEM64 Ⓧ[ 4112 + s + nt_align d + 2 ^ 13 * j + 64 * i ]]
+  [R_YMM6 := (((st R_YMM6 >> 32 << 32
+                .| st V_MEM64 Ⓓ[ 4128 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                   ]) >>
+               64 << 64
+               .| (st V_MEM64 Ⓠ[ 4128 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                   ] >> 32 << 32
+                   .| st V_MEM64
+                      Ⓓ[ 4128 + s + nt_align d + 2 ^ 13 * j + 64 * i ])) >>
+              96 << 96
+              .| (getmem 64 LittleE 12 (st V_MEM64)
+                    (4128 + s + nt_align d + 2 ^ 13 * j + 64 * i) >>
+                  64 << 64
+                  .| (st V_MEM64
+                      Ⓠ[ 4128 + s + nt_align d + 2 ^ 13 * j + 64 * i ] >> 32 <<
+                      32
+                      .| st V_MEM64
+                         Ⓓ[ 4128 + s + nt_align d + 2 ^ 13 * j + 64 * i ]))) >>
+             2 ^ 7 << 2 ^ 7
+             .| st V_MEM64 Ⓧ[ 4128 + s + nt_align d + 2 ^ 13 * j + 64 * i ]]
+  [R_YMM7 := (((st R_YMM7 >> 32 << 32
+                .| st V_MEM64 Ⓓ[ 4144 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                   ]) >>
+               64 << 64
+               .| (st V_MEM64 Ⓠ[ 4144 + s + nt_align d + 2 ^ 13 * j + 64 * i
+                   ] >> 32 << 32
+                   .| st V_MEM64
+                      Ⓓ[ 4144 + s + nt_align d + 2 ^ 13 * j + 64 * i ])) >>
+              96 << 96
+              .| (getmem 64 LittleE 12 (st V_MEM64)
+                    (4144 + s + nt_align d + 2 ^ 13 * j + 64 * i) >>
+                  64 << 64
+                  .| (st V_MEM64
+                      Ⓠ[ 4144 + s + nt_align d + 2 ^ 13 * j + 64 * i ] >> 32 <<
+                      32
+                      .| st V_MEM64
+                         Ⓓ[ 4144 + s + nt_align d + 2 ^ 13 * j + 64 * i ]))) >>
+             2 ^ 7 << 2 ^ 7
+             .| st V_MEM64 Ⓧ[ 4144 + s + nt_align d + 2 ^ 13 * j + 64 * i ]]
+  [V_MEM64 := Mpost][R_RDI := 4160 + d + nt_align d + 2 ^ 13 * j + 64 * i]
+  [R_CF := if
+            4160 + s + nt_align d + 2 ^ 13 * j ⊕ 64 * i <?
+            64 + s + nt_align d + 2 ^ 13 * j ⊕ 64 * i
+           then 1
+           else 0]
+  [R_RSI := 4160 + s + nt_align d + 2 ^ 13 * j ⊕ 64 * i][R_OF := n5]
+  [R_R10 := nt_count false d n - j ⊖ 1][R_SF := n4][R_ZF := 0][R_PF := n3]
+  [R_RCX := 64]) R_RDI =
+ d + (nt_align d + 4096 * 2 * (j + 1) + 64 * 0))
+File "./Examples/claude/amd64_memcpy_nt_bulk_proof.v", line 283, characters 79-82:
+Error: Tactic failure:  Cannot find witness.
+
+File "dune", lines 6-26, characters 0-958:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+24 |   Examples.claude.amd64_memcpy_loops_proof
+25 |   Examples.claude.arm8_common Examples.claude.abs_arm8
+26 |   Examples.claude.arm8_abs_proof))
+        rocq Examples/claude/amd64_memcpy_nt_bulk_proof.{glob,vo} (exit 1)
+Command exited with non-zero status 1
+	Command being timed: "dune build --no-buffer --cache=disabled -j1 --display short Examples/claude/amd64_memcpy_nt_bulk_proof.vo"
+	User time (seconds): 104.82
+	System time (seconds): 0.64
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:45.96
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2340496
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 125169
+	Voluntary context switches: 2067
+	Involuntary context switches: 11
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 1168
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+
+EXIT_CODE=1
