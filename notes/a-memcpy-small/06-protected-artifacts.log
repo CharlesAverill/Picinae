@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2997b5fa
+COMMAND=bash -e -c git\ diff\ --exit-code\ 9ae8e6800fa044797efd98372857e6ac89b18e1b\ --\ Examples/claude/lifter/scalar_ports\;\ sha256sum\ Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.v\ Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.manifest.json\ Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.pcode.json
+1c760b6f7c36f17eb4918b57949528060895f526c512c06b21787e946da44dc4  Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.v
+2be03e57c47624d620cf087893c441d8ebb744cb9b60e3090c5af2d43573f66c  Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.manifest.json
+74085611905613c8f806809fdecfcf3d9122076a85b4390a9cd743e540845165  Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.pcode.json
+
+EXIT_CODE=0
