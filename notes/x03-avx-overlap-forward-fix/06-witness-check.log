@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-be68d06e
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash notes/x03-avx-overlap-forward-fix/check-witnesses.sh
+File "/home/charles/.t3/worktrees/Picinae/t3-be68d06e/_build/witnesses.wJcVLFC5/Witnesses.v", line 45, characters 2-3:
+Error: [Focus] Wrong bullet -: Expecting +.
+
+
+EXIT_CODE=1
