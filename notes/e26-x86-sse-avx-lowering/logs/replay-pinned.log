@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-473b43ee
+COMMAND=bash notes/e26-x86-sse-avx-lowering/reproduce.sh --check
+PASS 4 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/replays/final.XllrhA1E/synthetic
+Ghidra log: /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/logs/a1c076c1a6c84de89d7d40a711dd87b4.log
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/replays/final.XllrhA1E/actual
+Ghidra log: /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/logs/f7806fe0d76d40ee9a80f17fad5f198e.log
+PASS five complete deterministic artifact sets (--check)
+
+EXIT_CODE=0

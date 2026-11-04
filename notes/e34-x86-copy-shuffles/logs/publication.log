@@ -1,0 +1,29 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1e49d7bf
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e34-x86-copy-shuffles/check-failures.py
+partial-batch COMMAND ['python3', 'tools/ghidra-lifter/lift-x64-shuffle.py', '--out', '/home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/replays/negatives.4k99_phy/partial-batch', '--fixture', 'align', 'reject'] EXIT 1
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: reject 0x101827 PSHUFB XMM1,XMM2: unmodeled instruction PSHUFB XMM1,XMM2; raw pcode: (register, 0x1240, 16) CALLOTHER (const, 0x9b, 4) , (register, 0x1240, 16) , (register, 0x1280, 16); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/logs/20bdd26414c1452ca46af275e836a45d.log
+
+missing-symbol COMMAND ['python3', 'tools/ghidra-lifter/lift-x64-shuffle.py', '--out', '/home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/replays/negatives.4k99_phy/missing-symbol', '--fixture', 'missing'] EXIT 1
+FAIL Ghidra script failed: ValueError: missing: expected one nonempty FUNC extent, got set(); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/logs/bb97744587e041dfb3739031768b2843.log
+
+whole-ssse3 COMMAND ['python3', 'tools/ghidra-lifter/lift-x64-shuffle.py', '--out', '/home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/replays/negatives.4k99_phy/whole-ssse3', '--cet-disabled', '__memcpy_ssse3'] EXIT 1
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_ssse3 0x27aca1 JMP R9: unsupported instruction prefix; raw pcode:  ---  BRANCHIND (register, 0x88, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/logs/9a07237cafe24722b23bc7b152f067f4.log
+
+whole-ssse3-back COMMAND ['python3', 'tools/ghidra-lifter/lift-x64-shuffle.py', '--out', '/home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/replays/negatives.4k99_phy/whole-ssse3-back', '--cet-disabled', '__memcpy_ssse3_back'] EXIT 1
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_ssse3_back 0x28021e JNC 0x00280260: unmodeled instruction JNC 0x00280260; raw pcode: (unique, 0x12780, 1) BOOL_NEGATE (register, 0x200, 1);  ---  CBRANCH (ram, 0x280260, 8) , (unique, 0x12780, 1); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/logs/4227b24d835949e288053ea362998030.log
+
+existing-or-symlink /home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/replays/negatives.4k99_phy/existing EXIT 2 usage: lift-x64-shuffle.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                           [--inventory INVENTORY] [--cet-disabled]
+                           [--fixture] [--instructions]
+                           symbols [symbols ...]
+lift-x64-shuffle.py: error: output directory already exists; refusing stale/replaced output
+
+existing-or-symlink /home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/replays/negatives.4k99_phy/link EXIT 2 usage: lift-x64-shuffle.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                           [--inventory INVENTORY] [--cet-disabled]
+                           [--fixture] [--instructions]
+                           symbols [symbols ...]
+lift-x64-shuffle.py: error: output directory already exists; refusing stale/replaced output
+
+PASS actual atomic publication failures and existing/symlink output preservation
+
+EXIT_CODE=0

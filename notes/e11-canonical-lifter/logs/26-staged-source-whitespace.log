@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=git diff --cached --check -- . :\!notes/e11-canonical-lifter/\*.diff :\!notes/e11-canonical-lifter/logs/ghidra/\*.log
+
+EXIT_CODE=0

@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-83d5497b
+COMMAND=python3 tools/ghidra-lifter/lift-x64.py --cet-disabled --out /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/glibc-profile toascii isascii abs labs pthread_equal
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: abs 0x145dd8 CMOVS EAX,EDI: machine branch with trailing pcode; raw pcode: (unique, 0x3dc00, 4) COPY (register, 0x38, 4); (register, 0x0, 8) INT_ZEXT (register, 0x0, 4); (unique, 0x3dc80, 1) BOOL_NEGATE (register, 0x207, 1);  ---  CBRANCH (ram, 0x145ddb, 8) , (unique, 0x3dc80, 1); (register, 0x0, 4) COPY (unique, 0x3dc00, 4); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/logs/e8214570eb5d4fbc93dba13db61a02ef.log
+
+EXIT_CODE=1

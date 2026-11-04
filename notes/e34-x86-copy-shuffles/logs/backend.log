@@ -1,0 +1,16 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1e49d7bf
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 tools/ghidra-lifter/test_x64_shuffle.py
+test_independent_byte_oracle_all_frames (__main__.Tests.test_independent_byte_oracle_all_frames) ... ok
+test_pins_and_artifacts (__main__.Tests.test_pins_and_artifacts) ... ok
+test_raw_graph_mutations (__main__.Tests.test_raw_graph_mutations) ... ok
+test_receipt_failures (__main__.Tests.test_receipt_failures) ... ok
+test_strict_encoding_and_unselected_forms (__main__.Tests.test_strict_encoding_and_unselected_forms) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 2.533s
+
+OK
+PASS 27280 byte-oracle comparisons; every defined YMM/GPR/flag/memory cell and byte frame
+PASS 21406 encoding/DAG/arity/width/userop mutations
+
+EXIT_CODE=0

@@ -1,0 +1,10 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1e49d7bf
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 tools/audit-proof-source.py --base bcdd924bec65111aeb9244de21e5dba6286da845 Examples/claude/lifter/x64_shuffle_fixture Examples/claude/lifter/x64_shuffle_pinned
+Base: bcdd924bec65111aeb9244de21e5dba6286da845
+Scope: 2 Rocq source files
+BASELINE totals: {}
+CURRENT totals: {}
+NEW totals: {}
+Source check only: inspect transitive Print Assumptions separately.
+
+EXIT_CODE=0

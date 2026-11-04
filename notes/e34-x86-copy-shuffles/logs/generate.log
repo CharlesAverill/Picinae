@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1e49d7bf
+COMMAND=bash notes/e34-x86-copy-shuffles/reproduce.sh --update
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/replays/reproduce.xEadVmRr/synthetic
+Ghidra log: /home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/logs/ed4fc7c4257840b79a1831daa9b16c36.log
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/replays/reproduce.xEadVmRr/actual
+Ghidra log: /home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/logs/f1805f1c1074443eadb68c28a23d4f7d.log
+PASS two deterministic artifacts (--update)
+
+EXIT_CODE=0

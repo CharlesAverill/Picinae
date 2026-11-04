@@ -1,0 +1,13 @@
+{
+  "copy_extents": 67,
+  "mnemonics": {
+    "pshufb": 0,
+    "palignr": 720,
+    "vpshufb": 0,
+    "vpalignr": 0
+  },
+  "families": {
+    "ssse3": 240,
+    "ssse3_back": 480
+  }
+}

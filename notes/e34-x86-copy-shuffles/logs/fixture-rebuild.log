@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1e49d7bf
+COMMAND=bash notes/e34-x86-copy-shuffles/fixture/build.sh
+dd3fd060a11db86ddf7bbdf0c530413299bdd6fbf45c2d48bb3932324d4f616a  /home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/fixture-build/shuffles.so
+
+EXIT_CODE=0
