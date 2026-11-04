@@ -1,0 +1,120 @@
+{
+  "blocked_helpers": [],
+  "bytes_sha256": "d16740dd61c525c62d5dc14fe6a2bb655a4f2e1ddb6f65dacfa4232c5f21dc1c",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "xTaskGetTickCountFromISR_armv6m",
+    "xTaskGetTickCountFromISR"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "assembly": "bx\tlr",
+      "kind": "return-candidate",
+      "site": "0x00000594",
+      "target": "runtime register/stack; Thumb bit required"
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x0000059c",
+  "entry": "0x00000590",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "3fc44d033450fffd7d5341f82092e9742579e28e88a43198e127a466c45795f1",
+  "instructions": [
+    {
+      "address": "0x00000590",
+      "assembly": "ldr\tr3, [pc, #4]\t@ (598 <xTaskGetTickCountFromISR+0x8>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4b01",
+      "width": 2
+    },
+    {
+      "address": "0x00000592",
+      "assembly": "ldr\tr0, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6818",
+      "width": 2
+    },
+    {
+      "address": "0x00000594",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    },
+    {
+      "address": "0x00000596",
+      "assembly": "nop\t\t\t@ (mov r8, r8)",
+      "frontend_encoding_supported": true,
+      "opcode": "46c0",
+      "width": 2
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x00000598",
+      "bytes": "2c000020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x2000002c",
+          "name": "xTickCount",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 1,
+      "instruction": "0x00000590",
+      "thumb_function_pointer": [],
+      "value": "0x2000002c"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x00000598",
+      "halfword": "2c00"
+    },
+    {
+      "address": "0x0000059a",
+      "halfword": "0020"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x00000594",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "row": "r09",
+  "size": 12,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "xTaskGetTickCountFromISR",
+  "symbol_record": {
+    "address": "0x00000590",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGetTickCountFromISR",
+    "section": "2",
+    "size": 12,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000591"
+  },
+  "thumb_symbol": "0x00000591",
+  "unsupported_instructions": []
+}

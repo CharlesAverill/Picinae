@@ -1,0 +1,24 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-7fbb9e39
+COMMAND=python3 notes/r11-missed-yield-fix/audit-assumptions.py
+missed_yield_welltyped: closed
+missed_yield_nwc: closed
+missed_yield_memory_word: closed
+missed_yield_memory_bytes: closed
+missed_yield_memory_outside: closed
+missed_yield_preserves_registers: closed
+missed_yield_correct: inherited FunctionalExtensionality.functional_extensionality_dep only
+missed_yield_post_at_bx: inherited FunctionalExtensionality.functional_extensionality_dep only
+missed_yield_functional: inherited FunctionalExtensionality.functional_extensionality_dep only
+missed_yield_preserves_callee_saved: inherited FunctionalExtensionality.functional_extensionality_dep only
+missed_yield_zero_bound: closed
+missed_yield_entry_satisfiable: closed
+missed_yield_ldr_step: closed
+missed_yield_mov_step: closed
+missed_yield_store_step: closed
+missed_yield_execution_witness: inherited FunctionalExtensionality.functional_extensionality_dep only
+missed_yield_return_step: inherited FunctionalExtensionality.functional_extensionality_dep only
+missed_yield_execution_returns: inherited FunctionalExtensionality.functional_extensionality_dep only
+PASS: 11 closed, 7 inherited-FE-only; all 18 reports inspected
+PASS: no imported admitted proof or additional axiom in any transitive report
+
+EXIT_CODE=0

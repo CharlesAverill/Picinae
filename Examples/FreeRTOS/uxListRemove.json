@@ -1,0 +1,212 @@
+{
+  "blocked_helpers": [],
+  "bytes_sha256": "31968b72d4bf068839aafbe4d8a55c974805341a28a9f28caeff3ead9d2c1ca8",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "uxListRemove_armv6m",
+    "uxListRemove"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "fallthrough": "0x000000b2",
+      "kind": "branch",
+      "owners": [
+        "uxListRemove"
+      ],
+      "site": "0x000000b0",
+      "target": "0x000000be",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "assembly": "bx\tlr",
+      "kind": "return-candidate",
+      "site": "0x000000bc",
+      "target": "runtime register/stack; Thumb bit required"
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "uxListRemove"
+      ],
+      "site": "0x000000c2",
+      "target": "0x000000b2",
+      "target_is_instruction_start": true,
+      "within_function": true
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x000000c4",
+  "entry": "0x000000a0",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "8f9ea032a3d808b777de30a7804b14cdf69478ef985bb44b1cccb1d19ebadfa9",
+  "instructions": [
+    {
+      "address": "0x000000a0",
+      "assembly": "ldr\tr3, [r0, #16]",
+      "frontend_encoding_supported": true,
+      "opcode": "6903",
+      "width": 2
+    },
+    {
+      "address": "0x000000a2",
+      "assembly": "ldr\tr1, [r0, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "6841",
+      "width": 2
+    },
+    {
+      "address": "0x000000a4",
+      "assembly": "ldr\tr2, [r0, #8]",
+      "frontend_encoding_supported": true,
+      "opcode": "6882",
+      "width": 2
+    },
+    {
+      "address": "0x000000a6",
+      "assembly": "str\tr2, [r1, #8]",
+      "frontend_encoding_supported": true,
+      "opcode": "608a",
+      "width": 2
+    },
+    {
+      "address": "0x000000a8",
+      "assembly": "ldr\tr1, [r0, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "6841",
+      "width": 2
+    },
+    {
+      "address": "0x000000aa",
+      "assembly": "str\tr1, [r2, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "6051",
+      "width": 2
+    },
+    {
+      "address": "0x000000ac",
+      "assembly": "ldr\tr2, [r3, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "685a",
+      "width": 2
+    },
+    {
+      "address": "0x000000ae",
+      "assembly": "cmp\tr2, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "4282",
+      "width": 2
+    },
+    {
+      "address": "0x000000b0",
+      "assembly": "beq.n\tbe <uxListRemove+0x1e>",
+      "frontend_encoding_supported": true,
+      "opcode": "d005",
+      "width": 2
+    },
+    {
+      "address": "0x000000b2",
+      "assembly": "movs\tr2, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2200",
+      "width": 2
+    },
+    {
+      "address": "0x000000b4",
+      "assembly": "str\tr2, [r0, #16]",
+      "frontend_encoding_supported": true,
+      "opcode": "6102",
+      "width": 2
+    },
+    {
+      "address": "0x000000b6",
+      "assembly": "ldr\tr0, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6818",
+      "width": 2
+    },
+    {
+      "address": "0x000000b8",
+      "assembly": "subs\tr0, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "3801",
+      "width": 2
+    },
+    {
+      "address": "0x000000ba",
+      "assembly": "str\tr0, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6018",
+      "width": 2
+    },
+    {
+      "address": "0x000000bc",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    },
+    {
+      "address": "0x000000be",
+      "assembly": "ldr\tr2, [r0, #8]",
+      "frontend_encoding_supported": true,
+      "opcode": "6882",
+      "width": 2
+    },
+    {
+      "address": "0x000000c0",
+      "assembly": "str\tr2, [r3, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "605a",
+      "width": 2
+    },
+    {
+      "address": "0x000000c2",
+      "assembly": "b.n\tb2 <uxListRemove+0x12>",
+      "frontend_encoding_supported": true,
+      "opcode": "e7f6",
+      "width": 2
+    }
+  ],
+  "literals": [],
+  "mapped_data": [],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x000000bc",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "row": "r04",
+  "size": 36,
+  "source": [
+    {
+      "path": "list.c",
+      "sha256": "e0a4d7a061e86ccb8ee4e08b0c1229c51d8c0a7a6f1c51c45083314f2e42b297"
+    }
+  ],
+  "stderr": "",
+  "symbol": "uxListRemove",
+  "symbol_record": {
+    "address": "0x000000a0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxListRemove",
+    "section": "2",
+    "size": 36,
+    "source": [
+      "list.c"
+    ],
+    "value": "0x000000a1"
+  },
+  "thumb_symbol": "0x000000a1",
+  "unsupported_instructions": []
+}

@@ -1,0 +1,258 @@
+{
+  "blocked_helpers": [],
+  "bytes_sha256": "d5ace5375945ac33dca03c5a3833a82825ec4dbd6d558000e6464937f4cf399b",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "vListInsert_armv6m",
+    "vListInsert"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "fallthrough": "0x0000007e",
+      "kind": "branch",
+      "owners": [
+        "vListInsert"
+      ],
+      "site": "0x0000007c",
+      "target": "0x0000009c",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x00000088",
+      "kind": "branch",
+      "owners": [
+        "vListInsert"
+      ],
+      "site": "0x00000086",
+      "target": "0x0000007e",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "assembly": "pop\t{r4, r5, pc}",
+      "kind": "return-candidate",
+      "site": "0x0000009a",
+      "target": "runtime register/stack; Thumb bit required"
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "vListInsert"
+      ],
+      "site": "0x0000009e",
+      "target": "0x00000088",
+      "target_is_instruction_start": true,
+      "within_function": true
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x000000a0",
+  "entry": "0x00000072",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "379c3edfa2edc460bf9d9e466804ad492c291778bb49086ffb2e3a21003b3ecc",
+  "instructions": [
+    {
+      "address": "0x00000072",
+      "assembly": "push\t{r4, r5, lr}",
+      "frontend_encoding_supported": true,
+      "opcode": "b530",
+      "width": 2
+    },
+    {
+      "address": "0x00000074",
+      "assembly": "ldr\tr5, [r1, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "680d",
+      "width": 2
+    },
+    {
+      "address": "0x00000076",
+      "assembly": "movs\tr3, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "0003",
+      "width": 2
+    },
+    {
+      "address": "0x00000078",
+      "assembly": "adds\tr3, #8",
+      "frontend_encoding_supported": true,
+      "opcode": "3308",
+      "width": 2
+    },
+    {
+      "address": "0x0000007a",
+      "assembly": "adds\tr2, r5, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "1c6a",
+      "width": 2
+    },
+    {
+      "address": "0x0000007c",
+      "assembly": "beq.n\t9c <vListInsert+0x2a>",
+      "frontend_encoding_supported": true,
+      "opcode": "d00e",
+      "width": 2
+    },
+    {
+      "address": "0x0000007e",
+      "assembly": "movs\tr4, r3",
+      "frontend_encoding_supported": true,
+      "opcode": "001c",
+      "width": 2
+    },
+    {
+      "address": "0x00000080",
+      "assembly": "ldr\tr3, [r3, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "685b",
+      "width": 2
+    },
+    {
+      "address": "0x00000082",
+      "assembly": "ldr\tr2, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "681a",
+      "width": 2
+    },
+    {
+      "address": "0x00000084",
+      "assembly": "cmp\tr2, r5",
+      "frontend_encoding_supported": true,
+      "opcode": "42aa",
+      "width": 2
+    },
+    {
+      "address": "0x00000086",
+      "assembly": "bls.n\t7e <vListInsert+0xc>",
+      "frontend_encoding_supported": true,
+      "opcode": "d9fa",
+      "width": 2
+    },
+    {
+      "address": "0x00000088",
+      "assembly": "ldr\tr3, [r4, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "6863",
+      "width": 2
+    },
+    {
+      "address": "0x0000008a",
+      "assembly": "str\tr3, [r1, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "604b",
+      "width": 2
+    },
+    {
+      "address": "0x0000008c",
+      "assembly": "str\tr1, [r3, #8]",
+      "frontend_encoding_supported": true,
+      "opcode": "6099",
+      "width": 2
+    },
+    {
+      "address": "0x0000008e",
+      "assembly": "str\tr4, [r1, #8]",
+      "frontend_encoding_supported": true,
+      "opcode": "608c",
+      "width": 2
+    },
+    {
+      "address": "0x00000090",
+      "assembly": "str\tr1, [r4, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "6061",
+      "width": 2
+    },
+    {
+      "address": "0x00000092",
+      "assembly": "str\tr0, [r1, #16]",
+      "frontend_encoding_supported": true,
+      "opcode": "6108",
+      "width": 2
+    },
+    {
+      "address": "0x00000094",
+      "assembly": "ldr\tr3, [r0, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6803",
+      "width": 2
+    },
+    {
+      "address": "0x00000096",
+      "assembly": "adds\tr3, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "3301",
+      "width": 2
+    },
+    {
+      "address": "0x00000098",
+      "assembly": "str\tr3, [r0, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6003",
+      "width": 2
+    },
+    {
+      "address": "0x0000009a",
+      "assembly": "pop\t{r4, r5, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bd30",
+      "width": 2
+    },
+    {
+      "address": "0x0000009c",
+      "assembly": "ldr\tr4, [r0, #16]",
+      "frontend_encoding_supported": true,
+      "opcode": "6904",
+      "width": 2
+    },
+    {
+      "address": "0x0000009e",
+      "assembly": "b.n\t88 <vListInsert+0x16>",
+      "frontend_encoding_supported": true,
+      "opcode": "e7f3",
+      "width": 2
+    }
+  ],
+  "literals": [],
+  "mapped_data": [],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x0000009a",
+      "assembly": "pop\t{r4, r5, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bd30",
+      "width": 2
+    }
+  ],
+  "row": "r05",
+  "size": 46,
+  "source": [
+    {
+      "path": "list.c",
+      "sha256": "e0a4d7a061e86ccb8ee4e08b0c1229c51d8c0a7a6f1c51c45083314f2e42b297"
+    }
+  ],
+  "stderr": "",
+  "symbol": "vListInsert",
+  "symbol_record": {
+    "address": "0x00000072",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vListInsert",
+    "section": "2",
+    "size": 46,
+    "source": [
+      "list.c"
+    ],
+    "value": "0x00000073"
+  },
+  "thumb_symbol": "0x00000073",
+  "unsupported_instructions": []
+}
