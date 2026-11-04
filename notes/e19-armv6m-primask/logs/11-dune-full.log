@@ -1,0 +1,138 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96390313
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short
+        rocq .Picinae.theory.d
+        rocq Picinae_numbers.{glob,vo}
+        rocq Picinae_auto.{glob,vo}
+        rocq Examples/FreeRTOS/eTaskGetState_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/prvResetNextTaskUnblockTime_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/prvSearchForNameWithinSingleList_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/prvTaskIsTaskSuspended_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/pvTaskIncrementMutexHeldCount_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/ulTaskGenericNotifyValueClear_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxListRemove_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxQueueMessagesWaiting_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxQueueSpacesAvailable_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxTaskGetNumberOfTasks_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxTaskPriorityGet_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxTaskResetEventItemValue_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vListInitialiseItem_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vListInitialise_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vListInsertEnd_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vListInsert_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskDelay_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskInternalSetTimeOutState_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskMissedYield_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskSetTimeOutState_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskSuspendAll_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskSwitchContext_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xEventGroupClearBits_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xEventGroupSetBits_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueGenericSendFromISR_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueGenericSend_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueGetMutexHolderFromISR_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueGetMutexHolder_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueReceiveFromISR_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueReceive_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xStreamBufferReceive_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xStreamBufferSend_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskCreateStatic_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskGenericNotifyStateClear_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskGetCurrentTaskHandle_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskGetSchedulerState_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskGetTickCountFromISR_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskGetTickCount_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskIncrementTick_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTimerGenericCommandFromISR_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTimerGenericCommandFromTask_armv6m.{glob,vo}
+        rocq tests/armv6m_primask/Checks.{glob,vo}
+        rocq Picinae_amd64.{glob,vo}
+        rocq Picinae_armv7.{glob,vo}
+        rocq Picinae_armv8.{glob,vo}
+        rocq Picinae_i386.{glob,vo}
+        rocq Picinae_riscv.{glob,vo}
+        rocq Examples/claude/abs_amd64.{glob,vo}
+File "./Examples/claude/abs_amd64.v", line 9, characters 15-21:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Examples/claude/abs_amd64.v", line 10, characters 15-18:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require Lia" or the deprecated "From Coq Require Lia"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+        rocq Examples/claude/amd64_common.{glob,vo}
+File "./Examples/claude/amd64_common.v", line 205, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 205, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 438, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 438, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq Examples/claude/abs_arm8.{glob,vo}
+File "./Examples/claude/abs_arm8.v", line 9, characters 15-21:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Examples/claude/abs_arm8.v", line 10, characters 15-18:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require Lia" or the deprecated "From Coq Require Lia"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+        rocq Examples/claude/arm8_common.{glob,vo}
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq Examples/claude/amd64_abs_proof.{glob,vo}
+Goal at < 0 >
+Goal at < 11 >
+Goal at < 11 >
+        rocq Examples/claude/arm8_abs_proof.{glob,vo}
+Goal at < 0 >
+Goal at < 8 >
+Goal at < 8 >
+
+EXIT_CODE=0

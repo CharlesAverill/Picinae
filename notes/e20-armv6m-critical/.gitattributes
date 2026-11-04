@@ -1,0 +1,2 @@
+logs/*.log -whitespace
+logs/*.objdump -whitespace

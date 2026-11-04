@@ -1,0 +1,11 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env dune build --cache=disabled -j1 --display short @armv6m-critical @Examples/FreeRTOSCritical/freertos-critical-projections
+        rocq .Picinae.theory.d
+        rocq Picinae_armv6m_sync.{glob,vo} (exit 1)
+File "./Picinae_armv6m_sync.v", line 31, characters 31-54:
+Error:
+The term "option armv6m_sync_kind" has type "Set"
+while it is expected to have type "N".
+
+
+EXIT_CODE=1

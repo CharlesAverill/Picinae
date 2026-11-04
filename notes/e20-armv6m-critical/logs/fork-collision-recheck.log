@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/e20-armv6m-critical
+
+EXIT_CODE=0

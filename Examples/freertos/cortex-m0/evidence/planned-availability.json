@@ -1,0 +1,123 @@
+{
+  "r01": {
+    "vListInitialiseItem": true
+  },
+  "r02": {
+    "vListInitialise": true
+  },
+  "r03": {
+    "vListInsertEnd": true
+  },
+  "r04": {
+    "uxListRemove": true
+  },
+  "r05": {
+    "vListInsert": true
+  },
+  "r06": {
+    "uxTaskGetNumberOfTasks": true
+  },
+  "r07": {
+    "xTaskGetCurrentTaskHandle": true
+  },
+  "r08": {
+    "xTaskGetTickCount": true
+  },
+  "r09": {
+    "xTaskGetTickCountFromISR": true
+  },
+  "r10": {
+    "vTaskSuspendAll": true
+  },
+  "r11": {
+    "vTaskMissedYield": true
+  },
+  "r12": {
+    "uxTaskPriorityGet": true
+  },
+  "r13": {
+    "uxTaskResetEventItemValue": true
+  },
+  "r14": {
+    "vTaskInternalSetTimeOutState": true
+  },
+  "r15": {
+    "vTaskSetTimeOutState": true
+  },
+  "r16": {
+    "xTaskGenericNotifyStateClear": true
+  },
+  "r17": {
+    "ulTaskGenericNotifyValueClear": true
+  },
+  "r18": {
+    "pvTaskIncrementMutexHeldCount": true
+  },
+  "r19": {
+    "xTaskGetSchedulerState": true
+  },
+  "r20": {
+    "uxQueueMessagesWaiting": true
+  },
+  "r21": {
+    "uxQueueSpacesAvailable": true
+  },
+  "r22": {
+    "xQueueGetMutexHolder": true
+  },
+  "r23": {
+    "xQueueGetMutexHolderFromISR": true
+  },
+  "r24": {
+    "eTaskGetState": true
+  },
+  "r25": {
+    "prvTaskIsTaskSuspended": true
+  },
+  "r26": {
+    "prvResetNextTaskUnblockTime": true
+  },
+  "r27": {
+    "prvSearchForNameWithinSingleList": true
+  },
+  "r28": {
+    "vTaskSwitchContext": true
+  },
+  "r29": {
+    "xQueueGenericSend": true
+  },
+  "r30": {
+    "xQueueReceive": true
+  },
+  "r31": {
+    "xQueueGenericSendFromISR": true
+  },
+  "r32": {
+    "xQueueReceiveFromISR": true
+  },
+  "r33": {
+    "vTaskDelay": true
+  },
+  "r34": {
+    "xTaskIncrementTick": true
+  },
+  "r35": {
+    "xTaskCreateStatic": true
+  },
+  "r36": {
+    "xEventGroupSetBits": true
+  },
+  "r37": {
+    "xEventGroupClearBits": true
+  },
+  "r38": {
+    "xStreamBufferSend": true
+  },
+  "r39": {
+    "xStreamBufferReceive": true
+  },
+  "r40": {
+    "xTimerGenericCommandFromISR": true,
+    "xTimerGenericCommandFromTask": true
+  }
+}
