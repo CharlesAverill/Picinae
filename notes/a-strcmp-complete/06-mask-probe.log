@@ -1,0 +1,14 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-e23fc53c
+COMMAND=python3 /home/charles/code/friends/.refs/picinae-llm-proofs/resources/resource-run.py --unit a-strcmp-complete --memory-kib 4000000 -- /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -s\ 65536\;\ bash\ notes/a-strcmp-complete/run-probe.sh
+ADMISSION WAIT a-strcmp-complete available RAM reserve
+ADMISSION WAIT a-strcmp-complete available RAM reserve
+ADMISSION WAIT a-strcmp-complete available RAM reserve
+ADMISSION WAIT a-strcmp-complete available RAM reserve
+ADMITTED a-strcmp-complete memory_kib=4000000
+File "/tmp/a-strcmp-complete.zZLWmzkk/Probe.v", line 45, characters 2-53:
+Error: Found no subterm matching "(?M1580 + ?M1581 * ?M1582) / ?M1582"
+in the current goal.
+
+RELEASED a-strcmp-complete exit=1
+
+EXIT_CODE=1

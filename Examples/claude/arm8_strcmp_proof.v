@@ -738,6 +738,46 @@ Lemma strcmp_fix_weak_decoder_sign:
 Proof. vm_compute. auto. Qed.
 Print Assumptions strcmp_fix_weak_decoder_sign.
 
+(* Sol continuation a-strcmp-complete: the following generic borrow fact
+   passed its complete Qed in diagnostic log 06. The diagnostic then failed
+   in the NEXT lemma. Subsequent corrected checks never received compiler
+   admission (log 12). This updated full module and this new fact's separate
+   Print Assumptions query have NOT been validated; see unit notes.
+   The remaining word-mask/REV/CLZ draft is kept outside the module. *)
+(* Base-256 subtraction with an explicit lower-digit borrow. *)
+Lemma strcmp_complete_borrow_digit: forall n B a b c d,
+  2^n = 256*B -> 0<B -> a<B -> c<B -> b<256 -> d<255 ->
+  msub n (a+B*b) (c+B*d) / B =
+  msub 8 b (d + if a <? c then 1 else 0).
+Proof.
+  intros n B a b c d WIDTH BP A C X Y.
+  assert (XB: a+B*b < 2^n) by nia.
+  assert (YB: c+B*d < 2^n) by nia.
+  destruct (N.ltb_spec a c) as [BORROW|NO]; cbn.
+  - assert (DB: d+1<2^8) by lia.
+    destruct (N.le_gt_cases (d+1) b) as [ORDER|ORDER].
+    + rewrite msub_nowrap by (rewrite !N.mod_small by assumption; nia).
+      rewrite (msub_nowrap 8) by (rewrite !N.mod_small by lia; lia).
+      rewrite !N.mod_small by lia.
+      symmetry. apply N.div_unique with (r:=B+a-c); nia.
+    + rewrite msub_wrap by (rewrite !N.mod_small by assumption; nia).
+      rewrite (msub_wrap 8) by (rewrite !N.mod_small by lia; lia).
+      rewrite !N.mod_small by lia. rewrite WIDTH.
+      symmetry. apply N.div_unique with (r:=B+a-c); nia.
+  - rewrite N.add_0_r.
+    destruct (N.le_gt_cases d b) as [ORDER|ORDER].
+    + rewrite msub_nowrap by (rewrite !N.mod_small by assumption; nia).
+      rewrite (msub_nowrap 8) by (rewrite !N.mod_small by lia; lia).
+      rewrite !N.mod_small by lia.
+      symmetry. apply N.div_unique with (r:=a-c); nia.
+    + rewrite msub_wrap by (rewrite !N.mod_small by assumption; nia).
+      rewrite (msub_wrap 8) by (rewrite !N.mod_small by lia; lia).
+      rewrite !N.mod_small by lia. rewrite WIDTH.
+      symmetry. apply N.div_unique with (r:=a-c); nia.
+Qed.
+
+Print Assumptions strcmp_complete_borrow_digit.
+
 (* The retained full statement is still open. The original 21-obligation
    attempt is preserved verbatim in notes/a-strcmp/arm8_strcmp_proof.initial.v.txt;
    its replay is notes/a-strcmp-fix/05-inherited-target.log. The weak decoder

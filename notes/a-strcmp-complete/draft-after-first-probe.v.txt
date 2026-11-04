@@ -1,0 +1,284 @@
+(* Base-256 subtraction with an explicit lower-digit borrow. *)
+Lemma strcmp_complete_borrow_digit: forall n B a b c d,
+  2^n = 256*B -> 0<B -> a<B -> c<B -> b<256 -> d<255 ->
+  msub n (a+B*b) (c+B*d) / B =
+  msub 8 b (d + if a <? c then 1 else 0).
+Proof.
+  intros n B a b c d WIDTH BP A C X Y.
+  assert (XB: a+B*b < 2^n) by nia.
+  assert (YB: c+B*d < 2^n) by nia.
+  destruct (N.ltb_spec a c) as [BORROW|NO]; cbn.
+  - assert (DB: d+1<2^8) by lia.
+    destruct (N.le_gt_cases (d+1) b) as [ORDER|ORDER].
+    + rewrite msub_nowrap by (rewrite !N.mod_small by assumption; nia).
+      rewrite (msub_nowrap 8) by (rewrite !N.mod_small by lia; lia).
+      rewrite !N.mod_small by lia.
+      symmetry. apply N.div_unique with (r:=B+a-c); nia.
+    + rewrite msub_wrap by (rewrite !N.mod_small by assumption; nia).
+      rewrite (msub_wrap 8) by (rewrite !N.mod_small by lia; lia).
+      rewrite !N.mod_small by lia. rewrite WIDTH.
+      symmetry. apply N.div_unique with (r:=B+a-c); nia.
+  - rewrite N.add_0_r.
+    destruct (N.le_gt_cases d b) as [ORDER|ORDER].
+    + rewrite msub_nowrap by (rewrite !N.mod_small by assumption; nia).
+      rewrite (msub_nowrap 8) by (rewrite !N.mod_small by lia; lia).
+      rewrite !N.mod_small by lia.
+      symmetry. apply N.div_unique with (r:=a-c); nia.
+    + rewrite msub_wrap by (rewrite !N.mod_small by assumption; nia).
+      rewrite (msub_wrap 8) by (rewrite !N.mod_small by lia; lia).
+      rewrite !N.mod_small by lia. rewrite WIDTH.
+      symmetry. apply N.div_unique with (r:=a-c); nia.
+Qed.
+
+Lemma strcmp_complete_byte_mod: forall x j,
+  strcmp_byte x j = (x mod 2^(8*(j+1))) / 2^(8*j).
+Proof.
+  intros x j. unfold strcmp_byte. rewrite N.shiftr_div_pow2.
+  replace (8*(j+1)) with (8*j+8) by lia.
+  rewrite N.pow_add_r, N.Div0.mod_mul_r.
+  rewrite N.mul_comm, N.div_add by apply pow2_nonzero.
+  rewrite N.div_small by apply mp2_mod_lt. reflexivity.
+Qed.
+
+Lemma strcmp_complete_sub_byte: forall x c j,
+  j<8 -> strcmp_byte c j < 255 ->
+  strcmp_byte (msub 64 x c) j =
+  msub 8 (strcmp_byte x j)
+    (strcmp_byte c j + if x mod 2^(8*j) <? c mod 2^(8*j) then 1 else 0).
+Proof.
+  intros x c j J C.
+  rewrite strcmp_complete_byte_mod, msub_mod_pow2, N.min_r by lia.
+  rewrite <- (msub_mod_l (8*(j+1)) (8*(j+1)) x c) by lia.
+  rewrite <- (msub_mod_r (8*(j+1)) (8*(j+1)) (x mod 2^(8*(j+1))) c) by lia.
+  set (B:=2^(8*j)).
+  assert (BP: 0<B) by apply mp2_gt_0.
+  assert (WIDTH: 2^(8*(j+1)) = 256*B).
+  { unfold B. replace (8*(j+1)) with (8+8*j) by lia. rewrite N.pow_add_r. reflexivity. }
+  assert (DX: x mod 2^(8*(j+1)) = x mod B+B*strcmp_byte x j).
+  { rewrite strcmp_complete_byte_mod.
+    pose proof (N.div_mod (x mod 2^(8*(j+1))) B ltac:(lia)) as D.
+    assert (MOD: (x mod 2^(8*(j+1))) mod B = x mod B).
+    { unfold B. rewrite mp2_mod_mod_min, N.min_r by lia. reflexivity. }
+    rewrite MOD in D. lia. }
+  assert (DC: c mod 2^(8*(j+1)) = c mod B+B*strcmp_byte c j).
+  { rewrite strcmp_complete_byte_mod.
+    pose proof (N.div_mod (c mod 2^(8*(j+1))) B ltac:(lia)) as D.
+    assert (MOD: (c mod 2^(8*(j+1))) mod B = c mod B).
+    { unfold B. rewrite mp2_mod_mod_min, N.min_r by lia. reflexivity. }
+    rewrite MOD in D. lia. }
+  rewrite DX, DC. apply strcmp_complete_borrow_digit;
+    try assumption; try apply N.mod_lt; try lia; apply strcmp_byte_bound.
+Qed.
+
+Lemma strcmp_complete_byte_bits: forall x j i,
+  N.testbit (strcmp_byte x j) i =
+  andb (i <? 8) (N.testbit x (i+8*j)).
+Proof.
+  intros. unfold strcmp_byte. change 256 with (2^8).
+  rewrite Nmod_pow2_bits, N.shiftr_spec'. reflexivity.
+Qed.
+
+Lemma strcmp_complete_byte_land: forall x y j,
+  strcmp_byte (x .& y) j = strcmp_byte x j .& strcmp_byte y j.
+Proof.
+  intros. apply N.bits_inj. intro i.
+  rewrite N.land_spec, !strcmp_complete_byte_bits, N.land_spec.
+  destruct (i <? 8), (N.testbit x (i+8*j)), (N.testbit y (i+8*j)); reflexivity.
+Qed.
+
+Lemma strcmp_complete_byte_lor: forall x y j,
+  strcmp_byte (x .| y) j = strcmp_byte x j .| strcmp_byte y j.
+Proof.
+  intros. apply N.bits_inj. intro i.
+  rewrite N.lor_spec, !strcmp_complete_byte_bits, N.lor_spec.
+  destruct (i <? 8), (N.testbit x (i+8*j)), (N.testbit y (i+8*j)); reflexivity.
+Qed.
+
+Lemma strcmp_complete_byte_lxor: forall x y j,
+  strcmp_byte (x .^ y) j = strcmp_byte x j .^ strcmp_byte y j.
+Proof.
+  intros. apply N.bits_inj. intro i.
+  rewrite N.lxor_spec, !strcmp_complete_byte_bits, N.lxor_spec.
+  destruct (i <? 8), (N.testbit x (i+8*j)), (N.testbit y (i+8*j)); reflexivity.
+Qed.
+
+Lemma strcmp_complete_constants: forall j,
+  j<8 ->
+  strcmp_byte 0x0101010101010101 j = 1 /\
+  strcmp_byte 0x7f7f7f7f7f7f7f7f j = 127 /\
+  strcmp_byte 0xffffffffffffffff j = 255.
+Proof.
+  intros j J.
+  assert (CASES: j=0 \/ j=1 \/ j=2 \/ j=3 \/ j=4 \/ j=5 \/ j=6 \/ j=7) by lia.
+  repeat destruct CASES as [E|CASES]; subst j; vm_compute; auto.
+Qed.
+
+Lemma strcmp_complete_prefix_no_borrow: forall j x,
+  j<=8 -> (forall i, i<j -> strcmp_byte x i <> 0) ->
+  0x0101010101010101 mod 2^(8*j) <= x mod 2^(8*j).
+Proof.
+  intro j. induction j using N.peano_ind; intros x J NZ.
+  - reflexivity.
+  - assert (J0: j<8) by lia.
+    pose proof (IHj x ltac:(lia) ltac:(intros; apply NZ; lia)) as IH.
+    pose proof (NZ j ltac:(lia)) as LAST.
+    pose proof (proj1 (strcmp_complete_constants j J0)) as C.
+    unfold strcmp_byte in LAST, C. rewrite N.shiftr_div_pow2 in LAST, C.
+    replace (8*N.succ j) with (8*j+8) by lia.
+    rewrite N.pow_add_r, !N.Div0.mod_mul_r.
+    change (2^8) with 256. rewrite C. nia.
+Qed.
+
+(* This is the actual SUB/OR/BICS zero-byte expression, including the
+   64-bit complement produced by the generated IL. *)
+Definition strcmp_complete_zero_mask (x:N) :=
+  msub 64 x 0x0101010101010101 .&
+  ((x .| 0x7f7f7f7f7f7f7f7f) .^ 0xffffffffffffffff).
+
+Lemma strcmp_complete_zero_mask_byte: forall x j,
+  j<8 -> strcmp_byte (strcmp_complete_zero_mask x) j =
+  msub 8 (strcmp_byte x j)
+    (1 + if x mod 2^(8*j) <? 0x0101010101010101 mod 2^(8*j) then 1 else 0)
+    .& ((strcmp_byte x j .| 127) .^ 255).
+Proof.
+  intros x j J. unfold strcmp_complete_zero_mask.
+  rewrite strcmp_complete_byte_land, strcmp_complete_byte_lxor,
+    strcmp_complete_byte_lor.
+  destruct (strcmp_complete_constants j J) as [C [L O]].
+  rewrite L, O, strcmp_complete_sub_byte, C by (try assumption; rewrite C; lia).
+  reflexivity.
+Qed.
+
+Lemma strcmp_complete_highbit: forall a,
+  a<256 -> N.testbit a 7 = (128 <=? a).
+Proof.
+  intros a A. rewrite N.testbit_eqb.
+  destruct (N.leb_spec 128 a) as [GE|LT].
+  - assert (D: a / 2^7=1).
+    { symmetry. apply N.div_unique with (r:=a-128); lia. }
+    rewrite D. reflexivity.
+  - rewrite N.div_small by (change (2^7) with 128; lia). reflexivity.
+Qed.
+
+Lemma strcmp_complete_complement_byte: forall a,
+  a<256 -> (a .| 127) .^ 255 = if N.testbit a 7 then 0 else 128.
+Proof.
+  intros a A. apply N.bits_inj. intro i.
+  rewrite N.lxor_spec, N.lor_spec.
+  change 127 with (N.ones 7). change 255 with (N.ones 8).
+  rewrite !N_ones_spec_ltb.
+  destruct (N.lt_trichotomy i 7) as [LO|[EQ|HI]].
+  - rewrite (proj2 (N.ltb_lt _ _) LO), (proj2 (N.ltb_lt i 8) ltac:(lia)).
+    destruct (N.testbit a i), (N.testbit a 7); cbn;
+      rewrite ?N.pow2_bits_eqb, ?(proj2 (N.eqb_neq 7 i) ltac:(lia)); reflexivity.
+  - subst i. destruct (N.testbit a 7); reflexivity.
+  - rewrite (proj2 (N.ltb_ge i 7) ltac:(lia)),
+      (proj2 (N.ltb_ge i 8) ltac:(lia)), (bound_hibits_zero 8 a i A ltac:(lia)).
+    destruct (N.testbit a 7); [reflexivity|].
+    symmetry. apply (bound_hibits_zero 8 128 i); lia.
+Qed.
+
+Lemma strcmp_complete_mask_byte_cases: forall a (borrow:bool),
+  a<256 ->
+  msub 8 a (1 + if borrow then 1 else 0) .& ((a .| 127) .^ 255) =
+  if (a =? 0) || ((a =? 1) && borrow) then 128 else 0.
+Proof.
+  intros a borrow A. rewrite strcmp_complete_complement_byte by exact A.
+  rewrite strcmp_complete_highbit by exact A.
+  destruct (N.leb_spec 128 a) as [HI|LO].
+  - rewrite N.land_0_r.
+    rewrite (proj2 (N.eqb_neq a 0) ltac:(lia)), (proj2 (N.eqb_neq a 1) ltac:(lia)). reflexivity.
+  - assert (LAND: forall z, z .& 128 = if N.testbit z 7 then 128 else 0).
+    { intro z. change 128 with (2^7). apply N.bits_inj. intro i.
+      rewrite N.land_spec, N.pow2_bits_eqb.
+      destruct (N.eqb_spec 7 i) as [<-|NE].
+      - destruct (N.testbit z 7); reflexivity.
+      - destruct (N.testbit z 7); rewrite ?N.pow2_bits_eqb,
+          (proj2 (N.eqb_neq _ _) NE); cbn; rewrite ?Bool.andb_false_r; reflexivity. }
+    rewrite LAND, strcmp_complete_highbit by (apply mp2_mod_lt).
+    destruct borrow; cbn.
+    + destruct (N.lt_ge_cases a 2) as [SMALL|LARGE].
+      * assert (CASES: a=0 \/ a=1) by lia. destruct CASES as [->|->]; reflexivity.
+      * rewrite msub_nowrap by (rewrite !N.mod_small; lia).
+        rewrite N.mod_small by lia.
+        rewrite (proj2 (N.leb_gt 128 (a-2)) ltac:(lia)),
+          (proj2 (N.eqb_neq a 0) ltac:(lia)), (proj2 (N.eqb_neq a 1) ltac:(lia)). reflexivity.
+    + destruct (N.eq_dec a 0) as [->|NZ]; [reflexivity|].
+      rewrite msub_nowrap by (rewrite !N.mod_small; lia).
+      rewrite N.mod_small by lia.
+      rewrite (proj2 (N.leb_gt 128 (a-1)) ltac:(lia)),
+        (proj2 (N.eqb_neq a 0) NZ), Bool.andb_false_r. reflexivity.
+Qed.
+
+Lemma strcmp_complete_mask_zero_byte: forall x j,
+  j<8 -> strcmp_byte x j=0 ->
+  strcmp_byte (strcmp_complete_zero_mask x) j=128.
+Proof.
+  intros x j J Z. rewrite strcmp_complete_zero_mask_byte by exact J.
+  rewrite Z. destruct (x mod 2^(8*j) <? 0x0101010101010101 mod 2^(8*j)); reflexivity.
+Qed.
+
+Lemma strcmp_complete_mask_prefix: forall x j,
+  j<8 -> (forall i, i<=j -> strcmp_byte x i <> 0) ->
+  strcmp_byte (strcmp_complete_zero_mask x) j=0.
+Proof.
+  intros x j J NZ. rewrite strcmp_complete_zero_mask_byte by exact J.
+  pose proof (strcmp_complete_prefix_no_borrow j x ltac:(lia)
+    ltac:(intros; apply NZ; lia)) as NB.
+  rewrite (proj2 (N.ltb_ge _ _) NB).
+  change 1 with (1 + if false then 1 else 0).
+  rewrite strcmp_complete_mask_byte_cases by apply strcmp_byte_bound.
+  rewrite (proj2 (N.eqb_neq _ _) (NZ j ltac:(lia))), Bool.andb_false_r. reflexivity.
+Qed.
+
+Lemma strcmp_complete_zero_mask_bound: forall x,
+  strcmp_complete_zero_mask x < 2^64.
+Proof.
+  intro x. unfold strcmp_complete_zero_mask. apply land_bound. apply mp2_mod_lt.
+Qed.
+
+(* General word lemma: all following bytes are unrestricted. This derives
+   the common-NUL high bit missing from the original internal invariant. *)
+Theorem strcmp_complete_word_syndrome: forall x y j,
+  x<2^64 -> y<2^64 -> j<8 ->
+  (forall i, i<j -> strcmp_byte x i = strcmp_byte y i /\ strcmp_byte x i <> 0) ->
+  (strcmp_byte x j <> strcmp_byte y j \/ strcmp_byte x j = 0) ->
+  strcmp_fix_syndrome x y ((x .^ y) .| strcmp_complete_zero_mask x) j.
+Proof.
+  intros x y j X Y J PREFIX STOP. split.
+  - unfold strcmp_syndrome. split.
+    + apply lor_bound; [apply lxor_bound; assumption|apply strcmp_complete_zero_mask_bound].
+    + split.
+      * rewrite N.lor_comm, N.lor_assoc, N.lor_diag. apply N.lor_comm.
+      * split.
+        -- intros i I. rewrite strcmp_complete_byte_lor, strcmp_complete_byte_lxor.
+           rewrite (proj1 (PREFIX i I)), N.lxor_nilpotent.
+           rewrite strcmp_complete_mask_prefix; [reflexivity|lia|].
+           intros k KI. exact (proj2 (PREFIX k ltac:(lia))).
+        -- rewrite strcmp_complete_byte_lor, strcmp_complete_byte_lxor.
+           intro ZERO. apply N.lor_eq_0_iff in ZERO. destruct ZERO as [XY MASK].
+           destruct STOP as [NE|Z].
+           ++ apply NE. apply N.lxor_eq. exact XY.
+           ++ rewrite (strcmp_complete_mask_zero_byte x j J Z) in MASK. discriminate.
+  - intros ZX ZY. rewrite N.lor_spec.
+    assert (BIT: N.testbit (strcmp_complete_zero_mask x) (8*j+7)=true).
+    { pose proof (strcmp_complete_mask_zero_byte x j J ZX) as B.
+      apply (f_equal (fun z=>N.testbit z 7)) in B.
+      rewrite strcmp_complete_byte_bits in B. cbn in B.
+      rewrite N.add_comm. exact B. }
+    rewrite BIT, Bool.orb_true_r. reflexivity.
+Qed.
+
+Theorem strcmp_complete_word_decode: forall s0 m p q K s j,
+  strcmp_frame s0 s -> s R_X2<2^64 -> s R_X3<2^64 -> j<8 ->
+  strcmp_stop m p q K ->
+  strcmp_pair m p q K (s R_X2) (s R_X3) j ->
+  s R_X6 = (s R_X2 .^ s R_X3) .| strcmp_complete_zero_mask (s R_X2) ->
+  strcmp_fix_decode s0 m p q K s.
+Proof.
+  intros s0 m p q K s j FRAME X Y J [_ STOP] PAIR MASK.
+  split; [exact FRAME|]. exists j. split; [exact J|]. split; [exact PAIR|].
+  rewrite MASK. apply strcmp_complete_word_syndrome; try assumption.
+  - exact (proj1 PAIR).
+  - destruct PAIR as [PREFIX [PX QY]]. rewrite PX, QY. exact STOP.
+Qed.

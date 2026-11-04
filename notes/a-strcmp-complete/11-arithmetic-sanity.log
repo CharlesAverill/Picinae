@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-e23fc53c
+COMMAND=python3 notes/a-strcmp-complete/check-mask-arithmetic.py
+512 byte/borrow cases pass
+4101 deterministic word cases pass: borrow, first-zero, masks, REV/CLZ
+These checks do not certify the unproved main contract.
+
+EXIT_CODE=0
