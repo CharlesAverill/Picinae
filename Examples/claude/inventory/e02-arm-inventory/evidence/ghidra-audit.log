@@ -1,0 +1,5 @@
+Picked up JAVA_TOOL_OPTIONS: -Xmx2G -Duser.home=/home/charles/code/friends/.toolchains/e02-arm-inventory/config -Djava.io.tmpdir=/home/charles/code/friends/.toolchains/e02-arm-inventory/tmp
+Picked up JAVA_TOOL_OPTIONS: -Xmx2G -Duser.home=/home/charles/code/friends/.toolchains/e02-arm-inventory/config -Djava.io.tmpdir=/home/charles/code/friends/.toolchains/e02-arm-inventory/tmp
+E02 PASS 85 exact historical instruction comments
+PcodeOp.COPY inputs[0]:(register, 0x40f0, 8)
+E02 wrote restricted toascii smoke lift

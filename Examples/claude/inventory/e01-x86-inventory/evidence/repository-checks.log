@@ -1,0 +1,23 @@
+Python syntax OK: Examples/claude/inventory/e01-x86-inventory/inventory.py
+Python syntax OK: Examples/claude/inventory/e01-x86-inventory/retrieve.py
+Python syntax OK: Examples/claude/inventory/e01-x86-inventory/verify.py
+disassembly.txt: OK
+dispatch-data.json: OK
+elf-header.txt: OK
+existing-lifts.json: OK
+ifunc-implementations.json: OK
+inventory.json: OK
+notes.txt: OK
+package-provenance.json: OK
+relocations.txt: OK
+resolvers.json: OK
+source-files.sha256: OK
+source-selectors.json: OK
+symbols.tsv: OK
+target-manifest.json: OK
+unit-suggestions.json: OK
+unit-suggestions.tsv: OK
+variants.md: OK
+Examples/claude/memmove_avx_amd64.v:351
+Examples/claude/memcpy_amd64.v:313
+git diff --cached --check: exit 0
