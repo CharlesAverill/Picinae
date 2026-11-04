@@ -1,0 +1,3 @@
+# Preserve verbatim diagnostic output and the context lines in upstream patches.
+logs/* whitespace=-blank-at-eol
+*.patch whitespace=-blank-at-eol

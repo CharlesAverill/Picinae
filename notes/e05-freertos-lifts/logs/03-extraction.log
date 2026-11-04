@@ -1,0 +1,11 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-a0eced30
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B Examples/freertos/cortex-m0/extract.py --elf /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf --objdump /home/charles/code/friends/.toolchains/e04-freertos-build/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-objdump --source /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-a0eced30/Examples/freertos/cortex-m0/extract.py", line 278, in <module>
+    main()
+  File "/home/charles/.t3/worktrees/Picinae/t3-a0eced30/Examples/freertos/cortex-m0/extract.py", line 58, in main
+    assert digest(disasm.encode()) == manifest['artifacts']['disassembly.txt']
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+EXIT_CODE=1
