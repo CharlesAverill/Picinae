@@ -1,0 +1,1685 @@
+{
+  "blocked_helpers": [
+    "fixture_assert_fail",
+    "vPortEnterCritical",
+    "vPortExitCritical",
+    "vPortYield"
+  ],
+  "bytes_sha256": "d00bce904e34c5d7b5e37869dd27ec367146356af59bec48c3244e9d012ecf4e",
+  "closure_prerequisites": [
+    {
+      "callee": "xStreamBufferSpacesAvailable",
+      "caller": "xStreamBufferSend",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x0000321e",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "fixture_assert_fail",
+      "caller": "xStreamBufferSpacesAvailable",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00002f46",
+      "unsupported_instructions": [
+        {
+          "address": "0x0000419c",
+          "assembly": "cpsid\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b672",
+          "width": 2
+        },
+        {
+          "address": "0x000041a6",
+          "assembly": "wfi",
+          "frontend_encoding_supported": false,
+          "opcode": "bf30",
+          "width": 2
+        }
+      ]
+    },
+    {
+      "callee": "prvWriteMessageToBuffer",
+      "caller": "xStreamBufferSend",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x0000322e",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "prvWriteBytesToBuffer",
+      "caller": "prvWriteMessageToBuffer",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000030da",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "memcpy",
+      "caller": "prvWriteBytesToBuffer",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00003066",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "vTaskSetTimeOutState",
+      "caller": "xStreamBufferSend",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00003268",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "vPortEnterCritical",
+      "caller": "vTaskSetTimeOutState",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000008da",
+      "unsupported_instructions": [
+        {
+          "address": "0x00003e68",
+          "assembly": "cpsid\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b672",
+          "width": 2
+        },
+        {
+          "address": "0x00003e72",
+          "assembly": "dsb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f4f",
+          "width": 4
+        },
+        {
+          "address": "0x00003e76",
+          "assembly": "isb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f6f",
+          "width": 4
+        }
+      ]
+    },
+    {
+      "callee": "vPortExitCritical",
+      "caller": "vTaskSetTimeOutState",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000008ea",
+      "unsupported_instructions": [
+        {
+          "address": "0x00003e98",
+          "assembly": "cpsie\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b662",
+          "width": 2
+        }
+      ]
+    },
+    {
+      "callee": "xTaskGenericNotifyStateClear",
+      "caller": "xStreamBufferSend",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00003280",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "xTaskGetCurrentTaskHandle",
+      "caller": "xStreamBufferSend",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x0000328a",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "xTaskGenericNotifyWait",
+      "caller": "xStreamBufferSend",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000032a0",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "vTaskSuspendAll",
+      "caller": "xTaskGenericNotifyWait",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00001c9c",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "xTaskResumeAll",
+      "caller": "xTaskGenericNotifyWait",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00001ccc",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "prvResetNextTaskUnblockTime",
+      "caller": "xTaskResumeAll",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000010dc",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "xTaskIncrementTick",
+      "caller": "xTaskResumeAll",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000010f4",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "vPortYield",
+      "caller": "xTaskResumeAll",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00001126",
+      "unsupported_instructions": [
+        {
+          "address": "0x00003e58",
+          "assembly": "dsb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f4f",
+          "width": 4
+        },
+        {
+          "address": "0x00003e5c",
+          "assembly": "isb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f6f",
+          "width": 4
+        }
+      ]
+    },
+    {
+      "callee": "prvAddCurrentTaskToDelayedList",
+      "caller": "xTaskGenericNotifyWait",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00001d16",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "uxListRemove",
+      "caller": "prvAddCurrentTaskToDelayedList",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00001992",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "vListInsert",
+      "caller": "prvAddCurrentTaskToDelayedList",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000019ae",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "xTaskCheckForTimeOut",
+      "caller": "xStreamBufferSend",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000032ac",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "vTaskInternalSetTimeOutState",
+      "caller": "xTaskCheckForTimeOut",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x0000099a",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "prvBytesInBuffer",
+      "caller": "xStreamBufferSend",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000032ca",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "xTaskGenericNotify",
+      "caller": "xStreamBufferSend",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000032ea",
+      "unsupported_instructions": []
+    },
+    {
+      "caller": "xTaskGenericNotify",
+      "edge": {
+        "assembly": "mov\tpc, r2",
+        "kind": "indirect-control",
+        "site": "0x00001582",
+        "target": "runtime register/stack; Thumb bit required"
+      },
+      "prerequisite": "resolve indirect/external target and its actual contract"
+    }
+  ],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "xStreamBufferSend_armv6m",
+    "xStreamBufferSend"
+  ],
+  "critical_isr_boundaries": [
+    {
+      "kind": "call",
+      "owners": [
+        "vPortEnterCritical"
+      ],
+      "return_site": "0x00003270",
+      "site": "0x0000326c",
+      "target": "0x00003e68",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vPortExitCritical"
+      ],
+      "return_site": "0x00003294",
+      "site": "0x00003290",
+      "target": "0x00003e80",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vPortExitCritical"
+      ],
+      "return_site": "0x000032c2",
+      "site": "0x000032be",
+      "target": "0x00003e80",
+      "target_is_instruction_start": null,
+      "within_function": false
+    }
+  ],
+  "edges": [
+    {
+      "fallthrough": "0x00003200",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x000031fe",
+      "target": "0x00003240",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x00003204",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x00003202",
+      "target": "0x00003248",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x0000320e",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x0000320c",
+      "target": "0x00003258",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x00003214",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x00003212",
+      "target": "0x00003250",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x00003218",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x00003216",
+      "target": "0x00003260",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "xStreamBufferSpacesAvailable"
+      ],
+      "return_site": "0x00003222",
+      "site": "0x0000321e",
+      "target": "0x00002f20",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "prvWriteMessageToBuffer"
+      ],
+      "return_site": "0x00003232",
+      "site": "0x0000322e",
+      "target": "0x000030b8",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x00003236",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x00003234",
+      "target": "0x000032c8",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "assembly": "pop\t{r4, r5, r6, r7, pc}",
+      "kind": "return-candidate",
+      "site": "0x0000323e",
+      "target": "runtime register/stack; Thumb bit required"
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "fixture_assert_fail"
+      ],
+      "return_site": "0x00003248",
+      "site": "0x00003244",
+      "target": "0x0000419c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "fixture_assert_fail"
+      ],
+      "return_site": "0x00003250",
+      "site": "0x0000324c",
+      "target": "0x0000419c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "fixture_assert_fail"
+      ],
+      "return_site": "0x00003258",
+      "site": "0x00003254",
+      "target": "0x0000419c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x0000325e",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x0000325c",
+      "target": "0x00003260",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x00003266",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x00003264",
+      "target": "0x0000321c",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vTaskSetTimeOutState"
+      ],
+      "return_site": "0x0000326c",
+      "site": "0x00003268",
+      "target": "0x000008d4",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vPortEnterCritical"
+      ],
+      "return_site": "0x00003270",
+      "site": "0x0000326c",
+      "target": "0x00003e68",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "xStreamBufferSpacesAvailable"
+      ],
+      "return_site": "0x00003276",
+      "site": "0x00003272",
+      "target": "0x00002f20",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x0000327c",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x0000327a",
+      "target": "0x000032be",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "xTaskGenericNotifyStateClear"
+      ],
+      "return_site": "0x00003284",
+      "site": "0x00003280",
+      "target": "0x000018ec",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x0000328a",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x00003288",
+      "target": "0x000032b6",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "xTaskGetCurrentTaskHandle"
+      ],
+      "return_site": "0x0000328e",
+      "site": "0x0000328a",
+      "target": "0x000012dc",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vPortExitCritical"
+      ],
+      "return_site": "0x00003294",
+      "site": "0x00003290",
+      "target": "0x00003e80",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "xTaskGenericNotifyWait"
+      ],
+      "return_site": "0x000032a4",
+      "site": "0x000032a0",
+      "target": "0x00001c90",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "xTaskCheckForTimeOut"
+      ],
+      "return_site": "0x000032b0",
+      "site": "0x000032ac",
+      "target": "0x00000920",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x000032b4",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x000032b2",
+      "target": "0x0000326c",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x000032b4",
+      "target": "0x000032c2",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "fixture_assert_fail"
+      ],
+      "return_site": "0x000032be",
+      "site": "0x000032ba",
+      "target": "0x0000419c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vPortExitCritical"
+      ],
+      "return_site": "0x000032c2",
+      "site": "0x000032be",
+      "target": "0x00003e80",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x000032c6",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x000032c4",
+      "target": "0x00003224",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x000032c6",
+      "target": "0x0000321c",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "prvBytesInBuffer"
+      ],
+      "return_site": "0x000032ce",
+      "site": "0x000032ca",
+      "target": "0x000031bc",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x000032d4",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x000032d2",
+      "target": "0x00003236",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vTaskSuspendAll"
+      ],
+      "return_site": "0x000032d8",
+      "site": "0x000032d4",
+      "target": "0x00000574",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x000032de",
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x000032dc",
+      "target": "0x000032f0",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "xTaskGenericNotify"
+      ],
+      "return_site": "0x000032ee",
+      "site": "0x000032ea",
+      "target": "0x00001550",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "xTaskResumeAll"
+      ],
+      "return_site": "0x000032f4",
+      "site": "0x000032f0",
+      "target": "0x00000fdc",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "xStreamBufferSend"
+      ],
+      "site": "0x000032f4",
+      "target": "0x00003236",
+      "target_is_instruction_start": true,
+      "within_function": true
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x0000330c",
+  "entry": "0x000031ec",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "c64c3024f5bcba3299a416e7979024915ac613e4b9efb7ecbf9eb7d1202d690d",
+  "instructions": [
+    {
+      "address": "0x000031ec",
+      "assembly": "push\t{r4, r5, r6, r7, lr}",
+      "frontend_encoding_supported": true,
+      "opcode": "b5f0",
+      "width": 2
+    },
+    {
+      "address": "0x000031ee",
+      "assembly": "mov\tlr, r8",
+      "frontend_encoding_supported": true,
+      "opcode": "46c6",
+      "width": 2
+    },
+    {
+      "address": "0x000031f0",
+      "assembly": "push\t{lr}",
+      "frontend_encoding_supported": true,
+      "opcode": "b500",
+      "width": 2
+    },
+    {
+      "address": "0x000031f2",
+      "assembly": "sub\tsp, #24",
+      "frontend_encoding_supported": true,
+      "opcode": "b086",
+      "width": 2
+    },
+    {
+      "address": "0x000031f4",
+      "assembly": "movs\tr4, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "0004",
+      "width": 2
+    },
+    {
+      "address": "0x000031f6",
+      "assembly": "mov\tr8, r1",
+      "frontend_encoding_supported": true,
+      "opcode": "4688",
+      "width": 2
+    },
+    {
+      "address": "0x000031f8",
+      "assembly": "movs\tr7, r2",
+      "frontend_encoding_supported": true,
+      "opcode": "0017",
+      "width": 2
+    },
+    {
+      "address": "0x000031fa",
+      "assembly": "str\tr3, [sp, #12]",
+      "frontend_encoding_supported": true,
+      "opcode": "9303",
+      "width": 2
+    },
+    {
+      "address": "0x000031fc",
+      "assembly": "cmp\tr1, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2900",
+      "width": 2
+    },
+    {
+      "address": "0x000031fe",
+      "assembly": "beq.n\t3240 <xStreamBufferSend+0x54>",
+      "frontend_encoding_supported": true,
+      "opcode": "d01f",
+      "width": 2
+    },
+    {
+      "address": "0x00003200",
+      "assembly": "cmp\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2800",
+      "width": 2
+    },
+    {
+      "address": "0x00003202",
+      "assembly": "beq.n\t3248 <xStreamBufferSend+0x5c>",
+      "frontend_encoding_supported": true,
+      "opcode": "d021",
+      "width": 2
+    },
+    {
+      "address": "0x00003204",
+      "assembly": "ldr\tr3, [r0, #8]",
+      "frontend_encoding_supported": true,
+      "opcode": "6883",
+      "width": 2
+    },
+    {
+      "address": "0x00003206",
+      "assembly": "subs\tr3, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "3b01",
+      "width": 2
+    },
+    {
+      "address": "0x00003208",
+      "assembly": "ldrb\tr2, [r0, #28]",
+      "frontend_encoding_supported": true,
+      "opcode": "7f02",
+      "width": 2
+    },
+    {
+      "address": "0x0000320a",
+      "assembly": "lsls\tr2, r2, #31",
+      "frontend_encoding_supported": true,
+      "opcode": "07d2",
+      "width": 2
+    },
+    {
+      "address": "0x0000320c",
+      "assembly": "bpl.n\t3258 <xStreamBufferSend+0x6c>",
+      "frontend_encoding_supported": true,
+      "opcode": "d524",
+      "width": 2
+    },
+    {
+      "address": "0x0000320e",
+      "assembly": "adds\tr6, r7, #4",
+      "frontend_encoding_supported": true,
+      "opcode": "1d3e",
+      "width": 2
+    },
+    {
+      "address": "0x00003210",
+      "assembly": "cmp\tr7, r6",
+      "frontend_encoding_supported": true,
+      "opcode": "42b7",
+      "width": 2
+    },
+    {
+      "address": "0x00003212",
+      "assembly": "bcs.n\t3250 <xStreamBufferSend+0x64>",
+      "frontend_encoding_supported": true,
+      "opcode": "d21d",
+      "width": 2
+    },
+    {
+      "address": "0x00003214",
+      "assembly": "cmp\tr3, r6",
+      "frontend_encoding_supported": true,
+      "opcode": "42b3",
+      "width": 2
+    },
+    {
+      "address": "0x00003216",
+      "assembly": "bcs.n\t3260 <xStreamBufferSend+0x74>",
+      "frontend_encoding_supported": true,
+      "opcode": "d223",
+      "width": 2
+    },
+    {
+      "address": "0x00003218",
+      "assembly": "movs\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2300",
+      "width": 2
+    },
+    {
+      "address": "0x0000321a",
+      "assembly": "str\tr3, [sp, #12]",
+      "frontend_encoding_supported": true,
+      "opcode": "9303",
+      "width": 2
+    },
+    {
+      "address": "0x0000321c",
+      "assembly": "movs\tr0, r4",
+      "frontend_encoding_supported": true,
+      "opcode": "0020",
+      "width": 2
+    },
+    {
+      "address": "0x0000321e",
+      "assembly": "bl\t2f20 <xStreamBufferSpacesAvailable>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7ff fe7f",
+      "width": 4
+    },
+    {
+      "address": "0x00003222",
+      "assembly": "movs\tr5, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "0005",
+      "width": 2
+    },
+    {
+      "address": "0x00003224",
+      "assembly": "str\tr6, [sp, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "9600",
+      "width": 2
+    },
+    {
+      "address": "0x00003226",
+      "assembly": "movs\tr3, r5",
+      "frontend_encoding_supported": true,
+      "opcode": "002b",
+      "width": 2
+    },
+    {
+      "address": "0x00003228",
+      "assembly": "movs\tr2, r7",
+      "frontend_encoding_supported": true,
+      "opcode": "003a",
+      "width": 2
+    },
+    {
+      "address": "0x0000322a",
+      "assembly": "mov\tr1, r8",
+      "frontend_encoding_supported": true,
+      "opcode": "4641",
+      "width": 2
+    },
+    {
+      "address": "0x0000322c",
+      "assembly": "movs\tr0, r4",
+      "frontend_encoding_supported": true,
+      "opcode": "0020",
+      "width": 2
+    },
+    {
+      "address": "0x0000322e",
+      "assembly": "bl\t30b8 <prvWriteMessageToBuffer>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7ff ff43",
+      "width": 4
+    },
+    {
+      "address": "0x00003232",
+      "assembly": "subs\tr5, r0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "1e05",
+      "width": 2
+    },
+    {
+      "address": "0x00003234",
+      "assembly": "bne.n\t32c8 <xStreamBufferSend+0xdc>",
+      "frontend_encoding_supported": true,
+      "opcode": "d148",
+      "width": 2
+    },
+    {
+      "address": "0x00003236",
+      "assembly": "movs\tr0, r5",
+      "frontend_encoding_supported": true,
+      "opcode": "0028",
+      "width": 2
+    },
+    {
+      "address": "0x00003238",
+      "assembly": "add\tsp, #24",
+      "frontend_encoding_supported": true,
+      "opcode": "b006",
+      "width": 2
+    },
+    {
+      "address": "0x0000323a",
+      "assembly": "pop\t{r7}",
+      "frontend_encoding_supported": true,
+      "opcode": "bc80",
+      "width": 2
+    },
+    {
+      "address": "0x0000323c",
+      "assembly": "mov\tr8, r7",
+      "frontend_encoding_supported": true,
+      "opcode": "46b8",
+      "width": 2
+    },
+    {
+      "address": "0x0000323e",
+      "assembly": "pop\t{r4, r5, r6, r7, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bdf0",
+      "width": 2
+    },
+    {
+      "address": "0x00003240",
+      "assembly": "ldr\tr0, [pc, #180]\t@ (32f8 <xStreamBufferSend+0x10c>)",
+      "frontend_encoding_supported": true,
+      "opcode": "482d",
+      "width": 2
+    },
+    {
+      "address": "0x00003242",
+      "assembly": "ldr\tr1, [pc, #184]\t@ (32fc <xStreamBufferSend+0x110>)",
+      "frontend_encoding_supported": true,
+      "opcode": "492e",
+      "width": 2
+    },
+    {
+      "address": "0x00003244",
+      "assembly": "bl\t419c <fixture_assert_fail>",
+      "frontend_encoding_supported": true,
+      "opcode": "f000 ffaa",
+      "width": 4
+    },
+    {
+      "address": "0x00003248",
+      "assembly": "ldr\tr0, [pc, #172]\t@ (32f8 <xStreamBufferSend+0x10c>)",
+      "frontend_encoding_supported": true,
+      "opcode": "482b",
+      "width": 2
+    },
+    {
+      "address": "0x0000324a",
+      "assembly": "ldr\tr1, [pc, #180]\t@ (3300 <xStreamBufferSend+0x114>)",
+      "frontend_encoding_supported": true,
+      "opcode": "492d",
+      "width": 2
+    },
+    {
+      "address": "0x0000324c",
+      "assembly": "bl\t419c <fixture_assert_fail>",
+      "frontend_encoding_supported": true,
+      "opcode": "f000 ffa6",
+      "width": 4
+    },
+    {
+      "address": "0x00003250",
+      "assembly": "ldr\tr0, [pc, #164]\t@ (32f8 <xStreamBufferSend+0x10c>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4829",
+      "width": 2
+    },
+    {
+      "address": "0x00003252",
+      "assembly": "ldr\tr1, [pc, #176]\t@ (3304 <xStreamBufferSend+0x118>)",
+      "frontend_encoding_supported": true,
+      "opcode": "492c",
+      "width": 2
+    },
+    {
+      "address": "0x00003254",
+      "assembly": "bl\t419c <fixture_assert_fail>",
+      "frontend_encoding_supported": true,
+      "opcode": "f000 ffa2",
+      "width": 4
+    },
+    {
+      "address": "0x00003258",
+      "assembly": "movs\tr6, r7",
+      "frontend_encoding_supported": true,
+      "opcode": "003e",
+      "width": 2
+    },
+    {
+      "address": "0x0000325a",
+      "assembly": "cmp\tr7, r3",
+      "frontend_encoding_supported": true,
+      "opcode": "429f",
+      "width": 2
+    },
+    {
+      "address": "0x0000325c",
+      "assembly": "bls.n\t3260 <xStreamBufferSend+0x74>",
+      "frontend_encoding_supported": true,
+      "opcode": "d900",
+      "width": 2
+    },
+    {
+      "address": "0x0000325e",
+      "assembly": "movs\tr6, r3",
+      "frontend_encoding_supported": true,
+      "opcode": "001e",
+      "width": 2
+    },
+    {
+      "address": "0x00003260",
+      "assembly": "ldr\tr3, [sp, #12]",
+      "frontend_encoding_supported": true,
+      "opcode": "9b03",
+      "width": 2
+    },
+    {
+      "address": "0x00003262",
+      "assembly": "cmp\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2b00",
+      "width": 2
+    },
+    {
+      "address": "0x00003264",
+      "assembly": "beq.n\t321c <xStreamBufferSend+0x30>",
+      "frontend_encoding_supported": true,
+      "opcode": "d0da",
+      "width": 2
+    },
+    {
+      "address": "0x00003266",
+      "assembly": "add\tr0, sp, #16",
+      "frontend_encoding_supported": true,
+      "opcode": "a804",
+      "width": 2
+    },
+    {
+      "address": "0x00003268",
+      "assembly": "bl\t8d4 <vTaskSetTimeOutState>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7fd fb34",
+      "width": 4
+    },
+    {
+      "address": "0x0000326c",
+      "assembly": "bl\t3e68 <vPortEnterCritical>",
+      "frontend_encoding_supported": true,
+      "opcode": "f000 fdfc",
+      "width": 4
+    },
+    {
+      "address": "0x00003270",
+      "assembly": "movs\tr0, r4",
+      "frontend_encoding_supported": true,
+      "opcode": "0020",
+      "width": 2
+    },
+    {
+      "address": "0x00003272",
+      "assembly": "bl\t2f20 <xStreamBufferSpacesAvailable>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7ff fe55",
+      "width": 4
+    },
+    {
+      "address": "0x00003276",
+      "assembly": "movs\tr5, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "0005",
+      "width": 2
+    },
+    {
+      "address": "0x00003278",
+      "assembly": "cmp\tr6, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "4286",
+      "width": 2
+    },
+    {
+      "address": "0x0000327a",
+      "assembly": "bls.n\t32be <xStreamBufferSend+0xd2>",
+      "frontend_encoding_supported": true,
+      "opcode": "d920",
+      "width": 2
+    },
+    {
+      "address": "0x0000327c",
+      "assembly": "ldr\tr1, [r4, #32]",
+      "frontend_encoding_supported": true,
+      "opcode": "6a21",
+      "width": 2
+    },
+    {
+      "address": "0x0000327e",
+      "assembly": "movs\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2000",
+      "width": 2
+    },
+    {
+      "address": "0x00003280",
+      "assembly": "bl\t18ec <xTaskGenericNotifyStateClear>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7fe fb34",
+      "width": 4
+    },
+    {
+      "address": "0x00003284",
+      "assembly": "ldr\tr3, [r4, #20]",
+      "frontend_encoding_supported": true,
+      "opcode": "6963",
+      "width": 2
+    },
+    {
+      "address": "0x00003286",
+      "assembly": "cmp\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2b00",
+      "width": 2
+    },
+    {
+      "address": "0x00003288",
+      "assembly": "bne.n\t32b6 <xStreamBufferSend+0xca>",
+      "frontend_encoding_supported": true,
+      "opcode": "d115",
+      "width": 2
+    },
+    {
+      "address": "0x0000328a",
+      "assembly": "bl\t12dc <xTaskGetCurrentTaskHandle>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7fe f827",
+      "width": 4
+    },
+    {
+      "address": "0x0000328e",
+      "assembly": "str\tr0, [r4, #20]",
+      "frontend_encoding_supported": true,
+      "opcode": "6160",
+      "width": 2
+    },
+    {
+      "address": "0x00003290",
+      "assembly": "bl\t3e80 <vPortExitCritical>",
+      "frontend_encoding_supported": true,
+      "opcode": "f000 fdf6",
+      "width": 4
+    },
+    {
+      "address": "0x00003294",
+      "assembly": "ldr\tr0, [r4, #32]",
+      "frontend_encoding_supported": true,
+      "opcode": "6a20",
+      "width": 2
+    },
+    {
+      "address": "0x00003296",
+      "assembly": "ldr\tr3, [sp, #12]",
+      "frontend_encoding_supported": true,
+      "opcode": "9b03",
+      "width": 2
+    },
+    {
+      "address": "0x00003298",
+      "assembly": "str\tr3, [sp, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "9300",
+      "width": 2
+    },
+    {
+      "address": "0x0000329a",
+      "assembly": "movs\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2300",
+      "width": 2
+    },
+    {
+      "address": "0x0000329c",
+      "assembly": "movs\tr2, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2200",
+      "width": 2
+    },
+    {
+      "address": "0x0000329e",
+      "assembly": "movs\tr1, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2100",
+      "width": 2
+    },
+    {
+      "address": "0x000032a0",
+      "assembly": "bl\t1c90 <xTaskGenericNotifyWait>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7fe fcf6",
+      "width": 4
+    },
+    {
+      "address": "0x000032a4",
+      "assembly": "movs\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2300",
+      "width": 2
+    },
+    {
+      "address": "0x000032a6",
+      "assembly": "str\tr3, [r4, #20]",
+      "frontend_encoding_supported": true,
+      "opcode": "6163",
+      "width": 2
+    },
+    {
+      "address": "0x000032a8",
+      "assembly": "add\tr1, sp, #12",
+      "frontend_encoding_supported": true,
+      "opcode": "a903",
+      "width": 2
+    },
+    {
+      "address": "0x000032aa",
+      "assembly": "add\tr0, sp, #16",
+      "frontend_encoding_supported": true,
+      "opcode": "a804",
+      "width": 2
+    },
+    {
+      "address": "0x000032ac",
+      "assembly": "bl\t920 <xTaskCheckForTimeOut>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7fd fb38",
+      "width": 4
+    },
+    {
+      "address": "0x000032b0",
+      "assembly": "cmp\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2800",
+      "width": 2
+    },
+    {
+      "address": "0x000032b2",
+      "assembly": "beq.n\t326c <xStreamBufferSend+0x80>",
+      "frontend_encoding_supported": true,
+      "opcode": "d0db",
+      "width": 2
+    },
+    {
+      "address": "0x000032b4",
+      "assembly": "b.n\t32c2 <xStreamBufferSend+0xd6>",
+      "frontend_encoding_supported": true,
+      "opcode": "e005",
+      "width": 2
+    },
+    {
+      "address": "0x000032b6",
+      "assembly": "ldr\tr0, [pc, #64]\t@ (32f8 <xStreamBufferSend+0x10c>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4810",
+      "width": 2
+    },
+    {
+      "address": "0x000032b8",
+      "assembly": "ldr\tr1, [pc, #76]\t@ (3308 <xStreamBufferSend+0x11c>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4913",
+      "width": 2
+    },
+    {
+      "address": "0x000032ba",
+      "assembly": "bl\t419c <fixture_assert_fail>",
+      "frontend_encoding_supported": true,
+      "opcode": "f000 ff6f",
+      "width": 4
+    },
+    {
+      "address": "0x000032be",
+      "assembly": "bl\t3e80 <vPortExitCritical>",
+      "frontend_encoding_supported": true,
+      "opcode": "f000 fddf",
+      "width": 4
+    },
+    {
+      "address": "0x000032c2",
+      "assembly": "cmp\tr5, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2d00",
+      "width": 2
+    },
+    {
+      "address": "0x000032c4",
+      "assembly": "bne.n\t3224 <xStreamBufferSend+0x38>",
+      "frontend_encoding_supported": true,
+      "opcode": "d1ae",
+      "width": 2
+    },
+    {
+      "address": "0x000032c6",
+      "assembly": "b.n\t321c <xStreamBufferSend+0x30>",
+      "frontend_encoding_supported": true,
+      "opcode": "e7a9",
+      "width": 2
+    },
+    {
+      "address": "0x000032c8",
+      "assembly": "movs\tr0, r4",
+      "frontend_encoding_supported": true,
+      "opcode": "0020",
+      "width": 2
+    },
+    {
+      "address": "0x000032ca",
+      "assembly": "bl\t31bc <prvBytesInBuffer>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7ff ff77",
+      "width": 4
+    },
+    {
+      "address": "0x000032ce",
+      "assembly": "ldr\tr3, [r4, #12]",
+      "frontend_encoding_supported": true,
+      "opcode": "68e3",
+      "width": 2
+    },
+    {
+      "address": "0x000032d0",
+      "assembly": "cmp\tr0, r3",
+      "frontend_encoding_supported": true,
+      "opcode": "4298",
+      "width": 2
+    },
+    {
+      "address": "0x000032d2",
+      "assembly": "bcc.n\t3236 <xStreamBufferSend+0x4a>",
+      "frontend_encoding_supported": true,
+      "opcode": "d3b0",
+      "width": 2
+    },
+    {
+      "address": "0x000032d4",
+      "assembly": "bl\t574 <vTaskSuspendAll>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7fd f94e",
+      "width": 4
+    },
+    {
+      "address": "0x000032d8",
+      "assembly": "ldr\tr3, [r4, #16]",
+      "frontend_encoding_supported": true,
+      "opcode": "6923",
+      "width": 2
+    },
+    {
+      "address": "0x000032da",
+      "assembly": "cmp\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2b00",
+      "width": 2
+    },
+    {
+      "address": "0x000032dc",
+      "assembly": "beq.n\t32f0 <xStreamBufferSend+0x104>",
+      "frontend_encoding_supported": true,
+      "opcode": "d008",
+      "width": 2
+    },
+    {
+      "address": "0x000032de",
+      "assembly": "ldr\tr0, [r4, #16]",
+      "frontend_encoding_supported": true,
+      "opcode": "6920",
+      "width": 2
+    },
+    {
+      "address": "0x000032e0",
+      "assembly": "ldr\tr1, [r4, #32]",
+      "frontend_encoding_supported": true,
+      "opcode": "6a21",
+      "width": 2
+    },
+    {
+      "address": "0x000032e2",
+      "assembly": "movs\tr6, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2600",
+      "width": 2
+    },
+    {
+      "address": "0x000032e4",
+      "assembly": "str\tr6, [sp, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "9600",
+      "width": 2
+    },
+    {
+      "address": "0x000032e6",
+      "assembly": "movs\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2300",
+      "width": 2
+    },
+    {
+      "address": "0x000032e8",
+      "assembly": "movs\tr2, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2200",
+      "width": 2
+    },
+    {
+      "address": "0x000032ea",
+      "assembly": "bl\t1550 <xTaskGenericNotify>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7fe f931",
+      "width": 4
+    },
+    {
+      "address": "0x000032ee",
+      "assembly": "str\tr6, [r4, #16]",
+      "frontend_encoding_supported": true,
+      "opcode": "6126",
+      "width": 2
+    },
+    {
+      "address": "0x000032f0",
+      "assembly": "bl\tfdc <xTaskResumeAll>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7fd fe74",
+      "width": 4
+    },
+    {
+      "address": "0x000032f4",
+      "assembly": "b.n\t3236 <xStreamBufferSend+0x4a>",
+      "frontend_encoding_supported": true,
+      "opcode": "e79f",
+      "width": 2
+    },
+    {
+      "address": "0x000032f6",
+      "assembly": "nop\t\t\t@ (mov r8, r8)",
+      "frontend_encoding_supported": true,
+      "opcode": "46c0",
+      "width": 2
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x000032f8",
+      "bytes": "38450000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 45,
+      "instruction": "0x00003240",
+      "thumb_function_pointer": [],
+      "value": "0x00004538"
+    },
+    {
+      "address": "0x000032fc",
+      "bytes": "35030000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 46,
+      "instruction": "0x00003242",
+      "thumb_function_pointer": [
+        "vTaskPrioritySet"
+      ],
+      "value": "0x00000335"
+    },
+    {
+      "address": "0x000032f8",
+      "bytes": "38450000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 43,
+      "instruction": "0x00003248",
+      "thumb_function_pointer": [],
+      "value": "0x00004538"
+    },
+    {
+      "address": "0x00003300",
+      "bytes": "36030000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 45,
+      "instruction": "0x0000324a",
+      "thumb_function_pointer": [],
+      "value": "0x00000336"
+    },
+    {
+      "address": "0x000032f8",
+      "bytes": "38450000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 41,
+      "instruction": "0x00003250",
+      "thumb_function_pointer": [],
+      "value": "0x00004538"
+    },
+    {
+      "address": "0x00003304",
+      "bytes": "45030000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 44,
+      "instruction": "0x00003252",
+      "thumb_function_pointer": [
+        "vTaskPrioritySet"
+      ],
+      "value": "0x00000345"
+    },
+    {
+      "address": "0x000032f8",
+      "bytes": "38450000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 16,
+      "instruction": "0x000032b6",
+      "thumb_function_pointer": [],
+      "value": "0x00004538"
+    },
+    {
+      "address": "0x00003308",
+      "bytes": "75030000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 19,
+      "instruction": "0x000032b8",
+      "thumb_function_pointer": [
+        "vTaskPrioritySet"
+      ],
+      "value": "0x00000375"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x000032f8",
+      "halfword": "3845"
+    },
+    {
+      "address": "0x000032fa",
+      "halfword": "0000"
+    },
+    {
+      "address": "0x000032fc",
+      "halfword": "3503"
+    },
+    {
+      "address": "0x000032fe",
+      "halfword": "0000"
+    },
+    {
+      "address": "0x00003300",
+      "halfword": "3603"
+    },
+    {
+      "address": "0x00003302",
+      "halfword": "0000"
+    },
+    {
+      "address": "0x00003304",
+      "halfword": "4503"
+    },
+    {
+      "address": "0x00003306",
+      "halfword": "0000"
+    },
+    {
+      "address": "0x00003308",
+      "halfword": "7503"
+    },
+    {
+      "address": "0x0000330a",
+      "halfword": "0000"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x0000323e",
+      "assembly": "pop\t{r4, r5, r6, r7, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bdf0",
+      "width": 2
+    }
+  ],
+  "row": "r38",
+  "size": 288,
+  "source": [
+    {
+      "path": "stream_buffer.c",
+      "sha256": "f2041618919a475c1438309013149105e5145acac4cdc57f79ee1a6dbe3b98a4"
+    }
+  ],
+  "stderr": "",
+  "symbol": "xStreamBufferSend",
+  "symbol_record": {
+    "address": "0x000031ec",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferSend",
+    "section": "2",
+    "size": 288,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x000031ed"
+  },
+  "thumb_symbol": "0x000031ed",
+  "unsupported_instructions": []
+}

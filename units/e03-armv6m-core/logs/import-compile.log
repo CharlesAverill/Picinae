@@ -1,0 +1,36 @@
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+make -f Makefile.coq Picinae_simplifier_v1_1.vo
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+ROCQ compile Picinae_simplifier_v1_1.v
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+File "./Picinae_armv6m.v", line 11, characters 15-21:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Picinae_armv6m.v", line 12, characters 15-21:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require ZArith" or the deprecated "From Coq Require ZArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Picinae_armv6m.v", line 13, characters 15-19:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require List" or the deprecated "From Coq Require List"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Picinae_armv6m.v", line 14, characters 15-31:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require Program.Equality"
+or the deprecated "From Coq Require Program.Equality"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Picinae_armv6m.v", line 15, characters 15-36:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require Structures.Equalities"
+or the deprecated "From Coq Require Structures.Equalities"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+EXIT=0

@@ -1,0 +1,316 @@
+{
+  "blocked_helpers": [
+    "fixture_assert_fail",
+    "vPortEnterCritical",
+    "vPortExitCritical"
+  ],
+  "bytes_sha256": "94b6828efe0dd2d6d5cdc34ffc8801af8a2c6c53c7f3e644c031f29f3801fd8a",
+  "closure_prerequisites": [
+    {
+      "callee": "vPortEnterCritical",
+      "caller": "uxTaskPriorityGet",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00000288",
+      "unsupported_instructions": [
+        {
+          "address": "0x00003e68",
+          "assembly": "cpsid\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b672",
+          "width": 2
+        },
+        {
+          "address": "0x00003e72",
+          "assembly": "dsb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f4f",
+          "width": 4
+        },
+        {
+          "address": "0x00003e76",
+          "assembly": "isb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f6f",
+          "width": 4
+        }
+      ]
+    },
+    {
+      "callee": "vPortExitCritical",
+      "caller": "uxTaskPriorityGet",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00000292",
+      "unsupported_instructions": [
+        {
+          "address": "0x00003e98",
+          "assembly": "cpsie\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b662",
+          "width": 2
+        }
+      ]
+    },
+    {
+      "callee": "fixture_assert_fail",
+      "caller": "vPortExitCritical",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00003ea0",
+      "unsupported_instructions": [
+        {
+          "address": "0x0000419c",
+          "assembly": "cpsid\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b672",
+          "width": 2
+        },
+        {
+          "address": "0x000041a6",
+          "assembly": "wfi",
+          "frontend_encoding_supported": false,
+          "opcode": "bf30",
+          "width": 2
+        }
+      ]
+    }
+  ],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "uxTaskPriorityGet_armv6m",
+    "uxTaskPriorityGet"
+  ],
+  "critical_isr_boundaries": [
+    {
+      "kind": "call",
+      "owners": [
+        "vPortEnterCritical"
+      ],
+      "return_site": "0x0000028c",
+      "site": "0x00000288",
+      "target": "0x00003e68",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vPortExitCritical"
+      ],
+      "return_site": "0x00000296",
+      "site": "0x00000292",
+      "target": "0x00003e80",
+      "target_is_instruction_start": null,
+      "within_function": false
+    }
+  ],
+  "edges": [
+    {
+      "kind": "call",
+      "owners": [
+        "vPortEnterCritical"
+      ],
+      "return_site": "0x0000028c",
+      "site": "0x00000288",
+      "target": "0x00003e68",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x00000290",
+      "kind": "branch",
+      "owners": [
+        "uxTaskPriorityGet"
+      ],
+      "site": "0x0000028e",
+      "target": "0x0000029a",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vPortExitCritical"
+      ],
+      "return_site": "0x00000296",
+      "site": "0x00000292",
+      "target": "0x00003e80",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "assembly": "pop\t{r4, pc}",
+      "kind": "return-candidate",
+      "site": "0x00000298",
+      "target": "runtime register/stack; Thumb bit required"
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "uxTaskPriorityGet"
+      ],
+      "site": "0x0000029e",
+      "target": "0x00000290",
+      "target_is_instruction_start": true,
+      "within_function": true
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x000002a4",
+  "entry": "0x00000284",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "333b0b3770506d9b92a7693920355058842796167524d30d53b5c91506f85144",
+  "instructions": [
+    {
+      "address": "0x00000284",
+      "assembly": "push\t{r4, lr}",
+      "frontend_encoding_supported": true,
+      "opcode": "b510",
+      "width": 2
+    },
+    {
+      "address": "0x00000286",
+      "assembly": "movs\tr4, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "0004",
+      "width": 2
+    },
+    {
+      "address": "0x00000288",
+      "assembly": "bl\t3e68 <vPortEnterCritical>",
+      "frontend_encoding_supported": true,
+      "opcode": "f003 fdee",
+      "width": 4
+    },
+    {
+      "address": "0x0000028c",
+      "assembly": "cmp\tr4, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2c00",
+      "width": 2
+    },
+    {
+      "address": "0x0000028e",
+      "assembly": "beq.n\t29a <uxTaskPriorityGet+0x16>",
+      "frontend_encoding_supported": true,
+      "opcode": "d004",
+      "width": 2
+    },
+    {
+      "address": "0x00000290",
+      "assembly": "ldr\tr4, [r4, #44]\t@ 0x2c",
+      "frontend_encoding_supported": true,
+      "opcode": "6ae4",
+      "width": 2
+    },
+    {
+      "address": "0x00000292",
+      "assembly": "bl\t3e80 <vPortExitCritical>",
+      "frontend_encoding_supported": true,
+      "opcode": "f003 fdf5",
+      "width": 4
+    },
+    {
+      "address": "0x00000296",
+      "assembly": "movs\tr0, r4",
+      "frontend_encoding_supported": true,
+      "opcode": "0020",
+      "width": 2
+    },
+    {
+      "address": "0x00000298",
+      "assembly": "pop\t{r4, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bd10",
+      "width": 2
+    },
+    {
+      "address": "0x0000029a",
+      "assembly": "ldr\tr3, [pc, #4]\t@ (2a0 <uxTaskPriorityGet+0x1c>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4b01",
+      "width": 2
+    },
+    {
+      "address": "0x0000029c",
+      "assembly": "ldr\tr4, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "681c",
+      "width": 2
+    },
+    {
+      "address": "0x0000029e",
+      "assembly": "b.n\t290 <uxTaskPriorityGet+0xc>",
+      "frontend_encoding_supported": true,
+      "opcode": "e7f7",
+      "width": 2
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x000002a0",
+      "bytes": "08010020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x20000108",
+          "name": "pxCurrentTCB",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 1,
+      "instruction": "0x0000029a",
+      "thumb_function_pointer": [],
+      "value": "0x20000108"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x000002a0",
+      "halfword": "0801"
+    },
+    {
+      "address": "0x000002a2",
+      "halfword": "0020"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x00000298",
+      "assembly": "pop\t{r4, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bd10",
+      "width": 2
+    }
+  ],
+  "row": "r12",
+  "size": 32,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "uxTaskPriorityGet",
+  "symbol_record": {
+    "address": "0x00000284",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxTaskPriorityGet",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000285"
+  },
+  "thumb_symbol": "0x00000285",
+  "unsupported_instructions": []
+}

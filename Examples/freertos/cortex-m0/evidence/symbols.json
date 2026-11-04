@@ -1,0 +1,3050 @@
+[
+  {
+    "address": "0x00004110",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "Default_Handler",
+    "section": "2",
+    "size": 4,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x00004111"
+  },
+  {
+    "address": "0x00004114",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "timer_callback",
+    "section": "2",
+    "size": 20,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x00004115"
+  },
+  {
+    "address": "0x20000abc",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "fixture_events",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000abc"
+  },
+  {
+    "address": "0x00004128",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "worker",
+    "section": "2",
+    "size": 116,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x00004129"
+  },
+  {
+    "address": "0x20000ac0",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "fixture_mutex",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000ac0"
+  },
+  {
+    "address": "0x20000ac4",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "fixture_queue",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000ac4"
+  },
+  {
+    "address": "0x20000ab8",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "fixture_stream",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000ab8"
+  },
+  {
+    "address": "0x20000a64",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "idle_tcb.3",
+    "section": "4",
+    "size": 84,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000a64"
+  },
+  {
+    "address": "0x20000664",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "idle_stack.2",
+    "section": "4",
+    "size": 1024,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000664"
+  },
+  {
+    "address": "0x20000610",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "timer_tcb.1",
+    "section": "4",
+    "size": 84,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000610"
+  },
+  {
+    "address": "0x20000210",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "timer_stack.0",
+    "section": "4",
+    "size": 1024,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000210"
+  },
+  {
+    "address": "0x000041e4",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "fixture_main",
+    "section": "2",
+    "size": 288,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x000041e5"
+  },
+  {
+    "address": "0x20000bc8",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "queue_storage",
+    "section": "4",
+    "size": 72,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000bc8"
+  },
+  {
+    "address": "0x20000b70",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "queue_bytes",
+    "section": "4",
+    "size": 16,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000b70"
+  },
+  {
+    "address": "0x20000b80",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "mutex_storage",
+    "section": "4",
+    "size": 72,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000b80"
+  },
+  {
+    "address": "0x20000b58",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "event_storage",
+    "section": "4",
+    "size": 24,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000b58"
+  },
+  {
+    "address": "0x20000af0",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "stream_bytes",
+    "section": "4",
+    "size": 65,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000af0"
+  },
+  {
+    "address": "0x20000b34",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "stream_storage",
+    "section": "4",
+    "size": 36,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000b34"
+  },
+  {
+    "address": "0x20000ac8",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "timer_storage",
+    "section": "4",
+    "size": 40,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000ac8"
+  },
+  {
+    "address": "0x20001010",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "worker_tcb",
+    "section": "4",
+    "size": 84,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20001010"
+  },
+  {
+    "address": "0x20000c10",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "worker_stack",
+    "section": "4",
+    "size": 1024,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20000c10"
+  },
+  {
+    "address": "0x000000c4",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvInitialiseNewTask",
+    "section": "2",
+    "size": 152,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000000c5"
+  },
+  {
+    "address": "0x0000015c",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvCreateStaticTask",
+    "section": "2",
+    "size": 132,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x0000015d"
+  },
+  {
+    "address": "0x20000078",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "pxDelayedTaskList",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000078"
+  },
+  {
+    "address": "0x20000074",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "pxOverflowDelayedTaskList",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000074"
+  },
+  {
+    "address": "0x20000060",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xPendingReadyList",
+    "section": "4",
+    "size": 20,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000060"
+  },
+  {
+    "address": "0x20000034",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xSuspendedTaskList",
+    "section": "4",
+    "size": 20,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000034"
+  },
+  {
+    "address": "0x2000004c",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xTasksWaitingTermination",
+    "section": "4",
+    "size": 20,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x2000004c"
+  },
+  {
+    "address": "0x200000a4",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "pxReadyTasksLists",
+    "section": "4",
+    "size": 100,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x200000a4"
+  },
+  {
+    "address": "0x20000028",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "uxTopReadyPriority",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000028"
+  },
+  {
+    "address": "0x000003e4",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvTaskIsTaskSuspended",
+    "section": "2",
+    "size": 72,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000003e5"
+  },
+  {
+    "address": "0x20000008",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "uxSchedulerSuspended",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000008"
+  },
+  {
+    "address": "0x2000001c",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xYieldPendings",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x2000001c"
+  },
+  {
+    "address": "0x2000002c",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xTickCount",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x2000002c"
+  },
+  {
+    "address": "0x20000030",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "uxCurrentNumberOfTasks",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000030"
+  },
+  {
+    "address": "0x000005d0",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvSearchForNameWithinSingleList",
+    "section": "2",
+    "size": 68,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000005d1"
+  },
+  {
+    "address": "0x20000018",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xNumOfOverflows",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000018"
+  },
+  {
+    "address": "0x000009cc",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvInitialiseTaskLists",
+    "section": "2",
+    "size": 96,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000009cd"
+  },
+  {
+    "address": "0x20000090",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xDelayedTaskList1",
+    "section": "4",
+    "size": 20,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000090"
+  },
+  {
+    "address": "0x2000007c",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xDelayedTaskList2",
+    "section": "4",
+    "size": 20,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x2000007c"
+  },
+  {
+    "address": "0x00000a2c",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvAddNewTaskToReadyList",
+    "section": "2",
+    "size": 192,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000a2d"
+  },
+  {
+    "address": "0x20000024",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xSchedulerRunning",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000024"
+  },
+  {
+    "address": "0x20000014",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "uxTaskNumber",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000014"
+  },
+  {
+    "address": "0x00000b18",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvCreateIdleTasks",
+    "section": "2",
+    "size": 84,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000b19"
+  },
+  {
+    "address": "0x00000c08",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvIdleTask",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000c09"
+  },
+  {
+    "address": "0x2000000c",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xIdleTaskHandles",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x2000000c"
+  },
+  {
+    "address": "0x000045ec",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "uxTopUsedPriority",
+    "section": "2",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000045ec"
+  },
+  {
+    "address": "0x20000010",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xNextTaskUnblockTime",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000010"
+  },
+  {
+    "address": "0x00000bc4",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvCheckTasksWaitingTermination",
+    "section": "2",
+    "size": 68,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000bc5"
+  },
+  {
+    "address": "0x20000048",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "uxDeletedTasksWaitingCleanUp",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000048"
+  },
+  {
+    "address": "0x00000c20",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvTaskCheckFreeStackSpace",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000c21"
+  },
+  {
+    "address": "0x00000c68",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvDeleteTCB",
+    "section": "2",
+    "size": 2,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000c69"
+  },
+  {
+    "address": "0x00000c6c",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvResetNextTaskUnblockTime",
+    "section": "2",
+    "size": 44,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000c6d"
+  },
+  {
+    "address": "0x20000020",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xPendedTicks",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000020"
+  },
+  {
+    "address": "0x00001970",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvAddCurrentTaskToDelayedList",
+    "section": "2",
+    "size": 196,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001971"
+  },
+  {
+    "address": "0x00001e98",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvInitialiseNewQueue",
+    "section": "2",
+    "size": 26,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00001e99"
+  },
+  {
+    "address": "0x000020c8",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvGetDisinheritPriorityAfterTimeout",
+    "section": "2",
+    "size": 18,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x000020c9"
+  },
+  {
+    "address": "0x000020da",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvCopyDataToQueue",
+    "section": "2",
+    "size": 114,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x000020db"
+  },
+  {
+    "address": "0x0000222c",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvCopyDataFromQueue",
+    "section": "2",
+    "size": 36,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x0000222d"
+  },
+  {
+    "address": "0x0000237c",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvUnlockQueue",
+    "section": "2",
+    "size": 126,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x0000237d"
+  },
+  {
+    "address": "0x000023fa",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvIsQueueEmpty",
+    "section": "2",
+    "size": 20,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x000023fb"
+  },
+  {
+    "address": "0x00002860",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvIsQueueFull",
+    "section": "2",
+    "size": 26,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002861"
+  },
+  {
+    "address": "0x000029d4",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvInitialiseMutex",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x000029d5"
+  },
+  {
+    "address": "0x00002d60",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvTestWaitCondition",
+    "section": "2",
+    "size": 22,
+    "source": [
+      "event_groups.c"
+    ],
+    "value": "0x00002d61"
+  },
+  {
+    "address": "0x0000303c",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvWriteBytesToBuffer",
+    "section": "2",
+    "size": 124,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x0000303d"
+  },
+  {
+    "address": "0x000030b8",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvWriteMessageToBuffer",
+    "section": "2",
+    "size": 76,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x000030b9"
+  },
+  {
+    "address": "0x00003104",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvReadBytesFromBuffer",
+    "section": "2",
+    "size": 108,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00003105"
+  },
+  {
+    "address": "0x00003170",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvReadMessageFromBuffer",
+    "section": "2",
+    "size": 76,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00003171"
+  },
+  {
+    "address": "0x000031bc",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvBytesInBuffer",
+    "section": "2",
+    "size": 18,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x000031bd"
+  },
+  {
+    "address": "0x00003550",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvInitialiseNewStreamBuffer",
+    "section": "2",
+    "size": 80,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00003551"
+  },
+  {
+    "address": "0x200001dc",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xTimerQueue",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x200001dc"
+  },
+  {
+    "address": "0x200001d8",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xTimerTaskHandle",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x200001d8"
+  },
+  {
+    "address": "0x0000390c",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvGetNextExpireTime",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x0000390d"
+  },
+  {
+    "address": "0x200001e4",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "pxCurrentTimerList",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x200001e4"
+  },
+  {
+    "address": "0x0000392c",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvInsertTimerInActiveList",
+    "section": "2",
+    "size": 72,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x0000392d"
+  },
+  {
+    "address": "0x200001e0",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "pxOverflowTimerList",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x200001e0"
+  },
+  {
+    "address": "0x00003974",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvReloadTimer",
+    "section": "2",
+    "size": 40,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003975"
+  },
+  {
+    "address": "0x0000399c",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvProcessExpiredTimer",
+    "section": "2",
+    "size": 60,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x0000399d"
+  },
+  {
+    "address": "0x000039d8",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvSwitchTimerLists",
+    "section": "2",
+    "size": 56,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x000039d9"
+  },
+  {
+    "address": "0x00003a10",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvSampleTimeNow",
+    "section": "2",
+    "size": 44,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003a11"
+  },
+  {
+    "address": "0x200001d4",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xLastTime.2",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x200001d4"
+  },
+  {
+    "address": "0x00003a3c",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvProcessTimerOrBlockTask",
+    "section": "2",
+    "size": 104,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003a3d"
+  },
+  {
+    "address": "0x00003aa4",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvProcessReceivedCommands",
+    "section": "2",
+    "size": 240,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003aa5"
+  },
+  {
+    "address": "0x00003b94",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvTimerTask",
+    "section": "2",
+    "size": 22,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003b95"
+  },
+  {
+    "address": "0x00003bac",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvCheckForValidListAndQueue",
+    "section": "2",
+    "size": 100,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003bad"
+  },
+  {
+    "address": "0x200001fc",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xActiveTimerList1",
+    "section": "4",
+    "size": 20,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x200001fc"
+  },
+  {
+    "address": "0x200001e8",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xActiveTimerList2",
+    "section": "4",
+    "size": 20,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x200001e8"
+  },
+  {
+    "address": "0x2000010c",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "xStaticTimerQueue.0",
+    "section": "4",
+    "size": 72,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x2000010c"
+  },
+  {
+    "address": "0x20000154",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "ucStaticTimerQueueStorage.1",
+    "section": "4",
+    "size": 128,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x20000154"
+  },
+  {
+    "address": "0x00003c74",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvInitialiseNewTimer",
+    "section": "2",
+    "size": 76,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003c75"
+  },
+  {
+    "address": "0x00003df8",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvTaskExitError",
+    "section": "2",
+    "size": 48,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x00003df9"
+  },
+  {
+    "address": "0x20000000",
+    "binding": "LOCAL",
+    "kind": "OBJECT",
+    "name": "ulCriticalNesting",
+    "section": "3",
+    "size": 4,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x20000000"
+  },
+  {
+    "address": "0x00001b34",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskPlaceOnUnorderedEventList",
+    "section": "2",
+    "size": 108,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001b35"
+  },
+  {
+    "address": "0x00002b34",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xEventGroupGetBitsFromISR",
+    "section": "2",
+    "size": 18,
+    "source": [
+      "event_groups.c"
+    ],
+    "value": "0x00002b35"
+  },
+  {
+    "address": "0x00003e80",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vPortExitCritical",
+    "section": "2",
+    "size": 48,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x00003e81"
+  },
+  {
+    "address": "0x00000284",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxTaskPriorityGet",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000285"
+  },
+  {
+    "address": "0x00004010",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vRestoreContextOfFirstTask",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "portable/GCC/ARM_CM0/portasm.c"
+    ],
+    "value": "0x00004011"
+  },
+  {
+    "address": "0x00001228",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskAbortDelay",
+    "section": "2",
+    "size": 180,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001229"
+  },
+  {
+    "address": "0x00002a70",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vQueueWaitForMessageRestricted",
+    "section": "2",
+    "size": 80,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002a71"
+  },
+  {
+    "address": "0x0000339c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferReceive",
+    "section": "2",
+    "size": 228,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x0000339d"
+  },
+  {
+    "address": "0x00001a34",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskDelayUntil",
+    "section": "2",
+    "size": 148,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001a35"
+  },
+  {
+    "address": "0x20001068",
+    "binding": "GLOBAL",
+    "kind": "OBJECT",
+    "name": "fixture_assert_line",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20001068"
+  },
+  {
+    "address": "0x00003eb0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "SysTick_Handler",
+    "section": "2",
+    "size": 36,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x00003eb1"
+  },
+  {
+    "address": "0x00002c00",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xEventGroupSync",
+    "section": "2",
+    "size": 216,
+    "source": [
+      "event_groups.c"
+    ],
+    "value": "0x00002c01"
+  },
+  {
+    "address": "0x00000000",
+    "binding": "GLOBAL",
+    "kind": "OBJECT",
+    "name": "fixture_vectors",
+    "section": "1",
+    "size": 64,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x00000000"
+  },
+  {
+    "address": "0x00001934",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "ulTaskGenericNotifyValueClear",
+    "section": "2",
+    "size": 60,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001935"
+  },
+  {
+    "address": "0x000040a0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "PendSV_Handler",
+    "section": "2",
+    "size": 64,
+    "source": [
+      "portable/GCC/ARM_CM0/portasm.c"
+    ],
+    "value": "0x000040a1"
+  },
+  {
+    "address": "0x0000214c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueGenericSendFromISR",
+    "section": "2",
+    "size": 224,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x0000214d"
+  },
+  {
+    "address": "0x000005a8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "pcTaskGetName",
+    "section": "2",
+    "size": 40,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000005a9"
+  },
+  {
+    "address": "0x20001064",
+    "binding": "GLOBAL",
+    "kind": "OBJECT",
+    "name": "fixture_assert_file",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x20001064"
+  },
+  {
+    "address": "0x00002f20",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferSpacesAvailable",
+    "section": "2",
+    "size": 52,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00002f21"
+  },
+  {
+    "address": "0x0000363c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferReset",
+    "section": "2",
+    "size": 80,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x0000363d"
+  },
+  {
+    "address": "0x000036f8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vStreamBufferSetStreamBufferNotificationIndex",
+    "section": "2",
+    "size": 80,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x000036f9"
+  },
+  {
+    "address": "0x00002a0c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueGiveMutexRecursive",
+    "section": "2",
+    "size": 64,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002a0d"
+  },
+  {
+    "address": "0x20000108",
+    "binding": "GLOBAL",
+    "kind": "OBJECT",
+    "name": "pxCurrentTCB",
+    "section": "4",
+    "size": 4,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x20000108"
+  },
+  {
+    "address": "0x00002e78",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferGetStaticBuffers",
+    "section": "2",
+    "size": 72,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00002e79"
+  },
+  {
+    "address": "0x0000330c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferSendFromISR",
+    "section": "2",
+    "size": 144,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x0000330d"
+  },
+  {
+    "address": "0x00004090",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "ulSetInterruptMask",
+    "section": "2",
+    "size": 8,
+    "source": [
+      "portable/GCC/ARM_CM0/portasm.c"
+    ],
+    "value": "0x00004091"
+  },
+  {
+    "address": "0x00000304",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskPrioritySet",
+    "section": "2",
+    "size": 224,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000305"
+  },
+  {
+    "address": "0x00000908",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskInternalSetTimeOutState",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000909"
+  },
+  {
+    "address": "0x00002ac0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xEventGroupCreateStatic",
+    "section": "2",
+    "size": 52,
+    "source": [
+      "event_groups.c"
+    ],
+    "value": "0x00002ac1"
+  },
+  {
+    "address": "0x00002d78",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xEventGroupWaitBits",
+    "section": "2",
+    "size": 256,
+    "source": [
+      "event_groups.c"
+    ],
+    "value": "0x00002d79"
+  },
+  {
+    "address": "0x00004080",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vStartFirstTask",
+    "section": "2",
+    "size": 16,
+    "source": [
+      "portable/GCC/ARM_CM0/portasm.c"
+    ],
+    "value": "0x00004081"
+  },
+  {
+    "address": "0x00003f98",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xPortStartScheduler",
+    "section": "2",
+    "size": 68,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x00003f99"
+  },
+  {
+    "address": "0x00000d4c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskEndScheduler",
+    "section": "2",
+    "size": 44,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000d4d"
+  },
+  {
+    "address": "0x00004410",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "memcpy",
+    "section": "2",
+    "size": 140,
+    "source": [
+      "toolchain runtime (see firmware.map)"
+    ],
+    "value": "0x00004411"
+  },
+  {
+    "address": "0x00001b04",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskPlaceOnEventList",
+    "section": "2",
+    "size": 48,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001b05"
+  },
+  {
+    "address": "0x000007f8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskRemoveFromUnorderedEventList",
+    "section": "2",
+    "size": 220,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000007f9"
+  },
+  {
+    "address": "0x00003e28",
+    "binding": "WEAK",
+    "kind": "FUNC",
+    "name": "vPortSetupTimerInterrupt",
+    "section": "2",
+    "size": 40,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x00003e29"
+  },
+  {
+    "address": "0x00002310",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueuePeekFromISR",
+    "section": "2",
+    "size": 108,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002311"
+  },
+  {
+    "address": "0x000029ec",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueCreateMutexStatic",
+    "section": "2",
+    "size": 30,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x000029ed"
+  },
+  {
+    "address": "0x000038f0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "pcTimerGetName",
+    "section": "2",
+    "size": 28,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x000038f1"
+  },
+  {
+    "address": "0x00002550",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueSemaphoreTake",
+    "section": "2",
+    "size": 376,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002551"
+  },
+  {
+    "address": "0x00003da4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerPendFunctionCall",
+    "section": "2",
+    "size": 64,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003da5"
+  },
+  {
+    "address": "0x00000c50",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxTaskGetStackHighWaterMark",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000c51"
+  },
+  {
+    "address": "0x00001f0c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueGetMutexHolder",
+    "section": "2",
+    "size": 44,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00001f0d"
+  },
+  {
+    "address": "0x0000005c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vListInsertEnd",
+    "section": "2",
+    "size": 22,
+    "source": [
+      "list.c"
+    ],
+    "value": "0x0000005d"
+  },
+  {
+    "address": "0x00001bf4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "ulTaskGenericNotifyTake",
+    "section": "2",
+    "size": 156,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001bf5"
+  },
+  {
+    "address": "0x00002d50",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vEventGroupSetBitsCallback",
+    "section": "2",
+    "size": 8,
+    "source": [
+      "event_groups.c"
+    ],
+    "value": "0x00002d51"
+  },
+  {
+    "address": "0x000004bc",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskResumeFromISR",
+    "section": "2",
+    "size": 184,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000004bd"
+  },
+  {
+    "address": "0x00000056",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vListInitialiseItem",
+    "section": "2",
+    "size": 6,
+    "source": [
+      "list.c"
+    ],
+    "value": "0x00000057"
+  },
+  {
+    "address": "0x00001158",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGetHandle",
+    "section": "2",
+    "size": 144,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001159"
+  },
+  {
+    "address": "0x00002410",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueReceive",
+    "section": "2",
+    "size": 320,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002411"
+  },
+  {
+    "address": "0x000002a4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxTaskPriorityGetFromISR",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000002a5"
+  },
+  {
+    "address": "0x0000368c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferResetFromISR",
+    "section": "2",
+    "size": 80,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x0000368d"
+  },
+  {
+    "address": "0x000041cc",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vApplicationGetTimerTaskMemory",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x000041cd"
+  },
+  {
+    "address": "0x000038a4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxTimerGetReloadMode",
+    "section": "2",
+    "size": 8,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x000038a5"
+  },
+  {
+    "address": "0x0000381c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerGetPeriod",
+    "section": "2",
+    "size": 28,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x0000381d"
+  },
+  {
+    "address": "0x00002b48",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xEventGroupSetBits",
+    "section": "2",
+    "size": 184,
+    "source": [
+      "event_groups.c"
+    ],
+    "value": "0x00002b49"
+  },
+  {
+    "address": "0x00001e68",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueGenericGetStaticBuffers",
+    "section": "2",
+    "size": 48,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00001e69"
+  },
+  {
+    "address": "0x000020a8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vQueueDelete",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x000020a9"
+  },
+  {
+    "address": "0x00003fdc",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vPortEndScheduler",
+    "section": "2",
+    "size": 36,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x00003fdd"
+  },
+  {
+    "address": "0x00000040",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vListInitialise",
+    "section": "2",
+    "size": 22,
+    "source": [
+      "list.c"
+    ],
+    "value": "0x00000041"
+  },
+  {
+    "address": "0x00002f54",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferIsEmpty",
+    "section": "2",
+    "size": 36,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00002f55"
+  },
+  {
+    "address": "0x00000584",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGetTickCount",
+    "section": "2",
+    "size": 12,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000585"
+  },
+  {
+    "address": "0x0000287c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueGenericSend",
+    "section": "2",
+    "size": 344,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x0000287d"
+  },
+  {
+    "address": "0x000031ec",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferSend",
+    "section": "2",
+    "size": 288,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x000031ed"
+  },
+  {
+    "address": "0x00002ff0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferReceiveCompletedFromISR",
+    "section": "2",
+    "size": 76,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00002ff1"
+  },
+  {
+    "address": "0x00004304",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "Reset_Handler",
+    "section": "2",
+    "size": 100,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x00004305"
+  },
+  {
+    "address": "0x000017e0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskGenericNotifyGiveFromISR",
+    "section": "2",
+    "size": 268,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000017e1"
+  },
+  {
+    "address": "0x00003480",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferNextMessageLengthBytes",
+    "section": "2",
+    "size": 80,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00003481"
+  },
+  {
+    "address": "0x000013c8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskPriorityDisinherit",
+    "section": "2",
+    "size": 168,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000013c9"
+  },
+  {
+    "address": "0x00003ed4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vPortSVCHandler_C",
+    "section": "2",
+    "size": 36,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x00003ed5"
+  },
+  {
+    "address": "0x00000708",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskRemoveFromEventList",
+    "section": "2",
+    "size": 240,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000709"
+  },
+  {
+    "address": "0x00002af4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xEventGroupClearBits",
+    "section": "2",
+    "size": 64,
+    "source": [
+      "event_groups.c"
+    ],
+    "value": "0x00002af5"
+  },
+  {
+    "address": "0x0000270c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueuePeek",
+    "section": "2",
+    "size": 308,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x0000270d"
+  },
+  {
+    "address": "0x000034d0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferReceiveFromISR",
+    "section": "2",
+    "size": 128,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x000034d1"
+  },
+  {
+    "address": "0x00000c98",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskDelete",
+    "section": "2",
+    "size": 180,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000c99"
+  },
+  {
+    "address": "0x000035a0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferGenericCreateStatic",
+    "section": "2",
+    "size": 156,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x000035a1"
+  },
+  {
+    "address": "0x0000153c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "pvTaskIncrementMutexHeldCount",
+    "section": "2",
+    "size": 20,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x0000153d"
+  },
+  {
+    "address": "0x00000920",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskCheckForTimeOut",
+    "section": "2",
+    "size": 160,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000921"
+  },
+  {
+    "address": "0x0000131c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskPriorityInherit",
+    "section": "2",
+    "size": 172,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x0000131d"
+  },
+  {
+    "address": "0x00001c90",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGenericNotifyWait",
+    "section": "2",
+    "size": 180,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001c91"
+  },
+  {
+    "address": "0x00002ec0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vStreamBufferDelete",
+    "section": "2",
+    "size": 56,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00002ec1"
+  },
+  {
+    "address": "0x00000574",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskSuspendAll",
+    "section": "2",
+    "size": 16,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000575"
+  },
+  {
+    "address": "0x000001e0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "eTaskGetState",
+    "section": "2",
+    "size": 164,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000001e1"
+  },
+  {
+    "address": "0x00002f78",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferIsFull",
+    "section": "2",
+    "size": 44,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00002f79"
+  },
+  {
+    "address": "0x00000590",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGetTickCountFromISR",
+    "section": "2",
+    "size": 12,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000591"
+  },
+  {
+    "address": "0x000000a0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxListRemove",
+    "section": "2",
+    "size": 36,
+    "source": [
+      "list.c"
+    ],
+    "value": "0x000000a1"
+  },
+  {
+    "address": "0x00000aec",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskCreateStatic",
+    "section": "2",
+    "size": 42,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000aed"
+  },
+  {
+    "address": "0x00000c38",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxTaskGetStackHighWaterMark2",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000c39"
+  },
+  {
+    "address": "0x0000042c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskResume",
+    "section": "2",
+    "size": 144,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x0000042d"
+  },
+  {
+    "address": "0x00000654",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskSwitchContext",
+    "section": "2",
+    "size": 180,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000655"
+  },
+  {
+    "address": "0x00003748",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerGenericCommandFromTask",
+    "section": "2",
+    "size": 100,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003749"
+  },
+  {
+    "address": "0x00004000",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xPortIsInsideInterrupt",
+    "section": "2",
+    "size": 10,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x00004001"
+  },
+  {
+    "address": "0x00003838",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTimerSetReloadMode",
+    "section": "2",
+    "size": 64,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003839"
+  },
+  {
+    "address": "0x00001eb4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueGenericCreateStatic",
+    "section": "2",
+    "size": 88,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00001eb5"
+  },
+  {
+    "address": "0x00001ba0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskPlaceOnEventListRestricted",
+    "section": "2",
+    "size": 84,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001ba1"
+  },
+  {
+    "address": "0x000041b4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vApplicationGetIdleTaskMemory",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x000041b5"
+  },
+  {
+    "address": "0x00000d78",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskSuspend",
+    "section": "2",
+    "size": 184,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000d79"
+  },
+  {
+    "address": "0x000011e8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskCatchUpTicks",
+    "section": "2",
+    "size": 64,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000011e9"
+  },
+  {
+    "address": "0x0000059c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxTaskGetNumberOfTasks",
+    "section": "2",
+    "size": 12,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x0000059d"
+  },
+  {
+    "address": "0x00003d7c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerPendFunctionCallFromISR",
+    "section": "2",
+    "size": 40,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003d7d"
+  },
+  {
+    "address": "0x00003e50",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vPortYield",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x00003e51"
+  },
+  {
+    "address": "0x000026c8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueTakeMutexRecursive",
+    "section": "2",
+    "size": 68,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x000026c9"
+  },
+  {
+    "address": "0x000037ac",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerGenericCommandFromISR",
+    "section": "2",
+    "size": 80,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x000037ad"
+  },
+  {
+    "address": "0x00002cd8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vEventGroupDelete",
+    "section": "2",
+    "size": 76,
+    "source": [
+      "event_groups.c"
+    ],
+    "value": "0x00002cd9"
+  },
+  {
+    "address": "0x00001550",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGenericNotify",
+    "section": "2",
+    "size": 296,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001551"
+  },
+  {
+    "address": "0x00004368",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "memset",
+    "section": "2",
+    "size": 166,
+    "source": [
+      "toolchain runtime (see firmware.map)"
+    ],
+    "value": "0x00004369"
+  },
+  {
+    "address": "0x000012e8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGetCurrentTaskHandleForCore",
+    "section": "2",
+    "size": 20,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000012e9"
+  },
+  {
+    "address": "0x00000072",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vListInsert",
+    "section": "2",
+    "size": 46,
+    "source": [
+      "list.c"
+    ],
+    "value": "0x00000073"
+  },
+  {
+    "address": "0x000040f0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "SVC_Handler",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "portable/GCC/ARM_CM0/portasm.c"
+    ],
+    "value": "0x000040f1"
+  },
+  {
+    "address": "0x00003c10",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerCreateTimerTask",
+    "section": "2",
+    "size": 100,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003c11"
+  },
+  {
+    "address": "0x00004060",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vRaisePrivilege",
+    "section": "2",
+    "size": 14,
+    "source": [
+      "portable/GCC/ARM_CM0/portasm.c"
+    ],
+    "value": "0x00004061"
+  },
+  {
+    "address": "0x00002d24",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xEventGroupGetStaticBuffer",
+    "section": "2",
+    "size": 44,
+    "source": [
+      "event_groups.c"
+    ],
+    "value": "0x00002d25"
+  },
+  {
+    "address": "0x00002250",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueReceiveFromISR",
+    "section": "2",
+    "size": 192,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002251"
+  },
+  {
+    "address": "0x000012dc",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGetCurrentTaskHandle",
+    "section": "2",
+    "size": 12,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000012dd"
+  },
+  {
+    "address": "0x00002ef8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferSetTriggerLevel",
+    "section": "2",
+    "size": 40,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00002ef9"
+  },
+  {
+    "address": "0x00001678",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGenericNotifyFromISR",
+    "section": "2",
+    "size": 360,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001679"
+  },
+  {
+    "address": "0x000036dc",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxStreamBufferGetStreamBufferNotificationIndex",
+    "section": "2",
+    "size": 28,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x000036dd"
+  },
+  {
+    "address": "0x00000fdc",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskResumeAll",
+    "section": "2",
+    "size": 380,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000fdd"
+  },
+  {
+    "address": "0x00002064",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxQueueSpacesAvailable",
+    "section": "2",
+    "size": 40,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002065"
+  },
+  {
+    "address": "0x00000b6c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskStartScheduler",
+    "section": "2",
+    "size": 88,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000b6d"
+  },
+  {
+    "address": "0x0000419c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "fixture_assert_fail",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "platform.c"
+    ],
+    "value": "0x0000419d"
+  },
+  {
+    "address": "0x00002a4c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueIsQueueFullFromISR",
+    "section": "2",
+    "size": 36,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002a4d"
+  },
+  {
+    "address": "0x00003d30",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "pvTimerGetTimerID",
+    "section": "2",
+    "size": 36,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003d31"
+  },
+  {
+    "address": "0x000038ac",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerGetExpiryTime",
+    "section": "2",
+    "size": 28,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x000038ad"
+  },
+  {
+    "address": "0x00004040",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xIsPrivileged",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "portable/GCC/ARM_CM0/portasm.c"
+    ],
+    "value": "0x00004041"
+  },
+  {
+    "address": "0x000009c0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskMissedYield",
+    "section": "2",
+    "size": 12,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000009c1"
+  },
+  {
+    "address": "0x00002040",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxQueueMessagesWaiting",
+    "section": "2",
+    "size": 36,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002041"
+  },
+  {
+    "address": "0x00001d44",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskResetState",
+    "section": "2",
+    "size": 100,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001d45"
+  },
+  {
+    "address": "0x00000e30",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskIncrementTick",
+    "section": "2",
+    "size": 428,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000e31"
+  },
+  {
+    "address": "0x00004098",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vClearInterruptMask",
+    "section": "2",
+    "size": 6,
+    "source": [
+      "portable/GCC/ARM_CM0/portasm.c"
+    ],
+    "value": "0x00004099"
+  },
+  {
+    "address": "0x00001da8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueGenericReset",
+    "section": "2",
+    "size": 192,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00001da9"
+  },
+  {
+    "address": "0x00003d54",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTimerSetTimerID",
+    "section": "2",
+    "size": 40,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003d55"
+  },
+  {
+    "address": "0x00003de4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTimerResetState",
+    "section": "2",
+    "size": 20,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003de5"
+  },
+  {
+    "address": "0x000018ec",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGenericNotifyStateClear",
+    "section": "2",
+    "size": 72,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000018ed"
+  },
+  {
+    "address": "0x00003d04",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerIsTimerActive",
+    "section": "2",
+    "size": 44,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003d05"
+  },
+  {
+    "address": "0x000038c8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerGetStaticBuffer",
+    "section": "2",
+    "size": 40,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x000038c9"
+  },
+  {
+    "address": "0x0000406e",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vResetPrivilege",
+    "section": "2",
+    "size": 14,
+    "source": [
+      "portable/GCC/ARM_CM0/portasm.c"
+    ],
+    "value": "0x0000406f"
+  },
+  {
+    "address": "0x00001ac8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskDelay",
+    "section": "2",
+    "size": 60,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001ac9"
+  },
+  {
+    "address": "0x00003878",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerGetReloadMode",
+    "section": "2",
+    "size": 44,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003879"
+  },
+  {
+    "address": "0x000012fc",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGetSchedulerState",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000012fd"
+  },
+  {
+    "address": "0x00001470",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskPriorityDisinheritAfterTimeout",
+    "section": "2",
+    "size": 180,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001471"
+  },
+  {
+    "address": "0x000020c4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxQueueGetQueueLength",
+    "section": "2",
+    "size": 4,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x000020c5"
+  },
+  {
+    "address": "0x00001f58",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueCreateCountingSemaphoreStatic",
+    "section": "2",
+    "size": 52,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00001f59"
+  },
+  {
+    "address": "0x00000614",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGetStaticBuffers",
+    "section": "2",
+    "size": 64,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000615"
+  },
+  {
+    "address": "0x0000449c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "strlen",
+    "section": "2",
+    "size": 92,
+    "source": [
+      "toolchain runtime (see firmware.map)"
+    ],
+    "value": "0x0000449d"
+  },
+  {
+    "address": "0x00003ef8",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "pxPortInitialiseStack",
+    "section": "2",
+    "size": 160,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x00003ef9"
+  },
+  {
+    "address": "0x00001f38",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueGetMutexHolderFromISR",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00001f39"
+  },
+  {
+    "address": "0x00003cc0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerCreateStatic",
+    "section": "2",
+    "size": 68,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x00003cc1"
+  },
+  {
+    "address": "0x000008d4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskSetTimeOutState",
+    "section": "2",
+    "size": 52,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000008d5"
+  },
+  {
+    "address": "0x000037fc",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTimerGetTimerDaemonTaskHandle",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "timers.c"
+    ],
+    "value": "0x000037fd"
+  },
+  {
+    "address": "0x00003e68",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vPortEnterCritical",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "portable/GCC/ARM_CM0/port.c"
+    ],
+    "value": "0x00003e69"
+  },
+  {
+    "address": "0x0000208c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxQueueMessagesWaitingFromISR",
+    "section": "2",
+    "size": 28,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x0000208d"
+  },
+  {
+    "address": "0x00002840",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueIsQueueEmptyFromISR",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002841"
+  },
+  {
+    "address": "0x000031d0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferBytesAvailable",
+    "section": "2",
+    "size": 28,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x000031d1"
+  },
+  {
+    "address": "0x00001524",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxTaskResetEventItemValue",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00001525"
+  },
+  {
+    "address": "0x000020c0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxQueueGetQueueItemSize",
+    "section": "2",
+    "size": 4,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x000020c1"
+  },
+  {
+    "address": "0x000002e4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxTaskBasePriorityGetFromISR",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000002e5"
+  },
+  {
+    "address": "0x00002d58",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vEventGroupClearBitsCallback",
+    "section": "2",
+    "size": 8,
+    "source": [
+      "event_groups.c"
+    ],
+    "value": "0x00002d59"
+  },
+  {
+    "address": "0x000002c4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "uxTaskBasePriorityGet",
+    "section": "2",
+    "size": 32,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000002c5"
+  },
+  {
+    "address": "0x00002fa4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xStreamBufferSendCompletedFromISR",
+    "section": "2",
+    "size": 76,
+    "source": [
+      "stream_buffer.c"
+    ],
+    "value": "0x00002fa5"
+  },
+  {
+    "address": "0x00001f8c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueGiveFromISR",
+    "section": "2",
+    "size": 180,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00001f8d"
+  }
+]
