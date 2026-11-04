@@ -1,0 +1,9 @@
+(* Use only on syntactically modular load addresses. In particular, do not
+   run unconstrained [rewrite getmem_mod_l] against arbitrary symbolic loads. *)
+Ltac next_unblock_normalize_loads :=
+  repeat lazymatch goal with
+  | |- context [getmem ?w ?en ?len ?m (?a mod 2^?w2)] =>
+      constr_eq w w2; rewrite (getmem_mod_l w en len m a)
+  end.
+Ltac next_unblock_reflexivity :=
+  lazymatch goal with |- ?a = ?b => constr_eq a b; reflexivity end.

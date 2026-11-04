@@ -1,8 +1,7 @@
 (* prvResetNextTaskUnblockTime -- sequential ARMv6-M IL partial correctness.
 
    Initial author: OpenAI gpt-6-astra, xhigh/default, r26-next-unblock.
-   PARTIAL: one-shot full build exhausted the assigned 2000000 KiB cap.
-   Final proof producer: none certified; see notes/r26-next-unblock/.
+   Final proof producer: not certified; see notes/r26-next-unblock/.
    FreeRTOS V11.1.0 dbf70559b27d39c1fdb68dfb9a32140b6a6777a0,
    tasks.c:6456-6474, include/list.h:225,258. ELF SHA256
    5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca.
@@ -167,7 +166,7 @@ Theorem next_unblock_correct : forall s t s' x'
   (MDL: models armv6mtypctx s),
   satisfies_all prvResetNextTaskUnblockTime_armv6m_prog
     (next_unblock_invariants s) next_unblock_exit ((x',s')::t).
-(* PARTIAL: initial proof preserved in notes/r26-next-unblock/initial-attempt.v.txt. *)
+(* WIP: unverified repair is archived in notes/r26-next-unblock-fix/. *)
 Abort.
 
 Corollary next_unblock_post_at_bx : forall s t s'
@@ -176,7 +175,7 @@ Corollary next_unblock_post_at_bx : forall s t s'
   (EXEC: exec_prog prvResetNextTaskUnblockTime_armv6m_prog ((Addr 0xc7e,s')::t))
   (UT: unterminated next_unblock_exit t),
   next_unblock_postcondition s s'.
-(* PARTIAL: initial proof preserved in notes/r26-next-unblock/initial-attempt.v.txt. *)
+(* WIP: unverified repair is archived in notes/r26-next-unblock-fix/. *)
 Abort.
 
 Corollary next_unblock_original_memory_effect : forall s t s'
@@ -188,7 +187,7 @@ Corollary next_unblock_original_memory_effect : forall s t s'
   outside_frame32 (s V_MEM32) (s' V_MEM32) 0x20000010 4 /\
   (forall i, i < 4 -> getmem 32 LittleE 1 (s' V_MEM32) (0x20000010+i) =
      xbits (next_unblock_result (s V_MEM32)) (i*8) ((i+1)*8)).
-(* PARTIAL: initial proof preserved in notes/r26-next-unblock/initial-attempt.v.txt. *)
+(* WIP: unverified repair is archived in notes/r26-next-unblock-fix/. *)
 Abort.
 
 Corollary next_unblock_preserves_callee_saved : forall s t s'
@@ -198,14 +197,14 @@ Corollary next_unblock_preserves_callee_saved : forall s t s'
   (UT: unterminated next_unblock_exit t),
   forall v, In v [R_R0; R_R1; R_R4; R_R5; R_R6; R_R7; R_R8;
     R_R9; R_R10; R_R11; R_R12; R_SP; R_LR; A_READ; A_WRITE; A_EXEC] -> s' v = s v.
-(* PARTIAL: initial proof preserved in notes/r26-next-unblock/initial-attempt.v.txt. *)
+(* WIP: unverified repair is archived in notes/r26-next-unblock-fix/. *)
 Abort.
 
 Theorem next_unblock_return_step : forall s
   (ODD: N.odd (s R_LR) = true) (ORDINARY: s R_LR < 0xfffffff0),
   can_step prvResetNextTaskUnblockTime_armv6m_prog
     ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s),(Addr 0xc7e,s)).
-(* PARTIAL: initial proof preserved in notes/r26-next-unblock/initial-attempt.v.txt. *)
+(* WIP: unverified repair is archived in notes/r26-next-unblock-fix/. *)
 Abort.
 
 Corollary next_unblock_caller_result : forall s t s'
@@ -217,5 +216,5 @@ Corollary next_unblock_caller_result : forall s t s'
   next_unblock_postcondition s s' /\
   can_step prvResetNextTaskUnblockTime_armv6m_prog
     ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s'),(Addr 0xc7e,s')).
-(* PARTIAL: initial proof preserved in notes/r26-next-unblock/initial-attempt.v.txt. *)
+(* WIP: unverified repair is archived in notes/r26-next-unblock-fix/. *)
 Abort.
