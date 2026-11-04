@@ -1,0 +1,21 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-48d97224
+COMMAND=python3 notes/r18-mutex-held/audit-statements.py
+PRESERVED mutex_held_nwc
+PRESERVED mutex_held_welltyped
+PRESERVED mutex_held_register_frame
+PRESERVED mutex_held_null_memory
+PRESERVED mutex_held_count_increment
+PRESERVED mutex_held_memory_frame
+PRESERVED mutex_held_written_bytes
+PRESERVED mutex_held_zero_bound
+PRESERVED mutex_held_entry_models
+PRESERVED mutex_held_entry_satisfiable
+PRESERVED mutex_held_current_satisfiable
+PRESERVED mutex_held_correct
+PRESERVED mutex_held_post_at_bx
+PRESERVED mutex_held_preserves_callee_saved
+PRESERVED mutex_held_return_step
+PRESERVED mutex_held_caller_result
+PASS: all 16 initial theorem/helper statements preserved exactly modulo whitespace.
+
+EXIT_CODE=0

@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-9c5b07a8
+COMMAND=python3 -
+Send SIGINT only to own compiler PID 761258; broad memsize transparency stalls conversion.
+
+EXIT_CODE=0
