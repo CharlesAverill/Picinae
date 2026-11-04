@@ -1,0 +1,74 @@
+diff --git a/tmp/e03-upstream-Picinae_armv6m.v b/Picinae_armv6m.v
+index 8e039f4..ec47daf 100644
+--- a/tmp/e03-upstream-Picinae_armv6m.v
++++ b/Picinae_armv6m.v
+@@ -1,6 +1,8 @@
+ (* Picinae_armv6m.v - ARMv6-M (Cortex-M0/M0+ Thumb) ISA for Picinae *)
+-(* Covers every ARMv6-M instruction, including the 32-bit BL, MSR, MRS, and barriers *)
+-(* Models the N, Z, C, and V flags and full LDM/STM/PUSH/POP behavior *)
++(* Imported from origin/timing 4f1772040b6fc9d12af3f84f2ca089bb65cd4bd6.
++   This is an IL model, not a proved refinement of the ARM architecture.
++   The strict ELF frontend rejects system instructions whose effects below are
++   approximated. See units/e03-armv6m-core/README.md for the trusted boundary. *)
+ 
+ Require Export Picinae_core.
+ Require Export Picinae_theory.
+@@ -8,11 +10,11 @@ Require Export Picinae_statics.
+ Require Export Picinae_finterp.
+ Require Export Picinae_simplifier_v1_1.
+ Require Export Picinae_ISA.
+-Require Import NArith.
+-Require Import ZArith.
+-Require Import List.
+-Require Import Program.Equality.
+-Require Import Structures.Equalities.
++From Stdlib Require Import NArith.
++From Stdlib Require Import ZArith.
++From Stdlib Require Import List.
++From Stdlib Require Import Program.Equality.
++From Stdlib Require Import Structures.Equalities.
+ 
+ Open Scope N.
+ 
+@@ -306,27 +308,6 @@ Definition armv6m_cond c :=
+   | COND_AL => Word 1 1
+   end.
+ 
+-(* The value of armv6m_cond c in store s (nonzero iff c holds), for timing
+-   models; see armv6m_cond_val_eval *)
+-Definition armv6m_cond_val (s : store) c :=
+-  match c with
+-  | COND_EQ => s F_Z
+-  | COND_NE => N.lnot (s F_Z) 1
+-  | COND_CS => s F_C
+-  | COND_CC => N.lnot (s F_C) 1
+-  | COND_MI => s F_N
+-  | COND_PL => N.lnot (s F_N) 1
+-  | COND_VS => s F_V
+-  | COND_VC => N.lnot (s F_V) 1
+-  | COND_HI => N.land (s F_C) (N.lnot (s F_Z) 1)
+-  | COND_LS => N.lor (N.lnot (s F_C) 1) (s F_Z)
+-  | COND_GE => N.b2n (s F_N =? s F_V)
+-  | COND_LT => N.b2n (negb (s F_N =? s F_V))
+-  | COND_GT => N.land (N.lnot (s F_Z) 1) (N.b2n (s F_N =? s F_V))
+-  | COND_LE => N.lor (s F_Z) (N.b2n (negb (s F_N =? s F_V)))
+-  | COND_AL => 1
+-  end.
+-
+ (* ========================================================================== *)
+ (*                         IL GENERATION HELPERS                              *)
+ (* ========================================================================== *)
+@@ -838,13 +819,3 @@ Proof.
+   destruct (thumb16_decode (binary a)); try apply welltyped_arm2il.
+   eexists. apply hastyp_armv6m_mov. reflexivity. apply hastyp_armv6m_word.
+ Qed.
+-
+-(* armv6m_cond_val is the value of a condition's IL encoding *)
+-Theorem armv6m_cond_val_eval:
+-  forall s c, eval_exp armv6mtypctx s (armv6m_cond c) (armv6m_cond_val s c) 1.
+-Proof.
+-  intros. destruct c; cbv [armv6m_cond armv6m_cond_val];
+-  repeat first [ eapply EBinOp with (n1:=s F_N) (n2:=s F_V) (w:=1)
+-               | eapply EBinOp with (w:=1)
+-               | econstructor ].
+-Qed.

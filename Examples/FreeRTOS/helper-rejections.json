@@ -1,0 +1,169 @@
+[
+  {
+    "command": [
+      "bash",
+      "./armv6m_lifter.sh",
+      "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+      "fixture_assert_fail_armv6m",
+      "fixture_assert_fail"
+    ],
+    "exit_code": 1,
+    "stderr": "armv6m lifter: unsupported instruction at 0x419c: cpsid\ti\n",
+    "stdout": "",
+    "symbol": "fixture_assert_fail",
+    "unsupported_instructions": [
+      {
+        "address": "0x0000419c",
+        "assembly": "cpsid\ti",
+        "frontend_encoding_supported": false,
+        "opcode": "b672",
+        "width": 2
+      },
+      {
+        "address": "0x000041a6",
+        "assembly": "wfi",
+        "frontend_encoding_supported": false,
+        "opcode": "bf30",
+        "width": 2
+      }
+    ]
+  },
+  {
+    "command": [
+      "bash",
+      "./armv6m_lifter.sh",
+      "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+      "ulSetInterruptMask_armv6m",
+      "ulSetInterruptMask"
+    ],
+    "exit_code": 1,
+    "stderr": "armv6m lifter: unsupported instruction at 0x4090: mrs\tr0, PRIMASK\n",
+    "stdout": "",
+    "symbol": "ulSetInterruptMask",
+    "unsupported_instructions": [
+      {
+        "address": "0x00004090",
+        "assembly": "mrs\tr0, PRIMASK",
+        "frontend_encoding_supported": false,
+        "opcode": "f3ef 8010",
+        "width": 4
+      },
+      {
+        "address": "0x00004094",
+        "assembly": "cpsid\ti",
+        "frontend_encoding_supported": false,
+        "opcode": "b672",
+        "width": 2
+      }
+    ]
+  },
+  {
+    "command": [
+      "bash",
+      "./armv6m_lifter.sh",
+      "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+      "vClearInterruptMask_armv6m",
+      "vClearInterruptMask"
+    ],
+    "exit_code": 1,
+    "stderr": "armv6m lifter: unsupported instruction at 0x4098: msr\tPRIMASK, r0\n",
+    "stdout": "",
+    "symbol": "vClearInterruptMask",
+    "unsupported_instructions": [
+      {
+        "address": "0x00004098",
+        "assembly": "msr\tPRIMASK, r0",
+        "frontend_encoding_supported": false,
+        "opcode": "f380 8810",
+        "width": 4
+      }
+    ]
+  },
+  {
+    "command": [
+      "bash",
+      "./armv6m_lifter.sh",
+      "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+      "vPortEnterCritical_armv6m",
+      "vPortEnterCritical"
+    ],
+    "exit_code": 1,
+    "stderr": "armv6m lifter: unsupported instruction at 0x3e68: cpsid\ti\n",
+    "stdout": "",
+    "symbol": "vPortEnterCritical",
+    "unsupported_instructions": [
+      {
+        "address": "0x00003e68",
+        "assembly": "cpsid\ti",
+        "frontend_encoding_supported": false,
+        "opcode": "b672",
+        "width": 2
+      },
+      {
+        "address": "0x00003e72",
+        "assembly": "dsb\tsy",
+        "frontend_encoding_supported": false,
+        "opcode": "f3bf 8f4f",
+        "width": 4
+      },
+      {
+        "address": "0x00003e76",
+        "assembly": "isb\tsy",
+        "frontend_encoding_supported": false,
+        "opcode": "f3bf 8f6f",
+        "width": 4
+      }
+    ]
+  },
+  {
+    "command": [
+      "bash",
+      "./armv6m_lifter.sh",
+      "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+      "vPortExitCritical_armv6m",
+      "vPortExitCritical"
+    ],
+    "exit_code": 1,
+    "stderr": "armv6m lifter: unsupported instruction at 0x3e98: cpsie\ti\n",
+    "stdout": "",
+    "symbol": "vPortExitCritical",
+    "unsupported_instructions": [
+      {
+        "address": "0x00003e98",
+        "assembly": "cpsie\ti",
+        "frontend_encoding_supported": false,
+        "opcode": "b662",
+        "width": 2
+      }
+    ]
+  },
+  {
+    "command": [
+      "bash",
+      "./armv6m_lifter.sh",
+      "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+      "vPortYield_armv6m",
+      "vPortYield"
+    ],
+    "exit_code": 1,
+    "stderr": "armv6m lifter: unsupported instruction at 0x3e58: dsb\tsy\n",
+    "stdout": "",
+    "symbol": "vPortYield",
+    "unsupported_instructions": [
+      {
+        "address": "0x00003e58",
+        "assembly": "dsb\tsy",
+        "frontend_encoding_supported": false,
+        "opcode": "f3bf 8f4f",
+        "width": 4
+      },
+      {
+        "address": "0x00003e5c",
+        "assembly": "isb\tsy",
+        "frontend_encoding_supported": false,
+        "opcode": "f3bf 8f6f",
+        "width": 4
+      }
+    ]
+  }
+]
