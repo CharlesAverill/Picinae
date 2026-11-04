@@ -1,0 +1,89 @@
+[
+  {
+    "address": "0x19aaf0",
+    "bytes": "1f000171",
+    "assembly": "cmp w0,#0x40",
+    "pcode": [
+      "(unique, 0x1c980, 4) COPY (const, 0x40, 4)",
+      "(register, 0x105, 1) INT_LESSEQUAL (const, 0x40, 4) , (register, 0x4000, 4)",
+      "(register, 0x106, 1) INT_SBORROW (register, 0x4000, 4) , (const, 0x40, 4)",
+      "(unique, 0x1ca80, 4) INT_SUB (register, 0x4000, 4) , (unique, 0x1c980, 4)",
+      "(register, 0x107, 1) INT_SLESS (unique, 0x1ca80, 4) , (const, 0x0, 4)",
+      "(register, 0x108, 1) INT_EQUAL (unique, 0x1ca80, 4) , (const, 0x0, 4)",
+      "(register, 0x100, 1) COPY (register, 0x107, 1)",
+      "(register, 0x101, 1) COPY (register, 0x108, 1)",
+      "(register, 0x102, 1) COPY (register, 0x105, 1)",
+      "(register, 0x103, 1) COPY (register, 0x106, 1)"
+    ]
+  },
+  {
+    "address": "0x19aaf4",
+    "bytes": "a8000054",
+    "assembly": "b.hi 0x0019ab08",
+    "pcode": [
+      "(unique, 0xd80, 1) BOOL_NEGATE (register, 0x101, 1)",
+      "(unique, 0xe80, 1) BOOL_AND (register, 0x102, 1) , (unique, 0xd80, 1)",
+      " ---  CBRANCH (ram, 0x19ab08, 8) , (unique, 0xe80, 1)"
+    ]
+  },
+  {
+    "address": "0x19aaf8",
+    "bytes": "210800d0",
+    "assembly": "adrp x1,0x2a0000",
+    "pcode": [
+      "(register, 0x4008, 8) COPY (const, 0x2a0000, 8)"
+    ]
+  },
+  {
+    "address": "0x19aafc",
+    "bytes": "21800191",
+    "assembly": "add x1,x1,#0x60",
+    "pcode": [
+      "(unique, 0x11e80, 8) COPY (const, 0x60, 8)",
+      "(register, 0x105, 1) INT_CARRY (register, 0x4008, 8) , (unique, 0x11e80, 8)",
+      "(register, 0x106, 1) INT_SCARRY (register, 0x4008, 8) , (unique, 0x11e80, 8)",
+      "(unique, 0x11f80, 8) INT_ADD (register, 0x4008, 8) , (unique, 0x11e80, 8)",
+      "(register, 0x107, 1) INT_SLESS (unique, 0x11f80, 8) , (const, 0x0, 8)",
+      "(register, 0x108, 1) INT_EQUAL (unique, 0x11f80, 8) , (const, 0x0, 8)",
+      "(register, 0x4008, 8) COPY (unique, 0x11f80, 8)"
+    ]
+  },
+  {
+    "address": "0x19ab00",
+    "bytes": "20d860f8",
+    "assembly": "ldr x0,[x1, w0, SXTW #0x3]",
+    "pcode": [
+      "(unique, 0x5f80, 8) INT_SEXT (register, 0x4000, 4)",
+      "(unique, 0x7200, 8) COPY (unique, 0x5f80, 8)",
+      "(unique, 0x7200, 8) INT_LEFT (unique, 0x7200, 8) , (const, 0x3, 8)",
+      "(unique, 0x7580, 8) INT_ADD (register, 0x4008, 8) , (unique, 0x7200, 8)",
+      "(register, 0x4000, 8) LOAD (const, 0x1b1, 8) , (unique, 0x7580, 8)"
+    ]
+  },
+  {
+    "address": "0x19ab04",
+    "bytes": "c0035fd6",
+    "assembly": "ret",
+    "pcode": [
+      "(register, 0x0, 8) COPY (register, 0x40f0, 8)",
+      " ---  RETURN (register, 0x0, 8)"
+    ]
+  },
+  {
+    "address": "0x19ab08",
+    "bytes": "000080d2",
+    "assembly": "mov x0,#0x0",
+    "pcode": [
+      "(register, 0x4000, 8) COPY (const, 0x0, 8)"
+    ]
+  },
+  {
+    "address": "0x19ab0c",
+    "bytes": "c0035fd6",
+    "assembly": "ret",
+    "pcode": [
+      "(register, 0x0, 8) COPY (register, 0x40f0, 8)",
+      " ---  RETURN (register, 0x0, 8)"
+    ]
+  }
+]
