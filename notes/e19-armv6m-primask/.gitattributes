@@ -1,0 +1,2 @@
+# Preserve raw command/objdump output, including its significant column padding.
+logs/* whitespace=-blank-at-eol

@@ -1,0 +1,204 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5f10d9a4
+COMMAND=python3 tools/audit-proof-source.py --base 49956416928e5b6bb3928b54ae33e3b81091f006
+Base: 49956416928e5b6bb3928b54ae33e3b81091f006
+Scope: 361 Rocq source files
+BASELINE Examples/claude/amd64_isinfl_proof.v:107: Admitted.
+CURRENT Examples/claude/amd64_isinfl_proof.v:107: Admitted.
+BASELINE Examples/claude/amd64_memmove_avx_nt_proof.v:402: Proof. Admitted.
+BASELINE Examples/claude/amd64_memmove_avx_nt_proof.v:693: Admitted.
+CURRENT Examples/claude/amd64_memmove_avx_nt_proof.v:402: Proof. Admitted.
+CURRENT Examples/claude/amd64_memmove_avx_nt_proof.v:693: Admitted.
+BASELINE Examples/claude/amd64_memset_avx2_proof.v:275: Admitted.
+CURRENT Examples/claude/amd64_memset_avx2_proof.v:275: Admitted.
+BASELINE Examples/claude/amd64_pthread_mutex_lock_proof.v:785: Admitted.
+CURRENT Examples/claude/amd64_pthread_mutex_lock_proof.v:785: Admitted.
+BASELINE Examples/claude/amd64_rand_r_proof.v:148: Admitted.
+CURRENT Examples/claude/amd64_rand_r_proof.v:148: Admitted.
+BASELINE Examples/claude/zz_s85.v:115: all: admit.
+BASELINE Examples/claude/zz_s85.v:116: Admitted.
+CURRENT Examples/claude/zz_s85.v:115: all: admit.
+CURRENT Examples/claude/zz_s85.v:116: Admitted.
+BASELINE Picinae_core.v:282: Parameter archtyps : typctx.
+BASELINE Picinae_core.v:283: Parameter mem_readable: store -> addr -> Prop.
+BASELINE Picinae_core.v:284: Parameter mem_writable: store -> addr -> Prop.
+CURRENT Picinae_core.v:282: Parameter archtyps : typctx.
+CURRENT Picinae_core.v:283: Parameter mem_readable: store -> addr -> Prop.
+CURRENT Picinae_core.v:284: Parameter mem_writable: store -> addr -> Prop.
+BASELINE Picinae_finterp.v:595: Parameter if_N_same: forall A (n:N) (a:A), (if n then a else a) = a.
+BASELINE Picinae_finterp.v:644: Parameter fexec_stmt_init:
+BASELINE Picinae_finterp.v:648: Parameter fexec_stmt_updn:
+BASELINE Picinae_finterp.v:653: Parameter fexec_stmt_hypn:
+BASELINE Picinae_finterp.v:658: Parameter fexec_stmt_fin:
+BASELINE Picinae_finterp.v:687: Parameter reduce_stmt:
+CURRENT Picinae_finterp.v:595: Parameter if_N_same: forall A (n:N) (a:A), (if n then a else a) = a.
+CURRENT Picinae_finterp.v:644: Parameter fexec_stmt_init:
+CURRENT Picinae_finterp.v:648: Parameter fexec_stmt_updn:
+CURRENT Picinae_finterp.v:653: Parameter fexec_stmt_hypn:
+CURRENT Picinae_finterp.v:658: Parameter fexec_stmt_fin:
+CURRENT Picinae_finterp.v:687: Parameter reduce_stmt:
+BASELINE Picinae_simplifier_v1_1.v:1809: Parameter simplify_sastN_hyp:
+BASELINE Picinae_simplifier_v1_1.v:1814: Parameter simplify_sastB_hyp:
+BASELINE Picinae_simplifier_v1_1.v:1819: Parameter simplify_sastS_hyp:
+BASELINE Picinae_simplifier_v1_1.v:1824: Parameter simplify_sastU_hyp:
+BASELINE Picinae_simplifier_v1_1.v:1829: Parameter simplify_sastU_goal:
+BASELINE Picinae_simplifier_v1_1.v:1836: Parameter N_shiftl1_pow2: forall {n w:N} (H: n < N.shiftl 1 w), n < 2^w.
+BASELINE Picinae_simplifier_v1_1.v:1837: Parameter simpl_if_if: forall (b:bool) (q1 q2:stmt),
+BASELINE Picinae_simplifier_v1_1.v:1839: Parameter simpl_if_not_if:
+BASELINE Picinae_simplifier_v1_1.v:2075: Parameter simpl_nvar_bound:
+CURRENT Picinae_simplifier_v1_1.v:1809: Parameter simplify_sastN_hyp:
+CURRENT Picinae_simplifier_v1_1.v:1814: Parameter simplify_sastB_hyp:
+CURRENT Picinae_simplifier_v1_1.v:1819: Parameter simplify_sastS_hyp:
+CURRENT Picinae_simplifier_v1_1.v:1824: Parameter simplify_sastU_hyp:
+CURRENT Picinae_simplifier_v1_1.v:1829: Parameter simplify_sastU_goal:
+CURRENT Picinae_simplifier_v1_1.v:1836: Parameter N_shiftl1_pow2: forall {n w:N} (H: n < N.shiftl 1 w), n < 2^w.
+CURRENT Picinae_simplifier_v1_1.v:1837: Parameter simpl_if_if: forall (b:bool) (q1 q2:stmt),
+CURRENT Picinae_simplifier_v1_1.v:1839: Parameter simpl_if_not_if:
+CURRENT Picinae_simplifier_v1_1.v:2075: Parameter simpl_nvar_bound:
+BASELINE Picinae_slogic.v:612: Parameter destruct_frames_stmt:
+BASELINE Picinae_slogic.v:622: Parameter destruct_frames'_stmt:
+BASELINE Picinae_slogic.v:635: Parameter hmodels_refl:
+BASELINE Picinae_slogic.v:638: Parameter hmodels_trans:
+BASELINE Picinae_slogic.v:642: Parameter hmodels_mono:
+BASELINE Picinae_slogic.v:661: Parameter framed_rep:
+BASELINE Picinae_slogic.v:664: Parameter framed_stmt:
+BASELINE Picinae_slogic.v:682: Parameter stmt_frame:
+BASELINE Picinae_slogic.v:687: Parameter prog_frame:
+BASELINE Picinae_slogic.v:697: Parameter upd_pres_sep:
+BASELINE Picinae_slogic.v:704: Parameter frames_stmt_sep:
+BASELINE Picinae_slogic.v:708: Parameter frames'_stmt_sep:
+BASELINE Picinae_slogic.v:712: Parameter frames_prog_sep:
+BASELINE Picinae_slogic.v:716: Parameter frames'_prog_sep:
+BASELINE Picinae_slogic.v:721: Parameter frames_stmt_htrue: forall q, frames_stmt htrue q.
+BASELINE Picinae_slogic.v:722: Parameter frames'_stmt_htrue: forall q, frames'_stmt htrue q.
+BASELINE Picinae_slogic.v:723: Parameter frames_prog_htrue: forall p, frames_prog htrue p.
+BASELINE Picinae_slogic.v:724: Parameter frames'_prog_htrue: forall p, frames'_prog htrue p.
+BASELINE Picinae_slogic.v:725: Parameter frames_stmt_hfalse: forall q, frames_stmt hfalse q.
+BASELINE Picinae_slogic.v:726: Parameter frames'_stmt_hfalse: forall q, frames'_stmt hfalse q.
+BASELINE Picinae_slogic.v:727: Parameter frames_prog_hfalse: forall p, frames_prog hfalse p.
+BASELINE Picinae_slogic.v:728: Parameter frames'_prog_hfalse: forall p, frames'_prog hfalse p.
+BASELINE Picinae_slogic.v:732: Parameter frames_stmt_anystore:
+BASELINE Picinae_slogic.v:736: Parameter frames'_stmt_anystore:
+BASELINE Picinae_slogic.v:741: Parameter frames_stmt_hprop: forall R q, frames_stmt (hprop var R) q.
+BASELINE Picinae_slogic.v:742: Parameter frames_prog_hprop: forall R p, frames_prog (hprop var R) p.
+BASELINE Picinae_slogic.v:745: Parameter frames_stmt_impl:
+BASELINE Picinae_slogic.v:749: Parameter frames'_stmt_impl:
+BASELINE Picinae_slogic.v:753: Parameter frames_prog_impl:
+BASELINE Picinae_slogic.v:757: Parameter frames'_prog_impl:
+BASELINE Picinae_slogic.v:762: Parameter frames_stmt_not:
+BASELINE Picinae_slogic.v:766: Parameter frames'_stmt_not:
+BASELINE Picinae_slogic.v:770: Parameter frames_prog_not:
+BASELINE Picinae_slogic.v:774: Parameter frames_prog'_not:
+CURRENT Picinae_slogic.v:612: Parameter destruct_frames_stmt:
+CURRENT Picinae_slogic.v:622: Parameter destruct_frames'_stmt:
+CURRENT Picinae_slogic.v:635: Parameter hmodels_refl:
+CURRENT Picinae_slogic.v:638: Parameter hmodels_trans:
+CURRENT Picinae_slogic.v:642: Parameter hmodels_mono:
+CURRENT Picinae_slogic.v:661: Parameter framed_rep:
+CURRENT Picinae_slogic.v:664: Parameter framed_stmt:
+CURRENT Picinae_slogic.v:682: Parameter stmt_frame:
+CURRENT Picinae_slogic.v:687: Parameter prog_frame:
+CURRENT Picinae_slogic.v:697: Parameter upd_pres_sep:
+CURRENT Picinae_slogic.v:704: Parameter frames_stmt_sep:
+CURRENT Picinae_slogic.v:708: Parameter frames'_stmt_sep:
+CURRENT Picinae_slogic.v:712: Parameter frames_prog_sep:
+CURRENT Picinae_slogic.v:716: Parameter frames'_prog_sep:
+CURRENT Picinae_slogic.v:721: Parameter frames_stmt_htrue: forall q, frames_stmt htrue q.
+CURRENT Picinae_slogic.v:722: Parameter frames'_stmt_htrue: forall q, frames'_stmt htrue q.
+CURRENT Picinae_slogic.v:723: Parameter frames_prog_htrue: forall p, frames_prog htrue p.
+CURRENT Picinae_slogic.v:724: Parameter frames'_prog_htrue: forall p, frames'_prog htrue p.
+CURRENT Picinae_slogic.v:725: Parameter frames_stmt_hfalse: forall q, frames_stmt hfalse q.
+CURRENT Picinae_slogic.v:726: Parameter frames'_stmt_hfalse: forall q, frames'_stmt hfalse q.
+CURRENT Picinae_slogic.v:727: Parameter frames_prog_hfalse: forall p, frames_prog hfalse p.
+CURRENT Picinae_slogic.v:728: Parameter frames'_prog_hfalse: forall p, frames'_prog hfalse p.
+CURRENT Picinae_slogic.v:732: Parameter frames_stmt_anystore:
+CURRENT Picinae_slogic.v:736: Parameter frames'_stmt_anystore:
+CURRENT Picinae_slogic.v:741: Parameter frames_stmt_hprop: forall R q, frames_stmt (hprop var R) q.
+CURRENT Picinae_slogic.v:742: Parameter frames_prog_hprop: forall R p, frames_prog (hprop var R) p.
+CURRENT Picinae_slogic.v:745: Parameter frames_stmt_impl:
+CURRENT Picinae_slogic.v:749: Parameter frames'_stmt_impl:
+CURRENT Picinae_slogic.v:753: Parameter frames_prog_impl:
+CURRENT Picinae_slogic.v:757: Parameter frames'_prog_impl:
+CURRENT Picinae_slogic.v:762: Parameter frames_stmt_not:
+CURRENT Picinae_slogic.v:766: Parameter frames'_stmt_not:
+CURRENT Picinae_slogic.v:770: Parameter frames_prog_not:
+CURRENT Picinae_slogic.v:774: Parameter frames_prog'_not:
+BASELINE Picinae_statics.v:315: Parameter setmem_welltyped:
+BASELINE Picinae_statics.v:320: Parameter hastyp_binop:
+BASELINE Picinae_statics.v:325: Parameter hastyp_extract:
+BASELINE Picinae_statics.v:330: Parameter hastyp_concat:
+BASELINE Picinae_statics.v:337: Parameter hastyp_exp_unique:
+BASELINE Picinae_statics.v:343: Parameter hastyp_exp_weaken:
+BASELINE Picinae_statics.v:348: Parameter hastyp_stmt_weaken:
+BASELINE Picinae_statics.v:351: Parameter hastyp_stmt_weaken':
+BASELINE Picinae_statics.v:356: Parameter hastyp_stmt_compat:
+BASELINE Picinae_statics.v:363: Parameter hastyp_stmt_frame_weaken:
+BASELINE Picinae_statics.v:388: Parameter typesafe_binop:
+BASELINE Picinae_statics.v:394: Parameter typesafe_unop:
+BASELINE Picinae_statics.v:400: Parameter typesafe_cast:
+BASELINE Picinae_statics.v:406: Parameter typesafe_getmem:
+BASELINE Picinae_statics.v:410: Parameter typesafe_setmem:
+BASELINE Picinae_statics.v:416: Parameter models_var:
+BASELINE Picinae_statics.v:422: Parameter models_subset:
+BASELINE Picinae_statics.v:427: Parameter preservation_eval_exp:
+BASELINE Picinae_statics.v:434: Parameter progress_eval_exp:
+BASELINE Picinae_statics.v:441: Parameter preservation_exec_stmt:
+BASELINE Picinae_statics.v:447: Parameter pres_frame_exec_stmt:
+BASELINE Picinae_statics.v:454: Parameter progress_exec_stmt:
+BASELINE Picinae_statics.v:461: Parameter preservation_exec_prog:
+BASELINE Picinae_statics.v:468: Parameter progress_exec_prog:
+BASELINE Picinae_statics.v:477: Parameter typchk_exp_sound:
+BASELINE Picinae_statics.v:481: Parameter typctx_meet_subset:
+BASELINE Picinae_statics.v:485: Parameter typctx_meet_comm:
+BASELINE Picinae_statics.v:489: Parameter typctx_meet_lowbound:
+BASELINE Picinae_statics.v:493: Parameter typchk_stmt_mono:
+BASELINE Picinae_statics.v:497: Parameter typchk_stmt_sound:
+BASELINE Picinae_statics.v:504: Parameter typchk_stmt_compute:
+BASELINE Picinae_statics.v:522: Parameter models_at_invariant:
+BASELINE Picinae_statics.v:529: Parameter models_after_steps:
+CURRENT Picinae_statics.v:315: Parameter setmem_welltyped:
+CURRENT Picinae_statics.v:320: Parameter hastyp_binop:
+CURRENT Picinae_statics.v:325: Parameter hastyp_extract:
+CURRENT Picinae_statics.v:330: Parameter hastyp_concat:
+CURRENT Picinae_statics.v:337: Parameter hastyp_exp_unique:
+CURRENT Picinae_statics.v:343: Parameter hastyp_exp_weaken:
+CURRENT Picinae_statics.v:348: Parameter hastyp_stmt_weaken:
+CURRENT Picinae_statics.v:351: Parameter hastyp_stmt_weaken':
+CURRENT Picinae_statics.v:356: Parameter hastyp_stmt_compat:
+CURRENT Picinae_statics.v:363: Parameter hastyp_stmt_frame_weaken:
+CURRENT Picinae_statics.v:388: Parameter typesafe_binop:
+CURRENT Picinae_statics.v:394: Parameter typesafe_unop:
+CURRENT Picinae_statics.v:400: Parameter typesafe_cast:
+CURRENT Picinae_statics.v:406: Parameter typesafe_getmem:
+CURRENT Picinae_statics.v:410: Parameter typesafe_setmem:
+CURRENT Picinae_statics.v:416: Parameter models_var:
+CURRENT Picinae_statics.v:422: Parameter models_subset:
+CURRENT Picinae_statics.v:427: Parameter preservation_eval_exp:
+CURRENT Picinae_statics.v:434: Parameter progress_eval_exp:
+CURRENT Picinae_statics.v:441: Parameter preservation_exec_stmt:
+CURRENT Picinae_statics.v:447: Parameter pres_frame_exec_stmt:
+CURRENT Picinae_statics.v:454: Parameter progress_exec_stmt:
+CURRENT Picinae_statics.v:461: Parameter preservation_exec_prog:
+CURRENT Picinae_statics.v:468: Parameter progress_exec_prog:
+CURRENT Picinae_statics.v:477: Parameter typchk_exp_sound:
+CURRENT Picinae_statics.v:481: Parameter typctx_meet_subset:
+CURRENT Picinae_statics.v:485: Parameter typctx_meet_comm:
+CURRENT Picinae_statics.v:489: Parameter typctx_meet_lowbound:
+CURRENT Picinae_statics.v:493: Parameter typchk_stmt_mono:
+CURRENT Picinae_statics.v:497: Parameter typchk_stmt_sound:
+CURRENT Picinae_statics.v:504: Parameter typchk_stmt_compute:
+CURRENT Picinae_statics.v:522: Parameter models_at_invariant:
+CURRENT Picinae_statics.v:529: Parameter models_after_steps:
+BASELINE Picinae_theory.v:9062: Parameter w bytes : bitwidth.
+BASELINE Picinae_theory.v:9201: Parameter w : bitwidth.
+BASELINE Picinae_theory.v:9202: Parameter e : endianness.
+BASELINE Picinae_theory.v:9203: Parameter dw pw : bitwidth.
+CURRENT Picinae_theory.v:9062: Parameter w bytes : bitwidth.
+CURRENT Picinae_theory.v:9201: Parameter w : bitwidth.
+CURRENT Picinae_theory.v:9202: Parameter e : endianness.
+CURRENT Picinae_theory.v:9203: Parameter dw pw : bitwidth.
+BASELINE totals: {'Admitted': 7, 'Parameter': 89, 'admit': 1}
+CURRENT totals: {'Admitted': 7, 'Parameter': 89, 'admit': 1}
+NEW totals: {}
+Source check only: inspect transitive Print Assumptions separately.
+
+EXIT_CODE=0

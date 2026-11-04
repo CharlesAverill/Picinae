@@ -1,0 +1,51 @@
+Require Import Picinae_armv6m.
+Require Import Picinae.tests.armv6m_primask.fixture.
+Check Picinae.tests.armv6m_primask.fixture.mask_fixture_decode_check.
+Print Assumptions Picinae.tests.armv6m_primask.fixture.mask_fixture_decode_check.
+Check Picinae.tests.armv6m_primask.fixture.mask_fixture_welltyped.
+Print Assumptions Picinae.tests.armv6m_primask.fixture.mask_fixture_welltyped.
+Require Import Picinae.tests.armv6m_primask.Checks.
+Check Picinae.tests.armv6m_primask.Checks.primask_state_widths.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.primask_state_widths.
+Check Picinae.tests.armv6m_primask.Checks.cps_all_modes_and_frames.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.cps_all_modes_and_frames.
+Check Picinae.tests.armv6m_primask.Checks.mrs_all_gprs_modes_and_frames.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.mrs_all_gprs_modes_and_frames.
+Check Picinae.tests.armv6m_primask.Checks.msr_all_gprs_bits_modes_and_frames.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.msr_all_gprs_bits_modes_and_frames.
+Check Picinae.tests.armv6m_primask.Checks.assembled_mask_shapes.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.assembled_mask_shapes.
+Check Picinae.tests.armv6m_primask.Checks.cps_reserved_bits.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.cps_reserved_bits.
+Check Picinae.tests.armv6m_primask.Checks.mrs_msr_invalid_registers.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.mrs_msr_invalid_registers.
+Check Picinae.tests.armv6m_primask.Checks.reserved_sysm.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.reserved_sysm.
+Check Picinae.tests.armv6m_primask.Checks.wrong_fixed_bits.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.wrong_fixed_bits.
+Check Picinae.tests.armv6m_primask.Checks.real_mask_finite_maps.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.real_mask_finite_maps.
+Check Picinae.tests.armv6m_primask.Checks.real_mask_lowering.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.real_mask_lowering.
+Check Picinae.tests.armv6m_primask.Checks.exception_return_excluded.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.exception_return_excluded.
+Check Picinae.tests.armv6m_primask.Checks.unsupported_system_boundary.
+Print Assumptions Picinae.tests.armv6m_primask.Checks.unsupported_system_boundary.
+Require Import Picinae.Examples.FreeRTOSMask.ulSetInterruptMask_armv6m.
+Check Picinae.Examples.FreeRTOSMask.ulSetInterruptMask_armv6m.ulSetInterruptMask_decode_check.
+Print Assumptions Picinae.Examples.FreeRTOSMask.ulSetInterruptMask_armv6m.ulSetInterruptMask_decode_check.
+Check Picinae.Examples.FreeRTOSMask.ulSetInterruptMask_armv6m.ulSetInterruptMask_welltyped.
+Print Assumptions Picinae.Examples.FreeRTOSMask.ulSetInterruptMask_armv6m.ulSetInterruptMask_welltyped.
+Require Import Picinae.Examples.FreeRTOSMask.vClearInterruptMask_armv6m.
+Check Picinae.Examples.FreeRTOSMask.vClearInterruptMask_armv6m.vClearInterruptMask_decode_check.
+Print Assumptions Picinae.Examples.FreeRTOSMask.vClearInterruptMask_armv6m.vClearInterruptMask_decode_check.
+Check Picinae.Examples.FreeRTOSMask.vClearInterruptMask_armv6m.vClearInterruptMask_welltyped.
+Print Assumptions Picinae.Examples.FreeRTOSMask.vClearInterruptMask_armv6m.vClearInterruptMask_welltyped.
+Check welltyped_arm2il.
+Print Assumptions welltyped_arm2il.
+Check welltyped_lift_armv6m.
+Print Assumptions welltyped_lift_armv6m.
+Check welltyped_armv6mprog.
+Print Assumptions welltyped_armv6mprog.
+Check welltyped_lift_armv6m_mask.
+Print Assumptions welltyped_lift_armv6m_mask.

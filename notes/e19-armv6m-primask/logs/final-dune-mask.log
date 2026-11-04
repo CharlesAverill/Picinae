@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96390313
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env dune build --cache=disabled -j1 --display short @armv6m-primask @Examples/FreeRTOSMask/freertos-mask-lifts
+        rocq .Picinae.theory.d
+        rocq Examples/FreeRTOSMask/ulSetInterruptMask_armv6m.{glob,vo}
+        rocq Examples/FreeRTOSMask/vClearInterruptMask_armv6m.{glob,vo}
+        rocq tests/armv6m_primask/fixture.{glob,vo}
+        rocq tests/armv6m_primask/Checks.{glob,vo}
+
+EXIT_CODE=0

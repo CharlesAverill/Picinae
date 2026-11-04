@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96390313
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e19-armv6m-primask/provenance.py
+PASS exact source and input provenance snapshot
+
+EXIT_CODE=0

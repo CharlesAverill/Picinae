@@ -1,0 +1,28 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96390313
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e19-armv6m-primask/frontend-tests.py
+PASS exact 16-bit delta, all register/SYSm templates and fixed-bit mutations
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x4090: mrs	r0, PRIMASK
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x4098: msr	PRIMASK, r0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e68: cpsid	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x419c: cpsid	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'xPortPendSVHandler']
+EXIT_CODE: 1
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-96390313/notes/e19-armv6m-primask/frontend-tests.py", line 51, in <module>
+    assert 'unsupported instruction' in proc.stderr, proc.stderr
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: armv6m lifter: expected one sized STT_FUNC symbol
+
+
+EXIT_CODE=1

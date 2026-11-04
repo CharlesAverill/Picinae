@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5f10d9a4
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/r42-port-mask-fix
+
+EXIT_CODE=0
