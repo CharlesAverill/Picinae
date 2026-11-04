@@ -1,0 +1,2090 @@
+[
+  {
+    "elf_address": "0xa81d0",
+    "names": [
+      "__GI_strcat",
+      "strcat",
+      "strcat@@GLIBC_2.2.5",
+      "strcat_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa81d4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa81f7",
+        "symbols_at_target": [
+          "__strcat_sse2_unaligned"
+        ],
+        "target": "0xc28e0"
+      },
+      {
+        "site": "0xa8207",
+        "symbols_at_target": [
+          "__strcat_sse2"
+        ],
+        "target": "0xc2720"
+      },
+      {
+        "site": "0xa820e",
+        "symbols_at_target": [
+          "__strcat_ssse3"
+        ],
+        "target": "0xbad10"
+      },
+      {
+        "site": "0xa8224",
+        "symbols_at_target": [
+          "__strcat_avx2_rtm"
+        ],
+        "target": "0x1aa130"
+      },
+      {
+        "site": "0xa8230",
+        "symbols_at_target": [
+          "__strcat_avx2"
+        ],
+        "target": "0x19dcb0"
+      },
+      {
+        "site": "0xa8240",
+        "symbols_at_target": [
+          "__strcat_evex"
+        ],
+        "target": "0x1b0c00"
+      }
+    ],
+    "sha256": "2398c3b80e4ff761008c19310377a07a802036ae4d1f0181cae1b5828819df19"
+  },
+  {
+    "elf_address": "0xa8260",
+    "names": [
+      "__GI_strchr",
+      "strchr",
+      "strchr@@GLIBC_2.2.5",
+      "strchr_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa8264",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa8288",
+        "symbols_at_target": [
+          "__strchr_sse2"
+        ],
+        "target": "0xba210"
+      },
+      {
+        "site": "0xa828f",
+        "symbols_at_target": [
+          "__strchr_sse2_no_bsf"
+        ],
+        "target": "0x1a46c0"
+      },
+      {
+        "site": "0xa82a9",
+        "symbols_at_target": [
+          "__strchr_avx2_rtm"
+        ],
+        "target": "0x1a8aa0"
+      },
+      {
+        "site": "0xa82b5",
+        "symbols_at_target": [
+          "__strchr_avx2"
+        ],
+        "target": "0x19d200"
+      },
+      {
+        "site": "0xa82c8",
+        "symbols_at_target": [
+          "__strchr_evex"
+        ],
+        "target": "0x1b1360"
+      }
+    ],
+    "sha256": "602bb8e9350bbafde0e0da87cd47962b8d153fb45c3a9eacfd1a8d5d61ed5279"
+  },
+  {
+    "elf_address": "0xa82e0",
+    "names": [
+      "__GI_strcmp",
+      "strcmp",
+      "strcmp@@GLIBC_2.2.5",
+      "strcmp_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa82e4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa8307",
+        "symbols_at_target": [
+          "__strcmp_sse2_unaligned"
+        ],
+        "target": "0xb2d70"
+      },
+      {
+        "site": "0xa8317",
+        "symbols_at_target": [
+          "__strcmp_sse2"
+        ],
+        "target": "0xb1920"
+      },
+      {
+        "site": "0xa831e",
+        "symbols_at_target": [
+          "__GI___strcmp_ssse3",
+          "__strcmp_ssse3"
+        ],
+        "target": "0x178270"
+      },
+      {
+        "site": "0xa8334",
+        "symbols_at_target": [
+          "__strcmp_avx2_rtm"
+        ],
+        "target": "0x1a8d20"
+      },
+      {
+        "site": "0xa8340",
+        "symbols_at_target": [
+          "__strcmp_avx2"
+        ],
+        "target": "0x1989c0"
+      },
+      {
+        "site": "0xa8352",
+        "symbols_at_target": [
+          "__strcmp_evex"
+        ],
+        "target": "0x1b1860"
+      }
+    ],
+    "sha256": "2eef44b10645f73afb2ce8801262d3f214a753c60d2fe2b869c07d7c7ef2604a"
+  },
+  {
+    "elf_address": "0xa8390",
+    "names": [
+      "__GI_strcpy",
+      "strcpy",
+      "strcpy@@GLIBC_2.2.5",
+      "strcpy_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa8394",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa83b7",
+        "symbols_at_target": [
+          "__strcpy_sse2_unaligned"
+        ],
+        "target": "0xbf890"
+      },
+      {
+        "site": "0xa83c7",
+        "symbols_at_target": [
+          "__strcpy_sse2"
+        ],
+        "target": "0xbf6b0"
+      },
+      {
+        "site": "0xa83ce",
+        "symbols_at_target": [
+          "__strcpy_ssse3"
+        ],
+        "target": "0x189ef0"
+      },
+      {
+        "site": "0xa83e4",
+        "symbols_at_target": [
+          "__strcpy_avx2_rtm"
+        ],
+        "target": "0x1aa7c0"
+      },
+      {
+        "site": "0xa83f0",
+        "symbols_at_target": [
+          "__strcpy_avx2"
+        ],
+        "target": "0x19ed30"
+      },
+      {
+        "site": "0xa8400",
+        "symbols_at_target": [
+          "__strcpy_evex"
+        ],
+        "target": "0x1b1cd0"
+      }
+    ],
+    "sha256": "1bb22701a990b33566a1f2cd46f006e4aa18997edad708bdd08c299c952a7451"
+  },
+  {
+    "elf_address": "0xa8420",
+    "names": [
+      "__GI_strcspn",
+      "strcspn",
+      "strcspn@@GLIBC_2.2.5",
+      "strcspn_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa8424",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa842b",
+        "symbols_at_target": [
+          "__strcspn_sse42"
+        ],
+        "target": "0x198610"
+      },
+      {
+        "site": "0xa8439",
+        "symbols_at_target": [
+          "__strcspn_sse2"
+        ],
+        "target": "0xc4620"
+      }
+    ],
+    "sha256": "2366b76c0699dd774302111c8259243e8ed0e00b3c060d85fbc7e85a85006ac8"
+  },
+  {
+    "elf_address": "0xa86a0",
+    "names": [
+      "__GI_strlen",
+      "strlen",
+      "strlen@@GLIBC_2.2.5",
+      "strlen_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa86a4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa86ab",
+        "symbols_at_target": [
+          "__strlen_sse2"
+        ],
+        "target": "0xba950"
+      },
+      {
+        "site": "0xa86df",
+        "symbols_at_target": [
+          "__strlen_avx2_rtm"
+        ],
+        "target": "0x1aab80"
+      },
+      {
+        "site": "0xa86ee",
+        "symbols_at_target": [
+          "__strlen_avx2"
+        ],
+        "target": "0x19d860"
+      },
+      {
+        "site": "0xa86f5",
+        "symbols_at_target": [
+          "__strlen_sse2"
+        ],
+        "target": "0xba950"
+      },
+      {
+        "site": "0xa8708",
+        "symbols_at_target": [
+          "__strlen_evex"
+        ],
+        "target": "0x1b2120"
+      }
+    ],
+    "sha256": "31eba34578a19bbf72f05d57b1138acd835d806ad005f003d484f94c18217c9d"
+  },
+  {
+    "elf_address": "0xa8720",
+    "names": [
+      "__GI___strnlen",
+      "__GI_strnlen",
+      "__strnlen",
+      "__strnlen_ifunc",
+      "strnlen",
+      "strnlen@@GLIBC_2.2.5"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa8724",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa872b",
+        "symbols_at_target": [
+          "__strnlen_sse2"
+        ],
+        "target": "0xbaaf0"
+      },
+      {
+        "site": "0xa875f",
+        "symbols_at_target": [
+          "__strnlen_avx2_rtm"
+        ],
+        "target": "0x1ac600"
+      },
+      {
+        "site": "0xa876e",
+        "symbols_at_target": [
+          "__strnlen_avx2"
+        ],
+        "target": "0x19d9e0"
+      },
+      {
+        "site": "0xa8775",
+        "symbols_at_target": [
+          "__strnlen_sse2"
+        ],
+        "target": "0xbaaf0"
+      },
+      {
+        "site": "0xa8788",
+        "symbols_at_target": [
+          "__strnlen_evex"
+        ],
+        "target": "0x1b3d80"
+      }
+    ],
+    "sha256": "d40f2fd3a0e5df76e535690bd0e5225288e47f7e97619ac6953f55ecef86cda3"
+  },
+  {
+    "elf_address": "0xa87a0",
+    "names": [
+      "__GI___strncat",
+      "strncat",
+      "strncat@@GLIBC_2.2.5",
+      "strncat_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa87a4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa87c7",
+        "symbols_at_target": [
+          "__strncat_sse2_unaligned"
+        ],
+        "target": "0xc31d0"
+      },
+      {
+        "site": "0xa87d7",
+        "symbols_at_target": [
+          "__strncat_sse2"
+        ],
+        "target": "0xb1800"
+      },
+      {
+        "site": "0xa87de",
+        "symbols_at_target": [
+          "__strncat_ssse3"
+        ],
+        "target": "0xbc930"
+      },
+      {
+        "site": "0xa87f4",
+        "symbols_at_target": [
+          "__strncat_avx2_rtm"
+        ],
+        "target": "0x1aacf0"
+      },
+      {
+        "site": "0xa8800",
+        "symbols_at_target": [
+          "__strncat_avx2"
+        ],
+        "target": "0x19e320"
+      },
+      {
+        "site": "0xa8810",
+        "symbols_at_target": [
+          "__strncat_evex"
+        ],
+        "target": "0x1b22a0"
+      }
+    ],
+    "sha256": "def7df0e576373b074588eaa0b61199b77228f39ab3006e0edede0530824cce3"
+  },
+  {
+    "elf_address": "0xa8830",
+    "names": [
+      "__GI_strncmp",
+      "strncmp",
+      "strncmp@@GLIBC_2.2.5",
+      "strncmp_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa8834",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa8858",
+        "symbols_at_target": [
+          "__strncmp_avx2_rtm"
+        ],
+        "target": "0x1ab730"
+      },
+      {
+        "site": "0xa886a",
+        "symbols_at_target": [
+          "__strncmp_avx2"
+        ],
+        "target": "0x198e00"
+      },
+      {
+        "site": "0xa8886",
+        "symbols_at_target": [
+          "__strncmp_sse42"
+        ],
+        "target": "0x193ab0"
+      },
+      {
+        "site": "0xa8899",
+        "symbols_at_target": [
+          "__strncmp_sse2"
+        ],
+        "target": "0xb3020"
+      },
+      {
+        "site": "0xa88a0",
+        "symbols_at_target": [
+          "__strncmp_ssse3"
+        ],
+        "target": "0x1794e0"
+      },
+      {
+        "site": "0xa88b2",
+        "symbols_at_target": [
+          "__strncmp_evex"
+        ],
+        "target": "0x1b2dc0"
+      }
+    ],
+    "sha256": "8b3493ee53c3dd7e2496e3a48340244c1cc640589ebde0251bd332521742aab2"
+  },
+  {
+    "elf_address": "0xa88d0",
+    "names": [
+      "__GI_strncpy",
+      "strncpy",
+      "strncpy@@GLIBC_2.2.5",
+      "strncpy_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa88d4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa88f7",
+        "symbols_at_target": [
+          "__strncpy_sse2_unaligned"
+        ],
+        "target": "0xbfec0"
+      },
+      {
+        "site": "0xa8907",
+        "symbols_at_target": [
+          "__strncpy_sse2"
+        ],
+        "target": "0xb18c0"
+      },
+      {
+        "site": "0xa890e",
+        "symbols_at_target": [
+          "__strncpy_ssse3"
+        ],
+        "target": "0x18b6a0"
+      },
+      {
+        "site": "0xa8924",
+        "symbols_at_target": [
+          "__strncpy_avx2_rtm"
+        ],
+        "target": "0x1abc80"
+      },
+      {
+        "site": "0xa8930",
+        "symbols_at_target": [
+          "__strncpy_avx2"
+        ],
+        "target": "0x19f0c0"
+      },
+      {
+        "site": "0xa8940",
+        "symbols_at_target": [
+          "__strncpy_evex"
+        ],
+        "target": "0x1b3330"
+      }
+    ],
+    "sha256": "af7506881eda63a5817961cc3d3be404969d0b9038292b424c213d78bf0693ba"
+  },
+  {
+    "elf_address": "0xa8960",
+    "names": [
+      "__GI_strrchr",
+      "strrchr",
+      "strrchr@@GLIBC_2.2.5",
+      "strrchr_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa8964",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa896b",
+        "symbols_at_target": [
+          "__strrchr_sse2"
+        ],
+        "target": "0xba650"
+      },
+      {
+        "site": "0xa899f",
+        "symbols_at_target": [
+          "__strrchr_avx2_rtm"
+        ],
+        "target": "0x1ac900"
+      },
+      {
+        "site": "0xa89ae",
+        "symbols_at_target": [
+          "__strrchr_avx2"
+        ],
+        "target": "0x19d690"
+      },
+      {
+        "site": "0xa89b5",
+        "symbols_at_target": [
+          "__strrchr_sse2"
+        ],
+        "target": "0xba650"
+      },
+      {
+        "site": "0xa89c8",
+        "symbols_at_target": [
+          "__strrchr_evex"
+        ],
+        "target": "0x1b4040"
+      }
+    ],
+    "sha256": "6d4c6d06064ddf11bde9f062dcf50032aeeaa900bf2841b7243ccc8dbd94d54b"
+  },
+  {
+    "elf_address": "0xa89e0",
+    "names": [
+      "__GI_strpbrk",
+      "strpbrk",
+      "strpbrk@@GLIBC_2.2.5",
+      "strpbrk_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa89e4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa89eb",
+        "symbols_at_target": [
+          "__strpbrk_sse42"
+        ],
+        "target": "0x198750"
+      },
+      {
+        "site": "0xa89f9",
+        "symbols_at_target": [
+          "__strpbrk_sse2"
+        ],
+        "target": "0xc46d0"
+      }
+    ],
+    "sha256": "4308f04de285fccd28e586919018764f91ffaeaa8811a7c5e730dd821ee6d1ac"
+  },
+  {
+    "elf_address": "0xa8b00",
+    "names": [
+      "__GI_strspn",
+      "strspn",
+      "strspn@@GLIBC_2.2.5",
+      "strspn_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa8b04",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa8b0b",
+        "symbols_at_target": [
+          "__strspn_sse42"
+        ],
+        "target": "0x198870"
+      },
+      {
+        "site": "0xa8b19",
+        "symbols_at_target": [
+          "__strspn_sse2"
+        ],
+        "target": "0xc4780"
+      }
+    ],
+    "sha256": "5a88520c515d0e1a159340c8855bcdcd96208cd431dccc383d388bd1cdde4a6c"
+  },
+  {
+    "elf_address": "0xa9310",
+    "names": [
+      "strstr",
+      "strstr@@GLIBC_2.2.5"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa9314",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa931b",
+        "symbols_at_target": [
+          "__GI_strstr",
+          "__strstr_sse2"
+        ],
+        "target": "0xa8fc0"
+      },
+      {
+        "site": "0xa9329",
+        "symbols_at_target": [
+          "__strstr_sse2_unaligned"
+        ],
+        "target": "0xc4180"
+      }
+    ],
+    "sha256": "734ccc6575cf0c5bb8575a9053590f755c877222ad919636ab009e816e86687b"
+  },
+  {
+    "elf_address": "0xa93f0",
+    "names": [
+      "__GI_memchr",
+      "__memchr",
+      "memchr",
+      "memchr@@GLIBC_2.2.5",
+      "memchr_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa93f4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa93fb",
+        "symbols_at_target": [
+          "__memchr_sse2"
+        ],
+        "target": "0xb4880"
+      },
+      {
+        "site": "0xa9437",
+        "symbols_at_target": [
+          "__memchr_avx2_rtm"
+        ],
+        "target": "0x1a7240"
+      },
+      {
+        "site": "0xa9445",
+        "symbols_at_target": [
+          "__memchr_avx2"
+        ],
+        "target": "0x199340"
+      },
+      {
+        "site": "0xa944c",
+        "symbols_at_target": [
+          "__memchr_sse2"
+        ],
+        "target": "0xb4880"
+      },
+      {
+        "site": "0xa946a",
+        "symbols_at_target": [
+          "__memchr_evex"
+        ],
+        "target": "0x1ae580"
+      },
+      {
+        "site": "0xa9471",
+        "symbols_at_target": [
+          "__memchr_evex_rtm"
+        ],
+        "target": "0x1b5c40"
+      }
+    ],
+    "sha256": "19956efe1547a08fce9376f59f470ffa94a1fbc5824f5b6803bfcd1749c7f0ad"
+  },
+  {
+    "elf_address": "0xa9480",
+    "names": [
+      "__GI_memcmp",
+      "bcmp",
+      "bcmp@@GLIBC_2.2.5",
+      "memcmp",
+      "memcmp@@GLIBC_2.2.5",
+      "memcmp_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa9484",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa94a4",
+        "symbols_at_target": [
+          "__memcmp_sse4_1"
+        ],
+        "target": "0x1a2bb0"
+      },
+      {
+        "site": "0xa94b6",
+        "symbols_at_target": [
+          "__memcmp_sse2"
+        ],
+        "target": "0xb5190"
+      },
+      {
+        "site": "0xa94bd",
+        "symbols_at_target": [
+          "__memcmp_ssse3"
+        ],
+        "target": "0x1a49e0"
+      },
+      {
+        "site": "0xa94e7",
+        "symbols_at_target": [
+          "__memcmp_avx2_movbe_rtm"
+        ],
+        "target": "0x1a7500"
+      },
+      {
+        "site": "0xa94f9",
+        "symbols_at_target": [
+          "__memcmp_avx2_movbe"
+        ],
+        "target": "0x199b00"
+      },
+      {
+        "site": "0xa9508",
+        "symbols_at_target": [
+          "__memcmp_evex_movbe"
+        ],
+        "target": "0x1ae880"
+      }
+    ],
+    "sha256": "560197bdde1117dc05b934c475d1cdbc0031c1548aaa625b1adc0e0e78a86990"
+  },
+  {
+    "elf_address": "0xa9520",
+    "names": [
+      "__GI___memcmpeq",
+      "__memcmpeq",
+      "__memcmpeq@@GLIBC_2.35",
+      "__memcmpeq_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa9524",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa952b",
+        "symbols_at_target": [
+          "__memcmpeq_sse2"
+        ],
+        "target": "0xb5590"
+      },
+      {
+        "site": "0xa955f",
+        "symbols_at_target": [
+          "__memcmpeq_avx2_rtm"
+        ],
+        "target": "0x1a7940"
+      },
+      {
+        "site": "0xa956e",
+        "symbols_at_target": [
+          "__memcmpeq_avx2"
+        ],
+        "target": "0x199f40"
+      },
+      {
+        "site": "0xa9575",
+        "symbols_at_target": [
+          "__memcmpeq_sse2"
+        ],
+        "target": "0xb5590"
+      },
+      {
+        "site": "0xa9588",
+        "symbols_at_target": [
+          "__memcmpeq_evex"
+        ],
+        "target": "0x1aeb80"
+      }
+    ],
+    "sha256": "30993df68f229ec7f975e26d867a4c5b480953eec104858f8fa0da7a577391d5"
+  },
+  {
+    "elf_address": "0xa95a0",
+    "names": [
+      "__GI_memmove",
+      "memmove",
+      "memmove@@GLIBC_2.2.5"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa95a4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa95ab",
+        "symbols_at_target": [
+          "__memcpy_erms",
+          "__memmove_erms"
+        ],
+        "target": "0xc48e0"
+      },
+      {
+        "site": "0xa95e6",
+        "symbols_at_target": [
+          "__memcpy_avx_unaligned_rtm",
+          "__memmove_avx_unaligned_rtm"
+        ],
+        "target": "0x1a7c30"
+      },
+      {
+        "site": "0xa95ed",
+        "symbols_at_target": [
+          "__memcpy_avx_unaligned_erms_rtm",
+          "__memmove_avx_unaligned_erms_rtm"
+        ],
+        "target": "0x1a7cc0"
+      },
+      {
+        "site": "0xa9621",
+        "symbols_at_target": [
+          "__memmove_ssse3"
+        ],
+        "target": "0x17d660"
+      },
+      {
+        "site": "0xa9628",
+        "symbols_at_target": [
+          "__memmove_ssse3_back"
+        ],
+        "target": "0x182d00"
+      },
+      {
+        "site": "0xa963d",
+        "symbols_at_target": [
+          "__memcpy_avx512_no_vzeroupper",
+          "__memmove_avx512_no_vzeroupper"
+        ],
+        "target": "0x1a3cf0"
+      },
+      {
+        "site": "0xa964e",
+        "symbols_at_target": [
+          "__memcpy_avx512_unaligned",
+          "__memmove_avx512_unaligned"
+        ],
+        "target": "0x1a67b0"
+      },
+      {
+        "site": "0xa9655",
+        "symbols_at_target": [
+          "__memcpy_avx512_unaligned_erms",
+          "__memmove_avx512_unaligned_erms"
+        ],
+        "target": "0x1a6840"
+      },
+      {
+        "site": "0xa966e",
+        "symbols_at_target": [
+          "__memcpy_sse2_unaligned",
+          "__memmove_sse2_unaligned",
+          "memcpy@GLIBC_2.2.5"
+        ],
+        "target": "0xc4870"
+      },
+      {
+        "site": "0xa9675",
+        "symbols_at_target": [
+          "__memcpy_sse2_unaligned_erms",
+          "__memmove_sse2_unaligned_erms"
+        ],
+        "target": "0xc4980"
+      },
+      {
+        "site": "0xa968e",
+        "symbols_at_target": [
+          "__memcpy_evex_unaligned",
+          "__memmove_evex_unaligned"
+        ],
+        "target": "0x1aedb0"
+      },
+      {
+        "site": "0xa9695",
+        "symbols_at_target": [
+          "__memcpy_evex_unaligned_erms",
+          "__memmove_evex_unaligned_erms"
+        ],
+        "target": "0x1aee40"
+      },
+      {
+        "site": "0xa96ae",
+        "symbols_at_target": [
+          "__memcpy_avx_unaligned",
+          "__memmove_avx_unaligned"
+        ],
+        "target": "0x1a07b0"
+      },
+      {
+        "site": "0xa96b5",
+        "symbols_at_target": [
+          "__memcpy_avx_unaligned_erms",
+          "__memmove_avx_unaligned_erms"
+        ],
+        "target": "0x1a0840"
+      }
+    ],
+    "sha256": "3626089ab77bba1828166f6e957f839b8ce500ccdf8ac42a438f9010825f05ec"
+  },
+  {
+    "elf_address": "0xa96d0",
+    "names": [
+      "__GI_memset",
+      "memset",
+      "memset@@GLIBC_2.2.5",
+      "memset_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa96d4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa96db",
+        "symbols_at_target": [
+          "__memset_erms"
+        ],
+        "target": "0xc4fb0"
+      },
+      {
+        "site": "0xa971b",
+        "symbols_at_target": [
+          "__memset_avx2_unaligned"
+        ],
+        "target": "0x1a0f80"
+      },
+      {
+        "site": "0xa9722",
+        "symbols_at_target": [
+          "__memset_avx2_unaligned_erms"
+        ],
+        "target": "0x1a1000"
+      },
+      {
+        "site": "0xa9732",
+        "symbols_at_target": [
+          "__memset_sse2_unaligned_erms"
+        ],
+        "target": "0xc5000"
+      },
+      {
+        "site": "0xa9739",
+        "symbols_at_target": [
+          "__memset_sse2_unaligned"
+        ],
+        "target": "0xc4f60"
+      },
+      {
+        "site": "0xa974d",
+        "symbols_at_target": [
+          "__memset_avx512_no_vzeroupper"
+        ],
+        "target": "0x1a4440"
+      },
+      {
+        "site": "0xa976b",
+        "symbols_at_target": [
+          "__memset_avx512_unaligned_erms"
+        ],
+        "target": "0x1a70c0"
+      },
+      {
+        "site": "0xa9772",
+        "symbols_at_target": [
+          "__memset_avx512_unaligned"
+        ],
+        "target": "0x1a7040"
+      },
+      {
+        "site": "0xa9782",
+        "symbols_at_target": [
+          "__memset_avx2_unaligned_rtm"
+        ],
+        "target": "0x1a8780"
+      },
+      {
+        "site": "0xa9789",
+        "symbols_at_target": [
+          "__memset_avx2_unaligned_erms_rtm"
+        ],
+        "target": "0x1a8800"
+      },
+      {
+        "site": "0xa97ae",
+        "symbols_at_target": [
+          "__memset_evex_unaligned"
+        ],
+        "target": "0x1af9c0"
+      },
+      {
+        "site": "0xa97b5",
+        "symbols_at_target": [
+          "__memset_evex_unaligned_erms"
+        ],
+        "target": "0x1afa40"
+      }
+    ],
+    "sha256": "98c2c4ff0ebfd41504d4268c270c5e451cfb306076f1fae1f24bed96cb7190b4"
+  },
+  {
+    "elf_address": "0xa97d0",
+    "names": [
+      "__GI___mempcpy",
+      "__GI_mempcpy",
+      "__mempcpy",
+      "__mempcpy@@GLIBC_2.2.5",
+      "__mempcpy_ifunc",
+      "mempcpy",
+      "mempcpy@@GLIBC_2.2.5"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa97d4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa97db",
+        "symbols_at_target": [
+          "__mempcpy_erms"
+        ],
+        "target": "0xc48b0"
+      },
+      {
+        "site": "0xa9816",
+        "symbols_at_target": [
+          "__mempcpy_avx_unaligned_rtm"
+        ],
+        "target": "0x1a7c10"
+      },
+      {
+        "site": "0xa981d",
+        "symbols_at_target": [
+          "__mempcpy_avx_unaligned_erms_rtm"
+        ],
+        "target": "0x1a7c80"
+      },
+      {
+        "site": "0xa9851",
+        "symbols_at_target": [
+          "__mempcpy_ssse3"
+        ],
+        "target": "0x17ac60"
+      },
+      {
+        "site": "0xa9858",
+        "symbols_at_target": [
+          "__mempcpy_ssse3_back"
+        ],
+        "target": "0x1801f0"
+      },
+      {
+        "site": "0xa986d",
+        "symbols_at_target": [
+          "__mempcpy_avx512_no_vzeroupper"
+        ],
+        "target": "0x1a3cd0"
+      },
+      {
+        "site": "0xa987e",
+        "symbols_at_target": [
+          "__mempcpy_avx512_unaligned"
+        ],
+        "target": "0x1a6790"
+      },
+      {
+        "site": "0xa9885",
+        "symbols_at_target": [
+          "__mempcpy_avx512_unaligned_erms"
+        ],
+        "target": "0x1a6800"
+      },
+      {
+        "site": "0xa989e",
+        "symbols_at_target": [
+          "__mempcpy_sse2_unaligned"
+        ],
+        "target": "0xc4850"
+      },
+      {
+        "site": "0xa98a5",
+        "symbols_at_target": [
+          "__mempcpy_sse2_unaligned_erms"
+        ],
+        "target": "0xc4930"
+      },
+      {
+        "site": "0xa98be",
+        "symbols_at_target": [
+          "__mempcpy_evex_unaligned"
+        ],
+        "target": "0x1aed90"
+      },
+      {
+        "site": "0xa98c5",
+        "symbols_at_target": [
+          "__mempcpy_evex_unaligned_erms"
+        ],
+        "target": "0x1aee00"
+      },
+      {
+        "site": "0xa98de",
+        "symbols_at_target": [
+          "__mempcpy_avx_unaligned"
+        ],
+        "target": "0x1a0790"
+      },
+      {
+        "site": "0xa98e5",
+        "symbols_at_target": [
+          "__mempcpy_avx_unaligned_erms"
+        ],
+        "target": "0x1a0800"
+      }
+    ],
+    "sha256": "6d31e052b51f0c2d2713c73b4d484b5c05576b8716104e377c29d528c7ef49a7"
+  },
+  {
+    "elf_address": "0xa9950",
+    "names": [
+      "__GI___stpcpy",
+      "__GI_stpcpy",
+      "__stpcpy",
+      "__stpcpy@@GLIBC_2.2.5",
+      "__stpcpy_ifunc",
+      "stpcpy",
+      "stpcpy@@GLIBC_2.2.5"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa9954",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa9977",
+        "symbols_at_target": [
+          "__stpcpy_sse2_unaligned"
+        ],
+        "target": "0xc0ed0"
+      },
+      {
+        "site": "0xa9987",
+        "symbols_at_target": [
+          "__stpcpy_sse2"
+        ],
+        "target": "0xbf7a0"
+      },
+      {
+        "site": "0xa998e",
+        "symbols_at_target": [
+          "__stpcpy_ssse3"
+        ],
+        "target": "0x18e220"
+      },
+      {
+        "site": "0xa99a4",
+        "symbols_at_target": [
+          "__stpcpy_avx2_rtm"
+        ],
+        "target": "0x1a93b0"
+      },
+      {
+        "site": "0xa99b0",
+        "symbols_at_target": [
+          "__stpcpy_avx2"
+        ],
+        "target": "0x19fa20"
+      },
+      {
+        "site": "0xa99c0",
+        "symbols_at_target": [
+          "__stpcpy_evex"
+        ],
+        "target": "0x1afd20"
+      }
+    ],
+    "sha256": "edfeb907c780555243e1c751cf74d7a89e402f24baea527d3459c97cb4fdfa86"
+  },
+  {
+    "elf_address": "0xa99e0",
+    "names": [
+      "__GI___stpncpy",
+      "__stpncpy",
+      "__stpncpy@@GLIBC_2.2.5",
+      "__stpncpy_ifunc",
+      "stpncpy",
+      "stpncpy@@GLIBC_2.2.5"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa99e4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa9a07",
+        "symbols_at_target": [
+          "__stpncpy_sse2_unaligned"
+        ],
+        "target": "0xc1590"
+      },
+      {
+        "site": "0xa9a17",
+        "symbols_at_target": [
+          "__stpncpy_sse2"
+        ],
+        "target": "0xb1850"
+      },
+      {
+        "site": "0xa9a1e",
+        "symbols_at_target": [
+          "__stpncpy_ssse3"
+        ],
+        "target": "0x18fa30"
+      },
+      {
+        "site": "0xa9a34",
+        "symbols_at_target": [
+          "__stpncpy_avx2_rtm"
+        ],
+        "target": "0x1a9770"
+      },
+      {
+        "site": "0xa9a40",
+        "symbols_at_target": [
+          "__stpncpy_avx2"
+        ],
+        "target": "0x19fdd0"
+      },
+      {
+        "site": "0xa9a50",
+        "symbols_at_target": [
+          "__stpncpy_evex"
+        ],
+        "target": "0x1b0170"
+      }
+    ],
+    "sha256": "15883a35a473629c591a80533437957cd84cb66ec866a83ec884b5420e34e312"
+  },
+  {
+    "elf_address": "0xa9c10",
+    "names": [
+      "__GI_memcpy",
+      "memcpy",
+      "memcpy@@GLIBC_2.14"
+    ],
+    "rip_references": [
+      {
+        "site": "0xa9c14",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xa9c1b",
+        "symbols_at_target": [
+          "__memcpy_erms",
+          "__memmove_erms"
+        ],
+        "target": "0xc48e0"
+      },
+      {
+        "site": "0xa9c56",
+        "symbols_at_target": [
+          "__memcpy_avx_unaligned_rtm",
+          "__memmove_avx_unaligned_rtm"
+        ],
+        "target": "0x1a7c30"
+      },
+      {
+        "site": "0xa9c5d",
+        "symbols_at_target": [
+          "__memcpy_avx_unaligned_erms_rtm",
+          "__memmove_avx_unaligned_erms_rtm"
+        ],
+        "target": "0x1a7cc0"
+      },
+      {
+        "site": "0xa9c91",
+        "symbols_at_target": [
+          "__memcpy_ssse3"
+        ],
+        "target": "0x17ac80"
+      },
+      {
+        "site": "0xa9c98",
+        "symbols_at_target": [
+          "__memcpy_ssse3_back"
+        ],
+        "target": "0x180210"
+      },
+      {
+        "site": "0xa9cad",
+        "symbols_at_target": [
+          "__memcpy_avx512_no_vzeroupper",
+          "__memmove_avx512_no_vzeroupper"
+        ],
+        "target": "0x1a3cf0"
+      },
+      {
+        "site": "0xa9cbe",
+        "symbols_at_target": [
+          "__memcpy_avx512_unaligned",
+          "__memmove_avx512_unaligned"
+        ],
+        "target": "0x1a67b0"
+      },
+      {
+        "site": "0xa9cc5",
+        "symbols_at_target": [
+          "__memcpy_avx512_unaligned_erms",
+          "__memmove_avx512_unaligned_erms"
+        ],
+        "target": "0x1a6840"
+      },
+      {
+        "site": "0xa9cde",
+        "symbols_at_target": [
+          "__memcpy_sse2_unaligned",
+          "__memmove_sse2_unaligned",
+          "memcpy@GLIBC_2.2.5"
+        ],
+        "target": "0xc4870"
+      },
+      {
+        "site": "0xa9ce5",
+        "symbols_at_target": [
+          "__memcpy_sse2_unaligned_erms",
+          "__memmove_sse2_unaligned_erms"
+        ],
+        "target": "0xc4980"
+      },
+      {
+        "site": "0xa9cfe",
+        "symbols_at_target": [
+          "__memcpy_evex_unaligned",
+          "__memmove_evex_unaligned"
+        ],
+        "target": "0x1aedb0"
+      },
+      {
+        "site": "0xa9d05",
+        "symbols_at_target": [
+          "__memcpy_evex_unaligned_erms",
+          "__memmove_evex_unaligned_erms"
+        ],
+        "target": "0x1aee40"
+      },
+      {
+        "site": "0xa9d1e",
+        "symbols_at_target": [
+          "__memcpy_avx_unaligned",
+          "__memmove_avx_unaligned"
+        ],
+        "target": "0x1a07b0"
+      },
+      {
+        "site": "0xa9d25",
+        "symbols_at_target": [
+          "__memcpy_avx_unaligned_erms",
+          "__memmove_avx_unaligned_erms"
+        ],
+        "target": "0x1a0840"
+      }
+    ],
+    "sha256": "0f4b85a7cb06361a0e3fa6d2f6c1c101e1a9194afbf19ded6d65d5840b7ae27f"
+  },
+  {
+    "elf_address": "0xaaf80",
+    "names": [
+      "__GI___rawmemchr",
+      "__rawmemchr",
+      "__rawmemchr@@GLIBC_2.2.5",
+      "__rawmemchr_ifunc",
+      "rawmemchr",
+      "rawmemchr@@GLIBC_2.2.5"
+    ],
+    "rip_references": [
+      {
+        "site": "0xaaf84",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xaaf8b",
+        "symbols_at_target": [
+          "__rawmemchr_sse2"
+        ],
+        "target": "0xb4bb0"
+      },
+      {
+        "site": "0xaafc7",
+        "symbols_at_target": [
+          "__rawmemchr_avx2_rtm"
+        ],
+        "target": "0x1a8940"
+      },
+      {
+        "site": "0xaafd5",
+        "symbols_at_target": [
+          "__rawmemchr_avx2"
+        ],
+        "target": "0x199610"
+      },
+      {
+        "site": "0xaafdc",
+        "symbols_at_target": [
+          "__rawmemchr_sse2"
+        ],
+        "target": "0xb4bb0"
+      },
+      {
+        "site": "0xaaffa",
+        "symbols_at_target": [
+          "__rawmemchr_evex"
+        ],
+        "target": "0x1afba0"
+      },
+      {
+        "site": "0xab001",
+        "symbols_at_target": [
+          "__rawmemchr_evex_rtm"
+        ],
+        "target": "0x1b5f40"
+      }
+    ],
+    "sha256": "1d0329a6d393d060ecfc527dec0bf265d83840cbea184ed652144361ee498b2c"
+  },
+  {
+    "elf_address": "0xab010",
+    "names": [
+      "__strchrnul",
+      "__strchrnul_ifunc",
+      "strchrnul",
+      "strchrnul@@GLIBC_2.2.5"
+    ],
+    "rip_references": [
+      {
+        "site": "0xab014",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xab01b",
+        "symbols_at_target": [
+          "__strchrnul_sse2"
+        ],
+        "target": "0xba440"
+      },
+      {
+        "site": "0xab04f",
+        "symbols_at_target": [
+          "__strchrnul_avx2_rtm"
+        ],
+        "target": "0x1a91a0"
+      },
+      {
+        "site": "0xab05e",
+        "symbols_at_target": [
+          "__strchrnul_avx2"
+        ],
+        "target": "0x19d480"
+      },
+      {
+        "site": "0xab065",
+        "symbols_at_target": [
+          "__strchrnul_sse2"
+        ],
+        "target": "0xba440"
+      },
+      {
+        "site": "0xab078",
+        "symbols_at_target": [
+          "__strchrnul_evex"
+        ],
+        "target": "0x1b1600"
+      }
+    ],
+    "sha256": "072d1f9d32c221d4c8e13b9fb7dda821be32e290f95eb833490024442ac80e22"
+  },
+  {
+    "elf_address": "0xb1570",
+    "names": [
+      "__memrchr",
+      "__memrchr_ifunc",
+      "memrchr",
+      "memrchr@@GLIBC_2.2.5"
+    ],
+    "rip_references": [
+      {
+        "site": "0xb1574",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0xb157b",
+        "symbols_at_target": [
+          "__memrchr_sse2"
+        ],
+        "target": "0xb4dc0"
+      },
+      {
+        "site": "0xb15af",
+        "symbols_at_target": [
+          "__memrchr_avx2_rtm"
+        ],
+        "target": "0x1a83a0"
+      },
+      {
+        "site": "0xb15be",
+        "symbols_at_target": [
+          "__memrchr_avx2"
+        ],
+        "target": "0x199780"
+      },
+      {
+        "site": "0xb15c5",
+        "symbols_at_target": [
+          "__memrchr_sse2"
+        ],
+        "target": "0xb4dc0"
+      },
+      {
+        "site": "0xb15d8",
+        "symbols_at_target": [
+          "__memrchr_evex"
+        ],
+        "target": "0x1af600"
+      }
+    ],
+    "sha256": "66b64878b855452be68d67c42c825ed10cc3e4358d4125be8d3ab081b5af6b72"
+  },
+  {
+    "elf_address": "0x1342f0",
+    "names": [
+      "__memcpy_chk",
+      "__memcpy_chk@@GLIBC_2.3.4",
+      "__memcpy_chk_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0x1342f4",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0x1342fb",
+        "symbols_at_target": [
+          "__memcpy_chk_erms",
+          "__memmove_chk_erms"
+        ],
+        "target": "0xc48d0"
+      },
+      {
+        "site": "0x134336",
+        "symbols_at_target": [
+          "__memcpy_chk_avx_unaligned_rtm",
+          "__memmove_chk_avx_unaligned_rtm"
+        ],
+        "target": "0x1a7c20"
+      },
+      {
+        "site": "0x13433d",
+        "symbols_at_target": [
+          "__memcpy_chk_avx_unaligned_erms_rtm",
+          "__memmove_chk_avx_unaligned_erms_rtm"
+        ],
+        "target": "0x1a7c90"
+      },
+      {
+        "site": "0x134371",
+        "symbols_at_target": [
+          "__memcpy_chk_ssse3"
+        ],
+        "target": "0x17ac70"
+      },
+      {
+        "site": "0x134378",
+        "symbols_at_target": [
+          "__memcpy_chk_ssse3_back"
+        ],
+        "target": "0x180200"
+      },
+      {
+        "site": "0x13438d",
+        "symbols_at_target": [
+          "__memcpy_chk_avx512_no_vzeroupper",
+          "__memmove_chk_avx512_no_vzeroupper"
+        ],
+        "target": "0x1a3ce0"
+      },
+      {
+        "site": "0x13439e",
+        "symbols_at_target": [
+          "__memcpy_chk_avx512_unaligned",
+          "__memmove_chk_avx512_unaligned"
+        ],
+        "target": "0x1a67a0"
+      },
+      {
+        "site": "0x1343a5",
+        "symbols_at_target": [
+          "__memcpy_chk_avx512_unaligned_erms",
+          "__memmove_chk_avx512_unaligned_erms"
+        ],
+        "target": "0x1a6810"
+      },
+      {
+        "site": "0x1343be",
+        "symbols_at_target": [
+          "__memcpy_chk_sse2_unaligned",
+          "__memmove_chk_sse2_unaligned"
+        ],
+        "target": "0xc4860"
+      },
+      {
+        "site": "0x1343c5",
+        "symbols_at_target": [
+          "__memcpy_chk_sse2_unaligned_erms",
+          "__memmove_chk_sse2_unaligned_erms"
+        ],
+        "target": "0xc4940"
+      },
+      {
+        "site": "0x1343de",
+        "symbols_at_target": [
+          "__memcpy_chk_evex_unaligned",
+          "__memmove_chk_evex_unaligned"
+        ],
+        "target": "0x1aeda0"
+      },
+      {
+        "site": "0x1343e5",
+        "symbols_at_target": [
+          "__memcpy_chk_evex_unaligned_erms",
+          "__memmove_chk_evex_unaligned_erms"
+        ],
+        "target": "0x1aee10"
+      },
+      {
+        "site": "0x1343fe",
+        "symbols_at_target": [
+          "__memcpy_chk_avx_unaligned",
+          "__memmove_chk_avx_unaligned"
+        ],
+        "target": "0x1a07a0"
+      },
+      {
+        "site": "0x134405",
+        "symbols_at_target": [
+          "__memcpy_chk_avx_unaligned_erms",
+          "__memmove_chk_avx_unaligned_erms"
+        ],
+        "target": "0x1a0810"
+      }
+    ],
+    "sha256": "32ec1f4a597fd891ea2999244475f4d347078e36a44f74a94f68098810a215b4"
+  },
+  {
+    "elf_address": "0x134420",
+    "names": [
+      "__memmove_chk",
+      "__memmove_chk@@GLIBC_2.3.4",
+      "__memmove_chk_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0x134424",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0x13442b",
+        "symbols_at_target": [
+          "__memcpy_chk_erms",
+          "__memmove_chk_erms"
+        ],
+        "target": "0xc48d0"
+      },
+      {
+        "site": "0x134466",
+        "symbols_at_target": [
+          "__memcpy_chk_avx_unaligned_rtm",
+          "__memmove_chk_avx_unaligned_rtm"
+        ],
+        "target": "0x1a7c20"
+      },
+      {
+        "site": "0x13446d",
+        "symbols_at_target": [
+          "__memcpy_chk_avx_unaligned_erms_rtm",
+          "__memmove_chk_avx_unaligned_erms_rtm"
+        ],
+        "target": "0x1a7c90"
+      },
+      {
+        "site": "0x1344a1",
+        "symbols_at_target": [
+          "__memmove_chk_ssse3"
+        ],
+        "target": "0x17d650"
+      },
+      {
+        "site": "0x1344a8",
+        "symbols_at_target": [
+          "__memmove_chk_ssse3_back"
+        ],
+        "target": "0x182cf0"
+      },
+      {
+        "site": "0x1344bd",
+        "symbols_at_target": [
+          "__memcpy_chk_avx512_no_vzeroupper",
+          "__memmove_chk_avx512_no_vzeroupper"
+        ],
+        "target": "0x1a3ce0"
+      },
+      {
+        "site": "0x1344ce",
+        "symbols_at_target": [
+          "__memcpy_chk_avx512_unaligned",
+          "__memmove_chk_avx512_unaligned"
+        ],
+        "target": "0x1a67a0"
+      },
+      {
+        "site": "0x1344d5",
+        "symbols_at_target": [
+          "__memcpy_chk_avx512_unaligned_erms",
+          "__memmove_chk_avx512_unaligned_erms"
+        ],
+        "target": "0x1a6810"
+      },
+      {
+        "site": "0x1344ee",
+        "symbols_at_target": [
+          "__memcpy_chk_sse2_unaligned",
+          "__memmove_chk_sse2_unaligned"
+        ],
+        "target": "0xc4860"
+      },
+      {
+        "site": "0x1344f5",
+        "symbols_at_target": [
+          "__memcpy_chk_sse2_unaligned_erms",
+          "__memmove_chk_sse2_unaligned_erms"
+        ],
+        "target": "0xc4940"
+      },
+      {
+        "site": "0x13450e",
+        "symbols_at_target": [
+          "__memcpy_chk_evex_unaligned",
+          "__memmove_chk_evex_unaligned"
+        ],
+        "target": "0x1aeda0"
+      },
+      {
+        "site": "0x134515",
+        "symbols_at_target": [
+          "__memcpy_chk_evex_unaligned_erms",
+          "__memmove_chk_evex_unaligned_erms"
+        ],
+        "target": "0x1aee10"
+      },
+      {
+        "site": "0x13452e",
+        "symbols_at_target": [
+          "__memcpy_chk_avx_unaligned",
+          "__memmove_chk_avx_unaligned"
+        ],
+        "target": "0x1a07a0"
+      },
+      {
+        "site": "0x134535",
+        "symbols_at_target": [
+          "__memcpy_chk_avx_unaligned_erms",
+          "__memmove_chk_avx_unaligned_erms"
+        ],
+        "target": "0x1a0810"
+      }
+    ],
+    "sha256": "1d070a967871d34a5764f964b83a42cbc45063614898d21d543fae64c2b620a7"
+  },
+  {
+    "elf_address": "0x134550",
+    "names": [
+      "__mempcpy_chk",
+      "__mempcpy_chk@@GLIBC_2.3.4",
+      "__mempcpy_chk_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0x134554",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0x13455b",
+        "symbols_at_target": [
+          "__mempcpy_chk_erms"
+        ],
+        "target": "0xc48a0"
+      },
+      {
+        "site": "0x134596",
+        "symbols_at_target": [
+          "__mempcpy_chk_avx_unaligned_rtm"
+        ],
+        "target": "0x1a7c00"
+      },
+      {
+        "site": "0x13459d",
+        "symbols_at_target": [
+          "__mempcpy_chk_avx_unaligned_erms_rtm"
+        ],
+        "target": "0x1a7c70"
+      },
+      {
+        "site": "0x1345d1",
+        "symbols_at_target": [
+          "__mempcpy_chk_ssse3"
+        ],
+        "target": "0x17ac50"
+      },
+      {
+        "site": "0x1345d8",
+        "symbols_at_target": [
+          "__mempcpy_chk_ssse3_back"
+        ],
+        "target": "0x1801e0"
+      },
+      {
+        "site": "0x1345ed",
+        "symbols_at_target": [
+          "__mempcpy_chk_avx512_no_vzeroupper"
+        ],
+        "target": "0x1a3cc0"
+      },
+      {
+        "site": "0x1345fe",
+        "symbols_at_target": [
+          "__mempcpy_chk_avx512_unaligned"
+        ],
+        "target": "0x1a6780"
+      },
+      {
+        "site": "0x134605",
+        "symbols_at_target": [
+          "__mempcpy_chk_avx512_unaligned_erms"
+        ],
+        "target": "0x1a67f0"
+      },
+      {
+        "site": "0x13461e",
+        "symbols_at_target": [
+          "__mempcpy_chk_sse2_unaligned"
+        ],
+        "target": "0xc4840"
+      },
+      {
+        "site": "0x134625",
+        "symbols_at_target": [
+          "__mempcpy_chk_sse2_unaligned_erms"
+        ],
+        "target": "0xc4920"
+      },
+      {
+        "site": "0x13463e",
+        "symbols_at_target": [
+          "__mempcpy_chk_evex_unaligned"
+        ],
+        "target": "0x1aed80"
+      },
+      {
+        "site": "0x134645",
+        "symbols_at_target": [
+          "__mempcpy_chk_evex_unaligned_erms"
+        ],
+        "target": "0x1aedf0"
+      },
+      {
+        "site": "0x13465e",
+        "symbols_at_target": [
+          "__mempcpy_chk_avx_unaligned"
+        ],
+        "target": "0x1a0780"
+      },
+      {
+        "site": "0x134665",
+        "symbols_at_target": [
+          "__mempcpy_chk_avx_unaligned_erms"
+        ],
+        "target": "0x1a07f0"
+      }
+    ],
+    "sha256": "1d1b65d419895d1d86861dba8d391d0b7bebdff658cb4518503313a26a8551d9"
+  },
+  {
+    "elf_address": "0x134680",
+    "names": [
+      "__memset_chk",
+      "__memset_chk@@GLIBC_2.3.4",
+      "__memset_chk_ifunc"
+    ],
+    "rip_references": [
+      {
+        "site": "0x134684",
+        "symbols_at_target": [],
+        "target": "0x219ec8"
+      },
+      {
+        "site": "0x13468b",
+        "symbols_at_target": [
+          "__memset_chk_erms"
+        ],
+        "target": "0xc4fa0"
+      },
+      {
+        "site": "0x1346cb",
+        "symbols_at_target": [
+          "__memset_chk_avx2_unaligned"
+        ],
+        "target": "0x1a0f70"
+      },
+      {
+        "site": "0x1346d2",
+        "symbols_at_target": [
+          "__memset_chk_avx2_unaligned_erms"
+        ],
+        "target": "0x1a0fe0"
+      },
+      {
+        "site": "0x1346e2",
+        "symbols_at_target": [
+          "__memset_chk_sse2_unaligned_erms"
+        ],
+        "target": "0xc4fd0"
+      },
+      {
+        "site": "0x1346e9",
+        "symbols_at_target": [
+          "__memset_chk_sse2_unaligned"
+        ],
+        "target": "0xc4f50"
+      },
+      {
+        "site": "0x1346fd",
+        "symbols_at_target": [
+          "__memset_chk_avx512_no_vzeroupper"
+        ],
+        "target": "0x1a4430"
+      },
+      {
+        "site": "0x13471b",
+        "symbols_at_target": [
+          "__memset_chk_avx512_unaligned_erms"
+        ],
+        "target": "0x1a70a0"
+      },
+      {
+        "site": "0x134722",
+        "symbols_at_target": [
+          "__memset_chk_avx512_unaligned"
+        ],
+        "target": "0x1a7030"
+      },
+      {
+        "site": "0x134732",
+        "symbols_at_target": [
+          "__memset_chk_avx2_unaligned_rtm"
+        ],
+        "target": "0x1a8770"
+      },
+      {
+        "site": "0x134739",
+        "symbols_at_target": [
+          "__memset_chk_avx2_unaligned_erms_rtm"
+        ],
+        "target": "0x1a87e0"
+      },
+      {
+        "site": "0x13475e",
+        "symbols_at_target": [
+          "__memset_chk_evex_unaligned"
+        ],
+        "target": "0x1af9b0"
+      },
+      {
+        "site": "0x134765",
+        "symbols_at_target": [
+          "__memset_chk_evex_unaligned_erms"
+        ],
+        "target": "0x1afa10"
+      }
+    ],
+    "sha256": "51ee41213c3614d0e0c683b437d377aa758f343add94af6cfd8fc1e043447c5c"
+  }
+]

@@ -1,0 +1,65 @@
+ Examples/claude/lifter/x64_rep_pinned/SUCCESS.json |   64 +
+ .../lifter/x64_rep_pinned/e27_rep_amd64.pcode.json | 7806 ++++++++++++++++++++
+ .../claude/lifter/x64_rep_pinned/e27_rep_amd64.v   |  369 +
+ .../claude/lifter/x64_rep_synthetic/SUCCESS.json   |   46 +
+ .../x64_rep_synthetic/e27_rep_amd64.pcode.json     | 2482 +++++++
+ .../lifter/x64_rep_synthetic/e27_rep_amd64.v       |  129 +
+ dune                                               |    8 +
+ notes/e27-x86-rep-lowering/README.md               |  209 +
+ .../e27-x86-rep-lowering/allowed-prerequisites.txt |    7 +
+ notes/e27-x86-rep-lowering/ancestry-before.txt     |   36 +
+ notes/e27-x86-rep-lowering/check-ancestry.py       |   31 +
+ notes/e27-x86-rep-lowering/check-artifacts.py      |   35 +
+ notes/e27-x86-rep-lowering/check-failures.py       |   26 +
+ notes/e27-x86-rep-lowering/fixture/build.sh        |    9 +
+ notes/e27-x86-rep-lowering/fixture/pins.json       |    3 +
+ notes/e27-x86-rep-lowering/fixture/rep.S           |   24 +
+ notes/e27-x86-rep-lowering/fixture/rep.so          |  Bin 0 -> 13696 bytes
+ notes/e27-x86-rep-lowering/logs/01-probe.log       |    2 +
+ .../e27-x86-rep-lowering/logs/02-backend-tests.log |   14 +
+ notes/e27-x86-rep-lowering/logs/03-dune.log        |  122 +
+ .../e27-x86-rep-lowering/logs/04-receipt-tests.log |    6 +
+ .../e27-x86-rep-lowering/logs/05-real-failures.log |   34 +
+ notes/e27-x86-rep-lowering/logs/06-regenerate.log  |    5 +
+ notes/e27-x86-rep-lowering/logs/07-replay.log      |    5 +
+ .../e27-x86-rep-lowering/logs/08-backend-final.log |   18 +
+ notes/e27-x86-rep-lowering/logs/09-artifacts.log   |   39 +
+ .../logs/10-e25-regression.log                     |   21 +
+ notes/e27-x86-rep-lowering/logs/11-dune-final.log  |   74 +
+ notes/e27-x86-rep-lowering/logs/12-assumptions.log |   18 +
+ .../logs/13-fixture-rebuild.log                    |    5 +
+ .../e27-x86-rep-lowering/logs/14-replay-final.log  |    9 +
+ .../logs/15-receipts-final.log                     |   10 +
+ notes/e27-x86-rep-lowering/logs/16-versions.log    |   19 +
+ .../e27-x86-rep-lowering/logs/17-source-audit.log  |   10 +
+ notes/e27-x86-rep-lowering/logs/18-whitespace.log  |    4 +
+ .../logs/19-fork-collision.log                     |    4 +
+ notes/e27-x86-rep-lowering/logs/20-objects.log     |    7 +
+ .../logs/21-ancestry-prestage.log                  |   20 +
+ .../ghidra/11fd75159a1c41e4ba72f47d4fe42bd9.log.gz |  Bin 0 -> 1278 bytes
+ .../ghidra/1e8b56ef41044d37bc9f47e7ac21998d.log.gz |  Bin 0 -> 1761 bytes
+ .../ghidra/441634c5b82241dc8c52703afec570ac.log.gz |  Bin 0 -> 1268 bytes
+ .../ghidra/5543a2e4201a4528bf2db2c88a552115.log.gz |  Bin 0 -> 1490 bytes
+ .../ghidra/5870d841c1604e538fb17817fe74e4a5.log.gz |  Bin 0 -> 1499 bytes
+ .../ghidra/5ec3b05f00f74dafbaa7e69b0a916933.log.gz |  Bin 0 -> 1282 bytes
+ .../ghidra/7674876414ba4f7897c3e04396d27db0.log.gz |  Bin 0 -> 1763 bytes
+ .../ghidra/892f5295828e4bfe96b28dd00efdd4dd.log.gz |  Bin 0 -> 1283 bytes
+ .../ghidra/992c9f9717c343c891cfefee84cdd72d.log.gz |  Bin 0 -> 1494 bytes
+ .../ghidra/a17a8673f9c444208471eb16f2e9fa8d.log.gz |  Bin 0 -> 1399 bytes
+ .../ghidra/c245035ed734469b960084276e834736.log.gz |  Bin 0 -> 1492 bytes
+ .../ghidra/c5f3603e0670494c82170a510a932999.log.gz |  Bin 0 -> 1748 bytes
+ .../ghidra/c9cf0896a72b4d08b07f17e02af6ad18.log.gz |  Bin 0 -> 1497 bytes
+ .../ghidra/d7647529b100488e967272560e630425.log.gz |  Bin 0 -> 1495 bytes
+ .../ghidra/e494f27bee464354accfd72b4d8ca684.log.gz |  Bin 0 -> 1761 bytes
+ notes/e27-x86-rep-lowering/merge-base-imported.txt |    1 +
+ notes/e27-x86-rep-lowering/print-assumptions.sh    |   13 +
+ notes/e27-x86-rep-lowering/probe.py                |   23 +
+ notes/e27-x86-rep-lowering/reproduce.sh            |   22 +
+ notes/e27-x86-rep-lowering/setup.txt               |   10 +
+ notes/e27-x86-rep-lowering/stat-imported.txt       |  283 +
+ tools/ghidra-lifter/lift-x64-rep.py                |  164 +
+ tools/ghidra-lifter/pcode2coq_x64_rep.py           |   94 +
+ tools/ghidra-lifter/test_x64_rep.py                |  271 +
+ tools/ghidra-lifter/test_x64_rep_publication.py    |   42 +
+ tools/ghidra-lifter/x64_rep_headless.py            |   95 +
+ 64 files changed, 12748 insertions(+)

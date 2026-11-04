@@ -1,0 +1,4628 @@
+[
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa81d0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_strcat",
+      "strcat",
+      "strcat@@GLIBC_2.2.5",
+      "strcat_ifunc"
+    ],
+    "unit_id": "x-strcat-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa8260",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_strchr",
+      "strchr",
+      "strchr@@GLIBC_2.2.5",
+      "strchr_ifunc"
+    ],
+    "unit_id": "x-strchr-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa82e0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_strcmp",
+      "strcmp",
+      "strcmp@@GLIBC_2.2.5",
+      "strcmp_ifunc"
+    ],
+    "unit_id": "x-strcmp-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa8390",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_strcpy",
+      "strcpy",
+      "strcpy@@GLIBC_2.2.5",
+      "strcpy_ifunc"
+    ],
+    "unit_id": "x-strcpy-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa8420",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_strcspn",
+      "strcspn",
+      "strcspn@@GLIBC_2.2.5",
+      "strcspn_ifunc"
+    ],
+    "unit_id": "x-strcspn-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa86a0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_strlen",
+      "strlen",
+      "strlen@@GLIBC_2.2.5",
+      "strlen_ifunc"
+    ],
+    "unit_id": "x-strlen-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa8720",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI___strnlen",
+      "__GI_strnlen",
+      "__strnlen",
+      "__strnlen_ifunc",
+      "strnlen",
+      "strnlen@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strnlen-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa87a0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI___strncat",
+      "strncat",
+      "strncat@@GLIBC_2.2.5",
+      "strncat_ifunc"
+    ],
+    "unit_id": "x-strncat-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa8830",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_strncmp",
+      "strncmp",
+      "strncmp@@GLIBC_2.2.5",
+      "strncmp_ifunc"
+    ],
+    "unit_id": "x-strncmp-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa88d0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_strncpy",
+      "strncpy",
+      "strncpy@@GLIBC_2.2.5",
+      "strncpy_ifunc"
+    ],
+    "unit_id": "x-strncpy-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa8960",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_strrchr",
+      "strrchr",
+      "strrchr@@GLIBC_2.2.5",
+      "strrchr_ifunc"
+    ],
+    "unit_id": "x-strrchr-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa89e0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_strpbrk",
+      "strpbrk",
+      "strpbrk@@GLIBC_2.2.5",
+      "strpbrk_ifunc"
+    ],
+    "unit_id": "x-strpbrk-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa8b00",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_strspn",
+      "strspn",
+      "strspn@@GLIBC_2.2.5",
+      "strspn_ifunc"
+    ],
+    "unit_id": "x-strspn-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa8fc0",
+    "external_targets": [
+      {
+        "kind": "call",
+        "site": "0xa8ffb",
+        "symbols_at_target": [],
+        "target": "0x28600",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xa9034",
+        "symbols_at_target": [],
+        "target": "0x28490",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xa904e",
+        "symbols_at_target": [],
+        "target": "0x28390",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xa9068",
+        "symbols_at_target": [],
+        "target": "0x28520",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xa91c1",
+        "symbols_at_target": [],
+        "target": "0x28520",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xa91f0",
+        "symbols_at_target": [],
+        "target": "0x28390",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "jmp",
+        "site": "0xa92f4",
+        "symbols_at_target": [
+          "two_way_long_needle"
+        ],
+        "target": "0xa8b30",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xa9308",
+        "symbols_at_target": [
+          "__stack_chk_fail",
+          "__stack_chk_fail@@GLIBC_2.4",
+          "__stack_chk_fail_local"
+        ],
+        "target": "0x1365c0",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xa9310",
+        "kind": "fallthrough",
+        "site": "0xa9308",
+        "symbols_at_target": [],
+        "target": "0xa930d",
+        "target_extent_owners": [
+          [
+            "strstr",
+            "strstr@@GLIBC_2.2.5"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__GI_strstr",
+      "__strstr_sse2"
+    ],
+    "unit_id": "x-strstr-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa9310",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "strstr",
+      "strstr@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strstr-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa93f0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_memchr",
+      "__memchr",
+      "memchr",
+      "memchr@@GLIBC_2.2.5",
+      "memchr_ifunc"
+    ],
+    "unit_id": "x-memchr-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa9480",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_memcmp",
+      "bcmp",
+      "bcmp@@GLIBC_2.2.5",
+      "memcmp",
+      "memcmp@@GLIBC_2.2.5",
+      "memcmp_ifunc"
+    ],
+    "unit_id": "x-bcmp-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa9520",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI___memcmpeq",
+      "__memcmpeq",
+      "__memcmpeq@@GLIBC_2.35",
+      "__memcmpeq_ifunc"
+    ],
+    "unit_id": "x-memcmpeq-resolver"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xa95a0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_memmove",
+      "memmove",
+      "memmove@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-memmove-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa96d0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_memset",
+      "memset",
+      "memset@@GLIBC_2.2.5",
+      "memset_ifunc"
+    ],
+    "unit_id": "x-memset-resolver"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xa97d0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI___mempcpy",
+      "__GI_mempcpy",
+      "__mempcpy",
+      "__mempcpy@@GLIBC_2.2.5",
+      "__mempcpy_ifunc",
+      "mempcpy",
+      "mempcpy@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-mempcpy-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa9900",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0xa9907",
+        "symbols_at_target": [],
+        "target": "0x285e0",
+        "target_extent_owners": []
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "bcopy",
+      "bcopy@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-bcopy"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa9950",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI___stpcpy",
+      "__GI_stpcpy",
+      "__stpcpy",
+      "__stpcpy@@GLIBC_2.2.5",
+      "__stpcpy_ifunc",
+      "stpcpy",
+      "stpcpy@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-stpcpy-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa99e0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI___stpncpy",
+      "__stpncpy",
+      "__stpncpy@@GLIBC_2.2.5",
+      "__stpncpy_ifunc",
+      "stpncpy",
+      "stpncpy@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-stpncpy-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xa9bb0",
+    "external_targets": [
+      {
+        "kind": "call",
+        "site": "0xa9bca",
+        "symbols_at_target": [],
+        "target": "0x28420",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "jmp",
+        "site": "0xa9be6",
+        "symbols_at_target": [],
+        "target": "0x283e0",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xa9bf9",
+        "symbols_at_target": [],
+        "target": "0x28620",
+        "target_extent_owners": []
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memccpy",
+      "memccpy",
+      "memccpy@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-memccpy"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xa9c10",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI_memcpy",
+      "memcpy",
+      "memcpy@@GLIBC_2.14"
+    ],
+    "unit_id": "x-memcpy-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xaa2e0",
+    "external_targets": [
+      {
+        "kind": "call",
+        "site": "0xaa310",
+        "symbols_at_target": [],
+        "target": "0x28490",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xaa322",
+        "symbols_at_target": [],
+        "target": "0x28390",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "jmp",
+        "site": "0xaa367",
+        "symbols_at_target": [
+          "two_way_long_needle"
+        ],
+        "target": "0xa9f10",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xaa3a6",
+        "symbols_at_target": [
+          "critical_factorization"
+        ],
+        "target": "0xa9da0",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xaa3c7",
+        "symbols_at_target": [],
+        "target": "0x283c0",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xaa49f",
+        "symbols_at_target": [],
+        "target": "0x28390",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xaa65b",
+        "symbols_at_target": [],
+        "target": "0x28390",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xaa6f5",
+        "symbols_at_target": [
+          "__stack_chk_fail",
+          "__stack_chk_fail@@GLIBC_2.4",
+          "__stack_chk_fail_local"
+        ],
+        "target": "0x1365c0",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xaa700",
+        "kind": "fallthrough",
+        "site": "0xaa6f5",
+        "symbols_at_target": [],
+        "target": "0xaa6fa",
+        "target_extent_owners": []
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcasestr",
+      "__strcasestr@@GLIBC_2.2.5",
+      "strcasestr",
+      "strcasestr@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strcasestr"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xaacc0",
+    "external_targets": [
+      {
+        "kind": "call",
+        "site": "0xaae56",
+        "symbols_at_target": [],
+        "target": "0x28520",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "jmp",
+        "site": "0xaaedf",
+        "symbols_at_target": [],
+        "target": "0x28420",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "jmp",
+        "site": "0xaaf5e",
+        "symbols_at_target": [
+          "two_way_long_needle"
+        ],
+        "target": "0xaa930",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xaaf77",
+        "symbols_at_target": [
+          "__stack_chk_fail",
+          "__stack_chk_fail@@GLIBC_2.4",
+          "__stack_chk_fail_local"
+        ],
+        "target": "0x1365c0",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xaaf80",
+        "kind": "fallthrough",
+        "site": "0xaaf77",
+        "symbols_at_target": [],
+        "target": "0xaaf7c",
+        "target_extent_owners": [
+          [
+            "__GI___rawmemchr",
+            "__rawmemchr",
+            "__rawmemchr@@GLIBC_2.2.5",
+            "__rawmemchr_ifunc",
+            "rawmemchr",
+            "rawmemchr@@GLIBC_2.2.5"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__GI___memmem",
+      "__GI_memmem",
+      "__memmem",
+      "memmem",
+      "memmem@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-memmem"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xaaf80",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__GI___rawmemchr",
+      "__rawmemchr",
+      "__rawmemchr@@GLIBC_2.2.5",
+      "__rawmemchr_ifunc",
+      "rawmemchr",
+      "rawmemchr@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-rawmemchr-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xab010",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__strchrnul",
+      "__strchrnul_ifunc",
+      "strchrnul",
+      "strchrnul@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strchrnul-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb1100",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcspn_c1@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strcspn-c1"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb1130",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcspn_c2@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strcspn-c2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb1160",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcspn_c3@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strcspn-c3"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb11a0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strspn_c1@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strspn-c1"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb11d0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strspn_c2@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strspn-c2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb1200",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strspn_c3@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strspn-c3"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb1260",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strpbrk_c2@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strpbrk-c2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb12a0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strpbrk_c3@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strpbrk-c3"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xb12f0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__mempcpy_small@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-mempcpy-small"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb13c0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcpy_small@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-strcpy-small"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb1480",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpcpy_small@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-stpcpy-small"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb1570",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__memrchr",
+      "__memrchr_ifunc",
+      "memrchr",
+      "memrchr@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-memrchr-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb1800",
+    "external_targets": [
+      {
+        "kind": "call",
+        "site": "0xb1818",
+        "symbols_at_target": [],
+        "target": "0x28490",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xb1827",
+        "symbols_at_target": [],
+        "target": "0x28390",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xb183a",
+        "symbols_at_target": [],
+        "target": "0x28620",
+        "target_extent_owners": []
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncat_sse2"
+    ],
+    "unit_id": "x-strncat-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb1850",
+    "external_targets": [
+      {
+        "kind": "call",
+        "site": "0xb186d",
+        "symbols_at_target": [],
+        "target": "0x28390",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xb187e",
+        "symbols_at_target": [],
+        "target": "0x28620",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "jmp",
+        "site": "0xb189e",
+        "symbols_at_target": [],
+        "target": "0x28670",
+        "target_extent_owners": []
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpncpy_sse2"
+    ],
+    "unit_id": "x-stpncpy-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb18c0",
+    "external_targets": [
+      {
+        "kind": "call",
+        "site": "0xb18dd",
+        "symbols_at_target": [],
+        "target": "0x28390",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0xb18f7",
+        "symbols_at_target": [],
+        "target": "0x28670",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "jmp",
+        "site": "0xb190f",
+        "symbols_at_target": [],
+        "target": "0x28620",
+        "target_extent_owners": []
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncpy_sse2"
+    ],
+    "unit_id": "x-strncpy-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb1920",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcmp_sse2"
+    ],
+    "unit_id": "x-strcmp-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb2d70",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcmp_sse2_unaligned"
+    ],
+    "unit_id": "x-strcmp-sse2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb3020",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncmp_sse2"
+    ],
+    "unit_id": "x-strncmp-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb4880",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memchr_sse2"
+    ],
+    "unit_id": "x-memchr-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb4bb0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__rawmemchr_sse2"
+    ],
+    "unit_id": "x-rawmemchr-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb4dc0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memrchr_sse2"
+    ],
+    "unit_id": "x-memrchr-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb5190",
+    "external_targets": [
+      {
+        "after_alignment": "0xb5590",
+        "kind": "fallthrough",
+        "site": "0xb558e",
+        "symbols_at_target": [
+          "__memcmpeq_sse2"
+        ],
+        "target": "0xb5590",
+        "target_extent_owners": [
+          [
+            "__memcmpeq_sse2"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcmp_sse2"
+    ],
+    "unit_id": "x-memcmp-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xb5590",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcmpeq_sse2"
+    ],
+    "unit_id": "x-memcmpeq-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xba210",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strchr_sse2"
+    ],
+    "unit_id": "x-strchr-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xba440",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strchrnul_sse2"
+    ],
+    "unit_id": "x-strchrnul-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xba650",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strrchr_sse2"
+    ],
+    "unit_id": "x-strrchr-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xba950",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strlen_sse2"
+    ],
+    "unit_id": "x-strlen-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xbaaf0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strnlen_sse2"
+    ],
+    "unit_id": "x-strnlen-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xbad10",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcat_ssse3"
+    ],
+    "unit_id": "x-strcat-ssse3"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xbc930",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncat_ssse3"
+    ],
+    "unit_id": "x-strncat-ssse3"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xbf6b0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcpy_sse2"
+    ],
+    "unit_id": "x-strcpy-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xbf7a0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpcpy_sse2"
+    ],
+    "unit_id": "x-stpcpy-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xbf890",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcpy_sse2_unaligned"
+    ],
+    "unit_id": "x-strcpy-sse2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xbfec0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncpy_sse2_unaligned"
+    ],
+    "unit_id": "x-strncpy-sse2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc0ed0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpcpy_sse2_unaligned"
+    ],
+    "unit_id": "x-stpcpy-sse2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc1590",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpncpy_sse2_unaligned"
+    ],
+    "unit_id": "x-stpncpy-sse2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc2720",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcat_sse2"
+    ],
+    "unit_id": "x-strcat-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc28e0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcat_sse2_unaligned"
+    ],
+    "unit_id": "x-strcat-sse2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc31d0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncat_sse2_unaligned"
+    ],
+    "unit_id": "x-strncat-sse2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc4180",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0xc4253",
+        "symbols_at_target": [
+          "__strchr_sse2"
+        ],
+        "target": "0xba210",
+        "target_extent_owners": [
+          [
+            "__strchr_sse2"
+          ]
+        ]
+      },
+      {
+        "kind": "jmp",
+        "site": "0xc44c3",
+        "symbols_at_target": [
+          "__GI_strstr",
+          "__strstr_sse2"
+        ],
+        "target": "0xa8fc0",
+        "target_extent_owners": [
+          [
+            "__GI_strstr",
+            "__strstr_sse2"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strstr_sse2_unaligned"
+    ],
+    "unit_id": "x-strstr-sse2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc4620",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcspn_sse2"
+    ],
+    "unit_id": "x-strcspn-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc46d0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strpbrk_sse2"
+    ],
+    "unit_id": "x-strpbrk-sse2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc4780",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strspn_sse2"
+    ],
+    "unit_id": "x-strspn-sse2"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc4840",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0xc4847",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xc4850",
+        "kind": "fallthrough",
+        "site": "0xc4847",
+        "symbols_at_target": [],
+        "target": "0xc484d",
+        "target_extent_owners": [
+          [
+            "__mempcpy_sse2_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_sse2_unaligned"
+    ],
+    "unit_id": "x-mempcpy-chk-sse2-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc4850",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0xc485a",
+        "symbols_at_target": [],
+        "target": "0xc4877",
+        "target_extent_owners": [
+          [
+            "__memcpy_sse2_unaligned",
+            "__memmove_sse2_unaligned",
+            "memcpy@GLIBC_2.2.5"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_sse2_unaligned"
+    ],
+    "unit_id": "x-mempcpy-sse2-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc4860",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0xc4867",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xc4870",
+        "kind": "fallthrough",
+        "site": "0xc4867",
+        "symbols_at_target": [],
+        "target": "0xc486d",
+        "target_extent_owners": [
+          [
+            "__memcpy_sse2_unaligned",
+            "__memmove_sse2_unaligned",
+            "memcpy@GLIBC_2.2.5"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_sse2_unaligned",
+      "__memmove_chk_sse2_unaligned"
+    ],
+    "unit_id": "x-memmove-chk-sse2-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc4870",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0xc487b",
+        "symbols_at_target": [],
+        "target": "0xc49b0",
+        "target_extent_owners": [
+          [
+            "__memcpy_sse2_unaligned_erms",
+            "__memmove_sse2_unaligned_erms"
+          ]
+        ]
+      },
+      {
+        "kind": "ja",
+        "site": "0xc4888",
+        "symbols_at_target": [],
+        "target": "0xc4a1d",
+        "target_extent_owners": [
+          [
+            "__memcpy_sse2_unaligned_erms",
+            "__memmove_sse2_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_sse2_unaligned",
+      "__memmove_sse2_unaligned",
+      "memcpy@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-memmove-sse2-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc48a0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0xc48a7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xc48b0",
+        "kind": "fallthrough",
+        "site": "0xc48a7",
+        "symbols_at_target": [],
+        "target": "0xc48ad",
+        "target_extent_owners": [
+          [
+            "__mempcpy_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_erms"
+    ],
+    "unit_id": "x-mempcpy-chk-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc48b0",
+    "external_targets": [
+      {
+        "kind": "je",
+        "site": "0xc48ba",
+        "symbols_at_target": [],
+        "target": "0xc4901",
+        "target_extent_owners": [
+          [
+            "__memcpy_erms",
+            "__memmove_erms"
+          ]
+        ]
+      },
+      {
+        "kind": "jmp",
+        "site": "0xc48bf",
+        "symbols_at_target": [],
+        "target": "0xc48ec",
+        "target_extent_owners": [
+          [
+            "__memcpy_erms",
+            "__memmove_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_erms"
+    ],
+    "unit_id": "x-mempcpy-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc48d0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0xc48d7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xc48e0",
+        "kind": "fallthrough",
+        "site": "0xc48d7",
+        "symbols_at_target": [],
+        "target": "0xc48dd",
+        "target_extent_owners": [
+          [
+            "__memcpy_erms",
+            "__memmove_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_erms",
+      "__memmove_chk_erms"
+    ],
+    "unit_id": "x-memmove-chk-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc48e0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_erms",
+      "__memmove_erms"
+    ],
+    "unit_id": "x-memmove-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc4920",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0xc4927",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xc4930",
+        "kind": "fallthrough",
+        "site": "0xc4927",
+        "symbols_at_target": [],
+        "target": "0xc492d",
+        "target_extent_owners": [
+          [
+            "__mempcpy_sse2_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_sse2_unaligned_erms"
+    ],
+    "unit_id": "x-mempcpy-chk-sse2-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc4930",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0xc493a",
+        "symbols_at_target": [],
+        "target": "0xc4987",
+        "target_extent_owners": [
+          [
+            "__memcpy_sse2_unaligned_erms",
+            "__memmove_sse2_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_sse2_unaligned_erms"
+    ],
+    "unit_id": "x-mempcpy-sse2-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc4940",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0xc4947",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xc4980",
+        "kind": "fallthrough",
+        "site": "0xc4947",
+        "symbols_at_target": [],
+        "target": "0xc494d",
+        "target_extent_owners": [
+          [
+            "__memcpy_sse2_unaligned_erms",
+            "__memmove_sse2_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_sse2_unaligned_erms",
+      "__memmove_chk_sse2_unaligned_erms"
+    ],
+    "unit_id": "x-memmove-chk-sse2-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0xc4980",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_sse2_unaligned_erms",
+      "__memmove_sse2_unaligned_erms"
+    ],
+    "unit_id": "x-memmove-sse2-unaligned-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc4f00",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0xc4f10",
+        "symbols_at_target": [],
+        "target": "0xc4f78",
+        "target_extent_owners": [
+          [
+            "__memset_sse2_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__bzero",
+      "__bzero@@GLIBC_2.2.5",
+      "bzero",
+      "bzero@@GLIBC_2.2.5"
+    ],
+    "unit_id": "x-bzero"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc4f50",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0xc4f57",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xc4f60",
+        "kind": "fallthrough",
+        "site": "0xc4f57",
+        "symbols_at_target": [],
+        "target": "0xc4f5d",
+        "target_extent_owners": [
+          [
+            "__memset_sse2_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_sse2_unaligned"
+    ],
+    "unit_id": "x-memset-chk-sse2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc4f60",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0xc4f7c",
+        "symbols_at_target": [],
+        "target": "0xc50c0",
+        "target_extent_owners": [
+          [
+            "__memset_sse2_unaligned_erms"
+          ]
+        ]
+      },
+      {
+        "kind": "ja",
+        "site": "0xc4f86",
+        "symbols_at_target": [],
+        "target": "0xc5049",
+        "target_extent_owners": [
+          [
+            "__memset_sse2_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_sse2_unaligned"
+    ],
+    "unit_id": "x-memset-sse2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc4fa0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0xc4fa7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xc4fb0",
+        "kind": "fallthrough",
+        "site": "0xc4fa7",
+        "symbols_at_target": [],
+        "target": "0xc4fad",
+        "target_extent_owners": [
+          [
+            "__memset_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_erms"
+    ],
+    "unit_id": "x-memset-chk-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc4fb0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_erms"
+    ],
+    "unit_id": "x-memset-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc4fd0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0xc4fd7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0xc5000",
+        "kind": "fallthrough",
+        "site": "0xc4fd7",
+        "symbols_at_target": [],
+        "target": "0xc4fdd",
+        "target_extent_owners": [
+          [
+            "__memset_sse2_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_sse2_unaligned_erms"
+    ],
+    "unit_id": "x-memset-chk-sse2-unaligned-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0xc5000",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_sse2_unaligned_erms"
+    ],
+    "unit_id": "x-memset-sse2-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1342f0",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__memcpy_chk",
+      "__memcpy_chk@@GLIBC_2.3.4",
+      "__memcpy_chk_ifunc"
+    ],
+    "unit_id": "x-memcpy-chk-resolver"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x134420",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__memmove_chk",
+      "__memmove_chk@@GLIBC_2.3.4",
+      "__memmove_chk_ifunc"
+    ],
+    "unit_id": "x-memmove-chk-resolver"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x134550",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__mempcpy_chk",
+      "__mempcpy_chk@@GLIBC_2.3.4",
+      "__mempcpy_chk_ifunc"
+    ],
+    "unit_id": "x-mempcpy-chk-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x134680",
+    "external_targets": [],
+    "kind": "resolver",
+    "symbols": [
+      "__memset_chk",
+      "__memset_chk@@GLIBC_2.3.4",
+      "__memset_chk_ifunc"
+    ],
+    "unit_id": "x-memset-chk-resolver"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x134780",
+    "external_targets": [
+      {
+        "kind": "call",
+        "site": "0x13479a",
+        "symbols_at_target": [],
+        "target": "0x28490",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0x1347b1",
+        "symbols_at_target": [],
+        "target": "0x28620",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0x1347c4",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1347d0",
+        "kind": "fallthrough",
+        "site": "0x1347c4",
+        "symbols_at_target": [],
+        "target": "0x1347c9",
+        "target_extent_owners": [
+          [
+            "__strcat_chk",
+            "__strcat_chk@@GLIBC_2.3.4"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpcpy_chk",
+      "__stpcpy_chk@@GLIBC_2.3.4"
+    ],
+    "unit_id": "x-stpcpy-chk"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1347d0",
+    "external_targets": [
+      {
+        "kind": "call",
+        "site": "0x134803",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0x134835",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcat_chk",
+      "__strcat_chk@@GLIBC_2.3.4"
+    ],
+    "unit_id": "x-strcat-chk"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x134850",
+    "external_targets": [
+      {
+        "kind": "call",
+        "site": "0x134864",
+        "symbols_at_target": [],
+        "target": "0x28490",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "jmp",
+        "site": "0x13487c",
+        "symbols_at_target": [],
+        "target": "0x28620",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0x134881",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x134890",
+        "kind": "fallthrough",
+        "site": "0x134881",
+        "symbols_at_target": [],
+        "target": "0x134886",
+        "target_extent_owners": [
+          [
+            "__strncat_chk",
+            "__strncat_chk@@GLIBC_2.3.4"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcpy_chk",
+      "__strcpy_chk@@GLIBC_2.3.4"
+    ],
+    "unit_id": "x-strcpy-chk"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x134890",
+    "external_targets": [
+      {
+        "kind": "call",
+        "site": "0x1348c4",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncat_chk",
+      "__strncat_chk@@GLIBC_2.3.4"
+    ],
+    "unit_id": "x-strncat-chk"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1349b0",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1349b9",
+        "symbols_at_target": [],
+        "target": "0x28480",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0x1349c4",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1349d0",
+        "kind": "fallthrough",
+        "site": "0x1349c4",
+        "symbols_at_target": [],
+        "target": "0x1349c9",
+        "target_extent_owners": [
+          [
+            "__stpncpy_chk",
+            "__stpncpy_chk@@GLIBC_2.4"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncpy_chk",
+      "__strncpy_chk@@GLIBC_2.3.4"
+    ],
+    "unit_id": "x-strncpy-chk"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1349d0",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1349d9",
+        "symbols_at_target": [],
+        "target": "0x285b0",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "call",
+        "site": "0x1349e4",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1349f0",
+        "kind": "fallthrough",
+        "site": "0x1349e4",
+        "symbols_at_target": [],
+        "target": "0x1349e9",
+        "target_extent_owners": []
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpncpy_chk",
+      "__stpncpy_chk@@GLIBC_2.4"
+    ],
+    "unit_id": "x-stpncpy-chk"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x178270",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__GI___strcmp_ssse3",
+      "__strcmp_ssse3"
+    ],
+    "unit_id": "x-strcmp-ssse3"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1794e0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncmp_ssse3"
+    ],
+    "unit_id": "x-strncmp-ssse3"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x17ac50",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x17ac57",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x17ac60",
+        "kind": "fallthrough",
+        "site": "0x17ac57",
+        "symbols_at_target": [],
+        "target": "0x17ac5d",
+        "target_extent_owners": [
+          [
+            "__mempcpy_ssse3"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_ssse3"
+    ],
+    "unit_id": "x-mempcpy-chk-ssse3"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x17ac60",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x17ac6a",
+        "symbols_at_target": [],
+        "target": "0x17ac87",
+        "target_extent_owners": [
+          [
+            "__memcpy_ssse3"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_ssse3"
+    ],
+    "unit_id": "x-mempcpy-ssse3"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x17ac70",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x17ac77",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x17ac80",
+        "kind": "fallthrough",
+        "site": "0x17ac77",
+        "symbols_at_target": [],
+        "target": "0x17ac7d",
+        "target_extent_owners": [
+          [
+            "__memcpy_ssse3"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_ssse3"
+    ],
+    "unit_id": "x-memcpy-chk-ssse3"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x17ac80",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_ssse3"
+    ],
+    "unit_id": "x-memcpy-ssse3"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x17d650",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x17d657",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x17d660",
+        "kind": "fallthrough",
+        "site": "0x17d657",
+        "symbols_at_target": [],
+        "target": "0x17d65d",
+        "target_extent_owners": [
+          [
+            "__memmove_ssse3"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memmove_chk_ssse3"
+    ],
+    "unit_id": "x-memmove-chk-ssse3"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x17d660",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memmove_ssse3"
+    ],
+    "unit_id": "x-memmove-ssse3"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1801e0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1801e7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1801f0",
+        "kind": "fallthrough",
+        "site": "0x1801e7",
+        "symbols_at_target": [],
+        "target": "0x1801ed",
+        "target_extent_owners": [
+          [
+            "__mempcpy_ssse3_back"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_ssse3_back"
+    ],
+    "unit_id": "x-mempcpy-chk-ssse3-back"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1801f0",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1801fa",
+        "symbols_at_target": [],
+        "target": "0x180217",
+        "target_extent_owners": [
+          [
+            "__memcpy_ssse3_back"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_ssse3_back"
+    ],
+    "unit_id": "x-mempcpy-ssse3-back"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x180200",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x180207",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x180210",
+        "kind": "fallthrough",
+        "site": "0x180207",
+        "symbols_at_target": [],
+        "target": "0x18020d",
+        "target_extent_owners": [
+          [
+            "__memcpy_ssse3_back"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_ssse3_back"
+    ],
+    "unit_id": "x-memcpy-chk-ssse3-back"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x180210",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_ssse3_back"
+    ],
+    "unit_id": "x-memcpy-ssse3-back"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x182cf0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x182cf7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x182d00",
+        "kind": "fallthrough",
+        "site": "0x182cf7",
+        "symbols_at_target": [],
+        "target": "0x182cfd",
+        "target_extent_owners": [
+          [
+            "__memmove_ssse3_back"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memmove_chk_ssse3_back"
+    ],
+    "unit_id": "x-memmove-chk-ssse3-back"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x182d00",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memmove_ssse3_back"
+    ],
+    "unit_id": "x-memmove-ssse3-back"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x189ef0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcpy_ssse3"
+    ],
+    "unit_id": "x-strcpy-ssse3"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x18b6a0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncpy_ssse3"
+    ],
+    "unit_id": "x-strncpy-ssse3"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x18e220",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpcpy_ssse3"
+    ],
+    "unit_id": "x-stpcpy-ssse3"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x18fa30",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpncpy_ssse3"
+    ],
+    "unit_id": "x-stpncpy-ssse3"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x192d00",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcmp_sse42"
+    ],
+    "unit_id": "x-strcmp-sse42"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x193ab0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncmp_sse42"
+    ],
+    "unit_id": "x-strncmp-sse42"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x198610",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x198720",
+        "symbols_at_target": [],
+        "target": "0x28490",
+        "target_extent_owners": []
+      },
+      {
+        "kind": "jmp",
+        "site": "0x19874a",
+        "symbols_at_target": [
+          "__strcspn_sse2"
+        ],
+        "target": "0xc4620",
+        "target_extent_owners": [
+          [
+            "__strcspn_sse2"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcspn_sse42"
+    ],
+    "unit_id": "x-strcspn-sse42"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x198750",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x198862",
+        "symbols_at_target": [
+          "__strpbrk_sse2"
+        ],
+        "target": "0xc46d0",
+        "target_extent_owners": [
+          [
+            "__strpbrk_sse2"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strpbrk_sse42"
+    ],
+    "unit_id": "x-strpbrk-sse42"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x198870",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x19899a",
+        "symbols_at_target": [
+          "__strspn_sse2"
+        ],
+        "target": "0xc4780",
+        "target_extent_owners": [
+          [
+            "__strspn_sse2"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strspn_sse42"
+    ],
+    "unit_id": "x-strspn-sse42"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1989c0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcmp_avx2"
+    ],
+    "unit_id": "x-strcmp-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x198e00",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncmp_avx2"
+    ],
+    "unit_id": "x-strncmp-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x199340",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memchr_avx2"
+    ],
+    "unit_id": "x-memchr-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x199610",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__rawmemchr_avx2"
+    ],
+    "unit_id": "x-rawmemchr-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x199780",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memrchr_avx2"
+    ],
+    "unit_id": "x-memrchr-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x199b00",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcmp_avx2_movbe"
+    ],
+    "unit_id": "x-memcmp-avx2-movbe"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x199f40",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcmpeq_avx2"
+    ],
+    "unit_id": "x-memcmpeq-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x19d200",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strchr_avx2"
+    ],
+    "unit_id": "x-strchr-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x19d480",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strchrnul_avx2"
+    ],
+    "unit_id": "x-strchrnul-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x19d690",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strrchr_avx2"
+    ],
+    "unit_id": "x-strrchr-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x19d860",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strlen_avx2"
+    ],
+    "unit_id": "x-strlen-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x19d9e0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strnlen_avx2"
+    ],
+    "unit_id": "x-strnlen-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x19dcb0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcat_avx2"
+    ],
+    "unit_id": "x-strcat-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x19e320",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncat_avx2"
+    ],
+    "unit_id": "x-strncat-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x19ed30",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcpy_avx2"
+    ],
+    "unit_id": "x-strcpy-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x19f0c0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncpy_avx2"
+    ],
+    "unit_id": "x-strncpy-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x19fa20",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpcpy_avx2"
+    ],
+    "unit_id": "x-stpcpy-avx2"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x19fdd0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpncpy_avx2"
+    ],
+    "unit_id": "x-stpncpy-avx2"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a0780",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a0787",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a0790",
+        "kind": "fallthrough",
+        "site": "0x1a0787",
+        "symbols_at_target": [],
+        "target": "0x1a078d",
+        "target_extent_owners": [
+          [
+            "__mempcpy_avx_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_avx_unaligned"
+    ],
+    "unit_id": "x-mempcpy-chk-avx-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a0790",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1a079a",
+        "symbols_at_target": [],
+        "target": "0x1a07b7",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned",
+            "__memmove_avx_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_avx_unaligned"
+    ],
+    "unit_id": "x-mempcpy-avx-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a07a0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a07a7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a07b0",
+        "kind": "fallthrough",
+        "site": "0x1a07a7",
+        "symbols_at_target": [],
+        "target": "0x1a07ad",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned",
+            "__memmove_avx_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_avx_unaligned",
+      "__memmove_chk_avx_unaligned"
+    ],
+    "unit_id": "x-memmove-chk-avx-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a07b0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a07bb",
+        "symbols_at_target": [],
+        "target": "0x1a0870",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned_erms",
+            "__memmove_avx_unaligned_erms"
+          ]
+        ]
+      },
+      {
+        "kind": "ja",
+        "site": "0x1a07c9",
+        "symbols_at_target": [],
+        "target": "0x1a090d",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned_erms",
+            "__memmove_avx_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_avx_unaligned",
+      "__memmove_avx_unaligned"
+    ],
+    "unit_id": "x-memmove-avx-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a07f0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a07f7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a0800",
+        "kind": "fallthrough",
+        "site": "0x1a07f7",
+        "symbols_at_target": [],
+        "target": "0x1a07fd",
+        "target_extent_owners": [
+          [
+            "__mempcpy_avx_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_avx_unaligned_erms"
+    ],
+    "unit_id": "x-mempcpy-chk-avx-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a0800",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1a080a",
+        "symbols_at_target": [],
+        "target": "0x1a0847",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned_erms",
+            "__memmove_avx_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_avx_unaligned_erms"
+    ],
+    "unit_id": "x-mempcpy-avx-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a0810",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a0817",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a0840",
+        "kind": "fallthrough",
+        "site": "0x1a0817",
+        "symbols_at_target": [],
+        "target": "0x1a081d",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned_erms",
+            "__memmove_avx_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_avx_unaligned_erms",
+      "__memmove_chk_avx_unaligned_erms"
+    ],
+    "unit_id": "x-memmove-chk-avx-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a0840",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_avx_unaligned_erms",
+      "__memmove_avx_unaligned_erms"
+    ],
+    "unit_id": "x-memmove-avx-unaligned-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a0f70",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a0f77",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a0f80",
+        "kind": "fallthrough",
+        "site": "0x1a0f77",
+        "symbols_at_target": [],
+        "target": "0x1a0f7d",
+        "target_extent_owners": [
+          [
+            "__memset_avx2_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_avx2_unaligned"
+    ],
+    "unit_id": "x-memset-chk-avx2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a0f80",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a0f94",
+        "symbols_at_target": [],
+        "target": "0x1a10e0",
+        "target_extent_owners": [
+          [
+            "__memset_avx2_unaligned_erms"
+          ]
+        ]
+      },
+      {
+        "kind": "ja",
+        "site": "0x1a0f9e",
+        "symbols_at_target": [],
+        "target": "0x1a1049",
+        "target_extent_owners": [
+          [
+            "__memset_avx2_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_avx2_unaligned"
+    ],
+    "unit_id": "x-memset-avx2-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a0fc0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_avx2_erms"
+    ],
+    "unit_id": "x-memset-avx2-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a0fe0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a0fe7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a1000",
+        "kind": "fallthrough",
+        "site": "0x1a0fe7",
+        "symbols_at_target": [],
+        "target": "0x1a0fed",
+        "target_extent_owners": [
+          [
+            "__memset_avx2_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_avx2_unaligned_erms"
+    ],
+    "unit_id": "x-memset-chk-avx2-unaligned-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a1000",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_avx2_unaligned_erms"
+    ],
+    "unit_id": "x-memset-avx2-unaligned-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a2bb0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcmp_sse4_1"
+    ],
+    "unit_id": "x-memcmp-sse4-1"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a3cc0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a3cc7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a3cd0",
+        "kind": "fallthrough",
+        "site": "0x1a3cc7",
+        "symbols_at_target": [],
+        "target": "0x1a3ccd",
+        "target_extent_owners": [
+          [
+            "__mempcpy_avx512_no_vzeroupper"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_avx512_no_vzeroupper"
+    ],
+    "unit_id": "x-mempcpy-chk-avx512-no-vzeroupper"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a3cd0",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1a3cda",
+        "symbols_at_target": [],
+        "target": "0x1a3cf7",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx512_no_vzeroupper",
+            "__memmove_avx512_no_vzeroupper"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_avx512_no_vzeroupper"
+    ],
+    "unit_id": "x-mempcpy-avx512-no-vzeroupper"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a3ce0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a3ce7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a3cf0",
+        "kind": "fallthrough",
+        "site": "0x1a3ce7",
+        "symbols_at_target": [],
+        "target": "0x1a3ced",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx512_no_vzeroupper",
+            "__memmove_avx512_no_vzeroupper"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_avx512_no_vzeroupper",
+      "__memmove_chk_avx512_no_vzeroupper"
+    ],
+    "unit_id": "x-memmove-chk-avx512-no-vzeroupper"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a3cf0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_avx512_no_vzeroupper",
+      "__memmove_avx512_no_vzeroupper"
+    ],
+    "unit_id": "x-memmove-avx512-no-vzeroupper"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a4430",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a4437",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a4440",
+        "kind": "fallthrough",
+        "site": "0x1a4437",
+        "symbols_at_target": [],
+        "target": "0x1a443d",
+        "target_extent_owners": [
+          [
+            "__memset_avx512_no_vzeroupper"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_avx512_no_vzeroupper"
+    ],
+    "unit_id": "x-memset-chk-avx512-no-vzeroupper"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a4440",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_avx512_no_vzeroupper"
+    ],
+    "unit_id": "x-memset-avx512-no-vzeroupper"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a46c0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strchr_sse2_no_bsf"
+    ],
+    "unit_id": "x-strchr-sse2-no-bsf"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a49e0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcmp_ssse3"
+    ],
+    "unit_id": "x-memcmp-ssse3"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a6780",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a6787",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a6790",
+        "kind": "fallthrough",
+        "site": "0x1a6787",
+        "symbols_at_target": [],
+        "target": "0x1a678d",
+        "target_extent_owners": [
+          [
+            "__mempcpy_avx512_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_avx512_unaligned"
+    ],
+    "unit_id": "x-mempcpy-chk-avx512-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a6790",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1a679a",
+        "symbols_at_target": [],
+        "target": "0x1a67b7",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx512_unaligned",
+            "__memmove_avx512_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_avx512_unaligned"
+    ],
+    "unit_id": "x-mempcpy-avx512-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a67a0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a67a7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a67b0",
+        "kind": "fallthrough",
+        "site": "0x1a67a7",
+        "symbols_at_target": [],
+        "target": "0x1a67ad",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx512_unaligned",
+            "__memmove_avx512_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_avx512_unaligned",
+      "__memmove_chk_avx512_unaligned"
+    ],
+    "unit_id": "x-memmove-chk-avx512-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a67b0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a67bb",
+        "symbols_at_target": [],
+        "target": "0x1a6890",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx512_unaligned_erms",
+            "__memmove_avx512_unaligned_erms"
+          ]
+        ]
+      },
+      {
+        "kind": "ja",
+        "site": "0x1a67ce",
+        "symbols_at_target": [],
+        "target": "0x1a694d",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx512_unaligned_erms",
+            "__memmove_avx512_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_avx512_unaligned",
+      "__memmove_avx512_unaligned"
+    ],
+    "unit_id": "x-memmove-avx512-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a67f0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a67f7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a6800",
+        "kind": "fallthrough",
+        "site": "0x1a67f7",
+        "symbols_at_target": [],
+        "target": "0x1a67fd",
+        "target_extent_owners": [
+          [
+            "__mempcpy_avx512_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_avx512_unaligned_erms"
+    ],
+    "unit_id": "x-mempcpy-chk-avx512-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a6800",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1a680a",
+        "symbols_at_target": [],
+        "target": "0x1a6847",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx512_unaligned_erms",
+            "__memmove_avx512_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_avx512_unaligned_erms"
+    ],
+    "unit_id": "x-mempcpy-avx512-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a6810",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a6817",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a6840",
+        "kind": "fallthrough",
+        "site": "0x1a6817",
+        "symbols_at_target": [],
+        "target": "0x1a681d",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx512_unaligned_erms",
+            "__memmove_avx512_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_avx512_unaligned_erms",
+      "__memmove_chk_avx512_unaligned_erms"
+    ],
+    "unit_id": "x-memmove-chk-avx512-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a6840",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_avx512_unaligned_erms",
+      "__memmove_avx512_unaligned_erms"
+    ],
+    "unit_id": "x-memmove-avx512-unaligned-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a7030",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a7037",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a7040",
+        "kind": "fallthrough",
+        "site": "0x1a7037",
+        "symbols_at_target": [],
+        "target": "0x1a703d",
+        "target_extent_owners": [
+          [
+            "__memset_avx512_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_avx512_unaligned"
+    ],
+    "unit_id": "x-memset-chk-avx512-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a7040",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a7051",
+        "symbols_at_target": [],
+        "target": "0x1a7100",
+        "target_extent_owners": [
+          [
+            "__memset_avx512_unaligned_erms"
+          ]
+        ]
+      },
+      {
+        "kind": "ja",
+        "site": "0x1a705e",
+        "symbols_at_target": [],
+        "target": "0x1a7149",
+        "target_extent_owners": [
+          [
+            "__memset_avx512_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_avx512_unaligned"
+    ],
+    "unit_id": "x-memset-avx512-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a7080",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_avx512_erms"
+    ],
+    "unit_id": "x-memset-avx512-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a70a0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a70a7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a70c0",
+        "kind": "fallthrough",
+        "site": "0x1a70a7",
+        "symbols_at_target": [],
+        "target": "0x1a70ad",
+        "target_extent_owners": [
+          [
+            "__memset_avx512_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_avx512_unaligned_erms"
+    ],
+    "unit_id": "x-memset-chk-avx512-unaligned-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a70c0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_avx512_unaligned_erms"
+    ],
+    "unit_id": "x-memset-avx512-unaligned-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a7240",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memchr_avx2_rtm"
+    ],
+    "unit_id": "x-memchr-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a7500",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcmp_avx2_movbe_rtm"
+    ],
+    "unit_id": "x-memcmp-avx2-movbe-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a7940",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcmpeq_avx2_rtm"
+    ],
+    "unit_id": "x-memcmpeq-avx2-rtm"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a7c00",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a7c07",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a7c10",
+        "kind": "fallthrough",
+        "site": "0x1a7c07",
+        "symbols_at_target": [],
+        "target": "0x1a7c0d",
+        "target_extent_owners": [
+          [
+            "__mempcpy_avx_unaligned_rtm"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_avx_unaligned_rtm"
+    ],
+    "unit_id": "x-mempcpy-chk-avx-unaligned-rtm"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a7c10",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1a7c1a",
+        "symbols_at_target": [],
+        "target": "0x1a7c37",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned_rtm",
+            "__memmove_avx_unaligned_rtm"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_avx_unaligned_rtm"
+    ],
+    "unit_id": "x-mempcpy-avx-unaligned-rtm"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a7c20",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a7c27",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a7c30",
+        "kind": "fallthrough",
+        "site": "0x1a7c27",
+        "symbols_at_target": [],
+        "target": "0x1a7c2d",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned_rtm",
+            "__memmove_avx_unaligned_rtm"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_avx_unaligned_rtm",
+      "__memmove_chk_avx_unaligned_rtm"
+    ],
+    "unit_id": "x-memmove-chk-avx-unaligned-rtm"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a7c30",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a7c3b",
+        "symbols_at_target": [],
+        "target": "0x1a7d00",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned_erms_rtm",
+            "__memmove_avx_unaligned_erms_rtm"
+          ]
+        ]
+      },
+      {
+        "kind": "ja",
+        "site": "0x1a7c49",
+        "symbols_at_target": [],
+        "target": "0x1a7d9d",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned_erms_rtm",
+            "__memmove_avx_unaligned_erms_rtm"
+          ]
+        ]
+      },
+      {
+        "kind": "jmp",
+        "site": "0x1a7c5f",
+        "symbols_at_target": [],
+        "target": "0x1a7ceb",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned_erms_rtm",
+            "__memmove_avx_unaligned_erms_rtm"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_avx_unaligned_rtm",
+      "__memmove_avx_unaligned_rtm"
+    ],
+    "unit_id": "x-memmove-avx-unaligned-rtm"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a7c70",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a7c77",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a7c80",
+        "kind": "fallthrough",
+        "site": "0x1a7c77",
+        "symbols_at_target": [],
+        "target": "0x1a7c7d",
+        "target_extent_owners": [
+          [
+            "__mempcpy_avx_unaligned_erms_rtm"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_avx_unaligned_erms_rtm"
+    ],
+    "unit_id": "x-mempcpy-chk-avx-unaligned-erms-rtm"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a7c80",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1a7c8a",
+        "symbols_at_target": [],
+        "target": "0x1a7cc7",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned_erms_rtm",
+            "__memmove_avx_unaligned_erms_rtm"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_avx_unaligned_erms_rtm"
+    ],
+    "unit_id": "x-mempcpy-avx-unaligned-erms-rtm"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a7c90",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a7c97",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a7cc0",
+        "kind": "fallthrough",
+        "site": "0x1a7c97",
+        "symbols_at_target": [],
+        "target": "0x1a7c9d",
+        "target_extent_owners": [
+          [
+            "__memcpy_avx_unaligned_erms_rtm",
+            "__memmove_avx_unaligned_erms_rtm"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_avx_unaligned_erms_rtm",
+      "__memmove_chk_avx_unaligned_erms_rtm"
+    ],
+    "unit_id": "x-memmove-chk-avx-unaligned-erms-rtm"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1a7cc0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_avx_unaligned_erms_rtm",
+      "__memmove_avx_unaligned_erms_rtm"
+    ],
+    "unit_id": "x-memmove-avx-unaligned-erms-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a83a0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memrchr_avx2_rtm"
+    ],
+    "unit_id": "x-memrchr-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a8770",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a8777",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a8780",
+        "kind": "fallthrough",
+        "site": "0x1a8777",
+        "symbols_at_target": [],
+        "target": "0x1a877d",
+        "target_extent_owners": [
+          [
+            "__memset_avx2_unaligned_rtm"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_avx2_unaligned_rtm"
+    ],
+    "unit_id": "x-memset-chk-avx2-unaligned-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a8780",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a8794",
+        "symbols_at_target": [],
+        "target": "0x1a88e0",
+        "target_extent_owners": [
+          [
+            "__memset_avx2_unaligned_erms_rtm"
+          ]
+        ]
+      },
+      {
+        "kind": "ja",
+        "site": "0x1a879e",
+        "symbols_at_target": [],
+        "target": "0x1a8849",
+        "target_extent_owners": [
+          [
+            "__memset_avx2_unaligned_erms_rtm"
+          ]
+        ]
+      },
+      {
+        "kind": "jmp",
+        "site": "0x1a87ae",
+        "symbols_at_target": [],
+        "target": "0x1a88b3",
+        "target_extent_owners": [
+          [
+            "__memset_avx2_unaligned_erms_rtm"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_avx2_unaligned_rtm"
+    ],
+    "unit_id": "x-memset-avx2-unaligned-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a87c0",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1a87d3",
+        "symbols_at_target": [],
+        "target": "0x1a88b3",
+        "target_extent_owners": [
+          [
+            "__memset_avx2_unaligned_erms_rtm"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_avx2_erms_rtm"
+    ],
+    "unit_id": "x-memset-avx2-erms-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a87e0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1a87e7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1a8800",
+        "kind": "fallthrough",
+        "site": "0x1a87e7",
+        "symbols_at_target": [],
+        "target": "0x1a87ed",
+        "target_extent_owners": [
+          [
+            "__memset_avx2_unaligned_erms_rtm"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_avx2_unaligned_erms_rtm"
+    ],
+    "unit_id": "x-memset-chk-avx2-unaligned-erms-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a8800",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_avx2_unaligned_erms_rtm"
+    ],
+    "unit_id": "x-memset-avx2-unaligned-erms-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a8940",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__rawmemchr_avx2_rtm"
+    ],
+    "unit_id": "x-rawmemchr-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a8aa0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strchr_avx2_rtm"
+    ],
+    "unit_id": "x-strchr-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a8d20",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcmp_avx2_rtm"
+    ],
+    "unit_id": "x-strcmp-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a91a0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strchrnul_avx2_rtm"
+    ],
+    "unit_id": "x-strchrnul-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a93b0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpcpy_avx2_rtm"
+    ],
+    "unit_id": "x-stpcpy-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1a9770",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpncpy_avx2_rtm"
+    ],
+    "unit_id": "x-stpncpy-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1aa130",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcat_avx2_rtm"
+    ],
+    "unit_id": "x-strcat-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1aa7c0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcpy_avx2_rtm"
+    ],
+    "unit_id": "x-strcpy-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1aab80",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strlen_avx2_rtm"
+    ],
+    "unit_id": "x-strlen-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1aacf0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncat_avx2_rtm"
+    ],
+    "unit_id": "x-strncat-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1ab730",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncmp_avx2_rtm"
+    ],
+    "unit_id": "x-strncmp-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1abc80",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncpy_avx2_rtm"
+    ],
+    "unit_id": "x-strncpy-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1ac600",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strnlen_avx2_rtm"
+    ],
+    "unit_id": "x-strnlen-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1ac900",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strrchr_avx2_rtm"
+    ],
+    "unit_id": "x-strrchr-avx2-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1ae580",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memchr_evex"
+    ],
+    "unit_id": "x-memchr-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1ae880",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcmp_evex_movbe"
+    ],
+    "unit_id": "x-memcmp-evex-movbe"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1aeb80",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcmpeq_evex"
+    ],
+    "unit_id": "x-memcmpeq-evex"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1aed80",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1aed87",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1aed90",
+        "kind": "fallthrough",
+        "site": "0x1aed87",
+        "symbols_at_target": [],
+        "target": "0x1aed8d",
+        "target_extent_owners": [
+          [
+            "__mempcpy_evex_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_evex_unaligned"
+    ],
+    "unit_id": "x-mempcpy-chk-evex-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1aed90",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1aed9a",
+        "symbols_at_target": [],
+        "target": "0x1aedb7",
+        "target_extent_owners": [
+          [
+            "__memcpy_evex_unaligned",
+            "__memmove_evex_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_evex_unaligned"
+    ],
+    "unit_id": "x-mempcpy-evex-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1aeda0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1aeda7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1aedb0",
+        "kind": "fallthrough",
+        "site": "0x1aeda7",
+        "symbols_at_target": [],
+        "target": "0x1aedad",
+        "target_extent_owners": [
+          [
+            "__memcpy_evex_unaligned",
+            "__memmove_evex_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_evex_unaligned",
+      "__memmove_chk_evex_unaligned"
+    ],
+    "unit_id": "x-memmove-chk-evex-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1aedb0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1aedbb",
+        "symbols_at_target": [],
+        "target": "0x1aee80",
+        "target_extent_owners": [
+          [
+            "__memcpy_evex_unaligned_erms",
+            "__memmove_evex_unaligned_erms"
+          ]
+        ]
+      },
+      {
+        "kind": "ja",
+        "site": "0x1aedcb",
+        "symbols_at_target": [],
+        "target": "0x1aef0d",
+        "target_extent_owners": [
+          [
+            "__memcpy_evex_unaligned_erms",
+            "__memmove_evex_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_evex_unaligned",
+      "__memmove_evex_unaligned"
+    ],
+    "unit_id": "x-memmove-evex-unaligned"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1aedf0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1aedf7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1aee00",
+        "kind": "fallthrough",
+        "site": "0x1aedf7",
+        "symbols_at_target": [],
+        "target": "0x1aedfd",
+        "target_extent_owners": [
+          [
+            "__mempcpy_evex_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_chk_evex_unaligned_erms"
+    ],
+    "unit_id": "x-mempcpy-chk-evex-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1aee00",
+    "external_targets": [
+      {
+        "kind": "jmp",
+        "site": "0x1aee0a",
+        "symbols_at_target": [],
+        "target": "0x1aee47",
+        "target_extent_owners": [
+          [
+            "__memcpy_evex_unaligned_erms",
+            "__memmove_evex_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__mempcpy_evex_unaligned_erms"
+    ],
+    "unit_id": "x-mempcpy-evex-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1aee10",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1aee17",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1aee40",
+        "kind": "fallthrough",
+        "site": "0x1aee17",
+        "symbols_at_target": [],
+        "target": "0x1aee1d",
+        "target_extent_owners": [
+          [
+            "__memcpy_evex_unaligned_erms",
+            "__memmove_evex_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memcpy_chk_evex_unaligned_erms",
+      "__memmove_chk_evex_unaligned_erms"
+    ],
+    "unit_id": "x-memmove-chk-evex-unaligned-erms"
+  },
+  {
+    "dependencies": "e06-x86-copy-lifts",
+    "elf": "0x1aee40",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memcpy_evex_unaligned_erms",
+      "__memmove_evex_unaligned_erms"
+    ],
+    "unit_id": "x-memmove-evex-unaligned-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1af600",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memrchr_evex"
+    ],
+    "unit_id": "x-memrchr-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1af9b0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1af9b7",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1af9c0",
+        "kind": "fallthrough",
+        "site": "0x1af9b7",
+        "symbols_at_target": [],
+        "target": "0x1af9bd",
+        "target_extent_owners": [
+          [
+            "__memset_evex_unaligned"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_evex_unaligned"
+    ],
+    "unit_id": "x-memset-chk-evex-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1af9c0",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1af9d1",
+        "symbols_at_target": [],
+        "target": "0x1afa80",
+        "target_extent_owners": [
+          [
+            "__memset_evex_unaligned_erms"
+          ]
+        ]
+      },
+      {
+        "kind": "ja",
+        "site": "0x1af9db",
+        "symbols_at_target": [],
+        "target": "0x1afac9",
+        "target_extent_owners": [
+          [
+            "__memset_evex_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_evex_unaligned"
+    ],
+    "unit_id": "x-memset-evex-unaligned"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1af9f0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_evex_erms"
+    ],
+    "unit_id": "x-memset-evex-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1afa10",
+    "external_targets": [
+      {
+        "kind": "jb",
+        "site": "0x1afa17",
+        "symbols_at_target": [
+          "__GI___chk_fail",
+          "__chk_fail",
+          "__chk_fail@@GLIBC_2.3.4"
+        ],
+        "target": "0x134f70",
+        "target_extent_owners": []
+      },
+      {
+        "after_alignment": "0x1afa40",
+        "kind": "fallthrough",
+        "site": "0x1afa17",
+        "symbols_at_target": [],
+        "target": "0x1afa1d",
+        "target_extent_owners": [
+          [
+            "__memset_evex_unaligned_erms"
+          ]
+        ]
+      }
+    ],
+    "kind": "entry-adapter",
+    "symbols": [
+      "__memset_chk_evex_unaligned_erms"
+    ],
+    "unit_id": "x-memset-chk-evex-unaligned-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1afa40",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memset_evex_unaligned_erms"
+    ],
+    "unit_id": "x-memset-evex-unaligned-erms"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1afba0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__rawmemchr_evex"
+    ],
+    "unit_id": "x-rawmemchr-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1afd20",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpcpy_evex"
+    ],
+    "unit_id": "x-stpcpy-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b0170",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__stpncpy_evex"
+    ],
+    "unit_id": "x-stpncpy-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b0c00",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcat_evex"
+    ],
+    "unit_id": "x-strcat-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b1360",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strchr_evex"
+    ],
+    "unit_id": "x-strchr-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b1600",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strchrnul_evex"
+    ],
+    "unit_id": "x-strchrnul-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b1860",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcmp_evex"
+    ],
+    "unit_id": "x-strcmp-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b1cd0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strcpy_evex"
+    ],
+    "unit_id": "x-strcpy-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b2120",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strlen_evex"
+    ],
+    "unit_id": "x-strlen-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b22a0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncat_evex"
+    ],
+    "unit_id": "x-strncat-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b2dc0",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncmp_evex"
+    ],
+    "unit_id": "x-strncmp-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b3330",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strncpy_evex"
+    ],
+    "unit_id": "x-strncpy-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b3d80",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strnlen_evex"
+    ],
+    "unit_id": "x-strnlen-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b4040",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__strrchr_evex"
+    ],
+    "unit_id": "x-strrchr-evex"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b5c40",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__memchr_evex_rtm"
+    ],
+    "unit_id": "x-memchr-evex-rtm"
+  },
+  {
+    "dependencies": "e07-x86-string-lifts",
+    "elf": "0x1b5f40",
+    "external_targets": [],
+    "kind": "body-and-paths",
+    "symbols": [
+      "__rawmemchr_evex_rtm"
+    ],
+    "unit_id": "x-rawmemchr-evex-rtm"
+  }
+]

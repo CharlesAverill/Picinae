@@ -1,0 +1,95 @@
+ .../claude/lifter/x64_scalar_fixture/SUCCESS.json  |   67 +
+ .../e25_scalar_callee_amd64.pcode.json             | 1336 ++++++++++++++++++++
+ .../x64_scalar_fixture/e25_scalar_callee_amd64.v   |  119 ++
+ .../e25_scalar_caller_amd64.pcode.json             |  161 +++
+ .../x64_scalar_fixture/e25_scalar_caller_amd64.v   |  119 ++
+ .../claude/lifter/x64_scalar_smoke/SUCCESS.json    |  127 ++
+ .../x64_scalar_smoke/e25_abs_amd64.pcode.json      |  519 ++++++++
+ .../claude/lifter/x64_scalar_smoke/e25_abs_amd64.v |  192 +++
+ .../x64_scalar_smoke/e25_isascii_amd64.pcode.json  |  623 +++++++++
+ .../lifter/x64_scalar_smoke/e25_isascii_amd64.v    |  192 +++
+ .../x64_scalar_smoke/e25_labs_amd64.pcode.json     |  447 +++++++
+ .../lifter/x64_scalar_smoke/e25_labs_amd64.v       |  192 +++
+ .../e25_pthread_equal_amd64.pcode.json             |  621 +++++++++
+ .../x64_scalar_smoke/e25_pthread_equal_amd64.v     |  192 +++
+ .../x64_scalar_smoke/e25_toascii_amd64.pcode.json  |  396 ++++++
+ .../lifter/x64_scalar_smoke/e25_toascii_amd64.v    |  192 +++
+ dune                                               |   18 +
+ notes/e25-x86-scalar-driver/README.md              |  188 +++
+ notes/e25-x86-scalar-driver/ancestry-before.txt    |   32 +
+ notes/e25-x86-scalar-driver/ancestry-imported.txt  |    6 +
+ notes/e25-x86-scalar-driver/check-artifacts.py     |   56 +
+ notes/e25-x86-scalar-driver/check-failures.py      |   51 +
+ notes/e25-x86-scalar-driver/fixture/build.sh       |    9 +
+ notes/e25-x86-scalar-driver/fixture/pins.json      |    4 +
+ notes/e25-x86-scalar-driver/fixture/scalar.S       |   49 +
+ notes/e25-x86-scalar-driver/fixture/scalar.so      |  Bin 0 -> 13592 bytes
+ notes/e25-x86-scalar-driver/implementation.sha256  |   12 +
+ notes/e25-x86-scalar-driver/isa-pins.json          |    8 +
+ notes/e25-x86-scalar-driver/logs/01-glibc-lift.log |    5 +
+ .../logs/02-glibc-profile.log                      |    5 +
+ notes/e25-x86-scalar-driver/logs/03-glibc-lift.log |    6 +
+ .../e25-x86-scalar-driver/logs/04-fixture-lift.log |    6 +
+ notes/e25-x86-scalar-driver/logs/05-generate.log   |    9 +
+ .../logs/06-backend-tests.log                      |   35 +
+ notes/e25-x86-scalar-driver/logs/07-dune.log       |  176 +++
+ .../logs/08-generate-final.log                     |    9 +
+ .../logs/09-publication-tests.log                  |   10 +
+ .../logs/10-backend-final.log                      |   21 +
+ notes/e25-x86-scalar-driver/logs/11-dune-final.log |   25 +
+ .../e25-x86-scalar-driver/logs/12-assumptions.log  |   53 +
+ notes/e25-x86-scalar-driver/logs/13-negatives.log  |   61 +
+ .../e25-x86-scalar-driver/logs/14-determinism.log  |    9 +
+ .../logs/15-fixture-rebuild.log                    |    5 +
+ .../logs/16-artifact-source-audit.log              |  460 +++++++
+ notes/e25-x86-scalar-driver/logs/17-toolchain.log  |   10 +
+ .../logs/18-fork-collision.log                     |    4 +
+ .../logs/19-final-regeneration.log                 |    9 +
+ .../e25-x86-scalar-driver/logs/20-final-replay.log |    9 +
+ .../logs/21-final-negatives.log                    |   67 +
+ .../logs/22-proof-source-audit.log                 |   10 +
+ .../logs/23-preserve-existing.log                  |    4 +
+ notes/e25-x86-scalar-driver/logs/24-diff-check.log |    4 +
+ .../logs/25-backend-complete.log                   |   21 +
+ .../logs/26-artifact-complete.log                  |  460 +++++++
+ .../logs/27-publication-complete.log               |   10 +
+ .../ghidra/01b966b572c54ee7b440eb4da66cf85b.log.gz |  Bin 0 -> 1675 bytes
+ .../ghidra/10e2d2fb57ac4c71a7ed9e60db205227.log.gz |  Bin 0 -> 1745 bytes
+ .../ghidra/16b61b45fea641acbb7e0e3de9d2c933.log.gz |  Bin 0 -> 1806 bytes
+ .../ghidra/1e6bad1a748b431f8661cda1f1208976.log.gz |  Bin 0 -> 1267 bytes
+ .../ghidra/214b249db92d4e7197886a41d7ac8f56.log.gz |  Bin 0 -> 2053 bytes
+ .../ghidra/22e10b8008ed441aab9ea34ead676998.log.gz |  Bin 0 -> 2056 bytes
+ .../ghidra/3e17c0c555d44fce84a80dcbbdc389fd.log.gz |  Bin 0 -> 1758 bytes
+ .../ghidra/43e04d95adcf4f31aaaa37e2fdbb3b5c.log.gz |  Bin 0 -> 1760 bytes
+ .../ghidra/5cfae494d59e4378ab8f2e6614349b9e.log.gz |  Bin 0 -> 1808 bytes
+ .../ghidra/60764bb6bc94446299ebac042dc55c3c.log.gz |  Bin 0 -> 1875 bytes
+ .../ghidra/69069f5b576f434d959e911e043ed21c.log.gz |  Bin 0 -> 1679 bytes
+ .../ghidra/69d7060c15ff424e8aed706cd4677026.log.gz |  Bin 0 -> 1877 bytes
+ .../ghidra/6c88fef1f587412fbabc7874f19602fa.log.gz |  Bin 0 -> 1591 bytes
+ .../ghidra/73fc79b682074f86a98f41fe0d930078.log.gz |  Bin 0 -> 1255 bytes
+ .../ghidra/842daf8f9f6649c48bb207a1c8a34e26.log.gz |  Bin 0 -> 1267 bytes
+ .../ghidra/8762f2d7aa0c4b789b434a77484324b8.log.gz |  Bin 0 -> 1267 bytes
+ .../ghidra/8efe58236ef04a3da7f4c786e7117cfa.log.gz |  Bin 0 -> 1406 bytes
+ .../ghidra/a86f870ec79c448781698b3fc471cecc.log.gz |  Bin 0 -> 1592 bytes
+ .../ghidra/aacc88cb94f74e5ea9a9bf4039179e07.log.gz |  Bin 0 -> 1871 bytes
+ .../ghidra/aacf739ea5384040a063cd99c8d5149b.log.gz |  Bin 0 -> 1756 bytes
+ .../ghidra/affeb340248441a1bad6f9f1bb09789d.log.gz |  Bin 0 -> 2154 bytes
+ .../ghidra/c03a988b75f54a4e9b10c66d7bc5b916.log.gz |  Bin 0 -> 1756 bytes
+ .../ghidra/cdcbd753dcd1469c9572f66c93af7170.log.gz |  Bin 0 -> 1270 bytes
+ .../ghidra/e4b2eae1205e461da5c0e1cef4314daa.log.gz |  Bin 0 -> 1870 bytes
+ .../ghidra/e8214570eb5d4fbc93dba13db61a02ef.log.gz |  Bin 0 -> 2183 bytes
+ .../ghidra/e8b8e239fd1348c09fe2b2a595f2f04e.log.gz |  Bin 0 -> 1757 bytes
+ .../ghidra/f1d1826b66d9404eab1fc175557f8835.log.gz |  Bin 0 -> 1266 bytes
+ .../ghidra/fc0fb65253d143fe861fea9de477e207.log.gz |  Bin 0 -> 1411 bytes
+ notes/e25-x86-scalar-driver/merge-base-before.txt  |    1 +
+ notes/e25-x86-scalar-driver/prerequisite-merge.txt |   14 +
+ notes/e25-x86-scalar-driver/print-assumptions.sh   |   18 +
+ notes/e25-x86-scalar-driver/reproduce.sh           |   23 +
+ notes/e25-x86-scalar-driver/stat-imported.txt      |  186 +++
+ .../e25-x86-scalar-driver/swallowed-exceptions.txt |   17 +
+ tools/ghidra-lifter/lift-x64.py                    |  159 +++
+ tools/ghidra-lifter/pcode2coq_x64.py               |  359 ++++++
+ tools/ghidra-lifter/test_x64.py                    |  265 ++++
+ tools/ghidra-lifter/test_x64_publication.py        |   42 +
+ tools/ghidra-lifter/x64_headless.py                |  141 +++
+ 94 files changed, 8656 insertions(+)
