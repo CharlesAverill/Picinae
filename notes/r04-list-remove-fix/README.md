@@ -147,3 +147,10 @@ the whole-source auditor, and are absent from the selected transitive trust.
 Final retention (19) and ancestry checks pass; generated IL/ISA/r00, root
 Dune and archived author evidence are unchanged. Remaining limits are exactly
 the scope exclusions above, with no unfinished assigned proof obligation.
+
+Implementation commit: `66ce3fd4574871bbd38382d7bc6313628b74d21c`.
+Its successful commit command is preserved in log 25. Log 26 records the exact
+post-implementation ancestry, diff stat and genuinely clean status before
+these final evidence files were added. The following evidence-only commit
+contains no proof/source change. Final-head/clean-status evidence is recorded
+externally only under the assigned `units/r04-list-remove-fix/` directory.
