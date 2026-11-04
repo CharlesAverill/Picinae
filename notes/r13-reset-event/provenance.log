@@ -1,0 +1,41 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-fe0e672b
+COMMAND=python3 notes/r13-reset-event/check-provenance.py
+TCB_t.sizeof 84
+TCB_t.xEventListItem 24
+ListItem_t.xItemValue 0
+TCB_t.uxPriority 44
+TickType_t.sizeof 4
+void *.sizeof 4
+configMAX_PRIORITIES=5U
+tasks.c SHA256 verified; lines 7569-7584:
+TickType_t uxTaskResetEventItemValue( void )
+{
+    TickType_t uxReturn;
+
+    traceENTER_uxTaskResetEventItemValue();
+
+    uxReturn = listGET_LIST_ITEM_VALUE( &( pxCurrentTCB->xEventListItem ) );
+
+    /* Reset the event list item to its normal value - so it can be used with
+     * queues and semaphores. */
+    listSET_LIST_ITEM_VALUE( &( pxCurrentTCB->xEventListItem ), ( ( TickType_t ) configMAX_PRIORITIES - ( TickType_t ) pxCurrentTCB->uxPriority ) );
+
+    traceRETURN_uxTaskResetEventItemValue( uxReturn );
+
+    return uxReturn;
+}
+Unchanged generated lift SHA256: 69b7a31b5f52c043a896f0f4a4393aeebbe74bbfde178b95b53b508135c0949c
+Inherited ELF SHA256: 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca
+Entry, exit, call-free artifact: 0x00001524 [{'address': '0x00001536', 'assembly': 'bx\tlr', 'frontend_encoding_supported': True, 'opcode': '4770', 'width': 2}] []
+0x00001524 4b04 ldr	r3, [pc, #16]	@ (1538 <uxTaskResetEventItemValue+0x14>)
+0x00001526 681a ldr	r2, [r3, #0]
+0x00001528 6990 ldr	r0, [r2, #24]
+0x0000152a 6819 ldr	r1, [r3, #0]
+0x0000152c 681a ldr	r2, [r3, #0]
+0x0000152e 6ac9 ldr	r1, [r1, #44]	@ 0x2c
+0x00001530 2305 movs	r3, #5
+0x00001532 1a5b subs	r3, r3, r1
+0x00001534 6193 str	r3, [r2, #24]
+0x00001536 4770 bx	lr
+
+EXIT_CODE=0
