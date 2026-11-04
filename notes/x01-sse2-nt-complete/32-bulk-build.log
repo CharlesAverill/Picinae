@@ -1,0 +1,32 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0da1e0be
+COMMAND=bash notes/x01-sse2-nt-complete/build-bulk.sh
+        rocq Examples/claude/amd64_memcpy_nt_bulk_proof.{glob,vo} (exit 1)
+File "./Examples/claude/amd64_memcpy_nt_bulk_proof.v", line 40, characters 40-43:
+Error: Tactic failure:  Cannot find witness.
+
+Command exited with non-zero status 1
+	Command being timed: "dune build --cache=disabled -j1 --display short Examples/claude/amd64_memcpy_nt_bulk_proof.vo"
+	User time (seconds): 0.23
+	System time (seconds): 0.17
+	Percent of CPU this job got: 102%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.39
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 418084
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 26179
+	Voluntary context switches: 29
+	Involuntary context switches: 2
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 328
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+
+EXIT_CODE=1

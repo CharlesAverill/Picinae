@@ -1,0 +1,72 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0da1e0be
+COMMAND=bash notes/x01-sse2-nt-complete/build-strategy.sh
+        rocq .Picinae.theory.d
+Goal at < 1854064 >
+Goal at < 1854224 >
+Goal at < 1854092 >
+Goal at < 1854381 >
+Goal at < 1854501 >
+File "./Examples/claude/amd64_memcpy_nt_strategy_proof.v", line 94, characters 18-19:
+Error:
+In environment
+m : memory
+d, s, n : N
+rsp : memory
+st : store
+t : list (exit * store)
+MDL : models archtyps st
+NOV : nov d s n
+NB : n < 2 ^ 64
+BIG : 64 <= n
+DOMAIN : nt_strategy_domain m d s n
+MEM : st V_MEM64 = nt_head_memory m d s
+D : st R_RDI = d + nt_align d
+S : st R_RSI = s ⊕ nt_align d
+NN : st R_RDX = n - nt_align d
+AX : st R_RAX = d
+SP : st R_RSP = rsp
+SEL : ~ nt_four_selected m d s n
+R10 : st R_R10 = n - nt_align d >> 4
+POS : 0 < nt_count false d n
+COPY : cpy m (nt_head_memory m d s) d s (fun x : N => x < 64)
+n3, n4, n5 : N
+t0 : list (exit * store)
+The term "D" has type "st R_RDI = d + nt_align d"
+while it is expected to have type
+ "st R_RDI = d + (nt_align d + 4096 * 2 * 0 + 64 * 0)".
+
+File "dune", lines 6-28, characters 0-1053:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+26 |   Examples.claude.amd64_memcpy_loops_proof
+27 |   Examples.claude.arm8_common Examples.claude.abs_arm8
+28 |   Examples.claude.arm8_abs_proof))
+        rocq Examples/claude/amd64_memcpy_nt_strategy_proof.{glob,vo} (exit 1)
+Command exited with non-zero status 1
+	Command being timed: "dune build --no-buffer --cache=disabled -j1 --display short Examples/claude/amd64_memcpy_nt_strategy_proof.vo"
+	User time (seconds): 16.97
+	System time (seconds): 0.20
+	Percent of CPU this job got: 97%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:17.57
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 636632
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 31933
+	Voluntary context switches: 356
+	Involuntary context switches: 7
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 592
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+
+EXIT_CODE=1

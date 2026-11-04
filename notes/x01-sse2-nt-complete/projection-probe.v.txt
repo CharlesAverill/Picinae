@@ -1,0 +1,10 @@
+Require Import Picinae_amd64.
+From Stdlib Require Import NArith.
+Open Scope N.
+Goal forall (st:store) x y, (st [R_YMM0:=x][R_RDI:=y][R_RCX:=64]) R_RDI=y.
+Proof.
+ intros. lazy beta iota zeta delta [update iseq VarEqDec vareq X64Arch.Var.eq_dec MiniX64VarEq.eq_dec x64var_rec x64var_rect].
+ Set Printing Depth 8.
+ match goal with |- ?G => idtac "PROJECTION_NORMAL_FORM" G end.
+ reflexivity.
+Qed.

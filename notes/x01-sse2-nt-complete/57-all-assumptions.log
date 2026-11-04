@@ -1,0 +1,13 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0da1e0be
+COMMAND=python3 notes/x01-sse2-nt-complete/audit-assumptions.py
+amd64_memcpy_nt_proof constants=21 exit=0 log=notes/x01-sse2-nt-complete/assumptions-amd64_memcpy_nt_proof.log
+amd64_memcpy_nt_dispatch_proof constants=3 exit=0 log=notes/x01-sse2-nt-complete/assumptions-amd64_memcpy_nt_dispatch_proof.log
+amd64_memcpy_nt_head_proof constants=9 exit=0 log=notes/x01-sse2-nt-complete/assumptions-amd64_memcpy_nt_head_proof.log
+amd64_memcpy_nt_domain_proof constants=7 exit=0 log=notes/x01-sse2-nt-complete/assumptions-amd64_memcpy_nt_domain_proof.log
+amd64_memcpy_nt_bulk_proof constants=7 exit=0 log=notes/x01-sse2-nt-complete/assumptions-amd64_memcpy_nt_bulk_proof.log
+amd64_memcpy_nt_bulk4_proof constants=2 exit=0 log=notes/x01-sse2-nt-complete/assumptions-amd64_memcpy_nt_bulk4_proof.log
+amd64_memcpy_nt_strategy_proof constants=16 exit=0 log=notes/x01-sse2-nt-complete/assumptions-amd64_memcpy_nt_strategy_proof.log
+amd64_memcpy_proof constants=3 exit=0 log=notes/x01-sse2-nt-complete/assumptions-amd64_memcpy_proof.log
+All sequential queries completed; inspect every raw Axioms block.
+
+EXIT_CODE=0
