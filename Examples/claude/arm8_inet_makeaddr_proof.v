@@ -1,7 +1,3 @@
-(* PARTIAL handoff: the single full target build failed at inet_bfm24_correct.
-   Only the preceding nine facts reached Qed; no full proof .vo was produced.
-   Every unchecked proof below is Aborted, with its statement unchanged. *)
-
 (* inet_makeaddr (AAPCS64, little-endian AArch64).
 
    SYNOPSIS: struct in_addr inet_makeaddr(in_addr_t net, in_addr_t host).
@@ -19,13 +15,14 @@
    See lifter/scalar_bitforms/e29_inet_makeaddr_arm8.manifest.json.
    The AMD64 proof is a specification/style reference only, never an import.
    Initial statement/proof author: OpenAI gpt-6-astra, xhigh/priority.
-   Validation and final-producer status are recorded in notes/a-inet-makeaddr/.
+   Proof repair: OpenAI gpt-6.1-sol, xhigh/default.
+   Validation and final-producer status: notes/a-inet-makeaddr-fix/.
 
    ABI: low32(X0)=net, low32(X1)=host. Upper halves are unrestricted within
    the modeled 64-bit register types. At each of the three RET sites X0 is
    the zero-extended 32-bit result. Memory, SP, X30, modeled X19-X29 and
    modeled Z8-Z15 are preserved. RET encodings name X30 as the target.
-   The intended invariant theorem specifies entry-to-RET partial correctness of
+   The invariant theorem establishes entry-to-RET partial correctness of
    this exact IL map for every input pair, including boundaries and high bits.
    No buffer-size, overlap, memory-content/accessibility, callee, global,
    CPU-feature, tunable, or result-oracle premise is imposed. The only state
@@ -131,41 +128,94 @@ Definition inet_bfm32 (net host rotate mask:N) :=
    (((net mod 2^32) >> rotate .| ((net mod 2^32) << (32-rotate)) mod 2^32) .& mask))
   mod 2^32.
 
+(* Normalize N.ones 32 at each call, then reduce closed mask bits and
+   comparisons explicitly. Discard masked-out leaves before case analysis. *)
+Ltac inet_bits_close :=
+  bits_rewrite; bits_norm_idx;
+  repeat match goal with |- context [N.testbit ?c ?k] =>
+    lazymatch c with Npos _ =>
+      let k' := eval vm_compute in k in
+      lazymatch k' with
+      | N0 => let b := eval vm_compute in (N.testbit c k) in
+              let E := fresh in assert (E : N.testbit c k = b) by (vm_compute; reflexivity);
+              rewrite E; clear E
+      | Npos _ => let b := eval vm_compute in (N.testbit c k) in
+                  let E := fresh in assert (E : N.testbit c k = b) by (vm_compute; reflexivity);
+                  rewrite E; clear E
+      end
+    end end;
+  cbn [N.ltb N.compare Pos.compare Pos.compare_cont N.add N.sub
+       andb orb xorb negb];
+  repeat first
+    [ progress cbn [andb orb xorb negb]
+    | rewrite Bool.andb_false_r | rewrite Bool.andb_true_r
+    | rewrite Bool.orb_false_r | rewrite Bool.orb_true_r ];
+  bits_norm_idx;
+  repeat match goal with |- context [N.testbit ?x ?k] =>
+    lazymatch x with Npos _ => fail | N0 => fail | _ =>
+      destruct (N.testbit x k) end end;
+  vm_compute; reflexivity.
+
+(* Above bit 31, use bounds before splitting any comparisons. In the
+   simplified REV expression there is no outer mod to discard these bits;
+   eagerly splitting every inner comparison creates exponentially many cases. *)
+Ltac inet_bits_high :=
+  bits_rewrite;
+  repeat first
+    [ progress cbn [andb orb xorb negb]
+    | rewrite Bool.andb_false_r | rewrite Bool.andb_true_r
+    | rewrite Bool.orb_false_r | rewrite Bool.orb_true_r
+    | match goal with |- context [?a <? ?b] =>
+        first [rewrite (proj2 (N.ltb_ge a b) ltac:(lia))
+              |rewrite (proj2 (N.ltb_lt a b) ltac:(lia))]
+      end
+    | match goal with |- context [N.testbit (Npos ?c) ?k] =>
+        let sz := eval vm_compute in (N.size (Npos c)) in
+        rewrite (testbit_const_high (Npos c) k) by
+          (change (N.size (Npos c)) with sz; lia)
+      end ];
+  reflexivity.
+
+Ltac inet_bitblast32 :=
+  apply N.bits_inj; let i := fresh "i" in intro i;
+  destruct (N.lt_ge_cases i 32);
+  [ let rec go k :=
+      lazymatch eval compute in (k <? 32) with
+      | true => destruct (N.eq_dec i k) as [->|?];
+                [ inet_bits_close | let k1 := eval compute in (N.succ k) in go k1 ]
+      | false => exfalso; lia
+      end in go 0
+  | inet_bits_high ].
+
 Lemma inet_bfm24_correct:
   forall net host, inet_bfm32 net host 8 0xff000000 =
     (net << 24 .| host mod 2^24) mod 2^32.
-Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are in
-     notes/a-inet-makeaddr/initial-attempt.v.txt and initial-build.log.
-     No Astra repair cycle was run. *)
-Abort.
+Proof. intros. unfold inet_bfm32. change (N.ones 32) with 0xffffffff. inet_bitblast32. Qed.
+Print Assumptions inet_bfm24_correct.
 
 Lemma inet_bfm16_correct:
   forall net host, inet_bfm32 net host 16 0xffff0000 =
     (net << 16 .| host mod 2^16) mod 2^32.
-Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are in
-     notes/a-inet-makeaddr/initial-attempt.v.txt and initial-build.log.
-     No Astra repair cycle was run. *)
-Abort.
+Proof. intros. unfold inet_bfm32. change (N.ones 32) with 0xffffffff. inet_bitblast32. Qed.
+Print Assumptions inet_bfm16_correct.
 
 Lemma inet_bfm8_correct:
   forall net host, inet_bfm32 net host 24 0xffffff00 =
     (net << 8 .| host mod 2^8) mod 2^32.
-Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are in
-     notes/a-inet-makeaddr/initial-attempt.v.txt and initial-build.log.
-     No Astra repair cycle was run. *)
-Abort.
+Proof. intros. unfold inet_bfm32. change (N.ones 32) with 0xffffffff. inet_bitblast32. Qed.
+Print Assumptions inet_bfm8_correct.
 
 Lemma inet_msub32_eqb:
   forall a b, a < 2^32 -> b < 2^32 ->
     (msub 32 a b =? 0) = (a =? b).
 Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are in
-     notes/a-inet-makeaddr/initial-attempt.v.txt and initial-build.log.
-     No Astra repair cycle was run. *)
-Abort.
+  intros a b A B. destruct (N.eqb_spec a b) as [E|E].
+  - subst. rewrite msub_diag. reflexivity.
+  - apply N.eqb_neq. intro H. apply E.
+    pose proof (add_msub 32 b a) as M.
+    rewrite H, N.add_0_r, !N.mod_small in M by assumption. symmetry; exact M.
+Qed.
+Print Assumptions inet_msub32_eqb.
 
 (* An inhabited typed entry, including arbitrary 32-bit upper halves. *)
 Definition inet_makeaddr_input (net host nhi hhi:N) : store :=
@@ -174,20 +224,24 @@ Definition inet_makeaddr_input (net host nhi hhi:N) : store :=
 Lemma inet_makeaddr_zero_typed:
   models arm8typctx (fun _ => 0).
 Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are in
-     notes/a-inet-makeaddr/initial-attempt.v.txt and initial-build.log.
-     No Astra repair cycle was run. *)
-Abort.
+  intros v w T. apply (proj1 (N.neq_0_lt_0 (2^w))).
+  apply N.pow_nonzero. discriminate.
+Qed.
+Print Assumptions inet_makeaddr_zero_typed.
 
 Lemma inet_makeaddr_input_typed:
   forall net host nhi hhi,
   net < 2^32 -> host < 2^32 -> nhi < 2^32 -> hhi < 2^32 ->
   models arm8typctx (inet_makeaddr_input net host nhi hhi).
 Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are in
-     notes/a-inet-makeaddr/initial-attempt.v.txt and initial-build.log.
-     No Astra repair cycle was run. *)
-Abort.
+  intros net host nhi hhi NET HOST NHI HHI. unfold inet_makeaddr_input.
+  apply models_update.
+  - change (host + 2^32*hhi < 2^64). nia.
+  - apply models_update.
+    + change (net + 2^32*nhi < 2^64). nia.
+    + apply inet_makeaddr_zero_typed.
+Qed.
+Print Assumptions inet_makeaddr_input_typed.
 
 Theorem inet_makeaddr_inputs_inhabited:
   forall net host nhi hhi,
@@ -195,19 +249,31 @@ Theorem inet_makeaddr_inputs_inhabited:
   exists s, models arm8typctx s /\
     trueif_inv (inet_makeaddr_invs net host 0 0 0 [(Addr 0x1f9d40,s)]).
 Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are in
-     notes/a-inet-makeaddr/initial-attempt.v.txt and initial-build.log.
-     No Astra repair cycle was run. *)
-Abort.
+  intros net host nhi hhi NET HOST NHI HHI.
+  exists (inet_makeaddr_input net host nhi hhi). split.
+  - apply inet_makeaddr_input_typed; assumption.
+  - cbn [inet_makeaddr_invs trueif_inv]. unfold inet_makeaddr_input.
+    repeat first [rewrite update_updated | rewrite update_frame by discriminate].
+    rewrite (N.mul_comm (2^32) nhi), (N.mul_comm (2^32) hhi).
+    rewrite !N.mod_add by discriminate. rewrite !N.mod_small by assumption.
+    repeat split; reflexivity.
+Qed.
+Print Assumptions inet_makeaddr_inputs_inhabited.
 
 Theorem inet_makeaddr_spec_inhabited:
   forall net host, net < 2^32 -> host < 2^32 ->
   exists s, models arm8typctx s /\ inet_makeaddr_postcondition net host 0 0 0 s.
 Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are in
-     notes/a-inet-makeaddr/initial-attempt.v.txt and initial-build.log.
-     No Astra repair cycle was run. *)
-Abort.
+  intros net host NET HOST.
+  exists (update (fun _ => 0) R_X0 (inet_makeaddr_result net host)). split.
+  - apply models_update.
+    + change (inet_makeaddr_result net host < 2^64).
+      pose proof (inet_makeaddr_result_bound net host). nia.
+    + apply inet_makeaddr_zero_typed.
+  - unfold inet_makeaddr_postcondition.
+    rewrite update_updated, !update_frame by discriminate. repeat split; reflexivity.
+Qed.
+Print Assumptions inet_makeaddr_spec_inhabited.
 
 Theorem inet_makeaddr_correct:
   forall s t s' x' net host m sp lr
@@ -218,7 +284,40 @@ Theorem inet_makeaddr_correct:
   satisfies_all e29_inet_makeaddr_arm8 (inet_makeaddr_invs net host m sp lr)
     inet_makeaddr_exit ((x',s')::t).
 Proof.
-  (* PARTIAL: exact initial attempt and diagnostics are in
-     notes/a-inet-makeaddr/initial-attempt.v.txt and initial-build.log.
-     No Astra repair cycle was run. *)
-Abort.
+  intros. apply prove_invs.
+  simpl. rewrite ENTRY. arm8_step. repeat split; assumption.
+  intros.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption.
+  apply inet_makeaddr_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t.
+  destruct_inv 64 PRE.
+  destruct PRE as [NET [HOST [MEM [SP LR]]]].
+  repeat arm8_step.
+  all: repeat rewrite N.shiftr_0_r in *.
+  all: repeat match goal with
+  | H: context [msub 32 ?a ?b =? 0] |- _ =>
+    rewrite (inet_msub32_eqb a b) in H by
+      (first [apply mp2_mod_lt | vm_compute; reflexivity])
+  end.
+  all: repeat match goal with
+  | H: context [if ?a <=? ?b then _ else _] |- _ => destruct (N.leb_spec a b)
+  | H: context [if ?a <? ?b then _ else _] |- _ => destruct (N.ltb_spec a b)
+  | H: context [if ?a =? ?b then _ else _] |- _ => destruct (N.eqb_spec a b)
+  end.
+  all: repeat match goal with
+  | H: context [N.land] |- _ => progress cbn [N.land N.lxor N.lor] in H
+  | H: context [N.lxor] |- _ => progress cbn [N.land N.lxor N.lor] in H
+  end.
+  all: try discriminate.
+  all: unfold inet_makeaddr_postcondition.
+  all: split; [|repeat split; assumption].
+  all: unfold inet_makeaddr_result, makeaddr; subst net host.
+  all: repeat match goal with
+  | |- context [if ?a <? ?b then _ else _] => destruct (N.ltb_spec a b)
+  end.
+  all: try (exfalso; lia).
+  all: clear - s1.
+  all: abstract (unfold ntohl32; inet_bitblast32).
+Qed.
+Print Assumptions inet_makeaddr_correct.
