@@ -1,0 +1,44 @@
+# Campaign row, followed by acceptable official V11.1.0 symbol(s).
+# Every row must have at least one nonempty function in the final ELF.
+r01 vListInitialiseItem
+r02 vListInitialise
+r03 vListInsertEnd
+r04 uxListRemove
+r05 vListInsert
+r06 uxTaskGetNumberOfTasks
+r07 xTaskGetCurrentTaskHandle
+r08 xTaskGetTickCount
+r09 xTaskGetTickCountFromISR
+r10 vTaskSuspendAll
+r11 vTaskMissedYield
+r12 uxTaskPriorityGet
+r13 uxTaskResetEventItemValue
+r14 vTaskInternalSetTimeOutState
+r15 vTaskSetTimeOutState
+r16 xTaskGenericNotifyStateClear
+r17 ulTaskGenericNotifyValueClear
+r18 pvTaskIncrementMutexHeldCount
+r19 xTaskGetSchedulerState
+# Plan/timing spelling xQueueMessagesWaiting is actually uxQueueMessagesWaiting.
+r20 uxQueueMessagesWaiting
+r21 uxQueueSpacesAvailable
+r22 xQueueGetMutexHolder
+r23 xQueueGetMutexHolderFromISR
+r24 eTaskGetState
+r25 prvTaskIsTaskSuspended
+r26 prvResetNextTaskUnblockTime
+r27 prvSearchForNameWithinSingleList
+r28 vTaskSwitchContext
+r29 xQueueGenericSend
+r30 xQueueReceive
+r31 xQueueGenericSendFromISR
+r32 xQueueReceiveFromISR
+r33 vTaskDelay
+r34 xTaskIncrementTick
+r35 xTaskCreateStatic
+r36 xEventGroupSetBits
+r37 xEventGroupClearBits
+r38 xStreamBufferSend
+r39 xStreamBufferReceive
+# V11.1.0 xTimerGenericCommand is a macro selecting these two real entries.
+r40 xTimerGenericCommandFromTask xTimerGenericCommandFromISR

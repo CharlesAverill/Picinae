@@ -1,0 +1,290 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-db745613
+COMMAND=env PROOF_MEMORY_KB=2000000 PROOF_STACK_KB=65536 /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash tools/print-assumptions.sh Picinae.Examples.FreeRTOS.armv6m_list_model field32_bound field32_read_write field32_frame ranges32_separate field_address32_nowrap fields20_separate field32_object_frame outside_frame32_refl outside_frame32_trans outside_frame32_write image20_fields image20_frame image20_welltyped empty_image_spec empty_image_frame memory_store32_welltyped empty_list_witness list_regions_witness concrete_empty_list_witness
+field32_bound
+     : forall m p off : BinNums.N,
+       BinNat.N.lt (field32 m p off)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+Closed under the global context
+field32_read_write
+     : forall m p off v : BinNums.N,
+       BinNat.N.lt v
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       field32 (write_field32 m p off v) p off = v
+Closed under the global context
+field32_frame
+     : forall m p off q other v : BinNums.N,
+       separate32 (BinNat.N.add q other)
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)))
+         (BinNat.N.add p off)
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))) ->
+       field32 (write_field32 m p off v) q other = field32 m q other
+Closed under the global context
+ranges32_separate
+     : forall p n q k : BinNums.N,
+       range32 p n ->
+       range32 q k ->
+       BinNat.N.le (BinNat.N.add p n) q \/ BinNat.N.le (BinNat.N.add q k) p ->
+       separate32 p n q k
+Closed under the global context
+field_address32_nowrap
+     : forall p n off : BinNums.N,
+       range32 p n ->
+       BinNat.N.lt off n ->
+       BinNat.N.modulo (BinNat.N.add p off)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) =
+       BinNat.N.add p off
+Closed under the global context
+fields20_separate
+     : forall p i j : BinNums.N,
+       BinNat.N.le
+         (BinNat.N.add p
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xI (BinNums.xO BinNums.xH))))))
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       List.In i fields20 ->
+       List.In j fields20 ->
+       i <> j ->
+       separate32 (BinNat.N.add p i)
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)))
+         (BinNat.N.add p j)
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)))
+Closed under the global context
+field32_object_frame
+     : forall m p n off v a : BinNums.N,
+       BinNat.N.le
+         (BinNat.N.add off
+            (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))))
+         n ->
+       separate32 a (BinNums.Npos BinNums.xH) p n ->
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+         (write_field32 m p off v) a =
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE (BinNums.Npos BinNums.xH) m a
+Closed under the global context
+outside_frame32_refl
+     : forall m p n : BinNums.N, outside_frame32 m m p n
+Closed under the global context
+outside_frame32_trans
+     : forall m0 m1 m2 p n : BinNums.N,
+       outside_frame32 m0 m1 p n ->
+       outside_frame32 m1 m2 p n -> outside_frame32 m0 m2 p n
+Closed under the global context
+outside_frame32_write
+     : forall m0 m p n off v : BinNums.N,
+       outside_frame32 m0 m p n ->
+       BinNat.N.le
+         (BinNat.N.add off
+            (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))))
+         n ->
+       outside_frame32 m0 (write_field32 m p off v) p n
+Closed under the global context
+image20_fields
+     : forall m p v0 v4 v8 v12 v16 : BinNums.N,
+       BinNat.N.le
+         (BinNat.N.add p
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xI (BinNums.xO BinNums.xH))))))
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt v0
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt v4
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt v8
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt v12
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt v16
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       item_contents (image20 m p v0 v4 v8 v12 v16) p v0 v4 v8 v12 v16
+Closed under the global context
+image20_frame
+     : forall m p v0 v4 v8 v12 v16 : BinNums.N,
+       outside_frame32 m (image20 m p v0 v4 v8 v12 v16) p
+         (BinNums.Npos
+            (BinNums.xO (BinNums.xO (BinNums.xI (BinNums.xO BinNums.xH)))))
+Closed under the global context
+image20_welltyped
+     : forall m p v0 v4 v8 v12 v16 : BinNums.N,
+       BinNat.N.lt m
+         (Picinae_theory.memsize
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt (image20 m p v0 v4 v8 v12 v16)
+         (Picinae_theory.memsize
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+Closed under the global context
+empty_image_spec
+     : forall m p : BinNums.N,
+       object32 p list_size -> empty_list (empty_image m p) p
+Closed under the global context
+empty_image_frame
+     : forall m p : BinNums.N,
+       outside_frame32 m (empty_image m p) p list_size
+Closed under the global context
+memory_store32_welltyped
+     : forall m : BinNums.N,
+       BinNat.N.lt m
+         (Picinae_theory.memsize
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx
+         (memory_store32 m)
+Closed under the global context
+empty_list_witness
+     : forall p : BinNums.N,
+       object32 p list_size ->
+       exists s : Picinae_armv6m.IL_ARMv6M.store,
+         Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s /\
+         empty_list (s Picinae_armv6m.V_MEM32) p /\
+         outside_frame32 BinNums.N0 (s Picinae_armv6m.V_MEM32) p list_size
+Closed under the global context
+list_regions_witness
+     : object32
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))))
+         list_size /\
+       object32
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH))))))))))))))
+         list_item_size /\
+       separate32
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))))
+         list_size
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH))))))))))))))
+         list_item_size
+Closed under the global context
+concrete_empty_list_witness
+     : exists s : Picinae_armv6m.IL_ARMv6M.store,
+         Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s /\
+         empty_list (s Picinae_armv6m.V_MEM32)
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO BinNums.xH))))))))))))) /\
+         outside_frame32 BinNums.N0 (s Picinae_armv6m.V_MEM32)
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO BinNums.xH)))))))))))))
+           list_size
+Closed under the global context
+
+EXIT_CODE=0

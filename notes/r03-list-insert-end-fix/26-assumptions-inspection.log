@@ -1,0 +1,49 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-75bde600
+COMMAND=python3 notes/r03-list-insert-end-fix/check-assumptions.py
+insert_end_nwc: closed
+insert_end_welltyped: closed
+insert_end_preserved: closed
+insert_end_register_frame: closed
+insert_apart_from: closed
+insert_separate_words: closed
+insert_end_words: closed
+insert_end_layout: closed
+insert_end_links: closed
+insert_end_ordinary_lr: closed
+insert_end_writes: closed
+insert_end_permissions: closed
+insert_end_pre: closed
+insert_end_prefix: closed
+insert_end_memory: closed
+insert_end_byte_frame: closed
+insert_end_fields: closed
+insert_end_observed_B: closed
+insert_end_observed_prefix: closed
+insert_end_observed_count: closed
+insert_end_observed_memory: closed
+insert_end_flags: closed
+insert_end_exact_post: closed
+insert_end_post: closed
+insert_end_exit: closed
+insert_end_invs: closed
+insert_end_memory_fields: closed
+insert_end_memory_frame: closed
+insert_end_original_loads: closed
+insert_end_exact: inherited FE only
+insert_end_at_bx: inherited FE only
+insert_end_count_no_overflow: closed
+insert_end_fixture: closed
+insert_end_fixture_links: closed
+insert_end_fixture_typed: closed
+insert_end_entry_store: closed
+insert_end_entry_witness: closed
+insert_end_empty_layout: closed
+insert_end_nonempty_layout: closed
+insert_end_local_empty_witness: closed
+insert_end_local_nonempty_witness: closed
+insert_end_return_step: inherited FE only
+insert_end_trace_returns: inherited FE only
+insert_end_ordinary_return_nonvacuity: inherited FE only
+PASS: all 44 declarations queried; 39 closed, five inherited FE only
+
+EXIT_CODE=0
