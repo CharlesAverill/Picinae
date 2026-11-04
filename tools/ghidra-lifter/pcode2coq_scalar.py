@@ -339,13 +339,121 @@ class ScalarLifter:
         if actual != expected:
             raise Unsupported('unhandled bitform raw-pcode shape')
 
+    def conditional_compare(self, insn, ops):
+        """Lower only the exact CCMP encoding and Ghidra 11.4.2 pcode shape.
+
+        SLEIGH snapshots the OLD condition, installs all four fallback flags,
+        then branches to inst_next on its negation, skipping a compare suffix.
+        An ordinary machine CBRANCH cannot accept that trailing suffix. Match
+        the entire DAG (including next address), then express just this shape
+        as prefix; If(skip) Nop compare. No general CFG acceptance is added.
+        NZCV and scratch flags remain modeled bytes containing boolean values.
+        """
+        raw = bytes(int(b) & 255 for b in insn.getBytes())
+        if len(raw) != 4:
+            raise Unsupported('CCMP encoding length')
+        bits = int.from_bytes(raw, 'little')
+        # sf/op/S/fixed fields, including reserved bits 10 and 4.
+        if bits & 0x7fe00410 != 0x7a400000:
+            raise Unsupported('unhandled CCMP encoding')
+        sf, immediate = bits >> 31, (bits >> 11) & 1
+        size = 4 << sf
+        rn, operand = (bits >> 5) & 31, (bits >> 16) & 31
+        cond, nzcv = (bits >> 12) & 15, bits & 15
+        expected, names = [], {}
+        def t(name, n=1):
+            return ('t', names.setdefault(name, len(names)), n)
+        def c(value, n=1): return ('c', value, n)
+        def r(index): return ('r', f'R_X{index}', 64, 0, size)
+        def f(name): return ('r', 'R_' + name, 8, 0, 1)
+        def emit(code, out, *args): expected.append((code, out, tuple(args)))
+        if cond < 8:
+            value = f(('ZR', 'CY', 'NG', 'OV')[cond // 2])
+            if cond & 1:
+                emit('BOOL_NEGATE', t('condition'), value)
+                value = t('condition')
+        elif cond == 8:
+            emit('BOOL_NEGATE', t('c0'), f('ZR'))
+            emit('BOOL_AND', t('condition'), f('CY'), t('c0'))
+            value = t('condition')
+        elif cond == 9:
+            emit('BOOL_NEGATE', t('c0'), f('CY'))
+            emit('BOOL_OR', t('condition'), t('c0'), f('ZR'))
+            value = t('condition')
+        elif cond in (10, 11):
+            emit('INT_EQUAL' if cond == 10 else 'INT_NOTEQUAL', t('condition'), f('NG'), f('OV'))
+            value = t('condition')
+        elif cond == 12:
+            emit('BOOL_NEGATE', t('c0'), f('ZR'))
+            emit('INT_EQUAL', t('c1'), f('NG'), f('OV'))
+            emit('BOOL_AND', t('condition'), t('c0'), t('c1'))
+            value = t('condition')
+        elif cond == 13:
+            emit('INT_NOTEQUAL', t('c0'), f('NG'), f('OV'))
+            emit('BOOL_OR', t('condition'), f('ZR'), t('c0'))
+            value = t('condition')
+        else:
+            value = c(1)  # Both AL and NV are always true in A64.
+        # SLEIGH expands zero-register reads before the condition snapshot.
+        if not immediate and operand == 31 and not sf:
+            emit('COPY', t('rm', size), c(0, size))
+        if rn == 31:
+            emit('COPY', t('rn', size), c(0, size))
+        a = t('rn', size) if rn == 31 else r(rn)
+        b = c(operand, 4) if immediate else (c(0, size) if sf else t('rm', size)) if operand == 31 else r(operand)
+        emit('COPY', t('saved'), value)
+        emit('COPY', t('fallback'), c(nzcv))
+        for name, mask in zip(('NG', 'ZR', 'CY', 'OV'), (8, 4, 2, 1)):
+            emit('INT_AND', t(name), t('fallback'), c(mask))
+            emit('INT_EQUAL', f(name), t(name), c(mask))
+        emit('BOOL_NEGATE', t('skip'), t('saved'))
+        branch = len(expected)
+        next_address = (int(insn.getAddress().getOffset()) + 4) % (1 << 64)
+        emit('CBRANCH', None, ('ram', next_address, 8), t('skip'))
+        if immediate and sf:
+            emit('INT_ZEXT', t('result', size), b)
+            b = t('result', size)
+        emit('INT_LESSEQUAL', f('TMPCY'), b, a)
+        emit('INT_SBORROW', f('TMPOV'), a, b)
+        emit('INT_SUB', t('result', size), a, b)
+        emit('INT_SLESS', f('TMPNG'), t('result', size), c(0, size))
+        emit('INT_EQUAL', f('TMPZR'), t('result', size), c(0, size))
+        for name in ('NG', 'ZR', 'CY', 'OV'):
+            emit('COPY', f(name), f('TMP' + name))
+
+        temps = {}
+        def node(v):
+            if v is None: return None
+            n = int(v.getSize())
+            if v.isUnique():
+                key = (int(v.getOffset()), n)
+                return ('t', temps.setdefault(key, len(temps)), n)
+            if v.isRegister(): return ('r', *self.register(v), n)
+            if v.isConstant(): return ('c', int(v.getOffset()) % (1 << (8 * n)), n)
+            if v.isAddress() and str(v.getAddress().getAddressSpace().getName()) == 'ram':
+                return ('ram', int(v.getOffset()), n)
+            raise Unsupported('non-scalar CCMP varnode')
+        actual = [(str(op.getMnemonic()), node(op.getOutput()), tuple(node(v) for v in op.getInputs())) for op in ops]
+        if actual != expected:
+            raise Unsupported('unhandled CCMP raw-pcode shape')
+        self.temps, self.ranges, self.initialized = {}, [], set()
+        for op in ops:
+            for vn in list(op.getInputs()) + [op.getOutput()]:
+                if vn is not None and vn.isUnique(): self.temp(vn)
+        prefix = [self.statement(op) for op in ops[:branch]]
+        skip, width = self.read(ops[branch].getInputs()[1])
+        suffix = seq([self.statement(op) for op in ops[branch + 1:]])
+        return seq(prefix + [f'If ({cast(skip, width, 1)}) (Nop) ({suffix})'])
+
     def instruction(self, insn):
         mnemonic = str(insn.getMnemonicString()).lower()
-        if mnemonic not in MNEMONICS | BITFORMS and not re.fullmatch(r'b\.(eq|ne|cs|hs|cc|lo|mi|pl|vs|vc|hi|ls|ge|lt|gt|le)', mnemonic):
+        if mnemonic not in MNEMONICS | BITFORMS | {'ccmp'} and not re.fullmatch(r'b\.(eq|ne|cs|hs|cc|lo|mi|pl|vs|vc|hi|ls|ge|lt|gt|le)', mnemonic):
             raise Unsupported(f'unmodeled instruction {insn}')
         if int(insn.getLength()) != 4:
             raise Unsupported('non-A64 instruction length')
         ops = list(insn.getPcode())
+        if mnemonic == 'ccmp':
+            return self.conditional_compare(insn, ops)
         if mnemonic in BITFORMS:
             self.check_bitform(insn, mnemonic, ops)
         self.temps, self.ranges, self.initialized = {}, [], set()
