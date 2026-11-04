@@ -1,0 +1,56 @@
+
+tests/armv6m/generated/snippets.elf:     file format elf32-littlearm
+
+SYMBOL TABLE:
+00001000 l    d  .text	00000000 .text
+00000000 l    d  .ARM.attributes	00000000 .ARM.attributes
+00000000 l    df *ABS*	00000000 snippets.o
+00001000 g     F .text	00000010 fixture
+00002030 g       .text	00000000 _bss_end__
+00001014 g     F .text	00000004 helper
+00002030 g       .text	00000000 __bss_start__
+00002030 g       .text	00000000 __bss_end__
+00002030 g       .text	00000000 __bss_start
+00002030 g       .text	00000000 __end__
+00001018 g     F .text	00000016 flag_cases
+00002030 g       .text	00000000 _edata
+00002030 g       .text	00000000 _end
+
+
+Contents of section .text:
+ 1000 10b5034c ff200130 002800f0 03f810bd  ...L. .0.(......
+ 1010 cdab3412 01217047 4018401a 48418841  ..4..!pG@.@.HA.A
+ 1020 8840c840 0841c841 fff7f4ff 7047c046  .@.@.A.A....pG.F
+Contents of section .ARM.attributes:
+ 0000 41200000 00616561 62690001 16000000  A ...aeabi......
+ 0010 05436f72 7465782d 4d300006 0c074d09  .Cortex-M0....M.
+ 0020 01                                   .               
+
+Disassembly of section .text:
+
+00001000 <fixture>:
+    1000:	b510      	push	{r4, lr}
+    1002:	4c03      	ldr	r4, [pc, #12]	@ (1010 <fixture+0x10>)
+    1004:	20ff      	movs	r0, #255	@ 0xff
+    1006:	3001      	adds	r0, #1
+    1008:	2800      	cmp	r0, #0
+    100a:	f000 f803 	bl	1014 <helper>
+    100e:	bd10      	pop	{r4, pc}
+    1010:	1234abcd 	.word	0x1234abcd
+
+00001014 <helper>:
+    1014:	2101      	movs	r1, #1
+    1016:	4770      	bx	lr
+
+00001018 <flag_cases>:
+    1018:	1840      	adds	r0, r0, r1
+    101a:	1a40      	subs	r0, r0, r1
+    101c:	4148      	adcs	r0, r1
+    101e:	4188      	sbcs	r0, r1
+    1020:	4088      	lsls	r0, r1
+    1022:	40c8      	lsrs	r0, r1
+    1024:	4108      	asrs	r0, r1
+    1026:	41c8      	rors	r0, r1
+    1028:	f7ff fff4 	bl	1014 <helper>
+    102c:	4770      	bx	lr
+    102e:	46c0      	nop			@ (mov r8, r8)

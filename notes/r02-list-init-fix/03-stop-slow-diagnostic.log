@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4bc3a1d0
+COMMAND=python3 -
+Interrupting only this unit diagnostic compiler: 503280 /home/charles/code/friends/.toolchains/opam/picinae/lib/rocq-runtime/rocqworker --kind=compile -q -w -level-tolerance -w -postfix-notation-not-level-1 -w -deprecated-native-compiler-option -w -native-compiler-disabled -native-compiler ondemand -boot -R /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/theories Corelib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Stdlib Stdlib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Ltac2 Ltac2 -R . Picinae Examples/FreeRTOS/armv6m_vListInitialise_proof.v 
+
+EXIT_CODE=0
