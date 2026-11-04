@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-f791c5bc
+COMMAND=python3 notes/r27-find-task-fix/check-preservation.py
+PASS: all 19 original statements and all original definitions unchanged; original evidence, generated map and list kit unchanged
+Additional lemmas: (none)
+
+EXIT_CODE=0

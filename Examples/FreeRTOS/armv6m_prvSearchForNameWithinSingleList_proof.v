@@ -1,7 +1,7 @@
 (* prvSearchForNameWithinSingleList: proposed sequential IL contract.
    Initial author: OpenAI gpt-6-astra, xhigh, default tier, r27-find-task.
-   Status: PARTIAL; first full build failed at search_skip_prefix.
-   Final proof producer: none certified. See notes/r27-find-task.
+   Final proof producer: not certified; Sol repair remains PARTIAL.
+   See notes/r27-find-task-fix/README.md. No full unit vo or assumptions audit.
 
    PROVENANCE: FreeRTOS V11.1.0, dbf70559b27d39c1fdb68dfb9a32140b6a6777a0;
    ELF SHA256 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca.
@@ -237,8 +237,10 @@ Lemma search_skip_prefix : forall m q before tail,
   Forall (fun io => search_name_matchb m q (snd io)=false) before ->
   search_result m q (before++tail) = search_result m q tail.
 Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
-Abort.
+  intros m q before tail F. induction F as [|[i o] before B F IH].
+  - reflexivity.
+  - cbn [app search_result]. change (search_name_matchb m q o = false) in B. rewrite B. exact IH.
+Qed.
 
 Theorem search_result_first_match : forall m q nodes,
   (Forall (fun io => search_name_matchb m q (snd io)=false) nodes /\
@@ -248,24 +250,48 @@ Theorem search_result_first_match : forall m q nodes,
     Forall (fun io => search_name_matchb m q (snd io)=false) before /\
     search_name_match m q owner /\ search_result m q nodes=owner.
 Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
-Abort.
+  intros m q nodes. induction nodes as [|[i o] tail IH].
+  - left. split; [constructor|reflexivity].
+  - destruct (search_name_matchb m q o) eqn:B.
+    + right. exists [], i, o, tail. split; [reflexivity|].
+      split; [constructor|]. split; [apply search_matchb_spec; exact B|].
+      cbn [search_result]. rewrite B. reflexivity.
+    + destruct IH as [[F Z]|[before [item [owner [after [E [F [MATCH RES]]]]]]]].
+      * left. split; [constructor; assumption|]. cbn [search_result]. rewrite B. exact Z.
+      * right. exists ((i,o)::before), item, owner, after.
+        split; [cbn; rewrite E; reflexivity|].
+        split; [constructor; assumption|]. split; [exact MATCH|].
+        cbn [search_result]. rewrite B. exact RES.
+Qed.
 
 Lemma search_zero_bound : forall w, 0 < 2^w.
-Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
-Abort.
+Proof. intro w. apply N.neq_0_lt_0, pow2_nonzero. Qed.
 Theorem search_witness_models : forall m l q sp lr,
   m < 2^(8*2^32) -> l<2^32 -> q<2^32 -> sp<2^32 -> lr<2^32 ->
   models armv6mtypctx (search_entry_witness m l q sp lr).
 Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
-Abort.
+  intros m l q sp lr M L Q SP LR v w T.
+  destruct v; cbn [armv6mtypctx] in T; try discriminate; injection T as <-.
+  all: lazymatch goal with
+  | |- search_entry_witness _ _ _ _ _ V_MEM32 < _ => exact M
+  | |- search_entry_witness _ _ _ _ _ R_R0 < _ => exact L
+  | |- search_entry_witness _ _ _ _ _ R_R1 < _ => exact Q
+  | |- search_entry_witness _ _ _ _ _ R_SP < _ => exact SP
+  | |- search_entry_witness _ _ _ _ _ R_LR < _ => exact LR
+  | |- search_entry_witness _ _ _ _ _ A_READ < _ => exact (ones_bound (2^32))
+  | |- search_entry_witness _ _ _ _ _ A_WRITE < _ => exact (ones_bound (2^32))
+  | |- search_entry_witness _ _ _ _ _ A_EXEC < _ => exact (ones_bound (2^32))
+  | |- _ < 2^?width => exact (search_zero_bound width)
+  end.
+Qed.
 Theorem search_witness_permissions : forall m l q sp lr nodes,
   search_permissions (search_entry_witness m l q sp lr) nodes.
 Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
-Abort.
+  intros. unfold search_permissions, search_read_range, search_write_range.
+  repeat split; try (intros; apply N.ones_spec_low; apply N.mod_lt, pow2_nonzero).
+  apply Forall_forall. intros [i o] IN. split; intros j LT;
+    apply N.ones_spec_low; apply N.mod_lt, pow2_nonzero.
+Qed.
 Theorem search_entry_satisfiable : forall m l q sp lr nodes,
   m<2^(8*2^32) -> search_layout m l nodes -> range32 q 16 ->
   20<=sp -> sp<2^32 -> sp mod 8=0 -> search_disjoint l q sp nodes ->
@@ -273,22 +299,51 @@ Theorem search_entry_satisfiable : forall m l q sp lr nodes,
   exists s, search_precondition s nodes /\ s V_MEM32=m /\ s R_R0=l /\
     s R_R1=q /\ s R_SP=sp /\ s R_LR=lr.
 Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
-Abort.
+  intros m l q sp lr nodes M L Q S SP AL SEP ODD LR.
+  exists (search_entry_witness m l q sp lr).
+  assert (LB: l<2^32) by exact (proj1 (proj2 (proj2 (proj1 L)))).
+  assert (QB: q<2^32) by exact (proj1 Q).
+  assert (LRB: lr<2^32) by (clear - LR; lia).
+  split.
+  - unfold search_precondition. split.
+    + apply search_witness_models; assumption.
+    + split; [exact L|]. split; [exact Q|]. split; [exact S|].
+      split; [exact SP|]. split; [exact AL|]. split; [exact SEP|].
+      split; [apply search_witness_permissions|]. split; assumption.
+  - repeat split; reflexivity.
+Qed.
 
 Theorem search_empty_layout : forall m p,
   object32 p 20 -> search_layout (empty_image m p) p [].
 Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
-Abort.
+  intros m p OBJ.
+  pose proof (empty_image_spec m p OBJ) as E.
+  destruct E as [_ [[COUNT [INDEX VALUE]] [NEXT PREVIOUS]]].
+  split; [exact OBJ|]. split; [exact COUNT|exact NEXT].
+Qed.
 
 (* Full-precondition nonvacuity for arbitrary typed background memory: the
    empty list at 256, query at 512, stack ending at 1024, ordinary LR=1. *)
 Theorem search_empty_entry_satisfiable : forall m,
   m < 2^(8*2^32) -> exists s, search_precondition s [].
 Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
-Abort.
+  intros m MB.
+  assert (OBJ: object32 256 20) by (repeat split; try reflexivity; discriminate).
+  assert (LAY: search_layout (empty_image m 256) 256 [])
+    by (apply search_empty_layout; exact OBJ).
+  assert (TYP: empty_image m 256 < 2^(8*2^32)).
+  { apply image20_welltyped. exact MB. }
+  assert (SEP: search_disjoint 256 512 1024 []).
+  { split.
+    - apply ranges32_separate; unfold range32; vm_compute; intuition discriminate.
+    - split.
+      + apply ranges32_separate; unfold range32; vm_compute; intuition discriminate.
+      + constructor. }
+  destruct (search_entry_satisfiable (empty_image m 256) 256 512 1024 1 []
+    TYP LAY ltac:(split; try reflexivity; discriminate) ltac:(discriminate) ltac:(reflexivity)
+    eq_refl SEP eq_refl ltac:(reflexivity)) as [s [PRE _]].
+  exists s. exact PRE.
+Qed.
 
 (* The execution attempt deliberately uses cuts to avoid unrolling the list or
    the byte loop. Original-memory loads need the stack/input separation facts. *)
@@ -298,7 +353,7 @@ Theorem search_correct : forall initial nodes t s' x'
   satisfies_all prvSearchForNameWithinSingleList_armv6m_prog
     (search_invariants initial nodes) search_exit ((x',s')::t).
 Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
+  (* WIP: exact unverified attempt retained in unit notes. *)
 Abort.
 
 Corollary search_post_at_pop : forall initial nodes t s'
@@ -307,7 +362,7 @@ Corollary search_post_at_pop : forall initial nodes t s'
   (EXEC: exec_prog prvSearchForNameWithinSingleList_armv6m_prog ((Addr 0x60e,s')::t))
   (UT: unterminated search_exit t), search_pop_post initial s' nodes.
 Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
+  (* WIP: exact unverified attempt retained in unit notes. *)
 Abort.
 
 (* This statement requires the actual return instruction to take an ordinary
@@ -319,7 +374,7 @@ Theorem search_return_step : forall initial current nodes,
       ((Addr (N.land (initial R_LR) (N.ones 32-1)),final),(Addr 0x60e,current)) /\
     search_postcondition initial final nodes.
 Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
+  (* WIP: exact unverified attempt retained in unit notes. *)
 Abort.
 
 Corollary search_caller_result : forall initial nodes t s'
@@ -332,5 +387,5 @@ Corollary search_caller_result : forall initial nodes t s'
       ((Addr (N.land (initial R_LR) (N.ones 32-1)),final),(Addr 0x60e,s')) /\
     search_postcondition initial final nodes.
 Proof.
-  (* PARTIAL: initial proof and diagnostics are preserved in notes/r27-find-task. *)
+  (* WIP: exact unverified attempt retained in unit notes. *)
 Abort.
