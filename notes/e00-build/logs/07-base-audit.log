@@ -1,0 +1,15 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-6b751a59
+COMMAND=bash --noprofile --norc -e -c git\ branch\ --show-current\;\ git\ rev-parse\ HEAD\ origin/llm_generated_proofs\;\ git\ merge-base\ origin/llm_generated_proofs\ HEAD\;\ git\ merge-base\ --is-ancestor\ 49956416928e5b6bb3928b54ae33e3b81091f006\ HEAD\;\ git\ log\ --oneline\ origin/llm_generated_proofs..HEAD\;\ git\ diff\ --stat\ origin/llm_generated_proofs...HEAD\;\ git\ diff\ 49956416928e5b6bb3928b54ae33e3b81091f006\ --\ \"\*.v\"\;\ git\ status\ --short
+llm-proofs/e00-build
+49956416928e5b6bb3928b54ae33e3b81091f006
+49956416928e5b6bb3928b54ae33e3b81091f006
+49956416928e5b6bb3928b54ae33e3b81091f006
+?? dune
+?? dune-project
+?? notes/
+?? tools/audit-proof-source.py
+?? tools/print-assumptions.sh
+?? tools/record-command.sh
+?? tools/test-proof-audit.py
+
+EXIT_CODE=0

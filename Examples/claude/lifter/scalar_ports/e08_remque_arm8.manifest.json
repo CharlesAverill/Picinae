@@ -1,0 +1,124 @@
+{
+  "addressing": "global",
+  "aliases_same_entry_extent": [
+    "remque"
+  ],
+  "build_id": "977c021c364ee3c495c0e5f2375bf6ba2124a6da",
+  "closure": {
+    "closed": true,
+    "direct_and_fallthrough_edges": [
+      {
+        "kind": "fallthrough",
+        "source": "0x1e4600",
+        "target": "0x1e4604"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x1e4604",
+        "target": "0x1e460c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e4604",
+        "target": "0x1e4608"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e4608",
+        "target": "0x1e460c"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x1e460c",
+        "target": "0x1e4614"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e460c",
+        "target": "0x1e4610"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e4610",
+        "target": "0x1e4614"
+      }
+    ],
+    "indirect_nonreturn_edges": [],
+    "meaning": "finite selected machine map closes all direct edges and fallthroughs; RETURN remains caller ABI boundary",
+    "returns": [
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x1e4614"
+      }
+    ]
+  },
+  "data": {
+    "analysis": "ADR(P)+ADD object references plus complete raw memory instruction list; manual target review required, no invented constants",
+    "contract": "Map ELF virtual data addresses to model addresses by +0x100000. Runtime memory must supply these bytes/state and any relocated pointer targets; generated program does not initialize memory.",
+    "materialized_objects": [],
+    "memory_accesses": [
+      {
+        "assembly": "ldp x1,x0,[x0]",
+        "instruction": "0x1e4600",
+        "pcode": [
+          "(unique, 0x24680, 8) LOAD (const, 0x1b1, 8) , (unique, 0x7c00, 8)",
+          "(unique, 0x24800, 8) LOAD (const, 0x1b1, 8) , (unique, 0x24700, 8)"
+        ]
+      },
+      {
+        "assembly": "str x0,[x1, #0x8]",
+        "instruction": "0x1e4608",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6500, 8) , (register, 0x4000, 8)"
+        ]
+      },
+      {
+        "assembly": "str x1,[x0]",
+        "instruction": "0x1e4610",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6800, 8) , (register, 0x4008, 8)"
+        ]
+      }
+    ],
+    "staticMemory": false
+  },
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "elf_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "generated_program": "e08_remque_arm8",
+  "generated_program_sha256": "f5e9a68f3f18417286f28d58b38014aa62646bf6ed237a8113c47bdc1a01c13a",
+  "image_base": "0x100000",
+  "implementation_sha256": {
+    "lift-scalar.py": "1bdf6ec35946c220dc07fc4963efc37b7cb3f150e0f77ccfbcfecd2e74828909",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "scalar_headless.py": "4aab6945ece18c558f2b1dc397a31a8333a8e380dcaf29630168472e1fe7bcd3"
+  },
+  "instruction_count": 6,
+  "limits": "Generated scalar IL and typing only; no functional correctness, termination, equivalence to historical lifts, or lifter soundness claim.",
+  "naming_adapter": {
+    "new": "e08_remque_arm8",
+    "occurrence_count": 2,
+    "old": "e11_remque_arm8",
+    "operation": "identifier substitution only"
+  },
+  "naming_closure_harness_sha256": "fdfce3192d5670367686ff78a4606197c83df74f817945cf653819f2f83165a5",
+  "original_program_sha256": "b677bcf9f959e4fa78c1ff23d0763617728269b9c4fc3a9ace9fb00a1cbbb126",
+  "pcode_sha256": "4964aa2836db8833f6d4179da305efb73b6cdcf9e3ae87ca23b7b2b6413dd2b7",
+  "record": {
+    "bytes_sha256": "516fcd05ec326a78fbb8d5a90b997f93b90de6e19841eb2d900f01c2ddf097cc",
+    "elf_entry": "0xe4600",
+    "entry": "0x1e4600",
+    "instructions": 6,
+    "output": "e11_remque_arm8.v",
+    "output_sha256": "b677bcf9f959e4fa78c1ff23d0763617728269b9c4fc3a9ace9fb00a1cbbb126",
+    "selected_symbols": [
+      "remque"
+    ],
+    "size": 24,
+    "symbol": "remque"
+  },
+  "schema": 1,
+  "selected_symbols": [
+    "remque"
+  ],
+  "symbol": "remque"
+}

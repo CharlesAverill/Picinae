@@ -1,0 +1,27 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-7d6e98da
+COMMAND=bash -e -c sha256sum\ Examples/claude/arm8_remque_proof.v\ notes/a-remque/initial-attempt.v.txt\ Examples/claude/lifter/scalar_ports/e08_remque_arm8.v\;\ git\ diff\ --check\;\ git\ diff\ --\ dune
+18b7fa70349834a758a6f45f018dd98da6f0f196812664ead382de997ebf38e2  Examples/claude/arm8_remque_proof.v
+18b7fa70349834a758a6f45f018dd98da6f0f196812664ead382de997ebf38e2  notes/a-remque/initial-attempt.v.txt
+f5e9a68f3f18417286f28d58b38014aa62646bf6ed237a8113c47bdc1a01c13a  Examples/claude/lifter/scalar_ports/e08_remque_arm8.v
+diff --git a/dune b/dune
+index f339ba9..6b3af56 100644
+--- a/dune
++++ b/dune
+@@ -16,6 +16,7 @@
+   Examples.claude.amd64_abs_proof
+   Examples.claude.arm8_common Examples.claude.abs_arm8
+   Examples.claude.arm8_abs_proof
++  Examples.claude.arm8_remque_proof
+   Examples.claude.lifter.scalar_smoke.e11_toascii_arm8
+   Examples.claude.lifter.scalar_smoke.e11_div_arm8
+   Examples.claude.lifter.scalar_smoke.e11_ldiv_arm8
+@@ -90,3 +91,7 @@
+   Examples/claude/lifter/scalar_ports/e08_sigabbrev_np_arm8.vo
+   Examples/claude/lifter/scalar_ports/e08_sigdescr_np_arm8.vo
+   Examples/claude/lifter/scalar_ports/e08_srand48_r_arm8.vo))
++
++(alias
++ (name a-remque)
++ (deps Examples/claude/arm8_remque_proof.vo))
+
+EXIT_CODE=0

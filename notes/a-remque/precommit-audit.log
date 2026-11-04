@@ -1,0 +1,34 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-7d6e98da
+COMMAND=bash -e -c git\ merge-base\ origin/llm_generated_proofs\ HEAD\;\ git\ log\ --format=\"%H\ %s\"\ origin/llm_generated_proofs..HEAD\;\ git\ diff\ --cached\ --stat\;\ git\ diff\ --cached\ --check\;\ git\ status\ --short\;\ git\ diff\ --exit-code\ 9ae8e6800fa044797efd98372857e6ac89b18e1b\ --\ Examples/claude/lifter/scalar_ports/e08_remque_arm8.v
+49956416928e5b6bb3928b54ae33e3b81091f006
+9ae8e6800fa044797efd98372857e6ac89b18e1b Add closed scalar ARM port extraction baseline
+378fe1b57514b9af3f017a72b4ca665910156cc7 Add strict pinned scalar lifting pipeline
+052521a753adbda077843ec7b259801282a7b1e9 Import reviewed partial ARM inventory evidence
+081d0233cd6667803b3907343b2fea6dc9eba714 Add pinned AArch64 glibc inventory and isolated smoke lift
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+ Examples/claude/arm8_remque_proof.v          | 274 ++++++++++
+ dune                                         |   5 +
+ notes/a-remque/README.md                     | 117 +++++
+ notes/a-remque/ancestry-before.log           |  39 ++
+ notes/a-remque/branch-collision.log          |   4 +
+ notes/a-remque/check-handoff.py              |  15 +
+ notes/a-remque/compiler-status.log           |   6 +
+ notes/a-remque/final-diff-check.log          |   4 +
+ notes/a-remque/final-scoped-source-audit.log |  10 +
+ notes/a-remque/full-source-audit.log         | 204 ++++++++
+ notes/a-remque/generated-assumptions-raw.txt |   4 +
+ notes/a-remque/handoff-check.log             |   7 +
+ notes/a-remque/initial-artifacts.log         |  27 +
+ notes/a-remque/initial-attempt.v.txt         | 306 +++++++++++
+ notes/a-remque/initial-build.log             | 138 +++++
+ notes/a-remque/initial-source-audit.log      |  10 +
+ notes/a-remque/interrupt-build.log           |   8 +
+ notes/a-remque/prepare.log                   | 756 +++++++++++++++++++++++++++
+ notes/a-remque/prerequisite-ancestry.log     | 410 +++++++++++++++
+ notes/a-remque/run-assumptions.sh            |  17 +
+ notes/a-remque/run-build.sh                  |  10 +
+ 21 files changed, 2371 insertions(+)
+notes/a-remque/interrupt-build.log:5: trailing whitespace.
++COMMAND: /home/charles/code/friends/.toolchains/opam/picinae/lib/rocq-runtime/rocqworker --kind=compile -q -w -level-tolerance -w -postfix-notation-not-level-1 -w -deprecated-native-compiler-option -w -native-compiler-disabled -native-compiler ondemand -boot -R /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/theories Corelib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Stdlib Stdlib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Ltac2 Ltac2 -R . Picinae Examples/claude/arm8_remque_proof.v 
+
+EXIT_CODE=2

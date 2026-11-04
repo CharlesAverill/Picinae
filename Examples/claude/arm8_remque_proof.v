@@ -1,0 +1,274 @@
+(* PARTIAL: the only full build was interrupted in remque_witness_typed.
+   No full .vo or transitive assumptions certificate exists. The exact initial
+   attempt is archived in notes/a-remque/initial-attempt.v.txt. Statements are
+   unchanged; unfinished proofs below are Abort, not assumed facts. *)
+
+(* remque (AArch64): remove a node with two 64-bit little-endian links.
+
+   Author: OpenAI gpt-6-astra, xhigh/default, one-shot initial proof.
+   Final proof producer is recorded in notes/a-remque/README.md after checking.
+   Specification adapted from amd64_remque_proof.v, with AAPCS64 registers.
+   void remque(void *elem): load next=m[elem], prev=m[elem+8] BEFORE either
+   store; if next<>0 write prev at next+8; if prev<>0 write next at prev.
+   The ordered exact-memory specification permits all aliases, including
+   next=prev (a shared sentinel) and elem=next=prev (circular singleton).
+   It does NOT promise elem is unchanged when elem aliases a written field.
+
+   Provenance: unchanged accepted e08_remque_arm8, checkpoint
+   9ae8e6800fa044797efd98372857e6ac89b18e1b. Ubuntu glibc 2.35-0ubuntu3.15,
+   /lib/aarch64-linux-gnu/libc.so.6, SHA256
+   79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06.
+   ELF entry 0xe4600, Ghidra image base 0x100000, model entry 0x1e4600,
+   six instructions / 24 bytes. Ghidra 11.4.2 raw SLEIGH pcode and accepted
+   strict scalar replacement pipeline; staticMemory=False. See the adjacent
+   scalar_ports/e08_remque_arm8.manifest.json for hashes and closure evidence.
+   This proves properties of that IL, not an independently validated binary
+   refinement, hardware fault model, concurrency, or termination theorem.
+
+   ABI: X0=elem at entry; no return-value obligation (void). The return-boundary
+   postcondition includes unchanged SP/X30. A separate all-trace frame covers
+   X18-X30, SP, and full model SIMD registers Z8-Z15 (stronger than the ABI's
+   low-64-bit obligation). RET jumps through X30 without stack accesses.
+   The boundary theorem stops BEFORE RET; remque_ret_exec checks the actual
+   map's RET separately. No callee, CPU feature, tunable, alignment or
+   pairwise disjointness assumption is needed for this scalar IL.
+
+   remque_objects explicitly requires readable nonwrapping elem[0..16), and
+   writable nonwrapping next+8[0..8) / prev[0..8) only when the link is nonzero.
+   remque_exact is stronger: arbitrary typed entry memory, modulo-2^64
+   addresses, and every defined execution. remque_correct exposes the ordinary
+   permitted-object precondition. The byte frame excludes precisely those
+   conditional write intervals; no global no-write-memory claim is made.
+ *)
+
+Require Import Picinae_armv8.
+Require Import e08_remque_arm8.
+Import ARM8Notations.
+From Stdlib Require Import NArith Lia List.
+Import ListNotations.
+Open Scope N.
+
+Definition remque_mem (m elem:N) :=
+  let next := m Ⓠ[elem] in
+  let prev := m Ⓠ[elem ⊕ 8] in
+  let m1 := if next =? 0 then m else m [Ⓠ next ⊕ 8 := prev] in
+  if prev =? 0 then m1 else m1 [Ⓠ prev := next].
+
+Definition remque_postcondition (m elem sp lr:N) (s:store) :=
+  s V_MEM64 = remque_mem m elem /\ s R_SP = sp /\ s R_X30 = lr.
+
+Definition remque_exit (t:trace) :=
+  match t with (Addr 0x1e4614,_)::_ => true | _ => false end.
+
+Definition remque_invs (m elem sp lr:N) (t:trace) :=
+  match t with (Addr a,s)::_ => match a with
+  | 0x1e4600 => Some
+      (s V_MEM64 = m /\ s R_X0 = elem /\ s R_SP = sp /\ s R_X30 = lr)
+  | 0x1e4614 => Some (remque_postcondition m elem sp lr s)
+  | _ => None end | _ => None end.
+
+Definition remque_objects (s:store) (m elem:N) :=
+  elem + 16 <= 2^64 /\ MemAcc mem_readable s elem 64 16 /\
+  (m Ⓠ[elem] <> 0 ->
+     m Ⓠ[elem] + 16 <= 2^64 /\
+     MemAcc mem_writable s (m Ⓠ[elem] ⊕ 8) 64 8) /\
+  (m Ⓠ[elem ⊕ 8] <> 0 ->
+     m Ⓠ[elem ⊕ 8] + 8 <= 2^64 /\
+     MemAcc mem_writable s (m Ⓠ[elem ⊕ 8]) 64 8).
+
+Definition remque_outside (m elem a:N) :=
+  (m Ⓠ[elem] <> 0 -> ~ overlap 64 a 1 (m Ⓠ[elem] ⊕ 8) 8) /\
+  (m Ⓠ[elem ⊕ 8] <> 0 -> ~ overlap 64 a 1 (m Ⓠ[elem ⊕ 8]) 8).
+
+Theorem remque_nwc: forall s2 s1, e08_remque_arm8 s1 = e08_remque_arm8 s2.
+Proof. reflexivity. Qed.
+
+Theorem remque_welltyped: welltyped_prog arm8typctx e08_remque_arm8.
+Proof. exact e08_remque_arm8.welltyped. Qed.
+
+Theorem remque_preserves_callee_saved:
+  forall v, In v [R_X18; R_X19; R_X20; R_X21; R_X22; R_X23; R_X24;
+                  R_X25; R_X26; R_X27; R_X28; R_X29; R_X30; R_SP;
+                  R_Z8; R_Z9; R_Z10; R_Z11; R_Z12; R_Z13; R_Z14; R_Z15] ->
+  forall_endstates e08_remque_arm8 (fun _ s _ s' => s v = s' v).
+Proof.
+  intros v IN. apply noassign_prog_same.
+  repeat destruct IN as [<-|IN]; [prove_noassign..|destruct IN].
+Qed.
+
+Theorem remque_exact:
+  forall s t s' x' m elem sp lr
+    (ENTRY: startof t (x',s') = (Addr 0x1e4600,s))
+    (MDL: models arm8typctx s)
+    (MEM: s V_MEM64 = m) (ELEM: s R_X0 = elem)
+    (SP: s R_SP = sp) (LR: s R_X30 = lr),
+  satisfies_all e08_remque_arm8 (remque_invs m elem sp lr)
+    remque_exit ((x',s')::t).
+Proof.
+  intros. apply prove_invs.
+  simpl. rewrite ENTRY. arm8_step. repeat split; assumption.
+  intros.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply remque_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t.
+  destruct_inv 64 PRE.
+  destruct PRE as [MEM [ELEM [SP LR]]].
+  repeat arm8_step.
+  all: unfold remque_postcondition; repeat split; try assumption.
+  all: unfold remque_mem; cbv zeta;
+       rewrite ?getmem_mod_l, ?(N.add_comm elem 8) in *;
+       rewrite BC, BC0; rewrite ?setmem_mod_l;
+       try rewrite (N.add_comm (m Ⓠ[elem]) 8); reflexivity.
+Qed.
+
+Theorem remque_correct:
+  forall s t s' x' m elem sp lr
+    (ENTRY: startof t (x',s') = (Addr 0x1e4600,s))
+    (MDL: models arm8typctx s)
+    (MEM: s V_MEM64 = m) (ELEM: s R_X0 = elem)
+    (SP: s R_SP = sp) (LR: s R_X30 = lr)
+    (OBJECTS: remque_objects s m elem),
+  satisfies_all e08_remque_arm8 (remque_invs m elem sp lr)
+    remque_exit ((x',s')::t).
+Proof. intros. eapply remque_exact; eassumption. Qed.
+
+Theorem remque_byte_frame:
+  forall m elem a, remque_outside m elem a ->
+    (remque_mem m elem) Ⓑ[a] = m Ⓑ[a].
+Proof.
+  intros m elem a [NN NP]. unfold remque_mem.
+  destruct (N.eqb_spec (m Ⓠ[elem]) 0) as [N0|N0];
+  destruct (N.eqb_spec (m Ⓠ[elem ⊕ 8]) 0) as [P0|P0];
+  repeat rewrite getmem_noverlap by auto; reflexivity.
+Qed.
+
+Theorem remque_post_byte_frame:
+  forall m elem sp lr s,
+    remque_postcondition m elem sp lr s ->
+    forall a, remque_outside m elem a -> (s V_MEM64) Ⓑ[a] = m Ⓑ[a].
+Proof.
+  intros m elem sp lr s [MEM _] a OUT.
+  rewrite MEM. apply remque_byte_frame, OUT.
+Qed.
+
+(* This is the actual selected map statement, including its PC assignment. *)
+Theorem remque_ret_exec:
+  forall s, exists q c',
+    e08_remque_arm8 s 0x1e4614 = Some (4,q) /\
+    exec_stmt arm8typctx s q c' (update s R_PC (s R_X30))
+      (Some (Addr (s R_X30))).
+Proof.
+  intro s. eexists. eexists. split; [reflexivity|].
+  eapply XSeq2.
+  - apply XMove. apply EVar. reflexivity.
+  - eapply XJmp with (w:=64).
+    replace (s R_X30) with (update s R_PC (s R_X30) R_PC)
+      by apply update_updated.
+    apply EVar. apply update_updated.
+Qed.
+
+(* Four path identities, using only ORIGINAL-memory links. *)
+Theorem remque_path_empty:
+  forall m elem, m Ⓠ[elem] = 0 -> m Ⓠ[elem ⊕ 8] = 0 ->
+    remque_mem m elem = m.
+Proof. intros. unfold remque_mem. rewrite H, H0. reflexivity. Qed.
+
+Theorem remque_path_next_only:
+  forall m elem, m Ⓠ[elem] <> 0 -> m Ⓠ[elem ⊕ 8] = 0 ->
+    remque_mem m elem = m [Ⓠ m Ⓠ[elem] ⊕ 8 := 0].
+Proof.
+  intros. unfold remque_mem. rewrite H0, (proj2 (N.eqb_neq _ _) H). reflexivity.
+Qed.
+
+Theorem remque_path_prev_only:
+  forall m elem, m Ⓠ[elem] = 0 -> m Ⓠ[elem ⊕ 8] <> 0 ->
+    remque_mem m elem = m [Ⓠ m Ⓠ[elem ⊕ 8] := 0].
+Proof.
+  intros. unfold remque_mem. rewrite H, (proj2 (N.eqb_neq _ _) H0). reflexivity.
+Qed.
+
+Theorem remque_path_both:
+  forall m elem, m Ⓠ[elem] <> 0 -> m Ⓠ[elem ⊕ 8] <> 0 ->
+    remque_mem m elem =
+      m [Ⓠ m Ⓠ[elem] ⊕ 8 := m Ⓠ[elem ⊕ 8]] [Ⓠ m Ⓠ[elem ⊕ 8] := m Ⓠ[elem]].
+Proof.
+  intros. unfold remque_mem.
+  rewrite (proj2 (N.eqb_neq _ _) H), (proj2 (N.eqb_neq _ _) H0). reflexivity.
+Qed.
+
+(* Constructive nonvacuity. Arbitrary links satisfying only the nonwrap bounds
+   fit into a concrete two-field node at address 256. Permissions cover the
+   whole modeled address space symbolically; no enormous integer is evaluated.
+   This is a witness, not a requirement that callers grant global permissions. *)
+Definition remque_witness_mem (next prev:N) :=
+  (0 [Ⓠ 256 := next]) [Ⓠ 264 := prev].
+Definition remque_witness_store (next prev:N) : store := fun v =>
+  match v with
+  | V_MEM64 => remque_witness_mem next prev
+  | R_X0 => 256
+  | A_READ | A_WRITE => N.ones (2^64)
+  | _ => 0 end.
+
+Lemma remque_witness_fields:
+  forall next prev, next < 2^64 -> prev < 2^64 ->
+    (remque_witness_mem next prev) Ⓠ[256] = next /\
+    (remque_witness_mem next prev) Ⓠ[256 ⊕ 8] = prev.
+Proof.
+  intros next prev N P. unfold remque_witness_mem.
+  change (256 ⊕ 8) with 264.
+  split.
+  - rewrite getmem_noverlap by (apply noverlap_sum; discriminate).
+    rewrite getmem_setmem by discriminate. apply N.mod_small, N.
+  - rewrite getmem_setmem by discriminate. apply N.mod_small, P.
+Qed.
+
+Lemma remque_witness_typed:
+  forall next prev, models arm8typctx (remque_witness_store next prev).
+Abort.
+
+Theorem remque_arbitrary_witness:
+  forall next prev, next + 16 <= 2^64 -> prev + 8 <= 2^64 ->
+    models arm8typctx (remque_witness_store next prev) /\
+    remque_objects (remque_witness_store next prev) (remque_witness_mem next prev) 256 /\
+    (remque_witness_mem next prev) Ⓠ[256] = next /\
+    (remque_witness_mem next prev) Ⓠ[256 ⊕ 8] = prev.
+Abort.
+
+(* Empty here means no neighbours, not a NULL elem: remque(NULL) reads address
+   zero in the IL and is not the C empty-list operation. *)
+Corollary remque_empty_witness:
+  remque_objects (remque_witness_store 0 0) (remque_witness_mem 0 0) 256 /\
+  remque_mem (remque_witness_mem 0 0) 256 = remque_witness_mem 0 0.
+Abort.
+
+Corollary remque_singleton_witness:
+  remque_objects (remque_witness_store 256 256) (remque_witness_mem 256 256) 256 /\
+  (remque_witness_mem 256 256) Ⓠ[256] = 256 /\
+  (remque_witness_mem 256 256) Ⓠ[256 ⊕ 8] = 256.
+Abort.
+
+(* Local node shape for a shared neighbour/sentinel; next=prev is allowed.
+   No global circular-list representation is assumed by the theorem. *)
+Corollary remque_shared_sentinel_witness:
+  remque_objects (remque_witness_store 512 512) (remque_witness_mem 512 512) 256 /\
+  (remque_witness_mem 512 512) Ⓠ[256] = 512 /\
+  (remque_witness_mem 512 512) Ⓠ[256 ⊕ 8] = 512.
+Abort.
+
+Corollary remque_nonempty_witness:
+  remque_objects (remque_witness_store 512 768) (remque_witness_mem 512 768) 256 /\
+  (remque_witness_mem 512 768) Ⓠ[256] = 512 /\
+  (remque_witness_mem 512 768) Ⓠ[256 ⊕ 8] = 768.
+Abort.
+
+Corollary remque_next_only_witness:
+  remque_objects (remque_witness_store 512 0) (remque_witness_mem 512 0) 256 /\
+  remque_mem (remque_witness_mem 512 0) 256 =
+    (remque_witness_mem 512 0) [Ⓠ 512 ⊕ 8 := 0].
+Abort.
+
+Corollary remque_prev_only_witness:
+  remque_objects (remque_witness_store 0 512) (remque_witness_mem 0 512) 256 /\
+  remque_mem (remque_witness_mem 0 512) 256 =
+    (remque_witness_mem 0 512) [Ⓠ 512 := 0].
+Abort.
