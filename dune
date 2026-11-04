@@ -20,7 +20,8 @@
   Examples.claude.amd64_memcpy_lemmas
   Examples.claude.memmove_avx_amd64
   Examples.claude.amd64_memmove_avx_proof
-  Examples.claude.amd64_memmove_avx_overlap_backward_proof))
+  Examples.claude.amd64_memmove_avx_overlap_backward_proof
+  Examples.claude.amd64_memmove_avx_backward_lowaddr_proof))
 
 (alias
  (name core)

@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-b39074c1
+COMMAND=git diff 48d4aa84b986150a8f4b4b12d50d92c67f2545ee -- Examples/claude/memmove_avx_amd64.v Examples/claude/amd64_memmove_avx_overlap_backward_proof.v
+
+EXIT_CODE=0
