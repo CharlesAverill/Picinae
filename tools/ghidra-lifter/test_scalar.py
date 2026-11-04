@@ -86,6 +86,7 @@ def parse(text):
         op = pop()
         if op == '(':
             result = exp(); assert pop() == ')'; return result
+        if op == 'Unknown': return ('unknown', int(pop(),0))
         if op == 'Word': return ('word', int(pop(), 0), int(pop(), 0))
         if op == 'Var': return ('var', var())
         if op == 'BinOp': return ('bin', pop(), exp(), exp())
@@ -106,6 +107,7 @@ def parse(text):
         if token == 'Nop': return ('nop',)
         if token == 'Move': return ('move', var(), exp())
         if token == 'Jmp': return ('jump', exp())
+        if token == 'Rep': return ('rep', exp(), stmt())
         if token == 'If': return ('if', exp(), stmt(), stmt())
         raise AssertionError(f'unsupported test statement {token}')
     def sequence():
@@ -123,6 +125,7 @@ def signed(x, w): return x - (1 << w) if x >> (w-1) else x
 
 def evaluate(tree, state):
     op, *args = tree
+    if op == 'unknown': return state.get('_unknown',0) % (1 << args[0]), args[0]
     if op == 'word': return args[0] % (1 << args[1]), args[1]
     if op == 'var': return state[args[0]]
     if op == 'cast':
@@ -168,6 +171,12 @@ def execute(tree, state):
         for s in args[0]:
             jump = execute(s, state)
             if jump is not None: return jump
+    elif op == 'rep':
+        n,_ = evaluate(args[0],state)
+        assert n <= 128, 'finite regression evaluator iteration cap'
+        for _ in range(n):
+            jump=execute(args[1],state)
+            if jump is not None:return jump
     elif op == 'move': state[args[0]] = evaluate(args[1], state)
     elif op == 'if': return execute(args[1] if evaluate(args[0], state)[0] else args[2], state)
     elif op == 'jump': return evaluate(args[0], state)[0]

@@ -1,0 +1,234 @@
+{
+  "counts": {
+    "bsf": 324,
+    "bsr": 62,
+    "tzcnt": 305
+  },
+  "distinct_encodings": 28,
+  "representatives": [
+    {
+      "address": "0x1b2d40",
+      "bytes": "480fbcd2",
+      "mnemonic": "bsf",
+      "operands": "rdx,rdx",
+      "symbol": "__strcmp_sse2",
+      "extent": "# ELF 0xb1920 Ghidra 0x1b1920 size 5193 SHA256 42d4d536460595a166f5f0a50b6d82af842e557747de92c084d3c76eae3a420d"
+    },
+    {
+      "address": "0x1b2daf",
+      "bytes": "480fbcd0",
+      "mnemonic": "bsf",
+      "operands": "rdx,rax",
+      "symbol": "__strcmp_sse2_unaligned",
+      "extent": "# ELF 0xb2d70 Ghidra 0x1b2d70 size 675 SHA256 f95b6bbbacf5d583abbaf196596899ddb961217b1d5c6e4a32afa59d389819ee"
+    },
+    {
+      "address": "0x1b2f19",
+      "bytes": "480fbcc9",
+      "mnemonic": "bsf",
+      "operands": "rcx,rcx",
+      "symbol": "__strcmp_sse2_unaligned",
+      "extent": "# ELF 0xb2d70 Ghidra 0x1b2d70 size 675 SHA256 f95b6bbbacf5d583abbaf196596899ddb961217b1d5c6e4a32afa59d389819ee"
+    },
+    {
+      "address": "0x1b2fdf",
+      "bytes": "480fbccf",
+      "mnemonic": "bsf",
+      "operands": "rcx,rdi",
+      "symbol": "__strcmp_sse2_unaligned",
+      "extent": "# ELF 0xb2d70 Ghidra 0x1b2d70 size 675 SHA256 f95b6bbbacf5d583abbaf196596899ddb961217b1d5c6e4a32afa59d389819ee"
+    },
+    {
+      "address": "0x1b48f9",
+      "bytes": "0fbcc0",
+      "mnemonic": "bsf",
+      "operands": "eax,eax",
+      "symbol": "__memchr_sse2",
+      "extent": "# ELF 0xb4880 Ghidra 0x1b4880 size 803 SHA256 d5de08da9a07fa515127b7734f49a9aa5c13005744d2d32730ee5a78ab542041"
+    },
+    {
+      "address": "0x1b4f66",
+      "bytes": "0fbdc0",
+      "mnemonic": "bsr",
+      "operands": "eax,eax",
+      "symbol": "__memrchr_sse2",
+      "extent": "# ELF 0xb4dc0 Ghidra 0x1b4dc0 size 969 SHA256 402a67c93c318d21e49375681fd4ed13fb0ecb476112900f0cf07cc4ff272db0"
+    },
+    {
+      "address": "0x1b5251",
+      "bytes": "0fbcca",
+      "mnemonic": "bsf",
+      "operands": "ecx,edx",
+      "symbol": "__memcmp_sse2",
+      "extent": "# ELF 0xb5190 Ghidra 0x1b5190 size 1024 SHA256 8a87718179ce2a5fa044e210752f0bdeb885b2ffeb58fbde2201833510b35b2b"
+    },
+    {
+      "address": "0x1b5275",
+      "bytes": "490fbccb",
+      "mnemonic": "bsf",
+      "operands": "rcx,r11",
+      "symbol": "__memcmp_sse2",
+      "extent": "# ELF 0xb5190 Ghidra 0x1b5190 size 1024 SHA256 8a87718179ce2a5fa044e210752f0bdeb885b2ffeb58fbde2201833510b35b2b"
+    },
+    {
+      "address": "0x1ba380",
+      "bytes": "480fbcc0",
+      "mnemonic": "bsf",
+      "operands": "rax,rax",
+      "symbol": "__strchr_sse2",
+      "extent": "# ELF 0xba210 Ghidra 0x1ba210 size 554 SHA256 f654e42dc00071b11059833ed618249d3df06b8f88b957131e349016cf066b06"
+    },
+    {
+      "address": "0x1ba6aa",
+      "bytes": "480fbdc0",
+      "mnemonic": "bsr",
+      "operands": "rax,rax",
+      "symbol": "__strrchr_sse2",
+      "extent": "# ELF 0xba650 Ghidra 0x1ba650 size 754 SHA256 31dc8b6ded8d31cda4eb3a6413836b7d7b8ba74bfba92d945a8622324126ad96"
+    },
+    {
+      "address": "0x1ba744",
+      "bytes": "480fbdf6",
+      "mnemonic": "bsr",
+      "operands": "rsi,rsi",
+      "symbol": "__strrchr_sse2",
+      "extent": "# ELF 0xba650 Ghidra 0x1ba650 size 754 SHA256 31dc8b6ded8d31cda4eb3a6413836b7d7b8ba74bfba92d945a8622324126ad96"
+    },
+    {
+      "address": "0x1ba93a",
+      "bytes": "480fbdc6",
+      "mnemonic": "bsr",
+      "operands": "rax,rsi",
+      "symbol": "__strrchr_sse2",
+      "extent": "# ELF 0xba650 Ghidra 0x1ba650 size 754 SHA256 31dc8b6ded8d31cda4eb3a6413836b7d7b8ba74bfba92d945a8622324126ad96"
+    },
+    {
+      "address": "0x1ba98a",
+      "bytes": "0fbcc2",
+      "mnemonic": "bsf",
+      "operands": "eax,edx",
+      "symbol": "__strlen_sse2",
+      "extent": "# ELF 0xba950 Ghidra 0x1ba950 size 412 SHA256 ce61393061217d53969c84b459af560faa0c3f15db6591762b8c290e48233872"
+    },
+    {
+      "address": "0x1ba9d2",
+      "bytes": "480fbcc2",
+      "mnemonic": "bsf",
+      "operands": "rax,rdx",
+      "symbol": "__strlen_sse2",
+      "extent": "# ELF 0xba950 Ghidra 0x1ba950 size 412 SHA256 ce61393061217d53969c84b459af560faa0c3f15db6591762b8c290e48233872"
+    },
+    {
+      "address": "0x1bfa88",
+      "bytes": "480fbcd1",
+      "mnemonic": "bsf",
+      "operands": "rdx,rcx",
+      "symbol": "__strcpy_sse2_unaligned",
+      "extent": "# ELF 0xbf890 Ghidra 0x1bf890 size 1571 SHA256 d00d5ef5ba1f70ecd6d6cb7b8225f3cbcdf98b84e12dfec6a1543c69445b1779"
+    },
+    {
+      "address": "0x1c422a",
+      "bytes": "490fbcc0",
+      "mnemonic": "bsf",
+      "operands": "rax,r8",
+      "symbol": "__strstr_sse2_unaligned",
+      "extent": "# ELF 0xc4180 Ghidra 0x1c4180 size 1171 SHA256 2f2e14397b2183914aee6fba06f0577ac274e01f242ab13eaf86431a4ebf1370"
+    },
+    {
+      "address": "0x1c4455",
+      "bytes": "490fbcc8",
+      "mnemonic": "bsf",
+      "operands": "rcx,r8",
+      "symbol": "__strstr_sse2_unaligned",
+      "extent": "# ELF 0xc4180 Ghidra 0x1c4180 size 1171 SHA256 2f2e14397b2183914aee6fba06f0577ac274e01f242ab13eaf86431a4ebf1370"
+    },
+    {
+      "address": "0x2989f6",
+      "bytes": "f30fbcd1",
+      "mnemonic": "tzcnt",
+      "operands": "edx,ecx",
+      "symbol": "__strcmp_avx2",
+      "extent": "# ELF 0x1989c0 Ghidra 0x2989c0 size 1087 SHA256 86f841a6e61810b9fd52102196560a6a7f8f6d97dcffefad4769bd3a597efc80"
+    },
+    {
+      "address": "0x298b73",
+      "bytes": "f30fbccf",
+      "mnemonic": "tzcnt",
+      "operands": "ecx,edi",
+      "symbol": "__strcmp_avx2",
+      "extent": "# ELF 0x1989c0 Ghidra 0x2989c0 size 1087 SHA256 86f841a6e61810b9fd52102196560a6a7f8f6d97dcffefad4769bd3a597efc80"
+    },
+    {
+      "address": "0x298b9c",
+      "bytes": "f30fbcf9",
+      "mnemonic": "tzcnt",
+      "operands": "edi,ecx",
+      "symbol": "__strcmp_avx2",
+      "extent": "# ELF 0x1989c0 Ghidra 0x2989c0 size 1087 SHA256 86f841a6e61810b9fd52102196560a6a7f8f6d97dcffefad4769bd3a597efc80"
+    },
+    {
+      "address": "0x298bd8",
+      "bytes": "f30fbcce",
+      "mnemonic": "tzcnt",
+      "operands": "ecx,esi",
+      "symbol": "__strcmp_avx2",
+      "extent": "# ELF 0x1989c0 Ghidra 0x2989c0 size 1087 SHA256 86f841a6e61810b9fd52102196560a6a7f8f6d97dcffefad4769bd3a597efc80"
+    },
+    {
+      "address": "0x298c42",
+      "bytes": "f3480fbccf",
+      "mnemonic": "tzcnt",
+      "operands": "rcx,rdi",
+      "symbol": "__strcmp_avx2",
+      "extent": "# ELF 0x1989c0 Ghidra 0x2989c0 size 1087 SHA256 86f841a6e61810b9fd52102196560a6a7f8f6d97dcffefad4769bd3a597efc80"
+    },
+    {
+      "address": "0x299376",
+      "bytes": "f30fbcc0",
+      "mnemonic": "tzcnt",
+      "operands": "eax,eax",
+      "symbol": "__memchr_avx2",
+      "extent": "# ELF 0x199340 Ghidra 0x299340 size 719 SHA256 55b68d2852e2e74de6ff826fa0e4f5f3e06fbc4f32953c54c3ad4ad4d86d4e50"
+    },
+    {
+      "address": "0x29952b",
+      "bytes": "f3480fbcc0",
+      "mnemonic": "tzcnt",
+      "operands": "rax,rax",
+      "symbol": "__memchr_avx2",
+      "extent": "# ELF 0x199340 Ghidra 0x299340 size 719 SHA256 55b68d2852e2e74de6ff826fa0e4f5f3e06fbc4f32953c54c3ad4ad4d86d4e50"
+    },
+    {
+      "address": "0x299c5b",
+      "bytes": "f30fbcc9",
+      "mnemonic": "tzcnt",
+      "operands": "ecx,ecx",
+      "symbol": "__memcmp_avx2_movbe",
+      "extent": "# ELF 0x199b00 Ghidra 0x299b00 size 1085 SHA256 e272288486101d6884b0bd910ac8f59f8dc49445e36ccf5da26a863591d8481f"
+    },
+    {
+      "address": "0x29e170",
+      "bytes": "0fbcd1",
+      "mnemonic": "bsf",
+      "operands": "edx,ecx",
+      "symbol": "__strcat_avx2",
+      "extent": "# ELF 0x19dcb0 Ghidra 0x29dcb0 size 1640 SHA256 7945171494e89342a20d4d40df2c45afbf3521b766e72166e02a74a96acc88e8"
+    },
+    {
+      "address": "0x29e1c6",
+      "bytes": "0fbcd2",
+      "mnemonic": "bsf",
+      "operands": "edx,edx",
+      "symbol": "__strcat_avx2",
+      "extent": "# ELF 0x19dcb0 Ghidra 0x29dcb0 size 1640 SHA256 7945171494e89342a20d4d40df2c45afbf3521b766e72166e02a74a96acc88e8"
+    },
+    {
+      "address": "0x2ae9d8",
+      "bytes": "0fbcc9",
+      "mnemonic": "bsf",
+      "operands": "ecx,ecx",
+      "symbol": "__memcmp_evex_movbe",
+      "extent": "# ELF 0x1ae880 Ghidra 0x2ae880 size 767 SHA256 1cb9d07e1a739299a71c9ecde585785e3f0cf28a496000638deddcda15614377"
+    }
+  ]
+}

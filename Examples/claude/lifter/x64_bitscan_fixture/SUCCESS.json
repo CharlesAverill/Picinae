@@ -1,0 +1,588 @@
+{
+  "source_kind": "synthetic",
+  "elf_sha256": "4e44c4c19f2432684f42dd2737e6198be20647ffa0775fda02f97eea9af45481",
+  "debug_sha256": "4e44c4c19f2432684f42dd2737e6198be20647ffa0775fda02f97eea9af45481",
+  "image_base": "0x100000",
+  "language": "x86:LE:64:default",
+  "addressing": "global",
+  "profile": "strict;bmi1=present;abm=present",
+  "scope": "function-extents",
+  "direct_edges": [],
+  "records": [
+    {
+      "symbol": "bsf32",
+      "elf_entry": "0x1000",
+      "entry": "0x101000",
+      "size": 5,
+      "bytes_sha256": "48f5276f6180f4999e04769258e9b38c2878c21bc16ec1bca3b792f449f553c7",
+      "extents": [
+        {
+          "elf_entry": "0x1000",
+          "size": 5
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_bsf32_amd64.v",
+      "output_sha256": "6b73ed37470dce070f8e531fde874486d673f4791154d77db46fba62ad2691f4",
+      "pcode_sha256": "83fe8e95e6cb698b933327e16f48e43875e4522689e7af378c9c1b47aa4135e1"
+    },
+    {
+      "symbol": "bsf32_alias",
+      "elf_entry": "0x1005",
+      "entry": "0x101005",
+      "size": 5,
+      "bytes_sha256": "4721dda76cd522ff91a4908114ab3f6e7b121a7b3c9c2a63c44602949dd3491a",
+      "extents": [
+        {
+          "elf_entry": "0x1005",
+          "size": 5
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_bsf32_alias_amd64.v",
+      "output_sha256": "0111e76bdf197ffa7bd0d427738f9c7e7ea3347990d6d317bc057bc90b49fde0",
+      "pcode_sha256": "f59fc099932131ec774b5a8c5e87cf7cc2127e6200940e25e6096f25c5e46095"
+    },
+    {
+      "symbol": "bsf64",
+      "elf_entry": "0x100a",
+      "entry": "0x10100a",
+      "size": 5,
+      "bytes_sha256": "db8e43f7a28d79c5f69a2762dc84d9b641b6eb616950721f50ab1075c5ad95fe",
+      "extents": [
+        {
+          "elf_entry": "0x100a",
+          "size": 5
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_bsf64_amd64.v",
+      "output_sha256": "64369cb013b062710d0637c12108081bf1a8fdde5a16e40a43898d3cd1b0bb87",
+      "pcode_sha256": "45a119d7153f1dbb2d31ab2f3c436092403986782969acb5fb1d075bfd45588d"
+    },
+    {
+      "symbol": "bsf64_alias",
+      "elf_entry": "0x100f",
+      "entry": "0x10100f",
+      "size": 5,
+      "bytes_sha256": "0412775143f83836bea5aa1c59a7d3cd347ea2bf65562505b82f46184319fd50",
+      "extents": [
+        {
+          "elf_entry": "0x100f",
+          "size": 5
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_bsf64_alias_amd64.v",
+      "output_sha256": "e05f9519ccee7942e297488463e8a8021887df0c5de590a0978e3841c306dd53",
+      "pcode_sha256": "ee011d3e775cce9d72a674cde747f3eb8606989c17ef10ef8449b3e181b13d23"
+    },
+    {
+      "symbol": "bsr32",
+      "elf_entry": "0x1014",
+      "entry": "0x101014",
+      "size": 5,
+      "bytes_sha256": "adb1e6eb818358bfe0bdb2cb20cbdcda03f18802450f873987ac3daf1353b601",
+      "extents": [
+        {
+          "elf_entry": "0x1014",
+          "size": 5
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_bsr32_amd64.v",
+      "output_sha256": "1eaee98deb043ab12a87b82d24402c32ccc90f0982e5df22f6a340162185c119",
+      "pcode_sha256": "86a018bfb9cbb8f6f50300a18a724eb62222555bb25657ee33db19a5201e7912"
+    },
+    {
+      "symbol": "bsr32_alias",
+      "elf_entry": "0x1019",
+      "entry": "0x101019",
+      "size": 5,
+      "bytes_sha256": "c32a8eda13223096fb2c406251d6e33b69f156e948c0b19e53f63a6165570d25",
+      "extents": [
+        {
+          "elf_entry": "0x1019",
+          "size": 5
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_bsr32_alias_amd64.v",
+      "output_sha256": "9beeab138c233f47affd9f97b55b5e9929f2b2e6342cf8844f2899b4eeb72f65",
+      "pcode_sha256": "0f0b5da4116437accd30a506f44789a932b21783573482dc15394fef916b6f33"
+    },
+    {
+      "symbol": "bsr64",
+      "elf_entry": "0x101e",
+      "entry": "0x10101e",
+      "size": 5,
+      "bytes_sha256": "8fc430bcdaae4b21381ae9d854f6eda7919d80468b1cd253bb65ff38b85e6ff2",
+      "extents": [
+        {
+          "elf_entry": "0x101e",
+          "size": 5
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_bsr64_amd64.v",
+      "output_sha256": "8c7e768ffa0b66f8f44724a7498f906784cde1079882fba4e3c16466055fc7ab",
+      "pcode_sha256": "a6eb6cf0ad832bca17fb8e04c9dfac4691cebe4af214a83c25eb71fccea954ce"
+    },
+    {
+      "symbol": "bsr64_alias",
+      "elf_entry": "0x1023",
+      "entry": "0x101023",
+      "size": 5,
+      "bytes_sha256": "c1a34bc0dff4be826d16ca02930af83b7d49e49dd83993df18f246c0cf336d6d",
+      "extents": [
+        {
+          "elf_entry": "0x1023",
+          "size": 5
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_bsr64_alias_amd64.v",
+      "output_sha256": "5252e0859bec25801b92efda2941d3a62ae39cc45c0ced5a68559fd105f2cf5c",
+      "pcode_sha256": "6dbfde5efd3a374d8b09c2491bf9d0a8dfc80c18f3a9882ecb28677115727507"
+    },
+    {
+      "symbol": "tzcnt32",
+      "elf_entry": "0x1028",
+      "entry": "0x101028",
+      "size": 6,
+      "bytes_sha256": "e9f6396afada8b832282e0a0ff84eabdcf4a54fa8f89a812cff0e290773b6519",
+      "extents": [
+        {
+          "elf_entry": "0x1028",
+          "size": 6
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_tzcnt32_amd64.v",
+      "output_sha256": "b70826d01bc9f9c7951cf18593f2ed18932fc92a9fe57676cd46916b0ff09a40",
+      "pcode_sha256": "47ef4df4df5df63690310123742c4aa6cd7f4d847501e95437bb8c4f2fa7a593"
+    },
+    {
+      "symbol": "tzcnt32_alias",
+      "elf_entry": "0x102e",
+      "entry": "0x10102e",
+      "size": 6,
+      "bytes_sha256": "9b656b26ce4cb1db669373de6af0539cc2484e33d3b1e4bd421800a664b82772",
+      "extents": [
+        {
+          "elf_entry": "0x102e",
+          "size": 6
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_tzcnt32_alias_amd64.v",
+      "output_sha256": "af5cc43e9a0266a178838f2b79760785c014d215d7053023e126a8ce05649ea4",
+      "pcode_sha256": "98a379f944b2b7a7e6b3e096b0aec4511bf16b728806b918cab6cf3fc3fa564a"
+    },
+    {
+      "symbol": "tzcnt64",
+      "elf_entry": "0x1034",
+      "entry": "0x101034",
+      "size": 6,
+      "bytes_sha256": "22a10eabb3043c3b3b7cf9f6080016c16b676d2dba94a0d0c48d1b88ffa3f8ce",
+      "extents": [
+        {
+          "elf_entry": "0x1034",
+          "size": 6
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_tzcnt64_amd64.v",
+      "output_sha256": "511d60baa6614da3be4f43c8429eb1d27c03feba0f12096baca8596582ed65b5",
+      "pcode_sha256": "65ac6f56c5d184fec543ec4844772116d75e0f9d7f9fe82d277e93c83221f210"
+    },
+    {
+      "symbol": "tzcnt64_alias",
+      "elf_entry": "0x103a",
+      "entry": "0x10103a",
+      "size": 6,
+      "bytes_sha256": "802322566244f8945712ba3c4aac6e238983e49ed29116fe0fb60b4e8b15b944",
+      "extents": [
+        {
+          "elf_entry": "0x103a",
+          "size": 6
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_tzcnt64_alias_amd64.v",
+      "output_sha256": "0624bd0cb9b163af3ac9425c46c197a709abd4609ae3ad7f53d116d1c532f03f",
+      "pcode_sha256": "5837e3340db41f522a1348c8d9f04bf7b899ae6664098772b08bd50d4c8c9ccf"
+    },
+    {
+      "symbol": "lzcnt32",
+      "elf_entry": "0x1040",
+      "entry": "0x101040",
+      "size": 6,
+      "bytes_sha256": "90627ff6df9570df10a27336395f6d5d6cb52cef2c41b107a60f2e9100367ac1",
+      "extents": [
+        {
+          "elf_entry": "0x1040",
+          "size": 6
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_lzcnt32_amd64.v",
+      "output_sha256": "c983964f2b84ac18f712acd9e034065f24b568426db5ead9e875bd8b7053446e",
+      "pcode_sha256": "77eef98228be34c1fd4b55a58ca0a1475797f6f4bae994781243821e03606add"
+    },
+    {
+      "symbol": "lzcnt32_alias",
+      "elf_entry": "0x1046",
+      "entry": "0x101046",
+      "size": 6,
+      "bytes_sha256": "c5993f63af811897f65fa043b2861d0ba44db3aedf5bbbb6436c99485767419f",
+      "extents": [
+        {
+          "elf_entry": "0x1046",
+          "size": 6
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_lzcnt32_alias_amd64.v",
+      "output_sha256": "328ef0382e98bd2a4c66597c60c775567306b958e4c12d6d2c707db846a6c939",
+      "pcode_sha256": "3e2d1f27f4765724e319424c328e6cebe03dc69fc05d72686ae53aff90d9b138"
+    },
+    {
+      "symbol": "lzcnt64",
+      "elf_entry": "0x104c",
+      "entry": "0x10104c",
+      "size": 6,
+      "bytes_sha256": "16c285158c867b158033da281bc7d2b12659c7a66aeeb4ee7a4c3779d93477d8",
+      "extents": [
+        {
+          "elf_entry": "0x104c",
+          "size": 6
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_lzcnt64_amd64.v",
+      "output_sha256": "7f0762459539e9a8f11b15af2e9ecf9264a0b26d5747cd5614710af0ec08f832",
+      "pcode_sha256": "d5209cf792b92073b7961c4fd1d63edbb171fdb425835c6eb4dba4e92608a738"
+    },
+    {
+      "symbol": "lzcnt64_alias",
+      "elf_entry": "0x1052",
+      "entry": "0x101052",
+      "size": 6,
+      "bytes_sha256": "bcaeccadf636885d836d9cf54d41a1bd4d93d4f4895941356feecec5272f3ac0",
+      "extents": [
+        {
+          "elf_entry": "0x1052",
+          "size": 6
+        }
+      ],
+      "instructions": 2,
+      "selected_symbols": [
+        "bsf32",
+        "bsf32_alias",
+        "bsf64",
+        "bsf64_alias",
+        "bsr32",
+        "bsr32_alias",
+        "bsr64",
+        "bsr64_alias",
+        "tzcnt32",
+        "tzcnt32_alias",
+        "tzcnt64",
+        "tzcnt64_alias",
+        "lzcnt32",
+        "lzcnt32_alias",
+        "lzcnt64",
+        "lzcnt64_alias"
+      ],
+      "output": "e28_lzcnt64_alias_amd64.v",
+      "output_sha256": "4f737db0096756a0edc905f8272d1ad4942892b10ab6c5ecfd4e638ffa01d5d3",
+      "pcode_sha256": "9600358bf15ba4f33d406aa2f38097f7ba37e36da2332e72e5b8a708d464b4e6"
+    }
+  ],
+  "isa_sha256": {
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.sla": "4d3ebe1ebf0b127dc5bd187979824b850fc94081e6660021e2bda834e7400504",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.slaspec": "9d66a01a4219ab0bee0697caf2d1ee389e094e927a857299cebb6182e40a4e6e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.pspec": "3c3dab75a2ac0b98b0552856f690e613d661e0df7cf94d6252e5604d9821629f",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64-gcc.cspec": "5eaa848f3eba7ebd4023541f9f37645dae077e8426fb562592f398d599530a9e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86.ldefs": "b2aa14d94a6162844b18bf47f2aed8579bf90cef3459f6e322b9c1f58146098b",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/ia.sinc": "8fbb244f7fc88be621b95f435b6e958c6a55819dd5b935242377bb2a7e2b9b76"
+  },
+  "implementation_sha256": {
+    "pcode2coq_bitscan.py": "85bfc4060e3019b54125c7bd47cc3743645d0b61691837c36efad409282c825e",
+    "pcode2coq_x64.py": "c885c6a572288f766bd4d3506763cdbea2308ec0130c6d93907ab08653edb276",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "bitscan_headless.py": "e5bc0b1ba7210387dbdb9e4c234b8d77beace78f59bdd98d541a7081be395247",
+    "lift-bitscan.py": "23e03e1125146b23859616a5131449665ba3fcc6128bb63a064cd623def017ef"
+  }
+}

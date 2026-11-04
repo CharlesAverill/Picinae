@@ -136,7 +136,7 @@ def main():
         # Receipt token is a freshness check, not reproducible artifact content.
         del receipt['token']
         receipt['implementation_sha256'] = {f: digest(repo/'tools/ghidra-lifter'/f) for f in
-                                         ('pcode2coq_x64.py', 'pcode2coq_scalar.py', 'x64_headless.py', 'lift-x64.py')}
+                                         ('pcode2coq_bitscan.py', 'pcode2coq_x64.py', 'pcode2coq_scalar.py', 'x64_headless.py', 'lift-x64.py')}
         (stage/'SUCCESS.json').write_text(json.dumps(receipt, indent=2)+'\n')
         # Serialize publishers to the same destination and recheck after launch.
         with (a.out.parent/'.e25-publish.lock').open('a') as publish_lock:

@@ -23,11 +23,12 @@ BOOL_OPS = set(COMPARE) | {'INT_CARRY','INT_SCARRY','INT_SBORROW','BOOL_NEGATE',
 
 
 class X64Lifter:
-    def __init__(self, language, cet_disabled=False):
+    def __init__(self, language, cet_disabled=False, bmi1=None, abm=None):
         if str(language.getLanguageID()) != 'x86:LE:64:default':
             raise Unsupported('requires x86:LE:64:default')
         self.lang = language
         self.cet_disabled = cet_disabled
+        self.bmi1, self.abm = bmi1, abm
         self.temps, self.ranges, self.initialized = {}, [], set()
 
     def register(self, vn):
@@ -222,6 +223,9 @@ class X64Lifter:
     def instruction(self, insn):
         mnemonic = str(insn.getMnemonicString()).upper()
         raw = bytes(int(b)&255 for b in insn.getBytes())
+        from pcode2coq_bitscan import SCANS, lower
+        if mnemonic in SCANS:
+            return lower(self, insn)
         if mnemonic == 'ENDBR64':
             if not self.cet_disabled or raw != bytes.fromhex('f30f1efa') or list(insn.getPcode()):
                 raise Unsupported('ENDBR64 requires explicit CET-disabled profile and exact empty-pcode encoding')

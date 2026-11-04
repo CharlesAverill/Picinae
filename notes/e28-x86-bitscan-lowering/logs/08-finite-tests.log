@@ -1,0 +1,16 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-09baf102
+COMMAND=python3 tools/ghidra-lifter/test_bitscan.py
+test_all_pinned_scan_encodings_and_feature_profiles (__main__.Tests.test_all_pinned_scan_encodings_and_feature_profiles) ... ok
+test_encoding_and_unknown_loop_rejections (__main__.Tests.test_encoding_and_unknown_loop_rejections) ... ok
+test_every_raw_operation_and_node_is_guarded (__main__.Tests.test_every_raw_operation_and_node_is_guarded) ... ok
+test_feature_declaration_is_required_and_independent (__main__.Tests.test_feature_declaration_is_required_and_independent) ... ok
+test_published_programs_and_ffs_finite_results (__main__.Tests.test_published_programs_and_ffs_finite_results) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 16.053s
+
+OK
+finite scan/profile/input/Unknown checks: 17832
+mutated node/constant rejection checks: 2136
+
+EXIT_CODE=0
