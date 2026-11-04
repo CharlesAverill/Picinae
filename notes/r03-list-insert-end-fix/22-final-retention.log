@@ -1,0 +1,24 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-75bde600
+COMMAND=python3 notes/r03-list-insert-end-fix/check-preservation.py
+PASS: all original non-proof code preserved (all definitions and 19 statements)
+insert_end_nwc
+insert_end_welltyped
+insert_end_register_frame
+insert_end_memory_fields
+insert_end_memory_frame
+insert_end_original_loads
+insert_end_exact
+insert_end_at_bx
+insert_end_count_no_overflow
+insert_end_fixture_links
+insert_end_fixture_typed
+insert_end_entry_witness
+insert_end_empty_layout
+insert_end_nonempty_layout
+insert_end_local_empty_witness
+insert_end_local_nonempty_witness
+insert_end_return_step
+insert_end_trace_returns
+insert_end_ordinary_return_nonvacuity
+
+EXIT_CODE=0

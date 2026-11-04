@@ -1,0 +1,57 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-75bde600
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_vListInsertEnd_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2700:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_vListInsertEnd_proof.{glob,vo} (exit 1)
+Goal at < 92 >
+Goal at < 112 >
+File "./Examples/FreeRTOS/armv6m_vListInsertEnd_proof.v", line 208, characters 49-60:
+Error:
+In environment
+s0 : store
+L, P : N
+R0 : s0 R_R0 = L
+R1 : s0 R_R1 = P
+t1 : list (exit * store)
+MDL1 : models archtyps s0
+ACC : MemAcc mem_writable s0 L 32 4
+t : list (exit * store)
+Unable to unify
+ "N.b2n
+    ((s0 V_MEM32 [ⒹP + 4 := s0 V_MEM32 Ⓓ[ L + 4 ] ] [Ⓓ
+      P + 8
+      := (s0 V_MEM32 [ⒹP + 4 := s0 V_MEM32 Ⓓ[ L + 4 ] ])
+         Ⓓ[ s0 V_MEM32 Ⓓ[ L + 4 ] + 8 ]
+      ]
+      [Ⓓ(s0 V_MEM32 [ⒹP + 4 := s0 V_MEM32 Ⓓ[ L + 4 ] ])
+        Ⓓ[ s0 V_MEM32 Ⓓ[ L + 4 ] + 8 ] + 4
+      := P ] [Ⓓs0 V_MEM32 Ⓓ[ L + 4 ] + 8 := P ] [Ⓓ
+      P + 16 := L ])
+     Ⓓ[ L ] ⊕ 1 =? 0)"
+with
+ "if
+   1
+   ⊕ (s0 V_MEM32 [Ⓓ4 + P := s0 V_MEM32 Ⓓ[ 4 + L ] ] [Ⓓ
+      8 + P
+      := (s0 V_MEM32 [Ⓓ4 + P := s0 V_MEM32 Ⓓ[ 4 + L ] ])
+         Ⓓ[ 8 + s0 V_MEM32 Ⓓ[ 4 + L ] ]
+      ]
+      [Ⓓ4 +
+        (s0 V_MEM32 [Ⓓ4 + P := s0 V_MEM32 Ⓓ[ 4 + L ] ])
+        Ⓓ[ 8 + s0 V_MEM32 Ⓓ[ 4 + L ] ]
+      := P ] [Ⓓ8 + s0 V_MEM32 Ⓓ[ 4 + L ] := P ] [Ⓓ
+      16 + P := L ])
+     Ⓓ[ L ] =?
+   0
+  then 1
+  else 0".
+
+
+EXIT_CODE=1

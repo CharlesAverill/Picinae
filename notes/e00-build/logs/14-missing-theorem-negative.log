@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-6b751a59
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash tools/print-assumptions.sh Picinae.Examples.claude.arm8_abs_proof e00_missing_theorem
+File "/home/charles/.t3/worktrees/Picinae/t3-6b751a59/_build/proof-audit.Qd1VYrKR/Assumptions.v", line 2, characters 6-64:
+Error: The reference
+Picinae.Examples.claude.arm8_abs_proof.e00_missing_theorem was not found
+in the current environment.
+
+
+EXIT_CODE=1

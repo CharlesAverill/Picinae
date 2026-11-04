@@ -1,0 +1,38 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-75bde600
+COMMAND=git commit -m Complete\ list\ insert-end\ proof\ contracts
+[llm-proofs/r03-list-insert-end-fix a8a1d37] Complete list insert-end proof contracts
+ 33 files changed, 3578 insertions(+), 33 deletions(-)
+ create mode 100644 notes/r03-list-insert-end-fix/01-build.log
+ create mode 100644 notes/r03-list-insert-end-fix/02-checkpoint-audit.log
+ create mode 100644 notes/r03-list-insert-end-fix/03-frame-diagnostic.log
+ create mode 100644 notes/r03-list-insert-end-fix/04-build.log
+ create mode 100644 notes/r03-list-insert-end-fix/05-exact-normalize.log
+ create mode 100644 notes/r03-list-insert-end-fix/06-exact-normalize.log
+ create mode 100644 notes/r03-list-insert-end-fix/07-exact-normalize.log
+ create mode 100644 notes/r03-list-insert-end-fix/08-fixture-diagnostic.log
+ create mode 100644 notes/r03-list-insert-end-fix/09-fixture-repair.log
+ create mode 100644 notes/r03-list-insert-end-fix/10-fixture-diagnostic.log
+ create mode 100644 notes/r03-list-insert-end-fix/11-fixture-repair.log
+ create mode 100644 notes/r03-list-insert-end-fix/12-assumptions.log
+ create mode 100644 notes/r03-list-insert-end-fix/13-source-audit.log
+ create mode 100644 notes/r03-list-insert-end-fix/14-unit-source-audit.log
+ create mode 100644 notes/r03-list-insert-end-fix/15-retention-audit.log
+ create mode 100644 notes/r03-list-insert-end-fix/16-strict-retention-audit.log
+ create mode 100644 notes/r03-list-insert-end-fix/17-ancestry-precommit.log
+ create mode 100644 notes/r03-list-insert-end-fix/18-final-retention.log
+ create mode 100644 notes/r03-list-insert-end-fix/19-fork-collision.log
+ create mode 100644 notes/r03-list-insert-end-fix/20-final-clean-build.log
+ create mode 100644 notes/r03-list-insert-end-fix/21-final-source-audit.log
+ create mode 100644 notes/r03-list-insert-end-fix/22-final-retention.log
+ create mode 100644 notes/r03-list-insert-end-fix/23-provenance.log
+ create mode 100644 notes/r03-list-insert-end-fix/24-final-all-assumptions.log
+ create mode 100644 notes/r03-list-insert-end-fix/25-final-ancestry-precommit.log
+ create mode 100644 notes/r03-list-insert-end-fix/26-assumptions-inspection.log
+ create mode 100644 notes/r03-list-insert-end-fix/README.md
+ create mode 100644 notes/r03-list-insert-end-fix/ancestry-before.log
+ create mode 100644 notes/r03-list-insert-end-fix/audit-ancestry.sh
+ create mode 100644 notes/r03-list-insert-end-fix/check-assumptions.py
+ create mode 100644 notes/r03-list-insert-end-fix/check-preservation.py
+ create mode 100644 notes/r03-list-insert-end-fix/print-all-assumptions.sh
+
+EXIT_CODE=0

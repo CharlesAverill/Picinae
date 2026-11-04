@@ -1,0 +1,12 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d0b2e085
+COMMAND=bash -c sha256sum\ Examples/FreeRTOS/armv6m_vListInsertEnd_proof.v\ Examples/FreeRTOS/vListInsertEnd_armv6m.v\ Picinae_armv6m.v\;\ git\ diff\ --check\;\ git\ diff\ --stat\;\ git\ status\ --short
+3a16f73db7b594afa54058d6f624e819ff931481598e7cbe42dec49ed5c0d892  Examples/FreeRTOS/armv6m_vListInsertEnd_proof.v
+2347839d3302c7293c77edb4f5b11f42711b4bc60812fbde7979c23f48dae70a  Examples/FreeRTOS/vListInsertEnd_armv6m.v
+fc2efdfcb4477ef615c996ae16b1221288e93e89c1a2dc7abd6dca40b44e9471  Picinae_armv6m.v
+ dune | 1 +
+ 1 file changed, 1 insertion(+)
+ M dune
+?? Examples/FreeRTOS/armv6m_vListInsertEnd_proof.v
+?? notes/r03-list-insert-end/
+
+EXIT_CODE=0

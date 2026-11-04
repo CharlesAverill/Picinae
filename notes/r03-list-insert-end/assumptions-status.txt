@@ -1,0 +1,6 @@
+NOT RUN: first full build failed (exit 1); no unit .vo or main theorem certificate.
+No raw unit Print Assumptions output exists. tools/print-assumptions.sh would
+build the incomplete target again; forbidden for this Astra handoff.
+No assertion of closed or FE-only main theorems is made.
+Inherited FE: Stdlib.FunctionalExtensionality.functional_extensionality_dep,
+documented in notes/e00-build; requires honest transitive recheck by Sol.
