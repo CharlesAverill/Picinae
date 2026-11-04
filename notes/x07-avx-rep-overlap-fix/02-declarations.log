@@ -1,0 +1,20 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-16637109
+COMMAND=python3 notes/x07-avx-rep-overlap-fix/audit-declarations.py
+UNCHANGED orp_path
+UNCHANGED orp_postcondition
+UNCHANGED orp_frame
+UNCHANGED orp_exit
+UNCHANGED orp_invs
+UNCHANGED orp_witness_memory
+UNCHANGED orp_witness_store
+UNCHANGED orp_welltyped
+UNCHANGED orp_nwc
+UNCHANGED orp_preserves_callee_saved
+UNCHANGED orp_neg_distance
+UNCHANGED memmove_avx_correct_rep_overlap
+UNCHANGED memmove_avx_rep_overlap_at_ret
+UNCHANGED orp_witness_globals
+UNCHANGED orp_entry_satisfiable
+UNCHANGED orp_critical_distances
+
+EXIT_CODE=0

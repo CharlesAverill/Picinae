@@ -1,7 +1,6 @@
-(* PARTIAL: initial full-target build failed. All nine proof attempts
-   are archived verbatim in notes/x07-avx-rep-overlap/initial-attempt.v.txt.
-   Statements below are retained with Abort, not exported as theorems.
-   No post-failure Astra repair or second compiler run was performed. *)
+(* PARTIAL WIP: stopped on Charles's wrap-up order. No x07 theorem is exported.
+   All nine exact statements remain; the latest repair is archived verbatim.
+   No successful x07 full-vo build or fresh assumptions audit was obtained. *)
 (* Forward-overlapping REP MOVSB and its actual policy fallbacks.
    Unit x07-avx-rep-overlap. Initial author: OpenAI gpt-6-astra,
    reasoningEffort=xhigh, serviceTier=default (assigned settings).
@@ -103,16 +102,24 @@ Definition orp_invs (m d s n rsp:N) (t:trace) :=
   end | _ => None end.
 
 Theorem orp_welltyped: welltyped_prog x64typctx memmove_avx_amd64.
-Proof. Abort.
+Proof.
+  (* Uncertified repair archived in notes/x07-avx-rep-overlap-fix/wrap-up-attempt.v.txt. *)
+Abort.
 Theorem orp_nwc: forall s2 s1, memmove_avx_amd64 s1 = memmove_avx_amd64 s2.
-Proof. Abort.
+Proof.
+  (* Uncertified repair archived in notes/x07-avx-rep-overlap-fix/wrap-up-attempt.v.txt. *)
+Abort.
 Theorem orp_preserves_callee_saved:
   forall_endstates memmove_avx_amd64 (fun _ st _ st' => orp_frame st st').
-Proof. Abort.
+Proof.
+  (* Uncertified repair archived in notes/x07-avx-rep-overlap-fix/wrap-up-attempt.v.txt. *)
+Abort.
 
 Lemma orp_neg_distance: forall d s, d < s -> s < 2^64 ->
   (2^64 - (d ⊖ s)) mod 2^64 = s-d.
-Proof. Abort.
+Proof.
+  (* Uncertified repair archived in notes/x07-avx-rep-overlap-fix/wrap-up-attempt.v.txt. *)
+Abort.
 
 Ltac orp_iter a k n C DS SN NB BIG K BC A1 :=
   apply N.eqb_neq in BC;
@@ -151,7 +158,9 @@ Theorem memmove_avx_correct_rep_overlap:
          (DS: d < s) (OV: s < d+n) (SW: s+n <= 2^64) (NS: n < 2^63)
          (BIG: 256 < n) (THR1: m Ⓠ[0x31a3f8] < n),
   satisfies_all memmove_avx_amd64 (orp_invs m d s n rsp) orp_exit ((x',s')::t).
-Proof. Abort.
+Proof.
+  (* Uncertified repair archived in notes/x07-avx-rep-overlap-fix/wrap-up-attempt.v.txt. *)
+Abort.
 
 Theorem memmove_avx_rep_overlap_at_ret:
   forall st t st' a m d s n rsp,
@@ -161,7 +170,9 @@ Theorem memmove_avx_rep_overlap_at_ret:
   st R_DF=0 -> orp_path m d s n ->
   exec_prog memmove_avx_amd64 ((Addr a,st')::t) -> unterminated orp_exit t ->
   orp_postcondition m d s n rsp st' /\ orp_frame st st'.
-Proof. Abort.
+Proof.
+  (* Uncertified repair archived in notes/x07-avx-rep-overlap-fix/wrap-up-attempt.v.txt. *)
+Abort.
 
 (* Typed entries for every gap 1..8191, both policy values, and either
    stop-threshold direction. No oracle/callee contract is introduced. *)
@@ -179,14 +190,18 @@ Lemma orp_witness_globals: forall policy stop,
   orp_witness_memory policy stop Ⓠ[0x31a3f8] = 256 /\
   orp_witness_memory policy stop Ⓠ[0x3215a0] = stop /\
   getmem 64 LittleE 4 (orp_witness_memory policy stop) 0x321598 = policy.
-Proof. Abort.
+Proof.
+  (* Uncertified repair archived in notes/x07-avx-rep-overlap-fix/wrap-up-attempt.v.txt. *)
+Abort.
 Theorem orp_entry_satisfiable:
   forall gap policy stop, 0 < gap < 8192 -> policy < 2^32 -> stop < 2^64 ->
   exists st m, models x64typctx st /\ orp_path m 4096 (4096+gap) 8192 /\
     st V_MEM64=m /\ st R_RDI=4096 /\ st R_RSI=4096+gap /\
     st R_RDX=8192 /\ st R_RSP=32768 /\ st R_DF=0 /\
     m Ⓠ[0x3215a0]=stop /\ getmem 64 LittleE 4 m 0x321598=policy.
-Proof. Abort.
+Proof.
+  (* Uncertified repair archived in notes/x07-avx-rep-overlap-fix/wrap-up-attempt.v.txt. *)
+Abort.
 Corollary orp_critical_distances:
   forall gap policy stop,
   In gap [1;31;32;63;127;4096] -> In policy [0;1] -> In stop [0;16384] ->
@@ -194,4 +209,6 @@ Corollary orp_critical_distances:
     st V_MEM64=m /\ st R_RDI=4096 /\ st R_RSI=4096+gap /\
     st R_RDX=8192 /\ st R_RSP=32768 /\ st R_DF=0 /\
     m Ⓠ[0x3215a0]=stop /\ getmem 64 LittleE 4 m 0x321598=policy.
-Proof. Abort.
+Proof.
+  (* Uncertified repair archived in notes/x07-avx-rep-overlap-fix/wrap-up-attempt.v.txt. *)
+Abort.

@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-16637109
+COMMAND=git diff --exit-code 088a01f07128f763e9cefeb61de776795557b93e -- Examples/claude/memmove_avx_amd64.v Examples/claude/amd64_memmove_avx_overlap_forward_proof.v Examples/claude/amd64_memmove_avx_rep_proof.v dune
+
+EXIT_CODE=0

@@ -1,0 +1,397 @@
+(* Forward-overlapping REP MOVSB and its actual policy fallbacks.
+   Unit x07-avx-rep-overlap. Initial author: OpenAI gpt-6-astra,
+   reasoningEffort=xhigh, serviceTier=default (assigned settings).
+   Initial one-shot attempt; final proof producer is unset pending validation.
+
+   Provenance inherited, not independently validated here:
+   /lib/x86_64-linux-gnu/libc.so.6, Ubuntu amd64 glibc 2.35-0ubuntu3.12,
+   SHA256 9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9,
+   __memmove_avx_unaligned_erms at Ghidra 0x2a0840, image base 0x100000,
+   normalized entry 0, Ghidra 11.4.2/pcode2coq. Generated map unchanged.
+
+   English specification: copy ORIGINAL source bytes [s,s+n) to [d,d+n),
+   preserve all bytes outside destination, return d in RAX, preserve RSP
+   and System V AMD64 RBX/RBP/R12-R15 at the selected pre-RET cut.
+   Entry RDI=d, RSI=s, RDX=n, RSP=rsp, DF=0, typed 64-bit pointers.
+   Domain: 256<n<2^63, d<s<d+n, s+n<=2^64, and n greater than the
+   original-memory REP threshold at 0x31a3f8. No NOV, minimum gap, lower
+   heap address, or additional size bound. No upper stop/NT threshold bound.
+
+   Actual dispatch: 192/199 selects 704; 710/713 excludes backward copy.
+   At 722/729, n < m[0x3215a0] reaches policy load 731; otherwise 800/807
+   rereads the original REP threshold and reaches 813. There NEG RCX yields
+   s-d, and 816/819 sends genuine forward overlap directly to 363.
+   Thus NO NT store is selected anywhere in this domain. 0x3215a8 is never
+   read here. For n below/equal REP but above initial NT threshold, x10
+   remains separate; n>=2^63 remains x09. These are scope boundaries, not
+   assertions that those overlap inputs actually execute NT stores.
+
+   Below stop, policy bit 0 at 0x321598 clear chooses 640, then source
+   alignment A iff ((d-s) mod 2^32)&0xe00=0, otherwise destination B.
+   Bit set sends low32(d-s)>0xffffffc0 to 363 (including gaps 1..63);
+   all other distances use B. Both policy values and every gap are allowed.
+   All threshold/policy loads above precede stores, even if globals overlap
+   destination. No unchanged-global claim after stores is used.
+
+   REP invariant copies [a,a+k), frames its complement and obtains every
+   next byte through ofw_load's unread ORIGINAL source rule. RCX=n-a-k,
+   RSI=s+a+k, RDI=d+a+k, DF=0. RCX=0 discharges the loop and saved head
+   stores at offsets 0 then 32; vector fallback loads each row before its
+   four stores via ofw_store4, then stores tail n-32,n-64,n-96,n-128,head 0.
+   Overlapping writes use cpy_store, not a disjoint-store assumption.
+
+   Total-memory sequential IL partial correctness only; CPU feature checks
+   and hardware page permissions are absent in this model, not extra silent
+   hypotheses. No termination/executed RET/caller continuation/fault/timing/
+   hardware/lifter correctness claim. Existing inherited functional
+   extensionality must be disclosed by transitive Print Assumptions.
+   Tactic scaffolding adapted from Claude Opus 5.5's baseline REP proof and
+   the accepted x03 Astra/Sol loop proof, with no NOV-based load use.
+ *)
+Require Import Picinae_amd64 memmove_avx_amd64.
+Import X64Notations.
+From Stdlib Require Import NArith ZArith Lia List.
+Require Import amd64_common amd64_memcpy_lemmas amd64_memmove_avx_proof.
+Require Import amd64_memmove_avx_rep_proof.
+Require Import amd64_memmove_avx_overlap_forward_proof.
+Import ListNotations.
+Open Scope N.
+
+Definition orp_path (m d s n:N) :=
+  256 < n /\ n < 2^63 /\ d < s /\ s < d+n /\ s+n <= 2^64 /\
+  m Ⓠ[0x31a3f8] < n.
+Definition orp_postcondition := ofw_postcondition.
+Definition orp_frame := ofw_frame.
+Definition orp_exit := rp_exit.
+
+Definition orp_invs (m d s n rsp:N) (t:trace) :=
+  match t with (Addr a,st)::_ => match a with
+  | 0 => Some (st V_MEM64 = m /\ st R_RDI = d /\ st R_RSI = s /\ st R_RDX = n /\
+               st R_RSP = rsp /\ st R_DF = 0)
+  (* the n > __x86_rep_movsb_threshold dispatch *)
+  | 704 => Some (st V_MEM64 = m /\ st R_RDI = d /\ st R_RSI = s /\ st R_RDX = n /\
+                 st R_RSP = rsp /\ st R_RAX = d /\ st R_DF = 0 /\ st R_YMM0 = m Ⓨ[s])
+  (* forward loop head, as in amd64_memmove_avx_loops_proof.v *)
+  | 416 => Some (exists k, a0 d <= k < n - 128 /\ cpy m (st V_MEM64) d s (fun i => a0 d <= i < k) /\
+                 st R_RDI = d + k /\ st R_RSI = s ⊕ k /\ st R_RDX = d + n - 128 /\ st R_RCX = d /\
+                 st R_RAX = d /\ st R_RSP = rsp /\
+                 st R_YMM0 = m Ⓨ[s] /\ st R_YMM5 = m Ⓨ[s ⊕ (n-32)] /\
+                 st R_YMM6 = m Ⓨ[s ⊕ (n-64)] /\ st R_YMM7 = m Ⓨ[s ⊕ (n-96)] /\
+                 st R_YMM8 = m Ⓨ[s ⊕ (n-128)])
+  (* REP MOVSB with the source aligned: k bytes copied from offset aA s *)
+  | 676 => Some (exists k, k <= n - aA s /\ st R_RCX = n - aA s - k /\
+                 st R_RDI = d ⊕ (aA s + k) /\ st R_RSI = s ⊕ (aA s + k) /\
+                 st R_R8 = d /\ st R_RAX = d /\ st R_DF = 0 /\ st R_RSP = rsp /\
+                 st R_YMM0 = m Ⓨ[s] /\ st R_YMM1 = m Ⓨ[s ⊕ 32] /\
+                 cpy m (st V_MEM64) d s (fun i => aA s <= i < aA s + k))
+  (* REP MOVSB with the destination aligned: k bytes copied from offset aB d *)
+  | 778 => Some (exists k, k <= n - aB d /\ st R_RCX = n - aB d - k /\
+                 st R_RDI = d ⊕ (aB d + k) /\ st R_RSI = s ⊕ (aB d + k) /\
+                 st R_R8 = d /\ st R_RAX = d /\ st R_DF = 0 /\ st R_RSP = rsp /\
+                 st R_YMM0 = m Ⓨ[s] /\ st R_YMM1 = m Ⓨ[s ⊕ 32] /\
+                 cpy m (st V_MEM64) d s (fun i => aB d <= i < aB d + k))
+  | 493 | 692 | 794 => Some (orp_postcondition m d s n rsp st)
+  (* Stop-policy path arrives before any store, with the wrapped d-s. *)
+  | 813 => Some (st V_MEM64=m /\ st R_RDI=d /\ st R_RSI=s /\ st R_RDX=n /\
+      st R_RSP=rsp /\ st R_RAX=d /\ st R_YMM0=m Ⓨ[s] /\ st R_RCX=d ⊖ s)
+  | 309 | 496 | 825 => Some False
+  | _ => None
+  end | _ => None end.
+
+Theorem orp_welltyped: welltyped_prog x64typctx memmove_avx_amd64.
+Proof. exact ofw_welltyped. Qed.
+Theorem orp_nwc: forall s2 s1, memmove_avx_amd64 s1 = memmove_avx_amd64 s2.
+Proof. reflexivity. Qed.
+Theorem orp_preserves_callee_saved:
+  forall_endstates memmove_avx_amd64 (fun _ st _ st' => orp_frame st st').
+Proof. exact ofw_preserves_callee_saved. Qed.
+
+Lemma orp_neg_distance: forall d s, d < s -> s < 2^64 ->
+  (2^64 - (d ⊖ s)) mod 2^64 = s-d.
+Proof.
+  intros d s DS SB. rewrite <- msub_neg.
+  rewrite msub_nowrap; rewrite !N.mod_small by lia; lia.
+Qed.
+
+Ltac orp_iter a k n C DS SN NB BIG K BC A1 :=
+  apply N.eqb_neq in BC;
+  exists (k + 1);
+  split; [clear - K BC BIG; lia|];
+  split; [unfold msub; clear - K BC NB BIG; fin_mod|]; 
+  split; [clear - K BC A1 NB BIG; aside|];
+  split; [clear - K BC A1 NB BIG; aside|];
+  repeat (split; [first [sassumption | sreflexivity |
+                        match goal with H: ?r = _ |- ?r = _ =>
+                          rewrite H; apply getmem_addr; rewrite ?N.mod_mod by discriminate; f_equal; clear; lia end]|]);
+  match goal with |- cpy _ (setmem _ _ _ ?M ?ad (getmem _ _ 1 ?M ?b)) _ _ _ =>
+    rewrite (ofw_load _ M _ _ n (a + k) _ (a + k) 1 b C) by
+      (first [ exact DS | exact SN | sassumption
+             | let i := fresh "i" in let Hi := fresh "Hi" in intros i Hi; clear - Hi K BC BIG; lia
+             | clear - K BC BIG; lia
+             | clear - K BC A1 NB BIG; aside
+])
+  end;
+  match goal with |- cpy ?m (setmem _ _ 1 ?M ?ad (getmem _ _ 1 ?m ?sa)) ?d ?s _ =>
+    match type of C with cpy _ _ _ _ ?W =>
+      refine (cpy_equiv m _ d s _ _ _ (cpy_store m M d s W (a + k) 1 ad sa C _ _ _ _ _))
+    end
+  end;
+  [ let i := fresh "i" in let H := fresh "H" in
+    intro i; clear - K BC BIG; cbv beta; split; intro H; [destruct H as [H|H]; lia | lia]
+  | .. ];
+  clear - K BC A1 NB BIG; aside.
+
+Theorem memmove_avx_correct_rep_overlap:
+  forall st t s' x' m d s n rsp
+         (ENTRY: startof t (x',s') = (Addr 0, st))
+         (MDL: models x64typctx st)
+         (MEM: st V_MEM64 = m) (D: st R_RDI = d) (S: st R_RSI = s) (Nn: st R_RDX = n)
+         (RSP: st R_RSP = rsp) (DF: st R_DF = 0)
+         (DS: d < s) (OV: s < d+n) (SW: s+n <= 2^64) (NS: n < 2^63)
+         (BIG: 256 < n) (THR1: m Ⓠ[0x31a3f8] < n),
+  satisfies_all memmove_avx_amd64 (orp_invs m d s n rsp) orp_exit ((x',s')::t).
+Proof.
+  intros.
+  assert (NB: n < 2^64) by (rewrite <- Nn; apply (MDL R_RDX 64); reflexivity).
+  assert (NW: d+n <= 2^64) by (clear - DS SW; lia).
+  destruct (ofw_dispatch d s n DS OV SW NS) as [DSN SIGN].
+  apply prove_invs.
+  simpl. rewrite ENTRY. x64_step. repeat split; assumption.
+  intros.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply memmove_avx_welltyped. intro MDL1.
+  clear - PRE MDL1 DS OV SW NS NW BIG THR1 NB DSN. rename t1 into t.
+  destruct_inv 64 PRE.
+  - (* entry *)
+    idtac "BEGIN entry".
+    destruct PRE as [MEM [D [S [Nn [RSP DF]]]]].
+    clear DS OV SW NS NW DSN.
+    repeat x64_step.
+    all: try (set (T := m Ⓠ[0x31a3f8]) in *; clearbody T).
+    all: try (match goal with |- False => idtac | |- nextinv _ _ _ _ _ => idtac end; bc_norm; refute BIG).
+    all: try (match goal with |- False => idtac end;
+              bc_norm; first [discriminate | refute THR1 | exfalso; nlia]).
+    all: repeat split; reflexivity || assumption.
+  - (* forward loop body *)
+    idtac "BEGIN forward loop body".
+    destruct PRE as [k [K [C [RDI [RSI [RDX [RCX [RAX [RSP [Y0 [Y5 [Y6 [Y7 Y8]]]]]]]]]]]]].
+    clear THR1.
+    repeat x64_step.
+    all: change (2^7) with 128 in *.
+    all: assert (E1: 128 + d ⊕ k = d + k + 128) by (clear - K NW BIG; rewrite N.mod_small by lia; lia).
+    all: assert (E2: d + n - 128 ⊖ 128 ⊖ d = n - 256) by
+           (clear - BIG NW; rewrite (msub_sub 64 (d + n - 128) 128) by lia;
+            rewrite (N.mod_small (d + n - 128 - 128)) by lia;
+            rewrite (msub_sub 64 (d + n - 128 - 128) d) by lia; rewrite N.mod_small by lia; lia).
+    all: rewrite E1, E2, (N.mod_small k) in BC by (clear - K NW BIG; lia).
+    all: pose proof (a0_bounds d) as A0.
+    + (* loop exit (JA not taken): store the saved tail and head, then return *)
+      apply ja_not_taken in BC.
+      assert (EX: n <= k + 256).
+      { clear - BC K BIG NW. destruct BC as [B|B]; [apply N.ltb_lt in B | apply N.eqb_eq in B]; lia. }
+      split; [assumption|]. split; [assumption|].
+      eapply cpy_copied; cycle 1.
+      { eapply (cpy_store _ _ _ _ _ 0); [eapply (cpy_store _ _ _ _ _ (n - 128));
+          [eapply (cpy_store _ _ _ _ _ (n - 96)); [eapply (cpy_store _ _ _ _ _ (n - 64));
+           [eapply (cpy_store _ _ _ _ _ (n - 32)); [eapply (ofw_store4 _ _ _ _ n k _ k (k+32) (k+64) (k+96)); [exact C|..]|..]|..]|..]|..]|..].
+        all: first [exact DS | exact SW | assumption | clear - K EX BIG NW NB A0; aside]. }
+      intro i. clear - A0 K EX BIG. split; intro H; [repeat destruct H as [H|H]; lia | lia].
+    + (* next iteration (JA taken) *)
+      apply ja_taken in BC. destruct BC as [B1 B2]. apply N.ltb_ge in B1. apply N.eqb_neq in B2.
+      assert (CT: k + 256 < n) by (clear - B1 B2 K BIG NW; lia).
+      exists (k + 128). split. clear - K CT A0; lia. split.
+      { eapply cpy_equiv; [|eapply (ofw_store4 _ _ _ _ n k _ k (k+32) (k+64) (k+96)); [exact C|..]].
+        intro i. clear - A0 K CT. split; intro H; [repeat destruct H as [H|H]; lia | lia].
+        all: first [exact DS | exact SW | assumption | clear - K CT BIG NW NB A0; aside]. }
+      split. rewrite E1. clear; lia. split. f_equal. clear; lia. split. reflexivity.
+      repeat split; try assumption.
+      all: match goal with H: ?r = _ |- ?r = _ => rewrite H; apply getmem_mod_l end.
+  - (* REP MOVSB, site A *)
+    idtac "BEGIN REP MOVSB, site A".
+    destruct PRE as [k [K [RCX [RDI [RSI [R8 [RAX [DF [RSP [Y0 [Y1 C]]]]]]]]]]].
+    eapply NIStep; [reflexivity|reflexivity|]. intros c0 s0 x XS. step_stmt XS.
+    destruct (n - aA s - k =? 0) eqn:BC.
+    all: destruct XS as [XS _].
+    all: repeat (ISA_step_and_simplify XS).
+    all: destruct XS as [XS ?]; subst x; rewrite XS; clear XS; try clear s0; try rewrite exitof_some.
+    all: repeat x64_step.
+    all: pose proof (aA_bounds s) as A1.
+    + rep_exit C DS NB BIG K BC A1.
+    + orp_iter (aA s) k n C DS SW NB BIG K BC A1.
+  - (* dispatch *)
+    idtac "BEGIN dispatch".
+    destruct PRE as [MEM [D [S [Nn [RSP [RAX [DF Y0]]]]]]].
+    repeat (x64_step;
+      try solve [set (T := m Ⓠ[0x3215a0]) in *; clearbody T;
+        set (U := m Ⓠ[0x31a3f8]) in *; clearbody U;
+        bc_norm; first [refute DSN | refute THR1]]).
+    all: set (T := m Ⓠ[0x3215a0]) in *; clearbody T.
+    all: set (U := m Ⓠ[0x31a3f8]) in *; clearbody U.
+    all: try solve [repeat split; first [sassumption | sreflexivity]].
+    all: try (match goal with |- False => idtac end; bc_norm; first [refute DSN | refute THR1]).
+    all: change (2^7) with 128.
+    all: pose proof (N.mod_lt d 64 ltac:(discriminate)) as DM; pose proof (N.mod_le d 64 ltac:(discriminate)) as DL.
+    all: pose proof (N.mod_lt s 64 ltac:(discriminate)) as SM; pose proof (N.mod_le s 64 ltac:(discriminate)) as SL.
+    all: pose proof (aA_bounds s) as AA; pose proof (aB_bounds d) as AB; pose proof (alignup64 d) as AU.
+    all: try (exists 0;
+      split; [clear - AA AB BIG; lia|];
+      split; [rep_arith NW SW NB BIG AA AB DM DL SM SL AU|];
+      split; [rep_arith NW SW NB BIG AA AB DM DL SM SL AU|];
+      split; [rep_arith NW SW NB BIG AA AB DM DL SM SL AU|];
+      do 4 (split; [assumption || reflexivity|]);
+      split; [assumption|]; split; [reflexivity|];
+      eapply cpy_equiv; [|apply cpy_empty]; intro i; clear; split; [intros []|intro H; lia]).
+    all: match goal with |- ?G => idtac "DISPATCH REMAIN" G end.
+    (* the short-distance fallback: the forward loop, k = a0 d *)
+    assert (DB: d + 32 < 2^64) by (clear - NW BIG; change (2^64) with 18446744073709551616 in *; lia).
+    pose proof (N.mod_lt d 32 ltac:(discriminate)) as DM32; pose proof (N.mod_le d 32 ltac:(discriminate)) as DL32.
+    pose proof (a0_bounds d) as A0.
+    exists (a0 d).
+    split. clear - A0 BIG; lia.
+    split. { eapply cpy_equiv; [|apply cpy_empty]. intro i. clear. split; [intros []|intro H; lia]. }
+    split. { rewrite lor31, N.mod_small; [unfold a0; clear - DM32 DL32; lia|].
+             clear - DB DM32 DL32. change (2^64) with 18446744073709551616 in *. lia. }
+    split. { unfold msub. rewrite lor31. rewrite ?N.add_mod_idemp_l, ?N.add_mod_idemp_r by discriminate.
+             rewrite (N.mod_small d) by (clear - DB; lia).
+             match goal with |- ?a mod _ = ?b mod _ =>
+               replace a with (b + 1 * 2^64) by (unfold a0; clear - DB DM32 DL32; change (2^64) with 18446744073709551616 in *; lia) end.
+             apply N.mod_add. discriminate. }
+    split. { unfold msub. rewrite N.add_mod_idemp_l by discriminate.
+             change (128 mod 2^64) with 128.
+             replace (d + (2^64 - 128) + n) with (d + n - 128 + 1 * 2^64)
+               by (clear - NW BIG; change (2^64) with 18446744073709551616 in *; lia).
+             rewrite N.mod_add by discriminate. apply N.mod_small. clear - NW BIG; change (2^64) with 18446744073709551616 in *; lia. }
+    do 2 (split; [reflexivity|]).
+    do 2 (split; [assumption|]).
+    repeat split; apply getmem_addr; apply addr_tail_w; clear - BIG; lia.
+  - (* REP MOVSB, site B *)
+    idtac "BEGIN REP MOVSB, site B".
+    destruct PRE as [k [K [RCX [RDI [RSI [R8 [RAX [DF [RSP [Y0 [Y1 C]]]]]]]]]]].
+    eapply NIStep; [reflexivity|reflexivity|]. intros c0 s0 x XS. step_stmt XS.
+    destruct (n - aB d - k =? 0) eqn:BC.
+    all: destruct XS as [XS _].
+    all: repeat (ISA_step_and_simplify XS).
+    all: destruct XS as [XS ?]; subst x; rewrite XS; clear XS; try clear s0; try rewrite exitof_some.
+    all: repeat x64_step.
+    all: pose proof (aB_bounds d) as A1.
+    + rep_exit C DS NB BIG K BC A1.
+    + orp_iter (aB d) k n C DS SW NB BIG K BC A1.
+  - (* stop-threshold fallback: 813 NEG; 816 CMP; 819 JA to 363 *)
+    idtac "BEGIN stop-threshold fallback: 813 NEG; 816 CMP; 819 JA to 363".
+    destruct PRE as [MEM [D [S [Nn [RSP [RAX [Y0 RCX]]]]]]].
+    assert (SB: s < 2^64) by (clear - SW BIG; lia).
+    assert (GAP: s-d < n) by (clear - DS OV; lia).
+    repeat x64_step.
+    all: rewrite ?(orp_neg_distance d s DS SB) in *.
+    all: try (match goal with |- False => idtac end;
+              bc_norm; first [discriminate | refute GAP]).
+    all: change (2^7) with 128.
+  assert (DB: d + 32 < 2^64) by (clear - NW BIG; change (2^64) with 18446744073709551616 in *; lia).
+    pose proof (N.mod_lt d 32 ltac:(discriminate)) as DM32; pose proof (N.mod_le d 32 ltac:(discriminate)) as DL32.
+    pose proof (a0_bounds d) as A0.
+    exists (a0 d).
+    split. clear - A0 BIG; lia.
+    split. { eapply cpy_equiv; [|apply cpy_empty]. intro i. clear. split; [intros []|intro H; lia]. }
+    split. { rewrite lor31, N.mod_small; [unfold a0; clear - DM32 DL32; lia|].
+             clear - DB DM32 DL32. change (2^64) with 18446744073709551616 in *. lia. }
+    split. { unfold msub. rewrite lor31. rewrite ?N.add_mod_idemp_l, ?N.add_mod_idemp_r by discriminate.
+             rewrite (N.mod_small d) by (clear - DB; lia).
+             match goal with |- ?a mod _ = ?b mod _ =>
+               replace a with (b + 1 * 2^64) by (unfold a0; clear - DB DM32 DL32; change (2^64) with 18446744073709551616 in *; lia) end.
+             apply N.mod_add. discriminate. }
+    split. { unfold msub. rewrite N.add_mod_idemp_l by discriminate.
+             change (128 mod 2^64) with 128.
+             replace (d + (2^64 - 128) + n) with (d + n - 128 + 1 * 2^64)
+               by (clear - NW BIG; change (2^64) with 18446744073709551616 in *; lia).
+             rewrite N.mod_add by discriminate. apply N.mod_small. clear - NW BIG; change (2^64) with 18446744073709551616 in *; lia. }
+    do 2 (split; [reflexivity|]).
+    do 2 (split; [assumption|]).
+    repeat split; apply getmem_addr; apply addr_tail_w; clear - BIG; lia.
+Time Qed.
+
+Theorem memmove_avx_rep_overlap_at_ret:
+  forall st t st' a m d s n rsp,
+  In a [493;692;794] ->
+  startof t (Addr a,st') = (Addr 0,st) -> models x64typctx st ->
+  st V_MEM64=m -> st R_RDI=d -> st R_RSI=s -> st R_RDX=n -> st R_RSP=rsp ->
+  st R_DF=0 -> orp_path m d s n ->
+  exec_prog memmove_avx_amd64 ((Addr a,st')::t) -> unterminated orp_exit t ->
+  orp_postcondition m d s n rsp st' /\ orp_frame st st'.
+Proof.
+  intros st t st' a m d s n rsp RET ENTRY MDL MEM D S NN SP DF
+    [BIG [NS [DS [OV [SW T1]]]]] XP UT.
+  split.
+  - pose proof (memmove_avx_correct_rep_overlap st t st' (Addr a)
+      m d s n rsp ENTRY MDL MEM D S NN SP DF DS OV SW NS BIG T1) as SAT.
+    repeat destruct RET as [<-|RET]; try contradiction;
+      exact (satall_trueif_inv _ _ _ _ SAT XP UT).
+  - exact (orp_preserves_callee_saved t (Addr 0) st (Addr a) st' XP ENTRY).
+Qed.
+
+(* Typed entries for every gap 1..8191, both policy values, and either
+   stop-threshold direction. No oracle/callee contract is introduced. *)
+Definition orp_witness_memory (policy stop:N) :=
+  setmem 64 LittleE 4
+    (setmem 64 LittleE 8 (setmem 64 LittleE 8 0 0x31a3f8 256)
+      0x3215a0 stop) 0x321598 policy.
+Definition orp_witness_store (gap policy stop:N) : store := fun v =>
+  match v with
+  | V_MEM64 => orp_witness_memory policy stop
+  | R_RDI => 4096 | R_RSI => 4096+gap | R_RDX => 8192 | R_RSP => 32768
+  | _ => 0 end.
+Lemma orp_witness_globals: forall policy stop,
+  policy < 2^32 -> stop < 2^64 ->
+  orp_witness_memory policy stop Ⓠ[0x31a3f8] = 256 /\
+  orp_witness_memory policy stop Ⓠ[0x3215a0] = stop /\
+  getmem 64 LittleE 4 (orp_witness_memory policy stop) 0x321598 = policy.
+Proof.
+  intros policy stop PB SB. unfold orp_witness_memory.
+  split.
+  - rewrite getmem_frame; [|left; vm_compute; discriminate|left; vm_compute; discriminate].
+    rewrite getmem_frame; [|left; vm_compute; discriminate|left; vm_compute; discriminate].
+    rewrite getmem_setmem by discriminate. reflexivity.
+  - split.
+    + rewrite getmem_frame; [|left; vm_compute; discriminate|left; vm_compute; discriminate].
+      rewrite getmem_setmem by discriminate. apply N.mod_small. exact SB.
+    + rewrite getmem_setmem by discriminate. apply N.mod_small. exact PB.
+Qed.
+Theorem orp_entry_satisfiable:
+  forall gap policy stop, 0 < gap < 8192 -> policy < 2^32 -> stop < 2^64 ->
+  exists st m, models x64typctx st /\ orp_path m 4096 (4096+gap) 8192 /\
+    st V_MEM64=m /\ st R_RDI=4096 /\ st R_RSI=4096+gap /\
+    st R_RDX=8192 /\ st R_RSP=32768 /\ st R_DF=0 /\
+    m Ⓠ[0x3215a0]=stop /\ getmem 64 LittleE 4 m 0x321598=policy.
+Proof.
+  intros gap policy stop GAP PB SB.
+  exists (orp_witness_store gap policy stop), (orp_witness_memory policy stop).
+  destruct (orp_witness_globals policy stop PB SB) as [T1 [T3 P]].
+  split.
+  - intros v w CV. destruct v; cbn [x64typctx] in CV;
+      inversion CV; subst; cbn [orp_witness_store].
+    all: lazymatch goal with
+      | |- orp_witness_memory _ _ < _ =>
+          unfold orp_witness_memory; change (2^(8*2^64)) with (memsize 64);
+          apply typesafe_setmem, typesafe_setmem, typesafe_setmem;
+          change (0 < 2^(2^64*8)); apply mp2_gt_0
+      | |- _ => first [apply mp2_gt_0 |
+          clear - GAP; change (2^64) with 18446744073709551616; lia]
+      end.
+  - split.
+    + unfold orp_path. rewrite T1. clear - GAP.
+      change (2^64) with 18446744073709551616;
+      change (2^63) with 9223372036854775808; repeat split; lia.
+    + repeat split; first [reflexivity | exact T3 | exact P].
+Qed.
+Corollary orp_critical_distances:
+  forall gap policy stop,
+  In gap [1;31;32;63;127;4096] -> In policy [0;1] -> In stop [0;16384] ->
+  exists st m, models x64typctx st /\ orp_path m 4096 (4096+gap) 8192 /\
+    st V_MEM64=m /\ st R_RDI=4096 /\ st R_RSI=4096+gap /\
+    st R_RDX=8192 /\ st R_RSP=32768 /\ st R_DF=0 /\
+    m Ⓠ[0x3215a0]=stop /\ getmem 64 LittleE 4 m 0x321598=policy.
+Proof.
+  intros gap policy stop G P T. apply orp_entry_satisfiable.
+  - repeat destruct G as [<-|G]; try (split; reflexivity); contradiction.
+  - repeat destruct P as [<-|P]; try reflexivity; contradiction.
+  - repeat destruct T as [<-|T]; try reflexivity; contradiction.
+Qed.
