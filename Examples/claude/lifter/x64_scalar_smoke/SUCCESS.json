@@ -1,0 +1,127 @@
+{
+  "source_kind": "glibc",
+  "elf_sha256": "9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9",
+  "debug_sha256": "10e200b6bb67e1697e1c924d7fe65f55d358e9e049c6bf9ec1e0151e5e25f450",
+  "image_base": "0x100000",
+  "language": "x86:LE:64:default",
+  "addressing": "global",
+  "profile": "cet-disabled",
+  "direct_edges": [
+    {
+      "site": "0x145dd8",
+      "target": "0x145ddb",
+      "kind": "CBRANCH"
+    },
+    {
+      "site": "0x145dea",
+      "target": "0x145dee",
+      "kind": "CBRANCH"
+    }
+  ],
+  "records": [
+    {
+      "symbol": "toascii",
+      "elf_entry": "0x3a170",
+      "entry": "0x13a170",
+      "size": 10,
+      "bytes_sha256": "07d5306d9f9696a8fa52acee06b145007079a4e630498808e146201f467f98ef",
+      "instructions": 4,
+      "selected_symbols": [
+        "toascii",
+        "isascii",
+        "abs",
+        "labs",
+        "pthread_equal"
+      ],
+      "output": "e25_toascii_amd64.v",
+      "output_sha256": "2a66e57f438ec4e263740ef155829a641f220d46ab9bd8aaaa5320601c3c81ea",
+      "pcode_sha256": "ec71feb5c2e52131978f73a18e8142240fc182ce986e68ae3917df31c4919136"
+    },
+    {
+      "symbol": "isascii",
+      "elf_entry": "0x3a180",
+      "entry": "0x13a180",
+      "size": 13,
+      "bytes_sha256": "0d11ba11e1a141b7ca4d8fcf65e91a34231f6ad7863426aff07641911c43e1ce",
+      "instructions": 5,
+      "selected_symbols": [
+        "toascii",
+        "isascii",
+        "abs",
+        "labs",
+        "pthread_equal"
+      ],
+      "output": "e25_isascii_amd64.v",
+      "output_sha256": "4a79bd51c87de0731b2f36e6d2e261c33bbfafd2d077867840b15865ec1475d9",
+      "pcode_sha256": "1a3c529e68d593b8aadbf3100104f8a712f9cab8583937160b90b480700227bc"
+    },
+    {
+      "symbol": "abs",
+      "elf_entry": "0x45dd0",
+      "entry": "0x145dd0",
+      "size": 12,
+      "bytes_sha256": "d1d230131d63336fa6512b99eaf7bbcf0a093fdbe34b196ab87a8bbe9f9fd416",
+      "instructions": 5,
+      "selected_symbols": [
+        "toascii",
+        "isascii",
+        "abs",
+        "labs",
+        "pthread_equal"
+      ],
+      "output": "e25_abs_amd64.v",
+      "output_sha256": "a3c513de16ad7c032c722300d8d916d6669450d942765cebf23971680b78368c",
+      "pcode_sha256": "8730289ac07531234e8a29d16ba72aa6dc34196b3d081ec0df94b63d5b77f811"
+    },
+    {
+      "symbol": "labs",
+      "elf_entry": "0x45de0",
+      "entry": "0x145de0",
+      "size": 15,
+      "bytes_sha256": "33bc55259c7e317c8370c226e034a98676cdb0778dbd536e269c9af2cb75c5f2",
+      "instructions": 5,
+      "selected_symbols": [
+        "toascii",
+        "isascii",
+        "abs",
+        "labs",
+        "pthread_equal"
+      ],
+      "output": "e25_labs_amd64.v",
+      "output_sha256": "82cca87adada87d5606e33f8579b45141dd6d547c5067ee55e44353f5c29fc04",
+      "pcode_sha256": "e2e004f65e931baf1b8302d61af7f541cbfac45d7701e1ad59c43c23a860aac2"
+    },
+    {
+      "symbol": "pthread_equal",
+      "elf_entry": "0x95c70",
+      "entry": "0x195c70",
+      "size": 13,
+      "bytes_sha256": "0e734c6bc10aa173b672922084e043117f5f2c1edc02ab6cda88708a277f7534",
+      "instructions": 5,
+      "selected_symbols": [
+        "toascii",
+        "isascii",
+        "abs",
+        "labs",
+        "pthread_equal"
+      ],
+      "output": "e25_pthread_equal_amd64.v",
+      "output_sha256": "8a24aa96e5a3eeba6a9c84573609827459285252d35956d1b160a7deb136ae3c",
+      "pcode_sha256": "83185331a6c3da6a3174a925c645efc1935510ceb44f44f6e50be32285ba3528"
+    }
+  ],
+  "isa_sha256": {
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.sla": "4d3ebe1ebf0b127dc5bd187979824b850fc94081e6660021e2bda834e7400504",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.slaspec": "9d66a01a4219ab0bee0697caf2d1ee389e094e927a857299cebb6182e40a4e6e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.pspec": "3c3dab75a2ac0b98b0552856f690e613d661e0df7cf94d6252e5604d9821629f",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64-gcc.cspec": "5eaa848f3eba7ebd4023541f9f37645dae077e8426fb562592f398d599530a9e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86.ldefs": "b2aa14d94a6162844b18bf47f2aed8579bf90cef3459f6e322b9c1f58146098b",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/ia.sinc": "8fbb244f7fc88be621b95f435b6e958c6a55819dd5b935242377bb2a7e2b9b76"
+  },
+  "implementation_sha256": {
+    "pcode2coq_x64.py": "87750d6653110df94a22c8645891502aedcd5347bb252b2a19a3d5afdb00f90a",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "x64_headless.py": "ea957d6ce1d04b168e3e595501c3bef56674065e36d661d14f403144155a2b83",
+    "lift-x64.py": "ba87a57b00c9f5b88cf47a0c8f0b9e6586e0cc2e9022f249085d1f561d12844a"
+  }
+}

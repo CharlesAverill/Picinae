@@ -1,0 +1,13 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-09baf102
+COMMAND=bash notes/e28-x86-bitscan-lowering/reproduce.sh --update
+PASS 3 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/replay.F6h0mPUC/glibc
+Ghidra log: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/logs/c110d9010ca0402083f36997c7f5b5c6.log
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/replay.F6h0mPUC/hot
+Ghidra log: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/logs/856443d9f9d142238bcdeb8c4860c260.log
+PASS 16 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/replay.F6h0mPUC/fixture
+Ghidra log: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/logs/4141adab041a42e7bca8672634396402.log
+PASS 4 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/replay.F6h0mPUC/fallback
+Ghidra log: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/logs/54a3d6c804064bbd80d8158e726d0344.log
+PASS complete deterministic bit-scan artifact sets --update
+
+EXIT_CODE=0
