@@ -1,7 +1,7 @@
 (* Forward overlap above the starting NT-policy threshold.
    Initial author: OpenAI gpt-6-astra, xhigh/default.
-   Status: PARTIAL; first full build failed at ofnt_negative_gap.
-   Final proof producer: none. Main theorems below are aborted, not certified.
+   Status: PARTIAL; validation stopped on Charles's wrap-up order.
+   Final proof producer: none; unvalidated repair bodies archived separately.
    Binary: /lib/x86_64-linux-gnu/libc.so.6, Ubuntu amd64 glibc 2.35-0ubuntu3.12,
    SHA256 9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9.
    __memmove_avx_unaligned_erms: Ghidra 0x2a0840, image base 0x100000.
@@ -95,8 +95,8 @@ Qed.
 Lemma ofnt_negative_gap:
   forall d s, d < s -> s < 2^64 -> msub 64 0 (d ⊖ s) = s-d.
 Proof.
-  (* PARTIAL: exact initial proof and first-build diagnostics are archived
-     under notes/x10-avx-forward-nt-policy/. No Astra repair cycle. *)
+  (* WIP: repair archived in notes/x10-avx-forward-nt-policy-fix/stopped-repair.v.txt;
+     validation stopped on Charles's order before the full target completed. *)
 Abort.
 
 Theorem memmove_avx_correct_forward_nt_policy:
@@ -108,8 +108,8 @@ Theorem memmove_avx_correct_forward_nt_policy:
          (THR1: n <= m Ⓠ[0x31a3f8]) (THR2: m Ⓠ[0x3215a8] < n),
   satisfies_all memmove_avx_amd64 (ofnt_invs m d s n rsp) ofnt_exit ((x',s')::t).
 Proof.
-  (* PARTIAL: exact initial proof and first-build diagnostics are archived
-     under notes/x10-avx-forward-nt-policy/. No Astra repair cycle. *)
+  (* WIP: repair archived in notes/x10-avx-forward-nt-policy-fix/stopped-repair.v.txt;
+     validation stopped on Charles's order before the full target completed. *)
 Abort.
 
 Theorem memmove_avx_forward_nt_policy_at_ret:
@@ -120,8 +120,8 @@ Theorem memmove_avx_forward_nt_policy_at_ret:
   unterminated ofnt_exit t ->
   ofnt_postcondition m d s n rsp st' /\ ofnt_frame st st'.
 Proof.
-  (* PARTIAL: exact initial proof and first-build diagnostics are archived
-     under notes/x10-avx-forward-nt-policy/. No Astra repair cycle. *)
+  (* WIP: repair archived in notes/x10-avx-forward-nt-policy-fix/stopped-repair.v.txt;
+     validation stopped on Charles's order before the full target completed. *)
 Abort.
 
 (* Nonvacuity: a typed entry for EVERY positive distance below 512, including
@@ -139,8 +139,8 @@ Lemma ofnt_witness_thresholds:
   ofnt_witness_memory Ⓠ[0x31a3f8] = 512 /\
   ofnt_witness_memory Ⓠ[0x3215a8] = 511.
 Proof.
-  (* PARTIAL: exact initial proof and first-build diagnostics are archived
-     under notes/x10-avx-forward-nt-policy/. No Astra repair cycle. *)
+  (* WIP: repair archived in notes/x10-avx-forward-nt-policy-fix/stopped-repair.v.txt;
+     validation stopped on Charles's order before the full target completed. *)
 Abort.
 
 Theorem ofnt_entry_satisfiable:
@@ -149,8 +149,8 @@ Theorem ofnt_entry_satisfiable:
     st V_MEM64=m /\ st R_RDI=4096 /\ st R_RSI=4096+gap /\
     st R_RDX=512 /\ st R_RSP=8192.
 Proof.
-  (* PARTIAL: exact initial proof and first-build diagnostics are archived
-     under notes/x10-avx-forward-nt-policy/. No Astra repair cycle. *)
+  (* WIP: repair archived in notes/x10-avx-forward-nt-policy-fix/stopped-repair.v.txt;
+     validation stopped on Charles's order before the full target completed. *)
 Abort.
 
 Corollary ofnt_critical_distances:
@@ -159,6 +159,6 @@ Corollary ofnt_critical_distances:
     st V_MEM64=m /\ st R_RDI=4096 /\ st R_RSI=4096+gap /\
     st R_RDX=512 /\ st R_RSP=8192.
 Proof.
-  (* PARTIAL: exact initial proof and first-build diagnostics are archived
-     under notes/x10-avx-forward-nt-policy/. No Astra repair cycle. *)
+  (* WIP: repair archived in notes/x10-avx-forward-nt-policy-fix/stopped-repair.v.txt;
+     validation stopped on Charles's order before the full target completed. *)
 Abort.
