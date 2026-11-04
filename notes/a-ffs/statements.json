@@ -1,0 +1,66 @@
+[
+  {
+    "name": "ffs_nwc",
+    "statement": "Theorem ffs_nwc: forall s2 s1, e11_ffs_arm8 s1 = e11_ffs_arm8 s2."
+  },
+  {
+    "name": "ffs_welltyped",
+    "statement": "Theorem ffs_welltyped: welltyped_prog arm8typctx e11_ffs_arm8."
+  },
+  {
+    "name": "ffs_preserves_memory",
+    "statement": "Theorem ffs_preserves_memory:\n  forall_endstates e11_ffs_arm8 (fun _ s _ s' => s V_MEM64 = s' V_MEM64)."
+  },
+  {
+    "name": "ffs_preserves_callee_saved",
+    "statement": "Theorem ffs_preserves_callee_saved:\n  forall v, In v [R_X19; R_X20; R_X21; R_X22; R_X23; R_X24; R_X25;\n    R_X26; R_X27; R_X28; R_X29; R_X30; R_SP; R_LR;\n    R_Z8; R_Z9; R_Z10; R_Z11; R_Z12; R_Z13; R_Z14; R_Z15] ->\n  forall_endstates e11_ffs_arm8 (fun _ s _ s' => s v = s' v)."
+  },
+  {
+    "name": "ffs_return_cut",
+    "statement": "Theorem ffs_return_cut: forall s a,\n  a = 52 \\/ a = 96 ->\n  e11_ffs_arm8 s a = Some (4, Move R_PC (Var R_X30) $; Jmp (Var R_PC))."
+  },
+  {
+    "name": "ffs_lowest_set_bit",
+    "statement": "Lemma ffs_lowest_set_bit:\n  forall n x, x < 2^n -> x <> 0 ->\n  exists k, k < n /\\ N.testbit x k = true /\\\n    forall j, j < k -> N.testbit x j = false."
+  },
+  {
+    "name": "ffs_isolate",
+    "statement": "Lemma ffs_isolate: forall x k,\n  x < 2^32 -> k < 32 -> N.testbit x k = true ->\n  (forall j, j < k -> N.testbit x j = false) ->\n  (msub 32 0 x) .& x = 2^k."
+  },
+  {
+    "name": "ffs_spec_satisfiable",
+    "statement": "Theorem ffs_spec_satisfiable: forall x, x < 2^32 -> exists r, ffs_spec x r."
+  },
+  {
+    "name": "ffs_isolation_spec",
+    "statement": "Lemma ffs_isolation_spec: forall x, x < 2^32 ->\n  exists r, ffs_spec x r /\\ r <= 32 /\\\n    (msub 32 0 x) .& x = (if r =? 0 then 0 else 2^(r-1))."
+  },
+  {
+    "name": "ffs_table_bytes_correct",
+    "statement": "Lemma ffs_table_bytes_correct: forall i, i < 256 ->\n  xbits ffs_table_bytes (i*8) ((i+1)*8) = N.size i."
+  },
+  {
+    "name": "ffs_table_satisfiable",
+    "statement": "Theorem ffs_table_satisfiable: ffs_table ffs_table_memory."
+  },
+  {
+    "name": "ffs_table_memory_bound",
+    "statement": "Lemma ffs_table_memory_bound: ffs_table_memory < 2^(8*2^64)."
+  },
+  {
+    "name": "ffs_entry_satisfiable",
+    "statement": "Theorem ffs_entry_satisfiable: forall u, u < 2^64 ->\n  exists s P, models arm8typctx s /\\ s R_X0 = u /\\\n    ffs_invs (u mod 2^32) 0 0 ffs_table_memory [(Addr 0,s)] = Some P /\\ P /\\\n    (forall a, a < 2^64 -> mem_readable s a)."
+  },
+  {
+    "name": "ffs_correct",
+    "statement": "Theorem ffs_correct:\n  forall s t s' x' x sp lr m\n    (ENTRY: startof t (x',s') = (Addr 0,s))\n    (MDL: models arm8typctx s)\n    (X: s R_X0 mod 2^32 = x) (SP: s R_SP = sp)\n    (LR: s R_X30 = lr) (MEM: s V_MEM64 = m) (TABLE: ffs_table m),\n  satisfies_all e11_ffs_arm8 (ffs_invs x sp lr m) ffs_exit ((x',s')::t)."
+  },
+  {
+    "name": "ffs_return_guard_satisfiable",
+    "statement": "Theorem ffs_return_guard_satisfiable: ffs_return_guard 100."
+  },
+  {
+    "name": "ffs_guarded_return",
+    "statement": "Theorem ffs_guarded_return:\n  forall a s q c s' e x sp lr m,\n  (a = 52 \\/ a = 96) -> e11_ffs_arm8 s a = Some (4,q) ->\n  postcondition x sp lr m s -> ffs_return_guard lr ->\n  exec_stmt arm8typctx s q c s' e ->\n  e = Some (Addr lr) /\\ postcondition x sp lr m (reset_temps s s') /\\\n  e11_ffs_arm8 (reset_temps s s') lr = None."
+  }
+]
