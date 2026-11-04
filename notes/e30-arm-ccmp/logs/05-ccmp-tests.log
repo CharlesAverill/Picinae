@@ -1,0 +1,15 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9d096d
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 tools/ghidra-lifter/test_ccmp.py
+test_actual_forms (__main__.Tests.test_actual_forms) ... ok
+test_cfg_scope (__main__.Tests.test_cfg_scope) ... ok
+test_malformed (__main__.Tests.test_malformed) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 27.343s
+
+OK
+PASS 339 actual encoding/pcode shapes; 81360 architectural/scratch register snapshots
+PASS CFG gate: only exact CCMP next-instruction compare suffix accepted
+PASS 65336 malformed encoding/DAG/branch/width/arity/output mutations rejected
+
+EXIT_CODE=0

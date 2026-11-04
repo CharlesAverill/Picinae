@@ -1,0 +1,19 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ba9de42a
+COMMAND=python3 notes/a-memchr-nosimd/check-statements.py
+UNCHANGED STATEMENT mc_nwc
+UNCHANGED STATEMENT mc_welltyped
+UNCHANGED STATEMENT mc_preserves_memory
+UNCHANGED STATEMENT mc_preserves_saved
+UNCHANGED STATEMENT mc_preserves_frame
+UNCHANGED STATEMENT mc_frame_refl
+UNCHANGED STATEMENT mc_zero_result
+UNCHANGED STATEMENT mc_null_iff
+UNCHANGED STATEMENT mc_witness_typed
+UNCHANGED STATEMENT mc_entry_inhabited
+UNCHANGED STATEMENT mc_zero_entry_inhabited
+UNCHANGED STATEMENT mc_all_alignments_inhabited
+UNCHANGED STATEMENT mc_detector_correct
+UNCHANGED STATEMENT memchr_nosimd_correct
+Only failed/unattempted proof bodies were replaced by Abort; no statement or definition change.
+
+EXIT_CODE=0

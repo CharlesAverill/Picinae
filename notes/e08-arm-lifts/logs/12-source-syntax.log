@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-746dec47
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 -c import\ ast\,pathlib\;\ files=list\(pathlib.Path\(\"notes/e08-arm-lifts\"\).glob\(\"\*.py\"\)\)\;\ \[ast.parse\(p.read_text\(\)\)\ for\ p\ in\ files\]\;\ print\(\"PASS\ syntax\"\,len\(files\)\,\"stdlib\ harness\ scripts\"\)
+PASS syntax 5 stdlib harness scripts
+
+EXIT_CODE=0

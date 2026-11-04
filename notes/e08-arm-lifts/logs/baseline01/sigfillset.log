@@ -1,0 +1,4 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/baseline01/sigfillset", "sigfillset"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigfillset 0x13b290 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/a8379c7151844f188cc19a6867fbf091.log
+
+EXIT_CODE=1

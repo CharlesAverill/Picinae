@@ -1,0 +1,67 @@
+[
+  {
+    "symbol": "toascii",
+    "instructions": 2,
+    "identical_ast": 2,
+    "different_addresses": [],
+    "samples_per_instruction": 128
+  },
+  {
+    "symbol": "div",
+    "instructions": 7,
+    "identical_ast": 6,
+    "different_addresses": [
+      "0x8"
+    ],
+    "samples_per_instruction": 128
+  },
+  {
+    "symbol": "ldiv",
+    "instructions": 4,
+    "identical_ast": 3,
+    "different_addresses": [
+      "0x4"
+    ],
+    "samples_per_instruction": 128
+  },
+  {
+    "symbol": "swab",
+    "instructions": 13,
+    "identical_ast": 11,
+    "different_addresses": [
+      "0x4",
+      "0x10"
+    ],
+    "samples_per_instruction": 128
+  },
+  {
+    "symbol": "ffs",
+    "instructions": 25,
+    "identical_ast": 17,
+    "different_addresses": [
+      "0xc",
+      "0x14",
+      "0x20",
+      "0x30",
+      "0x3c",
+      "0x48",
+      "0x50",
+      "0x5c"
+    ],
+    "samples_per_instruction": 128
+  },
+  {
+    "symbol": "ffsl",
+    "instructions": 18,
+    "identical_ast": 12,
+    "different_addresses": [
+      "0x10",
+      "0x1c",
+      "0x24",
+      "0x34",
+      "0x3c",
+      "0x40"
+    ],
+    "samples_per_instruction": 128
+  }
+]
