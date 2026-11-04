@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-f5cd5d9c
+COMMAND=bash --noprofile --norc -e -c cmp\ Examples/FreeRTOS/armv6m_xTaskGetTickCount_proof.v\ notes/r08-tick-count/initial-attempt.v.txt\;\ sha256sum\ Examples/FreeRTOS/armv6m_xTaskGetTickCount_proof.v\ Examples/FreeRTOS/xTaskGetTickCount_armv6m.v\ dune\;\ git\ diff\ --check\;\ test\ -s\ _build/default/Examples/FreeRTOS/armv6m_xTaskGetTickCount_proof.vo
+c3d07bd91e7618ebe07e4af5b0422f888d5404b9089d2d53176d7d76e0e90831  Examples/FreeRTOS/armv6m_xTaskGetTickCount_proof.v
+68aff25ab81b55dd8c885e4ac56056074634de87dfaf8d64edb9477e8d6c40e9  Examples/FreeRTOS/xTaskGetTickCount_armv6m.v
+8e7830378957fede7522070b992303226640dab5afa623164de212662102dc40  dune
+
+EXIT_CODE=0
