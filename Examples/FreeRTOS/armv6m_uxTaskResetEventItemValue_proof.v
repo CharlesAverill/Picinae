@@ -1,6 +1,8 @@
-(* PARTIAL: initial full build exhausted the assigned memory cap.
-   Every theorem attempt below is aborted, not exported. Exact initial proofs:
-   notes/r13-reset-event/initial-attempt.v.txt. No Astra repair cycle was run. *)
+(* PARTIAL Sol continuation: witness tactic repaired; full target checking
+   stopped on Charles's wrap-up order during reset_event_correct. No unit .vo
+   or transitive assumptions certificate exists. Remaining statements are
+   preserved as Abort; exact attempted proofs are in
+   notes/r13-reset-event-fix/attempt-02.v.txt. *)
 
 (* uxTaskResetEventItemValue -- ARMv6-M Cortex-M0 sequential IL contract.
 
@@ -78,13 +80,13 @@ Definition reset_event_permitted (s:store) : Prop :=
 
 Theorem reset_event_nwc : forall s2 s1,
   uxTaskResetEventItemValue_armv6m_prog s1 = uxTaskResetEventItemValue_armv6m_prog s2.
-Abort.
+Proof. reflexivity. Qed.
 Theorem reset_event_welltyped :
   welltyped_prog armv6mtypctx uxTaskResetEventItemValue_armv6m_prog.
-Abort.
+Proof. exact uxTaskResetEventItemValue_armv6m_welltyped. Qed.
 
 Lemma reset_event_zero_bound : forall w, 0 < 2^w.
-Abort.
+Proof. intro w. apply N.neq_0_lt_0, pow2_nonzero. Qed.
 Definition reset_event_entry_witness (m:memory) (lr:N) : store := fun v =>
   match v with
   | V_MEM32 => m
@@ -95,12 +97,37 @@ Definition reset_event_entry_witness (m:memory) (lr:N) : store := fun v =>
 Lemma reset_event_witness_models : forall m lr,
   m < 2^(8*2^32) -> lr < 2^32 ->
   models armv6mtypctx (reset_event_entry_witness m lr).
-Abort.
+Proof.
+  intros m lr B LR v w T. destruct v; cbn [armv6mtypctx] in T;
+    try discriminate; injection T as <-.
+  all: lazymatch goal with
+  | |- reset_event_entry_witness _ _ V_MEM32 < _ => exact B
+  | |- reset_event_entry_witness _ _ A_READ < _ => exact (ones_bound (2^32))
+  | |- reset_event_entry_witness _ _ A_WRITE < _ => exact (ones_bound (2^32))
+  | |- reset_event_entry_witness _ _ R_LR < _ => exact LR
+  | |- _ < 2^?width => exact (reset_event_zero_bound width)
+  end.
+Qed.
 Theorem reset_event_entry_satisfiable : forall m lr,
   m < 2^(8*2^32) -> N.odd lr = true -> lr < 0xfffffff0 ->
   exists s, models armv6mtypctx s /\ s V_MEM32 = m /\ s R_LR = lr /\
     reset_event_permitted s /\ N.odd (s R_LR) = true /\ s R_LR < 0xfffffff0.
-Abort.
+Proof.
+  intros m lr B ODD LR. exists (reset_event_entry_witness m lr).
+  split.
+  - apply reset_event_witness_models. exact B. clear - LR. change (lr < 4294967296). lia.
+  - split. reflexivity. split. reflexivity. split.
+    + intros i LT. unfold mem_readable, mem_writable.
+      change (N.testbit (N.ones (2^32)) (0x20000108 ⊕ i) = true /\
+        N.testbit (N.ones (2^32)) (reset_event_address m ⊕ i) = true /\
+        N.testbit (N.ones (2^32)) ((reset_event_tcb m ⊕ 44) ⊕ i) = true /\
+        N.testbit (N.ones (2^32)) (reset_event_address m ⊕ i) = true).
+      (* Split only conjunctions: trying reflexivity on a bitmap equality
+         would expand N.ones (2^32). *)
+      split; [|split; [|split]];
+        apply N.ones_spec_low; apply N.mod_lt, pow2_nonzero.
+    + split; assumption.
+Qed.
 
 (* Flags are intentionally unconstrained in the postcondition. *)
 Ltac ignore_vars v ::= constr:(match v with F_N | F_Z | F_C | F_V => true | _ => false end).

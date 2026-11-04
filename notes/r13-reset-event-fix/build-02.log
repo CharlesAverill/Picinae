@@ -1,0 +1,32 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5a06644e
+COMMAND=python3 /home/charles/code/friends/.refs/picinae-llm-proofs/resources/resource-run.py --unit r13-reset-event-fix --memory-kib 2500000 -- /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_uxTaskResetEventItemValue_proof.vo
+ADMISSION WAIT r13-reset-event-fix available RAM reserve
+ADMISSION WAIT r13-reset-event-fix available RAM reserve
+ADMISSION WAIT r13-reset-event-fix available RAM reserve
+ADMISSION WAIT r13-reset-event-fix available RAM reserve
+ADMISSION WAIT r13-reset-event-fix available RAM reserve
+ADMISSION WAIT r13-reset-event-fix available RAM reserve
+ADMISSION WAIT r13-reset-event-fix available RAM reserve
+ADMISSION WAIT r13-reset-event-fix available RAM reserve
+ADMITTED r13-reset-event-fix memory_kib=2500000
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2729:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.armv6m_uxTaskGetNumberOfTasks_proof
+63 |   Examples.FreeRTOS.armv6m_uxTaskResetEventItemValue_proof
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_uxTaskResetEventItemValue_proof.{glob,vo} (got signal TERM)
+BEGIN reset_event_nwc
+BEGIN reset_event_welltyped
+BEGIN reset_event_zero_bound
+BEGIN reset_event_witness_models
+BEGIN reset_event_entry_satisfiable
+BEGIN reset_event_correct
+Goal at < 5412 >
+Goal at < 5430 >
+RELEASED r13-reset-event-fix exit=1
+
+EXIT_CODE=1
