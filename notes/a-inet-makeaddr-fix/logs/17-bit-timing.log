@@ -1,0 +1,415 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0bd22e4f
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ rocq\ compile\ -q\ -time\ -R\ _build/default\ Picinae\ _build/fix-debug/Debug.v
+Chars 1858 - 1887 [Require~Import~Picinae_armv8.] 0.197 secs (0.106u,0.097s)
+Chars 1888 - 1926 [Require~Import~e29_inet_makead...] 0. secs (0.u,0.s)
+Chars 1927 - 1954 [Require~Import~arm8_common.] 0. secs (0.u,0.s)
+Chars 1955 - 1976 [Import~ARM8Notations.] 0. secs (0.u,0.s)
+Chars 1977 - 2020 [From~Stdlib~Require~Import~NAr...] 0.005 secs (0.u,0.005s)
+Chars 2021 - 2042 [Import~ListNotations.] 0. secs (0.u,0.s)
+Chars 2043 - 2056 [Open~Scope~N.] 0. secs (0.u,0.s)
+Chars 2058 - 2316 [Definition~makeaddr~(net~host~...] 0.002 secs (0.u,0.002s)
+Chars 2318 - 2394 [Definition~inet_makeaddr_resul...] 0. secs (0.u,0.s)
+Chars 2396 - 2560 [Definition~inet_makeaddr_postc...] 0. secs (0.u,0.001s)
+Chars 2562 - 2729 [Definition~inet_makeaddr_exit~...] 0.003 secs (0.u,0.003s)
+Chars 2731 - 3113 [Definition~inet_makeaddr_invs~...] 0.015 secs (0.u,0.015s)
+Chars 3115 - 3212 [Theorem~inet_makeaddr_nwc~:~~~...] 0. secs (0.u,0.s)
+Chars 3213 - 3219 [Proof.] 0. secs (0.u,0.s)
+Chars 3220 - 3232 [reflexivity.] 0.001 secs (0.u,0.001s)
+Chars 3233 - 3237 [Qed.] 0. secs (0.u,0.s)
+Closed under the global context
+Chars 3238 - 3274 [Print~Assumptions~inet_makeadd...] 0.002 secs (0.u,0.002s)
+Chars 3276 - 3360 [Theorem~inet_makeaddr_welltype...] 0. secs (0.u,0.s)
+Chars 3361 - 3367 [Proof.] 0. secs (0.u,0.s)
+Chars 3368 - 3407 [exact~e29_inet_makeaddr_arm8.w...] 0. secs (0.u,0.s)
+Chars 3408 - 3412 [Qed.] 0. secs (0.u,0.s)
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+Chars 3413 - 3455 [Print~Assumptions~inet_makeadd...] 0.22 secs (0.213u,0.013s)
+Chars 3457 - 3580 [Theorem~inet_makeaddr_preserve...] 0. secs (0.u,0.s)
+Chars 3581 - 3587 [Proof.] 0. secs (0.u,0.s)
+Chars 3588 - 3613 [apply~noassign_prog_same.] 0. secs (0.u,0.s)
+Chars 3614 - 3629 [prove_noassign.] 0.39 secs (0.401u,0.s)
+Chars 3630 - 3634 [Qed.] 0.064 secs (0.066u,0.s)
+Closed under the global context
+Chars 3635 - 3684 [Print~Assumptions~inet_makeadd...] 0.098 secs (0.1u,0.s)
+Chars 3686 - 3888 [Definition~inet_makeaddr_saved...] 0.001 secs (0.001u,0.s)
+Chars 3890 - 4047 [Theorem~inet_makeaddr_preserve...] 0. secs (0.u,0.s)
+Chars 4048 - 4054 [Proof.] 0. secs (0.u,0.s)
+Chars 4057 - 4069 [intros~v~IN.] 0. secs (0.u,0.s)
+Chars 4070 - 4095 [apply~noassign_prog_same.] 0. secs (0.u,0.s)
+Chars 4096 - 4129 [unfold~inet_makeaddr_saved~in~IN.] 0. secs (0.u,0.s)
+Chars 4132 - 4194 [repeat~destruct~IN~as~[<-|~IN]...] 6.246 secs (6.407u,0.02s)
+Chars 4195 - 4199 [Qed.] 0.514 secs (0.519u,0.01s)
+Closed under the global context
+Chars 4200 - 4255 [Print~Assumptions~inet_makeadd...] 0.18 secs (0.185u,0.s)
+Chars 4257 - 4370 [Theorem~inet_makeaddr_preserve...] 0. secs (0.u,0.s)
+Chars 4371 - 4377 [Proof.] 0. secs (0.u,0.s)
+Chars 4378 - 4403 [apply~noassign_prog_same.] 0. secs (0.u,0.s)
+Chars 4404 - 4419 [prove_noassign.] 0.277 secs (0.285u,0.s)
+Chars 4420 - 4424 [Qed.] 0.032 secs (0.033u,0.s)
+Closed under the global context
+Chars 4425 - 4470 [Print~Assumptions~inet_makeadd...] 0.075 secs (0.077u,0.s)
+Chars 4472 - 4588 [Theorem~inet_makeaddr_preserve...] 0. secs (0.u,0.s)
+Chars 4589 - 4595 [Proof.] 0. secs (0.u,0.s)
+Chars 4596 - 4621 [apply~noassign_prog_same.] 0. secs (0.u,0.s)
+Chars 4622 - 4637 [prove_noassign.] 0.28 secs (0.289u,0.s)
+Chars 4638 - 4642 [Qed.] 0.036 secs (0.037u,0.s)
+Closed under the global context
+Chars 4643 - 4689 [Print~Assumptions~inet_makeadd...] 0.079 secs (0.081u,0.s)
+Chars 4691 - 4856 [Theorem~inet_makeaddr_ret_map~...] 0.001 secs (0.001u,0.s)
+Chars 4857 - 4863 [Proof.] 0. secs (0.u,0.s)
+Chars 4864 - 4877 [intros~s~a~H.] 0. secs (0.u,0.s)
+Chars 4878 - 4934 [repeat~destruct~H~as~[<-|~H];~...] 0.001 secs (0.001u,0.s)
+Chars 4935 - 4939 [Qed.] 0. secs (0.u,0.s)
+Closed under the global context
+Chars 4940 - 4980 [Print~Assumptions~inet_makeadd...] 0.001 secs (0.001u,0.s)
+Chars 4982 - 5072 [Lemma~inet_makeaddr_result_bou...] 0. secs (0.u,0.s)
+Chars 5073 - 5079 [Proof.] 0. secs (0.u,0.s)
+Chars 5080 - 5087 [intros.] 0. secs (0.u,0.s)
+Chars 5088 - 5105 [apply~ntohl32_lt.] 0. secs (0.u,0.s)
+Chars 5106 - 5110 [Qed.] 0. secs (0.u,0.s)
+Closed under the global context
+Chars 5111 - 5156 [Print~Assumptions~inet_makeadd...] 0.237 secs (0.244u,0.s)
+Chars 5228 - 5378 [Definition~inet_rev32~(x~:~N)~...] 0.001 secs (0.001u,0.s)
+Chars 5380 - 5443 [Lemma~inet_rev32_correct~:~for...] 0. secs (0.u,0.s)
+Chars 5444 - 5450 [Proof.] 0. secs (0.u,0.s)
+Chars 5451 - 5459 [intro~x.] 0. secs (0.u,0.s)
+Chars 5460 - 5487 [unfold~inet_rev32,~ntohl32.] 0. secs (0.u,0.s)
+Chars 5488 - 5505 [bitblast_upto~32.] 6.497 secs (6.678u,0.01s)
+Chars 5506 - 5510 [Qed.] 0.458 secs (0.472u,0.s)
+Closed under the global context
+Chars 5511 - 5548 [Print~Assumptions~inet_rev32_c...] 0.247 secs (0.255u,0.s)
+Chars 5550 - 5738 [Definition~inet_bfm32~(net~hos...] 0. secs (0.u,0.s)
+Chars 5884 - 6788 [Ltac~~inet_bits_close~:=~~~bit...] 0. secs (0.u,0.s)
+Chars 7014 - 7643 [Ltac~~inet_bits_high~:=~~~bits...] 0. secs (0.u,0.s)
+Chars 7645 - 8060 [Ltac~~inet_bitblast32~:=~~~app...] 0. secs (0.u,0.s)
+Chars 8062 - 8184 [Lemma~inet_bfm24_correct~:~~~f...] 0. secs (0.u,0.s)
+Chars 8185 - 8191 [Proof.] 0. secs (0.u,0.s)
+Chars 8192 - 8199 [intros.] 0. secs (0.u,0.s)
+Chars 8200 - 8218 [unfold~inet_bfm32.] 0. secs (0.u,0.s)
+Chars 8219 - 8254 [change~(N.ones~32)~with~0xffff...] 0. secs (0.u,0.s)
+LOWBIT 0
+LOWBIT 1
+LOWBIT 2
+LOWBIT 3
+LOWBIT 4
+LOWBIT 5
+LOWBIT 6
+LOWBIT 7
+LOWBIT 8
+LOWBIT 9
+LOWBIT 10
+LOWBIT 11
+LOWBIT 12
+LOWBIT 13
+LOWBIT 14
+LOWBIT 15
+LOWBIT 16
+LOWBIT 17
+LOWBIT 18
+LOWBIT 19
+LOWBIT 20
+LOWBIT 21
+LOWBIT 22
+LOWBIT 23
+LOWBIT 24
+LOWBIT 25
+LOWBIT 26
+LOWBIT 27
+LOWBIT 28
+LOWBIT 29
+LOWBIT 30
+LOWBIT 31
+HIGHBITS
+Chars 8255 - 8271 [inet_bitblast32.] 2.089 secs (2.141u,0.01s)
+Chars 8272 - 8276 [Qed.] 0.159 secs (0.163u,0.s)
+Closed under the global context
+Chars 8277 - 8314 [Print~Assumptions~inet_bfm24_c...] 0.169 secs (0.174u,0.s)
+Chars 8316 - 8439 [Lemma~inet_bfm16_correct~:~~~f...] 0. secs (0.u,0.s)
+Chars 8440 - 8446 [Proof.] 0. secs (0.u,0.s)
+Chars 8447 - 8454 [intros.] 0. secs (0.u,0.s)
+Chars 8455 - 8473 [unfold~inet_bfm32.] 0. secs (0.u,0.s)
+Chars 8474 - 8509 [change~(N.ones~32)~with~0xffff...] 0. secs (0.u,0.s)
+LOWBIT 0
+LOWBIT 1
+LOWBIT 2
+LOWBIT 3
+LOWBIT 4
+LOWBIT 5
+LOWBIT 6
+LOWBIT 7
+LOWBIT 8
+LOWBIT 9
+LOWBIT 10
+LOWBIT 11
+LOWBIT 12
+LOWBIT 13
+LOWBIT 14
+LOWBIT 15
+LOWBIT 16
+LOWBIT 17
+LOWBIT 18
+LOWBIT 19
+LOWBIT 20
+LOWBIT 21
+LOWBIT 22
+LOWBIT 23
+LOWBIT 24
+LOWBIT 25
+LOWBIT 26
+LOWBIT 27
+LOWBIT 28
+LOWBIT 29
+LOWBIT 30
+LOWBIT 31
+HIGHBITS
+Chars 8510 - 8526 [inet_bitblast32.] 2.094 secs (2.157u,0.s)
+Chars 8527 - 8531 [Qed.] 0.158 secs (0.162u,0.s)
+Closed under the global context
+Chars 8532 - 8569 [Print~Assumptions~inet_bfm16_c...] 0.165 secs (0.17u,0.s)
+Chars 8571 - 8691 [Lemma~inet_bfm8_correct~:~~~fo...] 0. secs (0.u,0.s)
+Chars 8692 - 8698 [Proof.] 0. secs (0.u,0.s)
+Chars 8699 - 8706 [intros.] 0. secs (0.u,0.s)
+Chars 8707 - 8725 [unfold~inet_bfm32.] 0. secs (0.u,0.s)
+Chars 8726 - 8761 [change~(N.ones~32)~with~0xffff...] 0. secs (0.u,0.s)
+LOWBIT 0
+LOWBIT 1
+LOWBIT 2
+LOWBIT 3
+LOWBIT 4
+LOWBIT 5
+LOWBIT 6
+LOWBIT 7
+LOWBIT 8
+LOWBIT 9
+LOWBIT 10
+LOWBIT 11
+LOWBIT 12
+LOWBIT 13
+LOWBIT 14
+LOWBIT 15
+LOWBIT 16
+LOWBIT 17
+LOWBIT 18
+LOWBIT 19
+LOWBIT 20
+LOWBIT 21
+LOWBIT 22
+LOWBIT 23
+LOWBIT 24
+LOWBIT 25
+LOWBIT 26
+LOWBIT 27
+LOWBIT 28
+LOWBIT 29
+LOWBIT 30
+LOWBIT 31
+HIGHBITS
+Chars 8762 - 8778 [inet_bitblast32.] 2.11 secs (2.173u,0.s)
+Chars 8779 - 8783 [Qed.] 0.167 secs (0.172u,0.s)
+Closed under the global context
+Chars 8784 - 8820 [Print~Assumptions~inet_bfm8_co...] 0.173 secs (0.178u,0.s)
+Chars 8822 - 8917 [Lemma~inet_msub32_eqb~:~~~fora...] 0. secs (0.u,0.s)
+Chars 8918 - 8924 [Proof.] 0. secs (0.u,0.s)
+Chars 8927 - 8942 [intros~a~b~A~B.] 0. secs (0.u,0.s)
+Chars 8943 - 8978 [destruct~(N.eqb_spec~a~b)~as~[...] 0. secs (0.u,0.s)
+Chars 8981 - 8982 [-] 0. secs (0.u,0.s)
+Chars 8983 - 8989 [subst.] 0. secs (0.u,0.s)
+Chars 8990 - 9008 [rewrite~msub_diag.] 0. secs (0.u,0.s)
+Chars 9009 - 9021 [reflexivity.] 0. secs (0.u,0.s)
+Chars 9024 - 9025 [-] 0. secs (0.u,0.s)
+Chars 9026 - 9042 [apply~N.eqb_neq.] 0. secs (0.u,0.s)
+Chars 9043 - 9051 [intro~H.] 0. secs (0.u,0.s)
+Chars 9052 - 9060 [apply~E.] 0. secs (0.u,0.s)
+Chars 9065 - 9099 [pose~proof~(add_msub~32~b~a)~a...] 0. secs (0.u,0.s)
+Chars 9104 - 9158 [rewrite~H,~N.add_0_r,~!N.mod_s...] 0. secs (0.u,0.s)
+Chars 9159 - 9177 [symmetry;~exact~M.] 0. secs (0.u,0.s)
+Chars 9178 - 9182 [Qed.] 0. secs (0.u,0.s)
+Closed under the global context
+Chars 9183 - 9217 [Print~Assumptions~inet_msub32_...] 0.065 secs (0.067u,0.s)
+Chars 9292 - 9431 [Definition~inet_makeaddr_input...] 0. secs (0.u,0.s)
+Chars 9433 - 9498 [Lemma~inet_makeaddr_zero_typed...] 0. secs (0.u,0.s)
+Chars 9499 - 9505 [Proof.] 0. secs (0.u,0.s)
+Chars 9508 - 9521 [intros~v~w~T.] 0. secs (0.u,0.s)
+Chars 9522 - 9557 [apply~(proj1~(N.neq_0_lt_0~(2~...] 0. secs (0.u,0.s)
+Chars 9560 - 9580 [apply~N.pow_nonzero.] 0. secs (0.u,0.s)
+Chars 9581 - 9594 [discriminate.] 0. secs (0.u,0.s)
+Chars 9595 - 9599 [Qed.] 0. secs (0.u,0.s)
+Closed under the global context
+Chars 9600 - 9643 [Print~Assumptions~inet_makeadd...] 0.018 secs (0.018u,0.s)
+Chars 9645 - 9823 [Lemma~inet_makeaddr_input_type...] 0. secs (0.u,0.s)
+Chars 9824 - 9830 [Proof.] 0. secs (0.u,0.s)
+Chars 9833 - 9874 [intros~net~host~nhi~hhi~NET~HO...] 0. secs (0.u,0.s)
+Chars 9875 - 9902 [unfold~inet_makeaddr_input.] 0. secs (0.u,0.s)
+Chars 9905 - 9925 [apply~models_update.] 0. secs (0.u,0.s)
+Chars 9928 - 9929 [-] 0. secs (0.u,0.s)
+Chars 9930 - 9962 [change~(host~+~2~^~32~*~hhi~<~...] 0. secs (0.u,0.s)
+Chars 9963 - 9967 [nia.] 0.003 secs (0.003u,0.s)
+Chars 9970 - 9971 [-] 0. secs (0.u,0.s)
+Chars 9972 - 9992 [apply~models_update.] 0. secs (0.u,0.s)
+Chars 9997 - 9998 [+] 0. secs (0.u,0.s)
+Chars 9999 - 10030 [change~(net~+~2~^~32~*~nhi~<~2...] 0. secs (0.u,0.s)
+Chars 10031 - 10035 [nia.] 0.003 secs (0.003u,0.s)
+Chars 10040 - 10041 [+] 0. secs (0.u,0.s)
+Chars 10042 - 10073 [apply~inet_makeaddr_zero_typed.] 0. secs (0.u,0.s)
+Chars 10074 - 10078 [Qed.] 0.002 secs (0.002u,0.s)
+Closed under the global context
+Chars 10079 - 10123 [Print~Assumptions~inet_makeadd...] 0.181 secs (0.187u,0.s)
+Chars 10125 - 10357 [Theorem~inet_makeaddr_inputs_i...] 0.001 secs (0.001u,0.s)
+Chars 10358 - 10364 [Proof.] 0. secs (0.u,0.s)
+Chars 10367 - 10408 [intros~net~host~nhi~hhi~NET~HO...] 0. secs (0.u,0.s)
+Chars 10411 - 10457 [exists~(inet_makeaddr_input~ne...] 0. secs (0.u,0.s)
+Chars 10458 - 10464 [split.] 0. secs (0.u,0.s)
+Chars 10467 - 10468 [-] 0. secs (0.u,0.s)
+Chars 10469 - 10513 [apply~inet_makeaddr_input_type...] 0. secs (0.u,0.s)
+Chars 10516 - 10517 [-] 0. secs (0.u,0.s)
+Chars 10518 - 10554 [cbn[inet_makeaddr_invs~trueif_...] 0. secs (0.u,0.s)
+Chars 10555 - 10582 [unfold~inet_makeaddr_input.] 0. secs (0.u,0.s)
+Chars 10587 - 10664 [repeat~(first~~[~rewrite~updat...] 0.01 secs (0.01u,0.s)
+Chars 10669 - 10726 [rewrite~(N.mul_comm~(2~^~32)~n...] 0. secs (0.u,0.s)
+File "./_build/fix-debug/Debug.v", line 253, characters 13-22:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./_build/fix-debug/Debug.v", line 253, characters 13-22:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./_build/fix-debug/Debug.v", line 253, characters 13-22:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./_build/fix-debug/Debug.v", line 253, characters 13-22:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./_build/fix-debug/Debug.v", line 253, characters 13-22:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+Chars 10731 - 10766 [rewrite~!N.mod_add~by~discrimi...] 0. secs (0.u,0.s)
+Chars 10767 - 10802 [rewrite~!N.mod_small~by~assump...] 0. secs (0.u,0.s)
+Chars 10807 - 10833 [repeat~split;~reflexivity.] 0. secs (0.u,0.s)
+Chars 10834 - 10838 [Qed.] 0.003 secs (0.003u,0.s)
+Closed under the global context
+Chars 10839 - 10888 [Print~Assumptions~inet_makeadd...] 0.194 secs (0.2u,0.s)
+Chars 10890 - 11056 [Theorem~inet_makeaddr_spec_inh...] 0. secs (0.u,0.s)
+Chars 11057 - 11063 [Proof.] 0. secs (0.u,0.s)
+Chars 11066 - 11091 [intros~net~host~NET~HOST.] 0. secs (0.u,0.s)
+Chars 11094 - 11160 [exists~(update~(fun~_~=>~0)~R_...] 0. secs (0.u,0.s)
+Chars 11161 - 11167 [split.] 0. secs (0.u,0.s)
+Chars 11170 - 11171 [-] 0. secs (0.u,0.s)
+Chars 11172 - 11192 [apply~models_update.] 0. secs (0.u,0.s)
+Chars 11197 - 11198 [+] 0. secs (0.u,0.s)
+Chars 11199 - 11245 [change~(inet_makeaddr_result~n...] 0. secs (0.u,0.s)
+Chars 11252 - 11301 [pose~proof~(inet_makeaddr_resu...] 0. secs (0.u,0.s)
+Chars 11302 - 11306 [nia.] 0.002 secs (0.002u,0.s)
+Chars 11311 - 11312 [+] 0. secs (0.u,0.s)
+Chars 11313 - 11344 [apply~inet_makeaddr_zero_typed.] 0. secs (0.u,0.s)
+Chars 11347 - 11348 [-] 0. secs (0.u,0.s)
+Chars 11349 - 11384 [unfold~inet_makeaddr_postcondi...] 0. secs (0.u,0.s)
+Chars 11389 - 11443 [rewrite~update_updated,~!updat...] 0.001 secs (0.001u,0.s)
+Chars 11444 - 11470 [repeat~split;~reflexivity.] 0. secs (0.u,0.s)
+Chars 11471 - 11475 [Qed.] 0.002 secs (0.002u,0.s)
+Closed under the global context
+Chars 11476 - 11523 [Print~Assumptions~inet_makeadd...] 0.278 secs (0.287u,0.s)
+Chars 11525 - 11934 [Theorem~inet_makeaddr_correct~...] 0.001 secs (0.002u,0.s)
+Chars 11935 - 11941 [Proof.] 0. secs (0.u,0.s)
+Chars 11944 - 11951 [intros.] 0. secs (0.u,0.s)
+Chars 11952 - 11969 [apply~prove_invs.] 0. secs (0.u,0.s)
+Chars 11972 - 11978 [simpl.] 0. secs (0.u,0.s)
+Chars 11979 - 11993 [rewrite~ENTRY.] 0. secs (0.u,0.s)
+Goal at < 2071872 >
+Chars 11994 - 12004 [arm8_step.] 0.02 secs (0.02u,0.s)
+Chars 12005 - 12030 [repeat~split;~assumption.] 0. secs (0.u,0.s)
+Chars 12033 - 12040 [intros.] 0. secs (0.u,0.s)
+Chars 12043 - 12093 [erewrite~startof_prefix~in~ENT...] 0. secs (0.u,0.s)
+Chars 12096 - 12140 [eapply~models_at_invariant;~tr...] 0. secs (0.u,0.s)
+Chars 12143 - 12173 [apply~inet_makeaddr_welltyped.] 0. secs (0.u,0.s)
+Chars 12174 - 12185 [intro~MDL1.] 0. secs (0.u,0.s)
+Chars 12188 - 12205 [clear~-~PRE~MDL1.] 0. secs (0.u,0.s)
+Chars 12206 - 12223 [rename~t1~into~t.] 0. secs (0.u,0.s)
+Chars 12226 - 12246 [destruct_inv~64~PRE.] 0.316 secs (0.325u,0.s)
+Chars 12249 - 12292 [destruct~PRE~as~[NET~[HOST~[ME...] 0. secs (0.u,0.s)
+Goal at < 2071888 >
+Goal at < 2071912 >
+Goal at < 2071944 >
+Goal at < 2071944 >
+Chars 12295 - 12312 [repeat~arm8_step.] 5.057 secs (4.294u,0.s)
+Chars 12315 - 12353 [all:~repeat~rewrite~N.shiftr_0...] 0.006 secs (0.007u,0.s)
+Chars 12356 - 12535 [all:~~repeat~~~match~goal~with...] 0. secs (0.u,0.s)
+Chars 12538 - 12804 [all:~~repeat~~~match~goal~with...] 0.431 secs (0.444u,0.s)
+Chars 12807 - 12985 [all:~~repeat~~~match~goal~with...] 0.017 secs (0.017u,0.s)
+Chars 12988 - 13010 [all:~try~discriminate.] 0.032 secs (0.032u,0.s)
+Chars 13013 - 13053 [all:~unfold~inet_makeaddr_post...] 0. secs (0.u,0.s)
+Chars 13056 - 13096 [all:~split;~[~~|~repeat~split;...] 0.003 secs (0.003u,0.s)
+Chars 13099 - 13158 [all:~unfold~inet_makeaddr_resu...] 0.016 secs (0.017u,0.s)
+Chars 13161 - 13267 [all:~~repeat~~~match~goal~with...] 0.093 secs (0.095u,0.s)
+Chars 13270 - 13294 [all:~try~(exfalso;~lia).] 1.63 secs (1.678u,0.s)
+Chars 13297 - 13313 [all:~clear~-~s1.] 0.001 secs (0.001u,0.s)
+MAINBITS
+LOWBIT 0
+LOWBIT 1
+LOWBIT 2
+LOWBIT 3
+LOWBIT 4
+LOWBIT 5
+LOWBIT 6
+LOWBIT 7
+LOWBIT 8
+LOWBIT 9
+LOWBIT 10
+LOWBIT 11
+LOWBIT 12
+LOWBIT 13
+LOWBIT 14
+LOWBIT 15
+LOWBIT 16
+LOWBIT 17
+LOWBIT 18
+LOWBIT 19
+LOWBIT 20
+LOWBIT 21
+LOWBIT 22
+LOWBIT 23
+LOWBIT 24
+LOWBIT 25
+LOWBIT 26
+LOWBIT 27
+LOWBIT 28
+LOWBIT 29
+LOWBIT 30
+LOWBIT 31
+HIGHBITS
+LOWBIT 0
+LOWBIT 1
+LOWBIT 2
+LOWBIT 3
+LOWBIT 4
+LOWBIT 5
+LOWBIT 6
+LOWBIT 7
+LOWBIT 8
+LOWBIT 9
+LOWBIT 10
+LOWBIT 11
+LOWBIT 12
+LOWBIT 13
+LOWBIT 14
+LOWBIT 15
+LOWBIT 16
+LOWBIT 17
+LOWBIT 18
+LOWBIT 19
+LOWBIT 20
+LOWBIT 21
+LOWBIT 22
+LOWBIT 23
+LOWBIT 24
+LOWBIT 25
+Fatal error: out of memory
+tools/record-command.sh: line 22:    11 Aborted                 (core dumped) "$@"
+
+EXIT_CODE=134

@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0bd22e4f
+COMMAND=python3 -
+PASS: 18 statements retained byte for byte
+PASS: 9 definitions retained byte for byte
+No declaration or definition changes necessary.
+
+EXIT_CODE=0

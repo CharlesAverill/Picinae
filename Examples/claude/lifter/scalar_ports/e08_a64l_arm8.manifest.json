@@ -1,0 +1,205 @@
+{
+  "addressing": "global",
+  "aliases_same_entry_extent": [
+    "a64l"
+  ],
+  "build_id": "977c021c364ee3c495c0e5f2375bf6ba2124a6da",
+  "closure": {
+    "closed": true,
+    "direct_and_fallthrough_edges": [
+      {
+        "kind": "fallthrough",
+        "source": "0x1477f0",
+        "target": "0x1477f4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1477f4",
+        "target": "0x1477f8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1477f8",
+        "target": "0x1477fc"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1477fc",
+        "target": "0x147800"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x147800",
+        "target": "0x147804"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x147804",
+        "target": "0x147808"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x147808",
+        "target": "0x14780c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x14780c",
+        "target": "0x147810"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x147810",
+        "target": "0x147814"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x147814",
+        "target": "0x147838"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x147814",
+        "target": "0x147818"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x147818",
+        "target": "0x14781c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x14781c",
+        "target": "0x147820"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x147820",
+        "target": "0x147838"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x147820",
+        "target": "0x147824"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x147824",
+        "target": "0x147828"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x147828",
+        "target": "0x14782c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x14782c",
+        "target": "0x147830"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x147830",
+        "target": "0x147834"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x147834",
+        "target": "0x147804"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x147834",
+        "target": "0x147838"
+      }
+    ],
+    "indirect_nonreturn_edges": [],
+    "meaning": "finite selected machine map closes all direct edges and fallthroughs; RETURN remains caller ABI boundary",
+    "returns": [
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x147838"
+      }
+    ]
+  },
+  "data": {
+    "analysis": "ADR(P)+ADD object references plus complete raw memory instruction list; manual target review required, no invented constants",
+    "contract": "Map ELF virtual data addresses to model addresses by +0x100000. Runtime memory must supply these bytes/state and any relocated pointer targets; generated program does not initialize memory.",
+    "materialized_objects": [
+      {
+        "elf_address": "0x1494c8",
+        "elf_bytes_hex": "000102030405060708090a0b404040404040400c0d0e0f101112131415161718191a1b1c1d1e1f202122232425404040404040262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+        "elf_bytes_sha256": "24f6be4fc84fddbe76daa22e6217b7a4208e06d89082fbb95cf40093fb931e03",
+        "file_backed": true,
+        "materialization_sites": [
+          "0x1477f4"
+        ],
+        "materialized_at": "0x1477f4",
+        "model_address": "0x2494c8",
+        "referenced_model_address": "0x2494c8",
+        "relocations": [],
+        "size": 77,
+        "symbol": "a64l_table",
+        "symbol_aliases": [
+          "a64l_table"
+        ]
+      }
+    ],
+    "memory_accesses": [
+      {
+        "assembly": "ldrb w1,[x3]",
+        "instruction": "0x147804",
+        "pcode": [
+          "(unique, 0x25500, 1) LOAD (const, 0x1b1, 8) , (unique, 0x6680, 8)"
+        ]
+      },
+      {
+        "assembly": "ldrb w1,[x4, w1, UXTW ]",
+        "instruction": "0x147818",
+        "pcode": [
+          "(unique, 0x25600, 1) LOAD (const, 0x1b1, 8) , (unique, 0x7580, 8)"
+        ]
+      }
+    ],
+    "staticMemory": false
+  },
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "elf_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "generated_program": "e08_a64l_arm8",
+  "generated_program_sha256": "678a484c6cdc408462f11871b74238e28319214745a75f4e7feeadd23e311f1d",
+  "image_base": "0x100000",
+  "implementation_sha256": {
+    "lift-scalar.py": "1bdf6ec35946c220dc07fc4963efc37b7cb3f150e0f77ccfbcfecd2e74828909",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "scalar_headless.py": "4aab6945ece18c558f2b1dc397a31a8333a8e380dcaf29630168472e1fe7bcd3"
+  },
+  "instruction_count": 19,
+  "limits": "Generated scalar IL and typing only; no functional correctness, termination, equivalence to historical lifts, or lifter soundness claim.",
+  "naming_adapter": {
+    "new": "e08_a64l_arm8",
+    "occurrence_count": 2,
+    "old": "e11_a64l_arm8",
+    "operation": "identifier substitution only"
+  },
+  "naming_closure_harness_sha256": "fdfce3192d5670367686ff78a4606197c83df74f817945cf653819f2f83165a5",
+  "original_program_sha256": "9c13cf49614a0b0035e3908656ca55a1b4d286a10b79281fbbc80a594cb5054d",
+  "pcode_sha256": "62536d2ae7d0879f56c436f25936fcfca7e941e344cfba81ce1863e261df9bf2",
+  "record": {
+    "bytes_sha256": "72b1252a1583580e8bce44b746f5fb851496c95af8b0f0d356f1f54b066ece75",
+    "elf_entry": "0x477f0",
+    "entry": "0x1477f0",
+    "instructions": 19,
+    "output": "e11_a64l_arm8.v",
+    "output_sha256": "9c13cf49614a0b0035e3908656ca55a1b4d286a10b79281fbbc80a594cb5054d",
+    "selected_symbols": [
+      "a64l"
+    ],
+    "size": 76,
+    "symbol": "a64l"
+  },
+  "schema": 1,
+  "selected_symbols": [
+    "a64l"
+  ],
+  "symbol": "a64l"
+}

@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0bd22e4f
+COMMAND=git merge --ff-only e3ddea3cffe75231193e5b51e04a30ee7012e17a
+fatal: update_ref failed for ref 'ORIG_HEAD': cannot lock ref 'ORIG_HEAD': Unable to create '/home/charles/code/friends/CharlesAverill/Picinae/.git/worktrees/t3-0bd22e4f/ORIG_HEAD.lock': Read-only file system
+
+EXIT_CODE=128

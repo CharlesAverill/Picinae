@@ -1,0 +1,481 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0bd22e4f
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ bash\ notes/a-inet-makeaddr-fix/print-assumptions.sh
+inet_makeaddr_nwc
+     : forall s2 s1 : Picinae_armv8.ARM8Arch.store,
+       e29_inet_makeaddr_arm8.e29_inet_makeaddr_arm8 s1 =
+       e29_inet_makeaddr_arm8.e29_inet_makeaddr_arm8 s2
+Closed under the global context
+inet_makeaddr_welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e29_inet_makeaddr_arm8.e29_inet_makeaddr_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+inet_makeaddr_preserves_memory
+     : Picinae_armv8.IL_arm8.forall_endstates
+         e29_inet_makeaddr_arm8.e29_inet_makeaddr_arm8
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv8.ARM8Arch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv8.ARM8Arch.store) =>
+          s Picinae_armv8.V_MEM64 = s' Picinae_armv8.V_MEM64)
+Closed under the global context
+inet_makeaddr_preserves_callee_saved
+     : forall v : Picinae_armv8.arm8var,
+       List.In v inet_makeaddr_saved ->
+       Picinae_armv8.IL_arm8.forall_endstates
+         e29_inet_makeaddr_arm8.e29_inet_makeaddr_arm8
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv8.ARM8Arch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv8.ARM8Arch.store) =>
+          s v = s' v)
+Closed under the global context
+inet_makeaddr_preserves_sp
+     : Picinae_armv8.IL_arm8.forall_endstates
+         e29_inet_makeaddr_arm8.e29_inet_makeaddr_arm8
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv8.ARM8Arch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv8.ARM8Arch.store) =>
+          s Picinae_armv8.R_SP = s' Picinae_armv8.R_SP)
+Closed under the global context
+inet_makeaddr_preserves_x30
+     : Picinae_armv8.IL_arm8.forall_endstates
+         e29_inet_makeaddr_arm8.e29_inet_makeaddr_arm8
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv8.ARM8Arch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv8.ARM8Arch.store) =>
+          s Picinae_armv8.R_X30 = s' Picinae_armv8.R_X30)
+Closed under the global context
+inet_makeaddr_ret_map
+     : forall (s : Picinae_armv8.ARM8Arch.store) (a : BinNums.N),
+       List.In a
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xO
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))))))
+          :: BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xO
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))))))
+             :: BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xO
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...))))))))))))))))))))
+                :: nil) ->
+       e29_inet_makeaddr_arm8.e29_inet_makeaddr_arm8 s a =
+       Some
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)),
+          Picinae_armv8.IL_arm8.Seq
+            (Picinae_armv8.IL_arm8.Move Picinae_armv8.R_PC
+               (Picinae_armv8.IL_arm8.Var Picinae_armv8.R_X30))
+            (Picinae_armv8.IL_arm8.Jmp
+               (Picinae_armv8.IL_arm8.Var Picinae_armv8.R_PC)))
+Closed under the global context
+inet_makeaddr_result_bound
+     : forall net host : BinNums.N,
+       BinNat.N.lt (inet_makeaddr_result net host)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+Closed under the global context
+inet_rev32_correct
+     : forall x : BinNums.N, inet_rev32 x = arm8_common.ntohl32 x
+Closed under the global context
+inet_bfm24_correct
+     : forall net host : BinNums.N,
+       inet_bfm32 net host
+         (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))))))))))))))))))) =
+       BinNat.N.modulo
+         (BinNat.N.lor
+            (BinNat.N.shiftl net
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xI BinNums.xH))))))
+            (BinNat.N.modulo host
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xI BinNums.xH))))))))
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+Closed under the global context
+inet_bfm16_correct
+     : forall net host : BinNums.N,
+       inet_bfm32 net host
+         (BinNums.Npos
+            (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (BinNums.xI ...)))))))))))))))))))))) =
+       BinNat.N.modulo
+         (BinNat.N.lor
+            (BinNat.N.shiftl net
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+            (BinNat.N.modulo host
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+Closed under the global context
+inet_bfm8_correct
+     : forall net host : BinNums.N,
+       inet_bfm32 net host
+         (BinNums.Npos
+            (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xI BinNums.xH)))))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (BinNums.xI ...)))))))))))))))))))))) =
+       BinNat.N.modulo
+         (BinNat.N.lor
+            (BinNat.N.shiftl net
+               (BinNums.Npos
+                  (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+            (BinNat.N.modulo host
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+Closed under the global context
+inet_msub32_eqb
+     : forall a b : BinNums.N,
+       BinNat.N.lt a
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt b
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.eqb
+         (Picinae_core.msub
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+            a b)
+         BinNums.N0 =
+       BinNat.N.eqb a b
+Closed under the global context
+inet_makeaddr_zero_typed
+     : Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx
+         (fun _ : Picinae_armv8.IL_arm8.var => BinNums.N0)
+Closed under the global context
+inet_makeaddr_input_typed
+     : forall net host nhi hhi : BinNums.N,
+       BinNat.N.lt net
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt host
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt nhi
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt hhi
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx
+         (inet_makeaddr_input net host nhi hhi)
+Closed under the global context
+inet_makeaddr_inputs_inhabited
+     : forall net host nhi hhi : BinNums.N,
+       BinNat.N.lt net
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt host
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt nhi
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt hhi
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       exists s : Picinae_armv8.IL_arm8.store,
+         Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx s /\
+         Picinae_theory.trueif_inv
+           (inet_makeaddr_invs net host BinNums.N0 BinNums.N0 BinNums.N0
+              ((Picinae_core.Addr
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xO
+                                             (BinNums.xI
+                                                (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...))))))))))))))))),
+                s)
+               :: nil)%list)
+Closed under the global context
+inet_makeaddr_spec_inhabited
+     : forall net host : BinNums.N,
+       BinNat.N.lt net
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt host
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       exists s : Picinae_armv8.IL_arm8.store,
+         Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx s /\
+         inet_makeaddr_postcondition net host BinNums.N0 BinNums.N0
+           BinNums.N0 s
+Closed under the global context
+inet_makeaddr_correct
+     : forall (s : Picinae_armv8.IL_arm8.store)
+         (t : list (Picinae_core.exit * Picinae_armv8.IL_arm8.store))
+         (s' : Picinae_armv8.IL_arm8.store) (x' : Picinae_core.exit)
+         (net host m sp lr : BinNums.N),
+       Picinae_core.startof t (x', s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))))))),
+        s) ->
+       Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx s ->
+       BinNat.N.modulo (s Picinae_armv8.R_X0)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) =
+       net ->
+       BinNat.N.modulo (s Picinae_armv8.R_X1)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) =
+       host ->
+       s Picinae_armv8.V_MEM64 = m ->
+       s Picinae_armv8.R_SP = sp ->
+       s Picinae_armv8.R_X30 = lr ->
+       Picinae_armv8.Theory_arm8.satisfies_all
+         e29_inet_makeaddr_arm8.e29_inet_makeaddr_arm8
+         (inet_makeaddr_invs net host m sp lr) inet_makeaddr_exit
+         ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+makeaddr
+     : BinNums.N -> BinNums.N -> BinNums.N
+Closed under the global context
+inet_makeaddr_result
+     : BinNums.N -> BinNums.N -> BinNums.N
+Closed under the global context
+inet_makeaddr_postcondition
+     : BinNums.N ->
+       BinNums.N ->
+       BinNums.N ->
+       BinNums.N -> BinNums.N -> Picinae_armv8.IL_arm8.store -> Prop
+Closed under the global context
+inet_makeaddr_exit
+     : Picinae_armv8.IL_arm8.trace -> bool
+Closed under the global context
+inet_makeaddr_invs
+     : BinNums.N ->
+       BinNums.N ->
+       BinNums.N ->
+       BinNums.N -> BinNums.N -> Picinae_armv8.IL_arm8.trace -> option Prop
+Closed under the global context
+inet_makeaddr_saved
+     : list Picinae_armv8.arm8var
+Closed under the global context
+inet_rev32
+     : BinNums.N -> BinNums.N
+Closed under the global context
+inet_bfm32
+     : BinNums.N -> BinNums.N -> BinNums.N -> BinNums.N -> BinNums.N
+Closed under the global context
+inet_makeaddr_input
+     : BinNums.N ->
+       BinNums.N -> BinNums.N -> BinNums.N -> Picinae_armv8.IL_arm8.store
+Closed under the global context
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e29_inet_makeaddr_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0

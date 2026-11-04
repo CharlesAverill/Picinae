@@ -1,0 +1,25 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ea3464df
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 tools/ghidra-lifter/test_bitforms.py
+test_actual_and_width_fixtures (__main__.Tests.test_actual_and_width_fixtures) ... ERROR
+test_malformed_pcode_and_bytes (__main__.Tests.test_malformed_pcode_and_bytes) ... ok
+test_unhandled_shapes (__main__.Tests.test_unhandled_shapes) ... ok
+
+======================================================================
+ERROR: test_actual_and_width_fixtures (__main__.Tests.test_actual_and_width_fixtures)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/test_bitforms.py", line 88, in test_actual_and_width_fixtures
+    for r, value in oracle(row, before).items():
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/test_bitforms.py", line 52, in oracle
+    a, b = before[f'R_X{n}'][0] & mask, before[f'R_X{m}'][0] & mask
+                                        ~~~~~~^^^^^^^^^^^
+KeyError: 'R_X31'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.257s
+
+FAILED (errors=1)
+PASS 1549 malformed/unknown/mismatched forms rejected
+
+EXIT_CODE=1
