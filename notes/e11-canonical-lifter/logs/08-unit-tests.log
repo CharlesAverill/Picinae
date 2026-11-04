@@ -1,0 +1,19 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 tools/ghidra-lifter/test_scalar.py
+test_bool_negate (__main__.Tests.test_bool_negate) ... ok
+test_carry_overflow (__main__.Tests.test_carry_overflow) ... ok
+test_clz (__main__.Tests.test_clz) ... ok
+test_forward_branch_and_call (__main__.Tests.test_forward_branch_and_call) ... ok
+test_instruction_canonical_and_local (__main__.Tests.test_instruction_canonical_and_local) ... ok
+test_memory (__main__.Tests.test_memory) ... ok
+test_partial_merge_all_offsets (__main__.Tests.test_partial_merge_all_offsets) ... ok
+test_shift_large_count (__main__.Tests.test_shift_large_count) ... ok
+test_strict_rejections (__main__.Tests.test_strict_rejections) ... ok
+test_w_zext (__main__.Tests.test_w_zext) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 7.091s
+
+OK
+
+EXIT_CODE=0

@@ -1,0 +1,9 @@
+File "/home/charles/.t3/worktrees/Picinae/t3-0672c15b/Examples/claude/inventory/e02-arm-inventory/evidence/e02_toascii_smoke.v", line 4, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g

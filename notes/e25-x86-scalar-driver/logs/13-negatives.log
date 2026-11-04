@@ -1,0 +1,61 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-83d5497b
+COMMAND=python3 notes/e25-x86-scalar-driver/check-failures.py
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/lift-x64.py', '--cet-disabled', '--out', '/home/charles/code/friends/.toolchains/e25-x86-scalar-driver/negative.3r5kbfj5/missing', 'e25_missing_symbol']
+FAIL Ghidra script failed: ValueError: e25_missing_symbol: expected one nonempty FUNC extent, got set(); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/logs/aacc88cb94f74e5ea9a9bf4039179e07.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/lift-x64.py', '--cet-disabled', '--out', '/home/charles/code/friends/.toolchains/e25-x86-scalar-driver/negative.3r5kbfj5/mixed-missing', 'toascii', 'e25_missing_symbol']
+FAIL Ghidra script failed: ValueError: e25_missing_symbol: expected one nonempty FUNC extent, got set(); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/logs/69d7060c15ff424e8aed706cd4677026.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/lift-x64.py', '--out', '/home/charles/code/friends/.toolchains/e25-x86-scalar-driver/negative.3r5kbfj5/cet-default', 'toascii']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: toascii 0x13a170 ENDBR64: ENDBR64 requires explicit CET-disabled profile and exact empty-pcode encoding; raw pcode: ; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/logs/214b249db92d4e7197886a41d7ac8f56.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/lift-x64.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e25-x86-scalar-driver/negative.3r5kbfj5/mixed-vector', 'scalar_caller', 'scalar_callee', 'unsupported_vector']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unsupported_vector 0x101030 PXOR XMM0,XMM0: unmodeled instruction PXOR XMM0,XMM0; raw pcode: (register, 0x1200, 16) INT_XOR (register, 0x1200, 16) , (register, 0x1200, 16); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/logs/6c88fef1f587412fbabc7874f19602fa.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/lift-x64.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e25-x86-scalar-driver/negative.3r5kbfj5/indirect-call', 'unsupported_indirect']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unsupported_indirect 0x101035 CALL RAX: unmodeled op CALLIND; raw pcode: (unique, 0x3cc00, 8) COPY (register, 0x0, 8); (register, 0x20, 8) INT_SUB (register, 0x20, 8) , (const, 0x8, 8);  ---  STORE (const, 0x1b1, 8) , (register, 0x20, 8) , (const, 0x101037, 8);  ---  CALLIND (unique, 0x3cc00, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/logs/01b966b572c54ee7b440eb4da66cf85b.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/lift-x64.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e25-x86-scalar-driver/negative.3r5kbfj5/rep', 'unsupported_rep']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unsupported_rep 0x101038 MOVSB.REP RDI,RSI: unmodeled instruction MOVSB.REP RDI,RSI; raw pcode: (unique, 0x13500, 1) INT_EQUAL (register, 0x8, 8) , (const, 0x0, 8);  ---  CBRANCH (ram, 0x10103a, 8) , (unique, 0x13500, 1); (register, 0x8, 8) INT_SUB (register, 0x8, 8) , (const, 0x1, 8); (unique, 0x11280, 8) COPY (register, 0x38, 8); (unique, 0x11300, 8) INT_ADD (register, 0x38, 8) , (const, 0x1, 8); (unique, 0x11380, 8) INT_ZEXT (register, 0x20a, 1); (unique, 0x11400; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/logs/5cfae494d59e4378ab8f2e6614349b9e.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/lift-x64.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e25-x86-scalar-driver/negative.3r5kbfj5/unclosed-call', 'scalar_caller']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: direct CALL outside selected instruction boundaries: 0x101006; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/logs/fc0fb65253d143fe861fea9de477e207.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/lift-x64.py', '--out', '/home/charles/code/friends/.toolchains/e25-x86-scalar-driver/negative.3r5kbfj5/existing', 'abs']
+usage: lift-x64.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                   [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                   symbols [symbols ...]
+lift-x64.py: error: output directory already exists; refusing stale/replaced output
+EXPECTED_EXIT=2 ACTUAL_EXIT=2
+COMMAND=['/home/charles/miniconda3/bin/python3', '-c', "import sys; sys.path.insert(0,'/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter'); from test_x64 import *; X64Lifter(Language()).instruction(Insn('MOV',Op('CALLOTHER',None,VN('constant',0,4))))"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/pcode2coq_x64.py", line 243, in instruction
+    code,ins,out = self.shape(op)
+                   ^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/pcode2coq_x64.py", line 189, in shape
+    raise Unsupported(f'unmodeled op {code}')
+pcode2coq_scalar.Unsupported: unmodeled op CALLOTHER
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '-c', "import sys; sys.path.insert(0,'/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter'); from test_x64 import *; X64Lifter(Language()).instruction(Insn('MOV',Op('COPY',VN('register',999,8),VN('constant',0,8))))"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/pcode2coq_x64.py", line 246, in instruction
+    self.register(vn)
+  File "/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/pcode2coq_x64.py", line 36, in register
+    raise Unsupported(f'unknown register {vn}')
+pcode2coq_scalar.Unsupported: unknown register <test_scalar.VN object at 0x7f50bcb3ba70>
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '-c', "import sys; sys.path.insert(0,'/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter'); from test_x64 import *; X64Lifter(Language()).instruction(Insn('JZ',Op('CBRANCH',None,VN('constant',0,8))))"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/pcode2coq_x64.py", line 243, in instruction
+    code,ins,out = self.shape(op)
+                   ^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-83d5497b/tools/ghidra-lifter/pcode2coq_x64.py", line 191, in shape
+    raise Unsupported(f'malformed {code} pcode')
+pcode2coq_scalar.Unsupported: malformed CBRANCH pcode
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+PASS real strict negative batches, stale-output refusal and opcode/register/branch subprocesses; no partial publication
+
+EXIT_CODE=0

@@ -1,0 +1,21 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-83d5497b
+COMMAND=python3 tools/ghidra-lifter/test_x64.py
+test_actual_add_sub_flags (__main__.Tests.test_actual_add_sub_flags) ... ok
+test_actual_auxiliary_flag (__main__.Tests.test_actual_auxiliary_flag) ... ok
+test_actual_call_partial_memory_and_address_shapes (__main__.Tests.test_actual_call_partial_memory_and_address_shapes) ... ok
+test_canonical_temps_and_instruction_reset (__main__.Tests.test_canonical_temps_and_instruction_reset) ... ok
+test_carry_and_signed_overflow (__main__.Tests.test_carry_and_signed_overflow) ... ok
+test_flag_byte_read_and_one_bit_write (__main__.Tests.test_flag_byte_read_and_one_bit_write) ... ok
+test_forward_pcode_branch_and_definite_initialization (__main__.Tests.test_forward_pcode_branch_and_definite_initialization) ... ok
+test_glibc_actual_pcode_oracles (__main__.Tests.test_glibc_actual_pcode_oracles) ... ok
+test_memory_above_32bits (__main__.Tests.test_memory_above_32bits) ... ok
+test_partial_register_and_r32_zero (__main__.Tests.test_partial_register_and_r32_zero) ... ok
+test_strict_instruction_gate (__main__.Tests.test_strict_instruction_gate) ... ok
+test_strict_invalid_pcode_and_registers (__main__.Tests.test_strict_invalid_pcode_and_registers) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 9.975s
+
+OK
+
+EXIT_CODE=0

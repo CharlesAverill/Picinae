@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-83d5497b
+COMMAND=bash notes/e25-x86-scalar-driver/fixture/build.sh
+fbc4ef542d199d81f98f0c1a19ff339694a6a6ac0ef509653d12d75bec5f7576  /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/fixture-build/scalar.so
+
+EXIT_CODE=0
