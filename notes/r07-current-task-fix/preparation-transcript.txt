@@ -1,0 +1,34 @@
+Initial observation (before creating notes/r07-current-task-fix):
+  pwd: /home/charles/.t3/worktrees/Picinae/t3-02095182
+  git status --short --branch: ## t3/r07-current-task-fix
+  git rev-parse HEAD: 71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+  git merge-base origin/llm_generated_proofs HEAD:
+    49956416928e5b6bb3928b54ae33e3b81091f006
+  git log --format='%H %s' origin/llm_generated_proofs..HEAD:
+    71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+  git diff --stat: empty
+
+The first read-only git ls-remote --heads fork
+refs/heads/llm-proofs/r07-current-task-fix failed with exit 128:
+  fatal: unable to access 'https://github.com/CharlesDardaman/Picinae.git/': Could not resolve host: github.com
+The network-enabled retry was recorded with tools/record-command.sh in
+remote-branch-check.log: exit 0, empty result, before any branch rename.
+
+The first sandbox git merge --ff-only
+393e57f7973bbc0ea29e56902816e1ceb92cb20f failed with exit 128:
+  fatal: update_ref failed for ref 'ORIG_HEAD': cannot lock ref 'ORIG_HEAD': Unable to create '/home/charles/code/friends/CharlesAverill/Picinae/.git/worktrees/t3-02095182/ORIG_HEAD.lock': Read-only file system
+The subsequent git branch -m llm-proofs/r07-current-task-fix also failed:
+  error: unable to move logfile logs/refs/heads/t3/r07-current-task-fix to logs/refs/.tmp-renamed-log: Read-only file system
+  fatal: branch rename failed
+No import/rename succeeded in that sandbox attempt. A metadata-write-enabled
+retry succeeded and is recorded verbatim in checkpoint-import.log (exit 0).
+Only this prepared branch was renamed. No worktree was created.
+
+The initial status in ancestry-before.log includes this new notes directory
+as untracked; tracked files and index were clean. The initial observation
+above preceded creation of the evidence directory.
+
+All compiler/query commands use the assigned resource-run.py gate, the
+read-only isolated picinae-env wrapper, 1750000 KiB address-space cap, stack
+65536 KiB, cache disabled and -j1. The gate needs permission to update its
+own shared admission lease; its config is never edited by this unit.

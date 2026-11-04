@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-02095182
+COMMAND=bash -e -c cmp\ Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.v\ notes/r07-current-task-fix/attempt-02.v.txt\;\ cmp\ Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.v\ _build/default/Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.v\;\ sha256sum\ Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.v\ Examples/FreeRTOS/xTaskGetCurrentTaskHandle_armv6m.v\ _build/default/Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.vo\;\ stat\ -c\ \"%n\ %s\ bytes\"\ _build/default/Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.vo\;\ git\ diff\ --check\ --\ dune\;\ bash\ -n\ notes/r07-current-task-fix/validate.sh\;\ git\ diff\ --exit-code\ 393e57f7973bbc0ea29e56902816e1ceb92cb20f\ --\ notes/r07-current-task\;\ test\ \"\$\(git\ rev-parse\ refs/heads/llm-proofs/r07-current-task\)\"\ =\ 393e57f7973bbc0ea29e56902816e1ceb92cb20f
+67b9957a82d8f739f93141f3d3200736da0a9a7d1269cf0d36e574d34a893639  Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.v
+ab04b58fe6006e5fd75b5cf3c44cf5aaf51fabef7f644b12cd55a785c110d6f4  Examples/FreeRTOS/xTaskGetCurrentTaskHandle_armv6m.v
+71e6ad90a0d9f0182fec2e8a727b17124c6bd5548ddd47e7b1b9f53c9016c09d  _build/default/Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.vo
+_build/default/Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.vo 74224 bytes
+
+EXIT_CODE=0
