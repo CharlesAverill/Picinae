@@ -1,0 +1,35 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-48d97224
+COMMAND=bash -e -c git\ status\ --short\;\ git\ branch\ --show-current\;\ git\ rev-parse\ HEAD\;\ git\ rev-list\ --parents\ -n1\ HEAD\;\ git\ merge-base\ origin/llm_generated_proofs\ HEAD\;\ git\ log\ --format=\"%H\ %s\"\ origin/llm_generated_proofs..HEAD\;\ git\ diff\ --stat\ origin/llm_generated_proofs...HEAD\;\ git\ merge-base\ --is-ancestor\ HEAD\ 5fec2fc24d0c739bafc08add426f02a3085e15cd
+?? notes/r18-mutex-held/
+t3/prove-mutex-held-count
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 49956416928e5b6bb3928b54ae33e3b81091f006
+49956416928e5b6bb3928b54ae33e3b81091f006
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+ BUILDING.md                                        | 120 ++++++++++++
+ dune                                               |  38 ++++
+ dune-project                                       |   3 +
+ notes/e00-build/README.md                          | 168 +++++++++++++++++
+ notes/e00-build/check-selection.py                 |  16 ++
+ notes/e00-build/logs/01-dune-smoke.log             |   8 +
+ notes/e00-build/logs/02-dune-smoke.log             | 148 +++++++++++++++
+ notes/e00-build/logs/03-dune-smoke.log             |  89 +++++++++
+ notes/e00-build/logs/04-audit-tests.log            |   9 +
+ notes/e00-build/logs/05-baseline-source-audit.log  | 204 +++++++++++++++++++++
+ notes/e00-build/logs/06-toolchain.log              |  12 ++
+ notes/e00-build/logs/07-base-audit.log             |  15 ++
+ notes/e00-build/logs/08-fork-collision-check.log   |   4 +
+ notes/e00-build/logs/09-clean-build.log            | 195 ++++++++++++++++++++
+ notes/e00-build/logs/10-harness-tests.log          |   9 +
+ notes/e00-build/logs/11-x86-assumptions.log        |  43 +++++
+ notes/e00-build/logs/12-selected-objects.log       |  27 +++
+ notes/e00-build/logs/13-arm8-assumptions.log       |  29 +++
+ .../e00-build/logs/14-missing-theorem-negative.log |   9 +
+ .../logs/15-extensionality-provenance.log          |  13 ++
+ tools/audit-proof-source.py                        | 108 +++++++++++
+ tools/print-assumptions.sh                         |  36 ++++
+ tools/record-command.sh                            |  24 +++
+ tools/test-proof-audit.py                          |  82 +++++++++
+ 24 files changed, 1409 insertions(+)
+
+EXIT_CODE=0

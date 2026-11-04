@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-48d97224
+COMMAND=sha256sum Examples/FreeRTOS/armv6m_pvTaskIncrementMutexHeldCount_proof.v notes/r18-mutex-held/initial-attempt.v.txt Examples/FreeRTOS/pvTaskIncrementMutexHeldCount_armv6m.v
+645995bad29c07910a2eac3c71c7b3e811ecf820f25763f2569cad85fb3ab45f  Examples/FreeRTOS/armv6m_pvTaskIncrementMutexHeldCount_proof.v
+645995bad29c07910a2eac3c71c7b3e811ecf820f25763f2569cad85fb3ab45f  notes/r18-mutex-held/initial-attempt.v.txt
+447b2821c35d983c36509cdbbe0bdd6e53c35a9594bcdd3af872c45ebb6dbf53  Examples/FreeRTOS/pvTaskIncrementMutexHeldCount_armv6m.v
+
+EXIT_CODE=0
