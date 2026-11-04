@@ -1,0 +1,14 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-e23fc53c
+COMMAND=python3 notes/a-strcmp-complete/resource-evidence.py --cancel-waiter
+UTC: 2026-11-04 02:13:51
+MemAvailable_KiB: 40345416
+Active_reservations_KiB: 17500000
+Required_floor_KiB: 20971520
+Requested_unit_KiB: 4000000
+Headroom_shortfall_KiB: 2126104
+Admission_wait_messages: 64
+Conservative_wait_lower_bound_seconds: 1260
+Own_gate_PID: 724990 elapsed_seconds: 1340.53
+Stopped only own unadmitted waiter: 724990
+
+EXIT_CODE=0

@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-013cef89
+COMMAND=git branch -m llm-proofs/a-strcmp-fix
+
+EXIT_CODE=0

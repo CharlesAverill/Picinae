@@ -1,0 +1,18 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-013cef89
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 4000000\;\ ulimit\ -s\ 65536\;\ rocq\ compile\ -q\ -R\ _build/default\ Picinae\ /home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/SegmentProbe.v
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+Closed under the global context
+Closed under the global context
+Goal at < 1650860 >
+Goal at < 1650864 >
+BYTE EXIT SIGN GOAL:
+((toZ 32%N (m Ⓑ[ (p + K)%N ] ⊖ m Ⓑ[ (q + K)%N ]) ?= 0)%Z =
+ (m Ⓑ[ p + K ] ?= m Ⓑ[ q + K ]))
+File "/home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/SegmentProbe.v", line 169, characters 6-111:
+Error: Not convertible.
+
+
+EXIT_CODE=1

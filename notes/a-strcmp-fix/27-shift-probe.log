@@ -1,0 +1,29 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-013cef89
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 4000000\;\ ulimit\ -s\ 65536\;\ rocq\ compile\ -q\ -R\ _build/default\ Picinae\ /home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/ShiftProbe.v
+File "/home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/ShiftProbe.v", line 123, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "/home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/ShiftProbe.v", line 123, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "/home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/ShiftProbe.v", line 123, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "/home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/ShiftProbe.v", line 128, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "/home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/ShiftProbe.v", line 128, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "/home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/ShiftProbe.v", line 128, characters 12-21:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+Closed under the global context
+
+EXIT_CODE=0
