@@ -45,7 +45,8 @@
   Examples.claude.lifter.scalar_ccmp.e30_ccmp
   Examples.claude.lifter.scalar_ccmp.e30___memchr_nosimd_arm8
   Examples.claude.lifter.scalar_ccmp.e30_strcmp_arm8
-  Examples.claude.lifter.scalar_ccmp.e30_wcschrnul_arm8))
+  Examples.claude.lifter.scalar_ccmp.e30_wcschrnul_arm8
+  Examples.claude.arm8_wcschrnul_proof))
 
 (alias
  (name core)

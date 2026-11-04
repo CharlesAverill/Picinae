@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-62dac67c
+COMMAND=sha256sum Examples/claude/arm8_wcschrnul_proof.v notes/a-wcschrnul/initial-attempt.v.txt Examples/claude/lifter/scalar_ccmp/e30_wcschrnul_arm8.v
+4d3988242e3c104d76273dea3e3ea98238ee911a429a037552de4c7e7585ba29  Examples/claude/arm8_wcschrnul_proof.v
+4d3988242e3c104d76273dea3e3ea98238ee911a429a037552de4c7e7585ba29  notes/a-wcschrnul/initial-attempt.v.txt
+ab43b39ccf445c4cb9889ae1e2df855f35c9daf85d53056c1f7d2c4127bd3d20  Examples/claude/lifter/scalar_ccmp/e30_wcschrnul_arm8.v
+
+EXIT_CODE=0
