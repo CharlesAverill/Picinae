@@ -1,6 +1,7 @@
 (* pvTaskIncrementMutexHeldCount -- ARMv6-M sequential IL contract.
    Initial author: OpenAI gpt-6-astra, xhigh, service tier default; r18-mutex-held.
-   Status: PARTIAL; first full build failed. Final proof producer: none.
+   Status: WIP / PARTIAL; stopped on Charles's wrap-up order.
+   Final proof producer: none; no successful full proof-module build.
 
    Provenance: official FreeRTOS V11.1.0 commit
    dbf70559b27d39c1fdb68dfb9a32140b6a6777a0; tasks.c SHA256
@@ -174,14 +175,23 @@ Proof.
   - split; reflexivity.
 Qed.
 
-(* In particular every 32-bit current pointer, including NULL, is realizable. *)
+(* In particular every 32-bit current pointer, including NULL, is realizable.
+   Only this witness needs the abstract memory-size definition unfolded. *)
+Local Transparent memsize.
 Theorem mutex_held_current_satisfiable : forall p, p < 2^32 -> exists s,
   models armv6mtypctx s /\ mutex_held_permissions s /\
   mutex_held_ordinary_lr (s R_LR) /\ mutex_held_current (s V_MEM32) = p.
 Proof.
-  (* PARTIAL: exact initial attempt and first-build diagnostics are in
-     notes/r18-mutex-held; Astra one-shot policy requires a Sol handoff. *)
-Abort.
+  intros p B. set (m := setmem 32 LittleE 4 0 0x20000108 p).
+  assert (MT: m < 2^(8*2^32)).
+  { apply (setmem_welltyped 32 LittleE 4 0 0x20000108 p).
+    unfold memsize. exact (mutex_held_zero_bound (2^32*8)). }
+  destruct (mutex_held_entry_satisfiable m MT) as [s [MDL [MEM [PERM LR]]]].
+  exists s. split; [exact MDL|]. split; [exact PERM|]. split; [exact LR|].
+  rewrite MEM. unfold mutex_held_current, m.
+  rewrite getmem_setmem by discriminate. apply N.mod_small. exact B.
+Qed.
+Local Opaque memsize.
 
 Theorem mutex_held_correct : forall s t s' x'
   (ENTRY: startof t (x',s') = (Addr 0x153c,s))
@@ -189,9 +199,37 @@ Theorem mutex_held_correct : forall s t s' x'
   satisfies_all pvTaskIncrementMutexHeldCount_armv6m_prog
     (mutex_held_invariants s) mutex_held_exit ((x',s')::t).
 Proof.
-  (* PARTIAL: exact initial attempt and first-build diagnostics are in
-     notes/r18-mutex-held; Astra one-shot policy requires a Sol handoff. *)
-Abort.
+  intros. apply prove_invs.
+  - simpl. rewrite ENTRY. armv6m_step. reflexivity.
+  - intros.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption.
+    apply mutex_held_welltyped. intro MDL1.
+    clear - PRE MDL1. rename t1 into t.
+    destruct_inv 32 PRE. subst s1.
+    repeat armv6m_step.
+    all: unfold mutex_held_postcondition, mutex_held_memory,
+      mutex_held_increment, mutex_held_address, mutex_held_current,
+      mutex_held_frame, mutex_held_keep.
+    (* Split the frame before converting memory equalities: converting the
+       two differently normalized stores directly can expand large terms. *)
+    all: rewrite BC; split; [reflexivity|]; split.
+    all: try (intros v KEEP; destruct v; try contradiction; reflexivity).
+    + reflexivity.
+    + rewrite (setmem_mod_l 32 LittleE 4 (s V_MEM32)
+        (s V_MEM32 Ⓓ[0x20000108]+72)
+        ((s V_MEM32 Ⓓ[(s V_MEM32 Ⓓ[0x20000108]+72) mod 2^32]+1) mod 2^32)).
+      rewrite (getmem_mod_l 32 LittleE 4 (s V_MEM32)
+        (s V_MEM32 Ⓓ[0x20000108]+72)).
+      pose proof (setmem_mod_r 32 LittleE 4 (s V_MEM32)
+        (s V_MEM32 Ⓓ[0x20000108]+72)
+        (s V_MEM32 Ⓓ[s V_MEM32 Ⓓ[0x20000108]+72]+1)) as STORE_MOD.
+      change (4*8) with 32 in STORE_MOD.
+      rewrite STORE_MOD.
+      rewrite (N.add_comm (s V_MEM32 Ⓓ[0x20000108]) 72).
+      rewrite (N.add_comm (s V_MEM32 Ⓓ[72+s V_MEM32 Ⓓ[0x20000108]]) 1).
+      reflexivity.
+Qed.
 
 Corollary mutex_held_post_at_bx : forall s t s'
   (ENTRY: startof t (Addr 0x154a,s') = (Addr 0x153c,s))
@@ -200,9 +238,10 @@ Corollary mutex_held_post_at_bx : forall s t s'
   (UT: unterminated mutex_held_exit t),
   mutex_held_postcondition s s'.
 Proof.
-  (* PARTIAL: exact initial attempt and first-build diagnostics are in
-     notes/r18-mutex-held; Astra one-shot policy requires a Sol handoff. *)
-Abort.
+  intros.
+  pose proof (mutex_held_correct s t s' (Addr 0x154a) ENTRY MDL) as ALL.
+  pose proof (satall_trueif_inv _ _ _ _ ALL EXEC UT) as POST. exact POST.
+Qed.
 Corollary mutex_held_preserves_callee_saved : forall s t s'
   (ENTRY: startof t (Addr 0x154a,s') = (Addr 0x153c,s))
   (MDL: models armv6mtypctx s)
@@ -211,18 +250,39 @@ Corollary mutex_held_preserves_callee_saved : forall s t s'
   forall v, In v [R_R4;R_R5;R_R6;R_R7;R_R8;R_R9;R_R10;R_R11;R_SP;R_LR] ->
     s' v = s v.
 Proof.
-  (* PARTIAL: exact initial attempt and first-build diagnostics are in
-     notes/r18-mutex-held; Astra one-shot policy requires a Sol handoff. *)
-Abort.
+  intros s t s' ENTRY MDL EXEC UT v IN.
+  pose proof (proj2 (proj2 (mutex_held_post_at_bx s t s' ENTRY MDL EXEC UT))) as FRAME.
+  apply FRAME. destruct IN as [<-|[<-|[<-|[<-|[<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]]]]]];
+    exact I.
+Qed.
 
 Theorem mutex_held_return_step : forall s,
   mutex_held_ordinary_lr (s R_LR) ->
   can_step pvTaskIncrementMutexHeldCount_armv6m_prog
     ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s),(Addr 0x154a,s)).
 Proof.
-  (* PARTIAL: exact initial attempt and first-build diagnostics are in
-     notes/r18-mutex-held; Astra one-shot policy requires a Sol handoff. *)
-Abort.
+  intros s [ODD BOUND].
+  assert (LOW: s R_LR mod 2 = 1).
+  { apply mod2_1_neven. rewrite <- N.negb_odd, ODD. reflexivity. }
+  assert (XS: exec_stmt armv6mtypctx s (armv6m_bxwritepc (Var R_LR))
+    armv6mtypctx s (Some (Addr (N.land (s R_LR) (N.ones 32 - 1))))).
+  { unfold armv6m_bxwritepc. eapply XIf with (b:=1).
+    - assert (E: eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+        (s R_LR mod 2) 1).
+      { apply ECast with (w:=32) (n:=s R_LR). apply EVar. reflexivity. }
+      rewrite LOW in E. exact E.
+    - apply XJmp with (w:=32).
+      apply EBinOp with (w:=32) (n1:=s R_LR) (n2:=N.ones 32 - 1);
+        [apply EVar; reflexivity | apply EWord]. }
+  assert (CS: can_step pvTaskIncrementMutexHeldCount_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),reset_temps s s),(Addr 0x154a,s))).
+  { eapply CanStep with (sz:=2) (q:=armv6m_bxwritepc (Var R_LR))
+      (x:=Some (Addr (N.land (s R_LR) (N.ones 32 - 1))));
+      [reflexivity | exact XS]. }
+  assert (RESET: reset_temps s s = s).
+  { extensionality v. destruct v; reflexivity. }
+  rewrite RESET in CS. exact CS.
+Qed.
 Corollary mutex_held_caller_result : forall s t s'
   (ENTRY: startof t (Addr 0x154a,s') = (Addr 0x153c,s))
   (MDL: models armv6mtypctx s)
@@ -233,6 +293,8 @@ Corollary mutex_held_caller_result : forall s t s'
   exec_prog pvTaskIncrementMutexHeldCount_armv6m_prog
     ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s')::(Addr 0x154a,s')::t).
 Proof.
-  (* PARTIAL: exact initial attempt and first-build diagnostics are in
-     notes/r18-mutex-held; Astra one-shot policy requires a Sol handoff. *)
-Abort.
+  intros. pose proof (mutex_held_post_at_bx s t s' ENTRY MDL EXEC UT) as POST.
+  assert (LRFRAME: s' R_LR = s R_LR) by (apply (proj2 (proj2 POST)); exact I).
+  split; [exact POST|]. apply exec_prog_step; [exact EXEC|].
+  rewrite <- LRFRAME. apply mutex_held_return_step. rewrite LRFRAME. exact LR.
+Qed.

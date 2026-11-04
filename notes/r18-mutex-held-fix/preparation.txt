@@ -1,0 +1,17 @@
+Initial read-only observations, before notes creation:
+CWD=/home/charles/.t3/worktrees/Picinae/t3-9c5b07a8
+$ git status --short --branch
+## t3/9c5b07a8
+$ git rev-parse HEAD
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+$ git log -1 --format='%H %P %s'
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 49956416928e5b6bb3928b54ae33e3b81091f006 Add selective Dune builds and proof audit harness
+The platform subsequently named the prepared branch t3/mutex-held-proof-fix
+before this agent's sole branch rename. It was still clean at e00 except the
+new untracked fixer notes. Initial sandbox ls-remote failed DNS; authorized
+network retry exited 0 with no branch result; recorded repeat is 02-remote-name.log.
+The first ff-only merge failed because Git metadata is read-only in sandbox;
+the authorized retry succeeded (03b-prerequisite.log). Rename was limited to
+the prepared current branch (04-rename.log). No other branch or remote write.
+All 16 original statements and definitions and exact initial evidence are
+preserved; archive restoration byte equality is recorded in 05-restored.log.
