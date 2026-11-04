@@ -1,0 +1,141 @@
+Lemma ring_last_app : forall a xs ys,
+  ring_last a (xs++ys)=ring_last (ring_last a xs) ys.
+
+Lemma ring_last_member : forall a xs, ring_last a xs=a \/ In (ring_last a xs) xs.
+
+Lemma ring_hd_member : forall a xs, hd a xs=a \/ In (hd a xs) xs.
+
+Lemma ring_count_insert : forall (left right:list N) P,
+  N.of_nat (length (left++P::right))=N.of_nat (length (left++right))+1.
+
+Lemma ring_count_remove : forall (left right:list N) P,
+  0<N.of_nat (length (left++P::right)) /\
+  N.of_nat (length (left++right))=N.of_nat (length (left++P::right))-1.
+
+Lemma ring_members_insert : forall (left right:list N) P q,
+  In q (left++P::right) <-> q=P \/ In q (left++right).
+
+Lemma ring_members_remove : forall (left right:list N) P q,
+  NoDup (left++P::right) ->
+  (In q (left++right) <-> In q (left++P::right) /\ q<>P).
+
+Lemma ring_nodup_insert : forall (left right:list N) P,
+  NoDup (left++right) -> ~In P (left++right) -> NoDup (left++P::right).
+
+Lemma ring_regions_separate : forall L xs p q,
+  ring_geometry L xs -> In p (L::xs) -> In q (L::xs) -> p<>q ->
+  separate32 p 20 q 20.
+
+Lemma ring_object_fields_separate : forall L xs p q i j,
+  ring_geometry L xs -> In p (L::xs) -> In q (L::xs) ->
+  In i fields20 -> In j fields20 -> p<>q \/ i<>j ->
+  separate32 (p+i) 4 (q+j) 4.
+
+Lemma ring_fresh_geometry : forall m L left right P V O,
+  ring_geometry L (left++right) -> ring_fresh m L (left++right) P V O ->
+  ring_geometry L (left++P::right).
+
+Lemma ring_permission_word : forall (perm:store->addr->Prop) s p off,
+  MemAcc perm s p 32 20 -> off+4<=20 -> MemAcc perm s (p+off) 32 4.
+
+Lemma ring_insert_links : forall m L left right idx V O,
+  ring_rep m L (left++right) idx V O -> idx=hd (ring_sentinel L) right ->
+  insert_end_links m L idx (ring_last (ring_sentinel L) left).
+
+Lemma ring_remove_original : forall m L left P right idx V O,
+  ring_rep m L (left++P::right) idx V O ->
+  list_remove_original m P (hd (ring_sentinel L) right)
+    (ring_last (ring_sentinel L) left) L (N.of_nat (length (left++P::right))) idx.
+
+Lemma ring_insert_layout : forall m L left right idx P V O,
+  ring_rep m L (left++right) idx V O -> idx=hd (ring_sentinel L) right ->
+  ring_fresh m L (left++right) P V O ->
+  insert_end_layout L P idx (ring_last (ring_sentinel L) left).
+
+Lemma ring_remove_layout : forall m L left P right idx V O,
+  ring_rep m L (left++P::right) idx V O ->
+  list_remove_layout P (hd (ring_sentinel L) right)
+    (ring_last (ring_sentinel L) left) L.
+
+Theorem ring_insert_pre : forall s L left right idx P V O,
+  ring_rep (s V_MEM32) L (left++right) idx V O ->
+  idx=hd (ring_sentinel L) right -> ring_fresh (s V_MEM32) L (left++right) P V O ->
+  ring_insert_permissions s L (left++right) P ->
+  s R_R0=L -> s R_R1=P -> insert_end_ordinary_lr (s R_LR) ->
+  insert_end_pre s L P idx (ring_last (ring_sentinel L) left).
+
+Theorem ring_remove_pre : forall s L left P right idx V O,
+  ring_rep (s V_MEM32) L (left++P::right) idx V O ->
+  ring_permissions s L (left++P::right) -> s R_R0=P ->
+  list_remove_pre P (hd (ring_sentinel L) right)
+    (ring_last (ring_sentinel L) left) L (N.of_nat (length (left++P::right))) idx s.
+
+Theorem ring_insert_memory : forall m L left right idx P V O,
+  ring_rep m L (left++right) idx V O -> idx=hd (ring_sentinel L) right ->
+  ring_fresh m L (left++right) P V O -> N.of_nat (length (left++right))+1<2^32 ->
+  ring_rep (insert_end_memory m L P idx (ring_last (ring_sentinel L) left))
+    L (left++P::right) idx V O.
+
+Theorem ring_remove_memory : forall m L left P right idx V O,
+  ring_rep m L (left++P::right) idx V O ->
+  ring_rep (list_remove_mem m P (hd (ring_sentinel L) right)
+    (ring_last (ring_sentinel L) left) L (N.of_nat (length (left++P::right))) idx)
+    L (left++right) (ring_remove_cursor idx P (ring_last (ring_sentinel L) left)) V O.
+
+Theorem ring_insert_frame : forall m L P idx prev,
+  insert_end_byte_frame m (insert_end_memory m L P idx prev) L P idx prev.
+
+Theorem ring_remove_frame : forall m P nxt prev L c idx,
+  list_remove_byte_frame m (list_remove_mem m P nxt prev L c idx) P nxt prev L idx.
+
+Theorem ring_insert_refines : forall s0 t s L left right idx P V O,
+  ring_rep (s0 V_MEM32) L (left++right) idx V O ->
+  idx=hd (ring_sentinel L) right -> ring_fresh (s0 V_MEM32) L (left++right) P V O ->
+  N.of_nat (length (left++right))+1<2^32 ->
+  ring_insert_permissions s0 L (left++right) P ->
+  s0 R_R0=L -> s0 R_R1=P -> insert_end_ordinary_lr (s0 R_LR) ->
+  models armv6mtypctx s0 -> startof t (Addr 0x70,s)=(Addr 0x5c,s0) ->
+  exec_prog vListInsertEnd_armv6m_prog ((Addr 0x70,s)::t) -> unterminated insert_end_exit t ->
+  ring_rep (s V_MEM32) L (left++P::right) idx V O /\
+  (forall q, In q (left++P::right) <-> q=P \/ In q (left++right)) /\
+  field32 (s V_MEM32) L 0=N.of_nat (length (left++right))+1 /\
+  insert_end_post s0 L P idx (ring_last (ring_sentinel L) left) s.
+
+Theorem ring_remove_refines : forall s0 t s L left P right idx V O,
+  ring_rep (s0 V_MEM32) L (left++P::right) idx V O ->
+  ring_permissions s0 L (left++P::right) -> s0 R_R0=P -> models armv6mtypctx s0 ->
+  startof t (Addr 0xbc,s)=(Addr 0xa0,s0) ->
+  exec_prog uxListRemove_armv6m_prog ((Addr 0xbc,s)::t) -> unterminated list_remove_exit t ->
+  ring_rep (s V_MEM32) L (left++right)
+    (ring_remove_cursor idx P (ring_last (ring_sentinel L) left)) V O /\
+  (forall q, In q (left++right) <-> In q (left++P::right) /\ q<>P) /\
+  s R_R0=N.of_nat (length (left++right)) /\
+  list_remove_effects (s0 V_MEM32) (s V_MEM32) P (hd (ring_sentinel L) right)
+    (ring_last (ring_sentinel L) left) L (N.of_nat (length (left++P::right))) idx /\
+  (forall v, list_remove_preserved v -> s v=s0 v).
+
+Theorem ring_empty_witness :
+  ring_rep (empty_image 0 4096) 4096 [] 4104 (fun _=>42) (fun _=>99).
+
+Theorem ring_singleton_witness : forall idx, idx=4104 \/ idx=8192 ->
+  ring_rep (ring_singleton_image idx) 4096 [8192] idx (fun _=>42) (fun _=>99).
+
+Theorem ring_multi_witness : forall idx, idx=4104 \/ idx=8192 \/ idx=12288 ->
+  ring_rep (ring_multi_image idx) 4096 [8192;12288] idx (fun _=>42) (fun _=>99).
+
+Theorem ring_empty_insert_witness : exists s,
+  models armv6mtypctx s /\
+  ring_rep (s V_MEM32) 4096 [] 4104 (fun p=>field32 (s V_MEM32) p 0)
+    (fun p=>field32 (s V_MEM32) p 12) /\
+  insert_end_pre s 4096 8192 4104 4104.
+
+Theorem ring_singleton_remove_witness : forall equal:bool, exists s,
+  models armv6mtypctx s /\
+  ring_rep (s V_MEM32) 4096 [8192] (if equal then 8192 else 4104)
+    (fun _=>42) (fun _=>99) /\
+  list_remove_pre 8192 4104 4104 4096 1 (if equal then 8192 else 4104) s.
+
+Theorem ring_multi_remove_witness : forall idx,
+  idx=4104 \/ idx=8192 \/ idx=12288 -> exists s,
+  models armv6mtypctx s /\ ring_rep (s V_MEM32) 4096 [8192;12288] idx
+    (fun _=>42) (fun _=>99) /\ list_remove_pre 8192 12288 4104 4096 2 idx s.
