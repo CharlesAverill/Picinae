@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=bash notes/a-ffsl-fix/build.sh
+        rocq .Picinae.theory.d
+
+Interrupted explicitly after RBIT bit-blast stalled; wrapper session exit=130.
+No certificate produced. The unrestricted leaf case split was replaced.
