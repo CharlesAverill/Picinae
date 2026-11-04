@@ -1,0 +1,62 @@
+(* Pure flag normalization, with both operands representable. *)
+Lemma medium_sub_zero:
+  forall a b, a < 2^64 -> b < 2^64 ->
+  (msub 64 a b =? 0) = (a =? b).
+Proof.
+  intros a b A B. destruct (N.eqb_spec a b) as [E|E].
+  - subst. rewrite msub_diag. reflexivity.
+  - apply N.eqb_neq. intro H. apply E.
+    pose proof (add_msub 64 b a) as AM. rewrite H, N.add_0_r in AM.
+    rewrite (N.mod_small b), (N.mod_small a) in AM by assumption.
+    symmetry; exact AM.
+Qed.
+Print Assumptions medium_sub_zero.
+
+(* Only arithmetic hypotheses enter the solver. The original-memory loads
+   remain opaque while cpy_store composes their byte and outside-byte frames. *)
+Ltac medium_symbolic_stores n NN :=
+  lazymatch goal with
+  | |- cpy ?m (setmem 64 LittleE ?L ?M ?a (getmem 64 LittleE ?L ?m ?sa)) ?d ?s _ =>
+    let rec seek offsets :=
+      lazymatch offsets with
+      | ?k :: ?rest =>
+        first
+        [ let E := fresh "OFFSET" in
+          assert (E: a mod 2^64 = (d+k) mod 2^64)
+            by (clear - d n NN; unfold msub;
+                change (2^64) with 18446744073709551616 in *; lia);
+          eapply (cpy_store m M d s _ k L a sa);
+          [ medium_symbolic_stores n NN
+          | intros i I; clear - I NN; change (2^64) with 18446744073709551616 in *; lia
+          | clear; lia
+          | clear - NN; change (2^64) with 18446744073709551616 in *; lia
+          | exact E
+          | clear - s n NN; unfold msub;
+            change (2^64) with 18446744073709551616 in *; lia ]
+        | seek rest ]
+      | nil => fail "No matching medium store offset"
+      end
+    in seek constr:([0;8;16;24;32;40;48;56;n-64;n-56;n-48;n-40;n-32;n-24;n-16;n-8])
+  | |- cpy ?m ?m ?d ?s _ => apply cpy_empty
+  end.
+
+Ltac medium_symbolic_copied n NN :=
+  eapply cpy_copied; cycle 1;
+  [ medium_symbolic_stores n NN
+  | intro i; split; let HI := fresh "HI" in intro HI;
+    clear - HI NN; cbn in *; lia ].
+
+Ltac medium_prune NN :=
+  match goal with BC: ?b = ?v |- _ =>
+    lazymatch type of b with
+    | bool => solve [ exfalso; clear - NN BC;
+        repeat rewrite medium_sub_zero in BC by
+          (change (2^64) with 18446744073709551616 in *; lia);
+        repeat match type of BC with
+        | context [ ?a <=? ?b ] => destruct (N.leb_spec a b)
+        | context [ ?a <? ?b ] => destruct (N.ltb_spec a b)
+        | context [ ?a =? ?b ] => destruct (N.eqb_spec a b)
+        end;
+        cbn in BC; try discriminate; lia ]
+    end
+  end.
