@@ -1,0 +1,5 @@
+PASS 26 hash-validated REP instruction fragments: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/replay.O3sVoXHU/pinned
+Ghidra log: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/logs/7674876414ba4f7897c3e04396d27db0.log
+PASS 8 hash-validated REP instruction fragments: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/replay.O3sVoXHU/synthetic
+Ghidra log: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/logs/5ec3b05f00f74dafbaa7e69b0a916933.log
+PASS complete deterministic REP artifact sets --update

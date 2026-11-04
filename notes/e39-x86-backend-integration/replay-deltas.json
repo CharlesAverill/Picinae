@@ -1,0 +1,162 @@
+[
+  {
+    "unit": "e25",
+    "directory": "x64_scalar_smoke",
+    "identical_program_raw_files": 10,
+    "expected_receipt_deltas": {
+      "implementation_sha256": {
+        "historical": {
+          "pcode2coq_x64.py": "87750d6653110df94a22c8645891502aedcd5347bb252b2a19a3d5afdb00f90a",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_headless.py": "ea957d6ce1d04b168e3e595501c3bef56674065e36d661d14f403144155a2b83",
+          "lift-x64.py": "ba87a57b00c9f5b88cf47a0c8f0b9e6586e0cc2e9022f249085d1f561d12844a"
+        },
+        "replay": {
+          "pcode2coq_bitscan.py": "85bfc4060e3019b54125c7bd47cc3743645d0b61691837c36efad409282c825e",
+          "pcode2coq_x64.py": "c885c6a572288f766bd4d3506763cdbea2308ec0130c6d93907ab08653edb276",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_headless.py": "ea957d6ce1d04b168e3e595501c3bef56674065e36d661d14f403144155a2b83",
+          "lift-x64.py": "c12d1130cd76817659b1be9ea93f4e42b1e70c595c33ed097ebb2ade2bdbe2ff"
+        }
+      }
+    }
+  },
+  {
+    "unit": "e25",
+    "directory": "x64_scalar_fixture",
+    "identical_program_raw_files": 4,
+    "expected_receipt_deltas": {
+      "implementation_sha256": {
+        "historical": {
+          "pcode2coq_x64.py": "87750d6653110df94a22c8645891502aedcd5347bb252b2a19a3d5afdb00f90a",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_headless.py": "ea957d6ce1d04b168e3e595501c3bef56674065e36d661d14f403144155a2b83",
+          "lift-x64.py": "ba87a57b00c9f5b88cf47a0c8f0b9e6586e0cc2e9022f249085d1f561d12844a"
+        },
+        "replay": {
+          "pcode2coq_bitscan.py": "85bfc4060e3019b54125c7bd47cc3743645d0b61691837c36efad409282c825e",
+          "pcode2coq_x64.py": "c885c6a572288f766bd4d3506763cdbea2308ec0130c6d93907ab08653edb276",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_headless.py": "ea957d6ce1d04b168e3e595501c3bef56674065e36d661d14f403144155a2b83",
+          "lift-x64.py": "c12d1130cd76817659b1be9ea93f4e42b1e70c595c33ed097ebb2ade2bdbe2ff"
+        }
+      }
+    }
+  },
+  {
+    "unit": "e26",
+    "directory": "x64_copy_fixture",
+    "identical_program_raw_files": 8,
+    "expected_receipt_deltas": {
+      "implementation_sha256": {
+        "historical": {
+          "pcode2coq_x64.py": "87750d6653110df94a22c8645891502aedcd5347bb252b2a19a3d5afdb00f90a",
+          "pcode2coq_x64_copy.py": "775d39531e6aae10b6731d93193e74b3feb104843767d32eb353842f332e2015",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_copy_headless.py": "cfa5001b9e3c3d77dd51ebb75d7679a6fe8db7b7314d2a2bb1baa19391aa2510",
+          "lift-x64-copy.py": "85a3093622ba739b841d3b5036ac7e3589280329840617f57bde7453a3b1d57b"
+        },
+        "replay": {
+          "pcode2coq_x64.py": "c885c6a572288f766bd4d3506763cdbea2308ec0130c6d93907ab08653edb276",
+          "pcode2coq_x64_copy.py": "775d39531e6aae10b6731d93193e74b3feb104843767d32eb353842f332e2015",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_copy_headless.py": "cfa5001b9e3c3d77dd51ebb75d7679a6fe8db7b7314d2a2bb1baa19391aa2510",
+          "lift-x64-copy.py": "85a3093622ba739b841d3b5036ac7e3589280329840617f57bde7453a3b1d57b"
+        }
+      }
+    }
+  },
+  {
+    "unit": "e26",
+    "directory": "x64_copy_pinned",
+    "identical_program_raw_files": 2,
+    "expected_receipt_deltas": {
+      "implementation_sha256": {
+        "historical": {
+          "pcode2coq_x64.py": "87750d6653110df94a22c8645891502aedcd5347bb252b2a19a3d5afdb00f90a",
+          "pcode2coq_x64_copy.py": "775d39531e6aae10b6731d93193e74b3feb104843767d32eb353842f332e2015",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_copy_headless.py": "cfa5001b9e3c3d77dd51ebb75d7679a6fe8db7b7314d2a2bb1baa19391aa2510",
+          "lift-x64-copy.py": "85a3093622ba739b841d3b5036ac7e3589280329840617f57bde7453a3b1d57b"
+        },
+        "replay": {
+          "pcode2coq_x64.py": "c885c6a572288f766bd4d3506763cdbea2308ec0130c6d93907ab08653edb276",
+          "pcode2coq_x64_copy.py": "775d39531e6aae10b6731d93193e74b3feb104843767d32eb353842f332e2015",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_copy_headless.py": "cfa5001b9e3c3d77dd51ebb75d7679a6fe8db7b7314d2a2bb1baa19391aa2510",
+          "lift-x64-copy.py": "85a3093622ba739b841d3b5036ac7e3589280329840617f57bde7453a3b1d57b"
+        }
+      }
+    }
+  },
+  {
+    "unit": "e27",
+    "directory": "x64_rep_pinned",
+    "identical_program_raw_files": 2,
+    "expected_receipt_deltas": {
+      "implementation_sha256": {
+        "historical": {
+          "pcode2coq_x64_rep.py": "faa0dcf3cb05798d32bef0bebe8d09bacadcba98b6ba119d4c2517cb3326b0ec",
+          "pcode2coq_x64.py": "87750d6653110df94a22c8645891502aedcd5347bb252b2a19a3d5afdb00f90a",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_rep_headless.py": "f27f2418791d51467579eea5aaa6f3fee052cce903147024fd8a65bf43b4537a",
+          "lift-x64-rep.py": "024d119fa11eca82361b159b83e874f71353d2519ffa6a37c18b8b524b246a71"
+        },
+        "replay": {
+          "pcode2coq_x64_rep.py": "faa0dcf3cb05798d32bef0bebe8d09bacadcba98b6ba119d4c2517cb3326b0ec",
+          "pcode2coq_x64.py": "c885c6a572288f766bd4d3506763cdbea2308ec0130c6d93907ab08653edb276",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_rep_headless.py": "f27f2418791d51467579eea5aaa6f3fee052cce903147024fd8a65bf43b4537a",
+          "lift-x64-rep.py": "024d119fa11eca82361b159b83e874f71353d2519ffa6a37c18b8b524b246a71"
+        }
+      }
+    }
+  },
+  {
+    "unit": "e27",
+    "directory": "x64_rep_synthetic",
+    "identical_program_raw_files": 2,
+    "expected_receipt_deltas": {
+      "implementation_sha256": {
+        "historical": {
+          "pcode2coq_x64_rep.py": "faa0dcf3cb05798d32bef0bebe8d09bacadcba98b6ba119d4c2517cb3326b0ec",
+          "pcode2coq_x64.py": "87750d6653110df94a22c8645891502aedcd5347bb252b2a19a3d5afdb00f90a",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_rep_headless.py": "f27f2418791d51467579eea5aaa6f3fee052cce903147024fd8a65bf43b4537a",
+          "lift-x64-rep.py": "024d119fa11eca82361b159b83e874f71353d2519ffa6a37c18b8b524b246a71"
+        },
+        "replay": {
+          "pcode2coq_x64_rep.py": "faa0dcf3cb05798d32bef0bebe8d09bacadcba98b6ba119d4c2517cb3326b0ec",
+          "pcode2coq_x64.py": "c885c6a572288f766bd4d3506763cdbea2308ec0130c6d93907ab08653edb276",
+          "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+          "x64_rep_headless.py": "f27f2418791d51467579eea5aaa6f3fee052cce903147024fd8a65bf43b4537a",
+          "lift-x64-rep.py": "024d119fa11eca82361b159b83e874f71353d2519ffa6a37c18b8b524b246a71"
+        }
+      }
+    }
+  },
+  {
+    "unit": "e28",
+    "directory": "x64_bitscan_glibc",
+    "identical_program_raw_files": 6,
+    "expected_receipt_deltas": {}
+  },
+  {
+    "unit": "e28",
+    "directory": "x64_bitscan_hot",
+    "identical_program_raw_files": 2,
+    "expected_receipt_deltas": {}
+  },
+  {
+    "unit": "e28",
+    "directory": "x64_bitscan_fixture",
+    "identical_program_raw_files": 32,
+    "expected_receipt_deltas": {}
+  },
+  {
+    "unit": "e28",
+    "directory": "x64_bitscan_fallback",
+    "identical_program_raw_files": 8,
+    "expected_receipt_deltas": {}
+  }
+]

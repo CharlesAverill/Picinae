@@ -1,0 +1,38 @@
+?? notes/e28-x86-bitscan-lowering/
+t3/guarded-x86-bit-scan-lowering
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+49956416928e5b6bb3928b54ae33e3b81091f006
+49956416928e5b6bb3928b54ae33e3b81091f006
+71470bf Add selective Dune builds and proof audit harness
+ BUILDING.md                                        | 120 ++++++++++++
+ dune                                               |  38 ++++
+ dune-project                                       |   3 +
+ notes/e00-build/README.md                          | 168 +++++++++++++++++
+ notes/e00-build/check-selection.py                 |  16 ++
+ notes/e00-build/logs/01-dune-smoke.log             |   8 +
+ notes/e00-build/logs/02-dune-smoke.log             | 148 +++++++++++++++
+ notes/e00-build/logs/03-dune-smoke.log             |  89 +++++++++
+ notes/e00-build/logs/04-audit-tests.log            |   9 +
+ notes/e00-build/logs/05-baseline-source-audit.log  | 204 +++++++++++++++++++++
+ notes/e00-build/logs/06-toolchain.log              |  12 ++
+ notes/e00-build/logs/07-base-audit.log             |  15 ++
+ notes/e00-build/logs/08-fork-collision-check.log   |   4 +
+ notes/e00-build/logs/09-clean-build.log            | 195 ++++++++++++++++++++
+ notes/e00-build/logs/10-harness-tests.log          |   9 +
+ notes/e00-build/logs/11-x86-assumptions.log        |  43 +++++
+ notes/e00-build/logs/12-selected-objects.log       |  27 +++
+ notes/e00-build/logs/13-arm8-assumptions.log       |  29 +++
+ .../e00-build/logs/14-missing-theorem-negative.log |   9 +
+ .../logs/15-extensionality-provenance.log          |  13 ++
+ tools/audit-proof-source.py                        | 108 +++++++++++
+ tools/print-assumptions.sh                         |  36 ++++
+ tools/record-command.sh                            |  24 +++
+ tools/test-proof-audit.py                          |  82 +++++++++
+ 24 files changed, 1409 insertions(+)
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+081d0233cd6667803b3907343b2fea6dc9eba714 Add pinned AArch64 glibc inventory and isolated smoke lift
+131ad4b86cf4abcbd392048297038f3f219423bb Add exact Ubuntu x86 glibc copy and string inventory
+052521a753adbda077843ec7b259801282a7b1e9 Import reviewed partial ARM inventory evidence
+378fe1b57514b9af3f017a72b4ca665910156cc7 Add strict pinned scalar lifting pipeline
+1d4c46287725bd9c2dee3a7735b080ee9488e4ab Import reviewed x86 inventory prerequisite
+328088263ebba11786a03448808e584231504fe1 Add strict AMD64 scalar lifting pipeline

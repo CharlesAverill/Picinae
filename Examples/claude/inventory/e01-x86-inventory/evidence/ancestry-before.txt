@@ -1,0 +1,27 @@
+Prepared worktree: /home/charles/.t3/worktrees/Picinae/t3-82f6e4d5
+Prepared local branch immediately before rename: t3/x86-glibc-inventory
+Assigned local branch: llm-proofs/e01-x86-inventory
+Allowed base only: 49956416928e5b6bb3928b54ae33e3b81091f006
+Pinned timing reference (not imported): 4f1772040b6fc9d12af3f84f2ca089bb65cd4bd6
+
+Executed before rename:
+$ git ls-remote --heads fork refs/heads/llm-proofs/e01-x86-inventory
+exit 0; stdout empty (network-enabled retry; sandbox DNS first failed)
+$ git rev-parse HEAD
+49956416928e5b6bb3928b54ae33e3b81091f006
+exit 0
+$ git status --short
+exit 0; stdout empty
+$ git merge-base origin/llm_generated_proofs HEAD
+49956416928e5b6bb3928b54ae33e3b81091f006
+exit 0
+$ git log --oneline origin/llm_generated_proofs..HEAD
+exit 0; stdout empty
+$ git diff --stat origin/llm_generated_proofs...HEAD
+exit 0; stdout empty
+$ git merge-base --is-ancestor 49956416928e5b6bb3928b54ae33e3b81091f006 HEAD
+exit 0
+$ git branch -m llm-proofs/e01-x86-inventory
+exit 0 (network-enabled filesystem permission; initial sandbox attempt failed read-only)
+
+No prerequisite commits assigned or imported. No fork base or remote write.

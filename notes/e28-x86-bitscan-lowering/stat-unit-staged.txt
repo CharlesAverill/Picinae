@@ -1,0 +1,127 @@
+ .../lifter/x64_bitscan_fallback/SUCCESS.json       |   120 +
+ .../e28_lzcnt32_alias_amd64.pcode.json             |   200 +
+ .../x64_bitscan_fallback/e28_lzcnt32_alias_amd64.v |   101 +
+ .../e28_lzcnt64_alias_amd64.pcode.json             |   176 +
+ .../x64_bitscan_fallback/e28_lzcnt64_alias_amd64.v |   101 +
+ .../e28_tzcnt32_alias_amd64.pcode.json             |   362 +
+ .../x64_bitscan_fallback/e28_tzcnt32_alias_amd64.v |   101 +
+ .../e28_tzcnt64_alias_amd64.pcode.json             |   338 +
+ .../x64_bitscan_fallback/e28_tzcnt64_alias_amd64.v |   101 +
+ .../claude/lifter/x64_bitscan_fixture/SUCCESS.json |   588 +
+ .../e28_bsf32_alias_amd64.pcode.json               |   342 +
+ .../x64_bitscan_fixture/e28_bsf32_alias_amd64.v    |   353 +
+ .../x64_bitscan_fixture/e28_bsf32_amd64.pcode.json |   342 +
+ .../lifter/x64_bitscan_fixture/e28_bsf32_amd64.v   |   353 +
+ .../e28_bsf64_alias_amd64.pcode.json               |   318 +
+ .../x64_bitscan_fixture/e28_bsf64_alias_amd64.v    |   353 +
+ .../x64_bitscan_fixture/e28_bsf64_amd64.pcode.json |   318 +
+ .../lifter/x64_bitscan_fixture/e28_bsf64_amd64.v   |   353 +
+ .../e28_bsr32_alias_amd64.pcode.json               |   321 +
+ .../x64_bitscan_fixture/e28_bsr32_alias_amd64.v    |   353 +
+ .../x64_bitscan_fixture/e28_bsr32_amd64.pcode.json |   321 +
+ .../lifter/x64_bitscan_fixture/e28_bsr32_amd64.v   |   353 +
+ .../e28_bsr64_alias_amd64.pcode.json               |   297 +
+ .../x64_bitscan_fixture/e28_bsr64_alias_amd64.v    |   353 +
+ .../x64_bitscan_fixture/e28_bsr64_amd64.pcode.json |   297 +
+ .../lifter/x64_bitscan_fixture/e28_bsr64_amd64.v   |   353 +
+ .../e28_lzcnt32_alias_amd64.pcode.json             |   200 +
+ .../x64_bitscan_fixture/e28_lzcnt32_alias_amd64.v  |   353 +
+ .../e28_lzcnt32_amd64.pcode.json                   |   200 +
+ .../lifter/x64_bitscan_fixture/e28_lzcnt32_amd64.v |   353 +
+ .../e28_lzcnt64_alias_amd64.pcode.json             |   176 +
+ .../x64_bitscan_fixture/e28_lzcnt64_alias_amd64.v  |   353 +
+ .../e28_lzcnt64_amd64.pcode.json                   |   176 +
+ .../lifter/x64_bitscan_fixture/e28_lzcnt64_amd64.v |   353 +
+ .../e28_tzcnt32_alias_amd64.pcode.json             |   362 +
+ .../x64_bitscan_fixture/e28_tzcnt32_alias_amd64.v  |   353 +
+ .../e28_tzcnt32_amd64.pcode.json                   |   362 +
+ .../lifter/x64_bitscan_fixture/e28_tzcnt32_amd64.v |   353 +
+ .../e28_tzcnt64_alias_amd64.pcode.json             |   338 +
+ .../x64_bitscan_fixture/e28_tzcnt64_alias_amd64.v  |   353 +
+ .../e28_tzcnt64_amd64.pcode.json                   |   338 +
+ .../lifter/x64_bitscan_fixture/e28_tzcnt64_amd64.v |   353 +
+ .../claude/lifter/x64_bitscan_glibc/SUCCESS.json   |   110 +
+ .../x64_bitscan_glibc/e28_ffs_amd64.pcode.json     |   753 ++
+ .../lifter/x64_bitscan_glibc/e28_ffs_amd64.v       |   116 +
+ .../x64_bitscan_glibc/e28_ffsl_amd64.pcode.json    |   705 ++
+ .../lifter/x64_bitscan_glibc/e28_ffsl_amd64.v      |   116 +
+ .../x64_bitscan_glibc/e28_ffsll_amd64.pcode.json   |   705 ++
+ .../lifter/x64_bitscan_glibc/e28_ffsll_amd64.v     |   116 +
+ .../claude/lifter/x64_bitscan_hot/SUCCESS.json     |   156 +
+ .../x64_bitscan_hot/e28_hot_scans_amd64.pcode.json |  6914 ++++++++++
+ .../lifter/x64_bitscan_hot/e28_hot_scans_amd64.v   |   437 +
+ dune                                               |    52 +
+ notes/e28-x86-bitscan-lowering/README.md           |   196 +
+ .../allowed-prerequisites.txt                      |     7 +
+ notes/e28-x86-bitscan-lowering/check-ancestry.py   |    26 +
+ notes/e28-x86-bitscan-lowering/check-artifacts.py  |    40 +
+ notes/e28-x86-bitscan-lowering/check-e25-replay.sh |    16 +
+ notes/e28-x86-bitscan-lowering/check-failures.py   |    27 +
+ notes/e28-x86-bitscan-lowering/fixture-raw.json    | 10822 ++++++++++++++++
+ notes/e28-x86-bitscan-lowering/fixture/bitscan.S   |   111 +
+ notes/e28-x86-bitscan-lowering/fixture/bitscan.so  |   Bin 0 -> 13824 bytes
+ notes/e28-x86-bitscan-lowering/fixture/build.sh    |    10 +
+ notes/e28-x86-bitscan-lowering/fixture/pins.json   |     3 +
+ .../e28-x86-bitscan-lowering/implementation.sha256 |     8 +
+ notes/e28-x86-bitscan-lowering/inspect-fixture.sh  |    10 +
+ notes/e28-x86-bitscan-lowering/inspect.sh          |    10 +
+ .../inspect_fixture_headless.py                    |    28 +
+ notes/e28-x86-bitscan-lowering/inspect_headless.py |    38 +
+ notes/e28-x86-bitscan-lowering/logs/01-inspect.log |     7 +
+ notes/e28-x86-bitscan-lowering/logs/02-fixture.log |     5 +
+ .../logs/03-inspect-fixture.log                    |     6 +
+ .../logs/04-generation.log                         |    13 +
+ .../logs/05-finite-tests.log                       |    25 +
+ notes/e28-x86-bitscan-lowering/logs/06-dune.log    |   416 +
+ .../logs/07-publication-tests.log                  |    10 +
+ .../logs/08-finite-tests.log                       |    16 +
+ .../e28-x86-bitscan-lowering/logs/09-negatives.log |    37 +
+ .../logs/10-e25-backend.log                        |    21 +
+ .../logs/11-assumptions.log                        |   221 +
+ .../logs/12-final-generation.log                   |    13 +
+ .../logs/13-deterministic-replay.log               |    13 +
+ .../logs/14-e25-replay.log                         |     9 +
+ .../logs/15-e25-publication.log                    |    10 +
+ .../logs/16-source-audit.log                       |     6 +
+ .../logs/17-fork-collision.log                     |     4 +
+ .../logs/18-scalar-parser-regression.log           |    19 +
+ .../logs/19-source-audit.log                       |    10 +
+ .../logs/20-artifact-audit.log                     |     6 +
+ .../logs/21-ancestry-precommit.log                 |   298 +
+ .../logs/22-fixture-rebuild.log                    |     5 +
+ .../e28-x86-bitscan-lowering/logs/23-toolchain.log |     8 +
+ .../logs/24-diff-check.log                         |     4 +
+ .../logs/ancestry-before.log                       |    38 +
+ .../ghidra/18c2bb46bbc94978bb1969bd08bd28c8.log.gz |   Bin 0 -> 1852 bytes
+ .../ghidra/28a4d069139d4063a14fd2127eafe87c.log.gz |   Bin 0 -> 1763 bytes
+ .../ghidra/39a7f1a2289f4c06a1971384c58f3a01.log.gz |   Bin 0 -> 1834 bytes
+ .../ghidra/3a510b1e93eb4bfb924dc44c1ddf223b.log.gz |   Bin 0 -> 1289 bytes
+ .../ghidra/4141adab041a42e7bca8672634396402.log.gz |   Bin 0 -> 1325 bytes
+ .../ghidra/4aaed9bd298c4232a1c4ba5811b2ef15.log.gz |   Bin 0 -> 1328 bytes
+ .../ghidra/50cac95ec59345cea74916c69f6815d2.log.gz |   Bin 0 -> 1280 bytes
+ .../ghidra/54a3d6c804064bbd80d8158e726d0344.log.gz |   Bin 0 -> 1295 bytes
+ .../ghidra/588dda04673d479a86ceb008e26fa6c9.log.gz |   Bin 0 -> 1763 bytes
+ .../ghidra/6c7d605fa53d42818e5dbf51583479f5.log.gz |   Bin 0 -> 1725 bytes
+ .../ghidra/856443d9f9d142238bcdeb8c4860c260.log.gz |   Bin 0 -> 1761 bytes
+ .../ghidra/8f4838289c084546be6e154b83d5b428.log.gz |   Bin 0 -> 1760 bytes
+ .../ghidra/9f14ad13a7fd4279ab67bee55ed44b30.log.gz |   Bin 0 -> 1758 bytes
+ .../ghidra/b158d52e552c416a815a44dd7a9173e6.log.gz |   Bin 0 -> 1760 bytes
+ .../ghidra/c110d9010ca0402083f36997c7f5b5c6.log.gz |   Bin 0 -> 1762 bytes
+ .../ghidra/c63dd502a92940dc9c66e559083c29d1.log.gz |   Bin 0 -> 2297 bytes
+ .../ghidra/c9afac1b598840c69a50e80434de8357.log.gz |   Bin 0 -> 1297 bytes
+ .../ghidra/ccd8f973cd35407a8e9c14dcd9c1d1f4.log.gz |   Bin 0 -> 1892 bytes
+ .../ghidra/e67f7db7457c4fb8a942ef9c70ef09cc.log.gz |   Bin 0 -> 2074 bytes
+ .../ghidra/f210180e4c6a438496d5e503550ed362.log.gz |   Bin 0 -> 1330 bytes
+ notes/e28-x86-bitscan-lowering/pinned-raw.json     | 12548 +++++++++++++++++++
+ .../e28-x86-bitscan-lowering/print-assumptions.sh  |    12 +
+ notes/e28-x86-bitscan-lowering/reproduce.sh        |    28 +
+ notes/e28-x86-bitscan-lowering/scan-inventory.json |   234 +
+ tools/ghidra-lifter/bitscan_headless.py            |   161 +
+ tools/ghidra-lifter/lift-bitscan.py                |   168 +
+ tools/ghidra-lifter/lift-x64.py                    |     2 +-
+ tools/ghidra-lifter/pcode2coq_bitscan.py           |   122 +
+ tools/ghidra-lifter/pcode2coq_x64.py               |     6 +-
+ tools/ghidra-lifter/test_bitscan.py                |   135 +
+ tools/ghidra-lifter/test_bitscan_publication.py    |    42 +
+ tools/ghidra-lifter/test_scalar.py                 |     9 +
+ 126 files changed, 48761 insertions(+), 2 deletions(-)

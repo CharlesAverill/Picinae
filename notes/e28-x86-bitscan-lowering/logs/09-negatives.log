@@ -1,0 +1,37 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-09baf102
+COMMAND=python3 notes/e28-x86-bitscan-lowering/check-failures.py
+COMMAND ['/home/charles/miniconda3/bin/python3', 'tools/ghidra-lifter/lift-bitscan.py', '--out', '/home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/negative.n8yookaf/0', 'ffs']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: ffs 0x1a9910 ENDBR64: ENDBR64 requires explicit CET-disabled profile and exact empty-pcode encoding; raw pcode: ; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/logs/e67f7db7457c4fb8a942ef9c70ef09cc.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', 'tools/ghidra-lifter/lift-bitscan.py', '--out', '/home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/negative.n8yookaf/1', '--fixture', 'bsf32', 'tzcnt32']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: tzcnt32 0x101028 TZCNT R10D,R9D: TZCNT requires explicit CPU feature profile (present/absent); raw pcode: (unique, 0x1ba380, 4) COPY (const, 0x0, 4); (unique, 0x1ba400, 4) COPY (register, 0x88, 4); (unique, 0x1ba480, 4) INT_AND (unique, 0x1ba400, 4) , (const, 0x1, 4); (unique, 0x1ba500, 1) INT_NOTEQUAL (unique, 0x1ba480, 4) , (const, 0x0, 4);  ---  CBRANCH (const, 0x5, 4) , (unique, 0x1ba500, 1); (unique, 0x1ba380, 4) INT_ADD (unique, 0x1ba380, 4) , (const, 0x1, 4);; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/logs/39a7f1a2289f4c06a1971384c58f3a01.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', 'tools/ghidra-lifter/lift-bitscan.py', '--out', '/home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/negative.n8yookaf/2', '--fixture', '--bmi1', 'present', 'bsf32', 'lzcnt32']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: lzcnt32 0x101040 LZCNT R10D,R9D: LZCNT requires explicit CPU feature profile (present/absent); raw pcode: (register, 0x90, 4) LZCOUNT (register, 0x88, 4); (register, 0x206, 1) INT_EQUAL (register, 0x90, 4) , (const, 0x0, 4); (register, 0x200, 1) INT_EQUAL (register, 0x88, 4) , (const, 0x0, 4); (register, 0x90, 8) INT_ZEXT (register, 0x90, 4); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/logs/6c7d605fa53d42818e5dbf51583479f5.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', 'tools/ghidra-lifter/lift-bitscan.py', '--out', '/home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/negative.n8yookaf/3', '--fixture', '--bmi1', 'present', '--abm', 'present', 'bsf32', 'reject16']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: reject16 0x101058 BSF DX,AX: scan requires exact 32/64-bit register encoding; prefixes/memory reject; raw pcode: (unique, 0x33e80, 2) COPY (const, 0x0, 2); (register, 0x206, 1) INT_EQUAL (register, 0x0, 2) , (const, 0x0, 2); (unique, 0x33f80, 1) INT_EQUAL (register, 0x206, 1) , (const, 0x1, 1);  ---  CBRANCH (const, 0x7, 4) , (unique, 0x33f80, 1); (unique, 0x34000, 2) INT_RIGHT (register, 0x0, 2) , (unique, 0x33e80, 2); (unique, 0x34080, 2) INT_AND (unique, 0x34000,; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/logs/18c2bb46bbc94978bb1969bd08bd28c8.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', 'tools/ghidra-lifter/lift-bitscan.py', '--out', '/home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/negative.n8yookaf/4', '--fixture', '--bmi1', 'present', '--abm', 'present', 'bsf32', 'rejectmem']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: rejectmem 0x10105d BSF EAX,dword ptr [RDI]: scan requires exact 32/64-bit register encoding; prefixes/memory reject; raw pcode: (unique, 0x34200, 4) COPY (const, 0x0, 4); (unique, 0x11f80, 4) LOAD (const, 0x1b1, 4) , (register, 0x38, 8); (register, 0x206, 1) INT_EQUAL (unique, 0x11f80, 4) , (const, 0x0, 4); (unique, 0x34300, 1) INT_EQUAL (register, 0x206, 1) , (const, 0x1, 1);  ---  CBRANCH (const, 0x8, 4) , (unique, 0x34300, 1); (unique, 0x11f80, 4) LOAD (const, 0x; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/logs/ccd8f973cd35407a8e9c14dcd9c1d1f4.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', 'tools/ghidra-lifter/lift-bitscan.py', '--out', '/home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/negative.n8yookaf/5', '--samples', 'hot_scans']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: hot_scans 0x2989f6 TZCNT EDX,ECX: TZCNT requires explicit CPU feature profile (present/absent); raw pcode: (unique, 0x1ba380, 4) COPY (const, 0x0, 4); (unique, 0x1ba400, 4) COPY (register, 0x8, 4); (unique, 0x1ba480, 4) INT_AND (unique, 0x1ba400, 4) , (const, 0x1, 4); (unique, 0x1ba500, 1) INT_NOTEQUAL (unique, 0x1ba480, 4) , (const, 0x0, 4);  ---  CBRANCH (const, 0x5, 4) , (unique, 0x1ba500, 1); (unique, 0x1ba380, 4) INT_ADD (unique, 0x1ba380, 4) , (const, 0x1, 4);; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e28-x86-bitscan-lowering/logs/c63dd502a92940dc9c66e559083c29d1.log
+EXIT 1
+usage: lift-bitscan.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                       [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                       [--samples] [--bmi1 {present,absent}]
+                       [--abm {present,absent}]
+                       symbols [symbols ...]
+lift-bitscan.py: error: output directory already exists; refusing stale/replaced output
+existing EXIT 2
+usage: lift-bitscan.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                       [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                       [--samples] [--bmi1 {present,absent}]
+                       [--abm {present,absent}]
+                       symbols [symbols ...]
+lift-bitscan.py: error: output directory already exists; refusing stale/replaced output
+broken EXIT 2
+PASS six actual decoder failures leave no partial publication; existing/symlink destinations reject
+
+EXIT_CODE=0

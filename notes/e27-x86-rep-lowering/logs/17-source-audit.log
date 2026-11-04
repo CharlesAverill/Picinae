@@ -1,0 +1,10 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c
+COMMAND=python3 tools/audit-proof-source.py --base 328088263ebba11786a03448808e584231504fe1 Examples/claude/lifter/x64_rep_pinned Examples/claude/lifter/x64_rep_synthetic
+Base: 328088263ebba11786a03448808e584231504fe1
+Scope: 2 Rocq source files
+BASELINE totals: {}
+CURRENT totals: {}
+NEW totals: {}
+Source check only: inspect transitive Print Assumptions separately.
+
+EXIT_CODE=0

@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-95c58422
+COMMAND=python3 notes/e39-x86-backend-integration/check-artifacts.py
+PASS 39 compiled typing modules and 39 FE-only assumptions queries
+PASS all current dependency/output/raw hashes and 17 mixed selected instruction boundaries
+
+EXIT_CODE=0

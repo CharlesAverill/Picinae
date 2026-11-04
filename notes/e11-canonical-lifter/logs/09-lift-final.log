@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=python3 tools/ghidra-lifter/lift-scalar.py --out /home/charles/code/friends/.toolchains/e11-canonical-lifter/final toascii div ldiv swab ffs ffsl
+PASS 6 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e11-canonical-lifter/final
+Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/6e7217d064cd435fb1ca17742c6ad152.log
+
+EXIT_CODE=0

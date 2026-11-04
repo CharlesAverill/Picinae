@@ -1,0 +1,45 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-95c58422
+COMMAND=python3 notes/e39-x86-backend-integration/replay-old.py
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/old-replay.xeyz1i65/x64_scalar_smoke', '--cet-disabled', 'toascii', 'isascii', 'abs', 'labs', 'pthread_equal']
+PASS 5 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/old-replay.xeyz1i65/x64_scalar_smoke
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/dff91235a6dd4a60aba6c96bc4b899e7.log
+EXIT 0
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/old-replay.xeyz1i65/x64_scalar_fixture', '--fixture', 'scalar_caller', 'scalar_callee']
+PASS 2 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/old-replay.xeyz1i65/x64_scalar_fixture
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/157a6948b22547e98d89043079bf1953.log
+EXIT 0
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e26.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/old-replay.t5ca_42u/x64_copy_fixture', '--fixture', 'legacy', 'vex128', 'vex256', 'zero']
+PASS 4 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/old-replay.t5ca_42u/x64_copy_fixture
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/logs/6b38f2af709a421e9c78c029f4962f47.log
+EXIT 0
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e26.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/old-replay.t5ca_42u/x64_copy_pinned', '--instructions', 'pinned_moves']
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/old-replay.t5ca_42u/x64_copy_pinned
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/logs/eb23c2b2318f4220b940f93b6127e8f7.log
+EXIT 0
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e27.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/old-replay.x973n_gx/x64_rep_pinned']
+PASS 26 hash-validated REP instruction fragments: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/old-replay.x973n_gx/x64_rep_pinned
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/logs/c7e3046428ba40ab92f6076ae286c931.log
+EXIT 0
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e27.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/old-replay.x973n_gx/x64_rep_synthetic', '--fixture']
+PASS 8 hash-validated REP instruction fragments: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/old-replay.x973n_gx/x64_rep_synthetic
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/logs/3aff4c2db1ed41b3ab37278197a60a17.log
+EXIT 0
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e28.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/old-replay.c7j7setq/x64_bitscan_glibc', '--cet-disabled', 'ffs', 'ffsl', 'ffsll']
+PASS 3 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/old-replay.c7j7setq/x64_bitscan_glibc
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/logs/cdcc3c516e714d00ab4d41f411323109.log
+EXIT 0
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e28.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/old-replay.c7j7setq/x64_bitscan_hot', '--samples', '--bmi1', 'present', 'hot_scans']
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/old-replay.c7j7setq/x64_bitscan_hot
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/logs/3da046bcc7884af79d38f07f92adf221.log
+EXIT 0
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e28.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/old-replay.c7j7setq/x64_bitscan_fixture', '--fixture', '--bmi1', 'present', '--abm', 'present', 'bsf32', 'bsf32_alias', 'bsf64', 'bsf64_alias', 'bsr32', 'bsr32_alias', 'bsr64', 'bsr64_alias', 'tzcnt32', 'tzcnt32_alias', 'tzcnt64', 'tzcnt64_alias', 'lzcnt32', 'lzcnt32_alias', 'lzcnt64', 'lzcnt64_alias']
+PASS 16 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/old-replay.c7j7setq/x64_bitscan_fixture
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/logs/d7ab62c557064955b8796130ac4699a7.log
+EXIT 0
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e28.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/old-replay.c7j7setq/x64_bitscan_fallback', '--fixture', '--bmi1', 'absent', '--abm', 'absent', 'tzcnt32_alias', 'tzcnt64_alias', 'lzcnt32_alias', 'lzcnt64_alias']
+PASS 4 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/old-replay.c7j7setq/x64_bitscan_fallback
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/logs/b84a63bdc6aa4bae85114941b2e86ec3.log
+EXIT 0
+PASS all 38 historical programs/raw captures unchanged; explicit helper-hash deltas only
+
+EXIT_CODE=0

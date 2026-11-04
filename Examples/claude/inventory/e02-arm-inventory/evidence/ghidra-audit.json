@@ -1,0 +1,682 @@
+[
+  {
+    "function": "div",
+    "ghidra_address": "0x0013d840",
+    "expected": "mov w2,w0",
+    "actual": "mov w2,w0",
+    "bytes": "e203002a",
+    "match": true
+  },
+  {
+    "function": "div",
+    "ghidra_address": "0x0013d844",
+    "expected": "mov x0,#0x0",
+    "actual": "mov x0,#0x0",
+    "bytes": "000080d2",
+    "match": true
+  },
+  {
+    "function": "div",
+    "ghidra_address": "0x0013d848",
+    "expected": "sdiv w3,w2,w1",
+    "actual": "sdiv w3,w2,w1",
+    "bytes": "430cc11a",
+    "match": true
+  },
+  {
+    "function": "div",
+    "ghidra_address": "0x0013d84c",
+    "expected": "msub w1,w3,w1,w2",
+    "actual": "msub w1,w3,w1,w2",
+    "bytes": "6188011b",
+    "match": true
+  },
+  {
+    "function": "div",
+    "ghidra_address": "0x0013d850",
+    "expected": "bfxil x0,x3,#0x0,#0x20",
+    "actual": "bfxil x0,x3,#0x0,#0x20",
+    "bytes": "607c40b3",
+    "match": true
+  },
+  {
+    "function": "div",
+    "ghidra_address": "0x0013d854",
+    "expected": "bfm x0,x1,#0x20,#0x1f",
+    "actual": "bfm x0,x1,#0x20,#0x1f",
+    "bytes": "207c60b3",
+    "match": true
+  },
+  {
+    "function": "div",
+    "ghidra_address": "0x0013d858",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  },
+  {
+    "function": "ldiv",
+    "ghidra_address": "0x0013d860",
+    "expected": "mov x2,x0",
+    "actual": "mov x2,x0",
+    "bytes": "e20300aa",
+    "match": true
+  },
+  {
+    "function": "ldiv",
+    "ghidra_address": "0x0013d864",
+    "expected": "sdiv x0,x0,x1",
+    "actual": "sdiv x0,x0,x1",
+    "bytes": "000cc19a",
+    "match": true
+  },
+  {
+    "function": "ldiv",
+    "ghidra_address": "0x0013d868",
+    "expected": "msub x1,x0,x1,x2",
+    "actual": "msub x1,x0,x1,x2",
+    "bytes": "0188019b",
+    "match": true
+  },
+  {
+    "function": "ldiv",
+    "ghidra_address": "0x0013d86c",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194aa0",
+    "expected": "neg w1,w0",
+    "actual": "neg w1,w0",
+    "bytes": "e103004b",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194aa4",
+    "expected": "mov w2,#0xffff",
+    "actual": "mov w2,#0xffff",
+    "bytes": "e2ff9f52",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194aa8",
+    "expected": "and w1,w1,w0",
+    "actual": "and w1,w1,w0",
+    "bytes": "2100000a",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194aac",
+    "expected": "cmp w1,w2",
+    "actual": "cmp w1,w2",
+    "bytes": "3f00026b",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ab0",
+    "expected": "b.hi 0x00194ad8",
+    "actual": "b.hi 0x00194ad8",
+    "bytes": "48010054",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ab4",
+    "expected": "cmp w1,#0xff",
+    "actual": "cmp w1,#0xff",
+    "bytes": "3ffc0371",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ab8",
+    "expected": "adrp x2,0x24e000",
+    "actual": "adrp x2,0x24e000",
+    "bytes": "c20500d0",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194abc",
+    "expected": "cset w0,hi",
+    "actual": "cset w0,hi",
+    "bytes": "e0979f1a",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ac0",
+    "expected": "add x2,x2,#0x738",
+    "actual": "add x2,x2,#0x738",
+    "bytes": "42e01c91",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ac4",
+    "expected": "lsl w0,w0,#0x3",
+    "actual": "lsl w0,w0,#0x3",
+    "bytes": "00701d53",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ac8",
+    "expected": "lsr w1,w1,w0",
+    "actual": "lsr w1,w1,w0",
+    "bytes": "2124c01a",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194acc",
+    "expected": "ldrb w1,[x2, w1, UXTW ]",
+    "actual": "ldrb w1,[x2, w1, UXTW ]",
+    "bytes": "41486138",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ad0",
+    "expected": "add w0,w1,w0",
+    "actual": "add w0,w1,w0",
+    "bytes": "2000000b",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ad4",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ad8",
+    "expected": "mov w0,#0xffffff",
+    "actual": "mov w0,#0xffffff",
+    "bytes": "00e0bf12",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194adc",
+    "expected": "cmp w1,w0",
+    "actual": "cmp w1,w0",
+    "bytes": "3f00006b",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ae0",
+    "expected": "mov w2,#0x18",
+    "actual": "mov w2,#0x18",
+    "bytes": "02038052",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ae4",
+    "expected": "mov w0,#0x10",
+    "actual": "mov w0,#0x10",
+    "bytes": "00028052",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194ae8",
+    "expected": "csel w0,w0,w2,ls",
+    "actual": "csel w0,w0,w2,ls",
+    "bytes": "0090821a",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194aec",
+    "expected": "adrp x2,0x24e000",
+    "actual": "adrp x2,0x24e000",
+    "bytes": "c20500d0",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194af0",
+    "expected": "add x2,x2,#0x738",
+    "actual": "add x2,x2,#0x738",
+    "bytes": "42e01c91",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194af4",
+    "expected": "lsr w1,w1,w0",
+    "actual": "lsr w1,w1,w0",
+    "bytes": "2124c01a",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194af8",
+    "expected": "ldrb w1,[x2, w1, UXTW ]",
+    "actual": "ldrb w1,[x2, w1, UXTW ]",
+    "bytes": "41486138",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194afc",
+    "expected": "add w0,w1,w0",
+    "actual": "add w0,w1,w0",
+    "bytes": "2000000b",
+    "match": true
+  },
+  {
+    "function": "ffs",
+    "ghidra_address": "0x00194b00",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b10",
+    "expected": "mov x1,x0",
+    "actual": "mov x1,x0",
+    "bytes": "e10300aa",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b14",
+    "expected": "neg x0,x0",
+    "actual": "neg x0,x0",
+    "bytes": "e00300cb",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b18",
+    "expected": "and x0,x0,x1",
+    "actual": "and x0,x0,x1",
+    "bytes": "0000018a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b1c",
+    "expected": "orr x2,xzr,#0xffffffff",
+    "actual": "orr x2,xzr,#0xffffffff",
+    "bytes": "e27f40b2",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b20",
+    "expected": "cmp x0,x2",
+    "actual": "cmp x0,x2",
+    "bytes": "1f0002eb",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b24",
+    "expected": "b.hi 0x00194b3c",
+    "actual": "b.hi 0x00194b3c",
+    "bytes": "c8000054",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b28",
+    "expected": "rbit w0,w1",
+    "actual": "rbit w0,w1",
+    "bytes": "2000c05a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b2c",
+    "expected": "cmp w1,#0x0",
+    "actual": "cmp w1,#0x0",
+    "bytes": "3f000071",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b30",
+    "expected": "clz w0,w0",
+    "actual": "clz w0,w0",
+    "bytes": "0010c05a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b34",
+    "expected": "csinc w0,wzr,w0,eq",
+    "actual": "csinc w0,wzr,w0,eq",
+    "bytes": "e007801a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b38",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b3c",
+    "expected": "asr x1,x1,#0x20",
+    "actual": "asr x1,x1,#0x20",
+    "bytes": "21fc6093",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b40",
+    "expected": "rbit w0,w1",
+    "actual": "rbit w0,w1",
+    "bytes": "2000c05a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b44",
+    "expected": "cmp w1,#0x0",
+    "actual": "cmp w1,#0x0",
+    "bytes": "3f000071",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b48",
+    "expected": "clz w0,w0",
+    "actual": "clz w0,w0",
+    "bytes": "0010c05a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b4c",
+    "expected": "csinc w0,wzr,w0,eq",
+    "actual": "csinc w0,wzr,w0,eq",
+    "bytes": "e007801a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b50",
+    "expected": "add w0,w0,#0x20",
+    "actual": "add w0,w0,#0x20",
+    "bytes": "00800011",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b54",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b10",
+    "expected": "mov x1,x0",
+    "actual": "mov x1,x0",
+    "bytes": "e10300aa",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b14",
+    "expected": "neg x0,x0",
+    "actual": "neg x0,x0",
+    "bytes": "e00300cb",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b18",
+    "expected": "and x0,x0,x1",
+    "actual": "and x0,x0,x1",
+    "bytes": "0000018a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b1c",
+    "expected": "orr x2,xzr,#0xffffffff",
+    "actual": "orr x2,xzr,#0xffffffff",
+    "bytes": "e27f40b2",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b20",
+    "expected": "cmp x0,x2",
+    "actual": "cmp x0,x2",
+    "bytes": "1f0002eb",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b24",
+    "expected": "b.hi 0x00194b3c",
+    "actual": "b.hi 0x00194b3c",
+    "bytes": "c8000054",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b28",
+    "expected": "rbit w0,w1",
+    "actual": "rbit w0,w1",
+    "bytes": "2000c05a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b2c",
+    "expected": "cmp w1,#0x0",
+    "actual": "cmp w1,#0x0",
+    "bytes": "3f000071",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b30",
+    "expected": "clz w0,w0",
+    "actual": "clz w0,w0",
+    "bytes": "0010c05a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b34",
+    "expected": "csinc w0,wzr,w0,eq",
+    "actual": "csinc w0,wzr,w0,eq",
+    "bytes": "e007801a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b38",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b3c",
+    "expected": "asr x1,x1,#0x20",
+    "actual": "asr x1,x1,#0x20",
+    "bytes": "21fc6093",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b40",
+    "expected": "rbit w0,w1",
+    "actual": "rbit w0,w1",
+    "bytes": "2000c05a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b44",
+    "expected": "cmp w1,#0x0",
+    "actual": "cmp w1,#0x0",
+    "bytes": "3f000071",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b48",
+    "expected": "clz w0,w0",
+    "actual": "clz w0,w0",
+    "bytes": "0010c05a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b4c",
+    "expected": "csinc w0,wzr,w0,eq",
+    "actual": "csinc w0,wzr,w0,eq",
+    "bytes": "e007801a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b50",
+    "expected": "add w0,w0,#0x20",
+    "actual": "add w0,w0,#0x20",
+    "bytes": "00800011",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b54",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195eb0",
+    "expected": "and x2,x2,#-0x2",
+    "actual": "and x2,x2,#-0x2",
+    "bytes": "42f87f92",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195eb4",
+    "expected": "cmp x2,#0x1",
+    "actual": "cmp x2,#0x1",
+    "bytes": "5f0400f1",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195eb8",
+    "expected": "b.le 0x00195ee0",
+    "actual": "b.le 0x00195ee0",
+    "bytes": "4d010054",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195ebc",
+    "expected": "sub x6,x0,#0x1",
+    "actual": "sub x6,x0,#0x1",
+    "bytes": "060400d1",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195ec0",
+    "expected": "add x5,x1,#0x1",
+    "actual": "add x5,x1,#0x1",
+    "bytes": "25040091",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195ec4",
+    "expected": "nop",
+    "actual": "nop",
+    "bytes": "1f2003d5",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195ec8",
+    "expected": "ldrb w4,[x6, x2, LSL ]",
+    "actual": "ldrb w4,[x6, x2, LSL ]",
+    "bytes": "c4686238",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195ecc",
+    "expected": "sub x2,x2,#0x2",
+    "actual": "sub x2,x2,#0x2",
+    "bytes": "420800d1",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195ed0",
+    "expected": "ldrb w3,[x0, x2, LSL ]",
+    "actual": "ldrb w3,[x0, x2, LSL ]",
+    "bytes": "03686238",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195ed4",
+    "expected": "strb w4,[x1, x2, LSL ]",
+    "actual": "strb w4,[x1, x2, LSL ]",
+    "bytes": "24682238",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195ed8",
+    "expected": "strb w3,[x5, x2, LSL ]",
+    "actual": "strb w3,[x5, x2, LSL ]",
+    "bytes": "a3682238",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195edc",
+    "expected": "cbnz x2,0x00195ec8",
+    "actual": "cbnz x2,0x00195ec8",
+    "bytes": "62ffffb5",
+    "match": true
+  },
+  {
+    "function": "swab",
+    "ghidra_address": "0x00195ee0",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  }
+]

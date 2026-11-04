@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-473b43ee
+COMMAND=python3 tools/ghidra-lifter/lift-x64-copy.py --fixture --out /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/replays/initial-synthetic legacy vex128 vex256 zero
+PASS 4 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/replays/initial-synthetic
+Ghidra log: /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/logs/d5e83759b57b41758e867e89e90b0e67.log
+
+EXIT_CODE=0
