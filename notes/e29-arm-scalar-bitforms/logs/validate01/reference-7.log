@@ -1,0 +1,5 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/validate01/reference-7", "--global-addressing", "remque"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/validate01/reference-7
+Ghidra log: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/validate01/ghidra/logs/7b7aa5f5328b4901824ee9c5dafc51a6.log
+
+EXIT_CODE=0

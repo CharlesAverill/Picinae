@@ -1,0 +1,30 @@
+Picked up JAVA_TOOL_OPTIONS: -Xmx2G -Duser.home=/home/charles/code/friends/.toolchains/e02-arm-inventory/config -Djava.io.tmpdir=/home/charles/code/friends/.toolchains/e02-arm-inventory/tmp
+WARNING: JAVA_HOME environment specifies unsupported java version: /home/charles/code/friends/.toolchains/e02-arm-inventory/jdk-21.0.8+9-jre
+launcher.py:391 An error occurred launching Ghidra: Command 'java -cp "/home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/support/LaunchSupport.jar" LaunchSupport "/home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC" -jdk_home -save' returned non-zero exit status 1.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/lib/python3.12/site-packages/pyghidra/__main__.py", line 287, in <module>
+    main()
+  File "/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/lib/python3.12/site-packages/pyghidra/__main__.py", line 283, in main
+    parser.parse_args(namespace=PyGhidraArgs(parser)).func()
+  File "/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/lib/python3.12/site-packages/pyghidra/__main__.py", line 84, in func
+    launcher.start()
+  File "/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/lib/python3.12/site-packages/pyghidra/launcher.py", line 523, in start
+    self._report_fatal_error("An error occurred launching Ghidra", str(e), e)
+  File "/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/lib/python3.12/site-packages/pyghidra/launcher.py", line 392, in _report_fatal_error
+    raise cause
+  File "/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/lib/python3.12/site-packages/pyghidra/launcher.py", line 518, in start
+    self._setup_java(**jpype_kwargs)
+  File "/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/lib/python3.12/site-packages/pyghidra/launcher.py", line 418, in _setup_java
+    os.environ['JAVA_HOME'] = str(self.java_home)
+                                  ^^^^^^^^^^^^^^
+  File "/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/lib/python3.12/site-packages/pyghidra/launcher.py", line 318, in java_home
+    home = subprocess.check_output(cmd, encoding="utf-8", shell=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/miniconda3/lib/python3.12/subprocess.py", line 468, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/miniconda3/lib/python3.12/subprocess.py", line 573, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command 'java -cp "/home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/support/LaunchSupport.jar" LaunchSupport "/home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC" -jdk_home -save' returned non-zero exit status 1.
