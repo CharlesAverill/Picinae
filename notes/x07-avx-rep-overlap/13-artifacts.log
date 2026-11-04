@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-e7e7a9ff
+COMMAND=bash -c for\ f\ in\ amd64_memmove_avx_proof\ amd64_memmove_avx_overlap_forward_proof\ amd64_memmove_avx_loops_proof\ amd64_memmove_avx_rep_proof\;\ do\ test\ -s\ \"_build/default/Examples/claude/\$f.vo\"\ \|\|\ exit\ 1\;\ ls\ -l\ \"_build/default/Examples/claude/\$f.vo\"\;\ done\;\ test\ \!\ -e\ _build/default/Examples/claude/amd64_memmove_avx_rep_overlap_proof.vo
+-r--r--r-- 1 charles charles 8707882 Nov  3 18:57 _build/default/Examples/claude/amd64_memmove_avx_proof.vo
+-r--r--r-- 1 charles charles 12102865 Nov  3 19:00 _build/default/Examples/claude/amd64_memmove_avx_overlap_forward_proof.vo
+-r--r--r-- 1 charles charles 14809572 Nov  3 19:03 _build/default/Examples/claude/amd64_memmove_avx_loops_proof.vo
+-r--r--r-- 1 charles charles 13857767 Nov  3 19:07 _build/default/Examples/claude/amd64_memmove_avx_rep_proof.vo
+
+EXIT_CODE=0
