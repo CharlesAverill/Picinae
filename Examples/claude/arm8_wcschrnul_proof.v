@@ -7,7 +7,9 @@
    extracted by the reviewed e30 strict scalar CCMP pipeline (Ghidra 11.4.2).
    Its manifest and raw pcode remain beside the generated file.
    Initial author: OpenAI gpt-6-astra, xhigh, one-shot proof attempt.
-   Proof status and final proof producer: see notes/a-wcschrnul/README.md.
+   Proof repair and final proof producer: OpenAI gpt-6.1-sol, xhigh.
+   Kernel-check evidence and scope: notes/a-wcschrnul-fix/README.md.
+   Original one-shot evidence: notes/a-wcschrnul/README.md.
 
    ENGLISH SPEC / ABI: X0=p, W1=c (low 32 bits of X1), X30=lr, SP=sp.
    A wchar_t is four little-endian bytes; pointers are 64 bits. K is the
@@ -132,8 +134,46 @@ Definition wcschrnul_witness (c:N) : store := fun v =>
 Theorem wcschrnul_input_satisfiable: forall c,
   models arm8typctx (wcschrnul_witness c) /\
   wcschrnul_input (wcschrnul_witness c) 0 1 (c mod 2^32) 0 0 0.
-(* PARTIAL: exact initial proof is archived in notes/a-wcschrnul/initial-attempt.v.txt. *)
-Abort.
+Proof.
+  intro c. split.
+  - intros v w T. destruct v; inversion T; subst w;
+      cbn [wcschrnul_witness];
+      try (apply N.neq_0_lt_0; apply N.pow_nonzero; discriminate);
+      try (change (1 < 18446744073709551616); lia);
+      try (change (30 < 2^(2^64));
+           eapply N.lt_le_trans with (m:=2^5); [reflexivity|];
+           apply N.pow_le_mono_r; lia).
+    eapply N.lt_le_trans. apply N.mod_lt. discriminate.
+    apply N.pow_le_mono_r; lia.
+  - unfold wcschrnul_input, wcschrnul_stop.
+    cbn [wcschrnul_witness].
+    rewrite N.mod_mod by discriminate.
+    repeat split; try reflexivity; try (intros; lia).
+    + intros j J. assert (j=0 \/ j=1 \/ j=2 \/ j=3) by lia.
+      destruct H as [E|[E|[E|E]]]; subst j; reflexivity.
+    + right. reflexivity.
+Qed.
+
+(* Branch normalization operates on abstract words, never on memory syntax. *)
+Ltac wcschrnul_branches :=
+  repeat match goal with
+  | H: (?a =? ?b) = true |- _ => apply N.eqb_eq in H
+  | H: (?a =? ?b) = false |- _ => apply N.eqb_neq in H
+  | H: negb ?b = true |- _ => apply Bool.negb_true_iff in H
+  | H: negb ?b = false |- _ => apply Bool.negb_false_iff in H
+  end.
+
+Ltac wcschrnul_finish i k w C WB HIT MISS :=
+  cbn [wcschrnul_state postcondition] in *;
+  try rewrite C in *;
+  try rewrite (N.mod_small w 4294967296) in * by exact WB;
+  try rewrite wcschrnul_eq32 in * by assumption;
+  wcschrnul_branches;
+  first
+  [ assert (IK: i=k) by (apply HIT; intuition congruence);
+    subst i; repeat split; assumption
+  | split; [repeat split; assumption|];
+    exists i; split; [apply MISS; congruence|assumption] ].
 
 Theorem wcschrnul_correct:
   forall s t s' x' m p c k sp lr
@@ -142,8 +182,55 @@ Theorem wcschrnul_correct:
     (INPUT: wcschrnul_input s m p c k sp lr),
   satisfies_all e30_wcschrnul_arm8 (wcschrnul_invs m p c k sp lr)
     wcschrnul_exit ((x',s')::t).
-(* PARTIAL: exact initial proof is archived in notes/a-wcschrnul/initial-attempt.v.txt. *)
-Abort.
+Proof.
+  intros s t s' x' m p c k sp lr ENTRY MDL
+    [MEM [P [C [SP [LR [RANGE [READ STOP]]]]]]].
+  apply prove_invs.
+  - simpl. rewrite ENTRY. arm8_step. unfold wcschrnul_state.
+    repeat split; assumption.
+  - intros.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption.
+    apply wcschrnul_welltyped. intro MDL1.
+    clear - PRE MDL1 STOP RANGE. rename t1 into t.
+    destruct_inv 64 PRE.
+    + destruct PRE as [[MEM [C [SP LR]]] P].
+      repeat arm8_step.
+      split; [repeat split; assumption|].
+      exists 0. rewrite N.mul_0_r, N.add_0_r.
+      repeat split; try assumption; try reflexivity. apply N.le_0_l.
+    + destruct PRE as [[MEM [C [SP LR]]] [i [LE [P X2]]]].
+      remember (m Ⓓ[p+4*i]) as w eqn:W in *.
+      assert (WB: w < 2^32) by (rewrite W; apply getmem_bound).
+      assert (CB: c < 2^32) by (rewrite <- C; apply N.mod_lt; discriminate).
+      assert (HIT: w=0 \/ w=c -> i=k).
+      { rewrite W. apply wcschrnul_stop_hit; assumption. }
+      assert (MISS: w<>0 -> w<>c -> i<k).
+      { rewrite W. apply wcschrnul_stop_miss; assumption. }
+      clear STOP RANGE W.
+      repeat arm8_step; wcschrnul_finish i k w C WB HIT MISS.
+    + destruct PRE as [[MEM [C [SP LR]]] [i [LT P]]].
+      assert (NEXT: p+4*(i+1) < 2^64).
+      { apply (wcschrnul_addr_bound p k (i+1) RANGE). clear - LT. lia. }
+      assert (ADD: (4+p+4*i) mod 2^64 = p+4*(i+1)).
+      { replace (4+p+4*i) with (p+4*(i+1)) by lia.
+        apply N.mod_small. exact NEXT. }
+      repeat arm8_step.
+      split; [repeat split; assumption|]. exists (i+1).
+      split; [clear - LT; lia|].
+      rewrite <- ADD. split; [reflexivity|].
+      rewrite getmem_mod_l. reflexivity.
+    + destruct PRE as [[MEM [C [SP LR]]] [i [LE [P X2]]]].
+      remember (m Ⓓ[p+4*i]) as w eqn:W in *.
+      assert (WB: w < 2^32) by (rewrite W; apply getmem_bound).
+      assert (CB: c < 2^32) by (rewrite <- C; apply N.mod_lt; discriminate).
+      assert (HIT: w=0 \/ w=c -> i=k).
+      { rewrite W. apply wcschrnul_stop_hit; assumption. }
+      assert (MISS: w<>0 -> w<>c -> i<k).
+      { rewrite W. apply wcschrnul_stop_miss; assumption. }
+      clear STOP RANGE W.
+      repeat arm8_step; wcschrnul_finish i k w C WB HIT MISS.
+Qed.
 
 (* Ordinary RET, independent of the scan proof and without a callee oracle.
    The exact instruction is the unchanged map lookup at the unique exit. *)
@@ -153,5 +240,11 @@ Theorem wcschrnul_return:
   models arm8typctx s -> postcondition m p c k sp lr s ->
   exec_stmt arm8typctx s q ct s' x ->
   x = Some (Addr lr) /\ postcondition m p c k sp lr (reset_temps s s').
-(* PARTIAL: exact initial proof is archived in notes/a-wcschrnul/initial-attempt.v.txt. *)
-Abort.
+Proof.
+  intros s q ct s' x m p c k sp lr LOOK MDL [[MEM [C [SP LR]]] RESULT] XS.
+  cbn [e30_wcschrnul_arm8] in LOOK. injection LOOK as Q. subst q.
+  step_stmt XS. arm8_psimpl in XS.
+  destruct XS as [[STATE EXIT] _]. split; [exact EXIT|].
+  rewrite STATE. unfold postcondition, wcschrnul_state.
+  repeat split; assumption.
+Qed.

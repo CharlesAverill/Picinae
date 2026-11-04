@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-dd8b174b
+COMMAND=python3 notes/a-wcschrnul-fix/check-retention.py
+All 11 original theorem/lemma statements retained verbatim.
+All 8 original definitions retained verbatim.
+Original notes/archive and entire e30 artifact directory unchanged.
+
+EXIT_CODE=0
