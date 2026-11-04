@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-7d6e98da
+COMMAND=python3 notes/a-remque/check-handoff.py
+Initial attempt hash unchanged; every statement and definition retained.
+Eight unfinished proof bodies marked Abort; no full proof-module .vo exists.
+No second compilation performed.
+
+EXIT_CODE=0
