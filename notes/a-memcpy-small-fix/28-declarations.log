@@ -1,0 +1,32 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d5c9940f
+COMMAND=python3 notes/a-memcpy-small-fix/audit-declarations.py
+UNCHANGED: byte_of_getmem
+UNCHANGED: byte_setmem_cases
+UNCHANGED: copied
+UNCHANGED: cpy
+UNCHANGED: nov
+UNCHANGED: cpy_empty
+UNCHANGED: cpy_equiv
+UNCHANGED: cpy_copied
+UNCHANGED: addmsub
+UNCHANGED: cpy_load
+UNCHANGED: msub_off
+UNCHANGED: cpy_store
+UNCHANGED: memcpy_small_saved
+UNCHANGED: memcpy_small_frame
+UNCHANGED: memcpy_small_domain
+UNCHANGED: memcpy_small_input
+UNCHANGED: memcpy_small_post
+UNCHANGED: memcpy_small_exit
+UNCHANGED: memcpy_small_invs
+UNCHANGED: memcpy_small_nwc
+UNCHANGED: memcpy_small_welltyped
+UNCHANGED: memcpy_small_witness
+UNCHANGED: memcpy_small_witness_typed
+UNCHANGED: memcpy_small_entry_inhabited
+UNCHANGED: memcpy_small_zero_entry
+UNCHANGED: memcpy_small_correct
+UNCHANGED: memcpy_small_preserves_callee_saved
+Original theorem/lemma statements: 16
+
+EXIT_CODE=0
