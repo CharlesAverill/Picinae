@@ -203,7 +203,70 @@ Theorem list_remove_correct:
     (MDL: models armv6mtypctx s0) (INPUT: list_remove_pre p nxt prev l c idx s0),
   satisfies_all uxListRemove_armv6m_prog (list_remove_invs s0 p nxt prev l c idx)
     list_remove_exit ((x',s')::t).
-Abort.
+Proof.
+  intros. destruct INPUT as [LAY [POS [R0 [ORIG [RD [WR WI]]]]]].
+  destruct LAY as [PO [LO [NO [BO [PL [PN [PB SEP]]]]]]].
+  destruct ORIG as [RN [RB [RL [RC RI]]]].
+  assert (CB: c<2^32) by (rewrite <- RC; apply getmem_bound).
+  assert (DEC: msub 32 c 1=c-1).
+  { rewrite msub_sub by (clear - POS; lia). apply N.mod_small. clear - CB; lia. }
+  apply prove_invs.
+  - simpl. rewrite ENTRY. armv6m_step. reflexivity.
+  - intros. erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption.
+    apply list_remove_welltyped. intro MDL1.
+    clear - PRE MDL1 PO LO NO BO SEP POS R0 RN RB RL RC RI DEC.
+    rename t1 into t. destruct_inv 32 PRE.
+    + subst s1. unfold rm_read in RN, RB, RL, RC, RI.
+      repeat armv6m_step.
+      all: rewrite ?R0 in *;
+        rewrite ?(N.add_comm 4 p), ?(N.add_comm 8 p),
+          ?(N.add_comm 16 p) in *;
+        rewrite ?RN, ?RB, ?RL in *;
+        rewrite ?(N.add_comm 8 nxt), ?(N.add_comm 4 prev),
+          ?(N.add_comm 4 l) in *;
+        repeat rewrite getmem_mod_l in *;
+        repeat rewrite setmem_mod_l in *.
+      all: assert (NEXT: getmem 32 LittleE 4
+          (setmem 32 LittleE 4 (s0 V_MEM32) (nxt+8) prev) (p+4)=nxt).
+      all: try (rewrite getmem_noverlap by
+          (exact (SEP 1%nat 8%nat ltac:(lia) ltac:(lia) ltac:(lia))); exact RN).
+      all: rewrite NEXT in *.
+      all: assert (PREV: getmem 32 LittleE 4
+          (setmem 32 LittleE 4 (setmem 32 LittleE 4 (s0 V_MEM32)
+            (nxt+8) prev) (prev+4) nxt) (p+8)=prev).
+      all: try (rewrite getmem_noverlap by
+          exact (SEP 2%nat 9%nat ltac:(lia) ltac:(lia) ltac:(lia));
+        rewrite getmem_noverlap by
+          exact (SEP 2%nat 8%nat ltac:(lia) ltac:(lia) ltac:(lia)); exact RB).
+      all: assert (INDEX: getmem 32 LittleE 4
+          (setmem 32 LittleE 4 (setmem 32 LittleE 4 (s0 V_MEM32)
+            (nxt+8) prev) (prev+4) nxt) (l+4)=idx).
+      all: try (rewrite getmem_noverlap by
+          exact (SEP 6%nat 9%nat ltac:(lia) ltac:(lia) ltac:(lia));
+        rewrite getmem_noverlap by
+          exact (SEP 6%nat 8%nat ltac:(lia) ltac:(lia) ltac:(lia)); exact RI).
+      all: rewrite ?PREV, ?INDEX in *.
+      all: unfold list_remove_indexmem, list_remove_linkmem, rm_write;
+        destruct (N.eqb_spec idx p); [subst idx|];
+        psimpl; repeat split; try assumption; try reflexivity;
+        try (clear - BC; discriminate).
+    + destruct PRE as [MEM [R0' [R1 R3]]].
+      repeat armv6m_step.
+      unfold list_remove_post. psimpl.
+      rewrite ?R0', ?R1, ?R3, ?MEM.
+      rewrite ?(N.add_comm 16 p).
+      assert (COUNT: rm_read
+        (rm_write (list_remove_indexmem (s0 V_MEM32) p nxt prev l idx)
+          (p+16) 0) l=c).
+      { unfold list_remove_indexmem, list_remove_linkmem.
+        destruct (idx =? p); rm_load SEP; exact RC. }
+      unfold rm_read, rm_write in COUNT.
+      rewrite COUNT, DEC.
+      unfold list_remove_mem, rm_write.
+      repeat split; try assumption; try reflexivity.
+
+Qed.
 
 Theorem list_remove_at_bx:
   forall s0 t s p nxt prev l c idx,
@@ -214,14 +277,49 @@ Theorem list_remove_at_bx:
   list_remove_post s0 p nxt prev l c idx s /\
   list_remove_effects (s0 V_MEM32) (s V_MEM32) p nxt prev l c idx /\
   (forall v, list_remove_preserved v -> s v=s0 v).
-Abort.
+Proof.
+  intros s0 t s p nxt prev l c idx ENTRY MDL INPUT XP UT.
+  pose proof (list_remove_correct s0 t s (Addr 0xbc) p nxt prev l c idx ENTRY MDL INPUT) as SA.
+  pose proof (satall_trueif_inv _ _ _ _ SA XP UT) as POST.
+  change (list_remove_post s0 p nxt prev l c idx s) in POST.
+  split; [exact POST|]. split.
+  - destruct POST as [MEM REST]. rewrite MEM. apply list_remove_mem_effects.
+    + exact (proj1 INPUT).
+    + exact (proj1 (proj2 INPUT)).
+    + exact (proj1 (proj2 (proj2 (proj2 INPUT)))).
+  - intros v KEEP. symmetry.
+    exact (list_remove_register_frame v KEEP t (Addr 0xa0) s0 (Addr 0xbc) s XP ENTRY).
+Qed.
 
 Definition list_remove_ordinary_lr (lr:N) := lr mod 2=1 /\ lr<0xfffffff0.
 Theorem list_remove_return_step:
   forall s, models armv6mtypctx s -> list_remove_ordinary_lr (s R_LR) ->
   can_step uxListRemove_armv6m_prog
     ((Addr (N.land (s R_LR) 0xfffffffe),s),(Addr 0xbc,s)).
-Abort.
+Proof.
+  intros s MDL [ODD ORDINARY].
+  assert (RT: reset_temps s s=s).
+  { apply functional_extensionality. intro v.
+    unfold reset_temps, reset_vars. destruct (archtyps v); reflexivity. }
+  replace (Addr (N.land (s R_LR) 0xfffffffe),s) with
+    (exitof (0xbc+2) (Some (Addr (N.land (s R_LR) 0xfffffffe))),reset_temps s s)
+    by (rewrite RT; reflexivity).
+  eapply CanStep with (sz:=2) (q:=armv6m_bxwritepc (Var R_LR))
+    (c':=armv6mtypctx) (s':=s) (x:=Some (Addr (N.land (s R_LR) 0xfffffffe))).
+  - reflexivity.
+  - unfold armv6m_bxwritepc. eapply XIf with (b:=1).
+    + assert (E: eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+                   (s R_LR mod 2) 1).
+      { change (eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+          (cast CAST_LOW 32 1 (s R_LR)) 1).
+        apply ECast. apply EVar. reflexivity. }
+      rewrite ODD in E. exact E.
+    + apply XJmp with (w:=32).
+      change (eval_exp armv6mtypctx s
+        (BinOp OP_AND (Var R_LR) (Word (N.ones 32 - 1) 32))
+        (eval_binop OP_AND 32 (s R_LR) (N.ones 32 - 1)) 32).
+      apply EBinOp; [apply EVar; reflexivity|apply EWord].
+Qed.
 
 Definition list_remove_entry_store (m p lr:N) : store :=
   update (update (update (update (memory_store32 m) R_R0 p) R_LR lr)
@@ -232,7 +330,29 @@ Theorem list_remove_entry_witness:
   list_remove_original m p nxt prev l c idx -> lr<2^32 ->
   exists s, models armv6mtypctx s /\ list_remove_pre p nxt prev l c idx s /\
     s V_MEM32=m /\ s R_LR=lr.
-Abort.
+Proof.
+  intros m p nxt prev l c idx lr MB LAY POS ORIG LB.
+  exists (list_remove_entry_store m p lr).
+  assert (PB: p<2^32) by exact (proj1 (proj2 (proj2 (proj1 LAY)))).
+  split.
+  - unfold list_remove_entry_store.
+    apply models_update; [apply ones_bound|].
+    apply models_update; [apply ones_bound|].
+    apply models_update; [exact LB|].
+    apply models_update; [exact PB|].
+    apply memory_store32_welltyped. exact MB.
+  - unfold list_remove_pre. split.
+    + split; [exact LAY|]. split; [exact POS|].
+      unfold list_remove_entry_store, memory_store32.
+      rewrite !update_frame by discriminate. rewrite !update_updated.
+      split; [reflexivity|]. split; [exact ORIG|].
+      repeat split; intros; unfold MemAcc, mem_readable, mem_writable;
+        intros; rewrite ?update_frame by discriminate;
+        rewrite update_updated; apply N.ones_spec_low; apply mp2_mod_lt.
+    + unfold list_remove_entry_store, memory_store32.
+      rewrite !update_frame by discriminate. rewrite !update_updated.
+      split; reflexivity.
+Qed.
 
 (* Singleton at list+8, both legal index cases. Arbitrary original memory,
    item value and owner remain opaque; only the two witness objects are set. *)
@@ -241,25 +361,104 @@ Definition list_remove_singleton_image (m value owner:N) (equal:bool) :=
     list_max_value 8192 8192) 8192 value 4104 4104 owner 4096.
 Theorem list_remove_singleton_layout:
   list_remove_layout 8192 4104 4104 4096.
-Abort.
+Proof.
+  unfold list_remove_layout.
+  repeat split; try (unfold object32, range32; vm_compute; congruence).
+  all: try (apply ranges32_separate; unfold range32; lia).
+  intros i j I J NE.
+  assert (IC: i=0%nat \/ i=1%nat \/ i=2%nat \/ i=3%nat \/ i=4%nat \/
+              i=5%nat \/ i=6%nat \/ i=7%nat \/ i=8%nat \/ i=9%nat) by lia.
+  assert (JC: j=0%nat \/ j=1%nat \/ j=2%nat \/ j=3%nat \/ j=4%nat \/
+              j=5%nat \/ j=6%nat \/ j=7%nat \/ j=8%nat \/ j=9%nat) by lia.
+  repeat destruct IC as [IC|IC]; subst i;
+  repeat destruct JC as [JC|JC]; subst j;
+    try contradiction; cbn [rm_slot]; apply ranges32_separate; unfold range32; lia.
+Qed.
+(* Supply the intended bool binder type without changing the archived statement. *)
+Implicit Types (equal : bool).
 Theorem list_remove_singleton_witness:
   forall m value owner equal, m<memsize 32 -> value<2^32 -> owner<2^32 ->
   exists s, models armv6mtypctx s /\
     list_remove_pre 8192 4104 4104 4096 1 (if equal then 8192 else 4104) s /\
     s V_MEM32=list_remove_singleton_image m value owner equal /\
     list_remove_ordinary_lr (s R_LR).
-Abort.
+Proof.
+  intros m value owner equal MB VB OB.
+  assert (LAY:=list_remove_singleton_layout).
+  assert (IM: list_remove_singleton_image m value owner equal<memsize 32).
+  { unfold list_remove_singleton_image. repeat apply image20_welltyped. exact MB. }
+  assert (ORIG: list_remove_original (list_remove_singleton_image m value owner equal)
+    8192 4104 4104 4096 1 (if equal then 8192 else 4104)).
+  { unfold list_remove_singleton_image.
+    pose proof (image20_fields m 4096 1 (if equal then 8192 else 4104)
+      list_max_value 8192 8192 ltac:(discriminate) ltac:(reflexivity)
+      ltac:(destruct equal; reflexivity) ltac:(reflexivity) ltac:(reflexivity)
+      ltac:(reflexivity)) as LF.
+    pose proof (image20_fields
+      (image20 m 4096 1 (if equal then 8192 else 4104) list_max_value 8192 8192)
+      8192 value 4104 4104 owner 4096 ltac:(discriminate) VB ltac:(reflexivity)
+      ltac:(reflexivity) OB ltac:(reflexivity)) as PF.
+    destruct LF as [LC [LI REST]]. destruct PF as [PV [PN [PB [PO PL]]]].
+    set (mi := image20 m 4096 1 (if equal then 8192 else 4104)
+      list_max_value 8192 8192) in *.
+    set (mf := image20 mi 8192 value 4104 4104 owner 4096) in *.
+    unfold list_remove_original. repeat split; try assumption.
+    - change (field32 mf 4096 0=1).
+      unfold mf, image20. repeat rewrite field32_frame by
+        (apply ranges32_separate; unfold range32; clear; lia). exact LC.
+    - change (field32 mf 4096 4=(if equal then 8192 else 4104)).
+      unfold mf, image20. repeat rewrite field32_frame by
+        (apply ranges32_separate; unfold range32; clear; lia). exact LI. }
+
+  destruct (list_remove_entry_witness (list_remove_singleton_image m value owner equal)
+    8192 4104 4104 4096 1 (if equal then 8192 else 4104) 257 IM LAY
+    ltac:(reflexivity) ORIG ltac:(reflexivity)) as [s [MDL [PRE [MEM LR]]]].
+  exists s. split; [exact MDL|]. split; [exact PRE|]. split; [exact MEM|].
+  rewrite LR. split; reflexivity.
+Qed.
 
 (* A distinct-neighbor multi-node local entry, with either index branch.
    This is a satisfiability witness, not an assumed finite-list representation. *)
 Theorem list_remove_multi_layout:
   list_remove_layout 8192 12288 16384 4096.
-Abort.
+Proof.
+  unfold list_remove_layout.
+  repeat split; try (unfold object32, range32; vm_compute; congruence).
+  all: try (apply ranges32_separate; unfold range32; lia).
+  intros i j I J NE.
+  assert (IC: i=0%nat \/ i=1%nat \/ i=2%nat \/ i=3%nat \/ i=4%nat \/
+              i=5%nat \/ i=6%nat \/ i=7%nat \/ i=8%nat \/ i=9%nat) by lia.
+  assert (JC: j=0%nat \/ j=1%nat \/ j=2%nat \/ j=3%nat \/ j=4%nat \/
+              j=5%nat \/ j=6%nat \/ j=7%nat \/ j=8%nat \/ j=9%nat) by lia.
+  repeat destruct IC as [IC|IC]; subst i;
+  repeat destruct JC as [JC|JC]; subst j;
+    try contradiction; cbn [rm_slot]; apply ranges32_separate; unfold range32; lia.
+Qed.
 Theorem list_remove_multi_witness:
   forall equal:bool, exists s, models armv6mtypctx s /\
     list_remove_pre 8192 12288 16384 4096 3 (if equal then 8192 else 16384) s /\
     list_remove_ordinary_lr (s R_LR).
-Abort.
+Proof.
+  intro equal.
+  set (m:=image20 (image20 0 4096 3 (if equal then 8192 else 16384)
+    list_max_value 16384 12288) 8192 42 12288 16384 99 4096).
+  assert (MB:m<memsize 32).
+  { unfold m. repeat apply image20_welltyped.
+    change (0<2^(2^32*8)). apply mp2_gt_0. }
+  assert (ORIG: list_remove_original m 8192 12288 16384 4096 3
+    (if equal then 8192 else 16384)).
+  { unfold m, list_remove_original, rm_read, image20, write_field32.
+    repeat split;
+      repeat first [rewrite getmem_setmem by discriminate
+        | rewrite getmem_noverlap by
+          (apply ranges32_separate; unfold range32; clear; lia)];
+      rewrite ?N.mod_small by (destruct equal; reflexivity); reflexivity. }
+  destruct (list_remove_entry_witness m 8192 12288 16384 4096 3
+    (if equal then 8192 else 16384) 257 MB list_remove_multi_layout
+    ltac:(reflexivity) ORIG ltac:(reflexivity)) as [s [MDL [PRE [MEM LR]]]].
+  exists s. split; [exact MDL|]. split; [exact PRE|].
+  rewrite LR. split; reflexivity.
+Qed.
 
 Theorem list_remove_returns:
   forall s0 t s p nxt prev l c idx,
@@ -272,4 +471,24 @@ Theorem list_remove_returns:
   s R_R0=c-1 /\
   list_remove_effects (s0 V_MEM32) (s V_MEM32) p nxt prev l c idx /\
   (forall v, list_remove_preserved v -> s v=s0 v).
-Abort.
+Proof.
+  intros s0 t s p nxt prev l c idx ENTRY MDL INPUT LR XP UT.
+  destruct (list_remove_at_bx s0 t s p nxt prev l c idx ENTRY MDL INPUT XP UT)
+    as [POST [EFF FRAME]].
+  assert (MDL1: models armv6mtypctx s).
+  { exact (preservation_exec_prog _ list_remove_welltyped t (Addr 0xa0) s0
+      (Addr 0xbc) s XP ENTRY MDL). }
+  assert (LR1: s R_LR=s0 R_LR) by (apply FRAME; exact I).
+  split.
+  - rewrite <- LR1. apply list_remove_return_step; [exact MDL1|].
+    rewrite LR1. exact LR.
+  - split; [exact (proj1 (proj2 POST))|]. split; assumption.
+Qed.
+
+(* Final proof repair and validation: OpenAI gpt-6.1-sol, xhigh/default.
+   author_model=gpt-6-astra; final_proof_model=gpt-6.1-sol.
+   All original definitions/statements retained; the bool binder hint above
+   only supplies the intended type of the singleton witness's equal binder.
+   Full capped .vo build, raw assumptions and exact retention/ancestry audits:
+   notes/r04-list-remove-fix/. Inherited functional extensionality is disclosed
+   there; this remains local IL partial correctness at the scope stated above. *)
