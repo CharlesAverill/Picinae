@@ -1,0 +1,19 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ea3464df
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 tools/ghidra-lifter/test_bitforms.py --generate
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/test_bitforms.py", line 167, in <module>
+    if sys.argv[1:] == ['--generate']: generate()
+                                       ^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/test_bitforms.py", line 129, in generate
+    stmt = lower(row)
+           ^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/test_bitforms.py", line 38, in lower
+    return ScalarLifter(RawLanguage(row)).instruction(RawInsn(row))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/pcode2coq_scalar.py", line 350, in instruction
+    self.check_bitform(insn, mnemonic, ops)
+  File "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/pcode2coq_scalar.py", line 340, in check_bitform
+    raise Unsupported('unhandled bitform raw-pcode shape')
+pcode2coq_scalar.Unsupported: unhandled bitform raw-pcode shape
+
+EXIT_CODE=1

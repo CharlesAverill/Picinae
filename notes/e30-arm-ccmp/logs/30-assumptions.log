@@ -1,0 +1,110 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9d096d
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash notes/e30-arm-ccmp/print-assumptions.sh
+Require Import Picinae.Examples.claude.lifter.scalar_ccmp.e30___memchr_nosimd_arm8.
+Check e30___memchr_nosimd_arm8.welltyped.
+Print Assumptions e30___memchr_nosimd_arm8.welltyped.
+Require Import Picinae.Examples.claude.lifter.scalar_ccmp.e30_ccmp.
+Check e30_ccmp.welltyped.
+Print Assumptions e30_ccmp.welltyped.
+Check e30_ccmp.finite_execution_0.
+Print Assumptions e30_ccmp.finite_execution_0.
+Check e30_ccmp.finite_execution_1.
+Print Assumptions e30_ccmp.finite_execution_1.
+Check e30_ccmp.finite_execution_2.
+Print Assumptions e30_ccmp.finite_execution_2.
+Check e30_ccmp.finite_execution_3.
+Print Assumptions e30_ccmp.finite_execution_3.
+Check e30_ccmp.finite_execution_4.
+Print Assumptions e30_ccmp.finite_execution_4.
+Check e30_ccmp.finite_execution_5.
+Print Assumptions e30_ccmp.finite_execution_5.
+Check e30_ccmp.finite_execution_6.
+Print Assumptions e30_ccmp.finite_execution_6.
+Check e30_ccmp.finite_execution_7.
+Print Assumptions e30_ccmp.finite_execution_7.
+Check e30_ccmp.finite_execution_8.
+Print Assumptions e30_ccmp.finite_execution_8.
+Check e30_ccmp.finite_execution_9.
+Print Assumptions e30_ccmp.finite_execution_9.
+Check e30_ccmp.finite_execution_10.
+Print Assumptions e30_ccmp.finite_execution_10.
+Check e30_ccmp.finite_execution_11.
+Print Assumptions e30_ccmp.finite_execution_11.
+Check e30_ccmp.finite_execution_12.
+Print Assumptions e30_ccmp.finite_execution_12.
+Require Import Picinae.Examples.claude.lifter.scalar_ccmp.e30_strcmp_arm8.
+Check e30_strcmp_arm8.welltyped.
+Print Assumptions e30_strcmp_arm8.welltyped.
+Require Import Picinae.Examples.claude.lifter.scalar_ccmp.e30_wcschrnul_arm8.
+Check e30_wcschrnul_arm8.welltyped.
+Print Assumptions e30_wcschrnul_arm8.welltyped.
+
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e30___memchr_nosimd_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         fixtures
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+finite_execution_0
+     : List.forallb (fun b : bool => b) finite_checks_0 = true
+Closed under the global context
+finite_execution_1
+     : List.forallb (fun b : bool => b) finite_checks_1 = true
+Closed under the global context
+finite_execution_2
+     : List.forallb (fun b : bool => b) finite_checks_2 = true
+Closed under the global context
+finite_execution_3
+     : List.forallb (fun b : bool => b) finite_checks_3 = true
+Closed under the global context
+finite_execution_4
+     : List.forallb (fun b : bool => b) finite_checks_4 = true
+Closed under the global context
+finite_execution_5
+     : List.forallb (fun b : bool => b) finite_checks_5 = true
+Closed under the global context
+finite_execution_6
+     : List.forallb (fun b : bool => b) finite_checks_6 = true
+Closed under the global context
+finite_execution_7
+     : List.forallb (fun b : bool => b) finite_checks_7 = true
+Closed under the global context
+finite_execution_8
+     : List.forallb (fun b : bool => b) finite_checks_8 = true
+Closed under the global context
+finite_execution_9
+     : List.forallb (fun b : bool => b) finite_checks_9 = true
+Closed under the global context
+finite_execution_10
+     : List.forallb (fun b : bool => b) finite_checks_10 = true
+Closed under the global context
+finite_execution_11
+     : List.forallb (fun b : bool => b) finite_checks_11 = true
+Closed under the global context
+finite_execution_12
+     : List.forallb (fun b : bool => b) finite_checks_12 = true
+Closed under the global context
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e30_strcmp_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e30_wcschrnul_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0
