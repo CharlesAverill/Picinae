@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-c73a57d6
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/r05-list-insert
+
+EXIT_CODE=0

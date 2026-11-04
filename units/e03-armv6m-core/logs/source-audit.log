@@ -1,0 +1,6 @@
+PASS no proof holes/axiom declarations: Picinae_armv6m.v
+PASS no proof holes/axiom declarations: tests/armv6m/Checks.v
+PASS all 49 Print Assumptions reports closed under the global context
+No shared core file changes and no timing library/data imports.
+Final Dune validation: PENDING (no Dune configuration at exact base).
+EXIT=0

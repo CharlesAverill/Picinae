@@ -1,0 +1,15 @@
+PARTIAL: the target .vo was not produced.
+Raw in-compiler Print Assumptions output in assumptions-raw.txt corresponds,
+in source order, to sorted_insert_nwc, sorted_insert_welltyped and
+sorted_insert_register_frame. All three: Closed under the global context.
+No other helper or main theorem was kernel checked in this attempt.
+The final aborted source was not rebuilt: the mandatory one-shot policy
+forbids a second Astra repair/build cycle after the first failed full target.
+Do not treat the three prefix Qeds as a successful full target certificate.
+tools/print-assumptions.sh was read, but not run because it rebuilds the
+missing target .vo and cannot query aborted/absent main theorem constants.
+The Sol fixer must run it after a successful full build on all main theorems
+and imported dependencies. Baseline inherited functional_extensionality_dep
+is documented in e00; it did not appear in these three actual prefix queries.
+Transitive assumptions for the proposed functional/return/witness theorems
+are UNKNOWN because those theorems have no proof constants.
