@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-539c20e7
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/r26-next-unblock-fix
+
+EXIT_CODE=0

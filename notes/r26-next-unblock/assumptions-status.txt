@@ -1,0 +1,5 @@
+PARTIAL: no successful new full .vo target.
+No Print Assumptions output exists for the new module.
+The print-assumptions.sh helper would rebuild the failed target; not run after the one-shot failure.
+No imported-admission or FE-only certificate is claimed for the unbuilt statements.
+Inherited baseline permits FunctionalExtensionality.functional_extensionality_dep, subject to actual final queries.

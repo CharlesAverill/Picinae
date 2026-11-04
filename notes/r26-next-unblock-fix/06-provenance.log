@@ -1,0 +1,45 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-539c20e7
+COMMAND=python3 notes/r26-next-unblock/check-provenance.py
+/home/charles/code/friends/.toolchains/e04-freertos-build/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/tasks.c 6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149
+/home/charles/code/friends/.toolchains/e04-freertos-build/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/include/list.h e18c1bd8dffddc0608112f3e47f28962dc8df916984e68286bbc9a9fa4f83d7c
+Examples/freertos/cortex-m0/FreeRTOSConfig.h 6c63fc719991c8324546c700f95586dfdf1c11b35c69abbb008d06d0e256711c
+Examples/freertos/cortex-m0/inputs.json e28bdff07c4c94e296858e864b9706ca717e88cc201c3349140259455d5eac28
+Examples/freertos/cortex-m0/evidence/layout.json b501f440105154a99c41fa8fe764a116b98198356e3af4d297f3739d39a57cef
+Examples/freertos/cortex-m0/evidence/nm.txt d62076b03c95baf0d2cacad8d4b6f5244208b74e294981995a0fe847cec6f262
+List_t.sizeof 20
+List_t.uxNumberOfItems 0
+List_t.xListEnd 8
+MiniListItem_t.sizeof 12
+MiniListItem_t.pxNext 4
+ListItem_t.xItemValue 0
+TickType_t.sizeof 4
+void *.sizeof 4
+20000010 00000004 b xNextTaskUnblockTime
+20000078 00000004 b pxDelayedTaskList
+static void prvResetNextTaskUnblockTime( void )
+{
+    if( listLIST_IS_EMPTY( pxDelayedTaskList ) != pdFALSE )
+    {
+        /* The new current delayed list is empty.  Set xNextTaskUnblockTime to
+         * the maximum possible value so it is  extremely unlikely that the
+         * if( xTickCount >= xNextTaskUnblockTime ) test will pass until
+         * there is an item in the delayed list. */
+        xNextTaskUnblockTime = portMAX_DELAY;
+    }
+    else
+    {
+        /* The new current delayed list is not empty, get the value of
+         * the item at the head of the delayed list.  This is the time at
+         * which the task at the head of the delayed list should be removed
+         * from the Blocked state. */
+        xNextTaskUnblockTime = listGET_ITEM_VALUE_OF_HEAD_ENTRY( pxDelayedTaskList );
+    }
+}
+#define listGET_ITEM_VALUE_OF_HEAD_ENTRY( pxList )        ( ( ( pxList )->xListEnd ).pxNext->xItemValue )
+#define listLIST_IS_EMPTY( pxList )                       ( ( ( pxList )->uxNumberOfItems == ( UBaseType_t ) 0 ) ? pdTRUE : pdFALSE )
+ELF: 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca
+Call prerequisites: []
+Unsupported: []
+Unchanged generated lift SHA256: 0a3da6db0fc042536c322e2fce2f9df357bd592aea91ef2ecf5b75cda7c961f3
+
+EXIT_CODE=0
