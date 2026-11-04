@@ -45,6 +45,8 @@
   Examples.claude.lifter.x64_copy_fixture.e26_vex256_amd64
   Examples.claude.lifter.x64_copy_fixture.e26_zero_amd64
   Examples.claude.lifter.x64_copy_pinned.e26_pinned_moves_amd64
+  Examples.claude.lifter.x64_rep_pinned.e27_rep_amd64
+  Examples.claude.lifter.x64_rep_synthetic.e27_rep_amd64
   Examples.claude.lifter.x64_scalar_smoke.e25_toascii_amd64
   Examples.claude.lifter.x64_scalar_smoke.e25_isascii_amd64
   Examples.claude.lifter.x64_scalar_smoke.e25_abs_amd64
@@ -140,3 +142,9 @@
   Examples/claude/lifter/x64_copy_fixture/e26_vex256_amd64.vo
   Examples/claude/lifter/x64_copy_fixture/e26_zero_amd64.vo
   Examples/claude/lifter/x64_copy_pinned/e26_pinned_moves_amd64.vo))
+
+(alias
+ (name x64-rep-lifter)
+ (deps
+  Examples/claude/lifter/x64_rep_pinned/e27_rep_amd64.vo
+  Examples/claude/lifter/x64_rep_synthetic/e27_rep_amd64.vo))
