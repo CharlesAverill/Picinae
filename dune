@@ -60,6 +60,7 @@
   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
 ; END e05 generated modules
   Examples.FreeRTOS.armv6m_uxTaskGetNumberOfTasks_proof
+  Examples.FreeRTOS.armv6m_xTaskGetTickCountFromISR_proof
  ))
 
 (alias
@@ -85,3 +86,7 @@
 (alias
  (name armv6m)
  (deps Picinae_armv6m.vo))
+
+(alias
+ (name r09-tick-count-isr)
+ (deps Examples/FreeRTOS/armv6m_xTaskGetTickCountFromISR_proof.vo))

@@ -1,0 +1,64 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-584f983b
+COMMAND=python3 notes/r09-tick-count-isr/audit-provenance.py
+/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca
+/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/tasks.c 6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149
+/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/portable/GCC/ARM_CM0/portmacro.h c6291e8a22b1a4c8f8f16e6f00870505966cba890281c0b1c3c60597f057ab36
+/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/include/FreeRTOS.h 189d9626143b76b1a948a612c051617052f16b3e193324cc96b20e0eb4b8a103
+Examples/freertos/cortex-m0/FreeRTOSConfig.h 6c63fc719991c8324546c700f95586dfdf1c11b35c69abbb008d06d0e256711c
+Examples/freertos/cortex-m0/evidence/layout.json b501f440105154a99c41fa8fe764a116b98198356e3af4d297f3739d39a57cef
+Examples/FreeRTOS/xTaskGetTickCountFromISR_armv6m.v 3fc44d033450fffd7d5341f82092e9742579e28e88a43198e127a466c45795f1
+Global: [{'address': '0x2000002c', 'name': 'xTickCount', 'offset': 0, 'size': 4}]
+Instructions: [{'address': '0x00000590', 'assembly': 'ldr\tr3, [pc, #4]\t@ (598 <xTaskGetTickCountFromISR+0x8>)', 'frontend_encoding_supported': True, 'opcode': '4b01', 'width': 2}, {'address': '0x00000592', 'assembly': 'ldr\tr0, [r3, #0]', 'frontend_encoding_supported': True, 'opcode': '6818', 'width': 2}, {'address': '0x00000594', 'assembly': 'bx\tlr', 'frontend_encoding_supported': True, 'opcode': '4770', 'width': 2}, {'address': '0x00000596', 'assembly': 'nop\t\t\t@ (mov r8, r8)', 'frontend_encoding_supported': True, 'opcode': '46c0', 'width': 2}]
+Entry/return: 0x00000590 [{'address': '0x00000594', 'assembly': 'bx\tlr', 'frontend_encoding_supported': True, 'opcode': '4770', 'width': 2}]
+Pinned tasks.c function:
+TickType_t xTaskGetTickCountFromISR( void )
+{
+    TickType_t xReturn;
+    UBaseType_t uxSavedInterruptStatus;
+
+    traceENTER_xTaskGetTickCountFromISR();
+
+    /* RTOS ports that support interrupt nesting have the concept of a maximum
+     * system call (or maximum API call) interrupt priority.  Interrupts that are
+     * above the maximum system call priority are kept permanently enabled, even
+     * when the RTOS kernel is in a critical section, but cannot make any calls to
+     * FreeRTOS API functions.  If configASSERT() is defined in FreeRTOSConfig.h
+     * then portASSERT_IF_INTERRUPT_PRIORITY_INVALID() will result in an assertion
+     * failure if a FreeRTOS API function is called from an interrupt that has been
+     * assigned a priority above the configured maximum system call priority.
+     * Only FreeRTOS functions that end in FromISR can be called from interrupts
+     * that have been assigned a priority at or (logically) below the maximum
+     * system call  interrupt priority.  FreeRTOS maintains a separate interrupt
+     * safe API to ensure interrupt entry is as fast and as simple as possible.
+     * More information (albeit Cortex-M specific) is provided on the following
+     * link: https://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html */
+    portASSERT_IF_INTERRUPT_PRIORITY_INVALID();
+
+    uxSavedInterruptStatus = portTICK_TYPE_SET_INTERRUPT_MASK_FROM_ISR();
+    {
+        xReturn = xTickCount;
+    }
+    portTICK_TYPE_CLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedInterruptStatus );
+
+    traceRETURN_xTaskGetTickCountFromISR( xReturn );
+
+    return xReturn;
+}
+
+portable/GCC/ARM_CM0/portmacro.h:73:     typedef uint32_t        TickType_t;
+portable/GCC/ARM_CM0/portmacro.h:78:     #define portTICK_TYPE_IS_ATOMIC    1
+include/FreeRTOS.h:2746: #ifndef portASSERT_IF_INTERRUPT_PRIORITY_INVALID
+include/FreeRTOS.h:2747:     #define portASSERT_IF_INTERRUPT_PRIORITY_INVALID()
+include/FreeRTOS.h:2895:     #define portTICK_TYPE_SET_INTERRUPT_MASK_FROM_ISR()         portSET_INTERRUPT_MASK_FROM_ISR()
+include/FreeRTOS.h:2896:     #define portTICK_TYPE_CLEAR_INTERRUPT_MASK_FROM_ISR( x )    portCLEAR_INTERRUPT_MASK_FROM_ISR( ( x ) )
+include/FreeRTOS.h:2903:     #define portTICK_TYPE_SET_INTERRUPT_MASK_FROM_ISR()         0
+include/FreeRTOS.h:2904:     #define portTICK_TYPE_CLEAR_INTERRUPT_MASK_FROM_ISR( x )    ( void ) ( x )
+Compiled macro: #define portTICK_TYPE_IS_ATOMIC 1
+Compiled macro: #define portTICK_TYPE_SET_INTERRUPT_MASK_FROM_ISR() 0
+Compiled macro: #define configTICK_TYPE_WIDTH_IN_BITS TICK_TYPE_WIDTH_32_BITS
+Compiled macro: #define portASSERT_IF_INTERRUPT_PRIORITY_INVALID() 
+Compiled macro: #define portTICK_TYPE_CLEAR_INTERRUPT_MASK_FROM_ISR(x) ( void ) ( x )
+PASS: pinned source/config/layout and unchanged accepted call-free artifact.
+This evidence is not a binary/lifter refinement or asynchronous atomicity proof.
+
+EXIT_CODE=0
