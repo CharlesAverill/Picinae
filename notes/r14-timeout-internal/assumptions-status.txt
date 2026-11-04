@@ -1,0 +1,8 @@
+NOT RUN: the one-shot full proof target failed with exit 1 after author SIGINT.
+No successful .vo exists for the initial proof module. Running the assumptions
+helper would launch another build; no second Astra compiler run was attempted.
+No claims of closed/transitively verified main theorems are made.
+The baseline inherited Stdlib.FunctionalExtensionality.functional_extensionality_dep
+is documented in e00; its use by this unit is not certified.
+Run run-assumptions.sh through the assigned resource gate only after Sol completes
+and successfully builds the retained statements.
