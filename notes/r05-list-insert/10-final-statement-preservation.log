@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-c73a57d6
+COMMAND=python3 notes/r05-list-insert/check-statements.py
+PASS: all initial statements and definitions preserved exactly (whitespace/comments ignored)
+
+EXIT_CODE=0

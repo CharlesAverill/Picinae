@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-c73a57d6
+COMMAND=sha256sum Examples/FreeRTOS/armv6m_vListInsert_proof.v notes/r05-list-insert/initial-attempt.v.txt Examples/FreeRTOS/vListInsert_armv6m.v
+67ef3070eef5e485b7119be86fa209e2bc0e8dc2bc50c7a8febd283fd85636bf  Examples/FreeRTOS/armv6m_vListInsert_proof.v
+67ef3070eef5e485b7119be86fa209e2bc0e8dc2bc50c7a8febd283fd85636bf  notes/r05-list-insert/initial-attempt.v.txt
+379c3edfa2edc460bf9d9e466804ad492c291778bb49086ffb2e3a21003b3ecc  Examples/FreeRTOS/vListInsert_armv6m.v
+
+EXIT_CODE=0
