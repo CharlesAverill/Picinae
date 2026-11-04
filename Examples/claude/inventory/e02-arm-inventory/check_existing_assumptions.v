@@ -1,0 +1,12 @@
+Require Import Picinae.Examples.claude.div_arm8.
+Require Import Picinae.Examples.claude.ldiv_arm8.
+Require Import Picinae.Examples.claude.ffs_arm8.
+Require Import Picinae.Examples.claude.ffsl_arm8.
+Require Import Picinae.Examples.claude.ffsll_arm8.
+Require Import Picinae.Examples.claude.swab_arm8.
+Print Assumptions div_arm8.welltyped.
+Print Assumptions ldiv_arm8.welltyped.
+Print Assumptions ffs_arm8.welltyped.
+Print Assumptions ffsl_arm8.welltyped.
+Print Assumptions ffsll_arm8.welltyped.
+Print Assumptions swab_arm8.welltyped.

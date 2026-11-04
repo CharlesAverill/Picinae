@@ -1,0 +1,1 @@
+All 16 theorem/lemma statements retained exactly. Four prefix Qeds retained; twelve unchecked proofs replaced by Abort. No repair build performed.

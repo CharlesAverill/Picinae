@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-3b4b4f41
+COMMAND=python3 -c import\ json\,hashlib\;\ from\ pathlib\ import\ Path\;\ o=json.loads\(Path\(\"notes/e08-arm-lifts/ffs-reference-data.json\"\).read_text\(\)\)\[\"materialized_objects\"\]\[0\]\;\ b=bytes.fromhex\(o\[\"elf_bytes_hex\"\]\)\;\ print\(\"ELF\ address:\"\,o\[\"elf_address\"\]\,\"model\ address:\"\,o\[\"model_address\"\]\)\;\ print\(\"bytes:\"\,len\(b\)\,\"sha256:\"\,hashlib.sha256\(b\).hexdigest\(\)\)\;\ assert\ len\(b\)==256\;\ assert\ hashlib.sha256\(b\).hexdigest\(\)==o\[\"elf_bytes_sha256\"\]\;\ assert\ all\(v==i.bit_length\(\)\ for\ i\,v\ in\ enumerate\(b\)\)\;\ print\(\"All\ 256\ reference-data\ bytes\ equal\ the\ bit\ length\ of\ their\ index.\ This\ is\ provenance\ checking\,\ not\ a\ Rocq\ proof.\"\)
+ELF address: 0x14e738 model address: 0x24e738
+bytes: 256 sha256: 14a5d850c255623f9472e3c650abce0c78d32f0276b315b3a276a0462d97a1ac
+All 256 reference-data bytes equal the bit length of their index. This is provenance checking, not a Rocq proof.
+
+EXIT_CODE=0
