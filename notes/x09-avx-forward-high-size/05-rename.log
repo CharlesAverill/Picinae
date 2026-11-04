@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4842e322
+COMMAND=git branch -m llm-proofs/x09-avx-forward-high-size
+
+EXIT_CODE=0
