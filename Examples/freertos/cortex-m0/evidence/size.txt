@@ -1,0 +1,20 @@
+/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf  :
+section             size        addr
+.isr_vector           64           0
+.text              17880          64
+.data                  8   536870912
+.bss                4200   536870920
+.debug_info        47156           0
+.debug_abbrev       5491           0
+.debug_loc         47792           0
+.debug_aranges      1808           0
+.debug_ranges       2728           0
+.debug_macro       17776           0
+.debug_line        33376           0
+.debug_str        101890           0
+.comment              68           0
+.ARM.attributes       44           0
+.debug_frame        5376           0
+Total             285657
+
+
