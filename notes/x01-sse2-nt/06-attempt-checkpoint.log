@@ -1,0 +1,45 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d1776e8c
+COMMAND=bash -e -c sha256sum\ Examples/claude/amd64_memcpy_nt_proof.v\;\ rg\ -n\ \"\^\(Definition\|Lemma\|Theorem\)\ \"\ Examples/claude/amd64_memcpy_nt_proof.v\;\ git\ diff\ --check\;\ git\ diff\ --\ dune
+370d8cc31a381399cad0994852fa4bcc6083baa7c982b8521f6400e5179ddbb5  Examples/claude/amd64_memcpy_nt_proof.v
+33:Definition nt_align (d:N) := 64 - d mod 64.
+34:Lemma nt_align_bounds: forall d, 1 <= nt_align d <= 64.
+38:Definition nt_row (M:memory) d s o :=
+44:Lemma nt_row_advance: forall m M d s n W o,
+58:Definition nt_done (pages a j i x:N) :=
+64:Lemma nt_done_initial: forall pages a x,
+68:Lemma nt_done_chunk: forall pages a j x, 0 < pages ->
+83:Lemma nt_done_next_chunk: forall pages a j x, 0 < pages ->
+93:Definition nt_staged pages a j i q x :=
+99:Lemma nt_staged_zero: forall pages a j i x,
+103:Lemma nt_staged_finish: forall pages a j i x,
+116:Lemma nt_staged_bound: forall pages a j i q n x,
+126:Lemma nt_staged_advance: forall m M d s n pages a j i q,
+146:Definition nt_tail_state m d s n rsp c (st:store) :=
+150:Definition nt_tail_exit (t:trace) :=
+154:Definition nt_tail_invs m d s n rsp (t:trace) :=
+161:Lemma nt_tail_addr: forall x c n k, k < 2^64 -> k <= n -> c <= n ->
+172:Lemma nt_tail_final: forall (four:bool) m d s n rsp st t,
+193:Lemma nt_remainder_sub: forall a, 64 <= a -> a < 2^32 ->
+200:Lemma nt_tail_loop: forall (four:bool) m d s n rsp st t,
+240:Theorem memcpy_nt_tail_correct:
+262:Definition nt_tail_witness : store := fun v => match v with
+265:Theorem memcpy_nt_tail_nonvacuous:
+286:Definition nt_page_invs m d s o W (t:trace) :=
+291:Lemma memcpy_nt_first_page_stores: forall (four:bool) m d s n o W st t,
+diff --git a/dune b/dune
+index 51c663f..b48a1a6 100644
+--- a/dune
++++ b/dune
+@@ -14,6 +14,10 @@
+   Picinae_armv7 Picinae_armv8 Picinae_riscv Picinae_amd64 Picinae_numbers
+   Examples.claude.amd64_common Examples.claude.abs_amd64
+   Examples.claude.amd64_abs_proof
++  Examples.claude.memcpy_amd64 Examples.claude.amd64_memcpy_sets
++  Examples.claude.amd64_memcpy_lemmas Examples.claude.amd64_memcpy_proof
++  Examples.claude.amd64_memcpy_nt_proof
++  Examples.claude.amd64_memcpy_loops_proof
+   Examples.claude.arm8_common Examples.claude.abs_arm8
+   Examples.claude.arm8_abs_proof))
+ 
+
+EXIT_CODE=0
