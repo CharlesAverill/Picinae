@@ -1,0 +1,71 @@
+Source: /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/tasks.c
+SHA256: 6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149
+
+    static TCB_t * prvSearchForNameWithinSingleList( List_t * pxList,
+                                                     const char pcNameToQuery[] )
+    {
+        TCB_t * pxReturn = NULL;
+        TCB_t * pxTCB = NULL;
+        UBaseType_t x;
+        char cNextChar;
+        BaseType_t xBreakLoop;
+        const ListItem_t * pxEndMarker = listGET_END_MARKER( pxList );
+        ListItem_t * pxIterator;
+
+        /* This function is called with the scheduler suspended. */
+
+        if( listCURRENT_LIST_LENGTH( pxList ) > ( UBaseType_t ) 0 )
+        {
+            for( pxIterator = listGET_HEAD_ENTRY( pxList ); pxIterator != pxEndMarker; pxIterator = listGET_NEXT( pxIterator ) )
+            {
+                /* MISRA Ref 11.5.3 [Void pointer assignment] */
+                /* More details at: https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/main/MISRA.md#rule-115 */
+                /* coverity[misra_c_2012_rule_11_5_violation] */
+                pxTCB = listGET_LIST_ITEM_OWNER( pxIterator );
+
+                /* Check each character in the name looking for a match or
+                 * mismatch. */
+                xBreakLoop = pdFALSE;
+
+                for( x = ( UBaseType_t ) 0; x < ( UBaseType_t ) configMAX_TASK_NAME_LEN; x++ )
+                {
+                    cNextChar = pxTCB->pcTaskName[ x ];
+
+                    if( cNextChar != pcNameToQuery[ x ] )
+                    {
+                        /* Characters didn't match. */
+                        xBreakLoop = pdTRUE;
+                    }
+                    else if( cNextChar == ( char ) 0x00 )
+                    {
+                        /* Both strings terminated, a match must have been
+                         * found. */
+                        pxReturn = pxTCB;
+                        xBreakLoop = pdTRUE;
+                    }
+                    else
+                    {
+                        mtCOVERAGE_TEST_MARKER();
+                    }
+
+                    if( xBreakLoop != pdFALSE )
+                    {
+                        break;
+                    }
+                }
+
+                if( pxReturn != NULL )
+                {
+                    /* The handle has been found. */
+                    break;
+                }
+            }
+        }
+        else
+        {
+            mtCOVERAGE_TEST_MARKER();
+        }
+
+        return pxReturn;
+    }
+

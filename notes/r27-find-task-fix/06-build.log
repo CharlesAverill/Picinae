@@ -1,0 +1,38 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-f791c5bc
+COMMAND=bash notes/r27-find-task-fix/build.sh
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMITTED r27-find-task-fix memory_kib=2500000
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2718:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_prvSearchForNameWithinSingleList_proof.{glob,vo} (exit 1)
+Goal at < 1488 >
+Goal at < 1490 >
+Goal at < 1550 >
+Goal at < 1520 >
+Goal at < 1550 >
+Goal at < 1514 >
+Goal at < 1550 >
+Goal at < 1520 >
+Goal at < 1550 >
+Goal at < 1528 >
+Goal at < 1514 >
+Goal at < 1510 >
+Goal at < 1528 >
+Goal at < 1514 >
+File "./Examples/FreeRTOS/armv6m_prvSearchForNameWithinSingleList_proof.v", line 375, characters 6-125:
+Error: User interrupt.
+
+RELEASED r27-find-task-fix exit=1
+
+EXIT_CODE=1

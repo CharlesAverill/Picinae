@@ -1,0 +1,1 @@
+NOT RUN: the sole full .vo build failed (exit 1) at search_skip_prefix, initial line 241. No unit .vo or main theorem constants exist. No Print Assumptions output is available. Running tools/print-assumptions.sh would rebuild, violating immediate Astra handoff. Baseline inherited functional_extensionality_dep is documented but this unit has no transitive certificate.

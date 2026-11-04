@@ -1,0 +1,21 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-f791c5bc
+COMMAND=bash -e -c git\ merge-base\ origin/llm_generated_proofs\ HEAD\;\ git\ log\ --format=\"%H\ %s\"\ origin/llm_generated_proofs..HEAD\;\ git\ diff\ --stat\;\ git\ status\ --short
+49956416928e5b6bb3928b54ae33e3b81091f006
+00ca4312875f97177309034d7ee743a5ca7bb03f Add partial ARMv6-M task-name search proof handoff
+4ff26413448da4d8f064b0273ac5472cc9de7e5a Record completed list model validation evidence
+4369208b4edce53f84113bcfd3b859f3f58be334 Complete ARMv6-M list model proofs
+7de9edcc1e5094133d66bbeae129ef48078b9265 Add partial ARMv6-M list model proof handoff
+95da7ab7cee78f09a528aed86c1dfaf29520a9a8 Record FreeRTOS lift ancestry and validation evidence
+075f59aca328e60e6376e2af01fa49925ab10e9d Add reproducible FreeRTOS ARMv6-M function lifts
+8c01958e73ec7fe959c60b29444505afbb599d13 Merge reviewed FreeRTOS fixture into e05 lifts
+5677a5d1d995745cc1cefbd33bcda1a3a4b49d8b Validate ARMv6-M import with selective Dune target
+dac36c0a03088a90bb6e6385f82cb355d27cc204 Merge selective Dune prerequisite into ARMv6-M import
+abe7eda601a63d47eb70e765f4ae2c4ca235cca4 Add reproducible Cortex-M0 FreeRTOS build fixture
+59f696d32a5623cdfbceb9a1e0f91e2cc7c054c1 Add ARMv6-M ISA and strict ELF lifter
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+ ...armv6m_prvSearchForNameWithinSingleList_proof.v | 101 ++++++++++++++++-----
+ 1 file changed, 78 insertions(+), 23 deletions(-)
+ M Examples/FreeRTOS/armv6m_prvSearchForNameWithinSingleList_proof.v
+?? notes/r27-find-task-fix/
+
+EXIT_CODE=0
