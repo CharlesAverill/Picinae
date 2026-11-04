@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96052210
+COMMAND=git diff --cached --check -- Examples/FreeRTOS/armv6m_uxTaskGetNumberOfTasks_proof.v notes/r06-task-count-fix/audit-statements.py notes/r06-task-count-fix/audit-ancestry.py
+
+EXIT_CODE=0
