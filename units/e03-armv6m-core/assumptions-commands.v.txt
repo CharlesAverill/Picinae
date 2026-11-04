@@ -1,0 +1,101 @@
+From Stdlib Require Import NArith ZArith List.
+Require Import Picinae_armv6m Picinae.tests.armv6m.Checks.
+Require Import Picinae.tests.armv6m.generated.fixture Picinae.tests.armv6m.generated.all_bytes.
+Check memacc_respects_armv6mtypctx.
+Print Assumptions memacc_respects_armv6mtypctx.
+Check memacc_read_frame.
+Print Assumptions memacc_read_frame.
+Check memacc_write_frame.
+Print Assumptions memacc_write_frame.
+Check memacc_read_updated.
+Print Assumptions memacc_read_updated.
+Check memacc_write_updated.
+Print Assumptions memacc_write_updated.
+Check armv6m_varid_typ.
+Print Assumptions armv6m_varid_typ.
+Check armv6m_subset_typ.
+Print Assumptions armv6m_subset_typ.
+Check armv6m_subset_temp.
+Print Assumptions armv6m_subset_temp.
+Check hastyp_armv6m_varid.
+Print Assumptions hastyp_armv6m_varid.
+Check hastyp_armv6m_var.
+Print Assumptions hastyp_armv6m_var.
+Check hastyp_armv6m_word.
+Print Assumptions hastyp_armv6m_word.
+Check hastyp_armv6m_move.
+Print Assumptions hastyp_armv6m_move.
+Check hastyp_armv6m_mov.
+Print Assumptions hastyp_armv6m_mov.
+Check hastyp_armv6m_temp.
+Print Assumptions hastyp_armv6m_temp.
+Check hastyp_armv6m_seq.
+Print Assumptions hastyp_armv6m_seq.
+Check hastyp_armv6m_if.
+Print Assumptions hastyp_armv6m_if.
+Check hastyp_armv6m_seqlist.
+Print Assumptions hastyp_armv6m_seqlist.
+Check Forall_armv6m_map.
+Print Assumptions Forall_armv6m_map.
+Check hastyp_armv6m_ldm.
+Print Assumptions hastyp_armv6m_ldm.
+Check hastyp_armv6m_stm.
+Print Assumptions hastyp_armv6m_stm.
+Check hastyp_armv6m_push.
+Print Assumptions hastyp_armv6m_push.
+Check hastyp_armv6m_pop.
+Print Assumptions hastyp_armv6m_pop.
+Check welltyped_arm2il.
+Print Assumptions welltyped_arm2il.
+Check welltyped_armv6mprog.
+Print Assumptions welltyped_armv6mprog.
+Check welltyped_lift_armv6m.
+Print Assumptions welltyped_lift_armv6m.
+Check literal_after_function.
+Print Assumptions literal_after_function.
+Check literal_lift.
+Print Assumptions literal_lift.
+Check finite_program_boundary.
+Print Assumptions finite_program_boundary.
+Check decode_push.
+Print Assumptions decode_push.
+Check decode_pop.
+Print Assumptions decode_pop.
+Check decode_bl.
+Print Assumptions decode_bl.
+Check decode_bx.
+Print Assumptions decode_bx.
+Check invalid_decode.
+Print Assumptions invalid_decode.
+Check addition_wrap_flags.
+Print Assumptions addition_wrap_flags.
+Check addition_signed_overflow.
+Print Assumptions addition_signed_overflow.
+Check subtraction_borrow_flags.
+Print Assumptions subtraction_borrow_flags.
+Check adc_carry_in.
+Print Assumptions adc_carry_in.
+Check sbc_borrow_in.
+Print Assumptions sbc_borrow_in.
+Check shift_zero_preserves_carry.
+Print Assumptions shift_zero_preserves_carry.
+Check shift_32_carry.
+Print Assumptions shift_32_carry.
+Check forward_bl_link.
+Print Assumptions forward_bl_link.
+Check backward_bl_link.
+Print Assumptions backward_bl_link.
+Check bx_thumb_and_fault.
+Print Assumptions bx_thumb_and_fault.
+Check push_order.
+Print Assumptions push_order.
+Check pop_order_return.
+Print Assumptions pop_order_return.
+Check fixture_bytes_decode_check.
+Print Assumptions fixture_bytes_decode_check.
+Check fixture_bytes_welltyped.
+Print Assumptions fixture_bytes_welltyped.
+Check all_bytes_decode_check.
+Print Assumptions all_bytes_decode_check.
+Check all_bytes_welltyped.
+Print Assumptions all_bytes_welltyped.

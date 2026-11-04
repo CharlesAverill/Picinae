@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-f5cd5d9c
+COMMAND=git branch -m llm-proofs/r08-tick-count
+
+EXIT_CODE=0
