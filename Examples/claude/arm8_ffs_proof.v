@@ -72,38 +72,118 @@ Qed.
 Theorem ffs_return_cut: forall s a,
   a = 52 \/ a = 96 ->
   e11_ffs_arm8 s a = Some (4, Move R_PC (Var R_X30) $; Jmp (Var R_PC)).
-Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
-Abort.
+Proof. intros s a [E|E]; subst a; reflexivity. Qed.
 
 Lemma ffs_lowest_set_bit:
   forall n x, x < 2^n -> x <> 0 ->
   exists k, k < n /\ N.testbit x k = true /\
     forall j, j < k -> N.testbit x j = false.
 Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
-Abort.
+  induction n as [|n IH] using N.peano_ind; intros x LT NZ.
+    change (2^0) with 1 in LT. lia.
+  destruct (N.testbit x 0) eqn:B0.
+    exists 0. split; [lia | split; [assumption | intros; lia]].
+  assert (H2: x = 2 * N.div2 x).
+    pose proof (N.div2_odd x) as D. rewrite <- N.bit0_odd, B0 in D.
+    simpl N.b2n in D. lia.
+  destruct (IH (N.div2 x)) as [k [K [BK LK]]].
+    rewrite N.pow_succ_r' in LT. lia.
+    intro D. rewrite D in H2. lia.
+  rewrite N.div2_div in BK, LK.
+  exists (N.succ k). repeat split.
+    lia.
+    rewrite <- N.div2_bits. exact BK.
+    intros j J. destruct (N.eq_dec j 0) as [->|NZj]. exact B0.
+      replace j with (N.succ (N.pred j)) by lia.
+      rewrite <- N.div2_bits. apply LK. lia.
+Qed.
 
 Lemma ffs_isolate: forall x k,
   x < 2^32 -> k < 32 -> N.testbit x k = true ->
   (forall j, j < k -> N.testbit x j = false) ->
   (msub 32 0 x) .& x = 2^k.
 Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
-Abort.
+  intros x k XL K B L.
+  assert (NZ: x <> 0) by (intro E; rewrite E, N.bits_0 in B; discriminate).
+  assert (PK: 0 < 2^k) by (apply N.neq_0_lt_0, N.pow_nonzero; discriminate).
+  assert (XM: x mod 2^(N.succ k) = 2^k).
+  { apply N.bits_inj. intro j. rewrite Nmod_pow2_bits, N.pow2_bits_eqb.
+    destruct (N.ltb_spec j (N.succ k)) as [J|J].
+    - destruct (N.eq_dec j k) as [->|NE].
+      + rewrite B, N.eqb_refl. reflexivity.
+      + rewrite L by lia. rewrite (proj2 (N.eqb_neq k j) ltac:(lia)). reflexivity.
+    - rewrite (proj2 (N.eqb_neq k j) ltac:(lia)). reflexivity. }
+  assert (D: x = 2^k + (x / 2^(N.succ k)) * 2^(N.succ k)).
+  { pose proof (N.div_mod x (2^(N.succ k))
+      ltac:(apply N.pow_nonzero; discriminate)) as D.
+    rewrite XM in D. nia. }
+  assert (DP: x-1 = (2^k-1) + (x / 2^(N.succ k)) * 2^(N.succ k)) by lia.
+  assert (PL: 2^k-1 < 2^(N.succ k)) by (rewrite N.pow_succ_r'; nia).
+  assert (PM: (x-1) mod 2^(N.succ k) = 2^k-1).
+  { rewrite DP, N.mod_add by (apply N.pow_nonzero; discriminate).
+    apply N.mod_small. exact PL. }
+  assert (DQ: (x-1) / 2^(N.succ k) = x / 2^(N.succ k)).
+  { rewrite DP, N.div_add by (apply N.pow_nonzero; discriminate).
+    rewrite N.div_small by exact PL. reflexivity. }
+  assert (NEG: msub 32 0 x = N.lnot (x-1) 32).
+  { clear - XL NZ. rewrite msub_0_l, (N.mod_small x) by exact XL.
+    rewrite N.mod_small by lia.
+    rewrite N.lnot_sub_low, N.ones_equiv.
+    - lia.
+    - destruct (N.eq_dec (x-1) 0) as [E|E].
+      + rewrite E. reflexivity.
+      + apply N.log2_lt_pow2; lia. }
+  rewrite NEG. apply N.bits_inj. intro i.
+  rewrite N.land_spec, N.pow2_bits_eqb.
+  destruct (N.lt_ge_cases i 32) as [I|I].
+  - rewrite N.lnot_spec_low by exact I.
+    destruct (N.lt_trichotomy i k) as [IK|[IK|IK]].
+    + rewrite L by exact IK. rewrite (proj2 (N.eqb_neq k i) ltac:(first [clear - IK; lia | clear - K I; lia])).
+      apply Bool.andb_false_r.
+    + subst i. rewrite B, N.eqb_refl.
+      assert (P: N.testbit (x-1) k = false).
+      { pose proof (Nmod_pow2_bits (x-1) (N.succ k) k) as T.
+        rewrite PM in T.
+        replace (2^k-1) with (N.ones k) in T by (rewrite N.ones_equiv; lia).
+        rewrite N.ones_spec_high, (proj2 (N.ltb_lt k (N.succ k)) ltac:(lia)) in T by lia.
+        simpl in T. symmetry. exact T. }
+      rewrite P. reflexivity.
+    + rewrite (proj2 (N.eqb_neq k i) ltac:(first [clear - IK; lia | clear - K I; lia])).
+      assert (P: N.testbit (x-1) i = N.testbit x i).
+      { replace i with ((i-N.succ k)+N.succ k) by (clear - IK; lia).
+        rewrite <- (N.shiftr_spec' (x-1) (N.succ k) (i-N.succ k)),
+          <- (N.shiftr_spec' x (N.succ k) (i-N.succ k)).
+        rewrite !N.shiftr_div_pow2, DQ. reflexivity. }
+      rewrite P. destruct (N.testbit x i); reflexivity.
+  - rewrite (bound_hibits_zero 32 x i XL I).
+    rewrite (proj2 (N.eqb_neq k i) ltac:(first [clear - IK; lia | clear - K I; lia])). apply Bool.andb_false_r.
+Qed.
 
 
 Theorem ffs_spec_satisfiable: forall x, x < 2^32 -> exists r, ffs_spec x r.
 Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
-Abort.
+  intros x XL. destruct (N.eq_dec x 0) as [->|NZ].
+  - exists 0. unfold ffs_spec. split; [auto|contradiction].
+  - destruct (ffs_lowest_set_bit 32 x XL NZ) as [k [K [B L]]].
+    exists (k+1). unfold ffs_spec. replace (k+1-1) with k by lia.
+    split; [contradiction|]. intros _. repeat split; auto; lia.
+Qed.
 
 Lemma ffs_isolation_spec: forall x, x < 2^32 ->
   exists r, ffs_spec x r /\ r <= 32 /\
     (msub 32 0 x) .& x = (if r =? 0 then 0 else 2^(r-1)).
 Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
-Abort.
+  intros x XL. destruct (N.eq_dec x 0) as [->|NZ].
+  - exists 0. repeat split; try reflexivity; try lia; contradiction.
+  - destruct (ffs_lowest_set_bit 32 x XL NZ) as [k [K [B L]]].
+    exists (k+1). rewrite (ffs_isolate x k XL K B L).
+    rewrite (proj2 (N.eqb_neq (k+1) 0) ltac:(lia)).
+    replace (k+1-1) with k by lia.
+    split.
+    + unfold ffs_spec. replace (k+1-1) with k by lia.
+      split; [contradiction|]. intros _. repeat split; auto; lia.
+    + split; [lia|reflexivity].
+Qed.
 
 (* Literal little-endian encoding of the accepted e08 reference-data bytes.
    This is reference memory, never replacement executable code. *)
@@ -113,18 +193,29 @@ Definition ffs_table_memory := setmem 64 LittleE 256 0 0x24e738 ffs_table_bytes.
 Lemma ffs_table_bytes_correct: forall i, i < 256 ->
   xbits ffs_table_bytes (i*8) ((i+1)*8) = N.size i.
 Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
-Abort.
+  intros i I.
+  let rec go k :=
+    lazymatch eval compute in (k <? 256) with
+    | true => destruct (N.eq_dec i k) as [->|?];
+      [vm_compute; reflexivity | let k1 := eval compute in (N.succ k) in go k1]
+    | false => exfalso; lia end in go 0.
+Qed.
 
 Theorem ffs_table_satisfiable: ffs_table ffs_table_memory.
 Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
-Abort.
+  intros i I. unfold ffs_table_memory.
+  replace 256 with (i+1+(255-i)) by lia.
+  rewrite getmem_setmem_xbits by (clear - I; change (255-i+1 <= 18446744073709551616); lia).
+  apply ffs_table_bytes_correct. exact I.
+Qed.
 
 Lemma ffs_table_memory_bound: ffs_table_memory < 2^(8*2^64).
 Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
-Abort.
+  unfold ffs_table_memory. apply hibits_zero_bound. intros i I.
+  replace i with ((i-2^64*8)+2^64*8) by lia.
+  rewrite <- N.shiftr_spec', setmem_highbits, N.shiftr_0_l, N.bits_0.
+  reflexivity.
+Qed.
 
 Definition ffs_entry_store (u:N) : store := fun v =>
   if vareq v R_X0 then u else
@@ -136,8 +227,24 @@ Theorem ffs_entry_satisfiable: forall u, u < 2^64 ->
     ffs_invs (u mod 2^32) 0 0 ffs_table_memory [(Addr 0,s)] = Some P /\ P /\
     (forall a, a < 2^64 -> mem_readable s a).
 Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
-Abort.
+  intros u U. exists (ffs_entry_store u).
+  exists (u mod 2^32 = u mod 2^32 /\ 0 = 0 /\ 0 = 0 /\
+    ffs_table_memory = ffs_table_memory /\ ffs_table ffs_table_memory).
+  split.
+  - intros v w CV. unfold ffs_entry_store.
+    destruct (vareq v R_X0) as [E|E].
+    + subst v. change (Some 64 = Some w) in CV. inversion CV; subst. exact U.
+    + destruct (vareq v V_MEM64) as [M|M].
+      * subst v. change (Some (8*2^64) = Some w) in CV.
+        inversion CV; subst. apply ffs_table_memory_bound.
+      * destruct (vareq v A_READ) as [A|A].
+        -- subst v. change (Some (2^64) = Some w) in CV.
+           inversion CV; subst. apply ones_bound.
+        -- apply N.neq_0_lt_0, N.pow_nonzero. discriminate.
+  - repeat split; try reflexivity; try apply ffs_table_satisfiable.
+    intros a A. unfold mem_readable. change (N.testbit (N.ones (2^64)) a = true).
+    apply N.ones_spec_low. exact A.
+Qed.
 
 (* Finite case split is over the proved least-bit position, never over a
    restricted collection of input values. Upper input bits stay arbitrary. *)
@@ -166,7 +273,7 @@ Theorem ffs_correct:
     (LR: s R_X30 = lr) (MEM: s V_MEM64 = m) (TABLE: ffs_table m),
   satisfies_all e11_ffs_arm8 (ffs_invs x sp lr m) ffs_exit ((x',s')::t).
 Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
+  (* WIP: unchecked attempt in notes/a-ffs-fix/wrap-up-attempt.v.txt. *)
 Abort.
 
 (* An explicit post-RET adapter. Its guard prevents calling an internal
@@ -174,7 +281,7 @@ Abort.
 Definition ffs_return_guard (lr:N) := forall s, e11_ffs_arm8 s lr = None.
 Theorem ffs_return_guard_satisfiable: ffs_return_guard 100.
 Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
+  (* WIP: unchecked attempt in notes/a-ffs-fix/wrap-up-attempt.v.txt. *)
 Abort.
 
 Theorem ffs_guarded_return:
@@ -185,5 +292,5 @@ Theorem ffs_guarded_return:
   e = Some (Addr lr) /\ postcondition x sp lr m (reset_temps s s') /\
   e11_ffs_arm8 (reset_temps s s') lr = None.
 Proof.
-  (* PARTIAL: unchecked attempt preserved verbatim in notes/a-ffs/initial-attempt.v.txt. *)
+  (* WIP: unchecked attempt in notes/a-ffs-fix/wrap-up-attempt.v.txt. *)
 Abort.
