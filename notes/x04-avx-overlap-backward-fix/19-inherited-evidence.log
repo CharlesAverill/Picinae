@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9b461e
+COMMAND=git diff --exit-code 5a6fc185901b5016d19a67c5ab9009183b756131 -- notes/x04-avx-overlap-backward dune
+
+EXIT_CODE=0
