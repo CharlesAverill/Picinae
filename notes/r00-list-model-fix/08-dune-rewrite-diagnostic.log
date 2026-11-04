@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-db745613
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c export\ PROOF_MEMORY_KB=2000000\ PROOF_STACK_KB=65536\;\ ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_list_model.vo
+        rocq .Picinae.theory.d
+        rocq Examples/FreeRTOS/armv6m_list_model.{glob,vo} (exit 1)
+File "./Examples/FreeRTOS/armv6m_list_model.v", line 182, characters 8-150:
+Error: Proof is not complete.
+
+
+EXIT_CODE=1
