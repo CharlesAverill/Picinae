@@ -1,0 +1,15 @@
+Prepared worktree: /home/charles/.t3/worktrees/Picinae/t3-41a02797
+Initial branch: t3/r04-list-remove-fix
+Initial git status --short and git diff --stat: empty (exit 0).
+Initial HEAD: 71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+Parent: 49956416928e5b6bb3928b54ae33e3b81091f006
+Initial merge-base origin/llm_generated_proofs HEAD: 49956416928e5b6bb3928b54ae33e3b81091f006
+Initial origin..HEAD log: only 71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+Read-only git ls-remote --heads fork refs/heads/llm-proofs/r04-list-remove-fix:
+  sandboxed exit 128, DNS unavailable; escalated exit 0, empty output.
+git branch -m llm-proofs/r04-list-remove-fix initially failed exit 128 (read-only Git metadata).
+Escalated exact git branch -m llm-proofs/r04-list-remove-fix && git merge --ff-only e74e54bdcc1b2f2cb15160c7b17417316bcac627: exit 0, fast-forward.
+Only this prepared branch was renamed. No other branch or remote was written.
+No tools installed, no new environments. Shared environment reused read-only.
+The first persisted audit (01-before.log) follows exact archive restoration, so
+its working-tree diff intentionally shows that proof file restoration.

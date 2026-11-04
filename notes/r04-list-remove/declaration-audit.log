@@ -1,0 +1,22 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ab3d95c2
+COMMAND=python3 notes/r04-list-remove/prepare-handoff.py
+All definitions, theorem statements and Ltac declarations are byte-for-byte preserved.
+Seven completed Qed bodies preserved verbatim; nine unchecked proof bodies replaced by Abort.
+Theorem list_remove_nwc
+Theorem list_remove_welltyped
+Theorem list_remove_register_frame
+Lemma rm_read_write
+Lemma rm_read_frame
+Theorem list_remove_mem_frame
+Theorem list_remove_mem_effects
+Theorem list_remove_correct
+Theorem list_remove_at_bx
+Theorem list_remove_return_step
+Theorem list_remove_entry_witness
+Theorem list_remove_singleton_layout
+Theorem list_remove_singleton_witness
+Theorem list_remove_multi_layout
+Theorem list_remove_multi_witness
+Theorem list_remove_returns
+
+EXIT_CODE=0
