@@ -1,0 +1,99 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-508b2fbc
+COMMAND=bash --noprofile --norc -e -c date\ -u\;\ cat\ /proc/meminfo\;\ cat\ /home/charles/code/friends/.refs/picinae-llm-proofs/resources/config.json\;\ cat\ /home/charles/code/friends/.refs/picinae-llm-proofs/resources/active.json
+Wed Nov  4 02:06:03 UTC 2026
+MemTotal:       49331696 kB
+MemFree:         7812292 kB
+MemAvailable:   38777464 kB
+Buffers:         3803472 kB
+Cached:         26749896 kB
+SwapCached:       151004 kB
+Active:         24460096 kB
+Inactive:       15055388 kB
+Active(anon):    2465320 kB
+Inactive(anon):  6732712 kB
+Active(file):   21994776 kB
+Inactive(file):  8322676 kB
+Unevictable:          64 kB
+Mlocked:              64 kB
+SwapTotal:      12582912 kB
+SwapFree:         883240 kB
+Dirty:             25956 kB
+Writeback:           408 kB
+AnonPages:       8333836 kB
+Mapped:           590560 kB
+Shmem:            235508 kB
+KReclaimable:    1239080 kB
+Slab:            1455692 kB
+SReclaimable:    1239080 kB
+SUnreclaim:       216612 kB
+KernelStack:       31656 kB
+PageTables:       104400 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    37248760 kB
+Committed_AS:   29884404 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:       60668 kB
+VmallocChunk:          0 kB
+Percpu:            17280 kB
+AnonHugePages:   5124096 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+Hugetlb:               0 kB
+DirectMap4k:    10433536 kB
+DirectMap2M:    39897088 kB
+DirectMap1G:     9437184 kB
+{
+  "agent_cap": 24,
+  "max_compilers": 20,
+  "compiler_budget_kib": 26000000,
+  "legacy_reserved_kib": 0,
+  "available_floor_kib": 20971520,
+  "other_jobs_working_set_kib": 6500000,
+  "burst_reserve_kib": 4194304,
+  "max_load": 20
+}
+[
+  {
+    "pid": 738124,
+    "start": "74560500",
+    "unit": "a-remque",
+    "memory_kib": 1750000,
+    "admitted_at": 1793757395.475191,
+    "lease": "cea0b2738f3a46b48ebca0fa8d6533c7"
+  },
+  {
+    "pid": 707501,
+    "start": "74505053",
+    "unit": "x09-avx-forward-high-size",
+    "memory_kib": 3000000,
+    "admitted_at": 1793757494.821961,
+    "lease": "16c5b55ff0ac4438a87ab35e8ded10e4"
+  },
+  {
+    "pid": 735427,
+    "start": "74554856",
+    "unit": "coordinator-review-x01-sse2-nt-complete",
+    "memory_kib": 8000000,
+    "admitted_at": 1793757531.7873116,
+    "lease": "a11356b5a34a454bbd9e4222aba41fb1"
+  },
+  {
+    "pid": 761875,
+    "start": "74608770",
+    "unit": "r27-find-task-fix",
+    "memory_kib": 2500000,
+    "admitted_at": 1793757936.0638993,
+    "lease": "f37b35a583884d41802a94c06fc91f65"
+  }
+]
+
+EXIT_CODE=0

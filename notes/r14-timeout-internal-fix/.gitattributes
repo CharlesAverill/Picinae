@@ -1,0 +1,2 @@
+# Preserve exact compiler/query/provenance stdout, including source blank lines.
+*.log -whitespace

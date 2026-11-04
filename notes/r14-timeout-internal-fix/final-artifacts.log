@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-508b2fbc
+COMMAND=bash --noprofile --norc -e -c sha256sum\ Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.v\ Examples/FreeRTOS/vTaskInternalSetTimeOutState_armv6m.v\ _build/default/Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.v\ _build/default/Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.vo\;\ cmp\ Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.v\ _build/default/Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.v\;\ git\ rev-parse\ refs/heads/llm-proofs/r14-timeout-internal\;\ git\ diff\ --exit-code\ 97fd8ecfb6adac59f137ca465a0bfb4beb3862ac\ --\ dune\ Examples/FreeRTOS/vTaskInternalSetTimeOutState_armv6m.v\ notes/r14-timeout-internal\;\ git\ diff\ --check\ --\ Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.v
+75c2ccd9c98abfe3ea2a0d49cf26065ec1cfaaf614413db7432391738b48f8a8  Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.v
+14803137273ff52d1dfb881e22fbd9dd83ac3fe539ab9dbcd411b9e3d522ab5c  Examples/FreeRTOS/vTaskInternalSetTimeOutState_armv6m.v
+75c2ccd9c98abfe3ea2a0d49cf26065ec1cfaaf614413db7432391738b48f8a8  _build/default/Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.v
+04e6e9cef93615157e1b228f1ead61632044e62a3531f6299bcae59ad138c86d  _build/default/Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.vo
+97fd8ecfb6adac59f137ca465a0bfb4beb3862ac
+
+EXIT_CODE=0

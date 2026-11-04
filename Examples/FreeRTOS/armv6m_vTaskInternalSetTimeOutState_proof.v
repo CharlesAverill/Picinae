@@ -1,7 +1,9 @@
 (* vTaskInternalSetTimeOutState -- sequential ARMv6-M IL correctness.
 
    Initial author: OpenAI gpt-6-astra, xhigh, one-shot (r14-timeout-internal).
-   Final producer is recorded only after validation in notes/r14-timeout-internal.
+   Repair/final proof producer: OpenAI gpt-6.1-sol, xhigh.
+   Full .vo validation/evidence: notes/r14-timeout-internal-fix.
+   Original author source/evidence: notes/r14-timeout-internal (unchanged).
    Provenance: official FreeRTOS V11.1.0, commit
    dbf70559b27d39c1fdb68dfb9a32140b6a6777a0, tasks.c:5522-5531;
    ELF SHA256 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca.
@@ -180,8 +182,6 @@ Theorem timeout_correct : forall s t s' x'
   satisfies_all vTaskInternalSetTimeOutState_armv6m_prog
     (timeout_invariants s) timeout_exit ((x',s')::t).
 Proof.
-(* Unchecked initial Astra attempt; preserved verbatim in notes/r14-timeout-internal/initial-attempt.v.txt.
-
   intros. apply prove_invs.
   - simpl. rewrite ENTRY. armv6m_step. reflexivity.
   - intros.
@@ -193,10 +193,15 @@ Proof.
     repeat armv6m_step.
     unfold timeout_postcondition, timeout_ordered_memory, timeout_first, timeout_frame.
     split.
-    + rewrite ?setmem_mod_l, ?getmem_mod_l, ?getmem_mod_r. reflexivity.
+    + (* Normalize only the second store's address. Conversion on the
+         unequal 4+p / p+4 addresses would unfold the whole memory. *)
+      lazymatch goal with
+      | |- setmem ?w ?en ?len ?m _ ?value = _ =>
+          exact (f_equal (fun a => setmem w en len m a value)
+            (N.add_comm 4 (s R_R0)))
+      end.
     + intros v NEM NE3. destruct v; try contradiction; reflexivity.
-*)
-Abort.
+Qed.
 Corollary timeout_post_at_bx : forall s t s'
   (ENTRY: startof t (Addr 0x914,s') = (Addr 0x908,s))
   (MDL: models armv6mtypctx s)
@@ -204,12 +209,9 @@ Corollary timeout_post_at_bx : forall s t s'
   (UT: unterminated timeout_exit t),
   timeout_postcondition s s'.
 Proof.
-(* Unchecked initial Astra attempt; preserved verbatim in notes/r14-timeout-internal/initial-attempt.v.txt.
-
   intros. pose proof (timeout_correct s t s' (Addr 0x914) ENTRY MDL) as ALL.
   exact (satall_trueif_inv _ _ _ _ ALL EXEC UT).
-*)
-Abort.
+Qed.
 Corollary timeout_preserves_callee_saved : forall s t s'
   (ENTRY: startof t (Addr 0x914,s') = (Addr 0x908,s))
   (MDL: models armv6mtypctx s)
@@ -218,21 +220,16 @@ Corollary timeout_preserves_callee_saved : forall s t s'
   forall v, In v [R_R4; R_R5; R_R6; R_R7; R_R8; R_R9; R_R10; R_R11; R_SP; R_LR] ->
     s' v = s v.
 Proof.
-(* Unchecked initial Astra attempt; preserved verbatim in notes/r14-timeout-internal/initial-attempt.v.txt.
-
   intros s t s' ENTRY MDL EXEC UT v IN.
   pose proof (proj2 (timeout_post_at_bx s t s' ENTRY MDL EXEC UT)) as FRAME.
   apply FRAME; intro EQ; subst v; cbn in IN; intuition discriminate.
-*)
-Abort.
+Qed.
 
 Theorem timeout_return_step : forall s
   (ODD: N.odd (s R_LR) = true) (ORDINARY: s R_LR < 0xfffffff0),
   can_step vTaskInternalSetTimeOutState_armv6m_prog
     ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s),(Addr 0x914,s)).
 Proof.
-(* Unchecked initial Astra attempt; preserved verbatim in notes/r14-timeout-internal/initial-attempt.v.txt.
-
   intros s ODD ORDINARY.
   assert (LOW: s R_LR mod 2 = 1).
   { apply mod2_1_neven. rewrite <- N.negb_odd, ODD. reflexivity. }
@@ -254,8 +251,7 @@ Proof.
   assert (RESET: reset_temps s s = s).
   { extensionality v. destruct v; reflexivity. }
   rewrite RESET in CS. exact CS.
-*)
-Abort.
+Qed.
 
 Theorem timeout_caller_result : forall s t s'
   (ENTRY: startof t (Addr 0x914,s') = (Addr 0x908,s))
@@ -276,8 +272,6 @@ Theorem timeout_caller_result : forall s t s'
   can_step vTaskInternalSetTimeOutState_armv6m_prog
     ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s'),(Addr 0x914,s')).
 Proof.
-(* Unchecked initial Astra attempt; preserved verbatim in notes/r14-timeout-internal/initial-attempt.v.txt.
-
   intros.
   pose proof (timeout_post_at_bx s t s' ENTRY MDL EXEC UT) as POST.
   destruct POST as [MEM FRAME].
@@ -289,5 +283,4 @@ Proof.
   split. intros i I. rewrite MEM. apply timeout_original_bytes; assumption.
   split. intros a NO. rewrite MEM. apply timeout_memory_frame, NO.
   rewrite <- LR. apply timeout_return_step; rewrite LR; assumption.
-*)
-Abort.
+Qed.
