@@ -1,0 +1,54 @@
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+ROCQ DEP VFILES
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+make -f Makefile.coq Picinae_armv6m.vo
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+ROCQ compile Picinae_armv6m.v
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+./tests/armv6m/check.sh
+GNU assembler (GNU Binutils for Ubuntu) 2.42
+GNU objdump (GNU Binutils for Ubuntu) 2.42
+Python 3.12.3
+Python executable: /home/charles/code/friends/.toolchains/e03-armv6m-core/venv/bin/python
+e5dea01f8ec2db2a02d2430c3cca463a7bebbec66ade6f1433164ca8dfee7091  tests/armv6m/generated/snippets.elf
+Closed under the global context
+Closed under the global context
+Closed under the global context
+tests/armv6m/generated/missing_literal.s: Assembler messages:
+tests/armv6m/generated/missing_literal.s:9: Warning: section does not have enough alignment to ensure safe PC-relative loads
+PASS reject relocatable: exit=1; armv6m lifter: expected linked ARM ET_EXEC (not relocatable/shared)
+PASS reject missing function: exit=1; armv6m lifter: expected one sized STT_FUNC symbol
+PASS reject invalid definition name: exit=1; armv6m lifter: invalid Coq definition name
+PASS reject missing objdump: exit=1; armv6m lifter: [Errno 2] No such file or directory: '/nonexistent/objdump'
+PASS reject failing objdump: exit=1; armv6m lifter: Command '['/bin/false', '-d', '-z', 'tests/armv6m/generated/snippets.elf']' returned non-zero exit status 1.
+PASS reject unset objdump: exit=1; armv6m lifter: set OBJDUMP to an ARM objdump executable
+PASS reject missing file: exit=1; armv6m lifter: [Errno 2] No such file or directory: 'tests/armv6m/generated/absent.elf'
+PASS reject undefined: exit=1; armv6m lifter: unsupported instruction at 0x1000: udf	#0
+PASS reject cpsid: exit=1; armv6m lifter: unsupported instruction at 0x1000: cpsid	i
+PASS reject cpsie: exit=1; armv6m lifter: unsupported instruction at 0x1000: cpsie	i
+PASS reject mrs: exit=1; armv6m lifter: unsupported instruction at 0x1000: mrs	r0, PRIMASK
+PASS reject msr: exit=1; armv6m lifter: unsupported instruction at 0x1000: msr	PRIMASK, r0
+PASS reject dmb: exit=1; armv6m lifter: unsupported instruction at 0x1000: dmb	sy
+PASS reject dsb: exit=1; armv6m lifter: unsupported instruction at 0x1000: dsb	sy
+PASS reject isb: exit=1; armv6m lifter: unsupported instruction at 0x1000: isb	sy
+PASS reject svc: exit=1; armv6m lifter: unsupported instruction at 0x1000: svc	0
+PASS reject bkpt: exit=1; armv6m lifter: unsupported instruction at 0x1000: bkpt	0x0000
+PASS reject wfi: exit=1; armv6m lifter: unsupported instruction at 0x1000: wfi
+PASS reject wfe: exit=1; armv6m lifter: unsupported instruction at 0x1000: wfe
+PASS reject sev: exit=1; armv6m lifter: unsupported instruction at 0x1000: sev
+PASS reject yield: exit=1; armv6m lifter: unsupported instruction at 0x1000: yield
+PASS reject unknown_hint: exit=1; armv6m lifter: unsupported instruction at 0x1000: sevl
+PASS reject thumb2_movw: exit=1; armv6m lifter: unsupported instruction at 0x1000: movw	r0, #0
+PASS reject truncated_bl: exit=1; armv6m lifter: truncated instruction at 0x1000
+PASS reject unpredictable_stm: exit=1; armv6m lifter: unsupported instruction at 0x1000: stmia	r1!, {r0, r1}
+PASS reject empty_push: exit=1; armv6m lifter: unsupported instruction at 0x1000: push	{}
+PASS reject empty_pop: exit=1; armv6m lifter: unsupported instruction at 0x1000: pop	{}
+PASS reject unpredictable_cmp: exit=1; armv6m lifter: unsupported instruction at 0x1000: cmp	r0, r0
+PASS reject missing_literal: exit=1; armv6m lifter: missing/ambiguous bytes at 0x1400 (+4)
+PASS reject stripped: exit=1; armv6m lifter: symbol table required (preserve $t/$d mapping symbols)
+PASS reject retained relocations: exit=1; armv6m lifter: ELF contains unresolved/retained relocations
+PASS reject partial literal word: exit=1; armv6m lifter: missing/ambiguous bytes at 0x1010 (+4)
+PASS reject writable literal word: exit=1; armv6m lifter: literal word in writable section
+EXIT=0

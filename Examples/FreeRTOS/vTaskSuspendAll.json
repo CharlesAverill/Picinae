@@ -1,0 +1,134 @@
+{
+  "blocked_helpers": [],
+  "bytes_sha256": "4c512d1531f1e2431b168e85fd602d44dcbc587c368b62ecd6731b9d54e5e92b",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "vTaskSuspendAll_armv6m",
+    "vTaskSuspendAll"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "assembly": "bx\tlr",
+      "kind": "return-candidate",
+      "site": "0x0000057c",
+      "target": "runtime register/stack; Thumb bit required"
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x00000584",
+  "entry": "0x00000574",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "f5cb01c7a3778441bd9280a3a8a6d9602f1603ceea7e2a883e363f65855e92d9",
+  "instructions": [
+    {
+      "address": "0x00000574",
+      "assembly": "ldr\tr2, [pc, #8]\t@ (580 <vTaskSuspendAll+0xc>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4a02",
+      "width": 2
+    },
+    {
+      "address": "0x00000576",
+      "assembly": "ldr\tr3, [r2, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6813",
+      "width": 2
+    },
+    {
+      "address": "0x00000578",
+      "assembly": "adds\tr3, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "3301",
+      "width": 2
+    },
+    {
+      "address": "0x0000057a",
+      "assembly": "str\tr3, [r2, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6013",
+      "width": 2
+    },
+    {
+      "address": "0x0000057c",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    },
+    {
+      "address": "0x0000057e",
+      "assembly": "nop\t\t\t@ (mov r8, r8)",
+      "frontend_encoding_supported": true,
+      "opcode": "46c0",
+      "width": 2
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x00000580",
+      "bytes": "08000020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x20000008",
+          "name": "uxSchedulerSuspended",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 2,
+      "instruction": "0x00000574",
+      "thumb_function_pointer": [],
+      "value": "0x20000008"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x00000580",
+      "halfword": "0800"
+    },
+    {
+      "address": "0x00000582",
+      "halfword": "0020"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x0000057c",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "row": "r10",
+  "size": 16,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "vTaskSuspendAll",
+  "symbol_record": {
+    "address": "0x00000574",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskSuspendAll",
+    "section": "2",
+    "size": 16,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000575"
+  },
+  "thumb_symbol": "0x00000575",
+  "unsupported_instructions": []
+}
