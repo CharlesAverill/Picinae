@@ -1,10 +1,9 @@
-(* PARTIAL handoff: initial full build failed; later statements are Aborted.
-   No full unit .vo or transitive assumptions certificate. See unit notes. *)
-
 (* vTaskSuspendAll -- ARMv6-M Cortex-M0, sequential lifted-IL correctness.
 
    Initial author: OpenAI gpt-6-astra, xhigh, default (r10-suspend-all).
-   Validation and final proof producer status: notes/r10-suspend-all/README.md.
+   Final proof repair: OpenAI gpt-6.1-sol, xhigh, default (r10-suspend-all-fix).
+   Validation: notes/r10-suspend-all-fix/README.md; original evidence preserved
+   in notes/r10-suspend-all/README.md.
    PROVENANCE: official FreeRTOS Kernel V11.1.0,
    dbf70559b27d39c1fdb68dfb9a32140b6a6777a0; tasks.c SHA256
    6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149.
@@ -138,33 +137,45 @@ Qed.
 Lemma suspend_all_memory_word : forall m,
   (suspend_all_memory m) Ⓓ[0x20000008] = suspend_all_result m.
 Proof.
-  (* PARTIAL: initial attempt and compiler diagnostic are preserved in
-     notes/r10-suspend-all; reserved for a new Sol fixer, not repaired here. *)
-Abort.
+  intro m. unfold suspend_all_memory.
+  rewrite getmem_setmem by (clear; change (4 <= 4294967296); lia).
+  unfold suspend_all_result.
+  change (((1 + m Ⓓ[0x20000008]) mod 2^32) mod 2^32 =
+          (1 + m Ⓓ[0x20000008]) mod 2^32).
+  apply N.mod_mod, pow2_nonzero.
+Qed.
 
 Lemma suspend_all_memory_byte : forall m i, i < 4 ->
   (suspend_all_memory m) Ⓑ[0x20000008+i] =
     N.shiftr (suspend_all_result m) (i*8) mod 2^8.
 Proof.
-  (* PARTIAL: initial attempt and compiler diagnostic are preserved in
-     notes/r10-suspend-all; reserved for a new Sol fixer, not repaired here. *)
-Abort.
+  intros m i LT. unfold suspend_all_memory. rewrite getmem_1.
+  apply (setmem_byte 32 LittleE 4 i m 0x20000008 (suspend_all_result m));
+    [exact LT | clear; change (4 <= 4294967296); lia].
+Qed.
 
 Lemma suspend_all_outside_distance : forall a,
   a < 2^32 -> (a < 0x20000008 \/ 0x2000000c <= a) ->
   4 <= msub 32 a 0x20000008.
 Proof.
-  (* PARTIAL: initial attempt and compiler diagnostic are preserved in
-     notes/r10-suspend-all; reserved for a new Sol fixer, not repaired here. *)
-Abort.
+  intros a A [LO|HI].
+  - assert (D: a mod 2^32 < 0x20000008 mod 2^32).
+    { rewrite (N.mod_small a _ A). exact LO. }
+    rewrite (msub_wrap _ _ _ D), (N.mod_small a _ A).
+    change (4 <= 4294967296 + a - 536870920). lia.
+  - assert (D: 0x20000008 mod 2^32 <= a mod 2^32).
+    { rewrite (N.mod_small a _ A). change (536870920 <= a). lia. }
+    rewrite (msub_nowrap _ _ _ D), (N.mod_small a _ A).
+    change (4 <= a - 536870920). lia.
+Qed.
 
 Lemma suspend_all_memory_frame : forall m a,
   a < 2^32 -> (a < 0x20000008 \/ 0x2000000c <= a) ->
   (suspend_all_memory m) Ⓑ[a] = m Ⓑ[a].
 Proof.
-  (* PARTIAL: initial attempt and compiler diagnostic are preserved in
-     notes/r10-suspend-all; reserved for a new Sol fixer, not repaired here. *)
-Abort.
+  intros m a A OUT. unfold suspend_all_memory. rewrite !getmem_1.
+  apply setmem_frame. apply suspend_all_outside_distance; assumption.
+Qed.
 
 Theorem suspend_all_correct : forall s t s' x'
   (ENTRY: startof t (x',s') = (Addr 0x574,s))
@@ -172,9 +183,23 @@ Theorem suspend_all_correct : forall s t s' x'
   satisfies_all vTaskSuspendAll_armv6m_prog
     (suspend_all_invariants s) suspend_all_exit ((x',s')::t).
 Proof.
-  (* PARTIAL: initial attempt and compiler diagnostic are preserved in
-     notes/r10-suspend-all; reserved for a new Sol fixer, not repaired here. *)
-Abort.
+  intros. apply prove_invs.
+  - simpl. rewrite ENTRY. armv6m_step. reflexivity.
+  - intros.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption.
+    apply suspend_all_welltyped. intro MDL1.
+    clear - PRE MDL1. rename t1 into t.
+    destruct_inv 32 PRE. subst s1.
+    repeat armv6m_step.
+    unfold suspend_all_postcondition, suspend_all_memory,
+      suspend_all_result, suspend_all_frame.
+    split.
+    + rewrite ?setmem_mod_r.
+      first [reflexivity | rewrite N.add_comm; reflexivity].
+    + intros v MEM R2 R3 FN FZ FC FV.
+      destruct v; try contradiction; reflexivity.
+Qed.
 
 Corollary suspend_all_post_at_bx : forall s t s'
   (ENTRY: startof t (Addr 0x57c,s') = (Addr 0x574,s))
@@ -183,9 +208,11 @@ Corollary suspend_all_post_at_bx : forall s t s'
   (UT: unterminated suspend_all_exit t),
   suspend_all_postcondition s s'.
 Proof.
-  (* PARTIAL: initial attempt and compiler diagnostic are preserved in
-     notes/r10-suspend-all; reserved for a new Sol fixer, not repaired here. *)
-Abort.
+  intros.
+  pose proof (suspend_all_correct s t s' (Addr 0x57c) ENTRY MDL) as ALL.
+  pose proof (satall_trueif_inv _ _ _ _ ALL EXEC UT) as POST.
+  exact POST.
+Qed.
 
 Corollary suspend_all_original_memory_effects : forall s t s'
   (ENTRY: startof t (Addr 0x57c,s') = (Addr 0x574,s))
@@ -198,9 +225,14 @@ Corollary suspend_all_original_memory_effects : forall s t s'
   (forall a, a < 2^32 -> (a < 0x20000008 \/ 0x2000000c <= a) ->
     (s' V_MEM32) Ⓑ[a] = (s V_MEM32) Ⓑ[a]).
 Proof.
-  (* PARTIAL: initial attempt and compiler diagnostic are preserved in
-     notes/r10-suspend-all; reserved for a new Sol fixer, not repaired here. *)
-Abort.
+  intros.
+  pose proof (proj1 (suspend_all_post_at_bx s t s' ENTRY MDL EXEC UT)) as MEM.
+  rewrite MEM. split.
+  - exact (suspend_all_memory_word (s V_MEM32)).
+  - split.
+    + exact (suspend_all_memory_byte (s V_MEM32)).
+    + exact (suspend_all_memory_frame (s V_MEM32)).
+Qed.
 
 Corollary suspend_all_preserves_callee_saved : forall s t s'
   (ENTRY: startof t (Addr 0x57c,s') = (Addr 0x574,s))
@@ -210,18 +242,38 @@ Corollary suspend_all_preserves_callee_saved : forall s t s'
   forall v, In v [R_R4; R_R5; R_R6; R_R7; R_R8; R_R9; R_R10; R_R11; R_SP; R_LR] ->
     s' v = s v.
 Proof.
-  (* PARTIAL: initial attempt and compiler diagnostic are preserved in
-     notes/r10-suspend-all; reserved for a new Sol fixer, not repaired here. *)
-Abort.
+  intros s t s' ENTRY MDL EXEC UT v IN.
+  pose proof (proj2 (suspend_all_post_at_bx s t s' ENTRY MDL EXEC UT)) as FRAME.
+  apply FRAME; intro EQ; subst v; cbn in IN; intuition discriminate.
+Qed.
 
 Theorem suspend_all_return_step : forall s
   (ODD: N.odd (s R_LR) = true) (ORDINARY: s R_LR < 0xfffffff0),
   can_step vTaskSuspendAll_armv6m_prog
     ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s),(Addr 0x57c,s)).
 Proof.
-  (* PARTIAL: initial attempt and compiler diagnostic are preserved in
-     notes/r10-suspend-all; reserved for a new Sol fixer, not repaired here. *)
-Abort.
+  intros s ODD ORDINARY.
+  assert (LOW: s R_LR mod 2 = 1).
+  { apply mod2_1_neven. rewrite <- N.negb_odd, ODD. reflexivity. }
+  assert (XS: exec_stmt armv6mtypctx s (armv6m_bxwritepc (Var R_LR))
+    armv6mtypctx s (Some (Addr (N.land (s R_LR) (N.ones 32 - 1))))).
+  { unfold armv6m_bxwritepc. eapply XIf with (b:=1).
+    - assert (E: eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+        (s R_LR mod 2) 1).
+      { apply ECast with (w:=32) (n:=s R_LR). apply EVar. reflexivity. }
+      rewrite LOW in E. exact E.
+    - apply XJmp with (w:=32).
+      apply EBinOp with (w:=32) (n1:=s R_LR) (n2:=N.ones 32 - 1);
+        [apply EVar; reflexivity | apply EWord]. }
+  assert (CS: can_step vTaskSuspendAll_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),reset_temps s s),(Addr 0x57c,s))).
+  { eapply CanStep with (sz:=2) (q:=armv6m_bxwritepc (Var R_LR))
+      (x:=Some (Addr (N.land (s R_LR) (N.ones 32 - 1))));
+      [reflexivity | exact XS]. }
+  assert (RESET: reset_temps s s = s).
+  { extensionality v. destruct v; reflexivity. }
+  rewrite RESET in CS. exact CS.
+Qed.
 
 Corollary suspend_all_caller_result : forall s t s'
   (ENTRY: startof t (Addr 0x57c,s') = (Addr 0x574,s))
@@ -233,6 +285,9 @@ Corollary suspend_all_caller_result : forall s t s'
   can_step vTaskSuspendAll_armv6m_prog
     ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s'),(Addr 0x57c,s')).
 Proof.
-  (* PARTIAL: initial attempt and compiler diagnostic are preserved in
-     notes/r10-suspend-all; reserved for a new Sol fixer, not repaired here. *)
-Abort.
+  intros.
+  pose proof (suspend_all_post_at_bx s t s' ENTRY MDL EXEC UT) as POST.
+  assert (LR: s' R_LR = s R_LR) by (apply (proj2 POST); discriminate).
+  split. exact POST.
+  rewrite <- LR. apply suspend_all_return_step; rewrite LR; assumption.
+Qed.

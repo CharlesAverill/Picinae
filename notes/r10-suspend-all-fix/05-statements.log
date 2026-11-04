@@ -1,0 +1,21 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d99c9594
+COMMAND=python3 notes/r10-suspend-all/audit-statements.py
+PASS: 16 exact original statements and 8 exact original definitions
+Theorem suspend_all_nwc : forall s2 s1,
+Theorem suspend_all_welltyped :
+Lemma suspend_all_zero_bound : forall w, 0 < 2^w.
+Lemma suspend_all_witness_models : forall m lr,
+Theorem suspend_all_entry_satisfiable : forall m lr,
+Corollary suspend_all_entry_nonempty :
+Lemma suspend_all_memory_word : forall m,
+Lemma suspend_all_memory_byte : forall m i, i < 4 ->
+Lemma suspend_all_outside_distance : forall a,
+Lemma suspend_all_memory_frame : forall m a,
+Theorem suspend_all_correct : forall s t s' x'
+Corollary suspend_all_post_at_bx : forall s t s'
+Corollary suspend_all_original_memory_effects : forall s t s'
+Corollary suspend_all_preserves_callee_saved : forall s t s'
+Theorem suspend_all_return_step : forall s
+Corollary suspend_all_caller_result : forall s t s'
+
+EXIT_CODE=0

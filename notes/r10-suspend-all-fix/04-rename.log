@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d99c9594
+COMMAND=git branch -m llm-proofs/r10-suspend-all-fix
+error: unable to move logfile logs/refs/heads/t3/suspend-all-proof-fix to logs/refs/.tmp-renamed-log: Read-only file system
+fatal: branch rename failed
+
+EXIT_CODE=128
