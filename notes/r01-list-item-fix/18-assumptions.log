@@ -1,0 +1,325 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-856859c4
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env env PROOF_MEMORY_KB=2000000 PROOF_STACK_KB=65536 bash tools/print-assumptions.sh Picinae.Examples.FreeRTOS.armv6m_vListInitialiseItem_proof item_welltyped item_nwc item_memory_fields item_memory_outside item_preserves_registers item_exact item_correct item_entry_store_witness item_arbitrary_fields_witness item_mov_step item_store_step item_execution_witness item_return_step item_execution_returns
+item_welltyped
+     : Picinae_armv6m.Statics_ARMv6M.welltyped_prog
+         Picinae_armv6m.armv6mtypctx
+         vListInitialiseItem_armv6m.vListInitialiseItem_armv6m_prog
+Closed under the global context
+item_nwc
+     : forall s1 s2 : Picinae_armv6m.ARMv6MArch.store,
+       vListInitialiseItem_armv6m.vListInitialiseItem_armv6m_prog s1 =
+       vListInitialiseItem_armv6m.vListInitialiseItem_armv6m_prog s2
+Closed under the global context
+item_memory_fields
+     : forall m p : BinNums.N,
+       armv6m_list_model.object32 p armv6m_list_model.list_item_size ->
+       armv6m_list_model.item_contents
+         (armv6m_list_model.write_field32 m p
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+            BinNums.N0)
+         p (armv6m_list_model.field32 m p BinNums.N0)
+         (armv6m_list_model.field32 m p
+            (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))))
+         (armv6m_list_model.field32 m p
+            (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+         (armv6m_list_model.field32 m p
+            (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xI BinNums.xH)))))
+         BinNums.N0
+Closed under the global context
+item_memory_outside
+     : forall m p : BinNums.N,
+       armv6m_list_model.outside_frame32 m
+         (armv6m_list_model.write_field32 m p
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+            BinNums.N0)
+         (BinNat.N.add p
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)))
+Closed under the global context
+item_preserves_registers
+     : forall v : Picinae_armv6m.armv6mvar,
+       v <> Picinae_armv6m.V_MEM32 ->
+       v <> Picinae_armv6m.R_R3 ->
+       v <> Picinae_armv6m.F_N ->
+       v <> Picinae_armv6m.F_Z ->
+       Picinae_armv6m.IL_ARMv6M.forall_endstates
+         vListInitialiseItem_armv6m.vListInitialiseItem_armv6m_prog
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv6m.ARMv6MArch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv6m.ARMv6MArch.store) =>
+          s v = s' v)
+Closed under the global context
+item_exact
+     : forall (s0 : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store) (x' : Picinae_core.exit),
+       Picinae_core.startof t (x', s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xI
+                   (BinNums.xI
+                      (BinNums.xO (BinNums.xI (BinNums.xO BinNums.xH))))))),
+        s0) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s0 ->
+       Picinae_armv6m.Theory_ARMv6M.satisfies_all
+         vListInitialiseItem_armv6m.vListInitialiseItem_armv6m_prog
+         (item_invs s0) item_exit ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+item_correct
+     : forall (s0 : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH))))))),
+          s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xI
+                   (BinNums.xI
+                      (BinNums.xO (BinNums.xI (BinNums.xO BinNums.xH))))))),
+        s0) ->
+       item_entry s0 ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         vListInitialiseItem_armv6m.vListInitialiseItem_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xO
+                         (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH))))))),
+           s')
+          :: t)%list ->
+       Picinae_theory.unterminated item_exit t ->
+       item_post s0 s' /\
+       armv6m_list_model.item_contents (s' Picinae_armv6m.V_MEM32)
+         (s0 Picinae_armv6m.R_R0)
+         (armv6m_list_model.field32 (s0 Picinae_armv6m.V_MEM32)
+            (s0 Picinae_armv6m.R_R0) BinNums.N0)
+         (armv6m_list_model.field32 (s0 Picinae_armv6m.V_MEM32)
+            (s0 Picinae_armv6m.R_R0)
+            (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))))
+         (armv6m_list_model.field32 (s0 Picinae_armv6m.V_MEM32)
+            (s0 Picinae_armv6m.R_R0)
+            (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+         (armv6m_list_model.field32 (s0 Picinae_armv6m.V_MEM32)
+            (s0 Picinae_armv6m.R_R0)
+            (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xI BinNums.xH)))))
+         BinNums.N0 /\
+       armv6m_list_model.outside_frame32 (s0 Picinae_armv6m.V_MEM32)
+         (s' Picinae_armv6m.V_MEM32)
+         (BinNat.N.add (s0 Picinae_armv6m.R_R0)
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)))
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+item_entry_store_witness
+     : forall m p : BinNums.N,
+       BinNat.N.lt m
+         (Picinae_theory.memsize
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       armv6m_list_model.object32 p armv6m_list_model.list_item_size ->
+       item_entry (item_entry_store m p) /\
+       item_entry_store m p Picinae_armv6m.V_MEM32 = m
+Closed under the global context
+item_arbitrary_fields_witness
+     : forall p value next previous owner container : BinNums.N,
+       armv6m_list_model.object32 p armv6m_list_model.list_item_size ->
+       BinNat.N.lt value
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt next
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt previous
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt owner
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt container
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       exists s : Picinae_armv6m.IL_ARMv6M.store,
+         item_entry s /\
+         s Picinae_armv6m.R_R0 = p /\
+         armv6m_list_model.item_contents (s Picinae_armv6m.V_MEM32) p value
+           next previous owner container
+Closed under the global context
+item_mov_step
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       Picinae_armv6m.IL_ARMv6M.can_step
+         vListInitialiseItem_armv6m.vListInitialiseItem_armv6m_prog
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH))))))),
+          item_after_mov s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xO (BinNums.xI (BinNums.xO BinNums.xH))))))),
+           s))
+Closed under the global context
+item_store_step
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       item_writable s ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         vListInitialiseItem_armv6m.vListInitialiseItem_armv6m_prog
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH))))))),
+          item_after_store s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH))))))),
+           item_after_mov s))
+Closed under the global context
+item_execution_witness
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       item_entry s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         vListInitialiseItem_armv6m.vListInitialiseItem_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xO
+                         (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH))))))),
+           item_after_store s)
+          :: (Picinae_core.Addr
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH))))))),
+              item_after_mov s)
+             :: (Picinae_core.Addr
+                   (BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xI (BinNums.xO BinNums.xH))))))),
+                 s)
+                :: nil)%list /\
+       item_post s (item_after_store s)
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+item_return_step
+     : forall s : Picinae_armv6m.armv6mvar -> BinNums.N,
+       ordinary_item_lr (s Picinae_armv6m.R_LR) ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         vListInitialiseItem_armv6m.vListInitialiseItem_armv6m_prog
+         (Picinae_core.Addr
+            (BinNat.N.land (s Picinae_armv6m.R_LR)
+               (BinNat.N.sub
+                  (BinNat.N.ones
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  (BinNums.Npos BinNums.xH))),
+          s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xO
+                         (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH))))))),
+           s))
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+item_execution_returns
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       item_entry s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         vListInitialiseItem_armv6m.vListInitialiseItem_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNat.N.land (s Picinae_armv6m.R_LR)
+                (BinNat.N.sub
+                   (BinNat.N.ones
+                      (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                   (BinNums.Npos BinNums.xH))),
+           item_after_store s)
+          :: (Picinae_core.Addr
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH))))))),
+              item_after_store s)
+             :: (Picinae_core.Addr
+                   (BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xI (BinNums.xO BinNums.xH))))))),
+                 item_after_mov s)
+                :: (Picinae_core.Addr
+                      (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xI (BinNums.xO BinNums.xH))))))),
+                    s)
+                   :: nil)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0

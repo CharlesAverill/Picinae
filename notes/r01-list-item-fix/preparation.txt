@@ -1,0 +1,33 @@
+Preparation transcript summary (the initial tool results preceded creation of this
+notes directory; this file is a summary, not a reconstructed recorder log).
+
+Initial cwd: /home/charles/.t3/worktrees/Picinae/t3-856859c4
+Initial branch: t3/list-item-fix
+Initial git status --short: empty
+Initial HEAD: 71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+Its sole parent: 49956416928e5b6bb3928b54ae33e3b81091f006
+Initial merge base with origin/llm_generated_proofs: same pinned base
+Initial log above origin: only e00, Add selective Dune builds and proof audit harness
+Initial git diff --stat: empty
+
+Read before implementation:
+- /home/charles/code/friends/.refs/picinae-llm-proofs/plan.md, including r01-list-item-fix row
+- BUILDING.md
+- Examples/claude/SKILL.md (Charles's full repair/kernel-check override applies)
+- notes/r01-list-item/README.md
+- notes/r01-list-item/02-dune-initial.log (full first-build output)
+- notes/r01-list-item/initial-attempt.v.txt and accepted list kit/ISA/lift
+
+Read-only git ls-remote --heads fork refs/heads/llm-proofs/r01-list-item-fix
+succeeded, exit 0, no result, BEFORE branch rename.
+First git branch -m llm-proofs/r01-list-item-fix failed, exit 128:
+error: unable to move logfile logs/refs/heads/t3/list-item-fix to logs/refs/.tmp-renamed-log: Read-only file system
+fatal: branch rename failed
+No merge ran in that failed && command.
+The authorized sandbox escalation ran, exit 0:
+git branch -m llm-proofs/r01-list-item-fix && git merge --ff-only 36b196e6bcf526b568e1b1b6990f2aa11640e546
+This was exactly the assigned prepared branch and assigned checkpoint.
+No automatic approval rejection occurred. No other branch was changed.
+Reflog and checkpoint checks are recorded separately; accepted ancestry is
+explicitly enumerated by audit-ancestry.sh, not inferred from another branch.
+The entire original archived attempt was restored with cp before repairs.

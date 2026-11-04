@@ -1,0 +1,27 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-856859c4
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_vListInitialiseItem_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2705:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_vListInitialiseItem_proof.{glob,vo} (exit 1)
+Goal at < 86 >
+Goal at < 90 >
+File "./Examples/FreeRTOS/armv6m_vListInitialiseItem_proof.v", line 204, characters 9-39:
+Error: In environment
+s : store
+Unable to unify
+ "can_step ?M1528
+    (exitof (?M1529 + 2) None, reset_temps ?M1530 ?M1534,
+     (Addr ?M1529, ?M1530))"
+with
+ "can_step vListInitialiseItem_armv6m_prog
+    (Addr 88, reset_temps s (s[F_N := 0][F_Z := 1][R_R3 := 0]), (Addr 86, s))".
+
+
+EXIT_CODE=1
