@@ -1,0 +1,225 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1b541d85
+COMMAND=python3 /home/charles/code/friends/.refs/picinae-llm-proofs/resources/resource-run.py --unit r05-list-insert-fix --memory-kib 2500000 -- /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -s\ 65536\;\ exec\ bash\ --noprofile\ --norc
+ADMISSION WAIT r05-list-insert-fix paging activity
+ADMITTED r05-list-insert-fix memory_kib=2500000
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1b541d85
+COMMAND=dune build --cache=disabled -j1 --display short Examples/FreeRTOS/armv6m_vListInsert_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2697:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_vListInsert_proof.{glob,vo} (exit 1)
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 594, characters 66-81:
+Error: Found no subterm matching "lr mod 2" in the current goal.
+
+
+EXIT_CODE=1
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1b541d85
+COMMAND=dune build --cache=disabled -j1 --display short Examples/FreeRTOS/armv6m_vListInsert_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2697:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_vListInsert_proof.{glob,vo} (exit 1)
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 600, characters 17-21:
+Error: Unable to find an instance for the variable w.
+
+
+EXIT_CODE=1
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1b541d85
+COMMAND=dune build --cache=disabled -j1 --display short Examples/FreeRTOS/armv6m_vListInsert_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2697:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_vListInsert_proof.{glob,vo} (exit 1)
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 600, characters 24-237:
+Error: Not convertible.
+
+
+EXIT_CODE=1
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1b541d85
+COMMAND=dune build --cache=disabled -j1 --display short Examples/FreeRTOS/armv6m_vListInsert_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2697:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_vListInsert_proof.{glob,vo} (got signal ABRT)
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Axioms:
+functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 251, characters 36-46:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/FreeRTOS/armv6m_vListInsert_proof.v", line 253, characters 50-60:
+Warning: Notation app_length is deprecated since 8.20.
+Use length_app instead.
+[deprecated-syntactic-definition-since-8.20,deprecated-since-8.20,deprecated-syntactic-definition,deprecated,default]
+Fatal error: out of memory
+
+EXIT_CODE=1
+RELEASED r05-list-insert-fix exit=1
+
+EXIT_CODE=1

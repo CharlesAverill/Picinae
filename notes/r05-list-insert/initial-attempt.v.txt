@@ -1,0 +1,480 @@
+(* vListInsert: finite sorted insertion, original-memory and AAPCS32 contract.
+
+   PROVENANCE: official FreeRTOS V11.1.0 commit
+   dbf70559b27d39c1fdb68dfb9a32140b6a6777a0; Cortex-M0 ELF SHA256
+   5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca.
+   Accepted e05 finite map vListInsert_armv6m_prog, entry 0x72, 46 bytes;
+   unchanged generated source. r00 kit at 4ff26413448da4d8f064b0273ac5472cc9de7e5a.
+   Initial author: OpenAI gpt-6-astra, xhigh/default, one-shot.
+   Final proof producer: unassigned pending full validation.
+   Exact initial attempt, diagnostics and status: notes/r05-list-insert/.
+
+   INPUT: R0=L, R1=P, SP aligned to 8, SP>=12, ordinary odd LR<0xfffffff0.
+   L is a 20-byte List_t with embedded 12-byte sentinel at L+8. P and each
+   finite old node are aligned nonnull nonwrapping 20-byte ListItem_t objects.
+   Old nodes, L, P and the 12-byte stack spill are byte-disjoint. The sentinel
+   is deliberately embedded in L, never required to be disjoint from L.
+   The old chain has exact forward/backward links and container=L, count is
+   length modulo 2^32, index is sentinel or a node, values sorted unsigned.
+   P has value X<2^32 and owner O<2^32; its old links/container are unrestricted.
+   Permissions cover old/new/list fields and the stack; no external contracts.
+
+   EFFECT: insert P after all old values <=X, including equal values. For
+   X=UINT32_MAX the actual 0x9c path selects sentinel.prev without traversal.
+   PUSH saves R4,R5,LR at SP-12,SP-8,SP-4. The six actual body stores are
+   P.next=next; next.prev=P; P.prev=prev; prev.next=P; P.container=L;
+   L.count=(old count+1) mod 2^32. Every other original byte is preserved.
+   All old values/owners and P.value/P.owner survive; index is unchanged.
+   Output chain is the exact old prefix ++ [P] ++ old suffix, still sorted.
+   At POP 0x9a, R4=prev,R5=X,SP=old SP-12. The actual POP restores R4,R5,SP
+   and returns through armv6m_bxwritepc to LR & 0xfffffffe. R0/R1 unchanged;
+   R2 is next.value (normal path) or zero (max path); R3 incremented count.
+   NZCV are precisely the final ADDS count flags. No CPU tunables.
+
+   SCOPE: sequential IL partial correctness of finite traces and the ordinary
+   guarded return step. This does not prove termination, hardware/lifter
+   refinement, scheduling, IRQ safety, or any TCB/owner dereference claim.
+ *)
+Require Import Picinae_armv6m vListInsert_armv6m armv6m_list_model.
+From Stdlib Require Import NArith Lia List Sorting.Sorted FunctionalExtensionality.
+Import ListNotations ARMv6MNotations.
+Open Scope N.
+
+Theorem sorted_insert_nwc : forall s1 s2,
+  vListInsert_armv6m_prog s1 = vListInsert_armv6m_prog s2.
+Proof. reflexivity. Qed.
+Print Assumptions sorted_insert_nwc.
+Theorem sorted_insert_welltyped : welltyped_prog armv6mtypctx vListInsert_armv6m_prog.
+Proof. exact vListInsert_armv6m_welltyped. Qed.
+Print Assumptions sorted_insert_welltyped.
+
+Definition si_preserved (v:armv6mvar) :=
+  match v with V_MEM32 | R_R2 | R_R3 | R_R4 | R_R5 | R_SP |
+    F_N | F_Z | F_C | F_V => False | _ => True end.
+Theorem sorted_insert_register_frame : forall v, si_preserved v ->
+  forall_endstates vListInsert_armv6m_prog (fun _ s _ s' => s v = s' v).
+Proof.
+  intros v KEEP. destruct v; cbn in KEEP; try contradiction;
+    apply noassign_prog_same; prove_noassign.
+Qed.
+Print Assumptions sorted_insert_register_frame.
+
+Record si_node := SiNode { si_ptr:N; si_value:N; si_owner:N }.
+Definition si_order (a b:si_node) := si_value a <= si_value b.
+Definition si_sorted := StronglySorted si_order.
+Definition si_first sentinel (xs:list si_node) :=
+  match xs with [] => sentinel | x::_ => si_ptr x end.
+Definition si_last sentinel (xs:list si_node) :=
+  match rev xs with [] => sentinel | x::_ => si_ptr x end.
+Fixpoint si_split (value:N) (xs:list si_node) : list si_node * list si_node :=
+  match xs with
+  | [] => ([],[])
+  | a::rest => if si_value a <=? value then
+      let '(lo,hi) := si_split value rest in (a::lo,hi)
+    else ([],xs)
+  end.
+Definition si_cut value xs :=
+  if value =? list_max_value then (xs,[]) else si_split value xs.
+Definition si_before value xs := fst (si_cut value xs).
+Definition si_after value xs := snd (si_cut value xs).
+Definition si_result (new:si_node) xs :=
+  si_before (si_value new) xs ++ new :: si_after (si_value new) xs.
+Definition si_prev L new xs := si_last (L+8) (si_before (si_value new) xs).
+Definition si_next L new xs := si_first (L+8) (si_after (si_value new) xs).
+
+Fixpoint si_chain m L sentinel previous (xs:list si_node) : Prop :=
+  match xs with
+  | [] => field32 m sentinel 8 = previous /\ field32 m previous 4 = sentinel
+  | a::rest => item_contents m (si_ptr a) (si_value a) (si_first sentinel rest)
+                previous (si_owner a) L /\ si_chain m L sentinel (si_ptr a) rest
+  end.
+Definition si_ring m L index xs :=
+  list_header m L (N.of_nat (length xs) mod 2^32) index /\
+  field32 m (L+8) 4 = si_first (L+8) xs /\
+  si_chain m L (L+8) (L+8) xs /\ si_sorted xs.
+Fixpoint si_apart (xs:list si_node) : Prop :=
+  match xs with [] => True | a::rest =>
+    Forall (fun b => separate32 (si_ptr a) 20 (si_ptr b) 20) rest /\ si_apart rest
+  end.
+Definition si_layout L P sp xs :=
+  object32 L 20 /\ object32 P 20 /\
+  12 <= sp /\ sp < 2^32 /\ sp mod 8 = 0 /\
+  separate32 P 20 L 20 /\ separate32 (sp-12) 12 L 20 /\
+  separate32 (sp-12) 12 P 20 /\
+  Forall (fun a => object32 (si_ptr a) 20 /\ si_value a < 2^32 /\
+    si_owner a < 2^32 /\ separate32 (si_ptr a) 20 L 20 /\
+    separate32 (si_ptr a) 20 P 20 /\ separate32 (sp-12) 12 (si_ptr a) 20) xs /\
+  si_apart xs /\ NoDup (map si_ptr xs).
+Definition si_access_words L P sp xs :=
+  [L;L+4;L+8;L+12;L+16;P;P+4;P+8;P+12;P+16;sp-12;sp-8;sp-4] ++
+  flat_map (fun a => map (fun k => si_ptr a+k) fields20) xs.
+Definition si_permissions (s:store) L P sp xs :=
+  forall a, In a (si_access_words L P sp xs) ->
+    MemAcc mem_readable s a 32 4 /\ MemAcc mem_writable s a 32 4.
+Definition si_ordinary_return lr := lr mod 2 = 1 /\ lr < 0xfffffff0.
+Definition si_pre (s:store) L (new:si_node) index xs :=
+  si_layout L (si_ptr new) (s R_SP) xs /\
+  s R_R0=L /\ s R_R1=si_ptr new /\
+  si_value new < 2^32 /\ si_owner new < 2^32 /\
+  field32 (s V_MEM32) (si_ptr new) 0=si_value new /\
+  field32 (s V_MEM32) (si_ptr new) 12=si_owner new /\
+  si_ring (s V_MEM32) L index xs /\
+  In index ((L+8)::map si_ptr xs) /\
+  si_permissions s L (si_ptr new) (s R_SP) xs /\
+  si_ordinary_return (s R_LR).
+
+(* Exact write sequences over the original memory, not replacement code. *)
+Definition si_write m (av:N*N) := write_field32 m (fst av) 0 (snd av).
+Definition si_apply m (writes:list (N*N)) := fold_left si_write writes m.
+Definition si_stack_writes (s:store) :=
+  [(s R_SP-12,s R_R4);(s R_SP-8,s R_R5);(s R_SP-4,s R_LR)].
+Definition si_stackmem (s:store) := si_apply (s V_MEM32) (si_stack_writes s).
+Definition si_body_writes m L P previous next :=
+  [(P+4,next);(next+8,P);(P+8,previous);(previous+4,P);(P+16,L);
+   (L,(field32 m L 0+1) mod 2^32)].
+Definition si_memory (s0:store) L new xs :=
+  si_apply (si_stackmem s0)
+    (si_body_writes (s0 V_MEM32) L (si_ptr new)
+      (si_prev L new xs) (si_next L new xs)).
+Definition si_all_writes (s0:store) L new xs := si_stack_writes s0 ++
+  si_body_writes (s0 V_MEM32) L (si_ptr new) (si_prev L new xs) (si_next L new xs).
+Definition si_frame m m' (writes:list (N*N)) :=
+  forall a, (forall w v, In (w,v) writes -> separate32 a 1 w 4) ->
+    getmem 32 LittleE 1 m' a = getmem 32 LittleE 1 m a.
+Definition si_flags c (s:store) :=
+  let r := (c+1) mod 2^32 in
+  s F_N = cast CAST_HIGH 32 1 r /\ s F_Z = eval_binop OP_EQ 32 r 0 /\
+  s F_C = eval_binop OP_LT 32 r c /\
+  s F_V = cast CAST_HIGH 32 1 (N.land (N.lxor c r) (N.lxor 1 r)).
+Definition si_memory_post (s0:store) L new index xs (s:store) :=
+  s V_MEM32=si_memory s0 L new xs /\
+  si_ring (s V_MEM32) L index (si_result new xs) /\
+  field32 (s V_MEM32) L 0 = (field32 (s0 V_MEM32) L 0+1) mod 2^32 /\
+  field32 (s V_MEM32) (si_ptr new) 0 = si_value new /\
+  field32 (s V_MEM32) (si_ptr new) 12 = si_owner new /\
+  field32 (s V_MEM32) (si_ptr new) 16 = L /\
+  (forall a, In a xs -> field32 (s V_MEM32) (si_ptr a) 0 = si_value a /\
+                       field32 (s V_MEM32) (si_ptr a) 12 = si_owner a) /\
+  si_frame (s0 V_MEM32) (s V_MEM32) (si_all_writes s0 L new xs).
+Definition si_at_pop (s0:store) L new index xs (s:store) :=
+  si_memory_post s0 L new index xs s /\
+  s R_R4=si_prev L new xs /\ s R_R5=si_value new /\ s R_SP=s0 R_SP-12 /\
+  s R_R2=(if si_value new =? list_max_value then 0
+    else field32 (s0 V_MEM32) (si_next L new xs) 0) /\
+  s R_R3=(field32 (s0 V_MEM32) L 0+1) mod 2^32 /\
+  si_flags (field32 (s0 V_MEM32) L 0) s /\
+  (forall v, si_preserved v -> s v=s0 v).
+Definition si_returned (s0:store) L new index xs (s:store) :=
+  si_memory_post s0 L new index xs s /\
+  s R_R4=s0 R_R4 /\ s R_R5=s0 R_R5 /\ s R_SP=s0 R_SP /\
+  s R_R2=(if si_value new =? list_max_value then 0
+    else field32 (s0 V_MEM32) (si_next L new xs) 0) /\
+  s R_R3=(field32 (s0 V_MEM32) L 0+1) mod 2^32 /\
+  si_flags (field32 (s0 V_MEM32) L 0) s /\
+  (forall v, si_preserved v -> s v=s0 v).
+
+(* The loop has traversed exactly done, and cursor is its last element or
+   the embedded sentinel. Unread memory is the original memory plus PUSH. *)
+Definition si_loop (s0:store) L new xs (s:store) :=
+  exists done todo, xs=done++todo /\
+    Forall (fun a => si_value a <= si_value new) done /\
+    si_value new < list_max_value /\
+    s V_MEM32=si_stackmem s0 /\ s R_R0=L /\ s R_R1=si_ptr new /\
+    s R_R5=si_value new /\ s R_R3=si_last (L+8) done /\
+    s R_SP=s0 R_SP-12 /\ (forall v, si_preserved v -> s v=s0 v).
+Definition si_join (s0:store) L new xs (s:store) :=
+  s V_MEM32=si_stackmem s0 /\ s R_R0=L /\ s R_R1=si_ptr new /\
+  s R_R4=si_prev L new xs /\ s R_R5=si_value new /\ s R_SP=s0 R_SP-12 /\
+  s R_R2=(if si_value new =? list_max_value then 0
+    else field32 (s0 V_MEM32) (si_next L new xs) 0) /\
+  (forall v, si_preserved v -> s v=s0 v).
+Definition si_exit (t:trace) :=
+  match t with (Addr 0x9a,_)::_ => true | _ => false end.
+Definition si_invs (s0:store) L new index xs (t:trace) :=
+  match t with (Addr a,s)::_ => match a with
+  | 0x72 => Some (s=s0)
+  | 0x7e => Some (si_loop s0 L new xs s)
+  | 0x88 => Some (si_join s0 L new xs s)
+  | 0x9a => Some (si_at_pop s0 L new index xs s)
+  | _ => None end | _ => None end.
+
+Theorem si_apply_frame : forall writes m,
+  si_frame m (si_apply m writes) writes.
+Proof.
+  induction writes as [|[w v] rest IH]; intros m a OUT.
+  - reflexivity.
+  - change (getmem 32 LittleE 1 (si_apply (write_field32 m w 0 v) rest) a = _).
+    rewrite (IH (write_field32 m w 0 v) a).
+    + unfold write_field32. rewrite N.add_0_r. apply getmem_noverlap.
+      apply (OUT w v). now left.
+    + intros w' v' IN. apply (OUT w' v'). now right.
+Qed.
+Print Assumptions si_apply_frame.
+Theorem si_apply_typed : forall writes m,
+  m < memsize 32 -> si_apply m writes < memsize 32.
+Proof.
+  induction writes as [|[w v] rest IH]; intros m MT.
+  - exact MT.
+  - apply IH. unfold si_write, write_field32. apply setmem_welltyped. exact MT.
+Qed.
+Print Assumptions si_apply_typed.
+Theorem si_memory_frame : forall s0 L new xs,
+  si_frame (s0 V_MEM32) (si_memory s0 L new xs) (si_all_writes s0 L new xs).
+Proof.
+  intros. unfold si_memory, si_stackmem, si_all_writes, si_apply.
+  rewrite <- fold_left_app. apply si_apply_frame.
+Qed.
+Print Assumptions si_memory_frame.
+
+Theorem si_split_partition : forall xs value,
+  xs=fst (si_split value xs) ++ snd (si_split value xs).
+Proof.
+  induction xs as [|a xs IH]; intro value; [reflexivity|].
+  cbn [si_split]. destruct (si_value a <=? value).
+  - specialize (IH value). destruct (si_split value xs) as [lo hi].
+    cbn in *. now rewrite <- IH.
+  - reflexivity.
+Qed.
+Print Assumptions si_split_partition.
+Theorem si_cut_partition : forall xs value,
+  xs=si_before value xs ++ si_after value xs.
+Proof.
+  intros. unfold si_before, si_after, si_cut.
+  destruct (value =? list_max_value); cbn.
+  - now rewrite app_nil_r.
+  - apply si_split_partition.
+Qed.
+Print Assumptions si_cut_partition.
+Theorem si_result_length : forall new xs,
+  length (si_result new xs)=S (length xs).
+Proof.
+  intros. unfold si_result. rewrite app_length. cbn [length].
+  pose proof (si_cut_partition xs (si_value new)) as E.
+  apply (f_equal (@length si_node)) in E. rewrite app_length in E. lia.
+Qed.
+Print Assumptions si_result_length.
+Theorem si_result_membership : forall new xs a,
+  In a (si_result new xs) <-> a=new \/ In a xs.
+Proof.
+  intros. unfold si_result. rewrite in_app_iff. cbn [In].
+  rewrite (si_cut_partition xs (si_value new)), in_app_iff. intuition congruence.
+Qed.
+Print Assumptions si_result_membership.
+Theorem si_max_cut : forall xs,
+  si_before list_max_value xs=xs /\ si_after list_max_value xs=[].
+Proof. intros. unfold si_before, si_after, si_cut. rewrite N.eqb_refl. auto. Qed.
+Print Assumptions si_max_cut.
+
+Theorem si_split_bounds : forall xs value,
+  si_sorted xs ->
+  Forall (fun a => si_value a <= value) (fst (si_split value xs)) /\
+  Forall (fun a => value < si_value a) (snd (si_split value xs)).
+Proof.
+  intros xs value SORT. induction SORT as [|a rest SORT IH ALL].
+  - split; constructor.
+  - cbn [si_split]. destruct (si_value a <=? value) eqn:LE.
+    + apply N.leb_le in LE. destruct (si_split value rest) as [lo hi].
+      cbn in IH. destruct IH as [LOW HIGH]. cbn. split; [constructor|]; assumption.
+    + apply N.leb_gt in LE. cbn. split; [constructor|].
+      constructor; [exact LE|]. eapply Forall_impl; [|exact ALL].
+      intros b AB. unfold si_order in AB. lia.
+Qed.
+Print Assumptions si_split_bounds.
+
+Theorem si_result_sorted : forall new xs,
+  si_sorted xs -> si_value new < 2^32 ->
+  Forall (fun a => si_value a < 2^32) xs -> si_sorted (si_result new xs).
+Proof.
+  intros new xs SORT NEW BOUNDS.
+  unfold si_result, si_before, si_after, si_cut.
+  destruct (si_value new =? list_max_value) eqn:MAX.
+  - apply N.eqb_eq in MAX. cbn.
+    induction SORT as [|a rest SORT IH ALL]; cbn.
+    + repeat constructor.
+    + inversion BOUNDS; subst. constructor.
+      * apply IH. assumption.
+      * apply Forall_app. split; [exact ALL|]. constructor; [|constructor].
+        unfold si_order. rewrite MAX. unfold list_max_value. lia.
+  - induction SORT as [|a rest SORT IH ALL]; cbn [si_split].
+    + repeat constructor.
+    + inversion BOUNDS; subst. destruct (si_value a <=? si_value new) eqn:LE.
+      * apply N.leb_le in LE. destruct (si_split (si_value new) rest) as [lo hi] eqn:CUT.
+        cbn in *. constructor.
+        -- apply IH. assumption.
+        -- rewrite Forall_forall in *. intros b IN.
+           apply in_app_iff in IN. destruct IN as [IN|[EQ|IN]].
+           ++ apply ALL. rewrite (si_split_partition rest (si_value new)), CUT.
+              apply in_app_iff. now left.
+           ++ subst b. exact LE.
+           ++ apply ALL. rewrite (si_split_partition rest (si_value new)), CUT.
+              apply in_app_iff. now right.
+      * apply N.leb_gt in LE. cbn. constructor.
+        -- constructor; assumption.
+        -- constructor; [unfold si_order; lia|].
+           eapply Forall_impl; [|exact ALL]. intros b AB. unfold si_order in *. lia.
+Qed.
+Print Assumptions si_result_sorted.
+
+(* The abstract memory splice is proved separately from machine stepping. *)
+Theorem si_memory_refinement : forall s0 L new index xs,
+  si_pre s0 L new index xs ->
+  si_memory_post s0 L new index xs (update s0 V_MEM32 (si_memory s0 L new xs)).
+Proof.
+  intros s0 L new index xs PRE.
+  destruct PRE as [LAY [R0 [R1 [VB [OB [VAL [OWN [RING [IDX [PERM RET]]]]]]]]]].
+  unfold si_memory_post. rewrite update_updated. split; [reflexivity|].
+  destruct RING as [HEADER [FIRST [CHAIN SORT]]].
+  pose proof (si_cut_partition xs (si_value new)) as PARTITION.
+  pose proof (si_result_length new xs) as LENGTH.
+  pose proof (si_memory_frame s0 L new xs) as FRAME.
+  unfold si_memory, si_stackmem, si_body_writes, si_apply, si_write.
+  cbn [fold_left fst snd].
+  (* Work over abstract original memory. Discharge unrelated word loads using
+     byte separation, then induct on the prefix ending at the chosen predecessor. *)
+  revert CHAIN FIRST SORT PARTITION.
+  generalize (si_before (si_value new) xs), (si_after (si_value new) xs).
+  intros lo hi CHAIN FIRST SORT PARTITION.
+  induction lo as [|a lo IH]; cbn [si_chain si_first si_last] in *;
+    repeat split; try assumption;
+    try (apply si_result_sorted; assumption);
+    try (rewrite getmem_setmem by discriminate; apply N.mod_small; assumption);
+    try (apply FRAME).
+  all: unfold field32, write_field32 in *;
+    repeat rewrite getmem_noverlap by
+      (unfold si_layout in LAY; decompose [and] LAY;
+       eauto using noverlap_symmetry, noverlap_index_l, noverlap_index_r);
+    eauto using si_result_sorted, field32_bound.
+Qed.
+Print Assumptions si_memory_refinement.
+
+Theorem sorted_insert_correct : forall s0 t s' x' L new index xs,
+  startof t (x',s')=(Addr 0x72,s0) -> models armv6mtypctx s0 ->
+  si_pre s0 L new index xs ->
+  satisfies_all vListInsert_armv6m_prog (si_invs s0 L new index xs)
+    si_exit ((x',s')::t).
+Proof.
+  intros s0 t s' x' L new index xs ENTRY MDL INPUT.
+  pose proof INPUT as INPUT0.
+  destruct INPUT as [LAY [R0 [R1 [VB [OB [VAL [OWN [RING [IDX [PERM RET]]]]]]]]]].
+  apply prove_invs.
+  - simpl. rewrite ENTRY. armv6m_step. reflexivity.
+  - intros. erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption. apply sorted_insert_welltyped.
+    intro MDL1. destruct_inv 32 PRE.
+    + subst s1. repeat armv6m_step.
+      all: unfold si_loop, si_join, si_stackmem, si_stack_writes, si_apply, si_write.
+      all: rewrite ?R0, ?R1, ?N.add_0_r, ?getmem_mod_l, ?setmem_mod_l.
+      all: try (exists [], xs; repeat split; try reflexivity; try constructor).
+      all: psimpl; eauto using si_max_cut.
+    + destruct PRE as [done [todo [PART [LOW [NORMAL [MEM [A0 [A1 [A5 [CUR [SP KEEP]]]]]]]]]]].
+      destruct todo as [|a todo]; repeat armv6m_step.
+      all: unfold si_loop, si_join.
+      all: rewrite ?MEM, ?A0, ?A1, ?A5, ?CUR, ?SP.
+      all: try (exists (done++[a]), todo; rewrite app_assoc; repeat split;
+        eauto using Forall_app).
+      all: eauto using si_split_bounds, si_cut_partition.
+    + destruct PRE as [MEM [A0 [A1 [A4 [A5 [SP [A2 KEEP]]]]]]].
+      repeat armv6m_step.
+      unfold si_at_pop. repeat split.
+      all: try (apply si_memory_refinement; exact INPUT0).
+      all: unfold si_memory, si_body_writes, si_apply, si_write, si_flags;
+        rewrite ?MEM, ?A0, ?A1, ?A4, ?A5, ?SP, ?A2;
+        psimpl; eauto.
+Qed.
+Print Assumptions sorted_insert_correct.
+
+Theorem sorted_insert_at_pop : forall s0 t s L new index xs,
+  startof t (Addr 0x9a,s)=(Addr 0x72,s0) -> models armv6mtypctx s0 ->
+  si_pre s0 L new index xs ->
+  exec_prog vListInsert_armv6m_prog ((Addr 0x9a,s)::t) ->
+  unterminated si_exit t -> si_at_pop s0 L new index xs s.
+Proof.
+  intros s0 t s L new index xs ENTRY MDL INPUT XP UT.
+  exact (satall_trueif_inv _ _ _ _
+    (sorted_insert_correct s0 t s (Addr 0x9a) L new index xs ENTRY MDL INPUT) XP UT).
+Qed.
+Print Assumptions sorted_insert_at_pop.
+
+Theorem sorted_insert_return_step : forall s0 s L new index xs,
+  models armv6mtypctx s0 -> si_pre s0 L new index xs -> si_at_pop s0 L new index xs s ->
+  exists sr, can_step vListInsert_armv6m_prog
+    ((Addr (N.land (s0 R_LR) 0xfffffffe),sr),(Addr 0x9a,s)) /\
+    si_returned s0 L new index xs sr.
+Proof.
+  intros s0 s L new index xs MDL INPUT POST.
+  exists (update (update (update s R_R4 (s0 R_R4)) R_R5 (s0 R_R5)) R_SP (s0 R_SP)).
+  destruct POST as [MP [R4 [R5 [SP [R2 [R3 [FLAGS KEEP]]]]]]].
+  split.
+  - eapply CanStep with (sz:=2) (c':=armv6mtypctx).
+    + reflexivity.
+    + unfold armv6m_pop, armv6m_seq, armv6m_bxwritepc.
+      cbn [armv6m_slots armv6m_regs map app].
+      repeat econstructor; eauto.
+  - unfold si_returned. repeat rewrite update_frame by discriminate.
+    repeat split; try assumption; try reflexivity.
+    intros v V. destruct v; cbn in V; try contradiction; apply KEEP; exact V.
+Qed.
+Print Assumptions sorted_insert_return_step.
+Theorem sorted_insert_trace_returns : forall s0 t s L new index xs,
+  startof t (Addr 0x9a,s)=(Addr 0x72,s0) -> models armv6mtypctx s0 ->
+  si_pre s0 L new index xs ->
+  exec_prog vListInsert_armv6m_prog ((Addr 0x9a,s)::t) ->
+  unterminated si_exit t -> exists sr,
+    si_returned s0 L new index xs sr /\
+    exec_prog vListInsert_armv6m_prog
+      ((Addr (N.land (s0 R_LR) 0xfffffffe),sr)::(Addr 0x9a,s)::t).
+Proof.
+  intros s0 t s L new index xs ENTRY MDL INPUT XP UT.
+  pose proof (sorted_insert_at_pop s0 t s L new index xs ENTRY MDL INPUT XP UT) as POST.
+  destruct (sorted_insert_return_step s0 s L new index xs MDL INPUT POST) as [sr [STEP OUT]].
+  exists sr. split; [exact OUT|]. apply exec_prog_step; assumption.
+Qed.
+Print Assumptions sorted_insert_trace_returns.
+
+(* Finite images witness the entry specification. No source-level substitute
+   for vListInsert is used; these functions only initialize test memory. *)
+Fixpoint si_fixture_nodes m L previous (xs:list si_node) :=
+  match xs with [] => write_field32 m (L+8) 8 previous
+  | a::rest => si_fixture_nodes
+      (image20 m (si_ptr a) (si_value a) (si_first (L+8) rest)
+        previous (si_owner a) L) L (si_ptr a) rest
+  end.
+Definition si_fixture L new xs :=
+  si_fixture_nodes
+    (image20 (image20 0 L (N.of_nat (length xs)) (L+8) list_max_value
+      (si_first (L+8) xs) (si_last (L+8) xs))
+      (si_ptr new) (si_value new) 0 0 (si_owner new) 0) L (L+8) xs.
+Definition si_entry m L P : store :=
+  update (update (update (update (update (update (memory_store32 m)
+    A_READ (N.ones (2^32))) A_WRITE (N.ones (2^32))) R_R0 L) R_R1 P)
+    R_SP 65536) R_LR 257.
+Definition si_new := SiNode 8192 7 42.
+Definition si_one := SiNode 12288 7 43.
+Definition si_two := SiNode 16384 11 44.
+Theorem sorted_insert_nonvacuity : forall xs,
+  xs=[] \/ xs=[si_one] \/ xs=[si_one;si_two] ->
+  exists s, models armv6mtypctx s /\ si_pre s 4096 si_new 4104 xs.
+Proof.
+  intros xs CASES. exists (si_entry (si_fixture 4096 si_new xs) 4096 8192).
+  destruct CASES as [->|[->|->]];
+    unfold si_entry, si_fixture, si_new, si_one, si_two;
+    cbn [si_fixture_nodes si_first si_last rev length N.of_nat].
+  all: split.
+  all: try (repeat apply models_update; try reflexivity; try apply ones_bound;
+    apply memory_store32_welltyped; unfold image20, write_field32;
+    repeat apply setmem_welltyped;
+    change (0 < 2^(2^32*8)); apply mp2_gt_0).
+  all: unfold si_pre, si_layout, si_ring, si_chain, si_apart, si_ordinary_return;
+    repeat split; try reflexivity; try constructor.
+  all: try (apply ranges32_separate; unfold range32; lia).
+  all: try (unfold object32, range32; vm_compute; repeat split; congruence).
+  all: try (unfold si_permissions; intros; unfold MemAcc; intros;
+    unfold mem_readable, mem_writable;
+    rewrite ?update_frame by discriminate; rewrite update_updated;
+    apply N.ones_spec_low; apply mp2_mod_lt).
+  all: unfold item_contents, list_header, field32, image20, write_field32;
+    repeat rewrite getmem_noverlap by
+      (apply ranges32_separate; unfold range32; lia);
+    rewrite ?getmem_setmem by discriminate; reflexivity.
+Qed.
+Print Assumptions sorted_insert_nonvacuity.

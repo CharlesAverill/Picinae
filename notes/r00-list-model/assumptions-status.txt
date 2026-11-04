@@ -1,0 +1,6 @@
+NOT RUN: no unit .vo was produced by the sole initial build (exit 1).
+No raw unit Print Assumptions output exists. tools/print-assumptions.sh invokes
+Dune and would reattempt compilation, forbidden after the initial Astra failure.
+The new Sol fixer must collect verbatim output for all exported theorems.
+Baseline functional_extensionality_dep is documented in e00; this unit's
+transitive assumptions have not been certified.
