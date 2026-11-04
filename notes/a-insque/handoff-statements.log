@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-378c8105
+COMMAND=python3 notes/a-insque/check-statements.py
+All 19 initial theorem/lemma statements preserved exactly.
+Initial snapshot SHA256: bb86f7df7e54c882713539b6522f74acd88c3dfa290ee4539b301dc6a532253c
+Remaining Qed: 10
+Abort: 9
+No full proof target .vo exists.
+
+EXIT_CODE=0

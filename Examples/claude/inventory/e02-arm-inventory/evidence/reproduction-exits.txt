@@ -1,0 +1,28 @@
+Working directory: /home/charles/.t3/worktrees/Picinae/t3-0672c15b
+Final executed commands and outcomes (2026-11-03):
+
+/home/charles/miniconda3/bin/python3 Examples/claude/inventory/e02-arm-inventory/bootstrap.py
+exit=0; log=bootstrap.log (cached environment replay; not an empty-root bootstrap)
+
+/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/bin/python Examples/claude/inventory/e02-arm-inventory/inventory.py --toolchain /home/charles/code/friends/.toolchains/e02-arm-inventory --repo "$PWD" --out Examples/claude/inventory/e02-arm-inventory/evidence
+exit=0; log=inventory.log
+
+bash Examples/claude/inventory/e02-arm-inventory/run-ghidra.sh
+exit=0; log=ghidra-audit.log; 85 exact comment comparisons and restricted smoke output
+
+bash Examples/claude/inventory/e02-arm-inventory/probe-canonical.sh
+exit=0; log=canonical-driver-compatibility.log
+This diagnostic succeeds by checking the expected incompatibility and absence of a lift.
+Underlying unchanged canonical driver launcher exit=0 despite logged failure.
+
+bash Examples/claude/inventory/e02-arm-inventory/validate.sh
+exit=0; exact child commands and individual exits in validation-commands.log
+Memory cap 8000000 KiB; Make -j1 -B forced core rebuild, six sequential existing lift typechecks,
+existing typing assumptions, and smoke typecheck/assumptions.
+
+bash -n Examples/claude/inventory/e02-arm-inventory/run-ghidra.sh Examples/claude/inventory/e02-arm-inventory/probe-canonical.sh Examples/claude/inventory/e02-arm-inventory/validate.sh
+exit=0
+Python ast.parse on bootstrap.py, inventory.py and ghidra_audit.py: exit=0.
+Unit .v/.py/.sh token scan found no new prohibited proof declarations/placeholders.
+Dune build not run: no Dune project at pinned base; pending e00-build.
+Binary inventory assumptions N/A; typing theorem assumptions saved verbatim, including existing functional extensionality.

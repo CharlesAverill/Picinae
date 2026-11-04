@@ -1,0 +1,13 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=python3 notes/e11-canonical-lifter/check-artifacts.py
+scalar_smoke toascii 2 instruction byte/pcode records; hashes PASS
+scalar_smoke div 7 instruction byte/pcode records; hashes PASS
+scalar_smoke ldiv 4 instruction byte/pcode records; hashes PASS
+scalar_smoke swab 13 instruction byte/pcode records; hashes PASS
+scalar_smoke ffs 25 instruction byte/pcode records; hashes PASS
+scalar_smoke ffsl 18 instruction byte/pcode records; hashes PASS
+scalar_global mempcpy 108 instruction byte/pcode records; hashes PASS
+scalar_global __memcpy_generic 108 instruction byte/pcode records; hashes PASS
+PASS exactly eight selected new fixture .vo files; no e02 inventory .vo duplicates
+
+EXIT_CODE=0

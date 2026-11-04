@@ -1,0 +1,93 @@
+; One recursive -R mapping preserves the existing unqualified Require imports.
+(include_subdirs qualified)
+
+; Keep this list aligned with the active core entries in _CoqProject.
+; Explicit lists prevent unrelated examples and experimental modules being built.
+(rocq.theory
+ (name Picinae)
+ (theories Stdlib Ltac2)
+ (mode vo)
+ (flags :standard -w -level-tolerance -w -postfix-notation-not-level-1)
+ (modules
+  Picinae_core Picinae_theory Picinae_statics Picinae_auto Picinae_finterp
+  Picinae_simplifier_base Picinae_simplifier_v1_1 Picinae_ISA Picinae_i386
+  Picinae_armv7 Picinae_armv8 Picinae_riscv Picinae_amd64 Picinae_numbers
+  Examples.claude.amd64_common Examples.claude.abs_amd64
+  Examples.claude.amd64_abs_proof
+  Examples.claude.arm8_common Examples.claude.abs_arm8
+  Examples.claude.arm8_abs_proof
+  Examples.claude.arm8_insque_proof
+  Examples.claude.lifter.scalar_smoke.e11_toascii_arm8
+  Examples.claude.lifter.scalar_smoke.e11_div_arm8
+  Examples.claude.lifter.scalar_smoke.e11_ldiv_arm8
+  Examples.claude.lifter.scalar_smoke.e11_swab_arm8
+  Examples.claude.lifter.scalar_smoke.e11_ffs_arm8
+  Examples.claude.lifter.scalar_smoke.e11_ffsl_arm8
+  Examples.claude.lifter.scalar_global.e11_mempcpy_arm8
+  Examples.claude.lifter.scalar_global.e11___memcpy_generic_arm8
+  Examples.claude.lifter.scalar_ports.e08___drand48_iterate_arm8
+  Examples.claude.lifter.scalar_ports.e08___memcpy_generic_arm8
+  Examples.claude.lifter.scalar_ports.e08___memmove_generic_arm8
+  Examples.claude.lifter.scalar_ports.e08___memset_emag_arm8
+  Examples.claude.lifter.scalar_ports.e08_a64l_arm8
+  Examples.claude.lifter.scalar_ports.e08_cfmakeraw_arm8
+  Examples.claude.lifter.scalar_ports.e08_insque_arm8
+  Examples.claude.lifter.scalar_ports.e08_lcong48_r_arm8
+  Examples.claude.lifter.scalar_ports.e08_mempcpy_arm8
+  Examples.claude.lifter.scalar_ports.e08_remque_arm8
+  Examples.claude.lifter.scalar_ports.e08_seed48_arm8
+  Examples.claude.lifter.scalar_ports.e08_seed48_r_arm8
+  Examples.claude.lifter.scalar_ports.e08_sigabbrev_np_arm8
+  Examples.claude.lifter.scalar_ports.e08_sigdescr_np_arm8
+  Examples.claude.lifter.scalar_ports.e08_srand48_r_arm8))
+
+(alias
+ (name core)
+ (deps
+  Picinae_core.vo Picinae_theory.vo Picinae_statics.vo Picinae_auto.vo
+  Picinae_finterp.vo Picinae_simplifier_base.vo Picinae_simplifier_v1_1.vo
+  Picinae_ISA.vo Picinae_i386.vo Picinae_armv7.vo Picinae_armv8.vo
+  Picinae_riscv.vo Picinae_amd64.vo Picinae_numbers.vo))
+
+(alias
+ (name smoke-x86)
+ (deps Examples/claude/amd64_abs_proof.vo))
+
+(alias
+ (name smoke-arm8)
+ (deps Examples/claude/arm8_abs_proof.vo))
+
+(alias
+ (name smoke)
+ (deps (alias core) (alias smoke-x86) (alias smoke-arm8)))
+
+(alias
+ (name scalar-lifter)
+ (deps
+  Examples/claude/lifter/scalar_smoke/e11_toascii_arm8.vo
+  Examples/claude/lifter/scalar_smoke/e11_div_arm8.vo
+  Examples/claude/lifter/scalar_smoke/e11_ldiv_arm8.vo
+  Examples/claude/lifter/scalar_smoke/e11_swab_arm8.vo
+  Examples/claude/lifter/scalar_smoke/e11_ffs_arm8.vo
+  Examples/claude/lifter/scalar_smoke/e11_ffsl_arm8.vo
+  Examples/claude/lifter/scalar_global/e11_mempcpy_arm8.vo
+  Examples/claude/lifter/scalar_global/e11___memcpy_generic_arm8.vo))
+
+(alias
+ (name e08-arm-lifts)
+ (deps
+  Examples/claude/lifter/scalar_ports/e08___drand48_iterate_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08___memmove_generic_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08___memset_emag_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_a64l_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_cfmakeraw_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_insque_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_lcong48_r_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_mempcpy_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_remque_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_seed48_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_seed48_r_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_sigabbrev_np_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_sigdescr_np_arm8.vo
+  Examples/claude/lifter/scalar_ports/e08_srand48_r_arm8.vo))
