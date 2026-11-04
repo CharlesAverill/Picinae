@@ -1,0 +1,11 @@
+{
+  "List_t.sizeof": 20,
+  "List_t.uxNumberOfItems": 0,
+  "List_t.xListEnd": 8,
+  "MiniListItem_t.pxNext": 4,
+  "ListItem_t.sizeof": 20,
+  "ListItem_t.pxNext": 4,
+  "ListItem_t.pvOwner": 12,
+  "TCB_t.sizeof": 84,
+  "TCB_t.pcTaskName": 52
+}

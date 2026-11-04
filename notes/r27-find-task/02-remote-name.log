@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1f7f6596
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/r27-find-task
+
+EXIT_CODE=0

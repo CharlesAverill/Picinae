@@ -1,0 +1,24 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1f7f6596
+COMMAND=python3 notes/r27-find-task/check-statements.py
+PASS: all 19 initial theorem statements preserved verbatim
+search_nwc
+search_welltyped
+search_saved_bytes_frame
+search_matchb_spec
+search_match_at_zero
+search_mismatch
+search_exhausted
+search_skip_prefix
+search_result_first_match
+search_zero_bound
+search_witness_models
+search_witness_permissions
+search_entry_satisfiable
+search_empty_layout
+search_empty_entry_satisfiable
+search_correct
+search_post_at_pop
+search_return_step
+search_caller_result
+
+EXIT_CODE=0
