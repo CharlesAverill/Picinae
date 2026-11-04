@@ -1,0 +1,20 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-746dec47
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e08-arm-lifts/collect.py --out /home/charles/code/friends/.toolchains/e08-arm-lifts/rechecked01-published baseline01 move01
+RECHECK_PASS __drand48_iterate 27 instructions
+RECHECK_PASS __memset_emag 56 instructions
+RECHECK_PASS a64l 19 instructions
+RECHECK_PASS cfmakeraw 15 instructions
+RECHECK_PASS insque 8 instructions
+RECHECK_PASS lcong48_r 18 instructions
+RECHECK_PASS mempcpy 108 instructions
+RECHECK_PASS __memcpy_generic 108 instructions
+RECHECK_PASS remque 6 instructions
+RECHECK_PASS seed48 30 instructions
+RECHECK_PASS seed48_r 30 instructions
+RECHECK_PASS sigabbrev_np 8 instructions
+RECHECK_PASS sigdescr_np 8 instructions
+RECHECK_PASS srand48_r 13 instructions
+RECHECK_PASS __memmove_generic 154 instructions
+PASS rechecked publication /home/charles/code/friends/.toolchains/e08-arm-lifts/rechecked01-published 15 artifacts
+
+EXIT_CODE=0

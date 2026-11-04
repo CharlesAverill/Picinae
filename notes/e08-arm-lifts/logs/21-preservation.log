@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-746dec47
+COMMAND=python3 -
+PASS 271 historical/prerequisite source and fixture hashes unchanged
+
+EXIT_CODE=0

@@ -1,0 +1,156 @@
+{
+  "addressing": "global",
+  "aliases_same_entry_extent": [
+    "__srand48_r",
+    "srand48_r"
+  ],
+  "build_id": "977c021c364ee3c495c0e5f2375bf6ba2124a6da",
+  "closure": {
+    "closed": true,
+    "direct_and_fallthrough_edges": [
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6d0",
+        "target": "0x13e6d4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6d4",
+        "target": "0x13e6d8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6d8",
+        "target": "0x13e6dc"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6dc",
+        "target": "0x13e6e0"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6e0",
+        "target": "0x13e6e4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6e4",
+        "target": "0x13e6e8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6e8",
+        "target": "0x13e6ec"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6ec",
+        "target": "0x13e6f0"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6f0",
+        "target": "0x13e6f4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6f4",
+        "target": "0x13e6f8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6f8",
+        "target": "0x13e6fc"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e6fc",
+        "target": "0x13e700"
+      }
+    ],
+    "indirect_nonreturn_edges": [],
+    "meaning": "finite selected machine map closes all direct edges and fallthroughs; RETURN remains caller ABI boundary",
+    "returns": [
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x13e700"
+      }
+    ]
+  },
+  "data": {
+    "analysis": "ADR(P)+ADD object references plus complete raw memory instruction list; manual target review required, no invented constants",
+    "contract": "Map ELF virtual data addresses to model addresses by +0x100000. Runtime memory must supply these bytes/state and any relocated pointer targets; generated program does not initialize memory.",
+    "materialized_objects": [],
+    "memory_accesses": [
+      {
+        "assembly": "strh w5,[x1]",
+        "instruction": "0x13e6f0",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6700, 8) , (unique, 0x3ac80, 2)"
+        ]
+      },
+      {
+        "assembly": "stur w4,[x1, #0x2]",
+        "instruction": "0x13e6f4",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6980, 8) , (unique, 0x3a680, 4)"
+        ]
+      },
+      {
+        "assembly": "str w3,[x1, #0xc]",
+        "instruction": "0x13e6f8",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6400, 8) , (register, 0x4018, 4)"
+        ]
+      },
+      {
+        "assembly": "str x2,[x1, #0x10]",
+        "instruction": "0x13e6fc",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6500, 8) , (register, 0x4010, 8)"
+        ]
+      }
+    ],
+    "staticMemory": false
+  },
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "elf_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "generated_program": "e08_srand48_r_arm8",
+  "generated_program_sha256": "81fdb5b5dbc47d6469f002aa9ce630fa02189d09b1a4244c04087c24842c5132",
+  "image_base": "0x100000",
+  "implementation_sha256": {
+    "lift-scalar.py": "1bdf6ec35946c220dc07fc4963efc37b7cb3f150e0f77ccfbcfecd2e74828909",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "scalar_headless.py": "4aab6945ece18c558f2b1dc397a31a8333a8e380dcaf29630168472e1fe7bcd3"
+  },
+  "instruction_count": 13,
+  "limits": "Generated scalar IL and typing only; no functional correctness, termination, equivalence to historical lifts, or lifter soundness claim.",
+  "naming_adapter": {
+    "new": "e08_srand48_r_arm8",
+    "occurrence_count": 2,
+    "old": "e11_srand48_r_arm8",
+    "operation": "identifier substitution only"
+  },
+  "naming_closure_harness_sha256": "fdfce3192d5670367686ff78a4606197c83df74f817945cf653819f2f83165a5",
+  "original_program_sha256": "0edc3fa8ca68e389a906861396a034448b7954982860c9f3ede0589af9a06ea7",
+  "pcode_sha256": "c6769291b61fd0002f2ce83799ddb72607bddc8051631837e3f377118426ba76",
+  "record": {
+    "bytes_sha256": "7a6fe8ac58c90531ee6bb4e265a21dea8fe3e6425a5a6d6f60e071f4992488ee",
+    "elf_entry": "0x3e6d0",
+    "entry": "0x13e6d0",
+    "instructions": 13,
+    "output": "e11_srand48_r_arm8.v",
+    "output_sha256": "0edc3fa8ca68e389a906861396a034448b7954982860c9f3ede0589af9a06ea7",
+    "selected_symbols": [
+      "srand48_r"
+    ],
+    "size": 52,
+    "symbol": "srand48_r"
+  },
+  "schema": 1,
+  "selected_symbols": [
+    "srand48_r"
+  ],
+  "symbol": "srand48_r"
+}
