@@ -1,0 +1,158 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1e49d7bf
+COMMAND=bash notes/e34-x86-copy-shuffles/print-assumptions.sh
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e11___memcpy_generic_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e11_mempcpy_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e11_div_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e11_ffs_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e11_ffsl_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e11_ldiv_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e11_swab_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e11_toascii_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e26_legacy_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e26_vex128_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e26_vex256_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e26_zero_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e26_pinned_moves_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e25_scalar_callee_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e25_scalar_caller_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e25_abs_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e25_isascii_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e25_labs_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e25_pthread_equal_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e25_toascii_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e34_align_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_amd64.Statics_amd64.welltyped_prog Picinae_amd64.x64typctx
+         e34_pinned_shuffles_amd64
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0

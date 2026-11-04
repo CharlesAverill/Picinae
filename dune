@@ -16,6 +16,8 @@
   Examples.claude.amd64_abs_proof
   Examples.claude.arm8_common Examples.claude.abs_arm8
   Examples.claude.arm8_abs_proof
+  Examples.claude.lifter.x64_shuffle_fixture.e34_align_amd64
+  Examples.claude.lifter.x64_shuffle_pinned.e34_pinned_shuffles_amd64
   Examples.claude.lifter.x64_copy_fixture.e26_legacy_amd64
   Examples.claude.lifter.x64_copy_fixture.e26_vex128_amd64
   Examples.claude.lifter.x64_copy_fixture.e26_vex256_amd64
@@ -88,3 +90,9 @@
   Examples/claude/lifter/x64_copy_fixture/e26_vex256_amd64.vo
   Examples/claude/lifter/x64_copy_fixture/e26_zero_amd64.vo
   Examples/claude/lifter/x64_copy_pinned/e26_pinned_moves_amd64.vo))
+
+(alias
+ (name x64-shuffle-lifter)
+ (deps
+  Examples/claude/lifter/x64_shuffle_fixture/e34_align_amd64.vo
+  Examples/claude/lifter/x64_shuffle_pinned/e34_pinned_shuffles_amd64.vo))
