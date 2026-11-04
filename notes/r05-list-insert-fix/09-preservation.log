@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1b541d85
+COMMAND=python3 notes/r05-list-insert-fix/check-preservation.py
+PASS: 66 original declarations preserved; original evidence and generated IL unchanged
+
+EXIT_CODE=0
