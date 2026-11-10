@@ -103,6 +103,7 @@ arm_wcet_comparison/collatz/collatz_proofs.v
 arm_wcet_comparison/llsearch/insert_after_pos_in_list_lifted.v
 arm_wcet_comparison/llsearch/insert_after_pos_in_list_proof.v
 arm_wcet_comparison/llsearch/find_in_list_lifted.v
+arm_wcet_comparison/llsearch/find_in_list_proof.v
 arm_wcet_comparison/llsearch/insert_in_sorted_list_lifted.v
 arm_wcet_comparison/llsearch/insert_in_sorted_list_proof.v
 arm_wcet_comparison/arraysearch/find.v

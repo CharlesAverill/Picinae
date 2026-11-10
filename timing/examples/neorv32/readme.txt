@@ -18,3 +18,15 @@ Uploading via minicom:
 2. Follow this procedure: https://www.dannysung.com/articles/linux/tips/sending-binary-files-via-minicom/ (copy available in clock_freq_measurement)
 3. Ctrl-A S, select neorv32_exe.bin, upload
 4. After upload, select 'e' option to execute
+
+Uploading, running and logging automatically (instead of minicom):
+1. Burn the CPU and connect the UART TO USB port as above (close minicom, it holds the port)
+2. `pip install pyserial`
+3. `python3 run_on_board.py <path/to/neorv32_exe.bin> <log file> [--build] [--port /dev/ttyUSB0]`
+   The script gets the bootloader to its prompt (asks you to press reset if a program is
+   running), uploads the image, starts it, and writes its UART output to the log file.
+   Capture stops after --stop-count lines matching --stop-regex, or after --idle-timeout
+   seconds without output (default 30). Example, from data_structures/array/binary_search:
+     python3 ../../../neorv32/run_on_board.py binary/neorv32_exe.bin measurements.txt \
+         --build --stop-regex '^Len: ' --stop-count 1000
+     python3 compare_experiment_expected.py measurements.txt

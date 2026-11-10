@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-10T14:39:33",
+  "mem": "flash",
+  "reps": 3,
+  "baseline_cycles": 5,
+  "idcode": 536962120,
+  "flash_acr": 0,
+  "rcc_cr": 22403,
+  "rcc_cfgr": 0,
+  "syst_calib": 1073747824,
+  "baseline_min": 5,
+  "baseline_max": 5
+}

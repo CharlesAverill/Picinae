@@ -1,0 +1,3 @@
+INCLUDE memory.ld
+REGION_ALIAS("BENCHMEM", RAM);
+INCLUDE common.ld

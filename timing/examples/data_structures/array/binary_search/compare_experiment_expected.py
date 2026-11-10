@@ -82,7 +82,10 @@ def main():
             print(f"{str(lo <= measured <= hi):9} | {length:5} | {str(was_found):>5} | {measured:8} | {lo:7} {hi:7}")
         print(f"{in_bounds}/{len(cycle_counts)} measurements within the verified bounds")
 
-        lines = [('Measured (found)', found_points), ('Measured (not found)', notfound_points)]
+        if not cycle_counts:
+            sys.exit(f"No measurements found in {args.log_file}")
+        lines = [(label, pts) for label, pts in
+                 [('Measured (found)', found_points), ('Measured (not found)', notfound_points)] if pts]
 
     plot_comparison(
         "binary search",

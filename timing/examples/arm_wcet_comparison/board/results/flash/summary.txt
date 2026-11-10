@@ -1,0 +1,62 @@
+== calib  (16 inputs; in = stub)
+   functional result correct : 16/16
+   identical over repetitions: 16/16
+   measured == model         : 16/16
+     bx lr                              measured   3  expected   3
+     nop; bx lr                         measured   4  expected   4
+     8x nop; bx lr                      measured  11  expected  11
+     ldr [sram]; bx lr                  measured   5  expected   5
+     ldr [flash]; bx lr                 measured   5  expected   5
+     str [sram]; bx lr                  measured   5  expected   5
+     ldm {r1}; bx lr                    measured   5  expected   5
+     ldr =lit; bx lr                    measured   5  expected   5
+     muls; bx lr                        measured   4  expected   4
+     uxth; bx lr                        measured   4  expected   4
+     b; bx lr                           measured   6  expected   6
+     cmp; beq (taken); bx lr            measured   7  expected   7
+     cmp; beq (not taken); bx lr        measured   5  expected   5
+     push {r4,lr}; pop {r4,pc}          measured   9  expected   9
+     push {r4,r5,lr}; pop {r4,r5,pc}    measured  11  expected  11
+     push {lr}; bl stub_bx; pop {pc}    measured  14  expected  14
+
+== sum  (1001 inputs; in = size)
+   functional result correct : 1001/1001
+   identical over repetitions: 1001/1001
+   measured == model         : 1001/1001
+   max measured: 7007 cycles at in=(1000, 0, 0);  aiT WCET bound: 15032385539 (2.15e+06x)
+
+== while_true_break  (1000 inputs; in = n)
+   functional result correct : 1000/1000
+   identical over repetitions: 1000/1000
+   measured == model         : 1000/1000
+   max measured: 7982 cycles at in=(999, 0, 0);  aiT WCET bound: 8981 (1.13x)
+
+== find  (2002 inputs; in = len, idx (or not found), partial matches)
+   functional result correct : 2002/2002
+   identical over repetitions: 2002/2002
+   measured == model         : 2002/2002
+   max measured: 13923 cycles at in=(993, 4294967295, 993);  aiT WCET bound: 983077 (70.6x)
+
+== collatz  (65536 inputs; in = n)
+   functional result correct : 65536/65536
+   identical over repetitions: 65536/65536
+   measured == model         : 65536/65536
+   max measured: 660023 cycles at in=(0, 0, 0);  aiT WCET bound: 990042 (1.5x)
+
+== find_in_list  (2002 inputs; in = len, idx (or not found))
+   functional result correct : 2002/2002
+   identical over repetitions: 2002/2002
+   measured == model         : 2002/2002
+   max measured: 10003 cycles at in=(1000, 4294967295, 0);  aiT WCET bound: 20496 (2.05x)
+
+== insert_after_pos_in_list  (4002 inputs; in = len, pos, kind (0 normal, 1 l=NULL, 2 value=NULL))
+   functional result correct : 4002/4002
+   identical over repetitions: 4002/4002
+   measured == model         : 4002/4002
+   max measured: 10020 cycles at in=(1000, 999, 0);  aiT WCET bound: 21474836499 (2.14e+06x)
+
+== insert_in_sorted_list  (2003 inputs; in = k, value, nodes passed over)
+   functional result correct : 2003/2003
+   identical over repetitions: 2003/2003
+   measured == model         : 2003/2003
+   max measured: 9026 cycles at in=(1000, 4100, 1000);  aiT WCET bound: 18448 (2.04x)

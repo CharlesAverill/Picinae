@@ -1,0 +1,3 @@
+INCLUDE memory.ld
+REGION_ALIAS("BENCHMEM", FLASH);
+INCLUDE common.ld

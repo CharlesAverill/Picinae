@@ -23,6 +23,12 @@ def ins(pos,length):
     return r+tb_taken+(m-1)*(tmovs_reg+tldr_imm+tcmp_imm+tb_taken+tadds_imm8+tcmp_reg+tb_not_taken)+tmovs_reg+tldr_imm+tcmp_imm+((tb_taken+tadds_imm8+tcmp_reg+tb_taken+tmovs_reg+tldr_imm+tb) if pos<length else tb_not_taken)+tstr_imm+tstr_imm+(tpop_pc_base+2)
 def sorted_(d):
     return tldr_imm+tldr_pc+(tpush_base+1+1)+tcmp_reg+tb_not_taken+d*(tmovs_reg+tldr_imm+tldr_imm+tcmp_reg+tb_taken)+tmovs_reg+tldr_imm+tldr_imm+tcmp_reg+tb_not_taken+tstr_imm+tstr_imm+(tpop_pc_base+2)
+def find_in_list(length, idx):  # time_of_find_in_list in find_in_list_proof.v
+    miss=tldr_imm+tcmp_reg+tb_not_taken+tldr_imm+tcmp_imm+tb_taken
+    if length==0: return tcmp_imm+tb_taken+tmovs_imm+tb+tbx
+    r=tcmp_imm+tb_not_taken
+    if idx is not None: return r+idx*miss+tldr_imm+tcmp_reg+tb_taken+tbx
+    return r+(length-1)*miss+tldr_imm+tcmp_reg+tb_not_taken+tldr_imm+tcmp_imm+tb_not_taken+tbx
 # closed forms in the paper
 for n in range(0,300):
     assert sum_(n)==(11 if n==0 else 7+7*n)
@@ -34,4 +40,8 @@ for n in range(0,300):
         assert find(L,None,0)==21+10*L
         if n>=1: assert ins(n,L)==(30+10*n if n<L else 17+10*L)
     assert ins(0,5)==29
+    assert find_in_list(0,None)==11
+    for L in range(1,40):
+        assert find_in_list(L,None)==3+10*L
+        if n<L: assert find_in_list(L,n)==11+10*n
 print("all closed forms check")
