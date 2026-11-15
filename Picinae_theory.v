@@ -8192,45 +8192,25 @@ Qed.
    then an invariant is forced at this location.  If the user's invariant set (Invs)
    already supplies an invariant, then use it (even if b=false); otherwise use False. *)
 
-(* effinv' reports the provided invariant P if the trace is effectively
-   "leaving" the code by 1) exiting, 2) moving to an undefined part of
-   the program p, or 3) at a hardware exception. Otherwise it reports
-   `None`.
-   It could be renamed "inv_iff_effexit"
-*)
-Definition effinv' (p:program) (xp:trace->bool) t (P:Prop) :=
-  if xp t then Some P else
-  match t with (Addr a,s)::_ => if p s a then None else Some P
-             | _ => Some P end.
-Definition effinv (b:bool) (p:program) Inv (xp:trace->bool) t :=
-  match Inv t with
-  | None => effinv' p xp t False
-  | Some P => if b then Some P else effinv' p xp t P
-  end.
-Global Arguments effinv' p xp / !t.
-Global Arguments effinv b p Inv xp / !t.
-
-Section EffinvRedefinitionProposal.
+(* effexit returns true for (1) user-defined exits, (2) undefined code,
+   (3) hardware exceptions, and (4) the empty trace. *)
 Definition effexit (p:program) (xp:trace->bool) t :=
   if xp t then true else
   match t with (Addr a,s)::_ => if p s a then false else true
              | _ => true end.
-Definition effinv_redef (b:bool) (p:program) Inv (xp:trace->bool) t :=
+
+(* effinv reports the provided invariant P if the trace is effectively
+   "leaving" the code by (1) exiting, (2) moving to an undefined part of
+   the program p, or (3) at a hardware exception. Otherwise it reports
+   `None`.  If the trace exits without an invariant, it returns Some False.*)
+Definition effinv (b:bool) (p:program) Inv (xp:trace->bool) t :=
   match Inv t with
   | None => if effexit p xp t then Some False else None
   | Some P => if orb b (effexit p xp t) then Some P else None
   end.
+Global Arguments effexit p xp / !t.
+Global Arguments effinv b p Inv xp / !t.
 
-Theorem effinv_equiv:
-  forall b p Inv xp t, effinv b p Inv xp t = effinv_redef b p Inv xp t.
-Proof.
-  intros. unfold effinv, effinv', effinv_redef, effexit.
-  destruct b; destruct (Inv t); destruct (xp t); destruct t as [|[[a|i] s]];
-  simpl orb; try reflexivity.
-  all: destruct (p s a); reflexivity.
-Qed.
-
-(* May be useful to apply after destructing (effexit _ _ _). *)
 Theorem effexit_false:
   forall p xp t (EX: effexit p xp t = false),
     exists s a t' insn, t = (Addr a,s)::t' /\ p s a = Some insn.
@@ -8239,25 +8219,6 @@ Proof.
   destruct (xp t); try discriminate. destruct t as [|[[a|i] s]]; try discriminate. destruct (p s a) as [insn|] eqn: PSA; try discriminate.
   exists s, a, t, insn; now split.
 Qed.
-
-(* This is a redefinition of effinv_none below. *)
-Theorem effinv_redef_none:
-  forall b p Inv xp t (NONE: effinv_redef b p Inv xp t = None),
-    match t with
-    | (Addr a, s) :: _ => exists insn, p s a = Some insn
-    | _ => False
-    end.
-Proof with (try discriminate).
-  unfold effinv_redef. intros. destruct (Inv t); destruct (effexit p xp t) eqn:EX;
-  [ now destruct b
-  | apply effexit_false in EX
-  | discriminate
-  | apply effexit_false in EX].
-
-    all:destruct EX as [s [a [t' [insn [H1 H2]]]]]; destruct t as [| [[a2|i2] s2]];
-        try discriminate; inversion H1; subst; now exists insn.
-Qed.
-End EffinvRedefinitionProposal.
 
 
 (* This proof is not used. It just shows us humans that the only
@@ -8269,19 +8230,12 @@ Theorem effinv_none:
     | (Addr a, s) :: _ => exists insn, p s a = Some insn
     | _ => False
     end.
-Proof with (try discriminate).
-  unfold effinv, effinv'. intros.
-  destruct (Inv t) eqn:INVt.
-    destruct b; try discriminate.
-      destruct (xp t); try discriminate.
-        destruct t as [| [x s]]; try discriminate.
-          destruct x; try discriminate. destruct (p s a) as [insn|] eqn:PSA; try discriminate.
-            exists insn. trivial.
-    destruct (xp t); try discriminate.
-      destruct t as [| [x s]]; try discriminate.
-        destruct x; try discriminate.
-          destruct (p s a) as [insn|] eqn:PSA; try discriminate.
-            exists insn. trivial.
+Proof.
+  unfold effinv. intros.
+  destruct (Inv t); destruct (effexit p xp t) eqn:EX;
+    try (destruct b; discriminate).
+  all: apply effexit_false in EX;
+    destruct EX as [s [a [t' [insn [EQ IL]]]]]; subst t; now exists insn.
 Qed.
 
 (* The "next invariant" property is true if the computation always eventually
@@ -8312,11 +8266,11 @@ Theorem satall_trueif_inv:
   trueif_inv (Invs t).
 Proof.
   unfold satisfies_all. intros. specialize (SA XP UT true). inversion SA; subst.
-    unfold effinv,effinv' in TRU. destruct (Invs t). assumption.
+    unfold effinv,effexit in TRU. destruct (Invs t). assumption.
       destruct (xp t). contradiction.
       destruct t. contradiction.
       destruct p0 as ([a|i],s). destruct (p s a); contradiction. contradiction.
-    unfold effinv,effinv' in NOI. destruct (Invs _). discriminate. exact I.
+    unfold effinv,effexit in NOI. destruct (Invs _). discriminate. exact I.
 Qed.
 
 Lemma nextinv_noinv:
@@ -8341,11 +8295,11 @@ Lemma nextinv_raise:
 Proof.
   split; intro H.
 
-    apply NIHere'. unfold effinv, effinv'.
+    apply NIHere'. unfold effinv, effexit.
     destruct (Invs _); [|contradiction].
     destruct b; [|destruct (xp _)]; assumption.
 
-    inversion H; subst. unfold effinv, effinv' in TRU.
+    inversion H; subst. unfold effinv, effexit in TRU.
     destruct (Invs _).
       destruct b; [|destruct (xp _)]; assumption.
       destruct (xp _); assumption.
@@ -8368,7 +8322,7 @@ Lemma nextinv_exit:
 Proof.
   intros. destruct b. assumption.
   apply NIHere'. inversion NI; subst.
-    unfold effinv,effinv' in *. rewrite XP in *. assumption.
+    unfold effinv,effexit in *. rewrite XP in *. assumption.
     simpl in NOI. rewrite XP in NOI. destruct (Invs _); discriminate.
 Qed.
 
@@ -8379,7 +8333,7 @@ Lemma nextinv_nocode:
 Proof.
   intros. destruct b. assumption.
   apply NIHere'. inversion NI; subst.
-    unfold effinv,effinv' in *. rewrite IL in *.
+    unfold effinv,effexit in *. rewrite IL in *.
       destruct (Invs _); [destruct (xp _)|]; assumption.
     rewrite IL0 in IL. discriminate.
 Qed.
@@ -8506,17 +8460,11 @@ Lemma effinv_cases:
     (CASE3: xp1 t = false -> xp2 t = true -> b = false -> trueif_inv (Invs1 t) \/ true_inv (Invs2 t)),
   effinv_impl (effinv b p Invs1 xp1 t) (effinv b p Invs2 xp2 t) Goal.
 Proof.
-  unfold trueif_inv, effinv, effinv', effinv_impl. intros.
-  repeat first
-  [ assumption | exact I | intro; contradiction
-  | match goal with |- match match ?x with _ => _ end with _ => _ end => destruct x end
-  | apply CASE1; reflexivity
-  | destruct CASE3; solve [ reflexivity | assumption | apply EI; assumption ]
-  ].
-
-  destruct (xp1 _).
-    apply CASE1; reflexivity.
-    apply CASE2; solve [ reflexivity | assumption | discriminate 1 ].
+  unfold trueif_inv, effinv, effexit, effinv_impl. intros.
+  destruct (Invs1 t), (Invs2 t), b, (xp1 t), (xp2 t);
+    cbn [orb] in *; try tauto;
+    destruct t as [|[[a|i] s] t]; cbn in *; try tauto;
+    try destruct (p s a); cbn in *; intuition (eauto; discriminate).
 Qed.
 
 (* Assert that property P is satisfied after every possible step of trace t. *)
@@ -8551,7 +8499,8 @@ Proof.
 
     specialize (IMP t2 XP BC).
     destruct (effinv true p Invs2 xp2 (t2++xs::t1)) eqn:EI2; [apply NIHere'|];
-    unfold effinv,effinv',effinv_impl in *;
+    unfold effinv,effexit,effinv_impl in *;
+    cbn [orb] in *;
     repeat first
     [ solve [ apply IMP;assumption | discriminate | contradiction ]
     | match type of EI2 with Some _ = Some _ => inversion EI2; clear EI2; subst end
@@ -8560,18 +8509,22 @@ Proof.
     | match type of EI2 with match ?x with _ => _ end = _ => destruct x eqn:? end
     ].
     destruct (IMP TRU). assumption.
-    destruct p1 as (sz,q). eapply NIStep';[|eassumption|].
-      unfold effinv. rewrite Heqo0. unfold effinv'. rewrite Heqb,Heqo1. reflexivity.
-      intros. rewrite <- Heql. rewrite app_comm_cons. apply IH; simpl.
-        rewrite Heql. eapply H; try solve [ eassumption | reflexivity ].
+    destruct (xp2 _) eqn:XP2; [discriminate|].
+    destruct (t2++xs::t1) as [|[[a|i] s] t] eqn:TRACE; try discriminate.
+    destruct (p s a) as [[sz q]|] eqn:IL; try discriminate.
+    eapply NIStep'; [|exact IL|].
+      unfold effinv. rewrite Heqo0. unfold effexit. rewrite XP2, IL. reflexivity.
+      intros. rewrite <- TRACE. rewrite app_comm_cons. apply IH; simpl.
+        rewrite TRACE. eapply H; try solve [ eassumption | reflexivity ].
         apply exec_prog_step. assumption. destruct t2;
-          simpl in Heql |- *; inversion Heql; eapply CanStep; eassumption.
+          simpl in TRACE |- *; inversion TRACE; eapply CanStep; eassumption.
         apply H.
 
     assert (IMP' := IMP t2 XP BC). rewrite H1 in NOI.
     destruct (effinv true p Invs2 xp2 (t2++xs::t1)) eqn:EI2;
     [ apply NIHere' | eapply NIStep'; [|eassumption|shelve] ]; rewrite H1;
-    unfold effinv,effinv',effinv_impl in *;
+    unfold effinv,effexit,effinv_impl in *;
+    cbn [orb] in *;
     repeat first
     [ solve [ reflexivity | discriminate | assumption ]
     | match type of EI2 with Some _ = Some _ => inversion EI2; clear EI2; subst end
@@ -8584,7 +8537,7 @@ Proof.
       rewrite <- H1. eapply STEP. eassumption.
       apply exec_prog_step. assumption. destruct t2 as [|xs' t2];
         simpl; injection H1; intros; subst t; rewrite <- H0; eapply CanStep; eassumption.
-      apply IC with (t1:=t1). assumption. clear - NOI. unfold effinv,effinv' in NOI.
+      apply IC with (t1:=t1). assumption. clear - NOI. unfold effinv,effexit in NOI.
         destruct (Invs1 _). discriminate. destruct (xp1 _). discriminate. reflexivity.
 Qed.
 
@@ -8747,7 +8700,7 @@ Proof.
   intros. eapply NIStep; try eassumption.
   intros. eapply STEP. eassumption.
   apply ForallPrefixes_cons; [|apply H].
-  unfold effinv, effinv' in NOI.
+  unfold effinv, effexit in NOI.
   destruct (xp _); [|reflexivity].
   destruct (Invs _); [destruct b|]; discriminate.
 Qed.

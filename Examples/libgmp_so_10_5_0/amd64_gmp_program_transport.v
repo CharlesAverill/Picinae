@@ -22,10 +22,10 @@ Lemma effinv_has_code : forall p I xp b t,
 Proof.
   intros p I xp b t SUP H. specialize (SUP t).
   destruct t as [|[[a|i] s] tl];
-    try (unfold effinv,effinv' in H; rewrite SUP in H; destruct (xp _); contradiction).
+    try (unfold effinv,effexit in H; rewrite SUP in H; destruct (xp _); contradiction).
   destruct (p s a) as [code|] eqn:LOOK.
   - exists a,s,tl,code. split; [reflexivity | exact LOOK].
-  - specialize (SUP eq_refl). unfold effinv,effinv' in H.
+  - specialize (SUP eq_refl). unfold effinv,effexit in H.
     rewrite SUP,LOOK in H. destruct (xp _); contradiction.
 Qed.
 
@@ -36,7 +36,7 @@ Lemma effinv_program_agree : forall p q I J xp xq b a s t code,
 Proof.
   intros p q I J xp xq b a s t code EXT AGR LOOK.
   destruct (AGR a s t code LOOK) as [INV EXIT].
-  unfold effinv,effinv'. rewrite INV,EXIT,LOOK,(EXT _ _ _ LOOK).
+  unfold effinv,effexit. rewrite INV,EXIT,LOOK,(EXT _ _ _ LOOK).
   reflexivity.
 Qed.
 

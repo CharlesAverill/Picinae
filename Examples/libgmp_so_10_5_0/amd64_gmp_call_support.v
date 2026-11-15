@@ -16,9 +16,8 @@ Lemma effinv_none_same : forall p I J xp b t,
 Proof.
   intros p I J xp b t S. specialize (S t).
   unfold effinv,inv_present in *.
-  destruct (I t), (J t); try discriminate; destruct b;
-    unfold effinv'; destruct (xp t); destruct t as [|[[a|i] s] t];
-    try (destruct (p s a)); intuition discriminate.
+  destruct (I t), (J t); try discriminate;
+    destruct b; destruct (effexit p xp t); intuition discriminate.
 Qed.
 
 Lemma effinv_conj_none : forall p I J xp b t,
@@ -27,9 +26,8 @@ Lemma effinv_conj_none : forall p I J xp b t,
 Proof.
   intros p I J xp b t S. specialize (S t).
   unfold effinv,inv_conj,inv_present in *.
-  destruct (I t), (J t); try discriminate; destruct b;
-    unfold effinv'; destruct (xp t); destruct t as [|[[a|i] s] t];
-    try (destruct (p s a)); intuition discriminate.
+  destruct (I t), (J t); try discriminate;
+    destruct b; destruct (effexit p xp t); intuition discriminate.
 Qed.
 
 Lemma effinv_conj_true : forall p I J xp b t,
@@ -39,9 +37,8 @@ Lemma effinv_conj_true : forall p I J xp b t,
 Proof.
   intros p I J xp b t S. specialize (S t).
   unfold effinv,inv_conj,inv_present in *.
-  destruct (I t), (J t); try discriminate; destruct b;
-    unfold effinv'; destruct (xp t); destruct t as [|[[a|i] s] t];
-    try (destruct (p s a)); cbn [true_inv]; tauto.
+  destruct (I t), (J t); try discriminate;
+    destruct b; destruct (effexit p xp t); cbn [orb true_inv]; tauto.
 Qed.
 
 Lemma nextinv_conj_core : forall p I J xp b t,
