@@ -72,6 +72,7 @@ class LiftInfo:
     self.strictFailure = args.strictFailure
     self.debugOps = args.debugOps
     self.typeCheck = args.typeCheck
+    self.prependProgName = getattr(args, 'prependProgName', False)
     self.scriptobj = scriptobj
     if lang.isBigEndian():
       self.endness = 'BigE'
@@ -107,6 +108,29 @@ class LiftInfo:
         self.typctxBase = const.i386typctx
         self.reg_whitelist = const.i386_PicRegs
         self.bitreg_list = const.i386_BitRegs
+      case 's390:BE:64:default':
+        self.picArch = 's390x'
+        self.typctxPrefix = 's390x'
+        self.typctxBase = const.s390xtypctx
+        self.reg_whitelist = const.s390x_PicRegs
+        self.bytreg_list = const.s390x_BytRegs
+      case 'CHERIoT:LE:32:default':
+        self.picArch = 'cheriot'
+        self.typctxPrefix = 'cheriot'
+        self.typctxBase = const.cheriottypctx
+        self.reg_whitelist = const.cheriot_PicRegs
+        self.bytreg_list = const.cheriot_BytRegs
+      case 'SuperH:BE:32:SH-2':
+        self.picArch = 'sh2'
+        self.typctxPrefix = 'sh2'
+        self.typctxBase = const.sh2typctx
+        self.reg_whitelist = const.sh2_PicRegs
+      case 'OKI66K:LE:16:nX-8-500S':
+        self.picArch = 'oki66k'
+        self.typctxPrefix = 'oki66k'
+        self.typctxBase = const.oki66ktypctx
+        self.reg_whitelist = const.oki66k_PicRegs
+        self.bytreg_list = const.oki66k_BytRegs
       case other_arch:
         raise ValueError(f'Unsupported Arch: {other_arch}')
     self.typctx = self.typctxBase.copy()
@@ -129,6 +153,56 @@ def write_welltyped_banner(s:str):
   s += '\n * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *)'
   return s
 
+def memorySpace(info: LiftInfo, vn):
+    if vn.isConstant():
+      space = info.lang.getAddressFactory().getAddressSpace(vnOffset(vn))
+    elif vn.isAddress():
+      space = vn.getAddress().getAddressSpace()
+    else:
+      raise ValueError(f'Cannot determine memory space for {vn}')
+    if space is None:
+      raise ValueError(f'Unknown memory space for {vn}')
+    return space
+
+
+def memoryVar(info: LiftInfo, vn) -> str:
+    if info.picArch not in ('cheriot', 'oki66k'):
+      return f'V_MEM{info.space.getSize()}'
+    space_name = memorySpace(info, vn).getName()
+    if info.picArch == 'oki66k':
+      variables = {'rom': 'V_ROM32', 'ram': 'V_RAM16'}
+    else:
+      variables = {
+        'ram': 'V_MEM32',
+        'tagram': 'V_CTAGRAM',
+        'revocation': 'V_CREVOCATION',
+        'csreg': 'V_CSR',
+      }
+    if space_name not in variables:
+      raise ValueError(f'Unmodeled {info.picArch} memory space: {space_name}')
+    return variables[space_name]
+
+
+def memoryTypeWidth(info: LiftInfo, space) -> int:
+    return 8 * 2**space.getSize()
+
+
+def memoryAddr(info: LiftInfo, space, addr_vn) -> str:
+    if addr_vn.isAddress():
+      exp = f'Word 0x{vnOffset(addr_vn):x} {space.getSize()}'
+    else:
+      exp = vnToExp(info, addr_vn)
+    if info.picArch == 'cheriot' and space.getName() == 'csreg':
+      width = info.space.getSize()
+      if not addr_vn.isAddress() and vnWidth(info, addr_vn) != width:
+        exp = f'Cast CAST_UNSIGNED {width} ({exp})'
+      shift = space.getAddressableUnitSize().bit_length() - 1
+      if 1 << shift != space.getAddressableUnitSize():
+        raise ValueError('Cannot scale a non-power-of-two memory word size')
+      exp = f'BinOp OP_LSHIFT ({exp}) (Word {shift} {width})'
+    return exp
+
+
 # convert pcode varnode to picinae var
 def vnToVar(info: LiftInfo, vn) -> str:
     if vn.isUnique():
@@ -139,17 +213,23 @@ def vnToVar(info: LiftInfo, vn) -> str:
       #print(vn.toString())
       #print(vt.getRegister(vn).toString() + " " + vt.getRegister(vn).getAliases().toString())
 
-      return f'R_{vn.toString(info.lang).upper()}'
+      name = vn.toString(info.lang).upper()
+      if info.picArch == 's390x' and name.startswith('A') and name[1:].isdigit():
+        name = 'AR' + name[1:]
+      return f'R_{name}'
     # FIXME: subregs may be true for isAddress()
-    elif vn.isConstant() or vn.isAddress(): # assume const is an addr space id
+    elif vn.isConstant():
       return f'V_MEM{info.space.getSize()}'
+    elif vn.isAddress():
+      return memoryVar(info, vn)
     else:
       raise ValueError(f'Cannot convert {vn} to Picinae variable')
 
 def isBaseReg(info: LiftInfo, vn):
-  vt = info.vt
   try:
-    return vt.getRegister(vn).isBaseRegister()
+    reg = info.vt.getRegister(vn)
+    return (reg.isBaseRegister() and reg.getOffset() == vn.getOffset()
+            and reg.getBitLength() == vn.getSize() * 8)
   except:
     return False
 def vnToBase(info: LiftInfo, vn) -> Varnode:
@@ -175,9 +255,31 @@ def vnToBase(info: LiftInfo, vn) -> Varnode:
   print(f'(* DEBUG: Could not find base for {vn} *)')
   return vn
 
+
+def uniqueBase(info: LiftInfo, vn) -> Varnode:
+  if not vn.isUnique() or vnToVar(info, vn) in info.typctx:
+    return vn
+  offset = vnOffset(vn)
+  candidates = []
+  for name, width in info.typctx.items():
+    if not name.startswith('(V_TEMP 0x') or not name.endswith(')'):
+      continue
+    base_offset = int(name[10:-1], 16)
+    if base_offset <= offset and base_offset + width//8 >= offset + vn.getSize():
+      candidates.append((width, base_offset))
+  if not candidates:
+    return vn
+  width, base_offset = min(candidates)
+  return Varnode(vn.getAddress().getNewAddress(base_offset), width//8)
+
+
 def vnWidth(info: LiftInfo, vn) -> int:
   """Width of the Picinae expression emitted for a varnode."""
-  if vn.isUnique() or (vn.isRegister() and isBaseReg(info, vn)):
+  if vn.isUnique():
+    if uniqueBase(info, vn) != vn:
+      return vn.getSize() * 8
+    return info.typctx.get(vnToVar(info, vn), vn.getSize() * 8)
+  if vn.isRegister() and isBaseReg(info, vn):
     return info.typctx.get(vnToVar(info, vn), vn.getSize() * 8)
   # Subregisters emit Extract; constants and loads use the varnode's size.
   return vn.getSize() * 8
@@ -186,6 +288,14 @@ def vnWidth(info: LiftInfo, vn) -> int:
 # convert pcode varnode to picinae exp
 def vnToExp(info: LiftInfo, vn, lhs_width=None) -> str:
     if vn.isUnique():
+      base = uniqueBase(info, vn)
+      if base != vn:
+        low = (vnOffset(vn) - vnOffset(base)) * 8
+        exp = f'Extract {low + vn.getSize()*8 - 1} {low} (Var {vnToVar(info, base)})'
+        if lhs_width is not None and lhs_width != vn.getSize()*8:
+          cast = 'CAST_LOW' if lhs_width < vn.getSize()*8 else 'CAST_UNSIGNED'
+          exp = f'Cast {cast} {lhs_width} ({exp})'
+        return exp
       if lhs_width is None:
         return f'Var {vnToVar(info, vn)}'
       elif lhs_width < vnWidth(info, vn):
@@ -196,7 +306,7 @@ def vnToExp(info: LiftInfo, vn, lhs_width=None) -> str:
         return f'Var {vnToVar(info, vn)}'
     elif vn.isRegister():
       reg = info.vt.getRegister(vn)
-      if reg and reg.isBaseRegister():
+      if reg and isBaseReg(info, vn):
         return f'Var {vnToVar(info, vn)}'
       else:
         vnbase = vnToBase(info,vn)
@@ -211,7 +321,11 @@ def vnToExp(info: LiftInfo, vn, lhs_width=None) -> str:
     # FIXME: subregs may be true for isAddress()
     elif vn.isAddress(): # handles mem references
     # Picinae uses BYTEwidth for load/store sizes
-      return f'Load (Var {vnToVar(info, vn)}) (Word 0x{vnOffset(vn):x} {info.space.getSize()}) {info.endness} {vn.getSize()}'
+      space = memorySpace(info, vn)
+      address = f'Word 0x{vnOffset(vn):x} {space.getSize()}'
+      if info.picArch == 'cheriot' and space.getName() == 'csreg':
+        address = f'BinOp OP_LSHIFT ({address}) (Word 2 {info.space.getSize()})'
+      return f'Load (Var {memoryVar(info, vn)}) ({address}) {info.endness} {vn.getSize()}'
     else:
       raise ValueError(f'Cannot convert {vn} to Picinae expression')
 
@@ -271,19 +385,60 @@ def mv_stmt(var: str, exp: str, info:LiftInfo, cast_unsigned=None, cast_signed=N
   return f'Move {var} ({exp})'
 
 
+def storeValue(info: LiftInfo, vn) -> str:
+  width = vn.getSize() * 8
+  cast = 'CAST_LOW' if vnWidth(info, vn) > width else 'CAST_UNSIGNED'
+  return f'Cast {cast} {width} ({vnToExp(info, vn)})'
+
+
+def memoryOutputStmt(info: LiftInfo, out, exp: str) -> str:
+  space = memorySpace(info, out)
+  memory = memoryVar(info, out)
+  address = memoryAddr(info, space, out)
+  width = out.getSize() * 8
+  return mv_stmt(memory,
+      f'Store (Var {memory}) ({address}) (Cast CAST_UNSIGNED {width} ({exp})) {info.endness} {out.getSize()}',
+      info, w=memoryTypeWidth(info, space))
+
+
+def regAssignStmt(info: LiftInfo, out, exp: str, exp_width: int) -> str:
+  base = vnToBase(info, out)
+  out_width = out.getSize() * 8
+  if out == base:
+    if exp_width != out_width:
+      cast = 'CAST_LOW' if exp_width > out_width else 'CAST_UNSIGNED'
+      exp = f'Cast {cast} {out_width} ({exp})'
+    return mv_stmt(vnToVar(info, out), exp, info, w=out_width)
+  if exp_width > out_width:
+    exp = f'Cast CAST_LOW {out_width} ({exp})'
+  base_width = base.getSize() * 8
+  first_byte = out.getOffset() - base.getOffset()
+  last_byte = first_byte + out.getSize() - 1
+  mask = ''.join(reversed(['00' if first_byte <= i <= last_byte else 'FF'
+                           for i in range(base.getSize())]))
+  old = f'BinOp OP_AND (Var {vnToVar(info, base)}) (Word 0x{mask} {base_width})'
+  new = f'Cast CAST_UNSIGNED {base_width} ({exp})'
+  shifted = f'BinOp OP_LSHIFT ({new}) (Word {first_byte*8} {base_width})'
+  combined = f'BinOp OP_OR ({shifted}) ({old})'
+  return mv_stmt(vnToVar(info, base), combined, info, w=base_width)
+
+
 def abs_jmp_dest(info: LiftInfo, vn) -> str:
   if vn.isAddress(): #ram
   # varnode size for direct jumps (BRANCH, CALL) is irrelevant
   # use all bits to account for relative addressing wraparound
     return f'Word 0x{to_pic_addr(info, vnOffset(vn)):x} {info.space.getSize()}'
   elif vn.isConstant():
-    # no current solution to model this behavior in picinae
-    return ValueError("Relative pcode jump detected")
+    if info.strictFailure:
+      raise NotImplementedError("Relative pcode jump detected")
+    return None
   else:
     raise ValueError("Invalid address space type for jmp dest.")
 
 
 def jmp_stmt(exp: str) -> str:
+  if exp is None:
+    return 'Nop (* Relative pcode jump detected *)'
   return f'Jmp ({exp})'
 
 # given reg is in whitelisted registers for the picinae arch
@@ -367,21 +522,23 @@ def to_stmt(info: LiftInfo, op) -> str:
 
       # Memory Ops
       case PcodeOp.COPY:
-        baseout = vnToBase(info, out)
-        if out == baseout:
-          print(f'PcodeOp.COPY inputs[0]:{op.inputs[0]}')
-          return mv_stmt(vnToVar(info, out),
-              vnToExp(info, op.inputs[0]), info, w=vnWidth(info, ins[0]))
-        else :
-          return mv_stmt(vnToVar(info, baseout),
-              vnToExp(info, op.inputs[0]), info, cast_unsigned=8*baseout.getSize())
+        if out.isAddress():
+          space = memorySpace(info, out)
+          memory = memoryVar(info, out)
+          address = memoryAddr(info, space, out)
+          value = storeValue(info, ins[0])
+          return mv_stmt(memory,
+              f'Store (Var {memory}) ({address}) ({value}) {info.endness} {ins[0].getSize()}',
+              info, w=memoryTypeWidth(info, space))
+        return regAssignStmt(info, out, vnToExp(info, ins[0]), vnWidth(info, ins[0]))
 
       case PcodeOp.LOAD:
         # NOTE: address spaces for input0, input1, and output could technically all differ
         # TODO: If available cast the address to the byte-width of the source varnode (memory we're loading from, ins[0])
         #   "The data in input1 is interpreted as an unsigned offset and should have the same size as the space referred to by the"
-        load_addr_vn = vnToExp(info, ins[1])
-        new_val = f'Load (Var {vnToVar(info, ins[0])}) ({load_addr_vn}) {info.endness} {out.getSize()}'
+        space = memorySpace(info, ins[0])
+        load_addr_vn = memoryAddr(info, space, ins[1])
+        new_val = f'Load (Var {memoryVar(info, ins[0])}) ({load_addr_vn}) {info.endness} {out.getSize()}'
         # FIXME: Verify temporary variables in pcode are write-once, otherwise need more complicated logic
         # when writing to a temp variable to make sure Coq doesn't try to read it before it gets written to
         # otherwise it won't typecheck (the uninitialized temp variable won't have a bitwidth)
@@ -409,23 +566,23 @@ def to_stmt(info: LiftInfo, op) -> str:
           combined_val = f'BinOp OP_OR ({shifted_subreg}) ({masked_old_val})'
           return mv_stmt(vnToVar(info,base_reg), combined_val, info, w=base_bytes*8)
       case PcodeOp.STORE:
-        return mv_stmt(vnToVar(info, ins[0]),
-             # FIXME: might be wrong for explicit addresses?
-             # FIXME: factor out Cast into vnToExp subregister routines
-             f'Store (Var {vnToVar(info, ins[0])}) ({vnToExp(info, ins[1])}) (Cast CAST_UNSIGNED {ins[2].getSize()*8} ({vnToExp(info, ins[2])})) {info.endness} {ins[2].getSize()}',
-             info, w=8*2**info.space.getSize())
+        space = memorySpace(info, ins[0])
+        memory = memoryVar(info, ins[0])
+        address = memoryAddr(info, space, ins[1])
+        return mv_stmt(memory,
+             f'Store (Var {memory}) ({address}) ({storeValue(info, ins[2])}) {info.endness} {ins[2].getSize()}',
+             info, w=memoryTypeWidth(info, space))
 
       # Simple BinOps
       case binop if binop in const.simpBinopTrans:
-        baseout = vnToBase(info, out)
+        if out.isAddress():
+          return memoryOutputStmt(info, out,
+              toBinopExp(info, const.simpBinopTrans, binop, ins[0], ins[1]))
         bitout = vnBitReg(info, out)
-        if out == baseout:
-          return mv_stmt(vnToVar(info, out),\
-            toBinopExp(info, const.simpBinopTrans, binop, ins[0], ins[1], bitout=bitout),
-            info, w=binopWidth(info, ins[0], ins[1], bitout))
-        else :
-          return mv_stmt(vnToVar(info, baseout),\
-            toBinopExp(info, const.simpBinopTrans, binop, ins[0], ins[1]), info, cast_signed=8*baseout.getSize())
+        width = binopWidth(info, ins[0], ins[1], bitout)
+        return regAssignStmt(info, out,
+          toBinopExp(info, const.simpBinopTrans, binop, ins[0], ins[1], bitout=bitout),
+          width)
 
       # Comparisons produce one bit; byte-sized architecture flags need widening.
       case binop if binop in const.bitBinopTrans:
@@ -509,22 +666,93 @@ def to_stmt(info: LiftInfo, op) -> str:
         else:
           return f'Nop (* Unmodeled Op: {op.getMnemonic()} *)'
 
-# format seq of stmts
-def seq_str(info: LiftInfo, acc, op) -> str:
-  debug_op = '' if not info.debugOps else f'\n\t(* {op} *)'
-  return f'{acc} $;{debug_op}\n\t{to_stmt(info, op)}'
-
-
-def stmts_str(info: LiftInfo, ops) -> str:
+def stmts_str(info: LiftInfo, ops, next_addr: int) -> str:
   if not ops:
     debug_op = '' if not info.debugOps else '\n\t(* No pcode op *)'
     return f'{debug_op}\n\tNop'
 
-  # add $; to every stmt except first
-  first_stmt = to_stmt(info, ops[0])
-  first_str = f'\n\t{first_stmt}' if not info.debugOps else \
-               f'\n\t(* {ops[0]} *)\n\t{first_stmt}'
-  return first_str + functools.reduce(lambda acc, x: seq_str(info, acc, x), ops[1::], '')
+  def relative_target(op, index: int) -> int:
+    vn = op.getInputs()[0]
+    offset = vnOffset(vn)
+    bits = vn.getSize() * 8
+    if offset & (1 << (bits - 1)):
+      offset -= 1 << bits
+    if offset <= 0:
+      raise NotImplementedError(
+        f'Non-positive relative pcode branch at operation {index}; '
+        'Picinae cannot represent unbounded loops')
+    target = index + offset
+    if target > len(ops):
+      raise ValueError(
+        f'Relative pcode branch target {target} is outside the instruction')
+    return target
+
+  class NonNestedBranch(Exception):
+    pass
+
+  def lift_range(index: int, stop: int) -> str:
+    if index == stop:
+      return ''
+
+    op = ops[index]
+    opcode = op.getOpcode()
+    dest = op.getInputs()[0] if opcode in (
+      PcodeOp.BRANCH, PcodeOp.CBRANCH, PcodeOp.CALL) else None
+    debug_op = f'\n\t(* {op} *)' if info.debugOps else ''
+
+    if dest is not None and dest.isConstant():
+      target = relative_target(op, index)
+      if target > stop:
+        raise NonNestedBranch(index)
+      if opcode in (PcodeOp.BRANCH, PcodeOp.CALL):
+        return debug_op + lift_range(target, stop)
+      if target == index + 1:
+        return debug_op + lift_range(target, stop)
+
+      fallthrough = lift_range(index + 1, target) or '\n\t\tNop'
+      stmt = (f'If (Cast CAST_LOW 1 ({vnToExp(info, op.getInputs()[1])})) ('
+              f'\n\t\tNop\n\t) (* else *) ({fallthrough}\n\t)')
+      rest = lift_range(target, stop)
+      separator = ' $;' if rest else ''
+      return f'{debug_op}\n\t{stmt}{separator}{rest}'
+
+    stmt = to_stmt(info, op)
+    rest = lift_range(index + 1, stop)
+    separator = ' $;' if rest else ''
+    return f'{debug_op}\n\t{stmt}{separator}{rest}'
+
+  def lift_copied(index: int, conditional_path: bool) -> str:
+    if index == len(ops):
+      if conditional_path:
+        return f'\n\tJmp (Word 0x{next_addr:x} {info.space.getSize()})'
+      return ''
+
+    op = ops[index]
+    opcode = op.getOpcode()
+    dest = op.getInputs()[0] if opcode in (
+      PcodeOp.BRANCH, PcodeOp.CBRANCH, PcodeOp.CALL) else None
+
+    if dest is not None and dest.isConstant():
+      target = relative_target(op, index)
+      if opcode in (PcodeOp.BRANCH, PcodeOp.CALL):
+        return lift_copied(target, conditional_path)
+      taken = lift_copied(target, True)
+      stmt = (f'If (Cast CAST_LOW 1 ({vnToExp(info, op.getInputs()[1])})) ('
+              f'{taken}\n\t) (* else *) (\n\t\tNop\n\t)')
+    else:
+      stmt = to_stmt(info, op)
+
+    debug_op = f'\n\t(* {op} *)' if info.debugOps else ''
+    rest = lift_copied(index + 1, conditional_path)
+    separator = ' $;' if rest else ''
+    return f'{debug_op}\n\t{stmt}{separator}{rest}'
+
+  saved_typctx = info.typctx.copy()
+  try:
+    return lift_range(0, len(ops)) or '\n\tNop'
+  except NonNestedBranch:
+    info.typctx = saved_typctx
+    return lift_copied(0, False) or '\n\tNop'
 
 
 # convert offset from hex to get python int
@@ -565,7 +793,8 @@ def proc_insn(info: LiftInfo, insn) -> str:
   # address mapping
   mapping = f'| 0x{to_pic_addr(info, insn.address.offset) :x} =>'
   # pcode -> picinae IL
-  picIL = f'Some ({proto.getLength()},{stmts_str(info, insn.getPcode())}\n)'
+  next_addr = to_pic_addr(info, insn.address.offset + proto.getLength())
+  picIL = f'Some ({proto.getLength()},{stmts_str(info, insn.getPcode(), next_addr)}\n)'
 
   return f'{asm}\n{mapping} {picIL}\n'
 

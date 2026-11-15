@@ -187,6 +187,49 @@ arm8_BytRegs = {
     'R_NG', 'R_ZR', 'R_CY', 'R_OV', 'R_TMPNG', 'R_TMPZR', 'R_TMPCY', 'R_TMPOV'
 }
 
+s390x_PicRegs = {
+    'V_MEM64',
+    'R_GR0', 'R_GR1', 'R_GR2', 'R_GR3', 'R_GR4', 'R_GR5', 'R_GR6', 'R_GR7',
+    'R_GR8', 'R_GR9', 'R_GR10', 'R_GR11', 'R_GR12', 'R_GR13', 'R_GR14', 'R_GR15',
+    'R_AR0', 'R_AR1', 'R_AR2', 'R_AR3', 'R_AR4', 'R_AR5', 'R_AR6', 'R_AR7',
+    'R_AR8', 'R_AR9', 'R_AR10', 'R_AR11', 'R_AR12', 'R_AR13', 'R_AR14', 'R_AR15',
+    'R_C0', 'R_C1', 'R_C2', 'R_C3', 'R_C4', 'R_C5', 'R_C6', 'R_C7',
+    'R_C8', 'R_C9', 'R_C10', 'R_C11', 'R_C12', 'R_C13', 'R_C14', 'R_C15',
+    'R_FP0', 'R_FP1', 'R_FP2', 'R_FP3', 'R_FP4', 'R_FP5', 'R_FP6', 'R_FP7',
+    'R_FP8', 'R_FP9', 'R_FP10', 'R_FP11', 'R_FP12', 'R_FP13', 'R_FP14', 'R_FP15',
+    'R_XFP0', 'R_XFP1', 'R_XFP2', 'R_XFP3', 'R_XFP4', 'R_XFP5', 'R_XFP6', 'R_XFP7',
+    'R_XFP8', 'R_XFP9', 'R_XFP10', 'R_XFP11', 'R_XFP12', 'R_XFP13', 'R_XFP14', 'R_XFP15',
+    'R_PC', 'R_CC', 'R_FPC',
+    'A_READ', 'A_WRITE',
+    'V_TEMP',
+}
+
+s390xtypctx = {
+    'R_GR0': 64, 'R_GR1': 64, 'R_GR2': 64, 'R_GR3': 64,
+    'R_GR4': 64, 'R_GR5': 64, 'R_GR6': 64, 'R_GR7': 64,
+    'R_GR8': 64, 'R_GR9': 64, 'R_GR10': 64, 'R_GR11': 64,
+    'R_GR12': 64, 'R_GR13': 64, 'R_GR14': 64, 'R_GR15': 64,
+    'R_AR0': 32, 'R_AR1': 32, 'R_AR2': 32, 'R_AR3': 32,
+    'R_AR4': 32, 'R_AR5': 32, 'R_AR6': 32, 'R_AR7': 32,
+    'R_AR8': 32, 'R_AR9': 32, 'R_AR10': 32, 'R_AR11': 32,
+    'R_AR12': 32, 'R_AR13': 32, 'R_AR14': 32, 'R_AR15': 32,
+    'R_C0': 64, 'R_C1': 64, 'R_C2': 64, 'R_C3': 64,
+    'R_C4': 64, 'R_C5': 64, 'R_C6': 64, 'R_C7': 64,
+    'R_C8': 64, 'R_C9': 64, 'R_C10': 64, 'R_C11': 64,
+    'R_C12': 64, 'R_C13': 64, 'R_C14': 64, 'R_C15': 64,
+    'R_FP0': 64, 'R_FP1': 64, 'R_FP2': 64, 'R_FP3': 64,
+    'R_FP4': 64, 'R_FP5': 64, 'R_FP6': 64, 'R_FP7': 64,
+    'R_FP8': 64, 'R_FP9': 64, 'R_FP10': 64, 'R_FP11': 64,
+    'R_FP12': 64, 'R_FP13': 64, 'R_FP14': 64, 'R_FP15': 64,
+    'R_XFP0': 128, 'R_XFP1': 128, 'R_XFP2': 128, 'R_XFP3': 128,
+    'R_XFP4': 128, 'R_XFP5': 128, 'R_XFP6': 128, 'R_XFP7': 128,
+    'R_XFP8': 128, 'R_XFP9': 128, 'R_XFP10': 128, 'R_XFP11': 128,
+    'R_XFP12': 128, 'R_XFP13': 128, 'R_XFP14': 128, 'R_XFP15': 128,
+    'R_PC': 64, 'R_CC': 8, 'R_FPC': 32,
+}
+
+s390x_BytRegs = {'R_CC'}
+
 arm7_32_PicRegs = {
    'V_MEM32',  'V_MEM64',
    'R_R0',  'R_R1',  'R_R2',  'R_R3',  'R_R4',  'R_R5',  'R_R6',  'R_R7',
@@ -223,3 +266,71 @@ riscvtypctx = {
   'R_S0': 32, 'R_S1': 32, 'R_S2': 32, 'R_S3': 32, 'R_S4': 32, 'R_S5': 32,
   'R_S6': 32, 'R_S7': 32, 'R_S8': 32, 'R_S9': 32, 'R_S10': 32, 'R_S11': 32,
 }
+
+cheriot_PicRegs = {
+  'V_MEM32', 'V_CTAGRAM', 'V_CREVOCATION', 'V_CSR',
+  'R_CNULL', 'R_CRA', 'R_CSP', 'R_CGP', 'R_CTP', 'R_CT0', 'R_CT1', 'R_CT2',
+  'R_CS0', 'R_CS1', 'R_CA0', 'R_CA1', 'R_CA2', 'R_CA3', 'R_CA4', 'R_CA5',
+  'R_CTAG0', 'R_CTAG1', 'R_CTAG2', 'R_CTAG3', 'R_CTAG4', 'R_CTAG5', 'R_CTAG6', 'R_CTAG7',
+  'R_CTAG8', 'R_CTAG9', 'R_CTAG10', 'R_CTAG11', 'R_CTAG12', 'R_CTAG13', 'R_CTAG14', 'R_CTAG15',
+  'R_PCC', 'R_MTCC', 'R_MTDC', 'R_MSCRATCHC', 'R_MEPCC',
+  'R_PCC_TAG', 'R_MTCC_TAG', 'R_MTDC_TAG', 'R_MSCRATCHC_TAG', 'R_MEPCC_TAG',
+  'R_RESERVE_ADDRESS', 'R_RESERVE', 'R_RESERVE_LENGTH',
+  'A_READ', 'A_WRITE', 'A_EXEC', 'V_TEMP',
+}
+
+cheriottypctx = {
+  'R_CNULL': 64, 'R_CRA': 64, 'R_CSP': 64, 'R_CGP': 64,
+  'R_CTP': 64, 'R_CT0': 64, 'R_CT1': 64, 'R_CT2': 64,
+  'R_CS0': 64, 'R_CS1': 64, 'R_CA0': 64, 'R_CA1': 64,
+  'R_CA2': 64, 'R_CA3': 64, 'R_CA4': 64, 'R_CA5': 64,
+  'R_CTAG0': 8, 'R_CTAG1': 8, 'R_CTAG2': 8, 'R_CTAG3': 8,
+  'R_CTAG4': 8, 'R_CTAG5': 8, 'R_CTAG6': 8, 'R_CTAG7': 8,
+  'R_CTAG8': 8, 'R_CTAG9': 8, 'R_CTAG10': 8, 'R_CTAG11': 8,
+  'R_CTAG12': 8, 'R_CTAG13': 8, 'R_CTAG14': 8, 'R_CTAG15': 8,
+  'R_PCC': 64, 'R_MTCC': 64, 'R_MTDC': 64, 'R_MSCRATCHC': 64, 'R_MEPCC': 64,
+  'R_PCC_TAG': 8, 'R_MTCC_TAG': 8, 'R_MTDC_TAG': 8,
+  'R_MSCRATCHC_TAG': 8, 'R_MEPCC_TAG': 8,
+  'R_RESERVE_ADDRESS': 32, 'R_RESERVE': 8, 'R_RESERVE_LENGTH': 8,
+}
+
+cheriot_BytRegs = {
+  'R_CTAG0', 'R_CTAG1', 'R_CTAG2', 'R_CTAG3', 'R_CTAG4', 'R_CTAG5', 'R_CTAG6', 'R_CTAG7',
+  'R_CTAG8', 'R_CTAG9', 'R_CTAG10', 'R_CTAG11', 'R_CTAG12', 'R_CTAG13', 'R_CTAG14', 'R_CTAG15',
+  'R_PCC_TAG', 'R_MTCC_TAG', 'R_MTDC_TAG', 'R_MSCRATCHC_TAG', 'R_MEPCC_TAG',
+  'R_RESERVE', 'R_RESERVE_LENGTH',
+}
+
+sh2_PicRegs = {
+  'V_MEM32',
+  'R_R0', 'R_R1', 'R_R2', 'R_R3', 'R_R4', 'R_R5', 'R_R6', 'R_R7',
+  'R_R8', 'R_R9', 'R_R10', 'R_R11', 'R_R12', 'R_R13', 'R_R14', 'R_R15',
+  'R_SR', 'R_GBR', 'R_VBR', 'R_MACH', 'R_MACL', 'R_PR', 'R_PC',
+  'A_READ', 'A_WRITE', 'A_EXEC', 'V_TEMP',
+}
+
+sh2typctx = {
+  'R_R0': 32, 'R_R1': 32, 'R_R2': 32, 'R_R3': 32,
+  'R_R4': 32, 'R_R5': 32, 'R_R6': 32, 'R_R7': 32,
+  'R_R8': 32, 'R_R9': 32, 'R_R10': 32, 'R_R11': 32,
+  'R_R12': 32, 'R_R13': 32, 'R_R14': 32, 'R_R15': 32,
+  'R_SR': 32, 'R_GBR': 32, 'R_VBR': 32, 'R_MACH': 32,
+  'R_MACL': 32, 'R_PR': 32, 'R_PC': 32,
+}
+
+oki66k_PicRegs = {
+  'V_ROM32', 'V_RAM16',
+  'R_SSP', 'R_LRB', 'R_PSW', 'R_ACC', 'R_PC', 'R_X1', 'R_X2', 'R_DP', 'R_USP',
+  'R_CSR', 'R_TSR', 'R_DSR', 'R_ROMWIN',
+  'R_C', 'R_Z', 'R_HC', 'R_S', 'R_OV',
+  'A_READ', 'A_WRITE', 'A_EXEC', 'V_TEMP',
+}
+
+oki66ktypctx = {
+  'R_SSP': 16, 'R_LRB': 16, 'R_PSW': 16, 'R_ACC': 16,
+  'R_PC': 16, 'R_X1': 16, 'R_X2': 16, 'R_DP': 16, 'R_USP': 16,
+  'R_CSR': 8, 'R_TSR': 8, 'R_DSR': 8, 'R_ROMWIN': 8,
+  'R_C': 8, 'R_Z': 8, 'R_HC': 8, 'R_S': 8, 'R_OV': 8,
+}
+
+oki66k_BytRegs = {'R_C', 'R_Z', 'R_HC', 'R_S', 'R_OV'}
