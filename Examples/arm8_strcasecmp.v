@@ -250,7 +250,11 @@ Definition strcasecmp : program := fun _ a => match a with
 	Jmp (Word 1048600 64)
 )
 
+| _ => None
+end.
+
 (* Begin tolower *)
+Definition tolower : program := fun _ a => match a with
 (* 0x00200000: sub w1,w0,#0x41 *)
 | 2097152 => Some (4,
 	Move (V_TEMP 249216) (BinOp OP_MINUS (Extract 31 0 (Var R_X0)) (Word 65 32)) $;

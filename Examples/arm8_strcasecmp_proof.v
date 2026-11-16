@@ -33,6 +33,34 @@ Proof.
   Picinae_typecheck.
 Qed.
 
+(* The ARMv8 lifter produces well-typed IL. *)
+Theorem tolower_welltyped:
+	welltyped_prog arm8typctx tolower.
+Proof.
+  Picinae_typecheck.
+Qed.
+
+
+(* Compose the separately lifted caller and callee at their global addresses. *)
+Definition strcasecmp_program : program :=
+  updateall2 strcasecmp arm8_strcasecmp.tolower.
+
+Lemma strcasecmp_program_contains_strcasecmp: strcasecmp ⊆2 strcasecmp_program.
+Proof.
+  intros s a insn SC. unfold strcasecmp_program, updateall2, updateall, arm8_strcasecmp.tolower.
+  repeat first
+  [ exact SC | discriminate SC
+  | match goal with |- context [match ?n with _ => _ end] => is_var n; destruct n end ].
+Qed.
+
+Theorem strcasecmp_program_welltyped: welltyped_prog arm8typctx strcasecmp_program.
+Proof.
+  intros s a. unfold strcasecmp_program, updateall2, updateall.
+  destruct (arm8_strcasecmp.tolower s a) as [[sz q]|] eqn:TL.
+    pose proof (tolower_welltyped s a) as WT. rewrite TL in WT. exact WT.
+    apply strcasecmp_welltyped.
+Qed.
+
 (* Define binary string case-insensitivity. *)
 Definition tolower (c:N) : N :=
   if (65 <=? c mod 2^32) && (c mod 2^32 <=? 90) then (c mod 2^32 .| 32) else c.
@@ -144,10 +172,10 @@ Section Invariants.
      define appropriate invariant sets for each subroutine by extracting them
      from the above.  Note that these definitions receive the same extra hidden
      parameters as invs above, so are actually invariant set families. *)
-  Definition exits0 := make_exits 0 strcasecmp invs.
-  Definition invs0 := make_invs 0 strcasecmp invs.
-  Definition exits1 := make_exits 1 strcasecmp invs.
-  Definition invs1 := make_invs 1 strcasecmp invs.
+  Definition exits0 := make_exits 0 strcasecmp_program invs.
+  Definition invs0 := make_invs 0 strcasecmp_program invs.
+  Definition exits1 := make_exits 1 strcasecmp_program invs.
+  Definition invs1 := make_invs 1 strcasecmp_program invs.
 
 End Invariants.
 
@@ -240,6 +268,7 @@ Ltac step := time arm8_step.
 Theorem tolower_correctness:
   forall prog s sp mem t xs' arg1 arg2 a'
          (STRCASECMP: strcasecmp ⊆2 prog)
+         (TOLOWER: arm8_strcasecmp.tolower ⊆2 prog)
          (ENTRY: startof t xs' = (Addr 2097152, s))
          (MDL: models arm8typctx s)
          (SP: s R_SP = sp) (MEM: s V_MEM64 = mem)
@@ -249,8 +278,10 @@ Theorem tolower_correctness:
                            (exits0 sp mem a' arg1 arg2 (s R_X20) (s R_X21)) (xs'::t).
 Proof.
   (* Lift correctness to any program containing the verified instructions. *)
-  intros prog s sp mem t xs' arg1 arg2 a' STRCASECMP ENTRY MDL SP MEM X0 X19 X30.
-  eapply satisfies_all_pmono with (p1:=strcasecmp); [exact STRCASECMP| |].
+  intros prog s sp mem t xs' arg1 arg2 a' STRCASECMP TOLOWER ENTRY MDL SP MEM X0 X19 X30.
+  eapply satisfies_all_pmono with (p1:=strcasecmp_program).
+    unfold strcasecmp_program. rewrite <- (updateall2_subset _ _ TOLOWER).
+    apply updateall2_mono. exact STRCASECMP.
     intros a s1 t1 EXIT NOCODE. unfold invs0, make_invs.
     rewrite NOCODE. reflexivity.
 
@@ -269,7 +300,7 @@ Proof.
      that appears at the invariant point at which we're starting this case. *)
   intros.
   erewrite startof_prefix in ENTRY; try eassumption.
-  eapply models_at_invariant; try eassumption. apply strcasecmp_welltyped. intro MDL1.
+  eapply models_at_invariant; try eassumption. apply strcasecmp_program_welltyped. intro MDL1.
   clear - PRE MDL1. rename t1 into t.
 
   (* Break the proof into cases, one for each internal invariant-point. *)
@@ -295,6 +326,7 @@ Qed.
 Theorem strcmp_partial_correctness:
   forall prog s sp mem t s' x' arg1 arg2 a'
          (STRCASECMP: strcasecmp ⊆2 prog)
+         (TOLOWER: arm8_strcasecmp.tolower ⊆2 prog)
          (ENTRY: startof t (x',s') = (Addr 1048576, s))
          (MDL: models arm8typctx s)
          (SP: s R_SP = sp) (MEM: s V_MEM64 = mem) (X30: s R_X30 = a')
@@ -303,8 +335,10 @@ Theorem strcmp_partial_correctness:
                            (exits1 sp mem a' arg1 arg2 (s R_X20) (s R_X21)) ((x',s')::t).
 Proof.
   (* Lift correctness to any program containing the verified instructions. *)
-  intros prog s sp mem t s' x' arg1 arg2 a' STRCASECMP ENTRY MDL SP MEM X30 RX0 RX1.
-  eapply satisfies_all_pmono with (p1:=strcasecmp); [exact STRCASECMP| |].
+  intros prog s sp mem t s' x' arg1 arg2 a' STRCASECMP TOLOWER ENTRY MDL SP MEM X30 RX0 RX1.
+  eapply satisfies_all_pmono with (p1:=strcasecmp_program).
+    unfold strcasecmp_program. rewrite <- (updateall2_subset _ _ TOLOWER).
+    apply updateall2_mono. exact STRCASECMP.
     intros a s1 t1 EXIT NOCODE. unfold invs1, make_invs.
     rewrite NOCODE. reflexivity.
 
@@ -320,7 +354,7 @@ Proof.
   (* Change assumptions about s into assumptions about s1. *)
   intros.
   erewrite startof_prefix in ENTRY; try eassumption.
-  eapply models_at_invariant; try eassumption. apply strcasecmp_welltyped. intro MDL1.
+  eapply models_at_invariant; try eassumption. apply strcasecmp_program_welltyped. intro MDL1.
   set (x20 := s R_X20) in *. set (x21 := s R_X21) in *. clearbody x20 x21.
   clear - PRE MDL1. rename t1 into t. rename s1 into s. rename MDL1 into MDL.
 
@@ -366,9 +400,11 @@ Proof.
         (* Address 1048624: Unequal characters found. Call tolower(arg1). *)
         step.
         set (s1 := update _ _ _).
-        eapply models_after_steps. eassumption. apply strcasecmp_welltyped. intro MDL1.
+        eapply models_after_steps. eassumption. apply strcasecmp_program_welltyped. intro MDL1.
         eapply (perform_call 0). reflexivity.
-        intros. eapply tolower_correctness; (eassumption || reflexivity).
+        intros. eapply tolower_correctness;
+          first [ exact strcasecmp_program_contains_strcasecmp
+                | apply subset_updateall2 | eassumption | reflexivity ].
         reflexivity.
 
         (* Clean up the proof context after the call by creating hypotheses
@@ -378,7 +414,7 @@ Proof.
         unfold s1 in PRE. psimpl in PRE.
         assert (MDL': models arm8typctx s').
           eapply preservation_exec_prog; try eassumption.
-          apply strcasecmp_welltyped.
+          apply strcasecmp_program_welltyped.
         set (t' := t2++t0++_::t) in *. clearbody s1 t'.
         set (x21' := s R_X21) in PRE. clearbody x21'.
         clear - SEQ BC BC0 BC1 PRE MDL'.
@@ -394,16 +430,18 @@ Proof.
 
         (* Another call to tolower, performed in the same way as above. *)
         set (s1 := update _ _ _).
-        eapply models_after_steps. eassumption. apply strcasecmp_welltyped. intro MDL1.
+        eapply models_after_steps. eassumption. apply strcasecmp_program_welltyped. intro MDL1.
         eapply (perform_call 0). reflexivity.
-        intros. eapply tolower_correctness; (eassumption || reflexivity).
+        intros. eapply tolower_correctness;
+          first [ exact strcasecmp_program_contains_strcasecmp
+                | apply subset_updateall2 | eassumption | reflexivity ].
         reflexivity.
 
         intros.
         unfold s1 in PRE. psimpl in PRE.
         assert (MDL': models arm8typctx s').
           eapply preservation_exec_prog; try eassumption.
-          apply strcasecmp_welltyped.
+          apply strcasecmp_program_welltyped.
         set (t' := t2++t0++_::t) in *. clearbody s1 t'.
         rewrite X20 in PRE.
         clear - SEQ BC BC0 BC1 PRE MDL'.
@@ -432,9 +470,11 @@ Proof.
 
         (* Another call to tolower, performed the same as above. *)
         set (s1 := update _ _ _).
-        eapply models_after_steps. eassumption. apply strcasecmp_welltyped. intro MDL1.
+        eapply models_after_steps. eassumption. apply strcasecmp_program_welltyped. intro MDL1.
         eapply (perform_call 0). reflexivity.
-        intros. eapply tolower_correctness; (eassumption || reflexivity).
+        intros. eapply tolower_correctness;
+          first [ exact strcasecmp_program_contains_strcasecmp
+                | apply subset_updateall2 | eassumption | reflexivity ].
         reflexivity.
 
         intros.
@@ -442,7 +482,7 @@ Proof.
         set (x21' := s R_X21) in PRE. clearbody x21'.
         assert (MDL': models arm8typctx s').
           eapply preservation_exec_prog; try eassumption.
-          apply strcasecmp_welltyped.
+          apply strcasecmp_program_welltyped.
         set (t' := t2++t0++_::t) in *. clearbody s1 t'.
         clear - SEQ NEQ PRE MDL'.
         rename MDL' into MDL. rename t' into t. rename a'0 into a. rename s' into s.
@@ -455,9 +495,11 @@ Proof.
 
         (* Another call to tolower, performed the same as above. *)
         set (s1 := update _ _ _).
-        eapply models_after_steps. eassumption. apply strcasecmp_welltyped. intro MDL1.
+        eapply models_after_steps. eassumption. apply strcasecmp_program_welltyped. intro MDL1.
         eapply (perform_call 0). reflexivity.
-        intros. eapply tolower_correctness; (eassumption || reflexivity).
+        intros. eapply tolower_correctness;
+          first [ exact strcasecmp_program_contains_strcasecmp
+                | apply subset_updateall2 | eassumption | reflexivity ].
         reflexivity.
 
         intros.
@@ -465,7 +507,7 @@ Proof.
         set (x21' := s R_X21) in PRE. clearbody x21'.
         assert (MDL': models arm8typctx s').
           eapply preservation_exec_prog; try eassumption.
-          apply strcasecmp_welltyped.
+          apply strcasecmp_program_welltyped.
         set (t' := t2++t0++_::t) in *. clearbody s1 t'.
         clear - SEQ NEQ PRE MDL'.
         rename MDL' into MDL. rename t' into t. rename a'0 into a. rename s' into s.
