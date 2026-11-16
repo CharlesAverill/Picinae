@@ -1,0 +1,67 @@
+(* wmemmove -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (leaf)
+
+   SEMANTICS
+   ---------
+   musl's src/string/wmemmove.c (pointer arithmetic paraphrased so this
+   comment stays well-formed):
+       wchar_t *wmemmove(wchar_t *d, const wchar_t *s, size_t n)
+       {
+           wchar_t *d0 = d;
+           if (d == s) return d;
+           if ((uintptr_t)d - (uintptr_t)s < 4n)      [4n = n * sizeof(wchar_t)]
+               while (n--) d[n] = s[n];               [backward]
+           else
+               copy d[i] = s[i] for i = 0, 1, ..., n-1 [forward]
+           return d0;
+       }
+   The binary computes x3 = d - s (mod 2^64) and compares it unsigned with
+   n << 2 (mod 2^64); backward loop at 0x160268..0x160274, forward loop
+   at 0x16027c..0x160290.
+
+   SPECIFICATION (man 3 wmemmove, Linux man-pages 6.9.1)
+   -----------------------------------------------------
+     SYNOPSIS
+            #include <wchar.h>
+            wchar_t *wmemmove(wchar_t dest[.n], const wchar_t src[.n], size_t n);
+
+     DESCRIPTION
+            The wmemmove() function is the wide-character equivalent of the
+            memmove(3) function.  It copies n wide characters from the array
+            starting at src to the array starting at dest.  The arrays may
+            overlap.
+
+     RETURN VALUE
+            wmemmove() returns dest.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            wmemmove at 0x6024c (ELF vaddr); 0x16024c in Ghidra (image base 0x100000)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/wmemmove_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = dest = d, X1 = src = q, X2 = n; X30 = return address raddr;
+            SP = sp; m = memory on entry.
+   Output:  If execution reaches the RET (0x160278): X0 = d and memory =
+            wmemmove_spec m d q n, which is
+              - m                         if d = q;
+              - bcpy m d q n n (copy words n-1, n-2, ..., 0 in that order)
+                                          if (d - q) mod 2^64 < 4n mod 2^64;
+              - wcpy m d q n (copy words 0, 1, ..., n-1 in that order)
+                                          otherwise;
+            each word being read from the memory produced by the previous
+            copies (32-bit little-endian words, addresses mod 2^64).  With
+            this direction choice every source word is read before it is
+            overwritten, so for 4n < 2^64 the result is "dest[i] = old
+            src[i]" as the man page requires (not separately stated here).
+            SP, X30 and the AAPCS64 callee-saved registers are unchanged.
+ *)

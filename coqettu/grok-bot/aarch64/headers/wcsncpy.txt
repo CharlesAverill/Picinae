@@ -1,0 +1,84 @@
+(* wcsncpy -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (calls wmemset)
+
+   SEMANTICS
+   ---------
+   musl's src/string/wcsncpy.c:
+       wchar_t *wcsncpy(wchar_t *restrict d, const wchar_t *restrict s, size_t n) {
+           wchar_t *a = d;
+           while (n && *s) n--, *d++ = *s++;
+           wmemset(d, 0, n);
+           return a;
+       }
+   compiled as a 32-byte frame (stp x29,x30,[sp,#-32]! / str x19), an inline
+   4-byte copy loop (0x15fd84..0x15fd98; X2 counts n down, str w3,[x0],#4),
+   mov w1,#0 and bl wmemset (0x160294, re-proved here inside wcsncpy_prog),
+   then the frame restore.  wchar_t is 4 bytes.
+
+   SPECIFICATION (man 3 wcsncpy, Linux man-pages 6.9.1)
+   ----------------------------------------------------
+     SYNOPSIS
+            #include <wchar.h>
+            wchar_t *wcsncpy(wchar_t dest[restrict .n],
+                             const wchar_t src[restrict .n], size_t n);
+     DESCRIPTION
+            The wcsncpy() function is the wide-character equivalent of the
+            strncpy(3) function.  It copies at most n wide characters from the
+            wide-character string pointed to by src, including the terminating
+            null wide character (L'\0'), to the array pointed to by dest.
+            Exactly n wide characters are written at dest.  If the length
+            wcslen(src) is smaller than n, the remaining wide characters in the
+            array pointed to by dest are filled with null wide characters.  If
+            the length wcslen(src) is greater than or equal to n, the string
+            pointed to by dest will not be terminated by a null wide character.
+            The strings may not overlap.
+            The programmer must ensure that there is room for at least n wide
+            characters at dest.
+     RETURN VALUE
+            wcsncpy() returns dest.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            wcsncpy at 0x5fd70 (ELF vaddr); 0x15fd70 in Ghidra (image base 0x100000);
+            callee wmemset at 0x60294 / 0x160294
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/wcsncpy_armv8.v and
+            ../lifted/wmemset_armv8.v (combined as wcsncpy_prog).
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = dest (d), X1 = src (q), X2 = n, SP = sp, X30 = raddr,
+            X19/X29 = x19/x29; memory mem.
+   PRECONDITION (wcsncpy_pre sp mem d q n K), stated explicitly
+   (all element reads/writes are 4-byte little-endian words):
+            - words at q+4i (i < K) are nonzero, K <= n < 2^64, and either
+              K = n or the word at q+4K is 0 (so K = min(n, wcslen(q)), the
+              number of wide characters copied);
+            - 32 <= sp < 2^64, the destination array d..d+4n-1 and the source
+              bytes q..q+4K+3 lie below sp-32, i.e. below wcsncpy's own stack
+              frame (sp-32..sp);
+            - the copied destination range d..d+4K-1 and the read range
+              q..q+4K+3 do not overlap (q+4K+4 <= d or d+4K <= q).
+            Justification: the C standard makes copying between overlapping
+            objects undefined behaviour (restrict; the man page says the
+            strings may not overlap), and a destination that overlaps
+            wcsncpy's own stack frame is not caller-owned memory, so the
+            precondition only excludes undefined behaviour.  It is needed
+            because wcsncpy reloads X30, X29 and X19 from its frame after the
+            copy and the wmemset fill.
+   Output:  If execution reaches the RET (0x15fdb0), with
+            C = mem with x29, raddr, x19 stored at sp-32, sp-24, sp-16
+            (the saved frame):
+            memory = wset (wcpy C d q K) (d+4K) 0 (n-K), i.e. words q[0..K-1]
+            copied in order to d.., then n-K zero words at d+4K..d+4n-1
+            (wcpy in wcscpy_proof.v, wset in wmemset_proof.v), X0 = d,
+            SP = sp, X19 = x19, X29 = x29, X30 = raddr.
+            Partial correctness only.
+ *)

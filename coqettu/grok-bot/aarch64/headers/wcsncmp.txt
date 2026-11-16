@@ -1,0 +1,52 @@
+(* wcsncmp -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C
+
+   SEMANTICS
+   ---------
+   musl's src/string/wcsncmp.c:
+       for (; n && l[0]==r[0] && l[0] && r[0]; n--, l++, r++);
+       return n ? (l[0] < r[0] ? -1 : l[0] > r[0]) : 0;
+   (written with l[0] for the dereference of l).  wchar_t is unsigned int on
+   aarch64, so the final comparison is unsigned (cset w0,hi; csinv w0,w0,wzr,cs).
+   The loop test uses ccmp, which the lifter models with an internal
+   conditional jump; GrokStep.grok_step steps through it.  The proof needs
+   the BOOL_NEGATE lifter fix (../lifter/README_GROK.md).
+
+   SPECIFICATION (man 3 wcsncmp, Linux man-pages 6.9.1)
+   ----------------------------------------------------
+     SYNOPSIS
+            #include <wchar.h>
+            int wcsncmp(const wchar_t s1[.n], const wchar_t s2[.n], size_t n);
+
+     DESCRIPTION
+            The wcsncmp() function is the wide-character equivalent of the
+            strncmp(3) function.  It compares the wide-character string pointed
+            to by s1 and the wide-character string pointed to by s2, but at
+            most n wide characters from each string.  In each string, the
+            comparison extends only up to the first occurrence of a null wide
+            character (L'\0'), if any.
+
+     RETURN VALUE
+            The wcsncmp() function returns zero if the wide-character strings
+            at s1 and s2, truncated to at most length n, are equal.  It returns
+            an integer greater than zero if at the first differing position i
+            (i < n), the corresponding wide-character s1[i] is greater than
+            s2[i].  It returns an integer less than zero if at the first
+            differing position i (i < n), the corresponding wide-character
+            s1[i] is less than s2[i].
+
+   {PROVENANCE}
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = s1 = p, X1 = s2 = q, X2 = n; X30 = return address; m = memory.
+   Output:  If execution reaches the RET (0x15fd64), then either
+              - X0 = 0 and for all i < n the 32-bit words m[p+4i] = m[q+4i]
+                and are non-zero (no terminator within the first n), or
+              - there is k < n such that for all i < k the words agree and are
+                non-zero, at k they differ or m[p+4k] = 0 (end of s1), and
+                X0 = wcmp_result m[p+4k] m[q+4k]: 2^32-1 (int -1) if
+                m[p+4k] < m[q+4k] (unsigned), 1 if greater, 0 if equal (both
+                strings end at k).
+            Memory, SP, X30 and the AAPCS64 callee-saved registers are
+            unchanged.  Addresses wrap modulo 2^64.
+ *)

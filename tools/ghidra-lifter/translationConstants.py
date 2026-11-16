@@ -111,6 +111,12 @@ bitBinopTrans : dict = {
 }
 
 
+arm7_RegAliases = {
+  'NG': 'NF', 'ZR': 'ZF', 'CY': 'CF', 'OV': 'VF',
+  'TMPNG': 'TMPNF', 'TMPZR': 'TMPZF', 'TMPCY': 'TMPCF', 'TMPOV': 'TMPVF',
+  'SHIFT_CARRY': 'SHIFTCF', 'Q': 'QF', 'TB': 'T', 'ISAMODESWITCH': 'T',
+}
+
 # register whitelists
 arm7_PicRegs = {
   'V_MEM32', 'V_MEM64',
@@ -119,6 +125,7 @@ arm7_PicRegs = {
   'R_SP', 'R_LR', 'R_PC',
   'R_M', 'R_T', 'R_F', 'R_I', 'R_A', 'R_E', 'R_IT', 'R_GE', 'R_DNM',
   'R_JF', 'R_QF', 'R_VF', 'R_CF', 'R_ZF', 'R_NF',
+  'R_TMPVF', 'R_TMPCF', 'R_TMPZF', 'R_TMPNF', 'R_SHIFTCF', 'R_MULT_ADDR',
   'A_READ', 'A_WRITE',
   'V_TEMP',
 
@@ -128,11 +135,17 @@ arm7typctx = {
   'R_R0': 32, 'R_R1': 32, 'R_R2': 32, 'R_R3': 32,
   'R_R4': 32, 'R_R5': 32, 'R_R6': 32, 'R_R7': 32,
   'R_R8': 32, 'R_R9': 32, 'R_R10': 32, 'R_R11': 32, 'R_R12': 32,
-  'R_SP': 32, 'R_LR': 32, 'R_PC': 32,
+  'R_SP': 32, 'R_LR': 32, 'R_PC': 32, 'R_MULT_ADDR': 32,
   'R_M': 5,
   'R_T': 1, 'R_F': 1, 'R_I': 1, 'R_A': 1, 'R_E': 1,
   'R_IT': 8, 'R_GE': 4, 'R_DNM': 4,
   'R_JF': 1, 'R_QF': 1, 'R_VF': 1, 'R_CF': 1, 'R_ZF': 1, 'R_NF': 1,
+  'R_TMPVF': 1, 'R_TMPCF': 1, 'R_TMPZF': 1, 'R_TMPNF': 1, 'R_SHIFTCF': 1,
+}
+
+arm7_BitRegs = {
+  'R_QF', 'R_VF', 'R_CF', 'R_ZF', 'R_NF',
+  'R_TMPVF', 'R_TMPCF', 'R_TMPZF', 'R_TMPNF', 'R_SHIFTCF', 'R_T',
 }
 
 arm8_PicRegs = {

@@ -1,0 +1,71 @@
+(* wcsrchr -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (calls wcslen)
+
+   SEMANTICS
+   ---------
+   musl's src/string/wcsrchr.c (pointer loop paraphrased so this comment
+   stays well-formed):
+       wchar_t *wcsrchr(const wchar_t *s, wchar_t c)
+       {
+           const wchar_t *p;
+           for (p = s + wcslen(s); p >= s && p[0] != c; p--);
+           return p >= s ? [p cast to wchar_t pointer] : 0;
+       }
+   The binary saves X29, X30, X19, X20 in a 32-byte frame, keeps s in X19
+   and (uint32)c in W20, calls wcslen (0x15fc18, verified in the same file
+   as callee id 0 with an invariant family that also carries X19/X20), then
+   scans downward from s + 4*wcslen(s) comparing the unsigned pointer with
+   s (cmp x0,x19; b.cc) and the 32-bit word with c.
+
+   SPECIFICATION (man 3 wcsrchr, Linux man-pages 6.9.1)
+   ----------------------------------------------------
+     SYNOPSIS
+            #include <wchar.h>
+            wchar_t *wcsrchr(const wchar_t *wcs, wchar_t wc);
+
+     DESCRIPTION
+            The wcsrchr() function is the wide-character equivalent of the
+            strrchr(3) function.  It searches the last occurrence of wc in
+            the wide-character string pointed to by wcs.
+
+     RETURN VALUE
+            The wcsrchr() function returns a pointer to the last occurrence
+            of wc in the wide-character string pointed to by wcs, or NULL if
+            wc does not occur in the string.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            wcsrchr at 0x5fe20 (ELF vaddr); 0x15fe20 in Ghidra (image base 0x100000)
+            wcslen at 0x5fc18 (ELF vaddr); 0x15fc18 in Ghidra
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/wcsrchr_armv8.v and
+            ../lifted/wcslen_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = wcs = p, W1 = wc (X1 = c, c32 = c mod 2^32); SP = sp;
+            X30 = raddr; X29 = x29; X19 = x19; X20 = x20; m = memory.
+            Precondition wpre: 4 <= p, and the string does not wrap around
+            the address space (p + 4k < 2^64 for every k such that the first
+            k words at p in frame_mem are non-zero).
+   Output:  If execution reaches the RET (0x15fe68): SP = sp, X30 = raddr,
+            X29 = x29, X19 = x19, X20 = x20, memory = frame_mem (m with x29,
+            raddr, x19, x20 stored at sp-32, sp-24, sp-16, sp-8), and
+            wcsrchr_spec frame_mem p c32 X0: with L the wcslen of the string
+            at p (wlen: words 0..L-1 non-zero, word L zero, L < 2^62,
+            p + 4L < 2^64), either
+              - X0 = p + 4i for some i <= L with word i = c32 and no word j,
+                i < j <= L, equal to c32; or
+              - X0 = 0 and no word j <= L equals c32.
+            (The terminator counts as part of the string, as in strrchr;
+            the string is read from frame_mem, i.e. as the function sees it.)
+            X21..X28 and Z8..Z15 are never written
+            (wcsrchr_preserves_other_callee_saved).
+ *)

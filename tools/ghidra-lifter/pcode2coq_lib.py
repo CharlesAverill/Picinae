@@ -91,6 +91,7 @@ class LiftInfo:
         self.typctxPrefix = 'arm7'
         self.typctxBase = const.arm7typctx
         self.reg_whitelist = const.arm7_PicRegs
+        self.bitreg_list = const.arm7_BitRegs
       case 'eBPF:LE:64:default':
         self.picArch = 'ebpf'
         self.typctxPrefix = 'ebpf'
@@ -214,6 +215,8 @@ def vnToVar(info: LiftInfo, vn) -> str:
       #print(vt.getRegister(vn).toString() + " " + vt.getRegister(vn).getAliases().toString())
 
       name = vn.toString(info.lang).upper()
+      if info.picArch == 'armv7':
+        name = const.arm7_RegAliases.get(name, name)
       if info.picArch == 's390x' and name.startswith('A') and name[1:].isdigit():
         name = 'AR' + name[1:]
       return f'R_{name}'
@@ -645,9 +648,9 @@ def to_stmt(info: LiftInfo, op) -> str:
                  f'UnOp OP_POPCOUNT ({vnToExp(info, ins[0])})', info, **{cast: out.getSize()*8})
       case PcodeOp.LZCOUNT:
         out = vnToBase(info, out)
-        # defined in terms of popcount. lzcount = totalBits - popcount
+        # lzcount = totalBits - bitwidth
         return mv_stmt(vnToVar(info, out),
-                 f'BinOp OP_MINUS (Word {vnWidth(info, ins[0])} {vnWidth(info, ins[0])}) (UnOp OP_POPCOUNT ({vnToExp(info, ins[0])}))',
+                 f'BinOp OP_MINUS (Word {vnWidth(info, ins[0])} {vnWidth(info, ins[0])}) (UnOp OP_BITWIDTH ({vnToExp(info, ins[0])}))',
                  info, cast_unsigned=out.getSize()*8)
       case PcodeOp.INT_2COMP:
         out = vnToBase(info, out)

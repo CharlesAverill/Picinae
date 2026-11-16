@@ -1,0 +1,47 @@
+(* ntohl -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (leaf)
+
+   SEMANTICS
+   ---------
+   musl's src/network/ntohl.c:
+       uint32_t ntohl(uint32_t n) {
+           union { int i; char c; } u = { 1 };
+           return u.c ? bswap_32(n) : n;
+       }
+   compiled (little-endian) to "rev w0,w0; ret".
+
+   SPECIFICATION (man 3 byteorder, Linux man-pages 6.9.1)
+   ------------------------------------------------------
+     SYNOPSIS
+            #include <arpa/inet.h>
+            uint32_t ntohl(uint32_t netlong);
+     DESCRIPTION
+            The ntohl() function converts the unsigned integer netlong
+            from network byte order to host byte order.
+            On the i386 the host byte order is Least Significant Byte first,
+            whereas the network byte order, as used on the Internet, is Most
+            Significant Byte first.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            ntohl at 0x443bc (ELF vaddr); 0x1443bc in Ghidra (image base 0x100000)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/ntohl_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = x; X30 = return address.
+   Output:  If execution reaches the RET (0x1443c0):
+            X0 = revbytes (x mod 2^32) 4: the low 32 bits of the input with
+            their 4 bytes reversed, upper 32 bits zero (rev on W0).
+            Memory, SP, X30 and all AAPCS64 callee-saved registers are
+            unchanged.  aarch64 is little-endian, so the host-to-network
+            conversion is the byte swap.
+ *)

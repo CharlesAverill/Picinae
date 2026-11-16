@@ -70,6 +70,8 @@ Inductive arm7var :=
   | R_CF (* (bit 29) is the carry/borrow/extend bit. *)
   | R_ZF (* (bit 30) is the zero bit. *)
   | R_NF (* (bit 31) is the negative/less than bit. *)
+  (* Ghidra compatibility flag-staging and multi-register address registers. *)
+  | R_TMPVF | R_TMPCF | R_TMPZF | R_TMPNF | R_SHIFTCF | R_MULT_ADDR
   (* These meta-variables model page access permissions: *)
   | A_READ | A_WRITE
   | V_TEMP (n:N) (* Temporaries introduced by the lifter: *).
@@ -81,13 +83,14 @@ Definition arm7typctx v :=
   | V_MEM64 => Some (8*2^64)
   | R_R0 | R_R1 | R_R2 | R_R3 | R_R4 | R_R5 | R_R6 | R_R7 => Some 32
   | R_R8 | R_R9 | R_R10 | R_R11 | R_R12 => Some 32
-  | R_SP | R_LR | R_PC => Some 32
+  | R_SP | R_LR | R_PC | R_MULT_ADDR => Some 32
   | R_M => Some 5
   | R_T | R_F | R_I | R_A | R_E => Some 1
   | R_IT => Some 8
   | R_GE => Some 4
   | R_DNM => Some 4
   | R_JF | R_QF | R_VF | R_CF | R_ZF | R_NF => Some 1
+  | R_TMPVF | R_TMPCF | R_TMPZF | R_TMPNF | R_SHIFTCF => Some 1
   | A_READ | A_WRITE => Some (2^64)
   | V_TEMP _ => None
 end.

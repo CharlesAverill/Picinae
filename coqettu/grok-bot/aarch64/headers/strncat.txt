@@ -1,0 +1,73 @@
+(* strncat -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (calls strlen)
+
+   SEMANTICS
+   ---------
+   musl's src/string/strncat.c:
+       char *strncat(char *restrict d, const char *restrict s, size_t n) {
+           char *a = d;
+           d += strlen(d);
+           while (n && *s) n--, *d++ = *s++;
+           *d++ = 0;
+           return a;
+       }
+   compiled as a 48-byte frame (stp x29,x30,[sp,#-48]! / str x21 / stp x19,x20),
+   bl strlen (0x15efa8, re-proved here inside strncat_prog), an inline byte
+   loop (0x15f0e0..0x15f0f4, bounded by X2 = d+strlen(d)+n), strb wzr, and the
+   frame restore.
+
+   SPECIFICATION (man 3 strncat, Linux man-pages 6.9.1)
+   ----------------------------------------------------
+     SYNOPSIS
+            #include <string.h>
+            char *strncat(char *restrict dst, const char src[restrict .ssize],
+                          size_t ssize);
+     DESCRIPTION
+            This function catenates the input character sequence contained in
+            a null-padded fixed-width buffer, into a string at the buffer
+            pointed to by dst.  The programmer is responsible for allocating a
+            destination buffer large enough, that is,
+            strlen(dst) + strnlen(src, ssize) + 1.
+     RETURN VALUE
+            strncat() returns dst.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            strncat at 0x5f0b4 (ELF vaddr); 0x15f0b4 in Ghidra (image base 0x100000);
+            callee strlen at 0x5efa8 / 0x15efa8
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/strncat_armv8.v and
+            ../lifted/strlen_armv8.v (combined as strncat_prog).
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = dst (d), X1 = src (q), X2 = n, SP = sp, X30 = raddr,
+            X19/X20/X21/X29 = x19/x20/x21/x29; memory mem.
+   PRECONDITION (strncat_pre sp mem d q n Ld K), stated explicitly:
+            - d holds a string of length Ld: bytes d..d+Ld-1 nonzero, byte d+Ld = 0;
+            - bytes q..q+K-1 are nonzero, K <= n < 2^64, and either K = n or
+              byte q+K = 0 (so K = min(n, strnlen(q, n)), the number of bytes copied);
+            - 48 <= sp < 2^64 and both d..d+Ld+K and q..q+K lie strictly below
+              sp-48, i.e. below strncat's own stack frame (sp-48..sp);
+            - the written range d+Ld..d+Ld+K does not overlap the read range
+              q..q+K (q+K < d+Ld or d+Ld+K < q).
+            Justification: the C standard makes copying between overlapping
+            objects undefined behaviour (restrict), and a destination that
+            overlaps strncat's own stack frame is not caller-owned memory, so
+            the precondition only excludes undefined behaviour.  It is needed
+            because strncat reloads X30 and X19-X21 from its frame after the copy.
+   Output:  If execution reaches the RET (0x15f10c), with
+            C = mem with x29, raddr, x21, x19, x20 stored at sp-48, sp-40,
+            sp-16, sp-32, sp-24 (the saved frame):
+            memory = (bcp C (d+Ld) q K) with byte d+Ld+K set to 0
+            (bytes q[0..K-1] copied in order to d+Ld.., then the terminator;
+            see lib/GrokStr.v), X0 = d, SP = sp, X19 = x19, X20 = x20,
+            X21 = x21, X29 = x29, X30 = raddr.  Partial correctness only.
+ *)

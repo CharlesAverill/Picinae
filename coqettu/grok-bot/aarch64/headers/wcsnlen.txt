@@ -1,0 +1,71 @@
+(* wcsnlen -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (calls wmemchr)
+
+   SEMANTICS
+   ---------
+   musl's src/string/wcsnlen.c:
+       const wchar_t *z = wmemchr(s, 0, n);
+       if (z) n = z-s;
+       return n;
+   The binary saves X29/X30/X19/X20 in a 32-byte frame below SP, calls
+   wmemchr (0x1601d0, verified in the same file against the same
+   invariant family, as callee id 0), then computes (z - s) asr 2 and
+   selects n if z = NULL.
+   This file verifies the composition wcsnlen + wmemchr (program
+   wcsnlen_prog = both lifts) with Picinae's perform_call.
+
+   SPECIFICATION (man 3 wcsnlen, Linux man-pages 6.9.1)
+   ----------------------------------------------------
+     SYNOPSIS
+            #include <wchar.h>
+            size_t wcsnlen(const wchar_t s[.maxlen], size_t maxlen);
+
+     DESCRIPTION
+            The wcsnlen() function is the wide-character equivalent of the
+            strnlen(3) function.  It returns the number of wide-characters in
+            the string pointed to by s, not including the terminating null wide
+            character (L'\0'), but at most maxlen wide characters (note: this
+            parameter is not a byte count).  In doing this, wcsnlen() looks at
+            only the first maxlen wide characters at s and never beyond
+            s[maxlen-1].
+
+     RETURN VALUE
+            The wcsnlen() function returns wcslen(s), if that is less than
+            maxlen, or maxlen if there is no null wide character among the
+            first maxlen wide characters pointed to by s.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            wcsnlen at 0x5fdb4 (ELF vaddr); 0x15fdb4 in Ghidra (image base 0x100000)
+            wmemchr at 0x601d0 (ELF vaddr); 0x1601d0 in Ghidra
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/wcsnlen_armv8.v and
+            ../lifted/wmemchr_armv8.v (Ghidra's FUN_001601d8, which covers all
+            of wmemchr).
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = s, X1 = maxlen = n; SP = sp; X30 = return address raddr;
+            X19, X20, X29 = x19, x20, x29; m = memory on entry.
+   Memory:  wcsnlen stores x29, raddr, x19, x20 at sp-32 .. sp-1 (frame_mem);
+            wmemchr then reads the string from frame_mem, so the spec below
+            is stated over frame_mem (it equals m wherever the string does
+            not overlap the 32 bytes just below SP).
+   Output:  If execution reaches the RET (0x15fdec): memory = frame_mem,
+            SP = sp, X30 = raddr, X19 = x19, X20 = x20, X29 = x29, and
+            wcsnlen_post frame_mem s n X0 holds, i.e. either
+              - X0 = n and none of the first n wide chars is 0, or
+              - there is k < n with wide chars 0..k-1 non-zero, wide char k
+                zero, and X0 = (4k mod 2^64) asr 2 (= k whenever k < 2^61,
+                wcsnlen_result_small), or, in the degenerate case
+                s + 4k = 0 (mod 2^64), where wmemchr's pointer is NULL,
+                X0 = n.
+            X21..X28 and Z8..Z15 are never written (wcsnlen_preserves_other_callee_saved).
+ *)

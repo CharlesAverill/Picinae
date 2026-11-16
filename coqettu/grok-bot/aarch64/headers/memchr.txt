@@ -1,0 +1,49 @@
+(* memchr -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (word-at-a-time)
+
+   SEMANTICS
+   ---------
+   musl's src/string/memchr.c: c is reduced to an unsigned char; the
+   function scans byte-wise while s is not 8-byte aligned, then (if the
+   aligned byte is not c) a word at a time over the 8-byte words that lie
+   wholly inside the n bytes, using HASZERO(w XOR splat(c)) with
+       HASZERO(x) = (x - ONES) AND NOT x AND HIGHS,
+       ONES = 0x0101..01, HIGHS = 0x8080..80, splat(c) = c * ONES,
+   and finally byte-wise over the remaining bytes (starting at the first
+   word whose test fired, if any).  It returns a pointer to the first byte
+   equal to c, or NULL (0) if none of the n bytes equals c.
+
+   In the binary the cursor is X3 (byte/word loops) and X0 (tail loop);
+   X7 = s+n, X0 = s + (n AND NOT 7) bounds the word loop, X6 = splat(c),
+   X8 = 0xfefefefefefefeff (= -ONES).  The proof relies on
+   GrokBits.hasbyte_test_zero: if the test is zero, none of the 8 bytes of
+   the word equals c.
+
+   SPECIFICATION (man 3 memchr, Linux man-pages 6.9.1)
+   ---------------------------------------------------
+     SYNOPSIS
+            #include <string.h>
+            void *memchr(const void s[.n], int c, size_t n);
+
+     DESCRIPTION
+            The memchr() function scans the initial n bytes of the memory area
+            pointed to by s for the first instance of c.  Both c and the bytes
+            of the memory area pointed to by s are interpreted as unsigned char.
+
+     RETURN VALUE
+            The memchr() and memrchr() functions return a pointer to the
+            matching byte or NULL if the character does not occur in the given
+            memory area.
+
+   {PROVENANCE}
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = s, X1 = c (only its low 8 bits matter, c8 = c mod 2^8),
+            X2 = n; X30 = return address; m = memory on entry.
+   Output:  If execution reaches the RET (0x15e2a4), then either
+              - there is k < n with X0 = s+k (mod 2^64), m[s+i] <> c8 for all
+                i < k, and m[s+k] = c8 (the first match), or
+              - X0 = 0 (NULL) and m[s+i] <> c8 for all i < n.
+            Memory, SP, X30 and the AAPCS64 callee-saved registers are
+            unchanged.  Addresses wrap modulo 2^64.
+ *)

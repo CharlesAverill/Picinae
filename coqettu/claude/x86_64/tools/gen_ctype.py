@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""Generate proofs/ctype_proof.v (one contract per musl <ctype.h> function)."""
+F = [  # name, entry, ret, spec (Coq, in y), predicate?, prep tactic
+ ("isalpha","0x1415ae","0x1415bc","inr 65 90 y || inr 97 122 y",True,"or32"),
+ ("isdigit","0x1415f9","0x141604","inr 48 57 y",True,""),
+ ("isalnum","0x141589","0x1415a8","inr 65 90 y || inr 97 122 y || inr 48 57 y",True,"or32"),
+ ("isupper","0x14167d","0x141688","inr 65 90 y",True,""),
+ ("islower","0x14161b","0x141626","inr 97 122 y",True,""),
+ ("isspace","0x141663","0x141677","(y =? 32) || inr 9 13 y",True,""),
+ ("isxdigit","0x1418fd","0x141918","inr 48 57 y || inr 97 102 y || inr 65 70 y",True,"or32"),
+ ("isprint","0x14162c","0x141637","inr 32 126 y",True,""),
+ ("isgraph","0x14160a","0x141615","inr 33 126 y",True,""),
+ ("iscntrl","0x1415e2","0x1415f3","(y <? 32) || (y =? 127)",True,""),
+ ("isblank","0x1415cb","0x1415dc","(y =? 32) || (y =? 9)",True,""),
+ ("isascii","0x1415c2","0x1415ca","y <? 128",True,""),
+ ("toupper","0x141938","0x141946","if inr 97 122 y then y - 32 else y",False,"upper"),
+ ("tolower","0x141924","0x141932","if inr 65 90 y then y + 32 else y",False,"lower"),
+ ("toascii","0x14191e","0x141923","y mod 128",False,"ascii"),
+]
+HEADER = """(* <ctype.h> classification and conversion (musl x86_64, C)
+
+   SEMANTICS
+   ---------
+   musl's ctype functions for the C/POSIX locale (src/ctype/*.c) are pure
+   arithmetic on the int argument, e.g.
+       isalpha(c)  = ((unsigned)c|32)-'a' < 26
+       isdigit(c)  = (unsigned)c-'0' < 10
+       isspace(c)  = c == ' ' || (unsigned)c-'\\t' < 5
+       isxdigit(c) = isdigit(c) || ((unsigned)c|32)-'a' < 6
+       toupper(c)  = islower(c) ? c & 0x5f : c
+       tolower(c)  = isupper(c) ? c | 32 : c
+       toascii(c)  = c & 0x7f
+   This file proves each of isalpha, isdigit, isalnum, isupper, islower,
+   isspace, isxdigit, isprint, isgraph, iscntrl, isblank, isascii, toupper,
+   tolower and toascii against a table-free ASCII specification (<f>_spec).
+   The theorems hold for every 32-bit int c, not only for the unsigned-char
+   and EOF values the standard requires: every other value (including EOF
+   = -1, i.e. 0xffffffff, and all values above 255) is outside every class
+   and is returned unchanged by toupper/tolower.  The (c|32) tests are
+   handled by or32_range (lib/x64_ctype.v): (c|32) is in ['a', hi] exactly
+   when c is a letter in ['A', hi-32] or ['a', hi].  (ispunct, which
+   tail-calls isalnum, is not included yet.)
+
+   SPECIFICATION (man 3 isalpha, man 3 toupper, Linux man-pages 6.9.1)
+   -------------------------------------------------------------------
+
+     SYNOPSIS
+            #include <ctype.h>
+            int isalnum(int c);  int isalpha(int c);  int iscntrl(int c);
+            int isdigit(int c);  int isgraph(int c);  int islower(int c);
+            int isprint(int c);  int ispunct(int c);  int isspace(int c);
+            int isupper(int c);  int isxdigit(int c); int isascii(int c);
+            int isblank(int c);  int toupper(int c);  int tolower(int c);
+            int toascii(int c);
+
+     DESCRIPTION
+            These functions check whether c, which must have the value of an
+            unsigned char or EOF, falls into a certain character class
+            according to the specified locale.
+            isalnum() checks for an alphanumeric character; it is equivalent
+            to (isalpha(c) || isdigit(c)).  isalpha() checks for an
+            alphabetic character; in the standard "C" locale, it is
+            equivalent to (isupper(c) || islower(c)).  isascii() checks
+            whether c is a 7-bit unsigned char value that fits into the ASCII
+            character set.  isblank() checks for a blank character; that is,
+            a space or a tab.  iscntrl() checks for a control character.
+            isdigit() checks for a digit (0 through 9).  isgraph() checks for
+            any printable character except space.  islower() checks for a
+            lowercase character.  isprint() checks for any printable
+            character including space.  isspace() checks for white-space
+            characters.  In the "C" and "POSIX" locales, these are: space,
+            form-feed, newline, carriage return, horizontal tab, and vertical
+            tab.  isupper() checks for an uppercase letter.  isxdigit()
+            checks for hexadecimal digits.
+            toupper/tolower: The value returned is that of the converted
+            letter, or c if the conversion was not possible.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/x86_64/lib/libc.musl-x86_64.so.1, Alpine musl-1.2.6-r6
+            sha256 cc3e02006173e4d7c11c5d37deded8749cfe7786f71a70a5c87fa6f509714647
+            entry addresses below (Ghidra image base 0x100000)
+   Lifter:  Ghidra 12.0 (headless) + pcode2coq (tools/ghidra-lifter) with
+            --globalAddressing; see programs/<f>_amd64.v.  This file is
+            generated by tools/gen_ctype.py.
+   Model:   This specification and proof were written by Claude Opus 5.5
+            (claude-opus-5-5), an AI model by Anthropic, and machine-checked
+            by Rocq 9.1.
+
+   INPUT/OUTPUT SPECIFICATION (System V AMD64 ABI)
+   -----------------------------------------------
+   Input:   EDI = c (an int; y = RDI mod 2^32 is its bit pattern).
+   Output:  At the RET: for the is* functions RAX = 1 if <f>_spec y holds and
+            0 otherwise; for toupper/tolower/toascii RAX = <f>_spec y (the
+            converted value as a zero-extended 32-bit int).  RSP and RBX, RBP,
+            R12-R15 are unchanged; memory is unchanged.
+ *)
+
+"""
+out = [HEADER]
+out.append('''Require Import Picinae_amd64.
+''' + ''.join(f"Require Import CoqEtTu.programs.{n}_amd64.\n" for n,*_ in F) + '''Import X64Notations.
+From Stdlib Require Import NArith ZArith Lia List.
+Import ListNotations.
+Require Import CoqEtTu.lib.x64_abi CoqEtTu.lib.x64_ctype.
+Open Scope N.
+
+(* Close a classification goal: case on every test and refute or compute. *)
+Ltac ct_split :=
+  ctype_cases;
+  repeat match goal with |- context [N.b2n ?b] =>
+    lazymatch b with true => fail | false => fail | _ => destruct b eqn:? end end;
+  ctype_cases;
+  cbn [N.lor N.b2n orb andb Pos.lor] in *.
+Ltac ct_close :=
+  first [ reflexivity
+        | exfalso; unfold msub in *; change (2^32) with 4294967296 in *; lia
+        | unfold msub in *; change (2^32) with 4294967296 in *; lia ].
+Ltac ct_finish := ct_split; ct_close.
+
+(* Normalize (x | 32) and msub 32 (x | 32) _ to the low 32 bits y of x. *)
+Ltac or32_prep x :=
+  repeat rewrite lor_mod32 by reflexivity;
+  repeat match goal with |- context [msub 32 (x .| 32) ?k] =>
+    rewrite <- (msub_mod_l 32 32 (x .| 32) k) by reflexivity; rewrite lor_mod32 by reflexivity end;
+  repeat match goal with H: context [msub 32 (x .| 32) ?k] |- _ =>
+    rewrite <- (msub_mod_l 32 32 (x .| 32) k) in H by reflexivity; rewrite lor_mod32 in H by reflexivity end;
+  repeat match goal with H: context [(x .| 32) mod 2^32] |- _ => rewrite lor_mod32 in H by reflexivity end;
+  let Y := fresh "Y" in
+  assert (Y: x mod 2^32 < 2^32) by (apply N.mod_lt; discriminate);
+  pose proof (lor32_lt _ Y);
+  pose proof (or32_range (x mod 2^32) 122 (or_introl eq_refl));
+  pose proof (or32_range (x mod 2^32) 102 (or_intror eq_refl));
+  destruct (N.lt_ge_cases (x mod 2^32) 256);
+  [| match goal with H: 256 <= x mod 2^32 |- _ => pose proof (lor_ge256 _ 32 H) end].
+''')
+for n,ent,ret,spec,pred,prep in F:
+    post = f"s R_RAX = N.b2n ({n}_spec (c mod 2^32))" if pred else f"s R_RAX = {n}_spec (c mod 2^32)"
+    out.append(f'''
+(* ---- {n} ---- *)
+Definition {n}_spec (y:N) := {spec}.
+
+Theorem {n}_nwc: forall s2 s1, {n}_amd64 s1 = {n}_amd64 s2.
+Proof. reflexivity. Qed.
+
+Theorem {n}_welltyped: welltyped_prog x64typctx {n}_amd64.
+Proof. exact {n}_amd64.welltyped. Qed.
+
+Theorem {n}_preserves_memory:
+  forall_endstates {n}_amd64 (fun _ s _ s' => s V_MEM64 = s' V_MEM64).
+Proof. apply noassign_prog_same. prove_noassign. Qed.
+
+Definition {n}_exit (t:trace) :=
+  match t with (Addr a,_)::_ => match a with {ret} => true | _ => false end | _ => false end.
+
+Definition {n}_invs (s0:store) (c:N) (t:trace) :=
+  match t with (Addr a,s)::_ => match a with
+  | {ent} => Some (s R_RDI = c /\\ s V_MEM64 = s0 V_MEM64 /\\ s R_RSP = s0 R_RSP /\\ callee_saved_eq s0 s)
+  | {ret} => Some ({post} /\\ s V_MEM64 = s0 V_MEM64 /\\ s R_RSP = s0 R_RSP /\\ callee_saved_eq s0 s)
+  | _ => None end | _ => None end.
+
+Theorem {n}_correct:
+  forall prog s t s' x' c
+         (SUB: {n}_amd64 ⊆2 prog)
+         (ENTRY: startof t (x',s') = (Addr {ent}, s))
+         (MDL: models x64typctx s) (C: s R_RDI = c),
+  satisfies_all prog ({n}_invs s c) {n}_exit ((x',s')::t).
+Proof.
+  intros prog s0 t s' x' c SUB ENTRY MDL C.
+  eapply satisfies_all_pmono with (p1:={n}_amd64); [exact SUB| |].
+    intros a s1 t1 EXIT NOCODE. unfold {n}_invs.
+    repeat first
+    [ reflexivity | discriminate EXIT | discriminate NOCODE
+    | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+  intros [x1 s1] t1 START. rewrite ENTRY in START.
+  clear - s0 c MDL C START.
+  rename t1 into t. rename s1 into s'. rename x1 into x'. rename START into ENTRY.
+  apply prove_invs.
+  simpl. rewrite ENTRY. x64_step. conj_tac. apply callee_saved_eq_refl.
+  intros.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply {n}_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t.
+  destruct_inv 64 PRE.
+  destruct PRE as [RDI [MEM [RSP CS]]].
+  repeat x64_step. all: bc_norm.
+  all: split; [|conj_tac].
+  all: unfold {n}_spec, inr.
+''')
+    if prep == "or32":
+        out.append("  all: or32_prep c.\n  all: ct_finish.\nQed.\n")
+    elif prep == "upper":
+        out.append('''  all: try rewrite (land_mod32 c 95) by reflexivity.
+  all: try (rewrite <- N.land_assoc; change (95 .& 18446744069414584320) with 0;
+            rewrite N.land_0_r, N.lor_0_r).
+  all: ct_split.
+  all: try (exfalso; unfold msub in *; change (2^32) with 4294967296 in *; lia).
+  all: try reflexivity.
+  all: rewrite and95_lower by (unfold msub in *; change (2^32) with 4294967296 in *; lia); reflexivity.
+Qed.
+''')
+    elif prep == "lower":
+        out.append('''  all: try rewrite lor_mod32 by reflexivity.
+  all: try (rewrite <- N.land_assoc; change (32 .& 18446744069414584320) with 0).
+  all: ct_split.
+  all: try (exfalso; unfold msub in *; change (2^32) with 4294967296 in *; lia).
+  all: try reflexivity.
+  all: try (rewrite or32_upper by (unfold msub in *; change (2^32) with 4294967296 in *; lia); reflexivity).
+  all: rewrite land_high32, N.lor_0_r by (apply lor32_lt, N.mod_lt; discriminate); reflexivity.
+Qed.
+''')
+    elif prep == "ascii":
+        out.append('''  all: change 128 with (2^7); rewrite mp2_mod_mod_min; reflexivity.
+Qed.
+''')
+    else:
+        out.append("  all: ct_finish.\nQed.\n")
+open('proofs/ctype_proof.v','w').write(''.join(out))

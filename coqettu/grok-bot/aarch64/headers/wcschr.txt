@@ -1,0 +1,67 @@
+(* wcschr -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (calls wcslen)
+
+   SEMANTICS
+   ---------
+   musl's src/string/wcschr.c:
+       if (!c) return s + wcslen(s);
+       for (; *s && *s != c; s++);
+       return *s ? s : 0;
+   (casts to wchar_t pointer omitted here).  The binary tests the
+   low 32 bits of c (cbnz w1).  If they are 0 it saves X29/X30 and s in a
+   32-byte frame below SP, calls wcslen (0x15fc18, verified in the same file
+   against the same invariant family, as callee id 0) and returns
+   s + (len << 2).  Otherwise it scans 4-byte wide characters until one is
+   0 (returns NULL) or equals c (returns its address).
+   This file verifies the composition wcschr + wcslen (program
+   wcschr_prog = both lifts) with Picinae's perform_call.
+
+   SPECIFICATION (man 3 wcschr, Linux man-pages 6.9.1)
+   ---------------------------------------------------
+     SYNOPSIS
+            #include <wchar.h>
+            wchar_t *wcschr(const wchar_t *wcs, wchar_t wc);
+
+     DESCRIPTION
+            The wcschr() function is the wide-character equivalent of the
+            strchr(3) function.  It searches the first occurrence of wc in the
+            wide-character string pointed to by wcs.
+
+     RETURN VALUE
+            The wcschr() function returns a pointer to the first occurrence of
+            wc in the wide-character string pointed to by wcs, or NULL if wc
+            does not occur in the string.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            wcschr at 0x5fab4 (ELF vaddr); 0x15fab4 in Ghidra (image base 0x100000)
+            wcslen at 0x5fc18 (ELF vaddr); 0x15fc18 in Ghidra
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/wcschr_armv8.v and
+            ../lifted/wcslen_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = s = p, X1 = c (wchar_t; only the low 32 bits matter, c32 =
+            c mod 2^32); SP = sp; X30 = return address raddr; X29 = x29;
+            m = memory on entry.
+   Output:  If execution reaches any RET (0x15fad8, 0x15faf4, 0x15fafc):
+            SP = sp, X30 = raddr, X29 = x29, and (wcschr_post) either
+              - c32 <> 0, memory = m, and wcschr_spec m p c32 X0; or
+              - c32 = 0, memory = frame_mem (m with x29, raddr, p stored at
+                sp-32, sp-24, sp-8), and wcschr_spec frame_mem p 0 X0.
+            wcschr_spec m p c r: either there is k < 2^62 such that wide chars
+            0..k-1 are neither 0 nor c, wide char k equals c and r = p + 4k
+            (mod 2^64); or there is such a k with wide char k = 0, c <> 0 and
+            r = 0 (NULL).  (When the scan wraps all the way around the address
+            space k restarts at 0, so k is the index since the last wrap.)
+            X19..X28 and Z8..Z15 are never written
+            (wcschr_preserves_other_callee_saved).
+ *)

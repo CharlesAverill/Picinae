@@ -1,0 +1,47 @@
+(* iswxdigit -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (leaf)
+
+   SEMANTICS
+   ---------
+   musl's src/ctype/iswxdigit.c:
+       int iswxdigit(wint_t wc) { return (unsigned)(wc-'0') < 10 || (unsigned)((wc|32)-'a') < 6; }
+   compiled to  sub w1,w0,#0x30; cmp w1,#9; b.ls L; orr w0,w0,#0x20;
+   sub w0,w0,#0x61; cmp w0,#5; cset w0,ls; R: ret; L: mov w0,#1; b R.
+
+   SPECIFICATION (man 3 iswxdigit, Linux man-pages 6.9.1)
+   ----------------------------------------------
+     SYNOPSIS
+            #include <wctype.h>
+            int iswxdigit(wint_t wc);
+     DESCRIPTION
+            The iswxdigit() function is the wide-character equivalent of the
+            isxdigit(3) function.  It tests whether wc is a wide character
+            belonging to the wide-character class "xdigit".
+     RETURN VALUE
+            The iswxdigit() function returns nonzero if wc is a wide character
+            belonging to the wide-character class "xdigit".  Otherwise, it
+            returns zero.
+   (musl classifies only the ASCII range here; wint_t is 32 bits.)
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            iswxdigit at 0x1f270 (ELF vaddr); 0x11f270 in Ghidra (image base 0x100000)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/iswxdigit_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   W0 = wc (X0 = wc; only wc mod 2^32 is used); X30 = return address.
+   Output:  If execution reaches the RET (0x11f28c): X0 = 1 if wc mod 2^32 is in 0x30..0x39, 0x41..0x46 or
+            0x61..0x66, else X0 = 0 (both paths to the RET);
+            this holds for every 32-bit input (WEOF = 0xffffffff gives 0).  Memory, SP,
+            X30 and the AAPCS64 callee-saved registers are unchanged.
+            ((c|32) range tests: lib/GrokCtype2.v, finite check below 128.)
+ *)

@@ -1,0 +1,56 @@
+(* ffs -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C
+
+   SEMANTICS
+   ---------
+   musl's src/misc/ffs.c:
+       int ffs(int i) { return i ? a_ctz_l(i)+1 : 0; }
+   The binary: cbz w0 -> ret (X0 unchanged, so W0 = 0); otherwise
+   sxtw x0,w0; rbit x0,x0; clz x0,x0; add w0,w0,#1; ret.
+   The lifter expands rbit into a 6-stage mask-and-shift network; psimpl
+   rewrites it further.  The proof reifies the resulting expression
+   (lib/GrokBitRefl.v) and checks by computation (brev_check) that bit j of
+   it is bit 63-j of the input for j < 64 and 0 above.  clz is lifted as
+   64 - N.size x (our LZCOUNT lifter fix, ../lifter/README_GROK.md).
+
+   SPECIFICATION (man 3 ffs, Linux man-pages 6.9.1)
+   ------------------------------------------------
+     SYNOPSIS
+            #include <strings.h>
+            int ffs(int i);
+
+     DESCRIPTION
+            The ffs() function returns the position of the first (least
+            significant) bit set in the word i.  The least significant bit is
+            position 1 and the most significant position is, for example, 32
+            or 64.
+
+     RETURN VALUE
+            These functions return the position of the first bit set, or 0 if
+            no bits are set in i.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            ffs at 0x3b294 (ELF vaddr); 0x13b294 in Ghidra (image base 0x100000)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            BOOL_NEGATE and LZCOUNT fixes, see ../lifter/README_GROK.md),
+            options --globalAddressing --typeCheck; see ../lifted/ffs_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   W0 = i (X0 = i, only its low 32 bits matter); SP = sp;
+            X30 = raddr; m = memory.
+   Output:  At the RET (0x13b2a8): memory = m, SP = sp, X30 = raddr and
+            ffs_spec i (X0 mod 2^32), i.e. the int result W0 is
+              - 0 if i mod 2^32 = 0, or
+              - b + 1 where b < 32 is the index of the lowest set bit of i
+                (bit b of i is 1 and bits 0..b-1 are 0).
+            Callee-saved registers X19..X29, SP, Z8..Z15 and X30 are never
+            written (ffs_preserves_callee_saved, ffs_preserves_x30).
+ *)

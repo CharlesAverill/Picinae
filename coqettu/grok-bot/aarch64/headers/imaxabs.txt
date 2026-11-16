@@ -1,0 +1,54 @@
+(* imaxabs -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C
+
+   SEMANTICS
+   ---------
+   musl's src/inttypes/imaxabs.c:  return a>0 ? a : -a;  (intmax_t = 64-bit long) compiled to
+       cmp x0,#0; cneg x0,x0,lt
+   i.e. the 64-bit two's-complement negation when the argument is negative.
+
+   SPECIFICATION (man 3 abs, Linux man-pages 6.9.1)
+   ------------------------------------------------
+     SYNOPSIS
+            #include <stdlib.h>
+            int abs(int j);
+            long labs(long j);
+            long long llabs(long long j);
+
+            #include <inttypes.h>
+            intmax_t imaxabs(intmax_t j);
+
+     DESCRIPTION
+            The abs() function computes the absolute value of the integer
+            argument j.  The labs(), llabs(), and imaxabs() functions compute
+            the absolute value of the argument j of the appropriate integer
+            type for the function.
+
+     RETURN VALUE
+            Returns the absolute value of the integer argument, of the
+            appropriate integer type for the function.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            imaxabs at 0x5d36c (ELF vaddr); 0x15d36c in Ghidra (image base 0x100000)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            BOOL_NEGATE fix, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/imaxabs_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = j (intmax_t, 64-bit); X30 = return address.
+   Output:  At the RET (0x15d374): X0 = ofZ 64 (Z.abs (toZ 64 j)), i.e. the
+            absolute value of j read as a signed 64-bit integer, reduced to
+            64 bits (imaxabs_spec).  For the most negative value (-2^63),
+            where C leaves the result undefined, the machine result wraps
+            to -2^63 itself (this is what the formula gives).  Memory, SP,
+            X30 and the AAPCS64 callee-saved registers are unchanged.
+ *)
+

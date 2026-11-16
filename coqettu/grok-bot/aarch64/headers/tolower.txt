@@ -1,0 +1,44 @@
+(* tolower -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C
+
+   SEMANTICS
+   ---------
+   musl's src/ctype/tolower.c:  if (isupper(c)) return c | 32; return c;
+   with isupper(c) compiled to the unsigned test (unsigned)c - 'A' < 26:
+       sub w2,w0,#0x41; orr w1,w0,#0x20; cmp w2,#0x1a; csel w0,w1,w0,cc
+   musl's ctype is ASCII-only (the C/POSIX locale has no other letters).
+
+   SPECIFICATION (man 3 tolower, Linux man-pages 6.9.1)
+   ---------------------------------------------------
+     SYNOPSIS
+            #include <ctype.h>
+            int toupper(int c);
+            int tolower(int c);
+
+     DESCRIPTION
+            These functions convert lowercase letters to uppercase, and vice
+            versa.
+            If c is a lowercase letter, toupper() returns its uppercase
+            equivalent, if an uppercase representation exists in the current
+            locale.  Otherwise, it returns c.
+            If c is an uppercase letter, tolower() returns its lowercase
+            equivalent, if a lowercase representation exists in the current
+            locale.  Otherwise, it returns c.
+            If c is neither an unsigned char value nor EOF, the behavior of
+            these functions is undefined.
+
+     RETURN VALUE
+            The value returned is that of the converted letter, or c if the
+            conversion was not possible.
+
+   {PROVENANCE}
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   W0 = c (int; the upper half of X0 is ignored); X30 = return address.
+   Output:  At the RET (0x11f2e0), with c32 = c mod 2^32:
+              X0 = c32 + 32   if 65 <= c32 <= 90  ('A'..'Z')
+              X0 = c32        otherwise
+            (tolower_spec).  This holds for every 32-bit input, not just
+            unsigned char values and EOF.  Memory, SP, X30 and the AAPCS64
+            callee-saved registers are unchanged.
+ *)

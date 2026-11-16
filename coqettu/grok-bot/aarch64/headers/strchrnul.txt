@@ -1,0 +1,76 @@
+(* strchrnul -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (calls strlen)
+
+   SEMANTICS
+   ---------
+   musl's src/string/strchrnul.c (word-at-a-time):
+       c = (unsigned char)c;
+       if (!c) return s + strlen(s);
+       for (; (uintptr_t)s % ALIGN; s++)
+           if (!*s || UC(s[0]) == c) return s;
+       k = ONES * c;
+       for (w = VP(s); !HASZERO(w[0]) && !HASZERO(w[0]^k); w++);
+       s = VP(w);
+       for (; *s && UC(s[0]) != c; s++);
+       return s;
+   (UC = cast to unsigned char, VP = pointer cast; written this way
+   so the comment stays well-formed.)  If c mod 256 = 0 the binary saves
+   X29/X30 and s in a 32-byte frame below SP and calls strlen (0x15efa8,
+   verified in the same file against the same invariant family, as callee
+   id 0).  Otherwise: byte loop to 8-byte alignment, aligned quadword loop
+   testing haszero(x) | haszero(x ^ c*0x0101..01) (lemma chrnul_test), final
+   byte loop.  The quadword loop may read up to 7 bytes past the terminator
+   inside the same aligned quadword (as the C code does).
+   This file verifies the composition strchrnul + strlen (program
+   strchrnul_prog = both lifts) with Picinae's perform_call.
+
+   SPECIFICATION (man 3 strchrnul, Linux man-pages 6.9.1)
+   ------------------------------------------------------
+     SYNOPSIS
+            #define _GNU_SOURCE
+            #include <string.h>
+            char *strchrnul(const char *s, int c);
+
+     DESCRIPTION
+            The strchrnul() function is like strchr() except that if c is not
+            found in s, then it returns a pointer to the null byte at the end
+            of s, rather than NULL.
+            Here "character" means "byte"; these functions do not work with
+            wide or multibyte characters.
+
+     RETURN VALUE
+            The strchrnul() function returns a pointer to the matched
+            character, or a pointer to the null byte at the end of s (i.e.,
+            s+strlen(s)) if the character is not found.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            strchrnul at 0x5ebf4 (ELF vaddr); 0x15ebf4 in Ghidra (image base 0x100000)
+            strlen at 0x5efa8 (ELF vaddr); 0x15efa8 in Ghidra
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/strchrnul_armv8.v and
+            ../lifted/strlen_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = s = p, X1 = c (int; only c8 = c mod 256 matters); SP = sp;
+            X30 = return address raddr; X29 = x29; m = memory on entry.
+   Output:  If execution reaches either RET (0x15ec40, 0x15eca0):
+            SP = sp, X30 = raddr, X29 = x29, and (strchrnul_post) either
+              - c8 <> 0, memory = m, and strchrnul_spec m p c8 X0; or
+              - c8 = 0, memory = frame_mem (m with x29, raddr, p stored at
+                sp-32, sp-24, sp-8), and strchrnul_spec frame_mem p 0 X0.
+            strchrnul_spec m p c r: there is k < 2^64 such that bytes 0..k-1
+            at p are neither 0 nor c, byte k is 0 or c, and r = p + k
+            (mod 2^64).  (If the scan wraps around the whole address space k
+            restarts at 0.)
+            X19..X28 and Z8..Z15 are never written
+            (strchrnul_preserves_other_callee_saved).
+ *)

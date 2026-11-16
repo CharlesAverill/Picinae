@@ -1,0 +1,7 @@
+-R ../../.. Picinae
+-R . CoqEtTu
+-arg "-w -deprecated-missing-stdlib"
+-arg "-w -deprecated-syntactic-definition"
+-arg "-w -level-tolerance"
+-arg "-w -postfix-notation-not-level-1"
+-arg "-w -overriding-logical-loadpath"

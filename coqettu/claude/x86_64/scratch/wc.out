@@ -1,0 +1,31 @@
+Warning: /home/ixb/research/picinae-llm/coqettu/claude/x86_64 was previously
+Goal at < 1465905 >
+Goal at < 1465918 >
+E:
+(m [Ⓠs0 R_RSP ⊖ 8 := s1 R_RBX ] [Ⓠs0 R_RSP ⊖ 16 := src ] =
+ m [Ⓠs0 R_RSP ⊖ 8 := s0 R_RBX ] [Ⓠs0 R_RSP ⊖ 16 := src ] /\
+ d = d /\
+ d = d /\
+ s0 R_RSP ⊖ 24 = s0 R_RSP ⊖ 24 /\
+ cs_but_rbx s0
+   (s1[R_RSI := src][R_RDI := d][R_RBX := d]
+    [R_CF := if s0 R_RSP ⊖ 8 <? 16 then 1 else 0]
+    [R_OF := (s0 R_RSP ⊖ 8 >> 63 .^ s0 R_RSP ⊖ 24 >> 63)
+             .& (s0 R_RSP ⊖ 24 >> 63 .^ 1)]
+    [R_RSP := s0 R_RSP ⊖ 24]
+    [R_SF := if slt 64 (s0 R_RSP ⊖ 8 ⊖ 16) 0 then 1 else 0]
+    [R_ZF := if s0 R_RSP mod 2 ^ 64 =? 24 then 1 else 0]
+    [R_PF := if popcount (msub 8 (s0 R_RSP) 24) mod 2 =? 0 then 1 else 0]
+    [V_MEM64 := m [Ⓠs0 R_RSP ⊖ 8 := s1 R_RBX ] [Ⓠs0 R_RSP ⊖ 16 := src ]]))
+C1:
+(nextinv wcscat_program (wcscat_invs s0 m d src) wcscat_exit true
+   ((Addr 1295232, s1[R_RSP := s0 R_RSP ⊖ 32]
+     [V_MEM64 := m [Ⓠs0 R_RSP ⊖ 8 := s0 R_RBX ] [Ⓠs0 R_RSP ⊖ 16 := src ]
+                 [Ⓠs0 R_RSP ⊖ 32 := 1465923 ]])
+    :: (Addr 1465918, s1) :: t))
+C2:
+(nextinv wcscat_program (wcscat_invs s0 m d src) wcscat_exit true
+   ((Addr 1295184, s1[R_RSP := s0 R_RSP ⊖ 32]
+     [V_MEM64 := m [Ⓠs0 R_RSP ⊖ 8 := s0 R_RBX ] [Ⓠs0 R_RSP ⊖ 16 := src ]
+                 [Ⓠs0 R_RSP ⊖ 32 := 1465937 ]])
+    :: (Addr 1465932, s1) :: t))

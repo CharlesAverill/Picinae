@@ -1,0 +1,49 @@
+(* ntohs -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (leaf)
+
+   SEMANTICS
+   ---------
+   musl's src/network/ntohs.c:
+       uint16_t ntohs(uint16_t n) {
+           union { int i; char c; } u = { 1 };
+           return u.c ? bswap_16(n) : n;
+       }
+   compiled (little-endian) to "rev16 w0,w0; ret".
+
+   SPECIFICATION (man 3 byteorder, Linux man-pages 6.9.1)
+   ------------------------------------------------------
+     SYNOPSIS
+            #include <arpa/inet.h>
+            uint16_t ntohs(uint16_t netshort);
+     DESCRIPTION
+            The ntohs() function converts the unsigned short integer netshort
+            from network byte order to host byte order.
+            On the i386 the host byte order is Least Significant Byte first,
+            whereas the network byte order, as used on the Internet, is Most
+            Significant Byte first.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            ntohs at 0x443c4 (ELF vaddr); 0x1443c4 in Ghidra (image base 0x100000)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/ntohs_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = x; X30 = return address.
+   Output:  If execution reaches the RET (0x1443c8):
+            X0 mod 2^16 = revbytes (x mod 2^16) 2 (the uint16_t result:
+            the two low bytes swapped) and X0 < 2^32.  rev16 also swaps the
+            bytes of bits 16..31 of W0, which AAPCS64 leaves unspecified for
+            a uint16_t argument, so those result bits are not specified.
+            Memory, SP, X30 and all AAPCS64 callee-saved registers are
+            unchanged.  aarch64 is little-endian, so the host-to-network
+            conversion is the byte swap.
+ *)

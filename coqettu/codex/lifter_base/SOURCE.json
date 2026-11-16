@@ -1,0 +1,9 @@
+{
+  "repository_commit": "a4bae9c3bba96d2b3c441dd449c935b6f8e92953",
+  "files_sha256": {
+    "pcode2coq_lib.py": "b8815573479f4d70628ed0381310325a4280c0abd24155b25715833ea42a1244",
+    "pcode2coq_headless.py": "1094933e7b4af2af966f641e78ad06b0c4cea89cbf68665c940fbc0eed557347",
+    "translationConstants.py": "fee6afc5513599251a8f93924a1b7d45a815268934eebe64f8fec1b6ceb9958c"
+  },
+  "note": "Unmodified committed shared lifter snapshot; Codex modifications are isolated in ../pcode2coq_codex.py and ../bsf_adapter.py."
+}

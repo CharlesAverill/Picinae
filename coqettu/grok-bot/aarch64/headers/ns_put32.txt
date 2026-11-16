@@ -1,0 +1,44 @@
+(* ns_put32 -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (leaf)
+
+   SEMANTICS
+   ---------
+   musl's src/network/ns_parse.c: ns_put32 stores l>>24, l>>16, l>>8, l at cp[0..3] (as unsigned char)
+   compiled to  rev w0,w0; str w0,[x1]; ret.
+
+   SPECIFICATION
+   -------------
+   There is no Linux man-pages entry for the ns_* helpers.  They come from
+   BIND's libresolv (ns_parse.c / arpa/nameser.h), where they read or
+   write integers in network byte order (big-endian):
+     unsigned      ns_get16(const unsigned char *src);   16-bit value at src
+     unsigned long ns_get32(const unsigned char *src);   32-bit value at src
+     void          ns_put16(unsigned int src, unsigned char *dst);
+     void          ns_put32(unsigned long src, unsigned char *dst);
+   ns_put16/ns_put32 store the low 16/32 bits of src at dst, most
+   significant byte first.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            ns_put32 at 0x43f74 (ELF vaddr); 0x143f74 in Ghidra (image base 0x100000)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/ns_put32_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = src (only src mod 2^32 matters), X1 = dst (any address);
+            X30 = return address.
+   Output:  If execution reaches the RET (0x143f7c): memory = setmem 64 BigE 4
+            mem dst src, i.e. the 4 bytes at dst hold src mod 2^32 big-endian and
+            nothing else changes.  SP, X30 and the AAPCS64 callee-saved
+            registers are unchanged.
+   Proof: the rev/rev16 bit network is matched against Picinae's revbytes by
+   reflection (lib/GrokBytes.v, lib/GrokBitRefl.v); BigE = revbytes of LittleE.
+ *)

@@ -1,0 +1,82 @@
+(* wcsncat -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (calls wcslen)
+
+   SEMANTICS
+   ---------
+   musl's src/string/wcsncat.c:
+       wchar_t *wcsncat(wchar_t *restrict d, const wchar_t *restrict s, size_t n) {
+           wchar_t *a = d;
+           d += wcslen(d);
+           while (n && *s) n--, *d++ = *s++;
+           *d++ = 0;
+           return a;
+       }
+   compiled as a 48-byte frame (stp x29,x30,[sp,#-48]! / str x21 / stp x19,x20),
+   bl wcslen (0x15fc18, re-proved here inside wcsncat_prog), add x0,x21,x0,lsl #2,
+   an inline 4-byte loop (0x15fd04..0x15fd18; X19 counts n down, X20 walks src,
+   str w1,[x0],#4), str wzr,[x0], and the frame restore.  wchar_t is 4 bytes.
+
+   SPECIFICATION (man 3 wcsncat, Linux man-pages 6.9.1)
+   ----------------------------------------------------
+     SYNOPSIS
+            #include <wchar.h>
+            wchar_t *wcsncat(wchar_t dest[restrict .n],
+                             const wchar_t src[restrict .n], size_t n);
+     DESCRIPTION
+            The wcsncat() function is the wide-character equivalent of the
+            strncat(3) function.  It copies at most n wide characters from the
+            wide-character string pointed to by src to the end of the
+            wide-character string pointed to by dest, and adds a terminating
+            null wide character (L'\0').
+            The strings may not overlap.
+            The programmer must ensure that there is room for at least
+            wcslen(dest)+n+1 wide characters at dest.
+     RETURN VALUE
+            wcsncat() returns dest.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            wcsncat at 0x5fcdc (ELF vaddr); 0x15fcdc in Ghidra (image base 0x100000);
+            callee wcslen at 0x5fc18 / 0x15fc18
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/wcsncat_armv8.v and
+            ../lifted/wcslen_armv8.v (combined as wcsncat_prog).
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = dest (d), X1 = src (q), X2 = n, SP = sp, X30 = raddr,
+            X19/X20/X21/X29 = x19/x20/x21/x29; memory mem.
+   PRECONDITION (wcsncat_pre sp mem d q n Ld K), stated explicitly
+   (all element reads/writes are 4-byte little-endian words):
+            - d holds a wide string of length Ld: words at d+4i (i < Ld) are
+              nonzero and the word at d+4Ld is 0;
+            - words at q+4i (i < K) are nonzero, K <= n < 2^64, and either
+              K = n or the word at q+4K is 0 (so K = min(n, wcsnlen(q, n)),
+              the number of wide characters copied);
+            - 48 <= sp < 2^64 and both byte ranges d..d+4Ld+4K+3 and
+              q..q+4K+3 lie below sp-48, i.e. below wcsncat's own stack
+              frame (sp-48..sp);
+            - the written range d+4Ld..d+4Ld+4K+3 and the read range
+              q..q+4K+3 do not overlap (q+4K+4 <= d+4Ld or d+4Ld+4K+4 <= q).
+            Justification: the C standard makes copying between overlapping
+            objects undefined behaviour (restrict; the man page says the
+            strings may not overlap), and a destination that overlaps
+            wcsncat's own stack frame is not caller-owned memory, so the
+            precondition only excludes undefined behaviour.  It is needed
+            because wcsncat reloads X30 and X19-X21 from its frame after the copy.
+   Output:  If execution reaches the RET (0x15fd30), with
+            C = mem with x29, raddr, x21, x19, x20 stored at sp-48, sp-40,
+            sp-16, sp-32, sp-24 (the saved frame):
+            memory = (wcpy C (d+4Ld) q K) with the 4-byte word at d+4Ld+4K
+            set to 0 (words q[0..K-1] copied in order to d+4Ld.., then the
+            terminator; wcpy is defined in wcscpy_proof.v), X0 = d, SP = sp,
+            X19 = x19, X20 = x20, X21 = x21, X29 = x29, X30 = raddr.
+            Partial correctness only.
+ *)

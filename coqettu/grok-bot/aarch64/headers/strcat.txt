@@ -1,0 +1,69 @@
+(* strcat -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (calls strlen, strcpy -> stpcpy)
+
+   SEMANTICS
+   ---------
+   musl's src/string/strcat.c:
+       char *strcat(char *restrict dest, const char *restrict src) {
+           strcpy(dest + strlen(dest), src);
+           return dest;
+       }
+   compiled as a 48-byte frame (stp x29,x30,[sp,#-48]! / str x19 / str x1),
+   bl strlen (0x15efa8), bl strcpy (0x15eccc, which calls __stpcpy 0x15e950),
+   mov x0,x19 and the frame restore.  All three callees are re-proved here
+   inside the combined program strcat_prog.
+
+   SPECIFICATION (man 3 strcat, Linux man-pages 6.9.1)
+   ---------------------------------------------------
+     SYNOPSIS
+            #include <string.h>
+            char *strcat(char *restrict dst, const char *restrict src);
+     DESCRIPTION
+            This function catenates the string pointed to by src, after the
+            string pointed to by dst (overwriting its terminating null byte).
+            The programmer is responsible for allocating a destination buffer
+            large enough, that is, strlen(dst) + strlen(src) + 1.
+     RETURN VALUE
+            strcat() returns dst.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            strcat at 0x5eb98 (ELF vaddr); 0x15eb98 in Ghidra (image base 0x100000);
+            callees strlen 0x5efa8, strcpy 0x5eccc, stpcpy 0x5e950 (+0x100000 in Ghidra)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/strcat_armv8.v,
+            strcpy_armv8.v, stpcpy_armv8.v, strlen_armv8.v (combined as strcat_prog).
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = dst (d), X1 = src (q), SP = sp, X29 = x29, X19 = x19,
+            X30 = return address raddr; memory mem.
+   PRECONDITION (strcat_pre sp mem d q Ld Lq), stated explicitly:
+            - d holds a string of length Ld: bytes d..d+Ld-1 nonzero, byte d+Ld = 0;
+            - q holds a string of length Lq: bytes q..q+Lq-1 nonzero, byte q+Lq = 0;
+            - 80 <= sp < 2^64, and both the destination range d..d+Ld+Lq and
+              the source range q..q+Lq lie strictly below sp-80, i.e. below all
+              stack frames used by strcat (sp-48..sp) and strcpy (sp-80..sp-48);
+            - the written range d+Ld..d+Ld+Lq does not overlap the source
+              (q+Lq < d+Ld or d+Ld+Lq < q).
+            The C standard makes overlapping src/dst undefined behaviour
+            (restrict), and a destination buffer overlapping the callee frames
+            is not valid caller memory, so this precondition only excludes
+            undefined behaviour.  It is needed because strcpy reloads its saved
+            X30 from its frame after the copy.
+   Output:  If execution reaches strcat's RET (0x15ebc8), then with
+            C = mem with x29, raddr, x19, q stored at sp-48, sp-40, sp-32, sp-8
+            and F = C with sp-48, 0x15ebbc, d stored at sp-80, sp-72, sp-64
+            (the two saved frames):
+            memory = bcp F (d+Ld) q (Lq+1)  (bytes q[0..Lq], terminator
+            included, copied in order to d+Ld; see lib/GrokStr.v),
+            X0 = d, SP = sp, X29 = x29, X30 = raddr, X19 = x19.
+            Partial correctness only.
+ *)

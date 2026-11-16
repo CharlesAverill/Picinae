@@ -1,0 +1,68 @@
+(* strchr -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (calls strchrnul, which calls strlen)
+
+   SEMANTICS
+   ---------
+   musl's src/string/strchr.c:
+       char *r = __strchrnul(s, c);
+       return UC(r[0]) == (unsigned char)c ? r : 0;
+   (UC = cast to unsigned char.)  The binary saves X29/X30 and the 32-bit
+   c in a 32-byte frame below SP, calls strchrnul (0x15ebf4), which itself
+   may call strlen (0x15efa8) when c mod 256 = 0, then compares the byte at
+   the result with c mod 256 (ldrb + cmp w2,w1,UXTB).  All three functions
+   are verified in one invariant family over the program
+   strchr_prog = strchr + strchrnul + strlen lifts (ids 2/1/0,
+   strchr_callees.v; composition with Picinae's perform_call).
+   NOTE: the original lifter dropped the UXTB truncation in
+   `cmp w2,w1,UXTB` (lifter bug 3, fixed in ../lifter, see
+   ../lifter/README_GROK.md); the lift used here is the fixed one.
+
+   SPECIFICATION (man 3 strchr, Linux man-pages 6.9.1)
+   ---------------------------------------------------
+     SYNOPSIS
+            #include <string.h>
+            char *strchr(const char *s, int c);
+
+     DESCRIPTION
+            The strchr() function returns a pointer to the first occurrence
+            of the character c in the string s.
+            Here "character" means "byte"; these functions do not work with
+            wide or multibyte characters.
+
+     RETURN VALUE
+            The strchr() function returns a pointer to the matched character
+            or NULL if the character is not found.  The terminating null byte
+            is considered part of the string, so that if c is specified as
+            '\0', these functions return a pointer to the terminator.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            strchr at 0x5ebcc (ELF vaddr); 0x15ebcc in Ghidra (image base 0x100000)
+            strchrnul at 0x5ebf4; 0x15ebf4 in Ghidra
+            strlen at 0x5efa8; 0x15efa8 in Ghidra
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/strchr_armv8.v,
+            ../lifted/strchrnul_armv8.v and ../lifted/strlen_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = s = p, X1 = c (int; only c8 = c mod 256 matters); SP = sp;
+            X30 = return address raddr; X29 = x29; m = memory on entry.
+   Output:  If execution reaches the RET at 0x15ebf0 (strchr_post):
+            SP = sp, X30 = raddr, X29 = x29, and the final memory m' is
+            chr_frame (m with x29, raddr, c stored at sp-32, sp-24, sp-4
+            (32-bit)) or, when c8 = 0, chr_frame extended with strchrnul's
+            frame (sp-32, 0x15ebdc, p at sp-64, sp-56, sp-40); and there is r
+            with strchrnul_spec m' p c8 r (bytes p..r-1 are neither 0 nor c8,
+            byte r is 0 or c8, r = p + k mod 2^64) and
+            X0 = (if m'[r] = c8 then r else 0).
+            X19..X28 and Z8..Z15 are never written
+            (strchr_preserves_other_callee_saved).
+ *)

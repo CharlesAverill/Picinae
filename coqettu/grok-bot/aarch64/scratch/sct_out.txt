@@ -1,0 +1,118 @@
+GOAL:
+(nextinv strcat_prog
+   (make_invs 3 strcat_prog (invs sp mem raddr d q x29 x19))
+   (make_exits 3 strcat_prog (invs sp mem raddr d q x29 x19)) true
+   ((Addr
+       (bcp
+          (frame_mem (sp ⊖ 48)
+             (mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ
+              sp ⊖ 32 := x19 ] [Ⓠ sp ⊖ 8 := q ])
+             1436604 (sp ⊖ 48) d)
+          (d ⊕ L) q (N.to_nat (k + 1))
+        Ⓠ[ sp ⊖ 72 ]),
+     s4
+     [R_X30 := bcp
+                 (frame_mem (sp ⊖ 48)
+                    (mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ
+                     sp ⊖ 32 := x19 ] [Ⓠ sp ⊖ 8 := q ])
+                    1436604 (sp ⊖ 48) d)
+                 (d ⊕ L) q (N.to_nat (k + 1))
+               Ⓠ[ sp ⊖ 72 ]]
+     [R_PC := bcp
+                (frame_mem (sp ⊖ 48)
+                   (mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ
+                    sp ⊖ 32 := x19 ] [Ⓠ sp ⊖ 8 := q ])
+                   1436604 (sp ⊖ 48) d)
+                (d ⊕ L) q (N.to_nat (k + 1))
+              Ⓠ[ sp ⊖ 72 ]])
+    :: (Addr 1436908, s4)
+       :: t3 ++
+          t1 ++ (Addr 1437696, s0) :: t2 ++ t0 ++ (Addr 1436568, s1) :: t))
+MDL0 : (models arm8typctx s4)
+X19 :
+(s4 R_X19 =
+ bcp
+   (frame_mem (sp ⊖ 48)
+      (mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ sp ⊖ 32 := x19 ] [Ⓠ
+       sp ⊖ 8 := q ])
+      1436604 (sp ⊖ 48) d)
+   (d ⊕ L) q (N.to_nat (k + 1))
+ Ⓠ[ sp ⊖ 48 ⊖ 16 ])
+X30 :
+(s4 R_X30 =
+ bcp
+   (frame_mem (sp ⊖ 48)
+      (mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ sp ⊖ 32 := x19 ] [Ⓠ
+       sp ⊖ 8 := q ])
+      1436604 (sp ⊖ 48) d)
+   (d ⊕ L) q (N.to_nat (k + 1))
+ Ⓠ[ sp ⊖ 48 ⊖ 24 ])
+X29 :
+(s4 R_X29 =
+ bcp
+   (frame_mem (sp ⊖ 48)
+      (mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ sp ⊖ 32 := x19 ] [Ⓠ
+       sp ⊖ 8 := q ])
+      1436604 (sp ⊖ 48) d)
+   (d ⊕ L) q (N.to_nat (k + 1))
+ Ⓠ[ sp ⊖ 48 ⊖ 32 ])
+SP : (s4 R_SP = sp ⊖ 48)
+R0 : (s4 R_X0 = d ⊕ L)
+MEM :
+(s4 V_MEM64 =
+ bcp
+   (frame_mem (sp ⊖ 48)
+      (mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ sp ⊖ 32 := x19 ] [Ⓠ
+       sp ⊖ 8 := q ])
+      1436604 (sp ⊖ 48) d)
+   (d ⊕ L) q (N.to_nat (k + 1)))
+Z :
+(bcp
+   (frame_mem (sp ⊖ 48)
+      (mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ sp ⊖ 32 := x19 ] [Ⓠ
+       sp ⊖ 8 := q ])
+      1436604 (sp ⊖ 48) d)
+   (d ⊕ L) q (N.to_nat k)
+ Ⓑ[ q + k ] = 0)
+NZ :
+(bnz
+   (frame_mem (sp ⊖ 48)
+      (mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ sp ⊖ 32 := x19 ] [Ⓠ
+       sp ⊖ 8 := q ])
+      1436604 (sp ⊖ 48) d)
+   (d ⊕ L) q k)
+k : N
+t3 : (list (exit * store))
+s4 : store
+t1 : (list (exit * store))
+SP1 : (s0 R_SP = sp ⊖ 48)
+MEM1 :
+(s0 V_MEM64 =
+ mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ sp ⊖ 32 := x19 ] [Ⓠ
+ sp ⊖ 8 := q ])
+ZL :
+((mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ sp ⊖ 32 := x19 ] [Ⓠ
+  sp ⊖ 8 := q ])
+ Ⓑ[ d + L ] = 0)
+NF :
+(nilfree
+   (mem [Ⓠ sp ⊖ 48 := x29 ] [Ⓠ sp ⊖ 40 := raddr ] [Ⓠ sp ⊖ 32 := x19 ] [Ⓠ
+    sp ⊖ 8 := q ])
+   d L)
+LLT : (L < 2 ^ 64)
+L : N
+t2 : (list (exit * store))
+s0 : store
+t0 : (list (exit * store))
+Q64 : (q < N.pos (2 ^ 64))
+D64 : (d < N.pos (2 ^ 64))
+SP64 : (sp < N.pos (2 ^ 64))
+s1 : store
+t : (list (exit * store))
+x19 : N
+x29 : N
+q : N
+d : N
+raddr : N
+mem : N
+sp : N

@@ -1,0 +1,56 @@
+(* imaxdiv -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (leaf)
+
+   SEMANTICS
+   ---------
+   musl's src/stdlib/imaxdiv.c:
+       imaxdiv_t imaxdiv(intmax_t num, intmax_t den) { return (imaxdiv_t){ num/den, num%den }; }
+   compiled to  mov x2,x0; sdiv x0,x0,x1; msub x1,x0,x1,x2; ret.
+   The 16-byte struct {quot; rem} is returned in X0 (quot) and X1 (rem).
+
+   SPECIFICATION (man 3 div, Linux man-pages 6.9.1)
+   ------------------------------------------------
+     SYNOPSIS
+            #include <inttypes.h>
+            imaxdiv_t imaxdiv(intmax_t numerator, intmax_t denominator);
+     DESCRIPTION
+            The div() function computes the value numerator/denominator and
+            returns the quotient and remainder in a structure named div_t that
+            contains two integer members (in unspecified order) named quot and
+            rem.  The quotient is rounded toward zero.  The result satisfies
+            quot*denominator+rem = numerator.
+            The ldiv(), lldiv(), and imaxdiv() functions do the same, dividing
+            numbers of the indicated type and returning the result in a
+            structure of the indicated name, in all cases with fields quot and
+            rem of the same type as the function arguments.
+   (C leaves the behaviour undefined if the denominator is 0 or the quotient
+   is not representable; the theorem below still describes what this machine
+   code does in those cases.)
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            imaxdiv at 0x5d378 (ELF vaddr); 0x15d378 in Ghidra (image base 0x100000)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/imaxdiv_armv8.v.
+            (Generated from tools/div_template.v by tools/gen_div.py.)
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = num, X1 = den (64-bit two's complement); X30 = return address.
+   Output:  If execution reaches the RET (0x15d384):
+              X0 = sdiv64 num den, X1 = srem64 num den   (lib/GrokDiv.v), i.e.
+              X0 = 0 and X1 = num when den = 0 (aarch64 sdiv), and otherwise
+              X0 = the 64-bit truncating quotient, X1 = num - X0*den mod 2^64.
+            imaxdiv_semantics: if den <> 0 and not (num = INT64_MIN and den = -1),
+              toZ X0 = Z.quot num den and toZ X1 = Z.rem num den, so
+              quot*den + rem = num with the quotient rounded toward zero.
+            Memory, SP, X30 and the AAPCS64 callee-saved registers are unchanged.
+ *)
+

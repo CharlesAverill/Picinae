@@ -1,0 +1,106 @@
+(* Axiom audit: prints the assumptions of every main theorem.
+   The only axiom expected is Picinae's functional_extensionality_dep. *)
+From Grok.proofs Require wcslen_proof memcmp_proof strcmp_proof wcscmp_proof strlen_proof memchr_proof
+  tolower_proof toupper_proof abs_proof labs_proof llabs_proof wmemchr_proof wmemcmp_proof wcsncmp_proof strncmp_proof
+  wcsnlen_proof strnlen_proof wcschr_proof strchrnul_proof ffs_proof ffsl_proof ffsll_proof
+  strchr_callees strchr_proof wmemset_proof wmemcpy_proof wcscpy_proof swab_proof wmemmove_proof wcsrchr_proof
+  isdigit_proof isupper_proof islower_proof isprint_proof isgraph_proof isascii_proof imaxabs_proof ldiv_proof lldiv_proof imaxdiv_proof
+  sigemptyset_proof sigfillset_proof sigismember_proof pthread_equal_proof
+  ns_get16_proof ns_get32_proof ns_put16_proof ns_put32_proof div_proof
+  isalpha_proof isalnum_proof isxdigit_proof
+  iscntrl_proof isblank_proof isspace_proof
+  iswdigit_proof iswxdigit_proof
+  insque_proof remque_proof
+  stpcpy_proof strcpy_proof wcpcpy_proof
+  bcmp_proof wcscat_proof
+  htonl_proof htons_proof ntohl_proof ntohs_proof strcat_proof toascii_proof strncat_proof wcsncat_proof wcsncpy_proof.
+
+Print Assumptions wcslen_proof.wcslen_partial_correctness.
+Print Assumptions memcmp_proof.memcmp_partial_correctness.
+Print Assumptions strcmp_proof.strcmp_partial_correctness.
+Print Assumptions wcscmp_proof.wcscmp_partial_correctness.
+Print Assumptions strlen_proof.strlen_partial_correctness.
+Print Assumptions memchr_proof.memchr_partial_correctness.
+Print Assumptions tolower_proof.tolower_partial_correctness.
+Print Assumptions toupper_proof.toupper_partial_correctness.
+Print Assumptions abs_proof.abs_partial_correctness.
+Print Assumptions labs_proof.labs_partial_correctness.
+Print Assumptions llabs_proof.llabs_partial_correctness.
+Print Assumptions wmemchr_proof.wmemchr_partial_correctness.
+Print Assumptions wmemcmp_proof.wmemcmp_partial_correctness.
+Print Assumptions wcsncmp_proof.wcsncmp_partial_correctness.
+Print Assumptions strncmp_proof.strncmp_partial_correctness.
+Print Assumptions wcsnlen_proof.wcsnlen_partial_correctness.
+Print Assumptions wcsnlen_proof.wmemchr_correct_in_wcsnlen.
+Print Assumptions strnlen_proof.strnlen_partial_correctness.
+Print Assumptions strnlen_proof.memchr_correct_in_strnlen.
+Print Assumptions wcschr_proof.wcschr_partial_correctness.
+Print Assumptions wcschr_proof.wcslen_correct_in_wcschr.
+Print Assumptions strchrnul_proof.strchrnul_partial_correctness.
+Print Assumptions strchrnul_proof.strlen_correct_in_strchrnul.
+Print Assumptions ffs_proof.ffs_partial_correctness.
+Print Assumptions ffsl_proof.ffsl_partial_correctness.
+Print Assumptions ffsll_proof.ffsll_partial_correctness.
+Print Assumptions strchr_proof.strchr_partial_correctness.
+Print Assumptions strchr_callees.strchrnul_correct_in_strchr.
+Print Assumptions strchr_callees.strlen_correct_in_strchr.
+Print Assumptions strchr_proof.strchr_preserves_other_callee_saved.
+Print Assumptions wmemset_proof.wmemset_partial_correctness.
+Print Assumptions wmemcpy_proof.wmemcpy_partial_correctness.
+Print Assumptions wcscpy_proof.wcscpy_partial_correctness.
+Print Assumptions swab_proof.swab_partial_correctness.
+Print Assumptions wmemmove_proof.wmemmove_partial_correctness.
+Print Assumptions wcsrchr_proof.wcsrchr_partial_correctness.
+Print Assumptions wcsrchr_proof.wcslen_correct_in_wcsrchr.
+Print Assumptions isdigit_proof.isdigit_partial_correctness.
+Print Assumptions isupper_proof.isupper_partial_correctness.
+Print Assumptions islower_proof.islower_partial_correctness.
+Print Assumptions isprint_proof.isprint_partial_correctness.
+Print Assumptions isgraph_proof.isgraph_partial_correctness.
+Print Assumptions isascii_proof.isascii_partial_correctness.
+Print Assumptions imaxabs_proof.imaxabs_partial_correctness.
+Print Assumptions ldiv_proof.ldiv_partial_correctness.
+Print Assumptions ldiv_proof.ldiv_semantics.
+Print Assumptions lldiv_proof.lldiv_partial_correctness.
+Print Assumptions lldiv_proof.lldiv_semantics.
+Print Assumptions imaxdiv_proof.imaxdiv_partial_correctness.
+Print Assumptions imaxdiv_proof.imaxdiv_semantics.
+Print Assumptions sigemptyset_proof.sigemptyset_partial_correctness.
+Print Assumptions sigfillset_proof.sigfillset_partial_correctness.
+Print Assumptions sigismember_proof.sigismember_partial_correctness.
+Print Assumptions pthread_equal_proof.pthread_equal_partial_correctness.
+Print Assumptions ns_get16_proof.ns_get16_partial_correctness.
+Print Assumptions ns_get32_proof.ns_get32_partial_correctness.
+Print Assumptions ns_put16_proof.ns_put16_partial_correctness.
+Print Assumptions ns_put32_proof.ns_put32_partial_correctness.
+Print Assumptions div_proof.div_partial_correctness.
+Print Assumptions div_proof.div_semantics.
+Print Assumptions isalpha_proof.isalpha_partial_correctness.
+Print Assumptions isalnum_proof.isalnum_partial_correctness.
+Print Assumptions isxdigit_proof.isxdigit_partial_correctness.
+Print Assumptions iscntrl_proof.iscntrl_partial_correctness.
+Print Assumptions isblank_proof.isblank_partial_correctness.
+Print Assumptions isspace_proof.isspace_partial_correctness.
+Print Assumptions iswdigit_proof.iswdigit_partial_correctness.
+Print Assumptions iswxdigit_proof.iswxdigit_partial_correctness.
+Print Assumptions insque_proof.insque_partial_correctness.
+Print Assumptions remque_proof.remque_partial_correctness.
+Print Assumptions stpcpy_proof.stpcpy_partial_correctness.
+Print Assumptions strcpy_proof.strcpy_partial_correctness.
+Print Assumptions strcpy_proof.stpcpy_correct_in_strcpy.
+Print Assumptions wcpcpy_proof.wcpcpy_partial_correctness.
+Print Assumptions wcpcpy_proof.wcscpy_correct_in_wcpcpy.
+Print Assumptions wcpcpy_proof.wcslen_correct_in_wcpcpy.
+Print Assumptions bcmp_proof.bcmp_partial_correctness.
+Print Assumptions wcscat_proof.wcscat_partial_correctness.
+Print Assumptions wcscat_proof.wcslen_correct_in_wcscat.
+Print Assumptions wcscat_proof.wcscpy_correct_in_wcscat.
+Print Assumptions htonl_proof.htonl_partial_correctness.
+Print Assumptions htons_proof.htons_partial_correctness.
+Print Assumptions ntohl_proof.ntohl_partial_correctness.
+Print Assumptions ntohs_proof.ntohs_partial_correctness.
+Print Assumptions strcat_proof.strcat_partial_correctness.
+Print Assumptions toascii_proof.toascii_partial_correctness.
+Print Assumptions strncat_proof.strncat_partial_correctness.
+Print Assumptions wcsncat_proof.wcsncat_partial_correctness.
+Print Assumptions wcsncpy_proof.wcsncpy_partial_correctness.

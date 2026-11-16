@@ -1,0 +1,65 @@
+(* strnlen -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (calls memchr)
+
+   SEMANTICS
+   ---------
+   musl's src/string/strnlen.c:
+       const char *p = memchr(s, 0, n);
+       return p ? p-s : n;
+   The binary saves X29/X30 and X19/X20 in a 32-byte frame below SP, calls
+   memchr (0x15e1ec, verified in the same file against the same invariant
+   family, as callee id 0), then computes p - s and selects n if p = NULL.
+   This file verifies the composition strnlen + memchr (program
+   strnlen_prog = both lifts) with Picinae's perform_call.
+
+   SPECIFICATION (man 3 strnlen, Linux man-pages 6.9.1)
+   ----------------------------------------------------
+     SYNOPSIS
+            #include <string.h>
+            size_t strnlen(const char s[.maxlen], size_t maxlen);
+
+     DESCRIPTION
+            The strnlen() function returns the number of bytes in the string
+            pointed to by s, excluding the terminating null byte ('\0'), but at
+            most maxlen.  In doing this, strnlen() looks only at the first
+            maxlen characters in the string pointed to by s and never beyond
+            s[maxlen-1].
+
+     RETURN VALUE
+            The strnlen() function returns strlen(s), if that is less than
+            maxlen, or maxlen if there is no null terminating ('\0') among the
+            first maxlen characters pointed to by s.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            strnlen at 0x5f1c0 (ELF vaddr); 0x15f1c0 in Ghidra (image base 0x100000)
+            memchr at 0x5e1ec (ELF vaddr); 0x15e1ec in Ghidra
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/strnlen_armv8.v and
+            ../lifted/memchr_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = s, X1 = maxlen = n; SP = sp; X30 = return address raddr;
+            X19, X20, X29 = x19, x20, x29; m = memory on entry.
+   Memory:  strnlen stores x29, raddr, x19, x20 at sp-32 .. sp-1 (frame_mem);
+            memchr then reads the string from frame_mem, so the spec below is
+            stated over frame_mem (it equals m wherever the string does not
+            overlap the 32 bytes just below SP).
+   Output:  If execution reaches the RET (0x15f1f4): memory = frame_mem,
+            SP = sp, X30 = raddr, X19 = x19, X20 = x20, X29 = x29, and
+            strnlen_post frame_mem s n X0 holds, i.e. either
+              - X0 = n and none of the first n bytes is 0, or
+              - there is k < n with bytes 0..k-1 non-zero, byte k zero, and
+                X0 = k, or, in the degenerate case s + k = 0 (mod 2^64),
+                where memchr's pointer is NULL, X0 = n.
+            X21..X28 and Z8..Z15 are never written
+            (strnlen_preserves_other_callee_saved).
+ *)

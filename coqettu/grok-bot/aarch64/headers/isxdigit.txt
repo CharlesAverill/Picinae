@@ -1,0 +1,49 @@
+(* isxdigit -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (leaf)
+
+   SEMANTICS
+   ---------
+   musl's src/ctype/isxdigit.c:
+       int isxdigit(int c) { return isdigit(c) || ((unsigned)c|32)-'a' < 6; }
+   compiled to  sub w1,w0,#0x30; cmp w1,#9; b.ls L; orr w0,w0,#0x20;
+   sub w0,w0,#0x61; cmp w0,#5; cset w0,ls; R: ret; L: mov w0,#1; b R.
+
+   SPECIFICATION (man 3 isxdigit, Linux man-pages 6.9.1, C/POSIX locale)
+   -------------------------------------------------------------------
+     SYNOPSIS
+            #include <ctype.h>
+            int isxdigit(int c);
+     DESCRIPTION
+            These functions check whether c, which must have the value of an
+            unsigned char or EOF, falls into a certain character class
+            according to the specified locale.
+            isxdigit()
+                   checks for hexadecimal digits, that is, one of
+                   0 1 2 3 4 5 6 7 8 9 a b c d e f A B C D E F.
+     RETURN VALUE
+            The values returned are nonzero if the character c falls into
+            the tested class, and zero if not.
+   (musl supports only the C/POSIX ctype classes, i.e. ASCII.)
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            isxdigit at 0x1f29c (ELF vaddr); 0x11f29c in Ghidra (image base 0x100000)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/isxdigit_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   W0 = c (X0 = c; only c mod 2^32 is used); X30 = return address.
+   Output:  If execution reaches the RET (0x11f2b8): X0 = 1 if c mod 2^32 is in 0x30..0x39, 0x41..0x46 or
+            0x61..0x66, else X0 = 0 (both paths to the RET);
+            this holds for every 32-bit input (EOF = -1 gives 0).  Memory, SP,
+            X30 and the AAPCS64 callee-saved registers are unchanged.
+            ((c|32) range tests: lib/GrokCtype2.v, finite check below 128.)
+ *)

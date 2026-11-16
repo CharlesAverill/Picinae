@@ -1,0 +1,67 @@
+(* swab -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (leaf)
+
+   SEMANTICS
+   ---------
+   musl's src/unistd/swab.c:
+       void swab(const void *restrict _src, void *restrict _dest, ssize_t n)
+       {
+           const char *src = _src;
+           char *dest = _dest;
+           for (; n>1; n-=2) {
+               dest[0] = src[1];
+               dest[1] = src[0];
+               dest += 2;
+               src += 2;
+           }
+       }
+   The binary computes end = src + n and loops while (end - src) > 1 as a
+   signed 64-bit comparison (cmp x3,#1; b.gt), loading both bytes of a pair
+   before storing either.  The signed "gt" flag test is handled by lemma
+   gt1_test (lib/GrokSigned.v).
+
+   SPECIFICATION (man 3 swab, Linux man-pages 6.9.1)
+   -------------------------------------------------
+     SYNOPSIS
+            #include <unistd.h>
+            void swab(const void from[restrict .n], void to[restrict .n],
+                      ssize_t n);
+
+     DESCRIPTION
+            The swab() function copies n bytes from the array pointed to by
+            from to the array pointed to by to, exchanging adjacent even and
+            odd bytes.  This function is used to exchange data between
+            machines that have different low/high byte ordering.
+            This function does nothing when n is negative.  When n is
+            positive and odd, it handles n-1 bytes as above, and does
+            something unspecified with the last byte.  (In other words, n
+            should be even.)
+
+     RETURN VALUE
+            None.
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            swab at 0x5f9d8 (ELF vaddr); 0x15f9d8 in Ghidra (image base 0x100000)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/swab_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   X0 = from = q, X1 = to = d, X2 = n (ssize_t; toZ 64 n is its
+            signed value); X30 = return address raddr; SP = sp; m = memory.
+   Output:  If execution reaches the RET (0x15fa00): memory =
+            swb m q d (Z.to_nat (toZ 64 n / 2)), i.e. exactly floor(n/2)
+            byte pairs swapped when n >= 0 and nothing when n < 0 (an odd
+            last byte is left untouched); pair i writes to[2i] := from[2i+1],
+            to[2i+1] := from[2i], both read from the memory produced by the
+            previous pairs (addresses mod 2^64).  SP, X30 and the AAPCS64
+            callee-saved registers are unchanged.
+ *)

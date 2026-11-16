@@ -1,0 +1,47 @@
+(* iscntrl -- musl 1.2.6 (Alpine 1.2.6-r6), aarch64, compiled C (leaf)
+
+   SEMANTICS
+   ---------
+   musl's src/ctype/iscntrl.c:
+       int iscntrl(int c) { return (unsigned)c < 0x20 || c == 0x7f; }
+   compiled to  cmp w0,#0x7f; ccmp w0,#0x1f,#0,ne; cset w0,ls; ret
+   (the ccmp is stepped with grok_step from lib/GrokStep.v).
+
+   SPECIFICATION (man 3 iscntrl, Linux man-pages 6.9.1, C/POSIX locale)
+   -------------------------------------------------------------------
+     SYNOPSIS
+            #include <ctype.h>
+            int iscntrl(int c);
+     DESCRIPTION
+            These functions check whether c, which must have the value of an
+            unsigned char or EOF, falls into a certain character class
+            according to the specified locale.
+            iscntrl()
+                   checks for a control character.
+     RETURN VALUE
+            The values returned are nonzero if the character c falls into
+            the tested class, and zero if not.
+   (musl supports only the C/POSIX ctype classes, i.e. ASCII.)
+
+   PROVENANCE
+   ----------
+   Binary:  alpine_musl/aarch64/lib/libc.musl-aarch64.so.1 (symlink to
+            ld-musl-aarch64.so.1), from musl-1.2.6-r6.apk (Alpine aarch64,
+            apk sha256 180b2e52dbd452919c3271ed9dddf06826cee9a387650c81c00c7ac393031c5b)
+            sha256 4723e4caefd84b40d4164d62762360d3e7ab0b968eae16ea4aa6781e6d59141e
+            iscntrl at 0x1ee50 (ELF vaddr); 0x11ee50 in Ghidra (image base 0x100000)
+   Lifter:  Ghidra 12.0 PUBLIC (headless, pyghidraRun) + pcode2coq_headless.py,
+            our copy in ../lifter (picinae-llm tools/ghidra-lifter at a4bae9c +
+            local fixes 1-3, see ../lifter/README_GROK.md), options
+            --globalAddressing --typeCheck; see ../lifted/iscntrl_armv8.v.
+   Model:   This specification and proof were written by Grok Bot (agent coqettu)
+            and machine-checked by Rocq.
+
+   INPUT/OUTPUT SPECIFICATION (AAPCS64)
+   ------------------------------------
+   Input:   W0 = c (X0 = c; only c mod 2^32 is used); X30 = return address.
+   Output:  If execution reaches the RET (0x11ee5c): X0 = 1 if c mod 2^32 < 0x20 or c mod 2^32 = 0x7f,
+            else X0 = 0;
+            this holds for every 32-bit input (EOF = -1 gives 0).  Memory, SP,
+            X30 and the AAPCS64 callee-saved registers are unchanged.
+ *)
