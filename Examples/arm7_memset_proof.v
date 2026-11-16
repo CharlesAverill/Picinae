@@ -384,17 +384,29 @@ End VCs.
 (* Main functional correctness proof: *)
 
 Theorem memset_functional_correctness:
-  ∀ s p c len mem t s' x'
+  ∀ prog s p c len mem t s' x'
+    (MEMSET: memset_arm ⊆2 prog)
     (ENTRY: startof t (x',s') = (Addr 0, s))
     (MDL: models arm7typctx s)
     (MEM: s V_MEM32 = mem) (R0: s R_R0 = p) (R1: s R_R1 = c) (R2: s R_R2 = len),
-  satisfies_all memset_arm (memset_invset mem p c len) memset_exit ((x',s')::t).
+  satisfies_all prog (memset_invset mem p c len) memset_exit ((x',s')::t).
 Proof.
   (* Report time to interpret each instruction: *)
   Local Ltac step := time arm7_step.
 
-  (* Start proof by induction: *)
-  intros. apply prove_invs.
+  (* Lift correctness to any program containing the verified instructions. *)
+  intros prog s p c len mem t s' x' MEMSET ENTRY MDL MEM R0 R1 R2.
+  eapply satisfies_all_pmono with (p1:=memset_arm); [exact MEMSET| |].
+    intros a s1 t1 EXIT NOCODE. unfold memset_invset.
+    repeat first
+    [ reflexivity | discriminate EXIT | discriminate NOCODE
+    | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+
+    intros [x1 s1] t1 START. rewrite ENTRY in START.
+    clear - s p c len mem MDL MEM R0 R1 R2 START.
+    rename t1 into t. rename s1 into s'. rename x1 into x'. rename START into ENTRY.
+
+  apply prove_invs.
 
   (* Base case: *)
   simpl. rewrite ENTRY. step. rewrite filled0. repeat split; assumption.

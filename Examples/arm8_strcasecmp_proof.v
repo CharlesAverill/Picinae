@@ -238,17 +238,27 @@ Ltac step := time arm8_step.
 (* Prove that each subroutine satisfies the invariant set, starting with callees
    and proceeding to callers.  In this case, we start with subroutine tolower: *)
 Theorem tolower_correctness:
-  forall s sp mem t xs' arg1 arg2 a'
+  forall prog s sp mem t xs' arg1 arg2 a'
+         (STRCASECMP: strcasecmp ⊆2 prog)
          (ENTRY: startof t xs' = (Addr 2097152, s))
          (MDL: models arm8typctx s)
          (SP: s R_SP = sp) (MEM: s V_MEM64 = mem)
          (X0: s R_X0 = arg1) (X19: s R_X19 = arg2)
          (X30: s R_X30 = a'),
-  satisfies_all strcasecmp (invs0  sp mem a' arg1 arg2 (s R_X20) (s R_X21))
+  satisfies_all prog (invs0  sp mem a' arg1 arg2 (s R_X20) (s R_X21))
                            (exits0 sp mem a' arg1 arg2 (s R_X20) (s R_X21)) (xs'::t).
 Proof.
-  (* Use prove_invs to initiate a proof by induction. *)
-  intros. apply prove_invs.
+  (* Lift correctness to any program containing the verified instructions. *)
+  intros prog s sp mem t xs' arg1 arg2 a' STRCASECMP ENTRY MDL SP MEM X0 X19 X30.
+  eapply satisfies_all_pmono with (p1:=strcasecmp); [exact STRCASECMP| |].
+    intros a s1 t1 EXIT NOCODE. unfold invs0, make_invs.
+    rewrite NOCODE. reflexivity.
+
+    intros xs1 t1 START. rewrite ENTRY in START.
+    clear - s sp mem arg1 arg2 a' MDL SP MEM X0 X19 X30 START.
+    rename t1 into t. rename xs1 into xs'. rename START into ENTRY.
+
+  apply prove_invs.
 
   (* Base case: The invariant at the subroutine entry point is satisfied. *)
   simpl. rewrite ENTRY. step. repeat split; assumption.
@@ -283,16 +293,26 @@ Qed.
 (* Now prove correctness of the main strcasecmp subroutine,
    using our earlier proof of tolower at subroutine calls. *)
 Theorem strcmp_partial_correctness:
-  forall s sp mem t s' x' arg1 arg2 a'
+  forall prog s sp mem t s' x' arg1 arg2 a'
+         (STRCASECMP: strcasecmp ⊆2 prog)
          (ENTRY: startof t (x',s') = (Addr 1048576, s))
          (MDL: models arm8typctx s)
          (SP: s R_SP = sp) (MEM: s V_MEM64 = mem) (X30: s R_X30 = a')
          (RX0: s R_X0 = arg1) (RX1: s R_X1 = arg2),
-  satisfies_all strcasecmp (invs1  sp mem a' arg1 arg2 (s R_X20) (s R_X21))
+  satisfies_all prog (invs1  sp mem a' arg1 arg2 (s R_X20) (s R_X21))
                            (exits1 sp mem a' arg1 arg2 (s R_X20) (s R_X21)) ((x',s')::t).
 Proof.
-  (* Use prove_invs to initiate a proof by induction. *)
-  intros. apply prove_invs.
+  (* Lift correctness to any program containing the verified instructions. *)
+  intros prog s sp mem t s' x' arg1 arg2 a' STRCASECMP ENTRY MDL SP MEM X30 RX0 RX1.
+  eapply satisfies_all_pmono with (p1:=strcasecmp); [exact STRCASECMP| |].
+    intros a s1 t1 EXIT NOCODE. unfold invs1, make_invs.
+    rewrite NOCODE. reflexivity.
+
+    intros [x1 s1] t1 START. rewrite ENTRY in START.
+    clear - s sp mem arg1 arg2 a' MDL SP MEM X30 RX0 RX1 START.
+    rename t1 into t. rename s1 into s'. rename x1 into x'. rename START into ENTRY.
+
+  apply prove_invs.
 
   (* Base case: The invariant at the subroutine entry point is satisfied. *)
   simpl. rewrite ENTRY. step. repeat split; assumption.

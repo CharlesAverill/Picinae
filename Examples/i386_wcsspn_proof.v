@@ -100,14 +100,27 @@ End Invariants.
 (* Main correctness theorem & proof: *)
 
 Theorem wcsspn_correctness:
-  forall s t s' x'
+  forall prog s t s' x'
+         (WCSSPN: wcsspn_i386 ⊆2 prog)
          (ENTRY: startof t (x',s') = (Addr 0, s))
          (MDL: models x86typctx s),
-  satisfies_all wcsspn_i386 (wcsspn_invs s) wcsspn_exit ((x',s')::t).
+  satisfies_all prog (wcsspn_invs s) wcsspn_exit ((x',s')::t).
 Proof.
     Local Ltac step := time x86_step.
 
-    intros. eapply prove_invs.
+    (* Lift correctness to any program containing the verified instructions. *)
+    intros prog s t s' x' WCSSPN ENTRY MDL.
+    eapply satisfies_all_pmono with (p1:=wcsspn_i386); [exact WCSSPN| |].
+      intros a s1 t1 EXIT NOCODE. unfold wcsspn_invs.
+      repeat first
+      [ reflexivity | discriminate EXIT | discriminate NOCODE
+      | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+
+      intros [x1 s1] t1 START. rewrite ENTRY in START.
+      clear - s MDL START.
+      rename t1 into t. rename s1 into s'. rename x1 into x'. rename START into ENTRY.
+
+    eapply prove_invs.
     simpl. rewrite ENTRY. step. split; reflexivity.
 
     (* Optional: The following proof ignores all flag values except CF and ZF, so

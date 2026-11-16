@@ -7,7 +7,7 @@ Require Import Lia.
 Import ListNotations.
 Open Scope N_scope.
 
-(* 
+(*
     To create this function, I:
     - Wrote some assembly
 
@@ -61,7 +61,7 @@ Definition add_loop_riscv (a : addr) : N :=
     | 0x14 => 0x00130313 (* addi	t1,t1,1 *)
     | 0x18 => 0x407282b3 (* sub	t0,t0,t2 *)
     | 0x1c => 0xffce0ae3 (* beq	t3,t3,10 <add> *)
-    | _ => 0 
+    | _ => 0
     end.
 
 (*
@@ -98,7 +98,7 @@ Definition postcondition (s : store) (x y : N) :=
 Definition addloop_correctness_invs (p : addr) (x y : N) (t:trace) :=
     match t with (Addr a, s) :: _ => match a with
         | 0x8  => Some (s R_T0 = x /\ s R_T1 = y)
-        | 0x10 => Some (s R_T2 = 1 /\ s R_T3 = 0 /\ 
+        | 0x10 => Some (s R_T2 = 1 /\ s R_T3 = 0 /\
                 s R_T0 ⊕ s R_T1 = x ⊕ y)
         | 0x20 => Some (postcondition s x y)
         | _ => None end
@@ -119,23 +119,32 @@ Definition lifted_addloop := lift_riscv add_loop_riscv.
 
 (* And now for the proof!
 
-   Our partial correctness proof (partial because it assumes termination) 
+   Our partial correctness proof (partial because it assumes termination)
 *)
 Theorem addloop_partial_correctness:
-  forall s p t s' x' x y
+  forall prog s p t s' x' x y
+         (ADDLOOP: lifted_addloop ⊆2 prog)
          (ENTRY: startof t (x',s') = (Addr 0x8,s))  (* Define the entry point of the function *)
          (MDL: models rvtypctx s)
          (T0: s R_T0 = x)                           (* Tie the contents of T0 to a *)
          (T1: s R_T1 = y),                          (* Tie the contents of T1 to b *)
-  satisfies_all 
-    lifted_addloop                                  (* Provide lifted code *)
+  satisfies_all
+    prog                                            (* Provide enclosing program *)
     (addloop_correctness_invs p x y)                (* Provide invariant set *)
     addloop_exit                                    (* Provide exit point *)
   ((x',s')::t).
 Proof.
     Local Ltac step := time r5_step.
 
-    intros.
+    (* Lift correctness to any program containing the verified instructions. *)
+    intros prog s p t s' x' x y ADDLOOP ENTRY MDL T0 T1.
+    eapply satisfies_all_pmono with (p1:=lifted_addloop); [exact ADDLOOP| |].
+      intros a s1 t1 EXIT NOCODE. discriminate NOCODE.
+
+      intros [x1 s1] t1 START. rewrite ENTRY in START.
+      clear - s p x y MDL T0 T1 START.
+      rename t1 into t. rename s1 into s'. rename x1 into x'. rename START into ENTRY.
+
     apply prove_invs.
 
     (* Base case *)
@@ -145,9 +154,9 @@ Proof.
 
     (* Inductive step setup *)
     intros.
-    eapply startof_prefix in ENTRY; try eassumption.
-    eapply preservation_exec_prog in MDL; try (eassumption || apply lift_riscv_welltyped).
-    clear - PRE MDL. rename t1 into t. rename s1 into s'.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption. apply lift_riscv_welltyped. intro MDL1.
+    clear - PRE MDL1. rename MDL1 into MDL. rename t1 into t. rename s1 into s'.
 
     (* Meat of proof starts here *)
     destruct_inv 32 PRE.

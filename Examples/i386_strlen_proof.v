@@ -780,13 +780,25 @@ Qed.
 
 (* Finally we're ready to prove the main partial correctness theorem. *)
 Theorem strlen_partial_correctness:
-  forall s esp m t s' x'
+  forall prog s esp m t s' x'
+         (STRLEN: strlen_i386 ⊆2 prog)
          (ENTRY: startof t (x',s') = (Addr 0, s))
          (MDL: models x86typctx s)
          (ESP: s R_ESP = esp) (MEM: s V_MEM32 = m),
-  satisfies_all strlen_i386 (strlen_invs m esp) strlen_exit ((x',s')::t).
+  satisfies_all prog (strlen_invs m esp) strlen_exit ((x',s')::t).
 Proof.
-  intros.
+  (* Lift correctness to any program containing the verified instructions. *)
+  intros prog s esp m t s' x' STRLEN ENTRY MDL ESP MEM.
+  eapply satisfies_all_pmono with (p1:=strlen_i386); [exact STRLEN| |].
+    intros a s1 t1 EXIT NOCODE. unfold strlen_invs.
+    repeat first
+    [ reflexivity | discriminate EXIT | discriminate NOCODE
+    | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+
+    intros [x1 s1] t1 START. rewrite ENTRY in START.
+    clear - s esp m MDL ESP MEM START.
+    rename t1 into t. rename s1 into s'. rename x1 into x'. rename START into ENTRY.
+
 
   (* Time how long it takes for each symbolic interpretation step to complete
      (for profiling and to give visual cues that something is happening...). *)

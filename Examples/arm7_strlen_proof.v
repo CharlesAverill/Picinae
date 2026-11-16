@@ -208,15 +208,27 @@ Qed.
 
 (* Main correctness theorem (and proof): *)
 Theorem strlen_partial_correctness:
-  forall s p lr m t s' x'
+  forall prog s p lr m t s' x'
+         (STRLEN: strlen_arm ⊆2 prog)
          (ENTRY: startof t (x',s') = (Addr 0,s))
          (MDL: models arm7typctx s)
          (MEM: s V_MEM32 = m) (LR: s R_LR = lr) (R0: s R_R0 = p),
-  satisfies_all strlen_arm (strlen_invs m p) strlen_exit ((x',s')::t).
+  satisfies_all prog (strlen_invs m p) strlen_exit ((x',s')::t).
 Proof.
   Local Ltac step := time arm7_step.
 
-  intros.
+  (* Lift correctness to any program containing the verified instructions. *)
+  intros prog s p lr m t s' x' STRLEN ENTRY MDL MEM LR R0.
+  eapply satisfies_all_pmono with (p1:=strlen_arm); [exact STRLEN| |].
+    intros a s1 t1 EXIT NOCODE. unfold strlen_invs.
+    repeat first
+    [ reflexivity | discriminate EXIT | discriminate NOCODE
+    | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+
+    intros [x1 s1] t1 START. rewrite ENTRY in START.
+    clear - s p lr m MDL MEM LR R0 START.
+    rename t1 into t. rename s1 into s'. rename x1 into x'. rename START into ENTRY.
+
   apply prove_invs.
 
   (* Base case: *)

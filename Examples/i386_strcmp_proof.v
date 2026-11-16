@@ -250,6 +250,7 @@ Section VCs.
 End VCs.
 
 (* Our partial correctness theorem makes the following assumptions:
+   (STCMP) The enclosing program contains all instructions of strcmp_i386.
    (ENTRY) Specify the start address and state of the subroutine.
    (MDL) Assume that on entry the processor is in a valid state.
    (ESP) Let esp be the value of the ESP register on entry.
@@ -257,13 +258,28 @@ End VCs.
    From these, we prove that all invariants (including the post-condition) hold
    true for arbitrarily long executions (i.e., arbitrary t). *)
 Theorem strcmp_partial_correctness:
-  forall s t s' x'
+  forall p s t s' x'
+         (STCMP: strcmp_i386 ⊆2 p)
          (ENTRY: startof t (x',s') = (Addr 0, s))
          (MDL: models x86typctx s),
-  satisfies_all strcmp_i386 (strcmp_invs s) strcmp_exit ((x',s')::t).
+  satisfies_all p (strcmp_invs s) strcmp_exit ((x',s')::t).
 Proof.
-  (* Start the proof the same way as before. *)
-  intros. apply prove_invs.
+  (* Lift correctness of the subprogram to any enclosing program.  Invariants
+     outside the subprogram must be explicit exits, so they cannot hide a
+     transfer into unverified code. *)
+  intros p s t s' x' STCMP ENTRY MDL.
+  eapply satisfies_all_pmono with (p1:=strcmp_i386); [exact STCMP| |].
+    intros a s1 t1 EXIT NOCODE. unfold strcmp_invs.
+    repeat first
+    [ reflexivity | discriminate NOCODE
+    | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+
+    intros [x1 s1] t1 START. rewrite ENTRY in START.
+    clear - s MDL START.
+    rename t1 into t. rename s1 into s'. rename x1 into x'. rename START into ENTRY.
+
+  (* Verify the original subprogram using its existing preservation and VC lemmas. *)
+  apply prove_invs.
 
   (* Prove the base case similarly. *)
   simpl. rewrite ENTRY. x86_step. exact I.

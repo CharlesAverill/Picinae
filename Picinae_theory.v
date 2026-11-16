@@ -95,10 +95,17 @@ Tactic Notation "vantisym" constr(v1) constr(v2) "by" tactic(T) :=
 Definition pfsub {A B:Type} (f g: A -> option B) : Prop :=
   forall x y, f x = Some y -> g x = Some y.
 
+Definition pf2sub {A B C:Type} (f g: A -> B -> option C) : Prop :=
+  forall x y z, f x y = Some z -> g x y = Some z.
+
 Notation "f ⊆ g" := (pfsub f g) (at level 70, right associativity).
+Notation "f ⊆2 g" := (pf2sub f g) (at level 70, right associativity).
 
 Theorem pfsub_refl {A B}: forall (f:A->option B), f ⊆ f.
 Proof. unfold pfsub. intros. assumption. Qed.
+
+Theorem pf2sub_refl {A B C}: forall (f:A->B->option C), f ⊆2 f.
+Proof. unfold pf2sub. intros. assumption. Qed.
 
 Theorem pfsub_antisym {A B}:
   forall (f g:A->option B), f ⊆ g -> g ⊆ f -> f = g.
@@ -109,9 +116,30 @@ Proof.
     destruct (g v). apply GF. reflexivity. reflexivity.
 Qed.
 
+Theorem pf2sub_pfsub {A B C}:
+  forall (f g:A -> B -> option C), f ⊆2 g <-> (fun (ab:A*B) => let (a,b):=ab in f a b) ⊆(fun (ab:A*B) => let (a,b):=ab in g a b).
+Proof.
+  unfold pf2sub, pfsub in *; split; intros.
+    destruct x as [a b]. exact (H a b y H0).
+    specialize (H (x,y) z H0). exact H.
+Qed.
+
+Theorem pf2sub_antisym {A B C}:
+  forall (f g:A->C->option B), f ⊆2 g -> g ⊆2 f -> f = g.
+Proof.
+  intros f g FG GF; rewrite pf2sub_pfsub in *. unfold pfsub in *.
+  extensionality v. extensionality w. specialize (FG (v,w)). specialize (GF (v,w)). destruct (f v w) as [y|].
+    symmetry. apply FG. reflexivity.
+    destruct (g v w). apply GF. reflexivity. reflexivity.
+Qed.
+
 Theorem pfsub_trans {A B}:
   forall (f g h:A->option B), f ⊆ g -> g ⊆ h -> f ⊆ h.
 Proof. unfold pfsub. intros f g h FG GH x y FX. apply GH,FG. assumption. Qed.
+
+Theorem pf2sub_trans {A B C}:
+  forall (f g h:A->B->option C), f ⊆2 g -> g ⊆2 h -> f ⊆2 h.
+Proof. unfold pf2sub. intros f g h FG GH x y z FX. apply GH,FG. assumption. Qed.
 
 Theorem pfsub_contrapos {A B}:
   forall (f g: A -> option B) x, f ⊆ g -> g x = None -> f x = None.
@@ -121,10 +149,22 @@ Proof.
     reflexivity.
 Qed.
 
+Theorem pf2sub_contrapos {A B C}:
+  forall (f g:A->B->option C) x y, f ⊆2 g -> g x y = None -> f x y = None.
+Proof.
+  intros f g x y SS H. eapply pfsub_contrapos; [|exact H].
+  intros y' z FX. apply SS. assumption.
+Qed.
+
 Add Parametric Relation {A B:Type}: (A -> option B) pfsub
   reflexivity proved by pfsub_refl
   transitivity proved by pfsub_trans
 as pfsubset.
+
+Add Parametric Relation {A B C:Type}: (A -> B -> option C) pf2sub
+  reflexivity proved by pf2sub_refl
+  transitivity proved by pf2sub_trans
+as pf2subset.
 
 (* Symmetric updates preserve the partial order relation. *)
 Theorem pfsub_update {A B} {_: EqDec A}:
@@ -136,8 +176,32 @@ Proof.
     apply SS. assumption.
 Qed.
 
+Theorem pf2sub_update {A B C} {_: EqDec A}:
+  forall (f g:A->B->option C) (SS: f ⊆2 g) (x:A) (y:B->option C),
+  update f x y ⊆2 update g x y.
+Proof.
+  intros. unfold update. intros a b c H. destruct (a == x).
+    assumption.
+    apply SS. assumption.
+Qed.
+
+(* Symmetric updates to a single pair of arguments also preserve the relation. *)
+Theorem pf2sub_update2 {A B C} {_: EqDec A} {_: EqDec B}:
+  forall (f g:A->B->option C) (SS: f ⊆2 g) x y (z:option C),
+  update f x (update (f x) y z) ⊆2 update g x (update (g x) y z).
+Proof.
+  intros. unfold update. intros a b c H. destruct (a == x).
+    destruct (b == y).
+      assumption.
+      apply SS. assumption.
+    apply SS. assumption.
+Qed.
+
 Definition updateall {A B:Type} (f g: A -> option B) (x:A) : option B :=
   match g x with None => f x | Some y => Some y end.
+
+Definition updateall2 {A B C:Type} (f g:A->B->option C) (x:A) : B -> option C :=
+  updateall (f x) (g x).
 
 Theorem updateall_subset {A B}:
   forall (f g: A->option B), f ⊆ g -> updateall g f = g.
@@ -148,14 +212,34 @@ Proof.
     reflexivity.
 Qed.
 
+Theorem updateall2_subset {A B C}:
+  forall (f g:A->B->option C), f ⊆2 g -> updateall2 g f = g.
+Proof.
+  intros f g SS. extensionality x. unfold updateall2. apply updateall_subset.
+  intros y z FX. apply SS. assumption.
+Qed.
+
 Theorem subset_updateall {A B}:
   forall (f g: A->option B), f ⊆ updateall g f.
 Proof. unfold pfsub, updateall. intros. rewrite H. reflexivity. Qed.
+
+Theorem subset_updateall2 {A B C}:
+  forall (f g:A->B->option C), f ⊆2 updateall2 g f.
+Proof. unfold pf2sub, updateall2, updateall. intros. rewrite H. reflexivity. Qed.
 
 Theorem updateall_mono {A B}:
   forall (f1 f2 g: A -> option B) (SS: f1 ⊆ f2), updateall f1 g ⊆ updateall f2 g.
 Proof.
   unfold pfsub, updateall. intros. destruct (g x).
+    assumption.
+    apply SS. assumption.
+Qed.
+
+Theorem updateall2_mono {A B C}:
+  forall (f1 f2 g:A->B->option C) (SS: f1 ⊆2 f2),
+  updateall2 f1 g ⊆2 updateall2 f2 g.
+Proof.
+  unfold pf2sub, updateall2, updateall. intros. destruct (g x y).
     assumption.
     apply SS. assumption.
 Qed.
@@ -8254,6 +8338,28 @@ CoInductive nextinv' p Invs (xp: trace -> bool): bool -> trace -> Prop :=
                  nextinv' p Invs xp true ((exitof (a+sz) x1, reset_temps s s1)::(Addr a,s)::t)):
     nextinv' p Invs xp b ((Addr a, s)::t).
 
+(* Extending a program preserves next-invariant proofs when invariants outside
+   the original program are placed only at explicit exits. *)
+Theorem nextinv'_pmono:
+  forall p1 p2 Invs xp (PS: p1 ⊆2 p2)
+    (SUP: forall a s t, xp ((Addr a,s)::t) = false -> p1 s a = None ->
+          Invs ((Addr a,s)::t) = None)
+    b t (NI: nextinv' p1 Invs xp b t),
+  nextinv' p2 Invs xp b t.
+Proof.
+  intros p1 p2 Invs xp PS SUP. cofix IH. intros b t NI. inversion NI; subst.
+    apply NIHere'. unfold effinv, effexit in *.
+    destruct t as [|[[a|i] s] t]; try exact TRU.
+    destruct (xp ((Addr a,s)::t)) eqn:EXIT; [exact TRU|].
+    destruct (p1 s a) as [insn|] eqn:IL.
+      rewrite (PS _ _ _ IL). exact TRU.
+      rewrite (SUP _ _ _ EXIT IL) in TRU. contradiction.
+
+    eapply NIStep'; [|apply PS; exact IL|].
+      unfold effinv, effexit in *. rewrite IL in NOI. rewrite (PS _ _ _ IL). exact NOI.
+      intros. apply IH. eapply STEP. eassumption.
+Qed.
+
 (* Proving the "next invariant satisfied" property for all invariant points proves partial
    correctness of the program. *)
 
@@ -8271,6 +8377,44 @@ Proof.
       destruct t. contradiction.
       destruct p0 as ([a|i],s). destruct (p s a); contradiction. contradiction.
     unfold effinv,effexit in NOI. destruct (Invs _). discriminate. exact I.
+Qed.
+
+(* A correctness proof for every trace from a fixed initial state also applies
+   to any larger program.  Before an explicit exit, the original proof ensures
+   that each executed instruction belongs to the original program.  Thus the
+   larger program need not be globally well-typed or preserve any registers. *)
+Theorem satisfies_all_pmono:
+  forall p1 p2 Invs xp xs t (PS: p1 ⊆2 p2)
+    (SUP: forall a s t, xp ((Addr a,s)::t) = false -> p1 s a = None ->
+          Invs ((Addr a,s)::t) = None)
+    (SA: forall xs' t', startof t' xs' = startof t xs ->
+         satisfies_all p1 Invs xp (xs'::t')),
+  satisfies_all p2 Invs xp (xs::t).
+Proof.
+  intros p1 p2 Invs xp xs t PS SUP SA.
+  assert (RESTRICT: forall t' xs', startof t' xs' = startof t xs ->
+            exec_prog p2 (xs'::t') -> unterminated xp t' -> exec_prog p1 (xs'::t')).
+  { induction t' as [|xs1 t' IH]; intros xs' START XP UT.
+      apply exec_prog_none.
+      rewrite startof_cons in START.
+      assert (UT1: unterminated xp t') by (eapply unterminated_tl; exact UT).
+      assert (XP1: exec_prog p1 (xs1::t')).
+        apply IH; [exact START|eapply exec_prog_tail; exact XP|exact UT1].
+      assert (NI: nextinv' p1 Invs xp false (xs1::t')) by (apply SA; assumption).
+      assert (EXIT: xp (xs1::t') = false) by (inversion UT; assumption).
+      assert (CS: can_step p2 (xs',xs1)) by (eapply exec_prog_final; exact XP).
+      inversion CS; subst.
+      inversion NI; subst.
+        unfold effinv, effexit in TRU. rewrite EXIT in TRU.
+        destruct (p1 s a) as [insn|] eqn:IL.
+          destruct (Invs _); contradiction.
+          rewrite (SUP _ _ _ EXIT IL) in TRU. contradiction.
+        apply exec_prog_step. exact XP1.
+        assert (LOOK := PS _ _ _ IL). rewrite LU in LOOK. inversion LOOK; subst.
+        eapply CanStep; eassumption.
+  }
+  intros XP UT b. eapply nextinv'_pmono; [exact PS|exact SUP|].
+  apply SA; [reflexivity|apply RESTRICT; [reflexivity|exact XP|exact UT]|exact UT].
 Qed.
 
 Lemma nextinv_noinv:

@@ -175,7 +175,8 @@ End Invariants.
 
 ( * * * * * * * * *         ~~ ~~~~~~~~ ~~        * * * * * * * * * *)
 Theorem strspn_partial_correctness:
-  ∀ s str_ptr acpt_ptr acpt_len sp m t s' x'
+  ∀ prog s str_ptr acpt_ptr acpt_len sp m t s' x'
+         (STRSPN: strspn2 ⊆2 prog)
          (ENTRY: startof t (x',s') = (Addr 0x00100000,s))
          (MDL: models arm8typctx s)
          (M0: s V_MEM64 = m)
@@ -186,10 +187,21 @@ Theorem strspn_partial_correctness:
          (NO: ~overlap 64 acpt_ptr (N.succ acpt_len) (sp ⊖ 0x20) 32)
          (BITMAP: m Ⓨ[  0x00100000 + 0xb0  ] = 0)
 ,
-  satisfies_all strspn2 (strspn_invs m sp str_ptr acpt_ptr acpt_len) strspn_exit ((x',s')::t).
+  satisfies_all prog (strspn_invs m sp str_ptr acpt_ptr acpt_len) strspn_exit ((x',s')::t).
 Proof.
 Local Ltac step := time arm8_step.
-intros. unfold satisfies_all.
+  (* Lift correctness to any program containing the verified instructions. *)
+  intros prog s str_ptr acpt_ptr acpt_len sp m t s' x' STRSPN ENTRY MDL M0 STR SP ACPT ACPT_LEN NO BITMAP.
+  eapply satisfies_all_pmono with (p1:=strspn2); [exact STRSPN| |].
+    intros a s1 t1 EXIT NOCODE. unfold strspn_invs.
+    repeat first
+    [ reflexivity | discriminate EXIT | discriminate NOCODE
+    | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+
+    intros [x1 s1] t1 START. rewrite ENTRY in START.
+    clear - s str_ptr acpt_ptr acpt_len sp m MDL M0 STR SP ACPT ACPT_LEN NO BITMAP START.
+    rename t1 into t. rename s1 into s'. rename x1 into x'. rename START into ENTRY.
+
   apply prove_invs.
   (* Base Case *)
   simpl. rewrite ENTRY. step. repeat (split || assumption).
