@@ -20,7 +20,7 @@ if [[ -f "$project_dir/$project_name.gpr" ]]; then
 else
   input=(-import "$binary")
 fi
-functions='^(toascii|htonl|htons|ntohl|ntohs|isascii|isdigit|isgraph|islower|isprint|isupper|abs|labs|strlen|memcmp|bcmp|strnlen|wmemchr|wmemcmp|ffs|ffsl|ffsll|strcmp|memrchr|wmemset)$'
+functions='^(toascii|htonl|htons|ntohl|ntohs|isascii|isdigit|isgraph|islower|isprint|isupper|abs|labs|strlen|memcmp|bcmp|strnlen|wmemchr|wmemcmp|ffs|ffsl|ffsll|strcmp|memrchr|wmemset|isalpha|isalnum|isblank|iscntrl|isspace|tolower|toupper|wcscmp|wcsncmp|isxdigit|llabs|imaxabs|wcslen|wcsnlen|memchr|iswdigit|iswxdigit|iswcntrl|iswblank|iswdigit_l|iswxdigit_l|isalnum_l|isalpha_l|isblank_l|iscntrl_l|isdigit_l|isgraph_l|islower_l|isprint_l|isspace_l|isupper_l|isxdigit_l|ispunct|tolower_l|toupper_l|iswblank_l|ispunct_l|iswcntrl_l|strcoll_l|wcscoll_l|wcschr|wcsrchr|strrchr|strchrnul|strchr|wctrans|wctrans_l|wctype|wctype_l|strcasecmp|strcasecmp_l|strncasecmp|strncasecmp_l|index|rindex|strcoll|wcscoll|strncat|stpcpy|strcpy)$'
 "$ghidra_dir/support/pyghidraRun" --headless "$project_dir" "$project_name" \
   "${input[@]}" -scriptPath "$script_dir" \
   -postScript pcode2coq_codex.py --functionRegex "$functions" \
@@ -32,9 +32,12 @@ if rg -q '^ERROR|Traceback|NotImplementedError' "$script_dir/.build/lift.log"; t
   exit 1
 fi
 for symbol in toascii htonl htons ntohl ntohs isascii isdigit isgraph islower \
-  isprint isupper abs labs strlen memcmp bcmp strnlen wmemchr wmemcmp ffs ffsl ffsll strcmp memrchr wmemset; do
+  isprint isupper abs labs strlen memcmp bcmp strnlen wmemchr wmemcmp ffs ffsl ffsll strcmp memrchr wmemset isalpha isalnum isblank iscntrl isspace tolower toupper wcscmp wcsncmp isxdigit llabs imaxabs wcslen wcsnlen memchr iswdigit iswxdigit iswcntrl iswblank iswdigit_l iswxdigit_l isalnum_l isalpha_l isblank_l iscntrl_l isdigit_l isgraph_l islower_l isprint_l isspace_l isupper_l isxdigit_l ispunct tolower_l toupper_l iswblank_l ispunct_l iswcntrl_l strcoll_l wcscoll_l wcschr wcsrchr strrchr strchrnul strchr wctrans wctrans_l wctype wctype_l strcasecmp strcasecmp_l strncasecmp strncasecmp_l index rindex strcoll wcscoll strncat stpcpy strcpy; do
   if ! rg -q "Written: .*/${symbol}_i386.v" "$script_dir/.build/lift.log"; then
     printf 'No fresh lift reported for %s.\n' "$symbol" >&2
     exit 1
   fi
 done
+# The internal PIC thunk is not an exported ELF symbol. Lift it separately
+# after releasing the project, with its address and exact bytes checked.
+bash "$script_dir/lift_support.sh"

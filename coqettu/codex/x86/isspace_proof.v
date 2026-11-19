@@ -63,7 +63,9 @@ Proof.
     all: psimpl.
     all: try exact PRE.
     all: repeat split; try reflexivity.
-    Show.
+    all: fold (cdecl_arg s0) in *.
+    all: rewrite (ascii_space_test (cdecl_arg s0) ltac:(unfold cdecl_arg; apply getmem_bound)).
+    all: apply boolean_or_word.
 Qed.
 
 Theorem isspace_correct :

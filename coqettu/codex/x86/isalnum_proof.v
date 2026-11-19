@@ -63,7 +63,14 @@ Proof.
     all: psimpl.
     all: try exact PRE.
     all: repeat split; try reflexivity.
-    Show.
+    all: fold (cdecl_arg s0) in *.
+    all: rewrite (ascii_lower_test (N.lor (cdecl_arg s0) 32)
+      (or32_bound (cdecl_arg s0) ltac:(unfold cdecl_arg; apply getmem_bound))) in BC.
+    all: unfold ascii_lower in BC.
+    all: rewrite (alpha_fold (cdecl_arg s0)) in BC.
+    all: destruct (ascii_alpha (cdecl_arg s0)) eqn:ALPHA; cbn in BC; try discriminate.
+    all: cbn [orb].
+    all: first [reflexivity|apply ascii_digit_test; unfold cdecl_arg; apply getmem_bound].
 Qed.
 
 Theorem isalnum_correct :

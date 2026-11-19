@@ -66,3 +66,48 @@ Qed.
 Lemma boolean_or_word : forall (b c:bool),
   N.lor (if b then 1 else 0) (if c then 1 else 0) = if b||c then 1 else 0.
 Proof. intros [] []; reflexivity. Qed.
+
+Lemma ascii_upper_test : forall x, x<2^32 ->
+  N.lor (if msub 32 x 65 <? 25 then 1 else 0) (if x=?90 then 1 else 0) =
+    if ascii_upper x then 1 else 0.
+Proof.
+  intros x X. exact (classify_interval x 65 90 X ltac:(lia) ltac:(lia)).
+Qed.
+Lemma ascii_lower_test : forall x, x<2^32 ->
+  N.lor (if msub 32 x 97 <? 25 then 1 else 0) (if x=?122 then 1 else 0) =
+    if ascii_lower x then 1 else 0.
+Proof.
+  intros x X. exact (classify_interval x 97 122 X ltac:(lia) ltac:(lia)).
+Qed.
+Lemma ascii_digit_test : forall x, x<2^32 ->
+  N.lor (if msub 32 x 48 <? 9 then 1 else 0) (if x=?57 then 1 else 0) =
+    if ascii_digit x then 1 else 0.
+Proof.
+  intros x X. exact (classify_interval x 48 57 X ltac:(lia) ltac:(lia)).
+Qed.
+Lemma ascii_space_test : forall x, x<2^32 ->
+  N.lor (if msub 32 x 9 <? 4 then 1 else 0) (if x=?13 then 1 else 0) =
+    if (9<=?x)&&(x<=?13) then 1 else 0.
+Proof.
+  intros x X. exact (classify_interval x 9 13 X ltac:(lia) ltac:(lia)).
+Qed.
+
+Definition ascii_hex_letter (x:N) := ((65<=?x)&&(x<=?70)) || ((97<=?x)&&(x<=?102)).
+Lemma hex_letter_fold : forall x,
+  ((97<=?N.lor x 32)&&(N.lor x 32<=?102)) = ascii_hex_letter x.
+Proof.
+  intros x. destruct (N.lt_ge_cases x 128) as [SMALL|LARGE].
+  - ascii_finite x 0 128.
+  - pose proof (or32_large x LARGE) as OR. unfold ascii_hex_letter.
+    assert (A:(N.lor x 32<=?102)=false) by (apply N.leb_gt; lia).
+    assert (B:(x<=?70)=false) by (apply N.leb_gt; lia).
+    assert (C:(x<=?102)=false) by (apply N.leb_gt; lia).
+    rewrite A,B,C. destruct (97<=?N.lor x 32), (65<=?x), (97<=?x); reflexivity.
+Qed.
+Lemma ascii_hex_letter_test : forall x, x<2^32 ->
+  N.lor (if msub 32 (N.lor x 32) 97 <? 5 then 1 else 0)
+    (if N.lor x 32=?102 then 1 else 0) = if ascii_hex_letter x then 1 else 0.
+Proof.
+  intros x X. rewrite <- (hex_letter_fold x).
+  exact (classify_interval (N.lor x 32) 97 102 (or32_bound x X) ltac:(lia) ltac:(lia)).
+Qed.

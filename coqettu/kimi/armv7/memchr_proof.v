@@ -162,10 +162,10 @@ Proof.
 
       * unfold memchr_scan, memchr_frame in PRE.
         destruct PRE as (k & KN & R0 & R2 & R1 & PREFIX & C & NB & MEM & SP).
-        Time do 2 arm7_step. Time arm7_step.
-        -- Time arm7_step. Time arm7_step.
+        do 2 arm7_step. arm7_step.
+        -- arm7_step. arm7_step.
            ++ apply N.eqb_eq in BC0. rewrite !N.mod_small in BC0 by lia.
-              assert (k = s0 R_R2) by lia. subst k. Time do 2 arm7_step.
+              assert (k = s0 R_R2) by lia. subst k. do 2 arm7_step.
               unfold memchr_tail, memchr_frame. exists (s0 R_R2). repeat split.
               all: elimstore; psimpl; try assumption; try reflexivity; try lia.
            ++ apply N.eqb_neq in BC0. unfold memchr_probe, memchr_frame.
@@ -173,9 +173,9 @@ Proof.
               { destruct (proj1 (N.le_lteq k (s0 R_R2)) KN) as [LT|EQ]; [exact LT|].
                 subst k. rewrite !N.mod_small in BC0 by assumption. contradiction. }
               exists k. repeat split; elimstore; psimpl; try assumption; try reflexivity.
-        -- Time arm7_step.
+        -- arm7_step.
            ++ apply N.eqb_eq in BC0. rewrite !N.mod_small in BC0 by lia.
-              assert (k = s0 R_R2) by lia. subst k. Time arm7_step.
+              assert (k = s0 R_R2) by lia. subst k. arm7_step.
               unfold memchr_tail, memchr_frame. exists (s0 R_R2). repeat split.
               all: elimstore; psimpl; try assumption; try reflexivity; try lia.
            ++ apply N.eqb_neq in BC0. assert (HK : k < s0 R_R2).
@@ -207,14 +207,14 @@ Proof.
               rewrite (N.mod_small ((s0 R_R2)-k) (2^32)) by lia.
               apply (f_equal (fun x => x mod 2^32)).
               change (2^2) with 4. lia.
-           ** Show. rewrite !N.shiftl_mul_pow2. nia.
+           ** rewrite !N.shiftl_mul_pow2. nia.
 
       * unfold memchr_word_loop, memchr_frame in PRE.
         destruct PRE as (k & KN & R0 & R4 & R6 & R3 & R1 & PREFIX & C & NB & MEM & SP).
         do 2 arm7_step. arm7_step.
         -- do 2 arm7_step. unfold memchr_tail, memchr_frame. exists k.
            repeat split; elimstore; psimpl; try assumption; try reflexivity; try lia.
-        -- Time do 5 arm7_step. Time arm7_step.
+        -- do 5 arm7_step. arm7_step.
            ++ assert (HK4 : k+4 <= s0 R_R2).
               { destruct (N.lt_ge_cases ((s0 R_R2)-k) 4) as [LT|GE]; [|lia].
                 destruct (0 =? (((s0 R_R2)-k) - ((s0 R_R2)-k) mod 4)
@@ -224,21 +224,22 @@ Proof.
                 rewrite (N.mod_small ((s0 R_R2)-k) 4) by exact LT. lia. }
               unfold memchr_word_loop, memchr_frame. exists (k+4). repeat split.
               ** exact HK4.
-              ** Time psimpl. Time reflexivity.
+              ** psimpl. reflexivity.
               ** psimpl. clear - HK4. nia.
               ** exact R6.
               ** exact R1.
-              ** Time apply unequal_prefix_word; try assumption.
+              ** apply unequal_prefix_word; try assumption.
+                 unfold zero32 in BC0.
                  destruct (zero32 (N.lxor (spread_byte32 (s0 R_R1 mod 2^8))
-                                          ((memchr_pushmem s0) Ⓓ[(s0 R_R0) + k])) =? 0) eqn:Z;
-                   simpl in BC0; try discriminate.
-                 apply N.eqb_eq in Z. unfold zero32 in Z.
-                 rewrite (N.lxor_comm (spread_byte32 (s0 R_R1 mod 2^8))
-                                      ((memchr_pushmem s0) Ⓓ[(s0 R_R0) + k])) in Z.
-                 exact Z. rewrite Z in BC0; simpl in BC0; discriminate.
+                                          ((memchr_pushmem s0) Ⓓ[(s0 R_R0) + k])) =? 0) eqn:Z.
+                 --- apply N.eqb_eq in Z. unfold zero32 in Z.
+                     rewrite (N.lxor_comm (spread_byte32 (s0 R_R1 mod 2^8))
+                                          ((memchr_pushmem s0) Ⓓ[(s0 R_R0) + k])) in Z.
+                     exact Z.
+                 --- unfold zero32 in Z. rewrite Z in BC0. simpl in BC0. discriminate.
               ** exact C.
               ** exact NB.
-              ** elimstore. exact SP.
+              ** elimstore. reflexivity.
            ++ do 2 arm7_step. unfold memchr_tail, memchr_frame. exists k.
               repeat split; elimstore; psimpl; try assumption; try reflexivity; try lia.
 
@@ -257,7 +258,6 @@ Proof.
               unfold memchr_post, memchr_frame. exists k. repeat split.
               all: elimstore; psimpl; try assumption; try reflexivity; try lia.
               all: try (pose proof (PREFIX i H) as Q; assumption).
-              right. repeat split; psimpl; try assumption; try reflexivity; try lia.
            ++ apply N.eqb_neq in BC0. unfold memchr_tail, memchr_frame.
               exists (k+1). repeat split.
               all: elimstore; psimpl; try assumption; try reflexivity; try lia.

@@ -61,7 +61,7 @@ Proof.
     all: split; [|repeat split; reflexivity].
     all: fold (cdecl_arg s0) in *.
     all: assert (B: cdecl_arg s0<2^32) by (unfold cdecl_arg; apply getmem_bound).
-    all: rewrite (classify_interval (cdecl_arg s0) 65 90 B ltac:(lia) ltac:(lia)) in BC.
+    all: rewrite (ascii_upper_test (cdecl_arg s0) B) in BC.
     all: fold (ascii_upper (cdecl_arg s0)) in BC.
     all: destruct (ascii_upper (cdecl_arg s0)) eqn:CASE; cbn in BC; try discriminate.
     all: unfold tolower_spec; rewrite CASE.
@@ -86,6 +86,9 @@ Proof.
   intros prog EXT s0 t s x s' ret RET ENTRY XP UT.
   pose proof (tolower_correct prog EXT s0 t (Addr ret,s) ENTRY) as SA.
   pose proof (satall_trueif_inv prog _ _ _ SA (exec_prog_tail _ _ _ XP) UT) as INV.
-  destruct RET as [EQ|EQ]; subst ret;
-    eapply cdecl_ret_step; [apply EXT; reflexivity|exact INV|exact (exec_prog_final _ _ _ _ XP)].
+  destruct RET as [EQ|EQ]; subst ret.
+  - eapply cdecl_ret_step with (ret:=0x4f641) (s:=s);
+      [apply EXT; reflexivity|exact INV|exact (exec_prog_final _ _ _ _ XP)].
+  - eapply cdecl_ret_step with (ret:=0x4f645) (s:=s);
+      [apply EXT; reflexivity|exact INV|exact (exec_prog_final _ _ _ _ XP)].
 Qed.

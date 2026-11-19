@@ -8,12 +8,15 @@ directory = Path(__file__).resolve().parent
 sys.path.insert(0, str(directory))
 sys.path.insert(0, str(directory / "lifter_base"))
 import bsf_adapter
+import segment_adapter
 import pcode2coq_lib as lifting
 import pcode2coq_headless as headless
 
+original_var = lifting.vnToVar
 original_stmts = lifting.stmts_str
 original_lift = headless.liftFunc
 adapted_count = 0
+segment_count = 0
 
 
 def record(vn):
@@ -21,6 +24,18 @@ def record(vn):
         return None
     return {"space": str(vn.getAddress().getAddressSpace().getName()),
             "offset": int(vn.getOffset()), "size": int(vn.getSize())}
+
+
+def variable(info, vn):
+    global segment_count
+    name = original_var(info, vn)
+    if not vn.isRegister():
+        return name
+    mapped = segment_adapter.segment_alias(info.picArch, name,
+        str(vn.getAddress().getAddressSpace().getName()), int(vn.getOffset()), int(vn.getSize()))
+    if mapped != name:
+        segment_count += 1
+    return mapped
 
 
 def statements(info, ops, next_address):
@@ -45,13 +60,18 @@ def statements(info, ops, next_address):
 
 def lift_with_provenance(*args):
     before = adapted_count
+    segments_before = segment_count
     name, text = original_lift(*args)
     if adapted_count != before:
         text = ("(* Codex-local BSF32 adapter: bsf_adapter.py + pcode2coq_codex.py.\n"
                 "   Exact Ghidra graph; bounded guarded Rep; other loops remain rejected. *)\n" + text)
+    if segment_count != segments_before:
+        text = ("(* Codex-local i386 GS-base alias: segment_adapter.py + pcode2coq_codex.py.\n"
+                "   Exact 32-bit register0x114: Ghidra GS_OFFSET = Picinae R_GS_BASE. *)\n" + text)
     return name, text
 
 
+lifting.vnToVar = variable
 lifting.stmts_str = statements
 headless.liftFunc = lift_with_provenance
 headless.this = this

@@ -232,14 +232,120 @@ Proof.
   destruct_inv 64 PRE.
   - destruct PRE as [MEM [D [S [RSP CS]]]].
     repeat x64_step.
-    all: match goal with |- ?G => idtac "E:" G end.
-    all: admit.
+    pose proof CS as (B0 & B1 & B2 & B3 & B4 & B5). rewrite B0.
+    conj_tac. unfold cs_but_rbx; repeat split; rewrite ?update_frame by discriminate; assumption.
   - destruct PRE as [MEM [RDI [RBX [RSP CS]]]].
     x64_step.
-    match goal with |- ?G => idtac "C1:" G end.
-    admit.
+    match goal with |- nextinv _ _ _ _ ((Addr _, ?S)::_) => set (s2 := S) end.
+    apply (models_after_steps wcscat_program _ _ _ _ s2 nil _ s1 t MDL1 wcscat_program_welltyped).
+    intro MDL2.
+    eapply (call_leaf_ni wcscat_program wcslen_amd64 _ _ (wcslen_invs s2 (s2 V_MEM64) d) wcslen_exit).
+    + apply wcslen_in_wcscat.
+    + intros a s t' EXIT NOCODE. unfold wcslen_invs.
+      repeat first
+      [ reflexivity | discriminate EXIT | discriminate NOCODE
+      | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+    + intros t' [x' s'] START. apply wcslen_correct; first
+        [ apply pf2sub_refl | assumption | reflexivity | (unfold s2; reg; assumption) ].
+    + intros a s t' NC. unfold wcscat_invs, wcscat_exit.
+      repeat first
+      [ split | reflexivity | (exfalso; apply NC; reflexivity)
+      | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+    + intros [[a|i] s] t'; reflexivity.
+    + intros [[a|i] s] t'; reflexivity.
+    + intros a s t' X. unfold wcslen_exit in X. addr_cases X. discriminate.
+    + split; reflexivity.
+    + intros. split; reflexivity.
+    + intros a' s' t2 ENTRY' UT PRE.
+      unfold get_postcondition in PRE.
+      destruct (wcslen_exit _) eqn:EX; [|destruct PRE].
+      unfold wcslen_exit in EX. addr_cases EX.
+      simpl in PRE.
+      apply (models_after_steps _ _ _ _ _ s' t2 _ s1 t MDL1 wcscat_program_welltyped).
+      intro MDL3.
+      destruct PRE as [[k [NF [Z RAX]]] [MEM' [RSP' CS']]].
+      unfold s2 in *. rewrite !update_frame in RSP' by discriminate. rewrite update_updated in MEM', NF, Z.
+      destruct CS' as (C0&C1&C2&C3&C4&C5).
+      rewrite !update_frame in C0, C1, C2, C3, C4, C5 by discriminate.
+      assert (KL: k = Ld0).
+      { apply (wnilfree_unique _ d _ Ld0 NF Z).
+        - intros i I. rewrite (push3_word m _ _ _ _ d (Ld0 + 1) i (dst_sub d Ld0 Ls _ OVd)) by (clear - I; lia).
+          apply NL0, I.
+        - rewrite (push3_word m _ _ _ _ d (Ld0 + 1) Ld0 (dst_sub d Ld0 Ls _ OVd)) by (clear; lia). exact ZL0. }
+      subst k. rewrite (wcslen_ret Ld0 ltac:(clear - LB; lia)) in RAX.
+      repeat x64_step.
+      exists Ld0. conj_tac.
+      * rewrite RBX, N.mul_comm. reflexivity.
+      * destruct CS as (B1 & B2 & B3 & B4 & B5). unfold cs_but_rbx. reg.
+        rewrite C1, C2, C3, C4, C5. repeat split; assumption.
   - destruct PRE as [Ld [NL [ZL [MEM [RDI [RSI [RBX [RSP CS]]]]]]]].
+    assert (LE: Ld = Ld0) by exact (wnilfree_unique m d Ld Ld0 NL ZL NL0 ZL0). subst Ld.
     x64_step.
-    match goal with |- ?G => idtac "C2:" G end.
-    admit.
-Admitted.
+    match goal with |- nextinv _ _ _ _ ((Addr _, ?S)::_) => set (s2 := S) end.
+    apply (models_after_steps wcscat_program _ _ _ _ s2 nil _ s1 t MDL1 wcscat_program_welltyped).
+    intro MDL2.
+    set (M2 := m [Ⓠs0 R_RSP ⊖ 8 := s0 R_RBX] [Ⓠs0 R_RSP ⊖ 16 := src] [Ⓠs0 R_RSP ⊖ 32 := 1465937]) in *.
+    assert (S2M: s2 V_MEM64 = M2) by (unfold s2; apply update_updated).
+    assert (S2R: s2 R_RSP = s0 R_RSP ⊖ 32) by (unfold s2; rewrite update_frame by discriminate; apply update_updated).
+    assert (SRCW: forall i, i < Ls + 1 -> M2 Ⓓ[src ⊕ 4*i] = m Ⓓ[src ⊕ 4*i])
+      by (intros i I; unfold M2; exact (push3_word m _ _ _ _ src (Ls + 1) i OVs I)).
+    pose proof (app_sub d Ld0 Ls _ OVd) as OVa.
+    eapply (call_leaf_ni wcscat_program wcscpy_amd64 _ _
+              (wcscpy_invs s2 (s2 V_MEM64) (d ⊕ 4*Ld0) src Ls) wcscpy_exit).
+    + apply subset_updateall2.
+    + intros a s t' EXIT NOCODE. unfold wcscpy_invs.
+      repeat first
+      [ reflexivity | discriminate EXIT | discriminate NOCODE
+      | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+    + intros t' [x' s'] START. apply wcscpy_correct; first
+        [ apply pf2sub_refl | assumption | reflexivity | (unfold s2; reg; assumption) | idtac ].
+      rewrite S2M. split; [|split; [|split]].
+      * intros i I. rewrite SRCW by (clear - I; lia). apply NZs, I.
+      * rewrite SRCW by (clear; lia). exact Zs.
+      * exact NOVds.
+      * clear - LB. lia.
+    + intros a s t' NC. unfold wcscat_invs, wcscat_exit.
+      repeat first
+      [ split | reflexivity | (exfalso; apply NC; reflexivity)
+      | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+    + intros [[a|i] s] t'; reflexivity.
+    + intros [[a|i] s] t'; reflexivity.
+    + intros a s t' X. unfold wcscpy_exit in X. addr_cases X; discriminate.
+    + split; reflexivity.
+    + intros. split; reflexivity.
+    + intros a' s' t2 ENTRY' UT PRE.
+      unfold get_postcondition in PRE.
+      destruct (wcscpy_exit _) eqn:EX; [|destruct PRE].
+      unfold wcscpy_exit in EX. addr_cases EX.
+      simpl in PRE.
+      apply (models_after_steps _ _ _ _ _ s' t2 _ s1 t MDL1 wcscat_program_welltyped).
+      intro MDL3.
+      destruct PRE as [RAX' [[CPY FR] [RSP' CS']]].
+      rewrite S2M in CPY, FR. rewrite S2R in RSP'.
+      assert (RQ: forall j, (j = 8 \/ j = 16 \/ j = 32) -> s' V_MEM64 Ⓠ[s0 R_RSP ⊖ j] = M2 Ⓠ[s0 R_RSP ⊖ j]).
+      { intros j J. apply getmem_frame_mem. intros a A. rewrite <- !getmem_1 with (e:=LittleE).
+        apply FR. exact (slot_out _ _ _ j a OVa J A). }
+      assert (RA: s' V_MEM64 Ⓠ[s0 R_RSP ⊖ 32] = 1465937).
+      { rewrite RQ by (right; right; reflexivity). unfold M2. rewrite getmem_setmem by discriminate. reflexivity. }
+      assert (R8: s' V_MEM64 Ⓠ[s0 R_RSP ⊖ 8] = s0 R_RBX).
+      { rewrite RQ by (left; reflexivity). unfold M2.
+        rewrite getmem_noverlap by exact (qslot _ 8 32 eq_refl).
+        rewrite getmem_noverlap by exact (qslot _ 8 16 eq_refl).
+        rewrite getmem_setmem by discriminate. apply N.mod_small; assumption. }
+      x64_step. rewrite RA. repeat x64_step.
+      assert (RBXs: s' R_RBX = d) by
+        (rewrite (proj1 CS'); unfold s2; reg; exact RBX).
+      assert (CSb: s' R_RBP = s0 R_RBP /\ s' R_R12 = s0 R_R12 /\ s' R_R13 = s0 R_R13 /\
+                   s' R_R14 = s0 R_R14 /\ s' R_R15 = s0 R_R15) by
+        (destruct CS' as (_ & B1 & B2 & B3 & B4 & B5); rewrite B1, B2, B3, B4, B5;
+         unfold s2; reg; destruct CS as (C1 & C2 & C3 & C4 & C5); repeat split; assumption).
+      rewrite ?R8.
+      split. exact RBXs.
+      split.
+      { exists Ld0, Ls. split. exact NL0. split. exact ZL0. split. exact NZs. split. exact Zs. split.
+        - intros i I. rewrite CPY by exact I. apply SRCW, I.
+        - intros b B1 B2. rewrite (FR b B1). unfold M2. apply push3_32. exact B2. }
+      split. apply N.mod_small. exact RB.
+      destruct CSb as (C1 & C2 & C3 & C4 & C5).
+      unfold callee_saved_eq. repeat split; reg; sassumption.
+Qed.

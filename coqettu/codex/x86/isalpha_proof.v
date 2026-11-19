@@ -63,7 +63,11 @@ Proof.
     all: psimpl.
     all: try exact PRE.
     all: repeat split; try reflexivity.
-    Show.
+    all: fold (cdecl_arg s0).
+    all: rewrite (ascii_lower_test (N.lor (cdecl_arg s0) 32)
+      (or32_bound (cdecl_arg s0) ltac:(unfold cdecl_arg; apply getmem_bound))).
+    all: rewrite <- (alpha_fold (cdecl_arg s0)).
+    all: reflexivity.
 Qed.
 
 Theorem isalpha_correct :

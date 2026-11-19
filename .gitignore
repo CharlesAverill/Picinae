@@ -22,3 +22,6 @@ Makefile.coq
 Makefile.coq.conf
 .Makefile.coq.d
 *.cache
+**/headers
+**/build_logs
+**/logs

@@ -15,6 +15,11 @@ from pathlib import Path
 
 EXPECTED = "8affe9226ae00e51301465232d5ca760c186aab1142f715770bc7be5c3b698de"
 IMAGE_BASE = 0x10000
+# Internal support routines are pinned by exact bytes, not exported symbols.
+SUPPORT = {
+    "pc_thunk_bx": (0x3A842, 4, bytes.fromhex("8b1c24c3")),
+    "pc_thunk_ax": (0x3A83E, 4, bytes.fromhex("8b0424c3")),
+}
 
 
 def main() -> None:
@@ -45,16 +50,22 @@ def main() -> None:
         if not name_match or not hash_match or hash_match[1] != digest:
             raise SystemExit(f"Missing or inconsistent provenance in {source.name}")
         name = name_match[1]
-        address, size = symbols[name]
-        assembly = subprocess.check_output(
-            ["objdump", "-d", "-w", f"--disassemble={name}", str(binary)], text=True
-        )
-        instructions = {}
+        if name in SUPPORT:
+            address, size, expected_bytes = SUPPORT[name]
+            selection = [f"--start-address={address}", f"--stop-address={address + size}"]
+        else:
+            address, size = symbols[name]
+            selection = [f"--start-address={address}", f"--stop-address={address + size}"]
+        assembly = subprocess.check_output(["objdump", "-d", "-w", *selection, str(binary)], text=True)
+        instructions, encodings = {}, {}
         for line in assembly.splitlines():
             match = re.match(r"^\s*([0-9a-f]+):\s+((?:[0-9a-f]{2}\s+)+)\s*(\S.*)$", line)
             if match:
                 pc = int(match[1], 16)
                 instructions[pc] = (len(match[2].split()), match[3].strip())
+                encodings[pc] = bytes.fromhex("".join(match[2].split()))
+        if name in SUPPORT and b"".join(encodings[pc] for pc in sorted(encodings)) != expected_bytes:
+            raise SystemExit(f"Internal support bytes changed: {name}")
         lifted = {
             int(pc, 16) - IMAGE_BASE: int(length)
             for pc, length in re.findall(
@@ -93,6 +104,7 @@ def main() -> None:
             raise SystemExit(f"Unlifted reachable instructions in {name}: {sorted(missing)}")
         manifest.append({
             "function": name,
+            "internal_support": name in SUPPORT,
             "source": str(source.relative_to(directory)),
             "elf_address": hex(address),
             "global_entry": hex(address + IMAGE_BASE),
@@ -107,7 +119,7 @@ def main() -> None:
     result = {"binary_sha256": digest, "ghidra_image_base": hex(IMAGE_BASE),
               "lifter_baseline": baseline,
               "adapter_sha256": {name: hashlib.sha256((directory / name).read_bytes()).hexdigest()
-                                 for name in ["bsf_adapter.py", "pcode2coq_codex.py"]},
+                                 for name in ["bsf_adapter.py", "segment_adapter.py", "pcode2coq_codex.py"]},
               "functions": manifest}
     if args.manifest:
         args.manifest.parent.mkdir(parents=True, exist_ok=True)

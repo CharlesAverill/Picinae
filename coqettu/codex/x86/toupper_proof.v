@@ -61,11 +61,18 @@ Proof.
     all: split; [|repeat split; reflexivity].
     all: fold (cdecl_arg s0) in *.
     all: assert (B: cdecl_arg s0<2^32) by (unfold cdecl_arg; apply getmem_bound).
-    all: rewrite (classify_interval (cdecl_arg s0) 97 122 B ltac:(lia) ltac:(lia)) in BC.
+    all: rewrite (ascii_lower_test (cdecl_arg s0) B) in BC.
     all: fold (ascii_lower (cdecl_arg s0)) in BC.
     all: destruct (ascii_lower (cdecl_arg s0)) eqn:CASE; cbn in BC; try discriminate.
     all: unfold toupper_spec; rewrite CASE.
-    all: first [reflexivity|apply uppercase_and95; exact CASE].
+    all: try reflexivity.
+    assert (BYTE : cdecl_arg s0 mod 256 = getmem 32 LittleE 1 (s0 V_MEM32) (4+s0 R_ESP)).
+    { unfold cdecl_arg. exact (getmem_mod 32 LittleE 1 4 (s0 V_MEM32) (4+s0 R_ESP)). }
+    rewrite <- BYTE.
+    change (N.land (cdecl_arg s0 mod 2^8) 95 = cdecl_arg s0-32).
+    rewrite <- N.land_ones, <- N.land_assoc.
+    change (N.land (cdecl_arg s0) 95 = cdecl_arg s0-32).
+    apply uppercase_and95. exact CASE.
 Qed.
 Theorem toupper_correct : forall prog (EXT:toupper_i386 ⊆2 prog) s0 t xs
   (ENTRY:startof t xs=(Addr 0x4f663,s0)),
@@ -86,6 +93,9 @@ Proof.
   intros prog EXT s0 t s x s' ret RET ENTRY XP UT.
   pose proof (toupper_correct prog EXT s0 t (Addr ret,s) ENTRY) as SA.
   pose proof (satall_trueif_inv prog _ _ _ SA (exec_prog_tail _ _ _ XP) UT) as INV.
-  destruct RET as [EQ|EQ]; subst ret;
-    eapply cdecl_ret_step; [apply EXT; reflexivity|exact INV|exact (exec_prog_final _ _ _ _ XP)].
+  destruct RET as [EQ|EQ]; subst ret.
+  - eapply cdecl_ret_step with (ret:=0x4f66f) (s:=s);
+      [apply EXT; reflexivity|exact INV|exact (exec_prog_final _ _ _ _ XP)].
+  - eapply cdecl_ret_step with (ret:=0x4f673) (s:=s);
+      [apply EXT; reflexivity|exact INV|exact (exec_prog_final _ _ _ _ XP)].
 Qed.

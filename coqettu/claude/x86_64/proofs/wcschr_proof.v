@@ -60,7 +60,7 @@ Require Import CoqEtTu.programs.wcschr_amd64 CoqEtTu.programs.wcslen_amd64.
 Import X64Notations.
 From Stdlib Require Import NArith ZArith Lia List.
 Import ListNotations.
-Require Import CoqEtTu.lib.x64_common CoqEtTu.lib.x64_abi CoqEtTu.lib.x64_compose.
+Require Import CoqEtTu.lib.x64_common CoqEtTu.lib.x64_abi CoqEtTu.lib.x64_compose CoqEtTu.lib.x64_tail.
 Require Import CoqEtTu.proofs.wcslen_proof.
 Open Scope N.
 
@@ -96,6 +96,12 @@ Definition wcschr_post (s0:store) (m p c:N) (s:store) :=
   stack_frame m (s V_MEM64) (s0 R_RSP) 32 /\
   s R_RSP = s0 R_RSP /\ callee_saved_eq s0 s.
 
+(* memory at the call to wcslen: s saved at rsp-16, return address pushed *)
+Definition wcschr_cmem (s0:store) (m p:N) := m [Ⓠs0 R_RSP ⊖ 16 := p] [Ⓠs0 R_RSP ⊖ 32 := 0x13c322].
+
+(* 0x13c3a1 is wcslen's RET: the invariant there (wcslen's postcondition in
+   wcschr's frame) lets a caller of wcschr that also tail-calls wcslen (e.g.
+   wcscspn) tell this return apart from its own exit by RSP. *)
 Definition wcschr_invs (s0:store) (m p c:N) (t:trace) :=
   match t with (Addr a,s)::_ => match a with
   | 0x13c310 => Some (s V_MEM64 = m /\ s R_RDI = p /\ s R_RSI = c /\
@@ -105,6 +111,10 @@ Definition wcschr_invs (s0:store) (m p c:N) (t:trace) :=
                       wstack_ok m p c (s0 R_RSP) /\ s0 R_RSP < 2^64)
   | 0x13c334 => Some (exists k, s R_RDI = p ⊕ 4*k /\ wcfree m p (c mod 2^32) k /\ s R_RSI = c /\
                       c mod 2^32 <> 0 /\ s V_MEM64 = m /\ s R_RSP = s0 R_RSP /\ callee_saved_eq s0 s)
+  | 0x13c3a1 => Some (exists k, wnilfree (wcschr_cmem s0 m p) p k /\ wcschr_cmem s0 m p Ⓓ[p ⊕ 4*k] = 0 /\
+                      s R_RAX = (4 ⊗ k) >>> 2 /\ s V_MEM64 = wcschr_cmem s0 m p /\
+                      s R_RSP = s0 R_RSP ⊖ 32 /\ callee_saved_eq s0 s /\ c mod 2^32 = 0 /\
+                      wstack_ok m p c (s0 R_RSP) /\ s0 R_RSP < 2^64)
   | 0x13c32f | 0x13c341 | 0x13c344 => Some (wcschr_post s0 m p c s)
   | _ => None
   end | _ => None end.
@@ -183,7 +193,7 @@ Proof.
     match goal with |- nextinv _ _ _ _ ((Addr _, ?S)::_) => set (s2 := S) end.
     apply (models_after_steps wcschr_program _ _ _ _ s2 nil _ s1 t MDL1 wcschr_program_welltyped).
     intro MDL2.
-    eapply (call_leaf_ni wcschr_program wcslen_amd64 _ _ (wcslen_invs s2 (s2 V_MEM64) p) wcslen_exit).
+    eapply (tail_leaf_g_ni wcschr_program wcslen_amd64 _ _ (wcslen_invs s2 (s2 V_MEM64) p) wcslen_exit).
     + apply subset_updateall2.
     + intros a s t' EXIT NOCODE. unfold wcslen_invs.
       repeat first
@@ -192,39 +202,26 @@ Proof.
     + intros t' [x' s'] START. apply wcslen_correct; first
         [ assumption | apply pf2sub_refl | reflexivity
         | (unfold s2; rewrite !update_frame by discriminate; exact RDI) ].
-    + intros a s t' NC. unfold wcschr_invs, wcschr_exit.
+    + intros a s t' NC X2 _. unfold wcschr_invs, wcschr_exit, wcslen_exit in *.
       repeat first
-      [ split | reflexivity | (exfalso; apply NC; reflexivity)
+      [ split | reflexivity | (exfalso; apply NC; reflexivity) | discriminate X2
       | match goal with |- context [match ?n with _ => _ end] => destruct n end ].
+    + intros a s t' X2 H. unfold wcslen_exit in X2. addr_cases X2.
+      cbv beta iota delta [post_or_true true_inv wcslen_invs wcschr_invs] in H |- *.
+      destruct H as [[k [NF [Z RAX]]] [MEM' [RSP' CS']]].
+      assert (S2M: s2 V_MEM64 = wcschr_cmem s0 m p).
+      { unfold s2, wcschr_cmem. rewrite update_updated. sreflexivity. }
+      rewrite S2M in NF, Z, MEM'.
+      exists k. split. exact NF. split. exact Z. split. exact RAX. split. exact MEM'.
+      split. rewrite RSP'. unfold s2. rewrite !update_frame by discriminate. rewrite update_updated. reflexivity.
+      split. eapply callee_saved_eq_trans. exact CS. eapply callee_saved_eq_trans; [|exact CS'].
+        unfold s2. repeat split; rewrite !update_frame by discriminate; reflexivity.
+      split. exact C0. split. exact STK. exact RB.
     + intros [[a|i] s] t'; reflexivity.
     + intros [[a|i] s] t'; reflexivity.
     + intros a s t' X. unfold wcslen_exit in X. addr_cases X. discriminate.
     + split; reflexivity.
     + intros. split; reflexivity.
-    + intros a' s' t2 ENTRY' UT PRE.
-      unfold get_postcondition in PRE.
-      destruct (wcslen_exit _) eqn:EX; [|destruct PRE].
-      unfold wcslen_exit in EX. addr_cases EX.
-      simpl in PRE.
-      apply (models_after_steps _ _ _ _ _ s' t2 _ s1 t MDL1 wcschr_program_welltyped).
-      intro MDL3.
-      destruct PRE as [[k [NF [Z RAX]]] [MEM' [RSP' CS']]].
-      unfold s2 in *. rewrite !update_frame in RSP' by discriminate. rewrite update_updated in MEM', NF, Z.
-      repeat x64_step.
-      destruct (STK C0) as [L [NL [ZL [LB NOV]]]].
-      assert (KL: k = L).
-      { apply (wnilfree_unique _ p _ L NF Z).
-        intros i I. rewrite frame_words with (L:=L) by (assumption || lia). apply NL, I.
-        rewrite frame_words with (L:=L) by (assumption || lia). exact ZL. }
-      rewrite KL in *. rewrite (wcslen_ret L LB).
-      split. exists L. split. intros i I. rewrite C0. split; apply NL, I.
-        left. split. rewrite C0. exact ZL. f_equal. lia.
-      split. frame_tac.
-      split. apply N.mod_small, RB.
-      assert (CS2: callee_saved_eq s0 s').
-      { eapply callee_saved_eq_trans. exact CS. eapply callee_saved_eq_trans; [|exact CS'].
-        repeat split; rewrite !update_frame by discriminate; reflexivity. }
-      callee_saved_tac.
   - (* loop *)
     destruct PRE as [k [RDI [WF [RSI [CNZ [MEM [RSP CS]]]]]]].
     repeat x64_step. all: bc_norm.
@@ -241,5 +238,20 @@ Proof.
                        | right; split; [assumption|]; split; [assumption | reflexivity] ] |];
         fin
     end.
+  - (* wcslen's RET *)
+    destruct PRE as [k [NF [Z [RAX [MEM [RSP [CS [C0 [STK RB]]]]]]]]].
+    unfold wcschr_cmem in MEM, NF, Z.
+    repeat x64_step.
+    destruct (STK C0) as [L [NL [ZL [LB NOV]]]].
+    assert (KL: k = L).
+    { apply (wnilfree_unique _ p _ L NF Z).
+      intros i I. rewrite frame_words with (L:=L) by (assumption || lia). apply NL, I.
+      rewrite frame_words with (L:=L) by (assumption || lia). exact ZL. }
+    rewrite KL in *. rewrite (wcslen_ret L LB).
+    split. exists L. split. intros i I. rewrite C0. split; apply NL, I.
+      left. split. rewrite C0. exact ZL. f_equal. lia.
+    split. frame_tac.
+    split. apply N.mod_small, RB.
+    callee_saved_tac.
 Qed.
 
