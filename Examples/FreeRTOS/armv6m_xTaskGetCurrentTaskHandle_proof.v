@@ -1,0 +1,264 @@
+(* xTaskGetCurrentTaskHandle -- ARMv6-M Cortex-M0 sequential IL correctness.
+
+   Initial proof author: OpenAI gpt-6-astra, xhigh, r07-current-task.
+   One-shot proof adapted from the accepted r06 task-count proof authored by
+   gpt-6-astra and completed by gpt-6.1-sol at prerequisite 5fec2fc24d0c739bafc08add426f02a3085e15cd.
+   Repair/validation: r07-current-task-fix (OpenAI gpt-6.1-sol, xhigh).
+   Original attempt: notes/r07-current-task; final status: notes/r07-current-task-fix.
+
+   PROVENANCE: official FreeRTOS Kernel V11.1.0, commit
+   dbf70559b27d39c1fdb68dfb9a32140b6a6777a0; tasks.c SHA256
+   6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149.
+   ELF: isolated e04 verified02-a/out/FreeRTOS-Cortex-M0.elf, SHA256
+   5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca.
+   Generated xTaskGetCurrentTaskHandle_armv6m.v (armv6m_lifter.sh) is unchanged;
+   e05 manifest xTaskGetCurrentTaskHandle.json has no call/closure prerequisites.
+   Config: Examples/freertos/cortex-m0/FreeRTOSConfig.h, one core,
+   INCLUDE_xTaskGetCurrentTaskHandle=1, configUSE_MUTEXES=1.
+   Pinned nm/ABI evidence locates pxCurrentTCB at 0x20000108, size 4, offset 0;
+   layout.json has 32-bit pointer size = 4 bytes. No TCB field is accessed or assumed.
+
+   C/ABI spec: TaskHandle_t xTaskGetCurrentTaskHandle(void) returns pxCurrentTCB.
+   No register input arguments. Entry 0x12dc loads R3 with 0x20000108 using
+   the folded immutable literal bytes 08 01 00 20 at 0x12e4. Instruction 0x12de
+   loads the four-byte little-endian word at that address into R0. At the
+   designated exit BEFORE BX LR at 0x12e0, R0 equals that word in ORIGINAL
+   memory; every variable except R0/R3 is unchanged. Thus full memory,
+   permissions, flags, R4-R11, SP and LR are preserved; no stack is accessed.
+   Actual execution supplies load permissions; a typed readable witness is
+   proved for every bounded memory and every ordinary-return LR. The pointer
+   need not be nonzero, aligned, or point to a valid TCB; it is not dereferenced.
+
+   The separate actual BX theorem has guard odd LR and LR < 0xfffffff0, excludes
+   EXC_RETURN, clears bit zero, and preserves the entire state. The inherited
+   BX IL itself tests only the Thumb bit; the range bound scopes this theorem.
+   No caller code
+   at the destination is executed by this theorem. The functional invariant
+   needs only a modeled initial store and the specified entry; exit corollaries
+   also require an actual trace and no earlier designated exit. No size,
+   overlap, CPU-feature, tunable, or scheduler-cardinality hypothesis occurs.
+   Executable entries are exactly 0x12dc/0x12de/0x12e0/0x12e2; neither literal
+   pool bytes nor the default zero halfwords are executable. The NOP 0x12e2
+   is beyond the designated exit. This is sequential IL partial correctness,
+   not termination, hardware/IRQ/exception soundness, whole-kernel correctness,
+   or binary/lifter refinement. Provenance and literal immutability remain
+   inherited trusted boundaries; no callee oracle or kernel contract is used.
+ *)
+
+Require Import Picinae_armv6m.
+Require Import xTaskGetCurrentTaskHandle_armv6m.
+From Stdlib Require Import NArith List FunctionalExtensionality.
+Import ListNotations ARMv6MNotations.
+Open Scope N.
+
+Definition current_task_result (m:memory) : N := m Ⓓ[0x20000108].
+
+Definition current_task_frame (initial final:store) : Prop :=
+  forall v, v <> R_R0 -> v <> R_R3 -> final v = initial v.
+
+Definition current_task_postcondition (initial final:store) : Prop :=
+  final R_R0 = current_task_result (initial V_MEM32) /\
+  current_task_frame initial final.
+
+Definition current_task_exit (t:trace) : bool :=
+  match t with (Addr 0x12e0,_)::_ => true | _ => false end.
+
+Definition current_task_invariants (initial:store) (t:trace) : option Prop :=
+  match t with
+  | (Addr 0x12dc,s)::_ => Some (s = initial)
+  | (Addr 0x12e0,s)::_ => Some (current_task_postcondition initial s)
+  | _ => None
+  end.
+
+Theorem current_task_nwc : forall s2 s1,
+  xTaskGetCurrentTaskHandle_armv6m_prog s1 = xTaskGetCurrentTaskHandle_armv6m_prog s2.
+Proof. reflexivity. Qed.
+
+Theorem current_task_welltyped :
+  welltyped_prog armv6mtypctx xTaskGetCurrentTaskHandle_armv6m_prog.
+Proof. exact xTaskGetCurrentTaskHandle_armv6m_welltyped. Qed.
+
+Theorem current_task_preserves_memory :
+  forall_endstates xTaskGetCurrentTaskHandle_armv6m_prog
+    (fun _ s _ s' => s V_MEM32 = s' V_MEM32).
+Proof.
+  apply noassign_prog_same.
+  unfold prog_noassign, xTaskGetCurrentTaskHandle_armv6m_prog.
+  intros s a.
+  destruct (existsb (N.eqb a) xTaskGetCurrentTaskHandle_armv6m_entries) eqn:IN;
+    [|exact I].
+  apply existsb_exists in IN. destruct IN as [b [IN EQ]].
+  apply N.eqb_eq in EQ. subst a.
+  cbn [xTaskGetCurrentTaskHandle_armv6m_entries] in IN.
+  destruct IN as [<-|[<-|[<-|[<-|[]]]]]; prove_noassign.
+Qed.
+
+(* The bound lemma stays polymorphic in the width: do not evaluate 2^(8*2^32). *)
+Lemma current_task_zero_bound : forall w, 0 < 2^w.
+Proof. intro w. apply N.neq_0_lt_0, pow2_nonzero. Qed.
+
+Definition current_task_ordinary_return (lr:N) : Prop :=
+  N.odd lr = true /\ lr < 0xfffffff0.
+
+Definition current_task_entry_witness (m:memory) (lr:N) : store := fun v =>
+  match v with
+  | V_MEM32 => m
+  | A_READ => N.ones (2^32)
+  | R_LR => lr
+  | _ => 0
+  end.
+
+Definition current_task_readable (s:store) : Prop :=
+  forall n, n < 4 -> mem_readable s ((0x20000108+n) mod 2^32).
+
+Lemma current_task_witness_models : forall m lr,
+  m < 2^(8*2^32) -> lr < 2^32 ->
+  models armv6mtypctx (current_task_entry_witness m lr).
+Proof.
+  intros m lr B L v w T. destruct v; cbn [armv6mtypctx] in T;
+    try discriminate; injection T as <-.
+  (* Select by constructor before conversion: in particular never try the
+     memory bound against the enormous all-readable permission bitmap. *)
+  all: lazymatch goal with
+  | |- current_task_entry_witness _ _ V_MEM32 < _ => exact B
+  | |- current_task_entry_witness _ _ A_READ < _ => exact (ones_bound (2^32))
+  | |- current_task_entry_witness _ _ R_LR < _ => exact L
+  | |- _ < 2^?width => exact (current_task_zero_bound width)
+  end.
+Qed.
+
+Theorem current_task_entry_satisfiable : forall m lr,
+  m < 2^(8*2^32) -> current_task_ordinary_return lr ->
+  exists s, models armv6mtypctx s /\ s V_MEM32 = m /\
+    current_task_readable s /\ s R_LR = lr /\
+    current_task_ordinary_return (s R_LR).
+Proof.
+  intros m lr B [ODD ORD]. exists (current_task_entry_witness m lr).
+  split.
+  - apply current_task_witness_models. exact B.
+    exact (N.lt_trans lr 0xfffffff0 (2^32) ORD eq_refl).
+  - split. reflexivity.
+    split.
+    + intros n LT. unfold mem_readable.
+      change (N.testbit (N.ones (2^32)) ((0x20000108+n) mod 2^32) = true).
+      apply N.ones_spec_low. apply N.mod_lt, pow2_nonzero.
+    + split. reflexivity.
+      exact (conj ODD ORD).
+Qed.
+
+(* An explicit inhabited instance; the general witness above permits every
+   bounded architectural memory, hence arbitrary current-TCB pointer bytes. *)
+Corollary current_task_entry_nonempty :
+  exists s, models armv6mtypctx s /\ s V_MEM32 = 0 /\
+    current_task_readable s /\ s R_LR = 1 /\
+    current_task_ordinary_return (s R_LR).
+Proof.
+  apply current_task_entry_satisfiable.
+  - apply current_task_zero_bound.
+  - split; reflexivity.
+Qed.
+
+Theorem current_task_correct : forall s t s' x'
+  (ENTRY: startof t (x',s') = (Addr 0x12dc,s))
+  (MDL: models armv6mtypctx s),
+  satisfies_all xTaskGetCurrentTaskHandle_armv6m_prog
+    (current_task_invariants s) current_task_exit ((x',s')::t).
+Proof.
+  intros. apply prove_invs.
+  - simpl. rewrite ENTRY. armv6m_step. reflexivity.
+  - intros.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption.
+    apply current_task_welltyped. intro MDL1.
+    clear - PRE MDL1. rename t1 into t.
+    destruct_inv 32 PRE.
+    subst s1.
+    repeat armv6m_step.
+    unfold current_task_postcondition, current_task_result, current_task_frame.
+    split. reflexivity.
+    intros v NE0 NE3. destruct v; try contradiction; reflexivity.
+Qed.
+
+Corollary current_task_post_at_bx : forall s t s'
+  (ENTRY: startof t (Addr 0x12e0,s') = (Addr 0x12dc,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog xTaskGetCurrentTaskHandle_armv6m_prog ((Addr 0x12e0,s')::t))
+  (UT: unterminated current_task_exit t),
+  current_task_postcondition s s'.
+Proof.
+  intros.
+  pose proof (current_task_correct s t s' (Addr 0x12e0) ENTRY MDL) as ALL.
+  pose proof (satall_trueif_inv _ _ _ _ ALL EXEC UT) as POST.
+  exact POST.
+Qed.
+
+Corollary current_task_preserves_callee_saved : forall s t s'
+  (ENTRY: startof t (Addr 0x12e0,s') = (Addr 0x12dc,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog xTaskGetCurrentTaskHandle_armv6m_prog ((Addr 0x12e0,s')::t))
+  (UT: unterminated current_task_exit t),
+  forall v, In v [R_R4; R_R5; R_R6; R_R7; R_R8; R_R9; R_R10; R_R11; R_SP; R_LR] ->
+    s' v = s v.
+Proof.
+  intros s t s' ENTRY MDL EXEC UT v IN.
+  pose proof (proj2 (current_task_post_at_bx s t s' ENTRY MDL EXEC UT)) as FRAME.
+  apply FRAME; intro EQ; subst v; cbn in IN; intuition discriminate.
+Qed.
+
+Theorem current_task_return_step : forall s
+  (ORDINARY: current_task_ordinary_return (s R_LR)),
+  can_step xTaskGetCurrentTaskHandle_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s),(Addr 0x12e0,s)).
+Proof.
+  intros s [ODD ORD].
+  assert (LOW: s R_LR mod 2 = 1).
+  { apply mod2_1_neven. rewrite <- N.negb_odd, ODD. reflexivity. }
+  assert (XS: exec_stmt armv6mtypctx s (armv6m_bxwritepc (Var R_LR))
+    armv6mtypctx s (Some (Addr (N.land (s R_LR) (N.ones 32 - 1))))).
+  { unfold armv6m_bxwritepc. eapply XIf with (b:=1).
+    - assert (E: eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+        (s R_LR mod 2) 1).
+      { apply ECast with (w:=32) (n:=s R_LR). apply EVar. reflexivity. }
+      rewrite LOW in E. exact E.
+    - apply XJmp with (w:=32).
+      apply EBinOp with (w:=32) (n1:=s R_LR) (n2:=N.ones 32 - 1);
+        [apply EVar; reflexivity | apply EWord]. }
+  assert (CS: can_step xTaskGetCurrentTaskHandle_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),reset_temps s s),(Addr 0x12e0,s))).
+  { eapply CanStep with (sz:=2) (q:=armv6m_bxwritepc (Var R_LR))
+      (x:=Some (Addr (N.land (s R_LR) (N.ones 32 - 1))));
+      [reflexivity | exact XS]. }
+  assert (RESET: reset_temps s s = s).
+  { extensionality v. destruct v; reflexivity. }
+  rewrite RESET in CS. exact CS.
+Qed.
+
+Corollary current_task_caller_result : forall s t s'
+  (ENTRY: startof t (Addr 0x12e0,s') = (Addr 0x12dc,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog xTaskGetCurrentTaskHandle_armv6m_prog ((Addr 0x12e0,s')::t))
+  (UT: unterminated current_task_exit t)
+  (ORDINARY: current_task_ordinary_return (s R_LR)),
+  current_task_postcondition s s' /\
+  can_step xTaskGetCurrentTaskHandle_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s'),(Addr 0x12e0,s')).
+Proof.
+  intros.
+  pose proof (current_task_post_at_bx s t s' ENTRY MDL EXEC UT) as POST.
+  assert (LR: s' R_LR = s R_LR) by (apply (proj2 POST); discriminate).
+  split. exact POST.
+  rewrite <- LR. apply current_task_return_step. rewrite LR. exact ORDINARY.
+Qed.
+
+(* Whole-memory equality also states the original-memory effect at every byte,
+   including stack bytes and the four bytes of the pointer global itself. *)
+Theorem current_task_original_bytes : forall initial final,
+  current_task_postcondition initial final ->
+  final V_MEM32 = initial V_MEM32 /\
+  forall a, (final V_MEM32) Ⓑ[a] = (initial V_MEM32) Ⓑ[a].
+Proof.
+  intros initial final [_ FRAME].
+  assert (MEM: final V_MEM32 = initial V_MEM32) by (apply FRAME; discriminate).
+  split. exact MEM.
+  intro a. rewrite MEM. reflexivity.
+Qed.

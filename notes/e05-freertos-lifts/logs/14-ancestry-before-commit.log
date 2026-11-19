@@ -1,0 +1,123 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-a0eced30
+COMMAND=bash notes/e05-freertos-lifts/audit-ancestry.sh
+49956416928e5b6bb3928b54ae33e3b81091f006
+8c01958 Merge reviewed FreeRTOS fixture into e05 lifts
+5677a5d Validate ARMv6-M import with selective Dune target
+dac36c0 Merge selective Dune prerequisite into ARMv6-M import
+abe7eda Add reproducible Cortex-M0 FreeRTOS build fixture
+59f696d Add ARMv6-M ISA and strict ELF lifter
+71470bf Add selective Dune builds and proof audit harness
+8c01958e73ec7fe959c60b29444505afbb599d13 5677a5d1d995745cc1cefbd33bcda1a3a4b49d8b abe7eda601a63d47eb70e765f4ae2c4ca235cca4 Merge reviewed FreeRTOS fixture into e05 lifts
+5677a5d1d995745cc1cefbd33bcda1a3a4b49d8b dac36c0a03088a90bb6e6385f82cb355d27cc204 Validate ARMv6-M import with selective Dune target
+dac36c0a03088a90bb6e6385f82cb355d27cc204 59f696d32a5623cdfbceb9a1e0f91e2cc7c054c1 71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Merge selective Dune prerequisite into ARMv6-M import
+abe7eda601a63d47eb70e765f4ae2c4ca235cca4 49956416928e5b6bb3928b54ae33e3b81091f006 Add reproducible Cortex-M0 FreeRTOS build fixture
+59f696d32a5623cdfbceb9a1e0f91e2cc7c054c1 49956416928e5b6bb3928b54ae33e3b81091f006 Add ARMv6-M ISA and strict ELF lifter
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 49956416928e5b6bb3928b54ae33e3b81091f006 Add selective Dune builds and proof audit harness
+ BUILDING.md                                        |  120 +
+ Examples/freertos/cortex-m0/.gitattributes         |    2 +
+ Examples/freertos/cortex-m0/FreeRTOSConfig.h       |   71 +
+ Examples/freertos/cortex-m0/LICENSE.FreeRTOS       |   19 +
+ Examples/freertos/cortex-m0/Makefile               |    5 +
+ Examples/freertos/cortex-m0/README.md              |  248 ++
+ Examples/freertos/cortex-m0/build.py               |  293 ++
+ .../cortex-m0/evidence/ancestry-before.txt         |   19 +
+ .../freertos/cortex-m0/evidence/assumptions.txt    |    3 +
+ .../freertos/cortex-m0/evidence/attributes.txt     |   14 +
+ Examples/freertos/cortex-m0/evidence/build.log.gz  |  Bin 0 -> 221780 bytes
+ .../freertos/cortex-m0/evidence/commands.jsonl     |  110 +
+ .../freertos/cortex-m0/evidence/comparison.json    |   42 +
+ .../cortex-m0/evidence/config-macros.txt.gz        |  Bin 0 -> 13664 bytes
+ .../freertos/cortex-m0/evidence/console.log.gz     |  Bin 0 -> 2560 bytes
+ .../freertos/cortex-m0/evidence/disassembly.txt.gz |  Bin 0 -> 64847 bytes
+ .../freertos/cortex-m0/evidence/elf-header.txt     |   20 +
+ .../cortex-m0/evidence/gated-availability.json     |   50 +
+ .../freertos/cortex-m0/evidence/isa-audit.json     |   20 +
+ Examples/freertos/cortex-m0/evidence/layout.json   |   94 +
+ .../freertos/cortex-m0/evidence/linker-map.txt     | 1472 ++++++++++
+ Examples/freertos/cortex-m0/evidence/manifest.json |  910 ++++++
+ Examples/freertos/cortex-m0/evidence/nm.txt        |  263 ++
+ .../cortex-m0/evidence/planned-availability.json   |  123 +
+ .../cortex-m0/evidence/program-headers.txt         |   14 +
+ Examples/freertos/cortex-m0/evidence/sections.txt  |   28 +
+ Examples/freertos/cortex-m0/evidence/size.txt      |   20 +
+ Examples/freertos/cortex-m0/evidence/symbols.json  | 3050 ++++++++++++++++++++
+ .../freertos/cortex-m0/evidence/symbols.txt.gz     |  Bin 0 -> 7312 bytes
+ .../cortex-m0/evidence/trial01-failure.log.gz      |  Bin 0 -> 1104 bytes
+ .../cortex-m0/evidence/trial02-failure.log.gz      |  Bin 0 -> 78432 bytes
+ Examples/freertos/cortex-m0/fixture.ld             |   22 +
+ Examples/freertos/cortex-m0/gated-symbols.txt      |   13 +
+ Examples/freertos/cortex-m0/inputs.json            |   21 +
+ Examples/freertos/cortex-m0/layout-probe.c         |   56 +
+ Examples/freertos/cortex-m0/planned-symbols.txt    |   44 +
+ Examples/freertos/cortex-m0/platform.c             |  109 +
+ Examples/freertos/cortex-m0/reproduce.sh           |   13 +
+ Makefile                                           |    6 +-
+ Picinae_armv6m.v                                   |  821 ++++++
+ _CoqProject                                        |    1 +
+ armv6m_lifter.sh                                   |    5 +
+ dune                                               |   42 +
+ dune-project                                       |    3 +
+ lifter/armv6m.py                                   |  243 ++
+ notes/e00-build/README.md                          |  168 ++
+ notes/e00-build/check-selection.py                 |   16 +
+ notes/e00-build/logs/01-dune-smoke.log             |    8 +
+ notes/e00-build/logs/02-dune-smoke.log             |  148 +
+ notes/e00-build/logs/03-dune-smoke.log             |   89 +
+ notes/e00-build/logs/04-audit-tests.log            |    9 +
+ notes/e00-build/logs/05-baseline-source-audit.log  |  204 ++
+ notes/e00-build/logs/06-toolchain.log              |   12 +
+ notes/e00-build/logs/07-base-audit.log             |   15 +
+ notes/e00-build/logs/08-fork-collision-check.log   |    4 +
+ notes/e00-build/logs/09-clean-build.log            |  195 ++
+ notes/e00-build/logs/10-harness-tests.log          |    9 +
+ notes/e00-build/logs/11-x86-assumptions.log        |   43 +
+ notes/e00-build/logs/12-selected-objects.log       |   27 +
+ notes/e00-build/logs/13-arm8-assumptions.log       |   29 +
+ .../e00-build/logs/14-missing-theorem-negative.log |    9 +
+ .../logs/15-extensionality-provenance.log          |   13 +
+ tests/armv6m/.gitignore                            |    1 +
+ tests/armv6m/Checks.v                              |  104 +
+ tests/armv6m/check.sh                              |   40 +
+ tests/armv6m/rejections.py                         |   92 +
+ tests/armv6m/snippets.s                            |   42 +
+ tools/audit-proof-source.py                        |  108 +
+ tools/print-assumptions.sh                         |   36 +
+ tools/record-command.sh                            |   24 +
+ tools/test-proof-audit.py                          |   82 +
+ units/e03-armv6m-core/.gitattributes               |    3 +
+ units/e03-armv6m-core/README.md                    |  202 ++
+ units/e03-armv6m-core/all-output.v.txt             |   51 +
+ units/e03-armv6m-core/assumptions-commands.v.txt   |  101 +
+ units/e03-armv6m-core/fixture-output.v.txt         |   37 +
+ units/e03-armv6m-core/isa-upstream.patch           |   74 +
+ units/e03-armv6m-core/lifter-upstream.patch        |  101 +
+ units/e03-armv6m-core/logs/ancestry-before.log     |    5 +
+ units/e03-armv6m-core/logs/assumptions.log         |  243 ++
+ units/e03-armv6m-core/logs/base-make.log           |  113 +
+ .../e03-armv6m-core/logs/check-armv6m-attempt1.log |   25 +
+ .../e03-armv6m-core/logs/check-armv6m-attempt2.log |   18 +
+ .../logs/check-armv6m-before-final-tests.log       |   52 +
+ .../logs/check-armv6m-before-strengthening.log     |   49 +
+ units/e03-armv6m-core/logs/check-armv6m.log        |   54 +
+ units/e03-armv6m-core/logs/dune-assumptions.log    |   16 +
+ .../logs/dune-integration-clean-toolchain.log      |  105 +
+ .../logs/dune-integration-clean.log                |    8 +
+ units/e03-armv6m-core/logs/dune-integration.log    |    8 +
+ units/e03-armv6m-core/logs/dune-source-audit.log   |   10 +
+ units/e03-armv6m-core/logs/import-compile.log      |   36 +
+ units/e03-armv6m-core/logs/make-all.log            |   15 +
+ units/e03-armv6m-core/logs/rocq-check.log          |    1 +
+ .../logs/rocq-chk-invalid-command.log              |   29 +
+ units/e03-armv6m-core/logs/snippets.objdump        |   56 +
+ units/e03-armv6m-core/logs/source-audit.log        |    6 +
+ 97 files changed, 11353 insertions(+), 1 deletion(-)
+ dune | 46 +++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 45 insertions(+), 1 deletion(-)
+## llm-proofs/e05-freertos-lifts
+ M dune
+?? Examples/FreeRTOS/
+?? Examples/freertos/cortex-m0/extract.py
+?? notes/e05-freertos-lifts/
+PASS: exact assigned ancestry; e03 ISA/frontend and e04 fixture unchanged
+
+EXIT_CODE=0

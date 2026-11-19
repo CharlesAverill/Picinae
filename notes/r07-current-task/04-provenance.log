@@ -1,0 +1,266 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-459be5b6
+COMMAND=bash --noprofile --norc -e -c sha256sum\ Examples/FreeRTOS/xTaskGetCurrentTaskHandle_armv6m.v\ Examples/freertos/cortex-m0/FreeRTOSConfig.h\ /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/tasks.c\ /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf\;\ sed\ -n\ \"6472\,6512p\"\ /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/tasks.c\;\ cat\ Examples/FreeRTOS/xTaskGetCurrentTaskHandle.json\;\ rg\ -n\ \"pxCurrentTCB\|xTaskGetCurrentTaskHandle\"\ Examples/freertos/cortex-m0/evidence/nm.txt\;\ cat\ Examples/freertos/cortex-m0/evidence/layout.json
+ab04b58fe6006e5fd75b5cf3c44cf5aaf51fabef7f644b12cd55a785c110d6f4  Examples/FreeRTOS/xTaskGetCurrentTaskHandle_armv6m.v
+6c63fc719991c8324546c700f95586dfdf1c11b35c69abbb008d06d0e256711c  Examples/freertos/cortex-m0/FreeRTOSConfig.h
+6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149  /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/tasks.c
+5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca  /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf
+        xNextTaskUnblockTime = listGET_ITEM_VALUE_OF_HEAD_ENTRY( pxDelayedTaskList );
+    }
+}
+/*-----------------------------------------------------------*/
+
+#if ( ( INCLUDE_xTaskGetCurrentTaskHandle == 1 ) || ( configUSE_MUTEXES == 1 ) ) || ( configNUMBER_OF_CORES > 1 )
+
+    #if ( configNUMBER_OF_CORES == 1 )
+        TaskHandle_t xTaskGetCurrentTaskHandle( void )
+        {
+            TaskHandle_t xReturn;
+
+            traceENTER_xTaskGetCurrentTaskHandle();
+
+            /* A critical section is not required as this is not called from
+             * an interrupt and the current TCB will always be the same for any
+             * individual execution thread. */
+            xReturn = pxCurrentTCB;
+
+            traceRETURN_xTaskGetCurrentTaskHandle( xReturn );
+
+            return xReturn;
+        }
+    #else /* #if ( configNUMBER_OF_CORES == 1 ) */
+        TaskHandle_t xTaskGetCurrentTaskHandle( void )
+        {
+            TaskHandle_t xReturn;
+            UBaseType_t uxSavedInterruptStatus;
+
+            traceENTER_xTaskGetCurrentTaskHandle();
+
+            uxSavedInterruptStatus = portSET_INTERRUPT_MASK();
+            {
+                xReturn = pxCurrentTCBs[ portGET_CORE_ID() ];
+            }
+            portCLEAR_INTERRUPT_MASK( uxSavedInterruptStatus );
+
+            traceRETURN_xTaskGetCurrentTaskHandle( xReturn );
+
+            return xReturn;
+        }
+{
+  "blocked_helpers": [],
+  "bytes_sha256": "7da9335824f054845e69aa3a75ece32aa3fa7d043aeec78c08dc1b35b2982f9d",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "xTaskGetCurrentTaskHandle_armv6m",
+    "xTaskGetCurrentTaskHandle"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "assembly": "bx\tlr",
+      "kind": "return-candidate",
+      "site": "0x000012e0",
+      "target": "runtime register/stack; Thumb bit required"
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x000012e8",
+  "entry": "0x000012dc",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "ab04b58fe6006e5fd75b5cf3c44cf5aaf51fabef7f644b12cd55a785c110d6f4",
+  "instructions": [
+    {
+      "address": "0x000012dc",
+      "assembly": "ldr\tr3, [pc, #4]\t@ (12e4 <xTaskGetCurrentTaskHandle+0x8>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4b01",
+      "width": 2
+    },
+    {
+      "address": "0x000012de",
+      "assembly": "ldr\tr0, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6818",
+      "width": 2
+    },
+    {
+      "address": "0x000012e0",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    },
+    {
+      "address": "0x000012e2",
+      "assembly": "nop\t\t\t@ (mov r8, r8)",
+      "frontend_encoding_supported": true,
+      "opcode": "46c0",
+      "width": 2
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x000012e4",
+      "bytes": "08010020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x20000108",
+          "name": "pxCurrentTCB",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 1,
+      "instruction": "0x000012dc",
+      "thumb_function_pointer": [],
+      "value": "0x20000108"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x000012e4",
+      "halfword": "0801"
+    },
+    {
+      "address": "0x000012e6",
+      "halfword": "0020"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x000012e0",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "row": "r07",
+  "size": 12,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "xTaskGetCurrentTaskHandle",
+  "symbol_record": {
+    "address": "0x000012dc",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskGetCurrentTaskHandle",
+    "section": "2",
+    "size": 12,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000012dd"
+  },
+  "thumb_symbol": "0x000012dd",
+  "unsupported_instructions": []
+}
+52:000012dc 0000000c T xTaskGetCurrentTaskHandle
+53:000012e8 00000014 T xTaskGetCurrentTaskHandleForCore
+233:20000108 00000004 B pxCurrentTCB
+{
+  "BaseType_t.alignof": 4,
+  "BaseType_t.sizeof": 4,
+  "EventGroup_t.alignof": 4,
+  "EventGroup_t.sizeof": 24,
+  "EventGroup_t.uxEventBits": 0,
+  "EventGroup_t.xTasksWaitingForBits": 4,
+  "ListItem_t.alignof": 4,
+  "ListItem_t.pvOwner": 12,
+  "ListItem_t.pxContainer": 16,
+  "ListItem_t.pxNext": 4,
+  "ListItem_t.pxPrevious": 8,
+  "ListItem_t.sizeof": 20,
+  "ListItem_t.xItemValue": 0,
+  "List_t.alignof": 4,
+  "List_t.pxIndex": 4,
+  "List_t.sizeof": 20,
+  "List_t.uxNumberOfItems": 0,
+  "List_t.xListEnd": 8,
+  "MiniListItem_t.alignof": 4,
+  "MiniListItem_t.pxNext": 4,
+  "MiniListItem_t.pxPrevious": 8,
+  "MiniListItem_t.sizeof": 12,
+  "MiniListItem_t.xItemValue": 0,
+  "Queue_t.alignof": 4,
+  "Queue_t.cRxLock": 68,
+  "Queue_t.cTxLock": 69,
+  "Queue_t.pcHead": 0,
+  "Queue_t.pcWriteTo": 4,
+  "Queue_t.sizeof": 72,
+  "Queue_t.u.xQueue.pcReadFrom": 12,
+  "Queue_t.u.xQueue.pcTail": 8,
+  "Queue_t.u.xSemaphore.uxRecursiveCallCount": 12,
+  "Queue_t.u.xSemaphore.xMutexHolder": 8,
+  "Queue_t.uxItemSize": 64,
+  "Queue_t.uxLength": 60,
+  "Queue_t.uxMessagesWaiting": 56,
+  "Queue_t.xTasksWaitingToReceive": 36,
+  "Queue_t.xTasksWaitingToSend": 16,
+  "StackType_t.alignof": 4,
+  "StackType_t.sizeof": 4,
+  "StaticEventGroup_t.alignof": 4,
+  "StaticEventGroup_t.sizeof": 24,
+  "StaticQueue_t.alignof": 4,
+  "StaticQueue_t.sizeof": 72,
+  "StaticStreamBuffer_t.alignof": 4,
+  "StaticStreamBuffer_t.sizeof": 36,
+  "StaticTask_t.alignof": 4,
+  "StaticTask_t.sizeof": 84,
+  "StaticTimer_t.alignof": 4,
+  "StaticTimer_t.sizeof": 40,
+  "StreamBuffer_t.alignof": 4,
+  "StreamBuffer_t.pucBuffer": 24,
+  "StreamBuffer_t.sizeof": 36,
+  "StreamBuffer_t.ucFlags": 28,
+  "StreamBuffer_t.uxNotificationIndex": 32,
+  "StreamBuffer_t.xHead": 4,
+  "StreamBuffer_t.xLength": 8,
+  "StreamBuffer_t.xTail": 0,
+  "StreamBuffer_t.xTaskWaitingToReceive": 16,
+  "StreamBuffer_t.xTaskWaitingToSend": 20,
+  "StreamBuffer_t.xTriggerLevelBytes": 12,
+  "TCB_t.alignof": 4,
+  "TCB_t.pcTaskName": 52,
+  "TCB_t.pxStack": 48,
+  "TCB_t.pxTopOfStack": 0,
+  "TCB_t.sizeof": 84,
+  "TCB_t.ucDelayAborted": 81,
+  "TCB_t.ucNotifyState": 80,
+  "TCB_t.ulNotifiedValue": 76,
+  "TCB_t.uxBasePriority": 68,
+  "TCB_t.uxMutexesHeld": 72,
+  "TCB_t.uxPriority": 44,
+  "TCB_t.xEventListItem": 24,
+  "TCB_t.xStateListItem": 4,
+  "TickType_t.alignof": 4,
+  "TickType_t.sizeof": 4,
+  "TimeOut_t.alignof": 4,
+  "TimeOut_t.sizeof": 8,
+  "TimeOut_t.xOverflowCount": 0,
+  "TimeOut_t.xTimeOnEntering": 4,
+  "Timer_t.alignof": 4,
+  "Timer_t.pcTimerName": 0,
+  "Timer_t.pvTimerID": 28,
+  "Timer_t.pxCallbackFunction": 32,
+  "Timer_t.sizeof": 40,
+  "Timer_t.ucStatus": 36,
+  "Timer_t.xTimerListItem": 4,
+  "Timer_t.xTimerPeriodInTicks": 24,
+  "UBaseType_t.alignof": 4,
+  "UBaseType_t.sizeof": 4,
+  "void *.alignof": 4,
+  "void *.sizeof": 4
+}
+
+EXIT_CODE=0

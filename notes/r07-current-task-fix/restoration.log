@@ -1,0 +1,37 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-02095182
+COMMAND=bash -e -c sha256sum\ notes/r07-current-task/initial-attempt.v.txt\ Examples/FreeRTOS/xTaskGetCurrentTaskHandle_armv6m.v\;\ git\ diff\ --\ dune\;\ diff\ -u\ notes/r07-current-task/initial-attempt.v.txt\ Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.v\ \|\|\ test\ \"\$\?\"\ =\ 1
+8bc7f4bd966dee9fad5e9bb44c7264fbb50d23084bcb65dee45664acdac650d5  notes/r07-current-task/initial-attempt.v.txt
+ab04b58fe6006e5fd75b5cf3c44cf5aaf51fabef7f644b12cd55a785c110d6f4  Examples/FreeRTOS/xTaskGetCurrentTaskHandle_armv6m.v
+diff --git a/dune b/dune
+index 97fc4fb..4ff93a7 100644
+--- a/dune
++++ b/dune
+@@ -60,6 +60,7 @@
+   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+ ; END e05 generated modules
+   Examples.FreeRTOS.armv6m_uxTaskGetNumberOfTasks_proof
++  Examples.FreeRTOS.armv6m_xTaskGetCurrentTaskHandle_proof
+  ))
+ 
+ (alias
+@@ -85,3 +86,7 @@
+ (alias
+  (name armv6m)
+  (deps Picinae_armv6m.vo))
++
++(alias
++ (name r07-current-task)
++ (deps Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.vo))
+--- notes/r07-current-task/initial-attempt.v.txt	2026-11-03 19:48:25.166120802 -0600
++++ Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.v	2026-11-03 19:48:40.957380474 -0600
+@@ -15,7 +15,7 @@
+    Config: Examples/freertos/cortex-m0/FreeRTOSConfig.h, one core,
+    INCLUDE_xTaskGetCurrentTaskHandle=1, configUSE_MUTEXES=1.
+    Pinned nm/ABI evidence locates pxCurrentTCB at 0x20000108, size 4, offset 0;
+-   layout.json has sizeof(void*)=4. No TCB field is accessed or assumed.
++   layout.json has 32-bit pointer size = 4 bytes. No TCB field is accessed or assumed.
+ 
+    C/ABI spec: TaskHandle_t xTaskGetCurrentTaskHandle(void) returns pxCurrentTCB.
+    No register input arguments. Entry 0x12dc loads R3 with 0x20000108 using
+
+EXIT_CODE=0
