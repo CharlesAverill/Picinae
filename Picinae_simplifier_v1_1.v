@@ -2167,12 +2167,27 @@ Local Ltac psimp_verify_frontend :=
     reflexivity
   end.
 
+(*  To avoid unwanted expansion, all Var nodes in simplifier ASTs duplicate the
+    Coq expressions they contain into two arguments n and n'.  When the simplifier
+    front-end builds an AST, it puts an existential proof variable in n, and puts
+    the real expression in n'.  A new, safe-to-expand version of the tree is then
+    created by replacing each n' with n.  Tactics like compute can then be called
+    without risking any expansion.  The existential vars flow around as the ASTs
+    are manipulated.  After all AST simplification is finished, we must substitute
+    all the existential vars with the real expressions.  To do so, we take the
+    original AST, make an existential-free version by copying each n' over to n,
+    and then unify the two trees.  This instantiates all the existential vars
+    wherever they are (even in other goals) with the original expressions.
+ *)
+Local Ltac psimpl_unify v e :=
+  let e0 := (eval cbv delta [v] in v) in unify e0 e.
+
 Local Ltac psimpl_hyp_with _simpl_evars _make_mvt _simplify_sast_hyp t H :=
   let t2 := eval lazy [t simpl_evarsN simpl_evarsB simpl_evarsS] in (_simpl_evars t) in
   let mvt := eval compute in (_make_mvt t2) in
   eapply (_simplify_sast_hyp _ _ _ _ mvt t2) in H;
   [ compute in H
-  | unify t t2; reflexivity
+  | psimpl_unify t t2; reflexivity
   | reflexivity
   | psimp_verify_frontend ].
 
@@ -2185,7 +2200,7 @@ Local Ltac psimplU_hyp t H :=
   let mvt := eval compute in (make_mvtU t2) in
   eapply (simplify_sastU_hyp _ _ mvt t2) in H;
   [ compute in H
-  | unify t t2; reflexivity
+  | psimpl_unify t t2; reflexivity
   | reflexivity
   | psimp_verify_frontend ].
 Local Ltac psimplU_goal t :=
@@ -2193,7 +2208,7 @@ Local Ltac psimplU_goal t :=
   let mvt := eval compute in (make_mvtU t2) in
   eapply (simplify_sastU_goal _ _ mvt t2);
   [ compute
-  | unify t t2; reflexivity
+  | psimpl_unify t t2; reflexivity
   | reflexivity
   | psimp_verify_frontend ].
 
