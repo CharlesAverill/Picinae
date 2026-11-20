@@ -1,0 +1,23 @@
++ GET https://snapshot.ubuntu.com/ubuntu/20251001T000000Z/dists/jammy-proposed/InRelease
+SHA256 OK InRelease
++ GET https://snapshot.ubuntu.com/ubuntu/20251001T000000Z/dists/jammy-proposed/main/binary-amd64/Packages.xz
+SHA256 OK Packages.xz
++ GET https://snapshot.ubuntu.com/ubuntu/20251001T000000Z/dists/jammy-proposed/main/source/Sources.xz
+SHA256 OK Sources.xz
++ GET https://snapshot.ubuntu.com/ubuntu/20251001T000000Z/pool/main/g/glibc/glibc_2.35-0ubuntu3.12.debian.tar.xz
+SHA256 OK glibc_2.35-0ubuntu3.12.debian.tar.xz
++ GET https://snapshot.ubuntu.com/ubuntu/20251001T000000Z/pool/main/g/glibc/glibc_2.35-0ubuntu3.12.dsc
+SHA256 OK glibc_2.35-0ubuntu3.12.dsc
++ GET https://snapshot.ubuntu.com/ubuntu/20251001T000000Z/pool/main/g/glibc/glibc_2.35.orig.tar.xz
+SHA256 OK glibc_2.35.orig.tar.xz
++ GET https://snapshot.ubuntu.com/ubuntu/20251001T000000Z/pool/main/g/glibc/glibc_2.35.orig.tar.xz.asc
+SHA256 OK glibc_2.35.orig.tar.xz.asc
++ GET https://snapshot.ubuntu.com/ubuntu/20251001T000000Z/pool/main/g/glibc/libc6-dbg_2.35-0ubuntu3.12_amd64.deb
+SHA256 OK libc6-dbg_2.35-0ubuntu3.12_amd64.deb
++ GET https://snapshot.ubuntu.com/ubuntu/20251001T000000Z/pool/main/g/glibc/libc6_2.35-0ubuntu3.12_amd64.deb
+SHA256 OK libc6_2.35-0ubuntu3.12_amd64.deb
++ gpgv --homedir /home/charles/code/friends/.toolchains/e01-x86-inventory/network-check/gnupg --keyring /usr/share/keyrings/ubuntu-archive-keyring.gpg /home/charles/code/friends/.toolchains/e01-x86-inventory/network-check/downloads/InRelease
+gpgv: Signature made Tue Sep 30 21:18:01 2025 UTC
+gpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C
+gpgv: Good signature from "Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>"
+PASS: Ubuntu signature -> index hashes -> package/source hashes -> exact libc SHA256 and matching debug build ID

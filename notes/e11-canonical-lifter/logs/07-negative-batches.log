@@ -1,0 +1,23 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=python3 notes/e11-canonical-lifter/check-failures.py
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-symbol', 'toascii', 'e11_symbol_does_not_exist']
+FAIL [Errno 2] No such file or directory: '/home/charles/code/friends/.toolchains/e11-canonical-lifter/.e11-stage-vugzqy48/SUCCESS.json'; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/5e1e936bf7aa42f3a8f40369eb68dee2.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-asimd', 'toascii', '__memcpy_simd']
+FAIL [Errno 2] No such file or directory: '/home/charles/code/friends/.toolchains/e11-canonical-lifter/.e11-stage-putv786_/SUCCESS.json'; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/828d52da07a54ce1bcc2dd13178de571.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-tls', 'toascii', 'sigaddset']
+FAIL [Errno 2] No such file or directory: '/home/charles/code/friends/.toolchains/e11-canonical-lifter/.e11-stage-cqisnxo7/SUCCESS.json'; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/a9d3c99f484e41279d3bdd0404ebb096.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-zva', 'toascii', '__memset_generic']
+FAIL [Errno 2] No such file or directory: '/home/charles/code/friends/.toolchains/e11-canonical-lifter/.e11-stage-u36l4tji/SUCCESS.json'; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/9df440ae21ca4a3caf3f964fbb9fef5d.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-sve', 'toascii', '__memcpy_a64fx']
+FAIL [Errno 2] No such file or directory: '/home/charles/code/friends/.toolchains/e11-canonical-lifter/.e11-stage-0lmlpeyg/SUCCESS.json'; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/812752639c064e419f14848914265c87.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/lift-scalar.py', '--out', '/home/charles/code/friends/.toolchains/e11-canonical-lifter/reject-instruction-mte', 'toascii', '__strlen_mte']
+FAIL [Errno 2] No such file or directory: '/home/charles/code/friends/.toolchains/e11-canonical-lifter/.e11-stage-xwu1ss11/SUCCESS.json'; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e11-canonical-lifter/logs/5a28edea10df43f997401fe4f311e069.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+PASS six failing batches: nonzero, no accepted or partial output
+
+EXIT_CODE=0

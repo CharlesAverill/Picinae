@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=sha256sum -c notes/e11-canonical-lifter/implementation.sha256
+tools/ghidra-lifter/pcode2coq_scalar.py: OK
+tools/ghidra-lifter/scalar_headless.py: OK
+tools/ghidra-lifter/lift-scalar.py: OK
+tools/ghidra-lifter/test_scalar.py: OK
+
+EXIT_CODE=0

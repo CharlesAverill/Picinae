@@ -1,0 +1,33 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-473b43ee
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 tools/ghidra-lifter/test_x64_copy.py
+test_all_actual_and_synthetic_finite_semantics (__main__.Tests.test_all_actual_and_synthetic_finite_semantics) ... ERROR
+test_e26_receipt_rejects_partial_stale_and_mismatch (__main__.Tests.test_e26_receipt_rejects_partial_stale_and_mismatch) ... ok
+test_encoding_and_complete_raw_graph_rejections (__main__.Tests.test_encoding_and_complete_raw_graph_rejections) ... ok
+test_exact_artifact_reemission_and_pinned_bytes (__main__.Tests.test_exact_artifact_reemission_and_pinned_bytes) ... ok
+test_scalar_profile_unchanged_and_copy_is_opt_in (__main__.Tests.test_scalar_profile_unchanged_and_copy_is_opt_in) ... ok
+
+======================================================================
+ERROR: test_all_actual_and_synthetic_finite_semantics (__main__.Tests.test_all_actual_and_synthetic_finite_semantics)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-473b43ee/tools/ghidra-lifter/test_x64_copy.py", line 116, in test_all_actual_and_synthetic_finite_semantics
+    tree=parse(l.instruction(instruction(r)))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-473b43ee/tools/ghidra-lifter/pcode2coq_x64_copy.py", line 106, in instruction
+    self.validate_copy(enc,list(insn.getPcode()))
+  File "/home/charles/.t3/worktrees/Picinae/t3-473b43ee/tools/ghidra-lifter/pcode2coq_x64_copy.py", line 225, in validate_copy
+    value=read(ins[0])
+          ^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-473b43ee/tools/ghidra-lifter/pcode2coq_x64_copy.py", line 171, in read
+    require(v.isRegister(),'unmodeled vector pcode input space')
+  File "/home/charles/.t3/worktrees/Picinae/t3-473b43ee/tools/ghidra-lifter/pcode2coq_x64_copy.py", line 18, in require
+    if not ok: raise Unsupported(message)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+pcode2coq_scalar.Unsupported: unmodeled vector pcode input space
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.445s
+
+FAILED (errors=1)
+
+EXIT_CODE=1

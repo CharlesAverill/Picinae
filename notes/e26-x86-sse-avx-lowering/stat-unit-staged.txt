@@ -1,0 +1,87 @@
+ .../claude/lifter/x64_copy_fixture/SUCCESS.json    |  101 +
+ .../x64_copy_fixture/e26_legacy_amd64.pcode.json   | 1654 +++++
+ .../lifter/x64_copy_fixture/e26_legacy_amd64.v     |  260 +
+ .../x64_copy_fixture/e26_vex128_amd64.pcode.json   | 1156 ++++
+ .../lifter/x64_copy_fixture/e26_vex128_amd64.v     |  260 +
+ .../x64_copy_fixture/e26_vex256_amd64.pcode.json   |  999 +++
+ .../lifter/x64_copy_fixture/e26_vex256_amd64.v     |  260 +
+ .../x64_copy_fixture/e26_zero_amd64.pcode.json     | 1694 +++++
+ .../lifter/x64_copy_fixture/e26_zero_amd64.v       |  260 +
+ .../claude/lifter/x64_copy_pinned/SUCCESS.json     |   44 +
+ .../e26_pinned_moves_amd64.pcode.json              | 3975 ++++++++++++
+ .../x64_copy_pinned/e26_pinned_moves_amd64.v       |  156 +
+ dune                                               |   14 +
+ notes/e26-x86-sse-avx-lowering/README.md           |  218 +
+ notes/e26-x86-sse-avx-lowering/actual-raw.json     | 4321 +++++++++++++
+ .../e26-x86-sse-avx-lowering/actual-selection.json |  342 +
+ .../allowed-prerequisites.txt                      |    7 +
+ notes/e26-x86-sse-avx-lowering/ancestry-before.txt |   31 +
+ .../e26-x86-sse-avx-lowering/ancestry-imported.txt |  291 +
+ notes/e26-x86-sse-avx-lowering/capture.py          |   30 +
+ notes/e26-x86-sse-avx-lowering/capture.sh          |   16 +
+ notes/e26-x86-sse-avx-lowering/check-ancestry.py   |   23 +
+ notes/e26-x86-sse-avx-lowering/check-artifacts.py  |   26 +
+ notes/e26-x86-sse-avx-lowering/check-failures.py   |   20 +
+ notes/e26-x86-sse-avx-lowering/copy-opcodes.json   |   64 +
+ notes/e26-x86-sse-avx-lowering/fixture/build.sh    |    8 +
+ notes/e26-x86-sse-avx-lowering/fixture/moves.S     |   82 +
+ notes/e26-x86-sse-avx-lowering/fixture/moves.so    |  Bin 0 -> 13576 bytes
+ notes/e26-x86-sse-avx-lowering/fixture/pins.json   |    3 +
+ notes/e26-x86-sse-avx-lowering/isa-pins.json       |    9 +
+ .../logs/ancestry-precommit.log                    |   13 +
+ .../logs/artifact-audit.log                        |    5 +
+ .../logs/assumptions-verbatim.log                  |   39 +
+ .../logs/backend-complete.log                      |   15 +
+ .../logs/backend-expanded.log                      |   32 +
+ .../logs/backend-final.log                         |   33 +
+ .../logs/backend-tests.log                         |   15 +
+ .../logs/backend-verified.log                      |   15 +
+ .../logs/capture-actual.log                        |    6 +
+ .../logs/capture-synthetic-final.log               |    6 +
+ .../logs/capture-synthetic-fresh.log               |    6 +
+ .../logs/capture-synthetic.log                     |    6 +
+ notes/e26-x86-sse-avx-lowering/logs/diff-check.log |    4 +
+ notes/e26-x86-sse-avx-lowering/logs/dune-final.log |   40 +
+ notes/e26-x86-sse-avx-lowering/logs/dune-full.log  |  354 ++
+ .../logs/fixture-build.log                         |    5 +
+ .../logs/fixture-rebuild.log                       |    5 +
+ .../logs/fork-collision.log                        |    4 +
+ .../ghidra/013ed7cdc0e54bccb5098e99c8f0c08b.log.gz |  Bin 0 -> 2137 bytes
+ .../ghidra/02d82de593774b5a8ade4aa257f22050.log.gz |  Bin 0 -> 1737 bytes
+ .../ghidra/1ef9620badee457c9c941c8dcf6d6a06.log.gz |  Bin 0 -> 1742 bytes
+ .../ghidra/4e33b81974034da0b8061b5e7bb3f497.log.gz |  Bin 0 -> 2136 bytes
+ .../ghidra/5dc54ba46f234cb18d55b232903e7465.log.gz |  Bin 0 -> 1283 bytes
+ .../ghidra/64de60f1ad5b47b597904ce41f692c18.log.gz |  Bin 0 -> 1994 bytes
+ .../ghidra/7d5fa4e7b333458dbcbad8885731957b.log.gz |  Bin 0 -> 1997 bytes
+ .../ghidra/817b5069231b4824a1b4f351476f96d9.log.gz |  Bin 0 -> 1409 bytes
+ .../ghidra/9a74889bccdd4d729562019207920ddf.log.gz |  Bin 0 -> 1661 bytes
+ .../ghidra/a1c076c1a6c84de89d7d40a711dd87b4.log.gz |  Bin 0 -> 1283 bytes
+ .../ghidra/b581992e7f3341eb912db5ab17bf29fb.log.gz |  Bin 0 -> 1285 bytes
+ .../ghidra/d0454caeadeb43059d4a1ce8be9b914f.log.gz |  Bin 0 -> 1732 bytes
+ .../ghidra/d5e83759b57b41758e867e89e90b0e67.log.gz |  Bin 0 -> 1274 bytes
+ .../ghidra/d6630aa89e7b4f30887bc4e5eab74337.log.gz |  Bin 0 -> 1407 bytes
+ .../ghidra/ecae525f3d644db9958acd21106f2013.log.gz |  Bin 0 -> 1752 bytes
+ .../ghidra/f7806fe0d76d40ee9a80f17fad5f198e.log.gz |  Bin 0 -> 1750 bytes
+ .../ghidra/ffac9e6b76ab414b8cd325beda53c7d4.log.gz |  Bin 0 -> 1752 bytes
+ .../e26-x86-sse-avx-lowering/logs/lift-actual.log  |    6 +
+ .../logs/lift-synthetic.log                        |    6 +
+ .../logs/prerequisite-merge.log                    |  520 ++
+ .../logs/publication-failures.log                  |   29 +
+ .../logs/publication-final.log                     |   29 +
+ .../logs/regenerate-complete.log                   |    9 +
+ .../logs/regenerate-final.log                      |    5 +
+ .../logs/regenerate-pinned.log                     |    9 +
+ .../logs/replay-pinned.log                         |    9 +
+ .../logs/scalar-publication-regressions.log        |   10 +
+ .../logs/scalar-regressions.log                    |   21 +
+ notes/e26-x86-sse-avx-lowering/logs/selection.log  |    5 +
+ notes/e26-x86-sse-avx-lowering/logs/toolchain.log  |   19 +
+ .../e26-x86-sse-avx-lowering/print-assumptions.sh  |   17 +
+ notes/e26-x86-sse-avx-lowering/reproduce.sh        |   22 +
+ .../select-instructions.py                         |   26 +
+ notes/e26-x86-sse-avx-lowering/synthetic-raw.json  | 6626 ++++++++++++++++++++
+ tools/ghidra-lifter/lift-x64-copy.py               |  172 +
+ tools/ghidra-lifter/pcode2coq_x64_copy.py          |  246 +
+ tools/ghidra-lifter/test_x64_copy.py               |  243 +
+ tools/ghidra-lifter/x64_copy_headless.py           |  160 +
+ 86 files changed, 25116 insertions(+)

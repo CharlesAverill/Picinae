@@ -1,0 +1,32 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-473b43ee
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 tools/ghidra-lifter/test_x64_copy.py
+test_all_actual_and_synthetic_finite_semantics (__main__.Tests.test_all_actual_and_synthetic_finite_semantics) ... ERROR
+test_e26_receipt_rejects_partial_stale_and_mismatch (__main__.Tests.test_e26_receipt_rejects_partial_stale_and_mismatch) ... ok
+test_encoding_and_complete_raw_graph_rejections (__main__.Tests.test_encoding_and_complete_raw_graph_rejections) ... FAIL
+test_exact_artifact_reemission_and_pinned_bytes (__main__.Tests.test_exact_artifact_reemission_and_pinned_bytes) ... ok
+test_scalar_profile_unchanged_and_copy_is_opt_in (__main__.Tests.test_scalar_profile_unchanged_and_copy_is_opt_in) ... ok
+
+======================================================================
+ERROR: test_all_actual_and_synthetic_finite_semantics (__main__.Tests.test_all_actual_and_synthetic_finite_semantics)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-473b43ee/tools/ghidra-lifter/test_x64_copy.py", line 121, in test_all_actual_and_synthetic_finite_semantics
+    if e.address:
+       ^^^^^^^^^
+AttributeError: 'types.SimpleNamespace' object has no attribute 'address'
+
+======================================================================
+FAIL: test_encoding_and_complete_raw_graph_rejections (__main__.Tests.test_encoding_and_complete_raw_graph_rejections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-473b43ee/tools/ghidra-lifter/test_x64_copy.py", line 145, in test_encoding_and_complete_raw_graph_rejections
+    with self.assertRaises(Unsupported):l.instruction(instruction(bad))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unsupported not raised
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.187s
+
+FAILED (failures=1, errors=1)
+
+EXIT_CODE=1
