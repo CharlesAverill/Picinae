@@ -1,0 +1,6 @@
+COMMAND=["/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/bin/python", "-m", "pyghidra", "--skip-analysis", "--project-path", "/home/charles/code/friends/.toolchains/e11-canonical-lifter/projects/lift-z8jj294h", "--project-name", "e11", "/home/charles/code/friends/.toolchains/e02-arm-inventory/root/lib/aarch64-linux-gnu/libc.so.6", "/home/charles/.t3/worktrees/Picinae/t3-4aebc652/tools/ghidra-lifter/scalar_headless.py", "/home/charles/.t3/worktrees/Picinae/t3-4aebc652", "/home/charles/code/friends/.toolchains/e11-canonical-lifter/.e11-stage-qky3v_xw", "/home/charles/code/friends/.toolchains/e02-arm-inventory", "6e52c56415e44404a9cdbf2cf95ddcb8", "relative", "toascii", "div", "ldiv", "swab", "ffs", "ffsl"]
+JAVA_TOOL_OPTIONS=-Xmx1G -Duser.home=/home/charles/code/friends/.toolchains/e11-canonical-lifter/home -Djava.io.tmpdir=/home/charles/code/friends/.toolchains/e11-canonical-lifter/tmp
+Picked up JAVA_TOOL_OPTIONS: -Xmx1G -Duser.home=/home/charles/code/friends/.toolchains/e11-canonical-lifter/home -Djava.io.tmpdir=/home/charles/code/friends/.toolchains/e11-canonical-lifter/tmp
+Picked up JAVA_TOOL_OPTIONS: -Xmx1G -Duser.home=/home/charles/code/friends/.toolchains/e11-canonical-lifter/home -Djava.io.tmpdir=/home/charles/code/friends/.toolchains/e11-canonical-lifter/tmp
+
+LAUNCHER_EXIT=0

@@ -1,0 +1,340 @@
+[
+  {
+    "function": "__memcpy_chk",
+    "instruction": "0xf7b38",
+    "kind": "b",
+    "target": "0x9ab40",
+    "target_entries": [
+      "__GI_memcpy",
+      "__memcpy_generic"
+    ],
+    "target_containing_extents": [
+      "__GI_memcpy",
+      "__memcpy_generic"
+    ]
+  },
+  {
+    "function": "__memcpy_chk",
+    "instruction": "0xf7b44",
+    "kind": "bl",
+    "target": "0xf8440",
+    "target_entries": [
+      "__GI___chk_fail",
+      "__chk_fail"
+    ],
+    "target_containing_extents": [
+      "__GI___chk_fail",
+      "__chk_fail"
+    ]
+  },
+  {
+    "function": "__memmove_a64fx",
+    "instruction": "0x9beb0",
+    "kind": "b.ls",
+    "target": "0x9bc70",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI___memcpy_a64fx",
+      "__memcpy_a64fx"
+    ]
+  },
+  {
+    "function": "__memmove_a64fx",
+    "instruction": "0x9beb8",
+    "kind": "b.cs",
+    "target": "0x9bd00",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI___memcpy_a64fx",
+      "__memcpy_a64fx"
+    ]
+  },
+  {
+    "function": "__memmove_a64fx",
+    "instruction": "0x9bfa0",
+    "kind": "b",
+    "target": "0x9bdd8",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI___memcpy_a64fx",
+      "__memcpy_a64fx"
+    ]
+  },
+  {
+    "function": "__memmove_chk",
+    "instruction": "0xf7b58",
+    "kind": "b",
+    "target": "0x9acd0",
+    "target_entries": [
+      "__GI_memmove",
+      "__memmove_generic"
+    ],
+    "target_containing_extents": [
+      "__GI_memmove",
+      "__memmove_generic"
+    ]
+  },
+  {
+    "function": "__memmove_chk",
+    "instruction": "0xf7b64",
+    "kind": "bl",
+    "target": "0xf8440",
+    "target_entries": [
+      "__GI___chk_fail",
+      "__chk_fail"
+    ],
+    "target_containing_extents": [
+      "__GI___chk_fail",
+      "__chk_fail"
+    ]
+  },
+  {
+    "function": "__memmove_falkor",
+    "instruction": "0x9bb50",
+    "kind": "b.ls",
+    "target": "0x9ba30",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI___memcpy_falkor",
+      "__memcpy_falkor"
+    ]
+  },
+  {
+    "function": "__memmove_falkor",
+    "instruction": "0x9bb58",
+    "kind": "b.ls",
+    "target": "0x9b9dc",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI___memcpy_falkor",
+      "__memcpy_falkor"
+    ]
+  },
+  {
+    "function": "__memmove_generic",
+    "instruction": "0x9ace8",
+    "kind": "b.hi",
+    "target": "0x9abd0",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI_memcpy",
+      "__memcpy_generic"
+    ]
+  },
+  {
+    "function": "__memmove_generic",
+    "instruction": "0x9acf0",
+    "kind": "b.cc",
+    "target": "0x9ab78",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI_memcpy",
+      "__memcpy_generic"
+    ]
+  },
+  {
+    "function": "__memmove_generic",
+    "instruction": "0x9ad1c",
+    "kind": "b.cs",
+    "target": "0x9ac40",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI_memcpy",
+      "__memcpy_generic"
+    ]
+  },
+  {
+    "function": "__memmove_simd",
+    "instruction": "0x9af18",
+    "kind": "b.hi",
+    "target": "0x9ae50",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI___memcpy_simd",
+      "__memcpy_simd"
+    ]
+  },
+  {
+    "function": "__memmove_simd",
+    "instruction": "0x9af20",
+    "kind": "b.cc",
+    "target": "0x9adf8",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI___memcpy_simd",
+      "__memcpy_simd"
+    ]
+  },
+  {
+    "function": "__memmove_simd",
+    "instruction": "0x9af44",
+    "kind": "b.cs",
+    "target": "0x9ae98",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI___memcpy_simd",
+      "__memcpy_simd"
+    ]
+  },
+  {
+    "function": "__memmove_thunderx",
+    "instruction": "0x9afd0",
+    "kind": "b.cc",
+    "target": "0x9b1e0",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI___memcpy_thunderx",
+      "__memcpy_thunderx"
+    ]
+  },
+  {
+    "function": "__memmove_thunderx2",
+    "instruction": "0x9b28c",
+    "kind": "b.ls",
+    "target": "0x9b340",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI___memcpy_thunderx2",
+      "__memcpy_thunderx2"
+    ]
+  },
+  {
+    "function": "__memmove_thunderx2",
+    "instruction": "0x9b29c",
+    "kind": "b.cc",
+    "target": "0x9b914",
+    "target_entries": [],
+    "target_containing_extents": [
+      "__GI___memcpy_thunderx2",
+      "__memcpy_thunderx2"
+    ]
+  },
+  {
+    "function": "__mempcpy",
+    "instruction": "0x94a60",
+    "kind": "bl",
+    "target": "0x9ab40",
+    "target_entries": [
+      "__GI_memcpy",
+      "__memcpy_generic"
+    ],
+    "target_containing_extents": [
+      "__GI_memcpy",
+      "__memcpy_generic"
+    ]
+  },
+  {
+    "function": "__mempcpy_chk",
+    "instruction": "0xf7b88",
+    "kind": "bl",
+    "target": "0x9ab40",
+    "target_entries": [
+      "__GI_memcpy",
+      "__memcpy_generic"
+    ],
+    "target_containing_extents": [
+      "__GI_memcpy",
+      "__memcpy_generic"
+    ]
+  },
+  {
+    "function": "__mempcpy_chk",
+    "instruction": "0xf7b9c",
+    "kind": "bl",
+    "target": "0xf8440",
+    "target_entries": [
+      "__GI___chk_fail",
+      "__chk_fail"
+    ],
+    "target_containing_extents": [
+      "__GI___chk_fail",
+      "__chk_fail"
+    ]
+  },
+  {
+    "function": "__memset_chk",
+    "instruction": "0xf7ba8",
+    "kind": "b",
+    "target": "0x9bfc0",
+    "target_entries": [
+      "__GI___memset_generic",
+      "__GI_memset",
+      "__memset_generic"
+    ],
+    "target_containing_extents": [
+      "__GI___memset_generic",
+      "__GI_memset",
+      "__memset_generic"
+    ]
+  },
+  {
+    "function": "__memset_chk",
+    "instruction": "0xf7bb4",
+    "kind": "bl",
+    "target": "0xf8440",
+    "target_entries": [
+      "__GI___chk_fail",
+      "__chk_fail"
+    ],
+    "target_containing_extents": [
+      "__GI___chk_fail",
+      "__chk_fail"
+    ]
+  },
+  {
+    "function": "mempcpy",
+    "instruction": "0x94a60",
+    "kind": "bl",
+    "target": "0x9ab40",
+    "target_entries": [
+      "__GI_memcpy",
+      "__memcpy_generic"
+    ],
+    "target_containing_extents": [
+      "__GI_memcpy",
+      "__memcpy_generic"
+    ]
+  },
+  {
+    "function": "strcspn",
+    "instruction": "0x93374",
+    "kind": "bl",
+    "target": "0x96700",
+    "target_entries": [
+      "__strchrnul",
+      "strchrnul"
+    ],
+    "target_containing_extents": [
+      "__strchrnul",
+      "strchrnul"
+    ]
+  },
+  {
+    "function": "strcspn",
+    "instruction": "0x93380",
+    "kind": "bl",
+    "target": "0xf9ca0",
+    "target_entries": [
+      "__stack_chk_fail",
+      "__stack_chk_fail_local"
+    ],
+    "target_containing_extents": [
+      "__stack_chk_fail",
+      "__stack_chk_fail_local"
+    ]
+  },
+  {
+    "function": "strspn",
+    "instruction": "0x93db4",
+    "kind": "bl",
+    "target": "0xf9ca0",
+    "target_entries": [
+      "__stack_chk_fail",
+      "__stack_chk_fail_local"
+    ],
+    "target_containing_extents": [
+      "__stack_chk_fail",
+      "__stack_chk_fail_local"
+    ]
+  }
+]

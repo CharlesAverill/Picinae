@@ -1,0 +1,11 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-349ae4c4
+COMMAND=python3 notes/a-insque-fix/check-statements.py
+All 19 initial theorem/lemma statements and all 8 definitions preserved exactly.
+Initial snapshot SHA256: bb86f7df7e54c882713539b6522f74acd88c3dfa290ee4539b301dc6a532253c
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-349ae4c4/notes/a-insque-fix/check-statements.py", line 17, in <module>
+    assert Path('_build/default/Examples/claude/arm8_insque_proof.vo').exists()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+EXIT_CODE=1

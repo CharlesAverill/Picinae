@@ -1,0 +1,23 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-349ae4c4
+COMMAND=bash notes/a-insque-fix/build.sh
+ADMITTED a-insque-fix memory_kib=1750000
+        rocq .Picinae.theory.d
+File "dune", lines 6-42, characters 0-1891:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+40 |   Examples.claude.lifter.scalar_ports.e08_sigabbrev_np_arm8
+41 |   Examples.claude.lifter.scalar_ports.e08_sigdescr_np_arm8
+42 |   Examples.claude.lifter.scalar_ports.e08_srand48_r_arm8))
+        rocq Examples/claude/arm8_insque_proof.{glob,vo} (exit 1)
+Goal at < 1983968 >
+Goal at < 1983996 >
+Goal at < 1983996 >
+Goal at < 1983996 >
+File "./Examples/claude/arm8_insque_proof.v", line 293, characters 4-18:
+Error: memsize is opaque.
+
+RELEASED a-insque-fix exit=1
+
+EXIT_CODE=1
