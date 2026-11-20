@@ -1,0 +1,64 @@
+{
+  "selection": [
+    "pinned_rep_sites"
+  ],
+  "source_kind": "glibc",
+  "elf_sha256": "9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9",
+  "semantics": "rep-successful-sequential-fragments-v1",
+  "language": "x86:LE:64:default",
+  "addressing": "global",
+  "image_base": "0x100000",
+  "profile": "strict",
+  "frontier": [
+    "0x1a90a1",
+    "0x1aad43",
+    "0x1c463f",
+    "0x1c46ef",
+    "0x1c479f",
+    "0x1c4901",
+    "0x1c490f",
+    "0x1c4b9a",
+    "0x1c4fc9",
+    "0x1c50bc",
+    "0x2a0ae6",
+    "0x2a0b4c",
+    "0x2a0fd0",
+    "0x2a10cc",
+    "0x2a6b81",
+    "0x2a6bd7",
+    "0x2a7090",
+    "0x2a713c",
+    "0x2a7f67",
+    "0x2a7fcc",
+    "0x2a87d0",
+    "0x2a88cc",
+    "0x2af12f",
+    "0x2af18e",
+    "0x2afa00",
+    "0x2afabc"
+  ],
+  "records": [
+    {
+      "symbol": "rep",
+      "instructions": 26,
+      "output": "e27_rep_amd64.v",
+      "output_sha256": "0bd20cad401d20648fffebb92d56407a7b0789afc5b74b8a9e40c64feccb6604",
+      "pcode_sha256": "c56b0b8cfc2df3f64d8768dfa02c48f9b03fc0338950643c60527fc813291840"
+    }
+  ],
+  "isa_sha256": {
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.sla": "4d3ebe1ebf0b127dc5bd187979824b850fc94081e6660021e2bda834e7400504",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.slaspec": "9d66a01a4219ab0bee0697caf2d1ee389e094e927a857299cebb6182e40a4e6e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.pspec": "3c3dab75a2ac0b98b0552856f690e613d661e0df7cf94d6252e5604d9821629f",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64-gcc.cspec": "5eaa848f3eba7ebd4023541f9f37645dae077e8426fb562592f398d599530a9e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86.ldefs": "b2aa14d94a6162844b18bf47f2aed8579bf90cef3459f6e322b9c1f58146098b",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/ia.sinc": "8fbb244f7fc88be621b95f435b6e958c6a55819dd5b935242377bb2a7e2b9b76"
+  },
+  "implementation_sha256": {
+    "pcode2coq_x64_rep.py": "faa0dcf3cb05798d32bef0bebe8d09bacadcba98b6ba119d4c2517cb3326b0ec",
+    "pcode2coq_x64.py": "87750d6653110df94a22c8645891502aedcd5347bb252b2a19a3d5afdb00f90a",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "x64_rep_headless.py": "f27f2418791d51467579eea5aaa6f3fee052cce903147024fd8a65bf43b4537a",
+    "lift-x64-rep.py": "024d119fa11eca82361b159b83e874f71353d2519ffa6a37c18b8b524b246a71"
+  }
+}

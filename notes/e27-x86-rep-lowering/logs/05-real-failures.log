@@ -1,0 +1,34 @@
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c/tools/ghidra-lifter/lift-x64-rep.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e27-x86-rep-lowering/negative.g56mebbz/bad_addr32', 'rep_movsb', 'bad_addr32']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction MOVSB.REP ES:EDI,ESI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/logs/5870d841c1604e538fb17817fe74e4a5.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c/tools/ghidra-lifter/lift-x64-rep.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e27-x86-rep-lowering/negative.g56mebbz/bad_segment', 'rep_movsb', 'bad_segment']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction MOVSB.REP RDI,RSI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/logs/d7647529b100488e967272560e630425.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c/tools/ghidra-lifter/lift-x64-rep.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e27-x86-rep-lowering/negative.g56mebbz/bad_repne', 'rep_movsb', 'bad_repne']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction MOVSB.REP RDI,RSI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/logs/c245035ed734469b960084276e834736.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c/tools/ghidra-lifter/lift-x64-rep.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e27-x86-rep-lowering/negative.g56mebbz/bad_cmps', 'rep_movsb', 'bad_cmps']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction CMPSB.REPE RDI,RSI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/logs/5543a2e4201a4528bf2db2c88a552115.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c/tools/ghidra-lifter/lift-x64-rep.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e27-x86-rep-lowering/negative.g56mebbz/bad_scas', 'rep_movsb', 'bad_scas']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction SCASB.REPNE RDI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/logs/992c9f9717c343c891cfefee84cdd72d.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c/tools/ghidra-lifter/lift-x64-rep.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e27-x86-rep-lowering/negative.g56mebbz/bad_duplicate', 'rep_movsb', 'bad_duplicate']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction MOVSB.REP RDI,RSI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/logs/c9cf0896a72b4d08b07f17e02af6ad18.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c/tools/ghidra-lifter/lift-x64-rep.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e27-x86-rep-lowering/negative.g56mebbz/missing_symbol', 'rep_movsb', 'missing_symbol']
+FAIL Ghidra script failed: ValueError: expected unique synthetic FUNC missing_symbol; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e27-x86-rep-lowering/logs/a17a8673f9c444208471eb16f2e9fa8d.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c/tools/ghidra-lifter/lift-x64-rep.py', '--out', '/home/charles/code/friends/.toolchains/e27-x86-rep-lowering/negative.g56mebbz/existing']
+usage: lift-x64-rep.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                       [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                       [symbols ...]
+lift-x64-rep.py: error: output directory already exists; refusing stale/replaced output
+EXPECTED_EXIT=2 ACTUAL_EXIT=2
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-4ff7b03c/tools/ghidra-lifter/lift-x64-rep.py', '--out', '/home/charles/code/friends/.toolchains/e27-x86-rep-lowering/negative.g56mebbz/link']
+usage: lift-x64-rep.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                       [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                       [symbols ...]
+lift-x64-rep.py: error: output directory already exists; refusing stale/replaced output
+EXPECTED_EXIT=2 ACTUAL_EXIT=2
+PASS mixed supported/unsupported real extraction batches; no partial publication, staging or projects; existing destinations unchanged

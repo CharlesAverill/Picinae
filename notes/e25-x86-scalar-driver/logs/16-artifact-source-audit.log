@@ -1,0 +1,460 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-83d5497b
+COMMAND=python3 notes/e25-x86-scalar-driver/check-artifacts.py
+SOURCE f042e1b7305117321d2fa7730ce4a714ca86d6a1a6c31068bbf826a676614652 stdlib/abs.c
+SOURCE ef366f42e92670870d4c580ff7d76d613f58014dea2bd80d1803bbd68ad23837 stdlib/labs.c
+SOURCE c583758d5bf7ba138e6f3881f5f5706c93cde362548f691c42acf7d996b25725 sysdeps/wordsize-64/labs.c
+SOURCE 7eb1c5c059b05eaf6a32c688fe80c3f0cc1bedcdf7caa19b8efb79b6653469a9 nptl/pthread_equal.c
+SOURCE 9d4270baa7516fc55f320922afccf896ecdf33c58ac3131ee5f7d2ad5355acc7 ctype/ctype-extn.c
+SOURCE f24a6f94415830e9353adb3e9343b0b0a0f804bd369a083d589c26c009865f05 ctype/ctype.h
+PASS full exact e01 manifest (runtime/debug/source archives/packages)
+PASS glibc toascii entry=0x13a170 size=10 insns=4 bytes_sha256=07d5306d9f9696a8fa52acee06b145007079a4e630498808e146201f467f98ef
+PASS glibc isascii entry=0x13a180 size=13 insns=5 bytes_sha256=0d11ba11e1a141b7ca4d8fcf65e91a34231f6ad7863426aff07641911c43e1ce
+PASS glibc abs entry=0x145dd0 size=12 insns=5 bytes_sha256=d1d230131d63336fa6512b99eaf7bbcf0a093fdbe34b196ab87a8bbe9f9fd416
+PASS glibc labs entry=0x145de0 size=15 insns=5 bytes_sha256=33bc55259c7e317c8370c226e034a98676cdb0778dbd536e269c9af2cb75c5f2
+PASS glibc pthread_equal entry=0x195c70 size=13 insns=5 bytes_sha256=0e734c6bc10aa173b672922084e043117f5f2c1edc02ab6cda88708a277f7534
+PASS complete hashes, implementation pins, SLEIGH pins and exact instruction boundaries: x64_scalar_smoke
+PASS synthetic scalar_caller entry=0x101000 size=6 insns=2 bytes_sha256=140a6097f32eb2e83a145a8d478a25f6fcfb61cd28ac302f3ca368a2a0d25142
+PASS synthetic scalar_callee entry=0x101006 size=42 insns=13 bytes_sha256=3c8124882bfe69ed27334b4c8bb937d6c1ba42d04f80abe5161a187052bb9820
+PASS complete hashes, implementation pins, SLEIGH pins and exact instruction boundaries: x64_scalar_fixture
+
+Displaying notes found in: .note.gnu.property
+  Owner                Data size 	Description
+  GNU                  0x00000020	NT_GNU_PROPERTY_TYPE_0
+      Properties: x86 feature: IBT, SHSTK
+	x86 ISA needed: x86-64-baseline
+
+Displaying notes found in: .note.gnu.build-id
+  Owner                Data size 	Description
+  GNU                  0x00000014	NT_GNU_BUILD_ID (unique build ID bitstring)
+    Build ID: 085164b7e9093b36e3be17226f0d94a35b818c55
+
+Displaying notes found in: .note.ABI-tag
+  Owner                Data size 	Description
+  GNU                  0x00000010	NT_GNU_ABI_TAG (ABI version tag)
+    OS: Linux, ABI: 3.2.0
+
+Displaying notes found in: .note.stapsdt
+  Owner                Data size 	Description
+  stapsdt              0x0000003a	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: setjmp
+    Location: 0x0000000000042155, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi -4@%esi 8@%rax
+  stapsdt              0x0000003b	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: longjmp
+    Location: 0x0000000000042301, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi -4@%esi 8@%rdx
+  stapsdt              0x00000042	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: longjmp_target
+    Location: 0x000000000004231d, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi -4@%eax 8@%rdx
+  stapsdt              0x0000003b	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: longjmp
+    Location: 0x0000000000042367, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi -4@%esi 8@%rdx
+  stapsdt              0x00000042	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: longjmp_target
+    Location: 0x0000000000042383, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi -4@%eax 8@%rdx
+  stapsdt              0x0000003a	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: lll_lock_wait_private
+    Location: 0x0000000000091246, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000032	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: lll_lock_wait
+    Location: 0x00000000000912a9, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000033	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: cond_broadcast
+    Location: 0x0000000000092e02, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000031	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: cond_destroy
+    Location: 0x0000000000093155, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000035	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: cond_init
+    Location: 0x0000000000093216, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi 8@%rsi
+  stapsdt              0x00000030	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: cond_signal
+    Location: 0x0000000000093232, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000035	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: cond_wait
+    Location: 0x0000000000093871, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi 8@%rsi
+  stapsdt              0x00000035	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: cond_wait
+    Location: 0x0000000000093cc4, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi 8@%rsi
+  stapsdt              0x00000035	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: cond_wait
+    Location: 0x000000000009413d, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi 8@%rsi
+  stapsdt              0x0000004c	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: pthread_start
+    Location: 0x000000000009491a, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx 8@1600(%rbx) 8@1608(%rbx)
+  stapsdt              0x00000053	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: pthread_create
+    Location: 0x000000000009511a, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax 8@8(%rsp) 8@16(%rsp) 8@24(%rsp)
+  stapsdt              0x00000031	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: pthread_join
+    Location: 0x000000000009654b, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000045	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: pthread_join_ret
+    Location: 0x000000000009659c, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx -4@%r12d 8@%r13
+  stapsdt              0x00000033	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_acquired
+    Location: 0x0000000000096b4d, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbp
+  stapsdt              0x00000030	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_entry
+    Location: 0x00000000000971af, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000033	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_acquired
+    Location: 0x00000000000971f1, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000032	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_destroy
+    Location: 0x0000000000097574, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x0000002f	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_init
+    Location: 0x0000000000097649, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx
+  stapsdt              0x00000033	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_acquired
+    Location: 0x000000000009789e, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbp
+  stapsdt              0x00000030	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_entry
+    Location: 0x0000000000097eff, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000033	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_acquired
+    Location: 0x0000000000097f64, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x0000003d	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_timedlock_acquired
+    Location: 0x00000000000984ab, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbp
+  stapsdt              0x0000003d	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_timedlock_acquired
+    Location: 0x00000000000989df, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbp
+  stapsdt              0x0000003d	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_timedlock_acquired
+    Location: 0x0000000000098d86, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbp
+  stapsdt              0x00000049	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_clocklock_entry
+    Location: 0x0000000000098e29, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi -4@%esi 8@%rdx
+  stapsdt              0x00000041	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_timedlock_entry
+    Location: 0x0000000000098e47, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi 8@%rsi
+  stapsdt              0x00000031	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_release
+    Location: 0x000000000009958f, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r8
+  stapsdt              0x00000031	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_release
+    Location: 0x000000000009968a, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r8
+  stapsdt              0x00000032	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_release
+    Location: 0x000000000009998f, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000032	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: mutex_release
+    Location: 0x0000000000099aab, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000033	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: rwlock_destroy
+    Location: 0x000000000009a5f4, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000031	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: rdlock_entry
+    Location: 0x000000000009a64b, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000038	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: rdlock_acquire_read
+    Location: 0x000000000009a684, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx
+  stapsdt              0x00000032	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: rwlock_unlock
+    Location: 0x000000000009af5d, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000031	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: wrlock_entry
+    Location: 0x000000000009b12f, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi
+  stapsdt              0x00000039	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: wrlock_acquire_write
+    Location: 0x000000000009b197, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx
+  stapsdt              0x0000004c	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_arena_max
+    Location: 0x00000000000a0c57, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax 8@32+mp_(%rip)
+  stapsdt              0x0000004d	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_arena_test
+    Location: 0x00000000000a0c67, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax 8@24+mp_(%rip)
+  stapsdt              0x00000054	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_tunable_tcache_max_bytes
+    Location: 0x00000000000a0c80, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax 8@112+mp_(%rip)
+  stapsdt              0x00000050	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_tunable_tcache_count
+    Location: 0x00000000000a0cc0, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax 8@120+mp_(%rip)
+  stapsdt              0x00000059	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_tunable_tcache_unsorted_limit
+    Location: 0x00000000000a0cd7, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax 8@128+mp_(%rip)
+  stapsdt              0x00000052	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_mxfast
+    Location: 0x00000000000a0e50, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax 8@global_max_fast(%rip)
+  stapsdt              0x0000005e	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_trim_threshold
+    Location: 0x00000000000a0ed7, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax 8@mp_(%rip) -4@72+mp_(%rip)
+  stapsdt              0x00000059	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_top_pad
+    Location: 0x00000000000a0ef7, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax 8@8+mp_(%rip) -4@72+mp_(%rip)
+  stapsdt              0x00000061	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_mmap_threshold
+    Location: 0x00000000000a0f17, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax 8@16+mp_(%rip) -4@72+mp_(%rip)
+  stapsdt              0x0000005d	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_mmap_max
+    Location: 0x00000000000a0f37, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: -4@%eax -4@64+mp_(%rip) -4@72+mp_(%rip)
+  stapsdt              0x00000052	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_perturb
+    Location: 0x00000000000a0f57, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: -4@%eax -4@perturb_byte(%rip)
+  stapsdt              0x00000041	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_arena_reuse_free_list
+    Location: 0x00000000000a112a, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r12
+  stapsdt              0x0000003b	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_heap_new
+    Location: 0x00000000000a1cfd, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r12 8@%rbx
+  stapsdt              0x0000003e	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_arena_reuse
+    Location: 0x00000000000a1fe6, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r12 8@%rbx
+  stapsdt              0x0000004a	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_arena_reuse_wait
+    Location: 0x00000000000a2079, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r12 8@%r12 8@%rbx
+  stapsdt              0x0000003c	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_arena_new
+    Location: 0x00000000000a220c, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r12 8@%rbp
+  stapsdt              0x0000003e	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_arena_retry
+    Location: 0x00000000000a23c7, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rsi 8@%rdi
+  stapsdt              0x0000003d	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_sbrk_less
+    Location: 0x00000000000a266b, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax -8@%rbx
+  stapsdt              0x0000003c	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_heap_free
+    Location: 0x00000000000a2c2e, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi 8@%rax
+  stapsdt              0x0000003c	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_heap_less
+    Location: 0x00000000000a2dbb, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx 8@%r13
+  stapsdt              0x00000044	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_tcache_double_free
+    Location: 0x00000000000a2de0, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r8 8@%rcx
+  stapsdt              0x0000003b	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_heap_more
+    Location: 0x00000000000a31d2, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r8 8@%rcx
+  stapsdt              0x0000003d	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_sbrk_more
+    Location: 0x00000000000a3625, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rcx -8@%rdx
+  stapsdt              0x00000038	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_malloc_retry
+    Location: 0x00000000000a5350, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbp
+  stapsdt              0x0000004e	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_free_dyn_thresholds
+    Location: 0x00000000000a5491, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rax 8@%rdx
+  stapsdt              0x0000004e	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_free_dyn_thresholds
+    Location: 0x00000000000a55b3, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdx 8@%rax
+  stapsdt              0x00000040	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_realloc_retry
+    Location: 0x00000000000a5b90, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r12 8@%rbp
+  stapsdt              0x00000041	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_memalign_retry
+    Location: 0x00000000000a5ea0, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r13 8@%rbp
+  stapsdt              0x00000041	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_memalign_retry
+    Location: 0x00000000000a6178, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r13 8@%rbp
+  stapsdt              0x00000041	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_memalign_retry
+    Location: 0x00000000000a6468, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r12 8@%rbp
+  stapsdt              0x00000038	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_calloc_retry
+    Location: 0x00000000000a66d8, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r12
+  stapsdt              0x0000003c	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt
+    Location: 0x00000000000a6f38, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: -4@%ebp -4@%ebx
+  stapsdt              0x0000005d	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_mmap_max
+    Location: 0x00000000000a6fb0, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: -4@%ebx -4@64+mp_(%rip) -4@72+mp_(%rip)
+  stapsdt              0x00000061	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_mmap_threshold
+    Location: 0x00000000000a6fd0, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx 8@16+mp_(%rip) -4@72+mp_(%rip)
+  stapsdt              0x00000059	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_top_pad
+    Location: 0x00000000000a6ff0, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx 8@8+mp_(%rip) -4@72+mp_(%rip)
+  stapsdt              0x0000005e	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_trim_threshold
+    Location: 0x00000000000a7010, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx 8@mp_(%rip) -4@72+mp_(%rip)
+  stapsdt              0x0000004d	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_arena_test
+    Location: 0x00000000000a703e, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx 8@24+mp_(%rip)
+  stapsdt              0x00000052	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_perturb
+    Location: 0x00000000000a7050, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: -4@%ebx -4@perturb_byte(%rip)
+  stapsdt              0x0000004c	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_arena_max
+    Location: 0x00000000000a7076, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx 8@32+mp_(%rip)
+  stapsdt              0x00000052	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_mallopt_mxfast
+    Location: 0x00000000000a70b0, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rbx 8@global_max_fast(%rip)
+  stapsdt              0x00000041	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: memory_memalign_retry
+    Location: 0x00000000000a7380, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%r13 8@%r12
+  stapsdt              0x0000003b	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: longjmp
+    Location: 0x0000000000136511, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi -4@%esi 8@%rdx
+  stapsdt              0x00000042	NT_STAPSDT (SystemTap probe descriptors)
+    Provider: libc
+    Name: longjmp_target
+    Location: 0x000000000013652d, Base: 0x00000000001e3e28, Semaphore: 0x0000000000000000
+    Arguments: 8@%rdi -4@%eax 8@%rdx
+
+
+EXIT_CODE=0

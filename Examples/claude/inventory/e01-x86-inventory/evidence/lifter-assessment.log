@@ -1,0 +1,16 @@
+100644 blob 6d55386126be41b86171791715afb06011389911	Examples/claude/lifter/dump_at.py
+100644 blob 5d464b1d37641c2470c87520e8b40e41d928ca7e	Examples/claude/lifter/dump_pcode.py
+100644 blob e4605b8becd3b57460354dde83d58d2b106cda04	Examples/claude/lifter/firefox_libc_profile.txt
+100755 blob 4b9200750339e2ad670b6499e9419dd19cdaeee8	Examples/claude/lifter/killproof.sh
+100644 blob c187c84cafcfab6d0687a1001a3fc8c23473f275	Examples/claude/lifter/last_lift.log
+100755 blob 4191b3522c6db3eba0b013583c8d6f07b5714046	Examples/claude/lifter/lift.sh
+100644 blob 5f8f66b8297806bac8d84ed11b4227be7e1fe0ce	Examples/claude/lifter/list_userops.py
+100644 blob f773449ec1b0874db477b3f8df1fc84374758ae3	Examples/claude/lifter/pcode2coq_headless.py
+ABSENT /home/charles/Desktop/pcode2coq
+ABSENT /home/charles/.cache/picinae_lift/proj
+ABSENT /home/charles/.local/share/flatpak/app/org.ghidra_sre.Ghidra
+ABSENT /var/lib/flatpak/app/org.ghidra_sre.Ghidra
+flatpak executable: absent
+76:  | R_YMM0 | R_YMM1 | R_YMM2  | R_YMM3  | R_YMM4  | R_YMM5  | R_YMM6  | R_YMM7
+98:  | R_YMM0 | R_YMM1 | R_YMM2  | R_YMM3  | R_YMM4  | R_YMM5  | R_YMM6  | R_YMM7
+99:  | R_YMM8 | R_YMM9 | R_YMM10 | R_YMM11 | R_YMM12 | R_YMM13 | R_YMM14 | R_YMM15 => Some 256

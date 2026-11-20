@@ -1,0 +1,4 @@
+Picked up JAVA_TOOL_OPTIONS: -Xmx2G -Duser.home=/home/charles/code/friends/.toolchains/e02-arm-inventory/config -Djava.io.tmpdir=/home/charles/code/friends/.toolchains/e02-arm-inventory/tmp
+Picked up JAVA_TOOL_OPTIONS: -Xmx2G -Duser.home=/home/charles/code/friends/.toolchains/e02-arm-inventory/config -Djava.io.tmpdir=/home/charles/code/friends/.toolchains/e02-arm-inventory/tmp
+libc.so.6 - .ProgramDB
+pcode2coq_headless: FAILED toascii: 'LiftInfo' object has no attribute 'prependProgName'
