@@ -1,0 +1,17 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-746dec47
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e11-canonical-lifter/check-artifacts.py
+scalar_smoke toascii 2 instruction byte/pcode records; hashes PASS
+scalar_smoke div 7 instruction byte/pcode records; hashes PASS
+scalar_smoke ldiv 4 instruction byte/pcode records; hashes PASS
+scalar_smoke swab 13 instruction byte/pcode records; hashes PASS
+scalar_smoke ffs 25 instruction byte/pcode records; hashes PASS
+scalar_smoke ffsl 18 instruction byte/pcode records; hashes PASS
+scalar_global mempcpy 108 instruction byte/pcode records; hashes PASS
+scalar_global __memcpy_generic 108 instruction byte/pcode records; hashes PASS
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-746dec47/notes/e11-canonical-lifter/check-artifacts.py", line 20, in <module>
+    assert len(selected)==8,[str(p) for p in selected]
+           ^^^^^^^^^^^^^^^^
+AssertionError: ['/home/charles/.t3/worktrees/Picinae/t3-746dec47/_build/default/Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.vo', '/home/charles/.t3/worktrees/Picinae/t3-746dec47/_build/default/Examples/claude/lifter/scalar_ports/e08_mempcpy_arm8.vo']
+
+EXIT_CODE=1

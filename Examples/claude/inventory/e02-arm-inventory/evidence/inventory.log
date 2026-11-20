@@ -1,0 +1,2 @@
+PASS exact libc/debug build ID; 351 memory/string symbols; six lift extents
+PASS 47 disassembly ranges; 27 direct edges outside symbol extents (not a complete CFG)

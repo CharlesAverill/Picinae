@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-7d6e98da
+COMMAND=python3 -
+PID: 741201
+CWD: /home/charles/.t3/worktrees/Picinae/t3-7d6e98da/_build/default
+COMMAND: /home/charles/code/friends/.toolchains/opam/picinae/lib/rocq-runtime/rocqworker --kind=compile -q -w -level-tolerance -w -postfix-notation-not-level-1 -w -deprecated-native-compiler-option -w -native-compiler-disabled -native-compiler ondemand -boot -R /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/theories Corelib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Stdlib Stdlib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Ltac2 Ltac2 -R . Picinae Examples/claude/arm8_remque_proof.v 
+Send SIGINT to this unit compiler only after a prolonged inconclusive initial check; no memory failure claimed.
+
+EXIT_CODE=0
