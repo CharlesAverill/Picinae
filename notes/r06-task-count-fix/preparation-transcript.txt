@@ -1,0 +1,45 @@
+Preparation observations transcribed from the initial tool calls, before edits.
+This file is a transcript, not a replay pretending to observe an earlier tree.
+
+pwd
+/home/charles/.t3/worktrees/Picinae/t3-96052210
+
+git status --short
+[empty output, clean]
+git branch --show-current
+t3/task-count-fix
+git rev-parse HEAD
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+git log -4 --format='%H %P %s'
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 49956416928e5b6bb3928b54ae33e3b81091f006 Add selective Dune builds and proof audit harness
+[older base history omitted here; pinned origin and sole e00 parent were checked]
+
+git ls-remote --heads fork refs/heads/llm-proofs/r06-task-count-fix
+Sandbox attempt: exit 128
+fatal: unable to access 'https://github.com/CharlesDardaman/Picinae.git/': Could not resolve host: github.com
+Same read-only command retried with approved network access: exit 0, no output.
+This successful check preceded the rename. fork-recheck.log is a recorded later recheck.
+
+git merge-base origin/llm_generated_proofs HEAD
+49956416928e5b6bb3928b54ae33e3b81091f006
+git log --format='%H %s' origin/llm_generated_proofs..HEAD
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+git diff --stat origin/llm_generated_proofs...HEAD
+24 files changed, 1409 insertions(+)
+git status --porcelain=v1
+[empty output, clean]
+
+Exact rename/import command:
+git branch -m llm-proofs/r06-task-count-fix && git merge --ff-only 7042ff1b6abdf79e2b07a348c7ef9ed014126ded
+Sandbox attempt: exit 128
+error: unable to move logfile logs/refs/heads/t3/task-count-fix to logs/refs/.tmp-renamed-log: Read-only file system
+fatal: branch rename failed
+Same command retried with approved Git metadata access: exit 0.
+Updating 71470bf..7042ff1
+Fast-forward
+[verbose per-file import output omitted from this transcription; exact allowed history in ancestry-imported.log]
+
+Post-import git status --short (before source edits): empty, clean.
+Post-import merge-base: 49956416928e5b6bb3928b54ae33e3b81091f006.
+Post-import full commit log is reproduced in ancestry-imported.log.
+Only the prepared branch was renamed. Original author's branch/worktree untouched.

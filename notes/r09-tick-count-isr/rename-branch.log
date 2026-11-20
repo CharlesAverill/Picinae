@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-584f983b
+COMMAND=git branch -m llm-proofs/r09-tick-count-isr
+
+EXIT_CODE=0

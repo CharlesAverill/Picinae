@@ -1,0 +1,410 @@
+{
+  "blocked_helpers": [],
+  "bytes_sha256": "0441d27c664f96187cd3d3df975ef2d331dc490b53856f7ae71a25f738a5166b",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "prvSearchForNameWithinSingleList_armv6m",
+    "prvSearchForNameWithinSingleList"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "fallthrough": "0x000005d8",
+      "kind": "branch",
+      "owners": [
+        "prvSearchForNameWithinSingleList"
+      ],
+      "site": "0x000005d6",
+      "target": "0x00000610",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x000005e2",
+      "kind": "branch",
+      "owners": [
+        "prvSearchForNameWithinSingleList"
+      ],
+      "site": "0x000005e0",
+      "target": "0x000005f0",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "prvSearchForNameWithinSingleList"
+      ],
+      "site": "0x000005e4",
+      "target": "0x0000060e",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x000005ea",
+      "kind": "branch",
+      "owners": [
+        "prvSearchForNameWithinSingleList"
+      ],
+      "site": "0x000005e8",
+      "target": "0x0000060e",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x000005f0",
+      "kind": "branch",
+      "owners": [
+        "prvSearchForNameWithinSingleList"
+      ],
+      "site": "0x000005ee",
+      "target": "0x0000060c",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x00000600",
+      "kind": "branch",
+      "owners": [
+        "prvSearchForNameWithinSingleList"
+      ],
+      "site": "0x000005fe",
+      "target": "0x000005ea",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x00000604",
+      "kind": "branch",
+      "owners": [
+        "prvSearchForNameWithinSingleList"
+      ],
+      "site": "0x00000602",
+      "target": "0x000005e6",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x0000060a",
+      "kind": "branch",
+      "owners": [
+        "prvSearchForNameWithinSingleList"
+      ],
+      "site": "0x00000608",
+      "target": "0x000005f8",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "prvSearchForNameWithinSingleList"
+      ],
+      "site": "0x0000060a",
+      "target": "0x000005ea",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "assembly": "pop\t{r4, r5, r6, r7, pc}",
+      "kind": "return-candidate",
+      "site": "0x0000060e",
+      "target": "runtime register/stack; Thumb bit required"
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "prvSearchForNameWithinSingleList"
+      ],
+      "site": "0x00000612",
+      "target": "0x0000060e",
+      "target_is_instruction_start": true,
+      "within_function": true
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x00000614",
+  "entry": "0x000005d0",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "51f7221fe5bef4966871c52102a3cd62cd9079dc5403905b3cca96308820a89a",
+  "instructions": [
+    {
+      "address": "0x000005d0",
+      "assembly": "push\t{r4, r5, r6, r7, lr}",
+      "frontend_encoding_supported": true,
+      "opcode": "b5f0",
+      "width": 2
+    },
+    {
+      "address": "0x000005d2",
+      "assembly": "ldr\tr3, [r0, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6803",
+      "width": 2
+    },
+    {
+      "address": "0x000005d4",
+      "assembly": "cmp\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2b00",
+      "width": 2
+    },
+    {
+      "address": "0x000005d6",
+      "assembly": "beq.n\t610 <prvSearchForNameWithinSingleList+0x40>",
+      "frontend_encoding_supported": true,
+      "opcode": "d01b",
+      "width": 2
+    },
+    {
+      "address": "0x000005d8",
+      "assembly": "movs\tr7, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "0007",
+      "width": 2
+    },
+    {
+      "address": "0x000005da",
+      "assembly": "adds\tr7, #8",
+      "frontend_encoding_supported": true,
+      "opcode": "3708",
+      "width": 2
+    },
+    {
+      "address": "0x000005dc",
+      "assembly": "ldr\tr6, [r0, #12]",
+      "frontend_encoding_supported": true,
+      "opcode": "68c6",
+      "width": 2
+    },
+    {
+      "address": "0x000005de",
+      "assembly": "cmp\tr7, r6",
+      "frontend_encoding_supported": true,
+      "opcode": "42b7",
+      "width": 2
+    },
+    {
+      "address": "0x000005e0",
+      "assembly": "bne.n\t5f0 <prvSearchForNameWithinSingleList+0x20>",
+      "frontend_encoding_supported": true,
+      "opcode": "d106",
+      "width": 2
+    },
+    {
+      "address": "0x000005e2",
+      "assembly": "movs\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2000",
+      "width": 2
+    },
+    {
+      "address": "0x000005e4",
+      "assembly": "b.n\t60e <prvSearchForNameWithinSingleList+0x3e>",
+      "frontend_encoding_supported": true,
+      "opcode": "e013",
+      "width": 2
+    },
+    {
+      "address": "0x000005e6",
+      "assembly": "cmp\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2800",
+      "width": 2
+    },
+    {
+      "address": "0x000005e8",
+      "assembly": "bne.n\t60e <prvSearchForNameWithinSingleList+0x3e>",
+      "frontend_encoding_supported": true,
+      "opcode": "d111",
+      "width": 2
+    },
+    {
+      "address": "0x000005ea",
+      "assembly": "ldr\tr6, [r6, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "6876",
+      "width": 2
+    },
+    {
+      "address": "0x000005ec",
+      "assembly": "cmp\tr7, r6",
+      "frontend_encoding_supported": true,
+      "opcode": "42b7",
+      "width": 2
+    },
+    {
+      "address": "0x000005ee",
+      "assembly": "beq.n\t60c <prvSearchForNameWithinSingleList+0x3c>",
+      "frontend_encoding_supported": true,
+      "opcode": "d00d",
+      "width": 2
+    },
+    {
+      "address": "0x000005f0",
+      "assembly": "ldr\tr0, [r6, #12]",
+      "frontend_encoding_supported": true,
+      "opcode": "68f0",
+      "width": 2
+    },
+    {
+      "address": "0x000005f2",
+      "assembly": "movs\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2300",
+      "width": 2
+    },
+    {
+      "address": "0x000005f4",
+      "assembly": "movs\tr5, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "0005",
+      "width": 2
+    },
+    {
+      "address": "0x000005f6",
+      "assembly": "adds\tr5, #52\t@ 0x34",
+      "frontend_encoding_supported": true,
+      "opcode": "3534",
+      "width": 2
+    },
+    {
+      "address": "0x000005f8",
+      "assembly": "ldrb\tr2, [r5, r3]",
+      "frontend_encoding_supported": true,
+      "opcode": "5cea",
+      "width": 2
+    },
+    {
+      "address": "0x000005fa",
+      "assembly": "ldrb\tr4, [r1, r3]",
+      "frontend_encoding_supported": true,
+      "opcode": "5ccc",
+      "width": 2
+    },
+    {
+      "address": "0x000005fc",
+      "assembly": "cmp\tr4, r2",
+      "frontend_encoding_supported": true,
+      "opcode": "4294",
+      "width": 2
+    },
+    {
+      "address": "0x000005fe",
+      "assembly": "bne.n\t5ea <prvSearchForNameWithinSingleList+0x1a>",
+      "frontend_encoding_supported": true,
+      "opcode": "d1f4",
+      "width": 2
+    },
+    {
+      "address": "0x00000600",
+      "assembly": "cmp\tr2, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2a00",
+      "width": 2
+    },
+    {
+      "address": "0x00000602",
+      "assembly": "beq.n\t5e6 <prvSearchForNameWithinSingleList+0x16>",
+      "frontend_encoding_supported": true,
+      "opcode": "d0f0",
+      "width": 2
+    },
+    {
+      "address": "0x00000604",
+      "assembly": "adds\tr3, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "3301",
+      "width": 2
+    },
+    {
+      "address": "0x00000606",
+      "assembly": "cmp\tr3, #16",
+      "frontend_encoding_supported": true,
+      "opcode": "2b10",
+      "width": 2
+    },
+    {
+      "address": "0x00000608",
+      "assembly": "bne.n\t5f8 <prvSearchForNameWithinSingleList+0x28>",
+      "frontend_encoding_supported": true,
+      "opcode": "d1f6",
+      "width": 2
+    },
+    {
+      "address": "0x0000060a",
+      "assembly": "b.n\t5ea <prvSearchForNameWithinSingleList+0x1a>",
+      "frontend_encoding_supported": true,
+      "opcode": "e7ee",
+      "width": 2
+    },
+    {
+      "address": "0x0000060c",
+      "assembly": "movs\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2000",
+      "width": 2
+    },
+    {
+      "address": "0x0000060e",
+      "assembly": "pop\t{r4, r5, r6, r7, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bdf0",
+      "width": 2
+    },
+    {
+      "address": "0x00000610",
+      "assembly": "movs\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2000",
+      "width": 2
+    },
+    {
+      "address": "0x00000612",
+      "assembly": "b.n\t60e <prvSearchForNameWithinSingleList+0x3e>",
+      "frontend_encoding_supported": true,
+      "opcode": "e7fc",
+      "width": 2
+    }
+  ],
+  "literals": [],
+  "mapped_data": [],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x0000060e",
+      "assembly": "pop\t{r4, r5, r6, r7, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bdf0",
+      "width": 2
+    }
+  ],
+  "row": "r27",
+  "size": 68,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "prvSearchForNameWithinSingleList",
+  "symbol_record": {
+    "address": "0x000005d0",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvSearchForNameWithinSingleList",
+    "section": "2",
+    "size": 68,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000005d1"
+  },
+  "thumb_symbol": "0x000005d1",
+  "unsupported_instructions": []
+}

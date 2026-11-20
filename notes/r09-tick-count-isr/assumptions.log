@@ -1,0 +1,468 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-584f983b
+COMMAND=python3 /home/charles/code/friends/.refs/picinae-llm-proofs/resources/resource-run.py --unit r09-tick-count-isr --memory-kib 1750000 -- /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c export\ PROOF_MEMORY_KB=1750000\ PROOF_STACK_KB=65536\;\ ulimit\ -v\ 1750000\;\ ulimit\ -s\ 65536\;\ rocq\ --version\;\ ocamlc\ -version\;\ dune\ --version\;\ bash\ tools/print-assumptions.sh\ Picinae.Examples.FreeRTOS.armv6m_xTaskGetTickCountFromISR_proof\ tick_count_isr_nwc\ tick_count_isr_welltyped\ tick_count_isr_preserves_memory\ tick_count_isr_zero_bound\ tick_count_isr_witness_models\ tick_count_isr_entry_satisfiable\ tick_count_isr_correct\ tick_count_isr_post_at_bx\ tick_count_isr_preserves_callee_saved\ tick_count_isr_original_bytes\ tick_count_isr_return_step\ tick_count_isr_caller_result
+ADMITTED r09-tick-count-isr memory_kib=1750000
+The Rocq Prover, version 9.1.1
+compiled with OCaml 4.14.2
+4.14.2
+3.22.2
+tick_count_isr_nwc
+     : forall s2 s1 : Picinae_armv6m.ARMv6MArch.store,
+       xTaskGetTickCountFromISR_armv6m.xTaskGetTickCountFromISR_armv6m_prog
+         s1 =
+       xTaskGetTickCountFromISR_armv6m.xTaskGetTickCountFromISR_armv6m_prog
+         s2
+Closed under the global context
+tick_count_isr_welltyped
+     : Picinae_armv6m.Statics_ARMv6M.welltyped_prog
+         Picinae_armv6m.armv6mtypctx
+         xTaskGetTickCountFromISR_armv6m.xTaskGetTickCountFromISR_armv6m_prog
+Closed under the global context
+tick_count_isr_preserves_memory
+     : Picinae_armv6m.IL_ARMv6M.forall_endstates
+         xTaskGetTickCountFromISR_armv6m.xTaskGetTickCountFromISR_armv6m_prog
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv6m.ARMv6MArch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv6m.ARMv6MArch.store) =>
+          s Picinae_armv6m.V_MEM32 = s' Picinae_armv6m.V_MEM32)
+Closed under the global context
+tick_count_isr_zero_bound
+     : forall w : BinNums.N,
+       BinNat.N.lt BinNums.N0
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH)) w)
+Closed under the global context
+tick_count_isr_witness_models
+     : forall m : BinNums.N,
+       BinNat.N.lt m
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNat.N.mul
+               (BinNums.Npos
+                  (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx
+         (tick_count_isr_entry_witness m)
+Closed under the global context
+tick_count_isr_entry_satisfiable
+     : forall m : BinNums.N,
+       BinNat.N.lt m
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNat.N.mul
+               (BinNums.Npos
+                  (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       exists s : Picinae_armv6m.IL_ARMv6M.store,
+         Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s /\
+         s Picinae_armv6m.V_MEM32 = m /\
+         tick_count_isr_readable s /\
+         BinNat.N.odd (s Picinae_armv6m.R_LR) = true /\
+         BinNat.N.lt (s Picinae_armv6m.R_LR)
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xI
+                             (BinNums.xI
+                                (BinNums.xI
+                                   (BinNums.xI
+                                      (BinNums.xI
+                                         (BinNums.xI
+                                            (BinNums.xI
+                                               (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...))))))))))))))))))))
+Closed under the global context
+tick_count_isr_correct
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store) (x' : Picinae_core.exit),
+       Picinae_core.startof t (x', s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.Theory_ARMv6M.satisfies_all
+         xTaskGetTickCountFromISR_armv6m.xTaskGetTickCountFromISR_armv6m_prog
+         (tick_count_isr_invariants s) tick_count_isr_exit
+         ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+tick_count_isr_post_at_bx
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+          s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         xTaskGetTickCountFromISR_armv6m.xTaskGetTickCountFromISR_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+           s')
+          :: t)%list ->
+       Picinae_theory.unterminated tick_count_isr_exit t ->
+       tick_count_isr_postcondition s s'
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+tick_count_isr_preserves_callee_saved
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+          s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         xTaskGetTickCountFromISR_armv6m.xTaskGetTickCountFromISR_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+           s')
+          :: t)%list ->
+       Picinae_theory.unterminated tick_count_isr_exit t ->
+       forall v : Picinae_armv6m.armv6mvar,
+       List.In v
+         (Picinae_armv6m.R_R4
+          :: Picinae_armv6m.R_R5
+             :: Picinae_armv6m.R_R6
+                :: Picinae_armv6m.R_R7
+                   :: Picinae_armv6m.R_R8
+                      :: Picinae_armv6m.R_R9
+                         :: Picinae_armv6m.R_R10
+                            :: Picinae_armv6m.R_R11
+                               :: Picinae_armv6m.R_SP
+                                  :: Picinae_armv6m.R_LR :: nil) ->
+       s' v = s v
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+tick_count_isr_original_bytes
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+          s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         xTaskGetTickCountFromISR_armv6m.xTaskGetTickCountFromISR_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+           s')
+          :: t)%list ->
+       Picinae_theory.unterminated tick_count_isr_exit t ->
+       s' Picinae_armv6m.R_R0 =
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)))
+         (s Picinae_armv6m.V_MEM32)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...)))))))))))))))))))) /\
+       (forall a : Picinae_core.addr,
+        Picinae_core.getmem
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+          Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+          (s' Picinae_armv6m.V_MEM32) a =
+        Picinae_core.getmem
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+          Picinae_core.LittleE (BinNums.Npos BinNums.xH)
+          (s Picinae_armv6m.V_MEM32) a)
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+tick_count_isr_return_step
+     : forall s : Picinae_armv6m.armv6mvar -> BinNums.N,
+       BinNat.N.odd (s Picinae_armv6m.R_LR) = true ->
+       BinNat.N.lt (s Picinae_armv6m.R_LR)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...)))))))))))))))))))))) ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         xTaskGetTickCountFromISR_armv6m.xTaskGetTickCountFromISR_armv6m_prog
+         (Picinae_core.Addr
+            (BinNat.N.land (s Picinae_armv6m.R_LR)
+               (BinNat.N.sub
+                  (BinNat.N.ones
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  (BinNums.Npos BinNums.xH))),
+          s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+           s))
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+tick_count_isr_caller_result
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+          s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+        s) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         xTaskGetTickCountFromISR_armv6m.xTaskGetTickCountFromISR_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+           s')
+          :: t)%list ->
+       Picinae_theory.unterminated tick_count_isr_exit t ->
+       BinNat.N.odd (s Picinae_armv6m.R_LR) = true ->
+       BinNat.N.lt (s Picinae_armv6m.R_LR)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...)))))))))))))))))))) ->
+       tick_count_isr_postcondition s s' /\
+       Picinae_armv6m.IL_ARMv6M.can_step
+         xTaskGetTickCountFromISR_armv6m.xTaskGetTickCountFromISR_armv6m_prog
+         (Picinae_core.Addr
+            (BinNat.N.land (s Picinae_armv6m.R_LR)
+               (BinNat.N.sub
+                  (BinNat.N.ones
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  (BinNums.Npos BinNums.xH))),
+          s',
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI (BinNums.xO BinNums.xH))))))))))),
+           s'))
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+RELEASED r09-tick-count-isr exit=0
+
+EXIT_CODE=0
