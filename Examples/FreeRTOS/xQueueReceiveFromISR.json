@@ -1,0 +1,1081 @@
+{
+  "blocked_helpers": [
+    "fixture_assert_fail",
+    "ulSetInterruptMask",
+    "vClearInterruptMask"
+  ],
+  "bytes_sha256": "ef7fb5208732318f9f15e26ea3424336be407e0223f6367acb5caa5827f19501",
+  "closure_prerequisites": [
+    {
+      "callee": "ulSetInterruptMask",
+      "caller": "xQueueReceiveFromISR",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00002266",
+      "unsupported_instructions": [
+        {
+          "address": "0x00004090",
+          "assembly": "mrs\tr0, PRIMASK",
+          "frontend_encoding_supported": false,
+          "opcode": "f3ef 8010",
+          "width": 4
+        },
+        {
+          "address": "0x00004094",
+          "assembly": "cpsid\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b672",
+          "width": 2
+        }
+      ]
+    },
+    {
+      "callee": "prvCopyDataFromQueue",
+      "caller": "xQueueReceiveFromISR",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x0000227e",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "memcpy",
+      "caller": "prvCopyDataFromQueue",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x0000224a",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "xTaskRemoveFromEventList",
+      "caller": "xQueueReceiveFromISR",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00002298",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "fixture_assert_fail",
+      "caller": "xTaskRemoveFromEventList",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000007ae",
+      "unsupported_instructions": [
+        {
+          "address": "0x0000419c",
+          "assembly": "cpsid\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b672",
+          "width": 2
+        },
+        {
+          "address": "0x000041a6",
+          "assembly": "wfi",
+          "frontend_encoding_supported": false,
+          "opcode": "bf30",
+          "width": 2
+        }
+      ]
+    },
+    {
+      "callee": "uxTaskGetNumberOfTasks",
+      "caller": "xQueueReceiveFromISR",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000022c2",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "vClearInterruptMask",
+      "caller": "xQueueReceiveFromISR",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000022e8",
+      "unsupported_instructions": [
+        {
+          "address": "0x00004098",
+          "assembly": "msr\tPRIMASK, r0",
+          "frontend_encoding_supported": false,
+          "opcode": "f380 8810",
+          "width": 4
+        }
+      ]
+    }
+  ],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "xQueueReceiveFromISR_armv6m",
+    "xQueueReceiveFromISR"
+  ],
+  "critical_isr_boundaries": [
+    {
+      "kind": "call",
+      "owners": [
+        "ulSetInterruptMask"
+      ],
+      "return_site": "0x0000226a",
+      "site": "0x00002266",
+      "target": "0x00004090",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vClearInterruptMask"
+      ],
+      "return_site": "0x000022ec",
+      "site": "0x000022e8",
+      "target": "0x00004098",
+      "target_is_instruction_start": null,
+      "within_function": false
+    }
+  ],
+  "edges": [
+    {
+      "fallthrough": "0x00002262",
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x00002260",
+      "target": "0x000022ac",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x00002266",
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x00002264",
+      "target": "0x000022b4",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "ulSetInterruptMask"
+      ],
+      "return_site": "0x0000226a",
+      "site": "0x00002266",
+      "target": "0x00004090",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x00002272",
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x00002270",
+      "target": "0x000022e4",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "prvCopyDataFromQueue"
+      ],
+      "return_site": "0x00002282",
+      "site": "0x0000227e",
+      "target": "0x0000222c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x0000228c",
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x0000228a",
+      "target": "0x000022c2",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x00002294",
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x00002292",
+      "target": "0x000022e6",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "xTaskRemoveFromEventList"
+      ],
+      "return_site": "0x0000229c",
+      "site": "0x00002298",
+      "target": "0x00000708",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x000022a0",
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x0000229e",
+      "target": "0x000022e6",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x000022a6",
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x000022a4",
+      "target": "0x000022f6",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x000022aa",
+      "target": "0x000022e6",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "fixture_assert_fail"
+      ],
+      "return_site": "0x000022b4",
+      "site": "0x000022b0",
+      "target": "0x0000419c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x000022ba",
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x000022b8",
+      "target": "0x00002266",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "fixture_assert_fail"
+      ],
+      "return_site": "0x000022c2",
+      "site": "0x000022be",
+      "target": "0x0000419c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "uxTaskGetNumberOfTasks"
+      ],
+      "return_site": "0x000022c6",
+      "site": "0x000022c2",
+      "target": "0x0000059c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x000022ca",
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x000022c8",
+      "target": "0x000022fa",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x000022d0",
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x000022ce",
+      "target": "0x000022dc",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x000022da",
+      "target": "0x000022e6",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "fixture_assert_fail"
+      ],
+      "return_site": "0x000022e4",
+      "site": "0x000022e0",
+      "target": "0x0000419c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vClearInterruptMask"
+      ],
+      "return_site": "0x000022ec",
+      "site": "0x000022e8",
+      "target": "0x00004098",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "assembly": "pop\t{r4, r5, r6, r7, pc}",
+      "kind": "return-candidate",
+      "site": "0x000022f4",
+      "target": "runtime register/stack; Thumb bit required"
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x000022f8",
+      "target": "0x000022e6",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "xQueueReceiveFromISR"
+      ],
+      "site": "0x000022fc",
+      "target": "0x000022e6",
+      "target_is_instruction_start": true,
+      "within_function": true
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x00002310",
+  "entry": "0x00002250",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "60785959ddfca9cd33e11c91eaef07bdaadd89bb35178d8236e68e7ec8dc5160",
+  "instructions": [
+    {
+      "address": "0x00002250",
+      "assembly": "push\t{r4, r5, r6, r7, lr}",
+      "frontend_encoding_supported": true,
+      "opcode": "b5f0",
+      "width": 2
+    },
+    {
+      "address": "0x00002252",
+      "assembly": "mov\tlr, r8",
+      "frontend_encoding_supported": true,
+      "opcode": "46c6",
+      "width": 2
+    },
+    {
+      "address": "0x00002254",
+      "assembly": "push\t{lr}",
+      "frontend_encoding_supported": true,
+      "opcode": "b500",
+      "width": 2
+    },
+    {
+      "address": "0x00002256",
+      "assembly": "sub\tsp, #8",
+      "frontend_encoding_supported": true,
+      "opcode": "b082",
+      "width": 2
+    },
+    {
+      "address": "0x00002258",
+      "assembly": "movs\tr4, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "0004",
+      "width": 2
+    },
+    {
+      "address": "0x0000225a",
+      "assembly": "movs\tr5, r1",
+      "frontend_encoding_supported": true,
+      "opcode": "000d",
+      "width": 2
+    },
+    {
+      "address": "0x0000225c",
+      "assembly": "str\tr2, [sp, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "9201",
+      "width": 2
+    },
+    {
+      "address": "0x0000225e",
+      "assembly": "cmp\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2800",
+      "width": 2
+    },
+    {
+      "address": "0x00002260",
+      "assembly": "beq.n\t22ac <xQueueReceiveFromISR+0x5c>",
+      "frontend_encoding_supported": true,
+      "opcode": "d024",
+      "width": 2
+    },
+    {
+      "address": "0x00002262",
+      "assembly": "cmp\tr1, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2900",
+      "width": 2
+    },
+    {
+      "address": "0x00002264",
+      "assembly": "beq.n\t22b4 <xQueueReceiveFromISR+0x64>",
+      "frontend_encoding_supported": true,
+      "opcode": "d026",
+      "width": 2
+    },
+    {
+      "address": "0x00002266",
+      "assembly": "bl\t4090 <ulSetInterruptMask>",
+      "frontend_encoding_supported": true,
+      "opcode": "f001 ff13",
+      "width": 4
+    },
+    {
+      "address": "0x0000226a",
+      "assembly": "movs\tr7, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "0007",
+      "width": 2
+    },
+    {
+      "address": "0x0000226c",
+      "assembly": "ldr\tr6, [r4, #56]\t@ 0x38",
+      "frontend_encoding_supported": true,
+      "opcode": "6ba6",
+      "width": 2
+    },
+    {
+      "address": "0x0000226e",
+      "assembly": "cmp\tr6, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2e00",
+      "width": 2
+    },
+    {
+      "address": "0x00002270",
+      "assembly": "beq.n\t22e4 <xQueueReceiveFromISR+0x94>",
+      "frontend_encoding_supported": true,
+      "opcode": "d038",
+      "width": 2
+    },
+    {
+      "address": "0x00002272",
+      "assembly": "movs\tr3, #68\t@ 0x44",
+      "frontend_encoding_supported": true,
+      "opcode": "2344",
+      "width": 2
+    },
+    {
+      "address": "0x00002274",
+      "assembly": "ldrb\tr3, [r4, r3]",
+      "frontend_encoding_supported": true,
+      "opcode": "5ce3",
+      "width": 2
+    },
+    {
+      "address": "0x00002276",
+      "assembly": "sxtb\tr3, r3",
+      "frontend_encoding_supported": true,
+      "opcode": "b25b",
+      "width": 2
+    },
+    {
+      "address": "0x00002278",
+      "assembly": "mov\tr8, r3",
+      "frontend_encoding_supported": true,
+      "opcode": "4698",
+      "width": 2
+    },
+    {
+      "address": "0x0000227a",
+      "assembly": "movs\tr1, r5",
+      "frontend_encoding_supported": true,
+      "opcode": "0029",
+      "width": 2
+    },
+    {
+      "address": "0x0000227c",
+      "assembly": "movs\tr0, r4",
+      "frontend_encoding_supported": true,
+      "opcode": "0020",
+      "width": 2
+    },
+    {
+      "address": "0x0000227e",
+      "assembly": "bl\t222c <prvCopyDataFromQueue>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7ff ffd5",
+      "width": 4
+    },
+    {
+      "address": "0x00002282",
+      "assembly": "subs\tr6, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "3e01",
+      "width": 2
+    },
+    {
+      "address": "0x00002284",
+      "assembly": "str\tr6, [r4, #56]\t@ 0x38",
+      "frontend_encoding_supported": true,
+      "opcode": "63a6",
+      "width": 2
+    },
+    {
+      "address": "0x00002286",
+      "assembly": "mov\tr3, r8",
+      "frontend_encoding_supported": true,
+      "opcode": "4643",
+      "width": 2
+    },
+    {
+      "address": "0x00002288",
+      "assembly": "adds\tr3, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "3301",
+      "width": 2
+    },
+    {
+      "address": "0x0000228a",
+      "assembly": "bne.n\t22c2 <xQueueReceiveFromISR+0x72>",
+      "frontend_encoding_supported": true,
+      "opcode": "d11a",
+      "width": 2
+    },
+    {
+      "address": "0x0000228c",
+      "assembly": "ldr\tr3, [r4, #16]",
+      "frontend_encoding_supported": true,
+      "opcode": "6923",
+      "width": 2
+    },
+    {
+      "address": "0x0000228e",
+      "assembly": "movs\tr5, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "2501",
+      "width": 2
+    },
+    {
+      "address": "0x00002290",
+      "assembly": "cmp\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2b00",
+      "width": 2
+    },
+    {
+      "address": "0x00002292",
+      "assembly": "beq.n\t22e6 <xQueueReceiveFromISR+0x96>",
+      "frontend_encoding_supported": true,
+      "opcode": "d028",
+      "width": 2
+    },
+    {
+      "address": "0x00002294",
+      "assembly": "movs\tr0, r4",
+      "frontend_encoding_supported": true,
+      "opcode": "0020",
+      "width": 2
+    },
+    {
+      "address": "0x00002296",
+      "assembly": "adds\tr0, #16",
+      "frontend_encoding_supported": true,
+      "opcode": "3010",
+      "width": 2
+    },
+    {
+      "address": "0x00002298",
+      "assembly": "bl\t708 <xTaskRemoveFromEventList>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7fe fa36",
+      "width": 4
+    },
+    {
+      "address": "0x0000229c",
+      "assembly": "cmp\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2800",
+      "width": 2
+    },
+    {
+      "address": "0x0000229e",
+      "assembly": "beq.n\t22e6 <xQueueReceiveFromISR+0x96>",
+      "frontend_encoding_supported": true,
+      "opcode": "d022",
+      "width": 2
+    },
+    {
+      "address": "0x000022a0",
+      "assembly": "ldr\tr2, [sp, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "9a01",
+      "width": 2
+    },
+    {
+      "address": "0x000022a2",
+      "assembly": "cmp\tr2, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2a00",
+      "width": 2
+    },
+    {
+      "address": "0x000022a4",
+      "assembly": "beq.n\t22f6 <xQueueReceiveFromISR+0xa6>",
+      "frontend_encoding_supported": true,
+      "opcode": "d027",
+      "width": 2
+    },
+    {
+      "address": "0x000022a6",
+      "assembly": "movs\tr3, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "2301",
+      "width": 2
+    },
+    {
+      "address": "0x000022a8",
+      "assembly": "str\tr3, [r2, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6013",
+      "width": 2
+    },
+    {
+      "address": "0x000022aa",
+      "assembly": "b.n\t22e6 <xQueueReceiveFromISR+0x96>",
+      "frontend_encoding_supported": true,
+      "opcode": "e01c",
+      "width": 2
+    },
+    {
+      "address": "0x000022ac",
+      "assembly": "ldr\tr0, [pc, #80]\t@ (2300 <xQueueReceiveFromISR+0xb0>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4814",
+      "width": 2
+    },
+    {
+      "address": "0x000022ae",
+      "assembly": "ldr\tr1, [pc, #84]\t@ (2304 <xQueueReceiveFromISR+0xb4>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4915",
+      "width": 2
+    },
+    {
+      "address": "0x000022b0",
+      "assembly": "bl\t419c <fixture_assert_fail>",
+      "frontend_encoding_supported": true,
+      "opcode": "f001 ff74",
+      "width": 4
+    },
+    {
+      "address": "0x000022b4",
+      "assembly": "ldr\tr3, [r0, #64]\t@ 0x40",
+      "frontend_encoding_supported": true,
+      "opcode": "6c03",
+      "width": 2
+    },
+    {
+      "address": "0x000022b6",
+      "assembly": "cmp\tr3, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2b00",
+      "width": 2
+    },
+    {
+      "address": "0x000022b8",
+      "assembly": "beq.n\t2266 <xQueueReceiveFromISR+0x16>",
+      "frontend_encoding_supported": true,
+      "opcode": "d0d5",
+      "width": 2
+    },
+    {
+      "address": "0x000022ba",
+      "assembly": "ldr\tr0, [pc, #68]\t@ (2300 <xQueueReceiveFromISR+0xb0>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4811",
+      "width": 2
+    },
+    {
+      "address": "0x000022bc",
+      "assembly": "ldr\tr1, [pc, #72]\t@ (2308 <xQueueReceiveFromISR+0xb8>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4912",
+      "width": 2
+    },
+    {
+      "address": "0x000022be",
+      "assembly": "bl\t419c <fixture_assert_fail>",
+      "frontend_encoding_supported": true,
+      "opcode": "f001 ff6d",
+      "width": 4
+    },
+    {
+      "address": "0x000022c2",
+      "assembly": "bl\t59c <uxTaskGetNumberOfTasks>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7fe f96b",
+      "width": 4
+    },
+    {
+      "address": "0x000022c6",
+      "assembly": "cmp\tr8, r0",
+      "frontend_encoding_supported": true,
+      "opcode": "4580",
+      "width": 2
+    },
+    {
+      "address": "0x000022c8",
+      "assembly": "bcs.n\t22fa <xQueueReceiveFromISR+0xaa>",
+      "frontend_encoding_supported": true,
+      "opcode": "d217",
+      "width": 2
+    },
+    {
+      "address": "0x000022ca",
+      "assembly": "mov\tr3, r8",
+      "frontend_encoding_supported": true,
+      "opcode": "4643",
+      "width": 2
+    },
+    {
+      "address": "0x000022cc",
+      "assembly": "cmp\tr3, #127\t@ 0x7f",
+      "frontend_encoding_supported": true,
+      "opcode": "2b7f",
+      "width": 2
+    },
+    {
+      "address": "0x000022ce",
+      "assembly": "beq.n\t22dc <xQueueReceiveFromISR+0x8c>",
+      "frontend_encoding_supported": true,
+      "opcode": "d005",
+      "width": 2
+    },
+    {
+      "address": "0x000022d0",
+      "assembly": "adds\tr3, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "3301",
+      "width": 2
+    },
+    {
+      "address": "0x000022d2",
+      "assembly": "sxtb\tr3, r3",
+      "frontend_encoding_supported": true,
+      "opcode": "b25b",
+      "width": 2
+    },
+    {
+      "address": "0x000022d4",
+      "assembly": "movs\tr2, #68\t@ 0x44",
+      "frontend_encoding_supported": true,
+      "opcode": "2244",
+      "width": 2
+    },
+    {
+      "address": "0x000022d6",
+      "assembly": "strb\tr3, [r4, r2]",
+      "frontend_encoding_supported": true,
+      "opcode": "54a3",
+      "width": 2
+    },
+    {
+      "address": "0x000022d8",
+      "assembly": "movs\tr5, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "2501",
+      "width": 2
+    },
+    {
+      "address": "0x000022da",
+      "assembly": "b.n\t22e6 <xQueueReceiveFromISR+0x96>",
+      "frontend_encoding_supported": true,
+      "opcode": "e004",
+      "width": 2
+    },
+    {
+      "address": "0x000022dc",
+      "assembly": "ldr\tr0, [pc, #32]\t@ (2300 <xQueueReceiveFromISR+0xb0>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4808",
+      "width": 2
+    },
+    {
+      "address": "0x000022de",
+      "assembly": "ldr\tr1, [pc, #44]\t@ (230c <xQueueReceiveFromISR+0xbc>)",
+      "frontend_encoding_supported": true,
+      "opcode": "490b",
+      "width": 2
+    },
+    {
+      "address": "0x000022e0",
+      "assembly": "bl\t419c <fixture_assert_fail>",
+      "frontend_encoding_supported": true,
+      "opcode": "f001 ff5c",
+      "width": 4
+    },
+    {
+      "address": "0x000022e4",
+      "assembly": "movs\tr5, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2500",
+      "width": 2
+    },
+    {
+      "address": "0x000022e6",
+      "assembly": "movs\tr0, r7",
+      "frontend_encoding_supported": true,
+      "opcode": "0038",
+      "width": 2
+    },
+    {
+      "address": "0x000022e8",
+      "assembly": "bl\t4098 <vClearInterruptMask>",
+      "frontend_encoding_supported": true,
+      "opcode": "f001 fed6",
+      "width": 4
+    },
+    {
+      "address": "0x000022ec",
+      "assembly": "movs\tr0, r5",
+      "frontend_encoding_supported": true,
+      "opcode": "0028",
+      "width": 2
+    },
+    {
+      "address": "0x000022ee",
+      "assembly": "add\tsp, #8",
+      "frontend_encoding_supported": true,
+      "opcode": "b002",
+      "width": 2
+    },
+    {
+      "address": "0x000022f0",
+      "assembly": "pop\t{r7}",
+      "frontend_encoding_supported": true,
+      "opcode": "bc80",
+      "width": 2
+    },
+    {
+      "address": "0x000022f2",
+      "assembly": "mov\tr8, r7",
+      "frontend_encoding_supported": true,
+      "opcode": "46b8",
+      "width": 2
+    },
+    {
+      "address": "0x000022f4",
+      "assembly": "pop\t{r4, r5, r6, r7, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bdf0",
+      "width": 2
+    },
+    {
+      "address": "0x000022f6",
+      "assembly": "movs\tr5, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "2501",
+      "width": 2
+    },
+    {
+      "address": "0x000022f8",
+      "assembly": "b.n\t22e6 <xQueueReceiveFromISR+0x96>",
+      "frontend_encoding_supported": true,
+      "opcode": "e7f5",
+      "width": 2
+    },
+    {
+      "address": "0x000022fa",
+      "assembly": "movs\tr5, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "2501",
+      "width": 2
+    },
+    {
+      "address": "0x000022fc",
+      "assembly": "b.n\t22e6 <xQueueReceiveFromISR+0x96>",
+      "frontend_encoding_supported": true,
+      "opcode": "e7f3",
+      "width": 2
+    },
+    {
+      "address": "0x000022fe",
+      "assembly": "nop\t\t\t@ (mov r8, r8)",
+      "frontend_encoding_supported": true,
+      "opcode": "46c0",
+      "width": 2
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x00002300",
+      "bytes": "10450000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 20,
+      "instruction": "0x000022ac",
+      "thumb_function_pointer": [],
+      "value": "0x00004510"
+    },
+    {
+      "address": "0x00002304",
+      "bytes": "fd070000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 21,
+      "instruction": "0x000022ae",
+      "thumb_function_pointer": [
+        "vTaskRemoveFromUnorderedEventList"
+      ],
+      "value": "0x000007fd"
+    },
+    {
+      "address": "0x00002300",
+      "bytes": "10450000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 17,
+      "instruction": "0x000022ba",
+      "thumb_function_pointer": [],
+      "value": "0x00004510"
+    },
+    {
+      "address": "0x00002308",
+      "bytes": "fe070000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 18,
+      "instruction": "0x000022bc",
+      "thumb_function_pointer": [],
+      "value": "0x000007fe"
+    },
+    {
+      "address": "0x00002300",
+      "bytes": "10450000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 8,
+      "instruction": "0x000022dc",
+      "thumb_function_pointer": [],
+      "value": "0x00004510"
+    },
+    {
+      "address": "0x0000230c",
+      "bytes": "44080000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 11,
+      "instruction": "0x000022de",
+      "thumb_function_pointer": [],
+      "value": "0x00000844"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x00002300",
+      "halfword": "1045"
+    },
+    {
+      "address": "0x00002302",
+      "halfword": "0000"
+    },
+    {
+      "address": "0x00002304",
+      "halfword": "fd07"
+    },
+    {
+      "address": "0x00002306",
+      "halfword": "0000"
+    },
+    {
+      "address": "0x00002308",
+      "halfword": "fe07"
+    },
+    {
+      "address": "0x0000230a",
+      "halfword": "0000"
+    },
+    {
+      "address": "0x0000230c",
+      "halfword": "4408"
+    },
+    {
+      "address": "0x0000230e",
+      "halfword": "0000"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x000022f4",
+      "assembly": "pop\t{r4, r5, r6, r7, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bdf0",
+      "width": 2
+    }
+  ],
+  "row": "r32",
+  "size": 192,
+  "source": [
+    {
+      "path": "queue.c",
+      "sha256": "e66b73eb6dd7e6b2ccd121ab8d7345ab9698cd655b32171476643284e6dc4f4a"
+    }
+  ],
+  "stderr": "",
+  "symbol": "xQueueReceiveFromISR",
+  "symbol_record": {
+    "address": "0x00002250",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xQueueReceiveFromISR",
+    "section": "2",
+    "size": 192,
+    "source": [
+      "queue.c"
+    ],
+    "value": "0x00002251"
+  },
+  "thumb_symbol": "0x00002251",
+  "unsupported_instructions": []
+}

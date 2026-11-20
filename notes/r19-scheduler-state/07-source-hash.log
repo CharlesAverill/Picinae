@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-43c5d429
+COMMAND=sha256sum Examples/FreeRTOS/armv6m_xTaskGetSchedulerState_proof.v Examples/FreeRTOS/xTaskGetSchedulerState_armv6m.v dune
+d7db5e3a1d34a8ad8ba713349e3c17af3548e2968a02f134636bd08b6aa9f4d7  Examples/FreeRTOS/armv6m_xTaskGetSchedulerState_proof.v
+079c2ba35ac01da4db0ec699cdda334fc68bf870f396a448e2410b38cd4c04c8  Examples/FreeRTOS/xTaskGetSchedulerState_armv6m.v
+bfe7f4389fa8089ee139e57fd054c495f5a44428a8eba2451a2ad63686b28f7b  dune
+
+EXIT_CODE=0
