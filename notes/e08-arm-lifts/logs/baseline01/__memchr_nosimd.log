@@ -1,0 +1,4 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/baseline01/__memchr_nosimd", "__memchr_nosimd"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memchr_nosimd 0x19c808 orn x2,x11,x4: unmodeled instruction orn x2,x11,x4; raw pcode: (unique, 0x2cf00, 8) INT_2COMP (const, 0x1, 8); (unique, 0x2d000, 8) INT_XOR (register, 0x4020, 8) , (unique, 0x2cf00, 8); (register, 0x4010, 8) INT_OR (register, 0x4058, 8) , (unique, 0x2d000, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/3ba5e1054d074ddbbf662b581e694919.log
+
+EXIT_CODE=1
