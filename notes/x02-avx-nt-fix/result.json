@@ -1,0 +1,17 @@
+{
+  "unit": "x02-avx-nt-fix",
+  "state": "done",
+  "author_model": "Astra",
+  "final_proof_model": "Sol",
+  "branch": "llm-proofs/x02-avx-nt-fix",
+  "origin_base": "49956416928e5b6bb3928b54ae33e3b81091f006",
+  "prerequisite": "71470bffba65392adf1873a3df9f0cf0ca4f1ac9",
+  "author_checkpoint": "2d201cd4983ab0649f8d8a813158f40a7b1dbf55",
+  "main_theorems": ["memmove_avx_correct_nt", "nt_seg_1285"],
+  "main_assumptions": ["FunctionalExtensionality.functional_extensionality_dep"],
+  "public_statements_changed": false,
+  "generated_lift_changed": false,
+  "proof_memory_kb": 13000000,
+  "stack_kb": 65536,
+  "publication": "local only"
+}

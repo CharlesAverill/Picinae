@@ -1,0 +1,12 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-90e22f1a
+COMMAND=python3 tools/audit-proof-source.py --base 49956416928e5b6bb3928b54ae33e3b81091f006 Examples/claude/amd64_memmove_avx_nt_proof.v
+Base: 49956416928e5b6bb3928b54ae33e3b81091f006
+Scope: 1 Rocq source files
+BASELINE Examples/claude/amd64_memmove_avx_nt_proof.v:402: Proof. Admitted.
+BASELINE Examples/claude/amd64_memmove_avx_nt_proof.v:693: Admitted.
+BASELINE totals: {'Admitted': 2}
+CURRENT totals: {}
+NEW totals: {}
+Source check only: inspect transitive Print Assumptions separately.
+
+EXIT_CODE=0

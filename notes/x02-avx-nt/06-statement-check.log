@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-90e22f1a
+COMMAND=python3 notes/x02-avx-nt/check-statements.py
+nt_seg_1285: statement exactly unchanged in packaged source and attempt
+memmove_avx_correct_nt: statement exactly unchanged in packaged source and attempt
+Generated memmove_avx_amd64.v: unchanged against pinned origin base
+
+EXIT_CODE=0
