@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d3a7e613
+COMMAND=python3 notes/a-memcpy-medium/audit-partial.py
+PARTIAL: single build exit 1, out-of-memory, no unit vo.
+19 prefix Qeds observed: five initial facts and fourteen cases (33..46).
+85 unchanged statements aborted: cases 47..128 plus three main theorems.
+Four closed prefix queries; fifteen inherited-FE-only prefix queries.
+No new admission/axiom/parameter; no post-handoff compiler run.
+
+EXIT_CODE=0
