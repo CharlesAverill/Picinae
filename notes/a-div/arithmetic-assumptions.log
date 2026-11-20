@@ -1,0 +1,21 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-bca255ed
+COMMAND=env PROOF_MEMORY_KB=3000000 PROOF_STACK_KB=65536 /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash tools/print-assumptions.sh Picinae.Examples.claude.div_arith quot_range rem_range
+quot_range
+     : forall n d m : BinNums.Z,
+       BinInt.Z.lt BinNums.Z0 m ->
+       BinInt.Z.le (BinInt.Z.opp m) n /\ BinInt.Z.lt n m ->
+       BinInt.Z.le (BinInt.Z.opp m) d /\ BinInt.Z.lt d m ->
+       d <> BinNums.Z0 ->
+       ~ (n = BinInt.Z.opp m /\ d = BinNums.Zneg BinNums.xH) ->
+       BinInt.Z.le (BinInt.Z.opp m) (BinInt.Z.quot n d) /\
+       BinInt.Z.lt (BinInt.Z.quot n d) m
+Closed under the global context
+rem_range
+     : forall n d m : BinNums.Z,
+       BinInt.Z.le (BinInt.Z.opp m) d /\ BinInt.Z.lt d m ->
+       d <> BinNums.Z0 ->
+       BinInt.Z.le (BinInt.Z.opp m) (BinInt.Z.rem n d) /\
+       BinInt.Z.lt (BinInt.Z.rem n d) m
+Closed under the global context
+
+EXIT_CODE=0

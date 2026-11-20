@@ -1,0 +1,164 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-bca255ed
+COMMAND=env PROOF_MEMORY_KB=3000000 PROOF_STACK_KB=65536 /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash tools/print-assumptions.sh Picinae.Examples.claude.arm8_div_proof div_correct div_preserves_memory div_preserves_callee_saved div_nwc div_welltyped div_packed_hi div_inputs_satisfiable
+div_correct
+     : forall (s : Picinae_armv8.IL_arm8.store)
+         (t : list (Picinae_core.exit * Picinae_armv8.IL_arm8.store))
+         (s' : Picinae_armv8.IL_arm8.store) (x' : Picinae_core.exit)
+         (n d : BinNums.Z),
+       Picinae_core.startof t (x', s') = (Picinae_core.Addr BinNums.N0, s) ->
+       Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx s ->
+       Picinae_core.toZ
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         (s Picinae_armv8.R_X0) =
+       n ->
+       Picinae_core.toZ
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         (s Picinae_armv8.R_X1) =
+       d ->
+       d <> BinNums.Z0 ->
+       ~
+       (n =
+        BinInt.Z.opp
+          (BinInt.Z.pow (BinNums.Zpos (BinNums.xO BinNums.xH))
+             (BinNums.Zpos
+                (BinNums.xI (BinNums.xI (BinNums.xI (BinNums.xI BinNums.xH)))))) /\
+        d = BinNums.Zneg BinNums.xH) ->
+       Picinae_armv8.Theory_arm8.satisfies_all div_arm8.div_arm8
+         (div_invs n d) div_exit ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+div_preserves_memory
+     : Picinae_armv8.IL_arm8.forall_endstates div_arm8.div_arm8
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv8.ARM8Arch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv8.ARM8Arch.store) =>
+          s Picinae_armv8.V_MEM64 = s' Picinae_armv8.V_MEM64)
+Closed under the global context
+div_preserves_callee_saved
+     : forall v : Picinae_armv8.arm8var,
+       List.In v
+         (Picinae_armv8.R_X19
+          :: Picinae_armv8.R_X20
+             :: Picinae_armv8.R_X21
+                :: Picinae_armv8.R_X22
+                   :: Picinae_armv8.R_X23
+                      :: Picinae_armv8.R_X24
+                         :: Picinae_armv8.R_X25
+                            :: Picinae_armv8.R_X26
+                               :: Picinae_armv8.R_X27
+                                  :: Picinae_armv8.R_X28
+                                     :: Picinae_armv8.R_X29
+                                        :: Picinae_armv8.R_X30
+                                           :: Picinae_armv8.R_SP
+                                              :: Picinae_armv8.R_Z8
+                                                 :: 
+                                                 Picinae_armv8.R_Z9
+                                                 :: 
+                                                 Picinae_armv8.R_Z10
+                                                 :: 
+                                                 Picinae_armv8.R_Z11
+                                                 :: 
+                                                 Picinae_armv8.R_Z12
+                                                 :: 
+                                                 Picinae_armv8.R_Z13
+                                                 :: 
+                                                 Picinae_armv8.R_Z14
+                                                 :: 
+                                                 Picinae_armv8.R_Z15 :: nil) ->
+       Picinae_armv8.IL_arm8.forall_endstates div_arm8.div_arm8
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv8.ARM8Arch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv8.ARM8Arch.store) =>
+          s v = s' v)
+Closed under the global context
+div_nwc
+     : forall s2 s1 : Picinae_armv8.ARM8Arch.store,
+       div_arm8.div_arm8 s1 = div_arm8.div_arm8 s2
+Closed under the global context
+div_welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         div_arm8.div_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+div_packed_hi
+     : forall q r : BinNums.N,
+       BinNat.N.shiftr
+         (BinNat.N.lor
+            (BinNat.N.modulo q
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))
+            (BinNat.N.land
+               (BinNat.N.shiftl r
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))))))))))))))))))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))) =
+       BinNat.N.modulo r
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+Closed under the global context
+div_inputs_satisfiable
+     : forall n d : BinNums.Z,
+       Picinae_core.signed_range
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         n ->
+       Picinae_core.signed_range
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         d ->
+       exists s : Picinae_armv8.IL_arm8.store,
+         Picinae_armv8.Statics_arm8.models Picinae_armv8.arm8typctx s /\
+         Picinae_core.toZ
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+           (s Picinae_armv8.R_X0) =
+         n /\
+         Picinae_core.toZ
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+           (s Picinae_armv8.R_X1) =
+         d
+Closed under the global context
+
+EXIT_CODE=0
