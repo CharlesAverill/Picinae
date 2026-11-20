@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5046f507
+COMMAND=bash -e -c git\ ls-remote\ --heads\ fork\ refs/heads/llm-proofs/x03-avx-overlap-forward\;\ git\ branch\ -m\ llm-proofs/x03-avx-overlap-forward\;\ git\ branch\ --show-current
+llm-proofs/x03-avx-overlap-forward
+
+EXIT_CODE=0

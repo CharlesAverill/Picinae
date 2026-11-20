@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-be68d06e
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash notes/x03-avx-overlap-forward-fix/check-witnesses.sh
+File "/home/charles/.t3/worktrees/Picinae/t3-be68d06e/_build/witnesses.jaikkrg6/Witnesses.v", line 42, characters 12-28:
+Error: The reference N.pow_pos_nonneg was not found in the current
+environment.
+
+
+EXIT_CODE=1
