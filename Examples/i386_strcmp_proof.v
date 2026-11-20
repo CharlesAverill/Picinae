@@ -193,6 +193,7 @@ Section Invariants.
     | 22 | 36 => Some (postcondition s)
     | _ => None
     end | _ => None end.
+  Definition strcmp_invs_interactive := interactive_invs strcmp_invs.
 
 End Invariants.
 
@@ -219,13 +220,14 @@ Theorem strcmp_partial_correctness:
   forall s t s' x'
          (ENTRY: startof t (x',s') = (Addr 0, s))
          (MDL: models x86typctx s),
-  satisfies_all strcmp_i386 (strcmp_invs s) strcmp_exit ((x',s')::t).
+  satisfies_all strcmp_i386 (strcmp_invs_interactive s) strcmp_exit ((x',s')::t).
 Proof.
+  Local Ltac strip_loc := split;[apply InvAtI|].
   (* Start the proof the same way as before. *)
   intros. apply prove_invs.
 
   (* Prove the base case similarly. *)
-  simpl. rewrite ENTRY. x86_step. exact I.
+  simpl. rewrite ENTRY. x86_step. strip_loc. exact I.
 
   (* Change assumptions about s into assumptions about s1. *)
   intros. erewrite startof_prefix in ENTRY; try eassumption.
@@ -253,7 +255,7 @@ Proof.
   destruct_inv 32 PRE; unfold trueif_inv in ESP.
 
   (* Address 0 *)
-  step. step. exists 0. psimpl.
+  step. step. strip_loc. exists 0. psimpl.
     repeat (lia || split).
 
   (* Optional: The rest of the proof ignores all flag values except CF and ZF, so
@@ -264,7 +266,7 @@ Proof.
   | _ => false end).
 
   (* Address 8 *)
-  destruct PRE as (k & ECX & EDX & SEQ).
+  destruct PRE as (Loc & k & ECX & EDX & SEQ).
   step. step. step.
 
     (* Address 14 *)
@@ -272,11 +274,13 @@ Proof.
 
       (* Address 20 *)
       step. apply Neqb_ok in BC.
+      strip_loc.
       exists k. repeat first [ exact SEQ | split ].
         symmetry. apply Neqb_ok, BC0.
         apply N.compare_eq_iff, BC.
 
       (* loop back to Address 8 *)
+      strip_loc.
       exists (k+1). psimpl. split. reflexivity. split. reflexivity.
       intros i IK. rewrite N.add_1_l in IK. apply N.lt_succ_r, N.le_lteq in IK. destruct IK as [IK|IK].
         apply SEQ, IK.
@@ -286,6 +290,7 @@ Proof.
 
     (* Address 23 *)
     step. step. step.
+    strip_loc.
     exists k. split. exact SEQ. split.
       intro. destruct (_ <? _); discriminate.
       apply N.eqb_neq, N.lt_gt_cases in BC. destruct BC as [BC|BC].

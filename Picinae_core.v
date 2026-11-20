@@ -254,7 +254,6 @@ Definition startof {A} := @List.last A.
 Definition ostartof {A} (l:list A) := match l with nil => None | a::t => Some (startof t a) end.
 Definition start_state {A} t (xs: exit * A) := snd (startof t xs).
 
-
 (* Each Picinae instantiation takes a machine architecture as input, expressed as
    a module that defines a type "var" for IL variables, a typing context "typctx"
    that defines the type of each IL variable, the bitwidth mem_bits of memory reads
@@ -388,6 +387,21 @@ Inductive exec_stmt (c:typctx) (s:store): stmt -> typctx -> store -> option exit
 
 (* A program execution is a trace of consecutive statement executions. *)
 Definition trace := list (exit * store).
+
+(* `interactive_invs` wraps an invariant set (trace -> Prop) and places
+    a trivially true marker at each invariant the captures its address.
+    This is useful for keeping track of which case you are in during
+    interactive theorem proving sessions and should impose little
+    overhead if you accidentally leave it in. *)
+Inductive InvAt (x:exit) : Prop :=
+  InvAtI.
+Definition interactive_invs (invs:trace->option Prop) (t:trace) : option Prop :=
+  match t with (x,_)::_ =>
+  match invs t with
+  | Some P => Some (InvAt x /\ P)
+  | None => None
+  end
+  | _ => invs t end.
 
 Definition reset_vars (c:typctx) (s s':store) v :=
   match c v with None => s | Some _ => s' end v.
