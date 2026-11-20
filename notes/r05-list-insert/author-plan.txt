@@ -1,0 +1,7 @@
+Initial theorem/proof author: gpt-6-astra, xhigh/default.
+Assigned prerequisite: 4ff26413448da4d8f064b0273ac5472cc9de7e5a.
+Single full target build, no iterative Astra repair. Final producer unassigned.
+The actual return is POP {r4,r5,pc}, implemented by guarded armv6m_bxwritepc.
+Use finite ordered node records, exact circular links, embedded sentinel L+8,
+original-memory stack + insertion writes, and separate at-POP/returned ABI.
+No imported r03/r04 branches: templates read only.
