@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5fe56d14
+COMMAND=git branch -m llm-proofs/x10-avx-forward-nt-policy-fix
+
+EXIT_CODE=0

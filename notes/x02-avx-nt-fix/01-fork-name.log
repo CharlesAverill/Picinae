@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-78795c90
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/x02-avx-nt-fix
+
+EXIT_CODE=0

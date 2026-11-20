@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-90e22f1a
+COMMAND=git branch -m llm-proofs/x02-avx-nt
+
+EXIT_CODE=0

@@ -1,0 +1,18 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-78795c90
+COMMAND=python3 notes/x02-avx-nt-fix/resources.py
+PID 432229 CWD /home/charles/.t3/worktrees/Picinae/t3-78795c90 CMD dune build --cache=disabled -j1 --display short Examples/claude/amd64_memmove_avx_nt_proof.vo 
+State:	S (sleeping)
+VmPeak:	  292232 kB
+VmSize:	  232336 kB
+VmRSS:	   29264 kB
+Max stack size            67108864             67108864             bytes     
+Max address space         13312000000          13312000000          bytes     
+PID 452566 CWD /home/charles/.t3/worktrees/Picinae/t3-78795c90/_build/default CMD /home/charles/code/friends/.toolchains/opam/picinae/lib/rocq-runtime/rocqworker --kind=compile -q -w -level-tolerance -w -postfix-notation-not-level-1 -w -deprecated-native-compiler-option -w -native-compiler-disabled -native-compiler ondemand -boot -R /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/theories Corelib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Stdlib Stdlib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Ltac2 Ltac2 -R . Picinae Examples/claude/amd64_memmove_avx_nt_proof.v 
+State:	R (running)
+VmPeak:	 2812848 kB
+VmSize:	 2812848 kB
+VmRSS:	 2384064 kB
+Max stack size            67108864             67108864             bytes     
+Max address space         13312000000          13312000000          bytes     
+
+EXIT_CODE=0

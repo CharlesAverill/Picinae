@@ -1,0 +1,71 @@
+Proof.
+  intros m d s n rsp s1 t NOV NW SW BIG THR1 THR3 NB MDL1 PRE.
+    destruct PRE as [j [i [J [I [C [RDI [RSI [RCX [R10 [RDX [RAX RSP]]]]]]]]]]].
+    assert (CKB: 16384 * nk 14 d n <= n - aA d).
+    { unfold nk. change 16384 with (2^14). apply N.mul_div_le. discriminate. }
+    pose proof (aA_bounds d) as AAB.
+    assert (LE: aA d + 2 ^ 14 * j + 2 ^ 7 * i + 12416 <= n)
+      by (change (2^14) with 16384 in *; change (2^7) with 128 in *; clear - J I CKB AAB NB; nia).
+    pose proof (nt_adv4 m (s1 V_MEM64) d s n j i C NOV NB LE) as ADV.
+    do 33 x64_step.
+    set (Mhalf := (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (s1 V_MEM64)
+    (d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (32 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (32 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (64 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (64 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (96 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (96 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (2 ^ 12 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (2 ^ 12 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4128 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (4128 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4160 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (4160 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4192 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (4192 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))) in *.
+    clearbody Mhalf.
+    do 8 x64_step.
+    lazymatch type of ADV with cpy _ ?MP _ _ _ =>
+      set (Mpost := MP) in *; clearbody Mpost
+    end.
+    repeat x64_step.
+    all: change (2^13) with 8192 in *; change (2^14) with 16384 in *; change (2^12) with 4096 in *; change (2^7) with 128 in *.
+    + (* done: i=31, j=nk-1 -> full set, tail loop entry 1117 *)
+      apply N.eqb_eq in BC. apply N.eqb_eq in BC0.
+      rewrite N.mod_small in BC0 by (clear - J NB CKB; change (2^64) with 18446744073709551616 in *; nia).
+      assert (IE: i = 31) by (clear - BC; lia). assert (JE: j = nk 14 d n - 1) by (clear - BC0 J; lia).
+      assert (K1: 1 <= nk 14 d n) by (clear - J; lia).
+      assert (Ej: 16384 * j = 16384 * nk 14 d n - 16384) by (clear - JE K1; nia).
+      assert (Ei: 128 * i = 3968) by (clear - IE; nia).
+      assert (Es: 128 * N.succ i = 4096) by (clear - IE; nia).
+      split.
+      { eapply cpy_equiv'; [exact ADV|]. intro x. unfold done4. rewrite Ej, Es.
+        clear - K1. split; intro Hx; repeat destruct Hx as [Hx|Hx]; lia. }
+      split. { rewrite Ej, Ei. rewrite N.mod_small by (clear - NW CKB AAB K1; change (2^64) with 18446744073709551616 in *; nia).
+               clear - K1; lia. }
+      split. { rewrite Ej, Ei. f_equal. clear - K1; lia. }
+      split. exact RDX. split. exact RAX. exact RSP.
+    + (* j+1 chunk *)
+      apply N.eqb_eq in BC. apply N.eqb_neq in BC0.
+      rewrite N.mod_small in BC0 by (clear - J NB CKB; change (2^64) with 18446744073709551616 in *; nia).
+      assert (IE: i = 31) by (clear - BC; lia).
+      assert (K1: 1 <= nk 14 d n) by (clear - J; lia).
+      assert (Ei: 128 * i = 3968) by (clear - IE; nia).
+      assert (Es: 128 * N.succ i = 4096) by (clear - IE; nia).
+      assert (Ej1: 16384 * (j + 1) = 16384 * j + 16384) by (clear; nia).
+      exists (j + 1), 0. split. clear - BC0 J; lia. split. clear; lia.
+      split.
+      { eapply cpy_equiv'; [exact ADV|]. intro x. unfold done4. rewrite Es, Ej1.
+        clear. split; intro Hx; repeat destruct Hx as [Hx|Hx]; lia. }
+      split. { rewrite Ei, Ej1. rewrite N.mod_small by (clear - NW CKB AAB J K1; change (2^64) with 18446744073709551616 in *; nia).
+               clear; lia. }
+      split. { rewrite Ei, Ej1. rewrite N.mul_0_r, N.add_0_r. f_equal. clear; lia. }
+      split. clear; lia.
+      split. { rewrite msub_sub by (clear - BC0 J; lia).
+               rewrite N.mod_small by (clear - J NB CKB; change (2^64) with 18446744073709551616 in *; nia).
+               clear - BC0 J; lia. }
+      split. exact RDX. split. exact RAX. exact RSP.
+    + (* i+1 inner *)
+      apply N.eqb_neq in BC.
+      assert (Es: 128 * N.succ i = 128 * i + 128) by (clear; nia).
+      exists j, (N.succ i). split. exact J. split. clear - I BC; lia. split. exact ADV.
+      split. { rewrite Es. rewrite N.mod_small by (clear - NW LE AAB J I CKB NB BC; change (2^64) with 18446744073709551616 in *; nia).
+               clear; lia. }
+      split. { rewrite Es. f_equal. clear; lia. }
+      split. { rewrite msub_sub by (clear - I; lia). rewrite N.mod_small by (clear - I; lia). clear - I; lia. }
+      split. exact R10. split. exact RDX. split. exact RAX. exact RSP.
+Qed.

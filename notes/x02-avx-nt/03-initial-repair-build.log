@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-90e22f1a
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -c ulimit\ -v\ 13000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/claude/amd64_memmove_avx_nt_proof.vo
+        rocq .Picinae.theory.d
+        rocq Examples/claude/amd64_memmove_avx_nt_stores.{glob,vo} (exit 1)
+File "./Examples/claude/amd64_memmove_avx_nt_stores.v", line 149, characters 21-32:
+Error: Cannot find a relation to rewrite.
+
+
+EXIT_CODE=1

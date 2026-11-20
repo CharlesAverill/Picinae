@@ -1,0 +1,16 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-df03b650
+COMMAND=python3 notes/x10-avx-forward-nt-policy/preserve-handoff.py
+PRESERVED Theorem ofnt_welltyped
+PRESERVED Theorem ofnt_nwc
+PRESERVED Theorem ofnt_preserves_callee_saved
+PRESERVED Lemma ofnt_reverse_gap
+PRESERVED Lemma ofnt_negative_gap
+PRESERVED Theorem memmove_avx_correct_forward_nt_policy
+PRESERVED Theorem memmove_avx_forward_nt_policy_at_ret
+PRESERVED Lemma ofnt_witness_thresholds
+PRESERVED Theorem ofnt_entry_satisfiable
+PRESERVED Corollary ofnt_critical_distances
+Retained only the four proof bodies accepted before the compiler error.
+No second Dune/Rocq build or proof repair was run.
+
+EXIT_CODE=0

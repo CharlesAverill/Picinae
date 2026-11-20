@@ -1,0 +1,20 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5fe56d14
+COMMAND=python3 notes/x10-avx-forward-nt-policy-fix/audit-preservation.py
+PRESERVED Theorem ofnt_welltyped
+PRESERVED Theorem ofnt_nwc
+PRESERVED Theorem ofnt_preserves_callee_saved
+PRESERVED Lemma ofnt_reverse_gap
+PRESERVED Lemma ofnt_negative_gap
+PRESERVED Theorem memmove_avx_correct_forward_nt_policy
+PRESERVED Theorem memmove_avx_forward_nt_policy_at_ret
+PRESERVED Lemma ofnt_witness_thresholds
+PRESERVED Theorem ofnt_entry_satisfiable
+PRESERVED Corollary ofnt_critical_distances
+UNCHANGED Examples/claude/memmove_avx_amd64.v
+UNCHANGED Examples/claude/amd64_memmove_avx_overlap_forward_proof.v
+UNCHANGED Examples/claude/amd64_memmove_avx_nt_proof.v
+UNCHANGED Examples/claude/amd64_memmove_avx_nt_stores.v
+UNCHANGED Examples/claude/amd64_memmove_avx_nt_witness.v
+Original Astra evidence unchanged; all statements and definitions retained.
+
+EXIT_CODE=0
