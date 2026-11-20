@@ -1,0 +1,21 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-53ef439b
+COMMAND=bash -c rg\ -n\ \"\^\(Require\|From\ .\*Require\)\|Admitted\|admit\|Axiom\|Parameter\"\ Examples/claude/amd64_common.v\ Examples/claude/amd64_memcpy_sets.v\ Examples/claude/amd64_memcpy_lemmas.v\ Examples/claude/memmove_avx_amd64.v\ Examples/claude/amd64_memmove_avx_proof.v
+Examples/claude/amd64_memmove_avx_proof.v:69:Require Import Picinae_amd64.
+Examples/claude/amd64_memmove_avx_proof.v:70:Require Import memmove_avx_amd64.
+Examples/claude/amd64_memmove_avx_proof.v:72:From Stdlib Require Import NArith ZArith Lia List.
+Examples/claude/amd64_memmove_avx_proof.v:73:Require Import amd64_common.
+Examples/claude/amd64_memmove_avx_proof.v:74:Require Import amd64_memcpy_lemmas.
+Examples/claude/amd64_memcpy_lemmas.v:1:Require Import Picinae_amd64.
+Examples/claude/amd64_memcpy_lemmas.v:3:From Stdlib Require Import NArith ZArith Lia.
+Examples/claude/amd64_memcpy_lemmas.v:4:Require Import amd64_common.
+Examples/claude/amd64_memcpy_lemmas.v:5:Require Export amd64_memcpy_sets.
+Examples/claude/amd64_memcpy_sets.v:1:Require Import Picinae_amd64.
+Examples/claude/amd64_memcpy_sets.v:3:From Stdlib Require Import NArith ZArith Lia.
+Examples/claude/amd64_memcpy_sets.v:4:Require Import amd64_common.
+Examples/claude/memmove_avx_amd64.v:8:Require Import Picinae_amd64.
+Examples/claude/memmove_avx_amd64.v:9:Require Import NArith.
+Examples/claude/memmove_avx_amd64.v:10:Require Import Lia.
+Examples/claude/amd64_common.v:6:Require Import Picinae_amd64.
+Examples/claude/amd64_common.v:8:From Stdlib Require Import NArith ZArith Lia List FunctionalExtensionality.
+
+EXIT_CODE=0
