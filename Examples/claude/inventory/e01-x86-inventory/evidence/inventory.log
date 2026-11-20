@@ -1,0 +1,3 @@
+PASS: exact ELF and debug ID; 398 symbol records; 242 extents; 210 source IFUNC entries all present
+Examples/claude/memcpy_amd64.v: 313/313 boundaries, 301/313 mnemonics; 0 external targets
+Examples/claude/memmove_avx_amd64.v: 351/351 boundaries, 327/351 mnemonics; 0 external targets

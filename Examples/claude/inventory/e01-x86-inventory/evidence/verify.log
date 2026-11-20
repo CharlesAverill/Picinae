@@ -1,0 +1,8 @@
+PASS: output checksum manifest
+PASS: all selected debug-symbol addresses/sizes independently agree with nm
+PASS: 242 extent hashes agree with independent objcopy .text extraction
+PASS: all 84 copy candidates exist and occur in their six actual IFUNC resolvers
+PASS: SSSE3 copy/check entries remain distinct; other copy/check address aliases agree
+PASS: Examples/claude/memcpy_amd64.v: 313 instruction boundaries/lengths; 12 explicit NOP/prefetch annotation discrepancies
+PASS: Examples/claude/memmove_avx_amd64.v: 351 instruction boundaries/lengths; 24 explicit NOP/prefetch annotation discrepancies
+N/A: theorem checking and Print Assumptions (binary inventory; no theorem added/adapted)
