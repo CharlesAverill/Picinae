@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d5c9940f
+COMMAND=git diff --check
+
+EXIT_CODE=0

@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d5c9940f
+COMMAND=python3 notes/a-memcpy-small-fix/audit-assumptions.py
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-d5c9940f/notes/a-memcpy-small-fix/audit-assumptions.py", line 8, in <module>
+    assert sum(p.read_text().count('\nQed.') for p in sources) == 50
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+EXIT_CODE=1
