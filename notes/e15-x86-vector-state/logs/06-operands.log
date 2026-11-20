@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
+COMMAND=/home/charles/code/friends/.toolchains/e01-x86-inventory/venv/bin/python -B notes/e15-x86-vector-state/operand_inventory.py
+PASS: 20 exact wide-copy extents; 50 named register views; no explicit opmask operands
+
+EXIT_CODE=0

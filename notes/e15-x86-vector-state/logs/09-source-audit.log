@@ -1,0 +1,10 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
+COMMAND=/home/charles/code/friends/.toolchains/e01-x86-inventory/venv/bin/python -B tools/audit-proof-source.py --base 1b6a4814fd989f250e771c5fa4639100b560dfe8 Picinae_amd64_avx512.v Examples/claude/amd64_avx512_state_fixtures.v
+Base: 1b6a4814fd989f250e771c5fa4639100b560dfe8
+Scope: 2 Rocq source files
+BASELINE totals: {}
+CURRENT totals: {}
+NEW totals: {}
+Source check only: inspect transitive Print Assumptions separately.
+
+EXIT_CODE=0

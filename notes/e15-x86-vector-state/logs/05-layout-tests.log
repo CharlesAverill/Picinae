@@ -1,0 +1,16 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
+COMMAND=/home/charles/code/friends/.toolchains/e01-x86-inventory/venv/bin/python -B tools/test-amd64-vector-layout.py
+test_encoding_reach (__main__.LayoutTests.test_encoding_reach) ... ok
+test_every_vector_view_aliases_one_cell (__main__.LayoutTests.test_every_vector_view_aliases_one_cell) ... ok
+test_mask_policy (__main__.LayoutTests.test_mask_policy) ... ok
+test_mask_width_and_high_byte (__main__.LayoutTests.test_mask_width_and_high_byte) ... ok
+test_reject_invalid_varnodes (__main__.LayoutTests.test_reject_invalid_varnodes) ... ok
+test_reject_unknown_names_and_widths (__main__.LayoutTests.test_reject_unknown_names_and_widths) ... ok
+test_vector_high_lane (__main__.LayoutTests.test_vector_high_lane) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.001s
+
+OK
+
+EXIT_CODE=0

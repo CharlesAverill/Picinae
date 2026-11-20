@@ -1,0 +1,126 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
+COMMAND=bash -e -c git\ branch\ --show-current\;\ git\ rev-parse\ HEAD\ origin/llm_generated_proofs\;\ git\ merge-base\ origin/llm_generated_proofs\ HEAD\;\ git\ log\ --oneline\ origin/llm_generated_proofs..HEAD\;\ git\ rev-list\ --parents\ origin/llm_generated_proofs..HEAD\;\ git\ diff\ --stat\ origin/llm_generated_proofs...HEAD\;\ git\ diff\ --stat\ 1b6a4814fd989f250e771c5fa4639100b560dfe8..HEAD\;\ git\ diff\ --check\ 1b6a4814fd989f250e771c5fa4639100b560dfe8\;\ git\ diff\ --exit-code\ origin/llm_generated_proofs\ --\ Picinae_amd64.v\ Picinae_core.v\ Picinae_theory.v\ Picinae_statics.v\ lifter/pcode2coq_headless.py\;\ test\ \"\$\(git\ rev-parse\ origin/llm_generated_proofs\)\"\ =\ 49956416928e5b6bb3928b54ae33e3b81091f006\;\ test\ \"\$\(git\ merge-base\ origin/llm_generated_proofs\ HEAD\)\"\ =\ 49956416928e5b6bb3928b54ae33e3b81091f006\;\ test\ \"\$\(git\ rev-list\ --count\ origin/llm_generated_proofs..HEAD\)\"\ =\ 4\;\ git\ merge-base\ --is-ancestor\ 71470bffba65392adf1873a3df9f0cf0ca4f1ac9\ HEAD\;\ git\ merge-base\ --is-ancestor\ 131ad4b86cf4abcbd392048297038f3f219423bb\ HEAD
+llm-proofs/e15-x86-vector-state
+19194721ac1ca5f1a55e3838c395eea4794f611c
+49956416928e5b6bb3928b54ae33e3b81091f006
+49956416928e5b6bb3928b54ae33e3b81091f006
+1919472 Add coherent AMD64 wide-vector companion state
+1b6a481 Merge commit '131ad4b86cf4abcbd392048297038f3f219423bb' into llm-proofs/e15-x86-vector-state
+131ad4b Add exact Ubuntu x86 glibc copy and string inventory
+71470bf Add selective Dune builds and proof audit harness
+19194721ac1ca5f1a55e3838c395eea4794f611c 1b6a4814fd989f250e771c5fa4639100b560dfe8
+1b6a4814fd989f250e771c5fa4639100b560dfe8 71470bffba65392adf1873a3df9f0cf0ca4f1ac9 131ad4b86cf4abcbd392048297038f3f219423bb
+131ad4b86cf4abcbd392048297038f3f219423bb 49956416928e5b6bb3928b54ae33e3b81091f006
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 49956416928e5b6bb3928b54ae33e3b81091f006
+ BUILDING.md                                        |   136 +
+ Examples/claude/amd64_avx512_state_fixtures.v      |   132 +
+ .../claude/inventory/e01-x86-inventory/README.md   |   258 +
+ .../e01-x86-inventory/downloads.lock.json          |    56 +
+ .../e01-x86-inventory/evidence/ancestry-before.txt |    27 +
+ .../e01-x86-inventory/evidence/commands.md         |   124 +
+ .../evidence/fresh-extraction.log                  |   139 +
+ .../e01-x86-inventory/evidence/inventory.log       |     3 +
+ .../evidence/lifter-assessment.log                 |    16 +
+ .../evidence/network-retrieval.log                 |    23 +
+ .../e01-x86-inventory/evidence/replay-diff.log     |     0
+ .../evidence/replay-inventory.log                  |     3 +
+ .../evidence/repository-checks.log                 |    23 +
+ .../inventory/e01-x86-inventory/evidence/run.log   |    17 +
+ .../e01-x86-inventory/evidence/tool-versions.txt   |    21 +
+ .../e01-x86-inventory/evidence/verify.log          |     8 +
+ .../e01-x86-inventory/generated/SHA256SUMS         |    17 +
+ .../e01-x86-inventory/generated/disassembly.txt    | 62041 +++++++++++++++++++
+ .../e01-x86-inventory/generated/dispatch-data.json |   132 +
+ .../e01-x86-inventory/generated/elf-header.txt     |   134 +
+ .../generated/existing-lifts.json                  |  7863 +++
+ .../generated/ifunc-implementations.json           |  1472 +
+ .../e01-x86-inventory/generated/inventory.json     | 16747 +++++
+ .../e01-x86-inventory/generated/notes.txt          |   439 +
+ .../generated/package-provenance.json              |    94 +
+ .../e01-x86-inventory/generated/relocations.txt    |  1344 +
+ .../e01-x86-inventory/generated/resolvers.json     |  2090 +
+ .../generated/source-files.sha256                  |   239 +
+ .../generated/source-selectors.json                |    57 +
+ .../e01-x86-inventory/generated/symbols.tsv        |   399 +
+ .../generated/target-manifest.json                 |    13 +
+ .../generated/unit-suggestions.json                |  4628 ++
+ .../generated/unit-suggestions.tsv                 |   243 +
+ .../e01-x86-inventory/generated/variants.md        |    56 +
+ .../inventory/e01-x86-inventory/inventory.py       |   370 +
+ .../claude/inventory/e01-x86-inventory/retrieve.py |   110 +
+ Examples/claude/inventory/e01-x86-inventory/run.sh |    18 +
+ .../claude/inventory/e01-x86-inventory/verify.py   |    75 +
+ Picinae_amd64_avx512.v                             |   180 +
+ dune                                               |    48 +
+ dune-project                                       |     3 +
+ notes/e00-build/README.md                          |   168 +
+ notes/e00-build/check-selection.py                 |    16 +
+ notes/e00-build/logs/01-dune-smoke.log             |     8 +
+ notes/e00-build/logs/02-dune-smoke.log             |   148 +
+ notes/e00-build/logs/03-dune-smoke.log             |    89 +
+ notes/e00-build/logs/04-audit-tests.log            |     9 +
+ notes/e00-build/logs/05-baseline-source-audit.log  |   204 +
+ notes/e00-build/logs/06-toolchain.log              |    12 +
+ notes/e00-build/logs/07-base-audit.log             |    15 +
+ notes/e00-build/logs/08-fork-collision-check.log   |     4 +
+ notes/e00-build/logs/09-clean-build.log            |   195 +
+ notes/e00-build/logs/10-harness-tests.log          |     9 +
+ notes/e00-build/logs/11-x86-assumptions.log        |    43 +
+ notes/e00-build/logs/12-selected-objects.log       |    27 +
+ notes/e00-build/logs/13-arm8-assumptions.log       |    29 +
+ .../e00-build/logs/14-missing-theorem-negative.log |     9 +
+ .../logs/15-extensionality-provenance.log          |    13 +
+ notes/e15-x86-vector-state/README.md               |   234 +
+ notes/e15-x86-vector-state/copy-operands.json      |   975 +
+ notes/e15-x86-vector-state/logs/01-before.log      |    36 +
+ notes/e15-x86-vector-state/logs/02-import-e01.log  |    78 +
+ .../logs/03-fork-collision.log                     |     4 +
+ notes/e15-x86-vector-state/logs/04-first-build.log |   166 +
+ .../e15-x86-vector-state/logs/05-layout-tests.log  |    16 +
+ notes/e15-x86-vector-state/logs/06-operands.log    |     5 +
+ .../e15-x86-vector-state/logs/07-second-build.log  |     6 +
+ .../logs/08-fixture-assumptions.log                |   481 +
+ .../e15-x86-vector-state/logs/09-source-audit.log  |    10 +
+ .../logs/10-definition-assumptions.log             |     7 +
+ .../logs/11-smoke-ymm-assumptions.log              |    11 +
+ .../logs/12-clean-full-dune.log                    |   235 +
+ .../logs/13-primary-local-sources.log              |   160 +
+ notes/e15-x86-vector-state/logs/14-mask-source.log |    44 +
+ .../logs/15-scalar-assumptions.log                 |    43 +
+ .../logs/16-baseline-audit.log                     |   204 +
+ notes/e15-x86-vector-state/operand_inventory.py    |    93 +
+ tools/amd64_vector_layout.py                       |    80 +
+ tools/audit-proof-source.py                        |   108 +
+ tools/print-assumptions.sh                         |    36 +
+ tools/record-command.sh                            |    24 +
+ tools/test-amd64-vector-layout.py                  |    62 +
+ tools/test-proof-audit.py                          |    82 +
+ 83 files changed, 103996 insertions(+)
+ BUILDING.md                                        |  24 +-
+ Examples/claude/amd64_avx512_state_fixtures.v      | 132 +++
+ Picinae_amd64_avx512.v                             | 180 ++++
+ dune                                               |  10 +
+ notes/e15-x86-vector-state/README.md               | 234 +++++
+ notes/e15-x86-vector-state/copy-operands.json      | 975 +++++++++++++++++++++
+ notes/e15-x86-vector-state/logs/01-before.log      |  36 +
+ notes/e15-x86-vector-state/logs/02-import-e01.log  |  78 ++
+ .../logs/03-fork-collision.log                     |   4 +
+ notes/e15-x86-vector-state/logs/04-first-build.log | 166 ++++
+ .../e15-x86-vector-state/logs/05-layout-tests.log  |  16 +
+ notes/e15-x86-vector-state/logs/06-operands.log    |   5 +
+ .../e15-x86-vector-state/logs/07-second-build.log  |   6 +
+ .../logs/08-fixture-assumptions.log                | 481 ++++++++++
+ .../e15-x86-vector-state/logs/09-source-audit.log  |  10 +
+ .../logs/10-definition-assumptions.log             |   7 +
+ .../logs/11-smoke-ymm-assumptions.log              |  11 +
+ .../logs/12-clean-full-dune.log                    | 235 +++++
+ .../logs/13-primary-local-sources.log              | 160 ++++
+ notes/e15-x86-vector-state/logs/14-mask-source.log |  44 +
+ .../logs/15-scalar-assumptions.log                 |  43 +
+ .../logs/16-baseline-audit.log                     | 204 +++++
+ notes/e15-x86-vector-state/operand_inventory.py    |  93 ++
+ tools/amd64_vector_layout.py                       |  80 ++
+ tools/test-amd64-vector-layout.py                  |  62 ++
+ 25 files changed, 3292 insertions(+), 4 deletions(-)
+
+EXIT_CODE=0

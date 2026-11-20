@@ -1,0 +1,44 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2cd37487
+COMMAND=bash -e -c g=/home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages\;\ sed\ -n\ \"1594\,1607p\;1627\,1636p\;1900\,1915p\"\ \"\$g/ia.sinc\"
+XmmMaskMode: is evexZ=0 { }
+XmmMaskMode: "{z}" is evexZ=1 { XmmMask=0; }
+
+YmmMaskMode: is evexZ=0 { }
+YmmMaskMode: "{z}" is evexZ=1 { YmmMask=0; }
+
+ZmmMaskMode: is evexZ=0 { }
+ZmmMaskMode: "{z}" is evexZ=1 { ZmmMask=0; }
+
+AVXOpMask: "{"^evexOpmask^"}" is evexOpmask { export evexOpmask; }
+AVXOpMask:  is evexOpmask=0 { local tmp:8 = 0xffffffffffffffff; export *[const]:8 tmp; }
+# Z=0: merge masking
+# Z=1: zero masking
+XmmOpMask: AVXOpMask^XmmMaskMode is AVXOpMask & XmmMaskMode {
+	conditionalAssign(XmmResult[112,8], mask[14,1], XmmResult[112,8], XmmMask[112,8]);
+	conditionalAssign(XmmResult[120,8], mask[15,1], XmmResult[120,8], XmmMask[120,8]);
+}
+
+XmmOpMask8: is evexOpmask=0 {
+}
+
+XmmOpMask16: AVXOpMask^XmmMaskMode is AVXOpMask & XmmMaskMode {
+	local mask = AVXOpMask;
+	conditionalAssign(XmmResult[0,16], mask[0,1], XmmResult[0,16], XmmMask[0,16]);
+	conditionalAssign(ZmmResult[64,64], mask[1,1], ZmmResult[64,64], ZmmMask[64,64]);
+	conditionalAssign(ZmmResult[128,64], mask[2,1], ZmmResult[128,64], ZmmMask[128,64]);
+	conditionalAssign(ZmmResult[192,64], mask[3,1], ZmmResult[192,64], ZmmMask[192,64]);
+	conditionalAssign(ZmmResult[256,64], mask[4,1], ZmmResult[256,64], ZmmMask[256,64]);
+	conditionalAssign(ZmmResult[320,64], mask[5,1], ZmmResult[320,64], ZmmMask[320,64]);
+	conditionalAssign(ZmmResult[384,64], mask[6,1], ZmmResult[384,64], ZmmMask[384,64]);
+	conditionalAssign(ZmmResult[448,64], mask[7,1], ZmmResult[448,64], ZmmMask[448,64]);
+}
+
+ZmmOpMask64: is evexOpmask=0 {
+}
+
+
+RegK_m8:  KReg_rm is mod=3 & KReg_rm { tmp:1 = KReg_rm[0,8]; export tmp; }
+RegK_m8:  m8      is m8              { tmp:1 = m8; export tmp; }
+RegK_m16: KReg_rm is mod=3 & KReg_rm { tmp:2 = KReg_rm[0,16]; export tmp;}
+
+EXIT_CODE=0
