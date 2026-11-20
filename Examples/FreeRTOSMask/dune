@@ -1,0 +1,3 @@
+(alias
+ (name freertos-mask-lifts)
+ (deps ulSetInterruptMask_armv6m.vo vClearInterruptMask_armv6m.vo))
