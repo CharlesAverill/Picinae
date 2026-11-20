@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-48d97224
+COMMAND=git branch -m llm-proofs/r18-mutex-held
+
+EXIT_CODE=0

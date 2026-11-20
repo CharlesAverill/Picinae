@@ -1,0 +1,10 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96052210
+COMMAND=env PROOF_MEMORY_KB=2000000 PROOF_STACK_KB=65536 /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ ulimit\ -v\;\ ulimit\ -s\;\ rocq\ --version\;\ dune\ --version\;\ ocamlc\ -version
+2000000
+65536
+The Rocq Prover, version 9.1.1
+compiled with OCaml 4.14.2
+3.22.2
+4.14.2
+
+EXIT_CODE=0
