@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-b39074c1
+COMMAND=git branch -m llm-proofs/x08-avx-backward-lowaddr
+
+EXIT_CODE=0

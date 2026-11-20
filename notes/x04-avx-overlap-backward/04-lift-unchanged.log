@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-53ef439b
+COMMAND=git diff 49956416928e5b6bb3928b54ae33e3b81091f006 -- Examples/claude/memmove_avx_amd64.v
+
+EXIT_CODE=0

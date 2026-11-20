@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-48b8f09f
+COMMAND=kill -TERM 785321
+
+EXIT_CODE=0

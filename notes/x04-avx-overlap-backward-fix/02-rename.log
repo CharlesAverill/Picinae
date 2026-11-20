@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9b461e
+COMMAND=git branch -m llm-proofs/x04-avx-overlap-backward-fix
+
+EXIT_CODE=0

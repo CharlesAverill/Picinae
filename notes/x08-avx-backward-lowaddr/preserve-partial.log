@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-b39074c1
+COMMAND=python3 notes/x08-avx-backward-lowaddr/preserve-partial.py
+Preserved 11 completed prefix proof scripts and all 26 declarations.
+Replaced the failing main proof and 7 unchecked later attempts with Abort.
+No statement, definition, generated map or prerequisite proof changed.
+
+EXIT_CODE=0

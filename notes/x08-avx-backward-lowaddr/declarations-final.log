@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-b39074c1
+COMMAND=python3 notes/x08-avx-backward-lowaddr/audit-declarations.py
+Retained declarations: 26
+Retained lemma/theorem/corollary statements: 19
+Added declarations: (none)
+PASS: all original definitions and theorem statements retained
+
+EXIT_CODE=0

@@ -1,0 +1,48 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9b461e
+COMMAND=python3 notes/x04-avx-overlap-backward-fix/summarize-assumptions.py
+bw_suffix_unread: Closed under the global context
+bw_domain_all_gaps: Closed under the global context
+bw_gap_examples: Closed under the global context
+bw_typed_entry_witness: Closed under the global context
+bw_initial_memory_satisfiable: Closed under the global context
+memmove_avx_overlap_backward_nwc: Closed under the global context
+memmove_avx_overlap_backward_welltyped: inherited FE only
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+memmove_avx_overlap_backward_preserves_callee_saved: Closed under the global context
+land_align32: Closed under the global context
+c0_bounds: Closed under the global context
+rcx_c0: Closed under the global context
+rsi_c: Closed under the global context
+getmem_addr: Closed under the global context
+ja_not_taken: Closed under the global context
+ja_taken: Closed under the global context
+msub_add_mod: Closed under the global context
+bwd_rsi: Closed under the global context
+bw_store4: Closed under the global context
+bw_loop_unread: Closed under the global context
+memmove_avx_correct_overlap_backward: inherited FE only
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+memmove_avx_correct_self_alias: inherited FE only
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+memmove_avx_overlap_backward_at_ret: inherited FE only
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+memmove_avx_self_alias_at_ret: inherited FE only
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+PASS: 23 certificates; 18 closed, 5 inherited FE only; no imported admission
+
+EXIT_CODE=0
