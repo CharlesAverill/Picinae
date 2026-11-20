@@ -1,0 +1,64 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-013cef89
+COMMAND=git diff --cached --check
+notes/a-strcmp-fix/05-inherited-target.log:179: trailing whitespace.
++    [R_X0 := 8 ⊕ (p .& 18446744073709551608)][R_X9 := 
+notes/a-strcmp-fix/05-inherited-target.log:264: trailing whitespace.
++    [R_X0 := 8 ⊕ (p .& 18446744073709551608)][R_X9 := 
+notes/a-strcmp-fix/05-inherited-target.log:382: trailing whitespace.
++    [R_X0 := 8 ⊕ (p .& 18446744073709551608)][R_X9 := 
+notes/a-strcmp-fix/05-inherited-target.log:602: trailing whitespace.
++   (s1[R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]][R_X0 := 
+notes/a-strcmp-fix/05-inherited-target.log:647: trailing whitespace.
++   (s1[R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]][R_X0 := 
+notes/a-strcmp-fix/05-inherited-target.log:704: trailing whitespace.
++   (s1[R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]][R_X0 := 
+notes/a-strcmp-fix/05-inherited-target.log:1224: trailing whitespace.
++    [R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]][R_X0 := 
+notes/a-strcmp-fix/05-inherited-target.log:1286: trailing whitespace.
++   (s1[R_X7 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]][R_X0 := 
+notes/a-strcmp-fix/05-inherited-target.log:1322: trailing whitespace.
++    [R_X2 := s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ]][R_X9 := 
+notes/a-strcmp-fix/05-inherited-target.log:1354: trailing whitespace.
++    [R_X3 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X10 ]][R_X0 := 
+notes/a-strcmp-fix/05-inherited-target.log:1393: trailing whitespace.
++   (s1[R_X7 := s1 V_MEM64 Ⓠ[ s1 R_X0 + s1 R_X5 ]][R_X0 := 
+notes/a-strcmp-fix/05-inherited-target.log:1405: trailing whitespace.
++    [R_X2 := s1 V_MEM64 Ⓠ[ 8 + s1 R_X0 ]][R_X9 := 
+notes/a-strcmp-fix/26-interrupt-own-probe.log:4: trailing whitespace.
++Limit                     Soft Limit           Hard Limit           Units     
+notes/a-strcmp-fix/26-interrupt-own-probe.log:5: trailing whitespace.
++Max cpu time              unlimited            unlimited            seconds   
+notes/a-strcmp-fix/26-interrupt-own-probe.log:6: trailing whitespace.
++Max file size             unlimited            unlimited            bytes     
+notes/a-strcmp-fix/26-interrupt-own-probe.log:7: trailing whitespace.
++Max data size             unlimited            unlimited            bytes     
+notes/a-strcmp-fix/26-interrupt-own-probe.log:8: trailing whitespace.
++Max stack size            67108864             67108864             bytes     
+notes/a-strcmp-fix/26-interrupt-own-probe.log:9: trailing whitespace.
++Max core file size        0                    unlimited            bytes     
+notes/a-strcmp-fix/26-interrupt-own-probe.log:10: trailing whitespace.
++Max resident set          unlimited            unlimited            bytes     
+notes/a-strcmp-fix/26-interrupt-own-probe.log:11: trailing whitespace.
++Max processes             192674               192674               processes 
+notes/a-strcmp-fix/26-interrupt-own-probe.log:12: trailing whitespace.
++Max open files            1048576              1048576              files     
+notes/a-strcmp-fix/26-interrupt-own-probe.log:13: trailing whitespace.
++Max locked memory         6314455040           6314455040           bytes     
+notes/a-strcmp-fix/26-interrupt-own-probe.log:14: trailing whitespace.
++Max address space         4096000000           4096000000           bytes     
+notes/a-strcmp-fix/26-interrupt-own-probe.log:15: trailing whitespace.
++Max file locks            unlimited            unlimited            locks     
+notes/a-strcmp-fix/26-interrupt-own-probe.log:16: trailing whitespace.
++Max pending signals       192674               192674               signals   
+notes/a-strcmp-fix/26-interrupt-own-probe.log:17: trailing whitespace.
++Max msgqueue size         819200               819200               bytes     
+notes/a-strcmp-fix/26-interrupt-own-probe.log:18: trailing whitespace.
++Max nice priority         0                    0                    
+notes/a-strcmp-fix/26-interrupt-own-probe.log:19: trailing whitespace.
++Max realtime priority     0                    0                    
+notes/a-strcmp-fix/26-interrupt-own-probe.log:20: trailing whitespace.
++Max realtime timeout      unlimited            unlimited            us        
+notes/a-strcmp-fix/31-assumptions.raw.log:369: trailing whitespace.
++         Picinae_core.LittleE (BinNums.Npos BinNums.xH) m 
+
+EXIT_CODE=2

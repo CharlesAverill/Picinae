@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ea3464df
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e29-arm-scalar-bitforms/check-artifacts.py
+PASS inet_makeaddr 19 exact ELF instructions; naming-only adaptation; closed map; implementation hashes
+PASS rand_r 15 exact ELF instructions; naming-only adaptation; closed map; implementation hashes
+PASS all file hashes and 25 raw-pcode/IL fixtures
+
+EXIT_CODE=0

@@ -1,0 +1,43 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-013cef89
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 4000000\;\ ulimit\ -s\ 65536\;\ rocq\ compile\ -q\ -R\ _build/default\ Picinae\ /home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/RepairProbe.v
+Closed under the global context
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+File "/home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/RepairProbe.v", line 238, characters 31-44:
+Warning: Notation N.div_le_mono is deprecated since 8.17.
+Use Div0.div_le_mono instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "/home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/RepairProbe.v", line 238, characters 31-44:
+Warning: Notation N.div_le_mono is deprecated since 8.17.
+Use Div0.div_le_mono instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+File "/home/charles/code/friends/.toolchains/a-strcmp-fix/tmp/RepairProbe.v", line 449, characters 46-48:
+Error: Syntax error: ';' or ']' expected after [term level 200] (in [term]).
+
+
+EXIT_CODE=1

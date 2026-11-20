@@ -1,0 +1,16 @@
+Read-only branch collision check:
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/e30-arm-ccmp
+Initial sandbox exit=128 (DNS unavailable)
+Reviewed network retry exit=0
+OUTPUT=(empty)
+Prepared branch=t3/e30-arm-ccmp
+Prepared HEAD=71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+COMMAND=git merge-base --is-ancestor HEAD 9b9ea8fbb9c0921b07a906daae3cecc7048cbf6b
+EXIT_CODE=0
+Initial local rename failed due read-only linked Git metadata, before mutation.
+Reviewed metadata retry:
+COMMAND=git branch -m llm-proofs/e30-arm-ccmp
+EXIT_CODE=0
+COMMAND=git merge --ff-only 9b9ea8fbb9c0921b07a906daae3cecc7048cbf6b
+EXIT_CODE=0
+No worktree created and no remote mutation performed.

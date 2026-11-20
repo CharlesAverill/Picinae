@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-013cef89
+COMMAND=python3 -
+Examples/claude/arm8_strcmp_proof.v bytes= 29941 sha256= 6c7214a36a222d5dace925ffefd5f29bedabadc9ab74a29537df2dbbc26d2138
+_build/default/Examples/claude/arm8_strcmp_proof.vo bytes= 6017326 sha256= d35452d84fd01d85d9d3443c0204ee596f12e43979fd6993c20f406123d7a52d
+Examples/claude/lifter/scalar_ccmp/e30_strcmp_arm8.v bytes= 21523 sha256= 2b7b58a310afd013b2dae9e2953786404640796734fc6ae39cf309f0a6568dc3
+Qed declarations: 42
+
+EXIT_CODE=0

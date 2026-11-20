@@ -1,0 +1,26 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ea3464df
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e29-arm-scalar-bitforms/replay.py --run targets03
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra", "--out", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/inet_makeaddr", "--global-addressing", "inet_makeaddr"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/inet_makeaddr
+Ghidra log: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/logs/b1c1d1b63dc7477da36fe3435fe86e84.log
+EXIT_CODE=0
+PASS deterministic complete map inet_makeaddr
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra", "--out", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/rand_r", "--global-addressing", "rand_r"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/rand_r
+Ghidra log: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/logs/6e84ccab25b04515bed5c1d7adc2089e.log
+EXIT_CODE=0
+PASS deterministic complete map rand_r
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra", "--out", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/__memchr_nosimd", "--global-addressing", "__memchr_nosimd"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memchr_nosimd 0x19c81c ccmp x6,x8,#0x0,mi: unmodeled instruction ccmp x6,x8,#0x0,mi; raw pcode: (unique, 0x1a480, 1) COPY (register, 0x100, 1); (unique, 0x1a500, 1) COPY (const, 0x0, 1); (unique, 0xe780, 1) INT_AND (unique, 0x1a500, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) INT_AND (unique, 0x1a500, 1) , (const, 0x4, 1); (register, 0x101, 1) INT_EQUAL (unique, 0xe880, 1) , (const, 0x4, 1); (uniq; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/logs/aeaf9184182e4c27a18b7882fd80315f.log
+EXIT_CODE=1
+PASS exact frontier and no-output failure __memchr_nosimd
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra", "--out", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/strcmp", "--global-addressing", "strcmp"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strcmp 0x192fb4 ccmp x2,x3,#0x0,eq: unmodeled instruction ccmp x2,x3,#0x0,eq; raw pcode: (unique, 0x1a480, 1) COPY (register, 0x101, 1); (unique, 0x1a500, 1) COPY (const, 0x0, 1); (unique, 0xe780, 1) INT_AND (unique, 0x1a500, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) INT_AND (unique, 0x1a500, 1) , (const, 0x4, 1); (register, 0x101, 1) INT_EQUAL (unique, 0xe880, 1) , (const, 0x4, 1); (unique, 0xe98; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/logs/8ff0b2c7776240e1a8c1ad93c8ad05e8.log
+EXIT_CODE=1
+PASS exact frontier and no-output failure strcmp
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra", "--out", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/__strlen_asimd", "--global-addressing", "__strlen_asimd"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __strlen_asimd 0x19c970 ccmp x5,#0x0,#0x0,eq: unmodeled instruction ccmp x5,#0x0,#0x0,eq; raw pcode: (unique, 0x19f00, 1) COPY (register, 0x101, 1); (unique, 0x19f80, 1) COPY (const, 0x0, 1); (unique, 0xe780, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x4, 1); (register, 0x101, 1) INT_EQUAL (unique, 0xe880, 1) , (const, 0x4, 1); (u; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/logs/87c8e805b0b0414b829cd236310d9efb.log
+EXIT_CODE=1
+PASS exact frontier and no-output failure __strlen_asimd
+
+EXIT_CODE=0
