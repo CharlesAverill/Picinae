@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ea3464df
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e08-arm-lifts/check-harness.py
+EXPECTED_REJECTION dangling CALL: 0x194a60 -> 0x19ab40
+EXPECTED_REJECTION unclosed indirect transfer at 0x1000:  ---  BRANCHIND (register, 0x4000, 8)
+EXPECTED_REJECTION dangling machine fallthrough at 0x1000
+EXPECTED_REJECTION dangling call return site at 0x1000
+PASS actual memcpy+mempcpy closure and four unclosed maps rejected
+
+EXIT_CODE=0

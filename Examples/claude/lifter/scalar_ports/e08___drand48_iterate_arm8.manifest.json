@@ -1,0 +1,272 @@
+{
+  "addressing": "global",
+  "aliases_same_entry_extent": [
+    "__drand48_iterate"
+  ],
+  "build_id": "977c021c364ee3c495c0e5f2375bf6ba2124a6da",
+  "closure": {
+    "closed": true,
+    "direct_and_fallthrough_edges": [
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7c0",
+        "target": "0x13e7c4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7c4",
+        "target": "0x13e7c8"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x13e7c8",
+        "target": "0x13e804"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7c8",
+        "target": "0x13e7cc"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7cc",
+        "target": "0x13e7d0"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7d0",
+        "target": "0x13e7d4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7d4",
+        "target": "0x13e7d8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7d8",
+        "target": "0x13e7dc"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7dc",
+        "target": "0x13e7e0"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7e0",
+        "target": "0x13e7e4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7e4",
+        "target": "0x13e7e8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7e8",
+        "target": "0x13e7ec"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7ec",
+        "target": "0x13e7f0"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7f0",
+        "target": "0x13e7f4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7f4",
+        "target": "0x13e7f8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7f8",
+        "target": "0x13e7fc"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e7fc",
+        "target": "0x13e800"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e804",
+        "target": "0x13e808"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e808",
+        "target": "0x13e80c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e80c",
+        "target": "0x13e810"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e810",
+        "target": "0x13e814"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e814",
+        "target": "0x13e818"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e818",
+        "target": "0x13e81c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e81c",
+        "target": "0x13e820"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e820",
+        "target": "0x13e824"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x13e824",
+        "target": "0x13e828"
+      },
+      {
+        "kind": "BRANCH",
+        "source": "0x13e828",
+        "target": "0x13e7d4"
+      }
+    ],
+    "indirect_nonreturn_edges": [],
+    "meaning": "finite selected machine map closes all direct edges and fallthroughs; RETURN remains caller ABI boundary",
+    "returns": [
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x13e800"
+      }
+    ]
+  },
+  "data": {
+    "analysis": "ADR(P)+ADD object references plus complete raw memory instruction list; manual target review required, no invented constants",
+    "contract": "Map ELF virtual data addresses to model addresses by +0x100000. Runtime memory must supply these bytes/state and any relocated pointer targets; generated program does not initialize memory.",
+    "materialized_objects": [],
+    "memory_accesses": [
+      {
+        "assembly": "ldrh w0,[x1, #0xe]",
+        "instruction": "0x13e7c4",
+        "pcode": [
+          "(unique, 0x25700, 2) LOAD (const, 0x1b1, 8) , (unique, 0x6300, 8)"
+        ]
+      },
+      {
+        "assembly": "ldrh w4,[x1, #0xc]",
+        "instruction": "0x13e7cc",
+        "pcode": [
+          "(unique, 0x25700, 2) LOAD (const, 0x1b1, 8) , (unique, 0x6300, 8)"
+        ]
+      },
+      {
+        "assembly": "ldr x5,[x1, #0x10]",
+        "instruction": "0x13e7d0",
+        "pcode": [
+          "(register, 0x4028, 8) LOAD (const, 0x1b1, 8) , (unique, 0x6500, 8)"
+        ]
+      },
+      {
+        "assembly": "ldrh w1,[x2, #0x4]",
+        "instruction": "0x13e7d8",
+        "pcode": [
+          "(unique, 0x25700, 2) LOAD (const, 0x1b1, 8) , (unique, 0x6300, 8)"
+        ]
+      },
+      {
+        "assembly": "ldrh w6,[x2]",
+        "instruction": "0x13e7dc",
+        "pcode": [
+          "(unique, 0x25700, 2) LOAD (const, 0x1b1, 8) , (unique, 0x6700, 8)"
+        ]
+      },
+      {
+        "assembly": "ldrh w3,[x2, #0x2]",
+        "instruction": "0x13e7e0",
+        "pcode": [
+          "(unique, 0x25700, 2) LOAD (const, 0x1b1, 8) , (unique, 0x6300, 8)"
+        ]
+      },
+      {
+        "assembly": "str w1,[x2]",
+        "instruction": "0x13e7f4",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6780, 8) , (register, 0x4008, 4)"
+        ]
+      },
+      {
+        "assembly": "strh w1,[x2, #0x4]",
+        "instruction": "0x13e7fc",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6300, 8) , (unique, 0x3ac80, 2)"
+        ]
+      },
+      {
+        "assembly": "str w3,[x1, #0xc]",
+        "instruction": "0x13e820",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6400, 8) , (register, 0x4018, 4)"
+        ]
+      },
+      {
+        "assembly": "str x0,[x1, #0x10]",
+        "instruction": "0x13e824",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6500, 8) , (register, 0x4000, 8)"
+        ]
+      }
+    ],
+    "staticMemory": false
+  },
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "elf_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "generated_program": "e08___drand48_iterate_arm8",
+  "generated_program_sha256": "094d6a3f89887dc39e3ec02be9183e65391be017a960558669231ec2dc7cef1f",
+  "image_base": "0x100000",
+  "implementation_sha256": {
+    "lift-scalar.py": "1bdf6ec35946c220dc07fc4963efc37b7cb3f150e0f77ccfbcfecd2e74828909",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "scalar_headless.py": "4aab6945ece18c558f2b1dc397a31a8333a8e380dcaf29630168472e1fe7bcd3"
+  },
+  "instruction_count": 27,
+  "limits": "Generated scalar IL and typing only; no functional correctness, termination, equivalence to historical lifts, or lifter soundness claim.",
+  "naming_adapter": {
+    "new": "e08___drand48_iterate_arm8",
+    "occurrence_count": 2,
+    "old": "e11___drand48_iterate_arm8",
+    "operation": "identifier substitution only"
+  },
+  "naming_closure_harness_sha256": "fdfce3192d5670367686ff78a4606197c83df74f817945cf653819f2f83165a5",
+  "original_program_sha256": "79874ab3b0fecdefe6a1622bf145a60b26560ba6a49ff80fd7e8ad68feb61e5d",
+  "pcode_sha256": "b70a8960a6220bd7c96bbf7ae0114606dc38746a95845b1bec033947646999a1",
+  "record": {
+    "bytes_sha256": "975ffb7f4f704a546d2b293cb0605a4052e433a51816973b6921710362e31b9a",
+    "elf_entry": "0x3e7c0",
+    "entry": "0x13e7c0",
+    "instructions": 27,
+    "output": "e11___drand48_iterate_arm8.v",
+    "output_sha256": "79874ab3b0fecdefe6a1622bf145a60b26560ba6a49ff80fd7e8ad68feb61e5d",
+    "selected_symbols": [
+      "__drand48_iterate"
+    ],
+    "size": 108,
+    "symbol": "__drand48_iterate"
+  },
+  "schema": 1,
+  "selected_symbols": [
+    "__drand48_iterate"
+  ],
+  "symbol": "__drand48_iterate"
+}
