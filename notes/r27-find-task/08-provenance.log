@@ -1,0 +1,11 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1f7f6596
+COMMAND=python3 notes/r27-find-task/check-provenance.py
+PASS: pinned tasks.c hash and unchanged generated lift hash
+PASS: 34 instructions, no callee prerequisites, unsupported instructions, literals or globals
+Actual return: [{'address': '0x0000060e', 'assembly': 'pop\t{r4, r5, r6, r7, pc}', 'frontend_encoding_supported': True, 'opcode': 'bdf0', 'width': 2}]
+Compiler layout: {"ListItem_t.pvOwner": 12, "ListItem_t.pxNext": 4, "ListItem_t.sizeof": 20, "List_t.sizeof": 20, "List_t.uxNumberOfItems": 0, "List_t.xListEnd": 8, "MiniListItem_t.pxNext": 4, "TCB_t.pcTaskName": 52, "TCB_t.sizeof": 84}
+Source hash: 6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149
+Generated hash: 51f7221fe5bef4966871c52102a3cd62cd9079dc5403905b3cca96308820a89a
+ELF hash (inherited manifest, not independently relifted): 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca
+
+EXIT_CODE=0

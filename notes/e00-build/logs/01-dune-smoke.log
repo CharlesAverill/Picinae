@@ -1,0 +1,8 @@
+File "dune-project", line 2, characters 12-15:
+2 | (using rocq 1.0)
+                ^^^
+Error: Version 1.0 of Rocq Prover build language is not supported.
+Supported versions of this extension in version 3.22 of the dune language:
+- 0.1 to 0.12
+
+EXIT_CODE=1

@@ -1,0 +1,50 @@
+{
+  "pvPortMalloc": {
+    "present": false,
+    "reason": "configSUPPORT_DYNAMIC_ALLOCATION=0; no heap implementation linked"
+  },
+  "uxTaskGetSystemState": {
+    "present": false,
+    "reason": "configUSE_TRACE_FACILITY=0"
+  },
+  "vPortFree": {
+    "present": false,
+    "reason": "configSUPPORT_DYNAMIC_ALLOCATION=0; no heap implementation linked"
+  },
+  "xEventGroupCreate": {
+    "present": false,
+    "reason": "configSUPPORT_DYNAMIC_ALLOCATION=0; use xEventGroupCreateStatic"
+  },
+  "xQueueCreateSet": {
+    "present": false,
+    "reason": "configUSE_QUEUE_SETS=0"
+  },
+  "xQueueGenericCreate": {
+    "present": false,
+    "reason": "configSUPPORT_DYNAMIC_ALLOCATION=0; use xQueueGenericCreateStatic"
+  },
+  "xQueueMessagesWaiting": {
+    "present": false,
+    "reason": "wrong spelling in campaign/timing filename; use uxQueueMessagesWaiting"
+  },
+  "xQueueSelectFromSet": {
+    "present": false,
+    "reason": "configUSE_QUEUE_SETS=0"
+  },
+  "xStreamBufferGenericCreate": {
+    "present": false,
+    "reason": "configSUPPORT_DYNAMIC_ALLOCATION=0; use xStreamBufferGenericCreateStatic"
+  },
+  "xTaskCreate": {
+    "present": false,
+    "reason": "configSUPPORT_DYNAMIC_ALLOCATION=0; use xTaskCreateStatic"
+  },
+  "xTimerCreate": {
+    "present": false,
+    "reason": "configSUPPORT_DYNAMIC_ALLOCATION=0; use xTimerCreateStatic"
+  },
+  "xTimerGenericCommand": {
+    "present": false,
+    "reason": "macro in V11.1.0; use xTimerGenericCommandFromTask and xTimerGenericCommandFromISR"
+  }
+}
