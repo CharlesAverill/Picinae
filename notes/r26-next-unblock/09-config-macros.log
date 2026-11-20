@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-86e7a14d
+COMMAND=bash -e -o pipefail -c zcat\ Examples/freertos/cortex-m0/evidence/config-macros.txt.gz\ \|\ rg\ \"configUSE_MINI_LIST_ITEM\|configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES\|configTICK_TYPE_WIDTH_IN_BITS\"
+#define configTICK_TYPE_WIDTH_IN_BITS TICK_TYPE_WIDTH_32_BITS
+#define configUSE_MINI_LIST_ITEM 1
+#define configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES 0
+
+EXIT_CODE=0
