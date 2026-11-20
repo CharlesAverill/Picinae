@@ -1,0 +1,49 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-82be9105
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 3000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/claude/arm8_ldiv_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-19, characters 0-611:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+17 |   Examples.claude.arm8_common Examples.claude.abs_arm8
+18 |   Examples.claude.arm8_abs_proof
+19 |   Examples.claude.ldiv_arm8 Examples.claude.arm8_ldiv_proof))
+        rocq Examples/claude/arm8_ldiv_proof.{glob,vo} (exit 1)
+Goal at < 0 >
+Goal at < 12 >
+Goal at < 12 >
+File "./Examples/claude/arm8_ldiv_proof.v", line 206, characters 10-15:
+Error:
+In environment
+s : store
+t : list (exit * store)
+sr, sf : ARM8Arch.store
+x : exit
+n, d : Z
+sp, ra : N
+ENTRY : startof t (Addr 12, sr) = (Addr 0, s)
+MDL : models arm8typctx s
+HN : toZ 64 (s R_X0) = n
+HD : toZ 64 (s R_X1) = d
+SP : s R_SP = sp
+RA : s R_X30 = ra
+DNZ : d <> 0%Z
+NOVF : ~ (n = (- 2 ^ 63)%Z /\ d = (-1)%Z)
+XP : exec_prog ldiv_arm8 ((Addr 12, sr) :: t)
+UT : unterminated ldiv_exit t
+RET : can_step ldiv_arm8 (x, sf, (Addr 12, sr))
+SA :
+  satisfies_all ldiv_arm8 (ldiv_invs n d sp ra) ldiv_exit
+    ((Addr 12, sr) :: t)
+POST : postcondition n d sp ra sr
+FULL : exec_prog ldiv_arm8 ((x, sf) :: (Addr 12, sr) :: t)
+The term "ENTRY" has type "startof t (Addr 12, sr) = (Addr 0, s)"
+while it is expected to have type
+ "match t with
+  | [] => (Addr 12, sr)
+  | _ :: _ => startof t (x, sf)
+  end = (Addr 0, s)".
+
+
+EXIT_CODE=1
