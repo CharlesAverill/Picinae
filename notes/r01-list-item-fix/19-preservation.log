@@ -1,0 +1,21 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-856859c4
+COMMAND=python3 notes/r01-list-item-fix/check-preservation.py
+PASS: all definitions/predicates and all 14 original theorem statements byte-for-byte retained
+Only non-proof change: update final-producer attribution and validation-note path
+All 14 end in Qed; no missing/aborted declarations, admissions, axioms or parameters
+item_welltyped
+item_nwc
+item_memory_fields
+item_memory_outside
+item_preserves_registers
+item_exact
+item_correct
+item_entry_store_witness
+item_arbitrary_fields_witness
+item_mov_step
+item_store_step
+item_execution_witness
+item_return_step
+item_execution_returns
+
+EXIT_CODE=0

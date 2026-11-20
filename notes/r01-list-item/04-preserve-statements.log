@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4346038a
+COMMAND=python3 notes/r01-list-item/check-statements.py
+PASS: every definition, theorem statement and header is byte-for-byte preserved; only unchecked proof bodies replaced by Abort.
+Initial Qed count: 14
+Retained Qed count: 4
+Unchecked Abort count: 10
+
+EXIT_CODE=0

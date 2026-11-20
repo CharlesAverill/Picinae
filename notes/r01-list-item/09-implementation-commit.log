@@ -1,0 +1,23 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4346038a
+COMMAND=git commit -m Add\ partial\ ARMv6-M\ list\ item\ proof\ handoff
+[llm-proofs/r01-list-item d801d95] Add partial ARMv6-M list item proof handoff
+ 18 files changed, 1581 insertions(+)
+ create mode 100644 Examples/FreeRTOS/armv6m_vListInitialiseItem_proof.v
+ create mode 100644 notes/r01-list-item/01-initial-source.log
+ create mode 100644 notes/r01-list-item/02-dune-initial.log
+ create mode 100644 notes/r01-list-item/03-ancestry-before-commit.log
+ create mode 100644 notes/r01-list-item/04-preserve-statements.log
+ create mode 100644 notes/r01-list-item/05-source-audit.log
+ create mode 100644 notes/r01-list-item/06-unit-source-audit.log
+ create mode 100644 notes/r01-list-item/07-diff-check.log
+ create mode 100644 notes/r01-list-item/08-ancestry-final-before-commit.log
+ create mode 100644 notes/r01-list-item/README.md
+ create mode 100644 notes/r01-list-item/assumptions-status.txt
+ create mode 100644 notes/r01-list-item/audit-ancestry.sh
+ create mode 100644 notes/r01-list-item/check-statements.py
+ create mode 100644 notes/r01-list-item/initial-attempt.v.txt
+ create mode 100644 notes/r01-list-item/r01-before.log
+ create mode 100644 notes/r01-list-item/r01-fork-name-retry.log
+ create mode 100644 notes/r01-list-item/r01-fork-name.log
+
+EXIT_CODE=0

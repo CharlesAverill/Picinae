@@ -1,0 +1,12 @@
+NOT RUN: the only full target build failed (exit 1), so the unit has no .vo.
+No unit theorem assumptions certificate is claimed. tools/print-assumptions.sh
+would rebuild the failed unit and violate the one-shot author handoff policy.
+The four preceding helpers were processed before the failing proof, but have
+not been separately certified as a full .vo; no successful unit target exists.
+Accepted r00 assumptions evidence is inherited in
+notes/r00-list-model-fix/20-final-assumptions.log (19 closed facts).
+The inherited baseline functional extensionality axiom is
+Stdlib.Logic.FunctionalExtensionality.functional_extensionality_dep.
+This attempted unit imports FunctionalExtensionality for the return-step proof;
+only a successful build and raw Print Assumptions can establish which final
+unit theorems depend on it. No transitive-assumption completion is claimed.

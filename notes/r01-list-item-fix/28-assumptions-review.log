@@ -1,0 +1,19 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-856859c4
+COMMAND=python3 notes/r01-list-item-fix/check-assumptions.py
+item_welltyped: closed
+item_nwc: closed
+item_memory_fields: closed
+item_memory_outside: closed
+item_preserves_registers: closed
+item_exact: inherited functional_extensionality_dep only
+item_correct: inherited functional_extensionality_dep only
+item_entry_store_witness: closed
+item_arbitrary_fields_witness: closed
+item_mov_step: closed
+item_store_step: closed
+item_execution_witness: inherited functional_extensionality_dep only
+item_return_step: inherited functional_extensionality_dep only
+item_execution_returns: inherited functional_extensionality_dep only
+PASS: all 14 transitive queries; nine closed, five inherited FE-only; no imported admission
+
+EXIT_CODE=0

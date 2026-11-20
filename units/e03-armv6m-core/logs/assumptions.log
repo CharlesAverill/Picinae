@@ -1,0 +1,243 @@
+memacc_respects_armv6mtypctx
+     : memacc_respects_typctx armv6mtypctx
+Closed under the global context
+memacc_read_frame
+     : forall (s : armv6mvar -> N) (v : armv6mvar) (u : N),
+       v <> A_READ -> MemAcc mem_readable (s[v := u]) = MemAcc mem_readable s
+Closed under the global context
+memacc_write_frame
+     : forall (s : armv6mvar -> N) (v : armv6mvar) (u : N),
+       v <> A_WRITE ->
+       MemAcc mem_writable (s[v := u]) = MemAcc mem_writable s
+Closed under the global context
+memacc_read_updated
+     : forall (s : armv6mvar -> N) (v : armv6mvar) (u1 u2 : N),
+       MemAcc mem_readable (s[v := u2][A_READ := u1]) =
+       MemAcc mem_readable (s[A_READ := u1])
+Closed under the global context
+memacc_write_updated
+     : forall (s : armv6mvar -> N) (v : armv6mvar) (u1 u2 : N),
+       MemAcc mem_writable (s[v := u2][A_WRITE := u1]) =
+       MemAcc mem_writable (s[A_WRITE := u1])
+Closed under the global context
+armv6m_varid_typ
+     : forall n : regid, armv6mtypctx (armv6m_varid n) = Some 32
+Closed under the global context
+armv6m_subset_typ
+     : forall (c : armv6mvar -> option N) (v : armv6mvar) (w : N),
+       armv6mtypctx ⊆ c -> armv6mtypctx v = Some w -> c v = Some w
+Closed under the global context
+armv6m_subset_temp
+     : forall (c : armv6mvar -> option N) (n : N),
+       armv6mtypctx ⊆ c -> armv6mtypctx ⊆ c[V_TEMP n := Some 32]
+Closed under the global context
+hastyp_armv6m_varid
+     : forall (c : armv6mvar -> option N) (n : regid),
+       armv6mtypctx ⊆ c -> hastyp_exp c (Var (armv6m_varid n)) 32
+Closed under the global context
+hastyp_armv6m_var
+     : forall (c : armv6mvar -> option N) (a : addr) (n : regid),
+       armv6mtypctx ⊆ c -> hastyp_exp c (armv6m_var a n) 32
+Closed under the global context
+hastyp_armv6m_word
+     : forall (c : typctx) (n : N), hastyp_exp c (armv6m_word n) 32
+Closed under the global context
+hastyp_armv6m_move
+     : forall (c : armv6mvar -> option N) (v : armv6mvar) (w : N) (e : exp),
+       armv6mtypctx ⊆ c ->
+       armv6mtypctx v = Some w ->
+       hastyp_exp c e w -> hastyp_stmt armv6mtypctx c (Move v e) c
+Closed under the global context
+hastyp_armv6m_mov
+     : forall (c : armv6mvar -> option N) (n : regid) (e : exp),
+       armv6mtypctx ⊆ c ->
+       hastyp_exp c e 32 -> hastyp_stmt armv6mtypctx c (armv6m_mov n e) c
+Closed under the global context
+hastyp_armv6m_temp
+     : forall (c : typctx) (n : N) (e : exp),
+       hastyp_exp c e 32 ->
+       hastyp_stmt armv6mtypctx c (Move (V_TEMP n) e)
+         (c[V_TEMP n := Some 32])
+Closed under the global context
+hastyp_armv6m_seq
+     : forall (c0 c c1 c2 : typctx) (q1 q2 : stmt),
+       hastyp_stmt c0 c q1 c1 ->
+       hastyp_stmt c0 c1 q2 c2 -> hastyp_stmt c0 c (q1 $; q2) c2
+Closed under the global context
+hastyp_armv6m_if
+     : forall (c0 c : typctx) (e : exp) (q1 q2 : stmt),
+       hastyp_exp c e 1 ->
+       hastyp_stmt c0 c q1 c ->
+       hastyp_stmt c0 c q2 c -> hastyp_stmt c0 c (If e q1 q2) c
+Closed under the global context
+hastyp_armv6m_seqlist
+     : forall (c : typctx) (qs : list stmt),
+       Forall (fun q : stmt => hastyp_stmt armv6mtypctx c q c) qs ->
+       hastyp_stmt armv6mtypctx c (armv6m_seq qs) c
+Closed under the global context
+Forall_armv6m_map
+     : forall (P : stmt -> Prop) (f : ?A -> stmt) (l : list ?A),
+       (forall x : ?A, P (f x)) -> Forall P (map f l)
+where
+?A : [ |- Type]
+Closed under the global context
+hastyp_armv6m_ldm
+     : forall (c : armv6mvar -> option N) (rn : regid) (rl : N),
+       armv6mtypctx ⊆ c -> hastyp_stmt armv6mtypctx c (armv6m_ldm rn rl) c
+Closed under the global context
+hastyp_armv6m_stm
+     : forall (c : armv6mvar -> option N) (rn : regid) (rl : N),
+       armv6mtypctx ⊆ c -> hastyp_stmt armv6mtypctx c (armv6m_stm rn rl) c
+Closed under the global context
+hastyp_armv6m_push
+     : forall (c : armv6mvar -> option N) (rl : N) (lr : bool),
+       armv6mtypctx ⊆ c -> hastyp_stmt armv6mtypctx c (armv6m_push rl lr) c
+Closed under the global context
+hastyp_armv6m_pop
+     : forall (c : armv6mvar -> option N) (rl : N) (pc : bool),
+       armv6mtypctx ⊆ c -> hastyp_stmt armv6mtypctx c (armv6m_pop rl pc) c
+Closed under the global context
+welltyped_arm2il
+     : forall (a : addr) (i : thumb_instr),
+       exists c' : typctx,
+         hastyp_stmt armv6mtypctx armv6mtypctx (arm2il a i) c'
+Closed under the global context
+welltyped_armv6mprog
+     : welltyped_prog armv6mtypctx armv6m_prog
+Closed under the global context
+welltyped_lift_armv6m
+     : forall binary : addr -> N,
+       welltyped_prog armv6mtypctx (lift_armv6m binary)
+Closed under the global context
+literal_after_function
+     : armv6m_literal fixture_bytes 4098 3 = 305441741
+Closed under the global context
+literal_lift
+     : lift_armv6m fixture_bytes (fun _ : var => 0) 4098 =
+       Some (2, armv6m_mov 4 (Word 305441741 32))
+Closed under the global context
+finite_program_boundary
+     : fixture_bytes_prog (fun _ : ARMv6MArch.var => 0) 4112 = None /\
+       fixture_bytes_prog (fun _ : ARMv6MArch.var => 0) 4108 = None /\
+       fixture_bytes_prog (fun _ : ARMv6MArch.var => 0) 8192 = None
+Closed under the global context
+decode_push
+     : thumb16_decode (fixture_bytes 4096) = T_PUSH 16 true
+Closed under the global context
+decode_pop
+     : thumb16_decode (fixture_bytes 4110) = T_POP 16 true
+Closed under the global context
+decode_bl
+     : thumb32_decode (fixture_bytes 4106) (fixture_bytes 4108) = T_BL 6
+Closed under the global context
+decode_bx
+     : thumb16_decode (all_bytes 4118) = T_BX 14
+Closed under the global context
+invalid_decode
+     : thumb16_decode 56832 = T_Invalid /\
+       thumb32_decode 65535 65535 = T_Invalid
+Closed under the global context
+addition_wrap_flags
+     : map (get_result (instruction 4120) (regs 4294967295 1 0))
+         (R_R0 :: F_N :: F_Z :: F_C :: F_V :: nil) =
+       Some 0 :: Some 0 :: Some 1 :: Some 1 :: Some 0 :: nil
+Closed under the global context
+addition_signed_overflow
+     : map (get_result (instruction 4120) (regs 2147483647 1 0))
+         (R_R0 :: F_N :: F_Z :: F_C :: F_V :: nil) =
+       Some 2147483648 :: Some 1 :: Some 0 :: Some 0 :: Some 1 :: nil
+Closed under the global context
+subtraction_borrow_flags
+     : map (get_result (instruction 4122) (regs 0 1 0))
+         (R_R0 :: F_N :: F_Z :: F_C :: F_V :: nil) =
+       Some 4294967295 :: Some 1 :: Some 0 :: Some 0 :: Some 0 :: nil
+Closed under the global context
+adc_carry_in
+     : get_result (instruction 4124) (regs 4294967295 0 1) R_R0 = Some 0 /\
+       get_result (instruction 4124) (regs 4294967295 0 1) F_C = Some 1
+Closed under the global context
+sbc_borrow_in
+     : get_result (instruction 4126) (regs 0 0 0) R_R0 = Some 4294967295 /\
+       get_result (instruction 4126) (regs 0 0 0) F_C = Some 0
+Closed under the global context
+shift_zero_preserves_carry
+     : get_result (instruction 4128) (regs 2147483649 0 1) F_C = Some 1
+Closed under the global context
+shift_32_carry
+     : get_result (instruction 4128) (regs 2147483649 32 0) F_C = Some 1 /\
+       get_result (instruction 4130) (regs 2147483649 32 0) F_C = Some 1 /\
+       get_result (instruction 4132) (regs 2147483649 255 0) R_R0 =
+       Some 4294967295 /\
+       get_result (instruction 4134) (regs 2147483649 32 0) R_R0 =
+       Some 2147483649
+Closed under the global context
+forward_bl_link
+     : get_result (instruction 4106) (regs 0 0 0) R_LR = Some 4111 /\
+       get_exit (instruction 4106) (regs 0 0 0) = Some (Addr 4116)
+Closed under the global context
+backward_bl_link
+     : get_result (instruction 4136) (regs 0 0 0) R_LR = Some 4141 /\
+       get_exit (instruction 4136) (regs 0 0 0) = Some (Addr 4116)
+Closed under the global context
+bx_thumb_and_fault
+     : get_exit (instruction 4118)
+         (fun v : var => match v with
+                         | R_LR => 4111
+                         | _ => 0
+                         end) =
+       Some (Addr 4110) /\
+       get_exit (instruction 4118)
+         (fun v : var => match v with
+                         | R_LR => 4110
+                         | _ => 0
+                         end) =
+       Some (Raise 3)
+Closed under the global context
+push_order
+     : match run (instruction 4096) stack_state with
+       | Some (s, x) =>
+           (s R_SP, getmem 32 LittleE 4 (s V_MEM32) 24,
+            getmem 32 LittleE 4 (s V_MEM32) 28, x)
+       | None => (0, 0, 0, Some (Raise 0))
+       end = (24, 305419896, 4111, None)
+Closed under the global context
+pop_order_return
+     : match run (instruction 4110) after_push with
+       | Some (s, x) => (s R_SP, s R_R4, x)
+       | None => (0, 0, None)
+       end = (32, 305419896, Some (Addr 4110))
+Closed under the global context
+fixture_bytes_decode_check
+     : forallb
+         (fun a : addr =>
+          match
+            (if is_32bit_insn (fixture_bytes a)
+             then thumb32_decode (fixture_bytes a) (fixture_bytes (a + 2))
+             else thumb16_decode (fixture_bytes a))
+          with
+          | T_Invalid => false
+          | _ => true
+          end)
+         fixture_bytes_entries =
+       true
+Closed under the global context
+fixture_bytes_welltyped
+     : welltyped_prog armv6mtypctx fixture_bytes_prog
+Closed under the global context
+all_bytes_decode_check
+     : forallb
+         (fun a : addr =>
+          match
+            (if is_32bit_insn (all_bytes a)
+             then thumb32_decode (all_bytes a) (all_bytes (a + 2))
+             else thumb16_decode (all_bytes a))
+          with
+          | T_Invalid => false
+          | _ => true
+          end)
+         all_bytes_entries =
+       true
+Closed under the global context
+all_bytes_welltyped
+     : welltyped_prog armv6mtypctx all_bytes_prog
+Closed under the global context

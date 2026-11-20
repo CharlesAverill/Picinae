@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-856859c4
+COMMAND=bash -e -c git\ ls-remote\ --heads\ fork\ refs/heads/llm-proofs/r01-list-item-fix\;\ git\ show\ -s\ --format=\"%H\ %P\ %s\"\ 71470bffba65392adf1873a3df9f0cf0ca4f1ac9\;\ git\ reflog\ -n\ 4\ --format=\"%H\ %gs\"
+fatal: unable to access 'https://github.com/CharlesDardaman/Picinae.git/': Could not resolve host: github.com
+
+EXIT_CODE=128
