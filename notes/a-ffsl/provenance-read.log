@@ -1,0 +1,295 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1290b26e
+COMMAND=python3 -c import\ json\;\ from\ pathlib\ import\ Path\;\ p=Path\(\"/home/charles/.t3/worktrees/Picinae/t3-0672c15b/Examples/claude/inventory/e02-arm-inventory/evidence\"\)\;\ data=json.loads\(\(p/\"ghidra-audit.json\"\).read_text\(\)\)\;\ print\(\"Evidence\ source:\"\,p\)\;\ rows=\[r\ for\ r\ in\ data\ if\ r.get\(\"function\"\)\ in\ \(\"ffsl\"\,\"ffsll\"\)\]\;\ print\(json.dumps\(rows\,indent=2\)\)\;\ assert\ len\(rows\)==36\ and\ all\(r\[\"match\"\]\ for\ r\ in\ rows\)
+Evidence source: /home/charles/.t3/worktrees/Picinae/t3-0672c15b/Examples/claude/inventory/e02-arm-inventory/evidence
+[
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b10",
+    "expected": "mov x1,x0",
+    "actual": "mov x1,x0",
+    "bytes": "e10300aa",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b14",
+    "expected": "neg x0,x0",
+    "actual": "neg x0,x0",
+    "bytes": "e00300cb",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b18",
+    "expected": "and x0,x0,x1",
+    "actual": "and x0,x0,x1",
+    "bytes": "0000018a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b1c",
+    "expected": "orr x2,xzr,#0xffffffff",
+    "actual": "orr x2,xzr,#0xffffffff",
+    "bytes": "e27f40b2",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b20",
+    "expected": "cmp x0,x2",
+    "actual": "cmp x0,x2",
+    "bytes": "1f0002eb",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b24",
+    "expected": "b.hi 0x00194b3c",
+    "actual": "b.hi 0x00194b3c",
+    "bytes": "c8000054",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b28",
+    "expected": "rbit w0,w1",
+    "actual": "rbit w0,w1",
+    "bytes": "2000c05a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b2c",
+    "expected": "cmp w1,#0x0",
+    "actual": "cmp w1,#0x0",
+    "bytes": "3f000071",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b30",
+    "expected": "clz w0,w0",
+    "actual": "clz w0,w0",
+    "bytes": "0010c05a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b34",
+    "expected": "csinc w0,wzr,w0,eq",
+    "actual": "csinc w0,wzr,w0,eq",
+    "bytes": "e007801a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b38",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b3c",
+    "expected": "asr x1,x1,#0x20",
+    "actual": "asr x1,x1,#0x20",
+    "bytes": "21fc6093",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b40",
+    "expected": "rbit w0,w1",
+    "actual": "rbit w0,w1",
+    "bytes": "2000c05a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b44",
+    "expected": "cmp w1,#0x0",
+    "actual": "cmp w1,#0x0",
+    "bytes": "3f000071",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b48",
+    "expected": "clz w0,w0",
+    "actual": "clz w0,w0",
+    "bytes": "0010c05a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b4c",
+    "expected": "csinc w0,wzr,w0,eq",
+    "actual": "csinc w0,wzr,w0,eq",
+    "bytes": "e007801a",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b50",
+    "expected": "add w0,w0,#0x20",
+    "actual": "add w0,w0,#0x20",
+    "bytes": "00800011",
+    "match": true
+  },
+  {
+    "function": "ffsl",
+    "ghidra_address": "0x00194b54",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b10",
+    "expected": "mov x1,x0",
+    "actual": "mov x1,x0",
+    "bytes": "e10300aa",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b14",
+    "expected": "neg x0,x0",
+    "actual": "neg x0,x0",
+    "bytes": "e00300cb",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b18",
+    "expected": "and x0,x0,x1",
+    "actual": "and x0,x0,x1",
+    "bytes": "0000018a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b1c",
+    "expected": "orr x2,xzr,#0xffffffff",
+    "actual": "orr x2,xzr,#0xffffffff",
+    "bytes": "e27f40b2",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b20",
+    "expected": "cmp x0,x2",
+    "actual": "cmp x0,x2",
+    "bytes": "1f0002eb",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b24",
+    "expected": "b.hi 0x00194b3c",
+    "actual": "b.hi 0x00194b3c",
+    "bytes": "c8000054",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b28",
+    "expected": "rbit w0,w1",
+    "actual": "rbit w0,w1",
+    "bytes": "2000c05a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b2c",
+    "expected": "cmp w1,#0x0",
+    "actual": "cmp w1,#0x0",
+    "bytes": "3f000071",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b30",
+    "expected": "clz w0,w0",
+    "actual": "clz w0,w0",
+    "bytes": "0010c05a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b34",
+    "expected": "csinc w0,wzr,w0,eq",
+    "actual": "csinc w0,wzr,w0,eq",
+    "bytes": "e007801a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b38",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b3c",
+    "expected": "asr x1,x1,#0x20",
+    "actual": "asr x1,x1,#0x20",
+    "bytes": "21fc6093",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b40",
+    "expected": "rbit w0,w1",
+    "actual": "rbit w0,w1",
+    "bytes": "2000c05a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b44",
+    "expected": "cmp w1,#0x0",
+    "actual": "cmp w1,#0x0",
+    "bytes": "3f000071",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b48",
+    "expected": "clz w0,w0",
+    "actual": "clz w0,w0",
+    "bytes": "0010c05a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b4c",
+    "expected": "csinc w0,wzr,w0,eq",
+    "actual": "csinc w0,wzr,w0,eq",
+    "bytes": "e007801a",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b50",
+    "expected": "add w0,w0,#0x20",
+    "actual": "add w0,w0,#0x20",
+    "bytes": "00800011",
+    "match": true
+  },
+  {
+    "function": "ffsll",
+    "ghidra_address": "0x00194b54",
+    "expected": "ret",
+    "actual": "ret",
+    "bytes": "c0035fd6",
+    "match": true
+  }
+]
+
+EXIT_CODE=0

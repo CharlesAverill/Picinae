@@ -1,0 +1,359 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=bash notes/a-ffsl-fix/debug.sh
+Chars 0 - 83 [Require~Import~Picinae_armv8~f...] 0.233 secs (0.124u,0.114s)
+Chars 84 - 134 [From~Stdlib~Require~Import~NAr...] 0.026 secs (0.018u,0.008s)
+Chars 135 - 170 [Import~ARM8Notations~ListNotat...] 0. secs (0.u,0.s)
+Chars 171 - 184 [Open~Scope~N.] 0. secs (0.u,0.s)
+Chars 185 - 267 [Lemma~ffsl_asr_upper~:~~~foral...] 0.001 secs (0.u,0.s)
+Chars 268 - 274 [Proof.] 0. secs (0.u,0.s)
+Chars 277 - 285 [intro~x.] 0. secs (0.u,0.s)
+Chars 286 - 303 [apply~N.bits_inj.] 0. secs (0.u,0.s)
+Chars 304 - 312 [intro~i.] 0. secs (0.u,0.s)
+Chars 315 - 369 [rewrite~!Nmod_pow2_bits,~ashif...] 0.002 secs (0.001u,0.001s)
+Chars 372 - 408 [destruct~(N.ltb_spec~i~32)~as~...] 0.001 secs (0.u,0.001s)
+Chars 411 - 412 [-] 0. secs (0.u,0.s)
+Chars 413 - 479 [rewrite~(proj2~(N.ltb_lt~i~64)...] 0.015 secs (0.008u,0.007s)
+Chars 480 - 492 [reflexivity.] 0. secs (0.u,0.s)
+Chars 495 - 496 [-] 0. secs (0.u,0.s)
+Chars 497 - 509 [reflexivity.] 0. secs (0.u,0.s)
+Chars 510 - 514 [Qed.] 0.006 secs (0.006u,0.s)
+Chars 661 - 816 [Lemma~ffsl_isolate~:~~~forall~...] 0.001 secs (0.001u,0.s)
+Chars 817 - 823 [Proof.] 0. secs (0.u,0.s)
+Chars 826 - 846 [intros~x~k~XL~K~B~L.] 0. secs (0.u,0.s)
+Chars 849 - 922 [assert~(NZ~:~x~<>~0)~by~(intro...] 0.001 secs (0.001u,0.s)
+Chars 925 - 999 [assert~(PK~:~0~<~2~^~k)~by~(ap...] 0. secs (0.u,0.s)
+Chars 1002 - 1040 [assert~(XM~:~x~mod~2~^~N.succ~...] 0. secs (0.u,0.s)
+Chars 1043 - 1044 [{] 0. secs (0.u,0.s)
+Chars 1045 - 1062 [apply~N.bits_inj.] 0. secs (0.u,0.s)
+Chars 1063 - 1071 [intro~j.] 0. secs (0.u,0.s)
+Chars 1072 - 1112 [rewrite~Nmod_pow2_bits,~N.pow2...] 0. secs (0.u,0.s)
+Chars 1117 - 1161 [destruct~(N.ltb_spec~j~(N.succ...] 0. secs (0.u,0.s)
+Chars 1166 - 1167 [-] 0. secs (0.u,0.s)
+Chars 1168 - 1203 [destruct~(N.eq_dec~j~k)~as~[->...] 0. secs (0.u,0.s)
+Chars 1210 - 1211 [+] 0. secs (0.u,0.s)
+Chars 1212 - 1234 [rewrite~B,~N.eqb_refl.] 0. secs (0.u,0.s)
+Chars 1235 - 1247 [reflexivity.] 0. secs (0.u,0.s)
+Chars 1254 - 1255 [+] 0. secs (0.u,0.s)
+Chars 1256 - 1273 [rewrite~L~by~lia.] 0.012 secs (0.006u,0.006s)
+Chars 1274 - 1317 [rewrite~(proj2~(N.eqb_neq~k~j)...] 0.098 secs (0.09u,0.009s)
+Chars 1318 - 1330 [reflexivity.] 0. secs (0.u,0.s)
+Chars 1335 - 1336 [-] 0. secs (0.u,0.s)
+Chars 1337 - 1380 [rewrite~(proj2~(N.eqb_neq~k~j)...] 0.013 secs (0.012u,0.001s)
+Chars 1381 - 1393 [reflexivity.] 0. secs (0.u,0.s)
+Chars 1394 - 1395 [}] 0. secs (0.u,0.s)
+Chars 1398 - 1454 [assert~(D~:~x~=~2~^~k~+~x~/~2~...] 0. secs (0.u,0.s)
+Chars 1457 - 1458 [{] 0. secs (0.u,0.s)
+Chars 1459 - 1551 [pose~proof~~(N.div_mod~x~(2~^~...] 0. secs (0.u,0.s)
+Chars 1556 - 1572 [rewrite~XM~in~D.] 0. secs (0.u,0.s)
+Chars 1573 - 1577 [nia.] 0.055 secs (0.056u,0.s)
+Chars 1578 - 1579 [}] 0. secs (0.u,0.s)
+Chars 1582 - 1652 [assert~(DP~:~x~-~1~=~2~^~k~-~1...] 0.354 secs (0.301u,0.061s)
+Chars 1655 - 1721 [assert~(PL~:~2~^~k~-~1~<~2~^~N...] 0.064 secs (0.066u,0.s)
+Chars 1724 - 1768 [assert~(PM~:~(x~-~1)~mod~2~^~N...] 0. secs (0.u,0.s)
+Chars 1771 - 1772 [{] 0. secs (0.u,0.s)
+File "./notes/a-ffsl-fix/Debug.v", line 39, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./notes/a-ffsl-fix/Debug.v", line 39, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./notes/a-ffsl-fix/Debug.v", line 39, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+Chars 1773 - 1834 [rewrite~DP,~N.mod_add~by~(appl...] 0. secs (0.u,0.s)
+Chars 1839 - 1857 [apply~N.mod_small.] 0. secs (0.u,0.s)
+Chars 1858 - 1867 [exact~PL.] 0. secs (0.u,0.s)
+Chars 1868 - 1869 [}] 0. secs (0.u,0.s)
+Chars 1872 - 1925 [assert~(DQ~:~(x~-~1)~/~2~^~N.s...] 0. secs (0.u,0.s)
+Chars 1928 - 1929 [{] 0. secs (0.u,0.s)
+Chars 1930 - 1991 [rewrite~DP,~N.div_add~by~(appl...] 0. secs (0.u,0.s)
+Chars 1996 - 2028 [rewrite~N.div_small~by~exact~PL.] 0. secs (0.u,0.s)
+Chars 2029 - 2041 [reflexivity.] 0. secs (0.u,0.s)
+Chars 2042 - 2043 [}] 0. secs (0.u,0.s)
+Chars 2046 - 2090 [assert~(NEG~:~msub~64~0~x~=~N....] 0. secs (0.u,0.s)
+Chars 2093 - 2094 [{] 0. secs (0.u,0.s)
+Chars 2095 - 2109 [clear~-~XL~NZ.] 0. secs (0.u,0.s)
+Chars 2110 - 2156 [rewrite~msub_0_l,~(N.mod_small...] 0. secs (0.u,0.s)
+Chars 2161 - 2188 [rewrite~N.mod_small~by~lia.] 0.002 secs (0.002u,0.s)
+Chars 2193 - 2230 [rewrite~N.lnot_sub_low,~N.ones...] 0. secs (0.u,0.s)
+Chars 2235 - 2236 [-] 0. secs (0.u,0.s)
+Chars 2237 - 2241 [lia.] 0.003 secs (0.003u,0.s)
+Chars 2246 - 2247 [-] 0. secs (0.u,0.s)
+Chars 2248 - 2285 [destruct~(N.eq_dec~(x~-~1)~0)~...] 0. secs (0.u,0.s)
+Chars 2292 - 2293 [+] 0. secs (0.u,0.s)
+Chars 2294 - 2304 [rewrite~E.] 0. secs (0.u,0.s)
+Chars 2305 - 2317 [reflexivity.] 0. secs (0.u,0.s)
+Chars 2324 - 2325 [+] 0. secs (0.u,0.s)
+Chars 2326 - 2352 [apply~N.log2_lt_pow2;~lia.] 0.003 secs (0.003u,0.s)
+Chars 2353 - 2354 [}] 0. secs (0.u,0.s)
+Chars 2357 - 2369 [rewrite~NEG.] 0. secs (0.u,0.s)
+Chars 2370 - 2387 [apply~N.bits_inj.] 0. secs (0.u,0.s)
+Chars 2388 - 2396 [intro~i.] 0. secs (0.u,0.s)
+Chars 2399 - 2436 [rewrite~N.land_spec,~N.pow2_bi...] 0. secs (0.u,0.s)
+Chars 2439 - 2478 [destruct~(N.lt_ge_cases~i~64)~...] 0. secs (0.u,0.s)
+Chars 2481 - 2482 [-] 0. secs (0.u,0.s)
+Chars 2483 - 2518 [rewrite~N.lnot_spec_low~by~exa...] 0. secs (0.u,0.s)
+Chars 2523 - 2570 [destruct~(N.lt_trichotomy~i~k)...] 0. secs (0.u,0.s)
+Chars 2575 - 2576 [+] 0. secs (0.u,0.s)
+Chars 2577 - 2599 [rewrite~L~by~exact~IK.] 0. secs (0.u,0.s)
+Chars 2600 - 2682 [rewrite~~(proj2~(N.eqb_neq~k~i...] 0.001 secs (0.001u,0.s)
+Chars 2689 - 2713 [apply~Bool.andb_false_r.] 0. secs (0.u,0.s)
+Chars 2718 - 2719 [+] 0. secs (0.u,0.s)
+Chars 2720 - 2728 [subst~i.] 0. secs (0.u,0.s)
+Chars 2729 - 2751 [rewrite~B,~N.eqb_refl.] 0. secs (0.u,0.s)
+Chars 2758 - 2796 [assert~(P~:~N.testbit~(x~-~1)~...] 0. secs (0.u,0.s)
+Chars 2803 - 2804 [{] 0. secs (0.u,0.s)
+Chars 2805 - 2857 [pose~proof~(Nmod_pow2_bits~(x~...] 0. secs (0.u,0.s)
+Chars 2866 - 2882 [rewrite~PM~in~T.] 0. secs (0.u,0.s)
+Chars 2891 - 2959 [replace~(2~^~k~-~1)~with~(N.on...] 1.398 secs (1.435u,0.s)
+Chars 2968 - 3049 [rewrite~N.ones_spec_high,~(pro...] 1.56 secs (1.602u,0.s)
+Chars 3058 - 3069 [simpl~in~T.] 0. secs (0.u,0.s)
+Chars 3070 - 3079 [symmetry.] 0. secs (0.u,0.s)
+Chars 3080 - 3088 [exact~T.] 0. secs (0.u,0.s)
+Chars 3089 - 3090 [}] 0. secs (0.u,0.s)
+Chars 3097 - 3107 [rewrite~P.] 0. secs (0.u,0.s)
+Chars 3108 - 3120 [reflexivity.] 0. secs (0.u,0.s)
+Chars 3125 - 3126 [+] 0. secs (0.u,0.s)
+Chars 3127 - 3209 [rewrite~~(proj2~(N.eqb_neq~k~i...] 0.001 secs (0.001u,0.s)
+Chars 3216 - 3262 [assert~(P~:~N.testbit~(x~-~1)~...] 0. secs (0.u,0.s)
+Chars 3269 - 3270 [{] 0. secs (0.u,0.s)
+Chars 3271 - 3331 [replace~i~with~(i~-~N.succ~k~+...] 0.001 secs (0.001u,0.s)
+Chars 3340 - 3455 [rewrite~<-~(N.shiftr_spec'~(x~...] 0. secs (0.u,0.s)
+Chars 3464 - 3495 [rewrite~!N.shiftr_div_pow2,~DQ.] 0. secs (0.u,0.s)
+Chars 3496 - 3508 [reflexivity.] 0. secs (0.u,0.s)
+Chars 3509 - 3510 [}] 0. secs (0.u,0.s)
+Chars 3517 - 3527 [rewrite~P.] 0. secs (0.u,0.s)
+Chars 3528 - 3566 [destruct~(N.testbit~x~i);~refl...] 0. secs (0.u,0.s)
+Chars 3569 - 3570 [-] 0. secs (0.u,0.s)
+Chars 3571 - 3611 [rewrite~(bound_hibits_zero~64~...] 0. secs (0.u,0.s)
+Chars 3616 - 3698 [rewrite~~(proj2~(N.eqb_neq~k~i...] 0.002 secs (0.002u,0.s)
+Chars 3699 - 3723 [apply~Bool.andb_false_r.] 0. secs (0.u,0.s)
+Chars 3724 - 3728 [Qed.] 0.097 secs (0.1u,0.s)
+Chars 3730 - 3820 [Definition~ffsl_half~(x~:~N)~:...] 0. secs (0.u,0.s)
+Chars 3822 - 3950 [Definition~ffsl_value~(x~:~N)~...] 0. secs (0.u,0.s)
+Chars 3952 - 4024 [Lemma~ffsl_value_spec~:~forall...] 0. secs (0.u,0.s)
+Chars 4025 - 4031 [Proof.] 0. secs (0.u,0.s)
+Chars 4034 - 4046 [intros~x~XL.] 0. secs (0.u,0.s)
+Chars 4047 - 4082 [destruct~(N.eq_dec~x~0)~as~[->...] 0. secs (0.u,0.s)
+Chars 4085 - 4086 [-] 0. secs (0.u,0.s)
+Chars 4087 - 4098 [vm_compute.] 0. secs (0.u,0.s)
+Chars 4099 - 4105 [tauto.] 0.001 secs (0.001u,0.s)
+Chars 4108 - 4109 [-] 0. secs (0.u,0.s)
+Chars 4110 - 4169 [destruct~(ffsl_lowest_set_bit~...] 0. secs (0.u,0.s)
+Chars 4174 - 4192 [unfold~ffsl_value.] 0. secs (0.u,0.s)
+Chars 4193 - 4229 [rewrite~(ffsl_isolate~x~k~XL~K...] 0. secs (0.u,0.s)
+Chars 4234 - 4275 [destruct~(N.lt_ge_cases~k~32)~...] 0. secs (0.u,0.s)
+Chars 4280 - 4281 [+] 0. secs (0.u,0.s)
+Chars 4282 - 4322 [assert~(P~:~(0xffffffff~<?~2~^...] 0. secs (0.u,0.s)
+Chars 4329 - 4330 [{] 0. secs (0.u,0.s)
+Chars 4331 - 4346 [apply~N.ltb_ge.] 0. secs (0.u,0.s)
+Chars 4347 - 4414 [pose~proof~(N.pow_le_mono_r~2~...] 0.003 secs (0.003u,0.s)
+Chars 4423 - 4458 [change~(2~^~31)~with~214748364...] 0. secs (0.u,0.s)
+Chars 4459 - 4463 [lia.] 0.005 secs (0.005u,0.s)
+Chars 4464 - 4465 [}] 0. secs (0.u,0.s)
+Chars 4472 - 4482 [rewrite~P.] 0. secs (0.u,0.s)
+Chars 4483 - 4500 [unfold~ffsl_half.] 0. secs (0.u,0.s)
+Chars 4507 - 4535 [assert~(M~:~x~mod~2~^~32~<>~0).] 0. secs (0.u,0.s)
+Chars 4542 - 4543 [{] 0. secs (0.u,0.s)
+Chars 4544 - 4552 [intro~E.] 0. secs (0.u,0.s)
+Chars 4553 - 4593 [pose~proof~(Nmod_pow2_bits~x~3...] 0. secs (0.u,0.s)
+Chars 4602 - 4657 [rewrite~E,~N.bits_0,~(proj2~(N...] 0. secs (0.u,0.s)
+Chars 4658 - 4671 [discriminate.] 0. secs (0.u,0.s)
+Chars 4672 - 4673 [}] 0. secs (0.u,0.s)
+Chars 4680 - 4742 [rewrite~(proj2~(N.eqb_neq~_~_)...] 0. secs (0.u,0.s)
+Chars 4749 - 4766 [unfold~ffsl_spec.] 0. secs (0.u,0.s)
+Chars 4767 - 4797 [replace~(k~+~1~-~1)~with~k~by~...] 0.066 secs (0.068u,0.s)
+Chars 4804 - 4818 [split;~[~lia~|~~].] 0.046 secs (0.047u,0.s)
+Chars 4819 - 4828 [intros~_.] 0.001 secs (0.001u,0.s)
+Chars 4829 - 4853 [repeat~split;~auto;~lia.] 0.261 secs (0.268u,0.s)
+Chars 4858 - 4859 [+] 0. secs (0.u,0.s)
+Chars 4860 - 4899 [assert~(P~:~(0xffffffff~<?~2~^...] 0. secs (0.u,0.s)
+Chars 4906 - 4907 [{] 0. secs (0.u,0.s)
+Chars 4908 - 4923 [apply~N.ltb_lt.] 0. secs (0.u,0.s)
+Chars 4924 - 4983 [pose~proof~(N.pow_le_mono_r~2~...] 0. secs (0.u,0.s)
+Chars 4992 - 5027 [change~(2~^~32)~with~429496729...] 0. secs (0.u,0.s)
+Chars 5028 - 5032 [lia.] 0.005 secs (0.006u,0.s)
+Chars 5033 - 5034 [}] 0. secs (0.u,0.s)
+Chars 5041 - 5051 [rewrite~P.] 0. secs (0.u,0.s)
+Chars 5052 - 5069 [unfold~ffsl_half.] 0. secs (0.u,0.s)
+Chars 5070 - 5093 [rewrite~ffsl_asr_upper.] 0. secs (0.u,0.s)
+Chars 5100 - 5155 [assert~(UB~:~N.testbit~(ashift...] 0. secs (0.u,0.s)
+Chars 5162 - 5163 [{] 0. secs (0.u,0.s)
+Chars 5164 - 5249 [rewrite~ashiftr_spec,~(proj2~(...] 0.064 secs (0.066u,0.s)
+Chars 5258 - 5290 [replace~(k~-~32~+~32)~with~k~b...] 0.023 secs (0.023u,0.s)
+Chars 5291 - 5299 [exact~B.] 0. secs (0.u,0.s)
+Chars 5300 - 5301 [}] 0. secs (0.u,0.s)
+Chars 5308 - 5381 [assert~(UL~:~forall~j,~j~<~k~-...] 0.002 secs (0.002u,0.s)
+Chars 5388 - 5389 [{] 0. secs (0.u,0.s)
+Chars 5390 - 5401 [intros~j~J.] 0. secs (0.u,0.s)
+Chars 5402 - 5482 [rewrite~ashiftr_spec,~(proj2~(...] 0.095 secs (0.098u,0.s)
+Chars 5491 - 5499 [apply~L.] 0. secs (0.u,0.s)
+Chars 5500 - 5504 [lia.] 0.05 secs (0.051u,0.s)
+Chars 5505 - 5506 [}] 0. secs (0.u,0.s)
+Chars 5513 - 5549 [assert~(M~:~(x~>>~32)~mod~2~^~...] 0.002 secs (0.002u,0.s)
+Chars 5556 - 5557 [{] 0. secs (0.u,0.s)
+Chars 5558 - 5566 [intro~E.] 0. secs (0.u,0.s)
+Chars 5567 - 5628 [pose~proof~(Nmod_pow2_bits~(as...] 0.001 secs (0.001u,0.s)
+Chars 5637 - 5733 [rewrite~ffsl_asr_upper,~E,~N.b...] 0.19 secs (0.195u,0.s)
+Chars 5734 - 5747 [discriminate.] 0. secs (0.u,0.s)
+Chars 5748 - 5749 [}] 0. secs (0.u,0.s)
+Chars 5756 - 5841 [rewrite~(proj2~(N.eqb_neq~_~_)...] 0.098 secs (0.1u,0.s)
+Chars 5848 - 5865 [unfold~ffsl_spec.] 0. secs (0.u,0.s)
+Chars 5866 - 5904 [replace~(32~+~(k~-~32~+~1)~-~1...] 0.049 secs (0.05u,0.s)
+Chars 5911 - 5925 [split;~[~lia~|~~].] 0.05 secs (0.051u,0.s)
+Chars 5926 - 5935 [intros~_.] 0. secs (0.u,0.s)
+Chars 5936 - 5960 [repeat~split;~auto;~lia.] 0.446 secs (0.458u,0.s)
+Chars 5961 - 5965 [Qed.] 0.168 secs (0.172u,0.s)
+Chars 5967 - 6104 [Lemma~ffsl_branch~:~~~forall~y...] 0. secs (0.u,0.s)
+Chars 6105 - 6111 [Proof.] 0. secs (0.u,0.s)
+Chars 6114 - 6122 [intro~y.] 0. secs (0.u,0.s)
+Chars 6123 - 6251 [destruct~(N.eqb_spec~y~4294967...] 0.011 secs (0.011u,0.s)
+Chars 6252 - 6256 [Qed.] 0.002 secs (0.002u,0.s)
+Chars 6258 - 6509 [Theorem~ffsl_correct~:~~~foral...] 0. secs (0.001u,0.s)
+Chars 6510 - 6516 [Proof.] 0. secs (0.u,0.s)
+Chars 6519 - 6526 [intros.] 0. secs (0.u,0.s)
+Chars 6527 - 6544 [apply~prove_invs.] 0. secs (0.u,0.s)
+Chars 6547 - 6553 [simpl.] 0. secs (0.u,0.s)
+Chars 6554 - 6568 [rewrite~ENTRY.] 0. secs (0.u,0.s)
+Goal at < 0 >
+Chars 6569 - 6579 [arm8_step.] 0.008 secs (0.009u,0.s)
+Chars 6580 - 6605 [repeat~split;~assumption.] 0. secs (0.u,0.s)
+Chars 6608 - 6615 [intros.] 0. secs (0.u,0.s)
+Chars 6618 - 6668 [erewrite~startof_prefix~in~ENT...] 0. secs (0.u,0.s)
+Chars 6671 - 6715 [eapply~models_at_invariant;~tr...] 0. secs (0.u,0.s)
+Chars 6716 - 6737 [apply~ffsl_welltyped.] 0. secs (0.u,0.s)
+Chars 6738 - 6749 [intro~MDL1.] 0. secs (0.u,0.s)
+Chars 6752 - 6769 [clear~-~PRE~MDL1.] 0. secs (0.u,0.s)
+Chars 6770 - 6787 [rename~t1~into~t.] 0. secs (0.u,0.s)
+Chars 6790 - 6810 [destruct_inv~64~PRE.] 0.009 secs (0.009u,0.s)
+Chars 6813 - 6841 [destruct~PRE~as~[X~[SP~LR]].] 0. secs (0.u,0.s)
+Chars 6844 - 6915 [assert~(XL~:~x~<~2~^~64)~by~(r...] 0. secs (0.u,0.s)
+Chars 6918 - 6960 [pose~proof~(ffsl_value_spec~x~...] 0. secs (0.u,0.s)
+Goal at < 40 >
+Goal at < 40 >
+Goal at < 68 >
+Goal at < 68 >
+Chars 6963 - 6980 [repeat~arm8_step.] 11.705 secs (12.009u,0.02s)
+Chars 6983 - 7038 [all:~unfold~postcondition;~spl...] 0.002 secs (0.002u,0.s)
+Chars 7041 - 7062 [all:~rewrite~?X~in~*.] 0.006 secs (0.006u,0.s)
+Chars 7065 - 7096 [all:~rewrite~ffsl_branch~in~BC.] 0. secs (0.u,0.s)
+Chars 7099 - 7180 [all:~destruct~(4294967295~<?~m...] 0.022 secs (0.022u,0.s)
+Chars 7183 - 7253 [all:~unfold~ffsl_value,~ffsl_h...] 0.001 secs (0.001u,0.s)
+Chars 7256 - 7276 [all:~try~exact~SPEC.] 0. secs (0.u,0.s)
+Chars 7279 - 7455 [all:~~lazymatch~goal~with~~|~S...] 0.853 secs (0.875u,0.s)
+File "./notes/a-ffsl-fix/Debug.v", line 159, characters 12-13:
+Error:
+In environment
+x, sp, lr : N
+t : list (exit * store)
+s1 : store
+X : s1 R_X0 = x
+SP : s1 R_SP = sp
+LR : s1 R_X30 = lr
+MDL1 : models archtyps s1
+XL : x < 2 ^ 64
+SPEC : ffsl_spec x (1 + (32 - N.size (rbit32 x)))
+ROUTE : (4294967295 <? 0 ⊖ x .& x) = false
+BC : 0 = 0
+BC0 : (x mod 2 ^ 32 =? 0) = false
+t0 : list (exit * store)
+Unable to unify
+ "((((((((x .& 2863311530) >> 1 .| (x .& 1431655765) << 1) .& 3435973836) >>
+       2
+       .| (((x .& 715827882) >> 1 .| (x .& 357913941) << 1) .& 858993459) <<
+          2)
+      .& 4042322160) >>
+     4
+     .| (((((x .& 178956970) >> 1 .| (x .& 89478485) << 1) .& 214748364) >> 2
+          .| (((x .& 44739242) >> 1 .| (x .& 22369621) << 1) .& 53687091) <<
+             2)
+         .& 252645135) <<
+        4)
+    .& 4278255360) >>
+   8
+   .| (((((((x .& 44739242) >> 1 .| (x .& 22369621) << 1) .& 13421772) >> 2
+          .| (((x .& 2796202) >> 1 .| (x .& 1398101) << 1) .& 3355443) << 2)
+         .& 15790320) >>
+        4
+        .| (((((x .& 699050) >> 1 .| (x .& 349525) << 1) .& 838860) >> 2
+             .| (((x .& 174762) >> 1 .| (x .& 87381) << 1) .& 209715) << 2)
+            .& 986895) <<
+           4)
+       .& 16711935) <<
+      8) >>
+  16
+  .| ((((((((x .& 715827882) >> 1 .| (x .& 357913941) << 1) .& 214748364) >>
+          2
+          .| (((x .& 44739242) >> 1 .| (x .& 22369621) << 1) .& 53687091) <<
+             2)
+         .& 15790320) >>
+        4
+        .| (((((x .& 2796202) >> 1 .| (x .& 1398101) << 1) .& 838860) >> 2
+             .| (((x .& 174762) >> 1 .| (x .& 87381) << 1) .& 209715) << 2)
+            .& 986895) <<
+           4)
+       .& 65280) >>
+      8
+      .| (((((((x .& 10922) >> 1 .| (x .& 5461) << 1) .& 3276) >> 2
+             .| (((x .& 682) >> 1 .| (x .& 341) << 1) .& 819) << 2)
+            .& 240) >>
+           4
+           .| (((((x .& 42) >> 1 .| (x .& 21) << 1) .& 12) >> 2
+                .| (((x .& 2) >> 1 .| (x .& 1) << 1) .& 3) << 2)
+               .& 15) <<
+              4)
+          .& 255) <<
+         8) <<
+     16"
+with
+ "(((((((((x .& 2863311530) >> 1 .| (x .& 1431655765) << 1) .& 3435973836) >>
+        2
+        .| (((x .& 715827882) >> 1 .| (x .& 357913941) << 1) .& 858993459) <<
+           2)
+       .& 4042322160) >>
+      4
+      .| (((((x .& 178956970) >> 1 .| (x .& 89478485) << 1) .& 214748364) >>
+           2
+           .| (((x .& 44739242) >> 1 .| (x .& 22369621) << 1) .& 53687091) <<
+              2)
+          .& 252645135) <<
+         4)
+     .& 4278255360) >>
+    8
+    .| (((((((x .& 11184810) >> 1 .| (x .& 5592405) << 1) .& 13421772) >> 2
+           .| (((x .& 2796202) >> 1 .| (x .& 1398101) << 1) .& 3355443) << 2)
+          .& 15790320) >>
+         4
+         .| (((((x .& 699050) >> 1 .| (x .& 349525) << 1) .& 838860) >> 2
+              .| (((x .& 174762) >> 1 .| (x .& 87381) << 1) .& 209715) << 2)
+             .& 986895) <<
+            4)
+        .& 16711935) <<
+       8) >>
+   16
+   .| ((((((((x .& 43690) >> 1 .| (x .& 21845) << 1) .& 52428) >> 2
+           .| (((x .& 10922) >> 1 .| (x .& 5461) << 1) .& 13107) << 2)
+          .& 61680) >>
+         4
+         .| (((((x .& 2730) >> 1 .| (x .& 1365) << 1) .& 3276) >> 2
+              .| (((x .& 682) >> 1 .| (x .& 341) << 1) .& 819) << 2)
+             .& 3855) <<
+            4)
+        .& 65280) >>
+       8
+       .| ((((((x .& 170) >> 1 .| (x .& 85) << 1) .& 204) >> 2
+             .| (((x .& 42) >> 1 .| (x .& 21) << 1) .& 51) << 2)
+            .& 240) >>
+           4
+           .| ((((x .& 10) >> 1 .| (x .& 5) << 1) .& 12) >> 2
+               .| ((x .& 2) >> 1 .| x << 1) << 2) <<
+              4) <<
+          8) <<
+      16)
+  mod 2 ^ 32".
+
+
+EXIT_CODE=1

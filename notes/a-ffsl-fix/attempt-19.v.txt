@@ -1,0 +1,401 @@
+(* ffsl / ffsll (AArch64) -- first set bit of a 64-bit long.
+
+   PROVENANCE
+   Target: /lib/aarch64-linux-gnu/libc.so.6, Ubuntu glibc 2.35-0ubuntu3.15,
+   SHA256 79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06.
+   ELF entry 0x94b10; Ghidra entry 0x194b10; 18 instructions / 72 bytes.
+   Existing Ghidra 11.4.2 + pcode2coq lift, rebased to offset zero, unchanged.
+   e02's external inventory checks instruction text and shared ELF entry;
+   that is provenance evidence, not a proof of the lifter's soundness.
+   The ffsll adapter below checks the actual two generated IL programs.
+   Initial author: OpenAI gpt-6-astra, xhigh. Repair: gpt-6.1-sol, xhigh.
+   Author archive: notes/a-ffsl/; validation: notes/a-ffsl-fix/README.md.
+   This header is not a completion certificate.
+
+   ENGLISH SPECIFICATION / AAPCS64
+   int ffsl(long i); int ffsll(long long i).
+   Input X0 is any 64-bit bit pattern x (signed value toZ 64 x). This includes
+   zero, negative longs and LONG_MIN: no nonzero, sign or path restriction.
+   At either RET, X0 is zero iff x is zero; otherwise X0 is 1 plus the index
+   of the least significant set bit, in [1,64]. Hence the int result W0 is
+   positive and X0 has zero upper 32 bits. Memory, SP, X19-X29, X30 (the
+   actual return register), the model's separate R_LR and Z8-Z15 are unchanged.
+   No pointer, buffer, alignment, overlap, CPU extension or tunable hypothesis
+   is needed. Preconditions are only the ordinary typed ARM8 entry state and
+   entry at rebased offset zero. The model is sequential, with the generated
+   IL as trusted input. satisfies_all is partial correctness at RET, not a
+   termination theorem or a hardware/lifter soundness theorem.
+
+   ALGORITHM
+   Isolate x & -x modulo 2^64. If it exceeds 0xffffffff, use the upper word
+   after ASR X1,#32 and add 32 to its first-bit position. Otherwise use the
+   low word. Both paths reverse 32 bits, CLZ, then CSINC, including zero.
+ *)
+
+Require Import Picinae_armv8 ffsl_arm8 ffsll_arm8 arm8_common.
+Import ARM8Notations.
+From Stdlib Require Import NArith ZArith Lia List.
+Import ListNotations.
+Open Scope N.
+
+Definition ffsl_spec (x r:N) :=
+  (r = 0 <-> x = 0) /\
+  (x <> 0 -> 1 <= r <= 64 /\ N.testbit x (r-1) = true /\
+     forall j, j < r-1 -> N.testbit x j = false).
+
+Definition ffsl_exit (t:trace) :=
+  match t with (Addr 40,_)::_ | (Addr 68,_)::_ => true | _ => false end.
+
+Definition postcondition (x sp lr:N) (s:store) :=
+  ffsl_spec x (s R_X0) /\ s R_SP = sp /\ s R_X30 = lr.
+
+Definition ffsl_invs (x sp lr:N) (t:trace) :=
+  match t with (Addr a,s)::_ => match a with
+  | 0 => Some (s R_X0 = x /\ s R_SP = sp /\ s R_X30 = lr)
+  | 40 | 68 => Some (postcondition x sp lr s)
+  | _ => None
+  end | _ => None end.
+
+Theorem ffsl_nwc: forall s2 s1, ffsl_arm8 s1 = ffsl_arm8 s2.
+Proof. reflexivity. Qed.
+
+Theorem ffsl_welltyped: welltyped_prog arm8typctx ffsl_arm8.
+Proof. exact ffsl_arm8.welltyped. Qed.
+
+Theorem ffsl_ffsll_program_identity: ffsl_arm8 = ffsll_arm8.
+Proof. reflexivity. Qed.
+
+Theorem ffsl_preserves_memory:
+  forall_endstates ffsl_arm8 (fun _ s _ s' => s V_MEM64 = s' V_MEM64).
+Proof. apply noassign_prog_same. prove_noassign. Qed.
+
+Theorem ffsl_preserves_callee_saved:
+  forall v, In v [R_X19; R_X20; R_X21; R_X22; R_X23; R_X24; R_X25;
+                 R_X26; R_X27; R_X28; R_X29; R_X30; R_SP; R_LR;
+                 R_Z8; R_Z9; R_Z10; R_Z11; R_Z12; R_Z13; R_Z14; R_Z15] ->
+  forall_endstates ffsl_arm8 (fun _ s _ s' => s v = s' v).
+Proof.
+  intros v IN. apply noassign_prog_same.
+  repeat destruct IN as [<-|IN]; [prove_noassign..|destruct IN].
+Qed.
+
+(* Entry is inhabited for EVERY possible long; no result is assumed. *)
+Theorem ffsl_entry_satisfiable: forall x, x < 2^64 ->
+  exists s P, models arm8typctx s /\ s R_X0 = x /\
+    ffsl_invs x 0 0 [(Addr 0,s)] = Some P /\ P.
+Proof.
+  intros x XL.
+  exists (fun v => if vareq v R_X0 then x else 0).
+  exists (x = x /\ 0 = 0 /\ 0 = 0).
+  split.
+  - intros v w CV. destruct (vareq v R_X0) as [E|E].
+    + subst v. change (Some 64 = Some w) in CV. inversion CV; subst. exact XL.
+    + apply N.neq_0_lt_0, N.pow_nonzero. discriminate.
+  - repeat split; reflexivity.
+Qed.
+
+(* Architecture-neutral least-set-bit existence, copied from the mathematical
+   argument in amd64_common, without importing that ISA or its modules. *)
+Lemma ffsl_lowest_set_bit:
+  forall n x, x < 2^n -> x <> 0 ->
+  exists k, k < n /\ N.testbit x k = true /\
+    forall j, j < k -> N.testbit x j = false.
+Proof.
+  induction n as [|n IH] using N.peano_ind; intros x LT NZ.
+    change (2^0) with 1 in LT. lia.
+  destruct (N.testbit x 0) eqn:B0.
+    exists 0. split; [lia | split; [assumption | intros; lia]].
+  assert (H2: x = 2 * N.div2 x).
+    pose proof (N.div2_odd x) as D. rewrite <- N.bit0_odd, B0 in D.
+    simpl N.b2n in D. lia.
+  destruct (IH (N.div2 x)) as [k [K [BK LK]]].
+    rewrite N.pow_succ_r' in LT. lia.
+    intro D. rewrite D in H2. lia.
+  rewrite N.div2_div in BK, LK.
+  exists (N.succ k). repeat split.
+    lia.
+    rewrite <- N.div2_bits. exact BK.
+    intros j J. destruct (N.eq_dec j 0) as [->|NZj]. exact B0.
+      replace j with (N.succ (N.pred j)) by lia.
+      rewrite <- N.div2_bits. apply LK. lia.
+Qed.
+
+Theorem ffsl_spec_satisfiable: forall x, x < 2^64 -> exists r, ffsl_spec x r.
+Proof.
+  intros x XL. destruct (N.eq_dec x 0) as [->|NZ].
+  - exists 0. unfold ffsl_spec. split; [tauto|contradiction].
+  - destruct (ffsl_lowest_set_bit 64 x XL NZ) as [k [K [B L]]].
+    exists (k+1). unfold ffsl_spec. split; [lia|]. intros _.
+    replace (k+1-1) with k by lia. repeat split; auto; lia.
+Qed.
+
+(* A mathematical rendering of the five SWAR stages of the existing RBIT
+   instruction, used only as an arithmetic helper, never as replacement code. *)
+Definition rbit32 (x:N) :=
+  let a := ((x .& 0xaaaaaaaa) >> 1) .| ((x .& 0x55555555) << 1) in
+  let b := ((a .& 0xcccccccc) >> 2) .| ((a .& 0x33333333) << 2) in
+  let c := ((b .& 0xf0f0f0f0) >> 4) .| ((b .& 0x0f0f0f0f) << 4) in
+  let d := ((c .& 0xff00ff00) >> 8) .| ((c .& 0x00ff00ff) << 8) in
+  ((d >> 16) .| (d << 16)) mod 2^32.
+
+Lemma rbit32_bound: forall x, rbit32 x < 2^32.
+Proof. intros. unfold rbit32. apply mp2_mod_lt. Qed.
+
+(* Simplify constant masks before visiting the input-bit leaves. *)
+Ltac ffsl_constant_bits :=
+  repeat first
+    [ match goal with |- context [N.testbit (Npos ?p) ?i] =>
+        let b := eval vm_compute in (N.testbit (Npos p) i) in
+        change (N.testbit (Npos p) i) with b end
+    | match goal with |- context [N.testbit 0 ?i] => rewrite N.bits_0 end
+    | match goal with |- context [?i <? ?j] =>
+        let b := eval vm_compute in (i <? j) in
+        lazymatch b with true => change (i <? j) with true
+          | false => change (i <? j) with false end end
+    | progress cbn [andb orb]
+    | rewrite Bool.andb_false_r | rewrite Bool.andb_true_r
+    | rewrite Bool.orb_false_r | rewrite Bool.orb_true_r ].
+
+Ltac ffsl_reverse_bit :=
+  repeat (first [rewrite Nmod_pow2_bits | rewrite N.lor_spec
+    | rewrite N.land_spec | rewrite N.shiftr_spec'
+    | rewrite testbit_shiftl_ltb]; ffsl_constant_bits);
+  f_equal; vm_compute; reflexivity.
+
+Lemma rbit32_bits: forall x i, i < 32 ->
+  N.testbit (rbit32 x) i = N.testbit x (31-i).
+Proof.
+  intros x i I. unfold rbit32.
+  let rec go k :=
+    lazymatch eval compute in (k <? 32) with
+    | true => destruct (N.eq_dec i k) as [->|?];
+              [ffsl_reverse_bit | let k1 := eval compute in (N.succ k) in go k1]
+    | false => exfalso; lia
+    end in go 0.
+Qed.
+
+Lemma ffsl_clz_rbit: forall x k,
+  k < 32 -> N.testbit x k = true ->
+  (forall j, j < k -> N.testbit x j = false) ->
+  1 + (32 - N.size (rbit32 x)) = k+1.
+Proof.
+  intros x k K B L.
+  assert (RB: N.testbit (rbit32 x) (31-k) = true).
+  { rewrite rbit32_bits by lia. replace (31-(31-k)) with k by lia. exact B. }
+  assert (NZ: rbit32 x <> 0).
+  { intro E. rewrite E, N.bits_0 in RB. discriminate. }
+  assert (LG: N.log2 (rbit32 x) = 31-k).
+  { apply N.log2_bits_unique; [exact RB|]. intros j J.
+    destruct (N.lt_ge_cases j 32) as [JL|JL].
+    - rewrite rbit32_bits by exact JL. apply L. lia.
+    - apply (bound_hibits_zero 32); [apply rbit32_bound|exact JL]. }
+  rewrite N.size_log2 by exact NZ. rewrite LG. lia.
+Qed.
+
+Lemma ffsl_asr_upper: forall x,
+  (ashiftr 64 x 32) mod 2^32 = (x >> 32) mod 2^32.
+Proof.
+  intro x. apply N.bits_inj. intro i.
+  rewrite !Nmod_pow2_bits, ashiftr_spec, N.shiftr_spec'.
+  destruct (N.ltb_spec i 32) as [I|I].
+  - rewrite (proj2 (N.ltb_lt i 64) ltac:(lia)), N.min_l by (cbn; lia). reflexivity.
+  - reflexivity.
+Qed.
+
+(* Isolating the low bit is the branch-selection obligation: no arbitrary
+   low-word/nonzero precondition is attached to the public theorem. *)
+Lemma ffsl_isolate: forall x k,
+  x < 2^64 -> k < 64 -> N.testbit x k = true ->
+  (forall j, j < k -> N.testbit x j = false) ->
+  (msub 64 0 x) .& x = 2^k.
+Proof.
+  intros x k XL K B L.
+  assert (NZ: x <> 0) by (intro E; rewrite E, N.bits_0 in B; discriminate).
+  assert (PK: 0 < 2^k) by (apply N.neq_0_lt_0, N.pow_nonzero; discriminate).
+  assert (XM: x mod 2^(N.succ k) = 2^k).
+  { apply N.bits_inj. intro j. rewrite Nmod_pow2_bits, N.pow2_bits_eqb.
+    destruct (N.ltb_spec j (N.succ k)) as [J|J].
+    - destruct (N.eq_dec j k) as [->|NE].
+      + rewrite B, N.eqb_refl. reflexivity.
+      + rewrite L by lia. rewrite (proj2 (N.eqb_neq k j) ltac:(lia)). reflexivity.
+    - rewrite (proj2 (N.eqb_neq k j) ltac:(lia)). reflexivity. }
+  assert (D: x = 2^k + (x / 2^(N.succ k)) * 2^(N.succ k)).
+  { pose proof (N.div_mod x (2^(N.succ k))
+      ltac:(apply N.pow_nonzero; discriminate)) as D.
+    rewrite XM in D. nia. }
+  assert (DP: x-1 = (2^k-1) + (x / 2^(N.succ k)) * 2^(N.succ k)) by lia.
+  assert (PL: 2^k-1 < 2^(N.succ k)) by (rewrite N.pow_succ_r'; nia).
+  assert (PM: (x-1) mod 2^(N.succ k) = 2^k-1).
+  { rewrite DP, N.mod_add by (apply N.pow_nonzero; discriminate).
+    apply N.mod_small. exact PL. }
+  assert (DQ: (x-1) / 2^(N.succ k) = x / 2^(N.succ k)).
+  { rewrite DP, N.div_add by (apply N.pow_nonzero; discriminate).
+    rewrite N.div_small by exact PL. reflexivity. }
+  assert (NEG: msub 64 0 x = N.lnot (x-1) 64).
+  { clear - XL NZ. rewrite msub_0_l, (N.mod_small x) by exact XL.
+    rewrite N.mod_small by lia.
+    rewrite N.lnot_sub_low, N.ones_equiv.
+    - lia.
+    - destruct (N.eq_dec (x-1) 0) as [E|E].
+      + rewrite E. reflexivity.
+      + apply N.log2_lt_pow2; lia. }
+  rewrite NEG. apply N.bits_inj. intro i.
+  rewrite N.land_spec, N.pow2_bits_eqb.
+  destruct (N.lt_ge_cases i 64) as [I|I].
+  - rewrite N.lnot_spec_low by exact I.
+    destruct (N.lt_trichotomy i k) as [IK|[IK|IK]].
+    + rewrite L by exact IK. rewrite (proj2 (N.eqb_neq k i) ltac:(first [clear - IK; lia | clear - K I; lia])).
+      apply Bool.andb_false_r.
+    + subst i. rewrite B, N.eqb_refl.
+      assert (P: N.testbit (x-1) k = false).
+      { pose proof (Nmod_pow2_bits (x-1) (N.succ k) k) as T.
+        rewrite PM in T.
+        replace (2^k-1) with (N.ones k) in T by (rewrite N.ones_equiv; lia).
+        rewrite N.ones_spec_high, (proj2 (N.ltb_lt k (N.succ k)) ltac:(lia)) in T by lia.
+        simpl in T. symmetry. exact T. }
+      rewrite P. reflexivity.
+    + rewrite (proj2 (N.eqb_neq k i) ltac:(first [clear - IK; lia | clear - K I; lia])).
+      assert (P: N.testbit (x-1) i = N.testbit x i).
+      { replace i with ((i-N.succ k)+N.succ k) by (clear - IK; lia).
+        rewrite <- (N.shiftr_spec' (x-1) (N.succ k) (i-N.succ k)),
+          <- (N.shiftr_spec' x (N.succ k) (i-N.succ k)).
+        rewrite !N.shiftr_div_pow2, DQ. reflexivity. }
+      rewrite P. destruct (N.testbit x i); reflexivity.
+  - rewrite (bound_hibits_zero 64 x i XL I).
+    rewrite (proj2 (N.eqb_neq k i) ltac:(first [clear - IK; lia | clear - K I; lia])). apply Bool.andb_false_r.
+Qed.
+
+Definition ffsl_half (x:N) :=
+  if x mod 2^32 =? 0 then 0 else 1 + (32-N.size (rbit32 x)).
+
+Definition ffsl_value (x:N) :=
+  if 0xffffffff <? (msub 64 0 x) .& x
+  then 32 + ffsl_half (ashiftr 64 x 32)
+  else ffsl_half x.
+
+Lemma ffsl_value_spec: forall x, x < 2^64 -> ffsl_spec x (ffsl_value x).
+Proof.
+  intros x XL. destruct (N.eq_dec x 0) as [->|NZ].
+  - vm_compute. tauto.
+  - destruct (ffsl_lowest_set_bit 64 x XL NZ) as [k [K [B L]]].
+    unfold ffsl_value. rewrite (ffsl_isolate x k XL K B L).
+    destruct (N.lt_ge_cases k 32) as [KL|KH].
+    + assert (P: (0xffffffff <? 2^k) = false).
+      { apply N.ltb_ge. pose proof (N.pow_le_mono_r 2 k 31 ltac:(discriminate) ltac:(lia)).
+        change (2^31) with 2147483648 in *. lia. }
+      rewrite P. unfold ffsl_half.
+      assert (M: x mod 2^32 <> 0).
+      { intro E. pose proof (Nmod_pow2_bits x 32 k) as T.
+        rewrite E, N.bits_0, (proj2 (N.ltb_lt _ _) KL), B in T. discriminate. }
+      rewrite (proj2 (N.eqb_neq _ _) M), (ffsl_clz_rbit x k KL B L).
+      unfold ffsl_spec. replace (k+1-1) with k by lia.
+      split; [lia|]. intros _. repeat split; auto; lia.
+    + assert (P: (0xffffffff <? 2^k) = true).
+      { apply N.ltb_lt. pose proof (N.pow_le_mono_r 2 32 k ltac:(discriminate) KH).
+        change (2^32) with 4294967296 in *. lia. }
+      rewrite P. unfold ffsl_half. rewrite ffsl_asr_upper.
+      assert (UB: N.testbit (ashiftr 64 x 32) (k-32) = true).
+      { rewrite ashiftr_spec, (proj2 (N.ltb_lt (k-32) 64) ltac:(lia)), N.min_l by (cbn; lia).
+        replace (k-32+32) with k by lia. exact B. }
+      assert (UL: forall j, j < k-32 -> N.testbit (ashiftr 64 x 32) j = false).
+      { intros j J. rewrite ashiftr_spec, (proj2 (N.ltb_lt j 64) ltac:(lia)), N.min_l by (cbn; lia).
+        apply L. lia. }
+      assert (M: (x >> 32) mod 2^32 <> 0).
+      { intro E. pose proof (Nmod_pow2_bits (ashiftr 64 x 32) 32 (k-32)) as T.
+        rewrite ffsl_asr_upper, E, N.bits_0,
+          (proj2 (N.ltb_lt (k-32) 32) ltac:(lia)), UB in T. discriminate. }
+      rewrite (proj2 (N.eqb_neq _ _) M),
+        (ffsl_clz_rbit _ (k-32) ltac:(lia) UB UL).
+      unfold ffsl_spec. replace (32+(k-32+1)-1) with k by lia.
+      split; [lia|]. intros _. repeat split; auto; lia.
+Qed.
+
+Lemma ffsl_rbit_size: forall x, N.size (rbit32 x) <= 32.
+Proof.
+  intro x. destruct (N.eq_dec (rbit32 x) 0) as [Z|NZ].
+  - rewrite Z. apply N.le_0_l.
+  - rewrite N.size_log2 by exact NZ.
+    assert (N.log2 (rbit32 x) < 32).
+    { apply N.log2_lt_pow2; [lia | apply rbit32_bound]. }
+    lia.
+Qed.
+
+Lemma ffsl_count_result: forall z c, z <= 32 -> 33 <= c <= 65 ->
+  msub 32 c z = c-33 + (1+(32-z)).
+Proof.
+  intros z c Z C.
+  assert (ZL: z < 2^32) by (cbn; lia).
+  assert (CL: c < 2^32) by (cbn; lia).
+  rewrite msub_nowrap by
+    (rewrite (N.mod_small z _ ZL), (N.mod_small c _ CL); lia).
+  rewrite (N.mod_small z _ ZL), (N.mod_small c _ CL). lia.
+Qed.
+
+(* Relate the arithmetic simplifier's expanded masks to the SWAR helper.
+   Both sides are bounded by their final modulo, so only 32 bits matter. *)
+Ltac ffsl_rbit_normalize x :=
+  clear - x; unfold rbit32; apply N.bits_inj; let i := fresh "i" in intro i;
+  let I := fresh "I" in destruct (N.lt_ge_cases i 32) as [I|I];
+  [ let rec go k :=
+      lazymatch eval compute in (k <? 32) with
+      | true => destruct (N.eq_dec i k) as [->|?];
+        [idtac "Normalize RBIT bit" k; ffsl_reverse_bit | let k1 := eval compute in (N.succ k) in go k1]
+      | false => exfalso; lia end in go 0
+  | rewrite !Nmod_pow2_bits, (proj2 (N.ltb_ge i 32) I); reflexivity ].
+
+Lemma ffsl_branch: forall y,
+  (if y =? 4294967295 then 0 else if 4294967295 <=? y then 1 else 0) =
+  (if 4294967295 <? y then 1 else 0).
+Proof.
+  intro y. destruct (N.eqb_spec y 4294967295),
+    (N.leb_spec 4294967295 y), (N.ltb_spec 4294967295 y);
+    try reflexivity; exfalso; lia.
+Qed.
+
+Theorem ffsl_correct:
+  forall s t s' x' x sp lr
+    (ENTRY: startof t (x',s') = (Addr 0,s))
+    (MDL: models arm8typctx s)
+    (X: s R_X0 = x) (SP: s R_SP = sp) (LR: s R_X30 = lr),
+  satisfies_all ffsl_arm8 (ffsl_invs x sp lr) ffsl_exit ((x',s')::t).
+Proof.
+  intros. apply prove_invs.
+  simpl. rewrite ENTRY. arm8_step. repeat split; assumption.
+  intros.
+  erewrite startof_prefix in ENTRY; try eassumption.
+  eapply models_at_invariant; try eassumption. apply ffsl_welltyped. intro MDL1.
+  clear - PRE MDL1. rename t1 into t.
+  destruct_inv 64 PRE.
+  destruct PRE as [X [SP LR]].
+  assert (XL: x < 2^64) by (rewrite <- X; apply (MDL1 R_X0 64), eq_refl).
+  pose proof (ffsl_value_spec x XL) as SPEC.
+  repeat arm8_step.
+  all: unfold postcondition; split; [|split; assumption].
+  all: rewrite ?X in *.
+  (* Keep the real branch conditions and discharge every return path. *)
+  all: rewrite ffsl_branch in BC.
+  all: destruct (4294967295 <? (msub 64 0 x) .& x) eqn:ROUTE;
+    try discriminate.
+  all: unfold ffsl_value, ffsl_half in SPEC; rewrite ROUTE, BC0 in SPEC.
+  all: try exact SPEC.
+  all: lazymatch goal with
+  | SPEC: context [rbit32 ?y] |- context [N.size ?r] =>
+    assert (R: r = rbit32 y) by (ffsl_rbit_normalize x);
+    rewrite R
+  end.
+  all: lazymatch goal with
+  | |- ffsl_spec _ (msub 32 ?c (N.size (rbit32 ?y))) =>
+    pose proof (ffsl_rbit_size y) as SZ;
+    rewrite ffsl_count_result by (first [exact SZ | cbn; lia]);
+    exact SPEC
+  end.
+
+Qed.
+
+Theorem ffsll_correct:
+  forall s t s' x' x sp lr
+    (ENTRY: startof t (x',s') = (Addr 0,s))
+    (MDL: models arm8typctx s)
+    (X: s R_X0 = x) (SP: s R_SP = sp) (LR: s R_X30 = lr),
+  satisfies_all ffsll_arm8 (ffsl_invs x sp lr) ffsl_exit ((x',s')::t).
+Proof. rewrite <- ffsl_ffsll_program_identity. exact ffsl_correct. Qed.

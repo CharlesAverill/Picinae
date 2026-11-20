@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=cmp Examples/claude/arm8_ffsl_proof.v notes/a-ffsl-fix/attempt-final.v.txt
+
+EXIT_CODE=0

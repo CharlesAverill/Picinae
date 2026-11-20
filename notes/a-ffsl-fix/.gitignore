@@ -1,0 +1,9 @@
+Debug.v
+*.vo
+*.vos
+*.vok
+*.glob
+.*.aux
+ancestry-after.log
+commit.log
+DebugPrefix.v

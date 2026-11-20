@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1290b26e
+COMMAND=bash -e -c sha256sum\ Examples/claude/ffsl_arm8.v\ Examples/claude/ffsll_arm8.v\;\ git\ diff\ --exit-code\ 49956416928e5b6bb3928b54ae33e3b81091f006\ --\ Examples/claude/ffsl_arm8.v\ Examples/claude/ffsll_arm8.v
+484b9668fe0874948f52e768bceb4e2d6a52aaab93d67cd4e5249e9cab36c15b  Examples/claude/ffsl_arm8.v
+0d2d98caed639bd62c35c41987f5ec469d627cb71ba9f411c81e4a27f8b7d9a9  Examples/claude/ffsll_arm8.v
+
+EXIT_CODE=0

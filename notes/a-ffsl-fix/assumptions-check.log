@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=python3 notes/a-ffsl-fix/check-assumptions.py
+19 kernel assumption queries passed: 3 use only inherited functional_extensionality_dep; 16 are closed.
+The two public correctness theorems and typing use the reviewed Stdlib baseline; frames and arithmetic helpers are closed.
+
+EXIT_CODE=0

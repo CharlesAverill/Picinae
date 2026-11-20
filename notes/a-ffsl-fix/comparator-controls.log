@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=python3 notes/a-ffsl-fix/check-comparator.py
+All 23 author declarations (including definitions) preserved exactly.
+New supporting declarations: ffsl_branch, ffsl_count_result, ffsl_rbit_size
+Every proof terminates without Abort.
+Negative controls detect changed spec, changed entry requirement, and removed theorem.
+Proof terminators and additional helpers do not hide or change author declarations.
+
+EXIT_CODE=0

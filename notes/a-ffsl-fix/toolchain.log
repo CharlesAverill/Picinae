@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash -e -c rocq\ --version\;\ dune\ --version\;\ ocamlc\ -version
+The Rocq Prover, version 9.1.1
+compiled with OCaml 4.14.2
+3.22.2
+4.14.2
+
+EXIT_CODE=0

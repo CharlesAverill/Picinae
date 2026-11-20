@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=python3 notes/a-ffsl-fix/check-ancestry.py
+Verified a linear pinned origin -> reviewed e00 -> exact Astra checkpoint -> repair ancestry.
+Original author branch remains at the exact Astra checkpoint.
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+95fec3532babe28cc92926f2a23d6253ce55c69a Add partial AArch64 ffsl proof handoff
+
+EXIT_CODE=0

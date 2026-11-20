@@ -1,0 +1,43 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=bash notes/a-ffsl-fix/debug.sh
+Chars 0 - 83 [Require~Import~Picinae_armv8~f...] 0.729 secs (0.498u,0.249s)
+Chars 84 - 134 [From~Stdlib~Require~Import~NAr...] 0.083 secs (0.074u,0.012s)
+Chars 135 - 170 [Import~ARM8Notations~ListNotat...] 0. secs (0.u,0.s)
+Chars 171 - 184 [Open~Scope~N.] 0. secs (0.u,0.s)
+Chars 185 - 267 [Lemma~ffsl_asr_upper~:~~~foral...] 0.001 secs (0.001u,0.s)
+Chars 268 - 274 [Proof.] 0. secs (0.u,0.s)
+Chars 277 - 285 [intro~x.] 0. secs (0.u,0.s)
+Chars 286 - 303 [apply~N.bits_inj.] 0. secs (0.u,0.s)
+Chars 304 - 312 [intro~i.] 0. secs (0.u,0.s)
+Chars 315 - 369 [rewrite~!Nmod_pow2_bits,~ashif...] 0.002 secs (0.001u,0.s)
+Chars 372 - 408 [destruct~(N.ltb_spec~i~32)~as~...] 0.001 secs (0.u,0.001s)
+Chars 411 - 412 [-] 0. secs (0.u,0.s)
+Chars 413 - 479 [rewrite~(proj2~(N.ltb_lt~i~64)...] 0.006 secs (0.u,0.006s)
+Chars 480 - 492 [reflexivity.] 0. secs (0.u,0.s)
+Chars 495 - 496 [-] 0. secs (0.u,0.s)
+Chars 497 - 509 [reflexivity.] 0. secs (0.u,0.s)
+Chars 510 - 514 [Qed.] 0.002 secs (0.002u,0.s)
+Chars 661 - 816 [Lemma~ffsl_isolate~:~~~forall~...] 0.001 secs (0.001u,0.s)
+Chars 817 - 823 [Proof.] 0. secs (0.u,0.s)
+Chars 826 - 846 [intros~x~k~XL~K~B~L.] 0. secs (0.u,0.s)
+Chars 849 - 922 [assert~(NZ~:~x~<>~0)~by~(intro...] 0.001 secs (0.001u,0.s)
+Chars 925 - 999 [assert~(PK~:~0~<~2~^~k)~by~(ap...] 0. secs (0.u,0.s)
+Chars 1002 - 1040 [assert~(XM~:~x~mod~2~^~N.succ~...] 0. secs (0.u,0.s)
+Chars 1043 - 1044 [{] 0. secs (0.u,0.s)
+Chars 1045 - 1062 [apply~N.bits_inj.] 0. secs (0.u,0.s)
+Chars 1063 - 1071 [intro~j.] 0. secs (0.u,0.s)
+Chars 1072 - 1112 [rewrite~Nmod_pow2_bits,~N.pow2...] 0. secs (0.u,0.s)
+Chars 1117 - 1161 [destruct~(N.ltb_spec~j~(N.succ...] 0. secs (0.u,0.s)
+Chars 1166 - 1167 [-] 0. secs (0.u,0.s)
+Chars 1168 - 1203 [destruct~(N.eq_dec~j~k)~as~[->...] 0. secs (0.u,0.s)
+Chars 1210 - 1211 [+] 0. secs (0.u,0.s)
+Chars 1212 - 1234 [rewrite~B,~N.eqb_refl.] 0. secs (0.u,0.s)
+Chars 1235 - 1247 [reflexivity.] 0. secs (0.u,0.s)
+Chars 1254 - 1255 [+] 0. secs (0.u,0.s)
+Chars 1256 - 1273 [rewrite~L~by~lia.] 0.012 secs (0.011u,0.s)
+Chars 1274 - 1317 [rewrite~(proj2~(N.eqb_neq~j~k)...] 0.17 secs (0.147u,0.027s)
+File "./notes/a-ffsl-fix/Debug.v", line 30, characters 26-68:
+Error: Found no subterm matching "j =? k" in the current goal.
+
+
+EXIT_CODE=1

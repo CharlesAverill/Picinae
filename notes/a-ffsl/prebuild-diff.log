@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1290b26e
+COMMAND=git diff --stat
+ dune | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+EXIT_CODE=0

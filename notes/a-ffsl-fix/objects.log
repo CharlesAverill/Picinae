@@ -1,0 +1,29 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-28e4e74e
+COMMAND=bash -e -c stat\ _build/default/Examples/claude/arm8_ffsl_proof.vo\ _build/default/Examples/claude/ffsl_arm8.vo\ _build/default/Examples/claude/ffsll_arm8.vo\;\ sha256sum\ _build/default/Examples/claude/arm8_ffsl_proof.vo
+  File: _build/default/Examples/claude/arm8_ffsl_proof.vo
+  Size: 2669891   	Blocks: 5216       IO Block: 4096   regular file
+Device: 8,64	Inode: 7839459     Links: 1
+Access: (0444/-r--r--r--)  Uid: ( 1000/ charles)   Gid: ( 1000/ charles)
+Access: 2026-11-03 17:14:54.354645360 -0600
+Modify: 2026-11-03 17:14:44.069124714 -0600
+Change: 2026-11-03 17:14:44.205504872 -0600
+ Birth: 2026-11-03 17:14:44.039900400 -0600
+  File: _build/default/Examples/claude/ffsl_arm8.vo
+  Size: 16418     	Blocks: 40         IO Block: 4096   regular file
+Device: 8,64	Inode: 7830514     Links: 1
+Access: (0444/-r--r--r--)  Uid: ( 1000/ charles)   Gid: ( 1000/ charles)
+Access: 2026-11-03 16:51:32.614367857 -0600
+Modify: 2026-11-03 16:51:32.117222539 -0600
+Change: 2026-11-03 16:51:32.136718434 -0600
+ Birth: 2026-11-03 16:51:32.117222539 -0600
+  File: _build/default/Examples/claude/ffsll_arm8.vo
+  Size: 16424     	Blocks: 40         IO Block: 4096   regular file
+Device: 8,64	Inode: 7830567     Links: 1
+Access: (0444/-r--r--r--)  Uid: ( 1000/ charles)   Gid: ( 1000/ charles)
+Access: 2026-11-03 16:51:32.614367857 -0600
+Modify: 2026-11-03 16:51:32.487644545 -0600
+Change: 2026-11-03 16:51:32.507140439 -0600
+ Birth: 2026-11-03 16:51:32.487644545 -0600
+6c1465e102fab0cb8199f5ffc559e4cbb44f15b6f88e8757854790f6fb4d7648  _build/default/Examples/claude/arm8_ffsl_proof.vo
+
+EXIT_CODE=0

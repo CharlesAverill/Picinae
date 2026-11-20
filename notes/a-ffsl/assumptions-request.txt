@@ -1,0 +1,12 @@
+NOT EXECUTED: the one initial target build failed; there is no raw assumptions
+output. Run only after the Sol fixer obtains a successful full target build.
+
+env PROOF_MEMORY_KB=3000000 PROOF_STACK_KB=65536 \
+  /home/charles/code/friends/.toolchains/arm-validation/picinae-env \
+  bash tools/print-assumptions.sh \
+  Picinae.Examples.claude.arm8_ffsl_proof \
+  ffsl_correct ffsll_correct ffsl_nwc ffsl_welltyped \
+  ffsl_ffsll_program_identity ffsl_preserves_memory \
+  ffsl_preserves_callee_saved ffsl_entry_satisfiable ffsl_spec_satisfiable \
+  ffsl_lowest_set_bit rbit32_bound rbit32_bits ffsl_clz_rbit \
+  ffsl_asr_upper ffsl_isolate ffsl_value_spec
