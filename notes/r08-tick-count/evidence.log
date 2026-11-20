@@ -1,0 +1,70 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-f5cd5d9c
+COMMAND=python3 notes/r08-tick-count/check-evidence.py
+tasks.c SHA256 6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149
+4106: TickType_t xTaskGetTickCount( void )
+4107: {
+4108:     TickType_t xTicks;
+4109: 
+4110:     traceENTER_xTaskGetTickCount();
+4111: 
+4112:     /* Critical section required if running on a 16 bit processor. */
+4113:     portTICK_TYPE_ENTER_CRITICAL();
+4114:     {
+4115:         xTicks = xTickCount;
+4116:     }
+4117:     portTICK_TYPE_EXIT_CRITICAL();
+4118: 
+4119:     traceRETURN_xTaskGetTickCount( xTicks );
+4120: 
+4121:     return xTicks;
+4122: }
+portable/GCC/ARM_CM0/portmacro.h SHA256 c6291e8a22b1a4c8f8f16e6f00870505966cba890281c0b1c3c60597f057ab36
+65: typedef portSTACK_TYPE   StackType_t;
+66: typedef long             BaseType_t;
+67: typedef unsigned long    UBaseType_t;
+68: 
+69: #if ( configTICK_TYPE_WIDTH_IN_BITS == TICK_TYPE_WIDTH_16_BITS )
+70:     typedef uint16_t        TickType_t;
+71:     #define portMAX_DELAY   ( TickType_t ) 0xffff
+72: #elif ( configTICK_TYPE_WIDTH_IN_BITS == TICK_TYPE_WIDTH_32_BITS )
+73:     typedef uint32_t        TickType_t;
+74:     #define portMAX_DELAY   ( TickType_t ) 0xffffffffUL
+75: 
+76:     /* 32-bit tick type on a 32-bit architecture, so reads of the tick count do
+77:      * not need to be guarded with a critical section. */
+78:     #define portTICK_TYPE_IS_ATOMIC    1
+79: #else
+80:     #error configTICK_TYPE_WIDTH_IN_BITS set to unsupported tick type width.
+81: #endif
+include/FreeRTOS.h SHA256 189d9626143b76b1a948a612c051617052f16b3e193324cc96b20e0eb4b8a103
+2888: #if ( portTICK_TYPE_IS_ATOMIC == 0 )
+2889: 
+2890: /* Either variables of tick type cannot be read atomically, or
+2891:  * portTICK_TYPE_IS_ATOMIC was not set - map the critical sections used when
+2892:  * the tick count is returned to the standard critical section macros. */
+2893:     #define portTICK_TYPE_ENTER_CRITICAL()                      portENTER_CRITICAL()
+2894:     #define portTICK_TYPE_EXIT_CRITICAL()                       portEXIT_CRITICAL()
+2895:     #define portTICK_TYPE_SET_INTERRUPT_MASK_FROM_ISR()         portSET_INTERRUPT_MASK_FROM_ISR()
+2896:     #define portTICK_TYPE_CLEAR_INTERRUPT_MASK_FROM_ISR( x )    portCLEAR_INTERRUPT_MASK_FROM_ISR( ( x ) )
+2897: #else
+2898: 
+2899: /* The tick type can be read atomically, so critical sections used when the
+2900:  * tick count is returned can be defined away. */
+2901:     #define portTICK_TYPE_ENTER_CRITICAL()
+2902:     #define portTICK_TYPE_EXIT_CRITICAL()
+2903:     #define portTICK_TYPE_SET_INTERRUPT_MASK_FROM_ISR()         0
+2904:     #define portTICK_TYPE_CLEAR_INTERRUPT_MASK_FROM_ISR( x )    ( void ) ( x )
+2905: #endif /* if ( portTICK_TYPE_IS_ATOMIC == 0 ) */
+TickType_t and void * sizes: 4 4
+#define configTICK_TYPE_WIDTH_IN_BITS            TICK_TYPE_WIDTH_32_BITS
+#define configNUMBER_OF_CORES                    1
+#define configUSE_TRACE_FACILITY                 0
+00000584 0000000c T xTaskGetTickCount
+00000590 0000000c T xTaskGetTickCountFromISR
+2000002c 00000004 b xTickCount
+ELF SHA256: 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca
+Literal/object evidence: [{'address': '0x0000058c', 'bytes': '2c000020', 'cortex_m_system_region': False, 'globals': [{'address': '0x2000002c', 'name': 'xTickCount', 'offset': 0, 'size': 4}], 'imm8': 1, 'instruction': '0x00000584', 'thumb_function_pointer': [], 'value': '0x2000002c'}]
+Instructions: [{'address': '0x00000584', 'assembly': 'ldr\tr3, [pc, #4]\t@ (58c <xTaskGetTickCount+0x8>)', 'frontend_encoding_supported': True, 'opcode': '4b01', 'width': 2}, {'address': '0x00000586', 'assembly': 'ldr\tr0, [r3, #0]', 'frontend_encoding_supported': True, 'opcode': '6818', 'width': 2}, {'address': '0x00000588', 'assembly': 'bx\tlr', 'frontend_encoding_supported': True, 'opcode': '4770', 'width': 2}, {'address': '0x0000058a', 'assembly': 'nop\t\t\t@ (mov r8, r8)', 'frontend_encoding_supported': True, 'opcode': '46c0', 'width': 2}]
+PASS: pinned source hashes, configuration, sizes, global address and call-free manifest
+
+EXIT_CODE=0

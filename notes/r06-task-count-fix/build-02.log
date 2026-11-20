@@ -1,0 +1,19 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96052210
+COMMAND=env PROOF_MEMORY_KB=2000000 PROOF_STACK_KB=65536 /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_uxTaskGetNumberOfTasks_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-63, characters 0-2670:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+61 | ; END e05 generated modules
+62 |   Examples.FreeRTOS.armv6m_uxTaskGetNumberOfTasks_proof
+63 |  ))
+        rocq Examples/FreeRTOS/armv6m_uxTaskGetNumberOfTasks_proof.{glob,vo} (exit 1)
+Goal at < 1436 >
+Goal at < 1440 >
+File "./Examples/FreeRTOS/armv6m_uxTaskGetNumberOfTasks_proof.v", line 185, characters 12-16:
+Error: Unable to find an instance for the variable w.
+
+
+EXIT_CODE=1
