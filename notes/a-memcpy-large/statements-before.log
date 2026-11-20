@@ -1,0 +1,26 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-9fd9a36c
+COMMAND=python3 notes/a-memcpy-large/audit-statements.py
+21 theorem/lemma statements and initial specification definitions unchanged
+memcpy_large_nwc
+memcpy_large_welltyped
+memcpy_large_separated
+memcpy_large_size_bound
+memcpy_large_nov_of_separated
+memcpy_large_witness_typed
+memcpy_large_entry_inhabited
+memcpy_large_zero_source_entry
+memcpy_large_wrapped_end_entry
+memcpy_large_written_bound
+memcpy_large_written_advance
+memcpy_large_tail_cover
+memcpy_large_source_unchanged
+memcpy_large_store_value
+memcpy_large_entry_step
+memcpy_large_head_step
+memcpy_large_loop_step
+memcpy_large_tail_step
+memcpy_large_correct
+memcpy_large_returns_original_bytes
+memcpy_large_preserves_callee_saved
+
+EXIT_CODE=0

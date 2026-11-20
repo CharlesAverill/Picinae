@@ -1,0 +1,55 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d5c9940f
+COMMAND=python3 notes/a-memcpy-small-fix/audit-assumptions.py
+byte_of_getmem: CLOSED
+byte_setmem_cases: CLOSED
+cpy_empty: CLOSED
+cpy_equiv: CLOSED
+cpy_copied: CLOSED
+addmsub: CLOSED
+cpy_load: CLOSED
+msub_add_l: CLOSED
+msub_off: CLOSED
+cpy_store: CLOSED
+memcpy_small_nwc: CLOSED
+memcpy_small_welltyped: INHERITED FE ONLY
+memcpy_small_witness_typed: CLOSED
+memcpy_small_entry_inhabited: CLOSED
+memcpy_small_zero_entry: CLOSED
+memcpy_small_case_0: INHERITED FE ONLY
+memcpy_small_case_1: INHERITED FE ONLY
+memcpy_small_case_2: INHERITED FE ONLY
+memcpy_small_case_3: INHERITED FE ONLY
+memcpy_small_case_4: INHERITED FE ONLY
+memcpy_small_case_5: INHERITED FE ONLY
+memcpy_small_case_6: INHERITED FE ONLY
+memcpy_small_case_7: INHERITED FE ONLY
+memcpy_small_case_8: INHERITED FE ONLY
+memcpy_small_case_9: INHERITED FE ONLY
+memcpy_small_case_10: INHERITED FE ONLY
+memcpy_small_case_11: INHERITED FE ONLY
+memcpy_small_case_12: INHERITED FE ONLY
+memcpy_small_case_13: INHERITED FE ONLY
+memcpy_small_case_14: INHERITED FE ONLY
+memcpy_small_case_15: INHERITED FE ONLY
+memcpy_small_case_16: INHERITED FE ONLY
+memcpy_small_case_17: INHERITED FE ONLY
+memcpy_small_case_18: INHERITED FE ONLY
+memcpy_small_case_19: INHERITED FE ONLY
+memcpy_small_case_20: INHERITED FE ONLY
+memcpy_small_case_21: INHERITED FE ONLY
+memcpy_small_case_22: INHERITED FE ONLY
+memcpy_small_case_23: INHERITED FE ONLY
+memcpy_small_case_24: INHERITED FE ONLY
+memcpy_small_case_25: INHERITED FE ONLY
+memcpy_small_case_26: INHERITED FE ONLY
+memcpy_small_case_27: INHERITED FE ONLY
+memcpy_small_case_28: INHERITED FE ONLY
+memcpy_small_case_29: INHERITED FE ONLY
+memcpy_small_case_30: INHERITED FE ONLY
+memcpy_small_case_31: INHERITED FE ONLY
+memcpy_small_case_32: INHERITED FE ONLY
+memcpy_small_correct: INHERITED FE ONLY
+memcpy_small_preserves_callee_saved: INHERITED FE ONLY
+PASS: all 50 facts queried; 14 closed, 36 inherited FE only; no imported admission.
+
+EXIT_CODE=0
