@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ab3d95c2
+COMMAND=bash -e -c git\ diff\ --check\;\ test\ \!\ -f\ _build/default/Examples/FreeRTOS/armv6m_uxListRemove_proof.vo\;\ git\ diff\ --exit-code\ 4ff26413448da4d8f064b0273ac5472cc9de7e5a\ --\ Picinae_armv6m.v\ armv6m_lifter.sh\ Examples/FreeRTOS/uxListRemove_armv6m.v\ Examples/FreeRTOS/armv6m_list_model.v\;\ sha256sum\ notes/r04-list-remove/initial-attempt.v.txt\ Examples/FreeRTOS/uxListRemove_armv6m.v
+9c3ab7428dc523d7df0de3df5f962f8c40d2017f1700ee09aad1235ee79c7833  notes/r04-list-remove/initial-attempt.v.txt
+8f9ea032a3d808b777de30a7804b14cdf69478ef985bb44b1cccb1d19ebadfa9  Examples/FreeRTOS/uxListRemove_armv6m.v
+
+EXIT_CODE=0

@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d0b2e085
+COMMAND=bash -c git\ diff\ --check\ \&\&\ git\ diff\ --stat\ \&\&\ git\ status\ --short
+ dune | 1 +
+ 1 file changed, 1 insertion(+)
+ M dune
+?? Examples/FreeRTOS/armv6m_vListInsertEnd_proof.v
+?? notes/r03-list-insert-end/
+
+EXIT_CODE=0

@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2c979cb3
+COMMAND=python3 notes/r47-list-refinement-fix/check-retention.py
+All 30 original intended statements retained; only ring_hd_member binder types annotated.
+All inherited tracked files except the assigned module are byte-identical to the exact checkpoint.
+
+EXIT_CODE=0

@@ -1,0 +1,10 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ae1d8d8a
+COMMAND=python3 -
+PID 654655 CWD /home/charles/code/friends/.toolchains/r47-list-refinement/build/default COMMAND /home/charles/code/friends/.toolchains/opam/picinae/lib/rocq-runtime/rocqworker --kind=compile -q -w -level-tolerance -w -postfix-notation-not-level-1 -w -deprecated-native-compiler-option -w -native-compiler-disabled -native-compiler ondemand -boot -R /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/theories Corelib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Stdlib Stdlib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Ltac2 Ltac2 -R . Picinae Examples/FreeRTOS/armv6m_vListInsertEnd_proof.v 
+VmPeak:	 1173808 kB
+VmSize:	 1173808 kB
+VmRSS:	  917008 kB
+Max stack size            67108864             67108864             bytes     
+Max address space         4096000000           4096000000           bytes     
+
+EXIT_CODE=0

@@ -1,0 +1,36 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-41a02797
+COMMAND=bash -e -c git\ add\ Examples/FreeRTOS/armv6m_uxListRemove_proof.v\ notes/r04-list-remove-fix\;\ git\ commit\ -m\ \"Complete\ ARMv6-M\ list\ removal\ proofs\"
+[llm-proofs/r04-list-remove-fix 66ce3fd] Complete ARMv6-M list removal proofs
+ 31 files changed, 2993 insertions(+), 9 deletions(-)
+ create mode 100644 notes/r04-list-remove-fix/01-before.log
+ create mode 100644 notes/r04-list-remove-fix/02-entry-diagnostic.log
+ create mode 100644 notes/r04-list-remove-fix/03-entry-normalization.log
+ create mode 100644 notes/r04-list-remove-fix/04-entry-loads.log
+ create mode 100644 notes/r04-list-remove-fix/05-entry-context.log
+ create mode 100644 notes/r04-list-remove-fix/06-entry-separation.log
+ create mode 100644 notes/r04-list-remove-fix/07-entry-facts.log
+ create mode 100644 notes/r04-list-remove-fix/08-count-suffix.log
+ create mode 100644 notes/r04-list-remove-fix/09-layout-witness.log
+ create mode 100644 notes/r04-list-remove-fix/10-singleton-typing.log
+ create mode 100644 notes/r04-list-remove-fix/11-singleton-bounds.log
+ create mode 100644 notes/r04-list-remove-fix/12-singleton-fields.log
+ create mode 100644 notes/r04-list-remove-fix/13-witness-instantiation.log
+ create mode 100644 notes/r04-list-remove-fix/14-retention.log
+ create mode 100644 notes/r04-list-remove-fix/15-ancestry-precommit.log
+ create mode 100644 notes/r04-list-remove-fix/16-source-audit.log
+ create mode 100644 notes/r04-list-remove-fix/17-fork-collision-recheck.log
+ create mode 100644 notes/r04-list-remove-fix/18-final-dune.log
+ create mode 100644 notes/r04-list-remove-fix/19-final-retention.log
+ create mode 100644 notes/r04-list-remove-fix/20-unit-source-audit.log
+ create mode 100644 notes/r04-list-remove-fix/21-assumptions.log
+ create mode 100644 notes/r04-list-remove-fix/22-assumptions-inspection.log
+ create mode 100644 notes/r04-list-remove-fix/23-final-precommit-ancestry.log
+ create mode 100644 notes/r04-list-remove-fix/24-assumptions-inspection.log
+ create mode 100644 notes/r04-list-remove-fix/README.md
+ create mode 100644 notes/r04-list-remove-fix/allowed-checkpoint-commits.txt
+ create mode 100644 notes/r04-list-remove-fix/audit-ancestry.sh
+ create mode 100644 notes/r04-list-remove-fix/check-assumptions.py
+ create mode 100644 notes/r04-list-remove-fix/check-retention.py
+ create mode 100644 notes/r04-list-remove-fix/setup-session.txt
+
+EXIT_CODE=0

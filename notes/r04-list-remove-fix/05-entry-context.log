@@ -1,0 +1,106 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-41a02797
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_uxListRemove_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2698:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_uxListRemove_proof.{glob,vo} (exit 1)
+Goal at < 160 >
+Goal at < 178 >
+Goal at < 178 >
+ENTRY REMAINDER
+(s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+ := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ] [Ⓓ
+ 4 + l
+ := (s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+     := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ])
+    Ⓓ[ 8 + p ]
+ ] = s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev := nxt ] [Ⓓ4 + l := prev ])
+ENTRY REMAINDER ((s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] = nxt)
+ENTRY REMAINDER
+(s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+ := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ] [Ⓓ
+ 4 + l
+ := (s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+     := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ])
+    Ⓓ[ 8 + p ]
+ ] = s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev := nxt ])
+ENTRY REMAINDER ((s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] = nxt)
+ENTRY REMAINDER
+(s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+ := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ] =
+ s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev := nxt ] [Ⓓ4 + l := prev ])
+ENTRY REMAINDER ((s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] = nxt)
+ENTRY REMAINDER
+(s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+ := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ] =
+ s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev := nxt ])
+ENTRY REMAINDER ((s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] = nxt)
+8 goals
+  
+  s0 : store
+  p, nxt, prev, l, c : N
+  PO : object32 p 20
+  LO : object32 l 20
+  NO : object32 nxt 12
+  BO : object32 prev 12
+  SEP : rm_separated p nxt prev l
+  POS : 0 < c
+  R0 : s0 R_R0 = p
+  RN : s0 V_MEM32 Ⓓ[ p + 4 ] = nxt
+  RB : s0 V_MEM32 Ⓓ[ p + 8 ] = prev
+  RL : s0 V_MEM32 Ⓓ[ p + 16 ] = l
+  RC : s0 V_MEM32 Ⓓ[ l ] = c
+  DEC : c ⊖ 1 = c - 1
+  t : list (exit * store)
+  MDL1 : models archtyps s0
+  BC :
+    ((s0 V_MEM32 [Ⓓnxt + 8 := prev ] [Ⓓprev + 4
+      := (s0 V_MEM32 [Ⓓnxt + 8 := prev ]) Ⓓ[ p + 4 ] ])
+     Ⓓ[ l + 4 ] =? p) =
+    true
+  t0 : list (exit * store)
+  e : s0 V_MEM32 Ⓓ[ l + 4 ] = p
+  ============================
+  s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+  := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ] [Ⓓ
+  4 + l
+  := (s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+      := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ])
+     Ⓓ[ 8 + p ]
+  ] = s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev := nxt ] [Ⓓ4 + l := prev ]
+
+goal 2 is:
+ (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] = nxt
+goal 3 is:
+ s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+ := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ] [Ⓓ
+ 4 + l
+ := (s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+     := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ])
+    Ⓓ[ 8 + p ]
+ ] = s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev := nxt ]
+goal 4 is:
+ (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] = nxt
+goal 5 is:
+ s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+ := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ] =
+ s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev := nxt ] [Ⓓ4 + l := prev ]
+goal 6 is:
+ (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] = nxt
+goal 7 is:
+ s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev
+ := (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] ] =
+ s0 V_MEM32 [Ⓓ8 + nxt := prev ] [Ⓓ4 + prev := nxt ]
+goal 8 is:
+ (s0 V_MEM32 [Ⓓ8 + nxt := prev ]) Ⓓ[ 4 + p ] = nxt
+File "./Examples/FreeRTOS/armv6m_uxListRemove_proof.v", line 239, characters 6-35:
+Error: Tactic failure: entry diagnostic.
+
+
+EXIT_CODE=1

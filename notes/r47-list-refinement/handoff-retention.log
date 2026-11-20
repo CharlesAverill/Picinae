@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ae1d8d8a
+COMMAND=python3 notes/r47-list-refinement/prepare-handoff.py
+First failed declaration: ring_hd_member at source line 97
+Checked prefix declarations: ring_last_app ring_last_member
+PASS: all initial theorem statements retained byte-for-byte
+
+EXIT_CODE=0

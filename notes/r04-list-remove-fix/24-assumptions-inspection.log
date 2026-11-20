@@ -1,0 +1,21 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-41a02797
+COMMAND=python3 notes/r04-list-remove-fix/check-assumptions.py
+list_remove_nwc: Closed under the global context
+list_remove_welltyped: Closed under the global context
+list_remove_register_frame: Closed under the global context
+rm_read_write: Closed under the global context
+rm_read_frame: Closed under the global context
+list_remove_mem_frame: Closed under the global context
+list_remove_mem_effects: Closed under the global context
+list_remove_correct: inherited FE only
+list_remove_at_bx: inherited FE only
+list_remove_return_step: inherited FE only
+list_remove_entry_witness: Closed under the global context
+list_remove_singleton_layout: Closed under the global context
+list_remove_singleton_witness: Closed under the global context
+list_remove_multi_layout: Closed under the global context
+list_remove_multi_witness: Closed under the global context
+list_remove_returns: inherited FE only
+PASS: 16 transitive queries: 12 closed, 4 inherited functional extensionality only
+
+EXIT_CODE=0

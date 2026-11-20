@@ -1,0 +1,30 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-41a02797
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_uxListRemove_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2698:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_uxListRemove_proof.{glob,vo} (exit 1)
+Goal at < 160 >
+Goal at < 178 >
+Goal at < 178 >
+Goal at < 188 >
+File "./Examples/FreeRTOS/armv6m_uxListRemove_proof.v", line 394, characters 37-48:
+Error:
+In environment
+m, value, owner : N
+equal : bool
+MB : m < memsize 32
+VB : value < 2 ^ 32
+OB : owner < 2 ^ 32
+LAY : list_remove_layout 8192 4104 4104 4096
+IM : list_remove_singleton_image m value owner equal < memsize 32
+Unable to unify "2 ^ 32" with "4096 + 20".
+
+
+EXIT_CODE=1

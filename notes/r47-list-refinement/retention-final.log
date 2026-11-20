@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ae1d8d8a
+COMMAND=python3 notes/r47-list-refinement/audit-retention.py
+PASS: all 729 inherited files byte-identical to authorized integration
+PASS: dune only adds Examples.FreeRTOS.armv6m_list_refinement
+
+EXIT_CODE=0
