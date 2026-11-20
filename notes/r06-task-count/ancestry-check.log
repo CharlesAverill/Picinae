@@ -1,0 +1,13 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-9eb1e5fb
+COMMAND=python3 -
+PASS: exact eight reviewed prerequisite commits; pinned merge-base; assigned branch; generated lift unchanged.
+95da7ab7cee78f09a528aed86c1dfaf29520a9a8 Record FreeRTOS lift ancestry and validation evidence
+075f59aca328e60e6376e2af01fa49925ab10e9d Add reproducible FreeRTOS ARMv6-M function lifts
+8c01958e73ec7fe959c60b29444505afbb599d13 Merge reviewed FreeRTOS fixture into e05 lifts
+5677a5d1d995745cc1cefbd33bcda1a3a4b49d8b Validate ARMv6-M import with selective Dune target
+dac36c0a03088a90bb6e6385f82cb355d27cc204 Merge selective Dune prerequisite into ARMv6-M import
+abe7eda601a63d47eb70e765f4ae2c4ca235cca4 Add reproducible Cortex-M0 FreeRTOS build fixture
+59f696d32a5623cdfbceb9a1e0f91e2cc7c054c1 Add ARMv6-M ISA and strict ELF lifter
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+
+EXIT_CODE=0
