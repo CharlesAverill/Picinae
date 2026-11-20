@@ -1,0 +1,120 @@
+{
+  "blocked_helpers": [],
+  "bytes_sha256": "2932452f2b59448949b573e64a9608164f94ebf0157ac0ae4a4c6c01737095fd",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "vTaskMissedYield_armv6m",
+    "vTaskMissedYield"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "assembly": "bx\tlr",
+      "kind": "return-candidate",
+      "site": "0x000009c6",
+      "target": "runtime register/stack; Thumb bit required"
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x000009cc",
+  "entry": "0x000009c0",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "c29bc110f5d89645cb7ada5e271338a1359daee2f094e3ba764dc0c179fc092a",
+  "instructions": [
+    {
+      "address": "0x000009c0",
+      "assembly": "ldr\tr3, [pc, #4]\t@ (9c8 <vTaskMissedYield+0x8>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4b01",
+      "width": 2
+    },
+    {
+      "address": "0x000009c2",
+      "assembly": "movs\tr2, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "2201",
+      "width": 2
+    },
+    {
+      "address": "0x000009c4",
+      "assembly": "str\tr2, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "601a",
+      "width": 2
+    },
+    {
+      "address": "0x000009c6",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x000009c8",
+      "bytes": "1c000020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x2000001c",
+          "name": "xYieldPendings",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 1,
+      "instruction": "0x000009c0",
+      "thumb_function_pointer": [],
+      "value": "0x2000001c"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x000009c8",
+      "halfword": "1c00"
+    },
+    {
+      "address": "0x000009ca",
+      "halfword": "0020"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x000009c6",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "row": "r11",
+  "size": 12,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "vTaskMissedYield",
+  "symbol_record": {
+    "address": "0x000009c0",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskMissedYield",
+    "section": "2",
+    "size": 12,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000009c1"
+  },
+  "thumb_symbol": "0x000009c1",
+  "unsupported_instructions": []
+}

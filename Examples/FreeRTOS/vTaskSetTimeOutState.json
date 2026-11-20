@@ -1,0 +1,399 @@
+{
+  "blocked_helpers": [
+    "fixture_assert_fail",
+    "vPortEnterCritical",
+    "vPortExitCritical"
+  ],
+  "bytes_sha256": "83df92c61bf2b569c318691f803acd8d7d4c749ec28ca66077adf08873265df0",
+  "closure_prerequisites": [
+    {
+      "callee": "vPortEnterCritical",
+      "caller": "vTaskSetTimeOutState",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000008da",
+      "unsupported_instructions": [
+        {
+          "address": "0x00003e68",
+          "assembly": "cpsid\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b672",
+          "width": 2
+        },
+        {
+          "address": "0x00003e72",
+          "assembly": "dsb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f4f",
+          "width": 4
+        },
+        {
+          "address": "0x00003e76",
+          "assembly": "isb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f6f",
+          "width": 4
+        }
+      ]
+    },
+    {
+      "callee": "vPortExitCritical",
+      "caller": "vTaskSetTimeOutState",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000008ea",
+      "unsupported_instructions": [
+        {
+          "address": "0x00003e98",
+          "assembly": "cpsie\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b662",
+          "width": 2
+        }
+      ]
+    },
+    {
+      "callee": "fixture_assert_fail",
+      "caller": "vPortExitCritical",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00003ea0",
+      "unsupported_instructions": [
+        {
+          "address": "0x0000419c",
+          "assembly": "cpsid\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b672",
+          "width": 2
+        },
+        {
+          "address": "0x000041a6",
+          "assembly": "wfi",
+          "frontend_encoding_supported": false,
+          "opcode": "bf30",
+          "width": 2
+        }
+      ]
+    }
+  ],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "vTaskSetTimeOutState_armv6m",
+    "vTaskSetTimeOutState"
+  ],
+  "critical_isr_boundaries": [
+    {
+      "kind": "call",
+      "owners": [
+        "vPortEnterCritical"
+      ],
+      "return_site": "0x000008de",
+      "site": "0x000008da",
+      "target": "0x00003e68",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vPortExitCritical"
+      ],
+      "return_site": "0x000008ee",
+      "site": "0x000008ea",
+      "target": "0x00003e80",
+      "target_is_instruction_start": null,
+      "within_function": false
+    }
+  ],
+  "edges": [
+    {
+      "fallthrough": "0x000008da",
+      "kind": "branch",
+      "owners": [
+        "vTaskSetTimeOutState"
+      ],
+      "site": "0x000008d8",
+      "target": "0x000008f0",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vPortEnterCritical"
+      ],
+      "return_site": "0x000008de",
+      "site": "0x000008da",
+      "target": "0x00003e68",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "vPortExitCritical"
+      ],
+      "return_site": "0x000008ee",
+      "site": "0x000008ea",
+      "target": "0x00003e80",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "assembly": "pop\t{r4, pc}",
+      "kind": "return-candidate",
+      "site": "0x000008ee",
+      "target": "runtime register/stack; Thumb bit required"
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "fixture_assert_fail"
+      ],
+      "return_site": "0x000008f8",
+      "site": "0x000008f4",
+      "target": "0x0000419c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x00000908",
+  "entry": "0x000008d4",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "b935f3d20740e7797adbc6a6991e20a36b82e924dec27170e286cffd9ffd5639",
+  "instructions": [
+    {
+      "address": "0x000008d4",
+      "assembly": "push\t{r4, lr}",
+      "frontend_encoding_supported": true,
+      "opcode": "b510",
+      "width": 2
+    },
+    {
+      "address": "0x000008d6",
+      "assembly": "subs\tr4, r0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "1e04",
+      "width": 2
+    },
+    {
+      "address": "0x000008d8",
+      "assembly": "beq.n\t8f0 <vTaskSetTimeOutState+0x1c>",
+      "frontend_encoding_supported": true,
+      "opcode": "d00a",
+      "width": 2
+    },
+    {
+      "address": "0x000008da",
+      "assembly": "bl\t3e68 <vPortEnterCritical>",
+      "frontend_encoding_supported": true,
+      "opcode": "f003 fac5",
+      "width": 4
+    },
+    {
+      "address": "0x000008de",
+      "assembly": "ldr\tr3, [pc, #24]\t@ (8f8 <vTaskSetTimeOutState+0x24>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4b06",
+      "width": 2
+    },
+    {
+      "address": "0x000008e0",
+      "assembly": "ldr\tr3, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "681b",
+      "width": 2
+    },
+    {
+      "address": "0x000008e2",
+      "assembly": "str\tr3, [r4, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6023",
+      "width": 2
+    },
+    {
+      "address": "0x000008e4",
+      "assembly": "ldr\tr3, [pc, #20]\t@ (8fc <vTaskSetTimeOutState+0x28>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4b05",
+      "width": 2
+    },
+    {
+      "address": "0x000008e6",
+      "assembly": "ldr\tr3, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "681b",
+      "width": 2
+    },
+    {
+      "address": "0x000008e8",
+      "assembly": "str\tr3, [r4, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "6063",
+      "width": 2
+    },
+    {
+      "address": "0x000008ea",
+      "assembly": "bl\t3e80 <vPortExitCritical>",
+      "frontend_encoding_supported": true,
+      "opcode": "f003 fac9",
+      "width": 4
+    },
+    {
+      "address": "0x000008ee",
+      "assembly": "pop\t{r4, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bd10",
+      "width": 2
+    },
+    {
+      "address": "0x000008f0",
+      "assembly": "ldr\tr0, [pc, #12]\t@ (900 <vTaskSetTimeOutState+0x2c>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4803",
+      "width": 2
+    },
+    {
+      "address": "0x000008f2",
+      "assembly": "ldr\tr1, [pc, #16]\t@ (904 <vTaskSetTimeOutState+0x30>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4904",
+      "width": 2
+    },
+    {
+      "address": "0x000008f4",
+      "assembly": "bl\t419c <fixture_assert_fail>",
+      "frontend_encoding_supported": true,
+      "opcode": "f003 fc52",
+      "width": 4
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x000008f8",
+      "bytes": "18000020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x20000018",
+          "name": "xNumOfOverflows",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 6,
+      "instruction": "0x000008de",
+      "thumb_function_pointer": [],
+      "value": "0x20000018"
+    },
+    {
+      "address": "0x000008fc",
+      "bytes": "2c000020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x2000002c",
+          "name": "xTickCount",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 5,
+      "instruction": "0x000008e4",
+      "thumb_function_pointer": [],
+      "value": "0x2000002c"
+    },
+    {
+      "address": "0x00000900",
+      "bytes": "f8440000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 3,
+      "instruction": "0x000008f0",
+      "thumb_function_pointer": [],
+      "value": "0x000044f8"
+    },
+    {
+      "address": "0x00000904",
+      "bytes": "86150000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 4,
+      "instruction": "0x000008f2",
+      "thumb_function_pointer": [],
+      "value": "0x00001586"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x000008f8",
+      "halfword": "1800"
+    },
+    {
+      "address": "0x000008fa",
+      "halfword": "0020"
+    },
+    {
+      "address": "0x000008fc",
+      "halfword": "2c00"
+    },
+    {
+      "address": "0x000008fe",
+      "halfword": "0020"
+    },
+    {
+      "address": "0x00000900",
+      "halfword": "f844"
+    },
+    {
+      "address": "0x00000902",
+      "halfword": "0000"
+    },
+    {
+      "address": "0x00000904",
+      "halfword": "8615"
+    },
+    {
+      "address": "0x00000906",
+      "halfword": "0000"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x000008ee",
+      "assembly": "pop\t{r4, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bd10",
+      "width": 2
+    }
+  ],
+  "row": "r15",
+  "size": 52,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "vTaskSetTimeOutState",
+  "symbol_record": {
+    "address": "0x000008d4",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskSetTimeOutState",
+    "section": "2",
+    "size": 52,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000008d5"
+  },
+  "thumb_symbol": "0x000008d5",
+  "unsupported_instructions": []
+}

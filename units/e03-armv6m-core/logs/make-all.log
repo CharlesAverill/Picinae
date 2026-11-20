@@ -1,0 +1,15 @@
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+make -f Makefile.coq all
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+ROCQ compile Picinae_auto.v
+ROCQ compile Picinae_i386.v
+ROCQ compile Picinae_armv7.v
+ROCQ compile Picinae_armv8.v
+ROCQ compile Picinae_riscv.v
+ROCQ compile Picinae_amd64.v
+ROCQ compile Picinae_numbers.v
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+EXIT=0

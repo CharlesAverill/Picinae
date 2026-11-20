@@ -1,0 +1,2 @@
+# Preserve verbatim readelf/linker/size evidence, including tool whitespace.
+evidence/*.txt -whitespace
