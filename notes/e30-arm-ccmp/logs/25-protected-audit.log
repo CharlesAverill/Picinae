@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9d096d
+COMMAND=python3 notes/e30-arm-ccmp/audit.py
+PASS pinned origin merge-base; exact six allowed prerequisite commits; only own e30 scope follows e29
+PASS 897 unchanged protected historical/core/proof/e02/e08/e11/e29 source and evidence hashes
+
+EXIT_CODE=0

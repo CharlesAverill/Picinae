@@ -1,0 +1,127 @@
+[
+  {
+    "bytes": "2008c05a",
+    "assembly": "rev w0,w1",
+    "il": "Move (V_TEMP 0) (Extract 31 0 (Var R_X1)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00 32)) $;\n\tMove (V_TEMP 2) (BinOp OP_RSHIFT (Var (V_TEMP 1)) (Word 0x8 32)) $;\n\tMove (V_TEMP 3) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff 32)) $;\n\tMove (V_TEMP 4) (BinOp OP_LSHIFT (Var (V_TEMP 3)) (Word 0x8 32)) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 2)) (Var (V_TEMP 4))) $;\n\tMove (V_TEMP 5) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Word 0x10 32)) $;\n\tMove (V_TEMP 6) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Word 0x10 32)) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 5)) (Var (V_TEMP 6))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "2000222a",
+    "assembly": "orn w0,w1,w2",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Word 0x1 32)) $;\n\tMove (V_TEMP 1) (BinOp OP_XOR (Extract 31 0 (Var R_X2)) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (BinOp OP_OR (Extract 31 0 (Var R_X1)) (Var (V_TEMP 1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "2000226a",
+    "assembly": "bics w0,w1,w2",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Word 0x1 32)) $;\n\tMove (V_TEMP 1) (BinOp OP_XOR (Extract 31 0 (Var R_X2)) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Extract 31 0 (Var R_X1)) (Var (V_TEMP 1))) $;\n\tMove R_TMPNG (Cast CAST_UNSIGNED 8 (BinOp OP_SLT (Var (V_TEMP 2)) (Word 0x0 32))) $;\n\tMove R_TMPZR (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var (V_TEMP 2)) (Word 0x0 32))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2))) $;\n\tMove R_NG (Var R_TMPNG) $;\n\tMove R_ZR (Var R_TMPZR) $;\n\tMove R_CY (Word 0x0 8) $;\n\tMove R_OV (Word 0x0 8)"
+  },
+  {
+    "bytes": "20001f53",
+    "assembly": "ubfiz w0,w1,#0x1,#0x1",
+    "il": "Move (V_TEMP 0) (Extract 31 0 (Var R_X1)) $;\n\tMove (V_TEMP 1) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Word 0x1f 32)) $;\n\tMove (V_TEMP 2) (BinOp OP_MINUS (Word 0x20 32) (Word 0x1f 32)) $;\n\tMove (V_TEMP 3) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Var (V_TEMP 2))) $;\n\tMove (V_TEMP 4) (BinOp OP_OR (Var (V_TEMP 1)) (Var (V_TEMP 3))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 4)) (Word 0x2 32)) $;\n\tMove (V_TEMP 6) (BinOp OP_AND (Var (V_TEMP 5)) (Word 0x3 32)) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 6)))"
+  },
+  {
+    "bytes": "20281653",
+    "assembly": "ubfiz w0,w1,#0xa,#0xb",
+    "il": "Move (V_TEMP 0) (Extract 31 0 (Var R_X1)) $;\n\tMove (V_TEMP 1) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Word 0x16 32)) $;\n\tMove (V_TEMP 2) (BinOp OP_MINUS (Word 0x20 32) (Word 0x16 32)) $;\n\tMove (V_TEMP 3) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Var (V_TEMP 2))) $;\n\tMove (V_TEMP 4) (BinOp OP_OR (Var (V_TEMP 1)) (Var (V_TEMP 3))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 4)) (Word 0x1ffc00 32)) $;\n\tMove (V_TEMP 6) (BinOp OP_AND (Var (V_TEMP 5)) (Word 0x1fffff 32)) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 6)))"
+  },
+  {
+    "bytes": "20000253",
+    "assembly": "ubfiz w0,w1,#0x1e,#0x1",
+    "il": "Move (V_TEMP 0) (Extract 31 0 (Var R_X1)) $;\n\tMove (V_TEMP 1) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Word 0x2 32)) $;\n\tMove (V_TEMP 2) (BinOp OP_MINUS (Word 0x20 32) (Word 0x2 32)) $;\n\tMove (V_TEMP 3) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Var (V_TEMP 2))) $;\n\tMove (V_TEMP 4) (BinOp OP_OR (Var (V_TEMP 1)) (Var (V_TEMP 3))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 4)) (Word 0x40000000 32)) $;\n\tMove (V_TEMP 6) (BinOp OP_AND (Var (V_TEMP 5)) (Word 0x7fffffff 32)) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 6)))"
+  },
+  {
+    "bytes": "20741f53",
+    "assembly": "ubfiz w0,w1,#0x1,#0x1e",
+    "il": "Move (V_TEMP 0) (Extract 31 0 (Var R_X1)) $;\n\tMove (V_TEMP 1) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Word 0x1f 32)) $;\n\tMove (V_TEMP 2) (BinOp OP_MINUS (Word 0x20 32) (Word 0x1f 32)) $;\n\tMove (V_TEMP 3) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Var (V_TEMP 2))) $;\n\tMove (V_TEMP 4) (BinOp OP_OR (Var (V_TEMP 1)) (Var (V_TEMP 3))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 4)) (Word 0x7ffffffe 32)) $;\n\tMove (V_TEMP 6) (BinOp OP_AND (Var (V_TEMP 5)) (Word 0x7fffffff 32)) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 6)))"
+  },
+  {
+    "bytes": "200cc0da",
+    "assembly": "rev x0,x1",
+    "il": "Move (V_TEMP 0) (Var R_X1) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff00 64)) $;\n\tMove (V_TEMP 2) (BinOp OP_RSHIFT (Var (V_TEMP 1)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 3) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff 64)) $;\n\tMove (V_TEMP 4) (BinOp OP_LSHIFT (Var (V_TEMP 3)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 2)) (Var (V_TEMP 4))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff0000 64)) $;\n\tMove (V_TEMP 6) (BinOp OP_RSHIFT (Var (V_TEMP 5)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 7) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff 64)) $;\n\tMove (V_TEMP 8) (BinOp OP_LSHIFT (Var (V_TEMP 7)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 6)) (Var (V_TEMP 8))) $;\n\tMove (V_TEMP 9) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove (V_TEMP 10) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove R_X0 (BinOp OP_OR (Var (V_TEMP 9)) (Var (V_TEMP 10)))"
+  },
+  {
+    "bytes": "200022aa",
+    "assembly": "orn x0,x1,x2",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Word 0x1 64)) $;\n\tMove (V_TEMP 1) (BinOp OP_XOR (Var R_X2) (Var (V_TEMP 0))) $;\n\tMove R_X0 (BinOp OP_OR (Var R_X1) (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "200022ea",
+    "assembly": "bics x0,x1,x2",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Word 0x1 64)) $;\n\tMove (V_TEMP 1) (BinOp OP_XOR (Var R_X2) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var R_X1) (Var (V_TEMP 1))) $;\n\tMove R_TMPNG (Cast CAST_UNSIGNED 8 (BinOp OP_SLT (Var (V_TEMP 2)) (Word 0x0 64))) $;\n\tMove R_TMPZR (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var (V_TEMP 2)) (Word 0x0 64))) $;\n\tMove R_X0 (Var (V_TEMP 2)) $;\n\tMove R_NG (Var R_TMPNG) $;\n\tMove R_ZR (Var R_TMPZR) $;\n\tMove R_CY (Word 0x0 8) $;\n\tMove R_OV (Word 0x0 8)"
+  },
+  {
+    "bytes": "20007fd3",
+    "assembly": "ubfiz x0,x1,#0x1,#0x1",
+    "il": "Move (V_TEMP 0) (Var R_X1) $;\n\tMove (V_TEMP 1) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Word 0x3f 64)) $;\n\tMove (V_TEMP 2) (BinOp OP_MINUS (Word 0x40 64) (Word 0x3f 64)) $;\n\tMove (V_TEMP 3) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Var (V_TEMP 2))) $;\n\tMove (V_TEMP 4) (BinOp OP_OR (Var (V_TEMP 1)) (Var (V_TEMP 3))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 4)) (Word 0x2 64)) $;\n\tMove R_X0 (BinOp OP_AND (Var (V_TEMP 5)) (Word 0x3 64))"
+  },
+  {
+    "bytes": "202876d3",
+    "assembly": "ubfiz x0,x1,#0xa,#0xb",
+    "il": "Move (V_TEMP 0) (Var R_X1) $;\n\tMove (V_TEMP 1) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Word 0x36 64)) $;\n\tMove (V_TEMP 2) (BinOp OP_MINUS (Word 0x40 64) (Word 0x36 64)) $;\n\tMove (V_TEMP 3) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Var (V_TEMP 2))) $;\n\tMove (V_TEMP 4) (BinOp OP_OR (Var (V_TEMP 1)) (Var (V_TEMP 3))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 4)) (Word 0x1ffc00 64)) $;\n\tMove R_X0 (BinOp OP_AND (Var (V_TEMP 5)) (Word 0x1fffff 64))"
+  },
+  {
+    "bytes": "200042d3",
+    "assembly": "ubfiz x0,x1,#0x3e,#0x1",
+    "il": "Move (V_TEMP 0) (Var R_X1) $;\n\tMove (V_TEMP 1) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Word 0x2 64)) $;\n\tMove (V_TEMP 2) (BinOp OP_MINUS (Word 0x40 64) (Word 0x2 64)) $;\n\tMove (V_TEMP 3) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Var (V_TEMP 2))) $;\n\tMove (V_TEMP 4) (BinOp OP_OR (Var (V_TEMP 1)) (Var (V_TEMP 3))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 4)) (Word 0x4000000000000000 64)) $;\n\tMove R_X0 (BinOp OP_AND (Var (V_TEMP 5)) (Word 0x7fffffffffffffff 64))"
+  },
+  {
+    "bytes": "20f47fd3",
+    "assembly": "ubfiz x0,x1,#0x1,#0x3e",
+    "il": "Move (V_TEMP 0) (Var R_X1) $;\n\tMove (V_TEMP 1) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Word 0x3f 64)) $;\n\tMove (V_TEMP 2) (BinOp OP_MINUS (Word 0x40 64) (Word 0x3f 64)) $;\n\tMove (V_TEMP 3) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Var (V_TEMP 2))) $;\n\tMove (V_TEMP 4) (BinOp OP_OR (Var (V_TEMP 1)) (Var (V_TEMP 3))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 4)) (Word 0x7ffffffffffffffe 64)) $;\n\tMove R_X0 (BinOp OP_AND (Var (V_TEMP 5)) (Word 0x7fffffffffffffff 64))"
+  },
+  {
+    "bytes": "63281653",
+    "assembly": "ubfiz w3,w3,#0xa,#0xb",
+    "il": "Move (V_TEMP 0) (Extract 31 0 (Var R_X3)) $;\n\tMove (V_TEMP 1) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Word 0x16 32)) $;\n\tMove (V_TEMP 2) (BinOp OP_MINUS (Word 0x20 32) (Word 0x16 32)) $;\n\tMove (V_TEMP 3) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Var (V_TEMP 2))) $;\n\tMove (V_TEMP 4) (BinOp OP_OR (Var (V_TEMP 1)) (Var (V_TEMP 3))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 4)) (Word 0x1ffc00 32)) $;\n\tMove (V_TEMP 6) (BinOp OP_AND (Var (V_TEMP 5)) (Word 0x1fffff 32)) $;\n\tMove R_X3 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 6)))"
+  },
+  {
+    "bytes": "620124aa",
+    "assembly": "orn x2,x11,x4",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Word 0x1 64)) $;\n\tMove (V_TEMP 1) (BinOp OP_XOR (Var R_X4) (Var (V_TEMP 0))) $;\n\tMove R_X2 (BinOp OP_OR (Var R_X11) (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "830124aa",
+    "assembly": "orn x3,x12,x4",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Word 0x1 64)) $;\n\tMove (V_TEMP 1) (BinOp OP_XOR (Var R_X4) (Var (V_TEMP 0))) $;\n\tMove R_X3 (BinOp OP_OR (Var R_X12) (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "ad0dc0da",
+    "assembly": "rev x13,x13",
+    "il": "Move (V_TEMP 0) (Var R_X13) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff00 64)) $;\n\tMove (V_TEMP 2) (BinOp OP_RSHIFT (Var (V_TEMP 1)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 3) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff 64)) $;\n\tMove (V_TEMP 4) (BinOp OP_LSHIFT (Var (V_TEMP 3)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 2)) (Var (V_TEMP 4))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff0000 64)) $;\n\tMove (V_TEMP 6) (BinOp OP_RSHIFT (Var (V_TEMP 5)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 7) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff 64)) $;\n\tMove (V_TEMP 8) (BinOp OP_LSHIFT (Var (V_TEMP 7)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 6)) (Var (V_TEMP 8))) $;\n\tMove (V_TEMP 9) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove (V_TEMP 10) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove R_X13 (BinOp OP_OR (Var (V_TEMP 9)) (Var (V_TEMP 10)))"
+  },
+  {
+    "bytes": "cd0dc0da",
+    "assembly": "rev x13,x14",
+    "il": "Move (V_TEMP 0) (Var R_X14) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff00 64)) $;\n\tMove (V_TEMP 2) (BinOp OP_RSHIFT (Var (V_TEMP 1)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 3) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff 64)) $;\n\tMove (V_TEMP 4) (BinOp OP_LSHIFT (Var (V_TEMP 3)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 2)) (Var (V_TEMP 4))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff0000 64)) $;\n\tMove (V_TEMP 6) (BinOp OP_RSHIFT (Var (V_TEMP 5)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 7) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff 64)) $;\n\tMove (V_TEMP 8) (BinOp OP_LSHIFT (Var (V_TEMP 7)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 6)) (Var (V_TEMP 8))) $;\n\tMove (V_TEMP 9) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove (V_TEMP 10) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove R_X13 (BinOp OP_OR (Var (V_TEMP 9)) (Var (V_TEMP 10)))"
+  },
+  {
+    "bytes": "840026ea",
+    "assembly": "bics x4,x4,x6",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Word 0x1 64)) $;\n\tMove (V_TEMP 1) (BinOp OP_XOR (Var R_X6) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var R_X4) (Var (V_TEMP 1))) $;\n\tMove R_TMPNG (Cast CAST_UNSIGNED 8 (BinOp OP_SLT (Var (V_TEMP 2)) (Word 0x0 64))) $;\n\tMove R_TMPZR (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var (V_TEMP 2)) (Word 0x0 64))) $;\n\tMove R_X4 (Var (V_TEMP 2)) $;\n\tMove R_NG (Var R_TMPNG) $;\n\tMove R_ZR (Var R_TMPZR) $;\n\tMove R_CY (Word 0x0 8) $;\n\tMove R_OV (Word 0x0 8)"
+  },
+  {
+    "bytes": "c60cc0da",
+    "assembly": "rev x6,x6",
+    "il": "Move (V_TEMP 0) (Var R_X6) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff00 64)) $;\n\tMove (V_TEMP 2) (BinOp OP_RSHIFT (Var (V_TEMP 1)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 3) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff 64)) $;\n\tMove (V_TEMP 4) (BinOp OP_LSHIFT (Var (V_TEMP 3)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 2)) (Var (V_TEMP 4))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff0000 64)) $;\n\tMove (V_TEMP 6) (BinOp OP_RSHIFT (Var (V_TEMP 5)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 7) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff 64)) $;\n\tMove (V_TEMP 8) (BinOp OP_LSHIFT (Var (V_TEMP 7)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 6)) (Var (V_TEMP 8))) $;\n\tMove (V_TEMP 9) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove (V_TEMP 10) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove R_X6 (BinOp OP_OR (Var (V_TEMP 9)) (Var (V_TEMP 10)))"
+  },
+  {
+    "bytes": "420cc0da",
+    "assembly": "rev x2,x2",
+    "il": "Move (V_TEMP 0) (Var R_X2) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff00 64)) $;\n\tMove (V_TEMP 2) (BinOp OP_RSHIFT (Var (V_TEMP 1)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 3) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff 64)) $;\n\tMove (V_TEMP 4) (BinOp OP_LSHIFT (Var (V_TEMP 3)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 2)) (Var (V_TEMP 4))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff0000 64)) $;\n\tMove (V_TEMP 6) (BinOp OP_RSHIFT (Var (V_TEMP 5)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 7) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff 64)) $;\n\tMove (V_TEMP 8) (BinOp OP_LSHIFT (Var (V_TEMP 7)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 6)) (Var (V_TEMP 8))) $;\n\tMove (V_TEMP 9) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove (V_TEMP 10) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove R_X2 (BinOp OP_OR (Var (V_TEMP 9)) (Var (V_TEMP 10)))"
+  },
+  {
+    "bytes": "630cc0da",
+    "assembly": "rev x3,x3",
+    "il": "Move (V_TEMP 0) (Var R_X3) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff00 64)) $;\n\tMove (V_TEMP 2) (BinOp OP_RSHIFT (Var (V_TEMP 1)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 3) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff 64)) $;\n\tMove (V_TEMP 4) (BinOp OP_LSHIFT (Var (V_TEMP 3)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 2)) (Var (V_TEMP 4))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff0000 64)) $;\n\tMove (V_TEMP 6) (BinOp OP_RSHIFT (Var (V_TEMP 5)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 7) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff 64)) $;\n\tMove (V_TEMP 8) (BinOp OP_LSHIFT (Var (V_TEMP 7)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 6)) (Var (V_TEMP 8))) $;\n\tMove (V_TEMP 9) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove (V_TEMP 10) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove R_X3 (BinOp OP_OR (Var (V_TEMP 9)) (Var (V_TEMP 10)))"
+  },
+  {
+    "bytes": "840025ea",
+    "assembly": "bics x4,x4,x5",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Word 0x1 64)) $;\n\tMove (V_TEMP 1) (BinOp OP_XOR (Var R_X5) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var R_X4) (Var (V_TEMP 1))) $;\n\tMove R_TMPNG (Cast CAST_UNSIGNED 8 (BinOp OP_SLT (Var (V_TEMP 2)) (Word 0x0 64))) $;\n\tMove R_TMPZR (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var (V_TEMP 2)) (Word 0x0 64))) $;\n\tMove R_X4 (Var (V_TEMP 2)) $;\n\tMove R_NG (Var R_TMPNG) $;\n\tMove R_ZR (Var R_TMPZR) $;\n\tMove R_CY (Word 0x0 8) $;\n\tMove R_OV (Word 0x0 8)"
+  },
+  {
+    "bytes": "840cc0da",
+    "assembly": "rev x4,x4",
+    "il": "Move (V_TEMP 0) (Var R_X4) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff00 64)) $;\n\tMove (V_TEMP 2) (BinOp OP_RSHIFT (Var (V_TEMP 1)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 3) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xff00ff00ff00ff 64)) $;\n\tMove (V_TEMP 4) (BinOp OP_LSHIFT (Var (V_TEMP 3)) (Cast CAST_UNSIGNED 64 (Word 0x8 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 2)) (Var (V_TEMP 4))) $;\n\tMove (V_TEMP 5) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff0000 64)) $;\n\tMove (V_TEMP 6) (BinOp OP_RSHIFT (Var (V_TEMP 5)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 7) (BinOp OP_AND (Var (V_TEMP 0)) (Word 0xffff0000ffff 64)) $;\n\tMove (V_TEMP 8) (BinOp OP_LSHIFT (Var (V_TEMP 7)) (Cast CAST_UNSIGNED 64 (Word 0x10 32))) $;\n\tMove (V_TEMP 0) (BinOp OP_OR (Var (V_TEMP 6)) (Var (V_TEMP 8))) $;\n\tMove (V_TEMP 9) (BinOp OP_RSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove (V_TEMP 10) (BinOp OP_LSHIFT (Var (V_TEMP 0)) (Cast CAST_UNSIGNED 64 (Word 0x20 32))) $;\n\tMove R_X4 (BinOp OP_OR (Var (V_TEMP 9)) (Var (V_TEMP 10)))"
+  }
+]

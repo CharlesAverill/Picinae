@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ba9de42a
+COMMAND=bash -c for\ p\ in\ _build/default/Examples/claude/arm8_memchr_nosimd_spec.vo\ _build/default/Examples/claude/arm8_memchr_nosimd_proof.vo\ _build/default/Examples/claude/lifter/scalar_ccmp/e30___memchr_nosimd_arm8.vo\;\ do\ if\ test\ -f\ \"\$p\"\;\ then\ stat\ --format=\"PRESENT\ %n\ %s\ bytes\"\ \"\$p\"\;\ else\ echo\ \"ABSENT\ \$p\"\;\ fi\;\ done
+ABSENT _build/default/Examples/claude/arm8_memchr_nosimd_spec.vo
+ABSENT _build/default/Examples/claude/arm8_memchr_nosimd_proof.vo
+PRESENT _build/default/Examples/claude/lifter/scalar_ccmp/e30___memchr_nosimd_arm8.vo 185205 bytes
+
+EXIT_CODE=0

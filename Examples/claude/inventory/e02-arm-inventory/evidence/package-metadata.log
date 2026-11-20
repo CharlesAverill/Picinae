@@ -1,0 +1,12 @@
+libc6_2.35-0ubuntu3.15_arm64.deb
+Package: libc6
+Version: 2.35-0ubuntu3.15
+Architecture: arm64
+libc6-dbg_2.35-0ubuntu3.15_arm64.deb
+Package: libc6-dbg
+Version: 2.35-0ubuntu3.15
+Architecture: arm64
+root/lib/aarch64-linux-gnu/libc.so.6
+    Build ID: 977c021c364ee3c495c0e5f2375bf6ba2124a6da
+root/usr/lib/debug/.build-id/97/7c021c364ee3c495c0e5f2375bf6ba2124a6da.debug
+    Build ID: 977c021c364ee3c495c0e5f2375bf6ba2124a6da

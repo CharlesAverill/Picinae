@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ba9de42a
+COMMAND=git branch -m llm-proofs/a-memchr-nosimd
+error: unable to move logfile logs/refs/heads/t3/prove-a-memchr-nosimd to logs/refs/.tmp-renamed-log: Read-only file system
+fatal: branch rename failed
+
+EXIT_CODE=128

@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9d096d
+COMMAND=python3 notes/e30-arm-ccmp/collect.py --run raw03
+COMMAND=["/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/bin/python", "-m", "pyghidra", "--skip-analysis", "--project-path", "/home/charles/code/friends/.toolchains/e30-arm-ccmp/raw03/projects", "--project-name", "e30", "/home/charles/code/friends/.toolchains/e02-arm-inventory/root/lib/aarch64-linux-gnu/libc.so.6", "/home/charles/.t3/worktrees/Picinae/t3-4b9d096d/notes/e30-arm-ccmp/collect_headless.py", "/home/charles/.t3/worktrees/Picinae/t3-4b9d096d", "/home/charles/code/friends/.toolchains/e30-arm-ccmp/raw03"]
+LAUNCHER_EXIT=0
+PASS /home/charles/code/friends/.toolchains/e30-arm-ccmp/raw03/raw.json
+
+EXIT_CODE=0

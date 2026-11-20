@@ -1,0 +1,4 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-4b9d096d/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e30-arm-ccmp/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e30-arm-ccmp/validate01/memcmp", "--global-addressing", "memcmp"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: memcmp 0x1946e4 cneg w0,w0,cc: unmodeled instruction cneg w0,w0,cc; raw pcode: (unique, 0x2400, 1) BOOL_NEGATE (register, 0x102, 1); (unique, 0x1d280, 4) INT_2COMP (register, 0x4000, 4);  ---  CBRANCH (const, 0x2, 4) , (unique, 0x2400, 1); (unique, 0x1d280, 4) COPY (register, 0x4000, 4); (register, 0x4000, 8) INT_ZEXT (unique, 0x1d280, 4); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e30-arm-ccmp/validate01/ghidra/logs/0e7fd1b6643f4a40b5182586a672bb90.log
+
+EXIT_CODE=1

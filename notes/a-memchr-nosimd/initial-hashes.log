@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ba9de42a
+COMMAND=sha256sum Examples/claude/arm8_memchr_nosimd_spec.v Examples/claude/arm8_memchr_nosimd_proof.v dune
+eea68967132abce027515b86bf859197c8b8655232048919ba04dbc3759dc18a  Examples/claude/arm8_memchr_nosimd_spec.v
+792a91d235f7b4bb087c81b6eea9ebf2ec90869032da4757e73f8d69f3daffb0  Examples/claude/arm8_memchr_nosimd_proof.v
+71a51c384c4381c73dcd25a80eaf1d7bcc399bb2b2f73715b286b0cd47b3a561  dune
+
+EXIT_CODE=0
