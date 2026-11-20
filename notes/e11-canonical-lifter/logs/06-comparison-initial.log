@@ -1,0 +1,11 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e11-canonical-lifter/compare-il.py
+toascii: 2 instructions; 2 identical normalized ASTs; 0 exact explained differences; 128 effect samples/instruction PASS
+div: 7 instructions; 6 identical normalized ASTs; 1 exact explained differences; 128 effect samples/instruction PASS
+ldiv: 4 instructions; 3 identical normalized ASTs; 1 exact explained differences; 128 effect samples/instruction PASS
+swab: 13 instructions; 11 identical normalized ASTs; 2 exact explained differences; 128 effect samples/instruction PASS
+ffs: 25 instructions; 17 identical normalized ASTs; 8 exact explained differences; 128 effect samples/instruction PASS
+ffsl: 18 instructions; 10 identical normalized ASTs; 8 exact explained differences; 128 effect samples/instruction PASS
+PASS historical IL comparison (finite regression evidence only)
+
+EXIT_CODE=0

@@ -1,0 +1,4 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/baseline01/bsearch", "bsearch"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: bsearch 0x13bb8c blr x26: unmodeled instruction blr x26; raw pcode: (register, 0x0, 8) COPY (register, 0x40d0, 8); (register, 0x40f0, 8) INT_ADD (const, 0x13bb8c, 8) , (const, 0x4, 8);  ---  CALLIND (register, 0x0, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/6e08fb534099451aa08c820c553a77ff.log
+
+EXIT_CODE=1
