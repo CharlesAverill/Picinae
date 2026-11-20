@@ -1,0 +1,10 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-746dec47
+COMMAND=python3 tools/audit-proof-source.py --base 378fe1b57514b9af3f017a72b4ca665910156cc7 Examples/claude/lifter/scalar_ports
+Base: 378fe1b57514b9af3f017a72b4ca665910156cc7
+Scope: 15 Rocq source files
+BASELINE totals: {}
+CURRENT totals: {}
+NEW totals: {}
+Source check only: inspect transitive Print Assumptions separately.
+
+EXIT_CODE=0

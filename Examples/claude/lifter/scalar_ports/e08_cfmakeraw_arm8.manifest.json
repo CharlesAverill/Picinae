@@ -1,0 +1,174 @@
+{
+  "addressing": "global",
+  "aliases_same_entry_extent": [
+    "cfmakeraw"
+  ],
+  "build_id": "977c021c364ee3c495c0e5f2375bf6ba2124a6da",
+  "closure": {
+    "closed": true,
+    "direct_and_fallthrough_edges": [
+      {
+        "kind": "fallthrough",
+        "source": "0x1e1500",
+        "target": "0x1e1504"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e1504",
+        "target": "0x1e1508"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e1508",
+        "target": "0x1e150c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e150c",
+        "target": "0x1e1510"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e1510",
+        "target": "0x1e1514"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e1514",
+        "target": "0x1e1518"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e1518",
+        "target": "0x1e151c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e151c",
+        "target": "0x1e1520"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e1520",
+        "target": "0x1e1524"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e1524",
+        "target": "0x1e1528"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e1528",
+        "target": "0x1e152c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e152c",
+        "target": "0x1e1530"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e1530",
+        "target": "0x1e1534"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e1534",
+        "target": "0x1e1538"
+      }
+    ],
+    "indirect_nonreturn_edges": [],
+    "meaning": "finite selected machine map closes all direct edges and fallthroughs; RETURN remains caller ABI boundary",
+    "returns": [
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x1e1538"
+      }
+    ]
+  },
+  "data": {
+    "analysis": "ADR(P)+ADD object references plus complete raw memory instruction list; manual target review required, no invented constants",
+    "contract": "Map ELF virtual data addresses to model addresses by +0x100000. Runtime memory must supply these bytes/state and any relocated pointer targets; generated program does not initialize memory.",
+    "materialized_objects": [],
+    "memory_accesses": [
+      {
+        "assembly": "strh w1,[x0, #0x16]",
+        "instruction": "0x1e1504",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6300, 8) , (unique, 0x3ac80, 2)"
+        ]
+      },
+      {
+        "assembly": "ldp w1,w2,[x0, #0x8]",
+        "instruction": "0x1e1508",
+        "pcode": [
+          "(unique, 0x24280, 4) LOAD (const, 0x1b1, 8) , (unique, 0x7b80, 8)",
+          "(unique, 0x24480, 4) LOAD (const, 0x1b1, 8) , (unique, 0x24400, 8)"
+        ]
+      },
+      {
+        "assembly": "ldr x3,[x0]",
+        "instruction": "0x1e1510",
+        "pcode": [
+          "(register, 0x4018, 8) LOAD (const, 0x1b1, 8) , (unique, 0x6800, 8)"
+        ]
+      },
+      {
+        "assembly": "str x3,[x0]",
+        "instruction": "0x1e1530",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6800, 8) , (register, 0x4018, 8)"
+        ]
+      },
+      {
+        "assembly": "stp w1,w2,[x0, #0x8]",
+        "instruction": "0x1e1534",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a380, 4)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a480, 8) , (unique, 0x3a400, 4)"
+        ]
+      }
+    ],
+    "staticMemory": false
+  },
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "elf_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "generated_program": "e08_cfmakeraw_arm8",
+  "generated_program_sha256": "72c1a378415908dcd3105fc98c90491cb646bbebf3a6b1b2548738f509cb9e54",
+  "image_base": "0x100000",
+  "implementation_sha256": {
+    "lift-scalar.py": "1bdf6ec35946c220dc07fc4963efc37b7cb3f150e0f77ccfbcfecd2e74828909",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "scalar_headless.py": "4aab6945ece18c558f2b1dc397a31a8333a8e380dcaf29630168472e1fe7bcd3"
+  },
+  "instruction_count": 15,
+  "limits": "Generated scalar IL and typing only; no functional correctness, termination, equivalence to historical lifts, or lifter soundness claim.",
+  "naming_adapter": {
+    "new": "e08_cfmakeraw_arm8",
+    "occurrence_count": 2,
+    "old": "e11_cfmakeraw_arm8",
+    "operation": "identifier substitution only"
+  },
+  "naming_closure_harness_sha256": "fdfce3192d5670367686ff78a4606197c83df74f817945cf653819f2f83165a5",
+  "original_program_sha256": "074f207eecff007b835d1bcf67cbf0ab368e7f9227c2b3a7a0e7974a09cd0eaa",
+  "pcode_sha256": "c9a1b84c3be2f13a2d160a071660a97fae49d6ce78e7e547cec4d3cd1781471b",
+  "record": {
+    "bytes_sha256": "cc1e24ad4147061b09d3a017a4e730f397913a127a7a8b6293513c9f856109e2",
+    "elf_entry": "0xe1500",
+    "entry": "0x1e1500",
+    "instructions": 15,
+    "output": "e11_cfmakeraw_arm8.v",
+    "output_sha256": "074f207eecff007b835d1bcf67cbf0ab368e7f9227c2b3a7a0e7974a09cd0eaa",
+    "selected_symbols": [
+      "cfmakeraw"
+    ],
+    "size": 60,
+    "symbol": "cfmakeraw"
+  },
+  "schema": 1,
+  "selected_symbols": [
+    "cfmakeraw"
+  ],
+  "symbol": "cfmakeraw"
+}
