@@ -1,0 +1,156 @@
+{
+  "source_kind": "samples",
+  "elf_sha256": "9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9",
+  "debug_sha256": "10e200b6bb67e1697e1c924d7fe65f55d358e9e049c6bf9ec1e0151e5e25f450",
+  "image_base": "0x100000",
+  "language": "x86:LE:64:default",
+  "addressing": "global",
+  "profile": "strict;bmi1=present;abm=unspecified",
+  "scope": "instruction-samples",
+  "direct_edges": [],
+  "records": [
+    {
+      "symbol": "hot_scans",
+      "elf_entry": "0xb2d40",
+      "entry": "0x1b2d40",
+      "size": 4,
+      "bytes_sha256": "4f58a9461693f370c237a1153a8475bfcfd8bab552ecfdd98dd88a046d388388",
+      "extents": [
+        {
+          "elf_entry": "0xb2d40",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xb2daf",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xb2f19",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xb2fdf",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xb48f9",
+          "size": 3
+        },
+        {
+          "elf_entry": "0xb4f66",
+          "size": 3
+        },
+        {
+          "elf_entry": "0xb5251",
+          "size": 3
+        },
+        {
+          "elf_entry": "0xb5275",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xba380",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xba6aa",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xba744",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xba93a",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xba98a",
+          "size": 3
+        },
+        {
+          "elf_entry": "0xba9d2",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xbfa88",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xc422a",
+          "size": 4
+        },
+        {
+          "elf_entry": "0xc4455",
+          "size": 4
+        },
+        {
+          "elf_entry": "0x1989f6",
+          "size": 4
+        },
+        {
+          "elf_entry": "0x198b73",
+          "size": 4
+        },
+        {
+          "elf_entry": "0x198b9c",
+          "size": 4
+        },
+        {
+          "elf_entry": "0x198bd8",
+          "size": 4
+        },
+        {
+          "elf_entry": "0x198c42",
+          "size": 5
+        },
+        {
+          "elf_entry": "0x199376",
+          "size": 4
+        },
+        {
+          "elf_entry": "0x19952b",
+          "size": 5
+        },
+        {
+          "elf_entry": "0x199c5b",
+          "size": 4
+        },
+        {
+          "elf_entry": "0x19e170",
+          "size": 3
+        },
+        {
+          "elf_entry": "0x19e1c6",
+          "size": 3
+        },
+        {
+          "elf_entry": "0x1ae9d8",
+          "size": 3
+        }
+      ],
+      "instructions": 28,
+      "selected_symbols": [
+        "hot_scans"
+      ],
+      "output": "e28_hot_scans_amd64.v",
+      "output_sha256": "5b2772964921b3821ae20710c1b5361f335ec5479866aa43f92722ece09271da",
+      "pcode_sha256": "80089c42181a27dc1c076f6a1e4e22673f7cbe1cecfde1702eb30de41fbd307a"
+    }
+  ],
+  "isa_sha256": {
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.sla": "4d3ebe1ebf0b127dc5bd187979824b850fc94081e6660021e2bda834e7400504",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.slaspec": "9d66a01a4219ab0bee0697caf2d1ee389e094e927a857299cebb6182e40a4e6e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.pspec": "3c3dab75a2ac0b98b0552856f690e613d661e0df7cf94d6252e5604d9821629f",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64-gcc.cspec": "5eaa848f3eba7ebd4023541f9f37645dae077e8426fb562592f398d599530a9e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86.ldefs": "b2aa14d94a6162844b18bf47f2aed8579bf90cef3459f6e322b9c1f58146098b",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/ia.sinc": "8fbb244f7fc88be621b95f435b6e958c6a55819dd5b935242377bb2a7e2b9b76"
+  },
+  "implementation_sha256": {
+    "pcode2coq_bitscan.py": "85bfc4060e3019b54125c7bd47cc3743645d0b61691837c36efad409282c825e",
+    "pcode2coq_x64.py": "c885c6a572288f766bd4d3506763cdbea2308ec0130c6d93907ab08653edb276",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "bitscan_headless.py": "e5bc0b1ba7210387dbdb9e4c234b8d77beace78f59bdd98d541a7081be395247",
+    "lift-bitscan.py": "23e03e1125146b23859616a5131449665ba3fcc6128bb63a064cd623def017ef"
+  }
+}

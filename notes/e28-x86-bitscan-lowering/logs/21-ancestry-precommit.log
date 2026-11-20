@@ -1,0 +1,298 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-09baf102
+COMMAND=python3 notes/e28-x86-bitscan-lowering/check-ancestry.py
+MERGE_BASE 49956416928e5b6bb3928b54ae33e3b81091f006
+HEAD 328088263ebba11786a03448808e584231504fe1
+ALLOWED PREREQUISITES 7 OWN 0
+3280882 Add strict AMD64 scalar lifting pipeline
+1d4c462 Import reviewed x86 inventory prerequisite
+378fe1b Add strict pinned scalar lifting pipeline
+052521a Import reviewed partial ARM inventory evidence
+131ad4b Add exact Ubuntu x86 glibc copy and string inventory
+081d023 Add pinned AArch64 glibc inventory and isolated smoke lift
+71470bf Add selective Dune builds and proof audit harness
+BUILDING.md                                        |   120 +
+ .../claude/inventory/e01-x86-inventory/README.md   |   258 +
+ .../e01-x86-inventory/downloads.lock.json          |    56 +
+ .../e01-x86-inventory/evidence/ancestry-before.txt |    27 +
+ .../e01-x86-inventory/evidence/commands.md         |   124 +
+ .../evidence/fresh-extraction.log                  |   139 +
+ .../e01-x86-inventory/evidence/inventory.log       |     3 +
+ .../evidence/lifter-assessment.log                 |    16 +
+ .../evidence/network-retrieval.log                 |    23 +
+ .../e01-x86-inventory/evidence/replay-diff.log     |     0
+ .../evidence/replay-inventory.log                  |     3 +
+ .../evidence/repository-checks.log                 |    23 +
+ .../inventory/e01-x86-inventory/evidence/run.log   |    17 +
+ .../e01-x86-inventory/evidence/tool-versions.txt   |    21 +
+ .../e01-x86-inventory/evidence/verify.log          |     8 +
+ .../e01-x86-inventory/generated/SHA256SUMS         |    17 +
+ .../e01-x86-inventory/generated/disassembly.txt    | 62041 +++++++++++++++++++
+ .../e01-x86-inventory/generated/dispatch-data.json |   132 +
+ .../e01-x86-inventory/generated/elf-header.txt     |   134 +
+ .../generated/existing-lifts.json                  |  7863 +++
+ .../generated/ifunc-implementations.json           |  1472 +
+ .../e01-x86-inventory/generated/inventory.json     | 16747 +++++
+ .../e01-x86-inventory/generated/notes.txt          |   439 +
+ .../generated/package-provenance.json              |    94 +
+ .../e01-x86-inventory/generated/relocations.txt    |  1344 +
+ .../e01-x86-inventory/generated/resolvers.json     |  2090 +
+ .../generated/source-files.sha256                  |   239 +
+ .../generated/source-selectors.json                |    57 +
+ .../e01-x86-inventory/generated/symbols.tsv        |   399 +
+ .../generated/target-manifest.json                 |    13 +
+ .../generated/unit-suggestions.json                |  4628 ++
+ .../generated/unit-suggestions.tsv                 |   243 +
+ .../e01-x86-inventory/generated/variants.md        |    56 +
+ .../inventory/e01-x86-inventory/inventory.py       |   370 +
+ .../claude/inventory/e01-x86-inventory/retrieve.py |   110 +
+ Examples/claude/inventory/e01-x86-inventory/run.sh |    18 +
+ .../claude/inventory/e01-x86-inventory/verify.py   |    75 +
+ .../claude/inventory/e02-arm-inventory/README.md   |   237 +
+ .../e02-arm-inventory/artifacts.lock.json          |    47 +
+ .../inventory/e02-arm-inventory/bootstrap.py       |    64 +
+ .../e02-arm-inventory/check_existing_assumptions.v |    12 +
+ .../e02-arm-inventory/evidence/ancestry-before.txt |    17 +
+ .../e02-arm-inventory/evidence/bootstrap.log       |    19 +
+ .../evidence/canonical-driver-compatibility.log    |     4 +
+ .../evidence/copy-string-disassembly.txt           |  3230 +
+ .../e02-arm-inventory/evidence/core-build.log      |   103 +
+ .../e02-arm-inventory/evidence/e02_toascii_smoke.v |    24 +
+ .../evidence/early-jre-rejection.log               |    30 +
+ .../evidence/existing-assumptions.log              |    24 +
+ .../evidence/existing-lifts-typecheck.log          |    66 +
+ .../evidence/external-direct-edges.json            |   340 +
+ .../e02-arm-inventory/evidence/ghidra-audit.json   |   682 +
+ .../e02-arm-inventory/evidence/ghidra-audit.log    |     5 +
+ .../e02-arm-inventory/evidence/inventory.json      |  6470 ++
+ .../e02-arm-inventory/evidence/inventory.log       |     2 +
+ .../e02-arm-inventory/evidence/makefile.log        |     0
+ .../evidence/memory-string-symbols.tsv             |   352 +
+ .../evidence/package-metadata.log                  |    12 +
+ .../e02-arm-inventory/evidence/provenance.json     |    38 +
+ .../e02-arm-inventory/evidence/python-freeze.txt   |     3 +
+ .../evidence/reproduction-exits.txt                |    28 +
+ .../evidence/smoke-typecheck-assumptions.log       |     9 +
+ .../e02-arm-inventory/evidence/source-extract.log  |   141 +
+ .../evidence/toolchain-versions.log                |     8 +
+ .../evidence/validation-commands.log               |    12 +
+ .../e02-arm-inventory/evidence/versions.log        |     9 +
+ .../inventory/e02-arm-inventory/ghidra_audit.py    |    91 +
+ .../inventory/e02-arm-inventory/inventory.py       |   149 +
+ .../inventory/e02-arm-inventory/probe-canonical.sh |    19 +
+ .../inventory/e02-arm-inventory/run-ghidra.sh      |    28 +
+ .../claude/inventory/e02-arm-inventory/validate.sh |    32 +
+ Examples/claude/lifter/scalar_global/SUCCESS.json  |    41 +
+ .../e11___memcpy_generic_arm8.pcode.json           |  1274 +
+ .../scalar_global/e11___memcpy_generic_arm8.v      |   861 +
+ .../scalar_global/e11_mempcpy_arm8.pcode.json      |  1274 +
+ .../claude/lifter/scalar_global/e11_mempcpy_arm8.v |   861 +
+ Examples/claude/lifter/scalar_smoke/SUCCESS.json   |    91 +
+ .../lifter/scalar_smoke/e11_div_arm8.pcode.json    |    86 +
+ Examples/claude/lifter/scalar_smoke/e11_div_arm8.v |    68 +
+ .../lifter/scalar_smoke/e11_ffs_arm8.pcode.json    |   281 +
+ Examples/claude/lifter/scalar_smoke/e11_ffs_arm8.v |   191 +
+ .../lifter/scalar_smoke/e11_ffsl_arm8.pcode.json   |   239 +
+ .../claude/lifter/scalar_smoke/e11_ffsl_arm8.v     |   176 +
+ .../lifter/scalar_smoke/e11_ldiv_arm8.pcode.json   |    40 +
+ .../claude/lifter/scalar_smoke/e11_ldiv_arm8.v     |    34 +
+ .../lifter/scalar_smoke/e11_swab_arm8.pcode.json   |   145 +
+ .../claude/lifter/scalar_smoke/e11_swab_arm8.v     |   106 +
+ .../scalar_smoke/e11_toascii_arm8.pcode.json       |    20 +
+ .../claude/lifter/scalar_smoke/e11_toascii_arm8.v  |    23 +
+ .../claude/lifter/x64_scalar_fixture/SUCCESS.json  |    67 +
+ .../e25_scalar_callee_amd64.pcode.json             |  1336 +
+ .../x64_scalar_fixture/e25_scalar_callee_amd64.v   |   119 +
+ .../e25_scalar_caller_amd64.pcode.json             |   161 +
+ .../x64_scalar_fixture/e25_scalar_caller_amd64.v   |   119 +
+ .../claude/lifter/x64_scalar_smoke/SUCCESS.json    |   127 +
+ .../x64_scalar_smoke/e25_abs_amd64.pcode.json      |   519 +
+ .../claude/lifter/x64_scalar_smoke/e25_abs_amd64.v |   192 +
+ .../x64_scalar_smoke/e25_isascii_amd64.pcode.json  |   623 +
+ .../lifter/x64_scalar_smoke/e25_isascii_amd64.v    |   192 +
+ .../x64_scalar_smoke/e25_labs_amd64.pcode.json     |   447 +
+ .../lifter/x64_scalar_smoke/e25_labs_amd64.v       |   192 +
+ .../e25_pthread_equal_amd64.pcode.json             |   621 +
+ .../x64_scalar_smoke/e25_pthread_equal_amd64.v     |   192 +
+ .../x64_scalar_smoke/e25_toascii_amd64.pcode.json  |   396 +
+ .../lifter/x64_scalar_smoke/e25_toascii_amd64.v    |   192 +
+ dune                                               |    76 +
+ dune-project                                       |     3 +
+ notes/e00-build/README.md                          |   168 +
+ notes/e00-build/check-selection.py                 |    16 +
+ notes/e00-build/logs/01-dune-smoke.log             |     8 +
+ notes/e00-build/logs/02-dune-smoke.log             |   148 +
+ notes/e00-build/logs/03-dune-smoke.log             |    89 +
+ notes/e00-build/logs/04-audit-tests.log            |     9 +
+ notes/e00-build/logs/05-baseline-source-audit.log  |   204 +
+ notes/e00-build/logs/06-toolchain.log              |    12 +
+ notes/e00-build/logs/07-base-audit.log             |    15 +
+ notes/e00-build/logs/08-fork-collision-check.log   |     4 +
+ notes/e00-build/logs/09-clean-build.log            |   195 +
+ notes/e00-build/logs/10-harness-tests.log          |     9 +
+ notes/e00-build/logs/11-x86-assumptions.log        |    43 +
+ notes/e00-build/logs/12-selected-objects.log       |    27 +
+ notes/e00-build/logs/13-arm8-assumptions.log       |    29 +
+ .../e00-build/logs/14-missing-theorem-negative.log |     9 +
+ .../logs/15-extensionality-provenance.log          |    13 +
+ notes/e11-canonical-lifter/README.md               |   241 +
+ notes/e11-canonical-lifter/ancestry-before.txt     |     6 +
+ notes/e11-canonical-lifter/ancestry-imported.txt   |     3 +
+ notes/e11-canonical-lifter/check-artifacts.py      |    23 +
+ notes/e11-canonical-lifter/check-failures.py       |    33 +
+ notes/e11-canonical-lifter/compare-il.py           |    58 +
+ notes/e11-canonical-lifter/comparison.json         |    67 +
+ notes/e11-canonical-lifter/div.diff                |   119 +
+ notes/e11-canonical-lifter/ffs.diff                |   314 +
+ notes/e11-canonical-lifter/ffsl.diff               |   297 +
+ notes/e11-canonical-lifter/implementation.sha256   |     4 +
+ notes/e11-canonical-lifter/ldiv.diff               |    77 +
+ .../e11-canonical-lifter/logs/01-lift-attempt.log  |     6 +
+ notes/e11-canonical-lifter/logs/02-dune-scalar.log |   166 +
+ notes/e11-canonical-lifter/logs/03-unit-tests.log  |    77 +
+ notes/e11-canonical-lifter/logs/04-unit-tests.log  |    19 +
+ .../logs/05-negative-batches.log                   |    16 +
+ .../logs/06-comparison-initial.log                 |    11 +
+ .../logs/07-negative-batches.log                   |    23 +
+ notes/e11-canonical-lifter/logs/08-unit-tests.log  |    19 +
+ notes/e11-canonical-lifter/logs/09-lift-final.log  |     6 +
+ notes/e11-canonical-lifter/logs/10-global-call.log |     6 +
+ .../logs/11-comparison-final.log                   |    11 +
+ notes/e11-canonical-lifter/logs/12-lift-replay.log |     6 +
+ .../logs/13-global-call-final.log                  |     6 +
+ notes/e11-canonical-lifter/logs/14-determinism.log |    17 +
+ .../logs/15-dune-final-clean.log                   |   186 +
+ .../logs/16-negative-final.log                     |    33 +
+ .../logs/17-unit-tests-final.log                   |    19 +
+ .../logs/18-reproduce-final.log                    |     8 +
+ notes/e11-canonical-lifter/logs/19-assumptions.log |    60 +
+ .../logs/20-artifact-check.log                     |    13 +
+ .../e11-canonical-lifter/logs/21-source-audit.log  |    10 +
+ .../logs/22-determinism-final.log                  |     6 +
+ notes/e11-canonical-lifter/logs/23-versions.log    |    12 +
+ notes/e11-canonical-lifter/logs/24-diff-check.log  |     4 +
+ .../logs/25-historical-unchanged.log               |     4 +
+ .../logs/26-staged-source-whitespace.log           |     4 +
+ .../logs/27-final-source-audit.log                 |   204 +
+ notes/e11-canonical-lifter/logs/28-final-pins.log  |     8 +
+ .../ghidra/1e200f5fcfb54935b9c0d81bd2dc563f.log    |    68 +
+ .../ghidra/248ee340b55c4570958b8b53b1eed73d.log    |    68 +
+ .../ghidra/2c04745cab6c4b95a81ce3ec288d20f9.log    |    68 +
+ .../ghidra/320f052c5c234c03a0a9582a1bc29595.log    |    82 +
+ .../ghidra/34300b6b3990418b834c46f3039bffa7.log    |    82 +
+ .../ghidra/51dad8ddaea44d53a8d2a1be95406dd7.log    |    68 +
+ .../ghidra/5a28edea10df43f997401fe4f311e069.log    |    82 +
+ .../ghidra/5e1e936bf7aa42f3a8f40369eb68dee2.log    |    72 +
+ .../ghidra/6cfd74e23f944af7937318025af6fe7c.log    |    82 +
+ .../ghidra/6e52c56415e44404a9cdbf2cf95ddcb8.log    |     6 +
+ .../ghidra/6e7217d064cd435fb1ca17742c6ad152.log    |    68 +
+ .../ghidra/812752639c064e419f14848914265c87.log    |    82 +
+ .../ghidra/828d52da07a54ce1bcc2dd13178de571.log    |    94 +
+ .../ghidra/9363b84e8a834d3183a7a3a0938f28df.log    |    72 +
+ .../ghidra/9d1492b3ab814ac5a71c6b563102d6b7.log    |    72 +
+ .../ghidra/9df440ae21ca4a3caf3f964fbb9fef5d.log    |    82 +
+ .../ghidra/a07187f0d57b41e0858975e1920d8b60.log    |    68 +
+ .../ghidra/a9cf2dfc89f04dc0bfbdb5bac09aac2a.log    |    82 +
+ .../ghidra/a9d3c99f484e41279d3bdd0404ebb096.log    |    82 +
+ .../ghidra/b52403326453477e9b5d5c30430cee54.log    |    68 +
+ .../ghidra/bfb1693a0a974405913d326c5c645a69.log    |    68 +
+ .../ghidra/d7011e52ac1948afa6cfcd5485ab3920.log    |    72 +
+ .../ghidra/f19c75303ec943dc89458b43e14df02a.log    |    94 +
+ notes/e11-canonical-lifter/merge-base-before.txt   |     1 +
+ notes/e11-canonical-lifter/print-assumptions.sh    |    18 +
+ notes/e11-canonical-lifter/reproduce.sh            |    25 +
+ notes/e11-canonical-lifter/stat-imported.txt       |    59 +
+ notes/e11-canonical-lifter/swab.diff               |   185 +
+ notes/e11-canonical-lifter/toascii.diff            |    54 +
+ notes/e25-x86-scalar-driver/README.md              |   188 +
+ notes/e25-x86-scalar-driver/ancestry-before.txt    |    32 +
+ notes/e25-x86-scalar-driver/ancestry-imported.txt  |     6 +
+ notes/e25-x86-scalar-driver/check-ancestry.py      |    35 +
+ notes/e25-x86-scalar-driver/check-artifacts.py     |    56 +
+ notes/e25-x86-scalar-driver/check-failures.py      |    51 +
+ notes/e25-x86-scalar-driver/fixture/build.sh       |     9 +
+ notes/e25-x86-scalar-driver/fixture/pins.json      |     4 +
+ notes/e25-x86-scalar-driver/fixture/scalar.S       |    49 +
+ notes/e25-x86-scalar-driver/fixture/scalar.so      |   Bin 0 -> 13592 bytes
+ notes/e25-x86-scalar-driver/implementation.sha256  |    12 +
+ notes/e25-x86-scalar-driver/isa-pins.json          |     8 +
+ notes/e25-x86-scalar-driver/logs/01-glibc-lift.log |     5 +
+ .../logs/02-glibc-profile.log                      |     5 +
+ notes/e25-x86-scalar-driver/logs/03-glibc-lift.log |     6 +
+ .../e25-x86-scalar-driver/logs/04-fixture-lift.log |     6 +
+ notes/e25-x86-scalar-driver/logs/05-generate.log   |     9 +
+ .../logs/06-backend-tests.log                      |    35 +
+ notes/e25-x86-scalar-driver/logs/07-dune.log       |   176 +
+ .../logs/08-generate-final.log                     |     9 +
+ .../logs/09-publication-tests.log                  |    10 +
+ .../logs/10-backend-final.log                      |    21 +
+ notes/e25-x86-scalar-driver/logs/11-dune-final.log |    25 +
+ .../e25-x86-scalar-driver/logs/12-assumptions.log  |    53 +
+ notes/e25-x86-scalar-driver/logs/13-negatives.log  |    61 +
+ .../e25-x86-scalar-driver/logs/14-determinism.log  |     9 +
+ .../logs/15-fixture-rebuild.log                    |     5 +
+ .../logs/16-artifact-source-audit.log              |   460 +
+ notes/e25-x86-scalar-driver/logs/17-toolchain.log  |    10 +
+ .../logs/18-fork-collision.log                     |     4 +
+ .../logs/19-final-regeneration.log                 |     9 +
+ .../e25-x86-scalar-driver/logs/20-final-replay.log |     9 +
+ .../logs/21-final-negatives.log                    |    67 +
+ .../logs/22-proof-source-audit.log                 |    10 +
+ .../logs/23-preserve-existing.log                  |     4 +
+ notes/e25-x86-scalar-driver/logs/24-diff-check.log |     4 +
+ .../logs/25-backend-complete.log                   |    21 +
+ .../logs/26-artifact-complete.log                  |   460 +
+ .../logs/27-publication-complete.log               |    10 +
+ .../logs/28-staged-ancestry.log                    |   298 +
+ .../ghidra/01b966b572c54ee7b440eb4da66cf85b.log.gz |   Bin 0 -> 1675 bytes
+ .../ghidra/10e2d2fb57ac4c71a7ed9e60db205227.log.gz |   Bin 0 -> 1745 bytes
+ .../ghidra/16b61b45fea641acbb7e0e3de9d2c933.log.gz |   Bin 0 -> 1806 bytes
+ .../ghidra/1e6bad1a748b431f8661cda1f1208976.log.gz |   Bin 0 -> 1267 bytes
+ .../ghidra/214b249db92d4e7197886a41d7ac8f56.log.gz |   Bin 0 -> 2053 bytes
+ .../ghidra/22e10b8008ed441aab9ea34ead676998.log.gz |   Bin 0 -> 2056 bytes
+ .../ghidra/3e17c0c555d44fce84a80dcbbdc389fd.log.gz |   Bin 0 -> 1758 bytes
+ .../ghidra/43e04d95adcf4f31aaaa37e2fdbb3b5c.log.gz |   Bin 0 -> 1760 bytes
+ .../ghidra/5cfae494d59e4378ab8f2e6614349b9e.log.gz |   Bin 0 -> 1808 bytes
+ .../ghidra/60764bb6bc94446299ebac042dc55c3c.log.gz |   Bin 0 -> 1875 bytes
+ .../ghidra/69069f5b576f434d959e911e043ed21c.log.gz |   Bin 0 -> 1679 bytes
+ .../ghidra/69d7060c15ff424e8aed706cd4677026.log.gz |   Bin 0 -> 1877 bytes
+ .../ghidra/6c88fef1f587412fbabc7874f19602fa.log.gz |   Bin 0 -> 1591 bytes
+ .../ghidra/73fc79b682074f86a98f41fe0d930078.log.gz |   Bin 0 -> 1255 bytes
+ .../ghidra/842daf8f9f6649c48bb207a1c8a34e26.log.gz |   Bin 0 -> 1267 bytes
+ .../ghidra/8762f2d7aa0c4b789b434a77484324b8.log.gz |   Bin 0 -> 1267 bytes
+ .../ghidra/8efe58236ef04a3da7f4c786e7117cfa.log.gz |   Bin 0 -> 1406 bytes
+ .../ghidra/a86f870ec79c448781698b3fc471cecc.log.gz |   Bin 0 -> 1592 bytes
+ .../ghidra/aacc88cb94f74e5ea9a9bf4039179e07.log.gz |   Bin 0 -> 1871 bytes
+ .../ghidra/aacf739ea5384040a063cd99c8d5149b.log.gz |   Bin 0 -> 1756 bytes
+ .../ghidra/affeb340248441a1bad6f9f1bb09789d.log.gz |   Bin 0 -> 2154 bytes
+ .../ghidra/c03a988b75f54a4e9b10c66d7bc5b916.log.gz |   Bin 0 -> 1756 bytes
+ .../ghidra/cdcbd753dcd1469c9572f66c93af7170.log.gz |   Bin 0 -> 1270 bytes
+ .../ghidra/e4b2eae1205e461da5c0e1cef4314daa.log.gz |   Bin 0 -> 1870 bytes
+ .../ghidra/e8214570eb5d4fbc93dba13db61a02ef.log.gz |   Bin 0 -> 2183 bytes
+ .../ghidra/e8b8e239fd1348c09fe2b2a595f2f04e.log.gz |   Bin 0 -> 1757 bytes
+ .../ghidra/f1d1826b66d9404eab1fc175557f8835.log.gz |   Bin 0 -> 1266 bytes
+ .../ghidra/fc0fb65253d143fe861fea9de477e207.log.gz |   Bin 0 -> 1411 bytes
+ notes/e25-x86-scalar-driver/merge-base-before.txt  |     1 +
+ notes/e25-x86-scalar-driver/prerequisite-merge.txt |    14 +
+ notes/e25-x86-scalar-driver/print-assumptions.sh   |    18 +
+ notes/e25-x86-scalar-driver/reproduce.sh           |    23 +
+ notes/e25-x86-scalar-driver/stat-after.txt         |   279 +
+ notes/e25-x86-scalar-driver/stat-e25-staged.txt    |    95 +
+ notes/e25-x86-scalar-driver/stat-imported.txt      |   186 +
+ .../e25-x86-scalar-driver/swallowed-exceptions.txt |    17 +
+ tools/audit-proof-source.py                        |   108 +
+ tools/ghidra-lifter/lift-scalar.py                 |   129 +
+ tools/ghidra-lifter/lift-x64.py                    |   159 +
+ tools/ghidra-lifter/pcode2coq_scalar.py            |   320 +
+ tools/ghidra-lifter/pcode2coq_x64.py               |   359 +
+ tools/ghidra-lifter/scalar_headless.py             |   113 +
+ tools/ghidra-lifter/test_scalar.py                 |   244 +
+ tools/ghidra-lifter/test_x64.py                    |   265 +
+ tools/ghidra-lifter/test_x64_publication.py        |    42 +
+ tools/ghidra-lifter/x64_headless.py                |   141 +
+ tools/print-assumptions.sh                         |    36 +
+ tools/record-command.sh                            |    24 +
+ tools/test-proof-audit.py                          |    82 +
+ 282 files changed, 133241 insertions(+)
+PASS exact authorized prerequisite set plus only linear unit commits
+
+EXIT_CODE=0

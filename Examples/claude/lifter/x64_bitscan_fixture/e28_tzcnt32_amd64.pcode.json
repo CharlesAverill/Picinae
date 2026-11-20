@@ -1,0 +1,362 @@
+[
+  {
+    "address": "0x101028",
+    "bytes": "f3450fbcd1",
+    "assembly": "TZCNT R10D,R9D",
+    "pcode": [
+      "(unique, 0x1ba380, 4) COPY (const, 0x0, 4)",
+      "(unique, 0x1ba400, 4) COPY (register, 0x88, 4)",
+      "(unique, 0x1ba480, 4) INT_AND (unique, 0x1ba400, 4) , (const, 0x1, 4)",
+      "(unique, 0x1ba500, 1) INT_NOTEQUAL (unique, 0x1ba480, 4) , (const, 0x0, 4)",
+      " ---  CBRANCH (const, 0x5, 4) , (unique, 0x1ba500, 1)",
+      "(unique, 0x1ba380, 4) INT_ADD (unique, 0x1ba380, 4) , (const, 0x1, 4)",
+      "(unique, 0x1ba600, 4) INT_RIGHT (unique, 0x1ba400, 4) , (const, 0x1, 4)",
+      "(unique, 0x1ba400, 4) INT_OR (unique, 0x1ba600, 4) , (const, 0x80000000, 4)",
+      " ---  BRANCH (const, 0xfffffffa, 4)",
+      "(register, 0x206, 1) INT_EQUAL (unique, 0x1ba380, 4) , (const, 0x0, 4)",
+      "(register, 0x200, 1) INT_EQUAL (register, 0x88, 4) , (const, 0x0, 4)",
+      "(register, 0x90, 4) COPY (unique, 0x1ba380, 4)",
+      "(register, 0x90, 8) INT_ZEXT (register, 0x90, 4)"
+    ],
+    "ops": [
+      {
+        "code": "COPY",
+        "output": {
+          "space": "unique",
+          "offset": 1811328,
+          "size": 4
+        },
+        "inputs": [
+          {
+            "space": "const",
+            "offset": 0,
+            "size": 4
+          }
+        ]
+      },
+      {
+        "code": "COPY",
+        "output": {
+          "space": "unique",
+          "offset": 1811456,
+          "size": 4
+        },
+        "inputs": [
+          {
+            "space": "register",
+            "offset": 136,
+            "size": 4,
+            "register": "R9D",
+            "base": "R9",
+            "base_offset": 136,
+            "base_width": 64
+          }
+        ]
+      },
+      {
+        "code": "INT_AND",
+        "output": {
+          "space": "unique",
+          "offset": 1811584,
+          "size": 4
+        },
+        "inputs": [
+          {
+            "space": "unique",
+            "offset": 1811456,
+            "size": 4
+          },
+          {
+            "space": "const",
+            "offset": 1,
+            "size": 4
+          }
+        ]
+      },
+      {
+        "code": "INT_NOTEQUAL",
+        "output": {
+          "space": "unique",
+          "offset": 1811712,
+          "size": 1
+        },
+        "inputs": [
+          {
+            "space": "unique",
+            "offset": 1811584,
+            "size": 4
+          },
+          {
+            "space": "const",
+            "offset": 0,
+            "size": 4
+          }
+        ]
+      },
+      {
+        "code": "CBRANCH",
+        "output": null,
+        "inputs": [
+          {
+            "space": "const",
+            "offset": 5,
+            "size": 4
+          },
+          {
+            "space": "unique",
+            "offset": 1811712,
+            "size": 1
+          }
+        ]
+      },
+      {
+        "code": "INT_ADD",
+        "output": {
+          "space": "unique",
+          "offset": 1811328,
+          "size": 4
+        },
+        "inputs": [
+          {
+            "space": "unique",
+            "offset": 1811328,
+            "size": 4
+          },
+          {
+            "space": "const",
+            "offset": 1,
+            "size": 4
+          }
+        ]
+      },
+      {
+        "code": "INT_RIGHT",
+        "output": {
+          "space": "unique",
+          "offset": 1811968,
+          "size": 4
+        },
+        "inputs": [
+          {
+            "space": "unique",
+            "offset": 1811456,
+            "size": 4
+          },
+          {
+            "space": "const",
+            "offset": 1,
+            "size": 4
+          }
+        ]
+      },
+      {
+        "code": "INT_OR",
+        "output": {
+          "space": "unique",
+          "offset": 1811456,
+          "size": 4
+        },
+        "inputs": [
+          {
+            "space": "unique",
+            "offset": 1811968,
+            "size": 4
+          },
+          {
+            "space": "const",
+            "offset": 2147483648,
+            "size": 4
+          }
+        ]
+      },
+      {
+        "code": "BRANCH",
+        "output": null,
+        "inputs": [
+          {
+            "space": "const",
+            "offset": 4294967290,
+            "size": 4
+          }
+        ]
+      },
+      {
+        "code": "INT_EQUAL",
+        "output": {
+          "space": "register",
+          "offset": 518,
+          "size": 1,
+          "register": "ZF",
+          "base": "ZF",
+          "base_offset": 518,
+          "base_width": 8
+        },
+        "inputs": [
+          {
+            "space": "unique",
+            "offset": 1811328,
+            "size": 4
+          },
+          {
+            "space": "const",
+            "offset": 0,
+            "size": 4
+          }
+        ]
+      },
+      {
+        "code": "INT_EQUAL",
+        "output": {
+          "space": "register",
+          "offset": 512,
+          "size": 1,
+          "register": "CF",
+          "base": "CF",
+          "base_offset": 512,
+          "base_width": 8
+        },
+        "inputs": [
+          {
+            "space": "register",
+            "offset": 136,
+            "size": 4,
+            "register": "R9D",
+            "base": "R9",
+            "base_offset": 136,
+            "base_width": 64
+          },
+          {
+            "space": "const",
+            "offset": 0,
+            "size": 4
+          }
+        ]
+      },
+      {
+        "code": "COPY",
+        "output": {
+          "space": "register",
+          "offset": 144,
+          "size": 4,
+          "register": "R10D",
+          "base": "R10",
+          "base_offset": 144,
+          "base_width": 64
+        },
+        "inputs": [
+          {
+            "space": "unique",
+            "offset": 1811328,
+            "size": 4
+          }
+        ]
+      },
+      {
+        "code": "INT_ZEXT",
+        "output": {
+          "space": "register",
+          "offset": 144,
+          "size": 8,
+          "register": "R10",
+          "base": "R10",
+          "base_offset": 144,
+          "base_width": 64
+        },
+        "inputs": [
+          {
+            "space": "register",
+            "offset": 144,
+            "size": 4,
+            "register": "R10D",
+            "base": "R10",
+            "base_offset": 144,
+            "base_width": 64
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "address": "0x10102d",
+    "bytes": "c3",
+    "assembly": "RET",
+    "pcode": [
+      "(register, 0x288, 8) LOAD (const, 0x1b1, 8) , (register, 0x20, 8)",
+      "(register, 0x20, 8) INT_ADD (register, 0x20, 8) , (const, 0x8, 8)",
+      " ---  RETURN (register, 0x288, 8)"
+    ],
+    "ops": [
+      {
+        "code": "LOAD",
+        "output": {
+          "space": "register",
+          "offset": 648,
+          "size": 8,
+          "register": "RIP",
+          "base": "RIP",
+          "base_offset": 648,
+          "base_width": 64
+        },
+        "inputs": [
+          {
+            "space": "const",
+            "offset": 433,
+            "size": 8
+          },
+          {
+            "space": "register",
+            "offset": 32,
+            "size": 8,
+            "register": "RSP",
+            "base": "RSP",
+            "base_offset": 32,
+            "base_width": 64
+          }
+        ]
+      },
+      {
+        "code": "INT_ADD",
+        "output": {
+          "space": "register",
+          "offset": 32,
+          "size": 8,
+          "register": "RSP",
+          "base": "RSP",
+          "base_offset": 32,
+          "base_width": 64
+        },
+        "inputs": [
+          {
+            "space": "register",
+            "offset": 32,
+            "size": 8,
+            "register": "RSP",
+            "base": "RSP",
+            "base_offset": 32,
+            "base_width": 64
+          },
+          {
+            "space": "const",
+            "offset": 8,
+            "size": 8
+          }
+        ]
+      },
+      {
+        "code": "RETURN",
+        "output": null,
+        "inputs": [
+          {
+            "space": "register",
+            "offset": 648,
+            "size": 8,
+            "register": "RIP",
+            "base": "RIP",
+            "base_offset": 648,
+            "base_width": 64
+          }
+        ]
+      }
+    ]
+  }
+]

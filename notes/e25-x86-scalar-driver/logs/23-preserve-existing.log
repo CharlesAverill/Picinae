@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-83d5497b
+COMMAND=git diff --exit-code HEAD -- Examples tools/ghidra-lifter/pcode2coq_scalar.py tools/ghidra-lifter/scalar_headless.py tools/ghidra-lifter/lift-scalar.py Picinae_amd64.v
+
+EXIT_CODE=0
