@@ -1,0 +1,40 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-459be5b6
+COMMAND=bash --noprofile --norc -e -c sha256sum\ Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.v\ notes/r07-current-task/initial-attempt.v.txt\ Examples/FreeRTOS/xTaskGetCurrentTaskHandle_armv6m.v\;\ git\ diff\ --check\ --\ dune\;\ git\ diff\ --\ dune\;\ rg\ -n\ \"\^\(Theorem\|Lemma\|Corollary\)\"\ Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.v
+8bc7f4bd966dee9fad5e9bb44c7264fbb50d23084bcb65dee45664acdac650d5  Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.v
+8bc7f4bd966dee9fad5e9bb44c7264fbb50d23084bcb65dee45664acdac650d5  notes/r07-current-task/initial-attempt.v.txt
+ab04b58fe6006e5fd75b5cf3c44cf5aaf51fabef7f644b12cd55a785c110d6f4  Examples/FreeRTOS/xTaskGetCurrentTaskHandle_armv6m.v
+diff --git a/dune b/dune
+index 97fc4fb..4ff93a7 100644
+--- a/dune
++++ b/dune
+@@ -60,6 +60,7 @@
+   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+ ; END e05 generated modules
+   Examples.FreeRTOS.armv6m_uxTaskGetNumberOfTasks_proof
++  Examples.FreeRTOS.armv6m_xTaskGetCurrentTaskHandle_proof
+  ))
+ 
+ (alias
+@@ -85,3 +86,7 @@
+ (alias
+  (name armv6m)
+  (deps Picinae_armv6m.vo))
++
++(alias
++ (name r07-current-task)
++ (deps Examples/FreeRTOS/armv6m_xTaskGetCurrentTaskHandle_proof.vo))
+70:Theorem current_task_nwc : forall s2 s1,
+74:Theorem current_task_welltyped :
+78:Theorem current_task_preserves_memory :
+94:Lemma current_task_zero_bound : forall w, 0 < 2^w.
+111:Lemma current_task_witness_models : forall m lr,
+127:Theorem current_task_entry_satisfiable : forall m lr,
+148:Corollary current_task_entry_nonempty :
+158:Theorem current_task_correct : forall s t s' x'
+179:Corollary current_task_post_at_bx : forall s t s'
+192:Corollary current_task_preserves_callee_saved : forall s t s'
+205:Theorem current_task_return_step : forall s
+233:Corollary current_task_caller_result : forall s t s'
+252:Theorem current_task_original_bytes : forall initial final,
+
+EXIT_CODE=0
