@@ -1,0 +1,2 @@
+arm8_memcpy_common: all 9 theorem/lemma statements unchanged
+arm8_memcpy_small_proof: all 7 theorem/lemma statements unchanged

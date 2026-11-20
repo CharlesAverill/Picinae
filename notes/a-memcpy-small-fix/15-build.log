@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d5c9940f
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash notes/a-memcpy-small-fix/build.sh
+        rocq .Picinae.theory.d
+
+EXIT_CODE=130

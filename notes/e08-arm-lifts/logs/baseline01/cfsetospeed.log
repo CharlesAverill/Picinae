@@ -1,0 +1,4 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/baseline01/cfsetospeed", "cfsetospeed"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: cfsetospeed 0x1e0f48 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/5bcc30122d2d4f9db0417c850d2f3147.log
+
+EXIT_CODE=1

@@ -1,0 +1,12 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=bash --noprofile --norc -c /home/charles/code/friends/.toolchains/arm-validation/picinae-env\ rocq\ --version\;\ /home/charles/code/friends/.toolchains/arm-validation/picinae-env\ ocamlc\ -version\;\ /home/charles/code/friends/.toolchains/arm-validation/picinae-env\ dune\ --version\;\ /home/charles/code/friends/.toolchains/e02-arm-inventory/venv/bin/python\ --version\;\ /home/charles/code/friends/.toolchains/e02-arm-inventory/jdk-21.0.8+9/bin/java\ -version
+The Rocq Prover, version 9.1.1
+compiled with OCaml 4.14.2
+4.14.2
+3.22.2
+Python 3.12.9
+openjdk version "21.0.8" 2025-07-15 LTS
+OpenJDK Runtime Environment Temurin-21.0.8+9 (build 21.0.8+9-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.8+9 (build 21.0.8+9-LTS, mixed mode, sharing)
+
+EXIT_CODE=0

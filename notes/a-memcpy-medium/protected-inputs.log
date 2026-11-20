@@ -1,0 +1,29 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d3a7e613
+COMMAND=bash -e -c git\ diff\ --exit-code\ 1eb19d19c77636496bb24c6c9c53c029ac76935b\ --\ Examples/claude/arm8_memcpy_common.v\ Examples/claude/arm8_memcpy_small_proof.v\ Examples/claude/lifter\;\ sha256sum\ Examples/claude/arm8_memcpy_common.v\ Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.v\ notes/a-memcpy-medium/initial-proof.v.txt\;\ git\ diff\ --stat\;\ git\ diff\ --\ dune
+1e34dd8456099d46720fd1df88a70d89ac289f28087b5938812be917cdd5ebad  Examples/claude/arm8_memcpy_common.v
+1c760b6f7c36f17eb4918b57949528060895f526c512c06b21787e946da44dc4  Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.v
+1ca27ba9fe170b8a2ea756ff64359e99dc15bbb7a06ea95799cc29f1c29efe8f  notes/a-memcpy-medium/initial-proof.v.txt
+ dune | 5 +++++
+ 1 file changed, 5 insertions(+)
+diff --git a/dune b/dune
+index e9a6e37..cc351b0 100644
+--- a/dune
++++ b/dune
+@@ -17,6 +17,7 @@
+   Examples.claude.arm8_common Examples.claude.abs_arm8
+   Examples.claude.arm8_abs_proof
+   Examples.claude.arm8_memcpy_common Examples.claude.arm8_memcpy_small_proof
++  Examples.claude.arm8_memcpy_medium_proof
+   Examples.claude.lifter.scalar_smoke.e11_toascii_arm8
+   Examples.claude.lifter.scalar_smoke.e11_div_arm8
+   Examples.claude.lifter.scalar_smoke.e11_ldiv_arm8
+@@ -91,3 +92,7 @@
+   Examples/claude/lifter/scalar_ports/e08_sigabbrev_np_arm8.vo
+   Examples/claude/lifter/scalar_ports/e08_sigdescr_np_arm8.vo
+   Examples/claude/lifter/scalar_ports/e08_srand48_r_arm8.vo))
++
++(alias
++ (name a-memcpy-medium)
++ (deps Examples/claude/arm8_memcpy_medium_proof.vo))
+
+EXIT_CODE=0
