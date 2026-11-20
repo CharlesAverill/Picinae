@@ -1,0 +1,207 @@
+{
+  "scope": "Per-instruction diagnostics only; no partial map or relaxed control/closure gate.",
+  "total": 114,
+  "accepted_addresses": [
+    "0x194640",
+    "0x194644",
+    "0x194648",
+    "0x19464c",
+    "0x194650",
+    "0x194654",
+    "0x194658",
+    "0x19465c",
+    "0x194660",
+    "0x194664",
+    "0x194668",
+    "0x19466c",
+    "0x194670",
+    "0x194674",
+    "0x194678",
+    "0x19467c",
+    "0x194680",
+    "0x194684",
+    "0x194688",
+    "0x19468c",
+    "0x194690",
+    "0x194694",
+    "0x194698",
+    "0x19469c",
+    "0x1946a0",
+    "0x1946a4",
+    "0x1946a8",
+    "0x1946ac",
+    "0x1946b0",
+    "0x1946b4",
+    "0x1946b8",
+    "0x1946bc",
+    "0x1946c0",
+    "0x1946c4",
+    "0x1946c8",
+    "0x1946cc",
+    "0x1946d0",
+    "0x1946d4",
+    "0x1946d8",
+    "0x1946dc",
+    "0x1946e0",
+    "0x1946e4",
+    "0x1946e8",
+    "0x1946ec",
+    "0x1946f0",
+    "0x1946f4",
+    "0x1946f8",
+    "0x1946fc",
+    "0x194700",
+    "0x194704",
+    "0x194708",
+    "0x19470c",
+    "0x194710",
+    "0x194714",
+    "0x194718",
+    "0x19471c",
+    "0x194720",
+    "0x194724",
+    "0x194728",
+    "0x19472c",
+    "0x194730",
+    "0x194734",
+    "0x194738",
+    "0x19473c",
+    "0x194740",
+    "0x194744",
+    "0x194748",
+    "0x19474c",
+    "0x194750",
+    "0x194754",
+    "0x194758",
+    "0x19475c",
+    "0x194760",
+    "0x194764",
+    "0x194768",
+    "0x19476c",
+    "0x194770",
+    "0x194774",
+    "0x194778",
+    "0x19477c",
+    "0x194788",
+    "0x1947c8",
+    "0x1947cc",
+    "0x1947d0",
+    "0x1947d4",
+    "0x1947d8",
+    "0x1947dc",
+    "0x1947e0",
+    "0x1947e4",
+    "0x1947e8",
+    "0x1947ec",
+    "0x1947f0",
+    "0x1947f4",
+    "0x1947f8",
+    "0x1947fc",
+    "0x194800",
+    "0x194804"
+  ],
+  "rejected": [
+    {
+      "address": "0x194780",
+      "assembly": "ldr q0,[x0, #0x10]",
+      "bytes": "0004c03d",
+      "reason": "unmodeled register q0 (base z0)"
+    },
+    {
+      "address": "0x194784",
+      "assembly": "ldr q1,[x1, #0x10]",
+      "bytes": "2104c03d",
+      "reason": "unmodeled register q1 (base z1)"
+    },
+    {
+      "address": "0x19478c",
+      "assembly": "ldr q2,[x0, #0x20]",
+      "bytes": "0208c03d",
+      "reason": "unmodeled register q2 (base z2)"
+    },
+    {
+      "address": "0x194790",
+      "assembly": "ldr q3,[x1, #0x20]",
+      "bytes": "2308c03d",
+      "reason": "unmodeled register q3 (base z3)"
+    },
+    {
+      "address": "0x194794",
+      "assembly": "eor v0.16B,v0.16B,v1.16B",
+      "bytes": "001c216e",
+      "reason": "unmodeled register b0 (base z0)"
+    },
+    {
+      "address": "0x194798",
+      "assembly": "eor v1.16B,v2.16B,v3.16B",
+      "bytes": "411c236e",
+      "reason": "unmodeled register b2 (base z2)"
+    },
+    {
+      "address": "0x19479c",
+      "assembly": "ldr q2,[x0, #0x30]",
+      "bytes": "020cc03d",
+      "reason": "unmodeled register q2 (base z2)"
+    },
+    {
+      "address": "0x1947a0",
+      "assembly": "ldr q3,[x1, #0x30]",
+      "bytes": "230cc03d",
+      "reason": "unmodeled register q3 (base z3)"
+    },
+    {
+      "address": "0x1947a4",
+      "assembly": "umaxp v0.16B,v0.16B,v1.16B",
+      "bytes": "00a4216e",
+      "reason": "unmodeled instruction umaxp v0.16B,v0.16B,v1.16B"
+    },
+    {
+      "address": "0x1947a8",
+      "assembly": "ldr q4,[x0, #0x40]!",
+      "bytes": "040cc43c",
+      "reason": "unmodeled register q4 (base z4)"
+    },
+    {
+      "address": "0x1947ac",
+      "assembly": "ldr q5,[x1, #0x40]!",
+      "bytes": "250cc43c",
+      "reason": "unmodeled register q5 (base z5)"
+    },
+    {
+      "address": "0x1947b0",
+      "assembly": "eor v1.16B,v2.16B,v3.16B",
+      "bytes": "411c236e",
+      "reason": "unmodeled register b2 (base z2)"
+    },
+    {
+      "address": "0x1947b4",
+      "assembly": "eor v2.16B,v4.16B,v5.16B",
+      "bytes": "821c256e",
+      "reason": "unmodeled register b4 (base z4)"
+    },
+    {
+      "address": "0x1947b8",
+      "assembly": "umaxp v1.16B,v1.16B,v2.16B",
+      "bytes": "21a4226e",
+      "reason": "unmodeled instruction umaxp v1.16B,v1.16B,v2.16B"
+    },
+    {
+      "address": "0x1947bc",
+      "assembly": "umaxp v0.16B,v0.16B,v1.16B",
+      "bytes": "00a4216e",
+      "reason": "unmodeled instruction umaxp v0.16B,v0.16B,v1.16B"
+    },
+    {
+      "address": "0x1947c0",
+      "assembly": "umaxp v0.16B,v0.16B,v0.16B",
+      "bytes": "00a4206e",
+      "reason": "unmodeled instruction umaxp v0.16B,v0.16B,v0.16B"
+    },
+    {
+      "address": "0x1947c4",
+      "assembly": "fmov x6,d0",
+      "bytes": "0600669e",
+      "reason": "unmodeled instruction fmov x6,d0"
+    }
+  ]
+}

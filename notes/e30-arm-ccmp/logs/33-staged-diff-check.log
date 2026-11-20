@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9d096d
+COMMAND=git diff --cached --check -- . :\!notes/e30-arm-ccmp/logs/\*\* :\!notes/e30-arm-ccmp/historical/\*\*
+
+EXIT_CODE=0

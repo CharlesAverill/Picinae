@@ -1,0 +1,1170 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ff05d511
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash notes/e36-arm-cneg/print-assumptions.sh
+Require Import Picinae.Examples.claude.lifter.scalar_cneg.e36_cneg.
+Check e36_cneg.welltyped.
+Print Assumptions e36_cneg.welltyped.
+Check e36_cneg.finite_execution_0.
+Print Assumptions e36_cneg.finite_execution_0.
+Check e36_cneg.finite_execution_1.
+Print Assumptions e36_cneg.finite_execution_1.
+Check e36_cneg.finite_execution_2.
+Print Assumptions e36_cneg.finite_execution_2.
+Check e36_cneg.finite_execution_3.
+Print Assumptions e36_cneg.finite_execution_3.
+Check e36_cneg.finite_execution_4.
+Print Assumptions e36_cneg.finite_execution_4.
+Check e36_cneg.finite_execution_5.
+Print Assumptions e36_cneg.finite_execution_5.
+Check e36_cneg.finite_execution_6.
+Print Assumptions e36_cneg.finite_execution_6.
+Check e36_cneg.finite_execution_7.
+Print Assumptions e36_cneg.finite_execution_7.
+Check e36_cneg.finite_execution_8.
+Print Assumptions e36_cneg.finite_execution_8.
+Check e36_cneg.finite_execution_9.
+Print Assumptions e36_cneg.finite_execution_9.
+Check e36_cneg.finite_execution_10.
+Print Assumptions e36_cneg.finite_execution_10.
+Check e36_cneg.finite_execution_11.
+Print Assumptions e36_cneg.finite_execution_11.
+Check e36_cneg.finite_execution_12.
+Print Assumptions e36_cneg.finite_execution_12.
+Check e36_cneg.finite_execution_13.
+Print Assumptions e36_cneg.finite_execution_13.
+Check e36_cneg.finite_execution_14.
+Print Assumptions e36_cneg.finite_execution_14.
+Check e36_cneg.finite_execution_15.
+Print Assumptions e36_cneg.finite_execution_15.
+Check e36_cneg.finite_execution_16.
+Print Assumptions e36_cneg.finite_execution_16.
+Check e36_cneg.finite_execution_17.
+Print Assumptions e36_cneg.finite_execution_17.
+Check e36_cneg.finite_execution_18.
+Print Assumptions e36_cneg.finite_execution_18.
+Check e36_cneg.finite_execution_19.
+Print Assumptions e36_cneg.finite_execution_19.
+Check e36_cneg.finite_execution_20.
+Print Assumptions e36_cneg.finite_execution_20.
+Check e36_cneg.finite_execution_21.
+Print Assumptions e36_cneg.finite_execution_21.
+Check e36_cneg.finite_execution_22.
+Print Assumptions e36_cneg.finite_execution_22.
+Check e36_cneg.finite_execution_23.
+Print Assumptions e36_cneg.finite_execution_23.
+Check e36_cneg.finite_execution_24.
+Print Assumptions e36_cneg.finite_execution_24.
+Check e36_cneg.finite_execution_25.
+Print Assumptions e36_cneg.finite_execution_25.
+Check e36_cneg.finite_execution_26.
+Print Assumptions e36_cneg.finite_execution_26.
+Check e36_cneg.finite_execution_27.
+Print Assumptions e36_cneg.finite_execution_27.
+Check e36_cneg.finite_execution_28.
+Print Assumptions e36_cneg.finite_execution_28.
+Check e36_cneg.finite_execution_29.
+Print Assumptions e36_cneg.finite_execution_29.
+Check e36_cneg.finite_execution_30.
+Print Assumptions e36_cneg.finite_execution_30.
+Check e36_cneg.finite_execution_31.
+Print Assumptions e36_cneg.finite_execution_31.
+Check e36_cneg.finite_execution_32.
+Print Assumptions e36_cneg.finite_execution_32.
+Check e36_cneg.finite_execution_33.
+Print Assumptions e36_cneg.finite_execution_33.
+Check e36_cneg.finite_execution_34.
+Print Assumptions e36_cneg.finite_execution_34.
+Check e36_cneg.finite_execution_35.
+Print Assumptions e36_cneg.finite_execution_35.
+Check e36_cneg.finite_execution_36.
+Print Assumptions e36_cneg.finite_execution_36.
+Check e36_cneg.finite_execution_37.
+Print Assumptions e36_cneg.finite_execution_37.
+Check e36_cneg.finite_execution_38.
+Print Assumptions e36_cneg.finite_execution_38.
+Check e36_cneg.finite_execution_39.
+Print Assumptions e36_cneg.finite_execution_39.
+Check e36_cneg.finite_execution_40.
+Print Assumptions e36_cneg.finite_execution_40.
+Check e36_cneg.finite_execution_41.
+Print Assumptions e36_cneg.finite_execution_41.
+Check e36_cneg.finite_execution_42.
+Print Assumptions e36_cneg.finite_execution_42.
+Check e36_cneg.finite_execution_43.
+Print Assumptions e36_cneg.finite_execution_43.
+Check e36_cneg.finite_execution_44.
+Print Assumptions e36_cneg.finite_execution_44.
+Check e36_cneg.finite_execution_45.
+Print Assumptions e36_cneg.finite_execution_45.
+Check e36_cneg.finite_execution_46.
+Print Assumptions e36_cneg.finite_execution_46.
+Check e36_cneg.finite_execution_47.
+Print Assumptions e36_cneg.finite_execution_47.
+Check e36_cneg.finite_execution_48.
+Print Assumptions e36_cneg.finite_execution_48.
+Check e36_cneg.finite_execution_49.
+Print Assumptions e36_cneg.finite_execution_49.
+Check e36_cneg.finite_execution_50.
+Print Assumptions e36_cneg.finite_execution_50.
+Check e36_cneg.finite_execution_51.
+Print Assumptions e36_cneg.finite_execution_51.
+Check e36_cneg.finite_execution_52.
+Print Assumptions e36_cneg.finite_execution_52.
+Check e36_cneg.finite_execution_53.
+Print Assumptions e36_cneg.finite_execution_53.
+Check e36_cneg.finite_execution_54.
+Print Assumptions e36_cneg.finite_execution_54.
+Check e36_cneg.finite_execution_55.
+Print Assumptions e36_cneg.finite_execution_55.
+Check e36_cneg.finite_execution_56.
+Print Assumptions e36_cneg.finite_execution_56.
+Check e36_cneg.finite_execution_57.
+Print Assumptions e36_cneg.finite_execution_57.
+Check e36_cneg.finite_execution_58.
+Print Assumptions e36_cneg.finite_execution_58.
+Check e36_cneg.finite_execution_59.
+Print Assumptions e36_cneg.finite_execution_59.
+Check e36_cneg.finite_execution_60.
+Print Assumptions e36_cneg.finite_execution_60.
+Check e36_cneg.finite_execution_61.
+Print Assumptions e36_cneg.finite_execution_61.
+Check e36_cneg.finite_execution_62.
+Print Assumptions e36_cneg.finite_execution_62.
+Check e36_cneg.finite_execution_63.
+Print Assumptions e36_cneg.finite_execution_63.
+Check e36_cneg.finite_execution_64.
+Print Assumptions e36_cneg.finite_execution_64.
+Check e36_cneg.finite_execution_65.
+Print Assumptions e36_cneg.finite_execution_65.
+Check e36_cneg.finite_execution_66.
+Print Assumptions e36_cneg.finite_execution_66.
+Check e36_cneg.finite_execution_67.
+Print Assumptions e36_cneg.finite_execution_67.
+Check e36_cneg.finite_execution_68.
+Print Assumptions e36_cneg.finite_execution_68.
+Check e36_cneg.finite_execution_69.
+Print Assumptions e36_cneg.finite_execution_69.
+Check e36_cneg.finite_execution_70.
+Print Assumptions e36_cneg.finite_execution_70.
+Check e36_cneg.finite_execution_71.
+Print Assumptions e36_cneg.finite_execution_71.
+Check e36_cneg.finite_execution_72.
+Print Assumptions e36_cneg.finite_execution_72.
+Check e36_cneg.finite_execution_73.
+Print Assumptions e36_cneg.finite_execution_73.
+Check e36_cneg.finite_execution_74.
+Print Assumptions e36_cneg.finite_execution_74.
+Check e36_cneg.finite_execution_75.
+Print Assumptions e36_cneg.finite_execution_75.
+Check e36_cneg.finite_execution_76.
+Print Assumptions e36_cneg.finite_execution_76.
+Check e36_cneg.finite_execution_77.
+Print Assumptions e36_cneg.finite_execution_77.
+Check e36_cneg.finite_execution_78.
+Print Assumptions e36_cneg.finite_execution_78.
+Check e36_cneg.finite_execution_79.
+Print Assumptions e36_cneg.finite_execution_79.
+Check e36_cneg.finite_execution_80.
+Print Assumptions e36_cneg.finite_execution_80.
+Check e36_cneg.finite_execution_81.
+Print Assumptions e36_cneg.finite_execution_81.
+Check e36_cneg.finite_execution_82.
+Print Assumptions e36_cneg.finite_execution_82.
+Check e36_cneg.finite_execution_83.
+Print Assumptions e36_cneg.finite_execution_83.
+Check e36_cneg.finite_execution_84.
+Print Assumptions e36_cneg.finite_execution_84.
+Check e36_cneg.finite_execution_85.
+Print Assumptions e36_cneg.finite_execution_85.
+Check e36_cneg.finite_execution_86.
+Print Assumptions e36_cneg.finite_execution_86.
+Check e36_cneg.finite_execution_87.
+Print Assumptions e36_cneg.finite_execution_87.
+Check e36_cneg.finite_execution_88.
+Print Assumptions e36_cneg.finite_execution_88.
+Check e36_cneg.finite_execution_89.
+Print Assumptions e36_cneg.finite_execution_89.
+Check e36_cneg.finite_execution_90.
+Print Assumptions e36_cneg.finite_execution_90.
+Check e36_cneg.finite_execution_91.
+Print Assumptions e36_cneg.finite_execution_91.
+Check e36_cneg.finite_execution_92.
+Print Assumptions e36_cneg.finite_execution_92.
+Check e36_cneg.finite_execution_93.
+Print Assumptions e36_cneg.finite_execution_93.
+Check e36_cneg.finite_execution_94.
+Print Assumptions e36_cneg.finite_execution_94.
+Check e36_cneg.finite_execution_95.
+Print Assumptions e36_cneg.finite_execution_95.
+Check e36_cneg.finite_execution_96.
+Print Assumptions e36_cneg.finite_execution_96.
+Check e36_cneg.finite_execution_97.
+Print Assumptions e36_cneg.finite_execution_97.
+Check e36_cneg.finite_execution_98.
+Print Assumptions e36_cneg.finite_execution_98.
+Check e36_cneg.finite_execution_99.
+Print Assumptions e36_cneg.finite_execution_99.
+Check e36_cneg.finite_execution_100.
+Print Assumptions e36_cneg.finite_execution_100.
+Check e36_cneg.finite_execution_101.
+Print Assumptions e36_cneg.finite_execution_101.
+Check e36_cneg.finite_execution_102.
+Print Assumptions e36_cneg.finite_execution_102.
+Check e36_cneg.finite_execution_103.
+Print Assumptions e36_cneg.finite_execution_103.
+Check e36_cneg.finite_execution_104.
+Print Assumptions e36_cneg.finite_execution_104.
+Check e36_cneg.finite_execution_105.
+Print Assumptions e36_cneg.finite_execution_105.
+Check e36_cneg.finite_execution_106.
+Print Assumptions e36_cneg.finite_execution_106.
+Check e36_cneg.finite_execution_107.
+Print Assumptions e36_cneg.finite_execution_107.
+Check e36_cneg.finite_execution_108.
+Print Assumptions e36_cneg.finite_execution_108.
+Check e36_cneg.finite_execution_109.
+Print Assumptions e36_cneg.finite_execution_109.
+Check e36_cneg.finite_execution_110.
+Print Assumptions e36_cneg.finite_execution_110.
+Check e36_cneg.finite_execution_111.
+Print Assumptions e36_cneg.finite_execution_111.
+Check e36_cneg.finite_execution_112.
+Print Assumptions e36_cneg.finite_execution_112.
+Check e36_cneg.finite_execution_113.
+Print Assumptions e36_cneg.finite_execution_113.
+Check e36_cneg.finite_execution_114.
+Print Assumptions e36_cneg.finite_execution_114.
+Check e36_cneg.finite_execution_115.
+Print Assumptions e36_cneg.finite_execution_115.
+Check e36_cneg.finite_execution_116.
+Print Assumptions e36_cneg.finite_execution_116.
+Check e36_cneg.finite_execution_117.
+Print Assumptions e36_cneg.finite_execution_117.
+Check e36_cneg.finite_execution_118.
+Print Assumptions e36_cneg.finite_execution_118.
+Check e36_cneg.finite_execution_119.
+Print Assumptions e36_cneg.finite_execution_119.
+Check e36_cneg.finite_execution_120.
+Print Assumptions e36_cneg.finite_execution_120.
+Check e36_cneg.finite_execution_121.
+Print Assumptions e36_cneg.finite_execution_121.
+Check e36_cneg.finite_execution_122.
+Print Assumptions e36_cneg.finite_execution_122.
+Check e36_cneg.finite_execution_123.
+Print Assumptions e36_cneg.finite_execution_123.
+Check e36_cneg.finite_execution_124.
+Print Assumptions e36_cneg.finite_execution_124.
+Check e36_cneg.finite_execution_125.
+Print Assumptions e36_cneg.finite_execution_125.
+Check e36_cneg.finite_execution_126.
+Print Assumptions e36_cneg.finite_execution_126.
+Check e36_cneg.finite_execution_127.
+Print Assumptions e36_cneg.finite_execution_127.
+Check e36_cneg.finite_execution_128.
+Print Assumptions e36_cneg.finite_execution_128.
+Check e36_cneg.finite_execution_129.
+Print Assumptions e36_cneg.finite_execution_129.
+Check e36_cneg.finite_execution_130.
+Print Assumptions e36_cneg.finite_execution_130.
+Check e36_cneg.finite_execution_131.
+Print Assumptions e36_cneg.finite_execution_131.
+Check e36_cneg.finite_execution_132.
+Print Assumptions e36_cneg.finite_execution_132.
+Check e36_cneg.finite_execution_133.
+Print Assumptions e36_cneg.finite_execution_133.
+Check e36_cneg.finite_execution_134.
+Print Assumptions e36_cneg.finite_execution_134.
+Check e36_cneg.finite_execution_135.
+Print Assumptions e36_cneg.finite_execution_135.
+Check e36_cneg.finite_execution_136.
+Print Assumptions e36_cneg.finite_execution_136.
+Check e36_cneg.finite_execution_137.
+Print Assumptions e36_cneg.finite_execution_137.
+Check e36_cneg.finite_execution_138.
+Print Assumptions e36_cneg.finite_execution_138.
+Check e36_cneg.finite_execution_139.
+Print Assumptions e36_cneg.finite_execution_139.
+Check e36_cneg.finite_execution_140.
+Print Assumptions e36_cneg.finite_execution_140.
+Check e36_cneg.finite_execution_141.
+Print Assumptions e36_cneg.finite_execution_141.
+Check e36_cneg.finite_execution_142.
+Print Assumptions e36_cneg.finite_execution_142.
+Check e36_cneg.finite_execution_143.
+Print Assumptions e36_cneg.finite_execution_143.
+Check e36_cneg.finite_execution_144.
+Print Assumptions e36_cneg.finite_execution_144.
+Check e36_cneg.finite_execution_145.
+Print Assumptions e36_cneg.finite_execution_145.
+Check e36_cneg.finite_execution_146.
+Print Assumptions e36_cneg.finite_execution_146.
+Check e36_cneg.finite_execution_147.
+Print Assumptions e36_cneg.finite_execution_147.
+Check e36_cneg.finite_execution_148.
+Print Assumptions e36_cneg.finite_execution_148.
+Check e36_cneg.finite_execution_149.
+Print Assumptions e36_cneg.finite_execution_149.
+Check e36_cneg.finite_execution_150.
+Print Assumptions e36_cneg.finite_execution_150.
+Check e36_cneg.finite_execution_151.
+Print Assumptions e36_cneg.finite_execution_151.
+Check e36_cneg.finite_execution_152.
+Print Assumptions e36_cneg.finite_execution_152.
+Check e36_cneg.finite_execution_153.
+Print Assumptions e36_cneg.finite_execution_153.
+Check e36_cneg.finite_execution_154.
+Print Assumptions e36_cneg.finite_execution_154.
+Check e36_cneg.finite_execution_155.
+Print Assumptions e36_cneg.finite_execution_155.
+Check e36_cneg.finite_execution_156.
+Print Assumptions e36_cneg.finite_execution_156.
+Check e36_cneg.finite_execution_157.
+Print Assumptions e36_cneg.finite_execution_157.
+Check e36_cneg.finite_execution_158.
+Print Assumptions e36_cneg.finite_execution_158.
+Check e36_cneg.finite_execution_159.
+Print Assumptions e36_cneg.finite_execution_159.
+Check e36_cneg.finite_execution_160.
+Print Assumptions e36_cneg.finite_execution_160.
+Check e36_cneg.finite_execution_161.
+Print Assumptions e36_cneg.finite_execution_161.
+Check e36_cneg.finite_execution_162.
+Print Assumptions e36_cneg.finite_execution_162.
+Check e36_cneg.finite_execution_163.
+Print Assumptions e36_cneg.finite_execution_163.
+Check e36_cneg.finite_execution_164.
+Print Assumptions e36_cneg.finite_execution_164.
+Check e36_cneg.finite_execution_165.
+Print Assumptions e36_cneg.finite_execution_165.
+Check e36_cneg.finite_execution_166.
+Print Assumptions e36_cneg.finite_execution_166.
+Check e36_cneg.finite_execution_167.
+Print Assumptions e36_cneg.finite_execution_167.
+Check e36_cneg.finite_execution_168.
+Print Assumptions e36_cneg.finite_execution_168.
+Check e36_cneg.finite_execution_169.
+Print Assumptions e36_cneg.finite_execution_169.
+Check e36_cneg.finite_execution_170.
+Print Assumptions e36_cneg.finite_execution_170.
+Check e36_cneg.finite_execution_171.
+Print Assumptions e36_cneg.finite_execution_171.
+Check e36_cneg.finite_execution_172.
+Print Assumptions e36_cneg.finite_execution_172.
+Check e36_cneg.finite_execution_173.
+Print Assumptions e36_cneg.finite_execution_173.
+Check e36_cneg.finite_execution_174.
+Print Assumptions e36_cneg.finite_execution_174.
+Check e36_cneg.finite_execution_175.
+Print Assumptions e36_cneg.finite_execution_175.
+Check e36_cneg.finite_execution_176.
+Print Assumptions e36_cneg.finite_execution_176.
+Check e36_cneg.finite_execution_177.
+Print Assumptions e36_cneg.finite_execution_177.
+Check e36_cneg.finite_execution_178.
+Print Assumptions e36_cneg.finite_execution_178.
+Check e36_cneg.finite_execution_179.
+Print Assumptions e36_cneg.finite_execution_179.
+Check e36_cneg.finite_execution_180.
+Print Assumptions e36_cneg.finite_execution_180.
+Check e36_cneg.finite_execution_181.
+Print Assumptions e36_cneg.finite_execution_181.
+Check e36_cneg.finite_execution_182.
+Print Assumptions e36_cneg.finite_execution_182.
+Check e36_cneg.finite_execution_183.
+Print Assumptions e36_cneg.finite_execution_183.
+Check e36_cneg.finite_execution_184.
+Print Assumptions e36_cneg.finite_execution_184.
+Check e36_cneg.finite_execution_185.
+Print Assumptions e36_cneg.finite_execution_185.
+Check e36_cneg.finite_execution_186.
+Print Assumptions e36_cneg.finite_execution_186.
+Check e36_cneg.finite_execution_187.
+Print Assumptions e36_cneg.finite_execution_187.
+Check e36_cneg.finite_execution_188.
+Print Assumptions e36_cneg.finite_execution_188.
+Check e36_cneg.finite_execution_189.
+Print Assumptions e36_cneg.finite_execution_189.
+Check e36_cneg.finite_execution_190.
+Print Assumptions e36_cneg.finite_execution_190.
+Check e36_cneg.finite_execution_191.
+Print Assumptions e36_cneg.finite_execution_191.
+Check e36_cneg.finite_execution_192.
+Print Assumptions e36_cneg.finite_execution_192.
+Check e36_cneg.finite_execution_193.
+Print Assumptions e36_cneg.finite_execution_193.
+Check e36_cneg.finite_execution_194.
+Print Assumptions e36_cneg.finite_execution_194.
+Check e36_cneg.finite_execution_195.
+Print Assumptions e36_cneg.finite_execution_195.
+Check e36_cneg.finite_execution_196.
+Print Assumptions e36_cneg.finite_execution_196.
+Check e36_cneg.finite_execution_197.
+Print Assumptions e36_cneg.finite_execution_197.
+Check e36_cneg.finite_execution_198.
+Print Assumptions e36_cneg.finite_execution_198.
+Check e36_cneg.finite_execution_199.
+Print Assumptions e36_cneg.finite_execution_199.
+Check e36_cneg.finite_execution_200.
+Print Assumptions e36_cneg.finite_execution_200.
+Check e36_cneg.finite_execution_201.
+Print Assumptions e36_cneg.finite_execution_201.
+Check e36_cneg.finite_execution_202.
+Print Assumptions e36_cneg.finite_execution_202.
+Check e36_cneg.finite_execution_203.
+Print Assumptions e36_cneg.finite_execution_203.
+Check e36_cneg.finite_execution_204.
+Print Assumptions e36_cneg.finite_execution_204.
+Check e36_cneg.finite_execution_205.
+Print Assumptions e36_cneg.finite_execution_205.
+Check e36_cneg.finite_execution_206.
+Print Assumptions e36_cneg.finite_execution_206.
+Check e36_cneg.finite_execution_207.
+Print Assumptions e36_cneg.finite_execution_207.
+Check e36_cneg.finite_execution_208.
+Print Assumptions e36_cneg.finite_execution_208.
+Check e36_cneg.finite_execution_209.
+Print Assumptions e36_cneg.finite_execution_209.
+Check e36_cneg.finite_execution_210.
+Print Assumptions e36_cneg.finite_execution_210.
+Check e36_cneg.finite_execution_211.
+Print Assumptions e36_cneg.finite_execution_211.
+Check e36_cneg.finite_execution_212.
+Print Assumptions e36_cneg.finite_execution_212.
+Check e36_cneg.finite_execution_213.
+Print Assumptions e36_cneg.finite_execution_213.
+Check e36_cneg.finite_execution_214.
+Print Assumptions e36_cneg.finite_execution_214.
+Check e36_cneg.finite_execution_215.
+Print Assumptions e36_cneg.finite_execution_215.
+Check e36_cneg.finite_execution_216.
+Print Assumptions e36_cneg.finite_execution_216.
+Check e36_cneg.finite_execution_217.
+Print Assumptions e36_cneg.finite_execution_217.
+Check e36_cneg.finite_execution_218.
+Print Assumptions e36_cneg.finite_execution_218.
+Check e36_cneg.finite_execution_219.
+Print Assumptions e36_cneg.finite_execution_219.
+Check e36_cneg.finite_execution_220.
+Print Assumptions e36_cneg.finite_execution_220.
+Check e36_cneg.finite_execution_221.
+Print Assumptions e36_cneg.finite_execution_221.
+Check e36_cneg.finite_execution_222.
+Print Assumptions e36_cneg.finite_execution_222.
+Check e36_cneg.finite_execution_223.
+Print Assumptions e36_cneg.finite_execution_223.
+Check e36_cneg.finite_execution_224.
+Print Assumptions e36_cneg.finite_execution_224.
+Check e36_cneg.finite_execution_225.
+Print Assumptions e36_cneg.finite_execution_225.
+Check e36_cneg.finite_execution_226.
+Print Assumptions e36_cneg.finite_execution_226.
+Check e36_cneg.finite_execution_227.
+Print Assumptions e36_cneg.finite_execution_227.
+Check e36_cneg.finite_execution_228.
+Print Assumptions e36_cneg.finite_execution_228.
+Check e36_cneg.finite_execution_229.
+Print Assumptions e36_cneg.finite_execution_229.
+Check e36_cneg.finite_execution_230.
+Print Assumptions e36_cneg.finite_execution_230.
+
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         fixtures
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+finite_execution_0
+     : List.forallb (fun b : bool => b) finite_checks_0 = true
+Closed under the global context
+finite_execution_1
+     : List.forallb (fun b : bool => b) finite_checks_1 = true
+Closed under the global context
+finite_execution_2
+     : List.forallb (fun b : bool => b) finite_checks_2 = true
+Closed under the global context
+finite_execution_3
+     : List.forallb (fun b : bool => b) finite_checks_3 = true
+Closed under the global context
+finite_execution_4
+     : List.forallb (fun b : bool => b) finite_checks_4 = true
+Closed under the global context
+finite_execution_5
+     : List.forallb (fun b : bool => b) finite_checks_5 = true
+Closed under the global context
+finite_execution_6
+     : List.forallb (fun b : bool => b) finite_checks_6 = true
+Closed under the global context
+finite_execution_7
+     : List.forallb (fun b : bool => b) finite_checks_7 = true
+Closed under the global context
+finite_execution_8
+     : List.forallb (fun b : bool => b) finite_checks_8 = true
+Closed under the global context
+finite_execution_9
+     : List.forallb (fun b : bool => b) finite_checks_9 = true
+Closed under the global context
+finite_execution_10
+     : List.forallb (fun b : bool => b) finite_checks_10 = true
+Closed under the global context
+finite_execution_11
+     : List.forallb (fun b : bool => b) finite_checks_11 = true
+Closed under the global context
+finite_execution_12
+     : List.forallb (fun b : bool => b) finite_checks_12 = true
+Closed under the global context
+finite_execution_13
+     : List.forallb (fun b : bool => b) finite_checks_13 = true
+Closed under the global context
+finite_execution_14
+     : List.forallb (fun b : bool => b) finite_checks_14 = true
+Closed under the global context
+finite_execution_15
+     : List.forallb (fun b : bool => b) finite_checks_15 = true
+Closed under the global context
+finite_execution_16
+     : List.forallb (fun b : bool => b) finite_checks_16 = true
+Closed under the global context
+finite_execution_17
+     : List.forallb (fun b : bool => b) finite_checks_17 = true
+Closed under the global context
+finite_execution_18
+     : List.forallb (fun b : bool => b) finite_checks_18 = true
+Closed under the global context
+finite_execution_19
+     : List.forallb (fun b : bool => b) finite_checks_19 = true
+Closed under the global context
+finite_execution_20
+     : List.forallb (fun b : bool => b) finite_checks_20 = true
+Closed under the global context
+finite_execution_21
+     : List.forallb (fun b : bool => b) finite_checks_21 = true
+Closed under the global context
+finite_execution_22
+     : List.forallb (fun b : bool => b) finite_checks_22 = true
+Closed under the global context
+finite_execution_23
+     : List.forallb (fun b : bool => b) finite_checks_23 = true
+Closed under the global context
+finite_execution_24
+     : List.forallb (fun b : bool => b) finite_checks_24 = true
+Closed under the global context
+finite_execution_25
+     : List.forallb (fun b : bool => b) finite_checks_25 = true
+Closed under the global context
+finite_execution_26
+     : List.forallb (fun b : bool => b) finite_checks_26 = true
+Closed under the global context
+finite_execution_27
+     : List.forallb (fun b : bool => b) finite_checks_27 = true
+Closed under the global context
+finite_execution_28
+     : List.forallb (fun b : bool => b) finite_checks_28 = true
+Closed under the global context
+finite_execution_29
+     : List.forallb (fun b : bool => b) finite_checks_29 = true
+Closed under the global context
+finite_execution_30
+     : List.forallb (fun b : bool => b) finite_checks_30 = true
+Closed under the global context
+finite_execution_31
+     : List.forallb (fun b : bool => b) finite_checks_31 = true
+Closed under the global context
+finite_execution_32
+     : List.forallb (fun b : bool => b) finite_checks_32 = true
+Closed under the global context
+finite_execution_33
+     : List.forallb (fun b : bool => b) finite_checks_33 = true
+Closed under the global context
+finite_execution_34
+     : List.forallb (fun b : bool => b) finite_checks_34 = true
+Closed under the global context
+finite_execution_35
+     : List.forallb (fun b : bool => b) finite_checks_35 = true
+Closed under the global context
+finite_execution_36
+     : List.forallb (fun b : bool => b) finite_checks_36 = true
+Closed under the global context
+finite_execution_37
+     : List.forallb (fun b : bool => b) finite_checks_37 = true
+Closed under the global context
+finite_execution_38
+     : List.forallb (fun b : bool => b) finite_checks_38 = true
+Closed under the global context
+finite_execution_39
+     : List.forallb (fun b : bool => b) finite_checks_39 = true
+Closed under the global context
+finite_execution_40
+     : List.forallb (fun b : bool => b) finite_checks_40 = true
+Closed under the global context
+finite_execution_41
+     : List.forallb (fun b : bool => b) finite_checks_41 = true
+Closed under the global context
+finite_execution_42
+     : List.forallb (fun b : bool => b) finite_checks_42 = true
+Closed under the global context
+finite_execution_43
+     : List.forallb (fun b : bool => b) finite_checks_43 = true
+Closed under the global context
+finite_execution_44
+     : List.forallb (fun b : bool => b) finite_checks_44 = true
+Closed under the global context
+finite_execution_45
+     : List.forallb (fun b : bool => b) finite_checks_45 = true
+Closed under the global context
+finite_execution_46
+     : List.forallb (fun b : bool => b) finite_checks_46 = true
+Closed under the global context
+finite_execution_47
+     : List.forallb (fun b : bool => b) finite_checks_47 = true
+Closed under the global context
+finite_execution_48
+     : List.forallb (fun b : bool => b) finite_checks_48 = true
+Closed under the global context
+finite_execution_49
+     : List.forallb (fun b : bool => b) finite_checks_49 = true
+Closed under the global context
+finite_execution_50
+     : List.forallb (fun b : bool => b) finite_checks_50 = true
+Closed under the global context
+finite_execution_51
+     : List.forallb (fun b : bool => b) finite_checks_51 = true
+Closed under the global context
+finite_execution_52
+     : List.forallb (fun b : bool => b) finite_checks_52 = true
+Closed under the global context
+finite_execution_53
+     : List.forallb (fun b : bool => b) finite_checks_53 = true
+Closed under the global context
+finite_execution_54
+     : List.forallb (fun b : bool => b) finite_checks_54 = true
+Closed under the global context
+finite_execution_55
+     : List.forallb (fun b : bool => b) finite_checks_55 = true
+Closed under the global context
+finite_execution_56
+     : List.forallb (fun b : bool => b) finite_checks_56 = true
+Closed under the global context
+finite_execution_57
+     : List.forallb (fun b : bool => b) finite_checks_57 = true
+Closed under the global context
+finite_execution_58
+     : List.forallb (fun b : bool => b) finite_checks_58 = true
+Closed under the global context
+finite_execution_59
+     : List.forallb (fun b : bool => b) finite_checks_59 = true
+Closed under the global context
+finite_execution_60
+     : List.forallb (fun b : bool => b) finite_checks_60 = true
+Closed under the global context
+finite_execution_61
+     : List.forallb (fun b : bool => b) finite_checks_61 = true
+Closed under the global context
+finite_execution_62
+     : List.forallb (fun b : bool => b) finite_checks_62 = true
+Closed under the global context
+finite_execution_63
+     : List.forallb (fun b : bool => b) finite_checks_63 = true
+Closed under the global context
+finite_execution_64
+     : List.forallb (fun b : bool => b) finite_checks_64 = true
+Closed under the global context
+finite_execution_65
+     : List.forallb (fun b : bool => b) finite_checks_65 = true
+Closed under the global context
+finite_execution_66
+     : List.forallb (fun b : bool => b) finite_checks_66 = true
+Closed under the global context
+finite_execution_67
+     : List.forallb (fun b : bool => b) finite_checks_67 = true
+Closed under the global context
+finite_execution_68
+     : List.forallb (fun b : bool => b) finite_checks_68 = true
+Closed under the global context
+finite_execution_69
+     : List.forallb (fun b : bool => b) finite_checks_69 = true
+Closed under the global context
+finite_execution_70
+     : List.forallb (fun b : bool => b) finite_checks_70 = true
+Closed under the global context
+finite_execution_71
+     : List.forallb (fun b : bool => b) finite_checks_71 = true
+Closed under the global context
+finite_execution_72
+     : List.forallb (fun b : bool => b) finite_checks_72 = true
+Closed under the global context
+finite_execution_73
+     : List.forallb (fun b : bool => b) finite_checks_73 = true
+Closed under the global context
+finite_execution_74
+     : List.forallb (fun b : bool => b) finite_checks_74 = true
+Closed under the global context
+finite_execution_75
+     : List.forallb (fun b : bool => b) finite_checks_75 = true
+Closed under the global context
+finite_execution_76
+     : List.forallb (fun b : bool => b) finite_checks_76 = true
+Closed under the global context
+finite_execution_77
+     : List.forallb (fun b : bool => b) finite_checks_77 = true
+Closed under the global context
+finite_execution_78
+     : List.forallb (fun b : bool => b) finite_checks_78 = true
+Closed under the global context
+finite_execution_79
+     : List.forallb (fun b : bool => b) finite_checks_79 = true
+Closed under the global context
+finite_execution_80
+     : List.forallb (fun b : bool => b) finite_checks_80 = true
+Closed under the global context
+finite_execution_81
+     : List.forallb (fun b : bool => b) finite_checks_81 = true
+Closed under the global context
+finite_execution_82
+     : List.forallb (fun b : bool => b) finite_checks_82 = true
+Closed under the global context
+finite_execution_83
+     : List.forallb (fun b : bool => b) finite_checks_83 = true
+Closed under the global context
+finite_execution_84
+     : List.forallb (fun b : bool => b) finite_checks_84 = true
+Closed under the global context
+finite_execution_85
+     : List.forallb (fun b : bool => b) finite_checks_85 = true
+Closed under the global context
+finite_execution_86
+     : List.forallb (fun b : bool => b) finite_checks_86 = true
+Closed under the global context
+finite_execution_87
+     : List.forallb (fun b : bool => b) finite_checks_87 = true
+Closed under the global context
+finite_execution_88
+     : List.forallb (fun b : bool => b) finite_checks_88 = true
+Closed under the global context
+finite_execution_89
+     : List.forallb (fun b : bool => b) finite_checks_89 = true
+Closed under the global context
+finite_execution_90
+     : List.forallb (fun b : bool => b) finite_checks_90 = true
+Closed under the global context
+finite_execution_91
+     : List.forallb (fun b : bool => b) finite_checks_91 = true
+Closed under the global context
+finite_execution_92
+     : List.forallb (fun b : bool => b) finite_checks_92 = true
+Closed under the global context
+finite_execution_93
+     : List.forallb (fun b : bool => b) finite_checks_93 = true
+Closed under the global context
+finite_execution_94
+     : List.forallb (fun b : bool => b) finite_checks_94 = true
+Closed under the global context
+finite_execution_95
+     : List.forallb (fun b : bool => b) finite_checks_95 = true
+Closed under the global context
+finite_execution_96
+     : List.forallb (fun b : bool => b) finite_checks_96 = true
+Closed under the global context
+finite_execution_97
+     : List.forallb (fun b : bool => b) finite_checks_97 = true
+Closed under the global context
+finite_execution_98
+     : List.forallb (fun b : bool => b) finite_checks_98 = true
+Closed under the global context
+finite_execution_99
+     : List.forallb (fun b : bool => b) finite_checks_99 = true
+Closed under the global context
+finite_execution_100
+     : List.forallb (fun b : bool => b) finite_checks_100 = true
+Closed under the global context
+finite_execution_101
+     : List.forallb (fun b : bool => b) finite_checks_101 = true
+Closed under the global context
+finite_execution_102
+     : List.forallb (fun b : bool => b) finite_checks_102 = true
+Closed under the global context
+finite_execution_103
+     : List.forallb (fun b : bool => b) finite_checks_103 = true
+Closed under the global context
+finite_execution_104
+     : List.forallb (fun b : bool => b) finite_checks_104 = true
+Closed under the global context
+finite_execution_105
+     : List.forallb (fun b : bool => b) finite_checks_105 = true
+Closed under the global context
+finite_execution_106
+     : List.forallb (fun b : bool => b) finite_checks_106 = true
+Closed under the global context
+finite_execution_107
+     : List.forallb (fun b : bool => b) finite_checks_107 = true
+Closed under the global context
+finite_execution_108
+     : List.forallb (fun b : bool => b) finite_checks_108 = true
+Closed under the global context
+finite_execution_109
+     : List.forallb (fun b : bool => b) finite_checks_109 = true
+Closed under the global context
+finite_execution_110
+     : List.forallb (fun b : bool => b) finite_checks_110 = true
+Closed under the global context
+finite_execution_111
+     : List.forallb (fun b : bool => b) finite_checks_111 = true
+Closed under the global context
+finite_execution_112
+     : List.forallb (fun b : bool => b) finite_checks_112 = true
+Closed under the global context
+finite_execution_113
+     : List.forallb (fun b : bool => b) finite_checks_113 = true
+Closed under the global context
+finite_execution_114
+     : List.forallb (fun b : bool => b) finite_checks_114 = true
+Closed under the global context
+finite_execution_115
+     : List.forallb (fun b : bool => b) finite_checks_115 = true
+Closed under the global context
+finite_execution_116
+     : List.forallb (fun b : bool => b) finite_checks_116 = true
+Closed under the global context
+finite_execution_117
+     : List.forallb (fun b : bool => b) finite_checks_117 = true
+Closed under the global context
+finite_execution_118
+     : List.forallb (fun b : bool => b) finite_checks_118 = true
+Closed under the global context
+finite_execution_119
+     : List.forallb (fun b : bool => b) finite_checks_119 = true
+Closed under the global context
+finite_execution_120
+     : List.forallb (fun b : bool => b) finite_checks_120 = true
+Closed under the global context
+finite_execution_121
+     : List.forallb (fun b : bool => b) finite_checks_121 = true
+Closed under the global context
+finite_execution_122
+     : List.forallb (fun b : bool => b) finite_checks_122 = true
+Closed under the global context
+finite_execution_123
+     : List.forallb (fun b : bool => b) finite_checks_123 = true
+Closed under the global context
+finite_execution_124
+     : List.forallb (fun b : bool => b) finite_checks_124 = true
+Closed under the global context
+finite_execution_125
+     : List.forallb (fun b : bool => b) finite_checks_125 = true
+Closed under the global context
+finite_execution_126
+     : List.forallb (fun b : bool => b) finite_checks_126 = true
+Closed under the global context
+finite_execution_127
+     : List.forallb (fun b : bool => b) finite_checks_127 = true
+Closed under the global context
+finite_execution_128
+     : List.forallb (fun b : bool => b) finite_checks_128 = true
+Closed under the global context
+finite_execution_129
+     : List.forallb (fun b : bool => b) finite_checks_129 = true
+Closed under the global context
+finite_execution_130
+     : List.forallb (fun b : bool => b) finite_checks_130 = true
+Closed under the global context
+finite_execution_131
+     : List.forallb (fun b : bool => b) finite_checks_131 = true
+Closed under the global context
+finite_execution_132
+     : List.forallb (fun b : bool => b) finite_checks_132 = true
+Closed under the global context
+finite_execution_133
+     : List.forallb (fun b : bool => b) finite_checks_133 = true
+Closed under the global context
+finite_execution_134
+     : List.forallb (fun b : bool => b) finite_checks_134 = true
+Closed under the global context
+finite_execution_135
+     : List.forallb (fun b : bool => b) finite_checks_135 = true
+Closed under the global context
+finite_execution_136
+     : List.forallb (fun b : bool => b) finite_checks_136 = true
+Closed under the global context
+finite_execution_137
+     : List.forallb (fun b : bool => b) finite_checks_137 = true
+Closed under the global context
+finite_execution_138
+     : List.forallb (fun b : bool => b) finite_checks_138 = true
+Closed under the global context
+finite_execution_139
+     : List.forallb (fun b : bool => b) finite_checks_139 = true
+Closed under the global context
+finite_execution_140
+     : List.forallb (fun b : bool => b) finite_checks_140 = true
+Closed under the global context
+finite_execution_141
+     : List.forallb (fun b : bool => b) finite_checks_141 = true
+Closed under the global context
+finite_execution_142
+     : List.forallb (fun b : bool => b) finite_checks_142 = true
+Closed under the global context
+finite_execution_143
+     : List.forallb (fun b : bool => b) finite_checks_143 = true
+Closed under the global context
+finite_execution_144
+     : List.forallb (fun b : bool => b) finite_checks_144 = true
+Closed under the global context
+finite_execution_145
+     : List.forallb (fun b : bool => b) finite_checks_145 = true
+Closed under the global context
+finite_execution_146
+     : List.forallb (fun b : bool => b) finite_checks_146 = true
+Closed under the global context
+finite_execution_147
+     : List.forallb (fun b : bool => b) finite_checks_147 = true
+Closed under the global context
+finite_execution_148
+     : List.forallb (fun b : bool => b) finite_checks_148 = true
+Closed under the global context
+finite_execution_149
+     : List.forallb (fun b : bool => b) finite_checks_149 = true
+Closed under the global context
+finite_execution_150
+     : List.forallb (fun b : bool => b) finite_checks_150 = true
+Closed under the global context
+finite_execution_151
+     : List.forallb (fun b : bool => b) finite_checks_151 = true
+Closed under the global context
+finite_execution_152
+     : List.forallb (fun b : bool => b) finite_checks_152 = true
+Closed under the global context
+finite_execution_153
+     : List.forallb (fun b : bool => b) finite_checks_153 = true
+Closed under the global context
+finite_execution_154
+     : List.forallb (fun b : bool => b) finite_checks_154 = true
+Closed under the global context
+finite_execution_155
+     : List.forallb (fun b : bool => b) finite_checks_155 = true
+Closed under the global context
+finite_execution_156
+     : List.forallb (fun b : bool => b) finite_checks_156 = true
+Closed under the global context
+finite_execution_157
+     : List.forallb (fun b : bool => b) finite_checks_157 = true
+Closed under the global context
+finite_execution_158
+     : List.forallb (fun b : bool => b) finite_checks_158 = true
+Closed under the global context
+finite_execution_159
+     : List.forallb (fun b : bool => b) finite_checks_159 = true
+Closed under the global context
+finite_execution_160
+     : List.forallb (fun b : bool => b) finite_checks_160 = true
+Closed under the global context
+finite_execution_161
+     : List.forallb (fun b : bool => b) finite_checks_161 = true
+Closed under the global context
+finite_execution_162
+     : List.forallb (fun b : bool => b) finite_checks_162 = true
+Closed under the global context
+finite_execution_163
+     : List.forallb (fun b : bool => b) finite_checks_163 = true
+Closed under the global context
+finite_execution_164
+     : List.forallb (fun b : bool => b) finite_checks_164 = true
+Closed under the global context
+finite_execution_165
+     : List.forallb (fun b : bool => b) finite_checks_165 = true
+Closed under the global context
+finite_execution_166
+     : List.forallb (fun b : bool => b) finite_checks_166 = true
+Closed under the global context
+finite_execution_167
+     : List.forallb (fun b : bool => b) finite_checks_167 = true
+Closed under the global context
+finite_execution_168
+     : List.forallb (fun b : bool => b) finite_checks_168 = true
+Closed under the global context
+finite_execution_169
+     : List.forallb (fun b : bool => b) finite_checks_169 = true
+Closed under the global context
+finite_execution_170
+     : List.forallb (fun b : bool => b) finite_checks_170 = true
+Closed under the global context
+finite_execution_171
+     : List.forallb (fun b : bool => b) finite_checks_171 = true
+Closed under the global context
+finite_execution_172
+     : List.forallb (fun b : bool => b) finite_checks_172 = true
+Closed under the global context
+finite_execution_173
+     : List.forallb (fun b : bool => b) finite_checks_173 = true
+Closed under the global context
+finite_execution_174
+     : List.forallb (fun b : bool => b) finite_checks_174 = true
+Closed under the global context
+finite_execution_175
+     : List.forallb (fun b : bool => b) finite_checks_175 = true
+Closed under the global context
+finite_execution_176
+     : List.forallb (fun b : bool => b) finite_checks_176 = true
+Closed under the global context
+finite_execution_177
+     : List.forallb (fun b : bool => b) finite_checks_177 = true
+Closed under the global context
+finite_execution_178
+     : List.forallb (fun b : bool => b) finite_checks_178 = true
+Closed under the global context
+finite_execution_179
+     : List.forallb (fun b : bool => b) finite_checks_179 = true
+Closed under the global context
+finite_execution_180
+     : List.forallb (fun b : bool => b) finite_checks_180 = true
+Closed under the global context
+finite_execution_181
+     : List.forallb (fun b : bool => b) finite_checks_181 = true
+Closed under the global context
+finite_execution_182
+     : List.forallb (fun b : bool => b) finite_checks_182 = true
+Closed under the global context
+finite_execution_183
+     : List.forallb (fun b : bool => b) finite_checks_183 = true
+Closed under the global context
+finite_execution_184
+     : List.forallb (fun b : bool => b) finite_checks_184 = true
+Closed under the global context
+finite_execution_185
+     : List.forallb (fun b : bool => b) finite_checks_185 = true
+Closed under the global context
+finite_execution_186
+     : List.forallb (fun b : bool => b) finite_checks_186 = true
+Closed under the global context
+finite_execution_187
+     : List.forallb (fun b : bool => b) finite_checks_187 = true
+Closed under the global context
+finite_execution_188
+     : List.forallb (fun b : bool => b) finite_checks_188 = true
+Closed under the global context
+finite_execution_189
+     : List.forallb (fun b : bool => b) finite_checks_189 = true
+Closed under the global context
+finite_execution_190
+     : List.forallb (fun b : bool => b) finite_checks_190 = true
+Closed under the global context
+finite_execution_191
+     : List.forallb (fun b : bool => b) finite_checks_191 = true
+Closed under the global context
+finite_execution_192
+     : List.forallb (fun b : bool => b) finite_checks_192 = true
+Closed under the global context
+finite_execution_193
+     : List.forallb (fun b : bool => b) finite_checks_193 = true
+Closed under the global context
+finite_execution_194
+     : List.forallb (fun b : bool => b) finite_checks_194 = true
+Closed under the global context
+finite_execution_195
+     : List.forallb (fun b : bool => b) finite_checks_195 = true
+Closed under the global context
+finite_execution_196
+     : List.forallb (fun b : bool => b) finite_checks_196 = true
+Closed under the global context
+finite_execution_197
+     : List.forallb (fun b : bool => b) finite_checks_197 = true
+Closed under the global context
+finite_execution_198
+     : List.forallb (fun b : bool => b) finite_checks_198 = true
+Closed under the global context
+finite_execution_199
+     : List.forallb (fun b : bool => b) finite_checks_199 = true
+Closed under the global context
+finite_execution_200
+     : List.forallb (fun b : bool => b) finite_checks_200 = true
+Closed under the global context
+finite_execution_201
+     : List.forallb (fun b : bool => b) finite_checks_201 = true
+Closed under the global context
+finite_execution_202
+     : List.forallb (fun b : bool => b) finite_checks_202 = true
+Closed under the global context
+finite_execution_203
+     : List.forallb (fun b : bool => b) finite_checks_203 = true
+Closed under the global context
+finite_execution_204
+     : List.forallb (fun b : bool => b) finite_checks_204 = true
+Closed under the global context
+finite_execution_205
+     : List.forallb (fun b : bool => b) finite_checks_205 = true
+Closed under the global context
+finite_execution_206
+     : List.forallb (fun b : bool => b) finite_checks_206 = true
+Closed under the global context
+finite_execution_207
+     : List.forallb (fun b : bool => b) finite_checks_207 = true
+Closed under the global context
+finite_execution_208
+     : List.forallb (fun b : bool => b) finite_checks_208 = true
+Closed under the global context
+finite_execution_209
+     : List.forallb (fun b : bool => b) finite_checks_209 = true
+Closed under the global context
+finite_execution_210
+     : List.forallb (fun b : bool => b) finite_checks_210 = true
+Closed under the global context
+finite_execution_211
+     : List.forallb (fun b : bool => b) finite_checks_211 = true
+Closed under the global context
+finite_execution_212
+     : List.forallb (fun b : bool => b) finite_checks_212 = true
+Closed under the global context
+finite_execution_213
+     : List.forallb (fun b : bool => b) finite_checks_213 = true
+Closed under the global context
+finite_execution_214
+     : List.forallb (fun b : bool => b) finite_checks_214 = true
+Closed under the global context
+finite_execution_215
+     : List.forallb (fun b : bool => b) finite_checks_215 = true
+Closed under the global context
+finite_execution_216
+     : List.forallb (fun b : bool => b) finite_checks_216 = true
+Closed under the global context
+finite_execution_217
+     : List.forallb (fun b : bool => b) finite_checks_217 = true
+Closed under the global context
+finite_execution_218
+     : List.forallb (fun b : bool => b) finite_checks_218 = true
+Closed under the global context
+finite_execution_219
+     : List.forallb (fun b : bool => b) finite_checks_219 = true
+Closed under the global context
+finite_execution_220
+     : List.forallb (fun b : bool => b) finite_checks_220 = true
+Closed under the global context
+finite_execution_221
+     : List.forallb (fun b : bool => b) finite_checks_221 = true
+Closed under the global context
+finite_execution_222
+     : List.forallb (fun b : bool => b) finite_checks_222 = true
+Closed under the global context
+finite_execution_223
+     : List.forallb (fun b : bool => b) finite_checks_223 = true
+Closed under the global context
+finite_execution_224
+     : List.forallb (fun b : bool => b) finite_checks_224 = true
+Closed under the global context
+finite_execution_225
+     : List.forallb (fun b : bool => b) finite_checks_225 = true
+Closed under the global context
+finite_execution_226
+     : List.forallb (fun b : bool => b) finite_checks_226 = true
+Closed under the global context
+finite_execution_227
+     : List.forallb (fun b : bool => b) finite_checks_227 = true
+Closed under the global context
+finite_execution_228
+     : List.forallb (fun b : bool => b) finite_checks_228 = true
+Closed under the global context
+finite_execution_229
+     : List.forallb (fun b : bool => b) finite_checks_229 = true
+Closed under the global context
+finite_execution_230
+     : List.forallb (fun b : bool => b) finite_checks_230 = true
+Closed under the global context
+
+EXIT_CODE=0

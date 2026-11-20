@@ -1,0 +1,842 @@
+[
+  {
+    "bytes": "0014805a",
+    "assembly": "cneg w0,w0,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "2014815a",
+    "assembly": "cneg w0,w1,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "0114805a",
+    "assembly": "cneg w1,w0,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "de179e5a",
+    "assembly": "cneg w30,w30,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "dd179e5a",
+    "assembly": "cneg w29,w30,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "be179d5a",
+    "assembly": "cneg w30,w29,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "0004805a",
+    "assembly": "cneg w0,w0,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "2004815a",
+    "assembly": "cneg w0,w1,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "0104805a",
+    "assembly": "cneg w1,w0,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "de079e5a",
+    "assembly": "cneg w30,w30,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "dd079e5a",
+    "assembly": "cneg w29,w30,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "be079d5a",
+    "assembly": "cneg w30,w29,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "0034805a",
+    "assembly": "cneg w0,w0,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "2034815a",
+    "assembly": "cneg w0,w1,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "0134805a",
+    "assembly": "cneg w1,w0,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "de379e5a",
+    "assembly": "cneg w30,w30,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "dd379e5a",
+    "assembly": "cneg w29,w30,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "be379d5a",
+    "assembly": "cneg w30,w29,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "0024805a",
+    "assembly": "cneg w0,w0,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "2024815a",
+    "assembly": "cneg w0,w1,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "0124805a",
+    "assembly": "cneg w1,w0,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "de279e5a",
+    "assembly": "cneg w30,w30,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "dd279e5a",
+    "assembly": "cneg w29,w30,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "be279d5a",
+    "assembly": "cneg w30,w29,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "0054805a",
+    "assembly": "cneg w0,w0,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "2054815a",
+    "assembly": "cneg w0,w1,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "0154805a",
+    "assembly": "cneg w1,w0,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "de579e5a",
+    "assembly": "cneg w30,w30,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "dd579e5a",
+    "assembly": "cneg w29,w30,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "be579d5a",
+    "assembly": "cneg w30,w29,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "0044805a",
+    "assembly": "cneg w0,w0,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "2044815a",
+    "assembly": "cneg w0,w1,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "0144805a",
+    "assembly": "cneg w1,w0,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "de479e5a",
+    "assembly": "cneg w30,w30,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "dd479e5a",
+    "assembly": "cneg w29,w30,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "be479d5a",
+    "assembly": "cneg w30,w29,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "0074805a",
+    "assembly": "cneg w0,w0,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "2074815a",
+    "assembly": "cneg w0,w1,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "0174805a",
+    "assembly": "cneg w1,w0,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "de779e5a",
+    "assembly": "cneg w30,w30,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "dd779e5a",
+    "assembly": "cneg w29,w30,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "be779d5a",
+    "assembly": "cneg w30,w29,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 0)))"
+  },
+  {
+    "bytes": "0064805a",
+    "assembly": "cneg w0,w0,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "2064815a",
+    "assembly": "cneg w0,w1,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "0164805a",
+    "assembly": "cneg w1,w0,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "de679e5a",
+    "assembly": "cneg w30,w30,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "dd679e5a",
+    "assembly": "cneg w29,w30,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "be679d5a",
+    "assembly": "cneg w30,w29,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "0094805a",
+    "assembly": "cneg w0,w0,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "2094815a",
+    "assembly": "cneg w0,w1,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "0194805a",
+    "assembly": "cneg w1,w0,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "de979e5a",
+    "assembly": "cneg w30,w30,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "dd979e5a",
+    "assembly": "cneg w29,w30,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "be979d5a",
+    "assembly": "cneg w30,w29,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "0084805a",
+    "assembly": "cneg w0,w0,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "2084815a",
+    "assembly": "cneg w0,w1,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "0184805a",
+    "assembly": "cneg w1,w0,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "de879e5a",
+    "assembly": "cneg w30,w30,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "dd879e5a",
+    "assembly": "cneg w29,w30,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "be879d5a",
+    "assembly": "cneg w30,w29,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "00b4805a",
+    "assembly": "cneg w0,w0,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "20b4815a",
+    "assembly": "cneg w0,w1,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "01b4805a",
+    "assembly": "cneg w1,w0,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "deb79e5a",
+    "assembly": "cneg w30,w30,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "ddb79e5a",
+    "assembly": "cneg w29,w30,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "beb79d5a",
+    "assembly": "cneg w30,w29,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "00a4805a",
+    "assembly": "cneg w0,w0,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "20a4815a",
+    "assembly": "cneg w0,w1,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "01a4805a",
+    "assembly": "cneg w1,w0,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "dea79e5a",
+    "assembly": "cneg w30,w30,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "dda79e5a",
+    "assembly": "cneg w29,w30,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "bea79d5a",
+    "assembly": "cneg w30,w29,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 1)))"
+  },
+  {
+    "bytes": "00d4805a",
+    "assembly": "cneg w0,w0,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 3)))"
+  },
+  {
+    "bytes": "20d4815a",
+    "assembly": "cneg w0,w1,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 3)))"
+  },
+  {
+    "bytes": "01d4805a",
+    "assembly": "cneg w1,w0,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 3)))"
+  },
+  {
+    "bytes": "ded79e5a",
+    "assembly": "cneg w30,w30,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 3)))"
+  },
+  {
+    "bytes": "ddd79e5a",
+    "assembly": "cneg w29,w30,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 3)))"
+  },
+  {
+    "bytes": "bed79d5a",
+    "assembly": "cneg w30,w29,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 3)))"
+  },
+  {
+    "bytes": "00c4805a",
+    "assembly": "cneg w0,w0,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "20c4815a",
+    "assembly": "cneg w0,w1,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X1))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X1))) $;\n\tMove R_X0 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "01c4805a",
+    "assembly": "cneg w1,w0,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X0))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X0))) $;\n\tMove R_X1 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "dec79e5a",
+    "assembly": "cneg w30,w30,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "ddc79e5a",
+    "assembly": "cneg w29,w30,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X30))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X30))) $;\n\tMove R_X29 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "bec79d5a",
+    "assembly": "cneg w30,w29,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Extract 31 0 (Var R_X29))) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Extract 31 0 (Var R_X29))) $;\n\tMove R_X30 (Cast CAST_UNSIGNED 64 (Var (V_TEMP 2)))"
+  },
+  {
+    "bytes": "001480da",
+    "assembly": "cneg x0,x0,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "201481da",
+    "assembly": "cneg x0,x1,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "011480da",
+    "assembly": "cneg x1,x0,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "de179eda",
+    "assembly": "cneg x30,x30,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "dd179eda",
+    "assembly": "cneg x29,x30,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "be179dda",
+    "assembly": "cneg x30,x29,eq",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var R_ZR)) (Nop) (Move (V_TEMP 0) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "000480da",
+    "assembly": "cneg x0,x0,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "200481da",
+    "assembly": "cneg x0,x1,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "010480da",
+    "assembly": "cneg x1,x0,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "de079eda",
+    "assembly": "cneg x30,x30,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "dd079eda",
+    "assembly": "cneg x29,x30,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "be079dda",
+    "assembly": "cneg x30,x29,ne",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "003480da",
+    "assembly": "cneg x0,x0,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "203481da",
+    "assembly": "cneg x0,x1,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "013480da",
+    "assembly": "cneg x1,x0,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "de379eda",
+    "assembly": "cneg x30,x30,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "dd379eda",
+    "assembly": "cneg x29,x30,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "be379dda",
+    "assembly": "cneg x30,x29,cs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var R_CY)) (Nop) (Move (V_TEMP 0) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "002480da",
+    "assembly": "cneg x0,x0,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "202481da",
+    "assembly": "cneg x0,x1,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "012480da",
+    "assembly": "cneg x1,x0,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "de279eda",
+    "assembly": "cneg x30,x30,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "dd279eda",
+    "assembly": "cneg x29,x30,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "be279dda",
+    "assembly": "cneg x30,x29,cc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "005480da",
+    "assembly": "cneg x0,x0,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "205481da",
+    "assembly": "cneg x0,x1,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "015480da",
+    "assembly": "cneg x1,x0,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "de579eda",
+    "assembly": "cneg x30,x30,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "dd579eda",
+    "assembly": "cneg x29,x30,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "be579dda",
+    "assembly": "cneg x30,x29,mi",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var R_NG)) (Nop) (Move (V_TEMP 0) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "004480da",
+    "assembly": "cneg x0,x0,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "204481da",
+    "assembly": "cneg x0,x1,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "014480da",
+    "assembly": "cneg x1,x0,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "de479eda",
+    "assembly": "cneg x30,x30,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "dd479eda",
+    "assembly": "cneg x29,x30,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "be479dda",
+    "assembly": "cneg x30,x29,pl",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_NG) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "007480da",
+    "assembly": "cneg x0,x0,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "207481da",
+    "assembly": "cneg x0,x1,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "017480da",
+    "assembly": "cneg x1,x0,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "de779eda",
+    "assembly": "cneg x30,x30,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "dd779eda",
+    "assembly": "cneg x29,x30,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "be779dda",
+    "assembly": "cneg x30,x29,vs",
+    "il": "Move (V_TEMP 0) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var R_OV)) (Nop) (Move (V_TEMP 0) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 0))"
+  },
+  {
+    "bytes": "006480da",
+    "assembly": "cneg x0,x0,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "206481da",
+    "assembly": "cneg x0,x1,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "016480da",
+    "assembly": "cneg x1,x0,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "de679eda",
+    "assembly": "cneg x30,x30,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "dd679eda",
+    "assembly": "cneg x29,x30,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "be679dda",
+    "assembly": "cneg x30,x29,vc",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_OV) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "009480da",
+    "assembly": "cneg x0,x0,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "209481da",
+    "assembly": "cneg x0,x1,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "019480da",
+    "assembly": "cneg x1,x0,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "de979eda",
+    "assembly": "cneg x30,x30,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "dd979eda",
+    "assembly": "cneg x29,x30,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "be979dda",
+    "assembly": "cneg x30,x29,hi",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_AND (Var R_CY) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "008480da",
+    "assembly": "cneg x0,x0,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "208481da",
+    "assembly": "cneg x0,x1,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "018480da",
+    "assembly": "cneg x1,x0,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "de879eda",
+    "assembly": "cneg x30,x30,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "dd879eda",
+    "assembly": "cneg x29,x30,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "be879dda",
+    "assembly": "cneg x30,x29,ls",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_CY) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var (V_TEMP 0)) (Var R_ZR)) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "00b480da",
+    "assembly": "cneg x0,x0,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "20b481da",
+    "assembly": "cneg x0,x1,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "01b480da",
+    "assembly": "cneg x1,x0,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "deb79eda",
+    "assembly": "cneg x30,x30,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "ddb79eda",
+    "assembly": "cneg x29,x30,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "beb79dda",
+    "assembly": "cneg x30,x29,ge",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "00a480da",
+    "assembly": "cneg x0,x0,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "20a481da",
+    "assembly": "cneg x0,x1,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "01a480da",
+    "assembly": "cneg x1,x0,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "dea79eda",
+    "assembly": "cneg x30,x30,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "dda79eda",
+    "assembly": "cneg x29,x30,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "bea79dda",
+    "assembly": "cneg x30,x29,lt",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 0))) (Nop) (Move (V_TEMP 1) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 1))"
+  },
+  {
+    "bytes": "00d480da",
+    "assembly": "cneg x0,x0,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 3))"
+  },
+  {
+    "bytes": "20d481da",
+    "assembly": "cneg x0,x1,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 3))"
+  },
+  {
+    "bytes": "01d480da",
+    "assembly": "cneg x1,x0,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 3))"
+  },
+  {
+    "bytes": "ded79eda",
+    "assembly": "cneg x30,x30,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 3))"
+  },
+  {
+    "bytes": "ddd79eda",
+    "assembly": "cneg x29,x30,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 3))"
+  },
+  {
+    "bytes": "bed79dda",
+    "assembly": "cneg x30,x29,gt",
+    "il": "Move (V_TEMP 0) (BinOp OP_XOR (Var R_ZR) (Word 0x1 8)) $;\n\tMove (V_TEMP 1) (Cast CAST_UNSIGNED 8 (BinOp OP_EQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 2) (BinOp OP_AND (Var (V_TEMP 0)) (Var (V_TEMP 1))) $;\n\tMove (V_TEMP 3) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 2))) (Nop) (Move (V_TEMP 3) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 3))"
+  },
+  {
+    "bytes": "00c480da",
+    "assembly": "cneg x0,x0,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X0)) $;\n\tMove R_X0 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "20c481da",
+    "assembly": "cneg x0,x1,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X1)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X1)) $;\n\tMove R_X0 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "01c480da",
+    "assembly": "cneg x1,x0,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X0)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X0)) $;\n\tMove R_X1 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "dec79eda",
+    "assembly": "cneg x30,x30,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X30)) $;\n\tMove R_X30 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "ddc79eda",
+    "assembly": "cneg x29,x30,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X30)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X30)) $;\n\tMove R_X29 (Var (V_TEMP 2))"
+  },
+  {
+    "bytes": "bec79dda",
+    "assembly": "cneg x30,x29,le",
+    "il": "Move (V_TEMP 0) (Cast CAST_UNSIGNED 8 (BinOp OP_NEQ (Var R_NG) (Var R_OV))) $;\n\tMove (V_TEMP 1) (BinOp OP_OR (Var R_ZR) (Var (V_TEMP 0))) $;\n\tMove (V_TEMP 2) (UnOp OP_NEG (Var R_X29)) $;\n\tIf (Cast CAST_LOW 1 (Var (V_TEMP 1))) (Nop) (Move (V_TEMP 2) (Var R_X29)) $;\n\tMove R_X30 (Var (V_TEMP 2))"
+  }
+]

@@ -1,0 +1,28 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ea3464df
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash notes/e29-arm-scalar-bitforms/print-assumptions.sh
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         fixtures
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+finite_execution
+     : List.forallb (fun b : bool => b) finite_checks = true
+Closed under the global context
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e29_inet_makeaddr_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+welltyped
+     : Picinae_armv8.Statics_arm8.welltyped_prog Picinae_armv8.arm8typctx
+         e29_rand_r_arm8
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0

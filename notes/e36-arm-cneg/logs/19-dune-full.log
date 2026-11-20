@@ -1,0 +1,21 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ff05d511
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c export\ PROOF_MEMORY_KB=2000000\;\ ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ @all
+        rocq .Picinae.theory.d
+        rocq Examples/claude/lifter/scalar_cneg/e36_cneg.{glob,vo}
+File "./Examples/claude/lifter/scalar_cneg/e36_cneg.v", line 2, characters 45-51:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Examples/claude/lifter/scalar_cneg/e36_cneg.v", line 2, characters 52-56:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require List" or the deprecated "From Coq Require List"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Examples/claude/lifter/scalar_cneg/e36_cneg.v", line 2, characters 57-61:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require Bool" or the deprecated "From Coq Require Bool"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+
+EXIT_CODE=0
