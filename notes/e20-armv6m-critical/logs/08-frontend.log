@@ -1,0 +1,181 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e20-armv6m-critical/frontend-tests.py
+PASS all 16-bit words, all barrier second halfwords/options, fixed-bit mutations, PRIMASK operands
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e68: cpsid	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortExitCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e98: cpsie	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x4090: mrs	r0, PRIMASK
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x4098: msr	PRIMASK, r0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x419c: cpsid	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortExitCritical'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x41a6: wfi
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortExitCritical'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x41a6: wfi
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortExitCritical'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield'] EXIT_CODE: 1
+armv6m lifter: out-of-profile high/MMIO literal at 0x3e64
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x41a6: wfi
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: ssbb
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	oshld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	oshst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	osh
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: pssbb
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	nshld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	unst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	un
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	#8
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	ishld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	ishst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	ish
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dfb
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	ld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	st
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	#0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	oshld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	oshst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	osh
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	#4
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	nshld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	unst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	un
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	#8
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	ishld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	ishst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	ish
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	#12
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	ld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	st
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#1
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#2
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#3
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#4
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#5
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#6
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#7
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#8
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#9
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#10
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#11
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#12
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#13
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#14
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: msr	<unknown>, pc
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: mrs	pc, <unknown>
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: bgt.w	c3d14 <_sidata+0xbf6fc>
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: bge.w	c3d14 <_sidata+0xbf6fc>
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: bvs.w	c3d14 <_sidata+0xbf6fc>
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: @ <UNDEFINED> instruction: 0xfbbf8f4f
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-ca461yjp/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 0
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/notes/e20-armv6m-critical/frontend-tests.py", line 70, in <module>
+    probe(path,new,'vPortEnterCritical',False,'instruction')
+  File "/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/notes/e20-armv6m-critical/frontend-tests.py", line 41, in probe
+    assert p.returncode==1 and not p.stdout, p.stderr
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+EXIT_CODE=1

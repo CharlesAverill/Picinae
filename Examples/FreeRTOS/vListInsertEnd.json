@@ -1,0 +1,142 @@
+{
+  "blocked_helpers": [],
+  "bytes_sha256": "00cbb0d86801708b9fc7cfcd58f8e3c5cb5b583c216c6586cddc2be356422fd4",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "vListInsertEnd_armv6m",
+    "vListInsertEnd"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "assembly": "bx\tlr",
+      "kind": "return-candidate",
+      "site": "0x00000070",
+      "target": "runtime register/stack; Thumb bit required"
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x00000072",
+  "entry": "0x0000005c",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "2347839d3302c7293c77edb4f5b11f42711b4bc60812fbde7979c23f48dae70a",
+  "instructions": [
+    {
+      "address": "0x0000005c",
+      "assembly": "ldr\tr3, [r0, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "6843",
+      "width": 2
+    },
+    {
+      "address": "0x0000005e",
+      "assembly": "str\tr3, [r1, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "604b",
+      "width": 2
+    },
+    {
+      "address": "0x00000060",
+      "assembly": "ldr\tr2, [r3, #8]",
+      "frontend_encoding_supported": true,
+      "opcode": "689a",
+      "width": 2
+    },
+    {
+      "address": "0x00000062",
+      "assembly": "str\tr2, [r1, #8]",
+      "frontend_encoding_supported": true,
+      "opcode": "608a",
+      "width": 2
+    },
+    {
+      "address": "0x00000064",
+      "assembly": "str\tr1, [r2, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "6051",
+      "width": 2
+    },
+    {
+      "address": "0x00000066",
+      "assembly": "str\tr1, [r3, #8]",
+      "frontend_encoding_supported": true,
+      "opcode": "6099",
+      "width": 2
+    },
+    {
+      "address": "0x00000068",
+      "assembly": "str\tr0, [r1, #16]",
+      "frontend_encoding_supported": true,
+      "opcode": "6108",
+      "width": 2
+    },
+    {
+      "address": "0x0000006a",
+      "assembly": "ldr\tr3, [r0, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6803",
+      "width": 2
+    },
+    {
+      "address": "0x0000006c",
+      "assembly": "adds\tr3, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "3301",
+      "width": 2
+    },
+    {
+      "address": "0x0000006e",
+      "assembly": "str\tr3, [r0, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6003",
+      "width": 2
+    },
+    {
+      "address": "0x00000070",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "literals": [],
+  "mapped_data": [],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x00000070",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "row": "r03",
+  "size": 22,
+  "source": [
+    {
+      "path": "list.c",
+      "sha256": "e0a4d7a061e86ccb8ee4e08b0c1229c51d8c0a7a6f1c51c45083314f2e42b297"
+    }
+  ],
+  "stderr": "",
+  "symbol": "vListInsertEnd",
+  "symbol_record": {
+    "address": "0x0000005c",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vListInsertEnd",
+    "section": "2",
+    "size": 22,
+    "source": [
+      "list.c"
+    ],
+    "value": "0x0000005d"
+  },
+  "thumb_symbol": "0x0000005d",
+  "unsupported_instructions": []
+}

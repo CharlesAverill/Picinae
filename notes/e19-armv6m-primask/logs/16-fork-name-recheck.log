@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96390313
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/e19-armv6m-primask
+fatal: unable to access 'https://github.com/CharlesDardaman/Picinae.git/': Could not resolve host: github.com
+
+EXIT_CODE=128

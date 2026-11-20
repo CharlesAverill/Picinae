@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e20-armv6m-critical/compatibility.py
+PASS exhaustive old 16-bit and system/BL template 32-bit acceptance compatibility
+PASS old mask artifacts reproduce; original ISA/e03/e04/e05/e19 artifacts unchanged
+
+EXIT_CODE=0

@@ -1,0 +1,1105 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96390313
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env /home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e19-armv6m-primask/check-assumptions.py
+COMMAND: ['rocq', 'compile', '-q', '-R', '_build/default', 'Picinae', '/home/charles/.t3/worktrees/Picinae/t3-96390313/_build/e19-assumptions-n_g_k4w8/Assumptions.v']
+mask_fixture_decode_check
+     : List.forallb
+         (fun a : addr =>
+          armv6m_mask_instruction_supported
+            (if is_32bit_insn (mask_fixture a)
+             then
+              thumb32_decode (mask_fixture a)
+                (mask_fixture
+                   (BinNat.N.add a (BinNums.Npos (BinNums.xO BinNums.xH))))
+             else thumb16_decode (mask_fixture a)))
+         mask_fixture_entries =
+       true
+Closed under the global context
+mask_fixture_welltyped
+     : welltyped_prog armv6mtypctx mask_fixture_prog
+Closed under the global context
+primask_state_widths
+     : ListDef.map armv6mtypctx
+         (S_PRIMASK :: S_HANDLER :: S_CONTROL_NPRIV :: nil) =
+       Some (BinNums.Npos BinNums.xH)
+       :: Some (BinNums.Npos BinNums.xH)
+          :: Some (BinNums.Npos BinNums.xH) :: nil
+Closed under the global context
+cps_all_modes_and_frames
+     : matrix
+         (fun h n p : BinNums.N =>
+          (check
+             (arm2il BinNums.N0
+                (thumb16_decode
+                   (BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO BinNums.xH))))))))))))))))))
+             (sample h n p) S_PRIMASK
+             (if privileged h n then BinNums.Npos BinNums.xH else p) &&
+           check
+             (arm2il BinNums.N0
+                (thumb16_decode
+                   (BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO BinNums.xH))))))))))))))))))
+             (sample h n p) S_PRIMASK
+             (if privileged h n then BinNums.N0 else p))%bool) =
+       true
+Closed under the global context
+mrs_all_gprs_modes_and_frames
+     : matrix
+         (fun h n p : BinNums.N =>
+          List.forallb
+            (fun r : BinNums.N =>
+             check
+               (arm2il BinNums.N0
+                  (thumb32_decode
+                     (BinNums.Npos
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+                     (BinNat.N.add
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                        (BinNat.N.mul
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))
+                           r))))
+               (sample h n p) (armv6m_varid r)
+               (if privileged h n then p else BinNums.N0))
+            gprs) =
+       true
+Closed under the global context
+msr_all_gprs_bits_modes_and_frames
+     : matrix
+         (fun h n p : BinNums.N =>
+          List.forallb
+            (fun r : BinNums.N =>
+             List.forallb
+               (fun x : BinNums.N =>
+                check
+                  (arm2il BinNums.N0
+                     (thumb32_decode
+                        (BinNat.N.add
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI (BinNums.xI ...)))))))))))))))
+                           r)
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))))
+                  (sample h n p[armv6m_varid r := x]) S_PRIMASK
+                  (if privileged h n
+                   then
+                    BinNat.N.modulo x (BinNums.Npos (BinNums.xO BinNums.xH))
+                   else p))
+               values)
+            gprs) =
+       true
+Closed under the global context
+assembled_mask_shapes
+     : ListDef.map
+         (fun a : addr =>
+          if is_32bit_insn (mask_fixture a)
+          then
+           thumb32_decode (mask_fixture a)
+             (mask_fixture
+                (BinNat.N.add a (BinNums.Npos (BinNums.xO BinNums.xH))))
+          else thumb16_decode (mask_fixture a))
+         mask_fixture_entries =
+       T_MRS BinNums.N0
+         (BinNums.Npos
+            (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+       :: T_CPSID
+          :: T_MSR
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+               BinNums.N0
+             :: T_CPSIE
+                :: T_MRS
+                     (BinNums.Npos
+                        (BinNums.xO (BinNums.xI (BinNums.xI BinNums.xH))))
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+                   :: T_MSR
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))
+                        (BinNums.Npos
+                           (BinNums.xO (BinNums.xI (BinNums.xI BinNums.xH))))
+                      :: T_BX
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xI (BinNums.xI BinNums.xH))))
+                         :: nil
+Closed under the global context
+cps_reserved_bits
+     : List.forallb
+         (fun k : nat =>
+          match
+            thumb16_decode
+              (BinNat.N.add
+                 (BinNums.Npos
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                 (BinNat.N.of_nat k))
+          with
+          | T_CPSID =>
+              BinNat.N.eqb (BinNat.N.of_nat k)
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xO (BinNums.xI (BinNums.xI BinNums.xH)))))))
+          | T_CPSIE =>
+              BinNat.N.eqb (BinNat.N.of_nat k)
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xO (BinNums.xO (BinNums.xI BinNums.xH)))))))
+          | T_Invalid =>
+              negb
+                (BinNat.N.eqb (BinNat.N.of_nat k)
+                   (BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO (BinNums.xI BinNums.xH)))))))
+                 || BinNat.N.eqb (BinNat.N.of_nat k)
+                      (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI (BinNums.xI BinNums.xH))))))))
+          | _ => false
+          end)
+         (ListDef.seq 0 256) =
+       true
+Closed under the global context
+mrs_msr_invalid_registers
+     : List.forallb
+         (fun r : BinNums.N =>
+          (is_invalid
+             (thumb32_decode
+                (BinNums.Npos
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+                (BinNat.N.add
+                   (BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                   (BinNat.N.mul
+                      (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO BinNums.xH)))))))))
+                      r))) &&
+           is_invalid
+             (thumb32_decode
+                (BinNat.N.add
+                   (BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+                   r)
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))))%bool)
+         (BinNums.Npos (BinNums.xI (BinNums.xO (BinNums.xI BinNums.xH)))
+          :: BinNums.Npos (BinNums.xI (BinNums.xI (BinNums.xI BinNums.xH)))
+             :: nil) =
+       true
+Closed under the global context
+reserved_sysm
+     : List.forallb
+         (fun k : nat =>
+          let n := BinNat.N.of_nat k in
+          if
+           (BinNat.N.leb n (BinNums.Npos (BinNums.xI BinNums.xH))
+            || BinNat.N.leb
+                 (BinNums.Npos (BinNums.xI (BinNums.xO BinNums.xH))) n &&
+               BinNat.N.leb n
+                 (BinNums.Npos
+                    (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH))))
+            || BinNat.N.eqb n
+                 (BinNums.Npos
+                    (BinNums.xO
+                       (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+            || BinNat.N.eqb n
+                 (BinNums.Npos
+                    (BinNums.xO
+                       (BinNums.xO (BinNums.xI (BinNums.xO BinNums.xH))))))%bool
+          then true
+          else
+           (is_invalid
+              (thumb32_decode
+                 (BinNums.Npos
+                    (BinNums.xI
+                       (BinNums.xI
+                          (BinNums.xI
+                             (BinNums.xI
+                                (BinNums.xO
+                                   (BinNums.xI
+                                      (BinNums.xI
+                                         (BinNums.xI
+                                            (BinNums.xI
+                                               (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+                 (BinNat.N.add
+                    (BinNums.Npos
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                    n)) &&
+            is_invalid
+              (thumb32_decode
+                 (BinNums.Npos
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xI
+                                            (BinNums.xI
+                                               (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+                 (BinNat.N.add
+                    (BinNums.Npos
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                    n)))%bool)
+         (ListDef.seq 0 256) =
+       true
+Closed under the global context
+wrong_fixed_bits
+     : List.forallb
+         (fun pair : BinNums.N * BinNums.N =>
+          is_invalid (thumb32_decode (fst pair) (snd pair)))
+         ((BinNums.Npos
+             (BinNums.xI
+                (BinNums.xI
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))),
+           BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+          :: (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))),
+              BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+             :: (BinNums.Npos
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))),
+                 BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                :: (BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))),
+                    BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                   :: (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))),
+                       BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                      :: (BinNums.Npos
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))),
+                          BinNums.Npos
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                         :: nil) =
+       true
+Closed under the global context
+real_mask_finite_maps
+     : ulSetInterruptMask_armv6m.ulSetInterruptMask_entries =
+       BinNums.Npos
+         (BinNums.xO
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH))))))))))))))
+       :: BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))
+          :: BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))
+             :: nil /\
+       vClearInterruptMask_armv6m.vClearInterruptMask_entries =
+       BinNums.Npos
+         (BinNums.xO
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH))))))))))))))
+       :: BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))
+          :: nil /\
+       ulSetInterruptMask_armv6m.ulSetInterruptMask_prog
+         (sample BinNums.N0 (BinNums.Npos BinNums.xH) BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       None /\
+       vClearInterruptMask_armv6m.vClearInterruptMask_prog
+         (sample (BinNums.Npos BinNums.xH) (BinNums.Npos BinNums.xH)
+            BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       None /\
+       ulSetInterruptMask_armv6m.ulSetInterruptMask_prog
+         (sample BinNums.N0 BinNums.N0 BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xI
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       None /\
+       vClearInterruptMask_armv6m.vClearInterruptMask_prog
+         (sample BinNums.N0 BinNums.N0 BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       None
+Closed under the global context
+real_mask_lowering
+     : ulSetInterruptMask_armv6m.ulSetInterruptMask_prog
+         (sample BinNums.N0 BinNums.N0 BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       Some
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)),
+          arm2il
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))))
+            (T_MRS BinNums.N0
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) /\
+       ulSetInterruptMask_armv6m.ulSetInterruptMask_prog
+         (sample BinNums.N0 BinNums.N0 BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       Some
+         (BinNums.Npos (BinNums.xO BinNums.xH),
+          armv6m_write_primask
+            (Word (BinNums.Npos BinNums.xH) (BinNums.Npos BinNums.xH))) /\
+       vClearInterruptMask_armv6m.vClearInterruptMask_prog
+         (sample BinNums.N0 BinNums.N0 BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       Some
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)),
+          arm2il
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))))
+            (T_MSR
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+               BinNums.N0))
+Closed under the global context
+exception_return_excluded
+     : ulSetInterruptMask_armv6m.ulSetInterruptMask_prog
+         (sample (BinNums.Npos BinNums.xH) BinNums.N0 BinNums.N0
+          [R_LR := BinNums.Npos
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (BinNums.xI ...)))))))))))))))))))))])
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xI
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       None /\
+       vClearInterruptMask_armv6m.vClearInterruptMask_prog
+         (sample (BinNums.Npos BinNums.xH) BinNums.N0 BinNums.N0
+          [R_LR := BinNums.Npos
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...)))))))))))))))))))))])
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       None /\
+       armv6m_mask_target_supported (T_POP BinNums.N0 true)
+         (sample (BinNums.Npos BinNums.xH) BinNums.N0 BinNums.N0
+          [R_SP := BinNums.N0]
+          [V_MEM32 := setmem
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH))))))
+                        LittleE
+                        (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)))
+                        BinNums.N0 BinNums.N0
+                        (BinNums.Npos
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...)))))))))))))))))))))]) =
+       false
+Closed under the global context
+unsupported_system_boundary
+     : List.forallb armv6m_mask_instruction_supported
+         (T_MRS BinNums.N0
+            (BinNums.Npos (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH))))
+          :: T_MSR
+               (BinNums.Npos
+                  (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH))))
+               BinNums.N0
+             :: T_DSB :: T_DMB :: T_ISB :: T_WFI :: nil) =
+       false /\
+       ListDef.map armv6m_mask_instruction_supported
+         (T_MRS BinNums.N0
+            (BinNums.Npos (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH))))
+          :: T_MSR
+               (BinNums.Npos
+                  (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH))))
+               BinNums.N0
+             :: T_DSB :: T_DMB :: T_ISB :: T_WFI :: nil) =
+       false :: false :: false :: false :: false :: false :: nil
+Closed under the global context
+ulSetInterruptMask_decode_check
+     : List.forallb
+         (fun a : addr =>
+          armv6m_mask_instruction_supported
+            (if is_32bit_insn (ulSetInterruptMask a)
+             then
+              thumb32_decode (ulSetInterruptMask a)
+                (ulSetInterruptMask
+                   (BinNat.N.add a (BinNums.Npos (BinNums.xO BinNums.xH))))
+             else thumb16_decode (ulSetInterruptMask a)))
+         ulSetInterruptMask_entries =
+       true
+Closed under the global context
+ulSetInterruptMask_welltyped
+     : welltyped_prog armv6mtypctx ulSetInterruptMask_prog
+Closed under the global context
+vClearInterruptMask_decode_check
+     : List.forallb
+         (fun a : addr =>
+          armv6m_mask_instruction_supported
+            (if is_32bit_insn (vClearInterruptMask a)
+             then
+              thumb32_decode (vClearInterruptMask a)
+                (vClearInterruptMask
+                   (BinNat.N.add a (BinNums.Npos (BinNums.xO BinNums.xH))))
+             else thumb16_decode (vClearInterruptMask a)))
+         vClearInterruptMask_entries =
+       true
+Closed under the global context
+vClearInterruptMask_welltyped
+     : welltyped_prog armv6mtypctx vClearInterruptMask_prog
+Closed under the global context
+welltyped_arm2il
+     : forall (a : addr) (i : thumb_instr),
+       exists c' : typctx,
+         hastyp_stmt armv6mtypctx armv6mtypctx (arm2il a i) c'
+Closed under the global context
+welltyped_lift_armv6m
+     : forall binary : addr -> BinNums.N,
+       welltyped_prog armv6mtypctx (lift_armv6m binary)
+Closed under the global context
+welltyped_armv6mprog
+     : welltyped_prog armv6mtypctx armv6m_prog
+Closed under the global context
+welltyped_lift_armv6m_mask
+     : forall binary : addr -> BinNums.N,
+       welltyped_prog armv6mtypctx (lift_armv6m_mask binary)
+Closed under the global context
+EXIT_CODE: 0
+PASS: all 23 facts closed under the global context
+
+EXIT_CODE=0

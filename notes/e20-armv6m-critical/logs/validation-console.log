@@ -1,0 +1,2447 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e20-armv6m-critical/generate.py --check
+COMMAND: ['/home/charles/code/friends/.toolchains/e04-freertos-build/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-as', '-mcpu=cortex-m0', '-mthumb', '-o', '/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.o', '/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.s']
+EXIT_CODE: 0
+COMMAND: ['/home/charles/code/friends/.toolchains/e04-freertos-build/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ld', '-Ttext=0x1000', '--entry=sync_fixture', '-o', '/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.elf', '/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.o']
+EXIT_CODE: 0
+COMMAND: ['/home/charles/code/friends/.toolchains/e04-freertos-build/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-objdump', '-d', '-s', '/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.elf']
+
+/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.elf:     file format elf32-littlearm
+
+Contents of section .text:
+ 1000 bff35f8f bff34f8f bff36f8f 72b662b6  .._...O...o.r.b.
+ 1010 7047                                 pG              
+Contents of section .ARM.attributes:
+ 0000 41200000 00616561 62690001 16000000  A ...aeabi......
+ 0010 05436f72 7465782d 4d300006 0c074d09  .Cortex-M0....M.
+ 0020 01                                   .               
+
+Disassembly of section .text:
+
+00001000 <sync_fixture>:
+    1000:	f3bf 8f5f 	dmb	sy
+    1004:	f3bf 8f4f 	dsb	sy
+    1008:	f3bf 8f6f 	isb	sy
+    100c:	b672      	cpsid	i
+    100e:	b662      	cpsie	i
+    1010:	4770      	bx	lr
+EXIT_CODE: 0
+PASS: real critical sequential projections and independently assembled fixture reproduce
+
+EXIT_CODE=0
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e20-armv6m-critical/frontend-tests.py
+PASS all 16-bit words, all barrier second halfwords/options, fixed-bit mutations, PRIMASK operands
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e68: cpsid	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortExitCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e98: cpsie	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x4090: mrs	r0, PRIMASK
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x4098: msr	PRIMASK, r0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x419c: cpsid	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortExitCritical'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x41a6: wfi
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortExitCritical'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x41a6: wfi
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortExitCritical'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask'] EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield'] EXIT_CODE: 1
+armv6m lifter: out-of-profile high/MMIO literal at 0x3e64
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x41a6: wfi
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: ssbb
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	oshld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	oshst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	osh
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: pssbb
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	nshld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	unst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	un
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	#8
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	ishld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	ishst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	ish
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dfb
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	ld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	st
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	#0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	oshld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	oshst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	osh
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	#4
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	nshld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	unst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	un
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	#8
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	ishld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	ishst
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	ish
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	#12
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	ld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dmb	st
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#1
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#2
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#3
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#4
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#5
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#6
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#7
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#8
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#9
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#10
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#11
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#12
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#13
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: isb	#14
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: msr	<unknown>, pc
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: mrs	pc, <unknown>
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: bgt.w	c3d14 <_sidata+0xbf6fc>
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: bge.w	c3d14 <_sidata+0xbf6fc>
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: bvs.w	c3d14 <_sidata+0xbf6fc>
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: @ <UNDEFINED> instruction: 0xfbbf8f4f
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	st
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	ld
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	ish
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	un
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: b.w	bc3d14 <_sidata+0xbbf6fc>
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unknown instruction at 0x3e72: undefined (bcc, cond=0xE)
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: bfl	e, 43d14 <_sidata+0x3f6fc>
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: @ <UNDEFINED> instruction: 0xf3bf0f4f
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'critical-seq-v1-base', '/tmp/e20-elf-08301agn/mutation.elf', 'probe', 'vPortEnterCritical'] EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: wfi
+PASS strict failed-output behavior, actual MMIO/WFI/PSP boundaries, old profile compatibility
+
+EXIT_CODE=0
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env dune build --cache=disabled -j1 --display short @armv6m-critical @Examples/FreeRTOSCritical/freertos-critical-projections
+        rocq .Picinae.theory.d
+        rocq Picinae_armv6m_sync.{glob,vo}
+        rocq Examples/FreeRTOSCritical/vPortEnterCritical_armv6m.{glob,vo}
+        rocq Examples/FreeRTOSCritical/vPortExitCritical_armv6m.{glob,vo}
+        rocq tests/armv6m_critical/fixture.{glob,vo}
+        rocq tests/armv6m_critical/Checks.{glob,vo}
+File "./tests/armv6m_critical/Checks.v", line 29, characters 0-337:
+Warning: To avoid stack overflow, large numbers in nat are interpreted as
+applications of Nat.of_num_uint. [abstract-large-number,numbers,default]
+
+EXIT_CODE=0
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env dune build --cache=disabled -j1 --display short
+        rocq .Picinae.theory.d
+        rocq Picinae_numbers.{glob,vo}
+        rocq Picinae_auto.{glob,vo}
+        rocq Picinae_armv6m_sync.{glob,vo}
+        rocq Examples/FreeRTOS/eTaskGetState_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/prvResetNextTaskUnblockTime_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/prvSearchForNameWithinSingleList_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/prvTaskIsTaskSuspended_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/pvTaskIncrementMutexHeldCount_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/ulTaskGenericNotifyValueClear_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxListRemove_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxQueueMessagesWaiting_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxQueueSpacesAvailable_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxTaskGetNumberOfTasks_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxTaskPriorityGet_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/uxTaskResetEventItemValue_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vListInitialiseItem_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vListInitialise_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vListInsertEnd_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vListInsert_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskDelay_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskInternalSetTimeOutState_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskMissedYield_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskSetTimeOutState_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskSuspendAll_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/vTaskSwitchContext_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xEventGroupClearBits_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xEventGroupSetBits_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueGenericSendFromISR_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueGenericSend_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueGetMutexHolderFromISR_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueGetMutexHolder_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueReceiveFromISR_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xQueueReceive_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xStreamBufferReceive_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xStreamBufferSend_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskCreateStatic_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskGenericNotifyStateClear_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskGetCurrentTaskHandle_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskGetSchedulerState_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskGetTickCountFromISR_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskGetTickCount_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTaskIncrementTick_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTimerGenericCommandFromISR_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/xTimerGenericCommandFromTask_armv6m.{glob,vo}
+        rocq Picinae_amd64.{glob,vo}
+        rocq Picinae_armv7.{glob,vo}
+        rocq Picinae_armv8.{glob,vo}
+        rocq Picinae_i386.{glob,vo}
+        rocq Picinae_riscv.{glob,vo}
+        rocq Examples/FreeRTOSCritical/vPortEnterCritical_armv6m.{glob,vo}
+        rocq Examples/FreeRTOSCritical/vPortExitCritical_armv6m.{glob,vo}
+        rocq tests/armv6m_critical/fixture.{glob,vo}
+        rocq Examples/claude/abs_amd64.{glob,vo}
+File "./Examples/claude/abs_amd64.v", line 9, characters 15-21:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Examples/claude/abs_amd64.v", line 10, characters 15-18:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require Lia" or the deprecated "From Coq Require Lia"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+        rocq Examples/claude/amd64_common.{glob,vo}
+File "./Examples/claude/amd64_common.v", line 205, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 205, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 438, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 438, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq Examples/claude/abs_arm8.{glob,vo}
+File "./Examples/claude/abs_arm8.v", line 9, characters 15-21:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Examples/claude/abs_arm8.v", line 10, characters 15-18:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require Lia" or the deprecated "From Coq Require Lia"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+        rocq Examples/claude/arm8_common.{glob,vo}
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq tests/armv6m_critical/Checks.{glob,vo}
+File "./tests/armv6m_critical/Checks.v", line 29, characters 0-337:
+Warning: To avoid stack overflow, large numbers in nat are interpreted as
+applications of Nat.of_num_uint. [abstract-large-number,numbers,default]
+        rocq Examples/claude/amd64_abs_proof.{glob,vo}
+Goal at < 0 >
+Goal at < 11 >
+Goal at < 11 >
+        rocq Examples/claude/arm8_abs_proof.{glob,vo}
+Goal at < 0 >
+Goal at < 8 >
+Goal at < 8 >
+
+EXIT_CODE=0
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env /home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e20-armv6m-critical/check-assumptions.py
+COMMAND: ['rocq', 'compile', '-q', '-R', '_build/default', 'Picinae', '/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/_build/e20-assumptions-dypzziwd/Assumptions.v']
+sync_fixture_decode_check
+     : List.forallb
+         (fun a : addr =>
+          armv6m_sync_instruction_supported
+            (if is_32bit_insn (sync_fixture a)
+             then
+              armv6m_sync_decode32 (sync_fixture a)
+                (sync_fixture
+                   (BinNat.N.add a (BinNums.Npos (BinNums.xO BinNums.xH))))
+             else thumb16_decode (sync_fixture a)))
+         sync_fixture_entries =
+       true
+Closed under the global context
+sync_fixture_welltyped
+     : welltyped_prog armv6mtypctx sync_fixture_prog
+Closed under the global context
+assembled_sync_shapes
+     : ListDef.map
+         (fun a : addr =>
+          if is_32bit_insn (sync_fixture a)
+          then
+           armv6m_sync_decode32 (sync_fixture a)
+             (sync_fixture
+                (BinNat.N.add a (BinNums.Npos (BinNums.xO BinNums.xH))))
+          else thumb16_decode (sync_fixture a))
+         sync_fixture_entries =
+       T_DMB
+       :: T_DSB
+          :: T_ISB
+             :: T_CPSID
+                :: T_CPSIE
+                   :: T_BX
+                        (BinNums.Npos
+                           (BinNums.xO (BinNums.xI (BinNums.xI BinNums.xH))))
+                      :: nil
+Closed under the global context
+all_barrier_options
+     : List.forallb
+         (fun k : nat =>
+          let n := BinNat.N.of_nat k in
+          if
+           BinNat.N.eqb n
+             (BinNums.Npos (BinNums.xI (BinNums.xI (BinNums.xI BinNums.xH))))
+          then
+           match
+             armv6m_sync_decode32
+               (BinNums.Npos
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+               (BinNat.N.add
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xO
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                  n)
+           with
+           | T_DSB =>
+               match
+                 armv6m_sync_decode32
+                   (BinNums.Npos
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+                   (BinNat.N.add
+                      (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xI
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...))))))))))))))))
+                      n)
+               with
+               | T_DMB =>
+                   match
+                     armv6m_sync_decode32
+                       (BinNums.Npos
+                          (BinNums.xI
+                             (BinNums.xI
+                                (BinNums.xI
+                                   (BinNums.xI
+                                      (BinNums.xI
+                                         (BinNums.xI
+                                            (BinNums.xO
+                                               (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...))))))))))))))))
+                       (BinNat.N.add
+                          (BinNums.Npos
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xI
+                                               (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO (...)))))))))))))))
+                          n)
+                   with
+                   | T_ISB => true
+                   | _ => false
+                   end
+               | _ => false
+               end
+           | _ => false
+           end
+          else
+           (Checks.is_invalid
+              (armv6m_sync_decode32
+                 (BinNums.Npos
+                    (BinNums.xI
+                       (BinNums.xI
+                          (BinNums.xI
+                             (BinNums.xI
+                                (BinNums.xI
+                                   (BinNums.xI
+                                      (BinNums.xO
+                                         (BinNums.xI
+                                            (BinNums.xI
+                                               (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+                 (BinNat.N.add
+                    (BinNums.Npos
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xI
+                                            (BinNums.xO
+                                               (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                    n)) &&
+            Checks.is_invalid
+              (armv6m_sync_decode32
+                 (BinNums.Npos
+                    (BinNums.xI
+                       (BinNums.xI
+                          (BinNums.xI
+                             (BinNums.xI
+                                (BinNums.xI
+                                   (BinNums.xI
+                                      (BinNums.xO
+                                         (BinNums.xI
+                                            (BinNums.xI
+                                               (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+                 (BinNat.N.add
+                    (BinNums.Npos
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xI
+                                      (BinNums.xO
+                                         (BinNums.xI
+                                            (BinNums.xO
+                                               (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                    n)) &&
+            Checks.is_invalid
+              (armv6m_sync_decode32
+                 (BinNums.Npos
+                    (BinNums.xI
+                       (BinNums.xI
+                          (BinNums.xI
+                             (BinNums.xI
+                                (BinNums.xI
+                                   (BinNums.xI
+                                      (BinNums.xO
+                                         (BinNums.xI
+                                            (BinNums.xI
+                                               (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+                 (BinNat.N.add
+                    (BinNums.Npos
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xI
+                                         (BinNums.xI
+                                            (BinNums.xO
+                                               (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                    n)))%bool)
+         (ListDef.seq 0 16) =
+       true
+Closed under the global context
+barrier_fixed_bits
+     : List.forallb
+         (fun k : nat =>
+          let n := BinNat.N.of_nat k in
+          match
+            armv6m_sync_decode32
+              (BinNums.Npos
+                 (BinNums.xI
+                    (BinNums.xI
+                       (BinNums.xI
+                          (BinNums.xI
+                             (BinNums.xI
+                                (BinNums.xI
+                                   (BinNums.xO
+                                      (BinNums.xI
+                                         (BinNums.xI
+                                            (BinNums.xI
+                                               (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+              n
+          with
+          | T_BL _ =>
+              BinNat.N.eqb
+                (BinNat.N.land n
+                   (BinNums.Npos
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH)))))))))))))))))
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))))
+          | T_DMB =>
+              BinNat.N.eqb n
+                (BinNums.Npos
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+          | T_DSB =>
+              BinNat.N.eqb n
+                (BinNums.Npos
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+          | T_ISB =>
+              BinNat.N.eqb n
+                (BinNums.Npos
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xI
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+          | T_Invalid =>
+              negb
+                (BinNat.N.eqb n
+                   (BinNums.Npos
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                 || BinNat.N.eqb n
+                      (BinNums.Npos
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xI
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))))
+                 || BinNat.N.eqb n
+                      (BinNums.Npos
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xO
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))))))
+          | _ => false
+          end)
+         (ListDef.seq 0
+            (Nat.of_num_uint
+               (Number.UIntDecimal
+                  (Decimal.D6
+                     (Decimal.D5
+                        (Decimal.D5 (Decimal.D3 (Decimal.D6 Decimal.Nil)))))))) =
+       true
+Closed under the global context
+separate_barrier_observations
+     : sync_fixture_sync_view
+         (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH))))))))))))) =
+       Some
+         (Some SyncDMB_SY,
+          (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)), Nop)) /\
+       sync_fixture_sync_view
+         (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH))))))))))))) =
+       Some
+         (Some SyncDSB_SY,
+          (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)), Nop)) /\
+       sync_fixture_sync_view
+         (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH))))))))))))) =
+       Some
+         (Some SyncISB_SY,
+          (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)), Nop)) /\
+       sync_fixture_sync_view
+         (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH))))))))))))) =
+       Some
+         (None,
+          (BinNums.Npos (BinNums.xO BinNums.xH),
+           armv6m_write_primask
+             (Word (BinNums.Npos BinNums.xH) (BinNums.Npos BinNums.xH))))
+Closed under the global context
+projected_barriers_preserve_sample_state
+     : Checks.matrix
+         (fun h n p : BinNums.N =>
+          List.forallb
+            (fun a : addr =>
+             match
+               armv6m_sync_project (lift_armv6m_sync_view sync_fixture)
+                 (Checks.sample h n p) a
+             with
+             | Some (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)), q) =>
+                 match Checks.run q (Checks.sample h n p) with
+                 | Some (s', Some _) => false
+                 | Some (s', None) =>
+                     List.forallb
+                       (fun v : var =>
+                        BinNat.N.eqb (s' v) (Checks.sample h n p v))
+                       Checks.observed
+                 | None => false
+                 end
+             | _ => false
+             end)
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH))))))))))))
+             :: BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))
+                :: BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))
+                   :: nil)) =
+       true
+Closed under the global context
+exact_critical_literals_and_views
+     : vPortEnterCritical_armv6m.vPortEnterCritical_prog
+         (Checks.sample BinNums.N0 BinNums.N0 BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xI
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI BinNums.xH)))))))))))))) =
+       Some
+         (BinNums.Npos (BinNums.xO BinNums.xH),
+          armv6m_mov (BinNums.Npos (BinNums.xO BinNums.xH))
+            (armv6m_word
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))))))))))))))))))) /\
+       vPortExitCritical_armv6m.vPortExitCritical_prog
+         (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xI
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI BinNums.xH)))))))))))))) =
+       Some
+         (BinNums.Npos (BinNums.xO BinNums.xH),
+          armv6m_mov (BinNums.Npos (BinNums.xI BinNums.xH))
+            (armv6m_word
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...)))))))))))))))))))))) /\
+       vPortEnterCritical_armv6m.vPortEnterCritical_sync_view
+         (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xI
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI BinNums.xH)))))))))))))) =
+       Some
+         (Some SyncDSB_SY,
+          (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)), Nop)) /\
+       vPortEnterCritical_armv6m.vPortEnterCritical_sync_view
+         (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xI
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI BinNums.xH)))))))))))))) =
+       Some
+         (Some SyncISB_SY,
+          (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)), Nop))
+Closed under the global context
+critical_finite_and_profile_guards
+     : vPortEnterCritical_armv6m.vPortEnterCritical_prog
+         (Checks.sample BinNums.N0 BinNums.N0 BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI BinNums.xH)))))))))))))) =
+       None /\
+       vPortEnterCritical_armv6m.vPortEnterCritical_prog
+         (Checks.sample BinNums.N0 BinNums.N0 BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI BinNums.xH)))))))))))))) =
+       None /\
+       vPortExitCritical_armv6m.vPortExitCritical_prog
+         (Checks.sample BinNums.N0 BinNums.N0 BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI BinNums.xH)))))))))))))) =
+       None /\
+       vPortEnterCritical_armv6m.vPortEnterCritical_prog
+         (Checks.sample BinNums.N0 (BinNums.Npos BinNums.xH) BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xI
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI BinNums.xH)))))))))))))) =
+       None /\
+       vPortExitCritical_armv6m.vPortExitCritical_prog
+         (Checks.sample (BinNums.Npos BinNums.xH) 
+            (BinNums.Npos BinNums.xH) BinNums.N0)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI BinNums.xH)))))))))))))) =
+       None /\
+       vPortEnterCritical_armv6m.vPortEnterCritical_prog
+         (Checks.sample (BinNums.Npos BinNums.xH) BinNums.N0
+            (BinNums.Npos BinNums.xH)
+          [R_LR := BinNums.Npos
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...)))))))))))))))))))])
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xI
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI BinNums.xH)))))))))))))) =
+       None /\
+       vPortExitCritical_armv6m.vPortExitCritical_prog
+         (Checks.sample (BinNums.Npos BinNums.xH) BinNums.N0
+            (BinNums.Npos BinNums.xH)
+          [R_SP := BinNums.N0]
+          [V_MEM32 := setmem
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH))))))
+                        LittleE
+                        (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)))
+                        BinNums.N0
+                        (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)))
+                        (BinNums.Npos
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (BinNums.xI ...))))))))))))))))))])
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xI
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI BinNums.xH)))))))))))))) =
+       None /\
+       vPortExitCritical_armv6m.vPortExitCritical_prog
+         (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       None
+Closed under the global context
+conditional_cpsie_and_assert_edges
+     : match
+         vPortExitCritical_armv6m.vPortExitCritical_prog
+           (Checks.sample BinNums.N0 BinNums.N0 BinNums.N0)
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xI
+                    (BinNums.xI
+                       (BinNums.xO
+                          (BinNums.xI
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xI
+                                      (BinNums.xO
+                                         (BinNums.xI
+                                            (BinNums.xI
+                                               (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+       with
+       | Some (_, q) =>
+           match
+             Checks.run q
+               (Checks.sample BinNums.N0 BinNums.N0 BinNums.N0
+                [F_Z := BinNums.N0])
+           with
+           | Some
+             (_, Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xI
+                  (BinNums.xO
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI
+                        (BinNums.xO
+                         (BinNums.xI
+                          (BinNums.xI (BinNums.xI (BinNums.xI BinNums.xH)))))))))))))))) =>
+               true
+           | _ => false
+           end
+       | None => false
+       end = true /\
+       match
+         vPortExitCritical_armv6m.vPortExitCritical_prog
+           (Checks.sample BinNums.N0 BinNums.N0 BinNums.N0)
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xI
+                    (BinNums.xI
+                       (BinNums.xO
+                          (BinNums.xI
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xI
+                                      (BinNums.xO
+                                         (BinNums.xI
+                                            (BinNums.xI
+                                               (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+       with
+       | Some (_, q) =>
+           match
+             Checks.run q
+               (Checks.sample BinNums.N0 BinNums.N0 BinNums.N0
+                [F_Z := BinNums.Npos BinNums.xH])
+           with
+           | Some (_, None) => true
+           | _ => false
+           end
+       | None => false
+       end = true /\
+       Checks.matrix
+         (fun h n p : BinNums.N =>
+          Checks.check
+            (arm2il
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xO
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+               (thumb16_decode
+                  (vPortExitCritical_armv6m.vPortExitCritical
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xI
+                                                (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH)))))))))))))))))
+            (Checks.sample h n p) S_PRIMASK
+            (if Checks.privileged h n then BinNums.N0 else p)) =
+       true /\
+       match
+         vPortExitCritical_armv6m.vPortExitCritical_prog
+           (Checks.sample BinNums.N0 BinNums.N0 BinNums.N0)
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xI
+                                (BinNums.xO
+                                   (BinNums.xI
+                                      (BinNums.xO
+                                         (BinNums.xI
+                                            (BinNums.xI
+                                               (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+       with
+       | Some (_, q) =>
+           match
+             Checks.run q (Checks.sample BinNums.N0 BinNums.N0 BinNums.N0)
+           with
+           | Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI
+                        (BinNums.xI
+                         (BinNums.xO
+                          (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))))))))))) =>
+               BinNat.N.eqb (s' R_LR)
+                 (BinNums.Npos
+                    (BinNums.xI
+                       (BinNums.xO
+                          (BinNums.xI
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xI
+                                      (BinNums.xO
+                                         (BinNums.xI
+                                            (BinNums.xO
+                                               (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+           | Some (s', Some (Addr BinNums.N0)) |
+             Some (s', Some (Addr (BinNums.Npos (BinNums.xI _)))) |
+             Some
+             (s', Some (Addr (BinNums.Npos (BinNums.xO (BinNums.xI _))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI (BinNums.xI (BinNums.xI (BinNums.xI _))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI (BinNums.xI (BinNums.xO (BinNums.xI _)))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO (BinNums.xI (BinNums.xI (BinNums.xI _))))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI (BinNums.xI (BinNums.xO (BinNums.xI _)))))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI
+                        (BinNums.xI (BinNums.xO (BinNums.xO (BinNums.xI _))))))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI
+                        (BinNums.xI
+                         (BinNums.xO
+                          (BinNums.xO (BinNums.xO (BinNums.xI _)))))))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI
+                        (BinNums.xI
+                         (BinNums.xO
+                          (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xI _))))))))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI
+                        (BinNums.xI
+                         (BinNums.xO
+                          (BinNums.xO
+                           (BinNums.xO
+                            (BinNums.xO (BinNums.xO (BinNums.xI _)))))))))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI
+                        (BinNums.xI
+                         (BinNums.xO
+                          (BinNums.xO
+                           (BinNums.xO
+                            (BinNums.xO (BinNums.xO (BinNums.xO _)))))))))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI
+                        (BinNums.xI
+                         (BinNums.xO
+                          (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI
+                        (BinNums.xI
+                         (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI
+                        (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH)))))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO
+                       (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH))))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO
+                      (BinNums.xO (BinNums.xI (BinNums.xI BinNums.xH)))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO (BinNums.xO (BinNums.xI (BinNums.xO _)))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI
+                     (BinNums.xO (BinNums.xO (BinNums.xI BinNums.xH))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI (BinNums.xO (BinNums.xO (BinNums.xO _))))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI
+                    (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH)))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI
+                   (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH))))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO
+                  (BinNums.xI (BinNums.xI (BinNums.xI BinNums.xH)))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO (BinNums.xI (BinNums.xI (BinNums.xO _)))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO
+                 (BinNums.xO (BinNums.xI (BinNums.xI BinNums.xH))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO (BinNums.xO (BinNums.xI (BinNums.xO _))))))) |
+             Some
+             (s', Some
+              (Addr
+               (BinNums.Npos
+                (BinNums.xO (BinNums.xO (BinNums.xI BinNums.xH)))))) |
+             Some
+             (s', Some
+              (Addr (BinNums.Npos (BinNums.xO (BinNums.xO (BinNums.xO _)))))) |
+             Some
+             (s', Some
+              (Addr (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))))) |
+             Some (s', Some (Addr (BinNums.Npos (BinNums.xO BinNums.xH)))) |
+             Some (s', Some (Addr (BinNums.Npos BinNums.xH))) |
+             Some (s', Some (Raise _)) | Some (s', None) => false
+           | None => false
+           end
+       | None => false
+       end = true
+Closed under the global context
+memory_opcode_fixtures
+     : List.forallb
+         (fun x : BinNums.N =>
+          (Checks.check
+             (arm2il
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                (thumb16_decode
+                   (vPortEnterCritical_armv6m.vPortEnterCritical
+                      (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xO
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH)))))))))))))))))
+             (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH)
+              [R_R2 := BinNums.N0][V_MEM32 := x])
+             R_R3 x &&
+           Checks.check
+             (arm2il
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xI
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                (thumb16_decode
+                   (vPortEnterCritical_armv6m.vPortEnterCritical
+                      (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xI
+                                           (BinNums.xI
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH)))))))))))))))))
+             (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH)
+              [R_R2 := BinNums.N0][R_R3 := x])
+             V_MEM32 x &&
+           Checks.check
+             (arm2il
+                (BinNums.Npos
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xI
+                                           (BinNums.xO
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                (thumb16_decode
+                   (vPortExitCritical_armv6m.vPortExitCritical
+                      (BinNums.Npos
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH)))))))))))))))))
+             (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH)
+              [R_R3 := BinNums.N0][R_R2 := x])
+             V_MEM32 x)%bool)
+         (BinNums.N0
+          :: BinNums.Npos BinNums.xH
+             :: BinNums.Npos (BinNums.xO BinNums.xH)
+                :: BinNums.Npos
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...))))))))))))))))))))
+                   :: nil) =
+       true
+Closed under the global context
+actual_nesting_arithmetic_samples
+     : List.forallb
+         (fun x : BinNums.N =>
+          match
+            Checks.run
+              (arm2il
+                 (BinNums.Npos
+                    (BinNums.xO
+                       (BinNums.xI
+                          (BinNums.xI
+                             (BinNums.xI
+                                (BinNums.xO
+                                   (BinNums.xI
+                                      (BinNums.xI
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                 (thumb16_decode
+                    (vPortEnterCritical_armv6m.vPortEnterCritical
+                       (BinNums.Npos
+                          (BinNums.xO
+                             (BinNums.xI
+                                (BinNums.xI
+                                   (BinNums.xI
+                                      (BinNums.xO
+                                         (BinNums.xI
+                                            (BinNums.xI
+                                               (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH)))))))))))))))))
+              (Checks.sample BinNums.N0 BinNums.N0 (BinNums.Npos BinNums.xH)
+               [R_R3 := x])
+          with
+          | Some (s1, Some _) => false
+          | Some (s1, None) =>
+              match
+                Checks.run
+                  (arm2il
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xI
+                                                (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                     (thumb16_decode
+                        (vPortExitCritical_armv6m.vPortExitCritical
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI BinNums.xH)))))))))))))))))
+                  (Checks.sample BinNums.N0 BinNums.N0
+                     (BinNums.Npos BinNums.xH)
+                   [R_R2 := x])
+              with
+              | Some (s2, Some _) => false
+              | Some (s2, None) =>
+                  (BinNat.N.eqb (s1 R_R3)
+                     (BinNat.N.modulo
+                        (BinNat.N.add x (BinNums.Npos BinNums.xH))
+                        (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))))) &&
+                   BinNat.N.eqb (s2 R_R2)
+                     (msub
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH))))))
+                        x (BinNums.Npos BinNums.xH)) &&
+                   BinNat.N.eqb (s1 V_MEM32)
+                     (Checks.sample BinNums.N0 BinNums.N0
+                        (BinNums.Npos BinNums.xH) V_MEM32) &&
+                   BinNat.N.eqb (s2 V_MEM32)
+                     (Checks.sample BinNums.N0 BinNums.N0
+                        (BinNums.Npos BinNums.xH) V_MEM32) &&
+                   BinNat.N.eqb (s1 S_PRIMASK) (BinNums.Npos BinNums.xH) &&
+                   BinNat.N.eqb (s2 S_PRIMASK) (BinNums.Npos BinNums.xH))%bool
+              | None => false
+              end
+          | None => false
+          end)
+         (BinNums.N0
+          :: BinNums.Npos BinNums.xH
+             :: BinNums.Npos (BinNums.xO BinNums.xH)
+                :: BinNums.Npos
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...))))))))))))))))))))
+                   :: nil) =
+       true
+Closed under the global context
+remaining_systems_rejected
+     : ListDef.map armv6m_sync_instruction_supported
+         (T_WFI
+          :: T_MRS BinNums.N0
+               (BinNums.Npos
+                  (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH))))
+             :: T_MSR
+                  (BinNums.Npos
+                     (BinNums.xI (BinNums.xO (BinNums.xO BinNums.xH))))
+                  BinNums.N0
+                :: T_SVC BinNums.N0 :: T_DSB :: T_ISB :: T_DMB :: nil) =
+       false :: false :: false :: false :: true :: true :: true :: nil
+Closed under the global context
+vPortEnterCritical_decode_check
+     : List.forallb
+         (fun a : addr =>
+          armv6m_sync_instruction_supported
+            (if is_32bit_insn (vPortEnterCritical a)
+             then
+              armv6m_sync_decode32 (vPortEnterCritical a)
+                (vPortEnterCritical
+                   (BinNat.N.add a (BinNums.Npos (BinNums.xO BinNums.xH))))
+             else thumb16_decode (vPortEnterCritical a)))
+         vPortEnterCritical_entries =
+       true
+Closed under the global context
+vPortEnterCritical_welltyped
+     : welltyped_prog armv6mtypctx vPortEnterCritical_prog
+Closed under the global context
+vPortExitCritical_decode_check
+     : List.forallb
+         (fun a : addr =>
+          armv6m_sync_instruction_supported
+            (if is_32bit_insn (vPortExitCritical a)
+             then
+              armv6m_sync_decode32 (vPortExitCritical a)
+                (vPortExitCritical
+                   (BinNat.N.add a (BinNums.Npos (BinNums.xO BinNums.xH))))
+             else thumb16_decode (vPortExitCritical a)))
+         vPortExitCritical_entries =
+       true
+Closed under the global context
+vPortExitCritical_welltyped
+     : welltyped_prog armv6mtypctx vPortExitCritical_prog
+Closed under the global context
+welltyped_arm2il
+     : forall (a : addr) (i : thumb_instr),
+       exists c' : typctx,
+         hastyp_stmt armv6mtypctx armv6mtypctx (arm2il a i) c'
+Closed under the global context
+welltyped_lift_armv6m
+     : forall binary : addr -> BinNums.N,
+       welltyped_prog armv6mtypctx (lift_armv6m binary)
+Closed under the global context
+welltyped_armv6mprog
+     : welltyped_prog armv6mtypctx armv6m_prog
+Closed under the global context
+welltyped_lift_armv6m_mask
+     : forall binary : addr -> BinNums.N,
+       welltyped_prog armv6mtypctx (lift_armv6m_mask binary)
+Closed under the global context
+welltyped_lift_armv6m_sync_projection
+     : forall binary : addr -> BinNums.N,
+       welltyped_prog armv6mtypctx
+         (armv6m_sync_project (lift_armv6m_sync_view binary))
+Closed under the global context
+EXIT_CODE: 0
+PASS: all 22 facts closed under the global context
+
+EXIT_CODE=0
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash notes/e19-armv6m-primask/legacy-check.sh
+Closed under the global context
+Closed under the global context
+Closed under the global context
+tests/armv6m/generated/missing_literal.s: Assembler messages:
+tests/armv6m/generated/missing_literal.s:9: Warning: section does not have enough alignment to ensure safe PC-relative loads
+PASS reject relocatable: exit=1; armv6m lifter: expected linked ARM ET_EXEC (not relocatable/shared)
+PASS reject missing function: exit=1; armv6m lifter: expected one sized STT_FUNC symbol
+PASS reject invalid definition name: exit=1; armv6m lifter: invalid Coq definition name
+PASS reject missing objdump: exit=1; armv6m lifter: [Errno 2] No such file or directory: '/nonexistent/objdump'
+PASS reject failing objdump: exit=1; armv6m lifter: Command '['/bin/false', '-d', '-z', 'tests/armv6m/generated/snippets.elf']' returned non-zero exit status 1.
+PASS reject unset objdump: exit=1; armv6m lifter: set OBJDUMP to an ARM objdump executable
+PASS reject missing file: exit=1; armv6m lifter: [Errno 2] No such file or directory: 'tests/armv6m/generated/absent.elf'
+PASS reject undefined: exit=1; armv6m lifter: unsupported instruction at 0x1000: udf	#0
+PASS reject cpsid: exit=1; armv6m lifter: unsupported instruction at 0x1000: cpsid	i
+PASS reject cpsie: exit=1; armv6m lifter: unsupported instruction at 0x1000: cpsie	i
+PASS reject mrs: exit=1; armv6m lifter: unsupported instruction at 0x1000: mrs	r0, PRIMASK
+PASS reject msr: exit=1; armv6m lifter: unsupported instruction at 0x1000: msr	PRIMASK, r0
+PASS reject dmb: exit=1; armv6m lifter: unsupported instruction at 0x1000: dmb	sy
+PASS reject dsb: exit=1; armv6m lifter: unsupported instruction at 0x1000: dsb	sy
+PASS reject isb: exit=1; armv6m lifter: unsupported instruction at 0x1000: isb	sy
+PASS reject svc: exit=1; armv6m lifter: unsupported instruction at 0x1000: svc	0
+PASS reject bkpt: exit=1; armv6m lifter: unsupported instruction at 0x1000: bkpt	0x0000
+PASS reject wfi: exit=1; armv6m lifter: unsupported instruction at 0x1000: wfi
+PASS reject wfe: exit=1; armv6m lifter: unsupported instruction at 0x1000: wfe
+PASS reject sev: exit=1; armv6m lifter: unsupported instruction at 0x1000: sev
+PASS reject yield: exit=1; armv6m lifter: unsupported instruction at 0x1000: yield
+PASS reject unknown_hint: exit=1; armv6m lifter: unsupported instruction at 0x1000: sevl
+PASS reject thumb2_movw: exit=1; armv6m lifter: unsupported instruction at 0x1000: movw	r0, #0
+PASS reject truncated_bl: exit=1; armv6m lifter: truncated instruction at 0x1000
+PASS reject unpredictable_stm: exit=1; armv6m lifter: unsupported instruction at 0x1000: stmia	r1!, {r0, r1}
+PASS reject empty_push: exit=1; armv6m lifter: unsupported instruction at 0x1000: push	{}
+PASS reject empty_pop: exit=1; armv6m lifter: unsupported instruction at 0x1000: pop	{}
+PASS reject unpredictable_cmp: exit=1; armv6m lifter: unsupported instruction at 0x1000: cmp	r0, r0
+PASS reject missing_literal: exit=1; armv6m lifter: missing/ambiguous bytes at 0x1400 (+4)
+PASS reject stripped: exit=1; armv6m lifter: symbol table required (preserve $t/$d mapping symbols)
+PASS reject retained relocations: exit=1; armv6m lifter: ELF contains unresolved/retained relocations
+PASS reject partial literal word: exit=1; armv6m lifter: missing/ambiguous bytes at 0x1010 (+4)
+PASS reject writable literal word: exit=1; armv6m lifter: literal word in writable section
+
+EXIT_CODE=0
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e19-armv6m-primask/frontend-tests.py
+PASS exact 16-bit delta, all register/SYSm templates and fixed-bit mutations
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x4090: mrs	r0, PRIMASK
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x4098: msr	PRIMASK, r0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e68: cpsid	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x419c: cpsid	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask']
+EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask']
+EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x41a6: wfi
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask']
+EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask']
+EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x41a6: wfi
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+PASS real mask acceptance and retained barrier/WFI/PSP rejection boundaries
+
+EXIT_CODE=0
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e20-armv6m-critical/compatibility.py
+PASS exhaustive old 16-bit and system/BL template 32-bit acceptance compatibility
+PASS old mask artifacts reproduce; original ISA/e03/e04/e05/e19 artifacts unchanged
+
+EXIT_CODE=0
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e19-armv6m-primask/recheck-e05.py --elf /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf --objdump /home/charles/code/friends/.toolchains/e04-freertos-build/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-objdump --source /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0 --check
+r01 vListInitialiseItem: extracted; exit=0; decode/type facts generated
+r02 vListInitialise: extracted; exit=0; decode/type facts generated
+r03 vListInsertEnd: extracted; exit=0; decode/type facts generated
+r04 uxListRemove: extracted; exit=0; decode/type facts generated
+r05 vListInsert: extracted; exit=0; decode/type facts generated
+r06 uxTaskGetNumberOfTasks: extracted; exit=0; decode/type facts generated
+r07 xTaskGetCurrentTaskHandle: extracted; exit=0; decode/type facts generated
+r08 xTaskGetTickCount: extracted; exit=0; decode/type facts generated
+r09 xTaskGetTickCountFromISR: extracted; exit=0; decode/type facts generated
+r10 vTaskSuspendAll: extracted; exit=0; decode/type facts generated
+r11 vTaskMissedYield: extracted; exit=0; decode/type facts generated
+r12 uxTaskPriorityGet: extracted; exit=0; decode/type facts generated
+r13 uxTaskResetEventItemValue: extracted; exit=0; decode/type facts generated
+r14 vTaskInternalSetTimeOutState: extracted; exit=0; decode/type facts generated
+r15 vTaskSetTimeOutState: extracted; exit=0; decode/type facts generated
+r16 xTaskGenericNotifyStateClear: extracted; exit=0; decode/type facts generated
+r17 ulTaskGenericNotifyValueClear: extracted; exit=0; decode/type facts generated
+r18 pvTaskIncrementMutexHeldCount: extracted; exit=0; decode/type facts generated
+r19 xTaskGetSchedulerState: extracted; exit=0; decode/type facts generated
+r20 uxQueueMessagesWaiting: extracted; exit=0; decode/type facts generated
+r21 uxQueueSpacesAvailable: extracted; exit=0; decode/type facts generated
+r22 xQueueGetMutexHolder: extracted; exit=0; decode/type facts generated
+r23 xQueueGetMutexHolderFromISR: extracted; exit=0; decode/type facts generated
+r24 eTaskGetState: extracted; exit=0; decode/type facts generated
+r25 prvTaskIsTaskSuspended: extracted; exit=0; decode/type facts generated
+r26 prvResetNextTaskUnblockTime: extracted; exit=0; decode/type facts generated
+r27 prvSearchForNameWithinSingleList: extracted; exit=0; decode/type facts generated
+r28 vTaskSwitchContext: extracted; exit=0; decode/type facts generated
+r29 xQueueGenericSend: extracted; exit=0; decode/type facts generated
+r30 xQueueReceive: extracted; exit=0; decode/type facts generated
+r31 xQueueGenericSendFromISR: extracted; exit=0; decode/type facts generated
+r32 xQueueReceiveFromISR: extracted; exit=0; decode/type facts generated
+r33 vTaskDelay: extracted; exit=0; decode/type facts generated
+r34 xTaskIncrementTick: extracted; exit=0; decode/type facts generated
+r35 xTaskCreateStatic: extracted; exit=0; decode/type facts generated
+r36 xEventGroupSetBits: extracted; exit=0; decode/type facts generated
+r37 xEventGroupClearBits: extracted; exit=0; decode/type facts generated
+r38 xStreamBufferSend: extracted; exit=0; decode/type facts generated
+r39 xStreamBufferReceive: extracted; exit=0; decode/type facts generated
+r40 xTimerGenericCommandFromTask: extracted; exit=0; decode/type facts generated
+r41 xTimerGenericCommandFromISR: extracted; exit=0; decode/type facts generated
+helper fixture_assert_fail: rejected; exit=1; armv6m lifter: unsupported instruction at 0x419c: cpsid	i; stdout empty
+helper ulSetInterruptMask: rejected; exit=1; armv6m lifter: unsupported instruction at 0x4090: mrs	r0, PRIMASK; stdout empty
+helper vClearInterruptMask: rejected; exit=1; armv6m lifter: unsupported instruction at 0x4098: msr	PRIMASK, r0; stdout empty
+helper vPortEnterCritical: rejected; exit=1; armv6m lifter: unsupported instruction at 0x3e68: cpsid	i; stdout empty
+helper vPortExitCritical: rejected; exit=1; armv6m lifter: unsupported instruction at 0x3e98: cpsie	i; stdout empty
+helper vPortYield: rejected; exit=1; armv6m lifter: unsupported instruction at 0x3e58: dsb	sy; stdout empty
+asynchronous boundary SysTick_Handler: diagnostic strict exit=0; body supported; exception/call closure unmodeled
+asynchronous boundary PendSV_Handler: diagnostic strict exit=1; armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+asynchronous boundary SVC_Handler: diagnostic strict exit=1; armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+asynchronous boundary vStartFirstTask: diagnostic strict exit=1; armv6m lifter: unsupported instruction at 0x4080: cpsie	i
+EXPECTED provenance-only frontend_sha256 delta: 80d1a05683c6f4b15290926c6f1ec7e176f276b8f2d509d5f6cc18bf4798fb61 -> f6039b54c0f75d07c91d4d31e3f14f12caaec6f0f52c26427c8523c9972a81b5
+PASS: 89 artifacts byte-identical; coverage only frontend hash differs
+41 extracted, 0 rejected; 41 individual strict frontend invocations
+
+EXIT_CODE=0
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e20-armv6m-critical/provenance.py --check
+PASS exact ELF, global, code/data, call closure, barrier, tool and manual provenance
+
+EXIT_CODE=0
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B tools/audit-proof-source.py --base 49956416928e5b6bb3928b54ae33e3b81091f006
+Base: 49956416928e5b6bb3928b54ae33e3b81091f006
+Scope: 365 Rocq source files
+BASELINE Examples/claude/amd64_isinfl_proof.v:107: Admitted.
+CURRENT Examples/claude/amd64_isinfl_proof.v:107: Admitted.
+BASELINE Examples/claude/amd64_memmove_avx_nt_proof.v:402: Proof. Admitted.
+BASELINE Examples/claude/amd64_memmove_avx_nt_proof.v:693: Admitted.
+CURRENT Examples/claude/amd64_memmove_avx_nt_proof.v:402: Proof. Admitted.
+CURRENT Examples/claude/amd64_memmove_avx_nt_proof.v:693: Admitted.
+BASELINE Examples/claude/amd64_memset_avx2_proof.v:275: Admitted.
+CURRENT Examples/claude/amd64_memset_avx2_proof.v:275: Admitted.
+BASELINE Examples/claude/amd64_pthread_mutex_lock_proof.v:785: Admitted.
+CURRENT Examples/claude/amd64_pthread_mutex_lock_proof.v:785: Admitted.
+BASELINE Examples/claude/amd64_rand_r_proof.v:148: Admitted.
+CURRENT Examples/claude/amd64_rand_r_proof.v:148: Admitted.
+BASELINE Examples/claude/zz_s85.v:115: all: admit.
+BASELINE Examples/claude/zz_s85.v:116: Admitted.
+CURRENT Examples/claude/zz_s85.v:115: all: admit.
+CURRENT Examples/claude/zz_s85.v:116: Admitted.
+BASELINE Picinae_core.v:282: Parameter archtyps : typctx.
+BASELINE Picinae_core.v:283: Parameter mem_readable: store -> addr -> Prop.
+BASELINE Picinae_core.v:284: Parameter mem_writable: store -> addr -> Prop.
+CURRENT Picinae_core.v:282: Parameter archtyps : typctx.
+CURRENT Picinae_core.v:283: Parameter mem_readable: store -> addr -> Prop.
+CURRENT Picinae_core.v:284: Parameter mem_writable: store -> addr -> Prop.
+BASELINE Picinae_finterp.v:595: Parameter if_N_same: forall A (n:N) (a:A), (if n then a else a) = a.
+BASELINE Picinae_finterp.v:644: Parameter fexec_stmt_init:
+BASELINE Picinae_finterp.v:648: Parameter fexec_stmt_updn:
+BASELINE Picinae_finterp.v:653: Parameter fexec_stmt_hypn:
+BASELINE Picinae_finterp.v:658: Parameter fexec_stmt_fin:
+BASELINE Picinae_finterp.v:687: Parameter reduce_stmt:
+CURRENT Picinae_finterp.v:595: Parameter if_N_same: forall A (n:N) (a:A), (if n then a else a) = a.
+CURRENT Picinae_finterp.v:644: Parameter fexec_stmt_init:
+CURRENT Picinae_finterp.v:648: Parameter fexec_stmt_updn:
+CURRENT Picinae_finterp.v:653: Parameter fexec_stmt_hypn:
+CURRENT Picinae_finterp.v:658: Parameter fexec_stmt_fin:
+CURRENT Picinae_finterp.v:687: Parameter reduce_stmt:
+BASELINE Picinae_simplifier_v1_1.v:1809: Parameter simplify_sastN_hyp:
+BASELINE Picinae_simplifier_v1_1.v:1814: Parameter simplify_sastB_hyp:
+BASELINE Picinae_simplifier_v1_1.v:1819: Parameter simplify_sastS_hyp:
+BASELINE Picinae_simplifier_v1_1.v:1824: Parameter simplify_sastU_hyp:
+BASELINE Picinae_simplifier_v1_1.v:1829: Parameter simplify_sastU_goal:
+BASELINE Picinae_simplifier_v1_1.v:1836: Parameter N_shiftl1_pow2: forall {n w:N} (H: n < N.shiftl 1 w), n < 2^w.
+BASELINE Picinae_simplifier_v1_1.v:1837: Parameter simpl_if_if: forall (b:bool) (q1 q2:stmt),
+BASELINE Picinae_simplifier_v1_1.v:1839: Parameter simpl_if_not_if:
+BASELINE Picinae_simplifier_v1_1.v:2075: Parameter simpl_nvar_bound:
+CURRENT Picinae_simplifier_v1_1.v:1809: Parameter simplify_sastN_hyp:
+CURRENT Picinae_simplifier_v1_1.v:1814: Parameter simplify_sastB_hyp:
+CURRENT Picinae_simplifier_v1_1.v:1819: Parameter simplify_sastS_hyp:
+CURRENT Picinae_simplifier_v1_1.v:1824: Parameter simplify_sastU_hyp:
+CURRENT Picinae_simplifier_v1_1.v:1829: Parameter simplify_sastU_goal:
+CURRENT Picinae_simplifier_v1_1.v:1836: Parameter N_shiftl1_pow2: forall {n w:N} (H: n < N.shiftl 1 w), n < 2^w.
+CURRENT Picinae_simplifier_v1_1.v:1837: Parameter simpl_if_if: forall (b:bool) (q1 q2:stmt),
+CURRENT Picinae_simplifier_v1_1.v:1839: Parameter simpl_if_not_if:
+CURRENT Picinae_simplifier_v1_1.v:2075: Parameter simpl_nvar_bound:
+BASELINE Picinae_slogic.v:612: Parameter destruct_frames_stmt:
+BASELINE Picinae_slogic.v:622: Parameter destruct_frames'_stmt:
+BASELINE Picinae_slogic.v:635: Parameter hmodels_refl:
+BASELINE Picinae_slogic.v:638: Parameter hmodels_trans:
+BASELINE Picinae_slogic.v:642: Parameter hmodels_mono:
+BASELINE Picinae_slogic.v:661: Parameter framed_rep:
+BASELINE Picinae_slogic.v:664: Parameter framed_stmt:
+BASELINE Picinae_slogic.v:682: Parameter stmt_frame:
+BASELINE Picinae_slogic.v:687: Parameter prog_frame:
+BASELINE Picinae_slogic.v:697: Parameter upd_pres_sep:
+BASELINE Picinae_slogic.v:704: Parameter frames_stmt_sep:
+BASELINE Picinae_slogic.v:708: Parameter frames'_stmt_sep:
+BASELINE Picinae_slogic.v:712: Parameter frames_prog_sep:
+BASELINE Picinae_slogic.v:716: Parameter frames'_prog_sep:
+BASELINE Picinae_slogic.v:721: Parameter frames_stmt_htrue: forall q, frames_stmt htrue q.
+BASELINE Picinae_slogic.v:722: Parameter frames'_stmt_htrue: forall q, frames'_stmt htrue q.
+BASELINE Picinae_slogic.v:723: Parameter frames_prog_htrue: forall p, frames_prog htrue p.
+BASELINE Picinae_slogic.v:724: Parameter frames'_prog_htrue: forall p, frames'_prog htrue p.
+BASELINE Picinae_slogic.v:725: Parameter frames_stmt_hfalse: forall q, frames_stmt hfalse q.
+BASELINE Picinae_slogic.v:726: Parameter frames'_stmt_hfalse: forall q, frames'_stmt hfalse q.
+BASELINE Picinae_slogic.v:727: Parameter frames_prog_hfalse: forall p, frames_prog hfalse p.
+BASELINE Picinae_slogic.v:728: Parameter frames'_prog_hfalse: forall p, frames'_prog hfalse p.
+BASELINE Picinae_slogic.v:732: Parameter frames_stmt_anystore:
+BASELINE Picinae_slogic.v:736: Parameter frames'_stmt_anystore:
+BASELINE Picinae_slogic.v:741: Parameter frames_stmt_hprop: forall R q, frames_stmt (hprop var R) q.
+BASELINE Picinae_slogic.v:742: Parameter frames_prog_hprop: forall R p, frames_prog (hprop var R) p.
+BASELINE Picinae_slogic.v:745: Parameter frames_stmt_impl:
+BASELINE Picinae_slogic.v:749: Parameter frames'_stmt_impl:
+BASELINE Picinae_slogic.v:753: Parameter frames_prog_impl:
+BASELINE Picinae_slogic.v:757: Parameter frames'_prog_impl:
+BASELINE Picinae_slogic.v:762: Parameter frames_stmt_not:
+BASELINE Picinae_slogic.v:766: Parameter frames'_stmt_not:
+BASELINE Picinae_slogic.v:770: Parameter frames_prog_not:
+BASELINE Picinae_slogic.v:774: Parameter frames_prog'_not:
+CURRENT Picinae_slogic.v:612: Parameter destruct_frames_stmt:
+CURRENT Picinae_slogic.v:622: Parameter destruct_frames'_stmt:
+CURRENT Picinae_slogic.v:635: Parameter hmodels_refl:
+CURRENT Picinae_slogic.v:638: Parameter hmodels_trans:
+CURRENT Picinae_slogic.v:642: Parameter hmodels_mono:
+CURRENT Picinae_slogic.v:661: Parameter framed_rep:
+CURRENT Picinae_slogic.v:664: Parameter framed_stmt:
+CURRENT Picinae_slogic.v:682: Parameter stmt_frame:
+CURRENT Picinae_slogic.v:687: Parameter prog_frame:
+CURRENT Picinae_slogic.v:697: Parameter upd_pres_sep:
+CURRENT Picinae_slogic.v:704: Parameter frames_stmt_sep:
+CURRENT Picinae_slogic.v:708: Parameter frames'_stmt_sep:
+CURRENT Picinae_slogic.v:712: Parameter frames_prog_sep:
+CURRENT Picinae_slogic.v:716: Parameter frames'_prog_sep:
+CURRENT Picinae_slogic.v:721: Parameter frames_stmt_htrue: forall q, frames_stmt htrue q.
+CURRENT Picinae_slogic.v:722: Parameter frames'_stmt_htrue: forall q, frames'_stmt htrue q.
+CURRENT Picinae_slogic.v:723: Parameter frames_prog_htrue: forall p, frames_prog htrue p.
+CURRENT Picinae_slogic.v:724: Parameter frames'_prog_htrue: forall p, frames'_prog htrue p.
+CURRENT Picinae_slogic.v:725: Parameter frames_stmt_hfalse: forall q, frames_stmt hfalse q.
+CURRENT Picinae_slogic.v:726: Parameter frames'_stmt_hfalse: forall q, frames'_stmt hfalse q.
+CURRENT Picinae_slogic.v:727: Parameter frames_prog_hfalse: forall p, frames_prog hfalse p.
+CURRENT Picinae_slogic.v:728: Parameter frames'_prog_hfalse: forall p, frames'_prog hfalse p.
+CURRENT Picinae_slogic.v:732: Parameter frames_stmt_anystore:
+CURRENT Picinae_slogic.v:736: Parameter frames'_stmt_anystore:
+CURRENT Picinae_slogic.v:741: Parameter frames_stmt_hprop: forall R q, frames_stmt (hprop var R) q.
+CURRENT Picinae_slogic.v:742: Parameter frames_prog_hprop: forall R p, frames_prog (hprop var R) p.
+CURRENT Picinae_slogic.v:745: Parameter frames_stmt_impl:
+CURRENT Picinae_slogic.v:749: Parameter frames'_stmt_impl:
+CURRENT Picinae_slogic.v:753: Parameter frames_prog_impl:
+CURRENT Picinae_slogic.v:757: Parameter frames'_prog_impl:
+CURRENT Picinae_slogic.v:762: Parameter frames_stmt_not:
+CURRENT Picinae_slogic.v:766: Parameter frames'_stmt_not:
+CURRENT Picinae_slogic.v:770: Parameter frames_prog_not:
+CURRENT Picinae_slogic.v:774: Parameter frames_prog'_not:
+BASELINE Picinae_statics.v:315: Parameter setmem_welltyped:
+BASELINE Picinae_statics.v:320: Parameter hastyp_binop:
+BASELINE Picinae_statics.v:325: Parameter hastyp_extract:
+BASELINE Picinae_statics.v:330: Parameter hastyp_concat:
+BASELINE Picinae_statics.v:337: Parameter hastyp_exp_unique:
+BASELINE Picinae_statics.v:343: Parameter hastyp_exp_weaken:
+BASELINE Picinae_statics.v:348: Parameter hastyp_stmt_weaken:
+BASELINE Picinae_statics.v:351: Parameter hastyp_stmt_weaken':
+BASELINE Picinae_statics.v:356: Parameter hastyp_stmt_compat:
+BASELINE Picinae_statics.v:363: Parameter hastyp_stmt_frame_weaken:
+BASELINE Picinae_statics.v:388: Parameter typesafe_binop:
+BASELINE Picinae_statics.v:394: Parameter typesafe_unop:
+BASELINE Picinae_statics.v:400: Parameter typesafe_cast:
+BASELINE Picinae_statics.v:406: Parameter typesafe_getmem:
+BASELINE Picinae_statics.v:410: Parameter typesafe_setmem:
+BASELINE Picinae_statics.v:416: Parameter models_var:
+BASELINE Picinae_statics.v:422: Parameter models_subset:
+BASELINE Picinae_statics.v:427: Parameter preservation_eval_exp:
+BASELINE Picinae_statics.v:434: Parameter progress_eval_exp:
+BASELINE Picinae_statics.v:441: Parameter preservation_exec_stmt:
+BASELINE Picinae_statics.v:447: Parameter pres_frame_exec_stmt:
+BASELINE Picinae_statics.v:454: Parameter progress_exec_stmt:
+BASELINE Picinae_statics.v:461: Parameter preservation_exec_prog:
+BASELINE Picinae_statics.v:468: Parameter progress_exec_prog:
+BASELINE Picinae_statics.v:477: Parameter typchk_exp_sound:
+BASELINE Picinae_statics.v:481: Parameter typctx_meet_subset:
+BASELINE Picinae_statics.v:485: Parameter typctx_meet_comm:
+BASELINE Picinae_statics.v:489: Parameter typctx_meet_lowbound:
+BASELINE Picinae_statics.v:493: Parameter typchk_stmt_mono:
+BASELINE Picinae_statics.v:497: Parameter typchk_stmt_sound:
+BASELINE Picinae_statics.v:504: Parameter typchk_stmt_compute:
+BASELINE Picinae_statics.v:522: Parameter models_at_invariant:
+BASELINE Picinae_statics.v:529: Parameter models_after_steps:
+CURRENT Picinae_statics.v:315: Parameter setmem_welltyped:
+CURRENT Picinae_statics.v:320: Parameter hastyp_binop:
+CURRENT Picinae_statics.v:325: Parameter hastyp_extract:
+CURRENT Picinae_statics.v:330: Parameter hastyp_concat:
+CURRENT Picinae_statics.v:337: Parameter hastyp_exp_unique:
+CURRENT Picinae_statics.v:343: Parameter hastyp_exp_weaken:
+CURRENT Picinae_statics.v:348: Parameter hastyp_stmt_weaken:
+CURRENT Picinae_statics.v:351: Parameter hastyp_stmt_weaken':
+CURRENT Picinae_statics.v:356: Parameter hastyp_stmt_compat:
+CURRENT Picinae_statics.v:363: Parameter hastyp_stmt_frame_weaken:
+CURRENT Picinae_statics.v:388: Parameter typesafe_binop:
+CURRENT Picinae_statics.v:394: Parameter typesafe_unop:
+CURRENT Picinae_statics.v:400: Parameter typesafe_cast:
+CURRENT Picinae_statics.v:406: Parameter typesafe_getmem:
+CURRENT Picinae_statics.v:410: Parameter typesafe_setmem:
+CURRENT Picinae_statics.v:416: Parameter models_var:
+CURRENT Picinae_statics.v:422: Parameter models_subset:
+CURRENT Picinae_statics.v:427: Parameter preservation_eval_exp:
+CURRENT Picinae_statics.v:434: Parameter progress_eval_exp:
+CURRENT Picinae_statics.v:441: Parameter preservation_exec_stmt:
+CURRENT Picinae_statics.v:447: Parameter pres_frame_exec_stmt:
+CURRENT Picinae_statics.v:454: Parameter progress_exec_stmt:
+CURRENT Picinae_statics.v:461: Parameter preservation_exec_prog:
+CURRENT Picinae_statics.v:468: Parameter progress_exec_prog:
+CURRENT Picinae_statics.v:477: Parameter typchk_exp_sound:
+CURRENT Picinae_statics.v:481: Parameter typctx_meet_subset:
+CURRENT Picinae_statics.v:485: Parameter typctx_meet_comm:
+CURRENT Picinae_statics.v:489: Parameter typctx_meet_lowbound:
+CURRENT Picinae_statics.v:493: Parameter typchk_stmt_mono:
+CURRENT Picinae_statics.v:497: Parameter typchk_stmt_sound:
+CURRENT Picinae_statics.v:504: Parameter typchk_stmt_compute:
+CURRENT Picinae_statics.v:522: Parameter models_at_invariant:
+CURRENT Picinae_statics.v:529: Parameter models_after_steps:
+BASELINE Picinae_theory.v:9062: Parameter w bytes : bitwidth.
+BASELINE Picinae_theory.v:9201: Parameter w : bitwidth.
+BASELINE Picinae_theory.v:9202: Parameter e : endianness.
+BASELINE Picinae_theory.v:9203: Parameter dw pw : bitwidth.
+CURRENT Picinae_theory.v:9062: Parameter w bytes : bitwidth.
+CURRENT Picinae_theory.v:9201: Parameter w : bitwidth.
+CURRENT Picinae_theory.v:9202: Parameter e : endianness.
+CURRENT Picinae_theory.v:9203: Parameter dw pw : bitwidth.
+BASELINE totals: {'Admitted': 7, 'Parameter': 89, 'admit': 1}
+CURRENT totals: {'Admitted': 7, 'Parameter': 89, 'admit': 1}
+NEW totals: {}
+Source check only: inspect transitive Print Assumptions separately.
+
+EXIT_CODE=0
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=git diff --check
+
+EXIT_CODE=0

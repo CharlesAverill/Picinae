@@ -1,0 +1,31 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e20-armv6m-critical/generate.py
+COMMAND: ['/home/charles/code/friends/.toolchains/e04-freertos-build/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-as', '-mcpu=cortex-m0', '-mthumb', '-o', '/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.o', '/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.s']
+EXIT_CODE: 0
+COMMAND: ['/home/charles/code/friends/.toolchains/e04-freertos-build/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ld', '-Ttext=0x1000', '--entry=sync_fixture', '-o', '/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.elf', '/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.o']
+EXIT_CODE: 0
+COMMAND: ['/home/charles/code/friends/.toolchains/e04-freertos-build/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-objdump', '-d', '-s', '/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.elf']
+
+/home/charles/.t3/worktrees/Picinae/t3-126cc3e3/tests/armv6m_critical/snippets.elf:     file format elf32-littlearm
+
+Contents of section .text:
+ 1000 bff35f8f bff34f8f bff36f8f 72b662b6  .._...O...o.r.b.
+ 1010 7047                                 pG              
+Contents of section .ARM.attributes:
+ 0000 41200000 00616561 62690001 16000000  A ...aeabi......
+ 0010 05436f72 7465782d 4d300006 0c074d09  .Cortex-M0....M.
+ 0020 01                                   .               
+
+Disassembly of section .text:
+
+00001000 <sync_fixture>:
+    1000:	f3bf 8f5f 	dmb	sy
+    1004:	f3bf 8f4f 	dsb	sy
+    1008:	f3bf 8f6f 	isb	sy
+    100c:	b672      	cpsid	i
+    100e:	b662      	cpsie	i
+    1010:	4770      	bx	lr
+EXIT_CODE: 0
+PASS: real critical sequential projections and independently assembled fixture reproduce
+
+EXIT_CODE=0

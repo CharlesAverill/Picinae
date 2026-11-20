@@ -1,0 +1,65 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-126cc3e3
+COMMAND=/home/charles/code/friends/.toolchains/e05-freertos-lifts/venv/bin/python -B notes/e19-armv6m-primask/frontend-tests.py
+PASS exact 16-bit delta, all register/SYSm templates and fixed-bit mutations
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x4090: mrs	r0, PRIMASK
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x4098: msr	PRIMASK, r0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e68: cpsid	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x419c: cpsid	i
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'legacy-e03', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask']
+EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask']
+EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x41a6: wfi
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-base', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'ulSetInterruptMask']
+EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vClearInterruptMask']
+EXIT_CODE: 0
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortEnterCritical']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e72: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'vPortYield']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x3e58: dsb	sy
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'fixture_assert_fail']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x41a6: wfi
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'PendSV_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40a0: mrs	r0, PSP
+COMMAND: ['bash', 'armv6m_lifter.sh', '--profile', 'primask-v1-up', '/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf', 'probe', 'SVC_Handler']
+EXIT_CODE: 1
+armv6m lifter: unsupported instruction at 0x40f8: mrs	r0, PSP
+PASS real mask acceptance and retained barrier/WFI/PSP rejection boundaries
+
+EXIT_CODE=0
