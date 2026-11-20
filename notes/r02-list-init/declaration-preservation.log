@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ba16f2da
+COMMAND=python3 notes/r02-list-init/check-preservation.py
+PASS: all 12 theorem/lemma statements and all definitions unchanged; four unchecked proofs aborted
+
+EXIT_CODE=0

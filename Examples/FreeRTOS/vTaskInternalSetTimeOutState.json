@@ -1,0 +1,173 @@
+{
+  "blocked_helpers": [],
+  "bytes_sha256": "063656049abfb09f86579e498209e8d659c5777b3310ca8a4891c5ade9e13668",
+  "closure_prerequisites": [],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "vTaskInternalSetTimeOutState_armv6m",
+    "vTaskInternalSetTimeOutState"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "assembly": "bx\tlr",
+      "kind": "return-candidate",
+      "site": "0x00000914",
+      "target": "runtime register/stack; Thumb bit required"
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x00000920",
+  "entry": "0x00000908",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "14803137273ff52d1dfb881e22fbd9dd83ac3fe539ab9dbcd411b9e3d522ab5c",
+  "instructions": [
+    {
+      "address": "0x00000908",
+      "assembly": "ldr\tr3, [pc, #12]\t@ (918 <vTaskInternalSetTimeOutState+0x10>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4b03",
+      "width": 2
+    },
+    {
+      "address": "0x0000090a",
+      "assembly": "ldr\tr3, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "681b",
+      "width": 2
+    },
+    {
+      "address": "0x0000090c",
+      "assembly": "str\tr3, [r0, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "6003",
+      "width": 2
+    },
+    {
+      "address": "0x0000090e",
+      "assembly": "ldr\tr3, [pc, #12]\t@ (91c <vTaskInternalSetTimeOutState+0x14>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4b03",
+      "width": 2
+    },
+    {
+      "address": "0x00000910",
+      "assembly": "ldr\tr3, [r3, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "681b",
+      "width": 2
+    },
+    {
+      "address": "0x00000912",
+      "assembly": "str\tr3, [r0, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "6043",
+      "width": 2
+    },
+    {
+      "address": "0x00000914",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    },
+    {
+      "address": "0x00000916",
+      "assembly": "nop\t\t\t@ (mov r8, r8)",
+      "frontend_encoding_supported": true,
+      "opcode": "46c0",
+      "width": 2
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x00000918",
+      "bytes": "18000020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x20000018",
+          "name": "xNumOfOverflows",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 3,
+      "instruction": "0x00000908",
+      "thumb_function_pointer": [],
+      "value": "0x20000018"
+    },
+    {
+      "address": "0x0000091c",
+      "bytes": "2c000020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x2000002c",
+          "name": "xTickCount",
+          "offset": 0,
+          "size": 4
+        }
+      ],
+      "imm8": 3,
+      "instruction": "0x0000090e",
+      "thumb_function_pointer": [],
+      "value": "0x2000002c"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x00000918",
+      "halfword": "1800"
+    },
+    {
+      "address": "0x0000091a",
+      "halfword": "0020"
+    },
+    {
+      "address": "0x0000091c",
+      "halfword": "2c00"
+    },
+    {
+      "address": "0x0000091e",
+      "halfword": "0020"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x00000914",
+      "assembly": "bx\tlr",
+      "frontend_encoding_supported": true,
+      "opcode": "4770",
+      "width": 2
+    }
+  ],
+  "row": "r14",
+  "size": 24,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "vTaskInternalSetTimeOutState",
+  "symbol_record": {
+    "address": "0x00000908",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "vTaskInternalSetTimeOutState",
+    "section": "2",
+    "size": 24,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000909"
+  },
+  "thumb_symbol": "0x00000909",
+  "unsupported_instructions": []
+}

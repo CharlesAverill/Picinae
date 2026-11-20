@@ -1,0 +1,22 @@
+NO RAW PRINT ASSUMPTIONS OUTPUT EXISTS FOR THIS UNIT.
+
+The one permitted full build failed in list_init_correct, before a complete
+armv6m_vListInitialise_proof.vo was emitted. The main and later proofs were
+converted to Abort without any repair or second compiler invocation.
+tools/print-assumptions.sh builds its target, so running it now would violate
+the explicit first-failure handoff rule. It was not run.
+
+The eight preceding helpers reached Qed in the failed compilation, but no
+standalone full-target certificate or transitive assumptions certificate is
+claimed. The inherited Stdlib constant
+FunctionalExtensionality.functional_extensionality_dep is documented in e00;
+its exact occurrence in this unit's completed theorem dependencies remains
+UNVERIFIED. No imported admission is assumed acceptable. The fixer must use
+tools/print-assumptions.sh after successful full compilation and inspect every
+main/frame/witness theorem, not infer closure from the lexical audit.
+
+Suggested query list after a successful repair (all 12 facts):
+list_init_nwc list_init_welltyped list_init_register_frame list_init_swap_zero
+list_init_stores_image list_init_post_layout_frame list_init_entry_witness
+list_init_concrete_entry_witness list_init_correct list_init_at_bx
+list_init_return_step list_init_return_witness

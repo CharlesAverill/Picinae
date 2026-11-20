@@ -1,0 +1,30 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4bc3a1d0
+COMMAND=bash -e -c git\ add\ --\ Examples/FreeRTOS/armv6m_vListInitialise_proof.v\ notes/r02-list-init-fix\;\ git\ commit\ -m\ \"Complete\ ARMv6-M\ list\ initialization\ proofs\"\;\ git\ rev-parse\ HEAD\;\ git\ status\ --porcelain=v1\;\ test\ -z\ \"\$\(git\ status\ --porcelain=v1\)\"
+[llm-proofs/r02-list-init-fix 215ae49] Complete ARMv6-M list initialization proofs
+ 24 files changed, 2169 insertions(+), 12 deletions(-)
+ create mode 100644 notes/r02-list-init-fix/01-diagnostic-build.log
+ create mode 100644 notes/r02-list-init-fix/02-prepared-audit.log
+ create mode 100644 notes/r02-list-init-fix/03-stop-slow-diagnostic.log
+ create mode 100644 notes/r02-list-init-fix/04-store-expression-repair.log
+ create mode 100644 notes/r02-list-init-fix/05-declaration-preservation.log
+ create mode 100644 notes/r02-list-init-fix/06-return-cast-repair.log
+ create mode 100644 notes/r02-list-init-fix/07-return-jump-repair.log
+ create mode 100644 notes/r02-list-init-fix/08-full-target.log
+ create mode 100644 notes/r02-list-init-fix/09-declaration-preservation.log
+ create mode 100644 notes/r02-list-init-fix/10-source-audit.log
+ create mode 100644 notes/r02-list-init-fix/11-unit-source-audit.log
+ create mode 100644 notes/r02-list-init-fix/12-assumptions.log
+ create mode 100644 notes/r02-list-init-fix/13-inspect-assumptions.log
+ create mode 100644 notes/r02-list-init-fix/14-diff-check.log
+ create mode 100644 notes/r02-list-init-fix/15-before-commit.log
+ create mode 100644 notes/r02-list-init-fix/README.md
+ create mode 100644 notes/r02-list-init-fix/audit-ancestry.sh
+ create mode 100644 notes/r02-list-init-fix/check-assumptions.py
+ create mode 100644 notes/r02-list-init-fix/check-preservation.py
+ create mode 100644 notes/r02-list-init-fix/r02-list-init-fix-before.log
+ create mode 100644 notes/r02-list-init-fix/r02-list-init-fix-import.log
+ create mode 100644 notes/r02-list-init-fix/r02-list-init-fix-name-check.log
+ create mode 100644 notes/r02-list-init-fix/r02-list-init-fix-rename.log
+215ae494f4ba75e310bd3836f813f80423ea882a
+
+EXIT_CODE=0
