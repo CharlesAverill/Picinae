@@ -1,0 +1,141 @@
+{
+  "addressing": "global",
+  "aliases_same_entry_extent": [
+    "insque"
+  ],
+  "build_id": "977c021c364ee3c495c0e5f2375bf6ba2124a6da",
+  "closure": {
+    "closed": true,
+    "direct_and_fallthrough_edges": [
+      {
+        "kind": "fallthrough",
+        "source": "0x1e45e0",
+        "target": "0x1e45e4"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x1e45e4",
+        "target": "0x1e45f8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e45e4",
+        "target": "0x1e45e8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e45e8",
+        "target": "0x1e45ec"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e45ec",
+        "target": "0x1e45f0"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x1e45f0",
+        "target": "0x1e45f8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e45f0",
+        "target": "0x1e45f4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e45f4",
+        "target": "0x1e45f8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x1e45f8",
+        "target": "0x1e45fc"
+      }
+    ],
+    "indirect_nonreturn_edges": [],
+    "meaning": "finite selected machine map closes all direct edges and fallthroughs; RETURN remains caller ABI boundary",
+    "returns": [
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x1e45fc"
+      }
+    ]
+  },
+  "data": {
+    "analysis": "ADR(P)+ADD object references plus complete raw memory instruction list; manual target review required, no invented constants",
+    "contract": "Map ELF virtual data addresses to model addresses by +0x100000. Runtime memory must supply these bytes/state and any relocated pointer targets; generated program does not initialize memory.",
+    "materialized_objects": [],
+    "memory_accesses": [
+      {
+        "assembly": "ldr x2,[x1]",
+        "instruction": "0x1e45e8",
+        "pcode": [
+          "(register, 0x4010, 8) LOAD (const, 0x1b1, 8) , (unique, 0x6800, 8)"
+        ]
+      },
+      {
+        "assembly": "str x0,[x1]",
+        "instruction": "0x1e45ec",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6800, 8) , (register, 0x4000, 8)"
+        ]
+      },
+      {
+        "assembly": "str x0,[x2, #0x8]",
+        "instruction": "0x1e45f4",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6500, 8) , (register, 0x4000, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x2,x1,[x0]",
+        "instruction": "0x1e45f8",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7c00, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      }
+    ],
+    "staticMemory": false
+  },
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "elf_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "generated_program": "e08_insque_arm8",
+  "generated_program_sha256": "0d6d574a200f0674353fc00c68f9affb99de3eb33944637d454c7bcbe3056879",
+  "image_base": "0x100000",
+  "implementation_sha256": {
+    "lift-scalar.py": "1bdf6ec35946c220dc07fc4963efc37b7cb3f150e0f77ccfbcfecd2e74828909",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "scalar_headless.py": "4aab6945ece18c558f2b1dc397a31a8333a8e380dcaf29630168472e1fe7bcd3"
+  },
+  "instruction_count": 8,
+  "limits": "Generated scalar IL and typing only; no functional correctness, termination, equivalence to historical lifts, or lifter soundness claim.",
+  "naming_adapter": {
+    "new": "e08_insque_arm8",
+    "occurrence_count": 2,
+    "old": "e11_insque_arm8",
+    "operation": "identifier substitution only"
+  },
+  "naming_closure_harness_sha256": "fdfce3192d5670367686ff78a4606197c83df74f817945cf653819f2f83165a5",
+  "original_program_sha256": "09dd30d7bb1350bc7dad8e3f6d8e22c02738c124debcb7b0e0df932471581237",
+  "pcode_sha256": "7f18be47151dc635fc37dcacd71830130c62dba2f3b8a4db71b0d69a4a419282",
+  "record": {
+    "bytes_sha256": "ccb3a7353839bf249397e8cded864f0763cfccc8751fb0255f854b0f7c1d3157",
+    "elf_entry": "0xe45e0",
+    "entry": "0x1e45e0",
+    "instructions": 8,
+    "output": "e11_insque_arm8.v",
+    "output_sha256": "09dd30d7bb1350bc7dad8e3f6d8e22c02738c124debcb7b0e0df932471581237",
+    "selected_symbols": [
+      "insque"
+    ],
+    "size": 32,
+    "symbol": "insque"
+  },
+  "schema": 1,
+  "selected_symbols": [
+    "insque"
+  ],
+  "symbol": "insque"
+}
