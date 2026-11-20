@@ -1,0 +1,23 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-cc28baf9
+COMMAND=bash notes/a-ffs-fix/build.sh
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix paging activity
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMITTED a-ffs-fix memory_kib=1750000
+        rocq .Picinae.theory.d
+Terminated
+
+EXIT_CODE=143

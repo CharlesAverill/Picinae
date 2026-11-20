@@ -1,0 +1,25 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-cc28baf9
+COMMAND=bash notes/a-ffs-fix/build.sh
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMITTED a-ffs-fix memory_kib=1750000
+        rocq .Picinae.theory.d
+        rocq Examples/claude/arm8_ffs_proof.{glob,vo} (exit 1)
+File "./Examples/claude/arm8_ffs_proof.v", line 123, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_ffs_proof.v", line 123, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_ffs_proof.v", line 123, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_ffs_proof.v", line 208, characters 50-53:
+Error: Tactic failure:  Cannot find witness.
+
+RELEASED a-ffs-fix exit=1
+
+EXIT_CODE=1

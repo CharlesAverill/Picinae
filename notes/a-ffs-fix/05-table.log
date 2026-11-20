@@ -1,0 +1,11 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-cc28baf9
+COMMAND=python3 notes/a-ffs-fix/check-table.py
+PT_LOAD flags=0x5, ELF=0x14e738, file offset=0x14e738, size=256
+ELF SHA256: 79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06
+Table SHA256: 14a5d850c255623f9472e3c650abce0c78d32f0276b315b3a276a0462d97a1ac
+All 256 bytes match ELF, reference-data JSON, proof literal and index bit length.
+Model address = ELF address + 0x100000. Table is independent of input X0.
+Runtime memory must supply these bytes; staticMemory=False does not initialize them.
+This executable provenance check does not certify the lifter or prove total correctness.
+
+EXIT_CODE=0

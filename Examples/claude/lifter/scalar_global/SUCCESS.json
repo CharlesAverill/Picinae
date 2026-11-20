@@ -1,0 +1,41 @@
+{
+  "libc_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "language": "AARCH64:LE:64:v8A",
+  "addressing": "global",
+  "records": [
+    {
+      "symbol": "mempcpy",
+      "elf_entry": "0x94a50",
+      "entry": "0x194a50",
+      "size": 36,
+      "bytes_sha256": "996b3c5f35b03c496750402feeae7400082a917e3fe5e2b40300ea6b8fdeb7a8",
+      "output": "e11_mempcpy_arm8.v",
+      "output_sha256": "b814e3f892a2b8eb22575fb54f754d2366815a17f6600269f99c986f968d1038",
+      "instructions": 108,
+      "selected_symbols": [
+        "mempcpy",
+        "__memcpy_generic"
+      ]
+    },
+    {
+      "symbol": "__memcpy_generic",
+      "elf_entry": "0x9ab40",
+      "entry": "0x19ab40",
+      "size": 396,
+      "bytes_sha256": "36c3b5d18e4200898196a8bcd0e7ee8431b6e15420cfbc68879c7834eb257f51",
+      "output": "e11___memcpy_generic_arm8.v",
+      "output_sha256": "c956e06cdc291d0bef61f9da6286f1635a19ac269ae908dfa49427bf49c4f129",
+      "instructions": 108,
+      "selected_symbols": [
+        "mempcpy",
+        "__memcpy_generic"
+      ]
+    }
+  ],
+  "implementation_sha256": {
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "scalar_headless.py": "4aab6945ece18c558f2b1dc397a31a8333a8e380dcaf29630168472e1fe7bcd3",
+    "lift-scalar.py": "1bdf6ec35946c220dc07fc4963efc37b7cb3f150e0f77ccfbcfecd2e74828909"
+  }
+}

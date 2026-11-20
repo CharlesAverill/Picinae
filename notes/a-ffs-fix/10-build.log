@@ -1,0 +1,53 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-cc28baf9
+COMMAND=bash notes/a-ffs-fix/build.sh
+ADMISSION WAIT a-ffs-fix available RAM reserve
+ADMITTED a-ffs-fix memory_kib=1750000
+        rocq .Picinae.theory.d
+File "dune", lines 6-42, characters 0-1888:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+40 |   Examples.claude.lifter.scalar_ports.e08_sigabbrev_np_arm8
+41 |   Examples.claude.lifter.scalar_ports.e08_sigdescr_np_arm8
+42 |   Examples.claude.lifter.scalar_ports.e08_srand48_r_arm8))
+        rocq Examples/claude/arm8_ffs_proof.{glob,vo} (exit 1)
+Goal at < 0 >
+Goal at < 12 >
+File "./Examples/claude/arm8_ffs_proof.v", line 123, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_ffs_proof.v", line 123, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_ffs_proof.v", line 123, characters 16-25:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_ffs_proof.v", line 287, characters 38-41:
+Error:
+In environment
+x, sp, lr, m : N
+t : list (exit * store)
+s1 : store
+X : s1 R_X0 mod 2 ^ 32 = x
+SP : s1 R_SP = sp
+LR : s1 R_X30 = lr
+MEM : s1 V_MEM64 = m
+TABLE : ffs_table m
+MDL1 : models archtyps s1
+XL : x < 2 ^ 32
+r : N
+SPEC : ffs_spec x r
+RL : r <= 32
+ISO : msub 32 0 x .& x = (if r =? 0 then 0 else 2 ^ (r - 1))
+t0 : list (exit * store)
+The term "ISO" has type
+ "msub 32 0 x .& x = (if r =? 0 then 0 else 2 ^ (r - 1))"
+while it is expected to have type "x = 0 -> r = 0".
+
+RELEASED a-ffs-fix exit=1
+
+EXIT_CODE=1

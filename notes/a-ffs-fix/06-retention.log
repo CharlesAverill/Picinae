@@ -1,0 +1,32 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-cc28baf9
+COMMAND=python3 notes/a-ffs-fix/check-retention.py
+Unchanged statement: ffs_nwc
+Unchanged statement: ffs_welltyped
+Unchanged statement: ffs_preserves_memory
+Unchanged statement: ffs_preserves_callee_saved
+Unchanged statement: ffs_return_cut
+Unchanged statement: ffs_lowest_set_bit
+Unchanged statement: ffs_isolate
+Unchanged statement: ffs_spec_satisfiable
+Unchanged statement: ffs_isolation_spec
+Unchanged statement: ffs_table_bytes_correct
+Unchanged statement: ffs_table_satisfiable
+Unchanged statement: ffs_table_memory_bound
+Unchanged statement: ffs_entry_satisfiable
+Unchanged statement: ffs_correct
+Unchanged statement: ffs_return_guard_satisfiable
+Unchanged statement: ffs_guarded_return
+Unchanged definition: ffs_spec
+Unchanged definition: ffs_table
+Unchanged definition: ffs_exit
+Unchanged definition: postcondition
+Unchanged definition: ffs_invs
+Unchanged definition: ffs_table_bytes
+Unchanged definition: ffs_table_memory
+Unchanged definition: ffs_entry_store
+Unchanged definition: ffs_return_guard
+Unchanged generated map: Examples/claude/ffs_arm8.v
+Unchanged generated map: Examples/claude/lifter/scalar_smoke/e11_ffs_arm8.v
+Original author evidence preserved byte-for-byte.
+
+EXIT_CODE=0

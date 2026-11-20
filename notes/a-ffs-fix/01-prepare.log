@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-cc28baf9
+COMMAND=bash --noprofile --norc -e -c git\ merge\ --ff-only\ 6acd817e95e667cbf81f7ac40118e2d0f31ded4d\;\ git\ branch\ -m\ llm-proofs/a-ffs-fix
+fatal: update_ref failed for ref 'ORIG_HEAD': cannot lock ref 'ORIG_HEAD': Unable to create '/home/charles/code/friends/CharlesAverill/Picinae/.git/worktrees/t3-cc28baf9/ORIG_HEAD.lock': Read-only file system
+
+EXIT_CODE=128
