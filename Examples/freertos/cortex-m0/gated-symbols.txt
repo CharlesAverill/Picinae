@@ -1,0 +1,13 @@
+# Representative unavailable APIs, checked against the actual final ELF.
+xTaskCreate configSUPPORT_DYNAMIC_ALLOCATION=0; use xTaskCreateStatic
+xQueueGenericCreate configSUPPORT_DYNAMIC_ALLOCATION=0; use xQueueGenericCreateStatic
+xEventGroupCreate configSUPPORT_DYNAMIC_ALLOCATION=0; use xEventGroupCreateStatic
+xStreamBufferGenericCreate configSUPPORT_DYNAMIC_ALLOCATION=0; use xStreamBufferGenericCreateStatic
+xTimerCreate configSUPPORT_DYNAMIC_ALLOCATION=0; use xTimerCreateStatic
+xQueueCreateSet configUSE_QUEUE_SETS=0
+xQueueSelectFromSet configUSE_QUEUE_SETS=0
+uxTaskGetSystemState configUSE_TRACE_FACILITY=0
+pvPortMalloc configSUPPORT_DYNAMIC_ALLOCATION=0; no heap implementation linked
+vPortFree configSUPPORT_DYNAMIC_ALLOCATION=0; no heap implementation linked
+xQueueMessagesWaiting wrong spelling in campaign/timing filename; use uxQueueMessagesWaiting
+xTimerGenericCommand macro in V11.1.0; use xTimerGenericCommandFromTask and xTimerGenericCommandFromISR

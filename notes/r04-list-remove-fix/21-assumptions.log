@@ -1,0 +1,588 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-41a02797
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ export\ PROOF_MEMORY_KB=2000000\ PROOF_STACK_KB=65536\;\ bash\ tools/print-assumptions.sh\ Picinae.Examples.FreeRTOS.armv6m_uxListRemove_proof\ list_remove_nwc\ list_remove_welltyped\ list_remove_register_frame\ rm_read_write\ rm_read_frame\ list_remove_mem_frame\ list_remove_mem_effects\ list_remove_correct\ list_remove_at_bx\ list_remove_return_step\ list_remove_entry_witness\ list_remove_singleton_layout\ list_remove_singleton_witness\ list_remove_multi_layout\ list_remove_multi_witness\ list_remove_returns
+list_remove_nwc
+     : forall s2 s1 : Picinae_armv6m.ARMv6MArch.store,
+       uxListRemove_armv6m.uxListRemove_armv6m_prog s1 =
+       uxListRemove_armv6m.uxListRemove_armv6m_prog s2
+Closed under the global context
+list_remove_welltyped
+     : Picinae_armv6m.Statics_ARMv6M.welltyped_prog
+         Picinae_armv6m.armv6mtypctx
+         uxListRemove_armv6m.uxListRemove_armv6m_prog
+Closed under the global context
+list_remove_register_frame
+     : forall v : Picinae_armv6m.armv6mvar,
+       list_remove_preserved v ->
+       Picinae_armv6m.IL_ARMv6M.forall_endstates
+         uxListRemove_armv6m.uxListRemove_armv6m_prog
+         (fun (_ : Picinae_core.exit) (s : Picinae_armv6m.ARMv6MArch.store)
+            (_ : Picinae_core.exit) (s' : Picinae_armv6m.ARMv6MArch.store) =>
+          s v = s' v)
+Closed under the global context
+rm_read_write
+     : forall m a v : BinNums.N,
+       BinNat.N.lt v
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       rm_read (rm_write m a v) a = v
+Closed under the global context
+rm_read_frame
+     : forall m a v b : BinNums.N,
+       armv6m_list_model.separate32 b
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))) a
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))) ->
+       rm_read (rm_write m a v) b = rm_read m b
+Closed under the global context
+list_remove_mem_frame
+     : forall m p nxt prev l c idx a len : BinNums.N,
+       list_remove_outside p nxt prev l idx a len ->
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE len (list_remove_mem m p nxt prev l c idx) a =
+       Picinae_core.getmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))
+         Picinae_core.LittleE len m a
+Closed under the global context
+list_remove_mem_effects
+     : forall m p nxt prev l c idx : BinNums.N,
+       list_remove_layout p nxt prev l ->
+       BinNat.N.lt BinNums.N0 c ->
+       list_remove_original m p nxt prev l c idx ->
+       list_remove_effects m (list_remove_mem m p nxt prev l c idx) p nxt
+         prev l c idx
+Closed under the global context
+list_remove_correct
+     : forall (s0 : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store) (x' : Picinae_core.exit)
+         (p nxt prev l c idx : BinNums.N),
+       Picinae_core.startof t (x', s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO (BinNums.xI (BinNums.xO BinNums.xH)))))))),
+        s0) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s0 ->
+       list_remove_pre p nxt prev l c idx s0 ->
+       Picinae_armv6m.Theory_ARMv6M.satisfies_all
+         uxListRemove_armv6m.uxListRemove_armv6m_prog
+         (list_remove_invs s0 p nxt prev l c idx) list_remove_exit
+         ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+list_remove_at_bx
+     : forall (s0 : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s : Picinae_armv6m.IL_ARMv6M.store)
+         (p nxt prev l c idx : BinNums.N),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH)))))))),
+          s) =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO (BinNums.xI (BinNums.xO BinNums.xH)))))))),
+        s0) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s0 ->
+       list_remove_pre p nxt prev l c idx s0 ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         uxListRemove_armv6m.uxListRemove_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH)))))))),
+           s)
+          :: t)%list ->
+       Picinae_theory.unterminated list_remove_exit t ->
+       list_remove_post s0 p nxt prev l c idx s /\
+       list_remove_effects (s0 Picinae_armv6m.V_MEM32)
+         (s Picinae_armv6m.V_MEM32) p nxt prev l c idx /\
+       (forall v : Picinae_armv6m.armv6mvar,
+        list_remove_preserved v -> s v = s0 v)
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+list_remove_return_step
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       list_remove_ordinary_lr (s Picinae_armv6m.R_LR) ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         uxListRemove_armv6m.uxListRemove_armv6m_prog
+         (Picinae_core.Addr
+            (BinNat.N.land (s Picinae_armv6m.R_LR)
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...))))))))))))))))))))),
+          s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH)))))))),
+           s))
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+list_remove_entry_witness
+     : forall m p nxt prev l c idx lr : BinNums.N,
+       BinNat.N.lt m
+         (Picinae_theory.memsize
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       list_remove_layout p nxt prev l ->
+       BinNat.N.lt BinNums.N0 c ->
+       list_remove_original m p nxt prev l c idx ->
+       BinNat.N.lt lr
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       exists s : Picinae_armv6m.IL_ARMv6M.store,
+         Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s /\
+         list_remove_pre p nxt prev l c idx s /\
+         s Picinae_armv6m.V_MEM32 = m /\ s Picinae_armv6m.R_LR = lr
+Closed under the global context
+list_remove_singleton_layout
+     : list_remove_layout
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH))))))))))))))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))))
+Closed under the global context
+list_remove_singleton_witness
+     : forall (m value owner : BinNums.N) (equal : bool),
+       BinNat.N.lt m
+         (Picinae_theory.memsize
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt value
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt owner
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       exists s : Picinae_armv6m.IL_ARMv6M.store,
+         Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s /\
+         list_remove_pre
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xI
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO BinNums.xH)))))))))))))
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xI
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO BinNums.xH)))))))))))))
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO BinNums.xH)))))))))))))
+           (BinNums.Npos BinNums.xH)
+           (if equal
+            then
+             BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+            else
+             BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH)))))))))))))
+           s /\
+         s Picinae_armv6m.V_MEM32 =
+         list_remove_singleton_image m value owner equal /\
+         list_remove_ordinary_lr (s Picinae_armv6m.R_LR)
+Closed under the global context
+list_remove_multi_layout
+     : list_remove_layout
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH))))))))))))))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xI BinNums.xH))))))))))))))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))))
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))))))))
+Closed under the global context
+list_remove_multi_witness
+     : forall equal : bool,
+       exists s : Picinae_armv6m.IL_ARMv6M.store,
+         Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s /\
+         list_remove_pre
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))))
+           (BinNums.Npos
+              (BinNums.xO
+                 (BinNums.xO
+                    (BinNums.xO
+                       (BinNums.xO
+                          (BinNums.xO
+                             (BinNums.xO
+                                (BinNums.xO
+                                   (BinNums.xO
+                                      (BinNums.xO
+                                         (BinNums.xO
+                                            (BinNums.xO
+                                               (BinNums.xO BinNums.xH)))))))))))))
+           (BinNums.Npos (BinNums.xI BinNums.xH))
+           (if equal
+            then
+             BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+            else
+             BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))))
+           s /\
+         list_remove_ordinary_lr (s Picinae_armv6m.R_LR)
+Closed under the global context
+list_remove_returns
+     : forall (s0 : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s : Picinae_armv6m.IL_ARMv6M.store)
+         (p nxt prev l c idx : BinNums.N),
+       Picinae_core.startof t
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH)))))))),
+          s) =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO (BinNums.xI (BinNums.xO BinNums.xH)))))))),
+        s0) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s0 ->
+       list_remove_pre p nxt prev l c idx s0 ->
+       list_remove_ordinary_lr (s0 Picinae_armv6m.R_LR) ->
+       Picinae_armv6m.IL_ARMv6M.exec_prog
+         uxListRemove_armv6m.uxListRemove_armv6m_prog
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH)))))))),
+           s)
+          :: t)%list ->
+       Picinae_theory.unterminated list_remove_exit t ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         uxListRemove_armv6m.uxListRemove_armv6m_prog
+         (Picinae_core.Addr
+            (BinNat.N.land (s0 Picinae_armv6m.R_LR)
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (BinNums.xI ...)))))))))))))))))),
+          s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI (BinNums.xI (BinNums.xO BinNums.xH)))))))),
+           s)) /\
+       s Picinae_armv6m.R_R0 = BinNat.N.sub c (BinNums.Npos BinNums.xH) /\
+       list_remove_effects (s0 Picinae_armv6m.V_MEM32)
+         (s Picinae_armv6m.V_MEM32) p nxt prev l c idx /\
+       (forall v : Picinae_armv6m.armv6mvar,
+        list_remove_preserved v -> s v = s0 v)
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0

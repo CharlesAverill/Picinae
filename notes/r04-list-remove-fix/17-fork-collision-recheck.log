@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-41a02797
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/r04-list-remove-fix
+
+EXIT_CODE=0
