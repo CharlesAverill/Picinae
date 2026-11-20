@@ -1,0 +1,32 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4842e322
+COMMAND=python3 notes/x09-avx-forward-high-size/check-dispatch-arithmetic.py
+d=4096, s=8192, n=9223372036854779904, d+n=9223372036854784000, s+n=9223372036854788096
+delta=18446744073709547520, sign=0, dispatch_sum=0
+first row destination L=9223372036854783840, 33rd row source=9223372036854783840
+candidate wrong destination byte=9223372036854779744, source offset=9223372036854775648
+318 JC 0x002a0a30
+331 JA 0x002a0b6d
+337 LEA R8,[RCX + RDX*0x1]
+341 XOR R8,RCX
+344 SHR R8,0x3f
+348 AND ECX,0xf00
+354 ADD ECX,R8D
+357 JZ 0x002a0a35
+501 VMOVDQU YMM5,ymmword ptr [RSI + 0x20]
+511 LEA RCX,[RDI + RDX*0x1 + -0x81]
+533 AND RCX,-0x20
+544 VMOVDQU YMM1,ymmword ptr [RSI + 0x60]
+549 VMOVDQU YMM2,ymmword ptr [RSI + 0x40]
+554 VMOVDQU YMM3,ymmword ptr [RSI + 0x20]
+559 VMOVDQU YMM4,ymmword ptr [RSI]
+563 ADD RSI,-0x80
+567 VMOVDQA ymmword ptr [RCX + 0x60],YMM1
+572 VMOVDQA ymmword ptr [RCX + 0x40],YMM2
+577 VMOVDQA ymmword ptr [RCX + 0x20],YMM3
+582 VMOVDQA ymmword ptr [RCX],YMM4
+586 ADD RCX,-0x80
+590 CMP RDI,RCX
+593 JC 0x002a0a60
+PASS numerical diagnostic; no execution/termination/correctness certificate
+
+EXIT_CODE=0

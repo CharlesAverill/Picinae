@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4842e322
+COMMAND=python3 -
+All definitions and 11 theorem statements preserved verbatim: PASS
+Seven prefix proof bodies unchanged; four uncertified attempts Abort.
+New target .vo exists: False
+Accepted prerequisite .vo exists: True
+
+EXIT_CODE=0

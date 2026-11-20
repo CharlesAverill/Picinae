@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4842e322
+COMMAND=python3 notes/x09-avx-forward-high-size/preserve-partial.py
+Preserved all 11 exact statements; archived original proof bodies.
+Seven prefix Qeds processed before failure retained; four remaining attempts Abort.
+No full module certificate or assumptions audit: no completion claim.
+
+EXIT_CODE=0
