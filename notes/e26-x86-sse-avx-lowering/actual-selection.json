@@ -1,0 +1,342 @@
+[
+  {
+    "address": "0x1c4881",
+    "elf_address": "0xc4881",
+    "bytes": "0f1006",
+    "assembly": "movups xmm0,XMMWORD PTR [rsi]",
+    "owners": [
+      "__memcpy_sse2_unaligned",
+      "__memmove_sse2_unaligned",
+      "memcpy@GLIBC_2.2.5"
+    ]
+  },
+  {
+    "address": "0x1c4893",
+    "elf_address": "0xc4893",
+    "bytes": "0f1107",
+    "assembly": "movups XMMWORD PTR [rdi],xmm0",
+    "owners": [
+      "__memcpy_sse2_unaligned",
+      "__memmove_sse2_unaligned",
+      "memcpy@GLIBC_2.2.5"
+    ]
+  },
+  {
+    "address": "0x1c4ab8",
+    "elf_address": "0xc4ab8",
+    "bytes": "440f104416c0",
+    "assembly": "movups xmm8,XMMWORD PTR [rsi+rdx*1-0x40]",
+    "owners": [
+      "__memcpy_sse2_unaligned_erms",
+      "__memmove_sse2_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x1c4ae3",
+    "elf_address": "0xc4ae3",
+    "bytes": "0f290f",
+    "assembly": "movaps XMMWORD PTR [rdi],xmm1",
+    "owners": [
+      "__memcpy_sse2_unaligned_erms",
+      "__memmove_sse2_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x1c4b07",
+    "elf_address": "0xc4b07",
+    "bytes": "440f1102",
+    "assembly": "movups XMMWORD PTR [rdx],xmm8",
+    "owners": [
+      "__memcpy_sse2_unaligned_erms",
+      "__memmove_sse2_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x1c4c6d",
+    "elf_address": "0xc4c6d",
+    "bytes": "660fe707",
+    "assembly": "movntdq XMMWORD PTR [rdi],xmm0",
+    "owners": [
+      "__memcpy_sse2_unaligned_erms",
+      "__memmove_sse2_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x1c4e00",
+    "elf_address": "0xc4e00",
+    "bytes": "66440fe78700200000",
+    "assembly": "movntdq XMMWORD PTR [rdi+0x2000],xmm8",
+    "owners": [
+      "__memcpy_sse2_unaligned_erms",
+      "__memmove_sse2_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x27acb5",
+    "elf_address": "0x17acb5",
+    "bytes": "f30f6f06",
+    "assembly": "movdqu xmm0,XMMWORD PTR [rsi]",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27ad74",
+    "elf_address": "0x17ad74",
+    "bytes": "660f6f0e",
+    "assembly": "movdqa xmm1,XMMWORD PTR [rsi]",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27ad7c",
+    "elf_address": "0x17ad7c",
+    "bytes": "660f7f0f",
+    "assembly": "movdqa XMMWORD PTR [rdi],xmm1",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27ad8b",
+    "elf_address": "0x17ad8b",
+    "bytes": "f3410f7f00",
+    "assembly": "movdqu XMMWORD PTR [r8],xmm0",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27ad98",
+    "elf_address": "0x17ad98",
+    "bytes": "0f2826",
+    "assembly": "movaps xmm4,XMMWORD PTR [rsi]",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b1fc",
+    "elf_address": "0x17b1fc",
+    "bytes": "660f6ff5",
+    "assembly": "movdqa xmm6,xmm5",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b2cc",
+    "elf_address": "0x17b2cc",
+    "bytes": "0f28cd",
+    "assembly": "movaps xmm1,xmm5",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c58e",
+    "elf_address": "0x17c58e",
+    "bytes": "f30f7f47b8",
+    "assembly": "movdqu XMMWORD PTR [rdi-0x48],xmm0",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x280463",
+    "elf_address": "0x180463",
+    "bytes": "440f28466f",
+    "assembly": "movaps xmm8,XMMWORD PTR [rsi+0x6f]",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28047b",
+    "elf_address": "0x18047b",
+    "bytes": "440f294f70",
+    "assembly": "movaps XMMWORD PTR [rdi+0x70],xmm9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281cdf",
+    "elf_address": "0x181cdf",
+    "bytes": "f3440f6f4680",
+    "assembly": "movdqu xmm8,XMMWORD PTR [rsi-0x80]",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281dab",
+    "elf_address": "0x181dab",
+    "bytes": "66440f7f4780",
+    "assembly": "movdqa XMMWORD PTR [rdi-0x80],xmm8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2a07c1",
+    "elf_address": "0x1a07c1",
+    "bytes": "c5fe6f06",
+    "assembly": "vmovdqu ymm0,YMMWORD PTR [rsi]",
+    "owners": [
+      "__memcpy_avx_unaligned",
+      "__memmove_avx_unaligned"
+    ]
+  },
+  {
+    "address": "0x2a07d5",
+    "elf_address": "0x1a07d5",
+    "bytes": "c5fe7f07",
+    "assembly": "vmovdqu YMMWORD PTR [rdi],ymm0",
+    "owners": [
+      "__memcpy_avx_unaligned",
+      "__memmove_avx_unaligned"
+    ]
+  },
+  {
+    "address": "0x2a07df",
+    "elf_address": "0x1a07df",
+    "bytes": "c5f877",
+    "assembly": "vzeroupper",
+    "owners": [
+      "__memcpy_avx_unaligned",
+      "__memmove_avx_unaligned"
+    ]
+  },
+  {
+    "address": "0x2a08a2",
+    "elf_address": "0x1a08a2",
+    "bytes": "c5fa6f06",
+    "assembly": "vmovdqu xmm0,XMMWORD PTR [rsi]",
+    "owners": [
+      "__memcpy_avx_unaligned_erms",
+      "__memmove_avx_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x2a08ac",
+    "elf_address": "0x1a08ac",
+    "bytes": "c5fa7f07",
+    "assembly": "vmovdqu XMMWORD PTR [rdi],xmm0",
+    "owners": [
+      "__memcpy_avx_unaligned_erms",
+      "__memmove_avx_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x2a09c4",
+    "elf_address": "0x1a09c4",
+    "bytes": "c57e6f441680",
+    "assembly": "vmovdqu ymm8,YMMWORD PTR [rsi+rdx*1-0x80]",
+    "owners": [
+      "__memcpy_avx_unaligned_erms",
+      "__memmove_avx_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x2a09f7",
+    "elf_address": "0x1a09f7",
+    "bytes": "c5fd7f0f",
+    "assembly": "vmovdqa YMMWORD PTR [rdi],ymm1",
+    "owners": [
+      "__memcpy_avx_unaligned_erms",
+      "__memmove_avx_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x2a0a22",
+    "elf_address": "0x1a0a22",
+    "bytes": "c57e7f02",
+    "assembly": "vmovdqu YMMWORD PTR [rdx],ymm8",
+    "owners": [
+      "__memcpy_avx_unaligned_erms",
+      "__memmove_avx_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x2a0ae6",
+    "elf_address": "0x1a0ae6",
+    "bytes": "c4c17e7f00",
+    "assembly": "vmovdqu YMMWORD PTR [r8],ymm0",
+    "owners": [
+      "__memcpy_avx_unaligned_erms",
+      "__memmove_avx_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x2a0c44",
+    "elf_address": "0x1a0c44",
+    "bytes": "c5fde707",
+    "assembly": "vmovntdq YMMWORD PTR [rdi],ymm0",
+    "owners": [
+      "__memcpy_avx_unaligned_erms",
+      "__memmove_avx_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x2a0e27",
+    "elf_address": "0x1a0e27",
+    "bytes": "c57de78700200000",
+    "assembly": "vmovntdq YMMWORD PTR [rdi+0x2000],ymm8",
+    "owners": [
+      "__memcpy_avx_unaligned_erms",
+      "__memmove_avx_unaligned_erms"
+    ]
+  },
+  {
+    "address": "0x2a3d1f",
+    "elf_address": "0x1a3d1f",
+    "bytes": "62f17c481006",
+    "assembly": "vmovups zmm0,ZMMWORD PTR [rsi]",
+    "owners": [
+      "__memcpy_avx512_no_vzeroupper",
+      "__memmove_avx512_no_vzeroupper"
+    ]
+  },
+  {
+    "address": "0x2a3d56",
+    "elf_address": "0x1a3d56",
+    "bytes": "62f17c481107",
+    "assembly": "vmovups ZMMWORD PTR [rdi],zmm0",
+    "owners": [
+      "__memcpy_avx512_no_vzeroupper",
+      "__memmove_avx512_no_vzeroupper"
+    ]
+  },
+  {
+    "address": "0x2a3e1e",
+    "elf_address": "0x1a3e1e",
+    "bytes": "c4c17a7f49f0",
+    "assembly": "vmovdqu XMMWORD PTR [r9-0x10],xmm1",
+    "owners": [
+      "__memcpy_avx512_no_vzeroupper",
+      "__memmove_avx512_no_vzeroupper"
+    ]
+  },
+  {
+    "address": "0x2a4314",
+    "elf_address": "0x1a4314",
+    "bytes": "62f17d48e707",
+    "assembly": "vmovntdq ZMMWORD PTR [rdi],zmm0",
+    "owners": [
+      "__memcpy_avx512_no_vzeroupper",
+      "__memmove_avx512_no_vzeroupper"
+    ]
+  },
+  {
+    "address": "0x2af294",
+    "elf_address": "0x1af294",
+    "bytes": "62e17d28e707",
+    "assembly": "vmovntdq YMMWORD PTR [rdi],ymm16",
+    "owners": [
+      "__memcpy_evex_unaligned_erms",
+      "__memmove_evex_unaligned_erms"
+    ]
+  }
+]

@@ -1,0 +1,14 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-95c58422
+COMMAND=python3 notes/e39-x86-backend-integration/inspect-copy-frontiers.py
+PASS inspected 67 actual pinned copy extents; census matches accepted e26 evidence
+EVEX {'vmovups': 128, 'vmovdqu64': 218, 'vmovntdq': 44, 'vmovdqa64': 32}
+lddqu {'lddqu': 572, 'vlddqu': 0}
+df {'cld': 1, 'std': 1}
+hints_fences {'lfence': 4, 'prefetchnta': 76, 'prefetcht0': 152, 'prefetcht1': 64, 'sfence': 20}
+shuffles {'palignr': 720, 'pshufb': 0, 'vpalignr': 0, 'vpshufb': 0}
+evex {}
+scalar_spellings_padding {'cs': 33, 'data16': 115, 'dec': 20, 'inc': 9, 'jae': 127, 'jb': 207, 'nop': 459, 'notrack': 281, 'xchg': 30}
+other_projection {'vzeroall': 1, 'xtest': 1}
+Actual Ghidra JC is objdump jb; no alias lowering added. REP now composes, CLD/STD remain rejected.
+
+EXIT_CODE=0

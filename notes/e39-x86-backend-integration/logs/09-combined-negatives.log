@@ -1,0 +1,68 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-95c58422
+COMMAND=python3 notes/e39-x86-backend-integration/combined-failures.py
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/0', 'mixed']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: mixed 0x101000 ENDBR64: ENDBR64 requires explicit CET-disabled profile and exact empty-pcode encoding; raw pcode: ; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/logs/8b900e818a7c4802aa1579bfcec5e611.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/1', '--cet-disabled', 'mixed']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: mixed 0x10101e TZCNT RSI,RSI: TZCNT requires explicit CPU feature profile (present/absent); raw pcode: (unique, 0x1ba700, 8) COPY (const, 0x0, 8); (unique, 0x1ba780, 8) COPY (register, 0x30, 8); (unique, 0x1ba800, 8) INT_AND (unique, 0x1ba780, 8) , (const, 0x1, 8); (unique, 0x1ba880, 1) INT_NOTEQUAL (unique, 0x1ba800, 8) , (const, 0x0, 8);  ---  CBRANCH (const, 0x5, 4) , (unique, 0x1ba880, 1); (unique, 0x1ba700, 8) INT_ADD (unique, 0x1ba700, 8) , (const, 0x1, 8); (u; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/logs/1fadd38118fd4439974eb19e6b549f44.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/2', '--cet-disabled', '--bmi1', 'present', 'mixed']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: mixed 0x101023 LZCNT RDI,RDI: LZCNT requires explicit CPU feature profile (present/absent); raw pcode: (register, 0x38, 8) LZCOUNT (register, 0x38, 8); (register, 0x206, 1) INT_EQUAL (register, 0x38, 8) , (const, 0x0, 8); (register, 0x200, 1) INT_EQUAL (register, 0x38, 8) , (const, 0x0, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/logs/5f8bc1b89e3a46cf9dd8956a0cfa12e1.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/3', '--cet-disabled', '--bmi1', 'present', '--abm', 'present', 'mixed', 'rejected']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: rejected 0x10103e PSHUFB XMM1,XMM0: unmodeled instruction PSHUFB XMM1,XMM0; raw pcode: (register, 0x1240, 16) CALLOTHER (const, 0x9b, 4) , (register, 0x1240, 16) , (register, 0x1200, 16); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/logs/3e3a97e2d37e43b6b1b7f69dd6fb747f.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/4', '--cet-disabled', '--bmi1', 'present', '--abm', 'present', 'missing']
+FAIL Ghidra script failed: ValueError: missing: expected one nonempty FUNC extent, got set(); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/logs/af6f061078334b41b98d12d698383bef.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--cet-disabled', '--bmi1', 'present', '--abm', 'present', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/whole-avx', '__memmove_avx_unaligned_erms']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memmove_avx_unaligned_erms 0x2a084b JC 0x002a0870: unmodeled instruction JC 0x002a0870; raw pcode:  ---  CBRANCH (ram, 0x2a0870, 8) , (register, 0x200, 1); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/logs/210b9c91272242dca42e5849cfe01f30.log
+
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/invalid0', '--bmi1', 'unknown', 'mixed']
+usage: lift-x64-integrated.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                              [--inventory INVENTORY] [--cet-disabled]
+                              [--fixture] [--bmi1 {present,absent}]
+                              [--abm {present,absent}]
+                              symbols [symbols ...]
+lift-x64-integrated.py: error: argument --bmi1: invalid choice: 'unknown' (choose from present, absent)
+EXIT 2
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/invalid1', '--unknown-option', 'mixed']
+usage: lift-x64-integrated.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                              [--inventory INVENTORY] [--cet-disabled]
+                              [--fixture] [--bmi1 {present,absent}]
+                              [--abm {present,absent}]
+                              symbols [symbols ...]
+lift-x64-integrated.py: error: unrecognized arguments: --unknown-option
+EXIT 2
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/invalid2', '--abm', 'unspecified', 'mixed']
+usage: lift-x64-integrated.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                              [--inventory INVENTORY] [--cet-disabled]
+                              [--fixture] [--bmi1 {present,absent}]
+                              [--abm {present,absent}]
+                              symbols [symbols ...]
+lift-x64-integrated.py: error: argument --abm: invalid choice: 'unspecified' (choose from present, absent)
+EXIT 2
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/existing', 'mixed']
+usage: lift-x64-integrated.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                              [--inventory INVENTORY] [--cet-disabled]
+                              [--fixture] [--bmi1 {present,absent}]
+                              [--abm {present,absent}]
+                              symbols [symbols ...]
+lift-x64-integrated.py: error: output directory already exists; refusing stale/replaced output
+EXIT 2
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/link', 'mixed']
+usage: lift-x64-integrated.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                              [--inventory INVENTORY] [--cet-disabled]
+                              [--fixture] [--bmi1 {present,absent}]
+                              [--abm {present,absent}]
+                              symbols [symbols ...]
+lift-x64-integrated.py: error: output directory already exists; refusing stale/replaced output
+EXIT 2
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/lift-x64-integrated.py', '--fixture', '--cet-disabled', '--bmi1', 'absent', '--abm', 'absent', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/absent', 'mixed']
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-negatives.ds754qmh/absent
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/logs/3acd63cb6ae346f7867921306ab4c940.log
+EXIT 0
+PASS combined feature, partial-batch, unknown option, existing/symlink and absent-feature publication checks
+
+EXIT_CODE=0

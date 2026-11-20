@@ -1,0 +1,10 @@
+Prepared isolated worktree /home/charles/.t3/worktrees/Picinae/t3-4ff7b03c.
+Observed clean HEAD 71470bffba65392adf1873a3df9f0cf0ca4f1ac9.
+Initial git ls-remote --heads fork refs/heads/llm-proofs/e27-x86-rep-lowering:
+Sandbox DNS failure exit128; approved read-only retry exit0 with empty stdout.
+Verified prepared HEAD ancestor of checkpoint via git merge-base --is-ancestor (exit0).
+Initial sandbox git branch -m failed because git metadata was read-only (exit128).
+Approved local retry: git branch -m llm-proofs/e27-x86-rep-lowering &&
+git merge --ff-only 328088263ebba11786a03448808e584231504fe1 (exit0).
+Before edits recorded allowed-prerequisites.txt, merge-base-imported.txt and stat-imported.txt.
+No fork branch imported. All ancestry above base authorized exactly by checkpoint.

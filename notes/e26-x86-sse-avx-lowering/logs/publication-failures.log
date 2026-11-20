@@ -1,0 +1,29 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-473b43ee
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e26-x86-sse-avx-lowering/check-failures.py
+partial-batch COMMAND ['python3', 'tools/ghidra-lifter/lift-x64-copy.py', '--out', '/home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/replays/negatives.qptq6_h7/partial-batch', '--fixture', 'legacy', 'rejected'] EXIT 1
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: legacy 0x101048 MOVDQU XMM14,xmmword ptr [0x00103000]: unmodeled vector pcode input space; raw pcode: (register, 0x1580, 16) COPY (ram, 0x103000, 16); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/logs/d0454caeadeb43059d4a1ce8be9b914f.log
+
+masked-evex COMMAND ['python3', 'tools/ghidra-lifter/lift-x64-copy.py', '--out', '/home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/replays/negatives.qptq6_h7/masked-evex', '--fixture', 'rejected_evex'] EXIT 1
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: rejected_evex 0x1010f2 VMOVDQU64 YMM0{K1},ymmword ptr [RSI]: unmodeled instruction VMOVDQU64 YMM0{K1},ymmword ptr [RSI]; raw pcode: (unique, 0x6d00, 32) LOAD (const, 0x1b1, 4) , (register, 0x30, 8); (register, 0x8fc, 32) CALLOTHER (const, 0x299, 4) , (unique, 0x6d00, 32); (register, 0x93c, 32) COPY (register, 0x1200, 32); (unique, 0x1b900, 8) COPY (register, 0x83c, 8); (unique, 0x1b980, 1) SUBPIECE (unique, 0x1b900, 8) , (const, 0x0, 4); (unique, 0x1ba00, 1) INT_AND; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/logs/64de60f1ad5b47b597904ce41f692c18.log
+
+missing-symbol COMMAND ['python3', 'tools/ghidra-lifter/lift-x64-copy.py', '--out', '/home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/replays/negatives.qptq6_h7/missing-symbol', '--fixture', 'does_not_exist'] EXIT 1
+FAIL Ghidra script failed: ValueError: does_not_exist: expected one nonempty FUNC extent, got set(); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/logs/817b5069231b4824a1b4f351476f96d9.log
+
+whole-avx-copy COMMAND ['python3', 'tools/ghidra-lifter/lift-x64-copy.py', '--out', '/home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/replays/negatives.qptq6_h7/whole-avx-copy', '--cet-disabled', '__memmove_avx_unaligned_erms'] EXIT 1
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memmove_avx_unaligned_erms 0x2a084b JC 0x002a0870: unmodeled instruction JC 0x002a0870; raw pcode:  ---  CBRANCH (ram, 0x2a0870, 8) , (register, 0x200, 1); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/logs/013ed7cdc0e54bccb5098e99c8f0c08b.log
+
+existing-or-symlink /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/replays/negatives.qptq6_h7/existing EXIT 2 usage: lift-x64-copy.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                        [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                        [--instructions]
+                        symbols [symbols ...]
+lift-x64-copy.py: error: output directory already exists; refusing stale/replaced output
+
+existing-or-symlink /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/replays/negatives.qptq6_h7/link EXIT 2 usage: lift-x64-copy.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                        [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                        [--instructions]
+                        symbols [symbols ...]
+lift-x64-copy.py: error: output directory already exists; refusing stale/replaced output
+
+PASS actual atomic publication failures and existing/symlink output preservation
+
+EXIT_CODE=0

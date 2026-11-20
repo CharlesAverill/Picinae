@@ -1,0 +1,24 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-95c58422
+COMMAND=python3 notes/e39-x86-backend-integration/replay-old.py
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/old-replay.co0l3uny/x64_scalar_smoke', '--cet-disabled', 'toascii', 'isascii', 'abs', 'labs', 'pthread_equal']
+PASS 5 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/old-replay.co0l3uny/x64_scalar_smoke
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/b244f7649e9f4824ae6eb82d5656068b.log
+EXIT 0
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/old-replay.co0l3uny/x64_scalar_fixture', '--fixture', 'scalar_caller', 'scalar_callee']
+PASS 2 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/old-replay.co0l3uny/x64_scalar_fixture
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/657960e503bd4542a2b33c6238b33ca0.log
+EXIT 0
+COMMAND ['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e26.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/old-replay.co0l3uny/x64_copy_fixture', '--fixture', 'legacy', 'vex128', 'vex256', 'zero']
+usage: compat-e26.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                     [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                     [--instructions]
+                     symbols [symbols ...]
+compat-e26.py: error: all mutable extraction state/output must be under the e26 toolchain root
+EXIT 2
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/replay-old.py", line 13, in <module>
+    print('COMMAND',command,flush=True);r=subprocess.run(command);print('EXIT',r.returncode,flush=True);assert r.returncode==0
+                                                                                                               ^^^^^^^^^^^^^^^
+AssertionError
+
+EXIT_CODE=1

@@ -1,0 +1,60 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-95c58422
+COMMAND=python3 notes/e39-x86-backend-integration/run-tests.py
+test_bool_negate (test_scalar.Tests.test_bool_negate) ... ok
+test_carry_overflow (test_scalar.Tests.test_carry_overflow) ... ok
+test_clz (test_scalar.Tests.test_clz) ... ok
+test_forward_branch_and_call (test_scalar.Tests.test_forward_branch_and_call) ... ok
+test_instruction_canonical_and_local (test_scalar.Tests.test_instruction_canonical_and_local) ... ok
+test_memory (test_scalar.Tests.test_memory) ... ok
+test_partial_merge_all_offsets (test_scalar.Tests.test_partial_merge_all_offsets) ... ok
+test_shift_large_count (test_scalar.Tests.test_shift_large_count) ... ok
+test_strict_rejections (test_scalar.Tests.test_strict_rejections) ... ok
+test_w_zext (test_scalar.Tests.test_w_zext) ... ok
+test_actual_add_sub_flags (test_x64.Tests.test_actual_add_sub_flags) ... ok
+test_actual_auxiliary_flag (test_x64.Tests.test_actual_auxiliary_flag) ... ok
+test_actual_call_partial_memory_and_address_shapes (test_x64.Tests.test_actual_call_partial_memory_and_address_shapes) ... ok
+test_canonical_temps_and_instruction_reset (test_x64.Tests.test_canonical_temps_and_instruction_reset) ... ok
+test_carry_and_signed_overflow (test_x64.Tests.test_carry_and_signed_overflow) ... ok
+test_flag_byte_read_and_one_bit_write (test_x64.Tests.test_flag_byte_read_and_one_bit_write) ... ok
+test_forward_pcode_branch_and_definite_initialization (test_x64.Tests.test_forward_pcode_branch_and_definite_initialization) ... ok
+test_glibc_actual_pcode_oracles (test_x64.Tests.test_glibc_actual_pcode_oracles) ... ok
+test_memory_above_32bits (test_x64.Tests.test_memory_above_32bits) ... ok
+test_partial_register_and_r32_zero (test_x64.Tests.test_partial_register_and_r32_zero) ... ok
+test_strict_instruction_gate (test_x64.Tests.test_strict_instruction_gate) ... ok
+test_strict_invalid_pcode_and_registers (test_x64.Tests.test_strict_invalid_pcode_and_registers) ... ok
+test_all_actual_and_synthetic_finite_semantics (test_x64_copy.Tests.test_all_actual_and_synthetic_finite_semantics) ... ok
+test_e26_receipt_rejects_partial_stale_and_mismatch (test_x64_copy.Tests.test_e26_receipt_rejects_partial_stale_and_mismatch) ... ok
+test_encoding_and_complete_raw_graph_rejections (test_x64_copy.Tests.test_encoding_and_complete_raw_graph_rejections) ... ok
+test_exact_artifact_reemission_and_pinned_bytes (test_x64_copy.Tests.test_exact_artifact_reemission_and_pinned_bytes) ... ok
+test_scalar_profile_unchanged_and_copy_is_opt_in (test_x64_copy.Tests.test_scalar_profile_unchanged_and_copy_is_opt_in) ... ok
+test_actual_graph_reemission_and_e25_rejection (test_x64_rep.Tests.test_actual_graph_reemission_and_e25_rejection) ... ok
+test_all_sites_counts_directions_widths_wrap_and_alias (test_x64_rep.Tests.test_all_sites_counts_directions_widths_wrap_and_alias) ... ok
+test_alpha_renaming_is_allowed_only_without_overlap (test_x64_rep.Tests.test_alpha_renaming_is_allowed_only_without_overlap) ... ok
+test_large_count_bound_is_not_truncated (test_x64_rep.Tests.test_large_count_bound_is_not_truncated) ... ok
+test_mutated_loop_graphs_reject (test_x64_rep.Tests.test_mutated_loop_graphs_reject) ... ok
+test_prefix_encoding_mnemonic_loop_variants_reject (test_x64_rep.Tests.test_prefix_encoding_mnemonic_loop_variants_reject) ... ok
+test_zero_performs_no_memory_access (test_x64_rep.Tests.test_zero_performs_no_memory_access) ... ok
+test_all_pinned_scan_encodings_and_feature_profiles (test_bitscan.Tests.test_all_pinned_scan_encodings_and_feature_profiles) ... ok
+test_encoding_and_unknown_loop_rejections (test_bitscan.Tests.test_encoding_and_unknown_loop_rejections) ... ok
+test_every_raw_operation_and_node_is_guarded (test_bitscan.Tests.test_every_raw_operation_and_node_is_guarded) ... ok
+test_feature_declaration_is_required_and_independent (test_bitscan.Tests.test_feature_declaration_is_required_and_independent) ... ok
+test_published_programs_and_ffs_finite_results (test_bitscan.Tests.test_published_programs_and_ffs_finite_results) ... ok
+test_incomplete_stale_mismatched_and_partial_receipts (test_x64_publication.Tests.test_incomplete_stale_mismatched_and_partial_receipts) ... ok
+test_incomplete_stale_mismatched_and_partial_receipts (test_bitscan_publication.Tests.test_incomplete_stale_mismatched_and_partial_receipts) ... ok
+test_incomplete_stale_mismatched_and_partial_receipts (test_x64_rep_publication.Tests.test_incomplete_stale_mismatched_and_partial_receipts) ... ok
+test_closed_mixed_program_against_sequential_reference (test_x64_integrated.Tests.test_closed_mixed_program_against_sequential_reference) ... ok
+test_dependency_closure_and_receipt_rejection (test_x64_integrated.Tests.test_dependency_closure_and_receipt_rejection) ... ok
+test_interleaving_reuse_failure_and_features (test_x64_integrated.Tests.test_interleaving_reuse_failure_and_features) ... ok
+
+----------------------------------------------------------------------
+Ran 45 tests in 19.120s
+
+OK
+finite instruction/reference comparisons: 6560
+PASS 2720 raw/IL/oracle cases (all architectural registers, flags, full byte memory)
+PASS 3346 graph mutations rejected
+finite scan/profile/input/Unknown checks: 17832
+mutated node/constant rejection checks: 2136
+mixed program/reference comparisons: 320
+
+EXIT_CODE=0

@@ -1,0 +1,597 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-95c58422
+COMMAND=bash notes/e39-x86-backend-integration/run-build.sh
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 9152, characters 47-67:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9152, characters 47-67:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/abs_amd64.v", line 9, characters 15-21:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Examples/claude/abs_amd64.v", line 10, characters 15-18:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require Lia" or the deprecated "From Coq Require Lia"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fallback/e28_lzcnt32_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_bsf32_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_glibc/e28_ffs_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_hot/e28_hot_scans_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_copy_fixture/e26_legacy_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_copy_pinned/e26_pinned_moves_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_integrated_fixture/e39_mixed_amd64.v", line 11, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_rep_pinned/e27_rep_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_rep_synthetic/e27_rep_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_scalar_fixture/e25_scalar_callee_amd64.v", line 7, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_scalar_smoke/e25_abs_amd64.v", line 7, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 205, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 205, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 243, characters 67-76:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 438, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/amd64_common.v", line 438, characters 25-45:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fallback/e28_lzcnt64_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fallback/e28_tzcnt32_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fallback/e28_tzcnt64_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_bsf32_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_bsf64_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_bsf64_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_bsr32_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_bsr32_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_bsr64_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_bsr64_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_lzcnt32_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_lzcnt32_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_lzcnt64_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_lzcnt64_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_tzcnt32_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_tzcnt32_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_tzcnt64_alias_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_fixture/e28_tzcnt64_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_glibc/e28_ffsl_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_bitscan_glibc/e28_ffsll_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_copy_fixture/e26_vex128_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_copy_fixture/e26_vex256_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_copy_fixture/e26_zero_amd64.v", line 10, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_scalar_fixture/e25_scalar_caller_amd64.v", line 7, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_scalar_smoke/e25_isascii_amd64.v", line 7, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_scalar_smoke/e25_labs_amd64.v", line 7, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_scalar_smoke/e25_pthread_equal_amd64.v", line 7, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/x64_scalar_smoke/e25_toascii_amd64.v", line 7, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/scalar_global/e11___memcpy_generic_arm8.v", line 6, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/scalar_smoke/e11_div_arm8.v", line 6, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Examples/claude/abs_arm8.v", line 9, characters 15-21:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Examples/claude/abs_arm8.v", line 10, characters 15-18:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require Lia" or the deprecated "From Coq Require Lia"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 15, characters 31-40:
+Warning: Notation N.mod_0_l is deprecated since 8.17.
+Use Div0.mod_0_l instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_common.v", line 17, characters 10-19:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/scalar_global/e11_mempcpy_arm8.v", line 6, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/scalar_smoke/e11_ffs_arm8.v", line 6, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/scalar_smoke/e11_ffsl_arm8.v", line 6, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/scalar_smoke/e11_ldiv_arm8.v", line 6, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/scalar_smoke/e11_swab_arm8.v", line 6, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/lifter/scalar_smoke/e11_toascii_arm8.v", line 6, characters 29-35:
+Warning: Loading Stdlib without prefix is deprecated.
+Use "From Stdlib Require NArith" or the deprecated "From Coq Require NArith"
+for compatibility with older Coq versions.
+[deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
+Goal at < 0 >
+Goal at < 11 >
+Goal at < 11 >
+Goal at < 0 >
+Goal at < 8 >
+Goal at < 8 >
+
+EXIT_CODE=0

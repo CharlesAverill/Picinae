@@ -1,0 +1,92 @@
+{
+  "source_kind": "synthetic",
+  "elf_sha256": "f376e400aa6c65f45141bad5d8a3cc5c7bd41c6ff369613705554cfee9e3a6f9",
+  "debug_sha256": "f376e400aa6c65f45141bad5d8a3cc5c7bd41c6ff369613705554cfee9e3a6f9",
+  "image_base": "0x100000",
+  "language": "x86:LE:64:default",
+  "addressing": "global",
+  "profile": "integrated-cet-disabled;bmi1=present;abm=present",
+  "direct_edges": [
+    {
+      "site": "0x101016",
+      "target": "0x101018",
+      "kind": "CBRANCH"
+    },
+    {
+      "site": "0x101016",
+      "target": "0x101016",
+      "kind": "BRANCH"
+    },
+    {
+      "site": "0x10101c",
+      "target": "0x10102a",
+      "kind": "CBRANCH"
+    },
+    {
+      "site": "0x101028",
+      "target": "0x101034",
+      "kind": "BRANCH"
+    },
+    {
+      "site": "0x10102d",
+      "target": "0x101030",
+      "kind": "CBRANCH"
+    },
+    {
+      "site": "0x10102d",
+      "target": "0x10102d",
+      "kind": "BRANCH"
+    }
+  ],
+  "records": [
+    {
+      "symbol": "mixed",
+      "elf_entry": "0x1000",
+      "entry": "0x101000",
+      "size": 56,
+      "bytes_sha256": "33cf4783d4979be3207aaa05be8c3d8836950a1ee0eab32fa65111f2ad82efc7",
+      "instructions": 17,
+      "selected_symbols": [
+        "mixed"
+      ],
+      "output": "e39_mixed_amd64.v",
+      "output_sha256": "1da90d35765103d681e2b4809956e6e7b0fe64c2c26538678ccd7ceefffad19d",
+      "pcode_sha256": "059b8c5c11fa1a837d9a3baf4e4b58965bad13eb66a40ee44ac028faa7b3f018"
+    }
+  ],
+  "features": {
+    "cet_disabled": true,
+    "bmi1": "present",
+    "abm": "present"
+  },
+  "semantics": "scalar-copy256-rep-scan-sequential-v1",
+  "scope": "closed-selected-function-extents",
+  "dependencies": {
+    "Examples/claude/inventory/e01-x86-inventory/generated/target-manifest.json": "312a069a4eca7c4f6780c200d4564e43659f7ad3de096754d676f0cbe7904f4a",
+    "Examples/claude/inventory/e01-x86-inventory/inventory.py": "cca353802dd8da4078249544802a798580b5134f442b69b36230abb07fc7798e",
+    "Examples/claude/inventory/e01-x86-inventory/retrieve.py": "3679862dfb51c36022cfa97f97d050489ce688dcf289bd7c2cb871063b18abf4",
+    "Examples/claude/inventory/e02-arm-inventory/artifacts.lock.json": "f38c561778f0d60b7d5016e31a97e329f132db229b7c5c17a53b15a60bea940a",
+    "notes/e25-x86-scalar-driver/isa-pins.json": "2ddb93cb0b3a4dee3aee3c98c2d902e981b280daf137da114da986e9b0931061",
+    "notes/e39-x86-backend-integration/fixture/build.sh": "619c92e900c829bb151ed753e453ee253e5b84964b417382c17aa9b71331a174",
+    "notes/e39-x86-backend-integration/fixture/mixed.S": "d75a083b59afd2be51e30ab155370c53a687450ce49af686be747356e790de80",
+    "notes/e39-x86-backend-integration/fixture/mixed.so": "f376e400aa6c65f45141bad5d8a3cc5c7bd41c6ff369613705554cfee9e3a6f9",
+    "notes/e39-x86-backend-integration/fixture/pins.json": "19cae6e710ed97a24eb2afb21aac9605cd47cbaeb066995de9b8787f60505bcd",
+    "tools/ghidra-lifter/lift-x64-integrated.py": "5bc8b2537ce65ee1f6419cdfaa9367e1d8961c777cbbe0fe6d8144560bbc9ddb",
+    "tools/ghidra-lifter/pcode2coq_bitscan.py": "85bfc4060e3019b54125c7bd47cc3743645d0b61691837c36efad409282c825e",
+    "tools/ghidra-lifter/pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "tools/ghidra-lifter/pcode2coq_x64.py": "c885c6a572288f766bd4d3506763cdbea2308ec0130c6d93907ab08653edb276",
+    "tools/ghidra-lifter/pcode2coq_x64_copy.py": "775d39531e6aae10b6731d93193e74b3feb104843767d32eb353842f332e2015",
+    "tools/ghidra-lifter/pcode2coq_x64_integrated.py": "aa9c29a4229e615d76eaa91d6a257410a5e86a49ea31bc70e969dcc5260eb03b",
+    "tools/ghidra-lifter/pcode2coq_x64_rep.py": "faa0dcf3cb05798d32bef0bebe8d09bacadcba98b6ba119d4c2517cb3326b0ec",
+    "tools/ghidra-lifter/x64_integrated_headless.py": "62a0cb30a9faa45c39018210779cab53033286521fe0c584767b0ebfc92b1f96",
+    "tools/ghidra-lifter/x64_provenance.py": "a7fe93d968351cec36e9c964346789a26bff3f09e28d730548d4d81072ba632b"
+  },
+  "isa_sha256": {
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.sla": "4d3ebe1ebf0b127dc5bd187979824b850fc94081e6660021e2bda834e7400504",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.slaspec": "9d66a01a4219ab0bee0697caf2d1ee389e094e927a857299cebb6182e40a4e6e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.pspec": "3c3dab75a2ac0b98b0552856f690e613d661e0df7cf94d6252e5604d9821629f",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64-gcc.cspec": "5eaa848f3eba7ebd4023541f9f37645dae077e8426fb562592f398d599530a9e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86.ldefs": "b2aa14d94a6162844b18bf47f2aed8579bf90cef3459f6e322b9c1f58146098b",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/ia.sinc": "8fbb244f7fc88be621b95f435b6e958c6a55819dd5b935242377bb2a7e2b9b76"
+  }
+}

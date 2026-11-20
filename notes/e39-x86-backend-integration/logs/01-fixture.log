@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-95c58422
+COMMAND=bash notes/e39-x86-backend-integration/fixture/build.sh --update
+f376e400aa6c65f45141bad5d8a3cc5c7bd41c6ff369613705554cfee9e3a6f9  /home/charles/code/friends/.toolchains/e39-x86-backend-integration/fixture-build/mixed.so
+
+EXIT_CODE=0

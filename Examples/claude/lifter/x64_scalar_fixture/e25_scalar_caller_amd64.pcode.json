@@ -1,0 +1,161 @@
+[
+  {
+    "address": "0x101000",
+    "bytes": "e801000000",
+    "assembly": "CALL 0x00101006",
+    "pcode": [
+      "(register, 0x20, 8) INT_SUB (register, 0x20, 8) , (const, 0x8, 8)",
+      " ---  STORE (const, 0x1b1, 8) , (register, 0x20, 8) , (const, 0x101005, 8)",
+      " ---  CALL (ram, 0x101006, 8)"
+    ],
+    "ops": [
+      {
+        "code": "INT_SUB",
+        "output": {
+          "space": "register",
+          "offset": 32,
+          "size": 8,
+          "register": "RSP",
+          "base": "RSP",
+          "base_offset": 32,
+          "base_width": 64
+        },
+        "inputs": [
+          {
+            "space": "register",
+            "offset": 32,
+            "size": 8,
+            "register": "RSP",
+            "base": "RSP",
+            "base_offset": 32,
+            "base_width": 64
+          },
+          {
+            "space": "const",
+            "offset": 8,
+            "size": 8
+          }
+        ]
+      },
+      {
+        "code": "STORE",
+        "output": null,
+        "inputs": [
+          {
+            "space": "const",
+            "offset": 433,
+            "size": 8
+          },
+          {
+            "space": "register",
+            "offset": 32,
+            "size": 8,
+            "register": "RSP",
+            "base": "RSP",
+            "base_offset": 32,
+            "base_width": 64
+          },
+          {
+            "space": "const",
+            "offset": 1052677,
+            "size": 8
+          }
+        ]
+      },
+      {
+        "code": "CALL",
+        "output": null,
+        "inputs": [
+          {
+            "space": "ram",
+            "offset": 1052678,
+            "size": 8
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "address": "0x101005",
+    "bytes": "c3",
+    "assembly": "RET",
+    "pcode": [
+      "(register, 0x288, 8) LOAD (const, 0x1b1, 8) , (register, 0x20, 8)",
+      "(register, 0x20, 8) INT_ADD (register, 0x20, 8) , (const, 0x8, 8)",
+      " ---  RETURN (register, 0x288, 8)"
+    ],
+    "ops": [
+      {
+        "code": "LOAD",
+        "output": {
+          "space": "register",
+          "offset": 648,
+          "size": 8,
+          "register": "RIP",
+          "base": "RIP",
+          "base_offset": 648,
+          "base_width": 64
+        },
+        "inputs": [
+          {
+            "space": "const",
+            "offset": 433,
+            "size": 8
+          },
+          {
+            "space": "register",
+            "offset": 32,
+            "size": 8,
+            "register": "RSP",
+            "base": "RSP",
+            "base_offset": 32,
+            "base_width": 64
+          }
+        ]
+      },
+      {
+        "code": "INT_ADD",
+        "output": {
+          "space": "register",
+          "offset": 32,
+          "size": 8,
+          "register": "RSP",
+          "base": "RSP",
+          "base_offset": 32,
+          "base_width": 64
+        },
+        "inputs": [
+          {
+            "space": "register",
+            "offset": 32,
+            "size": 8,
+            "register": "RSP",
+            "base": "RSP",
+            "base_offset": 32,
+            "base_width": 64
+          },
+          {
+            "space": "const",
+            "offset": 8,
+            "size": 8
+          }
+        ]
+      },
+      {
+        "code": "RETURN",
+        "output": null,
+        "inputs": [
+          {
+            "space": "register",
+            "offset": 648,
+            "size": 8,
+            "register": "RIP",
+            "base": "RIP",
+            "base_offset": 648,
+            "base_width": 64
+          }
+        ]
+      }
+    ]
+  }
+]

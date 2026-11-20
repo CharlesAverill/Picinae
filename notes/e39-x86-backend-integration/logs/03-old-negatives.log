@@ -1,0 +1,163 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-95c58422
+COMMAND=python3 notes/e39-x86-backend-integration/old-failures.py
+HISTORICAL SUITE e25 private state /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--cet-disabled', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/negative.rapiq9ig/missing', 'e25_missing_symbol']
+FAIL Ghidra script failed: ValueError: e25_missing_symbol: expected one nonempty FUNC extent, got set(); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/1c104e295b134d7e9ac6e76cb942cfc8.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--cet-disabled', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/negative.rapiq9ig/mixed-missing', 'toascii', 'e25_missing_symbol']
+FAIL Ghidra script failed: ValueError: e25_missing_symbol: expected one nonempty FUNC extent, got set(); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/cf220bbba40247fd865aeb3db5a3e49a.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/negative.rapiq9ig/cet-default', 'toascii']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: toascii 0x13a170 ENDBR64: ENDBR64 requires explicit CET-disabled profile and exact empty-pcode encoding; raw pcode: ; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/2c697706034542e1a4def8b1813fa722.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/negative.rapiq9ig/mixed-vector', 'scalar_caller', 'scalar_callee', 'unsupported_vector']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unsupported_vector 0x101030 PXOR XMM0,XMM0: unmodeled instruction PXOR XMM0,XMM0; raw pcode: (register, 0x1200, 16) INT_XOR (register, 0x1200, 16) , (register, 0x1200, 16); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/4a1579df5bb2441992f771ddcbea4a21.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/negative.rapiq9ig/indirect-call', 'unsupported_indirect']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unsupported_indirect 0x101035 CALL RAX: unmodeled op CALLIND; raw pcode: (unique, 0x3cc00, 8) COPY (register, 0x0, 8); (register, 0x20, 8) INT_SUB (register, 0x20, 8) , (const, 0x8, 8);  ---  STORE (const, 0x1b1, 8) , (register, 0x20, 8) , (const, 0x101037, 8);  ---  CALLIND (unique, 0x3cc00, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/d213c8d5a3f64404bdc758e7081d25e5.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/negative.rapiq9ig/rep', 'unsupported_rep']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unsupported_rep 0x101038 MOVSB.REP RDI,RSI: unmodeled instruction MOVSB.REP RDI,RSI; raw pcode: (unique, 0x13500, 1) INT_EQUAL (register, 0x8, 8) , (const, 0x0, 8);  ---  CBRANCH (ram, 0x10103a, 8) , (unique, 0x13500, 1); (register, 0x8, 8) INT_SUB (register, 0x8, 8) , (const, 0x1, 8); (unique, 0x11280, 8) COPY (register, 0x38, 8); (unique, 0x11300, 8) INT_ADD (register, 0x38, 8) , (const, 0x1, 8); (unique, 0x11380, 8) INT_ZEXT (register, 0x20a, 1); (unique, 0x11400; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/f2ec057cd86c47f289c66442f3e185a6.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/negative.rapiq9ig/unclosed-call', 'scalar_caller']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: direct CALL outside selected instruction boundaries: 0x101006; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/logs/11baf18353ca485e80304d37ee21f04c.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/negative.rapiq9ig/existing', 'abs']
+usage: compat-e25.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                     [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                     symbols [symbols ...]
+compat-e25.py: error: output directory already exists; refusing stale/replaced output
+EXPECTED_EXIT=2 ACTUAL_EXIT=2
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e25.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e25/negative.rapiq9ig/existing-link', 'abs']
+usage: compat-e25.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                     [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                     symbols [symbols ...]
+compat-e25.py: error: output directory already exists; refusing stale/replaced output
+EXPECTED_EXIT=2 ACTUAL_EXIT=2
+COMMAND=['/home/charles/miniconda3/bin/python3', '-c', "import sys; sys.path.insert(0,'/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter'); from test_x64 import *; X64Lifter(Language()).instruction(Insn('MOV',Op('CALLOTHER',None,VN('constant',0,4))))"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/pcode2coq_x64.py", line 247, in instruction
+    code,ins,out = self.shape(op)
+                   ^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/pcode2coq_x64.py", line 190, in shape
+    raise Unsupported(f'unmodeled op {code}')
+pcode2coq_scalar.Unsupported: unmodeled op CALLOTHER
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '-c', "import sys; sys.path.insert(0,'/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter'); from test_x64 import *; X64Lifter(Language()).instruction(Insn('MOV',Op('COPY',VN('register',999,8),VN('constant',0,8))))"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/pcode2coq_x64.py", line 250, in instruction
+    self.register(vn)
+  File "/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/pcode2coq_x64.py", line 37, in register
+    raise Unsupported(f'unknown register {vn}')
+pcode2coq_scalar.Unsupported: unknown register <test_scalar.VN object at 0x7f8a5efb4380>
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '-c', "import sys; sys.path.insert(0,'/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter'); from test_x64 import *; X64Lifter(Language()).instruction(Insn('JZ',Op('CBRANCH',None,VN('constant',0,8))))"]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/pcode2coq_x64.py", line 247, in instruction
+    code,ins,out = self.shape(op)
+                   ^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-95c58422/tools/ghidra-lifter/pcode2coq_x64.py", line 192, in shape
+    raise Unsupported(f'malformed {code} pcode')
+pcode2coq_scalar.Unsupported: malformed CBRANCH pcode
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+PASS real strict negative batches, stale-output refusal and opcode/register/branch subprocesses; no partial publication
+HISTORICAL SUITE e26 private state /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26
+partial-batch COMMAND ['python3', 'notes/e39-x86-backend-integration/compat-e26.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/replays/negatives.m0lyjxuf/partial-batch', '--fixture', 'legacy', 'rejected'] EXIT 1
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: rejected 0x1010ec PSHUFB XMM1,XMM0: unmodeled instruction PSHUFB XMM1,XMM0; raw pcode: (register, 0x1240, 16) CALLOTHER (const, 0x9b, 4) , (register, 0x1240, 16) , (register, 0x1200, 16); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/logs/06234801961444b4980131be918fe896.log
+
+masked-evex COMMAND ['python3', 'notes/e39-x86-backend-integration/compat-e26.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/replays/negatives.m0lyjxuf/masked-evex', '--fixture', 'rejected_evex'] EXIT 1
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: rejected_evex 0x1010f2 VMOVDQU64 YMM0{K1},ymmword ptr [RSI]: unmodeled instruction VMOVDQU64 YMM0{K1},ymmword ptr [RSI]; raw pcode: (unique, 0x6d00, 32) LOAD (const, 0x1b1, 4) , (register, 0x30, 8); (register, 0x8fc, 32) CALLOTHER (const, 0x299, 4) , (unique, 0x6d00, 32); (register, 0x93c, 32) COPY (register, 0x1200, 32); (unique, 0x1b900, 8) COPY (register, 0x83c, 8); (unique, 0x1b980, 1) SUBPIECE (unique, 0x1b900, 8) , (const, 0x0, 4); (unique, 0x1ba00, 1) INT_AND; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/logs/1ba13f58b2844be083906f267948a4d4.log
+
+missing-symbol COMMAND ['python3', 'notes/e39-x86-backend-integration/compat-e26.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/replays/negatives.m0lyjxuf/missing-symbol', '--fixture', 'does_not_exist'] EXIT 1
+FAIL Ghidra script failed: ValueError: does_not_exist: expected one nonempty FUNC extent, got set(); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/logs/c52370025fbd461baab02e34a8c0e499.log
+
+whole-avx-copy COMMAND ['python3', 'notes/e39-x86-backend-integration/compat-e26.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/replays/negatives.m0lyjxuf/whole-avx-copy', '--cet-disabled', '__memmove_avx_unaligned_erms'] EXIT 1
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memmove_avx_unaligned_erms 0x2a084b JC 0x002a0870: unmodeled instruction JC 0x002a0870; raw pcode:  ---  CBRANCH (ram, 0x2a0870, 8) , (register, 0x200, 1); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/logs/b3858c078fb34f7da63d10f4c580abb0.log
+
+existing-or-symlink /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/replays/negatives.m0lyjxuf/existing EXIT 2 usage: compat-e26.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                     [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                     [--instructions]
+                     symbols [symbols ...]
+compat-e26.py: error: output directory already exists; refusing stale/replaced output
+
+existing-or-symlink /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e26/replays/negatives.m0lyjxuf/link EXIT 2 usage: compat-e26.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                     [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                     [--instructions]
+                     symbols [symbols ...]
+compat-e26.py: error: output directory already exists; refusing stale/replaced output
+
+PASS actual atomic publication failures and existing/symlink output preservation
+HISTORICAL SUITE e27 private state /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e27.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/negative.vccjtafv/bad_addr32', 'rep_movsb', 'bad_addr32']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction MOVSB.REP ES:EDI,ESI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/logs/cacaf8b6dca94380bebeb08055f8be4a.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e27.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/negative.vccjtafv/bad_segment', 'rep_movsb', 'bad_segment']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction MOVSB.REP RDI,RSI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/logs/d7799adb77d24bcbac8444bd4e6589b8.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e27.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/negative.vccjtafv/bad_repne', 'rep_movsb', 'bad_repne']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction MOVSB.REP RDI,RSI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/logs/4ed1b1925e584cd3b8d1eb6cfaee2b1f.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e27.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/negative.vccjtafv/bad_cmps', 'rep_movsb', 'bad_cmps']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction CMPSB.REPE RDI,RSI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/logs/57ac744a5dcf4e7c86f1e99a7c1bb89c.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e27.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/negative.vccjtafv/bad_scas', 'rep_movsb', 'bad_scas']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction SCASB.REPNE RDI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/logs/1d1e8e82a7ec40c7a10c7e13639e5247.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e27.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/negative.vccjtafv/bad_duplicate', 'rep_movsb', 'bad_duplicate']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: unmodeled instruction MOVSB.REP RDI,RSI; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/logs/6c8afcfc42cf4ef0a4a80c66088c3e44.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e27.py', '--fixture', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/negative.vccjtafv/missing_symbol', 'rep_movsb', 'missing_symbol']
+FAIL Ghidra script failed: ValueError: expected unique synthetic FUNC missing_symbol; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/logs/531bf0451c0e4ee6a5171dfb4593cc36.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e27.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/negative.vccjtafv/existing']
+usage: compat-e27.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                     [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                     [symbols ...]
+compat-e27.py: error: output directory already exists; refusing stale/replaced output
+EXPECTED_EXIT=2 ACTUAL_EXIT=2
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-95c58422/notes/e39-x86-backend-integration/compat-e27.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e27/negative.vccjtafv/link']
+usage: compat-e27.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                     [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                     [symbols ...]
+compat-e27.py: error: output directory already exists; refusing stale/replaced output
+EXPECTED_EXIT=2 ACTUAL_EXIT=2
+PASS mixed supported/unsupported real extraction batches; no partial publication, staging or projects; existing destinations unchanged
+HISTORICAL SUITE e28 private state /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28
+COMMAND ['/home/charles/miniconda3/bin/python3', 'notes/e39-x86-backend-integration/compat-e28.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/negative.k7cld5z6/0', 'ffs']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: ffs 0x1a9910 ENDBR64: ENDBR64 requires explicit CET-disabled profile and exact empty-pcode encoding; raw pcode: ; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/logs/e22a60d658b24dcbb46d68961573225a.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', 'notes/e39-x86-backend-integration/compat-e28.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/negative.k7cld5z6/1', '--fixture', 'bsf32', 'tzcnt32']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: tzcnt32 0x101028 TZCNT R10D,R9D: TZCNT requires explicit CPU feature profile (present/absent); raw pcode: (unique, 0x1ba380, 4) COPY (const, 0x0, 4); (unique, 0x1ba400, 4) COPY (register, 0x88, 4); (unique, 0x1ba480, 4) INT_AND (unique, 0x1ba400, 4) , (const, 0x1, 4); (unique, 0x1ba500, 1) INT_NOTEQUAL (unique, 0x1ba480, 4) , (const, 0x0, 4);  ---  CBRANCH (const, 0x5, 4) , (unique, 0x1ba500, 1); (unique, 0x1ba380, 4) INT_ADD (unique, 0x1ba380, 4) , (const, 0x1, 4);; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/logs/7d5185530d2749259382c94ef59973d7.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', 'notes/e39-x86-backend-integration/compat-e28.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/negative.k7cld5z6/2', '--fixture', '--bmi1', 'present', 'bsf32', 'lzcnt32']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: lzcnt32 0x101040 LZCNT R10D,R9D: LZCNT requires explicit CPU feature profile (present/absent); raw pcode: (register, 0x90, 4) LZCOUNT (register, 0x88, 4); (register, 0x206, 1) INT_EQUAL (register, 0x90, 4) , (const, 0x0, 4); (register, 0x200, 1) INT_EQUAL (register, 0x88, 4) , (const, 0x0, 4); (register, 0x90, 8) INT_ZEXT (register, 0x90, 4); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/logs/8a2a1b41470b4ac79b2ab27a36ae6885.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', 'notes/e39-x86-backend-integration/compat-e28.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/negative.k7cld5z6/3', '--fixture', '--bmi1', 'present', '--abm', 'present', 'bsf32', 'reject16']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: reject16 0x101058 BSF DX,AX: scan requires exact 32/64-bit register encoding; prefixes/memory reject; raw pcode: (unique, 0x33e80, 2) COPY (const, 0x0, 2); (register, 0x206, 1) INT_EQUAL (register, 0x0, 2) , (const, 0x0, 2); (unique, 0x33f80, 1) INT_EQUAL (register, 0x206, 1) , (const, 0x1, 1);  ---  CBRANCH (const, 0x7, 4) , (unique, 0x33f80, 1); (unique, 0x34000, 2) INT_RIGHT (register, 0x0, 2) , (unique, 0x33e80, 2); (unique, 0x34080, 2) INT_AND (unique, 0x34000,; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/logs/74d0537511614d56941b697de4cb3ae0.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', 'notes/e39-x86-backend-integration/compat-e28.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/negative.k7cld5z6/4', '--fixture', '--bmi1', 'present', '--abm', 'present', 'bsf32', 'rejectmem']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: rejectmem 0x10105d BSF EAX,dword ptr [RDI]: scan requires exact 32/64-bit register encoding; prefixes/memory reject; raw pcode: (unique, 0x34200, 4) COPY (const, 0x0, 4); (unique, 0x11f80, 4) LOAD (const, 0x1b1, 4) , (register, 0x38, 8); (register, 0x206, 1) INT_EQUAL (unique, 0x11f80, 4) , (const, 0x0, 4); (unique, 0x34300, 1) INT_EQUAL (register, 0x206, 1) , (const, 0x1, 1);  ---  CBRANCH (const, 0x8, 4) , (unique, 0x34300, 1); (unique, 0x11f80, 4) LOAD (const, 0x; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/logs/6ccce6d3ce194481b30436983ad47512.log
+EXIT 1
+COMMAND ['/home/charles/miniconda3/bin/python3', 'notes/e39-x86-backend-integration/compat-e28.py', '--out', '/home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/negative.k7cld5z6/5', '--samples', 'hot_scans']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: hot_scans 0x2989f6 TZCNT EDX,ECX: TZCNT requires explicit CPU feature profile (present/absent); raw pcode: (unique, 0x1ba380, 4) COPY (const, 0x0, 4); (unique, 0x1ba400, 4) COPY (register, 0x8, 4); (unique, 0x1ba480, 4) INT_AND (unique, 0x1ba400, 4) , (const, 0x1, 4); (unique, 0x1ba500, 1) INT_NOTEQUAL (unique, 0x1ba480, 4) , (const, 0x0, 4);  ---  CBRANCH (const, 0x5, 4) , (unique, 0x1ba500, 1); (unique, 0x1ba380, 4) INT_ADD (unique, 0x1ba380, 4) , (const, 0x1, 4);; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/compat/e28/logs/fdc482eaaa444c749225ad97b5882b20.log
+EXIT 1
+usage: compat-e28.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                     [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                     [--samples] [--bmi1 {present,absent}]
+                     [--abm {present,absent}]
+                     symbols [symbols ...]
+compat-e28.py: error: output directory already exists; refusing stale/replaced output
+existing EXIT 2
+usage: compat-e28.py [-h] [--deps DEPS] [--state STATE] --out OUT
+                     [--inventory INVENTORY] [--cet-disabled] [--fixture]
+                     [--samples] [--bmi1 {present,absent}]
+                     [--abm {present,absent}]
+                     symbols [symbols ...]
+compat-e28.py: error: output directory already exists; refusing stale/replaced output
+broken EXIT 2
+PASS six actual decoder failures leave no partial publication; existing/symlink destinations reject
+
+EXIT_CODE=0

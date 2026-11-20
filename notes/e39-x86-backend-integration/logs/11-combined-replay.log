@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-95c58422
+COMMAND=bash notes/e39-x86-backend-integration/reproduce.sh --check
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/combined-replay.yrQ68GxX/mixed
+Ghidra log: /home/charles/code/friends/.toolchains/e39-x86-backend-integration/logs/82f40870a6364b599bbc222c20a0824e.log
+
+EXIT_CODE=0

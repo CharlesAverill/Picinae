@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-09baf102
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/e28-x86-bitscan-lowering
+
+EXIT_CODE=0

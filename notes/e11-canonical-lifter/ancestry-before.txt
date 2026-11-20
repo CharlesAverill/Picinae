@@ -1,0 +1,6 @@
+Prepared HEAD 71470bffba65392adf1873a3df9f0cf0ca4f1ac9
+merge-base origin/llm_generated_proofs HEAD: 49956416928e5b6bb3928b54ae33e3b81091f006
+origin..HEAD: 71470bf Add selective Dune builds and proof audit harness
+Diff stat: 24 files changed, 1409 insertions(+)
+Read-only git ls-remote --heads fork refs/heads/llm-proofs/e11-canonical-lifter: exit 0, empty (network-enabled retry; initial sandbox DNS failure exit 128).
+Only the new prepared branch was renamed, after HEAD and merge-base verification.

@@ -1,0 +1,14 @@
+test_actual_graph_reemission_and_e25_rejection (__main__.Tests.test_actual_graph_reemission_and_e25_rejection) ... ok
+test_all_sites_counts_directions_widths_wrap_and_alias (__main__.Tests.test_all_sites_counts_directions_widths_wrap_and_alias) ... ok
+test_alpha_renaming_is_allowed_only_without_overlap (__main__.Tests.test_alpha_renaming_is_allowed_only_without_overlap) ... ok
+test_large_count_bound_is_not_truncated (__main__.Tests.test_large_count_bound_is_not_truncated) ... ok
+test_mutated_loop_graphs_reject (__main__.Tests.test_mutated_loop_graphs_reject) ... ok
+test_prefix_encoding_mnemonic_loop_variants_reject (__main__.Tests.test_prefix_encoding_mnemonic_loop_variants_reject) ... ok
+test_zero_performs_no_memory_access (__main__.Tests.test_zero_performs_no_memory_access) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 1.440s
+
+OK
+PASS 2720 raw/IL/oracle cases (all architectural registers, flags, full byte memory)
+PASS 3346 graph mutations rejected

@@ -1,0 +1,46 @@
+{
+  "selection": [
+    "rep_fixture"
+  ],
+  "source_kind": "synthetic",
+  "elf_sha256": "d7a43cba073f6aced58af05e8d31498a0a31cdcaafcda8316f1507fee0d59234",
+  "semantics": "rep-successful-sequential-fragments-v1",
+  "language": "x86:LE:64:default",
+  "addressing": "global",
+  "image_base": "0x100000",
+  "profile": "strict",
+  "frontier": [
+    "0x101002",
+    "0x101006",
+    "0x101009",
+    "0x10100d",
+    "0x101010",
+    "0x101014",
+    "0x101017",
+    "0x10101b"
+  ],
+  "records": [
+    {
+      "symbol": "rep",
+      "instructions": 8,
+      "output": "e27_rep_amd64.v",
+      "output_sha256": "76b353c2be3e95ee0528e9a13bcaa6a56d08cdc18b95e434356d73abfe34b631",
+      "pcode_sha256": "22f528c27721614a9375745bb21e91be90e536279c3d853d83d2737c88e7fa32"
+    }
+  ],
+  "isa_sha256": {
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.sla": "4d3ebe1ebf0b127dc5bd187979824b850fc94081e6660021e2bda834e7400504",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.slaspec": "9d66a01a4219ab0bee0697caf2d1ee389e094e927a857299cebb6182e40a4e6e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64.pspec": "3c3dab75a2ac0b98b0552856f690e613d661e0df7cf94d6252e5604d9821629f",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86-64-gcc.cspec": "5eaa848f3eba7ebd4023541f9f37645dae077e8426fb562592f398d599530a9e",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/x86.ldefs": "b2aa14d94a6162844b18bf47f2aed8579bf90cef3459f6e322b9c1f58146098b",
+    "ghidra_11.4.2_PUBLIC/Ghidra/Processors/x86/data/languages/ia.sinc": "8fbb244f7fc88be621b95f435b6e958c6a55819dd5b935242377bb2a7e2b9b76"
+  },
+  "implementation_sha256": {
+    "pcode2coq_x64_rep.py": "faa0dcf3cb05798d32bef0bebe8d09bacadcba98b6ba119d4c2517cb3326b0ec",
+    "pcode2coq_x64.py": "87750d6653110df94a22c8645891502aedcd5347bb252b2a19a3d5afdb00f90a",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "x64_rep_headless.py": "f27f2418791d51467579eea5aaa6f3fee052cce903147024fd8a65bf43b4537a",
+    "lift-x64-rep.py": "024d119fa11eca82361b159b83e874f71353d2519ffa6a37c18b8b524b246a71"
+  }
+}
