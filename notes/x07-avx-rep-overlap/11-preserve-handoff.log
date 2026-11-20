@@ -1,0 +1,14 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-e7e7a9ff
+COMMAND=python3 notes/x07-avx-rep-overlap/preserve-handoff.py
+Preserved 9 exact statements; all proof bodies replaced by Abort.
+Theorem orp_welltyped: welltyped_prog x64typctx memmove_avx_amd64.
+Theorem orp_nwc: forall s2 s1, memmove_avx_amd64 s1 = memmove_avx_amd64 s2.
+Theorem orp_preserves_callee_saved:
+Lemma orp_neg_distance: forall d s, d < s -> s < 2^64 ->
+Theorem memmove_avx_correct_rep_overlap:
+Theorem memmove_avx_rep_overlap_at_ret:
+Lemma orp_witness_globals: forall policy stop,
+Theorem orp_entry_satisfiable:
+Corollary orp_critical_distances:
+
+EXIT_CODE=0

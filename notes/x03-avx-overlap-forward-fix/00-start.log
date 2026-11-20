@@ -1,0 +1,49 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-be68d06e
+COMMAND=bash -c git\ status\ --short\;\ git\ branch\ --show-current\;\ git\ rev-parse\ HEAD\;\ git\ merge-base\ origin/llm_generated_proofs\ HEAD\;\ git\ log\ --format=\"%H\ %s\"\ origin/llm_generated_proofs..HEAD\;\ git\ diff\ --stat\ origin/llm_generated_proofs...HEAD
+?? notes/x03-avx-overlap-forward-fix/
+llm-proofs/x03-avx-overlap-forward-fix
+14bdeb6a8e93bddb2014b9b907e432dbf2b1516d
+49956416928e5b6bb3928b54ae33e3b81091f006
+14bdeb6a8e93bddb2014b9b907e432dbf2b1516d Add partial AVX forward overlap proof handoff
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+ BUILDING.md                                        | 120 ++++++
+ .../amd64_memmove_avx_overlap_forward_proof.v      | 309 ++++++++++++++
+ dune                                               |  41 ++
+ dune-project                                       |   3 +
+ notes/e00-build/README.md                          | 168 ++++++++
+ notes/e00-build/check-selection.py                 |  16 +
+ notes/e00-build/logs/01-dune-smoke.log             |   8 +
+ notes/e00-build/logs/02-dune-smoke.log             | 148 +++++++
+ notes/e00-build/logs/03-dune-smoke.log             |  89 ++++
+ notes/e00-build/logs/04-audit-tests.log            |   9 +
+ notes/e00-build/logs/05-baseline-source-audit.log  | 204 +++++++++
+ notes/e00-build/logs/06-toolchain.log              |  12 +
+ notes/e00-build/logs/07-base-audit.log             |  15 +
+ notes/e00-build/logs/08-fork-collision-check.log   |   4 +
+ notes/e00-build/logs/09-clean-build.log            | 195 +++++++++
+ notes/e00-build/logs/10-harness-tests.log          |   9 +
+ notes/e00-build/logs/11-x86-assumptions.log        |  43 ++
+ notes/e00-build/logs/12-selected-objects.log       |  27 ++
+ notes/e00-build/logs/13-arm8-assumptions.log       |  29 ++
+ .../e00-build/logs/14-missing-theorem-negative.log |   9 +
+ .../logs/15-extensionality-provenance.log          |  13 +
+ notes/x03-avx-overlap-forward/00-before.log        |  36 ++
+ notes/x03-avx-overlap-forward/01-branch.log        |   5 +
+ .../02-source-audit-initial.log                    |  10 +
+ .../x03-avx-overlap-forward/03-lift-unchanged.log  |   4 +
+ notes/x03-avx-overlap-forward/04-full-vo-build.log | 370 +++++++++++++++++
+ .../05-source-audit-all.log                        | 204 +++++++++
+ .../06-preserve-handoff.log                        |   5 +
+ .../07-source-audit-final.log                      |  10 +
+ .../x03-avx-overlap-forward/08-precommit-audit.log |  34 ++
+ notes/x03-avx-overlap-forward/README.md            | 158 +++++++
+ .../x03-avx-overlap-forward/audit-after-commit.sh  |  17 +
+ .../x03-avx-overlap-forward/initial-attempt.v.txt  | 454 +++++++++++++++++++++
+ notes/x03-avx-overlap-forward/preserve-handoff.py  |  20 +
+ tools/audit-proof-source.py                        | 108 +++++
+ tools/print-assumptions.sh                         |  36 ++
+ tools/record-command.sh                            |  24 ++
+ tools/test-proof-audit.py                          |  82 ++++
+ 38 files changed, 3048 insertions(+)
+
+EXIT_CODE=0
