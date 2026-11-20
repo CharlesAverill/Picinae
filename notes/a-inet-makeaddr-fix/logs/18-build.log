@@ -1,0 +1,55 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0bd22e4f
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ export\ PROOF_MEMORY_KB=2000000\ PROOF_STACK_KB=65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/claude/arm8_inet_makeaddr_proof.vo
+        rocq .Picinae.theory.d
+        rocq Examples/claude/arm8_inet_makeaddr_proof.{glob,vo}
+Closed under the global context
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Goal at < 2071872 >
+Goal at < 2071888 >
+Goal at < 2071912 >
+Goal at < 2071944 >
+Goal at < 2071944 >
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+File "./Examples/claude/arm8_inet_makeaddr_proof.v", line 257, characters 13-22:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_inet_makeaddr_proof.v", line 257, characters 13-22:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_inet_makeaddr_proof.v", line 257, characters 13-22:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_inet_makeaddr_proof.v", line 257, characters 13-22:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_inet_makeaddr_proof.v", line 257, characters 13-22:
+Warning: Notation N.mod_add is deprecated since 8.17.
+Use Div0.mod_add instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+
+EXIT_CODE=0

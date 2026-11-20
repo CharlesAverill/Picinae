@@ -1,0 +1,28 @@
+Closed under the global context
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+Closed under the global context
+File "./Examples/claude/arm8_inet_makeaddr_proof.v", line 133, characters 34-50:
+Error: In environment
+net, host : N
+IW : 0 < 32
+Unable to unify
+ "(0 <? 32) && ((if 0 <? 24 then false else true) || (0 <? 24) && true)"
+with
+ "(0 <? 32) &&
+  (true && xorb (N.testbit 4278190080 0) false
+   || ((0 + 8 <? 32) && true
+       || (0 <? 32) &&
+          (if 0 <? 32 - 8 then false else (0 - (32 - 8) <? 32) && true)) &&
+      N.testbit 4278190080 0)".
+
+
+EXIT_CODE=1

@@ -1,0 +1,38 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0bd22e4f
+COMMAND=python3 notes/a-inet-makeaddr-fix/check-assumptions.py
+inet_makeaddr_nwc: Closed under the global context
+inet_makeaddr_welltyped: inherited FE only (verbatim block retained in raw log)
+inet_makeaddr_preserves_memory: Closed under the global context
+inet_makeaddr_preserves_callee_saved: Closed under the global context
+inet_makeaddr_preserves_sp: Closed under the global context
+inet_makeaddr_preserves_x30: Closed under the global context
+inet_makeaddr_ret_map: Closed under the global context
+inet_makeaddr_result_bound: Closed under the global context
+inet_rev32_correct: Closed under the global context
+inet_bfm24_correct: Closed under the global context
+inet_bfm16_correct: Closed under the global context
+inet_bfm8_correct: Closed under the global context
+inet_msub32_eqb: Closed under the global context
+inet_makeaddr_zero_typed: Closed under the global context
+inet_makeaddr_input_typed: Closed under the global context
+inet_makeaddr_inputs_inhabited: Closed under the global context
+inet_makeaddr_spec_inhabited: Closed under the global context
+inet_makeaddr_correct: inherited FE only (verbatim block retained in raw log)
+makeaddr: Closed under the global context
+inet_makeaddr_result: Closed under the global context
+inet_makeaddr_postcondition: Closed under the global context
+inet_makeaddr_exit: Closed under the global context
+inet_makeaddr_invs: Closed under the global context
+inet_makeaddr_saved: Closed under the global context
+inet_rev32: Closed under the global context
+inet_bfm32: Closed under the global context
+inet_makeaddr_input: Closed under the global context
+welltyped: inherited FE only (verbatim block retained in raw log)
+PASS: 28 transitive queries; 25 closed, three inherited-FE-only; no other assumptions.
+Verbatim inherited assumption:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0

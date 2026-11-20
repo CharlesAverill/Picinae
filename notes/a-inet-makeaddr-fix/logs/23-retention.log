@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0bd22e4f
+COMMAND=python3 notes/a-inet-makeaddr-fix/check-retention.py
+PASS: all 18 theorem/lemma statements and all 9 definitions retained verbatim; no new theorem contracts.
+PASS: 18 Qed; no Abort/admission/axiom/parameter in completed module.
+PASS: generated lift, original author evidence, and Dune list unchanged; full .vo exists.
+PASS: pinned merge base, seven exact checkpoint commits, only scoped linear fixer commits: []
+
+EXIT_CODE=0

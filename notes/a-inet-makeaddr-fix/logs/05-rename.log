@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0bd22e4f
+COMMAND=git branch -m llm-proofs/a-inet-makeaddr-fix
+
+EXIT_CODE=0

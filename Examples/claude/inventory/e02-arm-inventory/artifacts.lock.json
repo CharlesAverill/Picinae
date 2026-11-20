@@ -1,0 +1,47 @@
+[
+  {
+    "file": "libc6_2.35-0ubuntu3.15_arm64.deb",
+    "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/glibc/libc6_2.35-0ubuntu3.15_arm64.deb",
+    "sha256": "dd88cc85dcfbac19c0c9b606676b7b1b87f851d75afa5c830fc5ba1293a30833"
+  },
+  {
+    "file": "libc6-dbg_2.35-0ubuntu3.15_arm64.deb",
+    "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/glibc/libc6-dbg_2.35-0ubuntu3.15_arm64.deb",
+    "sha256": "2044236bcf9efd6a19b62099d349b5680eb3f55cd303c6ffac15f4b45e97d745"
+  },
+  {
+    "file": "glibc_2.35.orig.tar.xz",
+    "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/glibc/glibc_2.35.orig.tar.xz",
+    "sha256": "5123732f6b67ccd319305efd399971d58592122bcc2a6518a1bd2510dd0cf52e"
+  },
+  {
+    "file": "glibc_2.35-0ubuntu3.15.debian.tar.xz",
+    "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/glibc/glibc_2.35-0ubuntu3.15.debian.tar.xz",
+    "sha256": "ea3f016b1987d995addb1c2b093a8f2679179d9bb3ebb9e2ea086469d56498c5"
+  },
+  {
+    "file": "glibc_2.35-0ubuntu3.15.dsc",
+    "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/glibc/glibc_2.35-0ubuntu3.15.dsc",
+    "sha256": "7b3e318ea5ac8b039a0fb5ef2e78b1812346bb753365d6d09622f698427cee56"
+  },
+  {
+    "file": "ghidra_11.4.2_PUBLIC_20250826.zip",
+    "url": "https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_11.4.2_build/ghidra_11.4.2_PUBLIC_20250826.zip",
+    "sha256": "795a02076af16257bd6f3f4736c4fc152ce9ff1f95df35cd47e2adc086e037a6"
+  },
+  {
+    "file": "OpenJDK21U-jdk_x64_linux_hotspot_21.0.8_9.tar.gz",
+    "url": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.8%2B9/OpenJDK21U-jdk_x64_linux_hotspot_21.0.8_9.tar.gz",
+    "sha256": "f2dc5418092c43003db8f9005c4a286e1c0104fea96ccdd49e8ebd037cac9219"
+  },
+  {
+    "file": "jpype1-1.6.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+    "url": "https://files.pythonhosted.org/packages/c4/a4/6038228e44cbcdb8f96ff2518cd6c577730f31fb62e9f46de7efdfabc2de/jpype1-1.6.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+    "sha256": "b56d7b662ce353c7f876e9ff3d4e775918348340795801e1f00c3b6241006264"
+  },
+  {
+    "file": "packaging-25.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl",
+    "sha256": "29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"
+  }
+]
