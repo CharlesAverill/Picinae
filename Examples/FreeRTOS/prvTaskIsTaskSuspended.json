@@ -1,0 +1,443 @@
+{
+  "blocked_helpers": [
+    "fixture_assert_fail"
+  ],
+  "bytes_sha256": "0aa8bbe94fda3092df5034cd123d98b370099d860a0c2349f5873637603d3399",
+  "closure_prerequisites": [
+    {
+      "callee": "fixture_assert_fail",
+      "caller": "prvTaskIsTaskSuspended",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000003fa",
+      "unsupported_instructions": [
+        {
+          "address": "0x0000419c",
+          "assembly": "cpsid\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b672",
+          "width": 2
+        },
+        {
+          "address": "0x000041a6",
+          "assembly": "wfi",
+          "frontend_encoding_supported": false,
+          "opcode": "bf30",
+          "width": 2
+        }
+      ]
+    }
+  ],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "prvTaskIsTaskSuspended_armv6m",
+    "prvTaskIsTaskSuspended"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "fallthrough": "0x000003ea",
+      "kind": "branch",
+      "owners": [
+        "prvTaskIsTaskSuspended"
+      ],
+      "site": "0x000003e8",
+      "target": "0x000003f6",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x000003f4",
+      "kind": "branch",
+      "owners": [
+        "prvTaskIsTaskSuspended"
+      ],
+      "site": "0x000003f2",
+      "target": "0x000003fe",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "assembly": "pop\t{r4, pc}",
+      "kind": "return-candidate",
+      "site": "0x000003f4",
+      "target": "runtime register/stack; Thumb bit required"
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "fixture_assert_fail"
+      ],
+      "return_site": "0x000003fe",
+      "site": "0x000003fa",
+      "target": "0x0000419c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x00000406",
+      "kind": "branch",
+      "owners": [
+        "prvTaskIsTaskSuspended"
+      ],
+      "site": "0x00000404",
+      "target": "0x00000416",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "fallthrough": "0x0000040a",
+      "kind": "branch",
+      "owners": [
+        "prvTaskIsTaskSuspended"
+      ],
+      "site": "0x00000408",
+      "target": "0x000003f4",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "prvTaskIsTaskSuspended"
+      ],
+      "site": "0x00000414",
+      "target": "0x000003f4",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "branch",
+      "owners": [
+        "prvTaskIsTaskSuspended"
+      ],
+      "site": "0x00000418",
+      "target": "0x000003f4",
+      "target_is_instruction_start": true,
+      "within_function": true
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x0000042c",
+  "entry": "0x000003e4",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "c826b55f4031ca85d12926f73051e28e3836565185939efdc620396278c01a50",
+  "instructions": [
+    {
+      "address": "0x000003e4",
+      "assembly": "push\t{r4, lr}",
+      "frontend_encoding_supported": true,
+      "opcode": "b510",
+      "width": 2
+    },
+    {
+      "address": "0x000003e6",
+      "assembly": "subs\tr3, r0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "1e03",
+      "width": 2
+    },
+    {
+      "address": "0x000003e8",
+      "assembly": "beq.n\t3f6 <prvTaskIsTaskSuspended+0x12>",
+      "frontend_encoding_supported": true,
+      "opcode": "d005",
+      "width": 2
+    },
+    {
+      "address": "0x000003ea",
+      "assembly": "ldr\tr2, [pc, #48]\t@ (41c <prvTaskIsTaskSuspended+0x38>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4a0c",
+      "width": 2
+    },
+    {
+      "address": "0x000003ec",
+      "assembly": "ldr\tr1, [r0, #20]",
+      "frontend_encoding_supported": true,
+      "opcode": "6941",
+      "width": 2
+    },
+    {
+      "address": "0x000003ee",
+      "assembly": "movs\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2000",
+      "width": 2
+    },
+    {
+      "address": "0x000003f0",
+      "assembly": "cmp\tr1, r2",
+      "frontend_encoding_supported": true,
+      "opcode": "4291",
+      "width": 2
+    },
+    {
+      "address": "0x000003f2",
+      "assembly": "beq.n\t3fe <prvTaskIsTaskSuspended+0x1a>",
+      "frontend_encoding_supported": true,
+      "opcode": "d004",
+      "width": 2
+    },
+    {
+      "address": "0x000003f4",
+      "assembly": "pop\t{r4, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bd10",
+      "width": 2
+    },
+    {
+      "address": "0x000003f6",
+      "assembly": "ldr\tr0, [pc, #40]\t@ (420 <prvTaskIsTaskSuspended+0x3c>)",
+      "frontend_encoding_supported": true,
+      "opcode": "480a",
+      "width": 2
+    },
+    {
+      "address": "0x000003f8",
+      "assembly": "ldr\tr1, [pc, #40]\t@ (424 <prvTaskIsTaskSuspended+0x40>)",
+      "frontend_encoding_supported": true,
+      "opcode": "490a",
+      "width": 2
+    },
+    {
+      "address": "0x000003fa",
+      "assembly": "bl\t419c <fixture_assert_fail>",
+      "frontend_encoding_supported": true,
+      "opcode": "f003 fecf",
+      "width": 4
+    },
+    {
+      "address": "0x000003fe",
+      "assembly": "ldr\tr2, [r3, #40]\t@ 0x28",
+      "frontend_encoding_supported": true,
+      "opcode": "6a9a",
+      "width": 2
+    },
+    {
+      "address": "0x00000400",
+      "assembly": "ldr\tr1, [pc, #36]\t@ (428 <prvTaskIsTaskSuspended+0x44>)",
+      "frontend_encoding_supported": true,
+      "opcode": "4909",
+      "width": 2
+    },
+    {
+      "address": "0x00000402",
+      "assembly": "cmp\tr2, r1",
+      "frontend_encoding_supported": true,
+      "opcode": "428a",
+      "width": 2
+    },
+    {
+      "address": "0x00000404",
+      "assembly": "beq.n\t416 <prvTaskIsTaskSuspended+0x32>",
+      "frontend_encoding_supported": true,
+      "opcode": "d007",
+      "width": 2
+    },
+    {
+      "address": "0x00000406",
+      "assembly": "cmp\tr2, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2a00",
+      "width": 2
+    },
+    {
+      "address": "0x00000408",
+      "assembly": "bne.n\t3f4 <prvTaskIsTaskSuspended+0x10>",
+      "frontend_encoding_supported": true,
+      "opcode": "d1f4",
+      "width": 2
+    },
+    {
+      "address": "0x0000040a",
+      "assembly": "adds\tr2, #80\t@ 0x50",
+      "frontend_encoding_supported": true,
+      "opcode": "3250",
+      "width": 2
+    },
+    {
+      "address": "0x0000040c",
+      "assembly": "ldrb\tr0, [r3, r2]",
+      "frontend_encoding_supported": true,
+      "opcode": "5c98",
+      "width": 2
+    },
+    {
+      "address": "0x0000040e",
+      "assembly": "subs\tr0, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "3801",
+      "width": 2
+    },
+    {
+      "address": "0x00000410",
+      "assembly": "subs\tr3, r0, #1",
+      "frontend_encoding_supported": true,
+      "opcode": "1e43",
+      "width": 2
+    },
+    {
+      "address": "0x00000412",
+      "assembly": "sbcs\tr0, r3",
+      "frontend_encoding_supported": true,
+      "opcode": "4198",
+      "width": 2
+    },
+    {
+      "address": "0x00000414",
+      "assembly": "b.n\t3f4 <prvTaskIsTaskSuspended+0x10>",
+      "frontend_encoding_supported": true,
+      "opcode": "e7ee",
+      "width": 2
+    },
+    {
+      "address": "0x00000416",
+      "assembly": "movs\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2000",
+      "width": 2
+    },
+    {
+      "address": "0x00000418",
+      "assembly": "b.n\t3f4 <prvTaskIsTaskSuspended+0x10>",
+      "frontend_encoding_supported": true,
+      "opcode": "e7ec",
+      "width": 2
+    },
+    {
+      "address": "0x0000041a",
+      "assembly": "nop\t\t\t@ (mov r8, r8)",
+      "frontend_encoding_supported": true,
+      "opcode": "46c0",
+      "width": 2
+    }
+  ],
+  "literals": [
+    {
+      "address": "0x0000041c",
+      "bytes": "34000020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x20000034",
+          "name": "xSuspendedTaskList",
+          "offset": 0,
+          "size": 20
+        }
+      ],
+      "imm8": 12,
+      "instruction": "0x000003ea",
+      "thumb_function_pointer": [],
+      "value": "0x20000034"
+    },
+    {
+      "address": "0x00000420",
+      "bytes": "f8440000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 10,
+      "instruction": "0x000003f6",
+      "thumb_function_pointer": [],
+      "value": "0x000044f8"
+    },
+    {
+      "address": "0x00000424",
+      "bytes": "dc0c0000",
+      "cortex_m_system_region": false,
+      "globals": [],
+      "imm8": 10,
+      "instruction": "0x000003f8",
+      "thumb_function_pointer": [],
+      "value": "0x00000cdc"
+    },
+    {
+      "address": "0x00000428",
+      "bytes": "60000020",
+      "cortex_m_system_region": false,
+      "globals": [
+        {
+          "address": "0x20000060",
+          "name": "xPendingReadyList",
+          "offset": 0,
+          "size": 20
+        }
+      ],
+      "imm8": 9,
+      "instruction": "0x00000400",
+      "thumb_function_pointer": [],
+      "value": "0x20000060"
+    }
+  ],
+  "mapped_data": [
+    {
+      "address": "0x0000041c",
+      "halfword": "3400"
+    },
+    {
+      "address": "0x0000041e",
+      "halfword": "0020"
+    },
+    {
+      "address": "0x00000420",
+      "halfword": "f844"
+    },
+    {
+      "address": "0x00000422",
+      "halfword": "0000"
+    },
+    {
+      "address": "0x00000424",
+      "halfword": "dc0c"
+    },
+    {
+      "address": "0x00000426",
+      "halfword": "0000"
+    },
+    {
+      "address": "0x00000428",
+      "halfword": "6000"
+    },
+    {
+      "address": "0x0000042a",
+      "halfword": "0020"
+    }
+  ],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x000003f4",
+      "assembly": "pop\t{r4, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bd10",
+      "width": 2
+    }
+  ],
+  "row": "r25",
+  "size": 72,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "prvTaskIsTaskSuspended",
+  "symbol_record": {
+    "address": "0x000003e4",
+    "binding": "LOCAL",
+    "kind": "FUNC",
+    "name": "prvTaskIsTaskSuspended",
+    "section": "2",
+    "size": 72,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x000003e5"
+  },
+  "thumb_symbol": "0x000003e5",
+  "unsupported_instructions": []
+}

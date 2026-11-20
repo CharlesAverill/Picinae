@@ -1,0 +1,20 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96052210
+COMMAND=python3 notes/r06-task-count-fix/audit-statements.py
+PASS: 11 statements retained verbatim: task_count_nwc, task_count_welltyped, task_count_preserves_memory, task_count_zero_bound, task_count_witness_models, task_count_entry_satisfiable, task_count_correct, task_count_post_at_bx, task_count_preserves_callee_saved, task_count_return_step, task_count_caller_result
+PASS: 7 definitions retained verbatim: task_count_result, task_count_frame, task_count_postcondition, task_count_exit, task_count_invariants, task_count_entry_witness, task_count_readable
+PASS: no Abort/admission/new axiom/parameter token in active proof
+PASS: original Astra attempt and evidence unchanged
+task_count_nwc: closed
+task_count_welltyped: closed
+task_count_preserves_memory: closed
+task_count_zero_bound: closed
+task_count_witness_models: closed
+task_count_entry_satisfiable: closed
+task_count_correct: inherited FunctionalExtensionality.functional_extensionality_dep only
+task_count_post_at_bx: inherited FunctionalExtensionality.functional_extensionality_dep only
+task_count_preserves_callee_saved: inherited FunctionalExtensionality.functional_extensionality_dep only
+task_count_return_step: inherited FunctionalExtensionality.functional_extensionality_dep only
+task_count_caller_result: inherited FunctionalExtensionality.functional_extensionality_dep only
+PASS: inspected all 11 transitive assumptions reports; no imported admitted theorem
+
+EXIT_CODE=0

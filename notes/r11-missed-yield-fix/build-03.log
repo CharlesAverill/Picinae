@@ -1,0 +1,48 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-7fbb9e39
+COMMAND=python3 /home/charles/code/friends/.refs/picinae-llm-proofs/resources/resource-run.py --unit r11-missed-yield-fix --memory-kib 2000000 -- /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_vTaskMissedYield_proof.vo
+ADMISSION WAIT r11-missed-yield-fix available RAM reserve
+ADMISSION WAIT r11-missed-yield-fix available RAM reserve
+ADMITTED r11-missed-yield-fix memory_kib=2000000
+        rocq .Picinae.theory.d
+        rocq Examples/FreeRTOS/armv6m_vTaskMissedYield_proof.{glob,vo}
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0.001 secs (0.001u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0.004 secs (0.003u,0.001s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Goal at < 2496 >
+Goal at < 2502 >
+Finished transaction in 0.128 secs (0.132u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0.001 secs (0.001u,0.s) (successful)
+Finished transaction in 0.001 secs (0.001u,0.s) (successful)
+Finished transaction in 0.001 secs (0.001u,0.s) (successful)
+Finished transaction in 0.004 secs (0.004u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0.002 secs (0.002u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0.001 secs (0.001u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0.001 secs (0.001u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0.004 secs (0.004u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0.001 secs (0.001u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0.002 secs (0.002u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+Finished transaction in 0. secs (0.u,0.s) (successful)
+RELEASED r11-missed-yield-fix exit=0
+
+EXIT_CODE=0
