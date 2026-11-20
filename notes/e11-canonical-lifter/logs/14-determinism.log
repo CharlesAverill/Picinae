@@ -1,0 +1,17 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4aebc652
+COMMAND=python3 -c from\ pathlib\ import\ Path\;\ a=Path\(\"/home/charles/code/friends/.toolchains/e11-canonical-lifter/final\"\)\;\ b=Path\(\"/home/charles/code/friends/.toolchains/e11-canonical-lifter/replay\"\)\;\ files=sorted\(p.name\ for\ p\ in\ a.iterdir\(\)\ if\ p.name\!=\"SUCCESS.json\"\)\;\ assert\ all\(\(a/f\).read_bytes\(\)==\(b/f\).read_bytes\(\)\ for\ f\ in\ files\)\;\ print\(\"PASS\ byte-identical\ fresh-project\ replay:\"\,\*files\,sep=\"\\n\"\)
+PASS byte-identical fresh-project replay:
+e11_div_arm8.pcode.json
+e11_div_arm8.v
+e11_ffs_arm8.pcode.json
+e11_ffs_arm8.v
+e11_ffsl_arm8.pcode.json
+e11_ffsl_arm8.v
+e11_ldiv_arm8.pcode.json
+e11_ldiv_arm8.v
+e11_swab_arm8.pcode.json
+e11_swab_arm8.v
+e11_toascii_arm8.pcode.json
+e11_toascii_arm8.v
+
+EXIT_CODE=0

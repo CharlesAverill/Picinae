@@ -1,0 +1,13 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-6b751a59
+COMMAND=bash --noprofile --norc -e -c sed\ -n\ \"24\,28p\"\ /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Stdlib/Logic/FunctionalExtensionality.v\;\ sha256sum\ /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Stdlib/Logic/FunctionalExtensionality.v\;\ rg\ -n\ \"Require\ Import\ FunctionalExtensionality\"\ Picinae_theory.v\ Picinae_finterp.v\ Picinae_simplifier_v1_1.v
+(** Statements of functional extensionality for simple and dependent functions. *)
+
+Axiom functional_extensionality_dep : forall {A} {B : A -> Type},
+  forall (f g : forall x : A, B x),
+  (forall x, f x = g x) -> f = g.
+ab45c777fbdfe93fc961d9d8bdd907a749fb41b783d5eea61bc53144ae3e02da  /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Stdlib/Logic/FunctionalExtensionality.v
+Picinae_simplifier_v1_1.v:39:From Stdlib Require Import FunctionalExtensionality.
+Picinae_theory.v:39:From Stdlib Require Import FunctionalExtensionality.
+Picinae_finterp.v:40:From Stdlib Require Import FunctionalExtensionality.
+
+EXIT_CODE=0

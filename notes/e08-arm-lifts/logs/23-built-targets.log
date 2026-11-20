@@ -1,0 +1,20 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-746dec47
+COMMAND=python3 -
+_build/default/Examples/claude/lifter/scalar_ports/e08___drand48_iterate_arm8.vo 97331 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08___memcpy_generic_arm8.vo 309575 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08___memmove_generic_arm8.vo 407918 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08___memset_emag_arm8.vo 174297 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08_a64l_arm8.vo 73969 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08_cfmakeraw_arm8.vo 60302 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08_insque_arm8.vo 34904 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08_lcong48_r_arm8.vo 67837 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08_mempcpy_arm8.vo 309521 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08_remque_arm8.vo 28139 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08_seed48_arm8.vo 103599 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08_seed48_r_arm8.vo 103611 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08_sigabbrev_np_arm8.vo 36089 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08_sigdescr_np_arm8.vo 36023 bytes; full .vo
+_build/default/Examples/claude/lifter/scalar_ports/e08_srand48_r_arm8.vo 53871 bytes; full .vo
+PASS 15 selected full .vo targets and 15 complete inherited-FE typing assumption queries
+
+EXIT_CODE=0

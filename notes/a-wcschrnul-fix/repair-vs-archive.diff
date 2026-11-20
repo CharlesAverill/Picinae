@@ -1,0 +1,73 @@
+--- Astra exact initial attempt
++++ Sol checked final proof
+@@ -7,7 +7,9 @@
+    extracted by the reviewed e30 strict scalar CCMP pipeline (Ghidra 11.4.2).
+    Its manifest and raw pcode remain beside the generated file.
+    Initial author: OpenAI gpt-6-astra, xhigh, one-shot proof attempt.
+-   Proof status and final proof producer: see notes/a-wcschrnul/README.md.
++   Proof repair and final proof producer: OpenAI gpt-6.1-sol, xhigh.
++   Kernel-check evidence and scope: notes/a-wcschrnul-fix/README.md.
++   Original one-shot evidence: notes/a-wcschrnul/README.md.
+ 
+    ENGLISH SPEC / ABI: X0=p, W1=c (low 32 bits of X1), X30=lr, SP=sp.
+    A wchar_t is four little-endian bytes; pointers are 64 bits. K is the
+@@ -148,7 +150,7 @@
+     rewrite N.mod_mod by discriminate.
+     repeat split; try reflexivity; try (intros; lia).
+     + intros j J. assert (j=0 \/ j=1 \/ j=2 \/ j=3) by lia.
+-      destruct H as [->|[->|[->|->]]]; reflexivity.
++      destruct H as [E|[E|[E|E]]]; subst j; reflexivity.
+     + right. reflexivity.
+ Qed.
+ 
+@@ -161,14 +163,14 @@
+   | H: negb ?b = false |- _ => apply Bool.negb_false_iff in H
+   end.
+ 
+-Ltac wcschrnul_finish i :=
++Ltac wcschrnul_finish i k w C WB HIT MISS :=
+   cbn [wcschrnul_state postcondition] in *;
+   try rewrite C in *;
+   try rewrite (N.mod_small w 4294967296) in * by exact WB;
+   try rewrite wcschrnul_eq32 in * by assumption;
+   wcschrnul_branches;
+   first
+-  [ assert (IK: i=k) by (apply HIT; tauto);
++  [ assert (IK: i=k) by (apply HIT; intuition congruence);
+     subst i; repeat split; assumption
+   | split; [repeat split; assumption|];
+     exists i; split; [apply MISS; congruence|assumption] ].
+@@ -206,12 +208,12 @@
+       assert (MISS: w<>0 -> w<>c -> i<k).
+       { rewrite W. apply wcschrnul_stop_miss; assumption. }
+       clear STOP RANGE W.
+-      repeat arm8_step; wcschrnul_finish i.
++      repeat arm8_step; wcschrnul_finish i k w C WB HIT MISS.
+     + destruct PRE as [[MEM [C [SP LR]]] [i [LT P]]].
+       assert (NEXT: p+4*(i+1) < 2^64).
+       { apply (wcschrnul_addr_bound p k (i+1) RANGE). clear - LT. lia. }
+-      assert (ADD: (p+4*i+4) mod 2^64 = p+4*(i+1)).
+-      { replace (p+4*i+4) with (p+4*(i+1)) by lia.
++      assert (ADD: (4+p+4*i) mod 2^64 = p+4*(i+1)).
++      { replace (4+p+4*i) with (p+4*(i+1)) by lia.
+         apply N.mod_small. exact NEXT. }
+       repeat arm8_step.
+       split; [repeat split; assumption|]. exists (i+1).
+@@ -227,7 +229,7 @@
+       assert (MISS: w<>0 -> w<>c -> i<k).
+       { rewrite W. apply wcschrnul_stop_miss; assumption. }
+       clear STOP RANGE W.
+-      repeat arm8_step; wcschrnul_finish i.
++      repeat arm8_step; wcschrnul_finish i k w C WB HIT MISS.
+ Qed.
+ 
+ (* Ordinary RET, independent of the scan proof and without a callee oracle.
+@@ -242,7 +244,7 @@
+   intros s q ct s' x m p c k sp lr LOOK MDL [[MEM [C [SP LR]]] RESULT] XS.
+   cbn [e30_wcschrnul_arm8] in LOOK. injection LOOK as Q. subst q.
+   step_stmt XS. arm8_psimpl in XS.
+-  destruct XS as [STATE EXIT]. rewrite LR in EXIT. split; [exact EXIT|].
++  destruct XS as [[STATE EXIT] _]. split; [exact EXIT|].
+   rewrite STATE. unfold postcondition, wcschrnul_state.
+   repeat split; assumption.
+ Qed.

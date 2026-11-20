@@ -1,0 +1,40 @@
+[
+  {
+    "exit": 0,
+    "files": [
+      "e29_inet_makeaddr_arm8.manifest.json",
+      "e29_inet_makeaddr_arm8.pcode.json",
+      "e29_inet_makeaddr_arm8.v"
+    ],
+    "status": "supported-closed-map",
+    "symbol": "inet_makeaddr"
+  },
+  {
+    "exit": 0,
+    "files": [
+      "e29_rand_r_arm8.manifest.json",
+      "e29_rand_r_arm8.pcode.json",
+      "e29_rand_r_arm8.v"
+    ],
+    "status": "supported-closed-map",
+    "symbol": "rand_r"
+  },
+  {
+    "exit": 1,
+    "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memchr_nosimd 0x19c81c ccmp x6,x8,#0x0,mi: unmodeled instruction ccmp x6,x8,#0x0,mi; raw pcode: (unique, 0x1a480, 1) COPY (register, 0x100, 1); (unique, 0x1a500, 1) COPY (const, 0x0, 1); (unique, 0xe780, 1) INT_AND (unique, 0x1a500, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) INT_AND (unique, 0x1a500, 1) , (const, 0x4, 1); (register, 0x101, 1) INT_EQUAL (unique, 0xe880, 1) , (const, 0x4, 1); (uniq",
+    "status": "strict-rejected",
+    "symbol": "__memchr_nosimd"
+  },
+  {
+    "exit": 1,
+    "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strcmp 0x192fb4 ccmp x2,x3,#0x0,eq: unmodeled instruction ccmp x2,x3,#0x0,eq; raw pcode: (unique, 0x1a480, 1) COPY (register, 0x101, 1); (unique, 0x1a500, 1) COPY (const, 0x0, 1); (unique, 0xe780, 1) INT_AND (unique, 0x1a500, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) INT_AND (unique, 0x1a500, 1) , (const, 0x4, 1); (register, 0x101, 1) INT_EQUAL (unique, 0xe880, 1) , (const, 0x4, 1); (unique, 0xe98",
+    "status": "strict-rejected",
+    "symbol": "strcmp"
+  },
+  {
+    "exit": 1,
+    "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __strlen_asimd 0x19c970 ccmp x5,#0x0,#0x0,eq: unmodeled instruction ccmp x5,#0x0,#0x0,eq; raw pcode: (unique, 0x19f00, 1) COPY (register, 0x101, 1); (unique, 0x19f80, 1) COPY (const, 0x0, 1); (unique, 0xe780, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x4, 1); (register, 0x101, 1) INT_EQUAL (unique, 0xe880, 1) , (const, 0x4, 1); (u",
+    "status": "strict-rejected",
+    "symbol": "__strlen_asimd"
+  }
+]

@@ -1,0 +1,5 @@
+NOT RUN for the new proof module: its only full target build exited 1.
+No full arm8_wcschrnul_proof.vo exists; the three unchecked theorem statements are Abort.
+Running tools/print-assumptions.sh would rebuild after failure, contrary to the one-shot Astra handoff policy.
+The prepared run-assumptions.sh uses that required tool once a Sol fixer has completed a successful build.
+No claim about transitive assumptions of the new main theorems is made.

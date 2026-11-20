@@ -1,0 +1,29 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-dd8b174b
+COMMAND=python3 /home/charles/code/friends/.refs/picinae-llm-proofs/resources/resource-run.py --unit a-wcschrnul-fix --memory-kib 1750000 -- /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/claude/arm8_wcschrnul_proof.vo
+ADMITTED a-wcschrnul-fix memory_kib=1750000
+        rocq .Picinae.theory.d
+        rocq Examples/claude/arm8_wcschrnul_proof.{glob,vo}
+Goal at < 1696960 >
+Goal at < 1696964 >
+Goal at < 1696992 >
+Goal at < 1696992 >
+Goal at < 1696976 >
+Goal at < 1696980 >
+Goal at < 1696992 >
+Goal at < 1696992 >
+Goal at < 1696976 >
+File "./Examples/claude/arm8_wcschrnul_proof.v", line 148, characters 12-21:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_wcschrnul_proof.v", line 148, characters 12-21:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Examples/claude/arm8_wcschrnul_proof.v", line 148, characters 12-21:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+RELEASED a-wcschrnul-fix exit=0
+
+EXIT_CODE=0

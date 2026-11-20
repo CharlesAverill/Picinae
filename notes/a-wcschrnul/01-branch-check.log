@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-62dac67c
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/a-wcschrnul
+
+EXIT_CODE=0

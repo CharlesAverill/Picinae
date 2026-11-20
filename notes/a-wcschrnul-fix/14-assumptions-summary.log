@@ -1,0 +1,16 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-dd8b174b
+COMMAND=python3 notes/a-wcschrnul-fix/summarize-assumptions.py
+wcschrnul_nwc: Closed under the global context
+wcschrnul_welltyped: inherited functional_extensionality_dep only
+wcschrnul_preserves_memory: Closed under the global context
+wcschrnul_preserves_callee_saved: Closed under the global context
+wcschrnul_stop_hit: Closed under the global context
+wcschrnul_stop_miss: Closed under the global context
+wcschrnul_addr_bound: Closed under the global context
+wcschrnul_eq32: Closed under the global context
+wcschrnul_input_satisfiable: Closed under the global context
+wcschrnul_correct: inherited functional_extensionality_dep only
+wcschrnul_return: inherited functional_extensionality_dep only
+8 closed; 3 inherited-FE-only; no other transitive assumptions.
+
+EXIT_CODE=0
