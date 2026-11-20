@@ -1,0 +1,11 @@
+COMMAND=["bash", "--noprofile", "--norc", "-e", "-c", "python3 notes/e10-arm-neon-lifts/check-artifacts.py; python3 tools/audit-proof-source.py --base a3a80d011dc91d51b163b9d68c33ef92ea40635b Examples/claude/lifter/neon_loads; git diff --check"]
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0fa60739
+PASS fresh raw and actual-Ghidra IL replay; pinned old target bytes/pcode; protected baseline hashes; exact assigned ancestry and own scope
+Base: a3a80d011dc91d51b163b9d68c33ef92ea40635b
+Scope: 1 Rocq source files
+BASELINE totals: {}
+CURRENT totals: {}
+NEW totals: {}
+Source check only: inspect transitive Print Assumptions separately.
+
+EXIT_CODE=0

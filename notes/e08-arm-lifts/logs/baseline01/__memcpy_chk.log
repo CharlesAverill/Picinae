@@ -1,0 +1,4 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/baseline01/__memcpy_chk", "__memcpy_chk"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_chk: direct edge outside selected extent(s): 0x19ab40; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/b9c41925ebb240cea4add99dd09059cb.log
+
+EXIT_CODE=1

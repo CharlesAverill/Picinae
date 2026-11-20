@@ -1,0 +1,14 @@
+COMMAND=["/home/charles/code/friends/.toolchains/arm-validation/picinae-env", "bash", "--noprofile", "--norc", "-e", "-c", "ulimit -v 2000000; ulimit -s 65536; rocq --version; ocamlc -version; dune --version; aarch64-linux-gnu-as --version"]
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0fa60739
+The Rocq Prover, version 9.1.1
+compiled with OCaml 4.14.2
+4.14.2
+3.22.2
+GNU assembler (GNU Binutils for Ubuntu) 2.42
+Copyright (C) 2024 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or later.
+This program has absolutely no warranty.
+This assembler was configured for a target of `aarch64-linux-gnu'.
+
+EXIT_CODE=0

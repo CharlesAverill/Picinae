@@ -1,0 +1,48 @@
+{
+  "profile": "aarch64-neon-q-loads-fixed-z256-v1",
+  "libc_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "ghidra": "11.4.2",
+  "language": "AARCH64:LE:64:v8A",
+  "arm_isa_sha256": "89973c3d41fe5f45cc8581ff41db7c8736d3f2b6d7bb6568112a3c3ac81cb845",
+  "source_sha256": {
+    "tools/ghidra-lifter/pcode2coq_scalar.py": "ad08a91cf417ed4f43d00bdadc42bb80a84d457472b0bcdc793fe293041f1a58",
+    "tools/ghidra-lifter/pcode2coq_neon_loads.py": "12063674b1f8fc7e87f5fca572bae95f5ae7f591f671cd8c35f317147673b9ea",
+    "tools/ghidra-lifter/neon_loads_headless.py": "36ade7396b27d505470a704cf7490921b0f4c7fe846c054f16c421e4e7127f62",
+    "tools/ghidra-lifter/lift-neon-loads.py": "2bc894e6b640cc2df27e7a3361a3b70711b9b3f5c69582e037c77c9d8fe502a4",
+    "tools/ghidra-lifter/test_neon_loads.py": "30d5c77c26f11a0fd223933bd863e2084dab6f1a5fd684bd1f5c2f1bfb81e702",
+    "notes/e10-arm-neon-lifts/fixtures.s": "eb32cbb657052b3c02b00ab4a14ede7a53ef8a0c71a6e1f282de454fe8bff3b6",
+    "notes/e10-arm-neon-lifts/collect.py": "9b014a45e7e803c39e61432a734ba9d0f38536bbd30fc9580e8302a7feac7d93",
+    "notes/e10-arm-neon-lifts/collect_headless.py": "8a3e3ed96207c0b39aa4abc9831c91d3b8188d27e8239e231cff823124ebd489"
+  },
+  "configuration": {
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "xhigh",
+    "serviceTier": "default",
+    "source": "Assigned launch metadata; no new delegates"
+  },
+  "compiler_limits": {
+    "virtual_KiB": 2000000,
+    "stack_KiB": 65536,
+    "parallelism": 1,
+    "dune_cache": "disabled"
+  },
+  "scope": "Open instruction fragments and closed synthetic finite fixture only; no universal instruction or function proof.",
+  "fixture_sha256": {
+    "IL.json": "9279b52a9939679b0fc7dcf63f8b93c2ea832f76bda5855ff82c42ee59ebbd8c",
+    "RAW.json": "46f69f67c814195a060e86a3deb60281dd1f44a021ebfa10dff112778d24db81",
+    "e10_neon_loads.v": "7f01a0ca6b60d14fbc97d96ebcd39cc9e1f2280fbf2198478aeae2a4543b6309"
+  },
+  "compiled_vo_sha256": "795d0773ae1b8af340e81bc205eff51e287e42ea6fbfb13d124c3dfc2dbe7c29",
+  "validation": {
+    "full_dune_log": "logs/28-dune-full.log",
+    "dune_exit": 0,
+    "assumptions_log": "logs/31-assumptions.log",
+    "assumptions_exit": 0,
+    "typing_facts": 2,
+    "closed_finite_facts": 29,
+    "finite_instruction_inputs": 882,
+    "finite_synthetic_inputs": 1,
+    "python_finite_inputs": 4536,
+    "source_protected_files": 1175
+  }
+}

@@ -1,0 +1,298 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ff05d511
+COMMAND=bash --noprofile --norc -e -c sha256sum\ /tmp/e29-arm-isa.pdf\;\ sed\ -n\ 8713\,8830p\ /tmp/e29-arm-isa.txt\;\ sed\ -n\ 9893\,10040p\ /tmp/e29-arm-isa.txt\;\ sed\ -n\ 312682\,312708p\ /tmp/e29-arm-isa.txt
+89973c3d41fe5f45cc8581ff41db7c8736d3f2b6d7bb6568112a3c3ac81cb845  /tmp/e29-arm-isa.pdf
+CNEG
+
+Conditional Negate returns, in the destination register, the negated value of the source register if the condition is
+TRUE, and otherwise returns the value of the source register.
+
+This is an alias of CSNEG. This means:
+
+•
+The encodings in this description are named to match the encodings of CSNEG.
+
+•
+The description of CSNEG gives the operational pseudocode for this instruction.
+
+31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10
+9
+8
+7
+6
+5
+4
+3
+2
+1
+0
+
+sf
+1
+0
+1
+1
+0
+1
+0
+1
+0
+0
+Rm
+!= 111x
+0
+1
+Rn
+Rd
+
+op
+cond
+o2
+
+32-bit (sf == 0)
+
+CNEG <Wd>, <Wn>, <cond>
+
+is equivalent to
+
+CSNEG <Wd>, <Wn>, <Wn>, invert(<cond>)
+
+and is the preferred disassembly when Rn == Rm.
+
+64-bit (sf == 1)
+
+CNEG <Xd>, <Xn>, <cond>
+
+is equivalent to
+
+CSNEG <Xd>, <Xn>, <Xn>, invert(<cond>)
+
+and is the preferred disassembly when Rn == Rm.
+
+Assembler Symbols
+
+<Wd>
+Is the 32-bit name of the general-purpose destination register, encoded in the "Rd" field.
+
+<Wn>
+Is the 32-bit name of the general-purpose source register, encoded in the "Rn" and "Rm" fields.
+
+<Xd>
+Is the 64-bit name of the general-purpose destination register, encoded in the "Rd" field.
+
+<Xn>
+Is the 64-bit name of the general-purpose source register, encoded in the "Rn" and "Rm" fields.
+
+<cond>
+Is one of the standard conditions, excluding AL and NV, encoded in the "cond" field with its least
+significant bit inverted.
+
+Operation
+
+The description of CSNEG gives the operational pseudocode for this instruction.
+
+Operational information
+
+If PSTATE.DIT is 1:
+
+•
+The execution time of this instruction is independent of:
+
+◦
+The values of the data supplied in any of its registers.
+
+◦
+The values of the NZCV flags.
+
+•
+The response of this instruction to asynchronous exceptions does not vary based on:
+
+◦
+The values of the data supplied in any of its registers.
+
+◦
+The values of the NZCV flags.
+
+Internal version only: isa v32.13, AdvSIMD v29.05, pseudocode v2020-12, sve v2020-12 ; Build timestamp: 2020-12-16T16:53
+
+Copyright © 2010-2020 Arm Limited or its affiliates. All rights reserved. This document is Non-Confidential.
+
+CNEG
+Page 107
+
+CSNEG
+
+Conditional Select Negation returns, in the destination register, the value of the first source register if the condition is
+TRUE, and otherwise returns the negated value of the second source register.
+
+This instruction is used by the alias CNEG.
+
+31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10
+9
+8
+7
+6
+5
+4
+3
+2
+1
+0
+
+sf
+1
+0
+1
+1
+0
+1
+0
+1
+0
+0
+Rm
+cond
+0
+1
+Rn
+Rd
+
+op
+o2
+
+32-bit (sf == 0)
+
+CSNEG <Wd>, <Wn>, <Wm>, <cond>
+
+64-bit (sf == 1)
+
+CSNEG <Xd>, <Xn>, <Xm>, <cond>
+
+integer d = UInt(Rd);
+integer n = UInt(Rn);
+integer m = UInt(Rm);
+integer datasize = if sf == '1' then 64 else 32;
+
+Assembler Symbols
+
+<Wd>
+Is the 32-bit name of the general-purpose destination register, encoded in the "Rd" field.
+
+<Wn>
+Is the 32-bit name of the first general-purpose source register, encoded in the "Rn" field.
+
+<Wm>
+Is the 32-bit name of the second general-purpose source register, encoded in the "Rm" field.
+
+<Xd>
+Is the 64-bit name of the general-purpose destination register, encoded in the "Rd" field.
+
+<Xn>
+Is the 64-bit name of the first general-purpose source register, encoded in the "Rn" field.
+
+<Xm>
+Is the 64-bit name of the second general-purpose source register, encoded in the "Rm" field.
+
+<cond>
+Is one of the standard conditions, encoded in the "cond" field in the standard way.
+
+Alias Conditions
+
+Alias
+Is preferred when
+
+CNEG
+cond != '111x' && Rn == Rm
+
+Operation
+
+bits(datasize) result;
+if ConditionHolds(cond) then
+
+result = X[n];
+
+else
+
+result = X[m];
+result = NOT(result);
+result = result + 1;
+
+X[d] = result;
+
+Operational information
+
+If PSTATE.DIT is 1:
+
+•
+The execution time of this instruction is independent of:
+
+◦
+The values of the data supplied in any of its registers.
+
+◦
+The values of the NZCV flags.
+
+•
+The response of this instruction to asynchronous exceptions does not vary based on:
+
+CSNEG
+Page 121
+
+◦
+The values of the data supplied in any of its registers.
+
+◦
+The values of the NZCV flags.
+
+Internal version only: isa v32.13, AdvSIMD v29.05, pseudocode v2020-12, sve v2020-12 ; Build timestamp: 2020-12-16T16:53
+
+Copyright © 2010-2020 Arm Limited or its affiliates. All rights reserved. This document is Non-Confidential.
+
+CSNEG
+Page 122
+
+DC
+
+Data Cache operation. For more information, see op0==0b01, cache maintenance, TLB maintenance, and address
+translation instructions.
+
+This is an alias of SYS. This means:
+
+•
+The encodings in this description are named to match the encodings of SYS.
+
+•
+The description of SYS gives the operational pseudocode for this instruction.
+
+31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10
+9
+8
+7
+// ConditionHolds()
+// ================
+// Return TRUE iff COND currently holds
+
+boolean ConditionHolds(bits(4) cond)
+
+// Evaluate base condition.
+case cond<3:1> of
+
+when '000' result = (PSTATE.Z == '1');                          // EQ or NE
+when '001' result = (PSTATE.C == '1');                          // CS or CC
+when '010' result = (PSTATE.N == '1');                          // MI or PL
+when '011' result = (PSTATE.V == '1');                          // VS or VC
+when '100' result = (PSTATE.C == '1' && PSTATE.Z == '0');       // HI or LS
+when '101' result = (PSTATE.N == PSTATE.V);                     // GE or LT
+when '110' result = (PSTATE.N == PSTATE.V && PSTATE.Z == '0');  // GT or LE
+when '111' result = TRUE;                                       // AL
+
+// Condition flag values in the set '111x' indicate always true
+// Otherwise, invert condition if necessary.
+if cond<0> == '1' && cond != '1111' then
+
+result = !result;
+
+return result;
+
+Library pseudocode for shared/functions/system/ConsumptionOfSpeculativeDataBarrier
+
+EXIT_CODE=0

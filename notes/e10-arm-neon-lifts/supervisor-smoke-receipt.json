@@ -1,0 +1,28 @@
+{
+  "libc_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "language": "AARCH64:LE:64:v8A",
+  "addressing": "relative",
+  "records": [
+    {
+      "symbol": "toascii",
+      "elf_entry": "0x34460",
+      "entry": "0x134460",
+      "size": 8,
+      "bytes_sha256": "62388c778f9cfcb9054360a0f1a21a25bbd435e4a1252e62717010f2d6a31631",
+      "output": "e10_toascii_arm8.v",
+      "output_sha256": "1e5dc8858bf7bc5a85de141d945f8adcb27f8c095917af24b65c37a368fa8509",
+      "instructions": 2,
+      "selected_symbols": [
+        "toascii"
+      ]
+    }
+  ],
+  "profile": "aarch64-neon-q-loads-fixed-z256-v1",
+  "implementation_sha256": {
+    "pcode2coq_scalar.py": "ad08a91cf417ed4f43d00bdadc42bb80a84d457472b0bcdc793fe293041f1a58",
+    "pcode2coq_neon_loads.py": "12063674b1f8fc7e87f5fca572bae95f5ae7f591f671cd8c35f317147673b9ea",
+    "neon_loads_headless.py": "36ade7396b27d505470a704cf7490921b0f4c7fe846c054f16c421e4e7127f62",
+    "lift-neon-loads.py": "2bc894e6b640cc2df27e7a3361a3b70711b9b3f5c69582e037c77c9d8fe502a4"
+  }
+}

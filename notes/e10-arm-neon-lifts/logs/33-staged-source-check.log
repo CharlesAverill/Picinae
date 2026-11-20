@@ -1,0 +1,4 @@
+COMMAND=["git", "diff", "--cached", "--check", "--", ".", ":(exclude)notes/e10-arm-neon-lifts/logs/**"]
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0fa60739
+
+EXIT_CODE=0

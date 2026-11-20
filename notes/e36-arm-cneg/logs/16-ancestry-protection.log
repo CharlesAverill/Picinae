@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ff05d511
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e36-arm-cneg/audit.py
+PASS pinned origin merge-base; exact seven allowed prerequisite commits; only own e36 scope follows e30
+PASS 1043 unchanged protected historical/core/proof/e02/e08/e11/e29/e30 source and evidence hashes
+
+EXIT_CODE=0

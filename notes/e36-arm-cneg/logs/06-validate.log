@@ -1,0 +1,146 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ff05d511
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e36-arm-cneg/validate.py --run validate01
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/__memchr_nosimd", "--global-addressing", "__memchr_nosimd"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/__memchr_nosimd
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/6ef67ec059564bb3a2d978f1fdd917aa.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/strcmp", "--global-addressing", "strcmp"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/strcmp
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/764e99626783435c900a04f87c8266b2.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/__strlen_asimd", "--global-addressing", "__strlen_asimd"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __strlen_asimd 0x19c9e0 ldp q1,q2,[x1, #0x20]!: unmodeled register q1 (base z1); raw pcode: (register, 0x4008, 8) INT_ADD (register, 0x4008, 8) , (const, 0x20, 8); (register, 0x5020, 16) LOAD (const, 0x1b1, 8) , (register, 0x4008, 8); (register, 0x5030, 8) COPY (const, 0x0, 8); (register, 0x5038, 8) COPY (const, 0x0, 8); (unique, 0xca600, 8) INT_ADD (register, 0x4008, 8) , (const, 0x10, 8); (register, 0x5040, 16) LOAD (const, 0x1b1, 8) , (unique, 0xca600, 8); (regis; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/e4d23e2cc939411aa48b8e3984d0b66e.log
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/wcschrnul", "--global-addressing", "wcschrnul"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/wcschrnul
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/27a2202629ea4b30abaa010bf8e6322c.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/memcmp", "--global-addressing", "memcmp"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: memcmp 0x194780 ldr q0,[x0, #0x10]: unmodeled register q0 (base z0); raw pcode: (unique, 0x6600, 8) INT_ADD (register, 0x4000, 8) , (const, 0x10, 8); (register, 0x5000, 16) LOAD (const, 0x1b1, 8) , (unique, 0x6600, 8); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/b8b8ab1408f34f1cbbcd2879bc658ad8.log
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/sigandset", "--global-addressing", "sigandset"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigandset 0x13b504 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/31ef50287e8f4bcda3ea9464054e4631.log
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/sigorset", "--global-addressing", "sigorset"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigorset 0x13b554 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/9f01c933a9d743d89564fa95322dd095.log
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/sigaddset", "--global-addressing", "sigaddset"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigaddset 0x13b2f4 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/eaff1ee541844c318b6eef8f3d2c3e51.log
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/sigdelset", "--global-addressing", "sigdelset"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigdelset 0x13b354 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/37ef0a23567e42be88936d410a1d5297.log
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/sigismember", "--global-addressing", "sigismember"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigismember 0x13b388 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/0cc6e6e43674418891d57b81b4cfb56b.log
+EXIT_CODE=1
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-0", "--global-addressing", "__drand48_iterate"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-0
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/b51a96875568470cae788643ab58b4d8.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-1", "--global-addressing", "__memset_emag"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-1
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/3b74901aff024f0c90af9e425991c1e9.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-2", "--global-addressing", "a64l"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-2
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/638ade8a8bd04017baeaf8baf8724d33.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-3", "--global-addressing", "cfmakeraw"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-3
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/bd24c8ad760b4f91954f02e302f6bcc4.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-4", "--global-addressing", "insque"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-4
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/ecb64ac6fd42447b80edc315a80facc7.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-5", "--global-addressing", "lcong48_r"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-5
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/2d44fae36cae4ae394eb7a0c03498ce8.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-6", "--global-addressing", "mempcpy", "__memcpy_generic"]
+PASS 2 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-6
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/593db596d21841298b4adb6e786455bf.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-7", "--global-addressing", "remque"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-7
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/49e8fed9ad72416cb303f8c47b736745.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-8", "--global-addressing", "seed48", "seed48_r"]
+PASS 2 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-8
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/038a821d1023467b83c6b10ef3ed2851.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-9", "--global-addressing", "sigabbrev_np"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-9
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/c1857a8be7ff4e1fa29960950ee25a18.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-10", "--global-addressing", "sigdescr_np"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-10
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/7128b28deb644e39aa9884e25576ec27.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-11", "--global-addressing", "srand48_r"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-11
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/078fed12fb5a42e0850257e4083382f0.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-12", "--global-addressing", "__memmove_generic", "__memcpy_generic"]
+PASS 2 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-12
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/0b2ecfd37e1c462b80d7115cf41d1cdf.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-smoke", "toascii", "div", "ldiv", "swab", "ffs", "ffsl"]
+PASS 6 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reference-smoke
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/01ed1eafc8464dc2874199cfe0d728d6.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/e29-inet_makeaddr", "--global-addressing", "inet_makeaddr"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/e29-inet_makeaddr
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/2b9136e743c948bfb1af74a241d5e2a2.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/e29-rand_r", "--global-addressing", "rand_r"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/e29-rand_r
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/e6b311f2d52b4237900b2acdbab961f4.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/e30-__memchr_nosimd", "--global-addressing", "__memchr_nosimd"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/e30-__memchr_nosimd
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/f31bccdb840b4f86acde986a39df2c41.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/e30-strcmp", "--global-addressing", "strcmp"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/e30-strcmp
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/d45f26aeab73415ca7d844f5f21692ae.log
+EXIT_CODE=0
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/e30-wcschrnul", "--global-addressing", "wcschrnul"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/e30-wcschrnul
+Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/6c4393dc3cbf48e5957e3688c25ab0b6.log
+EXIT_CODE=0
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py', '--state', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra', '--out', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reject-symbol', 'toascii', 'e11_symbol_does_not_exist']
+FAIL Ghidra script failed: ValueError: e11_symbol_does_not_exist: expected one nonempty FUNC extent, found set(); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/dd7f7e867f8c480fbc449075a650c2b4.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py', '--state', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra', '--out', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reject-relative-call', 'mempcpy']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: mempcpy: direct edge outside selected extent(s): 0x19ab40; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/32802a0cfad6461d966113ce0895e2d5.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py', '--state', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra', '--out', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reject-instruction-asimd', 'toascii', '__memcpy_simd']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_simd 0x19ade4 ldr q0,[x1]: unmodeled register q0 (base z0); raw pcode: (unique, 0x6880, 8) COPY (register, 0x4008, 8); (register, 0x5000, 16) LOAD (const, 0x1b1, 8) , (unique, 0x6880, 8); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/43c2f43011214da69a15ccae02edd3d9.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py', '--state', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra', '--out', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reject-instruction-tls', 'toascii', 'sigaddset']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigaddset 0x13b2f4 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/54b0380aba6d4db4b063fe7ab7b3f27b.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py', '--state', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra', '--out', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reject-instruction-zva', 'toascii', '__memset_generic']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memset_generic 0x19bfc4 dup v0.16B,w1: unmodeled instruction dup v0.16B,w1; raw pcode: (unique, 0x86d00, 1) COPY (register, 0x4008, 1); (register, 0x5000, 1) COPY (unique, 0x86d00, 1); (register, 0x5001, 1) COPY (unique, 0x86d00, 1); (register, 0x5002, 1) COPY (unique, 0x86d00, 1); (register, 0x5003, 1) COPY (unique, 0x86d00, 1); (register, 0x5004, 1) COPY (unique, 0x86d00, 1); (register, 0x5005, 1) COPY (unique, 0x86d00, 1); (register, 0x5006, 1) COPY (unique, 0x; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/35338c9205ed4accb044f0da6e03cf9a.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py', '--state', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra', '--out', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reject-instruction-sve', 'toascii', '__memcpy_a64fx']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_a64fx 0x19bc40 cntb x7: unmodeled instruction cntb x7; raw pcode: (register, 0x4038, 8) CALLOTHER (const, 0x150, 4) , (register, 0x4038, 8) , (const, 0x1f, 1) , (const, 0x1, 1); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/98e0433c14c7436eafb8ac19f5b8a0c3.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py', '--state', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra', '--out', '/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reject-instruction-mte', 'toascii', '__strlen_mte']
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __strlen_mte 0x19c8cc ld1 {v0.16B},[x1]: unmodeled instruction ld1 {v0.16B},[x1]; raw pcode: (register, 0x3104, 8) COPY (register, 0x4008, 8); (register, 0x5000, 1) LOAD (const, 0x1b1, 8) , (register, 0x3104, 8); (register, 0x3104, 8) INT_ADD (register, 0x3104, 8) , (const, 0x1, 8); (register, 0x5001, 1) LOAD (const, 0x1b1, 8) , (register, 0x3104, 8); (register, 0x3104, 8) INT_ADD (register, 0x3104, 8) , (const, 0x1, 8); (register, 0x5002, 1) LOAD (const, 0x1b1, 8) ; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/437d0f992a8e400598f61124e5668ed3.log
+EXPECTED_EXIT=1 ACTUAL_EXIT=1
+COMMAND=['/home/charles/miniconda3/bin/python3', '-c', 'import sys; sys.path.insert(0, \'/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter\'); from test_scalar import *; ScalarLifter(Language()).instruction(Insn("mov",Op("CALLOTHER",None,VN("constant",0,4))))']
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/pcode2coq_scalar.py", line 541, in instruction
+    raise Unsupported(f'unmodeled op {op.getMnemonic()}')
+pcode2coq_scalar.Unsupported: unmodeled op CALLOTHER
+EXPECTED_OPCODE_EXIT=1 ACTUAL_EXIT=1
+PASS seven failing batches and unsupported-op subprocess: nonzero, no accepted or partial output
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-ff05d511/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra", "--out", "/home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/reject-new-mixed", "--global-addressing", "memcmp", "__strlen_asimd"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: memcmp 0x194780 ldr q0,[x0, #0x10]: unmodeled register q0 (base z0); raw pcode: (unique, 0x6600, 8) INT_ADD (register, 0x4000, 8) , (const, 0x10, 8); (register, 0x5000, 16) LOAD (const, 0x1b1, 8) , (unique, 0x6600, 8); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e36-arm-cneg/validate01/ghidra/logs/7b8752598621434eb36b2a40337f539b.log
+EXIT_CODE=1
+PASS fresh targets, all e30/e29/e08/e11 prerequisite artifacts, metadata deltas, and eight atomic failure batches
+
+EXIT_CODE=0

@@ -1,0 +1,8 @@
+{
+  "url": "https://documentation-service.arm.com/static/6023d61995978b529036da45",
+  "sha256": "89973c3d41fe5f45cc8581ff41db7c8736d3f2b6d7bb6568112a3c3ac81cb845",
+  "version": "Arm A64 ISA isa v32.13 / pseudocode v2020-12; build 2020-12-16T16:53",
+  "source": "Unchanged e30/e36-pinned official PDF and extracted text in /tmp/e29-arm-isa.pdf and /tmp/e29-arm-isa.txt",
+  "reviewed_text": {"LDP_SIMD_FP": [86714,86995], "LDR_immediate_SIMD_FP": [86996,87400], "LDR_register_SIMD_FP": [87401,87690]},
+  "boundary": "Enabled AdvSIMD, accessible canonical ordinary memory and appropriate SP/data alignment are external hardware prerequisites. Finite IL checks use total bytewise modular memory, no fault/partial-progress/concurrency/hardware refinement guarantee. Z256 is the fixed pinned Ghidra/Picinae profile, not arbitrary SVE VL."
+}

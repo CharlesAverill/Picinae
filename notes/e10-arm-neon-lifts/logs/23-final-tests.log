@@ -1,0 +1,12 @@
+COMMAND=["python3", "tools/ghidra-lifter/test_neon_loads.py"]
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0fa60739
+...
+----------------------------------------------------------------------
+Ran 3 tests in 3.433s
+
+OK
+PASS 126 exact encoding shapes; 4536 full-register/memory/ordered-load snapshots
+PASS 10794 malformed encoding/DAG/width/order mutations; scalar default still rejects all Q forms
+PASS alpha-renamed temps, Z metadata mismatch, coherent D64/Q128 views
+
+EXIT_CODE=0

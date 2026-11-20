@@ -1,0 +1,9 @@
+{
+  "url": "https://documentation-service.arm.com/static/6023d61995978b529036da45",
+  "sha256": "89973c3d41fe5f45cc8581ff41db7c8736d3f2b6d7bb6568112a3c3ac81cb845",
+  "version": "Arm A64 ISA isa v32.13 / pseudocode v2020-12; build 2020-12-16T16:53",
+  "reviewed_pages": {"CNEG": [107], "CSNEG": [121,122], "ConditionHolds": "shared/functions/system/ConditionHolds, lines312682-312707"},
+  "source": "Read pinned official PDF and corresponding text already supplied locally by e29/e30; no changes to either file.",
+  "commands": ["sha256sum /tmp/e29-arm-isa.pdf", "sed -n 8713,8830p /tmp/e29-arm-isa.txt", "sed -n 9893,10040p /tmp/e29-arm-isa.txt", "sed -n 312682,312708p /tmp/e29-arm-isa.txt"],
+  "exit_codes": [0,0,0,0]
+}

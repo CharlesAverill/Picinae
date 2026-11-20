@@ -1,0 +1,25 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ff05d511
+COMMAND=bash --noprofile --norc -e -c export\ PYTHONDONTWRITEBYTECODE=1\;\ python3\ notes/e08-arm-lifts/check-harness.py\;\ python3\ notes/e08-arm-lifts/check-artifacts.py
+EXPECTED_REJECTION dangling CALL: 0x194a60 -> 0x19ab40
+EXPECTED_REJECTION unclosed indirect transfer at 0x1000:  ---  BRANCHIND (register, 0x4000, 8)
+EXPECTED_REJECTION dangling machine fallthrough at 0x1000
+EXPECTED_REJECTION dangling call return site at 0x1000
+PASS actual memcpy+mempcpy closure and four unclosed maps rejected
+PASS e08___drand48_iterate_arm8 27 instructions; 1 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08___memset_emag_arm8 56 instructions; 6 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08_a64l_arm8 19 instructions; 1 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08_cfmakeraw_arm8 15 instructions; 1 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08_insque_arm8 8 instructions; 1 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08_lcong48_r_arm8 18 instructions; 1 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08_mempcpy_arm8 108 instructions; 8 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08___memcpy_generic_arm8 108 instructions; 8 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08_remque_arm8 6 instructions; 1 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08_seed48_arm8 30 instructions; 2 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08_seed48_r_arm8 30 instructions; 2 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08_sigabbrev_np_arm8 8 instructions; 2 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08_sigdescr_np_arm8 8 instructions; 2 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08_srand48_r_arm8 13 instructions; 1 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS e08___memmove_generic_arm8 154 instructions; 9 RETURN sites; naming-only hash/ELF bytes/closed edges/data
+PASS all published file hashes and full e02 port accounting
+
+EXIT_CODE=0

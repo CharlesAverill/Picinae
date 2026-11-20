@@ -1,0 +1,574 @@
+{
+  "addressing": "global",
+  "aliases_same_entry_extent": [
+    "__GI___memset_emag",
+    "__memset_emag"
+  ],
+  "build_id": "977c021c364ee3c495c0e5f2375bf6ba2124a6da",
+  "closure": {
+    "closed": true,
+    "direct_and_fallthrough_edges": [
+      {
+        "kind": "fallthrough",
+        "source": "0x19c300",
+        "target": "0x19c304"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c304",
+        "target": "0x19c308"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c308",
+        "target": "0x19c30c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c30c",
+        "target": "0x19c310"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c310",
+        "target": "0x19c314"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c314",
+        "target": "0x19c318"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x19c318",
+        "target": "0x19c3a0"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c318",
+        "target": "0x19c31c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c31c",
+        "target": "0x19c320"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x19c320",
+        "target": "0x19c360"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c320",
+        "target": "0x19c324"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x19c324",
+        "target": "0x19c338"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c324",
+        "target": "0x19c328"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c328",
+        "target": "0x19c32c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c32c",
+        "target": "0x19c330"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c334",
+        "target": "0x19c338"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x19c338",
+        "target": "0x19c348"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c338",
+        "target": "0x19c33c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c33c",
+        "target": "0x19c340"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c340",
+        "target": "0x19c344"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x19c348",
+        "target": "0x19c358"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c348",
+        "target": "0x19c34c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c34c",
+        "target": "0x19c350"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x19c350",
+        "target": "0x19c358"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c350",
+        "target": "0x19c354"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c354",
+        "target": "0x19c358"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c35c",
+        "target": "0x19c360"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c360",
+        "target": "0x19c364"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x19c364",
+        "target": "0x19c380"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c364",
+        "target": "0x19c368"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c368",
+        "target": "0x19c36c"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x19c36c",
+        "target": "0x19c378"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c36c",
+        "target": "0x19c370"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c370",
+        "target": "0x19c374"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c374",
+        "target": "0x19c378"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c37c",
+        "target": "0x19c380"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c380",
+        "target": "0x19c384"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c384",
+        "target": "0x19c388"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c388",
+        "target": "0x19c38c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c38c",
+        "target": "0x19c390"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c390",
+        "target": "0x19c394"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c398",
+        "target": "0x19c39c"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c39c",
+        "target": "0x19c3a0"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3a0",
+        "target": "0x19c3a4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3a4",
+        "target": "0x19c3a8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3a8",
+        "target": "0x19c3ac"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3ac",
+        "target": "0x19c3b0"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3b0",
+        "target": "0x19c3b4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3b4",
+        "target": "0x19c3b8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3b8",
+        "target": "0x19c3bc"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3bc",
+        "target": "0x19c3c0"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3c0",
+        "target": "0x19c3c4"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x19c3c4",
+        "target": "0x19c3b0"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3c4",
+        "target": "0x19c3c8"
+      },
+      {
+        "kind": "CBRANCH",
+        "source": "0x19c3c8",
+        "target": "0x19c3d4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3c8",
+        "target": "0x19c3cc"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3cc",
+        "target": "0x19c3d0"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3d0",
+        "target": "0x19c3d4"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3d4",
+        "target": "0x19c3d8"
+      },
+      {
+        "kind": "fallthrough",
+        "source": "0x19c3d8",
+        "target": "0x19c3dc"
+      }
+    ],
+    "indirect_nonreturn_edges": [],
+    "meaning": "finite selected machine map closes all direct edges and fallthroughs; RETURN remains caller ABI boundary",
+    "returns": [
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x19c330"
+      },
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x19c344"
+      },
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x19c358"
+      },
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x19c378"
+      },
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x19c394"
+      },
+      {
+        "pcode": " ---  RETURN (register, 0x0, 8)",
+        "source": "0x19c3dc"
+      }
+    ]
+  },
+  "data": {
+    "analysis": "ADR(P)+ADD object references plus complete raw memory instruction list; manual target review required, no invented constants",
+    "contract": "Map ELF virtual data addresses to model addresses by +0x100000. Runtime memory must supply these bytes/state and any relocated pointer targets; generated program does not initialize memory.",
+    "materialized_objects": [],
+    "memory_accesses": [
+      {
+        "assembly": "str x1,[x0]",
+        "instruction": "0x19c328",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6800, 8) , (register, 0x4008, 8)"
+        ]
+      },
+      {
+        "assembly": "stur x1,[x4, #-0x8]",
+        "instruction": "0x19c32c",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6980, 8) , (unique, 0x3b180, 8)"
+        ]
+      },
+      {
+        "assembly": "str w1,[x0]",
+        "instruction": "0x19c33c",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6780, 8) , (register, 0x4008, 4)"
+        ]
+      },
+      {
+        "assembly": "stur w1,[x4, #-0x4]",
+        "instruction": "0x19c340",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6980, 8) , (unique, 0x3a680, 4)"
+        ]
+      },
+      {
+        "assembly": "strb w1,[x0]",
+        "instruction": "0x19c34c",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6680, 8) , (unique, 0x3a980, 1)"
+        ]
+      },
+      {
+        "assembly": "sturh w1,[x4, #-0x2]",
+        "instruction": "0x19c354",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x6980, 8) , (unique, 0x3b100, 2)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x0]",
+        "instruction": "0x19c360",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7c00, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x4, #-0x10]",
+        "instruction": "0x19c368",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x0, #0x10]",
+        "instruction": "0x19c370",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x4, #-0x20]",
+        "instruction": "0x19c374",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x0, #0x10]",
+        "instruction": "0x19c380",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x0, #0x20]",
+        "instruction": "0x19c384",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x0, #0x30]",
+        "instruction": "0x19c388",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x4, #-0x20]",
+        "instruction": "0x19c38c",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x4, #-0x10]",
+        "instruction": "0x19c390",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x0]",
+        "instruction": "0x19c3a0",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7c00, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x3, #0x10]",
+        "instruction": "0x19c3b0",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x3, #0x20]",
+        "instruction": "0x19c3b4",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x3, #0x30]",
+        "instruction": "0x19c3b8",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x3, #0x40]!",
+        "instruction": "0x19c3bc",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (register, 0x4018, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x3, #0x10]",
+        "instruction": "0x19c3cc",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x3, #0x20]",
+        "instruction": "0x19c3d0",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x4, #-0x20]",
+        "instruction": "0x19c3d4",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      },
+      {
+        "assembly": "stp x1,x1,[x4, #-0x10]",
+        "instruction": "0x19c3d8",
+        "pcode": [
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x7b80, 8) , (unique, 0x3a500, 8)",
+          " ---  STORE (const, 0x1b1, 8) , (unique, 0x3a600, 8) , (unique, 0x3a580, 8)"
+        ]
+      }
+    ],
+    "staticMemory": false
+  },
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "elf_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "generated_program": "e08___memset_emag_arm8",
+  "generated_program_sha256": "d88c12780e15542ee4a78674e9621deab12a58e415382ee50914b116b8cec8a8",
+  "image_base": "0x100000",
+  "implementation_sha256": {
+    "lift-scalar.py": "1bdf6ec35946c220dc07fc4963efc37b7cb3f150e0f77ccfbcfecd2e74828909",
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "scalar_headless.py": "4aab6945ece18c558f2b1dc397a31a8333a8e380dcaf29630168472e1fe7bcd3"
+  },
+  "instruction_count": 56,
+  "limits": "Generated scalar IL and typing only; no functional correctness, termination, equivalence to historical lifts, or lifter soundness claim.",
+  "naming_adapter": {
+    "new": "e08___memset_emag_arm8",
+    "occurrence_count": 2,
+    "old": "e11___memset_emag_arm8",
+    "operation": "identifier substitution only"
+  },
+  "naming_closure_harness_sha256": "fdfce3192d5670367686ff78a4606197c83df74f817945cf653819f2f83165a5",
+  "original_program_sha256": "2764977ed3ff0a7014e2487db81b8acd63c8a7be9f54deec6ee878e96e161500",
+  "pcode_sha256": "c8ee5b42a91c29bff345d5bc517c07def6517770b9ce2c01bc5b0232f08ebe36",
+  "record": {
+    "bytes_sha256": "26c1fd27577ac3a2ab9e44a418f0119d42f2e47f6d606c071c614f99d1ed8fd2",
+    "elf_entry": "0x9c300",
+    "entry": "0x19c300",
+    "instructions": 56,
+    "output": "e11___memset_emag_arm8.v",
+    "output_sha256": "2764977ed3ff0a7014e2487db81b8acd63c8a7be9f54deec6ee878e96e161500",
+    "selected_symbols": [
+      "__memset_emag"
+    ],
+    "size": 224,
+    "symbol": "__memset_emag"
+  },
+  "schema": 1,
+  "selected_symbols": [
+    "__memset_emag"
+  ],
+  "symbol": "__memset_emag"
+}

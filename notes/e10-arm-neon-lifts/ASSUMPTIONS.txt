@@ -1,0 +1,13 @@
+Raw complete output: logs/31-assumptions.log, EXIT_CODE=0.
+
+welltyped and closed_welltyped (two typing facts), verbatim:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+finite_execution_0 .. finite_execution_27, finite_closed_execution (29 finite facts), each verbatim:
+Closed under the global context
+
+Inherited functional extensionality from Picinae typing automation; no new assumption declaration.
+No universal instruction theorem, hardware theorem or function correctness theorem. Their assumptions: N/A.

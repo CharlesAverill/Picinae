@@ -1,0 +1,8 @@
+e36_cneg.finite_execution_0 through finite_execution_230 each print:
+Closed under the global context
+
+e36_cneg.welltyped prints:
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g

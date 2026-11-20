@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9d096d
+COMMAND=cmp Examples/claude/lifter/scalar_ccmp/RAW.json /home/charles/code/friends/.toolchains/e30-arm-ccmp/raw03/raw.json
+
+EXIT_CODE=0
