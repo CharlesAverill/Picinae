@@ -1,0 +1,695 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5f10d9a4
+COMMAND=bash notes/r42-port-mask-fix/check-assumptions.sh
+port_set_welltyped
+     : Picinae_armv6m.Statics_ARMv6M.welltyped_prog
+         Picinae_armv6m.armv6mtypctx
+         ulSetInterruptMask_armv6m.ulSetInterruptMask_prog
+Closed under the global context
+port_clear_welltyped
+     : Picinae_armv6m.Statics_ARMv6M.welltyped_prog
+         Picinae_armv6m.armv6mtypctx
+         vClearInterruptMask_armv6m.vClearInterruptMask_prog
+Closed under the global context
+mask_set_result_frame
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       mask_set_frame s (mask_set_result s)
+Closed under the global context
+mask_clear_result_frame
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       mask_clear_frame s (mask_clear_result s)
+Closed under the global context
+mask_set_result_post
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       mask_set_postcondition s (mask_set_result s)
+Closed under the global context
+mask_clear_result_post
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       mask_clear_postcondition s (mask_clear_result s)
+Closed under the global context
+mask_input_store_typed
+     : forall m arg sp : BinNums.N,
+       BinNat.N.lt m
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNat.N.mul
+               (BinNums.Npos
+                  (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))
+               (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))) ->
+       BinNat.N.lt arg
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt sp
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx
+         (mask_input_store m arg sp)
+Closed under the global context
+mask_entry_witness
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store) (p h lr : BinNums.N),
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       BinNat.N.lt p (BinNums.Npos (BinNums.xO BinNums.xH)) ->
+       BinNat.N.lt h (BinNums.Npos (BinNums.xO BinNums.xH)) ->
+       BinNat.N.odd lr = true ->
+       BinNat.N.lt lr
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (BinNums.xI ...)))))))))))))))))))) ->
+       mask_entry (mask_entry_store s p h lr) /\
+       mask_entry_store s p h lr Picinae_armv6m.S_PRIMASK = p /\
+       mask_entry_store s p h lr Picinae_armv6m.V_MEM32 =
+       s Picinae_armv6m.V_MEM32 /\
+       mask_entry_store s p h lr Picinae_armv6m.R_R0 = s Picinae_armv6m.R_R0 /\
+       mask_entry_store s p h lr Picinae_armv6m.R_SP = s Picinae_armv6m.R_SP
+Closed under the global context
+mask_both_bits_inhabited
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store) (h lr : BinNums.N),
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       BinNat.N.lt h (BinNums.Npos (BinNums.xO BinNums.xH)) ->
+       BinNat.N.odd lr = true ->
+       BinNat.N.lt lr
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...))))))))))))))))))))) ->
+       mask_entry (mask_entry_store s BinNums.N0 h lr) /\
+       mask_entry (mask_entry_store s (BinNums.Npos BinNums.xH) h lr)
+Closed under the global context
+mask_reset_same
+     : forall s : Picinae_armv6m.ARMv6MArch.store,
+       Picinae_armv6m.IL_ARMv6M.reset_temps s s = s
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+mask_reset_update
+     : forall (s : Picinae_armv6m.ARMv6MArch.store)
+         (v : Picinae_armv6m.armv6mvar) (n w : BinNums.N),
+       Picinae_armv6m.armv6mtypctx v = Some w ->
+       Picinae_armv6m.IL_ARMv6M.reset_temps s (Picinae_core.update s v n) =
+       Picinae_core.update s v n
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+mask_set_lookup_mrs
+     : forall s : Picinae_armv6m.armv6mvar -> BinNums.N,
+       s Picinae_armv6m.S_CONTROL_NPRIV = BinNums.N0 ->
+       ulSetInterruptMask_armv6m.ulSetInterruptMask_prog s
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       Some
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)), mask_mrs_stmt)
+Closed under the global context
+mask_set_lookup_cps
+     : forall s : Picinae_armv6m.armv6mvar -> BinNums.N,
+       s Picinae_armv6m.S_CONTROL_NPRIV = BinNums.N0 ->
+       ulSetInterruptMask_armv6m.ulSetInterruptMask_prog s
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       Some (BinNums.Npos (BinNums.xO BinNums.xH), mask_cps_stmt)
+Closed under the global context
+mask_clear_lookup_msr
+     : forall s : Picinae_armv6m.armv6mvar -> BinNums.N,
+       s Picinae_armv6m.S_CONTROL_NPRIV = BinNums.N0 ->
+       vClearInterruptMask_armv6m.vClearInterruptMask_prog s
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       Some
+         (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH)), mask_msr_stmt)
+Closed under the global context
+mask_set_lookup_bx
+     : forall s : Picinae_armv6m.armv6mvar -> BinNums.N,
+       s Picinae_armv6m.S_CONTROL_NPRIV = BinNums.N0 ->
+       BinNat.N.lt (s Picinae_armv6m.R_LR)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...)))))))))))))))))))))) ->
+       ulSetInterruptMask_armv6m.ulSetInterruptMask_prog s
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xI
+                  (BinNums.xI
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       Some (BinNums.Npos (BinNums.xO BinNums.xH), mask_bx_stmt)
+Closed under the global context
+mask_clear_lookup_bx
+     : forall s : Picinae_armv6m.armv6mvar -> BinNums.N,
+       s Picinae_armv6m.S_CONTROL_NPRIV = BinNums.N0 ->
+       BinNat.N.lt (s Picinae_armv6m.R_LR)
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xI
+                                 (BinNums.xI
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xI
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xI (...)))))))))))))))))))))) ->
+       vClearInterruptMask_armv6m.vClearInterruptMask_prog s
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xI
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))) =
+       Some (BinNums.Npos (BinNums.xO BinNums.xH), mask_bx_stmt)
+Closed under the global context
+mask_set_code_stable
+     : forall s t : Picinae_armv6m.armv6mvar -> BinNums.N,
+       s Picinae_armv6m.S_CONTROL_NPRIV = t Picinae_armv6m.S_CONTROL_NPRIV ->
+       s Picinae_armv6m.R_LR = t Picinae_armv6m.R_LR ->
+       forall a : Picinae_core.addr,
+       ulSetInterruptMask_armv6m.ulSetInterruptMask_prog s a =
+       ulSetInterruptMask_armv6m.ulSetInterruptMask_prog t a
+Closed under the global context
+mask_clear_code_stable
+     : forall s t : Picinae_armv6m.armv6mvar -> BinNums.N,
+       s Picinae_armv6m.S_CONTROL_NPRIV = t Picinae_armv6m.S_CONTROL_NPRIV ->
+       s Picinae_armv6m.R_LR = t Picinae_armv6m.R_LR ->
+       forall a : Picinae_core.addr,
+       vClearInterruptMask_armv6m.vClearInterruptMask_prog s a =
+       vClearInterruptMask_armv6m.vClearInterruptMask_prog t a
+Closed under the global context
+mask_privileged_eval
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       s Picinae_armv6m.S_CONTROL_NPRIV = BinNums.N0 ->
+       Picinae_armv6m.IL_ARMv6M.eval_exp Picinae_armv6m.armv6mtypctx s
+         Picinae_armv6m.armv6m_privileged (BinNums.Npos BinNums.xH)
+         (BinNums.Npos BinNums.xH)
+Closed under the global context
+mask_mrs_exec
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       s Picinae_armv6m.S_CONTROL_NPRIV = BinNums.N0 ->
+       Picinae_armv6m.IL_ARMv6M.exec_stmt Picinae_armv6m.armv6mtypctx s
+         mask_mrs_stmt
+         (Picinae_core.update Picinae_armv6m.armv6mtypctx Picinae_armv6m.R_R0
+            (Some
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))))
+         (mask_set_mrs s) None
+Closed under the global context
+mask_write_exec
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (e : Picinae_armv6m.IL_ARMv6M.exp) (n : BinNums.N),
+       Picinae_armv6m.Statics_ARMv6M.models Picinae_armv6m.armv6mtypctx s ->
+       s Picinae_armv6m.S_CONTROL_NPRIV = BinNums.N0 ->
+       Picinae_armv6m.IL_ARMv6M.eval_exp Picinae_armv6m.armv6mtypctx s e n
+         (BinNums.Npos BinNums.xH) ->
+       Picinae_armv6m.IL_ARMv6M.exec_stmt Picinae_armv6m.armv6mtypctx s
+         (Picinae_armv6m.armv6m_write_primask e)
+         (Picinae_core.update Picinae_armv6m.armv6mtypctx
+            Picinae_armv6m.S_PRIMASK (Some (BinNums.Npos BinNums.xH)))
+         (Picinae_core.update s Picinae_armv6m.S_PRIMASK n) None
+Closed under the global context
+mask_bx_exec
+     : forall s : Picinae_armv6m.armv6mvar -> BinNums.N,
+       BinNat.N.odd (s Picinae_armv6m.R_LR) = true ->
+       Picinae_armv6m.IL_ARMv6M.exec_stmt Picinae_armv6m.armv6mtypctx s
+         mask_bx_stmt Picinae_armv6m.armv6mtypctx s
+         (Some (Picinae_core.Addr (mask_return s)))
+Closed under the global context
+mask_move_step
+     : forall
+         (p : Picinae_armv6m.ARMv6MArch.store ->
+              Picinae_core.addr ->
+              option (BinNums.N * Picinae_armv6m.IL_ARMv6M.stmt))
+         (a : Picinae_core.addr) (sz : BinNums.N)
+         (s : Picinae_armv6m.ARMv6MArch.store)
+         (v : Picinae_armv6m.ARMv6MArch.var) (n w : BinNums.N)
+         (e : Picinae_armv6m.IL_ARMv6M.exp),
+       p s a = Some (sz, Picinae_armv6m.IL_ARMv6M.Move v e) ->
+       Picinae_armv6m.armv6mtypctx v = Some w ->
+       Picinae_armv6m.IL_ARMv6M.eval_exp Picinae_armv6m.armv6mtypctx s e n w ->
+       Picinae_armv6m.IL_ARMv6M.can_step p
+         (Picinae_core.Addr (BinNat.N.add a sz), Picinae_core.update s v n,
+          (Picinae_core.Addr a, s))
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+mask_return_step
+     : forall
+         (p : (Picinae_armv6m.armv6mvar -> BinNums.N) ->
+              Picinae_core.addr ->
+              option (BinNums.N * Picinae_armv6m.IL_ARMv6M.stmt))
+         (a : Picinae_core.addr) (s : Picinae_armv6m.armv6mvar -> BinNums.N),
+       p s a = Some (BinNums.Npos (BinNums.xO BinNums.xH), mask_bx_stmt) ->
+       BinNat.N.odd (s Picinae_armv6m.R_LR) = true ->
+       Picinae_armv6m.IL_ARMv6M.can_step p
+         (Picinae_core.Addr (mask_return s), s, (Picinae_core.Addr a, s))
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+mask_step_unique
+     : forall
+         (p : Picinae_armv6m.ARMv6MArch.store ->
+              Picinae_core.addr ->
+              option (BinNums.N * Picinae_armv6m.IL_ARMv6M.stmt))
+         (a : Picinae_core.addr) (s : Picinae_armv6m.ARMv6MArch.store)
+         (sz : BinNums.N) (q : Picinae_armv6m.IL_ARMv6M.stmt)
+         (c' : Picinae_armv6m.ARMv6MArch.typctx)
+         (s' : Picinae_armv6m.ARMv6MArch.store)
+         (x : option Picinae_core.exit),
+       p s a = Some (sz, q) ->
+       Picinae_armv6m.IL_ARMv6M.forall_exps_in_stmt
+         Picinae_armv6m.IL_ARMv6M.not_unknown q ->
+       Picinae_armv6m.IL_ARMv6M.exec_stmt Picinae_armv6m.armv6mtypctx s q c'
+         s' x ->
+       forall z : Picinae_core.exit * Picinae_armv6m.ARMv6MArch.store,
+       Picinae_armv6m.IL_ARMv6M.can_step p (z, (Picinae_core.Addr a, s)) ->
+       z =
+       (Picinae_core.exitof (BinNat.N.add a sz) x,
+        Picinae_armv6m.IL_ARMv6M.reset_temps s s')
+Closed under the global context
+mask_set_execution
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       mask_entry s ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         ulSetInterruptMask_armv6m.ulSetInterruptMask_prog
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+          mask_set_mrs s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+           s)) /\
+       Picinae_armv6m.IL_ARMv6M.can_step
+         ulSetInterruptMask_armv6m.ulSetInterruptMask_prog
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xI
+                     (BinNums.xI
+                        (BinNums.xO
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+          mask_set_result s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+           mask_set_mrs s)) /\
+       Picinae_armv6m.IL_ARMv6M.can_step
+         ulSetInterruptMask_armv6m.ulSetInterruptMask_prog
+         (Picinae_core.Addr (mask_return s), mask_set_result s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xI
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+           mask_set_result s)) /\
+       mask_set_postcondition s (mask_set_result s)
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+mask_clear_execution
+     : forall s : Picinae_armv6m.IL_ARMv6M.store,
+       mask_entry s ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         vClearInterruptMask_armv6m.vClearInterruptMask_prog
+         (Picinae_core.Addr
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xI
+                        (BinNums.xI
+                           (BinNums.xI
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+          mask_clear_result s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+           s)) /\
+       Picinae_armv6m.IL_ARMv6M.can_step
+         vClearInterruptMask_armv6m.vClearInterruptMask_prog
+         (Picinae_core.Addr (mask_return s), mask_clear_result s,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+           mask_clear_result s)) /\
+       mask_clear_postcondition s (mask_clear_result s)
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+ulSetInterruptMask_correct
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (s1 s2 s3 : Picinae_armv6m.ARMv6MArch.store)
+         (x1 x2 x3 : Picinae_core.exit),
+       mask_entry s ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         ulSetInterruptMask_armv6m.ulSetInterruptMask_prog
+         (x1, s1,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xO
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+           s)) ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         ulSetInterruptMask_armv6m.ulSetInterruptMask_prog (
+         x2, s2, (x1, s1)) ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         ulSetInterruptMask_armv6m.ulSetInterruptMask_prog (
+         x3, s3, (x2, s2)) ->
+       x3 = Picinae_core.Addr (mask_return s) /\
+       s3 = mask_set_result s /\ mask_set_postcondition s s3
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+vClearInterruptMask_correct
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (s1 s2 : Picinae_armv6m.ARMv6MArch.store)
+         (x1 x2 : Picinae_core.exit),
+       mask_entry s ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         vClearInterruptMask_armv6m.vClearInterruptMask_prog
+         (x1, s1,
+          (Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xI
+                               (BinNums.xO
+                                  (BinNums.xO
+                                     (BinNums.xI
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+           s)) ->
+       Picinae_armv6m.IL_ARMv6M.can_step
+         vClearInterruptMask_armv6m.vClearInterruptMask_prog
+         (x2, s2, (x1, s1)) ->
+       x2 = Picinae_core.Addr (mask_return s) /\
+       s2 = mask_clear_result s /\ mask_clear_postcondition s s2
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+ulSetInterruptMask_satisfies_all
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store) (x' : Picinae_core.exit),
+       Picinae_core.startof t (x', s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xO
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+        s) ->
+       mask_entry s ->
+       Picinae_armv6m.Theory_ARMv6M.satisfies_all
+         ulSetInterruptMask_armv6m.ulSetInterruptMask_prog 
+         (mask_set_invs s) mask_set_exit ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+vClearInterruptMask_satisfies_all
+     : forall (s : Picinae_armv6m.IL_ARMv6M.store)
+         (t : list (Picinae_core.exit * Picinae_armv6m.IL_ARMv6M.store))
+         (s' : Picinae_armv6m.IL_ARMv6M.store) (x' : Picinae_core.exit),
+       Picinae_core.startof t (x', s') =
+       (Picinae_core.Addr
+          (BinNums.Npos
+             (BinNums.xO
+                (BinNums.xO
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xI
+                            (BinNums.xO
+                               (BinNums.xO
+                                  (BinNums.xI
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))),
+        s) ->
+       mask_entry s ->
+       Picinae_armv6m.Theory_ARMv6M.satisfies_all
+         vClearInterruptMask_armv6m.vClearInterruptMask_prog
+         (mask_clear_invs s) mask_clear_exit ((x', s') :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0

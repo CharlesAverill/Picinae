@@ -1,0 +1,36 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5f10d9a4
+COMMAND=python3 notes/r42-port-mask-fix/check-assumptions-output.py
+port_set_welltyped: closed
+port_clear_welltyped: closed
+mask_set_result_frame: closed
+mask_clear_result_frame: closed
+mask_set_result_post: closed
+mask_clear_result_post: closed
+mask_input_store_typed: closed
+mask_entry_witness: closed
+mask_both_bits_inhabited: closed
+mask_reset_same: inherited functional_extensionality_dep only
+mask_reset_update: inherited functional_extensionality_dep only
+mask_set_lookup_mrs: closed
+mask_set_lookup_cps: closed
+mask_clear_lookup_msr: closed
+mask_set_lookup_bx: closed
+mask_clear_lookup_bx: closed
+mask_set_code_stable: closed
+mask_clear_code_stable: closed
+mask_privileged_eval: closed
+mask_mrs_exec: closed
+mask_write_exec: closed
+mask_bx_exec: closed
+mask_move_step: inherited functional_extensionality_dep only
+mask_return_step: inherited functional_extensionality_dep only
+mask_step_unique: closed
+mask_set_execution: inherited functional_extensionality_dep only
+mask_clear_execution: inherited functional_extensionality_dep only
+ulSetInterruptMask_correct: inherited functional_extensionality_dep only
+vClearInterruptMask_correct: inherited functional_extensionality_dep only
+ulSetInterruptMask_satisfies_all: inherited functional_extensionality_dep only
+vClearInterruptMask_satisfies_all: inherited functional_extensionality_dep only
+PASS: 31 transitive queries; 21 closed, 10 FE-only; no imported admission.
+
+EXIT_CODE=0

@@ -1,0 +1,71 @@
+{
+  "base": "49956416928e5b6bb3928b54ae33e3b81091f006",
+  "elf_path": "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "functions": [
+    {
+      "bytes": "eff3108072b67047",
+      "correctness_proof": "not part of engineering e19; r42 pending",
+      "entry": "0x4090",
+      "finite_entries": [
+        "0x4090",
+        "0x4094",
+        "0x4096"
+      ],
+      "size": 8,
+      "source_sha256": "c87d28aafc04b1eb814dfc81fdb76108f652dd087f86fb1809cc9d8a6018f679",
+      "symbol": "ulSetInterruptMask",
+      "thumb_symbol": "0x4091"
+    },
+    {
+      "bytes": "80f310887047",
+      "correctness_proof": "not part of engineering e19; r42 pending",
+      "entry": "0x4098",
+      "finite_entries": [
+        "0x4098",
+        "0x409c"
+      ],
+      "size": 6,
+      "source_sha256": "2399e1afb283ccac32d5b667bf79198dcc0869539045a397aaefb6a6defe35e4",
+      "symbol": "vClearInterruptMask",
+      "thumb_symbol": "0x4099"
+    }
+  ],
+  "kernel": "dbf70559b27d39c1fdb68dfb9a32140b6a6777a0",
+  "manuals": [
+    {
+      "document": "ARM DDI 0419E ID070218",
+      "sections": [
+        "B1.3.1",
+        "B1.4.3-6",
+        "B1.5.8",
+        "B4.1.1",
+        "B4.2.1-3"
+      ],
+      "sha256": "7a61a708b40748219991145090ad7dd8ee41474ff89f4e45219a32f5ea93632f",
+      "url": "https://documentation-service.arm.com/static/5f8ff05ef86e16515cdbf826"
+    },
+    {
+      "document": "ARM DDI 0432C ID113009",
+      "sections": [
+        "3.2"
+      ],
+      "sha256": "b4af6066093567dfb40fe641c55a2bd066fb487743d35bf22ced25da56e4383e",
+      "url": "https://documentation-service.arm.com/static/5e8e294afd977155116a6a5b"
+    }
+  ],
+  "prerequisite": "95da7ab7cee78f09a528aed86c1dfaf29520a9a8",
+  "profile": "primask-v1-base",
+  "sources_sha256": {
+    "Examples/FreeRTOSMask/ulSetInterruptMask_armv6m.v": "c87d28aafc04b1eb814dfc81fdb76108f652dd087f86fb1809cc9d8a6018f679",
+    "Examples/FreeRTOSMask/vClearInterruptMask_armv6m.v": "2399e1afb283ccac32d5b667bf79198dcc0869539045a397aaefb6a6defe35e4",
+    "Picinae_armv6m.v": "e51e2a08ea3aade520181d3bf53e49fa7ffa5788b79b9f31a7bd2d91d25a15e3",
+    "dune": "9c03253e2043710d6f24ccfca918255d9d67f1afc870d22e13f7917999fd6c6c",
+    "lifter/armv6m.py": "05c83322865a0f52228ca2fcc51f62e33ef6f56efb2d40a7f53742f411568672",
+    "tests/armv6m_primask/Checks.v": "e55f4f0f71145f260bb89dce51236396a93a43d6407b2dbe681d614d571a0a5a",
+    "tests/armv6m_primask/fixture.v": "07f40f5e20114bb1d74b9e93178933de3cf0d720da2d18a64af2d8f60c0cb088",
+    "tests/armv6m_primask/snippets.s": "2d59760ddb656b0042540945a6c070d928fecb64a437b053f2fef4a4a57f1752"
+  },
+  "timing_source": "4f1772040b6fc9d12af3f84f2ca089bb65cd4bd6",
+  "unit": "e19-armv6m-primask"
+}

@@ -1,0 +1,393 @@
+{
+  "blocked_helpers": [
+    "fixture_assert_fail",
+    "vPortEnterCritical",
+    "vPortExitCritical",
+    "vPortYield"
+  ],
+  "bytes_sha256": "59f5b9b9f1729069b33672bfa857dd04cc15d409a4c7e55599d1833210379643",
+  "closure_prerequisites": [
+    {
+      "callee": "prvCreateStaticTask",
+      "caller": "xTaskCreateStatic",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00000b04",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "memset",
+      "caller": "prvCreateStaticTask",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x0000018a",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "prvInitialiseNewTask",
+      "caller": "prvCreateStaticTask",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000001a8",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "vListInitialiseItem",
+      "caller": "prvInitialiseNewTask",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00000118",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "pxPortInitialiseStack",
+      "caller": "prvInitialiseNewTask",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00000134",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "fixture_assert_fail",
+      "caller": "prvInitialiseNewTask",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00000150",
+      "unsupported_instructions": [
+        {
+          "address": "0x0000419c",
+          "assembly": "cpsid\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b672",
+          "width": 2
+        },
+        {
+          "address": "0x000041a6",
+          "assembly": "wfi",
+          "frontend_encoding_supported": false,
+          "opcode": "bf30",
+          "width": 2
+        }
+      ]
+    },
+    {
+      "callee": "prvAddNewTaskToReadyList",
+      "caller": "xTaskCreateStatic",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00000b0c",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "vPortEnterCritical",
+      "caller": "prvAddNewTaskToReadyList",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00000a30",
+      "unsupported_instructions": [
+        {
+          "address": "0x00003e68",
+          "assembly": "cpsid\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b672",
+          "width": 2
+        },
+        {
+          "address": "0x00003e72",
+          "assembly": "dsb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f4f",
+          "width": 4
+        },
+        {
+          "address": "0x00003e76",
+          "assembly": "isb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f6f",
+          "width": 4
+        }
+      ]
+    },
+    {
+      "callee": "vPortExitCritical",
+      "caller": "prvAddNewTaskToReadyList",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00000aac",
+      "unsupported_instructions": [
+        {
+          "address": "0x00003e98",
+          "assembly": "cpsie\ti",
+          "frontend_encoding_supported": false,
+          "opcode": "b662",
+          "width": 2
+        }
+      ]
+    },
+    {
+      "callee": "prvInitialiseTaskLists",
+      "caller": "prvAddNewTaskToReadyList",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00000ac6",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "vListInitialise",
+      "caller": "prvInitialiseTaskLists",
+      "extracted": true,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x000009d6",
+      "unsupported_instructions": []
+    },
+    {
+      "callee": "vPortYield",
+      "caller": "prvAddNewTaskToReadyList",
+      "extracted": false,
+      "prerequisite": "callee functional/ABI/frame contract; compose actual finite maps",
+      "site": "0x00000acc",
+      "unsupported_instructions": [
+        {
+          "address": "0x00003e58",
+          "assembly": "dsb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f4f",
+          "width": 4
+        },
+        {
+          "address": "0x00003e5c",
+          "assembly": "isb\tsy",
+          "frontend_encoding_supported": false,
+          "opcode": "f3bf 8f6f",
+          "width": 4
+        }
+      ]
+    }
+  ],
+  "command": [
+    "bash",
+    "./armv6m_lifter.sh",
+    "/home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf",
+    "xTaskCreateStatic_armv6m",
+    "xTaskCreateStatic"
+  ],
+  "critical_isr_boundaries": [],
+  "edges": [
+    {
+      "kind": "call",
+      "owners": [
+        "prvCreateStaticTask"
+      ],
+      "return_site": "0x00000b08",
+      "site": "0x00000b04",
+      "target": "0x0000015c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "fallthrough": "0x00000b0c",
+      "kind": "branch",
+      "owners": [
+        "xTaskCreateStatic"
+      ],
+      "site": "0x00000b0a",
+      "target": "0x00000b10",
+      "target_is_instruction_start": true,
+      "within_function": true
+    },
+    {
+      "kind": "call",
+      "owners": [
+        "prvAddNewTaskToReadyList"
+      ],
+      "return_site": "0x00000b10",
+      "site": "0x00000b0c",
+      "target": "0x00000a2c",
+      "target_is_instruction_start": null,
+      "within_function": false
+    },
+    {
+      "assembly": "pop\t{r4, pc}",
+      "kind": "return-candidate",
+      "site": "0x00000b14",
+      "target": "runtime register/stack; Thumb bit required"
+    }
+  ],
+  "elf_sha256": "5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca",
+  "end_exclusive": "0x00000b16",
+  "entry": "0x00000aec",
+  "exit_code": 0,
+  "extraction": "extracted",
+  "generated_sha256": "9b9ab770d95e5b573583c19742436213914281e2c84ce8d56de02cbed94515b9",
+  "instructions": [
+    {
+      "address": "0x00000aec",
+      "assembly": "push\t{r4, lr}",
+      "frontend_encoding_supported": true,
+      "opcode": "b510",
+      "width": 2
+    },
+    {
+      "address": "0x00000aee",
+      "assembly": "sub\tsp, #24",
+      "frontend_encoding_supported": true,
+      "opcode": "b086",
+      "width": 2
+    },
+    {
+      "address": "0x00000af0",
+      "assembly": "movs\tr4, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2400",
+      "width": 2
+    },
+    {
+      "address": "0x00000af2",
+      "assembly": "str\tr4, [sp, #20]",
+      "frontend_encoding_supported": true,
+      "opcode": "9405",
+      "width": 2
+    },
+    {
+      "address": "0x00000af4",
+      "assembly": "add\tr4, sp, #20",
+      "frontend_encoding_supported": true,
+      "opcode": "ac05",
+      "width": 2
+    },
+    {
+      "address": "0x00000af6",
+      "assembly": "str\tr4, [sp, #12]",
+      "frontend_encoding_supported": true,
+      "opcode": "9403",
+      "width": 2
+    },
+    {
+      "address": "0x00000af8",
+      "assembly": "ldr\tr4, [sp, #40]\t@ 0x28",
+      "frontend_encoding_supported": true,
+      "opcode": "9c0a",
+      "width": 2
+    },
+    {
+      "address": "0x00000afa",
+      "assembly": "str\tr4, [sp, #8]",
+      "frontend_encoding_supported": true,
+      "opcode": "9402",
+      "width": 2
+    },
+    {
+      "address": "0x00000afc",
+      "assembly": "ldr\tr4, [sp, #36]\t@ 0x24",
+      "frontend_encoding_supported": true,
+      "opcode": "9c09",
+      "width": 2
+    },
+    {
+      "address": "0x00000afe",
+      "assembly": "str\tr4, [sp, #4]",
+      "frontend_encoding_supported": true,
+      "opcode": "9401",
+      "width": 2
+    },
+    {
+      "address": "0x00000b00",
+      "assembly": "ldr\tr4, [sp, #32]",
+      "frontend_encoding_supported": true,
+      "opcode": "9c08",
+      "width": 2
+    },
+    {
+      "address": "0x00000b02",
+      "assembly": "str\tr4, [sp, #0]",
+      "frontend_encoding_supported": true,
+      "opcode": "9400",
+      "width": 2
+    },
+    {
+      "address": "0x00000b04",
+      "assembly": "bl\t15c <prvCreateStaticTask>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7ff fb2a",
+      "width": 4
+    },
+    {
+      "address": "0x00000b08",
+      "assembly": "cmp\tr0, #0",
+      "frontend_encoding_supported": true,
+      "opcode": "2800",
+      "width": 2
+    },
+    {
+      "address": "0x00000b0a",
+      "assembly": "beq.n\tb10 <xTaskCreateStatic+0x24>",
+      "frontend_encoding_supported": true,
+      "opcode": "d001",
+      "width": 2
+    },
+    {
+      "address": "0x00000b0c",
+      "assembly": "bl\ta2c <prvAddNewTaskToReadyList>",
+      "frontend_encoding_supported": true,
+      "opcode": "f7ff ff8e",
+      "width": 4
+    },
+    {
+      "address": "0x00000b10",
+      "assembly": "ldr\tr0, [sp, #20]",
+      "frontend_encoding_supported": true,
+      "opcode": "9805",
+      "width": 2
+    },
+    {
+      "address": "0x00000b12",
+      "assembly": "add\tsp, #24",
+      "frontend_encoding_supported": true,
+      "opcode": "b006",
+      "width": 2
+    },
+    {
+      "address": "0x00000b14",
+      "assembly": "pop\t{r4, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bd10",
+      "width": 2
+    }
+  ],
+  "literals": [],
+  "mapped_data": [],
+  "proof_status": "No function correctness proof attempted",
+  "return_candidates": [
+    {
+      "address": "0x00000b14",
+      "assembly": "pop\t{r4, pc}",
+      "frontend_encoding_supported": true,
+      "opcode": "bd10",
+      "width": 2
+    }
+  ],
+  "row": "r35",
+  "size": 42,
+  "source": [
+    {
+      "path": "tasks.c",
+      "sha256": "6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149"
+    }
+  ],
+  "stderr": "",
+  "symbol": "xTaskCreateStatic",
+  "symbol_record": {
+    "address": "0x00000aec",
+    "binding": "GLOBAL",
+    "kind": "FUNC",
+    "name": "xTaskCreateStatic",
+    "section": "2",
+    "size": 42,
+    "source": [
+      "tasks.c"
+    ],
+    "value": "0x00000aed"
+  },
+  "thumb_symbol": "0x00000aed",
+  "unsupported_instructions": []
+}

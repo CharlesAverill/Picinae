@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-14b2d9df
+COMMAND=git diff --exit-code 0bc7fec4dbbfddbe8c5c130b9bd15d1b7af10ba6 -- Picinae_armv6m.v armv6m_lifter.sh Examples/FreeRTOS Examples/FreeRTOSMask/ulSetInterruptMask_armv6m.v Examples/FreeRTOSMask/vClearInterruptMask_armv6m.v
+
+EXIT_CODE=0

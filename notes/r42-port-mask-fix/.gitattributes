@@ -1,0 +1,2 @@
+# Compiler evidence is verbatim, including trailing spaces in Print output.
+*.log -whitespace

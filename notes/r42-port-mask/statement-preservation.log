@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-14b2d9df
+COMMAND=python3 notes/r42-port-mask/check-statements.py
+PASS: every original definition and theorem statement is retained.
+Unchecked proof bodies are Abort; exact initial attempt remains in initial-attempt.v.txt.
+
+EXIT_CODE=0
