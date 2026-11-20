@@ -1,0 +1,49 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d99c9594
+COMMAND=python3 notes/r10-suspend-all/audit-provenance.py
+6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149 /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/source/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/tasks.c
+6c63fc719991c8324546c700f95586dfdf1c11b35c69abbb008d06d0e256711c Examples/freertos/cortex-m0/FreeRTOSConfig.h
+b501f440105154a99c41fa8fe764a116b98198356e3af4d297f3739d39a57cef Examples/freertos/cortex-m0/evidence/layout.json
+ee5fb3cecf5b946187ae303d7126633c5ab36495e80b28364fedd5bc7c4118c9 Examples/freertos/cortex-m0/evidence/symbols.json
+f5cb01c7a3778441bd9280a3a8a6d9602f1603ceea7e2a883e363f65855e92d9 Examples/FreeRTOS/vTaskSuspendAll_armv6m.v
+5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca /home/charles/code/friends/.toolchains/e04-freertos-build/verified02-a/out/FreeRTOS-Cortex-M0.elf
+{"address": "0x20000008", "binding": "LOCAL", "kind": "OBJECT", "name": "uxSchedulerSuspended", "section": "4", "size": 4, "source": ["tasks.c"], "value": "0x20000008"}
+{"address": "0x00000574", "binding": "GLOBAL", "kind": "FUNC", "name": "vTaskSuspendAll", "section": "2", "size": 16, "source": ["tasks.c"], "value": "0x00000575"}
+0x00000574 4a02 ldr	r2, [pc, #8]	@ (580 <vTaskSuspendAll+0xc>)
+0x00000576 6813 ldr	r3, [r2, #0]
+0x00000578 3301 adds	r3, #1
+0x0000057a 6013 str	r3, [r2, #0]
+0x0000057c 4770 bx	lr
+0x0000057e 46c0 nop			@ (mov r8, r8)
+#define portMEMORY_BARRIER() __asm volatile ( "" ::: "memory" )
+#define portSOFTWARE_BARRIER() 
+#define traceRETURN_vTaskSuspendAll() 
+#define configUSE_TRACE_FACILITY 0
+#define traceENTER_vTaskSuspendAll() 
+#define configNUMBER_OF_CORES 1
+Pinned tasks.c lines 3811-3833:
+void vTaskSuspendAll( void )
+{
+    traceENTER_vTaskSuspendAll();
+
+    #if ( configNUMBER_OF_CORES == 1 )
+    {
+        /* A critical section is not required as the variable is of type
+         * BaseType_t.  Please read Richard Barry's reply in the following link to a
+         * post in the FreeRTOS support forum before reporting this as a bug! -
+         * https://goo.gl/wu4acr */
+
+        /* portSOFTWARE_BARRIER() is only implemented for emulated/simulated ports that
+         * do not otherwise exhibit real time behaviour. */
+        portSOFTWARE_BARRIER();
+
+        /* The scheduler is suspended if uxSchedulerSuspended is non-zero.  An increment
+         * is used to allow calls to vTaskSuspendAll() to nest. */
+        uxSchedulerSuspended = ( UBaseType_t ) ( uxSchedulerSuspended + 1U );
+
+        /* Enforces ordering for ports and optimised compilers that may otherwise place
+         * the above increment elsewhere. */
+        portMEMORY_BARRIER();
+    }
+PASS: pinned global address/size/offset and call-free instruction path; no hardware refinement claimed
+
+EXIT_CODE=0

@@ -1,0 +1,293 @@
+(* vTaskSuspendAll -- ARMv6-M Cortex-M0, sequential lifted-IL correctness.
+
+   Initial author: OpenAI gpt-6-astra, xhigh, default (r10-suspend-all).
+   Final proof repair: OpenAI gpt-6.1-sol, xhigh, default (r10-suspend-all-fix).
+   Validation: notes/r10-suspend-all-fix/README.md; original evidence preserved
+   in notes/r10-suspend-all/README.md.
+   PROVENANCE: official FreeRTOS Kernel V11.1.0,
+   dbf70559b27d39c1fdb68dfb9a32140b6a6777a0; tasks.c SHA256
+   6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149.
+   ELF SHA256 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca.
+   Generated lift: vTaskSuspendAll_armv6m.v, armv6m_lifter.sh, accepted
+   call-free e05 artifact 95da7ab7cee78f09a528aed86c1dfaf29520a9a8.
+   Exact source/config/layout evidence: Examples/freertos/cortex-m0/evidence,
+   FreeRTOSConfig.h, and Examples/FreeRTOS/vTaskSuspendAll.json.
+   configNUMBER_OF_CORES=1; UBaseType_t is 4 bytes. The literal at 0x580
+   supplies global uxSchedulerSuspended at 0x20000008, size 4, offset 0.
+
+   ABI/spec: void vTaskSuspendAll(void); no argument/result registers.
+   Entry 0x574 loads R2 from the immutable literal; 0x576 loads the original
+   little-endian word into R3; 0x578 increments it modulo 2^32; 0x57a stores
+   exactly that word; exit cut 0x57c is immediately before BX LR. The post
+   records exact final memory as one four-byte write to INITIAL memory,
+   hence every byte outside [0x20000008,0x2000000c) is preserved. All store
+   variables except memory, R2, R3 and NZCV are preserved, including R0/R1,
+   R4-R12, SP, LR, permission maps and temporaries. No stack access occurs.
+
+   The invariant theorem assumes only a typed ARMv6-M initial store and
+   an entry trace. The endpoint corollaries additionally assume an actual
+   execution reaching the first exit cut. Read/write permissions come from
+   the execution relation; arbitrary-memory, arbitrary ordinary-return LR
+   witnesses show typed/permitted entry satisfiability. No bound on the
+   original counter is imposed; overflow wraps to zero. No size/overlap,
+   CPU-feature or tunable precondition beyond this pinned artifact is used.
+   The caller theorem proves the actual BX step under odd LR < 0xfffffff0,
+   excludes EXC_RETURN, and retains the whole post-store state at the target.
+
+   Scope: partial correctness of the finite generated _prog and its ordinary
+   return step. No callee oracle, termination, IRQ/hardware/atomicity,
+   scheduler cardinality, whole-kernel invariant, or proved binary/lifter
+   refinement. Folded literal bytes are inherited immutable-code evidence.
+ *)
+
+Require Import Picinae_armv6m.
+Require Import vTaskSuspendAll_armv6m.
+From Stdlib Require Import NArith List Lia FunctionalExtensionality.
+Import ListNotations ARMv6MNotations.
+Open Scope N.
+
+Definition suspend_all_result (m:memory) : N :=
+  (1 + m Ⓓ[0x20000008]) mod 2^32.
+
+Definition suspend_all_memory (m:memory) : memory :=
+  m [Ⓓ 0x20000008 := suspend_all_result m].
+
+Definition suspend_all_frame (initial final:store) : Prop :=
+  forall v, v <> V_MEM32 -> v <> R_R2 -> v <> R_R3 ->
+    v <> F_N -> v <> F_Z -> v <> F_C -> v <> F_V ->
+    final v = initial v.
+
+Definition suspend_all_postcondition (initial final:store) : Prop :=
+  final V_MEM32 = suspend_all_memory (initial V_MEM32) /\
+  suspend_all_frame initial final.
+
+Definition suspend_all_exit (t:trace) : bool :=
+  match t with (Addr 0x57c,_)::_ => true | _ => false end.
+
+Definition suspend_all_invariants (initial:store) (t:trace) : option Prop :=
+  match t with
+  | (Addr 0x574,s)::_ => Some (s = initial)
+  | (Addr 0x57c,s)::_ => Some (suspend_all_postcondition initial s)
+  | _ => None
+  end.
+
+Theorem suspend_all_nwc : forall s2 s1,
+  vTaskSuspendAll_armv6m_prog s1 = vTaskSuspendAll_armv6m_prog s2.
+Proof. reflexivity. Qed.
+
+Theorem suspend_all_welltyped :
+  welltyped_prog armv6mtypctx vTaskSuspendAll_armv6m_prog.
+Proof. exact vTaskSuspendAll_armv6m_welltyped. Qed.
+
+Lemma suspend_all_zero_bound : forall w, 0 < 2^w.
+Proof. intro w. apply N.neq_0_lt_0, pow2_nonzero. Qed.
+
+Definition suspend_all_entry_witness (m:memory) (lr:N) : store := fun v =>
+  match v with
+  | V_MEM32 => m
+  | A_READ | A_WRITE => N.ones (2^32)
+  | R_LR => lr
+  | _ => 0
+  end.
+
+Definition suspend_all_permitted (s:store) : Prop :=
+  forall n, n < 4 ->
+    mem_readable s ((0x20000008+n) mod 2^32) /\
+    mem_writable s ((0x20000008+n) mod 2^32).
+
+Lemma suspend_all_witness_models : forall m lr,
+  m < 2^(8*2^32) -> lr < 2^32 ->
+  models armv6mtypctx (suspend_all_entry_witness m lr).
+Proof.
+  intros m lr B L v w T. destruct v; cbn [armv6mtypctx] in T;
+    try discriminate; injection T as <-.
+  all: lazymatch goal with
+  | |- suspend_all_entry_witness _ _ V_MEM32 < _ => exact B
+  | |- suspend_all_entry_witness _ _ A_READ < _ => exact (ones_bound (2^32))
+  | |- suspend_all_entry_witness _ _ A_WRITE < _ => exact (ones_bound (2^32))
+  | |- suspend_all_entry_witness _ _ R_LR < _ => exact L
+  | |- _ < 2^?width => exact (suspend_all_zero_bound width)
+  end.
+Qed.
+
+Theorem suspend_all_entry_satisfiable : forall m lr,
+  m < 2^(8*2^32) -> N.odd lr = true -> lr < 0xfffffff0 ->
+  exists s, models armv6mtypctx s /\ s V_MEM32 = m /\ s R_LR = lr /\
+    suspend_all_permitted s /\ N.odd (s R_LR) = true /\ s R_LR < 0xfffffff0.
+Proof.
+  intros m lr B O L. exists (suspend_all_entry_witness m lr).
+  split.
+  - apply suspend_all_witness_models. exact B. clear - L. lia.
+  - split. reflexivity. split. reflexivity. split.
+    + intros n LT. unfold mem_readable, mem_writable.
+      change (N.testbit (N.ones (2^32)) ((0x20000008+n) mod 2^32) = true /\
+              N.testbit (N.ones (2^32)) ((0x20000008+n) mod 2^32) = true).
+      split; apply N.ones_spec_low; apply N.mod_lt, pow2_nonzero.
+    + split; assumption.
+Qed.
+
+Corollary suspend_all_entry_nonempty :
+  exists s, models armv6mtypctx s /\ s V_MEM32 = 0 /\ s R_LR = 1 /\
+    suspend_all_permitted s /\ N.odd (s R_LR) = true /\ s R_LR < 0xfffffff0.
+Proof.
+  apply suspend_all_entry_satisfiable;
+    [apply suspend_all_zero_bound | reflexivity | reflexivity].
+Qed.
+
+Lemma suspend_all_memory_word : forall m,
+  (suspend_all_memory m) Ⓓ[0x20000008] = suspend_all_result m.
+Proof.
+  intro m. unfold suspend_all_memory.
+  rewrite getmem_setmem by (clear; change (4 <= 4294967296); lia).
+  unfold suspend_all_result.
+  change (((1 + m Ⓓ[0x20000008]) mod 2^32) mod 2^32 =
+          (1 + m Ⓓ[0x20000008]) mod 2^32).
+  apply N.mod_mod, pow2_nonzero.
+Qed.
+
+Lemma suspend_all_memory_byte : forall m i, i < 4 ->
+  (suspend_all_memory m) Ⓑ[0x20000008+i] =
+    N.shiftr (suspend_all_result m) (i*8) mod 2^8.
+Proof.
+  intros m i LT. unfold suspend_all_memory. rewrite getmem_1.
+  apply (setmem_byte 32 LittleE 4 i m 0x20000008 (suspend_all_result m));
+    [exact LT | clear; change (4 <= 4294967296); lia].
+Qed.
+
+Lemma suspend_all_outside_distance : forall a,
+  a < 2^32 -> (a < 0x20000008 \/ 0x2000000c <= a) ->
+  4 <= msub 32 a 0x20000008.
+Proof.
+  intros a A [LO|HI].
+  - assert (D: a mod 2^32 < 0x20000008 mod 2^32).
+    { rewrite (N.mod_small a _ A). exact LO. }
+    rewrite (msub_wrap _ _ _ D), (N.mod_small a _ A).
+    change (4 <= 4294967296 + a - 536870920). lia.
+  - assert (D: 0x20000008 mod 2^32 <= a mod 2^32).
+    { rewrite (N.mod_small a _ A). change (536870920 <= a). lia. }
+    rewrite (msub_nowrap _ _ _ D), (N.mod_small a _ A).
+    change (4 <= a - 536870920). lia.
+Qed.
+
+Lemma suspend_all_memory_frame : forall m a,
+  a < 2^32 -> (a < 0x20000008 \/ 0x2000000c <= a) ->
+  (suspend_all_memory m) Ⓑ[a] = m Ⓑ[a].
+Proof.
+  intros m a A OUT. unfold suspend_all_memory. rewrite !getmem_1.
+  apply setmem_frame. apply suspend_all_outside_distance; assumption.
+Qed.
+
+Theorem suspend_all_correct : forall s t s' x'
+  (ENTRY: startof t (x',s') = (Addr 0x574,s))
+  (MDL: models armv6mtypctx s),
+  satisfies_all vTaskSuspendAll_armv6m_prog
+    (suspend_all_invariants s) suspend_all_exit ((x',s')::t).
+Proof.
+  intros. apply prove_invs.
+  - simpl. rewrite ENTRY. armv6m_step. reflexivity.
+  - intros.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption.
+    apply suspend_all_welltyped. intro MDL1.
+    clear - PRE MDL1. rename t1 into t.
+    destruct_inv 32 PRE. subst s1.
+    repeat armv6m_step.
+    unfold suspend_all_postcondition, suspend_all_memory,
+      suspend_all_result, suspend_all_frame.
+    split.
+    + rewrite ?setmem_mod_r.
+      first [reflexivity | rewrite N.add_comm; reflexivity].
+    + intros v MEM R2 R3 FN FZ FC FV.
+      destruct v; try contradiction; reflexivity.
+Qed.
+
+Corollary suspend_all_post_at_bx : forall s t s'
+  (ENTRY: startof t (Addr 0x57c,s') = (Addr 0x574,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog vTaskSuspendAll_armv6m_prog ((Addr 0x57c,s')::t))
+  (UT: unterminated suspend_all_exit t),
+  suspend_all_postcondition s s'.
+Proof.
+  intros.
+  pose proof (suspend_all_correct s t s' (Addr 0x57c) ENTRY MDL) as ALL.
+  pose proof (satall_trueif_inv _ _ _ _ ALL EXEC UT) as POST.
+  exact POST.
+Qed.
+
+Corollary suspend_all_original_memory_effects : forall s t s'
+  (ENTRY: startof t (Addr 0x57c,s') = (Addr 0x574,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog vTaskSuspendAll_armv6m_prog ((Addr 0x57c,s')::t))
+  (UT: unterminated suspend_all_exit t),
+  (s' V_MEM32) Ⓓ[0x20000008] = (1 + (s V_MEM32) Ⓓ[0x20000008]) mod 2^32 /\
+  (forall i, i < 4 -> (s' V_MEM32) Ⓑ[0x20000008+i] =
+    N.shiftr (suspend_all_result (s V_MEM32)) (i*8) mod 2^8) /\
+  (forall a, a < 2^32 -> (a < 0x20000008 \/ 0x2000000c <= a) ->
+    (s' V_MEM32) Ⓑ[a] = (s V_MEM32) Ⓑ[a]).
+Proof.
+  intros.
+  pose proof (proj1 (suspend_all_post_at_bx s t s' ENTRY MDL EXEC UT)) as MEM.
+  rewrite MEM. split.
+  - exact (suspend_all_memory_word (s V_MEM32)).
+  - split.
+    + exact (suspend_all_memory_byte (s V_MEM32)).
+    + exact (suspend_all_memory_frame (s V_MEM32)).
+Qed.
+
+Corollary suspend_all_preserves_callee_saved : forall s t s'
+  (ENTRY: startof t (Addr 0x57c,s') = (Addr 0x574,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog vTaskSuspendAll_armv6m_prog ((Addr 0x57c,s')::t))
+  (UT: unterminated suspend_all_exit t),
+  forall v, In v [R_R4; R_R5; R_R6; R_R7; R_R8; R_R9; R_R10; R_R11; R_SP; R_LR] ->
+    s' v = s v.
+Proof.
+  intros s t s' ENTRY MDL EXEC UT v IN.
+  pose proof (proj2 (suspend_all_post_at_bx s t s' ENTRY MDL EXEC UT)) as FRAME.
+  apply FRAME; intro EQ; subst v; cbn in IN; intuition discriminate.
+Qed.
+
+Theorem suspend_all_return_step : forall s
+  (ODD: N.odd (s R_LR) = true) (ORDINARY: s R_LR < 0xfffffff0),
+  can_step vTaskSuspendAll_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s),(Addr 0x57c,s)).
+Proof.
+  intros s ODD ORDINARY.
+  assert (LOW: s R_LR mod 2 = 1).
+  { apply mod2_1_neven. rewrite <- N.negb_odd, ODD. reflexivity. }
+  assert (XS: exec_stmt armv6mtypctx s (armv6m_bxwritepc (Var R_LR))
+    armv6mtypctx s (Some (Addr (N.land (s R_LR) (N.ones 32 - 1))))).
+  { unfold armv6m_bxwritepc. eapply XIf with (b:=1).
+    - assert (E: eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+        (s R_LR mod 2) 1).
+      { apply ECast with (w:=32) (n:=s R_LR). apply EVar. reflexivity. }
+      rewrite LOW in E. exact E.
+    - apply XJmp with (w:=32).
+      apply EBinOp with (w:=32) (n1:=s R_LR) (n2:=N.ones 32 - 1);
+        [apply EVar; reflexivity | apply EWord]. }
+  assert (CS: can_step vTaskSuspendAll_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),reset_temps s s),(Addr 0x57c,s))).
+  { eapply CanStep with (sz:=2) (q:=armv6m_bxwritepc (Var R_LR))
+      (x:=Some (Addr (N.land (s R_LR) (N.ones 32 - 1))));
+      [reflexivity | exact XS]. }
+  assert (RESET: reset_temps s s = s).
+  { extensionality v. destruct v; reflexivity. }
+  rewrite RESET in CS. exact CS.
+Qed.
+
+Corollary suspend_all_caller_result : forall s t s'
+  (ENTRY: startof t (Addr 0x57c,s') = (Addr 0x574,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog vTaskSuspendAll_armv6m_prog ((Addr 0x57c,s')::t))
+  (UT: unterminated suspend_all_exit t)
+  (ODD: N.odd (s R_LR) = true) (ORDINARY: s R_LR < 0xfffffff0),
+  suspend_all_postcondition s s' /\
+  can_step vTaskSuspendAll_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s'),(Addr 0x57c,s')).
+Proof.
+  intros.
+  pose proof (suspend_all_post_at_bx s t s' ENTRY MDL EXEC UT) as POST.
+  assert (LR: s' R_LR = s R_LR) by (apply (proj2 POST); discriminate).
+  split. exact POST.
+  rewrite <- LR. apply suspend_all_return_step; rewrite LR; assumption.
+Qed.

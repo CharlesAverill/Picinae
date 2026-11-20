@@ -1,0 +1,29 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d99c9594
+COMMAND=python3 notes/r10-suspend-all-fix/audit-results.py
+suspend_all_nwc: Closed under the global context
+suspend_all_welltyped: Closed under the global context
+suspend_all_zero_bound: Closed under the global context
+suspend_all_witness_models: Closed under the global context
+suspend_all_entry_satisfiable: Closed under the global context
+suspend_all_entry_nonempty: Closed under the global context
+suspend_all_memory_word: Closed under the global context
+suspend_all_memory_byte: Closed under the global context
+suspend_all_outside_distance: Closed under the global context
+suspend_all_memory_frame: Closed under the global context
+suspend_all_correct: inherited functional_extensionality_dep only
+suspend_all_post_at_bx: inherited functional_extensionality_dep only
+suspend_all_original_memory_effects: inherited functional_extensionality_dep only
+suspend_all_preserves_callee_saved: inherited functional_extensionality_dep only
+suspend_all_return_step: inherited functional_extensionality_dep only
+suspend_all_caller_result: inherited functional_extensionality_dep only
+PASS: all 16 raw transitive queries inspected; 10 closed, six inherited FE only; no imported admission
+d7cb7b1a4b1e69902f59d98df8d4001982bce5ef9165ab8ff7d3def130fe4a11 12436 Examples/FreeRTOS/armv6m_vTaskSuspendAll_proof.v
+d7cb7b1a4b1e69902f59d98df8d4001982bce5ef9165ab8ff7d3def130fe4a11 12436 _build/default/Examples/FreeRTOS/armv6m_vTaskSuspendAll_proof.v
+467ddff74673e56fe302d557302abe9562a06d2e2fa64455f7a90a94dbf9f503 135278 _build/default/Examples/FreeRTOS/armv6m_vTaskSuspendAll_proof.vo
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-d99c9594/notes/r10-suspend-all-fix/audit-results.py", line 45, in <module>
+    assert not Path('_build/default/Examples/FreeRTOS/armv6m_vTaskSuspendAll_proof.vos').exists()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+EXIT_CODE=1

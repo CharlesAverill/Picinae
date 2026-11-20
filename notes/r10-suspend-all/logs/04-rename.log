@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d8b8261f
+COMMAND=git branch -m llm-proofs/r10-suspend-all
+
+EXIT_CODE=0

@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96052210
+COMMAND=git diff --cached --check
+notes/r06-task-count-fix/assumptions.log:77: trailing whitespace.
++         (task_count_invariants s) task_count_exit 
+notes/r06-task-count-fix/prepared-history.log:7: trailing whitespace.
++71470bffba65392adf1873a3df9f0cf0ca4f1ac9 
+
+EXIT_CODE=2

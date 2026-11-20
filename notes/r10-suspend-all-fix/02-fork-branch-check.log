@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-d99c9594
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/r10-suspend-all-fix
+
+EXIT_CODE=0
