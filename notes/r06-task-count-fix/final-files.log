@@ -1,0 +1,11 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-96052210
+COMMAND=bash -e -c git\ diff\ --check\;\ git\ diff\ --stat\;\ git\ status\ --short\;\ sha256sum\ Examples/FreeRTOS/armv6m_uxTaskGetNumberOfTasks_proof.v\ Examples/FreeRTOS/uxTaskGetNumberOfTasks_armv6m.v\;\ ls\ -l\ _build/default/Examples/FreeRTOS/armv6m_uxTaskGetNumberOfTasks_proof.vo\;\ git\ diff\ --exit-code\ 7042ff1\ --\ dune\ Picinae_armv6m.v\ lifter\ Examples/freertos\ notes/r06-task-count
+ .../FreeRTOS/armv6m_uxTaskGetNumberOfTasks_proof.v | 88 ++++++++++++++++++----
+ 1 file changed, 73 insertions(+), 15 deletions(-)
+ M Examples/FreeRTOS/armv6m_uxTaskGetNumberOfTasks_proof.v
+?? notes/r06-task-count-fix/
+da3ecb3584e536601140eabb33acb4d9353d3eb0b7c4bd5b2a90b29cbe17ac9d  Examples/FreeRTOS/armv6m_uxTaskGetNumberOfTasks_proof.v
+d237568eb2e532018e17575cf35830200626e9a48ea6f0004f81e6139f51b63e  Examples/FreeRTOS/uxTaskGetNumberOfTasks_armv6m.v
+-r--r--r-- 1 charles charles 66524 Nov  3 17:10 _build/default/Examples/FreeRTOS/armv6m_uxTaskGetNumberOfTasks_proof.vo
+
+EXIT_CODE=0

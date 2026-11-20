@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-43c5d429
+COMMAND=git branch -m llm-proofs/r19-scheduler-state
+
+EXIT_CODE=0
