@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ea3464df
+COMMAND=python3 notes/e29-arm-scalar-bitforms/collect.py --run raw07
+COMMAND=["/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/bin/python", "-m", "pyghidra", "--skip-analysis", "--project-path", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/raw07/projects", "--project-name", "e29", "/home/charles/code/friends/.toolchains/e02-arm-inventory/root/lib/aarch64-linux-gnu/libc.so.6", "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/notes/e29-arm-scalar-bitforms/collect_headless.py", "/home/charles/.t3/worktrees/Picinae/t3-ea3464df", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/raw07"]
+LAUNCHER_EXIT=0
+PASS /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/raw07/raw.json
+
+EXIT_CODE=0

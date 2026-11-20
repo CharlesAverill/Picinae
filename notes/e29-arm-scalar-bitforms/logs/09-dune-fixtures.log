@@ -1,0 +1,14 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-ea3464df
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -c export\ PROOF_MEMORY_KB=2000000\;\ ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ @e29-arm-scalar-bitforms
+File "dune", lines 6-42, characters 0-1909:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+40 |   Examples.claude.lifter.scalar_ports.e08_sigdescr_np_arm8
+41 |   Examples.claude.lifter.scalar_ports.e08_srand48_r_arm8
+42 |   Examples.claude.lifter.scalar_bitforms.e29_bitforms))
+Error: No rule found for
+Examples/claude/lifter/scalar_bitforms/e29_bitforms.v
+
+EXIT_CODE=1

@@ -1,0 +1,4 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/baseline01/__memcpy_thunderx2", "__memcpy_thunderx2"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_thunderx2 0x19b2d0 ldr q0,[x1], #0x10: unmodeled register q0 (base z0); raw pcode: (unique, 0x7400, 8) COPY (register, 0x4008, 8); (register, 0x4008, 8) INT_ADD (register, 0x4008, 8) , (const, 0x10, 8); (register, 0x5000, 16) LOAD (const, 0x1b1, 8) , (unique, 0x7400, 8); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/e927cb0819cb40aeb6fbe557479179aa.log
+
+EXIT_CODE=1

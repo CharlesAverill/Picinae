@@ -1,0 +1,5 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/insque", "insque"]
+PASS 1 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e08-arm-lifts/replay01/insque
+Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/3408923239924593bc4131bc4b57e147.log
+
+EXIT_CODE=0
