@@ -1,0 +1,480 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-f791c5bc
+COMMAND=bash notes/r27-find-task-fix/build.sh
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMISSION WAIT r27-find-task-fix available RAM reserve
+ADMITTED r27-find-task-fix memory_kib=2500000
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2718:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_prvSearchForNameWithinSingleList_proof.{glob,vo} (exit 1)
+Goal at < 1488 >
+Goal at < 1490 >
+Goal at < 1550 >
+Goal at < 1520 >
+Goal at < 1550 >
+Goal at < 1514 >
+Goal at < 1550 >
+Goal at < 1520 >
+Goal at < 1550 >
+Goal at < 1528 >
+Goal at < 1514 >
+Goal at < 1510 >
+Goal at < 1528 >
+Goal at < 1514 >
+OBLIGATION
+(search_running initial
+   (initial
+    [V_MEM32 := initial V_MEM32 [Ⓓinitial R_SP ⊖ 20 := initial R_R4 ]
+                [Ⓓinitial R_SP ⊖ 16 := initial R_R5 ] [Ⓓ
+                initial R_SP ⊖ 12 := initial R_R6 ] [Ⓓ
+                initial R_SP ⊖ 8 := initial R_R7 ] [Ⓓ
+                initial R_SP ⊖ 4 := initial R_LR ]]
+    [R_SP := initial R_SP ⊖ 20]) /\
+ initial R_R0 = initial R_R0)
+OBLIGATION
+(search_running initial
+   (s1[R_R3 := s1 V_MEM32 Ⓓ[ initial R_R0 ]][F_V := 0][F_C := 1][F_N := 0]
+    [F_Z := 1][R_R0 := 0]) /\
+ 0 = search_result (initial V_MEM32) (initial R_R1) nodes)
+OBLIGATION
+(search_running initial
+   (s1[R_R3 := s1 V_MEM32 Ⓓ[ initial R_R0 ]][R_R7 := 
+    8 ⊕ initial R_R0][R_R6 := s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ]]
+    [F_V := ((8 ⊕ initial R_R0 .^ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])
+             .& (8 ⊕ initial R_R0
+                 .^ 8 + initial R_R0 ⊖ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])) >>
+            31]
+    [F_C := if s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ] <=? 8 ⊕ initial R_R0
+            then 1
+            else 0]
+    [F_N := 0][F_Z := 1][R_R0 := 0]) /\
+ 0 = search_result (initial V_MEM32) (initial R_R1) nodes)
+OBLIGATION
+(search_running initial
+   (s1[R_R0 := initial R_R0][R_R3 := s1 V_MEM32 Ⓓ[ initial R_R0 ]]
+    [R_R7 := 8 ⊕ initial R_R0][R_R6 := s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ]]
+    [F_N := 8 + initial R_R0 ⊖ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ] >> 31]
+    [F_Z := 0]
+    [F_V := ((8 ⊕ initial R_R0 .^ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])
+             .& (8 ⊕ initial R_R0
+                 .^ 8 + initial R_R0 ⊖ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])) >>
+            31]
+    [F_C := if s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ] <=? 8 ⊕ initial R_R0
+            then 1
+            else 0]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R0 := initial R_R0][R_R3 := s1 V_MEM32 Ⓓ[ initial R_R0 ]]
+       [R_R7 := 8 ⊕ initial R_R0][R_R6 := s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ]]
+       [F_N := 8 + initial R_R0 ⊖ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ] >> 31]
+       [F_Z := 0]
+       [F_V := ((8 ⊕ initial R_R0 .^ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])
+                .& (8 ⊕ initial R_R0
+                    .^ 8 + initial R_R0 ⊖ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])) >>
+               31]
+       [F_C := if s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ] <=? 8 ⊕ initial R_R0
+               then 1
+               else 0])
+      nodes item owner tail))
+OBLIGATION
+(search_running initial
+   (s1[R_R0 := v0][F_N := v0 >> 31][F_Z := 1][F_V := 0][F_C := 1]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R0 := v0][F_N := v0 >> 31][F_Z := 1][F_V := 0][F_C := 1]) nodes
+      item owner tail /\
+    search_name_matchb (initial V_MEM32) (initial R_R1) owner = false))
+OBLIGATION
+(search_running initial
+   (s1[R_R0 := v0][F_N := v0 >> 31][F_Z := 0][F_V := 0][F_C := 1]) /\
+ v0 = search_result (initial V_MEM32) (initial R_R1) nodes)
+OBLIGATION
+(search_running initial
+   (s1[R_R6 := s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ]]
+    [F_V := ((s1 R_R7 .^ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])
+             .& (s1 R_R7 .^ s1 R_R7 ⊖ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])) >>
+            31]
+    [F_C := if s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ] <=? s1 R_R7 then 1 else 0]
+    [F_N := 0][F_Z := 1][R_R0 := 0]) /\
+ 0 = search_result (initial V_MEM32) (initial R_R1) nodes)
+OBLIGATION
+(search_running initial
+   (s1[R_R6 := s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ]]
+    [F_N := s1 R_R7 ⊖ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ] >> 31][F_Z := 0]
+    [F_V := ((s1 R_R7 .^ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])
+             .& (s1 R_R7 .^ s1 R_R7 ⊖ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])) >>
+            31]
+    [F_C := if s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ] <=? s1 R_R7 then 1 else 0]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R6 := s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ]]
+       [F_N := s1 R_R7 ⊖ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ] >> 31][F_Z := 0]
+       [F_V := ((s1 R_R7 .^ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])
+                .& (s1 R_R7 .^ s1 R_R7 ⊖ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])) >>
+               31]
+       [F_C := if s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ] <=? s1 R_R7 then 1 else 0])
+      nodes item owner tail))
+OBLIGATION
+(search_running initial
+   (s1[R_R6 := v][R_R0 := s1 V_MEM32 Ⓓ[ 12 + v ]][R_R3 := 0]
+    [F_N := 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] >> 31]
+    [F_Z := if 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] =? 0 then 1 else 0]
+    [F_V := ((s1 V_MEM32 Ⓓ[ 12 + v ] .^ 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ])
+             .& (52 .^ 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ])) >>
+            31]
+    [F_C := if 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] <? s1 V_MEM32 Ⓓ[ 12 + v ]
+            then 1
+            else 0]
+    [R_R5 := 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ]]) /\
+ (exists (item owner : N) (tail : search_nodes) (k : nat),
+    search_position initial
+      (s1[R_R6 := v][R_R0 := s1 V_MEM32 Ⓓ[ 12 + v ]][R_R3 := 0]
+       [F_N := 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] >> 31]
+       [F_Z := if 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] =? 0 then 1 else 0]
+       [F_V := ((s1 V_MEM32 Ⓓ[ 12 + v ] .^ 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ])
+                .& (52 .^ 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ])) >>
+               31]
+       [F_C := if 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] <? s1 V_MEM32 Ⓓ[ 12 + v ]
+               then 1
+               else 0]
+       [R_R5 := 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ]])
+      nodes item owner tail /\
+    (k < 16)%nat /\
+    s1 V_MEM32 Ⓓ[ 12 + v ] = owner /\
+    52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] = owner + 52 /\
+    0 = N.of_nat k /\ search_prefix (initial V_MEM32) (initial R_R1) owner k))
+OBLIGATION
+(search_running initial
+   (s1[R_R3 := N.of_nat v2][R_R5 := 52 + v0]
+    [R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+    [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]][F_N := 0][F_Z := 1]
+    [F_V := 0][F_C := 1]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R3 := N.of_nat v2][R_R5 := 52 + v0]
+       [R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+       [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]][F_N := 0][F_Z := 1]
+       [F_V := 0][F_C := 1])
+      nodes item owner tail /\
+    s1 R_R0 = owner /\
+    search_name_matchb (initial V_MEM32) (initial R_R1) owner = true))
+OBLIGATION
+(search_running initial
+   (s1[R_R5 := 52 + v0][R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+    [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]][R_R3 := 
+    1 ⊕ N.of_nat v2][F_N := N.of_nat v2 ⊖ 15 >> 31][F_Z := 1]
+    [F_V := ((1 ⊕ N.of_nat v2 .^ 16) .& (1 ⊕ N.of_nat v2 .^ N.of_nat v2 ⊖ 15)) >>
+            31]
+    [F_C := if 16 <=? 1 ⊕ N.of_nat v2 then 1 else 0]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R5 := 52 + v0][R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+       [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]]
+       [R_R3 := 1 ⊕ N.of_nat v2][F_N := N.of_nat v2 ⊖ 15 >> 31][F_Z := 1]
+       [F_V := ((1 ⊕ N.of_nat v2 .^ 16)
+                .& (1 ⊕ N.of_nat v2 .^ N.of_nat v2 ⊖ 15)) >>
+               31]
+       [F_C := if 16 <=? 1 ⊕ N.of_nat v2 then 1 else 0])
+      nodes item owner tail /\
+    search_name_matchb (initial V_MEM32) (initial R_R1) owner = false))
+OBLIGATION
+(search_running initial
+   (s1[R_R5 := 52 + v0][R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+    [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]][R_R3 := 
+    1 ⊕ N.of_nat v2][F_N := N.of_nat v2 ⊖ 15 >> 31][F_Z := 0]
+    [F_V := ((1 ⊕ N.of_nat v2 .^ 16) .& (1 ⊕ N.of_nat v2 .^ N.of_nat v2 ⊖ 15)) >>
+            31]
+    [F_C := if 16 <=? 1 ⊕ N.of_nat v2 then 1 else 0]) /\
+ (exists (item owner : N) (tail : search_nodes) (k : nat),
+    search_position initial
+      (s1[R_R5 := 52 + v0][R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+       [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]]
+       [R_R3 := 1 ⊕ N.of_nat v2][F_N := N.of_nat v2 ⊖ 15 >> 31][F_Z := 0]
+       [F_V := ((1 ⊕ N.of_nat v2 .^ 16)
+                .& (1 ⊕ N.of_nat v2 .^ N.of_nat v2 ⊖ 15)) >>
+               31]
+       [F_C := if 16 <=? 1 ⊕ N.of_nat v2 then 1 else 0])
+      nodes item owner tail /\
+    (k < 16)%nat /\
+    s1 R_R0 = owner /\
+    52 + v0 = owner + 52 /\
+    1 ⊕ N.of_nat v2 = N.of_nat k /\
+    search_prefix (initial V_MEM32) (initial R_R1) owner k))
+OBLIGATION
+(search_running initial
+   (s1[R_R3 := N.of_nat v2][R_R5 := 52 + v0]
+    [R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+    [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]]
+    [F_N := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]
+            ⊖ s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ] >> 31]
+    [F_Z := 0][F_V := 0]
+    [F_C := if
+             s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ] <=?
+             s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]
+            then 1
+            else 0]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R3 := N.of_nat v2][R_R5 := 52 + v0]
+       [R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+       [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]]
+       [F_N := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]
+               ⊖ s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ] >> 31]
+       [F_Z := 0][F_V := 0]
+       [F_C := if
+                s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ] <=?
+                s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]
+               then 1
+               else 0])
+      nodes item owner tail /\
+    search_name_matchb (initial V_MEM32) (initial R_R1) owner = false))
+13 goals
+  
+  initial : store
+  nodes : search_nodes
+  t : list (exit * store)
+  s' : store
+  x' : exit
+  INPUT : search_precondition initial nodes
+  t1, t2 : list (exit * store)
+  UT : unterminated search_exit t1
+  SPL : (x', s') :: t = t2 ++ (Addr 1488, initial) :: t1
+  MDL1 : models archtyps initial
+  ENTRY : startof t1 (Addr 1488, initial) = (Addr 1488, initial)
+  ACC : MemAcc mem_writable initial (initial R_SP ⊖ 20) 32 4
+  ACC0 : MemAcc mem_writable initial (initial R_SP ⊖ 16) 32 4
+  ACC1 : MemAcc mem_writable initial (initial R_SP ⊖ 12) 32 4
+  ACC2 : MemAcc mem_writable initial (initial R_SP ⊖ 8) 32 4
+  ACC3 : MemAcc mem_writable initial (initial R_SP ⊖ 4) 32 4
+  ============================
+  search_running initial
+    (initial
+     [V_MEM32 := initial V_MEM32 [Ⓓinitial R_SP ⊖ 20 := initial R_R4 ]
+                 [Ⓓinitial R_SP ⊖ 16 := initial R_R5 ] [Ⓓ
+                 initial R_SP ⊖ 12 := initial R_R6 ] [Ⓓ
+                 initial R_SP ⊖ 8 := initial R_R7 ] [Ⓓ
+                 initial R_SP ⊖ 4 := initial R_LR ]]
+     [R_SP := initial R_SP ⊖ 20]) /\
+  initial R_R0 = initial R_R0
+
+goal 2 is:
+ search_running initial
+   (s1[R_R3 := s1 V_MEM32 Ⓓ[ initial R_R0 ]][F_V := 0][F_C := 1][F_N := 0]
+    [F_Z := 1][R_R0 := 0]) /\
+ 0 = search_result (initial V_MEM32) (initial R_R1) nodes
+goal 3 is:
+ search_running initial
+   (s1[R_R3 := s1 V_MEM32 Ⓓ[ initial R_R0 ]][R_R7 := 
+    8 ⊕ initial R_R0][R_R6 := s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ]]
+    [F_V := ((8 ⊕ initial R_R0 .^ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])
+             .& (8 ⊕ initial R_R0
+                 .^ 8 + initial R_R0 ⊖ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])) >>
+            31]
+    [F_C := if s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ] <=? 8 ⊕ initial R_R0
+            then 1
+            else 0]
+    [F_N := 0][F_Z := 1][R_R0 := 0]) /\
+ 0 = search_result (initial V_MEM32) (initial R_R1) nodes
+goal 4 is:
+ search_running initial
+   (s1[R_R0 := initial R_R0][R_R3 := s1 V_MEM32 Ⓓ[ initial R_R0 ]]
+    [R_R7 := 8 ⊕ initial R_R0][R_R6 := s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ]]
+    [F_N := 8 + initial R_R0 ⊖ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ] >> 31]
+    [F_Z := 0]
+    [F_V := ((8 ⊕ initial R_R0 .^ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])
+             .& (8 ⊕ initial R_R0
+                 .^ 8 + initial R_R0 ⊖ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])) >>
+            31]
+    [F_C := if s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ] <=? 8 ⊕ initial R_R0
+            then 1
+            else 0]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R0 := initial R_R0][R_R3 := s1 V_MEM32 Ⓓ[ initial R_R0 ]]
+       [R_R7 := 8 ⊕ initial R_R0][R_R6 := s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ]]
+       [F_N := 8 + initial R_R0 ⊖ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ] >> 31]
+       [F_Z := 0]
+       [F_V := ((8 ⊕ initial R_R0 .^ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])
+                .& (8 ⊕ initial R_R0
+                    .^ 8 + initial R_R0 ⊖ s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ])) >>
+               31]
+       [F_C := if s1 V_MEM32 Ⓓ[ 12 + initial R_R0 ] <=? 8 ⊕ initial R_R0
+               then 1
+               else 0])
+      nodes item owner tail)
+goal 5 is:
+ search_running initial
+   (s1[R_R0 := v0][F_N := v0 >> 31][F_Z := 1][F_V := 0][F_C := 1]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R0 := v0][F_N := v0 >> 31][F_Z := 1][F_V := 0][F_C := 1]) nodes
+      item owner tail /\
+    search_name_matchb (initial V_MEM32) (initial R_R1) owner = false)
+goal 6 is:
+ search_running initial
+   (s1[R_R0 := v0][F_N := v0 >> 31][F_Z := 0][F_V := 0][F_C := 1]) /\
+ v0 = search_result (initial V_MEM32) (initial R_R1) nodes
+goal 7 is:
+ search_running initial
+   (s1[R_R6 := s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ]]
+    [F_V := ((s1 R_R7 .^ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])
+             .& (s1 R_R7 .^ s1 R_R7 ⊖ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])) >>
+            31]
+    [F_C := if s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ] <=? s1 R_R7 then 1 else 0]
+    [F_N := 0][F_Z := 1][R_R0 := 0]) /\
+ 0 = search_result (initial V_MEM32) (initial R_R1) nodes
+goal 8 is:
+ search_running initial
+   (s1[R_R6 := s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ]]
+    [F_N := s1 R_R7 ⊖ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ] >> 31][F_Z := 0]
+    [F_V := ((s1 R_R7 .^ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])
+             .& (s1 R_R7 .^ s1 R_R7 ⊖ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])) >>
+            31]
+    [F_C := if s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ] <=? s1 R_R7 then 1 else 0]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R6 := s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ]]
+       [F_N := s1 R_R7 ⊖ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ] >> 31][F_Z := 0]
+       [F_V := ((s1 R_R7 .^ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])
+                .& (s1 R_R7 .^ s1 R_R7 ⊖ s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ])) >>
+               31]
+       [F_C := if s1 V_MEM32 Ⓓ[ 4 + s1 R_R6 ] <=? s1 R_R7 then 1 else 0])
+      nodes item owner tail)
+goal 9 is:
+ search_running initial
+   (s1[R_R6 := v][R_R0 := s1 V_MEM32 Ⓓ[ 12 + v ]][R_R3 := 0]
+    [F_N := 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] >> 31]
+    [F_Z := if 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] =? 0 then 1 else 0]
+    [F_V := ((s1 V_MEM32 Ⓓ[ 12 + v ] .^ 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ])
+             .& (52 .^ 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ])) >>
+            31]
+    [F_C := if 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] <? s1 V_MEM32 Ⓓ[ 12 + v ]
+            then 1
+            else 0]
+    [R_R5 := 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ]]) /\
+ (exists (item owner : N) (tail : search_nodes) (k : nat),
+    search_position initial
+      (s1[R_R6 := v][R_R0 := s1 V_MEM32 Ⓓ[ 12 + v ]][R_R3 := 0]
+       [F_N := 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] >> 31]
+       [F_Z := if 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] =? 0 then 1 else 0]
+       [F_V := ((s1 V_MEM32 Ⓓ[ 12 + v ] .^ 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ])
+                .& (52 .^ 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ])) >>
+               31]
+       [F_C := if 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] <? s1 V_MEM32 Ⓓ[ 12 + v ]
+               then 1
+               else 0]
+       [R_R5 := 52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ]])
+      nodes item owner tail /\
+    (k < 16)%nat /\
+    s1 V_MEM32 Ⓓ[ 12 + v ] = owner /\
+    52 ⊕ s1 V_MEM32 Ⓓ[ 12 + v ] = owner + 52 /\
+    0 = N.of_nat k /\ search_prefix (initial V_MEM32) (initial R_R1) owner k)
+goal 10 is:
+ search_running initial
+   (s1[R_R3 := N.of_nat v2][R_R5 := 52 + v0]
+    [R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+    [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]][F_N := 0][F_Z := 1]
+    [F_V := 0][F_C := 1]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R3 := N.of_nat v2][R_R5 := 52 + v0]
+       [R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+       [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]][F_N := 0][F_Z := 1]
+       [F_V := 0][F_C := 1])
+      nodes item owner tail /\
+    s1 R_R0 = owner /\
+    search_name_matchb (initial V_MEM32) (initial R_R1) owner = true)
+goal 11 is:
+ search_running initial
+   (s1[R_R5 := 52 + v0][R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+    [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]][R_R3 := 
+    1 ⊕ N.of_nat v2][F_N := N.of_nat v2 ⊖ 15 >> 31][F_Z := 1]
+    [F_V := ((1 ⊕ N.of_nat v2 .^ 16) .& (1 ⊕ N.of_nat v2 .^ N.of_nat v2 ⊖ 15)) >>
+            31]
+    [F_C := if 16 <=? 1 ⊕ N.of_nat v2 then 1 else 0]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R5 := 52 + v0][R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+       [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]]
+       [R_R3 := 1 ⊕ N.of_nat v2][F_N := N.of_nat v2 ⊖ 15 >> 31][F_Z := 1]
+       [F_V := ((1 ⊕ N.of_nat v2 .^ 16)
+                .& (1 ⊕ N.of_nat v2 .^ N.of_nat v2 ⊖ 15)) >>
+               31]
+       [F_C := if 16 <=? 1 ⊕ N.of_nat v2 then 1 else 0])
+      nodes item owner tail /\
+    search_name_matchb (initial V_MEM32) (initial R_R1) owner = false)
+goal 12 is:
+ search_running initial
+   (s1[R_R5 := 52 + v0][R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+    [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]][R_R3 := 
+    1 ⊕ N.of_nat v2][F_N := N.of_nat v2 ⊖ 15 >> 31][F_Z := 0]
+    [F_V := ((1 ⊕ N.of_nat v2 .^ 16) .& (1 ⊕ N.of_nat v2 .^ N.of_nat v2 ⊖ 15)) >>
+            31]
+    [F_C := if 16 <=? 1 ⊕ N.of_nat v2 then 1 else 0]) /\
+ (exists (item owner : N) (tail : search_nodes) (k : nat),
+    search_position initial
+      (s1[R_R5 := 52 + v0][R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+       [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]]
+       [R_R3 := 1 ⊕ N.of_nat v2][F_N := N.of_nat v2 ⊖ 15 >> 31][F_Z := 0]
+       [F_V := ((1 ⊕ N.of_nat v2 .^ 16)
+                .& (1 ⊕ N.of_nat v2 .^ N.of_nat v2 ⊖ 15)) >>
+               31]
+       [F_C := if 16 <=? 1 ⊕ N.of_nat v2 then 1 else 0])
+      nodes item owner tail /\
+    (k < 16)%nat /\
+    s1 R_R0 = owner /\
+    52 + v0 = owner + 52 /\
+    1 ⊕ N.of_nat v2 = N.of_nat k /\
+    search_prefix (initial V_MEM32) (initial R_R1) owner k)
+goal 13 is:
+ search_running initial
+   (s1[R_R3 := N.of_nat v2][R_R5 := 52 + v0]
+    [R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+    [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]]
+    [F_N := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]
+            ⊖ s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ] >> 31]
+    [F_Z := 0][F_V := 0]
+    [F_C := if
+             s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ] <=?
+             s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]
+            then 1
+            else 0]) /\
+ (exists (item owner : N) (tail : search_nodes),
+    search_position initial
+      (s1[R_R3 := N.of_nat v2][R_R5 := 52 + v0]
+       [R_R2 := s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ]]
+       [R_R4 := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]]
+       [F_N := s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]
+               ⊖ s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ] >> 31]
+       [F_Z := 0][F_V := 0]
+       [F_C := if
+                s1 V_MEM32 Ⓑ[ 52 + v0 + N.of_nat v2 ] <=?
+                s1 V_MEM32 Ⓑ[ s1 R_R1 + N.of_nat v2 ]
+               then 1
+               else 0])
+      nodes item owner tail /\
+    search_name_matchb (initial V_MEM32) (initial R_R1) owner = false)
+File "./Examples/FreeRTOS/armv6m_prvSearchForNameWithinSingleList_proof.v", line 372, characters 6-39:
+Error: Tactic failure: execution diagnostic.
+
+RELEASED r27-find-task-fix exit=1
+
+EXIT_CODE=1

@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-f791c5bc
+COMMAND=bash -e -c git\ merge-base\ --is-ancestor\ HEAD\ 00ca4312875f97177309034d7ee743a5ca7bb03f\;\ git\ branch\ -m\ llm-proofs/r27-find-task-fix\;\ git\ merge\ --ff-only\ 00ca4312875f97177309034d7ee743a5ca7bb03f\;\ git\ merge-base\ origin/llm_generated_proofs\ HEAD\;\ git\ log\ --format=\"%H\ %s\"\ origin/llm_generated_proofs..HEAD\;\ git\ diff\ --stat\ origin/llm_generated_proofs...HEAD\;\ git\ status\ --short
+error: unable to move logfile logs/refs/heads/t3/find-task-proof-fix to logs/refs/.tmp-renamed-log: Read-only file system
+fatal: branch rename failed
+
+EXIT_CODE=128

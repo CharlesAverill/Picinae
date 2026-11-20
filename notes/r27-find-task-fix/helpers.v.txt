@@ -1,0 +1,78 @@
+(* Small original-memory facts for the loop proof. *)
+Lemma search_image_read : forall m p a n v0 v4 v8 v12 v16,
+  separate32 a n p 20 ->
+  getmem 32 LittleE n (image20 m p v0 v4 v8 v12 v16) a =
+  getmem 32 LittleE n m a.
+Proof.
+  intros m p a n v0 v4 v8 v12 v16 SEP.
+  unfold image20, write_field32.
+  repeat rewrite getmem_noverlap
+    by (apply noverlap_index_r; [exact SEP|discriminate]).
+  reflexivity.
+Qed.
+
+Lemma search_chain_node : forall m sentinel before item owner tail head,
+  search_chain m sentinel head (before ++ (item,owner)::tail) ->
+  item <> sentinel /\ object32 item 20 /\ object32 owner 84 /\
+  field32 m item 12 = owner /\
+  search_chain m sentinel (field32 m item 4) tail.
+Proof.
+  intros m sentinel before. induction before as [|[i o] before IH];
+    intros item owner tail head CH.
+  - exact (proj2 CH).
+  - apply (IH item owner tail (field32 m i 4)).
+    exact (proj2 (proj2 (proj2 (proj2 (proj2 CH))))).
+Qed.
+
+Lemma search_position_facts : forall initial current nodes item owner tail,
+  search_precondition initial nodes ->
+  search_position initial current nodes item owner tail ->
+  item <> initial R_R0+8 /\ object32 item 20 /\ object32 owner 84 /\
+  field32 (initial V_MEM32) item 12 = owner /\
+  search_chain (initial V_MEM32) (initial R_R0+8)
+    (field32 (initial V_MEM32) item 4) tail.
+Proof.
+  intros initial current nodes item owner tail PRE [before [E REST]].
+  destruct PRE as [_ [[OBJ [COUNT CH]] RESTP]].
+  rewrite E in CH. exact (search_chain_node _ _ before item owner tail _ CH).
+Qed.
+
+Lemma search_node_separate : forall initial nodes before item owner tail,
+  search_precondition initial nodes -> nodes=before++(item,owner)::tail ->
+  separate32 item 20 (initial R_SP-20) 20 /\
+  separate32 owner 84 (initial R_SP-20) 20.
+Proof.
+  intros initial nodes before item owner tail PRE E.
+  destruct PRE as [_ [_ [_ [_ [_ [_ [[SL [SQ SN]] REST]]]]]]].
+  rewrite E in SN. rewrite Forall_app in SN.
+  exact (Forall_inv (proj2 SN)).
+Qed.
+
+Lemma search_prefix_step : forall m q o k,
+  search_prefix m q o k ->
+  search_task_byte m o k = search_query_byte m q k ->
+  search_task_byte m o k <> 0 -> search_prefix m q o (S k).
+Proof.
+  intros m q o k PRE EQ NZ j LT.
+  destruct (Nat.eq_dec j k) as [->|NE]; [auto|apply PRE; lia].
+Qed.
+
+Lemma search_stack_load : forall initial p n off size,
+  separate32 p n (initial R_SP-20) 20 -> off+size <= n ->
+  getmem 32 LittleE size (search_stack_image initial) (p+off) =
+  getmem 32 LittleE size (initial V_MEM32) (p+off).
+Proof.
+  intros initial p n off size SEP IN. unfold search_stack_image.
+  apply search_image_read. apply (noverlap_index_l 32 p n
+    (initial R_SP-20) 20 off size SEP IN).
+Qed.
+
+Lemma search_position_result : forall initial current nodes item owner tail,
+  search_position initial current nodes item owner tail ->
+  search_result (initial V_MEM32) (initial R_R1) nodes =
+  if search_name_matchb (initial V_MEM32) (initial R_R1) owner
+  then owner else search_result (initial V_MEM32) (initial R_R1) tail.
+Proof.
+  intros initial current nodes item owner tail [before [E [F REST]]].
+  rewrite E, (search_skip_prefix _ _ before _ F). reflexivity.
+Qed.

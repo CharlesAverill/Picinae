@@ -1,0 +1,24 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-db745613
+COMMAND=python3 notes/r00-list-model-fix/check-preservation.py
+PASS: all original non-proof code preserved (all definitions and 19 statements)
+field32_bound
+field32_read_write
+field32_frame
+ranges32_separate
+field_address32_nowrap
+fields20_separate
+field32_object_frame
+outside_frame32_refl
+outside_frame32_trans
+outside_frame32_write
+image20_fields
+image20_frame
+image20_welltyped
+empty_image_spec
+empty_image_frame
+memory_store32_welltyped
+empty_list_witness
+list_regions_witness
+concrete_empty_list_witness
+
+EXIT_CODE=0

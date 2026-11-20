@@ -1,0 +1,424 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1f7f6596
+COMMAND=python3 /home/charles/code/friends/.refs/picinae-llm-proofs/resources/resource-run.py --unit r27-find-task --memory-kib 2500000 -- /home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2500000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_prvSearchForNameWithinSingleList_proof.vo
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task paging activity
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMISSION WAIT r27-find-task available RAM reserve
+ADMITTED r27-find-task memory_kib=2500000
+        rocq .Picinae.theory.d
+        rocq Picinae_core.{glob,vo}
+        rocq Picinae_theory.{glob,vo}
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 2687, characters 29-37:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3029, characters 25-33:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 3459, characters 26-34:
+Warning: Reference Zmod_0_r is deprecated since 9.1. Use Z.mod_0_r instead.
+[deprecated-reference-since-9.1,deprecated-since-9.1,deprecated-reference,deprecated,default]
+File "./Picinae_theory.v", line 9152, characters 47-67:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9152, characters 47-67:
+Warning: Notation N.div_lt_upper_bound is deprecated since 8.17.
+Use Div0.div_lt_upper_bound instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 14-23:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9169, characters 53-62:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 12-21:
+Warning: Notation N.add_mod is deprecated since 8.17.
+Use Div0.add_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+File "./Picinae_theory.v", line 9175, characters 51-60:
+Warning: Notation N.mod_mod is deprecated since 8.17.
+Use Div0.mod_mod instead.
+[deprecated-syntactic-definition-since-8.17,deprecated-since-8.17,deprecated-syntactic-definition,deprecated,default]
+        rocq Picinae_statics.{glob,vo}
+        rocq Picinae_finterp.{glob,vo}
+        rocq Picinae_simplifier_base.{glob,vo}
+        rocq Picinae_ISA.{glob,vo}
+        rocq Picinae_simplifier_v1_1.{glob,vo}
+        rocq Picinae_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/armv6m_list_model.{glob,vo}
+        rocq Examples/FreeRTOS/prvSearchForNameWithinSingleList_armv6m.{glob,vo}
+        rocq Examples/FreeRTOS/armv6m_prvSearchForNameWithinSingleList_proof.{glob,vo} (exit 1)
+File "./Examples/FreeRTOS/armv6m_prvSearchForNameWithinSingleList_proof.v", line 241, characters 39-48:
+Error: Found no subterm matching
+"(search_task_byte m o 0 =? 0) &&
+ ((search_task_byte m o 0 =? search_query_byte m q 0) && true)
+ || ((search_task_byte m o 1 =? 0) &&
+     ((search_task_byte m o 0 =? search_query_byte m q 0) &&
+      ((search_task_byte m o 1 =? search_query_byte m q 1) && true))
+     || ((search_task_byte m o 2 =? 0) &&
+         ((search_task_byte m o 0 =? search_query_byte m q 0) &&
+          ((search_task_byte m o 1 =? search_query_byte m q 1) &&
+           ((search_task_byte m o 2 =? search_query_byte m q 2) && true)))
+         || ((search_task_byte m o 3 =? 0) &&
+             ((search_task_byte m o 0 =? search_query_byte m q 0) &&
+              ((search_task_byte m o 1 =? search_query_byte m q 1) &&
+               ((search_task_byte m o 2 =? search_query_byte m q 2) &&
+                ((search_task_byte m o 3 =? search_query_byte m q 3) && true))))
+             || ((search_task_byte m o 4 =? 0) &&
+                 ((search_task_byte m o 0 =? search_query_byte m q 0) &&
+                  ((search_task_byte m o 1 =? search_query_byte m q 1) &&
+                   ((search_task_byte m o 2 =? search_query_byte m q 2) &&
+                    ((search_task_byte m o 3 =? search_query_byte m q 3) &&
+                     ((search_task_byte m o 4 =? search_query_byte m q 4) &&
+                      true)))))
+                 || ((search_task_byte m o 5 =? 0) &&
+                     ((search_task_byte m o 0 =? search_query_byte m q 0) &&
+                      ((search_task_byte m o 1 =? search_query_byte m q 1) &&
+                       ((search_task_byte m o 2 =? search_query_byte m q 2) &&
+                        ((search_task_byte m o 3 =? search_query_byte m q 3) &&
+                         ((search_task_byte m o 4 =? search_query_byte m q 4) &&
+                          ((search_task_byte m o 5 =? search_query_byte m q 5) &&
+                           true))))))
+                     || ((search_task_byte m o 6 =? 0) &&
+                         ((search_task_byte m o 0 =? search_query_byte m q 0) &&
+                          ((search_task_byte m o 1 =? search_query_byte m q 1) &&
+                           ((search_task_byte m o 2 =?
+                             search_query_byte m q 2) &&
+                            ((search_task_byte m o 3 =?
+                              search_query_byte m q 3) &&
+                             ((search_task_byte m o 4 =?
+                               search_query_byte m q 4) &&
+                              ((search_task_byte m o 5 =?
+                                search_query_byte m q 5) &&
+                               ((search_task_byte m o 6 =?
+                                 search_query_byte m q 6) &&
+                                true)))))))
+                         || ((search_task_byte m o 7 =? 0) &&
+                             ((search_task_byte m o 0 =?
+                               search_query_byte m q 0) &&
+                              ((search_task_byte m o 1 =?
+                                search_query_byte m q 1) &&
+                               ((search_task_byte m o 2 =?
+                                 search_query_byte m q 2) &&
+                                ((search_task_byte m o 3 =?
+                                  search_query_byte m q 3) &&
+                                 ((search_task_byte m o 4 =?
+                                   search_query_byte m q 4) &&
+                                  ((search_task_byte m o 5 =?
+                                    search_query_byte m q 5) &&
+                                   ((search_task_byte m o 6 =?
+                                     search_query_byte m q 6) &&
+                                    ((search_task_byte m o 7 =?
+                                      search_query_byte m q 7) &&
+                                     true))))))))
+                             || ((search_task_byte m o 8 =? 0) &&
+                                 ((search_task_byte m o 0 =?
+                                   search_query_byte m q 0) &&
+                                  ((search_task_byte m o 1 =?
+                                    search_query_byte m q 1) &&
+                                   ((search_task_byte m o 2 =?
+                                     search_query_byte m q 2) &&
+                                    ((search_task_byte m o 3 =?
+                                      search_query_byte m q 3) &&
+                                     ((search_task_byte m o 4 =?
+                                       search_query_byte m q 4) &&
+                                      ((search_task_byte m o 5 =?
+                                        search_query_byte m q 5) &&
+                                       ((search_task_byte m o 6 =?
+                                         search_query_byte m q 6) &&
+                                        ((search_task_byte m o 7 =?
+                                          search_query_byte m q 7) &&
+                                         ((search_task_byte m o 8 =?
+                                           search_query_byte m q 8) &&
+                                          true)))))))))
+                                 || ((search_task_byte m o 9 =? 0) &&
+                                     ((search_task_byte m o 0 =?
+                                       search_query_byte m q 0) &&
+                                      ((search_task_byte m o 1 =?
+                                        search_query_byte m q 1) &&
+                                       ((search_task_byte m o 2 =?
+                                         search_query_byte m q 2) &&
+                                        ((search_task_byte m o 3 =?
+                                          search_query_byte m q 3) &&
+                                         ((search_task_byte m o 4 =?
+                                           search_query_byte m q 4) &&
+                                          ((search_task_byte m o 5 =?
+                                            search_query_byte m q 5) &&
+                                           ((search_task_byte m o 6 =?
+                                             search_query_byte m q 6) &&
+                                            ((search_task_byte m o 7 =?
+                                              search_query_byte m q 7) &&
+                                             ((search_task_byte m o 8 =?
+                                               search_query_byte m q 8) &&
+                                              ((search_task_byte m o 9 =?
+                                                search_query_byte m q 9) &&
+                                               true))))))))))
+                                     || ((search_task_byte m o 10 =? 0) &&
+                                         ((search_task_byte m o 0 =?
+                                           search_query_byte m q 0) &&
+                                          ((search_task_byte m o 1 =?
+                                            search_query_byte m q 1) &&
+                                           ((search_task_byte m o 2 =?
+                                             search_query_byte m q 2) &&
+                                            ((search_task_byte m o 3 =?
+                                              search_query_byte m q 3) &&
+                                             ((search_task_byte m o 4 =?
+                                               search_query_byte m q 4) &&
+                                              ((search_task_byte m o 5 =?
+                                                search_query_byte m q 5) &&
+                                               ((search_task_byte m o 6 =?
+                                                 search_query_byte m q 6) &&
+                                                ((search_task_byte m o 7 =?
+                                                 search_query_byte m q 7) &&
+                                                 ((search_task_byte m o 8 =?
+                                                 search_query_byte m q 8) &&
+                                                 ((search_task_byte m o 9 =?
+                                                 search_query_byte m q 9) &&
+                                                 ((search_task_byte m o 10 =?
+                                                 search_query_byte m q 10) &&
+                                                 true)))))))))))
+                                         || ((search_task_byte m o 11 =? 0) &&
+                                             ((search_task_byte m o 0 =?
+                                               search_query_byte m q 0) &&
+                                              ((search_task_byte m o 1 =?
+                                                search_query_byte m q 1) &&
+                                               ((search_task_byte m o 2 =?
+                                                 search_query_byte m q 2) &&
+                                                ((search_task_byte m o 3 =?
+                                                 search_query_byte m q 3) &&
+                                                 ((search_task_byte m o 4 =?
+                                                 search_query_byte m q 4) &&
+                                                 ((search_task_byte m o 5 =?
+                                                 search_query_byte m q 5) &&
+                                                 ((search_task_byte m o 6 =?
+                                                 search_query_byte m q 6) &&
+                                                 ((search_task_byte m o 7 =?
+                                                 search_query_byte m q 7) &&
+                                                 ((search_task_byte m o 8 =?
+                                                 search_query_byte m q 8) &&
+                                                 ((search_task_byte m o 9 =?
+                                                 search_query_byte m q 9) &&
+                                                 ((search_task_byte m o 10 =?
+                                                 search_query_byte m q 10) &&
+                                                 ((search_task_byte m o 11 =?
+                                                 search_query_byte m q 11) &&
+                                                 true))))))))))))
+                                             || ((search_task_byte m o 12 =?
+                                                 0) &&
+                                                 ((search_task_byte m o 0 =?
+                                                 search_query_byte m q 0) &&
+                                                 ((search_task_byte m o 1 =?
+                                                 search_query_byte m q 1) &&
+                                                 ((search_task_byte m o 2 =?
+                                                 search_query_byte m q 2) &&
+                                                 ((search_task_byte m o 3 =?
+                                                 search_query_byte m q 3) &&
+                                                 ((search_task_byte m o 4 =?
+                                                 search_query_byte m q 4) &&
+                                                 ((search_task_byte m o 5 =?
+                                                 search_query_byte m q 5) &&
+                                                 ((search_task_byte m o 6 =?
+                                                 search_query_byte m q 6) &&
+                                                 ((search_task_byte m o 7 =?
+                                                 search_query_byte m q 7) &&
+                                                 ((search_task_byte m o 8 =?
+                                                 search_query_byte m q 8) &&
+                                                 ((search_task_byte m o 9 =?
+                                                 search_query_byte m q 9) &&
+                                                 ((search_task_byte m o 10 =?
+                                                 search_query_byte m q 10) &&
+                                                 ((search_task_byte m o 11 =?
+                                                 search_query_byte m q 11) &&
+                                                 ((search_task_byte m o 12 =?
+                                                 search_query_byte m q 12) &&
+                                                 true)))))))))))))
+                                                 || 
+                                                 ((search_task_byte m o 13 =?
+                                                 0) &&
+                                                 ((search_task_byte m o 0 =?
+                                                 search_query_byte m q 0) &&
+                                                 ((search_task_byte m o 1 =?
+                                                 search_query_byte m q 1) &&
+                                                 ((search_task_byte m o 2 =?
+                                                 search_query_byte m q 2) &&
+                                                 ((search_task_byte m o 3 =?
+                                                 search_query_byte m q 3) &&
+                                                 ((search_task_byte m o 4 =?
+                                                 search_query_byte m q 4) &&
+                                                 ((search_task_byte m o 5 =?
+                                                 search_query_byte m q 5) &&
+                                                 ((search_task_byte m o 6 =?
+                                                 search_query_byte m q 6) &&
+                                                 ((search_task_byte m o 7 =?
+                                                 search_query_byte m q 7) &&
+                                                 ((search_task_byte m o 8 =?
+                                                 search_query_byte m q 8) &&
+                                                 ((search_task_byte m o 9 =?
+                                                 search_query_byte m q 9) &&
+                                                 ((search_task_byte m o 10 =?
+                                                 search_query_byte m q 10) &&
+                                                 ((search_task_byte m o 11 =?
+                                                 search_query_byte m q 11) &&
+                                                 ((search_task_byte m o 12 =?
+                                                 search_query_byte m q 12) &&
+                                                 ((search_task_byte m o 13 =?
+                                                 search_query_byte m q 13) &&
+                                                 true))))))))))))))
+                                                 || 
+                                                 ((search_task_byte m o 14 =?
+                                                 0) &&
+                                                 ((search_task_byte m o 0 =?
+                                                 search_query_byte m q 0) &&
+                                                 ((search_task_byte m o 1 =?
+                                                 search_query_byte m q 1) &&
+                                                 ((search_task_byte m o 2 =?
+                                                 search_query_byte m q 2) &&
+                                                 ((search_task_byte m o 3 =?
+                                                 search_query_byte m q 3) &&
+                                                 ((search_task_byte m o 4 =?
+                                                 search_query_byte m q 4) &&
+                                                 ((search_task_byte m o 5 =?
+                                                 search_query_byte m q 5) &&
+                                                 ((search_task_byte m o 6 =?
+                                                 search_query_byte m q 6) &&
+                                                 ((search_task_byte m o 7 =?
+                                                 search_query_byte m q 7) &&
+                                                 ((search_task_byte m o 8 =?
+                                                 search_query_byte m q 8) &&
+                                                 ((search_task_byte m o 9 =?
+                                                 search_query_byte m q 9) &&
+                                                 ((search_task_byte m o 10 =?
+                                                 search_query_byte m q 10) &&
+                                                 ((search_task_byte m o 11 =?
+                                                 search_query_byte m q 11) &&
+                                                 ((search_task_byte m o 12 =?
+                                                 search_query_byte m q 12) &&
+                                                 ((search_task_byte m o 13 =?
+                                                 search_query_byte m q 13) &&
+                                                 ((search_task_byte m o 14 =?
+                                                 search_query_byte m q 14) &&
+                                                 true)))))))))))))))
+                                                 || 
+                                                 ((search_task_byte m o 15 =?
+                                                 0) &&
+                                                 ((search_task_byte m o 0 =?
+                                                 search_query_byte m q 0) &&
+                                                 ((search_task_byte m o 1 =?
+                                                 search_query_byte m q 1) &&
+                                                 ((search_task_byte m o 2 =?
+                                                 search_query_byte m q 2) &&
+                                                 ((search_task_byte m o 3 =?
+                                                 search_query_byte m q 3) &&
+                                                 ((search_task_byte m o 4 =?
+                                                 search_query_byte m q 4) &&
+                                                 ((search_task_byte m o 5 =?
+                                                 search_query_byte m q 5) &&
+                                                 ((search_task_byte m o 6 =?
+                                                 search_query_byte m q 6) &&
+                                                 ((search_task_byte m o 7 =?
+                                                 search_query_byte m q 7) &&
+                                                 ((search_task_byte m o 8 =?
+                                                 search_query_byte m q 8) &&
+                                                 ((search_task_byte m o 9 =?
+                                                 search_query_byte m q 9) &&
+                                                 ((search_task_byte m o 10 =?
+                                                 search_query_byte m q 10) &&
+                                                 ((search_task_byte m o 11 =?
+                                                 search_query_byte m q 11) &&
+                                                 ((search_task_byte m o 12 =?
+                                                 search_query_byte m q 12) &&
+                                                 ((search_task_byte m o 13 =?
+                                                 search_query_byte m q 13) &&
+                                                 ((search_task_byte m o 14 =?
+                                                 search_query_byte m q 14) &&
+                                                 ((search_task_byte m o 15 =?
+                                                 search_query_byte m q 15) &&
+                                                 true))))))))))))))))
+                                                 || false)))))))))))))))"
+in the current goal.
+
+RELEASED r27-find-task exit=1
+
+EXIT_CODE=1

@@ -1,0 +1,90 @@
+Proof.
+  intros initial nodes t s' x' INPUT ENTRY. apply prove_invs.
+  - simpl. rewrite ENTRY. armv6m_step. reflexivity.
+  - intros t1 a1 s1 t2 UT SPL PRE.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; [exact (proj1 INPUT)|apply search_welltyped|exact ENTRY|].
+    intro MDL1.
+    pose proof INPUT as DATA.
+    destruct DATA as [MDL [[LOBJ [COUNT CHAIN]] [QR [SPLB [SPUB [ALIGN [[SL [SQ SN]] REST]]]]]]].
+    assert (SENT: 8 ⊕ initial R_R0 = initial R_R0+8).
+    { rewrite N.add_comm. apply N.mod_small.
+      destruct LOBJ as [_ [_ [L LB]]]. clear - LB. lia. }
+    destruct_inv 32 PRE.
+    + subst s1. repeat armv6m_step.
+      assert (SUB: forall k, k<=20 -> initial R_SP ⊖ k = initial R_SP-k).
+      { intros k K. rewrite msub_nowrap; rewrite ?N.mod_small;
+          clear - SPLB SPUB K; lia. }
+      rewrite !SUB by discriminate.
+      split; [|reflexivity]. unfold search_running, search_fixed_frame,
+        search_stack_image, image20, write_field32.
+      split.
+      * cbn [update].
+        f_equal; [|reflexivity].
+      all: idtac "PUSH"; match goal with |- ?G => idtac G end.
+      all: fail "push diagnostic".
+    + destruct PRE as [[MEM [SP FIX]] R0].
+      assert (LC: getmem 32 LittleE 4 (s1 V_MEM32) (initial R_R0) = N.of_nat (length nodes)).
+      { rewrite MEM. change (getmem 32 LittleE 4 (search_stack_image initial) (initial R_R0+0) = _).
+        rewrite (search_stack_load initial (initial R_R0) 20 0 4 SL ltac:(discriminate)). exact COUNT. }
+      assert (LH: getmem 32 LittleE 4 (s1 V_MEM32) (12+initial R_R0) = field32 (initial V_MEM32) (initial R_R0) 12).
+      { rewrite N.add_comm, MEM. apply (search_stack_load initial (initial R_R0) 20 12 4 SL ltac:(discriminate)). }
+      repeat armv6m_step.
+      all: rewrite ?LC, ?LH, ?SENT in *.
+      all: split; [search_run|].
+      all: idtac "ENTRYLOOP"; match goal with |- ?G => idtac G end.
+      all: fail "entry loop diagnostic".
+    + destruct PRE as [[MEM [SP FIX]] [item [owner [tail [POS [R0 MATCH]]]]]].
+      pose proof (search_position_facts initial s1 nodes item owner tail INPUT POS) as FACT.
+      destruct FACT as [NE [IO [OO [OWN NEXT]]]].
+      destruct POS as [before [E [F [R6 R7]]]].
+      repeat armv6m_step.
+      all: split; [search_run|].
+      all: idtac "FOUND"; match goal with |- ?G => idtac G end.
+      all: fail "found diagnostic".
+    + destruct PRE as [[MEM [SP FIX]] [item [owner [tail [POS MATCH]]]]].
+      pose proof (search_position_facts initial s1 nodes item owner tail INPUT POS) as FACT.
+      destruct FACT as [NE [IO [OO [OWN NEXT]]]].
+      destruct POS as [before [E [F [R6 R7]]]].
+      pose proof (search_node_separate initial nodes before item owner tail INPUT E) as [SI SO].
+      assert (LN: getmem 32 LittleE 4 (s1 V_MEM32) (4+s1 R_R6) = field32 (initial V_MEM32) item 4).
+      { rewrite R6, N.add_comm, MEM. apply (search_stack_load initial item 20 4 4 SI ltac:(discriminate)). }
+      repeat armv6m_step.
+      all: rewrite ?LN, ?R7 in *.
+      all: split; [search_run|].
+      all: idtac "ADVANCE"; match goal with |- ?G => idtac G end.
+      all: fail "advance diagnostic".
+    + destruct PRE as [[MEM [SP FIX]] [item [owner [tail POS]]]].
+      pose proof (search_position_facts initial s1 nodes item owner tail INPUT POS) as FACT.
+      destruct FACT as [NE [IO [OO [OWN NEXT]]]].
+      destruct POS as [before [E [F [R6 R7]]]].
+      pose proof (search_node_separate initial nodes before item owner tail INPUT E) as [SI SO].
+      assert (LO: getmem 32 LittleE 4 (s1 V_MEM32) (12+item) = owner).
+      { rewrite N.add_comm, MEM, (search_stack_load initial item 20 12 4 SI ltac:(discriminate)). exact OWN. }
+      assert (NAME: 52 ⊕ owner = owner+52).
+      { rewrite N.add_comm. apply N.mod_small. destruct OO as [_ [_ [O OB]]]. clear - OB. lia. }
+      repeat armv6m_step.
+      rewrite ?LO, ?NAME.
+      split; [search_run|].
+      exists item, owner, tail, 0%nat. repeat split; try reflexivity; try lia.
+      all: idtac "OUTER"; match goal with |- ?G => idtac G end.
+      all: fail "outer diagnostic".
+    + destruct PRE as [[MEM [SP FIX]] [item [owner [tail [k [POS [K [R0 [R5 [R3 PREFIX]]]]]]]]]].
+      pose proof (search_position_facts initial s1 nodes item owner tail INPUT POS) as FACT.
+      destruct FACT as [NE [IO [OO [OWN NEXT]]]].
+      destruct POS as [before [E [F [R6 R7]]]].
+      pose proof (search_node_separate initial nodes before item owner tail INPUT E) as [SI SO].
+      assert (KT: N.of_nat k+1<=16) by (clear - K; lia).
+      assert (LTASK: getmem 32 LittleE 1 (s1 V_MEM32) (52+owner+N.of_nat k) = search_task_byte (initial V_MEM32) owner k).
+      { rewrite MEM. replace (52+owner+N.of_nat k) with (owner+(52+N.of_nat k)) by (clear; lia).
+        rewrite (search_stack_load initial owner 84 (52+N.of_nat k) 1 SO ltac:(clear - KT; lia)).
+        unfold search_task_byte. f_equal. clear; lia. }
+      assert (LQUERY: getmem 32 LittleE 1 (s1 V_MEM32) (s1 R_R1+N.of_nat k) = search_query_byte (initial V_MEM32) (initial R_R1) k).
+      { rewrite (FIX R_R1 ltac:(simpl; auto)), MEM.
+        apply (search_stack_load initial (initial R_R1) 16 (N.of_nat k) 1 SQ KT). }
+      repeat armv6m_step.
+      all: rewrite ?LTASK, ?LQUERY in *.
+      all: split; [search_run|].
+      all: idtac "INNER"; match goal with |- ?G => idtac G end.
+      all: fail "inner diagnostic".
+Qed.

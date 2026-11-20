@@ -1,0 +1,25 @@
+#coq_makefile -f _CoqProject -o Makefile.coq
+rocq makefile -f _CoqProject -o Makefile.coq
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+ROCQ DEP VFILES
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+make -f Makefile.coq Makefile.coq.conf
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+make[1]: 'Makefile.coq.conf' is up to date.
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+make -f Makefile.coq Picinae_armv6m.vo
+make[1]: Entering directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+ROCQ compile Picinae_armv6m.v
+make[1]: Leaving directory '/home/charles/.t3/worktrees/Picinae/t3-7a4e751d'
+./tests/armv6m/check.sh
+GNU assembler (GNU Binutils for Ubuntu) 2.42
+GNU objdump (GNU Binutils for Ubuntu) 2.42
+Python 3.12.9
+e5dea01f8ec2db2a02d2430c3cca463a7bebbec66ade6f1433164ca8dfee7091  tests/armv6m/generated/snippets.elf
+File "./tests/armv6m/Checks.v", line 22, characters 88-89:
+Error: The term "6" has type "N" while it is expected to have type "Z".
+
+make: *** [Makefile:11: check-armv6m] Error 1
+EXIT=2

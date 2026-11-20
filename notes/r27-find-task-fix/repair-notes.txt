@@ -1,0 +1,17 @@
+Initial author: gpt-6-astra (unchanged archive notes/r27-find-task/initial-attempt.v.txt).
+Fixer: gpt-6.1-sol, xhigh/default.
+Source checkpoint: 00ca4312875f97177309034d7ee743a5ca7bb03f.
+
+Repair 1: In search_skip_prefix, replace `cbn in B` with a `change` that
+reduces only snd (i,o), keeping search_name_matchb folded. The Boolean
+rewrite now has the same shape as the goal. No definition or statement change.
+
+Repair 2: Correct the explicit models_at_invariant subgoal order: models
+initial precedes welltyped_prog. The initial script had these reversed.
+
+Build 05: all fifteen declarations preceding search_correct accepted, then
+failed at models_at_invariant argument order. No full module vo yet.
+Build 06: symbolic stepping reached cut obligations; broad eauto 12 search
+was interrupted after several minutes. Only this unit's compiler PID was
+signalled, after checking its parent chain to its own gate. Exit 1, not a
+successful proof. See 07-interrupt-own-build.log.
