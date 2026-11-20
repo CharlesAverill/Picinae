@@ -1,0 +1,2173 @@
+{
+  "accepted": [
+    {
+      "artifact": "e08___drand48_iterate_arm8",
+      "instructions": 27,
+      "program_sha256": "094d6a3f89887dc39e3ec02be9183e65391be017a960558669231ec2dc7cef1f",
+      "selected_symbols": [
+        "__drand48_iterate"
+      ],
+      "symbol": "__drand48_iterate"
+    },
+    {
+      "artifact": "e08___memset_emag_arm8",
+      "instructions": 56,
+      "program_sha256": "d88c12780e15542ee4a78674e9621deab12a58e415382ee50914b116b8cec8a8",
+      "selected_symbols": [
+        "__memset_emag"
+      ],
+      "symbol": "__memset_emag"
+    },
+    {
+      "artifact": "e08_a64l_arm8",
+      "instructions": 19,
+      "program_sha256": "678a484c6cdc408462f11871b74238e28319214745a75f4e7feeadd23e311f1d",
+      "selected_symbols": [
+        "a64l"
+      ],
+      "symbol": "a64l"
+    },
+    {
+      "artifact": "e08_cfmakeraw_arm8",
+      "instructions": 15,
+      "program_sha256": "72c1a378415908dcd3105fc98c90491cb646bbebf3a6b1b2548738f509cb9e54",
+      "selected_symbols": [
+        "cfmakeraw"
+      ],
+      "symbol": "cfmakeraw"
+    },
+    {
+      "artifact": "e08_insque_arm8",
+      "instructions": 8,
+      "program_sha256": "0d6d574a200f0674353fc00c68f9affb99de3eb33944637d454c7bcbe3056879",
+      "selected_symbols": [
+        "insque"
+      ],
+      "symbol": "insque"
+    },
+    {
+      "artifact": "e08_lcong48_r_arm8",
+      "instructions": 18,
+      "program_sha256": "1baf6b04ba3fcf1995c4c3c73b4fabbe83846c69d615170072253e319a8efeb9",
+      "selected_symbols": [
+        "lcong48_r"
+      ],
+      "symbol": "lcong48_r"
+    },
+    {
+      "artifact": "e08_mempcpy_arm8",
+      "instructions": 108,
+      "program_sha256": "46f6a555dd3d96be5ebe5989f5406f1030f15e2c7db4312fc9720b2e7e67da5c",
+      "selected_symbols": [
+        "mempcpy",
+        "__memcpy_generic"
+      ],
+      "symbol": "mempcpy"
+    },
+    {
+      "artifact": "e08___memcpy_generic_arm8",
+      "instructions": 108,
+      "program_sha256": "1c760b6f7c36f17eb4918b57949528060895f526c512c06b21787e946da44dc4",
+      "selected_symbols": [
+        "mempcpy",
+        "__memcpy_generic"
+      ],
+      "symbol": "__memcpy_generic"
+    },
+    {
+      "artifact": "e08_remque_arm8",
+      "instructions": 6,
+      "program_sha256": "f5e9a68f3f18417286f28d58b38014aa62646bf6ed237a8113c47bdc1a01c13a",
+      "selected_symbols": [
+        "remque"
+      ],
+      "symbol": "remque"
+    },
+    {
+      "artifact": "e08_seed48_arm8",
+      "instructions": 30,
+      "program_sha256": "abd027a10dd76fd59b2cff3c9a201d2108f024a22ac3d9b048092f0bc58fdf2b",
+      "selected_symbols": [
+        "seed48",
+        "seed48_r"
+      ],
+      "symbol": "seed48"
+    },
+    {
+      "artifact": "e08_seed48_r_arm8",
+      "instructions": 30,
+      "program_sha256": "488122baae5e4963620758bb29bc2ba36f4685b15f019a917fc9e04a4862360e",
+      "selected_symbols": [
+        "seed48",
+        "seed48_r"
+      ],
+      "symbol": "seed48_r"
+    },
+    {
+      "artifact": "e08_sigabbrev_np_arm8",
+      "instructions": 8,
+      "program_sha256": "4c5a472ac01e753f36e751f326163b7ceac34bd9c09156151e26caaa7f3e890f",
+      "selected_symbols": [
+        "sigabbrev_np"
+      ],
+      "symbol": "sigabbrev_np"
+    },
+    {
+      "artifact": "e08_sigdescr_np_arm8",
+      "instructions": 8,
+      "program_sha256": "560b51712138858ce4e475c69edd95a233a6750ed13b2143f403c0fa65dd90ae",
+      "selected_symbols": [
+        "sigdescr_np"
+      ],
+      "symbol": "sigdescr_np"
+    },
+    {
+      "artifact": "e08_srand48_r_arm8",
+      "instructions": 13,
+      "program_sha256": "81fdb5b5dbc47d6469f002aa9ce630fa02189d09b1a4244c04087c24842c5132",
+      "selected_symbols": [
+        "srand48_r"
+      ],
+      "symbol": "srand48_r"
+    },
+    {
+      "artifact": "e08___memmove_generic_arm8",
+      "instructions": 154,
+      "program_sha256": "70565fb341a5fc2e8fe74b8c1775a3976dc4501f3b561a848c1c2c404823ccec",
+      "selected_symbols": [
+        "__memmove_generic",
+        "__memcpy_generic"
+      ],
+      "symbol": "__memmove_generic"
+    }
+  ],
+  "attempts": [
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "__drand48_iterate"
+      ],
+      "target": "__drand48_iterate"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memchr_generic"
+      ],
+      "target": "__memchr_generic"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memchr_nosimd"
+      ],
+      "target": "__memchr_nosimd"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memcpy_a64fx"
+      ],
+      "target": "__memcpy_a64fx"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memcpy_chk"
+      ],
+      "target": "__memcpy_chk"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memcpy_falkor"
+      ],
+      "target": "__memcpy_falkor"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memcpy_simd"
+      ],
+      "target": "__memcpy_simd"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memcpy_thunderx"
+      ],
+      "target": "__memcpy_thunderx"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memcpy_thunderx2"
+      ],
+      "target": "__memcpy_thunderx2"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memmove_a64fx"
+      ],
+      "target": "__memmove_a64fx"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memmove_chk"
+      ],
+      "target": "__memmove_chk"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memmove_falkor"
+      ],
+      "target": "__memmove_falkor"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memmove_generic"
+      ],
+      "target": "__memmove_generic"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memmove_simd"
+      ],
+      "target": "__memmove_simd"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memmove_thunderx"
+      ],
+      "target": "__memmove_thunderx"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memmove_thunderx2"
+      ],
+      "target": "__memmove_thunderx2"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__mempcpy_chk"
+      ],
+      "target": "__mempcpy_chk"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memset_a64fx"
+      ],
+      "target": "__memset_a64fx"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memset_chk"
+      ],
+      "target": "__memset_chk"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "__memset_emag"
+      ],
+      "target": "__memset_emag"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memset_falkor"
+      ],
+      "target": "__memset_falkor"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memset_generic"
+      ],
+      "target": "__memset_generic"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__memset_kunpeng"
+      ],
+      "target": "__memset_kunpeng"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__strlen_asimd"
+      ],
+      "target": "__strlen_asimd"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "__strlen_mte"
+      ],
+      "target": "__strlen_mte"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "a64l"
+      ],
+      "target": "a64l"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "bsearch"
+      ],
+      "target": "bsearch"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "cfmakeraw"
+      ],
+      "target": "cfmakeraw"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "cfsetispeed"
+      ],
+      "target": "cfsetispeed"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "cfsetospeed"
+      ],
+      "target": "cfsetospeed"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "finitel"
+      ],
+      "target": "finitel"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "inet_makeaddr"
+      ],
+      "target": "inet_makeaddr"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "insque"
+      ],
+      "target": "insque"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "isinfl"
+      ],
+      "target": "isinfl"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "isnanl"
+      ],
+      "target": "isnanl"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "lcong48_r"
+      ],
+      "target": "lcong48_r"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "lfind"
+      ],
+      "target": "lfind"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "lsearch"
+      ],
+      "target": "lsearch"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "memccpy"
+      ],
+      "target": "memccpy"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "memcmp"
+      ],
+      "target": "memcmp"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "mempcpy",
+        "__memcpy_generic"
+      ],
+      "target": "mempcpy"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "rand_r"
+      ],
+      "target": "rand_r"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "remque"
+      ],
+      "target": "remque"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "seed48",
+        "seed48_r"
+      ],
+      "target": "seed48"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "sigabbrev_np"
+      ],
+      "target": "sigabbrev_np"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "sigaddset"
+      ],
+      "target": "sigaddset"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "sigandset"
+      ],
+      "target": "sigandset"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "sigdelset"
+      ],
+      "target": "sigdelset"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "sigdescr_np"
+      ],
+      "target": "sigdescr_np"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "sigemptyset"
+      ],
+      "target": "sigemptyset"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "sigfillset"
+      ],
+      "target": "sigfillset"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "sigisemptyset"
+      ],
+      "target": "sigisemptyset"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "sigismember"
+      ],
+      "target": "sigismember"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "sigorset"
+      ],
+      "target": "sigorset"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "srand48_r"
+      ],
+      "target": "srand48_r"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "strchr"
+      ],
+      "target": "strchr"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "strcmp"
+      ],
+      "target": "strcmp"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "strcpy"
+      ],
+      "target": "strcpy"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "strcspn"
+      ],
+      "target": "strcspn"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "strdup"
+      ],
+      "target": "strdup"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "strndup"
+      ],
+      "target": "strndup"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "strsep"
+      ],
+      "target": "strsep"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "strspn"
+      ],
+      "target": "strspn"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "strtok_r"
+      ],
+      "target": "strtok_r"
+    },
+    {
+      "exit": 1,
+      "selected_symbols": [
+        "wcschrnul"
+      ],
+      "target": "wcschrnul"
+    },
+    {
+      "exit": 0,
+      "selected_symbols": [
+        "__memmove_generic",
+        "__memcpy_generic"
+      ],
+      "target": "__memmove_generic"
+    }
+  ],
+  "elf_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "inventory_sha256": "3329c81a30c86733a2a49445ba8fc270e6aa777256dbb42a3d2eb6f713bde0ce",
+  "ports": [
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 1014576,
+        "binding": "GLOBAL",
+        "name": "__memcpy_chk",
+        "size": 24,
+        "type": "FUNC"
+      },
+      "target": "__memcpy_chk"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 1014608,
+        "binding": "GLOBAL",
+        "name": "__memmove_chk",
+        "size": 24,
+        "type": "FUNC"
+      },
+      "target": "__memmove_chk"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 1014640,
+        "binding": "GLOBAL",
+        "name": "__mempcpy_chk",
+        "size": 48,
+        "type": "FUNC"
+      },
+      "target": "__mempcpy_chk"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "supported-generated",
+      "symbol": {
+        "address": 292848,
+        "binding": "GLOBAL",
+        "name": "a64l",
+        "size": 76,
+        "type": "FUNC"
+      },
+      "target": "a64l"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 251920,
+        "binding": "GLOBAL",
+        "name": "abs",
+        "size": 12,
+        "type": "FUNC"
+      },
+      "target": "abs"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 244528,
+        "binding": "GLOBAL",
+        "name": "bsearch",
+        "size": 176,
+        "type": "FUNC"
+      },
+      "target": "bsearch"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 921312,
+        "binding": "GLOBAL",
+        "name": "cfgetispeed",
+        "size": 32,
+        "type": "FUNC"
+      },
+      "target": "cfgetispeed"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 921296,
+        "binding": "GLOBAL",
+        "name": "cfgetospeed",
+        "size": 16,
+        "type": "FUNC"
+      },
+      "target": "cfgetospeed"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "supported-generated",
+      "symbol": {
+        "address": 922880,
+        "binding": "GLOBAL",
+        "name": "cfmakeraw",
+        "size": 60,
+        "type": "FUNC"
+      },
+      "target": "cfmakeraw"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 921440,
+        "binding": "GLOBAL",
+        "name": "cfsetispeed",
+        "size": 132,
+        "type": "FUNC"
+      },
+      "target": "cfsetispeed"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 921344,
+        "binding": "GLOBAL",
+        "name": "cfsetospeed",
+        "size": 92,
+        "type": "FUNC"
+      },
+      "target": "cfsetospeed"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 237376,
+        "binding": "WEAK",
+        "name": "copysign",
+        "size": 16,
+        "type": "FUNC"
+      },
+      "target": "copysign"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 238160,
+        "binding": "WEAK",
+        "name": "copysignf",
+        "size": 12,
+        "type": "FUNC"
+      },
+      "target": "copysignf"
+    },
+    {
+      "e02_status": "existing lift; no proof file",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 251968,
+        "binding": "GLOBAL",
+        "name": "div",
+        "size": 28,
+        "type": "FUNC"
+      },
+      "target": "div"
+    },
+    {
+      "e02_status": "existing lift; no proof file",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 608928,
+        "binding": "GLOBAL",
+        "name": "ffs",
+        "size": 100,
+        "type": "FUNC"
+      },
+      "target": "ffs"
+    },
+    {
+      "e02_status": "existing lift; no proof file",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 609040,
+        "binding": "WEAK",
+        "name": "ffsl",
+        "size": 72,
+        "type": "FUNC"
+      },
+      "target": "ffsl"
+    },
+    {
+      "e02_status": "existing lift; no proof file",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 609040,
+        "binding": "GLOBAL",
+        "name": "ffsll",
+        "size": 72,
+        "type": "FUNC"
+      },
+      "target": "ffsll"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 237344,
+        "binding": "WEAK",
+        "name": "finite",
+        "size": 24,
+        "type": "FUNC"
+      },
+      "target": "finite"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 238128,
+        "binding": "WEAK",
+        "name": "finitef",
+        "size": 24,
+        "type": "FUNC"
+      },
+      "target": "finitef"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 235808,
+        "binding": "WEAK",
+        "name": "finitel",
+        "size": 36,
+        "type": "FUNC"
+      },
+      "target": "finitel"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 956928,
+        "binding": "WEAK",
+        "name": "gnu_dev_major",
+        "size": 16,
+        "type": "FUNC"
+      },
+      "target": "gnu_dev_major"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 956960,
+        "binding": "WEAK",
+        "name": "gnu_dev_makedev",
+        "size": 40,
+        "type": "FUNC"
+      },
+      "target": "gnu_dev_makedev"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 956944,
+        "binding": "WEAK",
+        "name": "gnu_dev_minor",
+        "size": 16,
+        "type": "FUNC"
+      },
+      "target": "gnu_dev_minor"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 1023216,
+        "binding": "GLOBAL",
+        "name": "htonl",
+        "size": 8,
+        "type": "FUNC"
+      },
+      "target": "htonl"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 1023232,
+        "binding": "GLOBAL",
+        "name": "htons",
+        "size": 8,
+        "type": "FUNC"
+      },
+      "target": "htons"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 1023248,
+        "binding": "GLOBAL",
+        "name": "inet_lnaof",
+        "size": 44,
+        "type": "FUNC"
+      },
+      "target": "inet_lnaof"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 1023296,
+        "binding": "WEAK",
+        "name": "inet_makeaddr",
+        "size": 76,
+        "type": "FUNC"
+      },
+      "target": "inet_makeaddr"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 1023376,
+        "binding": "GLOBAL",
+        "name": "inet_netof",
+        "size": 44,
+        "type": "FUNC"
+      },
+      "target": "inet_netof"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "supported-generated",
+      "symbol": {
+        "address": 935392,
+        "binding": "GLOBAL",
+        "name": "insque",
+        "size": 32,
+        "type": "FUNC"
+      },
+      "target": "insque"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 214128,
+        "binding": "GLOBAL",
+        "name": "isascii",
+        "size": 12,
+        "type": "FUNC"
+      },
+      "target": "isascii"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 237264,
+        "binding": "WEAK",
+        "name": "isinf",
+        "size": 36,
+        "type": "FUNC"
+      },
+      "target": "isinf"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 238048,
+        "binding": "WEAK",
+        "name": "isinff",
+        "size": 36,
+        "type": "FUNC"
+      },
+      "target": "isinff"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 235696,
+        "binding": "WEAK",
+        "name": "isinfl",
+        "size": 52,
+        "type": "FUNC"
+      },
+      "target": "isinfl"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 237312,
+        "binding": "WEAK",
+        "name": "isnan",
+        "size": 24,
+        "type": "FUNC"
+      },
+      "target": "isnan"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 238096,
+        "binding": "WEAK",
+        "name": "isnanf",
+        "size": 24,
+        "type": "FUNC"
+      },
+      "target": "isnanf"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 235760,
+        "binding": "WEAK",
+        "name": "isnanl",
+        "size": 48,
+        "type": "FUNC"
+      },
+      "target": "isnanl"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 251936,
+        "binding": "GLOBAL",
+        "name": "labs",
+        "size": 12,
+        "type": "FUNC"
+      },
+      "target": "labs"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "supported-generated",
+      "symbol": {
+        "address": 255856,
+        "binding": "WEAK",
+        "name": "lcong48_r",
+        "size": 72,
+        "type": "FUNC"
+      },
+      "target": "lcong48_r"
+    },
+    {
+      "e02_status": "existing lift; no proof file",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 252000,
+        "binding": "GLOBAL",
+        "name": "ldiv",
+        "size": 16,
+        "type": "FUNC"
+      },
+      "target": "ldiv"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 949968,
+        "binding": "GLOBAL",
+        "name": "lfind",
+        "size": 156,
+        "type": "FUNC"
+      },
+      "target": "lfind"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 949760,
+        "binding": "GLOBAL",
+        "name": "lsearch",
+        "size": 204,
+        "type": "FUNC"
+      },
+      "target": "lsearch"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 644816,
+        "binding": "WEAK",
+        "name": "mbsinit",
+        "size": 28,
+        "type": "FUNC"
+      },
+      "target": "mbsinit"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 609952,
+        "binding": "WEAK",
+        "name": "memccpy",
+        "size": 136,
+        "type": "FUNC"
+      },
+      "target": "memccpy"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "memchr_sse2"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 607808,
+        "binding": "GLOBAL",
+        "name": "memcmp",
+        "size": 456,
+        "type": "FUNC"
+      },
+      "target": "memcmp"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "memcmp_avx2"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "ifunc-resolver-not-implementation",
+      "symbol": {
+        "address": 610096,
+        "binding": "GLOBAL",
+        "name": "memcpy",
+        "size": 320,
+        "type": "IFUNC"
+      },
+      "target": "memcpy"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "ifunc-resolver-not-implementation",
+      "symbol": {
+        "address": 608272,
+        "binding": "GLOBAL",
+        "name": "memmove",
+        "size": 320,
+        "type": "IFUNC"
+      },
+      "target": "memmove"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "memmove_avx"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "supported-generated",
+      "symbol": {
+        "address": 608848,
+        "binding": "GLOBAL",
+        "name": "mempcpy",
+        "size": 36,
+        "type": "FUNC"
+      },
+      "target": "mempcpy"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "ifunc-resolver-not-implementation",
+      "symbol": {
+        "address": 608592,
+        "binding": "GLOBAL",
+        "name": "memset",
+        "size": 252,
+        "type": "IFUNC"
+      },
+      "target": "memset"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "memset_avx2"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 529120,
+        "binding": "WEAK",
+        "name": "pthread_equal",
+        "size": 12,
+        "type": "FUNC"
+      },
+      "target": "pthread_equal"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [
+        "pthread_mutex_lock@@GLIBC_2.17"
+      ],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "pthread_mutex_lock"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [
+        "pthread_mutex_unlock@@GLIBC_2.17"
+      ],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "pthread_mutex_unlock"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 254592,
+        "binding": "GLOBAL",
+        "name": "rand_r",
+        "size": 60,
+        "type": "FUNC"
+      },
+      "target": "rand_r"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "supported-generated",
+      "symbol": {
+        "address": 935424,
+        "binding": "GLOBAL",
+        "name": "remque",
+        "size": 24,
+        "type": "FUNC"
+      },
+      "target": "remque"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "supported-generated",
+      "symbol": {
+        "address": 255296,
+        "binding": "GLOBAL",
+        "name": "seed48",
+        "size": 36,
+        "type": "FUNC"
+      },
+      "target": "seed48"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "supported-generated",
+      "symbol": {
+        "address": 633584,
+        "binding": "GLOBAL",
+        "name": "sigabbrev_np",
+        "size": 32,
+        "type": "FUNC"
+      },
+      "target": "sigabbrev_np"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 242352,
+        "binding": "GLOBAL",
+        "name": "sigaddset",
+        "size": 88,
+        "type": "FUNC"
+      },
+      "target": "sigaddset"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "sigaddset_internal"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 242896,
+        "binding": "GLOBAL",
+        "name": "sigandset",
+        "size": 72,
+        "type": "FUNC"
+      },
+      "target": "sigandset"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 242448,
+        "binding": "GLOBAL",
+        "name": "sigdelset",
+        "size": 88,
+        "type": "FUNC"
+      },
+      "target": "sigdelset"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "supported-generated",
+      "symbol": {
+        "address": 633552,
+        "binding": "WEAK",
+        "name": "sigdescr_np",
+        "size": 32,
+        "type": "FUNC"
+      },
+      "target": "sigdescr_np"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 242240,
+        "binding": "GLOBAL",
+        "name": "sigemptyset",
+        "size": 48,
+        "type": "FUNC"
+      },
+      "target": "sigemptyset"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 242288,
+        "binding": "GLOBAL",
+        "name": "sigfillset",
+        "size": 52,
+        "type": "FUNC"
+      },
+      "target": "sigfillset"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 242848,
+        "binding": "GLOBAL",
+        "name": "sigisemptyset",
+        "size": 48,
+        "type": "FUNC"
+      },
+      "target": "sigisemptyset"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 242544,
+        "binding": "GLOBAL",
+        "name": "sigismember",
+        "size": 68,
+        "type": "FUNC"
+      },
+      "target": "sigismember"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "sigismember_internal"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 242976,
+        "binding": "GLOBAL",
+        "name": "sigorset",
+        "size": 72,
+        "type": "FUNC"
+      },
+      "target": "sigorset"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "supported-generated",
+      "symbol": {
+        "address": 255696,
+        "binding": "WEAK",
+        "name": "srand48_r",
+        "size": 52,
+        "type": "FUNC"
+      },
+      "target": "srand48_r"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 601792,
+        "binding": "GLOBAL",
+        "name": "strchr",
+        "size": 160,
+        "type": "FUNC"
+      },
+      "target": "strchr"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strchr_avx2"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 601984,
+        "binding": "GLOBAL",
+        "name": "strcmp",
+        "size": 308,
+        "type": "FUNC"
+      },
+      "target": "strcmp"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strcmp_avx2"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 602368,
+        "binding": "GLOBAL",
+        "name": "strcpy",
+        "size": 288,
+        "type": "FUNC"
+      },
+      "target": "strcpy"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 602656,
+        "binding": "GLOBAL",
+        "name": "strcspn",
+        "size": 356,
+        "type": "FUNC"
+      },
+      "target": "strcspn"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strcspn_c1"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strcspn_c2"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strcspn_sse2"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 603280,
+        "binding": "WEAK",
+        "name": "strdup",
+        "size": 68,
+        "type": "FUNC"
+      },
+      "target": "strdup"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "ifunc-resolver-not-implementation",
+      "symbol": {
+        "address": 603616,
+        "binding": "GLOBAL",
+        "name": "strlen",
+        "size": 40,
+        "type": "IFUNC"
+      },
+      "target": "strlen"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strlen_avx2"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strlen_sse2"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 603360,
+        "binding": "WEAK",
+        "name": "strndup",
+        "size": 72,
+        "type": "FUNC"
+      },
+      "target": "strndup"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strnlen_sse2"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strpbrk_c2"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 611696,
+        "binding": "WEAK",
+        "name": "strsep",
+        "size": 92,
+        "type": "FUNC"
+      },
+      "target": "strsep"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 605264,
+        "binding": "GLOBAL",
+        "name": "strspn",
+        "size": 360,
+        "type": "FUNC"
+      },
+      "target": "strspn"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strspn_c1"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strspn_c2"
+    },
+    {
+      "e02_status": "no exact symbol; resolve variant/name before assigning",
+      "exact_versioned_names": [],
+      "status": "absent-exact-name",
+      "symbol": null,
+      "target": "strspn_sse2"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 607536,
+        "binding": "WEAK",
+        "name": "strtok_r",
+        "size": 160,
+        "type": "FUNC"
+      },
+      "target": "strtok_r"
+    },
+    {
+      "e02_status": "existing lift; no proof file",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 614064,
+        "binding": "GLOBAL",
+        "name": "swab",
+        "size": 52,
+        "type": "FUNC"
+      },
+      "target": "swab"
+    },
+    {
+      "e02_status": "existing lift; proof file present (not audited)",
+      "exact_versioned_names": [],
+      "status": "historical-preserved",
+      "symbol": {
+        "address": 214112,
+        "binding": "GLOBAL",
+        "name": "toascii",
+        "size": 8,
+        "type": "FUNC"
+      },
+      "target": "toascii"
+    },
+    {
+      "e02_status": "missing ARM lift",
+      "exact_versioned_names": [],
+      "status": "strict-rejected",
+      "symbol": {
+        "address": 648384,
+        "binding": "WEAK",
+        "name": "wcschrnul",
+        "size": 36,
+        "type": "FUNC"
+      },
+      "target": "wcschrnul"
+    }
+  ],
+  "rejected": [
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memchr_generic 0x19c6cc ld1 {v1.16B},[x3]: unmodeled instruction ld1 {v1.16B},[x3]; raw pcode: (register, 0x3104, 8) COPY (register, 0x4018, 8); (register, 0x5020, 1) LOAD (const, 0x1b1, 8) , (register, 0x3104, 8); (register, 0x3104, 8) INT_ADD (register, 0x3104, 8) , (const, 0x1, 8); (register, 0x5021, 1) LOAD (const, 0x1b1, 8) , (register, 0x3104, 8); (register, 0x3104, 8) INT_ADD (register, 0x3104, 8) , (const, 0x1, 8); (register, 0x5022, 1) LOAD (const, 0x1b1,",
+      "selected_symbols": [
+        "__memchr_generic"
+      ],
+      "target": "__memchr_generic"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memchr_nosimd 0x19c808 orn x2,x11,x4: unmodeled instruction orn x2,x11,x4; raw pcode: (unique, 0x2cf00, 8) INT_2COMP (const, 0x1, 8); (unique, 0x2d000, 8) INT_XOR (register, 0x4020, 8) , (unique, 0x2cf00, 8); (register, 0x4010, 8) INT_OR (register, 0x4058, 8) , (unique, 0x2d000, 8)",
+      "selected_symbols": [
+        "__memchr_nosimd"
+      ],
+      "target": "__memchr_nosimd"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_a64fx 0x19bc40 cntb x7: unmodeled instruction cntb x7; raw pcode: (register, 0x4038, 8) CALLOTHER (const, 0x150, 4) , (register, 0x4038, 8) , (const, 0x1f, 1) , (const, 0x1, 1)",
+      "selected_symbols": [
+        "__memcpy_a64fx"
+      ],
+      "target": "__memcpy_a64fx"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_chk: direct edge outside selected extent(s): 0x19ab40",
+      "selected_symbols": [
+        "__memcpy_chk"
+      ],
+      "target": "__memcpy_chk"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_falkor 0x19b9e0 ldr q0,[x1]: unmodeled register q0 (base z0); raw pcode: (unique, 0x6880, 8) COPY (register, 0x4008, 8); (register, 0x5000, 16) LOAD (const, 0x1b1, 8) , (unique, 0x6880, 8); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8)",
+      "selected_symbols": [
+        "__memcpy_falkor"
+      ],
+      "target": "__memcpy_falkor"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_simd 0x19ade4 ldr q0,[x1]: unmodeled register q0 (base z0); raw pcode: (unique, 0x6880, 8) COPY (register, 0x4008, 8); (register, 0x5000, 16) LOAD (const, 0x1b1, 8) , (unique, 0x6880, 8); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8)",
+      "selected_symbols": [
+        "__memcpy_simd"
+      ],
+      "target": "__memcpy_simd"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_thunderx 0x19b004 prfm PLDL1KEEP,[x1]: unmodeled instruction prfm PLDL1KEEP,[x1]; raw pcode: (unique, 0x6800, 8) COPY (register, 0x4008, 8);  ---  CALLOTHER (const, 0x42, 4) , (unique, 0x6800, 8) , (const, 0x0, 1) , (const, 0x0, 1) , (const, 0x0, 1)",
+      "selected_symbols": [
+        "__memcpy_thunderx"
+      ],
+      "target": "__memcpy_thunderx"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memcpy_thunderx2 0x19b2d0 ldr q0,[x1], #0x10: unmodeled register q0 (base z0); raw pcode: (unique, 0x7400, 8) COPY (register, 0x4008, 8); (register, 0x4008, 8) INT_ADD (register, 0x4008, 8) , (const, 0x10, 8); (register, 0x5000, 16) LOAD (const, 0x1b1, 8) , (unique, 0x7400, 8); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8)",
+      "selected_symbols": [
+        "__memcpy_thunderx2"
+      ],
+      "target": "__memcpy_thunderx2"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memmove_a64fx 0x19be70 cntb x7: unmodeled instruction cntb x7; raw pcode: (register, 0x4038, 8) CALLOTHER (const, 0x150, 4) , (register, 0x4038, 8) , (const, 0x1f, 1) , (const, 0x1, 1)",
+      "selected_symbols": [
+        "__memmove_a64fx"
+      ],
+      "target": "__memmove_a64fx"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memmove_chk: direct edge outside selected extent(s): 0x19acd0",
+      "selected_symbols": [
+        "__memmove_chk"
+      ],
+      "target": "__memmove_chk"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memmove_falkor: direct edge outside selected extent(s): 0x19ba30",
+      "selected_symbols": [
+        "__memmove_falkor"
+      ],
+      "target": "__memmove_falkor"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memmove_generic: direct edge outside selected extent(s): 0x19abd0",
+      "selected_symbols": [
+        "__memmove_generic"
+      ],
+      "target": "__memmove_generic"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memmove_simd: direct edge outside selected extent(s): 0x19ae50",
+      "selected_symbols": [
+        "__memmove_simd"
+      ],
+      "target": "__memmove_simd"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memmove_thunderx 0x19afcc ccmp x14,x2,#0x2,hi: unmodeled instruction ccmp x14,x2,#0x2,hi; raw pcode: (unique, 0x1a00, 1) BOOL_NEGATE (register, 0x101, 1); (unique, 0x1b00, 1) BOOL_AND (register, 0x102, 1) , (unique, 0x1a00, 1); (unique, 0x1a480, 1) COPY (unique, 0x1b00, 1); (unique, 0x1a500, 1) COPY (const, 0x2, 1); (unique, 0xe780, 1) INT_AND (unique, 0x1a500, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe",
+      "selected_symbols": [
+        "__memmove_thunderx"
+      ],
+      "target": "__memmove_thunderx"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memmove_thunderx2: direct edge outside selected extent(s): 0x19b340",
+      "selected_symbols": [
+        "__memmove_thunderx2"
+      ],
+      "target": "__memmove_thunderx2"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __mempcpy_chk: direct edge outside selected extent(s): 0x19ab40",
+      "selected_symbols": [
+        "__mempcpy_chk"
+      ],
+      "target": "__mempcpy_chk"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memset_a64fx 0x19c500 cntb x9: unmodeled instruction cntb x9; raw pcode: (register, 0x4048, 8) CALLOTHER (const, 0x150, 4) , (register, 0x4048, 8) , (const, 0x1f, 1) , (const, 0x1, 1)",
+      "selected_symbols": [
+        "__memset_a64fx"
+      ],
+      "target": "__memset_a64fx"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memset_chk: direct edge outside selected extent(s): 0x19bfc0",
+      "selected_symbols": [
+        "__memset_chk"
+      ],
+      "target": "__memset_chk"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memset_falkor 0x19c1c4 dup v0.16B,w1: unmodeled instruction dup v0.16B,w1; raw pcode: (unique, 0x86d00, 1) COPY (register, 0x4008, 1); (register, 0x5000, 1) COPY (unique, 0x86d00, 1); (register, 0x5001, 1) COPY (unique, 0x86d00, 1); (register, 0x5002, 1) COPY (unique, 0x86d00, 1); (register, 0x5003, 1) COPY (unique, 0x86d00, 1); (register, 0x5004, 1) COPY (unique, 0x86d00, 1); (register, 0x5005, 1) COPY (unique, 0x86d00, 1); (register, 0x5006, 1) COPY (unique, 0x8",
+      "selected_symbols": [
+        "__memset_falkor"
+      ],
+      "target": "__memset_falkor"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memset_generic 0x19bfc4 dup v0.16B,w1: unmodeled instruction dup v0.16B,w1; raw pcode: (unique, 0x86d00, 1) COPY (register, 0x4008, 1); (register, 0x5000, 1) COPY (unique, 0x86d00, 1); (register, 0x5001, 1) COPY (unique, 0x86d00, 1); (register, 0x5002, 1) COPY (unique, 0x86d00, 1); (register, 0x5003, 1) COPY (unique, 0x86d00, 1); (register, 0x5004, 1) COPY (unique, 0x86d00, 1); (register, 0x5005, 1) COPY (unique, 0x86d00, 1); (register, 0x5006, 1) COPY (unique, 0x",
+      "selected_symbols": [
+        "__memset_generic"
+      ],
+      "target": "__memset_generic"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __memset_kunpeng 0x19c404 dup v0.16B,w1: unmodeled instruction dup v0.16B,w1; raw pcode: (unique, 0x86d00, 1) COPY (register, 0x4008, 1); (register, 0x5000, 1) COPY (unique, 0x86d00, 1); (register, 0x5001, 1) COPY (unique, 0x86d00, 1); (register, 0x5002, 1) COPY (unique, 0x86d00, 1); (register, 0x5003, 1) COPY (unique, 0x86d00, 1); (register, 0x5004, 1) COPY (unique, 0x86d00, 1); (register, 0x5005, 1) COPY (unique, 0x86d00, 1); (register, 0x5006, 1) COPY (unique, 0x",
+      "selected_symbols": [
+        "__memset_kunpeng"
+      ],
+      "target": "__memset_kunpeng"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __strlen_asimd 0x19c968 bics x4,x4,x5: unmodeled instruction bics x4,x4,x5; raw pcode: (unique, 0x16880, 8) INT_2COMP (const, 0x1, 8); (unique, 0x16980, 8) INT_XOR (register, 0x4028, 8) , (unique, 0x16880, 8); (unique, 0x16a80, 8) INT_AND (register, 0x4020, 8) , (unique, 0x16980, 8); (register, 0x107, 1) INT_SLESS (unique, 0x16a80, 8) , (const, 0x0, 8); (register, 0x108, 1) INT_EQUAL (unique, 0x16a80, 8) , (const, 0x0, 8); (register, 0x4020, 8) COPY (unique, 0x16a80",
+      "selected_symbols": [
+        "__strlen_asimd"
+      ],
+      "target": "__strlen_asimd"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: __strlen_mte 0x19c8cc ld1 {v0.16B},[x1]: unmodeled instruction ld1 {v0.16B},[x1]; raw pcode: (register, 0x3104, 8) COPY (register, 0x4008, 8); (register, 0x5000, 1) LOAD (const, 0x1b1, 8) , (register, 0x3104, 8); (register, 0x3104, 8) INT_ADD (register, 0x3104, 8) , (const, 0x1, 8); (register, 0x5001, 1) LOAD (const, 0x1b1, 8) , (register, 0x3104, 8); (register, 0x3104, 8) INT_ADD (register, 0x3104, 8) , (const, 0x1, 8); (register, 0x5002, 1) LOAD (const, 0x1b1, 8) ",
+      "selected_symbols": [
+        "__strlen_mte"
+      ],
+      "target": "__strlen_mte"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: bsearch 0x13bb8c blr x26: unmodeled instruction blr x26; raw pcode: (register, 0x0, 8) COPY (register, 0x40d0, 8); (register, 0x40f0, 8) INT_ADD (const, 0x13bb8c, 8) , (const, 0x4, 8);  ---  CALLIND (register, 0x0, 8)",
+      "selected_symbols": [
+        "bsearch"
+      ],
+      "target": "bsearch"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: cfsetispeed 0x1e0fd0 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8)",
+      "selected_symbols": [
+        "cfsetispeed"
+      ],
+      "target": "cfsetispeed"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: cfsetospeed 0x1e0f48 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8)",
+      "selected_symbols": [
+        "cfsetospeed"
+      ],
+      "target": "cfsetospeed"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: finitel 0x139928 str q0,[sp]: unmodeled register q0 (base z0); raw pcode: (unique, 0x6880, 8) COPY (register, 0x8, 8);  ---  STORE (const, 0x1b1, 8) , (unique, 0x6880, 8) , (register, 0x5000, 16)",
+      "selected_symbols": [
+        "finitel"
+      ],
+      "target": "finitel"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: inet_makeaddr 0x1f9d4c rev w0,w1: unmodeled instruction rev w0,w1; raw pcode: (unique, 0x2fd00, 4) COPY (register, 0x4008, 4); (unique, 0x2fd80, 4) INT_AND (unique, 0x2fd00, 4) , (const, 0xff00ff00, 4); (unique, 0x2fe00, 4) INT_RIGHT (unique, 0x2fd80, 4) , (const, 0x8, 4); (unique, 0x2fe80, 4) INT_AND (unique, 0x2fd00, 4) , (const, 0xff00ff, 4); (unique, 0x2ff00, 4) INT_LEFT (unique, 0x2fe80, 4) , (const, 0x8, 4); (unique, 0x2fd00, 4) INT_OR (unique, 0x2fe00, 4) , (",
+      "selected_symbols": [
+        "inet_makeaddr"
+      ],
+      "target": "inet_makeaddr"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: isinfl 0x1398b4 str q0,[sp]: unmodeled register q0 (base z0); raw pcode: (unique, 0x6880, 8) COPY (register, 0x8, 8);  ---  STORE (const, 0x1b1, 8) , (unique, 0x6880, 8) , (register, 0x5000, 16)",
+      "selected_symbols": [
+        "isinfl"
+      ],
+      "target": "isinfl"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: isnanl 0x1398f8 str q0,[sp]: unmodeled register q0 (base z0); raw pcode: (unique, 0x6880, 8) COPY (register, 0x8, 8);  ---  STORE (const, 0x1b1, 8) , (unique, 0x6880, 8) , (register, 0x5000, 16)",
+      "selected_symbols": [
+        "isnanl"
+      ],
+      "target": "isnanl"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: lfind 0x1e7f24 blr x22: unmodeled instruction blr x22; raw pcode: (register, 0x0, 8) COPY (register, 0x40b0, 8); (register, 0x40f0, 8) INT_ADD (const, 0x1e7f24, 8) , (const, 0x4, 8);  ---  CALLIND (register, 0x0, 8)",
+      "selected_symbols": [
+        "lfind"
+      ],
+      "target": "lfind"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: lsearch 0x1e7e5c blr x23: unmodeled instruction blr x23; raw pcode: (register, 0x0, 8) COPY (register, 0x40b8, 8); (register, 0x40f0, 8) INT_ADD (const, 0x1e7e5c, 8) , (const, 0x4, 8);  ---  CALLIND (register, 0x0, 8)",
+      "selected_symbols": [
+        "lsearch"
+      ],
+      "target": "lsearch"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: memccpy: direct edge outside selected extent(s): 0x19c6c0",
+      "selected_symbols": [
+        "memccpy"
+      ],
+      "target": "memccpy"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: memcmp 0x194654 ccmp x3,x4,#0x0,ne: unmodeled instruction ccmp x3,x4,#0x0,ne; raw pcode: (unique, 0x1680, 1) BOOL_NEGATE (register, 0x101, 1); (unique, 0x1a480, 1) COPY (unique, 0x1680, 1); (unique, 0x1a500, 1) COPY (const, 0x0, 1); (unique, 0xe780, 1) INT_AND (unique, 0x1a500, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) INT_AND (unique, 0x1a500, 1) , (const, 0x4, 1); (register, 0x101, 1) INT_EQUAL ",
+      "selected_symbols": [
+        "memcmp"
+      ],
+      "target": "memcmp"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: rand_r 0x13e29c ubfiz w3,w3,#0xa,#0xb: unmodeled instruction ubfiz w3,w3,#0xa,#0xb; raw pcode: (unique, 0x40380, 4) COPY (register, 0x4018, 4); (unique, 0x40400, 4) INT_RIGHT (unique, 0x40380, 4) , (const, 0x16, 4); (unique, 0x40480, 4) INT_SUB (const, 0x20, 4) , (const, 0x16, 4); (unique, 0x40500, 4) INT_LEFT (unique, 0x40380, 4) , (unique, 0x40480, 4); (unique, 0x40580, 4) INT_OR (unique, 0x40400, 4) , (unique, 0x40500, 4); (unique, 0x40680, 4) INT_AND (unique, 0x",
+      "selected_symbols": [
+        "rand_r"
+      ],
+      "target": "rand_r"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigaddset 0x13b2bc ccmp x2,#0x0,#0x4,ls: unmodeled instruction ccmp x2,#0x0,#0x4,ls; raw pcode: (unique, 0x1b80, 1) BOOL_NEGATE (register, 0x102, 1); (unique, 0x1c80, 1) BOOL_OR (unique, 0x1b80, 1) , (register, 0x101, 1); (unique, 0x19f00, 1) COPY (unique, 0x1c80, 1); (unique, 0x19f80, 1) COPY (const, 0x4, 1); (unique, 0xe780, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) ",
+      "selected_symbols": [
+        "sigaddset"
+      ],
+      "target": "sigaddset"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigandset 0x13b4d8 ccmp x2,#0x0,#0x4,ne: unmodeled instruction ccmp x2,#0x0,#0x4,ne; raw pcode: (unique, 0x1680, 1) BOOL_NEGATE (register, 0x101, 1); (unique, 0x19f00, 1) COPY (unique, 0x1680, 1); (unique, 0x19f80, 1) COPY (const, 0x4, 1); (unique, 0xe780, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x4, 1); (register, 0x101, 1) INT",
+      "selected_symbols": [
+        "sigandset"
+      ],
+      "target": "sigandset"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigdelset 0x13b31c ccmp x2,#0x0,#0x4,ls: unmodeled instruction ccmp x2,#0x0,#0x4,ls; raw pcode: (unique, 0x1b80, 1) BOOL_NEGATE (register, 0x102, 1); (unique, 0x1c80, 1) BOOL_OR (unique, 0x1b80, 1) , (register, 0x101, 1); (unique, 0x19f00, 1) COPY (unique, 0x1c80, 1); (unique, 0x19f80, 1) COPY (const, 0x4, 1); (unique, 0xe780, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) ",
+      "selected_symbols": [
+        "sigdelset"
+      ],
+      "target": "sigdelset"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigemptyset 0x13b25c mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8)",
+      "selected_symbols": [
+        "sigemptyset"
+      ],
+      "target": "sigemptyset"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigfillset 0x13b290 mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8)",
+      "selected_symbols": [
+        "sigfillset"
+      ],
+      "target": "sigfillset"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigisemptyset 0x13b4bc mrs x2,tpidr_el0: unmodeled instruction mrs x2,tpidr_el0; raw pcode: (register, 0x4010, 8) COPY (register, 0x1660, 8)",
+      "selected_symbols": [
+        "sigisemptyset"
+      ],
+      "target": "sigisemptyset"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigismember 0x13b378 ccmp x0,#0x0,#0x4,ls: unmodeled instruction ccmp x0,#0x0,#0x4,ls; raw pcode: (unique, 0x1b80, 1) BOOL_NEGATE (register, 0x102, 1); (unique, 0x1c80, 1) BOOL_OR (unique, 0x1b80, 1) , (register, 0x101, 1); (unique, 0x19f00, 1) COPY (unique, 0x1c80, 1); (unique, 0x19f80, 1) COPY (const, 0x4, 1); (unique, 0xe780, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1",
+      "selected_symbols": [
+        "sigismember"
+      ],
+      "target": "sigismember"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: sigorset 0x13b528 ccmp x2,#0x0,#0x4,ne: unmodeled instruction ccmp x2,#0x0,#0x4,ne; raw pcode: (unique, 0x1680, 1) BOOL_NEGATE (register, 0x101, 1); (unique, 0x19f00, 1) COPY (unique, 0x1680, 1); (unique, 0x19f80, 1) COPY (const, 0x4, 1); (unique, 0xe780, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x4, 1); (register, 0x101, 1) INT_",
+      "selected_symbols": [
+        "sigorset"
+      ],
+      "target": "sigorset"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strchr 0x192ec8 dup v0.16B,w1: unmodeled instruction dup v0.16B,w1; raw pcode: (unique, 0x86d00, 1) COPY (register, 0x4008, 1); (register, 0x5000, 1) COPY (unique, 0x86d00, 1); (register, 0x5001, 1) COPY (unique, 0x86d00, 1); (register, 0x5002, 1) COPY (unique, 0x86d00, 1); (register, 0x5003, 1) COPY (unique, 0x86d00, 1); (register, 0x5004, 1) COPY (unique, 0x86d00, 1); (register, 0x5005, 1) COPY (unique, 0x86d00, 1); (register, 0x5006, 1) COPY (unique, 0x86d00, 1);",
+      "selected_symbols": [
+        "strchr"
+      ],
+      "target": "strchr"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strcmp 0x192fb0 bics x4,x4,x6: unmodeled instruction bics x4,x4,x6; raw pcode: (unique, 0x16880, 8) INT_2COMP (const, 0x1, 8); (unique, 0x16980, 8) INT_XOR (register, 0x4030, 8) , (unique, 0x16880, 8); (unique, 0x16a80, 8) INT_AND (register, 0x4020, 8) , (unique, 0x16980, 8); (register, 0x107, 1) INT_SLESS (unique, 0x16a80, 8) , (const, 0x0, 8); (register, 0x108, 1) INT_EQUAL (unique, 0x16a80, 8) , (const, 0x0, 8); (register, 0x4020, 8) COPY (unique, 0x16a80, 8); (r",
+      "selected_symbols": [
+        "strcmp"
+      ],
+      "target": "strcmp"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strcpy 0x19310c ld1 {v0.16B},[x2]: unmodeled instruction ld1 {v0.16B},[x2]; raw pcode: (register, 0x3104, 8) COPY (register, 0x4010, 8); (register, 0x5000, 1) LOAD (const, 0x1b1, 8) , (register, 0x3104, 8); (register, 0x3104, 8) INT_ADD (register, 0x3104, 8) , (const, 0x1, 8); (register, 0x5001, 1) LOAD (const, 0x1b1, 8) , (register, 0x3104, 8); (register, 0x3104, 8) INT_ADD (register, 0x3104, 8) , (const, 0x1, 8); (register, 0x5002, 1) LOAD (const, 0x1b1, 8) , (reg",
+      "selected_symbols": [
+        "strcpy"
+      ],
+      "target": "strcpy"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strcspn 0x193258 movi v0.4S,#0x0: unmodeled instruction movi v0.4S,#0x0; raw pcode: (register, 0x5000, 4) COPY (const, 0x0, 4); (register, 0x5004, 4) COPY (const, 0x0, 4); (register, 0x5008, 4) COPY (const, 0x0, 4); (register, 0x500c, 4) COPY (const, 0x0, 4); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8)",
+      "selected_symbols": [
+        "strcspn"
+      ],
+      "target": "strcspn"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strdup: direct edge outside selected extent(s): 0x19c8c0",
+      "selected_symbols": [
+        "strdup"
+      ],
+      "target": "strdup"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strndup: direct edge outside selected extent(s): 0x193640",
+      "selected_symbols": [
+        "strndup"
+      ],
+      "target": "strndup"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strsep: direct edge outside selected extent(s): 0x193220",
+      "selected_symbols": [
+        "strsep"
+      ],
+      "target": "strsep"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strspn 0x193c88 movi v0.4S,#0x0: unmodeled instruction movi v0.4S,#0x0; raw pcode: (register, 0x5000, 4) COPY (const, 0x0, 4); (register, 0x5004, 4) COPY (const, 0x0, 4); (register, 0x5008, 4) COPY (const, 0x0, 4); (register, 0x500c, 4) COPY (const, 0x0, 4); (register, 0x5010, 8) COPY (const, 0x0, 8); (register, 0x5018, 8) COPY (const, 0x0, 8)",
+      "selected_symbols": [
+        "strspn"
+      ],
+      "target": "strspn"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: strtok_r: direct edge outside selected extent(s): 0x193c50",
+      "selected_symbols": [
+        "strtok_r"
+      ],
+      "target": "strtok_r"
+    },
+    {
+      "driver_exit": 1,
+      "reason": "FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: wcschrnul 0x19e4c8 ccmp w1,w2,#0x4,ne: unmodeled instruction ccmp w1,w2,#0x4,ne; raw pcode: (unique, 0x1680, 1) BOOL_NEGATE (register, 0x101, 1); (unique, 0x1a200, 1) COPY (unique, 0x1680, 1); (unique, 0x1a280, 1) COPY (const, 0x4, 1); (unique, 0xe780, 1) INT_AND (unique, 0x1a280, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) INT_AND (unique, 0x1a280, 1) , (const, 0x4, 1); (register, 0x101, 1) INT_EQU",
+      "selected_symbols": [
+        "wcschrnul"
+      ],
+      "target": "wcschrnul"
+    }
+  ]
+}
