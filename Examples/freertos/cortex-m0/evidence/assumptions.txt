@@ -1,0 +1,3 @@
+N/A: binary-only engineering unit. No theorem was added or adapted, no lift was
+produced, and no Print Assumptions command applies. Compiler/ELF/ISA evidence is
+not a functional correctness proof.

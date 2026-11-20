@@ -1,0 +1,87 @@
+; One recursive -R mapping preserves the existing unqualified Require imports.
+(include_subdirs qualified)
+
+; Keep this list aligned with the active core entries in _CoqProject.
+; Explicit lists prevent unrelated examples and experimental modules being built.
+(rocq.theory
+ (name Picinae)
+ (theories Stdlib Ltac2)
+ (mode vo)
+ (flags :standard -w -level-tolerance -w -postfix-notation-not-level-1)
+ (modules
+  Picinae_core Picinae_theory Picinae_statics Picinae_auto Picinae_finterp
+  Picinae_simplifier_base Picinae_simplifier_v1_1 Picinae_ISA Picinae_i386
+  Picinae_armv7 Picinae_armv8 Picinae_armv6m Picinae_riscv Picinae_amd64 Picinae_numbers
+  Examples.claude.amd64_common Examples.claude.abs_amd64
+  Examples.claude.amd64_abs_proof
+  Examples.claude.arm8_common Examples.claude.abs_arm8
+  Examples.claude.arm8_abs_proof
+  Examples.FreeRTOS.armv6m_list_model
+; BEGIN e05 generated modules
+  Examples.FreeRTOS.vListInitialiseItem_armv6m
+  Examples.FreeRTOS.vListInitialise_armv6m
+  Examples.FreeRTOS.vListInsertEnd_armv6m
+  Examples.FreeRTOS.uxListRemove_armv6m
+  Examples.FreeRTOS.vListInsert_armv6m
+  Examples.FreeRTOS.uxTaskGetNumberOfTasks_armv6m
+  Examples.FreeRTOS.xTaskGetCurrentTaskHandle_armv6m
+  Examples.FreeRTOS.xTaskGetTickCount_armv6m
+  Examples.FreeRTOS.xTaskGetTickCountFromISR_armv6m
+  Examples.FreeRTOS.vTaskSuspendAll_armv6m
+  Examples.FreeRTOS.vTaskMissedYield_armv6m
+  Examples.FreeRTOS.uxTaskPriorityGet_armv6m
+  Examples.FreeRTOS.uxTaskResetEventItemValue_armv6m
+  Examples.FreeRTOS.vTaskInternalSetTimeOutState_armv6m
+  Examples.FreeRTOS.vTaskSetTimeOutState_armv6m
+  Examples.FreeRTOS.xTaskGenericNotifyStateClear_armv6m
+  Examples.FreeRTOS.ulTaskGenericNotifyValueClear_armv6m
+  Examples.FreeRTOS.pvTaskIncrementMutexHeldCount_armv6m
+  Examples.FreeRTOS.xTaskGetSchedulerState_armv6m
+  Examples.FreeRTOS.uxQueueMessagesWaiting_armv6m
+  Examples.FreeRTOS.uxQueueSpacesAvailable_armv6m
+  Examples.FreeRTOS.xQueueGetMutexHolder_armv6m
+  Examples.FreeRTOS.xQueueGetMutexHolderFromISR_armv6m
+  Examples.FreeRTOS.eTaskGetState_armv6m
+  Examples.FreeRTOS.prvTaskIsTaskSuspended_armv6m
+  Examples.FreeRTOS.prvResetNextTaskUnblockTime_armv6m
+  Examples.FreeRTOS.prvSearchForNameWithinSingleList_armv6m
+  Examples.FreeRTOS.vTaskSwitchContext_armv6m
+  Examples.FreeRTOS.xQueueGenericSend_armv6m
+  Examples.FreeRTOS.xQueueReceive_armv6m
+  Examples.FreeRTOS.xQueueGenericSendFromISR_armv6m
+  Examples.FreeRTOS.xQueueReceiveFromISR_armv6m
+  Examples.FreeRTOS.vTaskDelay_armv6m
+  Examples.FreeRTOS.xTaskIncrementTick_armv6m
+  Examples.FreeRTOS.xTaskCreateStatic_armv6m
+  Examples.FreeRTOS.xEventGroupSetBits_armv6m
+  Examples.FreeRTOS.xEventGroupClearBits_armv6m
+  Examples.FreeRTOS.xStreamBufferSend_armv6m
+  Examples.FreeRTOS.xStreamBufferReceive_armv6m
+  Examples.FreeRTOS.xTimerGenericCommandFromTask_armv6m
+  Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+; END e05 generated modules
+ ))
+
+(alias
+ (name core)
+ (deps
+  Picinae_core.vo Picinae_theory.vo Picinae_statics.vo Picinae_auto.vo
+  Picinae_finterp.vo Picinae_simplifier_base.vo Picinae_simplifier_v1_1.vo
+  Picinae_ISA.vo Picinae_i386.vo Picinae_armv7.vo Picinae_armv8.vo
+  Picinae_riscv.vo Picinae_amd64.vo Picinae_numbers.vo))
+
+(alias
+ (name smoke-x86)
+ (deps Examples/claude/amd64_abs_proof.vo))
+
+(alias
+ (name smoke-arm8)
+ (deps Examples/claude/arm8_abs_proof.vo))
+
+(alias
+ (name smoke)
+ (deps (alias core) (alias smoke-x86) (alias smoke-arm8)))
+
+(alias
+ (name armv6m)
+ (deps Picinae_armv6m.vo))
