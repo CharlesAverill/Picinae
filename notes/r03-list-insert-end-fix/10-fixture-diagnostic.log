@@ -1,0 +1,72 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-75bde600
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_vListInsertEnd_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2700:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_vListInsertEnd_proof.{glob,vo} (exit 1)
+Goal at < 92 >
+Goal at < 112 >
+File "./Examples/FreeRTOS/armv6m_vListInsertEnd_proof.v", line 265, characters 15-16:
+Error: Cannot infer this placeholder of type "N" in
+environment:
+m, L, P, I, B, c : N
+H : object32 L 20
+H1 : object32 P 20
+H0 : object32 I 12
+H2 : object32 B 12
+H3 : separate32 P 20 L 20
+H4 : separate32 P 20 I 12
+H5 : separate32 P 20 B 12
+H9 : separate32 (L + 0) 4 (L + 4) 4
+H6 : separate32 (L + 0) 4 (P + 0) 4
+H10 : separate32 (L + 0) 4 (P + 4) 4
+H11 : separate32 (L + 0) 4 (P + 8) 4
+H12 : separate32 (L + 0) 4 (P + 12) 4
+H13 : separate32 (L + 0) 4 (P + 16) 4
+H14 : separate32 (L + 0) 4 (B + 4) 4
+H15 : separate32 (L + 0) 4 (I + 8) 4
+H17 : True
+H8 : separate32 (L + 4) 4 (P + 0) 4
+H16 : separate32 (L + 4) 4 (P + 4) 4
+H19 : separate32 (L + 4) 4 (P + 8) 4
+H20 : separate32 (L + 4) 4 (P + 12) 4
+H21 : separate32 (L + 4) 4 (P + 16) 4
+H22 : separate32 (L + 4) 4 (B + 4) 4
+H23 : separate32 (L + 4) 4 (I + 8) 4
+H25 : True
+H18 : separate32 (P + 0) 4 (P + 4) 4
+H24 : separate32 (P + 0) 4 (P + 8) 4
+H27 : separate32 (P + 0) 4 (P + 12) 4
+H28 : separate32 (P + 0) 4 (P + 16) 4
+H29 : separate32 (P + 0) 4 (B + 4) 4
+H30 : separate32 (P + 0) 4 (I + 8) 4
+H32 : True
+H26 : separate32 (P + 4) 4 (P + 8) 4
+H31 : separate32 (P + 4) 4 (P + 12) 4
+H34 : separate32 (P + 4) 4 (P + 16) 4
+H35 : separate32 (P + 4) 4 (B + 4) 4
+H36 : separate32 (P + 4) 4 (I + 8) 4
+H38 : True
+H33 : separate32 (P + 8) 4 (P + 12) 4
+H37 : separate32 (P + 8) 4 (P + 16) 4
+H40 : separate32 (P + 8) 4 (B + 4) 4
+H41 : separate32 (P + 8) 4 (I + 8) 4
+H43 : True
+H39 : separate32 (P + 12) 4 (P + 16) 4
+H42 : separate32 (P + 12) 4 (B + 4) 4
+H45 : separate32 (P + 12) 4 (I + 8) 4
+H47 : True
+H44 : separate32 (P + 16) 4 (B + 4) 4
+H46 : separate32 (P + 16) 4 (I + 8) 4
+H50 : True
+H48 : separate32 (B + 4) 4 (I + 8) 4
+H52, H49, H53 : True
+
+
+EXIT_CODE=1

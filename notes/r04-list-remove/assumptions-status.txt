@@ -1,0 +1,22 @@
+NO UNIT PRINT ASSUMPTIONS OUTPUT EXISTS.
+The one full target build exited 1 inside list_remove_correct; no target .vo
+was produced. The nine unchecked proofs are Abort, not exported constants.
+Per the explicit Astra one-shot policy, tools/print-assumptions.sh was not run:
+it would rebuild the failed target, constituting a forbidden second cycle.
+The seven preceding Qed commands were accepted before the failure, but the
+whole module has no full .vo certificate and their transitive assumptions
+have NOT been queried in this unit. Do not count this unit as DONE.
+Inherited baseline FunctionalExtensionality.functional_extensionality_dep is
+documented in e00; the ordinary return attempt explicitly uses functional
+extensionality. No claim of axiom-freedom or imported-admission-free transitive
+closure is made without the later Sol run's actual Print Assumptions output.
+
+Required future query (run only by the authorized fixer, after completing proofs):
+PROOF_MEMORY_KB=2000000 PROOF_STACK_KB=65536 \
+/home/charles/code/friends/.toolchains/arm-validation/picinae-env \
+bash tools/print-assumptions.sh Picinae.Examples.FreeRTOS.armv6m_uxListRemove_proof \
+list_remove_nwc list_remove_welltyped list_remove_register_frame \
+rm_read_write rm_read_frame list_remove_mem_frame list_remove_mem_effects \
+list_remove_correct list_remove_at_bx list_remove_return_step \
+list_remove_entry_witness list_remove_singleton_layout list_remove_singleton_witness \
+list_remove_multi_layout list_remove_multi_witness list_remove_returns

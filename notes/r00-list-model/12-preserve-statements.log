@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-bcf6e4e7
+COMMAND=python3 -
+PASS: all 19 exact initial theorem statements retained
+Qed prefix: 10
+Aborted failed/unreached statements: 9
+No full unit .vo: PARTIAL
+
+EXIT_CODE=0

@@ -1,0 +1,16 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-7a4e751d
+COMMAND=bash tools/print-assumptions.sh Picinae.Picinae_armv6m welltyped_lift_armv6m welltyped_armv6mprog welltyped_arm2il
+welltyped_lift_armv6m
+     : forall binary : addr -> BinNums.N,
+       welltyped_prog armv6mtypctx (lift_armv6m binary)
+Closed under the global context
+welltyped_armv6mprog
+     : welltyped_prog armv6mtypctx armv6m_prog
+Closed under the global context
+welltyped_arm2il
+     : forall (a : addr) (i : thumb_instr),
+       exists c' : typctx,
+         hastyp_stmt armv6mtypctx armv6mtypctx (arm2il a i) c'
+Closed under the global context
+
+EXIT_CODE=0
