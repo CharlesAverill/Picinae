@@ -1,0 +1,41 @@
+(* One four-page inner iteration, over an abstract initial memory. *)
+Lemma nt_adv4: forall m M d s n j i,
+  cpy m M d s (done4 d j i) -> nov d s n -> n < 2^64 ->
+  aA d + 2 ^ 14 * j + 2 ^ 7 * i + 12416 <= n ->
+  cpy m (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 M
+    (d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (32 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (32 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (64 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (64 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (96 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (96 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (2 ^ 12 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (2 ^ 12 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4128 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (4128 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4160 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (4160 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4192 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (4192 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (2 ^ 13 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (2 ^ 13 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (8224 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (8224 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (8256 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (8256 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (8288 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (8288 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (12288 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (12288 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (12320 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (12320 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (12352 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (12352 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (12384 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (12384 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i))) d s (done4 d j (N.succ i)).
+Proof.
+  intros m M d s n j i C NOV NB LE.
+  eapply cpy_equiv';
+  [ eapply (cpy_store16 m M d s n (done4 d j i)
+    (aA d + 2 ^ 14 * j + 2 ^ 7 * i) (32 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (64 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (96 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (4096 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (4128 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (4160 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (4192 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (8192 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (8224 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (8256 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (8288 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (12288 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (12320 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (12352 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (12384 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i))
+    (d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (32 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (64 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (96 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (2 ^ 12 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4128 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4160 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4192 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (2 ^ 13 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8224 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8256 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8288 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12288 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12320 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12352 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12384 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i)
+    (s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (32 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (64 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (96 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (2 ^ 12 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4128 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4160 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4192 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (2 ^ 13 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8224 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8256 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8288 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12288 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12320 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12352 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12384 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i));
+    first [ exact C | exact NOV | exact NB
+          | (intros ii Hii; unfold done4 in Hii;
+             change (2^14) with 16384 in *; change (2^7) with 128 in *;
+             clear - Hii LE; lia)
+          | (change (2^12) with 4096 in *; change (2^13) with 8192 in *;
+             clear - LE; lia)
+          | (clear; f_equal; lia) ]
+  | intro x; unfold done4;
+    change (2^14) with 16384 in *; change (2^7) with 128 in *;
+    rewrite N.mul_succ_r; clear; split; intro H;
+    repeat destruct H as [H|H]; lia ].
+Qed.
+

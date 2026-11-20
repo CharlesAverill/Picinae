@@ -32,7 +32,24 @@
    OUTPUT: at the RET, RAX = d, RSP is unchanged, and copied m m' d s n.
 
    Model:   This specification and proof were written by Claude Opus 5.5
-            (claude-opus-5-5), an AI model by Anthropic, and machine-checked by Rocq.
+            (claude-opus-5-5), an AI model by Anthropic.
+   Repair:  OpenAI GPT-6 Astra, x02-avx-nt, 2026-11-03.
+            This is an initial repair attempt; see notes/x02-avx-nt for actual
+            kernel-check results and outstanding gaps.
+   Provenance (inherited, not independently validated here):
+            /lib/x86_64-linux-gnu/libc.so.6, Ubuntu 2.35-0ubuntu3.12,
+            sha256 9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9.
+            __memmove_avx_unaligned_erms, Ghidra address 0x2a0840,
+            image base 0x100000; Ghidra 11.4.2 / pcode2coq.
+   ABI:     System V AMD64, 64-bit RDI=dest, RSI=src, RDX=n, RSP=rsp.
+            copied includes the byte-memory frame outside dest[0,n).
+            memmove_avx_preserves_callee_saved, memmove_avx_nwc and
+            memmove_avx_welltyped are inherited from amd64_memmove_avx_proof.
+            The exit is immediately before RET, with unchanged RSP; no
+            return-address separation or caller-return theorem is claimed.
+   Scope:   Sequential lifted IL partial correctness; AVX availability and
+            binary/lifter fidelity are trusted, not checked by this theorem.
+            No termination, overlapping-buffer, or cache-ordering claim.
  *)
 
 Require Import Picinae_amd64.
@@ -44,6 +61,7 @@ Require Import amd64_memcpy_lemmas.
 Require Import amd64_memmove_avx_proof.
 Require Import amd64_memmove_avx_loops_proof.
 Require Import amd64_memmove_avx_rep_proof.
+Require Import amd64_memmove_avx_nt_stores.
 Open Scope N.
 
 (* The bulk starts at offset aA d (the destination rounded up to 64 bytes),
@@ -389,6 +407,47 @@ Proof.
   intro i. clear - CL CU BIG. split; intro H; [repeat destruct H as [H|H]; lia | lia].
 Qed.
 
+(* One four-page inner iteration, over an abstract initial memory. *)
+Lemma nt_adv4: forall m M d s n j i,
+  cpy m M d s (done4 d j i) -> nov d s n -> n < 2^64 ->
+  aA d + 2 ^ 14 * j + 2 ^ 7 * i + 12416 <= n ->
+  cpy m (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 M
+    (d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (32 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (32 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (64 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (64 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (96 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (96 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (2 ^ 12 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (2 ^ 12 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4128 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (4128 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4160 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (4160 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4192 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (4192 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (2 ^ 13 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (2 ^ 13 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (8224 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (8224 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (8256 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (8256 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (8288 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (8288 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (12288 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (12288 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (12320 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (12320 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (12352 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (12352 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (12384 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 M (12384 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i))) d s (done4 d j (N.succ i)).
+Proof.
+  intros m M d s n j i C NOV NB LE.
+  eapply cpy_equiv';
+  [ eapply (cpy_store16 m M d s n (done4 d j i)
+    (aA d + 2 ^ 14 * j + 2 ^ 7 * i) (32 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (64 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (96 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (4096 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (4128 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (4160 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (4192 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (8192 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (8224 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (8256 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (8288 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (12288 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (12320 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (12352 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i)) (12384 + (aA d + 2 ^ 14 * j + 2 ^ 7 * i))
+    (d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (32 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (64 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (96 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (2 ^ 12 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4128 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4160 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4192 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (2 ^ 13 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8224 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8256 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8288 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12288 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12320 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12352 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12384 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i)
+    (s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (32 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (64 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (96 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (2 ^ 12 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4128 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4160 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (4192 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (2 ^ 13 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8224 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8256 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (8288 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12288 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12320 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12352 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (12384 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i));
+    first [ exact C | exact NOV | exact NB
+          | (intros ii Hii; unfold done4 in Hii;
+             change (2^14) with 16384 in *; change (2^7) with 128 in *;
+             clear - Hii LE; lia)
+          | (change (2^12) with 4096 in *; change (2^13) with 8192 in *;
+             clear - LE; lia)
+          | (clear; f_equal; lia) ]
+  | intro x; unfold done4;
+    change (2^14) with 16384 in *; change (2^7) with 128 in *;
+    rewrite N.mul_succ_r; clear; split; intro H;
+    repeat destruct H as [H|H]; lia ].
+Qed.
+
 Lemma nt_seg_1285: forall m d s n rsp s1 t,
   nov d s n -> d + n < 2^64 -> s + n <= 2^64 -> 16448 <= n ->
   m Ⓠ[0x31a3f8] < n -> m Ⓠ[0x3215a0] <= n -> n < 2^64 -> models archtyps s1 ->
@@ -399,7 +458,78 @@ Lemma nt_seg_1285: forall m d s n rsp s1 t,
    s1 R_RCX = 32 - i /\ s1 R_R10 = nk 14 d n - j /\ s1 R_RDX = nr 14 d n /\
    s1 R_RAX = d /\ s1 R_RSP = rsp) ->
   nextinv memmove_avx_amd64 (nt_invs m d s n rsp) nt_exit false ((Addr 1285, s1) :: t).
-Proof. Admitted.
+Proof.
+  intros m d s n rsp s1 t NOV NW SW BIG THR1 THR3 NB MDL1 PRE.
+    destruct PRE as [j [i [J [I [C [RDI [RSI [RCX [R10 [RDX [RAX RSP]]]]]]]]]]].
+    assert (CKB: 16384 * nk 14 d n <= n - aA d).
+    { unfold nk. change 16384 with (2^14). apply N.mul_div_le. discriminate. }
+    pose proof (aA_bounds d) as AAB.
+    assert (LE: aA d + 2 ^ 14 * j + 2 ^ 7 * i + 12416 <= n)
+      by (change (2^14) with 16384 in *; change (2^7) with 128 in *; clear - J I CKB AAB NB; nia).
+    pose proof (nt_adv4 m (s1 V_MEM64) d s n j i C NOV NB LE) as ADV.
+    do 33 x64_step.
+    set (Mhalf := (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (setmem 64 LittleE 32 (s1 V_MEM64)
+    (d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (32 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (32 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (64 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (64 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (96 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (96 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (2 ^ 12 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (2 ^ 12 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4128 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (4128 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4160 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (4160 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))
+    (4192 + d + aA d + 2 ^ 14 * j + 2 ^ 7 * i) (getmem 64 LittleE 32 (s1 V_MEM64) (4192 + s + aA d + 2 ^ 14 * j + 2 ^ 7 * i)))) in *.
+    clearbody Mhalf.
+    do 8 x64_step.
+    lazymatch type of ADV with cpy _ ?MP _ _ _ =>
+      set (Mpost := MP) in *; clearbody Mpost
+    end.
+    repeat x64_step.
+    all: change (2^13) with 8192 in *; change (2^14) with 16384 in *; change (2^12) with 4096 in *; change (2^7) with 128 in *.
+    + (* done: i=31, j=nk-1 -> full set, tail loop entry 1117 *)
+      apply N.eqb_eq in BC. apply N.eqb_eq in BC0.
+      rewrite N.mod_small in BC0 by (clear - J NB CKB; change (2^64) with 18446744073709551616 in *; nia).
+      assert (IE: i = 31) by (clear - BC; lia). assert (JE: j = nk 14 d n - 1) by (clear - BC0 J; lia).
+      assert (K1: 1 <= nk 14 d n) by (clear - J; lia).
+      assert (Ej: 16384 * j = 16384 * nk 14 d n - 16384) by (clear - JE K1; nia).
+      assert (Ei: 128 * i = 3968) by (clear - IE; nia).
+      assert (Es: 128 * N.succ i = 4096) by (clear - IE; nia).
+      split.
+      { eapply cpy_equiv'; [exact ADV|]. intro x. unfold done4. rewrite Ej, Es.
+        clear - K1. split; intro Hx; repeat destruct Hx as [Hx|Hx]; lia. }
+      split. { rewrite Ej, Ei. rewrite N.mod_small by (clear - NW CKB AAB K1; change (2^64) with 18446744073709551616 in *; nia).
+               clear - K1; lia. }
+      split. { rewrite Ej, Ei. f_equal. clear - K1; lia. }
+      split. exact RDX. split. exact RAX. exact RSP.
+    + (* j+1 chunk *)
+      apply N.eqb_eq in BC. apply N.eqb_neq in BC0.
+      rewrite N.mod_small in BC0 by (clear - J NB CKB; change (2^64) with 18446744073709551616 in *; nia).
+      assert (IE: i = 31) by (clear - BC; lia).
+      assert (K1: 1 <= nk 14 d n) by (clear - J; lia).
+      assert (Ei: 128 * i = 3968) by (clear - IE; nia).
+      assert (Es: 128 * N.succ i = 4096) by (clear - IE; nia).
+      assert (Ej1: 16384 * (j + 1) = 16384 * j + 16384) by (clear; nia).
+      exists (j + 1), 0. split. clear - BC0 J; lia. split. clear; lia.
+      split.
+      { eapply cpy_equiv'; [exact ADV|]. intro x. unfold done4. rewrite Es, Ej1.
+        clear. split; intro Hx; repeat destruct Hx as [Hx|Hx]; lia. }
+      split. { rewrite Ei, Ej1. rewrite N.mod_small by (clear - NW CKB AAB J K1; change (2^64) with 18446744073709551616 in *; nia).
+               clear; lia. }
+      split. { rewrite Ei, Ej1. rewrite N.mul_0_r, N.add_0_r. f_equal. clear; lia. }
+      split. clear; lia.
+      split. { rewrite msub_sub by (clear - BC0 J; lia).
+               rewrite N.mod_small by (clear - J NB CKB; change (2^64) with 18446744073709551616 in *; nia).
+               clear - BC0 J; lia. }
+      split. exact RDX. split. exact RAX. exact RSP.
+    + (* i+1 inner *)
+      apply N.eqb_neq in BC.
+      assert (Es: 128 * N.succ i = 128 * i + 128) by (clear; nia).
+      exists j, (N.succ i). split. exact J. split. clear - I BC; lia. split. exact ADV.
+      split. { rewrite Es. rewrite N.mod_small by (clear - NW LE AAB J I CKB NB BC; change (2^64) with 18446744073709551616 in *; nia).
+               clear; lia. }
+      split. { rewrite Es. f_equal. clear; lia. }
+      split. { rewrite msub_sub by (clear - I; lia). rewrite N.mod_small by (clear - I; lia). clear - I; lia. }
+      split. exact R10. split. exact RDX. split. exact RAX. exact RSP.
+Qed.
+
 
 Lemma nt_seg_1613: forall m d s n rsp s1 t,
   nov d s n -> d + n < 2^64 -> s + n <= 2^64 -> 16448 <= n ->
@@ -690,4 +820,4 @@ Proof.
   - (* 1613 *) apply nt_seg_1613; assumption.
   - (* 1621 *) apply nt_seg_1621; assumption.
   - (* 1706 *) apply nt_seg_1706; assumption.
-Admitted.
+Qed.

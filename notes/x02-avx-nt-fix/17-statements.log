@@ -1,0 +1,13 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-78795c90
+COMMAND=python3 notes/x02-avx-nt-fix/check-statements.py
+nt_seg_1285: public statement byte-for-byte unchanged
+memmove_avx_correct_nt: public statement byte-for-byte unchanged
+nk: predicate byte-for-byte unchanged
+nr: predicate byte-for-byte unchanged
+done2: predicate byte-for-byte unchanged
+done4: predicate byte-for-byte unchanged
+nt_exit: predicate byte-for-byte unchanged
+nt_invs: predicate byte-for-byte unchanged
+Examples/claude/memmove_avx_amd64.v: generated lift unchanged
+
+EXIT_CODE=0

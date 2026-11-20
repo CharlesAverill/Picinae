@@ -1,0 +1,48 @@
+; One recursive -R mapping preserves the existing unqualified Require imports.
+(include_subdirs qualified)
+
+; Keep this list aligned with the active core entries in _CoqProject.
+; Explicit lists prevent unrelated examples and experimental modules being built.
+(rocq.theory
+ (name Picinae)
+ (theories Stdlib Ltac2)
+ (mode vo)
+ (flags :standard -w -level-tolerance -w -postfix-notation-not-level-1)
+ (modules
+  Picinae_core Picinae_theory Picinae_statics Picinae_auto Picinae_finterp
+  Picinae_simplifier_base Picinae_simplifier_v1_1 Picinae_ISA Picinae_i386
+  Picinae_armv7 Picinae_armv8 Picinae_riscv Picinae_amd64 Picinae_numbers
+  Examples.claude.amd64_common Examples.claude.abs_amd64
+  Examples.claude.amd64_abs_proof
+  Examples.claude.arm8_common Examples.claude.abs_arm8
+  Examples.claude.arm8_abs_proof
+  Examples.claude.memmove_avx_amd64
+  Examples.claude.amd64_memcpy_sets Examples.claude.amd64_memcpy_lemmas
+  Examples.claude.amd64_memmove_avx_proof
+  Examples.claude.amd64_memmove_avx_overlap_forward_proof
+  Examples.claude.amd64_memmove_avx_forward_nt_policy_proof
+  Examples.claude.amd64_memmove_avx_loops_proof
+  Examples.claude.amd64_memmove_avx_rep_proof
+  Examples.claude.amd64_memmove_avx_nt_stores
+  Examples.claude.amd64_memmove_avx_nt_proof
+  Examples.claude.amd64_memmove_avx_nt_witness))
+
+(alias
+ (name core)
+ (deps
+  Picinae_core.vo Picinae_theory.vo Picinae_statics.vo Picinae_auto.vo
+  Picinae_finterp.vo Picinae_simplifier_base.vo Picinae_simplifier_v1_1.vo
+  Picinae_ISA.vo Picinae_i386.vo Picinae_armv7.vo Picinae_armv8.vo
+  Picinae_riscv.vo Picinae_amd64.vo Picinae_numbers.vo))
+
+(alias
+ (name smoke-x86)
+ (deps Examples/claude/amd64_abs_proof.vo))
+
+(alias
+ (name smoke-arm8)
+ (deps Examples/claude/arm8_abs_proof.vo))
+
+(alias
+ (name smoke)
+ (deps (alias core) (alias smoke-x86) (alias smoke-arm8)))

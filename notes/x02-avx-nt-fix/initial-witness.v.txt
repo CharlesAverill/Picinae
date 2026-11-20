@@ -1,0 +1,48 @@
+(* Nonvacuity witness for the original AVX NT public input contract.
+   OpenAI GPT-6.1 Sol, x02-avx-nt-fix, 2026-11-03.
+   Sequential IL input witness only; no execution/termination claim. *)
+Require Import Picinae_amd64.
+Require Import amd64_memcpy_sets.
+Require Import amd64_memmove_avx_nt_proof.
+From Stdlib Require Import NArith Lia.
+Open Scope N.
+
+(* A concrete modeled entry satisfies every public precondition. Zero initial
+   memory makes both tunables zero; the two 32768-byte buffers are disjoint.
+   This witnesses inputs, not termination or a caller-return execution. *)
+Definition nt_entry_witness : store := fun v =>
+  match v with
+  | R_RDI => 65536
+  | R_RSI => 131072
+  | R_RDX => 32768
+  | _ => 0
+  end.
+
+Lemma nt_entry_inputs_satisfiable:
+  models x64typctx nt_entry_witness /\
+  nt_entry_witness V_MEM64 = 0 /\
+  nt_entry_witness R_RDI = 65536 /\
+  nt_entry_witness R_RSI = 131072 /\
+  nt_entry_witness R_RDX = 32768 /\
+  nt_entry_witness R_RSP = 0 /\
+  nov 65536 131072 32768 /\
+  65536 + 32768 < 2^64 /\ 131072 + 32768 <= 2^64 /\
+  16448 <= 32768 /\
+  getmem 64 LittleE 8 0 0x31a3f8 < 32768 /\
+  getmem 64 LittleE 8 0 0x3215a0 <= 32768.
+Proof.
+  split.
+  { intros v w T. destruct v; inversion T; subst w;
+      first [change (0 < 2^_); apply N.neq_0_lt_0, N.pow_nonzero; discriminate
+            | change (2^64) with 18446744073709551616; cbv [nt_entry_witness]; lia]. }
+  split; [reflexivity|]. split; [reflexivity|]. split; [reflexivity|].
+  split; [reflexivity|]. split; [reflexivity|].
+  split.
+  { intros i j I J.
+    rewrite !N.mod_small by (change (2^64) with 18446744073709551616; lia).
+    lia. }
+  change (2^64) with 18446744073709551616.
+  change (getmem 64 LittleE 8 0 0x31a3f8) with 0.
+  change (getmem 64 LittleE 8 0 0x3215a0) with 0.
+  repeat split; lia.
+Qed.
