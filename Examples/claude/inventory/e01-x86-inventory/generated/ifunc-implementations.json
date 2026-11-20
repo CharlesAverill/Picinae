@@ -1,0 +1,1472 @@
+[
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memcmpeq_avx2",
+    "present_in_debug_symbols": true,
+    "public": "__memcmpeq",
+    "source_line": 43
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memcmpeq_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "__memcmpeq",
+    "source_line": 47
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memcmpeq_evex",
+    "present_in_debug_symbols": true,
+    "public": "__memcmpeq",
+    "source_line": 52
+  },
+  {
+    "condition": "1",
+    "implementation": "__memcmpeq_sse2",
+    "present_in_debug_symbols": true,
+    "public": "__memcmpeq",
+    "source_line": 57
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__memchr_avx2",
+    "present_in_debug_symbols": true,
+    "public": "memchr",
+    "source_line": 61
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memchr_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "memchr",
+    "source_line": 64
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memchr_evex",
+    "present_in_debug_symbols": true,
+    "public": "memchr",
+    "source_line": 68
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memchr_evex_rtm",
+    "present_in_debug_symbols": true,
+    "public": "memchr",
+    "source_line": 73
+  },
+  {
+    "condition": "1",
+    "implementation": "__memchr_sse2",
+    "present_in_debug_symbols": true,
+    "public": "memchr",
+    "source_line": 78
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2) && CPU_FEATURE_USABLE (MOVBE))",
+    "implementation": "__memcmp_avx2_movbe",
+    "present_in_debug_symbols": true,
+    "public": "memcmp",
+    "source_line": 82
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2) && CPU_FEATURE_USABLE (MOVBE) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memcmp_avx2_movbe_rtm",
+    "present_in_debug_symbols": true,
+    "public": "memcmp",
+    "source_line": 87
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2) && CPU_FEATURE_USABLE (MOVBE))",
+    "implementation": "__memcmp_evex_movbe",
+    "present_in_debug_symbols": true,
+    "public": "memcmp",
+    "source_line": 93
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSE4_1)",
+    "implementation": "__memcmp_sse4_1",
+    "present_in_debug_symbols": true,
+    "public": "memcmp",
+    "source_line": 99
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__memcmp_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "memcmp",
+    "source_line": 101
+  },
+  {
+    "condition": "1",
+    "implementation": "__memcmp_sse2",
+    "present_in_debug_symbols": true,
+    "public": "memcmp",
+    "source_line": 103
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512F)",
+    "implementation": "__memmove_chk_avx512_no_vzeroupper",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 108
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memmove_chk_avx512_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 111
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memmove_chk_avx512_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 114
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__memmove_chk_avx_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 117
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__memmove_chk_avx_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 120
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memmove_chk_avx_unaligned_rtm",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 123
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memmove_chk_avx_unaligned_erms_rtm",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 127
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memmove_chk_evex_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 131
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memmove_chk_evex_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 134
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__memmove_chk_ssse3_back",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 137
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__memmove_chk_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 140
+  },
+  {
+    "condition": "1",
+    "implementation": "__memmove_chk_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 143
+  },
+  {
+    "condition": "1",
+    "implementation": "__memmove_chk_sse2_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 145
+  },
+  {
+    "condition": "1",
+    "implementation": "__memmove_chk_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memmove_chk",
+    "source_line": 147
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__memmove_avx_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 153
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__memmove_avx_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 156
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memmove_avx_unaligned_rtm",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 159
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memmove_avx_unaligned_erms_rtm",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 163
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memmove_evex_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 167
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memmove_evex_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 170
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512F)",
+    "implementation": "__memmove_avx512_no_vzeroupper",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 173
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memmove_avx512_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 176
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memmove_avx512_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 179
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__memmove_ssse3_back",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 182
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__memmove_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 184
+  },
+  {
+    "condition": "1",
+    "implementation": "__memmove_erms",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 186
+  },
+  {
+    "condition": "1",
+    "implementation": "__memmove_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 187
+  },
+  {
+    "condition": "1",
+    "implementation": "__memmove_sse2_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memmove",
+    "source_line": 189
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__memrchr_avx2",
+    "present_in_debug_symbols": true,
+    "public": "memrchr",
+    "source_line": 194
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memrchr_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "memrchr",
+    "source_line": 197
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW))",
+    "implementation": "__memrchr_evex",
+    "present_in_debug_symbols": true,
+    "public": "memrchr",
+    "source_line": 201
+  },
+  {
+    "condition": "1",
+    "implementation": "__memrchr_sse2",
+    "present_in_debug_symbols": true,
+    "public": "memrchr",
+    "source_line": 206
+  },
+  {
+    "condition": "1",
+    "implementation": "__memset_chk_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 211
+  },
+  {
+    "condition": "1",
+    "implementation": "__memset_chk_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 213
+  },
+  {
+    "condition": "1",
+    "implementation": "__memset_chk_sse2_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 215
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__memset_chk_avx2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 217
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__memset_chk_avx2_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 220
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memset_chk_avx2_unaligned_rtm",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 223
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memset_chk_avx2_unaligned_erms_rtm",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 227
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memset_chk_evex_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 231
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memset_chk_evex_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 236
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memset_chk_avx512_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 241
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memset_chk_avx512_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 246
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512F)",
+    "implementation": "__memset_chk_avx512_no_vzeroupper",
+    "present_in_debug_symbols": true,
+    "public": "__memset_chk",
+    "source_line": 251
+  },
+  {
+    "condition": "1",
+    "implementation": "__memset_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 259
+  },
+  {
+    "condition": "1",
+    "implementation": "__memset_sse2_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 261
+  },
+  {
+    "condition": "1",
+    "implementation": "__memset_erms",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 263
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__memset_avx2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 264
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__memset_avx2_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 267
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memset_avx2_unaligned_rtm",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 270
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memset_avx2_unaligned_erms_rtm",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 274
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memset_evex_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 278
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memset_evex_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 283
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memset_avx512_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 288
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__memset_avx512_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 293
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512F)",
+    "implementation": "__memset_avx512_no_vzeroupper",
+    "present_in_debug_symbols": true,
+    "public": "memset",
+    "source_line": 298
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__rawmemchr_avx2",
+    "present_in_debug_symbols": true,
+    "public": "rawmemchr",
+    "source_line": 305
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__rawmemchr_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "rawmemchr",
+    "source_line": 308
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__rawmemchr_evex",
+    "present_in_debug_symbols": true,
+    "public": "rawmemchr",
+    "source_line": 312
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__rawmemchr_evex_rtm",
+    "present_in_debug_symbols": true,
+    "public": "rawmemchr",
+    "source_line": 317
+  },
+  {
+    "condition": "1",
+    "implementation": "__rawmemchr_sse2",
+    "present_in_debug_symbols": true,
+    "public": "rawmemchr",
+    "source_line": 322
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__strlen_avx2",
+    "present_in_debug_symbols": true,
+    "public": "strlen",
+    "source_line": 326
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__strlen_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "strlen",
+    "source_line": 330
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__strlen_evex",
+    "present_in_debug_symbols": true,
+    "public": "strlen",
+    "source_line": 335
+  },
+  {
+    "condition": "1",
+    "implementation": "__strlen_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strlen",
+    "source_line": 340
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__strnlen_avx2",
+    "present_in_debug_symbols": true,
+    "public": "strnlen",
+    "source_line": 344
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__strnlen_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "strnlen",
+    "source_line": 348
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__strnlen_evex",
+    "present_in_debug_symbols": true,
+    "public": "strnlen",
+    "source_line": 353
+  },
+  {
+    "condition": "1",
+    "implementation": "__strnlen_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strnlen",
+    "source_line": 358
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__stpncpy_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "stpncpy",
+    "source_line": 362
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__stpncpy_avx2",
+    "present_in_debug_symbols": true,
+    "public": "stpncpy",
+    "source_line": 364
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__stpncpy_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "stpncpy",
+    "source_line": 366
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW))",
+    "implementation": "__stpncpy_evex",
+    "present_in_debug_symbols": true,
+    "public": "stpncpy",
+    "source_line": 370
+  },
+  {
+    "condition": "1",
+    "implementation": "__stpncpy_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "stpncpy",
+    "source_line": 374
+  },
+  {
+    "condition": "1",
+    "implementation": "__stpncpy_sse2",
+    "present_in_debug_symbols": true,
+    "public": "stpncpy",
+    "source_line": 376
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__stpcpy_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "stpcpy",
+    "source_line": 380
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__stpcpy_avx2",
+    "present_in_debug_symbols": true,
+    "public": "stpcpy",
+    "source_line": 382
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__stpcpy_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "stpcpy",
+    "source_line": 384
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW))",
+    "implementation": "__stpcpy_evex",
+    "present_in_debug_symbols": true,
+    "public": "stpcpy",
+    "source_line": 388
+  },
+  {
+    "condition": "1",
+    "implementation": "__stpcpy_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "stpcpy",
+    "source_line": 392
+  },
+  {
+    "condition": "1",
+    "implementation": "__stpcpy_sse2",
+    "present_in_debug_symbols": true,
+    "public": "stpcpy",
+    "source_line": 393
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__strcat_avx2",
+    "present_in_debug_symbols": true,
+    "public": "strcat",
+    "source_line": 424
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__strcat_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "strcat",
+    "source_line": 426
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW))",
+    "implementation": "__strcat_evex",
+    "present_in_debug_symbols": true,
+    "public": "strcat",
+    "source_line": 430
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__strcat_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "strcat",
+    "source_line": 434
+  },
+  {
+    "condition": "1",
+    "implementation": "__strcat_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "strcat",
+    "source_line": 436
+  },
+  {
+    "condition": "1",
+    "implementation": "__strcat_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strcat",
+    "source_line": 437
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__strchr_avx2",
+    "present_in_debug_symbols": true,
+    "public": "strchr",
+    "source_line": 441
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__strchr_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "strchr",
+    "source_line": 445
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__strchr_evex",
+    "present_in_debug_symbols": true,
+    "public": "strchr",
+    "source_line": 450
+  },
+  {
+    "condition": "1",
+    "implementation": "__strchr_sse2_no_bsf",
+    "present_in_debug_symbols": true,
+    "public": "strchr",
+    "source_line": 455
+  },
+  {
+    "condition": "1",
+    "implementation": "__strchr_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strchr",
+    "source_line": 456
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__strchrnul_avx2",
+    "present_in_debug_symbols": true,
+    "public": "strchrnul",
+    "source_line": 460
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (BMI2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__strchrnul_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "strchrnul",
+    "source_line": 464
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__strchrnul_evex",
+    "present_in_debug_symbols": true,
+    "public": "strchrnul",
+    "source_line": 469
+  },
+  {
+    "condition": "1",
+    "implementation": "__strchrnul_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strchrnul",
+    "source_line": 474
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__strrchr_avx2",
+    "present_in_debug_symbols": true,
+    "public": "strrchr",
+    "source_line": 478
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__strrchr_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "strrchr",
+    "source_line": 481
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW))",
+    "implementation": "__strrchr_evex",
+    "present_in_debug_symbols": true,
+    "public": "strrchr",
+    "source_line": 485
+  },
+  {
+    "condition": "1",
+    "implementation": "__strrchr_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strrchr",
+    "source_line": 489
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__strcmp_avx2",
+    "present_in_debug_symbols": true,
+    "public": "strcmp",
+    "source_line": 493
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__strcmp_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "strcmp",
+    "source_line": 496
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW) && CPU_FEATURE_USABLE (BMI2))",
+    "implementation": "__strcmp_evex",
+    "present_in_debug_symbols": true,
+    "public": "strcmp",
+    "source_line": 500
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSE4_2)",
+    "implementation": "__strcmp_sse42",
+    "present_in_debug_symbols": true,
+    "public": "strcmp",
+    "source_line": 505
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__strcmp_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "strcmp",
+    "source_line": 507
+  },
+  {
+    "condition": "1",
+    "implementation": "__strcmp_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "strcmp",
+    "source_line": 509
+  },
+  {
+    "condition": "1",
+    "implementation": "__strcmp_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strcmp",
+    "source_line": 510
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__strcpy_avx2",
+    "present_in_debug_symbols": true,
+    "public": "strcpy",
+    "source_line": 514
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__strcpy_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "strcpy",
+    "source_line": 516
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW))",
+    "implementation": "__strcpy_evex",
+    "present_in_debug_symbols": true,
+    "public": "strcpy",
+    "source_line": 520
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__strcpy_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "strcpy",
+    "source_line": 524
+  },
+  {
+    "condition": "1",
+    "implementation": "__strcpy_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "strcpy",
+    "source_line": 526
+  },
+  {
+    "condition": "1",
+    "implementation": "__strcpy_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strcpy",
+    "source_line": 527
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSE4_2)",
+    "implementation": "__strcspn_sse42",
+    "present_in_debug_symbols": true,
+    "public": "strcspn",
+    "source_line": 531
+  },
+  {
+    "condition": "1",
+    "implementation": "__strcspn_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strcspn",
+    "source_line": 533
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__strncat_avx2",
+    "present_in_debug_symbols": true,
+    "public": "strncat",
+    "source_line": 565
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__strncat_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "strncat",
+    "source_line": 567
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW))",
+    "implementation": "__strncat_evex",
+    "present_in_debug_symbols": true,
+    "public": "strncat",
+    "source_line": 571
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__strncat_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "strncat",
+    "source_line": 575
+  },
+  {
+    "condition": "1",
+    "implementation": "__strncat_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "strncat",
+    "source_line": 577
+  },
+  {
+    "condition": "1",
+    "implementation": "__strncat_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strncat",
+    "source_line": 579
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__strncpy_avx2",
+    "present_in_debug_symbols": true,
+    "public": "strncpy",
+    "source_line": 583
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__strncpy_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "strncpy",
+    "source_line": 585
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW))",
+    "implementation": "__strncpy_evex",
+    "present_in_debug_symbols": true,
+    "public": "strncpy",
+    "source_line": 589
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__strncpy_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "strncpy",
+    "source_line": 593
+  },
+  {
+    "condition": "1",
+    "implementation": "__strncpy_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "strncpy",
+    "source_line": 595
+  },
+  {
+    "condition": "1",
+    "implementation": "__strncpy_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strncpy",
+    "source_line": 597
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSE4_2)",
+    "implementation": "__strpbrk_sse42",
+    "present_in_debug_symbols": true,
+    "public": "strpbrk",
+    "source_line": 601
+  },
+  {
+    "condition": "1",
+    "implementation": "__strpbrk_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strpbrk",
+    "source_line": 603
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSE4_2)",
+    "implementation": "__strspn_sse42",
+    "present_in_debug_symbols": true,
+    "public": "strspn",
+    "source_line": 608
+  },
+  {
+    "condition": "1",
+    "implementation": "__strspn_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strspn",
+    "source_line": 610
+  },
+  {
+    "condition": "1",
+    "implementation": "__strstr_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "strstr",
+    "source_line": 614
+  },
+  {
+    "condition": "1",
+    "implementation": "__strstr_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strstr",
+    "source_line": 615
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512F)",
+    "implementation": "__memcpy_chk_avx512_no_vzeroupper",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 802
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memcpy_chk_avx512_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 805
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memcpy_chk_avx512_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 808
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__memcpy_chk_avx_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 811
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__memcpy_chk_avx_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 814
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memcpy_chk_avx_unaligned_rtm",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 817
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memcpy_chk_avx_unaligned_erms_rtm",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 821
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memcpy_chk_evex_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 825
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memcpy_chk_evex_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 828
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__memcpy_chk_ssse3_back",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 831
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__memcpy_chk_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 834
+  },
+  {
+    "condition": "1",
+    "implementation": "__memcpy_chk_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 837
+  },
+  {
+    "condition": "1",
+    "implementation": "__memcpy_chk_sse2_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 839
+  },
+  {
+    "condition": "1",
+    "implementation": "__memcpy_chk_erms",
+    "present_in_debug_symbols": true,
+    "public": "__memcpy_chk",
+    "source_line": 841
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__memcpy_avx_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 847
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__memcpy_avx_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 850
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memcpy_avx_unaligned_rtm",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 853
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__memcpy_avx_unaligned_erms_rtm",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 857
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memcpy_evex_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 861
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memcpy_evex_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 864
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__memcpy_ssse3_back",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 867
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__memcpy_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 869
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512F)",
+    "implementation": "__memcpy_avx512_no_vzeroupper",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 871
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memcpy_avx512_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 874
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__memcpy_avx512_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 877
+  },
+  {
+    "condition": "1",
+    "implementation": "__memcpy_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 880
+  },
+  {
+    "condition": "1",
+    "implementation": "__memcpy_sse2_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 881
+  },
+  {
+    "condition": "1",
+    "implementation": "__memcpy_erms",
+    "present_in_debug_symbols": true,
+    "public": "memcpy",
+    "source_line": 883
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512F)",
+    "implementation": "__mempcpy_chk_avx512_no_vzeroupper",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 888
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__mempcpy_chk_avx512_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 891
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__mempcpy_chk_avx512_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 894
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__mempcpy_chk_avx_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 897
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__mempcpy_chk_avx_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 900
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__mempcpy_chk_avx_unaligned_rtm",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 903
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__mempcpy_chk_avx_unaligned_erms_rtm",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 907
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__mempcpy_chk_evex_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 911
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__mempcpy_chk_evex_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 914
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__mempcpy_chk_ssse3_back",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 917
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__mempcpy_chk_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 920
+  },
+  {
+    "condition": "1",
+    "implementation": "__mempcpy_chk_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 923
+  },
+  {
+    "condition": "1",
+    "implementation": "__mempcpy_chk_sse2_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 925
+  },
+  {
+    "condition": "1",
+    "implementation": "__mempcpy_chk_erms",
+    "present_in_debug_symbols": true,
+    "public": "__mempcpy_chk",
+    "source_line": 927
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512F)",
+    "implementation": "__mempcpy_avx512_no_vzeroupper",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 933
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__mempcpy_avx512_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 936
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__mempcpy_avx512_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 939
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__mempcpy_avx_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 942
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX)",
+    "implementation": "__mempcpy_avx_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 945
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__mempcpy_avx_unaligned_rtm",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 948
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__mempcpy_avx_unaligned_erms_rtm",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 952
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__mempcpy_evex_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 956
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX512VL)",
+    "implementation": "__mempcpy_evex_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 959
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__mempcpy_ssse3_back",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 962
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__mempcpy_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 964
+  },
+  {
+    "condition": "1",
+    "implementation": "__mempcpy_sse2_unaligned",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 966
+  },
+  {
+    "condition": "1",
+    "implementation": "__mempcpy_sse2_unaligned_erms",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 968
+  },
+  {
+    "condition": "1",
+    "implementation": "__mempcpy_erms",
+    "present_in_debug_symbols": true,
+    "public": "mempcpy",
+    "source_line": 970
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (AVX2)",
+    "implementation": "__strncmp_avx2",
+    "present_in_debug_symbols": true,
+    "public": "strncmp",
+    "source_line": 974
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX2) && CPU_FEATURE_USABLE (RTM))",
+    "implementation": "__strncmp_avx2_rtm",
+    "present_in_debug_symbols": true,
+    "public": "strncmp",
+    "source_line": 977
+  },
+  {
+    "condition": "(CPU_FEATURE_USABLE (AVX512VL) && CPU_FEATURE_USABLE (AVX512BW))",
+    "implementation": "__strncmp_evex",
+    "present_in_debug_symbols": true,
+    "public": "strncmp",
+    "source_line": 981
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSE4_2)",
+    "implementation": "__strncmp_sse42",
+    "present_in_debug_symbols": true,
+    "public": "strncmp",
+    "source_line": 985
+  },
+  {
+    "condition": "CPU_FEATURE_USABLE (SSSE3)",
+    "implementation": "__strncmp_ssse3",
+    "present_in_debug_symbols": true,
+    "public": "strncmp",
+    "source_line": 987
+  },
+  {
+    "condition": "1",
+    "implementation": "__strncmp_sse2",
+    "present_in_debug_symbols": true,
+    "public": "strncmp",
+    "source_line": 989
+  }
+]

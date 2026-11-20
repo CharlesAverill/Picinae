@@ -1,0 +1,12 @@
+/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash -c rocq\ --version\;\ ocamlc\ -version\;\ dune\ --version\;\ aarch64-linux-gnu-objdump\ --version
+exit=0 log=versions.log
+/home/charles/code/friends/.toolchains/arm-validation/picinae-env rocq makefile -f _CoqProject -o Makefile.coq
+exit=0 log=makefile.log
+/home/charles/code/friends/.toolchains/arm-validation/picinae-env make -f Makefile.coq -j1 -B Picinae_armv8.vo
+exit=0 log=core-build.log
+/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash -c for\ f\ in\ div\ ldiv\ ffs\ ffsl\ ffsll\ swab\;\ do\ printf\ \"CHECK\ %s\\n\"\ \"\$f\"\;\ rocq\ c\ -R\ .\ Picinae\ \"Examples/claude/\$\{f\}_arm8.v\"\ \|\|\ exit\;\ done
+exit=0 log=existing-lifts-typecheck.log
+/home/charles/code/friends/.toolchains/arm-validation/picinae-env rocq c -R . Picinae /home/charles/.t3/worktrees/Picinae/t3-0672c15b/Examples/claude/inventory/e02-arm-inventory/check_existing_assumptions.v
+exit=0 log=existing-assumptions.log
+/home/charles/code/friends/.toolchains/arm-validation/picinae-env rocq c -R . Picinae /home/charles/.t3/worktrees/Picinae/t3-0672c15b/Examples/claude/inventory/e02-arm-inventory/evidence/e02_toascii_smoke.v
+exit=0 log=smoke-typecheck-assumptions.log
