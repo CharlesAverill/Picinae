@@ -1,0 +1,82 @@
+COMMAND=["/home/charles/code/friends/.toolchains/e02-arm-inventory/venv/bin/python", "-m", "pyghidra", "--skip-analysis", "--project-path", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/projects/lift-0oyuaq60", "--project-name", "e11", "/home/charles/code/friends/.toolchains/e02-arm-inventory/root/lib/aarch64-linux-gnu/libc.so.6", "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/scalar_headless.py", "/home/charles/.t3/worktrees/Picinae/t3-ea3464df", "/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/.e11-stage-1gqm89yb", "/home/charles/code/friends/.toolchains/e02-arm-inventory", "87c8e805b0b0414b829cd236310d9efb", "global", "__strlen_asimd"]
+JAVA_TOOL_OPTIONS=-Xmx1G -Duser.home=/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/home -Djava.io.tmpdir=/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/tmp
+Picked up JAVA_TOOL_OPTIONS: -Xmx1G -Duser.home=/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/home -Djava.io.tmpdir=/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/tmp
+Picked up JAVA_TOOL_OPTIONS: -Xmx1G -Duser.home=/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/home -Djava.io.tmpdir=/home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/tmp
+
+LAUNCHER_EXIT=0
+2026-11-03 17:47:11 INFO  (LoggingInitialization) Using log config file: jar:file:/home/charles/code/friends/.toolchains/e02-arm-inventory/ghidra_11.4.2_PUBLIC/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml  
+2026-11-03 17:47:11 INFO  (LoggingInitialization) Using log file: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/config/charles-ghidra/ghidra_11.4.2_PUBLIC/application.log  
+2026-11-03 17:47:11 INFO  (Preferences) Loading user preferences: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/config/charles-ghidra/ghidra_11.4.2_PUBLIC/preferences  
+2026-11-03 17:47:11 INFO  (ClassSearcher) Searching for classes...  
+2026-11-03 17:47:12 INFO  (ClassSearcher) Class search complete (372 ms)  
+2026-11-03 17:47:12 INFO  (SSLContextInitializer) Initializing SSL Context  
+2026-11-03 17:47:12 INFO  (SecureRandomFactory) Initializing Random Number Generator...  
+2026-11-03 17:47:12 INFO  (SecureRandomFactory) Random Number Generator initialization complete: NativePRNGNonBlocking  
+2026-11-03 17:47:12 INFO  (ApplicationTrustManagerFactory) Trust manager disabled, cacerts have not been set  
+2026-11-03 17:47:12 INFO  (DefaultProject) Creating project: /home/charles/code/friends/.toolchains/e29-arm-scalar-bitforms/targets03/ghidra/projects/lift-0oyuaq60/e11/e11  
+2026-11-03 17:47:12 INFO  (AutoImporter) Using Loader: Executable and Linking Format (ELF)  
+2026-11-03 17:47:12 INFO  (AutoImporter) Using Language/Compiler: AARCH64:LE:64:v8A:default  
+2026-11-03 17:47:12 INFO  (AutoImporter) Using Library Search Path: [., /bin, /lib, /lib64, /lib/x86_64-linux-gnu, /lib/aarch64-linux-gnu, /usr/bin, /usr/lib, /usr/X11R6/bin, /usr/X11R6/lib, /usr/java/packages/lib, /usr/lib64]  
+2026-11-03 17:47:13 DEBUG (ElfHeader) Elf symbol table section .dynsym linked to string table section .dynstr  
+2026-11-03 17:47:13 DEBUG (ElfHeader) Elf relocation table section .rela.dyn linked to symbol table section .dynsym affecting PT_LOAD  
+2026-11-03 17:47:13 DEBUG (ElfHeader) Elf relocation table section .rela.plt linked to symbol table section .dynsym affecting .got.plt  
+2026-11-03 17:47:13 DEBUG (ElfProgramBuilder) Discarding 4-byte alignment/filler segment_2.4 at 001002b4  
+2026-11-03 17:47:13 DEBUG (ElfProgramBuilder) Discarding 4-byte alignment/filler segment_2.6 at 0010485c  
+2026-11-03 17:47:13 DEBUG (ElfProgramBuilder) Discarding 1-byte alignment/filler segment_2.9 at 0011d96b  
+2026-11-03 17:47:13 DEBUG (ElfProgramBuilder) Discarding 4-byte alignment/filler segment_2.11 at 0011f064  
+2026-11-03 17:47:13 DEBUG (ElfProgramBuilder) Discarding 8-byte alignment/filler segment_2.16 at 00126ee8  
+2026-11-03 17:47:13 DEBUG (ElfProgramBuilder) Discarding 3-byte alignment/filler segment_2.22 at 0025b2cd  
+2026-11-03 17:47:13 DEBUG (ElfProgramBuilder) Discarding 1-byte alignment/filler segment_2.24 at 0025b2eb  
+2026-11-03 17:47:13 DEBUG (ElfProgramBuilder) Discarding 5-byte alignment/filler segment_2.28 at 00289823  
+2026-11-03 17:47:13 INFO  (AutoImporter) Additional info:
+Loading file:///home/charles/code/friends/.toolchains/e02-arm-inventory/root/lib/aarch64-linux-gnu/libc.so.6?MD5=8b9e0f393f6dbb7b3dddbaf831660a8a...
+Unsupported Thread-Local Symbol not loaded: __h_errno
+Unsupported Thread-Local Symbol not loaded: __libc_dlerror_result
+Unsupported Thread-Local Symbol not loaded: __resp
+Unsupported Thread-Local Symbol not loaded: errno
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0d70 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0d78 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0d80 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0d88 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0d90 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0d98 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0da8 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0db8 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0dc8 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0e10 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0f30 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0fd0 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_TLS_TPREL (1030, 0x406) at 002a0fe0 (Symbol = <no name>)
+ELF Relocation Warning: Type = 1030 (0x406) at 002a0f00 (Symbol = __libc_dlerror_result) - Relocation for TLS Symbol not supported
+Unhandled ELF Relocation: R_AARCH64_IRELATIVE (1032, 0x408) at 002a1088 (Symbol = <no name>)
+Unhandled ELF Relocation: R_AARCH64_IRELATIVE (1032, 0x408) at 002a1090 (Symbol = <no name>)
+Setting block .tdata to read-only
+Setting block .init_array to read-only
+Setting block __libc_subfreeres to read-only
+Setting block __libc_atexit to read-only
+Setting block __libc_IO_vtables to read-only
+Setting block .data.rel.ro to read-only
+Setting block .dynamic to read-only
+------------------------------------------------
+
+Linking the External Programs of 'libc.so.6' to imported libraries...
+  [ld-linux-aarch64.so.1] -> not found in project
+------------------------------------------------
+
+Resolving External Symbols of [/libc.so.6] - 12 unresolved symbols, no external libraries configured - skipping
+  
+2026-11-03 17:47:14 ERROR (GhidraScript) PyGhidraHeadlessScript.class> Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/scalar_headless.py", line 66, in <module>
+    stmt = lifter.instruction(insn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/pcode2coq_scalar.py", line 345, in instruction
+    raise Unsupported(f'unmodeled instruction {insn}')
+pcode2coq_scalar.Unsupported: unmodeled instruction ccmp x5,#0x0,#0x0,eq
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/charles/.t3/worktrees/Picinae/t3-ea3464df/tools/ghidra-lifter/scalar_headless.py", line 68, in <module>
+    raise Unsupported(f'{name} {address:#x} {insn}: {e}; raw pcode: ' + '; '.join(str(op) for op in insn.getPcode())) from e
+pcode2coq_scalar.Unsupported: __strlen_asimd 0x19c970 ccmp x5,#0x0,#0x0,eq: unmodeled instruction ccmp x5,#0x0,#0x0,eq; raw pcode: (unique, 0x19f00, 1) COPY (register, 0x101, 1); (unique, 0x19f80, 1) COPY (const, 0x0, 1); (unique, 0xe780, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x8, 1); (register, 0x100, 1) INT_EQUAL (unique, 0xe780, 1) , (const, 0x8, 1); (unique, 0xe880, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x4, 1); (register, 0x101, 1) INT_EQUAL (unique, 0xe880, 1) , (const, 0x4, 1); (unique, 0xe980, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x2, 1); (register, 0x102, 1) INT_EQUAL (unique, 0xe980, 1) , (const, 0x2, 1); (unique, 0xea80, 1) INT_AND (unique, 0x19f80, 1) , (const, 0x1, 1); (register, 0x103, 1) INT_EQUAL (unique, 0xea80, 1) , (const, 0x1, 1); (unique, 0x1a000, 1) BOOL_NEGATE (unique, 0x19f00, 1);  ---  CBRANCH (ram, 0x19c974, 8) , (unique, 0x1a000, 1); (unique, 0x1a100, 8) INT_ZEXT (const, 0x0, 4); (register, 0x105, 1) INT_LESSEQUAL (unique, 0x1a100, 8) , (register, 0x4028, 8); (register, 0x106, 1) INT_SBORROW (register, 0x4028, 8) , (unique, 0x1a100, 8); (unique, 0x1a100, 8) INT_SUB (register, 0x4028, 8) , (unique, 0x1a100, 8); (register, 0x107, 1) INT_SLESS (unique, 0x1a100, 8) , (const, 0x0, 8); (register, 0x108, 1) INT_EQUAL (unique, 0x1a100, 8) , (const, 0x0, 8); (register, 0x100, 1) COPY (register, 0x107, 1); (register, 0x101, 1) COPY (register, 0x108, 1); (register, 0x102, 1) COPY (register, 0x105, 1); (register, 0x103, 1) COPY (register, 0x106, 1)
+  
