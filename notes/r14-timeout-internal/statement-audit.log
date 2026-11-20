@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-8df74c71
+COMMAND=python3 notes/r14-timeout-internal/check-statements.py
+All 16 theorem/helper statements and all definitions unchanged.
+11 completed helper proof scripts unchanged; 5 unverified attempts packaged with Abort.
+Exact initial source snapshot SHA256 matches.
+
+EXIT_CODE=0

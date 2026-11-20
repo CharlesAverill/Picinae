@@ -1,0 +1,24 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-8df74c71
+COMMAND=bash -c date\ -u\;\ ps\ -p\ 719383\ -o\ pid\,ppid\,etime\,time\,rss\,vsz\,args\;\ cat\ /proc/719383/limits
+Wed Nov  4 01:55:33 UTC 2026
+    PID    PPID     ELAPSED     TIME   RSS    VSZ COMMAND
+ 719383  718582       06:25 00:06:37 873740 1092024 /home/charles/code/friends/.toolchains/opam/picinae/lib/rocq-runtime/rocqworker --kind=compile -q -w -level-tolerance -w -postfix-notation-not-level-1 -w -deprecated-native-compiler-option -w -native-compiler-disabled -native-compiler ondemand -boot -R /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/theories Corelib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Stdlib Stdlib -Q /home/charles/code/friends/.toolchains/opam/picinae/lib/coq/user-contrib/Ltac2 Ltac2 -R . Picinae Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.v
+Limit                     Soft Limit           Hard Limit           Units     
+Max cpu time              unlimited            unlimited            seconds   
+Max file size             unlimited            unlimited            bytes     
+Max data size             unlimited            unlimited            bytes     
+Max stack size            67108864             67108864             bytes     
+Max core file size        0                    unlimited            bytes     
+Max resident set          unlimited            unlimited            bytes     
+Max processes             192674               192674               processes 
+Max open files            1048576              1048576              files     
+Max locked memory         6314455040           6314455040           bytes     
+Max address space         2048000000           2048000000           bytes     
+Max file locks            unlimited            unlimited            locks     
+Max pending signals       192674               192674               signals   
+Max msgqueue size         819200               819200               bytes     
+Max nice priority         0                    0                    
+Max realtime priority     0                    0                    
+Max realtime timeout      unlimited            unlimited            us        
+
+EXIT_CODE=0
