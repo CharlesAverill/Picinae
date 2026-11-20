@@ -1,0 +1,91 @@
+{
+  "libc_sha256": "79fd4ecae5fb5fab4e17ec4f145d2b79026559dce52f01a478b0a04fef3dff06",
+  "debug_sha256": "c95b2118b5ea5ed12db5c745fb95af4dd696ce07d3ce966a60124519a443e9e7",
+  "language": "AARCH64:LE:64:v8A",
+  "addressing": "relative",
+  "records": [
+    {
+      "symbol": "toascii",
+      "elf_entry": "0x34460",
+      "entry": "0x134460",
+      "size": 8,
+      "bytes_sha256": "62388c778f9cfcb9054360a0f1a21a25bbd435e4a1252e62717010f2d6a31631",
+      "output": "e11_toascii_arm8.v",
+      "output_sha256": "513fb7ff74a383a3cc9a756025febf17bd3e364d96eac93bd4d7eb83efb3a24d",
+      "instructions": 2,
+      "selected_symbols": [
+        "toascii"
+      ]
+    },
+    {
+      "symbol": "div",
+      "elf_entry": "0x3d840",
+      "entry": "0x13d840",
+      "size": 28,
+      "bytes_sha256": "695a55fdf2ae550fd83a9cde071853359051ee12fa48410f7d24b068b0365a38",
+      "output": "e11_div_arm8.v",
+      "output_sha256": "5f1d5e3713196babc3c157ac3a5088f48028c708351d9dcf399323ad6dfa9b68",
+      "instructions": 7,
+      "selected_symbols": [
+        "div"
+      ]
+    },
+    {
+      "symbol": "ldiv",
+      "elf_entry": "0x3d860",
+      "entry": "0x13d860",
+      "size": 16,
+      "bytes_sha256": "57949ec917386dcb38c72ea26043b8aa776aff978686cf6b3f9387aeb7aeb35a",
+      "output": "e11_ldiv_arm8.v",
+      "output_sha256": "31e9dafa33e459e6c2b49a1e8b164acd6a70e121b232e0c0401230fe1ea896ca",
+      "instructions": 4,
+      "selected_symbols": [
+        "ldiv"
+      ]
+    },
+    {
+      "symbol": "swab",
+      "elf_entry": "0x95eb0",
+      "entry": "0x195eb0",
+      "size": 52,
+      "bytes_sha256": "828c99af1e55fcceed85fa25ed8969290cb106e498cf1fa202010d929f008072",
+      "output": "e11_swab_arm8.v",
+      "output_sha256": "5863030f6bef4536b4fcaf9239d5227100ece2545ac69bcff8cf1231b2af7e65",
+      "instructions": 13,
+      "selected_symbols": [
+        "swab"
+      ]
+    },
+    {
+      "symbol": "ffs",
+      "elf_entry": "0x94aa0",
+      "entry": "0x194aa0",
+      "size": 100,
+      "bytes_sha256": "3bd652a62416f71b2bb0e59ced098fe24f356bc62b7f005a0d5930f14d9ab8c0",
+      "output": "e11_ffs_arm8.v",
+      "output_sha256": "2bb264bd96fbee4c7d5968b32aa0eb91f276f9b099ea8288ff7b6dc8aecf274f",
+      "instructions": 25,
+      "selected_symbols": [
+        "ffs"
+      ]
+    },
+    {
+      "symbol": "ffsl",
+      "elf_entry": "0x94b10",
+      "entry": "0x194b10",
+      "size": 72,
+      "bytes_sha256": "f7efeb9e4b261f79fb163a821480c0ba2fd383fd7a70b25f9f2432e710b25f26",
+      "output": "e11_ffsl_arm8.v",
+      "output_sha256": "8f5eb83a5031410fed504459d917371911bf17c0e72bb648cb4082bcb1175e7a",
+      "instructions": 18,
+      "selected_symbols": [
+        "ffsl"
+      ]
+    }
+  ],
+  "implementation_sha256": {
+    "pcode2coq_scalar.py": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc",
+    "scalar_headless.py": "4aab6945ece18c558f2b1dc397a31a8333a8e380dcaf29630168472e1fe7bcd3",
+    "lift-scalar.py": "1bdf6ec35946c220dc07fc4963efc37b7cb3f150e0f77ccfbcfecd2e74828909"
+  }
+}

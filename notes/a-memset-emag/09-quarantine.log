@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-3c6c9c73
+COMMAND=python3 notes/a-memset-emag/preserve-partial.py
+Preserved all 22 theorem/lemma statements exactly.
+Retained four pre-failure Qed bodies; aborted every later attempt.
+
+EXIT_CODE=0

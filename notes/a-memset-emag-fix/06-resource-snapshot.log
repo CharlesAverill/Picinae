@@ -1,0 +1,62 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2fcee8ec
+COMMAND=bash -eu -c date\ -u\;\ head\ -6\ /proc/meminfo\;\ cat\ /home/charles/code/friends/.refs/picinae-llm-proofs/resources/config.json\;\ cat\ /home/charles/code/friends/.refs/picinae-llm-proofs/resources/active.json
+Wed Nov  4 01:59:48 UTC 2026
+MemTotal:       49331696 kB
+MemFree:         8569416 kB
+MemAvailable:   39133268 kB
+Buffers:         3792064 kB
+Cached:         26368976 kB
+SwapCached:       150132 kB
+{
+  "agent_cap": 24,
+  "max_compilers": 20,
+  "compiler_budget_kib": 26000000,
+  "legacy_reserved_kib": 0,
+  "available_floor_kib": 20971520,
+  "other_jobs_working_set_kib": 6500000,
+  "burst_reserve_kib": 4194304,
+  "max_load": 20
+}
+[
+  {
+    "pid": 701209,
+    "start": "74491419",
+    "unit": "a-memcpy-medium",
+    "memory_kib": 2000000,
+    "admitted_at": 1793756683.318914
+  },
+  {
+    "pid": 738124,
+    "start": "74560500",
+    "unit": "a-remque",
+    "memory_kib": 1750000,
+    "admitted_at": 1793757395.475191,
+    "lease": "cea0b2738f3a46b48ebca0fa8d6533c7"
+  },
+  {
+    "pid": 707501,
+    "start": "74505053",
+    "unit": "x09-avx-forward-high-size",
+    "memory_kib": 3000000,
+    "admitted_at": 1793757494.821961,
+    "lease": "16c5b55ff0ac4438a87ab35e8ded10e4"
+  },
+  {
+    "pid": 735427,
+    "start": "74554856",
+    "unit": "coordinator-review-x01-sse2-nt-complete",
+    "memory_kib": 8000000,
+    "admitted_at": 1793757531.7873116,
+    "lease": "a11356b5a34a454bbd9e4222aba41fb1"
+  },
+  {
+    "pid": 748546,
+    "start": "74581028",
+    "unit": "r10-suspend-all-fix",
+    "memory_kib": 1750000,
+    "admitted_at": 1793757585.3426933,
+    "lease": "7a66c5cdd2304fc9a753345122575479"
+  }
+]
+
+EXIT_CODE=0

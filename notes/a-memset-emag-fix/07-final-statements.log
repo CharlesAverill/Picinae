@@ -1,0 +1,7 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-2fcee8ec
+COMMAND=python3 notes/a-memset-emag-fix/check-source.py
+All 22 original theorem/lemma statements preserved verbatim.
+d88c12780e15542ee4a78674e9621deab12a58e415382ee50914b116b8cec8a8 Examples/claude/lifter/scalar_ports/e08___memset_emag_arm8.v
+48a043c9b21104979a4b40eae0b3450c0c47ed885f298477ce2484c0b3033bcf notes/a-memset-emag/initial-attempt.v.txt
+
+EXIT_CODE=0
