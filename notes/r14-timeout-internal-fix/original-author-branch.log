@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-508b2fbc
+COMMAND=git rev-parse refs/heads/llm-proofs/r14-timeout-internal
+97fd8ecfb6adac59f137ca465a0bfb4beb3862ac
+
+EXIT_CODE=0

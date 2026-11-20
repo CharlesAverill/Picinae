@@ -1,0 +1,8 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-508b2fbc
+COMMAND=git diff --cached --check
+notes/r14-timeout-internal-fix/provenance.log:7: trailing whitespace.
++5525: 
+notes/r14-timeout-internal-fix/provenance.log:11: trailing whitespace.
++5529: 
+
+EXIT_CODE=2

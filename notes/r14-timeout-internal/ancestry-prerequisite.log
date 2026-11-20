@@ -1,0 +1,275 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-8df74c71
+COMMAND=bash notes/r14-timeout-internal/check-ancestry.sh
+49956416928e5b6bb3928b54ae33e3b81091f006
+5fec2fc24d0c739bafc08add426f02a3085e15cd Prove ARMv6-M task count getter correctness
+7042ff1b6abdf79e2b07a348c7ef9ed014126ded Add partial ARMv6-M task count proof handoff
+95da7ab7cee78f09a528aed86c1dfaf29520a9a8 Record FreeRTOS lift ancestry and validation evidence
+075f59aca328e60e6376e2af01fa49925ab10e9d Add reproducible FreeRTOS ARMv6-M function lifts
+8c01958e73ec7fe959c60b29444505afbb599d13 Merge reviewed FreeRTOS fixture into e05 lifts
+5677a5d1d995745cc1cefbd33bcda1a3a4b49d8b Validate ARMv6-M import with selective Dune target
+dac36c0a03088a90bb6e6385f82cb355d27cc204 Merge selective Dune prerequisite into ARMv6-M import
+abe7eda601a63d47eb70e765f4ae2c4ca235cca4 Add reproducible Cortex-M0 FreeRTOS build fixture
+59f696d32a5623cdfbceb9a1e0f91e2cc7c054c1 Add ARMv6-M ISA and strict ELF lifter
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+ BUILDING.md                                        |   120 +
+ Examples/FreeRTOS/README.md                        |    75 +
+ Examples/FreeRTOS/abi.json                         |  1551 ++
+ .../FreeRTOS/armv6m_uxTaskGetNumberOfTasks_proof.v |   213 +
+ Examples/FreeRTOS/asynchronous-boundaries.json     |  1050 +
+ Examples/FreeRTOS/coverage.json                    |   600 +
+ Examples/FreeRTOS/coverage.md                      |    65 +
+ Examples/FreeRTOS/dune                             |   210 +
+ Examples/FreeRTOS/eTaskGetState.json               |   958 +
+ Examples/FreeRTOS/eTaskGetState_armv6m.v           |   128 +
+ Examples/FreeRTOS/helper-rejections.json           |   169 +
+ Examples/FreeRTOS/helpers.json                     | 19046 +++++++++++++++++++
+ Examples/FreeRTOS/prvResetNextTaskUnblockTime.json |   298 +
+ .../FreeRTOS/prvResetNextTaskUnblockTime_armv6m.v  |    62 +
+ .../FreeRTOS/prvSearchForNameWithinSingleList.json |   410 +
+ .../prvSearchForNameWithinSingleList_armv6m.v      |    66 +
+ Examples/FreeRTOS/prvTaskIsTaskSuspended.json      |   443 +
+ Examples/FreeRTOS/prvTaskIsTaskSuspended_armv6m.v  |    76 +
+ .../FreeRTOS/pvTaskIncrementMutexHeldCount.json    |   159 +
+ .../pvTaskIncrementMutexHeldCount_armv6m.v         |    44 +
+ .../FreeRTOS/ulTaskGenericNotifyValueClear.json    |   439 +
+ .../ulTaskGenericNotifyValueClear_armv6m.v         |    68 +
+ Examples/FreeRTOS/uxListRemove.json                |   212 +
+ Examples/FreeRTOS/uxListRemove_armv6m.v            |    50 +
+ Examples/FreeRTOS/uxQueueMessagesWaiting.json      |   323 +
+ Examples/FreeRTOS/uxQueueMessagesWaiting_armv6m.v  |    54 +
+ Examples/FreeRTOS/uxQueueSpacesAvailable.json      |   331 +
+ Examples/FreeRTOS/uxQueueSpacesAvailable_armv6m.v  |    54 +
+ Examples/FreeRTOS/uxTaskGetNumberOfTasks.json      |   120 +
+ Examples/FreeRTOS/uxTaskGetNumberOfTasks_armv6m.v  |    40 +
+ Examples/FreeRTOS/uxTaskPriorityGet.json           |   316 +
+ Examples/FreeRTOS/uxTaskPriorityGet_armv6m.v       |    50 +
+ Examples/FreeRTOS/uxTaskResetEventItemValue.json   |   162 +
+ .../FreeRTOS/uxTaskResetEventItemValue_armv6m.v    |    46 +
+ Examples/FreeRTOS/vListInitialise.json             |   142 +
+ Examples/FreeRTOS/vListInitialiseItem.json         |    86 +
+ Examples/FreeRTOS/vListInitialiseItem_armv6m.v     |    35 +
+ Examples/FreeRTOS/vListInitialise_armv6m.v         |    43 +
+ Examples/FreeRTOS/vListInsert.json                 |   258 +
+ Examples/FreeRTOS/vListInsertEnd.json              |   142 +
+ Examples/FreeRTOS/vListInsertEnd_armv6m.v          |    43 +
+ Examples/FreeRTOS/vListInsert_armv6m.v             |    55 +
+ Examples/FreeRTOS/vTaskDelay.json                  |   515 +
+ Examples/FreeRTOS/vTaskDelay_armv6m.v              |    68 +
+ .../FreeRTOS/vTaskInternalSetTimeOutState.json     |   173 +
+ .../FreeRTOS/vTaskInternalSetTimeOutState_armv6m.v |    48 +
+ Examples/FreeRTOS/vTaskMissedYield.json            |   120 +
+ Examples/FreeRTOS/vTaskMissedYield_armv6m.v        |    40 +
+ Examples/FreeRTOS/vTaskSetTimeOutState.json        |   399 +
+ Examples/FreeRTOS/vTaskSetTimeOutState_armv6m.v    |    66 +
+ Examples/FreeRTOS/vTaskSuspendAll.json             |   134 +
+ Examples/FreeRTOS/vTaskSuspendAll_armv6m.v         |    42 +
+ Examples/FreeRTOS/vTaskSwitchContext.json          |   955 +
+ Examples/FreeRTOS/vTaskSwitchContext_armv6m.v      |   146 +
+ Examples/FreeRTOS/xEventGroupClearBits.json        |   440 +
+ Examples/FreeRTOS/xEventGroupClearBits_armv6m.v    |    68 +
+ Examples/FreeRTOS/xEventGroupSetBits.json          |  1011 +
+ Examples/FreeRTOS/xEventGroupSetBits_armv6m.v      |   132 +
+ Examples/FreeRTOS/xQueueGenericSend.json           |  2070 ++
+ Examples/FreeRTOS/xQueueGenericSendFromISR.json    |  1260 ++
+ .../FreeRTOS/xQueueGenericSendFromISR_armv6m.v     |   158 +
+ Examples/FreeRTOS/xQueueGenericSend_armv6m.v       |   218 +
+ Examples/FreeRTOS/xQueueGetMutexHolder.json        |   356 +
+ Examples/FreeRTOS/xQueueGetMutexHolderFromISR.json |   235 +
+ .../FreeRTOS/xQueueGetMutexHolderFromISR_armv6m.v  |    50 +
+ Examples/FreeRTOS/xQueueGetMutexHolder_armv6m.v    |    56 +
+ Examples/FreeRTOS/xQueueReceive.json               |  1920 ++
+ Examples/FreeRTOS/xQueueReceiveFromISR.json        |  1081 ++
+ Examples/FreeRTOS/xQueueReceiveFromISR_armv6m.v    |   140 +
+ Examples/FreeRTOS/xQueueReceive_armv6m.v           |   204 +
+ Examples/FreeRTOS/xStreamBufferReceive.json        |  1357 ++
+ Examples/FreeRTOS/xStreamBufferReceive_armv6m.v    |   156 +
+ Examples/FreeRTOS/xStreamBufferSend.json           |  1685 ++
+ Examples/FreeRTOS/xStreamBufferSend_armv6m.v       |   192 +
+ Examples/FreeRTOS/xTaskCreateStatic.json           |   393 +
+ Examples/FreeRTOS/xTaskCreateStatic_armv6m.v       |    53 +
+ .../FreeRTOS/xTaskGenericNotifyStateClear.json     |   500 +
+ .../FreeRTOS/xTaskGenericNotifyStateClear_armv6m.v |    74 +
+ Examples/FreeRTOS/xTaskGetCurrentTaskHandle.json   |   120 +
+ .../FreeRTOS/xTaskGetCurrentTaskHandle_armv6m.v    |    40 +
+ Examples/FreeRTOS/xTaskGetSchedulerState.json      |   212 +
+ Examples/FreeRTOS/xTaskGetSchedulerState_armv6m.v  |    52 +
+ Examples/FreeRTOS/xTaskGetTickCount.json           |   120 +
+ Examples/FreeRTOS/xTaskGetTickCountFromISR.json    |   120 +
+ .../FreeRTOS/xTaskGetTickCountFromISR_armv6m.v     |    40 +
+ Examples/FreeRTOS/xTaskGetTickCount_armv6m.v       |    40 +
+ Examples/FreeRTOS/xTaskIncrementTick.json          |  2081 ++
+ Examples/FreeRTOS/xTaskIncrementTick_armv6m.v      |   286 +
+ Examples/FreeRTOS/xTimerGenericCommandFromISR.json |   556 +
+ .../FreeRTOS/xTimerGenericCommandFromISR_armv6m.v  |    80 +
+ .../FreeRTOS/xTimerGenericCommandFromTask.json     |   810 +
+ .../FreeRTOS/xTimerGenericCommandFromTask_armv6m.v |    92 +
+ Examples/freertos/cortex-m0/.gitattributes         |     2 +
+ Examples/freertos/cortex-m0/FreeRTOSConfig.h       |    71 +
+ Examples/freertos/cortex-m0/LICENSE.FreeRTOS       |    19 +
+ Examples/freertos/cortex-m0/Makefile               |     5 +
+ Examples/freertos/cortex-m0/README.md              |   248 +
+ Examples/freertos/cortex-m0/build.py               |   293 +
+ .../cortex-m0/evidence/ancestry-before.txt         |    19 +
+ .../freertos/cortex-m0/evidence/assumptions.txt    |     3 +
+ .../freertos/cortex-m0/evidence/attributes.txt     |    14 +
+ Examples/freertos/cortex-m0/evidence/build.log.gz  |   Bin 0 -> 221780 bytes
+ .../freertos/cortex-m0/evidence/commands.jsonl     |   110 +
+ .../freertos/cortex-m0/evidence/comparison.json    |    42 +
+ .../cortex-m0/evidence/config-macros.txt.gz        |   Bin 0 -> 13664 bytes
+ .../freertos/cortex-m0/evidence/console.log.gz     |   Bin 0 -> 2560 bytes
+ .../freertos/cortex-m0/evidence/disassembly.txt.gz |   Bin 0 -> 64847 bytes
+ .../freertos/cortex-m0/evidence/elf-header.txt     |    20 +
+ .../cortex-m0/evidence/gated-availability.json     |    50 +
+ .../freertos/cortex-m0/evidence/isa-audit.json     |    20 +
+ Examples/freertos/cortex-m0/evidence/layout.json   |    94 +
+ .../freertos/cortex-m0/evidence/linker-map.txt     |  1472 ++
+ Examples/freertos/cortex-m0/evidence/manifest.json |   910 +
+ Examples/freertos/cortex-m0/evidence/nm.txt        |   263 +
+ .../cortex-m0/evidence/planned-availability.json   |   123 +
+ .../cortex-m0/evidence/program-headers.txt         |    14 +
+ Examples/freertos/cortex-m0/evidence/sections.txt  |    28 +
+ Examples/freertos/cortex-m0/evidence/size.txt      |    20 +
+ Examples/freertos/cortex-m0/evidence/symbols.json  |  3050 +++
+ .../freertos/cortex-m0/evidence/symbols.txt.gz     |   Bin 0 -> 7312 bytes
+ .../cortex-m0/evidence/trial01-failure.log.gz      |   Bin 0 -> 1104 bytes
+ .../cortex-m0/evidence/trial02-failure.log.gz      |   Bin 0 -> 78432 bytes
+ Examples/freertos/cortex-m0/extract.py             |   342 +
+ Examples/freertos/cortex-m0/fixture.ld             |    22 +
+ Examples/freertos/cortex-m0/gated-symbols.txt      |    13 +
+ Examples/freertos/cortex-m0/inputs.json            |    21 +
+ Examples/freertos/cortex-m0/layout-probe.c         |    56 +
+ Examples/freertos/cortex-m0/planned-symbols.txt    |    44 +
+ Examples/freertos/cortex-m0/platform.c             |   109 +
+ Examples/freertos/cortex-m0/reproduce.sh           |    13 +
+ Makefile                                           |     6 +-
+ Picinae_armv6m.v                                   |   821 +
+ _CoqProject                                        |     1 +
+ armv6m_lifter.sh                                   |     5 +
+ dune                                               |    87 +
+ dune-project                                       |     3 +
+ lifter/armv6m.py                                   |   243 +
+ notes/e00-build/README.md                          |   168 +
+ notes/e00-build/check-selection.py                 |    16 +
+ notes/e00-build/logs/01-dune-smoke.log             |     8 +
+ notes/e00-build/logs/02-dune-smoke.log             |   148 +
+ notes/e00-build/logs/03-dune-smoke.log             |    89 +
+ notes/e00-build/logs/04-audit-tests.log            |     9 +
+ notes/e00-build/logs/05-baseline-source-audit.log  |   204 +
+ notes/e00-build/logs/06-toolchain.log              |    12 +
+ notes/e00-build/logs/07-base-audit.log             |    15 +
+ notes/e00-build/logs/08-fork-collision-check.log   |     4 +
+ notes/e00-build/logs/09-clean-build.log            |   195 +
+ notes/e00-build/logs/10-harness-tests.log          |     9 +
+ notes/e00-build/logs/11-x86-assumptions.log        |    43 +
+ notes/e00-build/logs/12-selected-objects.log       |    27 +
+ notes/e00-build/logs/13-arm8-assumptions.log       |    29 +
+ .../e00-build/logs/14-missing-theorem-negative.log |     9 +
+ .../logs/15-extensionality-provenance.log          |    13 +
+ notes/e05-freertos-lifts/README.md                 |   232 +
+ notes/e05-freertos-lifts/assumptions-query.v.txt   |   557 +
+ notes/e05-freertos-lifts/audit-ancestry.sh         |    29 +
+ notes/e05-freertos-lifts/check-assumptions.py      |    51 +
+ notes/e05-freertos-lifts/logs/01-before.log        |    35 +
+ .../logs/02-prerequisite-import.log                |   154 +
+ notes/e05-freertos-lifts/logs/03-extraction.log    |    11 +
+ notes/e05-freertos-lifts/logs/04-extraction.log    |    46 +
+ notes/e05-freertos-lifts/logs/05-toolchain.log     |     8 +
+ notes/e05-freertos-lifts/logs/06-dune.log          |   146 +
+ .../logs/07-extraction-final.log                   |    52 +
+ notes/e05-freertos-lifts/logs/08-reproduce.log     |    53 +
+ notes/e05-freertos-lifts/logs/09-dune-full.log     |    95 +
+ notes/e05-freertos-lifts/logs/10-source-audit.log  |   204 +
+ .../logs/11-extraction-final.log                   |    56 +
+ notes/e05-freertos-lifts/logs/12-assumptions.log   |  7033 +++++++
+ .../logs/13-extraction-final.log                   |    56 +
+ .../logs/14-ancestry-before-commit.log             |   123 +
+ .../logs/15-ancestry-after-implementation.log      |   234 +
+ .../logs/recheck-assumptions.log                   |  7033 +++++++
+ .../e05-freertos-lifts/logs/recheck-dune-full.log  |     4 +
+ .../e05-freertos-lifts/logs/recheck-extraction.log |    57 +
+ .../logs/recheck-source-audit.log                  |   204 +
+ notes/e05-freertos-lifts/validate.sh               |    22 +
+ notes/r06-task-count-fix/README.md                 |   167 +
+ notes/r06-task-count-fix/ancestry-imported.log     |   246 +
+ notes/r06-task-count-fix/ancestry-precommit.log    |   252 +
+ notes/r06-task-count-fix/assumptions.log           |   307 +
+ notes/r06-task-count-fix/attempt-01.v.txt          |   211 +
+ notes/r06-task-count-fix/attempt-02.v.txt          |   211 +
+ notes/r06-task-count-fix/attempt-03.v.txt          |   211 +
+ notes/r06-task-count-fix/audit-ancestry.py         |    41 +
+ notes/r06-task-count-fix/audit-statements.py       |    36 +
+ notes/r06-task-count-fix/build-01.log              |   128 +
+ notes/r06-task-count-fix/build-02.log              |    19 +
+ notes/r06-task-count-fix/build-03.log              |     8 +
+ notes/r06-task-count-fix/build-clean.log           |   109 +
+ notes/r06-task-count-fix/final-files.log           |    11 +
+ notes/r06-task-count-fix/fork-recheck.log          |     4 +
+ .../r06-task-count-fix/preparation-transcript.txt  |    45 +
+ notes/r06-task-count-fix/prepared-history.log      |    35 +
+ notes/r06-task-count-fix/raw-log-whitespace.log    |     8 +
+ notes/r06-task-count-fix/source-audit.log          |   204 +
+ notes/r06-task-count-fix/source-whitespace.log     |     4 +
+ .../statement-assumption-audit.log                 |    20 +
+ notes/r06-task-count-fix/toolchain.log             |    10 +
+ notes/r06-task-count-fix/unit-source-audit.log     |    10 +
+ notes/r06-task-count/README.md                     |   123 +
+ notes/r06-task-count/ancestry-check.log            |    13 +
+ notes/r06-task-count/ancestry-prepared.log         |    31 +
+ notes/r06-task-count/ancestry-prerequisites.log    |   227 +
+ notes/r06-task-count/final-source-audit.log        |   204 +
+ notes/r06-task-count/final-unit-source-audit.log   |    10 +
+ notes/r06-task-count/fork-check.log                |     4 +
+ notes/r06-task-count/initial-attempt.v.txt         |   204 +
+ notes/r06-task-count/initial-build.log             |   110 +
+ notes/r06-task-count/initial-source-sha256.log     |     6 +
+ notes/r06-task-count/precommit-check.log           |   229 +
+ notes/r06-task-count/source-audit.log              |   204 +
+ notes/r06-task-count/statement-audit.log           |    51 +
+ notes/r06-task-count/unit-source-audit.log         |    10 +
+ tests/armv6m/.gitignore                            |     1 +
+ tests/armv6m/Checks.v                              |   104 +
+ tests/armv6m/check.sh                              |    40 +
+ tests/armv6m/rejections.py                         |    92 +
+ tests/armv6m/snippets.s                            |    42 +
+ tools/audit-proof-source.py                        |   108 +
+ tools/print-assumptions.sh                         |    36 +
+ tools/record-command.sh                            |    24 +
+ tools/test-proof-audit.py                          |    82 +
+ units/e03-armv6m-core/.gitattributes               |     3 +
+ units/e03-armv6m-core/README.md                    |   202 +
+ units/e03-armv6m-core/all-output.v.txt             |    51 +
+ units/e03-armv6m-core/assumptions-commands.v.txt   |   101 +
+ units/e03-armv6m-core/fixture-output.v.txt         |    37 +
+ units/e03-armv6m-core/isa-upstream.patch           |    74 +
+ units/e03-armv6m-core/lifter-upstream.patch        |   101 +
+ units/e03-armv6m-core/logs/ancestry-before.log     |     5 +
+ units/e03-armv6m-core/logs/assumptions.log         |   243 +
+ units/e03-armv6m-core/logs/base-make.log           |   113 +
+ .../e03-armv6m-core/logs/check-armv6m-attempt1.log |    25 +
+ .../e03-armv6m-core/logs/check-armv6m-attempt2.log |    18 +
+ .../logs/check-armv6m-before-final-tests.log       |    52 +
+ .../logs/check-armv6m-before-strengthening.log     |    49 +
+ units/e03-armv6m-core/logs/check-armv6m.log        |    54 +
+ units/e03-armv6m-core/logs/dune-assumptions.log    |    16 +
+ .../logs/dune-integration-clean-toolchain.log      |   105 +
+ .../logs/dune-integration-clean.log                |     8 +
+ units/e03-armv6m-core/logs/dune-integration.log    |     8 +
+ units/e03-armv6m-core/logs/dune-source-audit.log   |    10 +
+ units/e03-armv6m-core/logs/import-compile.log      |    36 +
+ units/e03-armv6m-core/logs/make-all.log            |    15 +
+ units/e03-armv6m-core/logs/rocq-check.log          |     1 +
+ .../logs/rocq-chk-invalid-command.log              |    29 +
+ units/e03-armv6m-core/logs/snippets.objdump        |    56 +
+ units/e03-armv6m-core/logs/source-audit.log        |     6 +
+ 250 files changed, 81814 insertions(+), 1 deletion(-)
+ dune | 5 +++++
+ 1 file changed, 5 insertions(+)
+ M dune
+?? Examples/FreeRTOS/armv6m_vTaskInternalSetTimeOutState_proof.v
+?? notes/r14-timeout-internal/
+
+Commits added beyond assigned prerequisite:
+
+Generated lift unchanged:
+
+EXIT_CODE=0

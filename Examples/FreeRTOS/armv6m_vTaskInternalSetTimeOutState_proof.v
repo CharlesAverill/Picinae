@@ -1,0 +1,286 @@
+(* vTaskInternalSetTimeOutState -- sequential ARMv6-M IL correctness.
+
+   Initial author: OpenAI gpt-6-astra, xhigh, one-shot (r14-timeout-internal).
+   Repair/final proof producer: OpenAI gpt-6.1-sol, xhigh.
+   Full .vo validation/evidence: notes/r14-timeout-internal-fix.
+   Original author source/evidence: notes/r14-timeout-internal (unchanged).
+   Provenance: official FreeRTOS V11.1.0, commit
+   dbf70559b27d39c1fdb68dfb9a32140b6a6777a0, tasks.c:5522-5531;
+   ELF SHA256 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca.
+   Unchanged generated vTaskInternalSetTimeOutState_armv6m.v / armv6m_lifter.sh;
+   accepted e05 artifact 95da7ab7cee78f09a528aed86c1dfaf29520a9a8.
+   Compiler-derived evidence/layout.json gives sizeof(TimeOut_t)=8,
+   xOverflowCount offset 0, xTimeOnEntering offset 4, alignment 4.
+   include/task.h:125-129 and the pinned FreeRTOSConfig.h select 32-bit fields.
+   The manifest identifies xNumOfOverflows=0x20000018, xTickCount=0x2000002c.
+
+   AAPCS32: R0 is the caller's timeout pointer, no return value. At 0x908
+   load the overflow address, 0x90a read its original word, 0x90c store to R0;
+   0x90e load tick address, 0x910 read tick AFTER that store, 0x912 store to
+   R0+4. Cut/exit at 0x914, immediately before the actual BX LR instruction.
+   The two ordered stores describe all memory, and all variables except MEM
+   and R3 are preserved (including R0, SP, LR, R4-R11, flags, permissions).
+   The execution theorem permits all modular 32-bit aliases. Original tick
+   preservation needs precisely nonoverlap of the first four-byte store and
+   the tick global. Overflow-global aliases and second-store/global aliases
+   remain permitted: both loads precede the second store. The ordinary object
+   corollaries require R0+8 <= 2^32 for nonwrapping field/byte presentation;
+   no nonzero/alignment bound is needed by the IL theorem. Real C objects are
+   aligned as documented above. No count/value/CPU/tunable restrictions.
+
+   Executable traces supply load/store permissions; an arbitrary-memory,
+   arbitrary-32-bit-pointer typed/readable/writable witness is provided.
+   The separate ordinary return theorem requires odd LR < 0xfffffff0;
+   it proves the actual guarded BX step and excludes hardware EXC_RETURN.
+   The finite call-free generated map is the program; literal loads are
+   folded from immutable code, not mutable data. No callee oracle, IRQ,
+   hardware refinement, whole-kernel, cardinality, or termination claim.
+ *)
+Require Import Picinae_armv6m.
+Require Import vTaskInternalSetTimeOutState_armv6m.
+From Stdlib Require Import NArith Lia List FunctionalExtensionality.
+Import ListNotations ARMv6MNotations.
+Open Scope N.
+
+Definition timeout_first (m:memory) (p:N) : memory :=
+  m [Ⓓ p := m Ⓓ[0x20000018]].
+Definition timeout_ordered_memory (m:memory) (p:N) : memory :=
+  (timeout_first m p) [Ⓓ p+4 := (timeout_first m p) Ⓓ[0x2000002c]].
+Definition timeout_tick_separate (p:N) : Prop :=
+  ~ overlap 32 0x2000002c 4 p 4.
+Definition timeout_frame (initial final:store) : Prop :=
+  forall v, v <> V_MEM32 -> v <> R_R3 -> final v = initial v.
+Definition timeout_postcondition (initial final:store) : Prop :=
+  final V_MEM32 = timeout_ordered_memory (initial V_MEM32) (initial R_R0) /\
+  timeout_frame initial final.
+Definition timeout_exit (t:trace) : bool :=
+  match t with (Addr 0x914,_)::_ => true | _ => false end.
+Definition timeout_invariants (initial:store) (t:trace) : option Prop :=
+  match t with
+  | (Addr 0x908,s)::_ => Some (s = initial)
+  | (Addr 0x914,s)::_ => Some (timeout_postcondition initial s)
+  | _ => None
+  end.
+
+Theorem timeout_nwc : forall s2 s1,
+  vTaskInternalSetTimeOutState_armv6m_prog s1 =
+  vTaskInternalSetTimeOutState_armv6m_prog s2.
+Proof. reflexivity. Qed.
+Theorem timeout_welltyped :
+  welltyped_prog armv6mtypctx vTaskInternalSetTimeOutState_armv6m_prog.
+Proof. exact vTaskInternalSetTimeOutState_armv6m_welltyped. Qed.
+
+Lemma timeout_zero_bound : forall w, 0 < 2^w.
+Proof. intro w. apply N.neq_0_lt_0, pow2_nonzero. Qed.
+Definition timeout_entry_witness (m:memory) (p:N) : store := fun v =>
+  match v with
+  | V_MEM32 => m
+  | R_R0 => p
+  | A_READ | A_WRITE => N.ones (2^32)
+  | R_LR => 1
+  | _ => 0
+  end.
+Definition timeout_permitted (s:store) : Prop :=
+  (forall a, a < 2^32 -> mem_readable s a) /\
+  (forall a, a < 2^32 -> mem_writable s a).
+Lemma timeout_witness_models : forall m p,
+  m < 2^(8*2^32) -> p < 2^32 ->
+  models armv6mtypctx (timeout_entry_witness m p).
+Proof.
+  intros m p B P v w T. destruct v; cbn [armv6mtypctx] in T;
+    try discriminate; injection T as <-.
+  all: lazymatch goal with
+  | |- timeout_entry_witness _ _ V_MEM32 < _ => exact B
+  | |- timeout_entry_witness _ _ R_R0 < _ => exact P
+  | |- timeout_entry_witness _ _ A_READ < _ => exact (ones_bound (2^32))
+  | |- timeout_entry_witness _ _ A_WRITE < _ => exact (ones_bound (2^32))
+  | |- timeout_entry_witness _ _ R_LR < _ => change (1 < 2^32); reflexivity
+  | |- _ < 2^?width => exact (timeout_zero_bound width)
+  end.
+Qed.
+Theorem timeout_entry_satisfiable : forall m p,
+  m < 2^(8*2^32) -> p < 2^32 ->
+  exists s, models armv6mtypctx s /\ s V_MEM32 = m /\ s R_R0 = p /\
+    timeout_permitted s /\ N.odd (s R_LR) = true /\ s R_LR < 0xfffffff0.
+Proof.
+  intros m p B P. exists (timeout_entry_witness m p).
+  split. exact (timeout_witness_models m p B P).
+  split. reflexivity. split. reflexivity.
+  split.
+  - split; intros a A; unfold mem_readable, mem_writable;
+      change (N.testbit (N.ones (2^32)) a = true);
+      apply N.ones_spec_low; exact A.
+  - split; reflexivity.
+Qed.
+
+(* Arithmetic separation helper, independent of memory values. *)
+Lemma timeout_ranges_separate : forall p n q k,
+  p+n <= 2^32 -> q+k <= 2^32 ->
+  (p+n <= q \/ q+k <= p) -> ~ overlap 32 p n q k.
+Proof.
+  intros p n q k P Q SEP [i [j [I [J EQ]]]].
+  rewrite (N.mod_small (p+i) (2^32)) in EQ by lia.
+  rewrite (N.mod_small (q+j) (2^32)) in EQ by lia.
+  destruct SEP; lia.
+Qed.
+Lemma timeout_separation_nonvacuous : timeout_tick_separate 0x20000100.
+Proof. unfold timeout_tick_separate. apply timeout_ranges_separate; lia. Qed.
+
+Theorem timeout_original_memory : forall m p,
+  timeout_tick_separate p ->
+  timeout_ordered_memory m p =
+    (m [Ⓓ p := m Ⓓ[0x20000018]]) [Ⓓ p+4 := m Ⓓ[0x2000002c]].
+Proof.
+  intros m p SEP. unfold timeout_ordered_memory, timeout_first.
+  rewrite (getmem_noverlap 32 LittleE LittleE 4 4 m 0x2000002c p
+    (m Ⓓ[0x20000018]) SEP). reflexivity.
+Qed.
+Theorem timeout_original_fields : forall m p,
+  p+8 <= 2^32 -> timeout_tick_separate p ->
+  (timeout_ordered_memory m p) Ⓓ[p] = m Ⓓ[0x20000018] /\
+  (timeout_ordered_memory m p) Ⓓ[p+4] = m Ⓓ[0x2000002c].
+Proof.
+  intros m p B SEP. rewrite (timeout_original_memory m p SEP).
+  assert (NO: ~ overlap 32 p 4 (p+4) 4).
+  { apply timeout_ranges_separate; lia. }
+  split.
+  - rewrite (getmem_noverlap 32 LittleE LittleE 4 4
+      (m [Ⓓ p := m Ⓓ[0x20000018]]) p (p+4) (m Ⓓ[0x2000002c]) NO).
+    rewrite getmem_setmem by discriminate. apply getmem_mod_r.
+  - rewrite getmem_setmem by discriminate. apply getmem_mod_r.
+Qed.
+Theorem timeout_original_bytes : forall m p i,
+  p+8 <= 2^32 -> timeout_tick_separate p -> i < 4 ->
+  (timeout_ordered_memory m p) Ⓑ[p+i] = m Ⓑ[0x20000018+i] /\
+  (timeout_ordered_memory m p) Ⓑ[(p+4)+i] = m Ⓑ[0x2000002c+i].
+Proof.
+  intros m p i B SEP I.
+  destruct (timeout_original_fields m p B SEP) as [OV TICK].
+  split.
+  - apply (getmem_inner 32 LittleE (timeout_ordered_memory m p) m 4 p
+      0x20000018 i 1 OV). clear - I. lia.
+  - apply (getmem_inner 32 LittleE (timeout_ordered_memory m p) m 4 (p+4)
+      0x2000002c i 1 TICK). clear - I. lia.
+Qed.
+Theorem timeout_memory_frame : forall m p a,
+  ~ overlap 32 a 1 p 8 ->
+  (timeout_ordered_memory m p) Ⓑ[a] = m Ⓑ[a].
+Proof.
+  intros m p a NO. unfold timeout_ordered_memory, timeout_first.
+  rewrite (getmem_noverlap 32 LittleE LittleE 1 4
+    (m [Ⓓ p := m Ⓓ[0x20000018]]) a (p+4)
+    ((m [Ⓓ p := m Ⓓ[0x20000018]]) Ⓓ[0x2000002c])
+    (noverlap_index_r 32 a 1 p 8 4 4 NO (N.le_refl 8))).
+  apply getmem_noverlap.
+  pose proof (noverlap_index_r 32 a 1 p 8 0 4 NO (ltac:(discriminate))) as N0.
+  rewrite N.add_0_r in N0. exact N0.
+Qed.
+
+Theorem timeout_correct : forall s t s' x'
+  (ENTRY: startof t (x',s') = (Addr 0x908,s))
+  (MDL: models armv6mtypctx s),
+  satisfies_all vTaskInternalSetTimeOutState_armv6m_prog
+    (timeout_invariants s) timeout_exit ((x',s')::t).
+Proof.
+  intros. apply prove_invs.
+  - simpl. rewrite ENTRY. armv6m_step. reflexivity.
+  - intros.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption.
+    apply timeout_welltyped. intro MDL1.
+    clear - PRE MDL1. rename t1 into t.
+    destruct_inv 32 PRE. subst s1.
+    repeat armv6m_step.
+    unfold timeout_postcondition, timeout_ordered_memory, timeout_first, timeout_frame.
+    split.
+    + (* Normalize only the second store's address. Conversion on the
+         unequal 4+p / p+4 addresses would unfold the whole memory. *)
+      lazymatch goal with
+      | |- setmem ?w ?en ?len ?m _ ?value = _ =>
+          exact (f_equal (fun a => setmem w en len m a value)
+            (N.add_comm 4 (s R_R0)))
+      end.
+    + intros v NEM NE3. destruct v; try contradiction; reflexivity.
+Qed.
+Corollary timeout_post_at_bx : forall s t s'
+  (ENTRY: startof t (Addr 0x914,s') = (Addr 0x908,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog vTaskInternalSetTimeOutState_armv6m_prog ((Addr 0x914,s')::t))
+  (UT: unterminated timeout_exit t),
+  timeout_postcondition s s'.
+Proof.
+  intros. pose proof (timeout_correct s t s' (Addr 0x914) ENTRY MDL) as ALL.
+  exact (satall_trueif_inv _ _ _ _ ALL EXEC UT).
+Qed.
+Corollary timeout_preserves_callee_saved : forall s t s'
+  (ENTRY: startof t (Addr 0x914,s') = (Addr 0x908,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog vTaskInternalSetTimeOutState_armv6m_prog ((Addr 0x914,s')::t))
+  (UT: unterminated timeout_exit t),
+  forall v, In v [R_R4; R_R5; R_R6; R_R7; R_R8; R_R9; R_R10; R_R11; R_SP; R_LR] ->
+    s' v = s v.
+Proof.
+  intros s t s' ENTRY MDL EXEC UT v IN.
+  pose proof (proj2 (timeout_post_at_bx s t s' ENTRY MDL EXEC UT)) as FRAME.
+  apply FRAME; intro EQ; subst v; cbn in IN; intuition discriminate.
+Qed.
+
+Theorem timeout_return_step : forall s
+  (ODD: N.odd (s R_LR) = true) (ORDINARY: s R_LR < 0xfffffff0),
+  can_step vTaskInternalSetTimeOutState_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s),(Addr 0x914,s)).
+Proof.
+  intros s ODD ORDINARY.
+  assert (LOW: s R_LR mod 2 = 1).
+  { apply mod2_1_neven. rewrite <- N.negb_odd, ODD. reflexivity. }
+  assert (XS: exec_stmt armv6mtypctx s (armv6m_bxwritepc (Var R_LR))
+    armv6mtypctx s (Some (Addr (N.land (s R_LR) (N.ones 32 - 1))))).
+  { unfold armv6m_bxwritepc. eapply XIf with (b:=1).
+    - assert (E: eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+        (s R_LR mod 2) 1).
+      { apply ECast with (w:=32) (n:=s R_LR). apply EVar. reflexivity. }
+      rewrite LOW in E. exact E.
+    - apply XJmp with (w:=32).
+      apply EBinOp with (w:=32) (n1:=s R_LR) (n2:=N.ones 32 - 1);
+        [apply EVar; reflexivity | apply EWord]. }
+  assert (CS: can_step vTaskInternalSetTimeOutState_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),reset_temps s s),(Addr 0x914,s))).
+  { eapply CanStep with (sz:=2) (q:=armv6m_bxwritepc (Var R_LR))
+      (x:=Some (Addr (N.land (s R_LR) (N.ones 32 - 1))));
+      [reflexivity | exact XS]. }
+  assert (RESET: reset_temps s s = s).
+  { extensionality v. destruct v; reflexivity. }
+  rewrite RESET in CS. exact CS.
+Qed.
+
+Theorem timeout_caller_result : forall s t s'
+  (ENTRY: startof t (Addr 0x914,s') = (Addr 0x908,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog vTaskInternalSetTimeOutState_armv6m_prog ((Addr 0x914,s')::t))
+  (UT: unterminated timeout_exit t)
+  (SIZE: s R_R0 + 8 <= 2^32)
+  (SEP: timeout_tick_separate (s R_R0))
+  (ODD: N.odd (s R_LR) = true) (ORDINARY: s R_LR < 0xfffffff0),
+  timeout_postcondition s s' /\
+  (s' V_MEM32) Ⓓ[s R_R0] = (s V_MEM32) Ⓓ[0x20000018] /\
+  (s' V_MEM32) Ⓓ[s R_R0+4] = (s V_MEM32) Ⓓ[0x2000002c] /\
+  (forall i, i < 4 ->
+    (s' V_MEM32) Ⓑ[s R_R0+i] = (s V_MEM32) Ⓑ[0x20000018+i] /\
+    (s' V_MEM32) Ⓑ[(s R_R0+4)+i] = (s V_MEM32) Ⓑ[0x2000002c+i]) /\
+  (forall a, ~ overlap 32 a 1 (s R_R0) 8 ->
+    (s' V_MEM32) Ⓑ[a] = (s V_MEM32) Ⓑ[a]) /\
+  can_step vTaskInternalSetTimeOutState_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s'),(Addr 0x914,s')).
+Proof.
+  intros.
+  pose proof (timeout_post_at_bx s t s' ENTRY MDL EXEC UT) as POST.
+  destruct POST as [MEM FRAME].
+  assert (LR: s' R_LR = s R_LR) by (apply FRAME; discriminate).
+  split. split; assumption.
+  destruct (timeout_original_fields (s V_MEM32) (s R_R0) SIZE SEP) as [OV TICK].
+  split. rewrite MEM. exact OV.
+  split. rewrite MEM. exact TICK.
+  split. intros i I. rewrite MEM. apply timeout_original_bytes; assumption.
+  split. intros a NO. rewrite MEM. apply timeout_memory_frame, NO.
+  rewrite <- LR. apply timeout_return_step; rewrite LR; assumption.
+Qed.
