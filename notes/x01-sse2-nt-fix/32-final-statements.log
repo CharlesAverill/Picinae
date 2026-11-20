@@ -1,0 +1,30 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-010907e3
+COMMAND=python3 notes/x01-sse2-nt-fix/check-statements.py
+PRESERVED nt_align_bounds
+PRESERVED nt_row_advance
+PRESERVED nt_done_initial
+PRESERVED nt_done_chunk
+PRESERVED nt_done_next_chunk
+PRESERVED nt_staged_zero
+PRESERVED nt_staged_finish
+PRESERVED nt_staged_bound
+PRESERVED nt_staged_advance
+PRESERVED nt_tail_addr
+PRESERVED nt_tail_final
+PRESERVED nt_remainder_sub
+PRESERVED nt_tail_loop
+PRESERVED memcpy_nt_tail_correct
+PRESERVED memcpy_nt_tail_nonvacuous
+PRESERVED memcpy_nt_first_page_stores
+PRESERVED nt_align
+PRESERVED nt_row
+PRESERVED nt_done
+PRESERVED nt_staged
+PRESERVED nt_tail_state
+PRESERVED nt_tail_exit
+PRESERVED nt_tail_invs
+PRESERVED nt_tail_witness
+PRESERVED nt_page_invs
+Every original theorem/lemma statement and definition is preserved verbatim.
+
+EXIT_CODE=0

@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0da1e0be
+COMMAND=git diff --check -- dune Examples/claude/amd64_memcpy_nt_head_proof.v Examples/claude/amd64_memcpy_nt_domain_proof.v Examples/claude/amd64_memcpy_nt_bulk_proof.v Examples/claude/amd64_memcpy_nt_bulk4_proof.v Examples/claude/amd64_memcpy_nt_strategy_proof.v
+
+EXIT_CODE=0

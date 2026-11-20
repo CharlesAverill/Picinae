@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0da1e0be
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 8000000\;\ ulimit\ -s\ 65536\;\ rocq\ compile\ -q\ -R\ _build/default\ Picinae\ /tmp/x01-projection-probe.v
+Error: Invalid character '-' in identifier "x01-projection-probe".
+
+
+EXIT_CODE=1

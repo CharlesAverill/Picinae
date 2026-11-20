@@ -1,0 +1,100 @@
+(* SSE2 memcpy NT dispatch support, x01-sse2-nt-fix (PARTIAL unit).
+   Original unit author/model: OpenAI GPT-6 Astra. This additional dispatch
+   support and proof are by OpenAI GPT-6.1 Sol, November 2026.
+
+   Inherited lift: Ubuntu amd64 glibc 2.35-0ubuntu3.12, libc.so.6 SHA256
+   9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9,
+   Ghidra 11.4.2/pcode2coq; memcpy@GLIBC_2.2.5 at 0x1c4870.
+   memcpy_amd64.v is unchanged. The independently reported prefetch-to-NOP
+   findings remain a trusted-lifting boundary, not a proved binary property.
+
+   English spec: from the public System V AMD64 entry, RDI=d, RSI=s,
+   RDX=n, RSP=rsp, initial memory=m, n>128, genuine modular memcpy
+   nonoverlap, and n>initial m[0x3215a8], the dispatch reaches the NT cut
+   0x1c4bad with unchanged memory, d/s/n/rsp, RAX=d, RCX=d-s modulo 2^64,
+   and the low XMM0 lane loaded from original source. No stores precede
+   this cut, and no threshold-frame premise is needed for this dispatch.
+   This theorem does not execute the NT head, bulk loops, or tail, does not
+   conclude copied/termination, and is not a full-entry memcpy theorem.
+   No arbitrary size upper cap or nonwrapping-buffer premise is used;
+   modeled registers supply 64-bit inputs. No CPU feature, cache, ordering,
+   fault, concurrency, or lifter-soundness property is established.
+ *)
+Require Import Picinae_amd64 memcpy_amd64.
+Import X64Notations.
+From Stdlib Require Import NArith ZArith Lia List.
+Require Import amd64_common amd64_memcpy_lemmas amd64_memcpy_proof
+               amd64_memcpy_loops_proof.
+Import ListNotations.
+Open Scope N.
+
+Definition nt_dispatch_state m d s n rsp (st:store) :=
+  st V_MEM64 = m /\ st R_RDI = d /\ st R_RSI = s /\
+  st R_RDX = n /\ st R_RSP = rsp.
+Definition nt_dispatch_exit (t:trace) :=
+  match t with (Addr 1854381,_)::_ => true | _ => false end.
+Definition nt_dispatch_invs m d s n rsp (t:trace) :=
+  match t with (Addr a,st)::_ => match a with
+  | 1853552 => Some (nt_dispatch_state m d s n rsp st)
+  | 1854064 => Some (nt_dispatch_state m d s n rsp st /\
+                     st R_RAX = d /\ xmm_ok st R_YMM0 m s)
+  | 1854381 => Some (nt_dispatch_state m d s n rsp st /\
+                     st R_RAX = d /\ xmm_ok st R_YMM0 m s /\ st R_RCX = d ⊖ s)
+  | 1854092 | 1854224 => Some False
+  | 1853595 | 1853903 | 1853916 | 1853936 | 1853964 | 1854063 => Some False
+  | _ => None end | _ => None end.
+
+Theorem memcpy_nt_dispatch_correct:
+  forall st t st' x' m d s n rsp
+    (ENTRY: startof t (x',st') = (Addr 1853552,st))
+    (MDL: models x64typctx st)
+    (PRE: nt_dispatch_state m d s n rsp st)
+    (BIG: 128 < n) (NOV: nov d s n) (THR: m Ⓠ[0x3215a8] < n),
+  satisfies_all memcpy_amd64 (nt_dispatch_invs m d s n rsp)
+    nt_dispatch_exit ((x',st')::t).
+Proof.
+  intros.
+  assert (DSN: n <= d ⊖ s) by (apply nov_ds; [exact NOV|clear - BIG; lia]).
+  apply prove_invs.
+  - simpl. rewrite ENTRY. x64_step. exact PRE.
+  - intros. erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption. apply memcpy_welltyped. intro MDL1.
+    clear - PRE0 MDL1 BIG THR DSN. rename t1 into t.
+    destruct_inv 64 PRE0.
+    + destruct PRE0 as [MEM [D [S [Nn RSP]]]].
+      clear THR DSN. repeat step_prune.
+      split; [change (m=m /\ d=d /\ s=s /\ n=n /\ s1 R_RSP=rsp);
+        repeat split; try reflexivity; exact RSP|].
+      split; [reflexivity|]. unfold xmm_ok. psimpl. pack_xmm. reflexivity.
+    + destruct PRE0 as [[MEM [D [S [Nn RSP]]]] [RAX X0]].
+      repeat x64_step. idtac "DISPATCH stepped".
+      all: set (T := m Ⓠ[0x3215a8]) in *; clearbody T.
+      all: idtac "DISPATCH abstracted".
+      all: try (exfalso; apply N.ltb_lt in BC; clear - BC DSN; lia).
+      all: idtac "DISPATCH overlap refuted".
+      all: try (exfalso; apply ja_not_taken in BC0;
+        destruct BC0 as [B|B]; [apply N.ltb_lt in B|apply N.eqb_eq in B];
+        clear - B THR; lia).
+      all: idtac "DISPATCH threshold refuted".
+      split; [change (m=m /\ d=d /\ s=s /\ n=n /\ s1 R_RSP=rsp);
+        repeat split; try reflexivity; exact RSP|].
+      split; [exact RAX|]. split; [exact X0|]. reflexivity.
+Qed.
+
+Definition nt_dispatch_witness : store := fun v => match v with
+  | R_RDI | R_RAX => 4096 | R_RSI => 8192 | R_RDX => 256 | _ => 0 end.
+Theorem memcpy_nt_dispatch_nonvacuous:
+  models x64typctx nt_dispatch_witness /\
+  nt_dispatch_state 0 4096 8192 256 0 nt_dispatch_witness /\
+  128 < 256 /\ nov 4096 8192 256 /\ 0 Ⓠ[0x3215a8] < 256.
+Proof.
+  split.
+  { intros v w T. destruct v; inversion T; subst;
+      cbv [nt_dispatch_witness]; first
+        [apply N.neq_0_lt_0; apply N.pow_nonzero; discriminate|reflexivity]. }
+  split; [repeat split; reflexivity|]. split; [reflexivity|].
+  split.
+  { intros i j I J. rewrite !N.mod_small by (clear - I J; lia).
+    clear - I J; lia. }
+  reflexivity.
+Qed.

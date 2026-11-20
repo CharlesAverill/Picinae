@@ -1,0 +1,13 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0da1e0be
+COMMAND=python3 notes/x01-sse2-nt-complete/review-assumptions.py
+assumptions-amd64_memcpy_nt_bulk4_proof.log closed= 0 FE_only= 2 axiom_names= ['FunctionalExtensionality.functional_extensionality_dep']
+assumptions-amd64_memcpy_nt_bulk_proof.log closed= 6 FE_only= 1 axiom_names= ['FunctionalExtensionality.functional_extensionality_dep']
+assumptions-amd64_memcpy_nt_dispatch_proof.log closed= 2 FE_only= 1 axiom_names= ['FunctionalExtensionality.functional_extensionality_dep']
+assumptions-amd64_memcpy_nt_domain_proof.log closed= 7 FE_only= 0 axiom_names= []
+assumptions-amd64_memcpy_nt_head_proof.log closed= 5 FE_only= 4 axiom_names= ['FunctionalExtensionality.functional_extensionality_dep']
+assumptions-amd64_memcpy_nt_proof.log closed= 17 FE_only= 4 axiom_names= ['FunctionalExtensionality.functional_extensionality_dep']
+assumptions-amd64_memcpy_nt_strategy_proof.log closed= 3 FE_only= 13 axiom_names= ['FunctionalExtensionality.functional_extensionality_dep']
+assumptions-amd64_memcpy_proof.log closed= 2 FE_only= 1 axiom_names= ['FunctionalExtensionality.functional_extensionality_dep']
+TOTAL 68 CLOSED 42 FE_ONLY 26
+
+EXIT_CODE=0

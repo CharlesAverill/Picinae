@@ -1,0 +1,2088 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-0da1e0be
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env env PROOF_MEMORY_KB=8000000 PROOF_STACK_KB=65536 bash tools/print-assumptions.sh Picinae.Examples.claude.amd64_memcpy_nt_bulk_proof nt_saved_page_staged nt_image2_advance nt_image4_advance nt_image2_at nt_image4_at nt_count_bounds nt_bulk_iteration2
+nt_saved_page_staged
+     : forall (m L M : Picinae_core.memory) (d s n pages a j i q : BinNums.N),
+       BinNat.N.le (BinNums.Npos BinNums.xH) a /\
+       BinNat.N.le a
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt i
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt q pages ->
+       BinNat.N.le
+         (BinNat.N.add a
+            (BinNat.N.mul
+               (BinNat.N.mul
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                  pages)
+               (BinNat.N.add j (BinNums.Npos BinNums.xH))))
+         n ->
+       amd64_memcpy_sets.nov d s n ->
+       BinNat.N.lt n
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       amd64_memcpy_sets.cpy m L d s
+         (amd64_memcpy_nt_proof.nt_done pages a j i) ->
+       amd64_memcpy_sets.cpy m M d s
+         (amd64_memcpy_nt_proof.nt_staged pages a j i q) ->
+       amd64_memcpy_sets.cpy m
+         (nt_saved_page L M d s
+            (BinNat.N.add
+               (BinNat.N.add
+                  (BinNat.N.add a
+                     (BinNat.N.mul
+                        (BinNat.N.mul
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (...)))))))))))))
+                           pages)
+                        j))
+                  (BinNat.N.mul
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                     q))
+               (BinNat.N.mul
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  i)))
+         d s
+         (amd64_memcpy_nt_proof.nt_staged pages a j i
+            (BinNat.N.add q (BinNums.Npos BinNums.xH)))
+Closed under the global context
+nt_image2_advance
+     : forall (m M : Picinae_core.memory) (d s n a j i : BinNums.N),
+       BinNat.N.le (BinNums.Npos BinNums.xH) a /\
+       BinNat.N.le a
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt i
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.le
+         (BinNat.N.add a
+            (BinNat.N.mul
+               (BinNat.N.mul
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                  (BinNums.Npos (BinNums.xO BinNums.xH)))
+               (BinNat.N.add j (BinNums.Npos BinNums.xH))))
+         n ->
+       amd64_memcpy_sets.nov d s n ->
+       BinNat.N.lt n
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       amd64_memcpy_sets.cpy m M d s
+         (amd64_memcpy_nt_proof.nt_done
+            (BinNums.Npos (BinNums.xO BinNums.xH)) a j i) ->
+       amd64_memcpy_sets.cpy m
+         (nt_image2 M d s
+            (BinNat.N.add
+               (BinNat.N.add a
+                  (BinNat.N.mul
+                     (BinNat.N.mul
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                        (BinNums.Npos (BinNums.xO BinNums.xH)))
+                     j))
+               (BinNat.N.mul
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  i)))
+         d s
+         (amd64_memcpy_nt_proof.nt_done
+            (BinNums.Npos (BinNums.xO BinNums.xH)) a j
+            (BinNat.N.add i (BinNums.Npos BinNums.xH)))
+Closed under the global context
+nt_image4_advance
+     : forall (m M : Picinae_core.memory) (d s n a j i : BinNums.N),
+       BinNat.N.le (BinNums.Npos BinNums.xH) a /\
+       BinNat.N.le a
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.lt i
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH))))))) ->
+       BinNat.N.le
+         (BinNat.N.add a
+            (BinNat.N.mul
+               (BinNat.N.mul
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                  (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))))
+               (BinNat.N.add j (BinNums.Npos BinNums.xH))))
+         n ->
+       amd64_memcpy_sets.nov d s n ->
+       BinNat.N.lt n
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       amd64_memcpy_sets.cpy m M d s
+         (amd64_memcpy_nt_proof.nt_done
+            (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))) a j i) ->
+       amd64_memcpy_sets.cpy m
+         (nt_image4 M d s
+            (BinNat.N.add
+               (BinNat.N.add a
+                  (BinNat.N.mul
+                     (BinNat.N.mul
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                        (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))))
+                     j))
+               (BinNat.N.mul
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  i)))
+         d s
+         (amd64_memcpy_nt_proof.nt_done
+            (BinNums.Npos (BinNums.xO (BinNums.xO BinNums.xH))) a j
+            (BinNat.N.add i (BinNums.Npos BinNums.xH)))
+Closed under the global context
+nt_image2_at
+     : forall (M : Picinae_core.memory) (d s a c j i : BinNums.N),
+       nt_image2 M d s
+         (BinNat.N.add (BinNat.N.add a (BinNat.N.mul c j))
+            (BinNat.N.mul
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               i)) =
+       Picinae_core.setmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         Picinae_core.LittleE
+         (BinNums.Npos
+            (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+         (Picinae_core.setmem
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+            Picinae_core.LittleE
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+            (Picinae_core.setmem
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               Picinae_core.LittleE
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+               (Picinae_core.setmem
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  Picinae_core.LittleE
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+                  (Picinae_core.setmem
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                     Picinae_core.LittleE
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+                     (Picinae_core.setmem
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                        Picinae_core.LittleE
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))
+                        (Picinae_core.setmem
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                           Picinae_core.LittleE
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))
+                           (Picinae_core.setmem
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH)))))))
+                              Picinae_core.LittleE
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))
+                              M
+                              (BinNat.N.add
+                                 (BinNat.N.add (BinNat.N.add d a)
+                                    (BinNat.N.mul c j))
+                                 (BinNat.N.mul
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                    i))
+                              (Picinae_core.getmem
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                 Picinae_core.LittleE
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))
+                                 M
+                                 (BinNat.N.add
+                                    (BinNat.N.add 
+                                       (BinNat.N.add s a) 
+                                       (BinNat.N.mul c j))
+                                    (BinNat.N.mul
+                                       (BinNums.Npos
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                       i))))
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNat.N.add
+                                    (BinNat.N.add
+                                       (BinNums.Npos
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                       d)
+                                    a)
+                                 (BinNat.N.mul c j))
+                              (BinNat.N.mul
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                 i))
+                           (Picinae_core.getmem
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH)))))))
+                              Picinae_core.LittleE
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))
+                              M
+                              (BinNat.N.add
+                                 (BinNat.N.add
+                                    (BinNat.N.add
+                                       (BinNat.N.add
+                                          (BinNums.Npos
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                          s)
+                                       a)
+                                    (BinNat.N.mul c j))
+                                 (BinNat.N.mul
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                    i))))
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNat.N.add
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))
+                                    d)
+                                 a)
+                              (BinNat.N.mul c j))
+                           (BinNat.N.mul
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH)))))))
+                              i))
+                        (Picinae_core.getmem
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                           Picinae_core.LittleE
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))
+                           M
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNat.N.add
+                                    (BinNat.N.add
+                                       (BinNums.Npos
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))
+                                       s)
+                                    a)
+                                 (BinNat.N.mul c j))
+                              (BinNat.N.mul
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                 i))))
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xI BinNums.xH))))))
+                                 d)
+                              a)
+                           (BinNat.N.mul c j))
+                        (BinNat.N.mul
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                           i))
+                     (Picinae_core.getmem
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                        Picinae_core.LittleE
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))
+                        M
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNat.N.add
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))
+                                    s)
+                                 a)
+                              (BinNat.N.mul c j))
+                           (BinNat.N.mul
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH)))))))
+                              i))))
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                              d)
+                           a)
+                        (BinNat.N.mul c j))
+                     (BinNat.N.mul
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                        i))
+                  (Picinae_core.getmem
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                     Picinae_core.LittleE
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+                     M
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                                 s)
+                              a)
+                           (BinNat.N.mul c j))
+                        (BinNat.N.mul
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                           i))))
+               (BinNat.N.add
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xI
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                           d)
+                        a)
+                     (BinNat.N.mul c j))
+                  (BinNat.N.mul
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                     i))
+               (Picinae_core.getmem
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  Picinae_core.LittleE
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+                  M
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xI
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                              s)
+                           a)
+                        (BinNat.N.mul c j))
+                     (BinNat.N.mul
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                        i))))
+            (BinNat.N.add
+               (BinNat.N.add
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xI
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                        d)
+                     a)
+                  (BinNat.N.mul c j))
+               (BinNat.N.mul
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  i))
+            (Picinae_core.getmem
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               Picinae_core.LittleE
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+               M
+               (BinNat.N.add
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xI
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                           s)
+                        a)
+                     (BinNat.N.mul c j))
+                  (BinNat.N.mul
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                     i))))
+         (BinNat.N.add
+            (BinNat.N.add
+               (BinNat.N.add
+                  (BinNat.N.add
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                     d)
+                  a)
+               (BinNat.N.mul c j))
+            (BinNat.N.mul
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               i))
+         (Picinae_core.getmem
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+            Picinae_core.LittleE
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+            M
+            (BinNat.N.add
+               (BinNat.N.add
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))))))))
+                        s)
+                     a)
+                  (BinNat.N.mul c j))
+               (BinNat.N.mul
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  i)))
+Closed under the global context
+nt_image4_at
+     : forall (M : Picinae_core.memory) (d s a c j i : BinNums.N),
+       nt_image4 M d s
+         (BinNat.N.add (BinNat.N.add a (BinNat.N.mul c j))
+            (BinNat.N.mul
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               i)) =
+       Picinae_core.setmem
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         Picinae_core.LittleE
+         (BinNums.Npos
+            (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+         (Picinae_core.setmem
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+            Picinae_core.LittleE
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+            (Picinae_core.setmem
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               Picinae_core.LittleE
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+               (Picinae_core.setmem
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  Picinae_core.LittleE
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+                  (Picinae_core.setmem
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                     Picinae_core.LittleE
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+                     (Picinae_core.setmem
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                        Picinae_core.LittleE
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))
+                        (Picinae_core.setmem
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                           Picinae_core.LittleE
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))
+                           (Picinae_core.setmem
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH)))))))
+                              Picinae_core.LittleE
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))
+                              (Picinae_core.setmem
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                 Picinae_core.LittleE
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))
+                                 (Picinae_core.setmem
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                    Picinae_core.LittleE
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH)))))
+                                    (Picinae_core.setmem
+                                       (BinNums.Npos
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                       Picinae_core.LittleE
+                                       (BinNums.Npos
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                       (Picinae_core.setmem
+                                          (BinNums.Npos
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                          Picinae_core.LittleE
+                                          (BinNums.Npos
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                          (Picinae_core.setmem
+                                             (BinNums.Npos
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                             Picinae_core.LittleE
+                                             (BinNums.Npos
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                             (Picinae_core.setmem
+                                                (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                Picinae_core.LittleE
+                                                (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                                (Picinae_core.setmem
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                 Picinae_core.LittleE
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                                 (Picinae_core.setmem
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                 Picinae_core.LittleE
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                                 M
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add d a)
+                                                 (BinNat.N.mul c j))
+                                                 (BinNat.N.mul
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))
+                                                 i))
+                                                 (Picinae_core.getmem
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))
+                                                 Picinae_core.LittleE
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                                 M
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add s a)
+                                                 (BinNat.N.mul c j))
+                                                 (BinNat.N.mul
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))
+                                                 i))))
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))
+                                                 d) a) 
+                                                 (BinNat.N.mul c j))
+                                                 (BinNat.N.mul
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))
+                                                 i))
+                                                 (Picinae_core.getmem
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                 Picinae_core.LittleE
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                                 M
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNums.Npos
+                                                 (BinNums.xO (BinNums.xO ...)))
+                                                 s) a) 
+                                                 (BinNat.N.mul c j))
+                                                 (BinNat.N.mul
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))
+                                                 i))))
+                                                (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))
+                                                 d) a) 
+                                                 (BinNat.N.mul c j))
+                                                 (BinNat.N.mul
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                 i))
+                                                (Picinae_core.getmem
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                 Picinae_core.LittleE
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                                 M
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))
+                                                 s) a) 
+                                                 (BinNat.N.mul c j))
+                                                 (BinNat.N.mul
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))
+                                                 i))))
+                                             (BinNat.N.add
+                                                (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))
+                                                 d) a) 
+                                                 (BinNat.N.mul c j))
+                                                (BinNat.N.mul
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                 i))
+                                             (Picinae_core.getmem
+                                                (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                Picinae_core.LittleE
+                                                (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                                M
+                                                (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))
+                                                 s) a) 
+                                                 (BinNat.N.mul c j))
+                                                 (BinNat.N.mul
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                 i))))
+                                          (BinNat.N.add
+                                             (BinNat.N.add
+                                                (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))))
+                                                 d) a)
+                                                (BinNat.N.mul c j))
+                                             (BinNat.N.mul
+                                                (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                i))
+                                          (Picinae_core.getmem
+                                             (BinNums.Npos
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                             Picinae_core.LittleE
+                                             (BinNums.Npos
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                             M
+                                             (BinNat.N.add
+                                                (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))
+                                                 s) a) 
+                                                 (BinNat.N.mul c j))
+                                                (BinNat.N.mul
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                 i))))
+                                       (BinNat.N.add
+                                          (BinNat.N.add
+                                             (BinNat.N.add
+                                                (BinNat.N.add
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO (BinNums.xO ...))))))))
+                                                 d)
+                                                a)
+                                             (BinNat.N.mul c j))
+                                          (BinNat.N.mul
+                                             (BinNums.Npos
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                             i))
+                                       (Picinae_core.getmem
+                                          (BinNums.Npos
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                          Picinae_core.LittleE
+                                          (BinNums.Npos
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                          M
+                                          (BinNat.N.add
+                                             (BinNat.N.add
+                                                (BinNat.N.add
+                                                 (BinNat.N.add
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI (BinNums.xO ...)))))))
+                                                 s) a)
+                                                (BinNat.N.mul c j))
+                                             (BinNat.N.mul
+                                                (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                                i))))
+                                    (BinNat.N.add
+                                       (BinNat.N.add
+                                          (BinNat.N.add
+                                             (BinNat.N.add
+                                                (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO (BinNums.xO ...)))))))))
+                                                d)
+                                             a)
+                                          (BinNat.N.mul c j))
+                                       (BinNat.N.mul
+                                          (BinNums.Npos
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                          i))
+                                    (Picinae_core.getmem
+                                       (BinNums.Npos
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                       Picinae_core.LittleE
+                                       (BinNums.Npos
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))
+                                       M
+                                       (BinNat.N.add
+                                          (BinNat.N.add
+                                             (BinNat.N.add
+                                                (BinNat.N.add
+                                                 (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI (BinNums.xO ...))))))))
+                                                 s)
+                                                a)
+                                             (BinNat.N.mul c j))
+                                          (BinNat.N.mul
+                                             (BinNums.Npos
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                             i))))
+                                 (BinNat.N.add
+                                    (BinNat.N.add
+                                       (BinNat.N.add
+                                          (BinNat.N.add
+                                             (BinNums.Npos
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))))))
+                                             d)
+                                          a)
+                                       (BinNat.N.mul c j))
+                                    (BinNat.N.mul
+                                       (BinNums.Npos
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                       i))
+                                 (Picinae_core.getmem
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                    Picinae_core.LittleE
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH)))))
+                                    M
+                                    (BinNat.N.add
+                                       (BinNat.N.add
+                                          (BinNat.N.add
+                                             (BinNat.N.add
+                                                (BinNums.Npos
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO (BinNums.xO ...)))))))))
+                                                s)
+                                             a)
+                                          (BinNat.N.mul c j))
+                                       (BinNat.N.mul
+                                          (BinNums.Npos
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                          i))))
+                              (BinNat.N.add
+                                 (BinNat.N.add
+                                    (BinNat.N.add
+                                       (BinNat.N.add
+                                          (BinNums.Npos
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))))))))
+                                          d)
+                                       a)
+                                    (BinNat.N.mul c j))
+                                 (BinNat.N.mul
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                    i))
+                              (Picinae_core.getmem
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                 Picinae_core.LittleE
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))
+                                 M
+                                 (BinNat.N.add
+                                    (BinNat.N.add
+                                       (BinNat.N.add
+                                          (BinNat.N.add
+                                             (BinNums.Npos
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))))))
+                                             s)
+                                          a)
+                                       (BinNat.N.mul c j))
+                                    (BinNat.N.mul
+                                       (BinNums.Npos
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                       i))))
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNat.N.add
+                                    (BinNat.N.add
+                                       (BinNums.Npos
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))))))))
+                                       d)
+                                    a)
+                                 (BinNat.N.mul c j))
+                              (BinNat.N.mul
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                 i))
+                           (Picinae_core.getmem
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH)))))))
+                              Picinae_core.LittleE
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))
+                              M
+                              (BinNat.N.add
+                                 (BinNat.N.add
+                                    (BinNat.N.add
+                                       (BinNat.N.add
+                                          (BinNums.Npos
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))))))))
+                                          s)
+                                       a)
+                                    (BinNat.N.mul c j))
+                                 (BinNat.N.mul
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                    i))))
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNat.N.add
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))))))))))
+                                    d)
+                                 a)
+                              (BinNat.N.mul c j))
+                           (BinNat.N.mul
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH)))))))
+                              i))
+                        (Picinae_core.getmem
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                           Picinae_core.LittleE
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))
+                           M
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNat.N.add
+                                    (BinNat.N.add
+                                       (BinNums.Npos
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...))))))))))))
+                                       s)
+                                    a)
+                                 (BinNat.N.mul c j))
+                              (BinNat.N.mul
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO BinNums.xH)))))))
+                                 i))))
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO BinNums.xH))))))))))))))
+                                 d)
+                              a)
+                           (BinNat.N.mul c j))
+                        (BinNat.N.mul
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                           i))
+                     (Picinae_core.getmem
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                        Picinae_core.LittleE
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))
+                        M
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNat.N.add
+                                    (BinNums.Npos
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO (BinNums.xO ...)))))))))))))
+                                    s)
+                                 a)
+                              (BinNat.N.mul c j))
+                           (BinNat.N.mul
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO BinNums.xH)))))))
+                              i))))
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                              d)
+                           a)
+                        (BinNat.N.mul c j))
+                     (BinNat.N.mul
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                        i))
+                  (Picinae_core.getmem
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                     Picinae_core.LittleE
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+                     M
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNat.N.add
+                                 (BinNums.Npos
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                                 s)
+                              a)
+                           (BinNat.N.mul c j))
+                        (BinNat.N.mul
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                           i))))
+               (BinNat.N.add
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xI
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                           d)
+                        a)
+                     (BinNat.N.mul c j))
+                  (BinNat.N.mul
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                     i))
+               (Picinae_core.getmem
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  Picinae_core.LittleE
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+                  M
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNat.N.add
+                              (BinNums.Npos
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xI
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                              s)
+                           a)
+                        (BinNat.N.mul c j))
+                     (BinNat.N.mul
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                        i))))
+            (BinNat.N.add
+               (BinNat.N.add
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xI
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                        d)
+                     a)
+                  (BinNat.N.mul c j))
+               (BinNat.N.mul
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  i))
+            (Picinae_core.getmem
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               Picinae_core.LittleE
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+               M
+               (BinNat.N.add
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNat.N.add
+                           (BinNums.Npos
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xO
+                                          (BinNums.xO
+                                             (BinNums.xI
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                           s)
+                        a)
+                     (BinNat.N.mul c j))
+                  (BinNat.N.mul
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                     i))))
+         (BinNat.N.add
+            (BinNat.N.add
+               (BinNat.N.add
+                  (BinNat.N.add
+                     (BinNums.Npos
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xI
+                                       (BinNums.xI
+                                          (BinNums.xO
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                     d)
+                  a)
+               (BinNat.N.mul c j))
+            (BinNat.N.mul
+               (BinNums.Npos
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+               i))
+         (Picinae_core.getmem
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+            Picinae_core.LittleE
+            (BinNums.Npos
+               (BinNums.xO (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))
+            M
+            (BinNat.N.add
+               (BinNat.N.add
+                  (BinNat.N.add
+                     (BinNat.N.add
+                        (BinNums.Npos
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO
+                                    (BinNums.xO
+                                       (BinNums.xI
+                                          (BinNums.xI
+                                             (BinNums.xO
+                                                (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI BinNums.xH))))))))))))))
+                        s)
+                     a)
+                  (BinNat.N.mul c j))
+               (BinNat.N.mul
+                  (BinNums.Npos
+                     (BinNums.xO
+                        (BinNums.xO
+                           (BinNums.xO
+                              (BinNums.xO
+                                 (BinNums.xO (BinNums.xO BinNums.xH)))))))
+                  i)))
+Closed under the global context
+nt_count_bounds
+     : forall (four : bool) (d n : BinNums.N),
+       BinNat.N.le
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         n ->
+       BinNat.N.le
+         (BinNat.N.add (amd64_memcpy_nt_proof.nt_align d)
+            (BinNat.N.mul (nt_chunk four) (nt_count four d n)))
+         n /\
+       BinNat.N.sub n
+         (BinNat.N.add (amd64_memcpy_nt_proof.nt_align d)
+            (BinNat.N.mul (nt_chunk four) (nt_count four d n))) =
+       nt_rest four d n /\ BinNat.N.lt (nt_rest four d n) (nt_chunk four)
+Closed under the global context
+nt_bulk_iteration2
+     : forall (m : Picinae_core.memory) (d s n : BinNums.N)
+         (rsp : Picinae_core.memory) (st : Picinae_amd64.IL_amd64.store)
+         (t : list (Picinae_core.exit * Picinae_amd64.IL_amd64.store)),
+       Picinae_amd64.Statics_amd64.models Picinae_amd64.IL_amd64.archtyps st ->
+       amd64_memcpy_sets.nov d s n ->
+       BinNat.N.lt (BinNat.N.add d n)
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       BinNat.N.lt n
+         (BinNat.N.pow (BinNums.Npos (BinNums.xO BinNums.xH))
+            (BinNums.Npos
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO
+                        (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))) ->
+       BinNat.N.le
+         (BinNums.Npos
+            (BinNums.xO
+               (BinNums.xO
+                  (BinNums.xO
+                     (BinNums.xO (BinNums.xO (BinNums.xO BinNums.xH)))))))
+         n ->
+       (exists j i : BinNums.N, nt_bulk_state false m d s n rsp j i st) ->
+       Picinae_amd64.Theory_amd64.nextinv memcpy_amd64.memcpy_amd64
+         (nt_bulk_invs false m d s n rsp) (nt_bulk_exit false) false
+         ((Picinae_core.Addr
+             (BinNums.Npos
+                (BinNums.xI
+                   (BinNums.xO
+                      (BinNums.xI
+                         (BinNums.xO
+                            (BinNums.xO
+                               (BinNums.xI
+                                  (BinNums.xO
+                                     (BinNums.xO
+                                        (BinNums.xO
+                                           (BinNums.xO
+                                              (BinNums.xI
+                                                 (BinNums.xI
+                                                 (BinNums.xO
+                                                 (BinNums.xO
+                                                 (BinNums.xI
+                                                 (BinNums.xO (...)))))))))))))))))),
+           st)
+          :: t)%list
+Axioms:
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+
+EXIT_CODE=0
