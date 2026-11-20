@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-e7e7a9ff
+COMMAND=git branch -m llm-proofs/x07-avx-rep-overlap
+
+EXIT_CODE=0

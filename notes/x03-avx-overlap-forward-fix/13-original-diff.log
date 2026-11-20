@@ -1,0 +1,78 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-be68d06e
+COMMAND=git diff --no-index notes/x03-avx-overlap-forward/initial-attempt.v.txt Examples/claude/amd64_memmove_avx_overlap_forward_proof.v
+diff --git a/notes/x03-avx-overlap-forward/initial-attempt.v.txt b/Examples/claude/amd64_memmove_avx_overlap_forward_proof.v
+index 4a8fcd6..2550e85 100644
+--- a/notes/x03-avx-overlap-forward/initial-attempt.v.txt
++++ b/Examples/claude/amd64_memmove_avx_overlap_forward_proof.v
+@@ -1,5 +1,6 @@
+ (* Forward overlapping __memmove_avx_unaligned_erms: ordinary 128-byte loop.
+-   Initial author: OpenAI gpt-6-astra, xhigh/priority. Final producer: pending.
++   Initial author: OpenAI gpt-6-astra, xhigh/priority.
++   Repair and final proof producer: OpenAI gpt-6.1-sol, xhigh/priority.
+    Source: /lib/x86_64-linux-gnu/libc.so.6, Ubuntu amd64 glibc 2.35-0ubuntu3.12,
+    SHA256 9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9.
+    Symbol Ghidra address 0x2a0840, image base 0x100000, normalized entry 0.
+@@ -261,7 +262,7 @@ Proof.
+   { unfold msub. rewrite (N.mod_small s) by exact SB.
+     rewrite N.mod_small by (clear - DS SN; lia). lia. }
+   assert (ADD: d ⊖ s ⊕ n = d+n-s).
+-  { rewrite SUB. replace (2^64+d-s+n) with (d+n-s+1*2^64) by (clear - DS OV; lia).
++  { rewrite SUB. replace (2^64+d-s+n) with (d+n-s+1*2^64) by (clear - DS OV SN; lia).
+     rewrite N.mod_add by discriminate. apply N.mod_small. clear - DS SN; lia. }
+   split. rewrite SUB. clear - SN; lia.
+   rewrite ADD, SUB, N.shiftr_lxor.
+@@ -363,10 +364,7 @@ Proof.
+       { eapply (cpy_store _ _ _ _ _ 0); [eapply (cpy_store _ _ _ _ _ (n - 128));
+           [eapply (cpy_store _ _ _ _ _ (n - 96)); [eapply (cpy_store _ _ _ _ _ (n - 64));
+            [eapply (cpy_store _ _ _ _ _ (n - 32)); [eapply (ofw_store4 _ _ _ _ n k _ k (k+32) (k+64) (k+96)); [exact C|..]|..]|..]|..]|..]|..].
+-        all: lazymatch goal with
+-             | |- cpy _ _ _ _ _ => assumption | |- d < s => exact DS | |- s+n <= 2^64 => exact SN
+-             | |- _ => clear - K EX BIG NW NB A0; aside
+-             end. }
++        all: first [exact DS | exact SN | assumption | clear - K EX BIG NW NB A0; aside]. }
+       intro i. clear - A0 K EX BIG. split; intro H; [repeat destruct H as [H|H]; lia | lia].
+     + (* next iteration (JA taken) *)
+       apply ja_taken in BC. destruct BC as [B1 B2]. apply N.ltb_ge in B1. apply N.eqb_neq in B2.
+@@ -374,10 +372,7 @@ Proof.
+       exists (k + 128). split. clear - K CT A0; lia. split.
+       { eapply cpy_equiv; [|eapply (ofw_store4 _ _ _ _ n k _ k (k+32) (k+64) (k+96)); [exact C|..]].
+         intro i. clear - A0 K CT. split; intro H; [repeat destruct H as [H|H]; lia | lia].
+-        all: lazymatch goal with
+-             | |- cpy _ _ _ _ _ => assumption | |- d < s => exact DS | |- s+n <= 2^64 => exact SN
+-             | |- _ => clear - K CT BIG NW NB A0; aside
+-             end. }
++        all: first [exact DS | exact SN | assumption | clear - K CT BIG NW NB A0; aside]. }
+       split. rewrite E1. clear; lia. split. f_equal. clear; lia. split. reflexivity.
+       repeat split; try assumption.
+       all: match goal with H: ?r = _ |- ?r = _ => rewrite H; apply getmem_mod_l end.
+@@ -416,7 +411,7 @@ Lemma ofw_witness_thresholds:
+   ofw_witness_memory Ⓠ[0x3215a8] = 512.
+ Proof.
+   unfold ofw_witness_memory. split.
+-  - rewrite getmem_frame; [|left; vm_compute; reflexivity|left; vm_compute; reflexivity].
++  - rewrite getmem_frame; [|left; vm_compute; discriminate|left; vm_compute; discriminate].
+     rewrite getmem_setmem by discriminate. reflexivity.
+   - rewrite getmem_setmem by discriminate. reflexivity.
+ Qed.
+@@ -431,11 +426,14 @@ Proof.
+   split.
+   - intros v w CV. destruct v; cbn [x64typctx] in CV;
+       inversion CV; subst; cbn [ofw_witness_store].
+-    + unfold ofw_witness_memory. change (2^(8*2^64)) with (memsize 64).
+-      apply typesafe_setmem, typesafe_setmem. unfold memsize.
+-      apply N.pow_pos_nonneg. discriminate.
+-    all: first [apply N.pow_pos_nonneg; discriminate |
+-      clear - GAP; change (2^64) with 18446744073709551616; lia].
++    all: lazymatch goal with
++      | |- ofw_witness_memory < _ =>
++          unfold ofw_witness_memory; change (2^(8*2^64)) with (memsize 64);
++          apply typesafe_setmem, typesafe_setmem;
++          change (0 < 2^(2^64*8)); apply mp2_gt_0
++      | |- _ => first [apply mp2_gt_0 |
++          clear - GAP; change (2^64) with 18446744073709551616; lia]
++      end.
+   - split.
+     + unfold ofw_path. destruct ofw_witness_thresholds as [T1 T2].
+       rewrite T1,T2. clear - GAP. change (2^64) with 18446744073709551616;
+
+EXIT_CODE=1
