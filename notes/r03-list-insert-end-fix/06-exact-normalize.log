@@ -1,0 +1,19 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-75bde600
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c ulimit\ -v\ 2000000\;\ ulimit\ -s\ 65536\;\ dune\ build\ --cache=disabled\ -j1\ --display\ short\ Examples/FreeRTOS/armv6m_vListInsertEnd_proof.vo
+        rocq .Picinae.theory.d
+File "dune", lines 6-64, characters 0-2700:
+ 6 | (rocq.theory
+ 7 |  (name Picinae)
+ 8 |  (theories Stdlib Ltac2)
+....
+62 |   Examples.FreeRTOS.xTimerGenericCommandFromISR_armv6m
+63 | ; END e05 generated modules
+64 |  ))
+        rocq Examples/FreeRTOS/armv6m_vListInsertEnd_proof.{glob,vo} (exit 1)
+Goal at < 92 >
+Goal at < 112 >
+File "./Examples/FreeRTOS/armv6m_vListInsertEnd_proof.v", line 209, characters 6-97:
+Error: Found no subterm matching "?n + 16" in the current goal.
+
+
+EXIT_CODE=1

@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-a0eced30
+COMMAND=/home/charles/code/friends/.toolchains/arm-validation/picinae-env bash --noprofile --norc -e -c $'\n    ulimit -v 2000000\n    ulimit -s 65536\n    dune build --cache=disabled -j1 --display short\n  '
+
+EXIT_CODE=0
