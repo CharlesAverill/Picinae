@@ -1,0 +1,4 @@
+COMMAND=["/home/charles/miniconda3/bin/python3", "/home/charles/.t3/worktrees/Picinae/t3-746dec47/tools/ghidra-lifter/lift-scalar.py", "--state", "/home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra", "--global-addressing", "--out", "/home/charles/code/friends/.toolchains/e08-arm-lifts/baseline01/isinfl", "isinfl"]
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: isinfl 0x1398b4 str q0,[sp]: unmodeled register q0 (base z0); raw pcode: (unique, 0x6880, 8) COPY (register, 0x8, 8);  ---  STORE (const, 0x1b1, 8) , (unique, 0x6880, 8) , (register, 0x5000, 16); no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e08-arm-lifts/ghidra/logs/d589132f76014e449488c37d5a923ffb.log
+
+EXIT_CODE=1

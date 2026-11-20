@@ -1,0 +1,15 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-9191917d
+COMMAND=bash -c git\ branch\ --show-current\;\ git\ rev-parse\ HEAD\;\ git\ merge-base\ origin/llm_generated_proofs\ HEAD\;\ git\ log\ --format=\"%H\ %s\"\ origin/llm_generated_proofs..HEAD\;\ git\ diff\ --stat\;\ git\ status\ --short
+llm-proofs/a-strcmp
+bbad5922112dedaa192bbe1fd0ab97f3bcbb2ba9
+49956416928e5b6bb3928b54ae33e3b81091f006
+bbad5922112dedaa192bbe1fd0ab97f3bcbb2ba9 Add precise AArch64 conditional compare lowering
+9b9ea8fbb9c0921b07a906daae3cecc7048cbf6b Add strict AArch64 scalar bitform coverage
+9ae8e6800fa044797efd98372857e6ac89b18e1b Add closed scalar ARM port extraction baseline
+378fe1b57514b9af3f017a72b4ca665910156cc7 Add strict pinned scalar lifting pipeline
+052521a753adbda077843ec7b259801282a7b1e9 Import reviewed partial ARM inventory evidence
+081d0233cd6667803b3907343b2fea6dc9eba714 Add pinned AArch64 glibc inventory and isolated smoke lift
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9 Add selective Dune builds and proof audit harness
+?? notes/a-strcmp/
+
+EXIT_CODE=0

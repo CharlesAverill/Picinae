@@ -1,0 +1,10 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-4b9d096d
+COMMAND=python3 tools/audit-proof-source.py --base 9b9ea8fbb9c0921b07a906daae3cecc7048cbf6b Examples/claude/lifter/scalar_ccmp
+Base: 9b9ea8fbb9c0921b07a906daae3cecc7048cbf6b
+Scope: 4 Rocq source files
+BASELINE totals: {}
+CURRENT totals: {}
+NEW totals: {}
+Source check only: inspect transitive Print Assumptions separately.
+
+EXIT_CODE=0

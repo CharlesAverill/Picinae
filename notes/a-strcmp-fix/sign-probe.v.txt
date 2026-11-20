@@ -1,0 +1,26 @@
+Require Import Picinae_armv8 arm8_common.
+Import ARM8Notations.
+From Stdlib Require Import NArith ZArith Lia.
+Open Scope N.
+Lemma strcmp_fix_byte_sub_sign: forall a b,
+  a < 256 -> b < 256 ->
+  Z.compare (toZ 32 (msub 64 a b)) 0 = N.compare a b.
+Proof.
+  intros a b A B.
+  assert (AZ: toZ 32 a = Z.of_N a).
+  { unfold toZ. apply canonicalZ_id with (w':=32); [reflexivity|].
+    unfold signed_range. cbn. lia. }
+  assert (BZ: toZ 32 b = Z.of_N b).
+  { unfold toZ. apply canonicalZ_id with (w':=32); [reflexivity|].
+    unfold signed_range. cbn. lia. }
+  rewrite <- (toZ_mod_pow2 32 32 (msub 64 a b) ltac:(reflexivity)).
+  rewrite msub_mod_pow2. change (Z.compare (toZ 32 (msub 32 a b)) 0 = N.compare a b).
+  rewrite toZ_msub, AZ, BZ.
+  change (Z.compare (canonicalZ 32 (Z.of_N a-Z.of_N b)) 0 = N.compare a b).
+  rewrite (canonicalZ_id 32 32 (Z.of_N a-Z.of_N b))
+    by (unfold signed_range; cbn; lia).
+  destruct (N.compare_spec a b) as [E|LT|GT].
+  - apply Z.compare_eq_iff. lia.
+  - apply Z.compare_lt_iff. lia.
+  - apply Z.compare_gt_iff. lia.
+Qed.

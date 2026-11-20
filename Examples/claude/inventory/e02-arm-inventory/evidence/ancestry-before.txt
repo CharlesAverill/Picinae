@@ -1,0 +1,17 @@
+Prepared worktree at pinned base before local commit.
+The remote branch-name check was performed before branch rename:
+git ls-remote --heads fork refs/heads/llm-proofs/e02-arm-inventory
+exit=0; stdout empty (network escalation needed after sandbox DNS failure).
+Only the prepared local branch was renamed; no prerequisite imports.
+$ git rev-parse HEAD origin/llm_generated_proofs origin/timing
+49956416928e5b6bb3928b54ae33e3b81091f006
+49956416928e5b6bb3928b54ae33e3b81091f006
+4f1772040b6fc9d12af3f84f2ca089bb65cd4bd6
+exit=0
+$ git merge-base origin/llm_generated_proofs HEAD
+49956416928e5b6bb3928b54ae33e3b81091f006
+exit=0
+$ git log --oneline origin/llm_generated_proofs..HEAD
+exit=0
+$ git diff --stat origin/llm_generated_proofs...HEAD
+exit=0

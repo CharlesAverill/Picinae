@@ -1,0 +1,26 @@
+{
+  "state": "partial",
+  "author_model": "gpt-6-astra",
+  "continuation_model": "gpt-6.1-sol",
+  "branch": "llm-proofs/a-strcmp-complete",
+  "worktree": "/home/charles/.t3/worktrees/Picinae/t3-e23fc53c",
+  "base": "49956416928e5b6bb3928b54ae33e3b81091f006",
+  "prerequisite": "66bb12cfed34143d050f29289e4dc6aabba2cf87",
+  "main_theorem": "strcmp_correct",
+  "main_state": "Abort; no constant",
+  "new_fact_checked_at_Qed_in_failed_diagnostic": [
+    "strcmp_complete_borrow_digit"
+  ],
+  "updated_full_target_validated": false,
+  "new_assumptions_query_executed": false,
+  "inherited_full_target_build_exit": 0,
+  "probe_exit": 1,
+  "corrected_probe_exit": 143,
+  "compiler_admission_wait_seconds": 1340.53,
+  "headroom_shortfall_kib": 2126104,
+  "source_audit_exit": 0,
+  "retention_audit_exit": 0,
+  "preserved_prerequisite_declarations": 69,
+  "unverified_draft_lemmas": 35,
+  "no_pending_compiler": true
+}

@@ -1,0 +1,11 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-9191917d
+COMMAND=bash -c sha256sum\ Examples/claude/arm8_strcmp_proof.v\ Examples/claude/lifter/scalar_ccmp/e30_strcmp_arm8.v\;\ git\ diff\ --check\;\ git\ diff\ --stat\;\ git\ status\ --short
+4ee0b0cbecf4f9ab9b8f69fec1e59e853e39cac6ab2148e22f0aa8ba3d0cd1b6  Examples/claude/arm8_strcmp_proof.v
+2b7b58a310afd013b2dae9e2953786404640796734fc6ae39cf309f0a6568dc3  Examples/claude/lifter/scalar_ccmp/e30_strcmp_arm8.v
+ dune | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+ M dune
+?? Examples/claude/arm8_strcmp_proof.v
+?? notes/a-strcmp/
+
+EXIT_CODE=0
