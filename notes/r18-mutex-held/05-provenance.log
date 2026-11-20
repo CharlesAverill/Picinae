@@ -1,0 +1,111 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-48d97224
+COMMAND=python3 notes/r18-mutex-held/provenance.py
+Source /home/charles/code/friends/.toolchains/e04-freertos-build/FreeRTOS-Kernel-dbf70559b27d39c1fdb68dfb9a32140b6a6777a0/tasks.c sha256 6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149
+ELF SHA256 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca
+Kernel dbf70559b27d39c1fdb68dfb9a32140b6a6777a0
+Config SHA256 6c63fc719991c8324546c700f95586dfdf1c11b35c69abbb008d06d0e256711c
+Layout SHA256 b501f440105154a99c41fa8fe764a116b98198356e3af4d297f3739d39a57cef
+{'TCB_t.alignof': 4, 'TCB_t.pcTaskName': 52, 'TCB_t.pxStack': 48, 'TCB_t.pxTopOfStack': 0, 'TCB_t.sizeof': 84, 'TCB_t.ucDelayAborted': 81, 'TCB_t.ucNotifyState': 80, 'TCB_t.ulNotifiedValue': 76, 'TCB_t.uxBasePriority': 68, 'TCB_t.uxMutexesHeld': 72, 'TCB_t.uxPriority': 44, 'TCB_t.xEventListItem': 24, 'TCB_t.xStateListItem': 4, 'UBaseType_t.alignof': 4, 'UBaseType_t.sizeof': 4, 'void *.alignof': 4, 'void *.sizeof': 4}
+[
+  {
+    "address": "0x0000154c",
+    "bytes": "08010020",
+    "cortex_m_system_region": false,
+    "globals": [
+      {
+        "address": "0x20000108",
+        "name": "pxCurrentTCB",
+        "offset": 0,
+        "size": 4
+      }
+    ],
+    "imm8": 3,
+    "instruction": "0x0000153c",
+    "thumb_function_pointer": [],
+    "value": "0x20000108"
+  }
+]
+[
+  {
+    "address": "0x0000153c",
+    "assembly": "ldr\tr3, [pc, #12]\t@ (154c <pvTaskIncrementMutexHeldCount+0x10>)",
+    "frontend_encoding_supported": true,
+    "opcode": "4b03",
+    "width": 2
+  },
+  {
+    "address": "0x0000153e",
+    "assembly": "ldr\tr0, [r3, #0]",
+    "frontend_encoding_supported": true,
+    "opcode": "6818",
+    "width": 2
+  },
+  {
+    "address": "0x00001540",
+    "assembly": "cmp\tr0, #0",
+    "frontend_encoding_supported": true,
+    "opcode": "2800",
+    "width": 2
+  },
+  {
+    "address": "0x00001542",
+    "assembly": "beq.n\t154a <pvTaskIncrementMutexHeldCount+0xe>",
+    "frontend_encoding_supported": true,
+    "opcode": "d002",
+    "width": 2
+  },
+  {
+    "address": "0x00001544",
+    "assembly": "ldr\tr3, [r0, #72]\t@ 0x48",
+    "frontend_encoding_supported": true,
+    "opcode": "6c83",
+    "width": 2
+  },
+  {
+    "address": "0x00001546",
+    "assembly": "adds\tr3, #1",
+    "frontend_encoding_supported": true,
+    "opcode": "3301",
+    "width": 2
+  },
+  {
+    "address": "0x00001548",
+    "assembly": "str\tr3, [r0, #72]\t@ 0x48",
+    "frontend_encoding_supported": true,
+    "opcode": "6483",
+    "width": 2
+  },
+  {
+    "address": "0x0000154a",
+    "assembly": "bx\tlr",
+    "frontend_encoding_supported": true,
+    "opcode": "4770",
+    "width": 2
+  }
+]
+#if ( configUSE_MUTEXES == 1 )
+
+    TaskHandle_t pvTaskIncrementMutexHeldCount( void )
+    {
+        TCB_t * pxTCB;
+
+        traceENTER_pvTaskIncrementMutexHeldCount();
+
+        pxTCB = pxCurrentTCB;
+
+        /* If xSemaphoreCreateMutex() is called before any tasks have been created
+         * then pxCurrentTCB will be NULL. */
+        if( pxTCB != NULL )
+        {
+            ( pxTCB->uxMutexesHeld )++;
+        }
+
+        traceRETURN_pvTaskIncrementMutexHeldCount( pxTCB );
+
+        return pxTCB;
+    }
+
+#endif /* configUSE_MUTEXES */
+All selected pinned source/config/layout/generated hashes match. No call/unsupported-operation dependencies.
+
+EXIT_CODE=0

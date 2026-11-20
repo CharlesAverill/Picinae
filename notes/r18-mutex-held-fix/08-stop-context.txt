@@ -1,0 +1,8 @@
+Correction to the stop command's provisional diagnostic: the interrupted
+compiler's raw output (build-02.log) locates the stall at proof line 213,
+`all: rewrite ?BC; repeat split; try reflexivity`, AFTER the current-pointer
+witness's Qed and both symbolic execution paths. Thus the explicit-width
+witness repair passed; this was expensive symbolic-memory conversion in
+the original functional tactic, not evidence that the bound repair stalled.
+Only PID 761258 was signalled, after cwd and target-argument ownership checks.
+The interrupted build's true exit is 1. No other process was signalled.
