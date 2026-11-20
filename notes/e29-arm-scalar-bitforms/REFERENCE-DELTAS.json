@@ -1,0 +1,162 @@
+[
+  {
+    "artifact": "e08___drand48_iterate_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08___memset_emag_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08_a64l_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08_cfmakeraw_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08_insque_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08_lcong48_r_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08_mempcpy_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08___memcpy_generic_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08_remque_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08_seed48_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08_seed48_r_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08_sigabbrev_np_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08_sigdescr_np_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08_srand48_r_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e08___memmove_generic_arm8",
+    "content": "program/raw pcode/record byte-identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  },
+  {
+    "artifact": "e11 smoke/global receipts",
+    "content": "all fields except implementation hashes identical",
+    "expected_metadata_delta": {
+      "pcode2coq_scalar.py": {
+        "new": "8d480033f3c949286167b2ae3a9bcfbbd26a429796f95371d0035ac1011b2166",
+        "old": "d683bb328eafc209aa5395de2d78aee0ecdbae5f6cb91826d6c3576c4342a3cc"
+      }
+    }
+  }
+]
