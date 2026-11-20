@@ -1,0 +1,6 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-539c20e7
+COMMAND=python3 notes/r26-next-unblock-fix/check-statements.py
+PASS: all 16 original declarations and all definitions unchanged
+Archive SHA256: 9f4f8bf7a4fb7e0d64ff7632b196928975a93e2373c161bc63971319fc5d4e57
+
+EXIT_CODE=0
