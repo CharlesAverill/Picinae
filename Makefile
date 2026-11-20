@@ -6,6 +6,10 @@
 all: Makefile.coq
 	+make -f Makefile.coq all
 
+# Run through an isolated toolchain, e.g. picinae-env make -j1 check-armv6m.
+check-armv6m: Picinae_armv6m.vo
+	./tests/armv6m/check.sh
+
 cfi_riscv: print_segments/extraction.ml
 	@true
 
@@ -29,5 +33,5 @@ include Makefile.coq.conf
 print_segments/extraction.ml: cfi_riscv_extraction.v $(COQMF_VFILES:%.v=%.vo)
 	coqc -R . Picinae $< > $@
 
-.PHONY: all clean phony
+.PHONY: all clean phony check-armv6m
 
