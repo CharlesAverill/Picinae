@@ -1,0 +1,9 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-83d5497b
+COMMAND=bash notes/e25-x86-scalar-driver/reproduce.sh --update
+PASS 5 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/replay.ru592d5R/glibc
+Ghidra log: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/logs/3e17c0c555d44fce84a80dcbbdc389fd.log
+PASS 2 hash-validated complete artifacts: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/replay.ru592d5R/synthetic
+Ghidra log: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/logs/f1d1826b66d9404eab1fc175557f8835.log
+PASS complete deterministic artifact sets (--update)
+
+EXIT_CODE=0

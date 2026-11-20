@@ -1,0 +1,36 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1e49d7bf
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/home/charles/code/friends/.toolchains/e34-x86-copy-shuffles/tmp python3 -m unittest discover -s tools/ghidra-lifter -p test_x64\*.py -v
+test_actual_add_sub_flags (test_x64.Tests.test_actual_add_sub_flags) ... ok
+test_actual_auxiliary_flag (test_x64.Tests.test_actual_auxiliary_flag) ... ok
+test_actual_call_partial_memory_and_address_shapes (test_x64.Tests.test_actual_call_partial_memory_and_address_shapes) ... ok
+test_canonical_temps_and_instruction_reset (test_x64.Tests.test_canonical_temps_and_instruction_reset) ... ok
+test_carry_and_signed_overflow (test_x64.Tests.test_carry_and_signed_overflow) ... ok
+test_flag_byte_read_and_one_bit_write (test_x64.Tests.test_flag_byte_read_and_one_bit_write) ... ok
+test_forward_pcode_branch_and_definite_initialization (test_x64.Tests.test_forward_pcode_branch_and_definite_initialization) ... ok
+test_glibc_actual_pcode_oracles (test_x64.Tests.test_glibc_actual_pcode_oracles) ... ok
+test_memory_above_32bits (test_x64.Tests.test_memory_above_32bits) ... ok
+test_partial_register_and_r32_zero (test_x64.Tests.test_partial_register_and_r32_zero) ... ok
+test_strict_instruction_gate (test_x64.Tests.test_strict_instruction_gate) ... ok
+test_strict_invalid_pcode_and_registers (test_x64.Tests.test_strict_invalid_pcode_and_registers) ... ok
+test_all_actual_and_synthetic_finite_semantics (test_x64_copy.Tests.test_all_actual_and_synthetic_finite_semantics) ... ok
+test_e26_receipt_rejects_partial_stale_and_mismatch (test_x64_copy.Tests.test_e26_receipt_rejects_partial_stale_and_mismatch) ... ok
+test_encoding_and_complete_raw_graph_rejections (test_x64_copy.Tests.test_encoding_and_complete_raw_graph_rejections) ... ok
+test_exact_artifact_reemission_and_pinned_bytes (test_x64_copy.Tests.test_exact_artifact_reemission_and_pinned_bytes) ... ok
+test_scalar_profile_unchanged_and_copy_is_opt_in (test_x64_copy.Tests.test_scalar_profile_unchanged_and_copy_is_opt_in) ... ok
+test_incomplete_stale_mismatched_and_partial_receipts (test_x64_publication.Tests.test_incomplete_stale_mismatched_and_partial_receipts) ... ok
+test_independent_byte_oracle_all_frames (test_x64_shuffle.Tests.test_independent_byte_oracle_all_frames) ... ok
+test_pins_and_artifacts (test_x64_shuffle.Tests.test_pins_and_artifacts) ... ok
+test_raw_graph_mutations (test_x64_shuffle.Tests.test_raw_graph_mutations) ... ok
+test_receipt_failures (test_x64_shuffle.Tests.test_receipt_failures) ... ok
+test_snapshot_unique_metadata_and_footprint_rejections (test_x64_shuffle.Tests.test_snapshot_unique_metadata_and_footprint_rejections) ... ok
+test_strict_encoding_and_unselected_forms (test_x64_shuffle.Tests.test_strict_encoding_and_unselected_forms) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 7.317s
+
+OK
+finite instruction/reference comparisons: 6560
+PASS 27280 byte-oracle comparisons; every defined YMM/GPR/flag/memory cell and byte frame
+PASS 21406 encoding/DAG/arity/width/userop mutations
+
+EXIT_CODE=0

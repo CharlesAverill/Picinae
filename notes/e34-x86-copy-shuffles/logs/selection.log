@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1e49d7bf
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e34-x86-copy-shuffles/select-instructions.py
+PASS 67 copy extents, {'palignr': 720}, {'ssse3': 240, 'ssse3_back': 480}, 360 selected shuffle shapes
+
+EXIT_CODE=0

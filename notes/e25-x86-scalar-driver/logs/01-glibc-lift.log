@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-83d5497b
+COMMAND=python3 tools/ghidra-lifter/lift-x64.py --out /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/glibc-first toascii isascii abs labs pthread_equal
+FAIL Ghidra script failed: pcode2coq_scalar.Unsupported: toascii 0x13a170 ENDBR64: unmodeled instruction ENDBR64; raw pcode: ; no output accepted; Ghidra log: /home/charles/code/friends/.toolchains/e25-x86-scalar-driver/logs/affeb340248441a1bad6f9f1bb09789d.log
+
+EXIT_CODE=1

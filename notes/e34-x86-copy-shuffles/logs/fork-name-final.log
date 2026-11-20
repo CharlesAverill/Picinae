@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-1e49d7bf
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/e34-x86-copy-shuffles
+
+EXIT_CODE=0

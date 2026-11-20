@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-473b43ee
+COMMAND=env PYTHONDONTWRITEBYTECODE=1 python3 notes/e26-x86-sse-avx-lowering/check-artifacts.py
+PASS all five hash receipts, complete Qed typing facts, no new admissions/axioms/parameters, and protected inherited sources
+
+EXIT_CODE=0

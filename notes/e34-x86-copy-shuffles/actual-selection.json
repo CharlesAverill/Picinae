@@ -1,0 +1,3242 @@
+[
+  {
+    "address": "0x27b200",
+    "elf_address": "0x17b200",
+    "bytes": "660f3a0fec01",
+    "assembly": "palignr xmm5,xmm4,0x1",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b20a",
+    "elf_address": "0x17b20a",
+    "bytes": "660f3a0fe301",
+    "assembly": "palignr xmm4,xmm3,0x1",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b210",
+    "elf_address": "0x17b210",
+    "bytes": "660f3a0fda01",
+    "assembly": "palignr xmm3,xmm2,0x1",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b21a",
+    "elf_address": "0x17b21a",
+    "bytes": "660f3a0fd101",
+    "assembly": "palignr xmm2,xmm1,0x1",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b2b0",
+    "elf_address": "0x17b2b0",
+    "bytes": "660f3a0fca01",
+    "assembly": "palignr xmm1,xmm2,0x1",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b2b6",
+    "elf_address": "0x17b2b6",
+    "bytes": "660f3a0fd301",
+    "assembly": "palignr xmm2,xmm3,0x1",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b2bc",
+    "elf_address": "0x17b2bc",
+    "bytes": "660f3a0fdc01",
+    "assembly": "palignr xmm3,xmm4,0x1",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b2c2",
+    "elf_address": "0x17b2c2",
+    "bytes": "660f3a0fe501",
+    "assembly": "palignr xmm4,xmm5,0x1",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b350",
+    "elf_address": "0x17b350",
+    "bytes": "660f3a0fec02",
+    "assembly": "palignr xmm5,xmm4,0x2",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b35a",
+    "elf_address": "0x17b35a",
+    "bytes": "660f3a0fe302",
+    "assembly": "palignr xmm4,xmm3,0x2",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b360",
+    "elf_address": "0x17b360",
+    "bytes": "660f3a0fda02",
+    "assembly": "palignr xmm3,xmm2,0x2",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b36a",
+    "elf_address": "0x17b36a",
+    "bytes": "660f3a0fd102",
+    "assembly": "palignr xmm2,xmm1,0x2",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b400",
+    "elf_address": "0x17b400",
+    "bytes": "660f3a0fca02",
+    "assembly": "palignr xmm1,xmm2,0x2",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b406",
+    "elf_address": "0x17b406",
+    "bytes": "660f3a0fd302",
+    "assembly": "palignr xmm2,xmm3,0x2",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b40c",
+    "elf_address": "0x17b40c",
+    "bytes": "660f3a0fdc02",
+    "assembly": "palignr xmm3,xmm4,0x2",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b412",
+    "elf_address": "0x17b412",
+    "bytes": "660f3a0fe502",
+    "assembly": "palignr xmm4,xmm5,0x2",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b4a0",
+    "elf_address": "0x17b4a0",
+    "bytes": "660f3a0fec03",
+    "assembly": "palignr xmm5,xmm4,0x3",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b4aa",
+    "elf_address": "0x17b4aa",
+    "bytes": "660f3a0fe303",
+    "assembly": "palignr xmm4,xmm3,0x3",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b4b0",
+    "elf_address": "0x17b4b0",
+    "bytes": "660f3a0fda03",
+    "assembly": "palignr xmm3,xmm2,0x3",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b4ba",
+    "elf_address": "0x17b4ba",
+    "bytes": "660f3a0fd103",
+    "assembly": "palignr xmm2,xmm1,0x3",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b550",
+    "elf_address": "0x17b550",
+    "bytes": "660f3a0fca03",
+    "assembly": "palignr xmm1,xmm2,0x3",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b556",
+    "elf_address": "0x17b556",
+    "bytes": "660f3a0fd303",
+    "assembly": "palignr xmm2,xmm3,0x3",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b55c",
+    "elf_address": "0x17b55c",
+    "bytes": "660f3a0fdc03",
+    "assembly": "palignr xmm3,xmm4,0x3",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b562",
+    "elf_address": "0x17b562",
+    "bytes": "660f3a0fe503",
+    "assembly": "palignr xmm4,xmm5,0x3",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b5f0",
+    "elf_address": "0x17b5f0",
+    "bytes": "660f3a0fec04",
+    "assembly": "palignr xmm5,xmm4,0x4",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b5fa",
+    "elf_address": "0x17b5fa",
+    "bytes": "660f3a0fe304",
+    "assembly": "palignr xmm4,xmm3,0x4",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b600",
+    "elf_address": "0x17b600",
+    "bytes": "660f3a0fda04",
+    "assembly": "palignr xmm3,xmm2,0x4",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b60a",
+    "elf_address": "0x17b60a",
+    "bytes": "660f3a0fd104",
+    "assembly": "palignr xmm2,xmm1,0x4",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b6a0",
+    "elf_address": "0x17b6a0",
+    "bytes": "660f3a0fca04",
+    "assembly": "palignr xmm1,xmm2,0x4",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b6a6",
+    "elf_address": "0x17b6a6",
+    "bytes": "660f3a0fd304",
+    "assembly": "palignr xmm2,xmm3,0x4",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b6ac",
+    "elf_address": "0x17b6ac",
+    "bytes": "660f3a0fdc04",
+    "assembly": "palignr xmm3,xmm4,0x4",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b6b2",
+    "elf_address": "0x17b6b2",
+    "bytes": "660f3a0fe504",
+    "assembly": "palignr xmm4,xmm5,0x4",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b740",
+    "elf_address": "0x17b740",
+    "bytes": "660f3a0fec05",
+    "assembly": "palignr xmm5,xmm4,0x5",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b74a",
+    "elf_address": "0x17b74a",
+    "bytes": "660f3a0fe305",
+    "assembly": "palignr xmm4,xmm3,0x5",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b750",
+    "elf_address": "0x17b750",
+    "bytes": "660f3a0fda05",
+    "assembly": "palignr xmm3,xmm2,0x5",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b75a",
+    "elf_address": "0x17b75a",
+    "bytes": "660f3a0fd105",
+    "assembly": "palignr xmm2,xmm1,0x5",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b7f0",
+    "elf_address": "0x17b7f0",
+    "bytes": "660f3a0fca05",
+    "assembly": "palignr xmm1,xmm2,0x5",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b7f6",
+    "elf_address": "0x17b7f6",
+    "bytes": "660f3a0fd305",
+    "assembly": "palignr xmm2,xmm3,0x5",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b7fc",
+    "elf_address": "0x17b7fc",
+    "bytes": "660f3a0fdc05",
+    "assembly": "palignr xmm3,xmm4,0x5",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b802",
+    "elf_address": "0x17b802",
+    "bytes": "660f3a0fe505",
+    "assembly": "palignr xmm4,xmm5,0x5",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b890",
+    "elf_address": "0x17b890",
+    "bytes": "660f3a0fec06",
+    "assembly": "palignr xmm5,xmm4,0x6",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b89a",
+    "elf_address": "0x17b89a",
+    "bytes": "660f3a0fe306",
+    "assembly": "palignr xmm4,xmm3,0x6",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b8a0",
+    "elf_address": "0x17b8a0",
+    "bytes": "660f3a0fda06",
+    "assembly": "palignr xmm3,xmm2,0x6",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b8aa",
+    "elf_address": "0x17b8aa",
+    "bytes": "660f3a0fd106",
+    "assembly": "palignr xmm2,xmm1,0x6",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b940",
+    "elf_address": "0x17b940",
+    "bytes": "660f3a0fca06",
+    "assembly": "palignr xmm1,xmm2,0x6",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b946",
+    "elf_address": "0x17b946",
+    "bytes": "660f3a0fd306",
+    "assembly": "palignr xmm2,xmm3,0x6",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b94c",
+    "elf_address": "0x17b94c",
+    "bytes": "660f3a0fdc06",
+    "assembly": "palignr xmm3,xmm4,0x6",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b952",
+    "elf_address": "0x17b952",
+    "bytes": "660f3a0fe506",
+    "assembly": "palignr xmm4,xmm5,0x6",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b9e0",
+    "elf_address": "0x17b9e0",
+    "bytes": "660f3a0fec07",
+    "assembly": "palignr xmm5,xmm4,0x7",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b9ea",
+    "elf_address": "0x17b9ea",
+    "bytes": "660f3a0fe307",
+    "assembly": "palignr xmm4,xmm3,0x7",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b9f0",
+    "elf_address": "0x17b9f0",
+    "bytes": "660f3a0fda07",
+    "assembly": "palignr xmm3,xmm2,0x7",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27b9fa",
+    "elf_address": "0x17b9fa",
+    "bytes": "660f3a0fd107",
+    "assembly": "palignr xmm2,xmm1,0x7",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27ba90",
+    "elf_address": "0x17ba90",
+    "bytes": "660f3a0fca07",
+    "assembly": "palignr xmm1,xmm2,0x7",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27ba96",
+    "elf_address": "0x17ba96",
+    "bytes": "660f3a0fd307",
+    "assembly": "palignr xmm2,xmm3,0x7",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27ba9c",
+    "elf_address": "0x17ba9c",
+    "bytes": "660f3a0fdc07",
+    "assembly": "palignr xmm3,xmm4,0x7",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27baa2",
+    "elf_address": "0x17baa2",
+    "bytes": "660f3a0fe507",
+    "assembly": "palignr xmm4,xmm5,0x7",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bb2e",
+    "elf_address": "0x17bb2e",
+    "bytes": "660f3a0fec08",
+    "assembly": "palignr xmm5,xmm4,0x8",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bb38",
+    "elf_address": "0x17bb38",
+    "bytes": "660f3a0fe308",
+    "assembly": "palignr xmm4,xmm3,0x8",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bb3e",
+    "elf_address": "0x17bb3e",
+    "bytes": "660f3a0fda08",
+    "assembly": "palignr xmm3,xmm2,0x8",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bb48",
+    "elf_address": "0x17bb48",
+    "bytes": "660f3a0fd108",
+    "assembly": "palignr xmm2,xmm1,0x8",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bbe0",
+    "elf_address": "0x17bbe0",
+    "bytes": "660f3a0fca08",
+    "assembly": "palignr xmm1,xmm2,0x8",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bbe6",
+    "elf_address": "0x17bbe6",
+    "bytes": "660f3a0fd308",
+    "assembly": "palignr xmm2,xmm3,0x8",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bbec",
+    "elf_address": "0x17bbec",
+    "bytes": "660f3a0fdc08",
+    "assembly": "palignr xmm3,xmm4,0x8",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bbf2",
+    "elf_address": "0x17bbf2",
+    "bytes": "660f3a0fe508",
+    "assembly": "palignr xmm4,xmm5,0x8",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bc80",
+    "elf_address": "0x17bc80",
+    "bytes": "660f3a0fec09",
+    "assembly": "palignr xmm5,xmm4,0x9",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bc8a",
+    "elf_address": "0x17bc8a",
+    "bytes": "660f3a0fe309",
+    "assembly": "palignr xmm4,xmm3,0x9",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bc90",
+    "elf_address": "0x17bc90",
+    "bytes": "660f3a0fda09",
+    "assembly": "palignr xmm3,xmm2,0x9",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bc9a",
+    "elf_address": "0x17bc9a",
+    "bytes": "660f3a0fd109",
+    "assembly": "palignr xmm2,xmm1,0x9",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bd30",
+    "elf_address": "0x17bd30",
+    "bytes": "660f3a0fca09",
+    "assembly": "palignr xmm1,xmm2,0x9",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bd36",
+    "elf_address": "0x17bd36",
+    "bytes": "660f3a0fd309",
+    "assembly": "palignr xmm2,xmm3,0x9",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bd3c",
+    "elf_address": "0x17bd3c",
+    "bytes": "660f3a0fdc09",
+    "assembly": "palignr xmm3,xmm4,0x9",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bd42",
+    "elf_address": "0x17bd42",
+    "bytes": "660f3a0fe509",
+    "assembly": "palignr xmm4,xmm5,0x9",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bdd0",
+    "elf_address": "0x17bdd0",
+    "bytes": "660f3a0fec0a",
+    "assembly": "palignr xmm5,xmm4,0xa",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bdda",
+    "elf_address": "0x17bdda",
+    "bytes": "660f3a0fe30a",
+    "assembly": "palignr xmm4,xmm3,0xa",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bde0",
+    "elf_address": "0x17bde0",
+    "bytes": "660f3a0fda0a",
+    "assembly": "palignr xmm3,xmm2,0xa",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bdea",
+    "elf_address": "0x17bdea",
+    "bytes": "660f3a0fd10a",
+    "assembly": "palignr xmm2,xmm1,0xa",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27be80",
+    "elf_address": "0x17be80",
+    "bytes": "660f3a0fca0a",
+    "assembly": "palignr xmm1,xmm2,0xa",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27be86",
+    "elf_address": "0x17be86",
+    "bytes": "660f3a0fd30a",
+    "assembly": "palignr xmm2,xmm3,0xa",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27be8c",
+    "elf_address": "0x17be8c",
+    "bytes": "660f3a0fdc0a",
+    "assembly": "palignr xmm3,xmm4,0xa",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27be92",
+    "elf_address": "0x17be92",
+    "bytes": "660f3a0fe50a",
+    "assembly": "palignr xmm4,xmm5,0xa",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bf20",
+    "elf_address": "0x17bf20",
+    "bytes": "660f3a0fec0b",
+    "assembly": "palignr xmm5,xmm4,0xb",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bf2a",
+    "elf_address": "0x17bf2a",
+    "bytes": "660f3a0fe30b",
+    "assembly": "palignr xmm4,xmm3,0xb",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bf30",
+    "elf_address": "0x17bf30",
+    "bytes": "660f3a0fda0b",
+    "assembly": "palignr xmm3,xmm2,0xb",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bf3a",
+    "elf_address": "0x17bf3a",
+    "bytes": "660f3a0fd10b",
+    "assembly": "palignr xmm2,xmm1,0xb",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bfd0",
+    "elf_address": "0x17bfd0",
+    "bytes": "660f3a0fca0b",
+    "assembly": "palignr xmm1,xmm2,0xb",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bfd6",
+    "elf_address": "0x17bfd6",
+    "bytes": "660f3a0fd30b",
+    "assembly": "palignr xmm2,xmm3,0xb",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bfdc",
+    "elf_address": "0x17bfdc",
+    "bytes": "660f3a0fdc0b",
+    "assembly": "palignr xmm3,xmm4,0xb",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27bfe2",
+    "elf_address": "0x17bfe2",
+    "bytes": "660f3a0fe50b",
+    "assembly": "palignr xmm4,xmm5,0xb",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c070",
+    "elf_address": "0x17c070",
+    "bytes": "660f3a0fec0c",
+    "assembly": "palignr xmm5,xmm4,0xc",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c07a",
+    "elf_address": "0x17c07a",
+    "bytes": "660f3a0fe30c",
+    "assembly": "palignr xmm4,xmm3,0xc",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c080",
+    "elf_address": "0x17c080",
+    "bytes": "660f3a0fda0c",
+    "assembly": "palignr xmm3,xmm2,0xc",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c08a",
+    "elf_address": "0x17c08a",
+    "bytes": "660f3a0fd10c",
+    "assembly": "palignr xmm2,xmm1,0xc",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c120",
+    "elf_address": "0x17c120",
+    "bytes": "660f3a0fca0c",
+    "assembly": "palignr xmm1,xmm2,0xc",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c126",
+    "elf_address": "0x17c126",
+    "bytes": "660f3a0fd30c",
+    "assembly": "palignr xmm2,xmm3,0xc",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c12c",
+    "elf_address": "0x17c12c",
+    "bytes": "660f3a0fdc0c",
+    "assembly": "palignr xmm3,xmm4,0xc",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c132",
+    "elf_address": "0x17c132",
+    "bytes": "660f3a0fe50c",
+    "assembly": "palignr xmm4,xmm5,0xc",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c1c0",
+    "elf_address": "0x17c1c0",
+    "bytes": "660f3a0fec0d",
+    "assembly": "palignr xmm5,xmm4,0xd",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c1ca",
+    "elf_address": "0x17c1ca",
+    "bytes": "660f3a0fe30d",
+    "assembly": "palignr xmm4,xmm3,0xd",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c1d0",
+    "elf_address": "0x17c1d0",
+    "bytes": "660f3a0fda0d",
+    "assembly": "palignr xmm3,xmm2,0xd",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c1da",
+    "elf_address": "0x17c1da",
+    "bytes": "660f3a0fd10d",
+    "assembly": "palignr xmm2,xmm1,0xd",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c270",
+    "elf_address": "0x17c270",
+    "bytes": "660f3a0fca0d",
+    "assembly": "palignr xmm1,xmm2,0xd",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c276",
+    "elf_address": "0x17c276",
+    "bytes": "660f3a0fd30d",
+    "assembly": "palignr xmm2,xmm3,0xd",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c27c",
+    "elf_address": "0x17c27c",
+    "bytes": "660f3a0fdc0d",
+    "assembly": "palignr xmm3,xmm4,0xd",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c282",
+    "elf_address": "0x17c282",
+    "bytes": "660f3a0fe50d",
+    "assembly": "palignr xmm4,xmm5,0xd",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c310",
+    "elf_address": "0x17c310",
+    "bytes": "660f3a0fec0e",
+    "assembly": "palignr xmm5,xmm4,0xe",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c31a",
+    "elf_address": "0x17c31a",
+    "bytes": "660f3a0fe30e",
+    "assembly": "palignr xmm4,xmm3,0xe",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c320",
+    "elf_address": "0x17c320",
+    "bytes": "660f3a0fda0e",
+    "assembly": "palignr xmm3,xmm2,0xe",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c32a",
+    "elf_address": "0x17c32a",
+    "bytes": "660f3a0fd10e",
+    "assembly": "palignr xmm2,xmm1,0xe",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c3c0",
+    "elf_address": "0x17c3c0",
+    "bytes": "660f3a0fca0e",
+    "assembly": "palignr xmm1,xmm2,0xe",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c3c6",
+    "elf_address": "0x17c3c6",
+    "bytes": "660f3a0fd30e",
+    "assembly": "palignr xmm2,xmm3,0xe",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c3cc",
+    "elf_address": "0x17c3cc",
+    "bytes": "660f3a0fdc0e",
+    "assembly": "palignr xmm3,xmm4,0xe",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c3d2",
+    "elf_address": "0x17c3d2",
+    "bytes": "660f3a0fe50e",
+    "assembly": "palignr xmm4,xmm5,0xe",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c460",
+    "elf_address": "0x17c460",
+    "bytes": "660f3a0fec0f",
+    "assembly": "palignr xmm5,xmm4,0xf",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c46a",
+    "elf_address": "0x17c46a",
+    "bytes": "660f3a0fe30f",
+    "assembly": "palignr xmm4,xmm3,0xf",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c470",
+    "elf_address": "0x17c470",
+    "bytes": "660f3a0fda0f",
+    "assembly": "palignr xmm3,xmm2,0xf",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c47a",
+    "elf_address": "0x17c47a",
+    "bytes": "660f3a0fd10f",
+    "assembly": "palignr xmm2,xmm1,0xf",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c510",
+    "elf_address": "0x17c510",
+    "bytes": "660f3a0fca0f",
+    "assembly": "palignr xmm1,xmm2,0xf",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c516",
+    "elf_address": "0x17c516",
+    "bytes": "660f3a0fd30f",
+    "assembly": "palignr xmm2,xmm3,0xf",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c51c",
+    "elf_address": "0x17c51c",
+    "bytes": "660f3a0fdc0f",
+    "assembly": "palignr xmm3,xmm4,0xf",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x27c522",
+    "elf_address": "0x17c522",
+    "bytes": "660f3a0fe50f",
+    "assembly": "palignr xmm4,xmm5,0xf",
+    "owners": [
+      "__memcpy_ssse3"
+    ]
+  },
+  {
+    "address": "0x280474",
+    "elf_address": "0x180474",
+    "bytes": "66450f3a0fc801",
+    "assembly": "palignr xmm9,xmm8,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280480",
+    "elf_address": "0x180480",
+    "bytes": "66440f3a0fc701",
+    "assembly": "palignr xmm8,xmm7,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28048c",
+    "elf_address": "0x18048c",
+    "bytes": "660f3a0ffe01",
+    "assembly": "palignr xmm7,xmm6,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280496",
+    "elf_address": "0x180496",
+    "bytes": "660f3a0ff501",
+    "assembly": "palignr xmm6,xmm5,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2804a0",
+    "elf_address": "0x1804a0",
+    "bytes": "660f3a0fec01",
+    "assembly": "palignr xmm5,xmm4,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2804aa",
+    "elf_address": "0x1804aa",
+    "bytes": "660f3a0fe301",
+    "assembly": "palignr xmm4,xmm3,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2804b4",
+    "elf_address": "0x1804b4",
+    "bytes": "660f3a0fda01",
+    "assembly": "palignr xmm3,xmm2,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2804be",
+    "elf_address": "0x1804be",
+    "bytes": "660f3a0fd101",
+    "assembly": "palignr xmm2,xmm1,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280508",
+    "elf_address": "0x180508",
+    "bytes": "660f3a0fca01",
+    "assembly": "palignr xmm1,xmm2,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280516",
+    "elf_address": "0x180516",
+    "bytes": "660f3a0fd301",
+    "assembly": "palignr xmm2,xmm3,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280524",
+    "elf_address": "0x180524",
+    "bytes": "660f3a0fdc01",
+    "assembly": "palignr xmm3,xmm4,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280532",
+    "elf_address": "0x180532",
+    "bytes": "660f3a0fe501",
+    "assembly": "palignr xmm4,xmm5,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280540",
+    "elf_address": "0x180540",
+    "bytes": "660f3a0fee01",
+    "assembly": "palignr xmm5,xmm6,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28054e",
+    "elf_address": "0x18054e",
+    "bytes": "660f3a0ff701",
+    "assembly": "palignr xmm6,xmm7,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28055d",
+    "elf_address": "0x18055d",
+    "bytes": "66410f3a0ff801",
+    "assembly": "palignr xmm7,xmm8,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280570",
+    "elf_address": "0x180570",
+    "bytes": "66450f3a0fc101",
+    "assembly": "palignr xmm8,xmm9,0x1",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2805f4",
+    "elf_address": "0x1805f4",
+    "bytes": "66450f3a0fc802",
+    "assembly": "palignr xmm9,xmm8,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280600",
+    "elf_address": "0x180600",
+    "bytes": "66440f3a0fc702",
+    "assembly": "palignr xmm8,xmm7,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28060c",
+    "elf_address": "0x18060c",
+    "bytes": "660f3a0ffe02",
+    "assembly": "palignr xmm7,xmm6,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280616",
+    "elf_address": "0x180616",
+    "bytes": "660f3a0ff502",
+    "assembly": "palignr xmm6,xmm5,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280620",
+    "elf_address": "0x180620",
+    "bytes": "660f3a0fec02",
+    "assembly": "palignr xmm5,xmm4,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28062a",
+    "elf_address": "0x18062a",
+    "bytes": "660f3a0fe302",
+    "assembly": "palignr xmm4,xmm3,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280634",
+    "elf_address": "0x180634",
+    "bytes": "660f3a0fda02",
+    "assembly": "palignr xmm3,xmm2,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28063e",
+    "elf_address": "0x18063e",
+    "bytes": "660f3a0fd102",
+    "assembly": "palignr xmm2,xmm1,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280688",
+    "elf_address": "0x180688",
+    "bytes": "660f3a0fca02",
+    "assembly": "palignr xmm1,xmm2,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280696",
+    "elf_address": "0x180696",
+    "bytes": "660f3a0fd302",
+    "assembly": "palignr xmm2,xmm3,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2806a4",
+    "elf_address": "0x1806a4",
+    "bytes": "660f3a0fdc02",
+    "assembly": "palignr xmm3,xmm4,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2806b2",
+    "elf_address": "0x1806b2",
+    "bytes": "660f3a0fe502",
+    "assembly": "palignr xmm4,xmm5,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2806c0",
+    "elf_address": "0x1806c0",
+    "bytes": "660f3a0fee02",
+    "assembly": "palignr xmm5,xmm6,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2806ce",
+    "elf_address": "0x1806ce",
+    "bytes": "660f3a0ff702",
+    "assembly": "palignr xmm6,xmm7,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2806dd",
+    "elf_address": "0x1806dd",
+    "bytes": "66410f3a0ff802",
+    "assembly": "palignr xmm7,xmm8,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2806f0",
+    "elf_address": "0x1806f0",
+    "bytes": "66450f3a0fc102",
+    "assembly": "palignr xmm8,xmm9,0x2",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280774",
+    "elf_address": "0x180774",
+    "bytes": "66450f3a0fc803",
+    "assembly": "palignr xmm9,xmm8,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280780",
+    "elf_address": "0x180780",
+    "bytes": "66440f3a0fc703",
+    "assembly": "palignr xmm8,xmm7,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28078c",
+    "elf_address": "0x18078c",
+    "bytes": "660f3a0ffe03",
+    "assembly": "palignr xmm7,xmm6,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280796",
+    "elf_address": "0x180796",
+    "bytes": "660f3a0ff503",
+    "assembly": "palignr xmm6,xmm5,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2807a0",
+    "elf_address": "0x1807a0",
+    "bytes": "660f3a0fec03",
+    "assembly": "palignr xmm5,xmm4,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2807aa",
+    "elf_address": "0x1807aa",
+    "bytes": "660f3a0fe303",
+    "assembly": "palignr xmm4,xmm3,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2807b4",
+    "elf_address": "0x1807b4",
+    "bytes": "660f3a0fda03",
+    "assembly": "palignr xmm3,xmm2,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2807be",
+    "elf_address": "0x1807be",
+    "bytes": "660f3a0fd103",
+    "assembly": "palignr xmm2,xmm1,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280808",
+    "elf_address": "0x180808",
+    "bytes": "660f3a0fca03",
+    "assembly": "palignr xmm1,xmm2,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280816",
+    "elf_address": "0x180816",
+    "bytes": "660f3a0fd303",
+    "assembly": "palignr xmm2,xmm3,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280824",
+    "elf_address": "0x180824",
+    "bytes": "660f3a0fdc03",
+    "assembly": "palignr xmm3,xmm4,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280832",
+    "elf_address": "0x180832",
+    "bytes": "660f3a0fe503",
+    "assembly": "palignr xmm4,xmm5,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280840",
+    "elf_address": "0x180840",
+    "bytes": "660f3a0fee03",
+    "assembly": "palignr xmm5,xmm6,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28084e",
+    "elf_address": "0x18084e",
+    "bytes": "660f3a0ff703",
+    "assembly": "palignr xmm6,xmm7,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28085d",
+    "elf_address": "0x18085d",
+    "bytes": "66410f3a0ff803",
+    "assembly": "palignr xmm7,xmm8,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280870",
+    "elf_address": "0x180870",
+    "bytes": "66450f3a0fc103",
+    "assembly": "palignr xmm8,xmm9,0x3",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2808f4",
+    "elf_address": "0x1808f4",
+    "bytes": "66450f3a0fc804",
+    "assembly": "palignr xmm9,xmm8,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280900",
+    "elf_address": "0x180900",
+    "bytes": "66440f3a0fc704",
+    "assembly": "palignr xmm8,xmm7,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28090c",
+    "elf_address": "0x18090c",
+    "bytes": "660f3a0ffe04",
+    "assembly": "palignr xmm7,xmm6,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280916",
+    "elf_address": "0x180916",
+    "bytes": "660f3a0ff504",
+    "assembly": "palignr xmm6,xmm5,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280920",
+    "elf_address": "0x180920",
+    "bytes": "660f3a0fec04",
+    "assembly": "palignr xmm5,xmm4,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28092a",
+    "elf_address": "0x18092a",
+    "bytes": "660f3a0fe304",
+    "assembly": "palignr xmm4,xmm3,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280934",
+    "elf_address": "0x180934",
+    "bytes": "660f3a0fda04",
+    "assembly": "palignr xmm3,xmm2,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28093e",
+    "elf_address": "0x18093e",
+    "bytes": "660f3a0fd104",
+    "assembly": "palignr xmm2,xmm1,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280988",
+    "elf_address": "0x180988",
+    "bytes": "660f3a0fca04",
+    "assembly": "palignr xmm1,xmm2,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280996",
+    "elf_address": "0x180996",
+    "bytes": "660f3a0fd304",
+    "assembly": "palignr xmm2,xmm3,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2809a4",
+    "elf_address": "0x1809a4",
+    "bytes": "660f3a0fdc04",
+    "assembly": "palignr xmm3,xmm4,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2809b2",
+    "elf_address": "0x1809b2",
+    "bytes": "660f3a0fe504",
+    "assembly": "palignr xmm4,xmm5,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2809c0",
+    "elf_address": "0x1809c0",
+    "bytes": "660f3a0fee04",
+    "assembly": "palignr xmm5,xmm6,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2809ce",
+    "elf_address": "0x1809ce",
+    "bytes": "660f3a0ff704",
+    "assembly": "palignr xmm6,xmm7,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2809dd",
+    "elf_address": "0x1809dd",
+    "bytes": "66410f3a0ff804",
+    "assembly": "palignr xmm7,xmm8,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2809f0",
+    "elf_address": "0x1809f0",
+    "bytes": "66450f3a0fc104",
+    "assembly": "palignr xmm8,xmm9,0x4",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280a74",
+    "elf_address": "0x180a74",
+    "bytes": "66450f3a0fc805",
+    "assembly": "palignr xmm9,xmm8,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280a80",
+    "elf_address": "0x180a80",
+    "bytes": "66440f3a0fc705",
+    "assembly": "palignr xmm8,xmm7,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280a8c",
+    "elf_address": "0x180a8c",
+    "bytes": "660f3a0ffe05",
+    "assembly": "palignr xmm7,xmm6,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280a96",
+    "elf_address": "0x180a96",
+    "bytes": "660f3a0ff505",
+    "assembly": "palignr xmm6,xmm5,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280aa0",
+    "elf_address": "0x180aa0",
+    "bytes": "660f3a0fec05",
+    "assembly": "palignr xmm5,xmm4,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280aaa",
+    "elf_address": "0x180aaa",
+    "bytes": "660f3a0fe305",
+    "assembly": "palignr xmm4,xmm3,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280ab4",
+    "elf_address": "0x180ab4",
+    "bytes": "660f3a0fda05",
+    "assembly": "palignr xmm3,xmm2,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280abe",
+    "elf_address": "0x180abe",
+    "bytes": "660f3a0fd105",
+    "assembly": "palignr xmm2,xmm1,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280b08",
+    "elf_address": "0x180b08",
+    "bytes": "660f3a0fca05",
+    "assembly": "palignr xmm1,xmm2,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280b16",
+    "elf_address": "0x180b16",
+    "bytes": "660f3a0fd305",
+    "assembly": "palignr xmm2,xmm3,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280b24",
+    "elf_address": "0x180b24",
+    "bytes": "660f3a0fdc05",
+    "assembly": "palignr xmm3,xmm4,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280b32",
+    "elf_address": "0x180b32",
+    "bytes": "660f3a0fe505",
+    "assembly": "palignr xmm4,xmm5,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280b40",
+    "elf_address": "0x180b40",
+    "bytes": "660f3a0fee05",
+    "assembly": "palignr xmm5,xmm6,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280b4e",
+    "elf_address": "0x180b4e",
+    "bytes": "660f3a0ff705",
+    "assembly": "palignr xmm6,xmm7,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280b5d",
+    "elf_address": "0x180b5d",
+    "bytes": "66410f3a0ff805",
+    "assembly": "palignr xmm7,xmm8,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280b70",
+    "elf_address": "0x180b70",
+    "bytes": "66450f3a0fc105",
+    "assembly": "palignr xmm8,xmm9,0x5",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280bf4",
+    "elf_address": "0x180bf4",
+    "bytes": "66450f3a0fc806",
+    "assembly": "palignr xmm9,xmm8,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280c00",
+    "elf_address": "0x180c00",
+    "bytes": "66440f3a0fc706",
+    "assembly": "palignr xmm8,xmm7,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280c0c",
+    "elf_address": "0x180c0c",
+    "bytes": "660f3a0ffe06",
+    "assembly": "palignr xmm7,xmm6,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280c16",
+    "elf_address": "0x180c16",
+    "bytes": "660f3a0ff506",
+    "assembly": "palignr xmm6,xmm5,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280c20",
+    "elf_address": "0x180c20",
+    "bytes": "660f3a0fec06",
+    "assembly": "palignr xmm5,xmm4,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280c2a",
+    "elf_address": "0x180c2a",
+    "bytes": "660f3a0fe306",
+    "assembly": "palignr xmm4,xmm3,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280c34",
+    "elf_address": "0x180c34",
+    "bytes": "660f3a0fda06",
+    "assembly": "palignr xmm3,xmm2,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280c3e",
+    "elf_address": "0x180c3e",
+    "bytes": "660f3a0fd106",
+    "assembly": "palignr xmm2,xmm1,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280c88",
+    "elf_address": "0x180c88",
+    "bytes": "660f3a0fca06",
+    "assembly": "palignr xmm1,xmm2,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280c96",
+    "elf_address": "0x180c96",
+    "bytes": "660f3a0fd306",
+    "assembly": "palignr xmm2,xmm3,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280ca4",
+    "elf_address": "0x180ca4",
+    "bytes": "660f3a0fdc06",
+    "assembly": "palignr xmm3,xmm4,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280cb2",
+    "elf_address": "0x180cb2",
+    "bytes": "660f3a0fe506",
+    "assembly": "palignr xmm4,xmm5,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280cc0",
+    "elf_address": "0x180cc0",
+    "bytes": "660f3a0fee06",
+    "assembly": "palignr xmm5,xmm6,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280cce",
+    "elf_address": "0x180cce",
+    "bytes": "660f3a0ff706",
+    "assembly": "palignr xmm6,xmm7,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280cdd",
+    "elf_address": "0x180cdd",
+    "bytes": "66410f3a0ff806",
+    "assembly": "palignr xmm7,xmm8,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280cf0",
+    "elf_address": "0x180cf0",
+    "bytes": "66450f3a0fc106",
+    "assembly": "palignr xmm8,xmm9,0x6",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280d74",
+    "elf_address": "0x180d74",
+    "bytes": "66450f3a0fc807",
+    "assembly": "palignr xmm9,xmm8,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280d80",
+    "elf_address": "0x180d80",
+    "bytes": "66440f3a0fc707",
+    "assembly": "palignr xmm8,xmm7,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280d8c",
+    "elf_address": "0x180d8c",
+    "bytes": "660f3a0ffe07",
+    "assembly": "palignr xmm7,xmm6,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280d96",
+    "elf_address": "0x180d96",
+    "bytes": "660f3a0ff507",
+    "assembly": "palignr xmm6,xmm5,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280da0",
+    "elf_address": "0x180da0",
+    "bytes": "660f3a0fec07",
+    "assembly": "palignr xmm5,xmm4,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280daa",
+    "elf_address": "0x180daa",
+    "bytes": "660f3a0fe307",
+    "assembly": "palignr xmm4,xmm3,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280db4",
+    "elf_address": "0x180db4",
+    "bytes": "660f3a0fda07",
+    "assembly": "palignr xmm3,xmm2,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280dbe",
+    "elf_address": "0x180dbe",
+    "bytes": "660f3a0fd107",
+    "assembly": "palignr xmm2,xmm1,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280e08",
+    "elf_address": "0x180e08",
+    "bytes": "660f3a0fca07",
+    "assembly": "palignr xmm1,xmm2,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280e16",
+    "elf_address": "0x180e16",
+    "bytes": "660f3a0fd307",
+    "assembly": "palignr xmm2,xmm3,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280e24",
+    "elf_address": "0x180e24",
+    "bytes": "660f3a0fdc07",
+    "assembly": "palignr xmm3,xmm4,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280e32",
+    "elf_address": "0x180e32",
+    "bytes": "660f3a0fe507",
+    "assembly": "palignr xmm4,xmm5,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280e40",
+    "elf_address": "0x180e40",
+    "bytes": "660f3a0fee07",
+    "assembly": "palignr xmm5,xmm6,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280e4e",
+    "elf_address": "0x180e4e",
+    "bytes": "660f3a0ff707",
+    "assembly": "palignr xmm6,xmm7,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280e5d",
+    "elf_address": "0x180e5d",
+    "bytes": "66410f3a0ff807",
+    "assembly": "palignr xmm7,xmm8,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280e70",
+    "elf_address": "0x180e70",
+    "bytes": "66450f3a0fc107",
+    "assembly": "palignr xmm8,xmm9,0x7",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280ef4",
+    "elf_address": "0x180ef4",
+    "bytes": "66450f3a0fc808",
+    "assembly": "palignr xmm9,xmm8,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280f00",
+    "elf_address": "0x180f00",
+    "bytes": "66440f3a0fc708",
+    "assembly": "palignr xmm8,xmm7,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280f0c",
+    "elf_address": "0x180f0c",
+    "bytes": "660f3a0ffe08",
+    "assembly": "palignr xmm7,xmm6,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280f16",
+    "elf_address": "0x180f16",
+    "bytes": "660f3a0ff508",
+    "assembly": "palignr xmm6,xmm5,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280f20",
+    "elf_address": "0x180f20",
+    "bytes": "660f3a0fec08",
+    "assembly": "palignr xmm5,xmm4,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280f2a",
+    "elf_address": "0x180f2a",
+    "bytes": "660f3a0fe308",
+    "assembly": "palignr xmm4,xmm3,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280f34",
+    "elf_address": "0x180f34",
+    "bytes": "660f3a0fda08",
+    "assembly": "palignr xmm3,xmm2,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280f3e",
+    "elf_address": "0x180f3e",
+    "bytes": "660f3a0fd108",
+    "assembly": "palignr xmm2,xmm1,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280f88",
+    "elf_address": "0x180f88",
+    "bytes": "660f3a0fca08",
+    "assembly": "palignr xmm1,xmm2,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280f96",
+    "elf_address": "0x180f96",
+    "bytes": "660f3a0fd308",
+    "assembly": "palignr xmm2,xmm3,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280fa4",
+    "elf_address": "0x180fa4",
+    "bytes": "660f3a0fdc08",
+    "assembly": "palignr xmm3,xmm4,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280fb2",
+    "elf_address": "0x180fb2",
+    "bytes": "660f3a0fe508",
+    "assembly": "palignr xmm4,xmm5,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280fc0",
+    "elf_address": "0x180fc0",
+    "bytes": "660f3a0fee08",
+    "assembly": "palignr xmm5,xmm6,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280fce",
+    "elf_address": "0x180fce",
+    "bytes": "660f3a0ff708",
+    "assembly": "palignr xmm6,xmm7,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280fdd",
+    "elf_address": "0x180fdd",
+    "bytes": "66410f3a0ff808",
+    "assembly": "palignr xmm7,xmm8,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x280ff0",
+    "elf_address": "0x180ff0",
+    "bytes": "66450f3a0fc108",
+    "assembly": "palignr xmm8,xmm9,0x8",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281074",
+    "elf_address": "0x181074",
+    "bytes": "66450f3a0fc809",
+    "assembly": "palignr xmm9,xmm8,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281080",
+    "elf_address": "0x181080",
+    "bytes": "66440f3a0fc709",
+    "assembly": "palignr xmm8,xmm7,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28108c",
+    "elf_address": "0x18108c",
+    "bytes": "660f3a0ffe09",
+    "assembly": "palignr xmm7,xmm6,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281096",
+    "elf_address": "0x181096",
+    "bytes": "660f3a0ff509",
+    "assembly": "palignr xmm6,xmm5,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2810a0",
+    "elf_address": "0x1810a0",
+    "bytes": "660f3a0fec09",
+    "assembly": "palignr xmm5,xmm4,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2810aa",
+    "elf_address": "0x1810aa",
+    "bytes": "660f3a0fe309",
+    "assembly": "palignr xmm4,xmm3,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2810b4",
+    "elf_address": "0x1810b4",
+    "bytes": "660f3a0fda09",
+    "assembly": "palignr xmm3,xmm2,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2810be",
+    "elf_address": "0x1810be",
+    "bytes": "660f3a0fd109",
+    "assembly": "palignr xmm2,xmm1,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281108",
+    "elf_address": "0x181108",
+    "bytes": "660f3a0fca09",
+    "assembly": "palignr xmm1,xmm2,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281116",
+    "elf_address": "0x181116",
+    "bytes": "660f3a0fd309",
+    "assembly": "palignr xmm2,xmm3,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281124",
+    "elf_address": "0x181124",
+    "bytes": "660f3a0fdc09",
+    "assembly": "palignr xmm3,xmm4,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281132",
+    "elf_address": "0x181132",
+    "bytes": "660f3a0fe509",
+    "assembly": "palignr xmm4,xmm5,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281140",
+    "elf_address": "0x181140",
+    "bytes": "660f3a0fee09",
+    "assembly": "palignr xmm5,xmm6,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28114e",
+    "elf_address": "0x18114e",
+    "bytes": "660f3a0ff709",
+    "assembly": "palignr xmm6,xmm7,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28115d",
+    "elf_address": "0x18115d",
+    "bytes": "66410f3a0ff809",
+    "assembly": "palignr xmm7,xmm8,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281170",
+    "elf_address": "0x181170",
+    "bytes": "66450f3a0fc109",
+    "assembly": "palignr xmm8,xmm9,0x9",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2811f4",
+    "elf_address": "0x1811f4",
+    "bytes": "66450f3a0fc80a",
+    "assembly": "palignr xmm9,xmm8,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281200",
+    "elf_address": "0x181200",
+    "bytes": "66440f3a0fc70a",
+    "assembly": "palignr xmm8,xmm7,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28120c",
+    "elf_address": "0x18120c",
+    "bytes": "660f3a0ffe0a",
+    "assembly": "palignr xmm7,xmm6,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281216",
+    "elf_address": "0x181216",
+    "bytes": "660f3a0ff50a",
+    "assembly": "palignr xmm6,xmm5,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281220",
+    "elf_address": "0x181220",
+    "bytes": "660f3a0fec0a",
+    "assembly": "palignr xmm5,xmm4,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28122a",
+    "elf_address": "0x18122a",
+    "bytes": "660f3a0fe30a",
+    "assembly": "palignr xmm4,xmm3,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281234",
+    "elf_address": "0x181234",
+    "bytes": "660f3a0fda0a",
+    "assembly": "palignr xmm3,xmm2,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28123e",
+    "elf_address": "0x18123e",
+    "bytes": "660f3a0fd10a",
+    "assembly": "palignr xmm2,xmm1,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281288",
+    "elf_address": "0x181288",
+    "bytes": "660f3a0fca0a",
+    "assembly": "palignr xmm1,xmm2,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281296",
+    "elf_address": "0x181296",
+    "bytes": "660f3a0fd30a",
+    "assembly": "palignr xmm2,xmm3,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2812a4",
+    "elf_address": "0x1812a4",
+    "bytes": "660f3a0fdc0a",
+    "assembly": "palignr xmm3,xmm4,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2812b2",
+    "elf_address": "0x1812b2",
+    "bytes": "660f3a0fe50a",
+    "assembly": "palignr xmm4,xmm5,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2812c0",
+    "elf_address": "0x1812c0",
+    "bytes": "660f3a0fee0a",
+    "assembly": "palignr xmm5,xmm6,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2812ce",
+    "elf_address": "0x1812ce",
+    "bytes": "660f3a0ff70a",
+    "assembly": "palignr xmm6,xmm7,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2812dd",
+    "elf_address": "0x1812dd",
+    "bytes": "66410f3a0ff80a",
+    "assembly": "palignr xmm7,xmm8,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2812f0",
+    "elf_address": "0x1812f0",
+    "bytes": "66450f3a0fc10a",
+    "assembly": "palignr xmm8,xmm9,0xa",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281374",
+    "elf_address": "0x181374",
+    "bytes": "66450f3a0fc80b",
+    "assembly": "palignr xmm9,xmm8,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281380",
+    "elf_address": "0x181380",
+    "bytes": "66440f3a0fc70b",
+    "assembly": "palignr xmm8,xmm7,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28138c",
+    "elf_address": "0x18138c",
+    "bytes": "660f3a0ffe0b",
+    "assembly": "palignr xmm7,xmm6,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281396",
+    "elf_address": "0x181396",
+    "bytes": "660f3a0ff50b",
+    "assembly": "palignr xmm6,xmm5,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2813a0",
+    "elf_address": "0x1813a0",
+    "bytes": "660f3a0fec0b",
+    "assembly": "palignr xmm5,xmm4,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2813aa",
+    "elf_address": "0x1813aa",
+    "bytes": "660f3a0fe30b",
+    "assembly": "palignr xmm4,xmm3,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2813b4",
+    "elf_address": "0x1813b4",
+    "bytes": "660f3a0fda0b",
+    "assembly": "palignr xmm3,xmm2,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2813be",
+    "elf_address": "0x1813be",
+    "bytes": "660f3a0fd10b",
+    "assembly": "palignr xmm2,xmm1,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281408",
+    "elf_address": "0x181408",
+    "bytes": "660f3a0fca0b",
+    "assembly": "palignr xmm1,xmm2,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281416",
+    "elf_address": "0x181416",
+    "bytes": "660f3a0fd30b",
+    "assembly": "palignr xmm2,xmm3,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281424",
+    "elf_address": "0x181424",
+    "bytes": "660f3a0fdc0b",
+    "assembly": "palignr xmm3,xmm4,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281432",
+    "elf_address": "0x181432",
+    "bytes": "660f3a0fe50b",
+    "assembly": "palignr xmm4,xmm5,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281440",
+    "elf_address": "0x181440",
+    "bytes": "660f3a0fee0b",
+    "assembly": "palignr xmm5,xmm6,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28144e",
+    "elf_address": "0x18144e",
+    "bytes": "660f3a0ff70b",
+    "assembly": "palignr xmm6,xmm7,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28145d",
+    "elf_address": "0x18145d",
+    "bytes": "66410f3a0ff80b",
+    "assembly": "palignr xmm7,xmm8,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281470",
+    "elf_address": "0x181470",
+    "bytes": "66450f3a0fc10b",
+    "assembly": "palignr xmm8,xmm9,0xb",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2814f5",
+    "elf_address": "0x1814f5",
+    "bytes": "66450f3a0fc80c",
+    "assembly": "palignr xmm9,xmm8,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281501",
+    "elf_address": "0x181501",
+    "bytes": "66440f3a0fc70c",
+    "assembly": "palignr xmm8,xmm7,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28150d",
+    "elf_address": "0x18150d",
+    "bytes": "660f3a0ffe0c",
+    "assembly": "palignr xmm7,xmm6,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281517",
+    "elf_address": "0x181517",
+    "bytes": "660f3a0ff50c",
+    "assembly": "palignr xmm6,xmm5,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281521",
+    "elf_address": "0x181521",
+    "bytes": "660f3a0fec0c",
+    "assembly": "palignr xmm5,xmm4,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28152b",
+    "elf_address": "0x18152b",
+    "bytes": "660f3a0fe30c",
+    "assembly": "palignr xmm4,xmm3,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281535",
+    "elf_address": "0x181535",
+    "bytes": "660f3a0fda0c",
+    "assembly": "palignr xmm3,xmm2,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28153f",
+    "elf_address": "0x18153f",
+    "bytes": "660f3a0fd10c",
+    "assembly": "palignr xmm2,xmm1,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281588",
+    "elf_address": "0x181588",
+    "bytes": "660f3a0fca0c",
+    "assembly": "palignr xmm1,xmm2,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281596",
+    "elf_address": "0x181596",
+    "bytes": "660f3a0fd30c",
+    "assembly": "palignr xmm2,xmm3,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2815a4",
+    "elf_address": "0x1815a4",
+    "bytes": "660f3a0fdc0c",
+    "assembly": "palignr xmm3,xmm4,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2815b2",
+    "elf_address": "0x1815b2",
+    "bytes": "660f3a0fe50c",
+    "assembly": "palignr xmm4,xmm5,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2815c0",
+    "elf_address": "0x1815c0",
+    "bytes": "660f3a0fee0c",
+    "assembly": "palignr xmm5,xmm6,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2815ce",
+    "elf_address": "0x1815ce",
+    "bytes": "660f3a0ff70c",
+    "assembly": "palignr xmm6,xmm7,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2815dd",
+    "elf_address": "0x1815dd",
+    "bytes": "66410f3a0ff80c",
+    "assembly": "palignr xmm7,xmm8,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2815f0",
+    "elf_address": "0x1815f0",
+    "bytes": "66450f3a0fc10c",
+    "assembly": "palignr xmm8,xmm9,0xc",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281674",
+    "elf_address": "0x181674",
+    "bytes": "66450f3a0fc80d",
+    "assembly": "palignr xmm9,xmm8,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281680",
+    "elf_address": "0x181680",
+    "bytes": "66440f3a0fc70d",
+    "assembly": "palignr xmm8,xmm7,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28168c",
+    "elf_address": "0x18168c",
+    "bytes": "660f3a0ffe0d",
+    "assembly": "palignr xmm7,xmm6,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281696",
+    "elf_address": "0x181696",
+    "bytes": "660f3a0ff50d",
+    "assembly": "palignr xmm6,xmm5,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2816a0",
+    "elf_address": "0x1816a0",
+    "bytes": "660f3a0fec0d",
+    "assembly": "palignr xmm5,xmm4,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2816aa",
+    "elf_address": "0x1816aa",
+    "bytes": "660f3a0fe30d",
+    "assembly": "palignr xmm4,xmm3,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2816b4",
+    "elf_address": "0x1816b4",
+    "bytes": "660f3a0fda0d",
+    "assembly": "palignr xmm3,xmm2,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2816be",
+    "elf_address": "0x1816be",
+    "bytes": "660f3a0fd10d",
+    "assembly": "palignr xmm2,xmm1,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281708",
+    "elf_address": "0x181708",
+    "bytes": "660f3a0fca0d",
+    "assembly": "palignr xmm1,xmm2,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281716",
+    "elf_address": "0x181716",
+    "bytes": "660f3a0fd30d",
+    "assembly": "palignr xmm2,xmm3,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281724",
+    "elf_address": "0x181724",
+    "bytes": "660f3a0fdc0d",
+    "assembly": "palignr xmm3,xmm4,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281732",
+    "elf_address": "0x181732",
+    "bytes": "660f3a0fe50d",
+    "assembly": "palignr xmm4,xmm5,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281740",
+    "elf_address": "0x181740",
+    "bytes": "660f3a0fee0d",
+    "assembly": "palignr xmm5,xmm6,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28174e",
+    "elf_address": "0x18174e",
+    "bytes": "660f3a0ff70d",
+    "assembly": "palignr xmm6,xmm7,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28175d",
+    "elf_address": "0x18175d",
+    "bytes": "66410f3a0ff80d",
+    "assembly": "palignr xmm7,xmm8,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281770",
+    "elf_address": "0x181770",
+    "bytes": "66450f3a0fc10d",
+    "assembly": "palignr xmm8,xmm9,0xd",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2817f4",
+    "elf_address": "0x1817f4",
+    "bytes": "66450f3a0fc80e",
+    "assembly": "palignr xmm9,xmm8,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281800",
+    "elf_address": "0x181800",
+    "bytes": "66440f3a0fc70e",
+    "assembly": "palignr xmm8,xmm7,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28180c",
+    "elf_address": "0x18180c",
+    "bytes": "660f3a0ffe0e",
+    "assembly": "palignr xmm7,xmm6,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281816",
+    "elf_address": "0x181816",
+    "bytes": "660f3a0ff50e",
+    "assembly": "palignr xmm6,xmm5,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281820",
+    "elf_address": "0x181820",
+    "bytes": "660f3a0fec0e",
+    "assembly": "palignr xmm5,xmm4,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28182a",
+    "elf_address": "0x18182a",
+    "bytes": "660f3a0fe30e",
+    "assembly": "palignr xmm4,xmm3,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281834",
+    "elf_address": "0x181834",
+    "bytes": "660f3a0fda0e",
+    "assembly": "palignr xmm3,xmm2,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28183e",
+    "elf_address": "0x18183e",
+    "bytes": "660f3a0fd10e",
+    "assembly": "palignr xmm2,xmm1,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281888",
+    "elf_address": "0x181888",
+    "bytes": "660f3a0fca0e",
+    "assembly": "palignr xmm1,xmm2,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281896",
+    "elf_address": "0x181896",
+    "bytes": "660f3a0fd30e",
+    "assembly": "palignr xmm2,xmm3,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2818a4",
+    "elf_address": "0x1818a4",
+    "bytes": "660f3a0fdc0e",
+    "assembly": "palignr xmm3,xmm4,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2818b2",
+    "elf_address": "0x1818b2",
+    "bytes": "660f3a0fe50e",
+    "assembly": "palignr xmm4,xmm5,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2818c0",
+    "elf_address": "0x1818c0",
+    "bytes": "660f3a0fee0e",
+    "assembly": "palignr xmm5,xmm6,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2818ce",
+    "elf_address": "0x1818ce",
+    "bytes": "660f3a0ff70e",
+    "assembly": "palignr xmm6,xmm7,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2818dd",
+    "elf_address": "0x1818dd",
+    "bytes": "66410f3a0ff80e",
+    "assembly": "palignr xmm7,xmm8,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2818f0",
+    "elf_address": "0x1818f0",
+    "bytes": "66450f3a0fc10e",
+    "assembly": "palignr xmm8,xmm9,0xe",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281974",
+    "elf_address": "0x181974",
+    "bytes": "66450f3a0fc80f",
+    "assembly": "palignr xmm9,xmm8,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281980",
+    "elf_address": "0x181980",
+    "bytes": "66440f3a0fc70f",
+    "assembly": "palignr xmm8,xmm7,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x28198c",
+    "elf_address": "0x18198c",
+    "bytes": "660f3a0ffe0f",
+    "assembly": "palignr xmm7,xmm6,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281996",
+    "elf_address": "0x181996",
+    "bytes": "660f3a0ff50f",
+    "assembly": "palignr xmm6,xmm5,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2819a0",
+    "elf_address": "0x1819a0",
+    "bytes": "660f3a0fec0f",
+    "assembly": "palignr xmm5,xmm4,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2819aa",
+    "elf_address": "0x1819aa",
+    "bytes": "660f3a0fe30f",
+    "assembly": "palignr xmm4,xmm3,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2819b4",
+    "elf_address": "0x1819b4",
+    "bytes": "660f3a0fda0f",
+    "assembly": "palignr xmm3,xmm2,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x2819be",
+    "elf_address": "0x1819be",
+    "bytes": "660f3a0fd10f",
+    "assembly": "palignr xmm2,xmm1,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281a08",
+    "elf_address": "0x181a08",
+    "bytes": "660f3a0fca0f",
+    "assembly": "palignr xmm1,xmm2,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281a16",
+    "elf_address": "0x181a16",
+    "bytes": "660f3a0fd30f",
+    "assembly": "palignr xmm2,xmm3,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281a24",
+    "elf_address": "0x181a24",
+    "bytes": "660f3a0fdc0f",
+    "assembly": "palignr xmm3,xmm4,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281a32",
+    "elf_address": "0x181a32",
+    "bytes": "660f3a0fe50f",
+    "assembly": "palignr xmm4,xmm5,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281a40",
+    "elf_address": "0x181a40",
+    "bytes": "660f3a0fee0f",
+    "assembly": "palignr xmm5,xmm6,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281a4e",
+    "elf_address": "0x181a4e",
+    "bytes": "660f3a0ff70f",
+    "assembly": "palignr xmm6,xmm7,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281a5d",
+    "elf_address": "0x181a5d",
+    "bytes": "66410f3a0ff80f",
+    "assembly": "palignr xmm7,xmm8,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  },
+  {
+    "address": "0x281a70",
+    "elf_address": "0x181a70",
+    "bytes": "66450f3a0fc10f",
+    "assembly": "palignr xmm8,xmm9,0xf",
+    "owners": [
+      "__memcpy_ssse3_back"
+    ]
+  }
+]

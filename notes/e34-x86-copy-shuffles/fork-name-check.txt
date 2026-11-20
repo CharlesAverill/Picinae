@@ -1,0 +1,15 @@
+Before rename, the session ran exactly:
+git ls-remote --heads fork refs/heads/llm-proofs/e34-x86-copy-shuffles
+Exit code: 0. Stdout: empty. This successful read-only check preceded
+both the attempted sandboxed rename and its successful metadata-authorized retry.
+Initial prepared status was clean; HEAD was exactly
+71470bffba65392adf1873a3df9f0cf0ca4f1ac9. The ancestry-before file was then
+written after creating the unit's own untracked evidence directory.
+
+The first rename failed because shared Git metadata is outside the writable
+worktree. The authorized retry renamed only t3/x86-copy-shuffles to the assigned
+llm-proofs/e34-x86-copy-shuffles and fast-forwarded only the exact assigned
+bcdd924bec65111aeb9244de21e5dba6286da845 checkpoint. No other branch was changed.
+
+An optional final repeat is separately logged; its sandbox DNS failure does not
+replace or invalidate the successful pre-rename check.

@@ -1,0 +1,13 @@
+{
+  "debug/usr/lib/debug/.build-id/08/5164b7e9093b36e3be17226f0d94a35b818c55.debug": "10e200b6bb67e1697e1c924d7fe65f55d358e9e049c6bf9ec1e0151e5e25f450",
+  "downloads/InRelease": "3b81a94b256ebeb21292e5a3e472282dfde9e09385e9d49b4e5e233c7226f318",
+  "downloads/Packages.xz": "53abe47cc5df196106cbb71ea1574b2e0b8d83fe0e018cd87fcdea39f7a09f81",
+  "downloads/Sources.xz": "57933721e58017f98b609bc3804cba48a7c5082bb96ce722d7f42cde7cfe01fc",
+  "downloads/glibc_2.35-0ubuntu3.12.debian.tar.xz": "688428b7f3f1dae1b6621391b2744db6723bc2f9e3378b46f7f91ceab25e8e7c",
+  "downloads/glibc_2.35-0ubuntu3.12.dsc": "2b73b08099b6ea4f10840fdedb256fbbb20924c3f8c08abe10c456125a5334ad",
+  "downloads/glibc_2.35.orig.tar.xz": "5123732f6b67ccd319305efd399971d58592122bcc2a6518a1bd2510dd0cf52e",
+  "downloads/glibc_2.35.orig.tar.xz.asc": "853aaaf17d7366817e814057a467625ee7c0b26240e8b878db0f33c389c7bcb6",
+  "downloads/libc6-dbg_2.35-0ubuntu3.12_amd64.deb": "58078a980a3ababac41b8756e620da09fcb0f8f64f4e50db7bbcbeac82a8a505",
+  "downloads/libc6_2.35-0ubuntu3.12_amd64.deb": "d869a972aadd92883cfbef152a13e2a6084e82149575055b9c8a19336aef1f6e",
+  "runtime/lib/x86_64-linux-gnu/libc.so.6": "9b846df01200e522f8c57c1c0e4435777180d6fa031fa2baa6fa34f68562c4d9"
+}

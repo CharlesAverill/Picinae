@@ -1,0 +1,5 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-473b43ee
+COMMAND=bash notes/e26-x86-sse-avx-lowering/fixture/build.sh --check
+80d54e559d7069c8214eab668066f8ddc850305f96d9598817eb04f46f8db52c  /home/charles/code/friends/.toolchains/e26-x86-sse-avx-lowering/fixture-build/moves.so
+
+EXIT_CODE=0

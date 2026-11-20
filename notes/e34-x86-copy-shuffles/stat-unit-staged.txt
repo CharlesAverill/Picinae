@@ -1,0 +1,67 @@
+ .../claude/lifter/x64_shuffle_fixture/SUCCESS.json |    45 +
+ .../x64_shuffle_fixture/e34_align_amd64.pcode.json | 52347 +++++++++++++++
+ .../lifter/x64_shuffle_fixture/e34_align_amd64.v   |  1311 +
+ .../claude/lifter/x64_shuffle_pinned/SUCCESS.json  |    45 +
+ .../e34_pinned_shuffles_amd64.pcode.json           | 56882 ++++++++++++++++
+ .../x64_shuffle_pinned/e34_pinned_shuffles_amd64.v |  1457 +
+ dune                                               |     8 +
+ notes/e34-x86-copy-shuffles/README.md              |   204 +
+ notes/e34-x86-copy-shuffles/actual-raw.json        | 56882 ++++++++++++++++
+ notes/e34-x86-copy-shuffles/actual-selection.json  |  3242 +
+ .../allowed-prerequisites.txt                      |     8 +
+ notes/e34-x86-copy-shuffles/ancestry-before.txt    |    30 +
+ notes/e34-x86-copy-shuffles/ancestry-imported.txt  |   380 +
+ notes/e34-x86-copy-shuffles/build.sh               |     7 +
+ notes/e34-x86-copy-shuffles/capture.py             |    30 +
+ notes/e34-x86-copy-shuffles/capture.sh             |    16 +
+ notes/e34-x86-copy-shuffles/check-ancestry.py      |    25 +
+ notes/e34-x86-copy-shuffles/check-failures.py      |    20 +
+ notes/e34-x86-copy-shuffles/fixture/build.sh       |     8 +
+ notes/e34-x86-copy-shuffles/fixture/pins.json      |     3 +
+ notes/e34-x86-copy-shuffles/fixture/shuffles.S     |   345 +
+ notes/e34-x86-copy-shuffles/fixture/shuffles.so    |   Bin 0 -> 13432 bytes
+ notes/e34-x86-copy-shuffles/fork-name-check.txt    |    15 +
+ notes/e34-x86-copy-shuffles/implementation.sha256  |     7 +
+ .../e34-x86-copy-shuffles/logs/ancestry-final.log  |   386 +
+ notes/e34-x86-copy-shuffles/logs/ancestry.log      |   386 +
+ .../logs/assumptions-verbatim.log                  |   158 +
+ notes/e34-x86-copy-shuffles/logs/backend.log       |    16 +
+ .../logs/capture-actual-final.log                  |     6 +
+ .../e34-x86-copy-shuffles/logs/capture-actual.log  |     6 +
+ .../logs/capture-synthetic.log                     |     6 +
+ notes/e34-x86-copy-shuffles/logs/dune-final.log    |     4 +
+ notes/e34-x86-copy-shuffles/logs/dune-full.log     |   372 +
+ .../e34-x86-copy-shuffles/logs/fixture-rebuild.log |     5 +
+ .../e34-x86-copy-shuffles/logs/fork-name-final.log |     4 +
+ .../logs/fork-name-repeat.log                      |     5 +
+ notes/e34-x86-copy-shuffles/logs/generate.log      |     9 +
+ .../ghidra/20bdd26414c1452ca46af275e836a45d.log.gz |   Bin 0 -> 1627 bytes
+ .../ghidra/4227b24d835949e288053ea362998030.log.gz |   Bin 0 -> 2170 bytes
+ .../ghidra/5eaa5164059c4ec0b5bc75d18b0facb2.log.gz |   Bin 0 -> 1223 bytes
+ .../ghidra/9a07237cafe24722b23bc7b152f067f4.log.gz |   Bin 0 -> 2121 bytes
+ .../ghidra/a96e915add704e1fa831e28f35270e0e.log.gz |   Bin 0 -> 1751 bytes
+ .../ghidra/b499a61ed9c44e03bac1a4dec833be75.log.gz |   Bin 0 -> 1748 bytes
+ .../ghidra/bb97744587e041dfb3739031768b2843.log.gz |   Bin 0 -> 1352 bytes
+ .../ghidra/e71fd5a0f5494507837918c658853c4d.log.gz |   Bin 0 -> 1225 bytes
+ .../ghidra/ed4fc7c4257840b79a1831daa9b16c36.log.gz |   Bin 0 -> 1219 bytes
+ .../ghidra/f1805f1c1074443eadb68c28a23d4f7d.log.gz |   Bin 0 -> 1749 bytes
+ notes/e34-x86-copy-shuffles/logs/import.log        |   696 +
+ notes/e34-x86-copy-shuffles/logs/publication.log   |    29 +
+ .../logs/regenerate-final.log                      |     9 +
+ .../logs/regressions-complete.log                  |    36 +
+ .../logs/regressions-final.log                     |    35 +
+ notes/e34-x86-copy-shuffles/logs/regressions.log   |    35 +
+ notes/e34-x86-copy-shuffles/logs/replay-final.log  |     9 +
+ notes/e34-x86-copy-shuffles/logs/selection.log     |     5 +
+ notes/e34-x86-copy-shuffles/logs/source-audit.log  |    10 +
+ notes/e34-x86-copy-shuffles/logs/toolchain.log     |    20 +
+ notes/e34-x86-copy-shuffles/print-assumptions.sh   |    17 +
+ notes/e34-x86-copy-shuffles/reproduce.sh           |    22 +
+ notes/e34-x86-copy-shuffles/select-instructions.py |    27 +
+ notes/e34-x86-copy-shuffles/shuffle-census.json    |    13 +
+ notes/e34-x86-copy-shuffles/synthetic-raw.json     | 64303 +++++++++++++++++++
+ tools/ghidra-lifter/lift-x64-shuffle.py            |   172 +
+ tools/ghidra-lifter/pcode2coq_x64_shuffle.py       |   141 +
+ tools/ghidra-lifter/test_x64_shuffle.py            |   194 +
+ tools/ghidra-lifter/x64_shuffle_headless.py        |   160 +
+ 66 files changed, 240613 insertions(+)
