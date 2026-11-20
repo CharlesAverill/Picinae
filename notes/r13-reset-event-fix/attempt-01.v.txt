@@ -1,0 +1,277 @@
+(* uxTaskResetEventItemValue -- ARMv6-M Cortex-M0 sequential IL contract.
+
+   Initial author: OpenAI gpt-6-astra, xhigh/default, unit r13-reset-event.
+   Final proof producer: pending full kernel validation; see notes/r13-reset-event.
+   Provenance: FreeRTOS Kernel V11.1.0, commit
+   dbf70559b27d39c1fdb68dfb9a32140b6a6777a0, tasks.c lines 7569-7584,
+   SHA256 6a54883765441f12b45b7f2e36838727e8e0aa872054df30c814c473ee3e4149.
+   ELF SHA256 5c57b3b3d6c04df91f58a9c14cffdd9cf2ded41ebc0663f0c40a3afb3ba308ca.
+   Generated unchanged map: uxTaskResetEventItemValue_armv6m.v, strict
+   armv6m_lifter.sh; accepted e05 leaf artifact, no calls/closure premises.
+   Evidence: uxTaskResetEventItemValue.json and ../freertos/cortex-m0/
+   evidence/layout.json, evidence/manifest.json, FreeRTOSConfig.h.
+
+   ABI/spec: no register arguments; entry 0x1524; BX LR cut 0x1536.
+   The immutable literal at 0x1538 supplies pxCurrentTCB's address 0x20000108.
+   INITIAL memory supplies that pointer, the original 32-bit little-endian
+   event value at TCB+24 (xEventListItem+0), and priority at TCB+44.
+   configMAX_PRIORITIES=5. Return the original event value in R0 and write
+   (5-priority) modulo 2^32 to precisely the four event-value bytes.
+   R0-R3, NZCV and those four bytes may change. All other variables agree,
+   including R4-R11, R12, SP, LR, permissions, and temporaries.
+   Both pointer arithmetic and the four-byte memory access wrap modulo 2^32.
+   No pointer alignment, non-overlap, priority-range, CPU-feature or tunable
+   hypothesis is needed for this IL contract. Even aliases are allowed:
+   reads precede the only store, and the memory frame excludes exactly that
+   store footprint. This does not assert preservation of aliased objects.
+   Ordinary priorities <5 additionally give the natural value 5-priority.
+
+   The main invariant theorem assumes a typed entry store. Actual executable
+   traces supply read/write permissions. A separate arbitrary-memory/ordinary-LR
+   witness proves these permissions and typing are jointly satisfiable.
+   The ordinary BX step is proved only for odd LR below 0xfffffff0; it clears
+   bit zero and leaves the entire store unchanged. No callee oracle, IRQ,
+   hardware/exception behavior, scheduler invariant, whole-kernel correctness,
+   termination or proved binary/lifter refinement is claimed. Literal folding
+   and the inherited unvalidated lift remain in the trusted provenance boundary.
+ *)
+
+Require Import Picinae_armv6m.
+Require Import uxTaskResetEventItemValue_armv6m.
+From Stdlib Require Import NArith List Lia FunctionalExtensionality.
+Import ListNotations ARMv6MNotations.
+Open Scope N.
+
+Definition reset_event_tcb (m:memory) : N := m Ⓓ[0x20000108].
+Definition reset_event_address (m:memory) : N := reset_event_tcb m ⊕ 24.
+Definition reset_event_original (m:memory) : N := m Ⓓ[reset_event_address m].
+Definition reset_event_priority (m:memory) : N := m Ⓓ[reset_event_tcb m ⊕ 44].
+Definition reset_event_value (m:memory) : N := 5 ⊖ reset_event_priority m.
+Definition reset_event_memory (m:memory) : memory :=
+  m [Ⓓ reset_event_address m := reset_event_value m].
+
+Definition reset_event_frame (initial final:store) : Prop :=
+  forall v, ~ In v [V_MEM32; R_R0; R_R1; R_R2; R_R3; F_N; F_Z; F_C; F_V] ->
+    final v = initial v.
+Definition reset_event_postcondition (initial final:store) : Prop :=
+  final R_R0 = reset_event_original (initial V_MEM32) /\
+  final V_MEM32 = reset_event_memory (initial V_MEM32) /\
+  reset_event_frame initial final.
+Definition reset_event_exit (t:trace) : bool :=
+  match t with (Addr 0x1536,_)::_ => true | _ => false end.
+Definition reset_event_invariants (initial:store) (t:trace) : option Prop :=
+  match t with
+  | (Addr 0x1524,s)::_ => Some (s = initial)
+  | (Addr 0x1536,s)::_ => Some (reset_event_postcondition initial s)
+  | _ => None
+  end.
+Definition reset_event_permitted (s:store) : Prop :=
+  forall i, i < 4 ->
+    mem_readable s (0x20000108 ⊕ i) /\
+    mem_readable s (reset_event_address (s V_MEM32) ⊕ i) /\
+    mem_readable s ((reset_event_tcb (s V_MEM32) ⊕ 44) ⊕ i) /\
+    mem_writable s (reset_event_address (s V_MEM32) ⊕ i).
+
+Theorem reset_event_nwc : forall s2 s1,
+  uxTaskResetEventItemValue_armv6m_prog s1 = uxTaskResetEventItemValue_armv6m_prog s2.
+Proof.
+  idtac "BEGIN reset_event_nwc". reflexivity. Qed.
+Theorem reset_event_welltyped :
+  welltyped_prog armv6mtypctx uxTaskResetEventItemValue_armv6m_prog.
+Proof.
+  idtac "BEGIN reset_event_welltyped". exact uxTaskResetEventItemValue_armv6m_welltyped. Qed.
+
+Lemma reset_event_zero_bound : forall w, 0 < 2^w.
+Proof.
+  idtac "BEGIN reset_event_zero_bound". intro w. apply N.neq_0_lt_0, pow2_nonzero. Qed.
+Definition reset_event_entry_witness (m:memory) (lr:N) : store := fun v =>
+  match v with
+  | V_MEM32 => m
+  | A_READ | A_WRITE => N.ones (2^32)
+  | R_LR => lr
+  | _ => 0
+  end.
+Lemma reset_event_witness_models : forall m lr,
+  m < 2^(8*2^32) -> lr < 2^32 ->
+  models armv6mtypctx (reset_event_entry_witness m lr).
+Proof.
+  idtac "BEGIN reset_event_witness_models".
+  intros m lr B LR v w T. destruct v; cbn [armv6mtypctx] in T;
+    try discriminate; injection T as <-.
+  all: lazymatch goal with
+  | |- reset_event_entry_witness _ _ V_MEM32 < _ => exact B
+  | |- reset_event_entry_witness _ _ A_READ < _ => exact (ones_bound (2^32))
+  | |- reset_event_entry_witness _ _ A_WRITE < _ => exact (ones_bound (2^32))
+  | |- reset_event_entry_witness _ _ R_LR < _ => exact LR
+  | |- _ < 2^?width => exact (reset_event_zero_bound width)
+  end.
+Qed.
+Theorem reset_event_entry_satisfiable : forall m lr,
+  m < 2^(8*2^32) -> N.odd lr = true -> lr < 0xfffffff0 ->
+  exists s, models armv6mtypctx s /\ s V_MEM32 = m /\ s R_LR = lr /\
+    reset_event_permitted s /\ N.odd (s R_LR) = true /\ s R_LR < 0xfffffff0.
+Proof.
+  idtac "BEGIN reset_event_entry_satisfiable".
+  intros m lr B ODD LR. exists (reset_event_entry_witness m lr).
+  split.
+  - apply reset_event_witness_models. exact B. clear - LR. change (lr < 4294967296). lia.
+  - split. reflexivity. split. reflexivity. split.
+    + intros i LT. unfold mem_readable, mem_writable.
+      change (N.testbit (N.ones (2^32)) (0x20000108 ⊕ i) = true /\
+        N.testbit (N.ones (2^32)) (reset_event_address m ⊕ i) = true /\
+        N.testbit (N.ones (2^32)) ((reset_event_tcb m ⊕ 44) ⊕ i) = true /\
+        N.testbit (N.ones (2^32)) (reset_event_address m ⊕ i) = true).
+      repeat split; apply N.ones_spec_low; apply N.mod_lt, pow2_nonzero.
+    + split; assumption.
+Qed.
+
+(* Flags are intentionally unconstrained in the postcondition. *)
+Ltac ignore_vars v ::= constr:(match v with F_N | F_Z | F_C | F_V => true | _ => false end).
+
+Theorem reset_event_correct : forall s t s' x'
+  (ENTRY: startof t (x',s') = (Addr 0x1524,s))
+  (MDL: models armv6mtypctx s),
+  satisfies_all uxTaskResetEventItemValue_armv6m_prog
+    (reset_event_invariants s) reset_event_exit ((x',s')::t).
+Proof.
+  idtac "BEGIN reset_event_correct".
+  intros. apply prove_invs.
+  - simpl. rewrite ENTRY. armv6m_step. reflexivity.
+  - intros.
+    erewrite startof_prefix in ENTRY; try eassumption.
+    eapply models_at_invariant; try eassumption.
+    apply reset_event_welltyped. intro MDL1.
+    clear - PRE MDL1. rename t1 into t.
+    destruct_inv 32 PRE. subst s1.
+    repeat armv6m_step.
+    unfold reset_event_postcondition, reset_event_original, reset_event_memory,
+      reset_event_value, reset_event_priority, reset_event_address, reset_event_tcb,
+      reset_event_frame.
+    split. reflexivity. split. reflexivity.
+    intros v NE. destruct v; try reflexivity;
+      exfalso; apply NE; cbn; tauto.
+Qed.
+
+Corollary reset_event_post_at_bx : forall s t s'
+  (ENTRY: startof t (Addr 0x1536,s') = (Addr 0x1524,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog uxTaskResetEventItemValue_armv6m_prog ((Addr 0x1536,s')::t))
+  (UT: unterminated reset_event_exit t),
+  reset_event_postcondition s s'.
+Proof.
+  idtac "BEGIN reset_event_post_at_bx".
+  intros.
+  pose proof (reset_event_correct s t s' (Addr 0x1536) ENTRY MDL) as ALL.
+  pose proof (satall_trueif_inv _ _ _ _ ALL EXEC UT) as POST. exact POST.
+Qed.
+
+Corollary reset_event_preserves_callee_saved : forall s t s'
+  (ENTRY: startof t (Addr 0x1536,s') = (Addr 0x1524,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog uxTaskResetEventItemValue_armv6m_prog ((Addr 0x1536,s')::t))
+  (UT: unterminated reset_event_exit t),
+  forall v, In v [R_R4; R_R5; R_R6; R_R7; R_R8; R_R9; R_R10; R_R11; R_R12; R_SP; R_LR] ->
+    s' v = s v.
+Proof.
+  idtac "BEGIN reset_event_preserves_callee_saved".
+  intros s t s' ENTRY MDL EXEC UT v IN.
+  pose proof (proj2 (proj2 (reset_event_post_at_bx s t s' ENTRY MDL EXEC UT))) as FR.
+  apply FR. cbn in IN |- *. destruct v; intuition discriminate.
+Qed.
+
+Theorem reset_event_stored_word : forall m,
+  (reset_event_memory m) Ⓓ[reset_event_address m] = reset_event_value m.
+Proof.
+  idtac "BEGIN reset_event_stored_word".
+  intro m. unfold reset_event_memory. rewrite getmem_setmem by reflexivity.
+  apply N.mod_small, msub_lt.
+Qed.
+Theorem reset_event_written_byte : forall m i, i < 4 ->
+  getbyte (reset_event_memory m) (reset_event_address m + i) 32 =
+    N.shiftr (reset_event_value m) (i*8) mod 256.
+Proof.
+  idtac "BEGIN reset_event_written_byte".
+  intros m i LT. unfold reset_event_memory.
+  apply (setmem_byte 32 LittleE 4 i m (reset_event_address m) (reset_event_value m) LT).
+  reflexivity.
+Qed.
+Theorem reset_event_memory_frame : forall m a,
+  4 <= msub 32 a (reset_event_address m) ->
+  getbyte (reset_event_memory m) a 32 = getbyte m a 32.
+Proof.
+  idtac "BEGIN reset_event_memory_frame". intros m a OUT. unfold reset_event_memory. apply setmem_frame, OUT. Qed.
+Theorem reset_event_priority_normal : forall m, reset_event_priority m < 5 ->
+  reset_event_value m = 5 - reset_event_priority m.
+Proof.
+  idtac "BEGIN reset_event_priority_normal".
+  intros m P. unfold reset_event_value.
+  assert (B: reset_event_priority m < 2^32) by
+    (unfold reset_event_priority; apply getmem_bound).
+  rewrite msub_nowrap; rewrite (N.mod_small _ _ B); cbn [N.pow];
+    [reflexivity | clear - P; lia].
+Qed.
+
+Corollary reset_event_original_memory_effects : forall s t s'
+  (ENTRY: startof t (Addr 0x1536,s') = (Addr 0x1524,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog uxTaskResetEventItemValue_armv6m_prog ((Addr 0x1536,s')::t))
+  (UT: unterminated reset_event_exit t),
+  s' R_R0 = reset_event_original (s V_MEM32) /\
+  (s' V_MEM32) Ⓓ[reset_event_address (s V_MEM32)] = reset_event_value (s V_MEM32) /\
+  (forall i, i < 4 -> getbyte (s' V_MEM32) (reset_event_address (s V_MEM32)+i) 32 =
+    N.shiftr (reset_event_value (s V_MEM32)) (i*8) mod 256) /\
+  (forall a, 4 <= msub 32 a (reset_event_address (s V_MEM32)) ->
+    getbyte (s' V_MEM32) a 32 = getbyte (s V_MEM32) a 32).
+Proof.
+  idtac "BEGIN reset_event_original_memory_effects".
+  intros. destruct (reset_event_post_at_bx s t s' ENTRY MDL EXEC UT) as [RET [MEM FR]].
+  split. exact RET. rewrite MEM. split. apply reset_event_stored_word.
+  split. apply reset_event_written_byte. apply reset_event_memory_frame.
+Qed.
+
+Theorem reset_event_return_step : forall s
+  (ODD: N.odd (s R_LR) = true) (ORDINARY: s R_LR < 0xfffffff0),
+  can_step uxTaskResetEventItemValue_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s),(Addr 0x1536,s)).
+Proof.
+  idtac "BEGIN reset_event_return_step".
+  intros s ODD ORDINARY.
+  assert (LOW: s R_LR mod 2 = 1).
+  { apply mod2_1_neven. rewrite <- N.negb_odd, ODD. reflexivity. }
+  assert (XS: exec_stmt armv6mtypctx s (armv6m_bxwritepc (Var R_LR))
+    armv6mtypctx s (Some (Addr (N.land (s R_LR) (N.ones 32 - 1))))).
+  { unfold armv6m_bxwritepc. eapply XIf with (b:=1).
+    - assert (E: eval_exp armv6mtypctx s (Cast CAST_LOW 1 (Var R_LR))
+        (s R_LR mod 2) 1).
+      { apply ECast with (w:=32) (n:=s R_LR). apply EVar. reflexivity. }
+      rewrite LOW in E. exact E.
+    - apply XJmp with (w:=32).
+      apply EBinOp with (w:=32) (n1:=s R_LR) (n2:=N.ones 32 - 1);
+        [apply EVar; reflexivity | apply EWord]. }
+  assert (CS: can_step uxTaskResetEventItemValue_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),reset_temps s s),(Addr 0x1536,s))).
+  { eapply CanStep with (sz:=2) (q:=armv6m_bxwritepc (Var R_LR))
+      (x:=Some (Addr (N.land (s R_LR) (N.ones 32 - 1))));
+      [reflexivity | exact XS]. }
+  assert (RESET: reset_temps s s = s).
+  { extensionality v. destruct v; reflexivity. }
+  rewrite RESET in CS. exact CS.
+Qed.
+
+Corollary reset_event_caller_result : forall s t s'
+  (ENTRY: startof t (Addr 0x1536,s') = (Addr 0x1524,s))
+  (MDL: models armv6mtypctx s)
+  (EXEC: exec_prog uxTaskResetEventItemValue_armv6m_prog ((Addr 0x1536,s')::t))
+  (UT: unterminated reset_event_exit t)
+  (ODD: N.odd (s R_LR) = true) (ORDINARY: s R_LR < 0xfffffff0),
+  reset_event_postcondition s s' /\
+  can_step uxTaskResetEventItemValue_armv6m_prog
+    ((Addr (N.land (s R_LR) (N.ones 32 - 1)),s'),(Addr 0x1536,s')).
+Proof.
+  idtac "BEGIN reset_event_caller_result".
+  intros. pose proof (reset_event_post_at_bx s t s' ENTRY MDL EXEC UT) as POST.
+  assert (LR: s' R_LR = s R_LR).
+  { apply (proj2 (proj2 POST)). cbn. intuition discriminate. }
+  split. exact POST.
+  rewrite <- LR. apply reset_event_return_step; rewrite LR; assumption.
+Qed.

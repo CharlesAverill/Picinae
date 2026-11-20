@@ -1,0 +1,4 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-5a06644e
+COMMAND=git ls-remote --heads fork refs/heads/llm-proofs/r13-reset-event-fix
+
+EXIT_CODE=0

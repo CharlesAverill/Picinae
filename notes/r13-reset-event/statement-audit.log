@@ -1,0 +1,20 @@
+CWD=/home/charles/.t3/worktrees/Picinae/t3-fe0e672b
+COMMAND=python3 notes/r13-reset-event/check-statements.py
+PRESERVED, ABORTED: reset_event_nwc
+PRESERVED, ABORTED: reset_event_welltyped
+PRESERVED, ABORTED: reset_event_zero_bound
+PRESERVED, ABORTED: reset_event_witness_models
+PRESERVED, ABORTED: reset_event_entry_satisfiable
+PRESERVED, ABORTED: reset_event_correct
+PRESERVED, ABORTED: reset_event_post_at_bx
+PRESERVED, ABORTED: reset_event_preserves_callee_saved
+PRESERVED, ABORTED: reset_event_stored_word
+PRESERVED, ABORTED: reset_event_written_byte
+PRESERVED, ABORTED: reset_event_memory_frame
+PRESERVED, ABORTED: reset_event_priority_normal
+PRESERVED, ABORTED: reset_event_original_memory_effects
+PRESERVED, ABORTED: reset_event_return_step
+PRESERVED, ABORTED: reset_event_caller_result
+All definitions, declarations, theorem statements unchanged; only proof bodies removed.
+
+EXIT_CODE=0

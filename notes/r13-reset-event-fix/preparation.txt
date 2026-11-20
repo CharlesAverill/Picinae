@@ -1,0 +1,9 @@
+Prepared HEAD: 71470bffba65392adf1873a3df9f0cf0ca4f1ac9, sole parent pinned origin.
+Initial status tool output was empty before notes creation.
+The remote branch check initially failed sandbox DNS (exit 128), then
+network-enabled git ls-remote --heads fork refs/heads/llm-proofs/r13-reset-event-fix
+returned exit 0 and no output. Only the prepared branch was renamed.
+Fast-forward merge of exact source checkpoint 003d8a6d10510ce11b7c45beea2e62174b2ded2b
+succeeded (exit 0). The full exact checkpoint history is authorized by the
+specific task override; no original author branch or remote was modified.
+Initial author's source, map and evidence are unchanged.
